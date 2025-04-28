@@ -9,7 +9,7 @@
 - 1.6 Premier aperçu de l'environnement
 - 1.7 Comparaison avec d'autres environnements de développement
 
-### 2. [Découverte de l'IDE Delphi](#02-decouverte-de-lide-delphi/README.md)
+### 2. [Découverte de l'IDE Delphi](02-decouverte-de-lide-delphi/README.md)
 - 2.1 Présentation de l'interface
 - 2.2 Création d'un premier projet
 - 2.3 La Palette d'outils et l'Inspecteur d'objets
@@ -20,7 +20,7 @@
 - 2.8 Introduction au cycle de développement avec Delphi
 - 2.9 Utilisation du Gestionnaire de Packages (GetIt Package Manager)
 
-### 3. [Langage Object Pascal](#03-langage-object-pascal/README.md)
+### 3. [Langage Object Pascal](03-langage-object-pascal/README.md)
 - 3.1 Syntaxe fondamentale
 - 3.2 Types de données et conversions
 - 3.3 Variables, constantes et opérateurs
@@ -39,7 +39,7 @@
 - 3.10 Nouveautés de la syntaxe Object Pascal (dernières versions)
 - 3.11 Records avancés et opérateurs surchargés
 
-### 4. [Conception d'Interfaces Utilisateur avec la VCL](#04-conception-dinterfaces-utilisateur-avec-la-vcl/README.md)
+### 4. [Conception d'Interfaces Utilisateur avec la VCL](04-conception-dinterfaces-utilisateur-avec-la-vcl/README.md)
 - 4.1 Qu'est-ce que la VCL (Visual Component Library) ?
 - 4.2 Formulaires et fiches
 - 4.3 Composants standard et leur utilisation
@@ -57,7 +57,7 @@
 - 4.11 Accessibilité des interfaces utilisateur
 - 4.12 Interfaces haute résolution et prise en charge du DPI
 
-### 5. [Développement multi-plateforme avec FireMonkey (FMX)](#05-developpement-multi-plateforme-avec-firemonkey/README.md)
+### 5. [Développement multi-plateforme avec FireMonkey (FMX)](05-developpement-multi-plateforme-avec-firemonkey/README.md)
 - 5.1 Introduction à FireMonkey
 - 5.2 Différences entre VCL et FMX
 - 5.3 Création d'interfaces multi-plateformes
@@ -69,7 +69,7 @@
 - 5.9 Animations et effets visuels
 - 5.10 FMXLinux : développement pour Linux
 
-### 6. [Applications multi-fenêtres et navigation](#06-applications-multi-fenetres-et-navigation/README.md)
+### 6. [Applications multi-fenêtres et navigation](06-applications-multi-fenetres-et-navigation/README.md)
 - 6.1 Gestion des formulaires multiples
 - 6.2 Communication entre formulaires
 - 6.3 Formulaires MDI (Multiple Document Interface)
@@ -78,7 +78,7 @@
 - 6.6 Navigation dans les applications mobiles
 - 6.7 Gestion de l'état de l'application
 
-### 7. [Gestion des fichiers et flux de données](#07-gestion-des-fichiers-et-flux-de-donnees/README.md)
+### 7. [Gestion des fichiers et flux de données](07-gestion-des-fichiers-et-flux-de-donnees/README.md)
 - 7.1 Lecture/écriture de fichiers texte
 - 7.2 Manipulation de fichiers binaires
 - 7.3 Utilisation des TStream et classes dérivées
@@ -88,7 +88,7 @@
 - 7.7 Utilisation de formats modernes (JSON, XML, YAML)
 - 7.8 Manipulation de fichiers CSV et Excel
 
-### 8. [Accès aux bases de données MySQL/MariaDB](#08-acces-aux-bases-de-donnees-mysql-mariadb/README.md)
+### 8. [Accès aux bases de données MySQL/MariaDB](08-acces-aux-bases-de-donnees-mysql-mariadb/README.md)
 - 8.1 Vue d'ensemble des technologies d'accès aux données
 - 8.2 Configuration de MySQL/MariaDB pour Delphi
 - 8.3 FireDAC : architecture et composants
@@ -106,7 +106,7 @@
 - 8.12 Autres moteurs de bases de données (SQLite, PostgreSQL, SQL Server)
 - 8.13 NoSQL et bases de données documentaires
 
-### 9. [Rapports et impressions](#09-rapports-et-impressions/README.md)
+### 9. [Rapports et impressions](09-rapports-et-impressions/README.md)
 - 9.1 Composants d'impression natifs
 - 9.2 Aperçu avant impression
 - 9.3 Générateurs de rapports (FastReport, QuickReport)
@@ -116,7 +116,7 @@
 - 9.7 Rapports interactifs
 - 9.8 Graphiques et tableaux de bord avec TeeChart
 
-### 10. [Communication et services réseaux](#10-communication-et-services-reseaux/README.md)
+### 10. [Communication et services réseaux](10-communication-et-services-reseaux/README.md)
 - 10.1 Appels REST et API Web (TRESTClient)
 - 10.2 Manipulation de JSON et XML
 - 10.3 Socket et communications TCP/IP
@@ -128,7 +128,7 @@
 - 10.9 Intégration avec les services cloud (AWS, Azure, Google Cloud)
 - 10.10 WebSockets et communications temps réel
 
-### 11. [Multithreading et programmation asynchrone](#11-multithreading-et-programmation-asynchrone/README.md)
+### 11. [Multithreading et programmation asynchrone](11-multithreading-et-programmation-asynchrone/README.md)
 - 11.1 Principes du multithreading
 - 11.2 Création et gestion de threads
 - 11.3 Synchronisation et sections critiques
@@ -140,7 +140,7 @@
 - 11.9 Programmation réactive avec le pattern Observer
 - 11.10 Performances et bonnes pratiques en multithreading
 
-### 12. [Débogage et tests](#12-debogage-et-tests/README.md)
+### 12. [Débogage et tests](12-debogage-et-tests/README.md)
 - 12.1 Utilisation des points d'arrêt
 - 12.2 Inspection et modification des variables
 - 12.3 Test unitaire avec DUnit/DUnitX
@@ -152,7 +152,7 @@
 - 12.9 Déboggage de code multi-thread
 - 12.10 Couverture de code et qualité
 
-### 13. [Internationalisation et localisation](#13-internationalisation-et-localisation/README.md)
+### 13. [Internationalisation et localisation](13-internationalisation-et-localisation/README.md)
 - 13.1 Gestion des chaînes de caractères
 - 13.2 Ressources linguistiques
 - 13.3 Adaptation à différentes langues
@@ -162,7 +162,7 @@
 - 13.7 Gestion des écritures bidirectionnelles (RTL)
 - 13.8 Outils de traduction et flux de travail
 
-### 14. [Utilisation d'API et bibliothèques externes](#14-utilisation-dapi-et-bibliotheques-externes/README.md)
+### 14. [Utilisation d'API et bibliothèques externes](14-utilisation-dapi-et-bibliotheques-externes/README.md)
 - 14.1 Appels aux DLLs
 - 14.2 Intégration de bibliothèques C/C++
 - 14.3 API Windows natif
@@ -173,7 +173,7 @@
 - 14.8 Encapsulation d'API natives pour multi-plateformes
 - 14.9 Intégration de bibliothèques JavaScript via WebView
 
-### 15. [Applications mobiles avec Delphi](#15-applications-mobiles-avec-delphi/README.md)
+### 15. [Applications mobiles avec Delphi](15-applications-mobiles-avec-delphi/README.md)
 - 15.1 Spécificités du développement mobile
 - 15.2 Interface utilisateur tactile
 - 15.3 Accès aux capteurs (GPS, accéléromètre...)
@@ -186,7 +186,7 @@
 - 15.10 Permissions et confidentialité des données
 - 15.11 Intégration des services Firebase
 
-### 16. [Sécurité des applications](#16-securite-des-applications/README.md)
+### 16. [Sécurité des applications](16-securite-des-applications/README.md)
 - 16.1 Authentification des utilisateurs
 - 16.2 Autorisation et contrôle d'accès
 - 16.3 Chiffrement des données
@@ -198,7 +198,7 @@
 - 16.9 Signature numérique et validation
 - 16.10 Sécurité des applications mobiles
 
-### 17. [Distribution et déploiement](#17-distribution-et-deploiement/README.md)
+### 17. [Distribution et déploiement](17-distribution-et-deploiement/README.md)
 - 17.1 Compilation en mode release
 - 17.2 Optimisation du code final
 - 17.3 Création d'installateurs (Inno Setup, InstallAware)
@@ -210,7 +210,7 @@
 - 17.9 Déploiement continu (CI/CD)
 - 17.10 Télémétrie et analyse de crash
 
-### 18. [Architecture et bonnes pratiques](#18-architecture-et-bonnes-pratiques/README.md)
+### 18. [Architecture et bonnes pratiques](18-architecture-et-bonnes-pratiques/README.md)
 - 18.1 Structuration d'un projet Delphi
 - 18.2 Patterns d'architecture (MVC, MVVM)
 - 18.3 Séparation UI / logique métier
@@ -223,7 +223,7 @@
 - 18.10 Domain-Driven Design (DDD) avec Delphi
 - 18.11 Microservices et architecture distribuée
 
-### 19. [Projets avancés](#19-projets-avances/README.md)
+### 19. [Projets avancés](19-projets-avances/README.md)
 - 19.1 Application de gestion complète avec MySQL/MariaDB
     - 19.1.1 Conception de la base de données
     - 19.1.2 Implémentation des couches d'accès
@@ -237,7 +237,7 @@
 - 19.7 Projets d'intelligence artificielle et machine learning
 - 19.8 Intégration de plateformes de paiement
 
-### 20. [Ressources et communauté](#20-ressources-et-communaute/README.md)
+### 20. [Ressources et communauté](20-ressources-et-communaute/README.md)
 - 20.1 Documentation officielle
 - 20.2 Forums et groupes d'entraide
 - 20.3 Bibliothèques et composants tiers
@@ -249,7 +249,7 @@
 - 20.9 Communauté francophone Delphi
 - 20.10 Contribution aux projets Delphi
 
-### 21. [Delphi et l'Internet des Objets (IoT)](#21-delphi-et-liot/README.md)
+### 21. [Delphi et l'Internet des Objets (IoT)](21-delphi-et-liot/README.md)
 - 21.1 Introduction à l'IoT avec Delphi
 - 21.2 Communication Bluetooth / série
 - 21.3 Intégration avec Arduino / Raspberry Pi
@@ -259,7 +259,7 @@
 - 21.7 Traitement des données IoT en temps réel
 - 21.8 Tableaux de bord pour solutions IoT
 
-### 22. [Intelligence Artificielle et Machine Learning avec Delphi](#22-intelligence-artificielle-et-machine-learning-avec-delphi/README.md)
+### 22. [Intelligence Artificielle et Machine Learning avec Delphi](22-intelligence-artificielle-et-machine-learning-avec-delphi/README.md)
 - 22.1 Introduction à l'IA et au ML dans les applications Delphi
 - 22.2 Intégration avec TensorFlow et autres bibliothèques ML
 - 22.3 Traitement du langage naturel (NLP)
@@ -268,7 +268,7 @@
 - 22.6 Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)
 - 22.7 Utilisation des grands modèles de langage (LLM) via API
 
-### 23. [Conception d'applications Web avec Delphi](#23-conception-dapplications-web-avec-delphi/README.md)
+### 23. [Conception d'applications Web avec Delphi](23-conception-dapplications-web-avec-delphi/README.md)
 - 23.1 Introduction à Intraweb et TMS Web Core
 - 23.2 Applications Web basées sur VCL
 - 23.3 Création de services REST avec Delphi
@@ -278,7 +278,7 @@
 - 23.7 Progressive Web Apps (PWA)
 - 23.8 WebAssembly et Delphi
 
-### 24. [Tendances et futur de Delphi](#24-tendances-et-futur-de-delphi/README.md)
+### 24. [Tendances et futur de Delphi](24-tendances-et-futur-de-delphi/README.md)
 - 24.1 Évolution récente de l'écosystème Delphi
 - 24.2 Roadmap et orientations futures
 - 24.3 Low-code et RAD moderne
