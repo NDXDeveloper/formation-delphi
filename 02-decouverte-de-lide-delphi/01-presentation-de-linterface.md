@@ -1,5 +1,7 @@
 # 2.1 Présentation de l'interface de Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'environnement de développement intégré (IDE) de Delphi est conçu pour maximiser votre productivité. Lorsque vous lancez Delphi pour la première fois, vous serez accueilli par une interface riche mais bien organisée. Explorons ensemble les différentes parties qui composent cet environnement.
 
 ## L'écran d'accueil
@@ -114,3 +116,5 @@ En bas de l'IDE, la barre d'état fournit des informations utiles :
 L'interface de Delphi est conçue pour offrir une expérience de développement fluide et productive. Elle combine intelligemment des outils visuels puissants avec un éditeur de code avancé. En vous familiarisant avec cette interface, vous découvrirez qu'elle accélère considérablement le processus de développement d'applications.
 
 Dans la section suivante, nous allons créer notre premier projet pour mettre en pratique ces connaissances.
+
+⏭️ [Création d'un premier projet](/02-decouverte-de-lide-delphi/02-creation-dun-premier-projet.md)

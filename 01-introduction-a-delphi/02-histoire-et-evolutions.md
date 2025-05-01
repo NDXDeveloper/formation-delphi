@@ -1,5 +1,7 @@
 # 1.2 Histoire et évolutions
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 ## Les origines de Delphi
 
 Delphi est né en 1995, créé par la société Borland sous la direction de l'architecte en chef Anders Hejlsberg (qui a plus tard participé à la création de C# chez Microsoft). À l'époque, il s'agissait d'une révolution dans le monde du développement Windows : Delphi combinait la puissance du langage Object Pascal avec un environnement de développement visuel innovant.
@@ -72,3 +74,5 @@ Cette longévité exceptionnelle dans un secteur technologique en constante évo
 ---
 
 Delphi continue donc son évolution, fidèle à sa philosophie d'origine : permettre aux développeurs de créer rapidement des applications robustes et performantes, maintenant sur toutes les plateformes majeures.
+
+⏭️ [Versions disponibles et éditions (Community Edition incluse)](/01-introduction-a-delphi/03-versions-disponibles-et-editions.md)

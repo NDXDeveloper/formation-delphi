@@ -1,5 +1,7 @@
 # 3.5 Procédures et fonctions
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les procédures et fonctions sont des blocs de code réutilisables qui vous permettent d'organiser votre programme en modules. Elles sont essentielles pour créer du code bien structuré, lisible et maintenable. Dans cette section, nous explorons comment définir et utiliser ces éléments fondamentaux en Object Pascal.
 
 ## Pourquoi utiliser des procédures et fonctions ?
@@ -436,3 +438,5 @@ end;
 ---
 
 Les procédures et fonctions sont les éléments de base qui vous permettent de structurer et d'organiser votre code. En maîtrisant ces concepts, vous serez capable de créer des applications Delphi bien conçues et faciles à maintenir. Dans la prochaine section, nous aborderons la gestion des exceptions, qui vous permettra de gérer proprement les erreurs dans vos applications.
+
+⏭️ [Gestion des exceptions](/03-langage-object-pascal/06-gestion-des-exceptions.md)

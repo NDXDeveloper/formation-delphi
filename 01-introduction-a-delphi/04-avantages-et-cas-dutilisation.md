@@ -1,5 +1,7 @@
 # 1.4 Avantages et cas d'utilisation
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 ## Pourquoi choisir Delphi ?
 
 Delphi se distingue dans un univers rempli d'environnements de développement et de langages de programmation. Découvrons ensemble ses principaux avantages et les situations où il excelle particulièrement.
@@ -131,3 +133,5 @@ Pour les débutants, Delphi offre un chemin d'apprentissage progressif : vous po
 ---
 
 Dans les prochaines sections, nous allons découvrir comment installer et configurer votre environnement Delphi pour commencer votre voyage dans le développement d'applications performantes et professionnelles.
+
+⏭️ [Installation et configuration](/01-introduction-a-delphi/05-installation-et-configuration.md)

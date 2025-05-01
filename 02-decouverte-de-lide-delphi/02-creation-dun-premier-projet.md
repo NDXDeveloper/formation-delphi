@@ -1,5 +1,7 @@
 # 2.2 Création d'un premier projet
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Maintenant que nous sommes familiarisés avec l'interface de Delphi, passons à l'étape suivante : la création de notre premier projet. Nous allons réaliser une application simple mais fonctionnelle qui vous permettra de comprendre les bases du développement avec Delphi.
 
 ## Lancement d'un nouveau projet
@@ -190,3 +192,5 @@ Dans cette section, vous avez appris à :
 Ce premier projet, bien que simple, illustre le concept fondamental du développement avec Delphi : la création rapide d'applications Windows natives avec une interface visuelle et un comportement programmé.
 
 Dans la section suivante, nous explorerons plus en détail la Palette d'outils et l'Inspecteur d'objets, deux outils essentiels pour accélérer votre travail de développement.
+
+⏭️ [La Palette d'outils et l'Inspecteur d'objets](/02-decouverte-de-lide-delphi/03-palette-doutils-et-inspecteur-dobjets.md)

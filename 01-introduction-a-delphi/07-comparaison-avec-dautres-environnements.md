@@ -1,5 +1,7 @@
 # 1.7 Comparaison avec d'autres environnements de développement
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 Pour mieux comprendre les forces et les particularités de Delphi, il est utile de le comparer à d'autres environnements de développement populaires. Cette comparaison vous aidera à situer Delphi dans le paysage des outils de développement actuels et à apprécier ses avantages spécifiques.
 
 ## Delphi vs Visual Studio (C#/.NET)
@@ -179,3 +181,5 @@ Aucun environnement n'est universellement supérieur - le meilleur choix dépend
 ---
 
 Maintenant que nous avons exploré l'introduction à Delphi et sa position dans l'écosystème du développement logiciel, nous allons entrer dans le vif du sujet avec la section suivante : une découverte approfondie de l'IDE Delphi et la création de votre premier projet.
+
+⏭️ [Découverte de l'IDE Delphi](/02-decouverte-de-lide-delphi/README.md)

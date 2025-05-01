@@ -1,5 +1,7 @@
 # 1.3 Versions disponibles et éditions (Community Edition incluse)
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 ## Les différentes éditions de Delphi
 
 Delphi est disponible en plusieurs éditions, chacune s'adressant à différents types d'utilisateurs, du débutant au développeur professionnel. Comprendre ces différentes offres vous aidera à choisir celle qui correspond le mieux à vos besoins.
@@ -130,3 +132,5 @@ Quelle que soit l'édition que vous choisissez :
 ---
 
 En tant que débutant, la Community Edition est un excellent point de départ pour apprendre Delphi. Elle vous permettra d'explorer l'environnement et de créer des applications Windows complètes sans investissement financier. Lorsque vous serez plus à l'aise et que vous aurez des besoins plus spécifiques (comme le développement mobile), vous pourrez envisager de passer à une édition payante.
+
+⏭️ [Avantages et cas d'utilisation](/01-introduction-a-delphi/04-avantages-et-cas-dutilisation.md)

@@ -1,5 +1,7 @@
 # 3.6 Gestion des exceptions
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les exceptions sont un mécanisme qui permet de gérer les erreurs et les situations anormales dans votre programme. Au lieu de vérifier constamment si chaque opération a réussi, le système d'exceptions vous permet de séparer le code normal du code de gestion d'erreurs, rendant vos programmes plus clairs et plus robustes.
 
 ## Qu'est-ce qu'une exception ?
@@ -446,3 +448,5 @@ else
 La gestion des exceptions est un élément crucial dans le développement d'applications robustes. En utilisant correctement les structures `try-except-finally`, vous pouvez créer des programmes qui réagissent gracieusement aux erreurs, protègent les ressources et fournissent des informations utiles pour le débogage.
 
 Dans la prochaine section, nous aborderons la programmation orientée objet, un paradigme fondamental en Delphi qui vous permettra de structurer votre code de manière encore plus efficace.
+
+⏭️ [Programmation orientée objet](/03-langage-object-pascal/07-programmation-orientee-objets.md)

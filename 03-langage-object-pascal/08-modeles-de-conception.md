@@ -1,5 +1,7 @@
 # 3.8 Modèles de conception (Design Patterns)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les modèles de conception, ou "design patterns" en anglais, sont des solutions éprouvées à des problèmes courants de conception logicielle. Ce sont des "recettes" qui décrivent comment résoudre un problème spécifique de manière efficace et réutilisable. Dans cette section, nous allons découvrir les principaux modèles de conception et voir comment les implémenter en Object Pascal.
 
 ## Pourquoi utiliser des modèles de conception ?
@@ -903,3 +905,5 @@ Représente une opération à effectuer sur les éléments d'une structure d'obj
 Les modèles de conception sont des outils puissants dans votre boîte à outils de développeur. Ils vous aident à structurer votre code de manière élégante et à résoudre des problèmes courants. En comprenant et en appliquant ces modèles dans vos applications Delphi, vous créerez un code plus maintenable, plus flexible et plus robuste.
 
 Dans la prochaine section, nous explorerons comment organiser votre code source de manière efficace et favoriser la modularité dans vos applications Delphi.
+
+⏭️ [Organisation du code source et modularité](/03-langage-object-pascal/09-organisation-du-code-source-et-modularite.md)

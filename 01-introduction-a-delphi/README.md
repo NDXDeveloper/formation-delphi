@@ -1,5 +1,7 @@
 # 1. Introduction à Delphi
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 Bienvenue dans ce tutoriel complet sur Delphi 12 Athens, l'environnement de développement rapide d'applications (RAD) qui continue de se réinventer depuis plus de 25 ans. Que vous soyez débutant en programmation ou développeur expérimenté souhaitant explorer une nouvelle plateforme, ce guide vous accompagnera dans la découverte et la maîtrise de cet outil puissant.
 
 Delphi représente une solution unique dans le paysage du développement logiciel, combinant la productivité d'un environnement visuel avec la puissance et la flexibilité du langage Object Pascal. Cette introduction vous donnera un aperçu des caractéristiques fondamentales de Delphi et de son écosystème, vous préparant ainsi aux chapitres plus techniques qui suivront.
@@ -11,3 +13,5 @@ Dans cette section, nous explorerons les origines de Delphi, ses évolutions maj
 *Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Pour chaque fonctionnalité récente, un badge "Nécessite Delphi 12 ou supérieur" sera indiqué.*
 
 Commençons notre voyage dans l'univers de Delphi !
+
+⏭️ [Qu'est-ce que Delphi ?](/01-introduction-a-delphi/01-quest-ce-que-delphi.md)

@@ -1,5 +1,7 @@
 # 2.3 La Palette d'outils et l'Inspecteur d'objets
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Deux des outils les plus importants dans l'environnement Delphi sont la **Palette d'outils** et l'**Inspecteur d'objets**. Ces outils sont essentiels pour le développement visuel et permettent de construire des interfaces utilisateur rapidement, sans écrire de code pour chaque élément. Dans cette section, nous allons explorer en détail ces deux composants fondamentaux de l'IDE Delphi.
 
 ## La Palette d'outils
@@ -172,3 +174,5 @@ Pour vous familiariser avec ces outils, créez un petit formulaire de contact :
 La Palette d'outils et l'Inspecteur d'objets sont deux piliers de la philosophie RAD (Rapid Application Development) de Delphi. La maîtrise de ces outils est essentielle pour développer efficacement des applications. En pratiquant régulièrement, vous deviendrez de plus en plus à l'aise avec ces outils, ce qui accélérera considérablement votre processus de développement.
 
 Dans la prochaine section, nous explorerons l'Explorateur de projets et le gestionnaire de code, qui vous aideront à organiser et naviguer dans les fichiers de votre projet.
+
+⏭️ [Explorateur de projets et gestionnaire de code](/02-decouverte-de-lide-delphi/04-explorateur-de-projets-et-gestionnaire-de-code.md)

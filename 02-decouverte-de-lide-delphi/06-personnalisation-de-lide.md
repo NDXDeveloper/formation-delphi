@@ -1,5 +1,7 @@
 # 2.6 Personnalisation de l'IDE
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'Environnement de Développement Intégré (IDE) de Delphi est extrêmement flexible et peut être personnalisé pour s'adapter à vos préférences et à votre style de travail. Dans cette section, nous allons explorer les différentes façons de configurer Delphi pour qu'il réponde parfaitement à vos besoins.
 
 ## Pourquoi personnaliser l'IDE ?
@@ -267,3 +269,5 @@ Pour vous familiariser avec la personnalisation de l'IDE :
 La personnalisation de l'IDE Delphi est une étape importante pour optimiser votre productivité et votre confort de travail. N'hésitez pas à expérimenter avec différentes configurations pour trouver celle qui vous convient le mieux. Au fil du temps, vous affinerez vos préférences en fonction de votre expérience grandissante avec l'environnement.
 
 Dans la prochaine section, nous explorerons la structure d'un projet Delphi et comment s'organiser efficacement.
+
+⏭️ [Structure d'un projet Delphi](/02-decouverte-de-lide-delphi/07-structure-dun-projet-delphi.md)

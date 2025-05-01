@@ -1,5 +1,7 @@
 # 3.11 Records avancés et opérateurs surchargés
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans les versions récentes de Delphi, les records sont devenus beaucoup plus puissants, offrant des fonctionnalités autrefois réservées aux classes. Dans cette section, nous explorerons les capacités avancées des records et comment surcharger les opérateurs pour créer des types de données personnalisés plus intuitifs et plus faciles à utiliser.
 
 ## Records : bien plus que de simples structures
@@ -756,3 +758,5 @@ Les records avancés et les opérateurs surchargés sont des fonctionnalités pu
 Les records sont particulièrement utiles pour représenter des valeurs immuables comme des points, des vecteurs, des fractions, des coordonnées GPS, des dates, etc. En surchargeant les opérateurs, vous pouvez donner à ces types un comportement naturel et cohérent.
 
 Dans la prochaine section, nous explorerons d'autres aspects avancés du langage Object Pascal pour vous aider à écrire des applications encore plus puissantes et élégantes.
+
+⏭️ [Conception d'Interfaces Utilisateur avec la VCL](/04-conception-dinterfaces-utilisateur-avec-la-vcl/README.md)

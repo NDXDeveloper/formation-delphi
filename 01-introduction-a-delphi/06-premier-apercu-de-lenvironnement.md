@@ -1,5 +1,7 @@
 # 1.6 Premier aperçu de l'environnement
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 Bienvenue dans l'environnement de développement Delphi ! Cette section vous aidera à vous familiariser avec l'interface et à comprendre la disposition des différents éléments. Ne vous inquiétez pas si tout semble complexe au premier abord - nous allons découvrir chaque élément progressivement.
 
 ## Lancement de Delphi
@@ -182,3 +184,5 @@ Vous connaissez maintenant les éléments fondamentaux de l'environnement Delphi
 ---
 
 Dans la prochaine section, nous comparerons Delphi avec d'autres environnements de développement pour mieux comprendre ses forces et ses particularités.
+
+⏭️ [Comparaison avec d'autres environnements de développement](/01-introduction-a-delphi/07-comparaison-avec-dautres-environnements.md)

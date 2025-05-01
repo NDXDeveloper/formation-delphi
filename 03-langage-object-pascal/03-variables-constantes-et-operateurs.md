@@ -1,5 +1,7 @@
 # 3.3 Variables, constantes et opérateurs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons explorer comment déclarer et utiliser les variables et constantes en Object Pascal, ainsi que les opérateurs qui permettent de manipuler leurs valeurs. Ces concepts sont fondamentaux pour tout programme Delphi.
 
 ## Variables
@@ -427,3 +429,5 @@ end;
 ---
 
 Cette section vous a présenté les variables, constantes et opérateurs fondamentaux en Object Pascal. Ces concepts sont les outils de base que vous utiliserez dans tous vos programmes Delphi. Dans la prochaine section, nous aborderons les structures de contrôle qui vous permettront de diriger le flux d'exécution de vos programmes.
+
+⏭️ [Structures de contrôle (conditions, boucles)](/03-langage-object-pascal/04-structures-de-controle.md)

@@ -1,5 +1,7 @@
 # 2.8 Introduction au cycle de développement avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le développement d'une application avec Delphi suit un processus itératif que l'on appelle "cycle de développement". Comprendre ce cycle vous aidera à organiser efficacement votre travail et à produire des applications de qualité. Dans cette section, nous allons explorer les différentes étapes du cycle de développement avec Delphi, depuis la conception initiale jusqu'au déploiement final.
 
 ## Vue d'ensemble du cycle de développement
@@ -311,3 +313,5 @@ Le cycle de développement peut varier selon l'ampleur du projet :
 Le cycle de développement avec Delphi est un processus itératif qui combine les avantages du développement rapide d'applications (RAD) avec des pratiques de développement structurées. En comprenant et en suivant ce cycle, vous serez en mesure de créer des applications robustes, performantes et adaptées aux besoins des utilisateurs.
 
 Dans la prochaine section, nous explorerons l'utilisation du Gestionnaire de Packages (GetIt) qui vous permettra d'étendre facilement les capacités de Delphi avec des composants tiers.
+
+⏭️ [Utilisation du Gestionnaire de Packages (GetIt Package Manager)](/02-decouverte-de-lide-delphi/09-utilisation-du-gestionnaire-de-packages.md)

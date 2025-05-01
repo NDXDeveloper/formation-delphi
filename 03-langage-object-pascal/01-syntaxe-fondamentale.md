@@ -1,5 +1,7 @@
 # 3.1 Syntaxe fondamentale
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le langage Object Pascal utilisé dans Delphi est à la fois puissant et accessible. Cette section vous présentera les bases syntaxiques dont vous aurez besoin pour commencer à programmer avec Delphi.
 
 ## Structure générale d'un programme
@@ -191,3 +193,5 @@ Ces directives sont puissantes et permettent de personnaliser la compilation sel
 ---
 
 Dans les prochaines sections, nous aborderons plus en détail les types de données, les structures de contrôle et la programmation orientée objet en Object Pascal. Cette introduction à la syntaxe fondamentale vous donne les bases pour comprendre et écrire du code Delphi.
+
+⏭️ [Types de données et conversions](/03-langage-object-pascal/02-types-de-donnees-et-conversions.md)

@@ -1,5 +1,7 @@
 # 3.2 Types de données et conversions
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La manipulation des données est au cœur de tout programme. Dans cette section, nous explorerons les différents types de données disponibles dans le langage Object Pascal et comment les convertir d'un type à un autre.
 
 ## Types de données fondamentaux
@@ -352,3 +354,5 @@ Les génériques sont un sujet avancé qui sera couvert plus en détail dans une
 ---
 
 Vous avez maintenant une bonne compréhension des types de données disponibles dans Delphi et des méthodes pour les convertir. Dans la prochaine section, nous explorerons les variables, constantes et opérateurs qui vous permettront de manipuler ces données de manière efficace.
+
+⏭️ [Variables, constantes et opérateurs](/03-langage-object-pascal/03-variables-constantes-et-operateurs.md)

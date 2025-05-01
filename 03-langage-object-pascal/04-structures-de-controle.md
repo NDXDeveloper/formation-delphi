@@ -1,5 +1,7 @@
 # 3.4 Structures de contrôle (conditions, boucles)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les structures de contrôle sont au cœur de la programmation. Elles permettent de diriger le flux d'exécution de votre programme en fonction de conditions ou de répéter des instructions plusieurs fois. Dans cette section, nous allons explorer les différentes structures de contrôle disponibles en Object Pascal.
 
 ## Structures conditionnelles
@@ -400,3 +402,5 @@ Cet exemple affichera toutes les combinaisons de I et J pour des valeurs de 1 à
 ---
 
 Cette section vous a présenté les structures de contrôle fondamentales en Object Pascal. Maîtriser ces structures vous permettra de créer des programmes capables de prendre des décisions et de répéter des actions selon vos besoins. Dans la prochaine section, nous aborderons les procédures et fonctions, qui vous permettront d'organiser votre code en blocs réutilisables.
+
+⏭️ [Procédures et fonctions](/03-langage-object-pascal/05-procedures-et-fonctions.md)

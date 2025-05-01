@@ -1,5 +1,7 @@
 # 2.9 Utilisation du Gestionnaire de Packages (GetIt Package Manager)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages de Delphi est sa capacité à être étendu avec des composants et bibliothèques supplémentaires. Le Gestionnaire de Packages GetIt (GetIt Package Manager) est l'outil intégré qui vous permet d'installer facilement ces extensions directement depuis l'IDE. Dans cette section, nous allons découvrir comment utiliser GetIt pour enrichir votre environnement de développement Delphi.
 
 ## Qu'est-ce que GetIt Package Manager ?
@@ -261,3 +263,5 @@ Bien que GetIt soit très pratique, il existe d'autres façons d'étendre Delphi
 Le Gestionnaire de Packages GetIt est un outil puissant qui vous permet d'étendre facilement les capacités de Delphi. En explorant et en installant judicieusement des packages, vous pouvez gagner un temps précieux en réutilisant des composants existants plutôt que de tout développer vous-même.
 
 Dans le prochain chapitre, nous plongerons dans les fondamentaux du langage Object Pascal, la base de tout développement avec Delphi.
+
+⏭️ [Langage Object Pascal](/03-langage-object-pascal/README.md)

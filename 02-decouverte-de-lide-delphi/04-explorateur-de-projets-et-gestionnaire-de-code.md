@@ -1,5 +1,7 @@
 # 2.4 Explorateur de projets et gestionnaire de code
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Après avoir découvert la Palette d'outils et l'Inspecteur d'objets, nous allons maintenant explorer deux autres outils essentiels de Delphi : l'**Explorateur de projets** et le **Gestionnaire de code**. Ces outils vous aideront à organiser et à naviguer efficacement dans les fichiers de votre projet, surtout lorsque ceux-ci deviennent plus complexes.
 
 ## L'Explorateur de projets
@@ -191,3 +193,5 @@ Pour vous familiariser avec ces outils, essayez cet exercice simple :
 L'Explorateur de projets et le Gestionnaire de code sont des outils essentiels qui vous aideront à travailler efficacement sur des projets Delphi, particulièrement lorsque ceux-ci deviennent plus complexes. En maîtrisant ces outils, vous gagnerez en productivité et aurez une meilleure compréhension de la structure de votre application.
 
 Dans la prochaine section, nous verrons comment compiler et exécuter un projet Delphi, ainsi que les différentes options de compilation disponibles.
+
+⏭️ [Compilation et exécution](/02-decouverte-de-lide-delphi/05-compilation-et-execution.md)

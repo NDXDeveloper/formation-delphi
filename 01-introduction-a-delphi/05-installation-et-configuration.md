@@ -1,5 +1,7 @@
 # 1.5 Installation et configuration
 
+🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+
 Cette section vous guidera pas à pas dans l'installation et la configuration initiale de votre environnement Delphi. Nous nous concentrerons sur l'installation de Delphi Community Edition, qui est gratuite pour un usage personnel et pour les petites entreprises.
 
 ## Prérequis système
@@ -192,3 +194,5 @@ Delphi publie régulièrement des mises à jour pour corriger des bugs et ajoute
 ---
 
 Vous avez maintenant Delphi installé et configuré sur votre système ! Dans la prochaine section, nous explorerons l'environnement de développement et vous familiariserez avec son interface utilisateur.
+
+⏭️ [Premier aperçu de l'environnement](/01-introduction-a-delphi/06-premier-apercu-de-lenvironnement.md)

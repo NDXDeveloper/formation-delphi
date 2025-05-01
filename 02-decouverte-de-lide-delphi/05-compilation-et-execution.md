@@ -1,5 +1,7 @@
 # 2.5 Compilation et exécution
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Après avoir conçu l'interface utilisateur et écrit le code de votre application, l'étape suivante consiste à compiler et exécuter votre projet. Dans cette section, nous allons explorer les différentes façons de transformer votre code source en une application fonctionnelle, ainsi que les options de compilation disponibles dans Delphi.
 
 ## Concepts fondamentaux
@@ -230,3 +232,5 @@ Pour vous familiariser avec la compilation et l'exécution :
 La compilation et l'exécution sont des aspects fondamentaux du développement avec Delphi. En comprenant ces processus et en maîtrisant les différentes options disponibles, vous pourrez développer plus efficacement et créer des applications optimisées.
 
 Avec ces connaissances, vous êtes maintenant prêt à explorer des fonctionnalités plus avancées de Delphi. Dans la prochaine section, nous verrons comment personnaliser l'IDE pour l'adapter à vos préférences et à votre flux de travail.
+
+⏭️ [Personnalisation de l'IDE](/02-decouverte-de-lide-delphi/06-personnalisation-de-lide.md)

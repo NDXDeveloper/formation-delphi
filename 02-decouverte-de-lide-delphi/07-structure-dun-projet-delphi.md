@@ -1,5 +1,7 @@
 # 2.7 Structure d'un projet Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Comprendre la structure d'un projet Delphi est essentiel pour développer efficacement des applications. Dans cette section, nous allons examiner en détail les différents fichiers et dossiers qui composent un projet Delphi, ainsi que leur rôle dans l'architecture globale de votre application.
 
 ## Vue d'ensemble d'un projet Delphi
@@ -357,3 +359,5 @@ Pour maintenir une structure de projet saine :
 Comprendre la structure d'un projet Delphi est fondamental pour développer des applications bien organisées et maintenables. Les fichiers `.dpr`, `.pas` et `.dfm` constituent l'épine dorsale de votre application, tandis qu'une organisation claire des unités et des ressources contribuera à la facilité de développement et de maintenance.
 
 Dans la prochaine section, nous explorerons le cycle de développement avec Delphi, de la conception initiale au déploiement final.
+
+⏭️ [Introduction au cycle de développement avec Delphi](/02-decouverte-de-lide-delphi/08-introduction-au-cycle-de-developpement.md)

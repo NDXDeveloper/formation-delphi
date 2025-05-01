@@ -1,5 +1,7 @@
 # 3.9 Organisation du code source et modularité
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une bonne organisation du code est essentielle pour développer des applications maintenables et évolutives. Dans cette section, nous allons explorer comment structurer efficacement votre code Delphi et comment utiliser la modularité pour créer des applications bien conçues.
 
 ## Pourquoi organiser son code ?
@@ -674,3 +676,5 @@ Cet exemple illustre :
 Une bonne organisation du code est un investissement qui porte ses fruits à long terme. En suivant ces principes de modularité, vous créerez des applications Delphi plus maintenables, plus évolutives et plus robustes. À mesure que vos projets grandiront, vous apprécierez de plus en plus l'importance d'une architecture bien conçue.
 
 Dans la prochaine section, nous explorerons les nouveautés syntaxiques des dernières versions d'Object Pascal, qui peuvent vous aider à écrire un code encore plus propre et efficace.
+
+⏭️ [Nouveautés de la syntaxe Object Pascal (dernières versions)](/03-langage-object-pascal/10-nouveautes-de-la-syntaxe-object-pascal.md)

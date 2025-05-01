@@ -1,5 +1,7 @@
 # 2. Découverte de l'IDE Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'environnement de développement intégré (IDE) de Delphi constitue le cœur de l'expérience de développement. Il s'agit de votre atelier numérique, où chaque outil a été soigneusement conçu pour maximiser votre productivité et votre créativité en tant que développeur.
 
 Dans ce chapitre, nous allons explorer en profondeur l'interface de Delphi, ses fonctionnalités clés et comment les utiliser efficacement pour créer des applications robustes. Que vous découvriez les environnements de développement pour la première fois ou que vous soyez habitué à d'autres IDE comme Visual Studio ou IntelliJ, vous trouverez dans Delphi un équilibre entre puissance et simplicité qui caractérise les meilleurs outils de développement.
@@ -13,3 +15,5 @@ Nous aborderons également les aspects pratiques du développement quotidien : c
 *L'interface de Delphi 12 Athens présente quelques améliorations visuelles par rapport aux versions précédentes, mais les concepts fondamentaux restent les mêmes pour les utilisateurs de Delphi 11 Alexandria.*
 
 Plongeons maintenant dans cet environnement riche qui a défini pendant des décennies ce qu'est un véritable outil de développement rapide d'applications !
+
+⏭️ [Présentation de l'interface](/02-decouverte-de-lide-delphi/01-presentation-de-linterface.md)

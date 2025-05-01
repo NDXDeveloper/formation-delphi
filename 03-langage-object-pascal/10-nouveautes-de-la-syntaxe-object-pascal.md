@@ -1,5 +1,7 @@
 # 3.10 Nouveautés de la syntaxe Object Pascal (dernières versions)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le langage Object Pascal continue d'évoluer avec chaque nouvelle version de Delphi. Dans cette section, nous allons explorer les améliorations récentes de la syntaxe qui rendent le code plus concis, plus lisible et plus puissant. Ces nouveautés vous permettront d'écrire du code plus moderne tout en préservant la clarté et la robustesse qui font la réputation d'Object Pascal.
 
 ## Variables inline (Delphi 10.3 Rio)
@@ -729,3 +731,5 @@ L'évolution constante du langage montre l'engagement d'Embarcadero à maintenir
 ---
 
 Dans les prochaines sections, nous explorerons des aspects plus avancés d'Object Pascal, comme les records avancés et les opérateurs surchargés, qui vous permettront de tirer pleinement parti de la puissance du langage.
+
+⏭️ [Records avancés et opérateurs surchargés](/03-langage-object-pascal/11-records-avances-et-operateurs-surcharges.md)

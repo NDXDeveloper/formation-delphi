@@ -1,5 +1,7 @@
 # 3.7 Programmation orientée objet
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La programmation orientée objet (POO) est un paradigme de programmation qui permet d'organiser le code de manière plus structurée et modulaire. Object Pascal, le langage utilisé dans Delphi, est un langage orienté objet très puissant. Cette section vous présente les concepts fondamentaux de la POO dans Delphi.
 
 ## Qu'est-ce que la programmation orientée objet ?
@@ -189,4 +191,6 @@ Ces concepts vous permettront de tirer pleinement parti de la puissance de Delph
 ---
 
 La programmation orientée objet est un paradigme puissant qui vous permettra de mieux organiser votre code et de créer des applications plus robustes. Dans les sections suivantes, nous explorerons en détail chaque aspect de la POO en Delphi, en commençant par les classes et les objets.
+
+⏭️ [Classes et objets](/03-langage-object-pascal/07.1-classes-objets.md)
 
