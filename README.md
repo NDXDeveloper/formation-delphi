@@ -47,7 +47,8 @@ Chaque dossier correspond à un module spécifique de la formation. Vous pouvez 
 
 Si vous avez des questions concernant cette formation, n'hésitez pas à ouvrir une issue sur GitHub ou à me contacter directement via les informations ci-dessus.
 
-Bonne formation et bon développement avec Delphi !# formation-delphi
+Bonne formation et bon développement avec Delphi !
+
 ---
 
 ⭐ Si vous trouvez ce tutoriel utile, n'hésitez pas à lui donner une étoile sur GitHub !
