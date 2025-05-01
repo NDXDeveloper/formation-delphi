@@ -40,7 +40,7 @@ Chaque dossier correspond à un module spécifique de la formation. Vous pouvez 
 - **Auteur**: Nicolas DEOUX
 - **Email**: NDXDev@gmail.com
 - **LinkedIn**: [https://www.linkedin.com/in/nicolas-deoux-ab295980/](https://www.linkedin.com/in/nicolas-deoux-ab295980/)
-- **Licence**: MIT
+- **Licence**: Ce projet est sous licence Creative Commons Attribution 4.0 International (CC BY 4.0) - voir le fichier LICENSE pour plus de détails.
 - **Dépôt GitHub**: [https://github.com/NDXDeveloper/formation-delphi](https://github.com/NDXDeveloper/formation-delphi)
 
 ## Support et questions
@@ -48,3 +48,6 @@ Chaque dossier correspond à un module spécifique de la formation. Vous pouvez 
 Si vous avez des questions concernant cette formation, n'hésitez pas à ouvrir une issue sur GitHub ou à me contacter directement via les informations ci-dessus.
 
 Bonne formation et bon développement avec Delphi !# formation-delphi
+---
+
+⭐ Si vous trouvez ce tutoriel utile, n'hésitez pas à lui donner une étoile sur GitHub !
