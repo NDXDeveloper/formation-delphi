@@ -1,5 +1,7 @@
 # 5.4 Styles et apparence
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages de FireMonkey est son système de styles puissant et flexible. Les styles vous permettent de personnaliser l'apparence de votre application et de maintenir une cohérence visuelle sur toutes les plateformes ou, au contraire, d'adopter l'apparence native de chaque système. Dans cette section, nous allons explorer comment utiliser et personnaliser les styles dans vos applications FireMonkey.
 
 ## Comprendre le système de styles FireMonkey
@@ -399,3 +401,5 @@ end.
 Le système de styles de FireMonkey est l'un de ses atouts majeurs pour le développement multi-plateforme. Il vous permet de créer des applications visuellement attractives tout en maintenant une cohérence sur toutes les plateformes. Que vous choisissiez d'utiliser les styles prédéfinis qui imitent les interfaces natives ou de créer votre propre identité visuelle unique, FireMonkey vous offre tous les outils nécessaires.
 
 Dans la section suivante, nous verrons comment adapter votre application aux différentes tailles d'écran pour offrir une expérience utilisateur optimale sur tous les appareils.
+
+⏭️ [Adaptation aux différentes tailles d'écran](/05-developpement-multi-plateforme-avec-firemonkey/05-adaptation-aux-differentes-tailles-decran.md)

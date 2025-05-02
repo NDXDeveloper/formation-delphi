@@ -1,5 +1,7 @@
 # 7.7 Utilisation de formats modernes (JSON, XML, YAML)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les formats de données structurées comme JSON, XML et YAML sont aujourd'hui omniprésents dans le développement d'applications modernes. Delphi offre des outils puissants et faciles à utiliser pour manipuler ces formats. Ce chapitre vous guidera à travers l'utilisation de chacun d'entre eux.
 
 ## 7.7.1 JSON (JavaScript Object Notation)
@@ -509,3 +511,5 @@ Choisissez le format qui correspond le mieux à vos besoins spécifiques, en ten
 3. Créez un convertisseur qui transforme un format en un autre (par exemple, XML vers JSON).
 
 4. Réalisez une fonction qui valide la structure d'un document JSON ou XML selon un schéma donné.
+
+⏭️ [Manipulation de fichiers CSV et Excel](/07-gestion-des-fichiers-et-flux-de-donnees/08-manipulation-de-fichiers-csv-et-excel.md)

@@ -1,5 +1,7 @@
 # 4.8 Développement de composants personnalisés
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'une des forces de Delphi est sa capacité à être étendu grâce à la création de composants personnalisés. Ces composants peuvent ensuite être utilisés comme n'importe quel autre composant de la palette, ce qui vous permet de réutiliser facilement votre code et d'enrichir votre environnement de développement. Dans cette section, nous allons découvrir comment créer vos propres composants personnalisés.
 
 ## Pourquoi créer des composants personnalisés ?
@@ -1382,3 +1384,5 @@ Commencez par des composants simples, puis progressez vers des composants plus c
 ---
 
 *Exercice pratique : Créez un paquet de composants contenant un composant TLabeledPanel qui combine un TPanel avec un TLabel situé en haut qui sert de titre. Le composant doit avoir des propriétés pour contrôler la couleur, la police et la position du titre. Testez votre composant dans une application simple.*
+
+⏭️ [Migration depuis des versions précédentes de Delphi](/04-conception-dinterfaces-utilisateur-avec-la-vcl/09-migration-depuis-versions-precedentes.md)

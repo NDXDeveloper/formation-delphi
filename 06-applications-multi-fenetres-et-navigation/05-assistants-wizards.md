@@ -1,5 +1,7 @@
 # 6.5 Assistants (Wizards)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les assistants (ou wizards) sont des interfaces utilisateur spéciales qui guident l'utilisateur à travers un processus en plusieurs étapes. Ils sont particulièrement utiles pour les opérations complexes qui nécessitent de nombreuses informations ou décisions de la part de l'utilisateur.
 
 ## Pourquoi utiliser des assistants ?
@@ -1505,3 +1507,5 @@ end;
 ---
 
 Les assistants sont un outil puissant pour guider vos utilisateurs à travers des processus complexes. Bien conçus, ils peuvent considérablement améliorer l'expérience utilisateur de votre application Delphi. En suivant les principes décrits dans ce chapitre, vous pourrez créer des assistants intuitifs et professionnels qui rendront vos applications plus accessibles et agréables à utiliser.
+
+⏭️ [Navigation dans les applications mobiles](/06-applications-multi-fenetres-et-navigation/06-navigation-dans-les-applications-mobiles.md)

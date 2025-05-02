@@ -2,6 +2,8 @@
 
 ## 7.1 Lecture/écriture de fichiers texte
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La manipulation de fichiers texte est une opération fondamentale dans de nombreuses applications. Delphi offre plusieurs méthodes pour lire et écrire des fichiers texte, des plus simples aux plus avancées.
 
 ### Introduction
@@ -330,3 +332,5 @@ Cette application servira de base pour les exercices des sections suivantes où 
 ---
 
 À suivre dans la prochaine section : **7.2 Manipulation de fichiers binaires**
+
+⏭️ [Manipulation de fichiers binaires](/07-gestion-des-fichiers-et-flux-de-donnees/02-manipulation-de-fichiers-binaires.md)

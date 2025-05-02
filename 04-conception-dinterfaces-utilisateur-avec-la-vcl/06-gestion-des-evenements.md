@@ -1,5 +1,7 @@
 # 4.6 Gestion des événements
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La gestion des événements est un concept fondamental dans le développement d'applications Delphi. C'est grâce aux événements que vos applications peuvent réagir aux actions de l'utilisateur et à d'autres déclencheurs. Dans cette section, nous allons explorer comment les événements fonctionnent et comment les gérer efficacement.
 
 ## Qu'est-ce qu'un événement ?
@@ -566,3 +568,5 @@ Dans la prochaine section, nous verrons comment créer des dialogues personnalis
 1. Un bouton pour dessiner des formes spécifiques (cercle, rectangle, ligne)
 2. Une option pour remplir les formes avec une couleur
 3. La possibilité d'annuler la dernière action (fonction "Undo")*
+
+⏭️ [Création de dialogues personnalisés](/04-conception-dinterfaces-utilisateur-avec-la-vcl/07-creation-de-dialogues-personnalises.md)

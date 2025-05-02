@@ -1,5 +1,7 @@
 # 4.3 Composants standard et leur utilisation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les composants standard sont les éléments de base de toute interface utilisateur développée avec Delphi. Ils permettent aux utilisateurs d'interagir avec votre application et d'afficher des informations. Ces composants sont regroupés principalement dans les onglets **Standard** et **Additional** de la palette de composants.
 
 ## Qu'est-ce qu'un composant VCL ?
@@ -1781,3 +1783,5 @@ Dans la prochaine section, nous explorerons les contrôles avancés de la VCL, q
 ---
 
 *Exercice pratique : Créez une application simple qui affiche le contenu d'un répertoire dans un TListView avec trois colonnes (Nom, Taille, Date de modification). Ajoutez un TComboBox pour filtrer les fichiers par extension et un TEdit pour effectuer une recherche par nom.*
+
+⏭️ [Contrôles avancés (PageControl, TreeView, ListView)](/04-conception-dinterfaces-utilisateur-avec-la-vcl/04-controles-avances.md)

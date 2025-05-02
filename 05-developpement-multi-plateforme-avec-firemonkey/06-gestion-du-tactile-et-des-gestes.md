@@ -1,5 +1,7 @@
 # 5.6 Gestion du tactile et des gestes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages du développement multi-plateforme avec FireMonkey est la possibilité de créer des applications qui fonctionnent aussi bien avec une souris qu'avec des écrans tactiles. Dans cette section, nous allons explorer comment implémenter et gérer les interactions tactiles et les gestes pour rendre vos applications plus intuitives et agréables à utiliser sur les appareils mobiles et les écrans tactiles.
 
 ## Principes fondamentaux du tactile
@@ -587,3 +589,5 @@ La gestion du tactile et des gestes est essentielle pour créer des applications
 En utilisant les événements tactiles standards, la reconnaissance de gestes et les techniques présentées dans cette section, vous pouvez créer des applications qui offrent une expérience utilisateur naturelle et agréable sur tous les appareils, des smartphones aux ordinateurs portables avec écran tactile.
 
 Dans la section suivante, nous explorerons comment cibler spécifiquement différentes plateformes comme Windows, macOS, iOS, Android et Linux avec FireMonkey.
+
+⏭️ [Ciblage des plateformes : Windows, macOS, iOS, Android, Linux](/05-developpement-multi-plateforme-avec-firemonkey/07-ciblage-des-plateformes.md)

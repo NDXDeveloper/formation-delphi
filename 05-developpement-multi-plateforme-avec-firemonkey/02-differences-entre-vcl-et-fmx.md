@@ -1,5 +1,7 @@
 # 5.2 Différences entre VCL et FMX
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Si vous avez déjà travaillé avec Delphi, vous êtes probablement familier avec la VCL (Visual Component Library). Maintenant que vous découvrez FireMonkey (FMX), il est important de comprendre les principales différences entre ces deux bibliothèques d'interface utilisateur. Cette section vous aidera à faire la transition en douceur de l'une à l'autre.
 
 ## Origine et philosophie
@@ -238,3 +240,5 @@ Button1.Margins.Top := 5;
 Comprendre les différences entre VCL et FireMonkey est essentiel pour tirer le meilleur parti de ces deux bibliothèques. FMX n'est pas simplement une version multi-plateforme de la VCL, mais une approche différente de la création d'interfaces utilisateur. Avec cette connaissance, vous pourrez choisir la bibliothèque la plus adaptée à votre projet et éviter les pièges courants lors de la transition de l'une à l'autre.
 
 Dans les sections suivantes, nous explorerons en détail comment créer des interfaces utilisateur attrayantes et fonctionnelles avec FireMonkey.
+
+⏭️ [Création d'interfaces multi-plateformes](/05-developpement-multi-plateforme-avec-firemonkey/03-creation-dinterfaces-multi-plateformes.md)

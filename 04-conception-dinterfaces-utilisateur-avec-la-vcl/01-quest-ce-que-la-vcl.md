@@ -1,5 +1,7 @@
 # 4.1 Qu'est-ce que la VCL (Visual Component Library) ?
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La **VCL** (Visual Component Library) est l'un des piliers fondamentaux de Delphi. C'est une bibliothèque riche de composants visuels qui constitue le cœur de la création d'interfaces utilisateur sous Delphi pour les applications Windows.
 
 ## Définition simple
@@ -101,3 +103,5 @@ La VCL est le fondement de la création d'interfaces utilisateur sous Delphi pou
 ---
 
 *Dans le prochain chapitre, nous allons explorer les formulaires et fiches, qui constituent la base de toute interface utilisateur VCL.*
+
+⏭️ [Formulaires et fiches](/04-conception-dinterfaces-utilisateur-avec-la-vcl/02-formulaires-et-fiches.md)

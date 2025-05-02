@@ -1,5 +1,7 @@
 # 6.3 Formulaires MDI (Multiple Document Interface)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'interface à documents multiples (MDI) est un modèle d'interface graphique qui permet d'ouvrir plusieurs documents dans des fenêtres enfants à l'intérieur d'une fenêtre principale. Ce chapitre vous guidera dans la création et la gestion d'applications MDI avec Delphi.
 
 ## Qu'est-ce qu'une interface MDI ?
@@ -682,3 +684,5 @@ end;
 ---
 
 L'interface MDI est un concept puissant pour créer des applications permettant de travailler sur plusieurs documents simultanément. Bien qu'elle soit moins utilisée dans les interfaces modernes, elle reste pertinente pour de nombreuses applications professionnelles, notamment les suites bureautiques et les environnements de développement.
+
+⏭️ [Boîtes de dialogue standard et personnalisées](/06-applications-multi-fenetres-et-navigation/04-boites-de-dialogue-standard-et-personnalisees.md)

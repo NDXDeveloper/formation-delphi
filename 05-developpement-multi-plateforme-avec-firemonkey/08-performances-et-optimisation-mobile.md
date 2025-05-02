@@ -1,5 +1,7 @@
 # 5.8 Performances et optimisation mobile
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les appareils mobiles ont des ressources plus limitées que les ordinateurs de bureau : processeurs moins puissants, mémoire plus restreinte et autonomie de batterie à préserver. Pour offrir une expérience utilisateur fluide et réactive sur ces appareils, il est essentiel d'optimiser votre application FireMonkey. Dans cette section, nous explorerons diverses techniques pour améliorer les performances de vos applications mobiles.
 
 ## Comprendre les défis de performance sur mobile
@@ -791,3 +793,5 @@ L'optimisation des performances sur mobile est essentielle pour offrir une expé
 Rappelez-vous que l'optimisation est un processus continu : mesurez, améliorez, testez, puis recommencez. En prenant l'habitude d'appliquer ces bonnes pratiques dès le début de votre développement, vous créerez des applications mobiles performantes et agréables à utiliser, même sur des appareils aux ressources limitées.
 
 Dans la section suivante, nous explorerons comment ajouter des animations et effets visuels à vos applications FireMonkey tout en maintenant de bonnes performances.
+
+⏭️ [Animations et effets visuels](/05-developpement-multi-plateforme-avec-firemonkey/09-animations-et-effets-visuels.md)

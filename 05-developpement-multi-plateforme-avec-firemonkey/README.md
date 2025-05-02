@@ -1,5 +1,7 @@
 # 5. Développement multi-plateforme avec FireMonkey (FMX)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 FireMonkey (FMX) représente l'évolution de Delphi vers le monde multi-plateforme, permettant aux développeurs de créer des applications graphiques modernes qui s'exécutent non seulement sur Windows, mais également sur macOS, iOS, Android et Linux. Cette bibliothèque d'interface utilisateur de nouvelle génération est l'une des innovations majeures de l'écosystème Delphi dans la dernière décennie.
 
 Dans ce chapitre, nous explorerons comment FireMonkey permet de maintenir l'approche RAD (Rapid Application Development) qui a fait le succès de Delphi, tout en l'étendant au-delà des frontières de Windows. Cette extension multi-plateforme préserve un principe fondamental : écrire une seule base de code Object Pascal et l'adapter facilement aux différentes plateformes cibles.
@@ -15,3 +17,5 @@ Que vous souhaitiez porter une application Windows existante vers d'autres plate
 *Delphi 12 Athens a considérablement amélioré le support de Linux via FMXLinux et introduit de nouvelles fonctionnalités pour le développement mobile. Les éléments nécessitant spécifiquement Delphi 12 seront clairement identifiés dans ce chapitre.*
 
 Découvrons ensemble comment créer des applications performantes et esthétiques qui traversent les frontières des systèmes d'exploitation !
+
+⏭️ [Introduction à FireMonkey](/05-developpement-multi-plateforme-avec-firemonkey/01-introduction-a-firemonkey.md)

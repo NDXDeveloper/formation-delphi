@@ -1,5 +1,7 @@
 # 5.1 Introduction à FireMonkey (FMX)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 FireMonkey (souvent abrégé en FMX) est la bibliothèque d'interface utilisateur multi-plateforme de Delphi. Contrairement à la VCL (Visual Component Library) qui est spécifique à Windows, FireMonkey permet de développer des applications qui fonctionnent sur plusieurs systèmes d'exploitation à partir d'une base de code unique.
 
 ## Qu'est-ce que FireMonkey ?
@@ -141,3 +143,5 @@ Dans les sections suivantes, nous explorerons plus en détail les composants sp�
 - Documentation officielle de FireMonkey
 - Exemples d'applications FireMonkey inclus dans Delphi
 - Vidéos tutorielles sur le site d'Embarcadero
+
+⏭️ [Différences entre VCL et FMX](/05-developpement-multi-plateforme-avec-firemonkey/02-differences-entre-vcl-et-fmx.md)

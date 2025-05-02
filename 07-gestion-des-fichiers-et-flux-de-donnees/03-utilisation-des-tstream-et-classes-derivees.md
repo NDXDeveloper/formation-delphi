@@ -2,6 +2,8 @@
 
 ## 7.3 Utilisation des TStream et classes dérivées
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les flux (streams) sont l'un des concepts les plus puissants et flexibles de Delphi pour la manipulation de données. Ils permettent de traiter uniformément diverses sources et destinations de données, comme les fichiers, la mémoire, ou même les connexions réseau.
 
 ### Introduction aux flux (TStream)
@@ -1694,3 +1696,5 @@ Cet exercice vous permettra de combiner plusieurs types de flux et de voir comme
 ---
 
 À suivre dans la prochaine section : **7.4 Sérialisation et persistance d'objets**
+
+⏭️ [Sérialisation et persistance d'objets](/07-gestion-des-fichiers-et-flux-de-donnees/04-serialisation-et-persistance-dobjets.md)

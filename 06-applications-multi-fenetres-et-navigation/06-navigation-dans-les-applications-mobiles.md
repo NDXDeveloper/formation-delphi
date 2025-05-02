@@ -1,5 +1,7 @@
 # 6.6 Navigation dans les applications mobiles
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La navigation dans les applications mobiles fonctionne différemment des applications de bureau traditionnelles. Dans ce chapitre, nous allons explorer les spécificités de la navigation mobile avec Delphi et FireMonkey (FMX), en nous concentrant sur des concepts accessibles aux débutants.
 
 ## Comprendre la navigation mobile
@@ -2456,3 +2458,5 @@ La navigation est l'une des clés d'une bonne expérience utilisateur mobile. Pr
 1. **Exercice simple** : Créez une application avec 3 écrans et une navigation par pile simple (Main → Detail → Edit)
 2. **Exercice intermédiaire** : Implémentez une application avec navigation par onglets (4 onglets) et un écran de détail accessible depuis l'un des onglets
 3. **Exercice avancé** : Créez une application combinant menu tiroir, onglets et navigation par pile, avec un comportement adaptatif selon l'orientation de l'appareil
+
+⏭️ [Gestion de l'état de l'application](/06-applications-multi-fenetres-et-navigation/07-gestion-de-letat-de-lapplication.md)

@@ -1,5 +1,7 @@
 # 6.7 Gestion de l'état de l'application
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La gestion de l'état est un aspect fondamental du développement d'applications. Elle consiste à suivre et manipuler les données et configurations qui définissent comment votre application fonctionne à un moment donné. Dans ce chapitre, nous allons explorer différentes techniques pour gérer l'état d'une application Delphi, en partant des concepts de base jusqu'aux approches plus avancées.
 
 ## Qu'est-ce que l'état d'une application ?
@@ -1843,3 +1845,5 @@ La gestion d'état est un aspect fondamental du développement d'applications De
 La complexité de votre approche de gestion d'état doit correspondre à la complexité de votre application. Pour les petites applications, des solutions simples comme les fichiers INI ou le registre peuvent suffire. Pour les applications plus complexes, envisagez des patterns comme MVVM ou une architecture modulaire avec des DataModules spécialisés.
 
 Quelle que soit l'approche choisie, assurez-vous de suivre les bonnes pratiques en matière de séparation des préoccupations, de validation des données et de gestion des erreurs pour créer des applications fiables et performantes.
+
+⏭️ [Gestion des fichiers et flux de données](/07-gestion-des-fichiers-et-flux-de-donnees/README.md)

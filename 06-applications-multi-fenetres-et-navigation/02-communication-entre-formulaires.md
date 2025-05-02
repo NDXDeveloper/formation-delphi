@@ -1,5 +1,7 @@
 # 6.2 Communication entre formulaires
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une application Delphi utilisant plusieurs formulaires nécessite généralement que ces formulaires communiquent entre eux. Cette section vous explique comment établir efficacement cette communication.
 
 ## Pourquoi faire communiquer des formulaires ?
@@ -953,3 +955,5 @@ end.
 ---
 
 En maîtrisant ces techniques de communication entre formulaires, vous pourrez développer des applications Delphi plus sophistiquées et modulaires, tout en gardant un code propre et facilement maintenable.
+
+⏭️ [Formulaires MDI (Multiple Document Interface)](/06-applications-multi-fenetres-et-navigation/03-formulaires-mdi.md)

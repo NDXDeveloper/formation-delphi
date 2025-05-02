@@ -1,5 +1,7 @@
 # 5.7 Ciblage des plateformes : Windows, macOS, iOS, Android, Linux
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des principaux avantages de FireMonkey est sa capacité à cibler plusieurs plateformes à partir d'une base de code unique. Dans cette section, nous allons explorer comment configurer, adapter et déployer votre application pour chaque plateforme prise en charge : Windows, macOS, iOS, Android et Linux.
 
 ## Configuration du projet multi-plateforme
@@ -740,3 +742,5 @@ FireMonkey offre une puissante solution pour le développement multi-plateforme,
 L'approche recommandée consiste à développer d'abord les fonctionnalités communes, puis à adapter l'interface et le comportement pour chaque plateforme. En suivant les bonnes pratiques présentées dans cette section, vous pourrez maximiser la réutilisation du code tout en respectant les conventions et attentes des utilisateurs sur chaque plateforme.
 
 Dans la section suivante, nous explorerons comment optimiser les performances de vos applications FireMonkey sur les appareils mobiles.
+
+⏭️ [Performances et optimisation mobile](/05-developpement-multi-plateforme-avec-firemonkey/08-performances-et-optimisation-mobile.md)

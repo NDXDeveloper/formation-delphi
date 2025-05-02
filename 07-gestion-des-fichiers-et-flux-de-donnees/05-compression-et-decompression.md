@@ -2,6 +2,8 @@
 
 ## 7.5 Compression et décompression
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La compression de données est une technique qui permet de réduire la taille des fichiers ou des flux de données. Cette section vous guidera à travers les différentes méthodes disponibles en Delphi pour compresser et décompresser des données.
 
 ### Introduction à la compression
@@ -1482,3 +1484,5 @@ Cet exercice vous permettra de mettre en pratique les concepts de compression to
 ---
 
 À suivre dans la prochaine section : **7.6 Traitement par lots (Batch)**
+
+⏭️ [Traitement par lots (Batch)](/07-gestion-des-fichiers-et-flux-de-donnees/06-traitement-par-lots.md)

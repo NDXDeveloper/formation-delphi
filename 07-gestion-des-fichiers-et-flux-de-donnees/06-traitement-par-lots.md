@@ -2,6 +2,8 @@
 
 ## 7.6 Traitement par lots (Batch)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le traitement par lots, ou traitement batch, consiste à effectuer une série d'opérations sur un ensemble de fichiers ou de données, généralement sans intervention de l'utilisateur. Cette approche est particulièrement utile pour automatiser des tâches répétitives ou pour traiter de grandes quantités de données.
 
 ### Introduction au traitement par lots
@@ -2124,3 +2126,5 @@ Cet exercice vous permettra de mettre en pratique les différentes techniques pr
 ---
 
 À suivre dans la prochaine section : **7.7 Utilisation de formats modernes (JSON, XML, YAML)**
+
+⏭️ [Utilisation de formats modernes (JSON, XML, YAML)](/07-gestion-des-fichiers-et-flux-de-donnees/07-utilisation-de-formats-modernes.md)

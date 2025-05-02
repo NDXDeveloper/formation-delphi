@@ -449,4 +449,4 @@ La gestion des exceptions est un élément crucial dans le développement d'appl
 
 Dans la prochaine section, nous aborderons la programmation orientée objet, un paradigme fondamental en Delphi qui vous permettra de structurer votre code de manière encore plus efficace.
 
-⏭️ [Programmation orientée objet](/03-langage-object-pascal/07-programmation-orientee-objets.md)
+⏭️ [Programmation orientée objet](/03-langage-object-pascal/07-programmation-orientee-objet.md)

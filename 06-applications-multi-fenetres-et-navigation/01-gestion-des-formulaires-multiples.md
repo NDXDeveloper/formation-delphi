@@ -1,5 +1,7 @@
 # 6.1 Gestion des formulaires multiples
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les applications réelles dépassent rarement le cadre d'un formulaire unique. Apprenez à créer et gérer plusieurs formulaires pour construire des applications Delphi complètes.
 
 ## Comprendre les formulaires en Delphi
@@ -405,3 +407,5 @@ end.
 ---
 
 Maintenant que vous maîtrisez la gestion des formulaires multiples, vous pouvez créer des applications Delphi plus sophistiquées avec différentes fenêtres interagissant entre elles !
+
+⏭️ [Communication entre formulaires](/06-applications-multi-fenetres-et-navigation/02-communication-entre-formulaires.md)

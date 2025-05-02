@@ -1,5 +1,7 @@
 # 7.8 Manipulation de fichiers CSV et Excel
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les fichiers CSV (Comma-Separated Values) et Excel sont couramment utilisés pour stocker et échanger des données tabulaires. Delphi offre plusieurs méthodes pour manipuler ces formats, que ce soit avec des composants natifs ou des bibliothèques tierces. Ce chapitre vous guidera à travers les différentes approches pour travailler avec ces formats.
 
 ## 7.8.1 Manipulation de fichiers CSV
@@ -1293,3 +1295,5 @@ Ces techniques vous permettront de créer des applications robustes pour l'impor
 3. Réalisez une application qui peut fusionner plusieurs fichiers CSV ou feuilles Excel en un seul document.
 4. Créez un générateur de rapport qui analyse un fichier CSV de ventes et produit un rapport Excel avec graphiques et tableaux croisés dynamiques.
 5. Implémentez une solution pour traiter un fichier CSV de plusieurs gigaoctets en utilisant le streaming et des techniques d'optimisation de la mémoire.
+
+⏭️ [Accès aux bases de données MySQL/MariaDB](/08-acces-aux-bases-de-donnees-mysql-mariadb/README.md)

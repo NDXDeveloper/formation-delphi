@@ -1,5 +1,7 @@
 # 4.7 Création de dialogues personnalisés
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les boîtes de dialogue sont des éléments essentiels dans toute application. Elles permettent d'interagir avec l'utilisateur pour obtenir des informations, afficher des messages ou proposer des options. Dans cette section, nous allons voir comment créer et utiliser des dialogues personnalisés dans Delphi, au-delà des boîtes de dialogue standard.
 
 ## Les boîtes de dialogue standards vs personnalisées
@@ -523,3 +525,5 @@ En maîtrisant la création de dialogues personnalisés, vous pourrez améliorer
 ---
 
 *Exercice pratique : Créez un dialogue personnalisé pour saisir les coordonnées d'un contact (nom, prénom, téléphone, email, adresse). Ajoutez des validations pour chaque champ et assurez-vous que le dialogue respecte les bonnes pratiques d'interface utilisateur.*
+
+⏭️ [Développement de composants personnalisés](/04-conception-dinterfaces-utilisateur-avec-la-vcl/08-developpement-de-composants-personnalises.md)

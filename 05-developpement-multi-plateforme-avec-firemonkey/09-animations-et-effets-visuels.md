@@ -1,5 +1,7 @@
 # 5.9 Animations et effets visuels
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les animations et effets visuels sont des éléments essentiels pour créer des interfaces utilisateur modernes et attrayantes. FireMonkey offre un système d'animation puissant et flexible qui vous permet d'ajouter facilement du mouvement et des effets à vos applications. Dans cette section, nous explorerons comment utiliser ces fonctionnalités pour rendre vos applications plus dynamiques et engageantes.
 
 ## Comprendre les animations dans FireMonkey
@@ -611,3 +613,5 @@ Les animations et effets visuels de FireMonkey vous permettent de créer des int
 N'oubliez pas que la clé d'une bonne animation est qu'elle soit subtile et qu'elle serve un objectif précis dans l'interface utilisateur. Avec de la pratique et en suivant les bonnes pratiques présentées dans cette section, vous pourrez intégrer des animations qui améliorent réellement l'utilisabilité de vos applications plutôt que de simplement les décorer.
 
 Dans la section suivante, nous explorerons le développement pour Linux avec FireMonkey, ouvrant ainsi une plateforme supplémentaire pour vos applications multi-plateformes.
+
+⏭️ [FMXLinux : développement pour Linux](/05-developpement-multi-plateforme-avec-firemonkey/10-fmxlinux-developpement-pour-linux.md)

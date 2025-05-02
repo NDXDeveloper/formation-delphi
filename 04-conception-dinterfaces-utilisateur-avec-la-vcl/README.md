@@ -1,5 +1,7 @@
 # 4. Conception d'Interfaces Utilisateur avec la VCL
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La Visual Component Library (VCL) est l'une des pierres angulaires de l'écosystème Delphi et représente l'un de ses atouts majeurs depuis sa création. Cette bibliothèque riche et mature offre une approche visuelle et intuitive pour créer des interfaces utilisateur natives sur Windows, tout en simplifiant considérablement le processus de développement.
 
 Dans ce chapitre, nous explorerons en profondeur la VCL et ses nombreuses possibilités pour concevoir des interfaces modernes, réactives et professionnelles. Nous verrons comment cette bibliothèque encapsule élégamment les fonctionnalités de l'API Windows tout en offrant une couche d'abstraction qui vous permet de vous concentrer sur les aspects métier de vos applications plutôt que sur les complexités techniques sous-jacentes.
@@ -15,3 +17,5 @@ Que vous développiez une simple application utilitaire ou un logiciel d'entrepr
 *Delphi 12 Athens a enrichi la VCL avec de nouveaux composants et des améliorations significatives pour le support des écrans haute résolution. Les fonctionnalités nécessitant spécifiquement Delphi 12 seront clairement identifiées dans ce chapitre.*
 
 Plongeons maintenant dans l'univers des composants visuels qui font la force de Delphi depuis ses débuts !
+
+⏭️ [Qu'est-ce que la VCL (Visual Component Library) ?](/04-conception-dinterfaces-utilisateur-avec-la-vcl/01-quest-ce-que-la-vcl.md)

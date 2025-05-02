@@ -1,5 +1,7 @@
 # 5.3 Création d'interfaces multi-plateformes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages de FireMonkey est la possibilité de créer des interfaces utilisateur qui fonctionnent sur plusieurs plateformes à partir d'une seule base de code. Cette section vous guidera pas à pas dans la création d'interfaces efficaces et adaptatives pour différents systèmes d'exploitation et tailles d'écran.
 
 ## Principes fondamentaux
@@ -340,3 +342,5 @@ Delphi offre un outil de prévisualisation multi-plateforme qui vous permet de v
 4. Choisissez la plateforme et l'appareil à prévisualiser
 
 Cette fonctionnalité vous aide à identifier rapidement les problèmes d'adaptation avant même de compiler votre application.
+
+⏭️ [Styles et apparence](/05-developpement-multi-plateforme-avec-firemonkey/04-styles-et-apparence.md)

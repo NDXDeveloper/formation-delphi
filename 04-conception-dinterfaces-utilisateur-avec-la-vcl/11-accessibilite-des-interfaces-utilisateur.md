@@ -1,5 +1,7 @@
 # 4.11 Accessibilité des interfaces utilisateur
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'accessibilité des interfaces utilisateur consiste à concevoir des applications qui peuvent être utilisées par tous, y compris les personnes ayant différents types de handicaps. Dans cette section, nous allons découvrir comment rendre vos applications Delphi plus accessibles, assurant ainsi qu'elles peuvent être utilisées par un public plus large, tout en respectant les normes et réglementations relatives à l'accessibilité.
 
 ## Pourquoi l'accessibilité est-elle importante ?
@@ -634,3 +636,5 @@ L'accessibilité n'est pas une fonctionnalité à ajouter à la fin du développ
 ---
 
 *Exercice pratique : Prenez une application Delphi existante et améliorez son accessibilité en ajoutant des propriétés d'accessibilité, en optimisant la navigation au clavier et en ajoutant une option de haut contraste et de redimensionnement de police. Testez votre application avec un lecteur d'écran et uniquement avec le clavier pour vérifier son accessibilité.*
+
+⏭️ [Interfaces haute résolution et prise en charge du DPI](/04-conception-dinterfaces-utilisateur-avec-la-vcl/12-interfaces-haute-resolution-et-dpi.md)

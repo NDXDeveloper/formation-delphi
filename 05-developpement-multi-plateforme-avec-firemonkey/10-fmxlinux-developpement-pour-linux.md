@@ -1,5 +1,7 @@
 # 5.10 FMXLinux : développement pour Linux
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le support Linux pour FireMonkey, souvent appelé FMXLinux, est une fonctionnalité introduite dans Delphi 11 Alexandria qui permet aux développeurs d'étendre leurs applications FireMonkey au monde Linux. Cette section vous guidera à travers les bases du développement d'applications FireMonkey pour Linux, depuis la configuration jusqu'au déploiement.
 
 > **Note :** FMXLinux nécessite Delphi 11 Alexandria ou supérieur.
@@ -571,3 +573,5 @@ FMXLinux permet d'étendre la portée de vos applications FireMonkey au monde Li
 L'ajout du support Linux à vos applications FireMonkey existantes ouvre de nouvelles possibilités et marchés, particulièrement dans les environnements professionnels et éducatifs où Linux est largement utilisé.
 
 En suivant les bonnes pratiques présentées dans cette section, vous serez bien équipé pour développer, déployer et maintenir des applications FireMonkey multi-plateformes qui fonctionnent parfaitement sous Linux, Windows et macOS.
+
+⏭️ [Applications multi-fenêtres et navigation](/06-applications-multi-fenetres-et-navigation/README.md)

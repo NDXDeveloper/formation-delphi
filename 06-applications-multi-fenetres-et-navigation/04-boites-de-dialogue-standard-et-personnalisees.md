@@ -1,5 +1,7 @@
 # 6.4 Boîtes de dialogue standard et personnalisées
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les boîtes de dialogue sont des fenêtres spéciales qui facilitent l'interaction avec l'utilisateur. Elles servent à présenter des informations, poser des questions, ou recueillir des données. Dans ce chapitre, nous explorerons comment utiliser les boîtes de dialogue intégrées à Delphi et comment créer vos propres boîtes de dialogue personnalisées.
 
 ## Boîtes de dialogue standard
@@ -717,3 +719,5 @@ end;
 ---
 
 Les boîtes de dialogue sont un outil puissant pour interagir avec l'utilisateur. En maîtrisant à la fois les boîtes standard et personnalisées, vous pourrez créer des applications Delphi intuitives et professionnelles qui offrent une excellente expérience utilisateur.
+
+⏭️ [Assistants (Wizards)](/06-applications-multi-fenetres-et-navigation/05-assistants-wizards.md)

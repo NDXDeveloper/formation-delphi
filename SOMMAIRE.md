@@ -27,7 +27,7 @@
 - 3.4 [Structures de contrôle (conditions, boucles)](03-langage-object-pascal/04-structures-de-controle.md)
 - 3.5 [Procédures et fonctions](03-langage-object-pascal/05-procedures-et-fonctions.md)
 - 3.6 [Gestion des exceptions](03-langage-object-pascal/06-gestion-des-exceptions.md)
-- 3.7 [Programmation orientée objet](03-langage-object-pascal/07-programmation-orientee-objets.md)
+- 3.7 [Programmation orientée objet](03-langage-object-pascal/07-programmation-orientee-objet.md)
     - 3.7.1 [Classes et objets](03-langage-object-pascal/07.1-classes-objets.md)
     - 3.7.2 [Propriétés et méthodes](03-langage-object-pascal/07.2-proprietes-methodes.md)
     - 3.7.3 [Héritage et polymorphisme](03-langage-object-pascal/07.3-heritage-polymorphisme.md)

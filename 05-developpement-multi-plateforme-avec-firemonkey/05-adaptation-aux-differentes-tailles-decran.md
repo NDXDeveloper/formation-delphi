@@ -1,5 +1,7 @@
 # 5.5 Adaptation aux différentes tailles d'écran
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des défis majeurs du développement multi-plateforme est de créer des interfaces qui s'adaptent harmonieusement à toutes les tailles d'écran - des smartphones aux grands moniteurs de bureau. FireMonkey offre plusieurs outils puissants pour relever ce défi. Dans cette section, nous verrons comment créer des interfaces adaptatives qui offrent une expérience utilisateur optimale quelle que soit la taille de l'écran.
 
 ## Comprendre le défi des différentes résolutions
@@ -485,3 +487,5 @@ L'adaptation aux différentes tailles d'écran est un aspect fondamental du dév
 En utilisant les conteneurs adaptatifs, les alignements et les techniques présentées dans cette section, vous pouvez créer des applications qui s'adaptent automatiquement à toutes les tailles d'écran, des smartphones aux grands moniteurs de bureau.
 
 La section suivante explorera comment gérer les interactions tactiles et les gestes pour rendre vos applications encore plus intuitives sur les appareils mobiles.
+
+⏭️ [Gestion du tactile et des gestes](/05-developpement-multi-plateforme-avec-firemonkey/06-gestion-du-tactile-et-des-gestes.md)

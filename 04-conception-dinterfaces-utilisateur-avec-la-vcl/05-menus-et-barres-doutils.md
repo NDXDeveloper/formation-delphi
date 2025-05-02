@@ -1,5 +1,7 @@
 # 4.5 Menus et barres d'outils
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les menus et barres d'outils sont des éléments essentiels dans toute application Windows. Ils permettent d'organiser les fonctionnalités de votre application de manière accessible et cohérente. Dans cette section, nous allons découvrir comment créer et personnaliser des menus et des barres d'outils dans Delphi.
 
 ## Les menus (TMainMenu et TPopupMenu)
@@ -518,3 +520,5 @@ Dans la prochaine section, nous verrons comment gérer les événements d'une ma
 ---
 
 *Exercice pratique : Créez une petite application d'éditeur de texte avec un menu complet (Fichier, Édition, Format, Aide), une barre d'outils pour les fonctions courantes, et une barre d'état affichant le nombre de lignes, la position du curseur et l'heure actuelle. Ajoutez également un menu contextuel pour les opérations d'édition (couper, copier, coller).*
+
+⏭️ [Gestion des événements](/04-conception-dinterfaces-utilisateur-avec-la-vcl/06-gestion-des-evenements.md)

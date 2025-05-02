@@ -1,5 +1,7 @@
 # 4.2 Formulaires et fiches
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les formulaires (ou fiches) sont les éléments fondamentaux de toute application Delphi utilisant la VCL. Ils représentent les fenêtres que vos utilisateurs verront et avec lesquelles ils interagiront. Comprendre comment manipuler les formulaires est donc essentiel pour tout développeur Delphi.
 
 ## Qu'est-ce qu'un formulaire ?
@@ -223,3 +225,5 @@ Dans le prochain chapitre, nous explorerons les composants standard de la VCL et
 ---
 
 *Astuce pour débutants : N'hésitez pas à explorer les différentes propriétés des formulaires dans l'Inspecteur d'objets. C'est le meilleur moyen d'apprendre leurs fonctionnalités. Essayez de modifier certaines propriétés et observez leur effet sur votre application.*
+
+⏭️ [Composants standard et leur utilisation](/04-conception-dinterfaces-utilisateur-avec-la-vcl/03-composants-standard-et-leur-utilisation.md)

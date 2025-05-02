@@ -1,5 +1,7 @@
 # 4.12 Interfaces haute résolution et prise en charge du DPI
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Avec la multiplication des écrans haute résolution (HD, 4K, etc.) et des affichages à haute densité de pixels sur les ordinateurs portables et les tablettes, il devient essentiel de s'assurer que vos applications Delphi s'affichent correctement sur tous les types d'écrans. Cette section vous guidera à travers les concepts de base de la prise en charge du DPI (Dots Per Inch - Points Par Pouce) et vous montrera comment adapter vos applications VCL aux interfaces haute résolution.
 
 ## Comprendre les concepts de base
@@ -431,3 +433,5 @@ N'oubliez pas que la clé d'une bonne prise en charge DPI est de l'intégrer dè
 ---
 
 *Exercice pratique : Prenez une application Delphi existante et améliorez sa prise en charge des écrans haute résolution. Activez les options DPI appropriées, remplacez les icônes bitmap par des SVG, et assurez-vous que la mise en page s'adapte correctement au redimensionnement. Testez l'application à différentes échelles (100%, 125%, 150%, 200%) et corrigez les problèmes que vous observez.*
+
+⏭️ [Développement multi-plateforme avec FireMonkey (FMX)](/05-developpement-multi-plateforme-avec-firemonkey/README.md)

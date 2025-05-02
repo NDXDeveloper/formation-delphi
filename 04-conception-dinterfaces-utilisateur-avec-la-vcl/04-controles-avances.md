@@ -1,5 +1,7 @@
 # 4.4 Contrôles avancés (PageControl, TreeView, ListView)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les contrôles avancés de la VCL vous permettent de créer des interfaces utilisateur plus riches et plus interactives. Dans cette section, nous explorerons trois contrôles particulièrement puissants : les contrôles à onglets (`TPageControl`), les vues en arbre (`TTreeView`) et les vues en liste (`TListView`). Bien que nous ayons déjà abordé brièvement `TTreeView` et `TListView` dans la section précédente, nous les examinerons ici plus en profondeur.
 
 ## Contrôle à onglets (TPageControl et TTabSheet)
@@ -810,3 +812,5 @@ Dans la prochaine section, nous explorerons les menus et barres d'outils, qui co
 ---
 
 *Exercice pratique : Créez une application simple de gestion de tâches en utilisant un PageControl avec deux onglets : "Tâches" et "Statistiques". Dans l'onglet "Tâches", placez un ListView pour afficher la liste des tâches avec leur statut et leur priorité. Dans l'onglet "Statistiques", affichez un TreeView montrant les tâches organisées par catégories et par priorité.*
+
+⏭️ [Menus et barres d'outils](/04-conception-dinterfaces-utilisateur-avec-la-vcl/05-menus-et-barres-doutils.md)

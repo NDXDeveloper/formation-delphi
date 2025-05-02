@@ -1,5 +1,7 @@
 # 6. Applications multi-fenêtres et navigation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La plupart des applications professionnelles dépassent le cadre d'une simple fenêtre unique et nécessitent une architecture plus complexe impliquant plusieurs formulaires, des boîtes de dialogue et différents modèles de navigation. La maîtrise de ces concepts est essentielle pour créer des applications Delphi robustes et évolutives, qu'il s'agisse d'applications de bureau traditionnelles ou d'applications mobiles avec leurs paradigmes de navigation spécifiques.
 
 Dans ce chapitre, nous explorerons les techniques et les meilleures pratiques pour concevoir et implémenter des applications multi-fenêtres efficaces. Nous verrons comment Delphi offre un cadre flexible qui permet de gérer des interfaces utilisateur complexes tout en maintenant une architecture logicielle claire et maintenable.
@@ -15,3 +17,5 @@ Que vous développiez une application de gestion complexe, un outil de productiv
 *Delphi 12 Athens a introduit des améliorations significatives dans la gestion des interfaces multi-écrans et des paradigmes de navigation mobile. Les fonctionnalités spécifiques à cette version seront clairement identifiées dans ce chapitre.*
 
 Découvrons ensemble comment structurer efficacement vos applications pour offrir une expérience utilisateur fluide à travers multiples fenêtres et écrans !
+
+⏭️ [Gestion des formulaires multiples](/06-applications-multi-fenetres-et-navigation/01-gestion-des-formulaires-multiples.md)

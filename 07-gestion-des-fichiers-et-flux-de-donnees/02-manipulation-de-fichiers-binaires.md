@@ -2,6 +2,8 @@
 
 ## 7.2 Manipulation de fichiers binaires
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Contrairement aux fichiers texte, les fichiers binaires stockent les données sous leur forme brute, sans conversion en caractères lisibles. Ils sont utilisés pour stocker des images, des sons, des structures de données complexes ou tout autre contenu non textuel.
 
 ### Introduction aux fichiers binaires
@@ -605,3 +607,5 @@ Cet exercice vous permettra de mettre en pratique les concepts de manipulation d
 ---
 
 À suivre dans la prochaine section : **7.3 Utilisation des TStream et classes dérivées**
+
+⏭️ [Utilisation des TStream et classes dérivées](/07-gestion-des-fichiers-et-flux-de-donnees/03-utilisation-des-tstream-et-classes-derivees.md)

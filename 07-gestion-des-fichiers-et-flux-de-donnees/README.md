@@ -1,5 +1,7 @@
 # 7. Gestion des fichiers et flux de données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La manipulation efficace des fichiers et des flux de données est une compétence fondamentale pour tout développeur. Que vous développiez une simple application utilitaire ou un système complexe de gestion d'information, Delphi offre un ensemble riche et cohérent d'outils pour interagir avec les données persistantes, qu'elles soient stockées localement ou accessibles via un réseau.
 
 Dans ce chapitre, nous explorerons les différentes approches et classes que Delphi met à votre disposition pour gérer les fichiers et les flux (streams) de données. Le framework Object Pascal propose une hiérarchie élégante de classes qui vous permet de traiter de manière unifiée des sources de données très diverses : fichiers sur disque, mémoire, connexions réseau, ou même des formats compressés.
@@ -15,3 +17,5 @@ Vous découvrirez également comment Delphi facilite le traitement de formats sp
 *Delphi 12 Athens a introduit plusieurs améliorations dans la manipulation des formats de données modernes et la gestion des chemins de fichiers. Les fonctionnalités spécifiques à cette version seront clairement identifiées tout au long de ce chapitre.*
 
 Plongeons dans le monde des flux de données et découvrons comment Delphi vous permet de maîtriser efficacement l'entrée/sortie dans vos applications !
+
+⏭️ [Lecture/écriture de fichiers texte](/07-gestion-des-fichiers-et-flux-de-donnees/01-lecture-ecriture-de-fichiers-texte.md)

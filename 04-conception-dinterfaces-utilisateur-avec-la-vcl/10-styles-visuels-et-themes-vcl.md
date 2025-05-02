@@ -1,5 +1,7 @@
 # 4.10 Styles visuels et thèmes VCL
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les styles visuels et thèmes VCL permettent de transformer complètement l'apparence de votre application Delphi sans modifier votre code. Cette fonctionnalité puissante vous permet de donner un aspect moderne à vos applications et d'offrir à vos utilisateurs la possibilité de personnaliser l'interface selon leurs préférences. Dans cette section, nous allons découvrir comment implémenter et gérer les styles visuels dans vos applications VCL.
 
 ## Qu'est-ce que les styles visuels VCL ?
@@ -515,3 +517,5 @@ Avec Delphi 12 Athens et Delphi 11 Alexandria, les styles VCL sont plus riches e
 ---
 
 *Exercice pratique : Créez une application simple avec plusieurs contrôles VCL standards et ajoutez un sélecteur de styles permettant à l'utilisateur de choisir parmi au moins 5 styles différents. Ajoutez également un mode "Auto" qui détecte et applique automatiquement le thème clair ou sombre en fonction des paramètres du système d'exploitation.*
+
+⏭️ [Accessibilité des interfaces utilisateur](/04-conception-dinterfaces-utilisateur-avec-la-vcl/11-accessibilite-des-interfaces-utilisateur.md)

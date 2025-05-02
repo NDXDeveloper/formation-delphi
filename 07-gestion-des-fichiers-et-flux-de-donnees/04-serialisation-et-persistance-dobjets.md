@@ -2,6 +2,8 @@
 
 ## 7.4 Sérialisation et persistance d'objets
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La sérialisation est le processus qui consiste à convertir des objets (avec leurs propriétés et données) en un format qui peut être stocké ou transmis, puis reconstitué ultérieurement. Cette technique est essentielle pour sauvegarder l'état d'une application, partager des données entre différentes instances d'un programme, ou communiquer entre applications.
 
 ### Introduction à la sérialisation
@@ -1536,3 +1538,5 @@ Cet exercice vous permettra de mettre en pratique les différentes techniques de
 ---
 
 À suivre dans la prochaine section : **7.5 Compression et décompression**
+
+⏭️ [Compression et décompression](/07-gestion-des-fichiers-et-flux-de-donnees/05-compression-et-decompression.md)

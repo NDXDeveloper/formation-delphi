@@ -1,5 +1,7 @@
 # 4.9 Migration depuis des versions précédentes de Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La migration d'un projet depuis une version antérieure de Delphi vers Delphi 12 Athens (ou Delphi 11 Alexandria) peut sembler intimidante au premier abord. Cependant, avec une approche méthodique et quelques précautions, ce processus peut se dérouler sans difficultés majeures. Cette section vous guidera à travers les étapes essentielles et les considérations importantes pour réussir votre migration.
 
 ## Pourquoi migrer vers une version plus récente ?
@@ -381,3 +383,5 @@ Avec ces conseils, vous devriez pouvoir migrer vos projets VCL vers Delphi 12 At
 ---
 
 *Exercice pratique : Prenez un petit projet développé avec une ancienne version de Delphi (Delphi 7, Delphi 2007 ou même Delphi XE) et suivez les étapes décrites dans cette section pour le migrer vers votre version actuelle de Delphi. Notez les problèmes rencontrés et comment vous les avez résolus.*
+
+⏭️ [Styles visuels et thèmes VCL](/04-conception-dinterfaces-utilisateur-avec-la-vcl/10-styles-visuels-et-themes-vcl.md)
