@@ -596,4 +596,4 @@ En suivant les bonnes pratiques de visualisation et en choisissant les bons type
 
 Dans la section suivante, nous verrons comment exporter vos rapports et visualisations vers différents formats comme PDF, Excel ou HTML.
 
-⏭️ [Exportation vers différents formats (PDF, Excel, HTML...)](09-rapports-et-impressions/06-exportation-vers-differents-formats.md)
+⏭️ [Exportation vers différents formats (PDF, Excel, HTML...)](/09-rapports-et-impressions/06-exportation-vers-differents-formats.md)

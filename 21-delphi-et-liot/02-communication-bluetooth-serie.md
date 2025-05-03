@@ -518,4 +518,4 @@ Dans la prochaine section, nous explorerons l'intégration avec des plateformes 
 
 > **Note pour le tutoriel complet** : Cette section se concentre sur les communications série et Bluetooth de base. Pour des protocoles plus avancés comme MQTT et CoAP, référez-vous aux sections dédiées dans ce tutoriel.
 
-⏭️ [Intégration avec Arduino / Raspberry Pi](21-delphi-et-liot/03-integration-avec-arduino-raspberry-pi.md)
+⏭️ [Intégration avec Arduino / Raspberry Pi](/21-delphi-et-liot/03-integration-avec-arduino-raspberry-pi.md)

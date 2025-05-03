@@ -471,4 +471,4 @@ Rappelez-vous que la meilleure façon d'améliorer vos compétences en conceptio
 
 Dans le prochain chapitre, nous explorerons comment accéder aux capteurs spécifiques des appareils mobiles pour enrichir vos applications avec des fonctionnalités comme la géolocalisation et l'accéléromètre.
 
-⏭️ [Accès aux capteurs (GPS, accéléromètre...)](15-applications-mobiles-avec-delphi/03-acces-aux-capteurs.md)
+⏭️ [Accès aux capteurs (GPS, accéléromètre...)](/15-applications-mobiles-avec-delphi/03-acces-aux-capteurs.md)

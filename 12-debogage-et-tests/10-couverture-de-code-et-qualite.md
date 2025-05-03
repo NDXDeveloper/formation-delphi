@@ -618,4 +618,4 @@ En combinant tests unitaires, couverture de code, analyse statique et revues de 
 
 Dans les sections suivantes de ce tutoriel, nous explorerons d'autres aspects du développement Delphi, en continuant à mettre l'accent sur les bonnes pratiques et la qualité du code.
 
-⏭️ [Internationalisation et localisation](13-internationalisation-et-localisation/README.md)
+⏭️ [Internationalisation et localisation](/13-internationalisation-et-localisation/README.md)

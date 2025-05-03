@@ -1253,4 +1253,4 @@ En pratique, il est recommandé de :
 
 Dans la prochaine section, nous aborderons la création de rapports complexes avec des fonctionnalités avancées comme les sous-rapports, les graphiques et les tableaux croisés dynamiques.
 
-⏭️ [Création de rapports complexes](09-rapports-et-impressions/04-creation-de-rapports-complexes.md)
+⏭️ [Création de rapports complexes](/09-rapports-et-impressions/04-creation-de-rapports-complexes.md)

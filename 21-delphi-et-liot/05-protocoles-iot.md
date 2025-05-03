@@ -599,4 +599,4 @@ Dans la prochaine section, nous explorerons la gestion des dispositifs connecté
 2. Implémentez un système de contrôle d'éclairage qui utilise MQTT pour allumer/éteindre des LED
 3. Développez un client CoAP simple qui interroge un capteur et affiche ses données
 
-⏭️ [Gestion de dispositifs connectés](21-delphi-et-liot/06-gestion-de-dispositifs-connectes.md)
+⏭️ [Gestion de dispositifs connectés](/21-delphi-et-liot/06-gestion-de-dispositifs-connectes.md)

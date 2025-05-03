@@ -1550,4 +1550,4 @@ En combinant FireMonkey pour les interfaces utilisateur multi-plateformes et une
 
 Dans la prochaine section, nous explorerons les techniques pour optimiser les performances de vos applications mobiles Delphi, un aspect crucial pour offrir une expérience utilisateur fluide sur tous les appareils.
 
-⏭️ [Permissions et confidentialité des données](15-applications-mobiles-avec-delphi/10-permissions-et-confidentialite-des-donnees.md)
+⏭️ [Permissions et confidentialité des données](/15-applications-mobiles-avec-delphi/10-permissions-et-confidentialite-des-donnees.md)

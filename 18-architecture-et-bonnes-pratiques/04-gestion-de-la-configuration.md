@@ -809,4 +809,4 @@ N'oubliez pas de protéger les informations sensibles par chiffrement et d'inclu
 
 En suivant ces bonnes pratiques, vous créerez des applications plus robustes et adaptables aux besoins changeants des utilisateurs.
 
-⏭️ [Versionnement et gestion de code source](18-architecture-et-bonnes-pratiques/05-versionnement-et-gestion-de-code-source.md)
+⏭️ [Versionnement et gestion de code source](/18-architecture-et-bonnes-pratiques/05-versionnement-et-gestion-de-code-source.md)

@@ -1172,4 +1172,4 @@ Dans cette section, nous avons exploré les fondamentaux de WebBroker et DataSna
   - "Delphi Cookbook" par Daniele Spinetti et Daniele Teti
   - "Delphi Event-Based and Asynchronous Programming" par Andrea Magni
 
-⏭️ [Développement de sites Web dynamiques](23-conception-dapplications-web-avec-delphi/05-developpement-de-sites-web-dynamiques.md)
+⏭️ [Développement de sites Web dynamiques](/23-conception-dapplications-web-avec-delphi/05-developpement-de-sites-web-dynamiques.md)

@@ -18,4 +18,4 @@ La communauté francophone Delphi, particulièrement active, fera l'objet d'une 
 
 Découvrez comment tirer parti de la richesse de l'écosystème Delphi pour continuer votre apprentissage, trouver de l'aide quand vous en avez besoin, et contribuer à votre tour à cette communauté dynamique et accueillante !
 
-⏭️ [Documentation officielle](20-ressources-et-communaute/01-documentation-officielle.md)
+⏭️ [Documentation officielle](/20-ressources-et-communaute/01-documentation-officielle.md)

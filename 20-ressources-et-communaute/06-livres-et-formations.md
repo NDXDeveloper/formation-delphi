@@ -280,4 +280,4 @@ Des certifications tierces sont également reconnues :
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé d'investir immédiatement dans des formations coûteuses. Commencez par les ressources gratuites disponibles en ligne, et n'achetez des livres ou des formations que lorsque vous aurez identifié précisément vos besoins et confirmé votre intérêt pour Delphi. La progression étape par étape est souvent plus efficace qu'une immersion trop intensive qui pourrait vous décourager.
 
-⏭️ [Rester à jour avec Delphi](20-ressources-et-communaute/07-rester-a-jour-avec-delphi.md)
+⏭️ [Rester à jour avec Delphi](/20-ressources-et-communaute/07-rester-a-jour-avec-delphi.md)

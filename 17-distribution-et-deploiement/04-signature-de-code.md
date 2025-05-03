@@ -359,4 +359,4 @@ Dans la prochaine section, nous aborderons la mise à jour automatique, qui perm
 4. Vérifiez la signature dans les propriétés du fichier
 5. Créez un script batch simple pour automatiser le processus de signature
 
-⏭️ [Mise à jour automatique](17-distribution-et-deploiement/05-mise-a-jour-automatique.md)
+⏭️ [Mise à jour automatique](/17-distribution-et-deploiement/05-mise-a-jour-automatique.md)

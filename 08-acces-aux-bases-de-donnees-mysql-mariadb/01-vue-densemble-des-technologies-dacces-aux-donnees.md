@@ -119,4 +119,4 @@ Delphi propose des solutions robustes et performantes pour l'accès aux données
 
 **À suivre :** 8.2 Configuration de MySQL/MariaDB pour Delphi
 
-⏭️ [Configuration de MySQL/MariaDB pour Delphi](08-acces-aux-bases-de-donnees-mysql-mariadb/02-configuration-de-mysql-mariadb-pour-delphi.md)
+⏭️ [Configuration de MySQL/MariaDB pour Delphi](/08-acces-aux-bases-de-donnees-mysql-mariadb/02-configuration-de-mysql-mariadb-pour-delphi.md)

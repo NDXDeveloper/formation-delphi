@@ -385,4 +385,4 @@ Quelques projets Delphi accueillants pour les débutants :
 
 > **Astuce pour débutants** : N'attendez pas de vous sentir "prêt" pour contribuer - c'est justement en contribuant que vous développerez vos compétences. Commencez par de petites améliorations de documentation ou des corrections simples. Chaque contribution compte et vous permettra de gagner en confiance. N'oubliez pas que votre perspective de débutant est précieuse : vous remarquerez probablement des points d'amélioration qui échappent aux développeurs expérimentés, notamment dans la documentation et l'expérience utilisateur.
 
-⏭️ [Delphi et l'Internet des Objets (IoT)](21-delphi-et-liot/README.md)
+⏭️ [Delphi et l'Internet des Objets (IoT)](/21-delphi-et-liot/README.md)

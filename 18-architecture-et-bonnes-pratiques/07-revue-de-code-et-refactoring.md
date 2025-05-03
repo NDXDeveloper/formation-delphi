@@ -1167,4 +1167,4 @@ N'oubliez pas que ces pratiques ne sont pas des activités ponctuelles, mais des
 
 Enfin, rappelez-vous que le but ultime n'est pas d'avoir un code parfait, mais un code suffisamment bon pour répondre aux besoins actuels tout en restant adaptable aux exigences futures. Comme l'a dit Kent Beck, un des pionniers du refactoring : "Faites-le marcher, faites-le bien, puis faites-le vite."
 
-⏭️ [Intégration avec Git et CI/CD](18-architecture-et-bonnes-pratiques/08-integration-avec-git-et-ci-cd.md)
+⏭️ [Intégration avec Git et CI/CD](/18-architecture-et-bonnes-pratiques/08-integration-avec-git-et-ci-cd.md)

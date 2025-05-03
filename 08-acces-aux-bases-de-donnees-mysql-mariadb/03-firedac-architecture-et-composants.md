@@ -326,4 +326,4 @@ Dans la prochaine section, nous mettrons en pratique ces connaissances en nous c
 
 **À suivre :** 8.4 Connexion à une base MySQL/MariaDB
 
-⏭️ [Connexion à une base MySQL/MariaDB](08-acces-aux-bases-de-donnees-mysql-mariadb/04-connexion-a-une-base-mysql-mariadb.md)
+⏭️ [Connexion à une base MySQL/MariaDB](/08-acces-aux-bases-de-donnees-mysql-mariadb/04-connexion-a-une-base-mysql-mariadb.md)

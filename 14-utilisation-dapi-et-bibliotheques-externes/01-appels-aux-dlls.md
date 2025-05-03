@@ -324,4 +324,4 @@ Les DLLs sont particulièrement utiles pour :
 
 En maîtrisant les techniques présentées dans ce chapitre, vous pourrez tirer pleinement parti de cet aspect puissant de la programmation Delphi.
 
-⏭️ [Intégration de bibliothèques C/C++](14-utilisation-dapi-et-bibliotheques-externes/02-integration-de-bibliotheques-c-cpp.md)
+⏭️ [Intégration de bibliothèques C/C++](/14-utilisation-dapi-et-bibliotheques-externes/02-integration-de-bibliotheques-c-cpp.md)

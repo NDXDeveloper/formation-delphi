@@ -1943,4 +1943,4 @@ En combinant ces techniques, vous pouvez transformer vos rapports statiques en v
 
 Dans la prochaine section, nous explorerons les graphiques et tableaux de bord avec TeeChart, pour enrichir encore davantage vos visualisations de données dans Delphi.
 
-⏭️ [Graphiques et tableaux de bord avec TeeChart](09-rapports-et-impressions/08-graphiques-et-tableaux-de-bord-avec-teechart.md)
+⏭️ [Graphiques et tableaux de bord avec TeeChart](/09-rapports-et-impressions/08-graphiques-et-tableaux-de-bord-avec-teechart.md)

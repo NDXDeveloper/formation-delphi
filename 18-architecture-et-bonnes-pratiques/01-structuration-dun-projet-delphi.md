@@ -392,4 +392,4 @@ Cette structure est simple mais évolutive, adaptée à une petite application q
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé d'adopter immédiatement une structure complexe. Commencez avec une organisation simple, puis restructurez progressivement à mesure que votre projet grandit et que votre compréhension s'améliore. Une bonne structure est celle qui vous aide à naviguer et à comprendre votre propre code, même après plusieurs mois sans y avoir touché.
 
-⏭️ [Patterns d'architecture (MVC, MVVM)](18-architecture-et-bonnes-pratiques/02-patterns-darchitecture.md)
+⏭️ [Patterns d'architecture (MVC, MVVM)](/18-architecture-et-bonnes-pratiques/02-patterns-darchitecture.md)

@@ -1356,4 +1356,4 @@ Cet exercice vous permettra d'appliquer les concepts de files d'attente et de po
 
 Dans la prochaine section, nous explorerons l'interface utilisateur réactive, qui permettra à vos applications de rester fluides et réactives même pendant l'exécution de tâches intensives en arrière-plan.
 
-⏭️ [Interface utilisateur réactive](11-multithreading-et-programmation-asynchrone/07-interface-utilisateur-reactive.md)
+⏭️ [Interface utilisateur réactive](/11-multithreading-et-programmation-asynchrone/07-interface-utilisateur-reactive.md)

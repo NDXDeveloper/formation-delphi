@@ -199,4 +199,4 @@ Dans les prochaines sections, nous approfondirons chacune de ces technologies et
 2. Ajoutez une validation des champs (nom d'utilisateur non vide, mot de passe d'au moins 6 caractères)
 3. Affichez un message de bienvenue personnalisé après la connexion
 
-⏭️ [Applications Web basées sur VCL](23-conception-dapplications-web-avec-delphi/02-applications-web-basees-sur-vcl.md)
+⏭️ [Applications Web basées sur VCL](/23-conception-dapplications-web-avec-delphi/02-applications-web-basees-sur-vcl.md)

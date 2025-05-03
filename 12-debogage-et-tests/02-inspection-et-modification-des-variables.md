@@ -297,4 +297,4 @@ En maîtrisant ces techniques, vous gagnerez un temps précieux lors de la réso
 
 Dans la prochaine section, nous aborderons les tests unitaires avec DUnit/DUnitX, qui constituent une approche plus structurée pour vérifier le bon fonctionnement de votre code.
 
-⏭️ [Test unitaire avec DUnit/DUnitX](12-debogage-et-tests/03-test-unitaire-avec-dunit-dunitx.md)
+⏭️ [Test unitaire avec DUnit/DUnitX](/12-debogage-et-tests/03-test-unitaire-avec-dunit-dunitx.md)

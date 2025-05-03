@@ -99,4 +99,4 @@ Ces sections vous guideront à travers le processus complet de développement, a
 
 *Note: Cette section du tutoriel est conçue pour vous guider à travers la création d'une application complète. Si certains concepts vous semblent complexes, n'hésitez pas à consulter les chapitres précédents pour rafraîchir vos connaissances.*
 
-⏭️ [Conception de la base de données](19-projets-avances/01.1-conception-base-donnees.md)
+⏭️ [Conception de la base de données](/19-projets-avances/01.1-conception-base-donnees.md)

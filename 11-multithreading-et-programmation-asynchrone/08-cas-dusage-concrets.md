@@ -1837,4 +1837,4 @@ Cet exercice vous permettra d'appliquer les concepts de multithreading dans un c
 
 Dans le prochain chapitre, nous explorerons la programmation réactive avec le pattern Observer, qui constitue une autre approche puissante pour gérer les événements et les flux de données dans les applications Delphi.
 
-⏭️ [Programmation réactive avec le pattern Observer](11-multithreading-et-programmation-asynchrone/09-programmation-reactive-avec-pattern-observer.md)
+⏭️ [Programmation réactive avec le pattern Observer](/11-multithreading-et-programmation-asynchrone/09-programmation-reactive-avec-pattern-observer.md)

@@ -447,4 +447,4 @@ En suivant les bonnes pratiques présentées dans ce chapitre, vous pourrez int�
 
 Dans la prochaine section, nous aborderons l'utilisation de la caméra et des fonctionnalités multimédias dans vos applications mobiles.
 
-⏭️ [Utilisation de la caméra et des médias](15-applications-mobiles-avec-delphi/04-utilisation-de-la-camera-et-des-medias.md)
+⏭️ [Utilisation de la caméra et des médias](/15-applications-mobiles-avec-delphi/04-utilisation-de-la-camera-et-des-medias.md)

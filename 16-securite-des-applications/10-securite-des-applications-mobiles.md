@@ -1309,4 +1309,4 @@ En suivant ces bonnes pratiques et en effectuant des audits de sécurité régul
 > [!IMPORTANT]
 > La sécurité est un processus continu, pas un état final. Restez informé des nouvelles vulnérabilités et mettez régulièrement à jour vos applications pour maintenir un niveau de sécurité optimal.
 
-⏭️ [Distribution et déploiement](17-distribution-et-deploiement/README.md)
+⏭️ [Distribution et déploiement](/17-distribution-et-deploiement/README.md)

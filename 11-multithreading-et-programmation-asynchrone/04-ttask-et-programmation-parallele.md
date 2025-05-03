@@ -608,4 +608,4 @@ La programmation parallèle avec `TTask` est puissante et plus facile à utilise
 
 Dans la prochaine section, nous explorerons les tâches asynchrones et les callbacks, qui constituent une autre approche élégante pour la programmation concurrente.
 
-⏭️ [Tâches asynchrones et callbacks](11-multithreading-et-programmation-asynchrone/05-taches-asynchrones-et-callbacks.md)
+⏭️ [Tâches asynchrones et callbacks](/11-multithreading-et-programmation-asynchrone/05-taches-asynchrones-et-callbacks.md)

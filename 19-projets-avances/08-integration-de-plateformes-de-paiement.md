@@ -1445,4 +1445,4 @@ En suivant ce guide, vous disposez maintenant des bases nécessaires pour intég
 
 **Note technique** : La plupart des exemples de ce tutoriel sont compatibles avec Delphi 11 Alexandria et supérieur. L'utilisation des expressions lambda dans certains exemples de code pourrait nécessiter Delphi 12 Athens ou supérieur.
 
-⏭️ [Ressources et communauté](20-ressources-et-communaute/README.md)
+⏭️ [Ressources et communauté](/20-ressources-et-communaute/README.md)

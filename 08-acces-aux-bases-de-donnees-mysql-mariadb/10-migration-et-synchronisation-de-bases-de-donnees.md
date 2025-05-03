@@ -1487,4 +1487,4 @@ En suivant ces principes et en utilisant les techniques présentées dans cette 
 
 **À suivre :** 8.11 Sécurisation des accès et prévention des injections SQL
 
-⏭️ [Sécurisation des accès et prévention des injections SQL](08-acces-aux-bases-de-donnees-mysql-mariadb/11-securisation-des-acces-et-prevention-des-injections-sql.md)
+⏭️ [Sécurisation des accès et prévention des injections SQL](/08-acces-aux-bases-de-donnees-mysql-mariadb/11-securisation-des-acces-et-prevention-des-injections-sql.md)

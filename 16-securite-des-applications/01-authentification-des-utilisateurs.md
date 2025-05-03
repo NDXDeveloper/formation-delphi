@@ -566,4 +566,4 @@ Dans le prochain chapitre, nous aborderons la gestion des autorisations qui dét
 4. Créez un système de récupération de mot de passe par e-mail.
 5. Pour les plus avancés : Implémentez l'authentification à deux facteurs avec une application comme Google Authenticator.
 
-⏭️ [Autorisation et contrôle d'accès](16-securite-des-applications/02-autorisation-et-controle-dacces.md)
+⏭️ [Autorisation et contrôle d'accès](/16-securite-des-applications/02-autorisation-et-controle-dacces.md)

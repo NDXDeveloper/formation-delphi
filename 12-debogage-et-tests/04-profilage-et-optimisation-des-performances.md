@@ -496,4 +496,4 @@ Rappelez-vous que l'optimisation est un processus itératif qui doit être guid�
 
 Dans la prochaine section, nous examinerons la gestion des exceptions et la journalisation, des compétences essentielles pour créer des applications robustes et faciles à déboguer.
 
-⏭️ [Gestion des exceptions et journalisation](12-debogage-et-tests/05-gestion-des-exceptions-et-journalisation.md)
+⏭️ [Gestion des exceptions et journalisation](/12-debogage-et-tests/05-gestion-des-exceptions-et-journalisation.md)

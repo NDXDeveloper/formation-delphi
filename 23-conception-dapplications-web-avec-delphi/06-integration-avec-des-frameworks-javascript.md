@@ -1059,4 +1059,4 @@ L'intégration de Delphi avec des frameworks JavaScript ouvre de nombreuses poss
 
 Les approches présentées dans ce tutoriel ne sont que le début. À mesure que vous vous familiarisez avec ces concepts, vous pourrez explorer des intégrations plus avancées et créer des applications web sophistiquées avec Delphi.
 
-⏭️ [Progressive Web Apps (PWA)](23-conception-dapplications-web-avec-delphi/07-progressive-web-apps.md)
+⏭️ [Progressive Web Apps (PWA)](/23-conception-dapplications-web-avec-delphi/07-progressive-web-apps.md)

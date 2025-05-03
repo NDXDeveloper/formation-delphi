@@ -1386,4 +1386,4 @@ Dans la prochaine section, nous verrons comment gérer la migration et la synchr
 
 **À suivre :** 8.10 Migration et synchronisation de bases de données
 
-⏭️ [Migration et synchronisation de bases de données](08-acces-aux-bases-de-donnees-mysql-mariadb/10-migration-et-synchronisation-de-bases-de-donnees.md)
+⏭️ [Migration et synchronisation de bases de données](/08-acces-aux-bases-de-donnees-mysql-mariadb/10-migration-et-synchronisation-de-bases-de-donnees.md)

@@ -635,4 +635,4 @@ Delphi offre un excellent support pour la localisation, tant au niveau de la VCL
 
 Dans la prochaine section, nous verrons comment gérer les formats de date, heure et nombres spécifiques à chaque culture.
 
-⏭️ [Formats de date, heure et nombres](13-internationalisation-et-localisation/04-formats-de-date-heure-et-nombres.md)
+⏭️ [Formats de date, heure et nombres](/13-internationalisation-et-localisation/04-formats-de-date-heure-et-nombres.md)

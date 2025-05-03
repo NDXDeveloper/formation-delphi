@@ -1324,4 +1324,4 @@ N'oubliez pas que l'amélioration de la qualité du code est un processus contin
 
 Le code propre n'est pas seulement une question de technique, c'est aussi une question de respect : respect envers vos collègues qui devront lire et modifier votre code, respect envers vos futurs utilisateurs qui bénéficieront d'un logiciel plus fiable, et respect envers votre futur vous-même qui vous remerciera d'avoir écrit un code clair et bien structuré.
 
-⏭️ [Domain-Driven Design (DDD) avec Delphi](18-architecture-et-bonnes-pratiques/10-domain-driven-design-avec-delphi.md)
+⏭️ [Domain-Driven Design (DDD) avec Delphi](/18-architecture-et-bonnes-pratiques/10-domain-driven-design-avec-delphi.md)

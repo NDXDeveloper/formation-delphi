@@ -306,4 +306,4 @@ end;
 
 En maîtrisant ces techniques de gestion des chaînes de caractères, vous serez en mesure de créer des applications Delphi qui gèrent correctement les textes de différentes langues, ce qui est essentiel pour l'internationalisation de vos logiciels.
 
-⏭️ [Ressources linguistiques](13-internationalisation-et-localisation/02-ressources-linguistiques.md)
+⏭️ [Ressources linguistiques](/13-internationalisation-et-localisation/02-ressources-linguistiques.md)

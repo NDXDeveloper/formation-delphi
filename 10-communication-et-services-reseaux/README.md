@@ -18,4 +18,4 @@ Une attention particulière sera portée aux aspects de sécurité, qui sont cru
 
 Préparons-nous à explorer comment Delphi peut vous aider à créer des applications connectées qui interagissent efficacement avec le monde extérieur !
 
-⏭️ [Appels REST et API Web (TRESTClient)](10-communication-et-services-reseaux/01-appels-rest-et-api-web.md)
+⏭️ [Appels REST et API Web (TRESTClient)](/10-communication-et-services-reseaux/01-appels-rest-et-api-web.md)

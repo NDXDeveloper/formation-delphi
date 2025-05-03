@@ -302,4 +302,4 @@ Bien que sa configuration initiale puisse sembler complexe, les avantages qu'il 
 
 Dans la prochaine section, nous explorerons les tests d'intégration, qui complètent les tests unitaires en vérifiant comment les différentes parties de votre application interagissent entre elles.
 
-⏭️ [Tests d'intégration](12-debogage-et-tests/07-tests-dintegration.md)
+⏭️ [Tests d'intégration](/12-debogage-et-tests/07-tests-dintegration.md)

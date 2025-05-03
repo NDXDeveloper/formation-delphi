@@ -118,4 +118,4 @@ La documentation de Delphi s'améliore constamment. Avec chaque nouvelle version
 
 > **Astuce pour débutants** : N'hésitez pas à utiliser la fonction `F1` fréquemment lors de vos premiers pas avec Delphi. C'est souvent le moyen le plus rapide d'obtenir des informations sur un élément spécifique qui vous intrigue ou vous pose problème.
 
-⏭️ [Forums et groupes d'entraide](20-ressources-et-communaute/02-forums-et-groupes-dentraide.md)
+⏭️ [Forums et groupes d'entraide](/20-ressources-et-communaute/02-forums-et-groupes-dentraide.md)

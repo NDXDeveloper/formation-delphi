@@ -604,4 +604,4 @@ Commencez simplement avec quelques tests sur vos fonctions les plus critiques, p
 
 Dans la prochaine section, nous explorerons le profilage et l'optimisation des performances de vos applications Delphi.
 
-⏭️ [Profilage et optimisation des performances](12-debogage-et-tests/04-profilage-et-optimisation-des-performances.md)
+⏭️ [Profilage et optimisation des performances](/12-debogage-et-tests/04-profilage-et-optimisation-des-performances.md)

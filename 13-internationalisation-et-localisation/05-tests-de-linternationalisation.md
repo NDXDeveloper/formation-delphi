@@ -769,4 +769,4 @@ En investissant du temps dans les tests d'internationalisation, vous améliorere
 
 Dans la prochaine section, nous verrons comment gérer les encodages et le support Unicode dans vos applications Delphi.
 
-⏭️ [Support Unicode et encodages](13-internationalisation-et-localisation/06-support-unicode-et-encodages.md)
+⏭️ [Support Unicode et encodages](/13-internationalisation-et-localisation/06-support-unicode-et-encodages.md)

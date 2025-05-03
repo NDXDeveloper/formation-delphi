@@ -2851,4 +2851,4 @@ Les possibilités d'application sont vastes : contrôle qualité industriel, sé
 
 > **Remarque** : Les exemples de code présentés dans ce chapitre sont conçus pour être didactiques et accessibles aux débutants. Dans un contexte de production, certaines optimisations supplémentaires pourraient être nécessaires en fonction des exigences spécifiques de votre application.
 
-⏭️ [Développement de modèles prédictifs](22-intelligence-artificielle-et-machine-learning-avec-delphi/05-developpement-de-modeles-predictifs.md)
+⏭️ [Développement de modèles prédictifs](/22-intelligence-artificielle-et-machine-learning-avec-delphi/05-developpement-de-modeles-predictifs.md)

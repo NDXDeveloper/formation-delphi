@@ -356,4 +356,4 @@ Les composants natifs d'impression de Delphi offrent une solution simple et effi
 
 Dans la prochaine section, nous explorerons comment créer un aperçu avant impression plus sophistiqué pour offrir une meilleure expérience utilisateur.
 
-⏭️ [Aperçu avant impression](09-rapports-et-impressions/02-apercu-avant-impression.md)
+⏭️ [Aperçu avant impression](/09-rapports-et-impressions/02-apercu-avant-impression.md)

@@ -200,4 +200,4 @@ L'écosystème Delphi a évolué pour répondre aux besoins des développeurs mo
 
 La prochaine section explorera la roadmap et les orientations futures de Delphi, pour vous donner un aperçu de ce que réserve l'avenir de cette technologie.
 
-⏭️ [Roadmap et orientations futures](24-tendances-et-futur-de-delphi/02-roadmap-et-orientations-futures.md)
+⏭️ [Roadmap et orientations futures](/24-tendances-et-futur-de-delphi/02-roadmap-et-orientations-futures.md)

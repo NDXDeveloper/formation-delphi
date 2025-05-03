@@ -717,5 +717,5 @@ Pour aller plus loin, explorez d'autres fonctionnalités comme la gestion des to
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
 
-⏭️ [GraphQL et nouvelles API](10-communication-et-services-reseaux/08-graphql-et-nouvelles-api.md)
+⏭️ [GraphQL et nouvelles API](/10-communication-et-services-reseaux/08-graphql-et-nouvelles-api.md)
 

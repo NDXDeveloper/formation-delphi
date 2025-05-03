@@ -438,4 +438,4 @@ En choisissant la bonne approche pour votre projet et en suivant les bonnes prat
 
 Dans la prochaine section, nous verrons comment adapter votre application à différentes langues au-delà de la simple traduction des chaînes de caractères.
 
-⏭️ [Adaptation à différentes langues](13-internationalisation-et-localisation/03-adaptation-a-differentes-langues.md)
+⏭️ [Adaptation à différentes langues](/13-internationalisation-et-localisation/03-adaptation-a-differentes-langues.md)

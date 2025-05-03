@@ -623,4 +623,4 @@ Pour les débutants, nous recommandons :
 
 **À suivre :** 8.9 Modèle en couches pour l'accès aux données
 
-⏭️ [Modèle en couches pour l'accès aux données](08-acces-aux-bases-de-donnees-mysql-mariadb/09-modele-en-couches-pour-lacces-aux-donnees.md)
+⏭️ [Modèle en couches pour l'accès aux données](/08-acces-aux-bases-de-donnees-mysql-mariadb/09-modele-en-couches-pour-lacces-aux-donnees.md)

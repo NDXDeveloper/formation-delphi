@@ -18,4 +18,4 @@ Un accent particulier sera mis sur les techniques d'encapsulation qui vous perme
 
 Explorons ensemble comment étendre les capacités de vos applications Delphi en tirant parti de la richesse des bibliothèques et API disponibles dans l'écosystème logiciel moderne !
 
-⏭️ [Appels aux DLLs](14-utilisation-dapi-et-bibliotheques-externes/01-appels-aux-dlls.md)
+⏭️ [Appels aux DLLs](/14-utilisation-dapi-et-bibliotheques-externes/01-appels-aux-dlls.md)

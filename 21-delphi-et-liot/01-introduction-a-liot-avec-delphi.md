@@ -208,4 +208,4 @@ Delphi offre un environnement puissant et flexible pour développer des applicat
 
 Dans les prochaines sections, nous explorerons plus en détail les protocoles spécifiques et les intégrations matérielles pour l'IoT avec Delphi.
 
-⏭️ [Communication Bluetooth / série](21-delphi-et-liot/02-communication-bluetooth-serie.md)
+⏭️ [Communication Bluetooth / série](/21-delphi-et-liot/02-communication-bluetooth-serie.md)

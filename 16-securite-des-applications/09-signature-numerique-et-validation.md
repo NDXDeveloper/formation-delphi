@@ -608,4 +608,4 @@ En utilisant les signatures numériques, vous pouvez garantir l'authenticité et
 > - Découvrez les infrastructures à clé publique (PKI) pour gérer les certificats à grande échelle
 > - Intégrez les signatures numériques à vos processus d'authentification et de validation de documents
 
-⏭️ [Sécurité des applications mobiles](16-securite-des-applications/10-securite-des-applications-mobiles.md)
+⏭️ [Sécurité des applications mobiles](/16-securite-des-applications/10-securite-des-applications-mobiles.md)

@@ -819,4 +819,4 @@ Créez une application qui simule un système de traitement de commandes avec le
 
 Implémentez ce système en suivant les bonnes pratiques décrites dans ce chapitre. Testez-le avec différents nombres de threads et de commandes pour voir comment les performances évoluent.
 
-⏭️ [Débogage et tests](12-debogage-et-tests/README.md)
+⏭️ [Débogage et tests](/12-debogage-et-tests/README.md)

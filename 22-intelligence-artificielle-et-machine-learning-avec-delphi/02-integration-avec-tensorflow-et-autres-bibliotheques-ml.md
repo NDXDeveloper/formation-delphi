@@ -583,4 +583,4 @@ Dans la prochaine section, nous explorerons des applications spécifiques de tra
 
 > **Remarque**: Les exemples de code présentés sont destinés à illustrer les concepts. Pour une implémentation complète et fonctionnelle, des ajustements spécifiques à votre environnement et à vos besoins peuvent être nécessaires.
 
-⏭️ [Traitement du langage naturel (NLP)](22-intelligence-artificielle-et-machine-learning-avec-delphi/03-traitement-du-langage-naturel.md)
+⏭️ [Traitement du langage naturel (NLP)](/22-intelligence-artificielle-et-machine-learning-avec-delphi/03-traitement-du-langage-naturel.md)

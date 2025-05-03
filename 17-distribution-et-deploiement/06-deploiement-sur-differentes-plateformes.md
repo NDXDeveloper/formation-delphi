@@ -483,4 +483,4 @@ En suivant les étapes décrites dans ce chapitre et en planifiant votre dévelo
 
 Dans la prochaine section, nous explorerons la virtualisation et les conteneurs Docker, qui offrent encore plus de flexibilité pour le déploiement de vos applications Delphi.
 
-⏭️ [Virtualisation et conteneurs Docker](17-distribution-et-deploiement/07-virtualisation-et-conteneurs-docker.md)
+⏭️ [Virtualisation et conteneurs Docker](/17-distribution-et-deploiement/07-virtualisation-et-conteneurs-docker.md)

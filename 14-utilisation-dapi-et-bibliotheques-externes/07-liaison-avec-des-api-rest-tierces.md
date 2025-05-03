@@ -3960,4 +3960,4 @@ En suivant ces principes et en utilisant les outils appropriés, vous serez en m
 
 N'oubliez pas que l'intégration d'API est un processus itératif - commencez par des intégrations simples, puis affinez et améliorez au fil du temps. Bonne programmation !
 
-⏭️ [Encapsulation d'API natives pour multi-plateformes](14-utilisation-dapi-et-bibliotheques-externes/08-encapsulation-dapi-natives-pour-multi-plateformes.md)
+⏭️ [Encapsulation d'API natives pour multi-plateformes](/14-utilisation-dapi-et-bibliotheques-externes/08-encapsulation-dapi-natives-pour-multi-plateformes.md)

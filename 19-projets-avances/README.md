@@ -18,4 +18,4 @@ En travaillant sur ces projets avancés, vous développerez également des comp�
 
 Préparez-vous à relever des défis stimulants qui vous permettront de mettre en pratique l'ensemble de vos connaissances Delphi et de franchir un cap dans votre maîtrise de cet environnement de développement puissant !
 
-⏭️ [Application de gestion complète avec MySQL/MariaDB](19-projets-avances/01-application-de-gestion-complete-avec-mysql-mariadb.md)
+⏭️ [Application de gestion complète avec MySQL/MariaDB](/19-projets-avances/01-application-de-gestion-complete-avec-mysql-mariadb.md)

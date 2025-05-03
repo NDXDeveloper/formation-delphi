@@ -233,4 +233,4 @@ Vous avez maintenant configuré MySQL/MariaDB et Delphi pour travailler ensemble
 
 **À suivre :** 8.3 FireDAC : architecture et composants
 
-⏭️ [FireDAC : architecture et composants](08-acces-aux-bases-de-donnees-mysql-mariadb/03-firedac-architecture-et-composants.md)
+⏭️ [FireDAC : architecture et composants](/08-acces-aux-bases-de-donnees-mysql-mariadb/03-firedac-architecture-et-composants.md)

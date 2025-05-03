@@ -718,4 +718,4 @@ Les exemples présentés dans ce chapitre ne sont qu'un aperçu des possibilité
 
 N'hésitez pas à consulter la documentation Microsoft et les exemples Delphi pour approfondir vos connaissances de l'API Windows et enrichir vos applications.
 
-⏭️ [COM et ActiveX](14-utilisation-dapi-et-bibliotheques-externes/04-com-et-activex.md)
+⏭️ [COM et ActiveX](/14-utilisation-dapi-et-bibliotheques-externes/04-com-et-activex.md)

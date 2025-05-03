@@ -18,4 +18,4 @@ Nous aborderons également des approches architecturales plus avancées, comme l
 
 Explorons ensemble comment élever vos compétences Delphi au niveau supérieur en adoptant des approches architecturales qui ont fait leurs preuves dans l'industrie du logiciel et qui garantiront le succès à long terme de vos projets !
 
-⏭️ [Structuration d'un projet Delphi](18-architecture-et-bonnes-pratiques/01-structuration-dun-projet-delphi.md)
+⏭️ [Structuration d'un projet Delphi](/18-architecture-et-bonnes-pratiques/01-structuration-dun-projet-delphi.md)

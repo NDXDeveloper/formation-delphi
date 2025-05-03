@@ -3776,4 +3776,4 @@ En intégrant ces principes dans vos applications Delphi, vous ne vous conformer
 
 7. **Pour les plus avancés** : Implémentez un système complet de gestion de la conformité au GDPR, incluant le registre des activités de traitement, les politiques de rétention automatisées et des rapports d'audit réguliers.
 
-⏭️ [Signature numérique et validation](16-securite-des-applications/09-signature-numerique-et-validation.md)
+⏭️ [Signature numérique et validation](/16-securite-des-applications/09-signature-numerique-et-validation.md)

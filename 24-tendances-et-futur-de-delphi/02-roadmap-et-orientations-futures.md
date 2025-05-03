@@ -200,4 +200,4 @@ La roadmap de Delphi montre un engagement continu envers la modernisation tout e
 
 Dans la prochaine section, nous explorerons comment le RAD (Rapid Application Development) moderne s'intègre dans l'écosystème Delphi actuel et comment les approches low-code transforment le développement.
 
-⏭️ [Low-code et RAD moderne](24-tendances-et-futur-de-delphi/03-low-code-et-rad-moderne.md)
+⏭️ [Low-code et RAD moderne](/24-tendances-et-futur-de-delphi/03-low-code-et-rad-moderne.md)

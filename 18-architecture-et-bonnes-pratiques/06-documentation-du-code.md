@@ -745,4 +745,4 @@ Prendre l'habitude de documenter votre code au fur et à mesure que vous le dév
 
 Un code bien documenté est la marque d'un développeur professionnel et responsable. C'est un signe de respect envers vos collègues et votre futur vous-même.
 
-⏭️ [Revue de code et refactoring](18-architecture-et-bonnes-pratiques/07-revue-de-code-et-refactoring.md)
+⏭️ [Revue de code et refactoring](/18-architecture-et-bonnes-pratiques/07-revue-de-code-et-refactoring.md)

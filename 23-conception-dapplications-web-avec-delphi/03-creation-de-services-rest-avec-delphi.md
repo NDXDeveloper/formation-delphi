@@ -610,4 +610,4 @@ Les services REST sont une partie essentielle du développement d'applications m
 - Tutoriels vidéo sur DataSnap REST : [Embarcadero YouTube](https://www.youtube.com/user/EmbarcaderoTechNet)
 - Forums communautaires Delphi : [Embarcadero Forums](https://forums.embarcadero.com/)
 
-⏭️ [Utilisation de WebBroker et DataSnap](23-conception-dapplications-web-avec-delphi/04-utilisation-de-webbroker-et-datasnap.md)
+⏭️ [Utilisation de WebBroker et DataSnap](/23-conception-dapplications-web-avec-delphi/04-utilisation-de-webbroker-et-datasnap.md)

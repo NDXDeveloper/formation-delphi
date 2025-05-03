@@ -393,4 +393,4 @@ Dans la prochaine section, nous aborderons la signature de code, une étape impo
 3. Ajoutez au moins une fonctionnalité avancée (vérification des prérequis, création d'un fichier de configuration, etc.)
 4. Testez l'installateur sur un autre ordinateur ou une machine virtuelle
 
-⏭️ [Signature de code](17-distribution-et-deploiement/04-signature-de-code.md)
+⏭️ [Signature de code](/17-distribution-et-deploiement/04-signature-de-code.md)

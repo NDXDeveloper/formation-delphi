@@ -1659,4 +1659,4 @@ Les sockets sont un outil puissant pour créer des applications réseau, qu'il s
    - Ajoutez la prise en charge des méthodes POST
    - Implémentez un mécanisme simple d'authentification
 
-⏭️ [Services SOAP et WebServices](10-communication-et-services-reseaux/04-services-soap-et-webservices.md)
+⏭️ [Services SOAP et WebServices](/10-communication-et-services-reseaux/04-services-soap-et-webservices.md)

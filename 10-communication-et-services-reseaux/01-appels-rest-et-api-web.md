@@ -297,4 +297,4 @@ end;
 
 N'oubliez pas que la documentation de l'API que vous utilisez est votre meilleure alliée. Consultez-la pour comprendre les points d'accès disponibles, les paramètres requis et les formats de réponse attendus.
 
-⏭️ [Manipulation de JSON et XML](10-communication-et-services-reseaux/02-manipulation-de-json-et-xml.md)
+⏭️ [Manipulation de JSON et XML](/10-communication-et-services-reseaux/02-manipulation-de-json-et-xml.md)

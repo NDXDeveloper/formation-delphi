@@ -1531,4 +1531,4 @@ En résumé, les microservices sont un outil puissant dans votre boîte à outil
 - [RabbitMQ](https://www.rabbitmq.com/) - Broker de messages
 - [JWT](https://jwt.io/) - JSON Web Tokens pour l'authentification
 
-⏭️ [Projets avancés](19-projets-avances/README.md)
+⏭️ [Projets avancés](/19-projets-avances/README.md)

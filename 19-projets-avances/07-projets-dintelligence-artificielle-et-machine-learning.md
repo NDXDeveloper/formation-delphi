@@ -2893,4 +2893,4 @@ Avec les bonnes pratiques et architectures présentées dans ce chapitre, vous a
 
 _Note: Certains exemples avancés nécessitent Delphi 12 Athens ou supérieur._
 
-⏭️ [Intégration de plateformes de paiement](19-projets-avances/08-integration-de-plateformes-de-paiement.md)
+⏭️ [Intégration de plateformes de paiement](/19-projets-avances/08-integration-de-plateformes-de-paiement.md)

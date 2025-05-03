@@ -205,4 +205,4 @@ Lorsque vous mettez à jour Delphi, vérifiez toujours la compatibilité de vos 
 
 > **Astuce pour débutants** : Avant d'écrire votre propre code pour une fonctionnalité, faites une recherche rapide pour voir si une bibliothèque tiers ne propose pas déjà ce dont vous avez besoin. Vous pourriez gagner beaucoup de temps et bénéficier d'une solution bien testée.
 
-⏭️ [Conférences et événements](20-ressources-et-communaute/04-conferences-et-evenements.md)
+⏭️ [Conférences et événements](/20-ressources-et-communaute/04-conferences-et-evenements.md)

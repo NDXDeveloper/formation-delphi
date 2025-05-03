@@ -440,4 +440,4 @@ Dans la prochaine section, nous verrons comment manipuler les données une fois 
 
 **À suivre :** 8.5 Manipulation des données
 
-⏭️ [Manipulation des données](08-acces-aux-bases-de-donnees-mysql-mariadb/05-manipulation-des-donnees.md)
+⏭️ [Manipulation des données](/08-acces-aux-bases-de-donnees-mysql-mariadb/05-manipulation-des-donnees.md)

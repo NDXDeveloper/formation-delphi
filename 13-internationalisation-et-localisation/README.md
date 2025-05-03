@@ -18,4 +18,4 @@ Un accent particulier sera mis sur les aspects pratiques et les meilleures prati
 
 Découvrons ensemble comment transformer vos applications en solutions véritablement globales, capables de communiquer efficacement avec des utilisateurs de cultures et de langues diverses !
 
-⏭️ [Gestion des chaînes de caractères](13-internationalisation-et-localisation/01-gestion-des-chaines-de-caracteres.md)
+⏭️ [Gestion des chaînes de caractères](/13-internationalisation-et-localisation/01-gestion-des-chaines-de-caracteres.md)

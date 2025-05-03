@@ -1140,4 +1140,4 @@ En suivant ces principes, vous pourrez tirer parti des forces de chaque langage 
 
 L'intégration multi-langages n'est pas seulement une solution technique, c'est une approche stratégique qui vous permet de choisir le meilleur outil pour chaque tâche, maximisant ainsi l'efficacité et la qualité de vos applications.
 
-⏭️ [Liaison avec des API REST tierces](14-utilisation-dapi-et-bibliotheques-externes/07-liaison-avec-des-api-rest-tierces.md)
+⏭️ [Liaison avec des API REST tierces](/14-utilisation-dapi-et-bibliotheques-externes/07-liaison-avec-des-api-rest-tierces.md)

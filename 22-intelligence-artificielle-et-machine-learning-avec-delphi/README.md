@@ -18,4 +18,4 @@ Nous aborderons également l'intégration avec les services d'IA cloud modernes 
 
 Embarquons dans cette exploration passionnante de l'intelligence artificielle avec Delphi, et découvrez comment enrichir vos applications avec les capacités cognitives qui définissent l'avenir du développement logiciel !
 
-⏭️ [Introduction à l'IA et au ML dans les applications Delphi](22-intelligence-artificielle-et-machine-learning-avec-delphi/01-introduction-a-lia-et-au-ml-dans-les-applications-delphi.md)
+⏭️ [Introduction à l'IA et au ML dans les applications Delphi](/22-intelligence-artificielle-et-machine-learning-avec-delphi/01-introduction-a-lia-et-au-ml-dans-les-applications-delphi.md)

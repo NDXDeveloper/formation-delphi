@@ -1503,4 +1503,4 @@ Rappelez-vous que la protection de la vie privée doit être intégrée dès la 
 
 Dans la prochaine section, nous explorerons l'intégration des services Firebase dans vos applications mobiles Delphi pour ajouter des fonctionnalités puissantes comme les notifications push, l'authentification et l'analyse en temps réel.
 
-⏭️ [Intégration des services Firebase](15-applications-mobiles-avec-delphi/11-integration-des-services-firebase.md)
+⏭️ [Intégration des services Firebase](/15-applications-mobiles-avec-delphi/11-integration-des-services-firebase.md)

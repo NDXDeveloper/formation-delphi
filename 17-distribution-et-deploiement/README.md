@@ -18,4 +18,4 @@ Dans le monde moderne du développement logiciel, le déploiement n'est plus un 
 
 Découvrons ensemble comment transformer votre code en produits finalisés prêts à être distribués et utilisés à travers le monde !
 
-⏭️ [Compilation en mode release](17-distribution-et-deploiement/01-compilation-en-mode-release.md)
+⏭️ [Compilation en mode release](/17-distribution-et-deploiement/01-compilation-en-mode-release.md)

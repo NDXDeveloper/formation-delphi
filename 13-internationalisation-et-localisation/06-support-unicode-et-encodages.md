@@ -662,4 +662,4 @@ Les points clés à retenir :
 
 Dans la prochaine section, nous verrons comment gérer les écritures bidirectionnelles pour les langues comme l'arabe et l'hébreu.
 
-⏭️ [Gestion des écritures bidirectionnelles (RTL)](13-internationalisation-et-localisation/07-gestion-des-ecritures-bidirectionnelles.md)
+⏭️ [Gestion des écritures bidirectionnelles (RTL)](/13-internationalisation-et-localisation/07-gestion-des-ecritures-bidirectionnelles.md)

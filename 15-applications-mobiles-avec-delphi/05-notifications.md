@@ -1297,4 +1297,4 @@ N'oubliez pas que les notifications, bien qu'utiles, doivent être utilisées av
 
 Dans la prochaine section, nous aborderons le stockage local et la synchronisation des données, essentiels pour créer des applications mobiles qui fonctionnent efficacement même en l'absence de connexion internet.
 
-⏭️ [Stockage local et synchronisation](15-applications-mobiles-avec-delphi/06-stockage-local-et-synchronisation.md)
+⏭️ [Stockage local et synchronisation](/15-applications-mobiles-avec-delphi/06-stockage-local-et-synchronisation.md)

@@ -1740,4 +1740,4 @@ N'oubliez pas que Firebase est une plateforme en constante évolution, avec de n
 
 Dans la prochaine section, nous explorerons comment développer des jeux mobiles avec Delphi et FireMonkey, en utilisant les capacités graphiques avancées et les API de jeu pour créer des expériences interactives engageantes.
 
-⏭️ [Sécurité des applications](16-securite-des-applications/README.md)
+⏭️ [Sécurité des applications](/16-securite-des-applications/README.md)

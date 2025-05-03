@@ -1275,4 +1275,4 @@ Rappelez-vous que la sécurité est un processus continu, pas un état final. Le
 
 5. Pour les plus avancés : Intégrez l'outil d'audit dans votre IDE Delphi en créant un expert ou un plugin.
 
-⏭️ [Stockage sécurisé des identifiants](16-securite-des-applications/07-stockage-securise-des-identifiants.md)
+⏭️ [Stockage sécurisé des identifiants](/16-securite-des-applications/07-stockage-securise-des-identifiants.md)

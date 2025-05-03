@@ -529,4 +529,4 @@ N'oubliez pas que le domaine de l'IA évolue rapidement. Consultez régulièreme
 - [Documentation OpenAI](https://platform.openai.com/docs/introduction)
 - [Composants REST pour Delphi](https://docwiki.embarcadero.com/RADStudio/Alexandria/fr/REST_Client_Library)
 
-⏭️ [Utilisation des grands modèles de langage (LLM) via API](22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)
+⏭️ [Utilisation des grands modèles de langage (LLM) via API](/22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)

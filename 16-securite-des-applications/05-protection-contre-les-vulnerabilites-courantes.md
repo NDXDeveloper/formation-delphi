@@ -2164,4 +2164,4 @@ if %ERRORLEVEL% GEQ 1 (
 
 En mettant en œuvre ces recommandations et en utilisant les outils appropriés, vous pouvez considérablement renforcer la sécurité de vos applications Delphi contre les vulnérabilités courantes.
 
-⏭️ [Audit de sécurité](16-securite-des-applications/06-audit-de-securite.md)
+⏭️ [Audit de sécurité](/16-securite-des-applications/06-audit-de-securite.md)

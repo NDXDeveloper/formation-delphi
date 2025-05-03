@@ -295,4 +295,4 @@ Pour chaque nouvelle fonctionnalité qui vous intéresse :
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé de suivre toutes les évolutions en détail. Concentrez-vous d'abord sur la maîtrise des fondamentaux de Delphi. Au fur et à mesure que vous progresserez, vous pourrez naturellement élargir votre veille technologique. L'essentiel est de développer l'habitude de consulter régulièrement quelques sources fiables d'information.
 
-⏭️ [Exemples de projets open source Delphi](20-ressources-et-communaute/08-exemples-de-projets-open-source-delphi.md)
+⏭️ [Exemples de projets open source Delphi](/20-ressources-et-communaute/08-exemples-de-projets-open-source-delphi.md)

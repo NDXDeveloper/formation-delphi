@@ -877,4 +877,4 @@ Souvenez-vous que la meilleure approche est souvent préventive : une bonne conc
 
 Dans la prochaine section, nous explorerons la couverture de code et les techniques pour mesurer et améliorer la qualité de votre code Delphi.
 
-⏭️ [Couverture de code et qualité](12-debogage-et-tests/10-couverture-de-code-et-qualite.md)
+⏭️ [Couverture de code et qualité](/12-debogage-et-tests/10-couverture-de-code-et-qualite.md)

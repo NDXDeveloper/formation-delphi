@@ -769,4 +769,4 @@ N'oubliez pas que l'objectif ultime est de vous libérer des tâches répétitiv
 - [Inno Setup](https://jrsoftware.org/isinfo.php) - Créateur d'installateurs pour Windows
 - [GitHub Actions documentation](https://docs.github.com/en/actions) - Documentation officielle de GitHub Actions
 
-⏭️ [Clean Code et principes SOLID](18-architecture-et-bonnes-pratiques/09-clean-code-et-principes-solid.md)
+⏭️ [Clean Code et principes SOLID](/18-architecture-et-bonnes-pratiques/09-clean-code-et-principes-solid.md)

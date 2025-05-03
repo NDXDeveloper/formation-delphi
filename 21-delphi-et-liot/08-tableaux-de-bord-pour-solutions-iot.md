@@ -4718,4 +4718,4 @@ Pour aller plus loin avec votre tableau de bord IoT, voici quelques ressources u
 
 Ce tutoriel vous a guidé à travers la création d'un tableau de bord IoT fonctionnel et professionnel. N'hésitez pas à explorer davantage pour adapter cette solution à vos besoins spécifiques et créer des applications IoT encore plus puissantes avec Delphi!
 
-⏭️ [Intelligence Artificielle et Machine Learning avec Delphi](22-intelligence-artificielle-et-machine-learning-avec-delphi/README.md)
+⏭️ [Intelligence Artificielle et Machine Learning avec Delphi](/22-intelligence-artificielle-et-machine-learning-avec-delphi/README.md)

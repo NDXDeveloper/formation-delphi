@@ -5086,4 +5086,4 @@ Dans les prochaines sections, nous explorerons comment combiner ces capacités p
 
 > **Remarque** : Les exemples de code présentés dans ce chapitre sont conçus pour être didactiques et illustratifs. Dans un environnement de production réel, vous devriez prêter une attention particulière à la sécurité, aux performances et à la robustesse de votre implémentation.
 
-⏭️ [Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)](22-intelligence-artificielle-et-machine-learning-avec-delphi/06-integration-avec-des-services-dia-cloud.md)
+⏭️ [Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)](/22-intelligence-artificielle-et-machine-learning-avec-delphi/06-integration-avec-des-services-dia-cloud.md)

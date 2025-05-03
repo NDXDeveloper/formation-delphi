@@ -18,4 +18,4 @@ Un accent particulier sera mis sur la création d'interfaces utilisateur réacti
 
 Plongeons dans cet aspect fascinant de la programmation moderne qui vous permettra de créer des applications plus réactives, plus efficaces et exploitant pleinement la puissance de calcul disponible !
 
-⏭️ [Principes du multithreading](11-multithreading-et-programmation-asynchrone/01-principes-du-multithreading.md)
+⏭️ [Principes du multithreading](/11-multithreading-et-programmation-asynchrone/01-principes-du-multithreading.md)

@@ -3760,4 +3760,4 @@ Alors lancez-vous, expérimentez, et créez des applications mobiles qui se dém
 
 > **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
 
-⏭️ [Services Windows et applications de fond](19-projets-avances/04-services-windows-et-applications-de-fond.md)
+⏭️ [Services Windows et applications de fond](/19-projets-avances/04-services-windows-et-applications-de-fond.md)

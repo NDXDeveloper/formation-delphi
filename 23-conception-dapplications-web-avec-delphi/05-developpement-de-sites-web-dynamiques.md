@@ -1071,4 +1071,4 @@ Pour aller plus loin, explorez les frameworks et bibliothèques complémentaires
 
 N'hésitez pas à combiner Delphi avec des technologies web modernes pour tirer le meilleur des deux mondes !
 
-⏭️ [Intégration avec des frameworks JavaScript](23-conception-dapplications-web-avec-delphi/06-integration-avec-des-frameworks-javascript.md)
+⏭️ [Intégration avec des frameworks JavaScript](/23-conception-dapplications-web-avec-delphi/06-integration-avec-des-frameworks-javascript.md)

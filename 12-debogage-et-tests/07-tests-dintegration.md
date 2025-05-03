@@ -583,4 +583,4 @@ En suivant les bonnes pratiques présentées dans cette section et en adaptant l
 
 Dans la prochaine section, nous explorerons le mocking et les tests avec dépendances, des techniques qui vous permettront d'isoler votre code pour des tests plus précis et plus contrôlés.
 
-⏭️ [Mocking et tests avec dépendances](12-debogage-et-tests/08-mocking-et-tests-avec-dependances.md)
+⏭️ [Mocking et tests avec dépendances](/12-debogage-et-tests/08-mocking-et-tests-avec-dependances.md)

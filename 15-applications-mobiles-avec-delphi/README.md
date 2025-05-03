@@ -18,4 +18,4 @@ Vous découvrirez également comment tirer parti des services mobiles modernes, 
 
 Plongeons ensemble dans cet univers passionnant qui vous permettra d'étendre votre expertise Delphi au monde mobile et de créer des applications professionnelles pour les milliards d'appareils iOS et Android !
 
-⏭️ [Spécificités du développement mobile](15-applications-mobiles-avec-delphi/01-specificites-du-developpement-mobile.md)
+⏭️ [Spécificités du développement mobile](/15-applications-mobiles-avec-delphi/01-specificites-du-developpement-mobile.md)

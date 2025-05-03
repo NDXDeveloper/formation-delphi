@@ -1913,4 +1913,4 @@ Pour une gestion efficace des rapports dans une application d'entreprise, il est
 
 Dans la prochaine section, nous explorerons comment créer des rapports interactifs avec des fonctionnalités avancées comme les tableaux de bord, les rapports à la demande et les analyses ad hoc.
 
-⏭️ [Graphiques et visualisations de données](09-rapports-et-impressions/05-graphiques-et-visualisations-de-donnees.md)
+⏭️ [Graphiques et visualisations de données](/09-rapports-et-impressions/05-graphiques-et-visualisations-de-donnees.md)

@@ -2725,4 +2725,4 @@ Pour les graphiques avec de grandes quantités de données, pensez à :
 
 Avec les techniques présentées dans cette section, vous disposez maintenant des connaissances nécessaires pour créer des visualisations de données professionnelles et interactives qui aideront vos utilisateurs à mieux comprendre et analyser leurs données, renforçant ainsi considérablement la valeur de vos applications Delphi.
 
-⏭️ [Communication et services réseaux](10-communication-et-services-reseaux/README.md)
+⏭️ [Communication et services réseaux](/10-communication-et-services-reseaux/README.md)

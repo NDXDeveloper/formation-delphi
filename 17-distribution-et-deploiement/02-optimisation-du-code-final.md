@@ -251,4 +251,4 @@ L'optimisation du code final est une étape importante avant la distribution de 
 
 Dans la prochaine section, nous verrons comment créer des installateurs professionnels pour distribuer facilement votre application optimisée.
 
-⏭️ [Création d'installateurs (Inno Setup, InstallAware)](17-distribution-et-deploiement/03-creation-dinstallateurs.md)
+⏭️ [Création d'installateurs (Inno Setup, InstallAware)](/17-distribution-et-deploiement/03-creation-dinstallateurs.md)

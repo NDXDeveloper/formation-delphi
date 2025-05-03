@@ -547,4 +547,4 @@ En suivant les étapes et concepts présentés dans ce chapitre, vous êtes main
 
 **Rappel** : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.
 
-⏭️ [Applications PWA (Progressive Web Apps) avec Delphi](19-projets-avances/06-applications-pwa-avec-delphi.md)
+⏭️ [Applications PWA (Progressive Web Apps) avec Delphi](/19-projets-avances/06-applications-pwa-avec-delphi.md)

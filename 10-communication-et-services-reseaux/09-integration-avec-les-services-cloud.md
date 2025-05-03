@@ -2957,4 +2957,4 @@ L'intégration avec les services cloud offre de nombreux avantages aux applicati
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
 
-⏭️ [WebSockets et communications temps réel](10-communication-et-services-reseaux/10-websockets-et-communications-temps-reel.md)
+⏭️ [WebSockets et communications temps réel](/10-communication-et-services-reseaux/10-websockets-et-communications-temps-reel.md)

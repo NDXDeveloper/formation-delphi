@@ -836,4 +836,4 @@ Bien que le DDD puisse sembler complexe au début, ses principes peuvent être a
 
 N'oubliez pas que le DDD n'est pas une solution universelle. Évaluez si sa complexité est justifiée par les besoins de votre projet. Pour de nombreuses applications métier complexes, l'investissement dans le DDD se traduira par un code plus maintenable, plus évolutif et mieux aligné avec les objectifs de l'entreprise.
 
-⏭️ [Microservices et architecture distribuée](18-architecture-et-bonnes-pratiques/11-microservices-et-architecture-distribuee.md)
+⏭️ [Microservices et architecture distribuée](/18-architecture-et-bonnes-pratiques/11-microservices-et-architecture-distribuee.md)

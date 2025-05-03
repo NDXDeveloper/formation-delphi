@@ -656,4 +656,4 @@ En suivant ces principes, vous pourrez enrichir considérablement vos applicatio
 
 N'oubliez pas que chaque service a ses propres particularités et que cette introduction n'est qu'un point de départ. Consultez toujours la documentation officielle du service que vous souhaitez intégrer pour les détails spécifiques à ce service.
 
-⏭️ [Liaisons avec d'autres langages](14-utilisation-dapi-et-bibliotheques-externes/06-liaisons-avec-dautres-langages.md)
+⏭️ [Liaisons avec d'autres langages](/14-utilisation-dapi-et-bibliotheques-externes/06-liaisons-avec-dautres-langages.md)

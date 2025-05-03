@@ -1761,4 +1761,4 @@ Cet exercice vous permettra de mettre en pratique les concepts de programmation 
 
 Dans le prochain chapitre, nous explorerons les performances et les bonnes pratiques en multithreading, y compris comment optimiser vos applications multithreads
 
-⏭️ [Performances et bonnes pratiques en multithreading](11-multithreading-et-programmation-asynchrone/10-performances-et-bonnes-pratiques-en-multithreading.md)
+⏭️ [Performances et bonnes pratiques en multithreading](/11-multithreading-et-programmation-asynchrone/10-performances-et-bonnes-pratiques-en-multithreading.md)

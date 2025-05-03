@@ -517,4 +517,4 @@ Cet exercice vous permettra de voir concrètement la différence entre un code p
 
 Dans le prochain chapitre, nous explorerons `TTask` et la programmation parallèle, qui offrent une approche plus moderne et plus simple pour le multithreading.
 
-⏭️ [TTask et programmation parallèle](11-multithreading-et-programmation-asynchrone/04-ttask-et-programmation-parallele.md)
+⏭️ [TTask et programmation parallèle](/11-multithreading-et-programmation-asynchrone/04-ttask-et-programmation-parallele.md)

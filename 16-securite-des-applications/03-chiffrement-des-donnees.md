@@ -2240,4 +2240,4 @@ Dans le prochain chapitre, nous aborderons la sécurisation des connexions rése
 
 5. Pour les plus avancés : Implémentez un système de chiffrement de bout en bout pour l'échange de messages entre deux utilisateurs de votre application.
 
-⏭️ [Sécurisation des connexions](16-securite-des-applications/04-securisation-des-connexions.md)
+⏭️ [Sécurisation des connexions](/16-securite-des-applications/04-securisation-des-connexions.md)

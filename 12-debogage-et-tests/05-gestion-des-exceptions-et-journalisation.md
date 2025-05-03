@@ -703,4 +703,4 @@ En pratique, commencez simplement avec une journalisation basique, puis évoluez
 
 Dans la prochaine section, nous aborderons le débogage à distance, une technique puissante pour résoudre les problèmes qui ne se manifestent que dans des environnements spécifiques.
 
-⏭️ [Débogage à distance](12-debogage-et-tests/06-debogage-a-distance.md)
+⏭️ [Débogage à distance](/12-debogage-et-tests/06-debogage-a-distance.md)

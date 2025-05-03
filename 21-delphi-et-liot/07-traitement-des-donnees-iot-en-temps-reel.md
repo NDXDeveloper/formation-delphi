@@ -3070,4 +3070,4 @@ Voici quelques ressources utiles pour approfondir vos connaissances sur le trait
 
 Dans la prochaine section, nous explorerons la création de tableaux de bord IoT complets pour visualiser et interagir avec vos dispositifs et données.
 
-⏭️ [Tableaux de bord pour solutions IoT](21-delphi-et-liot/08-tableaux-de-bord-pour-solutions-iot.md)
+⏭️ [Tableaux de bord pour solutions IoT](/21-delphi-et-liot/08-tableaux-de-bord-pour-solutions-iot.md)

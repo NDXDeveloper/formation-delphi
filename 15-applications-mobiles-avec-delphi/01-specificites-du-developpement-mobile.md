@@ -204,4 +204,4 @@ En gardant à l'esprit les spécificités présentées dans ce chapitre, vous se
 
 Dans les sections suivantes, nous explorerons plus en détail la création d'interfaces tactiles efficaces et l'accès aux capteurs spécifiques des appareils mobiles.
 
-⏭️ [Interface utilisateur tactile](15-applications-mobiles-avec-delphi/02-interface-utilisateur-tactile.md)
+⏭️ [Interface utilisateur tactile](/15-applications-mobiles-avec-delphi/02-interface-utilisateur-tactile.md)

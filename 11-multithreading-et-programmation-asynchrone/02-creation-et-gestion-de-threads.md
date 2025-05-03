@@ -423,4 +423,4 @@ Pour vous entraîner, essayez de créer une application simple avec :
 
 Ce petit exercice vous permettra de mettre en pratique les concepts abordés dans ce chapitre.
 
-⏭️ [Synchronisation et sections critiques](11-multithreading-et-programmation-asynchrone/03-synchronisation-et-sections-critiques.md)
+⏭️ [Synchronisation et sections critiques](/11-multithreading-et-programmation-asynchrone/03-synchronisation-et-sections-critiques.md)

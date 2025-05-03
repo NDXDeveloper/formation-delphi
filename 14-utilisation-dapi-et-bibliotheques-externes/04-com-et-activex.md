@@ -503,4 +503,4 @@ Pour en apprendre davantage sur COM et ActiveX en Delphi, voici quelques ressour
 
 En maîtrisant COM et ActiveX, vous ajoutez un outil précieux à votre arsenal de développement Delphi, ouvrant la porte à une intégration transparente avec un large écosystème d'applications Windows.
 
-⏭️ [Intégration avec des services tiers](14-utilisation-dapi-et-bibliotheques-externes/05-integration-avec-des-services-tiers.md)
+⏭️ [Intégration avec des services tiers](/14-utilisation-dapi-et-bibliotheques-externes/05-integration-avec-des-services-tiers.md)

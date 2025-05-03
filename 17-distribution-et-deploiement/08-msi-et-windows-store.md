@@ -406,4 +406,4 @@ Chaque méthode a ses avantages et ses défis, mais avec les connaissances acqui
 
 Dans la prochaine section, nous explorerons l'intégration continue et le déploiement continu (CI/CD) pour automatiser le processus de compilation, de test et de déploiement de vos applications Delphi.
 
-⏭️ [Déploiement continu (CI/CD)](17-distribution-et-deploiement/09-deploiement-continu.md)
+⏭️ [Déploiement continu (CI/CD)](/17-distribution-et-deploiement/09-deploiement-continu.md)

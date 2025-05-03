@@ -179,4 +179,4 @@ La plupart des conférences Delphi partagent ensuite leurs ressources :
 
 En participant à ces événements, même en tant que débutant, vous accélérerez considérablement votre apprentissage de Delphi et vous vous intégrerez dans une communauté accueillante et passionnée. Les connexions que vous y ferez pourront vous aider tout au long de votre parcours avec Delphi, que ce soit pour résoudre des problèmes techniques ou découvrir de nouvelles opportunités professionnelles.
 
-⏭️ [Blogs et chaînes YouTube](20-ressources-et-communaute/05-blogs-et-chaines-youtube.md)
+⏭️ [Blogs et chaînes YouTube](/20-ressources-et-communaute/05-blogs-et-chaines-youtube.md)

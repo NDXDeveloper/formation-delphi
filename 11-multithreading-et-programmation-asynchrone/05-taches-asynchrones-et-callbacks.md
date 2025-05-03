@@ -681,4 +681,4 @@ Utilisez les concepts de tâches asynchrones et de callbacks pour implémenter c
 
 La programmation asynchrone et les callbacks sont des outils puissants pour créer des applications réactives qui peuvent effectuer des opérations complexes sans bloquer l'interface utilisateur. En maîtrisant ces concepts, vous pourrez développer des applications Delphi modernes et performantes.
 
-⏭️ [Files d'attente et pools de threads](11-multithreading-et-programmation-asynchrone/06-files-dattente-et-pools-de-threads.md)
+⏭️ [Files d'attente et pools de threads](/11-multithreading-et-programmation-asynchrone/06-files-dattente-et-pools-de-threads.md)

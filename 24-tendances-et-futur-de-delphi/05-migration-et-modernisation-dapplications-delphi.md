@@ -554,4 +554,4 @@ Même en tant que débutant, comprendre ces principes vous permettra d'aborder l
 
 Dans la prochaine section, nous explorerons comment Delphi s'intègre avec les technologies émergentes, ouvrant de nouvelles possibilités pour vos applications.
 
-⏭️ [Intégration avec les nouvelles technologies émergentes](24-tendances-et-futur-de-delphi/06-integration-avec-les-nouvelles-technologies-emergentes.md)
+⏭️ [Intégration avec les nouvelles technologies émergentes](/24-tendances-et-futur-de-delphi/06-integration-avec-les-nouvelles-technologies-emergentes.md)

@@ -1725,4 +1725,4 @@ N'oubliez pas que les mises à jour OTA ne remplacent pas complètement les mise
 
 Dans la prochaine section, nous verrons comment partager du code entre vos applications mobiles et desktop, une approche qui peut considérablement réduire le temps de développement et de maintenance de vos projets multi-plateformes.
 
-⏭️ [Partage de code entre applications mobile et desktop](15-applications-mobiles-avec-delphi/09-partage-de-code-entre-applications.md)
+⏭️ [Partage de code entre applications mobile et desktop](/15-applications-mobiles-avec-delphi/09-partage-de-code-entre-applications.md)

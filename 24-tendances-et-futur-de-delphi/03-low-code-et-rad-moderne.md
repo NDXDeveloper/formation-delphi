@@ -304,4 +304,4 @@ Le RAD moderne dans Delphi n'est pas qu'une question d'outils visuels, mais une 
 
 Dans la prochaine section, nous examinerons comment Delphi se positionne dans le paysage technologique actuel et comment il reste compétitif face aux technologies émergentes.
 
-⏭️ [Compétitivité dans le paysage technologique actuel](24-tendances-et-futur-de-delphi/04-competitivite-dans-le-paysage-technologique-actuel.md)
+⏭️ [Compétitivité dans le paysage technologique actuel](/24-tendances-et-futur-de-delphi/04-competitivite-dans-le-paysage-technologique-actuel.md)

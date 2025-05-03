@@ -443,4 +443,4 @@ En suivant les bonnes pratiques PWA et en exploitant les outils Delphi, vous pou
 
 _Note: Certains exemples avancés nécessitent Delphi 12 Athens ou supérieur._
 
-⏭️ [Projets d'intelligence artificielle et machine learning](19-projets-avances/07-projets-dintelligence-artificielle-et-machine-learning.md)
+⏭️ [Projets d'intelligence artificielle et machine learning](/19-projets-avances/07-projets-dintelligence-artificielle-et-machine-learning.md)

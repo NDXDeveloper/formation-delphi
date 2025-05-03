@@ -644,4 +644,4 @@ Les points clés à retenir :
 
 Dans la prochaine section, nous explorerons les outils de traduction et les flux de travail pour faciliter l'internationalisation de vos applications Delphi.
 
-⏭️ [Outils de traduction et flux de travail](13-internationalisation-et-localisation/08-outils-de-traduction-et-flux-de-travail.md)
+⏭️ [Outils de traduction et flux de travail](/13-internationalisation-et-localisation/08-outils-de-traduction-et-flux-de-travail.md)

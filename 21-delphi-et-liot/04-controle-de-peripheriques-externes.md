@@ -456,4 +456,4 @@ N'oubliez pas que Delphi excelle dans ce domaine grâce à sa compilation native
 
 La prochaine section couvrira les protocoles IoT spécialisés comme MQTT et CoAP.
 
-⏭️ [Protocoles IoT (MQTT, CoAP)](21-delphi-et-liot/05-protocoles-iot.md)
+⏭️ [Protocoles IoT (MQTT, CoAP)](/21-delphi-et-liot/05-protocoles-iot.md)

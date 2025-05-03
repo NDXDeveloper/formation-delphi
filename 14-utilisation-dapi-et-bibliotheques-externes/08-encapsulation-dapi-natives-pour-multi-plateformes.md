@@ -2512,4 +2512,4 @@ En suivant ces principes, vous créerez des applications Delphi multi-plateforme
 
 N'oubliez pas que le but principal de l'encapsulation d'API natives est de simplifier votre code d'application en masquant les complexités et les différences des plateformes sous-jacentes, vous permettant de vous concentrer sur les fonctionnalités et l'expérience utilisateur de votre application.
 
-⏭️ [Intégration de bibliothèques JavaScript via WebView](14-utilisation-dapi-et-bibliotheques-externes/09-integration-de-bibliotheques-javascript-via-webview.md)
+⏭️ [Intégration de bibliothèques JavaScript via WebView](/14-utilisation-dapi-et-bibliotheques-externes/09-integration-de-bibliotheques-javascript-via-webview.md)

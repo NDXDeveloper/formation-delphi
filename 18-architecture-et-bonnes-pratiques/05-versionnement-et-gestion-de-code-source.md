@@ -671,4 +671,4 @@ Les compétences en gestion de versions sont aujourd'hui indispensables pour tou
 - [Oh Shit, Git!?!](https://ohshitgit.com/fr) - Comment se sortir des situations difficiles avec Git
 - [Getting Started with Git and Delphi](https://www.embarcadero.com/starthere/xe5/mobdevsetup/ios/en/creating_a_git_repository.html) - Guide Embarcadero pour Git et Delphi
 
-⏭️ [Documentation du code](18-architecture-et-bonnes-pratiques/06-documentation-du-code.md)
+⏭️ [Documentation du code](/18-architecture-et-bonnes-pratiques/06-documentation-du-code.md)

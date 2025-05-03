@@ -1404,4 +1404,4 @@ FireMonkey et Delphi vous permettent de créer rapidement des applications multi
 
 > **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
 
-⏭️ [Applications mobiles avec fonctionnalités avancées](19-projets-avances/03-applications-mobiles-avec-fonctionnalites-avancees.md)
+⏭️ [Applications mobiles avec fonctionnalités avancées](/19-projets-avances/03-applications-mobiles-avec-fonctionnalites-avancees.md)

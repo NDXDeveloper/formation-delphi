@@ -1403,4 +1403,4 @@ Quel que soit votre choix, FireDAC rend l'interaction avec la base de données s
 
 **À suivre :** 8.13 NoSQL et bases de données documentaires
 
-⏭️ [NoSQL et bases de données documentaires](08-acces-aux-bases-de-donnees-mysql-mariadb/13-nosql-et-bases-de-donnees-documentaires.md)
+⏭️ [NoSQL et bases de données documentaires](/08-acces-aux-bases-de-donnees-mysql-mariadb/13-nosql-et-bases-de-donnees-documentaires.md)

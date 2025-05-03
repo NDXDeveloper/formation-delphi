@@ -1436,4 +1436,4 @@ La maîtrise du mocking vous permettra d'écrire des tests plus robustes et de c
 
 Dans la prochaine section, nous explorerons le débogage de code multi-thread, une compétence indispensable pour les applications modernes qui tirent parti de l'exécution parallèle.
 
-⏭️ [Déboggage de code multi-thread](12-debogage-et-tests/09-deboggage-de-code-multi-thread.md)
+⏭️ [Déboggage de code multi-thread](/12-debogage-et-tests/09-deboggage-de-code-multi-thread.md)

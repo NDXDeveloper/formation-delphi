@@ -18,4 +18,4 @@ Un accent particulier sera mis sur les stratégies pour maximiser la réutilisat
 
 Découvrons ensemble comment étendre votre expertise Delphi au monde du Web, créant ainsi des applications accessibles depuis n'importe quel appareil disposant d'un navigateur Internet !
 
-⏭️ [Introduction à Intraweb et TMS Web Core](23-conception-dapplications-web-avec-delphi/01-introduction-a-intraweb-et-tms-web-core.md)
+⏭️ [Introduction à Intraweb et TMS Web Core](/23-conception-dapplications-web-avec-delphi/01-introduction-a-intraweb-et-tms-web-core.md)

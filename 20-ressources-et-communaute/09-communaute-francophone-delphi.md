@@ -392,4 +392,4 @@ Options pour progresser :
 
 > **Astuce pour débutants** : N'hésitez pas à vous présenter lorsque vous rejoignez une communauté francophone Delphi. Mentionnez que vous êtes débutant, décrivez brièvement votre projet ou vos objectifs d'apprentissage, et vous recevrez généralement un accueil chaleureux et des conseils adaptés à votre niveau. La communauté francophone est particulièrement connue pour sa patience envers les nouveaux venus qui montrent de l'enthousiasme et de la volonté d'apprendre.
 
-⏭️ [Contribution aux projets Delphi](20-ressources-et-communaute/10-contribution-aux-projets-delphi.md)
+⏭️ [Contribution aux projets Delphi](/20-ressources-et-communaute/10-contribution-aux-projets-delphi.md)

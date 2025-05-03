@@ -689,4 +689,4 @@ Cette approche est particulièrement intéressante pour les développeurs Delphi
 
 N'oubliez pas que le monde des PWA évolue rapidement, alors restez à jour sur les dernières fonctionnalités et meilleures pratiques pour tirer le meilleur parti de cette technologie.
 
-⏭️ [WebAssembly et Delphi](23-conception-dapplications-web-avec-delphi/08-webassembly-et-delphi.md)
+⏭️ [WebAssembly et Delphi](/23-conception-dapplications-web-avec-delphi/08-webassembly-et-delphi.md)

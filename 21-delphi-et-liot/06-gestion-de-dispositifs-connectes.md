@@ -1708,4 +1708,4 @@ Pour finir, voici quelques bonnes pratiques à suivre lors de la création d'un 
 
 Dans la prochaine section, nous explorerons le traitement des données IoT en temps réel pour extraire des informations utiles de vos dispositifs connectés.
 
-⏭️ [Traitement des données IoT en temps réel](21-delphi-et-liot/07-traitement-des-donnees-iot-en-temps-reel.md)
+⏭️ [Traitement des données IoT en temps réel](/21-delphi-et-liot/07-traitement-des-donnees-iot-en-temps-reel.md)

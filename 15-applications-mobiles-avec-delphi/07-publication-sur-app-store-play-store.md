@@ -515,4 +515,4 @@ Une fois votre application publiée, écoutez attentivement les commentaires des
 
 Dans la prochaine section, nous explorerons comment mettre en place des mises à jour automatiques pour votre application afin de faciliter la distribution de nouvelles versions à vos utilisateurs existants.
 
-⏭️ [Mises à jour OTA (Over The Air)](15-applications-mobiles-avec-delphi/08-mises-a-jour-ota.md)
+⏭️ [Mises à jour OTA (Over The Air)](/15-applications-mobiles-avec-delphi/08-mises-a-jour-ota.md)

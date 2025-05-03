@@ -749,4 +749,4 @@ Commencez simplement, avec un pipeline basique, puis enrichissez-le progressivem
 
 Dans la prochaine section, nous explorerons les techniques de télémétrie et d'analyse de crash pour suivre la santé de vos applications en production et identifier rapidement les problèmes rencontrés par vos utilisateurs.
 
-⏭️ [Télémétrie et analyse de crash](17-distribution-et-deploiement/10-telemetrie-et-analyse-de-crash.md)
+⏭️ [Télémétrie et analyse de crash](/17-distribution-et-deploiement/10-telemetrie-et-analyse-de-crash.md)

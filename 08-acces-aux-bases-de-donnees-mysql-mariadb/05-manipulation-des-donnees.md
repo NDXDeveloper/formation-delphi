@@ -485,4 +485,4 @@ Dans les prochaines sections, nous explorerons plus en détail :
 - Les opérations CRUD avancées
 - Les transactions et l'intégrité des données
 
-⏭️ [Requêtes SQL et paramétrées](08-acces-aux-bases-de-donnees-mysql-mariadb/05.1-requetes-sql-parametrees.md)
+⏭️ [Requêtes SQL et paramétrées](/08-acces-aux-bases-de-donnees-mysql-mariadb/05.1-requetes-sql-parametrees.md)

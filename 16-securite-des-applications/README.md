@@ -18,4 +18,4 @@ Un accent particulier sera mis sur les considérations de sécurité propres aux
 
 Découvrons ensemble comment transformer la sécurité de simple considération technique en véritable avantage concurrentiel pour vos applications Delphi !
 
-⏭️ [Authentification des utilisateurs](16-securite-des-applications/01-authentification-des-utilisateurs.md)
+⏭️ [Authentification des utilisateurs](/16-securite-des-applications/01-authentification-des-utilisateurs.md)

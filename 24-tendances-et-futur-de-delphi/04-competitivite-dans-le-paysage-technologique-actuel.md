@@ -332,4 +332,4 @@ Pour le débutant, Delphi offre un chemin d'apprentissage qui combine la facilit
 
 Dans la prochaine section, nous explorerons les stratégies de migration et de modernisation des applications Delphi existantes, un aspect crucial pour de nombreuses entreprises ayant investi dans cette technologie au fil des ans.
 
-⏭️ [Migration et modernisation d'applications Delphi](24-tendances-et-futur-de-delphi/05-migration-et-modernisation-dapplications-delphi.md)
+⏭️ [Migration et modernisation d'applications Delphi](/24-tendances-et-futur-de-delphi/05-migration-et-modernisation-dapplications-delphi.md)

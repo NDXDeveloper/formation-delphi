@@ -788,4 +788,4 @@ Cet exercice vous permettra de mettre en pratique les concepts d'interface utili
 
 Dans la prochaine section, nous explorerons des cas d'usage concrets du multithreading dans différents types d'applications.
 
-⏭️ [Cas d'usage concrets](11-multithreading-et-programmation-asynchrone/08-cas-dusage-concrets.md)
+⏭️ [Cas d'usage concrets](/11-multithreading-et-programmation-asynchrone/08-cas-dusage-concrets.md)

@@ -640,4 +640,4 @@ Avec les composants d'exportation de FastReport, vous pouvez facilement proposer
 
 Dans la prochaine section, nous verrons comment créer des rapports interactifs qui offrent encore plus de flexibilité à vos utilisateurs.
 
-⏭️ [Rapports interactifs](09-rapports-et-impressions/07-rapports-interactifs.md)
+⏭️ [Rapports interactifs](/09-rapports-et-impressions/07-rapports-interactifs.md)

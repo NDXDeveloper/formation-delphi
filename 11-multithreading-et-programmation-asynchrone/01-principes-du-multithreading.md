@@ -157,4 +157,4 @@ end;
 
 Dans les sections suivantes, nous explorerons plus en détail la création et la gestion des threads, les techniques de synchronisation et les modèles de programmation asynchrone plus avancés disponibles dans Delphi.
 
-⏭️ [Création et gestion de threads](11-multithreading-et-programmation-asynchrone/02-creation-et-gestion-de-threads.md)
+⏭️ [Création et gestion de threads](/11-multithreading-et-programmation-asynchrone/02-creation-et-gestion-de-threads.md)

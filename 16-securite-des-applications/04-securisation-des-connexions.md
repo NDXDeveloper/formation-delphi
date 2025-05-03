@@ -1538,4 +1538,4 @@ Dans le prochain chapitre, nous aborderons la protection contre les vulnérabili
 
 5. Pour les plus avancés : Implémentez un système de messagerie chiffré de bout en bout utilisant le chiffrement asymétrique pour l'échange de clés et le chiffrement symétrique pour les messages.
 
-⏭️  [Protection contre les vulnérabilités courantes](16-securite-des-applications/05-protection-contre-les-vulnerabilites-courantes.md)
+⏭️  [Protection contre les vulnérabilités courantes](/16-securite-des-applications/05-protection-contre-les-vulnerabilites-courantes.md)

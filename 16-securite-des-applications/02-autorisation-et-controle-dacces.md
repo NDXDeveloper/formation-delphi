@@ -1436,4 +1436,4 @@ Dans le prochain chapitre, nous aborderons le chiffrement des données, qui cons
 
 5. Pour les plus avancés : Implémentez un système d'autorisation basé sur les attributs pour une application de gestion de documents où l'accès dépend du département de l'utilisateur et de la classification du document.
 
-⏭️ [Chiffrement des données](16-securite-des-applications/03-chiffrement-des-donnees.md)
+⏭️ [Chiffrement des données](/16-securite-des-applications/03-chiffrement-des-donnees.md)

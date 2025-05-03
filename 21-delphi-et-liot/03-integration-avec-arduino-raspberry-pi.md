@@ -1648,4 +1648,4 @@ L'intégration de Delphi avec Arduino et Raspberry Pi offre des possibilités in
 
 Dans les prochaines sections, nous explorerons les protocoles IoT spécialisés comme MQTT et CoAP, ainsi que la gestion des dispositifs connectés à plus grande échelle.
 
-⏭️ [Contrôle de périphériques externes](21-delphi-et-liot/04-controle-de-peripheriques-externes.md)
+⏭️ [Contrôle de périphériques externes](/21-delphi-et-liot/04-controle-de-peripheriques-externes.md)

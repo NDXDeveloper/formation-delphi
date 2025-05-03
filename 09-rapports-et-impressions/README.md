@@ -18,4 +18,4 @@ Enfin, nous explorerons les possibilités de visualisation avancée des données
 
 Explorons ensemble comment transformer vos données en rapports professionnels qui répondent aux exigences les plus strictes en matière de présentation et de qualité d'impression !
 
-⏭️ [Composants d'impression natifs](09-rapports-et-impressions/01-composants-dimpression-natifs.md)
+⏭️ [Composants d'impression natifs](/09-rapports-et-impressions/01-composants-dimpression-natifs.md)

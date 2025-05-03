@@ -1544,4 +1544,4 @@ En suivant les bonnes pratiques présentées dans ce chapitre, vous pourrez cré
 
 4. **Projet pratique** : Créez un outil de génération de commentaires de code qui analyse un fichier source Delphi et génère des commentaires explicatifs pour les méthodes et classes.
 
-⏭️ [Conception d'applications Web avec Delphi](23-conception-dapplications-web-avec-delphi/README.md)
+⏭️ [Conception d'applications Web avec Delphi](/23-conception-dapplications-web-avec-delphi/README.md)

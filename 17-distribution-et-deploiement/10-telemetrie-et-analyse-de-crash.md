@@ -1902,4 +1902,4 @@ En appliquant ces principes, vous transformerez votre application Delphi d'un pr
 
 Ce chapitre vous a présenté les concepts fondamentaux de la télémétrie et de l'analyse de crash dans les applications Delphi. En appliquant ces techniques, vous serez en mesure de créer des applications plus fiables et mieux adaptées aux besoins de vos utilisateurs. Dans les prochains chapitres, nous explorerons d'autres aspects avancés du développement avec Delphi qui vous permettront de créer des applications professionnelles de haute qualité.
 
-⏭️ [Architecture et bonnes pratiques](18-architecture-et-bonnes-pratiques/README.md)
+⏭️ [Architecture et bonnes pratiques](/18-architecture-et-bonnes-pratiques/README.md)

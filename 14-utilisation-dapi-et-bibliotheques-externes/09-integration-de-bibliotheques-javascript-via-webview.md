@@ -712,4 +712,4 @@ N'oubliez pas que la communication bidirectionnelle entre Delphi et JavaScript e
 - [Leaflet - Bibliothèque de cartes interactives](https://leafletjs.com/)
 - [Three.js - Bibliothèque 3D](https://threejs.org/)
 
-⏭️ [Applications mobiles avec Delphi](15-applications-mobiles-avec-delphi/README.md)
+⏭️ [Applications mobiles avec Delphi](/15-applications-mobiles-avec-delphi/README.md)

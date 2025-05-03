@@ -18,4 +18,4 @@ Nous aborderons également les stratégies de migration et de modernisation des 
 
 Explorons ensemble les horizons qui s'ouvrent à Delphi et comment vous pouvez vous positionner pour tirer le meilleur parti de cette plateforme en constante évolution !
 
-⏭️ [Évolution récente de l'écosystème Delphi](24-tendances-et-futur-de-delphi/01-evolution-recente-de-lecosysteme-delphi.md)
+⏭️ [Évolution récente de l'écosystème Delphi](/24-tendances-et-futur-de-delphi/01-evolution-recente-de-lecosysteme-delphi.md)

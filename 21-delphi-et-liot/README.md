@@ -18,4 +18,4 @@ Enfin, nous explorerons la gestion et la visualisation des données IoT, aspect 
 
 Embarquons ensemble dans cette exploration de l'Internet des Objets avec Delphi, et découvrez comment créer des applications qui connectent le monde numérique au monde physique !
 
-⏭️ [Introduction à l'IoT avec Delphi](21-delphi-et-liot/01-introduction-a-liot-avec-delphi.md)
+⏭️ [Introduction à l'IoT avec Delphi](/21-delphi-et-liot/01-introduction-a-liot-avec-delphi.md)

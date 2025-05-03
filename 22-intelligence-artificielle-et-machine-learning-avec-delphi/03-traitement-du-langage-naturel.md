@@ -2203,4 +2203,4 @@ Dans le prochain chapitre, nous explorerons la reconnaissance d'images et de for
 
 > **Remarque**: Les exemples de code présentés sont destinés à illustrer les concepts et peuvent nécessiter des adaptations pour fonctionner dans votre environnement spécifique.
 
-⏭️ [Reconnaissance d'images et de formes](22-intelligence-artificielle-et-machine-learning-avec-delphi/04-reconnaissance-dimages-et-de-formes.md)
+⏭️ [Reconnaissance d'images et de formes](/22-intelligence-artificielle-et-machine-learning-avec-delphi/04-reconnaissance-dimages-et-de-formes.md)

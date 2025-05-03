@@ -337,4 +337,4 @@ Pour aller plus loin, vous pouvez explorer des technologies comme REST, GraphQL,
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
 
-⏭️ [OAuth2 et authentification moderne](10-communication-et-services-reseaux/07-oauth2-et-authentification-moderne.md)
+⏭️ [OAuth2 et authentification moderne](/10-communication-et-services-reseaux/07-oauth2-et-authentification-moderne.md)

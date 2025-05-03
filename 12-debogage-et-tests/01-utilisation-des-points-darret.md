@@ -171,4 +171,4 @@ Les points d'arrêt sont un outil fondamental pour le débogage efficace dans De
 
 Dans la prochaine section, nous explorerons comment inspecter et modifier les variables pendant le débogage pour une analyse encore plus approfondie de votre code.
 
-⏭️ [Inspection et modification des variables](12-debogage-et-tests/02-inspection-et-modification-des-variables.md)
+⏭️ [Inspection et modification des variables](/12-debogage-et-tests/02-inspection-et-modification-des-variables.md)

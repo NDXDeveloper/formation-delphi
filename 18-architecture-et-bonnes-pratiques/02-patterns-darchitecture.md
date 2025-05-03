@@ -642,4 +642,4 @@ end.
 
 > **Astuce pour débutants** : Les patterns d'architecture peuvent sembler intimidants au début, mais ils deviennent plus naturels avec la pratique. Ne vous inquiétez pas si vous ne les appliquez pas parfaitement du premier coup. Commencez par simplement séparer votre code en fichiers logiques, puis évoluez vers des patterns plus structurés à mesure que vous gagnez en confiance et en expérience. L'objectif principal est d'avoir un code plus clair et plus maintenable, non de suivre rigidement une structure théorique.
 
-⏭️ [Séparation UI / logique métier](18-architecture-et-bonnes-pratiques/03-separation-ui-logique-metier.md)
+⏭️ [Séparation UI / logique métier](/18-architecture-et-bonnes-pratiques/03-separation-ui-logique-metier.md)

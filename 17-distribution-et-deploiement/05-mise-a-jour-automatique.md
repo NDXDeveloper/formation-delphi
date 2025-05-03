@@ -1047,4 +1047,4 @@ N'oubliez pas que la transparence est essentielle : informez toujours vos utilis
 
 Dans la prochaine section, nous aborderons le déploiement de vos applications Delphi sur différentes plateformes, ce qui étendra encore davantage la portée de vos logiciels.
 
-⏭️ [Déploiement sur différentes plateformes](17-distribution-et-deploiement/06-deploiement-sur-differentes-plateformes.md)
+⏭️ [Déploiement sur différentes plateformes](/17-distribution-et-deploiement/06-deploiement-sur-differentes-plateformes.md)

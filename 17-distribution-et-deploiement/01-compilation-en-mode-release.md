@@ -96,4 +96,4 @@ La compilation en mode Release est une étape essentielle avant de distribuer vo
 
 Dans la prochaine section, nous verrons comment optimiser davantage le code final pour obtenir les meilleures performances possibles.
 
-⏭️ [Optimisation du code final](17-distribution-et-deploiement/02-optimisation-du-code-final.md)
+⏭️ [Optimisation du code final](/17-distribution-et-deploiement/02-optimisation-du-code-final.md)

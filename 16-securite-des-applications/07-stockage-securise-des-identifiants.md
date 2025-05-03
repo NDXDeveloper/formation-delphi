@@ -2306,6 +2306,6 @@ Cette application illustre une façon simple de gérer des identifiants de mani�
 
 En mettant en pratique les concepts présentés dans ce chapitre, vous pourrez garantir que les informations sensibles de vos utilisateurs sont protégées de manière adéquate, contribuant ainsi à la sécurité globale de vos applications Delphi.
 
-⏭️ [GDPR et confidentialité des données](16-securite-des-applications/08-gdpr-et-confidentialite-des-donnees.md)
+⏭️ [GDPR et confidentialité des données](/16-securite-des-applications/08-gdpr-et-confidentialite-des-donnees.md)
 
 

@@ -549,4 +549,4 @@ Les conteneurs représentent l'avenir du déploiement d'applications, et avec le
 
 Dans la prochaine section, nous explorerons le déploiement d'applications Delphi sur le Microsoft Store, une autre avenue moderne pour distribuer vos applications aux utilisateurs finaux.
 
-⏭️ [MSI et Windows Store](17-distribution-et-deploiement/08-msi-et-windows-store.md)
+⏭️ [MSI et Windows Store](/17-distribution-et-deploiement/08-msi-et-windows-store.md)

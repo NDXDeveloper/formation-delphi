@@ -1371,4 +1371,4 @@ En suivant ces conseils et en utilisant les outils appropriés, vous faciliterez
 
 Avec cette section sur les outils de traduction et les flux de travail, vous avez maintenant tous les éléments nécessaires pour internationaliser efficacement vos applications Delphi. Dans le prochain chapitre, nous aborderons l'utilisation d'API et de bibliothèques externes pour étendre les fonctionnalités de vos applications.
 
-⏭️ [Utilisation d'API et bibliothèques externes](14-utilisation-dapi-et-bibliotheques-externes/README.md)
+⏭️ [Utilisation d'API et bibliothèques externes](/14-utilisation-dapi-et-bibliotheques-externes/README.md)

@@ -1412,4 +1412,4 @@ Les points clés à retenir sont :
 
 Dans la prochaine section, nous explorerons les notifications push et locales pour maintenir l'engagement des utilisateurs avec votre application, même lorsqu'elle n'est pas au premier plan.
 
-⏭️ [Notifications](15-applications-mobiles-avec-delphi/05-notifications.md)
+⏭️ [Notifications](/15-applications-mobiles-avec-delphi/05-notifications.md)

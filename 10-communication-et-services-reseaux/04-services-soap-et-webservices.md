@@ -684,4 +684,4 @@ En maîtrisant les concepts présentés dans ce chapitre, vous serez capable de 
    - Implémentez le même service en utilisant SOAP et REST
    - Comparez les performances et la facilité d'utilisation
 
-⏭️ [Architecture client-serveur](10-communication-et-services-reseaux/05-architecture-client-serveur.md)
+⏭️ [Architecture client-serveur](/10-communication-et-services-reseaux/05-architecture-client-serveur.md)

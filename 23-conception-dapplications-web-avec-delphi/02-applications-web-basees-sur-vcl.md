@@ -375,4 +375,4 @@ Dans la prochaine section, nous explorerons comment créer des services REST ave
 
 3. Bonus: Ajoutez un second formulaire qui affiche les données saisies et permet de les modifier.
 
-⏭️ [Création de services REST avec Delphi](23-conception-dapplications-web-avec-delphi/03-creation-de-services-rest-avec-delphi.md)
+⏭️ [Création de services REST avec Delphi](/23-conception-dapplications-web-avec-delphi/03-creation-de-services-rest-avec-delphi.md)

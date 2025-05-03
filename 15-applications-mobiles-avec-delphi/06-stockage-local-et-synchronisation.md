@@ -1565,4 +1565,4 @@ Les utilisateurs apprécieront particulièrement une application qui :
 
 La prochaine section explorera comment publier vos applications mobiles sur l'App Store et le Play Store, une étape cruciale pour atteindre votre public cible.
 
-⏭️ [Publication sur App Store / Play Store](15-applications-mobiles-avec-delphi/07-publication-sur-app-store-play-store.md)
+⏭️ [Publication sur App Store / Play Store](/15-applications-mobiles-avec-delphi/07-publication-sur-app-store-play-store.md)

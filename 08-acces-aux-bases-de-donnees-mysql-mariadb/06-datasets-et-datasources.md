@@ -704,4 +704,4 @@ Dans la prochaine section, nous explorerons les contrôles liés aux données qu
 
 **À suivre :** 8.7 Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)
 
-⏭️ [Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)](08-acces-aux-bases-de-donnees-mysql-mariadb/07-controles-lies-aux-donnees.md)
+⏭️ [Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)](/08-acces-aux-bases-de-donnees-mysql-mariadb/07-controles-lies-aux-donnees.md)

@@ -18,4 +18,4 @@ Nous aborderons également le profilage et l'optimisation des performances, vous
 
 Plongeons dans ces aspects essentiels du développement professionnel qui vous permettront de créer des applications non seulement fonctionnelles, mais également fiables, performantes et maintenables !
 
-⏭️ [Utilisation des points d'arrêt](12-debogage-et-tests/01-utilisation-des-points-darret.md)
+⏭️ [Utilisation des points d'arrêt](/12-debogage-et-tests/01-utilisation-des-points-darret.md)

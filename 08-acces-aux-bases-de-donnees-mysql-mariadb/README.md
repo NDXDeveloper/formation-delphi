@@ -18,4 +18,5 @@ Que vous développiez une application de gestion interne, un système commercial
 
 Plongeons dans l'univers de l'accès aux données avec Delphi et découvrons comment créer des applications centrées sur les données qui exploitent pleinement la puissance de MySQL et MariaDB !
 
-⏭️ [Vue d'ensemble des technologies d'accès aux données](08-acces-aux-bases-de-donnees-mysql-mariadb/01-vue-densemble-des-technologies-dacces-aux-donnees.md)
+⏭️ [Vue d'ensemble des technologies d'accès aux données](/08-acces-aux-bases-de-donnees-mysql-mariadb/01-vue-densemble-des-technologies-dacces-aux-donnees.md)
+

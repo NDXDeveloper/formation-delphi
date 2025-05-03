@@ -404,4 +404,4 @@ En adoptant cette discipline dès le début de vos projets, vous construirez des
 
 Dans les prochains chapitres, nous explorerons plus en détail les patterns architecturaux comme MVC et MVVM, ainsi que les techniques avancées d'organisation de code.
 
-⏭️ [Gestion de la configuration](18-architecture-et-bonnes-pratiques/04-gestion-de-la-configuration.md)
+⏭️ [Gestion de la configuration](/18-architecture-et-bonnes-pratiques/04-gestion-de-la-configuration.md)

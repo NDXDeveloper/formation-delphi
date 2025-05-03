@@ -1026,4 +1026,4 @@ Dans la prochaine section, nous explorerons "Live Bindings et liaison de donnée
 
 **À suivre :** 8.8 Live Bindings et liaison de données visuelle
 
-⏭️ [Live Bindings et liaison de données visuelle](08-acces-aux-bases-de-donnees-mysql-mariadb/08-live-bindings-et-liaison-de-donnees-visuelle.md)
+⏭️ [Live Bindings et liaison de données visuelle](/08-acces-aux-bases-de-donnees-mysql-mariadb/08-live-bindings-et-liaison-de-donnees-visuelle.md)

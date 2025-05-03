@@ -1046,6 +1046,6 @@ Ces solutions offrent des fonctionnalités avancées comme les tableaux croisés
 
 Dans la prochaine section, nous explorerons ces générateurs de rapports tiers et leurs fonctionnalités avancées.
 
-⏭️ [Générateurs de rapports (FastReport, QuickReport)](09-rapports-et-impressions/03-generateurs-de-rapports.md)
+⏭️ [Générateurs de rapports (FastReport, QuickReport)](/09-rapports-et-impressions/03-generateurs-de-rapports.md)
 
 

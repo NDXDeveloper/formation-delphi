@@ -434,4 +434,4 @@ Bien que cette intégration puisse sembler complexe au premier abord, les techni
 
 La clé du succès réside dans une bonne compréhension des conventions d'appel, de la gestion des types, et des bonnes pratiques pour la gestion des ressources.
 
-⏭️ [API Windows natif](14-utilisation-dapi-et-bibliotheques-externes/03-api-windows-natif.md)
+⏭️ [API Windows natif](/14-utilisation-dapi-et-bibliotheques-externes/03-api-windows-natif.md)

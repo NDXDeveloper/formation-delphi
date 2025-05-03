@@ -6563,4 +6563,4 @@ Créez un service qui synchronise des fichiers entre plusieurs ordinateurs sur u
 
 Ces exercices vous aideront à appliquer les concepts et techniques présentés dans ce chapitre, et à développer vos compétences dans la création de services Windows et d'applications de fond avec Delphi.
 
-⏭️ [Applications cloud et SaaS](19-projets-avances/05-applications-cloud-et-saas.md)
+⏭️ [Applications cloud et SaaS](/19-projets-avances/05-applications-cloud-et-saas.md)

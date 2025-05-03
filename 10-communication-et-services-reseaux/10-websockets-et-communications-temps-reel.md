@@ -2850,4 +2850,4 @@ Les communications en temps réel sont essentielles dans le paysage applicatif m
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités avancées de WebSockets peuvent nécessiter l'utilisation de bibliothèques tierces comme sgcWebSockets.*
 
-⏭️ [Multithreading et programmation asynchrone](11-multithreading-et-programmation-asynchrone/README.md)
+⏭️ [Multithreading et programmation asynchrone](/11-multithreading-et-programmation-asynchrone/README.md)

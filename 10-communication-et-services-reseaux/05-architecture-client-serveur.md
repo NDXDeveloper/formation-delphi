@@ -7755,4 +7755,4 @@ Pour approfondir vos connaissances sur l'architecture client-serveur, voici quel
 
 Avec ces connaissances et ces outils, vous êtes maintenant prêt à concevoir et implémenter vos propres applications client-serveur de manière professionnelle et efficace.
 
-⏭️ [Applications distribuées](10-communication-et-services-reseaux/06-applications-distribuees.md)
+⏭️ [Applications distribuées](/10-communication-et-services-reseaux/06-applications-distribuees.md)
