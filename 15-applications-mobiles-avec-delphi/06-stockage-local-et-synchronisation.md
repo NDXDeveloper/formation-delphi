@@ -1,5 +1,7 @@
 # 15.6 Stockage local et synchronisation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La gestion des données est un aspect fondamental des applications mobiles modernes. Les utilisateurs s'attendent à ce que leurs données soient préservées même lorsqu'ils ferment l'application et à pouvoir accéder à ces mêmes données sur différents appareils. Dans cette section, nous explorerons les techniques pour stocker les données localement et les synchroniser avec un serveur distant ou d'autres appareils.
 
 ## Défis du stockage et de la synchronisation sur mobile
@@ -1562,3 +1564,5 @@ Les utilisateurs apprécieront particulièrement une application qui :
 - Ne perd jamais leurs modifications
 
 La prochaine section explorera comment publier vos applications mobiles sur l'App Store et le Play Store, une étape cruciale pour atteindre votre public cible.
+
+⏭️ [Publication sur App Store / Play Store](15-applications-mobiles-avec-delphi/07-publication-sur-app-store-play-store.md)

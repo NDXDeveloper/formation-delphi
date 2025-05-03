@@ -1,5 +1,7 @@
 # 13.1 Gestion des chaînes de caractères
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'internationalisation d'une application commence par une bonne gestion des chaînes de caractères. Delphi offre des outils puissants pour manipuler le texte dans différentes langues et encodages.
 
 ## Les types de chaînes en Delphi
@@ -303,3 +305,5 @@ end;
 ---
 
 En maîtrisant ces techniques de gestion des chaînes de caractères, vous serez en mesure de créer des applications Delphi qui gèrent correctement les textes de différentes langues, ce qui est essentiel pour l'internationalisation de vos logiciels.
+
+⏭️ [Ressources linguistiques](13-internationalisation-et-localisation/02-ressources-linguistiques.md)

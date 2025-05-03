@@ -1,5 +1,7 @@
 # 18.6 Documentation du code
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Un code bien écrit raconte une histoire. Mais même la meilleure histoire peut bénéficier de quelques notes explicatives. C'est là qu'intervient la documentation du code.
@@ -742,3 +744,5 @@ N'oubliez pas que la meilleure documentation est celle qui est :
 Prendre l'habitude de documenter votre code au fur et à mesure que vous le développez est beaucoup plus efficace que d'essayer de le faire a posteriori. La documentation doit faire partie intégrante de votre processus de développement, pas une corvée à accomplir à la fin du projet.
 
 Un code bien documenté est la marque d'un développeur professionnel et responsable. C'est un signe de respect envers vos collègues et votre futur vous-même.
+
+⏭️ [Revue de code et refactoring](18-architecture-et-bonnes-pratiques/07-revue-de-code-et-refactoring.md)

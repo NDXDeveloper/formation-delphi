@@ -1,5 +1,7 @@
 # 20.6 Livres et formations
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Bien que les ressources en ligne soient nombreuses, les livres et formations structurées restent des moyens privilégiés pour acquérir des connaissances solides et méthodiques sur Delphi. Ces ressources offrent généralement un contenu plus approfondi, organisé de manière pédagogique et validé par des experts.
 
 ## Livres sur Delphi
@@ -277,3 +279,5 @@ Des certifications tierces sont également reconnues :
 ---
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé d'investir immédiatement dans des formations coûteuses. Commencez par les ressources gratuites disponibles en ligne, et n'achetez des livres ou des formations que lorsque vous aurez identifié précisément vos besoins et confirmé votre intérêt pour Delphi. La progression étape par étape est souvent plus efficace qu'une immersion trop intensive qui pourrait vous décourager.
+
+⏭️ [Rester à jour avec Delphi](20-ressources-et-communaute/07-rester-a-jour-avec-delphi.md)

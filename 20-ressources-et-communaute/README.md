@@ -1,5 +1,7 @@
 # 20. Ressources et communauté
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le voyage d'apprentissage de Delphi ne s'arrête pas à la fin de ce tutoriel. Pour continuer à développer vos compétences, résoudre des problèmes complexes et rester à jour avec les évolutions de la plateforme, il est essentiel de connaître les ressources disponibles et de s'intégrer dans la communauté active des développeurs Delphi. Ce chapitre vous guidera à travers l'écosystème riche qui entoure cet environnement de développement.
 
 Delphi bénéficie d'une communauté particulièrement fidèle et dynamique, composée de développeurs passionnés qui partagent leurs connaissances, leurs expériences et leurs solutions depuis plus de 25 ans. Cette longévité exceptionnelle dans le monde du développement logiciel a permis la création d'une vaste base de ressources : documentation, tutoriels, forums d'entraide, bibliothèques de composants, et bien plus encore.
@@ -15,3 +17,5 @@ La communauté francophone Delphi, particulièrement active, fera l'objet d'une 
 *Delphi 12 Athens a introduit de nouveaux canaux communautaires et ressources, notamment un hub de documentation amélioré et de nouvelles intégrations pour le partage de code et de solutions. Ces nouvelles ressources seront présentées tout au long de ce chapitre.*
 
 Découvrez comment tirer parti de la richesse de l'écosystème Delphi pour continuer votre apprentissage, trouver de l'aide quand vous en avez besoin, et contribuer à votre tour à cette communauté dynamique et accueillante !
+
+⏭️ [Documentation officielle](20-ressources-et-communaute/01-documentation-officielle.md)

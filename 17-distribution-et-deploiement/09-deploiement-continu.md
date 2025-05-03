@@ -1,5 +1,7 @@
 # 17.9 Déploiement continu (CI/CD)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous venez d'ajouter une nouvelle fonctionnalité à votre application Delphi. Après avoir effectué vos tests locaux, vous devez maintenant compiler l'application, créer un installateur, effectuer des tests supplémentaires et finalement la déployer pour vos utilisateurs. Et si tout ce processus pouvait être automatisé ? C'est exactement ce que permet l'intégration continue et le déploiement continu (CI/CD).
@@ -746,3 +748,5 @@ La mise en place d'un pipeline CI/CD pour vos applications Delphi peut sembler c
 Commencez simplement, avec un pipeline basique, puis enrichissez-le progressivement. N'oubliez pas que le CI/CD est un processus d'amélioration continue, tout comme le développement logiciel lui-même.
 
 Dans la prochaine section, nous explorerons les techniques de télémétrie et d'analyse de crash pour suivre la santé de vos applications en production et identifier rapidement les problèmes rencontrés par vos utilisateurs.
+
+⏭️ [Télémétrie et analyse de crash](17-distribution-et-deploiement/10-telemetrie-et-analyse-de-crash.md)

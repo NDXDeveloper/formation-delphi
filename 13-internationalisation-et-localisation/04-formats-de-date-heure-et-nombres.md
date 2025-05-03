@@ -1,5 +1,7 @@
 # 13.4 Formats de date, heure et nombres
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La gestion correcte des formats de date, heure et nombres est essentielle pour créer une application véritablement internationale. Ces formats varient considérablement d'un pays à l'autre, et leur bonne gestion contribue grandement à l'expérience utilisateur. Dans cette section, nous allons explorer en détail comment Delphi permet de gérer ces différents formats.
 
 ## L'importance des formats localisés
@@ -599,3 +601,5 @@ En utilisant correctement `TFormatSettings` et les fonctions de formatage associ
 ---
 
 Dans la prochaine section, nous verrons comment tester efficacement les aspects d'internationalisation de votre application pour vous assurer qu'elle fonctionne parfaitement pour tous vos utilisateurs.
+
+⏭️ [Tests de l'internationalisation](13-internationalisation-et-localisation/05-tests-de-linternationalisation.md)

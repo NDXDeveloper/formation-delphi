@@ -1,5 +1,7 @@
 # 18.11 Microservices et architecture distribuée
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans les chapitres précédents, nous avons vu comment structurer une application Delphi monolithique, où tous les composants fonctionnent au sein d'un même processus. Mais qu'en est-il si votre application devient si complexe qu'elle devient difficile à maintenir ? Ou si vous avez besoin de faire évoluer certaines parties indépendamment des autres ? Ou encore si vous souhaitez répartir la charge sur plusieurs serveurs ?
@@ -1528,3 +1530,5 @@ En résumé, les microservices sont un outil puissant dans votre boîte à outil
 - [Kubernetes](https://kubernetes.io/) - Orchestrateur de conteneurs
 - [RabbitMQ](https://www.rabbitmq.com/) - Broker de messages
 - [JWT](https://jwt.io/) - JSON Web Tokens pour l'authentification
+
+⏭️ [Projets avancés](19-projets-avances/README.md)

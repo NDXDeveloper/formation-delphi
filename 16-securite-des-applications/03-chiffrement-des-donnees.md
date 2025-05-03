@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.3 Chiffrement des données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le chiffrement est une technique qui permet de protéger vos données en les rendant illisibles sans la clé appropriée. Dans ce chapitre, nous allons explorer comment chiffrer et déchiffrer des données sensibles dans vos applications Delphi.
 
 ### Pourquoi chiffrer les données ?
@@ -2237,3 +2239,5 @@ Dans le prochain chapitre, nous aborderons la sécurisation des connexions rése
 4. Créez une application de carnet d'adresses qui chiffre les coordonnées des contacts (numéros de téléphone, adresses, etc.).
 
 5. Pour les plus avancés : Implémentez un système de chiffrement de bout en bout pour l'échange de messages entre deux utilisateurs de votre application.
+
+⏭️ [Sécurisation des connexions](16-securite-des-applications/04-securisation-des-connexions.md)

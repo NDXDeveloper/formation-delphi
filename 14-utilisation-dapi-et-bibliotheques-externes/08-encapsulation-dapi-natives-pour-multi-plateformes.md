@@ -1,5 +1,7 @@
 # 14.8 Encapsulation d'API natives pour multi-plateformes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Avec Delphi, il est possible de créer des applications qui fonctionnent sur plusieurs plateformes comme Windows, macOS, iOS, Android et Linux. Cependant, chaque système d'exploitation dispose de ses propres API natives qui offrent des fonctionnalités spécifiques à la plateforme.
@@ -2509,3 +2511,5 @@ L'encapsulation des API natives pour les applications multi-plateformes est une 
 En suivant ces principes, vous créerez des applications Delphi multi-plateformes robustes qui exploitent pleinement les capacités de chaque système d'exploitation tout en maintenant une base de code claire et maintenable.
 
 N'oubliez pas que le but principal de l'encapsulation d'API natives est de simplifier votre code d'application en masquant les complexités et les différences des plateformes sous-jacentes, vous permettant de vous concentrer sur les fonctionnalités et l'expérience utilisateur de votre application.
+
+⏭️ [Intégration de bibliothèques JavaScript via WebView](14-utilisation-dapi-et-bibliotheques-externes/09-integration-de-bibliotheques-javascript-via-webview.md)

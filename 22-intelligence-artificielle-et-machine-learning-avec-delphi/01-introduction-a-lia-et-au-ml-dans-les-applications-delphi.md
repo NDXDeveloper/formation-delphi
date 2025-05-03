@@ -1,5 +1,7 @@
 # 22.1 Introduction à l'IA et au ML dans les applications Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Qu'est-ce que l'IA et le ML ?
 
 Avant de plonger dans l'intégration de l'intelligence artificielle (IA) et du Machine Learning (ML) dans Delphi, définissons simplement ces concepts :
@@ -376,3 +378,5 @@ Dans les prochaines sections, nous approfondirons l'intégration avec des biblio
 ---
 
 > **Remarque**: Les exemples de code présentés nécessitent les unités système appropriées et, dans certains cas, des composants supplémentaires de la palette d'outils Delphi.
+
+⏭️ [Intégration avec TensorFlow et autres bibliothèques ML](22-intelligence-artificielle-et-machine-learning-avec-delphi/02-integration-avec-tensorflow-et-autres-bibliotheques-ml.md)

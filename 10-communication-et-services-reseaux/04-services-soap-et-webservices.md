@@ -1,5 +1,7 @@
 # 10.4 Services SOAP et WebServices
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les WebServices constituent un moyen standardisé permettant à des applications de communiquer entre elles via Internet, indépendamment des langages de programmation ou des systèmes d'exploitation utilisés. Dans ce chapitre, nous allons explorer les services SOAP (Simple Object Access Protocol) et les WebServices, comprendre leur fonctionnement et apprendre à les implémenter dans nos applications.
@@ -681,3 +683,5 @@ En maîtrisant les concepts présentés dans ce chapitre, vous serez capable de 
 4. **Comparaison SOAP vs REST**
    - Implémentez le même service en utilisant SOAP et REST
    - Comparez les performances et la facilité d'utilisation
+
+⏭️ [Architecture client-serveur](10-communication-et-services-reseaux/05-architecture-client-serveur.md)

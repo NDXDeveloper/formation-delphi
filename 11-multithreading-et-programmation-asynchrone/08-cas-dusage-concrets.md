@@ -1,5 +1,7 @@
 # 11.8 Cas d'usage concrets
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans les sections précédentes, nous avons exploré les concepts théoriques et techniques du multithreading. Maintenant, examinons comment appliquer ces connaissances à des cas d'usage réels. Ce chapitre présente plusieurs exemples concrets où le multithreading apporte une valeur significative, avec des exemples de code complets que vous pourrez adapter à vos propres projets.
@@ -1834,3 +1836,5 @@ Développez une application qui combine plusieurs des techniques vues dans ce ch
 Cet exercice vous permettra d'appliquer les concepts de multithreading dans un contexte plus complet et intégré.
 
 Dans le prochain chapitre, nous explorerons la programmation réactive avec le pattern Observer, qui constitue une autre approche puissante pour gérer les événements et les flux de données dans les applications Delphi.
+
+⏭️ [Programmation réactive avec le pattern Observer](11-multithreading-et-programmation-asynchrone/09-programmation-reactive-avec-pattern-observer.md)

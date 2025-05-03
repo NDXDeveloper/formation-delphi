@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.9 Signature numérique et validation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La signature numérique est une technique cryptographique qui permet de garantir l'authenticité et l'intégrité d'un document ou d'un message. Dans un monde où les données circulent en permanence, il est crucial de pouvoir vérifier que l'information n'a pas été altérée et qu'elle provient bien de l'émetteur attendu.
 
 Dans ce chapitre, nous allons explorer comment mettre en œuvre les signatures numériques dans vos applications Delphi, avec des exemples concrets et accessibles aux débutants.
@@ -605,3 +607,5 @@ En utilisant les signatures numériques, vous pouvez garantir l'authenticité et
 > - Explorez la certification de code pour signer vos applications Delphi avant distribution
 > - Découvrez les infrastructures à clé publique (PKI) pour gérer les certificats à grande échelle
 > - Intégrez les signatures numériques à vos processus d'authentification et de validation de documents
+
+⏭️ [Sécurité des applications mobiles](16-securite-des-applications/10-securite-des-applications-mobiles.md)

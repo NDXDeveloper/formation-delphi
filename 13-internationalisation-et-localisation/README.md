@@ -1,5 +1,7 @@
 # 13. Internationalisation et localisation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans un monde globalisé, les applications modernes doivent pouvoir s'adapter à différentes langues, cultures et conventions régionales. L'internationalisation (i18n) et la localisation (L10n) sont deux aspects complémentaires qui permettent à vos applications Delphi d'être accessibles et conviviales pour des utilisateurs du monde entier, augmentant ainsi considérablement leur portée et leur valeur commerciale.
 
 Dans ce chapitre, nous explorerons les fonctionnalités de Delphi qui facilitent la création d'applications multilingues et culturellement adaptées. Vous découvrirez comment concevoir votre architecture logicielle dès le départ pour qu'elle prenne en charge l'internationalisation, puis comment mettre en œuvre efficacement la localisation pour des marchés spécifiques.
@@ -15,3 +17,5 @@ Un accent particulier sera mis sur les aspects pratiques et les meilleures prati
 *Delphi 12 Athens a amélioré ses capacités d'internationalisation avec un support plus complet des scripts complexes et un meilleur rendu des textes bidirectionnels. Les fonctionnalités spécifiques à cette version seront clairement identifiées tout au long de ce chapitre.*
 
 Découvrons ensemble comment transformer vos applications en solutions véritablement globales, capables de communiquer efficacement avec des utilisateurs de cultures et de langues diverses !
+
+⏭️ [Gestion des chaînes de caractères](13-internationalisation-et-localisation/01-gestion-des-chaines-de-caracteres.md)

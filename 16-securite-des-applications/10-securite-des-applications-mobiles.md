@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.10 Sécurité des applications mobiles
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La sécurité des applications mobiles est un enjeu crucial dans le développement d'applications modernes. En effet, les applications mobiles accèdent souvent à des données sensibles et personnelles, et elles sont exposées à divers risques de sécurité. Dans ce chapitre, nous explorerons les meilleures pratiques et techniques pour sécuriser vos applications mobiles développées avec Delphi et FireMonkey (FMX).
 
 ### Les défis spécifiques de la sécurité mobile
@@ -1306,3 +1308,5 @@ En suivant ces bonnes pratiques et en effectuant des audits de sécurité régul
 
 > [!IMPORTANT]
 > La sécurité est un processus continu, pas un état final. Restez informé des nouvelles vulnérabilités et mettez régulièrement à jour vos applications pour maintenir un niveau de sécurité optimal.
+
+⏭️ [Distribution et déploiement](17-distribution-et-deploiement/README.md)

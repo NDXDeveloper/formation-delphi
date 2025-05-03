@@ -1,5 +1,7 @@
 # 11.7 Interface utilisateur réactive
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Une application bien conçue doit rester fluide et réactive, même lorsqu'elle exécute des opérations longues ou complexes en arrière-plan. Les utilisateurs s'attendent à pouvoir interagir avec l'interface à tout moment, sans blocages ni gel de l'application. Dans ce chapitre, nous allons découvrir comment créer des interfaces utilisateur réactives en Delphi en tirant parti des techniques de multithreading que nous avons apprises.
@@ -785,3 +787,5 @@ Cet exercice vous permettra de mettre en pratique les concepts d'interface utili
 - Gérez correctement les erreurs qui se produisent dans les threads secondaires.
 
 Dans la prochaine section, nous explorerons des cas d'usage concrets du multithreading dans différents types d'applications.
+
+⏭️ [Cas d'usage concrets](11-multithreading-et-programmation-asynchrone/08-cas-dusage-concrets.md)

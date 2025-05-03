@@ -1,5 +1,7 @@
 # 17.7 Virtualisation et conteneurs Docker
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans le monde du développement moderne, la virtualisation et les conteneurs sont devenus des technologies incontournables pour le déploiement d'applications. Si vous avez entendu parler de Docker et vous demandez comment l'utiliser avec vos applications Delphi, ce chapitre est fait pour vous. Nous allons explorer comment ces technologies peuvent simplifier le déploiement, améliorer la portabilité et faciliter la mise à l'échelle de vos applications Delphi.
@@ -546,3 +548,5 @@ La conteneurisation avec Docker offre de nombreux avantages pour les application
 Les conteneurs représentent l'avenir du déploiement d'applications, et avec les connaissances acquises dans ce chapitre, vous êtes maintenant prêt à moderniser votre workflow de développement Delphi et à profiter de tous les avantages de la conteneurisation.
 
 Dans la prochaine section, nous explorerons le déploiement d'applications Delphi sur le Microsoft Store, une autre avenue moderne pour distribuer vos applications aux utilisateurs finaux.
+
+⏭️ [MSI et Windows Store](17-distribution-et-deploiement/08-msi-et-windows-store.md)

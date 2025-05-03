@@ -1,5 +1,7 @@
 # 14.6 Liaisons avec d'autres langages
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans le monde du développement logiciel, il est rare qu'un seul langage de programmation puisse répondre à tous les besoins. Chaque langage a ses forces et ses faiblesses, et parfois, la meilleure solution consiste à combiner plusieurs langages dans un même projet. Delphi offre plusieurs moyens de communiquer avec du code écrit dans d'autres langages de programmation.
@@ -1137,3 +1139,5 @@ L'intégration entre Delphi et d'autres langages offre de nombreuses possibilit�
 En suivant ces principes, vous pourrez tirer parti des forces de chaque langage tout en conservant la puissance et la facilité de développement de Delphi comme base de votre application.
 
 L'intégration multi-langages n'est pas seulement une solution technique, c'est une approche stratégique qui vous permet de choisir le meilleur outil pour chaque tâche, maximisant ainsi l'efficacité et la qualité de vos applications.
+
+⏭️ [Liaison avec des API REST tierces](14-utilisation-dapi-et-bibliotheques-externes/07-liaison-avec-des-api-rest-tierces.md)

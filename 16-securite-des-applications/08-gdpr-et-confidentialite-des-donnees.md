@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.8 GDPR et confidentialité des données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le Règlement Général sur la Protection des Données (RGPD, ou GDPR en anglais) est une réglementation européenne qui définit comment les organisations doivent protéger les données personnelles des utilisateurs. Même si votre application n'est pas destinée au marché européen, les principes du GDPR constituent une bonne base pour concevoir des applications respectueuses de la vie privée des utilisateurs.
 
 Dans ce chapitre, nous allons explorer comment mettre en œuvre les principes du GDPR dans vos applications Delphi, avec des exemples concrets et des bonnes pratiques accessibles.
@@ -3773,3 +3775,5 @@ En intégrant ces principes dans vos applications Delphi, vous ne vous conformer
 6. **Développez un système de journalisation des accès** aux données personnelles qui enregistre qui a accédé à quelles données et quand.
 
 7. **Pour les plus avancés** : Implémentez un système complet de gestion de la conformité au GDPR, incluant le registre des activités de traitement, les politiques de rétention automatisées et des rapports d'audit réguliers.
+
+⏭️ [Signature numérique et validation](16-securite-des-applications/09-signature-numerique-et-validation.md)

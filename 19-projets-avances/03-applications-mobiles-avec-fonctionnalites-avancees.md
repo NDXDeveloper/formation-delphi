@@ -1,5 +1,7 @@
 # 19.3 Applications mobiles avec fonctionnalités avancées
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les appareils mobiles offrent un large éventail de fonctionnalités matérielles et logicielles que nous pouvons exploiter pour créer des applications riches et interactives. Dans ce chapitre, nous allons développer une application de "Carnet de Voyage" qui utilisera plusieurs fonctionnalités avancées disponibles sur les appareils mobiles.
@@ -3757,3 +3759,5 @@ Alors lancez-vous, expérimentez, et créez des applications mobiles qui se dém
 ---
 
 > **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
+
+⏭️ [Services Windows et applications de fond](19-projets-avances/04-services-windows-et-applications-de-fond.md)

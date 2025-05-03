@@ -1,5 +1,7 @@
 # 13.5 Tests de l'internationalisation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Après avoir implémenté l'internationalisation dans votre application Delphi, il est crucial de tester rigoureusement toutes les fonctionnalités liées aux différentes langues et cultures. Les tests d'internationalisation permettent de s'assurer que votre application fonctionnera correctement pour tous les utilisateurs, indépendamment de leur langue ou région.
 
 ## Pourquoi tester l'internationalisation ?
@@ -766,3 +768,5 @@ En investissant du temps dans les tests d'internationalisation, vous améliorere
 ---
 
 Dans la prochaine section, nous verrons comment gérer les encodages et le support Unicode dans vos applications Delphi.
+
+⏭️ [Support Unicode et encodages](13-internationalisation-et-localisation/06-support-unicode-et-encodages.md)

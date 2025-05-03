@@ -1,5 +1,7 @@
 # 19.7 Projets d'intelligence artificielle et machine learning avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à l'IA et au ML dans Delphi
 
 L'intelligence artificielle (IA) et le machine learning (ML) sont des domaines en pleine expansion qui transforment de nombreux secteurs. Grâce à Delphi, vous pouvez intégrer ces technologies avancées dans vos applications sans avoir à maîtriser des langages comme Python ou R. Ce chapitre vous guidera dans la création de projets d'IA et de ML avec Delphi, en commençant par les concepts fondamentaux.
@@ -2890,3 +2892,5 @@ Avec les bonnes pratiques et architectures présentées dans ce chapitre, vous a
 ---
 
 _Note: Certains exemples avancés nécessitent Delphi 12 Athens ou supérieur._
+
+⏭️ [Intégration de plateformes de paiement](19-projets-avances/08-integration-de-plateformes-de-paiement.md)

@@ -1,5 +1,7 @@
 # 10.7 OAuth2 et authentification moderne
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'authentification est un aspect crucial de toute application moderne, en particulier pour celles qui accèdent à des services externes ou qui nécessitent une sécurité renforcée. Dans ce chapitre, nous allons explorer OAuth2, le standard d'authentification moderne le plus répandu, et voir comment l'implémenter dans vos applications Delphi.
@@ -714,4 +716,6 @@ Pour aller plus loin, explorez d'autres fonctionnalités comme la gestion des to
 ---
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
+
+⏭️ [GraphQL et nouvelles API](10-communication-et-services-reseaux/08-graphql-et-nouvelles-api.md)
 

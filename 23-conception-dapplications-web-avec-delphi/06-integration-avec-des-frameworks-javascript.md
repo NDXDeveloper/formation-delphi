@@ -1,5 +1,7 @@
 # 23.6 Intégration avec des frameworks JavaScript
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Nous avons vu comment créer des sites web dynamiques avec Delphi, mais pour développer des interfaces utilisateur web modernes et interactives, l'intégration avec des frameworks JavaScript populaires peut être très avantageuse. Dans cette section, nous allons explorer comment combiner la puissance de Delphi côté serveur avec des frameworks JavaScript côté client pour créer des applications web complètes.
@@ -1056,3 +1058,5 @@ Si vous avez une application Delphi existante, vous pouvez la moderniser progres
 L'intégration de Delphi avec des frameworks JavaScript ouvre de nombreuses possibilités pour développer des applications web modernes. En combinant la robustesse de Delphi côté serveur avec la richesse des frameworks JavaScript côté client, vous pouvez créer des applications complètes qui tirent parti des forces de chaque technologie.
 
 Les approches présentées dans ce tutoriel ne sont que le début. À mesure que vous vous familiarisez avec ces concepts, vous pourrez explorer des intégrations plus avancées et créer des applications web sophistiquées avec Delphi.
+
+⏭️ [Progressive Web Apps (PWA)](23-conception-dapplications-web-avec-delphi/07-progressive-web-apps.md)

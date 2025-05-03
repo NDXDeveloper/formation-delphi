@@ -1,5 +1,7 @@
 # 17.2 Optimisation du code final
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Une fois que vous avez compilé votre application Delphi en mode Release, vous pouvez aller encore plus loin pour optimiser votre code final. Cette optimisation permet d'améliorer les performances, de réduire la taille de l'exécutable et d'offrir une meilleure expérience à vos utilisateurs. Ce chapitre vous guide à travers les différentes techniques d'optimisation accessibles même aux développeurs débutants.
@@ -248,3 +250,5 @@ Avant de finaliser votre application, vérifiez ces points :
 L'optimisation du code final est une étape importante avant la distribution de votre application Delphi. En appliquant les techniques décrites dans ce chapitre, vous pouvez améliorer significativement les performances de votre application. Rappelez-vous que l'optimisation est un équilibre entre performances, maintenabilité et temps de développement.
 
 Dans la prochaine section, nous verrons comment créer des installateurs professionnels pour distribuer facilement votre application optimisée.
+
+⏭️ [Création d'installateurs (Inno Setup, InstallAware)](17-distribution-et-deploiement/03-creation-dinstallateurs.md)

@@ -1,5 +1,7 @@
 # 9.5 Graphiques et visualisations de données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 La visualisation des données est un aspect essentiel des applications professionnelles. Présenter des informations sous forme de graphiques, diagrammes ou tableaux de bord permet aux utilisateurs de comprendre rapidement des tendances, des comparaisons ou des répartitions qui seraient difficiles à percevoir dans des données brutes.
@@ -593,3 +595,5 @@ Les graphiques et visualisations de données transforment les chiffres bruts en 
 En suivant les bonnes pratiques de visualisation et en choisissant les bons types de graphiques pour vos données, vous pouvez créer des tableaux de bord informatifs qui aideront vos utilisateurs à prendre de meilleures décisions.
 
 Dans la section suivante, nous verrons comment exporter vos rapports et visualisations vers différents formats comme PDF, Excel ou HTML.
+
+⏭️ [Exportation vers différents formats (PDF, Excel, HTML...)](09-rapports-et-impressions/06-exportation-vers-differents-formats.md)

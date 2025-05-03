@@ -1,5 +1,7 @@
 # 17.8 MSI et Windows Store
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Vous avez développé et optimisé votre application Delphi, et maintenant vous cherchez le meilleur moyen de la distribuer aux utilisateurs de Windows ? Ce chapitre vous guidera à travers deux méthodes de distribution professionnelles : les packages d'installation MSI et le Microsoft Store (Windows Store). Ces méthodes offrent à vos utilisateurs une expérience d'installation fluide et sécurisée, et peuvent aider votre application à atteindre un public plus large.
@@ -403,3 +405,5 @@ La distribution professionnelle de vos applications Delphi via des packages MSI 
 Chaque méthode a ses avantages et ses défis, mais avec les connaissances acquises dans ce chapitre, vous êtes maintenant en mesure de choisir la solution qui convient le mieux à votre application et à votre public cible.
 
 Dans la prochaine section, nous explorerons l'intégration continue et le déploiement continu (CI/CD) pour automatiser le processus de compilation, de test et de déploiement de vos applications Delphi.
+
+⏭️ [Déploiement continu (CI/CD)](17-distribution-et-deploiement/09-deploiement-continu.md)

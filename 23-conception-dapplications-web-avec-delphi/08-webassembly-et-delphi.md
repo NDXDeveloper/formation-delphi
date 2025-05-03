@@ -1,5 +1,7 @@
 # 23.8 WebAssembly et Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à WebAssembly
 
 WebAssembly (souvent abrégé Wasm) représente une avancée majeure dans le développement web. Il s'agit d'un format de code binaire conçu pour être exécuté dans les navigateurs web, offrant des performances proches du code natif. Pour les développeurs Delphi, WebAssembly ouvre de nouvelles possibilités pour porter des applications desktop sur le web tout en conservant des performances élevées.
@@ -505,3 +507,5 @@ WebAssembly ouvre de nouvelles portes pour les développeurs Delphi souhaitant c
 Que ce soit pour porter des applications existantes vers le web ou pour améliorer les performances des nouvelles applications web, WebAssembly représente une technologie prometteuse qui s'intègre bien dans l'écosystème Delphi.
 
 À mesure que la technologie évolue, nous pouvons nous attendre à une intégration encore plus profonde entre Delphi et WebAssembly, offrant aux développeurs le meilleur des deux mondes: la productivité et la facilité d'utilisation de Delphi, combinées avec les performances et la portabilité de WebAssembly.
+
+⏭️ [Tendances et futur de Delphi](24-tendances-et-futur-de-delphi/README.md)

@@ -1,5 +1,7 @@
 # 8.6 DataSets et DataSources
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons explorer deux concepts fondamentaux pour la gestion des données dans Delphi : les DataSets et les DataSources. Ces composants forment le pont entre votre base de données et l'interface utilisateur de votre application.
 
 ## Qu'est-ce qu'un DataSet ?
@@ -701,3 +703,5 @@ Dans la prochaine section, nous explorerons les contrôles liés aux données qu
 ---
 
 **À suivre :** 8.7 Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)
+
+⏭️ [Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)](08-acces-aux-bases-de-donnees-mysql-mariadb/07-controles-lies-aux-donnees.md)

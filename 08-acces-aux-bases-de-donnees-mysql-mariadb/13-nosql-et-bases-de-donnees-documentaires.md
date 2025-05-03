@@ -1,5 +1,7 @@
 # 8.13 NoSQL et bases de données documentaires
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Jusqu'à présent, nous avons exploré des bases de données relationnelles traditionnelles comme MySQL, SQLite, PostgreSQL et SQL Server. Mais il existe une autre catégorie de bases de données qui gagne en popularité : les bases de données NoSQL. Dans cette section, nous découvrirons ce qu'est le NoSQL, quand l'utiliser, et comment l'intégrer dans vos applications Delphi.
 
 ## Qu'est-ce que NoSQL ?
@@ -1511,3 +1513,5 @@ En explorant ces différentes approches, vous pourrez choisir la solution la plu
 ---
 
 **À suivre :** 9.1 Composants d'impression natifs
+
+⏭️ [Rapports et impressions](09-rapports-et-impressions/README.md)

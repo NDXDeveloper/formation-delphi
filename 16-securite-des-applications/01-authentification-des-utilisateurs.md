@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.1 Authentification des utilisateurs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'authentification des utilisateurs est une fonctionnalité essentielle pour de nombreuses applications modernes. Elle permet de vérifier l'identité d'un utilisateur et de lui accorder des droits spécifiques. Dans ce chapitre, nous allons explorer différentes méthodes d'authentification que vous pouvez implémenter dans vos applications Delphi.
 
 ### Qu'est-ce que l'authentification ?
@@ -563,3 +565,5 @@ Dans le prochain chapitre, nous aborderons la gestion des autorisations qui dét
 3. Implémentez un système "Se souvenir de moi" qui garde l'utilisateur connecté entre les sessions.
 4. Créez un système de récupération de mot de passe par e-mail.
 5. Pour les plus avancés : Implémentez l'authentification à deux facteurs avec une application comme Google Authenticator.
+
+⏭️ [Autorisation et contrôle d'accès](16-securite-des-applications/02-autorisation-et-controle-dacces.md)

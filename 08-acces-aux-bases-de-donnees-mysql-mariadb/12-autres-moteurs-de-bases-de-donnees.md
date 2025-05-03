@@ -1,5 +1,7 @@
 # 8.12 Autres moteurs de bases de données (SQLite, PostgreSQL, SQL Server)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Jusqu'à présent, nous avons concentré notre attention sur MySQL/MariaDB, mais l'un des grands avantages de FireDAC est sa capacité à se connecter à de nombreux moteurs de bases de données différents. Dans cette section, nous explorerons trois alternatives populaires : SQLite, PostgreSQL et SQL Server, et verrons comment adapter votre code Delphi pour travailler avec ces systèmes.
 
 ## Pourquoi utiliser d'autres moteurs de bases de données ?
@@ -1400,3 +1402,5 @@ Quel que soit votre choix, FireDAC rend l'interaction avec la base de données s
 ---
 
 **À suivre :** 8.13 NoSQL et bases de données documentaires
+
+⏭️ [NoSQL et bases de données documentaires](08-acces-aux-bases-de-donnees-mysql-mariadb/13-nosql-et-bases-de-donnees-documentaires.md)

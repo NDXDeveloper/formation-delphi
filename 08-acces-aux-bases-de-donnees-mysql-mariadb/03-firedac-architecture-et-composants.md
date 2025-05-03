@@ -1,5 +1,7 @@
 # 8.3 FireDAC : architecture et composants
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons explorer l'architecture de FireDAC et ses principaux composants. Comprendre ces éléments vous permettra de tirer le meilleur parti de cette technologie d'accès aux données puissante et flexible.
 
 ## Qu'est-ce que FireDAC ?
@@ -323,3 +325,5 @@ Dans la prochaine section, nous mettrons en pratique ces connaissances en nous c
 ---
 
 **À suivre :** 8.4 Connexion à une base MySQL/MariaDB
+
+⏭️ [Connexion à une base MySQL/MariaDB](08-acces-aux-bases-de-donnees-mysql-mariadb/04-connexion-a-une-base-mysql-mariadb.md)

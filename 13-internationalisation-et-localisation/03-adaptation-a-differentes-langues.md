@@ -1,5 +1,7 @@
 # 13.3 Adaptation à différentes langues
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La simple traduction des chaînes de caractères ne suffit pas pour créer une application véritablement internationale. L'adaptation à différentes langues, ou localisation, implique de prendre en compte plusieurs aspects culturels et linguistiques spécifiques. Dans cette section, nous aborderons les différentes techniques pour adapter votre application Delphi à plusieurs langues.
 
 ## Au-delà de la traduction de texte
@@ -632,3 +634,5 @@ Delphi offre un excellent support pour la localisation, tant au niveau de la VCL
 ---
 
 Dans la prochaine section, nous verrons comment gérer les formats de date, heure et nombres spécifiques à chaque culture.
+
+⏭️ [Formats de date, heure et nombres](13-internationalisation-et-localisation/04-formats-de-date-heure-et-nombres.md)

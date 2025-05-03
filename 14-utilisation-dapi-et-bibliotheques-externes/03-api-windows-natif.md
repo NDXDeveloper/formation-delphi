@@ -1,5 +1,7 @@
 # 14.3 API Windows natif
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'API Windows (Application Programming Interface) est un ensemble de fonctions, structures et constantes qui permettent à votre application Delphi d'interagir directement avec le système d'exploitation Windows. Si vous imaginez Windows comme une maison, l'API Windows représente toutes les portes, fenêtres et interrupteurs que vous pouvez utiliser pour contrôler cette maison.
@@ -715,3 +717,5 @@ Les exemples présentés dans ce chapitre ne sont qu'un aperçu des possibilité
 - Les graphiques et l'accès matériel
 
 N'hésitez pas à consulter la documentation Microsoft et les exemples Delphi pour approfondir vos connaissances de l'API Windows et enrichir vos applications.
+
+⏭️ [COM et ActiveX](14-utilisation-dapi-et-bibliotheques-externes/04-com-et-activex.md)

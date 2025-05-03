@@ -1,5 +1,7 @@
 # 23.5 Développement de sites Web dynamiques
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux sites Web dynamiques avec Delphi
 
 Jusqu'à présent, nous avons exploré comment créer des services REST et des applications Web basées sur VCL avec Delphi. Dans cette section, nous allons voir comment développer des sites Web véritablement dynamiques - des sites qui génèrent du contenu HTML à la volée en fonction des actions de l'utilisateur, des données de base de données, et d'autres facteurs.
@@ -1068,3 +1070,5 @@ Pour aller plus loin, explorez les frameworks et bibliothèques complémentaires
 - **HTMLComponents** : Pour un parsing HTML plus avancé
 
 N'hésitez pas à combiner Delphi avec des technologies web modernes pour tirer le meilleur des deux mondes !
+
+⏭️ [Intégration avec des frameworks JavaScript](23-conception-dapplications-web-avec-delphi/06-integration-avec-des-frameworks-javascript.md)

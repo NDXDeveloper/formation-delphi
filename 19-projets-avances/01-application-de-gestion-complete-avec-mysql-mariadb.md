@@ -1,5 +1,7 @@
 # 19.1 Application de gestion complète avec MySQL/MariaDB
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons développer ensemble une application de gestion complète utilisant Delphi et une base de données MySQL/MariaDB. Ce projet vous permettra d'appliquer de nombreux concepts vus précédemment et de les assembler dans une solution cohérente et fonctionnelle.
 
 ## Objectifs du projet
@@ -96,3 +98,5 @@ Ces sections vous guideront à travers le processus complet de développement, a
 ---
 
 *Note: Cette section du tutoriel est conçue pour vous guider à travers la création d'une application complète. Si certains concepts vous semblent complexes, n'hésitez pas à consulter les chapitres précédents pour rafraîchir vos connaissances.*
+
+⏭️ [Conception de la base de données](19-projets-avances/01.1-conception-base-donnees.md)

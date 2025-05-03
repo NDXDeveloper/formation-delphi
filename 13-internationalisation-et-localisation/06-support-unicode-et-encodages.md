@@ -1,5 +1,7 @@
 # 13.6 Support Unicode et encodages
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le support des différents encodages de caractères, et notamment d'Unicode, est essentiel pour créer des applications véritablement internationales. Dans cette section, nous allons explorer comment Delphi gère les encodages et comment vous pouvez travailler efficacement avec Unicode.
 
 ## Comprendre les encodages de caractères
@@ -659,3 +661,5 @@ Les points clés à retenir :
 ---
 
 Dans la prochaine section, nous verrons comment gérer les écritures bidirectionnelles pour les langues comme l'arabe et l'hébreu.
+
+⏭️ [Gestion des écritures bidirectionnelles (RTL)](13-internationalisation-et-localisation/07-gestion-des-ecritures-bidirectionnelles.md)

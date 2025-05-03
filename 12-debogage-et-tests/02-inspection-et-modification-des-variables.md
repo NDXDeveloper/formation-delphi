@@ -1,5 +1,7 @@
 # 12.2 Inspection et modification des variables
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à l'inspection des variables
 
 Une fois que vous avez suspendu l'exécution de votre programme avec un point d'arrêt, l'une des actions les plus utiles que vous pouvez effectuer est d'examiner l'état de vos variables. Delphi offre plusieurs outils puissants pour inspecter et même modifier les variables pendant le débogage, ce qui vous permet de comprendre et de corriger efficacement les problèmes dans votre code.
@@ -294,3 +296,5 @@ L'inspection et la modification des variables pendant le débogage sont des comp
 En maîtrisant ces techniques, vous gagnerez un temps précieux lors de la résolution de problèmes complexes et développerez une meilleure compréhension du comportement de votre code à l'exécution.
 
 Dans la prochaine section, nous aborderons les tests unitaires avec DUnit/DUnitX, qui constituent une approche plus structurée pour vérifier le bon fonctionnement de votre code.
+
+⏭️ [Test unitaire avec DUnit/DUnitX](12-debogage-et-tests/03-test-unitaire-avec-dunit-dunitx.md)

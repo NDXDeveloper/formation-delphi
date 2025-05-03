@@ -1,5 +1,7 @@
 # 18.5 Versionnement et gestion de code source
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous travaillez sur votre application Delphi depuis plusieurs semaines. Un jour, vous décidez d'ajouter une nouvelle fonctionnalité, mais après plusieurs heures de développement, vous réalisez que votre code ne fonctionne plus correctement. Vous aimeriez revenir à la version précédente, mais comment faire ?
@@ -668,3 +670,5 @@ Les compétences en gestion de versions sont aujourd'hui indispensables pour tou
 - [Learn Git Branching](https://learngitbranching.js.org/?locale=fr_FR) - Tutorial interactif pour apprendre Git
 - [Oh Shit, Git!?!](https://ohshitgit.com/fr) - Comment se sortir des situations difficiles avec Git
 - [Getting Started with Git and Delphi](https://www.embarcadero.com/starthere/xe5/mobdevsetup/ios/en/creating_a_git_repository.html) - Guide Embarcadero pour Git et Delphi
+
+⏭️ [Documentation du code](18-architecture-et-bonnes-pratiques/06-documentation-du-code.md)

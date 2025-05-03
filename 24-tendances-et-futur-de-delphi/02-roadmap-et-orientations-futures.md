@@ -1,5 +1,7 @@
 # 24.2 Roadmap et orientations futures de Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Comprendre les orientations futures de Delphi est essentiel pour tout développeur, même débutant. Cela vous permet d'anticiper les évolutions technologiques et de prendre des décisions éclairées pour vos projets. Cette section explore la roadmap de Delphi et les tendances qui façonneront son avenir.
@@ -197,3 +199,5 @@ Si vous débutez avec Delphi, voici quelques conseils concernant la roadmap :
 La roadmap de Delphi montre un engagement continu envers la modernisation tout en préservant les points forts historiques de l'environnement. Pour les débutants, c'est rassurant de savoir que l'investissement dans l'apprentissage de Delphi s'inscrit dans une vision à long terme, avec un écosystème qui continue d'évoluer et de s'adapter aux tendances technologiques.
 
 Dans la prochaine section, nous explorerons comment le RAD (Rapid Application Development) moderne s'intègre dans l'écosystème Delphi actuel et comment les approches low-code transforment le développement.
+
+⏭️ [Low-code et RAD moderne](24-tendances-et-futur-de-delphi/03-low-code-et-rad-moderne.md)

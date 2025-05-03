@@ -1,5 +1,7 @@
 # 23.4 Utilisation de WebBroker et DataSnap
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à WebBroker et DataSnap
 
 Dans les sections précédentes, nous avons exploré les fondamentaux des applications web avec Delphi. Maintenant, nous allons plonger dans deux technologies importantes pour le développement d'applications web côté serveur : WebBroker et DataSnap. Ces outils puissants vous permettent de créer des services web robustes et des solutions complètes de partage de données.
@@ -1169,3 +1171,5 @@ Dans cette section, nous avons exploré les fondamentaux de WebBroker et DataSna
 - Livres recommandés :
   - "Delphi Cookbook" par Daniele Spinetti et Daniele Teti
   - "Delphi Event-Based and Asynchronous Programming" par Andrea Magni
+
+⏭️ [Développement de sites Web dynamiques](23-conception-dapplications-web-avec-delphi/05-developpement-de-sites-web-dynamiques.md)

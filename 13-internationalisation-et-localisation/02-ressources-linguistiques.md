@@ -1,5 +1,7 @@
 # 13.2 Ressources linguistiques
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Pour créer des applications multilingues, il est essentiel de séparer les chaînes de caractères de votre code source. Delphi propose plusieurs mécanismes pour gérer les ressources linguistiques, permettant ainsi une internationalisation efficace de vos applications.
 
 ## Pourquoi utiliser des ressources linguistiques ?
@@ -435,3 +437,5 @@ En choisissant la bonne approche pour votre projet et en suivant les bonnes prat
 ---
 
 Dans la prochaine section, nous verrons comment adapter votre application à différentes langues au-delà de la simple traduction des chaînes de caractères.
+
+⏭️ [Adaptation à différentes langues](13-internationalisation-et-localisation/03-adaptation-a-differentes-langues.md)

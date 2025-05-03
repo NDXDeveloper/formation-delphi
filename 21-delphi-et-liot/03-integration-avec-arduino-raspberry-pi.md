@@ -1,5 +1,7 @@
 # 21.3 Intégration avec Arduino / Raspberry Pi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'une des forces de Delphi dans le domaine de l'IoT est sa capacité à s'intégrer avec des plateformes matérielles populaires comme Arduino et Raspberry Pi. Cette intégration vous permet de créer des solutions IoT complètes en combinant la puissance de développement d'interface de Delphi avec la flexibilité matérielle de ces plateformes.
@@ -1645,3 +1647,5 @@ L'intégration de Delphi avec Arduino et Raspberry Pi offre des possibilités in
 - **Delphi** pour créer des interfaces utilisateur riches et professionnelles
 
 Dans les prochaines sections, nous explorerons les protocoles IoT spécialisés comme MQTT et CoAP, ainsi que la gestion des dispositifs connectés à plus grande échelle.
+
+⏭️ [Contrôle de périphériques externes](21-delphi-et-liot/04-controle-de-peripheriques-externes.md)

@@ -1,5 +1,7 @@
 # 8.1 Vue d'ensemble des technologies d'accès aux données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'accès aux bases de données est l'une des fonctionnalités les plus importantes dans le développement d'applications professionnelles. Delphi offre plusieurs technologies robustes pour se connecter et manipuler des bases de données, ce qui en fait un choix excellent pour développer des applications de gestion.
@@ -116,3 +118,5 @@ Delphi propose des solutions robustes et performantes pour l'accès aux données
 ---
 
 **À suivre :** 8.2 Configuration de MySQL/MariaDB pour Delphi
+
+⏭️ [Configuration de MySQL/MariaDB pour Delphi](08-acces-aux-bases-de-donnees-mysql-mariadb/02-configuration-de-mysql-mariadb-pour-delphi.md)

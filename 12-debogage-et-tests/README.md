@@ -1,5 +1,7 @@
 # 12. Débogage et tests
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le développement de logiciels ne se limite pas à l'écriture de code. La création d'applications fiables et performantes nécessite une approche méthodique pour identifier, comprendre et résoudre les problèmes, ainsi que pour vérifier le bon fonctionnement des fonctionnalités. Delphi offre un environnement de débogage puissant et intuitif, complété par des outils de test qui vous permettent de garantir la qualité de vos applications tout au long du cycle de développement.
 
 Dans ce chapitre, nous explorerons les nombreuses facettes du débogage et des tests dans l'environnement Delphi. Vous découvrirez comment exploiter pleinement les capacités de son débogueur intégré, l'un des points forts historiques de cet IDE, qui vous permet d'observer et de contrôler l'exécution de votre programme avec une grande précision.
@@ -15,3 +17,5 @@ Nous aborderons également le profilage et l'optimisation des performances, vous
 *Delphi 12 Athens a introduit plusieurs améliorations dans son débogueur et ses outils de tests, notamment une meilleure prise en charge du débogage à distance et des fonctionnalités avancées d'inspection des variables. Les fonctionnalités spécifiques à cette version seront clairement identifiées tout au long de ce chapitre.*
 
 Plongeons dans ces aspects essentiels du développement professionnel qui vous permettront de créer des applications non seulement fonctionnelles, mais également fiables, performantes et maintenables !
+
+⏭️ [Utilisation des points d'arrêt](12-debogage-et-tests/01-utilisation-des-points-darret.md)

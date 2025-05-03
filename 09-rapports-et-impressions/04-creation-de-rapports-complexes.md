@@ -1,5 +1,7 @@
 # 9.4 Création de rapports complexes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Après avoir découvert les bases des générateurs de rapports dans les sections précédentes, nous allons maintenant nous plonger dans la création de rapports plus complexes. Ces rapports avancés vous permettront de présenter des informations de manière plus détaillée et structurée, de répondre aux besoins métier sophistiqués et d'offrir une meilleure expérience à vos utilisateurs.
@@ -1910,3 +1912,5 @@ La création de rapports complexes avec FastReport (ou QuickReport) offre de nom
 Pour une gestion efficace des rapports dans une application d'entreprise, il est recommandé de mettre en place une architecture modulaire avec un gestionnaire de rapports centralisé, comme celui présenté dans cette section. Cette approche facilite la maintenance, l'évolution et l'utilisation des rapports tout au long du cycle de vie de votre application.
 
 Dans la prochaine section, nous explorerons comment créer des rapports interactifs avec des fonctionnalités avancées comme les tableaux de bord, les rapports à la demande et les analyses ad hoc.
+
+⏭️ [Graphiques et visualisations de données](09-rapports-et-impressions/05-graphiques-et-visualisations-de-donnees.md)

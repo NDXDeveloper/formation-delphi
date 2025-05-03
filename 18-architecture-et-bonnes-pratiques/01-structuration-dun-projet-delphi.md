@@ -1,5 +1,7 @@
 # 18.1 Structuration d'un projet Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La structuration d'un projet est un aspect fondamental du développement logiciel, souvent négligé par les débutants mais essentiel pour créer des applications maintenables et évolutives. Une bonne organisation de votre projet Delphi dès le départ vous fera gagner un temps considérable lors des phases de développement, de maintenance et d'évolution. Cette section vous guidera à travers les principes et pratiques pour bien structurer vos projets Delphi.
 
 ## Pourquoi structurer son projet ?
@@ -389,3 +391,5 @@ Cette structure est simple mais évolutive, adaptée à une petite application q
 ---
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé d'adopter immédiatement une structure complexe. Commencez avec une organisation simple, puis restructurez progressivement à mesure que votre projet grandit et que votre compréhension s'améliore. Une bonne structure est celle qui vous aide à naviguer et à comprendre votre propre code, même après plusieurs mois sans y avoir touché.
+
+⏭️ [Patterns d'architecture (MVC, MVVM)](18-architecture-et-bonnes-pratiques/02-patterns-darchitecture.md)

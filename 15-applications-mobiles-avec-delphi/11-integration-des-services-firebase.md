@@ -1,5 +1,7 @@
 # 15.11 Intégration des services Firebase
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Firebase est une plateforme de développement d'applications mobiles créée par Google qui offre de nombreux services pour améliorer vos applications. Delphi permet d'intégrer facilement Firebase dans vos projets pour Android et iOS. Dans cette section, nous explorerons comment configurer et utiliser les services Firebase les plus populaires dans vos applications mobiles Delphi.
 
 ## Qu'est-ce que Firebase ?
@@ -1737,3 +1739,5 @@ En suivant les bonnes pratiques et en comprenant comment intégrer efficacement 
 N'oubliez pas que Firebase est une plateforme en constante évolution, avec de nouvelles fonctionnalités ajoutées régulièrement. Consultez la documentation officielle de Firebase et les ressources Delphi pour rester à jour avec les dernières améliorations et capacités.
 
 Dans la prochaine section, nous explorerons comment développer des jeux mobiles avec Delphi et FireMonkey, en utilisant les capacités graphiques avancées et les API de jeu pour créer des expériences interactives engageantes.
+
+⏭️ [Sécurité des applications](16-securite-des-applications/README.md)

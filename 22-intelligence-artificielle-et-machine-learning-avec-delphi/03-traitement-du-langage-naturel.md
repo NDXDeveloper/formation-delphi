@@ -1,5 +1,7 @@
 # 22.3 Traitement du langage naturel (NLP)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Qu'est-ce que le traitement du langage naturel ?
 
 Le traitement du langage naturel (NLP - Natural Language Processing) est une branche de l'intelligence artificielle qui permet aux ordinateurs de comprendre, interpréter et générer le langage humain. Dans cette section, nous allons découvrir comment intégrer des capacités de NLP dans vos applications Delphi.
@@ -2200,3 +2202,5 @@ Dans le prochain chapitre, nous explorerons la reconnaissance d'images et de for
 ---
 
 > **Remarque**: Les exemples de code présentés sont destinés à illustrer les concepts et peuvent nécessiter des adaptations pour fonctionner dans votre environnement spécifique.
+
+⏭️ [Reconnaissance d'images et de formes](22-intelligence-artificielle-et-machine-learning-avec-delphi/04-reconnaissance-dimages-et-de-formes.md)

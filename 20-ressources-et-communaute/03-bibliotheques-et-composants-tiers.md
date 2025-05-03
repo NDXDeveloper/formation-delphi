@@ -1,5 +1,7 @@
 # 20.3 Bibliothèques et composants tiers
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands atouts de Delphi est son écosystème riche de bibliothèques et composants tiers qui permettent d'étendre considérablement les fonctionnalités de base. Ces ressources vous aideront à développer plus rapidement et à ajouter des fonctionnalités avancées à vos applications sans avoir à tout coder vous-même.
 
 ## Pourquoi utiliser des composants tiers ?
@@ -202,3 +204,5 @@ Lorsque vous mettez à jour Delphi, vérifiez toujours la compatibilité de vos 
 ---
 
 > **Astuce pour débutants** : Avant d'écrire votre propre code pour une fonctionnalité, faites une recherche rapide pour voir si une bibliothèque tiers ne propose pas déjà ce dont vous avez besoin. Vous pourriez gagner beaucoup de temps et bénéficier d'une solution bien testée.
+
+⏭️ [Conférences et événements](20-ressources-et-communaute/04-conferences-et-evenements.md)

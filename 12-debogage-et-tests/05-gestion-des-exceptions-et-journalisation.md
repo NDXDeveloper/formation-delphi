@@ -1,5 +1,7 @@
 # 12.5 Gestion des exceptions et journalisation
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à la gestion des exceptions
 
 Les exceptions représentent un mécanisme puissant pour gérer les erreurs et les situations imprévues dans votre code. Contrairement aux méthodes traditionnelles de gestion d'erreurs basées sur des codes de retour, les exceptions permettent de séparer clairement le code de traitement normal du code de gestion des erreurs.
@@ -700,3 +702,5 @@ Souvenez-vous que la journalisation n'est pas seulement utile en cas d'erreur, m
 En pratique, commencez simplement avec une journalisation basique, puis évoluez vers des solutions plus sophistiquées au fur et à mesure que votre application grandit en complexité.
 
 Dans la prochaine section, nous aborderons le débogage à distance, une technique puissante pour résoudre les problèmes qui ne se manifestent que dans des environnements spécifiques.
+
+⏭️ [Débogage à distance](12-debogage-et-tests/06-debogage-a-distance.md)

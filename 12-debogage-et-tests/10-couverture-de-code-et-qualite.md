@@ -1,5 +1,7 @@
 # 12.10 Couverture de code et qualité
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à la couverture de code
 
 La couverture de code est une mesure qui permet d'évaluer quelle proportion de votre code est effectivement exécutée pendant les tests. C'est un indicateur important de la qualité de vos tests et, par extension, de la qualité globale de votre application. Une couverture élevée signifie que vos tests vérifient une plus grande partie de votre code, réduisant ainsi le risque de bugs non détectés.
@@ -615,3 +617,5 @@ Souvenez-vous que la couverture de code n'est pas une fin en soi, mais un outil 
 En combinant tests unitaires, couverture de code, analyse statique et revues de code, vous créerez un environnement de développement qui favorise la qualité à chaque étape du processus.
 
 Dans les sections suivantes de ce tutoriel, nous explorerons d'autres aspects du développement Delphi, en continuant à mettre l'accent sur les bonnes pratiques et la qualité du code.
+
+⏭️ [Internationalisation et localisation](13-internationalisation-et-localisation/README.md)

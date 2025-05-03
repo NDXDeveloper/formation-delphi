@@ -1,5 +1,7 @@
 # 11.3 Synchronisation et sections critiques
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Lorsque vous utilisez plusieurs threads dans votre application, ils peuvent accéder simultanément aux mêmes ressources (variables, fichiers, connexions réseau, etc.). Ces accès concurrents peuvent provoquer des problèmes difficiles à détecter et à résoudre. La synchronisation est un concept essentiel qui vous permet de coordonner les threads et d'éviter ces problèmes.
@@ -514,3 +516,5 @@ Cet exercice vous permettra de voir concrètement la différence entre un code p
 - Pensez à utiliser les classes thread-safe intégrées quand c'est possible
 
 Dans le prochain chapitre, nous explorerons `TTask` et la programmation parallèle, qui offrent une approche plus moderne et plus simple pour le multithreading.
+
+⏭️ [TTask et programmation parallèle](11-multithreading-et-programmation-asynchrone/04-ttask-et-programmation-parallele.md)

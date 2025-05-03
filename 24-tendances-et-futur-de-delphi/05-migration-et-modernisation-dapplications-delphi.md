@@ -1,5 +1,7 @@
 # 24.5 Migration et modernisation d'applications Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 De nombreuses entreprises possèdent des applications Delphi développées au fil des ans, parfois même depuis les premières versions des années 90. Ces applications restent souvent critiques pour les opérations quotidiennes. Dans cette section, nous explorerons comment moderniser ces applications héritées pour profiter des avantages des versions récentes de Delphi, tout en préservant l'investissement initial.
@@ -551,3 +553,5 @@ La migration et la modernisation d'applications Delphi représentent une opportu
 Même en tant que débutant, comprendre ces principes vous permettra d'aborder les projets existants avec confiance et de concevoir vos nouvelles applications avec une vision à long terme de leur évolution.
 
 Dans la prochaine section, nous explorerons comment Delphi s'intègre avec les technologies émergentes, ouvrant de nouvelles possibilités pour vos applications.
+
+⏭️ [Intégration avec les nouvelles technologies émergentes](24-tendances-et-futur-de-delphi/06-integration-avec-les-nouvelles-technologies-emergentes.md)

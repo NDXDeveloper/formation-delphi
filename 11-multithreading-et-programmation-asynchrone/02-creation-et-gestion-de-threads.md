@@ -1,5 +1,7 @@
 # 11.2 Création et gestion de threads
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Après avoir découvert les principes fondamentaux du multithreading, nous allons maintenant explorer la création et la gestion des threads dans Delphi. Ce chapitre vous donnera les connaissances pratiques pour implémenter vos propres threads et les gérer efficacement.
@@ -420,3 +422,5 @@ Pour vous entraîner, essayez de créer une application simple avec :
 4. Un label qui affiche la valeur actuelle
 
 Ce petit exercice vous permettra de mettre en pratique les concepts abordés dans ce chapitre.
+
+⏭️ [Synchronisation et sections critiques](11-multithreading-et-programmation-asynchrone/03-synchronisation-et-sections-critiques.md)

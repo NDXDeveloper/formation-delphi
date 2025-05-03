@@ -1,5 +1,7 @@
 # 20.8 Exemples de projets open source Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les projets open source représentent une ressource inestimable pour tout développeur Delphi, particulièrement pour les débutants. Ils offrent des exemples concrets de code que vous pouvez étudier, modifier et réutiliser dans vos propres applications. Explorer ces projets est l'une des meilleures façons d'améliorer vos compétences et de découvrir des techniques de programmation professionnelles.
 
 ## Pourquoi explorer des projets open source ?
@@ -377,3 +379,5 @@ Site qui répertorie des projets Delphi classés par catégorie :
 ---
 
 > **Astuce pour débutants** : Ne vous laissez pas intimider par les grands projets open source. Commencez par explorer de petites applications avec un objectif clair et un nombre limité de fonctionnalités. À mesure que votre compréhension s'améliore, vous pourrez progressivement aborder des projets plus complexes. Rappelez-vous que même les développeurs expérimentés ne comprennent pas immédiatement l'intégralité d'un nouveau projet - l'exploration progressive est la clé !
+
+⏭️ [Communauté francophone Delphi](20-ressources-et-communaute/09-communaute-francophone-delphi.md)

@@ -1,5 +1,7 @@
 # 14.1 Appels aux DLLs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les DLLs (Dynamic Link Libraries) sont des bibliothèques de code compilé qui peuvent être partagées entre plusieurs applications. Elles offrent plusieurs avantages :
@@ -321,3 +323,5 @@ Les DLLs sont particulièrement utiles pour :
 - Créer des architectures modulaires et extensibles
 
 En maîtrisant les techniques présentées dans ce chapitre, vous pourrez tirer pleinement parti de cet aspect puissant de la programmation Delphi.
+
+⏭️ [Intégration de bibliothèques C/C++](14-utilisation-dapi-et-bibliotheques-externes/02-integration-de-bibliotheques-c-cpp.md)

@@ -1,5 +1,7 @@
 # 12.9 Déboggage de code multi-thread
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction au code multi-thread
 
 Le multithreading (ou programmation multithread) permet à une application d'exécuter plusieurs tâches simultanément, améliorant ainsi les performances et la réactivité de l'interface utilisateur. Cependant, le débogage de code multi-thread présente des défis uniques, car les problèmes peuvent être intermittents, difficiles à reproduire et souvent liés à des interactions complexes entre les threads.
@@ -874,3 +876,5 @@ Le débogage de code multi-thread est une compétence avancée mais essentielle 
 Souvenez-vous que la meilleure approche est souvent préventive : une bonne conception du code multi-thread peut éliminer de nombreux problèmes avant même qu'ils n'apparaissent. Utilisez les primitives de synchronisation appropriées, minimisez les données partagées et documentez clairement les interactions entre threads.
 
 Dans la prochaine section, nous explorerons la couverture de code et les techniques pour mesurer et améliorer la qualité de votre code Delphi.
+
+⏭️ [Couverture de code et qualité](12-debogage-et-tests/10-couverture-de-code-et-qualite.md)

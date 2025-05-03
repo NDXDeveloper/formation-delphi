@@ -1,5 +1,7 @@
 # 19.5 Applications cloud et SaaS avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Le cloud computing et le modèle Software as a Service (SaaS) ont révolutionné la façon dont les applications sont développées, déployées et consommées. Avec Delphi, vous pouvez créer des applications modernes qui tirent pleinement parti de ces architectures. Ce chapitre vous guidera à travers les concepts fondamentaux et les étapes pratiques pour développer des applications cloud et SaaS avec Delphi.
@@ -544,3 +546,5 @@ En suivant les étapes et concepts présentés dans ce chapitre, vous êtes main
 ---
 
 **Rappel** : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.
+
+⏭️ [Applications PWA (Progressive Web Apps) avec Delphi](19-projets-avances/06-applications-pwa-avec-delphi.md)

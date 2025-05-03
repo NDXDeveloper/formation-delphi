@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.7 Stockage sécurisé des identifiants
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le stockage sécurisé des identifiants (mots de passe, clés API, jetons d'accès, etc.) est un aspect crucial de la sécurité des applications. Des identifiants mal protégés peuvent entraîner des accès non autorisés, des fuites de données et des violations de confidentialité. Dans ce chapitre, nous allons explorer diverses techniques pour stocker les identifiants de manière sécurisée dans vos applications Delphi.
 
 ### Pourquoi éviter le stockage en texte clair ?
@@ -2303,5 +2305,7 @@ end.
 Cette application illustre une façon simple de gérer des identifiants de manière sécurisée. Dans une application réelle, vous utiliseriez des techniques de chiffrement plus avancées et des contrôles de sécurité supplémentaires.
 
 En mettant en pratique les concepts présentés dans ce chapitre, vous pourrez garantir que les informations sensibles de vos utilisateurs sont protégées de manière adéquate, contribuant ainsi à la sécurité globale de vos applications Delphi.
+
+⏭️ [GDPR et confidentialité des données](16-securite-des-applications/08-gdpr-et-confidentialite-des-donnees.md)
 
 

@@ -1,5 +1,7 @@
 # 15.8 Mises à jour OTA (Over The Air)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les mises à jour OTA (Over The Air) permettent de mettre à jour certains aspects de votre application sans passer par les processus de validation des magasins d'applications, ce qui peut considérablement accélérer le déploiement de correctifs et de nouvelles fonctionnalités. Dans cette section, nous explorons comment implémenter ce mécanisme dans vos applications mobiles Delphi.
 
 ## Comprendre les mises à jour OTA
@@ -1722,3 +1724,5 @@ En suivant les bonnes pratiques et en implémentant des mécanismes de sécurit�
 N'oubliez pas que les mises à jour OTA ne remplacent pas complètement les mises à jour traditionnelles via les stores. Les changements majeurs dans le code natif nécessiteront toujours une nouvelle soumission. Les mises à jour OTA constituent plutôt un complément qui vous permet d'itérer plus rapidement sur certains aspects de votre application.
 
 Dans la prochaine section, nous verrons comment partager du code entre vos applications mobiles et desktop, une approche qui peut considérablement réduire le temps de développement et de maintenance de vos projets multi-plateformes.
+
+⏭️ [Partage de code entre applications mobile et desktop](15-applications-mobiles-avec-delphi/09-partage-de-code-entre-applications.md)

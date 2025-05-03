@@ -1,5 +1,7 @@
 # 21.8 Tableaux de bord pour solutions IoT
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une solution IoT n'est complète que lorsque les données collectées sont présentées de manière claire, intuitive et exploitable. Les tableaux de bord constituent l'interface utilisateur qui transforme des données brutes en informations visuelles permettant de prendre des décisions. Cette section vous guidera pas à pas dans la création de tableaux de bord professionnels pour vos solutions IoT avec Delphi.
 
 ## Introduction aux tableaux de bord IoT
@@ -4715,3 +4717,5 @@ Pour aller plus loin avec votre tableau de bord IoT, voici quelques ressources u
 - [Embarcadero Community](https://community.embarcadero.com/) - Forums et ressources pour développeurs Delphi
 
 Ce tutoriel vous a guidé à travers la création d'un tableau de bord IoT fonctionnel et professionnel. N'hésitez pas à explorer davantage pour adapter cette solution à vos besoins spécifiques et créer des applications IoT encore plus puissantes avec Delphi!
+
+⏭️ [Intelligence Artificielle et Machine Learning avec Delphi](22-intelligence-artificielle-et-machine-learning-avec-delphi/README.md)

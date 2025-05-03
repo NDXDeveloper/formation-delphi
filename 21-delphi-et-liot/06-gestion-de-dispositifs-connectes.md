@@ -1,5 +1,7 @@
 # 21.6 Gestion de dispositifs connectés
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une fois que vous maîtrisez la communication avec des périphériques individuels et les protocoles IoT comme MQTT et CoAP, l'étape suivante consiste à développer une solution pour gérer plusieurs dispositifs connectés simultanément. Cette section vous guidera à travers la conception et l'implémentation d'une application Delphi capable de gérer un réseau de dispositifs IoT de manière efficace et évolutive.
 
 ## Introduction à la gestion de dispositifs
@@ -1705,3 +1707,5 @@ Pour finir, voici quelques bonnes pratiques à suivre lors de la création d'un 
 - [Sécurité IoT](https://www.iotsecurityfoundation.org/)
 
 Dans la prochaine section, nous explorerons le traitement des données IoT en temps réel pour extraire des informations utiles de vos dispositifs connectés.
+
+⏭️ [Traitement des données IoT en temps réel](21-delphi-et-liot/07-traitement-des-donnees-iot-en-temps-reel.md)

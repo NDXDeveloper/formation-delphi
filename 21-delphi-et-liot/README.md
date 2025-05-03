@@ -1,5 +1,7 @@
 # 21. Delphi et l'Internet des Objets (IoT)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'Internet des Objets (IoT) représente l'une des évolutions technologiques les plus significatives de ces dernières années, transformant profondément notre interaction avec le monde physique. Cette convergence entre objets connectés, réseaux et logiciels ouvre des possibilités fascinantes pour les développeurs. Delphi, avec sa flexibilité et ses performances, constitue une plateforme particulièrement adaptée pour créer des applications qui interagissent avec cet écosystème IoT en pleine expansion.
 
 Dans ce chapitre, nous explorerons comment Delphi peut être utilisé pour développer des solutions IoT complètes, depuis la communication avec des dispositifs connectés jusqu'au traitement et à la visualisation des données qu'ils génèrent. Vous découvrirez comment exploiter les capacités de Delphi pour créer des applications qui servent de pont entre le monde numérique et le monde physique.
@@ -15,3 +17,5 @@ Enfin, nous explorerons la gestion et la visualisation des données IoT, aspect 
 *Delphi 12 Athens a introduit plusieurs améliorations significatives pour le développement IoT, notamment un meilleur support des protocoles de communication modernes et des composants optimisés pour la gestion des flux de données temps réel. Les fonctionnalités spécifiques à cette version seront clairement identifiées tout au long de ce chapitre.*
 
 Embarquons ensemble dans cette exploration de l'Internet des Objets avec Delphi, et découvrez comment créer des applications qui connectent le monde numérique au monde physique !
+
+⏭️ [Introduction à l'IoT avec Delphi](21-delphi-et-liot/01-introduction-a-liot-avec-delphi.md)

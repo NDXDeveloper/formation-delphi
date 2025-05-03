@@ -1,5 +1,7 @@
 # 24. Tendances et futur de Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Au terme de ce parcours approfondi à travers l'écosystème Delphi, il est temps de lever les yeux vers l'horizon et d'explorer les tendances qui façonnent l'avenir de cette plateforme de développement. Delphi a su traverser plus de deux décennies d'évolution technologique en se réinventant constamment tout en restant fidèle à ses principes fondateurs : productivité, performance et facilité d'utilisation. Ce chapitre final vous propose un regard sur les directions actuelles et futures de Delphi dans un paysage technologique en perpétuelle mutation.
 
 Le monde du développement logiciel évolue à un rythme effréné, avec l'émergence continue de nouvelles tendances, plateformes et paradigmes. Dans ce contexte dynamique, Delphi continue de se positionner comme une solution pertinente qui combine la stabilité nécessaire aux applications professionnelles avec l'innovation requise pour rester compétitif. Nous examinerons comment l'équipe d'Embarcadero oriente le développement de Delphi pour répondre aux défis contemporains tout en préservant sa philosophie distinctive.
@@ -15,3 +17,5 @@ Nous aborderons également les stratégies de migration et de modernisation des 
 *Delphi 12 Athens représente une étape importante dans l'évolution de la plateforme avec des innovations qui ouvrent de nouvelles possibilités pour les développeurs. Ce chapitre vous aidera à anticiper les prochaines évolutions et à vous y préparer efficacement.*
 
 Explorons ensemble les horizons qui s'ouvrent à Delphi et comment vous pouvez vous positionner pour tirer le meilleur parti de cette plateforme en constante évolution !
+
+⏭️ [Évolution récente de l'écosystème Delphi](24-tendances-et-futur-de-delphi/01-evolution-recente-de-lecosysteme-delphi.md)

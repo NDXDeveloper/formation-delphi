@@ -1,5 +1,7 @@
 # 18.7 Revue de code et refactoring
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous venez de terminer d'écrire un magnifique morceau de code qui fonctionne parfaitement. Mission accomplie ? Pas tout à fait ! Même le code qui fonctionne correctement peut souvent être amélioré en termes de lisibilité, de performance ou de maintenabilité. C'est là qu'interviennent la revue de code et le refactoring.
@@ -1164,3 +1166,5 @@ La revue de code vous permet de détecter les problèmes tôt, de partager les c
 N'oubliez pas que ces pratiques ne sont pas des activités ponctuelles, mais des habitudes à cultiver continuellement. Avec le temps, vous développerez un instinct pour détecter le code qui a besoin d'être amélioré et vous serez plus à l'aise pour appliquer les techniques de refactoring appropriées.
 
 Enfin, rappelez-vous que le but ultime n'est pas d'avoir un code parfait, mais un code suffisamment bon pour répondre aux besoins actuels tout en restant adaptable aux exigences futures. Comme l'a dit Kent Beck, un des pionniers du refactoring : "Faites-le marcher, faites-le bien, puis faites-le vite."
+
+⏭️ [Intégration avec Git et CI/CD](18-architecture-et-bonnes-pratiques/08-integration-avec-git-et-ci-cd.md)

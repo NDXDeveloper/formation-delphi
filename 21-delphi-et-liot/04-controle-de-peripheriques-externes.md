@@ -1,5 +1,7 @@
 # 21.4 Contrôle de périphériques externes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des aspects les plus passionnants de l'Internet des Objets (IoT) avec Delphi est la possibilité de contrôler des périphériques externes. Cette section vous guidera à travers les bases du contrôle de périphériques externes en utilisant Delphi, avec des exemples pratiques et accessibles.
 
 ## Introduction
@@ -453,3 +455,5 @@ N'oubliez pas que Delphi excelle dans ce domaine grâce à sa compilation native
 3. Implémentez un scanner de périphériques Bluetooth disponibles
 
 La prochaine section couvrira les protocoles IoT spécialisés comme MQTT et CoAP.
+
+⏭️ [Protocoles IoT (MQTT, CoAP)](21-delphi-et-liot/05-protocoles-iot.md)

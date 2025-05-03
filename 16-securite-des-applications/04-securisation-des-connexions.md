@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.4 Sécurisation des connexions
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans ce chapitre, nous allons explorer comment sécuriser les différents types de connexions réseau dans vos applications Delphi. La sécurisation des communications est essentielle pour protéger les données sensibles lorsqu'elles transitent entre votre application et d'autres systèmes.
 
 ### Pourquoi sécuriser les connexions ?
@@ -1535,3 +1537,5 @@ Dans le prochain chapitre, nous aborderons la protection contre les vulnérabili
 4. Créez une classe réutilisable pour gérer les connexions SSL/TLS sécurisées à un serveur.
 
 5. Pour les plus avancés : Implémentez un système de messagerie chiffré de bout en bout utilisant le chiffrement asymétrique pour l'échange de clés et le chiffrement symétrique pour les messages.
+
+⏭️  [Protection contre les vulnérabilités courantes](16-securite-des-applications/05-protection-contre-les-vulnerabilites-courantes.md)

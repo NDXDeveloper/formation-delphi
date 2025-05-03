@@ -1,5 +1,7 @@
 # 10.2 Manipulation de JSON et XML
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Lorsque vous travaillez avec des API Web et des échanges de données entre applications, deux formats sont particulièrement répandus : JSON et XML. Dans ce chapitre, nous allons apprendre à manipuler ces formats en programmation, des bases jusqu'aux opérations plus avancées.
@@ -857,3 +859,5 @@ En maîtrisant ces deux formats, vous serez capable d'intégrer facilement votre
 4. Développez un petit éditeur qui permet de visualiser et modifier des documents JSON et XML.
 
 N'oubliez pas que la pratique est la clé pour maîtriser ces concepts. Expérimentez avec différents exemples et structures pour vous familiariser avec les particularités de chaque format.
+
+⏭️ [Socket et communications TCP/IP](10-communication-et-services-reseaux/03-socket-et-communications-tcp-ip.md)

@@ -1,5 +1,7 @@
 # 8.9 Modèle en couches pour l'accès aux données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Jusqu'à présent, nous avons exploré comment connecter notre application à une base de données MySQL et manipuler les données avec différentes techniques. Cependant, dans les exemples précédents, nous avons souvent placé tout le code d'accès aux données directement dans les formulaires. Cette approche, bien que simple à comprendre pour les débutants, n'est pas idéale pour des applications professionnelles plus grandes.
 
 Dans cette section, nous allons découvrir comment structurer notre code selon un **modèle en couches**, une approche qui sépare l'accès aux données de l'interface utilisateur et qui apporte de nombreux avantages pour le développement et la maintenance des applications.
@@ -1383,3 +1385,5 @@ Dans la prochaine section, nous verrons comment gérer la migration et la synchr
 ---
 
 **À suivre :** 8.10 Migration et synchronisation de bases de données
+
+⏭️ [Migration et synchronisation de bases de données](08-acces-aux-bases-de-donnees-mysql-mariadb/10-migration-et-synchronisation-de-bases-de-donnees.md)

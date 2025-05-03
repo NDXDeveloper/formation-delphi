@@ -1,5 +1,7 @@
 # 9.6 Exportation vers différents formats (PDF, Excel, HTML...)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'une des fonctionnalités les plus appréciées des systèmes de rapports est la possibilité d'exporter les documents générés vers différents formats. Cette exportation permet de partager facilement les rapports avec d'autres personnes, de les archiver ou de les traiter ultérieurement dans d'autres applications.
@@ -637,3 +639,5 @@ L'exportation de rapports vers différents formats est une fonctionnalité essen
 Avec les composants d'exportation de FastReport, vous pouvez facilement proposer ces options à vos utilisateurs, soit individuellement, soit via un dialogue unifié.
 
 Dans la prochaine section, nous verrons comment créer des rapports interactifs qui offrent encore plus de flexibilité à vos utilisateurs.
+
+⏭️ [Rapports interactifs](09-rapports-et-impressions/07-rapports-interactifs.md)

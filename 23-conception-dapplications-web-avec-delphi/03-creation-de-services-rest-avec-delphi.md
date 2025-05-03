@@ -1,5 +1,7 @@
 # 23.3 Création de services REST avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux services REST
 
 Les services REST (Representational State Transfer) sont devenus le standard pour la création d'API web modernes. Ils permettent à différentes applications de communiquer entre elles via Internet en utilisant des requêtes HTTP standard.
@@ -607,3 +609,5 @@ Les services REST sont une partie essentielle du développement d'applications m
 - Documentation officielle de DataSnap REST : [Embarcadero DocWiki](https://docwiki.embarcadero.com/RADStudio/en/DataSnap_REST)
 - Tutoriels vidéo sur DataSnap REST : [Embarcadero YouTube](https://www.youtube.com/user/EmbarcaderoTechNet)
 - Forums communautaires Delphi : [Embarcadero Forums](https://forums.embarcadero.com/)
+
+⏭️ [Utilisation de WebBroker et DataSnap](23-conception-dapplications-web-avec-delphi/04-utilisation-de-webbroker-et-datasnap.md)

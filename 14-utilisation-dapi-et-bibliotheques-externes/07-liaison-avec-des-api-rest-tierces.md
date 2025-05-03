@@ -1,5 +1,7 @@
 # 14.7 Liaison avec des API REST tierces
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les API REST (Representational State Transfer) sont aujourd'hui la méthode la plus répandue pour permettre à différentes applications de communiquer entre elles via Internet. Ces API permettent à votre application Delphi d'interagir avec une multitude de services en ligne : réseaux sociaux, services météo, systèmes de paiement, bases de données, services cloud, et bien plus encore.
@@ -3957,3 +3959,5 @@ Pour continuer à développer vos compétences en intégration d'API REST avec D
 En suivant ces principes et en utilisant les outils appropriés, vous serez en mesure d'intégrer efficacement n'importe quelle API REST dans vos applications Delphi, ouvrant ainsi un monde de possibilités pour vos projets.
 
 N'oubliez pas que l'intégration d'API est un processus itératif - commencez par des intégrations simples, puis affinez et améliorez au fil du temps. Bonne programmation !
+
+⏭️ [Encapsulation d'API natives pour multi-plateformes](14-utilisation-dapi-et-bibliotheques-externes/08-encapsulation-dapi-natives-pour-multi-plateformes.md)

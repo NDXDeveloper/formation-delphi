@@ -1,5 +1,7 @@
 # 24.3 Low-code et RAD moderne
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Delphi est né avec une philosophie claire : accélérer le développement d'applications sans sacrifier la puissance ou la flexibilité. Cette approche, connue sous le nom de **RAD** (Rapid Application Development), a évolué pour intégrer les concepts modernes de **low-code**. Dans cette section, nous explorerons comment Delphi se positionne dans ce paysage en constante évolution et comment les débutants peuvent en tirer profit.
@@ -301,3 +303,5 @@ Delphi reste fidèle à sa philosophie RAD originelle tout en embrassant les con
 Le RAD moderne dans Delphi n'est pas qu'une question d'outils visuels, mais une philosophie complète de développement qui valorise la productivité sans sacrifier le contrôle. Pour le débutant, c'est une opportunité d'apprendre progressivement, en commençant par les aspects visuels avant de plonger dans les subtilités du code lorsque nécessaire.
 
 Dans la prochaine section, nous examinerons comment Delphi se positionne dans le paysage technologique actuel et comment il reste compétitif face aux technologies émergentes.
+
+⏭️ [Compétitivité dans le paysage technologique actuel](24-tendances-et-futur-de-delphi/04-competitivite-dans-le-paysage-technologique-actuel.md)

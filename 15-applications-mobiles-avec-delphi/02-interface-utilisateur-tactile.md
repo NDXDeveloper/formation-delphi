@@ -1,5 +1,7 @@
 # 15.2 Interface utilisateur tactile
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La création d'interfaces tactiles efficaces constitue l'un des défis majeurs du développement mobile. Avec Delphi et FireMonkey (FMX), vous disposez des outils nécessaires pour concevoir des interfaces adaptées au toucher qui offrent une expérience utilisateur intuitive et agréable.
 
 ## Principes fondamentaux des interfaces tactiles
@@ -468,3 +470,5 @@ La conception d'interfaces tactiles efficaces avec Delphi nécessite une compré
 Rappelez-vous que la meilleure façon d'améliorer vos compétences en conception d'interfaces tactiles est de tester régulièrement sur de vrais appareils et de collecter les retours des utilisateurs.
 
 Dans le prochain chapitre, nous explorerons comment accéder aux capteurs spécifiques des appareils mobiles pour enrichir vos applications avec des fonctionnalités comme la géolocalisation et l'accéléromètre.
+
+⏭️ [Accès aux capteurs (GPS, accéléromètre...)](15-applications-mobiles-avec-delphi/03-acces-aux-capteurs.md)

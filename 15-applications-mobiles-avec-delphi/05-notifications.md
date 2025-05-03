@@ -1,5 +1,7 @@
 # 15.5 Notifications
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les notifications sont un moyen essentiel de communiquer avec vos utilisateurs, même lorsqu'ils n'utilisent pas activement votre application. Elles permettent d'informer l'utilisateur d'événements importants, de lui rappeler des tâches ou de l'engager à revenir dans l'application. Dans cette section, nous explorerons comment implémenter différents types de notifications dans vos applications mobiles Delphi.
 
 ## Types de notifications
@@ -1294,3 +1296,5 @@ L'exemple du gestionnaire de rappels présenté dans ce chapitre montre comment 
 N'oubliez pas que les notifications, bien qu'utiles, doivent être utilisées avec parcimonie. Une application qui envoie trop de notifications risque d'être désinstallée ou de voir ses notifications désactivées par l'utilisateur. Concentrez-vous sur la qualité plutôt que sur la quantité, et assurez-vous que chaque notification apporte une réelle valeur à l'utilisateur.
 
 Dans la prochaine section, nous aborderons le stockage local et la synchronisation des données, essentiels pour créer des applications mobiles qui fonctionnent efficacement même en l'absence de connexion internet.
+
+⏭️ [Stockage local et synchronisation](15-applications-mobiles-avec-delphi/06-stockage-local-et-synchronisation.md)

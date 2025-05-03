@@ -1,5 +1,7 @@
 # 17.4 Signature de code
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Lorsque vous distribuez vos applications Delphi, les utilisateurs peuvent recevoir des avertissements de sécurité inquiétants indiquant que votre logiciel provient d'un "éditeur inconnu" ou qu'il n'est "pas digne de confiance". Pour éviter ces messages et renforcer la confiance des utilisateurs, la **signature de code** est essentielle.
@@ -356,3 +358,5 @@ Dans la prochaine section, nous aborderons la mise à jour automatique, qui perm
 3. Signez l'application avec votre certificat de test en utilisant SignTool
 4. Vérifiez la signature dans les propriétés du fichier
 5. Créez un script batch simple pour automatiser le processus de signature
+
+⏭️ [Mise à jour automatique](17-distribution-et-deploiement/05-mise-a-jour-automatique.md)

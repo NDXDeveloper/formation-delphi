@@ -1,5 +1,7 @@
 # 18.3 Séparation UI / logique métier
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'un des principes fondamentaux de la conception logicielle moderne est la séparation claire entre l'interface utilisateur (UI) et la logique métier. Cette séparation présente de nombreux avantages qui rendent votre application plus maintenable, plus testable et plus évolutive.
@@ -401,3 +403,5 @@ La séparation entre l'interface utilisateur et la logique métier est une prati
 En adoptant cette discipline dès le début de vos projets, vous construirez des applications plus modulaires, plus testables et plus faciles à faire évoluer au fil du temps.
 
 Dans les prochains chapitres, nous explorerons plus en détail les patterns architecturaux comme MVC et MVVM, ainsi que les techniques avancées d'organisation de code.
+
+⏭️ [Gestion de la configuration](18-architecture-et-bonnes-pratiques/04-gestion-de-la-configuration.md)

@@ -1,5 +1,7 @@
 # 8.11 Sécurisation des accès et prévention des injections SQL
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La sécurité est un aspect fondamental du développement d'applications qui manipulent des bases de données. Une application non sécurisée peut exposer des données sensibles ou permettre à des utilisateurs malveillants de compromettre votre système. Dans cette section, nous allons explorer les techniques essentielles pour sécuriser vos applications Delphi qui utilisent MySQL/MariaDB.
 
 ## Comprendre les risques de sécurité
@@ -1832,3 +1834,5 @@ En investissant du temps dans la sécurité dès le début de votre projet, vous
 ---
 
 **À suivre :** 8.12 Autres moteurs de bases de données (SQLite, PostgreSQL, SQL Server)
+
+⏭️ [Autres moteurs de bases de données (SQLite, PostgreSQL, SQL Server)](08-acces-aux-bases-de-donnees-mysql-mariadb/12-autres-moteurs-de-bases-de-donnees.md)

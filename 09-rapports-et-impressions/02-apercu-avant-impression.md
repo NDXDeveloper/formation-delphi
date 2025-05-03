@@ -1,5 +1,7 @@
 # 9.2 Aperçu avant impression
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'aperçu avant impression est une fonctionnalité essentielle pour les applications qui génèrent des documents. Elle permet aux utilisateurs de visualiser ce qui sera imprimé avant d'envoyer le travail à l'imprimante, économisant ainsi du papier et du temps. Dans cette section, nous allons découvrir comment implémenter cette fonctionnalité dans vos applications Delphi.
@@ -1043,5 +1045,7 @@ Si vos besoins en rapports sont complexes, envisagez d'utiliser des composants s
 Ces solutions offrent des fonctionnalités avancées comme les tableaux croisés dynamiques, les graphiques, les codes-barres, et bien plus encore.
 
 Dans la prochaine section, nous explorerons ces générateurs de rapports tiers et leurs fonctionnalités avancées.
+
+⏭️ [Générateurs de rapports (FastReport, QuickReport)](09-rapports-et-impressions/03-generateurs-de-rapports.md)
 
 

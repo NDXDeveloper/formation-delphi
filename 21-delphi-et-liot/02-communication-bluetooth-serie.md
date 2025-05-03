@@ -1,5 +1,7 @@
 # 21.2 Communication Bluetooth / série
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 La communication série et Bluetooth représente l'une des méthodes les plus courantes pour connecter des dispositifs IoT à vos applications Delphi. Que vous souhaitiez interagir avec un Arduino, un Raspberry Pi, ou tout autre appareil intelligent, maîtriser ces protocoles est essentiel dans votre boîte à outils IoT.
@@ -515,3 +517,5 @@ La communication série et Bluetooth sont des éléments fondamentaux pour conne
 Dans la prochaine section, nous explorerons l'intégration avec des plateformes IoT populaires comme Arduino et Raspberry Pi, en nous appuyant sur ces connaissances de communication série et Bluetooth.
 
 > **Note pour le tutoriel complet** : Cette section se concentre sur les communications série et Bluetooth de base. Pour des protocoles plus avancés comme MQTT et CoAP, référez-vous aux sections dédiées dans ce tutoriel.
+
+⏭️ [Intégration avec Arduino / Raspberry Pi](21-delphi-et-liot/03-integration-avec-arduino-raspberry-pi.md)

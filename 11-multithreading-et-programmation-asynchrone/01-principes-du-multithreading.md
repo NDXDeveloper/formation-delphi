@@ -1,5 +1,7 @@
 # 11.1 Principes du multithreading
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Le multithreading est une technique de programmation qui permet à un programme d'exécuter plusieurs tâches simultanément. Traditionnellement, un programme s'exécute de manière séquentielle, une instruction après l'autre, dans ce qu'on appelle un "thread" (fil d'exécution) unique. Avec le multithreading, votre application peut utiliser plusieurs threads qui s'exécutent en parallèle.
@@ -154,3 +156,5 @@ end;
 - Les mécanismes de synchronisation sont essentiels pour éviter les problèmes
 
 Dans les sections suivantes, nous explorerons plus en détail la création et la gestion des threads, les techniques de synchronisation et les modèles de programmation asynchrone plus avancés disponibles dans Delphi.
+
+⏭️ [Création et gestion de threads](11-multithreading-et-programmation-asynchrone/02-creation-et-gestion-de-threads.md)

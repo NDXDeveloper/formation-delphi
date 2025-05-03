@@ -1,5 +1,7 @@
 # 8.8 Live Bindings et liaison de données visuelle
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans les sections précédentes, nous avons exploré les méthodes traditionnelles de liaison de données dans Delphi, qui utilisent les contrôles "DB-aware" et les DataSources. Maintenant, découvrons une approche plus moderne et flexible : les **Live Bindings**.
 
 ## Qu'est-ce que Live Bindings ?
@@ -620,3 +622,5 @@ Pour les débutants, nous recommandons :
 ---
 
 **À suivre :** 8.9 Modèle en couches pour l'accès aux données
+
+⏭️ [Modèle en couches pour l'accès aux données](08-acces-aux-bases-de-donnees-mysql-mariadb/09-modele-en-couches-pour-lacces-aux-donnees.md)

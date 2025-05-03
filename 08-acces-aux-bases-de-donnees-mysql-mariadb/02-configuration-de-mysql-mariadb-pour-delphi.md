@@ -1,5 +1,7 @@
 # 8.2 Configuration de MySQL/MariaDB pour Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons voir comment configurer une base de données MySQL ou MariaDB pour l'utiliser avec Delphi. Nous couvrirons l'installation du serveur de base de données, la création d'une base et les configurations nécessaires pour que Delphi puisse s'y connecter efficacement.
 
 ## Qu'est-ce que MySQL et MariaDB ?
@@ -230,3 +232,5 @@ Vous avez maintenant configuré MySQL/MariaDB et Delphi pour travailler ensemble
 ---
 
 **À suivre :** 8.3 FireDAC : architecture et composants
+
+⏭️ [FireDAC : architecture et composants](08-acces-aux-bases-de-donnees-mysql-mariadb/03-firedac-architecture-et-composants.md)

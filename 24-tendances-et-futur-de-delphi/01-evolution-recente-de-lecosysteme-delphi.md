@@ -1,5 +1,7 @@
 # 24.1 Évolution récente de l'écosystème Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'écosystème Delphi a connu de nombreuses évolutions ces dernières années, transformant progressivement cet environnement de développement historique en une plateforme moderne et compétitive. Cette section vous présente les principales avancées qui ont façonné le Delphi d'aujourd'hui, même si vous êtes débutant dans cet univers.
@@ -197,3 +199,5 @@ Delphi fait partie de RAD Studio, qui offre un écosystème complet :
 L'écosystème Delphi a évolué pour répondre aux besoins des développeurs modernes tout en conservant ce qui a fait son succès : la productivité, la performance et la stabilité. Que vous soyez un développeur débutant ou expérimenté, Delphi offre aujourd'hui un environnement complet et moderne pour créer des applications performantes sur toutes les plateformes.
 
 La prochaine section explorera la roadmap et les orientations futures de Delphi, pour vous donner un aperçu de ce que réserve l'avenir de cette technologie.
+
+⏭️ [Roadmap et orientations futures](24-tendances-et-futur-de-delphi/02-roadmap-et-orientations-futures.md)

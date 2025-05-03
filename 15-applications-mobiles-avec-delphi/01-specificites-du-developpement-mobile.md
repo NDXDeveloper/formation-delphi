@@ -1,5 +1,7 @@
 # 15.1 Spécificités du développement mobile avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Le développement d'applications mobiles représente une opportunité passionnante d'étendre vos compétences Delphi au-delà du desktop traditionnel. Cependant, cette transition s'accompagne de considérations particulières que tout développeur doit comprendre pour créer des applications mobiles réussies.
 
 ## Introduction aux plateformes mobiles supportées
@@ -201,3 +203,5 @@ En gardant à l'esprit les spécificités présentées dans ce chapitre, vous se
 - Les tests sur appareils réels sont indispensables avant toute distribution
 
 Dans les sections suivantes, nous explorerons plus en détail la création d'interfaces tactiles efficaces et l'accès aux capteurs spécifiques des appareils mobiles.
+
+⏭️ [Interface utilisateur tactile](15-applications-mobiles-avec-delphi/02-interface-utilisateur-tactile.md)

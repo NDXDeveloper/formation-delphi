@@ -1,5 +1,7 @@
 # 17.6 Déploiement sur différentes plateformes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Une des grandes forces de Delphi est sa capacité à créer des applications pour différentes plateformes à partir d'une seule base de code. Grâce à FireMonkey (FMX) et aux capacités multi-plateformes de Delphi, vous pouvez déployer vos applications sur :
@@ -480,3 +482,5 @@ Le déploiement multi-plateformes avec Delphi est un atout majeur qui vous perme
 En suivant les étapes décrites dans ce chapitre et en planifiant votre développement de manière multi-plateforme dès le départ, vous pourrez tirer pleinement parti de cette capacité et offrir une expérience cohérente à vos utilisateurs, quelle que soit la plateforme qu'ils utilisent.
 
 Dans la prochaine section, nous explorerons la virtualisation et les conteneurs Docker, qui offrent encore plus de flexibilité pour le déploiement de vos applications Delphi.
+
+⏭️ [Virtualisation et conteneurs Docker](17-distribution-et-deploiement/07-virtualisation-et-conteneurs-docker.md)

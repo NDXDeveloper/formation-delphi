@@ -1,5 +1,7 @@
 # 11.6 Files d'attente et pools de threads
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans les sections précédentes, nous avons exploré comment créer et gérer des threads individuels ainsi que des tâches asynchrones. Dans ce chapitre, nous allons découvrir des techniques plus avancées pour gérer efficacement de nombreuses tâches : les files d'attente (queues) et les pools de threads.
@@ -1353,3 +1355,5 @@ Cet exercice vous permettra d'appliquer les concepts de files d'attente et de po
 - Le débogage des applications multi-threads nécessite des outils spécifiques comme la journalisation et le suivi des statistiques.
 
 Dans la prochaine section, nous explorerons l'interface utilisateur réactive, qui permettra à vos applications de rester fluides et réactives même pendant l'exécution de tâches intensives en arrière-plan.
+
+⏭️ [Interface utilisateur réactive](11-multithreading-et-programmation-asynchrone/07-interface-utilisateur-reactive.md)

@@ -1,5 +1,7 @@
 # 15.3 Accès aux capteurs (GPS, accéléromètre...)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages du développement mobile est la possibilité d'exploiter les nombreux capteurs intégrés dans les appareils modernes. Ces capteurs permettent à vos applications d'interagir avec le monde physique et d'offrir des fonctionnalités enrichies. Avec Delphi et FireMonkey, vous pouvez facilement accéder à ces capteurs sur Android et iOS à partir d'une base de code commune.
 
 ## Les capteurs disponibles
@@ -444,3 +446,5 @@ En suivant les bonnes pratiques présentées dans ce chapitre, vous pourrez int�
 - Testez toujours sur des appareils réels pour valider le comportement des capteurs
 
 Dans la prochaine section, nous aborderons l'utilisation de la caméra et des fonctionnalités multimédias dans vos applications mobiles.
+
+⏭️ [Utilisation de la caméra et des médias](15-applications-mobiles-avec-delphi/04-utilisation-de-la-camera-et-des-medias.md)

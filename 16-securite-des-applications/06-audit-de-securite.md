@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.6 Audit de sécurité
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une fois que vous avez mis en place les différentes protections pour sécuriser votre application Delphi, il est essentiel de vérifier leur efficacité par le biais d'un audit de sécurité. Ce processus vous permet d'identifier les vulnérabilités potentielles avant qu'elles ne soient exploitées par des attaquants.
 
 Dans ce chapitre, nous allons découvrir comment réaliser un audit de sécurité de base pour vos applications Delphi, même si vous n'êtes pas un expert en sécurité informatique.
@@ -1272,3 +1274,5 @@ Rappelez-vous que la sécurité est un processus continu, pas un état final. Le
 4. Modifiez l'outil pour générer des rapports dans un format spécifique requis par votre organisation.
 
 5. Pour les plus avancés : Intégrez l'outil d'audit dans votre IDE Delphi en créant un expert ou un plugin.
+
+⏭️ [Stockage sécurisé des identifiants](16-securite-des-applications/07-stockage-securise-des-identifiants.md)

@@ -1,5 +1,7 @@
 # 13.7 Gestion des écritures bidirectionnelles (RTL)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Certaines langues comme l'arabe, l'hébreu, le farsi (persan) et l'ourdou s'écrivent de droite à gauche (Right-to-Left ou RTL). La prise en charge de ces langues dans vos applications Delphi nécessite une attention particulière pour offrir une expérience utilisateur intuitive et naturelle. Cette section vous explique comment adapter votre interface pour les langues RTL.
 
 ## Comprendre les écritures bidirectionnelles
@@ -641,3 +643,5 @@ Les points clés à retenir :
 ---
 
 Dans la prochaine section, nous explorerons les outils de traduction et les flux de travail pour faciliter l'internationalisation de vos applications Delphi.
+
+⏭️ [Outils de traduction et flux de travail](13-internationalisation-et-localisation/08-outils-de-traduction-et-flux-de-travail.md)

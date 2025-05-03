@@ -1,5 +1,7 @@
 # 8.5 Manipulation des données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Maintenant que nous avons établi une connexion à notre base de données MySQL/MariaDB, nous allons explorer comment manipuler les données : récupérer des informations, ajouter de nouveaux enregistrements, modifier des données existantes et supprimer des enregistrements. Ces opérations, souvent désignées par l'acronyme CRUD (Create, Read, Update, Delete), constituent la base de toute application de gestion de données.
 
 Dans cette section, nous allons présenter les principes fondamentaux de la manipulation des données avec FireDAC. Les sections suivantes approfondiront chaque aspect avec des exemples plus détaillés.
@@ -482,3 +484,5 @@ Dans les prochaines sections, nous explorerons plus en détail :
 - Les requêtes SQL et paramétrées
 - Les opérations CRUD avancées
 - Les transactions et l'intégrité des données
+
+⏭️ [Requêtes SQL et paramétrées](08-acces-aux-bases-de-donnees-mysql-mariadb/05.1-requetes-sql-parametrees.md)

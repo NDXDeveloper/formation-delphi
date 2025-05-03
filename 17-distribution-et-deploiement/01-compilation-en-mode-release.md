@@ -1,5 +1,7 @@
 # 17.1 Compilation en mode release
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Lorsque vous développez une application Delphi, vous travaillez généralement en mode "Debug". Ce mode est idéal pendant le développement car il inclut des informations supplémentaires qui facilitent le débogage. Cependant, une fois votre application prête à être distribuée, vous devez la compiler en mode "Release". Cette section explique pourquoi et comment procéder.
@@ -93,3 +95,5 @@ La compilation en mode Release est une étape essentielle avant de distribuer vo
 5. Exécutez les deux versions et essayez de percevoir les différences de performance
 
 Dans la prochaine section, nous verrons comment optimiser davantage le code final pour obtenir les meilleures performances possibles.
+
+⏭️ [Optimisation du code final](17-distribution-et-deploiement/02-optimisation-du-code-final.md)

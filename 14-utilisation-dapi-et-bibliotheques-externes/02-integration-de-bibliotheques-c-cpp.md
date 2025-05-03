@@ -1,5 +1,7 @@
 # 14.2 Intégration de bibliothèques C/C++
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Delphi est un environnement de développement très puissant, mais parfois vous aurez besoin d'utiliser des fonctionnalités développées en C ou C++. Cela peut être nécessaire pour :
@@ -431,3 +433,5 @@ L'intégration de bibliothèques C/C++ dans Delphi ouvre d'immenses possibilité
 Bien que cette intégration puisse sembler complexe au premier abord, les techniques présentées dans ce chapitre vous permettront de créer des ponts robustes entre ces mondes de programmation. Commencez par des intégrations simples via DLL, puis progressez vers des techniques plus avancées à mesure que vos besoins évoluent.
 
 La clé du succès réside dans une bonne compréhension des conventions d'appel, de la gestion des types, et des bonnes pratiques pour la gestion des ressources.
+
+⏭️ [API Windows natif](14-utilisation-dapi-et-bibliotheques-externes/03-api-windows-natif.md)

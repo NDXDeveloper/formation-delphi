@@ -1,5 +1,7 @@
 # 21.5 Protocoles IoT (MQTT, CoAP)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans le monde de l'Internet des Objets (IoT), la communication efficace entre les dispositifs est cruciale. Pour cela, des protocoles spécialisés ont été développés pour répondre aux contraintes spécifiques des objets connectés. Dans cette section, nous allons explorer deux des protocoles les plus populaires - MQTT et CoAP - et voir comment les implémenter dans vos applications Delphi.
 
 ## Qu'est-ce qu'un protocole IoT ?
@@ -596,3 +598,5 @@ Dans la prochaine section, nous explorerons la gestion des dispositifs connecté
 1. Créez un dashboard qui surveille la température et l'humidité d'une pièce via MQTT
 2. Implémentez un système de contrôle d'éclairage qui utilise MQTT pour allumer/éteindre des LED
 3. Développez un client CoAP simple qui interroge un capteur et affiche ses données
+
+⏭️ [Gestion de dispositifs connectés](21-delphi-et-liot/06-gestion-de-dispositifs-connectes.md)

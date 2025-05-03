@@ -1,5 +1,7 @@
 # 9.7 Rapports interactifs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les rapports interactifs constituent une évolution majeure dans le domaine de la génération de rapports. Contrairement aux rapports statiques qui présentent simplement des informations, les rapports interactifs permettent aux utilisateurs d'explorer les données, de naviguer entre différentes sections, de filtrer les informations et même d'effectuer des actions directement dans le rapport.
@@ -1940,3 +1942,5 @@ FastReport offre un ensemble complet d'outils pour créer des rapports interacti
 En combinant ces techniques, vous pouvez transformer vos rapports statiques en véritables applications de reporting interactives, permettant aux utilisateurs d'analyser les données plus efficacement et de prendre de meilleures décisions métier.
 
 Dans la prochaine section, nous explorerons les graphiques et tableaux de bord avec TeeChart, pour enrichir encore davantage vos visualisations de données dans Delphi.
+
+⏭️ [Graphiques et tableaux de bord avec TeeChart](09-rapports-et-impressions/08-graphiques-et-tableaux-de-bord-avec-teechart.md)

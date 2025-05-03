@@ -1,5 +1,7 @@
 # 12.7 Tests d'intégration
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux tests d'intégration
 
 Alors que les tests unitaires (vus en section 12.3) se concentrent sur la vérification du bon fonctionnement des composants individuels de votre application, les tests d'intégration visent à valider les interactions entre ces composants. Ils constituent une étape cruciale pour s'assurer que les différentes parties de votre application fonctionnent correctement ensemble.
@@ -580,3 +582,5 @@ Bien que plus complexes à mettre en place que les tests unitaires, ils offrent 
 En suivant les bonnes pratiques présentées dans cette section et en adaptant les techniques à votre contexte spécifique, vous pourrez mettre en place une stratégie de test d'intégration efficace qui contribuera grandement à la qualité et à la robustesse de vos applications Delphi.
 
 Dans la prochaine section, nous explorerons le mocking et les tests avec dépendances, des techniques qui vous permettront d'isoler votre code pour des tests plus précis et plus contrôlés.
+
+⏭️ [Mocking et tests avec dépendances](12-debogage-et-tests/08-mocking-et-tests-avec-dependances.md)

@@ -1,5 +1,7 @@
 # 9.1 Composants d'impression natifs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'impression est une fonctionnalité essentielle pour de nombreuses applications professionnelles. Delphi propose plusieurs composants natifs qui facilitent l'implémentation des fonctionnalités d'impression sans avoir recours à des bibliothèques tierces. Dans cette section, nous allons explorer ces composants et apprendre à les utiliser efficacement.
 
 ## Concepts de base de l'impression
@@ -353,3 +355,5 @@ end;
 Les composants natifs d'impression de Delphi offrent une solution simple et efficace pour les besoins d'impression de base. Pour des fonctionnalités plus avancées comme la prévisualisation intégrée ou des rapports complexes, envisagez d'utiliser des composants spécialisés comme FastReport ou QuickReport (voir sections suivantes).
 
 Dans la prochaine section, nous explorerons comment créer un aperçu avant impression plus sophistiqué pour offrir une meilleure expérience utilisateur.
+
+⏭️ [Aperçu avant impression](09-rapports-et-impressions/02-apercu-avant-impression.md)

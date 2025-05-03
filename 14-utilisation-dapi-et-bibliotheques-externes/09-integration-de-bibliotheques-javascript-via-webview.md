@@ -1,5 +1,7 @@
 # 14.9 Intégration de bibliothèques JavaScript via WebView
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Le monde du JavaScript regorge de bibliothèques puissantes pour créer des graphiques interactifs, des visualisations de données, des cartes, et bien d'autres fonctionnalités riches. En tant que développeur Delphi, vous pourriez vouloir profiter de ces bibliothèques JavaScript sans avoir à recréer leurs fonctionnalités en Delphi.
@@ -709,3 +711,5 @@ N'oubliez pas que la communication bidirectionnelle entre Delphi et JavaScript e
 - [Chart.js - Bibliothèque de graphiques simple](https://www.chartjs.org/)
 - [Leaflet - Bibliothèque de cartes interactives](https://leafletjs.com/)
 - [Three.js - Bibliothèque 3D](https://threejs.org/)
+
+⏭️ [Applications mobiles avec Delphi](15-applications-mobiles-avec-delphi/README.md)

@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.2 Autorisation et contrôle d'accès
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une fois qu'un utilisateur est authentifié (a prouvé son identité), l'étape suivante consiste à gérer ce qu'il est autorisé à faire dans votre application. C'est ce qu'on appelle l'**autorisation** ou le **contrôle d'accès**.
 
 ### Distinction entre authentification et autorisation
@@ -1433,3 +1435,5 @@ Dans le prochain chapitre, nous aborderons le chiffrement des données, qui cons
 4. Créez un système de journalisation des accès et affichez un rapport des tentatives d'accès non autorisées.
 
 5. Pour les plus avancés : Implémentez un système d'autorisation basé sur les attributs pour une application de gestion de documents où l'accès dépend du département de l'utilisateur et de la classification du document.
+
+⏭️ [Chiffrement des données](16-securite-des-applications/03-chiffrement-des-donnees.md)

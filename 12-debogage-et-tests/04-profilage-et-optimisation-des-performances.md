@@ -1,5 +1,7 @@
 # 12.4 Profilage et optimisation des performances
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction au profilage
 
 Le profilage est une technique permettant d'analyser le comportement d'un programme pendant son exécution pour identifier les goulots d'étranglement et les opportunités d'optimisation. En tant que développeur Delphi, optimiser les performances de vos applications est essentiel pour offrir une meilleure expérience utilisateur et réduire la consommation de ressources.
@@ -493,3 +495,5 @@ Le profilage et l'optimisation des performances sont des compétences essentiell
 Rappelez-vous que l'optimisation est un processus itératif qui doit être guidé par des mesures objectives. Commencez toujours par profiler votre application pour identifier les véritables goulots d'étranglement, puis appliquez les techniques d'optimisation appropriées.
 
 Dans la prochaine section, nous examinerons la gestion des exceptions et la journalisation, des compétences essentielles pour créer des applications robustes et faciles à déboguer.
+
+⏭️ [Gestion des exceptions et journalisation](12-debogage-et-tests/05-gestion-des-exceptions-et-journalisation.md)

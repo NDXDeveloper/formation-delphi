@@ -1,5 +1,7 @@
 # 22.7 Utilisation des grands modèles de langage (LLM) via API
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les grands modèles de langage (Large Language Models ou LLM) représentent une avancée majeure dans le domaine de l'intelligence artificielle. Ces modèles, comme GPT-4, Claude, ou LLaMA, peuvent comprendre et générer du texte de façon quasi-humaine. Dans cette section, nous allons découvrir comment intégrer ces puissants outils à vos applications Delphi.
 
 ## Qu'est-ce qu'un grand modèle de langage ?
@@ -1541,3 +1543,5 @@ En suivant les bonnes pratiques présentées dans ce chapitre, vous pourrez cré
 3. **Exercice avancé** : Développez une application qui utilise les embeddings pour indexer et rechercher sémantiquement dans une base de documentation Delphi locale.
 
 4. **Projet pratique** : Créez un outil de génération de commentaires de code qui analyse un fichier source Delphi et génère des commentaires explicatifs pour les méthodes et classes.
+
+⏭️ [Conception d'applications Web avec Delphi](23-conception-dapplications-web-avec-delphi/README.md)

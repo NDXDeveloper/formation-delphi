@@ -1,5 +1,7 @@
 # 8.4 Connexion à une base MySQL/MariaDB
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans cette section, nous allons apprendre à établir une connexion entre votre application Delphi et une base de données MySQL/MariaDB. Nous verrons différentes approches, de la plus simple à la plus avancée, et nous examinerons les options qui vous permettront d'optimiser cette connexion.
 
 ## Préparation
@@ -437,3 +439,5 @@ Dans la prochaine section, nous verrons comment manipuler les données une fois 
 ---
 
 **À suivre :** 8.5 Manipulation des données
+
+⏭️ [Manipulation des données](08-acces-aux-bases-de-donnees-mysql-mariadb/05-manipulation-des-donnees.md)

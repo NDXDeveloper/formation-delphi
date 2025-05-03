@@ -1,5 +1,7 @@
 # 10.8 GraphQL et nouvelles API
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les API (Interfaces de Programmation d'Applications) modernes évoluent rapidement pour répondre aux besoins croissants des développeurs. Parmi ces évolutions, GraphQL se distingue comme une alternative puissante aux API REST traditionnelles. Dans ce chapitre, nous explorerons GraphQL et d'autres nouvelles API, ainsi que leur intégration dans les applications Delphi.
@@ -2806,3 +2808,5 @@ Chaque approche a ses forces et ses faiblesses, et le choix dépendra des besoin
 ---
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
+
+⏭️ [Intégration avec les services cloud (AWS, Azure, Google Cloud)](10-communication-et-services-reseaux/09-integration-avec-les-services-cloud.md)

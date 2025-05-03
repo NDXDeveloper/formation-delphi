@@ -1,5 +1,7 @@
 # 9.3 Générateurs de rapports (FastReport, QuickReport)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Bien que Delphi offre des composants natifs pour l'impression, la création de rapports complexes nécessite souvent des outils plus spécialisés. Les générateurs de rapports sont des composants tiers qui simplifient considérablement la création, la conception et l'impression de rapports professionnels.
@@ -1250,3 +1252,5 @@ En pratique, il est recommandé de :
 4. Profiter des fonctionnalités interactives pour une meilleure expérience utilisateur
 
 Dans la prochaine section, nous aborderons la création de rapports complexes avec des fonctionnalités avancées comme les sous-rapports, les graphiques et les tableaux croisés dynamiques.
+
+⏭️ [Création de rapports complexes](09-rapports-et-impressions/04-creation-de-rapports-complexes.md)

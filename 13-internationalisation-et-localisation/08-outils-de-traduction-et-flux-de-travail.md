@@ -1,5 +1,7 @@
 # 13.8 Outils de traduction et flux de travail
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'internationalisation d'une application ne se limite pas à l'aspect technique. Elle implique également un processus de traduction et une organisation du travail adaptés. Dans cette section, nous explorerons les outils et méthodes qui facilitent la traduction de vos applications Delphi ainsi que les meilleures pratiques pour gérer ce processus.
 
 ## Organisation des ressources de traduction
@@ -1368,3 +1370,5 @@ En suivant ces conseils et en utilisant les outils appropriés, vous faciliterez
 ---
 
 Avec cette section sur les outils de traduction et les flux de travail, vous avez maintenant tous les éléments nécessaires pour internationaliser efficacement vos applications Delphi. Dans le prochain chapitre, nous aborderons l'utilisation d'API et de bibliothèques externes pour étendre les fonctionnalités de vos applications.
+
+⏭️ [Utilisation d'API et bibliothèques externes](14-utilisation-dapi-et-bibliotheques-externes/README.md)

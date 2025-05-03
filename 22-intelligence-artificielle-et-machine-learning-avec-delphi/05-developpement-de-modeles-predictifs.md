@@ -1,5 +1,7 @@
 # 22.5 Développement de modèles prédictifs
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux modèles prédictifs
 
 Les modèles prédictifs sont des outils puissants qui permettent à vos applications de faire des prévisions basées sur des données historiques. Dans cette section, nous allons explorer comment intégrer cette capacité à vos applications Delphi.
@@ -5083,3 +5085,5 @@ Dans les prochaines sections, nous explorerons comment combiner ces capacités p
 ---
 
 > **Remarque** : Les exemples de code présentés dans ce chapitre sont conçus pour être didactiques et illustratifs. Dans un environnement de production réel, vous devriez prêter une attention particulière à la sécurité, aux performances et à la robustesse de votre implémentation.
+
+⏭️ [Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)](22-intelligence-artificielle-et-machine-learning-avec-delphi/06-integration-avec-des-services-dia-cloud.md)

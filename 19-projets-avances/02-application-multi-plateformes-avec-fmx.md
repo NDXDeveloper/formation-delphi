@@ -1,5 +1,7 @@
 # 19.2 Application multi-plateformes avec FireMonkey (FMX)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 FireMonkey (FMX) est le framework multi-plateformes de Delphi qui vous permet de développer une application unique pouvant s'exécuter sur Windows, macOS, iOS, Android et Linux. Dans ce tutoriel, nous allons créer une application simple de gestion de tâches qui fonctionnera sur toutes ces plateformes avec un minimum d'adaptations.
@@ -1401,3 +1403,5 @@ Les principes clés à retenir :
 FireMonkey et Delphi vous permettent de créer rapidement des applications multi-plateformes de qualité professionnelle, tout en minimisant la duplication de code et d'effort.
 
 > **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
+
+⏭️ [Applications mobiles avec fonctionnalités avancées](19-projets-avances/03-applications-mobiles-avec-fonctionnalites-avancees.md)

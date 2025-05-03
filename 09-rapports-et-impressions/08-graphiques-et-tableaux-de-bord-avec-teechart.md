@@ -1,5 +1,7 @@
 # 9.8 Graphiques et tableaux de bord avec TeeChart
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à TeeChart
 
 TeeChart est une bibliothèque puissante de composants graphiques pour Delphi qui permet de créer des visualisations de données avancées. Que vous ayez besoin de graphiques simples ou de tableaux de bord complexes, TeeChart offre tous les outils nécessaires pour transformer vos données brutes en informations visuelles compréhensibles.
@@ -2722,3 +2724,5 @@ Pour les graphiques avec de grandes quantités de données, pensez à :
 - Désactiver les fonctionnalités inutiles comme la 3D ou certaines étiquettes
 
 Avec les techniques présentées dans cette section, vous disposez maintenant des connaissances nécessaires pour créer des visualisations de données professionnelles et interactives qui aideront vos utilisateurs à mieux comprendre et analyser leurs données, renforçant ainsi considérablement la valeur de vos applications Delphi.
+
+⏭️ [Communication et services réseaux](10-communication-et-services-reseaux/README.md)

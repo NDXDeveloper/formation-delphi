@@ -1,5 +1,7 @@
 # 20.1 Documentation officielle
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La documentation officielle est une ressource indispensable pour tout développeur Delphi, du débutant à l'expert. Elle contient l'ensemble des informations validées par Embarcadero (l'éditeur de Delphi) et constitue la référence principale pour comprendre les fonctionnalités du langage et de l'environnement.
 
 ## Accéder à la documentation
@@ -115,3 +117,5 @@ La documentation de Delphi s'améliore constamment. Avec chaque nouvelle version
 ---
 
 > **Astuce pour débutants** : N'hésitez pas à utiliser la fonction `F1` fréquemment lors de vos premiers pas avec Delphi. C'est souvent le moyen le plus rapide d'obtenir des informations sur un élément spécifique qui vous intrigue ou vous pose problème.
+
+⏭️ [Forums et groupes d'entraide](20-ressources-et-communaute/02-forums-et-groupes-dentraide.md)

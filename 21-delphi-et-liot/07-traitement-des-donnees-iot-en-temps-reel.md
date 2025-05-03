@@ -1,5 +1,7 @@
 # 21.7 Traitement des données IoT en temps réel
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans les sections précédentes, nous avons appris à communiquer avec des périphériques IoT et à les gérer. L'étape suivante consiste à traiter et à analyser efficacement le flux continu de données que ces dispositifs génèrent. Cette section vous guidera à travers les concepts et techniques fondamentaux pour transformer des données IoT brutes en informations utiles et exploitables.
 
 ## Introduction au traitement de données IoT
@@ -3067,3 +3069,5 @@ Voici quelques ressources utiles pour approfondir vos connaissances sur le trait
 - [InfluxDB](https://www.influxdata.com/) - Base de données de séries temporelles pour les données IoT
 
 Dans la prochaine section, nous explorerons la création de tableaux de bord IoT complets pour visualiser et interagir avec vos dispositifs et données.
+
+⏭️ [Tableaux de bord pour solutions IoT](21-delphi-et-liot/08-tableaux-de-bord-pour-solutions-iot.md)

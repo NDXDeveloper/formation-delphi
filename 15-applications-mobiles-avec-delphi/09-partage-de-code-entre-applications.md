@@ -1,5 +1,7 @@
 # 15.9 Partage de code entre applications mobile et desktop
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'un des grands avantages de Delphi est la possibilité de partager du code entre différentes plateformes. Cette fonctionnalité vous permet de développer une base de code commune qui peut être déployée sur des applications mobiles (Android et iOS) ainsi que sur des applications desktop (Windows, macOS et Linux). Dans cette section, nous explorerons les techniques et les meilleures pratiques pour maximiser la réutilisation du code tout en respectant les spécificités de chaque plateforme.
 
 ## Pourquoi partager du code ?
@@ -1547,3 +1549,5 @@ Les principales clés du succès sont :
 En combinant FireMonkey pour les interfaces utilisateur multi-plateformes et une architecture bien pensée pour le code partagé, vous pouvez créer des applications sophistiquées qui fonctionnent de manière native sur desktop et mobiles, tout en minimisant les efforts de développement et de maintenance.
 
 Dans la prochaine section, nous explorerons les techniques pour optimiser les performances de vos applications mobiles Delphi, un aspect crucial pour offrir une expérience utilisateur fluide sur tous les appareils.
+
+⏭️ [Permissions et confidentialité des données](15-applications-mobiles-avec-delphi/10-permissions-et-confidentialite-des-donnees.md)

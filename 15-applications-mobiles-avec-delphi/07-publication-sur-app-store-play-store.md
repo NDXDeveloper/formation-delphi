@@ -1,5 +1,7 @@
 # 15.7 Publication sur App Store / Play Store
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Après avoir développé votre application mobile avec Delphi, l'étape finale consiste à la distribuer aux utilisateurs via les magasins d'applications officiels : l'App Store d'Apple pour iOS et le Google Play Store pour Android. Ce processus implique plusieurs étapes allant de la préparation de l'application à sa soumission et sa maintenance après publication.
 
 ## Préparation de votre application à la publication
@@ -512,3 +514,5 @@ En suivant les étapes détaillées dans ce chapitre, vous pouvez naviguer avec 
 Une fois votre application publiée, écoutez attentivement les commentaires des utilisateurs et utilisez ces retours pour orienter vos futures mises à jour. Une application bien entretenue et régulièrement mise à jour aura plus de chances de réussir à long terme.
 
 Dans la prochaine section, nous explorerons comment mettre en place des mises à jour automatiques pour votre application afin de faciliter la distribution de nouvelles versions à vos utilisateurs existants.
+
+⏭️ [Mises à jour OTA (Over The Air)](15-applications-mobiles-avec-delphi/08-mises-a-jour-ota.md)

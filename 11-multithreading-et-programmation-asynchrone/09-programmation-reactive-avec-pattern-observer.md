@@ -1,5 +1,7 @@
 # 11.9 Programmation réactive avec le pattern Observer
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 La programmation réactive est un paradigme axé sur les flux de données et la propagation des changements. Elle permet de construire des applications qui réagissent automatiquement aux modifications de données, d'état ou d'événements. L'un des modèles de conception (design pattern) fondamentaux pour implémenter la programmation réactive est le pattern Observer.
@@ -1758,3 +1760,5 @@ Créez une application de conversion de devises en temps réel qui utilise le pa
 Cet exercice vous permettra de mettre en pratique les concepts de programmation réactive dans un contexte réel.
 
 Dans le prochain chapitre, nous explorerons les performances et les bonnes pratiques en multithreading, y compris comment optimiser vos applications multithreads
+
+⏭️ [Performances et bonnes pratiques en multithreading](11-multithreading-et-programmation-asynchrone/10-performances-et-bonnes-pratiques-en-multithreading.md)

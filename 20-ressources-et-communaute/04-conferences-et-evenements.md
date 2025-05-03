@@ -1,5 +1,7 @@
 # 20.4 Conférences et événements
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Participer à des conférences et événements est l'un des meilleurs moyens pour approfondir vos connaissances de Delphi, découvrir les nouvelles fonctionnalités, et surtout, rencontrer d'autres développeurs passionnés. Que vous soyez débutant ou développeur expérimenté, ces événements offrent une expérience d'apprentissage inestimable et l'opportunité de créer des liens avec la communauté.
 
 ## Pourquoi participer à des événements Delphi ?
@@ -176,3 +178,5 @@ La plupart des conférences Delphi partagent ensuite leurs ressources :
 ---
 
 En participant à ces événements, même en tant que débutant, vous accélérerez considérablement votre apprentissage de Delphi et vous vous intégrerez dans une communauté accueillante et passionnée. Les connexions que vous y ferez pourront vous aider tout au long de votre parcours avec Delphi, que ce soit pour résoudre des problèmes techniques ou découvrir de nouvelles opportunités professionnelles.
+
+⏭️ [Blogs et chaînes YouTube](20-ressources-et-communaute/05-blogs-et-chaines-youtube.md)

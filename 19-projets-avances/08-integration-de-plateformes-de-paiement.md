@@ -1,5 +1,7 @@
 # 19.8 Intégration de plateformes de paiement
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'intégration des paiements en ligne dans vos applications Delphi est devenue une fonctionnalité essentielle pour les développeurs qui créent des logiciels de commerce, de gestion ou de services. Ce chapitre vous guidera à travers les étapes nécessaires pour connecter votre application Delphi à différentes plateformes de paiement.
@@ -1442,3 +1444,5 @@ En suivant ce guide, vous disposez maintenant des bases nécessaires pour intég
 ---
 
 **Note technique** : La plupart des exemples de ce tutoriel sont compatibles avec Delphi 11 Alexandria et supérieur. L'utilisation des expressions lambda dans certains exemples de code pourrait nécessiter Delphi 12 Athens ou supérieur.
+
+⏭️ [Ressources et communauté](20-ressources-et-communaute/README.md)

@@ -1,5 +1,7 @@
 # 18.4 Gestion de la configuration
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 La gestion de la configuration est un aspect essentiel de toute application professionnelle. Elle permet à votre logiciel de "se souvenir" des préférences des utilisateurs, de stocker des paramètres de connexion, et de s'adapter à différents environnements d'exécution. Dans ce chapitre, nous explorerons comment gérer efficacement la configuration dans vos applications Delphi.
@@ -806,3 +808,5 @@ Pour les applications simples, les fichiers INI ou le registre Windows peuvent s
 N'oubliez pas de protéger les informations sensibles par chiffrement et d'inclure des mécanismes pour gérer les différents environnements de déploiement.
 
 En suivant ces bonnes pratiques, vous créerez des applications plus robustes et adaptables aux besoins changeants des utilisateurs.
+
+⏭️ [Versionnement et gestion de code source](18-architecture-et-bonnes-pratiques/05-versionnement-et-gestion-de-code-source.md)

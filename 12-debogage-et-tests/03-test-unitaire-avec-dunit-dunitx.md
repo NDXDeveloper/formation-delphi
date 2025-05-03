@@ -1,5 +1,7 @@
 # 12.3 Test unitaire avec DUnit/DUnitX
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux tests unitaires
 
 Les tests unitaires constituent une pratique fondamentale du développement logiciel moderne. Ils vous permettent de vérifier que chaque "unité" de votre code (généralement une fonction ou une méthode) fonctionne correctement de façon isolée. Pour les développeurs Delphi, deux frameworks principaux sont disponibles : DUnit (plus ancien) et DUnitX (plus moderne et recommandé).
@@ -601,3 +603,5 @@ Les tests unitaires sont un investissement qui paie rapidement en termes de qual
 Commencez simplement avec quelques tests sur vos fonctions les plus critiques, puis étendez progressivement votre couverture. Avec le temps, vous développerez une suite de tests complète qui vous donnera confiance lors de l'évolution de votre code.
 
 Dans la prochaine section, nous explorerons le profilage et l'optimisation des performances de vos applications Delphi.
+
+⏭️ [Profilage et optimisation des performances](12-debogage-et-tests/04-profilage-et-optimisation-des-performances.md)

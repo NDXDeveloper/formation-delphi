@@ -1,5 +1,7 @@
 # 14. Utilisation d'API et bibliothèques externes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'une des grandes forces de Delphi réside dans sa capacité à s'intégrer avec des bibliothèques et API externes, vous permettant d'étendre les fonctionnalités de vos applications bien au-delà de ce que proposent les composants standards. Cette flexibilité vous donne accès à un vaste écosystème de bibliothèques spécialisées, d'API système de bas niveau, et de services tiers, démultipliant ainsi les possibilités de votre environnement de développement.
 
 Dans ce chapitre, nous explorerons les différentes méthodes que Delphi met à votre disposition pour communiquer avec le monde extérieur : des bibliothèques compilées (DLL), en passant par l'API Windows native, jusqu'aux services COM, ActiveX et aux API REST modernes. Vous découvrirez comment le langage Object Pascal facilite ces interactions tout en maintenant la sécurité de typage qui fait sa réputation.
@@ -15,3 +17,5 @@ Un accent particulier sera mis sur les techniques d'encapsulation qui vous perme
 *Delphi 12 Athens a simplifié l'intégration avec plusieurs API modernes et amélioré ses mécanismes d'encapsulation pour les bibliothèques externes. Les fonctionnalités spécifiques à cette version seront clairement identifiées tout au long de ce chapitre.*
 
 Explorons ensemble comment étendre les capacités de vos applications Delphi en tirant parti de la richesse des bibliothèques et API disponibles dans l'écosystème logiciel moderne !
+
+⏭️ [Appels aux DLLs](14-utilisation-dapi-et-bibliotheques-externes/01-appels-aux-dlls.md)

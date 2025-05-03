@@ -1,5 +1,7 @@
 # 11.5 Tâches asynchrones et callbacks
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans les sections précédentes, nous avons exploré les threads et les tâches parallèles pour exécuter du code en arrière-plan. Dans cette partie, nous allons découvrir une approche plus élégante pour gérer les opérations de longue durée : la programmation asynchrone.
@@ -678,3 +680,5 @@ Utilisez les concepts de tâches asynchrones et de callbacks pour implémenter c
 - Utilisez les méthodes asynchrones intégrées pour les opérations d'entrée/sortie et de réseau
 
 La programmation asynchrone et les callbacks sont des outils puissants pour créer des applications réactives qui peuvent effectuer des opérations complexes sans bloquer l'interface utilisateur. En maîtrisant ces concepts, vous pourrez développer des applications Delphi modernes et performantes.
+
+⏭️ [Files d'attente et pools de threads](11-multithreading-et-programmation-asynchrone/06-files-dattente-et-pools-de-threads.md)

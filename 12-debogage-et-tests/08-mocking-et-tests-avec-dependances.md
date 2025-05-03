@@ -1,5 +1,7 @@
 # 12.8 Mocking et tests avec dépendances
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction au mocking
 
 Le "mocking" est une technique essentielle dans le développement de tests efficaces. Elle consiste à créer des objets simulés (appelés "mocks") qui imitent le comportement de composants réels, mais de façon contrôlée et prévisible. Cette approche est particulièrement utile lorsque vous testez du code qui dépend d'autres composants.
@@ -1433,3 +1435,5 @@ En résumé :
 La maîtrise du mocking vous permettra d'écrire des tests plus robustes et de concevoir un code plus modulaire et maintenable. Combinée aux tests unitaires et aux tests d'intégration, cette technique vous aidera à construire des applications Delphi de haute qualité.
 
 Dans la prochaine section, nous explorerons le débogage de code multi-thread, une compétence indispensable pour les applications modernes qui tirent parti de l'exécution parallèle.
+
+⏭️ [Déboggage de code multi-thread](12-debogage-et-tests/09-deboggage-de-code-multi-thread.md)

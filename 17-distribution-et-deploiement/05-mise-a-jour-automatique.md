@@ -1,5 +1,7 @@
 # 17.5 Mise à jour automatique
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous venez de corriger un bug important ou d'ajouter une fonctionnalité très attendue à votre application Delphi. Comment faire en sorte que tous vos utilisateurs en profitent rapidement ? La réponse est simple : un système de **mise à jour automatique**.
@@ -1044,3 +1046,5 @@ Les approches présentées dans ce chapitre vont d'une solution simple mais fonc
 N'oubliez pas que la transparence est essentielle : informez toujours vos utilisateurs des mises à jour disponibles et donnez-leur le contrôle sur quand et comment ces mises à jour sont installées, sauf si des problèmes critiques de sécurité nécessitent une mise à jour forcée.
 
 Dans la prochaine section, nous aborderons le déploiement de vos applications Delphi sur différentes plateformes, ce qui étendra encore davantage la portée de vos logiciels.
+
+⏭️ [Déploiement sur différentes plateformes](17-distribution-et-deploiement/06-deploiement-sur-differentes-plateformes.md)

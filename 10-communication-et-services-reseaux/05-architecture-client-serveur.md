@@ -1,5 +1,7 @@
 # 10.5 Architecture client-serveur
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 L'architecture client-serveur est l'un des modèles fondamentaux de la programmation réseau et des applications distribuées. Dans ce chapitre, nous allons explorer les principes de cette architecture, comprendre ses avantages et inconvénients, et apprendre à l'implémenter dans nos applications.
@@ -7752,3 +7754,5 @@ Pour approfondir vos connaissances sur l'architecture client-serveur, voici quel
   - JMeter (pour les tests de charge)
 
 Avec ces connaissances et ces outils, vous êtes maintenant prêt à concevoir et implémenter vos propres applications client-serveur de manière professionnelle et efficace.
+
+⏭️ [Applications distribuées](10-communication-et-services-reseaux/06-applications-distribuees.md)

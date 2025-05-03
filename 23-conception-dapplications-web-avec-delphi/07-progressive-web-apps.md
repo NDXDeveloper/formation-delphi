@@ -1,5 +1,7 @@
 # 23.7 Progressive Web Apps (PWA)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux Progressive Web Apps
 
 Les Progressive Web Apps (PWA) représentent une évolution majeure dans le développement web. Ce sont des applications web qui offrent une expérience utilisateur similaire à celle des applications natives, tout en conservant les avantages des sites web traditionnels. En intégrant les capacités des PWA à vos applications Delphi, vous pouvez créer des expériences utilisateur modernes et engageantes.
@@ -686,3 +688,5 @@ Les Progressive Web Apps offrent un excellent compromis entre les applications w
 Cette approche est particulièrement intéressante pour les développeurs Delphi qui souhaitent élargir leur portée sans avoir à apprendre totalement de nouvelles technologies. En suivant les étapes de ce tutoriel, vous pouvez transformer vos applications web Delphi existantes en PWA modernes et engageantes.
 
 N'oubliez pas que le monde des PWA évolue rapidement, alors restez à jour sur les dernières fonctionnalités et meilleures pratiques pour tirer le meilleur parti de cette technologie.
+
+⏭️ [WebAssembly et Delphi](23-conception-dapplications-web-avec-delphi/08-webassembly-et-delphi.md)

@@ -1,5 +1,7 @@
 # 8.7 Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans les sections précédentes, nous avons appris à connecter notre application à une base de données MySQL et à manipuler les données avec les DataSets et DataSources. Maintenant, il est temps d'explorer comment afficher et modifier ces données à travers l'interface utilisateur grâce aux contrôles liés aux données.
 
 ## Qu'est-ce qu'un contrôle lié aux données ?
@@ -1023,3 +1025,5 @@ Dans la prochaine section, nous explorerons "Live Bindings et liaison de donnée
 ---
 
 **À suivre :** 8.8 Live Bindings et liaison de données visuelle
+
+⏭️ [Live Bindings et liaison de données visuelle](08-acces-aux-bases-de-donnees-mysql-mariadb/08-live-bindings-et-liaison-de-donnees-visuelle.md)

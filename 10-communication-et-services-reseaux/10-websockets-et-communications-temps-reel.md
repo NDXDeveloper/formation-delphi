@@ -1,5 +1,7 @@
 # 10.10 WebSockets et communications temps réel
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans le développement d'applications modernes, la communication en temps réel est devenue essentielle. Que ce soit pour des applications de messagerie instantanée, des tableaux de bord en direct, des jeux multi-joueurs ou des applications IoT (Internet des Objets), la capacité à échanger des données instantanément entre le client et le serveur est primordiale.
@@ -2847,3 +2849,5 @@ Les communications en temps réel sont essentielles dans le paysage applicatif m
 ---
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités avancées de WebSockets peuvent nécessiter l'utilisation de bibliothèques tierces comme sgcWebSockets.*
+
+⏭️ [Multithreading et programmation asynchrone](11-multithreading-et-programmation-asynchrone/README.md)

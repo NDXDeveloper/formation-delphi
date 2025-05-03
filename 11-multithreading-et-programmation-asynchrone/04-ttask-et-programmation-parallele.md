@@ -1,5 +1,7 @@
 # 11.4 TTask et programmation parallèle
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Jusqu'à présent, nous avons étudié la création et la gestion de threads avec la classe `TThread`, qui offre un contrôle précis mais nécessite une certaine quantité de code. Delphi propose une approche plus moderne et plus simple pour la programmation parallèle : la classe `TTask`.
@@ -605,3 +607,5 @@ Cet exercice vous permettra d'appliquer les concepts de `TTask`, `TParallel.For`
 La programmation parallèle avec `TTask` est puissante et plus facile à utiliser que les threads traditionnels. Elle vous permet d'exploiter au maximum les processeurs multi-cœurs modernes tout en simplifiant votre code.
 
 Dans la prochaine section, nous explorerons les tâches asynchrones et les callbacks, qui constituent une autre approche élégante pour la programmation concurrente.
+
+⏭️ [Tâches asynchrones et callbacks](11-multithreading-et-programmation-asynchrone/05-taches-asynchrones-et-callbacks.md)

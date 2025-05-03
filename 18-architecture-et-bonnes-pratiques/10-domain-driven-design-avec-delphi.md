@@ -1,5 +1,7 @@
 # 18.10 Domain-Driven Design (DDD) avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous développez une application de gestion pour une école. Vous pourriez créer des tables dans une base de données, puis concevoir votre application autour de ces tables. Mais est-ce vraiment la meilleure approche ? Et si vous conceviez plutôt votre application en pensant d'abord aux concepts du monde réel comme les "Élèves", les "Cours", les "Enseignants" et les interactions entre eux ?
@@ -833,3 +835,5 @@ Le Domain-Driven Design offre une approche puissante pour créer des application
 Bien que le DDD puisse sembler complexe au début, ses principes peuvent être appliqués progressivement. Commencez par identifier et modéliser les concepts clés de votre domaine, puis structurez votre code autour de ces concepts. Avec le temps et la pratique, vous développerez une intuition pour créer des modèles de domaine expressifs et efficaces.
 
 N'oubliez pas que le DDD n'est pas une solution universelle. Évaluez si sa complexité est justifiée par les besoins de votre projet. Pour de nombreuses applications métier complexes, l'investissement dans le DDD se traduira par un code plus maintenable, plus évolutif et mieux aligné avec les objectifs de l'entreprise.
+
+⏭️ [Microservices et architecture distribuée](18-architecture-et-bonnes-pratiques/11-microservices-et-architecture-distribuee.md)

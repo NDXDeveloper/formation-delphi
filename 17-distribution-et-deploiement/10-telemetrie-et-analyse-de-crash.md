@@ -1,5 +1,7 @@
 # 17.10 Télémétrie et analyse de crash
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Imaginez que vous venez de publier une nouvelle version de votre application Delphi. Quelques jours plus tard, un utilisateur vous contacte en signalant un problème, mais il n'arrive pas à expliquer clairement les circonstances du bug. Comment savoir ce qui s'est réellement passé ? Comment découvrir si d'autres utilisateurs rencontrent le même problème sans qu'ils vous le signalent ? C'est là qu'interviennent la télémétrie et l'analyse de crash.
@@ -1899,3 +1901,5 @@ En appliquant ces principes, vous transformerez votre application Delphi d'un pr
 ---
 
 Ce chapitre vous a présenté les concepts fondamentaux de la télémétrie et de l'analyse de crash dans les applications Delphi. En appliquant ces techniques, vous serez en mesure de créer des applications plus fiables et mieux adaptées aux besoins de vos utilisateurs. Dans les prochains chapitres, nous explorerons d'autres aspects avancés du développement avec Delphi qui vous permettront de créer des applications professionnelles de haute qualité.
+
+⏭️ [Architecture et bonnes pratiques](18-architecture-et-bonnes-pratiques/README.md)

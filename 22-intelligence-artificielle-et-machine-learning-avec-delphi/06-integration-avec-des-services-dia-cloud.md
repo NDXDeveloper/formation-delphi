@@ -1,5 +1,7 @@
 # 22.6 Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 L'intelligence artificielle est aujourd'hui facilement accessible via des services cloud qui proposent des API REST. Dans cette section, nous allons découvrir comment intégrer ces services dans vos applications Delphi, en nous concentrant sur les plateformes les plus populaires : Azure AI, Google AI et OpenAI.
 
 ## Prérequis
@@ -526,3 +528,5 @@ N'oubliez pas que le domaine de l'IA évolue rapidement. Consultez régulièreme
 - [Documentation Google Cloud AI](https://cloud.google.com/products/ai)
 - [Documentation OpenAI](https://platform.openai.com/docs/introduction)
 - [Composants REST pour Delphi](https://docwiki.embarcadero.com/RADStudio/Alexandria/fr/REST_Client_Library)
+
+⏭️ [Utilisation des grands modèles de langage (LLM) via API](22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)

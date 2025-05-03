@@ -1,5 +1,7 @@
 # 24.6 Intégration avec les nouvelles technologies émergentes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Delphi n'existe pas en isolation dans le paysage technologique. Sa longévité et sa pertinence continue s'expliquent en partie par sa capacité à s'intégrer avec les technologies émergentes. Dans cette section, nous explorerons comment Delphi peut interagir avec les innovations récentes, permettant aux développeurs de combiner la puissance et la stabilité de Delphi avec les nouvelles possibilités offertes par ces technologies.
@@ -664,3 +666,5 @@ L'intégration des technologies émergentes avec Delphi ouvre un monde de possib
 Même en tant que débutant, vous pouvez commencer à explorer ces intégrations de manière progressive, en construisant sur les bases solides que Delphi fournit. Cette combinaison de fondations éprouvées et d'innovations continue de faire de Delphi une plateforme pertinente et puissante pour le développement d'applications modernes.
 
 Le voyage d'apprentissage de Delphi ne s'arrête jamais vraiment, car la plateforme continue d'évoluer et de s'adapter aux nouvelles tendances technologiques. Restez curieux, expérimentez, et n'hésitez pas à combiner Delphi avec d'autres technologies pour créer des solutions qui répondent aux défis d'aujourd'hui et de demain.
+
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)

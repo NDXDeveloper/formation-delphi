@@ -1,5 +1,7 @@
 # 18.9 Clean Code et principes SOLID
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Avez-vous déjà eu à travailler sur un code que vous avez écrit il y a six mois et vous êtes demandé : "Qui a écrit ce code confus et pourquoi ?" Ou peut-être avez-vous rejoint un projet existant et passé des jours à comprendre comment il fonctionne avant de pouvoir faire la moindre modification ? Ces situations illustrent parfaitement pourquoi le "Clean Code" (code propre) et les principes SOLID sont si importants.
@@ -1321,3 +1323,5 @@ Bien que l'application de ces principes puisse sembler exiger plus d'effort init
 N'oubliez pas que l'amélioration de la qualité du code est un processus continu et progressif. Commencez par de petites améliorations, et avec le temps, ces bonnes pratiques deviendront naturelles et feront partie intégrante de votre façon de programmer.
 
 Le code propre n'est pas seulement une question de technique, c'est aussi une question de respect : respect envers vos collègues qui devront lire et modifier votre code, respect envers vos futurs utilisateurs qui bénéficieront d'un logiciel plus fiable, et respect envers votre futur vous-même qui vous remerciera d'avoir écrit un code clair et bien structuré.
+
+⏭️ [Domain-Driven Design (DDD) avec Delphi](18-architecture-et-bonnes-pratiques/10-domain-driven-design-avec-delphi.md)

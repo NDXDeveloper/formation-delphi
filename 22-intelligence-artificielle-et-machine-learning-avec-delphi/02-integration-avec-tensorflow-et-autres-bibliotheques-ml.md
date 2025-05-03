@@ -1,5 +1,7 @@
 # 22.2 Intégration avec TensorFlow et autres bibliothèques ML
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux bibliothèques ML pour Delphi
 
 Dans cette section, nous allons explorer comment intégrer des bibliothèques de Machine Learning (ML) populaires, en particulier TensorFlow, dans vos applications Delphi. L'objectif est de vous permettre d'exploiter la puissance de ces technologies tout en restant dans l'environnement de développement Delphi que vous connaissez.
@@ -580,3 +582,5 @@ Dans la prochaine section, nous explorerons des applications spécifiques de tra
 ---
 
 > **Remarque**: Les exemples de code présentés sont destinés à illustrer les concepts. Pour une implémentation complète et fonctionnelle, des ajustements spécifiques à votre environnement et à vos besoins peuvent être nécessaires.
+
+⏭️ [Traitement du langage naturel (NLP)](22-intelligence-artificielle-et-machine-learning-avec-delphi/03-traitement-du-langage-naturel.md)

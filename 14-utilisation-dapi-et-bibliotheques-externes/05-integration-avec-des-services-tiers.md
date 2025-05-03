@@ -1,5 +1,7 @@
 # 14.5 Intégration avec des services tiers
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans le monde moderne du développement logiciel, une application rarement fonctionne de manière isolée. L'intégration avec des services tiers permet d'enrichir considérablement vos applications Delphi en y ajoutant des fonctionnalités comme le stockage cloud, la géolocalisation, les paiements en ligne, l'authentification sociale, ou encore l'intelligence artificielle.
@@ -653,3 +655,5 @@ En suivant ces principes, vous pourrez enrichir considérablement vos applicatio
 - Sites comme GitHub pour trouver des composants et bibliothèques d'intégration existants
 
 N'oubliez pas que chaque service a ses propres particularités et que cette introduction n'est qu'un point de départ. Consultez toujours la documentation officielle du service que vous souhaitez intégrer pour les détails spécifiques à ce service.
+
+⏭️ [Liaisons avec d'autres langages](14-utilisation-dapi-et-bibliotheques-externes/06-liaisons-avec-dautres-langages.md)

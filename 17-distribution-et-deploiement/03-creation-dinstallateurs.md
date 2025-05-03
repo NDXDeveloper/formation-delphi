@@ -1,5 +1,7 @@
 # 17.3 Création d'installateurs (Inno Setup, InstallAware)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Une application Delphi bien conçue et optimisée mérite un installateur professionnel pour faciliter son déploiement chez les utilisateurs finaux. Ce chapitre vous guide à travers la création d'installateurs pour vos applications Delphi, en vous présentant deux outils populaires : **Inno Setup** (gratuit) et **InstallAware** (commercial).
@@ -390,3 +392,5 @@ Dans la prochaine section, nous aborderons la signature de code, une étape impo
 2. Créez un installateur basique pour l'une de vos applications Delphi
 3. Ajoutez au moins une fonctionnalité avancée (vérification des prérequis, création d'un fichier de configuration, etc.)
 4. Testez l'installateur sur un autre ordinateur ou une machine virtuelle
+
+⏭️ [Signature de code](17-distribution-et-deploiement/04-signature-de-code.md)

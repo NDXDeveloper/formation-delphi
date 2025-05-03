@@ -1,5 +1,7 @@
 # 12.1 Utilisation des points d'arrêt
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux points d'arrêt
 
 Le débogage est une compétence essentielle pour tout développeur, et les points d'arrêt (breakpoints) constituent l'un des outils les plus puissants dans cette boîte à outils. Dans Delphi, les points d'arrêt vous permettent de suspendre l'exécution de votre application à des endroits précis pour examiner l'état du programme.
@@ -168,3 +170,5 @@ Dans Delphi 12 Athens, vous pouvez définir des points d'arrêt qui se déclench
 Les points d'arrêt sont un outil fondamental pour le débogage efficace dans Delphi. En maîtrisant leur utilisation, vous pourrez résoudre plus rapidement les problèmes dans votre code et améliorer votre productivité en tant que développeur. N'hésitez pas à expérimenter avec les différents types de points d'arrêt pour trouver ceux qui correspondent le mieux à votre style de développement et aux besoins de vos projets.
 
 Dans la prochaine section, nous explorerons comment inspecter et modifier les variables pendant le débogage pour une analyse encore plus approfondie de votre code.
+
+⏭️ [Inspection et modification des variables](12-debogage-et-tests/02-inspection-et-modification-des-variables.md)

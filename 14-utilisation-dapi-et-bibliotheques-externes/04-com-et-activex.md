@@ -1,5 +1,7 @@
 # 14.4 COM et ActiveX
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 COM (Component Object Model) est une technologie Microsoft qui permet à différents composants logiciels de communiquer entre eux, même s'ils sont écrits dans des langages de programmation différents. ActiveX est une extension de COM qui ajoute des fonctionnalités supplémentaires, principalement pour les composants visuels et interactifs.
@@ -500,3 +502,5 @@ Pour en apprendre davantage sur COM et ActiveX en Delphi, voici quelques ressour
 3. Exemples fournis avec Delphi dans le dossier "Exemples"
 
 En maîtrisant COM et ActiveX, vous ajoutez un outil précieux à votre arsenal de développement Delphi, ouvrant la porte à une intégration transparente avec un large écosystème d'applications Windows.
+
+⏭️ [Intégration avec des services tiers](14-utilisation-dapi-et-bibliotheques-externes/05-integration-avec-des-services-tiers.md)

@@ -1,5 +1,7 @@
 # 10.1 Appels REST et API Web (TRESTClient)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans ce chapitre, nous allons découvrir comment interagir avec des API Web en utilisant le composant `TRESTClient` disponible dans de nombreux environnements de développement. Cette fonctionnalité est essentielle pour créer des applications modernes qui communiquent avec des services distants.
@@ -294,3 +296,5 @@ end;
 3. Créez un client pour une API de votre choix (par exemple, une API de films, de livres ou de musique).
 
 N'oubliez pas que la documentation de l'API que vous utilisez est votre meilleure alliée. Consultez-la pour comprendre les points d'accès disponibles, les paramètres requis et les formats de réponse attendus.
+
+⏭️ [Manipulation de JSON et XML](10-communication-et-services-reseaux/02-manipulation-de-json-et-xml.md)

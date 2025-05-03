@@ -1,5 +1,7 @@
 # 24.4 Compétitivité dans le paysage technologique actuel
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans un monde où les technologies de développement se multiplient à un rythme effréné, une question légitime se pose pour tout débutant : **Delphi est-il toujours compétitif en 2025 ?** Cette section vise à vous donner une vision claire et objective de la position de Delphi dans l'écosystème technologique actuel, ses forces comparatives, et comment il se mesure aux alternatives modernes.
@@ -329,3 +331,5 @@ Bien que chaque technologie ait ses forces et ses domaines de prédilection, Del
 Pour le débutant, Delphi offre un chemin d'apprentissage qui combine la facilité d'entrée (grâce à l'approche visuelle) avec la profondeur nécessaire pour créer des applications professionnelles. En 2025, maîtriser Delphi reste un atout précieux et distinctif dans la boîte à outils d'un développeur polyvalent.
 
 Dans la prochaine section, nous explorerons les stratégies de migration et de modernisation des applications Delphi existantes, un aspect crucial pour de nombreuses entreprises ayant investi dans cette technologie au fil des ans.
+
+⏭️ [Migration et modernisation d'applications Delphi](24-tendances-et-futur-de-delphi/05-migration-et-modernisation-dapplications-delphi.md)

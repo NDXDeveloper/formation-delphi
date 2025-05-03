@@ -1,5 +1,7 @@
 # 20.2 Forums et groupes d'entraide
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Même avec la meilleure documentation officielle, vous aurez inévitablement des questions spécifiques ou des problèmes qui nécessitent l'aide d'autres développeurs. La communauté Delphi est connue pour son esprit d'entraide, et de nombreuses ressources sont disponibles pour vous aider dans votre parcours d'apprentissage.
 
 ## Forums officiels
@@ -160,3 +162,5 @@ N'oubliez pas que ces forums et groupes fonctionnent grâce à la participation 
 ---
 
 > **Rappel** : La communauté Delphi est l'une des plus anciennes et des plus solidaires dans le monde de la programmation. N'ayez pas peur de poser des questions, même si elles vous semblent basiques. Chaque expert a été débutant un jour !
+
+⏭️ [Bibliothèques et composants tiers](20-ressources-et-communaute/03-bibliotheques-et-composants-tiers.md)

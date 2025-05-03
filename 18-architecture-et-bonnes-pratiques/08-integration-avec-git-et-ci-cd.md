@@ -1,5 +1,7 @@
 # 18.8 Intégration avec Git et CI/CD
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Dans ce chapitre, nous allons explorer comment intégrer votre développement Delphi avec deux pratiques essentielles du développement logiciel moderne : le contrôle de version avec Git et l'intégration/déploiement continus (CI/CD). Ces techniques, bien que parfois perçues comme complexes, peuvent considérablement améliorer votre flux de travail et la qualité de vos applications, même pour les projets de petite taille ou les développeurs individuels.
@@ -766,3 +768,5 @@ N'oubliez pas que l'objectif ultime est de vous libérer des tâches répétitiv
 - [PasDoc](https://github.com/pasdoc/pasdoc) - Générateur de documentation pour Pascal/Delphi
 - [Inno Setup](https://jrsoftware.org/isinfo.php) - Créateur d'installateurs pour Windows
 - [GitHub Actions documentation](https://docs.github.com/en/actions) - Documentation officielle de GitHub Actions
+
+⏭️ [Clean Code et principes SOLID](18-architecture-et-bonnes-pratiques/09-clean-code-et-principes-solid.md)

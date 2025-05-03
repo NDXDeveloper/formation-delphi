@@ -1,5 +1,7 @@
 # 19.4 Services Windows et applications de fond
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les services Windows sont des applications spéciales qui s'exécutent en arrière-plan, sans interface utilisateur visible. Ils sont parfaits pour des tâches qui doivent fonctionner en permanence, même lorsque aucun utilisateur n'est connecté à l'ordinateur. Dans ce chapitre, nous allons apprendre à créer des services Windows avec Delphi et explorer comment développer des applications qui travaillent en arrière-plan.
@@ -6531,7 +6533,7 @@ Ce chapitre vous a présenté les concepts fondamentaux et avancés des services
 En appliquant les bonnes pratiques et les techniques présentées dans ce chapitre, vous serez en mesure de concevoir des solutions d'arrière-plan fiables, efficaces et sécurisées pour répondre aux besoins variés de vos clients ou de votre organisation.
 
 > **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
-```
+
 
 ## Exercices pratiques
 
@@ -6560,3 +6562,5 @@ Créez un service qui synchronise des fichiers entre plusieurs ordinateurs sur u
 - Fournir une interface utilisateur pour configurer et surveiller la synchronisation
 
 Ces exercices vous aideront à appliquer les concepts et techniques présentés dans ce chapitre, et à développer vos compétences dans la création de services Windows et d'applications de fond avec Delphi.
+
+⏭️ [Applications cloud et SaaS](19-projets-avances/05-applications-cloud-et-saas.md)

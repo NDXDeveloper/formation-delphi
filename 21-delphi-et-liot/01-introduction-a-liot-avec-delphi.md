@@ -1,5 +1,7 @@
 # 21.1 Introduction à l'IoT avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Qu'est-ce que l'IoT (Internet des Objets) ?
 
 L'Internet des Objets, ou IoT (*Internet of Things* en anglais), désigne l'ensemble des appareils connectés à Internet capables de collecter et d'échanger des données. Ces objets peuvent être des capteurs, des actionneurs, des appareils ménagers intelligents, des montres connectées, ou même des voitures autonomes.
@@ -205,3 +207,5 @@ end;
 Delphi offre un environnement puissant et flexible pour développer des applications IoT. Grâce à sa compilation native, son développement multi-plateforme et son écosystème riche, vous pouvez créer rapidement des solutions IoT professionnelles allant de simples interfaces de contrôle à des systèmes complexes de surveillance en temps réel.
 
 Dans les prochaines sections, nous explorerons plus en détail les protocoles spécifiques et les intégrations matérielles pour l'IoT avec Delphi.
+
+⏭️ [Communication Bluetooth / série](21-delphi-et-liot/02-communication-bluetooth-serie.md)

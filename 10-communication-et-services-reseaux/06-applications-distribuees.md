@@ -1,5 +1,7 @@
 # 10.6 Applications distribuées
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les applications distribuées sont des systèmes informatiques où différents composants logiciels s'exécutent sur plusieurs ordinateurs interconnectés par un réseau. Dans ce chapitre, nous allons explorer comment Delphi peut être utilisé pour développer de telles applications.
@@ -334,3 +336,5 @@ Pour aller plus loin, vous pouvez explorer des technologies comme REST, GraphQL,
 ---
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
+
+⏭️ [OAuth2 et authentification moderne](10-communication-et-services-reseaux/07-oauth2-et-authentification-moderne.md)

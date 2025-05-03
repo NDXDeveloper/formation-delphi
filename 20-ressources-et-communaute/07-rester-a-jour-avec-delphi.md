@@ -1,5 +1,7 @@
 # 20.7 Rester à jour avec Delphi
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Dans le monde de la programmation, les technologies évoluent rapidement. Delphi ne fait pas exception, avec de nouvelles versions et des mises à jour régulières qui apportent des fonctionnalités innovantes, des améliorations de performances et des corrections de bugs. Pour tirer le meilleur parti de cet environnement de développement, il est essentiel de rester informé des dernières évolutions.
 
 ## Pourquoi rester à jour ?
@@ -292,3 +294,5 @@ Pour chaque nouvelle fonctionnalité qui vous intéresse :
 ---
 
 > **Astuce pour débutants** : Ne vous sentez pas obligé de suivre toutes les évolutions en détail. Concentrez-vous d'abord sur la maîtrise des fondamentaux de Delphi. Au fur et à mesure que vous progresserez, vous pourrez naturellement élargir votre veille technologique. L'essentiel est de développer l'habitude de consulter régulièrement quelques sources fiables d'information.
+
+⏭️ [Exemples de projets open source Delphi](20-ressources-et-communaute/08-exemples-de-projets-open-source-delphi.md)

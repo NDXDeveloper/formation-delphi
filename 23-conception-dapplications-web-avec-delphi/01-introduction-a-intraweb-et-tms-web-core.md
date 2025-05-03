@@ -1,5 +1,7 @@
 # 23.1 Introduction à Intraweb et TMS Web Core
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Développement web avec Delphi : les fondamentaux
 
 Vous connaissez déjà Delphi pour le développement d'applications desktop avec VCL ou multi-plateformes avec FireMonkey (FMX), mais saviez-vous que Delphi permet également de créer des applications web complètes ? Dans cette section, nous allons découvrir deux solutions majeures pour le développement web avec Delphi : IntraWeb et TMS Web Core.
@@ -196,3 +198,5 @@ Dans les prochaines sections, nous approfondirons chacune de ces technologies et
 1. Créez une page de connexion simple avec IntraWeb ou TMS Web Core
 2. Ajoutez une validation des champs (nom d'utilisateur non vide, mot de passe d'au moins 6 caractères)
 3. Affichez un message de bienvenue personnalisé après la connexion
+
+⏭️ [Applications Web basées sur VCL](23-conception-dapplications-web-avec-delphi/02-applications-web-basees-sur-vcl.md)

@@ -1,5 +1,7 @@
 # 22.4 Reconnaissance d'images et de formes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction à la reconnaissance d'images
 
 La reconnaissance d'images est une branche passionnante de l'intelligence artificielle qui permet à vos applications d'identifier et de comprendre le contenu visuel. Dans cette section, nous allons explorer comment intégrer cette technologie à vos applications Delphi.
@@ -2848,3 +2850,5 @@ Les possibilités d'application sont vastes : contrôle qualité industriel, sé
 ---
 
 > **Remarque** : Les exemples de code présentés dans ce chapitre sont conçus pour être didactiques et accessibles aux débutants. Dans un contexte de production, certaines optimisations supplémentaires pourraient être nécessaires en fonction des exigences spécifiques de votre application.
+
+⏭️ [Développement de modèles prédictifs](22-intelligence-artificielle-et-machine-learning-avec-delphi/05-developpement-de-modeles-predictifs.md)

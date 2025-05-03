@@ -1,5 +1,7 @@
 # 11.10 Performances et bonnes pratiques en multithreading
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Nous avons exploré en détail comment implémenter le multithreading dans Delphi. Cependant, le simple fait d'utiliser des threads ne garantit pas de meilleures performances. En fait, une implémentation incorrecte peut conduire à des applications plus lentes, moins stables et plus difficiles à déboguer. Dans ce chapitre, nous allons examiner les bonnes pratiques pour optimiser les performances de vos applications multithreads et éviter les pièges courants.
@@ -816,3 +818,5 @@ Créez une application qui simule un système de traitement de commandes avec le
    - L'activité de chaque thread
 
 Implémentez ce système en suivant les bonnes pratiques décrites dans ce chapitre. Testez-le avec différents nombres de threads et de commandes pour voir comment les performances évoluent.
+
+⏭️ [Débogage et tests](12-debogage-et-tests/README.md)

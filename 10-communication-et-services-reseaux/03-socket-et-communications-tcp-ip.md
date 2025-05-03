@@ -1,5 +1,7 @@
 # 10.3 Socket et communications TCP/IP
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Les sockets constituent la base des communications réseau modernes. Ils permettent à deux applications, qu'elles soient sur le même ordinateur ou sur des machines distantes, de communiquer entre elles via le réseau. Dans ce chapitre, nous allons explorer les bases des sockets et des communications TCP/IP, et comment les implémenter dans vos applications.
@@ -1656,3 +1658,5 @@ Les sockets sont un outil puissant pour créer des applications réseau, qu'il s
 5. **Extension du serveur Web**
    - Ajoutez la prise en charge des méthodes POST
    - Implémentez un mécanisme simple d'authentification
+
+⏭️ [Services SOAP et WebServices](10-communication-et-services-reseaux/04-services-soap-et-webservices.md)

@@ -1,5 +1,7 @@
 # 15.10 Permissions et confidentialité des données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 La gestion des permissions et la protection de la confidentialité des données sont des aspects fondamentaux du développement d'applications mobiles modernes. Les utilisateurs sont de plus en plus sensibles à la façon dont leurs données personnelles sont utilisées, et les réglementations comme le RGPD (Règlement Général sur la Protection des Données) en Europe ou le CCPA (California Consumer Privacy Act) aux États-Unis imposent des exigences strictes aux développeurs. Dans cette section, nous explorerons comment gérer correctement les permissions et protéger la confidentialité des utilisateurs dans vos applications Delphi.
 
 ## Comprendre les permissions mobiles
@@ -1500,3 +1502,5 @@ La gestion des permissions et la protection de la confidentialité des données 
 Rappelez-vous que la protection de la vie privée doit être intégrée dès la conception de votre application ("Privacy by Design") et non ajoutée comme une réflexion après coup. En prenant en compte ces considérations dès le début de votre projet, vous créerez des applications plus respectueuses et plus susceptibles d'être appréciées par vos utilisateurs.
 
 Dans la prochaine section, nous explorerons l'intégration des services Firebase dans vos applications mobiles Delphi pour ajouter des fonctionnalités puissantes comme les notifications push, l'authentification et l'analyse en temps réel.
+
+⏭️ [Intégration des services Firebase](15-applications-mobiles-avec-delphi/11-integration-des-services-firebase.md)

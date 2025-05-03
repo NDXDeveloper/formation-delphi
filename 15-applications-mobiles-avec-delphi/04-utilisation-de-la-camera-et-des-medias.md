@@ -1,5 +1,7 @@
 # 15.4 Utilisation de la caméra et des médias
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Les appareils mobiles modernes sont équipés de caméras de plus en plus performantes et offrent de nombreuses fonctionnalités multimédias. Intégrer ces capacités à vos applications Delphi peut considérablement enrichir l'expérience utilisateur. Dans cette section, nous allons explorer comment utiliser la caméra et manipuler différents types de médias (images, audio, vidéo) dans vos applications mobiles.
 
 ## 1. Utilisation de la caméra
@@ -1409,3 +1411,5 @@ Les points clés à retenir sont :
 - L'adaptation aux spécificités de chaque plateforme améliore l'expérience utilisateur
 
 Dans la prochaine section, nous explorerons les notifications push et locales pour maintenir l'engagement des utilisateurs avec votre application, même lorsqu'elle n'est pas au premier plan.
+
+⏭️ [Notifications](15-applications-mobiles-avec-delphi/05-notifications.md)

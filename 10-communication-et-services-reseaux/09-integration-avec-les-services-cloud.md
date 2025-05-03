@@ -1,5 +1,7 @@
 # 10.9 Intégration avec les services cloud (AWS, Azure, Google Cloud)
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction
 
 Le cloud computing a révolutionné la façon dont nous développons et déployons les applications. Les services cloud offrent de nombreux avantages : scalabilité, haute disponibilité, réduction des coûts d'infrastructure, et accès à des technologies avancées. Dans ce chapitre, nous allons découvrir comment intégrer votre application Delphi avec les principaux fournisseurs de services cloud : Amazon Web Services (AWS), Microsoft Azure et Google Cloud Platform (GCP).
@@ -2954,3 +2956,5 @@ L'intégration avec les services cloud offre de nombreux avantages aux applicati
 ---
 
 *Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
+
+⏭️ [WebSockets et communications temps réel](10-communication-et-services-reseaux/10-websockets-et-communications-temps-reel.md)

@@ -1,6 +1,8 @@
 # 16. Sécurité des applications
 ## 16.5 Protection contre les vulnérabilités courantes
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Même avec une authentification solide, des autorisations strictes, un chiffrement robuste et des connexions sécurisées, votre application peut rester vulnérable à diverses attaques si vous ne prenez pas en compte les risques de sécurité courants. Dans ce chapitre, nous allons explorer les vulnérabilités les plus fréquentes et comment les éviter dans vos applications Delphi.
 
 ### Injection SQL
@@ -2161,3 +2163,5 @@ if %ERRORLEVEL% GEQ 1 (
 7. Pour les plus avancés : Créez un middleware de sécurité qui applique automatiquement des en-têtes de sécurité à toutes les réponses HTTP de votre application.
 
 En mettant en œuvre ces recommandations et en utilisant les outils appropriés, vous pouvez considérablement renforcer la sécurité de vos applications Delphi contre les vulnérabilités courantes.
+
+⏭️ [Audit de sécurité](16-securite-des-applications/06-audit-de-securite.md)

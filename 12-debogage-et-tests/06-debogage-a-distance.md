@@ -1,5 +1,7 @@
 # 12.6 Débogage à distance
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction au débogage à distance
 
 Le débogage à distance est une technique puissante qui vous permet d'exécuter et déboguer votre application sur une machine différente de celle où vous développez. Cette approche est particulièrement utile dans plusieurs scénarios :
@@ -299,3 +301,5 @@ Le débogage à distance est un outil essentiel dans l'arsenal de tout développ
 Bien que sa configuration initiale puisse sembler complexe, les avantages qu'il offre en termes de capacité à identifier et résoudre les problèmes dans leur environnement réel sont inestimables. Avec de la pratique, le débogage à distance deviendra une partie naturelle de votre flux de travail de développement.
 
 Dans la prochaine section, nous explorerons les tests d'intégration, qui complètent les tests unitaires en vérifiant comment les différentes parties de votre application interagissent entre elles.
+
+⏭️ [Tests d'intégration](12-debogage-et-tests/07-tests-dintegration.md)

@@ -1,5 +1,7 @@
 # 23.2 Applications Web basées sur VCL
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 ## Introduction aux applications Web basées sur VCL
 
 Si vous êtes familier avec le développement d'applications desktop en Delphi, vous apprécierez la possibilité de réutiliser vos connaissances VCL (Visual Component Library) pour créer des applications web. Cette approche vous permet de faire la transition vers le développement web tout en conservant la puissance et la familiarité de l'environnement Delphi.
@@ -372,3 +374,5 @@ Dans la prochaine section, nous explorerons comment créer des services REST ave
 2. Ajoutez une validation pour s'assurer que l'email est au bon format et que le numéro de téléphone contient uniquement des chiffres.
 
 3. Bonus: Ajoutez un second formulaire qui affiche les données saisies et permet de les modifier.
+
+⏭️ [Création de services REST avec Delphi](23-conception-dapplications-web-avec-delphi/03-creation-de-services-rest-avec-delphi.md)

@@ -1,5 +1,7 @@
 # 8.10 Migration et synchronisation de bases de données
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Une application de gestion évolue constamment au fil du temps. De nouvelles fonctionnalités sont ajoutées, des corrections sont apportées, et cela entraîne souvent des modifications dans la structure de la base de données. Comment gérer ces changements efficacement, surtout quand votre application est déjà déployée chez des clients ? Cette section vous guidera à travers les concepts et techniques de migration et de synchronisation de bases de données MySQL avec Delphi.
 
 ## Comprendre les enjeux de la migration de bases de données
@@ -1484,3 +1486,5 @@ En suivant ces principes et en utilisant les techniques présentées dans cette 
 ---
 
 **À suivre :** 8.11 Sécurisation des accès et prévention des injections SQL
+
+⏭️ [Sécurisation des accès et prévention des injections SQL](08-acces-aux-bases-de-donnees-mysql-mariadb/11-securisation-des-acces-et-prevention-des-injections-sql.md)

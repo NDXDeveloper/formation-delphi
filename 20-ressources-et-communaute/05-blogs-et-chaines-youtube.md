@@ -1,5 +1,7 @@
 # 20.5 Blogs et chaînes YouTube
 
+🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+
 Internet regorge de ressources gratuites pour approfondir vos connaissances en Delphi. Les blogs et chaînes YouTube sont particulièrement précieux pour les débutants, car ils offrent des explications visuelles, des tutoriels pas à pas et des démonstrations concrètes. Ces ressources vous permettent d'apprendre à votre rythme et souvent de manière plus accessible que la documentation officielle.
 
 ## Blogs incontournables
@@ -221,3 +223,5 @@ Si vous trouvez un excellent tutoriel mais dans une langue que vous ne comprenez
 ---
 
 > **Astuce pour débutants** : Créez un document où vous notez les liens vers les vidéos et articles qui vous ont été particulièrement utiles. Ajoutez vos propres notes pour vous rappeler pourquoi cette ressource était précieuse. Cela deviendra une bibliothèque personnalisée de références que vous pourrez consulter lorsque vous aurez besoin de rafraîchir vos connaissances sur un sujet particulier.
+
+⏭️ [Livres et formations](20-ressources-et-communaute/06-livres-et-formations.md)
