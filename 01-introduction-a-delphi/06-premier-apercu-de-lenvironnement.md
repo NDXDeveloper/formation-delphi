@@ -1,6 +1,6 @@
 # 1.6 Premier aperçu de l'environnement
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 Bienvenue dans l'environnement de développement Delphi ! Cette section vous aidera à vous familiariser avec l'interface et à comprendre la disposition des différents éléments. Ne vous inquiétez pas si tout semble complexe au premier abord - nous allons découvrir chaque élément progressivement.
 

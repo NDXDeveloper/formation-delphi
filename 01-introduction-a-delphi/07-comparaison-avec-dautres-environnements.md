@@ -1,6 +1,6 @@
 # 1.7 Comparaison avec d'autres environnements de développement
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 Pour mieux comprendre les forces et les particularités de Delphi, il est utile de le comparer à d'autres environnements de développement populaires. Cette comparaison vous aidera à situer Delphi dans le paysage des outils de développement actuels et à apprécier ses avantages spécifiques.
 

@@ -1,6 +1,6 @@
 # 1. Introduction à Delphi
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 Bienvenue dans ce tutoriel complet sur Delphi 12 Athens, l'environnement de développement rapide d'applications (RAD) qui continue de se réinventer depuis plus de 25 ans. Que vous soyez débutant en programmation ou développeur expérimenté souhaitant explorer une nouvelle plateforme, ce guide vous accompagnera dans la découverte et la maîtrise de cet outil puissant.
 

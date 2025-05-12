@@ -1,6 +1,6 @@
 # 1.3 Versions disponibles et éditions (Community Edition incluse)
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 ## Les différentes éditions de Delphi
 

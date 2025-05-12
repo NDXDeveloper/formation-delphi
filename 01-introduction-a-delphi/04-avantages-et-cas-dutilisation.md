@@ -1,6 +1,6 @@
 # 1.4 Avantages et cas d'utilisation
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 ## Pourquoi choisir Delphi ?
 

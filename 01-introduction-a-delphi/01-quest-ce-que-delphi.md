@@ -1,6 +1,6 @@
 # 1.1 Qu'est-ce que Delphi ?
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 Delphi est un environnement de développement intégré (EDI ou IDE en anglais) créé par Embarcadero Technologies (anciennement Borland). C'est à la fois un langage de programmation et un outil complet pour construire des applications, principalement pour Windows, mais également pour d'autres plateformes comme macOS, iOS, Android et Linux.
 

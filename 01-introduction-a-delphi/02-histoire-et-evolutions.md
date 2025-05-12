@@ -1,6 +1,6 @@
 # 1.2 Histoire et évolutions
 
-🔝 Retour à la [Sommaire](/SOMMAIRE.md)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
 ## Les origines de Delphi
 
