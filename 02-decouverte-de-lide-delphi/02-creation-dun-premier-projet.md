@@ -1,146 +1,126 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 2.2 Création d'un premier projet
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Maintenant que nous sommes familiarisés avec l'interface de Delphi, passons à l'étape suivante : la création de notre premier projet. Nous allons réaliser une application simple mais fonctionnelle qui vous permettra de comprendre les bases du développement avec Delphi.
+Maintenant que vous connaissez l'interface de Delphi, il est temps de créer votre premier projet ! Cette étape est excitante car vous allez passer de la théorie à la pratique. Ne vous inquiétez pas, créer un projet dans Delphi est très simple et intuitif.
 
-## Lancement d'un nouveau projet
+Dans cette section, nous allons voir comment démarrer un nouveau projet, comprendre ce qui se passe en coulisse, et explorer les différents types de projets que vous pouvez créer.
 
-Pour créer un nouveau projet dans Delphi, suivez ces étapes :
+## Qu'est-ce qu'un projet Delphi ?
 
-1. Lancez Delphi si ce n'est pas déjà fait
-2. Dans l'écran d'accueil, cliquez sur "Nouveau" ou allez dans le menu **Fichier > Nouveau > Application VCL**
-3. Si l'écran d'accueil n'apparaît pas, utilisez le raccourci **Fichier > Nouveau > Application VCL** depuis la barre de menus
+Avant de commencer, clarifions ce qu'est un projet dans Delphi. Un projet n'est pas un simple fichier, mais un ensemble de fichiers qui travaillent ensemble pour créer votre application. Ces fichiers comprennent :
 
-> **Note :** VCL signifie "Visual Component Library", c'est la bibliothèque de composants visuels pour Windows. Pour une application multi-plateforme, vous choisiriez plutôt "Application FireMonkey" (FMX), mais nous commencerons par VCL qui est parfaite pour les débutants.
+- **Le fichier projet** (.dpr) : c'est le fichier principal qui coordonne tous les autres
+- **Les fiches** (.dfm) : les fichiers qui décrivent l'apparence de vos fenêtres
+- **Les unités de code** (.pas) : les fichiers qui contiennent le code Object Pascal
+- **Les ressources** : images, icônes, sons, etc.
+- **Les fichiers de configuration** : paramètres du projet
 
-## Comprendre ce qui a été créé
+Delphi gère automatiquement la plupart de ces fichiers pour vous. Vous n'avez pas besoin de vous préoccuper de leur organisation dès le début.
 
-Après avoir créé un nouveau projet, voici ce que vous observez :
+## Créer un nouveau projet : méthode pas à pas
 
-- Un **formulaire vide** (nommé "Form1" par défaut) s'affiche dans le concepteur
-- Delphi a automatiquement généré deux fichiers principaux :
-  - `Unit1.pas` : fichier contenant le code Object Pascal de votre formulaire
-  - `Unit1.dfm` : fichier décrivant l'interface visuelle (Design Form Module)
-- Dans le gestionnaire de projet, vous verrez également le fichier projet (`.dproj`) qui coordonne tous les éléments
+### Étape 1 : Accéder au menu de création
 
-![Premier formulaire Delphi](https://placeholder.com/delphi-first-form)
+Il existe plusieurs façons de créer un nouveau projet dans Delphi :
 
-## Enregistrement du projet
+**Via le menu principal** : cliquez sur "Fichier" puis "Nouveau", et enfin "Application Windows VCL" (ou "Application multi-plateforme - FireMonkey" selon votre besoin).
 
-Il est important d'enregistrer votre projet dès le début :
+**Via l'écran d'accueil** : si vous venez de lancer Delphi, l'écran d'accueil affiche des raccourcis pour créer rapidement un nouveau projet.
 
-1. Allez dans le menu **Fichier > Enregistrer tout** ou utilisez le raccourci **Ctrl+Shift+S**
-2. Delphi vous demandera d'enregistrer trois éléments :
-   - Le fichier projet (`.dproj`) - Donnez-lui un nom significatif comme "MonPremierProjet"
-   - Le fichier unité (`.pas`) - Vous pouvez le nommer "UPrincipal" (la convention est de préfixer les noms d'unités par "U")
-   - Le fichier formulaire (`.dfm`) sera enregistré automatiquement avec le même nom que le fichier unité
+**Via le raccourci clavier** : vous pouvez utiliser **Ctrl + N** pour ouvrir le dialogue de création.
 
-> **Bonne pratique :** Créez un dossier dédié pour chaque projet Delphi. Cela vous aidera à organiser votre travail et facilitera la sauvegarde ou le partage ultérieur.
+Pour notre premier projet, nous allons choisir une **Application Windows VCL**, qui est le type de projet le plus classique et le plus simple pour débuter sous Windows.
 
-## Conception de l'interface utilisateur
+### Étape 2 : Choisir le type de projet
 
-Maintenant, créons une interface simple avec quelques composants :
+Quand vous demandez à créer un nouveau projet, Delphi vous présente différentes options. Voici les plus courantes pour débuter :
 
-1. **Ajoutons un libellé (TLabel)** :
-   - Localisez l'onglet "Standard" dans la palette d'outils
-   - Cliquez sur le composant "Label"
-   - Cliquez ensuite sur le formulaire pour placer le composant
-   - Dans l'inspecteur d'objets, modifiez la propriété "Caption" en "Entrez votre nom :"
+**Application Windows VCL** : pour créer des applications Windows traditionnelles avec une interface native. C'est le choix idéal pour débuter et pour créer des applications destinées uniquement à Windows.
 
-2. **Ajoutons un champ de saisie (TEdit)** :
-   - Dans la palette d'outils, cliquez sur le composant "Edit"
-   - Placez-le sur le formulaire à droite du label
-   - Dans l'inspecteur d'objets, modifiez la propriété "Name" en "EditNom" (la convention est de préfixer le nom des composants par leur type)
-   - Effacez le contenu de la propriété "Text" pour que le champ soit vide au démarrage
+**Application multi-plateforme (FireMonkey)** : pour créer des applications qui fonctionnent sur plusieurs systèmes : Windows, macOS, iOS, Android, Linux. Plus complexe, mais très puissant si vous visez plusieurs plateformes.
 
-3. **Ajoutons un bouton (TButton)** :
-   - Dans la palette d'outils, cliquez sur le composant "Button"
-   - Placez-le sous le champ de saisie
-   - Modifiez sa propriété "Caption" en "Cliquez-moi"
-   - Modifiez sa propriété "Name" en "ButtonClickMe"
+**Application console** : pour créer des programmes en ligne de commande, sans interface graphique. Utile pour des scripts ou des outils automatisés.
 
-4. **Améliorons l'apparence du formulaire** :
-   - Sélectionnez le formulaire en cliquant sur sa surface (loin des autres composants)
-   - Modifiez sa propriété "Caption" en "Mon Premier Programme"
-   - Ajustez sa propriété "Width" à environ 350 (largeur)
-   - Ajustez sa propriété "Height" à environ 200 (hauteur)
+**Bibliothèque DLL** : pour créer des bibliothèques de code réutilisables.
 
-![Interface utilisateur simple](https://placeholder.com/delphi-simple-ui)
+Pour votre premier projet, choisissez **Application Windows VCL**. C'est le plus simple et le plus didactique.
 
-## Ajout de comportement avec du code
+### Étape 3 : La fiche principale est créée
 
-Maintenant, ajoutons du code pour rendre notre application interactive :
+Dès que vous validez votre choix, Delphi crée automatiquement plusieurs choses pour vous :
 
-1. **Double-cliquez sur le bouton** "Cliquez-moi" dans le formulaire
-   - Cette action crée automatiquement un gestionnaire d'événement pour l'événement "OnClick" du bouton
-   - Vous êtes maintenant dans l'éditeur de code, où Delphi a généré une procédure nommée `ButtonClickMeClick`
+**Une fiche vide** apparaît dans le concepteur : c'est la fenêtre principale de votre future application. Elle est actuellement vide et porte le nom par défaut "Form1".
 
-2. **Ajoutez le code suivant** entre les mots `begin` et `end` :
+**Une unité de code associée** : derrière cette fiche, il y a déjà du code Pascal généré automatiquement. Vous pouvez le voir en appuyant sur **F11** ou en cliquant sur l'onglet "Unit1.pas" en bas.
 
-```pascal
-if EditNom.Text = '' then
-  ShowMessage('Veuillez entrer votre nom!')
-else
-  ShowMessage('Bonjour ' + EditNom.Text + ' ! Bienvenue dans le monde de Delphi!');
+**Un fichier projet** : Delphi a créé le fichier principal de votre projet, mais vous n'avez pas besoin d'y toucher pour l'instant.
+
+À ce stade, même sans rien faire, vous avez déjà une application fonctionnelle ! Elle ne fait rien d'intéressant, mais elle peut être compilée et exécutée.
+
+### Étape 4 : Enregistrer votre projet
+
+Avant d'aller plus loin, il est important d'enregistrer votre projet. C'est une bonne habitude à prendre dès le début.
+
+**Choisir "Fichier > Enregistrer tout"** ou appuyez sur **Ctrl + Shift + S**.
+
+Delphi vous demandera de choisir un emplacement et un nom pour :
+
+1. **L'unité de code** (Unit1.pas) : par défaut, Delphi propose "Unit1". Il est recommandé de choisir un nom plus explicite, par exemple "MainUnit" ou "PrincipaleUnit" si c'est votre unité principale.
+
+2. **Le projet** (.dpr) : Delphi propose "Project1". Donnez-lui un nom significatif, par exemple "MonPremierProjet".
+
+**Conseil important** : créez toujours un dossier dédié pour chaque projet. Delphi génère de nombreux fichiers temporaires et de compilation, et il vaut mieux les avoir bien organisés dans des dossiers séparés.
+
+### Étape 5 : Structure des fichiers créés
+
+Après l'enregistrement, explorez le dossier de votre projet. Vous verrez plusieurs fichiers :
+
+**MonPremierProjet.dpr** : le fichier projet principal
+
+**MainUnit.pas** : votre unité de code
+
+**MainUnit.dfm** : la description de votre fiche (Form1)
+
+**MonPremierProjet.dproj** : les paramètres et options du projet
+
+**MonPremierProjet.res** : les ressources du projet (icône, etc.)
+
+D'autres fichiers et dossiers seront créés lors de la compilation, mais ce sont les fichiers principaux que Delphi utilise.
+
+## Comprendre la fiche créée
+
+Revenons à la fiche qui s'affiche dans le concepteur. Elle possède déjà plusieurs propriétés que vous pouvez modifier dans l'inspecteur d'objets :
+
+**Caption** : le titre qui s'affiche dans la barre de titre de la fenêtre. Par défaut, c'est "Form1". Essayez de le changer en "Ma Première Application" pour voir l'effet.
+
+**Width et Height** : les dimensions de la fenêtre en pixels. Vous pouvez les modifier soit en redimensionnant la fiche avec la souris, soit en changeant ces valeurs dans l'inspecteur.
+
+**Color** : la couleur de fond de la fenêtre. Par défaut, c'est la couleur standard de Windows.
+
+**Name** : le nom interne du formulaire dans le code. C'est par ce nom que vous ferez référence à cette fiche dans votre code.
+
+**Position** : définit où la fenêtre apparaîtra à l'écran (centrée, position par défaut, etc.).
+
+N'hésitez pas à explorer ces propriétés dans l'inspecteur d'objets pour voir leurs effets.
+
+## Le code généré automatiquement
+
+Appuyez sur **F11** pour voir le code associé à votre fiche. Vous verrez quelque chose comme ceci :
+
 ```
-
-Votre code complet devrait ressembler à ceci :
-
-```pascal
-procedure TForm1.ButtonClickMeClick(Sender: TObject);
-begin
-  if EditNom.Text = '' then
-    ShowMessage('Veuillez entrer votre nom!')
-  else
-    ShowMessage('Bonjour ' + EditNom.Text + ' ! Bienvenue dans le monde de Delphi!');
-end;
-```
-
-Ce code vérifie si l'utilisateur a saisi un nom. Si le champ est vide, il affiche un message d'avertissement. Sinon, il affiche un message personnalisé avec le nom saisi.
-
-## Exécution de votre premier programme
-
-Pour exécuter votre application :
-
-1. Appuyez sur la touche **F9** ou cliquez sur le bouton "Run" dans la barre d'outils (l'icône de triangle vert)
-2. Delphi va compiler votre projet et lancer l'application
-3. Votre formulaire apparaîtra comme une véritable application Windows
-4. Testez votre application :
-   - Essayez de cliquer sur le bouton sans rien saisir
-   - Puis entrez votre nom et cliquez à nouveau sur le bouton
-
-![Application en exécution](https://placeholder.com/delphi-running-app)
-
-## Comprendre ce qui se passe
-
-Félicitations, vous venez de créer votre première application Delphi ! Voici ce qui s'est passé :
-
-1. Vous avez créé une interface utilisateur en plaçant des composants visuels
-2. Vous avez défini leurs propriétés pour personnaliser leur apparence
-3. Vous avez écrit du code pour répondre à un événement (le clic sur un bouton)
-4. Delphi a compilé votre code en un exécutable Windows natif
-5. Votre application s'est exécutée de manière autonome
-
-## Exploration du code généré
-
-Examinons brièvement le code que Delphi a généré automatiquement. Dans l'éditeur de code, vous verrez une structure comme celle-ci :
-
-```pascal
-unit UPrincipal;
+unit MainUnit;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
 type
   TForm1 = class(TForm)
-    Label1: TLabel;
-    EditNom: TEdit;
-    ButtonClickMe: TButton;
-    procedure ButtonClickMeClick(Sender: TObject);
   private
     { Déclarations privées }
   public
@@ -154,43 +134,157 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.ButtonClickMeClick(Sender: TObject);
-begin
-  if EditNom.Text = '' then
-    ShowMessage('Veuillez entrer votre nom!')
-  else
-    ShowMessage('Bonjour ' + EditNom.Text + ' ! Bienvenue dans le monde de Delphi!');
-end;
-
 end.
 ```
 
-Ne vous inquiétez pas si tout cela semble complexe pour l'instant. Vous apprendrez progressivement la signification de chaque partie.
+Ne vous inquiétez pas si vous ne comprenez pas tout ce code pour l'instant. Voici ce qu'il faut retenir :
 
-## Personnalisation avancée (optionnelle)
+**interface** : la section qui déclare ce que votre unité rend visible aux autres parties du programme.
 
-Si vous souhaitez aller plus loin, voici quelques améliorations que vous pouvez apporter :
+**uses** : la liste des bibliothèques que cette unité utilise.
 
-1. **Ajouter un raccourci clavier** :
-   - Sélectionnez le bouton "Cliquez-moi"
-   - Dans l'inspecteur d'objets, cherchez la propriété "Default" et changez-la à "True"
-   - Maintenant, appuyer sur la touche Entrée équivaudra à cliquer sur le bouton
+**type** : ici est déclarée votre classe TForm1, qui représente votre fiche.
 
-2. **Rendre l'interface plus attrayante** :
-   - Ajoutez un composant TPanel depuis la palette pour regrouper vos contrôles
-   - Explorez les propriétés Font pour modifier l'apparence du texte
-   - Utilisez les propriétés Color pour ajouter des couleurs
+**implementation** : la section où vous écrirez le code qui fait fonctionner votre fiche.
+
+Delphi maintient automatiquement la synchronisation entre votre fiche visuelle et ce code. Quand vous ajoutez un bouton sur la fiche, Delphi ajoute automatiquement la déclaration correspondante dans le code.
+
+## Compiler et exécuter votre premier projet
+
+Maintenant, le moment que vous attendez : faire tourner votre application !
+
+**Appuyez sur F9** ou cliquez sur le bouton de lecture verte dans la barre d'outils.
+
+Delphi va alors :
+
+1. **Compiler votre code** : transformer le code Object Pascal en langage machine compréhensible par l'ordinateur.
+
+2. **Lier les bibliothèques** : assembler tous les composants nécessaires.
+
+3. **Créer l'exécutable** : générer le fichier .exe de votre application.
+
+4. **Lancer l'application** : exécuter automatiquement votre programme.
+
+Si tout se passe bien, une nouvelle fenêtre s'ouvre : c'est votre application ! Certes, elle ne fait rien pour l'instant, mais c'est déjà votre création. Vous pouvez la déplacer, la redimensionner, la minimiser, la fermer, exactement comme n'importe quelle application Windows.
+
+**En bas de l'IDE Delphi**, vous verrez la fenêtre de messages qui affiche les résultats de la compilation. Si tout s'est bien passé, vous verrez un message indiquant la réussite de la compilation et le nombre de lignes compilées.
+
+## Les différents modes de compilation
+
+Delphi offre plusieurs façons de compiler et exécuter votre projet :
+
+**F9 (Exécuter)** : compile et lance immédiatement l'application.
+
+**Ctrl + F9 (Compiler)** : compile le projet sans le lancer. Utile pour vérifier qu'il n'y a pas d'erreurs.
+
+**Shift + F9 (Compiler et construire)** : recompile tout le projet depuis zéro, même les parties qui n'ont pas changé.
+
+**F12** : vous ramène rapidement au concepteur de fiche si vous êtes dans le code.
+
+Pour l'instant, **F9** sera votre raccourci le plus utilisé.
+
+## Où se trouve votre application ?
+
+Quand vous compilez votre projet, Delphi crée un fichier exécutable (.exe). Mais où est-il ?
+
+Par défaut, l'exécutable se trouve dans un sous-dossier de votre projet :
+
+- **Win32\Debug** pour une compilation en mode Debug (développement) pour Windows 32 bits
+- **Win64\Debug** pour Windows 64 bits
+- **Win32\Release** pour une version finale optimisée
+
+Vous pouvez naviguer vers ce dossier et double-cliquer sur votre .exe pour lancer votre application sans passer par Delphi. C'est le fichier que vous pourrez distribuer à d'autres personnes (même si pour l'instant, il ne fait pas grand-chose !).
+
+## Les configurations de compilation
+
+Delphi propose deux configurations principales :
+
+**Debug** : mode de développement, avec des informations supplémentaires pour le débogage. L'exécutable est plus gros et moins optimisé, mais il est plus facile à déboguer.
+
+**Release** : mode de production, optimisé pour la vitesse et la taille. C'est cette version que vous utiliserez pour distribuer votre application finale.
+
+Vous pouvez changer de configuration dans la barre d'outils, où vous verrez un menu déroulant avec ces options. Pour le développement, restez en mode **Debug**.
+
+## Types de projets courants
+
+Bien que nous ayons créé une application VCL, voici un aperçu des autres types de projets que vous rencontrerez :
+
+**VCL Forms Application** : applications Windows classiques avec interface native. Idéal pour commencer et pour les applications professionnelles Windows.
+
+**FireMonkey (FMX) Application** : applications multi-plateformes avec interface moderne. Plus complexe mais permet de cibler Windows, macOS, iOS, Android et Linux avec le même code.
+
+**Console Application** : programmes en ligne de commande, sans interface graphique. Parfait pour des outils, des scripts, ou pour apprendre les bases du langage sans se soucier de l'interface.
+
+**Service Application** : pour créer des services Windows qui tournent en arrière-plan.
+
+**DLL Library** : pour créer des bibliothèques de code réutilisables.
+
+**Package** : pour créer des composants réutilisables dans l'IDE Delphi.
+
+Pour débuter, concentrez-vous sur les **VCL Forms Application**. Vous explorerez les autres types au fur et à mesure de votre progression.
+
+## Bonnes pratiques pour vos projets
+
+Dès votre premier projet, prenez de bonnes habitudes :
+
+**Un dossier par projet** : ne mélangez jamais les fichiers de différents projets dans le même dossier.
+
+**Des noms significatifs** : évitez de garder les noms par défaut "Unit1", "Project1". Donnez des noms qui décrivent la fonction ("MainForm", "CalculatriceProjet").
+
+**Sauvegardez régulièrement** : prenez l'habitude d'appuyer sur **Ctrl + S** fréquemment.
+
+**Utilisez le contrôle de version** : même pour de petits projets personnels, un système comme Git peut vous sauver la mise. Nous en reparlerons plus tard.
+
+**Commentez votre code** : même si pour l'instant il n'y a pas beaucoup de code, prenez l'habitude de commenter ce que vous faites.
+
+**Testez souvent** : compilez et testez votre application fréquemment, même pour de petites modifications. C'est plus facile de corriger les erreurs au fur et à mesure que de chercher un bug dans 100 lignes de code modifiées.
+
+## Les erreurs courantes et comment les éviter
+
+Même dans un projet simple, vous pouvez rencontrer quelques problèmes :
+
+**"Cannot create file"** : cela arrive si votre application est encore en cours d'exécution. Fermez-la avant de recompiler.
+
+**Fichiers manquants** : assurez-vous d'avoir bien enregistré tous vos fichiers avant de fermer Delphi.
+
+**Problèmes de droits d'accès** : évitez de créer vos projets dans des dossiers système comme "Program Files". Utilisez plutôt votre dossier "Documents" ou créez un dossier "Projets Delphi" dédié.
+
+**Chemins avec des espaces ou des caractères spéciaux** : même si Delphi les gère, il vaut mieux éviter les espaces dans les noms de dossiers pour vos projets (utilisez "MonProjet" plutôt que "Mon Projet").
+
+## Fermer et rouvrir un projet
+
+Pour fermer votre projet actuel : **Fichier > Fermer tout**
+
+Pour rouvrir un projet existant : **Fichier > Ouvrir un projet** (ou **Ctrl + F11**), puis naviguez jusqu'au fichier .dproj ou .dpr de votre projet.
+
+Delphi garde aussi une liste des projets récents dans le menu "Fichier", ce qui vous permet de les rouvrir rapidement.
+
+## Gérer plusieurs projets
+
+Au début, vous travaillerez probablement sur un projet à la fois. Mais Delphi permet aussi de gérer plusieurs projets simultanément grâce aux **groupes de projets** (.groupproj).
+
+Un groupe de projets est utile quand vous développez plusieurs applications qui travaillent ensemble, par exemple une application principale et une DLL, ou un client et un serveur.
+
+Pour créer un groupe de projets : **Fichier > Nouveau > Autre > Delphi Projects > Project Group**
+
+Mais ne vous souciez pas de cela pour l'instant. Concentrez-vous sur la maîtrise d'un seul projet à la fois.
 
 ## Conclusion
 
-Dans cette section, vous avez appris à :
-- Créer un nouveau projet Delphi
-- Concevoir une interface utilisateur simple
-- Ajouter du comportement avec du code Object Pascal
-- Exécuter et tester votre application
+Félicitations ! Vous venez de créer, compiler et exécuter votre premier projet Delphi. Même s'il ne fait encore rien de spectaculaire, vous avez franchi une étape importante.
 
-Ce premier projet, bien que simple, illustre le concept fondamental du développement avec Delphi : la création rapide d'applications Windows natives avec une interface visuelle et un comportement programmé.
+Vous savez maintenant :
 
-Dans la section suivante, nous explorerons plus en détail la Palette d'outils et l'Inspecteur d'objets, deux outils essentiels pour accélérer votre travail de développement.
+- Comment créer un nouveau projet
+- Comprendre les fichiers générés
+- Naviguer entre la fiche et le code
+- Compiler et exécuter une application
+- Où se trouve votre exécutable
+
+Dans les prochaines sections, nous allons enrichir cette application en ajoutant des composants visuels, en écrivant du code, et en créant quelque chose d'utile et d'interactif.
+
+L'important à ce stade est de vous familiariser avec le processus de création et de compilation. N'hésitez pas à créer plusieurs projets tests pour vous entraîner. Chaque nouveau projet est une occasion d'explorer et d'apprendre.
+
+La prochaine étape sera de découvrir la palette d'outils et l'inspecteur d'objets, les deux outils essentiels pour construire l'interface de vos applications !
 
 ⏭️ [La Palette d'outils et l'Inspecteur d'objets](/02-decouverte-de-lide-delphi/03-palette-doutils-et-inspecteur-dobjets.md)
