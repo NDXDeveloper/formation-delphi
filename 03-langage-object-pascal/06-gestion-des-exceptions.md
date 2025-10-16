@@ -1,452 +1,964 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.6 Gestion des exceptions
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les exceptions sont un mécanisme qui permet de gérer les erreurs et les situations anormales dans votre programme. Au lieu de vérifier constamment si chaque opération a réussi, le système d'exceptions vous permet de séparer le code normal du code de gestion d'erreurs, rendant vos programmes plus clairs et plus robustes.
+Les exceptions sont des événements anormaux qui surviennent pendant l'exécution d'un programme et qui perturbent son flux normal. Une bonne gestion des exceptions permet de :
+- **Éviter les plantages** de l'application
+- **Informer l'utilisateur** de manière claire
+- **Maintenir l'intégrité** des données
+- **Faciliter le débogage** en identifiant les problèmes
+- **Rendre le code plus robuste** et professionnel
+
+Sans gestion d'exceptions, une simple erreur (division par zéro, fichier introuvable, etc.) peut faire planter toute l'application.
 
 ## Qu'est-ce qu'une exception ?
 
-Une exception est un événement qui se produit pendant l'exécution d'un programme et qui interrompt le flux normal d'instructions. Quand une erreur survient, le système "lance" (ou "lève") une exception, qui peut être "attrapée" et traitée ailleurs dans le programme.
+Une exception est un objet qui représente une erreur ou une condition anormale. Lorsqu'une erreur se produit, on dit que le programme **"lève une exception"** (raise an exception).
 
-Quelques exemples de situations pouvant générer des exceptions :
+**Exemples de situations générant des exceptions :**
 - Division par zéro
-- Accès à un index hors des limites d'un tableau
-- Conversion de types invalide
-- Opération sur un fichier inexistant
-- Manque de mémoire
+- Conversion de chaîne invalide (transformer "abc" en nombre)
+- Fichier introuvable
+- Accès à un index hors limites d'un tableau
+- Mémoire insuffisante
+- Connexion réseau perdue
 
-## Structure de base : try-except
+## Programme sans gestion d'exceptions
 
-La structure de base pour gérer les exceptions en Object Pascal est le bloc `try-except` :
+Voyons ce qui se passe sans gestion d'exceptions :
 
 ```pascal
-try
-  // Code qui pourrait générer une exception
-except
-  // Code de gestion des exceptions
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Nombre: Integer;
+begin
+  Nombre := StrToInt(Edit1.Text);  // Si l'utilisateur entre "abc", le programme plante !
+  ShowMessage('Nombre saisi : ' + IntToStr(Nombre));
 end;
 ```
 
-Exemple simple :
+**Problème :** Si l'utilisateur entre du texte non numérique, l'application génère une erreur et peut se fermer brutalement.
 
+## La structure try...except
+
+La structure `try...except` permet d'intercepter et de gérer les exceptions.
+
+**Syntaxe :**
 ```pascal
-var
-  A, B, Resultat: Integer;
-begin
-  A := 10;
-  B := 0;
+try
+  // Code susceptible de générer une exception
+except
+  // Code exécuté en cas d'exception
+end;
+```
 
+**Exemple simple :**
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Nombre: Integer;
+begin
   try
-    Resultat := A div B;  // Ceci va générer une exception (division par zéro)
-    ShowMessage('Résultat : ' + IntToStr(Resultat));  // Cette ligne ne sera jamais exécutée
+    Nombre := StrToInt(Edit1.Text);
+    ShowMessage('Nombre saisi : ' + IntToStr(Nombre));
   except
-    ShowMessage('Erreur : Division par zéro !');
-  end;
-
-  ShowMessage('Le programme continue...');  // Cette ligne sera exécutée
-end;
-```
-
-Dans cet exemple, l'opération `A div B` génère une exception de division par zéro. Le code dans le bloc `except` est alors exécuté, puis le programme continue après le bloc `try-except`.
-
-## Capturer des types d'exceptions spécifiques
-
-Vous pouvez capturer et traiter différents types d'exceptions de manière spécifique :
-
-```pascal
-try
-  // Code qui pourrait générer différentes exceptions
-except
-  on E: EDivByZero do
-    ShowMessage('Erreur : Division par zéro !');
-  on E: EConvertError do
-    ShowMessage('Erreur : Conversion invalide !');
-  on E: Exception do
-    ShowMessage('Autre erreur : ' + E.Message);
-end;
-```
-
-Dans cet exemple :
-- Si une exception `EDivByZero` se produit, le premier gestionnaire est exécuté
-- Si une exception `EConvertError` se produit, le deuxième gestionnaire est exécuté
-- Pour toute autre exception, le dernier gestionnaire est exécuté (car `Exception` est la classe parent de toutes les exceptions)
-
-## Accéder aux informations de l'exception
-
-La variable `E` dans l'exemple précédent contient l'objet exception qui a été levé. Vous pouvez accéder à ses propriétés pour obtenir plus d'informations :
-
-```pascal
-try
-  StrToInt('abc');  // Ceci va générer une exception EConvertError
-except
-  on E: Exception do
-  begin
-    ShowMessage('Type d''erreur : ' + E.ClassName);
-    ShowMessage('Message d''erreur : ' + E.Message);
+    ShowMessage('Erreur : veuillez entrer un nombre valide');
   end;
 end;
 ```
 
-## Structure try-finally
+**Avantage :** Le programme ne plante plus. L'utilisateur reçoit un message clair et peut corriger sa saisie.
 
-La structure `try-finally` garantit qu'un bloc de code sera toujours exécuté, qu'une exception se produise ou non :
+### Capturer le message d'exception
 
-```pascal
-try
-  // Code qui pourrait générer une exception
-finally
-  // Code qui sera toujours exécuté
-end;
-```
-
-Cette structure est particulièrement utile pour le nettoyage de ressources (fermeture de fichiers, libération de mémoire, etc.) :
+Vous pouvez récupérer l'exception pour afficher son message :
 
 ```pascal
+procedure TForm1.Button1Click(Sender: TObject);
 var
-  F: TextFile;
+  Nombre: Integer;
 begin
-  AssignFile(F, 'donnees.txt');
-  Reset(F);  // Ouvre le fichier
-
   try
-    // Opérations sur le fichier
-    // (si une exception se produit ici, le fichier sera quand même fermé)
-  finally
-    CloseFile(F);  // Ferme le fichier dans tous les cas
+    Nombre := StrToInt(Edit1.Text);
+    ShowMessage('Nombre saisi : ' + IntToStr(Nombre));
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
   end;
 end;
 ```
 
-## Structure combinée try-except-finally
+**Explication :**
+- `on E: Exception do` : capture toutes les exceptions dans la variable `E`
+- `E.Message` : contient le message d'erreur descriptif
 
-Vous pouvez combiner les deux structures précédentes :
+### Capturer des types d'exceptions spécifiques
+
+Vous pouvez traiter différemment selon le type d'exception :
 
 ```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Nombre: Integer;
+begin
+  try
+    Nombre := StrToInt(Edit1.Text);
+    Nombre := 100 div Nombre;  // Division
+    ShowMessage('Résultat : ' + IntToStr(Nombre));
+  except
+    on E: EConvertError do
+      ShowMessage('Format de nombre invalide : ' + E.Message);
+    on E: EDivByZero do
+      ShowMessage('Erreur : division par zéro impossible');
+    on E: Exception do
+      ShowMessage('Erreur inattendue : ' + E.Message);
+  end;
+end;
+```
+
+**Important :** Les exceptions sont testées dans l'ordre. Placez les exceptions les plus spécifiques en premier, et l'exception générale `Exception` en dernier.
+
+### Exemple : Ouverture de fichier
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Fichier: TextFile;
+  Ligne: string;
+begin
+  try
+    AssignFile(Fichier, 'C:\données.txt');
+    Reset(Fichier);
+
+    while not Eof(Fichier) do
+    begin
+      ReadLn(Fichier, Ligne);
+      Memo1.Lines.Add(Ligne);
+    end;
+
+    CloseFile(Fichier);
+    ShowMessage('Fichier chargé avec succès');
+  except
+    on E: EInOutError do
+      ShowMessage('Erreur d''accès au fichier : ' + E.Message);
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
+end;
+```
+
+## La structure try...finally
+
+La structure `try...finally` garantit qu'un code sera exécuté, **qu'une exception se produise ou non**. Elle est essentielle pour libérer des ressources (fichiers, objets, connexions, etc.).
+
+**Syntaxe :**
+```pascal
 try
-  // Code qui pourrait générer une exception
+  // Code susceptible de générer une exception
+finally
+  // Code exécuté TOUJOURS (avec ou sans exception)
+end;
+```
+
+### Exemple : Libération d'objet
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Liste: TStringList;
+begin
+  Liste := TStringList.Create;
+  try
+    Liste.LoadFromFile('C:\données.txt');
+    Memo1.Lines.Assign(Liste);
+  finally
+    Liste.Free;  // Libération garantie, même en cas d'erreur
+  end;
+end;
+```
+
+**Pourquoi finally est important :**
+Sans `finally`, si une exception se produit pendant `LoadFromFile`, l'objet `Liste` ne serait jamais libéré, causant une fuite mémoire.
+
+### Exemple : Fermeture de fichier
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Fichier: TextFile;
+  Ligne: string;
+begin
+  AssignFile(Fichier, 'C:\données.txt');
+  Reset(Fichier);
+  try
+    while not Eof(Fichier) do
+    begin
+      ReadLn(Fichier, Ligne);
+      Memo1.Lines.Add(Ligne);
+    end;
+  finally
+    CloseFile(Fichier);  // Fermeture garantie
+  end;
+end;
+```
+
+### Exemple : Curseur de souris
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;  // Curseur sablier
+  try
+    // Traitement long
+    Sleep(5000);
+    // ... opérations ...
+  finally
+    Screen.Cursor := crDefault;  // Restauration garantie du curseur
+  end;
+end;
+```
+
+### Exemple : Activation/désactivation de contrôles
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Button1.Enabled := False;
+  try
+    // Traitement
+    TraiterDonnees;
+  finally
+    Button1.Enabled := True;  // Réactivation garantie
+  end;
+end;
+```
+
+## La structure try...except...finally
+
+Vous pouvez combiner `except` et `finally` pour gérer les exceptions ET garantir le nettoyage :
+
+**Syntaxe :**
+```pascal
+try
+  // Code susceptible de générer une exception
 except
   // Gestion des exceptions
 end;
-
-// La partie finally est placée après le bloc except
 finally
-  // Code qui sera toujours exécuté
+  // Nettoyage (toujours exécuté)
 end;
 ```
 
-Exemple complet avec des opérations sur un fichier :
+**Attention :** Cette syntaxe n'est pas directement supportée. Il faut imbriquer deux blocs try :
 
 ```pascal
+procedure TForm1.Button1Click(Sender: TObject);
 var
-  F: TextFile;
-  Ligne: string;
+  Liste: TStringList;
 begin
-  AssignFile(F, 'donnees.txt');
-
+  Liste := TStringList.Create;
   try
     try
-      Reset(F);  // Tente d'ouvrir le fichier
-
-      while not Eof(F) do
-      begin
-        ReadLn(F, Ligne);
-        // Traitement de la ligne...
-      end;
+      Liste.LoadFromFile(Edit1.Text);
+      Memo1.Lines.Assign(Liste);
+      ShowMessage('Fichier chargé avec succès');
     except
-      on E: EInOutError do
-        ShowMessage('Erreur de fichier : ' + E.Message);
       on E: Exception do
-        ShowMessage('Autre erreur : ' + E.Message);
+        ShowMessage('Erreur lors du chargement : ' + E.Message);
     end;
   finally
-    if TTextRec(F).Mode <> fmClosed then  // Vérifie si le fichier est ouvert
-      CloseFile(F);
+    Liste.Free;  // Toujours libéré
   end;
 end;
 ```
 
-## Lever ses propres exceptions
+**Autre approche (plus lisible) :**
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Liste: TStringList;
+begin
+  Liste := TStringList.Create;
+  try
+    Liste.LoadFromFile(Edit1.Text);
+    Memo1.Lines.Assign(Liste);
+    ShowMessage('Fichier chargé avec succès');
+  except
+    on E: Exception do
+      ShowMessage('Erreur lors du chargement : ' + E.Message);
+  end;
+  // Libération après le bloc try...except
+  Liste.Free;
+end;
+```
 
-Vous pouvez aussi lever vos propres exceptions avec le mot-clé `raise` :
+**Mais attention :** Cette dernière approche ne garantit pas la libération si une exception se produit APRÈS le bloc except. Utilisez `try...finally` autour du tout pour être sûr.
+
+**Meilleure pratique :**
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Liste: TStringList;
+begin
+  Liste := TStringList.Create;
+  try
+    try
+      Liste.LoadFromFile(Edit1.Text);
+      Memo1.Lines.Assign(Liste);
+    except
+      on E: Exception do
+        ShowMessage('Erreur : ' + E.Message);
+    end;
+  finally
+    Liste.Free;
+  end;
+end;
+```
+
+## Lever une exception (raise)
+
+Vous pouvez lever vos propres exceptions pour signaler des erreurs.
+
+**Syntaxe :**
+```pascal
+raise Exception.Create('Message d''erreur');
+```
+
+### Exemple : Validation de données
 
 ```pascal
-procedure VerifierAge(Age: Integer);
+procedure ValiderAge(Age: Integer);
 begin
   if Age < 0 then
     raise Exception.Create('L''âge ne peut pas être négatif');
 
-  if Age > 120 then
-    raise Exception.Create('L''âge semble trop élevé');
-
-  // Traitement normal si l'âge est valide
+  if Age > 150 then
+    raise Exception.Create('L''âge semble invalide');
 end;
-```
 
-Utilisez cette procédure dans un bloc `try-except` :
-
-```pascal
-try
-  VerifierAge(-5);
-except
-  on E: Exception do
-    ShowMessage('Erreur : ' + E.Message);
-end;
-```
-
-## Créer ses propres types d'exceptions
-
-Pour des applications plus complexes, vous pouvez créer vos propres types d'exceptions en dérivant de la classe `Exception` :
-
-```pascal
-type
-  EAgeInvalide = class(Exception);
-  EConnexionBD = class(Exception);
-
-procedure VerifierAge(Age: Integer);
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Age: Integer;
 begin
-  if Age < 0 then
-    raise EAgeInvalide.Create('L''âge ne peut pas être négatif');
-
-  if Age > 120 then
-    raise EAgeInvalide.Create('L''âge semble trop élevé');
+  try
+    Age := StrToInt(Edit1.Text);
+    ValiderAge(Age);
+    ShowMessage('Âge valide : ' + IntToStr(Age));
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
 end;
 ```
 
-Cela permet une gestion plus précise des différents types d'erreurs :
+### Exemple : Division sécurisée
 
 ```pascal
-try
-  VerifierAge(-5);
-except
-  on E: EAgeInvalide do
-    ShowMessage('Âge invalide : ' + E.Message);
-  on E: EConnexionBD do
-    ShowMessage('Erreur de connexion à la base de données : ' + E.Message);
-  on E: Exception do
-    ShowMessage('Autre erreur : ' + E.Message);
+function DiviserSecurise(A, B: Double): Double;
+begin
+  if B = 0 then
+    raise Exception.Create('Division par zéro impossible');
+
+  Result := A / B;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Resultat: Double;
+begin
+  try
+    Resultat := DiviserSecurise(10, 0);
+    ShowMessage(FloatToStr(Resultat));
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
 end;
 ```
 
-## Relancer une exception
+### Re-lever une exception (raise sans paramètre)
 
-Parfois, vous voulez traiter une exception mais la relancer pour qu'elle soit gérée à un niveau supérieur :
+Vous pouvez intercepter une exception, effectuer une action, puis la re-lever :
 
 ```pascal
-try
-  // Code qui pourrait générer une exception
-except
-  on E: Exception do
-  begin
-    // Journalisation de l'erreur
-    LogErreur(E.Message);
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  try
+    // Code risqué
+    TraiterDonnees;
+  except
+    on E: Exception do
+    begin
+      // Journaliser l'erreur
+      Log('Erreur survenue : ' + E.Message);
 
-    // Relance l'exception pour qu'elle soit gérée ailleurs
-    raise;  // Sans paramètre, cela relance l'exception courante
+      // Re-lever l'exception pour qu'elle soit gérée plus haut
+      raise;
+    end;
   end;
 end;
 ```
 
 ## Types d'exceptions courants
 
-Voici quelques types d'exceptions prédéfinis que vous rencontrerez souvent :
+Delphi fournit de nombreux types d'exceptions prédéfinis :
 
-- `Exception` : Classe de base pour toutes les exceptions
-- `EAbort` : Exception spéciale qui indique une interruption sans erreur
-- `EInOutError` : Erreurs d'entrée/sortie (fichiers)
-- `EConvertError` : Erreurs de conversion de types
-- `EDivByZero` : Division par zéro
-- `ERangeError` : Index hors limites
-- `EAccessViolation` : Accès mémoire illégal
-- `EZeroDivide` : Division par zéro (nombres à virgule)
-- `EOverflow` : Dépassement arithmétique
+| Exception | Description | Exemple |
+|-----------|-------------|---------|
+| `Exception` | Exception de base (parent de toutes) | Toute erreur générique |
+| `EConvertError` | Erreur de conversion | `StrToInt('abc')` |
+| `EDivByZero` | Division par zéro | `X := 10 div 0` |
+| `EInOutError` | Erreur d'entrée/sortie | Fichier introuvable |
+| `ERangeError` | Dépassement de plage | Accès hors limites d'un tableau |
+| `EAccessViolation` | Violation d'accès mémoire | Pointeur nil déréférencé |
+| `EOutOfMemory` | Mémoire insuffisante | Allocation impossible |
+| `EIntOverflow` | Dépassement d'entier | Résultat trop grand |
+| `EInvalidOp` | Opération invalide | Opération mathématique invalide |
+| `EAbort` | Abandon silencieux | Interruption volontaire |
+
+### Exemples d'exceptions courantes
+
+```pascal
+// EConvertError
+try
+  X := StrToInt('abc');
+except
+  on E: EConvertError do
+    ShowMessage('Conversion impossible');
+end;
+
+// EDivByZero
+try
+  X := 10 div 0;
+except
+  on E: EDivByZero do
+    ShowMessage('Division par zéro');
+end;
+
+// ERangeError
+var
+  Tableau: array[0..9] of Integer;
+begin
+  try
+    Tableau[100] := 5;  // Hors limites
+  except
+    on E: ERangeError do
+      ShowMessage('Index hors limites');
+  end;
+end;
+
+// EAccessViolation
+var
+  Objet: TStringList;
+begin
+  Objet := nil;
+  try
+    Objet.Add('test');  // Objet nil
+  except
+    on E: EAccessViolation do
+      ShowMessage('Objet non initialisé');
+  end;
+end;
+```
+
+## Créer des exceptions personnalisées
+
+Vous pouvez créer vos propres types d'exceptions pour des situations spécifiques.
+
+**Syntaxe :**
+```pascal
+type
+  EMonException = class(Exception);
+```
+
+**Exemple simple :**
+```pascal
+type
+  EAgeInvalide = class(Exception);
+
+procedure ValiderAge(Age: Integer);
+begin
+  if (Age < 0) or (Age > 150) then
+    raise EAgeInvalide.Create('Âge invalide : ' + IntToStr(Age));
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Age: Integer;
+begin
+  try
+    Age := StrToInt(Edit1.Text);
+    ValiderAge(Age);
+    ShowMessage('Âge valide');
+  except
+    on E: EAgeInvalide do
+      ShowMessage('Erreur de validation : ' + E.Message);
+    on E: EConvertError do
+      ShowMessage('Veuillez entrer un nombre');
+  end;
+end;
+```
+
+**Exemple avec plusieurs exceptions personnalisées :**
+```pascal
+type
+  ECompteInvalide = class(Exception);
+  ESoldeInsuffisant = class(Exception);
+  EMontantNegatif = class(Exception);
+
+procedure Retirer(Compte: TCompte; Montant: Double);
+begin
+  if Compte = nil then
+    raise ECompteInvalide.Create('Compte non initialisé');
+
+  if Montant < 0 then
+    raise EMontantNegatif.Create('Le montant ne peut pas être négatif');
+
+  if Compte.Solde < Montant then
+    raise ESoldeInsuffisant.CreateFmt('Solde insuffisant. Disponible : %.2f €',
+                                     [Compte.Solde]);
+
+  Compte.Solde := Compte.Solde - Montant;
+end;
+
+// Utilisation
+try
+  Retirer(MonCompte, 100);
+except
+  on E: ECompteInvalide do
+    ShowMessage('Erreur de compte : ' + E.Message);
+  on E: ESoldeInsuffisant do
+    ShowMessage('Erreur : ' + E.Message);
+  on E: EMontantNegatif do
+    ShowMessage('Montant invalide : ' + E.Message);
+end;
+```
+
+### Exception avec données supplémentaires
+
+```pascal
+type
+  EValidationErreur = class(Exception)
+  private
+    FChamp: string;
+    FValeur: string;
+  public
+    constructor Create(const Champ, Valeur, Message: string);
+    property Champ: string read FChamp;
+    property Valeur: string read FValeur;
+  end;
+
+constructor EValidationErreur.Create(const Champ, Valeur, Message: string);
+begin
+  inherited Create(Message);
+  FChamp := Champ;
+  FValeur := Valeur;
+end;
+
+// Utilisation
+procedure ValiderEmail(const Email: string);
+begin
+  if Pos('@', Email) = 0 then
+    raise EValidationErreur.Create('Email', Email, 'Format d''email invalide');
+end;
+
+// Capture
+try
+  ValiderEmail('adresse.invalide');
+except
+  on E: EValidationErreur do
+    ShowMessage(Format('Erreur dans le champ "%s" (valeur: "%s"): %s',
+                      [E.Champ, E.Valeur, E.Message]));
+end;
+```
+
+## EAbort : Exception silencieuse
+
+`EAbort` est une exception spéciale qui ne génère pas de message d'erreur. Elle est utilisée pour interrompre proprement une opération.
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if MessageDlg('Continuer ?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+    Abort;  // Lève EAbort
+
+  // Suite du traitement
+  TraiterDonnees;
+end;
+```
+
+**Particularité :** Si `EAbort` n'est pas capturé, il ne génère pas de message d'erreur à l'utilisateur.
+
+## Fonctions de conversion sécurisées
+
+Delphi fournit des versions sécurisées des fonctions de conversion qui ne lèvent pas d'exception :
+
+### TryStrToInt
+
+```pascal
+var
+  Nombre: Integer;
+begin
+  if TryStrToInt(Edit1.Text, Nombre) then
+    ShowMessage('Nombre : ' + IntToStr(Nombre))
+  else
+    ShowMessage('Conversion impossible');
+end;
+```
+
+### TryStrToFloat
+
+```pascal
+var
+  Valeur: Double;
+begin
+  if TryStrToFloat(Edit1.Text, Valeur) then
+    ShowMessage('Valeur : ' + FloatToStr(Valeur))
+  else
+    ShowMessage('Conversion impossible');
+end;
+```
+
+### TryStrToDate
+
+```pascal
+var
+  Date: TDateTime;
+begin
+  if TryStrToDate(Edit1.Text, Date) then
+    ShowMessage('Date : ' + DateToStr(Date))
+  else
+    ShowMessage('Format de date invalide');
+end;
+```
+
+**Avantage des fonctions Try... :**
+- Plus rapides (pas de gestion d'exception)
+- Code plus lisible pour les validations simples
+- Recommandées pour les conversions fréquentes
 
 ## Bonnes pratiques
 
-### 1. Soyez spécifique
-
-Capturez les exceptions les plus spécifiques possibles plutôt que toutes les exceptions :
+### 1. Être spécifique dans la capture
 
 ```pascal
-// Approche préférable
+// ✅ BON : capture spécifique
 try
-  // Code
+  Nombre := StrToInt(Edit1.Text);
 except
-  on E: EDivByZero do
-    // Traitement spécifique
   on E: EConvertError do
-    // Traitement spécifique
+    ShowMessage('Format invalide : ' + E.Message);
 end;
 
-// Évitez ceci sauf en dernier recours
+// ❌ Moins bon : capture tout
 try
-  // Code
+  Nombre := StrToInt(Edit1.Text);
+except
+  ShowMessage('Erreur');  // Quelle erreur ? On ne sait pas
+end;
+```
+
+### 2. Toujours libérer les ressources avec finally
+
+```pascal
+// ✅ BON : libération garantie
+Liste := TStringList.Create;
+try
+  // Utilisation
+finally
+  Liste.Free;
+end;
+
+// ❌ MAUVAIS : risque de fuite mémoire
+Liste := TStringList.Create;
+// Utilisation
+Liste.Free;  // Si erreur avant, Free n'est pas appelé
+```
+
+### 3. Ne pas capturer les exceptions qu'on ne peut pas gérer
+
+```pascal
+// ❌ MAUVAIS : capture et ignore
+try
+  OperationCritique;
+except
+  // Ne rien faire cache le problème
+end;
+
+// ✅ BON : laisser remonter ou gérer correctement
+try
+  OperationCritique;
 except
   on E: Exception do
-    // Traitement générique
-end;
-```
-
-### 2. N'avalez pas les exceptions silencieusement
-
-Évitez de capturer des exceptions sans les traiter correctement :
-
-```pascal
-// À ÉVITER
-try
-  // Code risqué
-except
-  // Vide - l'exception est "avalée" sans traitement
-end;
-```
-
-### 3. Utilisez toujours finally pour la libération des ressources
-
-```pascal
-var
-  Liste: TStringList;
-begin
-  Liste := TStringList.Create;
-  try
-    // Opérations sur la liste
-  finally
-    Liste.Free;  // La liste sera toujours libérée
+  begin
+    Log('Erreur critique : ' + E.Message);
+    raise;  // Re-lever pour que l'appelant sache
   end;
 end;
 ```
 
-### 4. Gardez les blocs try courts et précis
-
-Limitez la portée des blocs `try` au code qui pourrait réellement générer une exception :
+### 4. Utiliser des messages clairs
 
 ```pascal
-// À ÉVITER
-try
-  // Beaucoup de code ici...
-  // Difficile de savoir quelle partie peut générer une exception
-except
-  // Gestion des erreurs
-end;
+// ❌ MAUVAIS : message vague
+raise Exception.Create('Erreur');
 
-// PRÉFÉRABLE
-// Code normal qui ne génère pas d'exceptions
-
-try
-  // Seulement le code qui pourrait générer une exception
-except
-  // Gestion des erreurs
-end;
-
-// Suite du code normal
+// ✅ BON : message descriptif
+raise Exception.Create('Impossible d''ouvrir le fichier : ' + NomFichier);
 ```
 
-### 5. Utilisez le modèle de protection
-
-Pour les objets qui doivent être libérés, utilisez ce modèle :
+### 5. Valider tôt, échouer vite
 
 ```pascal
-var
-  Obj: TObject;
+// ✅ BON : validation au début
+function Diviser(A, B: Double): Double;
 begin
-  Obj := TObject.Create;
-  try
-    // Utilisez Obj ici
-  finally
-    Obj.Free;  // Libération garantie
-  end;
+  if B = 0 then
+    raise Exception.Create('Division par zéro');
+
+  Result := A / B;
+end;
+
+// ❌ Moins bon : vérification tardive
+function Diviser(A, B: Double): Double;
+begin
+  // Beaucoup de code...
+
+  if B = 0 then
+    // Erreur découverte trop tard
+    raise Exception.Create('Division par zéro');
+
+  Result := A / B;
 end;
 ```
 
-Ce modèle s'applique aussi aux transactions de base de données, aux fichiers, et à d'autres ressources.
-
-## Exemple : application concrète
-
-Voici un exemple plus complet montrant comment gérer les exceptions dans un contexte réel :
+### 6. Préférer Try... pour les conversions fréquentes
 
 ```pascal
-procedure TraiterFichierClient(const NomFichier: string);
-var
-  Fichier: TStringList;
-  i: Integer;
-  Ligne, Nom, Email: string;
-  Position: Integer;
+// ✅ BON : plus performant
+if TryStrToInt(Edit1.Text, Nombre) then
+  Traiter(Nombre)
+else
+  ShowMessage('Nombre invalide');
+
+// ❌ Moins efficace pour des conversions fréquentes
+try
+  Nombre := StrToInt(Edit1.Text);
+  Traiter(Nombre);
+except
+  on E: EConvertError do
+    ShowMessage('Nombre invalide');
+end;
+```
+
+### 7. Documenter les exceptions levées
+
+```pascal
+/// <summary>
+/// Divise deux nombres
+/// </summary>
+/// <exception cref="Exception">Levée si le diviseur est zéro</exception>
+function Diviser(A, B: Double): Double;
 begin
-  Fichier := TStringList.Create;
+  if B = 0 then
+    raise Exception.Create('Division par zéro impossible');
+
+  Result := A / B;
+end;
+```
+
+### 8. Nettoyer avant de lever une exception
+
+```pascal
+procedure TraiterFichier(const NomFichier: string);
+var
+  Fichier: TextFile;
+begin
+  AssignFile(Fichier, NomFichier);
+  Reset(Fichier);
   try
-    try
-      Fichier.LoadFromFile(NomFichier);
-
-      for i := 0 to Fichier.Count - 1 do
-      begin
-        Ligne := Fichier[i];
-
-        try
-          Position := Pos(';', Ligne);
-          if Position <= 0 then
-            raise Exception.Create('Format de ligne invalide');
-
-          Nom := Copy(Ligne, 1, Position - 1);
-          Email := Copy(Ligne, Position + 1, Length(Ligne));
-
-          if Trim(Nom) = '' then
-            raise Exception.Create('Nom manquant');
-
-          if Pos('@', Email) <= 0 then
-            raise Exception.Create('Email invalide');
-
-          // Traitement du client valide
-          EnregistrerClient(Nom, Email);
-
-        except
-          on E: Exception do
-          begin
-            // Journalise l'erreur mais continue avec la ligne suivante
-            LogErreur('Erreur à la ligne ' + IntToStr(i+1) + ': ' + E.Message);
-          end;
-        end;
-      end;
-
-      ShowMessage('Traitement terminé');
-    except
-      on E: EFOpenError do
-        ShowMessage('Impossible d''ouvrir le fichier : ' + E.Message);
-      on E: Exception do
-        ShowMessage('Erreur lors du traitement : ' + E.Message);
+    // Traitement
+    if not ConditionValide then
+    begin
+      CloseFile(Fichier);  // Nettoyage avant de lever
+      raise Exception.Create('Condition non valide');
     end;
   finally
-    Fichier.Free;
+    CloseFile(Fichier);
   end;
 end;
 ```
 
-Dans cet exemple, nous utilisons des blocs `try-except` imbriqués pour :
-1. Gérer les erreurs de fichier au niveau externe
-2. Gérer les erreurs de format pour chaque ligne à l'intérieur de la boucle
-3. Garantir que la liste `Fichier` est toujours libérée avec `finally`
+## Gestion centralisée des exceptions
 
-## Exceptions et performances
-
-Les exceptions sont conçues pour gérer les situations exceptionnelles, pas pour le contrôle de flux normal. Utiliser les exceptions de manière excessive peut nuire aux performances :
+Vous pouvez gérer globalement les exceptions non capturées :
 
 ```pascal
-// À ÉVITER : Utiliser les exceptions pour le contrôle de flux normal
-try
-  Valeur := TDictionnaire[Cle];
-except
-  on E: Exception do
-    Valeur := ValeurParDefaut;
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Application.OnException := GererExceptionGlobale;
 end;
 
-// PRÉFÉRABLE : Vérification explicite
-if TDictionnaire.ContainsKey(Cle) then
-  Valeur := TDictionnaire[Cle]
-else
-  Valeur := ValeurParDefaut;
+procedure TForm1.GererExceptionGlobale(Sender: TObject; E: Exception);
+begin
+  // Journaliser
+  Log('Exception non gérée : ' + E.Message);
+
+  // Afficher un message personnalisé
+  MessageDlg('Une erreur est survenue : ' + E.Message,
+             mtError, [mbOK], 0);
+end;
 ```
+
+## Journalisation des exceptions
+
+Il est important de garder une trace des exceptions pour le débogage :
+
+```pascal
+procedure LogErreur(const Message: string);
+var
+  Fichier: TextFile;
+begin
+  AssignFile(Fichier, 'C:\Logs\erreurs.log');
+  if FileExists('C:\Logs\erreurs.log') then
+    Append(Fichier)
+  else
+    Rewrite(Fichier);
+
+  try
+    WriteLn(Fichier, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' - ' + Message);
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+
+// Utilisation
+try
+  OperationRisquee;
+except
+  on E: Exception do
+  begin
+    LogErreur('Erreur dans OperationRisquee : ' + E.Message);
+    ShowMessage('Une erreur est survenue');
+  end;
+end;
+```
+
+## Erreurs courantes à éviter
+
+### Erreur 1 : Capturer sans gérer
+
+```pascal
+// ❌ MAUVAIS : cache les problèmes
+try
+  OperationImportante;
+except
+  // Rien...
+end;
+```
+
+### Erreur 2 : Oublier finally pour les ressources
+
+```pascal
+// ❌ MAUVAIS : fuite mémoire si exception
+Liste := TStringList.Create;
+Liste.LoadFromFile('fichier.txt');
+Liste.Free;
+
+// ✅ BON
+Liste := TStringList.Create;
+try
+  Liste.LoadFromFile('fichier.txt');
+finally
+  Liste.Free;
+end;
+```
+
+### Erreur 3 : Ordre incorrect des exceptions
+
+```pascal
+// ❌ MAUVAIS : Exception générale en premier
+try
+  // Code
+except
+  on E: Exception do
+    ShowMessage('Erreur générale');  // Capture TOUT
+  on E: EConvertError do
+    ShowMessage('Conversion');  // Ne sera jamais atteint !
+end;
+
+// ✅ BON : spécifique avant générique
+try
+  // Code
+except
+  on E: EConvertError do
+    ShowMessage('Conversion');
+  on E: Exception do
+    ShowMessage('Erreur générale');
+end;
+```
+
+### Erreur 4 : Re-créer l'exception au lieu de la re-lever
+
+```pascal
+// ❌ MAUVAIS : perd la trace de l'exception originale
+try
+  // Code
+except
+  on E: Exception do
+    raise Exception.Create(E.Message);  // Nouvelle exception
+end;
+
+// ✅ BON : conserve la trace
+try
+  // Code
+except
+  on E: Exception do
+  begin
+    Log(E.Message);
+    raise;  // Re-lève l'exception originale
+  end;
+end;
+```
+
+### Erreur 5 : Utiliser les exceptions pour le contrôle de flux
+
+```pascal
+// ❌ MAUVAIS : exception pour la logique normale
+function TrouverUtilisateur(ID: Integer): TUtilisateur;
+begin
+  if not UtilisateurExiste(ID) then
+    raise Exception.Create('Utilisateur non trouvé');
+  // ...
+end;
+
+// ✅ BON : utiliser un booléen ou nil
+function TrouverUtilisateur(ID: Integer): TUtilisateur;
+begin
+  if not UtilisateurExiste(ID) then
+    Result := nil  // Ou retourner False avec un paramètre out
+  else
+    // Chercher l'utilisateur
+end;
+```
+
+## Points clés à retenir
+
+1. **try...except** : capture et gère les exceptions
+2. **try...finally** : garantit l'exécution du code de nettoyage
+3. **raise** : lève une exception
+4. Capturer les exceptions **spécifiques** avant les génériques
+5. Toujours **libérer les ressources** dans un bloc finally
+6. Utiliser **Try...** fonctions pour éviter les exceptions fréquentes
+7. **Ne pas capturer** les exceptions qu'on ne peut pas gérer correctement
+8. Fournir des **messages d'erreur clairs** et informatifs
+9. **Journaliser** les exceptions pour le débogage
+10. Les exceptions sont pour les **situations anormales**, pas la logique normale
 
 ---
 
-La gestion des exceptions est un élément crucial dans le développement d'applications robustes. En utilisant correctement les structures `try-except-finally`, vous pouvez créer des programmes qui réagissent gracieusement aux erreurs, protègent les ressources et fournissent des informations utiles pour le débogage.
-
-Dans la prochaine section, nous aborderons la programmation orientée objet, un paradigme fondamental en Delphi qui vous permettra de structurer votre code de manière encore plus efficace.
+La gestion des exceptions est essentielle pour créer des applications robustes et professionnelles. Elle permet de prévoir les erreurs, d'informer clairement l'utilisateur et de maintenir l'intégrité de votre application. Dans la section suivante, nous explorerons la programmation orientée objet, qui permettra de structurer encore mieux votre code.
 
 ⏭️ [Programmation orientée objet](/03-langage-object-pascal/07-programmation-orientee-objet.md)

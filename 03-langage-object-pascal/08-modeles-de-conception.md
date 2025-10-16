@@ -1,909 +1,1144 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.8 Modèles de conception (Design Patterns)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les modèles de conception, ou "design patterns" en anglais, sont des solutions éprouvées à des problèmes courants de conception logicielle. Ce sont des "recettes" qui décrivent comment résoudre un problème spécifique de manière efficace et réutilisable. Dans cette section, nous allons découvrir les principaux modèles de conception et voir comment les implémenter en Object Pascal.
+Les **modèles de conception** (ou **Design Patterns** en anglais) sont des solutions éprouvées et réutilisables à des problèmes courants de conception logicielle. Ce sont comme des recettes de cuisine pour résoudre des problèmes de programmation qui reviennent régulièrement.
 
-## Pourquoi utiliser des modèles de conception ?
+## Qu'est-ce qu'un Design Pattern ?
 
-Les modèles de conception offrent plusieurs avantages :
+Un design pattern n'est pas un morceau de code que vous pouvez copier-coller. C'est plutôt une **description d'une solution** à un problème récurrent, une sorte de "meilleure pratique" qui a fait ses preuves.
 
-1. **Solutions éprouvées** : Ce sont des solutions qui ont fait leurs preuves et sont utilisées par des développeurs expérimentés
-2. **Vocabulaire commun** : Ils fournissent un langage standard pour parler de conception logicielle
-3. **Réutilisabilité** : Ils favorisent des conceptions réutilisables et évolutives
-4. **Qualité** : Ils contribuent à créer des logiciels plus maintenables et extensibles
+### Analogie du monde réel
 
-## Catégories de modèles de conception
+Imaginez que vous construisez une maison :
+- Vous n'inventez pas comment construire un escalier à chaque fois
+- Il existe des **modèles d'escaliers** éprouvés (en colimaçon, droit, tournant...)
+- Ces modèles ont été raffinés au fil des années
+- Vous choisissez et adaptez le modèle qui convient à votre situation
 
-Les modèles de conception sont généralement classés en trois catégories :
+Les design patterns fonctionnent de la même manière en programmation : ce sont des solutions éprouvées que vous adaptez à vos besoins spécifiques.
 
-1. **Modèles de création** : Comment créer des objets de manière flexible
-2. **Modèles structurels** : Comment organiser les classes et les objets
-3. **Modèles comportementaux** : Comment les objets interagissent et se comportent
+## Pourquoi utiliser des Design Patterns ?
 
-Examinons quelques modèles courants de chaque catégorie et comment les implémenter en Delphi.
+### Avantages
 
-## Modèles de création
+1. **Communication facilitée** : les patterns ont des noms reconnus. Dire "j'utilise un Singleton" est plus rapide que d'expliquer tout le mécanisme.
 
-### Singleton
+2. **Solutions éprouvées** : au lieu de réinventer la roue, vous utilisez ce qui fonctionne déjà.
 
-Le modèle Singleton garantit qu'une classe n'a qu'une seule instance et fournit un point d'accès global à cette instance.
+3. **Code plus maintenable** : les patterns créent du code structuré et facile à comprendre.
 
-**Cas d'utilisation** : Quand vous avez besoin d'exactement une instance d'une classe, comme un gestionnaire de configuration, un journal d'application ou une connexion à une base de données.
+4. **Gain de temps** : vous ne perdez pas de temps à chercher comment résoudre un problème déjà résolu.
+
+5. **Meilleure conception** : les patterns vous aident à concevoir des applications robustes et évolutives.
+
+### Mise en garde
+
+Les design patterns ne sont pas :
+- Une solution miracle à tous les problèmes
+- À utiliser à tout prix (pas de "sur-ingénierie")
+- Un substitut à la réflexion et à la conception
+
+**Règle d'or** : utilisez un pattern seulement s'il résout vraiment un problème que vous avez.
+
+## Catégories de Design Patterns
+
+Les design patterns sont généralement classés en trois catégories :
+
+### Patterns de création
+Concernent la manière de créer des objets.
+- Singleton
+- Factory
+- Builder
+
+### Patterns de structure
+Concernent la composition et l'organisation des classes et objets.
+- Adapter
+- Decorator
+- Facade
+
+### Patterns de comportement
+Concernent les interactions et responsabilités entre objets.
+- Observer
+- Strategy
+- Template Method
+
+## Pattern Singleton
+
+### Problème
+Vous avez besoin qu'une classe ait **une seule instance** dans toute l'application, accessible globalement.
+
+### Exemples concrets
+- Configuration de l'application (on ne veut qu'une seule configuration)
+- Gestionnaire de logs (un seul fichier de log)
+- Connexion à la base de données (une seule connexion partagée)
+
+### Solution
 
 ```pascal
-unit ConfigurationManager;
-
-interface
-
 type
-  TConfigurationManager = class
+  TConfiguration = class
   private
-    class var FInstance: TConfigurationManager;
-    FConfigFile: string;
-
-    constructor Create;
+    class var FInstance: TConfiguration;
+    FCheminFichiers: string;
+    FLangue: string;
+    constructor Create;  // Constructeur privé !
   public
-    class function GetInstance: TConfigurationManager;
-    class procedure ReleaseInstance;
+    destructor Destroy; override;
+    class function Instance: TConfiguration;
+    class procedure LibererInstance;
 
-    procedure LoadConfiguration;
-    procedure SaveConfiguration;
-    function GetValue(const Key: string): string;
-    procedure SetValue(const Key, Value: string);
+    property CheminFichiers: string read FCheminFichiers write FCheminFichiers;
+    property Langue: string read FLangue write FLangue;
   end;
 
-implementation
-
-constructor TConfigurationManager.Create;
+constructor TConfiguration.Create;
 begin
   inherited Create;
-  FConfigFile := 'config.ini';
-  // Initialisation
+  FCheminFichiers := 'C:\MesDocuments';
+  FLangue := 'FR';
 end;
 
-class function TConfigurationManager.GetInstance: TConfigurationManager;
+destructor TConfiguration.Destroy;
+begin
+  inherited Destroy;
+end;
+
+class function TConfiguration.Instance: TConfiguration;
 begin
   if FInstance = nil then
-    FInstance := TConfigurationManager.Create;
+    FInstance := TConfiguration.Create;
   Result := FInstance;
 end;
 
-class procedure TConfigurationManager.ReleaseInstance;
+class procedure TConfiguration.LibererInstance;
 begin
-  FInstance.Free;
-  FInstance := nil;
-end;
-
-// Autres méthodes d'implémentation...
-
-end.
-```
-
-Utilisation :
-
-```pascal
-var
-  Config: TConfigurationManager;
-begin
-  Config := TConfigurationManager.GetInstance;
-  Config.LoadConfiguration;
-
-  ShowMessage('Serveur : ' + Config.GetValue('ServerName'));
-
-  Config.SetValue('Port', '8080');
-  Config.SaveConfiguration;
-
-  // Ne pas libérer Config avec Free!
-  // À la fin de l'application :
-  // TConfigurationManager.ReleaseInstance;
+  FreeAndNil(FInstance);
 end;
 ```
 
-### Fabrique (Factory)
-
-Le modèle Fabrique fournit une interface pour créer des objets sans spécifier leurs classes concrètes.
-
-**Cas d'utilisation** : Quand vous voulez créer des objets sans connaître leur type exact à l'avance, ou quand vous voulez déléguer la création d'objets à des sous-classes.
+### Utilisation
 
 ```pascal
-unit AnimalFactory;
+begin
+  // Partout dans l'application, on accède à la même instance
+  TConfiguration.Instance.Langue := 'EN';
+  ShowMessage('Langue : ' + TConfiguration.Instance.Langue);
 
-interface
+  // Ailleurs dans l'application
+  ShowMessage('Langue : ' + TConfiguration.Instance.Langue);  // Affiche 'EN'
 
+  // À la fin de l'application
+  TConfiguration.LibererInstance;
+end;
+```
+
+### Avantages et inconvénients
+
+**✅ Avantages** :
+- Une seule instance garantie
+- Accès global facile
+- Initialisation paresseuse (créé seulement quand nécessaire)
+
+**⚠️ Inconvénients** :
+- Peut être difficile à tester
+- Crée un couplage fort
+- À utiliser avec modération
+
+## Pattern Factory (Fabrique)
+
+### Problème
+Vous voulez créer des objets sans spécifier leur classe exacte, en laissant une fabrique décider quelle classe instancier.
+
+### Exemples concrets
+- Créer différents types de documents (PDF, Word, Excel)
+- Créer différents types de notifications (Email, SMS, Push)
+- Créer différents moyens de paiement (Carte, PayPal, Virement)
+
+### Solution
+
+```pascal
 type
-  TAnimal = class
+  // Classe de base abstraite
+  TDocument = class
   public
-    procedure Manger; virtual; abstract;
-    procedure Parler; virtual; abstract;
+    procedure Ouvrir; virtual; abstract;
+    procedure Sauvegarder; virtual; abstract;
   end;
 
-  TChien = class(TAnimal)
+  // Classes concrètes
+  TDocumentPDF = class(TDocument)
   public
-    procedure Manger; override;
-    procedure Parler; override;
+    procedure Ouvrir; override;
+    procedure Sauvegarder; override;
   end;
 
-  TChat = class(TAnimal)
+  TDocumentWord = class(TDocument)
   public
-    procedure Manger; override;
-    procedure Parler; override;
+    procedure Ouvrir; override;
+    procedure Sauvegarder; override;
   end;
 
-  TTypeAnimal = (taChien, taChat);
-
-  TAnimalFactory = class
+  TDocumentExcel = class(TDocument)
   public
-    function CreerAnimal(TypeAnimal: TTypeAnimal): TAnimal;
+    procedure Ouvrir; override;
+    procedure Sauvegarder; override;
   end;
 
-implementation
+  // Type d'énumération
+  TTypeDocument = (tdPDF, tdWord, tdExcel);
 
-procedure TChien.Manger;
+  // Fabrique
+  TDocumentFactory = class
+  public
+    class function CreerDocument(TypeDoc: TTypeDocument): TDocument;
+  end;
+
+// Implémentations
+procedure TDocumentPDF.Ouvrir;
 begin
-  ShowMessage('Le chien mange sa nourriture.');
+  ShowMessage('Ouverture du PDF');
 end;
 
-procedure TChien.Parler;
+procedure TDocumentPDF.Sauvegarder;
 begin
-  ShowMessage('Wouf!');
+  ShowMessage('Sauvegarde du PDF');
 end;
 
-procedure TChat.Manger;
+procedure TDocumentWord.Ouvrir;
 begin
-  ShowMessage('Le chat mange des croquettes.');
+  ShowMessage('Ouverture du document Word');
 end;
 
-procedure TChat.Parler;
+procedure TDocumentWord.Sauvegarder;
 begin
-  ShowMessage('Miaou!');
+  ShowMessage('Sauvegarde du document Word');
 end;
 
-function TAnimalFactory.CreerAnimal(TypeAnimal: TTypeAnimal): TAnimal;
+procedure TDocumentExcel.Ouvrir;
 begin
-  case TypeAnimal of
-    taChien: Result := TChien.Create;
-    taChat: Result := TChat.Create;
-    else
-      Result := nil;
+  ShowMessage('Ouverture du classeur Excel');
+end;
+
+procedure TDocumentExcel.Sauvegarder;
+begin
+  ShowMessage('Sauvegarde du classeur Excel');
+end;
+
+// La fabrique décide quelle classe créer
+class function TDocumentFactory.CreerDocument(TypeDoc: TTypeDocument): TDocument;
+begin
+  case TypeDoc of
+    tdPDF:   Result := TDocumentPDF.Create;
+    tdWord:  Result := TDocumentWord.Create;
+    tdExcel: Result := TDocumentExcel.Create;
+  else
+    raise Exception.Create('Type de document inconnu');
   end;
 end;
-
-end.
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
-  Factory: TAnimalFactory;
-  Animal: TAnimal;
+  Document: TDocument;
 begin
-  Factory := TAnimalFactory.Create;
+  // On ne sait pas à l'avance quel type de document
+  Document := TDocumentFactory.CreerDocument(tdPDF);
   try
-    // Créer un chien
-    Animal := Factory.CreerAnimal(taChien);
-    try
-      Animal.Parler;  // Affiche "Wouf!"
-      Animal.Manger;  // Affiche "Le chien mange sa nourriture."
-    finally
-      Animal.Free;
-    end;
-
-    // Créer un chat
-    Animal := Factory.CreerAnimal(taChat);
-    try
-      Animal.Parler;  // Affiche "Miaou!"
-      Animal.Manger;  // Affiche "Le chat mange des croquettes."
-    finally
-      Animal.Free;
-    end;
+    Document.Ouvrir;
+    Document.Sauvegarder;
   finally
-    Factory.Free;
+    Document.Free;
+  end;
+
+  // Facile de changer le type
+  Document := TDocumentFactory.CreerDocument(tdWord);
+  try
+    Document.Ouvrir;
+  finally
+    Document.Free;
   end;
 end;
 ```
 
-## Modèles structurels
+### Avantages
 
-### Adaptateur (Adapter)
+**✅ Avantages** :
+- Séparation entre création et utilisation
+- Facile d'ajouter de nouveaux types
+- Code client plus simple
+- Centralisation de la logique de création
 
-Le modèle Adaptateur permet à des interfaces incompatibles de travailler ensemble en convertissant l'interface d'une classe en une autre interface attendue par le client.
+## Pattern Observer (Observateur)
 
-**Cas d'utilisation** : Quand vous devez utiliser une classe existante mais que son interface ne correspond pas à celle dont vous avez besoin.
+### Problème
+Un objet (le sujet) doit notifier automatiquement plusieurs autres objets (les observateurs) quand son état change, sans créer un couplage fort entre eux.
+
+### Exemples concrets
+- Notification de plusieurs écrans quand les données changent
+- Système d'événements
+- Mise à jour de plusieurs vues d'un même modèle
+
+### Solution
 
 ```pascal
-unit LegacySystemAdapter;
-
-interface
-
 type
-  // Interface attendue par notre application
-  IModernLogger = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    procedure LogInfo(const Message: string);
-    procedure LogError(const ErrorMessage: string);
+  // Interface pour les observateurs
+  IObservateur = interface
+    ['{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}']
+    procedure MettreAJour(const Message: string);
   end;
 
-  // Classe hérité d'un ancien système que nous ne pouvons pas modifier
-  TOldLogger = class
-  public
-    procedure WriteLog(const Text: string);
-    procedure WriteError(const ErrorCode: Integer; const Text: string);
-  end;
-
-  // Adaptateur qui fait le pont entre les deux
-  TLoggerAdapter = class(TInterfacedObject, IModernLogger)
+  // Sujet observable
+  TDonneesStock = class
   private
-    FOldLogger: TOldLogger;
+    FObservateurs: TList<IObservateur>;
+    FQuantite: Integer;
+    procedure NotifierObservateurs(const Message: string);
   public
-    constructor Create(OldLogger: TOldLogger);
+    constructor Create;
     destructor Destroy; override;
-
-    // Implémentation de IModernLogger
-    procedure LogInfo(const Message: string);
-    procedure LogError(const ErrorMessage: string);
+    procedure AjouterObservateur(Observateur: IObservateur);
+    procedure RetirerObservateur(Observateur: IObservateur);
+    procedure ModifierQuantite(NouvelleQuantite: Integer);
+    property Quantite: Integer read FQuantite;
   end;
 
-implementation
+  // Observateur concret : Affichage
+  TAffichageStock = class(TInterfacedObject, IObservateur)
+  private
+    FNom: string;
+  public
+    constructor Create(const ANom: string);
+    procedure MettreAJour(const Message: string);
+  end;
 
-// Implémentation de TOldLogger (simulation)
-procedure TOldLogger.WriteLog(const Text: string);
-begin
-  // Écrit dans un fichier journal au format ancien
-  ShowMessage('ANCIEN SYSTÈME : ' + Text);
-end;
+  // Observateur concret : Alerte
+  TAlerteStock = class(TInterfacedObject, IObservateur)
+  public
+    procedure MettreAJour(const Message: string);
+  end;
 
-procedure TOldLogger.WriteError(const ErrorCode: Integer; const Text: string);
-begin
-  // Écrit une erreur au format ancien
-  ShowMessage('ANCIEN SYSTÈME ERREUR #' + IntToStr(ErrorCode) + ' : ' + Text);
-end;
-
-// Implémentation de l'adaptateur
-constructor TLoggerAdapter.Create(OldLogger: TOldLogger);
+// Implémentation TDonneesStock
+constructor TDonneesStock.Create;
 begin
   inherited Create;
-  FOldLogger := OldLogger;
+  FObservateurs := TList<IObservateur>.Create;
+  FQuantite := 100;
 end;
 
-destructor TLoggerAdapter.Destroy;
+destructor TDonneesStock.Destroy;
 begin
-  // Ne pas libérer FOldLogger ici
-  inherited;
+  FObservateurs.Free;
+  inherited Destroy;
 end;
 
-procedure TLoggerAdapter.LogInfo(const Message: string);
+procedure TDonneesStock.AjouterObservateur(Observateur: IObservateur);
 begin
-  FOldLogger.WriteLog(Message);
+  FObservateurs.Add(Observateur);
 end;
 
-procedure TLoggerAdapter.LogError(const ErrorMessage: string);
+procedure TDonneesStock.RetirerObservateur(Observateur: IObservateur);
 begin
-  FOldLogger.WriteError(1, ErrorMessage);  // Code d'erreur arbitraire
+  FObservateurs.Remove(Observateur);
 end;
 
-end.
+procedure TDonneesStock.NotifierObservateurs(const Message: string);
+var
+  Observateur: IObservateur;
+begin
+  for Observateur in FObservateurs do
+    Observateur.MettreAJour(Message);
+end;
+
+procedure TDonneesStock.ModifierQuantite(NouvelleQuantite: Integer);
+begin
+  FQuantite := NouvelleQuantite;
+  NotifierObservateurs(Format('Stock modifié : %d unités', [FQuantite]));
+end;
+
+// Implémentation TAffichageStock
+constructor TAffichageStock.Create(const ANom: string);
+begin
+  inherited Create;
+  FNom := ANom;
+end;
+
+procedure TAffichageStock.MettreAJour(const Message: string);
+begin
+  ShowMessage(Format('[%s] %s', [FNom, Message]));
+end;
+
+// Implémentation TAlerteStock
+procedure TAlerteStock.MettreAJour(const Message: string);
+begin
+  ShowMessage('[ALERTE] ' + Message);
+end;
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
-  OldLogger: TOldLogger;
-  Logger: IModernLogger;
+  Stock: TDonneesStock;
+  Affichage1, Affichage2: IObservateur;
+  Alerte: IObservateur;
 begin
-  OldLogger := TOldLogger.Create;
+  Stock := TDonneesStock.Create;
   try
-    // Créer un adaptateur qui implémente notre interface moderne
-    Logger := TLoggerAdapter.Create(OldLogger);
+    // Créer les observateurs
+    Affichage1 := TAffichageStock.Create('Écran principal');
+    Affichage2 := TAffichageStock.Create('Écran secondaire');
+    Alerte := TAlerteStock.Create;
 
-    // Utiliser l'interface moderne
-    Logger.LogInfo('Test d''information');
-    Logger.LogError('Quelque chose a mal tourné');
+    // Enregistrer les observateurs
+    Stock.AjouterObservateur(Affichage1);
+    Stock.AjouterObservateur(Affichage2);
+    Stock.AjouterObservateur(Alerte);
 
-    // Pas besoin de libérer Logger (interface)
+    // Quand le stock change, tous les observateurs sont notifiés
+    Stock.ModifierQuantite(50);
+    // Tous les observateurs reçoivent la notification automatiquement !
+
   finally
-    OldLogger.Free;
+    Stock.Free;
   end;
 end;
 ```
 
-### Décorateur (Decorator)
+### Avantages
 
-Le modèle Décorateur permet d'ajouter des comportements à des objets de manière dynamique sans modifier leur structure.
+**✅ Avantages** :
+- Couplage faible entre sujet et observateurs
+- Facile d'ajouter de nouveaux observateurs
+- Les observateurs peuvent s'enregistrer/se retirer dynamiquement
 
-**Cas d'utilisation** : Quand vous voulez ajouter des responsabilités à des objets individuels de manière dynamique et transparente, sans affecter d'autres objets.
+## Pattern Strategy (Stratégie)
+
+### Problème
+Vous avez plusieurs algorithmes pour faire la même chose et vous voulez pouvoir changer facilement d'algorithme à l'exécution.
+
+### Exemples concrets
+- Différents algorithmes de tri
+- Différentes méthodes de calcul de prix (normal, réduit, membre VIP)
+- Différents modes de paiement
+
+### Solution
 
 ```pascal
-unit TextProcessor;
-
-interface
-
 type
-  ITextProcessor = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    function ProcessText(const Text: string): string;
+  // Interface pour la stratégie
+  IStrategieCalculPrix = interface
+    ['{7F8E9D0C-1B2A-3D4E-5F6A-7B8C9D0E1F2A}']
+    function CalculerPrix(PrixBase: Double): Double;
   end;
 
-  // Classe de base qui traite le texte
-  TBaseTextProcessor = class(TInterfacedObject, ITextProcessor)
+  // Stratégie : Prix normal
+  TStrategiePrixNormal = class(TInterfacedObject, IStrategieCalculPrix)
   public
-    function ProcessText(const Text: string): string; virtual;
+    function CalculerPrix(PrixBase: Double): Double;
+  end;
+
+  // Stratégie : Prix réduit
+  TStrategiePrixReduit = class(TInterfacedObject, IStrategieCalculPrix)
+  private
+    FPourcentageReduction: Double;
+  public
+    constructor Create(APourcentageReduction: Double);
+    function CalculerPrix(PrixBase: Double): Double;
+  end;
+
+  // Stratégie : Prix membre VIP
+  TStrategiePrixVIP = class(TInterfacedObject, IStrategieCalculPrix)
+  public
+    function CalculerPrix(PrixBase: Double): Double;
+  end;
+
+  // Contexte qui utilise une stratégie
+  TCalculateurPrix = class
+  private
+    FStrategie: IStrategieCalculPrix;
+  public
+    constructor Create(AStrategie: IStrategieCalculPrix);
+    procedure DefinirStrategie(AStrategie: IStrategieCalculPrix);
+    function Calculer(PrixBase: Double): Double;
+  end;
+
+// Implémentations
+function TStrategiePrixNormal.CalculerPrix(PrixBase: Double): Double;
+begin
+  Result := PrixBase;
+end;
+
+constructor TStrategiePrixReduit.Create(APourcentageReduction: Double);
+begin
+  inherited Create;
+  FPourcentageReduction := APourcentageReduction;
+end;
+
+function TStrategiePrixReduit.CalculerPrix(PrixBase: Double): Double;
+begin
+  Result := PrixBase * (1 - FPourcentageReduction / 100);
+end;
+
+function TStrategiePrixVIP.CalculerPrix(PrixBase: Double): Double;
+begin
+  // VIP : 25% de réduction + livraison gratuite
+  Result := PrixBase * 0.75;
+end;
+
+constructor TCalculateurPrix.Create(AStrategie: IStrategieCalculPrix);
+begin
+  inherited Create;
+  FStrategie := AStrategie;
+end;
+
+procedure TCalculateurPrix.DefinirStrategie(AStrategie: IStrategieCalculPrix);
+begin
+  FStrategie := AStrategie;
+end;
+
+function TCalculateurPrix.Calculer(PrixBase: Double): Double;
+begin
+  Result := FStrategie.CalculerPrix(PrixBase);
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  Calculateur: TCalculateurPrix;
+  PrixBase: Double;
+begin
+  PrixBase := 100.0;
+
+  // Client normal
+  Calculateur := TCalculateurPrix.Create(TStrategiePrixNormal.Create);
+  try
+    ShowMessage(Format('Prix normal : %.2f €', [Calculateur.Calculer(PrixBase)]));
+
+    // Changer pour client avec réduction
+    Calculateur.DefinirStrategie(TStrategiePrixReduit.Create(10));
+    ShowMessage(Format('Prix réduit : %.2f €', [Calculateur.Calculer(PrixBase)]));
+
+    // Changer pour client VIP
+    Calculateur.DefinirStrategie(TStrategiePrixVIP.Create);
+    ShowMessage(Format('Prix VIP : %.2f €', [Calculateur.Calculer(PrixBase)]));
+  finally
+    Calculateur.Free;
+  end;
+end;
+```
+
+### Avantages
+
+**✅ Avantages** :
+- Changement d'algorithme à l'exécution
+- Évite les structures if/case complexes
+- Facile d'ajouter de nouvelles stratégies
+- Chaque stratégie est testable indépendamment
+
+## Pattern Decorator (Décorateur)
+
+### Problème
+Vous voulez ajouter des fonctionnalités à un objet dynamiquement, sans modifier sa classe.
+
+### Exemples concrets
+- Ajouter des options à un café (lait, sucre, chocolat)
+- Ajouter des bordures, défilement à un composant visuel
+- Ajouter des fonctionnalités à un flux de données (compression, chiffrement)
+
+### Solution
+
+```pascal
+type
+  // Interface de base
+  IBoisson = interface
+    ['{9B8C7D6E-5F4A-3B2C-1D0E-9F8A7B6C5D4E}']
+    function ObtenirDescription: string;
+    function ObtenirPrix: Double;
+  end;
+
+  // Boisson de base
+  TCafe = class(TInterfacedObject, IBoisson)
+  public
+    function ObtenirDescription: string;
+    function ObtenirPrix: Double;
   end;
 
   // Décorateur abstrait
-  TTextProcessorDecorator = class(TInterfacedObject, ITextProcessor)
-  private
-    FWrapped: ITextProcessor;
+  TDecorateurBoisson = class(TInterfacedObject, IBoisson)
+  protected
+    FBoisson: IBoisson;
   public
-    constructor Create(Processor: ITextProcessor);
-    function ProcessText(const Text: string): string; virtual;
+    constructor Create(ABoisson: IBoisson);
+    function ObtenirDescription: string; virtual;
+    function ObtenirPrix: Double; virtual;
   end;
 
   // Décorateurs concrets
-  TUpperCaseDecorator = class(TTextProcessorDecorator)
+  TAvecLait = class(TDecorateurBoisson)
   public
-    function ProcessText(const Text: string): string; override;
+    function ObtenirDescription: string; override;
+    function ObtenirPrix: Double; override;
   end;
 
-  TTrimDecorator = class(TTextProcessorDecorator)
+  TAvecChocolat = class(TDecorateurBoisson)
   public
-    function ProcessText(const Text: string): string; override;
+    function ObtenirDescription: string; override;
+    function ObtenirPrix: Double; override;
   end;
 
-  TBracketDecorator = class(TTextProcessorDecorator)
+  TAvecCreme = class(TDecorateurBoisson)
   public
-    function ProcessText(const Text: string): string; override;
+    function ObtenirDescription: string; override;
+    function ObtenirPrix: Double; override;
   end;
 
-implementation
-
-// Implémentation du processeur de base
-function TBaseTextProcessor.ProcessText(const Text: string): string;
+// Implémentation TCafe
+function TCafe.ObtenirDescription: string;
 begin
-  Result := Text;  // Passe simplement le texte tel quel
+  Result := 'Café';
 end;
 
-// Implémentation du décorateur abstrait
-constructor TTextProcessorDecorator.Create(Processor: ITextProcessor);
+function TCafe.ObtenirPrix: Double;
+begin
+  Result := 2.50;
+end;
+
+// Implémentation TDecorateurBoisson
+constructor TDecorateurBoisson.Create(ABoisson: IBoisson);
 begin
   inherited Create;
-  FWrapped := Processor;
+  FBoisson := ABoisson;
 end;
 
-function TTextProcessorDecorator.ProcessText(const Text: string): string;
+function TDecorateurBoisson.ObtenirDescription: string;
 begin
-  Result := FWrapped.ProcessText(Text);  // Délègue au processeur enveloppé
+  Result := FBoisson.ObtenirDescription;
 end;
 
-// Implémentations des décorateurs concrets
-function TUpperCaseDecorator.ProcessText(const Text: string): string;
+function TDecorateurBoisson.ObtenirPrix: Double;
 begin
-  Result := UpperCase(inherited ProcessText(Text));
+  Result := FBoisson.ObtenirPrix;
 end;
 
-function TTrimDecorator.ProcessText(const Text: string): string;
+// Implémentation TAvecLait
+function TAvecLait.ObtenirDescription: string;
 begin
-  Result := Trim(inherited ProcessText(Text));
+  Result := FBoisson.ObtenirDescription + ' + Lait';
 end;
 
-function TBracketDecorator.ProcessText(const Text: string): string;
+function TAvecLait.ObtenirPrix: Double;
 begin
-  Result := '[' + inherited ProcessText(Text) + ']';
+  Result := FBoisson.ObtenirPrix + 0.50;
 end;
 
-end.
+// Implémentation TAvecChocolat
+function TAvecChocolat.ObtenirDescription: string;
+begin
+  Result := FBoisson.ObtenirDescription + ' + Chocolat';
+end;
+
+function TAvecChocolat.ObtenirPrix: Double;
+begin
+  Result := FBoisson.ObtenirPrix + 0.70;
+end;
+
+// Implémentation TAvecCreme
+function TAvecCreme.ObtenirDescription: string;
+begin
+  Result := FBoisson.ObtenirDescription + ' + Crème';
+end;
+
+function TAvecCreme.ObtenirPrix: Double;
+begin
+  Result := FBoisson.ObtenirPrix + 0.60;
+end;
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
-  Processor: ITextProcessor;
+  MaBoisson: IBoisson;
 begin
-  // Créer un processeur de base
-  Processor := TBaseTextProcessor.Create;
+  // Café simple
+  MaBoisson := TCafe.Create;
+  ShowMessage(Format('%s : %.2f €',
+    [MaBoisson.ObtenirDescription, MaBoisson.ObtenirPrix]));
 
-  // Décorer le processeur dans n'importe quel ordre
-  Processor := TTrimDecorator.Create(Processor);
-  Processor := TUpperCaseDecorator.Create(Processor);
-  Processor := TBracketDecorator.Create(Processor);
+  // Café avec lait
+  MaBoisson := TAvecLait.Create(TCafe.Create);
+  ShowMessage(Format('%s : %.2f €',
+    [MaBoisson.ObtenirDescription, MaBoisson.ObtenirPrix]));
 
-  // Utiliser le processeur décoré
-  ShowMessage(Processor.ProcessText('  hello world  '));  // Affiche "[HELLO WORLD]"
+  // Café avec lait et chocolat
+  MaBoisson := TAvecChocolat.Create(TAvecLait.Create(TCafe.Create));
+  ShowMessage(Format('%s : %.2f €',
+    [MaBoisson.ObtenirDescription, MaBoisson.ObtenirPrix]));
 
-  // Pas besoin de libérer Processor (interface)
+  // Café avec lait, chocolat et crème
+  MaBoisson := TAvecCreme.Create(
+                 TAvecChocolat.Create(
+                   TAvecLait.Create(TCafe.Create)));
+  ShowMessage(Format('%s : %.2f €',
+    [MaBoisson.ObtenirDescription, MaBoisson.ObtenirPrix]));
 end;
 ```
 
-## Modèles comportementaux
+### Avantages
 
-### Observateur (Observer)
+**✅ Avantages** :
+- Ajouter des fonctionnalités sans modifier le code existant
+- Combinaison flexible de fonctionnalités
+- Alternative à l'héritage multiple
+- Respect du principe ouvert/fermé
 
-Le modèle Observateur permet de définir une dépendance un-à-plusieurs entre des objets, de sorte que lorsqu'un objet change d'état, tous ses observateurs sont notifiés et mis à jour automatiquement.
+## Pattern Adapter (Adaptateur)
 
-**Cas d'utilisation** : Quand vous avez des objets qui doivent être informés des changements d'état d'un autre objet, comme une interface utilisateur qui doit refléter les changements dans les données.
+### Problème
+Vous avez deux classes avec des interfaces incompatibles et vous voulez qu'elles puissent travailler ensemble.
+
+### Exemples concrets
+- Adapter une ancienne bibliothèque à une nouvelle interface
+- Connecter un système européen à un système américain
+- Faire fonctionner ensemble des composants de fournisseurs différents
+
+### Solution
 
 ```pascal
-unit WeatherStation;
-
-interface
-
-uses
-  System.Generics.Collections;
-
 type
-  // Interface pour les observateurs
-  IWeatherObserver = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    procedure Update(const Temperature, Humidity, Pressure: Double);
+  // Interface cible attendue par le client
+  ILecteurAudio = interface
+    ['{5A6B7C8D-9E0F-1A2B-3C4D-5E6F7A8B9C0D}']
+    procedure Lire(NomFichier: string);
   end;
 
-  // Le sujet qui est observé
-  TWeatherStation = class
+  // Classe existante avec interface incompatible
+  TLecteurMP3Ancien = class
+  public
+    procedure LireMP3(Chemin: string);
+  end;
+
+  // Adaptateur
+  TAdaptateurMP3 = class(TInterfacedObject, ILecteurAudio)
   private
-    FObservers: TList<IWeatherObserver>;
-    FTemperature: Double;
-    FHumidity: Double;
-    FPressure: Double;
+    FLecteurAncien: TLecteurMP3Ancien;
   public
     constructor Create;
     destructor Destroy; override;
-
-    procedure RegisterObserver(Observer: IWeatherObserver);
-    procedure RemoveObserver(Observer: IWeatherObserver);
-    procedure NotifyObservers;
-
-    procedure SetMeasurements(Temperature, Humidity, Pressure: Double);
-
-    property Temperature: Double read FTemperature;
-    property Humidity: Double read FHumidity;
-    property Pressure: Double read FPressure;
+    procedure Lire(NomFichier: string);
   end;
 
-  // Observateurs concrets
-  TCurrentConditionsDisplay = class(TInterfacedObject, IWeatherObserver)
-  private
-    FTemperature: Double;
-    FHumidity: Double;
+  // Nouveau lecteur qui implémente directement l'interface
+  TLecteurMP4 = class(TInterfacedObject, ILecteurAudio)
   public
-    procedure Update(const Temperature, Humidity, Pressure: Double);
-    procedure Display;
+    procedure Lire(NomFichier: string);
   end;
 
-  TStatisticsDisplay = class(TInterfacedObject, IWeatherObserver)
-  private
-    FTemperatureSum: Double;
-    FReadingsCount: Integer;
-    FMaxTemperature: Double;
-    FMinTemperature: Double;
-  public
-    constructor Create;
-    procedure Update(const Temperature, Humidity, Pressure: Double);
-    procedure Display;
-  end;
+// Implémentation TLecteurMP3Ancien
+procedure TLecteurMP3Ancien.LireMP3(Chemin: string);
+begin
+  ShowMessage('Lecture du fichier MP3 : ' + Chemin);
+end;
 
-implementation
-
-uses
-  System.SysUtils;
-
-{ TWeatherStation }
-
-constructor TWeatherStation.Create;
+// Implémentation TAdaptateurMP3
+constructor TAdaptateurMP3.Create;
 begin
   inherited Create;
-  FObservers := TList<IWeatherObserver>.Create;
+  FLecteurAncien := TLecteurMP3Ancien.Create;
 end;
 
-destructor TWeatherStation.Destroy;
+destructor TAdaptateurMP3.Destroy;
 begin
-  FObservers.Free;
-  inherited;
+  FLecteurAncien.Free;
+  inherited Destroy;
 end;
 
-procedure TWeatherStation.RegisterObserver(Observer: IWeatherObserver);
+procedure TAdaptateurMP3.Lire(NomFichier: string);
 begin
-  FObservers.Add(Observer);
+  // Adapter l'appel vers l'ancienne interface
+  FLecteurAncien.LireMP3(NomFichier);
 end;
 
-procedure TWeatherStation.RemoveObserver(Observer: IWeatherObserver);
+// Implémentation TLecteurMP4
+procedure TLecteurMP4.Lire(NomFichier: string);
 begin
-  FObservers.Remove(Observer);
-end;
-
-procedure TWeatherStation.NotifyObservers;
-var
-  Observer: IWeatherObserver;
-begin
-  for Observer in FObservers do
-    Observer.Update(FTemperature, FHumidity, FPressure);
-end;
-
-procedure TWeatherStation.SetMeasurements(Temperature, Humidity, Pressure: Double);
-begin
-  FTemperature := Temperature;
-  FHumidity := Humidity;
-  FPressure := Pressure;
-  NotifyObservers;
-end;
-
-{ TCurrentConditionsDisplay }
-
-procedure TCurrentConditionsDisplay.Update(const Temperature, Humidity, Pressure: Double);
-begin
-  FTemperature := Temperature;
-  FHumidity := Humidity;
-  Display;
-end;
-
-procedure TCurrentConditionsDisplay.Display;
-begin
-  ShowMessage(Format('Conditions actuelles : %.1f°C et %.1f%% d''humidité',
-                    [FTemperature, FHumidity]));
-end;
-
-{ TStatisticsDisplay }
-
-constructor TStatisticsDisplay.Create;
-begin
-  inherited;
-  FTemperatureSum := 0;
-  FReadingsCount := 0;
-  FMaxTemperature := -1000;
-  FMinTemperature := 1000;
-end;
-
-procedure TStatisticsDisplay.Update(const Temperature, Humidity, Pressure: Double);
-begin
-  FTemperatureSum := FTemperatureSum + Temperature;
-  Inc(FReadingsCount);
-
-  if Temperature > FMaxTemperature then
-    FMaxTemperature := Temperature;
-
-  if Temperature < FMinTemperature then
-    FMinTemperature := Temperature;
-
-  Display;
-end;
-
-procedure TStatisticsDisplay.Display;
-begin
-  if FReadingsCount > 0 then
-    ShowMessage(Format('Statistiques de température : Moy=%.1f, Max=%.1f, Min=%.1f',
-                      [FTemperatureSum / FReadingsCount, FMaxTemperature, FMinTemperature]));
-end;
-
-end.
-```
-
-Utilisation :
-
-```pascal
-var
-  WeatherStation: TWeatherStation;
-  CurrentDisplay: IWeatherObserver;
-  StatisticsDisplay: IWeatherObserver;
-begin
-  WeatherStation := TWeatherStation.Create;
-  try
-    // Créer des observateurs
-    CurrentDisplay := TCurrentConditionsDisplay.Create;
-    StatisticsDisplay := TStatisticsDisplay.Create;
-
-    // Enregistrer les observateurs
-    WeatherStation.RegisterObserver(CurrentDisplay);
-    WeatherStation.RegisterObserver(StatisticsDisplay);
-
-    // Simuler des changements météo
-    WeatherStation.SetMeasurements(27.5, 65, 1013.1);
-    WeatherStation.SetMeasurements(28.2, 70, 1012.5);
-    WeatherStation.SetMeasurements(26.8, 75, 1010.2);
-
-    // Retirer un observateur
-    WeatherStation.RemoveObserver(CurrentDisplay);
-
-    WeatherStation.SetMeasurements(25.9, 80, 1009.7);
-
-    // Pas besoin de libérer CurrentDisplay ou StatisticsDisplay (interfaces)
-  finally
-    WeatherStation.Free;
-  end;
+  ShowMessage('Lecture du fichier MP4 : ' + NomFichier);
 end;
 ```
 
-### Stratégie (Strategy)
-
-Le modèle Stratégie définit une famille d'algorithmes, encapsule chacun d'eux et les rend interchangeables. Il permet de changer l'algorithme indépendamment des clients qui l'utilisent.
-
-**Cas d'utilisation** : Quand vous avez plusieurs manières de faire quelque chose et que vous voulez changer l'algorithme à l'exécution.
+### Utilisation
 
 ```pascal
-unit SortingStrategies;
+procedure UtiliserLecteur(Lecteur: ILecteurAudio; Fichier: string);
+begin
+  Lecteur.Lire(Fichier);
+end;
 
-interface
+var
+  LecteurMP3: ILecteurAudio;
+  LecteurMP4: ILecteurAudio;
+begin
+  // L'ancien lecteur MP3 fonctionne grâce à l'adaptateur
+  LecteurMP3 := TAdaptateurMP3.Create;
+  UtiliserLecteur(LecteurMP3, 'musique.mp3');
 
+  // Le nouveau lecteur MP4 fonctionne directement
+  LecteurMP4 := TLecteurMP4.Create;
+  UtiliserLecteur(LecteurMP4, 'video.mp4');
+
+  // Le code client n'a pas besoin de connaître la différence !
+end;
+```
+
+### Avantages
+
+**✅ Avantages** :
+- Réutilisation de code existant
+- Intégration de composants tiers
+- Séparation des préoccupations
+- Facilite la migration progressive
+
+## Pattern MVC (Model-View-Controller)
+
+### Problème
+Vous voulez séparer la logique métier (données), la présentation (interface) et le contrôle (interactions) pour faciliter la maintenance et les tests.
+
+### Composants
+
+1. **Model (Modèle)** : contient les données et la logique métier
+2. **View (Vue)** : affiche les données à l'utilisateur
+3. **Controller (Contrôleur)** : gère les interactions utilisateur
+
+### Solution simplifiée
+
+```pascal
 type
-  // Interface pour les stratégies de tri
-  ISortStrategy = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    procedure Sort(var Items: array of Integer);
-  end;
-
-  // Contexte qui utilise la stratégie
-  TSorter = class
+  // MODEL : les données
+  TModelProduit = class
   private
-    FSortStrategy: ISortStrategy;
+    FNom: string;
+    FPrix: Double;
+    FStock: Integer;
   public
-    procedure SetStrategy(Strategy: ISortStrategy);
-    procedure SortItems(var Items: array of Integer);
+    constructor Create(ANom: string; APrix: Double; AStock: Integer);
+    procedure ModifierStock(NouveauStock: Integer);
+    property Nom: string read FNom write FNom;
+    property Prix: Double read FPrix write FPrix;
+    property Stock: Integer read FStock;
   end;
 
-  // Stratégies concrètes
-  TBubbleSortStrategy = class(TInterfacedObject, ISortStrategy)
+  // VIEW : l'affichage
+  TVueProduit = class
   public
-    procedure Sort(var Items: array of Integer);
+    procedure Afficher(Produit: TModelProduit);
+    procedure AfficherMessage(const Message: string);
   end;
 
-  TQuickSortStrategy = class(TInterfacedObject, ISortStrategy)
-  public
-    procedure Sort(var Items: array of Integer);
+  // CONTROLLER : la logique de contrôle
+  TControleurProduit = class
   private
-    procedure QuickSort(var Items: array of Integer; Left, Right: Integer);
-    function Partition(var Items: array of Integer; Left, Right: Integer): Integer;
-  end;
-
-  TInsertionSortStrategy = class(TInterfacedObject, ISortStrategy)
+    FModel: TModelProduit;
+    FVue: TVueProduit;
   public
-    procedure Sort(var Items: array of Integer);
+    constructor Create(AModel: TModelProduit; AVue: TVueProduit);
+    destructor Destroy; override;
+    procedure AfficherProduit;
+    procedure AjouterStock(Quantite: Integer);
+    procedure RetirerStock(Quantite: Integer);
   end;
 
-implementation
-
-{ TSorter }
-
-procedure TSorter.SetStrategy(Strategy: ISortStrategy);
+// Implémentation TModelProduit
+constructor TModelProduit.Create(ANom: string; APrix: Double; AStock: Integer);
 begin
-  FSortStrategy := Strategy;
+  inherited Create;
+  FNom := ANom;
+  FPrix := APrix;
+  FStock := AStock;
 end;
 
-procedure TSorter.SortItems(var Items: array of Integer);
+procedure TModelProduit.ModifierStock(NouveauStock: Integer);
 begin
-  if Assigned(FSortStrategy) then
-    FSortStrategy.Sort(Items);
+  if NouveauStock >= 0 then
+    FStock := NouveauStock;
 end;
 
-{ TBubbleSortStrategy }
-
-procedure TBubbleSortStrategy.Sort(var Items: array of Integer);
-var
-  I, J, Temp: Integer;
-  Swapped: Boolean;
+// Implémentation TVueProduit
+procedure TVueProduit.Afficher(Produit: TModelProduit);
 begin
-  for I := High(Items) downto Low(Items) do
+  ShowMessage(Format('Produit : %s'#13#10 +
+                     'Prix : %.2f €'#13#10 +
+                     'Stock : %d unités',
+                     [Produit.Nom, Produit.Prix, Produit.Stock]));
+end;
+
+procedure TVueProduit.AfficherMessage(const Message: string);
+begin
+  ShowMessage(Message);
+end;
+
+// Implémentation TControleurProduit
+constructor TControleurProduit.Create(AModel: TModelProduit; AVue: TVueProduit);
+begin
+  inherited Create;
+  FModel := AModel;
+  FVue := AVue;
+end;
+
+destructor TControleurProduit.Destroy;
+begin
+  FModel.Free;
+  FVue.Free;
+  inherited Destroy;
+end;
+
+procedure TControleurProduit.AfficherProduit;
+begin
+  FVue.Afficher(FModel);
+end;
+
+procedure TControleurProduit.AjouterStock(Quantite: Integer);
+begin
+  FModel.ModifierStock(FModel.Stock + Quantite);
+  FVue.AfficherMessage(Format('%d unités ajoutées', [Quantite]));
+end;
+
+procedure TControleurProduit.RetirerStock(Quantite: Integer);
+begin
+  if FModel.Stock >= Quantite then
   begin
-    Swapped := False;
-    for J := Low(Items) to I - 1 do
-    begin
-      if Items[J] > Items[J + 1] then
-      begin
-        Temp := Items[J];
-        Items[J] := Items[J + 1];
-        Items[J + 1] := Temp;
-        Swapped := True;
-      end;
-    end;
-    if not Swapped then Break;
-  end;
+    FModel.ModifierStock(FModel.Stock - Quantite);
+    FVue.AfficherMessage(Format('%d unités retirées', [Quantite]));
+  end
+  else
+    FVue.AfficherMessage('Stock insuffisant !');
 end;
-
-{ TQuickSortStrategy }
-
-procedure TQuickSortStrategy.Sort(var Items: array of Integer);
-begin
-  if Length(Items) > 1 then
-    QuickSort(Items, Low(Items), High(Items));
-end;
-
-procedure TQuickSortStrategy.QuickSort(var Items: array of Integer; Left, Right: Integer);
-var
-  PivotIndex: Integer;
-begin
-  if Left < Right then
-  begin
-    PivotIndex := Partition(Items, Left, Right);
-    QuickSort(Items, Left, PivotIndex - 1);
-    QuickSort(Items, PivotIndex + 1, Right);
-  end;
-end;
-
-function TQuickSortStrategy.Partition(var Items: array of Integer; Left, Right: Integer): Integer;
-var
-  Pivot, Temp, I, J: Integer;
-begin
-  Pivot := Items[Right];
-  I := Left - 1;
-
-  for J := Left to Right - 1 do
-  begin
-    if Items[J] <= Pivot then
-    begin
-      Inc(I);
-      Temp := Items[I];
-      Items[I] := Items[J];
-      Items[J] := Temp;
-    end;
-  end;
-
-  Temp := Items[I + 1];
-  Items[I + 1] := Items[Right];
-  Items[Right] := Temp;
-
-  Result := I + 1;
-end;
-
-{ TInsertionSortStrategy }
-
-procedure TInsertionSortStrategy.Sort(var Items: array of Integer);
-var
-  I, J, Temp: Integer;
-begin
-  for I := Low(Items) + 1 to High(Items) do
-  begin
-    Temp := Items[I];
-    J := I - 1;
-
-    while (J >= Low(Items)) and (Items[J] > Temp) do
-    begin
-      Items[J + 1] := Items[J];
-      Dec(J);
-    end;
-
-    Items[J + 1] := Temp;
-  end;
-end;
-
-end.
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
-  Sorter: TSorter;
-  Items: array of Integer;
-  I: Integer;
-  StartTime, EndTime: Cardinal;
-
-  procedure PrintArray;
-  var
-    S: string;
-    I: Integer;
-  begin
-    S := 'Items: ';
-    for I := Low(Items) to High(Items) do
-      S := S + IntToStr(Items[I]) + ' ';
-    ShowMessage(S);
-  end;
-
+  Model: TModelProduit;
+  Vue: TVueProduit;
+  Controleur: TControleurProduit;
 begin
-  // Création du tableau à trier
-  SetLength(Items, 10);
-  Items[0] := 64; Items[1] := 34; Items[2] := 25; Items[3] := 12; Items[4] := 22;
-  Items[5] := 11; Items[6] := 90; Items[7] := 87; Items[8] := 45; Items[9] := 56;
+  // Créer les composants
+  Model := TModelProduit.Create('Ordinateur portable', 899.99, 10);
+  Vue := TVueProduit.Create;
+  Controleur := TControleurProduit.Create(Model, Vue);
 
-  Sorter := TSorter.Create;
   try
-    // Utiliser la stratégie de tri à bulles
-    PrintArray;
-    Sorter.SetStrategy(TBubbleSortStrategy.Create);
-    StartTime := GetTickCount;
-    Sorter.SortItems(Items);
-    EndTime := GetTickCount;
-    PrintArray;
-    ShowMessage('Tri à bulles : ' + IntToStr(EndTime - StartTime) + ' ms');
+    // Afficher le produit
+    Controleur.AfficherProduit;
 
-    // Remélanger le tableau
-    Items[0] := 64; Items[1] := 34; Items[2] := 25; Items[3] := 12; Items[4] := 22;
-    Items[5] := 11; Items[6] := 90; Items[7] := 87; Items[8] := 45; Items[9] := 56;
+    // Ajouter au stock
+    Controleur.AjouterStock(5);
+    Controleur.AfficherProduit;
 
-    // Utiliser la stratégie de tri rapide
-    PrintArray;
-    Sorter.SetStrategy(TQuickSortStrategy.Create);
-    StartTime := GetTickCount;
-    Sorter.SortItems(Items);
-    EndTime := GetTickCount;
-    PrintArray;
-    ShowMessage('Tri rapide : ' + IntToStr(EndTime - StartTime) + ' ms');
+    // Retirer du stock
+    Controleur.RetirerStock(3);
+    Controleur.AfficherProduit;
 
-    // Remélanger le tableau
-    Items[0] := 64; Items[1] := 34; Items[2] := 25; Items[3] := 12; Items[4] := 22;
-    Items[5] := 11; Items[6] := 90; Items[7] := 87; Items[8] := 45; Items[9] := 56;
-
-    // Utiliser la stratégie de tri par insertion
-    PrintArray;
-    Sorter.SetStrategy(TInsertionSortStrategy.Create);
-    StartTime := GetTickCount;
-    Sorter.SortItems(Items);
-    EndTime := GetTickCount;
-    PrintArray;
-    ShowMessage('Tri par insertion : ' + IntToStr(EndTime - StartTime) + ' ms');
   finally
-    Sorter.Free;
+    Controleur.Free;
   end;
 end;
 ```
 
-## Utilisation des modèles de conception dans Delphi
+### Avantages
 
-Delphi utilise déjà de nombreux modèles de conception dans son architecture :
+**✅ Avantages** :
+- Séparation claire des responsabilités
+- Facilite les tests unitaires
+- Plusieurs vues pour un même modèle
+- Modifications d'interface sans toucher à la logique
 
-- **Singleton** : `Application`, `Screen`, et `DataModule` sont des singletons
-- **Fabrique** : `TComponent.Create` agit comme une fabrique pour créer des composants
-- **Décorateur** : Les filtres de flux (`TStream`) comme `TBufferedFileStream`
-- **Observateur** : Le système d'événements (comme `OnClick`, `OnChange`) implémente le modèle observateur
-- **Stratégie** : Les adaptateurs de données (`TDataSet` avec différentes implémentations)
+## Autres Patterns importants
 
-## Comment choisir le bon modèle de conception ?
+### Template Method
 
-Voici quelques conseils pour choisir le modèle approprié :
+Définit le squelette d'un algorithme, en laissant les sous-classes redéfinir certaines étapes.
 
-1. **Identifiez le problème** : Quel problème essayez-vous de résoudre ?
-2. **Connaissez les modèles** : Familiarisez-vous avec les modèles courants
-3. **Considérez la simplicité** : Le modèle le plus simple qui répond au besoin est souvent le meilleur
-4. **Pensez à l'évolution** : Comment votre application pourrait-elle évoluer ?
-5. **Évitez la sur-ingénierie** : N'utilisez pas un modèle juste parce qu'il est "cool"
+```pascal
+type
+  TTraitementDocument = class
+  public
+    procedure Traiter;  // Méthode template
+  protected
+    procedure OuvrirDocument; virtual; abstract;
+    procedure AnalyserContenu; virtual; abstract;
+    procedure GenererRapport; virtual; abstract;
+    procedure FermerDocument; virtual; abstract;
+  end;
+
+procedure TTraitementDocument.Traiter;
+begin
+  OuvrirDocument;
+  AnalyserContenu;
+  GenererRapport;
+  FermerDocument;
+end;
+```
+
+### Command
+
+Encapsule une requête comme un objet, permettant de paramétrer, mettre en file d'attente ou annuler des opérations.
+
+```pascal
+type
+  ICommande = interface
+    procedure Executer;
+    procedure Annuler;
+  end;
+
+  TCommandeSauvegarder = class(TInterfacedObject, ICommande)
+  private
+    FDocument: TDocument;
+  public
+    constructor Create(ADocument: TDocument);
+    procedure Executer;
+    procedure Annuler;
+  end;
+```
+
+## Quand utiliser quel Pattern ?
+
+| Pattern | Quand l'utiliser |
+|---------|------------------|
+| **Singleton** | Une seule instance nécessaire (configuration, log) |
+| **Factory** | Création d'objets complexe ou variable |
+| **Observer** | Notification de changements à plusieurs objets |
+| **Strategy** | Plusieurs algorithmes interchangeables |
+| **Decorator** | Ajouter des fonctionnalités dynamiquement |
+| **Adapter** | Rendre compatibles des interfaces différentes |
+| **MVC** | Séparer logique, présentation et contrôle |
 
 ## Bonnes pratiques
 
-1. **Apprenez progressivement** : Commencez par les modèles les plus simples et les plus courants
-2. **Pratiquez** : Implémentez des modèles dans des petits projets pour les comprendre
-3. **Documentez** : Indiquez quels modèles vous utilisez et pourquoi
-4. **Ne réinventez pas la roue** : Utilisez les bibliothèques existantes quand elles implémentent le modèle dont vous avez besoin
-5. **Adaptez** : Les modèles sont des guides, pas des règles rigides
+### 1. Ne pas sur-utiliser les patterns
 
-## Modèles supplémentaires courants
+```pascal
+// ❌ Mauvais - pattern inutile pour un cas simple
+TFactorySingletonStrategyAdapter...  // Trop complexe !
 
-Voici quelques autres modèles que vous rencontrerez souvent :
+// ✅ Bon - simple et direct
+MaClasse := TMaClasse.Create;
+```
 
-### 1. Builder (Constructeur)
+### 2. Comprendre le problème avant d'appliquer un pattern
 
-Sépare la construction d'un objet complexe de sa représentation.
+Un pattern est une solution à un problème spécifique. Identifiez d'abord le problème !
 
-### 2. Prototype
+### 3. Les patterns évoluent
 
-Crée de nouveaux objets en clonant un objet existant.
+N'hésitez pas à adapter un pattern à vos besoins spécifiques.
 
-### 3. Composite
+### 4. Nommer clairement
 
-Compose des objets en structures arborescentes pour représenter des hiérarchies partie-tout.
+```pascal
+// ✅ Bon - le pattern est évident dans le nom
+TDocumentFactory
+TConfigurationSingleton
+TObserverDonnees
 
-### 4. Façade (Facade)
+// ⚠️ Moins clair
+TDoc
+TConf
+TData
+```
 
-Fournit une interface unifiée à un ensemble d'interfaces dans un sous-système.
+### 5. Documenter l'utilisation du pattern
 
-### 5. Commande (Command)
+```pascal
+/// <summary>
+/// Factory pour créer différents types de documents
+/// Pattern : Factory
+/// </summary>
+TDocumentFactory = class
+```
 
-Encapsule une demande sous forme d'objet, permettant de paramétrer des clients avec différentes demandes.
+## Anti-patterns à éviter
 
-### 6. État (State)
+### God Object (Objet Dieu)
 
-Permet à un objet de modifier son comportement quand son état interne change.
+Une classe qui fait tout - viole le principe de responsabilité unique.
 
-### 7. Chaîne de responsabilité (Chain of Responsibility)
+```pascal
+// ❌ Mauvais
+TApplication = class
+  procedure GererBaseDonnees;
+  procedure AfficherInterface;
+  procedure EnvoyerEmails;
+  procedure CalculerRapports;
+  procedure GererReseau;
+  // ... fait TOUT !
+end;
+```
 
-Passe une requête le long d'une chaîne de gestionnaires.
+### Spaghetti Code
 
-### 8. Visiteur (Visitor)
+Code emmêlé sans structure claire.
 
-Représente une opération à effectuer sur les éléments d'une structure d'objets.
+### Copy-Paste Programming
 
----
+Dupliquer du code au lieu de le factoriser.
 
-Les modèles de conception sont des outils puissants dans votre boîte à outils de développeur. Ils vous aident à structurer votre code de manière élégante et à résoudre des problèmes courants. En comprenant et en appliquant ces modèles dans vos applications Delphi, vous créerez un code plus maintenable, plus flexible et plus robuste.
+## Patterns spécifiques à Delphi
 
-Dans la prochaine section, nous explorerons comment organiser votre code source de manière efficace et favoriser la modularité dans vos applications Delphi.
+### DataModule
+
+Un conteneur pour les composants non-visuels (connexions DB, requêtes...).
+
+```pascal
+type
+  TDataModule1 = class(TDataModule)
+    FDConnection1: TFDConnection;
+    FDQuery1: TFDQuery;
+  end;
+```
+
+### LiveBindings
+
+Liaison automatique entre composants visuels et données (pattern Observer intégré).
+
+## Ressources pour approfondir
+
+- **Gang of Four (GoF)** : le livre de référence sur les design patterns
+- **Refactoring Guru** : site web avec explications et exemples
+- **Documentation Delphi** : patterns utilisés dans la VCL/FMX
+- **Code source de Delphi** : étudiez comment sont conçues les classes standard
+
+## Résumé
+
+- Les **Design Patterns** sont des solutions éprouvées à des problèmes récurrents
+
+- **Principaux patterns** :
+  - **Singleton** : une seule instance
+  - **Factory** : création d'objets flexible
+  - **Observer** : notification de changements
+  - **Strategy** : algorithmes interchangeables
+  - **Decorator** : ajout de fonctionnalités
+  - **Adapter** : compatibilité d'interfaces
+  - **MVC** : séparation des responsabilités
+
+- **Avantages** :
+  - Communication facilitée
+  - Solutions éprouvées
+  - Code maintenable
+  - Meilleure conception
+
+- **Règle d'or** : utilisez un pattern seulement s'il résout vraiment un problème
+
+- **Évitez** : la sur-ingénierie, les anti-patterns
+
+Les design patterns sont des outils puissants dans votre boîte à outils de développeur. Avec la pratique, vous reconnaîtrez naturellement les situations où ils sont utiles. Commencez par les patterns les plus simples (Singleton, Factory) avant de vous attaquer aux plus complexes.
 
 ⏭️ [Organisation du code source et modularité](/03-langage-object-pascal/09-organisation-du-code-source-et-modularite.md)

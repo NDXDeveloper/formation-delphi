@@ -1,358 +1,529 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.2 Types de données et conversions
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La manipulation des données est au cœur de tout programme. Dans cette section, nous explorerons les différents types de données disponibles dans le langage Object Pascal et comment les convertir d'un type à un autre.
+Un type de données définit la nature de l'information qu'une variable peut contenir et les opérations possibles sur cette information. Object Pascal est un langage **fortement typé**, ce qui signifie que chaque variable doit avoir un type déclaré explicitement. Cette rigueur permet de détecter de nombreuses erreurs dès la compilation.
 
-## Types de données fondamentaux
+## Les types de données de base
 
-Delphi offre un large éventail de types de données pour répondre à différents besoins. Voici les principaux types que vous utiliserez fréquemment :
+### Types entiers
 
-### Types numériques entiers
+Les types entiers permettent de stocker des nombres sans décimale. Object Pascal propose plusieurs types entiers selon la plage de valeurs et l'espace mémoire nécessaire.
 
-Ces types stockent des nombres entiers (sans décimales) :
+| Type | Taille | Plage de valeurs |
+|------|--------|------------------|
+| `Byte` | 1 octet | 0 à 255 |
+| `ShortInt` | 1 octet | -128 à 127 |
+| `Word` | 2 octets | 0 à 65 535 |
+| `SmallInt` | 2 octets | -32 768 à 32 767 |
+| `Cardinal` | 4 octets | 0 à 4 294 967 295 |
+| `Integer` | 4 octets | -2 147 483 648 à 2 147 483 647 |
+| `Int64` | 8 octets | -9 223 372 036 854 775 808 à 9 223 372 036 854 775 807 |
+| `UInt64` | 8 octets | 0 à 18 446 744 073 709 551 615 |
 
-| Type | Plage | Taille en mémoire |
-|------|-------|-------------------|
-| `Byte` | 0 à 255 | 1 octet |
-| `ShortInt` | -128 à 127 | 1 octet |
-| `Word` | 0 à 65 535 | 2 octets |
-| `SmallInt` | -32 768 à 32 767 | 2 octets |
-| `Cardinal` | 0 à 4 294 967 295 | 4 octets |
-| `Integer` | -2 147 483 648 à 2 147 483 647 | 4 octets |
-| `Int64` | Très grand (±9,2×10¹⁸) | 8 octets |
-| `UInt64` | 0 à très grand (1,8×10¹⁹) | 8 octets |
-
+**Exemples :**
 ```pascal
 var
-  Age: Byte;        // Pour de petites valeurs positives
-  Compteur: Integer; // Type entier général le plus courant
-  GrandNombre: Int64; // Pour les très grands nombres entiers
+  Age: Integer;
+  Population: Cardinal;
+  Compteur: Byte;
+begin
+  Age := 25;
+  Population := 67000000;
+  Compteur := 0;
+end;
 ```
 
-### Types numériques à virgule flottante
+**Type recommandé :** Pour la plupart des usages, `Integer` est le choix par défaut car il offre un bon compromis entre plage et performance.
 
-Ces types stockent des nombres avec une partie décimale :
+### Types réels (nombres à virgule)
 
-| Type | Précision | Plage approximative | Taille |
-|------|-----------|---------------------|--------|
-| `Single` | ~7 chiffres | ±1,5×10⁻⁴⁵ à ±3,4×10³⁸ | 4 octets |
-| `Double` | ~15-16 chiffres | ±5,0×10⁻³²⁴ à ±1,7×10³⁰⁸ | 8 octets |
-| `Extended` | ~19-20 chiffres | ±3,6×10⁻⁴⁹⁵¹ à ±1,1×10⁴⁹³² | 10 octets |
-| `Currency` | 4 décimales fixes | ±922 337 203 685 477,5807 | 8 octets |
+Les types réels permettent de stocker des nombres avec décimales.
 
+| Type | Taille | Précision | Plage approximative |
+|------|--------|-----------|---------------------|
+| `Single` | 4 octets | 7-8 chiffres | 1,5 × 10⁻⁴⁵ à 3,4 × 10³⁸ |
+| `Double` | 8 octets | 15-16 chiffres | 5,0 × 10⁻³²⁴ à 1,7 × 10³⁰⁸ |
+| `Extended` | 10 octets | 19-20 chiffres | 3,6 × 10⁻⁴⁹⁵¹ à 1,1 × 10⁴⁹³² |
+| `Currency` | 8 octets | 4 décimales fixes | -922 337 203 685 477,5808 à 922 337 203 685 477,5807 |
+
+**Exemples :**
 ```pascal
 var
-  Prix: Double;      // Pour la plupart des calculs avec décimales
-  Montant: Currency; // Idéal pour les calculs financiers (évite les erreurs d'arrondi)
+  Prix: Double;
+  Taux: Single;
+  MontantFacture: Currency;
+begin
+  Prix := 19.99;
+  Taux := 0.055;
+  MontantFacture := 1234.56;
+end;
 ```
 
-La `Currency` est particulièrement utile pour les calculs financiers car elle évite les erreurs d'arrondi courantes avec les nombres à virgule flottante.
+**Points importants :**
+- Utilisez `Double` pour les calculs scientifiques généraux
+- Utilisez `Currency` pour les calculs monétaires (évite les erreurs d'arrondi)
+- Le séparateur décimal en Object Pascal est le point (`.`), pas la virgule
 
 ### Type booléen
 
-Le type `Boolean` peut prendre deux valeurs :
+Le type `Boolean` ne peut avoir que deux valeurs : `True` (vrai) ou `False` (faux).
 
 ```pascal
 var
-  EstValide: Boolean; // Peut valoir True ou False
+  EstActif: Boolean;
+  EstMajeur: Boolean;
+begin
+  EstActif := True;
+  EstMajeur := False;
+
+  if EstActif then
+    ShowMessage('L''utilisateur est actif');
+end;
 ```
 
-Il existe aussi des variantes comme `ByteBool`, `WordBool` et `LongBool` qui ont la même fonction mais une taille en mémoire différente.
+**Variantes :**
+- `Boolean` : type standard (1 octet)
+- `ByteBool`, `WordBool`, `LongBool` : compatibilité avec d'autres langages
 
 ### Type caractère
 
-Pour stocker un caractère unique :
+Les types caractères permettent de stocker un seul caractère.
+
+| Type | Description | Exemple |
+|------|-------------|---------|
+| `Char` | Caractère Unicode (2 octets) | `'A'`, `'é'`, `'€'` |
+| `AnsiChar` | Caractère ANSI (1 octet) | `'A'`, `'B'` |
+
+**Exemple :**
+```pascal
+var
+  Initiale: Char;
+  Grade: Char;
+begin
+  Initiale := 'M';
+  Grade := 'A';
+end;
+```
+
+**Note :** Les caractères littéraux sont entourés d'apostrophes simples (`'`).
+
+### Type chaîne de caractères
+
+Les chaînes de caractères (`string`) permettent de stocker du texte.
 
 ```pascal
 var
-  Lettre: Char;          // Un caractère Unicode (2 octets)
-  CaractereANSI: AnsiChar; // Un caractère ANSI (1 octet)
+  Nom: string;
+  Prenom: string;
+  Message: string;
+begin
+  Nom := 'Dupont';
+  Prenom := 'Marie';
+  Message := 'Bonjour ' + Prenom + ' ' + Nom + ' !';
+  ShowMessage(Message); // Affiche : Bonjour Marie Dupont !
+end;
 ```
 
-### Types chaîne de caractères
+**Types de chaînes :**
+- `string` : chaîne Unicode dynamique (type recommandé)
+- `AnsiString` : chaîne ANSI dynamique
+- `WideString` : chaîne Unicode large
+- `ShortString` : chaîne de longueur fixe (255 caractères maximum, ancien type)
 
-Pour stocker du texte :
-
+**Opérations courantes :**
 ```pascal
 var
-  Prenom: string;         // Chaîne Unicode moderne (dynamique)
-  TexteAncien: AnsiString; // Chaîne ANSI (pour la compatibilité)
-  TexteCourt: ShortString; // Limitée à 255 caractères
+  Texte: string;
+  Longueur: Integer;
+begin
+  Texte := 'Delphi';
+  Longueur := Length(Texte);        // Retourne 6
+  Texte := UpperCase(Texte);        // Convertit en majuscules : 'DELPHI'
+  Texte := LowerCase(Texte);        // Convertit en minuscules : 'delphi'
+  Texte := Trim('  Espace  ');      // Supprime les espaces : 'Espace'
+end;
 ```
 
-Le type `string` est le plus couramment utilisé et a une longueur dynamique (s'adapte à son contenu).
+## Types énumérés
 
-### Type date et heure
-
-```pascal
-var
-  Aujourd'hui: TDate;      // Date seule
-  Maintenant: TTime;       // Heure seule
-  DateHeure: TDateTime;    // Date et heure combinées
-```
-
-Sous le capot, `TDateTime` est en fait un `Double` où la partie entière représente les jours (depuis le 30/12/1899) et la partie décimale représente l'heure.
-
-## Types structurés
-
-### Tableaux
-
-Les tableaux permettent de stocker plusieurs valeurs du même type :
-
-```pascal
-var
-  // Tableau statique (taille fixe)
-  Notes: array[1..5] of Integer;
-
-  // Tableau dynamique (taille variable)
-  Etudiants: array of string;
-```
-
-Pour utiliser un tableau dynamique :
-
-```pascal
-// Définir la taille
-SetLength(Etudiants, 10);  // Tableau de 10 éléments
-
-// Accéder aux éléments (les indices commencent à 0)
-Etudiants[0] := 'Alice';
-Etudiants[1] := 'Bob';
-```
-
-### Enregistrements (Records)
-
-Les records permettent de regrouper des données de différents types en une seule structure :
-
-```pascal
-type
-  TPersonne = record
-    Nom: string;
-    Prenom: string;
-    Age: Integer;
-    EstActif: Boolean;
-  end;
-
-var
-  Employe: TPersonne;
-```
-
-Pour accéder aux champs :
-
-```pascal
-Employe.Nom := 'Dupont';
-Employe.Prenom := 'Jean';
-Employe.Age := 42;
-Employe.EstActif := True;
-```
-
-Delphi 12 supporte également les initialisateurs d'enregistrements :
-
-```pascal
-Employe := TPersonne.Create('Dupont', 'Jean', 42, True);
-```
-<span style="color: #0066CC">**Nécessite Delphi 12 ou supérieur**</span>
-
-### Ensembles (Sets)
-
-Les ensembles permettent de stocker un groupe de valeurs du même type ordinal :
+Les types énumérés permettent de définir un ensemble de valeurs nommées.
 
 ```pascal
 type
   TJourSemaine = (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche);
-  TJoursOuvres = set of TJourSemaine;
+  TCouleur = (Rouge, Vert, Bleu, Jaune);
 
 var
-  JoursTravailles: TJoursOuvres;
-```
-
-Utilisation :
-
-```pascal
-// Initialisation d'un ensemble
-JoursTravailles := [Lundi, Mardi, Mercredi, Jeudi, Vendredi];
-
-// Test d'appartenance
-if Samedi in JoursTravailles then
-  ShowMessage('Le samedi est travaillé')
-else
-  ShowMessage('Le samedi n''est pas travaillé');
-```
-
-## Types pointeurs
-
-Les pointeurs stockent des adresses mémoire. Ils sont généralement utilisés dans des cas avancés :
-
-```pascal
-var
-  MonEntier: Integer;
-  PointeurEntier: ^Integer; // Déclaration d'un pointeur vers un entier
-```
-
-Utilisation :
-
-```pascal
-MonEntier := 42;
-PointeurEntier := @MonEntier; // @ donne l'adresse de MonEntier
-ShowMessage(IntToStr(PointeurEntier^)); // ^ accède à la valeur pointée
-```
-
-> 🔹 **Note pour débutants**: Les pointeurs sont un concept avancé. Vous pouvez programmer en Delphi pendant longtemps sans avoir à les utiliser directement, car le langage offre des mécanismes de plus haut niveau.
-
-## Conversions de types
-
-La conversion de types est essentielle lorsque vous travaillez avec différents types de données. Voici les principales méthodes :
-
-### Conversions numériques
-
-```pascal
-var
-  MonEntier: Integer;
-  MonReel: Double;
+  Jour: TJourSemaine;
+  Couleur: TCouleur;
 begin
-  // Conversion entier vers réel (implicite, sans risque)
-  MonEntier := 42;
-  MonReel := MonEntier; // Conversion automatique
+  Jour := Lundi;
+  Couleur := Rouge;
 
-  // Conversion réel vers entier (explicite, avec risque de perte de précision)
-  MonReel := 42.75;
-  MonEntier := Trunc(MonReel); // Tronque à 42 (supprime la partie décimale)
-  // ou
-  MonEntier := Round(MonReel); // Arrondit à 43 (au plus proche)
+  if Jour = Samedi then
+    ShowMessage('C''est le week-end !');
 end;
 ```
 
-### Conversions avec des chaînes
+**Avantages :** Les énumérations rendent le code plus lisible et évitent les erreurs avec des valeurs arbitraires.
 
-Delphi offre plusieurs fonctions pour convertir des valeurs numériques en chaînes et vice-versa :
+## Type ensemble (Set)
+
+Un ensemble est une collection de valeurs d'un type énuméré ou ordinal.
+
+```pascal
+type
+  TJourSemaine = (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche);
+  TJoursTravail = set of TJourSemaine;
+
+var
+  JoursOuvrables: TJoursTravail;
+begin
+  JoursOuvrables := [Lundi, Mardi, Mercredi, Jeudi, Vendredi];
+
+  if Samedi in JoursOuvrables then
+    ShowMessage('Samedi est un jour ouvrable')
+  else
+    ShowMessage('Samedi n''est pas un jour ouvrable');
+end;
+```
+
+## Type pointeur
+
+Un pointeur contient l'adresse mémoire d'une variable.
+
+```pascal
+var
+  Valeur: Integer;
+  PValeur: ^Integer;  // Pointeur vers un entier
+begin
+  Valeur := 42;
+  PValeur := @Valeur;        // @ retourne l'adresse de Valeur
+  ShowMessage(IntToStr(PValeur^));  // ^ déréférence le pointeur : affiche 42
+end;
+```
+
+**Note pour débutants :** Les pointeurs sont un concept avancé. Dans la plupart des cas, vous n'aurez pas besoin de les manipuler directement.
+
+## Type Variant
+
+Le type `Variant` peut contenir différents types de données.
+
+```pascal
+var
+  V: Variant;
+begin
+  V := 42;              // Entier
+  V := 'Texte';         // Chaîne
+  V := 3.14;            // Réel
+  V := True;            // Booléen
+end;
+```
+
+**Attention :** Utilisez `Variant` avec parcimonie. Il est moins performant et moins sûr que les types fortement typés.
+
+## Conversions de types
+
+### Conversions automatiques (implicites)
+
+Certaines conversions se font automatiquement lorsqu'il n'y a pas de perte de données :
+
+```pascal
+var
+  EntierCourt: SmallInt;
+  EntierLong: Integer;
+  NombreReel: Double;
+begin
+  EntierCourt := 100;
+  EntierLong := EntierCourt;      // OK : SmallInt → Integer
+  NombreReel := EntierLong;       // OK : Integer → Double
+end;
+```
+
+### Conversions explicites (cast)
+
+Pour les autres conversions, vous devez les effectuer explicitement.
+
+#### Fonctions de conversion courantes
+
+**Vers chaîne de caractères :**
+```pascal
+var
+  Nombre: Integer;
+  Prix: Double;
+  Texte: string;
+begin
+  Nombre := 42;
+  Texte := IntToStr(Nombre);        // Integer → String
+
+  Prix := 19.99;
+  Texte := FloatToStr(Prix);        // Double → String
+  Texte := FormatFloat('0.00', Prix); // Formatage personnalisé : '19.99'
+end;
+```
+
+**Depuis chaîne de caractères :**
+```pascal
+var
+  Texte: string;
+  Nombre: Integer;
+  Prix: Double;
+begin
+  Texte := '42';
+  Nombre := StrToInt(Texte);        // String → Integer
+
+  Texte := '19.99';
+  Prix := StrToFloat(Texte);        // String → Double
+end;
+```
+
+**Conversions avec gestion d'erreurs :**
+```pascal
+var
+  Texte: string;
+  Nombre: Integer;
+begin
+  Texte := 'abc';  // Pas un nombre valide
+
+  if TryStrToInt(Texte, Nombre) then
+    ShowMessage('Conversion réussie : ' + IntToStr(Nombre))
+  else
+    ShowMessage('Erreur de conversion');
+end;
+```
+
+**Pourquoi utiliser TryStrToInt ?** Cette fonction ne génère pas d'exception en cas d'erreur, ce qui rend le code plus robuste.
+
+#### Entre types numériques
+
+```pascal
+var
+  Entier: Integer;
+  Reel: Double;
+begin
+  // Double → Integer (troncature)
+  Reel := 3.7;
+  Entier := Trunc(Reel);    // Résultat : 3 (supprime la partie décimale)
+  Entier := Round(Reel);    // Résultat : 4 (arrondit)
+
+  // Integer → Double
+  Entier := 42;
+  Reel := Entier;           // Conversion automatique
+end;
+```
+
+#### Fonctions d'arrondi
+
+| Fonction | Description | Exemple |
+|----------|-------------|---------|
+| `Trunc(x)` | Supprime la partie décimale | `Trunc(3.7)` = 3 |
+| `Round(x)` | Arrondit au plus proche | `Round(3.7)` = 4 |
+| `Ceil(x)` | Arrondit au supérieur | `Ceil(3.2)` = 4 |
+| `Floor(x)` | Arrondit à l'inférieur | `Floor(3.7)` = 3 |
+
+#### Conversions de booléens
+
+```pascal
+var
+  Actif: Boolean;
+  Valeur: Integer;
+  Texte: string;
+begin
+  // Boolean → String
+  Actif := True;
+  Texte := BoolToStr(Actif, True);  // Retourne 'True'
+
+  // String → Boolean
+  Texte := 'True';
+  Actif := StrToBool(Texte);
+
+  // Boolean → Integer
+  Valeur := Ord(Actif);  // True = 1, False = 0
+end;
+```
+
+#### Conversions de caractères
+
+```pascal
+var
+  Caractere: Char;
+  Code: Integer;
+begin
+  // Char → Integer (code ASCII/Unicode)
+  Caractere := 'A';
+  Code := Ord(Caractere);  // Retourne 65
+
+  // Integer → Char
+  Code := 66;
+  Caractere := Chr(Code);  // Retourne 'B'
+end;
+```
+
+### Tableau récapitulatif des fonctions de conversion
+
+| Depuis | Vers | Fonction |
+|--------|------|----------|
+| Integer | String | `IntToStr(valeur)` |
+| String | Integer | `StrToInt(texte)` ou `TryStrToInt(texte, resultat)` |
+| Double | String | `FloatToStr(valeur)` ou `FormatFloat(format, valeur)` |
+| String | Double | `StrToFloat(texte)` ou `TryStrToFloat(texte, resultat)` |
+| Boolean | String | `BoolToStr(valeur, UseBoolStrs)` |
+| String | Boolean | `StrToBool(texte)` |
+| Char | Integer | `Ord(caractere)` |
+| Integer | Char | `Chr(code)` |
+| Double | Integer | `Trunc(valeur)` ou `Round(valeur)` |
+
+## Formatage de valeurs
+
+### Formatage de nombres
+
+```pascal
+var
+  Prix: Double;
+  Texte: string;
+begin
+  Prix := 1234.56;
+
+  // Différentes options de formatage
+  Texte := FormatFloat('0.00', Prix);        // '1234.56'
+  Texte := FormatFloat('#,##0.00', Prix);    // '1 234.56'
+  Texte := FormatFloat('0.00 €', Prix);      // '1234.56 €'
+end;
+```
+
+### Formatage de dates
+
+```pascal
+var
+  MaDate: TDateTime;
+  Texte: string;
+begin
+  MaDate := Now;  // Date et heure actuelles
+
+  Texte := DateToStr(MaDate);                    // '16/10/2025'
+  Texte := FormatDateTime('dd/mm/yyyy', MaDate); // '16/10/2025'
+  Texte := FormatDateTime('dd mmmm yyyy', MaDate); // '16 octobre 2025'
+end;
+```
+
+### Format avec paramètres multiples
+
+La fonction `Format` permet de créer des chaînes avec plusieurs valeurs :
+
+```pascal
+var
+  Nom: string;
+  Age: Integer;
+  Taille: Double;
+  Message: string;
+begin
+  Nom := 'Marie';
+  Age := 25;
+  Taille := 1.68;
+
+  Message := Format('%s a %d ans et mesure %.2f m', [Nom, Age, Taille]);
+  // Résultat : 'Marie a 25 ans et mesure 1.68 m'
+  ShowMessage(Message);
+end;
+```
+
+**Spécificateurs de format courants :**
+- `%s` : chaîne de caractères
+- `%d` : entier décimal
+- `%f` : nombre à virgule flottante
+- `%.2f` : nombre avec 2 décimales
+
+## Vérification de type
+
+### Opérateur is
+
+Permet de vérifier le type d'un objet :
+
+```pascal
+if MonObjet is TButton then
+  ShowMessage('C''est un bouton');
+```
+
+### Opérateur as
+
+Permet de convertir (cast) un objet vers un type spécifique :
+
+```pascal
+var
+  MonBouton: TButton;
+begin
+  if MonObjet is TButton then
+    MonBouton := MonObjet as TButton;
+end;
+```
+
+## Erreurs courantes et pièges à éviter
+
+### Dépassement de capacité
+
+```pascal
+var
+  Petit: Byte;  // Max 255
+begin
+  Petit := 300;  // ERREUR : dépassement !
+end;
+```
+
+**Solution :** Choisissez un type adapté à la plage de valeurs attendue.
+
+### Conversion sans vérification
 
 ```pascal
 var
   Texte: string;
   Nombre: Integer;
+begin
+  Texte := 'abc';
+  Nombre := StrToInt(Texte);  // ERREUR : exception levée !
+end;
+```
+
+**Solution :** Utilisez les fonctions `Try...` pour les conversions incertaines.
+
+### Perte de précision
+
+```pascal
+var
   Reel: Double;
+  Entier: Integer;
 begin
-  // De numérique vers chaîne
-  Nombre := 42;
-  Texte := IntToStr(Nombre); // Convertit un entier en chaîne
-
-  Reel := 3.14159;
-  Texte := FloatToStr(Reel); // Convertit un réel en chaîne
-  // ou avec formatage
-  Texte := Format('%.2f', [Reel]); // '3.14'
-
-  // De chaîne vers numérique
-  Texte := '42';
-  Nombre := StrToInt(Texte); // Convertit une chaîne en entier
-  // ou en sécurité
-  if TryStrToInt(Texte, Nombre) then
-    ShowMessage('Conversion réussie: ' + IntToStr(Nombre))
-  else
-    ShowMessage('Erreur de conversion');
-
-  Texte := '3.14';
-  Reel := StrToFloat(Texte); // Convertit une chaîne en réel
-  // ou en sécurité
-  if TryStrToFloat(Texte, Reel) then
-    ShowMessage('Conversion réussie: ' + FloatToStr(Reel))
-  else
-    ShowMessage('Erreur de conversion');
+  Reel := 3.7;
+  Entier := Trunc(Reel);  // Entier = 3 (la décimale est perdue)
 end;
 ```
 
-### Conversions de dates
+**Solution :** Soyez conscient des pertes de données lors des conversions.
 
-```pascal
-var
-  DateTexte: string;
-  MaDate: TDateTime;
-begin
-  // De date vers chaîne
-  MaDate := Now; // Date et heure actuelles
-  DateTexte := DateToStr(MaDate); // Format date uniquement
-  DateTexte := TimeToStr(MaDate); // Format heure uniquement
-  DateTexte := DateTimeToStr(MaDate); // Format date et heure
+## Points clés à retenir
 
-  // Avec formatage personnalisé
-  DateTexte := FormatDateTime('dd/mm/yyyy hh:nn:ss', MaDate);
-
-  // De chaîne vers date
-  DateTexte := '01/05/2023';
-  MaDate := StrToDate(DateTexte);
-  // ou en sécurité
-  if TryStrToDate(DateTexte, MaDate) then
-    ShowMessage('Date valide')
-  else
-    ShowMessage('Format de date invalide');
-end;
-```
-
-### Cast de types (Transtypage)
-
-Le cast de types permet de convertir explicitement une variable d'un type à un autre compatible :
-
-```pascal
-var
-  O: TObject;
-  B: TButton;
-begin
-  O := Button1; // Button1 est un contrôle sur la forme
-
-  // Cast pour récupérer l'objet sous sa vraie classe
-  if O is TButton then // Vérification du type avec "is"
-    B := TButton(O);   // Cast avec TButton(...)
-end;
-```
-
-## Types génériques
-
-Delphi supporte également la généricité, permettant de créer des structures ou classes qui peuvent fonctionner avec différents types :
-
-```pascal
-// Exemple simple avec une liste générique
-var
-  ListeEntiers: TList<Integer>;
-  ListeChaines: TList<string>;
-begin
-  ListeEntiers := TList<Integer>.Create;
-  try
-    ListeEntiers.Add(42);
-    ListeEntiers.Add(123);
-
-    ShowMessage(IntToStr(ListeEntiers[0])); // Affiche 42
-  finally
-    ListeEntiers.Free; // Libération de la mémoire
-  end;
-end;
-```
-
-Les génériques sont un sujet avancé qui sera couvert plus en détail dans une section ultérieure.
+1. Object Pascal est un langage **fortement typé** : chaque variable a un type fixe
+2. Choisissez le type de données adapté à vos besoins (plage, précision, performance)
+3. `Integer` et `Double` sont les types par défaut pour les nombres
+4. `string` est le type recommandé pour le texte
+5. `Currency` est préférable pour les calculs monétaires
+6. Utilisez les fonctions `Try...` pour les conversions avec gestion d'erreurs
+7. Le formatage des valeurs améliore la présentation des données
+8. Évitez le type `Variant` sauf nécessité absolue
 
 ## Conseils pratiques
 
-1. **Choix du bon type** :
-   - Utilisez `Integer` pour les nombres entiers généraux
-   - Utilisez `Double` pour les calculs scientifiques
-   - Utilisez `Currency` pour les calculs financiers
-   - Utilisez `string` pour la plupart des manipulations de texte
-
-2. **Vérifiez les conversions** :
-   - Utilisez toujours les fonctions `Try...` pour les conversions de chaînes en nombres ou dates
-   - Soyez conscient des pertes potentielles de précision lors de la conversion de réels en entiers
-
-3. **Déclaration explicite** :
-   - Déclarez toujours explicitement le type de vos variables pour améliorer la lisibilité et éviter les erreurs
-
-4. **Constantes typées** :
-   - Utilisez des constantes typées pour améliorer la maintenabilité :
-   ```pascal
-   const
-     PI: Double = 3.14159265358979;
-     MAX_ETUDIANTS: Integer = 100;
-   ```
+- Déclarez toujours explicitement le type de vos variables
+- Utilisez des types énumérés pour les valeurs qui ont un sens métier
+- Préférez `TryStrToInt` à `StrToInt` pour éviter les exceptions
+- Utilisez `Format` pour créer des messages complexes
+- Documentez les plages de valeurs attendues dans vos commentaires
+- Testez les conversions avec des valeurs limites
 
 ---
 
-Vous avez maintenant une bonne compréhension des types de données disponibles dans Delphi et des méthodes pour les convertir. Dans la prochaine section, nous explorerons les variables, constantes et opérateurs qui vous permettront de manipuler ces données de manière efficace.
+La maîtrise des types de données et des conversions est fondamentale pour écrire du code fiable et efficace. Dans la section suivante, nous verrons comment déclarer et utiliser des variables et des constantes.
 
 ⏭️ [Variables, constantes et opérateurs](/03-langage-object-pascal/03-variables-constantes-et-operateurs.md)

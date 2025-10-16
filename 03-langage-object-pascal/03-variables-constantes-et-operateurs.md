@@ -1,268 +1,295 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.3 Variables, constantes et opérateurs
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans cette section, nous allons explorer comment déclarer et utiliser les variables et constantes en Object Pascal, ainsi que les opérateurs qui permettent de manipuler leurs valeurs. Ces concepts sont fondamentaux pour tout programme Delphi.
+Les variables et constantes sont les conteneurs qui stockent les données dans vos programmes, tandis que les opérateurs sont les outils qui vous permettent de manipuler ces données. Cette section vous apprendra à déclarer, initialiser et utiliser ces éléments fondamentaux.
 
-## Variables
+## Les variables
 
-Une variable est un espace en mémoire nommé qui peut contenir une valeur d'un type spécifique. Cette valeur peut changer au cours de l'exécution du programme.
+### Qu'est-ce qu'une variable ?
+
+Une variable est un emplacement en mémoire qui contient une valeur et qui peut être modifiée pendant l'exécution du programme. Chaque variable possède :
+- Un **nom** (identifiant)
+- Un **type** (Integer, String, Boolean, etc.)
+- Une **valeur**
+- Une **portée** (scope)
 
 ### Déclaration de variables
 
-En Object Pascal, les variables doivent être déclarées avant d'être utilisées. La déclaration se fait généralement dans une section spécifique, délimitée par le mot-clé `var` :
+Pour déclarer une variable, on utilise le mot-clé `var` suivi du nom de la variable et de son type :
 
 ```pascal
 var
   Age: Integer;
   Nom: string;
-  Salaire: Currency;
   EstActif: Boolean;
+  Prix: Double;
 ```
 
-### Où déclarer les variables ?
+**Déclaration multiple :**
+```pascal
+var
+  Largeur, Hauteur, Profondeur: Integer;
+  Prenom, NomFamille: string;
+```
 
-Les variables peuvent être déclarées à différents niveaux :
+### Initialisation de variables
 
-1. **Variables globales (au niveau de l'unité)** - Accessibles partout dans l'unité :
-   ```pascal
-   unit MonUnite;
-
-   interface
-     // Variables visibles par d'autres unités
-     var
-       CompteurGlobal: Integer;
-
-   implementation
-     // Variables privées à cette unité
-     var
-       CompteurInterne: Integer;
-   ```
-
-2. **Variables locales (dans une procédure ou fonction)** - Accessibles uniquement à l'intérieur de la procédure :
-   ```pascal
-   procedure CalculerTotal;
-   var
-     SousTotal: Double;
-     TVA: Double;
-     Total: Double;
-   begin
-     // Code utilisant ces variables
-   end;
-   ```
-
-3. **Variables de classe (dans une classe)** - Déclarées comme champs d'une classe :
-   ```pascal
-   type
-     TClient = class
-     private
-       FNom: string;
-       FAge: Integer;
-     public
-       property Nom: string read FNom write FNom;
-       property Age: Integer read FAge write FAge;
-     end;
-   ```
-
-### Initialisation des variables
-
-Les variables peuvent être initialisées lors de leur déclaration ou plus tard dans le code :
+#### Initialisation au moment de l'utilisation
 
 ```pascal
 var
-  Compteur: Integer = 0;        // Initialisation directe (Delphi 2009+)
-  NomClient: string = 'Dupont';
-
-procedure Test;
-var
-  X: Integer;
+  Compteur: Integer;
 begin
-  X := 10;                      // Initialisation avec l'opérateur d'affectation
+  Compteur := 0;  // Initialisation
+  Compteur := Compteur + 1;
 end;
 ```
 
-Dans Delphi, les variables globales et les champs de classe sont automatiquement initialisés à une valeur par défaut (0 pour les nombres, vide pour les chaînes, `nil` pour les pointeurs et objets, etc.). Cependant, les variables locales ne sont pas initialisées automatiquement, il est donc recommandé de toujours les initialiser explicitement.
+#### Initialisation inline (depuis Delphi 2009)
 
-### Portée des variables
-
-La portée d'une variable détermine où celle-ci peut être utilisée dans votre code :
-
-- Les variables globales sont accessibles dans toute l'unité (et potentiellement d'autres unités)
-- Les variables locales ne sont accessibles que dans le bloc où elles sont déclarées
-- Les variables de boucle sont limitées à la boucle elle-même
+Vous pouvez initialiser une variable directement lors de sa déclaration :
 
 ```pascal
-procedure Exemple;
 var
-  X: Integer;
+  Age: Integer = 25;
+  Nom: string = 'Marie';
+  Prix: Double = 19.99;
+  EstActif: Boolean = True;
 begin
-  X := 10;  // X est accessible ici
-
-  for I := 1 to 10 do  // I est la variable de boucle
-  begin
-    // X et I sont accessibles ici
-    X := X + I;
-  end;
-
-  // X est encore accessible ici, mais pas I
-
-  begin
-    var Y: Integer;  // Variable locale à ce bloc (Delphi 10.3+)
-    Y := X * 2;
-    // X et Y sont accessibles ici
-  end;
-
-  // X est accessible ici, mais pas Y
+  // Les variables sont déjà initialisées
+  ShowMessage(Nom);
 end;
 ```
 
-Pour les versions récentes de Delphi (10.3+), vous pouvez déclarer des variables directement dans un bloc de code grâce à la déclaration de variable inline avec le mot-clé `var`.
+**Avantage :** Cela rend le code plus lisible et évite les oublis d'initialisation.
 
-### Durée de vie des variables
+### Variables locales vs variables globales
 
-La durée de vie d'une variable détermine quand elle est créée et détruite :
+#### Variables locales
 
-- Les variables globales existent pendant toute la durée d'exécution du programme
-- Les variables locales existent uniquement pendant l'exécution de la procédure ou fonction
-- Les variables de boucle existent uniquement pendant l'exécution de la boucle
+Déclarées dans une procédure ou fonction, elles n'existent que pendant l'exécution de celle-ci :
 
-## Constantes
+```pascal
+procedure CalculerTotal;
+var
+  Total: Double;  // Variable locale
+begin
+  Total := 100.0;
+  // Total n'existe que dans cette procédure
+end;
+```
 
-Une constante est similaire à une variable, mais sa valeur ne peut pas être modifiée après sa déclaration. Les constantes améliorent la lisibilité et la maintenance du code.
+#### Variables globales
+
+Déclarées dans la section `implementation` ou `interface` d'une unité :
+
+```pascal
+unit MonUnite;
+
+interface
+
+var
+  CompteurGlobal: Integer;  // Variable globale accessible partout
+
+implementation
+
+var
+  ConfigInterne: string;    // Variable globale accessible uniquement dans cette unité
+
+end.
+```
+
+**Bonnes pratiques :**
+- Privilégiez les variables locales
+- Évitez les variables globales sauf nécessité absolue
+- Les variables globales rendent le code plus difficile à maintenir
+
+### Portée des variables (Scope)
+
+La portée détermine où une variable est accessible dans votre code.
+
+```pascal
+var
+  X: Integer;  // Portée : toute l'unité
+
+procedure Test1;
+var
+  Y: Integer;  // Portée : uniquement dans Test1
+begin
+  X := 10;  // OK : X est accessible
+  Y := 20;  // OK : Y est accessible ici
+end;
+
+procedure Test2;
+begin
+  X := 30;  // OK : X est accessible
+  Y := 40;  // ERREUR : Y n'existe pas dans Test2
+end;
+```
+
+### Variables inline (Delphi 11+)
+
+Depuis Delphi 11, vous pouvez déclarer des variables directement dans le code :
+
+```pascal
+begin
+  var Compteur: Integer := 0;
+  var Nom: string := 'Delphi';
+
+  for var i: Integer := 1 to 10 do
+  begin
+    Compteur := Compteur + i;
+  end;
+
+  ShowMessage(IntToStr(Compteur));
+end;
+```
+
+**Avantage :** La variable est déclarée au plus proche de son utilisation.
+
+## Les constantes
+
+### Qu'est-ce qu'une constante ?
+
+Une constante est une valeur qui ne peut pas être modifiée pendant l'exécution du programme. Elle est définie une seule fois et reste fixe.
 
 ### Déclaration de constantes
 
-Les constantes sont déclarées avec le mot-clé `const` :
+#### Constantes typées
 
 ```pascal
 const
-  PI = 3.14159265358979;
-  VERSION = '1.0.0';
-  MAX_UTILISATEURS = 100;
-  COULEUR_FOND = $00FFFF;  // Valeur hexadécimale (jaune)
+  TauxTVA: Double = 0.20;
+  NombreMaxUtilisateurs: Integer = 100;
+  NomApplication: string = 'MonApp';
+  ModeDebug: Boolean = True;
 ```
 
-Notez que pour les constantes simples, on utilise `=` plutôt que `:=`.
-
-### Constantes typées
-
-Depuis Delphi 2009, vous pouvez déclarer des constantes avec un type explicite :
+#### Constantes non typées
 
 ```pascal
 const
-  PI: Double = 3.14159265358979;
-  VERSION: string = '1.0.0';
+  Pi = 3.14159265358979;
+  Titre = 'Bienvenue';
+  MaxValeur = 1000;
 ```
 
-### Constantes d'énumération
+**Note :** Le type est déduit automatiquement de la valeur assignée.
 
-Les énumérations sont un type spécial de constantes groupées :
+### Constantes vs Variables
+
+| Caractéristique | Variable | Constante |
+|----------------|----------|-----------|
+| Modification | Peut être modifiée | Immuable |
+| Mot-clé | `var` | `const` |
+| Performance | Standard | Légèrement optimisée |
+| Usage | Valeurs changeantes | Valeurs fixes |
+
+### Avantages des constantes
 
 ```pascal
-type
-  TJourSemaine = (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche);
-  TMois = (Janvier, Fevrier, Mars, Avril, Mai, Juin,
-           Juillet, Aout, Septembre, Octobre, Novembre, Decembre);
-```
+const
+  TauxTVA = 0.20;
+  TauxRemise = 0.10;
 
-Ces valeurs peuvent être utilisées comme ceci :
-
-```pascal
+procedure CalculerPrix;
 var
-  Jour: TJourSemaine;
+  PrixHT, PrixTTC: Double;
 begin
-  Jour := Mercredi;
-
-  if Jour = Vendredi then
-    ShowMessage('Bon weekend !');
-
-  // On peut aussi accéder à la valeur ordinale (position)
-  ShowMessage(IntToStr(Ord(Jour)));  // Affiche 2 (car Lundi est 0)
+  PrixHT := 100.0;
+  PrixTTC := PrixHT * (1 + TauxTVA);
+  // Si le taux change, on modifie uniquement la constante
 end;
 ```
 
+**Avantages :**
+1. Code plus lisible (nom explicite au lieu d'une valeur "magique")
+2. Maintenance facilitée (modification en un seul endroit)
+3. Évite les erreurs de frappe
+4. Documentation intégrée
+
 ### Constantes de ressources
 
-Delphi permet également de définir des constantes dans un fichier de ressources (.rc), utiles pour les chaînes multilingues ou les grands blocs de données.
+Les constantes sont souvent utilisées pour les messages et textes :
 
-## Opérateurs
+```pascal
+const
+  MSG_ERREUR_CONNEXION = 'Impossible de se connecter à la base de données';
+  MSG_SUCCES_SAUVEGARDE = 'Les données ont été sauvegardées avec succès';
+  MSG_CONFIRMATION = 'Êtes-vous sûr de vouloir continuer ?';
 
-Les opérateurs permettent d'effectuer des opérations sur les variables et les constantes.
+procedure Sauvegarder;
+begin
+  if EnregistrerDonnees then
+    ShowMessage(MSG_SUCCES_SAUVEGARDE)
+  else
+    ShowMessage(MSG_ERREUR_CONNEXION);
+end;
+```
+
+## Les opérateurs
+
+Les opérateurs permettent d'effectuer des opérations sur les variables et constantes.
 
 ### Opérateurs arithmétiques
 
-Pour les opérations mathématiques de base :
+| Opérateur | Description | Exemple | Résultat |
+|-----------|-------------|---------|----------|
+| `+` | Addition | `5 + 3` | 8 |
+| `-` | Soustraction | `5 - 3` | 2 |
+| `*` | Multiplication | `5 * 3` | 15 |
+| `/` | Division réelle | `5 / 2` | 2.5 |
+| `div` | Division entière | `5 div 2` | 2 |
+| `mod` | Modulo (reste) | `5 mod 2` | 1 |
 
-| Opérateur | Description | Exemple |
-|-----------|-------------|---------|
-| `+` | Addition | `A + B` |
-| `-` | Soustraction | `A - B` |
-| `*` | Multiplication | `A * B` |
-| `/` | Division réelle | `A / B` (donne un résultat à virgule) |
-| `div` | Division entière | `A div B` (donne un entier, ignore reste) |
-| `mod` | Modulo (reste) | `A mod B` (reste de la division entière) |
-
-Exemple d'utilisation :
-
+**Exemples :**
 ```pascal
 var
-  A, B, C: Integer;
-  D: Double;
+  A, B, Resultat: Integer;
+  Quotient: Double;
 begin
   A := 10;
   B := 3;
 
-  C := A + B;      // C = 13
-  C := A - B;      // C = 7
-  C := A * B;      // C = 30
-  C := A div B;    // C = 3 (division entière)
-  C := A mod B;    // C = 1 (reste de 10 / 3)
+  Resultat := A + B;      // 13
+  Resultat := A - B;      // 7
+  Resultat := A * B;      // 30
+  Resultat := A div B;    // 3 (division entière)
+  Resultat := A mod B;    // 1 (reste de la division)
 
-  D := A / B;      // D = 3.33333... (division réelle)
+  Quotient := A / B;      // 3.333... (division réelle)
 end;
 ```
-
-### Opérateurs d'assignation composés
-
-Delphi 12 a introduit des opérateurs d'assignation composés pour simplifier les opérations courantes :
-
-```pascal
-var
-  X: Integer;
-begin
-  X := 5;
-  X += 3;  // Équivalent à X := X + 3
-  X -= 2;  // Équivalent à X := X - 2
-  X *= 4;  // Équivalent à X := X * 4
-  X /= 2;  // Équivalent à X := X / 2 (pour les types réels)
-end;
-```
-
-<span style="color: #0066CC">**Nécessite Delphi 12 ou supérieur**</span>
 
 ### Opérateurs de comparaison
 
-Pour comparer des valeurs :
+| Opérateur | Description | Exemple | Résultat |
+|-----------|-------------|---------|----------|
+| `=` | Égal à | `5 = 5` | True |
+| `<>` | Différent de | `5 <> 3` | True |
+| `<` | Inférieur à | `3 < 5` | True |
+| `>` | Supérieur à | `5 > 3` | True |
+| `<=` | Inférieur ou égal | `5 <= 5` | True |
+| `>=` | Supérieur ou égal | `5 >= 3` | True |
 
-| Opérateur | Description | Exemple |
-|-----------|-------------|---------|
-| `=` | Égal à | `A = B` |
-| `<>` | Différent de | `A <> B` |
-| `<` | Inférieur à | `A < B` |
-| `>` | Supérieur à | `A > B` |
-| `<=` | Inférieur ou égal à | `A <= B` |
-| `>=` | Supérieur ou égal à | `A >= B` |
-
-Exemple d'utilisation :
-
+**Exemples :**
 ```pascal
 var
   Age: Integer;
-  EstAdulte: Boolean;
+  EstMajeur: Boolean;
 begin
   Age := 20;
 
-  EstAdulte := Age >= 18;  // True
+  EstMajeur := Age >= 18;           // True
+
+  if Age = 18 then
+    ShowMessage('Vous avez exactement 18 ans');
+
+  if Age <> 18 then
+    ShowMessage('Vous n''avez pas 18 ans');
 
   if Age > 65 then
     ShowMessage('Senior')
@@ -275,159 +302,517 @@ end;
 
 ### Opérateurs logiques
 
-Pour combiner des expressions booléennes :
+| Opérateur | Description | Exemple | Résultat |
+|-----------|-------------|---------|----------|
+| `and` | ET logique | `True and False` | False |
+| `or` | OU logique | `True or False` | True |
+| `not` | NON logique | `not True` | False |
+| `xor` | OU exclusif | `True xor True` | False |
 
-| Opérateur | Description | Exemple |
-|-----------|-------------|---------|
-| `and` | ET logique | `A and B` |
-| `or` | OU logique | `A or B` |
-| `not` | NON logique | `not A` |
-| `xor` | OU exclusif | `A xor B` |
-
-Exemple d'utilisation :
-
+**Exemples :**
 ```pascal
 var
   Age: Integer;
-  EstMembre: Boolean;
-  AAcces: Boolean;
+  APermis: Boolean;
+  PeutConduire: Boolean;
 begin
   Age := 20;
-  EstMembre := True;
+  APermis := True;
 
-  // Accès autorisé si adulte ET membre
-  AAcces := (Age >= 18) and EstMembre;  // True
+  // ET logique : les deux conditions doivent être vraies
+  PeutConduire := (Age >= 18) and APermis;
 
-  // Autre exemple avec plusieurs conditions
-  if (Age >= 18) and (Age <= 65) and EstMembre then
-    ShowMessage('Membre actif en âge de travailler');
+  // OU logique : au moins une condition doit être vraie
+  if (Age < 18) or (not APermis) then
+    ShowMessage('Ne peut pas conduire');
+
+  // NON logique : inverse la valeur booléenne
+  if not PeutConduire then
+    ShowMessage('Conduite interdite');
 end;
 ```
 
-Les opérateurs logiques évaluent généralement les deux opérandes, même si le résultat peut être déterminé à partir du premier. Dans Delphi, il existe aussi des opérateurs de court-circuit qui peuvent optimiser l'évaluation :
+### Tables de vérité
 
-```pascal
-// Opérateurs de court-circuit
-if EstMembre and then (CalculerPoints > 100) then
-  // Le calcul n'est effectué que si EstMembre est True
+**Opérateur AND :**
+| A | B | A and B |
+|---|---|---------|
+| True | True | True |
+| True | False | False |
+| False | True | False |
+| False | False | False |
 
-if EstBloque or else (SoldeNegatif) then
-  // Le solde n'est vérifié que si EstBloque est False
-```
+**Opérateur OR :**
+| A | B | A or B |
+|---|---|--------|
+| True | True | True |
+| True | False | True |
+| False | True | True |
+| False | False | False |
+
+**Opérateur NOT :**
+| A | not A |
+|---|-------|
+| True | False |
+| False | True |
 
 ### Opérateurs de chaînes
 
-Pour les chaînes de caractères :
+| Opérateur | Description | Exemple |
+|-----------|-------------|---------|
+| `+` | Concaténation | `'Hello' + ' ' + 'World'` → `'Hello World'` |
 
+**Exemples :**
 ```pascal
 var
   Prenom, Nom, NomComplet: string;
+  Message: string;
 begin
-  Prenom := 'Jean';
+  Prenom := 'Marie';
   Nom := 'Dupont';
 
-  // Concaténation avec l'opérateur +
-  NomComplet := Prenom + ' ' + Nom;  // 'Jean Dupont'
+  // Concaténation simple
+  NomComplet := Prenom + ' ' + Nom;  // 'Marie Dupont'
+
+  // Concaténation avec des variables et du texte
+  Message := 'Bonjour ' + Prenom + ', bienvenue !';
+
+  // Concaténation avec des nombres (conversion automatique)
+  Message := 'Vous avez ' + IntToStr(25) + ' ans';
 end;
 ```
 
-### Opérateurs d'ensemble
+### Opérateurs d'affectation
 
-Pour manipuler les ensembles :
+| Opérateur | Description | Équivalent |
+|-----------|-------------|------------|
+| `:=` | Affectation simple | `X := 5` |
+| `+=` | Addition et affectation | `X := X + 5` |
+| `-=` | Soustraction et affectation | `X := X - 5` |
+| `*=` | Multiplication et affectation | `X := X * 5` |
+| `/=` | Division et affectation | `X := X / 5` |
+
+**Note :** Les opérateurs composés (`+=`, `-=`, etc.) sont disponibles depuis Delphi 2010.
+
+**Exemples :**
+```pascal
+var
+  Compteur: Integer;
+  Total: Double;
+begin
+  Compteur := 10;
+  Compteur += 5;   // Équivalent à : Compteur := Compteur + 5;  // 15
+  Compteur -= 3;   // Équivalent à : Compteur := Compteur - 3;  // 12
+  Compteur *= 2;   // Équivalent à : Compteur := Compteur * 2;  // 24
+
+  Total := 100.0;
+  Total /= 4;      // Équivalent à : Total := Total / 4;  // 25.0
+end;
+```
+
+### Opérateurs d'incrémentation et décrémentation
+
+```pascal
+var
+  Compteur: Integer;
+begin
+  Compteur := 10;
+
+  Inc(Compteur);      // Compteur := Compteur + 1;  // 11
+  Inc(Compteur, 5);   // Compteur := Compteur + 5;  // 16
+
+  Dec(Compteur);      // Compteur := Compteur - 1;  // 15
+  Dec(Compteur, 3);   // Compteur := Compteur - 3;  // 12
+end;
+```
+
+**Avantage :** `Inc` et `Dec` sont légèrement plus rapides que `+=` et `-=`.
+
+### Opérateurs sur les bits
 
 | Opérateur | Description | Exemple |
 |-----------|-------------|---------|
-| `+` | Union | `A + B` |
-| `-` | Différence | `A - B` |
-| `*` | Intersection | `A * B` |
-| `<=` | Est sous-ensemble de | `A <= B` |
-| `>=` | Est sur-ensemble de | `A >= B` |
-| `in` | Appartient à | `e in A` |
+| `and` | ET bit à bit | `12 and 10` → 8 |
+| `or` | OU bit à bit | `12 or 10` → 14 |
+| `xor` | OU exclusif bit à bit | `12 xor 10` → 6 |
+| `not` | Complément bit à bit | `not 12` |
+| `shl` | Décalage à gauche | `5 shl 2` → 20 |
+| `shr` | Décalage à droite | `20 shr 2` → 5 |
 
-Exemple d'utilisation :
+**Exemples :**
+```pascal
+var
+  A, B, Resultat: Integer;
+begin
+  A := 12;  // En binaire : 1100
+  B := 10;  // En binaire : 1010
+
+  Resultat := A and B;  // 1000 = 8
+  Resultat := A or B;   // 1110 = 14
+  Resultat := A xor B;  // 0110 = 6
+
+  // Décalages (multiplication/division par puissances de 2)
+  Resultat := 5 shl 2;  // 5 * 2² = 20
+  Resultat := 20 shr 2; // 20 / 2² = 5
+end;
+```
+
+### Opérateur d'appartenance
+
+L'opérateur `in` teste si une valeur appartient à un ensemble :
 
 ```pascal
 type
-  TFruit = (Pomme, Poire, Banane, Orange, Fraise);
-  TFruits = set of TFruit;
+  TJourSemaine = (Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi, Dimanche);
 
 var
-  FruitsRouges, FruitsJaunes, MesFruits: TFruits;
+  Jour: TJourSemaine;
+  EstWeekend: Boolean;
 begin
-  FruitsRouges := [Pomme, Fraise];
-  FruitsJaunes := [Banane, Poire];
+  Jour := Samedi;
 
-  // Union
-  MesFruits := FruitsRouges + FruitsJaunes;  // [Pomme, Poire, Banane, Fraise]
+  EstWeekend := Jour in [Samedi, Dimanche];  // True
 
-  // Test d'appartenance
-  if Pomme in MesFruits then
-    ShowMessage('J''ai des pommes !');
+  if Jour in [Lundi..Vendredi] then
+    ShowMessage('Jour ouvrable')
+  else
+    ShowMessage('Week-end');
 end;
 ```
 
-### Priorité des opérateurs
+### Opérateur is
 
-Comme en mathématiques, les opérateurs ont une priorité qui détermine l'ordre d'évaluation :
+Vérifie si un objet est d'un type particulier :
 
-1. Opérateurs unaires (`not`, `-` unaire)
-2. Opérateurs multiplicatifs (`*`, `/`, `div`, `mod`, `and`)
-3. Opérateurs additifs (`+`, `-`, `or`, `xor`)
-4. Opérateurs relationnels (`=`, `<>`, `<`, `>`, `<=`, `>=`, `in`)
+```pascal
+if MonComposant is TButton then
+  ShowMessage('C''est un bouton');
+```
 
-Pour modifier cette priorité, utilisez des parenthèses :
+### Opérateur as
+
+Convertit un objet vers un type spécifique :
 
 ```pascal
 var
-  A, B, C, Resultat: Integer;
+  MonBouton: TButton;
 begin
-  A := 5;
-  B := 3;
-  C := (10);
-
-  // Sans parenthèses : multiplication d'abord
-  Resultat := A + B * C;      // 5 + (3 * 10) = 5 + 30 = 35
-
-  // Avec parenthèses : addition d'abord
-  Resultat := (A + B) * C;    // (5 + 3) * 10 = 8 * 10 = 80
+  if MonComposant is TButton then
+    MonBouton := MonComposant as TButton;
 end;
 ```
 
-## Conseils pratiques
+## 3.3.1 L'opérateur ternaire en Delphi 13
 
-1. **Nommage explicite** :
-   - Utilisez des noms de variables descriptifs qui expliquent leur rôle
-   - Adoptez une convention cohérente (comme PascalCase ou camelCase)
+### Nouveauté Delphi 13 Florence
 
-2. **Gestion de la portée** :
-   - Limitez la portée des variables au minimum nécessaire
-   - Évitez les variables globales quand possible
+Delphi 13 introduit l'**opérateur ternaire** (également appelé opérateur conditionnel), une fonctionnalité très attendue par la communauté. Cet opérateur permet d'écrire des expressions conditionnelles de manière plus concise.
 
-3. **Utilisation des constantes** :
-   - Utilisez des constantes pour toutes les valeurs fixes dans votre code
-   - Regroupez les constantes liées dans des énumérations
+### Syntaxe
 
-4. **Clarté du code** :
-   - Utilisez des parenthèses pour clarifier l'ordre des opérations
-   - Divisez les expressions complexes en plusieurs étapes
+```pascal
+resultat := si condition alors valeur_si_vrai sinon valeur_si_faux;
+```
 
-5. **Initialisation** :
-   - Initialisez toujours vos variables locales avant de les utiliser
-   - Vérifiez les valeurs avant les opérations problématiques (divisions, etc.)
+En Delphi 13, la syntaxe est :
 
-6. **Conventions de préfixe** :
-   - Pour les champs privés de classes, le préfixe `F` est couramment utilisé :
-   ```pascal
-   TClient = class
-   private
-     FNom: string;    // Champ privé avec préfixe F
-   public
-     property Nom: string read FNom write FNom;
-   end;
-   ```
+```pascal
+resultat := if condition then valeur_si_vrai else valeur_si_faux;
+```
+
+### Exemples d'utilisation
+
+#### Exemple simple
+
+**Avant Delphi 13 :**
+```pascal
+var
+  Age: Integer;
+  Statut: string;
+begin
+  Age := 20;
+
+  if Age >= 18 then
+    Statut := 'Majeur'
+  else
+    Statut := 'Mineur';
+end;
+```
+
+**Avec Delphi 13 :**
+```pascal
+var
+  Age: Integer;
+  Statut: string;
+begin
+  Age := 20;
+
+  Statut := if Age >= 18 then 'Majeur' else 'Mineur';
+end;
+```
+
+#### Exemple avec calculs
+
+```pascal
+var
+  Quantite: Integer;
+  PrixUnitaire: Double;
+  Remise: Double;
+begin
+  Quantite := 15;
+  PrixUnitaire := 10.0;
+
+  // Application d'une remise si quantité >= 10
+  Remise := if Quantite >= 10 then 0.15 else 0.0;
+
+  // Calcul direct du prix
+  Total := Quantite * PrixUnitaire * (1 - Remise);
+end;
+```
+
+#### Exemple avec chaînes de caractères
+
+```pascal
+var
+  EstConnecte: Boolean;
+  Message: string;
+begin
+  EstConnecte := True;
+
+  Message := if EstConnecte then 'Bienvenue !' else 'Veuillez vous connecter';
+  ShowMessage(Message);
+end;
+```
+
+#### Opérateurs ternaires imbriqués
+
+```pascal
+var
+  Note: Integer;
+  Mention: string;
+begin
+  Note := 15;
+
+  Mention := if Note >= 16 then 'Très bien'
+             else if Note >= 14 then 'Bien'
+             else if Note >= 12 then 'Assez bien'
+             else if Note >= 10 then 'Passable'
+             else 'Insuffisant';
+
+  ShowMessage('Mention : ' + Mention);
+end;
+```
+
+#### Utilisation dans des affectations de propriétés
+
+```pascal
+// Activer/désactiver un bouton selon une condition
+Button1.Enabled := if Edit1.Text <> '' then True else False;
+
+// Version simplifiée (le résultat est déjà booléen)
+Button1.Enabled := Edit1.Text <> '';
+
+// Changer la couleur selon une condition
+Panel1.Color := if Erreur then clRed else clGreen;
+```
+
+#### Utilisation dans des appels de fonctions
+
+```pascal
+ShowMessage(if Valide then 'Données valides' else 'Erreur de validation');
+
+Resultat := CalculerTotal(if AppliquerTVA then TauxTVA else 0);
+```
+
+### Avantages de l'opérateur ternaire
+
+1. **Code plus concis** : Réduit le nombre de lignes
+2. **Lisibilité améliorée** : Pour les conditions simples
+3. **Expressions fonctionnelles** : Permet d'utiliser des conditions dans des expressions
+4. **Modernisation** : Aligne Delphi avec d'autres langages modernes
+
+### Quand utiliser l'opérateur ternaire ?
+
+**✅ Utilisez-le pour :**
+- Affectations simples basées sur une condition
+- Valeurs par défaut conditionnelles
+- Messages ou textes conditionnels
+- Conditions simples et évidentes
+
+**❌ Évitez-le pour :**
+- Logique complexe avec plusieurs conditions
+- Code qui nécessite des explications détaillées
+- Situations où un `if...else` traditionnel est plus clair
+
+### Comparaison : if traditionnel vs opérateur ternaire
+
+```pascal
+// Cas simple : opérateur ternaire préférable
+Couleur := if Actif then clGreen else clGray;
+
+// Cas complexe : if traditionnel préférable
+if (Utilisateur.EstConnecte) and (Utilisateur.ALesDroits) and (not Utilisateur.EstBloque) then
+begin
+  AfficherTableauDeBord;
+  ChargerDonnees;
+  InitialiserSession;
+end
+else
+begin
+  AfficherPageConnexion;
+  LoggerTentative;
+end;
+```
+
+## Priorité des opérateurs
+
+Lorsque plusieurs opérateurs sont utilisés dans une expression, ils sont évalués selon leur priorité :
+
+| Priorité | Opérateurs | Type |
+|----------|------------|------|
+| 1 (haute) | `not`, `@` | Unaires |
+| 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr`, `as` | Multiplicatifs |
+| 3 | `+`, `-`, `or`, `xor` | Additifs |
+| 4 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in`, `is` | Relationnels |
+| 5 (basse) | Opérateur ternaire | Conditionnel |
+
+**Exemples :**
+```pascal
+var
+  Resultat: Integer;
+begin
+  Resultat := 5 + 3 * 2;      // 11 (pas 16) : * avant +
+  Resultat := (5 + 3) * 2;    // 16 : parenthèses en priorité
+
+  if (X > 0) and (Y > 0) then // Bonnes pratiques : utiliser des parenthèses
+    ShowMessage('Positif');
+end;
+```
+
+**Conseil :** En cas de doute, utilisez des parenthèses pour clarifier l'ordre d'évaluation.
+
+## Bonnes pratiques
+
+### Nommage des variables
+
+```pascal
+// ✅ Bonnes pratiques
+var
+  NombreUtilisateurs: Integer;
+  PrixTotalHT: Double;
+  EstValide: Boolean;
+  MessageErreur: string;
+
+// ❌ Mauvaises pratiques
+var
+  x: Integer;           // Nom trop vague
+  p: Double;            // Pas explicite
+  flag: Boolean;        // Pas clair
+  str: string;          // Nom générique
+```
+
+### Initialisation
+
+```pascal
+// ✅ Toujours initialiser les variables
+var
+  Compteur: Integer = 0;
+  Total: Double = 0.0;
+  Nom: string = '';
+
+// ❌ Variable non initialisée (valeur imprévisible)
+var
+  Compteur: Integer;
+begin
+  Compteur := Compteur + 1;  // DANGER : Compteur a une valeur aléatoire
+end;
+```
+
+### Utilisation des constantes
+
+```pascal
+// ✅ Utiliser des constantes pour les valeurs fixes
+const
+  TAUX_TVA = 0.20;
+  NB_MAX_TENTATIVES = 3;
+  MSG_ERREUR = 'Une erreur est survenue';
+
+// ❌ Valeurs "magiques" dans le code
+if Tentatives > 3 then  // Que représente 3 ?
+  ShowMessage('Une erreur est survenue');
+```
+
+### Opérateurs logiques
+
+```pascal
+// ✅ Utiliser des parenthèses pour la clarté
+if (Age >= 18) and (APermis) then
+
+// ✅ Simplifier les expressions booléennes
+EstValide := (Champ <> '');  // Au lieu de : if Champ <> '' then EstValide := True else EstValide := False;
+
+// ✅ Éviter les doubles négations
+if EstActif then  // Au lieu de : if not (not EstActif) then
+```
+
+## Erreurs courantes à éviter
+
+### Confusion entre = et :=
+
+```pascal
+// ❌ ERREUR : = est pour la comparaison
+X = 5;  // Erreur de syntaxe
+
+// ✅ CORRECT : := est pour l'affectation
+X := 5;
+
+// ✅ CORRECT : = pour les comparaisons
+if X = 5 then
+  ShowMessage('X vaut 5');
+```
+
+### Division entière vs division réelle
+
+```pascal
+var
+  A, B: Integer;
+  Resultat: Double;
+begin
+  A := 5;
+  B := 2;
+
+  // ❌ Division entière (résultat tronqué)
+  Resultat := A div B;  // Resultat = 2
+
+  // ✅ Division réelle
+  Resultat := A / B;    // Resultat = 2.5
+end;
+```
+
+### Modification de constantes
+
+```pascal
+const
+  MaxValeur = 100;
+
+begin
+  MaxValeur := 200;  // ❌ ERREUR : impossible de modifier une constante
+end;
+```
+
+## Points clés à retenir
+
+1. Utilisez `:=` pour l'affectation et `=` pour la comparaison
+2. Initialisez toujours vos variables
+3. Privilégiez les constantes pour les valeurs fixes
+4. Choisissez des noms de variables explicites
+5. Utilisez les parenthèses pour clarifier les expressions complexes
+6. L'opérateur ternaire (Delphi 13) simplifie les affectations conditionnelles
+7. Utilisez `Inc` et `Dec` pour les incrémentations simples
+8. Les opérateurs composés (`+=`, `-=`) rendent le code plus concis
 
 ---
 
-Cette section vous a présenté les variables, constantes et opérateurs fondamentaux en Object Pascal. Ces concepts sont les outils de base que vous utiliserez dans tous vos programmes Delphi. Dans la prochaine section, nous aborderons les structures de contrôle qui vous permettront de diriger le flux d'exécution de vos programmes.
+La maîtrise des variables, constantes et opérateurs est essentielle pour écrire du code efficace et maintenable. Dans la section suivante, nous découvrirons les structures de contrôle qui permettent de diriger le flux d'exécution de vos programmes.
 
-⏭️ [Structures de contrôle (conditions, boucles)](/03-langage-object-pascal/04-structures-de-controle.md)
+⏭️ [L'opérateur ternaire en Delphi 13](/03-langage-object-pascal/03.1-operateur-ternaire.md)

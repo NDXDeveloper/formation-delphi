@@ -1,57 +1,69 @@
-# 3.1 Syntaxe fondamentale
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 3.1 Syntaxe fondamentale du langage Object Pascal
 
-Le langage Object Pascal utilisé dans Delphi est à la fois puissant et accessible. Cette section vous présentera les bases syntaxiques dont vous aurez besoin pour commencer à programmer avec Delphi.
+## Introduction
+
+Object Pascal est le langage de programmation utilisé par Delphi. Sa syntaxe est claire, lisible et structurée, ce qui en fait un excellent langage pour débuter en programmation. Dans cette section, nous allons découvrir les éléments de base qui constituent tout programme Delphi.
 
 ## Structure générale d'un programme
 
-Un programme Delphi est généralement composé de plusieurs unités (fichiers `.pas`). Chaque unité possède une structure spécifique :
+Un programme Delphi est organisé en unités (units) qui contiennent du code. Voici la structure de base d'une unité :
 
 ```pascal
-unit NomUnite;
+unit MonUnite;
 
 interface
-  // Déclarations publiques (visibles par les autres unités)
-  // Types, constantes, variables, procédures, fonctions, classes...
+
+// Déclarations publiques (visibles par d'autres unités)
 
 implementation
-  // Code d'implémentation et déclarations privées
-  // Définitions des procédures et fonctions
-  // Variables locales à l'unité
 
-initialization
-  // Code exécuté quand l'unité est chargée (optionnel)
-
-finalization
-  // Code exécuté quand l'unité est déchargée (optionnel)
+// Code d'implémentation
 
 end.
 ```
 
-Remarquez que chaque instruction se termine par un point-virgule (`;`) et que l'unité elle-même se termine par `end.` (avec un point).
+Chaque unité se termine obligatoirement par le mot-clé `end` suivi d'un point (`.`).
 
-## Commentaires
+## Les commentaires
 
-Les commentaires permettent de documenter votre code. Delphi supporte deux styles de commentaires :
+Les commentaires permettent de documenter votre code. Ils sont ignorés lors de la compilation et servent uniquement à améliorer la lisibilité pour les développeurs.
+
+Il existe trois façons d'écrire des commentaires en Object Pascal :
 
 ```pascal
 // Commentaire sur une seule ligne
 
-{ Commentaire
-  sur plusieurs
-  lignes }
+{ Commentaire sur une ou
+  plusieurs lignes }
 
-(* Autre style de
-   commentaire sur
-   plusieurs lignes *)
+(* Autre forme de commentaire
+   sur plusieurs lignes *)
 ```
 
-Il est recommandé d'utiliser généreusement les commentaires pour expliquer votre code, surtout pour les débutants.
+**Recommandation :** Privilégiez `//` pour les commentaires courts et `{ }` pour les commentaires longs ou la désactivation temporaire de code.
 
-## Sensibilité à la casse
+## Les instructions et le point-virgule
 
-Object Pascal n'est **pas sensible à la casse**. Cela signifie que les identifiants suivants sont considérés comme identiques :
+En Object Pascal, chaque instruction se termine par un point-virgule (`;`) qui sert de séparateur d'instructions.
+
+```pascal
+var
+  Age: Integer;
+  Nom: string;
+begin
+  Age := 25;
+  Nom := 'Marie';
+  ShowMessage('Bonjour ' + Nom);
+end;
+```
+
+**Point important :** Le point-virgule n'est pas obligatoire avant certains mots-clés comme `end`, `else`, `until`, ou `except`, car ces mots-clés marquent déjà une séparation logique.
+
+## La casse : sensibilité aux majuscules/minuscules
+
+Object Pascal n'est **pas sensible à la casse** pour les identifiants. Cela signifie que :
 
 ```pascal
 MaVariable
@@ -59,139 +71,169 @@ mavariable
 MAVARIABLE
 ```
 
-Cependant, il est fortement recommandé d'adopter une convention de nommage cohérente, comme le "PascalCase" (chaque mot commence par une majuscule) pour améliorer la lisibilité.
+Ces trois écritures font référence à la même variable. Cependant, par convention et pour la lisibilité, on utilise généralement :
+- **PascalCase** (majuscule à chaque début de mot) pour les noms de types, classes, procédures et fonctions : `MonBouton`, `CalculerTotal`
+- **camelCase** (première lettre minuscule) pour les variables locales : `monCompteur`, `totalVentes`
 
-## Blocs de code
+## Les blocs begin/end
 
-Les blocs de code sont délimités par les mots-clés `begin` et `end`. Ils regroupent plusieurs instructions à exécuter séquentiellement :
+Les mots-clés `begin` et `end` délimitent un bloc d'instructions. Ils fonctionnent comme des accolades `{ }` dans d'autres langages.
 
 ```pascal
 begin
+  // Première instruction
+  // Deuxième instruction
+  // Troisième instruction
+end;
+```
+
+Un bloc peut contenir une ou plusieurs instructions. Ils sont particulièrement utiles avec les structures de contrôle :
+
+```pascal
+if Condition then
+begin
+  // Plusieurs instructions si la condition est vraie
   Instruction1;
   Instruction2;
   Instruction3;
 end;
 ```
 
-Notez que le mot-clé `end` est généralement suivi d'un point-virgule, sauf à la fin de l'unité où il est suivi d'un point.
+**Note :** Si vous n'avez qu'une seule instruction après un `if`, le `begin/end` n'est pas obligatoire, mais il est recommandé pour la clarté.
 
-## Indentation et formatage
+## L'indentation et la lisibilité
 
-Bien que l'indentation ne soit pas obligatoire pour le compilateur, elle est essentielle pour la lisibilité du code :
+Bien que l'indentation ne soit pas obligatoire en Object Pascal (contrairement à Python), elle est essentielle pour la lisibilité du code.
 
+**Mauvaise pratique :**
 ```pascal
-procedure ExempleIndentation;
+procedure Test;
 begin
-  if Condition then
+if X > 0 then
+begin
+Y := X * 2;
+ShowMessage('Résultat');
+end;
+end;
+```
+
+**Bonne pratique :**
+```pascal
+procedure Test;
+begin
+  if X > 0 then
   begin
-    // Code si la condition est vraie
-    Instruction1;
-    Instruction2;
-  end
-  else
-  begin
-    // Code si la condition est fausse
-    Instruction3;
-    Instruction4;
+    Y := X * 2;
+    ShowMessage('Résultat');
   end;
 end;
 ```
 
-## Déclaration de variables
+L'IDE Delphi offre des outils de formatage automatique du code (Ctrl+D) qui appliquent les conventions d'indentation.
 
-Les variables sont déclarées avec le mot-clé `var` suivi du nom de la variable et de son type :
+## Les mots-clés réservés
+
+Object Pascal possède des mots-clés réservés qui ne peuvent pas être utilisés comme noms de variables ou d'identifiants. Voici les principaux :
+
+- **Structure :** `program`, `unit`, `interface`, `implementation`, `uses`, `begin`, `end`
+- **Déclarations :** `var`, `const`, `type`, `procedure`, `function`, `class`, `record`
+- **Contrôle :** `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `while`, `do`, `repeat`, `until`
+- **Autres :** `and`, `or`, `not`, `nil`, `true`, `false`, `try`, `except`, `finally`, `raise`
+
+## Les espaces blancs
+
+Les espaces, tabulations et sauts de ligne sont généralement ignorés par le compilateur (sauf dans les chaînes de caractères). Vous pouvez les utiliser librement pour améliorer la lisibilité :
 
 ```pascal
+X:=Y+Z;        // Valide mais peu lisible
+X := Y + Z;    // Préférable
+```
+
+## Exemple complet : Structure d'une procédure simple
+
+Voici un exemple qui rassemble plusieurs éléments de syntaxe :
+
+```pascal
+procedure AfficherMessage;
 var
-  Age: Integer;
-  Nom: string;
-  EstActif: Boolean;
-  Prix: Double;
-```
-
-Vous pouvez également déclarer plusieurs variables du même type sur une ligne :
-
-```pascal
-var
-  X, Y, Z: Integer;
-  Prenom, Nom: string;
-```
-
-## Affectation de valeurs
-
-L'opérateur d'affectation en Object Pascal est `:=` (et non `=` comme dans certains autres langages) :
-
-```pascal
-Age := 25;
-Nom := 'Dupont';
-EstActif := True;
-Prix := 19.99;
-```
-
-## Terminologie importante
-
-Pour faciliter la compréhension des prochaines sections, voici quelques termes fondamentaux :
-
-- **Identificateur** : nom donné à une variable, une procédure, une fonction, une classe, etc.
-- **Mot-clé** : mot réservé par le langage (comme `begin`, `end`, `var`, `if`, etc.)
-- **Expression** : combinaison de variables, constantes et opérateurs qui produit une valeur
-- **Instruction** : ligne de code qui effectue une action spécifique
-- **Bloc** : ensemble d'instructions regroupées entre `begin` et `end`
-
-## Premier exemple : Hello World
-
-Voici un exemple simple de code dans un événement OnClick d'un bouton qui affiche un message :
-
-```pascal
-procedure TForm1.ButtonHelloClick(Sender: TObject);
+  Message: string;  // Déclaration d'une variable locale
 begin
-  ShowMessage('Bonjour, monde !');
+  // Initialisation de la variable
+  Message := 'Bienvenue dans Delphi !';
+
+  // Affichage du message
+  ShowMessage(Message);
 end;
 ```
 
-## Noms de fichiers et unités
+**Décortiquons ce code :**
+1. `procedure AfficherMessage;` - Déclaration de la procédure
+2. `var Message: string;` - Déclaration d'une variable locale de type chaîne
+3. `begin` - Début du bloc d'instructions
+4. `Message := 'Bienvenue dans Delphi !';` - Affectation d'une valeur
+5. `ShowMessage(Message);` - Appel d'une procédure système
+6. `end;` - Fin du bloc
 
-Dans Delphi, le nom du fichier `.pas` correspond généralement au nom de l'unité qu'il contient. Par exemple, l'unité `MaForme` sera stockée dans le fichier `MaForme.pas`.
+## Les séparateurs et délimiteurs
 
-Les formulaires ont également un fichier `.dfm` associé qui stocke les informations de conception visuelle (comme `MaForme.dfm`).
+Object Pascal utilise plusieurs symboles comme séparateurs et délimiteurs :
 
-## Projet principal
+| Symbole | Usage |
+|---------|-------|
+| `;` | Séparateur d'instructions |
+| `,` | Séparateur de paramètres ou d'éléments de liste |
+| `.` | Accès aux membres d'un objet ou d'un enregistrement |
+| `:` | Séparateur entre identifiant et type |
+| `()` | Délimiteur de paramètres ou expression |
+| `[]` | Délimiteur pour les tableaux et ensembles |
+| `''` | Délimiteur pour les chaînes de caractères |
 
-Un projet Delphi contient généralement un fichier `.dpr` qui sert de point d'entrée au programme :
+## Règles de nommage
 
+Pour nommer vos variables, procédures et autres identifiants, suivez ces règles :
+
+1. Un identifiant doit commencer par une lettre (A-Z, a-z) ou un underscore (_)
+2. Il peut ensuite contenir des lettres, des chiffres (0-9) ou des underscores
+3. Il ne peut pas contenir d'espaces ou de caractères spéciaux
+4. Il ne peut pas être un mot-clé réservé
+
+**Exemples valides :**
 ```pascal
-program MonApplication;
-
-uses
-  System.SysUtils,
-  MaForme in 'MaForme.pas' {Form1};
-
-{$R *.res}
-
-begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
-  Application.Run;
-end.
+MaVariable
+ma_variable
+Variable123
+_temp
+CalculTotal
 ```
 
-La section `uses` liste les unités utilisées par le projet, et les instructions dans le bloc principal initialisent et lancent l'application.
-
-## Directive de compilation
-
-Les directives de compilation sont des instructions spéciales pour le compilateur, encadrées par `{$...}` :
-
+**Exemples invalides :**
 ```pascal
-{$IFDEF DEBUG}
-  ShowMessage('Mode débogage activé');
-{$ENDIF}
+123Variable    // Commence par un chiffre
+Ma-Variable    // Contient un tiret
+Ma Variable    // Contient un espace
+begin          // Mot-clé réservé
 ```
 
-Ces directives sont puissantes et permettent de personnaliser la compilation selon différents critères.
+## Points clés à retenir
+
+1. Chaque instruction se termine par un point-virgule (`;`)
+2. Les blocs de code sont délimités par `begin` et `end`
+3. Object Pascal n'est pas sensible à la casse
+4. L'indentation améliore la lisibilité mais n'est pas obligatoire
+5. Les commentaires commencent par `//` ou sont entourés de `{ }`
+6. Les mots-clés réservés ne peuvent pas être utilisés comme identifiants
+7. Une unité se termine toujours par `end.` (avec un point)
+
+## Conseils pour débuter
+
+- Prenez l'habitude d'indenter votre code dès le début
+- Commentez votre code de manière claire et concise
+- Utilisez des noms de variables explicites (évitez `x`, `y`, `z` sauf pour des cas très simples)
+- Respectez les conventions de nommage pour faciliter la lecture
+- Utilisez le formateur automatique de l'IDE (Ctrl+D) pour garder un code propre
 
 ---
 
-Dans les prochaines sections, nous aborderons plus en détail les types de données, les structures de contrôle et la programmation orientée objet en Object Pascal. Cette introduction à la syntaxe fondamentale vous donne les bases pour comprendre et écrire du code Delphi.
+La maîtrise de cette syntaxe fondamentale est la première étape essentielle pour programmer efficacement en Delphi. Dans les sections suivantes, nous approfondirons chacun de ces concepts et découvrirons les types de données, les variables, et les structures de contrôle.
 
 ⏭️ [Types de données et conversions](/03-langage-object-pascal/02-types-de-donnees-et-conversions.md)

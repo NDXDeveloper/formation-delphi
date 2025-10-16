@@ -1,223 +1,374 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.9 Organisation du code source et modularité
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Une bonne organisation du code est essentielle pour développer des applications maintenables et évolutives. Dans cette section, nous allons explorer comment structurer efficacement votre code Delphi et comment utiliser la modularité pour créer des applications bien conçues.
+L'**organisation du code source** et la **modularité** sont essentielles pour créer des applications maintenables, évolutives et compréhensibles. Un code bien organisé est comme une maison bien rangée : on trouve facilement ce qu'on cherche et il est agréable d'y travailler.
 
 ## Pourquoi organiser son code ?
 
-Un code bien organisé offre de nombreux avantages :
+### Analogie du monde réel
 
-- **Lisibilité** : Le code est plus facile à comprendre
-- **Maintenabilité** : Les modifications et corrections sont plus simples à réaliser
-- **Réutilisabilité** : Les composants peuvent être réutilisés dans d'autres projets
-- **Collaboration** : Plusieurs développeurs peuvent travailler ensemble plus efficacement
-- **Testabilité** : Le code modulaire est plus facile à tester
-- **Évolutivité** : L'application peut grandir sans devenir incontrôlable
+Imaginez deux bibliothèques :
 
-## Les unités : le fondement de la modularité
+**Bibliothèque désorganisée** :
+- Les livres sont empilés au hasard
+- Pas de classification
+- Impossible de trouver un livre spécifique
+- Perte de temps constante
 
-En Delphi, l'unité (unit) est l'élément de base de la modularité. Une unité est un fichier `.pas` qui contient une portion isolée de code avec ses propres déclarations et implémentations.
+**Bibliothèque organisée** :
+- Les livres sont classés par catégories
+- Chaque section a sa place
+- Étiquettes claires
+- Facile de trouver et de ranger
+
+Votre code doit être comme la bibliothèque organisée !
+
+### Avantages d'un code bien organisé
+
+1. **Lisibilité** : facile à comprendre
+2. **Maintenabilité** : facile à modifier et corriger
+3. **Réutilisabilité** : facile de réutiliser des parties du code
+4. **Collaboration** : facile de travailler en équipe
+5. **Évolutivité** : facile d'ajouter de nouvelles fonctionnalités
+6. **Tests** : facile de tester chaque partie séparément
+7. **Performance** : compilation plus rapide avec une bonne organisation
+
+## Les unités (Units) en Delphi
+
+### Qu'est-ce qu'une unité ?
+
+Une **unité** (unit) est un fichier source Delphi qui contient du code réutilisable. C'est le bloc de construction fondamental pour organiser votre code en Delphi.
+
+Chaque unité :
+- Est un fichier `.pas`
+- A un nom unique
+- Contient des types, des classes, des fonctions, des procédures, des constantes
+- Peut être réutilisée dans différents projets
 
 ### Structure d'une unité
 
-Rappelons la structure d'une unité Delphi :
+```pascal
+unit NomDeLUnite;
+
+// Section INTERFACE : ce qui est visible de l'extérieur
+interface
+
+uses
+  System.SysUtils, System.Classes;  // Unités utilisées
+
+type
+  // Déclaration des types, classes, etc.
+  TMaClasse = class
+  public
+    procedure FaireQuelqueChose;
+  end;
+
+// Déclaration des fonctions et procédures publiques
+function CalculerTotal(A, B: Integer): Integer;
+
+// Section IMPLEMENTATION : le code interne
+implementation
+
+procedure TMaClasse.FaireQuelqueChose;
+begin
+  // Implémentation
+end;
+
+function CalculerTotal(A, B: Integer): Integer;
+begin
+  Result := A + B;
+end;
+
+// Section INITIALIZATION (optionnelle)
+initialization
+  // Code exécuté au démarrage de l'application
+
+// Section FINALIZATION (optionnelle)
+finalization
+  // Code exécuté à la fermeture de l'application
+
+end.
+```
+
+### Les sections d'une unité
+
+#### 1. Interface
+
+La section **interface** définit ce qui est **visible et accessible** depuis l'extérieur de l'unité.
+
+```pascal
+interface
+
+uses
+  System.SysUtils;  // Unités nécessaires pour l'interface
+
+type
+  TCalculatrice = class
+  public
+    function Additionner(A, B: Integer): Integer;
+  end;
+
+// Cette fonction est accessible de l'extérieur
+function CalculerMoyenne(Valeurs: array of Double): Double;
+```
+
+**Règle** : Tout ce qui est dans `interface` est public et utilisable par d'autres unités.
+
+#### 2. Implementation
+
+La section **implementation** contient le code réel des méthodes et peut contenir des éléments privés à l'unité.
+
+```pascal
+implementation
+
+uses
+  System.Math;  // Unité nécessaire uniquement pour l'implémentation
+
+// Fonction privée, invisible de l'extérieur
+function FonctionInterne: Integer;
+begin
+  Result := 42;
+end;
+
+function TCalculatrice.Additionner(A, B: Integer): Integer;
+begin
+  Result := A + B;
+end;
+
+function CalculerMoyenne(Valeurs: array of Double): Double;
+var
+  I: Integer;
+  Somme: Double;
+begin
+  Somme := 0;
+  for I := Low(Valeurs) to High(Valeurs) do
+    Somme := Somme + Valeurs[I];
+  Result := Somme / Length(Valeurs);
+end;
+```
+
+**Règle** : Ce qui est déclaré uniquement dans `implementation` est privé à l'unité.
+
+#### 3. Initialization et Finalization (optionnelles)
+
+```pascal
+var
+  CompteurGlobal: Integer;
+
+initialization
+  // Exécuté au démarrage de l'application
+  CompteurGlobal := 0;
+  WriteLn('Unité initialisée');
+
+finalization
+  // Exécuté à la fermeture de l'application
+  WriteLn('Unité finalisée');
+  // Libérer les ressources globales
+```
+
+## La clause Uses
+
+### Qu'est-ce que la clause Uses ?
+
+La clause `uses` indique quelles autres unités sont nécessaires pour votre code.
 
 ```pascal
 unit MonUnite;
 
 interface
-  // Déclarations visibles par les autres unités
-  // Uses, types, constantes, variables, procédures, fonctions...
+
+uses
+  System.SysUtils,    // Pour les fonctions de chaînes
+  System.Classes,     // Pour TStringList, etc.
+  Vcl.Dialogs;        // Pour ShowMessage
 
 implementation
-  // Uses additionnels (visibles uniquement dans l'implémentation)
-  // Code d'implémentation et déclarations privées
 
-initialization
-  // Code exécuté quand l'unité est chargée (optionnel)
-
-finalization
-  // Code exécuté quand l'unité est déchargée (optionnel)
-
-end.
+uses
+  System.Math;        // Uniquement pour l'implémentation
 ```
 
-### Bonnes pratiques pour les unités
-
-1. **Une responsabilité unique** : Chaque unité devrait avoir une responsabilité claire et unique
-2. **Noms significatifs** : Donnez des noms qui reflètent le contenu ou l'objectif de l'unité
-3. **Taille raisonnable** : Évitez les unités trop grandes (plus de 1000-2000 lignes)
-4. **Minimiser les dépendances** : Limitez les clauses `uses` à ce qui est réellement nécessaire
-
-## Organisation des unités
-
-Voici différentes approches pour organiser vos unités :
-
-### 1. Organisation par fonction
-
-Regroupez le code selon sa fonction dans l'application :
-
-- `MainForm.pas` : Formulaire principal
-- `Database.pas` : Accès aux données
-- `Configuration.pas` : Gestion des paramètres
-- `Reporting.pas` : Génération de rapports
-- `Utils.pas` : Fonctions utilitaires
-
-### 2. Organisation par couche
-
-Divisez votre application en couches :
-
-- **Présentation** : Interfaces utilisateur
-  - `MainForm.pas`, `CustomerForm.pas`, etc.
-- **Logique métier** : Règles et traitements
-  - `CustomerBusiness.pas`, `OrderBusiness.pas`, etc.
-- **Accès aux données** : Communication avec les bases de données
-  - `CustomerData.pas`, `OrderData.pas`, etc.
-- **Infrastructure** : Services communs
-  - `Logging.pas`, `Configuration.pas`, etc.
-
-### 3. Organisation par domaine
-
-Regroupez le code par domaine métier :
-
-- **Clients**
-  - `CustomerForm.pas`, `CustomerData.pas`, `CustomerBusiness.pas`
-- **Commandes**
-  - `OrderForm.pas`, `OrderData.pas`, `OrderBusiness.pas`
-- **Produits**
-  - `ProductForm.pas`, `ProductData.pas`, `ProductBusiness.pas`
-
-## Unités spécialisées
-
-Certains types d'unités ont des rôles spécifiques :
-
-### Unités d'interface
-
-Ces unités contiennent uniquement des déclarations d'interfaces (au sens POO) :
+### Uses dans interface vs implementation
 
 ```pascal
-unit Interfaces;
-
 interface
 
-type
-  ILogger = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    procedure Log(const Message: string);
-  end;
-
-  ICustomerRepository = interface
-    ['{87654321-4321-4321-4321-CBA987654321}']
-    function GetCustomer(ID: Integer): TCustomer;
-    procedure SaveCustomer(Customer: TCustomer);
-  end;
+uses
+  System.SysUtils;  // Nécessaire pour l'interface publique
+  // Les unités ici sont "propagées" aux utilisateurs de cette unité
 
 implementation
 
-end.
+uses
+  System.Math;      // Nécessaire uniquement pour l'implémentation
+  // Les unités ici restent privées à l'unité
 ```
 
-### Unités de constantes
+**Règle d'or** : Mettez dans `interface/uses` uniquement ce qui est strictement nécessaire pour les déclarations publiques. Le reste va dans `implementation/uses`.
 
-Regroupent les constantes utilisées par l'application :
+### Éviter les dépendances circulaires
+
+**Problème** : Deux unités qui se référencent mutuellement.
 
 ```pascal
-unit Constants;
-
+// Unit1.pas
+unit Unit1;
 interface
+uses Unit2;  // Unit1 utilise Unit2
 
-const
-  // Configuration
-  DEFAULT_SERVER = 'localhost';
-  DEFAULT_PORT = 3306;
-
-  // Messages
-  MSG_CONNECTION_ERROR = 'Erreur de connexion au serveur';
-
-  // Valeurs métier
-  TAX_RATE = 0.20;  // 20% de TVA
-
-resourcestring  // Pour les chaînes traduisibles
-  RS_WELCOME = 'Bienvenue dans notre application';
-  RS_GOODBYE = 'Merci d''avoir utilisé notre application';
-
-implementation
-
-end.
+// Unit2.pas
+unit Unit2;
+interface
+uses Unit1;  // Unit2 utilise Unit1 - ERREUR !
 ```
 
-### Unités de types
-
-Contiennent les définitions de types partagés :
+**Solution** : Déplacer l'une des références dans la section `implementation`.
 
 ```pascal
-unit Types;
-
+// Unit1.pas
+unit Unit1;
 interface
+uses Unit2;
 
-type
-  TCustomerType = (ctRegular, ctVIP, ctReseller);
-
-  TAddress = record
-    Street: string;
-    City: string;
-    ZipCode: string;
-    Country: string;
-  end;
-
-  TCustomer = class
-    ID: Integer;
-    Name: string;
-    Email: string;
-    CustomerType: TCustomerType;
-    Address: TAddress;
-  end;
-
+// Unit2.pas
+unit Unit2;
+interface
+// Pas de uses Unit1 ici
 implementation
-
-end.
+uses Unit1;  // Référence déplacée ici
 ```
 
-## Organisation des fichiers de projet
+## Organisation par fonctionnalité
 
-Au-delà des unités individuelles, organisez votre projet en dossiers logiques :
+### Principe de séparation des responsabilités
+
+Chaque unité doit avoir une **responsabilité unique et claire**.
+
+```pascal
+// ❌ Mauvais - une seule unité pour tout
+unit ToutMonCode;
+  // Classes de modèles
+  // Classes de connexion DB
+  // Classes d'interface
+  // Fonctions utilitaires
+  // Tout mélangé !
+end.
+
+// ✅ Bon - unités séparées par responsabilité
+unit App.Modeles;      // Classes de données
+unit App.Database;     // Accès aux données
+unit App.Interface;    // Composants d'interface
+unit App.Utilitaires;  // Fonctions utilitaires
+```
+
+### Exemple d'organisation par couches
+
+```
+Mon Application de Gestion
+├── Modèles (données)
+│   ├── App.Modeles.Client.pas
+│   ├── App.Modeles.Commande.pas
+│   └── App.Modeles.Produit.pas
+│
+├── Accès aux données
+│   ├── App.Data.Connexion.pas
+│   ├── App.Data.Client.pas
+│   └── App.Data.Commande.pas
+│
+├── Logique métier
+│   ├── App.Business.Vente.pas
+│   └── App.Business.Stock.pas
+│
+└── Interface utilisateur
+    ├── App.UI.MainForm.pas
+    ├── App.UI.ClientForm.pas
+    └── App.UI.CommandeForm.pas
+```
+
+## Structure des dossiers
+
+### Organisation physique des fichiers
 
 ```
 MonProjet/
-  ├── src/                  # Code source
-  │   ├── forms/            # Formulaires
-  │   ├── datamodules/      # Modules de données
-  │   ├── business/         # Logique métier
-  │   ├── data/             # Accès aux données
-  │   └── utils/            # Utilitaires
-  ├── resources/            # Ressources
-  │   ├── images/           # Images
-  │   ├── strings/          # Fichiers de traduction
-  │   └── reports/          # Modèles de rapports
-  ├── libs/                 # Bibliothèques tierces
-  ├── docs/                 # Documentation
-  └── tests/                # Tests unitaires
+├── Source/
+│   ├── Modeles/
+│   │   ├── Client.pas
+│   │   ├── Commande.pas
+│   │   └── Produit.pas
+│   │
+│   ├── Data/
+│   │   ├── Connexion.pas
+│   │   ├── ClientDAO.pas
+│   │   └── CommandeDAO.pas
+│   │
+│   ├── Business/
+│   │   ├── GestionVentes.pas
+│   │   └── GestionStock.pas
+│   │
+│   ├── UI/
+│   │   ├── MainForm.pas
+│   │   ├── MainForm.dfm
+│   │   ├── ClientForm.pas
+│   │   └── ClientForm.dfm
+│   │
+│   └── Utils/
+│       ├── StringUtils.pas
+│       └── DateUtils.pas
+│
+├── Tests/
+│   ├── TestClient.pas
+│   └── TestCommande.pas
+│
+├── Resources/
+│   ├── Images/
+│   └── Icons/
+│
+└── Documentation/
+    └── README.md
 ```
 
-Même si les dossiers sont utilisés dans l'IDE, assurez-vous que les chemins de recherche sont correctement configurés dans les options du projet.
+### Avantages de cette organisation
 
-## Namespaces (Espaces de noms)
+1. **Navigation facile** : on sait où chercher
+2. **Compilation par modules** : changements localisés
+3. **Travail en équipe** : moins de conflits
+4. **Réutilisation** : modules indépendants
+5. **Tests** : chaque module testable séparément
 
-Depuis Delphi 2009, vous pouvez utiliser des espaces de noms pour organiser votre code. Les espaces de noms aident à éviter les conflits de noms et à mieux structurer votre application.
+## Les Namespaces en Delphi
 
-### Utilisation des espaces de noms
+### Qu'est-ce qu'un namespace ?
 
-Les espaces de noms sont simplement des préfixes pour vos unités :
+Un **namespace** (espace de noms) est un préfixe qui permet d'organiser et de distinguer les unités.
 
 ```pascal
-// Dans l'unité App.Database.Connection.pas
-unit App.Database.Connection;
+// Namespaces standards de Delphi
+System.SysUtils      // Namespace System
+System.Classes
+System.Generics.Collections
+
+Vcl.Forms            // Namespace Vcl (Visual Component Library)
+Vcl.Dialogs
+Vcl.Controls
+
+FMX.Forms            // Namespace FMX (FireMonkey)
+FMX.Types
+```
+
+### Créer vos propres namespaces
+
+```pascal
+// MonApp.Modeles.Client.pas
+unit MonApp.Modeles.Client;
 
 interface
 
 type
-  TDatabaseConnection = class
+  TClient = class
     // ...
   end;
 
@@ -226,455 +377,710 @@ implementation
 end.
 ```
 
-Vous pouvez ensuite utiliser cet espace de noms dans votre clause `uses` :
+### Avantages des namespaces
+
+1. **Organisation hiérarchique** : structure claire
+2. **Évite les conflits de noms** : deux unités peuvent avoir le même nom dans des namespaces différents
+3. **Indication de la fonction** : on comprend directement le rôle de l'unité
+
+### Convention de nommage
 
 ```pascal
-uses
-  System.SysUtils,
-  System.Classes,
-  App.Database.Connection;
+// ✅ Bon - structure claire
+CompanyName.ProjectName.Category.Feature
+
+// Exemples concrets
+MonEntreprise.GestionStock.Modeles.Produit
+MonEntreprise.GestionStock.Data.ProduitDAO
+MonEntreprise.GestionStock.UI.ProduitForm
+
+// ✅ Bon - simplifié
+App.Models.Customer
+App.Data.CustomerDAO
+App.UI.CustomerForm
 ```
 
-### Organisation avec espaces de noms
+## Modularité et réutilisabilité
 
-Voici un exemple d'organisation d'unités avec des espaces de noms :
+### Principe de modularité
 
-- `App.UI.MainForm`
-- `App.UI.CustomerForm`
-- `App.Business.Customer`
-- `App.Business.Order`
-- `App.Data.CustomerRepository`
-- `App.Data.OrderRepository`
-- `App.Utils.Logging`
+La **modularité** consiste à diviser votre application en modules indépendants et réutilisables.
 
-Remarque : le nom de fichier doit correspondre au nom de l'unité, donc `App.UI.MainForm` serait sauvegardé dans `App.UI.MainForm.pas`.
-
-## Packages
-
-Pour les projets plus importants, les packages Delphi offrent un niveau supérieur de modularité.
-
-### Qu'est-ce qu'un package ?
-
-Un package est une bibliothèque de composants compilée séparément qui peut être utilisée par d'autres applications ou packages. Il existe deux types de packages :
-
-- **Packages d'exécution** (.bpl) : Utilisés à l'exécution
-- **Packages de conception** (.bpl) : Utilisés à la conception dans l'IDE
-
-### Création d'un package
-
-1. Choisissez `Fichier` > `Nouveau` > `Package` dans l'IDE
-2. Ajoutez vos unités au package
-3. Compilez le package
-
-### Structure d'un projet à packages
-
-Pour un grand projet, vous pourriez avoir :
-
-- `MyApp.Core.bpl` : Fonctionnalités de base
-- `MyApp.UI.bpl` : Interfaces utilisateur
-- `MyApp.Reports.bpl` : Générateur de rapports
-- `MyApp.exe` : Application principale qui utilise ces packages
-
-Cette approche permet :
-- Le développement parallèle
-- Le chargement dynamique de fonctionnalités
-- La mise à jour partielle de l'application
-
-## Modèles architecturaux
-
-Pour structurer votre application à un niveau plus élevé, considérez ces modèles d'architecture :
-
-### MVC (Modèle-Vue-Contrôleur)
-
-Divise l'application en trois parties :
-- **Modèle** : Données et logique métier
-- **Vue** : Interface utilisateur
-- **Contrôleur** : Gère les entrées et coordonne le modèle et la vue
-
-En Delphi, cela pourrait se traduire par :
-
-```
-App/
-  ├── Models/
-  │   ├── CustomerModel.pas
-  │   └── OrderModel.pas
-  ├── Views/
-  │   ├── MainForm.pas
-  │   └── CustomerForm.pas
-  └── Controllers/
-      ├── CustomerController.pas
-      └── OrderController.pas
-```
-
-### MVVM (Modèle-Vue-VueModèle)
-
-Une variante de MVC plus adaptée aux interfaces modernes :
-- **Modèle** : Données et logique métier
-- **Vue** : Interface utilisateur (passive)
-- **VueModèle** : Médiateur entre le modèle et la vue
-
-En Delphi, cela pourrait donner :
-
-```
-App/
-  ├── Models/
-  │   ├── CustomerModel.pas
-  │   └── OrderModel.pas
-  ├── Views/
-  │   ├── MainForm.pas
-  │   └── CustomerForm.pas
-  └── ViewModels/
-      ├── CustomerViewModel.pas
-      └── OrderViewModel.pas
-```
-
-### DDD (Domain-Driven Design)
-
-Pour les applications complexes, le DDD organise le code autour du domaine métier :
-- **Couche domaine** : Entités, objets valeur, services de domaine
-- **Couche application** : Orchestration, cas d'utilisation
-- **Couche infrastructure** : Persistance, communication externe
-- **Couche présentation** : Interfaces utilisateur
-
-## Modularité au niveau du code
-
-Au-delà de l'organisation des fichiers, la modularité se reflète dans la conception des classes et interfaces :
-
-### Interfaces pour le découplage
-
-Utilisez des interfaces pour réduire les dépendances entre les modules :
+#### Exemple : Module de gestion des logs
 
 ```pascal
-// Dans Interfaces.pas
-type
-  ILogger = interface
-    procedure Log(const Message: string);
-  end;
-
-// Dans FileLogger.pas
-type
-  TFileLogger = class(TInterfacedObject, ILogger)
-    procedure Log(const Message: string); override;
-  end;
-
-// Dans BusinessLogic.pas
-type
-  TBusinessProcessor = class
-  private
-    FLogger: ILogger;
-  public
-    constructor Create(ALogger: ILogger);
-    procedure ProcessData;
-  end;
-```
-
-L'unité `BusinessLogic` dépend de l'interface `ILogger` mais pas de l'implémentation concrète `TFileLogger`.
-
-### Injection de dépendances
-
-Fournissez les dépendances de l'extérieur plutôt que de les créer à l'intérieur :
-
-```pascal
-// Au lieu de ceci :
-constructor TCustomerService.Create;
-begin
-  FRepository := TCustomerRepository.Create;  // Dépendance forte
-end;
-
-// Préférez ceci :
-constructor TCustomerService.Create(ARepository: ICustomerRepository);
-begin
-  FRepository := ARepository;  // Dépendance injectée
-end;
-```
-
-Cela facilite les tests et permet de changer l'implémentation sans modifier le code.
-
-## Exemple concret : Application de gestion de clients
-
-Voici comment organiser une application simple de gestion de clients :
-
-### 1. Les interfaces
-
-```pascal
-// App.Interfaces.pas
-unit App.Interfaces;
+// App.Utils.Logger.pas
+unit App.Utils.Logger;
 
 interface
 
-uses
-  App.Types;
-
 type
-  ICustomerRepository = interface
-    ['{12345678-1234-1234-1234-123456789ABC}']
-    function GetAll: TCustomerArray;
-    function GetById(ID: Integer): TCustomer;
-    procedure Save(Customer: TCustomer);
-    procedure Delete(ID: Integer);
-  end;
+  TLogLevel = (llDebug, llInfo, llWarning, llError);
 
-  ICustomerService = interface
-    ['{87654321-4321-4321-4321-CBA987654321}']
-    function GetCustomers: TCustomerArray;
-    function GetCustomer(ID: Integer): TCustomer;
-    procedure SaveCustomer(Customer: TCustomer);
-    procedure DeleteCustomer(ID: Integer);
-    function GetVIPCustomers: TCustomerArray;
+  TLogger = class
+  private
+    class var FInstance: TLogger;
+    FLogFile: string;
+  public
+    class function Instance: TLogger;
+    procedure Log(const Message: string; Level: TLogLevel = llInfo);
+    procedure Debug(const Message: string);
+    procedure Error(const Message: string);
   end;
 
 implementation
 
+uses
+  System.SysUtils, System.IOUtils;
+
+class function TLogger.Instance: TLogger;
+begin
+  if FInstance = nil then
+    FInstance := TLogger.Create;
+  Result := FInstance;
+end;
+
+procedure TLogger.Log(const Message: string; Level: TLogLevel);
+var
+  LogMessage: string;
+begin
+  LogMessage := Format('[%s] [%s] %s',
+    [DateTimeToStr(Now), GetEnumName(TypeInfo(TLogLevel), Ord(Level)), Message]);
+  // Écrire dans le fichier...
+end;
+
+procedure TLogger.Debug(const Message: string);
+begin
+  Log(Message, llDebug);
+end;
+
+procedure TLogger.Error(const Message: string);
+begin
+  Log(Message, llError);
+end;
+
 end.
 ```
 
-### 2. Les types partagés
+Ce module peut être réutilisé dans n'importe quel projet !
+
+### Créer des bibliothèques de code réutilisable
+
+Regroupez les fonctionnalités communes dans des unités dédiées :
 
 ```pascal
-// App.Types.pas
-unit App.Types;
+// App.Utils.StringHelper.pas
+unit App.Utils.StringHelper;
 
 interface
 
 type
-  TCustomerType = (ctRegular, ctVIP, ctReseller);
-
-  TCustomer = class
+  TStringHelper = class
   public
-    ID: Integer;
-    Name: string;
-    Email: string;
-    CustomerType: TCustomerType;
+    class function EstEmail(const Email: string): Boolean;
+    class function EstTelephone(const Tel: string): Boolean;
+    class function CapitaliserMots(const Texte: string): string;
+    class function RemplacerAccents(const Texte: string): string;
+  end;
 
+implementation
+
+class function TStringHelper.EstEmail(const Email: string): Boolean;
+begin
+  // Validation d'email
+  Result := Pos('@', Email) > 0;
+end;
+
+class function TStringHelper.EstTelephone(const Tel: string): Boolean;
+begin
+  // Validation de téléphone
+  Result := Length(Tel) >= 10;
+end;
+
+class function TStringHelper.CapitaliserMots(const Texte: string): string;
+begin
+  // Mettre une majuscule au début de chaque mot
+  Result := Texte;  // Implémentation simplifiée
+end;
+
+class function TStringHelper.RemplacerAccents(const Texte: string): string;
+begin
+  // Remplacer les accents
+  Result := StringReplace(Texte, 'é', 'e', [rfReplaceAll]);
+  // etc.
+end;
+
+end.
+```
+
+## Séparation des couches
+
+### Architecture en couches
+
+Organisez votre application en couches distinctes :
+
+```
+┌─────────────────────────────────┐
+│   Couche Présentation (UI)      │  Formulaires, composants visuels
+├─────────────────────────────────┤
+│   Couche Logique Métier         │  Règles, calculs, validations
+├─────────────────────────────────┤
+│   Couche Accès aux Données      │  Connexion DB, requêtes
+├─────────────────────────────────┤
+│   Couche Données (Modèles)      │  Structures de données
+└─────────────────────────────────┘
+```
+
+### Exemple concret
+
+```pascal
+// ===== COUCHE MODÈLE =====
+// App.Models.Client.pas
+unit App.Models.Client;
+
+interface
+
+type
+  TClient = class
+  private
+    FID: Integer;
+    FNom: string;
+    FEmail: string;
+  public
+    property ID: Integer read FID write FID;
+    property Nom: string read FNom write FNom;
+    property Email: string read FEmail write FEmail;
+  end;
+
+implementation
+end.
+
+// ===== COUCHE DONNÉES =====
+// App.Data.ClientDAO.pas
+unit App.Data.ClientDAO;
+
+interface
+
+uses
+  App.Models.Client, System.Generics.Collections;
+
+type
+  TClientDAO = class
+  public
+    function ObtenirTous: TList<TClient>;
+    function ObtenirParID(ID: Integer): TClient;
+    procedure Enregistrer(Client: TClient);
+    procedure Supprimer(ID: Integer);
+  end;
+
+implementation
+
+uses
+  FireDAC.Comp.Client;  // Accès aux données
+
+function TClientDAO.ObtenirTous: TList<TClient>;
+begin
+  Result := TList<TClient>.Create;
+  // Code pour charger depuis la base de données
+end;
+
+function TClientDAO.ObtenirParID(ID: Integer): TClient;
+begin
+  Result := TClient.Create;
+  // Code pour charger un client spécifique
+end;
+
+procedure TClientDAO.Enregistrer(Client: TClient);
+begin
+  // Code pour sauvegarder dans la base de données
+end;
+
+procedure TClientDAO.Supprimer(ID: Integer);
+begin
+  // Code pour supprimer de la base de données
+end;
+
+end.
+
+// ===== COUCHE LOGIQUE MÉTIER =====
+// App.Business.ClientService.pas
+unit App.Business.ClientService;
+
+interface
+
+uses
+  App.Models.Client, App.Data.ClientDAO;
+
+type
+  TClientService = class
+  private
+    FDAO: TClientDAO;
+  public
     constructor Create;
-  end;
-
-  TCustomerArray = array of TCustomer;
-
-implementation
-
-constructor TCustomer.Create;
-begin
-  inherited;
-  CustomerType := ctRegular;
-end;
-
-end.
-```
-
-### 3. L'implémentation du repository
-
-```pascal
-// App.Data.CustomerRepository.pas
-unit App.Data.CustomerRepository;
-
-interface
-
-uses
-  System.SysUtils, System.Classes,
-  App.Interfaces, App.Types, FireDAC.Comp.Client;
-
-type
-  TCustomerRepository = class(TInterfacedObject, ICustomerRepository)
-  private
-    FConnection: TFDConnection;
-  public
-    constructor Create(Connection: TFDConnection);
     destructor Destroy; override;
-
-    // Implémentation de ICustomerRepository
-    function GetAll: TCustomerArray;
-    function GetById(ID: Integer): TCustomer;
-    procedure Save(Customer: TCustomer);
-    procedure Delete(ID: Integer);
+    function ValiderEmail(const Email: string): Boolean;
+    function CreerNouveauClient(const Nom, Email: string): TClient;
+    procedure EnregistrerClient(Client: TClient);
   end;
 
 implementation
-
-// Implémentation...
-
-end.
-```
-
-### 4. L'implémentation du service
-
-```pascal
-// App.Business.CustomerService.pas
-unit App.Business.CustomerService;
-
-interface
 
 uses
-  System.SysUtils,
-  App.Interfaces, App.Types;
+  System.SysUtils, System.RegularExpressions;
 
-type
-  TCustomerService = class(TInterfacedObject, ICustomerService)
-  private
-    FRepository: ICustomerRepository;
-  public
-    constructor Create(Repository: ICustomerRepository);
-
-    // Implémentation de ICustomerService
-    function GetCustomers: TCustomerArray;
-    function GetCustomer(ID: Integer): TCustomer;
-    procedure SaveCustomer(Customer: TCustomer);
-    procedure DeleteCustomer(ID: Integer);
-    function GetVIPCustomers: TCustomerArray;
-  end;
-
-implementation
-
-constructor TCustomerService.Create(Repository: ICustomerRepository);
+constructor TClientService.Create;
 begin
   inherited Create;
-  FRepository := Repository;
+  FDAO := TClientDAO.Create;
 end;
 
-// Reste de l'implémentation...
-
-function TCustomerService.GetVIPCustomers: TCustomerArray;
-var
-  AllCustomers: TCustomerArray;
-  Customer: TCustomer;
-  I, Count: Integer;
+destructor TClientService.Destroy;
 begin
-  AllCustomers := FRepository.GetAll;
-
-  // Compter les clients VIP
-  Count := 0;
-  for Customer in AllCustomers do
-    if Customer.CustomerType = ctVIP then
-      Inc(Count);
-
-  // Créer le tableau résultat
-  SetLength(Result, Count);
-
-  // Remplir le tableau
-  Count := 0;
-  for Customer in AllCustomers do
-    if Customer.CustomerType = ctVIP then
-    begin
-      Result[Count] := Customer;
-      Inc(Count);
-    end;
+  FDAO.Free;
+  inherited Destroy;
 end;
 
-// Reste de l'implémentation...
+function TClientService.ValiderEmail(const Email: string): Boolean;
+begin
+  // Règle métier : validation d'email
+  Result := TRegEx.IsMatch(Email, '^[\w\.-]+@[\w\.-]+\.\w+$');
+end;
+
+function TClientService.CreerNouveauClient(const Nom, Email: string): TClient;
+begin
+  if not ValiderEmail(Email) then
+    raise Exception.Create('Email invalide');
+
+  Result := TClient.Create;
+  Result.Nom := Nom;
+  Result.Email := Email;
+end;
+
+procedure TClientService.EnregistrerClient(Client: TClient);
+begin
+  // Règles métier avant sauvegarde
+  if Trim(Client.Nom) = '' then
+    raise Exception.Create('Le nom est obligatoire');
+
+  if not ValiderEmail(Client.Email) then
+    raise Exception.Create('Email invalide');
+
+  FDAO.Enregistrer(Client);
+end;
 
 end.
-```
 
-### 5. Le formulaire principal
-
-```pascal
-// App.UI.MainForm.pas
-unit App.UI.MainForm;
+// ===== COUCHE PRÉSENTATION =====
+// App.UI.ClientForm.pas
+unit App.UI.ClientForm;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Grids,
-  App.Interfaces, App.Types;
+  Vcl.Forms, Vcl.StdCtrls, App.Business.ClientService, App.Models.Client;
 
 type
-  TMainForm = class(TForm)
-    StringGrid1: TStringGrid;
-    btnAdd: TButton;
-    btnEdit: TButton;
-    btnDelete: TButton;
-    btnRefresh: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
-    procedure btnEditClick(Sender: TObject);
-    procedure btnDeleteClick(Sender: TObject);
+  TFormClient = class(TForm)
+    EditNom: TEdit;
+    EditEmail: TEdit;
+    ButtonEnregistrer: TButton;
+    procedure ButtonEnregistrerClick(Sender: TObject);
   private
-    FCustomerService: ICustomerService;
-    procedure LoadCustomers;
+    FService: TClientService;
   public
-    constructor Create(AOwner: TComponent; CustomerService: ICustomerService); reintroduce;
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 implementation
 
-{$R *.dfm}
+uses
+  Vcl.Dialogs, System.SysUtils;
 
-// Implémentation...
+constructor TFormClient.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FService := TClientService.Create;
+end;
+
+destructor TFormClient.Destroy;
+begin
+  FService.Free;
+  inherited Destroy;
+end;
+
+procedure TFormClient.ButtonEnregistrerClick(Sender: TObject);
+var
+  Client: TClient;
+begin
+  try
+    Client := FService.CreerNouveauClient(EditNom.Text, EditEmail.Text);
+    try
+      FService.EnregistrerClient(Client);
+      ShowMessage('Client enregistré avec succès');
+    finally
+      Client.Free;
+    end;
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
+end;
 
 end.
 ```
 
-### 6. Le fichier projet (DPR)
+### Avantages de la séparation en couches
+
+1. **Testabilité** : chaque couche peut être testée indépendamment
+2. **Maintenance** : changements localisés
+3. **Réutilisabilité** : les couches basses peuvent être réutilisées
+4. **Clarté** : responsabilités bien définies
+5. **Évolutivité** : facile d'ajouter des fonctionnalités
+
+## Conventions de nommage
+
+### Noms d'unités
 
 ```pascal
-// Project1.dpr
-program Project1;
+// ✅ Bon - descriptif et clair
+App.Models.Customer.pas
+App.Data.CustomerRepository.pas
+App.Utils.StringHelper.pas
+
+// ❌ Mauvais - trop vague
+Unit1.pas
+Utils.pas
+Stuff.pas
+```
+
+### Structure de nommage recommandée
+
+```
+[Namespace].[Catégorie].[Fonctionnalité].pas
+
+Exemples :
+MonApp.Models.Product.pas
+MonApp.Data.ProductDAO.pas
+MonApp.Business.SalesService.pas
+MonApp.UI.MainForm.pas
+MonApp.Utils.Logger.pas
+```
+
+### Préfixes pour les types
+
+| Type | Préfixe | Exemple |
+|------|---------|---------|
+| Classe | T | TClient, TCommande |
+| Interface | I | IRepository, ILogger |
+| Énumération | T | TStatus, TLogLevel |
+| Record | T | TPoint, TRectangle |
+| Formulaire | TForm | TFormClient, TFormMain |
+
+## Documentation du code
+
+### Commentaires XML
+
+Delphi supporte les commentaires de documentation XML :
+
+```pascal
+/// <summary>
+/// Calcule la moyenne d'un tableau de valeurs
+/// </summary>
+/// <param name="Valeurs">Tableau de valeurs à moyenner</param>
+/// <returns>La moyenne des valeurs</returns>
+/// <exception cref="Exception">Si le tableau est vide</exception>
+function CalculerMoyenne(Valeurs: array of Double): Double;
+```
+
+### En-têtes d'unité
+
+```pascal
+{******************************************************************************}
+{                                                                              }
+{  Unité : App.Utils.StringHelper                                              }
+{  Description : Fonctions utilitaires pour la manipulation de chaînes         }
+{  Auteur : Votre Nom                                                          }
+{  Date : 01/01/2025                                                           }
+{  Version : 1.0                                                               }
+{                                                                              }
+{******************************************************************************}
+unit App.Utils.StringHelper;
+```
+
+### Commentaires dans le code
+
+```pascal
+// ✅ Bon - explique le POURQUOI
+// On utilise un timeout de 30s car certaines requêtes sont lentes
+FDConnection.Timeout := 30000;
+
+// ❌ Mauvais - dit ce que fait le code (déjà évident)
+// Définit le timeout à 30000
+FDConnection.Timeout := 30000;
+```
+
+## Gestion des dépendances
+
+### Minimiser les dépendances
+
+```pascal
+// ❌ Mauvais - trop de dépendances
+unit MonUnite;
+interface
+uses
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.ExtCtrls, Vcl.Grids, Data.DB, FireDAC.Comp.Client, FireDAC.Stan.Param,
+  System.Generics.Collections, System.JSON, System.RegularExpressions;
+
+// ✅ Bon - dépendances minimales
+unit MonUnite;
+interface
+uses
+  System.SysUtils, System.Classes;  // Seulement ce qui est nécessaire
+
+implementation
+uses
+  Vcl.Dialogs;  // Utilisé uniquement dans l'implémentation
+```
+
+### Inversion de dépendance
+
+Utilisez des interfaces pour découpler les modules :
+
+```pascal
+// ❌ Mauvais - couplage fort
+type
+  TClientService = class
+  private
+    FMySQL: TMySQLConnection;  // Dépend d'une implémentation concrète
+  end;
+
+// ✅ Bon - couplage faible
+type
+  IDatabase = interface
+    procedure Connect;
+    procedure Execute(const SQL: string);
+  end;
+
+  TClientService = class
+  private
+    FDatabase: IDatabase;  // Dépend d'une abstraction
+  end;
+```
+
+## Bonnes pratiques d'organisation
+
+### 1. Une classe par unité (généralement)
+
+```pascal
+// ✅ Bon
+// Client.pas - contient uniquement TClient
+// Commande.pas - contient uniquement TCommande
+
+// ⚠️ Acceptable si classes très liées
+// Transaction.pas - contient TTransaction et TTransactionItem
+```
+
+### 2. Regrouper ce qui change ensemble
+
+```pascal
+// Classes qui changent ensemble → même unité
+unit App.Models.Vente;
+
+type
+  TVente = class
+    // ...
+  end;
+
+  TLigneVente = class  // Très lié à TVente
+    // ...
+  end;
+```
+
+### 3. Séparer interface et implémentation
+
+```pascal
+// IRepository.pas - interface uniquement
+unit App.Interfaces.IRepository;
+
+interface
+
+type
+  IRepository<T> = interface
+    procedure Save(Entity: T);
+    function GetById(ID: Integer): T;
+  end;
+
+implementation
+end.
+
+// ClientRepository.pas - implémentation
+unit App.Data.ClientRepository;
+
+interface
 
 uses
-  Vcl.Forms,
-  FireDAC.Comp.Client,
-  App.UI.MainForm in 'App.UI.MainForm.pas' {MainForm},
-  App.Interfaces in 'App.Interfaces.pas',
-  App.Types in 'App.Types.pas',
-  App.Data.CustomerRepository in 'App.Data.CustomerRepository.pas',
-  App.Business.CustomerService in 'App.Business.CustomerService.pas';
+  App.Interfaces.IRepository, App.Models.Client;
 
-{$R *.res}
-
-var
-  Connection: TFDConnection;
-  Repository: ICustomerRepository;
-  Service: ICustomerService;
-  MainForm: TMainForm;
-
-begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-
-  // Configuration
-  Connection := TFDConnection.Create(nil);
-  try
-    // Configuration de la connexion...
-    Connection.ConnectionString := 'DriverID=SQLite;Database=customers.db';
-    Connection.Connected := True;
-
-    // Création du repository
-    Repository := TCustomerRepository.Create(Connection);
-
-    // Création du service
-    Service := TCustomerService.Create(Repository);
-
-    // Création du formulaire principal
-    MainForm := TMainForm.Create(Application, Service);
-    Application.MainForm := MainForm;
-    Application.Run;
-  finally
-    Connection.Free;
+type
+  TClientRepository = class(TInterfacedObject, IRepository<TClient>)
+  public
+    procedure Save(Entity: TClient);
+    function GetById(ID: Integer): TClient;
   end;
+
+implementation
+// ...
 end.
 ```
 
-Cet exemple illustre :
-- L'utilisation d'interfaces pour le découplage
-- L'organisation du code en couches (UI, Business, Data)
-- L'injection de dépendances
-- La séparation des responsabilités
+### 4. Utiliser des fichiers include avec parcimonie
 
-## Conseils pratiques
+```pascal
+// Config.inc - constantes de configuration
+const
+  APP_VERSION = '1.0.0';
+  MAX_CONNECTIONS = 100;
 
-1. **Commencez simple** : Ne sur-ingénieriez pas les petits projets
-2. **Réfactorisez progressivement** : Améliorez l'organisation au fur et à mesure
-3. **Suivez un standard** : Adoptez des conventions de nommage et de structure cohérentes
-4. **Documentez** : Expliquez l'architecture et l'organisation pour les nouveaux développeurs
-5. **Utilisez des outils** : Des outils comme ModelMaker Code Explorer peuvent aider à gérer la structure
-6. **Surveillez les dépendances** : Évitez les dépendances circulaires entre les unités
+// Dans votre unité
+unit MonUnite;
 
----
+interface
 
-Une bonne organisation du code est un investissement qui porte ses fruits à long terme. En suivant ces principes de modularité, vous créerez des applications Delphi plus maintenables, plus évolutives et plus robustes. À mesure que vos projets grandiront, vous apprécierez de plus en plus l'importance d'une architecture bien conçue.
+{$I Config.inc}  // Inclure le fichier
 
-Dans la prochaine section, nous explorerons les nouveautés syntaxiques des dernières versions d'Object Pascal, qui peuvent vous aider à écrire un code encore plus propre et efficace.
+implementation
+end.
+```
+
+**Attention** : Ne pas abuser des includes, préférez les unités normales.
+
+### 5. Organiser les uses alphabétiquement
+
+```pascal
+// ✅ Bon - facile de voir ce qui est utilisé
+uses
+  Data.DB,
+  FireDAC.Comp.Client,
+  System.Classes,
+  System.Generics.Collections,
+  System.SysUtils,
+  Vcl.Dialogs;
+
+// ❌ Mauvais - désorganisé
+uses
+  Vcl.Dialogs, System.SysUtils, FireDAC.Comp.Client, Data.DB,
+  System.Classes;
+```
+
+## Exemple d'application complète bien organisée
+
+```
+GestionCommerciale/
+├── Source/
+│   ├── Core/
+│   │   ├── App.Core.Interfaces.pas      (Interfaces communes)
+│   │   ├── App.Core.Types.pas           (Types communs)
+│   │   └── App.Core.Constants.pas       (Constantes)
+│   │
+│   ├── Models/
+│   │   ├── App.Models.Client.pas
+│   │   ├── App.Models.Produit.pas
+│   │   ├── App.Models.Commande.pas
+│   │   └── App.Models.Facture.pas
+│   │
+│   ├── Data/
+│   │   ├── App.Data.Connection.pas
+│   │   ├── App.Data.ClientDAO.pas
+│   │   ├── App.Data.ProduitDAO.pas
+│   │   └── App.Data.CommandeDAO.pas
+│   │
+│   ├── Business/
+│   │   ├── App.Business.ClientService.pas
+│   │   ├── App.Business.VenteService.pas
+│   │   └── App.Business.StockService.pas
+│   │
+│   ├── UI/
+│   │   ├── Forms/
+│   │   │   ├── App.UI.MainForm.pas/.dfm
+│   │   │   ├── App.UI.ClientForm.pas/.dfm
+│   │   │   └── App.UI.CommandeForm.pas/.dfm
+│   │   │
+│   │   └── Components/
+│   │       ├── App.UI.ClientGrid.pas
+│   │       └── App.UI.SearchPanel.pas
+│   │
+│   └── Utils/
+│       ├── App.Utils.Logger.pas
+│       ├── App.Utils.StringHelper.pas
+│       └── App.Utils.Validator.pas
+│
+├── Tests/
+│   ├── Tests.Models.pas
+│   ├── Tests.Data.pas
+│   └── Tests.Business.pas
+│
+└── Resources/
+    ├── Images/
+    ├── SQL/
+    └── Config/
+```
+
+## Outils et fonctionnalités de l'IDE
+
+### Navigation dans le code
+
+- **Ctrl + Clic** : aller à la définition
+- **Ctrl + Shift + Flèches** : naviguer entre déclaration/implémentation
+- **Ctrl + G** : aller à la ligne
+- **Ctrl + Q + Q** : marquer/revenir à une position
+
+### Refactoring
+
+- **Renommer** (Ctrl + Shift + E) : renommer un symbole partout
+- **Extraire méthode** : créer une méthode depuis du code sélectionné
+- **Déplacer** : déplacer des méthodes entre classes
+
+### Gestionnaire de projet
+
+Organisez vos fichiers en groupes logiques dans le gestionnaire de projet.
+
+## Résumé
+
+- **Unités** : blocs de construction fondamentaux
+  - Section `interface` : ce qui est public
+  - Section `implementation` : le code interne
+  - Clause `uses` : gérer les dépendances
+
+- **Organisation par fonctionnalité**
+  - Une responsabilité par unité
+  - Séparation en couches (Modèles, Data, Business, UI)
+  - Structure de dossiers claire
+
+- **Namespaces** : organiser hiérarchiquement
+  - Format : `Company.Project.Category.Feature`
+  - Évite les conflits de noms
+
+- **Modularité**
+  - Modules indépendants et réutilisables
+  - Minimiser les dépendances
+  - Utiliser l'inversion de dépendance
+
+- **Bonnes pratiques**
+  - Nommage cohérent et descriptif
+  - Documentation du code
+  - Une classe par unité (généralement)
+  - Uses alphabétiques
+  - Séparer interface et implémentation
+
+- **Avantages**
+  - Code lisible et maintenable
+  - Facile à tester
+  - Réutilisable
+  - Évolutif
+  - Travail en équipe facilité
+
+Un code bien organisé est un investissement qui se rentabilise rapidement. Prenez le temps d'organiser correctement dès le début, vous gagnerez beaucoup de temps par la suite !
 
 ⏭️ [Nouveautés de la syntaxe Object Pascal (dernières versions)](/03-langage-object-pascal/10-nouveautes-de-la-syntaxe-object-pascal.md)

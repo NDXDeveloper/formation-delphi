@@ -1,442 +1,1080 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.5 Procédures et fonctions
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les procédures et fonctions sont des blocs de code réutilisables qui vous permettent d'organiser votre programme en modules. Elles sont essentielles pour créer du code bien structuré, lisible et maintenable. Dans cette section, nous explorons comment définir et utiliser ces éléments fondamentaux en Object Pascal.
+Les procédures et fonctions sont des blocs de code réutilisables qui permettent d'organiser votre programme en sous-tâches logiques. Au lieu d'écrire le même code plusieurs fois, vous le regroupez dans une procédure ou fonction que vous pouvez appeler autant de fois que nécessaire.
 
-## Pourquoi utiliser des procédures et fonctions ?
-
-Les avantages principaux sont :
-
-- **Réutilisation du code** : Écrire une fois, utiliser partout
-- **Lisibilité** : Un code bien découpé est plus facile à comprendre
-- **Maintenance** : Des modifications localisées dans une seule procédure
-- **Modularité** : Découper un problème complexe en sous-problèmes plus simples
-- **Tests** : Tester des unités de code isolées
+**Avantages :**
+- **Réutilisabilité** : Écrivez une fois, utilisez partout
+- **Lisibilité** : Code mieux structuré et plus facile à comprendre
+- **Maintenance** : Modifiez le code en un seul endroit
+- **Testabilité** : Testez chaque fonction indépendamment
+- **Collaboration** : Divisez le travail entre développeurs
 
 ## Différence entre procédure et fonction
 
-La distinction principale est simple :
+| Caractéristique | Procédure | Fonction |
+|----------------|-----------|----------|
+| Retourne une valeur | Non | Oui |
+| Mot-clé | `procedure` | `function` |
+| Usage typique | Effectuer une action | Calculer et retourner un résultat |
+| Exemple | Afficher un message | Calculer une somme |
 
-- Une **procédure** exécute une série d'actions sans renvoyer de valeur
-- Une **fonction** exécute des actions ET renvoie une valeur
+**Analogie simple :**
+- **Procédure** = Recette de cuisine (on fait quelque chose)
+- **Fonction** = Machine à calculer (on obtient un résultat)
 
-## Création d'une procédure
+## Les procédures
 
-La syntaxe de base d'une procédure est :
+### Déclaration simple
 
+**Syntaxe :**
 ```pascal
-procedure NomDeLaProcedure(Paramètre1: Type1; Paramètre2: Type2);
+procedure NomProcedure;
 begin
-  // Code à exécuter
+  // Instructions
 end;
 ```
 
-Exemple d'une procédure simple :
-
+**Exemple :**
 ```pascal
-procedure AfficherBonjour;
+procedure DireBonjour;
 begin
   ShowMessage('Bonjour !');
 end;
-```
 
-Pour utiliser (appeler) cette procédure :
-
-```pascal
-AfficherBonjour;  // Affiche la boîte de dialogue "Bonjour !"
-```
-
-## Création d'une fonction
-
-La syntaxe de base d'une fonction est :
-
-```pascal
-function NomDeLaFonction(Paramètre1: Type1; Paramètre2: Type2): TypeDeRetour;
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  // Code à exécuter
-
-  Result := ValeurDeRetour;  // Valeur renvoyée
+  DireBonjour;  // Appel de la procédure
 end;
 ```
 
-Exemple d'une fonction simple :
+### Procédure avec paramètres
 
+Les paramètres permettent de passer des informations à la procédure.
+
+**Syntaxe :**
 ```pascal
-function Carre(Nombre: Integer): Integer;
+procedure NomProcedure(parametre1: Type1; parametre2: Type2);
 begin
-  Result := Nombre * Nombre;
+  // Instructions utilisant les paramètres
 end;
 ```
 
-Pour utiliser cette fonction :
-
+**Exemple : Un paramètre**
 ```pascal
-var
-  Resultat: Integer;
+procedure DireBonjourA(const Nom: string);
 begin
-  Resultat := Carre(5);  // Resultat = 25
-  ShowMessage('Le carré de 5 est ' + IntToStr(Resultat));
+  ShowMessage('Bonjour ' + Nom + ' !');
+end;
+
+// Utilisation
+begin
+  DireBonjourA('Marie');    // Affiche : Bonjour Marie !
+  DireBonjourA('Pierre');   // Affiche : Bonjour Pierre !
 end;
 ```
 
-Le mot-clé `Result` est une variable spéciale qui contient la valeur que la fonction va renvoyer. Vous pouvez aussi utiliser une instruction `Exit` avec la valeur à renvoyer pour sortir immédiatement de la fonction :
-
+**Exemple : Plusieurs paramètres**
 ```pascal
-function EstPositif(Nombre: Integer): Boolean;
+procedure AfficherInfos(const Nom, Prenom: string; Age: Integer);
 begin
-  if Nombre > 0 then
-    Exit(True);  // Sort immédiatement avec la valeur True
+  ShowMessage(
+    'Nom : ' + Nom + #13#10 +
+    'Prénom : ' + Prenom + #13#10 +
+    'Âge : ' + IntToStr(Age) + ' ans'
+  );
+end;
 
-  Result := False;  // Exécuté seulement si Nombre <= 0
+// Utilisation
+begin
+  AfficherInfos('Dupont', 'Marie', 25);
 end;
 ```
 
-## Paramètres
+### Paramètres par valeur vs par référence
 
-Les paramètres permettent de passer des données à vos procédures et fonctions.
+#### Paramètres par valeur (défaut)
 
-### Types de paramètres
-
-Delphi offre différentes façons de passer des paramètres :
-
-#### Paramètres par valeur
-
-Par défaut, les paramètres sont passés par valeur, ce qui signifie que la procédure ou fonction travaille sur une copie des données :
+Le paramètre reçoit une **copie** de la valeur. Les modifications n'affectent pas la variable d'origine.
 
 ```pascal
-procedure Incrementer(Nombre: Integer);
+procedure AugmenterValeur(Nombre: Integer);
 begin
-  Nombre := Nombre + 1;  // Modifie la copie locale, pas la variable originale
+  Nombre := Nombre + 10;
   ShowMessage('Dans la procédure : ' + IntToStr(Nombre));
 end;
 
+// Utilisation
 var
   X: Integer;
 begin
-  X := 10;
-  Incrementer(X);  // Affiche "Dans la procédure : 11"
-  ShowMessage('Après appel : ' + IntToStr(X));  // Affiche "Après appel : 10"
+  X := 5;
+  AugmenterValeur(X);
+  ShowMessage('Après la procédure : ' + IntToStr(X));  // Affiche toujours 5
 end;
 ```
 
 #### Paramètres par référence (var)
 
-Pour modifier la variable originale, utilisez le mot-clé `var` :
+Le paramètre reçoit une **référence** à la variable. Les modifications affectent la variable d'origine.
 
 ```pascal
-procedure Incrementer(var Nombre: Integer);
+procedure AugmenterValeur(var Nombre: Integer);
 begin
-  Nombre := Nombre + 1;  // Modifie la variable originale
+  Nombre := Nombre + 10;
   ShowMessage('Dans la procédure : ' + IntToStr(Nombre));
 end;
 
+// Utilisation
 var
   X: Integer;
 begin
+  X := 5;
+  AugmenterValeur(X);
+  ShowMessage('Après la procédure : ' + IntToStr(X));  // Affiche 15
+end;
+```
+
+**Exemple pratique : Échanger deux valeurs**
+```pascal
+procedure Echanger(var A, B: Integer);
+var
+  Temp: Integer;
+begin
+  Temp := A;
+  A := B;
+  B := Temp;
+end;
+
+// Utilisation
+var
+  X, Y: Integer;
+begin
   X := 10;
-  Incrementer(X);  // Affiche "Dans la procédure : 11"
-  ShowMessage('Après appel : ' + IntToStr(X));  // Affiche "Après appel : 11"
+  Y := 20;
+
+  ShowMessage('Avant : X = ' + IntToStr(X) + ', Y = ' + IntToStr(Y));
+  Echanger(X, Y);
+  ShowMessage('Après : X = ' + IntToStr(X) + ', Y = ' + IntToStr(Y));
+  // Après : X = 20, Y = 10
 end;
 ```
 
 #### Paramètres constants (const)
 
-Pour les paramètres que vous ne modifierez pas (surtout pour les objets volumineux comme les chaînes), utilisez `const` pour améliorer les performances :
+Utiliser `const` indique que le paramètre ne sera pas modifié. C'est une optimisation pour les types complexes (chaînes, enregistrements, objets).
 
 ```pascal
 procedure AfficherMessage(const Message: string);
 begin
-  // Message ne peut pas être modifié ici
   ShowMessage(Message);
+  // Message := 'Autre chose';  // ← ERREUR : impossible de modifier un const
 end;
 ```
 
-#### Paramètres par constante (constref)
-
-Depuis Delphi 11, vous pouvez utiliser `constref` pour les objets gérés (comme les chaînes et interfaces) :
-
-```pascal
-procedure AfficherMessage(constref Message: string);
-begin
-  ShowMessage(Message);
-end;
-```
-
-<span style="color: #0066CC">**Nécessite Delphi 11 ou supérieur**</span>
+**Avantages de const :**
+- Plus performant pour les chaînes et structures
+- Protège contre les modifications accidentelles
+- Indique clairement l'intention au lecteur du code
 
 #### Paramètres de sortie (out)
 
-Pour les paramètres qui ne sont pas utilisés en entrée, mais seulement pour renvoyer des valeurs :
+Similaire à `var` mais indique que le paramètre est uniquement utilisé pour **sortir** une valeur.
 
 ```pascal
 procedure ObtenirDimensions(out Largeur, Hauteur: Integer);
 begin
-  // Les valeurs initiales de Largeur et Hauteur sont ignorées
-  Largeur := 800;
-  Hauteur := 600;
+  Largeur := 1920;
+  Hauteur := 1080;
 end;
 
+// Utilisation
 var
-  L, H: Integer;
+  W, H: Integer;
 begin
-  ObtenirDimensions(L, H);
-  ShowMessage(Format('Dimensions : %d x %d', [L, H]));
+  ObtenirDimensions(W, H);
+  ShowMessage(Format('Dimensions : %d x %d', [W, H]));
 end;
 ```
 
-### Paramètres par défaut
+### Tableau récapitulatif des types de paramètres
 
-Depuis Delphi 2009, vous pouvez définir des valeurs par défaut pour les paramètres :
+| Type | Mot-clé | Passage | Modification | Usage |
+|------|---------|---------|--------------|-------|
+| Par valeur | *(aucun)* | Copie | Variable d'origine non modifiée | Valeurs simples en lecture |
+| Par référence | `var` | Référence | Variable d'origine modifiée | Modification de la variable |
+| Constant | `const` | Copie ou référence optimisée | Interdit | Lecture seule, optimisation |
+| Sortie | `out` | Référence | Variable d'origine modifiée | Paramètre de sortie uniquement |
+
+### Paramètres avec valeurs par défaut
+
+Depuis Delphi 4, vous pouvez définir des valeurs par défaut pour les paramètres.
 
 ```pascal
-procedure ConfigurerApplication(const Titre: string = 'Mon Application';
-                               const Largeur: Integer = 800;
-                               const Hauteur: Integer = 600);
+procedure Saluer(const Nom: string = 'Invité'; const Titre: string = '');
 begin
-  // Utilisation des paramètres
-  Form1.Caption := Titre;
-  Form1.Width := Largeur;
-  Form1.Height := Hauteur;
+  if Titre <> '' then
+    ShowMessage('Bonjour ' + Titre + ' ' + Nom)
+  else
+    ShowMessage('Bonjour ' + Nom);
+end;
+
+// Utilisations possibles
+begin
+  Saluer;                           // Bonjour Invité
+  Saluer('Marie');                  // Bonjour Marie
+  Saluer('Dupont', 'Madame');       // Bonjour Madame Dupont
 end;
 ```
 
-Vous pouvez alors appeler cette procédure de différentes façons :
+**Règles importantes :**
+- Les paramètres avec valeur par défaut doivent être à la fin
+- Tous les paramètres après le premier paramètre par défaut doivent aussi avoir une valeur par défaut
 
 ```pascal
-ConfigurerApplication;  // Utilise tous les paramètres par défaut
-ConfigurerApplication('Nouvelle App');  // Personnalise seulement le titre
-ConfigurerApplication('Petite App', 400, 300);  // Personnalise tout
+// ✅ CORRECT
+procedure Test1(A: Integer; B: Integer = 10; C: string = 'test');
+
+// ❌ ERREUR : paramètre sans défaut après un paramètre avec défaut
+procedure Test2(A: Integer; B: Integer = 10; C: string);
 ```
 
-### Paramètres avec nom (named parameters)
+### Paramètres tableaux ouverts
 
-Depuis Delphi 12, vous pouvez utiliser les paramètres nommés pour plus de clarté :
-
-```pascal
-ConfigurerApplication(Hauteur := 400, Titre := 'Application spéciale');
-```
-
-<span style="color: #0066CC">**Nécessite Delphi 12 ou supérieur**</span>
-
-## Surcharge de procédures et fonctions
-
-La surcharge permet de définir plusieurs versions d'une même procédure ou fonction avec des paramètres différents :
+Permet de passer un tableau de taille variable.
 
 ```pascal
-// Calcule l'aire d'un carré
-function CalculerAire(Cote: Double): Double;
-begin
-  Result := Cote * Cote;
-end;
-
-// Calcule l'aire d'un rectangle
-function CalculerAire(Largeur, Hauteur: Double): Double;
-begin
-  Result := Largeur * Hauteur;
-end;
-```
-
-Delphi choisit la bonne version en fonction des paramètres que vous passez :
-
-```pascal
+procedure AfficherNombres(const Nombres: array of Integer);
 var
-  AireCarre, AireRectangle: Double;
+  i: Integer;
 begin
-  AireCarre := CalculerAire(5);  // Appelle la première version
-  AireRectangle := CalculerAire(5, 10);  // Appelle la seconde version
+  for i := Low(Nombres) to High(Nombres) do
+    ShowMessage(IntToStr(Nombres[i]));
+end;
+
+// Utilisation
+begin
+  AfficherNombres([1, 2, 3]);
+  AfficherNombres([10, 20, 30, 40, 50]);
 end;
 ```
 
-## Procédures et fonctions anonymes
+**Fonctions utiles :**
+- `Low(Tableau)` : Retourne l'indice minimum
+- `High(Tableau)` : Retourne l'indice maximum
+- `Length(Tableau)` : Retourne la taille du tableau
 
-Depuis Delphi 2009, vous pouvez créer des procédures et fonctions anonymes (aussi appelées "closures" ou "expressions lambda") :
+## Les fonctions
+
+### Déclaration simple
+
+**Syntaxe :**
+```pascal
+function NomFonction: TypeRetour;
+begin
+  // Instructions
+  Result := valeur;  // ou : NomFonction := valeur;
+end;
+```
+
+**Exemple :**
+```pascal
+function ObtenirMessage: string;
+begin
+  Result := 'Bienvenue dans Delphi !';
+end;
+
+// Utilisation
+var
+  Message: string;
+begin
+  Message := ObtenirMessage;
+  ShowMessage(Message);
+end;
+```
+
+### Fonction avec paramètres
 
 ```pascal
-var
-  Carre: TFunc<Integer, Integer>;
+function Additionner(A, B: Integer): Integer;
 begin
-  Carre := function(X: Integer): Integer
+  Result := A + B;
+end;
+
+// Utilisation
+var
+  Somme: Integer;
+begin
+  Somme := Additionner(5, 3);
+  ShowMessage('5 + 3 = ' + IntToStr(Somme));  // Affiche : 5 + 3 = 8
+end;
+```
+
+### Result vs nom de fonction
+
+Deux syntaxes possibles pour retourner une valeur :
+
+```pascal
+// Syntaxe moderne (recommandée)
+function Carre(N: Integer): Integer;
+begin
+  Result := N * N;
+end;
+
+// Syntaxe ancienne (déconseillée mais valide)
+function Carre(N: Integer): Integer;
+begin
+  Carre := N * N;
+end;
+```
+
+**Recommandation :** Utilisez toujours `Result` pour plus de clarté.
+
+### Exemples de fonctions utiles
+
+#### Fonction de validation
+
+```pascal
+function EstEmailValide(const Email: string): Boolean;
+begin
+  Result := (Pos('@', Email) > 0) and (Pos('.', Email) > 0);
+end;
+
+// Utilisation
+begin
+  if EstEmailValide('marie@example.com') then
+    ShowMessage('Email valide')
+  else
+    ShowMessage('Email invalide');
+end;
+```
+
+#### Fonction de calcul
+
+```pascal
+function CalculerTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;
+begin
+  Result := PrixHT * (1 + TauxTVA);
+end;
+
+// Utilisation
+var
+  PrixFinal: Double;
+begin
+  PrixFinal := CalculerTTC(100.0);       // Utilise la TVA par défaut (20%)
+  ShowMessage(FormatFloat('0.00 €', PrixFinal));  // 120.00 €
+
+  PrixFinal := CalculerTTC(100.0, 0.055);  // TVA à 5.5%
+  ShowMessage(FormatFloat('0.00 €', PrixFinal));  // 105.50 €
+end;
+```
+
+#### Fonction de transformation
+
+```pascal
+function CapitaliserMots(const Texte: string): string;
+var
+  i: Integer;
+  NouveauMot: Boolean;
+begin
+  Result := LowerCase(Texte);
+  NouveauMot := True;
+
+  for i := 1 to Length(Result) do
   begin
-    Result := X * X;
+    if NouveauMot and (Result[i] <> ' ') then
+    begin
+      Result[i] := UpCase(Result[i]);
+      NouveauMot := False;
+    end;
+
+    if Result[i] = ' ' then
+      NouveauMot := True;
+  end;
+end;
+
+// Utilisation
+begin
+  ShowMessage(CapitaliserMots('bonjour le monde'));  // Bonjour Le Monde
+end;
+```
+
+#### Fonction avec plusieurs valeurs de retour
+
+Utilisez des paramètres `var` ou `out` pour retourner plusieurs valeurs.
+
+```pascal
+function DiviserAvecReste(Dividende, Diviseur: Integer;
+                          out Reste: Integer): Integer;
+begin
+  Result := Dividende div Diviseur;
+  Reste := Dividende mod Diviseur;
+end;
+
+// Utilisation
+var
+  Quotient, Reste: Integer;
+begin
+  Quotient := DiviserAvecReste(17, 5, Reste);
+  ShowMessage(Format('17 ÷ 5 = %d reste %d', [Quotient, Reste]));
+  // Affiche : 17 ÷ 5 = 3 reste 2
+end;
+```
+
+### Fonctions booléennes
+
+Les fonctions qui retournent `Boolean` sont très utiles pour les tests.
+
+```pascal
+function EstPair(Nombre: Integer): Boolean;
+begin
+  Result := (Nombre mod 2) = 0;
+end;
+
+function EstDansIntervalle(Valeur, Min, Max: Integer): Boolean;
+begin
+  Result := (Valeur >= Min) and (Valeur <= Max);
+end;
+
+function EstAnneeBissextile(Annee: Integer): Boolean;
+begin
+  Result := ((Annee mod 4) = 0) and
+            (((Annee mod 100) <> 0) or ((Annee mod 400) = 0));
+end;
+
+// Utilisation
+var
+  N: Integer;
+begin
+  N := 24;
+
+  if EstPair(N) then
+    ShowMessage(IntToStr(N) + ' est pair');
+
+  if EstDansIntervalle(N, 1, 100) then
+    ShowMessage(IntToStr(N) + ' est entre 1 et 100');
+
+  if EstAnneeBissextile(2024) then
+    ShowMessage('2024 est une année bissextile');
+end;
+```
+
+## Portée des variables
+
+### Variables locales
+
+Déclarées dans une procédure/fonction, elles n'existent que pendant son exécution.
+
+```pascal
+procedure Calculer;
+var
+  Total: Integer;  // Variable locale
+begin
+  Total := 100;
+  ShowMessage(IntToStr(Total));
+end;
+
+procedure AutreProcedure;
+begin
+  ShowMessage(IntToStr(Total));  // ❌ ERREUR : Total n'existe pas ici
+end;
+```
+
+### Variables globales
+
+Déclarées au niveau de l'unité, elles sont accessibles partout dans l'unité.
+
+```pascal
+unit MonUnite;
+
+interface
+
+var
+  CompteurGlobal: Integer;  // Variable globale
+
+procedure Incrementer;
+
+implementation
+
+procedure Incrementer;
+begin
+  Inc(CompteurGlobal);  // Accès à la variable globale
+end;
+
+procedure Afficher;
+begin
+  ShowMessage(IntToStr(CompteurGlobal));  // Accès à la variable globale
+end;
+
+end.
+```
+
+**Bonnes pratiques :**
+- Évitez les variables globales autant que possible
+- Privilégiez le passage de paramètres
+- Si nécessaire, utilisez des propriétés de classe plutôt que des variables globales
+
+### Variables locales avec même nom
+
+Une variable locale peut avoir le même nom qu'une variable globale. La variable locale a priorité.
+
+```pascal
+var
+  Compteur: Integer;  // Variable globale
+
+procedure Test;
+var
+  Compteur: Integer;  // Variable locale (cache la globale)
+begin
+  Compteur := 10;  // Modifie la variable locale
+  ShowMessage(IntToStr(Compteur));  // Affiche 10
+end;
+
+begin
+  Compteur := 5;  // Variable globale
+  Test;
+  ShowMessage(IntToStr(Compteur));  // Affiche 5 (globale non modifiée)
+end;
+```
+
+## Procédures et fonctions imbriquées
+
+Vous pouvez déclarer des procédures/fonctions à l'intérieur d'autres procédures/fonctions.
+
+```pascal
+procedure ProcedurePrincipale;
+
+  // Procédure imbriquée
+  procedure ProcedureInterne;
+  begin
+    ShowMessage('Procédure interne');
   end;
 
-  ShowMessage(IntToStr(Carre(5)));  // Affiche 25
-end;
-```
-
-Elles sont particulièrement utiles pour les callbacks et les événements :
-
-```pascal
-Button1.OnClick := procedure(Sender: TObject)
 begin
-  ShowMessage('Bouton cliqué !');
+  ShowMessage('Procédure principale');
+  ProcedureInterne;  // Appel de la procédure imbriquée
 end;
 ```
+
+**Exemple pratique :**
+```pascal
+procedure TraiterDonnees;
+var
+  Total: Integer;
+
+  function CalculerSomme(A, B: Integer): Integer;
+  begin
+    Result := A + B;
+  end;
+
+  procedure AfficherResultat;
+  begin
+    ShowMessage('Total : ' + IntToStr(Total));
+  end;
+
+begin
+  Total := CalculerSomme(10, 20);
+  AfficherResultat;
+end;
+```
+
+**Note :** Les procédures/fonctions imbriquées ont accès aux variables locales de la procédure parente.
 
 ## Récursivité
 
-Une fonction ou procédure peut s'appeler elle-même, ce qu'on appelle la récursivité :
+Une fonction récursive est une fonction qui s'appelle elle-même.
+
+### Exemple : Factorielle
 
 ```pascal
-function Factorielle(N: Integer): Integer;
+function Factorielle(N: Integer): Int64;
 begin
   if N <= 1 then
     Result := 1
   else
     Result := N * Factorielle(N - 1);
 end;
-```
 
-Cet exemple calcule la factorielle d'un nombre (ex : 5! = 5×4×3×2×1 = 120).
-
-```pascal
-ShowMessage('5! = ' + IntToStr(Factorielle(5)));  // Affiche "5! = 120"
-```
-
-Attention : la récursivité mal contrôlée peut causer un dépassement de pile.
-
-## Déclaration forward
-
-Si vous avez besoin de deux procédures qui s'appellent mutuellement, vous devez utiliser une déclaration forward :
-
-```pascal
-procedure ProcedureB; forward;  // Déclaration préalable
-
-procedure ProcedureA;
+// Utilisation
 begin
-  ShowMessage('Procédure A');
-  ProcedureB;  // Appel à ProcedureB
-end;
-
-procedure ProcedureB;  // Implémentation réelle
-begin
-  ShowMessage('Procédure B');
-  // Peut appeler ProcedureA si nécessaire
+  ShowMessage('5! = ' + IntToStr(Factorielle(5)));  // 5! = 120
 end;
 ```
 
-## Organisation des procédures et fonctions
+**Explication :**
+- Factorielle(5) = 5 × Factorielle(4)
+- Factorielle(4) = 4 × Factorielle(3)
+- Factorielle(3) = 3 × Factorielle(2)
+- Factorielle(2) = 2 × Factorielle(1)
+- Factorielle(1) = 1 (condition d'arrêt)
 
-### Au niveau de l'unité
-
-Les procédures et fonctions peuvent être définies au niveau de l'unité :
+### Exemple : Suite de Fibonacci
 
 ```pascal
-unit MaCalculatrice;
+function Fibonacci(N: Integer): Integer;
+begin
+  if N <= 1 then
+    Result := N
+  else
+    Result := Fibonacci(N - 1) + Fibonacci(N - 2);
+end;
 
-interface
+// Utilisation
+var
+  i: Integer;
+begin
+  for i := 0 to 10 do
+    ShowMessage(Format('Fibonacci(%d) = %d', [i, Fibonacci(i)]));
+end;
+```
 
-// Déclarations visibles par les autres unités
-function Additionner(A, B: Integer): Integer;
-function Soustraire(A, B: Integer): Integer;
+### Exemple : Puissance
 
-implementation
+```pascal
+function Puissance(Base, Exposant: Integer): Int64;
+begin
+  if Exposant = 0 then
+    Result := 1
+  else
+    Result := Base * Puissance(Base, Exposant - 1);
+end;
 
-// Implémentations
-function Additionner(A, B: Integer): Integer;
+// Utilisation
+begin
+  ShowMessage('2^10 = ' + IntToStr(Puissance(2, 10)));  // 2^10 = 1024
+end;
+```
+
+**Points importants sur la récursivité :**
+1. **Condition d'arrêt obligatoire** : sinon boucle infinie
+2. **Consommation mémoire** : chaque appel utilise de la pile
+3. **Performance** : parfois moins efficace qu'une boucle
+4. **Élégance** : souvent plus claire pour certains problèmes
+
+## Surcharge de procédures et fonctions (Overload)
+
+La surcharge permet d'avoir plusieurs procédures/fonctions avec le même nom mais des paramètres différents.
+
+**Mot-clé :** `overload`
+
+```pascal
+// Additionner deux entiers
+function Additionner(A, B: Integer): Integer; overload;
 begin
   Result := A + B;
 end;
 
-function Soustraire(A, B: Integer): Integer;
+// Additionner trois entiers
+function Additionner(A, B, C: Integer): Integer; overload;
 begin
-  Result := A - B;
+  Result := A + B + C;
 end;
 
-// Procédure privée, visible uniquement dans cette unité
-procedure LogOperation(const Operation: string; A, B, Resultat: Integer);
+// Additionner deux réels
+function Additionner(A, B: Double): Double; overload;
 begin
-  // Code de journalisation
+  Result := A + B;
 end;
+
+// Utilisation
+var
+  ResInt: Integer;
+  ResDouble: Double;
+begin
+  ResInt := Additionner(5, 3);           // Appelle la version à 2 entiers
+  ResInt := Additionner(5, 3, 2);        // Appelle la version à 3 entiers
+  ResDouble := Additionner(5.5, 3.2);    // Appelle la version à 2 réels
+end;
+```
+
+**Exemple pratique : Affichage flexible**
+```pascal
+procedure Afficher(const Message: string); overload;
+begin
+  ShowMessage(Message);
+end;
+
+procedure Afficher(Nombre: Integer); overload;
+begin
+  ShowMessage(IntToStr(Nombre));
+end;
+
+procedure Afficher(Nombre: Double; Decimales: Integer); overload;
+begin
+  ShowMessage(FormatFloat('0.' + StringOfChar('0', Decimales), Nombre));
+end;
+
+// Utilisation
+begin
+  Afficher('Bonjour');        // Affiche une chaîne
+  Afficher(42);               // Affiche un entier
+  Afficher(3.14159, 2);       // Affiche un réel avec 2 décimales
+end;
+```
+
+## Procédures et fonctions anonymes
+
+Depuis Delphi 2009, vous pouvez créer des procédures et fonctions anonymes (closures).
+
+```pascal
+var
+  Additionner: TFunc<Integer, Integer, Integer>;
+begin
+  // Fonction anonyme
+  Additionner := function(A, B: Integer): Integer
+                 begin
+                   Result := A + B;
+                 end;
+
+  ShowMessage(IntToStr(Additionner(5, 3)));  // Affiche 8
+end;
+```
+
+**Exemple avec procédure anonyme :**
+```pascal
+var
+  DireBonjour: TProc<string>;
+begin
+  DireBonjour := procedure(const Nom: string)
+                 begin
+                   ShowMessage('Bonjour ' + Nom);
+                 end;
+
+  DireBonjour('Marie');
+end;
+```
+
+**Note :** Les fonctions anonymes sont un sujet avancé. Pour débuter, concentrez-vous sur les procédures et fonctions classiques.
+
+## Forward declaration
+
+Parfois, vous devez déclarer qu'une fonction existe avant de la définir.
+
+```pascal
+// Déclaration forward
+function FonctionA(N: Integer): Integer; forward;
+
+function FonctionB(N: Integer): Integer;
+begin
+  if N > 0 then
+    Result := FonctionA(N - 1)  // FonctionA n'est pas encore définie
+  else
+    Result := 0;
+end;
+
+// Définition de FonctionA
+function FonctionA(N: Integer): Integer;
+begin
+  if N > 0 then
+    Result := N + FonctionB(N - 1)
+  else
+    Result := 1;
+end;
+```
+
+## Bonnes pratiques
+
+### 1. Nommage clair
+
+```pascal
+// ✅ BON : noms descriptifs
+function CalculerPrixTTC(PrixHT: Double): Double;
+procedure EnvoyerEmail(const Destinataire, Sujet, Corps: string);
+
+// ❌ MAUVAIS : noms vagues
+function Calc(P: Double): Double;
+procedure Send(const D, S, C: string);
+```
+
+### 2. Une fonction = une responsabilité
+
+```pascal
+// ✅ BON : fonction focalisée
+function CalculerSomme(A, B: Integer): Integer;
+begin
+  Result := A + B;
+end;
+
+// ❌ MAUVAIS : fait trop de choses
+function ToutFaire(A, B: Integer): Integer;
+begin
+  Result := A + B;
+  ShowMessage('Calcul effectué');
+  Log('Addition de ' + IntToStr(A) + ' et ' + IntToStr(B));
+  SaveToFile(Result);
+end;
+```
+
+### 3. Limiter le nombre de paramètres
+
+```pascal
+// ❌ Trop de paramètres
+procedure CreerUtilisateur(Nom, Prenom, Email, Tel, Adresse, Ville,
+                          CodePostal, Pays: string; Age: Integer);
+
+// ✅ Utiliser un enregistrement ou une classe
+type
+  TUtilisateur = record
+    Nom, Prenom, Email, Tel: string;
+    Adresse, Ville, CodePostal, Pays: string;
+    Age: Integer;
+  end;
+
+procedure CreerUtilisateur(const Utilisateur: TUtilisateur);
+```
+
+### 4. Utiliser const pour les paramètres en lecture seule
+
+```pascal
+// ✅ BON : const pour les chaînes non modifiées
+procedure AfficherMessage(const Message: string);
+
+// ❌ Moins efficace
+procedure AfficherMessage(Message: string);
+```
+
+### 5. Valider les paramètres
+
+```pascal
+function Diviser(A, B: Double): Double;
+begin
+  if B = 0 then
+    raise Exception.Create('Division par zéro impossible');
+
+  Result := A / B;
+end;
+
+function ObtenirElement(const Liste: TStringList; Index: Integer): string;
+begin
+  if (Index < 0) or (Index >= Liste.Count) then
+    raise Exception.Create('Index hors limites');
+
+  Result := Liste[Index];
+end;
+```
+
+### 6. Documenter les fonctions complexes
+
+```pascal
+/// <summary>
+/// Calcule le montant TTC à partir d'un prix HT
+/// </summary>
+/// <param name="PrixHT">Prix hors taxes</param>
+/// <param name="TauxTVA">Taux de TVA (0.20 pour 20%)</param>
+/// <returns>Prix TTC calculé</returns>
+function CalculerPrixTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;
+begin
+  Result := PrixHT * (1 + TauxTVA);
+end;
+```
+
+### 7. Initialiser Result dès le début
+
+```pascal
+// ✅ BON : Result initialisé
+function Chercher(const Valeur: string): Integer;
+begin
+  Result := -1;  // Valeur par défaut si non trouvé
+
+  // ... code de recherche ...
+
+  if Trouve then
+    Result := Index;
+end;
+
+// ❌ Risqué : Result peut rester indéfini
+function Chercher(const Valeur: string): Integer;
+begin
+  // ... code de recherche ...
+
+  if Trouve then
+    Result := Index;
+  // Si Trouve = False, Result n'est pas défini !
+end;
+```
+
+### 8. Préférer les fonctions aux procédures avec var
+
+```pascal
+// ✅ BON : fonction pure
+function Carre(N: Integer): Integer;
+begin
+  Result := N * N;
+end;
+
+// ❌ Moins clair
+procedure Carre(N: Integer; var Resultat: Integer);
+begin
+  Resultat := N * N;
+end;
+```
+
+## Erreurs courantes à éviter
+
+### Erreur 1 : Oublier d'assigner Result
+
+```pascal
+// ❌ ERREUR : Result non assigné
+function Additionner(A, B: Integer): Integer;
+begin
+  ShowMessage('Addition en cours...');
+  // Oubli d'assigner Result !
+end;
+
+// ✅ CORRECT
+function Additionner(A, B: Integer): Integer;
+begin
+  Result := A + B;
+end;
+```
+
+### Erreur 2 : Modifier un paramètre const
+
+```pascal
+// ❌ ERREUR : tentative de modification d'un const
+procedure Traiter(const Texte: string);
+begin
+  Texte := UpperCase(Texte);  // ← Erreur de compilation
+end;
+
+// ✅ CORRECT : utiliser une variable locale
+procedure Traiter(const Texte: string);
+var
+  TexteMajuscules: string;
+begin
+  TexteMajuscules := UpperCase(Texte);
+  ShowMessage(TexteMajuscules);
+end;
+```
+
+### Erreur 3 : Récursivité sans condition d'arrêt
+
+```pascal
+// ❌ ERREUR : boucle infinie
+function Compte(N: Integer): Integer;
+begin
+  Result := N + Compte(N - 1);  // Pas de condition d'arrêt !
+end;
+
+// ✅ CORRECT : avec condition d'arrêt
+function Compte(N: Integer): Integer;
+begin
+  if N <= 0 then
+    Result := 0
+  else
+    Result := N + Compte(N - 1);
+end;
+```
+
+### Erreur 4 : Paramètres dans le mauvais ordre
+
+```pascal
+function Diviser(Dividende, Diviseur: Double): Double;
+begin
+  Result := Dividende / Diviseur;
+end;
+
+// ❌ Attention à l'ordre !
+var
+  Resultat: Double;
+begin
+  Resultat := Diviser(2, 10);  // 2 / 10 = 0.2
+  // Voulait-on 10 / 2 = 5 ?
+end;
+```
+
+### Erreur 5 : Confusion entre procédure et fonction
+
+```pascal
+// ❌ ERREUR : une procédure ne retourne pas de valeur
+procedure Additionner(A, B: Integer): Integer;  // ← Erreur de syntaxe
+
+// ✅ CORRECT : c'est une fonction
+function Additionner(A, B: Integer): Integer;
+begin
+  Result := A + B;
+end;
+```
+
+## Organisation du code
+
+### Ordre de déclaration dans une unité
+
+```pascal
+unit MonUnite;
+
+interface
+
+uses
+  System.SysUtils;
+
+// 1. Constantes
+const
+  MAX_VALEUR = 100;
+
+// 2. Types
+type
+  TMonType = record
+    Valeur: Integer;
+  end;
+
+// 3. Variables globales (à éviter si possible)
+var
+  CompteurGlobal: Integer;
+
+// 4. Déclarations de procédures/fonctions publiques
+procedure ProcedurePublique;
+function FonctionPublique(N: Integer): string;
+
+implementation
+
+// 5. Procédures/fonctions privées
+procedure ProcedurePrivee;
+begin
+  // ...
+end;
+
+// 6. Implémentation des procédures/fonctions publiques
+procedure ProcedurePublique;
+begin
+  // ...
+end;
+
+function FonctionPublique(N: Integer): string;
+begin
+  Result := IntToStr(N);
+end;
+
+// 7. Initialisation (optionnelle)
+initialization
+  CompteurGlobal := 0;
+
+// 8. Finalisation (optionnelle)
+finalization
+  // Code de nettoyage
 
 end.
 ```
 
-### Au sein d'une procédure
+## Points clés à retenir
 
-Vous pouvez définir des procédures et fonctions locales à l'intérieur d'autres procédures :
-
-```pascal
-procedure TraiterDonnees(const Donnees: array of Integer);
-  // Fonction locale, accessible uniquement à l'intérieur de TraiterDonnees
-  function Moyenne: Double;
-  var
-    Somme, I: Integer;
-  begin
-    Somme := 0;
-    for I := 0 to High(Donnees) do
-      Somme := Somme + Donnees[I];
-
-    if Length(Donnees) > 0 then
-      Result := Somme / Length(Donnees)
-    else
-      Result := 0;
-  end;
-
-begin
-  ShowMessage('Moyenne : ' + FloatToStr(Moyenne));
-  // Autres traitements...
-end;
-```
-
-### Au sein d'une classe
-
-Les procédures et fonctions peuvent être des méthodes de classes (nous verrons cela plus en détail dans la section sur la programmation orientée objet) :
-
-```pascal
-type
-  TCalculatrice = class
-  public
-    function Additionner(A, B: Integer): Integer;
-    function Soustraire(A, B: Integer): Integer;
-  end;
-
-function TCalculatrice.Additionner(A, B: Integer): Integer;
-begin
-  Result := A + B;
-end;
-
-function TCalculatrice.Soustraire(A, B: Integer): Integer;
-begin
-  Result := A - B;
-end;
-```
-
-## Conseils pratiques
-
-1. **Nommage explicite** :
-   - Utilisez des noms qui décrivent clairement ce que fait la procédure ou fonction
-   - Les verbes sont généralement bons pour les procédures (ex: `CalculerTotal`, `AfficherResultat`)
-   - Les fonctions peuvent être nommées par ce qu'elles renvoient (ex: `Moyenne`, `EstValide`)
-
-2. **Taille et responsabilité** :
-   - Chaque procédure ou fonction devrait avoir une seule responsabilité claire
-   - Visez des procédures de moins de 50 lignes si possible
-   - Si une procédure devient trop grande, découpez-la en sous-procédures
-
-3. **Documentation** :
-   - Ajoutez des commentaires décrivant le but, les paramètres et les valeurs de retour
-   ```pascal
-   { Calcule la distance entre deux points.
-     @param X1,Y1 Coordonnées du premier point
-     @param X2,Y2 Coordonnées du second point
-     @return La distance euclidienne entre les points
-   }
-   function Distance(X1, Y1, X2, Y2: Double): Double;
-   ```
-
-4. **Paramètres** :
-   - Utilisez `const` pour les paramètres que vous ne modifiez pas (surtout pour les types complexes)
-   - Limitez le nombre de paramètres (idéalement moins de 5)
-   - Groupez les paramètres liés dans des records si nécessaire
-
-5. **Portée** :
-   - Gardez vos procédures et fonctions aussi privées que possible
-   - N'exposez dans l'interface que ce qui est réellement nécessaire
+1. **Procédure** : effectue une action, ne retourne pas de valeur
+2. **Fonction** : calcule et retourne une valeur
+3. **Paramètres** : par valeur (défaut), par référence (`var`), constants (`const`), sortie (`out`)
+4. **Result** : variable spéciale pour retourner la valeur d'une fonction
+5. **Portée** : variables locales vs globales
+6. **Overload** : permet plusieurs versions d'une même fonction
+7. **Récursivité** : une fonction qui s'appelle elle-même (attention à la condition d'arrêt)
+8. **Une fonction = une responsabilité**
+9. Toujours initialiser `Result` dans les fonctions
+10. Valider les paramètres pour éviter les erreurs
 
 ---
 
-Les procédures et fonctions sont les éléments de base qui vous permettent de structurer et d'organiser votre code. En maîtrisant ces concepts, vous serez capable de créer des applications Delphi bien conçues et faciles à maintenir. Dans la prochaine section, nous aborderons la gestion des exceptions, qui vous permettra de gérer proprement les erreurs dans vos applications.
+Les procédures et fonctions sont les briques fondamentales qui permettent de construire des programmes bien structurés et maintenables. Dans la section suivante, nous découvrirons la gestion des exceptions pour rendre nos programmes plus robustes face aux erreurs.
 
 ⏭️ [Gestion des exceptions](/03-langage-object-pascal/06-gestion-des-exceptions.md)

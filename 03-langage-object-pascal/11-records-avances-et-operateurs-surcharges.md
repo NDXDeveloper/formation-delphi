@@ -1,256 +1,455 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 3.11 Records avancés et opérateurs surchargés
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans les versions récentes de Delphi, les records sont devenus beaucoup plus puissants, offrant des fonctionnalités autrefois réservées aux classes. Dans cette section, nous explorerons les capacités avancées des records et comment surcharger les opérateurs pour créer des types de données personnalisés plus intuitifs et plus faciles à utiliser.
+Les **records** (enregistrements) sont des structures de données qui regroupent plusieurs valeurs de types différents. Contrairement aux classes, les records sont des **types valeur** stockés sur la pile (stack), ce qui les rend plus rapides et légers.
 
-## Records : bien plus que de simples structures
+Depuis Delphi 2006, les records ont été considérablement améliorés pour ressembler davantage aux classes, tout en conservant leurs avantages de performance.
 
-Traditionnellement, un record en Pascal était simplement un regroupement de champs de différents types. Mais dans le Delphi moderne, les records peuvent avoir des méthodes, des propriétés, des constructeurs, et même surcharger des opérateurs.
+## Records simples (rappel de base)
 
-### Rappel sur les records de base
+### Qu'est-ce qu'un record ?
 
-Commençons par un rappel sur les records de base :
-
-```pascal
-type
-  TAdresse = record
-    Rue: string;
-    Ville: string;
-    CodePostal: string;
-    Pays: string;
-  end;
-
-var
-  Adresse: TAdresse;
-begin
-  Adresse.Rue := '123 Rue Principale';
-  Adresse.Ville := 'Paris';
-  Adresse.CodePostal := '75000';
-  Adresse.Pays := 'France';
-end;
-```
-
-### Pourquoi utiliser des records avancés ?
-
-Les records avancés offrent plusieurs avantages :
-
-1. **Efficacité** : Les records sont alloués sur la pile (stack) plutôt que sur le tas (heap), ce qui les rend plus rapides à créer et détruire
-2. **Pas de gestion mémoire manuelle** : Contrairement aux classes, vous n'avez pas besoin d'appeler `Free`
-3. **Sémantique de valeur** : Les records sont copiés par valeur, ce qui simplifie leur manipulation
-4. **Performances** : Pour les petites structures de données, les records peuvent être plus performants que les classes
-
-## Ajout de méthodes aux records
-
-Vous pouvez ajouter des méthodes à vos records, tout comme pour les classes :
+Un **record** est une structure qui regroupe plusieurs champs de types différents.
 
 ```pascal
 type
   TPoint = record
-  private
-    FX, FY: Integer;
-  public
-    // Méthodes
-    procedure Initialiser(X, Y: Integer);
-    function Distance(const AutrePoint: TPoint): Double;
-    procedure Deplacer(DX, DY: Integer);
-
-    // Propriétés
-    property X: Integer read FX write FX;
-    property Y: Integer read FY write FY;
+    X: Integer;
+    Y: Integer;
   end;
 
-procedure TPoint.Initialiser(X, Y: Integer);
-begin
-  FX := X;
-  FY := Y;
-end;
-
-function TPoint.Distance(const AutrePoint: TPoint): Double;
-begin
-  Result := Sqrt(Sqr(FX - AutrePoint.X) + Sqr(FY - AutrePoint.Y));
-end;
-
-procedure TPoint.Deplacer(DX, DY: Integer);
-begin
-  FX := FX + DX;
-  FY := FY + DY;
-end;
-```
-
-Utilisation :
-
-```pascal
 var
-  Point1, Point2: TPoint;
-  Dist: Double;
+  P: TPoint;
 begin
-  Point1.Initialiser(10, 20);
-  Point2.Initialiser(30, 40);
-
-  Dist := Point1.Distance(Point2);
-  ShowMessage(Format('Distance entre les points : %.2f', [Dist]));
-
-  Point1.Deplacer(5, 10);
-  ShowMessage(Format('Nouvelles coordonnées : (%d, %d)', [Point1.X, Point1.Y]));
+  P.X := 10;
+  P.Y := 20;
+  ShowMessage(Format('Point : (%d, %d)', [P.X, P.Y]));
 end;
 ```
 
-## Constructeurs dans les records
+### Différences entre record et classe
 
-Les records peuvent avoir des constructeurs, ce qui facilite leur initialisation :
+| Caractéristique | Record | Classe |
+|----------------|--------|--------|
+| **Type** | Type valeur | Type référence |
+| **Stockage** | Pile (stack) | Tas (heap) |
+| **Création** | Automatique | Avec Create |
+| **Libération** | Automatique | Avec Free |
+| **Héritage** | Non | Oui |
+| **Interfaces** | Oui (depuis Delphi 2009) | Oui |
+| **Performance** | Plus rapide | Légèrement plus lent |
+| **Copie** | Copie de valeur | Copie de référence |
+
+### Quand utiliser un record ?
+
+**✅ Utilisez un record pour** :
+- Structures de données simples et légères
+- Types de données mathématiques (Point, Rectangle, Complexe)
+- Données temporaires qui ne nécessitent pas d'héritage
+- Optimisation de la performance (moins d'allocations mémoire)
+
+**❌ Utilisez une classe pour** :
+- Structures complexes avec héritage
+- Gestion de ressources (fichiers, connexions)
+- Comportements polymorphes
+- Objets à durée de vie longue
+
+## Records avec constructeurs
+
+### Déclaration d'un constructeur
+
+Un record peut avoir un constructeur pour initialiser ses champs :
 
 ```pascal
 type
   TPoint = record
-  private
-    FX, FY: Integer;
-  public
-    constructor Create(X, Y: Integer);
-
-    property X: Integer read FX;
-    property Y: Integer read FY;
+    X, Y: Integer;
+    constructor Create(AX, AY: Integer);
   end;
 
-constructor TPoint.Create(X, Y: Integer);
+constructor TPoint.Create(AX, AY: Integer);
 begin
-  FX := X;
-  FY := Y;
+  X := AX;
+  Y := AY;
 end;
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
-  Point: TPoint;
+  P1, P2: TPoint;
 begin
-  Point := TPoint.Create(10, 20);
-  ShowMessage(Format('Point : (%d, %d)', [Point.X, Point.Y]));
+  // Avec constructeur
+  P1 := TPoint.Create(10, 20);
+
+  // Sans constructeur (initialisation manuelle)
+  P2.X := 30;
+  P2.Y := 40;
+
+  ShowMessage(Format('P1 : (%d, %d)', [P1.X, P1.Y]));
+  ShowMessage(Format('P2 : (%d, %d)', [P2.X, P2.Y]));
 end;
 ```
 
-Contrairement aux classes, le constructeur d'un record n'a pas besoin d'être appelé. Vous pouvez simplement utiliser un record sans l'initialiser, auquel cas tous ses champs auront leur valeur par défaut (0, nil, False, etc.).
-
-## Records avec des sections de visibilité
-
-Comme les classes, les records peuvent avoir des sections de visibilité (`private`, `public`, etc.) pour contrôler l'accès à leurs membres :
+### Plusieurs constructeurs (surcharge)
 
 ```pascal
 type
   TRectangle = record
-  private
-    FLargeur, FHauteur: Double;
-    function GetSurface: Double;
-    function GetPerimetre: Double;
-  public
-    constructor Create(Largeur, Hauteur: Double);
+    Gauche, Haut, Droite, Bas: Integer;
 
-    property Largeur: Double read FLargeur write FLargeur;
-    property Hauteur: Double read FHauteur write FHauteur;
-    property Surface: Double read GetSurface;
-    property Perimetre: Double read GetPerimetre;
+    constructor Create(AGauche, AHaut, ADroite, ABas: Integer); overload;
+    constructor Create(ALargeur, AHauteur: Integer); overload;
+    constructor CreateCentre(ACentreX, ACentreY, ALargeur, AHauteur: Integer);
   end;
 
-constructor TRectangle.Create(Largeur, Hauteur: Double);
+constructor TRectangle.Create(AGauche, AHaut, ADroite, ABas: Integer);
 begin
-  FLargeur := Largeur;
-  FHauteur := Hauteur;
+  Gauche := AGauche;
+  Haut := AHaut;
+  Droite := ADroite;
+  Bas := ABas;
 end;
 
-function TRectangle.GetSurface: Double;
+constructor TRectangle.Create(ALargeur, AHauteur: Integer);
 begin
-  Result := FLargeur * FHauteur;
+  Gauche := 0;
+  Haut := 0;
+  Droite := ALargeur;
+  Bas := AHauteur;
 end;
 
-function TRectangle.GetPerimetre: Double;
+constructor TRectangle.CreateCentre(ACentreX, ACentreY, ALargeur, AHauteur: Integer);
 begin
-  Result := 2 * (FLargeur + FHauteur);
+  Gauche := ACentreX - (ALargeur div 2);
+  Haut := ACentreY - (AHauteur div 2);
+  Droite := ACentreX + (ALargeur div 2);
+  Bas := ACentreY + (AHauteur div 2);
 end;
 ```
 
-## Records imbriqués
-
-Vous pouvez imbriquer des records pour créer des structures de données plus complexes :
+### Utilisation des différents constructeurs
 
 ```pascal
-type
-  TAdresse = record
-    Rue: string;
-    Ville: string;
-    CodePostal: string;
-    Pays: string;
-  end;
-
-  TPersonne = record
-    Nom: string;
-    Prenom: string;
-    DateNaissance: TDate;
-    Adresse: TAdresse;  // Record imbriqué
-
-    function Age: Integer;
-  end;
-
-function TPersonne.Age: Integer;
+var
+  R1, R2, R3: TRectangle;
 begin
-  Result := YearsBetween(Date, DateNaissance);
+  R1 := TRectangle.Create(0, 0, 100, 50);
+  R2 := TRectangle.Create(100, 50);
+  R3 := TRectangle.CreateCentre(50, 25, 100, 50);
 end;
 ```
 
-## Surcharge d'opérateurs
+## Records avec méthodes
 
-Une des fonctionnalités les plus puissantes des records avancés est la possibilité de surcharger les opérateurs. Cela vous permet de définir comment les opérateurs standard (`+`, `-`, `*`, etc.) se comportent avec vos types personnalisés.
+### Ajouter des méthodes à un record
 
-### Pourquoi surcharger les opérateurs ?
-
-La surcharge d'opérateurs permet d'utiliser vos types personnalisés de manière plus naturelle et intuitive. Par exemple, si vous avez un type `TVector`, il est plus naturel d'écrire `V1 + V2` que `V1.Add(V2)`.
-
-### Opérateurs disponibles
-
-En Object Pascal, vous pouvez surcharger les opérateurs suivants :
-
-- Arithmétiques : `+`, `-`, `*`, `/`, `div`, `mod`
-- Comparaison : `=`, `<>`, `<`, `>`, `<=`, `>=`
-- Logiques : `and`, `or`, `xor`, `not`
-- Explicites et implicites : conversions entre types
-
-### Syntaxe pour surcharger les opérateurs
-
-Pour surcharger un opérateur, vous utilisez le mot-clé `class operator` suivi de l'opérateur à surcharger :
+Les records peuvent contenir des méthodes comme les classes :
 
 ```pascal
 type
   TPoint = record
-  private
-    FX, FY: Integer;
-  public
-    constructor Create(X, Y: Integer);
+    X, Y: Integer;
 
-    // Surcharge d'opérateurs
-    class operator Add(const A, B: TPoint): TPoint;
-    class operator Subtract(const A, B: TPoint): TPoint;
-    class operator Equal(const A, B: TPoint): Boolean;
-    class operator NotEqual(const A, B: TPoint): Boolean;
+    constructor Create(AX, AY: Integer);
 
-    property X: Integer read FX;
-    property Y: Integer read FY;
+    // Méthodes
+    function Distance(Autre: TPoint): Double;
+    function EstOrigine: Boolean;
+    procedure Deplacer(DeltaX, DeltaY: Integer);
+    procedure DeplacerVers(Nouveau: TPoint);
+    function ToString: string;
+    procedure Afficher;
   end;
 
-constructor TPoint.Create(X, Y: Integer);
+constructor TPoint.Create(AX, AY: Integer);
 begin
-  FX := X;
-  FY := Y;
+  X := AX;
+  Y := AY;
 end;
+
+function TPoint.Distance(Autre: TPoint): Double;
+begin
+  Result := Sqrt(Sqr(Autre.X - X) + Sqr(Autre.Y - Y));
+end;
+
+function TPoint.EstOrigine: Boolean;
+begin
+  Result := (X = 0) and (Y = 0);
+end;
+
+procedure TPoint.Deplacer(DeltaX, DeltaY: Integer);
+begin
+  X := X + DeltaX;
+  Y := Y + DeltaY;
+end;
+
+procedure TPoint.DeplacerVers(Nouveau: TPoint);
+begin
+  X := Nouveau.X;
+  Y := Nouveau.Y;
+end;
+
+function TPoint.ToString: string;
+begin
+  Result := Format('(%d, %d)', [X, Y]);
+end;
+
+procedure TPoint.Afficher;
+begin
+  ShowMessage(ToString);
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P1, P2: TPoint;
+  Dist: Double;
+begin
+  P1 := TPoint.Create(10, 20);
+  P2 := TPoint.Create(30, 40);
+
+  P1.Afficher;  // Affiche "(10, 20)"
+
+  if P1.EstOrigine then
+    ShowMessage('P1 est à l''origine')
+  else
+    ShowMessage('P1 n''est pas à l''origine');
+
+  P1.Deplacer(5, 5);
+  P1.Afficher;  // Affiche "(15, 25)"
+
+  Dist := P1.Distance(P2);
+  ShowMessage(Format('Distance : %.2f', [Dist]));
+end;
+```
+
+## Méthodes de classe (class methods)
+
+Les records peuvent avoir des méthodes de classe (static) :
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    constructor Create(AX, AY: Integer);
+
+    // Méthodes de classe
+    class function Origine: TPoint; static;
+    class function Distance(P1, P2: TPoint): Double; static;
+    class function Milieu(P1, P2: TPoint): TPoint; static;
+  end;
+
+class function TPoint.Origine: TPoint;
+begin
+  Result.X := 0;
+  Result.Y := 0;
+end;
+
+class function TPoint.Distance(P1, P2: TPoint): Double;
+begin
+  Result := Sqrt(Sqr(P2.X - P1.X) + Sqr(P2.Y - P1.Y));
+end;
+
+class function TPoint.Milieu(P1, P2: TPoint): TPoint;
+begin
+  Result.X := (P1.X + P2.X) div 2;
+  Result.Y := (P1.Y + P2.Y) div 2;
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P1, P2, PMilieu: TPoint;
+  Dist: Double;
+begin
+  // Créer un point à l'origine
+  P1 := TPoint.Origine;
+
+  P2 := TPoint.Create(100, 50);
+
+  // Calculer la distance entre deux points
+  Dist := TPoint.Distance(P1, P2);
+  ShowMessage(Format('Distance : %.2f', [Dist]));
+
+  // Trouver le point milieu
+  PMilieu := TPoint.Milieu(P1, P2);
+  ShowMessage(Format('Milieu : (%d, %d)', [PMilieu.X, PMilieu.Y]));
+end;
+```
+
+## Opérateurs surchargés
+
+### Qu'est-ce qu'un opérateur surchargé ?
+
+La **surcharge d'opérateurs** permet de définir comment les opérateurs mathématiques (+, -, *, /, etc.) et de comparaison (=, <, >, etc.) fonctionnent avec vos types personnalisés.
+
+### Syntaxe générale
+
+```pascal
+type
+  TMonType = record
+    // Champs...
+
+    class operator NomOperateur(Paramètres): TypeRetour;
+  end;
+```
+
+## Opérateurs arithmétiques
+
+### Addition (+)
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    constructor Create(AX, AY: Integer);
+
+    // Opérateur d'addition
+    class operator Add(const A, B: TPoint): TPoint;
+  end;
 
 class operator TPoint.Add(const A, B: TPoint): TPoint;
 begin
-  Result := TPoint.Create(A.X + B.X, A.Y + B.Y);
+  Result.X := A.X + B.X;
+  Result.Y := A.Y + B.Y;
 end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P1, P2, P3: TPoint;
+begin
+  P1 := TPoint.Create(10, 20);
+  P2 := TPoint.Create(5, 15);
+
+  // Utilisation de l'opérateur +
+  P3 := P1 + P2;  // P3 = (15, 35)
+
+  ShowMessage(Format('P3 : (%d, %d)', [P3.X, P3.Y]));
+end;
+```
+
+### Soustraction (-)
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    class operator Subtract(const A, B: TPoint): TPoint;
+  end;
 
 class operator TPoint.Subtract(const A, B: TPoint): TPoint;
 begin
-  Result := TPoint.Create(A.X - B.X, A.Y - B.Y);
+  Result.X := A.X - B.X;
+  Result.Y := A.Y - B.Y;
 end;
+```
+
+### Multiplication (*) et Division (/)
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    // Multiplication par un scalaire
+    class operator Multiply(const Point: TPoint; Scalaire: Integer): TPoint;
+    class operator Multiply(Scalaire: Integer; const Point: TPoint): TPoint;
+
+    // Division par un scalaire
+    class operator Divide(const Point: TPoint; Diviseur: Integer): TPoint;
+  end;
+
+class operator TPoint.Multiply(const Point: TPoint; Scalaire: Integer): TPoint;
+begin
+  Result.X := Point.X * Scalaire;
+  Result.Y := Point.Y * Scalaire;
+end;
+
+class operator TPoint.Multiply(Scalaire: Integer; const Point: TPoint): TPoint;
+begin
+  Result := Multiply(Point, Scalaire);
+end;
+
+class operator TPoint.Divide(const Point: TPoint; Diviseur: Integer): TPoint;
+begin
+  if Diviseur = 0 then
+    raise Exception.Create('Division par zéro');
+  Result.X := Point.X div Diviseur;
+  Result.Y := Point.Y div Diviseur;
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P1, P2, P3, P4: TPoint;
+begin
+  P1 := TPoint.Create(10, 20);
+
+  P2 := P1 * 2;      // (20, 40)
+  P3 := 3 * P1;      // (30, 60)
+  P4 := P1 / 2;      // (5, 10)
+end;
+```
+
+## Opérateurs unaires
+
+### Négation (-)
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    class operator Negative(const Point: TPoint): TPoint;
+  end;
+
+class operator TPoint.Negative(const Point: TPoint): TPoint;
+begin
+  Result.X := -Point.X;
+  Result.Y := -Point.Y;
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P1, P2: TPoint;
+begin
+  P1 := TPoint.Create(10, 20);
+  P2 := -P1;  // P2 = (-10, -20)
+end;
+```
+
+## Opérateurs de comparaison
+
+### Égalité (=) et Inégalité (<>)
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    class operator Equal(const A, B: TPoint): Boolean;
+    class operator NotEqual(const A, B: TPoint): Boolean;
+  end;
 
 class operator TPoint.Equal(const A, B: TPoint): Boolean;
 begin
@@ -259,504 +458,681 @@ end;
 
 class operator TPoint.NotEqual(const A, B: TPoint): Boolean;
 begin
-  Result := not ((A.X = B.X) and (A.Y = B.Y));
+  Result := not (A = B);
 end;
 ```
 
-Utilisation :
-
-```pascal
-var
-  P1, P2, P3: TPoint;
-begin
-  P1 := TPoint.Create(10, 20);
-  P2 := TPoint.Create(30, 40);
-
-  // Utilisation des opérateurs surchargés
-  P3 := P1 + P2;  // Équivalent à P1.Add(P2)
-  ShowMessage(Format('P1 + P2 = (%d, %d)', [P3.X, P3.Y]));
-
-  P3 := P2 - P1;  // Équivalent à P2.Subtract(P1)
-  ShowMessage(Format('P2 - P1 = (%d, %d)', [P3.X, P3.Y]));
-
-  if P1 = P2 then  // Équivalent à P1.Equal(P2)
-    ShowMessage('Les points sont égaux')
-  else
-    ShowMessage('Les points sont différents');
-end;
-```
-
-### Conversion de types avec des opérateurs
-
-Vous pouvez également surcharger les opérateurs de conversion pour convertir votre record en d'autres types et vice versa :
+### Comparaisons (<, >, <=, >=)
 
 ```pascal
 type
   TPoint = record
+    X, Y: Integer;
+
+    // Comparaison basée sur la distance à l'origine
+    class operator LessThan(const A, B: TPoint): Boolean;
+    class operator GreaterThan(const A, B: TPoint): Boolean;
+    class operator LessThanOrEqual(const A, B: TPoint): Boolean;
+    class operator GreaterThanOrEqual(const A, B: TPoint): Boolean;
   private
-    FX, FY: Integer;
-  public
-    constructor Create(X, Y: Integer);
-
-    // Conversions
-    class operator Implicit(const Point: TPoint): string;
-    class operator Explicit(const Str: string): TPoint;
-
-    property X: Integer read FX;
-    property Y: Integer read FY;
+    function DistanceOrigine: Double;
   end;
 
-class operator TPoint.Implicit(const Point: TPoint): string;
+function TPoint.DistanceOrigine: Double;
 begin
-  Result := Format('(%d,%d)', [Point.X, Point.Y]);
+  Result := Sqrt(Sqr(X) + Sqr(Y));
 end;
 
-class operator TPoint.Explicit(const Str: string): TPoint;
-var
-  X, Y: Integer;
-  Parts: TArray<string>;
+class operator TPoint.LessThan(const A, B: TPoint): Boolean;
 begin
-  // Format attendu : "(X,Y)"
-  Parts := Str.Replace('(', '').Replace(')', '').Split([',']);
-  if Length(Parts) = 2 then
-  begin
-    if TryStrToInt(Parts[0], X) and TryStrToInt(Parts[1], Y) then
-      Result := TPoint.Create(X, Y)
-    else
-      Result := TPoint.Create(0, 0);
-  end
-  else
-    Result := TPoint.Create(0, 0);
+  Result := A.DistanceOrigine < B.DistanceOrigine;
+end;
+
+class operator TPoint.GreaterThan(const A, B: TPoint): Boolean;
+begin
+  Result := A.DistanceOrigine > B.DistanceOrigine;
+end;
+
+class operator TPoint.LessThanOrEqual(const A, B: TPoint): Boolean;
+begin
+  Result := A.DistanceOrigine <= B.DistanceOrigine;
+end;
+
+class operator TPoint.GreaterThanOrEqual(const A, B: TPoint): Boolean;
+begin
+  Result := A.DistanceOrigine >= B.DistanceOrigine;
 end;
 ```
 
-Utilisation :
+### Utilisation
+
+```pascal
+var
+  P1, P2: TPoint;
+begin
+  P1 := TPoint.Create(10, 20);
+  P2 := TPoint.Create(5, 10);
+
+  if P1 = P2 then
+    ShowMessage('Points égaux')
+  else
+    ShowMessage('Points différents');
+
+  if P1 > P2 then
+    ShowMessage('P1 est plus loin de l''origine que P2');
+end;
+```
+
+## Opérateurs de conversion (cast)
+
+### Conversion implicite
+
+```pascal
+type
+  TPoint = record
+    X, Y: Integer;
+
+    // Conversion implicite depuis un entier (point sur l'axe X)
+    class operator Implicit(Valeur: Integer): TPoint;
+
+    // Conversion implicite vers une chaîne
+    class operator Implicit(const Point: TPoint): string;
+  end;
+
+class operator TPoint.Implicit(Valeur: Integer): TPoint;
+begin
+  Result.X := Valeur;
+  Result.Y := 0;
+end;
+
+class operator TPoint.Implicit(const Point: TPoint): string;
+begin
+  Result := Format('(%d, %d)', [Point.X, Point.Y]);
+end;
+```
+
+### Utilisation
 
 ```pascal
 var
   P: TPoint;
   S: string;
 begin
-  P := TPoint.Create(10, 20);
+  // Conversion implicite depuis Integer
+  P := 10;  // P = (10, 0)
 
-  // Conversion implicite de TPoint vers string
-  S := P;  // S = "(10,20)"
-  ShowMessage('Point sous forme de chaîne : ' + S);
-
-  // Conversion explicite de string vers TPoint
-  P := TPoint(S);
-  ShowMessage(Format('Point converti : (%d, %d)', [P.X, P.Y]));
+  // Conversion implicite vers string
+  S := P;  // S = "(10, 0)"
+  ShowMessage(S);
 end;
 ```
 
-#### Conversion implicite vs explicite
-
-- **Implicite** (`Implicit`) : La conversion est automatique et ne nécessite pas de cast explicite
-- **Explicite** (`Explicit`) : La conversion nécessite un cast explicite (par exemple, `TPoint(S)`)
-
-En général, utilisez `Implicit` pour les conversions sans perte d'information et `Explicit` pour les conversions potentiellement ambiguës ou avec perte d'information.
-
-## Exemple complet : type de fraction
-
-Voici un exemple complet d'un record avancé représentant une fraction, avec constructeurs, méthodes et opérateurs surchargés :
+### Conversion explicite
 
 ```pascal
 type
-  TFraction = record
-  private
-    FNumerateur: Integer;
-    FDenominateur: Integer;
-    procedure Simplifier;
-    function GetValeur: Double;
-  public
-    constructor Create(Numerateur: Integer; Denominateur: Integer = 1);
+  TPoint = record
+    X, Y: Integer;
+
+    // Conversion explicite vers Double (distance à l'origine)
+    class operator Explicit(const Point: TPoint): Double;
+  end;
+
+class operator TPoint.Explicit(const Point: TPoint): Double;
+begin
+  Result := Sqrt(Sqr(Point.X) + Sqr(Point.Y));
+end;
+```
+
+### Utilisation
+
+```pascal
+var
+  P: TPoint;
+  Distance: Double;
+begin
+  P := TPoint.Create(3, 4);
+
+  // Conversion explicite avec cast
+  Distance := Double(P);  // Distance = 5.0
+
+  ShowMessage(FloatToStr(Distance));
+end;
+```
+
+## Exemple complet : Nombre complexe
+
+Voici un exemple complet d'un record avec tous les types d'opérateurs :
+
+```pascal
+type
+  TComplexe = record
+    Reel: Double;
+    Imaginaire: Double;
+
+    // Constructeurs
+    constructor Create(AReel, AImagianire: Double); overload;
+    constructor Create(AReel: Double); overload;
 
     // Méthodes
+    function Module: Double;
+    function Conjugue: TComplexe;
     function ToString: string;
-    function Inverse: TFraction;
 
-    // Opérateurs
-    class operator Add(const A, B: TFraction): TFraction;
-    class operator Subtract(const A, B: TFraction): TFraction;
-    class operator Multiply(const A, B: TFraction): TFraction;
-    class operator Divide(const A, B: TFraction): TFraction;
-    class operator Equal(const A, B: TFraction): Boolean;
-    class operator NotEqual(const A, B: TFraction): Boolean;
-    class operator LessThan(const A, B: TFraction): Boolean;
-    class operator GreaterThan(const A, B: TFraction): Boolean;
-    class operator Implicit(const Value: Integer): TFraction;
-    class operator Implicit(const Fraction: TFraction): Double;
+    // Méthodes de classe
+    class function Zero: TComplexe; static;
+    class function Un: TComplexe; static;
+    class function I: TComplexe; static;
 
-    property Numerateur: Integer read FNumerateur;
-    property Denominateur: Integer read FDenominateur;
-    property Valeur: Double read GetValeur;
+    // Opérateurs arithmétiques
+    class operator Add(const A, B: TComplexe): TComplexe;
+    class operator Subtract(const A, B: TComplexe): TComplexe;
+    class operator Multiply(const A, B: TComplexe): TComplexe;
+    class operator Divide(const A, B: TComplexe): TComplexe;
+
+    // Opérateurs unaires
+    class operator Negative(const C: TComplexe): TComplexe;
+
+    // Opérateurs de comparaison
+    class operator Equal(const A, B: TComplexe): Boolean;
+    class operator NotEqual(const A, B: TComplexe): Boolean;
+
+    // Opérateurs de conversion
+    class operator Implicit(Valeur: Double): TComplexe;
+    class operator Implicit(const C: TComplexe): string;
+    class operator Explicit(const C: TComplexe): Double;
   end;
 
-// Fonction utilitaire pour le PGCD (Plus Grand Commun Diviseur)
-function PGCD(A, B: Integer): Integer;
+// Constructeurs
+constructor TComplexe.Create(AReel, AImagianire: Double);
 begin
-  if B = 0 then
-    Result := A
+  Reel := AReel;
+  Imaginaire := AImagianire;
+end;
+
+constructor TComplexe.Create(AReel: Double);
+begin
+  Create(AReel, 0);
+end;
+
+// Méthodes
+function TComplexe.Module: Double;
+begin
+  Result := Sqrt(Sqr(Reel) + Sqr(Imaginaire));
+end;
+
+function TComplexe.Conjugue: TComplexe;
+begin
+  Result.Reel := Reel;
+  Result.Imaginaire := -Imaginaire;
+end;
+
+function TComplexe.ToString: string;
+begin
+  if Imaginaire >= 0 then
+    Result := Format('%.2f + %.2fi', [Reel, Imaginaire])
   else
-    Result := PGCD(B, A mod B);
+    Result := Format('%.2f - %.2fi', [Reel, Abs(Imaginaire)]);
 end;
 
-constructor TFraction.Create(Numerateur, Denominateur: Integer);
+// Méthodes de classe
+class function TComplexe.Zero: TComplexe;
 begin
-  if Denominateur = 0 then
-    raise Exception.Create('Le dénominateur ne peut pas être zéro');
-
-  FNumerateur := Numerateur;
-  FDenominateur := Denominateur;
-
-  // Gestion du signe
-  if FDenominateur < 0 then
-  begin
-    FNumerateur := -FNumerateur;
-    FDenominateur := -FDenominateur;
-  end;
-
-  Simplifier;
+  Result := TComplexe.Create(0, 0);
 end;
 
-procedure TFraction.Simplifier;
+class function TComplexe.Un: TComplexe;
+begin
+  Result := TComplexe.Create(1, 0);
+end;
+
+class function TComplexe.I: TComplexe;
+begin
+  Result := TComplexe.Create(0, 1);
+end;
+
+// Opérateurs arithmétiques
+class operator TComplexe.Add(const A, B: TComplexe): TComplexe;
+begin
+  Result.Reel := A.Reel + B.Reel;
+  Result.Imaginaire := A.Imaginaire + B.Imaginaire;
+end;
+
+class operator TComplexe.Subtract(const A, B: TComplexe): TComplexe;
+begin
+  Result.Reel := A.Reel - B.Reel;
+  Result.Imaginaire := A.Imaginaire - B.Imaginaire;
+end;
+
+class operator TComplexe.Multiply(const A, B: TComplexe): TComplexe;
+begin
+  // (a+bi)(c+di) = (ac-bd) + (ad+bc)i
+  Result.Reel := A.Reel * B.Reel - A.Imaginaire * B.Imaginaire;
+  Result.Imaginaire := A.Reel * B.Imaginaire + A.Imaginaire * B.Reel;
+end;
+
+class operator TComplexe.Divide(const A, B: TComplexe): TComplexe;
 var
-  Diviseur: Integer;
+  Denominateur: Double;
 begin
-  // Ne rien faire si le numérateur est zéro
-  if FNumerateur = 0 then
-  begin
-    FDenominateur := 1;
-    Exit;
-  end;
-
-  // Calculer le PGCD et simplifier
-  Diviseur := PGCD(Abs(FNumerateur), FDenominateur);
-  if Diviseur > 1 then
-  begin
-    FNumerateur := FNumerateur div Diviseur;
-    FDenominateur := FDenominateur div Diviseur;
-  end;
-end;
-
-function TFraction.GetValeur: Double;
-begin
-  Result := FNumerateur / FDenominateur;
-end;
-
-function TFraction.ToString: string;
-begin
-  if FDenominateur = 1 then
-    Result := IntToStr(FNumerateur)
-  else
-    Result := Format('%d/%d', [FNumerateur, FDenominateur]);
-end;
-
-function TFraction.Inverse: TFraction;
-begin
-  if FNumerateur = 0 then
-    raise Exception.Create('Impossible d''inverser une fraction nulle');
-
-  Result := TFraction.Create(FDenominateur, FNumerateur);
-end;
-
-class operator TFraction.Add(const A, B: TFraction): TFraction;
-begin
-  Result := TFraction.Create(
-    A.Numerateur * B.Denominateur + B.Numerateur * A.Denominateur,
-    A.Denominateur * B.Denominateur
-  );
-end;
-
-class operator TFraction.Subtract(const A, B: TFraction): TFraction;
-begin
-  Result := TFraction.Create(
-    A.Numerateur * B.Denominateur - B.Numerateur * A.Denominateur,
-    A.Denominateur * B.Denominateur
-  );
-end;
-
-class operator TFraction.Multiply(const A, B: TFraction): TFraction;
-begin
-  Result := TFraction.Create(
-    A.Numerateur * B.Numerateur,
-    A.Denominateur * B.Denominateur
-  );
-end;
-
-class operator TFraction.Divide(const A, B: TFraction): TFraction;
-begin
-  if B.Numerateur = 0 then
+  Denominateur := Sqr(B.Reel) + Sqr(B.Imaginaire);
+  if Denominateur = 0 then
     raise Exception.Create('Division par zéro');
 
-  Result := TFraction.Create(
-    A.Numerateur * B.Denominateur,
-    A.Denominateur * B.Numerateur
-  );
+  Result.Reel := (A.Reel * B.Reel + A.Imaginaire * B.Imaginaire) / Denominateur;
+  Result.Imaginaire := (A.Imaginaire * B.Reel - A.Reel * B.Imaginaire) / Denominateur;
 end;
 
-class operator TFraction.Equal(const A, B: TFraction): Boolean;
+class operator TComplexe.Negative(const C: TComplexe): TComplexe;
 begin
-  // Les fractions sont déjà simplifiées, donc on peut comparer directement
-  Result := (A.Numerateur = B.Numerateur) and (A.Denominateur = B.Denominateur);
+  Result.Reel := -C.Reel;
+  Result.Imaginaire := -C.Imaginaire;
 end;
 
-class operator TFraction.NotEqual(const A, B: TFraction): Boolean;
+// Opérateurs de comparaison
+class operator TComplexe.Equal(const A, B: TComplexe): Boolean;
+begin
+  Result := (Abs(A.Reel - B.Reel) < 0.0001) and
+            (Abs(A.Imaginaire - B.Imaginaire) < 0.0001);
+end;
+
+class operator TComplexe.NotEqual(const A, B: TComplexe): Boolean;
 begin
   Result := not (A = B);
 end;
 
-class operator TFraction.LessThan(const A, B: TFraction): Boolean;
+// Opérateurs de conversion
+class operator TComplexe.Implicit(Valeur: Double): TComplexe;
 begin
-  // On compare les produits croisés pour éviter les erreurs d'arrondi
-  Result := A.Numerateur * B.Denominateur < B.Numerateur * A.Denominateur;
+  Result := TComplexe.Create(Valeur, 0);
 end;
 
-class operator TFraction.GreaterThan(const A, B: TFraction): Boolean;
+class operator TComplexe.Implicit(const C: TComplexe): string;
 begin
-  Result := B < A;
+  Result := C.ToString;
 end;
 
-class operator TFraction.Implicit(const Value: Integer): TFraction;
+class operator TComplexe.Explicit(const C: TComplexe): Double;
 begin
-  Result := TFraction.Create(Value, 1);
-end;
-
-class operator TFraction.Implicit(const Fraction: TFraction): Double;
-begin
-  Result := Fraction.Valeur;
+  Result := C.Module;
 end;
 ```
 
-Utilisation :
+### Utilisation du nombre complexe
 
 ```pascal
 var
-  F1, F2, F3: TFraction;
-  D: Double;
+  C1, C2, C3: TComplexe;
+  Texte: string;
+  Module: Double;
 begin
-  F1 := TFraction.Create(1, 2);  // 1/2
-  F2 := TFraction.Create(3, 4);  // 3/4
+  // Création
+  C1 := TComplexe.Create(3, 4);
+  C2 := TComplexe.Create(1, 2);
 
   // Addition
-  F3 := F1 + F2;
-  ShowMessage('1/2 + 3/4 = ' + F3.ToString);  // 5/4
+  C3 := C1 + C2;  // (4 + 6i)
+  ShowMessage('C1 + C2 = ' + string(C3));
 
   // Soustraction
-  F3 := F2 - F1;
-  ShowMessage('3/4 - 1/2 = ' + F3.ToString);  // 1/4
+  C3 := C1 - C2;  // (2 + 2i)
+  ShowMessage('C1 - C2 = ' + string(C3));
 
   // Multiplication
-  F3 := F1 * F2;
-  ShowMessage('1/2 * 3/4 = ' + F3.ToString);  // 3/8
+  C3 := C1 * C2;  // (-5 + 10i)
+  ShowMessage('C1 * C2 = ' + string(C3));
 
   // Division
-  F3 := F1 / F2;
-  ShowMessage('1/2 / 3/4 = ' + F3.ToString);  // 2/3
+  C3 := C1 / C2;
+  ShowMessage('C1 / C2 = ' + string(C3));
+
+  // Négation
+  C3 := -C1;  // (-3 - 4i)
+  ShowMessage('-C1 = ' + string(C3));
+
+  // Conversion depuis Double
+  C3 := 5.0;  // (5 + 0i)
+
+  // Conversion vers string
+  Texte := C1;  // "3.00 + 4.00i"
+  ShowMessage(Texte);
+
+  // Conversion explicite vers Double (module)
+  Module := Double(C1);  // 5.0
+  ShowMessage('Module de C1 = ' + FloatToStr(Module));
+
+  // Méthodes de classe
+  ShowMessage('Zero = ' + string(TComplexe.Zero));
+  ShowMessage('Un = ' + string(TComplexe.Un));
+  ShowMessage('I = ' + string(TComplexe.I));
 
   // Comparaison
-  if F1 < F2 then
-    ShowMessage('1/2 est inférieur à 3/4');
-
-  // Conversion implicite d'entier vers fraction
-  F3 := 5;  // Équivalent à TFraction.Create(5, 1)
-  ShowMessage('F3 = ' + F3.ToString);  // 5
-
-  // Conversion implicite de fraction vers double
-  D := F1;  // Équivalent à F1.Valeur
-  ShowMessage('F1 en décimal = ' + FloatToStr(D));  // 0.5
-
-  // Inverse
-  F3 := F1.Inverse;
-  ShowMessage('Inverse de 1/2 = ' + F3.ToString);  // 2
+  if C1 = C2 then
+    ShowMessage('Égaux')
+  else
+    ShowMessage('Différents');
 end;
 ```
 
-## Différences clés entre records et classes
-
-Pour vous aider à choisir entre records et classes, voici les principales différences :
-
-| Caractéristique | Record | Classe |
-|-----------------|--------|--------|
-| Allocation | Sur la pile (stack) | Sur le tas (heap) |
-| Libération mémoire | Automatique | Manuelle (`Free`) |
-| Sémantique | Par valeur (copie) | Par référence (pointeur) |
-| Héritage | Non | Oui |
-| Polymorphisme | Non | Oui |
-| Constructeurs | Optionnels | Obligatoires |
-| Destructeurs | Non | Oui |
-| Méthodes virtuelles | Non | Oui |
-| Surcharge d'opérateurs | Oui | Non |
-| Taille maximale recommandée | Petite/Moyenne | Illimitée |
-
-### Quand utiliser un record plutôt qu'une classe ?
-
-- Pour les petites structures de données (quelques champs)
-- Quand vous avez besoin de la sémantique de valeur (copies, comparaisons)
-- Quand vous voulez éviter la gestion manuelle de la mémoire
-- Quand vous avez besoin de surcharger des opérateurs
-- Pour des types immuables (qui ne changent pas après création)
-
-### Quand utiliser une classe plutôt qu'un record ?
-
-- Pour les structures complexes avec beaucoup de champs et méthodes
-- Quand vous avez besoin d'héritage ou de polymorphisme
-- Quand vous avez besoin de méthodes virtuelles
-- Pour des cycles de vie longs ou contrôlés
-
-## Bonnes pratiques pour les records avancés
-
-1. **Gardez-les petits** : Les records sont copiés par valeur, donc ils devraient rester relativement petits
-2. **Rendez-les immuables** : Lorsque possible, concevez vos records pour qu'ils ne changent pas après création
-3. **Utilisez des propriétés** : Préférez les propriétés aux champs publics pour un meilleur encapsulation
-4. **Surchargez judicieusement** : Ne surchargez que les opérateurs qui ont un sens pour votre type
-5. **Respectez les conventions** : Assurez-vous que vos opérateurs se comportent comme attendu (par exemple, `a + b` devrait être égal à `b + a` pour l'addition)
-
-## Exemple pratique : vecteur 2D
-
-Voici un autre exemple pratique d'un record représentant un vecteur 2D avec des opérateurs surchargés :
+## Exemple pratique : Vecteur 2D
 
 ```pascal
 type
   TVecteur2D = record
-  private
-    FX, FY: Double;
-  public
-    constructor Create(X, Y: Double);
+    X, Y: Double;
+
+    constructor Create(AX, AY: Double);
 
     // Méthodes
-    function Magnitude: Double;
+    function Longueur: Double;
     function Normaliser: TVecteur2D;
-    function ProduitScalaire(const Autre: TVecteur2D): Double;
-
-    // Opérateurs
-    class operator Add(const A, B: TVecteur2D): TVecteur2D;
-    class operator Subtract(const A, B: TVecteur2D): TVecteur2D;
-    class operator Multiply(const Vecteur: TVecteur2D; Scalaire: Double): TVecteur2D;
-    class operator Multiply(Scalaire: Double; const Vecteur: TVecteur2D): TVecteur2D;
-    class operator Negative(const Vecteur: TVecteur2D): TVecteur2D;
-    class operator Equal(const A, B: TVecteur2D): Boolean;
-
+    function ProduitScalaire(Autre: TVecteur2D): Double;
+    function Angle: Double;
     function ToString: string;
 
-    property X: Double read FX;
-    property Y: Double read FY;
+    // Méthodes de classe
+    class function Zero: TVecteur2D; static;
+    class function Unitaire(Angle: Double): TVecteur2D; static;
+
+    // Opérateurs arithmétiques
+    class operator Add(const A, B: TVecteur2D): TVecteur2D;
+    class operator Subtract(const A, B: TVecteur2D): TVecteur2D;
+    class operator Multiply(const V: TVecteur2D; Scalaire: Double): TVecteur2D;
+    class operator Multiply(Scalaire: Double; const V: TVecteur2D): TVecteur2D;
+    class operator Divide(const V: TVecteur2D; Diviseur: Double): TVecteur2D;
+
+    // Opérateur unaire
+    class operator Negative(const V: TVecteur2D): TVecteur2D;
+
+    // Opérateurs de comparaison
+    class operator Equal(const A, B: TVecteur2D): Boolean;
+    class operator NotEqual(const A, B: TVecteur2D): Boolean;
   end;
 
-constructor TVecteur2D.Create(X, Y: Double);
+constructor TVecteur2D.Create(AX, AY: Double);
 begin
-  FX := X;
-  FY := Y;
+  X := AX;
+  Y := AY;
 end;
 
-function TVecteur2D.Magnitude: Double;
+function TVecteur2D.Longueur: Double;
 begin
-  Result := Sqrt(FX * FX + FY * FY);
+  Result := Sqrt(Sqr(X) + Sqr(Y));
 end;
 
 function TVecteur2D.Normaliser: TVecteur2D;
 var
-  Mag: Double;
+  Len: Double;
 begin
-  Mag := Magnitude;
-  if Mag > 0 then
-    Result := TVecteur2D.Create(FX / Mag, FY / Mag)
+  Len := Longueur;
+  if Len = 0 then
+    Result := Self
   else
-    Result := TVecteur2D.Create(0, 0);
+  begin
+    Result.X := X / Len;
+    Result.Y := Y / Len;
+  end;
 end;
 
-function TVecteur2D.ProduitScalaire(const Autre: TVecteur2D): Double;
+function TVecteur2D.ProduitScalaire(Autre: TVecteur2D): Double;
 begin
-  Result := FX * Autre.X + FY * Autre.Y;
+  Result := X * Autre.X + Y * Autre.Y;
 end;
 
-class operator TVecteur2D.Add(const A, B: TVecteur2D): TVecteur2D;
+function TVecteur2D.Angle: Double;
 begin
-  Result := TVecteur2D.Create(A.X + B.X, A.Y + B.Y);
-end;
-
-class operator TVecteur2D.Subtract(const A, B: TVecteur2D): TVecteur2D;
-begin
-  Result := TVecteur2D.Create(A.X - B.X, A.Y - B.Y);
-end;
-
-class operator TVecteur2D.Multiply(const Vecteur: TVecteur2D; Scalaire: Double): TVecteur2D;
-begin
-  Result := TVecteur2D.Create(Vecteur.X * Scalaire, Vecteur.Y * Scalaire);
-end;
-
-class operator TVecteur2D.Multiply(Scalaire: Double; const Vecteur: TVecteur2D): TVecteur2D;
-begin
-  Result := Vecteur * Scalaire;  // Réutilise l'autre opérateur Multiply
-end;
-
-class operator TVecteur2D.Negative(const Vecteur: TVecteur2D): TVecteur2D;
-begin
-  Result := TVecteur2D.Create(-Vecteur.X, -Vecteur.Y);
-end;
-
-class operator TVecteur2D.Equal(const A, B: TVecteur2D): Boolean;
-const
-  Epsilon = 1E-10;
-begin
-  Result := (Abs(A.X - B.X) < Epsilon) and (Abs(A.Y - B.Y) < Epsilon);
+  Result := ArcTan2(Y, X);
 end;
 
 function TVecteur2D.ToString: string;
 begin
-  Result := Format('(%.2f, %.2f)', [FX, FY]);
+  Result := Format('(%.2f, %.2f)', [X, Y]);
+end;
+
+class function TVecteur2D.Zero: TVecteur2D;
+begin
+  Result := TVecteur2D.Create(0, 0);
+end;
+
+class function TVecteur2D.Unitaire(Angle: Double): TVecteur2D;
+begin
+  Result.X := Cos(Angle);
+  Result.Y := Sin(Angle);
+end;
+
+class operator TVecteur2D.Add(const A, B: TVecteur2D): TVecteur2D;
+begin
+  Result.X := A.X + B.X;
+  Result.Y := A.Y + B.Y;
+end;
+
+class operator TVecteur2D.Subtract(const A, B: TVecteur2D): TVecteur2D;
+begin
+  Result.X := A.X - B.X;
+  Result.Y := A.Y - B.Y;
+end;
+
+class operator TVecteur2D.Multiply(const V: TVecteur2D; Scalaire: Double): TVecteur2D;
+begin
+  Result.X := V.X * Scalaire;
+  Result.Y := V.Y * Scalaire;
+end;
+
+class operator TVecteur2D.Multiply(Scalaire: Double; const V: TVecteur2D): TVecteur2D;
+begin
+  Result := V * Scalaire;
+end;
+
+class operator TVecteur2D.Divide(const V: TVecteur2D; Diviseur: Double): TVecteur2D;
+begin
+  if Diviseur = 0 then
+    raise Exception.Create('Division par zéro');
+  Result.X := V.X / Diviseur;
+  Result.Y := V.Y / Diviseur;
+end;
+
+class operator TVecteur2D.Negative(const V: TVecteur2D): TVecteur2D;
+begin
+  Result.X := -V.X;
+  Result.Y := -V.Y;
+end;
+
+class operator TVecteur2D.Equal(const A, B: TVecteur2D): Boolean;
+begin
+  Result := (Abs(A.X - B.X) < 0.0001) and (Abs(A.Y - B.Y) < 0.0001);
+end;
+
+class operator TVecteur2D.NotEqual(const A, B: TVecteur2D): Boolean;
+begin
+  Result := not (A = B);
 end;
 ```
 
-Utilisation :
+### Utilisation
 
 ```pascal
 var
   V1, V2, V3: TVecteur2D;
-  ProduitScalaire: Double;
 begin
   V1 := TVecteur2D.Create(3, 4);
   V2 := TVecteur2D.Create(1, 2);
 
-  // Addition
-  V3 := V1 + V2;
-  ShowMessage('V1 + V2 = ' + V3.ToString);  // (4.00, 6.00)
+  // Opérations vectorielles
+  V3 := V1 + V2;          // Addition
+  V3 := V1 - V2;          // Soustraction
+  V3 := V1 * 2;           // Multiplication par scalaire
+  V3 := V1 / 2;           // Division par scalaire
+  V3 := -V1;              // Négation
 
-  // Soustraction
-  V3 := V1 - V2;
-  ShowMessage('V1 - V2 = ' + V3.ToString);  // (2.00, 2.00)
+  // Méthodes
+  ShowMessage('Longueur V1 : ' + FloatToStr(V1.Longueur));
+  ShowMessage('Produit scalaire : ' + FloatToStr(V1.ProduitScalaire(V2)));
 
-  // Multiplication par un scalaire
-  V3 := V1 * 2;
-  ShowMessage('V1 * 2 = ' + V3.ToString);  // (6.00, 8.00)
-
-  // L'opérateur fonctionne dans les deux sens
-  V3 := 0.5 * V1;
-  ShowMessage('0.5 * V1 = ' + V3.ToString);  // (1.50, 2.00)
-
-  // Négation
-  V3 := -V1;
-  ShowMessage('-V1 = ' + V3.ToString);  // (-3.00, -4.00)
-
-  // Magnitude
-  ShowMessage('Magnitude de V1 = ' + FloatToStr(V1.Magnitude));  // 5.00
-
-  // Normalisation
   V3 := V1.Normaliser;
-  ShowMessage('V1 normalisé = ' + V3.ToString);  // (0.60, 0.80)
-
-  // Produit scalaire
-  ProduitScalaire := V1.ProduitScalaire(V2);
-  ShowMessage('V1 · V2 = ' + FloatToStr(ProduitScalaire));  // 11.00
+  ShowMessage('V1 normalisé : ' + V3.ToString);
 end;
 ```
 
-## Conclusion
+## Liste des opérateurs disponibles
 
-Les records avancés et les opérateurs surchargés sont des fonctionnalités puissantes d'Object Pascal qui vous permettent de créer des types de données personnalisés, intuitifs et faciles à utiliser. Utilisés correctement, ils peuvent rendre votre code plus propre, plus lisible et plus maintenable.
+| Opérateur | Méthode | Usage |
+|-----------|---------|-------|
+| + | Add | A + B |
+| - (binaire) | Subtract | A - B |
+| * | Multiply | A * B |
+| / | Divide | A / B |
+| - (unaire) | Negative | -A |
+| = | Equal | A = B |
+| <> | NotEqual | A <> B |
+| < | LessThan | A < B |
+| > | GreaterThan | A > B |
+| <= | LessThanOrEqual | A <= B |
+| >= | GreaterThanOrEqual | A >= B |
+| Implicit | Implicit | A := B (conversion auto) |
+| Explicit | Explicit | A := TypeA(B) (cast) |
+| Inc | Inc | Inc(A) |
+| Dec | Dec | Dec(A) |
+| LogicalAnd | LogicalAnd | A and B |
+| LogicalOr | LogicalOr | A or B |
+| LogicalNot | LogicalNot | not A |
+| BitwiseAnd | BitwiseAnd | A and B |
+| BitwiseOr | BitwiseOr | A or B |
 
-Les records sont particulièrement utiles pour représenter des valeurs immuables comme des points, des vecteurs, des fractions, des coordonnées GPS, des dates, etc. En surchargeant les opérateurs, vous pouvez donner à ces types un comportement naturel et cohérent.
+## Bonnes pratiques
 
-Dans la prochaine section, nous explorerons d'autres aspects avancés du langage Object Pascal pour vous aider à écrire des applications encore plus puissantes et élégantes.
+### 1. Utilisez const pour les paramètres d'opérateurs
+
+```pascal
+// ✅ Bon - évite la copie inutile
+class operator Add(const A, B: TPoint): TPoint;
+
+// ❌ Moins bon - copie les paramètres
+class operator Add(A, B: TPoint): TPoint;
+```
+
+### 2. Soyez cohérent avec les mathématiques
+
+```pascal
+// ✅ Bon - comportement attendu
+class operator Add(const A, B: TPoint): TPoint;
+
+// ❌ Confusant - + qui soustrait !
+class operator Add(const A, B: TPoint): TPoint;
+begin
+  Result.X := A.X - B.X;  // Non !
+end;
+```
+
+### 3. Validez les entrées
+
+```pascal
+class operator Divide(const A: TPoint; Diviseur: Integer): TPoint;
+begin
+  if Diviseur = 0 then
+    raise Exception.Create('Division par zéro');
+  Result.X := A.X div Diviseur;
+  Result.Y := A.Y div Diviseur;
+end;
+```
+
+### 4. Implémentez les opérateurs par paires
+
+Si vous implémentez `=`, implémentez aussi `<>`.
+Si vous implémentez `<`, implémentez aussi `>`, `<=`, `>=`.
+
+### 5. Utilisez les records pour les types valeur
+
+```pascal
+// ✅ Bon - type valeur léger
+type
+  TPoint = record
+    X, Y: Integer;
+  end;
+
+// ❌ Moins approprié - overhead de classe inutile
+type
+  TPoint = class
+    X, Y: Integer;
+  end;
+```
+
+## Limites des records
+
+### Pas d'héritage
+
+```pascal
+// ❌ ERREUR - les records ne supportent pas l'héritage
+type
+  TPoint2D = record
+    X, Y: Integer;
+  end;
+
+  TPoint3D = record(TPoint2D)  // Erreur de compilation !
+    Z: Integer;
+  end;
+```
+
+### Solution : composition
+
+```pascal
+// ✅ Solution - utiliser la composition
+type
+  TPoint2D = record
+    X, Y: Integer;
+  end;
+
+  TPoint3D = record
+    Point2D: TPoint2D;  // Composition
+    Z: Integer;
+  end;
+```
+
+### Attention aux références
+
+```pascal
+var
+  P1, P2: TPoint;
+begin
+  P1 := TPoint.Create(10, 20);
+  P2 := P1;  // Copie de valeur, pas de référence
+
+  P2.X := 99;
+
+  // P1.X vaut toujours 10 (pas 99)
+  // P2.X vaut 99
+end;
+```
+
+## Résumé
+
+- **Records avancés** : structures légères avec méthodes
+  - Constructeurs pour initialisation
+  - Méthodes d'instance et de classe
+  - Plus performants que les classes pour les petites structures
+
+- **Opérateurs surchargés** : définir le comportement des opérateurs
+  - **Arithmétiques** : +, -, *, /
+  - **Unaires** : - (négation)
+  - **Comparaison** : =, <>, <, >, <=, >=
+  - **Conversion** : Implicit, Explicit
+
+- **Avantages** :
+  - Code plus naturel et lisible
+  - Performance optimale (type valeur)
+  - Pas besoin de Create/Free
+  - Parfait pour types mathématiques
+
+- **Bonnes pratiques** :
+  - Paramètres const pour éviter les copies
+  - Cohérence mathématique
+  - Validation des entrées
+  - Implémenter les opérateurs par paires
+
+- **Limitations** :
+  - Pas d'héritage
+  - Copie de valeur (pas de référence)
+  - Utiliser composition au lieu d'héritage
+
+Les records avancés avec opérateurs surchargés sont parfaits pour créer des types de données mathématiques élégants et performants comme des points, vecteurs, matrices, nombres complexes, fractions, etc.
 
 ⏭️ [Conception d'Interfaces Utilisateur avec la VCL](/04-conception-dinterfaces-utilisateur-avec-la-vcl/README.md)
