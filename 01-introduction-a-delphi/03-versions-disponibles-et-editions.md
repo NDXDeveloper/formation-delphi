@@ -1,136 +1,214 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 1.3 Versions disponibles et éditions (Community Edition incluse)
 
-🔝 Retour au [Sommaire](/SOMMAIRE.md)
+## Introduction
+
+Delphi est proposé en plusieurs éditions adaptées à différents besoins et budgets. Que vous soyez un étudiant débutant, un développeur indépendant ou une grande entreprise, il existe une édition de Delphi faite pour vous. La bonne nouvelle ? Il existe même une version gratuite pour commencer !
 
 ## Les différentes éditions de Delphi
 
-Delphi est disponible en plusieurs éditions, chacune s'adressant à différents types d'utilisateurs, du débutant au développeur professionnel. Comprendre ces différentes offres vous aidera à choisir celle qui correspond le mieux à vos besoins.
+Embarcadero propose actuellement quatre éditions principales de Delphi, chacune offrant un niveau de fonctionnalités différent.
 
-### Delphi Community Edition
+### Community Edition (Édition Communautaire)
 
-La bonne nouvelle pour les débutants et les petites structures est que Delphi propose une édition gratuite :
+**C'est l'édition gratuite de Delphi**, et c'est celle que nous recommandons vivement aux débutants !
 
-- **Public cible** : Étudiants, débutants, petites entreprises, développeurs indépendants et open source
-- **Coût** : Gratuit
-- **Restrictions** :
-  - Limitée aux organisations réalisant moins de 5000$ de revenus annuels
-  - Nécessite un renouvellement chaque année (simple inscription)
-- **Caractéristiques** :
-  - Compiler pour Windows 32/64 bits
-  - IDE complet avec débogueur
-  - Support de base pour FireMonkey (FMX)
-  - Accès à la VCL (Visual Component Library)
+**Caractéristiques principales :**
+- **Totalement gratuite** pour les particuliers, les étudiants, les startups et les petites entreprises
+- Accès complet à l'IDE Delphi
+- Développement pour Windows (32 et 64 bits)
+- Bibliothèque VCL complète pour les applications Windows
+- Accès aux bases de données (MySQL, MariaDB, SQLite, etc.)
+- Composants de base pour créer des applications professionnelles
+- Mises à jour et corrections de bugs
 
-La Community Edition est une excellente façon de débuter avec Delphi sans investissement initial. Elle contient tout ce dont vous avez besoin pour créer des applications Windows complètes.
+**Conditions d'utilisation :**
+La Community Edition est gratuite si vous remplissez l'une de ces conditions :
+- Vous êtes un particulier qui apprend ou crée des applications non commerciales
+- Vous êtes une startup ou une entreprise générant moins de 5 000 $ de revenus annuels
+- Vous êtes étudiant ou enseignant
+- Vous développez des projets open source
 
-### Delphi Professional
+**Limitations :**
+- Pas de développement mobile (iOS, Android)
+- Pas de développement pour macOS ou Linux
+- Pas de composants avancés FireMonkey
+- Support communautaire uniquement (pas de support technique officiel)
 
-- **Public cible** : Développeurs professionnels, petites et moyennes entreprises
-- **Caractéristiques supplémentaires** :
-  - Toutes les fonctionnalités de la Community Edition
-  - Outils de base de données plus avancés
-  - Gestion des styles d'application
-  - Support technique de base
+**Notre recommandation :** Si vous débutez avec Delphi, commencez absolument par cette édition ! Elle vous permettra d'apprendre tout le nécessaire et de créer des applications Windows complètes sans dépenser un centime.
 
-### Delphi Enterprise
+### Professional Edition (Édition Professionnelle)
 
-- **Public cible** : Développeurs d'applications d'entreprise, organisations avec besoins avancés
-- **Caractéristiques supplémentaires** :
-  - Toutes les fonctionnalités de l'édition Professional
-  - Serveur d'applications EMS (Enterprise Mobility Services)
-  - Composants de bases de données avancés
-  - Outils de développement client/serveur
-  - Support multi-niveaux
-  - Connectivité InterBase améliorée
+L'édition Professionnelle est la première édition payante et s'adresse aux développeurs sérieux et aux petites équipes.
 
-### Delphi Architect
+**Ce qu'elle ajoute par rapport à la Community Edition :**
+- Développement pour **iOS** et **Android**
+- Framework **FireMonkey** pour le multi-plateforme
+- Support de **macOS** et **Linux**
+- Composants avancés pour le mobile (caméra, GPS, capteurs)
+- Support technique par email
+- Déploiement sur App Store et Google Play
 
-- **Public cible** : Architectes logiciels, projets complexes d'entreprise
-- **Caractéristiques supplémentaires** :
-  - Toutes les fonctionnalités de l'édition Enterprise
-  - Modélisation de données
-  - Outils avancés de conception d'architecture
-  - License serveur InterBase ToGo
+**Coût approximatif :**
+Entre 1 500 € et 2 500 € selon les promotions et les options choisies. Un abonnement de mise à jour annuel est généralement proposé.
 
-## Tableau comparatif des plateformes supportées par édition
+**Pour qui ?**
+- Développeurs indépendants professionnels
+- Petites entreprises souhaitant créer des applications multi-plateformes
+- Développeurs mobiles
+- Freelances proposant du développement d'applications
 
-| Plateforme cible          | Community | Professional | Enterprise | Architect |
-|---------------------------|:---------:|:------------:|:----------:|:---------:|
-| Windows 32 bits           |     ✅    |      ✅      |     ✅     |     ✅    |
-| Windows 64 bits           |     ✅    |      ✅      |     ✅     |     ✅    |
-| macOS                     |     ❌    |      ✅      |     ✅     |     ✅    |
-| iOS                       |     ❌    |      ✅      |     ✅     |     ✅    |
-| Android                   |     ❌    |      ✅      |     ✅     |     ✅    |
-| Linux                     |     ❌    |      ✅      |     ✅     |     ✅    |
+### Enterprise Edition (Édition Entreprise)
 
-## RAD Studio : au-delà de Delphi
+L'édition Enterprise ajoute des fonctionnalités avancées pour les équipes de développement et les projets d'envergure.
 
-RAD Studio est une solution plus complète qui inclut :
-- Delphi (Object Pascal)
-- C++Builder (C++)
-- Interface commune
+**Ce qu'elle ajoute par rapport à la Professional Edition :**
+- Composants avancés pour bases de données
+- Outils de reporting sophistiqués (FastReport)
+- Composants de visualisation de données avancés
+- Support des architectures multi-niveaux (DataSnap)
+- Outils de collaboration en équipe
+- Support technique prioritaire par téléphone et email
+- Licence pour plusieurs développeurs à tarif dégressif
 
-Si vous envisagez de développer en C++ en plus de Delphi, RAD Studio pourrait être une option intéressante car il offre les deux environnements avec une base commune.
+**Coût approximatif :**
+Entre 3 500 € et 5 500 € selon les options. Des licences flottantes pour équipes sont disponibles.
 
-## Versions récentes de Delphi
+**Pour qui ?**
+- Moyennes et grandes entreprises
+- Équipes de développement
+- Projets nécessitant des fonctionnalités avancées
+- Applications critiques nécessitant un support premium
 
-Delphi suit un cycle de publication régulier. Voici les versions les plus récentes :
+### Architect Edition (Édition Architecte)
 
-### Delphi 12 Athens (2023)
+L'édition ultime, offrant absolument toutes les fonctionnalités de Delphi.
 
-La dernière version majeure avec de nombreuses améliorations :
-- Interface utilisateur modernisée
-- Nouveau gestionnaire de packages GetIt amélioré
-- Support étendu pour le développement Linux
-- Compilateur ARC (Automatic Reference Counting) pour toutes les plateformes
-- Améliorations du langage Object Pascal
-- Support des projets .NET dans l'IDE
+**Ce qu'elle ajoute par rapport à l'Enterprise Edition :**
+- Outils de modélisation UML
+- Outils d'analyse de code avancés
+- Profilage de performance détaillé
+- Outils de refactoring sophistiqués
+- Diagrammes et documentation automatique
+- Tout le support technique Embarcadero
 
-### Delphi 11 Alexandria (2021)
+**Coût approximatif :**
+Entre 5 000 € et 8 000 € selon les options.
 
-- Prise en charge des styles visuels VCL améliorés
-- Support des écrans haute résolution
-- Migration Windows facilitée
-- Support étendu pour macOS et iOS
-- Améliorations des composants FireMonkey
+**Pour qui ?**
+- Architectes logiciels
+- Grandes organisations avec des exigences strictes
+- Projets complexes nécessitant des outils de modélisation
+- Équipes nécessitant le maximum d'outils de qualité
 
-### Delphi 10.4 Sydney (2020)
+## RAD Studio : La suite complète
 
-- Compilateur de nouvelle génération
-- Support Metal pour macOS
-- Améliorations des performances et de la qualité
-- Nouveaux styles VCL
+Il est important de noter que Delphi fait partie de **RAD Studio**, une suite qui inclut :
+- **Delphi** (pour Object Pascal)
+- **C++Builder** (pour le C++)
 
-## Choisir la bonne version
+Les éditions de RAD Studio offrent les deux environnements. Si vous n'avez besoin que de Delphi, vous pouvez acheter une licence Delphi seule. Si vous travaillez aussi avec C++, RAD Studio peut être plus économique.
 
-Pour les débutants ou ceux qui souhaitent découvrir Delphi :
-1. **Commencez avec la Community Edition** - Elle est gratuite et contient tout ce qu'il faut pour apprendre et développer des applications Windows.
-2. **Évaluez vos besoins de déploiement** - Si vous devez cibler d'autres plateformes comme macOS, iOS, Android ou Linux, vous devrez envisager les éditions payantes.
-3. **Testez avant d'acheter** - Embarcadero propose généralement des versions d'essai de 30 jours pour les éditions professionnelles.
+## Tableau comparatif simplifié
 
-## Installation et enregistrement
+| Fonctionnalité | Community | Professional | Enterprise | Architect |
+|----------------|-----------|--------------|------------|-----------|
+| Windows (VCL) | ✓ | ✓ | ✓ | ✓ |
+| iOS/Android | ✗ | ✓ | ✓ | ✓ |
+| macOS/Linux | ✗ | ✓ | ✓ | ✓ |
+| FireMonkey | Limité | ✓ | ✓ | ✓ |
+| Bases de données | Basique | ✓ | Avancé | Avancé |
+| Support technique | Communauté | Email | Email + Téléphone | Premium |
+| Outils de modélisation | ✗ | ✗ | ✗ | ✓ |
+| Prix | **Gratuit** | ~2 000 € | ~4 500 € | ~6 500 € |
 
-Quelle que soit l'édition que vous choisissez :
-1. Téléchargez l'installateur depuis le site officiel d'Embarcadero
-2. Suivez l'assistant d'installation
-3. Pour la Community Edition, créez ou utilisez un compte Embarcadero existant pour l'enregistrement
-4. Pour les éditions payantes, utilisez la clé de licence fournie lors de l'achat
+## Licences académiques
 
-## Mise à jour et cycle de version
+Embarcadero propose des **licences académiques** spéciales pour :
+- Les établissements d'enseignement
+- Les enseignants
+- Les étudiants
+- Les laboratoires de recherche
 
-- Delphi propose généralement une version majeure par an
-- Des mises à jour intermédiaires sont publiées régulièrement
-- Un programme de souscription annuelle "Update Subscription" permet de bénéficier des nouvelles versions
-- La Community Edition doit être renouvelée chaque année (gratuitement)
+Ces licences offrent des réductions significatives (souvent 70-90% de réduction) sur les éditions payantes. Si vous êtes étudiant ou enseignant, renseignez-vous auprès d'Embarcadero ou de votre établissement.
 
-## Ressources additionnelles
+## Licences en volume et entreprise
 
-- [Site officiel Embarcadero](https://www.embarcadero.com) - Pour télécharger Delphi et consulter les tarifs actuels
-- [Téléchargement Community Edition](https://www.embarcadero.com/products/delphi/starter/free-download) - Pour obtenir la version gratuite
-- [Matrice de comparaison des éditions](https://www.embarcadero.com/products/delphi/product-editions) - Pour des détails précis sur les différences entre éditions
+Pour les grandes organisations, Embarcadero propose :
+- Des **licences flottantes** : plusieurs développeurs partagent un pool de licences
+- Des **licences en volume** : tarifs dégressifs selon le nombre de développeurs
+- Des **accords entreprise** : contrats personnalisés pour les grandes structures
 
----
+Ces options permettent de réduire significativement le coût par développeur pour les équipes importantes.
 
-En tant que débutant, la Community Edition est un excellent point de départ pour apprendre Delphi. Elle vous permettra d'explorer l'environnement et de créer des applications Windows complètes sans investissement financier. Lorsque vous serez plus à l'aise et que vous aurez des besoins plus spécifiques (comme le développement mobile), vous pourrez envisager de passer à une édition payante.
+## Période d'essai
+
+Avant d'acheter, vous pouvez tester gratuitement :
+- **Essai gratuit de 30 jours** pour toutes les éditions payantes
+- Accès complet à toutes les fonctionnalités pendant la période d'essai
+- Aucune carte de crédit requise pour commencer
+
+Cela vous permet de tester l'édition Professional ou Enterprise avant de prendre une décision d'achat.
+
+## Mises à jour et maintenance
+
+Après l'achat d'une licence, vous avez deux options :
+
+**Licence perpétuelle :**
+- Vous possédez la version achetée à vie
+- Vous pouvez l'utiliser indéfiniment
+- Pas de mises à jour majeures incluses
+
+**Abonnement de mise à jour :**
+- Coût annuel (environ 25-40% du prix initial)
+- Accès à toutes les nouvelles versions pendant l'abonnement
+- Support technique continu
+- Mises à jour de sécurité et corrections de bugs
+
+La plupart des développeurs professionnels optent pour l'abonnement de mise à jour pour rester à jour avec les dernières fonctionnalités et corrections.
+
+## Quelle édition choisir ?
+
+Voici nos recommandations selon votre profil :
+
+**Vous débutez en programmation :**
+→ **Community Edition** sans hésitation. Gratuite et largement suffisante pour apprendre.
+
+**Vous êtes étudiant ou enseignant :**
+→ **Community Edition** pour commencer, puis demandez une licence académique si vous avez besoin du développement mobile.
+
+**Vous êtes développeur indépendant ou freelance :**
+→ **Professional Edition** si vous devez créer des applications mobiles ou multi-plateformes. Sinon, la Community peut suffire.
+
+**Vous travaillez en équipe ou en entreprise :**
+→ **Enterprise Edition** pour les fonctionnalités collaboratives et le support technique professionnel.
+
+**Vous êtes architecte logiciel ou gérez des projets complexes :**
+→ **Architect Edition** pour les outils de modélisation et d'analyse avancés.
+
+## Où se procurer Delphi ?
+
+Toutes les éditions de Delphi peuvent être téléchargées depuis le site officiel d'Embarcadero :
+**www.embarcadero.com**
+
+Le processus est simple :
+1. Créez un compte Embarcadero gratuit
+2. Téléchargez l'édition de votre choix
+3. Installez le logiciel
+4. Activez votre licence (gratuite pour Community, payante pour les autres)
+
+## Changement d'édition
+
+Il est possible de passer d'une édition à une autre :
+- **Upgrade** : Passer à une édition supérieure (paiement de la différence)
+- **Crossgrade** : Ajouter C++Builder si vous avez uniquement Delphi
+- Migration depuis d'anciennes versions avec tarifs préférentiels
+
+## En résumé
+
+Ne laissez pas le coût des éditions professionnelles vous décourager ! La **Community Edition gratuite** est un excellent point de départ qui vous permettra d'apprendre Delphi et de créer des applications Windows complètes sans aucun investissement. Une fois que vous maîtriserez l'outil et que vous aurez des besoins spécifiques (développement mobile, support professionnel), vous pourrez alors envisager une édition payante en connaissance de cause.
+
+Le plus important est de commencer et d'apprendre. Les compétences que vous développerez avec la Community Edition seront directement transférables à n'importe quelle édition supérieure si vous décidez d'évoluer plus tard.
 
 ⏭️ [Avantages et cas d'utilisation](/01-introduction-a-delphi/04-avantages-et-cas-dutilisation.md)
