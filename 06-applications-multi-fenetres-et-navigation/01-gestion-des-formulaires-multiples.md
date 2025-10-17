@@ -1,411 +1,459 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 6.1 Gestion des formulaires multiples
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les applications réelles dépassent rarement le cadre d'un formulaire unique. Apprenez à créer et gérer plusieurs formulaires pour construire des applications Delphi complètes.
+Dans les applications Delphi, un formulaire (ou fiche) représente une fenêtre de votre application. Jusqu'à présent, vous avez peut-être travaillé avec un seul formulaire principal, mais la plupart des applications réelles nécessitent plusieurs fenêtres pour organiser les fonctionnalités de manière claire et intuitive.
 
-## Comprendre les formulaires en Delphi
+La gestion des formulaires multiples est une compétence essentielle pour créer des applications professionnelles avec Delphi. Elle vous permet de :
 
-Dans Delphi, un formulaire (ou fiche) est une fenêtre de l'application représentée par une classe dérivée de `TForm`. Par défaut, votre projet commence avec un formulaire principal (`Form1`), mais une application professionnelle en contient généralement plusieurs :
+- Séparer les différentes fonctionnalités de votre application
+- Créer des boîtes de dialogue pour recueillir des informations
+- Afficher des fenêtres d'options ou de paramètres
+- Organiser votre interface utilisateur de manière modulaire
 
-- Fenêtre principale
-- Boîtes de dialogue
-- Écrans de configuration
-- Fenêtres d'édition de données
-- Assistants (wizards)
-- Et bien d'autres...
+## Comprendre les formulaires dans Delphi
 
-## Ajouter un nouveau formulaire à votre projet
+### Qu'est-ce qu'un formulaire ?
 
-Pour ajouter un nouveau formulaire à votre projet :
+Un formulaire dans Delphi est une classe qui hérite de `TForm`. Chaque formulaire possède :
 
-1. Dans le menu, cliquez sur **File** → **New** → **Form**
-2. Une nouvelle fiche vide apparaît dans l'éditeur
-3. Enregistrez le formulaire (Ctrl+S) en lui donnant un nom significatif (ex: `FormClients.pas`)
+- Une partie visuelle (l'interface utilisateur)
+- Une partie code (la logique de l'application)
+- Des propriétés configurables (titre, taille, position, etc.)
+- Des événements (OnCreate, OnShow, OnClose, etc.)
 
-Chaque formulaire est composé de :
-- Un fichier `.pas` contenant le code
-- Un fichier `.dfm` stockant la définition visuelle (propriétés, composants)
+### Le formulaire principal
 
-## Méthodes de création de formulaires
+Lorsque vous créez un nouveau projet Delphi, un formulaire principal est automatiquement créé. C'est le point d'entrée de votre application. Lorsque ce formulaire se ferme, l'application se termine généralement.
 
-Il existe plusieurs façons de créer et d'utiliser des formulaires secondaires :
+## Créer un nouveau formulaire
 
-### 1. Création automatique au démarrage
+### Étapes de création
 
-Par défaut, Delphi crée automatiquement le formulaire principal au démarrage de l'application. Vous pouvez configurer d'autres formulaires pour qu'ils soient également créés automatiquement :
+1. Dans l'IDE Delphi, allez dans le menu **Fichier** → **Nouveau** → **Fiche VCL** (pour une application VCL) ou **Fiche FireMonkey** (pour une application multi-plateforme)
 
-1. Ouvrez le **Project Manager** (Ctrl+Alt+P)
-2. Cliquez-droit sur le projet → **Options du projet**
-3. Dans l'onglet **Formulaires**, vous pouvez ajouter des formulaires à la liste **Auto-create forms**
+2. Un nouveau formulaire vierge apparaît dans l'éditeur
 
-```pascal
-// Dans le fichier .dpr du projet :
-Application.CreateForm(TFormPrincipal, FormPrincipal);
-Application.CreateForm(TFormClients, FormClients);
-```
+3. Deux fichiers sont créés automatiquement :
+   - Un fichier `.pas` (le code Object Pascal)
+   - Un fichier `.dfm` ou `.fmx` (la description visuelle du formulaire)
 
-⚠️ **Attention** : Les formulaires auto-créés restent en mémoire pendant toute la durée de l'application et consomment des ressources. Utilisez cette méthode pour les formulaires principaux ou fréquemment utilisés.
+### Structure d'un formulaire
 
-### 2. Création dynamique à la demande
-
-Pour une meilleure gestion de la mémoire, il est préférable de créer les formulaires secondaires uniquement lorsqu'ils sont nécessaires et de les libérer ensuite :
+Voici à quoi ressemble le code d'un formulaire nouvellement créé :
 
 ```pascal
-procedure TFormPrincipal.btnClientsClick(Sender: TObject);
-var
-  FormClients: TFormClients;
-begin
-  FormClients := TFormClients.Create(Self);
-  try
-    FormClients.ShowModal; // Affiche le formulaire et attend sa fermeture
-  finally
-    FormClients.Free; // Libère la mémoire
-  end;
-end;
-```
-
-Cette approche est recommandée pour :
-- Les boîtes de dialogue
-- Les formulaires rarement utilisés
-- Les formulaires nécessitant beaucoup de ressources
-
-### 3. Création unique (Singleton)
-
-Pour certains formulaires, vous souhaiterez peut-être les créer une seule fois mais les afficher/masquer selon les besoins :
-
-```pascal
-procedure TFormPrincipal.btnParametresClick(Sender: TObject);
-begin
-  if FFormParametres = nil then
-    FFormParametres := TFormParametres.Create(Self);
-
-  FFormParametres.Show; // Affiche le formulaire sans bloquer
-  FFormParametres.BringToFront; // Amène au premier plan
-end;
-```
-
-N'oubliez pas d'ajouter une variable dans la section `private` de votre formulaire principal :
-
-```pascal
-private
-  FFormParametres: TFormParametres;
-```
-
-Et de libérer cette référence dans le destructeur du formulaire principal :
-
-```pascal
-procedure TFormPrincipal.FormDestroy(Sender: TObject);
-begin
-  if Assigned(FFormParametres) then
-    FFormParametres.Free;
-end;
-```
-
-## Modes d'affichage des formulaires
-
-Il existe deux façons principales d'afficher un formulaire :
-
-### 1. Mode modal (ShowModal)
-
-```pascal
-FormClients.ShowModal;
-```
-
-- Bloque l'accès aux autres formulaires tant que celui-ci est ouvert
-- Renvoie une valeur à la fermeture (mrOk, mrCancel, etc.)
-- Idéal pour les boîtes de dialogue nécessitant une réponse utilisateur
-
-### 2. Mode non-modal (Show)
-
-```pascal
-FormClients.Show;
-```
-
-- L'utilisateur peut interagir avec les autres formulaires
-- L'exécution du code continue immédiatement après l'appel
-- Recommandé pour les fenêtres secondaires d'information ou de travail parallèle
-
-## Exemple pratique : Application avec liste et détails
-
-Créons une application simple avec deux formulaires :
-- Un formulaire principal affichant une liste
-- Un formulaire de détail pour éditer un élément
-
-### Étape 1 : Créer le formulaire principal
-
-```pascal
-unit FormMain;
+unit Unit2;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Buttons;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
 type
-  TMainForm = class(TForm)
-    ListBox1: TListBox;
-    Panel1: TPanel;
-    btnAjouter: TButton;
-    btnModifier: TButton;
-    btnSupprimer: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnAjouterClick(Sender: TObject);
-    procedure btnModifierClick(Sender: TObject);
-  private
-    procedure ChargerDonnees;
-  public
-    { Déclarations publiques }
-  end;
-
-var
-  MainForm: TMainForm;
-
-implementation
-
-{$R *.dfm}
-
-uses FormDetail; // Inclut l'unité du second formulaire
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  ChargerDonnees;
-end;
-
-procedure TMainForm.ChargerDonnees;
-begin
-  // Exemple : charger des données dans la liste
-  ListBox1.Items.Clear;
-  ListBox1.Items.Add('Produit 1 - 19.99€');
-  ListBox1.Items.Add('Produit 2 - 24.99€');
-  ListBox1.Items.Add('Produit 3 - 9.99€');
-  ListBox1.Items.Add('Produit 4 - 49.99€');
-end;
-
-procedure TMainForm.btnAjouterClick(Sender: TObject);
-var
-  DetailForm: TDetailForm;
-begin
-  DetailForm := TDetailForm.Create(Self);
-  try
-    DetailForm.Caption := 'Ajouter un produit';
-    DetailForm.edtNom.Text := '';
-    DetailForm.edtPrix.Text := '';
-
-    if DetailForm.ShowModal = mrOk then
-    begin
-      // Ajouter le nouveau produit à la liste
-      ListBox1.Items.Add(
-        DetailForm.edtNom.Text + ' - ' +
-        DetailForm.edtPrix.Text + '€'
-      );
-    end;
-  finally
-    DetailForm.Free;
-  end;
-end;
-
-procedure TMainForm.btnModifierClick(Sender: TObject);
-var
-  DetailForm: TDetailForm;
-  Index: Integer;
-  Nom, Prix: string;
-begin
-  Index := ListBox1.ItemIndex;
-  if Index = -1 then
-  begin
-    ShowMessage('Veuillez sélectionner un produit à modifier');
-    Exit;
-  end;
-
-  // Extraire le nom et le prix (format: "Nom - Prix€")
-  SplitNomPrix(ListBox1.Items[Index], Nom, Prix);
-
-  DetailForm := TDetailForm.Create(Self);
-  try
-    DetailForm.Caption := 'Modifier un produit';
-    DetailForm.edtNom.Text := Nom;
-    DetailForm.edtPrix.Text := Prix;
-
-    if DetailForm.ShowModal = mrOk then
-    begin
-      // Mettre à jour le produit dans la liste
-      ListBox1.Items[Index] :=
-        DetailForm.edtNom.Text + ' - ' +
-        DetailForm.edtPrix.Text + '€';
-    end;
-  finally
-    DetailForm.Free;
-  end;
-end;
-
-// Fonction utilitaire pour extraire le nom et le prix
-procedure TMainForm.SplitNomPrix(const Item: string; var Nom, Prix: string);
-var
-  Pos: Integer;
-begin
-  Pos := Item.IndexOf(' - ');
-  if Pos > 0 then
-  begin
-    Nom := Item.Substring(0, Pos);
-    Prix := Item.Substring(Pos + 3, Item.Length - Pos - 4); // Enlever le '€'
-  end
-  else
-  begin
-    Nom := Item;
-    Prix := '0';
-  end;
-end;
-
-end.
-```
-
-### Étape 2 : Créer le formulaire de détail
-
-```pascal
-unit FormDetail;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
-
-type
-  TDetailForm = class(TForm)
-    edtNom: TEdit;
-    edtPrix: TEdit;
-    Label1: TLabel;
-    Label2: TLabel;
-    Panel1: TPanel;
-    btnOK: TButton;
-    btnAnnuler: TButton;
-    procedure btnOKClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+  TForm2 = class(TForm)
   private
     { Déclarations privées }
   public
     { Déclarations publiques }
   end;
 
+var
+  Form2: TForm2;
+
 implementation
 
 {$R *.dfm}
 
-procedure TDetailForm.FormCreate(Sender: TObject);
-begin
-  // Position centrale par rapport au parent
-  Position := poOwnerFormCenter;
-end;
-
-procedure TDetailForm.btnOKClick(Sender: TObject);
-begin
-  // Validation simple
-  if edtNom.Text.Trim = '' then
-  begin
-    ShowMessage('Veuillez saisir un nom de produit');
-    edtNom.SetFocus;
-    Exit;
-  end;
-
-  if not TryStrToFloat(edtPrix.Text.Replace(',', '.'), nil) then
-  begin
-    ShowMessage('Le prix doit être un nombre valide');
-    edtPrix.SetFocus;
-    Exit;
-  end;
-
-  // Si tout est valide, on ferme avec OK
-  ModalResult := mrOk;
-end;
-
 end.
 ```
 
-## Partage de données entre formulaires
+**Points importants :**
 
-Il existe plusieurs façons de partager des données entre formulaires :
+- `TForm2` est le nom de la classe du formulaire
+- `Form2` est une variable globale qui représente l'instance du formulaire
+- La section `interface` contient les déclarations visibles par les autres unités
+- La section `implementation` contient le code de mise en œuvre
 
-### 1. Passage de paramètres au constructeur
+## Afficher un formulaire secondaire
 
-Vous pouvez créer un constructeur personnalisé pour passer des données :
+### Méthode 1 : Show (affichage non-modal)
+
+Un formulaire non-modal permet à l'utilisateur d'interagir avec d'autres fenêtres de l'application pendant qu'il est affiché.
 
 ```pascal
-// Dans l'unité du formulaire de détail
-constructor TDetailForm.Create(AOwner: TComponent; AProduitID: Integer);
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  inherited Create(AOwner);
-  FProduitID := AProduitID;
-  // Charger les données du produit
+  Form2.Show;
+end;
+```
+
+**Caractéristiques de Show :**
+- L'utilisateur peut passer d'une fenêtre à l'autre librement
+- Le code continue son exécution immédiatement après l'appel
+- Idéal pour des fenêtres d'outils ou de palettes
+
+### Méthode 2 : ShowModal (affichage modal)
+
+Un formulaire modal bloque l'interaction avec les autres fenêtres jusqu'à ce qu'il soit fermé.
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Form2.ShowModal;
+  // Le code ici ne s'exécute qu'après la fermeture de Form2
+end;
+```
+
+**Caractéristiques de ShowModal :**
+- L'utilisateur doit fermer cette fenêtre avant de continuer
+- Le code s'arrête à cet appel jusqu'à la fermeture du formulaire
+- Idéal pour les boîtes de dialogue et les formulaires de saisie
+- Retourne une valeur (ModalResult) qui indique comment le formulaire a été fermé
+
+### Récupérer le résultat d'un formulaire modal
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if Form2.ShowModal = mrOk then
+  begin
+    ShowMessage('L''utilisateur a cliqué sur OK');
+  end
+  else if Form2.ModalResult = mrCancel then
+  begin
+    ShowMessage('L''utilisateur a annulé');
+  end;
+end;
+```
+
+Les valeurs `ModalResult` courantes :
+- `mrOk` : Validation (bouton OK)
+- `mrCancel` : Annulation (bouton Annuler)
+- `mrYes` / `mrNo` : Réponses Oui/Non
+- `mrAbort`, `mrRetry`, `mrIgnore` : Autres options
+
+## Gestion de la création et destruction des formulaires
+
+### Auto-création des formulaires
+
+Par défaut, Delphi crée automatiquement tous les formulaires au démarrage de l'application. Vous pouvez voir et modifier cette liste dans **Projet** → **Options** → **Formulaires**.
+
+**Avantages :**
+- Simple à utiliser
+- Les formulaires sont toujours disponibles
+
+**Inconvénients :**
+- Consomme de la mémoire dès le démarrage
+- Ralentit le démarrage de l'application si vous avez beaucoup de formulaires
+
+### Création manuelle des formulaires
+
+Pour une meilleure gestion de la mémoire, vous pouvez créer les formulaires à la demande :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  MonFormulaire: TForm2;
+begin
+  MonFormulaire := TForm2.Create(Self);
+  try
+    MonFormulaire.ShowModal;
+  finally
+    MonFormulaire.Free;
+  end;
+end;
+```
+
+**Explications :**
+- `TForm2.Create(Self)` crée une nouvelle instance du formulaire
+- `Self` indique que Form1 est le propriétaire (owner)
+- Le bloc `try...finally` garantit que le formulaire est libéré même en cas d'erreur
+- `Free` libère la mémoire occupée par le formulaire
+
+### Vérifier si un formulaire existe
+
+Avant d'utiliser un formulaire, il est prudent de vérifier s'il existe :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if not Assigned(Form2) then
+    Form2 := TForm2.Create(Application);
+
+  Form2.Show;
+end;
+```
+
+`Assigned()` retourne `True` si la variable contient une référence valide à un objet.
+
+## Masquer et réafficher un formulaire
+
+Plutôt que de créer et détruire un formulaire à chaque utilisation, vous pouvez le masquer et le réafficher :
+
+```pascal
+// Masquer un formulaire
+Form2.Hide;
+
+// ou
+Form2.Visible := False;
+
+// Réafficher un formulaire
+Form2.Show;
+
+// ou
+Form2.Visible := True;
+```
+
+**Avantage :** Le formulaire conserve son état (valeurs des champs, position, etc.)
+
+**Inconvénient :** Le formulaire reste en mémoire
+
+## Fermer un formulaire
+
+### Depuis le formulaire lui-même
+
+```pascal
+procedure TForm2.Button1Click(Sender: TObject);
+begin
+  Close;  // Ferme le formulaire
+end;
+```
+
+### Pour un formulaire modal, définir le ModalResult
+
+```pascal
+procedure TForm2.ButtonOKClick(Sender: TObject);
+begin
+  ModalResult := mrOk;  // Ferme automatiquement le formulaire
 end;
 
-// Dans le formulaire principal
-DetailForm := TDetailForm.Create(Self, ProduitID);
+procedure TForm2.ButtonCancelClick(Sender: TObject);
+begin
+  ModalResult := mrCancel;
+end;
 ```
 
-### 2. Propriétés publiques
+**Astuce :** Vous pouvez définir la propriété `ModalResult` d'un bouton directement dans l'Inspecteur d'objets, ce qui évite d'écrire du code.
 
-Définissez des propriétés publiques dans votre formulaire que vous pourrez manipuler :
+## Passer des données entre formulaires
 
-```pascal
-// Dans l'interface du formulaire de détail
-public
-  property ProduitID: Integer read FProduitID write SetProduitID;
+### Méthode 1 : Utiliser les propriétés publiques
 
-// Dans le formulaire principal
-DetailForm := TDetailForm.Create(Self);
-DetailForm.ProduitID := 123;
-```
-
-### 3. Une classe de données partagée
-
-Pour les applications plus complexes, créez une classe de données partagée :
+Dans Form2, ajoutez une propriété publique :
 
 ```pascal
-unit DataModule;
-
-interface
-
 type
-  TDM = class(TDataModule)
-    // Composants d'accès aux données
+  TForm2 = class(TForm)
+    Edit1: TEdit;
+  private
+    FNomUtilisateur: string;
   public
-    // Méthodes d'accès/modification des données
+    property NomUtilisateur: string read FNomUtilisateur write FNomUtilisateur;
   end;
+```
 
-var
-  DM: TDM; // Variable globale accessible depuis toutes les unités
+Depuis Form1, accédez à cette propriété :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Form2.NomUtilisateur := 'Jean Dupont';
+  Form2.ShowModal;
+end;
+```
+
+### Méthode 2 : Accéder directement aux composants
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Form2.Edit1.Text := 'Valeur initiale';
+  if Form2.ShowModal = mrOk then
+  begin
+    ShowMessage('Valeur saisie : ' + Form2.Edit1.Text);
+  end;
+end;
+```
+
+**Note :** Cette méthode couple fortement les formulaires. La première méthode est préférable pour un code plus maintenable.
+
+### Méthode 3 : Constructeur personnalisé
+
+Créez un constructeur qui accepte des paramètres :
+
+```pascal
+type
+  TForm2 = class(TForm)
+  private
+    FNomUtilisateur: string;
+  public
+    constructor Create(AOwner: TComponent; const ANom: string); reintroduce;
+  end;
 
 implementation
 
-end.
+constructor TForm2.Create(AOwner: TComponent; const ANom: string);
+begin
+  inherited Create(AOwner);
+  FNomUtilisateur := ANom;
+end;
+```
+
+Utilisation :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  MonForm: TForm2;
+begin
+  MonForm := TForm2.Create(Self, 'Jean Dupont');
+  try
+    MonForm.ShowModal;
+  finally
+    MonForm.Free;
+  end;
+end;
 ```
 
 ## Bonnes pratiques
 
-1. **Nommage** : Donnez des noms significatifs à vos formulaires (pas Form1, Form2...)
-2. **Responsabilité unique** : Chaque formulaire doit avoir un objectif précis
-3. **Libération mémoire** : Utilisez toujours des blocs try/finally pour libérer les formulaires créés
-4. **Fermeture propre** : Assurez-vous que tous les formulaires enfants sont fermés quand le formulaire parent se ferme
-5. **Code minimal** : Gardez le code dans les formulaires secondaires au minimum, centralisez la logique métier
+### 1. Gérer la mémoire correctement
 
-## Astuces et pièges à éviter
+Toujours libérer les formulaires créés manuellement :
 
-- **Évitez les références circulaires** entre unités (A utilise B qui utilise A)
-- **Attention aux formulaires auto-créés** qui restent en mémoire
-- **Ne pas abuser de `Application.MainForm`** pour accéder au formulaire principal
-- **Utilisez les interfaces** pour découpler les formulaires dans les applications complexes
+```pascal
+// BON
+MonForm := TForm2.Create(Self);
+try
+  MonForm.ShowModal;
+finally
+  MonForm.Free;
+end;
 
-## Exercices pratiques
+// MAUVAIS - Fuite mémoire
+MonForm := TForm2.Create(Self);
+MonForm.ShowModal;
+// Le formulaire n'est jamais libéré !
+```
 
-1. Créez une application "Carnet d'adresses" avec un formulaire principal (liste) et un formulaire de détail (ajout/modification)
-2. Ajoutez un troisième formulaire "Paramètres" accessible depuis le formulaire principal
-3. Implémentez le stockage des données (fichier texte ou base de données simple)
+### 2. Utiliser des variables locales pour les formulaires temporaires
 
----
+```pascal
+// BON - Variable locale
+procedure TForm1.AfficherOptions;
+var
+  FormOptions: TFormOptions;
+begin
+  FormOptions := TFormOptions.Create(Self);
+  try
+    FormOptions.ShowModal;
+  finally
+    FormOptions.Free;
+  end;
+end;
+```
 
-Maintenant que vous maîtrisez la gestion des formulaires multiples, vous pouvez créer des applications Delphi plus sophistiquées avec différentes fenêtres interagissant entre elles !
+### 3. Éviter les références circulaires
+
+Si Form1 fait référence à Form2 et que Form2 fait référence à Form1, cela peut créer des problèmes. Utilisez plutôt des événements ou des interfaces pour communiquer.
+
+### 4. Ne pas accéder directement aux variables globales des formulaires
+
+```pascal
+// MAUVAIS
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Form2.Edit1.Text := 'test';  // Couplage fort
+end;
+
+// BON
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  F: TForm2;
+begin
+  F := TForm2.Create(Self);
+  try
+    F.ConfigurerAvec('test');  // Méthode encapsulée
+    F.ShowModal;
+  finally
+    F.Free;
+  end;
+end;
+```
+
+### 5. Gérer l'événement OnClose correctement
+
+```pascal
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  // Pour un formulaire modal, ne rien faire de spécial
+  Action := caHide;
+
+  // Pour un formulaire créé dynamiquement
+  // Action := caFree;  // Libère automatiquement le formulaire
+end;
+```
+
+## Position et taille des formulaires
+
+### Définir la position d'affichage
+
+```pascal
+// Au centre de l'écran
+Form2.Position := poScreenCenter;
+
+// Au centre du formulaire parent
+Form2.Position := poMainFormCenter;
+
+// Position personnalisée
+Form2.Position := poDesigned;  // Utilise les coordonnées définies
+Form2.Left := 100;
+Form2.Top := 100;
+```
+
+### Adapter la taille
+
+```pascal
+// Taille fixe
+Form2.BorderStyle := bsDialog;  // L'utilisateur ne peut pas redimensionner
+
+// Taille ajustable
+Form2.BorderStyle := bsSizeable;
+
+// Définir les contraintes
+Form2.Constraints.MinWidth := 400;
+Form2.Constraints.MinHeight := 300;
+```
+
+## Ordre d'affichage (Z-Order)
+
+Pour mettre un formulaire au premier plan :
+
+```pascal
+Form2.BringToFront;
+```
+
+Pour l'envoyer à l'arrière-plan :
+
+```pascal
+Form2.SendToBack;
+```
+
+## Résumé
+
+La gestion des formulaires multiples dans Delphi offre une grande flexibilité pour organiser votre application. Les points clés à retenir :
+
+- **Show** pour les fenêtres non-modales (interaction libre)
+- **ShowModal** pour les boîtes de dialogue (bloque l'interaction)
+- Toujours gérer la création et la destruction des formulaires
+- Utiliser des propriétés et méthodes pour passer des données entre formulaires
+- Respecter les bonnes pratiques pour éviter les fuites mémoire
+- Définir le `ModalResult` pour faciliter la communication avec les formulaires modaux
+
+La maîtrise de ces concepts vous permettra de créer des applications Delphi avec des interfaces utilisateur riches et bien organisées.
 
 ⏭️ [Communication entre formulaires](/06-applications-multi-fenetres-et-navigation/02-communication-entre-formulaires.md)

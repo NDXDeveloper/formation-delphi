@@ -1,688 +1,810 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 6.3 Formulaires MDI (Multiple Document Interface)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-L'interface à documents multiples (MDI) est un modèle d'interface graphique qui permet d'ouvrir plusieurs documents dans des fenêtres enfants à l'intérieur d'une fenêtre principale. Ce chapitre vous guidera dans la création et la gestion d'applications MDI avec Delphi.
+L'interface MDI (Multiple Document Interface) est un style d'application où plusieurs fenêtres enfants peuvent être ouvertes simultanément à l'intérieur d'une fenêtre parent principale. C'est comme avoir plusieurs documents ouverts dans une seule application conteneur.
 
-## Qu'est-ce qu'une interface MDI ?
+Vous avez probablement déjà utilisé des applications MDI sans le savoir. Des exemples classiques incluent :
 
-Une interface MDI (Multiple Document Interface) se compose de :
+- Les anciennes versions de Microsoft Word (avec plusieurs documents dans une même fenêtre)
+- Adobe Photoshop (avec plusieurs images ouvertes)
+- Des applications de gestion avec plusieurs fiches de saisie ouvertes en même temps
 
-- **Une fenêtre parent (conteneur)** : la fenêtre principale de l'application
-- **Plusieurs fenêtres enfants** : chacune contenant un document ou une vue différente
-- **Les fenêtres enfants sont confinées** à l'intérieur de la fenêtre parent
-- **Un menu Fenêtre (Window)** permettant de basculer entre les différentes fenêtres enfants
+Dans cette section, nous allons apprendre à créer et gérer des applications MDI avec Delphi.
 
-Les applications MDI sont particulièrement adaptées pour :
-- Éditeurs de texte/code avec multiples documents (comme Notepad++)
-- Applications de dessin ou de CAO
-- Gestionnaires de bases de données
-- Applications où l'utilisateur travaille sur plusieurs documents similaires simultanément
+## Comprendre le concept MDI
 
-## Créer une application MDI simple
+### MDI vs SDI
 
-### Étape 1 : Créer le formulaire parent MDI
+Il existe deux principaux types d'interfaces pour les applications Windows :
 
-1. Créez un nouveau projet VCL Forms Application
-2. Sur le formulaire principal, définissez la propriété `FormStyle` à `fsMDIForm`
-3. Ajoutez un menu principal (TMainMenu) avec une structure de base
-4. Ajoutez une barre d'état (TStatusBar) pour afficher des informations
+**SDI (Single Document Interface)**
+- Chaque document s'ouvre dans sa propre fenêtre indépendante
+- Les fenêtres peuvent être déplacées librement sur l'écran
+- Exemple moderne : Google Chrome, la plupart des applications actuelles
+
+**MDI (Multiple Document Interface)**
+- Une fenêtre parent contient toutes les fenêtres enfants
+- Les fenêtres enfants restent confinées dans la fenêtre parent
+- Les enfants peuvent être minimisés, maximisés à l'intérieur du parent
+- Exemple classique : anciennes versions de Microsoft Office
+
+### Structure d'une application MDI
+
+Une application MDI se compose de :
+
+1. **Un formulaire parent (MDI Parent)** : La fenêtre principale qui contient tout
+2. **Des formulaires enfants (MDI Child)** : Les fenêtres qui s'ouvrent à l'intérieur du parent
+3. **Un menu principal** : Généralement dans le formulaire parent
+4. **Optionnellement une barre d'outils** : Pour les actions communes
+
+## Créer une application MDI
+
+### Étape 1 : Configurer le formulaire parent
+
+Créez un nouveau projet VCL et configurez le formulaire principal comme parent MDI :
+
+1. Sélectionnez le formulaire principal (Form1)
+2. Dans l'Inspecteur d'objets, trouvez la propriété `FormStyle`
+3. Définissez `FormStyle` à `fsMDIForm`
 
 ```pascal
-// Structure de base du formulaire parent
-unit MainForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls;
-
+// Le code généré automatiquement
 type
-  TfrmMain = class(TForm)
-    MainMenu1: TMainMenu;
-    mnuFile: TMenuItem;
-    mnuNew: TMenuItem;
-    mnuExit: TMenuItem;
-    mnuWindow: TMenuItem;
-    mnuCascade: TMenuItem;
-    mnuTileHorizontal: TMenuItem;
-    mnuTileVertical: TMenuItem;
-    mnuArrangeIcons: TMenuItem;
-    StatusBar1: TStatusBar;
-    procedure mnuNewClick(Sender: TObject);
-    procedure mnuExitClick(Sender: TObject);
-    procedure mnuCascadeClick(Sender: TObject);
-    procedure mnuTileHorizontalClick(Sender: TObject);
-    procedure mnuTileVerticalClick(Sender: TObject);
-    procedure mnuArrangeIconsClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+  TForm1 = class(TForm)
   private
-    FChildCount: Integer;
+    { Private declarations }
   public
     { Public declarations }
   end;
 
 var
-  frmMain: TfrmMain;
+  Form1: TForm1;
 
 implementation
 
 {$R *.dfm}
 
-uses ChildForm; // Unité du formulaire enfant
+end.
 ```
 
-### Étape 2 : Créer le formulaire enfant MDI
+Dans le fichier DFM, vous verrez :
+```
+object Form1: TForm1
+  FormStyle = fsMDIForm
+  Caption = 'Application MDI - Fenêtre Principale'
+end
+```
 
-1. Ajoutez un nouveau formulaire au projet (File → New → Form)
-2. Définissez sa propriété `FormStyle` à `fsMDIChild`
+### Étape 2 : Créer un formulaire enfant
+
+1. Ajoutez un nouveau formulaire au projet (**Fichier** → **Nouveau** → **Fiche VCL**)
+2. Sélectionnez ce nouveau formulaire (Form2)
+3. Dans l'Inspecteur d'objets, définissez `FormStyle` à `fsMDIChild`
 
 ```pascal
-// Structure de base du formulaire enfant
-unit ChildForm;
+type
+  TForm2 = class(TForm)
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+```
+
+Dans le fichier DFM :
+```
+object Form2: TForm2
+  FormStyle = fsMDIChild
+  Caption = 'Document 1'
+end
+```
+
+### Étape 3 : Ouvrir des formulaires enfants
+
+Pour ouvrir un formulaire enfant depuis le formulaire parent :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  FormEnfant: TForm2;
+begin
+  FormEnfant := TForm2.Create(Self);
+  FormEnfant.Show;  // Utiliser Show, pas ShowModal
+end;
+```
+
+**Important :**
+- N'utilisez jamais `ShowModal` avec des formulaires MDI enfants
+- Utilisez toujours `Show`
+- Ne libérez pas manuellement le formulaire enfant, il sera géré automatiquement
+
+## Gérer plusieurs instances de formulaires enfants
+
+### Créer plusieurs fenêtres enfants du même type
+
+```pascal
+procedure TForm1.NouveauDocumentClick(Sender: TObject);
+var
+  FormEnfant: TForm2;
+  Compteur: Integer;
+  static NumeroDocument: Integer = 0;
+begin
+  Inc(NumeroDocument);
+
+  FormEnfant := TForm2.Create(Self);
+  FormEnfant.Caption := 'Document ' + IntToStr(NumeroDocument);
+  FormEnfant.Show;
+end;
+```
+
+### Parcourir les formulaires enfants ouverts
+
+```pascal
+procedure TForm1.ListerDocumentsClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  Memo1.Clear;
+  Memo1.Lines.Add('Documents ouverts :');
+
+  for i := 0 to MDIChildCount - 1 do
+  begin
+    Memo1.Lines.Add('  - ' + MDIChildren[i].Caption);
+  end;
+end;
+```
+
+**Propriétés utiles :**
+- `MDIChildCount` : Nombre de formulaires enfants ouverts
+- `MDIChildren[i]` : Accès au i-ème formulaire enfant
+- `ActiveMDIChild` : Le formulaire enfant actuellement actif
+
+## Menu dans les applications MDI
+
+### Menu principal
+
+Le menu principal est généralement placé dans le formulaire parent :
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Créer le menu principal
+  with MainMenu1 do
+  begin
+    // Menu Fichier
+    with Items.Add do
+    begin
+      Caption := '&Fichier';
+
+      // Nouveau document
+      with Add do
+      begin
+        Caption := '&Nouveau';
+        OnClick := NouveauDocumentClick;
+      end;
+
+      // Fermer le document actif
+      with Add do
+      begin
+        Caption := '&Fermer';
+        OnClick := FermerDocumentClick;
+      end;
+
+      // Séparateur
+      Add.Caption := '-';
+
+      // Quitter
+      with Add do
+      begin
+        Caption := '&Quitter';
+        OnClick := QuitterClick;
+      end;
+    end;
+
+    // Menu Fenêtre
+    with Items.Add do
+    begin
+      Caption := 'Fe&nêtre';
+
+      // Cascade
+      with Add do
+      begin
+        Caption := '&Cascade';
+        OnClick := CascadeClick;
+      end;
+
+      // Mosaïque horizontale
+      with Add do
+      begin
+        Caption := 'Mosaïque &horizontale';
+        OnClick := TileHorizontalClick;
+      end;
+
+      // Mosaïque verticale
+      with Add do
+      begin
+        Caption := 'Mosaïque &verticale';
+        OnClick := TileVerticalClick;
+      end;
+    end;
+  end;
+end;
+```
+
+### Fusion de menus (Menu Merging)
+
+Les formulaires enfants peuvent avoir leur propre menu qui se fusionne avec celui du parent.
+
+**Form2 (enfant) :**
+```pascal
+// Créer un menu spécifique au formulaire enfant
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  with MainMenu1 do
+  begin
+    with Items.Add do
+    begin
+      Caption := '&Édition';
+
+      with Add do
+      begin
+        Caption := '&Copier';
+        OnClick := CopierClick;
+      end;
+
+      with Add do
+      begin
+        Caption := 'Co&ller';
+        OnClick := CollerClick;
+      end;
+    end;
+  end;
+end;
+```
+
+Le menu "Édition" apparaîtra dans la barre de menu principale quand ce formulaire enfant est actif.
+
+## Organisation des fenêtres MDI
+
+### Disposition en cascade
+
+```pascal
+procedure TForm1.CascadeClick(Sender: TObject);
+begin
+  Cascade;
+end;
+```
+
+Les fenêtres se chevauchent légèrement, comme des cartes disposées en éventail.
+
+### Disposition en mosaïque horizontale
+
+```pascal
+procedure TForm1.TileHorizontalClick(Sender: TObject);
+begin
+  TileMode := tbHorizontal;
+  Tile;
+end;
+```
+
+Les fenêtres sont disposées horizontalement sans se chevaucher.
+
+### Disposition en mosaïque verticale
+
+```pascal
+procedure TForm1.TileVerticalClick(Sender: TObject);
+begin
+  TileMode := tbVertical;
+  Tile;
+end;
+```
+
+Les fenêtres sont disposées verticalement sans se chevaucher.
+
+### Réorganiser toutes les icônes
+
+```pascal
+procedure TForm1.RéorganiserIconesClick(Sender: TObject);
+begin
+  ArrangeIcons;
+end;
+```
+
+Réorganise proprement les fenêtres minimisées au bas de la fenêtre parent.
+
+## Gestion des formulaires enfants actifs
+
+### Détecter le formulaire actif
+
+```pascal
+procedure TForm1.AfficherFormActifClick(Sender: TObject);
+begin
+  if Assigned(ActiveMDIChild) then
+    ShowMessage('Formulaire actif : ' + ActiveMDIChild.Caption)
+  else
+    ShowMessage('Aucun formulaire enfant ouvert');
+end;
+```
+
+### Passer d'un formulaire à l'autre
+
+```pascal
+procedure TForm1.FormulaireSuivantClick(Sender: TObject);
+begin
+  if MDIChildCount > 0 then
+    Next;
+end;
+
+procedure TForm1.FormulairePrécédentClick(Sender: TObject);
+begin
+  if MDIChildCount > 0 then
+    Previous;
+end;
+```
+
+### Fermer le formulaire actif
+
+```pascal
+procedure TForm1.FermerDocumentClick(Sender: TObject);
+begin
+  if Assigned(ActiveMDIChild) then
+    ActiveMDIChild.Close;
+end;
+```
+
+### Fermer tous les formulaires
+
+```pascal
+procedure TForm1.FermerToutClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  // Parcourir à l'envers pour éviter les problèmes d'index
+  for i := MDIChildCount - 1 downto 0 do
+    MDIChildren[i].Close;
+end;
+```
+
+## Liste des fenêtres dans le menu
+
+### Ajouter automatiquement la liste des fenêtres
+
+Delphi peut automatiquement ajouter une liste des fenêtres ouvertes dans un menu :
+
+```pascal
+// Dans le formulaire parent
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  MenuFenetre: TMenuItem;
+begin
+  // Créer le menu Fenêtre
+  MenuFenetre := TMenuItem.Create(MainMenu1);
+  MenuFenetre.Caption := 'Fe&nêtre';
+  MainMenu1.Items.Add(MenuFenetre);
+
+  // Indiquer que ce menu contiendra la liste des fenêtres
+  WindowMenu := MenuFenetre;
+end;
+```
+
+Delphi ajoutera automatiquement :
+- Une coche devant la fenêtre active
+- Un numéro pour chaque fenêtre (1, 2, 3...)
+- La possibilité de cliquer pour activer une fenêtre
+
+## Exemple complet d'application MDI
+
+### Formulaire principal (MDI Parent)
+
+```pascal
+unit UnitMain;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus;
 
 type
-  TfrmChild = class(TForm)
+  TFormMain = class(TForm)
+    MainMenu1: TMainMenu;
+    MenuFichier: TMenuItem;
+    MenuNouveauDoc: TMenuItem;
+    MenuFermer: TMenuItem;
+    N1: TMenuItem;
+    MenuQuitter: TMenuItem;
+    MenuFenetre: TMenuItem;
+    MenuCascade: TMenuItem;
+    MenuTileH: TMenuItem;
+    MenuTileV: TMenuItem;
+    N2: TMenuItem;
+    procedure FormCreate(Sender: TObject);
+    procedure MenuNouveauDocClick(Sender: TObject);
+    procedure MenuFermerClick(Sender: TObject);
+    procedure MenuQuitterClick(Sender: TObject);
+    procedure MenuCascadeClick(Sender: TObject);
+    procedure MenuTileHClick(Sender: TObject);
+    procedure MenuTileVClick(Sender: TObject);
+  private
+    FCompteurDocuments: Integer;
+  public
+    { Public declarations }
+  end;
+
+var
+  FormMain: TFormMain;
+
+implementation
+
+uses UnitDocument;
+
+{$R *.dfm}
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FCompteurDocuments := 0;
+  Caption := 'Application MDI - Exemple';
+  WindowMenu := MenuFenetre;  // Active la liste automatique des fenêtres
+  Position := poScreenCenter;
+  WindowState := wsMaximized;
+end;
+
+procedure TFormMain.MenuNouveauDocClick(Sender: TObject);
+var
+  FormDoc: TFormDocument;
+begin
+  Inc(FCompteurDocuments);
+
+  FormDoc := TFormDocument.Create(Self);
+  FormDoc.Caption := 'Document ' + IntToStr(FCompteurDocuments);
+  FormDoc.Show;
+end;
+
+procedure TFormMain.MenuFermerClick(Sender: TObject);
+begin
+  if Assigned(ActiveMDIChild) then
+    ActiveMDIChild.Close;
+end;
+
+procedure TFormMain.MenuQuitterClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TFormMain.MenuCascadeClick(Sender: TObject);
+begin
+  Cascade;
+end;
+
+procedure TFormMain.MenuTileHClick(Sender: TObject);
+begin
+  TileMode := tbHorizontal;
+  Tile;
+end;
+
+procedure TFormMain.MenuTileVClick(Sender: TObject);
+begin
+  TileMode := tbVertical;
+  Tile;
+end;
+
+end.
+```
+
+### Formulaire enfant (MDI Child)
+
+```pascal
+unit UnitDocument;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+
+type
+  TFormDocument = class(TForm)
     Memo1: TMemo;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormActivate(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
-    FDocumentName: string;
+    FModifie: Boolean;
+    procedure MemoChange(Sender: TObject);
   public
-    property DocumentName: string read FDocumentName write FDocumentName;
+    property Modifie: Boolean read FModifie;
   end;
+
+var
+  FormDocument: TFormDocument;
 
 implementation
 
 {$R *.dfm}
 
-uses MainForm;
+procedure TFormDocument.FormCreate(Sender: TObject);
+begin
+  FModifie := False;
+  Memo1.OnChange := MemoChange;
+  Memo1.ScrollBars := ssBoth;
+  Memo1.Align := alClient;
+end;
+
+procedure TFormDocument.MemoChange(Sender: TObject);
+begin
+  FModifie := True;
+  if Pos('*', Caption) = 0 then
+    Caption := Caption + ' *';
+end;
+
+procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if FModifie then
+  begin
+    case MessageDlg('Voulez-vous enregistrer les modifications ?',
+      mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+      mrYes:
+        begin
+          // Code pour enregistrer
+          ShowMessage('Document enregistré');
+          Action := caFree;
+        end;
+      mrNo:
+        Action := caFree;
+      mrCancel:
+        Action := caNone;  // Annule la fermeture
+    end;
+  end
+  else
+    Action := caFree;
+end;
+
+end.
 ```
 
-### Étape 3 : Implémenter les fonctionnalités de base
+## Propriétés importantes des formulaires MDI
 
-Implémentez les gestionnaires d'événements dans le formulaire principal :
+### Formulaire parent (MDI Form)
+
+| Propriété | Description |
+|-----------|-------------|
+| `FormStyle` | Doit être `fsMDIForm` |
+| `MDIChildCount` | Nombre de formulaires enfants ouverts |
+| `MDIChildren[Index]` | Accès aux formulaires enfants |
+| `ActiveMDIChild` | Formulaire enfant actuellement actif |
+| `WindowMenu` | MenuItem qui affichera la liste des fenêtres |
+| `TileMode` | Mode de mosaïque (`tbHorizontal` ou `tbVertical`) |
+
+### Formulaire enfant (MDI Child)
+
+| Propriété | Description |
+|-----------|-------------|
+| `FormStyle` | Doit être `fsMDIChild` |
+| `WindowState` | État de la fenêtre (`wsNormal`, `wsMinimized`, `wsMaximized`) |
+| `Icon` | Icône affichée dans la barre de titre |
+
+## Événements importants
+
+### Dans le formulaire parent
 
 ```pascal
-procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TFormMain.FormActivate(Sender: TObject);
 begin
-  FChildCount := 0;
-  Caption := 'Application MDI - Delphi';
-  StatusBar1.SimpleText := 'Prêt';
+  // Appelé quand le formulaire parent devient actif
 end;
 
-procedure TfrmMain.mnuNewClick(Sender: TObject);
-var
-  ChildForm: TfrmChild;
+procedure TFormMain.FormDeactivate(Sender: TObject);
 begin
-  // Créer une nouvelle instance du formulaire enfant
-  ChildForm := TfrmChild.Create(Application);
-  Inc(FChildCount);
-
-  // Configurer le formulaire enfant
-  ChildForm.Caption := 'Document ' + IntToStr(FChildCount);
-  ChildForm.DocumentName := 'Document ' + IntToStr(FChildCount);
-
-  // Afficher le nombre de fenêtres ouvertes
-  StatusBar1.SimpleText := 'Documents ouverts: ' + IntToStr(FChildCount);
-end;
-
-procedure TfrmMain.mnuExitClick(Sender: TObject);
-begin
-  Close; // Fermer l'application
-end;
-
-// Fonctions de gestion de la disposition des fenêtres
-procedure TfrmMain.mnuCascadeClick(Sender: TObject);
-begin
-  Cascade; // Organiser les fenêtres en cascade
-end;
-
-procedure TfrmMain.mnuTileHorizontalClick(Sender: TObject);
-begin
-  TileMode := tbHorizontal;
-  Tile; // Organiser les fenêtres horizontalement
-end;
-
-procedure TfrmMain.mnuTileVerticalClick(Sender: TObject);
-begin
-  TileMode := tbVertical;
-  Tile; // Organiser les fenêtres verticalement
-end;
-
-procedure TfrmMain.mnuArrangeIconsClick(Sender: TObject);
-begin
-  ArrangeIcons; // Organiser les icônes des fenêtres minimisées
+  // Appelé quand le formulaire parent perd le focus
 end;
 ```
 
-Implémentez les gestionnaires d'événements dans le formulaire enfant :
+### Dans les formulaires enfants
 
 ```pascal
-procedure TfrmChild.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFormDocument.FormActivate(Sender: TObject);
 begin
-  // Décrémenter le compteur de fenêtres
-  Dec(frmMain.FChildCount);
-  frmMain.StatusBar1.SimpleText := 'Documents ouverts: ' + IntToStr(frmMain.FChildCount);
+  // Appelé quand ce document devient actif
+  StatusBar1.SimpleText := 'Document actif : ' + Caption;
+end;
 
-  // Définir l'action de fermeture pour libérer la mémoire
+procedure TFormDocument.FormDeactivate(Sender: TObject);
+begin
+  // Appelé quand ce document perd le focus
+end;
+
+procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  // Définir Action pour contrôler la fermeture
+  // caHide : Cache le formulaire
+  // caFree : Libère le formulaire (recommandé pour MDI)
+  // caMinimize : Minimise le formulaire
+  // caNone : Annule la fermeture
   Action := caFree;
 end;
+```
 
-procedure TfrmChild.FormActivate(Sender: TObject);
+## Avantages et inconvénients du MDI
+
+### Avantages
+
+**Organisation**
+- Toutes les fenêtres sont regroupées dans une seule fenêtre parent
+- Facilite la gestion de plusieurs documents simultanés
+- Interface cohérente et structurée
+
+**Gestion de l'espace**
+- Les fenêtres enfants ne peuvent pas sortir de la zone parent
+- Utile sur de petits écrans
+- Possibilité de maximiser un enfant dans la zone parent
+
+**Fonctionnalités intégrées**
+- Disposition automatique (cascade, mosaïque)
+- Liste des fenêtres dans le menu
+- Navigation facile entre les documents
+
+### Inconvénients
+
+**Style démodé**
+- L'interface MDI est considérée comme ancienne
+- Les applications modernes préfèrent les onglets ou les fenêtres SDI
+- Moins intuitive pour les nouveaux utilisateurs
+
+**Limitations**
+- Les fenêtres enfants sont confinées au parent
+- Difficile d'utiliser plusieurs écrans efficacement
+- Peut être confus avec beaucoup de fenêtres ouvertes
+
+**Complexité**
+- Plus difficile à programmer qu'une interface à onglets
+- Gestion de la fusion de menus parfois compliquée
+- Problèmes potentiels avec le focus et l'activation
+
+## Alternatives au MDI
+
+### Interface à onglets (Tabbed Interface)
+
+Plus moderne et généralement préférée :
+
+```pascal
+// Utilisation d'un TPageControl
+procedure TForm1.NouveauDocumentClick(Sender: TObject);
+var
+  TabSheet: TTabSheet;
+  Memo: TMemo;
 begin
-  // Mettre à jour la barre d'état avec le nom du document actif
-  frmMain.StatusBar1.SimpleText := 'Document actif: ' + DocumentName;
+  TabSheet := TTabSheet.Create(PageControl1);
+  TabSheet.PageControl := PageControl1;
+  TabSheet.Caption := 'Document ' + IntToStr(PageControl1.PageCount);
+
+  Memo := TMemo.Create(TabSheet);
+  Memo.Parent := TabSheet;
+  Memo.Align := alClient;
+
+  PageControl1.ActivePage := TabSheet;
 end;
 ```
 
-## Améliorer l'application MDI
+### Interface SDI (Single Document Interface)
 
-### Ajouter un menu Window dynamique
-
-Pour faciliter la navigation entre les fenêtres enfants, ajoutons une liste dynamique au menu Window :
-
-1. Ajoutez une ligne séparatrice dans le menu Window
-2. Ajoutez un gestionnaire d'événements sur le menu Window
+Chaque document dans sa propre fenêtre :
 
 ```pascal
-// Dans le formulaire principal
-procedure TfrmMain.mnuWindowClick(Sender: TObject);
+procedure TForm1.NouveauDocumentClick(Sender: TObject);
 var
-  i: Integer;
-  MenuItem: TMenuItem;
+  FormDoc: TFormDocument;
 begin
-  // Supprimer les anciens éléments de menu (au-delà des éléments fixes)
-  while mnuWindow.Count > 5 do // 4 éléments fixes + 1 séparateur
-    mnuWindow.Delete(5);
+  FormDoc := TFormDocument.Create(Application);
+  FormDoc.Show;
+end;
+```
 
-  // Ajouter une entrée pour chaque fenêtre enfant
-  for i := 0 to MDIChildCount - 1 do
+## Quand utiliser MDI ?
+
+**Utilisez MDI si :**
+- Vous développez une application de type "ancienne école" pour des utilisateurs habitués
+- Vous avez besoin de gérer beaucoup de fenêtres similaires
+- L'application doit fonctionner sur de petits écrans
+- Vous devez maintenir une application MDI existante
+
+**Évitez MDI si :**
+- Vous créez une nouvelle application moderne
+- Vous pouvez utiliser des onglets à la place
+- L'application sera utilisée sur plusieurs écrans
+- Vous visez une interface utilisateur moderne et intuitive
+
+## Conseils de conception
+
+### 1. Fournir des raccourcis clavier
+
+```pascal
+// Dans le formulaire parent
+procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Shift = [ssCtrl] then
   begin
-    MenuItem := TMenuItem.Create(mnuWindow);
-    MenuItem.Caption := '&' + IntToStr(i + 1) + ' ' + MDIChildren[i].Caption;
-    MenuItem.Tag := i; // Stocker l'index
-    MenuItem.OnClick := MDIChildClick;
-    MenuItem.Checked := MDIChildren[i] = ActiveMDIChild; // Cocher l'enfant actif
-    mnuWindow.Add(MenuItem);
-  end;
-end;
-
-procedure TfrmMain.MDIChildClick(Sender: TObject);
-begin
-  if Sender is TMenuItem then
-    MDIChildren[TMenuItem(Sender).Tag].BringToFront;
-end;
-```
-
-### Gestion plus avancée des fenêtres enfants
-
-Ajoutons la possibilité d'ouvrir et sauvegarder des fichiers :
-
-```pascal
-// Dans le formulaire principal, ajoutez ces méthodes
-procedure TfrmMain.mnuOpenClick(Sender: TObject);
-var
-  ChildForm: TfrmChild;
-  OpenDialog: TOpenDialog;
-  FileName: string;
-begin
-  OpenDialog := TOpenDialog.Create(Self);
-  try
-    OpenDialog.Filter := 'Fichiers texte (*.txt)|*.txt|Tous les fichiers (*.*)|*.*';
-    if OpenDialog.Execute then
-    begin
-      FileName := OpenDialog.FileName;
-
-      // Vérifier si le fichier est déjà ouvert
-      if IsFileOpen(FileName) then
-      begin
-        ShowMessage('Ce fichier est déjà ouvert !');
-        Exit;
-      end;
-
-      // Créer une nouvelle fenêtre enfant
-      ChildForm := TfrmChild.Create(Application);
-      Inc(FChildCount);
-
-      // Charger le fichier
-      ChildForm.LoadFromFile(FileName);
-      ChildForm.Caption := ExtractFileName(FileName);
-      ChildForm.DocumentName := FileName;
-
-      StatusBar1.SimpleText := 'Documents ouverts: ' + IntToStr(FChildCount);
+    case Key of
+      Ord('N'): MenuNouveauDocClick(Sender);  // Ctrl+N : Nouveau
+      Ord('W'): MenuFermerClick(Sender);      // Ctrl+W : Fermer
+      VK_TAB: Next;                            // Ctrl+Tab : Document suivant
     end;
-  finally
-    OpenDialog.Free;
   end;
 end;
+```
 
-function TfrmMain.IsFileOpen(const FileName: string): Boolean;
+### 2. Indiquer le document actif
+
+```pascal
+procedure TFormMain.UpdateStatusBar;
+begin
+  if Assigned(ActiveMDIChild) then
+    StatusBar1.SimpleText := 'Document : ' + ActiveMDIChild.Caption
+  else
+    StatusBar1.SimpleText := 'Aucun document ouvert';
+end;
+```
+
+### 3. Limiter le nombre de fenêtres
+
+```pascal
+procedure TFormMain.MenuNouveauDocClick(Sender: TObject);
+begin
+  if MDIChildCount >= 10 then
+  begin
+    ShowMessage('Vous avez atteint le nombre maximum de documents ouverts (10)');
+    Exit;
+  end;
+
+  // Créer le nouveau document
+end;
+```
+
+### 4. Sauvegarder l'état de l'application
+
+```pascal
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   i: Integer;
+  DocsModifies: Boolean;
 begin
-  Result := False;
+  DocsModifies := False;
+
+  // Vérifier si des documents ont été modifiés
   for i := 0 to MDIChildCount - 1 do
   begin
-    if TfrmChild(MDIChildren[i]).DocumentName = FileName then
+    if (MDIChildren[i] as TFormDocument).Modifie then
     begin
-      Result := True;
-      MDIChildren[i].BringToFront;
+      DocsModifies := True;
       Break;
     end;
   end;
-end;
-```
 
-Dans le formulaire enfant, ajoutez les méthodes pour charger et sauvegarder :
-
-```pascal
-procedure TfrmChild.LoadFromFile(const FileName: string);
-begin
-  Memo1.Lines.LoadFromFile(FileName);
-  FDocumentName := FileName;
-  Modified := False;
-end;
-
-procedure TfrmChild.SaveToFile(const FileName: string);
-begin
-  Memo1.Lines.SaveToFile(FileName);
-  FDocumentName := FileName;
-  Caption := ExtractFileName(FileName);
-  Modified := False;
-end;
-
-procedure TfrmChild.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-var
-  Response: Integer;
-begin
-  if Modified then
+  if DocsModifies then
   begin
-    Response := MessageDlg('Voulez-vous enregistrer les modifications apportées à "' +
-                           ExtractFileName(DocumentName) + '" ?',
-                           mtConfirmation, [mbYes, mbNo, mbCancel], 0);
-    case Response of
-      mrYes:
-        begin
-          // Enregistrer le document
-          if DocumentName = '' then
-          begin
-            // Demander un nom de fichier
-            with TSaveDialog.Create(Self) do
-            try
-              Filter := 'Fichiers texte (*.txt)|*.txt|Tous les fichiers (*.*)|*.*';
-              if Execute then
-                SaveToFile(FileName)
-              else
-                CanClose := False;
-            finally
-              Free;
-            end;
-          end
-          else
-            SaveToFile(DocumentName);
-        end;
-      mrCancel:
-        CanClose := False;
-    end;
+    if MessageDlg('Certains documents ont été modifiés. Quitter quand même ?',
+      mtWarning, [mbYes, mbNo], 0) = mrNo then
+      Action := caNone;
   end;
 end;
 ```
 
-## Exemple complet : Éditeur de texte MDI
+## Résumé
 
-Voici un exemple plus complet d'une application d'éditeur de texte MDI avec Delphi.
+Les formulaires MDI permettent de créer des applications avec plusieurs documents ouverts dans une seule fenêtre parent. Les points clés à retenir :
 
-### Structure du formulaire principal (MainForm.pas)
+- **FormStyle** : `fsMDIForm` pour le parent, `fsMDIChild` pour les enfants
+- **Gestion** : Utilisez `MDIChildCount`, `MDIChildren[]` et `ActiveMDIChild`
+- **Organisation** : Méthodes `Cascade`, `Tile`, `ArrangeIcons`
+- **Menus** : Utilisez `WindowMenu` pour la liste automatique des fenêtres
+- **Moderne** : Considérez les alternatives (onglets, SDI) pour les nouvelles applications
+- **Fermeture** : Définissez `Action := caFree` dans `OnClose` des enfants
 
-```pascal
-unit MainForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls, Vcl.ToolWin,
-  Vcl.ImgList, System.ImageList, Vcl.ExtCtrls;
-
-type
-  TfrmMain = class(TForm)
-    MainMenu1: TMainMenu;
-    mnuFile: TMenuItem;
-    mnuNew: TMenuItem;
-    mnuOpen: TMenuItem;
-    mnuSave: TMenuItem;
-    mnuSaveAs: TMenuItem;
-    mnuSep1: TMenuItem;
-    mnuExit: TMenuItem;
-    mnuEdit: TMenuItem;
-    mnuCut: TMenuItem;
-    mnuCopy: TMenuItem;
-    mnuPaste: TMenuItem;
-    mnuDelete: TMenuItem;
-    mnuSep2: TMenuItem;
-    mnuSelectAll: TMenuItem;
-    mnuWindow: TMenuItem;
-    mnuCascade: TMenuItem;
-    mnuTileHorizontal: TMenuItem;
-    mnuTileVertical: TMenuItem;
-    mnuArrangeIcons: TMenuItem;
-    mnuSep3: TMenuItem;
-    mnuCloseAll: TMenuItem;
-    StatusBar1: TStatusBar;
-    ToolBar1: TToolBar;
-    ImageList1: TImageList;
-    tbNew: TToolButton;
-    tbOpen: TToolButton;
-    tbSave: TToolButton;
-    ToolButton1: TToolButton;
-    tbCut: TToolButton;
-    tbCopy: TToolButton;
-    tbPaste: TToolButton;
-    procedure FormCreate(Sender: TObject);
-    procedure mnuNewClick(Sender: TObject);
-    procedure mnuOpenClick(Sender: TObject);
-    procedure mnuSaveClick(Sender: TObject);
-    procedure mnuSaveAsClick(Sender: TObject);
-    procedure mnuExitClick(Sender: TObject);
-    procedure mnuCutClick(Sender: TObject);
-    procedure mnuCopyClick(Sender: TObject);
-    procedure mnuPasteClick(Sender: TObject);
-    procedure mnuDeleteClick(Sender: TObject);
-    procedure mnuSelectAllClick(Sender: TObject);
-    procedure mnuCascadeClick(Sender: TObject);
-    procedure mnuTileHorizontalClick(Sender: TObject);
-    procedure mnuTileVerticalClick(Sender: TObject);
-    procedure mnuArrangeIconsClick(Sender: TObject);
-    procedure mnuCloseAllClick(Sender: TObject);
-    procedure mnuWindowClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    FChildCount: Integer;
-    procedure MDIChildClick(Sender: TObject);
-    function IsFileOpen(const FileName: string): Boolean;
-    function ActiveEditor: TMemo;
-    procedure EnableEditMenuItems;
-    procedure UpdateStatusBar;
-  public
-    { Public declarations }
-  end;
-
-var
-  frmMain: TfrmMain;
-
-implementation
-
-{$R *.dfm}
-
-uses ChildForm;
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-begin
-  FChildCount := 0;
-  Caption := 'Éditeur de texte MDI - Delphi';
-  StatusBar1.Panels[0].Text := 'Prêt';
-  StatusBar1.Panels[1].Text := 'Documents: 0';
-
-  // Par défaut, créer un nouveau document
-  mnuNewClick(nil);
-end;
-
-procedure TfrmMain.mnuNewClick(Sender: TObject);
-var
-  ChildForm: TfrmChild;
-begin
-  ChildForm := TfrmChild.Create(Application);
-  Inc(FChildCount);
-
-  ChildForm.Caption := 'Sans titre ' + IntToStr(FChildCount);
-  ChildForm.DocumentName := '';
-
-  UpdateStatusBar;
-end;
-
-// ... autres méthodes implémentées ...
-
-function TfrmMain.ActiveEditor: TMemo;
-begin
-  if ActiveMDIChild <> nil then
-    Result := TfrmChild(ActiveMDIChild).Memo1
-  else
-    Result := nil;
-end;
-
-procedure TfrmMain.EnableEditMenuItems;
-var
-  HasActiveChild: Boolean;
-  HasSelection: Boolean;
-begin
-  HasActiveChild := ActiveMDIChild <> nil;
-
-  // Activer/désactiver les commandes d'édition
-  mnuSave.Enabled := HasActiveChild;
-  mnuSaveAs.Enabled := HasActiveChild;
-
-  if HasActiveChild and (ActiveEditor <> nil) then
-  begin
-    HasSelection := ActiveEditor.SelLength > 0;
-
-    mnuCut.Enabled := HasSelection;
-    mnuCopy.Enabled := HasSelection;
-    mnuDelete.Enabled := HasSelection;
-    mnuPaste.Enabled := Clipboard.HasFormat(CF_TEXT);
-    mnuSelectAll.Enabled := True;
-
-    tbCut.Enabled := HasSelection;
-    tbCopy.Enabled := HasSelection;
-    tbPaste.Enabled := Clipboard.HasFormat(CF_TEXT);
-  end
-  else
-  begin
-    mnuCut.Enabled := False;
-    mnuCopy.Enabled := False;
-    mnuPaste.Enabled := False;
-    mnuDelete.Enabled := False;
-    mnuSelectAll.Enabled := False;
-
-    tbCut.Enabled := False;
-    tbCopy.Enabled := False;
-    tbPaste.Enabled := False;
-  end;
-end;
-
-procedure TfrmMain.UpdateStatusBar;
-begin
-  StatusBar1.Panels[1].Text := 'Documents: ' + IntToStr(FChildCount);
-
-  if ActiveMDIChild <> nil then
-    StatusBar1.Panels[0].Text := 'Document actif: ' +
-                                TfrmChild(ActiveMDIChild).DocumentName
-  else
-    StatusBar1.Panels[0].Text := 'Prêt';
-
-  EnableEditMenuItems;
-end;
-
-// ... autres méthodes implémentées ...
-```
-
-### Structure du formulaire enfant (ChildForm.pas)
-
-```pascal
-unit ChildForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
-
-type
-  TfrmChild = class(TForm)
-    Memo1: TMemo;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormActivate(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure Memo1Change(Sender: TObject);
-  private
-    FDocumentName: string;
-    FModified: Boolean;
-    procedure SetModified(const Value: Boolean);
-  public
-    procedure LoadFromFile(const FileName: string);
-    procedure SaveToFile(const FileName: string);
-    property DocumentName: string read FDocumentName write FDocumentName;
-    property Modified: Boolean read FModified write SetModified;
-  end;
-
-implementation
-
-{$R *.dfm}
-
-uses MainForm;
-
-procedure TfrmChild.FormCreate(Sender: TObject);
-begin
-  FModified := False;
-
-  // Configurer la position et la taille initiale
-  Width := (frmMain.ClientWidth * 2) div 3;
-  Height := (frmMain.ClientHeight * 2) div 3;
-  Left := (frmMain.ClientWidth - Width) div 2;
-  Top := (frmMain.ClientHeight - Height) div 2;
-end;
-
-procedure TfrmChild.SetModified(const Value: Boolean);
-begin
-  FModified := Value;
-
-  // Ajouter ou supprimer l'astérisque pour indiquer les modifications
-  if FModified and (Caption[Length(Caption)] <> '*') then
-    Caption := Caption + '*'
-  else if not FModified and (Caption[Length(Caption)] = '*') then
-    Caption := Copy(Caption, 1, Length(Caption) - 1);
-end;
-
-procedure TfrmChild.Memo1Change(Sender: TObject);
-begin
-  Modified := True;
-end;
-
-// ... autres méthodes implémentées ...
-```
-
-## Gestion avancée des formulaires MDI
-
-### Synchronisation entre les formulaires enfants
-
-Si vous voulez que toutes les fenêtres enfants partagent certaines informations ou états :
-
-```pascal
-// Dans le formulaire principal, ajouter une méthode pour diffuser les paramètres
-procedure TfrmMain.UpdateAllChildFonts(const NewFont: TFont);
-var
-  i: Integer;
-begin
-  for i := 0 to MDIChildCount - 1 do
-  begin
-    TfrmChild(MDIChildren[i]).Memo1.Font.Assign(NewFont);
-  end;
-end;
-```
-
-### MDI avec différents types de formulaires enfants
-
-Vous pouvez créer une application MDI avec différents types de fenêtres enfants :
-
-```pascal
-// Différents types de formulaires
-TChildFormType = (cftText, cftImage, cftTable);
-
-// Méthode pour créer un nouveau formulaire selon le type
-procedure TfrmMain.CreateChild(FormType: TChildFormType);
-begin
-  case FormType of
-    cftText:
-      begin
-        // Créer un formulaire éditeur de texte
-      end;
-    cftImage:
-      begin
-        // Créer un formulaire éditeur d'image
-      end;
-    cftTable:
-      begin
-        // Créer un formulaire éditeur de tableau
-      end;
-  end;
-end;
-```
-
-## Limitations et alternatives au MDI
-
-### Limitations du MDI
-
-- Style d'interface un peu daté pour certains utilisateurs
-- Gestion parfois complexe des fenêtres multiples
-- Inadapté aux interfaces modernes sur tablettes ou mobiles
-
-### Alternatives au MDI
-
-1. **Interface à onglets** : utiliser un `TPageControl` pour afficher plusieurs documents
-
-```pascal
-// Créer un nouvel onglet
-procedure TMainForm.CreateTabDocument(const Title: string);
-var
-  NewTab: TTabSheet;
-  NewMemo: TMemo;
-begin
-  NewTab := TTabSheet.Create(PageControl1);
-  NewTab.Caption := Title;
-  NewTab.PageControl := PageControl1;
-
-  NewMemo := TMemo.Create(NewTab);
-  NewMemo.Parent := NewTab;
-  NewMemo.Align := alClient;
-
-  PageControl1.ActivePage := NewTab;
-end;
-```
-
-2. **Formulaires flottants** : des formulaires indépendants qui restent au premier plan
-
-3. **Dock Panels** : utiliser des panneaux ancrables/flottants pour une UI plus flexible
-
-## Bonnes pratiques
-
-1. **Gestion de mémoire** : Libérez toujours les formulaires enfants correctement (`Action := caFree`)
-
-2. **Nommage des formulaires** : Utilisez des noms explicites, pas juste "Document 1, 2, 3"
-
-3. **État des menus** : Activez/désactivez les options de menu en fonction du contexte
-
-4. **Messages d'état** : Affichez des informations utiles dans la barre d'état
-
-5. **Gestion des modifications** : Demandez toujours à l'utilisateur s'il veut sauvegarder avant de fermer
-
-## Exercices pratiques
-
-1. **Exercice simple** : Créez un éditeur de texte MDI basique avec les fonctions de base (nouveau, ouvrir, enregistrer)
-
-2. **Exercice intermédiaire** : Ajoutez des fonctionnalités d'édition avancées et la possibilité de définir le style de texte
-
-3. **Exercice avancé** : Créez une application MDI avec différents types de documents (texte, images, tableaux)
-
----
-
-L'interface MDI est un concept puissant pour créer des applications permettant de travailler sur plusieurs documents simultanément. Bien qu'elle soit moins utilisée dans les interfaces modernes, elle reste pertinente pour de nombreuses applications professionnelles, notamment les suites bureautiques et les environnements de développement.
+Bien que le style MDI soit considéré comme un peu dépassé, il reste utile pour certains types d'applications, particulièrement dans les environnements professionnels où les utilisateurs sont habitués à cette interface.
 
 ⏭️ [Boîtes de dialogue standard et personnalisées](/06-applications-multi-fenetres-et-navigation/04-boites-de-dialogue-standard-et-personnalisees.md)

@@ -1,339 +1,64 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 6.6 Navigation dans les applications mobiles
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La navigation dans les applications mobiles fonctionne différemment des applications de bureau traditionnelles. Dans ce chapitre, nous allons explorer les spécificités de la navigation mobile avec Delphi et FireMonkey (FMX), en nous concentrant sur des concepts accessibles aux débutants.
+La navigation dans les applications mobiles est fondamentalement différente de celle des applications desktop. Les utilisateurs mobiles ont des attentes spécifiques en termes d'interface et de comportement, et Delphi avec FireMonkey (FMX) offre tous les outils nécessaires pour créer des expériences de navigation modernes et intuitives.
 
-## Comprendre la navigation mobile
+### Différences entre navigation desktop et mobile
 
-Les applications mobiles ont généralement une interface à écran unique, où l'utilisateur navigue d'un écran à un autre, contrairement aux multiples fenêtres des applications de bureau. Cette approche est optimisée pour les écrans tactiles et les appareils à surface d'affichage limitée.
+**Desktop (VCL/FMX) :**
+- Fenêtres multiples
+- Menus traditionnels
+- Souris et clavier
+- Écran large
 
-### Modèles de navigation mobile courants
+**Mobile (FMX) :**
+- Application plein écran
+- Navigation tactile
+- Gestes (swipe, pinch, tap)
+- Écran limité
+- Bouton retour matériel (Android)
+- Barre de navigation (iOS)
 
-1. **Navigation hiérarchique** : Organisation des écrans en arborescence
-2. **Navigation par onglets** : Changement d'écran par des onglets en bas ou en haut
-3. **Navigation latérale** : Menu coulissant (drawer/hamburger menu)
-4. **Navigation modale** : Écrans qui apparaissent temporairement au-dessus des autres
+### Patterns de navigation mobile
 
-## Préparation d'un projet mobile avec Delphi
+Les applications mobiles utilisent principalement ces patterns :
 
-Avant de commencer à implémenter la navigation, créons un projet mobile basique.
+1. **Navigation par onglets** : Barre d'onglets en bas (iOS) ou en haut (Android)
+2. **Navigation hiérarchique** : Empilage d'écrans avec bouton retour
+3. **Menu latéral (Drawer)** : Menu glissant depuis le côté
+4. **Navigation modale** : Écrans temporaires par-dessus le contenu
+5. **Navigation par cartes** : Cartes à défiler horizontalement
 
-### Création d'un projet FireMonkey mobile
+## TTabControl - Navigation par onglets
 
-1. Lancez Delphi et sélectionnez **Fichier → Nouveau → Application multi-périphériques**
-2. Choisissez **Blank Application** comme modèle
-3. Dans l'**Object Inspector**, configurez le formulaire principal :
-   - Définissez `Caption` à "Mon Application Mobile"
-   - Ajustez `Fill.Color` pour un fond agréable (par exemple, un bleu clair)
+Le composant `TTabControl` est l'outil principal pour créer une navigation par onglets dans les applications mobiles FMX.
 
-### Ajout de styles mobile
-
-Pour donner à votre application un aspect natif :
-
-1. Cliquez sur **Project → Options**
-2. Sélectionnez **Application → Appearance**
-3. Activez l'option **Apply style** et choisissez un style correspondant à la plateforme cible (par exemple "Glacier" pour iOS ou "Material" pour Android)
-
-```pascal
-// Vous pouvez aussi définir le style par programmation
-uses
-  FMX.Styles;
-
-// Dans votre FormCreate
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  TStyleManager.TrySetStyleFromFile('Material.style');
-end;
-```
-
-## Méthodes de navigation dans FireMonkey
-
-### 1. Navigation entre formulaires
-
-La méthode la plus simple consiste à utiliser plusieurs formulaires et à passer de l'un à l'autre.
-
-#### Création des formulaires
-
-1. Créez un nouveau formulaire : **Fichier → Nouveau → Multi-périphériques → Form**
-2. Personnalisez-le et ajoutez des éléments d'interface
-3. Répétez pour créer autant de formulaires que nécessaire
-
-#### Navigation basique entre formulaires
+### Configuration de base
 
 ```pascal
-// Dans votre unité principale (par exemple, MainForm.pas)
-uses
-  SecondForm; // Assurez-vous d'inclure l'unité du second formulaire
-
-procedure TMainForm.btnNavigateClick(Sender: TObject);
-var
-  Form2: TForm2;
-begin
-  Form2 := TForm2.Create(Application);
-  Form2.Show;
-  // Attention : ceci n'est pas idéal pour les applications mobiles
-  // car l'ancien formulaire reste en mémoire
-end;
-```
-
-#### Gestion appropriée des formulaires pour mobile
-
-Sur mobile, il est préférable de libérer le formulaire précédent ou d'utiliser d'autres approches :
-
-```pascal
-procedure TMainForm.btnNavigateClick(Sender: TObject);
-var
-  Form2: TForm2;
-begin
-  Form2 := TForm2.Create(Application);
-  // Passer des données si nécessaire
-  Form2.UserName := edtUserName.Text;
-
-  // Afficher le nouveau formulaire
-  Form2.Show;
-
-  // Fermer le formulaire actuel
-  Close;
-end;
-
-// Dans le second formulaire, ajouter un bouton retour
-procedure TForm2.btnBackClick(Sender: TObject);
-var
-  Form1: TForm1;
-begin
-  Form1 := TForm1.Create(Application);
-  Form1.Show;
-  Close; // Fermer ce formulaire
-end;
-```
-
-**Problèmes avec cette approche** :
-- Perte de l'état des formulaires lors de la navigation
-- Utilisation inefficace de la mémoire
-- Non-respect des conventions de navigation mobile
-
-### 2. Utilisation de TTabControl pour la navigation
-
-Une meilleure approche consiste à utiliser un `TTabControl` et à changer de "page" plutôt que de changer de formulaire.
-
-#### Configuration du TTabControl
-
-1. Glissez un `TTabControl` depuis la palette de composants sur votre formulaire
-2. Définissez son alignement à `Client` pour qu'il occupe tout l'espace
-3. Ajoutez plusieurs `TTabItem` (onglets) pour représenter vos différents écrans
-4. Placez les contrôles appropriés sur chaque onglet
-
-```pascal
-// Dans le concepteur, ajoutez un TTabControl avec les TabItems :
-// - tabHome
-// - tabProfile
-// - tabSettings
-
-// Dans le code, masquez les onglets pour une navigation mobile native
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Masquer les contrôles d'onglets (important pour une UI mobile)
-  TabControl1.TabPosition := TTabPosition.None;
-
-  // Démarrer sur la page d'accueil
-  TabControl1.ActiveTab := tabHome;
-end;
-```
-
-#### Navigation entre les onglets
-
-```pascal
-// Bouton pour aller au profil
-procedure TMainForm.btnGoToProfileClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabProfile;
-end;
-
-// Bouton pour aller aux paramètres
-procedure TMainForm.btnGoToSettingsClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabSettings;
-end;
-
-// Bouton pour revenir à l'accueil
-procedure TMainForm.btnBackToHomeClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabHome;
-end;
-```
-
-#### Ajout d'une transition animée
-
-FireMonkey permet d'ajouter facilement des animations de transition :
-
-```pascal
-procedure TMainForm.btnGoToProfileClick(Sender: TObject);
-begin
-  TabControl1.SetActiveTabWithTransition(tabProfile, TTabTransition.Slide,
-                                         TTabTransitionDirection.Normal, 0.3);
-end;
-```
-
-Les types de transitions disponibles sont :
-- `TTabTransition.Slide` : Glissement
-- `TTabTransition.Fade` : Fondu
-- `TTabTransition.None` : Aucune transition
-
-Les directions incluent :
-- `TTabTransitionDirection.Normal` : Direction par défaut (droite à gauche)
-- `TTabTransitionDirection.Reversed` : Direction inverse (gauche à droite)
-
-### 3. Navigation par onglets inférieure (style natif)
-
-Pour créer une barre d'onglets en bas comme dans de nombreuses applications mobiles :
-
-#### Configuration de la structure
-
-1. Utilisez un `TLayout` aligné en bas pour la barre d'onglets
-2. Utilisez un `TTabControl` pour le contenu principal, aligné `Client`
-3. Placez des boutons dans le `TLayout` pour représenter les onglets
-
-```pascal
-// Dans le concepteur :
-// - TTabControl (aligné Client) avec plusieurs TabItems
-// - TLayout (aligné Bottom, hauteur ~60) contenant plusieurs TSpeedButton
-
-// Dans le code :
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Masquer les contrôles d'onglets
-  TabControl1.TabPosition := TTabPosition.None;
-
-  // Style initial des boutons d'onglets
-  UpdateTabButtons(btnHome);
-end;
-
-// Gestionnaire de clic pour tous les boutons d'onglets
-procedure TMainForm.TabButtonClick(Sender: TObject);
-begin
-  // Mettre à jour l'apparence des boutons
-  UpdateTabButtons(TSpeedButton(Sender));
-
-  // Changer l'onglet actif
-  if Sender = btnHome then
-    TabControl1.ActiveTab := tabHome
-  else if Sender = btnProfile then
-    TabControl1.ActiveTab := tabProfile
-  else if Sender = btnSettings then
-    TabControl1.ActiveTab := tabSettings;
-end;
-
-// Mise à jour de l'apparence des boutons
-procedure TMainForm.UpdateTabButtons(ActiveButton: TSpeedButton);
-begin
-  // Réinitialiser tous les boutons
-  btnHome.Opacity := 0.6;
-  btnProfile.Opacity := 0.6;
-  btnSettings.Opacity := 0.6;
-
-  // Mettre en évidence le bouton actif
-  ActiveButton.Opacity := 1.0;
-end;
-```
-
-### 4. Navigation avec menu latéral (Drawer)
-
-Le menu latéral (aussi appelé "drawer" ou menu hamburger) est très courant dans les applications mobiles.
-
-#### Création d'un menu latéral simple
-
-1. Utilisez un `TMultiView` depuis la palette de composants
-2. Configurer le `TMultiView` :
-   - `DrawerOptions.Mode` = `TMultiViewMode.Popover`
-   - `DrawerOptions.Width` = `250` (ou selon vos besoins)
-   - `MasterButton` = un bouton avec l'icône hamburger
-
-```pascal
-// Dans l'événement OnClick du bouton de menu
-procedure TMainForm.btnMenuClick(Sender: TObject);
-begin
-  // Ouvrir/fermer le menu latéral
-  MultiView1.ShowMaster;
-end;
-
-// Dans le menu, ajouter des éléments comme des TListBoxItem
-procedure TMainForm.ListBox1ItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Navigation basée sur l'élément sélectionné
-  if Item = lbiHome then
-    TabControl1.ActiveTab := tabHome
-  else if Item = lbiProfile then
-    TabControl1.ActiveTab := tabProfile
-  else if Item = lbiSettings then
-    TabControl1.ActiveTab := tabSettings;
-
-  // Fermer le menu après la sélection
-  MultiView1.HideMaster;
-end;
-```
-
-## Exemple complet : Application mobile avec navigation combinée
-
-Maintenant, créons une application complète combinant plusieurs techniques de navigation.
-
-### Structure de l'application
-
-- **Menu latéral** : Pour la navigation principale entre sections
-- **Onglets inférieurs** : Pour la navigation dans une section
-- **Navigation entre formulaires** : Pour des écrans spécifiques (comme un écran de détails)
-
-### Code de l'interface principale
-
-```pascal
-unit MainForm;
+unit UnitMain;
 
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  FMX.Controls.Presentation, FMX.MultiView, FMX.Layouts, FMX.ListBox,
-  FMX.TabControl, FMX.Objects;
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.TabControl, FMX.StdCtrls;
 
 type
   TFormMain = class(TForm)
-    ToolBar1: TToolBar;
-    btnMenu: TSpeedButton;
-    lblTitle: TLabel;
-    MultiView1: TMultiView;
-    ListBox1: TListBox;
-    lbiHome: TListBoxItem;
-    lbiExplore: TListBoxItem;
-    lbiProfile: TListBoxItem;
-    lbiSettings: TListBoxItem;
     TabControl1: TTabControl;
-    tabHome: TTabItem;
-    tabExplore: TTabItem;
-    tabProfile: TTabItem;
-    tabSettings: TTabItem;
-    LayoutBottomTabs: TLayout;
-    btnTabHome: TSpeedButton;
-    btnTabExplore: TSpeedButton;
-    imgHome: TImage;
-    imgExplore: TImage;
-    imgProfile: TImage;
-    imgSettings: TImage;
-    btnTabProfile: TSpeedButton;
-    btnTabSettings: TSpeedButton;
-    ListViewHome: TListView;
+    TabItemAccueil: TTabItem;
+    TabItemRecherche: TTabItem;
+    TabItemProfil: TTabItem;
+    ToolBar1: TToolBar;
+    LabelTitre: TLabel;
     procedure FormCreate(Sender: TObject);
-    procedure ListBox1ItemClick(const Sender: TCustomListBox; const Item: TListBoxItem);
-    procedure btnTabHomeClick(Sender: TObject);
-    procedure btnTabExploreClick(Sender: TObject);
-    procedure btnTabProfileClick(Sender: TObject);
-    procedure btnTabSettingsClick(Sender: TObject);
-    procedure btnMenuClick(Sender: TObject);
-    procedure ListViewHomeItemClick(const Sender: TObject; const AItem: TListViewItem);
+    procedure TabControl1Change(Sender: TObject);
   private
-    procedure UpdateTabButtons(ActiveButton: TSpeedButton);
-    procedure UpdateTitle;
+    procedure ConfigurerNavigation;
   public
     { Public declarations }
   end;
@@ -345,2118 +70,1084 @@ implementation
 
 {$R *.fmx}
 
-uses
-  DetailForm;
-
 procedure TFormMain.FormCreate(Sender: TObject);
-var
-  I: Integer;
 begin
-  // Configuration initiale
+  ConfigurerNavigation;
+end;
+
+procedure TFormMain.ConfigurerNavigation;
+begin
+  // Masquer les onglets visuels (on créera des boutons personnalisés)
   TabControl1.TabPosition := TTabPosition.None;
-  TabControl1.ActiveTab := tabHome;
 
-  // Configuration du MultiView
-  MultiView1.Mode := TMultiViewMode.Popover;
-  MultiView1.HideMaster;
+  // Ou afficher les onglets en bas (style iOS)
+  // TabControl1.TabPosition := TTabPosition.Bottom;
 
-  // Remplir la ListView avec des données de test
-  for I := 1 to 20 do
-  begin
-    with ListViewHome.Items.Add do
-    begin
-      Text := 'Élément ' + I.ToString;
-      Detail := 'Description de l''élément ' + I.ToString;
-    end;
+  // Configuration des TabItems
+  TabItemAccueil.Text := 'Accueil';
+  TabItemRecherche.Text := 'Recherche';
+  TabItemProfil.Text := 'Profil';
+
+  // Page par défaut
+  TabControl1.ActiveTab := TabItemAccueil;
+end;
+
+procedure TFormMain.TabControl1Change(Sender: TObject);
+begin
+  // Mettre à jour le titre selon l'onglet actif
+  case TabControl1.TabIndex of
+    0: LabelTitre.Text := 'Accueil';
+    1: LabelTitre.Text := 'Recherche';
+    2: LabelTitre.Text := 'Profil';
+  end;
+end;
+
+end.
+```
+
+### Créer une barre de navigation personnalisée
+
+```pascal
+type
+  TFormMain = class(TForm)
+    TabControl1: TTabControl;
+    LayoutNavigation: TLayout;
+    ButtonAccueil: TSpeedButton;
+    ButtonRecherche: TSpeedButton;
+    ButtonProfil: TSpeedButton;
+    procedure ButtonAccueilClick(Sender: TObject);
+    procedure ButtonRechercheClick(Sender: TObject);
+    procedure ButtonProfilClick(Sender: TObject);
+  private
+    procedure NaviguerVers(Index: Integer);
+    procedure MettreAJourBoutons;
   end;
 
-  // Mettre à jour l'apparence des boutons d'onglets
-  UpdateTabButtons(btnTabHome);
+implementation
 
-  // Définir le titre
-  UpdateTitle;
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Masquer les onglets par défaut
+  TabControl1.TabPosition := TTabPosition.None;
+
+  // Positionner la barre de navigation en bas
+  LayoutNavigation.Align := TAlignLayout.Bottom;
+  LayoutNavigation.Height := 60;
+
+  // Configurer les boutons
+  ButtonAccueil.StyleLookup := 'tabitemstyle';
+  ButtonRecherche.StyleLookup := 'tabitemstyle';
+  ButtonProfil.StyleLookup := 'tabitemstyle';
+
+  MettreAJourBoutons;
 end;
 
-procedure TFormMain.UpdateTabButtons(ActiveButton: TSpeedButton);
+procedure TFormMain.NaviguerVers(Index: Integer);
 begin
-  // Réinitialiser tous les boutons
-  btnTabHome.Opacity := 0.6;
-  btnTabExplore.Opacity := 0.6;
-  btnTabProfile.Opacity := 0.6;
-  btnTabSettings.Opacity := 0.6;
+  TabControl1.TabIndex := Index;
+  MettreAJourBoutons;
+end;
 
+procedure TFormMain.MettreAJourBoutons;
+begin
   // Mettre en évidence le bouton actif
-  ActiveButton.Opacity := 1.0;
+  ButtonAccueil.IsPressed := TabControl1.TabIndex = 0;
+  ButtonRecherche.IsPressed := TabControl1.TabIndex = 1;
+  ButtonProfil.IsPressed := TabControl1.TabIndex = 2;
 end;
 
-procedure TFormMain.UpdateTitle;
+procedure TFormMain.ButtonAccueilClick(Sender: TObject);
 begin
-  // Mettre à jour le titre en fonction de l'onglet actif
-  if TabControl1.ActiveTab = tabHome then
-    lblTitle.Text := 'Accueil'
-  else if TabControl1.ActiveTab = tabExplore then
-    lblTitle.Text := 'Explorer'
-  else if TabControl1.ActiveTab = tabProfile then
-    lblTitle.Text := 'Profil'
-  else if TabControl1.ActiveTab = tabSettings then
-    lblTitle.Text := 'Paramètres';
+  NaviguerVers(0);
 end;
 
-procedure TFormMain.btnMenuClick(Sender: TObject);
+procedure TFormMain.ButtonRechercheClick(Sender: TObject);
 begin
-  // Ouvrir/fermer le menu latéral
+  NaviguerVers(1);
+end;
+
+procedure TFormMain.ButtonProfilClick(Sender: TObject);
+begin
+  NaviguerVers(2);
+end;
+```
+
+### Navigation avec icônes
+
+```pascal
+procedure TFormMain.ConfigurerIcones;
+begin
+  // Utiliser des caractères Unicode ou des images
+  ButtonAccueil.Text := #$F015;  // Icône maison (Font Awesome)
+  ButtonRecherche.Text := #$F002; // Icône recherche
+  ButtonProfil.Text := #$F007;    // Icône utilisateur
+
+  // Ou charger des images
+  ButtonAccueil.StyleLookup := 'tabitemstyle';
+  // Ajouter des TImage comme enfants des boutons
+end;
+```
+
+## Navigation hiérarchique (Stack Navigation)
+
+Pour une navigation en profondeur avec possibilité de revenir en arrière.
+
+### Principe du stack de navigation
+
+```pascal
+type
+  TNavigationManager = class
+  private
+    FTabControl: TTabControl;
+    FStack: TList<TTabItem>;
+  public
+    constructor Create(ATabControl: TTabControl);
+    destructor Destroy; override;
+    procedure Push(TabItem: TTabItem);
+    procedure Pop;
+    function CanGoBack: Boolean;
+  end;
+
+implementation
+
+constructor TNavigationManager.Create(ATabControl: TTabControl);
+begin
+  inherited Create;
+  FTabControl := ATabControl;
+  FStack := TList<TTabItem>.Create;
+end;
+
+destructor TNavigationManager.Destroy;
+begin
+  FStack.Free;
+  inherited;
+end;
+
+procedure TNavigationManager.Push(TabItem: TTabItem);
+begin
+  // Sauvegarder l'onglet actuel dans la pile
+  if Assigned(FTabControl.ActiveTab) then
+    FStack.Add(FTabControl.ActiveTab);
+
+  // Afficher le nouvel onglet
+  FTabControl.ActiveTab := TabItem;
+end;
+
+procedure TNavigationManager.Pop;
+var
+  PreviousTab: TTabItem;
+begin
+  if FStack.Count > 0 then
+  begin
+    PreviousTab := FStack.Last;
+    FStack.Delete(FStack.Count - 1);
+    FTabControl.ActiveTab := PreviousTab;
+  end;
+end;
+
+function TNavigationManager.CanGoBack: Boolean;
+begin
+  Result := FStack.Count > 0;
+end;
+```
+
+### Utilisation du gestionnaire de navigation
+
+```pascal
+type
+  TFormMain = class(TForm)
+    TabControl1: TTabControl;
+    TabItemListe: TTabItem;
+    TabItemDetail: TTabItem;
+    ButtonRetour: TButton;
+    ListBox1: TListBox;
+    procedure FormCreate(Sender: TObject);
+    procedure ListBox1ItemClick(Sender: TObject; const Point: TPointF);
+    procedure ButtonRetourClick(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
+      Shift: TShiftState);
+  private
+    FNavManager: TNavigationManager;
+  public
+    destructor Destroy; override;
+  end;
+
+implementation
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FNavManager := TNavigationManager.Create(TabControl1);
+  TabControl1.TabPosition := TTabPosition.None;
+  ButtonRetour.Visible := False;
+end;
+
+destructor TFormMain.Destroy;
+begin
+  FNavManager.Free;
+  inherited;
+end;
+
+procedure TFormMain.ListBox1ItemClick(Sender: TObject; const Point: TPointF);
+begin
+  // Naviguer vers le détail
+  FNavManager.Push(TabItemDetail);
+  ButtonRetour.Visible := True;
+
+  // Charger les détails de l'élément sélectionné
+  LabelDetail.Text := 'Détail de : ' + ListBox1.Selected.Text;
+end;
+
+procedure TFormMain.ButtonRetourClick(Sender: TObject);
+begin
+  FNavManager.Pop;
+  ButtonRetour.Visible := FNavManager.CanGoBack;
+end;
+
+procedure TFormMain.FormKeyUp(Sender: TObject; var Key: Word;
+  var KeyChar: Char; Shift: TShiftState);
+begin
+  // Gérer le bouton retour Android
+  {$IFDEF ANDROID}
+  if Key = vkHardwareBack then
+  begin
+    if FNavManager.CanGoBack then
+    begin
+      FNavManager.Pop;
+      ButtonRetour.Visible := FNavManager.CanGoBack;
+      Key := 0; // Empêcher la fermeture de l'app
+    end;
+  end;
+  {$ENDIF}
+end;
+```
+
+## Transitions et animations
+
+FireMonkey permet d'ajouter des animations lors des changements de page.
+
+### Transitions de base
+
+```pascal
+uses
+  FMX.Ani;
+
+procedure TFormMain.NaviguerAvecAnimation(VersDroite: Boolean);
+var
+  Animation: TFloatAnimation;
+begin
+  Animation := TFloatAnimation.Create(nil);
+  try
+    Animation.Parent := TabControl1;
+    Animation.PropertyName := 'Position.X';
+    Animation.Duration := 0.3;
+    Animation.AnimationType := TAnimationType.InOut;
+    Animation.Interpolation := TInterpolationType.Quadratic;
+
+    if VersDroite then
+    begin
+      Animation.StartValue := -TabControl1.Width;
+      Animation.StopValue := 0;
+    end
+    else
+    begin
+      Animation.StartValue := TabControl1.Width;
+      Animation.StopValue := 0;
+    end;
+
+    Animation.Start;
+  finally
+    Animation.Free;
+  end;
+end;
+```
+
+### Transition slide (glissement)
+
+```pascal
+procedure TFormMain.ChangerTabAvecSlide(NouvelIndex: Integer);
+var
+  Direction: Integer;
+begin
+  Direction := NouvelIndex - TabControl1.TabIndex;
+
+  // Configurer la transition
+  TabControl1.Transition := TTabTransition.Slide;
+  TabControl1.TransitionEffect := TTabTransitionEffect.Normal;
+
+  // Changer d'onglet (l'animation se fait automatiquement)
+  TabControl1.TabIndex := NouvelIndex;
+end;
+```
+
+### Personnaliser les transitions
+
+```pascal
+type
+  TTransitionType = (ttSlide, ttFade, ttNone);
+
+procedure TFormMain.AppliquerTransition(TransType: TTransitionType);
+begin
+  case TransType of
+    ttSlide:
+    begin
+      TabControl1.Transition := TTabTransition.Slide;
+      TabControl1.TransitionDuration := 0.3;
+    end;
+
+    ttFade:
+    begin
+      TabControl1.Transition := TTabTransition.None;
+      // Implémenter un fade manuel avec TFloatAnimation sur Opacity
+    end;
+
+    ttNone:
+    begin
+      TabControl1.Transition := TTabTransition.None;
+    end;
+  end;
+end;
+```
+
+## Menu latéral avec TMultiView
+
+`TMultiView` permet de créer un menu latéral (drawer) moderne.
+
+### Configuration de base
+
+```pascal
+type
+  TFormMain = class(TForm)
+    MultiView1: TMultiView;
+    ButtonMenu: TSpeedButton;
+    LayoutMenu: TLayout;
+    ButtonMenuItem1: TButton;
+    ButtonMenuItem2: TButton;
+    ButtonMenuItem3: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure ButtonMenuClick(Sender: TObject);
+    procedure ButtonMenuItem1Click(Sender: TObject);
+  private
+    procedure ConfigurerMultiView;
+  end;
+
+implementation
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  ConfigurerMultiView;
+end;
+
+procedure TFormMain.ConfigurerMultiView;
+begin
+  // Mode du MultiView
+  MultiView1.Mode := TMultiViewMode.Drawer;  // Menu coulissant
+
+  // Position du menu
+  MultiView1.DrawerOptions.Placement := TDrawerPlacement.Left;
+
+  // Largeur du menu
+  MultiView1.Width := 250;
+
+  // Options
+  MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;
+  MultiView1.DrawerOptions.DurationSliding := 0.3;
+
+  // Bouton pour ouvrir/fermer
+  ButtonMenu.Text := #$2630;  // Icône hamburger (≡)
+end;
+
+procedure TFormMain.ButtonMenuClick(Sender: TObject);
+begin
+  // Basculer l'état du menu
   if MultiView1.IsShowed then
     MultiView1.HideMaster
   else
     MultiView1.ShowMaster;
 end;
 
-procedure TFormMain.ListBox1ItemClick(const Sender: TCustomListBox; const Item: TListBoxItem);
+procedure TFormMain.ButtonMenuItem1Click(Sender: TObject);
 begin
-  // Navigation basée sur l'élément sélectionné dans le menu latéral
-  if Item = lbiHome then
-  begin
-    TabControl1.ActiveTab := tabHome;
-    UpdateTabButtons(btnTabHome);
-  end
-  else if Item = lbiExplore then
-  begin
-    TabControl1.ActiveTab := tabExplore;
-    UpdateTabButtons(btnTabExplore);
-  end
-  else if Item = lbiProfile then
-  begin
-    TabControl1.ActiveTab := tabProfile;
-    UpdateTabButtons(btnTabProfile);
-  end
-  else if Item = lbiSettings then
-  begin
-    TabControl1.ActiveTab := tabSettings;
-    UpdateTabButtons(btnTabSettings);
-  end;
+  // Action du menu
+  ShowMessage('Menu Item 1 cliqué');
 
-  // Mettre à jour le titre
-  UpdateTitle;
-
-  // Fermer le menu après la sélection
+  // Fermer le menu
   MultiView1.HideMaster;
-end;
 
-procedure TFormMain.btnTabHomeClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabHome;
-  UpdateTabButtons(TSpeedButton(Sender));
-  UpdateTitle;
+  // Naviguer vers une page
+  TabControl1.ActiveTab := TabItemPage1;
 end;
+```
 
-procedure TFormMain.btnTabExploreClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabExplore;
-  UpdateTabButtons(TSpeedButton(Sender));
-  UpdateTitle;
-end;
+### Modes de MultiView
 
-procedure TFormMain.btnTabProfileClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabProfile;
-  UpdateTabButtons(TSpeedButton(Sender));
-  UpdateTitle;
-end;
+```pascal
+// Mode Drawer : Menu coulissant par-dessus le contenu
+MultiView1.Mode := TMultiViewMode.Drawer;
+MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;
 
-procedure TFormMain.btnTabSettingsClick(Sender: TObject);
-begin
-  TabControl1.ActiveTab := tabSettings;
-  UpdateTabButtons(TSpeedButton(Sender));
-  UpdateTitle;
-end;
+// Mode Panel : Menu pousse le contenu
+MultiView1.Mode := TMultiViewMode.Panel;
 
-procedure TFormMain.ListViewHomeItemClick(const Sender: TObject; const AItem: TListViewItem);
+// Mode Popover : Menu en popup (iPad)
+MultiView1.Mode := TMultiViewMode.Popover;
+
+// Mode PlatformBehaviour : Comportement natif selon la plateforme
+MultiView1.Mode := TMultiViewMode.PlatformBehaviour;
+```
+
+### Menu avec profil utilisateur
+
+```pascal
+procedure TFormMain.ConfigurerMenuAvecProfil;
 var
-  DetailForm: TDetailForm;
+  LayoutProfil: TLayout;
+  CircleProfil: TCircle;
+  LabelNom: TLabel;
 begin
-  // Naviguer vers le formulaire de détails
-  DetailForm := TDetailForm.Create(Application);
-  DetailForm.SetItemDetails(AItem.Text, AItem.Detail);
-  DetailForm.Show;
-end;
+  // Créer une section profil en haut du menu
+  LayoutProfil := TLayout.Create(MultiView1);
+  LayoutProfil.Parent := MultiView1;
+  LayoutProfil.Align := TAlignLayout.Top;
+  LayoutProfil.Height := 150;
 
-end.
-```
+  // Photo de profil
+  CircleProfil := TCircle.Create(LayoutProfil);
+  CircleProfil.Parent := LayoutProfil;
+  CircleProfil.Width := 80;
+  CircleProfil.Height := 80;
+  CircleProfil.Position.X := 20;
+  CircleProfil.Position.Y := 20;
+  CircleProfil.Fill.Color := TAlphaColors.Lightblue;
 
-### Création du formulaire de détails
-
-Créez un nouveau formulaire (`DetailForm.pas`) pour l'écran de détails :
-
-```pascal
-unit DetailForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  FMX.Controls.Presentation, FMX.Layouts;
-
-type
-  TDetailForm = class(TForm)
-    ToolBar1: TToolBar;
-    btnBack: TSpeedButton;
-    lblTitle: TLabel;
-    Layout1: TLayout;
-    lblItemName: TLabel;
-    lblItemDetail: TLabel;
-    procedure btnBackClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-    FItemName: string;
-    FItemDetail: string;
-  public
-    procedure SetItemDetails(const AName, ADetail: string);
-  end;
-
-implementation
-
-{$R *.fmx}
-
-procedure TDetailForm.FormCreate(Sender: TObject);
-begin
-  // Configurer le bouton de retour selon la plateforme
-  {$IFDEF IOS}
-  btnBack.StyleLookup := 'backtoolbutton';
-  {$ENDIF}
-
-  {$IFDEF ANDROID}
-  btnBack.StyleLookup := 'arrowlefttoolbutton';
-  {$ENDIF}
-
-  btnBack.Text := '';
-end;
-
-procedure TDetailForm.SetItemDetails(const AName, ADetail: string);
-begin
-  FItemName := AName;
-  FItemDetail := ADetail;
-
-  // Mettre à jour l'interface
-  lblTitle.Text := FItemName;
-  lblItemName.Text := FItemName;
-  lblItemDetail.Text := FItemDetail;
-end;
-
-procedure TDetailForm.btnBackClick(Sender: TObject);
-begin
-  // Retour au formulaire précédent
-  Close;
-end;
-
-end.
-```
-
-## Gestion du bouton retour sur Android
-
-Sur Android, il est important de gérer correctement le bouton retour matériel (ou virtuel) :
-
-```pascal
-// Ajouter à l'interface de TFormMain
-procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-
-// Implémentation
-procedure TFormMain.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-begin
-  {$IFDEF ANDROID}
-  // Gestion du bouton retour sur Android
-  if Key = vkHardwareBack then
-  begin
-    // Si le menu est ouvert, le fermer
-    if MultiView1.IsShowed then
-    begin
-      MultiView1.HideMaster;
-      Key := 0; // Empêcher l'action par défaut (quitter l'application)
-    end
-    // Sinon, comportement par défaut (quitter l'application)
-  end;
-  {$ENDIF}
+  // Nom de l'utilisateur
+  LabelNom := TLabel.Create(LayoutProfil);
+  LabelNom.Parent := LayoutProfil;
+  LabelNom.Text := 'Jean Dupont';
+  LabelNom.Position.X := 20;
+  LabelNom.Position.Y := 110;
+  LabelNom.Font.Size := 16;
 end;
 ```
 
-Pour l'écran de détails, il faut aussi gérer le bouton retour :
+## Gestes de navigation
+
+FireMonkey supporte nativement les gestes tactiles.
+
+### Swipe pour naviguer
 
 ```pascal
-// Dans DetailForm.pas, ajouter à l'interface
-procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-
-// Implémentation
-procedure TDetailForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-begin
-  {$IFDEF ANDROID}
-  // Gestion du bouton retour sur Android
-  if Key = vkHardwareBack then
-  begin
-    // Fermer ce formulaire
-    Close;
-    Key := 0; // Empêcher l'action par défaut
-  end;
-  {$ENDIF}
-end;
-```
-
-## Navigation avec état persistant
-
-Un défi courant dans les applications mobiles est de préserver l'état de l'interface lors de la navigation. Voici comment implémenter cette fonctionnalité :
-
-```pascal
-// Dans MainForm.pas, ajoutez ces variables privées
-private
-  FLastActiveTab: TTabItem;
-  FScrollPositions: array[0..3] of Single;
-
-// Dans la procédure où vous changez d'onglet, sauvegardez la position de défilement
-procedure TFormMain.btnTabHomeClick(Sender: TObject);
-begin
-  // Sauvegarder la position de défilement de l'onglet actuel
-  if TabControl1.ActiveTab = tabHome then
-    FScrollPositions[0] := ListViewHome.ScrollViewPos
-  else if TabControl1.ActiveTab = tabExplore then
-    FScrollPositions[1] := // position du contrôle de défilement
-  // etc.
-
-  // Sauvegarder l'onglet actuel
-  FLastActiveTab := TabControl1.ActiveTab;
-
-  // Changer d'onglet
-  TabControl1.ActiveTab := tabHome;
-
-  // Restaurer la position de défilement
-  ListViewHome.ScrollViewPos := FScrollPositions[0];
-
-  // Mettre à jour l'UI
-  UpdateTabButtons(TSpeedButton(Sender));
-  UpdateTitle;
-end;
-```
-
-## Gestion de l'orientation de l'écran
-
-Les applications mobiles doivent souvent s'adapter à l'orientation de l'écran :
-
-```pascal
-procedure TFormMain.FormResize(Sender: TObject);
-begin
-  // Détecter l'orientation
-  if Width > Height then
-    HandleLandscapeOrientation
-  else
-    HandlePortraitOrientation;
-end;
-
-procedure TFormMain.HandlePortraitOrientation;
-begin
-  // Configuration pour l'orientation portrait
-  LayoutBottomTabs.Align := TAlignLayout.Bottom;
-  LayoutBottomTabs.Height := 60;
-
-  // Ajuster les autres contrôles si nécessaire
-end;
-
-procedure TFormMain.HandleLandscapeOrientation;
-begin
-  // Configuration pour l'orientation paysage
-  // Par exemple, déplacer les onglets sur le côté
-  LayoutBottomTabs.Align := TAlignLayout.Right;
-  LayoutBottomTabs.Width := 80;
-
-  // Ajuster les autres contrôles si nécessaire
-end;
-```
-
-## Navigation avec gestes (Swipe)
-
-FireMonkey permet d'ajouter facilement une navigation par gestes :
-
-```pascal
-// Dans le concepteur, ajoutez un TGestureManager
-// Dans FormCreate :
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  // ... autre code d'initialisation
-
-  // Configurer les gestes
-  Touch.GestureManager := GestureManager1;
-  Touch.StandardGestures := [TStandardGesture.sgLeft, TStandardGesture.sgRight];
-end;
-
-// Gérer les événements de geste
-procedure TFormMain.FormGesture(Sender: TObject; const EventInfo: TGestureEventInfo;
-  var Handled: Boolean);
-begin
-  case EventInfo.GestureID of
-    // Glisser vers la gauche (naviguer vers la droite)
-    sgiLeft:
-      begin
-        if TabControl1.ActiveTab = tabHome then
-        begin
-          TabControl1.ActiveTab := tabExplore;
-          UpdateTabButtons(btnTabExplore);
-          UpdateTitle;
-          Handled := True;
-        end
-        else if TabControl1.ActiveTab = tabExplore then
-        begin
-          TabControl1.ActiveTab := tabProfile;
-          UpdateTabButtons(btnTabProfile);
-          UpdateTitle;
-          Handled := True;
-        end
-        else if TabControl1.ActiveTab = tabProfile then
-        begin
-          TabControl1.ActiveTab := tabSettings;
-          UpdateTabButtons(btnTabSettings);
-          UpdateTitle;
-          Handled := True;
-        end;
-      end;
-
-    // Glisser vers la droite (naviguer vers la gauche)
-    sgiRight:
-      begin
-        if TabControl1.ActiveTab = tabSettings then
-        begin
-          TabControl1.ActiveTab := tabProfile;
-          UpdateTabButtons(btnTabProfile);
-          UpdateTitle;
-          Handled := True;
-        end
-        else if TabControl1.ActiveTab = tabProfile then
-        begin
-          TabControl1.ActiveTab := tabExplore;
-          UpdateTabButtons(btnTabExplore);
-          UpdateTitle;
-          Handled := True;
-        end
-        else if TabControl1.ActiveTab = tabExplore then
-        begin
-          TabControl1.ActiveTab := tabHome;
-          UpdateTabButtons(btnTabHome);
-          UpdateTitle;
-          Handled := True;
-        end;
-      end;
-  end;
-end;
-```
-
-## Navigation adaptative pour téléphones et tablettes
-
-Pour les applications universelles, adaptez la navigation selon la taille de l'écran :
-
-```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-var
-  ScreenService: IFMXScreenService;
-  ScreenSize: TSizeF;
-begin
-  // ... autre code d'initialisation
-
-  // Détecter si c'est une tablette
-  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService) then
-  begin
-    ScreenSize := ScreenService.GetScreenSize;
-    if (ScreenSize.Width >= 600) or (ScreenSize.Height >= 600) then
-      SetupTabletUI
-    else
-      SetupPhoneUI;
-  end;
-end;
-
-procedure TFormMain.SetupPhoneUI;
-begin
-  // Interface pour téléphone
-  // - Onglets en bas
-  // - Navigation empilée
-  LayoutBottomTabs.Visible := True;
-  LayoutBottomTabs.Align := TAlignLayout.Bottom;
-  LayoutBottomTabs.Height := 60;
-end;
-
-procedure TFormMain.SetupTabletUI;
-begin
-  // Interface pour tablette
-  // - Menu permanent à gauche (comme sur iPad)
-  // - Écran divisé en mode paysage
-  LayoutBottomTabs.Visible := False;
-  MultiView1.Mode := TMultiViewMode.Drawer;
-  MultiView1.DrawerOptions.Mode := TDrawerMode.PushingDetailView;
-  MultiView1.DrawerOptions.PushingMode := TPushingMode.Overlap;
-  MultiView1.Visible := True;
-
-  // En mode paysage, garder le menu ouvert par défaut
-  if Width > Height then
-    MultiView1.ShowMaster;
-end;
-```
-
-## Bonnes pratiques pour la navigation mobile
-
-1. **Cohérence** : Suivez les conventions de la plateforme (iOS ou Android)
-2. **Simplicité** : Limitez la profondeur de navigation à 3-4 niveaux maximum
-3. **Retour évident** : Assurez-vous que l'utilisateur sait toujours comment revenir en arrière
-4. **Feedback visuel** : Indiquez clairement où se trouve l'utilisateur dans l'application
-5. **Efficacité** : Permettez d'accéder aux fonctions principales en 2-3 actions
-6. **Orientation** : Testez votre application en mode portrait et paysage
-7. **Performance** : Évitez de créer/détruire des formulaires en permanence
-8. **Accessibilité** : Assurez-vous que les cibles tactiles sont assez grandes (≥ 44pt)
-
-## Erreurs courantes à éviter
-
-1. **Ignorer les conventions de plateforme** : Un menu hamburger n'est pas naturel sur iOS
-2. **Navigation trop profonde** : L'utilisateur se perd après 3-4 niveaux
-3. **Boutons trop petits** ou trop proches les uns des autres
-4. **Manque d'indication** sur l'emplacement actuel dans l'application
-5. **Oublier de gérer le bouton Retour** sur Android
-6. **Navigation incohérente** entre différentes parties de l'application
-7. **Non-persistance de l'état** lors de la navigation (perte des données saisies)
-8. **Transitions trop lentes** qui frustrent l'utilisateur
-
-## Exercices pratiques
-
-1. **Exercice simple** : Créez une application avec 3 onglets et une barre de navigation inférieure
-2. **Exercice intermédiaire** : Ajoutez un écran de détails accessible depuis une liste, avec navigation retour
-3. **Exercice avancé** : Créez une application combinant menu latéral, onglets et adaptée au mode tablette
-
-## Conclusion
-
-La navigation est l'un des aspects les plus importants d'une application mobile. Bien conçue, elle permet à l'utilisateur de se déplacer intuitivement dans votre application. FireMonkey offre tous les outils nécessaires pour créer une navigation fluide et adaptée aux différentes plateformes mobiles.
-
-En combinant les techniques vues dans ce chapitre – onglets, menu latéral, navigation hiérarchique – vous pouvez créer des applications mobiles Delphi offrant une excellente expérience utilisateur.
-
-
-# 6.6 Navigation dans les applications mobiles
-
-La navigation dans les applications mobiles diffère considérablement de celle des applications desktop. Alors que les applications desktop utilisent souvent plusieurs fenêtres et des interfaces MDI, les applications mobiles s'appuient sur un modèle de navigation plus fluide et adapté aux écrans tactiles. Ce chapitre vous guidera à travers les concepts et techniques de navigation pour les applications mobiles créées avec Delphi et FireMonkey (FMX).
-
-## Comprendre les modèles de navigation mobile
-
-Avant de plonger dans le code, il est important de comprendre les modèles de navigation courants dans les applications mobiles :
-
-### 1. Navigation par pile (Stack Navigation)
-
-C'est le modèle le plus courant :
-- Les écrans sont empilés les uns sur les autres
-- Chaque nouvel écran est placé au sommet de la pile
-- Le bouton de retour permet de revenir à l'écran précédent (dépiler)
-- Typique des applications iOS et Android
-
-### 2. Navigation par onglets (Tab Navigation)
-
-- Plusieurs écrans accessibles via des onglets en bas ou en haut
-- Permet de basculer rapidement entre les fonctions principales
-- Les onglets conservent généralement leur état entre les changements
-
-### 3. Navigation par tiroir (Drawer Navigation)
-
-- Menu latéral qui s'affiche en glissant depuis le bord de l'écran
-- Souvent utilisé pour les options, paramètres ou sections principales
-- Également appelé "Hamburger Menu" ou "Side Menu"
-
-### 4. Navigation modale
-
-- Affiche un écran qui doit être fermé avant de continuer
-- Utilisé pour les tâches qui nécessitent l'attention complète de l'utilisateur
-- Exemples : dialogues de confirmation, assistants, formulaires de saisie
-
-## Implémenter la navigation par pile dans FireMonkey
-
-La navigation par pile est la base de la plupart des applications mobiles. Voici comment l'implémenter avec Delphi et FireMonkey.
-
-### Étape 1 : Créer un projet d'application mobile
-
-1. Lancez Delphi et créez un nouveau projet FireMonkey Mobile
-2. Sélectionnez "Multi-Device Application"
-3. Choisissez "Blank Application"
-4. Enregistrez le projet
-
-### Étape 2 : Configurer l'écran principal
-
-Commençons par configurer l'écran principal qui servira de point d'entrée :
-
-```pascal
-unit MainForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.ListBox;
-
 type
   TFormMain = class(TForm)
-    ToolBar1: TToolBar;
-    lblTitle: TLabel;
-    ListBox1: TListBox;
-    ListBoxItem1: TListBoxItem;
-    ListBoxItem2: TListBoxItem;
-    procedure FormCreate(Sender: TObject);
-    procedure ListBox1ItemClick(const Sender: TCustomListBox;
-      const Item: TListBoxItem);
-  private
-    { Déclarations privées }
-  public
-    { Déclarations publiques }
-  end;
-
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.fmx}
-
-uses
-  DetailForm; // Nous créerons cette unité plus tard
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale de l'écran
-  lblTitle.Text := 'Écran principal';
-
-  // Configurer les éléments de la liste
-  ListBoxItem1.Text := 'Produit 1';
-  ListBoxItem2.Text := 'Produit 2';
-
-  // Ajouter quelques éléments supplémentaires pour l'exemple
-  ListBox1.Items.Add('Produit 3');
-  ListBox1.Items.Add('Produit 4');
-end;
-
-procedure TFormMain.ListBox1ItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Ouvrir l'écran de détails quand un élément est cliqué
-  ShowDetailForm(Item.Text);
-end;
-
-procedure TFormMain.ShowDetailForm(const ProductName: string);
-var
-  DetailForm: TFormDetail;
-begin
-  DetailForm := TFormDetail.Create(nil);
-  try
-    // Passer des données à l'écran de détails
-    DetailForm.SetProductName(ProductName);
-
-    // Afficher l'écran de détails
-    DetailForm.Show;
-  except
-    DetailForm.Free;
-    raise;
-  end;
-end;
-
-end.
-```
-
-Dans le Designer FireMonkey, ajoutez ces composants à votre formulaire principal :
-- Un `TToolBar` en haut
-- Un `TLabel` dans la barre d'outils (pour le titre)
-- Un `TListBox` qui occupe la majeure partie de l'écran
-- Ajoutez quelques `TListBoxItem` à la liste
-
-### Étape 3 : Créer l'écran de détails
-
-Ajoutez un nouveau formulaire à votre projet (File → New → Multi-Device Form) et implémentez-le comme suit :
-
-```pascal
-unit DetailForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts;
-
-type
-  TFormDetail = class(TForm)
-    ToolBar1: TToolBar;
-    btnBack: TButton;
-    lblTitle: TLabel;
-    lblProductName: TLabel;
-    lblDescription: TLabel;
-    procedure btnBackClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-    FProductName: string;
-  public
-    procedure SetProductName(const Value: string);
-  end;
-
-implementation
-
-{$R *.fmx}
-
-procedure TFormDetail.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  lblTitle.Text := 'Détails du produit';
-end;
-
-procedure TFormDetail.SetProductName(const Value: string);
-begin
-  FProductName := Value;
-
-  // Mettre à jour l'interface utilisateur
-  lblProductName.Text := FProductName;
-  lblDescription.Text := 'Description de ' + FProductName;
-end;
-
-procedure TFormDetail.btnBackClick(Sender: TObject);
-begin
-  // Fermer cet écran et revenir au précédent
-  Close;
-end;
-
-end.
-```
-
-Dans le Designer, ajoutez ces composants à votre formulaire de détails :
-- Un `TToolBar` en haut
-- Un `TButton` dans la barre d'outils (pour revenir en arrière)
-- Un `TLabel` dans la barre d'outils (pour le titre)
-- Un `TLabel` pour afficher le nom du produit
-- Un `TLabel` pour afficher la description
-
-**Important** : Positionnez le bouton de retour à gauche de la barre d'outils et définissez son texte à "Retour" ou utilisez un caractère comme "←".
-
-### Étape 4 : Améliorer la navigation
-
-La navigation de base fonctionne, mais elle n'est pas très élégante. Améliorons-la avec des transitions et une meilleure gestion de l'écran :
-
-```pascal
-// Dans MainForm.pas, modifiez la méthode ShowDetailForm
-procedure TFormMain.ShowDetailForm(const ProductName: string);
-var
-  DetailForm: TFormDetail;
-begin
-  DetailForm := TFormDetail.Create(Application);
-
-  // Configurer le formulaire avant de l'afficher
-  DetailForm.SetProductName(ProductName);
-
-  // Transition vers le nouvel écran (glissement depuis la droite)
-  DetailForm.ShowModal(
-    procedure(ModalResult: TModalResult)
-    begin
-      // Code exécuté après la fermeture du formulaire
-      // (nettoyage, actualisation, etc.)
-    end);
-end;
-```
-
-## Implémenter la navigation par onglets
-
-La navigation par onglets est idéale pour accéder rapidement aux principales fonctionnalités. Voyons comment l'implémenter.
-
-### Étape 1 : Créer un projet avec TabControl
-
-1. Créez un nouveau projet FireMonkey Mobile
-2. Ajoutez un `TTabControl` qui occupe la majeure partie de l'écran
-3. Ajoutez un `TTabItem` pour chaque onglet (par exemple : Accueil, Produits, Panier, Profil)
-4. Ajoutez un `TToolBar` en bas de l'écran pour les boutons d'onglets
-
-```pascal
-unit MainTabForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.TabControl,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts;
-
-type
-  TFormTabs = class(TForm)
     TabControl1: TTabControl;
-    TabItem1: TTabItem;
-    TabItem2: TTabItem;
-    TabItem3: TTabItem;
-    TabItem4: TTabItem;
-    ToolBar1: TToolBar;
-    btnTab1: TButton;
-    btnTab2: TButton;
-    btnTab3: TButton;
-    btnTab4: TButton;
-    Layout1: TLayout;
-    Layout2: TLayout;
-    Layout3: TLayout;
-    Layout4: TLayout;
-    lblTab1: TLabel;
-    lblTab2: TLabel;
-    lblTab3: TLabel;
-    lblTab4: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure btnTab1Click(Sender: TObject);
-    procedure btnTab2Click(Sender: TObject);
-    procedure btnTab3Click(Sender: TObject);
-    procedure btnTab4Click(Sender: TObject);
-  private
-    procedure UpdateTabButtons;
-  public
-    { Public declarations }
-  end;
-
-var
-  FormTabs: TFormTabs;
-
-implementation
-
-{$R *.fmx}
-
-procedure TFormTabs.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  TabControl1.ActiveTab := TabItem1;
-
-  // Définir les titres des onglets
-  TabItem1.Text := 'Accueil';
-  TabItem2.Text := 'Produits';
-  TabItem3.Text := 'Panier';
-  TabItem4.Text := 'Profil';
-
-  // Définir le contenu de démonstration
-  lblTab1.Text := 'Écran d''accueil';
-  lblTab2.Text := 'Liste des produits';
-  lblTab3.Text := 'Votre panier';
-  lblTab4.Text := 'Votre profil';
-
-  // Définir les boutons d'onglets
-  btnTab1.Text := 'Accueil';
-  btnTab2.Text := 'Produits';
-  btnTab3.Text := 'Panier';
-  btnTab4.Text := 'Profil';
-
-  // Mettre à jour l'état des boutons
-  UpdateTabButtons;
-end;
-
-procedure TFormTabs.btnTab1Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItem1;
-  UpdateTabButtons;
-end;
-
-procedure TFormTabs.btnTab2Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItem2;
-  UpdateTabButtons;
-end;
-
-procedure TFormTabs.btnTab3Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItem3;
-  UpdateTabButtons;
-end;
-
-procedure TFormTabs.btnTab4Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItem4;
-  UpdateTabButtons;
-end;
-
-procedure TFormTabs.UpdateTabButtons;
-begin
-  // Mise en évidence du bouton actif
-  btnTab1.Opacity := IfThen(TabControl1.ActiveTab = TabItem1, 1.0, 0.6);
-  btnTab2.Opacity := IfThen(TabControl1.ActiveTab = TabItem2, 1.0, 0.6);
-  btnTab3.Opacity := IfThen(TabControl1.ActiveTab = TabItem3, 1.0, 0.6);
-  btnTab4.Opacity := IfThen(TabControl1.ActiveTab = TabItem4, 1.0, 0.6);
-end;
-
-end.
-```
-
-### Étape 2 : Améliorer la barre d'onglets
-
-Pour une apparence plus professionnelle, ajoutez des icônes à vos boutons d'onglets :
-
-```pascal
-// Dans le Designer, ajoutez des TImage à chaque bouton
-// Ou personnalisez en code
-
-procedure TFormTabs.FormCreate(Sender: TObject);
-begin
-  // ... Code existant
-
-  // Ajouter des images aux boutons d'onglets
-  // (supposons que les images sont dans le projet)
-  btnTab1.ImageIndex := 0; // Icône Accueil
-  btnTab2.ImageIndex := 1; // Icône Produits
-  btnTab3.ImageIndex := 2; // Icône Panier
-  btnTab4.ImageIndex := 3; // Icône Profil
-
-  // Style des boutons pour onglets
-  btnTab1.StyleLookup := 'tabitembutton';
-  btnTab2.StyleLookup := 'tabitembutton';
-  btnTab3.StyleLookup := 'tabitembutton';
-  btnTab4.StyleLookup := 'tabitembutton';
-end;
-```
-
-### Étape 3 : Combiner navigation par onglets et par pile
-
-Dans les applications réelles, vous combinerez souvent navigation par onglets et navigation par pile :
-
-```pascal
-// Dans l'onglet Produits, implémentez l'ouverture d'un détail de produit
-
-procedure TFormTabs.ListBoxProductsItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-var
-  DetailForm: TFormDetail;
-begin
-  DetailForm := TFormDetail.Create(Application);
-
-  // Configurer le formulaire avant de l'afficher
-  DetailForm.SetProductName(Item.Text);
-
-  // Afficher l'écran de détails en mode modal
-  DetailForm.ShowModal(
-    procedure(ModalResult: TModalResult)
-    begin
-      // Retour à l'onglet Produits
-    end);
-end;
-```
-
-## Implémenter un menu tiroir (Drawer Navigation)
-
-Le menu tiroir est une autre forme populaire de navigation, particulièrement sur Android.
-
-### Étape 1 : Créer la structure du formulaire
-
-1. Créez un nouveau projet FireMonkey Mobile
-2. Ajoutez un `TLayout` (`LayoutDrawer`) pour contenir le menu tiroir
-3. Ajoutez un `TLayout` (`LayoutContent`) pour le contenu principal
-4. Ajoutez un `TToolBar` avec un bouton de menu hamburger
-
-```pascal
-unit DrawerForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.ListBox,
-  FMX.Ani;
-
-type
-  TFormDrawer = class(TForm)
-    ToolBar1: TToolBar;
-    btnMenu: TButton;
-    lblTitle: TLabel;
-    LayoutDrawer: TLayout;
-    LayoutContent: TLayout;
-    ListBoxMenu: TListBox;
-    LayoutOverlay: TLayout;
-    FloatAnimationDrawer: TFloatAnimation;
-    procedure FormCreate(Sender: TObject);
-    procedure btnMenuClick(Sender: TObject);
-    procedure ListBoxMenuItemClick(const Sender: TCustomListBox;
-      const Item: TListBoxItem);
-    procedure LayoutOverlayClick(Sender: TObject);
-  private
-    FDrawerOpen: Boolean;
-    procedure ToggleDrawer;
-    procedure CloseDrawer;
-    procedure OpenDrawer;
-    procedure SwitchToScreen(const ScreenName: string);
-  public
-    { Public declarations }
-  end;
-
-var
-  FormDrawer: TFormDrawer;
-
-implementation
-
-{$R *.fmx}
-
-procedure TFormDrawer.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  lblTitle.Text := 'Écran d''accueil';
-  FDrawerOpen := False;
-
-  // Configurer le menu tiroir
-  LayoutDrawer.Width := 250;
-  LayoutDrawer.Position.X := -LayoutDrawer.Width;
-
-  // Configurer l'overlay (couche semi-transparente)
-  LayoutOverlay.Visible := False;
-  LayoutOverlay.HitTest := True;
-  LayoutOverlay.Opacity := 0;
-
-  // Configurer l'animation du tiroir
-  FloatAnimationDrawer.PropertyName := 'Position.X';
-  FloatAnimationDrawer.Parent := LayoutDrawer;
-  FloatAnimationDrawer.Duration := 0.25;
-
-  // Remplir le menu
-  ListBoxMenu.Items.Add('Accueil');
-  ListBoxMenu.Items.Add('Produits');
-  ListBoxMenu.Items.Add('Catégories');
-  ListBoxMenu.Items.Add('Mon compte');
-  ListBoxMenu.Items.Add('Paramètres');
-  ListBoxMenu.Items.Add('À propos');
-end;
-
-procedure TFormDrawer.btnMenuClick(Sender: TObject);
-begin
-  ToggleDrawer;
-end;
-
-procedure TFormDrawer.ToggleDrawer;
-begin
-  if FDrawerOpen then
-    CloseDrawer
-  else
-    OpenDrawer;
-end;
-
-procedure TFormDrawer.OpenDrawer;
-begin
-  // Afficher le tiroir
-  FDrawerOpen := True;
-
-  // Animer l'ouverture du tiroir
-  FloatAnimationDrawer.StartValue := LayoutDrawer.Position.X;
-  FloatAnimationDrawer.StopValue := 0;
-  FloatAnimationDrawer.Start;
-
-  // Afficher l'overlay
-  LayoutOverlay.Visible := True;
-  LayoutOverlay.BringToFront;
-  LayoutDrawer.BringToFront;
-
-  // Animer l'opacité de l'overlay
-  TAnimator.AnimateFloat(LayoutOverlay, 'Opacity', 0.5, 0.25);
-end;
-
-procedure TFormDrawer.CloseDrawer;
-begin
-  // Cacher le tiroir
-  FDrawerOpen := False;
-
-  // Animer la fermeture du tiroir
-  FloatAnimationDrawer.StartValue := LayoutDrawer.Position.X;
-  FloatAnimationDrawer.StopValue := -LayoutDrawer.Width;
-  FloatAnimationDrawer.Start;
-
-  // Animer l'opacité de l'overlay puis le cacher
-  TAnimator.AnimateFloat(LayoutOverlay, 'Opacity', 0, 0.25,
-    TAnimationType.Out, TInterpolationType.Linear,
-    procedure
-    begin
-      LayoutOverlay.Visible := False;
-    end);
-end;
-
-procedure TFormDrawer.LayoutOverlayClick(Sender: TObject);
-begin
-  // Fermer le tiroir quand on clique en dehors
-  CloseDrawer;
-end;
-
-procedure TFormDrawer.ListBoxMenuItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Changer d'écran quand on clique sur un élément du menu
-  SwitchToScreen(Item.Text);
-
-  // Fermer le tiroir
-  CloseDrawer;
-end;
-
-procedure TFormDrawer.SwitchToScreen(const ScreenName: string);
-begin
-  // Mettre à jour le titre
-  lblTitle.Text := ScreenName;
-
-  // Dans une application réelle, vous changeriez de contenu ici
-  ShowMessage('Navigation vers : ' + ScreenName);
-end;
-
-end.
-```
-
-## Navigation modale
-
-La navigation modale est utile pour des interactions isolées. En FireMonkey, cela se fait facilement avec `ShowModal`.
-
-### Exemple d'écran de connexion modal
-
-```pascal
-// Dans le formulaire principal, ajoutez un bouton de connexion
-procedure TMainForm.btnLoginClick(Sender: TObject);
-var
-  LoginForm: TLoginForm;
-begin
-  LoginForm := TLoginForm.Create(nil);
-  try
-    // Afficher l'écran de connexion en mode modal
-    if LoginForm.ShowModal = mrOk then
-    begin
-      // L'utilisateur s'est connecté avec succès
-      lblUser.Text := 'Connecté en tant que : ' + LoginForm.Username;
-    end;
-  finally
-    LoginForm.Free;
-  end;
-end;
-```
-
-## Utiliser un composant TMultiView pour une navigation avancée
-
-FireMonkey inclut un composant `TMultiView` spécialement conçu pour la navigation par tiroir.
-
-### Étape 1 : Configurer le TMultiView
-
-1. Ajoutez un `TMultiView` à votre formulaire
-2. Placez un `TListBox` à l'intérieur du `TMultiView.DrawerContent`
-3. Placez votre contenu principal dans `TMultiView.MasterContent`
-
-```pascal
-unit MultiViewForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.ListBox,
-  FMX.MultiView;
-
-type
-  TFormMultiView = class(TForm)
-    MultiView1: TMultiView;
-    ToolBar1: TToolBar;
-    btnMenu: TButton;
-    lblTitle: TLabel;
-    ListBoxMenu: TListBox;
-    ListBoxItem1: TListBoxItem;
-    ListBoxItem2: TListBoxItem;
-    ListBoxItem3: TListBoxItem;
-    ListBoxItem4: TListBoxItem;
-    ListBoxItem5: TListBoxItem;
-    Layout1: TLayout;
-    lblContent: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure ListBoxMenuItemClick(const Sender: TCustomListBox;
-      const Item: TListBoxItem);
-  private
-    procedure SwitchToScreen(const ScreenName: string);
-  public
-    { Public declarations }
-  end;
-
-var
-  FormMultiView: TFormMultiView;
-
-implementation
-
-{$R *.fmx}
-
-procedure TFormMultiView.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  MultiView1.Mode := TMultiViewMode.Drawer;
-  MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;
-  MultiView1.DrawerOptions.Gesture := [TDrawerGesture.Edge, TDrawerGesture.Swipe];
-
-  // Configurer le bouton de menu
-  btnMenu.StyleLookup := 'drawertoolbutton';
-  btnMenu.Text := '';
-
-  // Titre initial
-  lblTitle.Text := 'Écran d''accueil';
-  lblContent.Text := 'Contenu de l''écran d''accueil';
-
-  // Configurer le menu
-  ListBoxItem1.Text := 'Accueil';
-  ListBoxItem2.Text := 'Produits';
-  ListBoxItem3.Text := 'Catégories';
-  ListBoxItem4.Text := 'Mon compte';
-  ListBoxItem5.Text := 'Paramètres';
-end;
-
-procedure TFormMultiView.ListBoxMenuItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Changer d'écran quand on clique sur un élément du menu
-  SwitchToScreen(Item.Text);
-
-  // Fermer le MultiView
-  MultiView1.HideMaster;
-end;
-
-procedure TFormMultiView.SwitchToScreen(const ScreenName: string);
-begin
-  // Mettre à jour le titre
-  lblTitle.Text := ScreenName;
-
-  // Mettre à jour le contenu
-  lblContent.Text := 'Contenu de l''écran : ' + ScreenName;
-end;
-
-end.
-```
-
-## Bonnes pratiques pour la navigation mobile
-
-1. **Cohérence avec les plateformes** : Respectez les conventions de navigation d'iOS et Android
-2. **Retour intuitif** : Assurez-vous que les utilisateurs peuvent toujours revenir à l'écran précédent
-3. **Transitions fluides** : Ajoutez des animations pour rendre la navigation plus agréable
-4. **Feedback visuel** : Indiquez clairement l'écran actif (couleur, icône, texte)
-5. **Navigation adaptative** : Adaptez la navigation selon la taille d'écran et l'orientation
-6. **Profondeur limitée** : Évitez d'avoir plus de 3 niveaux de profondeur dans la navigation
-7. **Navigation efficace** : Permettez d'accéder aux fonctions principales en 2-3 touches maximum
-
-## Astuces et pièges à éviter
-
-### Gestion de la mémoire
-
-Soyez attentif à la libération des formulaires :
-
-```pascal
-// Évitez ce code (fuite de mémoire) :
-procedure TMainForm.btnShowDetailBadClick(Sender: TObject);
-var
-  DetailForm: TDetailForm;
-begin
-  DetailForm := TDetailForm.Create(nil);
-  DetailForm.Show; // Fuite de mémoire ! Qui va libérer DetailForm ?
-end;
-
-// Préférez cette approche :
-procedure TMainForm.btnShowDetailGoodClick(Sender: TObject);
-var
-  DetailForm: TDetailForm;
-begin
-  DetailForm := TDetailForm.Create(Application);
-  DetailForm.Show;
-end;
-
-// Ou encore mieux, avec ShowModal et un gestionnaire :
-procedure TMainForm.btnShowDetailBestClick(Sender: TObject);
-var
-  DetailForm: TDetailForm;
-begin
-  DetailForm := TDetailForm.Create(nil);
-  try
-    DetailForm.ShowModal(
-      procedure(ModalResult: TModalResult)
-      begin
-        // Le formulaire se ferme ici
-      end);
-  except
-    DetailForm.Free;
-    raise;
-  end;
-end;
-```
-
-### Gestion du cycle de vie de l'application
-
-N'oubliez pas que les applications mobiles peuvent être mises en arrière-plan ou terminées à tout moment :
-
-```pascal
-procedure TMainForm.FormSaveState(Sender: TObject);
-begin
-  // Sauvegarder l'état avant que l'application soit mise en arrière-plan
-  SaveCurrentScreen;
-  SaveUserProgress;
-end;
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Restaurer l'état à la réouverture
-  if HasSavedState then
-    RestoreAppState;
-end;
-```
-
-### Adaptation aux différentes plateformes
-
-Adaptez votre navigation aux conventions de chaque plateforme :
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Adapter l'interface selon la plateforme
-  {$IFDEF IOS}
-  // Style iOS
-  btnBack.Text := '';
-  btnBack.StyleLookup := 'backtoolbutton';
-  {$ENDIF}
-
-  {$IFDEF ANDROID}
-  // Style Android
-  btnBack.Text := '';
-  btnBack.StyleLookup := 'arrowlefttoolbutton';
-  {$ENDIF}
-end;
-```
-
-## Exemple pratique : Application complète
-
-Pour illustrer ces concepts, créons une petite application de recettes combinant plusieurs types de navigation :
-
-1. Navigation par onglets pour les sections principales (Recettes, Favoris, Courses, Profil)
-2. Navigation par pile pour afficher les détails des recettes
-3. Menu tiroir pour les options et paramètres
-
-Ce code est un point de départ que vous pouvez étendre :
-
-```pascal
-unit MainForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.ListBox,
-  FMX.TabControl, FMX.MultiView;
-
-type
-  TFormMain = class(TForm)
-    ToolBar1: TToolBar;
-    btnMenu: TButton;
-    lblTitle: TLabel;
-    MultiView1: TMultiView;
-    ListBoxMenu: TListBox;
-    TabControl1: TTabControl;
-    TabItemRecipes: TTabItem;
-    TabItemFavorites: TTabItem;
-    TabItemShopping: TTabItem;
-    TabItemProfile: TTabItem;
-    Layout1: TLayout;
-    btnTab1: TButton;
-    btnTab2: TButton;
-    btnTab3: TButton;
-    btnTab4: TButton;
-    ListBoxRecipes: TListBox;
-    ListBoxFavorites: TListBox;
-    procedure FormCreate(Sender: TObject);
-    procedure btnTab1Click(Sender: TObject);
-    procedure btnTab2Click(Sender: TObject);
-    procedure btnTab3Click(Sender: TObject);
-    procedure btnTab4Click(Sender: TObject);
-    procedure ListBoxRecipesItemClick(const Sender: TCustomListBox;
-      const Item: TListBoxItem);
-    procedure ListBoxMenuItemClick(const Sender: TCustomListBox;
-      const Item: TListBoxItem);
-  private
-    procedure UpdateTabButtons;
-    procedure ShowRecipeDetail(const RecipeName: string);
-  public
-    { Public declarations }
-  end;
-
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.fmx}
-
-uses
-  RecipeDetailForm;
-
-procedure TFormMain.FormCreate(Sender: TObject);
-var
-  I: Integer;
-begin
-  // Configuration du MultiView
-  MultiView1.Mode := TMultiViewMode.Drawer;
-  MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;
-
-  // Configuration du bouton de menu
-  btnMenu.StyleLookup := 'drawertoolbutton';
-  btnMenu.Text := '';
-
-  // Configurer TabControl
-  TabControl1.ActiveTab := TabItemRecipes;
-
-  // Configurer les titres
-  TabItemRecipes.Text := 'Recettes';
-  TabItemFavorites.Text := 'Favoris';
-  TabItemShopping.Text := 'Courses';
-  TabItemProfile.Text := 'Profil';
-
-  // Configurer les boutons d'onglets
-  btnTab1.Text := 'Recettes';
-  btnTab2.Text := 'Favoris';
-  btnTab3.Text := 'Courses';
-  btnTab4.Text := 'Profil';
-
-  // Ajouter des éléments au menu latéral
-  ListBoxMenu.Items.Add('Paramètres');
-  ListBoxMenu.Items.Add('Aide');
-  ListBoxMenu.Items.Add('À propos');
-  ListBoxMenu.Items.Add('Commentaires');
-  ListBoxMenu.Items.Add('Noter l''application');
-
-  // Ajouter des recettes de démonstration
-  ListBoxRecipes.Items.Clear;
-  for I := 1 to 20 do
-    ListBoxRecipes.Items.Add('Recette ' + I.ToString);
-
-  // Ajouter des favoris de démonstration
-  ListBoxFavorites.Items.Clear;
-  ListBoxFavorites.Items.Add('Recette favorite 1');
-  ListBoxFavorites.Items.Add('Recette favorite 2');
-  ListBoxFavorites.Items.Add('Recette favorite 3');
-
-  // Mettre à jour les boutons d'onglets
-  UpdateTabButtons;
-
-  // Définir le titre initial
-  lblTitle.Text := 'Recettes';
-end;
-
-procedure TFormMain.btnTab1Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItemRecipes;
-  lblTitle.Text := 'Recettes';
-  UpdateTabButtons;
-end;
-
-procedure TFormMain.btnTab2Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItemFavorites;
-  lblTitle.Text := 'Favoris';
-  UpdateTabButtons;
-end;
-
-procedure TFormMain.btnTab3Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItemShopping;
-  lblTitle.Text := 'Liste de courses';
-  UpdateTabButtons;
-end;
-
-procedure TFormMain.btnTab4Click(Sender: TObject);
-begin
-  TabControl1.ActiveTab := TabItemProfile;
-  lblTitle.Text := 'Profil';
-  UpdateTabButtons;
-end;
-
-procedure TFormMain.UpdateTabButtons;
-begin
-  // Mise en évidence du bouton actif
-  btnTab1.Opacity := IfThen(TabControl1.ActiveTab = TabItemRecipes, 1.0, 0.6);
-  btnTab2.Opacity := IfThen(TabControl1.ActiveTab = TabItemFavorites, 1.0, 0.6);
-  btnTab3.Opacity := IfThen(TabControl1.ActiveTab = TabItemShopping, 1.0, 0.6);
-  btnTab4.Opacity := IfThen(TabControl1.ActiveTab = TabItemProfile, 1.0, 0.6);
-end;
-
-procedure TFormMain.ListBoxRecipesItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Afficher le détail de la recette
-  ShowRecipeDetail(Item.Text);
-end;
-
-procedure TFormMain.ShowRecipeDetail(const RecipeName: string);
-var
-  DetailForm: TRecipeDetailForm;
-begin
-  DetailForm := TRecipeDetailForm.Create(Application);
-  try
-    // Configurer les détails de la recette
-    DetailForm.SetRecipeName(RecipeName);
-
-    // Afficher l'écran de détails
-    DetailForm.Show;
-  except
-    DetailForm.Free;
-    raise;
-  end;
-end;
-
-procedure TFormMain.ListBoxMenuItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-begin
-  // Gérer les options du menu
-  MultiView1.HideMaster;
-
-  if Item.Text = 'Paramètres' then
-    ShowSettings
-  else if Item.Text = 'Aide' then
-    ShowHelp
-  else if Item.Text = 'À propos' then
-    ShowAbout
-  else if Item.Text = 'Noter l''application' then
-    RateApp;
-end;
-```
-
-Créons maintenant le formulaire de détail de recette :
-
-```pascal
-unit RecipeDetailForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.Objects;
-
-type
-  TRecipeDetailForm = class(TForm)
-    ToolBar1: TToolBar;
-    btnBack: TButton;
-    lblTitle: TLabel;
-    btnFavorite: TButton;
-    ScrollBox1: TScrollBox;
-    Image1: TImage;
-    lblRecipeName: TLabel;
-    lblPreparationTime: TLabel;
-    lblDifficulty: TLabel;
-    Layout1: TLayout;
-    lblIngredientsTitle: TLabel;
-    lblIngredients: TLabel;
-    Layout2: TLayout;
-    lblDirectionsTitle: TLabel;
-    lblDirections: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure btnBackClick(Sender: TObject);
-    procedure btnFavoriteClick(Sender: TObject);
-  private
-    FRecipeName: string;
-    FIsFavorite: Boolean;
-    procedure UpdateFavoriteButton;
-  public
-    procedure SetRecipeName(const Value: string);
-  end;
-
-implementation
-
-{$R *.fmx}
-
-procedure TRecipeDetailForm.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  FIsFavorite := False;
-
-  // Configurer le bouton de retour selon la plateforme
-  {$IFDEF IOS}
-  btnBack.StyleLookup := 'backtoolbutton';
-  {$ENDIF}
-
-  {$IFDEF ANDROID}
-  btnBack.StyleLookup := 'arrowlefttoolbutton';
-  {$ENDIF}
-
-  btnBack.Text := '';
-
-  // Configuration du bouton favori
-  UpdateFavoriteButton;
-end;
-
-procedure TRecipeDetailForm.SetRecipeName(const Value: string);
-begin
-  FRecipeName := Value;
-
-  // Mettre à jour l'interface
-  lblTitle.Text := FRecipeName;
-  lblRecipeName.Text := FRecipeName;
-
-  // Dans une application réelle, vous chargeriez les détails de la recette depuis une source de données
-  lblPreparationTime.Text := 'Temps de préparation : 30 minutes';
-  lblDifficulty.Text := 'Difficulté : Facile';
-
-  lblIngredients.Text :=
-    '- 200g de farine' + sLineBreak +
-    '- 100g de sucre' + sLineBreak +
-    '- 2 œufs' + sLineBreak +
-    '- 100ml de lait' + sLineBreak +
-    '- 50g de beurre' + sLineBreak +
-    '- 1 sachet de levure';
-
-  lblDirections.Text :=
-    '1. Mélanger la farine et la levure.' + sLineBreak +
-    '2. Ajouter le sucre et mélanger.' + sLineBreak +
-    '3. Incorporer les œufs un à un.' + sLineBreak +
-    '4. Ajouter le lait progressivement.' + sLineBreak +
-    '5. Faire fondre le beurre et l''ajouter à la préparation.' + sLineBreak +
-    '6. Cuire à 180°C pendant 25 minutes.';
-end;
-
-procedure TRecipeDetailForm.btnBackClick(Sender: TObject);
-begin
-  // Fermer l'écran et revenir à la liste
-  Close;
-end;
-
-procedure TRecipeDetailForm.btnFavoriteClick(Sender: TObject);
-begin
-  // Inverser l'état favori
-  FIsFavorite := not FIsFavorite;
-  UpdateFavoriteButton;
-
-  // Dans une application réelle, vous sauvegarderiez cet état
-  if FIsFavorite then
-    ShowMessage('Ajouté aux favoris')
-  else
-    ShowMessage('Retiré des favoris');
-end;
-
-procedure TRecipeDetailForm.UpdateFavoriteButton;
-begin
-  if FIsFavorite then
-  begin
-    btnFavorite.StyleLookup := 'starglyph';
-    btnFavorite.Opacity := 1.0;
-  end
-  else
-  begin
-    btnFavorite.StyleLookup := 'starglyphgray';
-    btnFavorite.Opacity := 0.6;
-  end;
-end;
-
-end.
-```
-
-## Navigation responsive selon l'orientation de l'appareil
-
-Une bonne application mobile doit s'adapter à l'orientation de l'appareil. Voici comment gérer cela:
-
-```pascal
-procedure TMainForm.FormResize(Sender: TObject);
-begin
-  // Détecter l'orientation
-  if Width > Height then
-    HandleLandscapeOrientation
-  else
-    HandlePortraitOrientation;
-end;
-
-procedure TMainForm.HandlePortraitOrientation;
-begin
-  // Configuration pour l'orientation portrait
-  TabBtnsLayout.Align := TAlignLayout.Bottom;
-  TabBtnsLayout.Height := 60;
-
-  // Ajuster les contrôles pour le mode portrait
-  ListBoxRecipes.Margins.Bottom := TabBtnsLayout.Height;
-end;
-
-procedure TMainForm.HandleLandscapeOrientation;
-begin
-  // Configuration pour l'orientation paysage
-  TabBtnsLayout.Align := TAlignLayout.Right;
-  TabBtnsLayout.Width := 120;
-
-  // Ajuster les contrôles pour le mode paysage
-  ListBoxRecipes.Margins.Bottom := 0;
-  ListBoxRecipes.Margins.Right := TabBtnsLayout.Width;
-end;
-```
-
-## Gestion de la barre de notification (StatusBar)
-
-La barre de notification (en haut de l'écran) peut être personnalisée pour une meilleure intégration:
-
-```pascal
-uses
-  // ... autres uses
-  FMX.StatusBar;
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // ... autre code d'initialisation
-
-  // Configurer la barre de statut
-  {$IF DEFINED(IOS) or DEFINED(ANDROID)}
-  StatusBar.Visible := True;
-
-  // Couleur de la barre de statut
-  StatusBar.BackgroundColor := TAlphaColorRec.Green; // Ou votre couleur d'application
-
-  // Style du texte dans la barre de statut
-  // (important pour la lisibilité selon la couleur de fond)
-  StatusBar.ForegroundColor := TAlphaColorRec.White;
-  {$ENDIF}
-end;
-```
-
-## Navigation adaptative selon la taille de l'écran
-
-Pour une application universelle (téléphone et tablette), adaptez la navigation:
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-var
-  ScreenService: IFMXScreenService;
-  ScreenSize: TSizeF;
-begin
-  // ... autre code d'initialisation
-
-  // Obtenir le service d'écran et la taille
-  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService) then
-  begin
-    ScreenSize := ScreenService.GetScreenSize;
-
-    // Vérifier si c'est une tablette (critère approximatif)
-    if (ScreenSize.Width >= 600) or (ScreenSize.Height >= 600) then
-      SetupTabletUI
-    else
-      SetupPhoneUI;
-  end;
-end;
-
-procedure TMainForm.SetupTabletUI;
-begin
-  // Interface pour tablette - navigation divisée
-  // Par exemple, liste à gauche et détails à droite en mode paysage
-  SplitView.Visible := True;
-  RecipesList.Width := 300;
-  RecipesList.Align := TAlignLayout.Left;
-  RecipeDetail.Align := TAlignLayout.Client;
-
-  // Dans cet exemple, nous supposons que vous avez des composants
-  // SplitView, RecipesList et RecipeDetail sur votre formulaire
-end;
-
-procedure TMainForm.SetupPhoneUI;
-begin
-  // Interface pour téléphone - navigation empilée
-  SplitView.Visible := False;
-  RecipesList.Align := TAlignLayout.Client;
-  RecipeDetail.Visible := False;
-end;
-
-// Pour gérer le clic sur un élément de la liste dans l'interface tablette
-procedure TMainForm.ListBoxRecipesItemClick(const Sender: TCustomListBox;
-  const Item: TListBoxItem);
-var
-  ScreenService: IFMXScreenService;
-  ScreenSize: TSizeF;
-  IsTablet: Boolean;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService) then
-  begin
-    ScreenSize := ScreenService.GetScreenSize;
-    IsTablet := (ScreenSize.Width >= 600) or (ScreenSize.Height >= 600);
-
-    if IsTablet and (Width > Height) then
-    begin
-      // Mode tablette en paysage - montrer les détails dans le panneau de droite
-      RecipeDetail.Visible := True;
-      LoadRecipeDetails(Item.Text, RecipeDetail);
-    end
-    else
-    begin
-      // Mode téléphone ou tablette en portrait - naviguer vers un nouvel écran
-      ShowRecipeDetail(Item.Text);
-    end;
-  end;
-end;
-```
-
-## Navigation avec gestes (Swipe Navigation)
-
-FireMonkey permet d'implémenter facilement une navigation par glissement (swipe):
-
-```pascal
-unit SwipeNavigationForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.TabControl,
-  FMX.Gestures;
-
-type
-  TFormSwipe = class(TForm)
-    TabControl1: TTabControl;
-    TabItem1: TTabItem;
-    TabItem2: TTabItem;
-    TabItem3: TTabItem;
     GestureManager1: TGestureManager;
-    ToolBar1: TToolBar;
-    lblTitle: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormGesture(Sender: TObject; const EventInfo: TGestureEventInfo;
       var Handled: Boolean);
-  private
-    procedure UpdateTitle;
-  public
-    { Public declarations }
   end;
-
-var
-  FormSwipe: TFormSwipe;
 
 implementation
 
-{$R *.fmx}
-
-procedure TFormSwipe.FormCreate(Sender: TObject);
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  // Configuration initiale
-  TabControl1.ActiveTab := TabItem1;
-  TabItem1.Text := 'Écran 1';
-  TabItem2.Text := 'Écran 2';
-  TabItem3.Text := 'Écran 3';
-
-  // Configurer les gestes
+  // Activer les gestes
   Touch.GestureManager := GestureManager1;
-  Touch.StandardGestures := [TStandardGesture.sgLeft, TStandardGesture.sgRight];
+  Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
+                                  TInteractiveGesture.Pan];
 
-  // Mettre à jour le titre
-  UpdateTitle;
+  // Gestes standards
+  Touch.StandardGestures := [TStandardGesture.Left, TStandardGesture.Right];
 end;
 
-procedure TFormSwipe.FormGesture(Sender: TObject;
+procedure TFormMain.FormGesture(Sender: TObject;
   const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  // Gestion des gestes de swipe
-  case EventInfo.GestureID of
-    // Swipe vers la gauche (aller à droite)
-    sgiLeft:
-      begin
-        if TabControl1.ActiveTab = TabItem1 then
-          TabControl1.ActiveTab := TabItem2
-        else if TabControl1.ActiveTab = TabItem2 then
-          TabControl1.ActiveTab := TabItem3;
+  if EventInfo.GestureID = igiLeft then
+  begin
+    // Swipe vers la gauche : page suivante
+    if TabControl1.TabIndex < TabControl1.TabCount - 1 then
+    begin
+      TabControl1.TabIndex := TabControl1.TabIndex + 1;
+      Handled := True;
+    end;
+  end
+  else if EventInfo.GestureID = igiRight then
+  begin
+    // Swipe vers la droite : page précédente
+    if TabControl1.TabIndex > 0 then
+    begin
+      TabControl1.TabIndex := TabControl1.TabIndex - 1;
+      Handled := True;
+    end;
+  end;
+end;
+```
 
-        UpdateTitle;
-        Handled := True;
-      end;
+### Pull to refresh (tirer pour rafraîchir)
 
-    // Swipe vers la droite (aller à gauche)
-    sgiRight:
-      begin
-        if TabControl1.ActiveTab = TabItem3 then
-          TabControl1.ActiveTab := TabItem2
-        else if TabControl1.ActiveTab = TabItem2 then
-          TabControl1.ActiveTab := TabItem1;
+```pascal
+type
+  TFormMain = class(TForm)
+    VertScrollBox1: TVertScrollBox;
+    ListBox1: TListBox;
+    LayoutRefresh: TLayout;
+    ArcRefresh: TArc;
+    procedure VertScrollBox1CalcContentBounds(Sender: TObject;
+      var ContentBounds: TRectF);
+    procedure VertScrollBox1ViewportPositionChange(Sender: TObject;
+      const OldViewportPosition, NewViewportPosition: TPointF);
+  private
+    FRefreshing: Boolean;
+    procedure DemarrerRefresh;
+    procedure TerminerRefresh;
+  end;
 
-        UpdateTitle;
-        Handled := True;
-      end;
+implementation
+
+procedure TFormMain.VertScrollBox1ViewportPositionChange(Sender: TObject;
+  const OldViewportPosition, NewViewportPosition: TPointF);
+begin
+  // Si on tire vers le bas au-delà du haut de la liste
+  if (NewViewportPosition.Y < -80) and not FRefreshing then
+  begin
+    DemarrerRefresh;
   end;
 end;
 
-procedure TFormSwipe.UpdateTitle;
+procedure TFormMain.DemarrerRefresh;
 begin
-  lblTitle.Text := TabControl1.ActiveTab.Text;
+  FRefreshing := True;
+
+  // Animation de l'indicateur
+  TAnimator.AnimateFloat(ArcRefresh, 'EndAngle', 360, 1, TAnimationType.InOut);
+
+  // Charger les nouvelles données
+  TTask.Run(procedure
+  begin
+    Sleep(2000); // Simulation
+
+    TThread.Synchronize(nil, procedure
+    begin
+      // Mettre à jour les données
+      ListBox1.Items.Add('Nouvel élément');
+      TerminerRefresh;
+    end);
+  end);
 end;
 
-end.
+procedure TFormMain.TerminerRefresh;
+begin
+  FRefreshing := False;
+  VertScrollBox1.ViewportPosition := PointF(0, 0);
+end;
 ```
 
-## Navigation avec les boutons système
+## Bouton retour matériel (Android)
 
-Sur les appareils mobiles, il est important de gérer correctement le bouton Retour du système (en particulier sur Android):
+Gérer correctement le bouton retour physique d'Android.
+
+### Implémentation de base
 
 ```pascal
-procedure TFormMain.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
-  Shift: TShiftState);
+uses
+  FMX.Platform;
+
+type
+  TFormMain = class(TForm)
+    procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
+      Shift: TShiftState);
+  private
+    function GererBoutonRetour: Boolean;
+  end;
+
+implementation
+
+procedure TFormMain.FormKeyUp(Sender: TObject; var Key: Word;
+  var KeyChar: Char; Shift: TShiftState);
 begin
   {$IFDEF ANDROID}
-  // Gérer le bouton retour d'Android
   if Key = vkHardwareBack then
   begin
-    // Si le menu tiroir est ouvert, le fermer
-    if MultiView1.IsShowed then
-    begin
-      MultiView1.HideMaster;
-      Key := 0; // Empêcher l'action par défaut
-    end
-    // Si nous sommes dans un écran de détail, revenir à la liste
-    else if FCurrentDetailForm <> nil then
-    begin
-      FCurrentDetailForm.Close;
-      Key := 0; // Empêcher l'action par défaut
-    end
-    // Sinon, demander confirmation pour quitter l'application
-    else if MessageDlg('Voulez-vous quitter l''application ?',
-                       TMsgDlgType.mtConfirmation,
-                       [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
-    begin
-      // Laisser l'action par défaut se produire (quitter l'application)
-    end
-    else
-    begin
-      Key := 0; // Empêcher l'action par défaut
-    end;
+    if GererBoutonRetour then
+      Key := 0;  // Empêcher la fermeture de l'application
   end;
   {$ENDIF}
 end;
-```
 
-## Partage d'état entre écrans
+function TFormMain.GererBoutonRetour: Boolean;
+begin
+  Result := False;
 
-Lorsque vous naviguez entre plusieurs écrans, il est souvent nécessaire de partager des données:
-
-### 1. Via une variable globale
-
-```pascal
-// Dans une unité séparée (DataModule.pas)
-unit DataModule;
-
-interface
-
-uses
-  System.SysUtils, System.Classes;
-
-type
-  TAppData = class
-  private
-    FUsername: string;
-    FIsLoggedIn: Boolean;
-    FThemeIndex: Integer;
-  public
-    property Username: string read FUsername write FUsername;
-    property IsLoggedIn: Boolean read FIsLoggedIn write FIsLoggedIn;
-    property ThemeIndex: Integer read FThemeIndex write FThemeIndex;
+  // Si un menu est ouvert, le fermer
+  if MultiView1.IsShowed then
+  begin
+    MultiView1.HideMaster;
+    Result := True;
+    Exit;
   end;
 
-var
-  AppData: TAppData;
+  // Si on n'est pas sur la page d'accueil, y retourner
+  if TabControl1.TabIndex <> 0 then
+  begin
+    TabControl1.TabIndex := 0;
+    Result := True;
+    Exit;
+  end;
+
+  // Si on est sur l'accueil, demander confirmation pour quitter
+  if MessageDlg('Voulez-vous quitter l''application ?',
+    TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
+  begin
+    // Laisser l'application se fermer
+    Result := False;
+  end
+  else
+    Result := True;
+end;
+```
+
+## Navigation avec paramètres
+
+Passer des données entre les écrans.
+
+### Méthode 1 : Propriétés publiques
+
+```pascal
+type
+  TTabItemDetail = class(TTabItem)
+  private
+    FItemID: Integer;
+    FItemNom: string;
+  public
+    property ItemID: Integer read FItemID write FItemID;
+    property ItemNom: string read FItemNom write FItemNom;
+    procedure ChargerDetails;
+  end;
 
 implementation
 
-initialization
-  AppData := TAppData.Create;
+procedure TTabItemDetail.ChargerDetails;
+begin
+  LabelNom.Text := FItemNom;
+  // Charger les détails depuis la base de données avec FItemID
+end;
 
-finalization
-  AppData.Free;
-
-end.
+// Utilisation
+procedure TFormMain.ListBox1ItemClick(Sender: TObject);
+begin
+  TabItemDetail.ItemID := ListBox1.ItemIndex;
+  TabItemDetail.ItemNom := ListBox1.Selected.Text;
+  TabItemDetail.ChargerDetails;
+  TabControl1.ActiveTab := TabItemDetail;
+end;
 ```
 
-### 2. Via des paramètres
+### Méthode 2 : Événement avec données
 
 ```pascal
-// Dans le formulaire principal
-procedure TMainForm.ShowSettingsForm;
-var
-  SettingsForm: TSettingsForm;
+type
+  TNavigationData = record
+    ID: Integer;
+    Nom: string;
+    Data: TObject;
+  end;
+
+  TNavigationEvent = procedure(Sender: TObject; const Data: TNavigationData) of object;
+
+type
+  TFormMain = class(TForm)
+  private
+    FOnNavigate: TNavigationEvent;
+    procedure DoNavigation(const Data: TNavigationData);
+  public
+    property OnNavigate: TNavigationEvent read FOnNavigate write FOnNavigate;
+  end;
+
+procedure TFormMain.DoNavigation(const Data: TNavigationData);
 begin
-  SettingsForm := TSettingsForm.Create(nil);
+  if Assigned(FOnNavigate) then
+    FOnNavigate(Self, Data);
+end;
+
+// Utilisation
+procedure TFormMain.NaviguerVersDetail(ItemID: Integer);
+var
+  NavData: TNavigationData;
+begin
+  NavData.ID := ItemID;
+  NavData.Nom := 'Article ' + IntToStr(ItemID);
+  NavData.Data := nil;
+
+  DoNavigation(NavData);
+  TabControl1.ActiveTab := TabItemDetail;
+end;
+```
+
+## Barre d'outils et actions
+
+### Barre d'outils avec boutons
+
+```pascal
+type
+  TFormMain = class(TForm)
+    ToolBar1: TToolBar;
+    ButtonMenu: TSpeedButton;
+    LabelTitre: TLabel;
+    ButtonAction: TSpeedButton;
+    procedure FormCreate(Sender: TObject);
+  private
+    procedure ConfigurerToolBar;
+  end;
+
+procedure TFormMain.ConfigurerToolBar;
+begin
+  // Position de la toolbar
+  ToolBar1.Align := TAlignLayout.Top;
+  ToolBar1.Height := 56;
+
+  // Bouton menu à gauche
+  ButtonMenu.Align := TAlignLayout.Left;
+  ButtonMenu.Width := 50;
+  ButtonMenu.Text := #$2630;  // ≡
+
+  // Titre au centre
+  LabelTitre.Align := TAlignLayout.Client;
+  LabelTitre.TextSettings.HorzAlign := TTextAlign.Center;
+  LabelTitre.TextSettings.Font.Size := 18;
+
+  // Bouton d'action à droite
+  ButtonAction.Align := TAlignLayout.Right;
+  ButtonAction.Width := 50;
+  ButtonAction.Text := #$22EE;  // ⋮ (trois points verticaux)
+end;
+```
+
+### Menu contextuel (ActionSheet iOS / BottomSheet Android)
+
+```pascal
+procedure TFormMain.AfficherMenuActions;
+var
+  ActionSheet: TCustomActionSheet;
+begin
+  ActionSheet := TCustomActionSheet.Create(Self);
   try
-    // Passer les paramètres actuels
-    SettingsForm.SetSettings(FNotificationsEnabled, FDarkModeEnabled);
+    ActionSheet.Title := 'Actions';
 
-    if SettingsForm.ShowModal = mrOk then
+    ActionSheet.AddAction('Partager', procedure
     begin
-      // Récupérer les nouveaux paramètres
-      SettingsForm.GetSettings(FNotificationsEnabled, FDarkModeEnabled);
+      ShowMessage('Partager');
+    end);
 
-      // Appliquer les nouveaux paramètres
-      ApplySettings;
-    end;
+    ActionSheet.AddAction('Copier', procedure
+    begin
+      ShowMessage('Copier');
+    end);
+
+    ActionSheet.AddAction('Supprimer', procedure
+    begin
+      ShowMessage('Supprimer');
+    end, TCustomActionSheetType.Destructive);
+
+    ActionSheet.AddAction('Annuler', procedure
+    begin
+      // Ne rien faire
+    end, TCustomActionSheetType.Cancel);
+
+    ActionSheet.Execute;
   finally
-    SettingsForm.Free;
+    ActionSheet.Free;
   end;
 end;
 ```
 
-### 3. Via des notifications
+## Indicateurs de chargement
+
+### ActivityIndicator
 
 ```pascal
-// Dans une unité séparée (NotificationService.pas)
-unit NotificationService;
+procedure TFormMain.ChargerDonnees;
+begin
+  ActivityIndicator1.Visible := True;
+  ActivityIndicator1.Enabled := True;
 
-interface
+  TTask.Run(procedure
+  begin
+    // Charger les données
+    Sleep(2000); // Simulation
 
-type
-  TNotificationType = (ntLogin, ntLogout, ntThemeChanged, ntDataUpdated);
-  TNotificationEvent = procedure(NotificationType: TNotificationType; Data: TObject) of object;
+    TThread.Synchronize(nil, procedure
+    begin
+      // Mettre à jour l'interface
+      ListBox1.Items.Add('Données chargées');
 
-  TNotificationCenter = class
-  private
-    FObservers: TList<TNotificationEvent>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Subscribe(Observer: TNotificationEvent);
-    procedure Unsubscribe(Observer: TNotificationEvent);
-    procedure Notify(NotificationType: TNotificationType; Data: TObject = nil);
-  end;
+      ActivityIndicator1.Enabled := False;
+      ActivityIndicator1.Visible := False;
+    end);
+  end);
+end;
+```
 
+### Skeleton screens (écrans squelettes)
+
+```pascal
+procedure TFormMain.AfficherSkeleton;
 var
-  NotificationCenter: TNotificationCenter;
+  i: Integer;
+  Item: TListBoxItem;
+  Rect: TRectangle;
+begin
+  ListBox1.Clear;
 
-implementation
+  for i := 0 to 5 do
+  begin
+    Item := TListBoxItem.Create(ListBox1);
+    Item.Parent := ListBox1;
+    Item.Height := 80;
+    Item.Selectable := False;
 
+    // Rectangle gris animé (placeholder)
+    Rect := TRectangle.Create(Item);
+    Rect.Parent := Item;
+    Rect.Align := TAlignLayout.Client;
+    Rect.Margins.Rect := RectF(10, 10, 10, 10);
+    Rect.Fill.Color := TAlphaColorRec.Lightgray;
+    Rect.Stroke.Kind := TBrushKind.None;
+    Rect.XRadius := 5;
+    Rect.YRadius := 5;
+
+    // Animation de pulsation
+    TAnimator.AnimateFloat(Rect, 'Opacity', 0.3, 1, TAnimationType.InOut,
+      TInterpolationType.Linear);
+  end;
+end;
+```
+
+## Gestion de l'état de l'application
+
+### Sauvegarder l'état de navigation
+
+```pascal
 uses
-  System.Generics.Collections;
+  System.IOUtils;
 
-constructor TNotificationCenter.Create;
-begin
-  inherited Create;
-  FObservers := TList<TNotificationEvent>.Create;
-end;
-
-destructor TNotificationCenter.Destroy;
-begin
-  FObservers.Free;
-  inherited;
-end;
-
-procedure TNotificationCenter.Subscribe(Observer: TNotificationEvent);
-begin
-  if FObservers.IndexOf(Observer) < 0 then
-    FObservers.Add(Observer);
-end;
-
-procedure TNotificationCenter.Unsubscribe(Observer: TNotificationEvent);
+procedure TFormMain.SauvegarderEtat;
 var
-  Index: Integer;
+  IniFile: TIniFile;
+  ConfigPath: string;
 begin
-  Index := FObservers.IndexOf(Observer);
-  if Index >= 0 then
-    FObservers.Delete(Index);
+  {$IFDEF ANDROID}
+  ConfigPath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
+  {$ENDIF}
+  {$IFDEF IOS}
+  ConfigPath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
+  {$ENDIF}
+
+  IniFile := TIniFile.Create(ConfigPath);
+  try
+    IniFile.WriteInteger('Navigation', 'TabIndex', TabControl1.TabIndex);
+    IniFile.WriteInteger('Navigation', 'ScrollPosition',
+      Round(VertScrollBox1.ViewportPosition.Y));
+  finally
+    IniFile.Free;
+  end;
 end;
 
-procedure TNotificationCenter.Notify(NotificationType: TNotificationType; Data: TObject);
+procedure TFormMain.RestaurerEtat;
 var
-  Observer: TNotificationEvent;
+  IniFile: TIniFile;
+  ConfigPath: string;
+  TabIndex: Integer;
 begin
-  for Observer in FObservers do
-    Observer(NotificationType, Data);
-end;
+  ConfigPath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
 
-initialization
-  NotificationCenter := TNotificationCenter.Create;
+  if TFile.Exists(ConfigPath) then
+  begin
+    IniFile := TIniFile.Create(ConfigPath);
+    try
+      TabIndex := IniFile.ReadInteger('Navigation', 'TabIndex', 0);
+      TabControl1.TabIndex := TabIndex;
 
-finalization
-  NotificationCenter.Free;
-
-end.
-```
-
-Utilisation dans les formulaires:
-
-```pascal
-// Dans n'importe quel formulaire
-procedure TLoginForm.DoLogin;
-begin
-  // Effectuer la connexion
-  // ...
-
-  // Notifier les autres écrans
-  NotificationCenter.Notify(ntLogin, User);
-
-  // Fermer l'écran de connexion
-  Close;
-end;
-
-// Dans le formulaire principal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // ... autre code d'initialisation
-
-  // S'abonner aux notifications
-  NotificationCenter.Subscribe(HandleNotification);
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Se désabonner des notifications
-  NotificationCenter.Unsubscribe(HandleNotification);
-end;
-
-procedure TMainForm.HandleNotification(NotificationType: TNotificationType; Data: TObject);
-begin
-  case NotificationType of
-    ntLogin:
-      begin
-        // Mettre à jour l'interface pour un utilisateur connecté
-        lblUser.Text := TUser(Data).Username;
-        btnLogin.Visible := False;
-        btnLogout.Visible := True;
-      end;
-
-    ntLogout:
-      begin
-        // Mettre à jour l'interface pour un utilisateur déconnecté
-        lblUser.Text := 'Non connecté';
-        btnLogin.Visible := True;
-        btnLogout.Visible := False;
-      end;
-
-    // Autres types de notifications
+      VertScrollBox1.ViewportPosition := PointF(0,
+        IniFile.ReadInteger('Navigation', 'ScrollPosition', 0));
+    finally
+      IniFile.Free;
+    end;
   end;
 end;
 ```
 
-## Gestion de l'état avec un pattern MVVM
+## Bonnes pratiques
 
-Pour les applications plus complexes, considérez l'utilisation du pattern MVVM (Model-View-ViewModel):
+### 1. Navigation cohérente
 
 ```pascal
-// ViewModel pour la liste des recettes
-unit RecipesViewModel;
+// Toujours utiliser le même pattern dans toute l'app
+// Éviter de mélanger navigation par onglets et drawer sans raison
+```
 
-interface
+### 2. Feedback visuel
 
-uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
-  RecipeModel; // Contient la définition du TRecipe
+```pascal
+procedure TFormMain.ButtonItemClick(Sender: TObject);
+begin
+  // Indiquer visuellement le clic
+  TAnimator.AnimateFloat(Sender as TControl, 'Opacity', 0.5, 0.2);
 
+  // Puis naviguer
+  TTask.Run(procedure
+  begin
+    Sleep(200);
+    TThread.Synchronize(nil, procedure
+    begin
+      NaviguerVersPage(1);
+    end);
+  end);
+end;
+```
+
+### 3. Transitions rapides
+
+```pascal
+// Les animations doivent être courtes (200-300ms max)
+TabControl1.TransitionDuration := 0.25;
+```
+
+### 4. Gérer les états
+
+```pascal
 type
-  TRecipesViewModel = class
-  private
-    FRecipes: TList<TRecipe>;
-    FOnRecipesChanged: TNotifyEvent;
-  public
-    constructor Create;
-    destructor Destroy; override;
+  TPageState = (psLoading, psLoaded, psError, psEmpty);
 
-    procedure LoadRecipes;
-    function GetRecipe(Index: Integer): TRecipe;
-    function GetRecipeCount: Integer;
-    function FindRecipeByName(const Name: string): TRecipe;
-    procedure ToggleFavorite(RecipeId: Integer);
-
-    property OnRecipesChanged: TNotifyEvent read FOnRecipesChanged write FOnRecipesChanged;
+procedure TFormMain.AfficherEtat(Etat: TPageState);
+begin
+  case Etat of
+    psLoading: ActivityIndicator1.Visible := True;
+    psLoaded:
+    begin
+      ActivityIndicator1.Visible := False;
+      ListBox1.Visible := True;
+    end;
+    psError: AfficherMessageErreur;
+    psEmpty: AfficherMessageVide;
   end;
-
-implementation
-
-// ... Implémentation
+end;
 ```
 
-## Conclusion et bonnes pratiques
+### 5. Navigation prévisible
 
-1. **Planifiez votre navigation** avant de commencer le développement
-2. **Restez cohérent** avec les conventions de chaque plateforme
-3. **Testez sur de vrais appareils** pour vérifier l'expérience utilisateur
-4. **Optimisez pour les différentes tailles d'écran** (téléphone vs tablette)
-5. **Utilisez des animations fluides** mais pas excessives
-6. **Gardez à l'esprit l'accessibilité** (taille des boutons, contraste)
-7. **Assurez-vous que l'utilisateur sait toujours où il se trouve** dans l'application
-8. **Gérez correctement le cycle de vie** de l'application mobile
+```pascal
+// Le bouton retour doit toujours faire ce que l'utilisateur attend
+// Ordre de priorité :
+// 1. Fermer un dialogue/popup
+// 2. Fermer un menu
+// 3. Revenir à la page précédente
+// 4. Retour à l'accueil
+// 5. Demander confirmation pour quitter
+```
 
-La navigation est l'une des clés d'une bonne expérience utilisateur mobile. Prenez le temps de la concevoir soigneusement pour que vos utilisateurs puissent naviguer intuitivement dans votre application Delphi.
+### 6. Tester sur vrais appareils
 
-## Exercices pratiques
+```pascal
+// Tester particulièrement :
+// - Différentes tailles d'écran
+// - Rotation de l'écran
+// - Bouton retour Android
+// - Gestes iOS (swipe depuis le bord gauche)
+// - Notch iPhone / barre de navigation Android
+```
 
-1. **Exercice simple** : Créez une application avec 3 écrans et une navigation par pile simple (Main → Detail → Edit)
-2. **Exercice intermédiaire** : Implémentez une application avec navigation par onglets (4 onglets) et un écran de détail accessible depuis l'un des onglets
-3. **Exercice avancé** : Créez une application combinant menu tiroir, onglets et navigation par pile, avec un comportement adaptatif selon l'orientation de l'appareil
+### 7. Respecter les guidelines
+
+```pascal
+// iOS : Navigation en bas, bouton retour en haut à gauche
+// Android : Navigation en haut, bouton menu hamburger
+
+{$IFDEF IOS}
+TabControl1.TabPosition := TTabPosition.Bottom;
+{$ENDIF}
+
+{$IFDEF ANDROID}
+TabControl1.TabPosition := TTabPosition.Top;
+{$ENDIF}
+```
+
+## Patterns de navigation avancés
+
+### Master-Detail
+
+```pascal
+type
+  TFormMain = class(TForm)
+    TabControl1: TTabControl;
+    TabMaster: TTabItem;
+    TabDetail: TTabItem;
+    ListBox1: TListBox;
+    procedure ListBox1ItemClick(Sender: TObject);
+  private
+    procedure AfficherDetail(ItemIndex: Integer);
+  end;
+
+procedure TFormMain.ListBox1ItemClick(Sender: TObject);
+begin
+  AfficherDetail(ListBox1.ItemIndex);
+end;
+
+procedure TFormMain.AfficherDetail(ItemIndex: Integer);
+begin
+  // Charger les détails
+  LabelDetailTitre.Text := ListBox1.Items[ItemIndex];
+
+  // Naviguer avec animation
+  TabControl1.Transition := TTabTransition.Slide;
+  TabControl1.ActiveTab := TabDetail;
+end;
+```
+
+### Navigation conditionnelle
+
+```pascal
+procedure TFormMain.NaviguerSelon Authentification;
+begin
+  if UtilisateurConnecte then
+    TabControl1.ActiveTab := TabAccueil
+  else
+    TabControl1.ActiveTab := TabConnexion;
+end;
+```
+
+### Deep linking
+
+```pascal
+procedure TFormMain.GererLienProfond(const URL: string);
+begin
+  // Exemple : myapp://profile/123
+  if URL.StartsWith('myapp://profile/') then
+  begin
+    var ID := URL.Replace('myapp://profile/', '');
+    NaviguerVersProfil(StrToInt(ID));
+  end
+  else if URL.StartsWith('myapp://article/') then
+  begin
+    var ID := URL.Replace('myapp://article/', '');
+    NaviguerVersArticle(StrToInt(ID));
+  end;
+end;
+```
+
+## Résumé
+
+La navigation mobile nécessite une approche différente des applications desktop. Les points clés à retenir :
+
+- **TTabControl** : Principal composant pour la navigation par onglets
+- **TMultiView** : Pour les menus latéraux (drawer)
+- **Stack de navigation** : Gérer l'historique et le bouton retour
+- **Transitions** : Animations fluides entre les pages (200-300ms)
+- **Gestes** : Swipe, pull-to-refresh, gestes natifs
+- **Bouton retour Android** : Gérer correctement avec FormKeyUp
+- **États** : Loading, loaded, error, empty
+- **Patterns natifs** : Respecter les conventions iOS/Android
+- **Performance** : Transitions rapides, chargement asynchrone
+- **Tests** : Toujours tester sur vrais appareils
+
+Une bonne navigation rend l'application intuitive et agréable à utiliser. Suivez les conventions de chaque plateforme pour une expérience native.
 
 ⏭️ [Gestion de l'état de l'application](/06-applications-multi-fenetres-et-navigation/07-gestion-de-letat-de-lapplication.md)
