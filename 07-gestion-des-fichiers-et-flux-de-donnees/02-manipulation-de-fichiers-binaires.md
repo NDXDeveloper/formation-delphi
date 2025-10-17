@@ -1,611 +1,1201 @@
-# 7. Gestion des fichiers et flux de données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-## 7.2 Manipulation de fichiers binaires
+# 7.2 Manipulation de fichiers binaires
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Contrairement aux fichiers texte, les fichiers binaires stockent les données sous leur forme brute, sans conversion en caractères lisibles. Ils sont utilisés pour stocker des images, des sons, des structures de données complexes ou tout autre contenu non textuel.
+Contrairement aux fichiers texte qui stockent des informations sous forme de caractères lisibles par l'homme, les fichiers binaires stockent des données dans leur format natif, exactement comme elles sont représentées en mémoire par l'ordinateur.
 
-### Introduction aux fichiers binaires
+Dans ce chapitre, nous allons découvrir comment manipuler ces fichiers binaires en Delphi, une compétence essentielle pour travailler avec des formats de fichiers personnalisés, des bases de données simples, ou des fichiers de configuration complexes.
 
-Les fichiers binaires sont généralement plus compacts et plus rapides à traiter que les fichiers texte pour certains types de données. En Delphi, il existe plusieurs méthodes pour manipuler ces fichiers, des approches traditionnelles Pascal aux méthodes modernes orientées objet.
+## Qu'est-ce qu'un fichier binaire ?
 
-### Différences entre fichiers texte et fichiers binaires
+Un fichier binaire contient des données brutes sous forme d'octets (bytes). Contrairement aux fichiers texte :
 
-| Fichiers texte | Fichiers binaires |
-|----------------|-------------------|
-| Stockent du texte lisible | Stockent des données brutes |
-| Peuvent être ouverts dans un éditeur de texte | Nécessitent généralement un programme spécifique |
-| Utilisent des caractères de fin de ligne | N'ont pas de concept de "ligne" |
-| Conversion automatique entre formats texte | Pas de conversion - les octets sont écrits tels quels |
+**Fichier texte :**
+- Stocke le nombre 12345 comme "12345" (5 caractères, 5 octets)
+- Lisible directement dans un éditeur de texte
+- Plus volumineux
+- Encodage variable (UTF-8, ANSI, etc.)
 
-### Approche traditionnelle
+**Fichier binaire :**
+- Stocke le nombre 12345 comme une valeur binaire (2 ou 4 octets selon le type)
+- Illisible dans un éditeur de texte classique
+- Plus compact
+- Représentation exacte des données en mémoire
 
-Comme pour les fichiers texte, Delphi permet l'utilisation de la méthode traditionnelle Pascal pour les fichiers binaires, mais avec le type `File` au lieu de `TextFile`.
+### Exemples de fichiers binaires courants
 
-#### Lecture d'un fichier binaire
+- Images : `.jpg`, `.png`, `.bmp`, `.gif`
+- Exécutables : `.exe`, `.dll`
+- Archives : `.zip`, `.rar`
+- Vidéos : `.mp4`, `.avi`
+- Documents : `.pdf`, `.docx`
+- Bases de données : `.db`, `.sqlite`
 
-```pascal
-procedure LireFichierBinaire(const NomFichier: string);
-var
-  Fichier: File;
-  Buffer: array[0..1023] of Byte;  // Un tampon de 1024 octets
-  NbOctetsLus: Integer;
-begin
-  AssignFile(Fichier, NomFichier);
-  try
-    Reset(Fichier, 1);  // Le "1" indique la taille d'un bloc (1 octet)
+---
 
-    // Lire des blocs jusqu'à la fin du fichier
-    while not Eof(Fichier) do
-    begin
-      BlockRead(Fichier, Buffer, SizeOf(Buffer), NbOctetsLus);
+## Pourquoi utiliser des fichiers binaires ?
 
-      // Utiliser les données lues (NbOctetsLus octets dans Buffer)
-      // Par exemple, les afficher en hexadécimal
-      Memo1.Lines.Add(Format('Lu %d octets', [NbOctetsLus]));
-    end;
-  finally
-    CloseFile(Fichier);
-  end;
-end;
-```
+Les fichiers binaires présentent plusieurs avantages :
 
-#### Écriture dans un fichier binaire
+1. **Compacité** : moins d'espace disque utilisé
+2. **Performance** : lecture/écriture plus rapide
+3. **Précision** : conservation exacte des valeurs (pas de conversion texte)
+4. **Sécurité** : données moins facilement lisibles ou modifiables
+5. **Structures complexes** : stockage de données structurées complexes
 
-```pascal
-procedure EcrireFichierBinaire(const NomFichier: string);
-var
-  Fichier: File;
-  Buffer: array[0..9] of Byte;
-begin
-  // Préparer quelques données pour l'exemple
-  for var i := 0 to 9 do
-    Buffer[i] := i * 10;  // Valeurs 0, 10, 20, ..., 90
+---
 
-  AssignFile(Fichier, NomFichier);
-  try
-    Rewrite(Fichier, 1);  // Créer ou écraser le fichier, bloc de 1 octet
+## Les différentes approches en Delphi
 
-    // Écrire le tableau d'octets dans le fichier
-    BlockWrite(Fichier, Buffer, SizeOf(Buffer));
-  finally
-    CloseFile(Fichier);
-  end;
-end;
-```
+Delphi offre plusieurs méthodes pour manipuler des fichiers binaires :
 
-### Approche avec types spécifiques
+1. **TFileStream** : l'approche moderne et flexible (recommandée)
+2. **File of Type** : l'approche classique Pascal (typée)
+3. **File non typé** : pour un contrôle total au niveau des octets
+4. **TMemoryStream** : pour manipuler des données binaires en mémoire
 
-On peut aussi écrire et lire des variables typées directement :
+Nous allons explorer ces méthodes en détail.
 
-```pascal
-type
-  TPersonne = record
-    Nom: string[50];  // Chaîne de caractères de longueur fixe
-    Age: Integer;
-    Taille: Double;
-  end;
+---
 
-procedure EcrireEnregistrement(const NomFichier: string);
-var
-  Fichier: File of TPersonne;
-  Personne: TPersonne;
-begin
-  Personne.Nom := 'Dupont';
-  Personne.Age := 30;
-  Personne.Taille := 1.75;
+## Méthode 1 : TFileStream (Recommandée)
 
-  AssignFile(Fichier, NomFichier);
-  try
-    Rewrite(Fichier);  // Taille de bloc automatique basée sur TPersonne
+`TFileStream` est une classe moderne qui permet de lire et écrire des données binaires de manière flexible et puissante.
 
-    // Écrire l'enregistrement
-    Write(Fichier, Personne);
-  finally
-    CloseFile(Fichier);
-  end;
-end;
-
-procedure LireEnregistrement(const NomFichier: string);
-var
-  Fichier: File of TPersonne;
-  Personne: TPersonne;
-begin
-  AssignFile(Fichier, NomFichier);
-  try
-    Reset(Fichier);
-
-    if not Eof(Fichier) then
-    begin
-      Read(Fichier, Personne);
-
-      // Utiliser les données lues
-      ShowMessage(Format('Nom: %s, Age: %d, Taille: %.2f',
-                         [Personne.Nom, Personne.Age, Personne.Taille]));
-    end;
-  finally
-    CloseFile(Fichier);
-  end;
-end;
-```
-
-> **Attention**: Cette méthode à quelques limitations. Les chaînes à longueur variable et certains types complexes peuvent causer des problèmes. Pour les structures de données modernes, préférez la sérialisation (section 7.4).
-
-### Approche moderne avec les flux (TStream)
-
-L'approche recommandée pour manipuler des fichiers binaires en Delphi moderne est d'utiliser les classes dérivées de `TStream`, notamment `TFileStream`.
-
-#### Lecture d'un fichier binaire avec TFileStream
+### Création et ouverture d'un TFileStream
 
 ```pascal
 uses
   System.Classes, System.SysUtils;
 
-procedure LireFichierAvecStream(const NomFichier: string);
 var
-  Flux: TFileStream;
-  Buffer: TBytes;
-  NbOctetsLus: Integer;
+  Stream: TFileStream;
 begin
-  // Allouer le tampon
-  SetLength(Buffer, 1024);
-
-  // Créer le flux de fichier en lecture
-  Flux := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
+  // Créer un nouveau fichier (ou écraser l'existant)
+  Stream := TFileStream.Create('data.bin', fmCreate);
   try
-    // Lire jusqu'à 1024 octets du fichier
-    NbOctetsLus := Flux.Read(Buffer, Length(Buffer));
-
-    // Afficher les premiers octets lus
-    var Resultat := '';
-    for var i := 0 to Min(NbOctetsLus, 20) - 1 do
-      Resultat := Resultat + Format('%2.2x ', [Buffer[i]]);
-
-    ShowMessage(Format('Lu %d octets. Début: %s', [NbOctetsLus, Resultat]));
-
-    // Obtenir la taille totale du fichier
-    ShowMessage(Format('Taille totale du fichier: %d octets', [Flux.Size]));
-
-    // Repositionner le curseur au début du fichier
-    Flux.Position := 0;
-
-    // Lire d'autres données si nécessaire...
-
+    // Travailler avec le stream
   finally
-    Flux.Free;
+    Stream.Free;
   end;
+
+  // Ouvrir un fichier existant en lecture seule
+  Stream := TFileStream.Create('data.bin', fmOpenRead);
+
+  // Ouvrir en lecture/écriture
+  Stream := TFileStream.Create('data.bin', fmOpenReadWrite);
+
+  // Créer s'il n'existe pas, ouvrir sinon
+  Stream := TFileStream.Create('data.bin', fmOpenReadWrite or fmCreate);
 end;
 ```
 
-#### Écriture dans un fichier binaire avec TFileStream
+**Modes d'ouverture disponibles :**
+- `fmCreate` : crée un nouveau fichier (écrase s'il existe)
+- `fmOpenRead` : ouvre en lecture seule
+- `fmOpenWrite` : ouvre en écriture seule
+- `fmOpenReadWrite` : ouvre en lecture/écriture
+- `fmShareDenyNone` : autorise le partage complet
+- `fmShareDenyRead` : interdit la lecture par d'autres processus
+- `fmShareDenyWrite` : interdit l'écriture par d'autres processus
+
+### Écriture de données simples
 
 ```pascal
-procedure EcrireFichierAvecStream(const NomFichier: string);
+procedure EcrireDonneesSimples;
 var
-  Flux: TFileStream;
-  Donnees: TBytes;
+  Stream: TFileStream;
+  Nombre: Integer;
+  Reel: Double;
+  Caractere: Char;
+  Booleen: Boolean;
 begin
-  // Préparer quelques données
-  SetLength(Donnees, 10);
-  for var i := 0 to 9 do
-    Donnees[i] := i * 10;
-
-  // Créer le flux de fichier en écriture
-  Flux := TFileStream.Create(NomFichier, fmCreate);
+  Stream := TFileStream.Create('donnees.bin', fmCreate);
   try
-    // Écrire les données dans le fichier
-    Flux.WriteBuffer(Donnees, Length(Donnees));
+    // Écrire un entier
+    Nombre := 12345;
+    Stream.Write(Nombre, SizeOf(Nombre));
 
-    // Ajouter d'autres données à la fin
-    var AutresDonnees: TBytes := [255, 254, 253];
-    Flux.WriteBuffer(AutresDonnees, Length(AutresDonnees));
+    // Écrire un réel
+    Reel := 3.14159;
+    Stream.Write(Reel, SizeOf(Reel));
+
+    // Écrire un caractère
+    Caractere := 'A';
+    Stream.Write(Caractere, SizeOf(Caractere));
+
+    // Écrire un booléen
+    Booleen := True;
+    Stream.Write(Booleen, SizeOf(Booleen));
+
+    ShowMessage('Données écrites avec succès !');
   finally
-    Flux.Free;
+    Stream.Free;
   end;
 end;
 ```
 
-### Lecture et écriture de structures de données
+**Points clés :**
+- `Write(Variable, Taille)` : écrit les octets de la variable
+- `SizeOf(Variable)` : retourne la taille en octets
+- Les données sont écrites dans l'ordre séquentiel
 
-Pour stocker des structures de données complexes, vous pouvez écrire et lire les champs individuellement :
+### Lecture de données simples
+
+```pascal
+procedure LireDonneesSimples;
+var
+  Stream: TFileStream;
+  Nombre: Integer;
+  Reel: Double;
+  Caractere: Char;
+  Booleen: Boolean;
+  Message: string;
+begin
+  if not FileExists('donnees.bin') then
+  begin
+    ShowMessage('Fichier introuvable !');
+    Exit;
+  end;
+
+  Stream := TFileStream.Create('donnees.bin', fmOpenRead);
+  try
+    // Lire dans le même ordre que l'écriture !
+    Stream.Read(Nombre, SizeOf(Nombre));
+    Stream.Read(Reel, SizeOf(Reel));
+    Stream.Read(Caractere, SizeOf(Caractere));
+    Stream.Read(Booleen, SizeOf(Booleen));
+
+    // Afficher les résultats
+    Message := Format('Nombre: %d' + #13#10 +
+                      'Réel: %.5f' + #13#10 +
+                      'Caractère: %s' + #13#10 +
+                      'Booléen: %s',
+                      [Nombre, Reel, Caractere, BoolToStr(Booleen, True)]);
+    ShowMessage(Message);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+**Important :**
+- Les données doivent être lues **dans le même ordre** qu'elles ont été écrites
+- Les types de données doivent correspondre exactement
+
+### Écriture et lecture de chaînes de caractères
+
+Les chaînes nécessitent une attention particulière car leur longueur est variable :
+
+```pascal
+// Écrire une chaîne
+procedure EcrireChaine(Stream: TFileStream; const S: string);
+var
+  Longueur: Integer;
+  Bytes: TBytes;
+begin
+  // Convertir la chaîne en bytes UTF-8
+  Bytes := TEncoding.UTF8.GetBytes(S);
+  Longueur := Length(Bytes);
+
+  // Écrire d'abord la longueur
+  Stream.Write(Longueur, SizeOf(Longueur));
+
+  // Puis écrire les données
+  if Longueur > 0 then
+    Stream.Write(Bytes[0], Longueur);
+end;
+
+// Lire une chaîne
+function LireChaine(Stream: TFileStream): string;
+var
+  Longueur: Integer;
+  Bytes: TBytes;
+begin
+  // Lire la longueur
+  Stream.Read(Longueur, SizeOf(Longueur));
+
+  // Lire les données
+  if Longueur > 0 then
+  begin
+    SetLength(Bytes, Longueur);
+    Stream.Read(Bytes[0], Longueur);
+    Result := TEncoding.UTF8.GetString(Bytes);
+  end
+  else
+    Result := '';
+end;
+
+// Exemple d'utilisation
+procedure ExempleChaines;
+var
+  Stream: TFileStream;
+  Texte, TexteLu: string;
+begin
+  // Écriture
+  Stream := TFileStream.Create('textes.bin', fmCreate);
+  try
+    EcrireChaine(Stream, 'Bonjour');
+    EcrireChaine(Stream, 'Delphi');
+    EcrireChaine(Stream, 'Fichiers binaires !');
+  finally
+    Stream.Free;
+  end;
+
+  // Lecture
+  Stream := TFileStream.Create('textes.bin', fmOpenRead);
+  try
+    TexteLu := LireChaine(Stream) + ' ' +
+               LireChaine(Stream) + ' ' +
+               LireChaine(Stream);
+    ShowMessage(TexteLu);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+### Navigation dans le stream
+
+```pascal
+procedure NavigationStream;
+var
+  Stream: TFileStream;
+  Position, Taille: Int64;
+begin
+  Stream := TFileStream.Create('donnees.bin', fmOpenRead);
+  try
+    // Obtenir la taille du fichier
+    Taille := Stream.Size;
+    ShowMessage('Taille du fichier : ' + IntToStr(Taille) + ' octets');
+
+    // Obtenir la position actuelle
+    Position := Stream.Position;
+    ShowMessage('Position actuelle : ' + IntToStr(Position));
+
+    // Se déplacer au début
+    Stream.Seek(0, soBeginning);
+
+    // Se déplacer à la fin
+    Stream.Seek(0, soEnd);
+
+    // Se déplacer de 10 octets depuis le début
+    Stream.Seek(10, soBeginning);
+
+    // Avancer de 5 octets depuis la position actuelle
+    Stream.Seek(5, soCurrent);
+
+    // Revenir 3 octets en arrière
+    Stream.Seek(-3, soCurrent);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+**Paramètres de Seek :**
+- `soBeginning` (ou `soFromBeginning`) : depuis le début du fichier
+- `soCurrent` (ou `soFromCurrent`) : depuis la position actuelle
+- `soEnd` (ou `soFromEnd`) : depuis la fin du fichier
+
+---
+
+## Méthode 2 : Manipulation de Records (Structures)
+
+Les records (enregistrements) permettent de regrouper plusieurs données. C'est idéal pour créer des formats de fichiers structurés.
+
+### Définition et écriture d'un record
 
 ```pascal
 type
-  TFicheClient = record
+  TPerson = record
     ID: Integer;
-    Nom: string;
-    DateInscription: TDateTime;
-    Solde: Double;
+    Age: Byte;
+    Salaire: Double;
+    Actif: Boolean;
+    // Note : éviter les string dans les records pour les fichiers binaires
   end;
 
-procedure EcrireFicheClient(const NomFichier: string; const Fiche: TFicheClient);
+procedure EcrirePersonne;
 var
-  Flux: TFileStream;
-  NomBytes: TBytes;
+  Stream: TFileStream;
+  Personne: TPerson;
 begin
-  Flux := TFileStream.Create(NomFichier, fmCreate);
+  Stream := TFileStream.Create('personnes.bin', fmCreate);
   try
-    // Écrire l'ID (4 octets)
-    Flux.WriteBuffer(Fiche.ID, SizeOf(Integer));
+    // Première personne
+    Personne.ID := 1;
+    Personne.Age := 30;
+    Personne.Salaire := 45000.50;
+    Personne.Actif := True;
+    Stream.Write(Personne, SizeOf(TPerson));
 
-    // Écrire le nom (longueur variable)
-    NomBytes := TEncoding.UTF8.GetBytes(Fiche.Nom);
+    // Deuxième personne
+    Personne.ID := 2;
+    Personne.Age := 25;
+    Personne.Salaire := 38000.00;
+    Personne.Actif := True;
+    Stream.Write(Personne, SizeOf(TPerson));
 
-    // D'abord la longueur du nom
-    var Longueur: Integer := Length(NomBytes);
-    Flux.WriteBuffer(Longueur, SizeOf(Integer));
-
-    // Puis le contenu du nom
-    if Longueur > 0 then
-      Flux.WriteBuffer(NomBytes, Longueur);
-
-    // Écrire la date (8 octets)
-    Flux.WriteBuffer(Fiche.DateInscription, SizeOf(TDateTime));
-
-    // Écrire le solde (8 octets)
-    Flux.WriteBuffer(Fiche.Solde, SizeOf(Double));
+    ShowMessage('Personnes enregistrées');
   finally
-    Flux.Free;
-  end;
-end;
-
-function LireFicheClient(const NomFichier: string): TFicheClient;
-var
-  Flux: TFileStream;
-  NomBytes: TBytes;
-  Longueur: Integer;
-begin
-  Result := Default(TFicheClient);
-
-  if not FileExists(NomFichier) then
-    Exit;
-
-  Flux := TFileStream.Create(NomFichier, fmOpenRead);
-  try
-    // Lire l'ID
-    Flux.ReadBuffer(Result.ID, SizeOf(Integer));
-
-    // Lire la longueur du nom
-    Flux.ReadBuffer(Longueur, SizeOf(Integer));
-
-    // Lire le contenu du nom
-    if Longueur > 0 then
-    begin
-      SetLength(NomBytes, Longueur);
-      Flux.ReadBuffer(NomBytes, Longueur);
-      Result.Nom := TEncoding.UTF8.GetString(NomBytes);
-    end
-    else
-      Result.Nom := '';
-
-    // Lire la date
-    Flux.ReadBuffer(Result.DateInscription, SizeOf(TDateTime));
-
-    // Lire le solde
-    Flux.ReadBuffer(Result.Solde, SizeOf(Double));
-  finally
-    Flux.Free;
+    Stream.Free;
   end;
 end;
 ```
 
-### Utilisation de la classe TMemoryStream
-
-Pour manipuler des données binaires en mémoire avant de les sauvegarder, vous pouvez utiliser `TMemoryStream` :
+### Lecture de records
 
 ```pascal
-procedure ManipulerDonneesAvantSauvegarde;
+procedure LirePersonnes;
+var
+  Stream: TFileStream;
+  Personne: TPerson;
+  Texte: string;
+begin
+  Stream := TFileStream.Create('personnes.bin', fmOpenRead);
+  try
+    Texte := 'Liste des personnes :' + #13#10#13#10;
+
+    // Lire tant qu'il y a des données
+    while Stream.Position < Stream.Size do
+    begin
+      Stream.Read(Personne, SizeOf(TPerson));
+
+      Texte := Texte + Format('ID: %d, Âge: %d, Salaire: %.2f, Actif: %s' + #13#10,
+        [Personne.ID, Personne.Age, Personne.Salaire,
+         BoolToStr(Personne.Actif, True)]);
+    end;
+
+    ShowMessage(Texte);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+### Record avec chaîne de longueur fixe
+
+Pour inclure du texte dans un record binaire, utilisez des tableaux de caractères :
+
+```pascal
+type
+  TPersonneAvecNom = packed record
+    ID: Integer;
+    Nom: array[0..49] of Char;  // 50 caractères maximum
+    Age: Byte;
+    Salaire: Double;
+  end;
+
+procedure EcrirePersonneAvecNom;
+var
+  Stream: TFileStream;
+  Personne: TPersonneAvecNom;
+begin
+  Stream := TFileStream.Create('personnes_noms.bin', fmCreate);
+  try
+    // Initialiser à zéro
+    FillChar(Personne, SizeOf(TPersonneAvecNom), 0);
+
+    Personne.ID := 1;
+    StrPCopy(Personne.Nom, 'Jean Dupont');
+    Personne.Age := 30;
+    Personne.Salaire := 45000.50;
+
+    Stream.Write(Personne, SizeOf(TPersonneAvecNom));
+  finally
+    Stream.Free;
+  end;
+end;
+
+function LirePersonneAvecNom: string;
+var
+  Stream: TFileStream;
+  Personne: TPersonneAvecNom;
+begin
+  Stream := TFileStream.Create('personnes_noms.bin', fmOpenRead);
+  try
+    Stream.Read(Personne, SizeOf(TPersonneAvecNom));
+
+    Result := Format('ID: %d' + #13#10 +
+                     'Nom: %s' + #13#10 +
+                     'Âge: %d' + #13#10 +
+                     'Salaire: %.2f',
+                     [Personne.ID,
+                      StrPas(Personne.Nom),
+                      Personne.Age,
+                      Personne.Salaire]);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+**Note importante :**
+- Utilisez `packed record` pour éviter l'alignement mémoire automatique
+- Les tableaux de Char ont une taille fixe
+- `StrPCopy` copie une string dans un tableau de Char
+- `StrPas` convertit un tableau de Char en string
+
+---
+
+## Méthode 3 : File of Type (Approche classique)
+
+Cette approche héritée du Pascal traditionnel permet de travailler avec des fichiers typés.
+
+### Fichier d'entiers
+
+```pascal
+procedure FichierEntiers;
+var
+  Fichier: File of Integer;
+  Nombre: Integer;
+  i: Integer;
+begin
+  // Écriture
+  AssignFile(Fichier, 'nombres.dat');
+  Rewrite(Fichier);
+  try
+    for i := 1 to 10 do
+      Write(Fichier, i * i);  // Écrire les carrés de 1 à 10
+  finally
+    CloseFile(Fichier);
+  end;
+
+  // Lecture
+  AssignFile(Fichier, 'nombres.dat');
+  Reset(Fichier);
+  try
+    while not Eof(Fichier) do
+    begin
+      Read(Fichier, Nombre);
+      ShowMessage(IntToStr(Nombre));
+    end;
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+### Fichier de records
+
+```pascal
+type
+  TArticle = packed record
+    Code: Integer;
+    Nom: array[0..29] of Char;
+    Prix: Double;
+    Stock: Integer;
+  end;
+
+procedure GererArticles;
+var
+  Fichier: File of TArticle;
+  Article: TArticle;
+begin
+  // Créer le fichier et ajouter des articles
+  AssignFile(Fichier, 'articles.dat');
+  Rewrite(Fichier);
+  try
+    // Article 1
+    FillChar(Article, SizeOf(TArticle), 0);
+    Article.Code := 1;
+    StrPCopy(Article.Nom, 'Ordinateur portable');
+    Article.Prix := 899.99;
+    Article.Stock := 15;
+    Write(Fichier, Article);
+
+    // Article 2
+    FillChar(Article, SizeOf(TArticle), 0);
+    Article.Code := 2;
+    StrPCopy(Article.Nom, 'Souris sans fil');
+    Article.Prix := 29.99;
+    Article.Stock := 50;
+    Write(Fichier, Article);
+  finally
+    CloseFile(Fichier);
+  end;
+
+  // Lire les articles
+  Reset(Fichier);
+  try
+    while not Eof(Fichier) do
+    begin
+      Read(Fichier, Article);
+      ShowMessage(Format('Code: %d, Nom: %s, Prix: %.2f €, Stock: %d',
+        [Article.Code, StrPas(Article.Nom), Article.Prix, Article.Stock]));
+    end;
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+### Accès direct (lecture d'un enregistrement spécifique)
+
+```pascal
+function LireArticleParPosition(Position: Integer): TArticle;
+var
+  Fichier: File of TArticle;
+  Article: TArticle;
+begin
+  AssignFile(Fichier, 'articles.dat');
+  Reset(Fichier);
+  try
+    // Se positionner sur l'enregistrement voulu (commence à 0)
+    Seek(Fichier, Position);
+
+    if not Eof(Fichier) then
+      Read(Fichier, Article)
+    else
+      raise Exception.Create('Position invalide');
+
+    Result := Article;
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+
+// Utilisation
+var
+  Article: TArticle;
+begin
+  Article := LireArticleParPosition(1);  // Lire le 2ème article
+  ShowMessage(StrPas(Article.Nom));
+end;
+```
+
+### Modification d'un enregistrement
+
+```pascal
+procedure ModifierArticle(Position: Integer; NouveauPrix: Double);
+var
+  Fichier: File of TArticle;
+  Article: TArticle;
+begin
+  AssignFile(Fichier, 'articles.dat');
+  Reset(Fichier);
+  try
+    // Lire l'article
+    Seek(Fichier, Position);
+    Read(Fichier, Article);
+
+    // Modifier le prix
+    Article.Prix := NouveauPrix;
+
+    // Revenir en arrière et réécrire
+    Seek(Fichier, Position);
+    Write(Fichier, Article);
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+---
+
+## Méthode 4 : TMemoryStream
+
+`TMemoryStream` permet de manipuler des données binaires en mémoire avant de les sauvegarder.
+
+### Utilisation basique
+
+```pascal
+procedure ExempleMemoryStream;
 var
   MemStream: TMemoryStream;
   FileStream: TFileStream;
-  Valeur: Integer;
+  Nombre: Integer;
+  Texte: string;
 begin
   MemStream := TMemoryStream.Create;
   try
-    // Écrire des données dans le flux mémoire
-    Valeur := 12345;
-    MemStream.WriteBuffer(Valeur, SizeOf(Integer));
+    // Écrire en mémoire
+    Nombre := 42;
+    MemStream.Write(Nombre, SizeOf(Nombre));
 
-    Valeur := 67890;
-    MemStream.WriteBuffer(Valeur, SizeOf(Integer));
+    Nombre := 100;
+    MemStream.Write(Nombre, SizeOf(Nombre));
 
-    // Ajouter d'autres données...
+    // Sauvegarder en fichier
+    MemStream.SaveToFile('donnees_mem.bin');
 
-    // Revenir au début du flux mémoire
+    // Réinitialiser la position
     MemStream.Position := 0;
 
-    // Sauvegarder le contenu dans un fichier
-    FileStream := TFileStream.Create('donnees.bin', fmCreate);
-    try
-      // Copier tout le contenu du MemoryStream dans le fichier
-      FileStream.CopyFrom(MemStream, 0);  // 0 signifie tout copier
-    finally
-      FileStream.Free;
-    end;
+    // Relire depuis la mémoire
+    MemStream.Read(Nombre, SizeOf(Nombre));
+    ShowMessage('Premier nombre : ' + IntToStr(Nombre));
+
+    MemStream.Read(Nombre, SizeOf(Nombre));
+    ShowMessage('Deuxième nombre : ' + IntToStr(Nombre));
   finally
     MemStream.Free;
   end;
 end;
 ```
 
-### Manipulation de fichiers binaires communs
-
-#### Exemple : Manipulation d'une image
+### Charger un fichier en mémoire
 
 ```pascal
-procedure SauvegarderImageDepuisImage(const NomFichier: string; Image: TImage);
+procedure TraiterFichierEnMemoire;
 var
-  Flux: TFileStream;
+  MemStream: TMemoryStream;
+  Nombre: Integer;
+  Total: Integer;
 begin
-  Flux := TFileStream.Create(NomFichier, fmCreate);
+  MemStream := TMemoryStream.Create;
   try
-    if Assigned(Image.Picture.Graphic) then
-      Image.Picture.Graphic.SaveToStream(Flux);
-  finally
-    Flux.Free;
-  end;
-end;
+    // Charger le fichier complet en mémoire
+    MemStream.LoadFromFile('nombres.bin');
 
-procedure ChargerImageVersImage(const NomFichier: string; Image: TImage);
-var
-  Flux: TFileStream;
-begin
-  if not FileExists(NomFichier) then
-    Exit;
+    // Traiter les données
+    MemStream.Position := 0;
+    Total := 0;
 
-  Flux := TFileStream.Create(NomFichier, fmOpenRead);
-  try
-    Image.Picture.LoadFromStream(Flux);
-  finally
-    Flux.Free;
-  end;
-end;
-```
-
-#### Exemple : Créer un fichier d'en-tête simple
-
-Les fichiers binaires ont souvent un en-tête avec des informations sur leur contenu :
-
-```pascal
-type
-  TEnTeteFichier = packed record
-    Signature: array[0..3] of AnsiChar;  // Identifiant du format
-    Version: Word;                       // Version du format
-    NbElements: Integer;                 // Nombre d'éléments stockés
-    DateCreation: TDateTime;             // Date de création
-  end;
-
-procedure CreerFichierAvecEnTete(const NomFichier: string);
-var
-  Flux: TFileStream;
-  EnTete: TEnTeteFichier;
-begin
-  // Initialiser l'en-tête
-  EnTete.Signature := 'MYAP';  // Signature de mon application
-  EnTete.Version := 1;
-  EnTete.NbElements := 0;
-  EnTete.DateCreation := Now;
-
-  // Créer le fichier et écrire l'en-tête
-  Flux := TFileStream.Create(NomFichier, fmCreate);
-  try
-    Flux.WriteBuffer(EnTete, SizeOf(TEnTeteFichier));
-
-    // Écrire les données suivant l'en-tête...
-
-  finally
-    Flux.Free;
-  end;
-end;
-
-function VerifierFichierValide(const NomFichier: string): Boolean;
-var
-  Flux: TFileStream;
-  EnTete: TEnTeteFichier;
-begin
-  Result := False;
-
-  if not FileExists(NomFichier) then
-    Exit;
-
-  // Vérifier que le fichier a au moins la taille de l'en-tête
-  if TFile.GetSize(NomFichier) < SizeOf(TEnTeteFichier) then
-    Exit;
-
-  Flux := TFileStream.Create(NomFichier, fmOpenRead);
-  try
-    // Lire l'en-tête
-    Flux.ReadBuffer(EnTete, SizeOf(TEnTeteFichier));
-
-    // Vérifier la signature
-    Result := (EnTete.Signature = 'MYAP') and (EnTete.Version <= 1);
-  finally
-    Flux.Free;
-  end;
-end;
-```
-
-### Utilisation de System.IOUtils pour les fichiers binaires
-
-L'unité `System.IOUtils` offre aussi des méthodes pour les fichiers binaires :
-
-```pascal
-uses
-  System.IOUtils, System.SysUtils;
-
-procedure ExempleIOUtilsBinaire;
-var
-  Donnees: TBytes;
-begin
-  // Préparer des données
-  SetLength(Donnees, 10);
-  for var i := 0 to 9 do
-    Donnees[i] := i * 10;
-
-  // Écrire les données
-  TFile.WriteAllBytes('donnees.bin', Donnees);
-
-  // Lire les données
-  var DonneesLues := TFile.ReadAllBytes('donnees.bin');
-
-  // Vérifier le contenu
-  var Resultat := '';
-  for var i := 0 to Length(DonneesLues) - 1 do
-    Resultat := Resultat + Format('%d ', [DonneesLues[i]]);
-
-  ShowMessage('Données lues : ' + Resultat);
-end;
-```
-
-> **Note :** La classe `TFile` avec les méthodes `ReadAllBytes` et `WriteAllBytes` nécessite Delphi 11 ou supérieur.
-
-### Conseils pratiques
-
-1. **Toujours fermer les flux** : Utilisez des blocs `try...finally` pour vous assurer que les ressources sont libérées.
-
-2. **Vérifiez les valeurs de retour** : Les méthodes `Read` et `Write` des flux retournent le nombre d'octets effectivement lus ou écrits.
-
-3. **Format de données personnalisé** : Si vous créez votre propre format de fichier binaire, ajoutez toujours une signature et une version pour faciliter la compatibilité future.
-
-4. **Champs de longueur fixe vs variable** : Pour les champs de longueur variable (comme les chaînes), stockez d'abord la longueur, puis les données.
-
-5. **Utilisez `packed record`** : Pour les structures qui seront écrites/lues directement avec `WriteBuffer`/`ReadBuffer`, utilisez le mot-clé `packed` pour éviter l'alignement mémoire.
-
-6. **Attention à la portabilité** : Les tailles de types peuvent varier selon les plateformes. Utilisez des types de taille fixe (`Int32`, `UInt16`, etc.) pour des fichiers portables.
-
-### Exemple complet : Gestionnaire de données binaires
-
-Voici un exemple simple d'application qui sauvegarde une liste de personnes dans un fichier binaire :
-
-```pascal
-type
-  TPersonne = record
-    ID: Integer;
-    Nom: string;
-    Age: Integer;
-  end;
-
-procedure TFormGestionnaire.ButtonSauvegarderClick(Sender: TObject);
-var
-  Flux: TFileStream;
-  Personne: TPersonne;
-  NomBytes: TBytes;
-  Longueur: Integer;
-begin
-  if SaveDialog1.Execute then
-  begin
-    Flux := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-    try
-      // Nombre de personnes
-      var NbPersonnes: Integer := ListBox1.Items.Count;
-      Flux.WriteBuffer(NbPersonnes, SizeOf(Integer));
-
-      // Enregistrer chaque personne
-      for var i := 0 to ListBox1.Items.Count - 1 do
-      begin
-        Personne := TPersonne(ListBox1.Items.Objects[i]);
-
-        // Écrire l'ID
-        Flux.WriteBuffer(Personne.ID, SizeOf(Integer));
-
-        // Écrire le nom
-        NomBytes := TEncoding.UTF8.GetBytes(Personne.Nom);
-        Longueur := Length(NomBytes);
-        Flux.WriteBuffer(Longueur, SizeOf(Integer));
-        if Longueur > 0 then
-          Flux.WriteBuffer(NomBytes[0], Longueur);
-
-        // Écrire l'âge
-        Flux.WriteBuffer(Personne.Age, SizeOf(Integer));
-      end;
-
-      ShowMessage('Données sauvegardées avec succès !');
-    finally
-      Flux.Free;
-    end;
-  end;
-end;
-
-procedure TFormGestionnaire.ButtonChargerClick(Sender: TObject);
-var
-  Flux: TFileStream;
-  Personne: TPersonne;
-  NomBytes: TBytes;
-  Longueur, NbPersonnes: Integer;
-begin
-  if OpenDialog1.Execute then
-  begin
-    if not FileExists(OpenDialog1.FileName) then
+    while MemStream.Position < MemStream.Size do
     begin
-      ShowMessage('Le fichier n''existe pas !');
-      Exit;
+      MemStream.Read(Nombre, SizeOf(Nombre));
+      Total := Total + Nombre;
     end;
 
-    Flux := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-    try
-      // Lire le nombre de personnes
-      Flux.ReadBuffer(NbPersonnes, SizeOf(Integer));
-
-      // Vider la liste actuelle
-      for var i := 0 to ListBox1.Items.Count - 1 do
-        TObject(ListBox1.Items.Objects[i]).Free;
-      ListBox1.Clear;
-
-      // Lire chaque personne
-      for var i := 0 to NbPersonnes - 1 do
-      begin
-        // Lire l'ID
-        Flux.ReadBuffer(Personne.ID, SizeOf(Integer));
-
-        // Lire le nom
-        Flux.ReadBuffer(Longueur, SizeOf(Integer));
-        if Longueur > 0 then
-        begin
-          SetLength(NomBytes, Longueur);
-          Flux.ReadBuffer(NomBytes[0], Longueur);
-          Personne.Nom := TEncoding.UTF8.GetString(NomBytes);
-        end
-        else
-          Personne.Nom := '';
-
-        // Lire l'âge
-        Flux.ReadBuffer(Personne.Age, SizeOf(Integer));
-
-        // Ajouter à la liste
-        var NouvellePersonne := TPersonne.Create;
-        NouvellePersonne.ID := Personne.ID;
-        NouvellePersonne.Nom := Personne.Nom;
-        NouvellePersonne.Age := Personne.Age;
-
-        ListBox1.Items.AddObject(
-          Format('%d - %s (%d ans)', [Personne.ID, Personne.Nom, Personne.Age]),
-          NouvellePersonne);
-      end;
-
-      ShowMessage('Données chargées avec succès !');
-    finally
-      Flux.Free;
-    end;
+    ShowMessage('Total : ' + IntToStr(Total));
+  finally
+    MemStream.Free;
   end;
 end;
 ```
-
-### Exercice pratique
-
-Créez une application simple qui :
-1. Permet à l'utilisateur de dessiner des formes sur un TImage
-2. Sauvegarde le dessin dans un fichier binaire personnalisé
-3. Charge le dessin depuis ce fichier
-
-Structure suggérée pour le fichier :
-- En-tête : signature, version, nombre de formes
-- Pour chaque forme : type (rectangle, cercle...), position, couleur, taille
-
-Cet exercice vous permettra de mettre en pratique les concepts de manipulation de fichiers binaires tout en créant quelque chose de visuel.
 
 ---
 
-À suivre dans la prochaine section : **7.3 Utilisation des TStream et classes dérivées**
+## Format de fichier personnalisé avec en-tête
+
+Un bon format de fichier binaire commence généralement par un en-tête (header) qui décrit le contenu.
+
+### Exemple complet : système de configuration binaire
+
+```pascal
+type
+  // En-tête du fichier
+  TConfigHeader = packed record
+    Signature: array[0..3] of Char;  // 'CONF'
+    Version: Word;                    // Version du format
+    NombreEntrees: Integer;           // Nombre de configurations
+  end;
+
+  // Une entrée de configuration
+  TConfigEntry = packed record
+    Nom: array[0..31] of Char;
+    ValeurEntier: Integer;
+    ValeurReel: Double;
+    Actif: Boolean;
+  end;
+
+// Écrire un fichier de configuration
+procedure CreerFichierConfig;
+var
+  Stream: TFileStream;
+  Header: TConfigHeader;
+  Entry: TConfigEntry;
+begin
+  Stream := TFileStream.Create('config.dat', fmCreate);
+  try
+    // Écrire l'en-tête
+    Header.Signature := 'CONF';
+    Header.Version := 1;
+    Header.NombreEntrees := 2;
+    Stream.Write(Header, SizeOf(TConfigHeader));
+
+    // Première entrée
+    FillChar(Entry, SizeOf(TConfigEntry), 0);
+    StrPCopy(Entry.Nom, 'ResolutionX');
+    Entry.ValeurEntier := 1920;
+    Entry.ValeurReel := 0.0;
+    Entry.Actif := True;
+    Stream.Write(Entry, SizeOf(TConfigEntry));
+
+    // Deuxième entrée
+    FillChar(Entry, SizeOf(TConfigEntry), 0);
+    StrPCopy(Entry.Nom, 'Volume');
+    Entry.ValeurEntier := 0;
+    Entry.ValeurReel := 0.75;
+    Entry.Actif := True;
+    Stream.Write(Entry, SizeOf(TConfigEntry));
+
+    ShowMessage('Fichier de configuration créé');
+  finally
+    Stream.Free;
+  end;
+end;
+
+// Lire le fichier de configuration
+procedure LireFichierConfig;
+var
+  Stream: TFileStream;
+  Header: TConfigHeader;
+  Entry: TConfigEntry;
+  i: Integer;
+  Texte: string;
+begin
+  if not FileExists('config.dat') then
+  begin
+    ShowMessage('Fichier de configuration introuvable');
+    Exit;
+  end;
+
+  Stream := TFileStream.Create('config.dat', fmOpenRead);
+  try
+    // Lire l'en-tête
+    Stream.Read(Header, SizeOf(TConfigHeader));
+
+    // Vérifier la signature
+    if Header.Signature <> 'CONF' then
+    begin
+      ShowMessage('Fichier invalide !');
+      Exit;
+    end;
+
+    Texte := Format('Format version %d' + #13#10 +
+                    'Nombre d''entrées : %d' + #13#10#13#10,
+                    [Header.Version, Header.NombreEntrees]);
+
+    // Lire les entrées
+    for i := 1 to Header.NombreEntrees do
+    begin
+      Stream.Read(Entry, SizeOf(TConfigEntry));
+
+      Texte := Texte + Format('Nom: %s' + #13#10 +
+                              'Valeur entière: %d' + #13#10 +
+                              'Valeur réelle: %.2f' + #13#10 +
+                              'Actif: %s' + #13#10#13#10,
+                              [StrPas(Entry.Nom),
+                               Entry.ValeurEntier,
+                               Entry.ValeurReel,
+                               BoolToStr(Entry.Actif, True)]);
+    end;
+
+    ShowMessage(Texte);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+---
+
+## Copie et comparaison de fichiers binaires
+
+### Copier un fichier binaire
+
+```pascal
+procedure CopierFichier(const Source, Destination: string);
+var
+  SourceStream, DestStream: TFileStream;
+begin
+  SourceStream := TFileStream.Create(Source, fmOpenRead);
+  try
+    DestStream := TFileStream.Create(Destination, fmCreate);
+    try
+      // Copier tout le contenu
+      DestStream.CopyFrom(SourceStream, 0);
+      ShowMessage('Copie réussie');
+    finally
+      DestStream.Free;
+    end;
+  finally
+    SourceStream.Free;
+  end;
+end;
+```
+
+### Comparer deux fichiers binaires
+
+```pascal
+function FichiersIdentiques(const Fichier1, Fichier2: string): Boolean;
+var
+  Stream1, Stream2: TFileStream;
+  Buffer1, Buffer2: array[0..4095] of Byte;
+  BytesLus1, BytesLus2: Integer;
+begin
+  Result := False;
+
+  if not (FileExists(Fichier1) and FileExists(Fichier2)) then
+    Exit;
+
+  Stream1 := TFileStream.Create(Fichier1, fmOpenRead);
+  try
+    Stream2 := TFileStream.Create(Fichier2, fmOpenRead);
+    try
+      // Vérifier d'abord la taille
+      if Stream1.Size <> Stream2.Size then
+        Exit;
+
+      // Comparer bloc par bloc
+      repeat
+        BytesLus1 := Stream1.Read(Buffer1, SizeOf(Buffer1));
+        BytesLus2 := Stream2.Read(Buffer2, SizeOf(Buffer2));
+
+        if (BytesLus1 <> BytesLus2) or
+           not CompareMem(@Buffer1, @Buffer2, BytesLus1) then
+          Exit;
+
+      until BytesLus1 = 0;
+
+      Result := True;
+    finally
+      Stream2.Free;
+    end;
+  finally
+    Stream1.Free;
+  end;
+end;
+```
+
+---
+
+## Gestion des erreurs et bonnes pratiques
+
+### Vérifications avant manipulation
+
+```pascal
+procedure ManipulationSecurisee(const NomFichier: string);
+var
+  Stream: TFileStream;
+begin
+  // Vérifier l'existence
+  if not FileExists(NomFichier) then
+  begin
+    ShowMessage('Fichier introuvable : ' + NomFichier);
+    Exit;
+  end;
+
+  // Vérifier la taille
+  if TFile.GetSize(NomFichier) = 0 then
+  begin
+    ShowMessage('Fichier vide');
+    Exit;
+  end;
+
+  // Vérifier les permissions
+  try
+    Stream := TFileStream.Create(NomFichier, fmOpenReadWrite);
+    try
+      // Manipulations...
+    finally
+      Stream.Free;
+    end;
+  except
+    on E: Exception do
+      ShowMessage('Erreur d''accès au fichier : ' + E.Message);
+  end;
+end;
+```
+
+### Gestion complète des exceptions
+
+```pascal
+procedure LectureSecurisee(const NomFichier: string);
+var
+  Stream: TFileStream;
+  Donnee: Integer;
+begin
+  Stream := nil;
+  try
+    try
+      Stream := TFileStream.Create(NomFichier, fmOpenRead);
+
+      if Stream.Size < SizeOf(Integer) then
+        raise Exception.Create('Fichier trop petit');
+
+      Stream.Read(Donnee, SizeOf(Donnee));
+      ShowMessage('Donnée lue : ' + IntToStr(Donnee));
+
+    except
+      on E: EFOpenError do
+        ShowMessage('Impossible d''ouvrir le fichier : ' + E.Message);
+      on E: EReadError do
+        ShowMessage('Erreur de lecture : ' + E.Message);
+      on E: Exception do
+        ShowMessage('Erreur inattendue : ' + E.Message);
+    end;
+  finally
+    if Assigned(Stream) then
+      Stream.Free;
+  end;
+end;
+```
+
+---
+
+## Bonnes pratiques essentielles
+
+### 1. Toujours utiliser packed record
+
+```pascal
+// BON
+type
+  TDonnees = packed record
+    ID: Integer;
+    Valeur: Double;
+  end;
+
+// MAUVAIS (alignement mémoire variable)
+type
+  TDonnees = record
+    ID: Integer;
+    Valeur: Double;
+  end;
+```
+
+Le mot-clé `packed` garantit que la structure n'aura pas de remplissage (padding) invisible entre les champs.
+
+### 2. Éviter les types dynamiques dans les records
+
+```pascal
+// À ÉVITER dans les fichiers binaires
+type
+  TMauvaisRecord = packed record
+    ID: Integer;
+    Nom: string;        // Taille variable !
+    Liste: TStringList; // Objet complexe !
+  end;
+
+// PRÉFÉRER
+type
+  TBonRecord = packed record
+    ID: Integer;
+    Nom: array[0..49] of Char;  // Taille fixe
+  end;
+```
+
+### 3. Inclure des informations de version
+
+```pascal
+type
+  THeader = packed record
+    Signature: array[0..3] of Char;  // Identification
+    Version: Word;                    // Pour compatibilité future
+    // ... autres champs
+  end;
+```
+
+### 4. Toujours libérer les streams
+
+```pascal
+var
+  Stream: TFileStream;
+begin
+  Stream := TFileStream.Create('fichier.bin', fmCreate);
+  try
+    // Votre code ici
+  finally
+    Stream.Free;  // TOUJOURS dans le bloc finally
+  end;
+end;
+```
+
+### 5. Vérifier la taille avant la lecture
+
+```pascal
+if Stream.Size < SizeOf(TMonRecord) then
+  raise Exception.Create('Fichier corrompu ou incomplet');
+```
+
+### 6. Utiliser des constantes pour les tailles
+
+```pascal
+const
+  TAILLE_NOM = 50;
+  TAILLE_DESCRIPTION = 200;
+
+type
+  TArticle = packed record
+    Nom: array[0..TAILLE_NOM-1] of Char;
+    Description: array[0..TAILLE_DESCRIPTION-1] of Char;
+  end;
+```
+
+---
+
+## Exemple complet : Mini base de données
+
+Voici un exemple pratique d'une petite base de données en fichier binaire :
+
+```pascal
+type
+  // En-tête de la base
+  TDatabaseHeader = packed record
+    Signature: array[0..3] of Char;  // 'MYDB'
+    Version: Word;
+    NombreEnregistrements: Integer;
+    DateCreation: TDateTime;
+  end;
+
+  // Enregistrement client
+  TClient = packed record
+    ID: Integer;
+    Nom: array[0..49] of Char;
+    Email: array[0..99] of Char;
+    Telephone: array[0..19] of Char;
+    Solde: Double;
+    Actif: Boolean;
+  end;
+
+// Créer la base de données
+procedure CreerBaseDonnees;
+var
+  Stream: TFileStream;
+  Header: TDatabaseHeader;
+begin
+  Stream := TFileStream.Create('clients.db', fmCreate);
+  try
+    // En-tête
+    Header.Signature := 'MYDB';
+    Header.Version := 1;
+    Header.NombreEnregistrements := 0;
+    Header.DateCreation := Now;
+    Stream.Write(Header, SizeOf(TDatabaseHeader));
+  finally
+    Stream.Free;
+  end;
+end;
+
+// Ajouter un client
+procedure AjouterClient(const Nom, Email, Telephone: string; Solde: Double);
+var
+  Stream: TFileStream;
+  Header: TDatabaseHeader;
+  Client: TClient;
+begin
+  Stream := TFileStream.Create('clients.db', fmOpenReadWrite);
+  try
+    // Lire l'en-tête
+    Stream.Read(Header, SizeOf(TDatabaseHeader));
+
+    // Préparer le nouveau client
+    FillChar(Client, SizeOf(TClient), 0);
+    Client.ID := Header.NombreEnregistrements + 1;
+    StrPCopy(Client.Nom, Nom);
+    StrPCopy(Client.Email, Email);
+    StrPCopy(Client.Telephone, Telephone);
+    Client.Solde := Solde;
+    Client.Actif := True;
+
+    // Se positionner à la fin
+    Stream.Seek(0, soEnd);
+
+    // Écrire le client
+    Stream.Write(Client, SizeOf(TClient));
+
+    // Mettre à jour l'en-tête
+    Header.NombreEnregistrements := Header.NombreEnregistrements + 1;
+    Stream.Seek(0, soBeginning);
+    Stream.Write(Header, SizeOf(TDatabaseHeader));
+
+    ShowMessage('Client ajouté avec succès');
+  finally
+    Stream.Free;
+  end;
+end;
+
+// Lire tous les clients
+function LireTousLesClients: string;
+var
+  Stream: TFileStream;
+  Header: TDatabaseHeader;
+  Client: TClient;
+  i: Integer;
+  Resultat: string;
+begin
+  Stream := TFileStream.Create('clients.db', fmOpenRead);
+  try
+    // Lire l'en-tête
+    Stream.Read(Header, SizeOf(TDatabaseHeader));
+
+    Resultat := Format('Base de données - Version %d' + #13#10 +
+                       'Créée le : %s' + #13#10 +
+                       'Nombre de clients : %d' + #13#10#13#10,
+                       [Header.Version,
+                        DateTimeToStr(Header.DateCreation),
+                        Header.NombreEnregistrements]);
+
+    // Lire chaque client
+    for i := 1 to Header.NombreEnregistrements do
+    begin
+      Stream.Read(Client, SizeOf(TClient));
+
+      if Client.Actif then
+        Resultat := Resultat + Format('ID: %d - %s' + #13#10 +
+                                      'Email: %s, Tél: %s' + #13#10 +
+                                      'Solde: %.2f €' + #13#10#13#10,
+                                      [Client.ID,
+                                       StrPas(Client.Nom),
+                                       StrPas(Client.Email),
+                                       StrPas(Client.Telephone),
+                                       Client.Solde]);
+    end;
+
+    Result := Resultat;
+  finally
+    Stream.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  CreerBaseDonnees;
+  AjouterClient('Jean Dupont', 'jean@email.com', '0612345678', 1500.00);
+  AjouterClient('Marie Martin', 'marie@email.com', '0698765432', 2300.50);
+
+  Memo1.Text := LireTousLesClients;
+end;
+```
+
+---
+
+## Tableau comparatif des méthodes
+
+| Critère | TFileStream | File of Type | TMemoryStream |
+|---------|-------------|--------------|---------------|
+| **Modernité** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Flexibilité** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Simplicité** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Performance** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Accès direct** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Mémoire** | Faible | Faible | Élevée |
+| **Pour débuter** | ✅ Recommandé | ✅ OK | ⚠️ Avancé |
+
+---
+
+## Résumé
+
+Dans ce chapitre, vous avez appris à manipuler des fichiers binaires en Delphi :
+
+1. **TFileStream** : la méthode moderne et flexible, recommandée pour la plupart des usages
+2. **File of Type** : l'approche classique, excellente pour les fichiers typés et l'accès direct
+3. **TMemoryStream** : pour travailler en mémoire avant sauvegarde
+4. **Records structurés** : pour créer des formats de fichiers personnalisés
+
+**Points clés à retenir :**
+
+- Les fichiers binaires sont plus compacts et rapides que les fichiers texte
+- Utilisez `packed record` pour garantir la structure exacte
+- Évitez les types dynamiques (string, TStringList, etc.) dans les records binaires
+- Incluez toujours un en-tête avec signature et version
+- Lisez les données dans le même ordre qu'elles ont été écrites
+- Gérez les erreurs et vérifiez les fichiers avant manipulation
+- Libérez toujours les streams avec `Free` dans un bloc `finally`
+
+Les fichiers binaires sont particulièrement utiles pour :
+- Créer des formats de données personnalisés
+- Stocker des configurations complexes
+- Implémenter des mini bases de données
+- Sauvegarder l'état d'une application
+- Échanger des données entre applications
+
+Avec ces connaissances, vous êtes maintenant capable de créer vos propres formats de fichiers binaires et de manipuler efficacement des données structurées !
 
 ⏭️ [Utilisation des TStream et classes dérivées](/07-gestion-des-fichiers-et-flux-de-donnees/03-utilisation-des-tstream-et-classes-derivees.md)

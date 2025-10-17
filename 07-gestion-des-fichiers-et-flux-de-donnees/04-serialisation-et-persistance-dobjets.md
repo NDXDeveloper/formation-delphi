@@ -1,847 +1,488 @@
-# 7. Gestion des fichiers et flux de données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-## 7.4 Sérialisation et persistance d'objets
+# 7.4 Sérialisation et persistance d'objets
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La sérialisation est le processus qui consiste à convertir des objets (avec leurs propriétés et données) en un format qui peut être stocké ou transmis, puis reconstitué ultérieurement. Cette technique est essentielle pour sauvegarder l'état d'une application, partager des données entre différentes instances d'un programme, ou communiquer entre applications.
+La sérialisation est le processus de conversion d'un objet en mémoire en une forme qui peut être stockée dans un fichier ou transmise sur un réseau. La persistance, quant à elle, consiste à sauvegarder l'état d'un objet pour le récupérer plus tard.
 
-### Introduction à la sérialisation
+Imaginez que vous avez créé un personnage dans un jeu vidéo avec ses caractéristiques (nom, niveau, points de vie, équipement). La sérialisation permet de transformer toutes ces informations en données stockables, et la persistance permet de les sauvegarder pour retrouver votre personnage exactement tel quel lors de votre prochaine session de jeu.
 
-En termes simples, la sérialisation transforme un objet en mémoire en une séquence d'octets, et la désérialisation fait l'inverse. Delphi offre plusieurs approches pour réaliser cette tâche, des plus simples aux plus sophistiquées.
+## Concepts fondamentaux
+
+### Qu'est-ce que la sérialisation ?
+
+**Sérialisation** : Transformer un objet complexe en une séquence d'octets ou en texte structuré.
+
+**Désérialisation** : Recréer un objet à partir des données sérialisées.
+
+**Analogie :** Pensez à un meuble en kit :
+- **Sérialisation** = démonter le meuble et le mettre en pièces dans un carton
+- **Désérialisation** = remonter le meuble à partir des pièces et des instructions
 
 ### Pourquoi sérialiser des objets ?
 
-- **Persistance des données** : Sauvegarder l'état d'une application pour le restaurer ultérieurement
-- **Transfert de données** : Envoyer des objets sur un réseau ou entre processus
-- **Clonage d'objets** : Créer des copies profondes d'objets complexes
-- **Caching** : Stocker temporairement des objets pour améliorer les performances
+1. **Sauvegarde de l'état** : Sauvegarder les paramètres d'une application
+2. **Persistance** : Stocker des données entre les sessions
+3. **Communication** : Envoyer des objets sur un réseau
+4. **Copie profonde** : Dupliquer des objets complexes
+5. **Annuler/Refaire** : Implémenter l'historique des actions
+6. **Cache** : Stocker temporairement des objets
 
-### Méthodes de sérialisation en Delphi
+---
 
-#### 1. Approche manuelle
+## Méthode 1 : Sérialisation manuelle avec Streams
 
-L'approche la plus basique consiste à implémenter manuellement des méthodes pour sauvegarder et charger les propriétés d'un objet :
+C'est la méthode la plus basique et la plus contrôlée. Vous écrivez explicitement chaque champ dans un stream.
 
-```pascal
-type
-  TPersonne = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FTaille: Double;
-  public
-    constructor Create;
-    procedure SaveToStream(Stream: TStream);
-    procedure LoadFromStream(Stream: TStream);
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
-  end;
-
-constructor TPersonne.Create;
-begin
-  inherited;
-  FNom := '';
-  FAge := 0;
-  FTaille := 0;
-end;
-
-procedure TPersonne.SaveToStream(Stream: TStream);
-var
-  StrLen: Integer;
-  TempStr: UTF8String;
-begin
-  // Écrire le nom
-  TempStr := UTF8String(FNom);
-  StrLen := Length(TempStr);
-  Stream.WriteBuffer(StrLen, SizeOf(Integer));
-  if StrLen > 0 then
-    Stream.WriteBuffer(TempStr[1], StrLen);
-
-  // Écrire l'âge
-  Stream.WriteBuffer(FAge, SizeOf(Integer));
-
-  // Écrire la taille
-  Stream.WriteBuffer(FTaille, SizeOf(Double));
-end;
-
-procedure TPersonne.LoadFromStream(Stream: TStream);
-var
-  StrLen: Integer;
-  TempStr: UTF8String;
-begin
-  // Lire le nom
-  Stream.ReadBuffer(StrLen, SizeOf(Integer));
-  if StrLen > 0 then
-  begin
-    SetLength(TempStr, StrLen);
-    Stream.ReadBuffer(TempStr[1], StrLen);
-    FNom := string(TempStr);
-  end
-  else
-    FNom := '';
-
-  // Lire l'âge
-  Stream.ReadBuffer(FAge, SizeOf(Integer));
-
-  // Lire la taille
-  Stream.ReadBuffer(FTaille, SizeOf(Double));
-end;
-```
-
-Utilisation :
-
-```pascal
-procedure SauvegarderPersonne(const NomFichier: string);
-var
-  Stream: TFileStream;
-  Personne: TPersonne;
-begin
-  Personne := TPersonne.Create;
-  try
-    Personne.Nom := 'Dupont';
-    Personne.Age := 30;
-    Personne.Taille := 1.75;
-
-    Stream := TFileStream.Create(NomFichier, fmCreate);
-    try
-      Personne.SaveToStream(Stream);
-    finally
-      Stream.Free;
-    end;
-  finally
-    Personne.Free;
-  end;
-end;
-
-procedure ChargerPersonne(const NomFichier: string);
-var
-  Stream: TFileStream;
-  Personne: TPersonne;
-begin
-  Personne := TPersonne.Create;
-  try
-    Stream := TFileStream.Create(NomFichier, fmOpenRead);
-    try
-      Personne.LoadFromStream(Stream);
-
-      ShowMessage(Format('Nom: %s, Age: %d, Taille: %.2f m',
-                        [Personne.Nom, Personne.Age, Personne.Taille]));
-    finally
-      Stream.Free;
-    end;
-  finally
-    Personne.Free;
-  end;
-end;
-```
-
-#### 2. Utilisation de TReader/TWriter
-
-Delphi fournit les classes `TReader` et `TWriter` qui simplifient la sérialisation en gérant automatiquement certains types de données :
-
-```pascal
-type
-  TPersonne = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FTaille: Double;
-  public
-    procedure SaveToStream(Stream: TStream);
-    procedure LoadFromStream(Stream: TStream);
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
-  end;
-
-procedure TPersonne.SaveToStream(Stream: TStream);
-var
-  Writer: TWriter;
-begin
-  Writer := TWriter.Create(Stream, 4096);
-  try
-    // TWriter gère automatiquement les types standards
-    Writer.WriteString(FNom);
-    Writer.WriteInteger(FAge);
-    Writer.WriteFloat(FTaille);
-  finally
-    Writer.Free;
-  end;
-end;
-
-procedure TPersonne.LoadFromStream(Stream: TStream);
-var
-  Reader: TReader;
-begin
-  Reader := TReader.Create(Stream, 4096);
-  try
-    FNom := Reader.ReadString;
-    FAge := Reader.ReadInteger;
-    FTaille := Reader.ReadFloat;
-  finally
-    Reader.Free;
-  end;
-end;
-```
-
-Les classes `TReader` et `TWriter` offrent des méthodes spécifiques pour différents types de données :
-
-| Méthode d'écriture | Méthode de lecture | Type de données |
-|--------------------|-------------------|----------------|
-| `WriteBoolean` | `ReadBoolean` | `Boolean` |
-| `WriteInteger` | `ReadInteger` | `Integer` |
-| `WriteFloat` | `ReadFloat` | `Single`, `Double`, `Extended` |
-| `WriteString` | `ReadString` | `string` |
-| `WriteChar` | `ReadChar` | `Char` |
-| `WriteWideString` | `ReadWideString` | `WideString` |
-| `WriteDate` | `ReadDate` | `TDateTime` (date) |
-| `WriteBinary` | `ReadBinary` | Données binaires |
-
-#### 3. RTTI (Run-Time Type Information)
-
-La RTTI permet de sérialiser dynamiquement les objets en examinant leurs propriétés à l'exécution. Cette approche est particulièrement utile pour les objets complexes :
+### Exemple simple : Classe TPerson
 
 ```pascal
 uses
-  System.Rtti, System.TypInfo;
+  System.Classes, System.SysUtils;
 
 type
-  TPersonne = class
+  TPerson = class
   private
     FNom: string;
+    FPrenom: string;
     FAge: Integer;
-    FTaille: Double;
-  published  // Important: les propriétés doivent être "published"
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
-  end;
-
-procedure SauvegarderObjetAvecRTTI(Obj: TObject; Stream: TStream);
-var
-  Contexte: TRttiContext;
-  Type_: TRttiType;
-  Prop: TRttiProperty;
-  Value: TValue;
-  TypeInfo: string;
-  PropCount: Integer;
-  PropName: string;
-  PropTypeName: string;
-  StrLen: Integer;
-  S: string;
-  I: Integer;
-  F: Double;
-  B: Boolean;
-begin
-  Contexte := TRttiContext.Create;
-  try
-    // Écrire le nom du type
-    TypeInfo := Obj.ClassName;
-    StrLen := Length(TypeInfo);
-    Stream.WriteBuffer(StrLen, SizeOf(Integer));
-    if StrLen > 0 then
-      Stream.WriteBuffer(TypeInfo[1], StrLen * SizeOf(Char));
-
-    // Obtenir le type RTTI
-    Type_ := Contexte.GetType(Obj.ClassType);
-
-    // Écrire le nombre de propriétés publiées
-    PropCount := 0;
-    for Prop in Type_.GetProperties do
-      if Prop.Visibility = TMemberVisibility.mvPublished then
-        Inc(PropCount);
-
-    Stream.WriteBuffer(PropCount, SizeOf(Integer));
-
-    // Parcourir et sauvegarder chaque propriété publiée
-    for Prop in Type_.GetProperties do
-    begin
-      if Prop.Visibility = TMemberVisibility.mvPublished then
-      begin
-        // Écrire le nom de la propriété
-        PropName := Prop.Name;
-        StrLen := Length(PropName);
-        Stream.WriteBuffer(StrLen, SizeOf(Integer));
-        if StrLen > 0 then
-          Stream.WriteBuffer(PropName[1], StrLen * SizeOf(Char));
-
-        // Écrire le type de la propriété
-        PropTypeName := Prop.PropertyType.Name;
-        StrLen := Length(PropTypeName);
-        Stream.WriteBuffer(StrLen, SizeOf(Integer));
-        if StrLen > 0 then
-          Stream.WriteBuffer(PropTypeName[1], StrLen * SizeOf(Char));
-
-        // Obtenir la valeur de la propriété
-        Value := Prop.GetValue(Obj);
-
-        // Sauvegarder la valeur selon son type
-        if Prop.PropertyType.TypeKind = tkString then
-        begin
-          S := Value.AsString;
-          StrLen := Length(S);
-          Stream.WriteBuffer(StrLen, SizeOf(Integer));
-          if StrLen > 0 then
-            Stream.WriteBuffer(S[1], StrLen * SizeOf(Char));
-        end
-        else if Prop.PropertyType.TypeKind = tkInteger then
-        begin
-          I := Value.AsInteger;
-          Stream.WriteBuffer(I, SizeOf(Integer));
-        end
-        else if Prop.PropertyType.TypeKind = tkFloat then
-        begin
-          F := Value.AsExtended;
-          Stream.WriteBuffer(F, SizeOf(Double));
-        end
-        else if Prop.PropertyType.TypeKind = tkEnumeration then
-        begin
-          if Prop.PropertyType.Handle = TypeInfo(Boolean) then
-          begin
-            B := Value.AsBoolean;
-            Stream.WriteBuffer(B, SizeOf(Boolean));
-          end;
-        end;
-        // Ajouter d'autres types selon vos besoins...
-      end;
-    end;
-  finally
-    Contexte.Free;
-  end;
-end;
-
-function ChargerObjetAvecRTTI(Stream: TStream): TObject;
-var
-  Contexte: TRttiContext;
-  Type_: TRttiType;
-  Prop: TRttiProperty;
-  TypeInfo: string;
-  PropCount: Integer;
-  PropName: string;
-  PropTypeName: string;
-  StrLen: Integer;
-  S: string;
-  I: Integer;
-  F: Double;
-  B: Boolean;
-  i: Integer;
-  Value: TValue;
-begin
-  Result := nil;
-  Contexte := TRttiContext.Create;
-  try
-    // Lire le nom du type
-    Stream.ReadBuffer(StrLen, SizeOf(Integer));
-    SetLength(TypeInfo, StrLen);
-    if StrLen > 0 then
-      Stream.ReadBuffer(TypeInfo[1], StrLen * SizeOf(Char));
-
-    // Créer une instance du type
-    for Type_ in Contexte.GetTypes do
-    begin
-      if (Type_ is TRttiInstanceType) and (Type_.Name = TypeInfo) then
-      begin
-        Result := TRttiInstanceType(Type_).MetaclassType.Create;
-        Break;
-      end;
-    end;
-
-    if Result = nil then
-      Exit;
-
-    // Lire le nombre de propriétés
-    Stream.ReadBuffer(PropCount, SizeOf(Integer));
-
-    // Lire chaque propriété
-    for i := 0 to PropCount - 1 do
-    begin
-      // Lire le nom de la propriété
-      Stream.ReadBuffer(StrLen, SizeOf(Integer));
-      SetLength(PropName, StrLen);
-      if StrLen > 0 then
-        Stream.ReadBuffer(PropName[1], StrLen * SizeOf(Char));
-
-      // Lire le type de la propriété
-      Stream.ReadBuffer(StrLen, SizeOf(Integer));
-      SetLength(PropTypeName, StrLen);
-      if StrLen > 0 then
-        Stream.ReadBuffer(PropTypeName[1], StrLen * SizeOf(Char));
-
-      // Trouver la propriété correspondante
-      Type_ := Contexte.GetType(Result.ClassType);
-      Prop := Type_.GetProperty(PropName);
-
-      if Assigned(Prop) then
-      begin
-        // Lire la valeur selon son type
-        if Prop.PropertyType.TypeKind = tkString then
-        begin
-          Stream.ReadBuffer(StrLen, SizeOf(Integer));
-          SetLength(S, StrLen);
-          if StrLen > 0 then
-            Stream.ReadBuffer(S[1], StrLen * SizeOf(Char));
-          Prop.SetValue(Result, S);
-        end
-        else if Prop.PropertyType.TypeKind = tkInteger then
-        begin
-          Stream.ReadBuffer(I, SizeOf(Integer));
-          Prop.SetValue(Result, I);
-        end
-        else if Prop.PropertyType.TypeKind = tkFloat then
-        begin
-          Stream.ReadBuffer(F, SizeOf(Double));
-          Prop.SetValue(Result, F);
-        end
-        else if Prop.PropertyType.TypeKind = tkEnumeration then
-        begin
-          if Prop.PropertyType.Handle = TypeInfo(Boolean) then
-          begin
-            Stream.ReadBuffer(B, SizeOf(Boolean));
-            Prop.SetValue(Result, B);
-          end;
-        end;
-        // Ajouter d'autres types selon vos besoins...
-      end;
-    end;
-  finally
-    Contexte.Free;
-  end;
-end;
-```
-
-> **Note :** Cette implémentation RTTI est simplifiée pour l'exemple et ne gère pas tous les types possibles. Dans une application réelle, vous devriez utiliser une bibliothèque plus complète ou développer une solution plus robuste.
-
-#### 4. Sérialisation au format JSON
-
-JSON (JavaScript Object Notation) est un format texte léger, facile à lire et à écrire, qui est devenu un standard pour l'échange de données. Delphi offre d'excellentes fonctionnalités pour sérialiser des objets en JSON :
-
-```pascal
-uses
-  System.JSON, REST.Json;
-
-type
-  TPersonne = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FTaille: Double;
-  published
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
-  end;
-
-procedure SauvegarderPersonneEnJSON(const NomFichier: string);
-var
-  Personne: TPersonne;
-  JSONObj: TJSONObject;
-  JSONString: string;
-begin
-  Personne := TPersonne.Create;
-  try
-    Personne.Nom := 'Dupont';
-    Personne.Age := 30;
-    Personne.Taille := 1.75;
-
-    // Convertir l'objet en JSON
-    JSONString := TJson.ObjectToJsonString(Personne);
-
-    // Sauvegarder dans un fichier
-    TFile.WriteAllText(NomFichier, JSONString);
-  finally
-    Personne.Free;
-  end;
-end;
-
-procedure ChargerPersonneDepuisJSON(const NomFichier: string);
-var
-  Personne: TPersonne;
-  JSONString: string;
-begin
-  // Lire le contenu du fichier
-  JSONString := TFile.ReadAllText(NomFichier);
-
-  // Convertir le JSON en objet
-  Personne := TJson.JsonToObject<TPersonne>(JSONString);
-  try
-    ShowMessage(Format('Nom: %s, Age: %d, Taille: %.2f m',
-                      [Personne.Nom, Personne.Age, Personne.Taille]));
-  finally
-    Personne.Free;
-  end;
-end;
-```
-
-Les avantages de la sérialisation JSON :
-- Format lisible par les humains
-- Interopérabilité avec d'autres langages et plateformes
-- Facilité de débogage
-- Support natif dans les API web et REST
-
-> **Note :** L'utilisation de `TJson.ObjectToJsonString` et `TJson.JsonToObject<T>` nécessite Delphi XE7 ou supérieur.
-
-#### 5. Sérialisation au format XML
-
-XML est un autre format populaire pour la sérialisation. Delphi propose plusieurs approches pour travailler avec XML :
-
-```pascal
-uses
-  Xml.XMLDoc, Xml.XMLIntf;
-
-type
-  TPersonne = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FTaille: Double;
+    FEmail: string;
   public
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
+    constructor Create(const ANom, APrenom: string; AAge: Integer; const AEmail: string);
 
-    procedure SaveToXML(const NomFichier: string);
-    procedure LoadFromXML(const NomFichier: string);
-  end;
-
-procedure TPersonne.SaveToXML(const NomFichier: string);
-var
-  XMLDoc: IXMLDocument;
-  RootNode, PersonneNode: IXMLNode;
-begin
-  // Créer un nouveau document XML
-  XMLDoc := TXMLDocument.Create(nil);
-  XMLDoc.Active := True;
-
-  // Créer le nœud racine
-  RootNode := XMLDoc.AddChild('donnees');
-
-  // Ajouter un nœud pour la personne
-  PersonneNode := RootNode.AddChild('personne');
-  PersonneNode.ChildValues['nom'] := FNom;
-  PersonneNode.ChildValues['age'] := FAge;
-  PersonneNode.ChildValues['taille'] := FTaille;
-
-  // Sauvegarder le document XML
-  XMLDoc.SaveToFile(NomFichier);
-end;
-
-procedure TPersonne.LoadFromXML(const NomFichier: string);
-var
-  XMLDoc: IXMLDocument;
-  RootNode, PersonneNode: IXMLNode;
-begin
-  // Charger le document XML
-  XMLDoc := TXMLDocument.Create(nil);
-  XMLDoc.LoadFromFile(NomFichier);
-  XMLDoc.Active := True;
-
-  // Obtenir le nœud racine
-  RootNode := XMLDoc.DocumentElement;
-
-  // Lire les données de la personne
-  if Assigned(RootNode) and (RootNode.ChildNodes.Count > 0) then
-  begin
-    PersonneNode := RootNode.ChildNodes[0];
-
-    if PersonneNode.NodeName = 'personne' then
-    begin
-      FNom := PersonneNode.ChildValues['nom'];
-      FAge := PersonneNode.ChildValues['age'];
-      FTaille := PersonneNode.ChildValues['taille'];
-    end;
-  end;
-end;
-```
-
-### Persistance d'objets complexes
-
-Pour les objets complexes qui contiennent d'autres objets ou des collections, il faut adapter les méthodes de sérialisation :
-
-```pascal
-type
-  TAdresse = class
-  private
-    FRue: string;
-    FVille: string;
-    FCodePostal: string;
-  published
-    property Rue: string read FRue write FRue;
-    property Ville: string read FVille write FVille;
-    property CodePostal: string read FCodePostal write FCodePostal;
-  end;
-
-  TClient = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FAdresse: TAdresse;
-    FTelephones: TStringList;
-  public
-    constructor Create;
-    destructor Destroy; override;
     procedure SaveToStream(Stream: TStream);
     procedure LoadFromStream(Stream: TStream);
+
+    procedure SaveToFile(const FileName: string);
+    procedure LoadFromFile(const FileName: string);
+
     property Nom: string read FNom write FNom;
+    property Prenom: string read FPrenom write FPrenom;
     property Age: Integer read FAge write FAge;
-    property Adresse: TAdresse read FAdresse;
-    property Telephones: TStringList read FTelephones;
-  end;
-
-constructor TClient.Create;
-begin
-  inherited;
-  FAdresse := TAdresse.Create;
-  FTelephones := TStringList.Create;
-end;
-
-destructor TClient.Destroy;
-begin
-  FAdresse.Free;
-  FTelephones.Free;
-  inherited;
-end;
-
-procedure TClient.SaveToStream(Stream: TStream);
-var
-  Writer: TWriter;
-  Count: Integer;
-begin
-  Writer := TWriter.Create(Stream, 4096);
-  try
-    // Sauvegarder les propriétés simples
-    Writer.WriteString(FNom);
-    Writer.WriteInteger(FAge);
-
-    // Sauvegarder l'adresse
-    Writer.WriteString(FAdresse.Rue);
-    Writer.WriteString(FAdresse.Ville);
-    Writer.WriteString(FAdresse.CodePostal);
-
-    // Sauvegarder la liste de téléphones
-    Count := FTelephones.Count;
-    Writer.WriteInteger(Count);
-
-    for var i := 0 to Count - 1 do
-      Writer.WriteString(FTelephones[i]);
-  finally
-    Writer.Free;
-  end;
-end;
-
-procedure TClient.LoadFromStream(Stream: TStream);
-var
-  Reader: TReader;
-  Count: Integer;
-begin
-  Reader := TReader.Create(Stream, 4096);
-  try
-    // Charger les propriétés simples
-    FNom := Reader.ReadString;
-    FAge := Reader.ReadInteger;
-
-    // Charger l'adresse
-    FAdresse.Rue := Reader.ReadString;
-    FAdresse.Ville := Reader.ReadString;
-    FAdresse.CodePostal := Reader.ReadString;
-
-    // Charger la liste de téléphones
-    FTelephones.Clear;
-    Count := Reader.ReadInteger;
-
-    for var i := 0 to Count - 1 do
-      FTelephones.Add(Reader.ReadString);
-  finally
-    Reader.Free;
-  end;
-end;
-```
-
-### Versionnement de la sérialisation
-
-Pour maintenir la compatibilité avec les anciennes versions sérialisées, il est recommandé d'ajouter un numéro de version à vos données :
-
-```pascal
-type
-  TPersonne = class
-  private
-    FNom: string;
-    FAge: Integer;
-    FTaille: Double;
-    FEmail: string;  // Nouvelle propriété ajoutée dans la version 2
-  public
-    procedure SaveToStream(Stream: TStream);
-    procedure LoadFromStream(Stream: TStream);
-    property Nom: string read FNom write FNom;
-    property Age: Integer read FAge write FAge;
-    property Taille: Double read FTaille write FTaille;
     property Email: string read FEmail write FEmail;
   end;
 
-procedure TPersonne.SaveToStream(Stream: TStream);
-var
-  Writer: TWriter;
-  Version: Integer;
+constructor TPerson.Create(const ANom, APrenom: string; AAge: Integer; const AEmail: string);
 begin
-  Writer := TWriter.Create(Stream, 4096);
-  try
-    // Écrire le numéro de version actuel
-    Version := 2;  // Version 2 inclut l'email
-    Writer.WriteInteger(Version);
-
-    // Écrire les données de base (version 1)
-    Writer.WriteString(FNom);
-    Writer.WriteInteger(FAge);
-    Writer.WriteFloat(FTaille);
-
-    // Écrire les données ajoutées en version 2
-    Writer.WriteString(FEmail);
-  finally
-    Writer.Free;
-  end;
+  inherited Create;
+  FNom := ANom;
+  FPrenom := APrenom;
+  FAge := AAge;
+  FEmail := AEmail;
 end;
 
-procedure TPersonne.LoadFromStream(Stream: TStream);
-var
-  Reader: TReader;
-  Version: Integer;
-begin
-  Reader := TReader.Create(Stream, 4096);
-  try
-    // Lire le numéro de version
-    Version := Reader.ReadInteger;
-
-    // Lire les données de base (version 1)
-    FNom := Reader.ReadString;
-    FAge := Reader.ReadInteger;
-    FTaille := Reader.ReadFloat;
-
-    // Lire les données supplémentaires selon la version
-    if Version >= 2 then
-      FEmail := Reader.ReadString
-    else
-      FEmail := '';  // Valeur par défaut si version ancienne
-  finally
-    Reader.Free;
+procedure TPerson.SaveToStream(Stream: TStream);
+  // Fonction helper pour écrire une chaîne
+  procedure WriteString(const S: string);
+  var
+    Bytes: TBytes;
+    Len: Integer;
+  begin
+    Bytes := TEncoding.UTF8.GetBytes(S);
+    Len := Length(Bytes);
+    Stream.WriteBuffer(Len, SizeOf(Integer));
+    if Len > 0 then
+      Stream.WriteBuffer(Bytes[0], Len);
   end;
-end;
-```
-
-### Persistance avec les bases de données
-
-Pour stocker des objets dans une base de données, vous pouvez les sérialiser dans un champ BLOB :
-
-```pascal
-procedure SauvegarderPersonneDansDB(Personne: TPersonne; Query: TFDQuery);
-var
-  MemStream: TMemoryStream;
 begin
-  MemStream := TMemoryStream.Create;
-  try
-    // Sérialiser l'objet
-    Personne.SaveToStream(MemStream);
+  // Écrire un en-tête de version
+  Stream.WriteBuffer(Integer(1), SizeOf(Integer)); // Version 1
 
-    // Revenir au début du flux
-    MemStream.Position := 0;
-
-    // Préparer la requête
-    Query.SQL.Text := 'INSERT INTO Personnes (ID, Donnees) VALUES (:ID, :Donnees)';
-    Query.ParamByName('ID').AsInteger := 1;  // ID exemple
-
-    // Assigner le flux au paramètre BLOB
-    Query.ParamByName('Donnees').LoadFromStream(MemStream, ftBlob);
-
-    // Exécuter la requête
-    Query.ExecSQL;
-  finally
-    MemStream.Free;
-  end;
+  // Écrire les champs
+  WriteString(FNom);
+  WriteString(FPrenom);
+  Stream.WriteBuffer(FAge, SizeOf(Integer));
+  WriteString(FEmail);
 end;
 
-function ChargerPersonneDepuisDB(ID: Integer; Query: TFDQuery): TPersonne;
-var
-  MemStream: TMemoryStream;
-begin
-  Result := TPersonne.Create;
-
-  MemStream := TMemoryStream.Create;
-  try
-    // Préparer la requête
-    Query.SQL.Text := 'SELECT Donnees FROM Personnes WHERE ID = :ID';
-    Query.ParamByName('ID').AsInteger := ID;
-    Query.Open;
-
-    if not Query.IsEmpty then
+procedure TPerson.LoadFromStream(Stream: TStream);
+  // Fonction helper pour lire une chaîne
+  function ReadString: string;
+  var
+    Bytes: TBytes;
+    Len: Integer;
+  begin
+    Stream.ReadBuffer(Len, SizeOf(Integer));
+    if Len > 0 then
     begin
-      // Charger le BLOB dans le flux
-      TBlobField(Query.FieldByName('Donnees')).SaveToStream(MemStream);
+      SetLength(Bytes, Len);
+      Stream.ReadBuffer(Bytes[0], Len);
+      Result := TEncoding.UTF8.GetString(Bytes);
+    end
+    else
+      Result := '';
+  end;
+var
+  Version: Integer;
+begin
+  // Lire l'en-tête de version
+  Stream.ReadBuffer(Version, SizeOf(Integer));
 
-      // Revenir au début du flux
-      MemStream.Position := 0;
+  if Version <> 1 then
+    raise Exception.Create('Version de fichier non supportée');
 
-      // Désérialiser l'objet
-      Result.LoadFromStream(MemStream);
-    end;
+  // Lire les champs
+  FNom := ReadString;
+  FPrenom := ReadString;
+  Stream.ReadBuffer(FAge, SizeOf(Integer));
+  FEmail := ReadString;
+end;
 
-    Query.Close;
+procedure TPerson.SaveToFile(const FileName: string);
+var
+  FileStream: TFileStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmCreate);
+  try
+    SaveToStream(FileStream);
   finally
-    MemStream.Free;
+    FileStream.Free;
+  end;
+end;
+
+procedure TPerson.LoadFromFile(const FileName: string);
+var
+  FileStream: TFileStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  try
+    LoadFromStream(FileStream);
+  finally
+    FileStream.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Person: TPerson;
+begin
+  // Créer et sauvegarder
+  Person := TPerson.Create('Dupont', 'Jean', 30, 'jean@email.com');
+  try
+    Person.SaveToFile('personne.dat');
+    ShowMessage('Personne sauvegardée');
+  finally
+    Person.Free;
+  end;
+
+  // Charger
+  Person := TPerson.Create('', '', 0, '');
+  try
+    Person.LoadFromFile('personne.dat');
+    ShowMessage(Format('%s %s, %d ans, %s',
+      [Person.Prenom, Person.Nom, Person.Age, Person.Email]));
+  finally
+    Person.Free;
   end;
 end;
 ```
 
-### Bibliothèques de sérialisation tierces
+### Avantages et inconvénients
 
-Plusieurs bibliothèques tierces offrent des fonctionnalités avancées de sérialisation :
+**Avantages :**
+- Contrôle total sur le format
+- Très compact (format binaire)
+- Rapide
+- Indépendant des frameworks externes
 
-- **SuperObject** : Manipulation JSON rapide et flexible
-- **mORMot** : Framework ORM avec sérialisation performante
-- **Spring4D** : Framework avec des fonctionnalités de sérialisation avancées
-- **DWScript** : Supporte la sérialisation JSON efficace
+**Inconvénients :**
+- Beaucoup de code à écrire
+- Difficile à maintenir si la classe évolue
+- Format binaire non lisible
+- Gestion manuelle des versions
 
-### Bonnes pratiques de sérialisation
+---
 
-1. **Versionnez vos formats** : Incluez toujours un numéro de version dans vos données sérialisées pour la compatibilité future.
+## Méthode 2 : Sérialisation JSON
 
-2. **Validez les données** : Vérifiez l'intégrité des données lors de la désérialisation (checksums, validations).
+JSON (JavaScript Object Notation) est un format texte léger, lisible et universellement supporté.
 
-3. **Gérez les erreurs** : Prévoyez des mécanismes de restauration en cas de corruption des données.
-
-4. **Documenter le format** : Si vous utilisez un format personnalisé, documentez-le pour faciliter la maintenance.
-
-5. **Sécurité** : Attention aux vulnérabilités potentielles lors de la désérialisation de données externes.
-
-6. **Performances** : Pour les grands ensembles de données, préférez les formats binaires aux formats texte.
-
-7. **Interopérabilité** : Utilisez JSON ou XML si vos données doivent être lues par d'autres systèmes.
-
-### Exemple complet : Éditeur de personnes
-
-Voici un exemple d'application qui permet de créer, modifier, sauvegarder et charger des personnes sérialisées :
+### Utilisation de System.JSON
 
 ```pascal
-unit MainForm;
-
-interface
-
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  System.JSON, System.Classes, System.SysUtils;
 
+type
+  TPerson = class
+  private
+    FNom: string;
+    FPrenom: string;
+    FAge: Integer;
+    FEmail: string;
+  public
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
+    function ToJSONString: string;
+    procedure FromJSONString(const JSONStr: string);
+
+    procedure SaveToFile(const FileName: string);
+    procedure LoadFromFile(const FileName: string);
+
+    property Nom: string read FNom write FNom;
+    property Prenom: string read FPrenom write FPrenom;
+    property Age: Integer read FAge write FAge;
+    property Email: string read FEmail write FEmail;
+  end;
+
+function TPerson.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('nom', FNom);
+  Result.AddPair('prenom', FPrenom);
+  Result.AddPair('age', TJSONNumber.Create(FAge));
+  Result.AddPair('email', FEmail);
+end;
+
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
+var
+  Pair: TJSONPair;
+begin
+  Pair := JSONObj.Get('nom');
+  if Assigned(Pair) then
+    FNom := Pair.JsonValue.Value;
+
+  Pair := JSONObj.Get('prenom');
+  if Assigned(Pair) then
+    FPrenom := Pair.JsonValue.Value;
+
+  Pair := JSONObj.Get('age');
+  if Assigned(Pair) then
+    FAge := StrToIntDef(Pair.JsonValue.Value, 0);
+
+  Pair := JSONObj.Get('email');
+  if Assigned(Pair) then
+    FEmail := Pair.JsonValue.Value;
+end;
+
+function TPerson.ToJSONString: string;
+var
+  JSONObj: TJSONObject;
+begin
+  JSONObj := ToJSON;
+  try
+    Result := JSONObj.ToString;
+  finally
+    JSONObj.Free;
+  end;
+end;
+
+procedure TPerson.FromJSONString(const JSONStr: string);
+var
+  JSONObj: TJSONObject;
+begin
+  JSONObj := TJSONObject.ParseJSONValue(JSONStr) as TJSONObject;
+  if Assigned(JSONObj) then
+  try
+    FromJSON(JSONObj);
+  finally
+    JSONObj.Free;
+  end;
+end;
+
+procedure TPerson.SaveToFile(const FileName: string);
+var
+  JSONStr: string;
+begin
+  JSONStr := ToJSONString;
+  TFile.WriteAllText(FileName, JSONStr, TEncoding.UTF8);
+end;
+
+procedure TPerson.LoadFromFile(const FileName: string);
+var
+  JSONStr: string;
+begin
+  JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
+  FromJSONString(JSONStr);
+end;
+
+// Utilisation
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  Person: TPerson;
+  JSONStr: string;
+begin
+  Person := TPerson.Create;
+  try
+    // Créer et sauvegarder
+    Person.Nom := 'Martin';
+    Person.Prenom := 'Marie';
+    Person.Age := 28;
+    Person.Email := 'marie@email.com';
+
+    Person.SaveToFile('personne.json');
+
+    // Afficher le JSON
+    JSONStr := Person.ToJSONString;
+    Memo1.Lines.Text := JSONStr;
+
+    // Réinitialiser et charger
+    Person.Nom := '';
+    Person.Age := 0;
+
+    Person.LoadFromFile('personne.json');
+    ShowMessage(Format('%s %s, %d ans',
+      [Person.Prenom, Person.Nom, Person.Age]));
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+Le fichier JSON résultant sera lisible :
+```json
+{
+  "nom": "Martin",
+  "prenom": "Marie",
+  "age": 28,
+  "email": "marie@email.com"
+}
+```
+
+---
+
+## Méthode 3 : Sérialisation XML
+
+XML est un autre format texte structuré, particulièrement adapté aux documents complexes.
+
+### Utilisation de Xml.XMLIntf et Xml.XMLDoc
+
+```pascal
+uses
+  System.SysUtils, System.Classes,
+  Xml.XMLIntf, Xml.XMLDoc;
+
+type
+  TPerson = class
+  private
+    FNom: string;
+    FPrenom: string;
+    FAge: Integer;
+    FEmail: string;
+  public
+    function ToXML: IXMLDocument;
+    procedure FromXML(XMLDoc: IXMLDocument);
+
+    procedure SaveToFile(const FileName: string);
+    procedure LoadFromFile(const FileName: string);
+
+    property Nom: string read FNom write FNom;
+    property Prenom: string read FPrenom write FPrenom;
+    property Age: Integer read FAge write FAge;
+    property Email: string read FEmail write FEmail;
+  end;
+
+function TPerson.ToXML: IXMLDocument;
+var
+  RootNode, PersonNode: IXMLNode;
+begin
+  Result := TXMLDocument.Create(nil);
+  Result.Active := True;
+  Result.Version := '1.0';
+  Result.Encoding := 'UTF-8';
+
+  RootNode := Result.AddChild('person');
+  RootNode.AddChild('nom').Text := FNom;
+  RootNode.AddChild('prenom').Text := FPrenom;
+  RootNode.AddChild('age').Text := IntToStr(FAge);
+  RootNode.AddChild('email').Text := FEmail;
+end;
+
+procedure TPerson.FromXML(XMLDoc: IXMLDocument);
+var
+  RootNode: IXMLNode;
+begin
+  RootNode := XMLDoc.DocumentElement;
+
+  if RootNode.NodeName = 'person' then
+  begin
+    FNom := RootNode.ChildValues['nom'];
+    FPrenom := RootNode.ChildValues['prenom'];
+    FAge := StrToIntDef(RootNode.ChildValues['age'], 0);
+    FEmail := RootNode.ChildValues['email'];
+  end;
+end;
+
+procedure TPerson.SaveToFile(const FileName: string);
+var
+  XMLDoc: IXMLDocument;
+begin
+  XMLDoc := ToXML;
+  XMLDoc.SaveToFile(FileName);
+end;
+
+procedure TPerson.LoadFromFile(const FileName: string);
+var
+  XMLDoc: IXMLDocument;
+begin
+  XMLDoc := TXMLDocument.Create(nil);
+  XMLDoc.LoadFromFile(FileName);
+  XMLDoc.Active := True;
+  FromXML(XMLDoc);
+end;
+
+// Utilisation
+procedure TForm1.Button3Click(Sender: TObject);
+var
+  Person: TPerson;
+begin
+  Person := TPerson.Create;
+  try
+    Person.Nom := 'Dubois';
+    Person.Prenom := 'Pierre';
+    Person.Age := 35;
+    Person.Email := 'pierre@email.com';
+
+    Person.SaveToFile('personne.xml');
+    ShowMessage('Sauvegardé en XML');
+
+    // Réinitialiser et charger
+    Person.Nom := '';
+    Person.LoadFromFile('personne.xml');
+    ShowMessage('Chargé : ' + Person.Nom);
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+Le fichier XML résultant :
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<person>
+  <nom>Dubois</nom>
+  <prenom>Pierre</prenom>
+  <age>35</age>
+  <email>pierre@email.com</email>
+</person>
+```
+
+---
+
+## Sérialisation d'objets complexes
+
+### Objets imbriqués
+
+```pascal
 type
   TAdresse = class
   private
     FRue: string;
     FVille: string;
     FCodePostal: string;
-  published
+  public
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
     property Rue: string read FRue write FRue;
     property Ville: string read FVille write FVille;
     property CodePostal: string read FCodePostal write FCodePostal;
   end;
 
-  TPersonne = class
+  TPerson = class
   private
     FNom: string;
     FPrenom: string;
@@ -850,693 +491,1194 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure SaveToFile(const FileName: string);
-    procedure LoadFromFile(const FileName: string);
-  published
+
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
     property Nom: string read FNom write FNom;
     property Prenom: string read FPrenom write FPrenom;
     property Age: Integer read FAge write FAge;
     property Adresse: TAdresse read FAdresse;
   end;
 
-  TfrmMain = class(TForm)
-    pnlTop: TPanel;
-    btnNouveau: TButton;
-    btnOuvrir: TButton;
-    btnSauvegarder: TButton;
-    btnSauvegarderJSON: TButton;
-    pnlMain: TPanel;
-    lblNom: TLabel;
-    edtNom: TEdit;
-    lblPrenom: TLabel;
-    edtPrenom: TEdit;
-    lblAge: TLabel;
-    edtAge: TEdit;
-    grpAdresse: TGroupBox;
-    lblRue: TLabel;
-    edtRue: TEdit;
-    lblVille: TLabel;
-    edtVille: TEdit;
-    lblCodePostal: TLabel;
-    edtCodePostal: TEdit;
-    OpenDialog1: TOpenDialog;
-    SaveDialog1: TSaveDialog;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnNouveauClick(Sender: TObject);
-    procedure btnOuvrirClick(Sender: TObject);
-    procedure btnSauvegarderClick(Sender: TObject);
-    procedure btnSauvegarderJSONClick(Sender: TObject);
-  private
-    FPersonne: TPersonne;
-    procedure UpdateUI;
-    procedure ObjectToUI;
-    procedure UIToObject;
-  public
-    { Déclarations publiques }
-  end;
-
-var
-  frmMain: TfrmMain;
-
-implementation
-
-{$R *.dfm}
-
-uses
-  System.JSON, REST.Json, System.IOUtils;
-
-constructor TPersonne.Create;
+constructor TPerson.Create;
 begin
   inherited;
   FAdresse := TAdresse.Create;
 end;
 
-destructor TPersonne.Destroy;
+destructor TPerson.Destroy;
 begin
   FAdresse.Free;
   inherited;
 end;
 
-procedure TPersonne.SaveToFile(const FileName: string);
+function TAdresse.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('rue', FRue);
+  Result.AddPair('ville', FVille);
+  Result.AddPair('codePostal', FCodePostal);
+end;
+
+procedure TAdresse.FromJSON(JSONObj: TJSONObject);
+begin
+  FRue := JSONObj.GetValue<string>('rue');
+  FVille := JSONObj.GetValue<string>('ville');
+  FCodePostal := JSONObj.GetValue<string>('codePostal');
+end;
+
+function TPerson.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('nom', FNom);
+  Result.AddPair('prenom', FPrenom);
+  Result.AddPair('age', TJSONNumber.Create(FAge));
+  Result.AddPair('adresse', FAdresse.ToJSON);
+end;
+
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
 var
-  Stream: TFileStream;
-  Writer: TWriter;
-  Version: Integer;
+  AdresseObj: TJSONObject;
 begin
-  Stream := TFileStream.Create(FileName, fmCreate);
-  try
-    Writer := TWriter.Create(Stream, 4096);
-    try
-      // Écrire la version du format
-      Version := 1;
-      Writer.WriteInteger(Version);
+  FNom := JSONObj.GetValue<string>('nom');
+  FPrenom := JSONObj.GetValue<string>('prenom');
+  FAge := JSONObj.GetValue<Integer>('age');
 
-      // Écrire les données de la personne
-      Writer.WriteString(FNom);
-      Writer.WriteString(FPrenom);
-      Writer.WriteInteger(FAge);
-
-      // Écrire les données de l'adresse
-      Writer.WriteString(FAdresse.Rue);
-      Writer.WriteString(FAdresse.Ville);
-      Writer.WriteString(FAdresse.CodePostal);
-    finally
-      Writer.Free;
-    end;
-  finally
-    Stream.Free;
-  end;
+  AdresseObj := JSONObj.GetValue<TJSONObject>('adresse');
+  if Assigned(AdresseObj) then
+    FAdresse.FromJSON(AdresseObj);
 end;
 
-procedure TPersonne.LoadFromFile(const FileName: string);
+// Utilisation
 var
-  Stream: TFileStream;
-  Reader: TReader;
-  Version: Integer;
+  Person: TPerson;
+  JSONStr: string;
 begin
-  Stream := TFileStream.Create(FileName, fmOpenRead);
+  Person := TPerson.Create;
   try
-    Reader := TReader.Create(Stream, 4096);
-    try
-      // Lire la version du format
-      Version := Reader.ReadInteger;
+    Person.Nom := 'Lambert';
+    Person.Prenom := 'Sophie';
+    Person.Age := 32;
+    Person.Adresse.Rue := '123 Rue de la Paix';
+    Person.Adresse.Ville := 'Paris';
+    Person.Adresse.CodePostal := '75001';
 
-      // Lire les données selon la version
-      if Version >= 1 then
-      begin
-        FNom := Reader.ReadString;
-        FPrenom := Reader.ReadString;
-        FAge := Reader.ReadInteger;
-
-        FAdresse.Rue := Reader.ReadString;
-        FAdresse.Ville := Reader.ReadString;
-        FAdresse.CodePostal := Reader.ReadString;
-      end;
-    finally
-      Reader.Free;
-    end;
+    JSONStr := Person.ToJSON.ToString;
+    Memo1.Text := JSONStr;
   finally
-    Stream.Free;
+    Person.Free;
   end;
 end;
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-begin
-  FPersonne := TPersonne.Create;
-  UpdateUI;
-end;
-
-procedure TfrmMain.FormDestroy(Sender: TObject);
-begin
-  FPersonne.Free;
-end;
-
-procedure TfrmMain.UpdateUI;
-begin
-  ObjectToUI;
-end;
-
-procedure TfrmMain.ObjectToUI;
-begin
-  edtNom.Text := FPersonne.Nom;
-  edtPrenom.Text := FPersonne.Prenom;
-  edtAge.Text := IntToStr(FPersonne.Age);
-
-  edtRue.Text := FPersonne.Adresse.Rue;
-  edtVille.Text := FPersonne.Adresse.Ville;
-  edtCodePostal.Text := FPersonne.Adresse.CodePostal;
-end;
-
-procedure TfrmMain.UIToObject;
-begin
-  FPersonne.Nom := edtNom.Text;
-  FPersonne.Prenom := edtPrenom.Text;
-
-  // Convertir en entier avec gestion d'erreur
-  try
-    FPersonne.Age := StrToInt(edtAge.Text);
-  except
-    FPersonne.Age := 0;
-  end;
-
-  FPersonne.Adresse.Rue := edtRue.Text;
-  FPersonne.Adresse.Ville := edtVille.Text;
-  FPersonne.Adresse.CodePostal := edtCodePostal.Text;
-end;
-
-procedure TfrmMain.btnNouveauClick(Sender: TObject);
-begin
-  // Créer une nouvelle personne
-  FPersonne.Free;
-  FPersonne := TPersonne.Create;
-  UpdateUI;
-end;
-
-procedure TfrmMain.btnOuvrirClick(Sender: TObject);
-begin
-  OpenDialog1.Filter := 'Fichiers personne (*.per)|*.per|Fichiers JSON (*.json)|*.json|Tous les fichiers (*.*)|*.*';
-
-  if OpenDialog1.Execute then
-  begin
-    if AnsiLowerCase(ExtractFileExt(OpenDialog1.FileName)) = '.json' then
-    begin
-      // Charger depuis JSON
-      var JSONString := TFile.ReadAllText(OpenDialog1.FileName);
-      var NouvellePersonne := TJson.JsonToObject<TPersonne>(JSONString);
-
-      // Remplacer la personne actuelle
-      FPersonne.Free;
-      FPersonne := NouvellePersonne;
-    end
-    else
-    begin
-      // Charger depuis le format binaire
-      FPersonne.LoadFromFile(OpenDialog1.FileName);
-    end;
-
-    UpdateUI;
-  end;
-end;
-
-procedure TfrmMain.btnSauvegarderClick(Sender: TObject);
-begin
-  SaveDialog1.Filter := 'Fichiers personne (*.per)|*.per|Tous les fichiers (*.*)|*.*';
-  SaveDialog1.DefaultExt := 'per';
-
-  if SaveDialog1.Execute then
-  begin
-    // Mettre à jour l'objet avec les données de l'interface
-    UIToObject;
-
-    // Sauvegarder dans le format binaire
-    FPersonne.SaveToFile(SaveDialog1.FileName);
-  end;
-end;
-
-procedure TfrmMain.btnSauvegarderJSONClick(Sender: TObject);
-begin
-  SaveDialog1.Filter := 'Fichiers JSON (*.json)|*.json|Tous les fichiers (*.*)|*.*';
-  SaveDialog1.DefaultExt := 'json';
-
-  if SaveDialog1.Execute then
-  begin
-    // Mettre à jour l'objet avec les données de l'interface
-    UIToObject;
-
-    // Convertir en JSON
-    var JSONString := TJson.ObjectToJsonString(FPersonne);
-
-    // Sauvegarder dans un fichier
-    TFile.WriteAllText(SaveDialog1.FileName, JSONString);
-  end;
-end;
-
-end.
 ```
 
-Pour compléter cet exemple, voici le fichier DFM de l'interface graphique :
-
-```pascal
-object frmMain: TfrmMain
-  Left = 0
-  Top = 0
-  Caption = 'Éditeur de Personnes'
-  ClientHeight = 382
-  ClientWidth = 538
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
-  TextHeight = 13
-  object pnlTop: TPanel
-    Left = 0
-    Top = 0
-    Width = 538
-    Height = 41
-    Align = alTop
-    TabOrder = 0
-    ExplicitWidth = 528
-    object btnNouveau: TButton
-      Left = 16
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Nouveau'
-      TabOrder = 0
-      OnClick = btnNouveauClick
-    end
-    object btnOuvrir: TButton
-      Left = 97
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Ouvrir...'
-      TabOrder = 1
-      OnClick = btnOuvrirClick
-    end
-    object btnSauvegarder: TButton
-      Left = 178
-      Top = 8
-      Width = 97
-      Height = 25
-      Caption = 'Sauvegarder...'
-      TabOrder = 2
-      OnClick = btnSauvegarderClick
-    end
-    object btnSauvegarderJSON: TButton
-      Left = 281
-      Top = 8
-      Width = 121
-      Height = 25
-      Caption = 'Sauvegarder en JSON...'
-      TabOrder = 3
-      OnClick = btnSauvegarderJSONClick
-    end
-  end
-  object pnlMain: TPanel
-    Left = 0
-    Top = 41
-    Width = 538
-    Height = 341
-    Align = alClient
-    TabOrder = 1
-    ExplicitWidth = 528
-    ExplicitHeight = 331
-    object lblNom: TLabel
-      Left = 16
-      Top = 16
-      Width = 27
-      Height = 13
-      Caption = 'Nom :'
-    end
-    object lblPrenom: TLabel
-      Left = 16
-      Top = 48
-      Width = 44
-      Height = 13
-      Caption = 'Prénom :'
-    end
-    object lblAge: TLabel
-      Left = 16
-      Top = 80
-      Width = 25
-      Height = 13
-      Caption = 'Age :'
-    end
-    object edtNom: TEdit
-      Left = 72
-      Top = 16
-      Width = 217
-      Height = 21
-      TabOrder = 0
-    end
-    object edtPrenom: TEdit
-      Left = 72
-      Top = 48
-      Width = 217
-      Height = 21
-      TabOrder = 1
-    end
-    object edtAge: TEdit
-      Left = 72
-      Top = 80
-      Width = 65
-      Height = 21
-      TabOrder = 2
-    end
-    object grpAdresse: TGroupBox
-      Left = 16
-      Top = 120
-      Width = 489
-      Height = 137
-      Caption = 'Adresse'
-      TabOrder = 3
-      object lblRue: TLabel
-        Left = 16
-        Top = 24
-        Width = 27
-        Height = 13
-        Caption = 'Rue :'
-      end
-      object lblVille: TLabel
-        Left = 16
-        Top = 56
-        Width = 25
-        Height = 13
-        Caption = 'Ville :'
-      end
-      object lblCodePostal: TLabel
-        Left = 16
-        Top = 88
-        Width = 63
-        Height = 13
-        Caption = 'Code Postal :'
-      end
-      object edtRue: TEdit
-        Left = 96
-        Top = 24
-        Width = 369
-        Height = 21
-        TabOrder = 0
-      end
-      object edtVille: TEdit
-        Left = 96
-        Top = 56
-        Width = 217
-        Height = 21
-        TabOrder = 1
-      end
-      object edtCodePostal: TEdit
-        Left = 96
-        Top = 88
-        Width = 89
-        Height = 21
-        TabOrder = 2
-      end
-    end
-  end
-  object OpenDialog1: TOpenDialog
-    Left = 320
-    Top = 200
-  end
-  object SaveDialog1: TSaveDialog
-    Left = 392
-    Top = 200
-  end
-end
+JSON résultant :
+```json
+{
+  "nom": "Lambert",
+  "prenom": "Sophie",
+  "age": 32,
+  "adresse": {
+    "rue": "123 Rue de la Paix",
+    "ville": "Paris",
+    "codePostal": "75001"
+  }
+}
 ```
 
-### Persistance d'un arbre d'objets
-
-Lorsque vous avez des structures complexes comme des arbres d'objets, la sérialisation devient plus délicate. Voici un exemple de sérialisation d'un arbre de catégories :
+### Listes d'objets
 
 ```pascal
 type
-  TCategorie = class
+  TPersonList = class
   private
-    FNom: string;
-    FDescription: string;
-    FSousCategories: TObjectList<TCategorie>;
+    FPersons: TObjectList<TPerson>;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure SaveToStream(Stream: TStream);
-    procedure LoadFromStream(Stream: TStream);
-    function AddSousCategorie(const Nom: string): TCategorie;
-    property Nom: string read FNom write FNom;
-    property Description: string read FDescription write FDescription;
-    property SousCategories: TObjectList<TCategorie> read FSousCategories;
-  end;
 
-constructor TCategorie.Create;
-begin
-  inherited;
-  FSousCategories := TObjectList<TCategorie>.Create(True); // True = Owns objects
-end;
+    procedure Add(Person: TPerson);
+    function Count: Integer;
+    function GetPerson(Index: Integer): TPerson;
 
-destructor TCategorie.Destroy;
-begin
-  FSousCategories.Free;
-  inherited;
-end;
+    function ToJSON: TJSONArray;
+    procedure FromJSON(JSONArray: TJSONArray);
 
-function TCategorie.AddSousCategorie(const Nom: string): TCategorie;
-begin
-  Result := TCategorie.Create;
-  Result.Nom := Nom;
-  FSousCategories.Add(Result);
-end;
-
-procedure TCategorie.SaveToStream(Stream: TStream);
-var
-  Writer: TWriter;
-  Count: Integer;
-  i: Integer;
-begin
-  Writer := TWriter.Create(Stream, 4096);
-  try
-    // Écrire les données de cette catégorie
-    Writer.WriteString(FNom);
-    Writer.WriteString(FDescription);
-
-    // Écrire le nombre de sous-catégories
-    Count := FSousCategories.Count;
-    Writer.WriteInteger(Count);
-
-    // Écrire récursivement chaque sous-catégorie
-    for i := 0 to Count - 1 do
-      FSousCategories[i].SaveToStream(Stream);
-  finally
-    Writer.Free;
-  end;
-end;
-
-procedure TCategorie.LoadFromStream(Stream: TStream);
-var
-  Reader: TReader;
-  Count, i: Integer;
-  SousCategorie: TCategorie;
-begin
-  Reader := TReader.Create(Stream, 4096);
-  try
-    // Lire les données de cette catégorie
-    FNom := Reader.ReadString;
-    FDescription := Reader.ReadString;
-
-    // Lire le nombre de sous-catégories
-    Count := Reader.ReadInteger;
-
-    // Vider la liste actuelle
-    FSousCategories.Clear;
-
-    // Lire récursivement chaque sous-catégorie
-    for i := 0 to Count - 1 do
-    begin
-      SousCategorie := TCategorie.Create;
-      FSousCategories.Add(SousCategorie);
-      SousCategorie.LoadFromStream(Stream);
-    end;
-  finally
-    Reader.Free;
-  end;
-end;
-```
-
-### Persistance de collections
-
-Pour les collections, vous pouvez utiliser les mécanismes standards de Delphi ou implémenter votre propre logique :
-
-```pascal
-type
-  TProduit = class
-  private
-    FCode: string;
-    FNom: string;
-    FPrix: Double;
-  published
-    property Code: string read FCode write FCode;
-    property Nom: string read FNom write FNom;
-    property Prix: Double read FPrix write FPrix;
-  end;
-
-  TProduits = class(TObjectList<TProduit>)
-  public
     procedure SaveToFile(const FileName: string);
     procedure LoadFromFile(const FileName: string);
-    procedure SaveToJSON(const FileName: string);
-    procedure LoadFromJSON(const FileName: string);
   end;
 
-procedure TProduits.SaveToFile(const FileName: string);
-var
-  Stream: TFileStream;
-  Writer: TWriter;
-  Count, i: Integer;
+constructor TPersonList.Create;
 begin
-  Stream := TFileStream.Create(FileName, fmCreate);
-  try
-    Writer := TWriter.Create(Stream, 4096);
-    try
-      // Écrire le nombre de produits
-      Count := Self.Count;
-      Writer.WriteInteger(Count);
+  inherited;
+  FPersons := TObjectList<TPerson>.Create(True); // True = possède les objets
+end;
 
-      // Écrire chaque produit
-      for i := 0 to Count - 1 do
-      begin
-        Writer.WriteString(Self[i].Code);
-        Writer.WriteString(Self[i].Nom);
-        Writer.WriteFloat(Self[i].Prix);
-      end;
-    finally
-      Writer.Free;
-    end;
-  finally
-    Stream.Free;
+destructor TPersonList.Destroy;
+begin
+  FPersons.Free;
+  inherited;
+end;
+
+procedure TPersonList.Add(Person: TPerson);
+begin
+  FPersons.Add(Person);
+end;
+
+function TPersonList.Count: Integer;
+begin
+  Result := FPersons.Count;
+end;
+
+function TPersonList.GetPerson(Index: Integer): TPerson;
+begin
+  Result := FPersons[Index];
+end;
+
+function TPersonList.ToJSON: TJSONArray;
+var
+  Person: TPerson;
+begin
+  Result := TJSONArray.Create;
+  for Person in FPersons do
+    Result.AddElement(Person.ToJSON);
+end;
+
+procedure TPersonList.FromJSON(JSONArray: TJSONArray);
+var
+  i: Integer;
+  JSONObj: TJSONObject;
+  Person: TPerson;
+begin
+  FPersons.Clear;
+
+  for i := 0 to JSONArray.Count - 1 do
+  begin
+    JSONObj := JSONArray.Items[i] as TJSONObject;
+    Person := TPerson.Create;
+    Person.FromJSON(JSONObj);
+    FPersons.Add(Person);
   end;
 end;
 
-procedure TProduits.LoadFromFile(const FileName: string);
-var
-  Stream: TFileStream;
-  Reader: TReader;
-  Count, i: Integer;
-  Produit: TProduit;
-begin
-  Stream := TFileStream.Create(FileName, fmOpenRead);
-  try
-    Reader := TReader.Create(Stream, 4096);
-    try
-      // Lire le nombre de produits
-      Count := Reader.ReadInteger;
-
-      // Vider la liste actuelle
-      Self.Clear;
-
-      // Lire chaque produit
-      for i := 0 to Count - 1 do
-      begin
-        Produit := TProduit.Create;
-        Produit.Code := Reader.ReadString;
-        Produit.Nom := Reader.ReadString;
-        Produit.Prix := Reader.ReadFloat;
-        Self.Add(Produit);
-      end;
-    finally
-      Reader.Free;
-    end;
-  finally
-    Stream.Free;
-  end;
-end;
-
-procedure TProduits.SaveToJSON(const FileName: string);
+procedure TPersonList.SaveToFile(const FileName: string);
 var
   JSONArray: TJSONArray;
-  JSONObj: TJSONObject;
-  i: Integer;
+  JSONStr: string;
 begin
-  JSONArray := TJSONArray.Create;
+  JSONArray := ToJSON;
   try
-    // Créer un objet JSON pour chaque produit
-    for i := 0 to Self.Count - 1 do
-    begin
-      JSONObj := TJSONObject.Create;
-      JSONObj.AddPair('code', Self[i].Code);
-      JSONObj.AddPair('nom', Self[i].Nom);
-      JSONObj.AddPair('prix', TJSONNumber.Create(Self[i].Prix));
-      JSONArray.AddElement(JSONObj);
-    end;
-
-    // Sauvegarder le tableau JSON dans un fichier
-    TFile.WriteAllText(FileName, JSONArray.ToString);
+    JSONStr := JSONArray.ToString;
+    TFile.WriteAllText(FileName, JSONStr, TEncoding.UTF8);
   finally
     JSONArray.Free;
   end;
 end;
 
-procedure TProduits.LoadFromJSON(const FileName: string);
+procedure TPersonList.LoadFromFile(const FileName: string);
 var
-  JSONString: string;
+  JSONStr: string;
   JSONArray: TJSONArray;
-  JSONValue: TJSONValue;
-  JSONObj: TJSONObject;
-  Produit: TProduit;
+begin
+  JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
+  JSONArray := TJSONObject.ParseJSONValue(JSONStr) as TJSONArray;
+  if Assigned(JSONArray) then
+  try
+    FromJSON(JSONArray);
+  finally
+    JSONArray.Free;
+  end;
+end;
+
+// Utilisation
+var
+  PersonList: TPersonList;
+  Person: TPerson;
   i: Integer;
 begin
-  // Lire le contenu du fichier
-  JSONString := TFile.ReadAllText(FileName);
+  PersonList := TPersonList.Create;
+  try
+    // Ajouter des personnes
+    Person := TPerson.Create;
+    Person.Nom := 'Dupont';
+    Person.Prenom := 'Jean';
+    Person.Age := 30;
+    PersonList.Add(Person);
 
-  // Analyser le JSON
-  JSONArray := TJSONObject.ParseJSONValue(JSONString) as TJSONArray;
-  if Assigned(JSONArray) then
-  begin
-    try
-      // Vider la liste actuelle
-      Self.Clear;
+    Person := TPerson.Create;
+    Person.Nom := 'Martin';
+    Person.Prenom := 'Marie';
+    Person.Age := 28;
+    PersonList.Add(Person);
 
-      // Parcourir chaque élément du tableau
-      for i := 0 to JSONArray.Count - 1 do
-      begin
-        JSONValue := JSONArray.Items[i];
-        if JSONValue is TJSONObject then
-        begin
-          JSONObj := TJSONObject(JSONValue);
+    // Sauvegarder
+    PersonList.SaveToFile('personnes.json');
 
-          Produit := TProduit.Create;
-          Produit.Code := JSONObj.GetValue<string>('code');
-          Produit.Nom := JSONObj.GetValue<string>('nom');
-          Produit.Prix := JSONObj.GetValue<Double>('prix');
+    // Recharger
+    PersonList.LoadFromFile('personnes.json');
 
-          Self.Add(Produit);
-        end;
-      end;
-    finally
-      JSONArray.Free;
-    end;
+    // Afficher
+    for i := 0 to PersonList.Count - 1 do
+      Memo1.Lines.Add(PersonList.GetPerson(i).Nom);
+  finally
+    PersonList.Free;
   end;
 end;
 ```
 
-### Exercice pratique
+---
 
-Créez une application de gestion de bibliothèque avec les fonctionnalités suivantes :
+## Gestion des versions
 
-1. Définition de classes pour les livres, auteurs et catégories
-2. Interface pour ajouter, modifier et supprimer des livres
-3. Sauvegarde de la bibliothèque complète dans un fichier binaire
-4. Export/import au format JSON
-5. Possibilité de sauvegarder/charger l'état de l'application
+Lors de l'évolution de vos classes, il est important de gérer la compatibilité avec les anciennes versions.
 
-Cet exercice vous permettra de mettre en pratique les différentes techniques de sérialisation tout en créant une application utile.
+### Stratégie de versioning
+
+```pascal
+type
+  TPerson = class
+  private
+    FNom: string;
+    FPrenom: string;
+    FAge: Integer;
+    FEmail: string;
+    FTelephone: string; // Nouveau champ ajouté en version 2
+  public
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
+    property Nom: string read FNom write FNom;
+    property Prenom: string read FPrenom write FPrenom;
+    property Age: Integer read FAge write FAge;
+    property Email: string read FEmail write FEmail;
+    property Telephone: string read FTelephone write FTelephone;
+  end;
+
+const
+  PERSON_VERSION = 2;
+
+function TPerson.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('version', TJSONNumber.Create(PERSON_VERSION));
+  Result.AddPair('nom', FNom);
+  Result.AddPair('prenom', FPrenom);
+  Result.AddPair('age', TJSONNumber.Create(FAge));
+  Result.AddPair('email', FEmail);
+  Result.AddPair('telephone', FTelephone); // Nouveau champ
+end;
+
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
+var
+  Version: Integer;
+  Pair: TJSONPair;
+begin
+  // Lire la version (1 par défaut si absente)
+  Pair := JSONObj.Get('version');
+  if Assigned(Pair) then
+    Version := StrToIntDef(Pair.JsonValue.Value, 1)
+  else
+    Version := 1;
+
+  // Champs communs à toutes les versions
+  FNom := JSONObj.GetValue<string>('nom');
+  FPrenom := JSONObj.GetValue<string>('prenom');
+  FAge := JSONObj.GetValue<Integer>('age');
+  FEmail := JSONObj.GetValue<string>('email');
+
+  // Champ ajouté en version 2
+  if Version >= 2 then
+  begin
+    Pair := JSONObj.Get('telephone');
+    if Assigned(Pair) then
+      FTelephone := Pair.JsonValue.Value
+    else
+      FTelephone := ''; // Valeur par défaut
+  end
+  else
+    FTelephone := ''; // Version 1 n'avait pas ce champ
+end;
+```
 
 ---
 
-À suivre dans la prochaine section : **7.5 Compression et décompression**
+## Utilisation du RTTI (Run-Time Type Information)
+
+Le RTTI permet d'inspecter et de manipuler les types à l'exécution, ce qui peut simplifier la sérialisation.
+
+### Sérialisation automatique avec RTTI
+
+```pascal
+uses
+  System.Rtti, System.TypInfo;
+
+type
+  TPerson = class
+  private
+    FNom: string;
+    FPrenom: string;
+    FAge: Integer;
+    FEmail: string;
+  published
+    property Nom: string read FNom write FNom;
+    property Prenom: string read FPrenom write FPrenom;
+    property Age: Integer read FAge write FAge;
+    property Email: string read FEmail write FEmail;
+  end;
+
+function ObjectToJSON(Obj: TObject): TJSONObject;
+var
+  Context: TRttiContext;
+  RttiType: TRttiType;
+  Prop: TRttiProperty;
+  Value: TValue;
+begin
+  Result := TJSONObject.Create;
+  Context := TRttiContext.Create;
+  try
+    RttiType := Context.GetType(Obj.ClassType);
+
+    for Prop in RttiType.GetProperties do
+    begin
+      // Sérialiser uniquement les propriétés published
+      if Prop.Visibility = mvPublished then
+      begin
+        Value := Prop.GetValue(Obj);
+
+        case Prop.PropertyType.TypeKind of
+          tkInteger, tkInt64:
+            Result.AddPair(Prop.Name, TJSONNumber.Create(Value.AsInteger));
+          tkFloat:
+            Result.AddPair(Prop.Name, TJSONNumber.Create(Value.AsExtended));
+          tkString, tkUString, tkLString, tkWString:
+            Result.AddPair(Prop.Name, Value.AsString);
+          tkEnumeration:
+            begin
+              if Prop.PropertyType.Handle = TypeInfo(Boolean) then
+                Result.AddPair(Prop.Name, TJSONBool.Create(Value.AsBoolean))
+              else
+                Result.AddPair(Prop.Name, Value.AsOrdinal);
+            end;
+        end;
+      end;
+    end;
+  finally
+    Context.Free;
+  end;
+end;
+
+procedure JSONToObject(JSONObj: TJSONObject; Obj: TObject);
+var
+  Context: TRttiContext;
+  RttiType: TRttiType;
+  Prop: TRttiProperty;
+  Pair: TJSONPair;
+  Value: TValue;
+begin
+  Context := TRttiContext.Create;
+  try
+    RttiType := Context.GetType(Obj.ClassType);
+
+    for Prop in RttiType.GetProperties do
+    begin
+      if Prop.Visibility = mvPublished then
+      begin
+        Pair := JSONObj.Get(Prop.Name);
+        if Assigned(Pair) then
+        begin
+          case Prop.PropertyType.TypeKind of
+            tkInteger, tkInt64:
+              Value := TValue.From<Integer>(StrToIntDef(Pair.JsonValue.Value, 0));
+            tkFloat:
+              Value := TValue.From<Extended>(StrToFloatDef(Pair.JsonValue.Value, 0));
+            tkString, tkUString, tkLString, tkWString:
+              Value := TValue.From<string>(Pair.JsonValue.Value);
+            tkEnumeration:
+              begin
+                if Prop.PropertyType.Handle = TypeInfo(Boolean) then
+                  Value := TValue.From<Boolean>(StrToBoolDef(Pair.JsonValue.Value, False))
+                else
+                  Value := TValue.From<Integer>(StrToIntDef(Pair.JsonValue.Value, 0));
+              end;
+          end;
+
+          if Prop.IsWritable then
+            Prop.SetValue(Obj, Value);
+        end;
+      end;
+    end;
+  finally
+    Context.Free;
+  end;
+end;
+
+// Utilisation
+var
+  Person: TPerson;
+  JSONObj: TJSONObject;
+  JSONStr: string;
+begin
+  Person := TPerson.Create;
+  try
+    Person.Nom := 'Rousseau';
+    Person.Prenom := 'Luc';
+    Person.Age := 40;
+    Person.Email := 'luc@email.com';
+
+    // Sérialisation automatique
+    JSONObj := ObjectToJSON(Person);
+    try
+      JSONStr := JSONObj.ToString;
+      ShowMessage(JSONStr);
+
+      // Réinitialiser
+      Person.Nom := '';
+      Person.Age := 0;
+
+      // Désérialisation automatique
+      JSONToObject(JSONObj, Person);
+      ShowMessage(Person.Nom); // Affiche 'Rousseau'
+    finally
+      JSONObj.Free;
+    end;
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+---
+
+## Persistance des composants VCL/FMX
+
+Delphi dispose d'un mécanisme intégré pour sauvegarder et charger des composants.
+
+### Sauvegarder un composant en fichier
+
+```pascal
+// Sauvegarder un composant dans un stream
+procedure SaveComponentToFile(Component: TComponent; const FileName: string);
+var
+  FileStream: TFileStream;
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    // Écrire le composant dans le stream
+    MemStream.WriteComponent(Component);
+
+    // Sauvegarder dans un fichier
+    MemStream.Position := 0;
+    FileStream := TFileStream.Create(FileName, fmCreate);
+    try
+      ObjectBinaryToText(MemStream, FileStream);
+    finally
+      FileStream.Free;
+    end;
+  finally
+    MemStream.Free;
+  end;
+end;
+
+// Charger un composant depuis un fichier
+procedure LoadComponentFromFile(Component: TComponent; const FileName: string);
+var
+  FileStream: TFileStream;
+  MemStream: TMemoryStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  try
+    MemStream := TMemoryStream.Create;
+    try
+      ObjectTextToBinary(FileStream, MemStream);
+      MemStream.Position := 0;
+      MemStream.ReadComponent(Component);
+    finally
+      MemStream.Free;
+    end;
+  finally
+    FileStream.Free;
+  end;
+end;
+
+// Exemple : sauvegarder les paramètres d'un formulaire
+procedure TForm1.SaveFormSettings;
+begin
+  SaveComponentToFile(Self, 'form_settings.txt');
+end;
+
+procedure TForm1.LoadFormSettings;
+begin
+  if FileExists('form_settings.txt') then
+    LoadComponentFromFile(Self, 'form_settings.txt');
+end;
+```
+
+### Sauvegarder uniquement certaines propriétés
+
+```pascal
+procedure SaveFormPosition(Form: TForm; const FileName: string);
+var
+  Settings: TStringList;
+begin
+  Settings := TStringList.Create;
+  try
+    Settings.Add('Left=' + IntToStr(Form.Left));
+    Settings.Add('Top=' + IntToStr(Form.Top));
+    Settings.Add('Width=' + IntToStr(Form.Width));
+    Settings.Add('Height=' + IntToStr(Form.Height));
+    Settings.Add('WindowState=' + IntToStr(Ord(Form.WindowState)));
+
+    Settings.SaveToFile(FileName);
+  finally
+    Settings.Free;
+  end;
+end;
+
+procedure LoadFormPosition(Form: TForm; const FileName: string);
+var
+  Settings: TStringList;
+begin
+  if not FileExists(FileName) then
+    Exit;
+
+  Settings := TStringList.Create;
+  try
+    Settings.LoadFromFile(FileName);
+
+    Form.Left := StrToIntDef(Settings.Values['Left'], Form.Left);
+    Form.Top := StrToIntDef(Settings.Values['Top'], Form.Top);
+    Form.Width := StrToIntDef(Settings.Values['Width'], Form.Width);
+    Form.Height := StrToIntDef(Settings.Values['Height'], Form.Height);
+    Form.WindowState := TWindowState(StrToIntDef(Settings.Values['WindowState'], 0));
+  finally
+    Settings.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  LoadFormPosition(Self, 'window_position.ini');
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  SaveFormPosition(Self, 'window_position.ini');
+end;
+```
+
+---
+
+## Patterns avancés
+
+### 1. Interface de sérialisation
+
+```pascal
+type
+  ISerializable = interface
+    ['{12345678-1234-1234-1234-123456789ABC}']
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+  end;
+
+  TPerson = class(TInterfacedObject, ISerializable)
+  private
+    FNom: string;
+    FAge: Integer;
+  public
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
+    property Nom: string read FNom write FNom;
+    property Age: Integer read FAge write FAge;
+  end;
+
+function TPerson.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('nom', FNom);
+  Result.AddPair('age', TJSONNumber.Create(FAge));
+end;
+
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
+begin
+  FNom := JSONObj.GetValue<string>('nom');
+  FAge := JSONObj.GetValue<Integer>('age');
+end;
+
+// Fonction générique
+procedure SaveSerializable(Obj: ISerializable; const FileName: string);
+var
+  JSONObj: TJSONObject;
+begin
+  JSONObj := Obj.ToJSON;
+  try
+    TFile.WriteAllText(FileName, JSONObj.ToString, TEncoding.UTF8);
+  finally
+    JSONObj.Free;
+  end;
+end;
+```
+
+### 2. Factory Pattern pour la désérialisation
+
+```pascal
+type
+  TPersonFactory = class
+    class function CreateFromJSON(const JSONStr: string): TPerson;
+    class function CreateFromFile(const FileName: string): TPerson;
+  end;
+
+class function TPersonFactory.CreateFromJSON(const JSONStr: string): TPerson;
+var
+  JSONObj: TJSONObject;
+begin
+  Result := TPerson.Create;
+  try
+    JSONObj := TJSONObject.ParseJSONValue(JSONStr) as TJSONObject;
+    if Assigned(JSONObj) then
+    try
+      Result.FromJSON(JSONObj);
+    finally
+      JSONObj.Free;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+class function TPersonFactory.CreateFromFile(const FileName: string): TPerson;
+var
+  JSONStr: string;
+begin
+  JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
+  Result := CreateFromJSON(JSONStr);
+end;
+
+// Utilisation
+var
+  Person: TPerson;
+begin
+  Person := TPersonFactory.CreateFromFile('personne.json');
+  try
+    ShowMessage(Person.Nom);
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+### 3. Classe de base pour la sérialisation
+
+```pascal
+type
+  TSerializableObject = class abstract
+  protected
+    procedure WriteString(Stream: TStream; const S: string);
+    function ReadString(Stream: TStream): string;
+    procedure WriteInteger(Stream: TStream; Value: Integer);
+    function ReadInteger(Stream: TStream): Integer;
+  public
+    procedure SaveToStream(Stream: TStream); virtual; abstract;
+    procedure LoadFromStream(Stream: TStream); virtual; abstract;
+
+    procedure SaveToFile(const FileName: string);
+    procedure LoadFromFile(const FileName: string);
+  end;
+
+procedure TSerializableObject.WriteString(Stream: TStream; const S: string);
+var
+  Bytes: TBytes;
+  Len: Integer;
+begin
+  Bytes := TEncoding.UTF8.GetBytes(S);
+  Len := Length(Bytes);
+  Stream.WriteBuffer(Len, SizeOf(Integer));
+  if Len > 0 then
+    Stream.WriteBuffer(Bytes[0], Len);
+end;
+
+function TSerializableObject.ReadString(Stream: TStream): string;
+var
+  Bytes: TBytes;
+  Len: Integer;
+begin
+  Stream.ReadBuffer(Len, SizeOf(Integer));
+  if Len > 0 then
+  begin
+    SetLength(Bytes, Len);
+    Stream.ReadBuffer(Bytes[0], Len);
+    Result := TEncoding.UTF8.GetString(Bytes);
+  end
+  else
+    Result := '';
+end;
+
+procedure TSerializableObject.WriteInteger(Stream: TStream; Value: Integer);
+begin
+  Stream.WriteBuffer(Value, SizeOf(Integer));
+end;
+
+function TSerializableObject.ReadInteger(Stream: TStream): Integer;
+begin
+  Stream.ReadBuffer(Result, SizeOf(Integer));
+end;
+
+procedure TSerializableObject.SaveToFile(const FileName: string);
+var
+  FileStream: TFileStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmCreate);
+  try
+    SaveToStream(FileStream);
+  finally
+    FileStream.Free;
+  end;
+end;
+
+procedure TSerializableObject.LoadFromFile(const FileName: string);
+var
+  FileStream: TFileStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  try
+    LoadFromStream(FileStream);
+  finally
+    FileStream.Free;
+  end;
+end;
+
+// Utilisation
+type
+  TPerson = class(TSerializableObject)
+  private
+    FNom: string;
+    FAge: Integer;
+  public
+    procedure SaveToStream(Stream: TStream); override;
+    procedure LoadFromStream(Stream: TStream); override;
+
+    property Nom: string read FNom write FNom;
+    property Age: Integer read FAge write FAge;
+  end;
+
+procedure TPerson.SaveToStream(Stream: TStream);
+begin
+  WriteString(Stream, FNom);
+  WriteInteger(Stream, FAge);
+end;
+
+procedure TPerson.LoadFromStream(Stream: TStream);
+begin
+  FNom := ReadString(Stream);
+  FAge := ReadInteger(Stream);
+end;
+```
+
+---
+
+## Gestion des erreurs
+
+### Validation lors de la désérialisation
+
+```pascal
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
+begin
+  // Vérifier que l'objet JSON est valide
+  if not Assigned(JSONObj) then
+    raise Exception.Create('Objet JSON invalide');
+
+  // Vérifier la présence des champs obligatoires
+  if not JSONObj.TryGetValue<string>('nom', FNom) then
+    raise Exception.Create('Champ "nom" manquant');
+
+  if not JSONObj.TryGetValue<string>('prenom', FPrenom) then
+    raise Exception.Create('Champ "prenom" manquant');
+
+  // Champs optionnels avec valeurs par défaut
+  if not JSONObj.TryGetValue<Integer>('age', FAge) then
+    FAge := 0;
+
+  if not JSONObj.TryGetValue<string>('email', FEmail) then
+    FEmail := '';
+
+  // Validation des données
+  if FAge < 0 then
+    raise Exception.Create('Âge invalide');
+
+  if (FEmail <> '') and (Pos('@', FEmail) = 0) then
+    raise Exception.Create('Email invalide');
+end;
+```
+
+### Try/Catch lors du chargement
+
+```pascal
+procedure TForm1.ChargerPersonne(const FileName: string);
+var
+  Person: TPerson;
+begin
+  Person := TPerson.Create;
+  try
+    try
+      Person.LoadFromFile(FileName);
+
+      // Utiliser l'objet chargé
+      Edit1.Text := Person.Nom;
+      Edit2.Text := IntToStr(Person.Age);
+
+      ShowMessage('Personne chargée avec succès');
+    except
+      on E: EFileNotFoundException do
+        ShowMessage('Fichier introuvable : ' + FileName);
+      on E: EFOpenError do
+        ShowMessage('Impossible d''ouvrir le fichier : ' + E.Message);
+      on E: Exception do
+        ShowMessage('Erreur lors du chargement : ' + E.Message);
+    end;
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+---
+
+## Comparaison des méthodes
+
+| Méthode | Avantages | Inconvénients | Usage recommandé |
+|---------|-----------|---------------|------------------|
+| **Manuelle (Stream)** | Compact, rapide, contrôle total | Beaucoup de code, maintenance difficile | Performances critiques, format propriétaire |
+| **JSON** | Lisible, universel, flexible | Plus volumineux, parsing plus lent | API, configuration, échange de données |
+| **XML** | Structuré, validable, standard | Verbeux, complexe | Documents hiérarchiques, métadonnées |
+| **RTTI** | Automatique, peu de code | Moins de contrôle, propriétés published uniquement | Prototypage rapide, classes simples |
+| **Composants VCL/FMX** | Intégré à Delphi | Spécifique à Delphi | Sauvegarde de formulaires, composants |
+
+---
+
+## Bonnes pratiques
+
+### 1. Toujours inclure une version
+
+```pascal
+const
+  FORMAT_VERSION = 1;
+
+procedure TPerson.SaveToStream(Stream: TStream);
+begin
+  Stream.WriteBuffer(FORMAT_VERSION, SizeOf(Integer));
+  // ... reste des données
+end;
+```
+
+### 2. Valider les données lors du chargement
+
+```pascal
+procedure TPerson.LoadFromStream(Stream: TStream);
+var
+  Version: Integer;
+begin
+  Stream.ReadBuffer(Version, SizeOf(Integer));
+
+  if Version > FORMAT_VERSION then
+    raise Exception.Create('Version de fichier trop récente');
+
+  if Version < 1 then
+    raise Exception.Create('Version de fichier invalide');
+
+  // Charger selon la version
+end;
+```
+
+### 3. Utiliser des valeurs par défaut
+
+```pascal
+procedure TPerson.FromJSON(JSONObj: TJSONObject);
+begin
+  FNom := JSONObj.GetValue<string>('nom', ''); // Valeur par défaut : chaîne vide
+  FAge := JSONObj.GetValue<Integer>('age', 0); // Valeur par défaut : 0
+end;
+```
+
+### 4. Séparer la logique de sérialisation
+
+```pascal
+// Ne pas mettre la logique métier dans les méthodes de sérialisation
+// BON
+procedure TPerson.SaveToFile(const FileName: string);
+var
+  Stream: TFileStream;
+begin
+  Stream := TFileStream.Create(FileName, fmCreate);
+  try
+    SaveToStream(Stream);
+  finally
+    Stream.Free;
+  end;
+end;
+
+// MAUVAIS
+procedure TPerson.SaveToFile(const FileName: string);
+begin
+  // Validation métier
+  if FAge < 18 then
+    raise Exception.Create('La personne doit être majeure');
+
+  // ... sérialisation
+end;
+```
+
+### 5. Documenter le format
+
+```pascal
+{
+  Format de fichier Person v1.0
+
+  Structure binaire :
+  - 4 bytes : Version (Integer)
+  - 4 bytes : Longueur du nom (Integer)
+  - n bytes : Nom (UTF-8)
+  - 4 bytes : Âge (Integer)
+  - 4 bytes : Longueur de l'email (Integer)
+  - n bytes : Email (UTF-8)
+}
+```
+
+### 6. Tester la compatibilité ascendante et descendante
+
+```pascal
+// Tester que v2 peut lire des fichiers v1
+procedure TestBackwardCompatibility;
+var
+  Person: TPerson;
+begin
+  Person := TPerson.Create;
+  try
+    Person.LoadFromFile('personne_v1.dat');
+    Assert(Person.Nom <> '', 'Nom devrait être chargé');
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+---
+
+## Exemple complet : Système de configuration
+
+Voici un exemple pratique combinant plusieurs concepts :
+
+```pascal
+type
+  TApplicationSettings = class
+  private
+    FWindowWidth: Integer;
+    FWindowHeight: Integer;
+    FWindowLeft: Integer;
+    FWindowTop: Integer;
+    FLanguage: string;
+    FTheme: string;
+    FAutoSave: Boolean;
+    FRecentFiles: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure LoadDefaults;
+    function ToJSON: TJSONObject;
+    procedure FromJSON(JSONObj: TJSONObject);
+
+    procedure SaveToFile(const FileName: string);
+    procedure LoadFromFile(const FileName: string);
+
+    property WindowWidth: Integer read FWindowWidth write FWindowWidth;
+    property WindowHeight: Integer read FWindowHeight write FWindowHeight;
+    property WindowLeft: Integer read FWindowLeft write FWindowLeft;
+    property WindowTop: Integer read FWindowTop write FWindowTop;
+    property Language: string read FLanguage write FLanguage;
+    property Theme: string read FTheme write FTheme;
+    property AutoSave: Boolean read FAutoSave write FAutoSave;
+    property RecentFiles: TStringList read FRecentFiles;
+  end;
+
+constructor TApplicationSettings.Create;
+begin
+  inherited;
+  FRecentFiles := TStringList.Create;
+  LoadDefaults;
+end;
+
+destructor TApplicationSettings.Destroy;
+begin
+  FRecentFiles.Free;
+  inherited;
+end;
+
+procedure TApplicationSettings.LoadDefaults;
+begin
+  FWindowWidth := 800;
+  FWindowHeight := 600;
+  FWindowLeft := 100;
+  FWindowTop := 100;
+  FLanguage := 'fr';
+  FTheme := 'light';
+  FAutoSave := True;
+  FRecentFiles.Clear;
+end;
+
+function TApplicationSettings.ToJSON: TJSONObject;
+var
+  RecentArray: TJSONArray;
+  i: Integer;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('version', TJSONNumber.Create(1));
+
+  Result.AddPair('windowWidth', TJSONNumber.Create(FWindowWidth));
+  Result.AddPair('windowHeight', TJSONNumber.Create(FWindowHeight));
+  Result.AddPair('windowLeft', TJSONNumber.Create(FWindowLeft));
+  Result.AddPair('windowTop', TJSONNumber.Create(FWindowTop));
+  Result.AddPair('language', FLanguage);
+  Result.AddPair('theme', FTheme);
+  Result.AddPair('autoSave', TJSONBool.Create(FAutoSave));
+
+  RecentArray := TJSONArray.Create;
+  for i := 0 to FRecentFiles.Count - 1 do
+    RecentArray.Add(FRecentFiles[i]);
+  Result.AddPair('recentFiles', RecentArray);
+end;
+
+procedure TApplicationSettings.FromJSON(JSONObj: TJSONObject);
+var
+  RecentArray: TJSONArray;
+  i: Integer;
+begin
+  FWindowWidth := JSONObj.GetValue<Integer>('windowWidth', 800);
+  FWindowHeight := JSONObj.GetValue<Integer>('windowHeight', 600);
+  FWindowLeft := JSONObj.GetValue<Integer>('windowLeft', 100);
+  FWindowTop := JSONObj.GetValue<Integer>('windowTop', 100);
+  FLanguage := JSONObj.GetValue<string>('language', 'fr');
+  FTheme := JSONObj.GetValue<string>('theme', 'light');
+  FAutoSave := JSONObj.GetValue<Boolean>('autoSave', True);
+
+  FRecentFiles.Clear;
+  if JSONObj.TryGetValue<TJSONArray>('recentFiles', RecentArray) then
+  begin
+    for i := 0 to RecentArray.Count - 1 do
+      FRecentFiles.Add(RecentArray.Items[i].Value);
+  end;
+end;
+
+procedure TApplicationSettings.SaveToFile(const FileName: string);
+var
+  JSONObj: TJSONObject;
+  JSONStr: string;
+begin
+  JSONObj := ToJSON;
+  try
+    JSONStr := JSONObj.Format; // Format avec indentation
+    TFile.WriteAllText(FileName, JSONStr, TEncoding.UTF8);
+  finally
+    JSONObj.Free;
+  end;
+end;
+
+procedure TApplicationSettings.LoadFromFile(const FileName: string);
+var
+  JSONStr: string;
+  JSONObj: TJSONObject;
+begin
+  if not FileExists(FileName) then
+  begin
+    LoadDefaults;
+    Exit;
+  end;
+
+  try
+    JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
+    JSONObj := TJSONObject.ParseJSONValue(JSONStr) as TJSONObject;
+    if Assigned(JSONObj) then
+    try
+      FromJSON(JSONObj);
+    finally
+      JSONObj.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      // En cas d'erreur, charger les valeurs par défaut
+      LoadDefaults;
+      // Logger l'erreur si nécessaire
+    end;
+  end;
+end;
+
+// Utilisation dans l'application
+var
+  Settings: TApplicationSettings;
+begin
+  Settings := TApplicationSettings.Create;
+  try
+    // Charger au démarrage
+    Settings.LoadFromFile('settings.json');
+
+    // Appliquer les paramètres
+    Form1.Width := Settings.WindowWidth;
+    Form1.Height := Settings.WindowHeight;
+    Form1.Left := Settings.WindowLeft;
+    Form1.Top := Settings.WindowTop;
+
+    // ... utiliser l'application ...
+
+    // Sauvegarder à la fermeture
+    Settings.WindowWidth := Form1.Width;
+    Settings.WindowHeight := Form1.Height;
+    Settings.WindowLeft := Form1.Left;
+    Settings.WindowTop := Form1.Top;
+
+    Settings.SaveToFile('settings.json');
+  finally
+    Settings.Free;
+  end;
+end;
+```
+
+---
+
+## Résumé
+
+Dans ce chapitre, vous avez découvert la sérialisation et la persistance d'objets en Delphi :
+
+**Méthodes de sérialisation :**
+- **Manuelle avec streams** : contrôle total, format binaire compact
+- **JSON** : format texte lisible, universel, flexible
+- **XML** : format structuré, standard pour documents complexes
+- **RTTI** : automatique via l'introspection de types
+- **Composants VCL/FMX** : mécanisme intégré de Delphi
+
+**Concepts clés :**
+- Sérialisation = transformer un objet en données stockables
+- Désérialisation = recréer un objet depuis les données
+- Versioning = gérer l'évolution du format
+- Validation = vérifier les données lors du chargement
+
+**Bonnes pratiques :**
+- Toujours inclure un numéro de version
+- Valider les données chargées
+- Utiliser des valeurs par défaut
+- Gérer les erreurs gracieusement
+- Documenter le format de fichier
+- Tester la compatibilité
+
+**Quand utiliser quoi :**
+- **Stream binaire** : performance, format propriétaire
+- **JSON** : configuration, API, échange de données
+- **XML** : documents structurés, interopérabilité
+- **RTTI** : prototypage rapide, classes simples
+- **Composants** : sauvegarde d'interfaces utilisateur
+
+La sérialisation est une compétence essentielle qui vous permettra de créer des applications qui conservent leur état, communiquent avec d'autres systèmes et offrent une meilleure expérience utilisateur !
 
 ⏭️ [Compression et décompression](/07-gestion-des-fichiers-et-flux-de-donnees/05-compression-et-decompression.md)

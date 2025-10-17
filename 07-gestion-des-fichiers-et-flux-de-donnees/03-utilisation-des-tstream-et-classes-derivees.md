@@ -1,97 +1,316 @@
-# 7. Gestion des fichiers et flux de données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-## 7.3 Utilisation des TStream et classes dérivées
+# 7.3 Utilisation des TStream et classes dérivées
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les flux (streams) sont l'un des concepts les plus puissants et flexibles de Delphi pour la manipulation de données. Ils permettent de traiter uniformément diverses sources et destinations de données, comme les fichiers, la mémoire, ou même les connexions réseau.
+Les streams (flux de données) constituent l'un des concepts les plus puissants et polyvalents de Delphi pour manipuler des données. Que vous travailliez avec des fichiers, de la mémoire, des chaînes de caractères ou des ressources, les streams offrent une interface unifiée et cohérente.
 
-### Introduction aux flux (TStream)
+Dans ce chapitre, nous allons explorer en profondeur la classe `TStream` et toutes ses classes dérivées, en comprenant leur utilité et leurs cas d'usage spécifiques.
 
-Un flux (`TStream`) est une abstraction qui représente une séquence d'octets, indépendamment de leur origine ou de leur destination. Il fournit une interface commune pour lire et écrire des données.
+## Qu'est-ce qu'un Stream ?
 
-La classe `TStream` est la classe de base abstraite. Vous n'utilisez jamais directement une instance de `TStream`, mais plutôt une de ses classes dérivées qui implémentent des comportements spécifiques.
+Un stream (flux) est une abstraction qui représente une séquence d'octets. Pensez à un stream comme à un tuyau par lequel les données circulent. Vous pouvez :
 
-### Hiérarchie des classes TStream
+- Lire des données depuis le stream
+- Écrire des données dans le stream
+- Vous déplacer à différentes positions dans le stream
+- Copier des données d'un stream vers un autre
 
-Voici une vue simplifiée de la hiérarchie des classes de flux en Delphi :
+**Analogie simple :** Imaginez un stream comme une cassette VHS. Vous pouvez :
+- Lire le contenu (lecture)
+- Enregistrer dessus (écriture)
+- Avancer ou reculer rapidement (déplacement)
+- Copier sur une autre cassette (copie)
 
-```
-TStream (classe abstraite)
-  ├─ THandleStream
-  │    ├─ TFileStream
-  │    └─ TPipeStream
-  ├─ TCustomMemoryStream
-  │    ├─ TMemoryStream
-  │    └─ TResourceStream
-  ├─ TStringStream
-  ├─ TBytesStream
-  └─ TCustomStream
-       └─ ... (autres classes dérivées spécialisées)
-```
+---
 
-### Méthodes communes à tous les flux
+## La classe de base : TStream
 
-Tous les flux partagent certaines méthodes et propriétés importantes :
+`TStream` est une classe abstraite qui définit l'interface commune pour tous les types de streams. Elle se trouve dans l'unité `System.Classes`.
 
-| Méthode/Propriété | Description |
-|-------------------|-------------|
-| `Read` | Lit un nombre spécifié d'octets dans un tampon |
-| `Write` | Écrit un nombre spécifié d'octets depuis un tampon |
-| `ReadBuffer` | Lit exactement le nombre d'octets spécifié (lève une exception sinon) |
-| `WriteBuffer` | Écrit exactement le nombre d'octets spécifié |
-| `Seek` | Déplace la position dans le flux |
-| `Position` | Position actuelle dans le flux (en octets depuis le début) |
-| `Size` | Taille totale du flux en octets |
-| `CopyFrom` | Copie des données depuis un autre flux |
-
-### Les classes de flux les plus utilisées
-
-#### TFileStream
-
-Comme nous l'avons vu dans la section précédente, `TFileStream` permet d'accéder aux fichiers sur disque. Voici un rappel de son utilisation de base :
+### Propriétés principales
 
 ```pascal
 var
-  Flux: TFileStream;
+  Stream: TStream;
 begin
-  // Créer un nouveau fichier ou écraser un fichier existant
-  Flux := TFileStream.Create('monfichier.dat', fmCreate);
+  // Position actuelle dans le stream (en octets depuis le début)
+  Stream.Position := 0;
+  ShowMessage('Position : ' + IntToStr(Stream.Position));
+
+  // Taille totale du stream en octets
+  ShowMessage('Taille : ' + IntToStr(Stream.Size));
+end;
+```
+
+### Méthodes essentielles
+
+#### 1. Read - Lire des données
+
+```pascal
+function Read(var Buffer; Count: Longint): Longint;
+
+// Exemple
+var
+  Stream: TMemoryStream;
+  Nombre: Integer;
+  BytesLus: Integer;
+begin
+  Stream := TMemoryStream.Create;
   try
-    // Opérations sur le flux...
+    // ... (remplir le stream)
+    Stream.Position := 0;
+
+    // Lire un entier
+    BytesLus := Stream.Read(Nombre, SizeOf(Integer));
+    ShowMessage('Nombre lu : ' + IntToStr(Nombre));
+    ShowMessage('Octets lus : ' + IntToStr(BytesLus));
   finally
-    Flux.Free;
+    Stream.Free;
   end;
 end;
 ```
 
-Les modes d'ouverture disponibles pour `TFileStream` sont :
+**Note :** `Read` retourne le nombre d'octets effectivement lus, qui peut être inférieur à ce qui a été demandé si on atteint la fin du stream.
 
-| Mode | Description |
-|------|-------------|
-| `fmCreate` | Crée un nouveau fichier ou écrase un fichier existant |
-| `fmOpenRead` | Ouvre un fichier existant en lecture seule |
-| `fmOpenWrite` | Ouvre un fichier existant en écriture seule |
-| `fmOpenReadWrite` | Ouvre un fichier existant en lecture et écriture |
+#### 2. Write - Écrire des données
 
-Ces modes peuvent être combinés avec des options de partage :
-
-| Option de partage | Description |
-|-------------------|-------------|
-| `fmShareExclusive` | Accès exclusif (aucun autre processus ne peut ouvrir le fichier) |
-| `fmShareDenyWrite` | Empêche les autres processus d'ouvrir le fichier en écriture |
-| `fmShareDenyRead` | Empêche les autres processus d'ouvrir le fichier en lecture |
-| `fmShareDenyNone` | Permet aux autres processus d'ouvrir le fichier en lecture et écriture |
-
-Exemple :
 ```pascal
-// Ouvrir un fichier en lecture et autoriser d'autres processus à le lire
-Flux := TFileStream.Create('monfichier.dat', fmOpenRead or fmShareDenyWrite);
+function Write(const Buffer; Count: Longint): Longint;
+
+// Exemple
+var
+  Stream: TMemoryStream;
+  Nombre: Integer;
+  BytesEcrits: Integer;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    Nombre := 42;
+    BytesEcrits := Stream.Write(Nombre, SizeOf(Integer));
+    ShowMessage('Octets écrits : ' + IntToStr(BytesEcrits));
+  finally
+    Stream.Free;
+  end;
+end;
 ```
 
-#### TMemoryStream
+#### 3. Seek - Se déplacer dans le stream
 
-`TMemoryStream` stocke les données en mémoire. C'est utile pour manipuler des données avant de les sauvegarder ou après les avoir lues :
+```pascal
+function Seek(Offset: Longint; Origin: Word): Longint;
+
+// Exemples
+var
+  Stream: TFileStream;
+begin
+  Stream := TFileStream.Create('data.bin', fmOpenRead);
+  try
+    // Aller au début
+    Stream.Seek(0, soBeginning);
+    // ou simplement : Stream.Position := 0;
+
+    // Aller à la fin
+    Stream.Seek(0, soEnd);
+
+    // Avancer de 10 octets
+    Stream.Seek(10, soCurrent);
+
+    // Reculer de 5 octets
+    Stream.Seek(-5, soCurrent);
+
+    // Aller à l'octet 100
+    Stream.Seek(100, soBeginning);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+**Origines possibles :**
+- `soBeginning` (ou `soFromBeginning`) : depuis le début
+- `soCurrent` (ou `soFromCurrent`) : depuis la position actuelle
+- `soEnd` (ou `soFromEnd`) : depuis la fin
+
+#### 4. CopyFrom - Copier depuis un autre stream
+
+```pascal
+function CopyFrom(Source: TStream; Count: Int64): Int64;
+
+// Exemple : copier un fichier vers un autre
+var
+  Source, Dest: TFileStream;
+begin
+  Source := TFileStream.Create('source.dat', fmOpenRead);
+  try
+    Dest := TFileStream.Create('destination.dat', fmCreate);
+    try
+      // Copier tout le contenu (0 = tout)
+      Dest.CopyFrom(Source, 0);
+      ShowMessage('Copie terminée');
+    finally
+      Dest.Free;
+    end;
+  finally
+    Source.Free;
+  end;
+end;
+```
+
+#### 5. ReadBuffer et WriteBuffer - Versions strictes
+
+Ces méthodes lèvent une exception si le nombre d'octets demandé n'a pas pu être lu ou écrit.
+
+```pascal
+var
+  Stream: TMemoryStream;
+  Nombre: Integer;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    Nombre := 100;
+
+    // WriteBuffer garantit que tous les octets sont écrits
+    Stream.WriteBuffer(Nombre, SizeOf(Integer));
+
+    Stream.Position := 0;
+
+    // ReadBuffer garantit que tous les octets sont lus
+    // (lève une exception sinon)
+    Stream.ReadBuffer(Nombre, SizeOf(Integer));
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+---
+
+## Hiérarchie des classes de Stream
+
+```
+TStream (classe abstraite)
+├── THandleStream
+│   └── TFileStream
+├── TCustomMemoryStream
+│   ├── TMemoryStream
+│   ├── TBytesStream
+│   └── TStringStream
+├── TResourceStream
+└── Autres classes dérivées
+```
+
+Explorons maintenant chaque classe en détail.
+
+---
+
+## TFileStream - Stream pour les fichiers
+
+`TFileStream` permet de lire et écrire des fichiers comme des streams. Nous l'avons déjà rencontré dans le chapitre précédent, mais approfondissons son utilisation.
+
+### Création et modes d'ouverture
+
+```pascal
+// Créer un nouveau fichier
+Stream := TFileStream.Create('fichier.dat', fmCreate);
+
+// Ouvrir en lecture seule
+Stream := TFileStream.Create('fichier.dat', fmOpenRead);
+
+// Ouvrir en écriture seule
+Stream := TFileStream.Create('fichier.dat', fmOpenWrite);
+
+// Ouvrir en lecture/écriture
+Stream := TFileStream.Create('fichier.dat', fmOpenReadWrite);
+
+// Créer ou ouvrir
+Stream := TFileStream.Create('fichier.dat', fmOpenReadWrite or fmCreate);
+
+// Avec partage
+Stream := TFileStream.Create('fichier.dat',
+                            fmOpenRead or fmShareDenyWrite);
+```
+
+### Exemple pratique : Log avec TFileStream
+
+```pascal
+procedure AjouterAuLog(const Message: string);
+var
+  Stream: TFileStream;
+  Texte: UTF8String;
+  NomFichier: string;
+begin
+  NomFichier := 'application.log';
+
+  // Ouvrir ou créer le fichier
+  if FileExists(NomFichier) then
+    Stream := TFileStream.Create(NomFichier, fmOpenReadWrite or fmShareDenyWrite)
+  else
+    Stream := TFileStream.Create(NomFichier, fmCreate);
+
+  try
+    // Aller à la fin
+    Stream.Seek(0, soEnd);
+
+    // Préparer le message
+    Texte := UTF8String(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) +
+                        ' - ' + Message + #13#10);
+
+    // Écrire
+    Stream.WriteBuffer(Texte[1], Length(Texte));
+  finally
+    Stream.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  AjouterAuLog('Application démarrée');
+  AjouterAuLog('Utilisateur a cliqué sur le bouton');
+end;
+```
+
+---
+
+## TMemoryStream - Stream en mémoire
+
+`TMemoryStream` stocke les données en mémoire RAM. C'est extrêmement rapide mais limité par la mémoire disponible.
+
+### Utilisation de base
+
+```pascal
+var
+  MemStream: TMemoryStream;
+  Nombre: Integer;
+  Texte: AnsiString;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    // Écrire différents types de données
+    Nombre := 42;
+    MemStream.Write(Nombre, SizeOf(Integer));
+
+    Nombre := 100;
+    MemStream.Write(Nombre, SizeOf(Integer));
+
+    // Revenir au début
+    MemStream.Position := 0;
+
+    // Relire
+    MemStream.Read(Nombre, SizeOf(Integer));
+    ShowMessage('Premier nombre : ' + IntToStr(Nombre));
+
+    MemStream.Read(Nombre, SizeOf(Integer));
+    ShowMessage('Deuxième nombre : ' + IntToStr(Nombre));
+  finally
+    MemStream.Free;
+  end;
+end;
+```
+
+### Charger et sauvegarder depuis/vers un fichier
 
 ```pascal
 var
@@ -99,202 +318,500 @@ var
 begin
   MemStream := TMemoryStream.Create;
   try
-    // Écrire des données dans le flux mémoire
-    var Valeur: Integer := 12345;
-    MemStream.WriteBuffer(Valeur, SizeOf(Integer));
+    // Charger un fichier en mémoire
+    MemStream.LoadFromFile('données.dat');
 
-    // Revenir au début du flux
-    MemStream.Position := 0;
+    // Manipuler les données en mémoire
+    // ... votre code ...
 
-    // Lire les données
-    var ValeurLue: Integer;
-    MemStream.ReadBuffer(ValeurLue, SizeOf(Integer));
-
-    ShowMessage(Format('Valeur lue: %d', [ValeurLue]));
+    // Sauvegarder en fichier
+    MemStream.SaveToFile('données_modifiées.dat');
   finally
     MemStream.Free;
   end;
 end;
 ```
 
-Méthodes spécifiques à `TMemoryStream` :
+### SetSize - Préallouer de la mémoire
 
-| Méthode | Description |
-|---------|-------------|
-| `Clear` | Vide le contenu du flux et réinitialise la position |
-| `SetSize` | Définit la taille du flux (redimensionne le tampon mémoire) |
-| `SaveToFile` | Sauvegarde le contenu du flux dans un fichier |
-| `LoadFromFile` | Charge le contenu d'un fichier dans le flux |
-| `Memory` | Retourne un pointeur vers le tampon mémoire interne |
+Pour optimiser les performances lors d'écritures multiples :
 
-#### TStringStream
+```pascal
+var
+  MemStream: TMemoryStream;
+  i: Integer;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    // Préallouer 1 Mo
+    MemStream.SetSize(1024 * 1024);
 
-`TStringStream` est spécialement conçu pour manipuler des chaînes de caractères dans un flux. Il gère automatiquement les encodages :
+    // Réinitialiser la position
+    MemStream.Position := 0;
+
+    // Écrire des données
+    for i := 1 to 1000 do
+      MemStream.Write(i, SizeOf(Integer));
+
+    // Ajuster à la taille réelle
+    MemStream.SetSize(MemStream.Position);
+  finally
+    MemStream.Free;
+  end;
+end;
+```
+
+### Accès direct à la mémoire
+
+```pascal
+var
+  MemStream: TMemoryStream;
+  Pointeur: PByte;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    // ... remplir le stream ...
+
+    // Accéder directement à la mémoire
+    Pointeur := MemStream.Memory;
+
+    // Lire le premier octet
+    ShowMessage('Premier octet : ' + IntToStr(Pointeur^));
+  finally
+    MemStream.Free;
+  end;
+end;
+```
+
+### Exemple pratique : Buffer de données
+
+```pascal
+type
+  TDataBuffer = class
+  private
+    FStream: TMemoryStream;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AjouterEntier(Valeur: Integer);
+    procedure AjouterReel(Valeur: Double);
+    procedure AjouterTexte(const Texte: string);
+
+    procedure Effacer;
+    procedure SauvegarderDans(const NomFichier: string);
+    function ObtenirTaille: Int64;
+  end;
+
+constructor TDataBuffer.Create;
+begin
+  inherited;
+  FStream := TMemoryStream.Create;
+end;
+
+destructor TDataBuffer.Destroy;
+begin
+  FStream.Free;
+  inherited;
+end;
+
+procedure TDataBuffer.AjouterEntier(Valeur: Integer);
+begin
+  FStream.Write(Valeur, SizeOf(Integer));
+end;
+
+procedure TDataBuffer.AjouterReel(Valeur: Double);
+begin
+  FStream.Write(Valeur, SizeOf(Double));
+end;
+
+procedure TDataBuffer.AjouterTexte(const Texte: string);
+var
+  Bytes: TBytes;
+  Longueur: Integer;
+begin
+  Bytes := TEncoding.UTF8.GetBytes(Texte);
+  Longueur := Length(Bytes);
+
+  // Écrire la longueur puis les données
+  FStream.Write(Longueur, SizeOf(Integer));
+  if Longueur > 0 then
+    FStream.Write(Bytes[0], Longueur);
+end;
+
+procedure TDataBuffer.Effacer;
+begin
+  FStream.Clear;
+  FStream.Position := 0;
+end;
+
+procedure TDataBuffer.SauvegarderDans(const NomFichier: string);
+begin
+  FStream.SaveToFile(NomFichier);
+end;
+
+function TDataBuffer.ObtenirTaille: Int64;
+begin
+  Result := FStream.Size;
+end;
+
+// Utilisation
+var
+  Buffer: TDataBuffer;
+begin
+  Buffer := TDataBuffer.Create;
+  try
+    Buffer.AjouterEntier(42);
+    Buffer.AjouterReel(3.14);
+    Buffer.AjouterTexte('Bonjour Delphi');
+
+    Buffer.SauvegarderDans('données.bin');
+    ShowMessage('Taille : ' + IntToStr(Buffer.ObtenirTaille) + ' octets');
+  finally
+    Buffer.Free;
+  end;
+end;
+```
+
+---
+
+## TStringStream - Stream pour les chaînes
+
+`TStringStream` permet de traiter une chaîne de caractères comme un stream. Très utile pour la sérialisation et la manipulation de texte.
+
+### Utilisation de base
 
 ```pascal
 uses
   System.Classes, System.SysUtils;
 
-procedure ExempleStringStream;
 var
   StringStream: TStringStream;
 begin
-  // Créer un flux de chaîne avec du contenu initial (UTF-8 par défaut)
-  StringStream := TStringStream.Create('Bonjour, Delphi !');
+  // Créer un stream vide
+  StringStream := TStringStream.Create('', TEncoding.UTF8);
   try
-    // Ajouter du texte à la fin
-    StringStream.WriteString(' Comment ça va ?');
+    // Écrire du texte
+    StringStream.WriteString('Bonjour ');
+    StringStream.WriteString('le monde !');
 
-    // Récupérer tout le contenu sous forme de chaîne
-    ShowMessage('Contenu : ' + StringStream.DataString);
+    // Récupérer le contenu
+    ShowMessage(StringStream.DataString);
 
-    // Réinitialiser la position pour relire depuis le début
-    StringStream.Position := 0;
-
-    // Lire les 8 premiers caractères
-    var Debut := StringStream.ReadString(8);
-    ShowMessage('Début : ' + Debut);
+    // Résultat : "Bonjour le monde !"
   finally
     StringStream.Free;
   end;
 end;
 ```
 
-`TStringStream` est particulièrement utile pour :
-- Convertir des données binaires en texte encodé (Base64, Hex...)
-- Manipuler du texte comme s'il s'agissait d'un fichier
-- Analyser du texte avec des méthodes de flux
+### Créer depuis une chaîne existante
 
-#### TBytesStream
+```pascal
+var
+  StringStream: TStringStream;
+  Ligne: string;
+begin
+  StringStream := TStringStream.Create('Ligne 1'#13#10'Ligne 2'#13#10'Ligne 3',
+                                       TEncoding.UTF8);
+  try
+    // Lire ligne par ligne
+    while StringStream.Position < StringStream.Size do
+    begin
+      Ligne := '';
+      // Lire caractère par caractère jusqu'à la fin de ligne
+      // (exemple simplifié)
+    end;
+  finally
+    StringStream.Free;
+  end;
+end;
+```
 
-`TBytesStream` est similaire à `TMemoryStream` mais travaille directement avec le type `TBytes` (tableau dynamique d'octets) :
+### Exemple : Génération de CSV
+
+```pascal
+function GenererCSV(const Donnees: array of array of string): string;
+var
+  StringStream: TStringStream;
+  i, j: Integer;
+begin
+  StringStream := TStringStream.Create('', TEncoding.UTF8);
+  try
+    for i := Low(Donnees) to High(Donnees) do
+    begin
+      for j := Low(Donnees[i]) to High(Donnees[i]) do
+      begin
+        StringStream.WriteString(Donnees[i][j]);
+
+        if j < High(Donnees[i]) then
+          StringStream.WriteString(';')
+        else
+          StringStream.WriteString(#13#10);
+      end;
+    end;
+
+    Result := StringStream.DataString;
+  finally
+    StringStream.Free;
+  end;
+end;
+
+// Utilisation
+var
+  CSV: string;
+  Donnees: array[0..2] of array[0..2] of string;
+begin
+  Donnees[0][0] := 'Nom'; Donnees[0][1] := 'Prénom'; Donnees[0][2] := 'Âge';
+  Donnees[1][0] := 'Dupont'; Donnees[1][1] := 'Jean'; Donnees[1][2] := '30';
+  Donnees[2][0] := 'Martin'; Donnees[2][1] := 'Marie'; Donnees[2][2] := '25';
+
+  CSV := GenererCSV(Donnees);
+  Memo1.Text := CSV;
+end;
+```
+
+### Sauvegarder et charger
+
+```pascal
+var
+  StringStream: TStringStream;
+begin
+  // Créer et sauvegarder
+  StringStream := TStringStream.Create('Mon contenu texte', TEncoding.UTF8);
+  try
+    StringStream.SaveToFile('texte.txt');
+  finally
+    StringStream.Free;
+  end;
+
+  // Charger
+  StringStream := TStringStream.Create('', TEncoding.UTF8);
+  try
+    StringStream.LoadFromFile('texte.txt');
+    ShowMessage(StringStream.DataString);
+  finally
+    StringStream.Free;
+  end;
+end;
+```
+
+---
+
+## TBytesStream - Stream pour les tableaux d'octets
+
+`TBytesStream` travaille avec des tableaux dynamiques d'octets (`TBytes`).
+
+### Utilisation de base
 
 ```pascal
 var
   BytesStream: TBytesStream;
-  Donnees: TBytes;
+  Bytes: TBytes;
 begin
-  // Créer un tableau d'octets
-  SetLength(Donnees, 5);
-  for var i := 0 to 4 do
-    Donnees[i] := i * 10;
+  // Créer depuis un tableau d'octets
+  SetLength(Bytes, 5);
+  Bytes[0] := 10;
+  Bytes[1] := 20;
+  Bytes[2] := 30;
+  Bytes[3] := 40;
+  Bytes[4] := 50;
 
-  // Créer un flux à partir du tableau d'octets
-  BytesStream := TBytesStream.Create(Donnees);
+  BytesStream := TBytesStream.Create(Bytes);
   try
-    // Ajouter plus de données
-    var AutresDonnees: TBytes := [100, 101, 102];
-    BytesStream.WriteBuffer(AutresDonnees, Length(AutresDonnees));
+    ShowMessage('Taille : ' + IntToStr(BytesStream.Size));
 
-    // Obtenir le tableau d'octets complet
-    var ResultatBytes := BytesStream.Bytes;
-
-    // Afficher le contenu
-    var Texte := '';
-    for var i := 0 to Length(ResultatBytes) - 1 do
-      Texte := Texte + ResultatBytes[i].ToString + ' ';
-
-    ShowMessage('Contenu: ' + Texte);
+    // Accéder aux octets
+    ShowMessage('Premier octet : ' + IntToStr(BytesStream.Bytes[0]));
   finally
     BytesStream.Free;
   end;
 end;
 ```
 
-#### TResourceStream
-
-`TResourceStream` permet d'accéder aux ressources intégrées à l'exécutable. C'est utile pour inclure des données dans votre application sans nécessiter de fichiers externes :
+### Exemple : Manipulation d'images
 
 ```pascal
+procedure ChargerEtModifierImage;
+var
+  BytesStream: TBytesStream;
+  Bytes: TBytes;
+  Image: TJPEGImage;
+begin
+  // Charger une image dans un tableau d'octets
+  Bytes := TFile.ReadAllBytes('photo.jpg');
+
+  BytesStream := TBytesStream.Create(Bytes);
+  try
+    // Charger dans un composant image
+    Image := TJPEGImage.Create;
+    try
+      Image.LoadFromStream(BytesStream);
+
+      // Afficher
+      Form1.Image1.Picture.Assign(Image);
+    finally
+      Image.Free;
+    end;
+  finally
+    BytesStream.Free;
+  end;
+end;
+```
+
+### Convertir entre différents streams
+
+```pascal
+procedure ConvertirFileStreamEnBytes;
+var
+  FileStream: TFileStream;
+  BytesStream: TBytesStream;
+  Bytes: TBytes;
+begin
+  FileStream := TFileStream.Create('données.dat', fmOpenRead);
+  try
+    // Créer un tableau d'octets de la bonne taille
+    SetLength(Bytes, FileStream.Size);
+
+    // Lire tout le contenu
+    FileStream.Read(Bytes[0], FileStream.Size);
+
+    // Créer un BytesStream
+    BytesStream := TBytesStream.Create(Bytes);
+    try
+      // Manipuler les données
+      ShowMessage('Converti : ' + IntToStr(BytesStream.Size) + ' octets');
+    finally
+      BytesStream.Free;
+    end;
+  finally
+    FileStream.Free;
+  end;
+end;
+```
+
+---
+
+## TResourceStream - Stream pour les ressources
+
+`TResourceStream` permet d'accéder aux ressources incorporées dans l'exécutable.
+
+### Incorporer une ressource
+
+D'abord, créez un fichier de ressources (`.rc`) :
+
+```
+// fichier resources.rc
+MYDATA RCDATA "donnees.bin"
+MYTEXT RCDATA "texte.txt"
+MYICON ICON "icone.ico"
+```
+
+Compilez-le avec :
+```
+brcc32 resources.rc
+```
+
+Puis incluez-le dans votre projet :
+```pascal
+{$R resources.res}
+```
+
+### Lire une ressource
+
+```pascal
+procedure LireRessource;
 var
   ResStream: TResourceStream;
+  Texte: TStringList;
 begin
-  // Créer un flux à partir d'une ressource nommée 'MONIMAGE' de type 'JPEG'
-  ResStream := TResourceStream.Create(HInstance, 'MONIMAGE', 'JPEG');
+  // Charger la ressource 'MYTEXT' de type 'RCDATA'
+  ResStream := TResourceStream.Create(HInstance, 'MYTEXT', RT_RCDATA);
   try
-    // Utiliser la ressource (par exemple, charger une image)
-    Image1.Picture.LoadFromStream(ResStream);
+    Texte := TStringList.Create;
+    try
+      Texte.LoadFromStream(ResStream);
+      Memo1.Lines.Text := Texte.Text;
+    finally
+      Texte.Free;
+    end;
   finally
     ResStream.Free;
   end;
 end;
 ```
 
-Pour inclure des ressources dans votre application, vous devez les définir dans un fichier `.rc` et le compiler avec votre projet.
-
-### Opérations communes sur les flux
-
-#### Positionnement dans un flux (Seek)
-
-La méthode `Seek` permet de déplacer la position dans le flux :
+### Charger une image depuis les ressources
 
 ```pascal
+procedure ChargerImageRessource;
 var
-  Flux: TFileStream;
+  ResStream: TResourceStream;
+  Image: TJPEGImage;
 begin
-  Flux := TFileStream.Create('donnees.bin', fmOpenRead);
+  ResStream := TResourceStream.Create(HInstance, 'MYPHOTO', RT_RCDATA);
   try
-    // Aller à la position 100 depuis le début
-    Flux.Seek(100, soBeginning);
-
-    // Avancer de 50 octets depuis la position actuelle
-    Flux.Seek(50, soCurrent);
-
-    // Aller 20 octets avant la fin du fichier
-    Flux.Seek(-20, soEnd);
-
-    // Obtenir la position actuelle
-    ShowMessage(Format('Position: %d', [Flux.Position]));
+    Image := TJPEGImage.Create;
+    try
+      Image.LoadFromStream(ResStream);
+      Form1.Image1.Picture.Assign(Image);
+    finally
+      Image.Free;
+    end;
   finally
-    Flux.Free;
+    ResStream.Free;
   end;
 end;
 ```
 
-Les constantes pour l'origine du déplacement sont :
-- `soBeginning` : depuis le début du flux
-- `soCurrent` : depuis la position actuelle
-- `soEnd` : depuis la fin du flux
-
-#### Copie entre flux
-
-La méthode `CopyFrom` permet de copier des données d'un flux à un autre :
+### Vérifier l'existence d'une ressource
 
 ```pascal
-procedure CopierFichier(const SourceNom, DestinationNom: string);
+function RessourceExiste(const NomRessource: string): Boolean;
 var
-  Source, Destination: TFileStream;
+  ResStream: TResourceStream;
 begin
-  Source := TFileStream.Create(SourceNom, fmOpenRead or fmShareDenyWrite);
+  Result := False;
   try
-    Destination := TFileStream.Create(DestinationNom, fmCreate);
+    ResStream := TResourceStream.Create(HInstance, NomRessource, RT_RCDATA);
     try
-      // Copier tout le contenu de Source vers Destination
-      Destination.CopyFrom(Source, 0); // 0 signifie tout copier
+      Result := True;
     finally
-      Destination.Free;
+      ResStream.Free;
     end;
-  finally
-    Source.Free;
+  except
+    Result := False;
   end;
 end;
+```
 
-procedure CopierPartie(const SourceNom, DestinationNom: string;
-  Debut, Taille: Int64);
-var
-  Source, Destination: TFileStream;
+---
+
+## Opérations avancées avec les Streams
+
+### 1. Copie partielle entre streams
+
+```pascal
+procedure CopierPartie(Source, Dest: TStream; Debut, Taille: Int64);
 begin
-  Source := TFileStream.Create(SourceNom, fmOpenRead);
-  try
-    // Positionner au point de départ
-    Source.Position := Debut;
+  // Se positionner au début de la partie à copier
+  Source.Position := Debut;
 
-    Destination := TFileStream.Create(DestinationNom, fmCreate);
+  // Copier la taille demandée
+  Dest.CopyFrom(Source, Taille);
+end;
+
+// Exemple : copier les 1000 premiers octets
+var
+  Source, Dest: TFileStream;
+begin
+  Source := TFileStream.Create('source.dat', fmOpenRead);
+  try
+    Dest := TFileStream.Create('extrait.dat', fmCreate);
     try
-      // Copier seulement 'Taille' octets
-      Destination.CopyFrom(Source, Taille);
+      CopierPartie(Source, Dest, 0, 1000);
     finally
-      Destination.Free;
+      Dest.Free;
     end;
   finally
     Source.Free;
@@ -302,903 +819,320 @@ begin
 end;
 ```
 
-### Lecture et écriture de données typées
-
-Pour faciliter la lecture et l'écriture de types de données spécifiques, on peut créer des méthodes d'extension :
+### 2. Lecture ligne par ligne d'un stream texte
 
 ```pascal
-// Placer dans une unité d'utilitaires
-unit StreamUtils;
-
-interface
-
-uses
-  System.Classes, System.SysUtils;
-
-type
-  // Méthodes d'extension pour TStream
-  TStreamHelper = class helper for TStream
-  public
-    // Lecture de types simples
-    function ReadBoolean: Boolean;
-    function ReadInteger: Integer;
-    function ReadInt64: Int64;
-    function ReadDouble: Double;
-    function ReadString: string;
-
-    // Écriture de types simples
-    procedure WriteBoolean(Value: Boolean);
-    procedure WriteInteger(Value: Integer);
-    procedure WriteInt64(Value: Int64);
-    procedure WriteDouble(Value: Double);
-    procedure WriteString(const Value: string);
-  end;
-
-implementation
-
-function TStreamHelper.ReadBoolean: Boolean;
-begin
-  ReadBuffer(Result, SizeOf(Boolean));
-end;
-
-function TStreamHelper.ReadInteger: Integer;
-begin
-  ReadBuffer(Result, SizeOf(Integer));
-end;
-
-function TStreamHelper.ReadInt64: Int64;
-begin
-  ReadBuffer(Result, SizeOf(Int64));
-end;
-
-function TStreamHelper.ReadDouble: Double;
-begin
-  ReadBuffer(Result, SizeOf(Double));
-end;
-
-function TStreamHelper.ReadString: string;
+function LireLigne(Stream: TStream): string;
 var
-  Len: Integer;
-  Bytes: TBytes;
+  C: AnsiChar;
+  Ligne: AnsiString;
 begin
-  // Lire la longueur de la chaîne
-  ReadBuffer(Len, SizeOf(Integer));
+  Ligne := '';
 
-  // Lire les octets de la chaîne
-  if Len > 0 then
+  while Stream.Position < Stream.Size do
   begin
-    SetLength(Bytes, Len);
-    ReadBuffer(Bytes[0], Len);
-    Result := TEncoding.UTF8.GetString(Bytes);
-  end
-  else
-    Result := '';
+    Stream.Read(C, 1);
+
+    if C = #13 then
+    begin
+      // Lire aussi le #10 si présent
+      if Stream.Position < Stream.Size then
+      begin
+        Stream.Read(C, 1);
+        if C <> #10 then
+          Stream.Position := Stream.Position - 1;
+      end;
+      Break;
+    end
+    else if C = #10 then
+      Break
+    else
+      Ligne := Ligne + C;
+  end;
+
+  Result := string(Ligne);
 end;
 
-procedure TStreamHelper.WriteBoolean(Value: Boolean);
-begin
-  WriteBuffer(Value, SizeOf(Boolean));
-end;
-
-procedure TStreamHelper.WriteInteger(Value: Integer);
-begin
-  WriteBuffer(Value, SizeOf(Integer));
-end;
-
-procedure TStreamHelper.WriteInt64(Value: Int64);
-begin
-  WriteBuffer(Value, SizeOf(Int64));
-end;
-
-procedure TStreamHelper.WriteDouble(Value: Double);
-begin
-  WriteBuffer(Value, SizeOf(Double));
-end;
-
-procedure TStreamHelper.WriteString(const Value: string);
+// Utilisation
 var
-  Bytes: TBytes;
-  Len: Integer;
+  FileStream: TFileStream;
+  Ligne: string;
 begin
-  // Convertir la chaîne en octets
-  Bytes := TEncoding.UTF8.GetBytes(Value);
-  Len := Length(Bytes);
-
-  // Écrire la longueur puis les octets
-  WriteBuffer(Len, SizeOf(Integer));
-  if Len > 0 then
-    WriteBuffer(Bytes[0], Len);
-end;
-
-end.
-```
-
-Utilisation :
-
-```pascal
-uses
-  StreamUtils;
-
-procedure ExempleUtiliserHelper;
-var
-  Flux: TMemoryStream;
-begin
-  Flux := TMemoryStream.Create;
+  FileStream := TFileStream.Create('texte.txt', fmOpenRead);
   try
-    // Écrire des données typées
-    Flux.WriteInteger(42);
-    Flux.WriteString('Bonjour Delphi');
-    Flux.WriteBoolean(True);
-    Flux.WriteDouble(3.14159);
-
-    // Repositionner au début
-    Flux.Position := 0;
-
-    // Lire les données
-    var Entier := Flux.ReadInteger;
-    var Texte := Flux.ReadString;
-    var Bool := Flux.ReadBoolean;
-    var Reel := Flux.ReadDouble;
-
-    ShowMessage(Format('Entier: %d'#13#10 +
-                       'Texte: %s'#13#10 +
-                       'Booléen: %s'#13#10 +
-                       'Réel: %f',
-                       [Entier, Texte, BoolToStr(Bool, True), Reel]));
+    while FileStream.Position < FileStream.Size do
+    begin
+      Ligne := LireLigne(FileStream);
+      Memo1.Lines.Add(Ligne);
+    end;
   finally
-    Flux.Free;
+    FileStream.Free;
   end;
 end;
 ```
 
-> **Note :** Le concept de classes "helper" nécessite Delphi 10.4 ou supérieur pour l'utilisation complète des fonctionnalités montrées ici.
-
-### Flux adaptateurs
-
-Delphi permet également de créer des flux adaptateurs qui transforment les données lors de la lecture ou de l'écriture.
-
-#### TBufferedFileStream
-
-Permet d'améliorer les performances en utilisant un tampon mémoire pour les opérations sur les fichiers :
+### 3. Compression de stream (avec ZLib)
 
 ```pascal
 uses
-  System.Classes, System.SysUtils, Vcl.Dialogs;
+  System.ZLib;
 
-// Cette classe n'est pas fournie par Delphi, nous la créons
+procedure CompresserStream(Source, Dest: TStream);
+var
+  Compressor: TZCompressionStream;
+begin
+  Source.Position := 0;
+  Dest.Size := 0;
+
+  Compressor := TZCompressionStream.Create(Dest);
+  try
+    Compressor.CopyFrom(Source, 0);
+  finally
+    Compressor.Free;
+  end;
+end;
+
+procedure DecompresserStream(Source, Dest: TStream);
+var
+  Decompressor: TZDecompressionStream;
+begin
+  Source.Position := 0;
+  Dest.Size := 0;
+
+  Decompressor := TZDecompressionStream.Create(Source);
+  try
+    Dest.CopyFrom(Decompressor, 0);
+  finally
+    Decompressor.Free;
+  end;
+end;
+
+// Exemple d'utilisation
+var
+  Original, Compresse, Decompresse: TMemoryStream;
+  i: Integer;
+  TauxCompression: Double;
+begin
+  Original := TMemoryStream.Create;
+  Compresse := TMemoryStream.Create;
+  Decompresse := TMemoryStream.Create;
+  try
+    // Créer des données à comprimer
+    for i := 1 to 10000 do
+      Original.Write(i, SizeOf(Integer));
+
+    // Comprimer
+    CompresserStream(Original, Compresse);
+
+    TauxCompression := (Compresse.Size / Original.Size) * 100;
+    ShowMessage(Format('Original : %d octets' + #13#10 +
+                       'Compressé : %d octets' + #13#10 +
+                       'Taux : %.2f%%',
+                       [Original.Size, Compresse.Size, TauxCompression]));
+
+    // Décompresser
+    DecompresserStream(Compresse, Decompresse);
+
+    ShowMessage('Décompressé : ' + IntToStr(Decompresse.Size) + ' octets');
+  finally
+    Original.Free;
+    Compresse.Free;
+    Decompresse.Free;
+  end;
+end;
+```
+
+### 4. Chiffrement simple de stream
+
+```pascal
+// ATTENTION : Ceci est un exemple pédagogique simple
+// Pour du chiffrement réel, utilisez des bibliothèques cryptographiques
+procedure ChiffrerStreamSimple(Stream: TStream; const Cle: Byte);
+var
+  Buffer: array[0..4095] of Byte;
+  BytesLus, i: Integer;
+  Position: Int64;
+begin
+  Position := Stream.Position;
+  Stream.Position := 0;
+
+  repeat
+    BytesLus := Stream.Read(Buffer, SizeOf(Buffer));
+
+    if BytesLus > 0 then
+    begin
+      // XOR simple avec la clé
+      for i := 0 to BytesLus - 1 do
+        Buffer[i] := Buffer[i] xor Cle;
+
+      Stream.Position := Stream.Position - BytesLus;
+      Stream.Write(Buffer, BytesLus);
+    end;
+  until BytesLus = 0;
+
+  Stream.Position := Position;
+end;
+
+// Utilisation (chiffrer et déchiffrer utilisent la même fonction avec XOR)
+var
+  MemStream: TMemoryStream;
+  Texte: AnsiString;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    Texte := 'Message secret';
+    MemStream.Write(Texte[1], Length(Texte));
+
+    // Chiffrer
+    ChiffrerStreamSimple(MemStream, 42);
+    MemStream.SaveToFile('chiffre.dat');
+
+    // Déchiffrer
+    MemStream.Position := 0;
+    ChiffrerStreamSimple(MemStream, 42);
+
+    MemStream.Position := 0;
+    SetLength(Texte, MemStream.Size);
+    MemStream.Read(Texte[1], MemStream.Size);
+    ShowMessage(string(Texte));
+  finally
+    MemStream.Free;
+  end;
+end;
+```
+
+---
+
+## Création d'une classe de Stream personnalisée
+
+Vous pouvez créer vos propres classes dérivées de TStream pour des besoins spécifiques.
+
+### Exemple : Stream avec compteur de lectures/écritures
+
+```pascal
 type
-  TBufferedFileStream = class(TStream)
+  TCountingStream = class(TStream)
   private
-    FFileStream: TFileStream;
-    FBuffer: TMemoryStream;
-    FBufferSize: Integer;
-    FBufferDirty: Boolean;
-    FBufferStart: Int64;
-    procedure FlushBuffer;
-    procedure FillBuffer(Position: Int64);
+    FStream: TStream;
+    FBytesLus: Int64;
+    FBytesEcrits: Int64;
+    FNombreLectures: Integer;
+    FNombreEcritures: Integer;
+  protected
+    function GetSize: Int64; override;
+    procedure SetSize(NewSize: Longint); override;
   public
-    constructor Create(const AFileName: string; Mode: Word; BufferSize: Integer = 8192);
+    constructor Create(AStream: TStream);
     destructor Destroy; override;
+
     function Read(var Buffer; Count: Longint): Longint; override;
     function Write(const Buffer; Count: Longint): Longint; override;
-    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+    function Seek(Offset: Longint; Origin: Word): Longint; override;
+
+    property BytesLus: Int64 read FBytesLus;
+    property BytesEcrits: Int64 read FBytesEcrits;
+    property NombreLectures: Integer read FNombreLectures;
+    property NombreEcritures: Integer read FNombreEcritures;
   end;
 
-constructor TBufferedFileStream.Create(const AFileName: string; Mode: Word; BufferSize: Integer);
+constructor TCountingStream.Create(AStream: TStream);
 begin
   inherited Create;
-  FFileStream := TFileStream.Create(AFileName, Mode);
-  FBuffer := TMemoryStream.Create;
-  FBufferSize := BufferSize;
-  FBuffer.Size := BufferSize;
-  FBufferDirty := False;
-  FBufferStart := -1; // Marque le tampon comme non rempli
+  FStream := AStream;
+  FBytesLus := 0;
+  FBytesEcrits := 0;
+  FNombreLectures := 0;
+  FNombreEcritures := 0;
 end;
 
-destructor TBufferedFileStream.Destroy;
+destructor TCountingStream.Destroy;
 begin
-  if FBufferDirty then
-    FlushBuffer;
-  FBuffer.Free;
-  FFileStream.Free;
+  // Ne pas libérer FStream, on ne le possède pas
   inherited;
 end;
 
-procedure TBufferedFileStream.FlushBuffer;
+function TCountingStream.Read(var Buffer; Count: Longint): Longint;
 begin
-  if FBufferDirty and (FBufferStart >= 0) then
-  begin
-    FFileStream.Position := FBufferStart;
-    FFileStream.WriteBuffer(FBuffer.Memory^, FBuffer.Size);
-    FBufferDirty := False;
-  end;
+  Result := FStream.Read(Buffer, Count);
+  Inc(FBytesLus, Result);
+  Inc(FNombreLectures);
 end;
 
-procedure TBufferedFileStream.FillBuffer(Position: Int64);
+function TCountingStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  Result := FStream.Write(Buffer, Count);
+  Inc(FBytesEcrits, Result);
+  Inc(FNombreEcritures);
+end;
+
+function TCountingStream.Seek(Offset: Longint; Origin: Word): Longint;
+begin
+  Result := FStream.Seek(Offset, Origin);
+end;
+
+function TCountingStream.GetSize: Int64;
+begin
+  Result := FStream.Size;
+end;
+
+procedure TCountingStream.SetSize(NewSize: Longint);
+begin
+  FStream.Size := NewSize;
+end;
+
+// Utilisation
 var
-  BytesRead: Integer;
-begin
-  if FBufferDirty then
-    FlushBuffer;
-
-  FFileStream.Position := Position;
-  FBuffer.Clear;
-  FBufferStart := Position;
-
-  // Remplir le tampon avec les données du fichier
-  BytesRead := FFileStream.Read(FBuffer.Memory^, FBufferSize);
-  FBuffer.Size := BytesRead;
-  FBufferDirty := False;
-end;
-
-function TBufferedFileStream.Read(var Buffer; Count: Longint): Longint;
-var
-  BufferPtr: PByte;
-  BytesToRead, AvailableInBuffer, BufferOffset: Integer;
-  CurrentPosition: Int64;
-begin
-  Result := 0;
-  BufferPtr := @Buffer;
-  BytesToRead := Count;
-  CurrentPosition := Position;
-
-  while BytesToRead > 0 do
-  begin
-    // Si la position courante est en dehors du tampon, le recharger
-    if (CurrentPosition < FBufferStart) or
-       (CurrentPosition >= FBufferStart + FBuffer.Size) then
-    begin
-      FillBuffer(CurrentPosition);
-      if FBuffer.Size = 0 then // Fin de fichier atteinte
-        Break;
-    end;
-
-    // Calculer le décalage dans le tampon et les octets disponibles
-    BufferOffset := CurrentPosition - FBufferStart;
-    AvailableInBuffer := FBuffer.Size - BufferOffset;
-
-    if AvailableInBuffer <= 0 then
-    begin
-      FillBuffer(CurrentPosition);
-      if FBuffer.Size = 0 then // Fin de fichier atteinte
-        Break;
-      BufferOffset := 0;
-      AvailableInBuffer := FBuffer.Size;
-    end;
-
-    // Lire autant que possible du tampon
-    if BytesToRead <= AvailableInBuffer then
-    begin
-      Move(PByte(FBuffer.Memory)[BufferOffset]^, BufferPtr^, BytesToRead);
-      Inc(Result, BytesToRead);
-      Inc(CurrentPosition, BytesToRead);
-      BytesToRead := 0;
-    end
-    else
-    begin
-      Move(PByte(FBuffer.Memory)[BufferOffset]^, BufferPtr^, AvailableInBuffer);
-      Inc(Result, AvailableInBuffer);
-      Inc(BufferPtr, AvailableInBuffer);
-      Inc(CurrentPosition, AvailableInBuffer);
-      Dec(BytesToRead, AvailableInBuffer);
-    end;
-  end;
-
-  Position := CurrentPosition;
-end;
-
-function TBufferedFileStream.Write(const Buffer; Count: Longint): Longint;
-var
-  BufferPtr: PByte;
-  BytesToWrite, SpaceInBuffer, BufferOffset: Integer;
-  CurrentPosition: Int64;
-begin
-  Result := 0;
-  BufferPtr := @Buffer;
-  BytesToWrite := Count;
-  CurrentPosition := Position;
-
-  while BytesToWrite > 0 do
-  begin
-    // Si la position courante est en dehors du tampon, le recharger
-    if (CurrentPosition < FBufferStart) or
-       (CurrentPosition >= FBufferStart + FBufferSize) then
-    begin
-      FlushBuffer;
-      FillBuffer(CurrentPosition);
-      if FBuffer.Size < FBufferSize then
-        FBuffer.Size := FBufferSize; // Préparer le tampon pour l'écriture
-    end;
-
-    // Calculer le décalage dans le tampon et l'espace disponible
-    BufferOffset := CurrentPosition - FBufferStart;
-    SpaceInBuffer := FBufferSize - BufferOffset;
-
-    if SpaceInBuffer <= 0 then
-    begin
-      FlushBuffer;
-      FillBuffer(CurrentPosition);
-      BufferOffset := 0;
-      SpaceInBuffer := FBufferSize;
-    end;
-
-    // Écrire autant que possible dans le tampon
-    if BytesToWrite <= SpaceInBuffer then
-    begin
-      Move(BufferPtr^, PByte(FBuffer.Memory)[BufferOffset]^, BytesToWrite);
-      Inc(Result, BytesToWrite);
-      Inc(CurrentPosition, BytesToWrite);
-      BytesToWrite := 0;
-      FBufferDirty := True;
-    end
-    else
-    begin
-      Move(BufferPtr^, PByte(FBuffer.Memory)[BufferOffset]^, SpaceInBuffer);
-      Inc(Result, SpaceInBuffer);
-      Inc(BufferPtr, SpaceInBuffer);
-      Inc(CurrentPosition, SpaceInBuffer);
-      Dec(BytesToWrite, SpaceInBuffer);
-      FBufferDirty := True;
-      FlushBuffer;
-    end;
-  end;
-
-  Position := CurrentPosition;
-end;
-
-function TBufferedFileStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
-begin
-  case Origin of
-    soBeginning: Result := Offset;
-    soCurrent: Result := Position + Offset;
-    soEnd:
-    begin
-      FlushBuffer;
-      Result := FFileStream.Seek(Offset, soEnd);
-    end;
-    else
-      Result := Position;
-  end;
-end;
-```
-
-Utilisation :
-
-```pascal
-procedure TestBufferedFileStream;
-var
-  BufStream: TBufferedFileStream;
-  StartTime: TDateTime;
-  Data: array of Byte;
+  FileStream: TFileStream;
+  CountingStream: TCountingStream;
+  Nombre: Integer;
   i: Integer;
 begin
-  // Créer des données de test
-  SetLength(Data, 10 * 1024 * 1024); // 10 Mo
-  for i := 0 to Length(Data) - 1 do
-    Data[i] := i mod 256;
-
-  // Tester avec TBufferedFileStream
-  StartTime := Now;
-  BufStream := TBufferedFileStream.Create('test_buffered.dat', fmCreate, 64 * 1024);
+  FileStream := TFileStream.Create('test.dat', fmCreate);
   try
-    BufStream.WriteBuffer(Data[0], Length(Data));
-  finally
-    BufStream.Free;
-  end;
-  ShowMessage(Format('Temps avec tampon: %.2f ms',
-                     [(Now - StartTime) * 24 * 60 * 60 * 1000]));
-
-  // On pourrait comparer avec TFileStream standard pour voir la différence
-end;
-```
-
-> **Note :** Cette implémentation est simplifiée pour illustration. Dans un contexte de production, vous pourriez utiliser des bibliothèques existantes ou des implémentations plus robustes.
-
-### Flux de compression et décompression
-
-Delphi fournit des flux pour la compression et décompression dans l'unité `System.Zip` :
-
-```pascal
-uses
-  System.Classes, System.Zip, System.SysUtils;
-
-procedure CompresserFichier(const FichierSource, FichierDestination: string);
-var
-  SourceStream, DestStream: TFileStream;
-  ZipStream: TZCompressionStream;
-begin
-  SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
+    CountingStream := TCountingStream.Create(FileStream);
     try
-      // Créer un flux de compression (niveau de compression 9 = maximum)
-      ZipStream := TZCompressionStream.Create(DestStream, zcMax);
-      try
-        // Copier les données sources dans le flux de compression
-        ZipStream.CopyFrom(SourceStream, 0); // 0 = copier tout
-      finally
-        // Important: fermer le flux de compression avant le flux de destination
-        ZipStream.Free;
-      end;
+      // Écrire des données
+      for i := 1 to 100 do
+        CountingStream.Write(i, SizeOf(Integer));
+
+      // Afficher les statistiques
+      ShowMessage(Format('Écritures : %d' + #13#10 +
+                         'Octets écrits : %d',
+                         [CountingStream.NombreEcritures,
+                          CountingStream.BytesEcrits]));
+
+      // Lire les données
+      CountingStream.Position := 0;
+      for i := 1 to 100 do
+        CountingStream.Read(Nombre, SizeOf(Integer));
+
+      // Afficher les statistiques
+      ShowMessage(Format('Lectures : %d' + #13#10 +
+                         'Octets lus : %d',
+                         [CountingStream.NombreLectures,
+                          CountingStream.BytesLus]));
     finally
-      DestStream.Free;
+      CountingStream.Free;
     end;
   finally
-    SourceStream.Free;
-  end;
-end;
-
-procedure DecompresserFichier(const FichierCompresse, FichierDestination: string);
-var
-  SourceStream, DestStream: TFileStream;
-  UnzipStream: TZDecompressionStream;
-  Buffer: array[0..8191] of Byte;
-  Count: Integer;
-begin
-  SourceStream := TFileStream.Create(FichierCompresse, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      // Créer un flux de décompression
-      UnzipStream := TZDecompressionStream.Create(SourceStream);
-      try
-        // Lire par blocs et écrire dans le fichier de destination
-        repeat
-          Count := UnzipStream.Read(Buffer, SizeOf(Buffer));
-          if Count > 0 then
-            DestStream.WriteBuffer(Buffer, Count);
-        until Count = 0;
-      finally
-        UnzipStream.Free;
-      end;
-    finally
-      DestStream.Free;
-    end;
-  finally
-    SourceStream.Free;
+    FileStream.Free;
   end;
 end;
 ```
 
-### Flux de chiffrement et déchiffrement
+---
 
-Bien que Delphi ne fournisse pas directement des flux de chiffrement, vous pouvez créer vos propres descendants de `TStream` pour chiffrer et déchiffrer des données :
+## Patterns et bonnes pratiques
 
-```pascal
-uses
-  System.Classes, System.SysUtils, System.Hash;
-
-// Exemple simplifié de flux de chiffrement avec XOR
-type
-  TXORCryptoStream = class(TStream)
-  private
-    FInnerStream: TStream;
-    FKey: TBytes;
-    FOwnsStream: Boolean;
-    FPosition: Int64;
-  public
-    constructor Create(AStream: TStream; const AKey: string; AOwnsStream: Boolean = False);
-    destructor Destroy; override;
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Write(const Buffer; Count: Longint): Longint; override;
-    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    property InnerStream: TStream read FInnerStream;
-  end;
-
-constructor TXORCryptoStream.Create(AStream: TStream; const AKey: string; AOwnsStream: Boolean);
-begin
-  inherited Create;
-  FInnerStream := AStream;
-  FOwnsStream := AOwnsStream;
-  FPosition := 0;
-
-  // Créer une clé de chiffrement à partir de la chaîne
-  FKey := THashMD5.GetHashBytes(AKey);
-end;
-
-destructor TXORCryptoStream.Destroy;
-begin
-  if FOwnsStream then
-    FInnerStream.Free;
-  inherited Destroy;
-end;
-
-function TXORCryptoStream.Read(var Buffer; Count: Longint): Longint;
-var
-  I: Integer;
-  PBuf: PByte;
-begin
-  // Lire les données du flux sous-jacent
-  Result := FInnerStream.Read(Buffer, Count);
-
-  // Déchiffrer en appliquant XOR avec la clé
-  PBuf := @Buffer;
-  for I := 0 to Result - 1 do
-  begin
-    PBuf^ := PBuf^ xor FKey[(FPosition + I) mod Length(FKey)];
-    Inc(PBuf);
-  end;
-
-  Inc(FPosition, Result);
-end;
-
-function TXORCryptoStream.Write(const Buffer; Count: Longint): Longint;
-var
-  I: Integer;
-  TempBuffer: TBytes;
-  PBuf: PByte;
-begin
-  // Copier les données pour ne pas modifier l'original
-  SetLength(TempBuffer, Count);
-  Move(Buffer, TempBuffer[0], Count);
-
-  // Chiffrer en appliquant XOR avec la clé
-  for I := 0 to Count - 1 do
-    TempBuffer[I] := TempBuffer[I] xor FKey[(FPosition + I) mod Length(FKey)];
-
-  // Écrire les données chiffrées dans le flux sous-jacent
-  Result := FInnerStream.Write(TempBuffer[0], Count);
-
-  Inc(FPosition, Result);
-end;
-
-function TXORCryptoStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
-begin
-  Result := FInnerStream.Seek(Offset, Origin);
-  FPosition := Result;
-end;
-```
-
-Utilisation :
+### 1. Pattern de création sécurisée
 
 ```pascal
-procedure ChiffrerFichier(const FichierSource, FichierDestination, MotDePasse: string);
-var
-  SourceStream, DestStream: TFileStream;
-  CryptoStream: TXORCryptoStream;
-begin
-  SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      // Créer un flux de chiffrement
-      CryptoStream := TXORCryptoStream.Create(DestStream, MotDePasse, False);
-      try
-        // Copier les données sources dans le flux de chiffrement
-        CryptoStream.CopyFrom(SourceStream, 0);
-      finally
-        CryptoStream.Free;
-      end;
-    finally
-      DestStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-
-procedure DechiffrerFichier(const FichierChiffre, FichierDestination, MotDePasse: string);
-var
-  SourceStream, DestStream: TFileStream;
-  CryptoStream: TXORCryptoStream;
-begin
-  SourceStream := TFileStream.Create(FichierChiffre, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      // Créer un flux de déchiffrement (même classe puisque XOR fonctionne dans les deux sens)
-      CryptoStream := TXORCryptoStream.Create(SourceStream, MotDePasse, False);
-      try
-        // Copier les données chiffrées vers le fichier de destination
-        DestStream.CopyFrom(CryptoStream, 0);
-      finally
-        CryptoStream.Free;
-      end;
-    finally
-      DestStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-```
-
-> **Note :** Cet exemple utilise un chiffrement XOR simple pour illustrer le concept. Pour une application réelle, utilisez des algorithmes de chiffrement plus robustes comme AES ou RSA, disponibles dans l'unité `System.Hash`.
-
-### Utilisation des flux dans les composants visuels
-
-De nombreux composants Delphi prennent en charge les flux via des méthodes `LoadFromStream` et `SaveToStream` :
-
-```pascal
-procedure ExempleFluxAvecComposants;
-var
-  MemStream: TMemoryStream;
-begin
-  MemStream := TMemoryStream.Create;
-  try
-    // Sauvegarder le contenu d'un mémo dans un flux
-    Memo1.Lines.SaveToStream(MemStream);
-
-    // Revenir au début du flux
-    MemStream.Position := 0;
-
-    // Charger le contenu dans un autre mémo
-    Memo2.Lines.LoadFromStream(MemStream);
-
-    // Utiliser le même flux pour une image
-    MemStream.Clear;
-    if Assigned(Image1.Picture.Graphic) then
-      Image1.Picture.Graphic.SaveToStream(MemStream);
-
-    // Revenir au début
-    MemStream.Position := 0;
-
-    // Charger l'image dans un autre composant
-    Image2.Picture.LoadFromStream(MemStream);
-  finally
-    MemStream.Free;
-  end;
-end;
-```
-
-Composants qui prennent en charge les flux :
-- `TMemo` et `TRichEdit` via `Lines.LoadFromStream` et `Lines.SaveToStream`
-- `TImage` via `Picture.LoadFromStream` et `Picture.SaveToStream`
-- `TListBox` et `TComboBox` via `Items.LoadFromStream` et `Items.SaveToStream`
-- `TBitmap`, `TJPEGImage` et autres classes graphiques
-
-### Flux pour les bases de données
-
-Les champs mémo et BLOB (Binary Large OBject) des bases de données fonctionnent également avec les flux :
-
-```pascal
-procedure SauvegarderImageDansBlobField;
-var
-  MemStream: TMemoryStream;
-begin
-  if not DataModule1.TableClients.Active then
-    DataModule1.TableClients.Open;
-
-  // Passer en mode édition
-  DataModule1.TableClients.Edit;
-
-  MemStream := TMemoryStream.Create;
-  try
-    // Sauvegarder l'image dans le flux
-    if Assigned(Image1.Picture.Graphic) then
-      Image1.Picture.Graphic.SaveToStream(MemStream);
-
-    // Revenir au début du flux
-    MemStream.Position := 0;
-
-    // Charger le flux dans le champ BLOB
-    TBlobField(DataModule1.TableClients.FieldByName('Photo')).LoadFromStream(MemStream);
-
-    // Valider les modifications
-    DataModule1.TableClients.Post;
-  finally
-    MemStream.Free;
-  end;
-end;
-
-procedure ChargerImageDepuisBlobField;
-var
-  MemStream: TMemoryStream;
-begin
-  if not DataModule1.TableClients.Active then
-    DataModule1.TableClients.Open;
-
-  MemStream := TMemoryStream.Create;
-  try
-    // Charger le champ BLOB dans le flux
-    TBlobField(DataModule1.TableClients.FieldByName('Photo')).SaveToStream(MemStream);
-
-    // Revenir au début du flux
-    MemStream.Position := 0;
-
-    // Si le BLOB n'est pas vide
-    if MemStream.Size > 0 then
-    begin
-      // Essayer de charger l'image
-      try
-        Image1.Picture.LoadFromStream(MemStream);
-      except
-        on E: Exception do
-          ShowMessage('Erreur lors du chargement de l''image : ' + E.Message);
-      end;
-    end;
-  finally
-    MemStream.Free;
-  end;
-end;
-```
-
-### Création de votre propre classe de flux
-
-Dans certains cas, vous pourriez avoir besoin de créer votre propre classe de flux spécialisée. Voici un exemple de flux qui ne permet d'accéder qu'à une partie d'un autre flux :
-
-```pascal
-type
-  TPartialStream = class(TStream)
-  private
-    FBaseStream: TStream;
-    FStartPos: Int64;
-    FSize: Int64;
-    FPosition: Int64;
-    FOwnsStream: Boolean;
-  public
-    // Crée un flux qui représente une partie d'un autre flux
-    constructor Create(ABaseStream: TStream; AStartPos, ASize: Int64; AOwnsStream: Boolean = False);
-    destructor Destroy; override;
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Write(const Buffer; Count: Longint): Longint; override;
-    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    property BaseStream: TStream read FBaseStream;
-    property StartPos: Int64 read FStartPos;
-    property Size: Int64 read FSize;
-  end;
-
-constructor TPartialStream.Create(ABaseStream: TStream; AStartPos, ASize: Int64; AOwnsStream: Boolean);
-begin
-  inherited Create;
-  FBaseStream := ABaseStream;
-  FStartPos := AStartPos;
-  FSize := ASize;
-  FPosition := 0;
-  FOwnsStream := AOwnsStream;
-
-  // Vérifier les paramètres
-  if FBaseStream = nil then
-    raise EStreamError.Create('Flux de base non défini');
-
-  if FStartPos < 0 then
-    raise EStreamError.Create('Position de départ négative');
-
-  if FSize < 0 then
-    raise EStreamError.Create('Taille négative');
-
-  // Vérifier que la portion demandée est dans les limites du flux de base
-  if FStartPos + FSize > FBaseStream.Size then
-    raise EStreamError.Create('La portion demandée dépasse la taille du flux de base');
-end;
-
-destructor TPartialStream.Destroy;
-begin
-  if FOwnsStream then
-    FBaseStream.Free;
-  inherited;
-end;
-
-function TPartialStream.Read(var Buffer; Count: Longint): Longint;
-var
-  BytesLeft: Int64;
-begin
-  // Calculer combien d'octets peuvent être réellement lus
-  BytesLeft := FSize - FPosition;
-  if Count > BytesLeft then
-    Count := BytesLeft;
-
-  if Count <= 0 then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  // Positionner le flux de base
-  FBaseStream.Position := FStartPos + FPosition;
-
-  // Lire les données
-  Result := FBaseStream.Read(Buffer, Count);
-
-  // Mettre à jour notre position
-  Inc(FPosition, Result);
-end;
-
-function TPartialStream.Write(const Buffer; Count: Longint): Longint;
-var
-  BytesLeft: Int64;
-begin
-  // Calculer combien d'octets peuvent être réellement écrits
-  BytesLeft := FSize - FPosition;
-  if Count > BytesLeft then
-    Count := BytesLeft;
-
-  if Count <= 0 then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  // Positionner le flux de base
-  FBaseStream.Position := FStartPos + FPosition;
-
-  // Écrire les données
-  Result := FBaseStream.Write(Buffer, Count);
-
-  // Mettre à jour notre position
-  Inc(FPosition, Result);
-end;
-
-function TPartialStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
-var
-  NewPos: Int64;
-begin
-  // Calculer la nouvelle position en fonction de l'origine
-  case Origin of
-    soBeginning: NewPos := Offset;
-    soCurrent:   NewPos := FPosition + Offset;
-    soEnd:       NewPos := FSize + Offset;
-    else
-      raise EStreamError.Create('Origine de déplacement invalide');
-  end;
-
-  // Vérifier les limites
-  if NewPos < 0 then
-    NewPos := 0
-  else if NewPos > FSize then
-    NewPos := FSize;
-
-  // Mettre à jour la position
-  FPosition := NewPos;
-  Result := FPosition;
-end;
-```
-
-Utilisation :
-
-```pascal
-procedure ExtraireSectionFichier(const FichierSource, FichierDestination: string;
-  Debut, Taille: Int64);
-var
-  SourceStream, DestStream: TFileStream;
-  PartStream: TPartialStream;
-begin
-  SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
-  try
-    // S'assurer que les paramètres sont valides
-    if (Debut < 0) or (Debut >= SourceStream.Size) then
-      raise Exception.Create('Position de départ invalide');
-
-    if (Taille <= 0) or (Debut + Taille > SourceStream.Size) then
-      Taille := SourceStream.Size - Debut;
-
-    // Créer un flux partiel qui représente seulement la portion demandée
-    PartStream := TPartialStream.Create(SourceStream, Debut, Taille);
-    try
-      // Créer le fichier de destination
-      DestStream := TFileStream.Create(FichierDestination, fmCreate);
-      try
-        // Copier la portion du fichier source vers la destination
-        DestStream.CopyFrom(PartStream, 0);
-      finally
-        DestStream.Free;
-      end;
-    finally
-      PartStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-```
-
-### Flux pour les opérations réseau
-
-Delphi fournit également des flux spécialisés pour les opérations réseau, comme `TSocketStream` et d'autres dans les composants Indy ou les clients REST.
-
-### Techniques avancées avec les flux
-
-#### Clonage et copie de flux
-
-Créer une copie d'un flux peut être utile, notamment pour conserver une version intermédiaire des données :
-
-```pascal
-function CloneStream(Source: TStream): TMemoryStream;
+function CreerEtInitialiserStream: TMemoryStream;
 begin
   Result := TMemoryStream.Create;
   try
-    Source.Position := 0;
-    Result.CopyFrom(Source, 0);
+    // Initialisation
+    Result.SetSize(1024);
     Result.Position := 0;
   except
     Result.Free;
@@ -1207,494 +1141,438 @@ begin
 end;
 ```
 
-#### Traitement par blocs pour les grands fichiers
-
-Pour les fichiers volumineux, il est préférable de traiter les données par blocs plutôt que de tout charger en mémoire :
+### 2. Stream Wrapper pour gestion automatique
 
 ```pascal
-procedure TraiterGrandFichierParBlocs(const NomFichier: string);
-const
-  TAILLE_BLOC = 1024 * 1024; // 1 Mo par bloc
-var
-  Flux: TFileStream;
-  Buffer: TBytes;
-  BytesLus: Integer;
-  TotalTraite: Int64;
-begin
-  SetLength(Buffer, TAILLE_BLOC);
-  Flux := TFileStream.Create(NomFichier, fmOpenRead);
-  try
-    TotalTraite := 0;
-
-    repeat
-      // Lire un bloc
-      BytesLus := Flux.Read(Buffer[0], TAILLE_BLOC);
-
-      if BytesLus > 0 then
-      begin
-        // Traiter les données du bloc...
-        // Par exemple, calculer une somme de contrôle
-
-        Inc(TotalTraite, BytesLus);
-
-        // Afficher la progression
-        Label1.Caption := Format('Traité: %.2f Mo (%.1f%%)',
-                                [TotalTraite / (1024 * 1024),
-                                 (TotalTraite / Flux.Size) * 100]);
-        Application.ProcessMessages; // Permettre la mise à jour de l'interface
-      end;
-    until BytesLus = 0;
-
-    ShowMessage(Format('Traitement terminé: %.2f Mo', [TotalTraite / (1024 * 1024)]));
-  finally
-    Flux.Free;
-  end;
-end;
-```
-
-### Bonnes pratiques avec les flux
-
-1. **Toujours libérer les ressources** : Utilisez `try...finally` pour vous assurer que les flux sont libérés même en cas d'exception.
-
-2. **Gérer les erreurs** : Capturez les exceptions spécifiques comme `EStreamError` ou `EFOpenError` pour un traitement d'erreur précis.
-
-3. **Flux imbriqués** : Libérez les flux dans l'ordre inverse de leur création (de l'intérieur vers l'extérieur).
-
-4. **Position des flux** : N'oubliez pas de repositionner les flux au début après écriture si vous prévoyez de les lire.
-
-5. **Performances** :
-   - Utilisez `WriteBuffer`/`ReadBuffer` plutôt que `Write`/`Read` lorsque vous voulez garantir la lecture/écriture de tous les octets.
-   - Utilisez un tampon de taille appropriée (ni trop petit, ni trop grand) pour les opérations par blocs.
-   - Pour les grands fichiers, traitez par blocs plutôt que de tout charger en mémoire.
-
-6. **Propriétaire des flux** : Définissez clairement qui est responsable de libérer les flux, surtout lorsque vous les passez entre différentes méthodes.
-
-### Exemple de projet complet
-
-Voici un exemple complet de gestionnaire de fichiers qui montre l'utilisation de plusieurs types de flux :
-
-```pascal
-unit Main;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, System.Zip, System.Hash;
-
 type
-  TFormMain = class(TForm)
-    PageControl1: TPageControl;
-    TabSheet1: TTabSheet;
-    TabSheet2: TTabSheet;
-    TabSheet3: TTabSheet;
-    OpenDialog1: TOpenDialog;
-    SaveDialog1: TSaveDialog;
-    MemoTexte: TMemo;
-    ButtonCharger: TButton;
-    ButtonSauvegarder: TButton;
-    ButtonCompresser: TButton;
-    ButtonDecompresser: TButton;
-    Image1: TImage;
-    ButtonChargerImage: TButton;
-    ButtonSauvegarderImage: TButton;
-    ButtonRotationImage: TButton;
-    ProgressBar1: TProgressBar;
-    MemoStats: TMemo;
-    ButtonEncrypter: TButton;
-    ButtonDecrypter: TButton;
-    EditMotDePasse: TEdit;
-    Label1: TLabel;
-    procedure ButtonChargerClick(Sender: TObject);
-    procedure ButtonSauvegarderClick(Sender: TObject);
-    procedure ButtonCompresserClick(Sender: TObject);
-    procedure ButtonDecompresserClick(Sender: TObject);
-    procedure ButtonChargerImageClick(Sender: TObject);
-    procedure ButtonSauvegarderImageClick(Sender: TObject);
-    procedure ButtonRotationImageClick(Sender: TObject);
-    procedure ButtonEncrypterClick(Sender: TObject);
-    procedure ButtonDecrypterClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-    procedure AfficheStats(const Fichier: string);
-    function CreateZipStream(AStream: TStream): TStream;
-    function CreateUnzipStream(AStream: TStream): TStream;
-    function CreateEncryptStream(AStream: TStream; const Password: string): TStream;
-    function CreateDecryptStream(AStream: TStream; const Password: string): TStream;
-  public
-    { Public declarations }
+  TStreamHelper = class helper for TStream
+    procedure WriteInteger(Value: Integer);
+    function ReadInteger: Integer;
+    procedure WriteString(const Value: string);
+    function ReadString: string;
   end;
 
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormMain.FormCreate(Sender: TObject);
+procedure TStreamHelper.WriteInteger(Value: Integer);
 begin
-  PageControl1.ActivePageIndex := 0;
+  Self.WriteBuffer(Value, SizeOf(Integer));
 end;
 
-procedure TFormMain.AfficheStats(const Fichier: string);
-var
-  Info: TSearchRec;
+function TStreamHelper.ReadInteger: Integer;
 begin
-  if FindFirst(Fichier, faAnyFile, Info) = 0 then
+  Self.ReadBuffer(Result, SizeOf(Integer));
+end;
+
+procedure TStreamHelper.WriteString(const Value: string);
+var
+  Bytes: TBytes;
+  Longueur: Integer;
+begin
+  Bytes := TEncoding.UTF8.GetBytes(Value);
+  Longueur := Length(Bytes);
+  Self.WriteBuffer(Longueur, SizeOf(Integer));
+  if Longueur > 0 then
+    Self.WriteBuffer(Bytes[0], Longueur);
+end;
+
+function TStreamHelper.ReadString: string;
+var
+  Bytes: TBytes;
+  Longueur: Integer;
+begin
+  Self.ReadBuffer(Longueur, SizeOf(Integer));
+  if Longueur > 0 then
   begin
-    MemoStats.Lines.Clear;
-    MemoStats.Lines.Add('Nom: ' + ExtractFileName(Fichier));
-    MemoStats.Lines.Add('Taille: ' + FormatFloat('#,##0', Info.Size) + ' octets');
-    MemoStats.Lines.Add('Date: ' + DateTimeToStr(FileDateToDateTime(Info.Time)));
-    FindClose(Info);
-  end;
+    SetLength(Bytes, Longueur);
+    Self.ReadBuffer(Bytes[0], Longueur);
+    Result := TEncoding.UTF8.GetString(Bytes);
+  end
+  else
+    Result := '';
 end;
 
-procedure TFormMain.ButtonChargerClick(Sender: TObject);
+// Utilisation simplifiée
 var
-  Stream: TFileStream;
+  Stream: TMemoryStream;
+  Texte: string;
+  Nombre: Integer;
 begin
-  if OpenDialog1.Execute then
-  begin
-    Stream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-    try
-      MemoTexte.Lines.LoadFromStream(Stream);
-      AfficheStats(OpenDialog1.FileName);
-    finally
-      Stream.Free;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonSauvegarderClick(Sender: TObject);
-var
-  Stream: TFileStream;
-begin
-  if SaveDialog1.Execute then
-  begin
-    Stream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-    try
-      MemoTexte.Lines.SaveToStream(Stream);
-      AfficheStats(SaveDialog1.FileName);
-    finally
-      Stream.Free;
-    end;
-  end;
-end;
-
-function TFormMain.CreateZipStream(AStream: TStream): TStream;
-begin
-  Result := TZCompressionStream.Create(TCompressionLevel.clMax, AStream);
-end;
-
-function TFormMain.CreateUnzipStream(AStream: TStream): TStream;
-begin
-  Result := TZDecompressionStream.Create(AStream);
-end;
-
-// Implémentation simplifiée pour l'exemple
-function TFormMain.CreateEncryptStream(AStream: TStream; const Password: string): TStream;
-begin
-  // Dans une application réelle, utilisez un algorithme plus fort que XOR
-  Result := TXORCryptoStream.Create(AStream, Password, False);
-end;
-
-function TFormMain.CreateDecryptStream(AStream: TStream; const Password: string): TStream;
-begin
-  // Même classe que pour le chiffrement car XOR est réversible
-  Result := TXORCryptoStream.Create(AStream, Password, False);
-end;
-
-procedure TFormMain.ButtonCompresserClick(Sender: TObject);
-var
-  SourceStream, DestStream, ZipStream: TStream;
-begin
-  if OpenDialog1.Execute then
-  begin
-    if SaveDialog1.Execute then
-    begin
-      SourceStream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-      try
-        DestStream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-        try
-          ZipStream := CreateZipStream(DestStream);
-          try
-            ProgressBar1.Max := 100;
-            ProgressBar1.Position := 0;
-
-            // Copier le contenu
-            ZipStream.CopyFrom(SourceStream, 0);
-            ProgressBar1.Position := 100;
-
-            AfficheStats(SaveDialog1.FileName);
-            ShowMessage('Compression terminée !');
-          finally
-            ZipStream.Free;
-          end;
-        finally
-          DestStream.Free;
-        end;
-      finally
-        SourceStream.Free;
-      end;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonDecompresserClick(Sender: TObject);
-var
-  SourceStream, DestStream, UnzipStream: TStream;
-  Buffer: array[0..8191] of Byte;
-  Count: Integer;
-  TotalRead: Int64;
-  SourceSize: Int64;
-begin
-  if OpenDialog1.Execute then
-  begin
-    if SaveDialog1.Execute then
-    begin
-      SourceStream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-      try
-        SourceSize := SourceStream.Size;
-        DestStream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-        try
-          UnzipStream := CreateUnzipStream(SourceStream);
-          try
-            ProgressBar1.Max := 100;
-            ProgressBar1.Position := 0;
-            TotalRead := 0;
-
-            // Lire par blocs
-            repeat
-              Count := UnzipStream.Read(Buffer, SizeOf(Buffer));
-              if Count > 0 then
-              begin
-                DestStream.WriteBuffer(Buffer, Count);
-                Inc(TotalRead, Count);
-
-                // Mise à jour de la progression (approximative)
-                ProgressBar1.Position := Min(100, Round((TotalRead / (SourceSize * 2)) * 100));
-                Application.ProcessMessages;
-              end;
-            until Count = 0;
-
-            ProgressBar1.Position := 100;
-            AfficheStats(SaveDialog1.FileName);
-            ShowMessage('Décompression terminée !');
-          finally
-            UnzipStream.Free;
-          end;
-        finally
-          DestStream.Free;
-        end;
-      finally
-        SourceStream.Free;
-      end;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonChargerImageClick(Sender: TObject);
-var
-  Stream: TFileStream;
-begin
-  if OpenDialog1.Execute then
-  begin
-    Stream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-    try
-      Image1.Picture.LoadFromStream(Stream);
-      AfficheStats(OpenDialog1.FileName);
-    finally
-      Stream.Free;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonSauvegarderImageClick(Sender: TObject);
-var
-  Stream: TFileStream;
-begin
-  if SaveDialog1.Execute then
-  begin
-    Stream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-    try
-      if Assigned(Image1.Picture.Graphic) then
-        Image1.Picture.SaveToFile(SaveDialog1.FileName);
-
-      AfficheStats(SaveDialog1.FileName);
-    finally
-      Stream.Free;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonRotationImageClick(Sender: TObject);
-var
-  Bitmap: TBitmap;
-  MemStream: TMemoryStream;
-  x, y: Integer;
-  SrcPixel, DstPixel: PRGBQuad;
-  SrcScanline, DstScanline: PByte;
-  OrigWidth, OrigHeight: Integer;
-begin
-  if not Assigned(Image1.Picture.Graphic) then
-    Exit;
-
-  MemStream := TMemoryStream.Create;
+  Stream := TMemoryStream.Create;
   try
-    // Sauvegarder l'image actuelle dans un flux mémoire
-    Image1.Picture.Graphic.SaveToStream(MemStream);
+    Stream.WriteInteger(42);
+    Stream.WriteString('Bonjour');
 
-    // Créer un nouveau bitmap
-    Bitmap := TBitmap.Create;
-    try
-      // Charger l'image originale
-      MemStream.Position := 0;
-      Bitmap.LoadFromStream(MemStream);
+    Stream.Position := 0;
 
-      // Définir la profondeur de couleur à 32 bits
-      Bitmap.PixelFormat := pf32bit;
+    Nombre := Stream.ReadInteger;
+    Texte := Stream.ReadString;
 
-      OrigWidth := Bitmap.Width;
-      OrigHeight := Bitmap.Height;
-
-      // Créer un nouveau bitmap pour la rotation
-      var RotatedBmp := TBitmap.Create;
-      try
-        RotatedBmp.PixelFormat := pf32bit;
-        RotatedBmp.SetSize(OrigHeight, OrigWidth); // Inverser dimensions
-
-        // Rotation 90° dans le sens horaire
-        for y := 0 to OrigHeight - 1 do
-        begin
-          SrcScanline := Bitmap.ScanLine[y];
-
-          for x := 0 to OrigWidth - 1 do
-          begin
-            SrcPixel := PRGBQuad(SrcScanline + x * 4);
-            DstScanline := RotatedBmp.ScanLine[OrigWidth - 1 - x];
-            DstPixel := PRGBQuad(DstScanline + y * 4);
-
-            // Copier les pixels
-            DstPixel^ := SrcPixel^;
-          end;
-        end;
-
-        // Appliquer l'image tournée
-        Image1.Picture.Assign(RotatedBmp);
-      finally
-        RotatedBmp.Free;
-      end;
-    finally
-      Bitmap.Free;
-    end;
+    ShowMessage(Format('Nombre : %d, Texte : %s', [Nombre, Texte]));
   finally
-    MemStream.Free;
+    Stream.Free;
   end;
 end;
-
-procedure TFormMain.ButtonEncrypterClick(Sender: TObject);
-var
-  SourceStream, DestStream, CryptoStream: TStream;
-begin
-  if EditMotDePasse.Text = '' then
-  begin
-    ShowMessage('Veuillez entrer un mot de passe');
-    Exit;
-  end;
-
-  if OpenDialog1.Execute then
-  begin
-    if SaveDialog1.Execute then
-    begin
-      SourceStream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-      try
-        DestStream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-        try
-          CryptoStream := CreateEncryptStream(DestStream, EditMotDePasse.Text);
-          try
-            ProgressBar1.Max := 100;
-            ProgressBar1.Position := 0;
-
-            // Copier le contenu
-            CryptoStream.CopyFrom(SourceStream, 0);
-            ProgressBar1.Position := 100;
-
-            AfficheStats(SaveDialog1.FileName);
-            ShowMessage('Chiffrement terminé !');
-          finally
-            CryptoStream.Free;
-          end;
-        finally
-          DestStream.Free;
-        end;
-      finally
-        SourceStream.Free;
-      end;
-    end;
-  end;
-end;
-
-procedure TFormMain.ButtonDecrypterClick(Sender: TObject);
-var
-  SourceStream, DestStream, CryptoStream: TStream;
-begin
-  if EditMotDePasse.Text = '' then
-  begin
-    ShowMessage('Veuillez entrer un mot de passe');
-    Exit;
-  end;
-
-  if OpenDialog1.Execute then
-  begin
-    if SaveDialog1.Execute then
-    begin
-      SourceStream := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
-      try
-        DestStream := TFileStream.Create(SaveDialog1.FileName, fmCreate);
-        try
-          CryptoStream := CreateDecryptStream(SourceStream, EditMotDePasse.Text);
-          try
-            ProgressBar1.Max := 100;
-            ProgressBar1.Position := 0;
-
-            // Copier le contenu
-            DestStream.CopyFrom(CryptoStream, 0);
-            ProgressBar1.Position := 100;
-
-            AfficheStats(SaveDialog1.FileName);
-            ShowMessage('Déchiffrement terminé !');
-          finally
-            CryptoStream.Free;
-          end;
-        finally
-          DestStream.Free;
-        end;
-      finally
-        SourceStream.Free;
-      end;
-    end;
-  end;
-end;
-
-end.
 ```
 
-### Exercice pratique
+### 3. Utiliser des interfaces pour la gestion automatique
 
-Créez une application qui utilise différents types de flux pour :
-1. Charger une image
-2. Lui appliquer un filtre simple (comme la conversion en niveaux de gris)
-3. La compresser
-4. La sauvegarder dans un fichier chiffré
-5. Puis être capable de faire l'opération inverse (déchiffrement, décompression, chargement)
+```pascal
+type
+  IStreamWrapper = interface
+    ['{12345678-1234-1234-1234-123456789012}']
+    function GetStream: TStream;
+    property Stream: TStream read GetStream;
+  end;
 
-Cet exercice vous permettra de combiner plusieurs types de flux et de voir comment ils peuvent être utilisés ensemble de manière pratique.
+  TStreamWrapper = class(TInterfacedObject, IStreamWrapper)
+  private
+    FStream: TStream;
+    function GetStream: TStream;
+  public
+    constructor Create(AStream: TStream);
+    destructor Destroy; override;
+    property Stream: TStream read GetStream;
+  end;
+
+constructor TStreamWrapper.Create(AStream: TStream);
+begin
+  inherited Create;
+  FStream := AStream;
+end;
+
+destructor TStreamWrapper.Destroy;
+begin
+  FStream.Free;
+  inherited;
+end;
+
+function TStreamWrapper.GetStream: TStream;
+begin
+  Result := FStream;
+end;
+
+// Utilisation (pas besoin de try/finally)
+procedure UtiliserStreamWrapper;
+var
+  StreamWrapper: IStreamWrapper;
+  Stream: TStream;
+begin
+  StreamWrapper := TStreamWrapper.Create(TMemoryStream.Create);
+  Stream := StreamWrapper.Stream;
+
+  // Utiliser le stream
+  Stream.Write(...);
+
+  // Pas besoin de Free, l'interface s'en charge automatiquement
+end;
+```
 
 ---
 
-À suivre dans la prochaine section : **7.4 Sérialisation et persistance d'objets**
+## Cas d'usage pratiques
+
+### 1. Sérialisation d'objets
+
+```pascal
+type
+  TPerson = class
+  private
+    FNom: string;
+    FAge: Integer;
+    FSalaire: Double;
+  public
+    procedure SaveToStream(Stream: TStream);
+    procedure LoadFromStream(Stream: TStream);
+
+    property Nom: string read FNom write FNom;
+    property Age: Integer read FAge write FAge;
+    property Salaire: Double read FSalaire write FSalaire;
+  end;
+
+procedure TPerson.SaveToStream(Stream: TStream);
+var
+  Bytes: TBytes;
+  Longueur: Integer;
+begin
+  // Sauvegarder le nom
+  Bytes := TEncoding.UTF8.GetBytes(FNom);
+  Longueur := Length(Bytes);
+  Stream.Write(Longueur, SizeOf(Integer));
+  if Longueur > 0 then
+    Stream.Write(Bytes[0], Longueur);
+
+  // Sauvegarder l'âge
+  Stream.Write(FAge, SizeOf(Integer));
+
+  // Sauvegarder le salaire
+  Stream.Write(FSalaire, SizeOf(Double));
+end;
+
+procedure TPerson.LoadFromStream(Stream: TStream);
+var
+  Bytes: TBytes;
+  Longueur: Integer;
+begin
+  // Charger le nom
+  Stream.Read(Longueur, SizeOf(Integer));
+  if Longueur > 0 then
+  begin
+    SetLength(Bytes, Longueur);
+    Stream.Read(Bytes[0], Longueur);
+    FNom := TEncoding.UTF8.GetString(Bytes);
+  end;
+
+  // Charger l'âge
+  Stream.Read(FAge, SizeOf(Integer));
+
+  // Charger le salaire
+  Stream.Read(FSalaire, SizeOf(Double));
+end;
+
+// Utilisation
+var
+  Person: TPerson;
+  FileStream: TFileStream;
+begin
+  Person := TPerson.Create;
+  try
+    Person.Nom := 'Jean Dupont';
+    Person.Age := 30;
+    Person.Salaire := 45000.0;
+
+    // Sauvegarder
+    FileStream := TFileStream.Create('personne.dat', fmCreate);
+    try
+      Person.SaveToStream(FileStream);
+    finally
+      FileStream.Free;
+    end;
+
+    // Réinitialiser
+    Person.Nom := '';
+    Person.Age := 0;
+    Person.Salaire := 0;
+
+    // Charger
+    FileStream := TFileStream.Create('personne.dat', fmOpenRead);
+    try
+      Person.LoadFromStream(FileStream);
+      ShowMessage(Format('%s, %d ans, %.2f €',
+        [Person.Nom, Person.Age, Person.Salaire]));
+    finally
+      FileStream.Free;
+    end;
+  finally
+    Person.Free;
+  end;
+end;
+```
+
+### 2. Communication réseau avec TMemoryStream
+
+```pascal
+// Préparer des données à envoyer
+function PreparerMessage(const Commande: string; const Donnees: TBytes): TBytes;
+var
+  Stream: TMemoryStream;
+  Longueur: Integer;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    // En-tête : longueur de la commande
+    Longueur := Length(Commande);
+    Stream.Write(Longueur, SizeOf(Integer));
+
+    // Commande
+    if Longueur > 0 then
+      Stream.Write(Commande[1], Longueur * SizeOf(Char));
+
+    // Données
+    Longueur := Length(Donnees);
+    Stream.Write(Longueur, SizeOf(Integer));
+    if Longueur > 0 then
+      Stream.Write(Donnees[0], Longueur);
+
+    // Convertir en TBytes
+    SetLength(Result, Stream.Size);
+    Stream.Position := 0;
+    Stream.Read(Result[0], Stream.Size);
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+### 3. Cache avec TMemoryStream
+
+```pascal
+type
+  TDataCache = class
+  private
+    FCache: TDictionary<string, TMemoryStream>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Ajouter(const Cle: string; const Donnees: TBytes);
+    function Obtenir(const Cle: string; out Donnees: TBytes): Boolean;
+    procedure Effacer(const Cle: string);
+    procedure EffacerTout;
+  end;
+
+constructor TDataCache.Create;
+begin
+  inherited;
+  FCache := TDictionary<string, TMemoryStream>.Create;
+end;
+
+destructor TDataCache.Destroy;
+begin
+  EffacerTout;
+  FCache.Free;
+  inherited;
+end;
+
+procedure TDataCache.Ajouter(const Cle: string; const Donnees: TBytes);
+var
+  Stream: TMemoryStream;
+begin
+  // Supprimer l'ancienne entrée si elle existe
+  if FCache.ContainsKey(Cle) then
+    Effacer(Cle);
+
+  Stream := TMemoryStream.Create;
+  if Length(Donnees) > 0 then
+    Stream.Write(Donnees[0], Length(Donnees));
+
+  FCache.Add(Cle, Stream);
+end;
+
+function TDataCache.Obtenir(const Cle: string; out Donnees: TBytes): Boolean;
+var
+  Stream: TMemoryStream;
+begin
+  Result := FCache.TryGetValue(Cle, Stream);
+  if Result then
+  begin
+    SetLength(Donnees, Stream.Size);
+    Stream.Position := 0;
+    Stream.Read(Donnees[0], Stream.Size);
+  end;
+end;
+
+procedure TDataCache.Effacer(const Cle: string);
+var
+  Stream: TMemoryStream;
+begin
+  if FCache.TryGetValue(Cle, Stream) then
+  begin
+    Stream.Free;
+    FCache.Remove(Cle);
+  end;
+end;
+
+procedure TDataCache.EffacerTout;
+var
+  Pair: TPair<string, TMemoryStream>;
+begin
+  for Pair in FCache do
+    Pair.Value.Free;
+  FCache.Clear;
+end;
+```
+
+---
+
+## Tableau comparatif des classes de Stream
+
+| Classe | Usage principal | Avantages | Inconvénients |
+|--------|----------------|-----------|---------------|
+| **TFileStream** | Fichiers sur disque | Pas de limite de taille | Plus lent (I/O disque) |
+| **TMemoryStream** | Données en RAM | Très rapide | Limité par la RAM |
+| **TStringStream** | Manipulation de texte | Simple pour le texte | Moins flexible |
+| **TBytesStream** | Tableaux d'octets | Interface pratique | Duplication mémoire |
+| **TResourceStream** | Ressources embarquées | Lecture seule | Lecture seule |
+
+---
+
+## Bonnes pratiques essentielles
+
+### 1. Toujours libérer les streams
+
+```pascal
+var
+  Stream: TStream;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    // Votre code
+  finally
+    Stream.Free;
+  end;
+end;
+```
+
+### 2. Vérifier la position et la taille
+
+```pascal
+if Stream.Position + SizeOf(Integer) <= Stream.Size then
+  Stream.Read(Valeur, SizeOf(Integer))
+else
+  raise Exception.Create('Pas assez de données dans le stream');
+```
+
+### 3. Utiliser ReadBuffer/WriteBuffer pour la sécurité
+
+```pascal
+// Préférer ReadBuffer qui lève une exception si pas assez de données
+Stream.ReadBuffer(Valeur, SizeOf(Integer));
+
+// Au lieu de Read qui retourne juste moins d'octets
+BytesLus := Stream.Read(Valeur, SizeOf(Integer));
+```
+
+### 4. Réinitialiser la position avant lecture
+
+```pascal
+Stream.Position := 0;
+// Puis lire
+```
+
+### 5. Prévoir l'encodage pour le texte
+
+```pascal
+// Toujours spécifier l'encodage
+StringStream := TStringStream.Create('', TEncoding.UTF8);
+```
+
+---
+
+## Résumé
+
+Dans ce chapitre, vous avez découvert l'écosystème complet des streams en Delphi :
+
+**Classes principales :**
+- **TStream** : classe de base abstraite avec les méthodes fondamentales
+- **TFileStream** : pour les fichiers sur disque
+- **TMemoryStream** : pour les données en mémoire
+- **TStringStream** : pour manipuler du texte
+- **TBytesStream** : pour les tableaux d'octets
+- **TResourceStream** : pour les ressources embarquées
+
+**Opérations essentielles :**
+- Lecture avec `Read` et `ReadBuffer`
+- Écriture avec `Write` et `WriteBuffer`
+- Navigation avec `Seek` et `Position`
+- Copie avec `CopyFrom`
+- Sauvegarde/Chargement avec `SaveToFile` et `LoadFromFile`
+
+**Points clés :**
+- Les streams offrent une interface unifiée pour manipuler différentes sources de données
+- Toujours libérer les streams dans un bloc `finally`
+- Préférer `TMemoryStream` pour la performance, `TFileStream` pour les gros volumes
+- Utiliser les bons encodages pour le texte
+- Vérifier toujours les positions et tailles avant lecture/écriture
+
+Les streams sont un outil fondamental en Delphi qui vous servira dans de nombreux contextes : fichiers, réseau, sérialisation, compression, chiffrement, etc. Maîtriser les streams vous permettra de manipuler les données de manière efficace et élégante !
 
 ⏭️ [Sérialisation et persistance d'objets](/07-gestion-des-fichiers-et-flux-de-donnees/04-serialisation-et-persistance-dobjets.md)

@@ -1,1488 +1,1304 @@
-# 7. Gestion des fichiers et flux de données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-## 7.5 Compression et décompression
+# 7.5 Compression et décompression
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La compression de données est une technique qui permet de réduire la taille des fichiers ou des flux de données. Cette section vous guidera à travers les différentes méthodes disponibles en Delphi pour compresser et décompresser des données.
+La compression de données est une technique permettant de réduire la taille des fichiers ou des données en mémoire. C'est particulièrement utile pour économiser de l'espace de stockage, accélérer les transferts réseau, ou optimiser les performances d'une application.
 
-### Introduction à la compression
+**Analogie simple :** La compression est comme ranger des vêtements dans une valise. Au lieu de les laisser dépliés, vous les pliez soigneusement pour qu'ils prennent moins de place. La décompression, c'est sortir les vêtements et les déplier pour les utiliser à nouveau.
 
-La compression permet de :
-- Réduire l'espace disque utilisé
-- Accélérer les transferts réseau
-- Économiser la bande passante
-- Archiver plus efficacement les données
+## Concepts fondamentaux
 
-Il existe deux types principaux de compression :
-- **Compression sans perte** : aucune information n'est perdue (utilisée pour les documents, programmes, etc.)
-- **Compression avec perte** : certaines informations sont supprimées (utilisée pour les images, sons, vidéos)
+### Qu'est-ce que la compression ?
 
-Delphi propose plusieurs solutions pour la compression sans perte, qui est celle que nous allons explorer dans cette section.
+La **compression** est le processus de réduction de la taille d'un fichier ou d'un ensemble de données en éliminant les redondances ou en utilisant des algorithmes mathématiques intelligents.
 
-### Compression avec System.Zip
+La **décompression** est l'opération inverse : reconstituer les données originales à partir des données compressées.
 
-Depuis les versions récentes de Delphi, l'unité `System.Zip` offre des fonctionnalités natives pour la compression et décompression au format ZIP. C'est la solution la plus simple et la plus directe.
+### Types de compression
 
-#### Compression d'un fichier avec TZipFile
+Il existe deux grandes catégories de compression :
 
-```pascal
-uses
-  System.Zip, System.SysUtils, System.IOUtils;
+#### 1. Compression sans perte (Lossless)
 
-procedure CompresserFichier(const FichierSource, FichierDestination: string);
-var
-  Zip: TZipFile;
-begin
-  // Vérifier que le fichier source existe
-  if not FileExists(FichierSource) then
-  begin
-    ShowMessage('Le fichier source n''existe pas !');
-    Exit;
-  end;
+Les données décompressées sont **exactement identiques** aux données originales.
 
-  // Créer l'archive ZIP
-  Zip := TZipFile.Create;
-  try
-    // Créer un nouveau fichier ZIP
-    Zip.Open(FichierDestination, zmWrite);
+**Exemples :**
+- ZIP, GZIP, 7Z
+- PNG (images)
+- FLAC (audio)
 
-    // Ajouter le fichier à l'archive
-    // Paramètres : FichierSource = chemin du fichier à ajouter
-    //              '' = répertoire dans l'archive (racine ici)
-    //              0 = niveau de compression (0 = défaut)
-    Zip.Add(FichierSource, '');
+**Usage :** Documents, code source, bases de données, archives
 
-    // Fermer l'archive
-    Zip.Close;
+#### 2. Compression avec perte (Lossy)
 
-    ShowMessage('Compression terminée avec succès !');
-  finally
-    Zip.Free;
-  end;
-end;
+Les données décompressées sont **similaires mais pas identiques** aux données originales. Certaines informations sont perdues pour obtenir un meilleur taux de compression.
+
+**Exemples :**
+- JPEG (images)
+- MP3, AAC (audio)
+- MP4, H.264 (vidéo)
+
+**Usage :** Multimédia (photos, musique, vidéos)
+
+> **Note :** Dans ce chapitre, nous nous concentrerons sur la compression sans perte, qui est celle utilisée pour les données et fichiers dans les applications.
+
+### Taux de compression
+
+Le **taux de compression** indique à quel point les données ont été réduites :
+
+```
+Taux de compression = (Taille originale - Taille compressée) / Taille originale × 100%
+
+Exemple :
+Fichier original : 1000 Ko
+Fichier compressé : 300 Ko
+Taux : (1000 - 300) / 1000 × 100% = 70%
 ```
 
-#### Compression de plusieurs fichiers
+**Note :** Tous les fichiers ne se compressent pas aussi bien. Les fichiers texte ou répétitifs se compressent bien, tandis que les fichiers déjà compressés (JPEG, MP3, ZIP) ne se compressent pratiquement pas.
 
-```pascal
-procedure CompresserPlusieurs(const FichiersSource: TArray<string>;
-                             const FichierDestination: string);
-var
-  Zip: TZipFile;
-  Fichier: string;
-begin
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FichierDestination, zmWrite);
+---
 
-    // Ajouter chaque fichier à l'archive
-    for Fichier in FichiersSource do
-    begin
-      if FileExists(Fichier) then
-        Zip.Add(Fichier, '');
-    end;
+## ZLib : La bibliothèque standard
 
-    Zip.Close;
-  finally
-    Zip.Free;
-  end;
-end;
+Delphi inclut nativement la bibliothèque **ZLib**, qui est l'une des bibliothèques de compression les plus utilisées au monde. Elle implémente l'algorithme DEFLATE.
 
-// Utilisation :
-procedure TForm1.ButtonCompresserClick(Sender: TObject);
-var
-  Fichiers: TArray<string>;
-begin
-  if OpenDialog1.Execute then
-  begin
-    Fichiers := OpenDialog1.Files.ToStringArray;
-
-    if SaveDialog1.Execute then
-      CompresserPlusieurs(Fichiers, SaveDialog1.FileName);
-  end;
-end;
-```
-
-#### Compression avec structure de dossiers
-
-Pour conserver la structure de dossiers dans une archive ZIP :
-
-```pascal
-procedure CompresserDossier(const DossierSource, FichierDestination: string);
-var
-  Zip: TZipFile;
-  Fichiers: TArray<string>;
-  Fichier: string;
-  CheminRelatif: string;
-begin
-  // Obtenir tous les fichiers du dossier et ses sous-dossiers
-  Fichiers := TDirectory.GetFiles(DossierSource, '*', TSearchOption.soAllDirectories);
-
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FichierDestination, zmWrite);
-
-    // Ajouter chaque fichier en préservant les chemins relatifs
-    for Fichier in Fichiers do
-    begin
-      // Calculer le chemin relatif du fichier par rapport au dossier source
-      CheminRelatif := StringReplace(
-        ExtractRelativePath(IncludeTrailingPathDelimiter(DossierSource), Fichier),
-        '\', '/', [rfReplaceAll]);
-
-      // Ajouter le fichier avec son chemin relatif dans l'archive
-      Zip.Add(Fichier, CheminRelatif);
-    end;
-
-    Zip.Close;
-  finally
-    Zip.Free;
-  end;
-end;
-```
-
-#### Extraction d'un fichier ZIP
-
-```pascal
-procedure ExtraireFichierZip(const FichierZip, DossierDestination: string);
-var
-  Zip: TZipFile;
-begin
-  // Vérifier que le fichier ZIP existe
-  if not FileExists(FichierZip) then
-  begin
-    ShowMessage('Le fichier ZIP n''existe pas !');
-    Exit;
-  end;
-
-  // Créer le dossier de destination s'il n'existe pas
-  if not DirectoryExists(DossierDestination) then
-    ForceDirectories(DossierDestination);
-
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FichierZip, zmRead);
-
-    // Extraire tous les fichiers vers le dossier de destination
-    Zip.ExtractAll(DossierDestination);
-
-    Zip.Close;
-
-    ShowMessage('Extraction terminée avec succès !');
-  finally
-    Zip.Free;
-  end;
-end;
-```
-
-#### Extraction sélective
-
-```pascal
-procedure ExtraireFichierSpecifique(const FichierZip, NomFichierDansZip, FichierDestination: string);
-var
-  Zip: TZipFile;
-  Index: Integer;
-begin
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FichierZip, zmRead);
-
-    // Chercher l'index du fichier dans l'archive
-    Index := Zip.IndexOf(NomFichierDansZip);
-
-    if Index >= 0 then
-    begin
-      // Extraire le fichier spécifique
-      Zip.Extract(Index, FichierDestination);
-      ShowMessage('Fichier extrait avec succès !');
-    end
-    else
-      ShowMessage('Fichier non trouvé dans l''archive !');
-
-    Zip.Close;
-  finally
-    Zip.Free;
-  end;
-end;
-```
-
-#### Lister le contenu d'un ZIP
-
-```pascal
-procedure ListerContenuZip(const FichierZip: string; Memo: TMemo);
-var
-  Zip: TZipFile;
-  Header: TZipHeader;
-  i: Integer;
-begin
-  Memo.Clear;
-
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FichierZip, zmRead);
-
-    Memo.Lines.Add('Contenu de l''archive :');
-    Memo.Lines.Add('-------------------');
-
-    // Parcourir tous les fichiers de l'archive
-    for i := 0 to Zip.FileCount - 1 do
-    begin
-      Zip.Read(i, Header);
-
-      Memo.Lines.Add(Format(
-        '%s - Taille: %d octets, Taille compressée: %d octets (%.1f%%)',
-        [Header.FileName,
-         Header.UncompressedSize,
-         Header.CompressedSize,
-         (1 - Header.CompressedSize / Header.UncompressedSize) * 100]));
-    end;
-
-    Zip.Close;
-  finally
-    Zip.Free;
-  end;
-end;
-```
-
-#### Niveaux de compression
-
-TZipFile permet de spécifier le niveau de compression lors de l'ajout de fichiers :
-
-```pascal
-// Paramètres : Fichier à ajouter, chemin dans l'archive, niveau de compression
-Zip.Add(FichierSource, '', TZipCompression.zcMaximum);  // Compression maximale
-```
-
-Les niveaux disponibles sont :
-- `zcNone` - Pas de compression (stockage simple)
-- `zcFastest` - Compression rapide mais moins efficace
-- `zcDefault` - Compromis entre vitesse et taux de compression
-- `zcMaximum` - Compression optimale mais plus lente
-- `zcLevel1` à `zcLevel9` - Niveaux intermédiaires (1=rapide, 9=optimal)
-
-### Compression avec ZLib
-
-Pour une compression plus flexible ou pour utiliser l'algorithme DEFLATE directement, Delphi fournit l'accès à la bibliothèque ZLib via les classes `TZCompressionStream` et `TZDecompressionStream`.
-
-#### Compression d'un flux mémoire
-
-```pascal
-uses
-  System.Classes, System.SysUtils, System.ZLib;
-
-procedure CompresserMemoire(const SourceBytes: TBytes; out CompressedBytes: TBytes);
-var
-  SourceStream: TBytesStream;
-  CompressedStream: TBytesStream;
-  CompressionStream: TZCompressionStream;
-begin
-  SourceStream := TBytesStream.Create(SourceBytes);
-  try
-    CompressedStream := TBytesStream.Create;
-    try
-      // Créer un flux de compression avec compression maximale
-      CompressionStream := TZCompressionStream.Create(
-        CompressedStream, TZCompressionLevel.zcMax);
-      try
-        // Copier les données source dans le flux de compression
-        CompressionStream.CopyFrom(SourceStream, 0);
-      finally
-        // Important : fermer le flux de compression avant d'utiliser les résultats
-        CompressionStream.Free;
-      end;
-
-      // Récupérer les données compressées
-      CompressedBytes := CompressedStream.Bytes;
-    finally
-      CompressedStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-
-procedure DecompresserMemoire(const CompressedBytes: TBytes; out SourceBytes: TBytes);
-var
-  CompressedStream: TBytesStream;
-  SourceStream: TBytesStream;
-  DecompressionStream: TZDecompressionStream;
-  Buffer: array[0..4095] of Byte;
-  BytesRead: Integer;
-begin
-  CompressedStream := TBytesStream.Create(CompressedBytes);
-  try
-    SourceStream := TBytesStream.Create;
-    try
-      // Créer un flux de décompression
-      DecompressionStream := TZDecompressionStream.Create(CompressedStream);
-      try
-        // Lire les données décompressées par blocs
-        repeat
-          BytesRead := DecompressionStream.Read(Buffer, SizeOf(Buffer));
-          if BytesRead > 0 then
-            SourceStream.WriteBuffer(Buffer, BytesRead);
-        until BytesRead = 0;
-      finally
-        DecompressionStream.Free;
-      end;
-
-      // Récupérer les données décompressées
-      SourceBytes := SourceStream.Bytes;
-    finally
-      SourceStream.Free;
-    end;
-  finally
-    CompressedStream.Free;
-  end;
-end;
-```
-
-#### Compression de fichiers avec ZLib
-
-```pascal
-procedure CompresserFichierZLib(const FichierSource, FichierDestination: string);
-var
-  SourceStream: TFileStream;
-  DestStream: TFileStream;
-  CompressionStream: TZCompressionStream;
-begin
-  SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      // Créer un flux de compression
-      CompressionStream := TZCompressionStream.Create(
-        DestStream, TZCompressionLevel.zcMax);
-      try
-        // Copier le fichier source dans le flux de compression
-        CompressionStream.CopyFrom(SourceStream, 0);
-      finally
-        // Important : fermer le flux de compression avant le flux de destination
-        CompressionStream.Free;
-      end;
-    finally
-      DestStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-
-procedure DecompresserFichierZLib(const FichierCompresse, FichierDestination: string);
-var
-  SourceStream: TFileStream;
-  DestStream: TFileStream;
-  DecompressionStream: TZDecompressionStream;
-  Buffer: array[0..4095] of Byte;
-  BytesRead: Integer;
-begin
-  SourceStream := TFileStream.Create(FichierCompresse, fmOpenRead);
-  try
-    DestStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      // Créer un flux de décompression
-      DecompressionStream := TZDecompressionStream.Create(SourceStream);
-      try
-        // Lire les données décompressées par blocs
-        repeat
-          BytesRead := DecompressionStream.Read(Buffer, SizeOf(Buffer));
-          if BytesRead > 0 then
-            DestStream.WriteBuffer(Buffer, BytesRead);
-        until BytesRead = 0;
-      finally
-        DecompressionStream.Free;
-      end;
-    finally
-      DestStream.Free;
-    end;
-  finally
-    SourceStream.Free;
-  end;
-end;
-```
-
-### Compression de chaînes de caractères
-
-Pour compresser des chaînes de caractères rapidement, vous pouvez utiliser les fonctions utilitaires de ZLib :
-
-```pascal
-uses
-  System.ZLib, System.SysUtils;
-
-function CompresserChaine(const Source: string): TBytes;
-var
-  SourceBytes: TBytes;
-begin
-  // Convertir la chaîne en tableau d'octets
-  SourceBytes := TEncoding.UTF8.GetBytes(Source);
-
-  // Compresser les données
-  Result := ZCompressBytes(SourceBytes);
-end;
-
-function DecompresserVersChaine(const Compressed: TBytes): string;
-var
-  SourceBytes: TBytes;
-begin
-  // Décompresser les données
-  SourceBytes := ZDecompressBytes(Compressed);
-
-  // Convertir en chaîne
-  Result := TEncoding.UTF8.GetString(SourceBytes);
-end;
-```
-
-### Gestion des fichiers GZIP
-
-Le format GZIP est un format de compression populaire, en particulier pour les fichiers individuels ou les transferts web. Delphi supporte également la manipulation de fichiers GZIP :
+### Importer l'unité ZLib
 
 ```pascal
 uses
   System.ZLib, System.Classes, System.SysUtils;
+```
 
-procedure CompresserFichierGZip(const FichierSource, FichierDestination: string);
+---
+
+## Compression de streams
+
+### Compression basique avec TZCompressionStream
+
+```pascal
+procedure CompresserStream(Source, Destination: TStream);
 var
-  SourceStream: TFileStream;
-  GZipStream: TGZFileStream;
-  Buffer: array[0..8191] of Byte;
-  BytesRead: Integer;
+  Compresseur: TZCompressionStream;
 begin
+  Source.Position := 0;
+  Destination.Size := 0;
+
+  // Créer le compresseur
+  Compresseur := TZCompressionStream.Create(Destination);
+  try
+    // Copier les données source dans le compresseur
+    Compresseur.CopyFrom(Source, 0);
+  finally
+    Compresseur.Free;
+  end;
+end;
+
+// Exemple d'utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Original, Compresse: TMemoryStream;
+  i: Integer;
+  TauxCompression: Double;
+begin
+  Original := TMemoryStream.Create;
+  Compresse := TMemoryStream.Create;
+  try
+    // Créer des données à comprimer
+    for i := 1 to 10000 do
+      Original.WriteBuffer(i, SizeOf(Integer));
+
+    // Comprimer
+    CompresserStream(Original, Compresse);
+
+    // Calculer et afficher le taux de compression
+    TauxCompression := (1 - Compresse.Size / Original.Size) * 100;
+
+    ShowMessage(Format('Taille originale : %d octets' + #13#10 +
+                       'Taille compressée : %d octets' + #13#10 +
+                       'Taux de compression : %.2f%%',
+                       [Original.Size, Compresse.Size, TauxCompression]));
+  finally
+    Original.Free;
+    Compresse.Free;
+  end;
+end;
+```
+
+### Décompression avec TZDecompressionStream
+
+```pascal
+procedure DecompresserStream(Source, Destination: TStream);
+var
+  Decompresseur: TZDecompressionStream;
+begin
+  Source.Position := 0;
+  Destination.Size := 0;
+
+  // Créer le décompresseur
+  Decompresseur := TZDecompressionStream.Create(Source);
+  try
+    // Copier les données décompressées
+    Destination.CopyFrom(Decompresseur, 0);
+  finally
+    Decompresseur.Free;
+  end;
+end;
+
+// Exemple complet : compression et décompression
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  Original, Compresse, Decompresse: TMemoryStream;
+  Texte, TexteDecompresse: AnsiString;
+begin
+  Original := TMemoryStream.Create;
+  Compresse := TMemoryStream.Create;
+  Decompresse := TMemoryStream.Create;
+  try
+    // Créer du texte répétitif (se compresse bien)
+    Texte := 'Bonjour tout le monde ! ';
+    Texte := Texte + Texte + Texte + Texte; // Répéter plusieurs fois
+
+    // Écrire dans le stream original
+    Original.WriteBuffer(Texte[1], Length(Texte));
+
+    ShowMessage('Original : ' + IntToStr(Original.Size) + ' octets');
+
+    // Comprimer
+    CompresserStream(Original, Compresse);
+    ShowMessage('Compressé : ' + IntToStr(Compresse.Size) + ' octets');
+
+    // Décompresser
+    DecompresserStream(Compresse, Decompresse);
+    ShowMessage('Décompressé : ' + IntToStr(Decompresse.Size) + ' octets');
+
+    // Vérifier que c'est identique
+    Decompresse.Position := 0;
+    SetLength(TexteDecompresse, Decompresse.Size);
+    Decompresse.ReadBuffer(TexteDecompresse[1], Decompresse.Size);
+
+    if Texte = TexteDecompresse then
+      ShowMessage('Décompression réussie : données identiques')
+    else
+      ShowMessage('Erreur : données différentes');
+  finally
+    Original.Free;
+    Compresse.Free;
+    Decompresse.Free;
+  end;
+end;
+```
+
+---
+
+## Niveaux de compression
+
+ZLib offre différents niveaux de compression qui permettent de choisir entre vitesse et taux de compression.
+
+### Les niveaux disponibles
+
+```pascal
+type
+  TZCompressionLevel = (
+    zcNone,       // Pas de compression (0)
+    zcFastest,    // Le plus rapide, compression minimale (1)
+    zcDefault,    // Compromis vitesse/compression (6)
+    zcMax         // Compression maximale, plus lent (9)
+  );
+```
+
+### Utilisation des niveaux
+
+```pascal
+procedure CompresserAvecNiveau(Source, Destination: TStream;
+                               Niveau: TZCompressionLevel);
+var
+  Compresseur: TZCompressionStream;
+begin
+  Source.Position := 0;
+  Destination.Size := 0;
+
+  // Créer le compresseur avec le niveau spécifié
+  Compresseur := TZCompressionStream.Create(Destination, Niveau);
+  try
+    Compresseur.CopyFrom(Source, 0);
+  finally
+    Compresseur.Free;
+  end;
+end;
+
+// Comparaison des niveaux
+procedure TForm1.CompareNiveaux;
+var
+  Original, Compresse1, Compresse2, Compresse3: TMemoryStream;
+  i: Integer;
+  Debut, Fin: Cardinal;
+  Temps: Cardinal;
+begin
+  Original := TMemoryStream.Create;
+  Compresse1 := TMemoryStream.Create;
+  Compresse2 := TMemoryStream.Create;
+  Compresse3 := TMemoryStream.Create;
+  try
+    // Créer des données test
+    for i := 1 to 100000 do
+      Original.WriteBuffer(i, SizeOf(Integer));
+
+    // Niveau zcFastest
+    Debut := GetTickCount;
+    CompresserAvecNiveau(Original, Compresse1, zcFastest);
+    Temps := GetTickCount - Debut;
+    Memo1.Lines.Add(Format('Fastest : %d octets, %d ms',
+      [Compresse1.Size, Temps]));
+
+    // Niveau zcDefault
+    Debut := GetTickCount;
+    CompresserAvecNiveau(Original, Compresse2, zcDefault);
+    Temps := GetTickCount - Debut;
+    Memo1.Lines.Add(Format('Default : %d octets, %d ms',
+      [Compresse2.Size, Temps]));
+
+    // Niveau zcMax
+    Debut := GetTickCount;
+    CompresserAvecNiveau(Original, Compresse3, zcMax);
+    Temps := GetTickCount - Debut;
+    Memo1.Lines.Add(Format('Max : %d octets, %d ms',
+      [Compresse3.Size, Temps]));
+  finally
+    Original.Free;
+    Compresse1.Free;
+    Compresse2.Free;
+    Compresse3.Free;
+  end;
+end;
+```
+
+**Recommandations :**
+- **zcFastest** : pour de gros volumes où la vitesse prime
+- **zcDefault** : bon compromis pour la plupart des usages
+- **zcMax** : pour maximiser l'économie d'espace (archives, backups)
+
+---
+
+## Compression de fichiers
+
+### Comprimer un fichier
+
+```pascal
+procedure CompresserFichier(const FichierSource, FichierDestination: string);
+var
+  SourceStream, DestStream: TFileStream;
+  Compresseur: TZCompressionStream;
+begin
+  // Ouvrir le fichier source
   SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
   try
-    // Créer un flux GZIP
-    GZipStream := TGZFileStream.Create(FichierDestination, gzOpenWrite);
+    // Créer le fichier destination
+    DestStream := TFileStream.Create(FichierDestination, fmCreate);
     try
-      // Copier les données par blocs
-      repeat
-        BytesRead := SourceStream.Read(Buffer, SizeOf(Buffer));
-        if BytesRead > 0 then
-          GZipStream.WriteBuffer(Buffer, BytesRead);
-      until BytesRead = 0;
+      // Créer le compresseur
+      Compresseur := TZCompressionStream.Create(DestStream, zcDefault);
+      try
+        // Copier et comprimer
+        Compresseur.CopyFrom(SourceStream, 0);
+      finally
+        Compresseur.Free;
+      end;
     finally
-      GZipStream.Free;
+      DestStream.Free;
     end;
   finally
     SourceStream.Free;
   end;
 end;
 
-procedure DecompresserFichierGZip(const FichierGZip, FichierDestination: string);
-var
-  GZipStream: TGZFileStream;
-  DestStream: TFileStream;
-  Buffer: array[0..8191] of Byte;
-  BytesRead: Integer;
+// Utilisation
+procedure TForm1.Button3Click(Sender: TObject);
 begin
-  // Ouvrir le fichier GZIP en lecture
-  GZipStream := TGZFileStream.Create(FichierGZip, gzOpenRead);
+  if OpenDialog1.Execute then
+  begin
+    CompresserFichier(OpenDialog1.FileName,
+                      OpenDialog1.FileName + '.zlib');
+    ShowMessage('Fichier compressé avec succès');
+  end;
+end;
+```
+
+### Décompresser un fichier
+
+```pascal
+procedure DecompresserFichier(const FichierSource, FichierDestination: string);
+var
+  SourceStream, DestStream: TFileStream;
+  Decompresseur: TZDecompressionStream;
+begin
+  // Ouvrir le fichier compressé
+  SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
   try
+    // Créer le fichier destination
     DestStream := TFileStream.Create(FichierDestination, fmCreate);
     try
-      // Lire par blocs
-      repeat
-        BytesRead := GZipStream.Read(Buffer, SizeOf(Buffer));
-        if BytesRead > 0 then
-          DestStream.WriteBuffer(Buffer, BytesRead);
-      until BytesRead = 0;
+      // Créer le décompresseur
+      Decompresseur := TZDecompressionStream.Create(SourceStream);
+      try
+        // Décompresser
+        DestStream.CopyFrom(Decompresseur, 0);
+      finally
+        Decompresseur.Free;
+      end;
     finally
       DestStream.Free;
     end;
   finally
-    GZipStream.Free;
+    SourceStream.Free;
   end;
 end;
-```
 
-### Création d'archives personnalisées
-
-Vous pouvez créer votre propre format d'archive en combinant plusieurs fichiers dans un seul fichier compressé :
-
-```pascal
-type
-  TFileHeader = record
-    Signature: array[0..3] of AnsiChar;  // Signature de l'archive ('MYAR')
-    Version: Word;                       // Version du format
-    NomFichier: array[0..255] of AnsiChar; // Nom du fichier original
-    TailleOriginale: Int64;              // Taille avant compression
-    TailleCompresse: Int64;              // Taille après compression
-    DateCreation: TDateTime;             // Date de création
-  end;
-
-procedure AjouterFichierArchive(const FichierArchive, FichierAjouter: string);
+// Utilisation
+procedure TForm1.Button4Click(Sender: TObject);
 var
-  ArchiveStream: TFileStream;
-  SourceStream: TFileStream;
-  CompressedStream: TMemoryStream;
-  CompressionStream: TZCompressionStream;
-  Header: TFileHeader;
-  FileNameAnsi: AnsiString;
+  FichierCompresse, FichierDecompresse: string;
 begin
-  // Ouvrir ou créer l'archive
-  if FileExists(FichierArchive) then
-    ArchiveStream := TFileStream.Create(FichierArchive, fmOpenReadWrite)
-  else
-    ArchiveStream := TFileStream.Create(FichierArchive, fmCreate);
-
-  try
-    // Se positionner à la fin de l'archive
-    ArchiveStream.Position := ArchiveStream.Size;
-
-    // Préparer l'en-tête
-    FillChar(Header, SizeOf(Header), 0);
-    Header.Signature := 'MYAR';
-    Header.Version := 1;
-
-    FileNameAnsi := AnsiString(ExtractFileName(FichierAjouter));
-    if Length(FileNameAnsi) > 255 then
-      SetLength(FileNameAnsi, 255);
-    Move(FileNameAnsi[1], Header.NomFichier, Length(FileNameAnsi));
-
-    Header.DateCreation := Now;
-
-    // Compresser le fichier en mémoire
-    SourceStream := TFileStream.Create(FichierAjouter, fmOpenRead);
-    try
-      Header.TailleOriginale := SourceStream.Size;
-
-      CompressedStream := TMemoryStream.Create;
-      try
-        CompressionStream := TZCompressionStream.Create(
-          CompressedStream, TZCompressionLevel.zcMax);
-        try
-          CompressionStream.CopyFrom(SourceStream, 0);
-        finally
-          CompressionStream.Free;
-        end;
-
-        // Récupérer la taille compressée
-        Header.TailleCompresse := CompressedStream.Size;
-
-        // Écrire l'en-tête dans l'archive
-        ArchiveStream.WriteBuffer(Header, SizeOf(Header));
-
-        // Écrire les données compressées
-        CompressedStream.Position := 0;
-        ArchiveStream.CopyFrom(CompressedStream, 0);
-      finally
-        CompressedStream.Free;
-      end;
-    finally
-      SourceStream.Free;
-    end;
-  finally
-    ArchiveStream.Free;
-  end;
-end;
-
-procedure ExtraireFichierArchive(const FichierArchive, IndexOuNom: Variant; const DossierDestination: string);
-var
-  ArchiveStream: TFileStream;
-  DecompressedStream: TFileStream;
-  CompressedStream: TMemoryStream;
-  DecompressionStream: TZDecompressionStream;
-  Header: TFileHeader;
-  Position: Int64;
-  Index, CurrentIndex: Integer;
-  FichierCherche: string;
-  NomFichier: string;
-  FichierTrouve: Boolean;
-begin
-  ArchiveStream := TFileStream.Create(FichierArchive, fmOpenRead);
-  try
-    Position := 0;
-    CurrentIndex := 0;
-    FichierTrouve := False;
-
-    // Si c'est un index numérique
-    if VarType(IndexOuNom) in [varByte, varWord, varLongWord, varInteger, varInt64] then
-      Index := IndexOuNom
-    else
-      // Sinon c'est un nom de fichier
-      FichierCherche := IndexOuNom;
-
-    // Parcourir l'archive
-    while Position < ArchiveStream.Size do
-    begin
-      // Se positionner pour lire l'en-tête
-      ArchiveStream.Position := Position;
-
-      // Lire l'en-tête
-      ArchiveStream.ReadBuffer(Header, SizeOf(Header));
-
-      // Vérifier la signature
-      if String(Header.Signature) <> 'MYAR' then
-        raise Exception.Create('Format d''archive invalide');
-
-      // Extraire le nom du fichier
-      NomFichier := String(Header.NomFichier).Trim;
-
-      // Vérifier si c'est le fichier recherché
-      if ((VarType(IndexOuNom) in [varByte, varWord, varLongWord, varInteger, varInt64]) and
-          (CurrentIndex = Index)) or
-         ((VarType(IndexOuNom) = varString) and
-          (AnsiCompareText(NomFichier, FichierCherche) = 0)) then
-      begin
-        // Créer le flux de décompression
-        CompressedStream := TMemoryStream.Create;
-        try
-          // Copier les données compressées
-          ArchiveStream.Position := Position + SizeOf(Header);
-          CompressedStream.CopyFrom(ArchiveStream, Header.TailleCompresse);
-          CompressedStream.Position := 0;
-
-          // Créer le fichier de destination
-          if not DirectoryExists(DossierDestination) then
-            ForceDirectories(DossierDestination);
-
-          DecompressedStream := TFileStream.Create(
-            IncludeTrailingPathDelimiter(DossierDestination) + NomFichier, fmCreate);
-          try
-            // Décompresser le fichier
-            DecompressionStream := TZDecompressionStream.Create(CompressedStream);
-            try
-              DecompressedStream.CopyFrom(DecompressionStream, 0);
-            finally
-              DecompressionStream.Free;
-            end;
-          finally
-            DecompressedStream.Free;
-          end;
-
-          FichierTrouve := True;
-          Break;
-        finally
-          CompressedStream.Free;
-        end;
-      end;
-
-      // Passer au fichier suivant
-      Position := Position + SizeOf(Header) + Header.TailleCompresse;
-      Inc(CurrentIndex);
-    end;
-
-    if not FichierTrouve then
-      raise Exception.Create('Fichier non trouvé dans l''archive');
-  finally
-    ArchiveStream.Free;
-  end;
-end;
-```
-
-### Compression et décompression dans les applications réseau
-
-La compression est particulièrement utile pour les applications réseau, car elle permet de réduire la quantité de données transférées :
-
-```pascal
-procedure EnvoyerDonneesCompressees(Socket: TClientSocket; const Donnees: string);
-var
-  MemStream: TMemoryStream;
-  CompressedStream: TMemoryStream;
-  CompressionStream: TZCompressionStream;
-  CompressedSize: Integer;
-begin
-  MemStream := TMemoryStream.Create;
-  try
-    // Convertir la chaîne en octets et écrire dans le flux
-    WriteStringToStream(MemStream, Donnees);
-    MemStream.Position := 0;
-
-    CompressedStream := TMemoryStream.Create;
-    try
-      // Compresser les données
-      CompressionStream := TZCompressionStream.Create(CompressedStream, TZCompressionLevel.zcDefault);
-      try
-        CompressionStream.CopyFrom(MemStream, 0);
-      finally
-        CompressionStream.Free;
-      end;
-
-      // Envoyer la taille des données compressées
-      CompressedSize := CompressedStream.Size;
-      Socket.Socket.SendBuf(CompressedSize, SizeOf(Integer));
-
-      // Envoyer les données compressées
-      CompressedStream.Position := 0;
-      Socket.Socket.SendStream(CompressedStream);
-    finally
-      CompressedStream.Free;
-    end;
-  finally
-    MemStream.Free;
-  end;
-end;
-
-function RecevoirDonneesCompressees(Socket: TClientSocket): string;
-var
-  CompressedStream: TMemoryStream;
-  DecompressedStream: TMemoryStream;
-  DecompressionStream: TZDecompressionStream;
-  CompressedSize: Integer;
-begin
-  // Recevoir la taille des données compressées
-  Socket.Socket.ReceiveBuf(CompressedSize, SizeOf(Integer));
-
-  CompressedStream := TMemoryStream.Create;
-  try
-    // Redimensionner le flux pour accueillir les données
-    CompressedStream.Size := CompressedSize;
-
-    // Recevoir les données compressées
-    Socket.Socket.ReceiveBuf(CompressedStream.Memory^, CompressedSize);
-    CompressedStream.Position := 0;
-
-    DecompressedStream := TMemoryStream.Create;
-    try
-      // Décompresser les données
-      DecompressionStream := TZDecompressionStream.Create(CompressedStream);
-      try
-        DecompressedStream.CopyFrom(DecompressionStream, 0);
-      finally
-        DecompressionStream.Free;
-      end;
-
-      // Convertir le flux en chaîne
-      DecompressedStream.Position := 0;
-      Result := ReadStringFromStream(DecompressedStream);
-    finally
-      DecompressedStream.Free;
-    end;
-  finally
-    CompressedStream.Free;
-  end;
-end;
-```
-
-### Exemple d'application : Gestionnaire d'archives
-
-Voici un exemple simple d'application permettant de créer et manipuler des archives ZIP :
-
-```pascal
-unit Main;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, System.Zip, System.IOUtils;
-
-type
-  TFormMain = class(TForm)
-    pnlTop: TPanel;
-    btnNouveau: TButton;
-    btnOuvrir: TButton;
-    btnAjouter: TButton;
-    btnExtraire: TButton;
-    lvFichiers: TListView;
-    StatusBar1: TStatusBar;
-    OpenDialog1: TOpenDialog;
-    SaveDialog1: TSaveDialog;
-    btnSupprimer: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnNouveauClick(Sender: TObject);
-    procedure btnOuvrirClick(Sender: TObject);
-    procedure btnAjouterClick(Sender: TObject);
-    procedure btnExtraireClick(Sender: TObject);
-    procedure btnSupprimerClick(Sender: TObject);
-  private
-    FArchiveCourante: string;
-    procedure AfficherContenuArchive;
-    procedure MajBarreEtat;
-  public
-    { Public declarations }
-  end;
-
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  FArchiveCourante := '';
-  StatusBar1.SimpleText := 'Prêt';
-end;
-
-procedure TFormMain.AfficherContenuArchive;
-var
-  Zip: TZipFile;
-  Header: TZipHeader;
-  i: Integer;
-  ListItem: TListItem;
-begin
-  lvFichiers.Clear;
-
-  if (FArchiveCourante = '') or not FileExists(FArchiveCourante) then
-    Exit;
-
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FArchiveCourante, zmRead);
-
-    // Ajouter chaque fichier à la liste
-    for i := 0 to Zip.FileCount - 1 do
-    begin
-      Zip.Read(i, Header);
-
-      ListItem := lvFichiers.Items.Add;
-      ListItem.Caption := Header.FileName;
-      ListItem.SubItems.Add(FormatFloat('#,##0', Header.UncompressedSize) + ' octets');
-      ListItem.SubItems.Add(FormatFloat('#,##0', Header.CompressedSize) + ' octets');
-
-      // Calculer le taux de compression
-      if Header.UncompressedSize > 0 then
-        ListItem.SubItems.Add(FormatFloat('0.0',
-          (1 - Header.CompressedSize / Header.UncompressedSize) * 100) + '%')
-      else
-        ListItem.SubItems.Add('0%');
-
-      ListItem.SubItems.Add(DateTimeToStr(FileDateToDateTime(Header.ModifiedDateTime)));
-    end;
-
-    Zip.Close;
-  finally
-    Zip.Free;
-  end;
-
-  MajBarreEtat;
-end;
-
-procedure TFormMain.MajBarreEtat;
-begin
-  if FArchiveCourante <> '' then
-  begin
-    StatusBar1.SimpleText := 'Archive : ' + FArchiveCourante + ' (' +
-      IntToStr(lvFichiers.Items.Count) + ' fichiers)';
-  end
-  else
-    StatusBar1.SimpleText := 'Aucune archive ouverte';
-end;
-
-procedure TFormMain.btnNouveauClick(Sender: TObject);
-begin
-  SaveDialog1.Filter := 'Archives ZIP (*.zip)|*.zip';
-  SaveDialog1.DefaultExt := 'zip';
-
-  if SaveDialog1.Execute then
-  begin
-    // Créer une nouvelle archive vide
-    if FileExists(SaveDialog1.FileName) then
-    begin
-      if MessageDlg('Ce fichier existe déjà. Voulez-vous l''écraser ?',
-        mtConfirmation, [mbYes, mbNo], 0) = mrNo then
-        Exit;
-
-      DeleteFile(SaveDialog1.FileName);
-    end;
-
-    // Créer un fichier ZIP vide
-    var Zip := TZipFile.Create;
-    try
-      Zip.Open(SaveDialog1.FileName, zmWrite);
-      Zip.Close;
-    finally
-      Zip.Free;
-    end;
-
-    FArchiveCourante := SaveDialog1.FileName;
-    AfficherContenuArchive;
-  end;
-end;
-
-procedure TFormMain.btnOuvrirClick(Sender: TObject);
-begin
-  OpenDialog1.Filter := 'Archives ZIP (*.zip)|*.zip';
-
   if OpenDialog1.Execute then
   begin
-    if not FileExists(OpenDialog1.FileName) then
-    begin
-      ShowMessage('Le fichier n''existe pas !');
-      Exit;
-    end;
+    FichierCompresse := OpenDialog1.FileName;
+    FichierDecompresse := ChangeFileExt(FichierCompresse, '.txt');
 
-    FArchiveCourante := OpenDialog1.FileName;
-    AfficherContenuArchive;
+    DecompresserFichier(FichierCompresse, FichierDecompresse);
+    ShowMessage('Fichier décompressé : ' + FichierDecompresse);
   end;
 end;
-
-procedure TFormMain.btnAjouterClick(Sender: TObject);
-var
-  Zip: TZipFile;
-  i: Integer;
-begin
-  if FArchiveCourante = '' then
-  begin
-    ShowMessage('Aucune archive ouverte !');
-    Exit;
-  end;
-
-  OpenDialog1.Filter := 'Tous les fichiers (*.*)|*.*';
-  OpenDialog1.Options := OpenDialog1.Options + [ofAllowMultiSelect];
-
-  if OpenDialog1.Execute then
-  begin
-    Zip := TZipFile.Create;
-    try
-      Zip.Open(FArchiveCourante, zmReadWrite);
-
-      // Ajouter chaque fichier sélectionné
-      for i := 0 to OpenDialog1.Files.Count - 1 do
-      begin
-        if FileExists(OpenDialog1.Files[i]) then
-        begin
-          try
-            Zip.Add(OpenDialog1.Files[i], ExtractFileName(OpenDialog1.Files[i]));
-          except
-            on E: Exception do
-              ShowMessage('Erreur lors de l''ajout de ' + OpenDialog1.Files[i] +
-                ': ' + E.Message);
-          end;
-        end;
-      end;
-
-      Zip.Close;
-    finally
-      Zip.Free;
-    end;
-
-    // Rafraîchir l'affichage
-    AfficherContenuArchive;
-  end;
-
-  OpenDialog1.Options := OpenDialog1.Options - [ofAllowMultiSelect];
-end;
-
-procedure TFormMain.btnExtraireClick(Sender: TObject);
-var
-  Zip: TZipFile;
-  DossierDestination: string;
-  i: Integer;
-begin
-  if FArchiveCourante = '' then
-  begin
-    ShowMessage('Aucune archive ouverte !');
-    Exit;
-  end;
-
-  if lvFichiers.SelCount = 0 then
-  begin
-    ShowMessage('Aucun fichier sélectionné !');
-    Exit;
-  end;
-
-  // Demander le dossier de destination
-  var SelectDir := TFileOpenDialog.Create(nil);
-  try
-    SelectDir.Options := [fdoPickFolders];
-    SelectDir.Title := 'Sélectionner le dossier de destination';
-
-    if not SelectDir.Execute then
-      Exit;
-
-    DossierDestination := SelectDir.FileName;
-  finally
-    SelectDir.Free;
-  end;
-
-  // Extraire les fichiers sélectionnés
-  Zip := TZipFile.Create;
-  try
-    Zip.Open(FArchiveCourante, zmRead);
-
-    for i := 0 to lvFichiers.Items.Count - 1 do
-    begin
-      if lvFichiers.Items[i].Selected then
-      begin
-        try
-          Zip.Extract(lvFichiers.Items[i].Caption,
-            IncludeTrailingPathDelimiter(DossierDestination), False);
-        except
-          on E: Exception do
-            ShowMessage('Erreur lors de l''extraction de ' +
-              lvFichiers.Items[i].Caption + ': ' + E.Message);
-        end;
-      end;
-    end;
-
-    Zip.Close;
-
-    ShowMessage('Extraction terminée avec succès !');
-  finally
-    Zip.Free;
-  end;
-end;
-
-procedure TFormMain.btnSupprimerClick(Sender: TObject);
-var
-  TempArchive: string;
-  Zip, TempZip: TZipFile;
-  i, j: Integer;
-  Header: TZipHeader;
-  ASupprimer: TStringList;
-begin
-  if FArchiveCourante = '' then
-  begin
-    ShowMessage('Aucune archive ouverte !');
-    Exit;
-  end;
-
-  if lvFichiers.SelCount = 0 then
-  begin
-    ShowMessage('Aucun fichier sélectionné !');
-    Exit;
-  end;
-
-  if MessageDlg('Êtes-vous sûr de vouloir supprimer les fichiers sélectionnés ?',
-    mtConfirmation, [mbYes, mbNo], 0) = mrNo then
-    Exit;
-
-  // Créer une liste des fichiers à supprimer
-  ASupprimer := TStringList.Create;
-  try
-    for i := 0 to lvFichiers.Items.Count - 1 do
-    begin
-      if lvFichiers.Items[i].Selected then
-        ASupprimer.Add(lvFichiers.Items[i].Caption);
-    end;
-
-    // Créer une archive temporaire
-    TempArchive := ChangeFileExt(FArchiveCourante, '.tmp');
-
-    Zip := TZipFile.Create;
-    TempZip := TZipFile.Create;
-    try
-      Zip.Open(FArchiveCourante, zmRead);
-      TempZip.Open(TempArchive, zmWrite);
-
-      // Copier uniquement les fichiers non sélectionnés
-      for i := 0 to Zip.FileCount - 1 do
-      begin
-        Zip.Read(i, Header);
-
-        if ASupprimer.IndexOf(Header.FileName) < 0 then
-        begin
-          // Extraire temporairement le fichier
-          var TempFile := TPath.GetTempFileName;
-          try
-            Zip.Extract(i, TempFile);
-
-            // L'ajouter à la nouvelle archive
-            TempZip.Add(TempFile, Header.FileName);
-          finally
-            DeleteFile(TempFile);
-          end;
-        end;
-      end;
-
-      Zip.Close;
-      TempZip.Close;
-
-      // Remplacer l'ancienne archive par la nouvelle
-      DeleteFile(FArchiveCourante);
-      RenameFile(TempArchive, FArchiveCourante);
-
-      // Rafraîchir l'affichage
-      AfficherContenuArchive;
-    finally
-      Zip.Free;
-      TempZip.Free;
-    end;
-  finally
-    ASupprimer.Free;
-  end;
-end;
-
-end.
 ```
 
-Voici le fichier DFM de l'interface graphique :
+### Fonction complète avec gestion d'erreurs
 
 ```pascal
-object FormMain: TFormMain
-  Left = 0
-  Top = 0
-  Caption = 'Gestionnaire d'#39'Archives'
-  ClientHeight = 442
-  ClientWidth = 628
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OnCreate = FormCreate
-  TextHeight = 13
-  object pnlTop: TPanel
-    Left = 0
-    Top = 0
-    Width = 628
-    Height = 41
-    Align = alTop
-    TabOrder = 0
-    object btnNouveau: TButton
-      Left = 8
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Nouveau'
-      TabOrder = 0
-      OnClick = btnNouveauClick
-    end
-    object btnOuvrir: TButton
-      Left = 89
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Ouvrir...'
-      TabOrder = 1
-      OnClick = btnOuvrirClick
-    end
-    object btnAjouter: TButton
-      Left = 170
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Ajouter...'
-      TabOrder = 2
-      OnClick = btnAjouterClick
-    end
-    object btnExtraire: TButton
-      Left = 251
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Extraire...'
-      TabOrder = 3
-      OnClick = btnExtraireClick
-    end
-    object btnSupprimer: TButton
-      Left = 332
-      Top = 8
-      Width = 75
-      Height = 25
-      Caption = 'Supprimer'
-      TabOrder = 4
-      OnClick = btnSupprimerClick
-    end
-  end
-  object lvFichiers: TListView
-    Left = 0
-    Top = 41
-    Width = 628
-    Height = 382
-    Align = alClient
-    Columns = <
-      item
-        Caption = 'Nom du fichier'
-        Width = 250
-      end
-      item
-        Caption = 'Taille originale'
-        Width = 100
-      end
-      item
-        Caption = 'Taille compress'#233'e'
-        Width = 100
-      end
-      item
-        Caption = 'Taux'
-        Width = 50
-      end
-      item
-        Caption = 'Date'
-        Width = 120
-      end>
-    GridLines = True
-    MultiSelect = True
-    RowSelect = True
-    TabOrder = 1
-    ViewStyle = vsReport
-  end
-  object StatusBar1: TStatusBar
-    Left = 0
-    Top = 423
-    Width = 628
-    Height = 19
-    Panels = <>
-    SimplePanel = True
-  end
-  object OpenDialog1: TOpenDialog
-    Left = 432
-    Top = 8
-  end
-  object SaveDialog1: TSaveDialog
-    Left = 496
-    Top = 8
-  end
-end
-```
-
-### Comparaison des différentes techniques de compression
-
-Voici un tableau comparatif des différentes méthodes de compression disponibles en Delphi :
-
-| Méthode | Avantages | Inconvénients | Cas d'utilisation |
-|---------|-----------|---------------|-------------------|
-| `TZipFile` | - Simple d'utilisation<br>- Format ZIP standard<br>- Gestion des fichiers et dossiers | - Moins flexible pour les données en mémoire | - Archivage de fichiers<br>- Sauvegarde de données<br>- Installation d'applications |
-| `TZCompressionStream` | - Contrôle précis du niveau de compression<br>- Flexible pour tous types de données<br>- Intégration parfaite avec le système de flux | - Compression d'un flux à la fois<br>- Nécessite plus de code | - Compression à la volée<br>- Données en mémoire<br>- Transferts réseau |
-| `ZCompressBytes` | - Utilisation très simple<br>- Idéal pour petites données | - Moins d'options<br>- Moins performant pour gros volumes | - Compression de chaînes<br>- Petites données binaires |
-| `TGZFileStream` | - Format GZIP standard<br>- Utilisé sur le web | - Limité à un seul fichier | - Fichiers individuels<br>- Transferts HTTP |
-
-### Bonnes pratiques pour la compression
-
-1. **Choisir le bon format** :
-   - ZIP pour les fichiers multiples avec structure de dossiers
-   - GZIP pour les fichiers uniques ou transferts web
-   - ZLib brut pour les données en mémoire ou transferts réseau
-
-2. **Niveau de compression** :
-   - Utiliser `zcMaximum` pour les archives ou sauvegardes (priorité à la taille)
-   - Utiliser `zcDefault` pour un bon compromis
-   - Utiliser `zcFastest` pour les transferts réseau en temps réel (priorité à la vitesse)
-
-3. **Performance** :
-   - Pour les gros fichiers, compresser par blocs
-   - Utiliser des threads séparés pour la compression de gros fichiers
-   - Fournir une barre de progression pour les opérations longues
-
-4. **Sécurité** :
-   - Vérifier les erreurs lors de la décompression
-   - Méfiez-vous des "bombs de compression" (fichiers qui, une fois décompressés, deviennent extrêmement volumineux)
-   - Limiter la taille maximale de décompression pour les données externes
-
-5. **Interopérabilité** :
-   - Préférer les formats standards (ZIP, GZIP) pour les fichiers qui seront utilisés sur d'autres plateformes
-   - Tester la compatibilité avec les outils standards (WinZip, 7-Zip, etc.)
-
-### Optimisation de la compression
-
-La compression de données peut être coûteuse en ressources. Voici quelques conseils pour l'optimiser :
-
-```pascal
-procedure CompresserFichierGrosEnThreads(const FichierSource, FichierDestination: string);
-var
-  Taille, PositionCourante, TailleBloc: Int64;
-  Threads: array of TThread;
-  i, NbThreads: Integer;
-  ThreadsTermines: Boolean;
-  FichiersTmp: TStringList;
+function CompresserFichierSecurise(const Source, Destination: string): Boolean;
 begin
-  // Déterminer la taille du fichier
-  Taille := TFile.GetSize(FichierSource);
+  Result := False;
 
-  // Adapter le nombre de threads et la taille des blocs
-  if Taille < 1024 * 1024 then  // Moins de 1 Mo
+  // Vérifier que le fichier source existe
+  if not FileExists(Source) then
   begin
-    NbThreads := 1;
-    TailleBloc := Taille;
-  end
-  else if Taille < 10 * 1024 * 1024 then  // Moins de 10 Mo
-  begin
-    NbThreads := 2;
-    TailleBloc := Taille div NbThreads;
-  end
-  else if Taille < 100 * 1024 * 1024 then  // Moins de 100 Mo
-  begin
-    NbThreads := 4;
-    TailleBloc := Taille div NbThreads;
-  end
-  else  // Plus de 100 Mo
-  begin
-    NbThreads := 8;
-    TailleBloc := Taille div NbThreads;
+    ShowMessage('Fichier source introuvable : ' + Source);
+    Exit;
   end;
 
-  // Créer les fichiers temporaires pour chaque bloc
-  FichiersTmp := TStringList.Create;
   try
-    SetLength(Threads, NbThreads);
-    PositionCourante := 0;
-
-    // Créer un thread pour chaque bloc
-    for i := 0 to NbThreads - 1 do
-    begin
-      var FichierTmp := TPath.GetTempFileName;
-      FichiersTmp.Add(FichierTmp);
-
-      var BlocDebut := PositionCourante;
-      var BlocFin := BlocDebut + TailleBloc;
-
-      // Ajuster le dernier bloc
-      if i = NbThreads - 1 then
-        BlocFin := Taille;
-
-      // Créer le thread de compression
-      Threads[i] := TThread.CreateAnonymousThread(
-        procedure
-        var
-          SourceStream: TFileStream;
-          DestStream: TFileStream;
-          CompressionStream: TZCompressionStream;
-        begin
-          SourceStream := TFileStream.Create(FichierSource, fmOpenRead);
-          try
-            SourceStream.Position := BlocDebut;
-
-            DestStream := TFileStream.Create(FichierTmp, fmCreate);
-            try
-              CompressionStream := TZCompressionStream.Create(
-                DestStream, TZCompressionLevel.zcDefault);
-              try
-                CompressionStream.CopyFrom(SourceStream, BlocFin - BlocDebut);
-              finally
-                CompressionStream.Free;
-              end;
-            finally
-              DestStream.Free;
-            end;
-          finally
-            SourceStream.Free;
-          end;
-        end);
-
-      // Démarrer le thread
-      Threads[i].Start;
-
-      // Préparer pour le prochain bloc
-      PositionCourante := BlocFin;
-    end;
-
-    // Attendre que tous les threads soient terminés
-    repeat
-      ThreadsTermines := True;
-      for i := 0 to NbThreads - 1 do
-      begin
-        if not Threads[i].Finished then
-        begin
-          ThreadsTermines := False;
-          Break;
-        end;
-      end;
-
-      if not ThreadsTermines then
-        Sleep(100);
-    until ThreadsTermines;
-
-    // Fusionner les fichiers temporaires en un seul fichier
-    var FinalStream := TFileStream.Create(FichierDestination, fmCreate);
-    try
-      for i := 0 to FichiersTmp.Count - 1 do
-      begin
-        var TmpStream := TFileStream.Create(FichiersTmp[i], fmOpenRead);
-        try
-          FinalStream.CopyFrom(TmpStream, 0);
-        finally
-          TmpStream.Free;
-        end;
-      end;
-    finally
-      FinalStream.Free;
-    end;
-  finally
-    // Supprimer les fichiers temporaires
-    for i := 0 to FichiersTmp.Count - 1 do
-      DeleteFile(FichiersTmp[i]);
-
-    FichiersTmp.Free;
+    CompresserFichier(Source, Destination);
+    Result := True;
+  except
+    on E: EFOpenError do
+      ShowMessage('Impossible d''ouvrir le fichier : ' + E.Message);
+    on E: EWriteError do
+      ShowMessage('Erreur d''écriture : ' + E.Message);
+    on E: Exception do
+      ShowMessage('Erreur lors de la compression : ' + E.Message);
   end;
 end;
 ```
-
-> **Note :** Ce code est un exemple simplifié et ne gère pas tous les cas particuliers. Dans une application réelle, vous auriez besoin d'ajouter plus de vérifications d'erreurs et de synchronisation entre les threads.
-
-### Compression et formats de données courants
-
-#### Images
-
-Delphi permet de manipuler différents formats d'images qui utilisent déjà la compression :
-
-```pascal
-procedure CompressImage(const SourceFileName, DestFileName: string; Quality: Integer);
-var
-  SourceImage, JpegImage: TImage;
-  JpegBitmap: TBitmap;
-  Jpeg: TJPEGImage;
-begin
-  // Qualité doit être entre 1 (faible qualité, haute compression) et 100 (haute qualité)
-  if (Quality < 1) or (Quality > 100) then
-    Quality := 80;  // Valeur par défaut
-
-  SourceImage := TImage.Create(nil);
-  JpegImage := TImage.Create(nil);
-  try
-    // Charger l'image source
-    SourceImage.Picture.LoadFromFile(SourceFileName);
-
-    // Préparer l'image JPEG
-    JpegBitmap := TBitmap.Create;
-    try
-      // Copier l'image source dans un bitmap
-      JpegBitmap.Assign(SourceImage.Picture.Graphic);
-
-      // Créer un JPEG à partir du bitmap
-      Jpeg := TJPEGImage.Create;
-      try
-        Jpeg.Assign(JpegBitmap);
-        Jpeg.CompressionQuality := Quality;
-        Jpeg.SaveToFile(DestFileName);
-      finally
-        Jpeg.Free;
-      end;
-    finally
-      JpegBitmap.Free;
-    end;
-  finally
-    SourceImage.Free;
-    JpegImage.Free;
-  end;
-end;
-```
-
-#### Base64
-
-La représentation Base64 est souvent utilisée pour encoder des données binaires en texte, mais elle augmente la taille d'environ 33%. En combinant la compression et le Base64, vous pouvez réduire cette augmentation :
-
-```pascal
-function CompressAndBase64Encode(const Data: TBytes): string;
-var
-  CompressedData: TBytes;
-begin
-  // Compresser les données
-  CompressedData := ZCompressBytes(Data);
-
-  // Encoder en Base64
-  Result := TNetEncoding.Base64.EncodeBytesToString(CompressedData);
-end;
-
-function Base64DecodeAndDecompress(const Base64Data: string): TBytes;
-var
-  CompressedData: TBytes;
-begin
-  // Décoder le Base64
-  CompressedData := TNetEncoding.Base64.DecodeStringToBytes(Base64Data);
-
-  // Décompresser les données
-  Result := ZDecompressBytes(CompressedData);
-end;
-```
-
-### Exercice pratique
-
-Créez une application qui permet de :
-
-1. Compresser un dossier entier en archive ZIP
-2. Afficher les statistiques de compression (taux, gain d'espace)
-3. Extraire des fichiers sélectionnés
-4. Ajouter une protection par mot de passe (indice : recherchez TZipFile.Password)
-
-Cet exercice vous permettra de mettre en pratique les concepts de compression tout en créant une application utile.
 
 ---
 
-À suivre dans la prochaine section : **7.6 Traitement par lots (Batch)**
+## Compression de chaînes de caractères
+
+### Fonctions utilitaires
+
+```pascal
+function CompresserString(const S: string): TBytes;
+var
+  SourceStream, DestStream: TMemoryStream;
+  Compresseur: TZCompressionStream;
+  Bytes: TBytes;
+begin
+  // Convertir la chaîne en bytes
+  Bytes := TEncoding.UTF8.GetBytes(S);
+
+  SourceStream := TMemoryStream.Create;
+  DestStream := TMemoryStream.Create;
+  try
+    // Écrire dans le stream source
+    if Length(Bytes) > 0 then
+      SourceStream.WriteBuffer(Bytes[0], Length(Bytes));
+
+    SourceStream.Position := 0;
+
+    // Comprimer
+    Compresseur := TZCompressionStream.Create(DestStream, zcDefault);
+    try
+      Compresseur.CopyFrom(SourceStream, 0);
+    finally
+      Compresseur.Free;
+    end;
+
+    // Récupérer les bytes compressés
+    SetLength(Result, DestStream.Size);
+    DestStream.Position := 0;
+    DestStream.ReadBuffer(Result[0], DestStream.Size);
+  finally
+    SourceStream.Free;
+    DestStream.Free;
+  end;
+end;
+
+function DecompresserString(const CompressedData: TBytes): string;
+var
+  SourceStream, DestStream: TMemoryStream;
+  Decompresseur: TZDecompressionStream;
+  Bytes: TBytes;
+begin
+  SourceStream := TMemoryStream.Create;
+  DestStream := TMemoryStream.Create;
+  try
+    // Écrire les données compressées
+    if Length(CompressedData) > 0 then
+      SourceStream.WriteBuffer(CompressedData[0], Length(CompressedData));
+
+    SourceStream.Position := 0;
+
+    // Décompresser
+    Decompresseur := TZDecompressionStream.Create(SourceStream);
+    try
+      DestStream.CopyFrom(Decompresseur, 0);
+    finally
+      Decompresseur.Free;
+    end;
+
+    // Convertir en string
+    if DestStream.Size > 0 then
+    begin
+      SetLength(Bytes, DestStream.Size);
+      DestStream.Position := 0;
+      DestStream.ReadBuffer(Bytes[0], DestStream.Size);
+      Result := TEncoding.UTF8.GetString(Bytes);
+    end
+    else
+      Result := '';
+  finally
+    SourceStream.Free;
+    DestStream.Free;
+  end;
+end;
+
+// Exemple d'utilisation
+procedure TForm1.Button5Click(Sender: TObject);
+var
+  TexteOriginal, TexteDecompresse: string;
+  DonneesCompressees: TBytes;
+  TauxCompression: Double;
+begin
+  TexteOriginal := Memo1.Lines.Text;
+
+  // Comprimer
+  DonneesCompressees := CompresserString(TexteOriginal);
+
+  TauxCompression := (1 - Length(DonneesCompressees) /
+                     (Length(TexteOriginal) * SizeOf(Char))) * 100;
+
+  ShowMessage(Format('Original : %d octets' + #13#10 +
+                     'Compressé : %d octets' + #13#10 +
+                     'Taux : %.2f%%',
+                     [Length(TexteOriginal) * SizeOf(Char),
+                      Length(DonneesCompressees),
+                      TauxCompression]));
+
+  // Décompresser
+  TexteDecompresse := DecompresserString(DonneesCompressees);
+
+  // Vérifier
+  if TexteOriginal = TexteDecompresse then
+    ShowMessage('Décompression réussie !')
+  else
+    ShowMessage('Erreur : textes différents');
+end;
+```
+
+---
+
+## Archives ZIP
+
+Pour créer et manipuler des archives ZIP complètes, Delphi offre l'unité `System.Zip`.
+
+### Créer une archive ZIP
+
+```pascal
+uses
+  System.Zip;
+
+procedure CreerArchiveZip(const FichiersACompresser: TStringList;
+                          const NomArchive: string);
+var
+  ZipFile: TZipFile;
+  Fichier: string;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    // Ouvrir/créer l'archive en mode écriture
+    ZipFile.Open(NomArchive, zmWrite);
+
+    // Ajouter chaque fichier
+    for Fichier in FichiersACompresser do
+    begin
+      if FileExists(Fichier) then
+        ZipFile.Add(Fichier);
+    end;
+
+    // Fermer l'archive
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button6Click(Sender: TObject);
+var
+  Fichiers: TStringList;
+begin
+  Fichiers := TStringList.Create;
+  try
+    // Ajouter les fichiers à archiver
+    Fichiers.Add('C:\Documents\fichier1.txt');
+    Fichiers.Add('C:\Documents\fichier2.txt');
+    Fichiers.Add('C:\Documents\photo.jpg');
+
+    CreerArchiveZip(Fichiers, 'C:\Archives\monarchive.zip');
+    ShowMessage('Archive créée avec succès');
+  finally
+    Fichiers.Free;
+  end;
+end;
+```
+
+### Extraire une archive ZIP
+
+```pascal
+procedure ExtraireArchiveZip(const NomArchive, DossierDestination: string);
+var
+  ZipFile: TZipFile;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    // Ouvrir l'archive en lecture
+    ZipFile.Open(NomArchive, zmRead);
+
+    // Extraire tous les fichiers
+    ZipFile.ExtractAll(DossierDestination);
+
+    // Fermer l'archive
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button7Click(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    ExtraireArchiveZip(OpenDialog1.FileName, 'C:\Extraction\');
+    ShowMessage('Extraction terminée');
+  end;
+end;
+```
+
+### Lister le contenu d'une archive
+
+```pascal
+procedure ListerContenuZip(const NomArchive: string; Liste: TStrings);
+var
+  ZipFile: TZipFile;
+  Fichier: TZipHeader;
+begin
+  Liste.Clear;
+
+  ZipFile := TZipFile.Create;
+  try
+    ZipFile.Open(NomArchive, zmRead);
+
+    // Parcourir tous les fichiers
+    for Fichier in ZipFile.FileNames do
+    begin
+      Liste.Add(Fichier.FileName);
+    end;
+
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.Button8Click(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    ListerContenuZip(OpenDialog1.FileName, Memo1.Lines);
+    ShowMessage(Format('L''archive contient %d fichiers',
+      [Memo1.Lines.Count]));
+  end;
+end;
+```
+
+### Extraire un seul fichier d'une archive
+
+```pascal
+procedure ExtraireFichierSpecifique(const NomArchive, NomFichier,
+                                    Destination: string);
+var
+  ZipFile: TZipFile;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    ZipFile.Open(NomArchive, zmRead);
+
+    // Extraire le fichier spécifique
+    ZipFile.Extract(NomFichier, Destination);
+
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.ExtraireUnFichier;
+var
+  Archive, Fichier, Destination: string;
+begin
+  Archive := 'C:\monarchive.zip';
+  Fichier := 'documents/rapport.pdf';
+  Destination := 'C:\Extraction\';
+
+  ExtraireFichierSpecifique(Archive, Fichier, Destination);
+end;
+```
+
+### Ajouter un fichier à une archive existante
+
+```pascal
+procedure AjouterFichierAArchive(const NomArchive, FichierAAjouter: string);
+var
+  ZipFile: TZipFile;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    // Ouvrir en mode lecture/écriture
+    ZipFile.Open(NomArchive, zmReadWrite);
+
+    // Ajouter le fichier
+    ZipFile.Add(FichierAAjouter);
+
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+```
+
+### Informations détaillées sur une archive
+
+```pascal
+procedure AfficherInfosArchive(const NomArchive: string);
+var
+  ZipFile: TZipFile;
+  Fichier: TZipHeader;
+  TailleCompresse, TailleOriginale: Int64;
+  TauxCompression: Double;
+  Infos: string;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    ZipFile.Open(NomArchive, zmRead);
+
+    TailleCompresse := 0;
+    TailleOriginale := 0;
+
+    Infos := Format('Archive : %s' + #13#10 +
+                    'Nombre de fichiers : %d' + #13#10#13#10,
+                    [ExtractFileName(NomArchive),
+                     ZipFile.FileCount]);
+
+    // Parcourir les fichiers
+    for Fichier in ZipFile.FileNames do
+    begin
+      TailleOriginale := TailleOriginale + Fichier.UncompressedSize;
+      TailleCompresse := TailleCompresse + Fichier.CompressedSize;
+
+      Infos := Infos + Format('%s : %d -> %d octets' + #13#10,
+        [Fichier.FileName,
+         Fichier.UncompressedSize,
+         Fichier.CompressedSize]);
+    end;
+
+    TauxCompression := (1 - TailleCompresse / TailleOriginale) * 100;
+
+    Infos := Infos + #13#10 + Format('Total original : %d octets' + #13#10 +
+                                      'Total compressé : %d octets' + #13#10 +
+                                      'Taux de compression : %.2f%%',
+                                      [TailleOriginale, TailleCompresse,
+                                       TauxCompression]);
+
+    ShowMessage(Infos);
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+```
+
+---
+
+## Application pratique : Sauvegarde compressée
+
+Voici un exemple complet de système de sauvegarde avec compression.
+
+```pascal
+type
+  TBackupManager = class
+  private
+    FDossierSource: string;
+    FDossierDestination: string;
+  public
+    constructor Create(const Source, Destination: string);
+
+    function CreerSauvegarde: Boolean;
+    procedure RestaurerSauvegarde(const NomArchive: string);
+    function ListerSauvegardes: TStringList;
+
+    property DossierSource: string read FDossierSource write FDossierSource;
+    property DossierDestination: string read FDossierDestination
+      write FDossierDestination;
+  end;
+
+constructor TBackupManager.Create(const Source, Destination: string);
+begin
+  inherited Create;
+  FDossierSource := IncludeTrailingPathDelimiter(Source);
+  FDossierDestination := IncludeTrailingPathDelimiter(Destination);
+
+  // Créer le dossier de destination s'il n'existe pas
+  if not DirectoryExists(FDossierDestination) then
+    ForceDirectories(FDossierDestination);
+end;
+
+function TBackupManager.CreerSauvegarde: Boolean;
+var
+  ZipFile: TZipFile;
+  NomArchive: string;
+  Fichiers: TStringDynArray;
+  Fichier: string;
+begin
+  Result := False;
+
+  try
+    // Nom de l'archive avec horodatage
+    NomArchive := FDossierDestination + 'backup_' +
+                  FormatDateTime('yyyymmdd_hhnnss', Now) + '.zip';
+
+    // Récupérer tous les fichiers du dossier source
+    Fichiers := TDirectory.GetFiles(FDossierSource, '*.*',
+                                    TSearchOption.soAllDirectories);
+
+    if Length(Fichiers) = 0 then
+    begin
+      ShowMessage('Aucun fichier à sauvegarder');
+      Exit;
+    end;
+
+    ZipFile := TZipFile.Create;
+    try
+      ZipFile.Open(NomArchive, zmWrite);
+
+      // Ajouter chaque fichier
+      for Fichier in Fichiers do
+      begin
+        // Conserver la structure de répertoires
+        ZipFile.Add(Fichier,
+                   StringReplace(Fichier, FDossierSource, '', []));
+      end;
+
+      ZipFile.Close;
+      Result := True;
+
+      ShowMessage(Format('Sauvegarde créée : %s' + #13#10 +
+                         '%d fichiers archivés',
+                         [NomArchive, Length(Fichiers)]));
+    finally
+      ZipFile.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erreur lors de la sauvegarde : ' + E.Message);
+      Result := False;
+    end;
+  end;
+end;
+
+procedure TBackupManager.RestaurerSauvegarde(const NomArchive: string);
+var
+  ZipFile: TZipFile;
+  DossierRestauration: string;
+begin
+  if not FileExists(NomArchive) then
+  begin
+    ShowMessage('Archive introuvable : ' + NomArchive);
+    Exit;
+  end;
+
+  try
+    // Créer un dossier de restauration
+    DossierRestauration := FDossierDestination + 'restauration_' +
+                          FormatDateTime('yyyymmdd_hhnnss', Now) + '\';
+    ForceDirectories(DossierRestauration);
+
+    ZipFile := TZipFile.Create;
+    try
+      ZipFile.Open(NomArchive, zmRead);
+      ZipFile.ExtractAll(DossierRestauration);
+      ZipFile.Close;
+
+      ShowMessage('Restauration terminée dans : ' + DossierRestauration);
+    finally
+      ZipFile.Free;
+    end;
+  except
+    on E: Exception do
+      ShowMessage('Erreur lors de la restauration : ' + E.Message);
+  end;
+end;
+
+function TBackupManager.ListerSauvegardes: TStringList;
+var
+  Fichiers: TStringDynArray;
+  Fichier: string;
+begin
+  Result := TStringList.Create;
+
+  // Chercher tous les fichiers .zip dans le dossier destination
+  Fichiers := TDirectory.GetFiles(FDossierDestination, 'backup_*.zip');
+
+  for Fichier in Fichiers do
+    Result.Add(Fichier);
+
+  Result.Sort;
+end;
+
+// Utilisation
+procedure TForm1.Button9Click(Sender: TObject);
+var
+  BackupManager: TBackupManager;
+begin
+  BackupManager := TBackupManager.Create('C:\MesDonnees\', 'C:\Sauvegardes\');
+  try
+    if BackupManager.CreerSauvegarde then
+      ShowMessage('Sauvegarde réussie');
+  finally
+    BackupManager.Free;
+  end;
+end;
+
+procedure TForm1.Button10Click(Sender: TObject);
+var
+  BackupManager: TBackupManager;
+  Sauvegardes: TStringList;
+begin
+  BackupManager := TBackupManager.Create('C:\MesDonnees\', 'C:\Sauvegardes\');
+  try
+    Sauvegardes := BackupManager.ListerSauvegardes;
+    try
+      Memo1.Lines.Assign(Sauvegardes);
+    finally
+      Sauvegardes.Free;
+    end;
+  finally
+    BackupManager.Free;
+  end;
+end;
+```
+
+---
+
+## Compression avec mot de passe (ZIP)
+
+Delphi permet également de créer des archives ZIP protégées par mot de passe.
+
+```pascal
+procedure CreerZipAvecMotDePasse(const Fichiers: TStringList;
+                                 const NomArchive, MotDePasse: string);
+var
+  ZipFile: TZipFile;
+  Fichier: string;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    ZipFile.Open(NomArchive, zmWrite);
+
+    // Définir le mot de passe
+    ZipFile.Password := MotDePasse;
+
+    // Ajouter les fichiers
+    for Fichier in Fichiers do
+    begin
+      if FileExists(Fichier) then
+        ZipFile.Add(Fichier);
+    end;
+
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+procedure ExtraireZipAvecMotDePasse(const NomArchive, Destination,
+                                    MotDePasse: string);
+var
+  ZipFile: TZipFile;
+begin
+  ZipFile := TZipFile.Create;
+  try
+    ZipFile.Open(NomArchive, zmRead);
+
+    // Définir le mot de passe
+    ZipFile.Password := MotDePasse;
+
+    // Extraire
+    ZipFile.ExtractAll(Destination);
+
+    ZipFile.Close;
+  finally
+    ZipFile.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.CreerArchiveSecurisee;
+var
+  Fichiers: TStringList;
+  MotDePasse: string;
+begin
+  MotDePasse := InputBox('Mot de passe',
+                         'Entrez un mot de passe pour l''archive :', '');
+
+  if MotDePasse = '' then
+  begin
+    ShowMessage('Mot de passe requis');
+    Exit;
+  end;
+
+  Fichiers := TStringList.Create;
+  try
+    Fichiers.Add('C:\Documents\secret.txt');
+    Fichiers.Add('C:\Documents\confidentiel.pdf');
+
+    CreerZipAvecMotDePasse(Fichiers, 'C:\archive_securisee.zip', MotDePasse);
+    ShowMessage('Archive sécurisée créée');
+  finally
+    Fichiers.Free;
+  end;
+end;
+```
+
+---
+
+## Optimisation et bonnes pratiques
+
+### 1. Choisir le bon niveau de compression
+
+```pascal
+function ChoisirNiveauCompression(TailleFichier: Int64): TZCompressionLevel;
+begin
+  if TailleFichier < 1024 * 1024 then // < 1 Mo
+    Result := zcMax  // Petits fichiers : compression max
+  else if TailleFichier < 100 * 1024 * 1024 then // < 100 Mo
+    Result := zcDefault  // Fichiers moyens : compromis
+  else
+    Result := zcFastest;  // Gros fichiers : vitesse prioritaire
+end;
+```
+
+### 2. Compresser par blocs pour les gros fichiers
+
+```pascal
+procedure CompresserParBlocs(const Source, Destination: string);
+const
+  TAILLE_BLOC = 1024 * 1024; // 1 Mo
+var
+  SourceStream, DestStream: TFileStream;
+  Compresseur: TZCompressionStream;
+  Buffer: array[0..TAILLE_BLOC-1] of Byte;
+  BytesLus: Integer;
+begin
+  SourceStream := TFileStream.Create(Source, fmOpenRead);
+  try
+    DestStream := TFileStream.Create(Destination, fmCreate);
+    try
+      Compresseur := TZCompressionStream.Create(DestStream, zcDefault);
+      try
+        repeat
+          BytesLus := SourceStream.Read(Buffer, TAILLE_BLOC);
+          if BytesLus > 0 then
+            Compresseur.WriteBuffer(Buffer, BytesLus);
+        until BytesLus = 0;
+      finally
+        Compresseur.Free;
+      end;
+    finally
+      DestStream.Free;
+    end;
+  finally
+    SourceStream.Free;
+  end;
+end;
+```
+
+### 3. Vérifier si la compression est utile
+
+```pascal
+function CompressionEstUtile(const Extension: string): Boolean;
+var
+  ExtensionsNonCompressibles: TStringList;
+begin
+  ExtensionsNonCompressibles := TStringList.Create;
+  try
+    // Fichiers déjà compressés
+    ExtensionsNonCompressibles.Add('.zip');
+    ExtensionsNonCompressibles.Add('.rar');
+    ExtensionsNonCompressibles.Add('.7z');
+    ExtensionsNonCompressibles.Add('.jpg');
+    ExtensionsNonCompressibles.Add('.jpeg');
+    ExtensionsNonCompressibles.Add('.png');
+    ExtensionsNonCompressibles.Add('.mp3');
+    ExtensionsNonCompressibles.Add('.mp4');
+    ExtensionsNonCompressibles.Add('.avi');
+    ExtensionsNonCompressibles.Add('.mkv');
+
+    Result := ExtensionsNonCompressibles.IndexOf(
+      LowerCase(Extension)) = -1;
+  finally
+    ExtensionsNonCompressibles.Free;
+  end;
+end;
+
+procedure CompresserIntelligent(const Source, Destination: string);
+var
+  Extension: string;
+  TailleSource, TailleCompresse: Int64;
+begin
+  Extension := ExtractFileExt(Source);
+
+  if not CompressionEstUtile(Extension) then
+  begin
+    // Copier simplement le fichier
+    TFile.Copy(Source, Destination, True);
+    ShowMessage('Fichier copié sans compression (déjà compressé)');
+    Exit;
+  end;
+
+  // Comprimer
+  CompresserFichier(Source, Destination);
+
+  // Vérifier si la compression a été efficace
+  TailleSource := TFile.GetSize(Source);
+  TailleCompresse := TFile.GetSize(Destination);
+
+  if TailleCompresse >= TailleSource * 0.95 then
+  begin
+    // Compression inefficace (< 5%), utiliser le fichier original
+    DeleteFile(Destination);
+    TFile.Copy(Source, Destination, True);
+    ShowMessage('Compression peu efficace, fichier copié tel quel');
+  end;
+end;
+```
+
+### 4. Afficher une barre de progression
+
+```pascal
+procedure CompresserAvecProgression(const Source, Destination: string;
+                                    ProgressBar: TProgressBar);
+const
+  TAILLE_BLOC = 64 * 1024; // 64 Ko
+var
+  SourceStream, DestStream: TFileStream;
+  Compresseur: TZCompressionStream;
+  Buffer: array[0..TAILLE_BLOC-1] of Byte;
+  BytesLus, TotalLus: Integer;
+  TailleTotal: Int64;
+begin
+  SourceStream := TFileStream.Create(Source, fmOpenRead);
+  try
+    TailleTotal := SourceStream.Size;
+    ProgressBar.Max := 100;
+    ProgressBar.Position := 0;
+
+    DestStream := TFileStream.Create(Destination, fmCreate);
+    try
+      Compresseur := TZCompressionStream.Create(DestStream, zcDefault);
+      try
+        TotalLus := 0;
+
+        repeat
+          BytesLus := SourceStream.Read(Buffer, TAILLE_BLOC);
+          if BytesLus > 0 then
+          begin
+            Compresseur.WriteBuffer(Buffer, BytesLus);
+            Inc(TotalLus, BytesLus);
+
+            // Mettre à jour la barre de progression
+            ProgressBar.Position := Round((TotalLus / TailleTotal) * 100);
+            Application.ProcessMessages;
+          end;
+        until BytesLus = 0;
+      finally
+        Compresseur.Free;
+      end;
+    finally
+      DestStream.Free;
+    end;
+  finally
+    SourceStream.Free;
+  end;
+end;
+```
+
+### 5. Gestion des erreurs robuste
+
+```pascal
+function CompresserSecurise(const Source, Destination: string): Boolean;
+begin
+  Result := False;
+
+  // Vérifications préalables
+  if not FileExists(Source) then
+  begin
+    ShowMessage('Fichier source introuvable');
+    Exit;
+  end;
+
+  if FileExists(Destination) then
+  begin
+    if MessageDlg('Le fichier destination existe déjà. Écraser ?',
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+  end;
+
+  try
+    CompresserFichier(Source, Destination);
+
+    // Vérifier que le fichier a bien été créé
+    if not FileExists(Destination) then
+    begin
+      ShowMessage('Erreur : fichier destination non créé');
+      Exit;
+    end;
+
+    // Vérifier que le fichier n'est pas vide
+    if TFile.GetSize(Destination) = 0 then
+    begin
+      ShowMessage('Erreur : fichier destination vide');
+      DeleteFile(Destination);
+      Exit;
+    end;
+
+    Result := True;
+  except
+    on E: EInOutError do
+    begin
+      ShowMessage('Erreur d''entrée/sortie : ' + E.Message);
+      if FileExists(Destination) then
+        DeleteFile(Destination);
+    end;
+    on E: EOutOfMemory do
+    begin
+      ShowMessage('Mémoire insuffisante pour la compression');
+      if FileExists(Destination) then
+        DeleteFile(Destination);
+    end;
+    on E: Exception do
+    begin
+      ShowMessage('Erreur inattendue : ' + E.Message);
+      if FileExists(Destination) then
+        DeleteFile(Destination);
+    end;
+  end;
+end;
+```
+
+---
+
+## Comparaison des méthodes
+
+| Méthode | Usage | Avantages | Inconvénients |
+|---------|-------|-----------|---------------|
+| **ZLib (Streams)** | Données en mémoire, fichiers simples | Intégré, rapide, contrôle total | Format propriétaire, pas d'archives |
+| **System.Zip** | Archives multi-fichiers | Standard ZIP, compatible, mot de passe | Plus lent, moins de contrôle |
+| **Compression chaînes** | Données texte, communication | Simple pour petites données | Pas efficace pour gros volumes |
+
+---
+
+## Conseils pratiques
+
+### Quand compresser ?
+
+**OUI, compresser dans ces cas :**
+- Fichiers texte (logs, configuration, code source)
+- Sauvegardes
+- Transferts réseau
+- Stockage long terme
+- Fichiers CSV, XML, JSON
+- Bases de données texte
+
+**NON, éviter la compression pour :**
+- Fichiers déjà compressés (JPEG, MP3, ZIP, etc.)
+- Très petits fichiers (< 1 Ko)
+- Données nécessitant un accès aléatoire fréquent
+- Applications temps réel critiques
+
+### Taux de compression typiques
+
+- **Code source** : 80-90%
+- **Fichiers texte** : 60-80%
+- **Images BMP** : 70-90%
+- **Bases de données** : 50-70%
+- **Fichiers exécutables** : 40-60%
+- **Images JPEG** : 0-5% (déjà compressées)
+
+---
+
+## Résumé
+
+Dans ce chapitre, vous avez découvert la compression et décompression en Delphi :
+
+**Concepts clés :**
+- Compression = réduire la taille des données
+- Décompression = reconstituer les données originales
+- Sans perte (lossless) vs avec perte (lossy)
+- Taux de compression et niveaux
+
+**Outils disponibles :**
+- **System.ZLib** : compression de streams et fichiers
+- **System.Zip** : création et manipulation d'archives ZIP
+- Niveaux de compression (Fastest, Default, Max)
+- Protection par mot de passe
+
+**Techniques apprises :**
+- Compresser des streams, fichiers et chaînes
+- Créer et extraire des archives ZIP
+- Gérer des sauvegardes compressées
+- Optimiser selon le type de données
+
+**Bonnes pratiques :**
+- Choisir le bon niveau de compression
+- Vérifier si la compression est utile
+- Compresser par blocs les gros fichiers
+- Gérer les erreurs robustement
+- Afficher la progression pour les longs traitements
+
+La compression est un outil puissant pour économiser de l'espace disque, accélérer les transferts et améliorer les performances de vos applications Delphi !
 
 ⏭️ [Traitement par lots (Batch)](/07-gestion-des-fichiers-et-flux-de-donnees/06-traitement-par-lots.md)
