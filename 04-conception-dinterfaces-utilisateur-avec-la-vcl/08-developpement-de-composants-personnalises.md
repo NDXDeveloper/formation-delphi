@@ -1,755 +1,579 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 4.8 Développement de composants personnalisés
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-L'une des forces de Delphi est sa capacité à être étendu grâce à la création de composants personnalisés. Ces composants peuvent ensuite être utilisés comme n'importe quel autre composant de la palette, ce qui vous permet de réutiliser facilement votre code et d'enrichir votre environnement de développement. Dans cette section, nous allons découvrir comment créer vos propres composants personnalisés.
+Le développement de composants personnalisés est l'une des fonctionnalités les plus puissantes de Delphi. Cela vous permet de créer vos propres contrôles réutilisables, d'étendre les composants existants et de construire des bibliothèques de composants adaptées à vos besoins spécifiques.
 
-## Pourquoi créer des composants personnalisés ?
+## 4.8.1 Qu'est-ce qu'un composant personnalisé ?
 
-Avant de nous lancer dans le développement, voici quelques raisons pour lesquelles vous pourriez vouloir créer vos propres composants :
+### Définition
 
-- **Réutilisation du code** : encapsulez une fonctionnalité que vous utilisez souvent
-- **Simplification** : masquez la complexité derrière une interface simple
-- **Cohérence** : assurez-vous que vos fonctionnalités sont utilisées de manière cohérente
-- **Organisation** : regroupez des contrôles liés en un seul composant
-- **Distribution** : partagez facilement vos fonctionnalités avec d'autres développeurs
+Un **composant personnalisé** est un élément réutilisable que vous créez vous-même, qui peut être :
+- Ajouté à la palette d'outils de Delphi
+- Glissé-déposé sur un formulaire comme n'importe quel autre composant
+- Configuré via l'Inspecteur d'objets
+- Réutilisé dans plusieurs projets
 
-## Les différents types de composants personnalisés
+### Pourquoi créer des composants personnalisés ?
 
-Il existe plusieurs approches pour créer des composants personnalisés dans Delphi :
+**Réutilisabilité :**
+- Éviter de dupliquer le code dans plusieurs formulaires
+- Créer une bibliothèque de composants pour votre entreprise
+- Partager des fonctionnalités entre projets
 
-1. **Composants non visuels** : ils n'ont pas d'interface visible mais fournissent des fonctionnalités
-2. **Contrôles simples** : ils étendent les contrôles existants en ajoutant des fonctionnalités
-3. **Contrôles composés** : ils combinent plusieurs contrôles existants
-4. **Contrôles entièrement personnalisés** : ils dessinent leur propre interface et gèrent leurs propres événements
+**Encapsulation :**
+- Cacher la complexité derrière une interface simple
+- Regrouper des fonctionnalités liées
+- Faciliter la maintenance
 
-Commençons par comprendre la structure d'un composant et comment le créer.
+**Cohérence :**
+- Garantir un comportement uniforme dans toute l'application
+- Standardiser l'apparence et les fonctionnalités
+- Simplifier les mises à jour
 
-## Structure de base d'un composant
+**Productivité :**
+- Conception visuelle plutôt que code
+- Propriétés configurables dans l'Inspecteur d'objets
+- Gain de temps sur les projets futurs
 
-Un composant Delphi est essentiellement une classe dérivée de `TComponent` ou d'une de ses classes dérivées. Voici la structure typique :
+### Types de composants
+
+**Composants visuels :**
+- S'affichent à l'écran (boutons, zones de texte, graphiques)
+- Héritent généralement de `TControl` ou `TGraphicControl`
+- Exemple : Un bouton avec dégradé personnalisé
+
+**Composants non-visuels :**
+- N'ont pas d'interface visible (timers, connexions)
+- Héritent de `TComponent`
+- Exemple : Un gestionnaire de logs
+
+---
+
+## 4.8.2 Les bases de l'héritage en Delphi
+
+### Hiérarchie des classes de composants
+
+```
+TObject (classe de base)
+  └─ TPersistent
+      └─ TComponent (composants non-visuels)
+          └─ TControl (composants visuels de base)
+              ├─ TWinControl (composants Windows natifs)
+              │   ├─ TButton
+              │   ├─ TEdit
+              │   └─ TCustomControl (pour dessins personnalisés)
+              └─ TGraphicControl (composants graphiques légers)
+                  ├─ TLabel
+                  ├─ TShape
+                  └─ TImage
+```
+
+### Choisir la classe parent
+
+| Classe parent | Quand l'utiliser |
+|--------------|------------------|
+| `TComponent` | Composant non-visuel (timer, connexion) |
+| `TGraphicControl` | Composant visuel simple sans focus ni enfants |
+| `TCustomControl` | Composant visuel avec dessin personnalisé complet |
+| `TWinControl` | Composant pouvant contenir d'autres composants |
+| Composant existant | Pour étendre un composant standard |
+
+---
+
+## 4.8.3 Créer un premier composant simple
+
+### Exemple 1 : Étendre un composant existant
+
+Créons un `TEdit` qui n'accepte que des nombres.
+
+#### Étape 1 : Créer l'unité
+
+1. Menu **Fichier** → **Nouveau** → **Autre**
+2. Catégorie **Delphi** → **Unité**
+3. Nommer le fichier : `EditNumerique.pas`
+
+#### Étape 2 : Déclarer la classe
 
 ```pascal
-unit MaUnitComposant;
+unit EditNumerique;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Graphics;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls;
 
 type
-  TMonComposant = class(TComponent)  // Ou TGraphicControl, TWinControl, etc.
+  TEditNumerique = class(TEdit)
   private
-    // Champs privés et méthodes
-    FMaPropriete: Integer;
-    procedure SetMaPropriete(const Value: Integer);
+    FAccepterDecimales: Boolean;
+    FAccepterNegatifs: Boolean;
   protected
-    // Méthodes protégées pour la dérivation
-    procedure Paint; override;  // Pour les contrôles visuels
+    procedure KeyPress(var Key: Char); override;
   public
-    // Méthodes et propriétés publiques
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
   published
-    // Propriétés visibles dans l'Inspecteur d'objets
-    property MaPropriete: Integer read FMaPropriete write SetMaPropriete;
+    property AccepterDecimales: Boolean read FAccepterDecimales
+      write FAccepterDecimales default True;
+    property AccepterNegatifs: Boolean read FAccepterNegatifs
+      write FAccepterNegatifs default True;
   end;
 
 procedure Register;
 
 implementation
 
-{ TMonComposant }
-
-constructor TMonComposant.Create(AOwner: TComponent);
+constructor TEditNumerique.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  // Initialisation
-  FMaPropriete := 0;
+  FAccepterDecimales := True;
+  FAccepterNegatifs := True;
 end;
 
-destructor TMonComposant.Destroy;
+procedure TEditNumerique.KeyPress(var Key: Char);
+var
+  SeparateurDecimal: Char;
 begin
-  // Nettoyage
-  inherited Destroy;
-end;
+  SeparateurDecimal := FormatSettings.DecimalSeparator;
 
-procedure TMonComposant.SetMaPropriete(const Value: Integer);
-begin
-  if FMaPropriete <> Value then
+  // Autoriser les touches de contrôle (Backspace, etc.)
+  if CharInSet(Key, [#8, #13]) then
   begin
-    FMaPropriete := Value;
-    // Actions suite au changement de la propriété
+    inherited KeyPress(Key);
+    Exit;
   end;
+
+  // Autoriser les chiffres
+  if CharInSet(Key, ['0'..'9']) then
+  begin
+    inherited KeyPress(Key);
+    Exit;
+  end;
+
+  // Autoriser le signe négatif
+  if FAccepterNegatifs and (Key = '-') and (SelStart = 0) and
+     (Pos('-', Text) = 0) then
+  begin
+    inherited KeyPress(Key);
+    Exit;
+  end;
+
+  // Autoriser le séparateur décimal
+  if FAccepterDecimales and (Key = SeparateurDecimal) and
+     (Pos(SeparateurDecimal, Text) = 0) then
+  begin
+    inherited KeyPress(Key);
+    Exit;
+  end;
+
+  // Bloquer toutes les autres touches
+  Key := #0;
+  Beep;
 end;
 
 procedure Register;
 begin
-  RegisterComponents('Ma Palette', [TMonComposant]);
+  RegisterComponents('Mes Composants', [TEditNumerique]);
 end;
 
 end.
 ```
 
-Les sections clés sont :
+#### Étape 3 : Comprendre le code
 
-- **private** : champs et méthodes internes
-- **protected** : méthodes que les classes dérivées peuvent surcharger
-- **public** : interface accessible à tous
-- **published** : propriétés visibles dans l'Inspecteur d'objets
-
-La procédure `Register` est particulièrement importante : elle indique à Delphi dans quelle palette placer votre composant.
-
-## Créer un composant non visuel simple
-
-Commençons par un exemple simple : un composant de minuterie amélioré qui offre plus de fonctionnalités que le `TTimer` standard.
-
-### Étape 1 : Créer un paquet pour vos composants
-
-1. Choisissez **Fichier** > **Nouveau** > **Paquet**
-2. Enregistrez-le sous un nom significatif (par exemple, "MesComposants.dpk")
-3. Dans l'explorateur de projets, faites un clic droit sur le nom du paquet et choisissez **Ajouter...**
-4. Sélectionnez **Nouveau fichier** puis **Unité** et enregistrez-la (par exemple, "UTimerPlus.pas")
-
-### Étape 2 : Coder le composant
+**Sections de la classe :**
 
 ```pascal
-unit UTimerPlus;
+private
+  // Variables internes, non accessibles de l'extérieur
+  FAccepterDecimales: Boolean;
 
-interface
+protected
+  // Méthodes que les classes dérivées peuvent redéfinir
+  procedure KeyPress(var Key: Char); override;
 
-uses
-  System.SysUtils, System.Classes;
+public
+  // Méthodes et propriétés accessibles par le code
+  constructor Create(AOwner: TComponent); override;
 
-type
-  TCountDownEvent = procedure(Sender: TObject; SecondesRestantes: Integer) of object;
-  TTimerCompleteEvent = procedure(Sender: TObject) of object;
-
-  TTimerPlus = class(TComponent)
-  private
-    FTimer: TTimer;
-    FDuree: Integer;  // Durée en secondes
-    FRestant: Integer;  // Temps restant
-    FPause: Boolean;
-    FOnCountDown: TCountDownEvent;
-    FOnComplete: TTimerCompleteEvent;
-    procedure TimerTick(Sender: TObject);
-    procedure SetDuree(const Value: Integer);
-    procedure SetEnabled(const Value: Boolean);
-    function GetEnabled: Boolean;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-    procedure Start;
-    procedure Stop;
-    procedure Pause;
-    procedure Resume;
-    property TempsRestant: Integer read FRestant;
-  published
-    property Duree: Integer read FDuree write SetDuree default 60;
-    property Enabled: Boolean read GetEnabled write SetEnabled default False;
-    property OnCountDown: TCountDownEvent read FOnCountDown write FOnCountDown;
-    property OnComplete: TTimerCompleteEvent read FOnComplete write FOnComplete;
-  end;
-
-procedure Register;
-
-implementation
-
-{ TTimerPlus }
-
-constructor TTimerPlus.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FTimer := TTimer.Create(Self);
-  FTimer.Enabled := False;
-  FTimer.Interval := 1000;  // 1 seconde
-  FTimer.OnTimer := TimerTick;
-  FDuree := 60;  // Par défaut : 60 secondes
-  FRestant := FDuree;
-  FPause := False;
-end;
-
-destructor TTimerPlus.Destroy;
-begin
-  FTimer.Free;
-  inherited Destroy;
-end;
-
-function TTimerPlus.GetEnabled: Boolean;
-begin
-  Result := FTimer.Enabled;
-end;
-
-procedure TTimerPlus.Pause;
-begin
-  if FTimer.Enabled and not FPause then
-  begin
-    FTimer.Enabled := False;
-    FPause := True;
-  end;
-end;
-
-procedure TTimerPlus.Resume;
-begin
-  if FPause then
-  begin
-    FTimer.Enabled := True;
-    FPause := False;
-  end;
-end;
-
-procedure TTimerPlus.SetDuree(const Value: Integer);
-begin
-  if Value > 0 then
-  begin
-    FDuree := Value;
-    if not FTimer.Enabled then
-      FRestant := FDuree;
-  end;
-end;
-
-procedure TTimerPlus.SetEnabled(const Value: Boolean);
-begin
-  if Value <> FTimer.Enabled then
-  begin
-    FTimer.Enabled := Value;
-
-    if Value then
-    begin
-      // Réinitialise le compteur lorsqu'on l'active
-      FRestant := FDuree;
-      FPause := False;
-    end;
-  end;
-end;
-
-procedure TTimerPlus.Start;
-begin
-  FRestant := FDuree;
-  FPause := False;
-  FTimer.Enabled := True;
-end;
-
-procedure TTimerPlus.Stop;
-begin
-  FTimer.Enabled := False;
-  FPause := False;
-  FRestant := FDuree;
-end;
-
-procedure TTimerPlus.TimerTick(Sender: TObject);
-begin
-  if FRestant > 0 then
-  begin
-    Dec(FRestant);
-
-    // Déclencher l'événement de décompte
-    if Assigned(FOnCountDown) then
-      FOnCountDown(Self, FRestant);
-
-    // Si terminé
-    if FRestant = 0 then
-    begin
-      FTimer.Enabled := False;
-
-      if Assigned(FOnComplete) then
-        FOnComplete(Self);
-    end;
-  end;
-end;
-
-procedure Register;
-begin
-  RegisterComponents('Mes Composants', [TTimerPlus]);
-end;
-
-end.
+published
+  // Propriétés visibles dans l'Inspecteur d'objets
+  property AccepterDecimales: Boolean read FAccepterDecimales
+    write FAccepterDecimales default True;
 ```
 
-### Étape 3 : Compiler et installer le paquet
+**Le mot-clé `override` :**
+- Indique que vous redéfinissez une méthode de la classe parent
+- Permet d'appeler la version parent avec `inherited`
 
-1. Assurez-vous que l'unité de votre composant est ajoutée au paquet
-2. Compilez le paquet (clic droit sur le nom du paquet > **Compiler**)
-3. Installez le paquet (clic droit sur le nom du paquet > **Installer**)
+**Le constructeur :**
+```pascal
+constructor TEditNumerique.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner); // Toujours appeler le constructeur parent
+  FAccepterDecimales := True; // Initialiser les valeurs par défaut
+  FAccepterNegatifs := True;
+end;
+```
 
-Après l'installation, votre composant apparaîtra dans la palette sous l'onglet "Mes Composants".
+**La procédure Register :**
+```pascal
+procedure Register;
+begin
+  // Enregistre le composant dans la palette d'outils
+  RegisterComponents('Mes Composants', [TEditNumerique]);
+end;
+```
 
-### Étape 4 : Utiliser votre composant
+#### Étape 4 : Installer le composant
 
-Vous pouvez maintenant utiliser votre composant comme n'importe quel autre :
+1. Menu **Composant** → **Installer des composants**
+2. Cliquez sur **Ajouter une unité**
+3. Sélectionnez votre fichier `EditNumerique.pas`
+4. Cliquez sur **OK**
+5. Delphi compile et installe le package
+6. Le composant apparaît dans la palette sous "Mes Composants"
+
+#### Étape 5 : Utiliser le composant
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Configuration du TimerPlus
-  TimerPlus1.Duree := 30;  // 30 secondes
-  TimerPlus1.OnCountDown := AfficherDecompte;
-  TimerPlus1.OnComplete := FinDecompte;
+  // Le composant est configuré visuellement dans l'Inspecteur d'objets
+  EditNumerique1.AccepterDecimales := True;
+  EditNumerique1.AccepterNegatifs := False;
 end;
 
-procedure TForm1.ButtonStartClick(Sender: TObject);
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Valeur: Double;
 begin
-  TimerPlus1.Start;
-  ButtonStart.Enabled := False;
-  ButtonPause.Enabled := True;
-  ButtonStop.Enabled := True;
-end;
-
-procedure TForm1.AfficherDecompte(Sender: TObject; SecondesRestantes: Integer);
-begin
-  LabelCompte.Caption := 'Temps restant : ' + IntToStr(SecondesRestantes) + ' secondes';
-end;
-
-procedure TForm1.FinDecompte(Sender: TObject);
-begin
-  ShowMessage('Temps écoulé !');
-  ButtonStart.Enabled := True;
-  ButtonPause.Enabled := False;
-  ButtonStop.Enabled := False;
-end;
-```
-
-## Créer un contrôle visuel simple
-
-Passons maintenant à un contrôle visuel simple. Nous allons créer un bouton amélioré qui change de couleur lorsqu'on le survole.
-
-### Étape 1 : Ajouter une nouvelle unité au paquet
-
-Créez une nouvelle unité nommée "UBoutonCouleur.pas" et ajoutez-la à votre paquet.
-
-### Étape 2 : Coder le composant
-
-```pascal
-unit UBoutonCouleur;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics;
-
-type
-  TBoutonCouleur = class(TButton)
-  private
-    FCouleurSurvol: TColor;
-    FCouleurNormale: TColor;
-    FSurvole: Boolean;
-    procedure SetCouleurSurvol(const Value: TColor);
-    procedure SetCouleurNormale(const Value: TColor);
-  protected
-    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
-    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
-  public
-    constructor Create(AOwner: TComponent); override;
-  published
-    property CouleurSurvol: TColor read FCouleurSurvol write SetCouleurSurvol default clHighlight;
-    property CouleurNormale: TColor read FCouleurNormale write SetCouleurNormale default clBtnFace;
-  end;
-
-procedure Register;
-
-implementation
-
-{ TBoutonCouleur }
-
-constructor TBoutonCouleur.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FCouleurNormale := clBtnFace;
-  FCouleurSurvol := clHighlight;
-  FSurvole := False;
-  Font.Color := clWindowText;
-end;
-
-procedure TBoutonCouleur.CMMouseEnter(var Message: TMessage);
-begin
-  inherited;
-  // La souris entre dans la zone du bouton
-  FSurvole := True;
-  Color := FCouleurSurvol;
-
-  // Si la couleur de survol est foncée, on adapte la couleur du texte
-  if GetRValue(FCouleurSurvol) + GetGValue(FCouleurSurvol) + GetBValue(FCouleurSurvol) < 384 then
-    Font.Color := clWhite
+  if TryStrToFloat(EditNumerique1.Text, Valeur) then
+    ShowMessage('Valeur saisie : ' + FloatToStr(Valeur))
   else
-    Font.Color := clBlack;
-
-  Invalidate;  // Forcer le redessin
+    ShowMessage('Veuillez entrer un nombre valide');
 end;
-
-procedure TBoutonCouleur.CMMouseLeave(var Message: TMessage);
-begin
-  inherited;
-  // La souris quitte la zone du bouton
-  FSurvole := False;
-  Color := FCouleurNormale;
-
-  // Restaurer la couleur du texte par défaut
-  Font.Color := clWindowText;
-
-  Invalidate;  // Forcer le redessin
-end;
-
-procedure TBoutonCouleur.SetCouleurNormale(const Value: TColor);
-begin
-  if FCouleurNormale <> Value then
-  begin
-    FCouleurNormale := Value;
-    if not FSurvole then
-    begin
-      Color := FCouleurNormale;
-      Invalidate;
-    end;
-  end;
-end;
-
-procedure TBoutonCouleur.SetCouleurSurvol(const Value: TColor);
-begin
-  if FCouleurSurvol <> Value then
-  begin
-    FCouleurSurvol := Value;
-    if FSurvole then
-    begin
-      Color := FCouleurSurvol;
-      Invalidate;
-    end;
-  end;
-end;
-
-procedure Register;
-begin
-  RegisterComponents('Mes Composants', [TBoutonCouleur]);
-end;
-
-end.
 ```
 
-### Étape 3 : Recompiler et réinstaller le paquet
+---
 
-Après avoir ajouté le nouveau composant, vous devez recompiler et réinstaller le paquet pour qu'il apparaisse dans la palette.
+## 4.8.4 Propriétés personnalisées
 
-## Créer un contrôle composé
+### Types de propriétés
 
-Un contrôle composé regroupe plusieurs contrôles existants en un seul. Voici un exemple de champ de recherche qui combine un `TEdit` et un `TButton`.
-
-### Étape 1 : Ajouter une nouvelle unité
-
-Créez une nouvelle unité "UChampRecherche.pas" et ajoutez-la à votre paquet.
-
-### Étape 2 : Coder le composant
+#### Propriétés simples
 
 ```pascal
-unit UChampRecherche;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics,
-  Vcl.ExtCtrls;
-
 type
-  TSearchEvent = procedure(Sender: TObject; const SearchText: string) of object;
-
-  TChampRecherche = class(TWinControl)
+  TMonComposant = class(TCustomControl)
   private
-    FEdit: TEdit;
-    FButton: TButton;
-    FPanel: TPanel;
-    FPlaceholder: string;
-    FOnSearch: TSearchEvent;
-    procedure SetPlaceholder(const Value: string);
-    function GetText: string;
-    procedure SetText(const Value: string);
-    procedure ButtonClick(Sender: TObject);
-    procedure EditKeyPress(Sender: TObject; var Key: Char);
-  protected
-    procedure Resize; override;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
+    FCouleurFond: TColor;
+    FTexte: string;
+    procedure SetCouleurFond(const Value: TColor);
+    procedure SetTexte(const Value: string);
   published
-    property Align;
-    property Anchors;
-    property Color;
-    property Enabled;
-    property Font;
-    property ParentColor;
-    property ParentFont;
-    property TabOrder;
-    property TabStop;
-    property Visible;
-
-    property Text: string read GetText write SetText;
-    property Placeholder: string read FPlaceholder write SetPlaceholder;
-    property OnSearch: TSearchEvent read FOnSearch write FOnSearch;
+    property CouleurFond: TColor read FCouleurFond write SetCouleurFond
+      default clWhite;
+    property Texte: string read FTexte write SetTexte;
   end;
-
-procedure Register;
 
 implementation
 
-{ TChampRecherche }
-
-constructor TChampRecherche.Create(AOwner: TComponent);
+procedure TMonComposant.SetCouleurFond(const Value: TColor);
 begin
-  inherited Create(AOwner);
-
-  Width := 200;
-  Height := 25;
-
-  // Créer le panneau conteneur
-  FPanel := TPanel.Create(Self);
-  FPanel.Parent := Self;
-  FPanel.Align := alClient;
-  FPanel.BevelOuter := bvNone;
-  FPanel.ShowCaption := False;
-
-  // Créer le champ de texte
-  FEdit := TEdit.Create(Self);
-  FEdit.Parent := FPanel;
-  FEdit.Align := alClient;
-  FEdit.TextHint := 'Rechercher...';
-  FEdit.OnKeyPress := EditKeyPress;
-
-  // Créer le bouton
-  FButton := TButton.Create(Self);
-  FButton.Parent := FPanel;
-  FButton.Align := alRight;
-  FButton.Width := 25;
-  FButton.Caption := '🔍';
-  FButton.OnClick := ButtonClick;
-
-  // Définir les valeurs par défaut
-  FPlaceholder := 'Rechercher...';
-end;
-
-destructor TChampRecherche.Destroy;
-begin
-  // Les contrôles enfants seront automatiquement libérés
-  inherited Destroy;
-end;
-
-procedure TChampRecherche.ButtonClick(Sender: TObject);
-begin
-  if Assigned(FOnSearch) then
-    FOnSearch(Self, FEdit.Text);
-end;
-
-procedure TChampRecherche.EditKeyPress(Sender: TObject; var Key: Char);
-begin
-  if Key = #13 then  // Touche Entrée
+  if FCouleurFond <> Value then
   begin
-    Key := #0;  // Supprime le bip
-    ButtonClick(Sender);  // Déclenche la recherche
+    FCouleurFond := Value;
+    Invalidate; // Redessiner le composant
   end;
 end;
 
-function TChampRecherche.GetText: string;
+procedure TMonComposant.SetTexte(const Value: string);
 begin
-  Result := FEdit.Text;
-end;
-
-procedure TChampRecherche.Resize;
-begin
-  inherited;
-  FButton.Width := Height;  // Adapte la largeur du bouton à la hauteur du contrôle
-end;
-
-procedure TChampRecherche.SetPlaceholder(const Value: string);
-begin
-  if FPlaceholder <> Value then
+  if FTexte <> Value then
   begin
-    FPlaceholder := Value;
-    FEdit.TextHint := FPlaceholder;
+    FTexte := Value;
+    Invalidate;
   end;
 end;
-
-procedure TChampRecherche.SetText(const Value: string);
-begin
-  FEdit.Text := Value;
-end;
-
-procedure Register;
-begin
-  RegisterComponents('Mes Composants', [TChampRecherche]);
-end;
-
-end.
 ```
 
-## Créer un contrôle entièrement personnalisé
+**Pourquoi utiliser des méthodes Set ?**
+- Valider les valeurs avant de les accepter
+- Déclencher des actions lors du changement (redessiner, recalculer)
+- Maintenir la cohérence de l'état interne
 
-Pour finir, créons un contrôle plus avancé : une jauge de progression circulaire qui dessine son propre affichage.
-
-### Étape 1 : Ajouter une nouvelle unité
-
-Créez une nouvelle unité "UJaugeCirculaire.pas" et ajoutez-la à votre paquet.
-
-### Étape 2 : Coder le composant
+#### Propriétés calculées (lecture seule)
 
 ```pascal
-unit UJaugeCirculaire;
+type
+  TCompteur = class(TComponent)
+  private
+    FValeur: Integer;
+    function GetEstPair: Boolean;
+  published
+    property Valeur: Integer read FValeur write FValeur;
+    property EstPair: Boolean read GetEstPair; // Lecture seule
+  end;
+
+function TCompteur.GetEstPair: Boolean;
+begin
+  Result := (FValeur mod 2) = 0;
+end;
+```
+
+#### Propriétés avec valeurs par défaut
+
+```pascal
+type
+  TMonBouton = class(TButton)
+  private
+    FRayon: Integer;
+  published
+    property Rayon: Integer read FRayon write FRayon default 10;
+  end;
+
+constructor TMonBouton.Create(AOwner: TComponent);
+begin
+  inherited;
+  FRayon := 10; // Important : initialiser avec la valeur par défaut
+end;
+```
+
+**La directive `default` :**
+- Indique la valeur par défaut à l'Inspecteur d'objets
+- Évite de sauvegarder la propriété dans le fichier .dfm si elle a la valeur par défaut
+- ATTENTION : Ne définit PAS automatiquement la valeur, vous devez l'initialiser dans le constructeur
+
+#### Propriétés énumérées
+
+```pascal
+type
+  TAlignementTexte = (atGauche, atCentre, atDroite);
+
+  TLabelPersonnalise = class(TGraphicControl)
+  private
+    FAlignement: TAlignementTexte;
+    procedure SetAlignement(const Value: TAlignementTexte);
+  published
+    property Alignement: TAlignementTexte read FAlignement
+      write SetAlignement default atGauche;
+  end;
+
+implementation
+
+constructor TLabelPersonnalise.Create(AOwner: TComponent);
+begin
+  inherited;
+  FAlignement := atGauche;
+  Width := 100;
+  Height := 20;
+end;
+
+procedure TLabelPersonnalise.SetAlignement(const Value: TAlignementTexte);
+begin
+  if FAlignement <> Value then
+  begin
+    FAlignement := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TLabelPersonnalise.Paint;
+var
+  R: TRect;
+  Flags: Integer;
+begin
+  inherited;
+
+  R := ClientRect;
+  Canvas.Brush.Color := Color;
+  Canvas.FillRect(R);
+
+  // Définir l'alignement
+  case FAlignement of
+    atGauche:  Flags := DT_LEFT;
+    atCentre:  Flags := DT_CENTER;
+    atDroite:  Flags := DT_RIGHT;
+  end;
+
+  Flags := Flags or DT_VCENTER or DT_SINGLELINE;
+  Canvas.Font := Font;
+  DrawText(Canvas.Handle, PChar(Caption), -1, R, Flags);
+end;
+```
+
+---
+
+## 4.8.5 Événements personnalisés
+
+### Créer un événement
+
+```pascal
+type
+  // Type de l'événement
+  TValeurChangeEvent = procedure(Sender: TObject; NouvelleValeur: Integer) of object;
+
+  TCompteurPersonnalise = class(TComponent)
+  private
+    FValeur: Integer;
+    FOnValeurChange: TValeurChangeEvent;
+    procedure SetValeur(const Value: Integer);
+  protected
+    procedure DoValeurChange(NouvelleValeur: Integer); virtual;
+  published
+    property Valeur: Integer read FValeur write SetValeur;
+    property OnValeurChange: TValeurChangeEvent read FOnValeurChange
+      write FOnValeurChange;
+  end;
+
+implementation
+
+procedure TCompteurPersonnalise.SetValeur(const Value: Integer);
+begin
+  if FValeur <> Value then
+  begin
+    FValeur := Value;
+    DoValeurChange(FValeur); // Déclencher l'événement
+  end;
+end;
+
+procedure TCompteurPersonnalise.DoValeurChange(NouvelleValeur: Integer);
+begin
+  // Déclencher l'événement s'il est assigné
+  if Assigned(FOnValeurChange) then
+    FOnValeurChange(Self, NouvelleValeur);
+end;
+```
+
+### Utiliser l'événement
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  CompteurPersonnalise1.OnValeurChange := GererChangementValeur;
+end;
+
+procedure TForm1.GererChangementValeur(Sender: TObject; NouvelleValeur: Integer);
+begin
+  Label1.Caption := 'Nouvelle valeur : ' + IntToStr(NouvelleValeur);
+end;
+```
+
+---
+
+## 4.8.6 Créer un composant visuel personnalisé
+
+### Exemple : Jauge de progression circulaire
+
+```pascal
+unit JaugeCirculaire;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Graphics, Winapi.Windows,
-  System.Math;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Graphics, System.Math;
 
 type
   TJaugeCirculaire = class(TGraphicControl)
   private
-    FMin: Integer;
-    FMax: Integer;
+    FMinimum: Integer;
+    FMaximum: Integer;
     FPosition: Integer;
     FCouleurFond: TColor;
     FCouleurJauge: TColor;
-    FCouleurTexte: TColor;
     FEpaisseur: Integer;
-    FAfficherPourcentage: Boolean;
-    procedure SetMin(const Value: Integer);
-    procedure SetMax(const Value: Integer);
+    procedure SetMinimum(const Value: Integer);
+    procedure SetMaximum(const Value: Integer);
     procedure SetPosition(const Value: Integer);
     procedure SetCouleurFond(const Value: TColor);
     procedure SetCouleurJauge(const Value: TColor);
-    procedure SetCouleurTexte(const Value: TColor);
     procedure SetEpaisseur(const Value: Integer);
-    procedure SetAfficherPourcentage(const Value: Boolean);
-    function GetPourcentage: Integer;
   protected
     procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
-    function PositionValide(APosition: Integer): Boolean;
-    property Pourcentage: Integer read GetPourcentage;
   published
+    property Minimum: Integer read FMinimum write SetMinimum default 0;
+    property Maximum: Integer read FMaximum write SetMaximum default 100;
+    property Position: Integer read FPosition write SetPosition default 0;
+    property CouleurFond: TColor read FCouleurFond write SetCouleurFond
+      default clSilver;
+    property CouleurJauge: TColor read FCouleurJauge write SetCouleurJauge
+      default clGreen;
+    property Epaisseur: Integer read FEpaisseur write SetEpaisseur default 10;
+
+    // Republier les propriétés héritées utiles
     property Align;
     property Anchors;
-    property Cursor;
+    property Color;
+    property Font;
+    property ParentColor;
     property Visible;
-    property Enabled;
-    property ShowHint;
-    property Hint;
-    property ParentShowHint;
-
-    property Min: Integer read FMin write SetMin default 0;
-    property Max: Integer read FMax write SetMax default 100;
-    property Position: Integer read FPosition write SetPosition default 0;
-    property CouleurFond: TColor read FCouleurFond write SetCouleurFond default clBtnFace;
-    property CouleurJauge: TColor read FCouleurJauge write SetCouleurJauge default clHighlight;
-    property CouleurTexte: TColor read FCouleurTexte write SetCouleurTexte default clWindowText;
-    property Epaisseur: Integer read FEpaisseur write SetEpaisseur default 10;
-    property AfficherPourcentage: Boolean read FAfficherPourcentage write SetAfficherPourcentage default True;
+    property OnClick;
+    property OnDblClick;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
   end;
 
 procedure Register;
 
 implementation
 
-{ TJaugeCirculaire }
-
 constructor TJaugeCirculaire.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+
+  // Valeurs par défaut
+  FMinimum := 0;
+  FMaximum := 100;
+  FPosition := 0;
+  FCouleurFond := clSilver;
+  FCouleurJauge := clGreen;
+  FEpaisseur := 10;
+
+  // Taille par défaut
   Width := 100;
   Height := 100;
-  FMin := 0;
-  FMax := 100;
-  FPosition := 0;
-  FCouleurFond := clBtnFace;
-  FCouleurJauge := clHighlight;
-  FCouleurTexte := clWindowText;
-  FEpaisseur := 10;
-  FAfficherPourcentage := True;
 end;
 
-function TJaugeCirculaire.GetPourcentage: Integer;
+procedure TJaugeCirculaire.SetMinimum(const Value: Integer);
 begin
-  if FMax <> FMin then
-    Result := Round((FPosition - FMin) / (FMax - FMin) * 100)
-  else
-    Result := 0;
-end;
-
-procedure TJaugeCirculaire.Paint;
-var
-  R, RInner: TRect;
-  CenterX, CenterY, Radius: Integer;
-  StartAngle, SweepAngle: Integer;
-  S: string;
-  TextSize: TSize;
-  ArcColor: TColor;
-begin
-  // Calcul des coordonnées
-  CenterX := Width div 2;
-  CenterY := Height div 2;
-  Radius := Min(CenterX, CenterY) - 2;
-
-  // Dessiner le fond
-  Canvas.Brush.Color := Color;
-  Canvas.FillRect(ClientRect);
-
-  // Dessiner le cercle extérieur
-  Canvas.Brush.Color := FCouleurFond;
-  Canvas.Pen.Color := FCouleurFond;
-  Canvas.Pen.Width := 1;
-  R := Rect(CenterX - Radius, CenterY - Radius, CenterX + Radius, CenterY + Radius);
-  Canvas.Ellipse(R);
-
-  // Dessiner la jauge
-  if FPosition > FMin then
+  if FMinimum <> Value then
   begin
-    StartAngle := 270;  // Commencer en haut
-    SweepAngle := Round(360 * GetPourcentage / 100);
-
-    // Convertir les angles en coordonnées logiques pour Windows
-    StartAngle := StartAngle * 16;
-    SweepAngle := SweepAngle * 16;
-
-    Canvas.Brush.Color := FCouleurJauge;
-    Canvas.Pen.Color := FCouleurJauge;
-    Canvas.Pen.Width := FEpaisseur;
-
-    // Dessiner l'arc
-    Winapi.Windows.Arc(Canvas.Handle,
-                        R.Left, R.Top, R.Right, R.Bottom,
-                        CenterX + Round(Radius * Cos(DegToRad(StartAngle / 16))),
-                        CenterY + Round(Radius * Sin(DegToRad(StartAngle / 16))),
-                        CenterX + Round(Radius * Cos(DegToRad((StartAngle + SweepAngle) / 16))),
-                        CenterY + Round(Radius * Sin(DegToRad((StartAngle + SweepAngle) / 16))));
-  end;
-
-  // Dessiner le cercle intérieur (trou)
-  Canvas.Brush.Color := Color;
-  Canvas.Pen.Color := Color;
-  Canvas.Pen.Width := 1;
-  RInner := Rect(CenterX - Radius + FEpaisseur + 2,
-                 CenterY - Radius + FEpaisseur + 2,
-                 CenterX + Radius - FEpaisseur - 2,
-                 CenterY + Radius - FEpaisseur - 2);
-  Canvas.Ellipse(RInner);
-
-  // Afficher le pourcentage
-  if FAfficherPourcentage then
-  begin
-    S := IntToStr(GetPourcentage) + '%';
-    Canvas.Font := Font;
-    Canvas.Font.Color := FCouleurTexte;
-    TextSize := Canvas.TextExtent(S);
-    Canvas.TextOut(CenterX - TextSize.cx div 2, CenterY - TextSize.cy div 2, S);
+    FMinimum := Value;
+    if FPosition < FMinimum then
+      FPosition := FMinimum;
+    Invalidate;
   end;
 end;
 
-function TJaugeCirculaire.PositionValide(APosition: Integer): Boolean;
+procedure TJaugeCirculaire.SetMaximum(const Value: Integer);
 begin
-  Result := (APosition >= FMin) and (APosition <= FMax);
+  if FMaximum <> Value then
+  begin
+    FMaximum := Value;
+    if FPosition > FMaximum then
+      FPosition := FMaximum;
+    Invalidate;
+  end;
 end;
 
-procedure TJaugeCirculaire.SetAfficherPourcentage(const Value: Boolean);
+procedure TJaugeCirculaire.SetPosition(const Value: Integer);
 begin
-  if FAfficherPourcentage <> Value then
+  if FPosition <> Value then
   begin
-    FAfficherPourcentage := Value;
+    // Limiter la valeur entre Min et Max
+    if Value < FMinimum then
+      FPosition := FMinimum
+    else if Value > FMaximum then
+      FPosition := FMaximum
+    else
+      FPosition := Value;
+
     Invalidate;
   end;
 end;
@@ -772,59 +596,69 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetCouleurTexte(const Value: TColor);
-begin
-  if FCouleurTexte <> Value then
-  begin
-    FCouleurTexte := Value;
-    Invalidate;
-  end;
-end;
-
 procedure TJaugeCirculaire.SetEpaisseur(const Value: Integer);
 begin
   if FEpaisseur <> Value then
   begin
     FEpaisseur := Value;
-    if FEpaisseur < 1 then FEpaisseur := 1;
     Invalidate;
   end;
 end;
 
-procedure TJaugeCirculaire.SetMax(const Value: Integer);
+procedure TJaugeCirculaire.Paint;
+var
+  Rect: TRect;
+  CentreX, CentreY, Rayon: Integer;
+  Pourcentage: Double;
+  AngleFin: Integer;
+  Texte: string;
+  TailleTexte: TSize;
 begin
-  if FMax <> Value then
-  begin
-    FMax := Value;
-    if FMax <= FMin then FMax := FMin + 1;
-    if not PositionValide(FPosition) then FPosition := FMin;
-    Invalidate;
-  end;
-end;
+  inherited Paint;
 
-procedure TJaugeCirculaire.SetMin(const Value: Integer);
-begin
-  if FMin <> Value then
-  begin
-    FMin := Value;
-    if FMin >= FMax then FMin := FMax - 1;
-    if not PositionValide(FPosition) then FPosition := FMin;
-    Invalidate;
-  end;
-end;
+  // Fond
+  Canvas.Brush.Color := Color;
+  Canvas.FillRect(ClientRect);
 
-procedure TJaugeCirculaire.SetPosition(const Value: Integer);
-begin
-  if FPosition <> Value then
+  // Calculer les dimensions
+  Rect := ClientRect;
+  CentreX := Rect.Width div 2;
+  CentreY := Rect.Height div 2;
+  Rayon := Min(Rect.Width, Rect.Height) div 2 - FEpaisseur;
+
+  // Dessiner le cercle de fond
+  Canvas.Pen.Color := FCouleurFond;
+  Canvas.Pen.Width := FEpaisseur;
+  Canvas.Brush.Style := bsClear;
+  Canvas.Ellipse(CentreX - Rayon, CentreY - Rayon,
+                 CentreX + Rayon, CentreY + Rayon);
+
+  // Calculer le pourcentage
+  if FMaximum > FMinimum then
+    Pourcentage := (FPosition - FMinimum) / (FMaximum - FMinimum)
+  else
+    Pourcentage := 0;
+
+  // Dessiner l'arc de progression (de -90° à AngleFin)
+  AngleFin := Round(Pourcentage * 360);
+  if AngleFin > 0 then
   begin
-    if PositionValide(Value) then
-      FPosition := Value
-    else if Value < FMin then
-      FPosition := FMin
-    else
-      FPosition := FMax;
-    Invalidate;
+    Canvas.Pen.Color := FCouleurJauge;
+    Canvas.Arc(CentreX - Rayon, CentreY - Rayon,
+               CentreX + Rayon, CentreY + Rayon,
+               CentreX, CentreY - Rayon,  // Point de départ (haut)
+               CentreX + Round(Rayon * Cos(DegToRad(AngleFin - 90))),
+               CentreY + Round(Rayon * Sin(DegToRad(AngleFin - 90))));
   end;
+
+  // Afficher le pourcentage au centre
+  Canvas.Brush.Style := bsClear;
+  Canvas.Font := Font;
+  Texte := Format('%d%%', [Round(Pourcentage * 100)]);
+  TailleTexte := Canvas.TextExtent(Texte);
+  Canvas.TextOut(CentreX - TailleTexte.cx div 2,
+                 CentreY - TailleTexte.cy div 2,
+                 Texte);
 end;
 
 procedure Register;
@@ -835,100 +669,439 @@ end;
 end.
 ```
 
-## Éditeurs de propriétés personnalisés
-
-Pour fournir une meilleure expérience utilisateur lors de la conception, vous pouvez créer des éditeurs de propriétés personnalisés. Cela dépasse le cadre d'une introduction, mais voici un aperçu simplifié :
+### Utilisation du composant
 
 ```pascal
-unit UEditeurCouleur;
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  JaugeCirculaire1.Minimum := 0;
+  JaugeCirculaire1.Maximum := 100;
+  JaugeCirculaire1.Position := 0;
+  JaugeCirculaire1.CouleurJauge := clBlue;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  // Incrémenter la jauge
+  if JaugeCirculaire1.Position < JaugeCirculaire1.Maximum then
+    JaugeCirculaire1.Position := JaugeCirculaire1.Position + 10;
+end;
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  // Animation automatique
+  JaugeCirculaire1.Position := (JaugeCirculaire1.Position + 1) mod 101;
+end;
+```
+
+---
+
+## 4.8.7 Composants conteneurs
+
+### Créer un composant pouvant contenir d'autres composants
+
+```pascal
+type
+  TPanneauPersonnalise = class(TCustomControl)
+  private
+    FTitre: string;
+    FCouleurTitre: TColor;
+    FHauteurTitre: Integer;
+    procedure SetTitre(const Value: string);
+    procedure SetCouleurTitre(const Value: TColor);
+    procedure SetHauteurTitre(const Value: Integer);
+  protected
+    procedure Paint; override;
+    procedure Resize; override;
+    procedure AlignControls(AControl: TControl; var Rect: TRect); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property Titre: string read FTitre write SetTitre;
+    property CouleurTitre: TColor read FCouleurTitre write SetCouleurTitre
+      default clNavy;
+    property HauteurTitre: Integer read FHauteurTitre write SetHauteurTitre
+      default 30;
+
+    // Republier les propriétés de TWinControl
+    property Align;
+    property Anchors;
+    property Color;
+    property ParentColor;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property OnClick;
+    property OnDblClick;
+    property OnEnter;
+    property OnExit;
+  end;
+
+implementation
+
+constructor TPanneauPersonnalise.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+
+  FTitre := 'Panneau';
+  FCouleurTitre := clNavy;
+  FHauteurTitre := 30;
+
+  Width := 200;
+  Height := 150;
+  Color := clWhite;
+
+  // Important pour un conteneur
+  ControlStyle := ControlStyle + [csAcceptsControls];
+end;
+
+procedure TPanneauPersonnalise.SetTitre(const Value: string);
+begin
+  if FTitre <> Value then
+  begin
+    FTitre := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TPanneauPersonnalise.SetCouleurTitre(const Value: TColor);
+begin
+  if FCouleurTitre <> Value then
+  begin
+    FCouleurTitre := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TPanneauPersonnalise.SetHauteurTitre(const Value: Integer);
+begin
+  if FHauteurTitre <> Value then
+  begin
+    FHauteurTitre := Value;
+    Realign; // Réaligner les contrôles enfants
+    Invalidate;
+  end;
+end;
+
+procedure TPanneauPersonnalise.Paint;
+var
+  R: TRect;
+begin
+  inherited Paint;
+
+  // Dessiner la zone de titre
+  R := Rect(0, 0, Width, FHauteurTitre);
+  Canvas.Brush.Color := FCouleurTitre;
+  Canvas.FillRect(R);
+
+  // Dessiner le texte du titre
+  Canvas.Font.Color := clWhite;
+  Canvas.Font.Style := [fsBold];
+  Canvas.Brush.Style := bsClear;
+  DrawText(Canvas.Handle, PChar(FTitre), -1, R,
+           DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+
+  // Dessiner la bordure
+  Canvas.Pen.Color := clBlack;
+  Canvas.Brush.Style := bsClear;
+  Canvas.Rectangle(0, 0, Width, Height);
+end;
+
+procedure TPanneauPersonnalise.Resize;
+begin
+  inherited Resize;
+  Invalidate;
+end;
+
+procedure TPanneauPersonnalise.AlignControls(AControl: TControl; var Rect: TRect);
+begin
+  // Ajuster la zone disponible pour les contrôles enfants
+  // en tenant compte de la barre de titre
+  Rect.Top := FHauteurTitre + 5;
+  Rect.Left := 5;
+  Rect.Right := Rect.Right - 5;
+  Rect.Bottom := Rect.Bottom - 5;
+
+  inherited AlignControls(AControl, Rect);
+end;
+```
+
+---
+
+## 4.8.8 Composants non-visuels
+
+### Exemple : Gestionnaire de logs
+
+```pascal
+unit GestionnaireLog;
 
 interface
 
 uses
-  DesignIntf, DesignEditors, System.Classes, Vcl.Dialogs, Vcl.Graphics;
+  System.SysUtils, System.Classes;
 
 type
-  TEditeurCouleur = class(TPropertyEditor)
+  TNiveauLog = (nlDebug, nlInfo, nlAvertissement, nlErreur, nlCritique);
+
+  TLogEvent = procedure(Sender: TObject; Niveau: TNiveauLog;
+    const Message: string) of object;
+
+  TGestionnaireLog = class(TComponent)
+  private
+    FNomFichier: string;
+    FActif: Boolean;
+    FNiveauMinimum: TNiveauLog;
+    FOnLog: TLogEvent;
+    procedure SetNomFichier(const Value: string);
+  protected
+    procedure DoLog(Niveau: TNiveauLog; const Message: string); virtual;
+    procedure EcrireDansFichier(const Ligne: string);
   public
-    procedure Edit; override;
-    function GetAttributes: TPropertyAttributes; override;
-    function GetValue: string; override;
-    procedure SetValue(const Value: string); override;
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    procedure Debug(const Message: string);
+    procedure Info(const Message: string);
+    procedure Avertissement(const Message: string);
+    procedure Erreur(const Message: string);
+    procedure Critique(const Message: string);
+    procedure Log(Niveau: TNiveauLog; const Message: string);
+  published
+    property NomFichier: string read FNomFichier write SetNomFichier;
+    property Actif: Boolean read FActif write FActif default True;
+    property NiveauMinimum: TNiveauLog read FNiveauMinimum
+      write FNiveauMinimum default nlDebug;
+    property OnLog: TLogEvent read FOnLog write FOnLog;
   end;
 
 procedure Register;
 
 implementation
 
-procedure TEditeurCouleur.Edit;
-var
-  ColorDialog: TColorDialog;
+uses
+  System.IOUtils;
+
+constructor TGestionnaireLog.Create(AOwner: TComponent);
 begin
-  ColorDialog := TColorDialog.Create(nil);
+  inherited Create(AOwner);
+  FActif := True;
+  FNiveauMinimum := nlDebug;
+  FNomFichier := 'application.log';
+end;
+
+destructor TGestionnaireLog.Destroy;
+begin
+  // Nettoyage si nécessaire
+  inherited Destroy;
+end;
+
+procedure TGestionnaireLog.SetNomFichier(const Value: string);
+begin
+  if FNomFichier <> Value then
+    FNomFichier := Value;
+end;
+
+procedure TGestionnaireLog.DoLog(Niveau: TNiveauLog; const Message: string);
+begin
+  if Assigned(FOnLog) then
+    FOnLog(Self, Niveau, Message);
+end;
+
+procedure TGestionnaireLog.EcrireDansFichier(const Ligne: string);
+var
+  Fichier: TextFile;
+begin
   try
-    ColorDialog.Color := TColor(GetOrdValue);
-    if ColorDialog.Execute then
-      SetOrdValue(ColorDialog.Color);
-  finally
-    ColorDialog.Free;
+    AssignFile(Fichier, FNomFichier);
+    if FileExists(FNomFichier) then
+      Append(Fichier)
+    else
+      Rewrite(Fichier);
+    try
+      WriteLn(Fichier, Ligne);
+    finally
+      CloseFile(Fichier);
+    end;
+  except
+    // Gérer silencieusement les erreurs d'écriture
   end;
 end;
 
-function TEditeurCouleur.GetAttributes: TPropertyAttributes;
+procedure TGestionnaireLog.Log(Niveau: TNiveauLog; const Message: string);
+const
+  NiveauTexte: array[TNiveauLog] of string =
+    ('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL');
+var
+  Ligne: string;
 begin
-  Result := [paValueList, paDialog];
+  if not FActif then
+    Exit;
+
+  if Niveau < FNiveauMinimum then
+    Exit;
+
+  Ligne := Format('[%s] [%s] %s',
+    [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+     NiveauTexte[Niveau],
+     Message]);
+
+  EcrireDansFichier(Ligne);
+  DoLog(Niveau, Message);
 end;
 
-function TEditeurCouleur.GetValue: string;
+procedure TGestionnaireLog.Debug(const Message: string);
 begin
-  Result := ColorToString(TColor(GetOrdValue));
+  Log(nlDebug, Message);
 end;
 
-procedure TEditeurCouleur.SetValue(const Value: string);
+procedure TGestionnaireLog.Info(const Message: string);
 begin
-  SetOrdValue(StringToColor(Value));
+  Log(nlInfo, Message);
+end;
+
+procedure TGestionnaireLog.Avertissement(const Message: string);
+begin
+  Log(nlAvertissement, Message);
+end;
+
+procedure TGestionnaireLog.Erreur(const Message: string);
+begin
+  Log(nlErreur, Message);
+end;
+
+procedure TGestionnaireLog.Critique(const Message: string);
+begin
+  Log(nlCritique, Message);
 end;
 
 procedure Register;
 begin
-  RegisterPropertyEditor(TypeInfo(TColor), nil, '', TEditeurCouleur);
+  RegisterComponents('Mes Composants', [TGestionnaireLog]);
 end;
 
 end.
 ```
 
-## Bonnes pratiques de développement de composants
-
-### 1. Organisation du code
-
-- Séparez clairement les sections private, protected, public et published
-- Utilisez des noms explicites pour les propriétés et méthodes
-- Commentez votre code, surtout pour les fonctionnalités complexes
-- Regroupez les propriétés liées dans la section published
-
-### 2. Gestion de la mémoire
-
-- Libérez toujours tous les objets que vous créez dans le destructeur
-- Utilisez le owner (propriétaire) pour la gestion automatique des composants enfants
-- Évitez les fuites de mémoire en vérifiant avec des outils comme FastMM
+### Utilisation
 
 ```pascal
-destructor TMonComposant.Destroy;
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Libérer les objets créés manuellement
-  if Assigned(FListe) then
-    FListe.Free;
+  GestionnaireLog1.NomFichier := 'C:\Logs\monapp.log';
+  GestionnaireLog1.Actif := True;
+  GestionnaireLog1.NiveauMinimum := nlInfo;
+  GestionnaireLog1.OnLog := AfficherLog;
 
-  // Appeler le destructeur parent en dernier
-  inherited Destroy;
+  GestionnaireLog1.Info('Application démarrée');
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  try
+    // Code qui peut générer une erreur
+    GestionnaireLog1.Debug('Début du traitement');
+    TraiterDonnees;
+    GestionnaireLog1.Info('Traitement réussi');
+  except
+    on E: Exception do
+    begin
+      GestionnaireLog1.Erreur('Erreur : ' + E.Message);
+      raise;
+    end;
+  end;
+end;
+
+procedure TForm1.AfficherLog(Sender: TObject; Niveau: TNiveauLog;
+  const Message: string);
+begin
+  Memo1.Lines.Add(Message);
 end;
 ```
 
-### 3. Propriétés et notifications
+---
 
-- Utilisez des méthodes Set... pour les propriétés qui nécessitent des actions lors du changement
-- Appelez Invalidate pour les propriétés qui affectent l'apparence visuelle
-- Utilisez la notification pour réagir aux changements des composants liés
+## 4.8.9 Packages de composants
+
+### Créer un package
+
+Un **package** permet de regrouper plusieurs composants pour faciliter leur installation et distribution.
+
+#### Étape 1 : Créer le package
+
+1. Menu **Fichier** → **Nouveau** → **Package**
+2. Sauvegarder le package : `MesComposants.dpk`
+
+#### Étape 2 : Ajouter les unités
+
+1. Clic droit sur le package → **Ajouter**
+2. Sélectionner vos fichiers .pas
+3. Compiler le package
+
+#### Étape 3 : Installer le package
+
+1. Clic droit sur le package → **Installer**
+2. Les composants apparaissent dans la palette
+
+### Structure d'un package
+
+```pascal
+package MesComposants;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+// ... autres directives ...
+{$ENDIF IMPLICITBUILDING}
+
+requires
+  rtl,
+  vcl;
+
+contains
+  EditNumerique in 'EditNumerique.pas',
+  JaugeCirculaire in 'JaugeCirculaire.pas',
+  GestionnaireLog in 'GestionnaireLog.pas';
+
+end.
+```
+
+---
+
+## 4.8.10 Bonnes pratiques
+
+### 1. Nommage des composants
+
+```pascal
+// Bon : Préfixe cohérent
+type
+  TMesComposantsEdit = class(TEdit)
+  TMesComposantsButton = class(TButton)
+
+// Ou utiliser un préfixe d'entreprise
+type
+  TACMEButton = class(TButton)
+  TACMEEdit = class(TEdit)
+```
+
+### 2. Toujours appeler inherited
+
+```pascal
+constructor TMonComposant.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner); // TOUJOURS en premier
+  // Votre code d'initialisation
+end;
+
+procedure TMonComposant.Paint;
+begin
+  inherited Paint; // Appeler la version parente
+  // Votre code de dessin
+end;
+```
+
+### 3. Utiliser Invalidate pour le redessin
 
 ```pascal
 procedure TMonComposant.SetCouleur(const Value: TColor);
@@ -936,453 +1109,268 @@ begin
   if FCouleur <> Value then
   begin
     FCouleur := Value;
-    // Redessiner si la couleur change
-    Invalidate;
+    Invalidate; // Demander un redessin
   end;
 end;
-
-procedure TMonComposant.Notification(AComponent: TComponent; Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
-
-  // Réagir si un composant lié est supprimé
-  if (Operation = opRemove) and (AComponent = FComposantLie) then
-    FComposantLie := nil;
-end;
 ```
 
-### 4. Messages Windows
-
-Pour les contrôles visuels, gérez correctement les messages Windows :
+### 4. Valider les valeurs des propriétés
 
 ```pascal
-procedure TMonBouton.CMMouseEnter(var Message: TMessage);
+procedure TJauge.SetMaximum(const Value: Integer);
 begin
-  inherited;
-  // Code pour gérer l'entrée de la souris
-  FSurvole := True;
-  Invalidate;
-end;
+  if Value <= FMinimum then
+    raise Exception.Create('Maximum doit être supérieur à Minimum');
 
-procedure TMonBouton.CMMouseLeave(var Message: TMessage);
-begin
-  inherited;
-  // Code pour gérer la sortie de la souris
-  FSurvole := False;
+  FMaximum := Value;
+
+  // Ajuster Position si nécessaire
+  if FPosition > FMaximum then
+    SetPosition(FMaximum);
+
   Invalidate;
 end;
 ```
 
-### 5. Personnalisation de l'aspect
-
-- Utilisez des propriétés comme BorderStyle, Color, Font
-- Pensez à la compatibilité avec les thèmes Windows
-- Pour les contrôles entièrement personnalisés, surchargez la méthode Paint
-
-### 6. Tests et débogage
-
-- Testez votre composant dans différents contextes
-- Vérifiez son comportement lors du redimensionnement et du changement de thème
-- Utilisez des assertions pour vérifier les conditions importantes
-
-## Organisation des paquets de composants
-
-Pour les projets plus importants, il est recommandé d'organiser vos composants en plusieurs paquets :
-
-### 1. Paquet d'exécution (Runtime)
-
-Contient uniquement le code nécessaire à l'exécution. Ce paquet sera inclus dans votre application.
-
-```delphi
-package MesComposantsRuntime;
-
-{$R *.res}
-{$ALIGN 8}
-{$ASSERTIONS ON}
-{$BOOLEVAL OFF}
-// ... autres directives ...
-
-requires
-  rtl,
-  vcl;
-
-contains
-  UTimerPlus in 'UTimerPlus.pas',
-  UBoutonCouleur in 'UBoutonCouleur.pas',
-  UChampRecherche in 'UChampRecherche.pas',
-  UJaugeCirculaire in 'UJaugeCirculaire.pas';
-
-end.
-```
-
-### 2. Paquet de conception (Design)
-
-Contient le code nécessaire uniquement à l'IDE (éditeurs de propriétés, procédures d'enregistrement).
-
-```delphi
-package MesComposantsDesign;
-
-{$R *.res}
-{$ALIGN 8}
-{$ASSERTIONS ON}
-{$BOOLEVAL OFF}
-// ... autres directives ...
-
-requires
-  rtl,
-  vcl,
-  designide,
-  MesComposantsRuntime;
-
-contains
-  UEditeurCouleur in 'UEditeurCouleur.pas',
-  UEnregistrement in 'UEnregistrement.pas';
-
-end.
-```
-
-L'avantage de cette séparation est que vos applications finales n'incluront que le paquet d'exécution, sans le code spécifique à la conception.
-
-## Distribution de vos composants
-
-Pour partager vos composants avec d'autres développeurs, suivez ces étapes :
-
-### 1. Créer un package d'installation
-
-Incluez tous les fichiers nécessaires :
-- Fichiers source (.pas)
-- Fichiers de projet de paquet (.dpk)
-- Fichiers de ressources (.res, .dcr)
-- Documentation
-
-### 2. Fournir des exemples
-
-Créez un projet de démonstration qui montre comment utiliser vos composants.
-
-### 3. Créer une documentation
-
-Documentez vos composants :
-- Description générale
-- Liste des propriétés, méthodes et événements
-- Exemples d'utilisation
-
-### 4. Gestion des versions
-
-Utilisez un système de contrôle de version comme Git pour gérer l'évolution de vos composants.
-
-## Exemple concret : Un composant de saisie monétaire
-
-Voici un exemple plus complet d'un composant de saisie monétaire qui hérite de `TEdit` et qui formate automatiquement la valeur entrée comme un montant monétaire.
+### 5. Documenter les propriétés
 
 ```pascal
-unit UEditMonetaire;
+published
+  /// <summary>
+  /// Définit la valeur minimale de la jauge
+  /// </summary>
+  /// <remarks>
+  /// Doit être inférieur à Maximum
+  /// </remarks>
+  property Minimum: Integer read FMinimum write SetMinimum default 0;
+```
 
-interface
+### 6. Gérer la persistance correctement
 
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls,
-  System.UITypes;
-
+```pascal
 type
-  TDevise = (devEuro, devDollar, devLivre, devYen);
-
-  TFormatOptions = class(TPersistent)
+  TMonComposant = class(TCustomControl)
   private
-    FDevise: TDevise;
-    FDecimales: Integer;
-    FSeparateurMilliers: Boolean;
-    FOnChange: TNotifyEvent;
-    procedure SetDevise(const Value: TDevise);
-    procedure SetDecimales(const Value: Integer);
-    procedure SetSeparateurMilliers(const Value: Boolean);
-  public
-    constructor Create;
-    procedure Assign(Source: TPersistent); override;
-  published
-    property Devise: TDevise read FDevise write SetDevise default devEuro;
-    property Decimales: Integer read FDecimales write SetDecimales default 2;
-    property SeparateurMilliers: Boolean read FSeparateurMilliers
-                                write SetSeparateurMilliers default True;
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-  end;
-
-  TEditMonetaire = class(TEdit)
-  private
-    FValeur: Currency;
-    FOptions: TFormatOptions;
-    FModifie: Boolean;
-    procedure SetValeur(const Value: Currency);
-    procedure OptionsChangeHandler(Sender: TObject);
-    procedure UpdateDisplay;
-    function GetSymboleDevise: string;
-  protected
-    procedure KeyPress(var Key: Char); override;
-    procedure Change; override;
+    FOptions: TStringList;
+    function GetOptions: TStrings;
+    procedure SetOptions(const Value: TStrings);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure FormatText;
-    property Valeur: Currency read FValeur write SetValeur;
   published
-    property Options: TFormatOptions read FOptions write FOptions;
+    property Options: TStrings read GetOptions write SetOptions;
   end;
-
-procedure Register;
 
 implementation
 
-const
-  SYMBOLES_DEVISE: array[TDevise] of string = ('€', '$', '£', '¥');
-
-{ TFormatOptions }
-
-constructor TFormatOptions.Create;
+constructor TMonComposant.Create(AOwner: TComponent);
 begin
-  inherited Create;
-  FDevise := devEuro;
-  FDecimales := 2;
-  FSeparateurMilliers := True;
+  inherited;
+  FOptions := TStringList.Create;
 end;
 
-procedure TFormatOptions.Assign(Source: TPersistent);
-begin
-  if Source is TFormatOptions then
-  begin
-    FDevise := TFormatOptions(Source).Devise;
-    FDecimales := TFormatOptions(Source).Decimales;
-    FSeparateurMilliers := TFormatOptions(Source).SeparateurMilliers;
-
-    if Assigned(FOnChange) then
-      FOnChange(Self);
-  end
-  else
-    inherited Assign(Source);
-end;
-
-procedure TFormatOptions.SetDecimales(const Value: Integer);
-begin
-  if (Value >= 0) and (Value <= 4) and (FDecimales <> Value) then
-  begin
-    FDecimales := Value;
-    if Assigned(FOnChange) then
-      FOnChange(Self);
-  end;
-end;
-
-procedure TFormatOptions.SetDevise(const Value: TDevise);
-begin
-  if FDevise <> Value then
-  begin
-    FDevise := Value;
-    if Assigned(FOnChange) then
-      FOnChange(Self);
-  end;
-end;
-
-procedure TFormatOptions.SetSeparateurMilliers(const Value: Boolean);
-begin
-  if FSeparateurMilliers <> Value then
-  begin
-    FSeparateurMilliers := Value;
-    if Assigned(FOnChange) then
-      FOnChange(Self);
-  end;
-end;
-
-{ TEditMonetaire }
-
-constructor TEditMonetaire.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FValeur := 0;
-  FModifie := False;
-
-  // Créer et configurer les options
-  FOptions := TFormatOptions.Create;
-  FOptions.OnChange := OptionsChangeHandler;
-
-  // Configuration par défaut
-  TextHint := 'Entrez un montant';
-  Alignment := taRightJustify;
-
-  // Initialiser l'affichage
-  UpdateDisplay;
-end;
-
-destructor TEditMonetaire.Destroy;
+destructor TMonComposant.Destroy;
 begin
   FOptions.Free;
-  inherited Destroy;
+  inherited;
 end;
 
-function TEditMonetaire.GetSymboleDevise: string;
+function TMonComposant.GetOptions: TStrings;
 begin
-  Result := SYMBOLES_DEVISE[FOptions.Devise];
+  Result := FOptions;
 end;
 
-procedure TEditMonetaire.Change;
+procedure TMonComposant.SetOptions(const Value: TStrings);
 begin
-  inherited Change;
-
-  // Marquer comme modifié
-  FModifie := True;
+  FOptions.Assign(Value);
 end;
-
-procedure TEditMonetaire.KeyPress(var Key: Char);
-var
-  DecimalSeparator: Char;
-begin
-  DecimalSeparator := FormatSettings.DecimalSeparator;
-
-  // Accepter uniquement les chiffres, le séparateur décimal et le Backspace
-  if not (CharInSet(Key, ['0'..'9', DecimalSeparator, #8])) then
-    Key := #0;
-
-  // Accepter le séparateur décimal seulement s'il n'est pas déjà présent
-  // et si le composant est configuré pour afficher des décimales
-  if (Key = DecimalSeparator) and
-     ((Pos(DecimalSeparator, Text) > 0) or (FOptions.Decimales = 0)) then
-    Key := #0;
-
-  inherited KeyPress(Key);
-end;
-
-procedure TEditMonetaire.OptionsChangeHandler(Sender: TObject);
-begin
-  UpdateDisplay;
-end;
-
-procedure TEditMonetaire.SetValeur(const Value: Currency);
-begin
-  if FValeur <> Value then
-  begin
-    FValeur := Value;
-    UpdateDisplay;
-  end;
-end;
-
-procedure TEditMonetaire.UpdateDisplay;
-var
-  FormatStr: string;
-  TempText: string;
-begin
-  // Construire le format selon les options
-  if FOptions.SeparateurMilliers then
-    FormatStr := '#,##0'
-  else
-    FormatStr := '0';
-
-  // Ajouter les décimales si nécessaire
-  if FOptions.Decimales > 0 then
-    FormatStr := FormatStr + '.' + StringOfChar('0', FOptions.Decimales);
-
-  // Formater le montant
-  TempText := FormatFloat(FormatStr, FValeur);
-
-  // Ajouter le symbole de devise
-  TempText := TempText + ' ' + GetSymboleDevise;
-
-  // Mettre à jour le texte sans déclencher l'événement Change
-  FModifie := False;
-  Text := TempText;
-end;
-
-procedure TEditMonetaire.FormatText;
-var
-  Value: Currency;
-begin
-  if FModifie and (Text <> '') then
-  begin
-    // Enlever tout sauf les chiffres et le séparateur décimal
-    try
-      Value := StrToCurr(Text);
-      FValeur := Value;
-    except
-      // En cas d'erreur, ne pas modifier la valeur
-    end;
-  end;
-
-  // Mettre à jour l'affichage
-  UpdateDisplay;
-  FModifie := False;
-end;
-
-procedure Register;
-begin
-  RegisterComponents('Mes Composants', [TEditMonetaire]);
-end;
-
-end.
 ```
 
-## Débogage des composants
-
-Le débogage des composants peut être plus complexe que celui d'une application normale. Voici quelques techniques utiles :
-
-### 1. Console de débogage
-
-Utilisez `OutputDebugString` pour envoyer des messages à la console de débogage :
+### 7. Optimiser le redessin
 
 ```pascal
-OutputDebugString(PChar('Valeur : ' + IntToStr(MaValeur)));
-```
-
-### 2. Exceptions personnalisées
-
-Lancez des exceptions avec des messages clairs pour identifier les problèmes :
-
-```pascal
-if not ConditionValide then
-  raise Exception.Create('TMonComposant: Paramètre invalide');
-```
-
-### 3. Journal d'événements
-
-Créez un journal pour suivre les événements importants :
-
-```pascal
-procedure TMonComposant.LogEvent(const EventName, Details: string);
-var
-  LogFile: TextFile;
+procedure TMonComposant.BeginUpdate;
 begin
-  AssignFile(LogFile, 'C:\Temp\ComposantLog.txt');
+  Inc(FUpdateCount);
+end;
 
-  if FileExists('C:\Temp\ComposantLog.txt') then
-    Append(LogFile)
-  else
-    Rewrite(LogFile);
+procedure TMonComposant.EndUpdate;
+begin
+  Dec(FUpdateCount);
+  if FUpdateCount = 0 then
+    Invalidate;
+end;
 
-  try
-    WriteLn(LogFile, FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
-                     ' - ' + EventName + ': ' + Details);
-  finally
-    CloseFile(LogFile);
-  end;
+procedure TMonComposant.SetPropriete(const Value: Integer);
+begin
+  if FUpdateCount = 0 then
+    Invalidate;
 end;
 ```
 
-## Ressources pour aller plus loin
+### 8. Supporter le changement de taille
 
-Le développement de composants est un vaste sujet. Voici quelques ressources pour approfondir vos connaissances :
+```pascal
+procedure TMonComposant.Paint;
+var
+  R: TRect;
+begin
+  inherited;
 
-1. **Documentation officielle Delphi** - Consultez la section sur le développement de composants
-2. **Livres spécialisés** - "Delphi Component Design" de Danny Thorpe
-3. **Forums et groupes de discussion** - DelphiPraxis, Stack Overflow, etc.
-4. **Étudier le code source** - Examinez le code de composants open source pour apprendre les bonnes pratiques
+  // Toujours utiliser ClientRect ou Width/Height
+  R := ClientRect;
 
-## Conclusion
+  // S'adapter à la taille actuelle
+  Canvas.Rectangle(0, 0, Width, Height);
+end;
+```
 
-La création de composants personnalisés est l'une des compétences les plus puissantes que vous puissiez développer en tant que programmeur Delphi. En encapsulant des fonctionnalités réutilisables dans des composants, vous pouvez :
+### 9. Tests et débogage
 
-- Améliorer votre productivité
-- Standardiser votre code
-- Créer des interfaces utilisateur plus riches
-- Partager votre travail avec d'autres développeurs
+```pascal
+{$IFDEF DEBUG}
+procedure TMonComposant.SetPosition(const Value: Integer);
+begin
+  // Vérifications supplémentaires en mode debug
+  Assert(Value >= FMinimum, 'Position < Minimum');
+  Assert(Value <= FMaximum, 'Position > Maximum');
 
-Commencez par des composants simples, puis progressez vers des composants plus complexes à mesure que vous gagnez en expérience.
+  FPosition := Value;
+  Invalidate;
+end;
+{$ENDIF}
+```
+
+### 10. Gestion des ressources
+
+```pascal
+destructor TMonComposant.Destroy;
+begin
+  // Libérer tous les objets créés
+  FreeAndNil(FBitmap);
+  FreeAndNil(FListe);
+
+  inherited Destroy; // TOUJOURS en dernier
+end;
+```
 
 ---
 
-*Exercice pratique : Créez un paquet de composants contenant un composant TLabeledPanel qui combine un TPanel avec un TLabel situé en haut qui sert de titre. Le composant doit avoir des propriétés pour contrôler la couleur, la police et la position du titre. Testez votre composant dans une application simple.*
+## 4.8.11 Astuces avancées
+
+### Éditeur de propriété personnalisé
+
+Pour certaines propriétés complexes, vous pouvez créer un éditeur personnalisé dans l'Inspecteur d'objets :
+
+```pascal
+uses
+  DesignIntf, DesignEditors;
+
+type
+  TCouleurGradientEditor = class(TPropertyEditor)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+  end;
+
+procedure TCouleurGradientEditor.Edit;
+begin
+  // Afficher un dialogue personnalisé pour éditer la propriété
+  with TFormEditeurCouleur.Create(nil) do
+  try
+    // Configurer et afficher
+    if ShowModal = mrOk then
+      SetOrdValue(CouleurSelectionnee);
+  finally
+    Free;
+  end;
+end;
+
+function TCouleurGradientEditor.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog, paRevertable];
+end;
+
+function TCouleurGradientEditor.GetValue: string;
+begin
+  Result := ColorToString(GetOrdValue);
+end;
+
+// Enregistrer l'éditeur
+procedure Register;
+begin
+  RegisterPropertyEditor(TypeInfo(TColor), TMonComposant,
+    'CouleurGradient', TCouleurGradientEditor);
+end;
+```
+
+### Icône personnalisée dans la palette
+
+```pascal
+// Créer un fichier .dcr (ressource bitmap)
+// Nommé : NomUnite.dcr
+// Contenant des bitmaps 24x24 pour chaque composant
+
+{$R EditNumerique.dcr}
+
+procedure Register;
+begin
+  RegisterComponents('Mes Composants', [TEditNumerique]);
+end;
+```
+
+### Composant avec streaming personnalisé
+
+```pascal
+type
+  TMonComposant = class(TComponent)
+  protected
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure LireData(Reader: TReader);
+    procedure EcrireData(Writer: TWriter);
+  end;
+
+procedure TMonComposant.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('DonneesPersonnalisees', LireData, EcrireData, True);
+end;
+
+procedure TMonComposant.LireData(Reader: TReader);
+begin
+  // Lire depuis le fichier .dfm
+end;
+
+procedure TMonComposant.EcrireData(Writer: TWriter);
+begin
+  // Écrire dans le fichier .dfm
+end;
+```
+
+---
+
+## Conclusion
+
+Le développement de composants personnalisés est une compétence avancée qui ouvre de nombreuses possibilités dans Delphi. En créant vos propres composants, vous pouvez :
+
+- Réutiliser efficacement votre code
+- Créer des bibliothèques de composants métier
+- Améliorer la productivité de votre équipe
+- Construire des interfaces utilisateur uniques
+- Encapsuler la complexité
+
+### Points clés à retenir :
+
+- **Héritage** : Choisissez la bonne classe parente (TComponent, TGraphicControl, TWinControl)
+- **Propriétés** : Utilisez des méthodes Set pour la validation et le redessin
+- **Événements** : Créez des événements personnalisés pour notifier les changements
+- **Paint** : Redéfinissez la méthode Paint pour le dessin personnalisé
+- **Invalidate** : Appelez Invalidate pour déclencher un redessin
+- **inherited** : Appelez toujours les méthodes parentes
+- **Packages** : Regroupez vos composants dans des packages pour faciliter la distribution
+- **Documentation** : Documentez vos composants pour faciliter leur utilisation
+
+Avec ces connaissances, vous êtes prêt à créer vos propres composants personnalisés et à étendre les capacités de Delphi selon vos besoins spécifiques !
 
 ⏭️ [Migration depuis des versions précédentes de Delphi](/04-conception-dinterfaces-utilisateur-avec-la-vcl/09-migration-depuis-versions-precedentes.md)

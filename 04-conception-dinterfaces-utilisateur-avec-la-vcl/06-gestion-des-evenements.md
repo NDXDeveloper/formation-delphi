@@ -1,572 +1,1209 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 4.6 Gestion des événements
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La gestion des événements est un concept fondamental dans le développement d'applications Delphi. C'est grâce aux événements que vos applications peuvent réagir aux actions de l'utilisateur et à d'autres déclencheurs. Dans cette section, nous allons explorer comment les événements fonctionnent et comment les gérer efficacement.
+La gestion des événements est au cœur de la programmation d'interfaces graphiques avec Delphi. Comprendre les événements est essentiel pour créer des applications interactives qui répondent aux actions de l'utilisateur. Dans ce chapitre, nous allons découvrir comment fonctionnent les événements et comment les utiliser efficacement.
 
-## Qu'est-ce qu'un événement ?
+## 4.6.1 Qu'est-ce qu'un événement ?
 
-Un **événement** est une notification qu'une action particulière s'est produite, comme :
-- Un clic de souris
-- Une pression sur une touche du clavier
-- Un changement de valeur dans un contrôle
-- L'ouverture ou la fermeture d'une fenêtre
-- L'expiration d'un minuteur
+### Définition
 
-En Delphi, les événements suivent le modèle de **délégation d'événements**, où vous "déléguez" la gestion d'un événement à une méthode spécifique appelée **gestionnaire d'événement** (ou **event handler** en anglais).
+Un **événement** est une action ou une occurrence qui se produit dans votre application et à laquelle vous pouvez répondre en exécutant du code. C'est le mécanisme qui permet à votre programme de réagir aux interactions de l'utilisateur ou à des changements d'état.
 
-## Structure d'un gestionnaire d'événement
+### Exemples d'événements courants
 
-Un gestionnaire d'événement en Delphi est une méthode de votre formulaire (ou d'une autre classe) avec une signature spécifique. Voici sa structure générale :
+- L'utilisateur clique sur un bouton
+- L'utilisateur tape du texte dans une zone de saisie
+- L'utilisateur déplace la souris sur un composant
+- Une fenêtre s'ouvre ou se ferme
+- Un timer déclenche une action périodique
+- Un fichier est chargé
+- Une erreur se produit
 
+### Le modèle événementiel
+
+Delphi utilise un modèle de **programmation événementielle** :
+
+1. **L'application attend** un événement (elle est en "boucle d'attente")
+2. **Un événement se produit** (clic, frappe clavier, etc.)
+3. **Le gestionnaire d'événement est appelé** (votre code s'exécute)
+4. **L'application retourne en attente** du prochain événement
+
+```
+┌─────────────────────────────────────┐
+│   Application en attente            │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│   Événement se produit              │
+│   (ex: clic sur bouton)             │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│   Gestionnaire d'événement appelé   │
+│   (votre code s'exécute)            │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│   Retour en attente                 │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 4.6.2 Anatomie d'un événement
+
+### Structure d'un gestionnaire d'événement
+
+Un gestionnaire d'événement (event handler) est une procédure qui s'exécute lorsqu'un événement se produit.
+
+**Syntaxe générale :**
 ```pascal
-procedure TNomFormulaire.NomComposantNomEvenement(Sender: TObject);
+procedure TForm1.NomComposantNomEvenement(Sender: TObject);
 begin
-  // Code à exécuter quand l'événement se produit
+  // Votre code ici
 end;
 ```
 
-Par exemple :
+**Exemple concret :**
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  ShowMessage('Bouton cliqué !');
+end;
+```
+
+### Le paramètre Sender
+
+Le paramètre **Sender** représente le composant qui a déclenché l'événement. Il est de type `TObject`, ce qui signifie qu'il peut référencer n'importe quel composant.
+
+**Pourquoi Sender est utile ?**
+
+```pascal
+// Un seul gestionnaire pour plusieurs boutons
+procedure TForm1.BoutonClick(Sender: TObject);
+begin
+  if Sender = Button1 then
+    ShowMessage('Bouton 1 cliqué')
+  else if Sender = Button2 then
+    ShowMessage('Bouton 2 cliqué')
+  else if Sender = Button3 then
+    ShowMessage('Bouton 3 cliqué');
+end;
+```
+
+**Utilisation avancée avec cast :**
+```pascal
+procedure TForm1.BoutonClick(Sender: TObject);
+var
+  Bouton: TButton;
+begin
+  // Convertir Sender en TButton pour accéder à ses propriétés
+  Bouton := Sender as TButton;
+  ShowMessage('Vous avez cliqué sur : ' + Bouton.Caption);
+
+  // Modifier le bouton qui a été cliqué
+  Bouton.Color := clRed;
+end;
+```
+
+---
+
+## 4.6.3 Créer un gestionnaire d'événement
+
+### Méthode 1 : Double-clic (la plus simple)
+
+1. Sélectionnez le composant sur le formulaire
+2. Double-cliquez dessus
+3. Delphi crée automatiquement le gestionnaire pour l'événement par défaut
+4. Écrivez votre code entre `begin` et `end`
+
+**Événements par défaut :**
+- **TButton** : OnClick
+- **TEdit** : OnChange
+- **TForm** : OnCreate
+- **TTimer** : OnTimer
+
+### Méthode 2 : Via l'Inspecteur d'objets
+
+1. Sélectionnez le composant
+2. Allez dans l'Inspecteur d'objets
+3. Cliquez sur l'onglet **Événements** (icône éclair ⚡)
+4. Double-cliquez dans la colonne de droite à côté du nom de l'événement
+5. Delphi crée le gestionnaire et vous y amène
+
+### Méthode 3 : Réutiliser un gestionnaire existant
+
+1. Dans l'onglet Événements de l'Inspecteur d'objets
+2. Cliquez sur la liste déroulante à côté de l'événement
+3. Sélectionnez un gestionnaire existant dans la liste
+
+**Exemple :** Utiliser le même gestionnaire `Button1Click` pour plusieurs boutons.
+
+### Méthode 4 : Créer manuellement (avancé)
+
+```pascal
+// Dans la déclaration de classe (section private ou public)
+procedure MonGestionnaire(Sender: TObject);
+
+// Dans le code
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Assigner le gestionnaire
+  Button1.OnClick := MonGestionnaire;
+end;
+
+procedure TForm1.MonGestionnaire(Sender: TObject);
+begin
+  ShowMessage('Événement déclenché !');
+end;
+```
+
+---
+
+## 4.6.4 Les événements de la souris
+
+### OnClick
+
+L'événement le plus utilisé, déclenché lors d'un clic simple.
 
 ```pascal
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  ShowMessage('Le bouton a été cliqué !');
+  Label1.Caption := 'Bouton cliqué !';
 end;
 ```
 
-Dans cet exemple :
-- `TForm1` est la classe de votre formulaire
-- `Button1` est le nom du composant (un bouton)
-- `Click` est le nom de l'événement
-- `Sender: TObject` est un paramètre qui identifie le composant qui a déclenché l'événement
+### OnDblClick
 
-## Création de gestionnaires d'événements
-
-Il existe plusieurs façons de créer un gestionnaire d'événement en Delphi :
-
-### 1. Via l'Inspecteur d'objets (méthode la plus courante)
-
-1. Sélectionnez le composant sur votre formulaire
-2. Cliquez sur l'onglet "Événements" (icône en forme d'éclair) dans l'Inspecteur d'objets
-3. Double-cliquez à droite de l'événement que vous souhaitez gérer (par exemple, `OnClick`)
-4. Delphi crée automatiquement un gestionnaire d'événement vide et vous place dans l'éditeur de code
-
-![Inspecteur d'objets - Onglet Événements](https://via.placeholder.com/300x200)
-
-### 2. Par code (à l'exécution)
-
-Vous pouvez également assigner des gestionnaires d'événements dynamiquement par code :
+Déclenché lors d'un double-clic.
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TForm1.ListBox1DblClick(Sender: TObject);
 begin
-  // Assigner un gestionnaire d'événement au bouton
-  Button1.OnClick := MonGestionnairePersonnalise;
-end;
-
-procedure TForm1.MonGestionnairePersonnalise(Sender: TObject);
-begin
-  ShowMessage('Gestionnaire personnalisé appelé !');
+  if ListBox1.ItemIndex <> -1 then
+    ShowMessage('Vous avez double-cliqué sur : ' +
+                ListBox1.Items[ListBox1.ItemIndex]);
 end;
 ```
 
-### 3. En utilisant l'éditeur de formulaire
+### OnMouseDown et OnMouseUp
 
-Vous pouvez également double-cliquer directement sur certains composants dans l'éditeur de formulaire pour créer leur gestionnaire d'événement par défaut :
-- Double-cliquer sur un bouton crée un gestionnaire `OnClick`
-- Double-cliquer sur un formulaire crée un gestionnaire `OnCreate`
-- etc.
-
-## Le paramètre Sender
-
-Presque tous les gestionnaires d'événements en Delphi incluent un paramètre `Sender: TObject`. Ce paramètre identifie le composant qui a déclenché l'événement, ce qui est particulièrement utile lorsque vous utilisez le même gestionnaire pour plusieurs composants.
+Déclenchés lorsque l'utilisateur appuie ou relâche un bouton de la souris.
 
 ```pascal
-procedure TForm1.BoutonCouleurClick(Sender: TObject);
-begin
-  // Déterminer quel bouton a été cliqué
-  if Sender = BoutonRouge then
-    Panel1.Color := clRed
-  else if Sender = BoutonVert then
-    Panel1.Color := clGreen
-  else if Sender = BoutonBleu then
-    Panel1.Color := clBlue;
-end;
-```
-
-Pour utiliser ce gestionnaire avec plusieurs boutons :
-1. Créez le gestionnaire pour l'un des boutons
-2. Dans l'Inspecteur d'objets, sélectionnez les autres boutons
-3. Choisissez le même gestionnaire dans la liste déroulante pour l'événement `OnClick`
-
-## Types d'événements courants
-
-### Événements de la souris
-
-- **OnClick** : déclenché par un clic simple
-- **OnDblClick** : déclenché par un double-clic
-- **OnMouseDown** : déclenché lorsqu'un bouton de la souris est enfoncé
-- **OnMouseUp** : déclenché lorsqu'un bouton de la souris est relâché
-- **OnMouseMove** : déclenché lorsque la souris se déplace sur le composant
-- **OnMouseEnter** : déclenché lorsque la souris entre dans la zone du composant
-- **OnMouseLeave** : déclenché lorsque la souris quitte la zone du composant
-
-```pascal
-procedure TForm1.Panel1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-begin
-  // Afficher les coordonnées de la souris dans une étiquette
-  Label1.Caption := Format('X: %d, Y: %d', [X, Y]);
-end;
-```
-
-Le type `TShiftState` vous indique quelles touches modificatrices (Shift, Ctrl, Alt) et quels boutons de souris sont enfoncés.
-
-### Événements du clavier
-
-- **OnKeyDown** : déclenché lorsqu'une touche est enfoncée
-- **OnKeyUp** : déclenché lorsqu'une touche est relâchée
-- **OnKeyPress** : déclenché pour les touches de caractères (pas pour les touches spéciales comme les flèches)
-
-```pascal
-procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
-begin
-  // Autoriser uniquement les chiffres
-  if not (Key in ['0'..'9', #8]) then // #8 est Backspace
-    Key := #0; // Annuler la touche
-end;
-
-procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  // Réagir à la touche F1
-  if Key = VK_F1 then
-    ShowMessage('Aide');
-
-  // Réagir à Ctrl+S
-  if (Key = Ord('S')) and (ssCtrl in Shift) then
-    ActionEnregistrer.Execute;
-end;
-```
-
-### Événements de changement
-
-- **OnChange** : déclenché lorsque la valeur ou le contenu d'un contrôle change
-- **OnSelect** : déclenché lorsque la sélection change dans certains contrôles
-
-```pascal
-procedure TForm1.TrackBar1Change(Sender: TObject);
-begin
-  // Mettre à jour une étiquette avec la valeur actuelle
-  Label1.Caption := 'Valeur: ' + IntToStr(TrackBar1.Position);
-
-  // Changer l'opacité d'un panneau
-  Panel1.Color := RGB(255, 0, 0); // Rouge
-  Panel1.AlphaBlendValue := TrackBar1.Position;
-  Panel1.AlphaBlend := True;
-end;
-```
-
-### Événements de formulaire
-
-- **OnCreate** : déclenché lors de la création du formulaire
-- **OnShow** : déclenché lorsque le formulaire devient visible
-- **OnClose** : déclenché lorsque le formulaire est sur le point d'être fermé
-- **OnCloseQuery** : permet de valider ou d'annuler la fermeture
-- **OnActivate** : déclenché lorsque le formulaire devient actif
-- **OnDeactivate** : déclenché lorsque le formulaire perd le focus
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // Initialisation lors de la création du formulaire
-  ComboBox1.Items.Clear;
-  ComboBox1.Items.Add('Option 1');
-  ComboBox1.Items.Add('Option 2');
-  ComboBox1.ItemIndex := 0;
-end;
-
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
-  if DocumentModifie then
-  begin
-    case MessageDlg('Document non enregistré. Voulez-vous enregistrer avant de quitter ?',
-                    mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
-      mrYes:
-        begin
-          ActionEnregistrer.Execute;
-          CanClose := True;
-        end;
-      mrNo: CanClose := True;
-      mrCancel: CanClose := False;
-    end;
-  end;
-end;
-```
-
-## Événements personnalisés
-
-Vous pouvez également créer vos propres événements dans des composants personnalisés. C'est un sujet plus avancé, mais voici un aperçu simple :
-
-```pascal
-type
-  // Définir un type pour le gestionnaire d'événement
-  TMonEvenementSpecial = procedure(Sender: TObject; Valeur: Integer) of object;
-
-  // Classe avec un événement personnalisé
-  TMonComposant = class(TComponent)
-  private
-    FOnEvenementSpecial: TMonEvenementSpecial;
-    FValeur: Integer;
-  public
-    procedure DeclencherEvenement;
-    procedure SetValeur(const Value: Integer);
-  published
-    property OnEvenementSpecial: TMonEvenementSpecial
-                               read FOnEvenementSpecial
-                               write FOnEvenementSpecial;
-    property Valeur: Integer read FValeur write SetValeur;
-  end;
-
-// Implémentation
-procedure TMonComposant.SetValeur(const Value: Integer);
-begin
-  if FValeur <> Value then
-  begin
-    FValeur := Value;
-    // Déclencher l'événement lors du changement de valeur
-    DeclencherEvenement;
-  end;
-end;
-
-procedure TMonComposant.DeclencherEvenement;
-begin
-  // Vérifier si un gestionnaire est assigné avant de l'appeler
-  if Assigned(FOnEvenementSpecial) then
-    FOnEvenementSpecial(Self, FValeur);
-end;
-```
-
-## Techniques avancées et astuces
-
-### 1. Utilisation d'une même méthode pour plusieurs événements
-
-```pascal
-procedure TForm1.GestionCommune(Sender: TObject);
-begin
-  // Déterminer quelle action effectuer selon l'expéditeur
-  if Sender = Button1 then
-    ShowMessage('Button1 cliqué')
-  else if Sender = Button2 then
-    ShowMessage('Button2 cliqué')
-  else if Sender = Timer1 then
-    Label1.Caption := TimeToStr(Now);
-end;
-```
-
-### 2. Délai d'événements (debouncing)
-
-Parfois, certains événements comme `OnChange` peuvent se déclencher trop fréquemment. Vous pouvez utiliser un timer pour limiter la fréquence des actions :
-
-```pascal
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
-  // Réinitialiser le timer à chaque changement
-  TimerDelai.Enabled := False;
-  TimerDelai.Enabled := True;
-end;
-
-procedure TForm1.TimerDelaiTimer(Sender: TObject);
-begin
-  // Ce code s'exécute uniquement après une pause dans la saisie
-  TimerDelai.Enabled := False;
-  Label1.Caption := 'Texte saisi : ' + Edit1.Text;
-  // Effectuer une recherche, etc.
-end;
-```
-
-### 3. Mémorisation d'informations entre les événements
-
-Vous pouvez déclarer des variables dans la section `private` de votre formulaire pour mémoriser des informations entre les appels d'événements :
-
-```pascal
-type
-  TForm1 = class(TForm)
-    // Composants et gestionnaires d'événements déclarés automatiquement
-  private
-    FDernierePosition: TPoint;
-    FGlisserEnCours: Boolean;
-  public
-    { Déclarations publiques }
-  end;
-
 procedure TForm1.Panel1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  // Mémoriser le début du glissement
-  FDernierePosition := Point(X, Y);
-  FGlisserEnCours := True;
-end;
-
-procedure TForm1.Panel1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-begin
-  if FGlisserEnCours then
-  begin
-    // Déplacer l'objet relativement au mouvement de la souris
-    Panel1.Left := Panel1.Left + (X - FDernierePosition.X);
-    Panel1.Top := Panel1.Top + (Y - FDernierePosition.Y);
-  end;
+  if Button = mbLeft then
+    Panel1.Color := clRed
+  else if Button = mbRight then
+    Panel1.Color := clBlue;
 end;
 
 procedure TForm1.Panel1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  // Fin du glissement
-  FGlisserEnCours := False;
+  Panel1.Color := clWhite;
 end;
 ```
 
-## Bonnes pratiques
+**Paramètres :**
+- **Button** : Bouton de souris utilisé (`mbLeft`, `mbRight`, `mbMiddle`)
+- **Shift** : État des touches modificatrices (Ctrl, Shift, Alt)
+- **X, Y** : Position de la souris dans le composant
 
-### 1. Nommage clair des gestionnaires
+### OnMouseMove
 
-Utilisez des noms qui indiquent clairement :
-- Le composant concerné
-- L'événement géré
-- L'action effectuée (si nécessaire)
-
-Exemples :
-- `BoutonEnregistrerClick`
-- `FormulairePrincipalCreate`
-- `EditionNomValidation`
-
-### 2. Garder les gestionnaires courts et ciblés
-
-Si un gestionnaire devient trop long, décomposez-le en méthodes auxiliaires :
+Déclenché lorsque la souris se déplace sur le composant.
 
 ```pascal
-procedure TForm1.ButtonCalculerClick(Sender: TObject);
+procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
 begin
-  // Au lieu de mettre tout le code ici
-  EffectuerCalculs;
-  AfficherResultats;
-end;
+  // Afficher les coordonnées de la souris
+  StatusBar1.SimpleText := Format('Position: X=%d, Y=%d', [X, Y]);
 
-procedure TForm1.EffectuerCalculs;
-begin
-  // Code de calcul
-end;
-
-procedure TForm1.AfficherResultats;
-begin
-  // Code d'affichage
-end;
-```
-
-### 3. Éviter les effets de bord
-
-Ne modifiez pas de façon inattendue l'état d'autres composants que ceux concernés par l'événement, sauf si c'est clairement nécessaire.
-
-### 4. Gérer les exceptions
-
-Ajoutez des blocs try/except dans les gestionnaires qui pourraient générer des exceptions :
-
-```pascal
-procedure TForm1.ButtonDiviserClick(Sender: TObject);
-var
-  A, B, Resultat: Double;
-begin
-  try
-    A := StrToFloat(EditNombre1.Text);
-    B := StrToFloat(EditNombre2.Text);
-
-    if B = 0 then
-      raise Exception.Create('Division par zéro impossible');
-
-    Resultat := A / B;
-    LabelResultat.Caption := FloatToStr(Resultat);
-
-  except
-    on E: EConvertError do
-      ShowMessage('Veuillez entrer des nombres valides');
-    on E: Exception do
-      ShowMessage('Erreur : ' + E.Message);
+  // Dessiner un point à la position de la souris si bouton gauche enfoncé
+  if ssLeft in Shift then
+  begin
+    Image1.Canvas.Pixels[X, Y] := clBlack;
   end;
 end;
 ```
 
-## Exemple complet : Dessin simple
+### OnMouseEnter et OnMouseLeave
 
-Voici un exemple qui utilise plusieurs types d'événements pour créer une application de dessin simple :
+Déclenchés lorsque la souris entre ou sort du composant.
 
 ```pascal
-unit UnitDessin;
+procedure TForm1.Button1MouseEnter(Sender: TObject);
+begin
+  Button1.Color := clYellow;
+  Button1.Font.Style := [fsBold];
+end;
 
-interface
+procedure TForm1.Button1MouseLeave(Sender: TObject);
+begin
+  Button1.Color := clBtnFace;
+  Button1.Font.Style := [];
+end;
+```
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.ComCtrls;
+### OnMouseWheel
 
+Déclenché lors de l'utilisation de la molette de la souris.
+
+```pascal
+procedure TForm1.Image1MouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  // Zoomer avec la molette
+  if WheelDelta > 0 then
+    Image1.Width := Image1.Width + 10  // Zoom avant
+  else
+    Image1.Width := Image1.Width - 10; // Zoom arrière
+
+  Handled := True; // Indiquer que l'événement a été traité
+end;
+```
+
+---
+
+## 4.6.5 Les événements du clavier
+
+### OnKeyPress
+
+Déclenché lorsqu'une touche de caractère est appuyée.
+
+```pascal
+procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
+begin
+  // N'accepter que des chiffres
+  if not (Key in ['0'..'9', #8, #13]) then  // #8 = Backspace, #13 = Enter
+  begin
+    Key := #0; // Annuler la frappe
+    Beep; // Son d'alerte
+  end;
+
+  // Valider avec Enter
+  if Key = #13 then
+  begin
+    ShowMessage('Valeur saisie : ' + Edit1.Text);
+  end;
+end;
+```
+
+### OnKeyDown et OnKeyUp
+
+Déclenchés pour toutes les touches, y compris les touches spéciales.
+
+```pascal
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // Détection de combinaisons de touches
+  if (Key = VK_F5) then
+    ActualiserDonnees;
+
+  if (ssCtrl in Shift) and (Key = Ord('S')) then
+  begin
+    Key := 0; // Empêcher le traitement par défaut
+    EnregistrerDocument;
+  end;
+
+  // Touches fléchées
+  case Key of
+    VK_LEFT:  DeplacerGauche;
+    VK_RIGHT: DeplacerDroite;
+    VK_UP:    DeplacerHaut;
+    VK_DOWN:  DeplacerBas;
+  end;
+end;
+```
+
+**Codes de touches courants (Virtual Key Codes) :**
+
+| Code | Touche |
+|------|--------|
+| `VK_RETURN` ou `VK_ENTER` | Entrée |
+| `VK_ESCAPE` | Échap |
+| `VK_SPACE` | Espace |
+| `VK_BACK` | Retour arrière |
+| `VK_DELETE` | Suppr |
+| `VK_F1` à `VK_F12` | F1 à F12 |
+| `VK_LEFT`, `VK_RIGHT`, `VK_UP`, `VK_DOWN` | Flèches |
+| `VK_HOME`, `VK_END` | Début, Fin |
+| `VK_PRIOR`, `VK_NEXT` | Page Haut, Page Bas |
+| `VK_CONTROL` | Ctrl |
+| `VK_SHIFT` | Shift |
+| `VK_MENU` | Alt |
+
+**État des modificateurs (Shift) :**
+- `ssShift` : Touche Shift enfoncée
+- `ssCtrl` : Touche Ctrl enfoncée
+- `ssAlt` : Touche Alt enfoncée
+- `ssLeft`, `ssRight`, `ssMiddle` : Boutons de souris
+
+### Exemple complet : Calculatrice au clavier
+
+```pascal
+procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
+begin
+  case Key of
+    '0'..'9', ',', '.':
+      ; // Accepter les chiffres et décimales
+
+    '+', '-', '*', '/':
+      begin
+        FOprateur := Key;
+        FValeur1 := StrToFloatDef(Edit1.Text, 0);
+        Edit1.Clear;
+      end;
+
+    '=', #13:
+      begin
+        FValeur2 := StrToFloatDef(Edit1.Text, 0);
+        case FOperateur of
+          '+': Edit1.Text := FloatToStr(FValeur1 + FValeur2);
+          '-': Edit1.Text := FloatToStr(FValeur1 - FValeur2);
+          '*': Edit1.Text := FloatToStr(FValeur1 * FValeur2);
+          '/': if FValeur2 <> 0 then
+                 Edit1.Text := FloatToStr(FValeur1 / FValeur2)
+               else
+                 ShowMessage('Division par zéro !');
+        end;
+      end;
+
+    #8: ; // Backspace autorisé
+
+    else
+      Key := #0; // Bloquer les autres touches
+  end;
+end;
+```
+
+---
+
+## 4.6.6 Les événements du formulaire
+
+### OnCreate
+
+Déclenché une seule fois, à la création du formulaire. C'est l'endroit idéal pour initialiser vos variables et composants.
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Initialisation
+  FCompteur := 0;
+  ListBox1.Items.Clear;
+
+  // Configuration
+  Edit1.Text := '';
+  Edit1.MaxLength := 50;
+
+  // Charger des données
+  ChargerConfiguration;
+  ChargerDonnees;
+end;
+```
+
+### OnShow
+
+Déclenché chaque fois que le formulaire devient visible.
+
+```pascal
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  // Actualiser les données à chaque affichage
+  ActualiserListeProduits;
+
+  // Mettre le focus sur un contrôle
+  Edit1.SetFocus;
+end;
+```
+
+### OnClose et OnCloseQuery
+
+**OnCloseQuery** : Permet de confirmer la fermeture.
+
+```pascal
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  if Memo1.Modified then
+  begin
+    case MessageDlg('Enregistrer les modifications ?',
+                    mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+      mrYes:
+        begin
+          EnregistrerDocument;
+          CanClose := True;
+        end;
+      mrNo:
+        CanClose := True;
+      mrCancel:
+        CanClose := False; // Annuler la fermeture
+    end;
+  end
+  else
+    CanClose := True;
+end;
+```
+
+**OnClose** : Déclenché juste avant la fermeture effective.
+
+```pascal
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  // Nettoyer les ressources
+  SauvegarderConfiguration;
+
+  // Libérer le formulaire de la mémoire
+  Action := caFree;
+end;
+```
+
+**Actions possibles :**
+- `caNone` : Ne rien faire (annule la fermeture)
+- `caHide` : Masquer le formulaire
+- `caFree` : Libérer le formulaire de la mémoire
+- `caMinimize` : Minimiser le formulaire
+
+### OnResize
+
+Déclenché lorsque la taille du formulaire change.
+
+```pascal
+procedure TForm1.FormResize(Sender: TObject);
+begin
+  // Adapter la taille des composants
+  Panel1.Width := ClientWidth - 20;
+  Memo1.Height := ClientHeight - Panel1.Height - 30;
+
+  // Centrer un composant
+  Button1.Left := (ClientWidth - Button1.Width) div 2;
+end;
+```
+
+### OnActivate et OnDeactivate
+
+Déclenchés lorsque le formulaire devient actif ou perd le focus.
+
+```pascal
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+  // Actualiser quand la fenêtre redevient active
+  VerifierMisesAJour;
+  StatusBar1.SimpleText := 'Fenêtre active';
+end;
+
+procedure TForm1.FormDeactivate(Sender: TObject);
+begin
+  StatusBar1.SimpleText := 'Fenêtre inactive';
+end;
+```
+
+---
+
+## 4.6.7 Les événements de contrôles courants
+
+### TEdit : OnChange
+
+Déclenché à chaque modification du texte.
+
+```pascal
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+  // Compter les caractères en temps réel
+  Label1.Caption := Format('Caractères : %d / 100', [Length(Edit1.Text)]);
+
+  // Validation en temps réel
+  if Length(Edit1.Text) > 100 then
+  begin
+    Edit1.Color := clRed;
+    Label1.Font.Color := clRed;
+  end
+  else
+  begin
+    Edit1.Color := clWindow;
+    Label1.Font.Color := clWindowText;
+  end;
+end;
+```
+
+### TEdit : OnEnter et OnExit
+
+Déclenchés lorsque le contrôle reçoit ou perd le focus.
+
+```pascal
+procedure TForm1.Edit1Enter(Sender: TObject);
+begin
+  // Sélectionner tout le texte quand on entre dans le champ
+  Edit1.SelectAll;
+  Edit1.Color := clYellow;
+  StatusBar1.SimpleText := 'Saisie du nom...';
+end;
+
+procedure TForm1.Edit1Exit(Sender: TObject);
+begin
+  // Valider et formatter à la sortie
+  Edit1.Text := Trim(Edit1.Text); // Enlever les espaces
+  Edit1.Color := clWindow;
+
+  if Edit1.Text = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    Edit1.SetFocus; // Retourner au champ
+  end;
+end;
+```
+
+### TComboBox : OnChange et OnSelect
+
+```pascal
+procedure TForm1.ComboBox1Change(Sender: TObject);
+begin
+  // Déclenché pour toute modification (même par code)
+  Label1.Caption := 'Sélection : ' + ComboBox1.Text;
+end;
+
+procedure TForm1.ComboBox1Select(Sender: TObject);
+begin
+  // Déclenché uniquement par sélection utilisateur
+  case ComboBox1.ItemIndex of
+    0: AfficherPage1;
+    1: AfficherPage2;
+    2: AfficherPage3;
+  end;
+end;
+```
+
+### TCheckBox : OnClick
+
+```pascal
+procedure TForm1.CheckBox1Click(Sender: TObject);
+begin
+  if CheckBox1.Checked then
+  begin
+    Panel1.Visible := True;
+    Label1.Caption := 'Options avancées activées';
+  end
+  else
+  begin
+    Panel1.Visible := False;
+    Label1.Caption := 'Options avancées désactivées';
+  end;
+end;
+```
+
+### TListBox et TListView : OnClick, OnDblClick, OnSelectItem
+
+```pascal
+procedure TForm1.ListBox1Click(Sender: TObject);
+begin
+  if ListBox1.ItemIndex <> -1 then
+  begin
+    // Afficher des détails
+    Label1.Caption := 'Sélectionné : ' + ListBox1.Items[ListBox1.ItemIndex];
+    Button1.Enabled := True;
+  end
+  else
+    Button1.Enabled := False;
+end;
+
+procedure TForm1.ListBox1DblClick(Sender: TObject);
+begin
+  // Double-clic pour éditer
+  if ListBox1.ItemIndex <> -1 then
+    EditerElement(ListBox1.ItemIndex);
+end;
+```
+
+### TTimer : OnTimer
+
+Déclenché périodiquement selon l'intervalle défini.
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Timer1.Interval := 1000; // 1000 ms = 1 seconde
+  Timer1.Enabled := True;
+end;
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  // Mise à jour de l'heure
+  Label1.Caption := TimeToStr(Now);
+
+  // Animation simple
+  Image1.Left := Image1.Left + 5;
+  if Image1.Left > ClientWidth then
+    Image1.Left := -Image1.Width;
+end;
+```
+
+---
+
+## 4.6.8 Ordre d'exécution des événements
+
+Il est important de comprendre l'ordre dans lequel les événements se déclenchent.
+
+### Lors de l'ouverture d'un formulaire
+
+```
+1. OnCreate
+2. OnShow
+3. OnActivate
+4. OnPaint
+```
+
+### Lors de la fermeture d'un formulaire
+
+```
+1. OnCloseQuery (possibilité d'annuler)
+2. OnClose
+3. OnDeactivate
+4. OnDestroy
+```
+
+### Lors d'un clic sur un bouton
+
+```
+1. OnMouseDown
+2. OnClick
+3. OnMouseUp
+```
+
+### Lors de la saisie dans un Edit
+
+```
+1. OnEnter (focus)
+2. OnKeyDown
+3. OnKeyPress
+4. OnChange
+5. OnKeyUp
+6. OnExit (perte du focus)
+```
+
+### Exemple de traçage des événements
+
+```pascal
+procedure TForm1.TracerEvenement(const NomEvenement: string);
+begin
+  Memo1.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + NomEvenement);
+end;
+
+procedure TForm1.Button1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  TracerEvenement('Button1.OnMouseDown');
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  TracerEvenement('Button1.OnClick');
+end;
+
+procedure TForm1.Button1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  TracerEvenement('Button1.OnMouseUp');
+end;
+```
+
+---
+
+## 4.6.9 Événements avancés
+
+### Événements personnalisés
+
+Vous pouvez créer vos propres événements.
+
+```pascal
 type
-  TFormDessin = class(TForm)
-    PanelOutils: TPanel;
-    PanelDessin: TPanel;
-    ButtonEffacer: TButton;
-    LabelTaille: TLabel;
-    TrackBarTaille: TTrackBar;
-    ColorBoxCouleur: TColorBox;
-    LabelCouleur: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure PanelDessinMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure PanelDessinMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
-    procedure PanelDessinMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure ButtonEffacerClick(Sender: TObject);
-    procedure TrackBarTailleChange(Sender: TObject);
-    procedure ColorBoxCouleurChange(Sender: TObject);
-  private
-    FDessin: Boolean;
-    FDernierPoint: TPoint;
-    FCouleurPinceau: TColor;
-    FTaillePinceau: Integer;
-    procedure DessinerLigne(FromX, FromY, ToX, ToY: Integer);
-    procedure EffacerDessin;
-  public
-    { Public declarations }
-  end;
+  // Déclaration du type d'événement
+  TNotificationEvent = procedure(Sender: TObject; const Message: string) of object;
 
-var
-  FormDessin: TFormDessin;
+  TForm1 = class(TForm)
+    // ...
+  private
+    FOnNotification: TNotificationEvent;
+    procedure DeclencherNotification(const Message: string);
+  public
+    property OnNotification: TNotificationEvent read FOnNotification write FOnNotification;
+  end;
 
 implementation
 
-{$R *.dfm}
-
-procedure TFormDessin.FormCreate(Sender: TObject);
+procedure TForm1.DeclencherNotification(const Message: string);
 begin
-  // Initialisation
-  FDessin := False;
-  FCouleurPinceau := clBlack;
-  FTaillePinceau := 5;
-
-  // Configurer la zone de dessin
-  PanelDessin.Color := clWhite;
-  PanelDessin.DoubleBuffered := True; // Réduire le scintillement
-
-  // Initialiser les contrôles
-  ColorBoxCouleur.Selected := FCouleurPinceau;
-  TrackBarTaille.Position := FTaillePinceau;
+  // Déclencher l'événement s'il est assigné
+  if Assigned(FOnNotification) then
+    FOnNotification(Self, Message);
 end;
 
-procedure TFormDessin.PanelDessinMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  DeclencherNotification('Le bouton a été cliqué !');
+end;
+
+// Utilisation
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  OnNotification := GererNotification;
+end;
+
+procedure TForm1.GererNotification(Sender: TObject; const Message: string);
+begin
+  ShowMessage(Message);
+end;
+```
+
+### Événements anonymes (procédures anonymes)
+
+Disponible à partir de Delphi 2009.
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  // Créer un événement anonyme
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      Sleep(2000); // Simuler un traitement long
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ShowMessage('Traitement terminé !');
+        end
+      );
+    end
+  ).Start;
+end;
+```
+
+### Bloquer et débloquer les événements
+
+Parfois, vous devez modifier un contrôle sans déclencher ses événements.
+
+```pascal
+procedure TForm1.ChargerDonnees;
+var
+  EventHandler: TNotifyEvent;
+begin
+  // Sauvegarder le gestionnaire
+  EventHandler := ComboBox1.OnChange;
+
+  // Désactiver temporairement
+  ComboBox1.OnChange := nil;
+
+  try
+    // Modifier sans déclencher OnChange
+    ComboBox1.Items.Clear;
+    ComboBox1.Items.Add('Option 1');
+    ComboBox1.Items.Add('Option 2');
+    ComboBox1.ItemIndex := 0;
+  finally
+    // Restaurer le gestionnaire
+    ComboBox1.OnChange := EventHandler;
+  end;
+end;
+```
+
+---
+
+## 4.6.10 Exemples pratiques complets
+
+### Exemple 1 : Validation de formulaire
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Button1.Enabled := False; // Désactiver jusqu'à validation
+end;
+
+procedure TForm1.EditChange(Sender: TObject);
+begin
+  // Activer le bouton seulement si tous les champs sont remplis
+  Button1.Enabled := (Edit1.Text <> '') and
+                     (Edit2.Text <> '') and
+                     (Edit3.Text <> '');
+end;
+
+procedure TForm1.Edit1Exit(Sender: TObject);
+begin
+  // Validation du nom
+  if Trim(Edit1.Text) = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    Edit1.SetFocus;
+  end;
+end;
+
+procedure TForm1.Edit2Exit(Sender: TObject);
+begin
+  // Validation de l'email
+  if Pos('@', Edit2.Text) = 0 then
+  begin
+    ShowMessage('Email invalide');
+    Edit2.SetFocus;
+  end;
+end;
+
+procedure TForm1.Edit3KeyPress(Sender: TObject; var Key: Char);
+begin
+  // Accepter uniquement les chiffres pour le téléphone
+  if not (Key in ['0'..'9', #8, #13]) then
+    Key := #0;
+end;
+```
+
+### Exemple 2 : Application de dessin simple
+
+```pascal
+type
+  TForm1 = class(TForm)
+    Image1: TImage;
+  private
+    FDessin: Boolean;
+    FDernierX, FDernierY: Integer;
+  end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  FDessin := False;
+  Image1.Canvas.Brush.Color := clWhite;
+  Image1.Canvas.FillRect(Image1.ClientRect);
+end;
+
+procedure TForm1.Image1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if Button = mbLeft then
   begin
-    // Commencer le dessin
     FDessin := True;
-    FDernierPoint := Point(X, Y);
+    FDernierX := X;
+    FDernierY := Y;
+  end;
+end;
 
-    // Dessiner un point au départ
-    with PanelDessin.Canvas do
+procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  if FDessin then
+  begin
+    // Dessiner une ligne
+    Image1.Canvas.Pen.Color := clBlack;
+    Image1.Canvas.Pen.Width := 2;
+    Image1.Canvas.MoveTo(FDernierX, FDernierY);
+    Image1.Canvas.LineTo(X, Y);
+
+    FDernierX := X;
+    FDernierY := Y;
+  end;
+end;
+
+procedure TForm1.Image1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  FDessin := False;
+end;
+```
+
+### Exemple 3 : Recherche dynamique
+
+```pascal
+procedure TForm1.EditRechercheChange(Sender: TObject);
+var
+  i: Integer;
+  Texte: string;
+begin
+  Texte := LowerCase(EditRecherche.Text);
+
+  // Effacer les résultats précédents
+  ListBoxResultats.Items.BeginUpdate;
+  try
+    ListBoxResultats.Items.Clear;
+
+    // Rechercher dans la liste source
+    if Texte <> '' then
     begin
-      Pen.Color := FCouleurPinceau;
-      Pen.Width := FTaillePinceau;
-      Ellipse(X - FTaillePinceau div 2, Y - FTaillePinceau div 2,
-              X + FTaillePinceau div 2, Y + FTaillePinceau div 2);
+      for i := 0 to ListeSource.Count - 1 do
+      begin
+        if Pos(Texte, LowerCase(ListeSource[i])) > 0 then
+          ListBoxResultats.Items.Add(ListeSource[i]);
+      end;
+    end;
+
+    // Afficher le nombre de résultats
+    LabelResultats.Caption := Format('%d résultat(s) trouvé(s)',
+                                     [ListBoxResultats.Items.Count]);
+  finally
+    ListBoxResultats.Items.EndUpdate;
+  end;
+end;
+
+procedure TForm1.EditRechercheKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // Navigation clavier dans les résultats
+  if Key = VK_DOWN then
+  begin
+    if ListBoxResultats.Items.Count > 0 then
+    begin
+      ListBoxResultats.SetFocus;
+      ListBoxResultats.ItemIndex := 0;
+      Key := 0;
     end;
   end;
 end;
-
-procedure TFormDessin.PanelDessinMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  if FDessin and (ssLeft in Shift) then
-  begin
-    // Dessiner une ligne du dernier point au point actuel
-    DessinerLigne(FDernierPoint.X, FDernierPoint.Y, X, Y);
-    FDernierPoint := Point(X, Y);
-  end;
-end;
-
-procedure TFormDessin.PanelDessinMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  // Arrêter le dessin
-  FDessin := False;
-end;
-
-procedure TFormDessin.DessinerLigne(FromX, FromY, ToX, ToY: Integer);
-begin
-  with PanelDessin.Canvas do
-  begin
-    Pen.Color := FCouleurPinceau;
-    Pen.Width := FTaillePinceau;
-
-    // Dessiner une ligne entre les deux points
-    MoveTo(FromX, FromY);
-    LineTo(ToX, ToY);
-
-    // Ajouter un cercle au point d'arrivée pour un trait plus lisse
-    Brush.Color := FCouleurPinceau;
-    Ellipse(ToX - FTaillePinceau div 2, ToY - FTaillePinceau div 2,
-            ToX + FTaillePinceau div 2, ToY + FTaillePinceau div 2);
-  end;
-end;
-
-procedure TFormDessin.ButtonEffacerClick(Sender: TObject);
-begin
-  EffacerDessin;
-end;
-
-procedure TFormDessin.EffacerDessin;
-begin
-  // Effacer toute la zone de dessin
-  with PanelDessin.Canvas do
-  begin
-    Brush.Color := clWhite;
-    Pen.Color := clWhite;
-    Rectangle(0, 0, PanelDessin.Width, PanelDessin.Height);
-  end;
-end;
-
-procedure TFormDessin.TrackBarTailleChange(Sender: TObject);
-begin
-  // Mettre à jour la taille du pinceau
-  FTaillePinceau := TrackBarTaille.Position;
-  LabelTaille.Caption := 'Taille : ' + IntToStr(FTaillePinceau);
-end;
-
-procedure TFormDessin.ColorBoxCouleurChange(Sender: TObject);
-begin
-  // Mettre à jour la couleur du pinceau
-  FCouleurPinceau := ColorBoxCouleur.Selected;
-end;
-
-end.
 ```
 
-## Conclusion
+### Exemple 4 : Glisser-déposer (Drag & Drop)
 
-La gestion des événements est au cœur de la programmation Delphi. Elle permet de créer des applications interactives qui répondent aux actions de l'utilisateur. En comprenant bien comment les événements fonctionnent et comment les gérer efficacement, vous pourrez créer des interfaces utilisateur riches et réactives.
+```pascal
+procedure TForm1.ListBox1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+  begin
+    // Démarrer le glisser-déposer
+    ListBox1.BeginDrag(False);
+  end;
+end;
 
-Quelques points clés à retenir :
-- Les événements sont des notifications d'actions spécifiques
-- Les gestionnaires d'événements sont des méthodes avec une signature particulière
-- Le paramètre `Sender` vous permet d'identifier la source de l'événement
-- Vous pouvez réutiliser un même gestionnaire pour plusieurs composants
-- Les variables privées du formulaire permettent de mémoriser des états entre les événements
+procedure TForm1.ListBox2DragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+begin
+  // Accepter seulement si la source est ListBox1
+  Accept := Source = ListBox1;
+end;
 
-Dans la prochaine section, nous verrons comment créer des dialogues personnalisés pour enrichir encore davantage l'interaction avec l'utilisateur.
+procedure TForm1.ListBox2DragDrop(Sender, Source: TObject; X, Y: Integer);
+begin
+  if (Source = ListBox1) and (ListBox1.ItemIndex <> -1) then
+  begin
+    // Copier l'élément
+    ListBox2.Items.Add(ListBox1.Items[ListBox1.ItemIndex]);
+
+    // Optionnel : supprimer de la source
+    ListBox1.Items.Delete(ListBox1.ItemIndex);
+  end;
+end;
+```
 
 ---
 
-*Exercice pratique : Modifiez l'exemple de dessin ci-dessus pour ajouter les fonctionnalités suivantes :
-1. Un bouton pour dessiner des formes spécifiques (cercle, rectangle, ligne)
-2. Une option pour remplir les formes avec une couleur
-3. La possibilité d'annuler la dernière action (fonction "Undo")*
+## 4.6.11 Bonnes pratiques
+
+### 1. Nommage des gestionnaires
+
+```pascal
+// Bon : Nom descriptif
+procedure TForm1.BoutonValiderClick(Sender: TObject);
+
+// Mauvais : Nom par défaut non modifié
+procedure TForm1.Button1Click(Sender: TObject);
+```
+
+### 2. Ne pas surcharger les événements
+
+```pascal
+// À éviter : Trop de logique dans OnChange
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+  // 50 lignes de code...
+  // Difficile à maintenir !
+end;
+
+// Préférer : Découper en fonctions
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+  ValiderChamp;
+  MettreAJourCompteur;
+  VerifierLongueur;
+end;
+```
+
+### 3. Vérifier les conditions avant de traiter
+
+```pascal
+procedure TForm1.ListBox1DblClick(Sender: TObject);
+begin
+  // Toujours vérifier qu'un élément est sélectionné
+  if ListBox1.ItemIndex = -1 then
+    Exit;
+
+  // Traiter l'élément sélectionné
+  EditerElement(ListBox1.ItemIndex);
+end;
+```
+
+### 4. Utiliser des drapeaux pour éviter les boucles
+
+```pascal
+type
+  TForm1 = class(TForm)
+  private
+    FMiseAJourEnCours: Boolean;
+  end;
+
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+  if FMiseAJourEnCours then
+    Exit; // Éviter la récursion
+
+  FMiseAJourEnCours := True;
+  try
+    // Traitement qui pourrait modifier Edit1
+    MettreAJourAutresChamps;
+  finally
+    FMiseAJourEnCours := False;
+  end;
+end;
+```
+
+### 5. Gérer les exceptions dans les événements
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  try
+    // Code qui pourrait générer une exception
+    ConvertirEtAfficher(Edit1.Text);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erreur : ' + E.Message);
+      Edit1.SetFocus;
+    end;
+  end;
+end;
+```
+
+### 6. Libérer les ressources correctement
+
+```pascal
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  try
+    // Sauvegarder les données
+    SauvegarderConfiguration;
+
+    // Fermer les connexions
+    if Assigned(FConnexion) then
+      FConnexion.Close;
+
+    // Libérer les objets créés
+    FreeAndNil(FListeUtilisateurs);
+  finally
+    Action := caFree;
+  end;
+end;
+```
+
+### 7. Documenter les événements complexes
+
+```pascal
+procedure TForm1.ComplexEventHandler(Sender: TObject);
+begin
+  {
+    Ce gestionnaire d'événement effectue les opérations suivantes :
+    1. Valide les données saisies
+    2. Met à jour la base de données
+    3. Actualise l'interface utilisateur
+    4. Envoie une notification par email
+
+    Déclenché par : Button1.OnClick
+    Appelé depuis : ValidationForm, AutoSave
+  }
+
+  // Votre code ici...
+end;
+```
+
+---
+
+## 4.6.12 Débogage des événements
+
+### Techniques de débogage
+
+**1. Points d'arrêt**
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  // Placer un point d'arrêt ici (F5)
+  ShowMessage('Test');
+end;
+```
+
+**2. Messages de trace**
+```pascal
+procedure TForm1.Edit1Change(Sender: TObject);
+begin
+  OutputDebugString(PChar('Edit1.Text = ' + Edit1.Text));
+end;
+```
+
+**3. Compteur d'appels**
+```pascal
+var
+  FCompteurAppels: Integer = 0;
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  Inc(FCompteurAppels);
+  Caption := Format('Appels : %d', [FCompteurAppels]);
+end;
+```
+
+### Erreurs courantes
+
+**1. Oublier de vérifier Assigned**
+```pascal
+// Erreur : Peut causer une exception
+FObjet.Methode;
+
+// Correct
+if Assigned(FObjet) then
+  FObjet.Methode;
+```
+
+**2. Modifier un composant pendant son événement**
+```pascal
+// Attention : Peut causer des problèmes
+procedure TForm1.ListBox1Click(Sender: TObject);
+begin
+  ListBox1.Items.Clear; // Dangereux pendant l'événement Click
+end;
+
+// Mieux : Utiliser PostMessage ou un flag
+procedure TForm1.ListBox1Click(Sender: TObject);
+begin
+  PostMessage(Handle, WM_USER + 1, 0, 0);
+end;
+```
+
+---
+
+## Conclusion
+
+La gestion des événements est la pierre angulaire de la programmation d'interfaces graphiques avec Delphi. En maîtrisant les concepts présentés dans ce chapitre, vous serez capable de créer des applications interactives et réactives qui répondent efficacement aux actions de l'utilisateur.
+
+### Points clés à retenir :
+
+- **Les événements** permettent à votre application de réagir aux actions de l'utilisateur
+- **Le paramètre Sender** identifie le composant qui a déclenché l'événement
+- **L'ordre des événements** est important et prévisible
+- **Les bonnes pratiques** améliorent la maintenabilité et la robustesse du code
+- **La validation** des données doit être effectuée dans les événements appropriés
+- **Le débogage** des événements nécessite des techniques spécifiques
+
+Avec ces connaissances, vous êtes prêt à créer des interfaces utilisateur riches et interactives dans vos applications Delphi !
 
 ⏭️ [Création de dialogues personnalisés](/04-conception-dinterfaces-utilisateur-avec-la-vcl/07-creation-de-dialogues-personnalises.md)

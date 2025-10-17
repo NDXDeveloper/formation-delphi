@@ -1,524 +1,1012 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 4.5 Menus et barres d'outils
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les menus et barres d'outils sont des éléments essentiels dans toute application Windows. Ils permettent d'organiser les fonctionnalités de votre application de manière accessible et cohérente. Dans cette section, nous allons découvrir comment créer et personnaliser des menus et des barres d'outils dans Delphi.
+Les menus et les barres d'outils sont des éléments essentiels de toute application Windows professionnelle. Ils permettent à l'utilisateur d'accéder rapidement aux fonctionnalités de votre programme. Dans ce chapitre, nous allons découvrir comment créer et gérer ces composants dans Delphi.
 
-## Les menus (TMainMenu et TPopupMenu)
+## 4.5.1 Les menus principaux (MainMenu)
 
-Delphi propose deux types principaux de menus :
-- `TMainMenu` : le menu principal, situé en haut de la fenêtre
-- `TPopupMenu` : menu contextuel qui apparaît lors d'un clic droit
+### Qu'est-ce qu'un MainMenu ?
 
-### Le menu principal (TMainMenu)
+Le **MainMenu** est le menu principal de votre application, généralement situé en haut de la fenêtre, juste sous la barre de titre. C'est le menu que vous voyez dans presque tous les logiciels Windows avec des éléments comme "Fichier", "Edition", "Affichage", etc.
 
-#### Création d'un menu principal
+### Pourquoi utiliser un menu ?
 
-Pour ajouter un menu principal à votre formulaire :
+- Organisation logique des fonctionnalités
+- Accès standardisé aux commandes
+- Raccourcis clavier pour les utilisateurs avancés
+- Conformité aux standards Windows
+- Gain d'espace par rapport aux boutons
 
-1. Cliquez sur le composant `MainMenu` dans l'onglet **Standard** de la palette de composants
-2. Placez-le sur votre formulaire (il sera invisible à l'exécution)
-3. Double-cliquez sur le composant pour ouvrir l'éditeur de menu
+### Créer un menu principal
 
-L'éditeur de menu est un outil visuel qui vous permet de créer et d'organiser facilement les entrées de votre menu.
+#### Étape 1 : Ajouter le composant MainMenu
 
-#### Utilisation de l'éditeur de menu
+1. Dans la palette d'outils, recherchez **MainMenu** (catégorie "Standard")
+2. Double-cliquez dessus ou glissez-le sur votre formulaire
+3. Le composant apparaît dans la zone des composants non visuels (en bas du formulaire)
 
-- Cliquez sur "Insérer" pour ajouter une entrée
-- Saisissez le texte de l'entrée dans la propriété `Caption`
-- Pour créer un sous-menu, cliquez sur la flèche droite
-- Pour revenir au niveau supérieur, cliquez sur la flèche gauche
-- Pour ajouter une entrée au même niveau, cliquez sur la flèche bas
+#### Étape 2 : Concevoir la structure du menu
 
-#### Propriétés importantes des éléments de menu
+1. Double-cliquez sur le composant **MainMenu1**
+2. Le concepteur de menu s'ouvre
+3. Cliquez sur le rectangle vide pour créer un élément de menu
+4. Dans l'Inspecteur d'objets, modifiez la propriété **Caption**
 
-- **Caption** : texte affiché dans le menu
-- **Name** : nom utilisé pour accéder à l'élément dans le code
-- **ShortCut** : raccourci clavier associé
-- **Enabled** : active ou désactive l'élément
-- **Visible** : rend l'élément visible ou invisible
-- **Checked** : affiche ou non une coche à côté de l'élément
-- **ImageIndex** : index de l'image à afficher (depuis un `TImageList`)
-- **Break** : permet de créer un saut de ligne dans le menu
+**Exemple de structure classique :**
+```
+Fichier
+  ├─ Nouveau
+  ├─ Ouvrir...
+  ├─ Enregistrer
+  ├─ Enregistrer sous...
+  ├─ ──────────── (séparateur)
+  └─ Quitter
 
-#### Conventions pour les menus
+Edition
+  ├─ Annuler
+  ├─ Rétablir
+  ├─ ──────────── (séparateur)
+  ├─ Couper
+  ├─ Copier
+  └─ Coller
 
-Voici quelques bonnes pratiques pour vos menus :
+Aide
+  ├─ Aide
+  └─ À propos...
+```
 
-1. **Structure standard** : suivez la structure habituelle des applications Windows
-   - Fichier, Édition, Affichage, Outils, Aide...
+#### Étape 3 : Créer des éléments de menu
 
-2. **Raccourcis clavier standards**
-   - Fichier > Nouveau : Ctrl+N
-   - Fichier > Ouvrir : Ctrl+O
-   - Fichier > Enregistrer : Ctrl+S
-   - Édition > Couper : Ctrl+X
-   - Édition > Copier : Ctrl+C
-   - Édition > Coller : Ctrl+V
+**Pour créer un élément de premier niveau :**
+- Tapez le nom dans le rectangle vide (ex: "Fichier")
+- Appuyez sur Entrée
 
-3. **Séparateurs** : utilisez des séparateurs (traits horizontaux) pour regrouper logiquement les commandes
-   - Pour ajouter un séparateur, créez un élément avec `-` comme Caption
+**Pour créer un sous-élément :**
+- Cliquez sur l'élément parent
+- Tapez le nom dans le rectangle qui apparaît en dessous
+- Appuyez sur Entrée
 
-4. **Accélérateurs** : permettent d'accéder à un menu avec le clavier
-   - Placez un caractère `&` avant la lettre qui servira d'accélérateur
-   - Exemple : `&Fichier` permet d'accéder au menu Fichier avec Alt+F
+**Pour créer un séparateur :**
+- Créez un élément de menu
+- Définissez sa propriété **Caption** à : `-`
 
-#### Exemple de code pour gérer les événements de menu
+### Propriétés importantes d'un élément de menu
+
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| **Caption** | Texte affiché | `&Fichier` (le & crée un raccourci Alt+F) |
+| **Name** | Nom de l'élément dans le code | `MenuFichierOuvrir` |
+| **ShortCut** | Raccourci clavier | `Ctrl+O` |
+| **Checked** | Affiche une coche | `True` ou `False` |
+| **Enabled** | Active/désactive l'élément | `True` ou `False` |
+| **Visible** | Affiche/masque l'élément | `True` ou `False` |
+| **ImageIndex** | Index de l'icône | `0, 1, 2...` |
+| **RadioItem** | Comportement bouton radio | `True` ou `False` |
+| **GroupIndex** | Groupe pour RadioItem | `1, 2, 3...` |
+
+### Raccourcis clavier et mnémoniques
+
+#### Mnémoniques (touches d'accès Alt)
+
+Utilisez le caractère `&` avant une lettre pour créer un raccourci Alt :
 
 ```pascal
-procedure TForm1.MenuNouveauClick(Sender: TObject);
+MenuFichier.Caption := '&Fichier';      // Alt+F
+MenuOuvrir.Caption := '&Ouvrir...';     // Alt+O
+MenuEnregistrer.Caption := '&Enregistrer'; // Alt+E
+```
+
+#### Raccourcis clavier (ShortCut)
+
+Les raccourcis permettent d'accéder directement à une fonction :
+
+**Définir un raccourci visuellement :**
+1. Sélectionnez l'élément de menu
+2. Dans l'Inspecteur d'objets, cliquez sur **ShortCut**
+3. Choisissez la combinaison dans la liste déroulante
+
+**Raccourcis standards :**
+- `Ctrl+N` : Nouveau
+- `Ctrl+O` : Ouvrir
+- `Ctrl+S` : Enregistrer
+- `Ctrl+Z` : Annuler
+- `Ctrl+Y` : Rétablir
+- `Ctrl+X` : Couper
+- `Ctrl+C` : Copier
+- `Ctrl+V` : Coller
+- `F1` : Aide
+
+### Gérer les événements de menu
+
+L'événement le plus important est **OnClick**, déclenché quand l'utilisateur clique sur l'élément.
+
+```pascal
+// Double-cliquez sur l'élément de menu dans le concepteur
+// pour créer automatiquement la procédure OnClick
+
+procedure TForm1.MenuFichierNouveauClick(Sender: TObject);
 begin
-  // Code pour créer un nouveau document
-  Memo1.Clear;
-  Caption := 'Nouveau document - Mon Éditeur';
+  ShowMessage('Création d''un nouveau document');
+  // Votre code ici
 end;
 
-procedure TForm1.MenuOuvrirClick(Sender: TObject);
+procedure TForm1.MenuFichierOuvrirClick(Sender: TObject);
 begin
-  // Ouvrir un fichier
   if OpenDialog1.Execute then
   begin
+    // Charger le fichier sélectionné
     Memo1.Lines.LoadFromFile(OpenDialog1.FileName);
-    Caption := ExtractFileName(OpenDialog1.FileName) + ' - Mon Éditeur';
   end;
 end;
 
-procedure TForm1.MenuEnregistrerClick(Sender: TObject);
+procedure TForm1.MenuFichierEnregistrerClick(Sender: TObject);
 begin
-  // Enregistrer le fichier
   if SaveDialog1.Execute then
   begin
     Memo1.Lines.SaveToFile(SaveDialog1.FileName);
-    Caption := ExtractFileName(SaveDialog1.FileName) + ' - Mon Éditeur';
+    ShowMessage('Fichier enregistré avec succès');
   end;
 end;
 
-procedure TForm1.MenuQuitterClick(Sender: TObject);
+procedure TForm1.MenuFichierQuitterClick(Sender: TObject);
 begin
-  // Fermer l'application
-  Close;
-end;
-```
-
-### Menus contextuels (TPopupMenu)
-
-Les menus contextuels apparaissent lorsque l'utilisateur fait un clic droit sur un contrôle ou une zone de votre application.
-
-#### Création d'un menu contextuel
-
-1. Cliquez sur le composant `PopupMenu` dans l'onglet **Standard** de la palette
-2. Placez-le sur votre formulaire
-3. Double-cliquez dessus pour ouvrir l'éditeur de menu et créez vos entrées
-4. Associez le menu au contrôle souhaité via sa propriété `PopupMenu`
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // Associer le menu contextuel au mémo
-  Memo1.PopupMenu := PopupMenu1;
-end;
-```
-
-#### Exemple de menu contextuel pour un éditeur de texte
-
-```pascal
-procedure TForm1.PopupMenu1Popup(Sender: TObject);
-begin
-  // Activer/désactiver les options selon le contexte
-  MenuContextCouper.Enabled := Memo1.SelLength > 0;
-  MenuContextCopier.Enabled := Memo1.SelLength > 0;
-  MenuContextColler.Enabled := Clipboard.HasFormat(CF_TEXT);
-end;
-
-procedure TForm1.MenuContextCouperClick(Sender: TObject);
-begin
-  Memo1.CutToClipboard;
-end;
-
-procedure TForm1.MenuContextCopierClick(Sender: TObject);
-begin
-  Memo1.CopyToClipboard;
-end;
-
-procedure TForm1.MenuContextCollerClick(Sender: TObject);
-begin
-  Memo1.PasteFromClipboard;
+  Close; // Ferme l'application
 end;
 ```
 
 ### Menus dynamiques
 
-Parfois, vous aurez besoin de créer ou modifier des menus à l'exécution, par exemple pour afficher une liste de fichiers récents.
-
-#### Exemple : Liste des fichiers récents
+Vous pouvez activer/désactiver ou cocher des éléments par code :
 
 ```pascal
-procedure TForm1.MettreAJourMenuFichiersRecents;
-var
-  i: Integer;
-  MenuItem: TMenuItem;
-begin
-  // Effacer les anciens éléments
-  while MenuFichiersRecents.Count > 0 do
-    MenuFichiersRecents.Delete(0);
+// Désactiver un élément
+MenuEnregistrer.Enabled := False;
 
-  // Si la liste est vide, ajouter un élément désactivé
-  if FichiersRecents.Count = 0 then
-  begin
-    MenuItem := TMenuItem.Create(MenuFichiersRecents);
-    MenuItem.Caption := '(Aucun fichier récent)';
-    MenuItem.Enabled := False;
-    MenuFichiersRecents.Add(MenuItem);
-  end
-  else
-  begin
-    // Ajouter les fichiers récents
-    for i := 0 to FichiersRecents.Count - 1 do
-    begin
-      MenuItem := TMenuItem.Create(MenuFichiersRecents);
-      MenuItem.Caption := '&' + IntToStr(i + 1) + ' ' + FichiersRecents[i];
-      MenuItem.Tag := i;  // Stocker l'indice dans Tag
-      MenuItem.OnClick := MenuFichierRecentClick;
-      MenuFichiersRecents.Add(MenuItem);
-    end;
+// Activer un élément
+MenuAnnuler.Enabled := True;
 
-    // Ajouter un séparateur et une option pour effacer la liste
-    MenuItem := TMenuItem.Create(MenuFichiersRecents);
-    MenuItem.Caption := '-';
-    MenuFichiersRecents.Add(MenuItem);
+// Cocher un élément
+MenuAffichageBarreOutils.Checked := True;
 
-    MenuItem := TMenuItem.Create(MenuFichiersRecents);
-    MenuItem.Caption := 'Effacer la liste';
-    MenuItem.OnClick := MenuEffacerFichiersRecentsClick;
-    MenuFichiersRecents.Add(MenuItem);
-  end;
-end;
+// Décocher un élément
+MenuAffichageBarreOutils.Checked := False;
 
-procedure TForm1.MenuFichierRecentClick(Sender: TObject);
-var
-  Indice: Integer;
-begin
-  Indice := (Sender as TMenuItem).Tag;
-  if (Indice >= 0) and (Indice < FichiersRecents.Count) then
-    OuvrirFichier(FichiersRecents[Indice]);
-end;
+// Alterner une coche
+MenuAffichageBarreOutils.Checked := not MenuAffichageBarreOutils.Checked;
+
+// Masquer un élément
+MenuAdmin.Visible := False;
 ```
 
-## Les barres d'outils (TToolBar et TToolButton)
-
-Les barres d'outils offrent un accès rapide aux fonctions les plus utilisées de votre application. Dans Delphi, elles sont créées principalement avec les composants `TToolBar` et `TToolButton`.
-
-### Création d'une barre d'outils
-
-1. Cliquez sur le composant `ToolBar` dans l'onglet **Win32** de la palette
-2. Placez-le en haut de votre formulaire (généralement sous le menu principal)
-3. Définissez ses propriétés (par exemple, `ShowCaptions` pour afficher le texte des boutons)
-4. Ajoutez des boutons soit par code, soit en cliquant droit sur la barre d'outils et en choisissant "Nouveau bouton"
-
-### Propriétés importantes de TToolBar
-
-- **AutoSize** : ajuste automatiquement la hauteur selon les boutons
-- **Flat** : style plat (moderne) ou en relief (classique)
-- **Transparent** : rend le fond transparent
-- **ShowCaptions** : affiche le texte sous les icônes
-- **Images** : ImageList contenant les icônes des boutons
-- **EdgeBorders** : bordures à afficher (haut, bas, gauche, droite)
-- **EdgeInner** et **EdgeOuter** : style des bordures internes et externes
-
-### Propriétés des boutons de la barre d'outils (TToolButton)
-
-- **Caption** : texte affiché (si ShowCaptions est activé)
-- **ImageIndex** : indice de l'icône dans l'ImageList
-- **Style** : type de bouton (normal, séparateur, déroulant, etc.)
-- **Grouped** et **AllowAllUp** : pour créer des groupes de boutons exclusifs ou non
-
-### Exemple : Création d'une barre d'outils par code
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  Button: TToolButton;
-begin
-  // Configuration de la barre d'outils
-  ToolBar1.Images := ImageList1;
-  ToolBar1.ShowCaptions := True;
-  ToolBar1.Flat := True;
-
-  // Bouton Nouveau
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Caption := 'Nouveau';
-  Button.ImageIndex := 0;  // Indice de l'icône dans l'ImageList
-  Button.OnClick := MenuNouveauClick;  // Réutiliser le gestionnaire du menu
-
-  // Bouton Ouvrir
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Caption := 'Ouvrir';
-  Button.ImageIndex := 1;
-  Button.OnClick := MenuOuvrirClick;
-
-  // Séparateur
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Style := tbsSeparator;
-  Button.Width := 8;
-
-  // Bouton Enregistrer
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Caption := 'Enregistrer';
-  Button.ImageIndex := 2;
-  Button.OnClick := MenuEnregistrerClick;
-end;
-```
-
-### Synchronisation avec les actions
-
-Si vous utilisez le système d'actions (voir section 4.3.3), vous pouvez associer vos boutons de barre d'outils directement aux actions via la propriété `Action`. Cela permet de synchroniser automatiquement l'état, le texte et l'icône du bouton avec l'action correspondante.
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  Button: TToolButton;
-begin
-  // Configuration de la barre d'outils
-  ToolBar1.Images := ImageList1;
-  ToolBar1.ShowCaptions := True;
-
-  // Bouton Nouveau associé à une action
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Action := ActionNouveau;  // Association à une action
-
-  // Bouton Ouvrir associé à une action
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Action := ActionOuvrir;
-
-  // Séparateur
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Style := tbsSeparator;
-  Button.Width := 8;
-
-  // Bouton Enregistrer associé à une action
-  Button := TToolButton.Create(Self);
-  Button.Parent := ToolBar1;
-  Button.Action := ActionEnregistrer;
-end;
-```
-
-### Création visuelle (à la conception)
-
-La méthode la plus simple pour créer une barre d'outils consiste à utiliser l'éditeur visuel :
-
-1. Déposez un composant `TToolBar` sur votre formulaire
-2. Cliquez avec le bouton droit dessus et choisissez "Nouveau bouton"
-3. Configurez le bouton dans l'Inspecteur d'objets
-4. Répétez l'opération pour ajouter d'autres boutons
-5. Pour ajouter un séparateur, créez un nouveau bouton et changez sa propriété `Style` en `tbsSeparator`
-
-## Barres d'état (TStatusBar)
-
-Une barre d'état, située généralement en bas de la fenêtre, permet d'afficher des informations sur l'état actuel de l'application.
-
-### Création d'une barre d'état
-
-1. Cliquez sur le composant `StatusBar` dans l'onglet **Win32** de la palette
-2. Placez-le en bas de votre formulaire
-
-### Propriétés importantes
-
-- **SimplePanel** : mode simple (un seul panneau) ou multi-panneaux
-- **SimpleText** : texte affiché en mode simple
-- **Panels** : collection de panneaux en mode multi-panneaux
-
-### Utilisation de panneaux multiples
+### Exemple complet : Menu avec gestion d'état
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Configuration de la barre d'état
-  StatusBar1.SimplePanel := False;  // Mode multi-panneaux
-
-  // Créer les panneaux
-  with StatusBar1.Panels.Add do
-  begin
-    Width := 200;
-    Text := 'Prêt';
-    Style := psText;
-  end;
-
-  with StatusBar1.Panels.Add do
-  begin
-    Width := 100;
-    Style := psText;  // Style texte
-    Alignment := taCenter;  // Centré
-  end;
-
-  with StatusBar1.Panels.Add do
-  begin
-    Width := 80;
-    Style := psOwnerDraw;  // Dessin personnalisé
-  end;
-
-  // Le dernier panneau s'étend automatiquement
-  with StatusBar1.Panels.Add do
-  begin
-    Style := psText;
-    Alignment := taRightJustify;  // Aligné à droite
-  end;
+  // Initialiser l'état des menus
+  MenuFichierEnregistrer.Enabled := False; // Pas de document ouvert
+  MenuEditionAnnuler.Enabled := False;
+  MenuEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
-// Mise à jour de la barre d'état
-procedure TForm1.UpdateStatusBar;
+procedure TForm1.MenuFichierNouveauClick(Sender: TObject);
 begin
-  StatusBar1.Panels[0].Text := 'Lignes: ' + IntToStr(Memo1.Lines.Count);
-  StatusBar1.Panels[1].Text := 'Col: ' + IntToStr(Memo1.CaretPos.X + 1);
-  StatusBar1.Panels[3].Text := FormatDateTime('hh:nn:ss', Now);
+  Memo1.Clear;
+  MenuFichierEnregistrer.Enabled := True; // Activer l'enregistrement
+  Caption := 'Mon Application - Nouveau document';
 end;
 
-// Gestion du dessin personnalisé
-procedure TForm1.StatusBar1DrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
-  const Rect: TRect);
+procedure TForm1.MenuEditionAnnulerClick(Sender: TObject);
 begin
-  if Panel = StatusBar1.Panels[2] then
-  begin
-    // Dessin d'un indicateur (par exemple, mode INS/OVR)
-    with StatusBar.Canvas do
-    begin
-      if FModeInsert then
-      begin
-        Brush.Color := clGreen;
-        Font.Color := clWhite;
-        TextOut(Rect.Left + 5, Rect.Top + 2, 'INS');
-      end
-      else
-      begin
-        Brush.Color := clRed;
-        Font.Color := clWhite;
-        TextOut(Rect.Left + 5, Rect.Top + 2, 'OVR');
-      end;
-    end;
-  end;
-end;
-```
-
-## Intégration dans un exemple complet
-
-Voici un exemple qui intègre menu, barre d'outils et barre d'état dans une application d'éditeur de texte simple :
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // Configuration initiale
-  FichiersRecents := TStringList.Create;
-  MettreAJourMenuFichiersRecents;
-
-  // Associer le menu contextuel au mémo
-  Memo1.PopupMenu := PopupMenu1;
-
-  // Initialiser la barre d'état
-  UpdateStatusBar;
-
-  // Démarrer le timer pour mettre à jour l'heure
-  Timer1.Enabled := True;
-end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  FichiersRecents.Free;
+  Memo1.Undo;
+  // Désactiver si plus d'annulation possible
+  MenuEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
 procedure TForm1.Memo1Change(Sender: TObject);
 begin
-  // Mettre à jour la barre d'état quand le texte change
-  UpdateStatusBar;
+  // Activer "Annuler" si le contenu a changé
+  MenuEditionAnnuler.Enabled := Memo1.Modified;
 end;
+```
 
-procedure TForm1.Memo1Click(Sender: TObject);
+---
+
+## 4.5.2 Les menus contextuels (PopupMenu)
+
+### Qu'est-ce qu'un PopupMenu ?
+
+Le **PopupMenu** est un menu qui s'affiche lorsque l'utilisateur fait un clic droit sur un composant. C'est le menu contextuel que vous voyez dans l'Explorateur Windows, par exemple.
+
+### Créer un menu contextuel
+
+#### Étape 1 : Ajouter le composant
+
+1. Recherchez **PopupMenu** dans la palette d'outils
+2. Placez-le sur votre formulaire (zone des composants non visuels)
+
+#### Étape 2 : Créer les éléments
+
+1. Double-cliquez sur le **PopupMenu1**
+2. Créez les éléments comme pour un MainMenu
+3. Fermez le concepteur
+
+#### Étape 3 : Associer le menu à un composant
+
+Dans l'Inspecteur d'objets du composant cible :
+1. Trouvez la propriété **PopupMenu**
+2. Sélectionnez **PopupMenu1** dans la liste
+
+### Exemple de menu contextuel pour un Memo
+
+```pascal
+// Structure du menu contextuel :
+// - Couper
+// - Copier
+// - Coller
+// ────────
+// - Tout sélectionner
+
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Mettre à jour la position du curseur dans la barre d'état
-  UpdateStatusBar;
+  // Le menu contextuel est déjà lié via la propriété PopupMenu
+  // du Memo1 en mode conception
 end;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
+procedure TForm1.PopupCoupeClick(Sender: TObject);
 begin
-  // Mettre à jour l'heure dans la barre d'état
-  StatusBar1.Panels[3].Text := FormatDateTime('hh:nn:ss', Now);
+  Memo1.CutToClipboard;
 end;
 
-procedure TForm1.AjouterFichierRecent(const FileName: string);
+procedure TForm1.PopupCopierClick(Sender: TObject);
+begin
+  Memo1.CopyToClipboard;
+end;
+
+procedure TForm1.PopupCollerClick(Sender: TObject);
+begin
+  Memo1.PasteFromClipboard;
+end;
+
+procedure TForm1.PopupToutSelectionnerClick(Sender: TObject);
+begin
+  Memo1.SelectAll;
+end;
+
+// Événement déclenché avant l'affichage du menu
+procedure TForm1.PopupMenu1Popup(Sender: TObject);
+begin
+  // Activer/désactiver les éléments selon le contexte
+  PopupCouper.Enabled := Memo1.SelLength > 0;
+  PopupCopier.Enabled := Memo1.SelLength > 0;
+  PopupColler.Enabled := Clipboard.HasFormat(CF_TEXT);
+end;
+```
+
+### Afficher un menu contextuel par code
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
 var
-  Index: Integer;
+  P: TPoint;
 begin
-  // Éviter les doublons
-  Index := FichiersRecents.IndexOf(FileName);
-  if Index >= 0 then
-    FichiersRecents.Delete(Index);
+  // Obtenir la position de la souris
+  P := Mouse.CursorPos;
 
-  // Ajouter au début de la liste
-  FichiersRecents.Insert(0, FileName);
-
-  // Limiter à 5 fichiers récents
-  while FichiersRecents.Count > 5 do
-    FichiersRecents.Delete(FichiersRecents.Count - 1);
-
-  // Mettre à jour le menu
-  MettreAJourMenuFichiersRecents;
+  // Afficher le menu à cette position
+  PopupMenu1.Popup(P.X, P.Y);
 end;
 
-procedure TForm1.OuvrirFichier(const FileName: string);
+// Ou afficher à la position du composant
+procedure TForm1.Image1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 begin
-  try
-    Memo1.Lines.LoadFromFile(FileName);
-    Caption := ExtractFileName(FileName) + ' - Mon Éditeur';
-    FichierCourant := FileName;
-    AjouterFichierRecent(FileName);
-    UpdateStatusBar;
-  except
-    on E: Exception do
-      ShowMessage('Erreur lors de l''ouverture du fichier: ' + E.Message);
+  if Button = mbRight then
+  begin
+    // Convertir les coordonnées locales en coordonnées écran
+    PopupMenu1.Popup(Image1.ClientToScreen(Point(X, Y)).X,
+                     Image1.ClientToScreen(Point(X, Y)).Y);
   end;
 end;
 ```
 
-## Astuces et bonnes pratiques
+---
 
-### 1. Cohérence avec les standards Windows
+## 4.5.3 Les barres d'outils (ToolBar)
 
-Suivez les conventions habituelles pour que vos utilisateurs se sentent à l'aise :
-- Menu Fichier pour les opérations sur les documents
-- Menu Édition pour couper/copier/coller
-- Menu Affichage pour les options d'affichage
-- Aide et À propos à la fin
+### Qu'est-ce qu'une ToolBar ?
 
-### 2. Raccourcis clavier et info-bulles
+La **ToolBar** (barre d'outils) est une barre contenant des boutons avec icônes permettant un accès rapide aux fonctions les plus utilisées. Elle se trouve généralement juste sous le menu principal.
 
-- Définissez des raccourcis clavier pour les actions fréquentes
-- Ajoutez des info-bulles (Hint) à vos boutons de barre d'outils
-- Activez les info-bulles avec `Application.ShowHint := True`
+### Créer une barre d'outils
 
-### 3. Personnalisation par l'utilisateur
+#### Étape 1 : Ajouter les composants nécessaires
 
-Pour les applications plus avancées, envisagez de permettre aux utilisateurs de personnaliser les barres d'outils et les menus. Delphi propose des composants comme `TActionManager` qui facilitent cette fonctionnalité.
+Vous aurez besoin de :
+- **ToolBar** : La barre elle-même
+- **ImageList** : Pour stocker les icônes
+- **ToolButton** : Les boutons de la barre
 
-### 4. Menus adaptés au contexte
+1. Ajoutez un **ToolBar** sur votre formulaire
+2. Ajoutez un **ImageList** (zone non visuelle)
+3. Reliez l'ImageList au ToolBar via la propriété **Images**
 
-Modifiez dynamiquement l'état des éléments de menu en fonction du contexte :
-- Désactivez les options non applicables
-- Cochez/décochez les options d'activation
-- Utilisez l'événement `OnPopup` pour mettre à jour avant l'affichage
+#### Étape 2 : Charger les images
 
-## Conclusion
+1. Double-cliquez sur **ImageList1**
+2. Cliquez sur "Add" pour ajouter des images
+3. Chargez vos icônes (format PNG, BMP, ou ICO)
+4. Taille recommandée : 16x16 ou 24x24 pixels
 
-Les menus et barres d'outils sont des éléments essentiels de toute interface utilisateur professionnelle. Delphi offre tous les outils nécessaires pour les créer et les personnaliser facilement. En combinant menus, barres d'outils et barres d'état avec le système d'actions, vous pouvez créer des interfaces cohérentes et intuitives pour vos applications.
+#### Étape 3 : Ajouter des boutons
 
-Dans la prochaine section, nous verrons comment gérer les événements d'une manière plus approfondie pour rendre vos applications encore plus interactives.
+**Méthode 1 : Visuelle**
+1. Cliquez droit sur la ToolBar
+2. Sélectionnez "New Button"
+3. Dans l'Inspecteur d'objets :
+   - Définissez **ImageIndex** (numéro de l'icône)
+   - Définissez **Hint** (info-bulle)
+   - Créez l'événement **OnClick**
+
+**Méthode 2 : Par code**
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  BoutonNouveau, BoutonOuvrir, BoutonEnregistrer: TToolButton;
+  Separateur: TToolButton;
+begin
+  ToolBar1.Images := ImageList1;
+  ToolBar1.ShowCaptions := False; // Masquer les textes
+
+  // Bouton Nouveau
+  BoutonNouveau := TToolButton.Create(ToolBar1);
+  BoutonNouveau.Parent := ToolBar1;
+  BoutonNouveau.ImageIndex := 0;
+  BoutonNouveau.Hint := 'Nouveau (Ctrl+N)';
+  BoutonNouveau.OnClick := MenuFichierNouveauClick; // Réutiliser le code du menu
+
+  // Bouton Ouvrir
+  BoutonOuvrir := TToolButton.Create(ToolBar1);
+  BoutonOuvrir.Parent := ToolBar1;
+  BoutonOuvrir.ImageIndex := 1;
+  BoutonOuvrir.Hint := 'Ouvrir (Ctrl+O)';
+  BoutonOuvrir.OnClick := MenuFichierOuvrirClick;
+
+  // Séparateur
+  Separateur := TToolButton.Create(ToolBar1);
+  Separateur.Parent := ToolBar1;
+  Separateur.Style := tbsSeparator;
+  Separateur.Width := 8;
+
+  // Bouton Enregistrer
+  BoutonEnregistrer := TToolButton.Create(ToolBar1);
+  BoutonEnregistrer.Parent := ToolBar1;
+  BoutonEnregistrer.ImageIndex := 2;
+  BoutonEnregistrer.Hint := 'Enregistrer (Ctrl+S)';
+  BoutonEnregistrer.OnClick := MenuFichierEnregistrerClick;
+end;
+```
+
+### Types de boutons (Style)
+
+| Style | Description |
+|-------|-------------|
+| **tbsButton** | Bouton normal (par défaut) |
+| **tbsCheck** | Bouton à bascule (pressé/relâché) |
+| **tbsDropDown** | Bouton avec menu déroulant |
+| **tbsSeparator** | Séparateur visuel |
+| **tbsDivider** | Ligne de séparation verticale |
+
+### Propriétés importantes du ToolBar
+
+| Propriété | Description |
+|-----------|-------------|
+| **Images** | ImageList contenant les icônes |
+| **ShowCaptions** | Afficher le texte sous les icônes |
+| **Flat** | Style plat moderne |
+| **List** | Affichage en mode liste |
+| **Wrapable** | Permet le passage à la ligne |
+| **ShowHint** | Afficher les info-bulles |
+| **ButtonHeight** | Hauteur des boutons |
+| **ButtonWidth** | Largeur des boutons |
+
+### Propriétés importantes du ToolButton
+
+| Propriété | Description |
+|-----------|-------------|
+| **ImageIndex** | Index de l'icône |
+| **Caption** | Texte du bouton |
+| **Hint** | Info-bulle |
+| **Style** | Type de bouton |
+| **Down** | État enfoncé (pour tbsCheck) |
+| **Enabled** | Actif ou désactivé |
+| **Grouped** | Grouper avec d'autres boutons |
+| **DropdownMenu** | Menu pour tbsDropDown |
+
+### Exemple complet : Barre d'outils avec états
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Configuration de la barre d'outils
+  ToolBar1.ShowCaptions := False;
+  ToolBar1.ShowHint := True;
+  ToolBar1.Flat := True;
+
+  // Initialiser l'état des boutons
+  ToolButtonEnregistrer.Enabled := False;
+  ToolButtonAnnuler.Enabled := False;
+end;
+
+procedure TForm1.ToolButtonNouveauClick(Sender: TObject);
+begin
+  Memo1.Clear;
+  ToolButtonEnregistrer.Enabled := True;
+  Caption := 'Mon Éditeur - Nouveau document';
+end;
+
+procedure TForm1.ToolButtonAnnulerClick(Sender: TObject);
+begin
+  Memo1.Undo;
+  ToolButtonAnnuler.Enabled := Memo1.CanUndo;
+end;
+
+// Bouton à bascule pour afficher/masquer une règle
+procedure TForm1.ToolButtonRegleClick(Sender: TObject);
+begin
+  Panel1.Visible := ToolButtonRegle.Down;
+end;
+
+// Bouton avec menu déroulant
+procedure TForm1.ToolButtonZoomClick(Sender: TObject);
+begin
+  // Le menu se déclenche automatiquement
+  // si DropdownMenu est défini
+end;
+```
 
 ---
 
-*Exercice pratique : Créez une petite application d'éditeur de texte avec un menu complet (Fichier, Édition, Format, Aide), une barre d'outils pour les fonctions courantes, et une barre d'état affichant le nombre de lignes, la position du curseur et l'heure actuelle. Ajoutez également un menu contextuel pour les opérations d'édition (couper, copier, coller).*
+## 4.5.4 Les ActionList (Liste d'actions)
+
+### Qu'est-ce qu'une ActionList ?
+
+Une **ActionList** est un composant puissant qui centralise la gestion des actions de votre application. Au lieu de dupliquer le code entre un menu et un bouton de barre d'outils, vous créez une action unique qui peut être liée à plusieurs contrôles.
+
+### Avantages des ActionList
+
+- **Code centralisé** : Une seule procédure pour plusieurs contrôles
+- **Gestion d'état automatique** : Activer/désactiver tous les contrôles liés en une fois
+- **Raccourcis clavier intégrés** : Définis une seule fois
+- **Maintenance facilitée** : Modifier une action met à jour tous les contrôles
+- **Organisation** : Toutes les actions regroupées au même endroit
+
+### Créer et utiliser une ActionList
+
+#### Étape 1 : Ajouter le composant
+
+1. Ajoutez un **ActionList** sur votre formulaire
+2. Double-cliquez dessus pour ouvrir l'éditeur d'actions
+
+#### Étape 2 : Créer des actions
+
+1. Cliquez sur "Nouvelle Action" (icône +)
+2. Définissez les propriétés :
+   - **Name** : Nom de l'action (ex: `ActFichierNouveau`)
+   - **Caption** : Texte affiché (`&Nouveau`)
+   - **ShortCut** : Raccourci clavier (`Ctrl+N`)
+   - **ImageIndex** : Index de l'icône
+   - **Hint** : Info-bulle
+
+#### Étape 3 : Lier les contrôles aux actions
+
+**Pour un élément de menu :**
+1. Sélectionnez l'élément
+2. Dans la propriété **Action**, choisissez l'action
+
+**Pour un bouton de barre d'outils :**
+1. Sélectionnez le ToolButton
+2. Dans la propriété **Action**, choisissez l'action
+
+### Exemple complet avec ActionList
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Associer l'ImageList aux actions
+  ActionList1.Images := ImageList1;
+
+  // L'état initial peut être défini ici
+  ActFichierEnregistrer.Enabled := False;
+  ActEditionAnnuler.Enabled := False;
+end;
+
+// Action Nouveau
+procedure TForm1.ActFichierNouveauExecute(Sender: TObject);
+begin
+  if Memo1.Modified then
+  begin
+    case MessageDlg('Voulez-vous enregistrer les modifications ?',
+                    mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+      mrYes: ActFichierEnregistrerExecute(Sender);
+      mrCancel: Exit;
+    end;
+  end;
+
+  Memo1.Clear;
+  Memo1.Modified := False;
+  ActFichierEnregistrer.Enabled := True;
+  Caption := 'Mon Éditeur - Nouveau document';
+end;
+
+// Action Ouvrir
+procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    Memo1.Lines.LoadFromFile(OpenDialog1.FileName);
+    Caption := 'Mon Éditeur - ' + ExtractFileName(OpenDialog1.FileName);
+    ActFichierEnregistrer.Enabled := True;
+  end;
+end;
+
+// Action Enregistrer
+procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);
+begin
+  if SaveDialog1.FileName = '' then
+  begin
+    if SaveDialog1.Execute then
+    begin
+      Memo1.Lines.SaveToFile(SaveDialog1.FileName);
+      Memo1.Modified := False;
+      Caption := 'Mon Éditeur - ' + ExtractFileName(SaveDialog1.FileName);
+    end;
+  end
+  else
+  begin
+    Memo1.Lines.SaveToFile(SaveDialog1.FileName);
+    Memo1.Modified := False;
+  end;
+end;
+
+// Gestion automatique de l'état
+procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);
+begin
+  // OnUpdate est appelé régulièrement
+  // pour mettre à jour l'état de l'action
+  ActFichierEnregistrer.Enabled := Memo1.Modified;
+end;
+
+procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);
+begin
+  ActEditionAnnuler.Enabled := Memo1.CanUndo;
+end;
+
+procedure TForm1.ActEditionCollerUpdate(Sender: TObject);
+begin
+  ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
+end;
+
+// Actions d'édition
+procedure TForm1.ActEditionCoupeExecute(Sender: TObject);
+begin
+  Memo1.CutToClipboard;
+end;
+
+procedure TForm1.ActEditionCopierExecute(Sender: TObject);
+begin
+  Memo1.CopyToClipboard;
+end;
+
+procedure TForm1.ActEditionCollerExecute(Sender: TObject);
+begin
+  Memo1.PasteFromClipboard;
+end;
+
+procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);
+begin
+  Memo1.Undo;
+end;
+```
+
+### Actions standard intégrées
+
+Delphi propose des actions prédéfinies dans les catégories suivantes :
+
+**Actions de fichier :**
+- `TFileOpen`, `TFileSaveAs`, `TFileExit`
+
+**Actions d'édition :**
+- `TEditCut`, `TEditCopy`, `TEditPaste`, `TEditSelectAll`, `TEditUndo`, `TEditDelete`
+
+**Actions de recherche :**
+- `TSearchFind`, `TSearchReplace`, `TSearchFindNext`
+
+**Actions d'aide :**
+- `THelpContents`, `THelpTopicSearch`
+
+Pour les utiliser :
+1. Dans l'éditeur d'ActionList, cliquez sur la flèche à côté de "Nouvelle Action"
+2. Sélectionnez "Nouvelle Action Standard"
+3. Choisissez l'action dans la liste
+
+### Catégories d'actions
+
+Vous pouvez organiser vos actions en catégories :
+
+```pascal
+// Définir la catégorie d'une action
+ActFichierNouveau.Category := 'Fichier';
+ActFichierOuvrir.Category := 'Fichier';
+ActEditionCouper.Category := 'Edition';
+ActEditionCopier.Category := 'Edition';
+```
+
+---
+
+## 4.5.5 Exemple complet d'application avec menus et barres d'outils
+
+Voici un exemple d'éditeur de texte simple intégrant tous les concepts :
+
+```pascal
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Menus, ToolWin, ComCtrls, ImgList, ActnList;
+
+type
+  TForm1 = class(TForm)
+    MainMenu1: TMainMenu;
+    MenuFichier: TMenuItem;
+    MenuEdition: TMenuItem;
+    MenuAide: TMenuItem;
+    PopupMenu1: TPopupMenu;
+    ToolBar1: TToolBar;
+    ImageList1: TImageList;
+    ActionList1: TActionList;
+    Memo1: TMemo;
+    StatusBar1: TStatusBar;
+    OpenDialog1: TOpenDialog;
+    SaveDialog1: TSaveDialog;
+
+    // Actions
+    ActFichierNouveau: TAction;
+    ActFichierOuvrir: TAction;
+    ActFichierEnregistrer: TAction;
+    ActFichierQuitter: TAction;
+    ActEditionCouper: TAction;
+    ActEditionCopier: TAction;
+    ActEditionColler: TAction;
+    ActEditionAnnuler: TAction;
+    ActAideAPropos: TAction;
+
+    // Éléments de menu liés aux actions
+    MenuFichierNouveau: TMenuItem;
+    MenuFichierOuvrir: TMenuItem;
+    MenuFichierEnregistrer: TMenuItem;
+    N1: TMenuItem; // Séparateur
+    MenuFichierQuitter: TMenuItem;
+
+    MenuEditionAnnuler: TMenuItem;
+    N2: TMenuItem;
+    MenuEditionCouper: TMenuItem;
+    MenuEditionCopier: TMenuItem;
+    MenuEditionColler: TMenuItem;
+
+    MenuAideAPropos: TMenuItem;
+
+    // Boutons de barre d'outils liés aux actions
+    ToolButtonNouveau: TToolButton;
+    ToolButtonOuvrir: TToolButton;
+    ToolButtonEnregistrer: TToolButton;
+    ToolButtonSep1: TToolButton;
+    ToolButtonCouper: TToolButton;
+    ToolButtonCopier: TToolButton;
+    ToolButtonColler: TToolButton;
+
+    procedure FormCreate(Sender: TObject);
+    procedure ActFichierNouveauExecute(Sender: TObject);
+    procedure ActFichierOuvrirExecute(Sender: TObject);
+    procedure ActFichierEnregistrerExecute(Sender: TObject);
+    procedure ActFichierQuitterExecute(Sender: TObject);
+    procedure ActEditionCoupeExecute(Sender: TObject);
+    procedure ActEditionCopierExecute(Sender: TObject);
+    procedure ActEditionCollerExecute(Sender: TObject);
+    procedure ActEditionAnnulerExecute(Sender: TObject);
+    procedure ActAideAProposExecute(Sender: TObject);
+    procedure Memo1Change(Sender: TObject);
+    procedure ActFichierEnregistrerUpdate(Sender: TObject);
+    procedure ActEditionAnnulerUpdate(Sender: TObject);
+    procedure ActEditionCollerUpdate(Sender: TObject);
+    procedure ActEditionCoupeUpdate(Sender: TObject);
+  private
+    FNomFichier: string;
+    procedure MettreAJourTitre;
+  public
+    { Déclarations publiques }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Configuration
+  ActionList1.Images := ImageList1;
+  Memo1.Clear;
+  FNomFichier := '';
+  MettreAJourTitre;
+
+  // Configuration des dialogues
+  OpenDialog1.Filter := 'Fichiers texte (*.txt)|*.TXT|Tous les fichiers (*.*)|*.*';
+  SaveDialog1.Filter := OpenDialog1.Filter;
+  SaveDialog1.DefaultExt := 'txt';
+end;
+
+procedure TForm1.MettreAJourTitre;
+begin
+  if FNomFichier = '' then
+    Caption := 'Éditeur de texte - Sans titre'
+  else
+    Caption := 'Éditeur de texte - ' + ExtractFileName(FNomFichier);
+
+  if Memo1.Modified then
+    Caption := Caption + ' *';
+end;
+
+procedure TForm1.ActFichierNouveauExecute(Sender: TObject);
+begin
+  if Memo1.Modified then
+  begin
+    case MessageDlg('Enregistrer les modifications ?',
+                    mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+      mrYes: ActFichierEnregistrerExecute(Sender);
+      mrCancel: Exit;
+    end;
+  end;
+
+  Memo1.Clear;
+  FNomFichier := '';
+  Memo1.Modified := False;
+  MettreAJourTitre;
+  StatusBar1.SimpleText := 'Nouveau document créé';
+end;
+
+procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    Memo1.Lines.LoadFromFile(OpenDialog1.FileName);
+    FNomFichier := OpenDialog1.FileName;
+    Memo1.Modified := False;
+    MettreAJourTitre;
+    StatusBar1.SimpleText := 'Fichier ouvert : ' + FNomFichier;
+  end;
+end;
+
+procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);
+begin
+  if FNomFichier = '' then
+  begin
+    if SaveDialog1.Execute then
+      FNomFichier := SaveDialog1.FileName
+    else
+      Exit;
+  end;
+
+  Memo1.Lines.SaveToFile(FNomFichier);
+  Memo1.Modified := False;
+  MettreAJourTitre;
+  StatusBar1.SimpleText := 'Fichier enregistré : ' + FNomFichier;
+end;
+
+procedure TForm1.ActFichierQuitterExecute(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TForm1.ActEditionCoupeExecute(Sender: TObject);
+begin
+  Memo1.CutToClipboard;
+  StatusBar1.SimpleText := 'Texte coupé';
+end;
+
+procedure TForm1.ActEditionCopierExecute(Sender: TObject);
+begin
+  Memo1.CopyToClipboard;
+  StatusBar1.SimpleText := 'Texte copié';
+end;
+
+procedure TForm1.ActEditionCollerExecute(Sender: TObject);
+begin
+  Memo1.PasteFromClipboard;
+  StatusBar1.SimpleText := 'Texte collé';
+end;
+
+procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);
+begin
+  Memo1.Undo;
+  StatusBar1.SimpleText := 'Annulation effectuée';
+end;
+
+procedure TForm1.ActAideAProposExecute(Sender: TObject);
+begin
+  ShowMessage('Éditeur de texte simple' + #13#10 +
+              'Version 1.0' + #13#10 +
+              'Créé avec Delphi');
+end;
+
+procedure TForm1.Memo1Change(Sender: TObject);
+begin
+  MettreAJourTitre;
+  StatusBar1.SimpleText := Format('Lignes: %d  Caractères: %d',
+    [Memo1.Lines.Count, Length(Memo1.Text)]);
+end;
+
+// Mise à jour automatique des états
+procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);
+begin
+  ActFichierEnregistrer.Enabled := Memo1.Modified;
+end;
+
+procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);
+begin
+  ActEditionAnnuler.Enabled := Memo1.CanUndo;
+end;
+
+procedure TForm1.ActEditionCollerUpdate(Sender: TObject);
+begin
+  ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
+end;
+
+procedure TForm1.ActEditionCoupeUpdate(Sender: TObject);
+begin
+  ActEditionCouper.Enabled := Memo1.SelLength > 0;
+end;
+
+end.
+```
+
+---
+
+## 4.5.6 Bonnes pratiques
+
+### Organisation des menus
+
+1. **Suivez les conventions Windows** :
+   - Fichier, Edition, Affichage, Outils, Aide (dans cet ordre)
+   - Placez "Quitter" en dernier dans le menu Fichier
+   - Utilisez les raccourcis standards
+
+2. **Groupez logiquement** :
+   - Utilisez des séparateurs pour grouper les fonctions similaires
+   - Limitez à 5-7 éléments par groupe
+
+3. **Accessibilité** :
+   - Définissez des mnémoniques (Alt+Lettre) uniques
+   - Ajoutez des raccourcis clavier pour les fonctions fréquentes
+   - Affichez les raccourcis dans les info-bulles
+
+### Conception des barres d'outils
+
+1. **Sélectionnez les actions principales** :
+   - Limitez-vous aux 8-12 actions les plus utilisées
+   - N'ajoutez pas toutes les fonctions du menu
+
+2. **Icônes claires** :
+   - Utilisez des icônes standard et reconnaissables
+   - Taille cohérente (16x16 ou 24x24)
+   - Style homogène
+
+3. **Organisation logique** :
+   - Groupez les boutons par fonction
+   - Utilisez des séparateurs
+
+4. **Info-bulles descriptives** :
+   - Incluez le nom de la fonction et le raccourci
+   - Exemple : "Enregistrer (Ctrl+S)"
+
+### Utilisation des ActionList
+
+1. **Centralisez la logique** :
+   - Une action = une fonction
+   - Évitez de dupliquer le code
+
+2. **Nommage cohérent** :
+   - Préfixez avec le nom du menu : `ActFichierNouveau`
+   - Ou par catégorie : `ActNouveau`, `ActOuvrir`
+
+3. **Utilisez OnUpdate** :
+   - Pour activer/désactiver automatiquement
+   - Vérifie régulièrement les conditions
+
+4. **Organisez en catégories** :
+   - Facilite la maintenance
+   - Améliore la lisibilité
+
+---
+
+## 4.5.7 Personnalisation avancée
+
+### Afficher/masquer la barre d'outils
+
+```pascal
+procedure TForm1.MenuAffichageBarreOutilsClick(Sender: TObject);
+begin
+  ToolBar1.Visible := not ToolBar1.Visible;
+  MenuAffichageBarreOutils.Checked := ToolBar1.Visible;
+end;
+```
+
+### Barre d'outils personnalisable
+
+```pascal
+// Permettre à l'utilisateur de personnaliser
+procedure TForm1.ToolBar1ContextPopup(Sender: TObject; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+  // Afficher un menu de personnalisation
+  PopupMenuToolBar.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+end;
+```
+
+### Menus dynamiques (liste récente)
+
+```pascal
+procedure TForm1.AjouterFichierRecent(const NomFichier: string);
+var
+  MenuItem: TMenuItem;
+begin
+  // Créer un nouvel élément de menu
+  MenuItem := TMenuItem.Create(MenuFichier);
+  MenuItem.Caption := ExtractFileName(NomFichier);
+  MenuItem.OnClick := OuvrirFichierRecent;
+  MenuItem.Tag := PtrInt(NomFichier); // Stocker le chemin complet
+
+  // Insérer avant le séparateur et "Quitter"
+  MenuFichier.Insert(MenuFichier.Count - 2, MenuItem);
+end;
+
+procedure TForm1.OuvrirFichierRecent(Sender: TObject);
+var
+  NomFichier: string;
+begin
+  NomFichier := string((Sender as TMenuItem).Tag);
+  if FileExists(NomFichier) then
+  begin
+    Memo1.Lines.LoadFromFile(NomFichier);
+    FNomFichier := NomFichier;
+  end
+  else
+    ShowMessage('Fichier introuvable');
+end;
+```
+
+---
+
+## Conclusion
+
+Les menus et barres d'outils sont des éléments essentiels d'une interface utilisateur professionnelle. En utilisant les composants MainMenu, PopupMenu, ToolBar et ActionList de manière cohérente, vous créerez des applications intuitives et conformes aux standards Windows.
+
+### Points clés à retenir :
+
+- **MainMenu** : Menu principal de l'application
+- **PopupMenu** : Menu contextuel (clic droit)
+- **ToolBar** : Accès rapide aux fonctions principales
+- **ActionList** : Centralisation de la logique et des états
+- **Cohérence** : Respectez les conventions et standards
+- **Accessibilité** : Raccourcis clavier et mnémoniques
+
+Avec ces outils, vous êtes prêt à créer des interfaces riches et efficaces pour vos applications Delphi !
 
 ⏭️ [Gestion des événements](/04-conception-dinterfaces-utilisateur-avec-la-vcl/06-gestion-des-evenements.md)

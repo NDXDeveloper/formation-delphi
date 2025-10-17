@@ -1,86 +1,216 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 4.10 Styles visuels et thèmes VCL
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les styles visuels et thèmes VCL permettent de transformer complètement l'apparence de votre application Delphi sans modifier votre code. Cette fonctionnalité puissante vous permet de donner un aspect moderne à vos applications et d'offrir à vos utilisateurs la possibilité de personnaliser l'interface selon leurs préférences. Dans cette section, nous allons découvrir comment implémenter et gérer les styles visuels dans vos applications VCL.
+Les styles visuels VCL (Visual Component Library) permettent de transformer l'apparence de votre application Windows sans modifier une seule ligne de code fonctionnel. C'est l'une des fonctionnalités les plus impressionnantes de Delphi moderne, qui permet de donner un aspect professionnel et contemporain à vos applications.
 
-## Qu'est-ce que les styles visuels VCL ?
+## 4.10.1 Qu'est-ce qu'un style VCL ?
 
-Les styles visuels VCL (aussi appelés thèmes VCL) sont une technologie qui permet de modifier l'apparence des contrôles standard de la VCL. Introduits dans Delphi XE2 et considérablement améliorés dans les versions ultérieures, ils offrent plusieurs avantages :
+### Définition
 
-- Modernisation de l'interface utilisateur
-- Cohérence visuelle sur toutes les plateformes
-- Personnalisation selon l'identité visuelle de votre entreprise
-- Adaptation aux préférences des utilisateurs (mode clair/sombre)
-- Amélioration de l'expérience utilisateur
+Un **style VCL** est un ensemble de paramètres visuels qui définissent l'apparence de tous les composants de votre application :
+- Couleurs de fond et de texte
+- Bordures et dégradés
+- Polices et tailles
+- Images et icônes
+- Effets visuels
 
-## Styles intégrés disponibles
+### Avant et après les styles VCL
 
-Delphi 12 Athens (et Delphi 11 Alexandria) propose de nombreux styles prédéfinis, notamment :
+**Sans style (apparence Windows classique) :**
+```
+┌─────────────────────────────────┐
+│  Mon Application            [_][□][X]│
+├─────────────────────────────────┤
+│ Fichier  Edition  Affichage     │
+├─────────────────────────────────┤
+│                                  │
+│  [ Bouton gris standard ]       │
+│                                  │
+│  [✓] Case à cocher              │
+│                                  │
+│  Apparence Windows basique      │
+└─────────────────────────────────┘
+```
 
-- Windows11 Modern Light/Dark
-- Windows11 Classic Light/Dark
-- Windows10 Blue/SlateGray/Black
-- Aqua Light/Dark
-- Glow
-- Sky
-- Ruby Graphite
-- Emerald Light/Dark
-- Amethyst Kamri
-- Et bien d'autres...
+**Avec style moderne (ex: Windows 11 Modern Dark) :**
+```
+┌─────────────────────────────────┐
+│  Mon Application            [_][□][X]│
+├─────────────────────────────────┤
+│ Fichier  Edition  Affichage     │
+├─────────────────────────────────┤
+│                                  │
+│  [ Bouton moderne arrondi  ]    │
+│                                  │
+│  [✓] Case moderne               │
+│                                  │
+│  Design contemporain et élégant │
+└─────────────────────────────────┘
+```
 
-Ces styles couvrent une large gamme d'esthétiques, des interfaces professionnelles aux designs modernes et colorés.
+### Pourquoi utiliser des styles VCL ?
 
-## Activer un style visuel
+**1. Apparence moderne**
+- Donnez un look contemporain à votre application
+- Restez au goût du jour sans refaire l'interface
+- Impressionnez vos utilisateurs
 
-### Étape 1 : Ajouter les unités nécessaires
+**2. Cohérence visuelle**
+- Tous les composants adoptent le même style
+- Harmonisation automatique des couleurs
+- Aspect professionnel garanti
 
-Pour utiliser les styles VCL, vous devez d'abord ajouter les unités requises :
+**3. Adaptabilité**
+- Support du mode sombre (Dark Mode)
+- Adaptation à Windows 11
+- Respect des préférences utilisateur
+
+**4. Personnalisation**
+- Créez votre propre identité visuelle
+- Démarquez-vous de la concurrence
+- Alignez-vous avec votre charte graphique
+
+**5. Facilité**
+- Pas de modification du code
+- Application en quelques clics
+- Changement dynamique possible
+
+---
+
+## 4.10.2 Styles prédéfinis de Delphi 13
+
+### Liste des styles disponibles
+
+Delphi 13 Florence inclut de nombreux styles prêts à l'emploi :
+
+**Styles clairs :**
+- `Windows` (style par défaut)
+- `Windows10`
+- `Windows11 Modern Light`
+- `Light`
+- `Silver`
+- `Sky`
+- `Aqua Light Slate`
+
+**Styles sombres :**
+- `Windows11 Modern Dark`
+- `Carbon`
+- `Charcoal Dark Slate`
+- `Obsidian`
+- `Glossy`
+
+**Styles colorés :**
+- `Ruby Graphite`
+- `Sapphire Kamri`
+- `Emerald Light Slate`
+- `Amethyst Kamri`
+
+**Styles Windows classiques :**
+- `Luna`
+- `Amakrits`
+- `Aqua Graphite`
+
+### Aperçu des styles populaires
+
+#### Windows11 Modern Light
+```
+Caractéristiques :
+- Arrière-plan blanc/gris clair
+- Bordures arrondies
+- Ombres douces
+- Police moderne (Segoe UI)
+- Boutons avec effet hover
+```
+
+#### Windows11 Modern Dark
+```
+Caractéristiques :
+- Arrière-plan sombre (#1E1E1E)
+- Texte clair (#FFFFFF)
+- Contraste élevé
+- Moins de fatigue oculaire
+- Aspect professionnel
+```
+
+#### Carbon
+```
+Caractéristiques :
+- Noir profond
+- Accents bleus
+- Style élégant
+- Idéal pour applications créatives
+```
+
+---
+
+## 4.10.3 Appliquer un style à votre application
+
+### Méthode 1 : Configuration du projet (Design Time)
+
+C'est la méthode la plus simple pour appliquer un style permanent.
+
+#### Étapes détaillées
+
+**1. Ouvrir les options du projet**
+```
+Menu Projet → Options
+ou
+Clic droit sur le projet → Options
+```
+
+**2. Naviguer vers les styles**
+```
+Apparence → Styles VCL personnalisés
+```
+
+**3. Sélectionner les styles**
+```
+☑ Windows11 Modern Dark
+☑ Windows11 Modern Light
+☑ Carbon
+☐ Tous les autres (décocher)
+```
+
+**4. Définir le style par défaut**
+```
+Dans la liste déroulante en haut :
+"Style par défaut" → Sélectionner "Windows11 Modern Dark"
+```
+
+**5. Appliquer et compiler**
+```
+Cliquer sur OK
+Compiler le projet (Ctrl + F9)
+Exécuter (F9)
+```
+
+**Important :** Les styles sélectionnés seront inclus dans l'exécutable, augmentant légèrement sa taille.
+
+### Méthode 2 : Par code (Runtime)
+
+Pour changer le style dynamiquement pendant l'exécution.
 
 ```pascal
 uses
-  Vcl.Themes, Vcl.Styles;
-```
+  Vcl.Themes;
 
-### Étape 2 : Choisir et activer un style
-
-Pour appliquer un style, utilisez la méthode `TStyleManager.TrySetStyle` :
-
-```pascal
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  TStyleManager.TrySetStyle('Windows11 Modern Light');
+  // Vérifier si un style est disponible
+  if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
+  begin
+    // Appliquer le style
+    TStyleManager.SetStyle('Windows11 Modern Dark');
+  end;
 end;
 ```
 
-Vous pouvez également ajouter cette ligne dans le bloc d'initialisation de votre projet (fichier .dpr) :
+### Méthode 3 : Sélection par l'utilisateur
 
-```pascal
-program MonApplication;
-
-uses
-  Vcl.Forms,
-  Vcl.Themes,
-  Vcl.Styles,
-  UnitPrincipale in 'UnitPrincipale.pas' {Form1};
-
-{$R *.res}
-
-begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-
-  // Activer le style avant de créer les formulaires
-  TStyleManager.TrySetStyle('Windows11 Modern Light');
-
-  Application.CreateForm(TForm1, Form1);
-  Application.Run;
-end;
-```
-
-## Lister les styles disponibles
-
-Pour permettre à l'utilisateur de choisir un style, vous pouvez lister tous les styles disponibles :
+Permettre à l'utilisateur de choisir son style préféré.
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);
@@ -89,433 +219,1080 @@ var
 begin
   // Remplir une ComboBox avec les styles disponibles
   ComboBoxStyles.Items.Clear;
-
   for StyleName in TStyleManager.StyleNames do
     ComboBoxStyles.Items.Add(StyleName);
 
   // Sélectionner le style actuel
-  ComboBoxStyles.ItemIndex := ComboBoxStyles.Items.IndexOf(TStyleManager.ActiveStyle.Name);
+  ComboBoxStyles.ItemIndex := ComboBoxStyles.Items.IndexOf(
+    TStyleManager.ActiveStyle.Name
+  );
 end;
-```
 
-## Changer de style à la volée
-
-L'un des grands avantages des styles VCL est que vous pouvez les changer dynamiquement pendant l'exécution de l'application :
-
-```pascal
 procedure TForm1.ComboBoxStylesChange(Sender: TObject);
 begin
-  if ComboBoxStyles.ItemIndex >= 0 then
-    TStyleManager.TrySetStyle(ComboBoxStyles.Text);
+  // Appliquer le style sélectionné
+  if ComboBoxStyles.ItemIndex <> -1 then
+    TStyleManager.SetStyle(ComboBoxStyles.Items[ComboBoxStyles.ItemIndex]);
 end;
 ```
 
-## Personnaliser l'apparence des contrôles avec les styles
+---
 
-Les styles VCL modifient automatiquement l'apparence de presque tous les contrôles standard. Cependant, vous pouvez aussi ajuster certaines propriétés pour mieux s'intégrer avec les styles :
+## 4.10.4 Styles VCL en mode conception - Prototypage rapide
 
-### Boutons plats et modernes
+### Aperçu des styles dans l'IDE
 
-```pascal
-Button1.StyleElements := [seFont, seClient, seBorder];
-Button1.Flat := True;
+Delphi 13 permet de visualiser les styles directement pendant la conception.
+
+**Activer l'aperçu des styles :**
+
+**1. Dans l'Inspecteur d'objets du formulaire**
+```
+Propriété : StyleElements
+Valeur : [seFont, seClient, seBorder]  (par défaut, activé)
 ```
 
-### Panneaux transparents
-
-```pascal
-Panel1.StyleElements := [seFont];
-Panel1.ParentBackground := True;
+**2. Prévisualisation en temps réel**
+```
+Menu Affichage → Aperçu du style
+ou
+Barre d'outils → Sélecteur de style
 ```
 
-### Adaptation aux styles sombres
-
-```pascal
-// Vérifier si le style actuel est sombre
-function IsCurrentStyleDark: Boolean;
-var
-  RGB: Integer;
-  R, G, B: Byte;
-  Color: TColor;
-begin
-  // Obtenir la couleur de fond du formulaire avec le style appliqué
-  Color := StyleServices.GetStyleColor(scWindow);
-
-  // Extraire les composants rouge, vert et bleu
-  RGB := ColorToRGB(Color);
-  R := GetRValue(RGB);
-  G := GetGValue(RGB);
-  B := GetBValue(RGB);
-
-  // Calculer la luminosité approximative
-  // Si la somme R+G+B est inférieure à 384 (moyenne de 128 par canal),
-  // considérer que c'est un thème sombre
-  Result := (R + G + B) < 384;
-end;
-
-// Utilisation
-procedure TForm1.ApplyStyleSpecificSettings;
-begin
-  if IsCurrentStyleDark then
-  begin
-    // Ajustements pour styles sombres
-    Chart1.BackWall.Brush.Color := clGray;
-    Chart1.Title.Font.Color := clWhite;
-  end
-  else
-  begin
-    // Ajustements pour styles clairs
-    Chart1.BackWall.Brush.Color := clWhite;
-    Chart1.Title.Font.Color := clBlack;
-  end;
-end;
+**3. Changer temporairement le style de l'IDE**
+```
+Menu Outils → Options
+Environnement → Thème de l'IDE
 ```
 
-## Gérer le changement de style
-
-Lorsqu'un style est modifié, vous pourriez avoir besoin de mettre à jour certains éléments de votre application. Vous pouvez intercepter cet événement :
+### Conception avec aperçu du style
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // S'abonner à l'événement de changement de style
-  TStyleManager.OnStyleChanged := StyleChangedHandler;
+  // Le formulaire et ses composants respectent automatiquement
+  // le style défini dans les options du projet
+
+  // Tous ces composants adopteront le style actif :
+  // - Boutons
+  // - Zones de texte
+  // - Listes
+  // - Grilles
+  // - Menus
+  // etc.
 end;
+```
 
-procedure TForm1.StyleChangedHandler(Sender: TObject);
+### StyleElements : Contrôle fin
+
+La propriété `StyleElements` permet de contrôler quels aspects du style sont appliqués.
+
+```pascal
+// Appliquer tous les éléments de style (par défaut)
+Button1.StyleElements := [seFont, seClient, seBorder];
+
+// Désactiver le style de police uniquement
+Button1.StyleElements := [seClient, seBorder];
+Button1.Font.Color := clRed; // Cette couleur sera respectée
+
+// Désactiver complètement le style pour ce composant
+Button1.StyleElements := [];
+Button1.Color := clYellow; // Couleur personnalisée
+```
+
+**Éléments de StyleElements :**
+
+| Élément | Description |
+|---------|-------------|
+| `seFont` | Police (couleur, taille, style) |
+| `seClient` | Zone cliente (arrière-plan) |
+| `seBorder` | Bordures |
+
+---
+
+## 4.10.5 Gestion avancée des styles
+
+### Obtenir des informations sur le style actif
+
+```pascal
+uses
+  Vcl.Themes;
+
+procedure TForm1.AfficherInfosStyle;
+var
+  Style: TCustomStyleServices;
 begin
-  // Mettre à jour les éléments qui ont besoin d'être ajustés
-  ApplyStyleSpecificSettings;
+  Style := TStyleManager.ActiveStyle;
 
-  // Si vous avez des images qui doivent s'adapter au style
-  UpdateImagesForStyle;
-end;
+  Memo1.Lines.Clear;
+  Memo1.Lines.Add('Nom du style : ' + Style.Name);
+  Memo1.Lines.Add('Fichier : ' + TStyleManager.ActiveStyle.FileName);
 
-procedure TForm1.UpdateImagesForStyle;
-begin
-  // Exemple : changer les icônes selon le style
-  if IsCurrentStyleDark then
-  begin
-    Image1.Picture.LoadFromFile('icons_dark/save.png');
-    Image2.Picture.LoadFromFile('icons_dark/open.png');
-  end
+  // Vérifier si c'est un style sombre
+  if Style.GetSystemColor(clWindow) = clBlack then
+    Memo1.Lines.Add('Mode : Sombre')
   else
+    Memo1.Lines.Add('Mode : Clair');
+end;
+```
+
+### Lister tous les styles disponibles
+
+```pascal
+procedure TForm1.ListerStyles;
+var
+  StyleName: string;
+begin
+  ListBox1.Items.Clear;
+
+  for StyleName in TStyleManager.StyleNames do
   begin
-    Image1.Picture.LoadFromFile('icons_light/save.png');
-    Image2.Picture.LoadFromFile('icons_light/open.png');
+    ListBox1.Items.Add(StyleName);
+
+    // Marquer le style actif
+    if StyleName = TStyleManager.ActiveStyle.Name then
+      ListBox1.Items[ListBox1.Items.Count - 1] :=
+        '► ' + ListBox1.Items[ListBox1.Items.Count - 1];
   end;
 end;
 ```
 
-## Exclure certains contrôles des styles
-
-Dans certains cas, vous pourriez vouloir qu'un contrôle conserve son apparence standard, indépendamment du style actif :
+### Charger un style externe
 
 ```pascal
-// Exclure complètement un contrôle du système de styles
-Panel1.StyleElements := [];
+procedure TForm1.ChargerStyleExterne;
+var
+  NomFichier: string;
+begin
+  OpenDialog1.Filter := 'Styles VCL (*.vsf)|*.vsf';
+  if OpenDialog1.Execute then
+  begin
+    NomFichier := OpenDialog1.FileName;
 
-// Inclure seulement certains éléments
-Edit1.StyleElements := [seFont, seBorder]; // Pas de couleur de fond stylisée
+    try
+      // Charger le style
+      if TStyleManager.IsValidStyle(NomFichier) then
+      begin
+        TStyleManager.LoadFromFile(NomFichier);
+        ShowMessage('Style chargé avec succès');
+      end
+      else
+        ShowMessage('Fichier de style invalide');
+    except
+      on E: Exception do
+        ShowMessage('Erreur : ' + E.Message);
+    end;
+  end;
+end;
 ```
 
-Les valeurs possibles pour `StyleElements` sont :
-- `seFont` : Police et couleur du texte
-- `seClient` : Couleur de fond
-- `seBorder` : Bordures
-- `seAll` : Tous les éléments (valeur par défaut)
-
-## Créer un sélecteur de styles interactif
-
-Voici un exemple plus complet d'un sélecteur de styles avec aperçu :
+### Sauvegarder les préférences utilisateur
 
 ```pascal
-unit UnitStyleSelector;
+uses
+  System.IniFiles;
+
+procedure TForm1.SauvegarderPreferencesStyle;
+var
+  Ini: TIniFile;
+begin
+  Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    Ini.WriteString('Apparence', 'Style', TStyleManager.ActiveStyle.Name);
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TForm1.ChargerPreferencesStyle;
+var
+  Ini: TIniFile;
+  StyleName: string;
+begin
+  Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    StyleName := Ini.ReadString('Apparence', 'Style', 'Windows11 Modern Light');
+
+    if TStyleManager.IsValidStyle(StyleName) then
+      TStyleManager.SetStyle(StyleName);
+  finally
+    Ini.Free;
+  end;
+end;
+```
+
+---
+
+## 4.10.6 Adapter votre code aux styles
+
+### Utiliser les couleurs du style
+
+Au lieu de coder des couleurs en dur, utilisez les couleurs du style actif.
+
+**Mauvaise pratique :**
+```pascal
+procedure TForm1.DessinerFond;
+begin
+  Canvas.Brush.Color := clWhite; // Toujours blanc, même en mode sombre
+  Canvas.FillRect(ClientRect);
+  Canvas.Font.Color := clBlack;  // Toujours noir
+  Canvas.TextOut(10, 10, 'Texte');
+end;
+```
+
+**Bonne pratique :**
+```pascal
+uses
+  Vcl.Themes;
+
+procedure TForm1.DessinerFond;
+var
+  StyleServices: TCustomStyleServices;
+begin
+  StyleServices := TStyleManager.ActiveStyle;
+
+  // Utiliser les couleurs du style actif
+  Canvas.Brush.Color := StyleServices.GetSystemColor(clWindow);
+  Canvas.FillRect(ClientRect);
+
+  Canvas.Font.Color := StyleServices.GetSystemColor(clWindowText);
+  Canvas.TextOut(10, 10, 'Texte');
+end;
+```
+
+### Couleurs système disponibles
+
+```pascal
+// Couleurs principales
+clWindow        // Arrière-plan des fenêtres
+clWindowText    // Texte des fenêtres
+clBtnFace       // Fond des boutons
+clBtnText       // Texte des boutons
+clHighlight     // Sélection
+clHighlightText // Texte sélectionné
+
+// Exemple d'utilisation
+procedure TForm1.AppliquerCouleurs;
+var
+  Style: TCustomStyleServices;
+begin
+  Style := TStyleManager.ActiveStyle;
+
+  Panel1.Color := Style.GetSystemColor(clBtnFace);
+  Label1.Font.Color := Style.GetSystemColor(clBtnText);
+  Edit1.Color := Style.GetSystemColor(clWindow);
+  Edit1.Font.Color := Style.GetSystemColor(clWindowText);
+end;
+```
+
+### Dessiner avec le style
+
+```pascal
+uses
+  Vcl.Themes;
+
+procedure TForm1.Image1Paint(Sender: TObject);
+var
+  Details: TThemedElementDetails;
+  R: TRect;
+begin
+  R := Image1.ClientRect;
+
+  // Dessiner un bouton avec le style actif
+  Details := TStyleManager.ActiveStyle.GetElementDetails(tbPushButtonNormal);
+  TStyleManager.ActiveStyle.DrawElement(Image1.Canvas.Handle, Details, R);
+
+  // Dessiner du texte centré
+  TStyleManager.ActiveStyle.DrawText(Image1.Canvas.Handle, Details,
+    'Bouton stylisé', R, [tfCenter, tfVerticalCenter, tfSingleLine]);
+end;
+```
+
+---
+
+## 4.10.7 Styles et composants tiers
+
+### Problèmes courants
+
+Certains composants tiers ne supportent pas automatiquement les styles VCL.
+
+**Symptômes :**
+- Apparence incohérente
+- Composant reste en style Windows classique
+- Couleurs inadaptées au thème
+
+### Solution 1 : StyleElements
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Forcer l'application du style
+  ComposantTiers1.StyleElements := [seFont, seClient, seBorder];
+end;
+```
+
+### Solution 2 : Hooks de style
+
+Pour des composants plus complexes :
+
+```pascal
+uses
+  Vcl.Themes;
+
+type
+  TStyleHook_MonComposant = class(TScrollingStyleHook)
+  protected
+    procedure Paint(Canvas: TCanvas); override;
+  end;
+
+procedure TStyleHook_MonComposant.Paint(Canvas: TCanvas);
+begin
+  // Code de dessin personnalisé avec le style
+  inherited;
+end;
+
+initialization
+  TCustomStyleEngine.RegisterStyleHook(TMonComposant, TStyleHook_MonComposant);
+```
+
+### Solution 3 : Mise à jour du composant
+
+Vérifiez si une version récente du composant supporte les styles VCL.
+
+---
+
+## 4.10.8 Créer un menu de sélection de style
+
+### Interface utilisateur complète
+
+```pascal
+unit FormPreferencesStyle;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Vcl.Themes, Vcl.Styles;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Themes;
 
 type
-  TFormStyleSelector = class(TForm)
-    ListBoxStyles: TListBox;
-    PanelPreview: TPanel;
-    ButtonApply: TButton;
-    ButtonCancel: TButton;
-    LabelStyleName: TLabel;
-    PanelPreviewContent: TPanel;
-    ButtonPreview: TButton;
-    EditPreview: TEdit;
-    CheckBoxPreview: TCheckBox;
-    RadioButtonPreview: TRadioButton;
-    TrackBarPreview: TTrackBar;
-    ComboBoxPreview: TComboBox;
-    ProgressBarPreview: TProgressBar;
+  TFormPreferences = class(TForm)
+    GroupBoxStyle: TGroupBox;
+    RadioGroupStyles: TRadioGroup;
+    ButtonAppliquer: TButton;
+    ButtonOK: TButton;
+    ButtonAnnuler: TButton;
+    PanelApercu: TPanel;
+    LabelApercu: TLabel;
+    ButtonApercu: TButton;
+    CheckBoxApercu: TCheckBox;
     procedure FormCreate(Sender: TObject);
-    procedure ListBoxStylesClick(Sender: TObject);
-    procedure ButtonApplyClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
+    procedure RadioGroupStylesClick(Sender: TObject);
+    procedure ButtonAppliquerClick(Sender: TObject);
+    procedure ButtonOKClick(Sender: TObject);
   private
-    FOriginalStyle: string;
-    procedure UpdatePreview;
-  public
-    class function Execute: Boolean;
+    FStyleInitial: string;
+    procedure ChargerStyles;
+    procedure AppercuStyle(const StyleName: string);
   end;
+
+var
+  FormPreferences: TFormPreferences;
 
 implementation
 
 {$R *.dfm}
 
-// Fonction d'exécution statique
-class function TFormStyleSelector.Execute: Boolean;
-var
-  Dialog: TFormStyleSelector;
+procedure TFormPreferences.FormCreate(Sender: TObject);
 begin
-  Dialog := TFormStyleSelector.Create(Application);
-  try
-    Result := Dialog.ShowModal = mrOk;
-  finally
-    Dialog.Free;
-  end;
+  // Sauvegarder le style actuel
+  FStyleInitial := TStyleManager.ActiveStyle.Name;
+
+  // Charger la liste des styles
+  ChargerStyles;
+
+  // Sélectionner le style actuel
+  RadioGroupStyles.ItemIndex := RadioGroupStyles.Items.IndexOf(FStyleInitial);
 end;
 
-procedure TFormStyleSelector.FormCreate(Sender: TObject);
+procedure TFormPreferences.ChargerStyles;
 var
   StyleName: string;
 begin
-  // Mémoriser le style original au cas où l'utilisateur annule
-  FOriginalStyle := TStyleManager.ActiveStyle.Name;
+  RadioGroupStyles.Items.Clear;
 
-  // Remplir la liste des styles
-  ListBoxStyles.Items.Clear;
+  // Ajouter tous les styles disponibles
   for StyleName in TStyleManager.StyleNames do
-    ListBoxStyles.Items.Add(StyleName);
-
-  // Sélectionner le style actuel
-  ListBoxStyles.ItemIndex := ListBoxStyles.Items.IndexOf(FOriginalStyle);
-
-  // Initialiser les contrôles de démonstration
-  ComboBoxPreview.Items.Add('Option 1');
-  ComboBoxPreview.Items.Add('Option 2');
-  ComboBoxPreview.Items.Add('Option 3');
-  ComboBoxPreview.ItemIndex := 0;
-
-  CheckBoxPreview.Checked := True;
-  RadioButtonPreview.Checked := True;
-  TrackBarPreview.Position := 50;
-  ProgressBarPreview.Position := 75;
-
-  // Mettre à jour l'aperçu
-  UpdatePreview;
+    RadioGroupStyles.Items.Add(StyleName);
 end;
 
-procedure TFormStyleSelector.ListBoxStylesClick(Sender: TObject);
+procedure TFormPreferences.RadioGroupStylesClick(Sender: TObject);
 begin
-  // Changer le style pour l'aperçu
-  if ListBoxStyles.ItemIndex >= 0 then
+  if RadioGroupStyles.ItemIndex <> -1 then
+    AppercuStyle(RadioGroupStyles.Items[RadioGroupStyles.ItemIndex]);
+end;
+
+procedure TFormPreferences.AppercuStyle(const StyleName: string);
+begin
+  // Appliquer temporairement le style pour l'aperçu
+  if TStyleManager.IsValidStyle(StyleName) then
   begin
-    TStyleManager.TrySetStyle(ListBoxStyles.Items[ListBoxStyles.ItemIndex]);
-    UpdatePreview;
+    TStyleManager.SetStyle(StyleName);
+
+    // Mettre à jour l'aperçu
+    LabelApercu.Caption := 'Aperçu du style : ' + StyleName;
+
+    // Forcer le redessin
+    PanelApercu.Invalidate;
   end;
 end;
 
-procedure TFormStyleSelector.UpdatePreview;
+procedure TFormPreferences.ButtonAppliquerClick(Sender: TObject);
 begin
-  // Mettre à jour le libellé avec le nom du style
-  LabelStyleName.Caption := 'Style : ' + TStyleManager.ActiveStyle.Name;
+  // Appliquer définitivement le style sélectionné
+  if RadioGroupStyles.ItemIndex <> -1 then
+  begin
+    TStyleManager.SetStyle(RadioGroupStyles.Items[RadioGroupStyles.ItemIndex]);
+    ShowMessage('Style appliqué avec succès');
+  end;
 end;
 
-procedure TFormStyleSelector.ButtonApplyClick(Sender: TObject);
+procedure TFormPreferences.ButtonOKClick(Sender: TObject);
 begin
-  // L'utilisateur confirme le choix, fermer avec OK
+  ButtonAppliquerClick(Sender);
   ModalResult := mrOk;
 end;
 
-procedure TFormStyleSelector.ButtonCancelClick(Sender: TObject);
-begin
-  // L'utilisateur annule, restaurer le style original
-  TStyleManager.TrySetStyle(FOriginalStyle);
-  ModalResult := mrCancel;
-end;
+end.
 ```
 
-Usage dans le formulaire principal :
+### Exemple d'utilisation
 
 ```pascal
-procedure TForm1.ButtonSelectStyleClick(Sender: TObject);
+procedure TFormMain.MenuOptionsStyleClick(Sender: TObject);
 begin
-  if TFormStyleSelector.Execute then
-    // Le style a été changé et confirmé par l'utilisateur
-    SaveStylePreference(TStyleManager.ActiveStyle.Name);
-end;
-```
-
-## Sauvegarder et restaurer le style préféré
-
-Pour offrir une meilleure expérience utilisateur, vous pouvez sauvegarder la préférence de style et la restaurer au prochain démarrage :
-
-```pascal
-procedure SaveStylePreference(const StyleName: string);
-var
-  Registry: TRegistry;
-begin
-  Registry := TRegistry.Create;
+  with TFormPreferences.Create(Self) do
   try
-    Registry.RootKey := HKEY_CURRENT_USER;
-    if Registry.OpenKey('Software\MyCompany\MyApp', True) then
+    if ShowModal = mrOk then
     begin
-      Registry.WriteString('StyleName', StyleName);
-      Registry.CloseKey;
+      // Le style a été appliqué
+      // Optionnel : Sauvegarder la préférence
+      SauvegarderPreferencesStyle;
     end;
   finally
-    Registry.Free;
+    Free;
   end;
 end;
-
-function LoadStylePreference: string;
-var
-  Registry: TRegistry;
-begin
-  Result := ''; // Style par défaut si rien n'est trouvé
-
-  Registry := TRegistry.Create;
-  try
-    Registry.RootKey := HKEY_CURRENT_USER;
-    if Registry.OpenKey('Software\MyCompany\MyApp', False) then
-    begin
-      if Registry.ValueExists('StyleName') then
-        Result := Registry.ReadString('StyleName');
-      Registry.CloseKey;
-    end;
-  finally
-    Registry.Free;
-  end;
-end;
-
-// Dans le projet principal ou le formulaire principal
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  StyleName: string;
-begin
-  // Charger et appliquer le style préféré
-  StyleName := LoadStylePreference;
-  if (StyleName <> '') and (TStyleManager.StyleNames.IndexOf(StyleName) >= 0) then
-    TStyleManager.TrySetStyle(StyleName)
-  else
-    TStyleManager.TrySetStyle('Windows11 Modern Light'); // Style par défaut
-end;
 ```
-
-## Mode clair/sombre automatique
-
-Une fonctionnalité moderne très appréciée est la détection automatique du mode clair/sombre du système d'exploitation :
-
-```pascal
-// Nécessite Delphi 10.4 ou supérieur et Windows 10/11
-uses
-  Winapi.Windows, Vcl.Themes, Vcl.Styles;
-
-// Constantes pour l'API Windows
-const
-  DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-  DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
-
-// Détecte si Windows utilise le mode sombre
-function IsWindowsInDarkMode: Boolean;
-var
-  Module: HMODULE;
-  ShouldAppsUseDarkMode: function: Boolean; stdcall;
-begin
-  Result := False;
-
-  // Charger la DLL UxTheme
-  Module := LoadLibrary('UxTheme.dll');
-  if Module <> 0 then
-  begin
-    try
-      // Obtenir la fonction ShouldAppsUseDarkMode
-      @ShouldAppsUseDarkMode := GetProcAddress(Module, MakeIntResource(132));
-
-      if Assigned(ShouldAppsUseDarkMode) then
-        Result := ShouldAppsUseDarkMode();
-    finally
-      FreeLibrary(Module);
-    end;
-  end;
-end;
-
-// Applique le style approprié selon le mode du système
-procedure ApplySystemTheme;
-begin
-  if IsWindowsInDarkMode then
-    TStyleManager.TrySetStyle('Windows11 Modern Dark')
-  else
-    TStyleManager.TrySetStyle('Windows11 Modern Light');
-end;
-
-// Utilisation dans le formulaire principal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  ApplySystemTheme;
-end;
-```
-
-## Conseils avancés pour les styles VCL
-
-### 1. Performances
-
-L'utilisation des styles peut avoir un impact sur les performances, surtout avec de nombreux contrôles. Quelques conseils :
-
-- Utilisez `DoubleBuffered := True` sur les formulaires pour réduire le scintillement
-- N'appliquez pas de styles à des contrôles critiques en termes de performance
-- Testez votre application avec différents styles pour identifier les problèmes éventuels
-
-### 2. Compatibilité avec les composants tiers
-
-Certains composants tiers peuvent ne pas bien fonctionner avec les styles VCL :
-
-- Vérifiez si le composant supporte les styles VCL
-- Utilisez `StyleElements := []` pour les composants problématiques
-- Contactez le fournisseur pour des versions compatibles
-
-### 3. Création de styles personnalisés
-
-Vous pouvez créer vos propres styles avec l'outil Bitmap Style Designer inclus dans Delphi :
-
-1. Ouvrez l'outil via le menu **Outils** > **Bitmap Style Designer**
-2. Créez un nouveau style ou modifiez un style existant
-3. Personnalisez les couleurs, textures et formes selon vos besoins
-4. Enregistrez le style en tant que fichier .vsf
-5. Chargez-le dans votre application :
-
-```pascal
-TStyleManager.LoadFromFile('MonStylePersonnalise.vsf');
-TStyleManager.TrySetStyle('MonStylePersonnalise');
-```
-
-## Bonnes pratiques pour l'utilisation des styles
-
-1. **Testez avec plusieurs styles** : Assurez-vous que votre application est attrayante et fonctionnelle avec différents styles.
-
-2. **Adaptez-vous aux styles sombres** : Vérifiez que vos graphiques, images et couleurs personnalisées s'adaptent bien aux styles sombres.
-
-3. **Offrez du choix** : Permettez aux utilisateurs de choisir leur style préféré et mémorisez ce choix.
-
-4. **Cohérence** : Gardez une cohérence visuelle dans toute l'application, même avec les composants qui ne supportent pas les styles.
-
-5. **Respect des préférences système** : Si possible, détectez et respectez le mode clair/sombre du système d'exploitation.
-
-## Conclusion
-
-Les styles visuels VCL sont un moyen puissant de moderniser vos applications Delphi et d'améliorer l'expérience utilisateur. Ils vous permettent de transformer complètement l'apparence de votre application avec un minimum d'effort de codage. En offrant à vos utilisateurs la possibilité de personnaliser l'interface, vous rendez votre application plus agréable et plus accessible.
-
-Avec Delphi 12 Athens et Delphi 11 Alexandria, les styles VCL sont plus riches et plus flexibles que jamais, vous permettant de créer des applications à l'aspect professionnel et moderne, tout en maintenant la facilité d'utilisation et la productivité qui caractérisent le développement Delphi.
 
 ---
 
-*Exercice pratique : Créez une application simple avec plusieurs contrôles VCL standards et ajoutez un sélecteur de styles permettant à l'utilisateur de choisir parmi au moins 5 styles différents. Ajoutez également un mode "Auto" qui détecte et applique automatiquement le thème clair ou sombre en fonction des paramètres du système d'exploitation.*
+## 4.10.9 Mode sombre et mode clair
 
-⏭️ [Accessibilité des interfaces utilisateur](/04-conception-dinterfaces-utilisateur-avec-la-vcl/11-accessibilite-des-interfaces-utilisateur.md)
+### Détecter le mode Windows
+
+Windows 10/11 permet aux utilisateurs de choisir entre mode clair et sombre.
+
+```pascal
+uses
+  Winapi.Windows, System.Win.Registry;
+
+function EstModeSombreWindows: Boolean;
+var
+  Reg: TRegistry;
+begin
+  Result := False;
+  Reg := TRegistry.Create(KEY_READ);
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize') then
+    begin
+      if Reg.ValueExists('AppsUseLightTheme') then
+        Result := Reg.ReadInteger('AppsUseLightTheme') = 0;
+      Reg.CloseKey;
+    end;
+  finally
+    Reg.Free;
+  end;
+end;
+```
+
+### Appliquer automatiquement le bon style
+
+```pascal
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Appliquer le style selon les préférences Windows
+  if EstModeSombreWindows then
+  begin
+    if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
+      TStyleManager.SetStyle('Windows11 Modern Dark');
+  end
+  else
+  begin
+    if TStyleManager.IsValidStyle('Windows11 Modern Light') then
+      TStyleManager.SetStyle('Windows11 Modern Light');
+  end;
+end;
+```
+
+### Basculer entre modes
+
+```pascal
+procedure TFormMain.MenuBasculerModeClick(Sender: TObject);
+var
+  StyleActuel: string;
+begin
+  StyleActuel := TStyleManager.ActiveStyle.Name;
+
+  // Basculer entre mode clair et sombre
+  if Pos('Dark', StyleActuel) > 0 then
+  begin
+    // Passer au mode clair
+    if TStyleManager.IsValidStyle('Windows11 Modern Light') then
+      TStyleManager.SetStyle('Windows11 Modern Light');
+  end
+  else
+  begin
+    // Passer au mode sombre
+    if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
+      TStyleManager.SetStyle('Windows11 Modern Dark');
+  end;
+
+  // Mettre à jour l'icône du menu
+  ActualiserIconeMode;
+end;
+```
+
+---
+
+## 4.10.10 Personnalisation avancée
+
+### Créer un style personnalisé
+
+Delphi inclut un éditeur de styles visuels.
+
+**Lancer l'éditeur de styles :**
+```
+Menu Outils → Bitmap Style Designer
+```
+
+**Processus de création :**
+
+1. **Charger un style de base**
+   - Ouvrir un style existant (.vsf)
+   - Partir d'un modèle proche de ce que vous voulez
+
+2. **Modifier les couleurs**
+   - Onglet "Colors"
+   - Changer les couleurs principales
+   - Tester avec l'aperçu
+
+3. **Personnaliser les composants**
+   - Sélectionner chaque type de composant
+   - Modifier les bitmaps et couleurs
+   - Ajuster les marges et espacements
+
+4. **Enregistrer le style**
+   - Fichier → Enregistrer sous
+   - Format .vsf
+   - Donner un nom descriptif
+
+### Appliquer votre style personnalisé
+
+```pascal
+// Méthode 1 : Inclure dans les options du projet
+// Projet → Options → Apparence → Styles VCL personnalisés
+// Cliquer sur "Ajouter" et sélectionner votre fichier .vsf
+
+// Méthode 2 : Charger dynamiquement
+procedure TForm1.ChargerStylePersonnalise;
+var
+  StylePath: string;
+begin
+  StylePath := ExtractFilePath(Application.ExeName) + 'Styles\MonStyle.vsf';
+
+  if FileExists(StylePath) then
+  begin
+    try
+      TStyleManager.LoadFromFile(StylePath);
+      TStyleManager.SetStyle('MonStyle');
+      ShowMessage('Style personnalisé chargé');
+    except
+      on E: Exception do
+        ShowMessage('Erreur de chargement : ' + E.Message);
+    end;
+  end;
+end;
+```
+
+### Modifier des couleurs spécifiques
+
+```pascal
+uses
+  Vcl.Themes;
+
+procedure TForm1.PersonnaliserCouleurs;
+var
+  Style: TCustomStyleServices;
+begin
+  Style := TStyleManager.ActiveStyle;
+
+  // Modifier temporairement des couleurs
+  // Note : Ceci affecte l'instance actuelle uniquement
+
+  // Exemple : Forcer une couleur d'accentuation
+  Panel1.Color := RGB(0, 120, 215); // Bleu Windows
+  Panel1.StyleElements := [seFont, seBorder]; // Garder style sauf couleur
+end;
+```
+
+---
+
+## 4.10.11 Performance et optimisation
+
+### Impact sur les performances
+
+**Temps de démarrage :**
+- Les styles ajoutent environ 50-200ms au démarrage
+- Négligeable pour la plupart des applications
+- Styles chargés une seule fois
+
+**Utilisation mémoire :**
+- Environ 2-5 Mo par style chargé
+- Recommandé : Inclure seulement 2-3 styles
+- Libérer les styles non utilisés si nécessaire
+
+### Optimisations
+
+**1. Inclure seulement les styles nécessaires**
+```pascal
+// Dans les options du projet, ne cocher que :
+☑ Windows11 Modern Light
+☑ Windows11 Modern Dark
+☐ Tous les autres (décocher)
+```
+
+**2. Charger les styles à la demande**
+```pascal
+procedure TForm1.ChargerStyleSiNecessaire(const StyleName: string);
+begin
+  if not TStyleManager.IsValidStyle(StyleName) then
+  begin
+    // Charger depuis un fichier externe
+    TStyleManager.LoadFromFile(StyleName + '.vsf');
+  end;
+
+  TStyleManager.SetStyle(StyleName);
+end;
+```
+
+**3. Libérer les styles non utilisés**
+```pascal
+procedure TForm1.LibererStylesInutilises;
+var
+  StyleName: string;
+begin
+  for StyleName in TStyleManager.StyleNames do
+  begin
+    if StyleName <> TStyleManager.ActiveStyle.Name then
+      // Note : Il n'y a pas de méthode UnloadStyle dans Delphi
+      // Les styles restent en mémoire une fois chargés
+      ;
+  end;
+end;
+```
+
+---
+
+## 4.10.12 Problèmes courants et solutions
+
+### Problème 1 : Texte illisible
+
+**Symptôme :**
+Le texte n'est pas visible ou mal contrasté.
+
+**Cause :**
+Couleur de texte codée en dur.
+
+**Solution :**
+```pascal
+// Mauvais
+Label1.Font.Color := clBlack;
+
+// Bon
+Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);
+Label1.StyleElements := [seFont, seClient, seBorder];
+```
+
+### Problème 2 : Composant ne respecte pas le style
+
+**Symptôme :**
+Un composant garde l'apparence Windows standard.
+
+**Solution :**
+```pascal
+// Vérifier StyleElements
+MonComposant.StyleElements := [seFont, seClient, seBorder];
+
+// Forcer le redessin
+MonComposant.Invalidate;
+MonComposant.Repaint;
+```
+
+### Problème 3 : Changement de style lent
+
+**Symptôme :**
+L'application se fige lors du changement de style.
+
+**Solution :**
+```pascal
+procedure TForm1.ChangerStyleAsync(const NouveauStyle: string);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    Application.ProcessMessages;
+
+    TStyleManager.SetStyle(NouveauStyle);
+
+    // Forcer la mise à jour de tous les formulaires
+    Application.ProcessMessages;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+```
+
+### Problème 4 : Certaines zones ne se mettent pas à jour
+
+**Symptôme :**
+Après changement de style, certaines zones gardent l'ancien style.
+
+**Solution :**
+```pascal
+procedure TForm1.ActualiserTout;
+var
+  i: Integer;
+begin
+  // Forcer le redessin du formulaire principal
+  Invalidate;
+
+  // Forcer le redessin de tous les contrôles
+  for i := 0 to ComponentCount - 1 do
+  begin
+    if Components[i] is TControl then
+      TControl(Components[i]).Invalidate;
+  end;
+
+  // Forcer le redessin de tous les formulaires ouverts
+  for i := 0 to Screen.FormCount - 1 do
+    Screen.Forms[i].Invalidate;
+end;
+```
+
+### Problème 5 : Images avec fond blanc
+
+**Symptôme :**
+Les icônes avec fond blanc sont visibles en mode sombre.
+
+**Solution :**
+```pascal
+// Utiliser des images avec transparence (PNG)
+// Ou utiliser plusieurs ImageList selon le thème
+
+procedure TForm1.ActualiserImages;
+begin
+  if Pos('Dark', TStyleManager.ActiveStyle.Name) > 0 then
+  begin
+    // Images pour mode sombre
+    ToolBar1.Images := ImageListDark;
+    MainMenu1.Images := ImageListDark;
+  end
+  else
+  begin
+    // Images pour mode clair
+    ToolBar1.Images := ImageListLight;
+    MainMenu1.Images := ImageListLight;
+  end;
+end;
+```
+
+---
+
+## 4.10.13 Bonnes pratiques
+
+### 1. Toujours utiliser StyleElements
+
+```pascal
+// Appliquer à tous les composants lors de la création
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 0 to ComponentCount - 1 do
+  begin
+    if Components[i] is TControl then
+      TControl(Components[i]).StyleElements := [seFont, seClient, seBorder];
+  end;
+end;
+```
+
+### 2. Tester avec plusieurs styles
+
+```pascal
+// Pendant le développement, tester régulièrement avec :
+// - Un style clair (Windows11 Modern Light)
+// - Un style sombre (Windows11 Modern Dark)
+// - Le style Windows par défaut
+```
+
+### 3. Éviter les couleurs codées en dur
+
+```pascal
+// À éviter
+Panel1.Color := clWhite;
+Label1.Font.Color := clBlack;
+
+// Préférer
+Panel1.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindow);
+Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);
+```
+
+### 4. Gérer les images correctement
+
+```pascal
+// Utiliser des images vectorielles ou PNG avec transparence
+// Adapter les couleurs des images selon le thème
+// Prévoir deux jeux d'icônes (clair/sombre) si nécessaire
+```
+
+### 5. Documenter le style par défaut
+
+```pascal
+{
+  CONFIGURATION DES STYLES
+  ========================
+
+  Style par défaut : Windows11 Modern Light
+  Styles inclus :
+    - Windows11 Modern Light
+    - Windows11 Modern Dark
+
+  L'utilisateur peut changer le style via :
+    Menu Options → Apparence → Sélectionner un thème
+
+  Le choix est sauvegardé dans :
+    %AppData%\MonApplication\config.ini
+}
+```
+
+### 6. Prévoir un mode sombre
+
+```pascal
+// Toujours inclure au minimum :
+// - Un style clair
+// - Un style sombre
+// Et permettre à l'utilisateur de choisir
+```
+
+### 7. Tester l'accessibilité
+
+```pascal
+// Vérifier :
+// - Le contraste des couleurs
+// - La lisibilité des polices
+// - La taille des éléments interactifs
+// - Le support des lecteurs d'écran
+```
+
+---
+
+## 4.10.14 Exemple complet : Application avec sélection de style
+
+```pascal
+unit MainForm;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, System.IniFiles,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Themes;
+
+type
+  TFormMain = class(TForm)
+    MainMenu1: TMainMenu;
+    MenuFichier: TMenuItem;
+    MenuOptions: TMenuItem;
+    MenuAide: TMenuItem;
+    MenuQuitter: TMenuItem;
+    MenuTheme: TMenuItem;
+    StatusBar1: TStatusBar;
+    Panel1: TPanel;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure MenuQuitterClick(Sender: TObject);
+    procedure MenuThemeClick(Sender: TObject);
+  private
+    procedure ChargerPreferences;
+    procedure SauvegarderPreferences;
+    procedure CreerMenuStyles;
+    procedure ChangerStyle(Sender: TObject);
+    procedure MettreAJourStyleActif;
+  end;
+
+var
+  FormMain: TFormMain;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Charger les préférences sauvegardées
+  ChargerPreferences;
+
+  // Créer le menu de sélection de styles
+  CreerMenuStyles;
+
+  // Mettre à jour l'affichage
+  MettreAJourStyleActif;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  // Sauvegarder les préférences
+  SauvegarderPreferences;
+end;
+
+procedure TFormMain.ChargerPreferences;
+var
+  Ini: TIniFile;
+  StyleName: string;
+begin
+  Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    // Charger le style préféré
+    StyleName := Ini.ReadString('Apparence', 'Style', 'Windows11 Modern Light');
+
+    if TStyleManager.IsValidStyle(StyleName) then
+      TStyleManager.SetStyle(StyleName);
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TFormMain.SauvegarderPreferences;
+var
+  Ini: TIniFile;
+begin
+  Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  try
+    // Sauvegarder le style actuel
+    Ini.WriteString('Apparence', 'Style', TStyleManager.ActiveStyle.Name);
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TFormMain.CreerMenuStyles;
+var
+  StyleName: string;
+  MenuItem: TMenuItem;
+begin
+  // Vider le menu existant
+  MenuTheme.Clear;
+
+  // Ajouter un élément pour chaque style disponible
+  for StyleName in TStyleManager.StyleNames do
+  begin
+    MenuItem := TMenuItem.Create(MenuTheme);
+    MenuItem.Caption := StyleName;
+    MenuItem.RadioItem := True; // Comportement bouton radio
+    MenuItem.GroupIndex := 1;
+    MenuItem.OnClick := ChangerStyle;
+
+    // Cocher le style actif
+    if StyleName = TStyleManager.ActiveStyle.Name then
+      MenuItem.Checked := True;
+
+    MenuTheme.Add(MenuItem);
+  end;
+end;
+
+procedure TFormMain.ChangerStyle(Sender: TObject);
+var
+  MenuItem: TMenuItem;
+begin
+  if Sender is TMenuItem then
+  begin
+    MenuItem := TMenuItem(Sender);
+
+    // Changer le style
+    if TStyleManager.IsValidStyle(MenuItem.Caption) then
+    begin
+      Screen.Cursor := crHourGlass;
+      try
+        TStyleManager.SetStyle(MenuItem.Caption);
+        MettreAJourStyleActif;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+    end;
+  end;
+end;
+
+procedure TFormMain.MettreAJourStyleActif;
+begin
+  // Afficher le style actif dans la barre d'état
+  StatusBar1.SimpleText := 'Style actif : ' + TStyleManager.ActiveStyle.Name;
+
+  // Forcer le redessin
+  Invalidate;
+end;
+
+procedure TFormMain.MenuThemeClick(Sender: TObject);
+begin
+  // Recréer le menu au cas où des styles auraient été ajoutés
+  CreerMenuStyles;
+end;
+
+procedure TFormMain.MenuQuitterClick(Sender: TObject);
+begin
+  Close;
+end;
+
+end.
+```
+
+---
+
+## Conclusion
+
+Les styles visuels VCL sont un outil puissant pour moderniser vos applications Delphi. Avec Delphi 13 Florence, vous bénéficiez d'un support complet de Windows 11 et de styles modernes prêts à l'emploi.
+
+### Points clés à retenir :
+
+- **Facilité** : Appliquer un style en quelques clics
+- **Modernité** : Aspect contemporain garanti
+- **Flexibilité** : Changement dynamique possible
+- **Cohérence** : Tous les composants harmonisés
+- **Personnalisation** : Créez vos propres styles
+- **Performance** : Impact minimal sur les performances
+- **Accessibilité** : Support du mode sombre
+- **Compatibilité** : Fonctionne avec la plupart des composants VCL
+
+### Recommandations finales :
+
+1. Incluez toujours au moins un style clair et un style sombre
+2. Utilisez `StyleElements` sur tous vos composants
+3. Évitez les couleurs codées en dur
+4. Testez votre application avec différents styles
+5. Permettez à l'utilisateur de choisir son style préféré
+6. Sauvegardez les préférences utilisateur
+7. Adaptez vos images aux différents thèmes
+8. Documentez le style par défaut de votre application
+
+Avec ces connaissances, vous êtes prêt à créer des applications Delphi modernes et élégantes qui s'intègrent parfaitement à Windows 11 ! 🎨
+
+⏭️ [Styles VCL en mode conception - Prototypage rapide](/04-conception-dinterfaces-utilisateur-avec-la-vcl/10.1-styles-vcl-en-mode-conception.md)
