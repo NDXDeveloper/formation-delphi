@@ -1,443 +1,689 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 8.4 Connexion à une base MySQL/MariaDB
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans cette section, nous allons apprendre à établir une connexion entre votre application Delphi et une base de données MySQL/MariaDB. Nous verrons différentes approches, de la plus simple à la plus avancée, et nous examinerons les options qui vous permettront d'optimiser cette connexion.
+Maintenant que vous connaissez l'architecture de FireDAC et que MySQL/MariaDB est installé et configuré, il est temps de créer votre première connexion ! Dans ce chapitre, nous allons connecter pas à pas une application Delphi à votre base de données.
 
-## Préparation
+## Création d'un projet de test
 
-Avant de commencer, assurez-vous que :
-- MySQL/MariaDB est correctement installé (voir section 8.2)
-- Les bibliothèques clientes sont disponibles
-- Vous avez créé une base de données et un utilisateur avec les privilèges appropriés
+### Étape 1 : Nouveau projet VCL
 
-## Connexion simple avec l'Éditeur de Connexion FireDAC
+1. Lancez Delphi
+2. Menu **Fichier** → **Nouveau** → **Application VCL - Delphi**
+3. Sauvegardez immédiatement votre projet :
+   - **Fichier** → **Enregistrer tout**
+   - Créez un dossier pour votre projet (par exemple : `C:\MesProjets\TestMySQL`)
+   - Nommez l'unité : `uMain.pas`
+   - Nommez le projet : `TestMySQL.dproj`
 
-Delphi offre un éditeur visuel qui facilite la configuration de vos connexions. C'est la méthode recommandée pour les débutants.
+**Pourquoi sauvegarder tout de suite ?**
+Cela évite les problèmes de chemins relatifs avec les composants FireDAC.
 
-### Étape 1 : Ajouter un composant TFDConnection
+### Étape 2 : Préparer le formulaire
 
-1. Créez un nouveau projet VCL ou ouvrez un projet existant
-2. Dans la palette de composants, cliquez sur l'onglet "FireDAC"
-3. Déposez un composant `TFDConnection` sur votre formulaire
+1. Redimensionnez le formulaire à une taille confortable (environ 600x400)
+2. Définissez les propriétés du formulaire :
+   - `Name` : `FormMain`
+   - `Caption` : `Test de connexion MySQL`
+   - `Position` : `poScreenCenter`
 
-![Ajout du composant TFDConnection](https://placeholder.pics/svg/400x200/DEDEDE/555555/Ajout%20TFDConnection)
+## Ajout des composants FireDAC
 
-### Étape 2 : Configurer la connexion avec l'éditeur visuel
+### Les composants nécessaires
 
-1. Sélectionnez le composant `TFDConnection` sur votre formulaire
-2. Dans l'Object Inspector (Inspecteur d'Objets), localisez la propriété `ConnectionDefName`
-3. Cliquez sur les points de suspension [...] à droite de cette propriété
+Pour établir une connexion basique, vous avez besoin de **3 composants minimum** :
 
-![Ouverture de l'éditeur de connexion](https://placeholder.pics/svg/400x150/DEDEDE/555555/Ouverture%20Editeur%20Connexion)
+1. **TFDConnection** - pour la connexion
+2. **TFDPhysMySQLDriverLink** - pour le pilote MySQL (optionnel mais recommandé)
+3. **TFDGUIxWaitCursor** - pour le curseur d'attente (optionnel)
 
-4. Dans la fenêtre qui apparaît, cliquez sur le bouton "+" pour ajouter une nouvelle définition
-5. Donnez un nom significatif à votre connexion (ex: "MySQL_MaBase")
-6. Sélectionnez "MySQL" dans la liste déroulante "Driver ID"
+### Placement des composants
 
-![Configuration de la connexion](https://placeholder.pics/svg/500x350/DEDEDE/555555/Configuration%20Connexion%20MySQL)
+#### 1. Ajouter TFDConnection
 
-7. Dans l'onglet "Connection", renseignez les paramètres suivants :
-   - **Server** : l'adresse du serveur (souvent "localhost")
-   - **Database** : le nom de votre base de données
-   - **User_Name** : votre nom d'utilisateur MySQL
-   - **Password** : votre mot de passe
-   - **CharacterSet** : "utf8mb4" (recommandé pour le support Unicode complet)
+1. Dans la palette de composants, onglet **FireDAC**
+2. Double-cliquez sur **TFDConnection** (ou glissez-le sur le formulaire)
+3. Un composant non-visuel apparaît sur votre formulaire
+4. Dans l'inspecteur d'objets, modifiez la propriété `Name` : `FDConnection1` (déjà le nom par défaut)
 
-8. Cliquez sur "Test" pour vérifier que la connexion fonctionne
-9. Si le test réussit, cliquez sur "OK" pour sauvegarder cette configuration
+#### 2. Ajouter TFDPhysMySQLDriverLink
 
-10. De retour sur le formulaire, définissez la propriété `Connected` à `True` pour établir la connexion au démarrage de l'application
+1. Même onglet **FireDAC**
+2. Cherchez **TFDPhysMySQLDriverLink** (ou utilisez **FireDAC Links** → **TFDPhysMySQLDriverLink**)
+3. Double-cliquez pour l'ajouter
+4. Laissez le nom par défaut : `FDPhysMySQLDriverLink1`
 
-### Étape 3 : Gestion des erreurs de connexion
+#### 3. Ajouter TFDGUIxWaitCursor
 
-Il est important de gérer les erreurs qui pourraient survenir lors de la connexion. Ajoutez ce code à votre formulaire :
+1. Onglet **FireDAC**
+2. Cherchez **TFDGUIxWaitCursor**
+3. Double-cliquez pour l'ajouter
+4. Laissez le nom par défaut : `FDGUIxWaitCursor1`
 
-```delphi
-procedure TForm1.FormCreate(Sender: TObject);
+**Résultat :** Vous devriez voir 3 icônes non-visuelles sur votre formulaire.
+
+### Composants visuels pour tester
+
+Ajoutons maintenant des éléments visuels pour tester la connexion :
+
+#### 1. Ajouter un bouton de connexion
+
+1. Palette **Standard** → **TButton**
+2. Placez-le sur le formulaire
+3. Propriétés :
+   - `Name` : `btnConnecter`
+   - `Caption` : `Se connecter`
+   - `Left` : `20`
+   - `Top` : `20`
+
+#### 2. Ajouter un bouton de déconnexion
+
+1. Ajoutez un second **TButton**
+2. Propriétés :
+   - `Name` : `btnDeconnecter`
+   - `Caption` : `Se déconnecter`
+   - `Left` : `120`
+   - `Top` : `20`
+   - `Enabled` : `False` (désactivé au départ)
+
+#### 3. Ajouter un Memo pour les messages
+
+1. Palette **Standard** → **TMemo**
+2. Placez-le sur le formulaire
+3. Propriétés :
+   - `Name` : `memoLog`
+   - `Align` : `alBottom`
+   - `Height` : `200`
+   - `ReadOnly` : `True`
+   - `ScrollBars` : `ssVertical`
+
+**Votre formulaire devrait maintenant ressembler à ceci :**
+
+```
+┌─────────────────────────────────────┐
+│ Test de connexion MySQL    [_][□][X]│
+├─────────────────────────────────────┤
+│  [Se connecter] [Se déconnecter]    │
+│                                     │
+│                                     │
+│                                     │
+├─────────────────────────────────────┤
+│ ┌─────────────────────────────────┐ │
+│ │ Memo pour les messages          │ │
+│ │                                 │ │
+│ │                                 │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+## Configuration de la connexion (Design Time)
+
+Nous allons d'abord configurer la connexion directement dans l'IDE (au moment de la conception).
+
+### Méthode 1 : Éditeur de connexion graphique
+
+#### Étape 1 : Ouvrir l'éditeur
+
+1. Sélectionnez le composant `FDConnection1` sur le formulaire
+2. Dans l'inspecteur d'objets, cherchez la propriété `ConnectionDefName`
+3. Cliquez sur le bouton **[...]** à côté de `Params`
+4. L'**Éditeur de définition de connexion** s'ouvre
+
+Ou plus simplement :
+- Double-cliquez directement sur le composant `FDConnection1`
+
+#### Étape 2 : Choisir le pilote
+
+Dans l'éditeur de définition :
+
+1. Dans la liste déroulante **Driver ID**, sélectionnez : `MySQL`
+2. L'interface affiche maintenant les paramètres spécifiques à MySQL
+
+#### Étape 3 : Configurer les paramètres
+
+Remplissez les champs suivants :
+
+| Paramètre | Valeur à saisir | Explication |
+|-----------|-----------------|-------------|
+| **Server** | `localhost` ou `127.0.0.1` | Adresse du serveur MySQL |
+| **Port** | `3306` | Port par défaut MySQL (laissez vide pour utiliser par défaut) |
+| **Database** | `ma_gestion` | Nom de votre base de données |
+| **User_Name** | `delphi_user` | Utilisateur créé précédemment |
+| **Password** | `votre_mot_de_passe` | Mot de passe de l'utilisateur |
+| **CharacterSet** | `utf8mb4` | Important pour les accents ! |
+
+**Paramètres optionnels mais recommandés :**
+
+| Paramètre | Valeur | Pourquoi ? |
+|-----------|--------|------------|
+| **LoginTimeout** | `10` | Délai max pour la connexion (secondes) |
+| **ConnectionTimeout** | `30` | Délai max pour garder la connexion |
+
+#### Étape 4 : Tester la connexion
+
+1. Cliquez sur le bouton **Test** en bas de la fenêtre
+2. Si tout est correct, vous verrez : **"Connection test successful"**
+3. Si erreur, consultez la section "Résolution de problèmes" plus bas
+4. Cliquez sur **OK** pour fermer l'éditeur
+
+#### Étape 5 : Propriétés importantes
+
+De retour dans l'inspecteur d'objets du `FDConnection1` :
+
+| Propriété | Valeur recommandée | Explication |
+|-----------|-------------------|-------------|
+| `LoginPrompt` | `False` | Ne pas demander les identifiants à l'utilisateur |
+| `Connected` | `False` | Ne pas connecter automatiquement au démarrage |
+
+**Pourquoi `Connected = False` ?**
+Il est préférable de gérer la connexion par code pour mieux contrôler les erreurs.
+
+### Méthode 2 : Configuration manuelle des paramètres
+
+Vous pouvez aussi configurer les paramètres directement dans l'inspecteur d'objets :
+
+1. Sélectionnez `FDConnection1`
+2. Cherchez la propriété `Params`
+3. Double-cliquez sur `Params` : une fenêtre s'ouvre
+4. Ajoutez les lignes suivantes (une par ligne) :
+
+```
+DriverID=MySQL
+Server=localhost
+Port=3306
+Database=ma_gestion
+User_Name=delphi_user
+Password=votre_mot_de_passe
+CharacterSet=utf8mb4
+```
+
+**Attention :** Mettre le mot de passe dans les propriétés n'est pas sécurisé ! C'est acceptable pour le développement, mais pas pour la production.
+
+## Configuration de la bibliothèque client MySQL
+
+### Spécifier le chemin de libmysql.dll
+
+Le composant `TFDPhysMySQLDriverLink` permet de spécifier où se trouve la bibliothèque client MySQL.
+
+1. Sélectionnez `FDPhysMySQLDriverLink1`
+2. Dans l'inspecteur d'objets, cherchez la propriété `VendorLib`
+3. Spécifiez le chemin complet vers la DLL :
+
+**Exemples de chemins :**
+
+```
+// MariaDB par défaut (64 bits)
+C:\Program Files\MariaDB 11.5\lib\libmariadb.dll
+
+// MySQL par défaut (64 bits)
+C:\Program Files\MySQL\MySQL Server 8.0\lib\libmysql.dll
+
+// Dans le dossier de votre application (recommandé pour distribution)
+libmysql.dll
+```
+
+**Astuce :** Si vous mettez juste le nom du fichier (`libmysql.dll`), Delphi cherchera dans :
+- Le dossier de l'application
+- Les dossiers du PATH système
+
+**Recommandation pour distribution :**
+Copiez `libmysql.dll` dans le même dossier que votre .exe, et utilisez juste le nom de fichier sans chemin.
+
+### Laisser vide (détection automatique)
+
+Vous pouvez aussi laisser `VendorLib` vide. FireDAC essaiera de trouver automatiquement la bibliothèque. Cela fonctionne généralement sous Windows si MySQL/MariaDB est installé correctement.
+
+## Connexion par code (Runtime)
+
+Maintenant, programmons la connexion avec du code !
+
+### Code du bouton "Se connecter"
+
+Double-cliquez sur le bouton `btnConnecter` pour créer son événement `OnClick` :
+
+```pascal
+procedure TFormMain.btnConnecterClick(Sender: TObject);
 begin
+  // Effacer le log
+  memoLog.Clear;
+
   try
     // Tentative de connexion
+    memoLog.Lines.Add('Tentative de connexion à MySQL...');
     FDConnection1.Connected := True;
-    StatusBar1.SimpleText := 'Connecté à la base de données';
+
+    // Si on arrive ici, la connexion a réussi
+    memoLog.Lines.Add('✓ Connexion réussie !');
+    memoLog.Lines.Add('Serveur : ' + FDConnection1.Params.Values['Server']);
+    memoLog.Lines.Add('Base de données : ' + FDConnection1.Params.Values['Database']);
+
+    // Activer/désactiver les boutons
+    btnConnecter.Enabled := False;
+    btnDeconnecter.Enabled := True;
+
   except
     on E: Exception do
     begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      StatusBar1.SimpleText := 'Non connecté';
+      memoLog.Lines.Add('✗ Erreur de connexion :');
+      memoLog.Lines.Add(E.Message);
+
+      // S'assurer que la connexion est fermée
+      FDConnection1.Connected := False;
     end;
   end;
 end;
 ```
 
-## Connexion par code
+**Explications du code :**
 
-Si vous préférez configurer la connexion entièrement par code (par exemple pour changer dynamiquement de base de données), voici comment procéder :
+- `memoLog.Clear` : efface les anciens messages
+- `try...except` : capture les erreurs de connexion
+- `FDConnection1.Connected := True` : établit la connexion
+- Si succès : affiche les infos et change l'état des boutons
+- Si échec : affiche l'erreur dans le memo
 
-```delphi
-procedure TForm1.ConnecterBaseDeDonnees;
+### Code du bouton "Se déconnecter"
+
+Double-cliquez sur le bouton `btnDeconnecter` :
+
+```pascal
+procedure TFormMain.btnDeconnecterClick(Sender: TObject);
 begin
-  // S'assurer que la connexion est fermée
-  FDConnection1.Connected := False;
-
-  // Configurer la connexion
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Clear;
-  FDConnection1.Params.Add('Server=localhost');
-  FDConnection1.Params.Add('Database=ma_base');
-  FDConnection1.Params.Add('User_Name=mon_utilisateur');
-  FDConnection1.Params.Add('Password=mon_mot_de_passe');
-  FDConnection1.Params.Add('CharacterSet=utf8mb4');
-
   try
-    // Ouvrir la connexion
-    FDConnection1.Connected := True;
-    StatusBar1.SimpleText := 'Connecté à ' + FDConnection1.Params.Values['Database'];
+    // Fermer la connexion
+    FDConnection1.Connected := False;
+
+    memoLog.Lines.Add('─────────────────────────');
+    memoLog.Lines.Add('✓ Déconnexion réussie');
+
+    // Activer/désactiver les boutons
+    btnConnecter.Enabled := True;
+    btnDeconnecter.Enabled := False;
+
   except
     on E: Exception do
     begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      StatusBar1.SimpleText := 'Non connecté';
+      memoLog.Lines.Add('✗ Erreur lors de la déconnexion :');
+      memoLog.Lines.Add(E.Message);
     end;
   end;
 end;
 ```
 
-## Stocker les paramètres de connexion de façon sécurisée
+### Code de fermeture du formulaire
 
-Pour une application en production, il est essentiel de ne pas coder en dur les identifiants de connexion dans votre application. Voici quelques approches :
+Il est important de fermer la connexion quand l'application se termine.
 
-### 1. Utiliser un fichier de configuration
+1. Sélectionnez le formulaire `FormMain`
+2. Dans l'inspecteur d'objets, onglet **Événements**
+3. Double-cliquez sur `OnClose`
+4. Ajoutez ce code :
 
-Créez un fichier de configuration (par exemple, `config.ini`) :
-
-```ini
-[Database]
-Server=localhost
-Database=ma_base
-User=mon_utilisateur
-Password=mon_mot_de_passe
-```
-
-Puis lisez ce fichier dans votre application :
-
-```delphi
-procedure TForm1.ChargerConfigurationBD;
-var
-  IniFile: TIniFile;
-  ConfigPath: string;
+```pascal
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  ConfigPath := ExtractFilePath(Application.ExeName) + 'config.ini';
-
-  if FileExists(ConfigPath) then
-  begin
-    IniFile := TIniFile.Create(ConfigPath);
-    try
-      FDConnection1.Params.Clear;
-      FDConnection1.DriverName := 'MySQL';
-      FDConnection1.Params.Add('Server=' + IniFile.ReadString('Database', 'Server', 'localhost'));
-      FDConnection1.Params.Add('Database=' + IniFile.ReadString('Database', 'Database', ''));
-      FDConnection1.Params.Add('User_Name=' + IniFile.ReadString('Database', 'User', ''));
-      FDConnection1.Params.Add('Password=' + IniFile.ReadString('Database', 'Password', ''));
-      FDConnection1.Params.Add('CharacterSet=utf8mb4');
-    finally
-      IniFile.Free;
-    end;
-  end
-  else
-    ShowMessage('Fichier de configuration non trouvé : ' + ConfigPath);
-end;
-```
-
-**Note de sécurité** : Ce fichier de configuration doit être stocké de manière sécurisée et non distribué avec l'application.
-
-### 2. Demander les identifiants à l'utilisateur
-
-Pour une meilleure sécurité, vous pouvez demander les identifiants à l'utilisateur lors du démarrage de l'application :
-
-```delphi
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Clear;
-  FDConnection1.Params.Add('Server=localhost');
-  FDConnection1.Params.Add('Database=ma_base');
-  FDConnection1.LoginPrompt := True;  // Active la demande d'identifiants
-end;
-```
-
-Avec `LoginPrompt := True`, FireDAC affichera automatiquement une boîte de dialogue demandant le nom d'utilisateur et le mot de passe.
-
-## Options avancées de connexion
-
-FireDAC offre de nombreuses options pour personnaliser votre connexion MySQL/MariaDB. Voici les plus utiles :
-
-### Timeout de connexion
-
-```delphi
-FDConnection1.Params.Add('ConnectionTimeout=30');  // En secondes
-```
-
-### Réessayer automatiquement en cas d'échec
-
-```delphi
-FDConnection1.ConnectionOptions.ConnectRetryCount := 3;        // Nombre de tentatives
-FDConnection1.ConnectionOptions.ConnectRetryInterval := 2000;  // Intervalle en ms
-```
-
-### Compression des données
-
-Pour les connexions à distance avec beaucoup de données :
-
-```delphi
-FDConnection1.Params.Add('Compress=True');
-```
-
-### SSL/TLS pour connexion sécurisée
-
-```delphi
-FDConnection1.Params.Add('SSL=True');
-FDConnection1.Params.Add('SSLKey=/chemin/vers/client-key.pem');
-FDConnection1.Params.Add('SSLCert=/chemin/vers/client-cert.pem');
-FDConnection1.Params.Add('SSLCACert=/chemin/vers/ca-cert.pem');
-```
-
-### Optimisation du fetch des résultats
-
-```delphi
-// Récupérer 100 enregistrements à la fois pour de meilleures performances
-FDConnection1.FetchOptions.RowsetSize := 100;
-
-// Mode d'accès aux résultats
-FDConnection1.ResourceOptions.DirectExecute := False;
-FDConnection1.ResourceOptions.ServerOutput := False;
-```
-
-## Connexion à plusieurs bases de données
-
-Vous pouvez avoir plusieurs connexions dans une même application :
-
-```delphi
-// Première connexion - Base de données principale
-FDConnection1.DriverName := 'MySQL';
-FDConnection1.Params.Clear;
-FDConnection1.Params.Add('Server=localhost');
-FDConnection1.Params.Add('Database=base_principale');
-FDConnection1.Params.Add('User_Name=utilisateur1');
-FDConnection1.Params.Add('Password=motdepasse1');
-
-// Deuxième connexion - Base de données d'archives
-FDConnection2.DriverName := 'MySQL';
-FDConnection2.Params.Clear;
-FDConnection2.Params.Add('Server=serveur_archives.mondomaine.com');
-FDConnection2.Params.Add('Database=base_archives');
-FDConnection2.Params.Add('User_Name=utilisateur2');
-FDConnection2.Params.Add('Password=motdepasse2');
-```
-
-Chaque connexion est indépendante et peut être utilisée avec ses propres composants `TFDQuery`, `TFDTable`, etc.
-
-## Exemple complet : Formulaire de connexion personnalisé
-
-Voici un exemple plus élaboré qui crée un formulaire de connexion personnalisé :
-
-```delphi
-unit UnitConnexion;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, FireDAC.Comp.Client;
-
-type
-  TFormConnexion = class(TForm)
-    EditServeur: TEdit;
-    EditBaseDeDonnees: TEdit;
-    EditUtilisateur: TEdit;
-    EditMotDePasse: TEdit;
-    ButtonConnecter: TButton;
-    ButtonAnnuler: TButton;
-    LabelServeur: TLabel;
-    LabelBaseDeDonnees: TLabel;
-    LabelUtilisateur: TLabel;
-    LabelMotDePasse: TLabel;
-    procedure ButtonConnecterClick(Sender: TObject);
-    procedure ButtonAnnulerClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-    FConnection: TFDConnection;
-  public
-    constructor Create(AOwner: TComponent; AConnection: TFDConnection); reintroduce;
-  end;
-
-implementation
-
-{$R *.dfm}
-
-constructor TFormConnexion.Create(AOwner: TComponent; AConnection: TFDConnection);
-begin
-  inherited Create(AOwner);
-  FConnection := AConnection;
-end;
-
-procedure TFormConnexion.FormCreate(Sender: TObject);
-begin
-  // Remplir avec les valeurs actuelles si la connexion est déjà configurée
-  if FConnection.Params.Count > 0 then
-  begin
-    EditServeur.Text := FConnection.Params.Values['Server'];
-    EditBaseDeDonnees.Text := FConnection.Params.Values['Database'];
-    EditUtilisateur.Text := FConnection.Params.Values['User_Name'];
-    EditMotDePasse.Text := FConnection.Params.Values['Password'];
-  end
-  else
-  begin
-    // Valeurs par défaut
-    EditServeur.Text := 'localhost';
-    EditBaseDeDonnees.Text := 'ma_base';
-    EditUtilisateur.Text := 'utilisateur';
-    EditMotDePasse.Text := '';
-  end;
-end;
-
-procedure TFormConnexion.ButtonConnecterClick(Sender: TObject);
-begin
-  // Fermer la connexion existante
-  if FConnection.Connected then
-    FConnection.Connected := False;
-
-  // Configurer la connexion
-  FConnection.DriverName := 'MySQL';
-  FConnection.Params.Clear;
-  FConnection.Params.Add('Server=' + EditServeur.Text);
-  FConnection.Params.Add('Database=' + EditBaseDeDonnees.Text);
-  FConnection.Params.Add('User_Name=' + EditUtilisateur.Text);
-  FConnection.Params.Add('Password=' + EditMotDePasse.Text);
-  FConnection.Params.Add('CharacterSet=utf8mb4');
-
-  try
-    // Tester la connexion
-    FConnection.Connected := True;
-    ShowMessage('Connexion réussie à la base de données ' + EditBaseDeDonnees.Text);
-    ModalResult := mrOk;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      ModalResult := mrNone;  // Rester sur le formulaire
-    end;
-  end;
-end;
-
-procedure TFormConnexion.ButtonAnnulerClick(Sender: TObject);
-begin
-  ModalResult := mrCancel;
-end;
-
-end.
-```
-
-Et voici comment utiliser ce formulaire :
-
-```delphi
-procedure TFormPrincipal.ActionConnexionExecute(Sender: TObject);
-var
-  FormConnexion: TFormConnexion;
-begin
-  FormConnexion := TFormConnexion.Create(Self, FDConnection1);
-  try
-    if FormConnexion.ShowModal = mrOk then
-    begin
-      // La connexion a été configurée et testée dans le formulaire
-      // Mettre à jour l'interface utilisateur en conséquence
-      ActualiserInterface;
-    end;
-  finally
-    FormConnexion.Free;
-  end;
-end;
-```
-
-## Vérifier l'état de la connexion
-
-Il est important de vérifier l'état de la connexion avant d'exécuter des opérations sur la base de données :
-
-```delphi
-procedure TForm1.ExecuterRequete;
-begin
-  if not FDConnection1.Connected then
-  begin
-    try
-      FDConnection1.Connected := True;
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Impossible de se connecter à la base de données : ' + E.Message);
-        Exit;  // Sortir de la procédure si la connexion échoue
-      end;
-    end;
-  end;
-
-  // Maintenant que la connexion est établie, exécuter la requête
-  FDQuery1.Open;
-end;
-```
-
-## Déconnexion propre
-
-N'oubliez pas de fermer proprement la connexion lorsque vous n'en avez plus besoin :
-
-```delphi
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  // Fermer toutes les requêtes actives
-  if FDQuery1.Active then
-    FDQuery1.Close;
-
-  // Fermer la connexion
+  // Fermer la connexion si elle est ouverte
   if FDConnection1.Connected then
     FDConnection1.Connected := False;
 end;
 ```
 
-## Diagnostiquer les problèmes de connexion
+## Configuration par code complet
 
-Si vous rencontrez des problèmes de connexion, FireDAC propose un système de trace :
+Pour un contrôle total, vous pouvez configurer tous les paramètres par code :
 
-```delphi
-procedure TForm1.ActiverTrace;
+```pascal
+procedure TFormMain.ConnecterAvecCode;
 begin
-  // Créer et configurer le composant de trace
-  FDMonitor := TFDMonitor.Create(nil);
-  FDMonitor.Tracing := True;
-  FDMonitor.Enabled := True;
+  // Configurer les paramètres de connexion
+  FDConnection1.Params.Clear;  // Effacer les paramètres existants
 
-  // Configurer les options de trace
-  FDConnection1.Params.Add('MonitorBy=Remote');  // Activer le monitoring
-  FDConnection1.FetchOptions.RecsMax := -1;       // Tracer tous les enregistrements
+  // Paramètres de base
+  FDConnection1.Params.Add('DriverID=MySQL');
+  FDConnection1.Params.Add('Server=localhost');
+  FDConnection1.Params.Add('Port=3306');
+  FDConnection1.Params.Add('Database=ma_gestion');
+  FDConnection1.Params.Add('User_Name=delphi_user');
+  FDConnection1.Params.Add('Password=VotreMotDePasse');
+  FDConnection1.Params.Add('CharacterSet=utf8mb4');
 
-  // Spécifier le fichier de trace
-  FDMonitor.FileName := 'C:\Temp\FireDAC_Trace.txt';
-  FDMonitor.OutputOptions := [moFileName];
+  // Paramètres optionnels
+  FDConnection1.Params.Add('LoginTimeout=10');
 
-  ShowMessage('Trace activée : ' + FDMonitor.FileName);
+  // Désactiver le prompt de connexion
+  FDConnection1.LoginPrompt := False;
+
+  try
+    // Se connecter
+    FDConnection1.Connected := True;
+    ShowMessage('Connexion réussie !');
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
 end;
 ```
 
-## Conclusion
+**Avantages de la configuration par code :**
+- Peut lire les paramètres depuis un fichier de configuration
+- Plus facile à changer en production
+- Meilleure sécurité (pas de mot de passe visible dans le .dfm)
 
-La connexion à une base de données MySQL/MariaDB avec FireDAC est relativement simple mais offre de nombreuses options de personnalisation. Vous pouvez choisir entre une configuration visuelle via l'éditeur de connexion ou une configuration par code selon vos besoins.
+## Lecture des paramètres depuis un fichier INI
 
-Dans tous les cas, n'oubliez pas de :
-- Gérer correctement les erreurs de connexion
-- Sécuriser les identifiants de connexion
-- Fermer proprement les connexions lorsqu'elles ne sont plus nécessaires
+Une approche professionnelle consiste à stocker les paramètres dans un fichier externe.
 
-Dans la prochaine section, nous verrons comment manipuler les données une fois la connexion établie.
+### Créer un fichier config.ini
 
----
+Créez un fichier texte `config.ini` dans le dossier de votre application :
 
-**À suivre :** 8.5 Manipulation des données
+```ini
+[Database]
+Server=localhost
+Port=3306
+Database=ma_gestion
+Username=delphi_user
+Password=VotreMotDePasse
+CharacterSet=utf8mb4
+```
+
+### Code pour lire le fichier INI
+
+Ajoutez `IniFiles` dans la clause `uses` de votre unité :
+
+```pascal
+uses
+  System.SysUtils, System.Classes, IniFiles;
+```
+
+Créez une méthode pour charger la configuration :
+
+```pascal
+procedure TFormMain.ChargerConfiguration;
+var
+  IniFile: TIniFile;
+  CheminConfig: string;
+begin
+  // Chemin du fichier de configuration
+  CheminConfig := ExtractFilePath(Application.ExeName) + 'config.ini';
+
+  // Vérifier que le fichier existe
+  if not FileExists(CheminConfig) then
+  begin
+    ShowMessage('Fichier config.ini introuvable !');
+    Exit;
+  end;
+
+  // Créer l'objet IniFile
+  IniFile := TIniFile.Create(CheminConfig);
+  try
+    // Lire les paramètres
+    FDConnection1.Params.Clear;
+    FDConnection1.Params.Add('DriverID=MySQL');
+    FDConnection1.Params.Add('Server=' + IniFile.ReadString('Database', 'Server', 'localhost'));
+    FDConnection1.Params.Add('Port=' + IniFile.ReadString('Database', 'Port', '3306'));
+    FDConnection1.Params.Add('Database=' + IniFile.ReadString('Database', 'Database', ''));
+    FDConnection1.Params.Add('User_Name=' + IniFile.ReadString('Database', 'Username', ''));
+    FDConnection1.Params.Add('Password=' + IniFile.ReadString('Database', 'Password', ''));
+    FDConnection1.Params.Add('CharacterSet=' + IniFile.ReadString('Database', 'CharacterSet', 'utf8mb4'));
+
+    FDConnection1.LoginPrompt := False;
+
+  finally
+    IniFile.Free;  // Libérer l'objet
+  end;
+end;
+```
+
+**Utilisation :**
+
+```pascal
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Charger la configuration au démarrage
+  ChargerConfiguration;
+end;
+```
+
+## Gestion avancée des erreurs
+
+Voici un exemple de gestion d'erreurs plus détaillée :
+
+```pascal
+procedure TFormMain.btnConnecterClick(Sender: TObject);
+begin
+  memoLog.Clear;
+
+  try
+    memoLog.Lines.Add('Connexion en cours...');
+    FDConnection1.Connected := True;
+
+    memoLog.Lines.Add('');
+    memoLog.Lines.Add('═══════════════════════════════');
+    memoLog.Lines.Add('✓ CONNEXION RÉUSSIE');
+    memoLog.Lines.Add('═══════════════════════════════');
+    memoLog.Lines.Add('Serveur     : ' + FDConnection1.Params.Values['Server']);
+    memoLog.Lines.Add('Base        : ' + FDConnection1.Params.Values['Database']);
+    memoLog.Lines.Add('Utilisateur : ' + FDConnection1.Params.Values['User_Name']);
+    memoLog.Lines.Add('Encodage    : ' + FDConnection1.Params.Values['CharacterSet']);
+
+    btnConnecter.Enabled := False;
+    btnDeconnecter.Enabled := True;
+
+  except
+    on E: EFDDBEngineException do
+    begin
+      memoLog.Lines.Add('');
+      memoLog.Lines.Add('═══════════════════════════════');
+      memoLog.Lines.Add('✗ ERREUR DE CONNEXION');
+      memoLog.Lines.Add('═══════════════════════════════');
+      memoLog.Lines.Add('Type    : Erreur FireDAC/MySQL');
+      memoLog.Lines.Add('Message : ' + E.Message);
+
+      // Analyser l'erreur
+      if Pos('Can''t connect', E.Message) > 0 then
+        memoLog.Lines.Add('→ Le serveur MySQL n''est peut-être pas démarré')
+      else if Pos('Access denied', E.Message) > 0 then
+        memoLog.Lines.Add('→ Vérifiez le nom d''utilisateur et le mot de passe')
+      else if Pos('Unknown database', E.Message) > 0 then
+        memoLog.Lines.Add('→ La base de données n''existe pas');
+
+      FDConnection1.Connected := False;
+    end;
+
+    on E: Exception do
+    begin
+      memoLog.Lines.Add('');
+      memoLog.Lines.Add('✗ ERREUR GÉNÉRALE');
+      memoLog.Lines.Add(E.ClassName + ': ' + E.Message);
+      FDConnection1.Connected := False;
+    end;
+  end;
+end;
+```
+
+## Test de votre application
+
+### Compilation et exécution
+
+1. Appuyez sur **F9** ou cliquez sur le bouton **Exécuter**
+2. Votre application se lance
+3. Cliquez sur **Se connecter**
+4. Si tout va bien, vous devriez voir le message de succès dans le memo
+
+### Vérifications
+
+✅ Le message "Connexion réussie" apparaît
+✅ Les informations de connexion sont affichées
+✅ Le bouton "Se connecter" est désactivé
+✅ Le bouton "Se déconnecter" est activé
+✅ En cliquant sur "Se déconnecter", la connexion se ferme
+
+## Résolution de problèmes courants
+
+### Erreur : "Cannot load vendor library"
+
+**Cause :** FireDAC ne trouve pas `libmysql.dll` ou `libmariadb.dll`
+
+**Solutions :**
+1. Vérifiez la propriété `VendorLib` de `TFDPhysMySQLDriverLink`
+2. Copiez la DLL dans le dossier de votre .exe
+3. Vérifiez que la DLL est de la même architecture (32/64 bits) que votre application
+
+### Erreur : "Can't connect to MySQL server"
+
+**Cause :** Le serveur MySQL n'est pas accessible
+
+**Solutions :**
+1. Vérifiez que le service MySQL/MariaDB est démarré
+2. Testez la connexion avec HeidiSQL ou MySQL Workbench
+3. Vérifiez le nom du serveur et le port (localhost, 3306)
+4. Vérifiez le pare-feu
+
+### Erreur : "Access denied for user"
+
+**Cause :** Nom d'utilisateur ou mot de passe incorrect
+
+**Solutions :**
+1. Vérifiez les identifiants
+2. Vérifiez que l'utilisateur existe dans MySQL
+3. Vérifiez les permissions de l'utilisateur
+4. Testez la connexion avec HeidiSQL
+
+### Erreur : "Unknown database"
+
+**Cause :** La base de données spécifiée n'existe pas
+
+**Solutions :**
+1. Vérifiez le nom de la base de données (sensible à la casse sous Linux)
+2. Créez la base de données si elle n'existe pas
+3. Vérifiez que l'utilisateur a accès à cette base
+
+### Problème : Caractères accentués mal affichés
+
+**Cause :** Encodage incorrect
+
+**Solutions :**
+1. Ajoutez `CharacterSet=utf8mb4` dans les paramètres
+2. Vérifiez que la base de données utilise utf8mb4
+3. Vérifiez l'encodage de vos fichiers source Delphi (UTF-8)
+
+## Bonnes pratiques
+
+### ✅ À faire
+
+- **Toujours** utiliser try...except pour gérer les erreurs de connexion
+- **Fermer** la connexion quand elle n'est plus nécessaire
+- **Utiliser** un fichier de configuration pour les paramètres de connexion
+- **Tester** la connexion avant de déployer l'application
+- **Utiliser** utf8mb4 comme encodage de caractères
+- **Créer** un utilisateur dédié pour l'application (ne pas utiliser root)
+
+### ❌ À éviter
+
+- Ne **jamais** laisser un mot de passe en clair dans le code source
+- Ne **pas** ignorer les exceptions de connexion
+- Ne **pas** garder la connexion ouverte inutilement
+- Ne **pas** utiliser le compte root pour les applications
+- Ne **pas** oublier de fermer la connexion à la fermeture de l'application
+
+## Méthodes utiles de TFDConnection
+
+| Méthode | Description | Exemple |
+|---------|-------------|---------|
+| `Open` | Ouvre la connexion | `FDConnection1.Open;` |
+| `Close` | Ferme la connexion | `FDConnection1.Close;` |
+| `ExecSQL` | Exécute une commande SQL | `FDConnection1.ExecSQL('CREATE TABLE...');` |
+| `StartTransaction` | Démarre une transaction | `FDConnection1.StartTransaction;` |
+| `Commit` | Valide une transaction | `FDConnection1.Commit;` |
+| `Rollback` | Annule une transaction | `FDConnection1.Rollback;` |
+
+## Propriétés utiles de TFDConnection
+
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `Connected` | Boolean | État de la connexion |
+| `ConnectionName` | String | Nom de la connexion |
+| `DriverName` | String | Nom du pilote (MySQL) |
+| `Params` | TStrings | Paramètres de connexion |
+| `LoginPrompt` | Boolean | Demander les identifiants |
+| `InTransaction` | Boolean | Transaction en cours ? |
+
+## Vérifier l'état de la connexion
+
+Vous pouvez vérifier l'état de la connexion à tout moment :
+
+```pascal
+if FDConnection1.Connected then
+begin
+  ShowMessage('Connexion active');
+  // Informations sur la connexion
+  ShowMessage('Serveur: ' + FDConnection1.Params.Values['Server']);
+end
+else
+  ShowMessage('Pas de connexion');
+```
+
+## Événements de TFDConnection
+
+Vous pouvez réagir aux événements de connexion :
+
+### OnBeforeConnect
+
+Se produit juste avant la tentative de connexion :
+
+```pascal
+procedure TFormMain.FDConnection1BeforeConnect(Sender: TObject);
+begin
+  memoLog.Lines.Add('Tentative de connexion...');
+end;
+```
+
+### OnAfterConnect
+
+Se produit après une connexion réussie :
+
+```pascal
+procedure TFormMain.FDConnection1AfterConnect(Sender: TObject);
+begin
+  memoLog.Lines.Add('Connecté avec succès !');
+end;
+```
+
+### OnBeforeDisconnect
+
+Se produit avant la déconnexion :
+
+```pascal
+procedure TFormMain.FDConnection1BeforeDisconnect(Sender: TObject);
+begin
+  memoLog.Lines.Add('Fermeture de la connexion...');
+end;
+```
+
+## Résumé
+
+Vous savez maintenant comment :
+
+✅ Placer les composants FireDAC sur un formulaire
+✅ Configurer une connexion MySQL/MariaDB au design time
+✅ Établir une connexion par code
+✅ Gérer les erreurs de connexion
+✅ Charger les paramètres depuis un fichier INI
+✅ Fermer proprement une connexion
+✅ Diagnostiquer les problèmes courants
+
+## Prochaines étapes
+
+Maintenant que votre application peut se connecter à MySQL/MariaDB, vous êtes prêt à :
+
+1. **Exécuter des requêtes SELECT** pour lire des données
+2. **Afficher les données** dans des grilles et des contrôles
+3. **Modifier les données** (INSERT, UPDATE, DELETE)
+4. **Utiliser des requêtes paramétrées** pour la sécurité
+
+Dans la section suivante, nous verrons comment manipuler concrètement les données de votre base MySQL/MariaDB !
 
 ⏭️ [Manipulation des données](/08-acces-aux-bases-de-donnees-mysql-mariadb/05-manipulation-des-donnees.md)

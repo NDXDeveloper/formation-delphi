@@ -1,1029 +1,983 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 8.7 Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans les sections précédentes, nous avons appris à connecter notre application à une base de données MySQL et à manipuler les données avec les DataSets et DataSources. Maintenant, il est temps d'explorer comment afficher et modifier ces données à travers l'interface utilisateur grâce aux contrôles liés aux données.
+Les **contrôles liés aux données** (Data-Aware Controls) sont des composants visuels spécialement conçus pour afficher et modifier automatiquement les données d'un DataSet. Ils rendent la création d'interfaces de bases de données incroyablement simple et rapide.
+
+Dans ce chapitre, nous allons explorer en détail tous les contrôles DB disponibles dans Delphi et apprendre à les utiliser efficacement.
 
 ## Qu'est-ce qu'un contrôle lié aux données ?
 
-Un **contrôle lié aux données** (ou contrôle DB-aware) est un composant visuel spécialement conçu pour afficher et/ou modifier les données provenant d'un DataSet. Ces contrôles se connectent à un DataSource et permettent une interaction automatique avec les données sans avoir à écrire beaucoup de code.
+### Définition
 
-![Architecture des contrôles DB](https://placeholder.pics/svg/600x250/DEDEDE/555555/Architecture%20Contrôles%20DB)
+Un **contrôle lié aux données** (ou Data-Aware Control) est un composant visuel qui :
+- Se connecte automatiquement à un DataSource
+- Affiche les données de l'enregistrement courant
+- Permet la modification directe des données
+- Se met à jour automatiquement lors de la navigation
 
-## Trouver les contrôles liés aux données dans l'IDE
+### Contrôle standard vs contrôle DB
 
-Dans l'IDE de Delphi, les contrôles liés aux données sont regroupés principalement dans la palette de composants sous deux onglets :
+| Contrôle standard | Contrôle DB | Différence |
+|-------------------|-------------|------------|
+| `TEdit` | `TDBEdit` | Le DBEdit se lie à un champ de la base |
+| `TMemo` | `TDBMemo` | Le DBMemo affiche automatiquement le contenu |
+| `TCheckBox` | `TDBCheckBox` | Le DBCheckBox reflète la valeur booléenne |
+| `TImage` | `TDBImage` | Le DBImage affiche une image stockée |
 
-- **Data Controls** : Contient les contrôles de base liés aux données
-- **Data Access** : Contient les composants d'accès aux données (DataSources, etc.)
+### Propriétés communes
 
-![Contrôles dans l'IDE](https://placeholder.pics/svg/500x200/DEDEDE/555555/Data%20Controls%20dans%20l'IDE)
+Tous les contrôles DB partagent ces deux propriétés essentielles :
 
-## Les contrôles liés aux données les plus courants
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `DataSource` | TDataSource | Le DataSource auquel se connecter |
+| `DataField` | String | Le nom du champ à afficher/modifier |
 
-### TDBGrid
+## Palette de composants Data Controls
 
-Le `TDBGrid` est sans doute le contrôle le plus utilisé pour afficher des données. Il présente les données sous forme de tableau avec des lignes (enregistrements) et des colonnes (champs).
+Dans l'IDE Delphi, les contrôles DB se trouvent dans l'onglet **Data Controls** :
 
-#### Propriétés importantes du TDBGrid
+```
+┌─────────────────────────────────────┐
+│  Data Controls                      │
+├─────────────────────────────────────┤
+│  DBGrid  DBNavigator  DBText        │
+│  DBEdit  DBMemo  DBImage  DBCombo   │
+│  DBCheckBox  DBRadioGroup           │
+│  DBLookupComboBox  DBLookupListBox  │
+│  DBRichEdit  DBCtrlGrid             │
+└─────────────────────────────────────┘
+```
 
-- **DataSource** : La source de données à afficher
-- **Columns** : Collection des colonnes et leur configuration
-- **Options** : Diverses options de comportement et d'apparence
-- **ReadOnly** : Si True, les données ne peuvent pas être modifiées
+## TDBGrid : La grille de données
 
-#### Configuration de base d'un TDBGrid
+**TDBGrid** est probablement le contrôle DB le plus utilisé. Il affiche les données sous forme de tableau avec des lignes et des colonnes.
 
-```delphi
-procedure TForm1.ConfigurerDBGrid;
+### Configuration de base
+
+```pascal
+// Au design time (dans l'inspecteur d'objets)
+DBGrid1.DataSource := DataSource1;
+
+// Ou par code
+DBGrid1.DataSource := DataSource1;
+```
+
+C'est tout ! Le DBGrid affiche automatiquement toutes les colonnes du DataSet.
+
+### Propriétés importantes
+
+#### Options d'affichage
+
+```pascal
+// Afficher les titres de colonnes
+DBGrid1.Options := DBGrid1.Options + [dgTitles];
+
+// Permettre la sélection de lignes entières
+DBGrid1.Options := DBGrid1.Options + [dgRowSelect];
+
+// Afficher les indicateurs (flèche sur la ligne courante)
+DBGrid1.Options := DBGrid1.Options + [dgIndicator];
+
+// Permettre l'édition directe
+DBGrid1.Options := DBGrid1.Options + [dgEditing];
+
+// Afficher les lignes alternées colorées
+DBGrid1.Options := DBGrid1.Options + [dgRowLines];
+```
+
+#### Configuration complète des options
+
+```pascal
+// Configurer toutes les options ensemble
+DBGrid1.Options := [
+  dgTitles,          // Afficher les en-têtes
+  dgIndicator,       // Afficher l'indicateur de ligne
+  dgColumnResize,    // Permettre le redimensionnement des colonnes
+  dgColLines,        // Lignes verticales entre colonnes
+  dgRowLines,        // Lignes horizontales entre lignes
+  dgTabs,            // Navigation avec Tab
+  dgRowSelect,       // Sélection de lignes entières
+  dgAlwaysShowSelection, // Garder la sélection visible
+  dgConfirmDelete,   // Confirmer avant suppression
+  dgCancelOnExit     // Annuler les modifications si on quitte
+];
+```
+
+### Personnalisation des colonnes
+
+#### Masquer/afficher des colonnes
+
+```pascal
+// Masquer la colonne "id"
+DBGrid1.Columns[0].Visible := False;
+
+// Ou par le nom du champ
+var
+  i: Integer;
 begin
-  // Connecter le DBGrid à la source de données
-  DBGrid1.DataSource := DataSource1;
-
-  // Optionnel : Configurer les options
-  DBGrid1.Options := DBGrid1.Options + [dgRowSelect, dgAlwaysShowSelection]
-                   - [dgEditing];  // Désactiver l'édition
-
-  // Définir la hauteur des lignes
-  DBGrid1.DefaultRowHeight := 22;
-
-  // Ajuster automatiquement la largeur des colonnes
-  DBGrid1.Columns.BeginUpdate;
-  try
-    // Configuration des colonnes (si nécessaire)
-  finally
-    DBGrid1.Columns.EndUpdate;
+  for i := 0 to DBGrid1.Columns.Count - 1 do
+  begin
+    if DBGrid1.Columns[i].FieldName = 'id' then
+      DBGrid1.Columns[i].Visible := False;
   end;
 end;
 ```
 
-#### Personnalisation des colonnes
+#### Définir la largeur des colonnes
 
-Pour une meilleure présentation des données, vous pouvez personnaliser les colonnes :
+```pascal
+// Définir la largeur en pixels
+DBGrid1.Columns[0].Width := 50;   // ID : 50 pixels
+DBGrid1.Columns[1].Width := 150;  // Nom : 150 pixels
+DBGrid1.Columns[2].Width := 150;  // Prénom : 150 pixels
+DBGrid1.Columns[3].Width := 200;  // Email : 200 pixels
 
-1. Sélectionnez le `TDBGrid` dans le formulaire
-2. Cliquez-droit et choisissez "Columns Editor"
-3. Cliquez sur le bouton "+" pour ajouter les colonnes souhaitées
-4. Configurez chaque colonne (titre, largeur, alignement, etc.)
-
-Ou par code :
-
-```delphi
-procedure TForm1.PersonnaliserColonnesDBGrid;
-var
-  Colonne: TColumn;
-begin
-  // Supprimer les colonnes existantes
-  DBGrid1.Columns.Clear;
-
-  // Ajouter et configurer des colonnes personnalisées
-  // Colonne ID
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'id';
-  Colonne.Title.Caption := 'ID';
-  Colonne.Width := 50;
-  Colonne.Alignment := taCenter;
-
-  // Colonne Nom
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'nom';
-  Colonne.Title.Caption := 'Nom';
-  Colonne.Width := 150;
-
-  // Colonne Prénom
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'prenom';
-  Colonne.Title.Caption := 'Prénom';
-  Colonne.Width := 150;
-
-  // Colonne Date de naissance avec format personnalisé
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'date_naissance';
-  Colonne.Title.Caption := 'Date de naissance';
-  Colonne.Width := 120;
-  Colonne.ButtonStyle := cbsNone;  // Pas de bouton calendrier
-
-  // Colonne Email
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'email';
-  Colonne.Title.Caption := 'Adresse e-mail';
-  Colonne.Width := 200;
-
-  // Masquer certaines colonnes
-  // Colonne.Visible := False;
-end;
+// Largeur automatique
+DBGrid1.Columns[0].Width := -1;  // Auto-ajustement
 ```
 
-#### Événements utiles du TDBGrid
+#### Changer les titres
 
-- **OnDrawColumnCell** : Permet de personnaliser l'affichage des cellules
-- **OnDblClick** : Déclenché lors d'un double-clic sur une cellule
-- **OnTitleClick** : Déclenché lors d'un clic sur un titre de colonne (utile pour le tri)
+```pascal
+// Changer le titre d'une colonne
+DBGrid1.Columns[0].Title.Caption := 'Identifiant';
+DBGrid1.Columns[1].Title.Caption := 'Nom complet';
+DBGrid1.Columns[2].Title.Caption := 'Adresse e-mail';
 
-#### Exemple de personnalisation de l'affichage
+// Alignement du titre
+DBGrid1.Columns[0].Title.Alignment := taCenter;
 
-```delphi
+// Police du titre
+DBGrid1.Columns[0].Title.Font.Style := [fsBold];
+DBGrid1.Columns[0].Title.Font.Color := clNavy;
+```
+
+#### Alignement et format des cellules
+
+```pascal
+// Aligner le contenu
+DBGrid1.Columns[0].Alignment := taCenter;      // ID centré
+DBGrid1.Columns[3].Alignment := taRightJustify; // Prix aligné à droite
+
+// Format d'affichage pour les nombres
+DBGrid1.Columns[3].DisplayFormat := '#,##0.00 €';  // Pour les prix
+
+// Couleur de fond
+DBGrid1.Columns[0].Color := clInfoBk;
+```
+
+### Éditeur de colonnes (au design time)
+
+**Méthode recommandée** : Utiliser l'éditeur de colonnes
+
+1. Clic droit sur le DBGrid → **Columns Editor**
+2. Cliquez sur **Add All Fields** pour ajouter toutes les colonnes
+3. Sélectionnez chaque colonne et modifiez ses propriétés :
+   - `FieldName` : Champ à afficher
+   - `Title.Caption` : En-tête de colonne
+   - `Width` : Largeur
+   - `Visible` : Afficher ou masquer
+   - `ReadOnly` : Lecture seule
+   - `Color` : Couleur de fond
+
+### Coloration conditionnelle
+
+```pascal
+// Événement OnDrawColumnCell
 procedure TForm1.DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect;
   DataCol: Integer; Column: TColumn; State: TGridDrawState);
 begin
-  // Personnaliser l'affichage des cellules
-  if not (gdSelected in State) then
+  // Colorer les lignes selon une condition
+  if FDQuery1.FieldByName('actif').AsBoolean = False then
   begin
-    // Colorer en alternance les lignes
-    if Odd(DBGrid1.DataSource.DataSet.RecNo) then
-      DBGrid1.Canvas.Brush.Color := $F0F0F0
-    else
-      DBGrid1.Canvas.Brush.Color := clWhite;
-
-    // Colorer différemment certaines valeurs
-    if (Column.FieldName = 'statut') and
-       (Column.Field.AsString = 'Inactif') then
-      DBGrid1.Canvas.Font.Color := clRed;
+    // Client inactif : fond gris clair
+    DBGrid1.Canvas.Brush.Color := clSilver;
+    DBGrid1.Canvas.FillRect(Rect);
   end;
 
-  // Dessiner la cellule
+  // Colorer une colonne spécifique
+  if Column.FieldName = 'solde' then
+  begin
+    if FDQuery1.FieldByName('solde').AsCurrency < 0 then
+      DBGrid1.Canvas.Font.Color := clRed  // Solde négatif en rouge
+    else
+      DBGrid1.Canvas.Font.Color := clGreen; // Solde positif en vert
+  end;
+
+  // Dessiner le texte par défaut
   DBGrid1.DefaultDrawColumnCell(Rect, DataCol, Column, State);
 end;
 ```
 
-#### Tri des données en cliquant sur les en-têtes
+### Événements utiles du DBGrid
 
-```delphi
+```pascal
+// Double-clic sur une cellule
+procedure TForm1.DBGrid1DblClick(Sender: TObject);
+begin
+  // Ouvrir un formulaire de détail, par exemple
+  ShowMessage('ID : ' + FDQuery1.FieldByName('id').AsString);
+end;
+
+// Clic sur un titre de colonne (pour trier)
 procedure TForm1.DBGrid1TitleClick(Column: TColumn);
 begin
-  // Trier par la colonne cliquée
-  if FDQuery1.IndexFieldNames = Column.FieldName then
-    // Inverser l'ordre si on clique sur la même colonne
-    FDQuery1.IndexFieldNames := Column.FieldName + ':D'
-  else
-    FDQuery1.IndexFieldNames := Column.FieldName;
-
-  // Indication visuelle de la colonne de tri (optionnel)
-  Column.Title.Font.Style := [fsBold];
+  // Trier par cette colonne
+  FDQuery1.Close;
+  FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY ' + Column.FieldName;
+  FDQuery1.Open;
 end;
-```
 
-### TDBNavigator
-
-Le `TDBNavigator` est un contrôle qui fournit des boutons pour naviguer et manipuler les enregistrements d'un DataSet. Il est très utile pour les interfaces de gestion de données.
-
-#### Propriétés du TDBNavigator
-
-- **DataSource** : La source de données à contrôler
-- **VisibleButtons** : Détermine quels boutons sont visibles
-- **Hints** : Infobulles pour chaque bouton
-- **ConfirmDelete** : Demande une confirmation avant la suppression
-
-#### Fonctions des boutons du TDBNavigator
-
-| Bouton | Fonction |
-|--------|----------|
-| Premier | Se déplace au premier enregistrement |
-| Précédent | Se déplace à l'enregistrement précédent |
-| Suivant | Se déplace à l'enregistrement suivant |
-| Dernier | Se déplace au dernier enregistrement |
-| Insérer | Ajoute un nouvel enregistrement |
-| Supprimer | Supprime l'enregistrement actuel |
-| Éditer | Passe en mode édition |
-| Valider | Enregistre les modifications |
-| Annuler | Annule les modifications |
-| Rafraîchir | Recharge les données du DataSet |
-
-#### Configuration du TDBNavigator
-
-```delphi
-procedure TForm1.ConfigurerDBNavigator;
+// Changement de cellule
+procedure TForm1.DBGrid1CellClick(Column: TColumn);
 begin
-  // Associer le navigateur à la source de données
-  DBNavigator1.DataSource := DataSource1;
-
-  // Personnaliser les boutons visibles (optionnel)
-  DBNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast,
-                                  nbInsert, nbDelete, nbEdit,
-                                  nbPost, nbCancel, nbRefresh];
-
-  // Définir des infobulles personnalisées
-  DBNavigator1.Hints.Clear;
-  DBNavigator1.Hints.Add('Premier');
-  DBNavigator1.Hints.Add('Précédent');
-  DBNavigator1.Hints.Add('Suivant');
-  DBNavigator1.Hints.Add('Dernier');
-  DBNavigator1.Hints.Add('Ajouter');
-  DBNavigator1.Hints.Add('Supprimer');
-  DBNavigator1.Hints.Add('Modifier');
-  DBNavigator1.Hints.Add('Enregistrer');
-  DBNavigator1.Hints.Add('Annuler');
-  DBNavigator1.Hints.Add('Actualiser');
-
-  // Activer les infobulles
-  DBNavigator1.ShowHint := True;
-
-  // Demander confirmation avant suppression
-  DBNavigator1.ConfirmDelete := True;
+  // Réagir au clic sur une cellule
+  StatusBar1.SimpleText := 'Colonne : ' + Column.Title.Caption;
 end;
 ```
 
-### Contrôles d'édition de texte
+### Exporter le contenu du DBGrid
 
-#### TDBEdit
+```pascal
+procedure ExporterVersCsv(Grid: TDBGrid; const NomFichier: string);
+var
+  F: TextFile;
+  i: Integer;
+  Ligne: string;
+begin
+  AssignFile(F, NomFichier);
+  Rewrite(F);
+  try
+    // En-têtes
+    Ligne := '';
+    for i := 0 to Grid.Columns.Count - 1 do
+    begin
+      if Grid.Columns[i].Visible then
+      begin
+        if Ligne <> '' then Ligne := Ligne + ';';
+        Ligne := Ligne + Grid.Columns[i].Title.Caption;
+      end;
+    end;
+    WriteLn(F, Ligne);
 
-Le `TDBEdit` est un champ de texte simple lié à un champ de la base de données.
+    // Données
+    Grid.DataSource.DataSet.DisableControls;
+    try
+      Grid.DataSource.DataSet.First;
+      while not Grid.DataSource.DataSet.Eof do
+      begin
+        Ligne := '';
+        for i := 0 to Grid.Columns.Count - 1 do
+        begin
+          if Grid.Columns[i].Visible then
+          begin
+            if Ligne <> '' then Ligne := Ligne + ';';
+            Ligne := Ligne + Grid.Columns[i].Field.AsString;
+          end;
+        end;
+        WriteLn(F, Ligne);
+        Grid.DataSource.DataSet.Next;
+      end;
+    finally
+      Grid.DataSource.DataSet.EnableControls;
+    end;
 
-```delphi
-// Configuration de base
+    ShowMessage('Export réussi');
+  finally
+    CloseFile(F);
+  end;
+end;
+```
+
+## Contrôles de saisie
+
+### TDBEdit : Champ de saisie
+
+**Usage :** Éditer une valeur texte ou numérique sur une ligne.
+
+```pascal
+// Configuration
 DBEdit1.DataSource := DataSource1;
-DBEdit1.DataField := 'nom';  // Nom du champ à éditer
+DBEdit1.DataField := 'nom';
+
+// Propriétés utiles
+DBEdit1.ReadOnly := False;     // Autoriser la modification
+DBEdit1.MaxLength := 50;       // Limiter à 50 caractères
+DBEdit1.CharCase := ecUpperCase; // Tout en majuscules
+DBEdit1.Color := clWindow;     // Couleur de fond
 ```
 
-#### TDBMemo
+**Validation :**
 
-Le `TDBMemo` est utilisé pour éditer des textes longs sur plusieurs lignes.
-
-```delphi
-// Configuration de base
-DBMemo1.DataSource := DataSource1;
-DBMemo1.DataField := 'description';
-DBMemo1.ScrollBars := ssVertical;  // Ajouter une barre de défilement verticale
-```
-
-#### TDBRichEdit
-
-Le `TDBRichEdit` permet d'éditer du texte avec mise en forme (gras, italique, etc.).
-
-```delphi
-// Configuration de base
-DBRichEdit1.DataSource := DataSource1;
-DBRichEdit1.DataField := 'contenu_formate';
-```
-
-### Contrôles de sélection
-
-#### TDBComboBox
-
-Le `TDBComboBox` permet de sélectionner une valeur parmi une liste prédéfinie.
-
-```delphi
-// Configuration de base
-DBComboBox1.DataSource := DataSource1;
-DBComboBox1.DataField := 'categorie';
-
-// Ajouter des éléments à la liste
-DBComboBox1.Items.Clear;
-DBComboBox1.Items.Add('Catégorie A');
-DBComboBox1.Items.Add('Catégorie B');
-DBComboBox1.Items.Add('Catégorie C');
-```
-
-#### TDBLookupComboBox
-
-Le `TDBLookupComboBox` est l'un des contrôles les plus puissants et utiles. Il permet de sélectionner une valeur à partir d'une autre table (par exemple, choisir un client dans une liste de clients).
-
-##### Configuration du TDBLookupComboBox
-
-Pour utiliser ce contrôle, nous avons besoin :
-1. D'un DataSet principal (celui que nous éditons)
-2. D'un DataSet de recherche (contenant les valeurs à afficher dans la liste)
-3. D'un DataSource pour le DataSet de recherche
-
-```delphi
-procedure TForm1.ConfigurerDBLookupComboBox;
+```pascal
+// Événement OnExit : validation à la sortie du champ
+procedure TForm1.DBEdit1Exit(Sender: TObject);
 begin
-  // Configurons un lookup pour sélectionner une ville
-
-  // 1. Configurer le DataSet de recherche
-  FDQueryVilles.Connection := FDConnection1;
-  FDQueryVilles.SQL.Text := 'SELECT id, nom FROM villes ORDER BY nom';
-  FDQueryVilles.Open;
-
-  // 2. Configurer le DataSource de recherche
-  DataSourceVilles.DataSet := FDQueryVilles;
-
-  // 3. Configurer le DBLookupComboBox
-  DBLookupComboBoxVille.DataSource := DataSourceClients;  // DataSource principal
-  DBLookupComboBoxVille.DataField := 'ville_id';          // Champ à éditer
-  DBLookupComboBoxVille.ListSource := DataSourceVilles;   // Source de la liste
-  DBLookupComboBoxVille.KeyField := 'id';                 // Champ de clé dans la liste
-  DBLookupComboBoxVille.ListField := 'nom';               // Champ à afficher dans la liste
+  if Trim(DBEdit1.Text) = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    DBEdit1.SetFocus;  // Remettre le focus
+  end;
 end;
 ```
 
-Avec cette configuration, lorsque l'utilisateur sélectionne une ville dans la liste, c'est l'ID de la ville qui sera enregistré dans le champ `ville_id` de la table clients, mais l'utilisateur verra le nom de la ville.
+### TDBMemo : Zone de texte multiligne
 
-#### TDBRadioGroup
+**Usage :** Éditer un texte long sur plusieurs lignes (commentaires, description).
 
-Le `TDBRadioGroup` permet de sélectionner une option parmi plusieurs via des boutons radio.
+```pascal
+// Configuration
+DBMemo1.DataSource := DataSource1;
+DBMemo1.DataField := 'commentaires';
 
-```delphi
-// Configuration de base
+// Propriétés
+DBMemo1.ScrollBars := ssVertical;  // Barre de défilement
+DBMemo1.WordWrap := True;          // Retour à la ligne automatique
+DBMemo1.MaxLength := 1000;         // Limite de caractères
+```
+
+### TDBRichEdit : Texte enrichi
+
+**Usage :** Texte avec mise en forme (gras, italique, couleurs).
+
+```pascal
+DBRichEdit1.DataSource := DataSource1;
+DBRichEdit1.DataField := 'description_riche';
+```
+
+## Contrôles de sélection
+
+### TDBCheckBox : Case à cocher
+
+**Usage :** Valeurs booléennes (Oui/Non, Vrai/Faux, Actif/Inactif).
+
+```pascal
+// Configuration
+DBCheckBox1.DataSource := DataSource1;
+DBCheckBox1.DataField := 'actif';
+
+// Personnalisation
+DBCheckBox1.Caption := 'Client actif';
+DBCheckBox1.ValueChecked := '1';     // Valeur si coché
+DBCheckBox1.ValueUnchecked := '0';   // Valeur si décoché
+```
+
+### TDBComboBox : Liste déroulante
+
+**Usage :** Sélectionner une valeur parmi une liste prédéfinie.
+
+```pascal
+// Configuration
+DBComboBox1.DataSource := DataSource1;
+DBComboBox1.DataField := 'civilite';
+
+// Ajouter les valeurs possibles
+DBComboBox1.Items.Clear;
+DBComboBox1.Items.Add('M.');
+DBComboBox1.Items.Add('Mme');
+DBComboBox1.Items.Add('Mlle');
+
+// Style
+DBComboBox1.Style := csDropDownList;  // Pas d'édition libre
+```
+
+### TDBRadioGroup : Groupe de boutons radio
+
+**Usage :** Choix exclusif parmi plusieurs options.
+
+```pascal
+// Configuration
 DBRadioGroup1.DataSource := DataSource1;
 DBRadioGroup1.DataField := 'statut';
 
-// Définir les options
+// Définir les valeurs
 DBRadioGroup1.Items.Clear;
 DBRadioGroup1.Items.Add('Actif');
-DBRadioGroup1.Items.Add('En attente');
 DBRadioGroup1.Items.Add('Inactif');
+DBRadioGroup1.Items.Add('Suspendu');
 
-// Définir les valeurs correspondantes
+// Valeurs correspondantes dans la base
 DBRadioGroup1.Values.Clear;
 DBRadioGroup1.Values.Add('A');
-DBRadioGroup1.Values.Add('P');
 DBRadioGroup1.Values.Add('I');
+DBRadioGroup1.Values.Add('S');
+
+// Affichage
+DBRadioGroup1.Caption := 'Statut du client';
+DBRadioGroup1.Columns := 3;  // 3 colonnes
 ```
 
-#### TDBCheckBox
+## Contrôles de Lookup (listes de choix)
 
-Le `TDBCheckBox` est utilisé pour les champs booléens (vrai/faux).
+Les contrôles **Lookup** permettent de sélectionner une valeur à partir d'une **autre table**.
 
-```delphi
-// Configuration de base
-DBCheckBox1.DataSource := DataSource1;
-DBCheckBox1.DataField := 'est_actif';
-DBCheckBox1.Caption := 'Client actif';
+### Concept du Lookup
 
-// Personnalisation des valeurs (optionnel)
-DBCheckBox1.ValueChecked := 'Oui';
-DBCheckBox1.ValueUnchecked := 'Non';
+**Scénario typique :**
+- Table `commandes` avec un champ `client_id`
+- Table `clients` avec `id` et `nom`
+- Vous voulez afficher le **nom du client** au lieu de l'ID numérique
+
+### TDBLookupComboBox : Liste déroulante de lookup
+
+```pascal
+// DataSource principal (commandes)
+DataSourceCommandes.DataSet := FDQueryCommandes;
+
+// DataSource de lookup (clients)
+DataSourceClients.DataSet := FDQueryClients;
+
+// Configuration du DBLookupComboBox
+DBLookupComboBox1.DataSource := DataSourceCommandes;  // Source principale
+DBLookupComboBox1.DataField := 'client_id';           // Champ à stocker
+
+DBLookupComboBox1.ListSource := DataSourceClients;    // Source de la liste
+DBLookupComboBox1.KeyField := 'id';                   // Champ clé dans clients
+DBLookupComboBox1.ListField := 'nom';                 // Champ à afficher
+
+// Charger les clients
+FDQueryClients.SQL.Text := 'SELECT id, nom FROM clients ORDER BY nom';
+FDQueryClients.Open;
 ```
 
-### Contrôles pour les dates
+**Fonctionnement :**
+1. L'utilisateur sélectionne "Dupont Jean" dans la liste
+2. Le DBLookupComboBox stocke l'`id` (par exemple 5) dans `commandes.client_id`
+3. Il affiche "Dupont Jean" à l'écran
 
-#### TDBDateTimePicker
+### Afficher plusieurs champs dans le Lookup
 
-Le `TDBDateTimePicker` permet de sélectionner une date et/ou une heure facilement.
+```pascal
+// Afficher nom et prénom
+DBLookupComboBox1.ListField := 'nom;prenom';
 
-```delphi
-// Configuration de base
-DBDateTimePicker1.DataSource := DataSource1;
-DBDateTimePicker1.DataField := 'date_naissance';
-
-// Format de la date
-DBDateTimePicker1.Format := 'dd/MM/yyyy';
+// Ou concaténer dans la requête
+FDQueryClients.SQL.Text :=
+  'SELECT id, CONCAT(nom, '' '', prenom) AS nom_complet FROM clients';
+DBLookupComboBox1.ListField := 'nom_complet';
 ```
 
-### Contrôles d'affichage uniquement
+### TDBLookupListBox : Liste de choix
 
-#### TDBText
+Similaire à DBLookupComboBox mais affiche une liste permanente au lieu d'une liste déroulante.
 
-Le `TDBText` affiche le contenu d'un champ sans permettre l'édition.
+```pascal
+DBLookupListBox1.DataSource := DataSourceCommandes;
+DBLookupListBox1.DataField := 'client_id';
+DBLookupListBox1.ListSource := DataSourceClients;
+DBLookupListBox1.KeyField := 'id';
+DBLookupListBox1.ListField := 'nom';
+DBLookupListBox1.Height := 150;  // Afficher plusieurs lignes
+```
 
-```delphi
-// Configuration de base
+## Contrôles d'affichage (lecture seule)
+
+### TDBText : Texte en lecture seule
+
+**Usage :** Afficher une valeur sans possibilité de modification.
+
+```pascal
 DBText1.DataSource := DataSource1;
-DBText1.DataField := 'nom_complet';
+DBText1.DataField := 'total';
+
+// Mise en forme
+DBText1.Font.Size := 14;
+DBText1.Font.Style := [fsBold];
+DBText1.Font.Color := clRed;
 ```
 
-#### TDBImage
+**Avantage sur TDBEdit :** Plus léger, optimisé pour l'affichage uniquement.
 
-Le `TDBImage` affiche une image stockée dans un champ BLOB.
+### TDBImage : Affichage d'images
 
-```delphi
-// Configuration de base
+**Usage :** Afficher des images stockées dans la base (champs BLOB).
+
+```pascal
 DBImage1.DataSource := DataSource1;
 DBImage1.DataField := 'photo';
-DBImage1.Stretch := True;  // Redimensionner l'image pour qu'elle s'adapte
-DBImage1.Proportional := True;  // Conserver les proportions
+
+// Options d'affichage
+DBImage1.Stretch := True;       // Étirer l'image
+DBImage1.Proportional := True;  // Garder les proportions
+DBImage1.Center := True;        // Centrer l'image
 ```
 
-## Gestion des événements des contrôles
+**Charger une image :**
 
-Les contrôles liés aux données génèrent des événements qui peuvent être utilisés pour personnaliser leur comportement :
-
-```delphi
-procedure TForm1.DBEdit1Change(Sender: TObject);
+```pascal
+procedure ChargerImage(const CheminFichier: string);
 begin
-  // Code à exécuter lorsque le contenu du DBEdit change
-  Label1.Caption := 'Modifié : ' + DBEdit1.Text;
-end;
+  if FDQuery1.State <> dsEdit then
+    FDQuery1.Edit;
 
-procedure TForm1.DBLookupComboBoxVilleCloseUp(Sender: TObject);
-begin
-  // Code à exécuter après la sélection d'une ville
-  if not VarIsNull(DBLookupComboBoxVille.KeyValue) then
-    Label2.Caption := 'Ville sélectionnée : ' + DBLookupComboBoxVille.Text;
+  TBlobField(FDQuery1.FieldByName('photo')).LoadFromFile(CheminFichier);
+  FDQuery1.Post;
 end;
 ```
 
-## Contrôler l'état d'activation des contrôles
+## TDBNavigator : Barre de navigation
 
-Il est souvent nécessaire d'activer ou désactiver des contrôles en fonction de l'état du DataSet :
+Le **DBNavigator** fournit des boutons pour naviguer et manipuler les données.
 
-```delphi
-procedure TForm1.DataSource1StateChange(Sender: TObject);
-begin
-  // Activer l'édition uniquement quand on est en mode insertion ou édition
-  DBEdit1.Enabled := DataSource1.State in [dsEdit, dsInsert];
-  DBEdit2.Enabled := DataSource1.State in [dsEdit, dsInsert];
-  DBLookupComboBox1.Enabled := DataSource1.State in [dsEdit, dsInsert];
+### Configuration complète
 
-  // Activer les boutons en fonction de l'état
-  ButtonEnregistrer.Enabled := DataSource1.State in [dsEdit, dsInsert];
-  ButtonAnnuler.Enabled := DataSource1.State in [dsEdit, dsInsert];
-  ButtonModifier.Enabled := (DataSource1.State = dsBrowse) and
-                            not DataSource1.DataSet.IsEmpty;
-end;
+```pascal
+DBNavigator1.DataSource := DataSource1;
+
+// Personnaliser les boutons visibles
+DBNavigator1.VisibleButtons := [
+  nbFirst,    // Premier
+  nbPrior,    // Précédent
+  nbNext,     // Suivant
+  nbLast,     // Dernier
+  nbInsert,   // Nouveau
+  nbDelete,   // Supprimer
+  nbEdit,     // Éditer
+  nbPost,     // Valider
+  nbCancel,   // Annuler
+  nbRefresh   // Rafraîchir
+];
+
+// Confirmer avant suppression
+DBNavigator1.ConfirmDelete := True;
+
+// Afficher les hints (bulles d'aide)
+DBNavigator1.ShowHint := True;
+DBNavigator1.Hints.Clear;
+DBNavigator1.Hints.Add('Premier enregistrement');
+DBNavigator1.Hints.Add('Enregistrement précédent');
+DBNavigator1.Hints.Add('Enregistrement suivant');
+DBNavigator1.Hints.Add('Dernier enregistrement');
+DBNavigator1.Hints.Add('Insérer un enregistrement');
+DBNavigator1.Hints.Add('Supprimer cet enregistrement');
+DBNavigator1.Hints.Add('Modifier cet enregistrement');
+DBNavigator1.Hints.Add('Valider les modifications');
+DBNavigator1.Hints.Add('Annuler les modifications');
+DBNavigator1.Hints.Add('Rafraîchir les données');
 ```
 
-## Validation des données saisies
+### Événements du DBNavigator
 
-Vous pouvez valider les données avant qu'elles ne soient enregistrées dans le DataSet :
-
-```delphi
-procedure TForm1.DataSource1DataChange(Sender: TObject; Field: TField);
+```pascal
+// Avant de cliquer sur un bouton
+procedure TForm1.DBNavigator1BeforeAction(Sender: TObject;
+  Button: TNavigateBtn);
 begin
-  // Vérifier si le champ modifié est le champ 'email'
-  if (Field <> nil) and (Field.FieldName = 'email') then
-  begin
-    // Vérifier que l'email contient un '@'
-    if (Field.AsString <> '') and (Pos('@', Field.AsString) = 0) then
-    begin
-      ShowMessage('Adresse e-mail invalide !');
-      DBEdit3.SetFocus;  // Revenir au champ email
-    end;
+  case Button of
+    nbDelete:
+      begin
+        // Vérification personnalisée avant suppression
+        if MessageDlg('Vraiment supprimer ?', mtWarning, [mbYes, mbNo], 0) <> mrYes then
+          Abort;  // Annule l'action
+      end;
+    nbPost:
+      begin
+        // Validation avant enregistrement
+        if Trim(FDQuery1.FieldByName('nom').AsString) = '' then
+        begin
+          ShowMessage('Le nom est obligatoire');
+          Abort;
+        end;
+      end;
   end;
 end;
+```
 
+## Contrôles spécialisés
+
+### TDBCtrlGrid : Grille de contrôles
+
+Affiche plusieurs enregistrements avec des contrôles personnalisés pour chacun (comme une "grille de fiches").
+
+```pascal
+// Configuration
+DBCtrlGrid1.DataSource := DataSource1;
+DBCtrlGrid1.RowCount := 5;  // 5 enregistrements visibles
+
+// Placer des contrôles à l'intérieur
+// (DBEdit, DBImage, etc. positionnés sur le DBCtrlGrid)
+```
+
+**Usage :** Créer des listes personnalisées de type "catalogue" ou "galerie".
+
+### TDBListBox : Liste avec données
+
+```pascal
+DBListBox1.DataSource := DataSource1;
+DBListBox1.DataField := 'categorie';
+```
+
+## Mise en page et organisation
+
+### Exemple d'interface complète
+
+```
+┌────────────────────────────────────────────┐
+│  Fiche Client                          [X] │
+├────────────────────────────────────────────┤
+│  [|◄] [◄] [►] [►|] [+] [🗑] [✓] [X]  [↻]   │ ← DBNavigator
+├────────────────────────────────────────────┤
+│  ┌──────────────────────────────────────┐  │
+│  │ Informations générales               │  │
+│  ├──────────────────────────────────────┤  │
+│  │ Civilité : [M.    ▼]  ← DBComboBox   │  │
+│  │ Nom :      [_____________] ← DBEdit  │  │
+│  │ Prénom :   [_____________] ← DBEdit  │  │
+│  │ Email :    [_____________] ← DBEdit  │  │
+│  │ Tél :      [_____________] ← DBEdit  │  │
+│  │ ☑ Actif    ← DBCheckBox             │  │
+│  └──────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────┐  │
+│  │ Commentaires      ← DBMemo           │  │
+│  │                                      │  │
+│  │                                      │  │
+│  └──────────────────────────────────────┘  │
+└────────────────────────────────────────────┘
+```
+
+### Utiliser des panels pour organiser
+
+```pascal
+// Panel pour les informations de base
+PanelInfos.Align := alTop;
+PanelInfos.Height := 200;
+PanelInfos.Caption := 'Informations générales';
+
+// Panel pour les commentaires
+PanelCommentaires.Align := alClient;
+```
+
+## Validation des données
+
+### Validation au niveau des contrôles
+
+```pascal
+// Dans l'événement OnExit du DBEdit
+procedure TForm1.DBEditEmailExit(Sender: TObject);
+begin
+  // Valider l'email
+  if (Trim(DBEditEmail.Text) <> '') and
+     (Pos('@', DBEditEmail.Text) = 0) then
+  begin
+    ShowMessage('Adresse email invalide');
+    DBEditEmail.SetFocus;
+  end;
+end;
+```
+
+### Validation centralisée
+
+```pascal
+// Dans l'événement BeforePost du DataSet
 procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);
 begin
-  // Vérifier que les champs obligatoires sont remplis
-  if DataSet.FieldByName('nom').AsString = '' then
+  // Nom obligatoire
+  if Trim(DataSet.FieldByName('nom').AsString) = '' then
   begin
-    ShowMessage('Le nom est obligatoire !');
-    DBEdit1.SetFocus;
-    Abort;  // Annuler l'enregistrement
-  end;
-
-  if DataSet.FieldByName('email').AsString = '' then
-  begin
-    ShowMessage('L''email est obligatoire !');
-    DBEdit3.SetFocus;
-    Abort;
-  end;
-end;
-```
-
-## Exemple complet : Formulaire de gestion des clients
-
-Voici un exemple qui illustre l'utilisation de plusieurs contrôles liés aux données dans une application réelle :
-
-```delphi
-unit UnitGestionClients;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL,
-  FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait, FireDAC.Stan.Param, FireDAC.DatS,
-  FireDAC.DApt.Intf, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  Vcl.StdCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Mask,
-  Vcl.ComCtrls;
-
-type
-  TFormGestionClients = class(TForm)
-    // Composants de base de données
-    FDConnection1: TFDConnection;
-    FDQueryClients: TFDQuery;
-    DataSourceClients: TDataSource;
-    FDQueryVilles: TFDQuery;
-    DataSourceVilles: TDataSource;
-
-    // Contrôles de navigation et d'affichage des données
-    PanelHaut: TPanel;
-    DBNavigator1: TDBNavigator;
-    PageControl1: TPageControl;
-
-    // Page "Liste des clients"
-    TabSheetListe: TTabSheet;
-    DBGrid1: TDBGrid;
-    PanelRecherche: TPanel;
-    LabelRechercher: TLabel;
-    EditRecherche: TEdit;
-    ButtonRechercher: TButton;
-
-    // Page "Détails du client"
-    TabSheetDetails: TTabSheet;
-    LabelNom: TLabel;
-    DBEditNom: TDBEdit;
-    LabelPrenom: TLabel;
-    DBEditPrenom: TDBEdit;
-    LabelEmail: TLabel;
-    DBEditEmail: TDBEdit;
-    LabelTelephone: TLabel;
-    DBEditTelephone: TDBEdit;
-    LabelAdresse: TLabel;
-    DBMemoAdresse: TDBMemo;
-    LabelVille: TLabel;
-    DBLookupComboBoxVille: TDBLookupComboBox;
-    LabelDateNaissance: TLabel;
-    DBDateTimePickerNaissance: TDBDateTimePicker;
-    DBCheckBoxActif: TDBCheckBox;
-    GroupBoxGenre: TDBRadioGroup;
-    LabelNotes: TLabel;
-    DBRichEditNotes: TDBRichEdit;
-    LabelDateCreation: TLabel;
-    DBTextDateCreation: TDBText;
-
-    // Boutons d'action
-    PanelBoutons: TPanel;
-    ButtonNouveau: TButton;
-    ButtonModifier: TButton;
-    ButtonSupprimer: TButton;
-    ButtonEnregistrer: TButton;
-    ButtonAnnuler: TButton;
-
-    StatusBar1: TStatusBar;
-
-    // Événements
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonRechercherClick(Sender: TObject);
-    procedure ButtonNouveauClick(Sender: TObject);
-    procedure ButtonModifierClick(Sender: TObject);
-    procedure ButtonSupprimerClick(Sender: TObject);
-    procedure ButtonEnregistrerClick(Sender: TObject);
-    procedure ButtonAnnulerClick(Sender: TObject);
-    procedure DBGrid1DblClick(Sender: TObject);
-    procedure DBGrid1TitleClick(Column: TColumn);
-    procedure DataSourceClientsStateChange(Sender: TObject);
-    procedure FDQueryClientsBeforePost(DataSet: TDataSet);
-    procedure DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect;
-      DataCol: Integer; Column: TColumn; State: TGridDrawState);
-
-  private
-    procedure ConnecterBaseDeDonnees;
-    procedure ConfigurerControles;
-    procedure ConfigurerDBGrid;
-    procedure MettreAJourStatut;
-  public
-    { Déclarations publiques }
-  end;
-
-var
-  FormGestionClients: TFormGestionClients;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormGestionClients.FormCreate(Sender: TObject);
-begin
-  ConnecterBaseDeDonnees;
-  ConfigurerControles;
-
-  // Initialiser les contrôles
-  PageControl1.ActivePage := TabSheetListe;
-  EditRecherche.Clear;
-
-  MettreAJourStatut;
-end;
-
-procedure TFormGestionClients.ConnecterBaseDeDonnees;
-begin
-  try
-    FDConnection1.Connected := True;
-
-    // Configurer et ouvrir les DataSets
-    FDQueryClients.Connection := FDConnection1;
-    FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';
-    FDQueryClients.Open;
-
-    FDQueryVilles.Connection := FDConnection1;
-    FDQueryVilles.SQL.Text := 'SELECT id, nom FROM villes ORDER BY nom';
-    FDQueryVilles.Open;
-
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      StatusBar1.SimpleText := 'Non connecté';
-    end;
-  end;
-end;
-
-procedure TFormGestionClients.ConfigurerControles;
-begin
-  // Configurer le navigateur
-  DBNavigator1.DataSource := DataSourceClients;
-
-  // Configurer le DBGrid
-  ConfigurerDBGrid;
-
-  // Configurer le DBLookupComboBox
-  DBLookupComboBoxVille.ListSource := DataSourceVilles;
-  DBLookupComboBoxVille.KeyField := 'id';
-  DBLookupComboBoxVille.ListField := 'nom';
-
-  // Configurer le DBRadioGroup
-  GroupBoxGenre.Items.Clear;
-  GroupBoxGenre.Items.Add('Homme');
-  GroupBoxGenre.Items.Add('Femme');
-  GroupBoxGenre.Items.Add('Autre');
-  GroupBoxGenre.Values.Clear;
-  GroupBoxGenre.Values.Add('H');
-  GroupBoxGenre.Values.Add('F');
-  GroupBoxGenre.Values.Add('A');
-
-  // Configurer le DBDateTimePicker
-  DBDateTimePickerNaissance.Format := 'dd/MM/yyyy';
-
-  // Configurer les contrôles en fonction de l'état du DataSet
-  DataSourceClientsStateChange(nil);
-end;
-
-procedure TFormGestionClients.ConfigurerDBGrid;
-var
-  Colonne: TColumn;
-begin
-  DBGrid1.DataSource := DataSourceClients;
-
-  // Personnaliser les colonnes
-  DBGrid1.Columns.Clear;
-
-  // Colonne ID
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'id';
-  Colonne.Title.Caption := 'ID';
-  Colonne.Width := 50;
-  Colonne.Alignment := taCenter;
-
-  // Colonne Nom
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'nom';
-  Colonne.Title.Caption := 'Nom';
-  Colonne.Width := 150;
-
-  // Colonne Prénom
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'prenom';
-  Colonne.Title.Caption := 'Prénom';
-  Colonne.Width := 150;
-
-  // Colonne Email
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'email';
-  Colonne.Title.Caption := 'Email';
-  Colonne.Width := 200;
-
-  // Colonne Téléphone
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'telephone';
-  Colonne.Title.Caption := 'Téléphone';
-  Colonne.Width := 120;
-
-  // Colonne Actif
-  Colonne := DBGrid1.Columns.Add;
-  Colonne.FieldName := 'actif';
-  Colonne.Title.Caption := 'Actif';
-  Colonne.Width := 60;
-  Colonne.Alignment := taCenter;
-
-  // Options du DBGrid
-  DBGrid1.Options := DBGrid1.Options + [dgRowSelect, dgAlwaysShowSelection]
-                   - [dgEditing];
-end;
-
-procedure TFormGestionClients.FormDestroy(Sender: TObject);
-begin
-  // Fermer proprement les DataSets et la connexion
-  if FDQueryVilles.Active then
-    FDQueryVilles.Close;
-
-  if FDQueryClients.Active then
-    FDQueryClients.Close;
-
-  if FDConnection1.Connected then
-    FDConnection1.Connected := False;
-end;
-
-procedure TFormGestionClients.ButtonRechercherClick(Sender: TObject);
-var
-  TermeRecherche: string;
-begin
-  TermeRecherche := Trim(EditRecherche.Text);
-
-  if TermeRecherche = '' then
-  begin
-    // Réinitialiser le filtre
-    FDQueryClients.Filtered := False;
-    FDQueryClients.Filter := '';
-  end
-  else
-  begin
-    // Appliquer un filtre
-    FDQueryClients.Filtered := False;  // Désactiver d'abord
-    FDQueryClients.Filter := Format('(nom LIKE ''%%%s%%'') OR (prenom LIKE ''%%%s%%'') OR (email LIKE ''%%%s%%'')',
-                               [TermeRecherche, TermeRecherche, TermeRecherche]);
-    FDQueryClients.Filtered := True;
-  end;
-
-  MettreAJourStatut;
-end;
-
-procedure TFormGestionClients.ButtonNouveauClick(Sender: TObject);
-begin
-  FDQueryClients.Append;
-  PageControl1.ActivePage := TabSheetDetails;
-  DBEditNom.SetFocus;
-end;
-
-procedure TFormGestionClients.ButtonModifierClick(Sender: TObject);
-begin
-  if not FDQueryClients.IsEmpty then
-  begin
-    FDQueryClients.Edit;
-    PageControl1.ActivePage := TabSheetDetails;
+    ShowMessage('Le nom est obligatoire');
     DBEditNom.SetFocus;
+    Abort;  // Empêche le Post
   end;
-end;
 
-procedure TFormGestionClients.ButtonSupprimerClick(Sender: TObject);
-begin
-  if not FDQueryClients.IsEmpty then
-    if MessageDlg('Êtes-vous sûr de vouloir supprimer ce client ?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      FDQueryClients.Delete;
-end;
-
-procedure TFormGestionClients.ButtonEnregistrerClick(Sender: TObject);
-begin
-  if FDQueryClients.State in [dsEdit, dsInsert] then
+  // Email valide
+  if Pos('@', DataSet.FieldByName('email').AsString) = 0 then
   begin
-    try
-      FDQueryClients.Post;
-      PageControl1.ActivePage := TabSheetListe;
-    except
-      on E: Exception do
-        ShowMessage('Erreur lors de l''enregistrement : ' + E.Message);
-    end;
-  end;
-end;
-
-procedure TFormGestionClients.ButtonAnnulerClick(Sender: TObject);
-begin
-  if FDQueryClients.State in [dsEdit, dsInsert] then
-  begin
-    FDQueryClients.Cancel;
-    PageControl1.ActivePage := TabSheetListe;
-  end;
-end;
-
-procedure TFormGestionClients.DBGrid1DblClick(Sender: TObject);
-begin
-  if not FDQueryClients.IsEmpty then
-  begin
-    PageControl1.ActivePage := TabSheetDetails;
-  end;
-end;
-
-procedure TFormGestionClients.DBGrid1TitleClick(Column: TColumn);
-begin
-  // Trier par la colonne cliquée
-  if FDQueryClients.IndexFieldNames = Column.FieldName then
-    // Inverser l'ordre si on clique sur la même colonne
-    FDQueryClients.IndexFieldNames := Column.FieldName + ':D'
-  else
-    FDQueryClients.IndexFieldNames := Column.FieldName;
-end;
-
-procedure TFormGestionClients.DataSourceClientsStateChange(Sender: TObject);
-begin
-  // Adapter l'interface en fonction de l'état du DataSet
-  case FDQueryClients.State of
-    dsEdit, dsInsert:
-      begin
-        // En mode édition ou insertion
-        ButtonNouveau.Enabled := False;
-        ButtonModifier.Enabled := False;
-        ButtonSupprimer.Enabled := False;
-        ButtonEnregistrer.Enabled := True;
-        ButtonAnnuler.Enabled := True;
-        DBNavigator1.Enabled := False;
-        DBGrid1.Enabled := False;
-        EditRecherche.Enabled := False;
-        ButtonRechercher.Enabled := False;
-
-        StatusBar1.SimpleText := 'Édition en cours...';
-      end;
-    dsBrowse:
-      begin
-        // En mode navigation
-        ButtonNouveau.Enabled := True;
-        ButtonModifier.Enabled := not FDQueryClients.IsEmpty;
-        ButtonSupprimer.Enabled := not FDQueryClients.IsEmpty;
-        ButtonEnregistrer.Enabled := False;
-        ButtonAnnuler.Enabled := False;
-        DBNavigator1.Enabled := True;
-        DBGrid1.Enabled := True;
-        EditRecherche.Enabled := True;
-        ButtonRechercher.Enabled := True;
-
-        MettreAJourStatut;
-      end;
-  end;
-end;
-
-procedure TFormGestionClients.FDQueryClientsBeforePost(DataSet: TDataSet);
-begin
-  // Valider les données avant enregistrement
-  if DataSet.FieldByName('nom').AsString = '' then
-  begin
-    ShowMessage('Le nom est obligatoire !');
-    DBEditNom.SetFocus;
-    Abort;
-  end;
-
-  if DataSet.FieldByName('email').AsString = '' then
-  begin
-    ShowMessage('L''email est obligatoire !');
+    ShowMessage('Email invalide');
     DBEditEmail.SetFocus;
     Abort;
   end;
 
-  // Ajouter des champs de suivi
-  if DataSet.State = dsInsert then
-    DataSet.FieldByName('date_creation').AsDateTime := Now
-  else if DataSet.State = dsEdit then
-    DataSet.FieldByName('date_modification').AsDateTime := Now;
-end;
-
-procedure TFormGestionClients.DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect;
-  DataCol: Integer; Column: TColumn; State: TGridDrawState);
-begin
-  // Personnaliser l'affichage des cellules
-  if not (gdSelected in State) then
+  // Téléphone avec format
+  if not ValidatePhone(DataSet.FieldByName('telephone').AsString) then
   begin
-    // Colorer en alternance les lignes
-    if Odd(FDQueryClients.RecNo) then
-      DBGrid1.Canvas.Brush.Color := $F0F0F0
-    else
-      DBGrid1.Canvas.Brush.Color := clWhite;
-
-    // Colorer différemment certaines valeurs
-    if (Column.FieldName = 'actif') then
-    begin
-      if Column.Field.AsString = 'Oui' then
-        DBGrid1.Canvas.Font.Color := clGreen
-      else
-        DBGrid1.Canvas.Font.Color := clRed;
-    end;
+    ShowMessage('Numéro de téléphone invalide');
+    DBEditTel.SetFocus;
+    Abort;
   end;
-
-  // Dessiner la cellule
-  DBGrid1.DefaultDrawColumnCell(Rect, DataCol, Column, State);
 end;
+```
 
-procedure TFormGestionClients.MettreAJourStatut;
+## Formatage des données
+
+### Masques de saisie
+
+```pascal
+// Téléphone français
+DBEditTel.EditMask := '00 00 00 00 00;1;_';
+
+// Code postal
+DBEditCP.EditMask := '00000;1;_';
+
+// Date
+DBEditDate.EditMask := '00/00/0000;1;_';
+
+// NIR (Sécurité sociale)
+DBEditNIR.EditMask := '0 00 00 00 000 000 00;1;_';
+```
+
+**Format du masque :**
+- `0` : Chiffre obligatoire
+- `9` : Chiffre optionnel
+- `L` : Lettre obligatoire
+- `l` : Lettre optionnelle
+- `A` : Lettre ou chiffre obligatoire
+- `a` : Lettre ou chiffre optionnel
+- `;1` : Enregistrer avec le masque
+- `;_` : Caractère d'espace réservé
+
+### DisplayFormat pour l'affichage
+
+```pascal
+// Dans l'éditeur de champs du DataSet
+// Pour un champ monétaire
+TFloatField(FDQuery1prix).DisplayFormat := '#,##0.00 €';
+
+// Pour un champ pourcentage
+TFloatField(FDQuery1taux).DisplayFormat := '0.00 %';
+
+// Pour les grands nombres
+TIntegerField(FDQuery1population).DisplayFormat := '#,###';
+```
+
+## Gestion des couleurs
+
+### Coloration selon l'état
+
+```pascal
+procedure TForm1.DataSource1StateChange(Sender: TObject);
 begin
-  if FDQueryClients.Active then
+  case TDataSource(Sender).State of
+    dsEdit, dsInsert:
+      begin
+        // Mode édition : fond jaune clair
+        DBEditNom.Color := $00FFFFCC;
+        DBEditPrenom.Color := $00FFFFCC;
+        DBEditEmail.Color := $00FFFFCC;
+      end;
+    dsBrowse:
+      begin
+        // Mode navigation : fond blanc
+        DBEditNom.Color := clWindow;
+        DBEditPrenom.Color := clWindow;
+        DBEditEmail.Color := clWindow;
+      end;
+  end;
+end;
+```
+
+### Coloration selon les valeurs
+
+```pascal
+procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);
+begin
+  // Client inactif : grisé
+  if not DataSet.FieldByName('actif').AsBoolean then
   begin
-    if FDQueryClients.Filtered then
-      StatusBar1.SimpleText := Format('%d clients trouvés (filtrés)', [FDQueryClients.RecordCount])
-    else
-      StatusBar1.SimpleText := Format('%d clients au total', [FDQueryClients.RecordCount]);
+    DBEditNom.Color := clSilver;
+    DBEditNom.Font.Color := clGray;
   end
   else
-    StatusBar1.SimpleText := 'Base de données non connectée';
-end;
-
-end.
-```
-
-## Bonnes pratiques pour l'utilisation des contrôles liés aux données
-
-Pour tirer le meilleur parti des contrôles liés aux données dans vos applications Delphi :
-
-1. **Organisation de l'interface** : Regroupez logiquement les contrôles liés (par exemple, utilisez des `TGroupBox` ou des `TPanel`).
-
-2. **Validation des données** :
-   - Utilisez les événements `BeforePost` du DataSet pour valider les données
-   - Ajoutez des validations au niveau des contrôles pour un retour immédiat
-
-3. **Expérience utilisateur** :
-   - Désactivez les contrôles qui ne doivent pas être modifiés dans certains états
-   - Utilisez des raccourcis clavier (propriété `ShortCut`)
-   - Ajoutez des infobulles explicatives (propriété `Hint` avec `ShowHint := True`)
-
-4. **Performance** :
-   - Ne chargez que les données nécessaires dans le DataSet
-   - Utilisez des objets `TField` persistants pour un accès rapide aux champs
-   - Pour les grandes listes, utilisez des techniques de chargement progressif
-
-5. **Facilité de maintenance** :
-   - Nommez clairement vos contrôles (par exemple, `DBEditNomClient`)
-   - Commentez le code, particulièrement pour les validations complexes
-   - Centralisez la logique de validation dans des méthodes dédiées
-
-## Personnalisation avancée des contrôles
-
-### Créer un contrôle personnalisé
-
-Si les contrôles standard ne répondent pas à vos besoins, vous pouvez créer vos propres contrôles liés aux données :
-
-```delphi
-unit DBAdvancedEdit;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.DBCtrls, Data.DB;
-
-type
-  TDBAdvancedEdit = class(TDBEdit)
-  private
-    FMandatory: Boolean;
-    FMandatoryColor: TColor;
-    procedure SetMandatory(const Value: Boolean);
-    procedure UpdateBackground;
-  protected
-    procedure Change; override;
-  public
-    constructor Create(AOwner: TComponent); override;
-  published
-    property Mandatory: Boolean read FMandatory write SetMandatory default False;
-    property MandatoryColor: TColor read FMandatoryColor write FMandatoryColor default clYellow;
-  end;
-
-procedure Register;
-
-implementation
-
-procedure Register;
-begin
-  RegisterComponents('Data Controls', [TDBAdvancedEdit]);
-end;
-
-constructor TDBAdvancedEdit.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FMandatory := False;
-  FMandatoryColor := clYellow;
-end;
-
-procedure TDBAdvancedEdit.SetMandatory(const Value: Boolean);
-begin
-  if FMandatory <> Value then
   begin
-    FMandatory := Value;
-    UpdateBackground;
+    DBEditNom.Color := clWindow;
+    DBEditNom.Font.Color := clBlack;
   end;
 end;
-
-procedure TDBAdvancedEdit.Change;
-begin
-  inherited Change;
-  UpdateBackground;
-end;
-
-procedure TDBAdvancedEdit.UpdateBackground;
-begin
-  if FMandatory and (Text = '') then
-    Color := FMandatoryColor
-  else
-    Color := clWindow;
-end;
-
-end.
 ```
 
-### Utiliser des styles pour personnaliser l'apparence
+## Contrôles en lecture seule
 
-Delphi permet de personnaliser l'apparence des contrôles via les styles VCL :
+### Rendre un contrôle ReadOnly
 
-```delphi
-procedure TForm1.ApplyCustomStyle;
+```pascal
+// Désactiver l'édition
+DBEditID.ReadOnly := True;
+DBEditDateCreation.ReadOnly := True;
+
+// Visuellement différent
+DBEditID.Color := clBtnFace;
+DBEditID.Font.Color := clGrayText;
+```
+
+### Désactiver selon les droits
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Charger un style personnalisé
-  TStyleManager.TrySetStyle('Aqua Light Slate');
-
-  // Ou appliquer des modifications spécifiques
-  with DBGrid1.TitleFont do
+  // Si l'utilisateur n'est pas administrateur
+  if not EstAdministrateur then
   begin
-    Name := 'Segoe UI';
-    Size := 10;
-    Style := [fsBold];
-    Color := clNavy;
+    DBEditSalaire.ReadOnly := True;
+    DBEditSalaire.Color := clBtnFace;
+    DBNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast];
   end;
 end;
 ```
 
-## Conclusion
+## Raccourcis clavier et navigation
 
-Les contrôles liés aux données sont l'un des grands avantages de Delphi pour le développement d'applications de gestion. Ils vous permettent de créer rapidement des interfaces utilisateur qui interagissent avec vos bases de données sans avoir à écrire beaucoup de code.
+### Navigation au clavier dans les contrôles
 
-Pour créer des applications professionnelles avec Delphi et MySQL/MariaDB :
-- Utilisez les DataSets et DataSources pour accéder aux données
-- Choisissez les contrôles liés aux données appropriés pour chaque type de champ
-- Personnalisez l'apparence et le comportement des contrôles pour une meilleure expérience utilisateur
-- Validez les données pour assurer l'intégrité de votre base de données
-- Structurez votre interface de manière logique et intuitive
+```pascal
+// Ordre de tabulation
+DBEditNom.TabOrder := 0;
+DBEditPrenom.TabOrder := 1;
+DBEditEmail.TabOrder := 2;
+DBEditTel.TabOrder := 3;
 
-Dans la prochaine section, nous explorerons "Live Bindings et liaison de données visuelle", une autre approche puissante pour connecter vos données à votre interface utilisateur.
+// Passer directement au suivant avec Enter
+procedure TForm1.DBEditNomKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then  // Touche Enter
+  begin
+    Key := #0;  // Annuler le beep
+    SelectNext(Sender as TWinControl, True, True);  // Aller au suivant
+  end;
+end;
+```
 
----
+### Raccourcis pour le DBNavigator
 
-**À suivre :** 8.8 Live Bindings et liaison de données visuelle
+```pascal
+// Gérer les touches F2, F3, etc.
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  case Key of
+    VK_F2: FDQuery1.Insert;     // F2 : Nouveau
+    VK_F3: FDQuery1.Edit;       // F3 : Modifier
+    VK_F4: FDQuery1.Delete;     // F4 : Supprimer
+    VK_F5: FDQuery1.Refresh;    // F5 : Rafraîchir
+  end;
+end;
+```
+
+## Bonnes pratiques
+
+### ✅ À FAIRE
+
+1. **Utiliser la validation dans BeforePost**
+   ```pascal
+   procedure FDQuery1BeforePost(DataSet: TDataSet);
+   begin
+     // Validation centralisée
+   end;
+   ```
+
+2. **Fournir un retour visuel**
+   ```pascal
+   // Changer la couleur en mode édition
+   if DataSource1.State in [dsEdit, dsInsert] then
+     Panel1.Color := clYellow;
+   ```
+
+3. **Désactiver les contrôles pendant le chargement**
+   ```pascal
+   DBEdit1.Enabled := False;
+   try
+     FDQuery1.Open;
+   finally
+     DBEdit1.Enabled := True;
+   end;
+   ```
+
+4. **Utiliser DBLookupComboBox pour les clés étrangères**
+   ```pascal
+   // Plutôt que de saisir un ID manuellement
+   DBLookupComboBox1.ListField := 'nom_client';
+   ```
+
+5. **Gérer les valeurs NULL**
+   ```pascal
+   if FDQuery1.FieldByName('telephone').IsNull then
+     DBTextTel.Caption := '(non renseigné)';
+   ```
+
+### ❌ À ÉVITER
+
+1. **Modifier directement sans vérifier l'état**
+   ```pascal
+   // ❌ ERREUR
+   DBEdit1.Text := 'Nouvelle valeur';  // Ne modifie pas la base !
+
+   // ✅ CORRECT
+   FDQuery1.Edit;
+   FDQuery1.FieldByName('nom').AsString := 'Nouvelle valeur';
+   FDQuery1.Post;
+   ```
+
+2. **Oublier de lier DataSource ET DataField**
+   ```pascal
+   // ❌ Incomplet
+   DBEdit1.DataSource := DataSource1;
+   // Manque DataField !
+   ```
+
+3. **Trop de contrôles sur un formulaire**
+   ```
+   ❌ Un formulaire avec 50 DBEdit
+   ✅ Organiser en onglets ou sous-formulaires
+   ```
+
+4. **Ne pas gérer les erreurs de contraintes**
+   ```pascal
+   // ✅ Gérer les doublons
+   try
+     FDQuery1.Post;
+   except
+     on E: Exception do
+       if Pos('Duplicate', E.Message) > 0 then
+         ShowMessage('Cette valeur existe déjà');
+   end;
+   ```
+
+## Tableau récapitulatif des contrôles DB
+
+| Contrôle | Usage | Propriétés clés |
+|----------|-------|-----------------|
+| `TDBGrid` | Grille de données | `DataSource`, `Options`, `Columns` |
+| `TDBEdit` | Saisie texte | `DataSource`, `DataField`, `MaxLength` |
+| `TDBMemo` | Texte multiligne | `DataSource`, `DataField`, `ScrollBars` |
+| `TDBText` | Affichage texte | `DataSource`, `DataField` |
+| `TDBCheckBox` | Case à cocher | `DataSource`, `DataField`, `Caption` |
+| `TDBComboBox` | Liste déroulante | `DataSource`, `DataField`, `Items` |
+| `TDBLookupComboBox` | Lookup | `DataSource`, `DataField`, `ListSource`, `KeyField`, `ListField` |
+| `TDBImage` | Image | `DataSource`, `DataField`, `Stretch` |
+| `TDBNavigator` | Navigation | `DataSource`, `VisibleButtons` |
+| `TDBRadioGroup` | Choix exclusif | `DataSource`, `DataField`, `Items`, `Values` |
+
+## Résumé
+
+### Points clés
+
+✅ Les contrôles DB se lient automatiquement aux données via **DataSource** et **DataField**
+✅ **TDBGrid** est le composant le plus polyvalent pour afficher des données
+✅ **TDBLookupComboBox** est essentiel pour les relations entre tables
+✅ La **validation** se fait idéalement dans l'événement **BeforePost**
+✅ Les contrôles DB se mettent à jour **automatiquement** lors de la navigation
+✅ Utilisez **DBNavigator** pour fournir une interface de navigation standard
+
+### Workflow typique
+
+```
+1. Placer un TDataSource sur le formulaire
+2. Le lier à un TFDQuery
+3. Placer des contrôles DB (DBEdit, DBGrid, etc.)
+4. Configurer DataSource et DataField pour chaque contrôle
+5. Ouvrir le Query → Les données s'affichent automatiquement !
+```
+
+## Prochaines étapes
+
+Vous maîtrisez maintenant tous les contrôles liés aux données ! Dans les sections suivantes, nous verrons :
+
+1. **Live Bindings** : Une approche moderne et flexible pour lier les données
+2. **Modèle en couches** : Séparer la logique d'accès aux données de l'interface
+3. **Migration et synchronisation** : Gérer l'évolution de vos bases de données
+
+Avec ces connaissances, vous pouvez créer des interfaces riches et intuitives pour manipuler vos données MySQL/MariaDB !
 
 ⏭️ [Live Bindings et liaison de données visuelle](/08-acces-aux-bases-de-donnees-mysql-mariadb/08-live-bindings-et-liaison-de-donnees-visuelle.md)

@@ -1,329 +1,507 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 8.3 FireDAC : architecture et composants
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans cette section, nous allons explorer l'architecture de FireDAC et ses principaux composants. Comprendre ces éléments vous permettra de tirer le meilleur parti de cette technologie d'accès aux données puissante et flexible.
+FireDAC (Fire Data Access Components) est le framework moderne de Delphi pour accéder aux bases de données. Avant de commencer à l'utiliser, il est important de comprendre comment il est organisé et quels sont les composants principaux que vous utiliserez dans vos applications.
 
-## Qu'est-ce que FireDAC ?
+Dans ce chapitre, nous allons découvrir l'architecture de FireDAC de manière simple et progressive, sans rentrer dans des détails trop techniques.
 
-FireDAC (Fast InProcess REtrieval of Data) est la bibliothèque d'accès aux données moderne de Delphi. Elle remplace les anciennes technologies comme BDE, dbExpress et ADO, en offrant de meilleures performances et davantage de fonctionnalités.
+## Qu'est-ce qu'un composant ?
 
-![Logo FireDAC](https://placeholder.pics/svg/300x100/DEDEDE/555555/FireDAC)
+Dans Delphi, un **composant** est un élément réutilisable que vous pouvez placer sur vos formulaires. Les composants FireDAC sont des éléments non-visuels (ils n'apparaissent pas à l'exécution) qui gèrent la communication avec la base de données.
 
-## L'architecture en couches de FireDAC
+**Analogie simple :**
+Imaginez que vous voulez commander un repas dans un restaurant :
+- Le **serveur** (composant de connexion) fait le lien entre vous et la cuisine
+- Le **menu** (composant de requête) contient les plats disponibles
+- Votre **commande** (les données) est transmise et préparée
+- Le **plateau** (DataSource) apporte le plat à votre table
 
-FireDAC utilise une architecture en couches qui sépare clairement les différentes responsabilités. Cette conception rend FireDAC à la fois puissant et flexible.
+C'est exactement le même principe avec FireDAC : différents composants travaillent ensemble pour récupérer et afficher vos données.
 
-### Les couches principales de FireDAC
+## Architecture globale de FireDAC
 
-1. **Couche Application** : Interface avec votre code Delphi
-2. **Couche Dataset** : Gestion des données en mémoire
-3. **Couche SQL Command** : Traduction et exécution des requêtes SQL
-4. **Couche Database** : Communication avec les bases de données spécifiques
-5. **Couche Driver** : Interface avec les bibliothèques clientes des SGBD
-
-Voici une représentation simplifiée de cette architecture :
+FireDAC utilise une architecture en **couches** (layers) pour séparer les responsabilités :
 
 ```
-+---------------------------+
-|   Application Delphi      |
-+---------------------------+
-            ↕
-+---------------------------+
-|  Composants FireDAC       |
-|  (TFDQuery, TFDTable...)  |
-+---------------------------+
-            ↕
-+---------------------------+
-|    Moteur FireDAC         |
-+---------------------------+
-            ↕
-+---------------------------+
-|   Pilotes spécifiques     |
-|   (MySQL, SQLite...)      |
-+---------------------------+
-            ↕
-+---------------------------+
-|   Bases de données        |
-+---------------------------+
+┌─────────────────────────────────────────┐
+│   Votre Application Delphi              │
+│   (Interface utilisateur)               │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Composants de Liaison (DataSource)    │
+│   - TDataSource                         │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Composants de Données (DataSets)      │
+│   - TFDQuery, TFDTable, TFDStoredProc   │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Composant de Connexion                │
+│   - TFDConnection                       │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Pilote FireDAC (FD.Phys.MySQL)        │
+│   Gère la communication spécifique      │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Bibliothèque Client MySQL             │
+│   (libmysql.dll / libmariadb.dll)       │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│   Serveur MySQL/MariaDB                 │
+│   (Base de données)                     │
+└─────────────────────────────────────────┘
 ```
 
-Cette architecture en couches offre plusieurs avantages :
-
-- **Uniformité** : La même interface est utilisée, quel que soit le SGBD
-- **Flexibilité** : Vous pouvez changer de base de données sans modifier votre code
-- **Performance** : Optimisation à chaque niveau de l'architecture
-- **Extensibilité** : Possibilité d'ajouter de nouveaux pilotes
+**Ne vous inquiétez pas** si ce schéma semble complexe ! Nous allons examiner chaque couche en détail.
 
 ## Les composants essentiels de FireDAC
 
-### TFDConnection
+### 1. TFDConnection - Le composant de connexion
 
-**TFDConnection** est le composant central qui gère la connexion à la base de données. C'est toujours le premier composant à configurer dans votre application.
+**Rôle :** C'est le composant **central** qui établit et maintient la connexion avec votre base de données.
 
-#### Propriétés importantes de TFDConnection
+**Analogie :** C'est comme la ligne téléphonique entre vous et la base de données.
 
-- **DriverName** : Définit le type de base de données ('MySQL', 'SQLite', etc.)
-- **Params** : Collection de paramètres pour configurer la connexion
-- **Connected** : État de la connexion (True/False)
-- **LoginPrompt** : Demande ou non les identifiants à l'utilisateur
+**Caractéristiques :**
+- Un seul `TFDConnection` par base de données
+- Tous les autres composants FireDAC doivent être reliés à cette connexion
+- Gère l'ouverture et la fermeture de la connexion
+- Contient tous les paramètres de connexion (serveur, utilisateur, mot de passe, etc.)
 
-#### Exemple de configuration pour MySQL
+**Propriétés principales :**
 
-```delphi
-FDConnection1.DriverName := 'MySQL';
-FDConnection1.Params.Clear;
-FDConnection1.Params.Add('Server=localhost');
-FDConnection1.Params.Add('Database=ma_base');
-FDConnection1.Params.Add('User_Name=mon_utilisateur');
-FDConnection1.Params.Add('Password=mon_mot_de_passe');
-FDConnection1.Params.Add('CharacterSet=utf8mb4');
-FDConnection1.Connected := True;
+| Propriété | Description | Exemple de valeur |
+|-----------|-------------|-------------------|
+| `DriverName` | Type de base de données | `'MySQL'` |
+| `Params` | Paramètres de connexion | Server, Database, User_Name, Password |
+| `Connected` | État de la connexion | `True` ou `False` |
+| `LoginPrompt` | Demander les identifiants | `False` (généralement) |
+
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDConnection`
+
+### 2. TFDQuery - Le composant de requête
+
+**Rôle :** Permet d'exécuter des requêtes SQL et de manipuler les résultats.
+
+**Analogie :** C'est comme un formulaire de recherche qui vous permet de demander exactement ce que vous voulez à la base de données.
+
+**Caractéristiques :**
+- Le composant le **plus utilisé** dans FireDAC
+- Très flexible : peut faire des SELECT, INSERT, UPDATE, DELETE
+- Supporte les paramètres SQL pour la sécurité
+- Peut gérer des résultats de plusieurs milliers de lignes efficacement
+
+**Propriétés principales :**
+
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| `Connection` | Lien vers le TFDConnection | `FDConnection1` |
+| `SQL` | La requête SQL à exécuter | `SELECT * FROM clients` |
+| `Active` | Dataset ouvert ou fermé | `True` ou `False` |
+| `Params` | Paramètres de la requête | `[ParamByName('id')]` |
+
+**Méthodes importantes :**
+
+| Méthode | Usage | Exemple |
+|---------|-------|---------|
+| `Open` | Exécute un SELECT | `FDQuery1.Open;` |
+| `ExecSQL` | Exécute INSERT/UPDATE/DELETE | `FDQuery1.ExecSQL;` |
+| `Close` | Ferme le dataset | `FDQuery1.Close;` |
+| `First` | Va au premier enregistrement | `FDQuery1.First;` |
+| `Next` | Va à l'enregistrement suivant | `FDQuery1.Next;` |
+| `Eof` | Teste la fin du dataset | `while not FDQuery1.Eof do` |
+
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDQuery`
+
+### 3. TFDTable - Le composant table
+
+**Rôle :** Accède directement à une table de la base de données, sans écrire de SQL.
+
+**Analogie :** C'est comme ouvrir un classeur et consulter directement une fiche.
+
+**Caractéristiques :**
+- Accès simple à une table complète
+- Pas besoin d'écrire de SQL
+- Moins flexible que TFDQuery
+- Utile pour des opérations simples
+
+**Propriétés principales :**
+
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| `Connection` | Lien vers le TFDConnection | `FDConnection1` |
+| `TableName` | Nom de la table | `'clients'` |
+| `Active` | Table ouverte ou fermée | `True` ou `False` |
+
+**Quand utiliser TFDTable vs TFDQuery ?**
+
+**TFDTable :**
+- ✅ Accès simple à toute une table
+- ✅ Navigation rapide sans SQL
+- ❌ Charge toute la table (peut être lourd)
+- ❌ Pas de filtrage au niveau serveur
+
+**TFDQuery :**
+- ✅ Contrôle total avec SQL
+- ✅ Peut filtrer côté serveur (plus efficace)
+- ✅ Jointures et requêtes complexes
+- ❌ Nécessite de connaître un peu de SQL
+
+**Recommandation :** Utilisez principalement `TFDQuery` dans vos projets.
+
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDTable`
+
+### 4. TFDStoredProc - Le composant procédure stockée
+
+**Rôle :** Exécute des procédures stockées (stored procedures) dans la base de données.
+
+**Qu'est-ce qu'une procédure stockée ?**
+C'est un ensemble de commandes SQL enregistrées dans la base de données, que vous pouvez appeler par leur nom.
+
+**Caractéristiques :**
+- Exécute du code SQL complexe côté serveur
+- Peut accepter des paramètres en entrée et en sortie
+- Souvent plus performant pour des opérations complexes
+
+**Propriétés principales :**
+
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| `Connection` | Lien vers le TFDConnection | `FDConnection1` |
+| `StoredProcName` | Nom de la procédure | `'calculer_total'` |
+| `Params` | Paramètres de la procédure | `[Param1, Param2]` |
+
+**Note pour débutants :** Les procédures stockées sont un sujet avancé. Pour commencer, concentrez-vous sur `TFDQuery`.
+
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDStoredProc`
+
+### 5. TDataSource - Le composant de liaison
+
+**Rôle :** Fait le lien entre les composants de données (Query, Table) et les composants visuels (Grids, Edit).
+
+**Analogie :** C'est le câble qui relie votre lecteur DVD à votre télévision.
+
+**Caractéristiques :**
+- **Essentiel** pour afficher des données dans l'interface
+- Un `TDataSource` par dataset que vous voulez afficher
+- Ne fait pas partie de FireDAC à proprement parler (composant Delphi standard)
+
+**Propriétés principales :**
+
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| `DataSet` | Le dataset source | `FDQuery1` |
+| `Enabled` | Active/désactive le lien | `True` ou `False` |
+
+**Comment ça fonctionne ?**
+
+```
+TFDQuery1 ────► TDataSource1 ────► TDBGrid1
+(Données)        (Liaison)         (Affichage)
 ```
 
-### TFDQuery
+**Dans la palette de composants :**
+Onglet **Data Access** → `TDataSource`
 
-**TFDQuery** est l'un des composants les plus utilisés. Il vous permet d'exécuter des requêtes SQL et de manipuler les résultats.
+## Composants complémentaires utiles
 
-#### Propriétés importantes de TFDQuery
+### TFDPhysMySQLDriverLink
 
-- **Connection** : Référence au composant TFDConnection
-- **SQL** : Contient la requête SQL à exécuter
-- **Active** : Indique si la requête est active
-- **ParamByName** : Accède aux paramètres de la requête
+**Rôle :** Spécifie explicitement l'utilisation du pilote MySQL pour FireDAC.
 
-#### Exemple d'utilisation de TFDQuery
+**Quand l'utiliser ?**
+- Techniquement facultatif (FireDAC peut le détecter automatiquement)
+- Utile pour spécifier le chemin de la bibliothèque client
+- Recommandé pour éviter les ambiguïtés
 
-```delphi
-// Requête simple
-FDQuery1.Connection := FDConnection1;
-FDQuery1.SQL.Text := 'SELECT * FROM clients';
-FDQuery1.Active := True;  // Exécute la requête et charge les résultats
+**Propriétés principales :**
 
-// Requête avec paramètres
-FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE ville = :ville';
-FDQuery1.ParamByName('ville').AsString := 'Paris';
-FDQuery1.Active := True;
-```
+| Propriété | Description | Exemple |
+|-----------|-------------|---------|
+| `VendorLib` | Chemin vers libmysql.dll | `'C:\...\libmysql.dll'` |
 
-### TFDTable
+**Dans la palette de composants :**
+Onglet **FireDAC Links** → `TFDPhysMySQLDriverLink`
 
-**TFDTable** représente une table complète de la base de données. Il est plus simple à utiliser que TFDQuery pour les opérations basiques.
+### TFDGUIxWaitCursor
 
-#### Propriétés importantes de TFDTable
+**Rôle :** Affiche un curseur d'attente lors des opérations longues.
 
-- **Connection** : Référence au composant TFDConnection
-- **TableName** : Nom de la table à manipuler
-- **Active** : Indique si la table est active
+**Pourquoi c'est utile ?**
+Quand une requête prend du temps, l'utilisateur voit que l'application travaille.
 
-#### Exemple d'utilisation de TFDTable
-
-```delphi
-FDTable1.Connection := FDConnection1;
-FDTable1.TableName := 'clients';
-FDTable1.Active := True;  // Charge tous les enregistrements de la table
-```
-
-### TFDUpdateSQL
-
-**TFDUpdateSQL** permet de personnaliser les opérations d'insertion, de mise à jour et de suppression associées à un TFDQuery.
-
-#### Exemple d'utilisation de TFDUpdateSQL
-
-```delphi
-// Configuration du composant TFDUpdateSQL
-FDUpdateSQL1.Connection := FDConnection1;
-FDUpdateSQL1.InsertSQL.Text := 'INSERT INTO clients (nom, prenom) VALUES (:nom, :prenom)';
-FDUpdateSQL1.ModifySQL.Text := 'UPDATE clients SET nom = :nom, prenom = :prenom WHERE id = :id';
-FDUpdateSQL1.DeleteSQL.Text := 'DELETE FROM clients WHERE id = :id';
-
-// Association avec un TFDQuery
-FDQuery1.UpdateObject := FDUpdateSQL1;
-```
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDGUIxWaitCursor`
 
 ### TFDTransaction
 
-**TFDTransaction** gère les transactions pour assurer l'intégrité des données lors d'opérations multiples.
+**Rôle :** Gère les transactions pour assurer l'intégrité des données.
 
-#### Exemple d'utilisation de TFDTransaction
+**Qu'est-ce qu'une transaction ?**
+Un ensemble d'opérations qui doivent toutes réussir ou toutes échouer ensemble.
 
-```delphi
+**Exemple :**
+Transférer de l'argent entre deux comptes :
+1. Débiter le compte A (-100€)
+2. Créditer le compte B (+100€)
+
+Si l'étape 2 échoue, l'étape 1 doit être annulée (rollback).
+
+**Note pour débutants :** Les transactions sont importantes mais complexes. FireDAC gère automatiquement les transactions simples.
+
+**Dans la palette de composants :**
+Onglet **FireDAC** → `TFDTransaction`
+
+## Organisation typique sur un formulaire
+
+Voici comment vous organiserez généralement vos composants FireDAC :
+
+```
+Formulaire principal
+├── FDConnection1 (TFDConnection)
+│   └── Paramètres : MySQL, localhost, ma_base
+│
+├── FDPhysMySQLDriverLink1 (TFDPhysMySQLDriverLink)
+│   └── VendorLib : chemin vers libmysql.dll
+│
+├── FDQuery1 (TFDQuery)
+│   ├── Connection : FDConnection1
+│   └── SQL : SELECT * FROM clients
+│
+├── DataSource1 (TDataSource)
+│   └── DataSet : FDQuery1
+│
+└── DBGrid1 (TDBGrid)
+    └── DataSource : DataSource1
+```
+
+**Flux de données :**
+1. `FDConnection1` se connecte à MySQL
+2. `FDQuery1` exécute une requête via cette connexion
+3. `DataSource1` expose les données de la requête
+4. `DBGrid1` affiche les données via le DataSource
+
+## Les unités (units) FireDAC à inclure
+
+Pour utiliser FireDAC, vous devez ajouter certaines unités dans la clause `uses` de votre code :
+
+### Unités essentielles
+
+```pascal
+uses
+  // Unités FireDAC de base
+  FireDAC.Stan.Intf,      // Interfaces de base
+  FireDAC.Stan.Option,    // Options FireDAC
+  FireDAC.Stan.Error,     // Gestion des erreurs
+  FireDAC.Stan.Def,       // Définitions
+  FireDAC.Stan.Pool,      // Pool de connexions
+  FireDAC.Stan.Async,     // Opérations asynchrones
+
+  // Unités de connexion
+  FireDAC.Phys.Intf,      // Interface physique
+  FireDAC.Phys.MySQL,     // Pilote MySQL
+  FireDAC.Phys.MySQLDef,  // Définitions MySQL
+
+  // Unités d'interface utilisateur
+  FireDAC.UI.Intf,        // Interface utilisateur
+  FireDAC.VCLUI.Wait,     // Curseur d'attente VCL
+
+  // Unités de composants
+  FireDAC.Comp.Client,    // TFDConnection, TFDQuery, etc.
+  FireDAC.Comp.DataSet,   // Support DataSet
+
+  // Unités DAO (Data Access Objects)
+  FireDAC.DApt.Intf,      // Interface adaptateur
+  FireDAC.DApt;           // Adaptateur de données
+```
+
+**Bonne nouvelle :** Delphi ajoute automatiquement ces unités quand vous placez des composants FireDAC sur votre formulaire !
+
+### Unités pour d'autres bases de données
+
+Si vous utilisez d'autres bases de données :
+
+```pascal
+// Pour PostgreSQL
+FireDAC.Phys.PG, FireDAC.Phys.PGDef,
+
+// Pour SQLite
+FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
+
+// Pour SQL Server
+FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef,
+
+// Pour Oracle
+FireDAC.Phys.Oracle, FireDAC.Phys.OracleDef,
+```
+
+## Propriétés communes aux datasets FireDAC
+
+Tous les composants de données (Query, Table, StoredProc) partagent des propriétés communes car ils héritent de `TFDDataSet` :
+
+### Navigation
+
+| Propriété/Méthode | Description |
+|-------------------|-------------|
+| `Eof` | Fin du dataset (End Of File) |
+| `Bof` | Début du dataset (Begin Of File) |
+| `RecordCount` | Nombre total d'enregistrements |
+| `RecNo` | Numéro de l'enregistrement courant |
+| `First` | Aller au premier enregistrement |
+| `Last` | Aller au dernier enregistrement |
+| `Next` | Enregistrement suivant |
+| `Prior` | Enregistrement précédent |
+
+### Édition
+
+| Méthode | Description |
+|---------|-------------|
+| `Edit` | Passe en mode édition |
+| `Post` | Valide les modifications |
+| `Cancel` | Annule les modifications |
+| `Delete` | Supprime l'enregistrement courant |
+| `Insert` | Insère un nouvel enregistrement |
+| `Append` | Ajoute un enregistrement à la fin |
+
+### État
+
+| Propriété | Description | Valeurs |
+|-----------|-------------|---------|
+| `State` | État actuel du dataset | dsInactive, dsBrowse, dsEdit, dsInsert |
+| `Modified` | Dataset modifié ? | True/False |
+| `Active` | Dataset ouvert ? | True/False |
+
+### Accès aux champs
+
+```pascal
+// Plusieurs façons d'accéder aux données
+Value := FDQuery1.FieldByName('nom').AsString;
+Value := FDQuery1['nom'];  // Syntaxe courte
+Value := FDQuery1.Fields[0].AsString;  // Par index
+```
+
+## Gestion de la mémoire et des ressources
+
+### Principe important : Ouverture et Fermeture
+
+**Règle d'or :** Ce que vous ouvrez, vous devez le fermer !
+
+```pascal
+// Bonne pratique
+FDQuery1.Open;
 try
-  // Démarrer la transaction
-  FDTransaction1.Connection := FDConnection1;
-  FDTransaction1.StartTransaction;
-
-  // Exécuter des opérations
-  FDQuery1.SQL.Text := 'INSERT INTO commandes (client_id, date) VALUES (1, NOW())';
-  FDQuery1.ExecSQL;
-
-  FDQuery1.SQL.Text := 'INSERT INTO details_commande (commande_id, produit_id, quantite) VALUES (LAST_INSERT_ID(), 5, 2)';
-  FDQuery1.ExecSQL;
-
-  // Valider les modifications
-  FDTransaction1.Commit;
-except
-  on E: Exception do
-  begin
-    // En cas d'erreur, annuler toutes les modifications
-    FDTransaction1.Rollback;
-    ShowMessage('Erreur : ' + E.Message);
-  end;
+  // Traiter les données
+finally
+  FDQuery1.Close;  // Toujours fermer
 end;
 ```
 
-### TDataSource
+### Libération automatique
 
-**TDataSource** fait le lien entre les données (TFDQuery, TFDTable) et les contrôles visuels. Ce n'est pas un composant FireDAC à proprement parler, mais il est essentiel pour l'affichage des données.
+Les composants placés sur un formulaire sont automatiquement libérés quand le formulaire est détruit. Vous n'avez pas besoin de les libérer manuellement.
 
-#### Exemple d'utilisation de TDataSource
+### Connexion persistante ou à la demande ?
 
-```delphi
-// Configuration de la source de données
-DataSource1.DataSet := FDQuery1;
+**Deux approches :**
 
-// Liaison avec des contrôles visuels
-DBGrid1.DataSource := DataSource1;
-DBEdit1.DataSource := DataSource1;
+**1. Connexion persistante** (recommandée pour débuter)
+```pascal
+// Ouverte au démarrage de l'application
+FDConnection1.Connected := True;
 ```
 
-## Familles de composants FireDAC
-
-FireDAC organise ses composants en plusieurs familles, chacune ayant un rôle spécifique :
-
-### Composants de connexion et pilotes
-
-- **TFDConnection** : Connexion à la base de données
-- **TFDPhysMySQLDriverLink** : Lien explicite au pilote MySQL (optionnel)
-- **TFDManagerLink** : Gestionnaire de connexions centralisé pour les applications multi-connexions
-
-### Composants d'accès aux données
-
-- **TFDQuery** : Exécution de requêtes SQL
-- **TFDTable** : Accès direct aux tables
-- **TFDStoredProc** : Exécution de procédures stockées
-- **TFDCommand** : Commandes SQL sans jeu de résultats
-
-### Composants de mise à jour
-
-- **TFDUpdateSQL** : Personnalisation des opérations de mise à jour
-- **TFDBatchMove** : Import/export de données en masse
-
-### Composants de contrôle
-
-- **TFDTransaction** : Gestion des transactions
-- **TFDSchemaAdapter** : Coordination des mises à jour entre plusieurs DataSets
-
-### Composants de mise en cache et de mémoire
-
-- **TFDMemTable** : Table en mémoire
-- **TFDLocalSQL** : Moteur SQL local pour les données en mémoire
-
-## Emplacement des composants dans l'IDE
-
-Dans Delphi, les composants FireDAC sont regroupés dans plusieurs onglets de la palette de composants :
-
-- **FireDAC** : Composants principaux
-- **FireDAC Comp** : Composants spécifiques aux bases de données
-- **FireDAC UI** : Composants d'interface utilisateur pour FireDAC
-
-![Palette FireDAC](https://placeholder.pics/svg/600x150/DEDEDE/555555/Palette%20FireDAC)
-
-## L'architecture en action : Flux des données avec FireDAC
-
-Voici comment les données circulent dans une application typique utilisant FireDAC :
-
-1. **Connexion à la base de données** : Le composant TFDConnection établit la connexion
-2. **Exécution de requêtes** : TFDQuery ou TFDTable envoie des commandes SQL
-3. **Récupération des données** : Les résultats sont chargés dans un buffer local
-4. **Liaison des données** : TDataSource relie les données aux contrôles visuels
-5. **Modification des données** : Les changements sont d'abord stockés localement
-6. **Validation des modifications** : TFDQuery.Post ou TFDTable.Post enregistre les changements
-7. **Application des modifications** : Les modifications sont envoyées à la base de données
-8. **Gestion des erreurs** : Les exceptions sont levées en cas de problème
-
-## Démonstration pratique : Configuration complète
-
-Voici un exemple complet qui montre comment configurer et utiliser les composants FireDAC pour afficher et modifier des données d'une table MySQL :
-
-```delphi
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // 1. Configuration de la connexion
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Clear;
-  FDConnection1.Params.Add('Server=localhost');
-  FDConnection1.Params.Add('Database=ma_base');
-  FDConnection1.Params.Add('User_Name=mon_utilisateur');
-  FDConnection1.Params.Add('Password=mon_mot_de_passe');
-
-  try
-    // 2. Établir la connexion
-    FDConnection1.Connected := True;
-
-    // 3. Configuration de la requête
-    FDQuery1.Connection := FDConnection1;
-    FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
-
-    // 4. Exécution de la requête
-    FDQuery1.Open;
-
-    StatusBar1.SimpleText := 'Connecté à la base de données. ' +
-                             IntToStr(FDQuery1.RecordCount) + ' enregistrements chargés.';
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      StatusBar1.SimpleText := 'Non connecté';
-    end;
-  end;
-end;
-
-// Ajouter un nouvel enregistrement
-procedure TForm1.btnAjouterClick(Sender: TObject);
-begin
-  FDQuery1.Append;  // Prépare un nouvel enregistrement
-  // Les champs peuvent être remplis via DBEdit ou par code :
-  // FDQuery1.FieldByName('nom').AsString := 'Nouveau nom';
-end;
-
-// Enregistrer les modifications
-procedure TForm1.btnEnregistrerClick(Sender: TObject);
-begin
-  if FDQuery1.State in [dsEdit, dsInsert] then
-    FDQuery1.Post;  // Valide les modifications
-end;
-
-// Supprimer un enregistrement
-procedure TForm1.btnSupprimerClick(Sender: TObject);
-begin
-  if not FDQuery1.IsEmpty then
-    if MessageDlg('Êtes-vous sûr de vouloir supprimer cet enregistrement ?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      FDQuery1.Delete;
+**2. Connexion à la demande**
+```pascal
+// Ouverte uniquement quand nécessaire
+FDConnection1.Open;
+try
+  FDQuery1.Open;
+  // Traiter...
+finally
+  FDConnection1.Close;
 end;
 ```
 
-## Bonnes pratiques avec FireDAC
+## Architecture en couches recommandée
 
-Pour terminer, voici quelques bonnes pratiques à suivre lorsque vous utilisez FireDAC :
+Pour les applications professionnelles, séparez votre code en couches :
 
-1. **Gérez les connexions efficacement** : Fermez les connexions lorsqu'elles ne sont plus nécessaires.
-2. **Utilisez les paramètres** : Préférez les requêtes paramétrées pour éviter les injections SQL.
-3. **Gérez les transactions** : Utilisez des transactions pour les opérations multiples.
-4. **Fermez les requêtes** : Fermez les TFDQuery lorsqu'elles ne sont plus utilisées.
-5. **Contrôlez les exceptions** : Encadrez vos opérations de base de données dans des blocs try/except.
-6. **Optimisez les requêtes** : Limitez les données récupérées à ce qui est nécessaire.
-7. **Utilisez FetchOptions** : Configurez les options de récupération pour optimiser les performances.
+### Approche simple (débutants)
 
-## Conclusion
+```
+Formulaire (UI)
+    ↓
+Composants FireDAC directement sur le formulaire
+    ↓
+Base de données
+```
 
-FireDAC est une technologie d'accès aux données puissante et flexible. Sa conception en couches et sa riche collection de composants vous permettent de créer des applications robustes qui interagissent efficacement avec diverses bases de données, dont MySQL/MariaDB.
+### Approche professionnelle (avancé)
 
-Dans la prochaine section, nous mettrons en pratique ces connaissances en nous connectant spécifiquement à une base de données MySQL/MariaDB et en effectuant des opérations de base.
+```
+Formulaire (UI - Présentation)
+    ↓
+Module Métier (Business Logic)
+    ↓
+Module d'Accès aux Données (DataModule avec composants FireDAC)
+    ↓
+Base de données
+```
 
----
+**DataModule :** Un conteneur non-visuel pour regrouper tous vos composants FireDAC. Nous verrons cela plus tard.
 
-**À suivre :** 8.4 Connexion à une base MySQL/MariaDB
+## Résumé des composants essentiels
+
+| Composant | Rôle | Indispensable ? |
+|-----------|------|-----------------|
+| **TFDConnection** | Connexion à la BD | ✅ Oui |
+| **TFDQuery** | Requêtes SQL | ✅ Oui (principal) |
+| **TDataSource** | Liaison UI | ✅ Oui (pour affichage) |
+| TFDTable | Accès table directe | ⚠️ Optionnel |
+| TFDStoredProc | Procédures stockées | ⚠️ Si nécessaire |
+| TFDPhysMySQLDriverLink | Pilote MySQL | ⚠️ Recommandé |
+| TFDGUIxWaitCursor | Curseur attente | ⚠️ Optionnel |
+| TFDTransaction | Transactions | ⚠️ Avancé |
+
+## Points clés à retenir
+
+✅ **FireDAC utilise une architecture en couches** pour séparer les responsabilités
+
+✅ **TFDConnection** est le composant central qui connecte à la base de données
+
+✅ **TFDQuery** est le composant le plus utilisé pour exécuter des requêtes SQL
+
+✅ **TDataSource** fait le lien entre les données et l'interface utilisateur
+
+✅ **Tous les composants de données** doivent être reliés à un TFDConnection
+
+✅ **N'oubliez pas de fermer** les datasets après utilisation
+
+✅ **Les unités FireDAC** sont ajoutées automatiquement par Delphi
+
+## Prochaines étapes
+
+Maintenant que vous comprenez l'architecture et les composants de FireDAC, vous êtes prêt à :
+
+1. Créer votre première connexion à MySQL/MariaDB
+2. Exécuter vos premières requêtes SQL
+3. Afficher des données dans votre interface
+4. Manipuler les données (ajout, modification, suppression)
+
+Dans la section suivante, nous allons mettre tout cela en pratique en créant notre première connexion fonctionnelle !
 
 ⏭️ [Connexion à une base MySQL/MariaDB](/08-acces-aux-bases-de-donnees-mysql-mariadb/04-connexion-a-une-base-mysql-mariadb.md)

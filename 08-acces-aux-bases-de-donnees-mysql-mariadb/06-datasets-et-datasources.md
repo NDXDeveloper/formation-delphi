@@ -1,707 +1,926 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 8.6 DataSets et DataSources
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Dans cette section, nous allons explorer deux concepts fondamentaux pour la gestion des données dans Delphi : les DataSets et les DataSources. Ces composants forment le pont entre votre base de données et l'interface utilisateur de votre application.
+Dans les sections précédentes, vous avez appris à exécuter des requêtes SQL pour manipuler les données. Maintenant, nous allons approfondir le concept de **DataSet** et comprendre comment **DataSource** fait le lien entre vos données et l'interface utilisateur.
+
+Ces composants sont au cœur de l'architecture de données de Delphi et vous permettent de créer des interfaces riches et interactives avec un minimum de code.
 
 ## Qu'est-ce qu'un DataSet ?
 
-Un **DataSet** est un composant qui représente un ensemble de données sous forme de tableau. Il peut s'agir des résultats d'une requête SQL, d'une table entière, ou même d'une table en mémoire. Les DataSets vous permettent de :
+### Définition
 
-- Parcourir les enregistrements
-- Ajouter, modifier ou supprimer des données
-- Filtrer ou trier les données
-- Rechercher des informations spécifiques
+Un **DataSet** est un conteneur de données en mémoire qui représente un ensemble d'enregistrements provenant d'une base de données. C'est comme une "table virtuelle" dans votre application.
 
-Dans FireDAC, les composants comme `TFDQuery`, `TFDTable` et `TFDMemTable` sont tous des DataSets - ils héritent tous de la classe de base `TDataSet`.
+### Analogie : Le classeur de fiches
 
-![Structure hiérarchique des DataSets](https://placeholder.pics/svg/550x250/DEDEDE/555555/Hiérarchie%20DataSets)
+Imaginez un **DataSet** comme un classeur de fiches posé sur votre bureau :
 
-## Qu'est-ce qu'un DataSource ?
+```
+┌─────────────────────────────────────┐
+│  DATASET (Classeur en mémoire)      │
+├─────────────────────────────────────┤
+│  Fiche 1 : Dupont Jean              │ ← Premier enregistrement
+│  Fiche 2 : Martin Sophie            │
+│  Fiche 3 : Bernard Luc              │ ← Enregistrement courant (curseur)
+│  Fiche 4 : Durand Marie             │
+│  Fiche 5 : Petit Claire             │ ← Dernier enregistrement
+└─────────────────────────────────────┘
+```
 
-Un **DataSource** (source de données) est un composant qui sert d'intermédiaire entre un DataSet et les contrôles visuels. Il transmet les données du DataSet aux contrôles d'affichage et renvoie les modifications effectuées par l'utilisateur au DataSet.
+- Vous pouvez **parcourir** les fiches (First, Next, Prior, Last)
+- Vous pouvez **lire** le contenu de la fiche courante
+- Vous pouvez **modifier** une fiche (Edit)
+- Vous pouvez **ajouter** une nouvelle fiche (Insert, Append)
+- Vous pouvez **supprimer** une fiche (Delete)
 
-En résumé :
-- Le **DataSet** contient et gère les données
-- Le **DataSource** fait le lien entre le DataSet et l'interface utilisateur
-- Les **contrôles liés aux données** (DB-aware controls) affichent et permettent la modification des données
+### En Delphi
 
-![Architecture DataSet-DataSource-Contrôles](https://placeholder.pics/svg/650x200/DEDEDE/555555/Architecture%20DataSet-DataSource-Contrôles)
+Dans Delphi, plusieurs composants héritent de `TDataSet` :
 
-## Configuration de base
+| Composant | Type | Usage |
+|-----------|------|-------|
+| **TFDQuery** | DataSet FireDAC | Le plus utilisé, pour les requêtes SQL |
+| **TFDTable** | DataSet FireDAC | Accès direct à une table |
+| **TFDStoredProc** | DataSet FireDAC | Exécution de procédures stockées |
+| **TClientDataSet** | DataSet en mémoire | Données sans connexion à la base |
 
-Voici comment configurer ces éléments ensemble :
+**Dans ce chapitre**, nous nous concentrerons principalement sur **TFDQuery** car c'est le composant le plus polyvalent et le plus utilisé.
 
-### 1. Placer les composants
+## Le cycle de vie d'un DataSet
 
-1. Ajoutez un composant `TFDConnection` configuré pour votre base de données MySQL
-2. Ajoutez un composant `TFDQuery` ou `TFDTable` (ce sont des DataSets)
-3. Ajoutez un composant `TDataSource`
-4. Ajoutez des contrôles liés aux données (`TDBGrid`, `TDBEdit`, etc.)
+Un DataSet passe par différentes étapes dans son cycle de vie :
 
-![Composants dans l'IDE](https://placeholder.pics/svg/500x250/DEDEDE/555555/Composants%20dans%20l'IDE)
+```
+┌──────────────┐
+│   INACTIVE   │ ← Dataset fermé, pas de données
+└──────┬───────┘
+       │ Open
+       ▼
+┌──────────────┐
+│    BROWSE    │ ← Navigation et consultation
+└──────┬───────┘
+       │ Edit/Insert
+       ▼
+┌──────────────┐
+│ EDIT/INSERT  │ ← Modification en cours
+└──────┬───────┘
+       │ Post → retour à BROWSE
+       │ Cancel → retour à BROWSE
+       ▼
+┌──────────────┐
+│    BROWSE    │
+└──────┬───────┘
+       │ Close
+       ▼
+┌──────────────┐
+│   INACTIVE   │
+└──────────────┘
+```
 
-### 2. Configurer les liaisons
+## États d'un DataSet
 
-1. Reliez le `TFDQuery` à votre `TFDConnection` :
-   ```
-   FDQuery1.Connection := FDConnection1;
-   ```
+### Les états possibles
 
-2. Définissez la requête SQL :
-   ```
-   FDQuery1.SQL.Text := 'SELECT * FROM clients';
-   ```
+Un DataSet est toujours dans l'un de ces états :
 
-3. Reliez le `TDataSource` au `TFDQuery` :
-   ```
-   DataSource1.DataSet := FDQuery1;
-   ```
+| État | Constante | Description |
+|------|-----------|-------------|
+| **Inactif** | `dsInactive` | Dataset fermé, aucune donnée accessible |
+| **Navigation** | `dsBrowse` | Dataset ouvert, consultation des données |
+| **Édition** | `dsEdit` | Modification d'un enregistrement existant |
+| **Insertion** | `dsInsert` | Création d'un nouvel enregistrement |
+| **Calcul** | `dsCalcFields` | Calcul de champs calculés (usage avancé) |
 
-4. Reliez les contrôles au `TDataSource` :
-   ```
-   DBGrid1.DataSource := DataSource1;
-   DBEdit1.DataSource := DataSource1;
-   ```
+### Vérifier l'état courant
 
-5. Activez le DataSet :
-   ```
-   FDQuery1.Active := True;
-   ```
-
-## Propriétés essentielles des DataSets
-
-Tous les DataSets partagent un ensemble de propriétés et méthodes communes. Voici les plus importantes :
-
-### Propriétés d'état
-
-- **Active** : Détermine si le DataSet contient des données (True) ou non (False).
-- **State** : Indique l'état actuel du DataSet (`dsBrowse`, `dsEdit`, `dsInsert`, etc.).
-- **RecordCount** : Nombre d'enregistrements dans le DataSet.
-- **RecNo** : Position actuelle dans le DataSet.
-- **EOF** et **BOF** : Indiquent si le curseur est à la fin ou au début du DataSet.
-- **Fields** : Collection des champs disponibles dans le DataSet.
-
-### Exemple pour vérifier l'état d'un DataSet
-
-```delphi
-procedure TForm1.AfficherEtatDataSet;
-var
-  EtatTexte: string;
-begin
-  // Vérifier si le DataSet est actif
-  if not FDQuery1.Active then
-  begin
-    Memo1.Lines.Add('Le DataSet n''est pas actif');
-    Exit;
-  end;
-
-  // Afficher l'état actuel
-  case FDQuery1.State of
-    dsBrowse: EtatTexte := 'Navigation';
-    dsEdit: EtatTexte := 'Édition';
-    dsInsert: EtatTexte := 'Insertion';
-    dsSetKey: EtatTexte := 'Définition de clé';
-    else EtatTexte := 'Autre état';
-  end;
-
-  Memo1.Lines.Add('État actuel : ' + EtatTexte);
-  Memo1.Lines.Add('Nombre d''enregistrements : ' + IntToStr(FDQuery1.RecordCount));
-  Memo1.Lines.Add('Position actuelle : ' + IntToStr(FDQuery1.RecNo));
-
-  // Vérifier si nous sommes au début ou à la fin
-  if FDQuery1.BOF then
-    Memo1.Lines.Add('Au début du DataSet');
-  if FDQuery1.EOF then
-    Memo1.Lines.Add('À la fin du DataSet');
+```pascal
+// Obtenir l'état actuel
+case FDQuery1.State of
+  dsInactive: ShowMessage('Dataset fermé');
+  dsBrowse:   ShowMessage('Consultation');
+  dsEdit:     ShowMessage('Modification en cours');
+  dsInsert:   ShowMessage('Ajout en cours');
 end;
+
+// Vérifier un état spécifique
+if FDQuery1.State = dsEdit then
+  ShowMessage('Modification en cours');
+
+// Vérifier si le dataset est actif
+if FDQuery1.Active then
+  ShowMessage('Dataset ouvert')
+else
+  ShowMessage('Dataset fermé');
 ```
 
 ## Navigation dans un DataSet
 
-Les DataSets offrent plusieurs méthodes pour naviguer entre les enregistrements :
+### Le curseur d'enregistrement
 
-| Méthode | Description |
-|---------|-------------|
-| `First` | Se déplace au premier enregistrement |
-| `Last` | Se déplace au dernier enregistrement |
-| `Next` | Se déplace à l'enregistrement suivant |
-| `Prior` | Se déplace à l'enregistrement précédent |
-| `MoveBy(n)` | Se déplace de n enregistrements (avant ou arrière) |
+Le **curseur** est un pointeur qui indique quel enregistrement est actuellement actif dans le DataSet.
 
-### Exemple de navigation
+### Méthodes de navigation
 
-```delphi
-procedure TForm1.btnPremierClick(Sender: TObject);
+```pascal
+// ─── Positionnement absolu ───
+FDQuery1.First;    // Aller au premier enregistrement
+FDQuery1.Last;     // Aller au dernier enregistrement
+
+// ─── Déplacement relatif ───
+FDQuery1.Next;     // Enregistrement suivant
+FDQuery1.Prior;    // Enregistrement précédent
+
+// ─── Déplacement par index ───
+FDQuery1.RecNo := 5;  // Aller au 5ème enregistrement (si disponible)
+
+// ─── Déplacement par recherche ───
+FDQuery1.Locate('nom', 'Dupont', []);  // Chercher et positionner
+```
+
+### Propriétés de position
+
+```pascal
+// Vérifier la position
+if FDQuery1.Bof then
+  ShowMessage('Début du dataset');
+
+if FDQuery1.Eof then
+  ShowMessage('Fin du dataset');
+
+// Numéro de l'enregistrement courant
+ShowMessage('Enregistrement n°' + IntToStr(FDQuery1.RecNo));
+
+// Nombre total d'enregistrements
+ShowMessage('Total : ' + IntToStr(FDQuery1.RecordCount) + ' enregistrements');
+
+// Vérifier si le dataset est vide
+if FDQuery1.IsEmpty then
+  ShowMessage('Aucun enregistrement')
+else
+  ShowMessage('Dataset contient des données');
+```
+
+### Parcourir tous les enregistrements
+
+```pascal
+procedure ParcourrirTous;
 begin
   FDQuery1.First;
-  MettreAJourStatut;
-end;
-
-procedure TForm1.btnPrecedentClick(Sender: TObject);
-begin
-  FDQuery1.Prior;
-  MettreAJourStatut;
-end;
-
-procedure TForm1.btnSuivantClick(Sender: TObject);
-begin
-  FDQuery1.Next;
-  MettreAJourStatut;
-end;
-
-procedure TForm1.btnDernierClick(Sender: TObject);
-begin
-  FDQuery1.Last;
-  MettreAJourStatut;
-end;
-
-procedure TForm1.MettreAJourStatut;
-begin
-  StatusBar1.SimpleText := Format('Enregistrement %d sur %d',
-    [FDQuery1.RecNo, FDQuery1.RecordCount]);
-end;
-```
-
-## Modification des données
-
-Les DataSets permettent également de modifier, ajouter ou supprimer des enregistrements :
-
-### Ajouter un nouvel enregistrement
-
-```delphi
-procedure TForm1.btnAjouterClick(Sender: TObject);
-begin
-  FDQuery1.Append;  // Le DataSet passe en état dsInsert
-  // À ce stade, l'utilisateur peut remplir les champs via les contrôles DB-aware
-  // ou vous pouvez définir des valeurs par défaut :
-  FDQuery1.FieldByName('date_creation').AsDateTime := Now;
-  FDQuery1.FieldByName('actif').AsBoolean := True;
-end;
-```
-
-### Modifier un enregistrement existant
-
-```delphi
-procedure TForm1.btnModifierClick(Sender: TObject);
-begin
-  if not FDQuery1.IsEmpty then
+  while not FDQuery1.Eof do
   begin
-    FDQuery1.Edit;  // Le DataSet passe en état dsEdit
-    // L'utilisateur peut maintenant modifier les champs
+    // Traiter l'enregistrement courant
+    ShowMessage(FDQuery1.FieldByName('nom').AsString);
+
+    // Passer au suivant
+    FDQuery1.Next;
   end;
 end;
 ```
 
-### Enregistrer les modifications
+**Bonne pratique :** Toujours vérifier `Eof` pour éviter de dépasser la fin du DataSet.
 
-```delphi
-procedure TForm1.btnEnregistrerClick(Sender: TObject);
-begin
-  if FDQuery1.State in [dsEdit, dsInsert] then
-    FDQuery1.Post;  // Valide les modifications
-end;
+## Accès aux champs (Fields)
+
+### Les différentes méthodes
+
+Il existe plusieurs façons d'accéder aux valeurs des champs :
+
+#### Méthode 1 : FieldByName (recommandée)
+
+```pascal
+// Lecture
+Nom := FDQuery1.FieldByName('nom').AsString;
+Age := FDQuery1.FieldByName('age').AsInteger;
+Salaire := FDQuery1.FieldByName('salaire').AsCurrency;
+DateNaissance := FDQuery1.FieldByName('date_naissance').AsDateTime;
+
+// Écriture (en mode Edit ou Insert)
+FDQuery1.Edit;
+FDQuery1.FieldByName('nom').AsString := 'Nouveau nom';
+FDQuery1.Post;
+```
+
+**Avantages :**
+- Lisible et explicite
+- Indépendant de l'ordre des colonnes
+- Génère une erreur si le champ n'existe pas
+
+#### Méthode 2 : Notation crochets (syntaxe courte)
+
+```pascal
+// Lecture
+Nom := FDQuery1['nom'];
+Email := FDQuery1['email'];
+
+// Écriture
+FDQuery1.Edit;
+FDQuery1['nom'] := 'Nouveau nom';
+FDQuery1.Post;
+```
+
+**Avantages :**
+- Syntaxe plus courte
+- Pratique pour du code rapide
+
+#### Méthode 3 : Par index
+
+```pascal
+// Accès par position (0, 1, 2...)
+Nom := FDQuery1.Fields[0].AsString;
+Prenom := FDQuery1.Fields[1].AsString;
+```
+
+**Inconvénients :**
+- Fragile : si l'ordre des colonnes change, le code casse
+- Moins lisible
+- **À éviter** sauf cas spécifiques
+
+#### Méthode 4 : Champs persistants (avancé)
+
+Dans l'éditeur de champs du dataset, vous pouvez créer des propriétés persistantes :
+
+```pascal
+// Après avoir créé les champs persistants dans l'IDE
+Nom := FDQuery1nom.AsString;  // Plus rapide, type-safe
+Age := FDQuery1age.AsInteger;
+```
+
+### Conversions de types
+
+Chaque champ propose différentes conversions :
+
+| Méthode | Type retourné | Usage |
+|---------|---------------|-------|
+| `AsString` | String | Texte |
+| `AsInteger` | Integer | Nombres entiers |
+| `AsInt64` | Int64 | Grands entiers |
+| `AsFloat` | Double | Nombres décimaux |
+| `AsCurrency` | Currency | Montants monétaires |
+| `AsBoolean` | Boolean | Vrai/Faux |
+| `AsDateTime` | TDateTime | Date et heure |
+| `AsDate` | TDate | Date seulement |
+| `AsTime` | TTime | Heure seulement |
+
+### Gestion des valeurs NULL
+
+```pascal
+// Vérifier si un champ est NULL
+if FDQuery1.FieldByName('telephone').IsNull then
+  ShowMessage('Pas de téléphone renseigné')
+else
+  Telephone := FDQuery1.FieldByName('telephone').AsString;
+
+// Assigner NULL à un champ
+FDQuery1.Edit;
+FDQuery1.FieldByName('telephone').Clear;  // Définit à NULL
+FDQuery1.Post;
+
+// Valeur par défaut si NULL
+Telephone := FDQuery1.FieldByName('telephone').AsString;
+if Telephone = '' then
+  Telephone := 'Non renseigné';
+```
+
+## Modification des données avec un DataSet
+
+### Ajouter un enregistrement
+
+#### Méthode Append
+
+```pascal
+// Append : Ajouter à la fin
+FDQuery1.Append;  // Passe en mode dsInsert
+FDQuery1.FieldByName('nom').AsString := 'Dupont';
+FDQuery1.FieldByName('prenom').AsString := 'Jean';
+FDQuery1.FieldByName('email').AsString := 'jean.dupont@email.fr';
+FDQuery1.Post;  // Valider et enregistrer dans la base
+```
+
+#### Méthode Insert
+
+```pascal
+// Insert : Insérer à la position courante
+FDQuery1.Insert;  // Passe en mode dsInsert
+FDQuery1.FieldByName('nom').AsString := 'Martin';
+FDQuery1.FieldByName('prenom').AsString := 'Sophie';
+FDQuery1.Post;
+```
+
+**Note :** Pour la plupart des bases de données, `Insert` et `Append` ont le même effet. `Append` est plus couramment utilisé.
+
+### Modifier un enregistrement
+
+```pascal
+// Passer en mode édition
+FDQuery1.Edit;  // Passe en mode dsEdit
+
+// Modifier les champs
+FDQuery1.FieldByName('email').AsString := 'nouveau@email.fr';
+FDQuery1.FieldByName('telephone').AsString := '0612345678';
+
+// Valider les modifications
+FDQuery1.Post;  // Enregistre dans la base
 ```
 
 ### Annuler les modifications
 
-```delphi
-procedure TForm1.btnAnnulerClick(Sender: TObject);
-begin
-  if FDQuery1.State in [dsEdit, dsInsert] then
-    FDQuery1.Cancel;  // Annule les modifications
-end;
+```pascal
+// Annuler les modifications en cours
+FDQuery1.Cancel;  // Retourne en mode dsBrowse sans enregistrer
 ```
 
 ### Supprimer un enregistrement
 
-```delphi
-procedure TForm1.btnSupprimerClick(Sender: TObject);
+```pascal
+// Supprimer l'enregistrement courant
+if MessageDlg('Confirmer la suppression ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
 begin
-  if not FDQuery1.IsEmpty then
-    if MessageDlg('Êtes-vous sûr de vouloir supprimer cet enregistrement ?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      FDQuery1.Delete;
+  FDQuery1.Delete;  // Supprime immédiatement de la base
 end;
 ```
 
-## Accès aux champs d'un DataSet
+## Qu'est-ce qu'un DataSource ?
 
-Il existe plusieurs façons d'accéder aux valeurs des champs :
+### Définition
 
-### 1. Via FieldByName
+Un **DataSource** (TDataSource) est un composant qui fait le **lien** entre un DataSet et les composants visuels (contrôles liés aux données).
 
-C'est la méthode la plus simple mais pas la plus efficace :
+### Analogie : Le câble de connexion
 
-```delphi
-// Lire une valeur
-NomClient := FDQuery1.FieldByName('nom').AsString;
-DateNaissance := FDQuery1.FieldByName('date_naissance').AsDateTime;
-SoldeCompte := FDQuery1.FieldByName('solde').AsFloat;
-
-// Modifier une valeur
-FDQuery1.Edit;
-FDQuery1.FieldByName('adresse').AsString := 'Nouvelle adresse';
-FDQuery1.Post;
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│   TFDQuery   │──────►│ TDataSource  │──────►│   DBGrid     │
+│  (Données)   │       │   (Câble)    │       │ (Affichage)  │
+└──────────────┘       └──────────────┘       └──────────────┘
 ```
 
-### 2. Via des objets TField persistants
+Le DataSource est comme un **câble** qui :
+- Transmet les données du DataSet vers les contrôles visuels
+- Notifie les contrôles quand les données changent
+- Synchronise plusieurs contrôles sur la même source
 
-Cette méthode est plus efficace pour les accès fréquents :
+### Configuration d'un DataSource
 
-1. Sélectionnez votre DataSet dans l'IDE
-2. Cliquez-droit et choisissez "Fields Editor"
-3. Cliquez-droit dans l'éditeur et choisissez "Add all fields"
+```pascal
+// Au design time (dans l'inspecteur d'objets)
+DataSource1.DataSet := FDQuery1;
 
-Delphi va créer des objets `TField` pour chaque colonne. Vous pouvez alors y accéder directement :
-
-```delphi
-// Supposons que vous avez ajouté les champs "nom", "date_naissance" et "solde"
-NomClient := FDQuery1nom.AsString;  // Notez l'absence de FieldByName
-DateNaissance := FDQuery1date_naissance.AsDateTime;
-SoldeCompte := FDQuery1solde.AsFloat;
+// Ou par code
+DataSource1.DataSet := FDQuery1;
 ```
 
-### 3. Via une variable de champ
+## Composants liés aux données (Data-Aware Controls)
 
-Pour un accès encore plus rapide dans une boucle :
+Les composants visuels qui peuvent être liés à un DataSource sont appelés **Data-Aware Controls** (contrôles sensibles aux données).
 
-```delphi
-procedure TForm1.CalculerTotal;
-var
-  ChampPrix: TField;
-  Total: Double;
-begin
-  Total := 0;
+### Les principaux composants
 
-  ChampPrix := FDQuery1.FieldByName('prix');  // Récupérer le champ une seule fois
+| Composant | Usage | Propriété DataSource |
+|-----------|-------|---------------------|
+| **TDBGrid** | Grille de données (tableau) | `DataSource` |
+| **TDBEdit** | Champ de saisie | `DataSource` + `DataField` |
+| **TDBMemo** | Zone de texte multiligne | `DataSource` + `DataField` |
+| **TDBText** | Texte en lecture seule | `DataSource` + `DataField` |
+| **TDBComboBox** | Liste déroulante | `DataSource` + `DataField` |
+| **TDBCheckBox** | Case à cocher | `DataSource` + `DataField` |
+| **TDBImage** | Image | `DataSource` + `DataField` |
+| **TDBLookupComboBox** | Liste de choix depuis une autre table | `DataSource` + `DataField` |
+| **TDBNavigator** | Boutons de navigation | `DataSource` |
 
-  FDQuery1.First;
-  while not FDQuery1.EOF do
-  begin
-    Total := Total + ChampPrix.AsFloat;  // Utiliser la référence au champ
-    FDQuery1.Next;
-  end;
+### Configuration d'un contrôle lié
 
-  LabelTotal.Caption := 'Total : ' + FormatFloat('#,##0.00 €', Total);
-end;
+```pascal
+// DBEdit pour afficher le nom
+DBEdit1.DataSource := DataSource1;
+DBEdit1.DataField := 'nom';
+
+// DBEdit pour afficher le prénom
+DBEdit2.DataSource := DataSource1;
+DBEdit2.DataField := 'prenom';
+
+// DBGrid pour afficher tout
+DBGrid1.DataSource := DataSource1;
 ```
 
-## Filtrage des données
+**Automatisme :** Quand vous changez d'enregistrement dans le DataSet, **tous** les contrôles liés se mettent à jour automatiquement !
 
-Les DataSets permettent de filtrer les données sans avoir à exécuter une nouvelle requête SQL :
+## Exemple complet : Formulaire maître-détail
 
-```delphi
-procedure TForm1.btnFiltrerClick(Sender: TObject);
-begin
-  // Activer le filtre
-  FDQuery1.Filtered := False;  // Désactiver d'abord pour éviter les problèmes
-  FDQuery1.Filter := 'ville = ''Paris'' AND age > 18';
-  FDQuery1.Filtered := True;
+Créons une interface complète avec navigation et édition :
 
-  StatusBar1.SimpleText := Format('%d enregistrements après filtrage',
-    [FDQuery1.RecordCount]);
-end;
+### Composants sur le formulaire
 
-procedure TForm1.btnTousClick(Sender: TObject);
-begin
-  // Désactiver le filtre
-  FDQuery1.Filtered := False;
-  FDQuery1.Filter := '';
-
-  StatusBar1.SimpleText := Format('%d enregistrements au total',
-    [FDQuery1.RecordCount]);
-end;
+```
+┌─────────────────────────────────────────────┐
+│  Gestion des Clients                    [X] │
+├─────────────────────────────────────────────┤
+│  [|◄] [◄] [►] [►|] [+] [✓] [X] [🗑]         │ ← DBNavigator
+├─────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────┐  │
+│  │ ID | Nom    | Prénom | Email          │  │ ← DBGrid
+│  │ 1  | Dupont | Jean   | jean@...       │  │
+│  │ 2  | Martin | Sophie | sophie@...     │  │
+│  └───────────────────────────────────────┘  │
+├─────────────────────────────────────────────┤
+│  Détails de l'enregistrement courant        │
+│  ┌─────────────────────────────────────┐    │
+│  │ Nom :     [Dupont              ]    │    │ ← DBEdit
+│  │ Prénom :  [Jean                ]    │    │ ← DBEdit
+│  │ Email :   [jean@email.fr       ]    │    │ ← DBEdit
+│  │ Tél :     [0601020304          ]    │    │ ← DBEdit
+│  └─────────────────────────────────────┘    │
+└─────────────────────────────────────────────┘
 ```
 
-## Recherche dans un DataSet
+### Code de mise en place
 
-Vous pouvez rechercher des enregistrements spécifiques :
-
-```delphi
-procedure TForm1.btnRechercherClick(Sender: TObject);
-var
-  ValeurRecherchee: string;
-begin
-  ValeurRecherchee := EditRecherche.Text;
-
-  if ValeurRecherchee = '' then Exit;
-
-  // Recherche à partir de la position actuelle
-  FDQuery1.FindNearest([ValeurRecherchee]);
-
-  // Ou recherche exacte (doit être au début du DataSet)
-  // FDQuery1.First;
-  // if not FDQuery1.Locate('nom', ValeurRecherchee, []) then
-  //   ShowMessage('Valeur non trouvée');
-end;
-```
-
-## Tri des données
-
-Vous pouvez également trier les données sans nouvelle requête SQL :
-
-```delphi
-procedure TForm1.btnTrierNomClick(Sender: TObject);
-begin
-  FDQuery1.IndexFieldNames := 'nom';  // Tri par le champ "nom"
-end;
-
-procedure TForm1.btnTrierDateClick(Sender: TObject);
-begin
-  FDQuery1.IndexFieldNames := 'date_creation DESC';  // Tri descendant
-end;
-```
-
-## Événements importants des DataSets
-
-Les DataSets fournissent plusieurs événements qui vous permettent de contrôler et de réagir aux changements :
-
-| Événement | Description |
-|-----------|-------------|
-| `BeforeOpen` | Avant l'ouverture du DataSet |
-| `AfterOpen` | Après l'ouverture du DataSet |
-| `BeforeClose` | Avant la fermeture du DataSet |
-| `AfterClose` | Après la fermeture du DataSet |
-| `BeforeInsert` | Avant l'insertion d'un nouvel enregistrement |
-| `AfterInsert` | Après l'insertion d'un nouvel enregistrement |
-| `BeforeEdit` | Avant la modification d'un enregistrement |
-| `AfterEdit` | Après le passage en mode édition |
-| `BeforePost` | Avant l'enregistrement des modifications |
-| `AfterPost` | Après l'enregistrement des modifications |
-| `BeforeDelete` | Avant la suppression d'un enregistrement |
-| `AfterDelete` | Après la suppression d'un enregistrement |
-| `OnNewRecord` | Lors de la création d'un nouvel enregistrement |
-
-### Exemple d'utilisation des événements
-
-```delphi
-procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);
-begin
-  // Vérification avant enregistrement
-  if DataSet.FieldByName('email').AsString = '' then
-  begin
-    ShowMessage('L''email est obligatoire !');
-    Abort;  // Annule l'opération Post
-  end;
-
-  // Mise à jour automatique de certains champs
-  if DataSet.State = dsInsert then
-    DataSet.FieldByName('date_creation').AsDateTime := Now
-  else if DataSet.State = dsEdit then
-    DataSet.FieldByName('date_modification').AsDateTime := Now;
-end;
-
-procedure TForm1.FDQuery1AfterPost(DataSet: TDataSet);
-begin
-  // Actions après enregistrement
-  StatusBar1.SimpleText := 'Enregistrement sauvegardé à ' +
-                           TimeToStr(Now);
-
-  // Rafraîchir d'autres parties de l'application si nécessaire
-  MettreAJourStatistiques;
-end;
-```
-
-## Le composant TDataSource en détail
-
-Le `TDataSource` joue un rôle crucial en transmettant les données et les événements entre le DataSet et les contrôles visuels.
-
-### Propriétés importantes de TDataSource
-
-- **DataSet** : Le DataSet auquel ce DataSource est associé
-- **Enabled** : Active ou désactive la source de données
-- **AutoEdit** : Détermine si les contrôles peuvent automatiquement mettre le DataSet en mode édition
-
-### Événements utiles de TDataSource
-
-- **OnDataChange** : Déclenché lorsque les données changent
-- **OnStateChange** : Déclenché lorsque l'état du DataSet change
-- **OnUpdateData** : Déclenché lorsque les données sont mises à jour
-
-### Exemple d'utilisation des événements TDataSource
-
-```delphi
-procedure TForm1.DataSource1StateChange(Sender: TObject);
-begin
-  // Activer/désactiver les boutons en fonction de l'état
-  btnAjouter.Enabled := not (DataSource1.State in [dsEdit, dsInsert]);
-  btnModifier.Enabled := (DataSource1.State = dsBrowse) and not FDQuery1.IsEmpty;
-  btnSupprimer.Enabled := (DataSource1.State = dsBrowse) and not FDQuery1.IsEmpty;
-  btnEnregistrer.Enabled := DataSource1.State in [dsEdit, dsInsert];
-  btnAnnuler.Enabled := DataSource1.State in [dsEdit, dsInsert];
-end;
-
-procedure TForm1.DataSource1DataChange(Sender: TObject; Field: TField);
-begin
-  // Mise à jour de l'interface en fonction de l'enregistrement actuel
-  if not FDQuery1.IsEmpty then
-    StatusBar1.SimpleText := 'Client : ' + FDQuery1.FieldByName('nom').AsString
-  else
-    StatusBar1.SimpleText := 'Aucun client';
-end;
-```
-
-## Utilisation de plusieurs DataSources
-
-Vous pouvez avoir plusieurs DataSources dans une application, chacun connecté à un DataSet différent. Cela est particulièrement utile pour gérer des relations maître-détail.
-
-### Exemple de relation maître-détail
-
-```delphi
-// Configuration des DataSets
-FDQueryClients.Connection := FDConnection1;
-FDQueryClients.SQL.Text := 'SELECT * FROM clients';
-
-FDQueryCommandes.Connection := FDConnection1;
-FDQueryCommandes.SQL.Text := 'SELECT * FROM commandes WHERE client_id = :client_id';
-FDQueryCommandes.ParamByName('client_id').DataType := ftInteger;
-
-// Configuration des DataSources
-DataSourceClients.DataSet := FDQueryClients;
-DataSourceCommandes.DataSet := FDQueryCommandes;
-
-// Liaison maître-détail
-FDQueryCommandes.MasterSource := DataSourceClients;
-FDQueryCommandes.MasterFields := 'id';  // Champ dans la table clients
-FDQueryCommandes.IndexFieldNames := 'client_id';  // Champ correspondant dans la table commandes
-
-// Activation des DataSets
-FDQueryClients.Active := True;
-FDQueryCommandes.Active := True;
-```
-
-Dans cet exemple, lorsque l'utilisateur navigue entre les clients, la liste des commandes est automatiquement filtrée pour n'afficher que les commandes du client sélectionné.
-
-## Bonnes pratiques
-
-Pour une utilisation efficace des DataSets et DataSources :
-
-1. **Nommez clairement vos composants** : Utilisez des noms descriptifs comme `dsClients` pour un DataSource lié aux clients.
-
-2. **Limitez les données chargées** : Évitez de charger des tables entières si vous n'en avez pas besoin. Utilisez des requêtes SQL avec des clauses WHERE appropriées.
-
-3. **Utilisez le mode déconnecté** : Chargez les données, déconnectez-vous de la base, puis reconnectez-vous uniquement pour valider les modifications.
-
-4. **Créez des objets TField persistants** pour les champs fréquemment utilisés.
-
-5. **Désactivez AutoEdit** si vous souhaitez contrôler précisément quand les utilisateurs peuvent éditer les données.
-
-6. **Activez CachedUpdates** pour les opérations en lot :
-   ```delphi
-   FDQuery1.CachedUpdates := True;
-   // ... modifications multiples ...
-   FDQuery1.ApplyUpdates;  // Envoie toutes les modifications à la base
-   ```
-
-7. **Utilisez des événements** pour valider les données et maintenir l'intégrité.
-
-## Exemple complet : Formulaire de gestion des clients
-
-Voici un exemple qui rassemble plusieurs concepts vus dans cette section :
-
-```delphi
-unit UnitGestionClients;
+```pascal
+unit uFormClients;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL,
-  FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait, FireDAC.Stan.Param, FireDAC.DatS,
-  FireDAC.DApt.Intf, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  Vcl.StdCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.ExtCtrls, Vcl.DBCtrls, Vcl.Mask,
-  Vcl.ComCtrls;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms,
+  Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls, Vcl.Controls,
+  FireDAC.Comp.Client, Data.DB, Vcl.ExtCtrls;
 
 type
-  TFormGestionClients = class(TForm)
+  TFormClients = class(TForm)
+    // Composants FireDAC
     FDConnection1: TFDConnection;
     FDQueryClients: TFDQuery;
     DataSourceClients: TDataSource;
-    PanelHaut: TPanel;
-    DBNavigator1: TDBNavigator;
-    PanelCentre: TPanel;
+
+    // Composants visuels
     DBGrid1: TDBGrid;
-    PanelDroite: TPanel;
-    LabelNom: TLabel;
+    DBNavigator1: TDBNavigator;
     DBEditNom: TDBEdit;
-    LabelPrenom: TLabel;
     DBEditPrenom: TDBEdit;
-    LabelEmail: TLabel;
     DBEditEmail: TDBEdit;
-    LabelTelephone: TLabel;
-    DBEditTelephone: TDBEdit;
-    GroupBoxRecherche: TGroupBox;
-    EditRecherche: TEdit;
-    ButtonRechercher: TButton;
-    StatusBar1: TStatusBar;
+    DBEditTel: TDBEdit;
+
     procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonRechercherClick(Sender: TObject);
-    procedure DataSourceClientsStateChange(Sender: TObject);
-    procedure DataSourceClientsDataChange(Sender: TObject; Field: TField);
-    procedure FDQueryClientsBeforePost(DataSet: TDataSet);
   private
-    procedure ConnecterBaseDeDonnees;
-    procedure MettreAJourStatut;
+    { Déclarations privées }
   public
     { Déclarations publiques }
   end;
 
 var
-  FormGestionClients: TFormGestionClients;
+  FormClients: TFormClients;
 
 implementation
 
 {$R *.dfm}
 
-procedure TFormGestionClients.FormCreate(Sender: TObject);
+procedure TFormClients.FormCreate(Sender: TObject);
 begin
-  ConnecterBaseDeDonnees;
+  // Connecter à la base
+  FDConnection1.Connected := True;
 
-  // Initialiser les contrôles
-  EditRecherche.Clear;
+  // Configurer le DataSource
+  DataSourceClients.DataSet := FDQueryClients;
 
-  // Configurer les événements du DataSource et DataSet
-  DataSourceClients.OnStateChange := DataSourceClientsStateChange;
-  DataSourceClients.OnDataChange := DataSourceClientsDataChange;
-  FDQueryClients.BeforePost := FDQueryClientsBeforePost;
-end;
+  // Configurer les DBEdit
+  DBEditNom.DataSource := DataSourceClients;
+  DBEditNom.DataField := 'nom';
 
-procedure TFormGestionClients.ConnecterBaseDeDonnees;
-begin
-  try
-    FDConnection1.Connected := True;
+  DBEditPrenom.DataSource := DataSourceClients;
+  DBEditPrenom.DataField := 'prenom';
 
-    // Configurer la requête
-    FDQueryClients.Connection := FDConnection1;
-    FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';
-    FDQueryClients.Open;
+  DBEditEmail.DataSource := DataSourceClients;
+  DBEditEmail.DataField := 'email';
 
-    MettreAJourStatut;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur de connexion : ' + E.Message);
-      StatusBar1.SimpleText := 'Non connecté';
-    end;
-  end;
-end;
+  DBEditTel.DataSource := DataSourceClients;
+  DBEditTel.DataField := 'telephone';
 
-procedure TFormGestionClients.FormDestroy(Sender: TObject);
-begin
-  // Fermer proprement
-  if FDQueryClients.Active then
-    FDQueryClients.Close;
+  // Configurer le DBGrid
+  DBGrid1.DataSource := DataSourceClients;
 
-  if FDConnection1.Connected then
-    FDConnection1.Connected := False;
-end;
+  // Configurer le DBNavigator
+  DBNavigator1.DataSource := DataSourceClients;
 
-procedure TFormGestionClients.ButtonRechercherClick(Sender: TObject);
-var
-  TermeRecherche: string;
-begin
-  TermeRecherche := Trim(EditRecherche.Text);
-
-  if TermeRecherche = '' then
-  begin
-    // Réinitialiser le filtre
-    FDQueryClients.Filtered := False;
-    FDQueryClients.Filter := '';
-  end
-  else
-  begin
-    // Appliquer un filtre
-    FDQueryClients.Filtered := False;  // Désactiver d'abord
-    FDQueryClients.Filter := Format('(nom LIKE ''%%%s%%'') OR (prenom LIKE ''%%%s%%'') OR (email LIKE ''%%%s%%'')',
-                               [TermeRecherche, TermeRecherche, TermeRecherche]);
-    FDQueryClients.Filtered := True;
-  end;
-
-  MettreAJourStatut;
-end;
-
-procedure TFormGestionClients.DataSourceClientsStateChange(Sender: TObject);
-begin
-  // Adapter l'interface en fonction de l'état du DataSet
-  case FDQueryClients.State of
-    dsEdit, dsInsert:
-      StatusBar1.SimpleText := 'Édition en cours...';
-    dsBrowse:
-      MettreAJourStatut;
-  end;
-
-  // Activer/désactiver la recherche pendant l'édition
-  GroupBoxRecherche.Enabled := (FDQueryClients.State = dsBrowse);
-end;
-
-procedure TFormGestionClients.DataSourceClientsDataChange(Sender: TObject; Field: TField);
-begin
-  // Réagir au changement d'enregistrement courant
-  if not FDQueryClients.IsEmpty then
-    Caption := 'Gestion des clients - ' + FDQueryClients.FieldByName('nom').AsString +
-               ' ' + FDQueryClients.FieldByName('prenom').AsString
-  else
-    Caption := 'Gestion des clients';
-end;
-
-procedure TFormGestionClients.FDQueryClientsBeforePost(DataSet: TDataSet);
-begin
-  // Valider les données avant enregistrement
-  if DataSet.FieldByName('nom').AsString = '' then
-  begin
-    ShowMessage('Le nom est obligatoire !');
-    DBEditNom.SetFocus;
-    Abort;
-  end;
-
-  if DataSet.FieldByName('email').AsString = '' then
-  begin
-    ShowMessage('L''email est obligatoire !');
-    DBEditEmail.SetFocus;
-    Abort;
-  end;
-
-  // Ajouter des champs de suivi
-  if DataSet.State = dsInsert then
-    DataSet.FieldByName('date_creation').AsDateTime := Now
-  else if DataSet.State = dsEdit then
-    DataSet.FieldByName('date_modification').AsDateTime := Now;
-end;
-
-procedure TFormGestionClients.MettreAJourStatut;
-begin
-  if FDQueryClients.Active then
-  begin
-    if FDQueryClients.Filtered then
-      StatusBar1.SimpleText := Format('%d clients trouvés (filtrés)', [FDQueryClients.RecordCount])
-    else
-      StatusBar1.SimpleText := Format('%d clients au total', [FDQueryClients.RecordCount]);
-  end
-  else
-    StatusBar1.SimpleText := 'Base de données non connectée';
+  // Charger les données
+  FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
+  FDQueryClients.Open;
 end;
 
 end.
 ```
 
-## Conclusion
+**Magie de Delphi :** Avec ce code, vous avez :
+- Navigation automatique (via DBNavigator)
+- Affichage dans la grille
+- Édition directe dans les DBEdit
+- Synchronisation automatique de tous les contrôles !
 
-Les DataSets et DataSources sont des concepts fondamentaux pour travailler avec des données dans Delphi. Ils fournissent une abstraction puissante qui vous permet de manipuler des données sans vous soucier des détails de la base de données sous-jacente.
+## Le composant DBNavigator
 
-Avec ces composants, vous pouvez :
-- Afficher et modifier des données facilement dans votre interface utilisateur
-- Naviguer, filtrer et trier les enregistrements
-- Valider les données avant qu'elles ne soient enregistrées
-- Créer des relations maître-détail pour gérer des données hiérarchiques
+**TDBNavigator** est un composant très pratique qui fournit des boutons de navigation et d'édition.
 
-Dans la prochaine section, nous explorerons les contrôles liés aux données qui permettent d'afficher et de modifier les informations de vos DataSets.
+### Les boutons du DBNavigator
 
----
+| Bouton | Action | Méthode équivalente |
+|--------|--------|---------------------|
+| `|◄` | Premier enregistrement | `First` |
+| `◄` | Enregistrement précédent | `Prior` |
+| `►` | Enregistrement suivant | `Next` |
+| `►|` | Dernier enregistrement | `Last` |
+| `+` | Ajouter un enregistrement | `Insert` |
+| `🗑` | Supprimer l'enregistrement | `Delete` |
+| `✓` | Valider les modifications | `Post` |
+| `X` | Annuler les modifications | `Cancel` |
+| `↻` | Rafraîchir les données | `Refresh` |
 
-**À suivre :** 8.7 Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)
+### Personnaliser le DBNavigator
+
+```pascal
+// Masquer certains boutons
+DBNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast, nbRefresh];
+
+// Confirmer avant suppression
+DBNavigator1.ConfirmDelete := True;
+
+// Changer les hints (bulles d'aide)
+DBNavigator1.Hints.Clear;
+DBNavigator1.Hints.Add('Premier');
+DBNavigator1.Hints.Add('Précédent');
+// etc.
+DBNavigator1.ShowHint := True;
+```
+
+## Événements importants d'un DataSet
+
+Les DataSets génèrent des événements que vous pouvez intercepter pour ajouter votre logique.
+
+### Événements de navigation
+
+```pascal
+// Avant de changer d'enregistrement
+procedure TForm1.FDQuery1BeforeScroll(DataSet: TDataSet);
+begin
+  // Vérifier si des modifications sont en cours
+  if DataSet.State in [dsEdit, dsInsert] then
+  begin
+    if MessageDlg('Enregistrer les modifications ?',
+       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      DataSet.Post
+    else
+      DataSet.Cancel;
+  end;
+end;
+
+// Après avoir changé d'enregistrement
+procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);
+begin
+  // Mettre à jour l'interface
+  StatusBar1.SimpleText := 'Enregistrement ' +
+    IntToStr(DataSet.RecNo) + ' sur ' + IntToStr(DataSet.RecordCount);
+end;
+```
+
+### Événements de modification
+
+```pascal
+// Avant d'insérer un enregistrement
+procedure TForm1.FDQuery1BeforeInsert(DataSet: TDataSet);
+begin
+  // Vérifier les permissions
+  if not UtilisateurPeutAjouter then
+  begin
+    ShowMessage('Vous n''avez pas les droits pour ajouter');
+    Abort;  // Annule l'opération
+  end;
+end;
+
+// Avant de valider les modifications
+procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);
+begin
+  // Validation personnalisée
+  if Trim(DataSet.FieldByName('nom').AsString) = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    Abort;  // Empêche le Post
+  end;
+
+  // Valider l'email
+  if Pos('@', DataSet.FieldByName('email').AsString) = 0 then
+  begin
+    ShowMessage('Email invalide');
+    Abort;
+  end;
+end;
+
+// Après avoir validé les modifications
+procedure TForm1.FDQuery1AfterPost(DataSet: TDataSet);
+begin
+  ShowMessage('Enregistrement sauvegardé');
+end;
+
+// Avant de supprimer
+procedure TForm1.FDQuery1BeforeDelete(DataSet: TDataSet);
+begin
+  if MessageDlg('Confirmer la suppression ?',
+     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Abort;  // Annule la suppression
+end;
+```
+
+### Événements de champs
+
+```pascal
+// Quand un champ change
+procedure TForm1.FDQuery1nomChange(Sender: TField);
+begin
+  // Le champ "nom" a été modifié
+  lblNomModifie.Visible := True;
+end;
+
+// Validation d'un champ
+procedure TForm1.FDQuery1emailValidate(Sender: TField);
+begin
+  if Pos('@', Sender.AsString) = 0 then
+    raise Exception.Create('Email invalide');
+end;
+```
+
+## Filtrage et tri d'un DataSet
+
+### Filtrer les données
+
+#### Filtre côté serveur (recommandé)
+
+```pascal
+// Filtrer avec WHERE dans la requête SQL
+FDQuery1.Close;
+FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE actif = TRUE';
+FDQuery1.Open;
+```
+
+#### Filtre côté client
+
+```pascal
+// Filtrer après avoir chargé les données
+FDQuery1.Filter := 'nom LIKE ''D%''';  // Noms commençant par D
+FDQuery1.Filtered := True;
+
+// Désactiver le filtre
+FDQuery1.Filtered := False;
+
+// Filtres multiples
+FDQuery1.Filter := 'actif = TRUE AND nom LIKE ''D%''';
+FDQuery1.Filtered := True;
+```
+
+**Important :** Le filtrage côté client charge toutes les données puis filtre en mémoire. Pour de grandes tables, préférez le filtrage côté serveur (WHERE dans SQL).
+
+### Trier les données
+
+#### Tri côté serveur (recommandé)
+
+```pascal
+// Trier avec ORDER BY dans la requête
+FDQuery1.Close;
+FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';
+FDQuery1.Open;
+```
+
+#### Tri côté client
+
+```pascal
+// Trier après chargement (FireDAC)
+FDQuery1.IndexFieldNames := 'nom;prenom';  // Tri sur nom puis prénom
+
+// Ordre décroissant
+FDQuery1.IndexFieldNames := 'nom:D';  // D pour Descending
+```
+
+## Recherche dans un DataSet
+
+### Méthode Locate
+
+```pascal
+// Chercher un enregistrement
+if FDQuery1.Locate('nom', 'Dupont', []) then
+  ShowMessage('Client trouvé')
+else
+  ShowMessage('Client non trouvé');
+
+// Recherche insensible à la casse
+if FDQuery1.Locate('nom', 'dupont', [loCaseInsensitive]) then
+  ShowMessage('Trouvé');
+
+// Recherche partielle
+if FDQuery1.Locate('nom', 'Dup', [loPartialKey]) then
+  ShowMessage('Trouvé');
+
+// Recherche sur plusieurs champs
+if FDQuery1.Locate('nom;prenom', VarArrayOf(['Dupont', 'Jean']), []) then
+  ShowMessage('Trouvé');
+```
+
+### Méthode Lookup
+
+```pascal
+// Récupérer une valeur sans déplacer le curseur
+var
+  Email: Variant;
+begin
+  Email := FDQuery1.Lookup('id', 5, 'email');
+  if not VarIsNull(Email) then
+    ShowMessage('Email : ' + VarToStr(Email));
+end;
+```
+
+## Rafraîchir les données
+
+### Méthode Refresh
+
+```pascal
+// Recharger les données depuis la base
+FDQuery1.Refresh;
+
+// Ou fermer et rouvrir
+FDQuery1.Close;
+FDQuery1.Open;
+```
+
+### Rafraîchissement automatique
+
+```pascal
+// Événement de formulaire avec un Timer
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  FDQuery1.Refresh;  // Recharge toutes les 30 secondes
+end;
+```
+
+## Propriétés utiles d'un DataSet
+
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `Active` | Boolean | Dataset ouvert ou fermé |
+| `State` | TDataSetState | État courant (Browse, Edit, Insert...) |
+| `RecordCount` | Integer | Nombre d'enregistrements |
+| `RecNo` | Integer | Numéro de l'enregistrement courant |
+| `Bof` | Boolean | True si au début |
+| `Eof` | Boolean | True si à la fin |
+| `IsEmpty` | Boolean | True si aucun enregistrement |
+| `Modified` | Boolean | True si modifications non sauvegardées |
+| `FieldCount` | Integer | Nombre de champs |
+| `Fields[]` | TField | Accès aux champs par index |
+
+## Méthodes utiles d'un DataSet
+
+| Méthode | Description |
+|---------|-------------|
+| `Open` | Ouvre le dataset |
+| `Close` | Ferme le dataset |
+| `Refresh` | Recharge les données |
+| `First` | Premier enregistrement |
+| `Last` | Dernier enregistrement |
+| `Next` | Enregistrement suivant |
+| `Prior` | Enregistrement précédent |
+| `Append` | Ajouter à la fin |
+| `Insert` | Insérer à la position courante |
+| `Edit` | Passer en mode édition |
+| `Post` | Valider les modifications |
+| `Cancel` | Annuler les modifications |
+| `Delete` | Supprimer l'enregistrement |
+| `Locate` | Rechercher un enregistrement |
+| `DisableControls` | Désactiver les contrôles liés |
+| `EnableControls` | Réactiver les contrôles liés |
+
+## Optimisation : DisableControls / EnableControls
+
+Quand vous parcourez de nombreux enregistrements, désactivez les contrôles visuels pour améliorer les performances :
+
+```pascal
+procedure TraiterTous;
+begin
+  FDQuery1.DisableControls;  // Désactive les mises à jour visuelles
+  try
+    FDQuery1.First;
+    while not FDQuery1.Eof do
+    begin
+      // Traiter l'enregistrement
+      // ...
+
+      FDQuery1.Next;
+    end;
+  finally
+    FDQuery1.EnableControls;  // Réactive les mises à jour
+  end;
+end;
+```
+
+**Gain :** Peut être **10 à 100 fois plus rapide** pour les traitements en masse !
+
+## Bonnes pratiques
+
+### ✅ À FAIRE
+
+1. **Toujours utiliser un DataSource** pour lier les données aux contrôles
+   ```pascal
+   DBEdit1.DataSource := DataSource1;
+   DBEdit1.DataField := 'nom';
+   ```
+
+2. **Valider dans BeforePost** plutôt que dans le bouton
+   ```pascal
+   procedure FDQuery1BeforePost(DataSet: TDataSet);
+   begin
+     // Validation ici
+   end;
+   ```
+
+3. **Utiliser DisableControls** pour les traitements en masse
+   ```pascal
+   FDQuery1.DisableControls;
+   try
+     // Traitement
+   finally
+     FDQuery1.EnableControls;
+   end;
+   ```
+
+4. **Vérifier l'état avant modification**
+   ```pascal
+   if not (FDQuery1.State in [dsEdit, dsInsert]) then
+     FDQuery1.Edit;
+   ```
+
+### ❌ À ÉVITER
+
+1. **Modifier directement sans Edit**
+   ```pascal
+   // ❌ ERREUR
+   FDQuery1.FieldByName('nom').AsString := 'Nouveau';
+
+   // ✅ CORRECT
+   FDQuery1.Edit;
+   FDQuery1.FieldByName('nom').AsString := 'Nouveau';
+   FDQuery1.Post;
+   ```
+
+2. **Oublier le Post**
+   ```pascal
+   // ❌ Modifications perdues
+   FDQuery1.Edit;
+   FDQuery1.FieldByName('nom').AsString := 'Nouveau';
+   // Pas de Post !
+   ```
+
+3. **Accéder aux champs d'un dataset fermé**
+   ```pascal
+   // ❌ ERREUR
+   if not FDQuery1.Active then
+     FDQuery1.FieldByName('nom').AsString;  // Exception !
+   ```
+
+## Résumé
+
+### DataSet : Les points clés
+
+✅ Un DataSet est un conteneur de données en mémoire
+✅ Il a un état (Inactive, Browse, Edit, Insert)
+✅ On navigue avec First, Next, Prior, Last
+✅ On modifie avec Edit, Post, Cancel
+✅ On accède aux champs avec FieldByName
+
+### DataSource : Les points clés
+
+✅ Le DataSource fait le lien entre DataSet et contrôles visuels
+✅ Tous les contrôles liés sont synchronisés automatiquement
+✅ Un seul DataSource peut servir plusieurs contrôles
+✅ Les contrôles DB (DBEdit, DBGrid, etc.) utilisent un DataSource
+
+### Schéma récapitulatif
+
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│  TFDQuery    │──────►│ TDataSource  │──────►│   DBGrid     │
+│              │       │              │       │   DBEdit     │
+│  - Open      │       │  - DataSet   │       │   DBText     │
+│  - Edit      │       │              │       │   etc.       │
+│  - Post      │       │              │       │              │
+│  - Next      │       │              │       │  Tous        │
+│  - Fields    │       │              │       │  synchronisés│
+└──────────────┘       └──────────────┘       └──────────────┘
+```
+
+## Prochaines étapes
+
+Vous maîtrisez maintenant les DataSets et DataSources ! Dans les sections suivantes, nous verrons :
+
+1. **Contrôles liés aux données** (DBGrid avancé, DBLookup, etc.)
+2. **Live Bindings** pour des liaisons encore plus flexibles
+3. **Modèle en couches** pour une meilleure architecture
+4. **Optimisation** des performances avec les DataSets
+
+Avec ces connaissances, vous pouvez créer des interfaces riches et interactives qui manipulent les données de manière intuitive et efficace !
 
 ⏭️ [Contrôles liés aux données (DBGrid, DBEdit, DBLookupComboBox...)](/08-acces-aux-bases-de-donnees-mysql-mariadb/07-controles-lies-aux-donnees.md)

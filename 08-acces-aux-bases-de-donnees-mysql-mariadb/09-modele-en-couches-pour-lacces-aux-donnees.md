@@ -1,80 +1,718 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 8.9 Modèle en couches pour l'accès aux données
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Jusqu'à présent, nous avons exploré comment connecter notre application à une base de données MySQL et manipuler les données avec différentes techniques. Cependant, dans les exemples précédents, nous avons souvent placé tout le code d'accès aux données directement dans les formulaires. Cette approche, bien que simple à comprendre pour les débutants, n'est pas idéale pour des applications professionnelles plus grandes.
+Lorsque vous créez une application de base de données, il est tentant de tout mettre dans le formulaire : la connexion, les requêtes, la logique métier, et l'interface utilisateur. Cela fonctionne pour de petites applications, mais devient rapidement **ingérable** pour des projets plus importants.
 
-Dans cette section, nous allons découvrir comment structurer notre code selon un **modèle en couches**, une approche qui sépare l'accès aux données de l'interface utilisateur et qui apporte de nombreux avantages pour le développement et la maintenance des applications.
+Le **modèle en couches** (ou architecture en couches) est une approche qui **sépare** les différentes responsabilités de votre application en modules distincts. C'est une des meilleures pratiques du développement logiciel professionnel.
 
-## Pourquoi utiliser un modèle en couches ?
+## Pourquoi séparer en couches ?
 
-Avant de plonger dans l'implémentation, voyons les avantages d'un modèle en couches :
+### Le problème de l'approche monolithique
 
-1. **Séparation des responsabilités** : Chaque partie du code a un rôle spécifique et bien défini
-2. **Maintenabilité améliorée** : Il est plus facile de modifier une partie sans affecter les autres
-3. **Réutilisabilité du code** : Les couches d'accès aux données peuvent être partagées entre plusieurs formulaires ou projets
-4. **Testabilité** : Il est plus facile de tester chaque couche indépendamment
-5. **Évolutivité** : Vous pouvez modifier une couche (par exemple, changer de base de données) sans impacter les autres
+Imaginez un formulaire qui fait tout :
 
-## Les différentes couches d'une application
+```pascal
+// ❌ TOUT dans le formulaire - Architecture monolithique
+procedure TFormClients.btnSauvegarderClick(Sender: TObject);
+begin
+  // Connexion à la base
+  FDConnection1.Params.Values['Server'] := 'localhost';
+  FDConnection1.Params.Values['Database'] := 'ma_base';
+  FDConnection1.Connected := True;
 
-Une architecture en couches typique pour une application Delphi comprend généralement les niveaux suivants :
+  // Validation métier
+  if Trim(editNom.Text) = '' then
+    raise Exception.Create('Nom obligatoire');
+  if Pos('@', editEmail.Text) = 0 then
+    raise Exception.Create('Email invalide');
+  if CalculerAge(DateNaissance) < 18 then
+    raise Exception.Create('Le client doit être majeur');
 
-![Architecture en couches](https://placeholder.pics/svg/650x400/DEDEDE/555555/Architecture%20en%20couches)
+  // SQL
+  FDQuery1.SQL.Text :=
+    'INSERT INTO clients (nom, prenom, email, date_naissance) ' +
+    'VALUES (:nom, :prenom, :email, :date)';
+  FDQuery1.ParamByName('nom').AsString := editNom.Text;
+  FDQuery1.ParamByName('prenom').AsString := editPrenom.Text;
+  FDQuery1.ParamByName('email').AsString := editEmail.Text;
+  FDQuery1.ParamByName('date').AsDate := DateNaissance;
+  FDQuery1.ExecSQL;
 
-### 1. Interface Utilisateur (UI)
-
-La couche Interface Utilisateur contient les formulaires, les contrôles visuels et la logique de présentation. C'est la partie que l'utilisateur voit et avec laquelle il interagit.
-
-### 2. Logique Métier (Business Logic)
-
-La couche Logique Métier contient les règles et processus de l'entreprise. Elle traite les données, effectue des calculs, applique des validations et exécute les opérations métier.
-
-### 3. Accès aux Données (Data Access)
-
-La couche Accès aux Données est responsable de toutes les interactions avec la base de données. Elle exécute les requêtes SQL, gère les connexions et convertit les données entre la base de données et les objets de l'application.
-
-### 4. Modèle de Données (Data Model)
-
-La couche Modèle de Données définit la structure des données manipulées par l'application, généralement sous forme de classes.
-
-## Mise en œuvre du modèle en couches dans Delphi
-
-Maintenant, voyons comment implémenter concrètement cette architecture dans une application Delphi.
-
-### Structure du projet
-
-D'abord, organisez votre projet en unités distinctes :
-
-```
-MonProjet/
-  ├── UI/                  # Couche interface utilisateur
-  │   ├── UMainForm.pas    # Formulaire principal
-  │   └── UClientForm.pas  # Formulaire de gestion des clients
-  ├── Business/            # Couche logique métier
-  │   ├── UClientLogic.pas # Logique métier pour les clients
-  │   └── ...
-  ├── DataAccess/          # Couche accès aux données
-  │   ├── UDataModule.pas  # Module de données pour les connexions
-  │   ├── UClientDAO.pas   # Accès aux données des clients (DAO = Data Access Object)
-  │   └── ...
-  └── Model/               # Couche modèle de données
-      ├── UClientModel.pas # Classe représentant un client
-      └── ...
+  // Mise à jour de l'interface
+  ChargerClients;
+  ShowMessage('Client sauvegardé');
+end;
 ```
 
-### Couche Modèle de Données
+**Problèmes :**
+- 🔴 Code **dupliqué** dans chaque formulaire
+- 🔴 **Difficile à tester** (tout est lié à l'interface)
+- 🔴 **Impossible de réutiliser** la logique
+- 🔴 **Modification complexe** : changer la base touche tous les formulaires
+- 🔴 **Maintenance cauchemardesque** pour de grandes applications
 
-Commençons par définir notre modèle de données. Pour un client, cela pourrait ressembler à :
+### L'approche en couches
 
-```delphi
-// UClientModel.pas
-unit UClientModel;
+```
+┌─────────────────────────────────────────┐
+│     COUCHE PRÉSENTATION (UI)            │
+│  FormClients, FormCommandes, etc.       │
+│  - Affichage                            │
+│  - Interaction utilisateur              │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│     COUCHE MÉTIER (Business Logic)      │
+│  TClientManager, TCommandeManager       │
+│  - Règles métier                        │
+│  - Validation                           │
+│  - Calculs                              │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│     COUCHE DONNÉES (Data Access)        │
+│  TDataModule, TClientDAO                │
+│  - Connexion base de données            │
+│  - Requêtes SQL                         │
+│  - Gestion CRUD                         │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────▼──────────────────────┐
+│     BASE DE DONNÉES                     │
+│  MySQL/MariaDB                          │
+└─────────────────────────────────────────┘
+```
+
+**Avantages :**
+- ✅ Code **organisé** et **maintenable**
+- ✅ Facilement **testable** (chaque couche séparément)
+- ✅ **Réutilisable** (même logique dans plusieurs formulaires)
+- ✅ **Évolutif** (changer une couche sans toucher les autres)
+- ✅ **Travail en équipe** facilité (chacun sur sa couche)
+
+## Les trois couches principales
+
+### 1. Couche Présentation (UI Layer)
+
+**Responsabilités :**
+- Afficher les données
+- Gérer les interactions utilisateur (clics, saisies)
+- Mettre à jour l'interface
+
+**Ce qu'elle NE fait PAS :**
+- ❌ Validation métier complexe
+- ❌ Connexion directe à la base
+- ❌ Logique de calcul
+
+**Composants :**
+- Formulaires (TForm)
+- Contrôles visuels (Button, Edit, Grid)
+- DataSources et contrôles DB
+
+### 2. Couche Métier (Business Logic Layer)
+
+**Responsabilités :**
+- Implémenter les **règles métier**
+- **Valider** les données
+- Effectuer les **calculs** complexes
+- Coordonner les opérations
+
+**Ce qu'elle NE fait PAS :**
+- ❌ Affichage (pas de ShowMessage)
+- ❌ SQL direct
+- ❌ Gestion de l'interface
+
+**Composants :**
+- Classes métier (TClientManager, TFactureManager)
+- Objets métier (TClient, TCommande)
+- Services (TEmailService, TReportService)
+
+### 3. Couche Données (Data Access Layer)
+
+**Responsabilités :**
+- **Connexion** à la base de données
+- Exécution des **requêtes SQL**
+- Opérations **CRUD**
+- Gestion des **transactions**
+
+**Ce qu'elle NE fait PAS :**
+- ❌ Validation métier
+- ❌ Affichage
+- ❌ Logique complexe
+
+**Composants :**
+- DataModule (TDataModule)
+- Classes DAO (Data Access Object)
+- Composants FireDAC
+
+## Mise en pratique : Le DataModule
+
+Le **DataModule** est le composant idéal pour implémenter la couche d'accès aux données.
+
+### Qu'est-ce qu'un DataModule ?
+
+Un **DataModule** est un conteneur **non-visuel** pour les composants de données. C'est comme un formulaire, mais sans interface graphique.
+
+### Créer un DataModule
+
+#### Étape 1 : Créer le DataModule
+
+1. **Fichier** → **Nouveau** → **Autre...**
+2. Dans la catégorie **Delphi Files**, sélectionnez **DataModule**
+3. Nommez-le : `dmDatabase` (Data Module Database)
+4. Sauvegardez : `uDmDatabase.pas`
+
+#### Étape 2 : Ajouter les composants FireDAC
+
+Sur le DataModule, placez :
+
+- **TFDConnection** : la connexion principale
+- **TFDPhysMySQLDriverLink** : le pilote MySQL
+- **TFDQuery** pour chaque entité (Clients, Commandes, etc.)
+- **TDataSource** correspondants
+
+```pascal
+unit uDmDatabase;
 
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool,
+  FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL, FireDAC.Phys.MySQLDef,
+  FireDAC.VCLUI.Wait, FireDAC.Comp.Client, Data.DB, FireDAC.Stan.Param,
+  FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet;
+
+type
+  TdmDatabase = class(TDataModule)
+    FDConnection1: TFDConnection;
+    FDPhysMySQLDriverLink1: TFDPhysMySQLDriverLink;
+
+    // Queries
+    FDQueryClients: TFDQuery;
+    FDQueryCommandes: TFDQuery;
+    FDQueryProduits: TFDQuery;
+
+    // DataSources
+    DataSourceClients: TDataSource;
+    DataSourceCommandes: TDataSource;
+    DataSourceProduits: TDataSource;
+
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
+  private
+    { Déclarations privées }
+    procedure ConfigurerConnexion;
+  public
+    { Déclarations publiques }
+    // Méthodes d'accès aux données
+    procedure ConnecterBase;
+    procedure DeconnecterBase;
+
+    // Clients
+    procedure ChargerClients;
+    function AjouterClient(const Nom, Prenom, Email: string): Integer;
+    procedure ModifierClient(ID: Integer; const Nom, Prenom, Email: string);
+    procedure SupprimerClient(ID: Integer);
+
+    // Commandes
+    procedure ChargerCommandes(ClientID: Integer);
+    function CreerCommande(ClientID: Integer; const Articles: TArray<Integer>): Integer;
+  end;
+
+var
+  dmDatabase: TdmDatabase;
+
+implementation
+
+{%CLASSGROUP 'Vcl.Controls.TControl'}
+
+{$R *.dfm}
+
+procedure TdmDatabase.DataModuleCreate(Sender: TObject);
+begin
+  ConfigurerConnexion;
+  ConnecterBase;
+end;
+
+procedure TdmDatabase.DataModuleDestroy(Sender: TObject);
+begin
+  DeconnecterBase;
+end;
+
+procedure TdmDatabase.ConfigurerConnexion;
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.Params.Add('DriverID=MySQL');
+  FDConnection1.Params.Add('Server=localhost');
+  FDConnection1.Params.Add('Port=3306');
+  FDConnection1.Params.Add('Database=ma_gestion');
+  FDConnection1.Params.Add('User_Name=delphi_user');
+  FDConnection1.Params.Add('Password=MonMotDePasse');
+  FDConnection1.Params.Add('CharacterSet=utf8mb4');
+  FDConnection1.LoginPrompt := False;
+end;
+
+procedure TdmDatabase.ConnecterBase;
+begin
+  if not FDConnection1.Connected then
+    FDConnection1.Connected := True;
+end;
+
+procedure TdmDatabase.DeconnecterBase;
+begin
+  if FDConnection1.Connected then
+    FDConnection1.Connected := False;
+end;
+
+// ─── CLIENTS ───
+
+procedure TdmDatabase.ChargerClients;
+begin
+  FDQueryClients.Close;
+  FDQueryClients.SQL.Text :=
+    'SELECT id, nom, prenom, email, telephone, actif ' +
+    'FROM clients ' +
+    'WHERE actif = TRUE ' +
+    'ORDER BY nom, prenom';
+  FDQueryClients.Open;
+end;
+
+function TdmDatabase.AjouterClient(const Nom, Prenom, Email: string): Integer;
+begin
+  FDQueryClients.SQL.Text :=
+    'INSERT INTO clients (nom, prenom, email, date_creation) ' +
+    'VALUES (:nom, :prenom, :email, NOW())';
+
+  FDQueryClients.ParamByName('nom').AsString := Nom;
+  FDQueryClients.ParamByName('prenom').AsString := Prenom;
+  FDQueryClients.ParamByName('email').AsString := Email;
+
+  FDQueryClients.ExecSQL;
+
+  // Retourner l'ID auto-généré
+  Result := FDConnection1.GetLastAutoGenValue('clients');
+end;
+
+procedure TdmDatabase.ModifierClient(ID: Integer; const Nom, Prenom, Email: string);
+begin
+  FDQueryClients.SQL.Text :=
+    'UPDATE clients SET ' +
+    '  nom = :nom, ' +
+    '  prenom = :prenom, ' +
+    '  email = :email ' +
+    'WHERE id = :id';
+
+  FDQueryClients.ParamByName('nom').AsString := Nom;
+  FDQueryClients.ParamByName('prenom').AsString := Prenom;
+  FDQueryClients.ParamByName('email').AsString := Email;
+  FDQueryClients.ParamByName('id').AsInteger := ID;
+
+  FDQueryClients.ExecSQL;
+end;
+
+procedure TdmDatabase.SupprimerClient(ID: Integer);
+begin
+  // Suppression logique
+  FDQueryClients.SQL.Text := 'UPDATE clients SET actif = FALSE WHERE id = :id';
+  FDQueryClients.ParamByName('id').AsInteger := ID;
+  FDQueryClients.ExecSQL;
+end;
+
+// ─── COMMANDES ───
+
+procedure TdmDatabase.ChargerCommandes(ClientID: Integer);
+begin
+  FDQueryCommandes.Close;
+  FDQueryCommandes.SQL.Text :=
+    'SELECT id, date_commande, total, statut ' +
+    'FROM commandes ' +
+    'WHERE client_id = :client_id ' +
+    'ORDER BY date_commande DESC';
+
+  FDQueryCommandes.ParamByName('client_id').AsInteger := ClientID;
+  FDQueryCommandes.Open;
+end;
+
+function TdmDatabase.CreerCommande(ClientID: Integer;
+  const Articles: TArray<Integer>): Integer;
+var
+  i: Integer;
+  CommandeID: Integer;
+begin
+  FDConnection1.StartTransaction;
+  try
+    // Créer la commande
+    FDQueryCommandes.SQL.Text :=
+      'INSERT INTO commandes (client_id, date_commande, statut) ' +
+      'VALUES (:client_id, NOW(), ''En cours'')';
+    FDQueryCommandes.ParamByName('client_id').AsInteger := ClientID;
+    FDQueryCommandes.ExecSQL;
+
+    CommandeID := FDConnection1.GetLastAutoGenValue('commandes');
+
+    // Ajouter les articles (code simplifié)
+    // ... code pour ajouter les articles ...
+
+    FDConnection1.Commit;
+    Result := CommandeID;
+  except
+    FDConnection1.Rollback;
+    raise;
+  end;
+end;
+
+end.
+```
+
+### Utiliser le DataModule dans un formulaire
+
+```pascal
+unit uFormClients;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms,
+  Vcl.Controls, Vcl.StdCtrls, Vcl.DBCtrls, Vcl.Grids, Vcl.DBGrids,
+  uDmDatabase;  // ← Ajouter la référence au DataModule
+
+type
+  TFormClients = class(TForm)
+    DBGrid1: TDBGrid;
+    btnNouveau: TButton;
+    btnModifier: TButton;
+    btnSupprimer: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure btnNouveauClick(Sender: TObject);
+  private
+    { Déclarations privées }
+  public
+    { Déclarations publiques }
+  end;
+
+var
+  FormClients: TFormClients;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormClients.FormCreate(Sender: TObject);
+begin
+  // Lier au DataModule
+  DBGrid1.DataSource := dmDatabase.DataSourceClients;
+
+  // Charger les données
+  dmDatabase.ChargerClients;
+end;
+
+procedure TFormClients.btnNouveauClick(Sender: TObject);
+var
+  NouveauID: Integer;
+begin
+  // Appeler le DataModule pour ajouter
+  NouveauID := dmDatabase.AjouterClient('Nouveau', 'Client', 'nouveau@email.fr');
+
+  ShowMessage('Client créé avec l''ID : ' + IntToStr(NouveauID));
+
+  // Recharger
+  dmDatabase.ChargerClients;
+end;
+
+end.
+```
+
+**Important :** Le DataModule doit être créé **en premier** dans le projet.
+
+### Configuration dans le projet
+
+Dans le fichier projet (`.dpr`), assurez-vous que le DataModule est créé avant les formulaires :
+
+```pascal
+program GestionClients;
+
+uses
+  Vcl.Forms,
+  uDmDatabase in 'uDmDatabase.pas' {dmDatabase: TDataModule},  // ← En premier !
+  uFormClients in 'uFormClients.pas' {FormClients};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+
+  // Créer le DataModule en premier
+  Application.CreateForm(TdmDatabase, dmDatabase);
+
+  // Puis les formulaires
+  Application.CreateForm(TFormClients, FormClients);
+
+  Application.Run;
+end.
+```
+
+## Couche Métier : Classes de gestion
+
+La couche métier contient la **logique business** et orchestre les opérations.
+
+### Créer une classe Manager
+
+```pascal
+unit uClientManager;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, uDmDatabase;
+
+type
+  TClientManager = class
+  private
+    FDataModule: TdmDatabase;
+  public
+    constructor Create(ADataModule: TdmDatabase);
+
+    // Méthodes métier
+    function CreerNouveauClient(const Nom, Prenom, Email, Telephone: string): Integer;
+    procedure ModifierClient(ID: Integer; const Nom, Prenom, Email, Telephone: string);
+    function SupprimerClient(ID: Integer): Boolean;
+    function RechercherClients(const Critere: string): Boolean;
+
+    // Validation
+    function ValiderEmail(const Email: string): Boolean;
+    function ValiderTelephone(const Telephone: string): Boolean;
+
+    // Règles métier
+    function ClientPeutEtreSupprimer(ClientID: Integer): Boolean;
+    function CalculerNombreCommandes(ClientID: Integer): Integer;
+  end;
+
+implementation
+
+{ TClientManager }
+
+constructor TClientManager.Create(ADataModule: TdmDatabase);
+begin
+  inherited Create;
+  FDataModule := ADataModule;
+end;
+
+function TClientManager.CreerNouveauClient(const Nom, Prenom, Email,
+  Telephone: string): Integer;
+begin
+  // Validation métier
+  if Trim(Nom) = '' then
+    raise Exception.Create('Le nom est obligatoire');
+
+  if Trim(Prenom) = '' then
+    raise Exception.Create('Le prénom est obligatoire');
+
+  if not ValiderEmail(Email) then
+    raise Exception.Create('Email invalide');
+
+  if (Telephone <> '') and (not ValiderTelephone(Telephone)) then
+    raise Exception.Create('Numéro de téléphone invalide');
+
+  // Vérifier que l'email n'existe pas déjà
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT COUNT(*) AS nb FROM clients WHERE email = :email';
+  FDataModule.FDQueryClients.ParamByName('email').AsString := Email;
+  FDataModule.FDQueryClients.Open;
+
+  if FDataModule.FDQueryClients.FieldByName('nb').AsInteger > 0 then
+    raise Exception.Create('Cet email est déjà utilisé');
+
+  // Appeler la couche données
+  Result := FDataModule.AjouterClient(Nom, Prenom, Email);
+
+  // Log ou notification (optionnel)
+  // LogActivity('Client créé : ' + Nom + ' ' + Prenom);
+end;
+
+procedure TClientManager.ModifierClient(ID: Integer; const Nom, Prenom,
+  Email, Telephone: string);
+begin
+  // Validation
+  if Trim(Nom) = '' then
+    raise Exception.Create('Le nom est obligatoire');
+
+  if not ValiderEmail(Email) then
+    raise Exception.Create('Email invalide');
+
+  // Vérifier que l'email n'est pas utilisé par un autre client
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT COUNT(*) AS nb FROM clients WHERE email = :email AND id <> :id';
+  FDataModule.FDQueryClients.ParamByName('email').AsString := Email;
+  FDataModule.FDQueryClients.ParamByName('id').AsInteger := ID;
+  FDataModule.FDQueryClients.Open;
+
+  if FDataModule.FDQueryClients.FieldByName('nb').AsInteger > 0 then
+    raise Exception.Create('Cet email est déjà utilisé');
+
+  // Appeler la couche données
+  FDataModule.ModifierClient(ID, Nom, Prenom, Email);
+end;
+
+function TClientManager.SupprimerClient(ID: Integer): Boolean;
+begin
+  Result := False;
+
+  // Règle métier : on ne peut pas supprimer un client avec des commandes
+  if not ClientPeutEtreSupprimer(ID) then
+  begin
+    raise Exception.Create(
+      'Impossible de supprimer : ce client a des commandes en cours');
+  end;
+
+  // Appeler la couche données
+  FDataModule.SupprimerClient(ID);
+  Result := True;
+end;
+
+function TClientManager.RechercherClients(const Critere: string): Boolean;
+begin
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT * FROM clients ' +
+    'WHERE actif = TRUE ' +
+    '  AND (nom LIKE :critere OR prenom LIKE :critere OR email LIKE :critere) ' +
+    'ORDER BY nom, prenom';
+
+  FDataModule.FDQueryClients.ParamByName('critere').AsString := '%' + Critere + '%';
+  FDataModule.FDQueryClients.Open;
+
+  Result := not FDataModule.FDQueryClients.IsEmpty;
+end;
+
+function TClientManager.ValiderEmail(const Email: string): Boolean;
+begin
+  Result := (Trim(Email) <> '') and
+            (Pos('@', Email) > 0) and
+            (Pos('.', Email) > Pos('@', Email));
+end;
+
+function TClientManager.ValiderTelephone(const Telephone: string): Boolean;
+var
+  TelNettoyé: string;
+  i: Integer;
+begin
+  // Enlever les espaces et caractères spéciaux
+  TelNettoyé := '';
+  for i := 1 to Length(Telephone) do
+    if CharInSet(Telephone[i], ['0'..'9']) then
+      TelNettoyé := TelNettoyé + Telephone[i];
+
+  // Vérifier la longueur (10 chiffres pour la France)
+  Result := Length(TelNettoyé) = 10;
+end;
+
+function TClientManager.ClientPeutEtreSupprimer(ClientID: Integer): Boolean;
+var
+  NbCommandes: Integer;
+begin
+  NbCommandes := CalculerNombreCommandes(ClientID);
+  Result := NbCommandes = 0;
+end;
+
+function TClientManager.CalculerNombreCommandes(ClientID: Integer): Integer;
+begin
+  FDataModule.FDQueryCommandes.Close;
+  FDataModule.FDQueryCommandes.SQL.Text :=
+    'SELECT COUNT(*) AS nb FROM commandes WHERE client_id = :id';
+  FDataModule.FDQueryCommandes.ParamByName('id').AsInteger := ClientID;
+  FDataModule.FDQueryCommandes.Open;
+
+  Result := FDataModule.FDQueryCommandes.FieldByName('nb').AsInteger;
+end;
+
+end.
+```
+
+### Utiliser le Manager dans le formulaire
+
+```pascal
+unit uFormClients;
+
+interface
+
+uses
+  System.SysUtils, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls,
+  uDmDatabase, uClientManager;  // ← Ajouter les références
+
+type
+  TFormClients = class(TForm)
+    btnNouveau: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure btnNouveauClick(Sender: TObject);
+  private
+    FClientManager: TClientManager;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormClients.FormCreate(Sender: TObject);
+begin
+  // Créer le manager
+  FClientManager := TClientManager.Create(dmDatabase);
+end;
+
+procedure TFormClients.FormDestroy(Sender: TObject);
+begin
+  // Libérer le manager
+  FClientManager.Free;
+end;
+
+procedure TFormClients.btnNouveauClick(Sender: TObject);
+var
+  NouveauID: Integer;
+begin
+  try
+    // Utiliser le manager (pas le DataModule directement !)
+    NouveauID := FClientManager.CreerNouveauClient(
+      'Nouveau',
+      'Client',
+      'nouveau@email.fr',
+      '0601020304'
+    );
+
+    ShowMessage('Client créé avec succès (ID: ' + IntToStr(NouveauID) + ')');
+    dmDatabase.ChargerClients;
+
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
+end;
+
+end.
+```
+
+**Avantage :** Toute la validation et la logique métier est **centralisée** dans le Manager, pas dispersée dans les formulaires !
+
+## Objets métier (Domain Objects)
+
+Pour une architecture encore plus propre, créez des **classes métier** qui représentent vos entités.
+
+### Définir une classe métier
+
+```pascal
+unit uClient;
+
+interface
+
+uses
+  System.SysUtils;
 
 type
   TClient = class
@@ -84,1306 +722,671 @@ type
     FPrenom: string;
     FEmail: string;
     FTelephone: string;
-    FAdresse: string;
-    FVilleID: Integer;
-    FDateNaissance: TDateTime;
     FActif: Boolean;
     FDateCreation: TDateTime;
   public
     constructor Create; overload;
-    constructor Create(AID: Integer; ANom, APrenom, AEmail: string); overload;
-    function EstValide: Boolean;
-    function AgeEnAnnees: Integer;
-  published  // Utilisé pour les propriétés accessibles par RTTI
+    constructor Create(AID: Integer; const ANom, APrenom, AEmail: string); overload;
+
+    // Propriétés
     property ID: Integer read FID write FID;
     property Nom: string read FNom write FNom;
     property Prenom: string read FPrenom write FPrenom;
     property Email: string read FEmail write FEmail;
     property Telephone: string read FTelephone write FTelephone;
-    property Adresse: string read FAdresse write FAdresse;
-    property VilleID: Integer read FVilleID write FVilleID;
-    property DateNaissance: TDateTime read FDateNaissance write FDateNaissance;
     property Actif: Boolean read FActif write FActif;
     property DateCreation: TDateTime read FDateCreation write FDateCreation;
+
+    // Méthodes métier
+    function NomComplet: string;
+    function EstValide: Boolean;
+    function ToString: string; override;
   end;
 
 implementation
 
+{ TClient }
+
 constructor TClient.Create;
 begin
   inherited Create;
-  FID := 0;
-  FNom := '';
-  FPrenom := '';
-  FEmail := '';
-  FTelephone := '';
-  FAdresse := '';
-  FVilleID := 0;
-  FDateNaissance := 0;
   FActif := True;
   FDateCreation := Now;
 end;
 
-constructor TClient.Create(AID: Integer; ANom, APrenom, AEmail: string);
+constructor TClient.Create(AID: Integer; const ANom, APrenom, AEmail: string);
 begin
-  Create;  // Appel au constructeur sans paramètres
+  Create;
   FID := AID;
   FNom := ANom;
   FPrenom := APrenom;
   FEmail := AEmail;
 end;
 
+function TClient.NomComplet: string;
+begin
+  Result := FPrenom + ' ' + FNom;
+end;
+
 function TClient.EstValide: Boolean;
 begin
-  // Vérifier que les champs obligatoires sont remplis
-  Result := (FNom <> '') and (FEmail <> '');
+  Result := (Trim(FNom) <> '') and
+            (Trim(FPrenom) <> '') and
+            (Pos('@', FEmail) > 0);
 end;
 
-function TClient.AgeEnAnnees: Integer;
+function TClient.ToString: string;
 begin
-  if FDateNaissance = 0 then
-    Result := 0
-  else
-    Result := Trunc((Now - FDateNaissance) / 365.25);
+  Result := Format('%s (ID: %d)', [NomComplet, FID]);
 end;
 
 end.
 ```
 
-### Couche Accès aux Données
+### DAO (Data Access Object)
 
-Ensuite, créons un DataModule pour gérer la connexion à la base de données :
+Le **DAO** est responsable de la conversion entre les objets métier et la base de données.
 
-```delphi
-// UDataModule.pas
-unit UDataModule;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL,
-  FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait, FireDAC.Comp.Client, Data.DB;
-
-type
-  TDataModule1 = class(TDataModule)
-    FDConnection1: TFDConnection;
-    procedure DataModuleCreate(Sender: TObject);
-  private
-    procedure ConfigurerConnexion;
-  public
-    function OuvrirConnexion: Boolean;
-    procedure FermerConnexion;
-    function ObtenirConnexion: TFDConnection;
-  end;
-
-var
-  DataModule1: TDataModule1;
-
-implementation
-
-{%CLASSGROUP 'Vcl.Controls.TControl'}
-
-{$R *.dfm}
-
-procedure TDataModule1.DataModuleCreate(Sender: TObject);
-begin
-  ConfigurerConnexion;
-end;
-
-procedure TDataModule1.ConfigurerConnexion;
-begin
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Clear;
-  FDConnection1.Params.Add('Server=localhost');
-  FDConnection1.Params.Add('Database=ma_base');
-  FDConnection1.Params.Add('User_Name=mon_utilisateur');
-  FDConnection1.Params.Add('Password=mon_mot_de_passe');
-  FDConnection1.Params.Add('CharacterSet=utf8mb4');
-  FDConnection1.LoginPrompt := False;
-end;
-
-function TDataModule1.OuvrirConnexion: Boolean;
-begin
-  Result := False;
-  try
-    if not FDConnection1.Connected then
-      FDConnection1.Connected := True;
-    Result := FDConnection1.Connected;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur de connexion
-      // Dans une vraie application, utilisez un système de journalisation
-      Result := False;
-    end;
-  end;
-end;
-
-procedure TDataModule1.FermerConnexion;
-begin
-  if FDConnection1.Connected then
-    FDConnection1.Connected := False;
-end;
-
-function TDataModule1.ObtenirConnexion: TFDConnection;
-begin
-  Result := FDConnection1;
-end;
-
-end.
-```
-
-Puis, créons un DAO (Data Access Object) pour les clients :
-
-```delphi
-// UClientDAO.pas
-unit UClientDAO;
+```pascal
+unit uClientDAO;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
-  FireDAC.DApt.Intf, FireDAC.Stan.Async, FireDAC.DApt, Data.DB,
-  FireDAC.Comp.DataSet, FireDAC.Comp.Client, UDataModule, UClientModel;
+  System.SysUtils, System.Generics.Collections,
+  FireDAC.Comp.Client, uClient, uDmDatabase;
 
 type
   TClientDAO = class
   private
-    FDataModule: TDataModule1;
+    FDataModule: TdmDatabase;
+    function DataSetToClient(DataSet: TFDQuery): TClient;
   public
-    constructor Create(ADataModule: TDataModule1);
-    destructor Destroy; override;
+    constructor Create(ADataModule: TdmDatabase);
 
-    // Méthodes CRUD (Create, Read, Update, Delete)
-    function Ajouter(AClient: TClient): Boolean;
-    function ObtenirParID(AID: Integer): TClient;
-    function ObtenirTous: TFDQuery;
-    function ObtenirParNom(ANom: string): TFDQuery;
-    function Modifier(AClient: TClient): Boolean;
-    function Supprimer(AID: Integer): Boolean;
+    // CRUD
+    function Lire(ID: Integer): TClient;
+    function LireTous: TObjectList<TClient>;
+    function Creer(Client: TClient): Integer;
+    procedure Modifier(Client: TClient);
+    procedure Supprimer(ID: Integer);
 
-    // Méthodes utilitaires
-    function ClientExiste(AID: Integer): Boolean;
-    function EmailUnique(AEmail: string; AExcludeID: Integer = 0): Boolean;
+    // Recherches
+    function RechercherParEmail(const Email: string): TClient;
+    function RechercherParNom(const Nom: string): TObjectList<TClient>;
   end;
 
 implementation
 
-constructor TClientDAO.Create(ADataModule: TDataModule1);
+{ TClientDAO }
+
+constructor TClientDAO.Create(ADataModule: TdmDatabase);
 begin
   inherited Create;
   FDataModule := ADataModule;
 end;
 
-destructor TClientDAO.Destroy;
+function TClientDAO.DataSetToClient(DataSet: TFDQuery): TClient;
 begin
-  // Nettoyage si nécessaire
-  inherited;
+  Result := TClient.Create;
+  Result.ID := DataSet.FieldByName('id').AsInteger;
+  Result.Nom := DataSet.FieldByName('nom').AsString;
+  Result.Prenom := DataSet.FieldByName('prenom').AsString;
+  Result.Email := DataSet.FieldByName('email').AsString;
+  Result.Telephone := DataSet.FieldByName('telephone').AsString;
+  Result.Actif := DataSet.FieldByName('actif').AsBoolean;
+  Result.DateCreation := DataSet.FieldByName('date_creation').AsDateTime;
 end;
 
-function TClientDAO.Ajouter(AClient: TClient): Boolean;
-var
-  Query: TFDQuery;
-begin
-  Result := False;
-
-  if not AClient.EstValide then
-    Exit;
-
-  if not EmailUnique(AClient.Email) then
-    Exit;
-
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
-
-      Query.SQL.Text := 'INSERT INTO clients (nom, prenom, email, telephone, ' +
-                        'adresse, ville_id, date_naissance, actif, date_creation) ' +
-                        'VALUES (:nom, :prenom, :email, :telephone, ' +
-                        ':adresse, :ville_id, :date_naissance, :actif, :date_creation)';
-
-      Query.ParamByName('nom').AsString := AClient.Nom;
-      Query.ParamByName('prenom').AsString := AClient.Prenom;
-      Query.ParamByName('email').AsString := AClient.Email;
-      Query.ParamByName('telephone').AsString := AClient.Telephone;
-      Query.ParamByName('adresse').AsString := AClient.Adresse;
-      Query.ParamByName('ville_id').AsInteger := AClient.VilleID;
-      Query.ParamByName('date_naissance').AsDateTime := AClient.DateNaissance;
-      Query.ParamByName('actif').AsBoolean := AClient.Actif;
-      Query.ParamByName('date_creation').AsDateTime := Now;
-
-      Query.ExecSQL;
-
-      // Récupérer l'ID généré
-      AClient.ID := FDataModule.ObtenirConnexion.GetLastAutoGenValue('clients');
-
-      Result := True;
-    finally
-      Query.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      Result := False;
-    end;
-  end;
-end;
-
-function TClientDAO.ObtenirParID(AID: Integer): TClient;
-var
-  Query: TFDQuery;
+function TClientDAO.Lire(ID: Integer): TClient;
 begin
   Result := nil;
 
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT * FROM clients WHERE id = :id';
+  FDataModule.FDQueryClients.ParamByName('id').AsInteger := ID;
+  FDataModule.FDQueryClients.Open;
 
-      Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
-      Query.ParamByName('id').AsInteger := AID;
-      Query.Open;
+  if not FDataModule.FDQueryClients.IsEmpty then
+    Result := DataSetToClient(FDataModule.FDQueryClients);
+end;
 
-      if Query.RecordCount > 0 then
-      begin
-        Result := TClient.Create;
-        Result.ID := Query.FieldByName('id').AsInteger;
-        Result.Nom := Query.FieldByName('nom').AsString;
-        Result.Prenom := Query.FieldByName('prenom').AsString;
-        Result.Email := Query.FieldByName('email').AsString;
-        Result.Telephone := Query.FieldByName('telephone').AsString;
-        Result.Adresse := Query.FieldByName('adresse').AsString;
-        Result.VilleID := Query.FieldByName('ville_id').AsInteger;
-        Result.DateNaissance := Query.FieldByName('date_naissance').AsDateTime;
-        Result.Actif := Query.FieldByName('actif').AsBoolean;
-        Result.DateCreation := Query.FieldByName('date_creation').AsDateTime;
-      end;
-    finally
-      Query.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      if Assigned(Result) then
-        Result.Free;
-      Result := nil;
-    end;
+function TClientDAO.LireTous: TObjectList<TClient>;
+var
+  Client: TClient;
+begin
+  Result := TObjectList<TClient>.Create(True);  // True = possède les objets
+
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT * FROM clients WHERE actif = TRUE ORDER BY nom, prenom';
+  FDataModule.FDQueryClients.Open;
+
+  FDataModule.FDQueryClients.First;
+  while not FDataModule.FDQueryClients.Eof do
+  begin
+    Client := DataSetToClient(FDataModule.FDQueryClients);
+    Result.Add(Client);
+    FDataModule.FDQueryClients.Next;
   end;
 end;
 
-function TClientDAO.ObtenirTous: TFDQuery;
-var
-  Query: TFDQuery;
+function TClientDAO.Creer(Client: TClient): Integer;
 begin
-  Query := TFDQuery.Create(nil);
+  FDataModule.FDQueryClients.SQL.Text :=
+    'INSERT INTO clients (nom, prenom, email, telephone, date_creation) ' +
+    'VALUES (:nom, :prenom, :email, :tel, :date)';
 
-  try
-    Query.Connection := FDataModule.ObtenirConnexion;
-    Query.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';
-    Query.Open;
+  FDataModule.FDQueryClients.ParamByName('nom').AsString := Client.Nom;
+  FDataModule.FDQueryClients.ParamByName('prenom').AsString := Client.Prenom;
+  FDataModule.FDQueryClients.ParamByName('email').AsString := Client.Email;
+  FDataModule.FDQueryClients.ParamByName('tel').AsString := Client.Telephone;
+  FDataModule.FDQueryClients.ParamByName('date').AsDateTime := Client.DateCreation;
 
-    Result := Query;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      Query.Free;
-      Result := nil;
-    end;
-  end;
+  FDataModule.FDQueryClients.ExecSQL;
+
+  Result := FDataModule.FDConnection1.GetLastAutoGenValue('clients');
+  Client.ID := Result;
 end;
 
-function TClientDAO.ObtenirParNom(ANom: string): TFDQuery;
-var
-  Query: TFDQuery;
+procedure TClientDAO.Modifier(Client: TClient);
 begin
-  Query := TFDQuery.Create(nil);
+  FDataModule.FDQueryClients.SQL.Text :=
+    'UPDATE clients SET ' +
+    '  nom = :nom, ' +
+    '  prenom = :prenom, ' +
+    '  email = :email, ' +
+    '  telephone = :tel ' +
+    'WHERE id = :id';
 
-  try
-    Query.Connection := FDataModule.ObtenirConnexion;
-    Query.SQL.Text := 'SELECT * FROM clients WHERE nom LIKE :nom OR prenom LIKE :nom ORDER BY nom, prenom';
-    Query.ParamByName('nom').AsString := '%' + ANom + '%';
-    Query.Open;
+  FDataModule.FDQueryClients.ParamByName('nom').AsString := Client.Nom;
+  FDataModule.FDQueryClients.ParamByName('prenom').AsString := Client.Prenom;
+  FDataModule.FDQueryClients.ParamByName('email').AsString := Client.Email;
+  FDataModule.FDQueryClients.ParamByName('tel').AsString := Client.Telephone;
+  FDataModule.FDQueryClients.ParamByName('id').AsInteger := Client.ID;
 
-    Result := Query;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      Query.Free;
-      Result := nil;
-    end;
-  end;
+  FDataModule.FDQueryClients.ExecSQL;
 end;
 
-function TClientDAO.Modifier(AClient: TClient): Boolean;
-var
-  Query: TFDQuery;
+procedure TClientDAO.Supprimer(ID: Integer);
 begin
-  Result := False;
-
-  if not AClient.EstValide then
-    Exit;
-
-  if not EmailUnique(AClient.Email, AClient.ID) then
-    Exit;
-
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
-
-      Query.SQL.Text := 'UPDATE clients SET ' +
-                        'nom = :nom, ' +
-                        'prenom = :prenom, ' +
-                        'email = :email, ' +
-                        'telephone = :telephone, ' +
-                        'adresse = :adresse, ' +
-                        'ville_id = :ville_id, ' +
-                        'date_naissance = :date_naissance, ' +
-                        'actif = :actif, ' +
-                        'date_modification = :date_modification ' +
-                        'WHERE id = :id';
-
-      Query.ParamByName('nom').AsString := AClient.Nom;
-      Query.ParamByName('prenom').AsString := AClient.Prenom;
-      Query.ParamByName('email').AsString := AClient.Email;
-      Query.ParamByName('telephone').AsString := AClient.Telephone;
-      Query.ParamByName('adresse').AsString := AClient.Adresse;
-      Query.ParamByName('ville_id').AsInteger := AClient.VilleID;
-      Query.ParamByName('date_naissance').AsDateTime := AClient.DateNaissance;
-      Query.ParamByName('actif').AsBoolean := AClient.Actif;
-      Query.ParamByName('date_modification').AsDateTime := Now;
-      Query.ParamByName('id').AsInteger := AClient.ID;
-
-      Query.ExecSQL;
-
-      Result := Query.RowsAffected > 0;
-    finally
-      Query.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      Result := False;
-    end;
-  end;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'UPDATE clients SET actif = FALSE WHERE id = :id';
+  FDataModule.FDQueryClients.ParamByName('id').AsInteger := ID;
+  FDataModule.FDQueryClients.ExecSQL;
 end;
 
-function TClientDAO.Supprimer(AID: Integer): Boolean;
-var
-  Query: TFDQuery;
+function TClientDAO.RechercherParEmail(const Email: string): TClient;
 begin
-  Result := False;
+  Result := nil;
 
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT * FROM clients WHERE email = :email';
+  FDataModule.FDQueryClients.ParamByName('email').AsString := Email;
+  FDataModule.FDQueryClients.Open;
 
-      Query.SQL.Text := 'DELETE FROM clients WHERE id = :id';
-      Query.ParamByName('id').AsInteger := AID;
-      Query.ExecSQL;
-
-      Result := Query.RowsAffected > 0;
-    finally
-      Query.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer l'erreur
-      Result := False;
-    end;
-  end;
+  if not FDataModule.FDQueryClients.IsEmpty then
+    Result := DataSetToClient(FDataModule.FDQueryClients);
 end;
 
-function TClientDAO.ClientExiste(AID: Integer): Boolean;
+function TClientDAO.RechercherParNom(const Nom: string): TObjectList<TClient>;
 var
-  Query: TFDQuery;
+  Client: TClient;
 begin
-  Result := False;
+  Result := TObjectList<TClient>.Create(True);
 
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
+  FDataModule.FDQueryClients.Close;
+  FDataModule.FDQueryClients.SQL.Text :=
+    'SELECT * FROM clients WHERE nom LIKE :nom ORDER BY nom';
+  FDataModule.FDQueryClients.ParamByName('nom').AsString := '%' + Nom + '%';
+  FDataModule.FDQueryClients.Open;
 
-      Query.SQL.Text := 'SELECT COUNT(*) FROM clients WHERE id = :id';
-      Query.ParamByName('id').AsInteger := AID;
-      Query.Open;
-
-      Result := Query.Fields[0].AsInteger > 0;
-    finally
-      Query.Free;
-    end;
-  except
-    // Gérer l'erreur
-    Result := False;
-  end;
-end;
-
-function TClientDAO.EmailUnique(AEmail: string; AExcludeID: Integer): Boolean;
-var
-  Query: TFDQuery;
-begin
-  Result := False;
-
-  try
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := FDataModule.ObtenirConnexion;
-
-      if AExcludeID > 0 then
-      begin
-        Query.SQL.Text := 'SELECT COUNT(*) FROM clients WHERE email = :email AND id <> :id';
-        Query.ParamByName('id').AsInteger := AExcludeID;
-      end
-      else
-        Query.SQL.Text := 'SELECT COUNT(*) FROM clients WHERE email = :email';
-
-      Query.ParamByName('email').AsString := AEmail;
-      Query.Open;
-
-      Result := Query.Fields[0].AsInteger = 0;  // Aucun autre client avec cet email
-    finally
-      Query.Free;
-    end;
-  except
-    // Gérer l'erreur
-    Result := False;
+  FDataModule.FDQueryClients.First;
+  while not FDataModule.FDQueryClients.Eof do
+  begin
+    Client := DataSetToClient(FDataModule.FDQueryClients);
+    Result.Add(Client);
+    FDataModule.FDQueryClients.Next;
   end;
 end;
 
 end.
 ```
 
-### Couche Logique Métier
+### Utiliser les objets métier
 
-Maintenant, créons la couche logique métier qui encapsule les règles métier :
-
-```delphi
-// UClientLogic.pas
-unit UClientLogic;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, FireDAC.Comp.Client, Data.DB,
-  UClientModel, UClientDAO, UDataModule;
-
-type
-  TClientLogic = class
-  private
-    FDataModule: TDataModule1;
-    FClientDAO: TClientDAO;
-  public
-    constructor Create(ADataModule: TDataModule1);
-    destructor Destroy; override;
-
-    // Fonctionnalités métier
-    function CreerClient(ANom, APrenom, AEmail, ATelephone: string;
-                          AVilleID: Integer; ADateNaissance: TDateTime): Boolean;
-    function MettreAJourClient(AID: Integer; ANom, APrenom, AEmail, ATelephone: string;
-                          AVilleID: Integer; ADateNaissance: TDateTime; AActif: Boolean): Boolean;
-    function DesactiverClient(AID: Integer): Boolean;
-    function RechercherClients(ATerme: string): TFDQuery;
-    function CalculerAgeClient(AID: Integer): Integer;
-    function ObtenirTousLesClients: TFDQuery;
-    function ObtenirClientParID(AID: Integer): TClient;
-    function SupprimerClient(AID: Integer): Boolean;
-
-    // Validations métier
-    function ValiderEmail(AEmail: string): Boolean;
-    function ValiderAge(ADateNaissance: TDateTime): Boolean;
-  end;
-
-implementation
-
-constructor TClientLogic.Create(ADataModule: TDataModule1);
-begin
-  inherited Create;
-  FDataModule := ADataModule;
-  FClientDAO := TClientDAO.Create(FDataModule);
-end;
-
-destructor TClientLogic.Destroy;
-begin
-  FClientDAO.Free;
-  inherited;
-end;
-
-function TClientLogic.CreerClient(ANom, APrenom, AEmail, ATelephone: string;
-                          AVilleID: Integer; ADateNaissance: TDateTime): Boolean;
+```pascal
+procedure TFormClients.AfficherClients;
 var
+  DAO: TClientDAO;
+  Clients: TObjectList<TClient>;
   Client: TClient;
 begin
-  Result := False;
+  DAO := TClientDAO.Create(dmDatabase);
+  try
+    Clients := DAO.LireTous;
+    try
+      Memo1.Clear;
+      for Client in Clients do
+      begin
+        Memo1.Lines.Add(Client.ToString);
+      end;
+    finally
+      Clients.Free;  // Libère automatiquement tous les clients
+    end;
+  finally
+    DAO.Free;
+  end;
+end;
 
-  // Validation métier
-  if (ANom = '') or (AEmail = '') then
-    Exit;
-
-  if not ValiderEmail(AEmail) then
-    Exit;
-
-  if not ValiderAge(ADateNaissance) then
-    Exit;
-
-  // Création du client
+procedure TFormClients.CreerClient;
+var
+  DAO: TClientDAO;
+  Client: TClient;
+  NouveauID: Integer;
+begin
   Client := TClient.Create;
   try
-    Client.Nom := ANom;
-    Client.Prenom := APrenom;
-    Client.Email := AEmail;
-    Client.Telephone := ATelephone;
-    Client.VilleID := AVilleID;
-    Client.DateNaissance := ADateNaissance;
-    Client.Actif := True;
+    // Remplir l'objet
+    Client.Nom := 'Dupont';
+    Client.Prenom := 'Jean';
+    Client.Email := 'jean.dupont@email.fr';
+    Client.Telephone := '0601020304';
 
-    Result := FClientDAO.Ajouter(Client);
-  finally
-    Client.Free;
-  end;
-end;
+    // Valider
+    if not Client.EstValide then
+      raise Exception.Create('Client invalide');
 
-function TClientLogic.MettreAJourClient(AID: Integer; ANom, APrenom, AEmail, ATelephone: string;
-                          AVilleID: Integer; ADateNaissance: TDateTime; AActif: Boolean): Boolean;
-var
-  Client: TClient;
-begin
-  Result := False;
-
-  // Validation métier
-  if (ANom = '') or (AEmail = '') then
-    Exit;
-
-  if not ValiderEmail(AEmail) then
-    Exit;
-
-  if not ValiderAge(ADateNaissance) then
-    Exit;
-
-  // Récupération et mise à jour du client
-  Client := FClientDAO.ObtenirParID(AID);
-  if Client = nil then
-    Exit;
-
-  try
-    Client.Nom := ANom;
-    Client.Prenom := APrenom;
-    Client.Email := AEmail;
-    Client.Telephone := ATelephone;
-    Client.VilleID := AVilleID;
-    Client.DateNaissance := ADateNaissance;
-    Client.Actif := AActif;
-
-    Result := FClientDAO.Modifier(Client);
-  finally
-    Client.Free;
-  end;
-end;
-
-function TClientLogic.DesactiverClient(AID: Integer): Boolean;
-var
-  Client: TClient;
-begin
-  Result := False;
-
-  Client := FClientDAO.ObtenirParID(AID);
-  if Client = nil then
-    Exit;
-
-  try
-    Client.Actif := False;
-    Result := FClientDAO.Modifier(Client);
-  finally
-    Client.Free;
-  end;
-end;
-
-function TClientLogic.RechercherClients(ATerme: string): TFDQuery;
-begin
-  Result := FClientDAO.ObtenirParNom(ATerme);
-end;
-
-function TClientLogic.CalculerAgeClient(AID: Integer): Integer;
-var
-  Client: TClient;
-begin
-  Result := 0;
-
-  Client := FClientDAO.ObtenirParID(AID);
-  if Client <> nil then
-  begin
+    // Sauvegarder
+    DAO := TClientDAO.Create(dmDatabase);
     try
-      Result := Client.AgeEnAnnees;
+      NouveauID := DAO.Creer(Client);
+      ShowMessage('Client créé avec l''ID : ' + IntToStr(NouveauID));
     finally
-      Client.Free;
+      DAO.Free;
     end;
-  end;
-end;
-
-function TClientLogic.ObtenirTousLesClients: TFDQuery;
-begin
-  Result := FClientDAO.ObtenirTous;
-end;
-
-function TClientLogic.ObtenirClientParID(AID: Integer): TClient;
-begin
-  Result := FClientDAO.ObtenirParID(AID);
-end;
-
-function TClientLogic.SupprimerClient(AID: Integer): Boolean;
-begin
-  Result := FClientDAO.Supprimer(AID);
-end;
-
-function TClientLogic.ValiderEmail(AEmail: string): Boolean;
-begin
-  // Vérification basique de format d'email
-  Result := (Pos('@', AEmail) > 1) and (Pos('.', AEmail) > Pos('@', AEmail) + 1);
-end;
-
-function TClientLogic.ValiderAge(ADateNaissance: TDateTime): Boolean;
-var
-  Age: Integer;
-begin
-  if ADateNaissance = 0 then
-    Result := True  // Date non spécifiée acceptée
-  else
-  begin
-    Age := Trunc((Now - ADateNaissance) / 365.25);
-    Result := (Age >= 0) and (Age <= 120);  // Vérification d'âge raisonnable
-  end;
-end;
-
-end.
-```
-
-### Couche Interface Utilisateur
-
-Enfin, créons un formulaire qui utilise notre architecture en couches :
-
-```delphi
-// UClientForm.pas
-unit UClientForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Data.DB, Vcl.StdCtrls, Vcl.Grids, Vcl.DBGrids,
-  Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Mask, Vcl.DBCtrls, FireDAC.Comp.Client,
-  UDataModule, UClientLogic, UClientModel;
-
-type
-  TFormClient = class(TForm)
-    PageControl1: TPageControl;
-    TabSheetListe: TTabSheet;
-    TabSheetDetail: TTabSheet;
-    PanelRecherche: TPanel;
-    DBGrid1: TDBGrid;
-    LabelRecherche: TLabel;
-    EditRecherche: TEdit;
-    ButtonRechercher: TButton;
-    DataSource1: TDataSource;
-    PanelActions: TPanel;
-    ButtonNouveau: TButton;
-    ButtonModifier: TButton;
-    ButtonSupprimer: TButton;
-    LabelNom: TLabel;
-    EditNom: TEdit;
-    LabelPrenom: TLabel;
-    EditPrenom: TEdit;
-    LabelEmail: TLabel;
-    EditEmail: TEdit;
-    LabelTelephone: TLabel;
-    EditTelephone: TEdit;
-    LabelVille: TLabel;
-    ComboBoxVille: TComboBox;
-    LabelDateNaissance: TLabel;
-    DateTimePickerNaissance: TDateTimePicker;
-    CheckBoxActif: TCheckBox;
-    ButtonEnregistrer: TButton;
-    ButtonAnnuler: TButton;
-    StatusBar1: TStatusBar;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonRechercherClick(Sender: TObject);
-    procedure ButtonNouveauClick(Sender: TObject);
-    procedure ButtonModifierClick(Sender: TObject);
-    procedure ButtonSupprimerClick(Sender: TObject);
-    procedure ButtonEnregistrerClick(Sender: TObject);
-    procedure ButtonAnnulerClick(Sender: TObject);
-    procedure DBGrid1DblClick(Sender: TObject);
-  private
-    FDataModule: TDataModule1;
-    FClientLogic: TClientLogic;
-    FClientQuery: TFDQuery;
-    FVilleQuery: TFDQuery;
-    FModeEdition: Boolean;
-    FClientID: Integer;
-
-    procedure ChargerVilles;
-    procedure RafraichirListeClients;
-    procedure AfficherClient(AID: Integer);
-    procedure EffacerFormulaire;
-    procedure ModeAffichage;
-    procedure ModeEdition;
-    function ValiderFormulaire: Boolean;
-  public
-    { Déclarations publiques }
-  end;
-
-var
-  FormClient: TFormClient;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
-  // Initialiser les modules et la logique
-  FDataModule := TDataModule1.Create(Self);
-  FClientLogic := TClientLogic.Create(FDataModule);
-
-  // Ouvrir la connexion
-  if not FDataModule.OuvrirConnexion then
-  begin
-    ShowMessage('Impossible de se connecter à la base de données.');
-    StatusBar1.SimpleText := 'Non connecté';
-    Exit;
-  end;
-
-  // Initialiser les composants
-  PageControl1.ActivePage := TabSheetListe;
-  FModeEdition := False;
-  FClientID := 0;
-
-  // Charger les données
-  ChargerVilles;
-  RafraichirListeClients;
-
-  // Configuration de l'interface
-  ModeAffichage;
-  StatusBar1.SimpleText := 'Prêt';
-end;
-
-procedure TFormClient.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  if Assigned(FClientQuery) then
-    FClientQuery.Free;
-
-  if Assigned(FVilleQuery) then
-    FVilleQuery.Free;
-
-  FClientLogic.Free;
-
-  // Fermer la connexion
-  FDataModule.FermerConnexion;
-end;
-
-procedure TFormClient.ChargerVilles;
-var
-  Query: TFDQuery;
-begin
-  ComboBoxVille.Items.Clear;
-  ComboBoxVille.Items.AddObject('(Aucune)', TObject(0));
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDataModule.ObtenirConnexion;
-    Query.SQL.Text := 'SELECT id, nom FROM villes ORDER BY nom';
-    Query.Open;
-
-    while not Query.Eof do
-    begin
-      ComboBoxVille.Items.AddObject(
-        Query.FieldByName('nom').AsString,
-        TObject(Query.FieldByName('id').AsInteger)
-      );
-      Query.Next;
-    end;
-
-    ComboBoxVille.ItemIndex := 0;
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TFormClient.RafraichirListeClients;
-begin
-  // Libérer la requête précédente si existante
-  if Assigned(FClientQuery) then
-    FreeAndNil(FClientQuery);
-
-  // Obtenir la liste des clients via la couche logique
-  FClientQuery := FClientLogic.ObtenirTousLesClients;
-
-  if Assigned(FClientQuery) then
-  begin
-    // Configurer la source de données
-    DataSource1.DataSet := FClientQuery;
-
-    // Mettre à jour l'affichage
-    StatusBar1.SimpleText := Format('%d clients trouvés', [FClientQuery.RecordCount]);
-  end
-  else
-    StatusBar1.SimpleText := 'Erreur lors du chargement des clients';
-end;
-
-procedure TFormClient.ButtonRechercherClick(Sender: TObject);
-var
-  Terme: string;
-begin
-  Terme := Trim(EditRecherche.Text);
-
-  // Libérer la requête précédente si existante
-  if Assigned(FClientQuery) then
-    FreeAndNil(FClientQuery);
-
-  if Terme = '' then
-    FClientQuery := FClientLogic.ObtenirTousLesClients
-  else
-    FClientQuery := FClientLogic.RechercherClients(Terme);
-
-  if Assigned(FClientQuery) then
-  begin
-    // Configurer la source de données
-    DataSource1.DataSet := FClientQuery;
-
-    // Mettre à jour l'affichage
-    StatusBar1.SimpleText := Format('%d clients trouvés', [FClientQuery.RecordCount]);
-  end
-  else
-    StatusBar1.SimpleText := 'Erreur lors de la recherche';
-end;
-
-procedure TFormClient.ButtonNouveauClick(Sender: TObject);
-begin
-  EffacerFormulaire;
-  FClientID := 0;
-  FModeEdition := True;
-  ModeEdition;
-  PageControl1.ActivePage := TabSheetDetail;
-  EditNom.SetFocus;
-end;
-
-procedure TFormClient.ButtonModifierClick(Sender: TObject);
-begin
-  if not Assigned(FClientQuery) or FClientQuery.IsEmpty then
-  begin
-    ShowMessage('Aucun client sélectionné.');
-    Exit;
-  end;
-
-  // Charger le client sélectionné
-  AfficherClient(FClientQuery.FieldByName('id').AsInteger);
-
-  // Passer en mode édition
-  FModeEdition := True;
-  ModeEdition;
-  PageControl1.ActivePage := TabSheetDetail;
-  EditNom.SetFocus;
-end;
-
-procedure TFormClient.ButtonSupprimerClick(Sender: TObject);
-begin
-  if not Assigned(FClientQuery) or FClientQuery.IsEmpty then
-  begin
-    ShowMessage('Aucun client sélectionné.');
-    Exit;
-  end;
-
-  if MessageDlg('Êtes-vous sûr de vouloir supprimer ce client ?',
-     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-  begin
-    if FClientLogic.SupprimerClient(FClientQuery.FieldByName('id').AsInteger) then
-    begin
-      ShowMessage('Client supprimé avec succès.');
-      RafraichirListeClients;
-    end
-    else
-      ShowMessage('Erreur lors de la suppression du client.');
-  end;
-end;
-
-procedure TFormClient.ButtonEnregistrerClick(Sender: TObject);
-var
-  VilleID: Integer;
-  Success: Boolean;
-begin
-  if not ValiderFormulaire then
-    Exit;
-
-  // Récupérer l'ID de la ville sélectionnée
-  if ComboBoxVille.ItemIndex > 0 then
-    VilleID := Integer(ComboBoxVille.Items.Objects[ComboBoxVille.ItemIndex])
-  else
-    VilleID := 0;
-
-  // Création ou mise à jour selon le mode
-  if FClientID = 0 then
-  begin
-    // Nouveau client
-    Success := FClientLogic.CreerClient(
-      EditNom.Text,
-      EditPrenom.Text,
-      EditEmail.Text,
-      EditTelephone.Text,
-      VilleID,
-      DateTimePickerNaissance.Date
-    );
-
-    if Success then
-      ShowMessage('Client créé avec succès.')
-    else
-      ShowMessage('Erreur lors de la création du client.');
-  end
-  else
-  begin
-    // Mise à jour d'un client existant
-    Success := FClientLogic.MettreAJourClient(
-      FClientID,
-      EditNom.Text,
-      EditPrenom.Text,
-      EditEmail.Text,
-      EditTelephone.Text,
-      VilleID,
-      DateTimePickerNaissance.Date,
-      CheckBoxActif.Checked
-    );
-
-    if Success then
-      ShowMessage('Client mis à jour avec succès.')
-    else
-      ShowMessage('Erreur lors de la mise à jour du client.');
-  end;
-
-  if Success then
-  begin
-    // Retour à la liste et rafraîchissement
-    ModeAffichage;
-    FModeEdition := False;
-    PageControl1.ActivePage := TabSheetListe;
-    RafraichirListeClients;
-  end;
-end;
-
-procedure TFormClient.ButtonAnnulerClick(Sender: TObject);
-begin
-  // Annuler les modifications et revenir à la liste
-  ModeAffichage;
-  FModeEdition := False;
-  PageControl1.ActivePage := TabSheetListe;
-end;
-
-procedure TFormClient.DBGrid1DblClick(Sender: TObject);
-begin
-  if not Assigned(FClientQuery) or FClientQuery.IsEmpty then
-    Exit;
-
-  // Afficher le client sélectionné
-  AfficherClient(FClientQuery.FieldByName('id').AsInteger);
-  PageControl1.ActivePage := TabSheetDetail;
-end;
-
-procedure TFormClient.AfficherClient(AID: Integer);
-var
-  Client: TClient;
-  i: Integer;
-begin
-  // Récupérer le client via la couche logique
-  Client := FClientLogic.ObtenirClientParID(AID);
-
-  if not Assigned(Client) then
-  begin
-    ShowMessage('Client non trouvé.');
-    Exit;
-  end;
-
-  try
-    // Stocker l'ID pour les opérations futures
-    FClientID := Client.ID;
-
-    // Remplir les champs du formulaire
-    EditNom.Text := Client.Nom;
-    EditPrenom.Text := Client.Prenom;
-    EditEmail.Text := Client.Email;
-    EditTelephone.Text := Client.Telephone;
-
-    // Sélectionner la ville dans la combobox
-    ComboBoxVille.ItemIndex := 0;  // Par défaut "(Aucune)"
-    for i := 0 to ComboBoxVille.Items.Count - 1 do
-    begin
-      if Integer(ComboBoxVille.Items.Objects[i]) = Client.VilleID then
-      begin
-        ComboBoxVille.ItemIndex := i;
-        Break;
-      end;
-    end;
-
-    // Autres champs
-    if Client.DateNaissance > 0 then
-      DateTimePickerNaissance.Date := Client.DateNaissance
-    else
-      DateTimePickerNaissance.Date := Date;
-
-    CheckBoxActif.Checked := Client.Actif;
-
-    // Afficher l'âge dans la barre d'état
-    StatusBar1.SimpleText := Format('Client: %s %s, %d ans',
-      [Client.Nom, Client.Prenom, Client.AgeEnAnnees]);
   finally
     Client.Free;
   end;
 end;
-
-procedure TFormClient.EffacerFormulaire;
-begin
-  // Réinitialiser les champs du formulaire
-  EditNom.Text := '';
-  EditPrenom.Text := '';
-  EditEmail.Text := '';
-  EditTelephone.Text := '';
-  ComboBoxVille.ItemIndex := 0;
-  DateTimePickerNaissance.Date := Date;
-  CheckBoxActif.Checked := True;
-end;
-
-procedure TFormClient.ModeAffichage;
-begin
-  // Configurer l'interface en mode affichage
-  EditNom.ReadOnly := True;
-  EditPrenom.ReadOnly := True;
-  EditEmail.ReadOnly := True;
-  EditTelephone.ReadOnly := True;
-  ComboBoxVille.Enabled := False;
-  DateTimePickerNaissance.Enabled := False;
-  CheckBoxActif.Enabled := False;
-
-  ButtonEnregistrer.Visible := False;
-  ButtonAnnuler.Visible := False;
-end;
-
-procedure TFormClient.ModeEdition;
-begin
-  // Configurer l'interface en mode édition
-  EditNom.ReadOnly := False;
-  EditPrenom.ReadOnly := False;
-  EditEmail.ReadOnly := False;
-  EditTelephone.ReadOnly := False;
-  ComboBoxVille.Enabled := True;
-  DateTimePickerNaissance.Enabled := True;
-  CheckBoxActif.Enabled := True;
-
-  ButtonEnregistrer.Visible := True;
-  ButtonAnnuler.Visible := True;
-end;
-
-function TFormClient.ValiderFormulaire: Boolean;
-begin
-  Result := False;
-
-  // Vérifier les champs obligatoires
-  if Trim(EditNom.Text) = '' then
-  begin
-    ShowMessage('Le nom est obligatoire.');
-    EditNom.SetFocus;
-    Exit;
-  end;
-
-  if Trim(EditEmail.Text) = '' then
-  begin
-    ShowMessage('L''email est obligatoire.');
-    EditEmail.SetFocus;
-    Exit;
-  end;
-
-  // Vérifier le format de l'email
-  if not FClientLogic.ValiderEmail(EditEmail.Text) then
-  begin
-    ShowMessage('Format d''email invalide.');
-    EditEmail.SetFocus;
-    Exit;
-  end;
-
-  // Vérifier l'âge
-  if not FClientLogic.ValiderAge(DateTimePickerNaissance.Date) then
-  begin
-    ShowMessage('Date de naissance invalide.');
-    DateTimePickerNaissance.SetFocus;
-    Exit;
-  end;
-
-  Result := True;
-end;
-
-end.
 ```
 
-## Structure complète d'un projet en couches
+## Organisation des fichiers
 
-Maintenant que nous avons vu comment mettre en œuvre chaque couche, voici comment organiser un projet Delphi complet en utilisant un modèle en couches :
+### Structure recommandée
 
 ```
 MonProjet/
-  ├── Sources/
-  │   ├── UI/                  # Couche interface utilisateur
-  │   │   ├── UMainForm.pas    # Formulaire principal
-  │   │   ├── UClientForm.pas  # Formulaire de gestion des clients
-  │   │   ├── UProduitForm.pas # Formulaire de gestion des produits
-  │   │   └── ULoginForm.pas   # Formulaire de connexion
-  │   │
-  │   ├── Business/            # Couche logique métier
-  │   │   ├── UClientLogic.pas # Logique métier pour les clients
-  │   │   ├── UProduitLogic.pas # Logique métier pour les produits
-  │   │   └── UAuthLogic.pas   # Logique d'authentification
-  │   │
-  │   ├── DataAccess/          # Couche accès aux données
-  │   │   ├── UDataModule.pas  # Module de données principal
-  │   │   ├── UClientDAO.pas   # Accès aux données des clients
-  │   │   ├── UProduitDAO.pas  # Accès aux données des produits
-  │   │   └── UUtilisateurDAO.pas # Accès aux données des utilisateurs
-  │   │
-  │   └── Model/               # Couche modèle de données
-  │       ├── UClientModel.pas # Classe représentant un client
-  │       ├── UProduitModel.pas # Classe représentant un produit
-  │       └── UUtilisateurModel.pas # Classe représentant un utilisateur
-  │
-  ├── Assets/                  # Ressources (images, icônes, etc.)
-  ├── Doc/                     # Documentation
-  ├── Tests/                   # Tests unitaires
-  └── MonProjet.dpr            # Fichier projet principal
+│
+├── Projet.dpr                  (Fichier projet)
+│
+├── Forms/                      (Couche Présentation)
+│   ├── uFormMain.pas
+│   ├── uFormClients.pas
+│   ├── uFormCommandes.pas
+│   └── uFormRapports.pas
+│
+├── DataModules/                (Couche Données)
+│   ├── uDmDatabase.pas
+│   └── uDmConfiguration.pas
+│
+├── Business/                   (Couche Métier)
+│   ├── Managers/
+│   │   ├── uClientManager.pas
+│   │   ├── uCommandeManager.pas
+│   │   └── uProduitManager.pas
+│   │
+│   └── Services/
+│       ├── uEmailService.pas
+│       └── uReportService.pas
+│
+├── DataAccess/                 (Accès données)
+│   ├── uClientDAO.pas
+│   ├── uCommandeDAO.pas
+│   └── uProduitDAO.pas
+│
+├── Model/                      (Objets métier)
+│   ├── uClient.pas
+│   ├── uCommande.pas
+│   └── uProduit.pas
+│
+└── Common/                     (Utilitaires communs)
+    ├── uConstants.pas
+    ├── uTypes.pas
+    └── uUtils.pas
 ```
 
-Cette structure maintient une séparation claire entre les différentes responsabilités et facilite la maintenance du code.
+## Injection de dépendances (niveau intermédiaire)
 
-## Avantages du modèle en couches pour les grands projets
+Pour une architecture encore plus flexible, utilisez l'**injection de dépendances**.
 
-### 1. Travail en équipe facilité
+### Principe
 
-Avec une architecture en couches, plusieurs développeurs peuvent travailler sur différentes parties du projet sans se gêner mutuellement :
-- Un développeur peut travailler sur l'interface utilisateur
-- Un autre peut se concentrer sur la logique métier
-- Un troisième peut s'occuper de l'accès aux données
+Au lieu de créer directement les dépendances, on les **injecte** via le constructeur ou des propriétés.
 
-### 2. Réutilisation du code
+```pascal
+// ❌ Sans injection : dépendance forte
+type
+  TClientManager = class
+  private
+    FDataModule: TdmDatabase;
+  public
+    constructor Create;  // Crée TdmDatabase à l'intérieur
+  end;
 
-Les couches inférieures (Modèle, Accès aux Données) peuvent être réutilisées dans plusieurs projets ou dans différentes parties du même projet.
+// ✅ Avec injection : dépendance faible
+type
+  TClientManager = class
+  private
+    FDataModule: TdmDatabase;
+  public
+    constructor Create(ADataModule: TdmDatabase);  // Reçoit de l'extérieur
+  end;
+```
 
-### 3. Évolutivité simplifiée
+**Avantages :**
+- Plus facile à **tester** (on peut injecter un mock)
+- Plus **flexible** (on peut changer l'implémentation)
+- Respect du principe de **responsabilité unique**
 
-Si vous devez changer de base de données (par exemple, passer de MySQL à PostgreSQL), vous n'avez qu'à modifier la couche d'accès aux données, sans toucher à l'interface utilisateur ou à la logique métier.
+### Exemple avec interface
 
-### 4. Testabilité améliorée
+```pascal
+// Interface pour l'accès données
+type
+  IClientRepository = interface
+    ['{GUID-HERE}']
+    function Lire(ID: Integer): TClient;
+    function LireTous: TObjectList<TClient>;
+    function Creer(Client: TClient): Integer;
+    procedure Modifier(Client: TClient);
+    procedure Supprimer(ID: Integer);
+  end;
 
-Vous pouvez écrire des tests unitaires pour chaque couche indépendamment :
-- Tests sur les modèles et leurs méthodes
-- Tests sur la logique métier
-- Tests simulés (mock tests) pour l'accès aux données
+// Implémentation avec FireDAC
+type
+  TClientRepositoryFireDAC = class(TInterfacedObject, IClientRepository)
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    // Implémenter les méthodes de l'interface
+  end;
 
-### 5. Maintenance simplifiée
+// Manager qui utilise l'interface
+type
+  TClientManager = class
+  private
+    FRepository: IClientRepository;
+  public
+    constructor Create(ARepository: IClientRepository);
+    // Le manager ne connaît pas FireDAC, seulement l'interface !
+  end;
+```
 
-Quand un bug apparaît, il est plus facile de le localiser dans une architecture bien structurée.
+**Résultat :** On peut facilement remplacer FireDAC par une autre technologie sans toucher au Manager !
 
-## Variations du modèle en couches
+## Tests unitaires
 
-### Modèle MVC (Modèle-Vue-Contrôleur)
+L'architecture en couches facilite énormément les **tests unitaires**.
 
-Le MVC est une variante populaire du modèle en couches :
-- **Modèle** : Représente les données et la logique métier
-- **Vue** : Gère l'interface utilisateur
-- **Contrôleur** : Fait le lien entre le modèle et la vue, gère les interactions
+### Tester la couche métier
 
-### Modèle MVVM (Modèle-Vue-VueModèle)
+```pascal
+unit uClientManagerTests;
 
-Le MVVM est particulièrement adapté aux applications avec des interfaces riches :
-- **Modèle** : Représente les données et la logique métier
-- **Vue** : Interface utilisateur pure
-- **VueModèle** : Expose les données du modèle sous une forme adaptée à la vue
+interface
 
-### Modèle Repository
+uses
+  DUnitX.TestFramework, uClientManager, uDmDatabase;
 
-Ce modèle ajoute une abstraction supplémentaire entre la logique métier et l'accès aux données :
-- **Repository** : Interface qui définit les méthodes d'accès aux données
-- **DAO** : Implémentation concrète du repository
+type
+  [TestFixture]
+  TClientManagerTests = class
+  private
+    FClientManager: TClientManager;
+  public
+    [Setup]
+    procedure Setup;
 
-## Bonnes pratiques pour l'architecture en couches
+    [TearDown]
+    procedure TearDown;
 
-1. **Dépendances à sens unique** : Les couches supérieures peuvent connaître les couches inférieures, mais pas l'inverse. Par exemple, la logique métier peut connaître le modèle, mais le modèle ne doit pas connaître la logique métier.
+    [Test]
+    procedure TestCreerClient_Valide;
 
-2. **Interfaces pour l'abstraction** : Utilisez des interfaces pour définir les contrats entre les couches, ce qui facilite les tests et le remplacement des implémentations.
+    [Test]
+    procedure TestCreerClient_EmailInvalide;
 
-   ```delphi
-   // Définition de l'interface
-   IClientDAO = interface
-     ['{GUID}']
-     function Ajouter(AClient: TClient): Boolean;
-     function ObtenirParID(AID: Integer): TClient;
-     // ...
-   end;
+    [Test]
+    procedure TestValiderEmail;
+  end;
 
-   // Implémentation pour MySQL
-   TClientDAOMySQL = class(TInterfacedObject, IClientDAO)
-     // Implémentation des méthodes
-   end;
+implementation
+
+procedure TClientManagerTests.Setup;
+begin
+  // Créer le manager avec une base de test
+  FClientManager := TClientManager.Create(dmDatabase);
+end;
+
+procedure TClientManagerTests.TearDown;
+begin
+  FClientManager.Free;
+end;
+
+procedure TClientManagerTests.TestCreerClient_Valide;
+var
+  ID: Integer;
+begin
+  // Arrange
+  // Act
+  ID := FClientManager.CreerNouveauClient('Test', 'Client', 'test@email.fr', '');
+
+  // Assert
+  Assert.IsTrue(ID > 0, 'L''ID doit être supérieur à 0');
+end;
+
+procedure TClientManagerTests.TestCreerClient_EmailInvalide;
+begin
+  // Assert.WillRaise : on attend une exception
+  Assert.WillRaise(
+    procedure
+    begin
+      FClientManager.CreerNouveauClient('Test', 'Client', 'emailinvalide', '');
+    end,
+    Exception,
+    'Devrait lever une exception pour email invalide'
+  );
+end;
+
+procedure TClientManagerTests.TestValiderEmail;
+begin
+  Assert.IsTrue(FClientManager.ValiderEmail('test@example.com'));
+  Assert.IsFalse(FClientManager.ValiderEmail('invalide'));
+  Assert.IsFalse(FClientManager.ValiderEmail(''));
+end;
+
+end.
+```
+
+## Bonnes pratiques
+
+### ✅ À FAIRE
+
+1. **Un DataModule par base de données**
+   ```pascal
+   dmPrincipale  // Base principale
+   dmStatistiques  // Base de statistiques
    ```
 
-3. **Injection de dépendances** : Passez les dépendances aux objets plutôt que de les créer en interne.
-
-   ```delphi
-   // Mauvaise pratique
-   constructor TClientLogic.Create;
-   begin
-     FClientDAO := TClientDAO.Create;  // Dépendance directe
-   end;
-
-   // Bonne pratique
-   constructor TClientLogic.Create(AClientDAO: IClientDAO);
-   begin
-     FClientDAO := AClientDAO;  // Injection de dépendance
-   end;
+2. **Séparer les responsabilités**
+   ```
+   Formulaires → Affichage uniquement
+   Managers → Logique métier
+   DAO → Accès données
    ```
 
-4. **Unités séparées** : Chaque classe ou groupe de classes liées devrait être dans sa propre unité.
+3. **Valider dans la couche métier**
+   ```pascal
+   // ✅ Dans le Manager
+   if not ValiderEmail(Email) then
+     raise Exception.Create('Email invalide');
+   ```
 
-5. **Documentation des responsabilités** : Documentez clairement ce que chaque couche est censée faire.
+4. **Utiliser des interfaces**
+   ```pascal
+   IClientRepository, ICommandeRepository
+   ```
 
-## Migration vers une architecture en couches
+5. **Créer des objets métier**
+   ```pascal
+   TClient, TCommande, TProduit
+   ```
 
-Si vous avez déjà une application existante, voici comment migrer progressivement vers une architecture en couches :
+6. **Logger les opérations importantes**
+   ```pascal
+   Logger.Info('Client créé : ' + Client.NomComplet);
+   ```
 
-1. **Identification des couches** : Identifiez les responsabilités dans votre code existant.
+### ❌ À ÉVITER
 
-2. **Extraction du modèle** : Commencez par extraire les structures de données dans une couche modèle.
+1. **Mélanger les couches**
+   ```pascal
+   // ❌ SQL dans le formulaire
+   FDQuery1.SQL.Text := 'SELECT...';
 
-3. **Création de la couche d'accès aux données** : Déplacez progressivement le code d'accès à la base de données dans des classes DAO.
+   // ✅ Appeler le DataModule ou Manager
+   dmDatabase.ChargerClients;
+   ```
 
-4. **Implémentation de la logique métier** : Créez des classes de logique métier qui utilisent les DAO.
+2. **Dépendances circulaires**
+   ```
+   ❌ FormClients uses uClientManager
+      uClientManager uses FormClients
+   ```
 
-5. **Refactorisation de l'interface utilisateur** : Finalement, adaptez vos formulaires pour utiliser la nouvelle logique métier au lieu d'accéder directement aux données.
+3. **Logique dans les getters/setters**
+   ```pascal
+   // ❌ Logique métier dans la propriété
+   procedure TClient.SetEmail(const Value: string);
+   begin
+     if Pos('@', Value) = 0 then
+       raise Exception.Create('Email invalide');
+     FEmail := Value;
+   end;
 
-## Conclusion
+   // ✅ Méthode de validation séparée
+   function TClient.ValiderEmail: Boolean;
+   ```
 
-L'utilisation d'une architecture en couches dans vos applications Delphi avec MySQL apporte de nombreux avantages en termes de maintenabilité, d'évolutivité et de robustesse. Bien que cette approche nécessite plus de code et une réflexion plus approfondie sur la conception, elle s'avère payante sur le long terme, particulièrement pour les applications complexes ou destinées à évoluer.
+4. **Trop de paramètres**
+   ```pascal
+   // ❌ Trop de paramètres
+   function Creer(N, P, E, T, A, V, C, D: string): Integer;
 
-Pour les débutants, il peut sembler plus simple de commencer avec une approche monolithique où tout le code est dans les formulaires. Cependant, au fur et à mesure que vous progressez, essayez d'adopter progressivement les principes de séparation des responsabilités pour améliorer la qualité de vos applications.
+   // ✅ Utiliser un objet
+   function Creer(Client: TClient): Integer;
+   ```
 
-Dans la prochaine section, nous verrons comment gérer la migration et la synchronisation de bases de données, un aspect important pour les applications qui évoluent dans le temps.
+## Architecture complète récapitulative
 
----
+```
+┌─────────────────────────────────────────────────────┐
+│              COUCHE PRÉSENTATION                    │
+│  FormMain, FormClients, FormCommandes               │
+│  • Affichage                                        │
+│  • Interaction utilisateur                          │
+│  • Appelle → Managers                               │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│              COUCHE MÉTIER                          │
+│  ClientManager, CommandeManager                     │
+│  EmailService, ReportService                        │
+│  • Règles métier                                    │
+│  • Validation                                       │
+│  • Orchestration                                    │
+│  • Appelle → DAO                                    │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│         COUCHE ACCÈS DONNÉES (DAO)                  │
+│  ClientDAO, CommandeDAO                             │
+│  • Conversion objets ↔ base                         │
+│  • Requêtes SQL                                     │
+│  • Appelle → DataModule                             │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│              DATA MODULE                            │
+│  TFDConnection, TFDQuery                            │
+│  • Connexion physique                               │
+│  • Gestion des composants FireDAC                   │
+│  • Appelle → Base de données                        │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│           BASE DE DONNÉES                           │
+│  MySQL/MariaDB                                      │
+└─────────────────────────────────────────────────────┘
 
-**À suivre :** 8.10 Migration et synchronisation de bases de données
+     OBJETS MÉTIER (utilisés dans toutes les couches)
+┌─────────────────────────────────────────────────────┐
+│  TClient, TCommande, TProduit                       │
+│  • Propriétés                                       │
+│  • Méthodes métier simples                          │
+└─────────────────────────────────────────────────────┘
+```
+
+## Résumé
+
+### Points clés
+
+✅ **Séparer en 3 couches** : Présentation, Métier, Données
+✅ **DataModule** pour centraliser l'accès aux données
+✅ **Managers** pour la logique métier
+✅ **DAO** pour convertir objets ↔ base
+✅ **Objets métier** pour représenter les entités
+✅ **Injection de dépendances** pour la flexibilité
+
+### Avantages de l'architecture en couches
+
+| Avantage | Description |
+|----------|-------------|
+| **Maintenabilité** | Code organisé, facile à comprendre |
+| **Réutilisabilité** | Même logique dans plusieurs formulaires |
+| **Testabilité** | Chaque couche testable séparément |
+| **Évolutivité** | Facile d'ajouter des fonctionnalités |
+| **Travail d'équipe** | Chacun peut travailler sur sa couche |
+| **Flexibilité** | Changer une couche sans toucher les autres |
+
+### Progression recommandée
+
+**Niveau débutant :**
+1. Tout dans le formulaire (pour apprendre)
+2. Passer à un DataModule simple
+
+**Niveau intermédiaire :**
+3. Ajouter des classes Manager
+4. Créer des objets métier
+
+**Niveau avancé :**
+5. Implémenter des DAO
+6. Utiliser des interfaces
+7. Injection de dépendances
+
+## Prochaines étapes
+
+Vous maîtrisez maintenant l'architecture en couches ! Dans les sections suivantes, nous verrons :
+
+1. **Migration de bases** de données
+2. **Sécurisation** avancée
+3. **Optimisation** des performances
+4. **Patterns avancés** (Repository, Unit of Work)
+
+Avec une architecture en couches bien conçue, votre application sera professionnelle, maintenable et évolutive !
 
 ⏭️ [Migration et synchronisation de bases de données](/08-acces-aux-bases-de-donnees-mysql-mariadb/10-migration-et-synchronisation-de-bases-de-donnees.md)
