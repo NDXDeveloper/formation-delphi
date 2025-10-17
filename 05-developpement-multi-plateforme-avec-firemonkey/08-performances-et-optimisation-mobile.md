@@ -1,797 +1,1216 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 5.8 Performances et optimisation mobile
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les appareils mobiles ont des ressources plus limitées que les ordinateurs de bureau : processeurs moins puissants, mémoire plus restreinte et autonomie de batterie à préserver. Pour offrir une expérience utilisateur fluide et réactive sur ces appareils, il est essentiel d'optimiser votre application FireMonkey. Dans cette section, nous explorerons diverses techniques pour améliorer les performances de vos applications mobiles.
+Développer pour mobile n'est pas simplement "compiler pour iOS ou Android". Les appareils mobiles ont des contraintes très différentes des ordinateurs de bureau : batterie limitée, mémoire restreinte, puissance de calcul variable, et des utilisateurs qui attendent une réactivité parfaite. Dans cette section, nous allons explorer comment optimiser vos applications FireMonkey pour qu'elles fonctionnent de manière fluide et efficace sur smartphones et tablettes.
 
-## Comprendre les défis de performance sur mobile
+## 1. Comprendre les contraintes mobiles
 
-Avant de plonger dans les optimisations, identifions les principales contraintes des appareils mobiles :
+### Les limitations physiques
 
-- **Puissance de calcul limitée** : Même les smartphones haut de gamme ont moins de puissance qu'un ordinateur de bureau
-- **Mémoire restreinte** : La mémoire disponible est plus limitée et partagée entre toutes les applications
-- **Autonomie de batterie** : Chaque opération consomme de l'énergie, affectant l'autonomie
-- **Bande passante variable** : Les connexions réseau peuvent être lentes ou intermittentes
-- **Expérience utilisateur** : Les utilisateurs attendent une interface fluide et réactive (60 FPS)
+**Batterie** :
+- Capacité : 2000-5000 mAh (vs ordinateur branché secteur)
+- Autonomie : 8-12 heures d'utilisation typique
+- Sensible : GPS, écran, réseau consomment beaucoup
+- Impact utilisateur : Une app qui vide la batterie sera désinstallée
 
-## Mesurer les performances
+**Mémoire RAM** :
+- Smartphone entrée de gamme : 2-4 GB
+- Smartphone milieu de gamme : 4-6 GB
+- Smartphone haut de gamme : 8-12 GB
+- Comparaison : PC moderne a 16-32 GB
 
-Avant d'optimiser, il faut mesurer. FireMonkey offre plusieurs outils pour évaluer les performances :
+**Processeur** :
+- Architecture ARM (pas x86 comme PC)
+- Plusieurs cœurs (4-8) mais moins puissants individuellement
+- Throttling thermique : ralentit si surchauffe
+- Comparaison : 2-3x moins puissant qu'un PC
 
-### Utiliser le moniteur de performances intégré
+**Stockage** :
+- Plus lent que les SSD des PC
+- Partagé avec le système et autres apps
+- Espace limité : 32-256 GB total
+
+**Réseau** :
+- 4G/5G : rapide mais consomme de la batterie
+- WiFi : plus économe mais pas toujours disponible
+- Coût des données : limitation des forfaits
+
+### Implications pour le développement
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
+// Ce qui fonctionne bien sur PC...
+for i := 1 to 10000 do
 begin
-  // Activer le moniteur de performances (FPS counter)
-  FillRateControl.Enabled := True;
-  FillRateControl.ShowInOptionsMenu := True;
+  Image := TImage.Create(Self);
+  Image.Bitmap.LoadFromFile('photo' + i.ToString + '.jpg');
+  // ... traitement
 end;
+
+// ... peut être catastrophique sur mobile :
+// - Trop de mémoire utilisée
+// - Trop lent
+// - Batterie qui fond
 ```
 
-Pour activer le compteur de FPS visuellement pendant l'exécution :
-1. Appuyez longuement sur l'application pendant environ 3 secondes
-2. Un menu contextuel apparaîtra avec l'option "Fill Rate"
-3. Activez cette option pour afficher le compteur de FPS
+### Le principe "Mobile First"
 
-### Chronométrer des opérations spécifiques
+Développer en pensant mobile d'abord, puis enrichir pour desktop :
+- ✅ Interface simple et directe
+- ✅ Animations légères
+- ✅ Chargement progressif
+- ✅ Gestion agressive de la mémoire
+- ✅ Économie de batterie
 
-```pascal
-procedure ChronometrerOperation;
-var
-  StartTime: TDateTime;
-  ElapsedMS: Int64;
-begin
-  StartTime := Now;
+## 2. Optimisation de l'interface utilisateur
 
-  // Opération à mesurer
-  MaFonctionAChronomerer;
+### Réduire la complexité visuelle
 
-  // Calculer le temps écoulé en millisecondes
-  ElapsedMS := MilliSecondsBetween(Now, StartTime);
-  ShowMessage('Opération effectuée en ' + ElapsedMS.ToString + ' ms');
-end;
-```
-
-## Optimisations générales
-
-### 1. Désactiver les animations inutiles
-
-Les animations consomment beaucoup de ressources. Désactivez celles qui ne sont pas essentielles :
+**Problème** : Trop d'éléments à dessiner = framerate faible
 
 ```pascal
-procedure TForm1.OptimiserAnimations;
-begin
-  // Désactiver les animations sur les listes longues
-  ListView1.ShowAnimations := False;
-
-  // Réduire la complexité des animations
-  FloatAnimation1.Duration := 0.2; // Durée plus courte (200ms au lieu de 300ms par défaut)
-  FloatAnimation1.InterpolationType := TInterpolationType.Linear; // Interpolation simple
-end;
-```
-
-### 2. Gérer efficacement les ressources
-
-Libérez les ressources dès qu'elles ne sont plus nécessaires :
-
-```pascal
-procedure TForm1.ChargerImage;
-var
-  Bitmap: TBitmap;
-begin
-  Bitmap := TBitmap.Create;
-  try
-    Bitmap.LoadFromFile('image.png');
-    Image1.Bitmap.Assign(Bitmap);
-  finally
-    // Libérer la ressource dès que possible
-    Bitmap.Free;
-  end;
-end;
-```
-
-### 3. Utiliser les opérations asynchrones
-
-Évitez de bloquer l'interface utilisateur en effectuant les opérations longues en arrière-plan :
-
-```pascal
-procedure TForm1.ChargementAsynchrone;
-begin
-  // Afficher un indicateur de chargement
-  ArcDial1.Visible := True;
-
-  // Exécuter la tâche en arrière-plan
-  TTask.Run(
-    procedure
-    var
-      Data: TMemoryStream;
-    begin
-      Data := TMemoryStream.Create;
-      try
-        // Opération longue (ex: téléchargement)
-        TelechargerDonnees(Data);
-
-        // Mise à jour de l'interface sur le thread principal
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ArcDial1.Visible := False;
-            TraiterDonnees(Data);
-          end);
-      finally
-        Data.Free;
-      end;
-    end);
-end;
-```
-
-## Optimisations spécifiques à l'interface utilisateur
-
-### 1. Utiliser le Lazy Loading pour les listes
-
-Pour les longues listes, chargez uniquement les éléments visibles :
-
-```pascal
-procedure TForm1.ConfigurerListeOptimisee;
-begin
-  // Configurer la liste avec chargement à la demande
-  ListView1.ItemAppearance.ItemHeight := 60;
-  ListView1.SearchVisible := False; // Désactiver la recherche si non nécessaire
-
-  // Événement de chargement des éléments
-  ListView1.OnUpdatingItemView := ChargementElementListe;
-end;
-
-procedure TForm1.ChargementElementListe(const Sender: TObject;
-  const AItem: TListViewItem);
-begin
-  // Charger l'image seulement lorsque l'élément devient visible
-  if not Assigned(AItem.Objects.ImageObject.Bitmap) or
-     (AItem.Objects.ImageObject.Bitmap.Width = 0) then
-  begin
-    // Charger l'image pour cet élément
-    AItem.Objects.ImageObject.Bitmap.LoadFromFile(
-      'images/' + AItem.Tag.ToString + '.png');
-  end;
-end;
-```
-
-### 2. Éviter les opérations coûteuses pendant le défilement
-
-```pascal
-procedure TForm1.ListView1Scroll(Sender: TObject);
-begin
-  // Désactiver temporairement les opérations coûteuses pendant le défilement
-  FEstEnDefilement := True;
-
-  // Réactiver après une courte période d'inactivité
-  if Assigned(FTimerDefilement) then
-    FTimerDefilement.Enabled := False;
-
-  FTimerDefilement.Interval := 200; // 200ms
-  FTimerDefilement.OnTimer := FinDefilement;
-  FTimerDefilement.Enabled := True;
-end;
-
-procedure TForm1.FinDefilement(Sender: TObject);
-begin
-  FEstEnDefilement := False;
-  FTimerDefilement.Enabled := False;
-
-  // Recharger les éléments visibles avec toutes les informations
-  RechargerElementsVisibles;
-end;
-```
-
-### 3. Réduire la complexité visuelle
-
-Des interfaces visuellement plus simples sont plus performantes :
-
-```pascal
-procedure TForm1.SimplifierInterface;
-begin
-  // Éviter les effets de transparence complexes
-  Rectangle1.Opacity := 1.0; // Opacité complète plutôt que semi-transparence
-
-  // Éviter les dégradés complexes si non essentiels
-  Rectangle1.Fill.Kind := TBrushKind.Solid;
-
-  // Limiter les ombres portées aux éléments importants
-  ShadowEffect1.Enabled := False;
-
-  // Préférer les rectangles arrondis plutôt que des formes complexes
-  Path1.Visible := False;
-  RoundRect1.Visible := True;
-end;
-```
-
-### 4. Utiliser des bitmaps mis en cache
-
-```pascal
-procedure TForm1.OptimiserListeAvecCache;
-const
-  MAX_CACHE_SIZE = 20; // Limiter la taille du cache
-var
-  CacheBitmaps: TDictionary<Integer, TBitmap>;
-begin
-  // Créer le cache d'images
-  CacheBitmaps := TDictionary<Integer, TBitmap>.Create;
-
-  // Utilisation du cache dans la gestion des éléments de liste
-  ListView1.OnUpdatingItemView :=
-    procedure(const Sender: TObject; const AItem: TListViewItem)
-    var
-      ItemID: Integer;
-      Bitmap: TBitmap;
-    begin
-      ItemID := AItem.Tag;
-
-      // Vérifier si l'image est dans le cache
-      if not CacheBitmaps.TryGetValue(ItemID, Bitmap) then
-      begin
-        // Si pas dans le cache, la charger et l'ajouter
-        if CacheBitmaps.Count >= MAX_CACHE_SIZE then
-        begin
-          // Stratégie simple : vider le cache quand plein
-          for var CachedBitmap in CacheBitmaps.Values do
-            CachedBitmap.Free;
-          CacheBitmaps.Clear;
-        end;
-
-        Bitmap := TBitmap.Create;
-        Bitmap.LoadFromFile('images/' + ItemID.ToString + '.png');
-        CacheBitmaps.Add(ItemID, Bitmap);
-      end;
-
-      // Assigner l'image depuis le cache
-      AItem.Objects.ImageObject.Bitmap.Assign(Bitmap);
-    end;
-end;
-```
-
-### 5. Utiliser des images de taille adaptée
-
-Redimensionner les images à la taille nécessaire avant de les utiliser :
-
-```pascal
-function RedimensionnerImage(const ImageSource: TBitmap;
-  const LargeurCible, HauteurCible: Integer): TBitmap;
-begin
-  Result := TBitmap.Create(LargeurCible, HauteurCible);
-  Result.Canvas.BeginScene;
-  try
-    Result.Canvas.DrawBitmap(ImageSource,
-      RectF(0, 0, ImageSource.Width, ImageSource.Height),
-      RectF(0, 0, LargeurCible, HauteurCible),
-      1.0, // Opacité
-      False // Maintenir les proportions
-    );
-  finally
-    Result.Canvas.EndScene;
-  end;
-end;
-```
-
-## Optimisation de la mémoire
-
-### 1. Éviter les fuites de mémoire
-
-```pascal
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources explicitement
-  if Assigned(FImageCache) then
-  begin
-    // Vider le cache d'images
-    for var Bitmap in FImageCache.Values do
-      Bitmap.Free;
-    FImageCache.Free;
-  end;
-
-  // Annuler les tâches en cours
-  if Assigned(FTachesEnCours) then
-  begin
-    for var Tache in FTachesEnCours do
-      Tache.Cancel;
-  end;
-end;
-```
-
-### 2. Réduire l'utilisation de mémoire
-
-```pascal
-procedure TForm1.OptimiserUtilisationMemoire;
-begin
-  // Utiliser des types de données appropriés
-  // (par exemple, Short String au lieu de String pour les chaînes courtes)
-
-  // Limiter le nombre d'éléments chargés
-  ListView1.BeginUpdate;
-  try
-    // Conserver seulement les N premiers éléments
-    while ListView1.Items.Count > 100 do
-      ListView1.Items.Delete(ListView1.Items.Count - 1);
-  finally
-    ListView1.EndUpdate;
-  end;
-
-  // Déclencher manuellement le ramasse-miettes
-  ReportMemoryLeaksOnShutdown := True; // En mode débogage uniquement
-end;
-```
-
-### 3. Réutiliser les objets plutôt que de les recréer
-
-```pascal
-procedure TForm1.ConfigurerPoolObjets;
-const
-  POOL_SIZE = 20;
+// ❌ MAUVAIS : Trop d'éléments
+procedure TForm1.CreerInterface;
 var
   i: Integer;
 begin
-  // Créer un pool d'objets réutilisables
-  FBitmapPool := TObjectList<TBitmap>.Create(False); // Ne pas libérer automatiquement
-
-  // Pré-allouer des objets
-  for i := 1 to POOL_SIZE do
+  for i := 1 to 100 do
   begin
-    var Bitmap := TBitmap.Create(100, 100);
-    FBitmapPool.Add(Bitmap);
+    // 100 boutons avec effets = lourd
+    var Button := TButton.Create(Self);
+    Button.Parent := ScrollBox1;
+
+    // Effet d'ombre sur chaque bouton
+    var Shadow := TShadowEffect.Create(Button);
+    Shadow.Parent := Button;
+
+    // Effet de lueur
+    var Glow := TGlowEffect.Create(Button);
+    Glow.Parent := Button;
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Simplifier
+procedure TForm1.CreerInterfaceOptimisee;
+var
+  i: Integer;
+begin
+  for i := 1 to 100 do
+  begin
+    var Button := TButton.Create(Self);
+    Button.Parent := ScrollBox1;
+
+    {$IFDEF ANDROID OR IOS}
+      // Pas d'effets sur mobile
+    {$ELSE}
+      // Effets uniquement sur desktop
+      var Shadow := TShadowEffect.Create(Button);
+      Shadow.Parent := Button;
+    {$ENDIF}
+  end;
+end;
+```
+
+### Limiter les effets visuels
+
+**Effets coûteux sur mobile** :
+- Ombres (Shadow, InnerGlow)
+- Flou (Blur, GaussianBlur)
+- Reflets (Reflection)
+- Transparence excessive
+
+```pascal
+procedure TForm1.ConfigurerEffetsSelonPlateforme;
+begin
+  {$IFDEF ANDROID OR IOS}
+    // Mobile : Désactiver les effets
+    BlurEffect1.Enabled := False;
+    ShadowEffect1.Enabled := False;
+    ReflectionEffect1.Enabled := False;
+  {$ELSE}
+    // Desktop : Activer
+    BlurEffect1.Enabled := True;
+    ShadowEffect1.Enabled := True;
+    ReflectionEffect1.Enabled := True;
+  {$ENDIF}
+end;
+```
+
+### Optimiser les listes
+
+**Problème** : Créer tous les éléments d'une liste = lent et gourmand
+
+```pascal
+// ❌ MAUVAIS : Créer 1000 items d'un coup
+procedure TForm1.RemplirListe;
+var
+  i: Integer;
+begin
+  for i := 1 to 1000 do
+  begin
+    var Item := TListBoxItem.Create(ListBox1);
+    Item.Parent := ListBox1;
+    Item.Text := 'Item ' + i.ToString;
+    // Crée 1000 composants en mémoire
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Utiliser la virtualisation
+procedure TForm1.RemplirListeVirtuelle;
+begin
+  // TListView avec virtualisation
+  ListView1.Items.Count := 1000;  // Juste le nombre
+  // Les items sont créés à la demande lors du scroll
+end;
+
+procedure TForm1.ListView1UpdateObjects(const Sender: TObject;
+  const AItem: TListViewItem);
+begin
+  // Cette méthode est appelée pour chaque item visible
+  AItem.Text := 'Item ' + AItem.Index.ToString;
+  AItem.Detail := 'Détails de l\'item';
+
+  // Seuls les items visibles sont créés
+end;
+```
+
+### Réduire les mises à jour de l'UI
+
+```pascal
+// ❌ MAUVAIS : Mettre à jour l'UI à chaque itération
+procedure TForm1.TraiterDonnees;
+var
+  i: Integer;
+begin
+  for i := 1 to 10000 do
+  begin
+    // Traitement
+    TraiterItem(i);
+
+    // Mise à jour UI à chaque fois = très lent
+    ProgressBar1.Value := i / 10000 * 100;
+    Label1.Text := i.ToString + ' / 10000';
+    Application.ProcessMessages;  // Force le redessinage
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Mettre à jour par lots
+procedure TForm1.TraiterDonneesOptimise;
+var
+  i: Integer;
+begin
+  for i := 1 to 10000 do
+  begin
+    TraiterItem(i);
+
+    // Mettre à jour tous les 100 items
+    if (i mod 100) = 0 then
+    begin
+      ProgressBar1.Value := i / 10000 * 100;
+      Label1.Text := i.ToString + ' / 10000';
+      Application.ProcessMessages;
+    end;
+  end;
+end;
+```
+
+## 3. Gestion de la mémoire
+
+### Comprendre la mémoire sur mobile
+
+**Limite stricte** :
+- Android : Le système tue les apps qui consomment trop
+- iOS : idem, et avertit l'utilisateur si récurrent
+
+**Symptômes de problèmes mémoire** :
+- App qui se ferme brutalement
+- Ralentissements progressifs
+- Freezes et blocages
+
+### Libérer les ressources
+
+```pascal
+// ❌ MAUVAIS : Garder tout en mémoire
+var
+  FImages: TArray<TBitmap>;
+
+procedure TForm1.ChargerImages;
+var
+  i: Integer;
+begin
+  SetLength(FImages, 100);
+  for i := 0 to 99 do
+  begin
+    FImages[i] := TBitmap.Create;
+    FImages[i].LoadFromFile('image' + i.ToString + '.jpg');
+    // 100 images en mémoire = plusieurs centaines de MB
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Charger à la demande
+procedure TForm1.ChargerImageALaDemande(Index: Integer);
+begin
+  // Libérer l'image précédente
+  if Assigned(FImageActuelle) then
+    FImageActuelle.Free;
+
+  // Charger uniquement l'image nécessaire
+  FImageActuelle := TBitmap.Create;
+  FImageActuelle.LoadFromFile('image' + Index.ToString + '.jpg');
+
+  Image1.Bitmap.Assign(FImageActuelle);
+end;
+```
+
+### Vider les caches régulièrement
+
+```pascal
+procedure TForm1.ViderCaches;
+begin
+  // Vider les bitmaps non utilisés
+  Image1.Bitmap.Clear;
+  Image2.Bitmap.Clear;
+
+  // Forcer le garbage collection (Delphi gère automatiquement,
+  // mais on peut suggérer)
+
+  // Libérer les objets temporaires
+  for var Obj in FListeObjetsTemporaires do
+    Obj.Free;
+  FListeObjetsTemporaires.Clear;
+end;
+
+procedure TForm1.FormDeactivate(Sender: TObject);
+begin
+  // Libérer les ressources quand l'app passe en arrière-plan
+  ViderCaches;
+end;
+```
+
+### Détecter les fuites mémoire
+
+```pascal
+// Utiliser ReportMemoryLeaksOnShutdown en mode Debug
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  {$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
+end;
+
+// Vérifier qu'on libère tout
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  // Libérer explicitement les objets créés
+  FreeAndNil(FMonObjet);
+  FreeAndNil(FMaListe);
+
+  // Les composants créés avec Owner sont libérés automatiquement
+end;
+```
+
+## 4. Optimisation des images
+
+### Comprendre le poids des images
+
+**Calcul mémoire** :
+```
+Taille en mémoire = Largeur × Hauteur × 4 octets (RGBA)
+
+Exemple :
+Image 1920×1080 = 1920 × 1080 × 4 = 8.3 MB en mémoire
+(même si le fichier JPG fait 500 KB sur disque !)
+```
+
+**Conséquence** : 10 photos plein écran = 80 MB de RAM sur mobile !
+
+### Redimensionner les images
+
+```pascal
+procedure TForm1.ChargerImageRedimensionnee(const Fichier: string;
+  LargeurMax, HauteurMax: Integer);
+var
+  BitmapTemp: TBitmap;
+  Ratio: Single;
+  NouvelleLargeur, NouvelleHauteur: Integer;
+begin
+  BitmapTemp := TBitmap.Create;
+  try
+    BitmapTemp.LoadFromFile(Fichier);
+
+    // Calculer le ratio pour conserver les proportions
+    if BitmapTemp.Width > BitmapTemp.Height then
+      Ratio := LargeurMax / BitmapTemp.Width
+    else
+      Ratio := HauteurMax / BitmapTemp.Height;
+
+    NouvelleLargeur := Trunc(BitmapTemp.Width * Ratio);
+    NouvelleHauteur := Trunc(BitmapTemp.Height * Ratio);
+
+    // Redimensionner
+    Image1.Bitmap.SetSize(NouvelleLargeur, NouvelleHauteur);
+    Image1.Bitmap.Canvas.BeginScene;
+    try
+      Image1.Bitmap.Canvas.DrawBitmap(
+        BitmapTemp,
+        RectF(0, 0, BitmapTemp.Width, BitmapTemp.Height),
+        RectF(0, 0, NouvelleLargeur, NouvelleHauteur),
+        1.0,
+        True);  // High quality
+    finally
+      Image1.Bitmap.Canvas.EndScene;
+    end;
+  finally
+    BitmapTemp.Free;
   end;
 end;
 
-function TForm1.ObtenirBitmapDuPool: TBitmap;
+// Utilisation
+{$IFDEF ANDROID OR IOS}
+  ChargerImageRedimensionnee('photo.jpg', 800, 600);  // Résolution mobile
+{$ELSE}
+  ChargerImageRedimensionnee('photo.jpg', 1920, 1080);  // Résolution desktop
+{$ENDIF}
+```
+
+### Utiliser des formats optimisés
+
+```pascal
+// Préférer PNG pour les images avec transparence
+// Préférer JPG pour les photos (plus léger)
+
+procedure TForm1.SauvegarderImageOptimisee(Bitmap: TBitmap;
+  const Fichier: string);
 begin
-  if FBitmapPool.Count > 0 then
+  // Déterminer le format selon le contenu
+  if ImageATransparence(Bitmap) then
   begin
-    Result := FBitmapPool[0];
-    FBitmapPool.Delete(0);
+    // PNG pour la transparence
+    Bitmap.SaveToFile(Fichier + '.png');
   end
   else
-    Result := TBitmap.Create(100, 100);
-end;
+  begin
+    // JPG avec compression pour les photos
+    var Surface := TBitmapSurface.Create;
+    try
+      Surface.Assign(Bitmap);
 
-procedure TForm1.RetournerBitmapAuPool(Bitmap: TBitmap);
-begin
-  // Réinitialiser l'objet
-  Bitmap.Clear(TAlphaColors.Null);
-
-  // Le remettre dans le pool s'il n'est pas trop grand
-  if FBitmapPool.Count < 30 then
-    FBitmapPool.Add(Bitmap)
-  else
-    Bitmap.Free;
+      // Qualité 80% = bon compromis taille/qualité
+      if not TBitmapCodecManager.SaveToFile(
+        Fichier + '.jpg', Surface, nil) then
+        raise Exception.Create('Erreur sauvegarde');
+    finally
+      Surface.Free;
+    end;
+  end;
 end;
 ```
 
-## Optimisations des opérations réseau
-
-### 1. Mise en cache des données
+### Compression et cache d'images
 
 ```pascal
-function TForm1.ObtenirDonneesAvecCache(const URL: string;
-  ExpirationEnMinutes: Integer): TStream;
-var
-  NomFichierCache: string;
-  InfoFichier: TFileInfo;
-begin
-  // Créer un nom de fichier unique pour cette URL
-  NomFichierCache := TPath.Combine(TPath.GetCachePath,
-    THashMD5.GetHashString(URL) + '.cache');
+type
+  TImageCache = class
+  private
+    FCache: TDictionary<string, TBitmap>;
+    FTailleMaxCache: Integer;
+  public
+    constructor Create(TailleMaxMB: Integer);
+    destructor Destroy; override;
 
-  // Vérifier si le cache existe et est valide
-  if FileExists(NomFichierCache) then
-  begin
-    if GetFileInfo(NomFichierCache, InfoFichier) then
-    begin
-      // Vérifier si le cache n'a pas expiré
-      if MinutesBetween(Now, InfoFichier.FileTime) < ExpirationEnMinutes then
-      begin
-        Result := TFileStream.Create(NomFichierCache, fmOpenRead);
-        Exit;
-      end;
-    end;
+    function Obtenir(const Fichier: string): TBitmap;
+    procedure Vider;
   end;
 
-  // Le cache n'existe pas ou a expiré, télécharger les données
-  Result := TelechargerDonneesEtMettreCacheAJour(URL, NomFichierCache);
+constructor TImageCache.Create(TailleMaxMB: Integer);
+begin
+  inherited Create;
+  FCache := TDictionary<string, TBitmap>.Create;
+  FTailleMaxCache := TailleMaxMB * 1024 * 1024;  // Convertir en octets
 end;
 
-function TForm1.TelechargerDonneesEtMettreCacheAJour(const URL, NomFichierCache: string): TStream;
-var
-  HTTP: TNetHTTPClient;
-  Response: IHTTPResponse;
-  FichierCache: TFileStream;
+destructor TImageCache.Destroy;
 begin
-  HTTP := TNetHTTPClient.Create(nil);
-  try
-    // Télécharger les données
-    Response := HTTP.Get(URL);
+  Vider;
+  FCache.Free;
+  inherited;
+end;
 
-    // Sauvegarder dans le cache
-    if Response.StatusCode = 200 then
+function TImageCache.Obtenir(const Fichier: string): TBitmap;
+begin
+  // Chercher dans le cache
+  if not FCache.TryGetValue(Fichier, Result) then
+  begin
+    // Pas en cache : charger
+    Result := TBitmap.Create;
+    Result.LoadFromFile(Fichier);
+
+    // Ajouter au cache si pas trop gros
+    if CalculerTailleCache + TailleImage(Result) < FTailleMaxCache then
+      FCache.Add(Fichier, Result);
+  end;
+end;
+
+procedure TImageCache.Vider;
+begin
+  for var Bitmap in FCache.Values do
+    Bitmap.Free;
+  FCache.Clear;
+end;
+```
+
+## 5. Animations performantes
+
+### Éviter les animations trop fréquentes
+
+```pascal
+// ❌ MAUVAIS : Animation à 60 FPS peut être trop
+procedure TForm1.Timer60FPSTimer(Sender: TObject);
+begin
+  // Appelé 60 fois par seconde = beaucoup de travail
+  Rectangle1.Position.X := Rectangle1.Position.X + 1;
+  Rectangle1.RotationAngle := Rectangle1.RotationAngle + 1;
+  // Si plusieurs animations = charge importante
+end;
+```
+
+```pascal
+// ✅ BON : Utiliser TAnimation intégré
+procedure TForm1.AnimerAvecTAnimation;
+var
+  Anim: TFloatAnimation;
+begin
+  // FireMonkey optimise automatiquement
+  Anim := TFloatAnimation.Create(Rectangle1);
+  Anim.Parent := Rectangle1;
+  Anim.PropertyName := 'Position.X';
+  Anim.StartValue := 0;
+  Anim.StopValue := 300;
+  Anim.Duration := 1.0;  // 1 seconde
+  Anim.Start;
+
+  // L'animation est gérée par le moteur, pas par vous
+end;
+```
+
+### Limiter le nombre d'animations simultanées
+
+```pascal
+// ❌ MAUVAIS : Trop d'animations simultanées
+procedure TForm1.AnimerTout;
+var
+  i: Integer;
+begin
+  // 50 éléments animés = surcharge
+  for i := 0 to 49 do
+  begin
+    var Anim := TFloatAnimation.Create(Rectangles[i]);
+    Anim.Parent := Rectangles[i];
+    Anim.PropertyName := 'Opacity';
+    Anim.StartValue := 0;
+    Anim.StopValue := 1;
+    Anim.Duration := 2;
+    Anim.Start;
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Animer par groupes
+procedure TForm1.AnimerParGroupes;
+var
+  i: Integer;
+begin
+  // Animer 5 par 5 avec délai
+  for i := 0 to 49 do
+  begin
+    var Anim := TFloatAnimation.Create(Rectangles[i]);
+    Anim.Parent := Rectangles[i];
+    Anim.PropertyName := 'Opacity';
+    Anim.StartValue := 0;
+    Anim.StopValue := 1;
+    Anim.Duration := 0.5;  // Plus court
+    Anim.Delay := (i div 5) * 0.1;  // Délai par groupe
+    Anim.Start;
+  end;
+end;
+```
+
+### Désactiver les animations sur appareil lent
+
+```pascal
+function TForm1.AppareilRapide: Boolean;
+begin
+  // Détecter si l'appareil est assez puissant
+  {$IFDEF ANDROID}
+    // Vérifier le nombre de cœurs, la RAM, etc.
+    Result := GetProcessorCount > 4;
+  {$ENDIF}
+
+  {$IFDEF IOS}
+    // iPhone plus récent = plus rapide
+    Result := True;  // iOS généralement performant
+  {$ENDIF}
+end;
+
+procedure TForm1.ConfigurerAnimations;
+begin
+  if AppareilRapide then
+  begin
+    // Activer toutes les animations
+    AnimationsComplexes := True;
+  end
+  else
+  begin
+    // Simplifier ou désactiver
+    AnimationsComplexes := False;
+  end;
+end;
+```
+
+## 6. Gestion du réseau et batterie
+
+### Regrouper les requêtes réseau
+
+```pascal
+// ❌ MAUVAIS : Une requête par donnée
+procedure TForm1.ChargerDonnees;
+var
+  i: Integer;
+begin
+  for i := 1 to 100 do
+  begin
+    // 100 requêtes HTTP = lent et consomme batterie
+    RESTClient1.BaseURL := 'https://api.exemple.com/item/' + i.ToString;
+    RESTRequest1.Execute;
+    TraiterReponse(RESTRequest1.Response.Content);
+  end;
+end;
+```
+
+```pascal
+// ✅ BON : Une seule requête
+procedure TForm1.ChargerDonneesOptimise;
+begin
+  // Une seule requête pour tout
+  RESTClient1.BaseURL := 'https://api.exemple.com/items?limit=100';
+  RESTRequest1.Execute;
+
+  // Traiter la réponse groupée
+  var JSON := TJSONObject.ParseJSONValue(RESTRequest1.Response.Content);
+  try
+    TraiterTousLesItems(JSON);
+  finally
+    JSON.Free;
+  end;
+end;
+```
+
+### Cache des données réseau
+
+```pascal
+type
+  TCacheReseau = class
+  private
+    FCacheDonnees: TDictionary<string, string>;
+    FCacheExpiration: TDictionary<string, TDateTime>;
+    FDureeCache: Integer;  // En secondes
+  public
+    constructor Create(DureeCacheSecondes: Integer = 300);
+    destructor Destroy; override;
+
+    function ObtenirDonnees(const URL: string): string;
+    procedure StockerDonnees(const URL, Donnees: string);
+    function EstDansCache(const URL: string): Boolean;
+  end;
+
+function TCacheReseau.ObtenirDonnees(const URL: string): string;
+begin
+  // Vérifier si en cache et pas expiré
+  if EstDansCache(URL) then
+  begin
+    if Now - FCacheExpiration[URL] < FDureeCache / 86400 then
     begin
-      FichierCache := TFileStream.Create(NomFichierCache, fmCreate);
-      try
-        FichierCache.WriteBuffer(Response.ContentAsString[1],
-          Length(Response.ContentAsString) * SizeOf(Char));
-        // Rembobiner pour lecture
-        FichierCache.Position := 0;
-        Result := FichierCache;
-      except
-        FichierCache.Free;
-        raise;
-      end;
+      // Cache valide
+      Result := FCacheDonnees[URL];
+      Exit;
     end
     else
-      raise Exception.CreateFmt('Erreur HTTP %d', [Response.StatusCode]);
-  finally
-    HTTP.Free;
+    begin
+      // Cache expiré : retirer
+      FCacheDonnees.Remove(URL);
+      FCacheExpiration.Remove(URL);
+    end;
+  end;
+
+  // Pas en cache : retourner vide
+  Result := '';
+end;
+
+procedure TCacheReseau.StockerDonnees(const URL, Donnees: string);
+begin
+  FCacheDonnees.AddOrSetValue(URL, Donnees);
+  FCacheExpiration.AddOrSetValue(URL, Now);
+end;
+
+// Utilisation
+procedure TForm1.ChargerAvecCache(const URL: string);
+var
+  Donnees: string;
+begin
+  // Essayer le cache d'abord
+  Donnees := FCache.ObtenirDonnees(URL);
+
+  if Donnees = '' then
+  begin
+    // Pas en cache : faire la requête
+    RESTClient1.BaseURL := URL;
+    RESTRequest1.Execute;
+    Donnees := RESTRequest1.Response.Content;
+
+    // Stocker en cache
+    FCache.StockerDonnees(URL, Donnees);
+  end;
+
+  // Utiliser les données
+  TraiterDonnees(Donnees);
+end;
+```
+
+### Désactiver les synchronisations en arrière-plan
+
+```pascal
+procedure TForm1.GererEtatApplication;
+begin
+  // Événement quand l'app passe en arrière-plan
+  var FMXApplicationEventService: IFMXApplicationEventService;
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXApplicationEventService, FMXApplicationEventService) then
+  begin
+    FMXApplicationEventService.SetApplicationEventHandler(
+      procedure(AAppEvent: TApplicationEvent; AContext: TObject)
+      begin
+        case AAppEvent of
+          TApplicationEvent.BecameActive:
+          begin
+            // App devient active : reprendre les activités
+            Timer1.Enabled := True;
+            ReprendreSynchronisation;
+          end;
+
+          TApplicationEvent.EnteredBackground:
+          begin
+            // App en arrière-plan : économiser la batterie
+            Timer1.Enabled := False;
+            SusprendreSynchronisation;
+          end;
+        end;
+      end);
   end;
 end;
 ```
 
-### 2. Compression des données
+## 7. Traitements asynchrones
+
+### Déporter les calculs lourds
 
 ```pascal
-procedure TForm1.EnvoyerDonneesCompressees(const URL: string; Data: TStream);
+// ❌ MAUVAIS : Calcul dans le thread principal
+procedure TForm1.ButtonCalculClick(Sender: TObject);
 var
-  HTTP: TNetHTTPClient;
-  CompressedStream: TMemoryStream;
-  ZipFile: TZipFile;
+  i: Integer;
+  Resultat: Double;
 begin
-  // Compresser les données
-  CompressedStream := TMemoryStream.Create;
-  try
-    ZipFile := TZipFile.Create;
-    try
-      ZipFile.Open(CompressedStream, TZipMode.zmWrite);
-      ZipFile.Add(Data, 'data.bin');
-    finally
-      ZipFile.Free;
-    end;
+  // Calcul lourd = interface gelée
+  for i := 1 to 1000000 do
+    Resultat := Resultat + Sqrt(i);
 
-    CompressedStream.Position := 0;
-
-    // Envoyer les données compressées
-    HTTP := TNetHTTPClient.Create(nil);
-    try
-      HTTP.ContentType := 'application/zip';
-      HTTP.CustomHeaders['Content-Encoding'] := 'gzip';
-      HTTP.Post(URL, CompressedStream);
-    finally
-      HTTP.Free;
-    end;
-  finally
-    CompressedStream.Free;
-  end;
+  Label1.Text := Resultat.ToString;
 end;
 ```
 
-### 3. Limiter les transferts de données
-
 ```pascal
-procedure TForm1.ChargerDonneesParPage(Page, ElementsParPage: Integer);
-var
-  URL: string;
+// ✅ BON : Calcul asynchrone avec TTask
+procedure TForm1.ButtonCalculClickOptimise(Sender: TObject);
 begin
-  // Construire l'URL avec pagination
-  URL := Format('https://api.example.com/data?page=%d&limit=%d',
-    [Page, ElementsParPage]);
+  // Afficher un indicateur de chargement
+  ProgressCircle.Visible := True;
+  ProgressCircle.Enabled := True;
 
-  // Charger seulement une page de données à la fois
+  // Lancer le calcul en arrière-plan
   TTask.Run(
     procedure
     var
-      HTTP: TNetHTTPClient;
-      Response: IHTTPResponse;
+      i: Integer;
+      Resultat: Double;
     begin
-      HTTP := TNetHTTPClient.Create(nil);
-      try
-        Response := HTTP.Get(URL);
-        if Response.StatusCode = 200 then
+      // Calcul lourd dans un thread séparé
+      Resultat := 0;
+      for i := 1 to 1000000 do
+        Resultat := Resultat + Sqrt(i);
+
+      // Retour au thread principal pour mettre à jour l'UI
+      TThread.Synchronize(nil,
+        procedure
         begin
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              // Traiter les données reçues et mettre à jour l'interface
-              TraiterDonneesJSON(Response.ContentAsString);
-            end);
-        end;
+          Label1.Text := Resultat.ToString;
+          ProgressCircle.Visible := False;
+          ProgressCircle.Enabled := False;
+        end);
+    end);
+end;
+```
+
+### Charger les images en arrière-plan
+
+```pascal
+procedure TForm1.ChargerImageAsync(const Fichier: string;
+  Image: TImage);
+begin
+  TTask.Run(
+    procedure
+    var
+      Bitmap: TBitmap;
+    begin
+      // Charger dans le thread de fond
+      Bitmap := TBitmap.Create;
+      try
+        Bitmap.LoadFromFile(Fichier);
+
+        // Redimensionner si nécessaire
+        {$IFDEF ANDROID OR IOS}
+        if Bitmap.Width > 1024 then
+          RedimensionnerBitmap(Bitmap, 1024, 768);
+        {$ENDIF}
+
+        // Mettre à jour l'UI dans le thread principal
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Image.Bitmap.Assign(Bitmap);
+          end);
       finally
-        HTTP.Free;
+        Bitmap.Free;
       end;
     end);
 end;
 ```
 
-## Optimisations spécifiques au système d'exploitation
+## 8. Profiling et mesure des performances
 
-### Android
+### Mesurer le temps d'exécution
 
 ```pascal
-{$IFDEF ANDROID}
-procedure TForm1.OptimiserPourAndroid;
+uses
+  System.Diagnostics;
+
+procedure TForm1.MesurerPerformance;
+var
+  Chrono: TStopwatch;
 begin
-  // Réduire la résolution des images pour les appareils à faible mémoire
-  if TOSVersion.Check(5, 0) then // Android 5.0 ou supérieur
-  begin
-    var ActivityManager := TJActivityManager.Wrap(
-      TAndroidHelper.Context.getSystemService(TJContext.JavaClass.ACTIVITY_SERVICE));
-    var MemInfo := TJActivityManager_MemoryInfo.Create;
-    ActivityManager.getMemoryInfo(MemInfo);
+  Chrono := TStopwatch.StartNew;
 
-    // Si mémoire disponible faible, réduire la qualité des images
-    if (MemInfo.availMem / MemInfo.totalMem) < 0.2 then
-    begin
-      // Moins de 20% de mémoire disponible
-      Image1.DisableInterpolation := True; // Qualité inférieure mais plus rapide
-      FQualiteImage := 70; // Réduire la qualité JPEG
-    end;
-  end;
+  // Code à mesurer
+  ChargerDonnees;
+  TraiterDonnees;
+  AfficherResultats;
 
-  // Adapter les animations à la puissance de l'appareil
-  var PackageManager := TAndroidHelper.Context.getPackageManager;
-  if not PackageManager.hasSystemFeature(TJPackageManager.JavaClass.FEATURE_RAM_HIGH) then
-  begin
-    // Appareil à faible RAM
-    Animation1.Enabled := False;
-    Animation2.Duration := Animation2.Duration * 1.5; // Ralentir les animations
-    Animation3.InterpolationType := TInterpolationType.Linear; // Interpolation simple
-  end;
+  Chrono.Stop;
+
+  {$IFDEF DEBUG}
+  ShowMessage('Temps d''exécution : ' +
+    Chrono.ElapsedMilliseconds.ToString + ' ms');
+  {$ENDIF}
 end;
-{$ENDIF}
 ```
 
-### iOS
+### Surveiller l'utilisation mémoire
+
+```pascal
+function TForm1.ObtenirMemoireUtilisee: Int64;
+var
+  MemoryManagerState: TMemoryManagerState;
+  SmallBlockTypeState: TSmallBlockTypeState;
+begin
+  GetMemoryManagerState(MemoryManagerState);
+  Result := MemoryManagerState.TotalAllocatedMediumBlockSize +
+            MemoryManagerState.TotalAllocatedLargeBlockSize;
+
+  for SmallBlockTypeState in MemoryManagerState.SmallBlockTypeStates do
+    Result := Result + SmallBlockTypeState.UseableBlockSize *
+                       SmallBlockTypeState.AllocatedBlockCount;
+end;
+
+procedure TForm1.AfficherInfosMemoire;
+var
+  MemMB: Double;
+begin
+  MemMB := ObtenirMemoireUtilisee / (1024 * 1024);
+  LabelMemoire.Text := Format('Mémoire : %.2f MB', [MemMB]);
+
+  {$IFDEF DEBUG}
+  if MemMB > 100 then
+    ShowMessage('ATTENTION : Consommation mémoire élevée !');
+  {$ENDIF}
+end;
+```
+
+### Calculer le framerate
+
+```pascal
+var
+  FFrameCount: Integer;
+  FLastTime: TDateTime;
+  FFPS: Single;
+
+procedure TForm1.FormRender(Sender: TObject; Context: TContext3D;
+  const ATarget: TContextTarget);
+begin
+  Inc(FFrameCount);
+
+  // Calculer FPS chaque seconde
+  if Now - FLastTime >= 1/86400 then  // 1 seconde
+  begin
+    FFPS := FFrameCount / ((Now - FLastTime) * 86400);
+    FFrameCount := 0;
+    FLastTime := Now;
+
+    LabelFPS.Text := Format('FPS : %.1f', [FFPS]);
+
+    {$IFDEF DEBUG}
+    if FFPS < 30 then
+      ShowMessage('ATTENTION : Framerate faible !');
+    {$ENDIF}
+  end;
+end;
+```
+
+## 9. Optimisations spécifiques iOS
+
+### Désactiver le motion blur
 
 ```pascal
 {$IFDEF IOS}
-procedure TForm1.OptimiserPouriOS;
+procedure TForm1.DesactiverMotionBlur;
 begin
-  // Vérifier le modèle d'appareil pour adapter les performances
-  var DeviceModel: NSString;
-  var Size: NSUInteger;
-  var Device: UIDevice := TUIDevice.Wrap(TUIDevice.OCClass.currentDevice);
+  // iOS ajoute parfois un effet de flou pendant les animations
+  // Désactiver pour de meilleures performances
+  Quality := TCanvasQuality.SystemDefault;
+end;
+{$ENDIF}
+```
 
-  // Obtenir le modèle d'appareil
-  var ModelKey := StrToNSStr('model');
-  if sysctlbyname(MarshaledAString(UTF8String('hw.machine')), nil, @Size, nil, 0) = 0 then
+### Optimiser pour les différents iPhones
+
+```pascal
+{$IFDEF IOS}
+function TForm1.EstiPhoneRecent: Boolean;
+var
+  Device: UIDevice;
+begin
+  Device := TUIDevice.Wrap(TUIDevice.OCClass.currentDevice);
+
+  // iPhone 12 et plus récents
+  Result := Device.systemVersion.doubleValue >= 14.0;
+end;
+
+procedure TForm1.ConfigurerSeloniPhone;
+begin
+  if EstiPhoneRecent then
   begin
-    SetLength(DeviceModel, Size);
-    sysctlbyname(MarshaledAString(UTF8String('hw.machine')), MarshaledAString(UTF8String(DeviceModel)), @Size, nil, 0);
-
-    // Adapter selon le modèle
-    if Pos('iPhone8', NSStrToStr(DeviceModel)) > 0 then
-    begin
-      // Modèle plus ancien - réduire les effets
-      DesactiverEffetsAvances;
-    end;
-  end;
-
-  // Éviter l'échantillonnage sur les petits écrans
-  if Screen.Size.Width < 400 then
+    // iPhone récent : activer plus de fonctionnalités
+    EffetsVisuels := True;
+    QualiteImages := Haute;
+  end
+  else
   begin
-    Image1.WrapMode := TImageWrapMode.Original;
+    // iPhone plus ancien : simplifier
+    EffetsVisuels := False;
+    QualiteImages := Moyenne;
   end;
 end;
 {$ENDIF}
 ```
 
-## Cas pratiques d'optimisation
+## 10. Optimisations spécifiques Android
 
-### Optimisation d'une galerie d'images
+### Gérer les différentes versions Android
 
 ```pascal
-procedure TForm1.ConfigurerGalerieOptimisee;
+{$IFDEF ANDROID}
+uses
+  Androidapi.Helpers;
+
+function TForm1.VersionAndroid: Integer;
 begin
-  // Utiliser un TImageViewer avec chargement optimisé
-  ImageViewer1.Align := TAlignLayout.Client;
-
-  // Mode d'interpolation optimisé
-  ImageViewer1.BitmapInterpolationMode := TImageInterpolationMode.GPUOptimized;
-
-  // Configuration des images miniatures
-  FlowLayout1.Align := TAlignLayout.Bottom;
-  FlowLayout1.Height := 120;
-  FlowLayout1.HorizontalFlow := True;
-  FlowLayout1.WrapMode := TFlowLayoutWrapMode.Wrap;
-
-  // Charger les miniatures en tâche de fond
-  ChargementMiniaturesTacheFond;
+  Result := TJBuild_VERSION.JavaClass.SDK_INT;
 end;
 
-procedure TForm1.ChargementMiniaturesTacheFond;
+procedure TForm1.ConfigurerSelonAndroid;
 begin
-  TTask.Run(
-    procedure
-    var
-      Fichiers: TArray<string>;
-      Miniatures: TArray<TBitmap>;
-      i: Integer;
-    begin
-      // Obtenir la liste des fichiers images
-      Fichiers := TDirectory.GetFiles(TPath.GetDocumentsPath, '*.jpg');
-      SetLength(Miniatures, Length(Fichiers));
-
-      // Créer des miniatures optimisées
-      for i := 0 to High(Fichiers) do
-      begin
-        Miniatures[i] := TBitmap.Create;
-        ChargerImageMiniature(Fichiers[i], Miniatures[i]);
-
-        // Mettre à jour l'interface tous les 5 éléments ou à la fin
-        if (i mod 5 = 0) or (i = High(Fichiers)) then
-        begin
-          TThread.Synchronize(nil,
-            procedure
-            var
-              j: Integer;
-            begin
-              // Ajouter les miniatures traitées à l'interface
-              for j := Max(0, i-4) to i do
-              begin
-                if (j <= High(Miniatures)) and Assigned(Miniatures[j]) then
-                  AjouterMiniatureUI(Miniatures[j], Fichiers[j]);
-              end;
-
-              // Mise à jour de la progression
-              ProgressBar1.Value := (i + 1) / Length(Fichiers);
-            end);
-        end;
-      end;
-    end);
-end;
-
-procedure TForm1.ChargerImageMiniature(const Fichier: string; Miniature: TBitmap);
-var
-  SourceBitmap: TBitmap;
-begin
-  SourceBitmap := TBitmap.Create;
-  try
-    // Charger l'image source
-    SourceBitmap.LoadFromFile(Fichier);
-
-    // Redimensionner pour créer une miniature (max 120x120 pixels)
-    Miniature.SetSize(120, 120);
-    Miniature.Canvas.BeginScene;
-    try
-      // Dessiner avec maintien du ratio
-      var SourceRect := RectF(0, 0, SourceBitmap.Width, SourceBitmap.Height);
-      var DestRect := RectF(0, 0, 120, 120);
-
-      // Centrer l'image dans la miniature
-      PreserverRatio(SourceBitmap.Width, SourceBitmap.Height, DestRect);
-
-      Miniature.Canvas.DrawBitmap(SourceBitmap, SourceRect, DestRect, 1.0);
-    finally
-      Miniature.Canvas.EndScene;
-    end;
-  finally
-    SourceBitmap.Free;
-  end;
-end;
-
-procedure TForm1.PreserverRatio(SourceWidth, SourceHeight: Single; var DestRect: TRectF);
-var
-  Ratio, NewWidth, NewHeight: Single;
-begin
-  if (SourceWidth <= 0) or (SourceHeight <= 0) then
-    Exit;
-
-  Ratio := SourceWidth / SourceHeight;
-
-  if Ratio > 1 then
+  if VersionAndroid >= 28 then  // Android 9.0+
   begin
-    // Image plus large que haute
-    NewWidth := DestRect.Width;
-    NewHeight := NewWidth / Ratio;
-
-    // Centrer verticalement
-    DestRect.Top := (DestRect.Height - NewHeight) / 2;
-    DestRect.Bottom := DestRect.Top + NewHeight;
+    // Version récente : fonctionnalités complètes
+    ActiverNotificationsAvancees;
+  end
+  else if VersionAndroid >= 23 then  // Android 6.0+
+  begin
+    // Version moyenne : fonctionnalités standard
+    ActiverNotificationsStandard;
   end
   else
   begin
-    // Image plus haute que large
-    NewHeight := DestRect.Height;
-    NewWidth := NewHeight * Ratio;
-
-    // Centrer horizontalement
-    DestRect.Left := (DestRect.Width - NewWidth) / 2;
-    DestRect.Right := DestRect.Left + NewWidth;
+    // Ancienne version : fonctionnalités basiques
+    ActiverNotificationsBasiques;
   end;
 end;
+{$ENDIF}
 ```
 
-### Optimisation d'une liste de données
+### Optimiser pour différents écrans Android
 
 ```pascal
-procedure TForm1.OptimiserListeDonnees;
+{$IFDEF ANDROID}
+function TForm1.EstGrandEcran: Boolean;
+var
+  ScreenService: IFMXScreenService;
+  ScreenSize: TSize;
 begin
-  // Utiliser un ListView optimisé
-  ListView1.Align := TAlignLayout.Client;
-
-  // Configurer le ListView pour les performances
-  ListView1.ItemAppearance.ItemHeight := 60;
-  ListView1.ItemAppearance.ItemEditHeight := 60;
-  ListView1.SearchVisible := False; // Désactiver si non nécessaire
-
-  // Désactiver les fonctionnalités coûteuses non utilisées
-  ListView1.CanSwipeDelete := False; // Désactiver si non nécessaire
-  ListView1.PullToRefresh := False;  // Désactiver si non nécessaire
-
-  // Si le défilement est saccadé, optimiser les animations
-  ListView1.SeparatorLeftOffset := 0; // Simplifier le dessin des séparateurs
-  ListView1.ShowSelection := False;   // Désactiver la sélection visuelle si non nécessaire
-
-  // Configurer le chargement optimal
-  ListView1.BeginUpdate;
-  try
-    ChargementDonneesPagine(1); // Charger la première page
-  finally
-    ListView1.EndUpdate;
-  end;
-
-  // Configurer le chargement des pages suivantes lors du défilement
-  ListView1.OnScrollViewChange :=
-    procedure(Sender: TObject)
-    begin
-      if EstProcheDeLaFin(ListView1) and not FChargementEnCours then
-      begin
-        FChargementEnCours := True;
-        ChargementDonneesPagine(FPageActuelle + 1);
-      end;
-    end;
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXScreenService, ScreenService) then
+  begin
+    ScreenSize := ScreenService.GetScreenSize;
+    // Plus de 6 pouces en diagonale
+    Result := Sqrt(Sqr(ScreenSize.Width) + Sqr(ScreenSize.Height)) > 1000;
+  end
+  else
+    Result := False;
 end;
 
-function TForm1.EstProcheDeLaFin(ListView: TListView): Boolean;
-var
-  ContentBounds, ViewportBounds: TRectF;
-  Distance: Single;
+procedure TForm1.AdapterSelonEcran;
 begin
-  ContentBounds := ListView.ContentBounds;
-  ViewportBounds := ListView.ViewportBounds;
+  if EstGrandEcran then
+  begin
+    // Grand écran : interface enrichie
+    AfficherDeuxColonnes;
+    TailleTexte := 16;
+  end
+  else
+  begin
+    // Petit écran : interface simple
+    AfficherUneColonne;
+    TailleTexte := 14;
+  end;
+end;
+{$ENDIF}
+```
 
-  // Distance entre la position actuelle et la fin du contenu
-  Distance := ContentBounds.Bottom - ViewportBounds.Bottom;
+## 11. Bonnes pratiques
 
-  // Considérer "proche de la fin" si moins de 2 éléments visibles restants
-  Result := Distance < (ListView.ItemAppearance.ItemHeight * 2);
+### ✅ À FAIRE
+
+**1. Tester sur appareils réels**
+```pascal
+// Ne pas se fier uniquement à l'émulateur
+// Tester sur :
+// - Smartphone entrée de gamme
+// - Smartphone milieu de gamme
+// - Tablette
+```
+
+**2. Profiler régulièrement**
+```pascal
+{$IFDEF DEBUG}
+  // Mesurer performances à chaque sprint
+  MesurerTempsChargement;
+  MesurerUtilisationMemoire;
+  MesurerFramerate;
+{$ENDIF}
+```
+
+**3. Charger progressivement**
+```pascal
+// Afficher l'interface rapidement
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Afficher l'essentiel immédiatement
+  AfficherInterfaceMinimale;
+
+  // Charger le reste en arrière-plan
+  TTask.Run(procedure
+  begin
+    ChargerDonneesSecondaires;
+    TThread.Synchronize(nil, procedure
+    begin
+      AfficherInterfaceComplete;
+    end);
+  end);
 end;
 ```
 
-## Meilleures pratiques pour l'optimisation
+**4. Gérer les états de l'application**
+```pascal
+// Économiser la batterie en arrière-plan
+procedure TForm1.ApplicationEnteredBackground;
+begin
+  // Suspendre les timers
+  Timer1.Enabled := False;
 
-1. **Mesurer avant d'optimiser** : Identifiez les vrais problèmes de performance
-2. **Optimiser par ordre d'importance** : Concentrez-vous sur les opérations les plus coûteuses
-3. **Tester sur des appareils réels** : Les émulateurs peuvent donner des résultats trompeurs
-4. **Tester sur des appareils bas de gamme** : Si ça fonctionne bien sur un appareil bas de gamme, ça fonctionnera partout
-5. **Optimiser progressivement** : Une amélioration à la fois pour identifier les gains
-6. **Équilibrer performance et fonctionnalités** : Parfois, il vaut mieux simplifier que d'optimiser à l'extrême
+  // Arrêter les animations
+  ArreterAnimations;
 
-## Liste de vérification d'optimisation mobile
+  // Fermer les connexions réseau
+  FermerConnexions;
+end;
+```
 
-Utilisez cette liste pour vérifier si votre application est optimisée pour mobile :
+**5. Utiliser les composants optimisés**
+```pascal
+// Préférer TListView à TListBox (virtualisation)
+// Préférer TImageList pour multiples images
+// Utiliser TBitmapListAnimation pour animations d'images
+```
 
-- [ ] Les animations sont fluides (60 FPS)
-- [ ] L'application démarre en moins de 3 secondes
-- [ ] Les opérations longues s'exécutent en arrière-plan
-- [ ] Les images sont mises à l'échelle appropriée
-- [ ] Les effets visuels complexes sont limités
-- [ ] Les listes longues utilisent un chargement à la demande
-- [ ] Les ressources sont libérées lorsqu'elles ne sont plus nécessaires
-- [ ] Les opérations réseau sont optimisées (cache, compression)
-- [ ] L'application s'adapte aux appareils de faible puissance
-- [ ] La consommation de batterie est raisonnable
+**6. Limiter les redessins**
+```pascal
+// Utiliser BeginUpdate/EndUpdate
+ListBox1.BeginUpdate;
+try
+  for i := 1 to 1000 do
+    ListBox1.Items.Add('Item ' + i.ToString);
+finally
+  ListBox1.EndUpdate;  // Un seul redessinage
+end;
+```
+
+### ❌ À ÉVITER
+
+**1. Charger toutes les données au démarrage**
+```pascal
+// ❌ MAUVAIS
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  ChargerToutesLesImages;  // Lourd
+  ChargerToutesBDD;         // Lent
+  InitialiserTout;          // Long
+  // L'utilisateur attend 10 secondes...
+end;
+```
+
+**2. Animations et effets excessifs**
+```pascal
+// ❌ MAUVAIS : Trop d'effets
+for i := 0 to 50 do
+begin
+  var Shadow := TShadowEffect.Create(Buttons[i]);
+  var Glow := TGlowEffect.Create(Buttons[i]);
+  var Blur := TBlurEffect.Create(Buttons[i]);
+  // = Framerate catastrophique
+end;
+```
+
+**3. Synchronisation constante**
+```pascal
+// ❌ MAUVAIS
+Timer1.Interval := 100;  // 10 fois par seconde
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  // Requête réseau toutes les 100ms = batterie vide rapidement
+  SynchroniserServeur;
+end;
+```
+
+**4. Ignorer la mémoire**
+```pascal
+// ❌ MAUVAIS : Fuites mémoire
+procedure TForm1.CreerObjets;
+begin
+  for i := 1 to 1000 do
+  begin
+    var Obj := TMonObjet.Create;  // Jamais libéré !
+    Obj.Traiter;
+  end;
+  // = Crash après quelques minutes
+end;
+```
+
+**5. Blocage du thread principal**
+```pascal
+// ❌ MAUVAIS
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  Sleep(5000);  // Interface gelée 5 secondes
+  // L'utilisateur pense que l'app a crashé
+end;
+```
+
+## 12. Checklist d'optimisation
+
+Avant de déployer votre application mobile :
+
+**Performance** :
+- [ ] FPS > 30 sur appareil entrée de gamme
+- [ ] Temps de démarrage < 3 secondes
+- [ ] Scroll fluide dans les listes
+- [ ] Pas de freeze/blocage
+
+**Mémoire** :
+- [ ] Utilisation < 100 MB sur appareil moyen
+- [ ] Pas de fuite mémoire (vérifier avec profiler)
+- [ ] Libération ressources en arrière-plan
+- [ ] Images redimensionnées pour mobile
+
+**Batterie** :
+- [ ] Pas de synchronisation constante
+- [ ] GPS utilisé uniquement si nécessaire
+- [ ] Animations limitées et optimisées
+- [ ] Activités suspendues en arrière-plan
+
+**Réseau** :
+- [ ] Requêtes regroupées
+- [ ] Cache des données
+- [ ] Timeout configuré
+- [ ] Gestion des erreurs réseau
+
+**Expérience utilisateur** :
+- [ ] Feedback visuel immédiat
+- [ ] Indicateurs de chargement
+- [ ] Messages d'erreur clairs
+- [ ] Pas de crash
 
 ## Conclusion
 
-L'optimisation des performances sur mobile est essentielle pour offrir une expérience utilisateur de qualité. En suivant les techniques présentées dans cette section, vous pouvez considérablement améliorer la réactivité et la fluidité de vos applications FireMonkey sur les appareils mobiles.
+L'optimisation mobile est un aspect crucial du développement avec FireMonkey. Les points clés à retenir :
 
-Rappelez-vous que l'optimisation est un processus continu : mesurez, améliorez, testez, puis recommencez. En prenant l'habitude d'appliquer ces bonnes pratiques dès le début de votre développement, vous créerez des applications mobiles performantes et agréables à utiliser, même sur des appareils aux ressources limitées.
+📱 **Contraintes** : Batterie, mémoire et processeur limités
 
-Dans la section suivante, nous explorerons comment ajouter des animations et effets visuels à vos applications FireMonkey tout en maintenant de bonnes performances.
+📱 **Interface** : Simplifier et limiter les effets visuels
+
+📱 **Mémoire** : Gérer activement et libérer agressivement
+
+📱 **Images** : Redimensionner et compresser pour mobile
+
+📱 **Animations** : Limiter et utiliser les APIs optimisées
+
+📱 **Réseau** : Regrouper les requêtes et cacher les données
+
+📱 **Asynchrone** : Déporter les traitements lourds
+
+📱 **Profiling** : Mesurer et optimiser régulièrement
+
+📱 **Tests** : Tester sur appareils réels de différentes gammes
+
+Une application bien optimisée offre une expérience fluide, ne vide pas la batterie, et sera mieux notée par les utilisateurs. Investir du temps dans l'optimisation mobile est essentiel pour le succès de votre application.
 
 ⏭️ [Animations et effets visuels](/05-developpement-multi-plateforme-avec-firemonkey/09-animations-et-effets-visuels.md)

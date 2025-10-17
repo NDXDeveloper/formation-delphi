@@ -1,577 +1,1064 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 5.10 FMXLinux : développement pour Linux
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Le support Linux pour FireMonkey, souvent appelé FMXLinux, est une fonctionnalité introduite dans Delphi 11 Alexandria qui permet aux développeurs d'étendre leurs applications FireMonkey au monde Linux. Cette section vous guidera à travers les bases du développement d'applications FireMonkey pour Linux, depuis la configuration jusqu'au déploiement.
+Linux représente un écosystème important dans le monde du développement logiciel, particulièrement pour les serveurs, les environnements scientifiques, et les postes de travail de développeurs. Avec FMXLinux, Embarcadero a étendu FireMonkey pour permettre le développement d'applications graphiques Linux natives. Dans cette section, nous allons découvrir comment créer des applications Delphi qui fonctionnent sur Linux, complétant ainsi la couverture multi-plateforme de FireMonkey.
 
-> **Note :** FMXLinux nécessite Delphi 11 Alexandria ou supérieur.
+## 1. Qu'est-ce que FMXLinux ?
 
-## Introduction à FMXLinux
+### Définition
 
-FMXLinux permet de porter vos applications FireMonkey existantes vers Linux avec un minimum de modifications. Grâce à cette technologie, vous pouvez maintenant cibler les principales plateformes desktop avec une base de code commune :
-- Windows
-- macOS
-- Linux
+**FMXLinux** est l'extension de FireMonkey qui permet de compiler et exécuter des applications FireMonkey sur les systèmes Linux 64 bits. C'est le même framework FireMonkey que vous utilisez pour Windows, macOS, iOS et Android, mais ciblant maintenant Linux.
 
-FMXLinux repose sur GTK3 (GIMP Toolkit version 3), une bibliothèque graphique multiplateforme populaire sous Linux, pour afficher l'interface utilisateur de vos applications.
+### Un peu d'histoire
 
-## Prérequis pour le développement Linux
+**2017** : Première version de FMXLinux avec Delphi 10.2 Tokyo
+**Aujourd'hui** : Support mature et stable dans Delphi
 
-Avant de commencer le développement pour Linux, assurez-vous de disposer des éléments suivants :
+FMXLinux comble un vide important : avant son existence, il n'y avait pas de solution RAD (Rapid Application Development) simple pour créer des applications graphiques Linux avec Delphi.
 
-1. **Delphi 11 Alexandria ou supérieur** : Version minimale requise pour le support FMXLinux
+### Que peut-on faire avec FMXLinux ?
 
-2. **Système Linux pour tester** : Bien que vous puissiez développer sous Windows, vous aurez besoin d'un système Linux pour tester vos applications. Options possibles :
-   - Machine Linux physique
-   - Machine virtuelle (comme VirtualBox ou VMware)
-   - Sous-système Windows pour Linux (WSL2) avec environnement graphique
+**Applications desktop Linux** :
+- Outils de gestion et d'administration
+- Applications métier
+- Outils de développement
+- Dashboards et monitoring
+- Applications scientifiques
+- Clients d'API et services
 
-3. **Dépendances Linux requises** : Sur votre système Linux de test, installez les dépendances nécessaires :
+**Avantages** :
+- ✅ Même code que Windows/macOS/mobile
+- ✅ Interface graphique native
+- ✅ Performance native (compilé, pas interprété)
+- ✅ Accès aux API Linux
+- ✅ Pas de dépendances Java ou .NET
 
+## 2. Distributions Linux supportées
+
+### Distributions principales
+
+FMXLinux fonctionne sur les principales distributions Linux 64 bits :
+
+**Famille Debian** :
+- Ubuntu 18.04 LTS, 20.04 LTS, 22.04 LTS
+- Debian 10, 11, 12
+- Linux Mint
+- Elementary OS
+
+**Famille Red Hat** :
+- Fedora 36, 37, 38
+- Red Hat Enterprise Linux (RHEL) 8, 9
+- CentOS Stream
+- Rocky Linux
+
+**Autres** :
+- openSUSE Leap, Tumbleweed
+- Arch Linux
+- Manjaro
+
+### Environnements de bureau
+
+FMXLinux fonctionne avec tous les environnements de bureau populaires :
+- **GNOME** (Ubuntu, Fedora par défaut)
+- **KDE Plasma** (Kubuntu, openSUSE)
+- **XFCE** (Xubuntu, léger)
+- **Cinnamon** (Linux Mint)
+- **MATE** (léger et traditionnel)
+
+**Important** : Votre application fonctionnera de la même manière quel que soit l'environnement de bureau.
+
+## 3. Configuration de l'environnement
+
+### Prérequis
+
+**Sur votre PC Windows (développement)** :
+- Delphi 10.2 Tokyo ou supérieur (Professional, Enterprise ou Architect)
+- Connexion réseau vers une machine Linux
+
+**Sur la machine Linux (cible)** :
+- Distribution Linux 64 bits
+- GTK 3 installé (généralement préinstallé)
+- PAServer Linux (fourni avec Delphi)
+- Connexion réseau vers votre PC Windows
+
+### Architecture de développement
+
+```
+┌─────────────────────┐         Réseau           ┌──────────────────────┐
+│   PC Windows        │ ◄──────────────────────► │  Machine Linux       │
+│                     │                          │                      │
+│  - Delphi IDE       │   Compilation à distance │  - PAServer          │
+│  - Code source      │   Déploiement            │  - Application       │
+│  - Débogage         │   Exécution              │  - Bibliothèques     │
+└─────────────────────┘                          └──────────────────────┘
+```
+
+Vous développez sur Windows, mais la compilation et l'exécution se font sur Linux via PAServer.
+
+### Installation de PAServer sur Linux
+
+**Étape 1 : Copier PAServer**
+
+PAServer pour Linux se trouve dans votre installation Delphi :
+```
+C:\Program Files (x86)\Embarcadero\Studio\XX.0\PAServer\LinuxPAServer23.0.tar.gz
+```
+
+Copiez ce fichier sur votre machine Linux (via SFTP, clé USB, etc.)
+
+**Étape 2 : Extraire et installer**
+
+Sur Linux, dans un terminal :
 ```bash
-# Pour Ubuntu/Debian
+# Créer un répertoire pour PAServer
+mkdir ~/PAServer
+cd ~/PAServer
+
+# Extraire l'archive
+tar -xzf LinuxPAServer23.0.tar.gz
+
+# Rendre le script exécutable
+chmod +x paserver
+```
+
+**Étape 3 : Installer les dépendances**
+
+Ubuntu/Debian :
+```bash
 sudo apt-get update
 sudo apt-get install libgtk-3-0 libgtk-3-dev
+sudo apt-get install joe wget p7zip-full curl openssh-server
+sudo apt-get install build-essential
+sudo apt-get install zlib1g-dev libcurl4-gnutls-dev
+```
 
-# Pour Fedora/Red Hat
+Fedora/Red Hat :
+```bash
 sudo dnf install gtk3 gtk3-devel
+sudo dnf install joe wget p7zip curl openssh-server
+sudo dnf install gcc gcc-c++ make
+sudo dnf install zlib-devel libcurl-devel
 ```
 
-## Configuration d'un projet FMXLinux
-
-### Créer un nouveau projet Linux
-
-Pour créer un nouveau projet compatible Linux :
-
-1. Lancez Delphi et sélectionnez **Fichier > Nouveau > Application multi-périphériques**
-2. Vous obtiendrez un formulaire FireMonkey vide
-3. Allez dans **Projet > Options du Projet > Plateformes cibles**
-4. Activez la plateforme **Linux 64 bits**
-
-![Options de plateforme](https://placehold.co/400x300)
-
-### Configurer un projet existant pour Linux
-
-Pour ajouter le support Linux à un projet FireMonkey existant :
-
-1. Ouvrez votre projet FireMonkey
-2. Allez dans **Projet > Options du Projet > Plateformes cibles**
-3. Activez la plateforme **Linux 64 bits**
-4. Vérifiez votre code pour les problèmes de compatibilité (voir plus bas)
-
-## Spécificités du développement pour Linux
-
-### Détection conditionnelle de la plateforme
-
-Pour adapter votre code aux spécificités de Linux, utilisez les directives de compilation :
-
-```pascal
-{$IFDEF LINUX}
-  // Code spécifique à Linux
-{$ENDIF}
-
-{$IF Defined(MSWINDOWS)}
-  // Code pour Windows
-{$ELSEIF Defined(MACOS)}
-  // Code pour macOS
-{$ELSEIF Defined(LINUX)}
-  // Code pour Linux
-{$ENDIF}
-```
-
-### Accès aux fonctionnalités Linux spécifiques
-
-Pour accéder aux fonctionnalités spécifiques de Linux, vous pouvez utiliser l'unité `Posix.Unistd` :
-
-```pascal
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  {$IFDEF LINUX}
-  Posix.Unistd, Posix.Stdlib,
-  {$ENDIF}
-  // Autres unités...
-  ;
-
-procedure TForm1.ExecuterCommandeLinux;
-{$IFDEF LINUX}
-var
-  ResultCode: Integer;
-begin
-  // Exécuter une commande shell Linux
-  ResultCode := System(_PAnsiChar('xdg-open https://www.embarcadero.com'));
-  if ResultCode <> 0 then
-    ShowMessage('Erreur lors de l''exécution de la commande');
-end;
-{$ELSE}
-begin
-  ShowMessage('Cette fonctionnalité est disponible uniquement sous Linux');
-end;
-{$ENDIF}
-```
-
-### Chemins de fichiers
-
-Les chemins de fichiers sous Linux utilisent des barres obliques (`/`) au lieu des barres obliques inversées (`\`) utilisées sous Windows. Utilisez les fonctions de l'unité `System.IOUtils` pour gérer les chemins de manière multiplateforme :
-
-```pascal
-uses
-  System.IOUtils;
-
-procedure TForm1.GestionCheminsFichiers;
-var
-  CheminDocument: string;
-begin
-  // Obtenir un chemin compatible avec la plateforme actuelle
-  CheminDocument := TPath.Combine(TPath.GetDocumentsPath, 'monfichier.txt');
-
-  // Afficher le chemin
-  Memo1.Lines.Add('Chemin du document : ' + CheminDocument);
-
-  // Vérifier si le chemin existe
-  if TFile.Exists(CheminDocument) then
-    Memo1.Lines.Add('Le fichier existe');
-end;
-```
-
-## Interface utilisateur sous Linux
-
-### Styles et thèmes GTK
-
-Sous Linux, FireMonkey utilise GTK3 comme backend d'interface utilisateur. Par défaut, votre application adoptera le thème GTK du système, ce qui lui donnera un aspect natif.
-
-Vous pouvez également appliquer un style FireMonkey spécifique :
-
-```pascal
-procedure TForm1.AppliquerStyleLinux;
-begin
-  {$IFDEF LINUX}
-  // Utiliser un style spécifique sous Linux
-  TStyleManager.TrySetStyleFromResource('Windows10');
-  {$ENDIF}
-end;
-```
-
-### Adaptations spécifiques pour Linux
-
-Certains éléments d'interface peuvent nécessiter des ajustements pour offrir une meilleure expérience sous Linux :
-
-```pascal
-procedure TForm1.AdapterInterfaceLinux;
-begin
-  {$IFDEF LINUX}
-  // Augmenter légèrement la taille des contrôles pour GTK
-  Button1.Height := Button1.Height + 4;
-  Edit1.Height := Edit1.Height + 4;
-
-  // Ajuster les marges pour un meilleur rendu sous GTK
-  Panel1.Margins.Top := 8;
-  Panel1.Margins.Bottom := 8;
-  {$ENDIF}
-end;
-```
-
-### Menus et raccourcis clavier
-
-Les conventions de menu diffèrent légèrement sous Linux. Pour une meilleure expérience utilisateur, adaptez vos menus selon la plateforme :
-
-```pascal
-procedure TForm1.ConfigurerMenus;
-begin
-  // Menu commun à toutes les plateformes
-  MainMenu1.Items[0].Text := 'Fichier';
-
-  {$IFDEF LINUX}
-  // Sous Linux, "Préférences" est plus courant que "Options"
-  MenuItemOptions.Text := 'Préférences';
-
-  // Raccourcis clavier Linux style (utilisant Ctrl)
-  MenuItemCouper.ShortCut := TextToShortCut('Ctrl+X');
-  MenuItemCopier.ShortCut := TextToShortCut('Ctrl+C');
-  MenuItemColler.ShortCut := TextToShortCut('Ctrl+V');
-  {$ENDIF}
-end;
-```
-
-## Gestion des différences entre les plateformes
-
-### Boîtes de dialogue de fichiers
-
-Les boîtes de dialogue de fichiers sont gérées différemment selon la plateforme. FireMonkey s'occupe de ces différences, mais vous devrez peut-être adapter certains paramètres :
-
-```pascal
-procedure TForm1.OuvrirFichier;
-var
-  Dialog: TOpenDialog;
-begin
-  Dialog := TOpenDialog.Create(nil);
-  try
-    Dialog.Title := 'Sélectionner un fichier';
-    Dialog.Filter := 'Tous les fichiers|*.*|Documents texte|*.txt';
-
-    {$IFDEF LINUX}
-    // Sous Linux, définir le répertoire initial vers le dossier personnel
-    Dialog.InitialDir := GetEnvironmentVariable('HOME');
-    {$ELSE}
-    Dialog.InitialDir := TPath.GetDocumentsPath;
-    {$ENDIF}
-
-    if Dialog.Execute then
-      TraiterFichier(Dialog.FileName);
-  finally
-    Dialog.Free;
-  end;
-end;
-```
-
-### Fonctionnalités du presse-papiers
-
-Le presse-papiers fonctionne généralement de manière cohérente entre les plateformes, mais certaines fonctionnalités avancées peuvent nécessiter des adaptations :
-
-```pascal
-procedure TForm1.CopierTexteDansPressepaiers;
-begin
-  Clipboard.AsText := Edit1.Text;
-
-  {$IFDEF LINUX}
-  // Sur certaines distributions Linux, il peut être nécessaire
-  // d'attendre un court instant pour que le presse-papiers soit mis à jour
-  Sleep(50);
-  {$ENDIF}
-end;
-```
-
-## Déploiement sous Linux
-
-### Compilation pour Linux
-
-Pour compiler votre application pour Linux :
-
-1. Sélectionnez **Linux 64 bits** comme plateforme cible dans la barre d'outils
-2. Compilez votre projet (**Maj+F9** ou **Projet > Compiler**)
-
-Le fichier exécutable résultant sera créé dans le dossier de sortie Linux de votre projet.
-
-### Fichiers requis pour l'exécution
-
-Pour que votre application s'exécute sous Linux, vous devrez déployer les fichiers suivants :
-
-1. Votre fichier exécutable principal
-2. Les bibliothèques RTL et FireMonkey (généralement situées dans le dossier d'installation de Delphi sous `bin/linuxx64/`)
-
-Voici un exemple de structure de déploiement :
-
-```
-MonApplication/
-  ├── MonApplication          # Votre exécutable
-  ├── libfmx.so               # Bibliothèque FireMonkey
-  ├── librtl.so               # Bibliothèque RTL
-  └── [autres bibliothèques .so requises]
-```
-
-### Script de déploiement
-
-Voici un exemple de script shell que vous pouvez utiliser pour déployer votre application Linux :
+**Étape 4 : Lancer PAServer**
 
 ```bash
-#!/bin/bash
-
-# Chemin vers votre application compilée
-APP_NAME="MonApplication"
-DELPHI_PATH="/chemin/vers/delphi"
-LIBS_PATH="$DELPHI_PATH/bin/linuxx64"
-OUTPUT_DIR="./deploy"
-
-# Créer le répertoire de déploiement
-mkdir -p $OUTPUT_DIR
-
-# Copier l'exécutable
-cp bin/linux64/Release/$APP_NAME $OUTPUT_DIR/
-
-# Copier les bibliothèques requises
-cp $LIBS_PATH/librtl.so $OUTPUT_DIR/
-cp $LIBS_PATH/libfmx.so $OUTPUT_DIR/
-
-# Ajouter d'autres bibliothèques selon les besoins
-# cp $LIBS_PATH/libfmxlinux.so $OUTPUT_DIR/
-# cp $LIBS_PATH/libRESTComponents.so $OUTPUT_DIR/ # Si vous utilisez REST
-
-echo "Déploiement terminé dans $OUTPUT_DIR"
+cd ~/PAServer
+./paserver
 ```
 
-### Création d'un paquet Debian (.deb)
-
-Pour une distribution plus professionnelle, vous pouvez créer un paquet Debian :
-
-1. Créez un répertoire de structure Debian :
-
-```bash
-mkdir -p myapp/DEBIAN
-mkdir -p myapp/usr/bin
-mkdir -p myapp/usr/share/applications
-mkdir -p myapp/usr/share/pixmaps
-```
-
-2. Créez un fichier de contrôle `myapp/DEBIAN/control` :
+Première exécution : PAServer vous demandera de créer un mot de passe.
 
 ```
-Package: monapplication
-Version: 1.0
-Section: utils
-Priority: optional
-Architecture: amd64
-Depends: libgtk-3-0 (>= 3.20.0)
-Maintainer: Votre Nom <votre.email@exemple.com>
-Description: Mon Application Delphi
- Une application développée avec Delphi et FireMonkey.
- Cette application offre les fonctionnalités suivantes...
+PAServer version 23.0
+Password:
+Confirm password:
+
+PAServer started on port 64211
 ```
 
-3. Copiez vos fichiers dans la structure :
+**Astuce** : Noter le port (64211 par défaut) et le mot de passe.
 
-```bash
-cp MonApplication myapp/usr/bin/
-cp libfmx.so librtl.so myapp/usr/bin/
-cp icon.png myapp/usr/share/pixmaps/monapplication.png
+### Configuration dans Delphi
+
+**Étape 1 : Créer un profil de connexion**
+
+1. Dans Delphi : **Tools → Options**
+2. Aller dans **Connection Profile Manager**
+3. Cliquer **Add**
+4. Configurer :
+   - **Profile name** : Linux64 (ou un nom de votre choix)
+   - **Platform** : Linux64
+   - **Host name** : Adresse IP de votre machine Linux
+   - **Port number** : 64211 (par défaut)
+   - **Password** : Le mot de passe PAServer
+
+**Étape 2 : Tester la connexion**
+
+1. Cliquer **Test Connection**
+2. Si succès : "Connection established successfully"
+3. Cliquer **OK** pour sauvegarder
+
+### Ajouter la plateforme Linux64 au projet
+
+**Méthode 1 : Nouveau projet**
+
+1. **File → New → Multi-Device Application - Delphi**
+2. Choisir un template (Blank Application)
+3. Dans **Project Manager**, clic droit sur **Target Platforms**
+4. **Add Platform → Linux 64-bit**
+5. Double-cliquer sur **Linux64** pour l'activer
+
+**Méthode 2 : Projet existant**
+
+Si vous avez déjà un projet FireMonkey :
+1. **Project → Target Platforms**
+2. **Add Platform → Linux 64-bit**
+3. Sélectionner le profil de connexion créé
+4. OK
+
+## 4. Premier projet FMXLinux
+
+### Créer une application simple
+
+**Étape 1 : Nouveau projet**
+```
+File → New → Multi-Device Application
+Template : Blank Application
 ```
 
-4. Créez un fichier `.desktop` pour l'intégration au menu :
+**Étape 2 : Ajouter des composants**
 
-```
-[Desktop Entry]
-Name=Mon Application
-Comment=Description de mon application
-Exec=/usr/bin/MonApplication
-Icon=monapplication
-Terminal=false
-Type=Application
-Categories=Utility;
-```
+Sur le formulaire :
+- 1 TLabel (renommer en LabelTitre)
+- 1 TEdit (renommer en EditNom)
+- 1 TButton (renommer en ButtonBonjour)
+- 1 TMemo (renommer en MemoResultat)
 
-5. Créez le paquet Debian :
-
-```bash
-dpkg-deb --build myapp
-```
-
-Le résultat sera un fichier `myapp.deb` que les utilisateurs pourront installer avec la commande `sudo dpkg -i myapp.deb`.
-
-## Dépannage des problèmes courants sous Linux
-
-### Problèmes de bibliothèques manquantes
-
-Si votre application ne démarre pas en raison de bibliothèques manquantes, utilisez la commande `ldd` pour identifier les dépendances :
-
-```bash
-ldd ./MonApplication
-```
-
-Installez ensuite les bibliothèques manquantes :
-
-```bash
-sudo apt-get install libgtk-3-0 libgtk-3-dev
-```
-
-### Problèmes de permissions
-
-Si vous rencontrez des problèmes de permissions :
-
-```bash
-# Rendre votre application exécutable
-chmod +x ./MonApplication
-
-# Rendre les bibliothèques accessibles
-chmod +x *.so
-```
-
-### Problèmes d'affichage
-
-Si l'interface utilisateur s'affiche incorrectement :
-
-1. Vérifiez que GTK3 est correctement installé
-2. Testez avec différents thèmes GTK
-3. Vérifiez les variables d'environnement d'affichage :
-
-```bash
-export GTK_DEBUG=interactive
-./MonApplication
-```
-
-## Exemple complet : Application multi-plateforme
-
-Voici un exemple d'application simple qui s'adapte aux différentes plateformes, y compris Linux :
+**Étape 3 : Code**
 
 ```pascal
-unit MainUnit;
+unit Unit1;
 
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  FMX.Controls.Presentation, FMX.Edit, FMX.Layouts, FMX.ListBox, FMX.Memo,
-  FMX.Memo.Types, FMX.ScrollBox,
-  {$IFDEF LINUX}
-  Posix.Unistd, Posix.Stdlib,
-  {$ENDIF}
-  System.IOUtils;
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.StdCtrls, FMX.Edit, FMX.ScrollBox, FMX.Memo, FMX.Controls.Presentation;
 
 type
-  TMainForm = class(TForm)
-    ToolBar1: TToolBar;
-    Label1: TLabel;
-    Button1: TButton;
-    Edit1: TEdit;
-    Memo1: TMemo;
-    ListBox1: TListBox;
-    StatusBar1: TStatusBar;
-    StatusLabel: TLabel;
+  TForm1 = class(TForm)
+    LabelTitre: TLabel;
+    EditNom: TEdit;
+    ButtonBonjour: TButton;
+    MemoResultat: TMemo;
+    procedure ButtonBonjourClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
   private
-    procedure DetecterSystemeExploitation;
-    procedure AjusterInterfaceSelonPlateforme;
-    function ObtenirInfoSysteme: string;
+    { Déclarations privées }
   public
-    { Public declarations }
+    { Déclarations publiques }
   end;
 
 var
-  MainForm: TMainForm;
+  Form1: TForm1;
 
 implementation
 
 {$R *.fmx}
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  DetecterSystemeExploitation;
-  AjusterInterfaceSelonPlateforme;
-
-  // Remplir la liste avec des éléments de test
-  ListBox1.Items.Add('Élément 1');
-  ListBox1.Items.Add('Élément 2');
-  ListBox1.Items.Add('Élément 3');
-
-  // Afficher le chemin du répertoire utilisateur
-  Memo1.Lines.Add('Répertoire documents : ' + TPath.GetDocumentsPath);
-  Memo1.Lines.Add('Répertoire temporaire : ' + TPath.GetTempPath);
-end;
-
-procedure TMainForm.DetecterSystemeExploitation;
-begin
-  {$IF Defined(MSWINDOWS)}
-    Caption := 'Application Windows';
-    StatusLabel.Text := 'Exécution sous Windows';
-  {$ELSEIF Defined(MACOS)}
-    Caption := 'Application macOS';
-    StatusLabel.Text := 'Exécution sous macOS';
-  {$ELSEIF Defined(LINUX)}
-    Caption := 'Application Linux';
-    StatusLabel.Text := 'Exécution sous Linux';
-  {$ELSE}
-    Caption := 'Application multi-plateforme';
-    StatusLabel.Text := 'Plateforme inconnue';
-  {$ENDIF}
-end;
-
-procedure TMainForm.AjusterInterfaceSelonPlateforme;
-begin
-  {$IFDEF MSWINDOWS}
-    // Ajustements pour Windows
-    Button1.TextSettings.Font.Size := 10;
-  {$ENDIF}
-
-  {$IFDEF MACOS}
-    // Ajustements pour macOS
-    Button1.TextSettings.Font.Size := 12;
-    ToolBar1.Height := 40;
-  {$ENDIF}
+  LabelTitre.Text := 'Application Linux avec FMXLinux';
+  EditNom.TextPrompt := 'Entrez votre nom';
+  ButtonBonjour.Text := 'Dire Bonjour';
 
   {$IFDEF LINUX}
-    // Ajustements pour Linux
-    Button1.TextSettings.Font.Size := 11;
-    Button1.Height := Button1.Height + 4;
-    Edit1.Height := Edit1.Height + 4;
-    Label1.TextSettings.Font.Size := 12;
-  {$ENDIF}
-end;
-
-procedure TMainForm.Button1Click(Sender: TObject);
-begin
-  Memo1.Lines.Add('Texte saisi : ' + Edit1.Text);
-  Memo1.Lines.Add('Informations système : ');
-  Memo1.Lines.Add(ObtenirInfoSysteme);
-  Edit1.Text := '';
-end;
-
-function TMainForm.ObtenirInfoSysteme: string;
-var
-  ResultText: string;
-begin
-  ResultText := 'OS : ';
-
-  {$IF Defined(MSWINDOWS)}
-    ResultText := ResultText + 'Windows ' + TOSVersion.Major.ToString + '.' +
-                  TOSVersion.Minor.ToString;
-  {$ELSEIF Defined(MACOS)}
-    ResultText := ResultText + 'macOS ' + TOSVersion.Major.ToString + '.' +
-                  TOSVersion.Minor.ToString;
-  {$ELSEIF Defined(LINUX)}
-    // Sous Linux, on peut obtenir plus d'informations sur la distribution
-    {$IFDEF LINUX}
-    var FileName := '/etc/os-release';
-    if TFile.Exists(FileName) then
-    begin
-      var Content := TFile.ReadAllText(FileName);
-      var Lines := Content.Split([#10]);
-      for var Line in Lines do
-      begin
-        if Line.StartsWith('PRETTY_NAME=') then
-        begin
-          var Name := Line.Replace('PRETTY_NAME=', '').Replace('"', '');
-          ResultText := ResultText + Name;
-          Break;
-        end;
-      end;
-    end
-    else
-      ResultText := ResultText + 'Linux (distribution inconnue)';
-    {$ENDIF}
+  Caption := 'FMXLinux Demo - Linux';
   {$ELSE}
-    ResultText := ResultText + 'Inconnu';
+  Caption := 'FMXLinux Demo - ' + TOSVersion.ToString;
+  {$ENDIF}
+end;
+
+procedure TForm1.ButtonBonjourClick(Sender: TObject);
+var
+  Message: string;
+begin
+  if EditNom.Text.Trim.IsEmpty then
+  begin
+    ShowMessage('Veuillez entrer votre nom');
+    Exit;
+  end;
+
+  Message := Format('Bonjour %s !', [EditNom.Text]);
+
+  {$IFDEF LINUX}
+  Message := Message + #13#10 + 'Vous utilisez Linux !';
+  {$ELSE}
+  Message := Message + #13#10 + 'Vous utilisez : ' + TOSVersion.ToString;
   {$ENDIF}
 
-  // Ajouter des informations sur le système
-  ResultText := ResultText + #13#10 + 'Architecture : ' + TOSVersion.Architecture;
-  ResultText := ResultText + #13#10 + 'Version : ' + TOSVersion.ToString;
-
-  Result := ResultText;
+  MemoResultat.Lines.Add(TimeToStr(Now) + ' - ' + Message);
 end;
 
 end.
 ```
 
-## Recommandations pour le développement Linux
+**Étape 4 : Compiler et exécuter**
 
-1. **Testez régulièrement** : Ne développez pas toute votre application sous Windows pour ensuite découvrir des problèmes sous Linux. Testez fréquemment.
+1. Sélectionner la plateforme **Linux64**
+2. **Run → Run (F9)**
+3. Delphi compile, déploie sur Linux via PAServer
+4. L'application s'exécute sur Linux !
 
-2. **Utiliser des chemins relatifs** : Évitez les chemins codés en dur spécifiques à une plateforme.
+### Observer le déploiement
 
-3. **Respectez les conventions Linux** : Les utilisateurs Linux s'attendent à certaines conventions d'interface (menus, raccourcis clavier, etc.).
+Dans la fenêtre Messages de Delphi, vous verrez :
+```
+[PAClient] Connecting to 192.168.1.100:64211...
+[PAClient] Connected
+[Deploying] Project1 (Linux64)
+[Deploying] Transferring files...
+[Deploying] Complete
+[Running] /home/user/PAServer/scratch-dir/Project1
+```
 
-4. **Gestion des permissions** : Sous Linux, la gestion des permissions de fichiers est plus stricte. Assurez-vous que votre application demande les permissions appropriées.
+## 5. Spécificités Linux
 
-5. **Préférez les API multiplateformes** : Utilisez autant que possible les API FireMonkey multiplateformes plutôt que des APIs spécifiques à une plateforme.
+### Système de fichiers
 
-6. **Documentation sur le déploiement** : Fournissez des instructions claires pour l'installation sous Linux, y compris les dépendances requises.
+**Chemins Linux** :
+```pascal
+// Séparateur : / (pas \)
+var
+  CheminLinux: string;
+begin
+  {$IFDEF LINUX}
+  CheminLinux := '/home/user/documents/fichier.txt';
+  {$ELSE}
+  CheminLinux := 'C:\Users\user\documents\fichier.txt';
+  {$ENDIF}
+end;
+```
+
+**Utiliser TPath pour la portabilité** :
+```pascal
+uses
+  System.IOUtils;
+
+var
+  CheminPortable: string;
+begin
+  // S'adapte automatiquement au système
+  CheminPortable := TPath.Combine(
+    TPath.GetDocumentsPath,
+    'MonFichier.txt'
+  );
+
+  // Linux : /home/user/Documents/MonFichier.txt
+  // Windows : C:\Users\user\Documents\MonFichier.txt
+end;
+```
+
+### Chemins standards Linux
+
+```pascal
+{$IFDEF LINUX}
+uses
+  Posix.Stdlib;
+
+function ObtenirCheminHome: string;
+begin
+  Result := string(getenv('HOME'));
+  // Exemple : /home/username
+end;
+
+function ObtenirCheminConfig: string;
+begin
+  Result := TPath.Combine(ObtenirCheminHome, '.config', 'MonApp');
+  // Exemple : /home/username/.config/MonApp
+end;
+
+function ObtenirCheminDonnees: string;
+begin
+  Result := TPath.Combine(ObtenirCheminHome, '.local', 'share', 'MonApp');
+  // Exemple : /home/username/.local/share/MonApp
+end;
+{$ENDIF}
+```
+
+### Permissions fichiers
+
+Sur Linux, les permissions sont importantes :
+
+```pascal
+{$IFDEF LINUX}
+uses
+  Posix.SysStat;
+
+procedure RendreExecutable(const Fichier: string);
+var
+  StatBuf: _stat;
+begin
+  // Obtenir les permissions actuelles
+  if stat(PAnsiChar(AnsiString(Fichier)), StatBuf) = 0 then
+  begin
+    // Ajouter permission d'exécution
+    chmod(PAnsiChar(AnsiString(Fichier)),
+          StatBuf.st_mode or S_IXUSR or S_IXGRP or S_IXOTH);
+  end;
+end;
+{$ENDIF}
+```
+
+### Variables d'environnement
+
+```pascal
+{$IFDEF LINUX}
+uses
+  Posix.Stdlib;
+
+function ObtenirVariableEnv(const NomVar: string): string;
+var
+  P: PAnsiChar;
+begin
+  P := getenv(PAnsiChar(AnsiString(NomVar)));
+  if P <> nil then
+    Result := string(P)
+  else
+    Result := '';
+end;
+
+// Exemples
+procedure AfficherInfosSysteme;
+begin
+  ShowMessage('User : ' + ObtenirVariableEnv('USER'));
+  ShowMessage('Home : ' + ObtenirVariableEnv('HOME'));
+  ShowMessage('Shell : ' + ObtenirVariableEnv('SHELL'));
+  ShowMessage('Desktop : ' + ObtenirVariableEnv('XDG_CURRENT_DESKTOP'));
+end;
+{$ENDIF}
+```
+
+### Exécuter des commandes système
+
+```pascal
+{$IFDEF LINUX}
+uses
+  Posix.Stdlib, Posix.Unistd;
+
+function ExecuterCommande(const Commande: string): Integer;
+begin
+  Result := system(PAnsiChar(AnsiString(Commande)));
+end;
+
+// Exemples d'utilisation
+procedure ExemplesCommandes;
+begin
+  // Ouvrir un fichier avec l'application par défaut
+  ExecuterCommande('xdg-open /home/user/document.pdf');
+
+  // Ouvrir une URL dans le navigateur
+  ExecuterCommande('xdg-open https://www.example.com');
+
+  // Notification desktop
+  ExecuterCommande('notify-send "Titre" "Message de notification"');
+end;
+{$ENDIF}
+```
+
+### Détecter l'environnement de bureau
+
+```pascal
+{$IFDEF LINUX}
+function ObtenirEnvironnementBureau: string;
+begin
+  Result := ObtenirVariableEnv('XDG_CURRENT_DESKTOP');
+  // Retourne : GNOME, KDE, XFCE, etc.
+end;
+
+function EstGNOME: Boolean;
+begin
+  Result := ObtenirEnvironnementBureau.Contains('GNOME');
+end;
+
+function EstKDE: Boolean;
+begin
+  Result := ObtenirEnvironnementBureau.Contains('KDE');
+end;
+{$ENDIF}
+```
+
+## 6. Interface utilisateur sur Linux
+
+### Apparence native
+
+FireMonkey sur Linux utilise GTK3, ce qui donne une apparence cohérente avec le système :
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  {$IFDEF LINUX}
+  // L'apparence est automatiquement GTK3
+  // Les boutons, menus, dialogues ressemblent à des apps Linux natives
+  {$ENDIF}
+end;
+```
+
+### Dialogues système
+
+Les dialogues FireMonkey s'affichent comme des dialogues GTK natifs :
+
+```pascal
+procedure TForm1.AfficherDialogues;
+begin
+  // Dialogue message - apparence native GTK
+  ShowMessage('Message Linux natif');
+
+  // Dialogue confirmation
+  if MessageDlg('Voulez-vous continuer ?',
+                TMsgDlgType.mtConfirmation,
+                [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
+    ShowMessage('Vous avez cliqué Oui');
+
+  // Dialogue ouverture de fichier
+  var OpenDialog := TOpenDialog.Create(nil);
+  try
+    OpenDialog.Filter := 'Fichiers texte|*.txt|Tous les fichiers|*.*';
+    if OpenDialog.Execute then
+      ShowMessage('Fichier sélectionné : ' + OpenDialog.FileName);
+  finally
+    OpenDialog.Free;
+  end;
+end;
+```
+
+### Icônes et thème système
+
+```pascal
+procedure TForm1.AdapterAuTheme;
+begin
+  {$IFDEF LINUX}
+  // FireMonkey s'adapte au thème clair/sombre du système
+  // Pas de code spécial nécessaire
+
+  // Pour une icône d'application
+  if FileExists('/usr/share/icons/hicolor/48x48/apps/monapp.png') then
+    Application.Icon.LoadFromFile(
+      '/usr/share/icons/hicolor/48x48/apps/monapp.png');
+  {$ENDIF}
+end;
+```
+
+## 7. Déploiement d'applications Linux
+
+### Structure de déploiement
+
+Après compilation, votre application Linux contient :
+```
+MonApp/
+├── MonApp (exécutable)
+├── libcgsqlite3.so (si base de données)
+├── libmidas.so (si DataSnap)
+└── (autres dépendances si nécessaires)
+```
+
+### Méthode 1 : Binaire simple
+
+**Pour distribution simple** :
+
+1. Compiler en mode Release
+2. Récupérer le binaire depuis PAServer :
+   ```
+   /home/user/PAServer/scratch-dir/MonApp/Linux64/Release/MonApp
+   ```
+3. Distribuer avec un script d'installation
+
+**Script install.sh** :
+```bash
+#!/bin/bash
+# Installation de MonApp
+
+APP_NAME="MonApp"
+INSTALL_DIR="/opt/$APP_NAME"
+DESKTOP_FILE="/usr/share/applications/$APP_NAME.desktop"
+
+echo "Installation de $APP_NAME..."
+
+# Créer le répertoire d'installation
+sudo mkdir -p $INSTALL_DIR
+sudo cp $APP_NAME $INSTALL_DIR/
+sudo chmod +x $INSTALL_DIR/$APP_NAME
+
+# Créer le raccourci desktop
+sudo cat > $DESKTOP_FILE << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=$APP_NAME
+Comment=Mon Application Linux
+Exec=$INSTALL_DIR/$APP_NAME
+Icon=$INSTALL_DIR/icon.png
+Terminal=false
+Categories=Utility;
+EOF
+
+echo "Installation terminée !"
+echo "Lancez l'application depuis le menu Applications."
+```
+
+### Méthode 2 : Package .deb (Debian/Ubuntu)
+
+**Structure du package** :
+```
+monapp_1.0-1_amd64/
+├── DEBIAN/
+│   └── control
+├── opt/
+│   └── monapp/
+│       ├── MonApp
+│       └── icon.png
+└── usr/
+    └── share/
+        └── applications/
+            └── monapp.desktop
+```
+
+**Fichier control** :
+```
+Package: monapp
+Version: 1.0-1
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: libgtk-3-0
+Maintainer: Votre Nom <email@exemple.com>
+Description: Mon Application Linux
+ Description détaillée de votre application
+ sur plusieurs lignes si nécessaire.
+```
+
+**Créer le package** :
+```bash
+# Construire le package
+dpkg-deb --build monapp_1.0-1_amd64
+
+# Installer localement pour tester
+sudo dpkg -i monapp_1.0-1_amd64.deb
+```
+
+### Méthode 3 : AppImage (Portable)
+
+**AppImage** = fichier unique exécutable sur toutes les distributions
+
+**Avantages** :
+- Un seul fichier
+- Pas d'installation nécessaire
+- Fonctionne partout
+- Inclut toutes les dépendances
+
+**Création d'AppImage** :
+
+1. Télécharger **appimagetool**
+2. Créer la structure :
+```
+MonApp.AppDir/
+├── AppRun (script de lancement)
+├── MonApp (exécutable)
+├── monapp.desktop
+├── icon.png
+└── usr/
+    └── lib/ (bibliothèques)
+```
+
+3. Créer l'AppImage :
+```bash
+./appimagetool-x86_64.AppImage MonApp.AppDir
+```
+
+Résultat : `MonApp-x86_64.AppImage` (fichier unique distributable)
+
+### Méthode 4 : Flatpak
+
+**Flatpak** = système de packaging moderne pour Linux
+
+**Avantages** :
+- Sandboxing (sécurité)
+- Distribution via Flathub
+- Mises à jour automatiques
+- Isolation des dépendances
+
+**Fichier manifest (org.exemple.MonApp.yaml)** :
+```yaml
+app-id: org.exemple.MonApp
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
+command: MonApp
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+
+modules:
+  - name: MonApp
+    buildsystem: simple
+    build-commands:
+      - install -D MonApp /app/bin/MonApp
+      - install -D monapp.desktop /app/share/applications/org.exemple.MonApp.desktop
+      - install -D icon.png /app/share/icons/hicolor/256x256/apps/org.exemple.MonApp.png
+    sources:
+      - type: file
+        path: MonApp
+      - type: file
+        path: monapp.desktop
+      - type: file
+        path: icon.png
+```
+
+**Construire le Flatpak** :
+```bash
+flatpak-builder --force-clean build-dir org.exemple.MonApp.yaml
+flatpak-builder --repo=repo --force-clean build-dir org.exemple.MonApp.yaml
+```
+
+## 8. Intégration système Linux
+
+### Fichier .desktop
+
+Pour que votre application apparaisse dans le menu :
+
+**monapp.desktop** :
+```ini
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Mon Application
+Name[fr]=Mon Application
+Comment=Description courte
+Comment[fr]=Description courte en français
+Exec=/opt/monapp/MonApp
+Icon=/opt/monapp/icon.png
+Terminal=false
+Categories=Utility;Office;
+Keywords=gestion;outil;
+```
+
+**Installation** :
+```bash
+# Système (tous les utilisateurs)
+sudo cp monapp.desktop /usr/share/applications/
+
+# Utilisateur local
+cp monapp.desktop ~/.local/share/applications/
+```
+
+### Icône d'application
+
+**Formats recommandés** :
+- PNG : 16x16, 32x32, 48x48, 128x128, 256x256
+- SVG : vectoriel (idéal)
+
+**Installation des icônes** :
+```bash
+# Icônes système
+sudo cp icon-16.png /usr/share/icons/hicolor/16x16/apps/monapp.png
+sudo cp icon-32.png /usr/share/icons/hicolor/32x32/apps/monapp.png
+sudo cp icon-48.png /usr/share/icons/hicolor/48x48/apps/monapp.png
+sudo cp icon-256.png /usr/share/icons/hicolor/256x256/apps/monapp.png
+
+# Mettre à jour le cache d'icônes
+sudo gtk-update-icon-cache /usr/share/icons/hicolor/
+```
+
+### Notifications desktop
+
+```pascal
+{$IFDEF LINUX}
+procedure EnvoyerNotification(const Titre, Message: string);
+var
+  Commande: string;
+begin
+  // Utiliser notify-send pour les notifications
+  Commande := Format('notify-send "%s" "%s"', [Titre, Message]);
+  system(PAnsiChar(AnsiString(Commande)));
+end;
+
+// Notification avec icône
+procedure NotificationAvecIcone(const Titre, Message, Icone: string);
+var
+  Commande: string;
+begin
+  Commande := Format('notify-send -i "%s" "%s" "%s"', [Icone, Titre, Message]);
+  system(PAnsiChar(AnsiString(Commande)));
+end;
+
+// Exemples
+procedure TForm1.EnvoyerNotifications;
+begin
+  EnvoyerNotification('Information', 'Traitement terminé avec succès');
+  NotificationAvecIcone('Erreur', 'Une erreur est survenue', 'dialog-error');
+end;
+{$ENDIF}
+```
+
+## 9. Débogage sur Linux
+
+### Déboguer à distance
+
+Delphi permet de déboguer votre application Linux directement depuis l'IDE Windows :
+
+**Configurer le débogage** :
+1. Dans Delphi, placer des points d'arrêt dans le code
+2. **Run → Run (F9)**
+3. L'application démarre sur Linux
+4. Le débogueur se connecte via PAServer
+
+**Fonctionnalités disponibles** :
+- Points d'arrêt
+- Pas à pas (F7, F8)
+- Inspection des variables
+- Pile d'appels
+- Évaluation d'expressions
+
+### Logs et diagnostics
+
+```pascal
+{$IFDEF LINUX}
+procedure EcrireLog(const Message: string);
+var
+  Fichier: TextFile;
+  CheminLog: string;
+begin
+  CheminLog := TPath.Combine(
+    TPath.GetHomePath,
+    '.local', 'share', 'MonApp', 'app.log'
+  );
+
+  // Créer le répertoire si nécessaire
+  ForceDirectories(TPath.GetDirectoryName(CheminLog));
+
+  AssignFile(Fichier, CheminLog);
+  if FileExists(CheminLog) then
+    Append(Fichier)
+  else
+    Rewrite(Fichier);
+
+  try
+    WriteLn(Fichier, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) +
+                     ' - ' + Message);
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+{$ENDIF}
+```
+
+### Informations système
+
+```pascal
+{$IFDEF LINUX}
+uses
+  Posix.SysUtsname;
+
+function ObtenirInfosSysteme: string;
+var
+  UtsName: utsname;
+begin
+  if uname(UtsName) = 0 then
+  begin
+    Result := Format(
+      'Système : %s'#13#10 +
+      'Node : %s'#13#10 +
+      'Release : %s'#13#10 +
+      'Version : %s'#13#10 +
+      'Machine : %s',
+      [
+        string(UtsName.sysname),
+        string(UtsName.nodename),
+        string(UtsName.release),
+        string(UtsName.version),
+        string(UtsName.machine)
+      ]
+    );
+  end
+  else
+    Result := 'Impossible d''obtenir les infos système';
+end;
+
+procedure TForm1.AfficherInfosSysteme;
+begin
+  ShowMessage(ObtenirInfosSysteme);
+end;
+{$ENDIF}
+```
+
+## 10. Limitations et considérations
+
+### Ce qui fonctionne parfaitement
+
+✅ **Composants FireMonkey standards**
+✅ **FireDAC** (accès bases de données)
+✅ **REST/HTTP** (communication réseau)
+✅ **Fichiers et flux**
+✅ **Threads et parallélisme**
+✅ **Animations et effets**
+✅ **JSON, XML**
+
+### Limitations connues
+
+⚠️ **Pas de WebBrowser natif** : TWebBrowser n'est pas disponible sur Linux
+- Solution : Utiliser un composant tiers ou appeler un navigateur externe
+
+⚠️ **Services système** : Créer des daemons Linux nécessite du code natif spécifique
+
+⚠️ **Certaines API Windows** : Évidemment, les API Windows spécifiques ne fonctionnent pas
+- Solution : Code conditionnel avec {$IFDEF LINUX}
+
+### Alternatives et solutions
+
+**Pour WebBrowser** :
+```pascal
+{$IFDEF LINUX}
+procedure OuvrirURL(const URL: string);
+begin
+  // Ouvrir dans le navigateur par défaut
+  system(PAnsiChar(AnsiString('xdg-open ' + URL)));
+end;
+{$ELSE}
+procedure OuvrirURL(const URL: string);
+begin
+  WebBrowser1.Navigate(URL);
+end;
+{$ENDIF}
+```
+
+## 11. Bonnes pratiques FMXLinux
+
+### ✅ À FAIRE
+
+**1. Tester sur plusieurs distributions**
+```pascal
+// Testez au minimum sur :
+// - Ubuntu (Debian)
+// - Fedora (Red Hat)
+// Pour couvrir les deux grandes familles
+```
+
+**2. Utiliser TPath pour les chemins**
+```pascal
+// ✅ BON : Portable
+CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'data.txt');
+
+// ❌ MAUVAIS : Spécifique Windows
+CheminFichier := 'C:\Users\user\Documents\data.txt';
+```
+
+**3. Gérer les permissions**
+```pascal
+{$IFDEF LINUX}
+  // Vérifier les permissions avant d'écrire
+  if DirectoryExists(CheminDonnees) then
+    SauvegarderDonnees
+  else
+    ForceDirectories(CheminDonnees);
+{$ENDIF}
+```
+
+**4. Fournir plusieurs formats de distribution**
+```pascal
+// Distribuer en :
+// - .deb (Ubuntu/Debian)
+// - .rpm (Fedora/RHEL)
+// - AppImage (universel)
+// - Flatpak (moderne)
+```
+
+**5. Respecter les conventions Linux**
+```pascal
+{$IFDEF LINUX}
+  // Configuration : ~/.config/MonApp/
+  // Données : ~/.local/share/MonApp/
+  // Cache : ~/.cache/MonApp/
+  // Logs : ~/.local/share/MonApp/logs/
+{$ENDIF}
+```
+
+**6. Prévoir une interface en ligne de commande**
+```pascal
+{$IFDEF LINUX}
+// Les utilisateurs Linux apprécient les options CLI
+if ParamCount > 0 then
+begin
+  if ParamStr(1) = '--version' then
+    WriteLn('MonApp version 1.0')
+  else if ParamStr(1) = '--help' then
+    AfficherAide;
+end;
+{$ENDIF}
+```
+
+### ❌ À ÉVITER
+
+**1. Chemins en dur Windows**
+```pascal
+// ❌ MAUVAIS
+Fichier := 'C:\Program Files\MonApp\config.ini';
+```
+
+**2. Supposer l'utilisateur root**
+```pascal
+// ❌ MAUVAIS : Écrire dans /etc/ ou /usr/
+// Les apps utilisateur ne doivent PAS nécessiter root
+```
+
+**3. Interface uniquement graphique**
+```pascal
+// ❌ MAUVAIS : Pas d'option ligne de commande
+// Sur Linux, beaucoup d'utilisateurs utilisent le terminal
+```
+
+**4. Ignorer les fichiers cachés**
+```pascal
+// ❌ MAUVAIS : Oublier que .config est un répertoire caché
+// Les utilisateurs ne le verront pas facilement
+```
+
+## 12. Ressources et communauté
+
+### Documentation officielle
+
+**Embarcadero DocWiki** :
+- FMXLinux Guide
+- Linux Application Development
+- PAServer Documentation
+
+### Communauté
+
+**Forums** :
+- Embarcadero Forums (section FMXLinux)
+- Delphi-PRAXiS
+- Stack Overflow (tag: delphi-fmx)
+
+**Groupes** :
+- LinkedIn Delphi Groups
+- Reddit r/delphi
+- Telegram Delphi channels
+
+### Exemples de projets
+
+**Sur GitHub** :
+- Rechercher "fmxlinux"
+- Exemples officiels Embarcadero
+- Projets open source utilisant FMXLinux
 
 ## Conclusion
 
-FMXLinux permet d'étendre la portée de vos applications FireMonkey au monde Linux avec relativement peu d'efforts. En comprenant les différences entre les plateformes et en adaptant votre code et votre interface utilisateur en conséquence, vous pouvez offrir une expérience utilisateur cohérente et native sur toutes les plateformes desktop.
+FMXLinux complète l'écosystème multi-plateforme de FireMonkey en apportant Linux dans l'équation. Les points clés à retenir :
 
-L'ajout du support Linux à vos applications FireMonkey existantes ouvre de nouvelles possibilités et marchés, particulièrement dans les environnements professionnels et éducatifs où Linux est largement utilisé.
+🐧 **Même code** : Votre application FireMonkey fonctionne sur Linux sans réécriture
 
-En suivant les bonnes pratiques présentées dans cette section, vous serez bien équipé pour développer, déployer et maintenir des applications FireMonkey multi-plateformes qui fonctionnent parfaitement sous Linux, Windows et macOS.
+🐧 **GTK3 natif** : Apparence cohérente avec le système Linux
 
-⏭️ [Applications multi-fenêtres et navigation](/06-applications-multi-fenetres-et-navigation/README.md)
+🐧 **PAServer** : Permet développement depuis Windows
+
+🐧 **Multiple distributions** : Fonctionne sur Ubuntu, Fedora, Debian, etc.
+
+🐧 **Déploiement flexible** : .deb, .rpm, AppImage, Flatpak
+
+🐧 **Performance native** : Compilé, pas interprété
+
+🐧 **Intégration système** : Notifications, menus, icônes
+
+🐧 **Débogage distant** : Debug depuis Delphi sur Windows
+
+Avec FMXLinux, vous pouvez maintenant créer des applications qui fonctionnent sur Windows, macOS, iOS, Android **ET** Linux, couvrant ainsi pratiquement tous les systèmes d'exploitation modernes avec un seul code source Delphi. C'est le véritable "Write Once, Compile Anywhere" pour les développeurs Delphi.
+
+⏭️ [Applications graphiques Linux avec FireMonkey](/05-developpement-multi-plateforme-avec-firemonkey/10.1-applications-graphiques-linux-avec-firemonkey.md)
