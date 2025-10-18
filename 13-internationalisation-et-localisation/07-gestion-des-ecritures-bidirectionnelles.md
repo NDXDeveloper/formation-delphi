@@ -1,647 +1,928 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.7 Gestion des écritures bidirectionnelles (RTL)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Certaines langues comme l'arabe, l'hébreu, le farsi (persan) et l'ourdou s'écrivent de droite à gauche (Right-to-Left ou RTL). La prise en charge de ces langues dans vos applications Delphi nécessite une attention particulière pour offrir une expérience utilisateur intuitive et naturelle. Cette section vous explique comment adapter votre interface pour les langues RTL.
+Certaines langues s'écrivent de droite à gauche (Right-to-Left ou RTL) au lieu de gauche à droite (Left-to-Right ou LTR). Supporter ces langues nécessite d'adapter l'interface utilisateur pour créer une expérience naturelle et intuitive. Dans cette section, nous allons découvrir comment Delphi gère les écritures bidirectionnelles et comment adapter vos applications.
 
-## Comprendre les écritures bidirectionnelles
+## Qu'est-ce que RTL/LTR ?
 
-### Qu'est-ce que la bidirectionnalité ?
+### Direction d'écriture
 
-La bidirectionnalité (souvent abrégée "BiDi") désigne la capacité d'afficher à la fois des textes qui se lisent de droite à gauche (RTL) et des textes qui se lisent de gauche à droite (LTR). Ce concept est important car même dans un texte en arabe ou en hébreu, certains éléments comme les chiffres ou les mots en langues occidentales s'écrivent de gauche à droite.
+| Direction | Abréviation | Description | Langues |
+|-----------|-------------|-------------|---------|
+| **Left-to-Right** | LTR | Écriture de gauche à droite | Français, anglais, espagnol, allemand, etc. |
+| **Right-to-Left** | RTL | Écriture de droite à gauche | Arabe, hébreu, persan, ourdou |
 
-### Caractéristiques des langues RTL
+### Exemple visuel
 
-- Le texte commence à droite et se poursuit vers la gauche
-- Les paragraphes sont alignés à droite
-- L'interface utilisateur est généralement inversée (menus, boutons, etc.)
-- Les chiffres et les mots en langues occidentales restent LTR même dans un texte RTL
-
-## Le système BiDiMode de Delphi
-
-Delphi offre une propriété centrale appelée `BiDiMode` qui permet de gérer l'orientation des textes et des contrôles. Cette propriété est disponible pour les formulaires et pour la plupart des contrôles visuels.
-
-### Les valeurs possibles de BiDiMode
-
-```pascal
-type
-  TBiDiMode = (bdLeftToRight, bdRightToLeft, bdRightToLeftNoAlign,
-                bdRightToLeftReadingOnly);
+**LTR (Français) :**
+```
+→ Bonjour le monde
+  Le texte commence à gauche
 ```
 
-Voici la signification de chaque valeur :
+**RTL (Arabe) :**
+```
+مرحبا بالعالم ←
+         النص يبدأ من اليمين
+```
 
-- `bdLeftToRight` : Affichage standard de gauche à droite (par défaut)
-- `bdRightToLeft` : Affichage de droite à gauche avec alignement à droite
-- `bdRightToLeftNoAlign` : Texte de droite à gauche sans alignement à droite
-- `bdRightToLeftReadingOnly` : Seul l'ordre de lecture est de droite à gauche, pas l'alignement
+### Langues RTL principales
 
-## Application de BiDiMode à un formulaire
+| Langue | Nom natif | Nombre de locuteurs | Remarques |
+|--------|-----------|---------------------|-----------|
+| **Arabe** | العربية | ~300 millions | Très répandu |
+| **Hébreu** | עברית | ~9 millions | Israël |
+| **Persan** | فارسی | ~70 millions | Iran, Afghanistan |
+| **Ourdou** | اردو | ~70 millions | Pakistan, Inde |
+| **Yiddish** | ייִדיש | ~1 million | Communautés juives |
 
-Pour prendre en charge les langues RTL dans votre application, commencez par configurer le mode BiDi au niveau du formulaire :
+> 💡 **Important** : Ces langues représentent un marché important. Ne pas supporter RTL peut exclure des millions d'utilisateurs potentiels.
+
+## Comprendre BiDiMode
+
+### La propriété BiDiMode
+
+Dans Delphi, la propriété `BiDiMode` contrôle la direction du texte et de la mise en page.
+
+| Valeur | Description | Usage |
+|--------|-------------|-------|
+| `bdLeftToRight` | Gauche à droite (défaut) | Langues LTR (français, anglais, etc.) |
+| `bdRightToLeft` | Droite à gauche | Langues RTL (arabe, hébreu) |
+| `bdRightToLeftNoAlign` | RTL sans alignement automatique | RTL avec contrôle manuel |
+| `bdRightToLeftReadingOnly` | RTL lecture seule | Affichage RTL, contrôles LTR |
+
+### Effet de BiDiMode
+
+Quand vous activez `BiDiMode = bdRightToLeft` sur un formulaire :
+
+**Changements automatiques :**
+- ✅ Le texte s'aligne à droite
+- ✅ Les menus s'ouvrent de droite à gauche
+- ✅ Les barres de défilement passent à gauche
+- ✅ Les onglets s'inversent (dernier à gauche)
+- ✅ Les boutons OK/Annuler s'inversent
+- ✅ L'ordre de tabulation s'inverse
+
+### Exemple simple
 
 ```pascal
-procedure TForm1.SetRTLMode(IsRTL: Boolean);
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  if IsRTL then
-    BiDiMode := bdRightToLeft
-  else
-    BiDiMode := bdLeftToRight;
+  // Activer le mode RTL pour tout le formulaire
+  Self.BiDiMode := bdRightToLeft;
 
-  // Forcer la mise à jour de l'interface
-  RecreateWnd;
+  // Tous les composants enfants héritent de ce mode
 end;
 ```
 
-> 💡 Lorsque vous définissez `BiDiMode` sur un formulaire, tous les contrôles qui ont `ParentBiDiMode` à `True` hériteront automatiquement de ce paramètre.
+## Configuration d'une application RTL
 
-## Définir BiDiMode au niveau de l'application
-
-Pour appliquer le mode RTL à toute l'application d'un coup :
+### Détecter si RTL est nécessaire
 
 ```pascal
-procedure TMyApplication.SetRTLMode(IsRTL: Boolean);
+uses
+  System.SysUtils;
+
+function EstLangueRTL(const CodeLangue: string): Boolean;
 begin
-  if IsRTL then
-  begin
-    Application.BiDiMode := bdRightToLeft;
-    // Forcer RTL au niveau de l'application
-    SetProcessDefaultLayout(1);  // Windows API
-  end
+  Result := (CodeLangue = 'ar') or  // Arabe
+            (CodeLangue = 'he') or  // Hébreu
+            (CodeLangue = 'fa') or  // Persan
+            (CodeLangue = 'ur');    // Ourdou
+end;
+
+procedure TFormPrincipal.DefinirDirectionTexte(const CodeLangue: string);
+begin
+  if EstLangueRTL(CodeLangue) then
+    Self.BiDiMode := bdRightToLeft
   else
-  begin
-    Application.BiDiMode := bdLeftToRight;
-    SetProcessDefaultLayout(0);  // Windows API
-  end;
+    Self.BiDiMode := bdLeftToRight;
+
+  // Réappliquer la mise en page
+  AppliquerMiseEnPageRTL;
 end;
 ```
 
-> ⚠️ Attention : Il est préférable de définir le `BiDiMode` de l'application avant la création des formulaires, idéalement dans le fichier .dpr du projet.
+### Activer RTL globalement
 
-### Exemple dans le fichier projet (.dpr)
+Pour activer RTL sur toute l'application :
 
 ```pascal
-program MyRTLApp;
+program MonApplication;
 
 uses
   Vcl.Forms,
-  MainForm in 'MainForm.pas' {Form1};
+  System.SysUtils,
+  FormPrincipal in 'FormPrincipal.pas' {FrmPrincipal};
 
 {$R *.res}
 
 begin
-  // Définir le mode RTL au niveau de l'application si nécessaire
-  if SomeCondition then
-    Application.BiDiMode := bdRightToLeft;
-
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+
+  // Activer BiDiMode globalement
+  Application.BiDiMode := bdRightToLeft;
+
+  Application.CreateForm(TFrmPrincipal, FrmPrincipal);
   Application.Run;
 end.
 ```
 
-## Héritage du BiDiMode
+## Adaptation des composants
 
-Chaque contrôle possède une propriété `ParentBiDiMode` qui, lorsqu'elle est définie à `True`, fait que le contrôle hérite de la propriété `BiDiMode` de son parent.
+### Labels et textes
 
 ```pascal
-procedure TForm1.ConfigureControls;
+procedure ConfigurerLabelsRTL;
 begin
-  // Faire hériter tous les contrôles du mode BiDi du formulaire
-  for var I := 0 to ComponentCount - 1 do
-  begin
-    if Components[I] is TControl then
-      TControl(Components[I]).ParentBiDiMode := True;
-  end;
+  // En mode RTL, les labels s'alignent automatiquement à droite
+  Label1.Caption := 'الاسم:'; // "Nom:" en arabe
+
+  // L'alignement est inversé automatiquement
+  // LTR : taLeftJustify  → RTL : taRightJustify
+  // LTR : taRightJustify → RTL : taLeftJustify
 end;
 ```
 
-## Adaptation de la disposition des contrôles
+### Boutons et ordre
 
-Lorsque vous passez en mode RTL, Delphi inverse automatiquement la disposition des contrôles, mais il est parfois nécessaire d'apporter des ajustements manuels.
-
-### Alignement automatique des contrôles
-
-Dans la plupart des cas, Delphi gère automatiquement l'alignement des contrôles en mode RTL :
-
-- Les libellés et textes sont alignés à droite
-- Les barres de défilement passent du côté gauche
-- L'ordre des onglets est inversé
-- Les menus sont alignés à droite
-
-### Inverser manuellement l'alignement
-
-Dans certains cas, vous pourriez vouloir contrôler explicitement l'alignement :
+En mode RTL, l'ordre des boutons doit être inversé :
 
 ```pascal
-procedure TForm1.UpdateAlignment(IsRTL: Boolean);
+procedure TFormDialogue.ConfigurerBoutonsRTL;
 begin
-  if IsRTL then
+  if Self.BiDiMode = bdRightToLeft then
   begin
-    Label1.Alignment := taRightJustify;
-    Edit1.TextHint := 'أدخل النص هنا';  // "Entrez le texte ici" en arabe
+    // RTL : Annuler à gauche, OK à droite
+    BtnOK.Left := Self.ClientWidth - BtnOK.Width - 10;
+    BtnAnnuler.Left := BtnOK.Left - BtnAnnuler.Width - 5;
   end
   else
   begin
-    Label1.Alignment := taLeftJustify;
-    Edit1.TextHint := 'Entrez le texte ici';
+    // LTR : OK à gauche, Annuler à droite
+    BtnOK.Left := 10;
+    BtnAnnuler.Left := BtnOK.Left + BtnOK.Width + 5;
   end;
 end;
 ```
 
-## Alignement des textes avec BiDiMode
-
-Les propriétés d'alignement des textes interagissent avec `BiDiMode` :
+### Champs de saisie
 
 ```pascal
-procedure TForm1.ConfigureTextAlignment;
+procedure ConfigurerEditsRTL;
 begin
-  // Pour un Label
-  Label1.Alignment := taLeftJustify;  // En mode RTL, s'affichera à droite
+  // Les Edit héritent automatiquement de BiDiMode
+  EditNom.BiDiMode := bdRightToLeft;
 
-  // Pour un Edit
-  Edit1.Alignment := taRightJustify;  // Alignement explicite à droite
-
-  // Pour un Memo
-  Memo1.Alignment := taCenter;        // Centré quelle que soit la direction
+  // Le curseur commence à droite
+  // Le texte s'écrit de droite à gauche
+  EditNom.Text := 'محمد'; // "Mohamed" en arabe
 end;
 ```
 
-## Traitement des champs numériques et des dates
+### Menus
 
-Les chiffres restent toujours affichés de gauche à droite, même en mode RTL. Cela peut nécessiter des adaptations pour les champs combinant texte et chiffres :
+Les menus s'adaptent automatiquement en mode RTL :
 
 ```pascal
-procedure TForm1.SetupNumericFields;
+procedure TFormPrincipal.CreerMenuRTL;
 begin
-  // Pour les champs numériques, on peut garder LTR même en contexte RTL
-  edtAmount.BiDiMode := bdLeftToRight;
-  edtAmount.ParentBiDiMode := False;  // Ne pas hériter du parent
+  // Le menu principal s'inverse automatiquement
+  Self.BiDiMode := bdRightToLeft;
 
-  // Pour les dates, cela dépend du format
-  if FormatSettings.ShortDateFormat = 'yyyy/MM/dd' then
-    edtDate.BiDiMode := bdLeftToRight
-  else
-    edtDate.BiDiMode := bdRightToLeft;
+  // Menu Fichier devient le plus à droite
+  MenuFichier.Caption := 'ملف'; // "Fichier" en arabe
+  MenuEdition.Caption := 'تحرير'; // "Édition" en arabe
+
+  // Les sous-menus s'ouvrent vers la gauche
 end;
 ```
 
-## Gestion des composants complexes
-
-### Tableaux et grilles
-
-Les composants comme `TStringGrid` ou `TDBGrid` nécessitent une attention particulière :
+### Barres d'outils
 
 ```pascal
-procedure TForm1.ConfigureGrid;
-begin
-  // En mode RTL, la première colonne est à droite
-  StringGrid1.BiDiMode := bdRightToLeft;
-
-  // Définir les titres des colonnes
-  if StringGrid1.BiDiMode = bdRightToLeft then
-  begin
-    StringGrid1.Cells[0, 0] := 'العمود 1';  // "Colonne 1" en arabe
-    StringGrid1.Cells[1, 0] := 'العمود 2';  // "Colonne 2" en arabe
-  end
-  else
-  begin
-    StringGrid1.Cells[0, 0] := 'Colonne 1';
-    StringGrid1.Cells[1, 0] := 'Colonne 2';
-  end;
-end;
-```
-
-### Menus et barres d'outils
-
-Les menus et barres d'outils sont automatiquement inversés en mode RTL :
-
-```pascal
-procedure TForm1.CreateRTLMenu;
+procedure ConfigurerToolBarRTL(ToolBar: TToolBar);
 var
-  MenuItem: TMenuItem;
+  i: Integer;
+  Bouton: TToolButton;
 begin
-  // Créer un menu - l'alignement sera géré automatiquement
-  MenuItem := TMenuItem.Create(MainMenu1);
-  MenuItem.Caption := 'ملف';  // "Fichier" en arabe
-  MainMenu1.Items.Add(MenuItem);
-
-  // Ajouter un sous-menu
-  with TMenuItem.Create(MenuItem) do
+  if ToolBar.BiDiMode = bdRightToLeft then
   begin
-    Caption := 'فتح';  // "Ouvrir" en arabe
-    OnClick := OpenMenuItemClick;
-    MenuItem.Add(Self);
+    // Inverser l'ordre des boutons
+    for i := ToolBar.ButtonCount - 1 downto 0 do
+    begin
+      Bouton := ToolBar.Buttons[i];
+      Bouton.Left := (ToolBar.ButtonCount - 1 - i) * (Bouton.Width + 2);
+    end;
   end;
 end;
 ```
 
-## Prise en charge des textes bidirectionnels
+### Onglets (PageControl)
 
-Les textes bidirectionnels (qui contiennent à la fois des parties RTL et LTR) nécessitent une attention particulière.
+```pascal
+procedure ConfigurerOngletsRTL(PageControl: TPageControl);
+begin
+  PageControl.BiDiMode := bdRightToLeft;
 
-### Contrôle de l'orientation avec des marqueurs Unicode
+  // Les onglets s'affichent de droite à gauche
+  // Le premier onglet est à droite
+  PageControl.TabSheet1.Caption := 'عام'; // "Général" en arabe
+  PageControl.TabSheet2.Caption := 'متقدم'; // "Avancé" en arabe
+end;
+```
 
-Unicode inclut des caractères spéciaux qui contrôlent la direction du texte :
+## Gestion des images et icônes
+
+Certaines images doivent être inversées en mode RTL.
+
+### Images directionnelles
+
+Les images qui ont une direction (flèches, etc.) doivent être inversées :
+
+```pascal
+type
+  TGestionnaireImagesRTL = class
+  private
+    FImagesFlecheGauche: TImageList;
+    FImagesFlecheDroite: TImageList;
+  public
+    procedure ChargerImagesRTL;
+    function ObtenirImageFleche(Gauche: Boolean; RTL: Boolean): TBitmap;
+  end;
+
+procedure TGestionnaireImagesRTL.ChargerImagesRTL;
+begin
+  // Charger les images dans les deux sens
+  FImagesFlecheGauche := TImageList.Create(nil);
+  FImagesFlecheDroite := TImageList.Create(nil);
+
+  // En RTL, échanger les flèches
+end;
+
+function TGestionnaireImagesRTL.ObtenirImageFleche(Gauche: Boolean; RTL: Boolean): TBitmap;
+begin
+  // Si RTL, inverser la direction
+  if RTL then
+    Gauche := not Gauche;
+
+  if Gauche then
+    Result := ExtraireImage(FImagesFlecheGauche, 0)
+  else
+    Result := ExtraireImage(FImagesFlecheDroite, 0);
+end;
+```
+
+### Images à inverser vs à ne pas inverser
+
+| Type d'image | Action en RTL | Exemple |
+|--------------|---------------|---------|
+| **Flèches directionnelles** | Inverser | ← devient → |
+| **Icônes de navigation** | Inverser | Suivant/Précédent |
+| **Logos et marques** | Ne pas inverser | Logo de l'entreprise |
+| **Icônes neutres** | Ne pas inverser | Engrenage, étoile |
+| **Texte dans l'image** | Traduire, ne pas inverser | Capture d'écran |
+
+### Fonction d'inversion d'image
+
+```pascal
+uses
+  Vcl.Graphics;
+
+function InverserImageHorizontalement(const ImageOriginale: TBitmap): TBitmap;
+var
+  x, y: Integer;
+begin
+  Result := TBitmap.Create;
+  Result.Width := ImageOriginale.Width;
+  Result.Height := ImageOriginale.Height;
+
+  for y := 0 to ImageOriginale.Height - 1 do
+    for x := 0 to ImageOriginale.Width - 1 do
+      Result.Canvas.Pixels[ImageOriginale.Width - 1 - x, y] :=
+        ImageOriginale.Canvas.Pixels[x, y];
+end;
+
+// Utilisation
+procedure TForm1.ChargerImageRTL;
+var
+  ImageLTR, ImageRTL: TBitmap;
+begin
+  ImageLTR := TBitmap.Create;
+  try
+    ImageLTR.LoadFromFile('fleche_droite.bmp');
+
+    if Self.BiDiMode = bdRightToLeft then
+    begin
+      ImageRTL := InverserImageHorizontalement(ImageLTR);
+      try
+        Image1.Picture.Bitmap := ImageRTL;
+      finally
+        ImageRTL.Free;
+      end;
+    end
+    else
+      Image1.Picture.Bitmap := ImageLTR;
+  finally
+    ImageLTR.Free;
+  end;
+end;
+```
+
+## Mise en page et alignement
+
+### Utilisation des Anchors
+
+Les Anchors fonctionnent bien avec RTL :
+
+```pascal
+procedure ConfigurerAnchorsRTL;
+begin
+  // Ces anchors s'adaptent automatiquement
+  BtnOK.Anchors := [akRight, akBottom];     // Reste à droite en LTR, à gauche en RTL
+  BtnAnnuler.Anchors := [akRight, akBottom];
+
+  Panel1.Anchors := [akLeft, akTop, akRight, akBottom]; // S'étend correctement
+end;
+```
+
+### Panels et conteneurs
+
+```pascal
+procedure ConfigurerPanelsRTL(Form: TForm);
+begin
+  // Panel gauche en LTR devient panel droit en RTL
+  PanelMenu.BiDiMode := Form.BiDiMode;
+  PanelMenu.Align := alRight; // Devient automatiquement alLeft en RTL
+
+  // Panel principal
+  PanelPrincipal.BiDiMode := Form.BiDiMode;
+  PanelPrincipal.Align := alClient;
+end;
+```
+
+### Grilles et listes
+
+```pascal
+procedure ConfigurerGridRTL(Grid: TStringGrid);
+begin
+  Grid.BiDiMode := bdRightToLeft;
+
+  // Les colonnes s'affichent de droite à gauche
+  // La première colonne est à droite
+
+  // Inverser l'ordre des colonnes si nécessaire
+  if Grid.BiDiMode = bdRightToLeft then
+  begin
+    Grid.ColCount := 3;
+    Grid.Cells[0, 0] := 'العمود 3'; // Colonne 3
+    Grid.Cells[1, 0] := 'العمود 2'; // Colonne 2
+    Grid.Cells[2, 0] := 'العمود 1'; // Colonne 1
+  end;
+end;
+```
+
+## Texte mixte (BiDi)
+
+Parfois, un texte RTL peut contenir des éléments LTR (nombres, mots anglais).
+
+### Algorithme BiDi Unicode
+
+Unicode définit un algorithme pour gérer le texte bidirectionnel :
+
+```pascal
+var
+  TexteMixte: string;
+begin
+  // Texte arabe avec un mot anglais et un nombre
+  TexteMixte := 'مرحبا Hello عالم 123';
+
+  // Delphi gère automatiquement l'affichage :
+  // Les mots arabes RTL, "Hello" LTR, "123" LTR
+  Label1.Caption := TexteMixte;
+end;
+```
+
+### Marques directionnelles Unicode
+
+Pour contrôler finement la direction, utilisez des caractères de contrôle Unicode :
+
+| Caractère | Code | Description | Usage |
+|-----------|------|-------------|-------|
+| LRM | U+200E | Left-to-Right Mark | Forcer LTR |
+| RLM | U+200F | Right-to-Left Mark | Forcer RTL |
+| LRE | U+202A | Left-to-Right Embedding | Début zone LTR |
+| RLE | U+202B | Right-to-Left Embedding | Début zone RTL |
+| PDF | U+202C | Pop Directional Formatting | Fin zone |
 
 ```pascal
 const
-  // Marqueurs de direction Unicode
-  LRM = Char($200E);  // Left-to-right Mark
-  RLM = Char($200F);  // Right-to-left Mark
-  LRE = Char($202A);  // Left-to-right Embedding
-  RLE = Char($202B);  // Right-to-left Embedding
-  PDF = Char($202C);  // Pop Directional Formatting
-  LRO = Char($202D);  // Left-to-right Override
-  RLO = Char($202E);  // Right-to-left Override
+  LRM = #$200E; // Left-to-Right Mark
+  RLM = #$200F; // Right-to-Left Mark
 
-procedure TForm1.SetupBidirectionalText;
+procedure ExempleMarquesDirectionnelles;
 var
-  MixedText: string;
+  Texte: string;
 begin
-  // Exemple : texte arabe avec un mot anglais intégré
-  MixedText := 'مرحبا ' + LRE + 'Hello' + PDF + ' العالم';
-  Label1.Caption := MixedText;
+  // Forcer un nombre à rester LTR dans un texte RTL
+  Texte := 'السعر:' + LRM + ' 1,234.56' + RLM + ' دولار';
+  // "Prix: 1,234.56 dollars" en arabe avec le nombre correctement formaté
+
+  Label1.Caption := Texte;
 end;
 ```
 
-> 💡 Ces marqueurs sont invisibles mais influencent l'affichage du texte.
+## Gestion des raccourcis clavier
 
-## Changer dynamiquement la direction du texte
-
-Vous pouvez permettre à l'utilisateur de changer la direction du texte à la volée :
+Les raccourcis clavier ne changent pas en RTL, mais leur position peut être confuse.
 
 ```pascal
-procedure TForm1.btnToggleDirectionClick(Sender: TObject);
+procedure ConfigurerRaccourcisRTL;
 begin
-  // Inverser le mode BiDi actuel
-  if BiDiMode = bdLeftToRight then
-    BiDiMode := bdRightToLeft
+  // Les raccourcis restent les mêmes
+  ActionFichierNouveau.ShortCut := ShortCut(Ord('N'), [ssCtrl]);
+
+  // Mais le texte du menu change
+  if Self.BiDiMode = bdRightToLeft then
+    MenuNouveau.Caption := 'جديد' + #9 + 'Ctrl+N' // Arabe + raccourci
   else
-    BiDiMode := bdLeftToRight;
-
-  // Mettre à jour l'interface
-  RecreateWnd;
+    MenuNouveau.Caption := 'Nouveau' + #9 + 'Ctrl+N';
 end;
 ```
 
-## Détection automatique de la direction du texte
+## Problèmes courants et solutions
 
-Vous pouvez détecter automatiquement si un texte est principalement RTL :
+### Problème 1 : Barres de défilement mal positionnées
+
+**Symptôme :** Les barres de défilement restent à droite en mode RTL
+
+**Solution :**
 
 ```pascal
-function IsRTLText(const AText: string): Boolean;
+procedure CorrigerBarresDefilement(Memo: TMemo);
+begin
+  Memo.BiDiMode := bdRightToLeft;
+
+  // Forcer la mise à jour
+  Memo.Perform(WM_VSCROLL, SB_TOP, 0);
+  Memo.ScrollBars := ssVertical;
+end;
+```
+
+### Problème 2 : Composants non alignés
+
+**Symptôme :** Certains composants ne s'alignent pas correctement
+
+**Solution :**
+
+```pascal
+procedure RealignerComposantsRTL(Form: TForm);
 var
-  RTLCount, LTRCount, I: Integer;
-  Ch: Char;
+  i: Integer;
+  Composant: TComponent;
+  Control: TControl;
 begin
-  RTLCount := 0;
-  LTRCount := 0;
-
-  for I := 1 to Length(AText) do
+  for i := 0 to Form.ComponentCount - 1 do
   begin
-    Ch := AText[I];
+    Composant := Form.Components[i];
+    if Composant is TControl then
+    begin
+      Control := TControl(Composant);
 
-    // Plages de caractères RTL (simplifiées)
-    if (Ord(Ch) >= $0590) and (Ord(Ch) <= $08FF) then
-      Inc(RTLCount)
-    // Plages de caractères LTR (simplifiées)
-    else if ((Ord(Ch) >= $0041) and (Ord(Ch) <= $007A)) or
-            ((Ord(Ch) >= $00C0) and (Ord(Ch) <= $024F)) then
-      Inc(LTRCount);
-  end;
-
-  // Si plus de caractères RTL que LTR, considérer comme RTL
-  Result := RTLCount > LTRCount;
-end;
-
-procedure TForm1.AutoDetectDirection;
-begin
-  // Détecter et appliquer automatiquement la direction
-  if IsRTLText(Memo1.Text) then
-    Memo1.BiDiMode := bdRightToLeft
-  else
-    Memo1.BiDiMode := bdLeftToRight;
-
-  Memo1.ParentBiDiMode := False;  // Ne pas hériter du parent
-end;
-```
-
-> ⚠️ Cette fonction est simplifiée. Pour une détection précise, il faudrait une analyse plus complète des plages Unicode.
-
-## Gestion de l'éditeur de texte en mode RTL
-
-Pour les champs de texte multilignes comme `TMemo`, des considérations supplémentaires s'appliquent :
-
-```pascal
-procedure TForm1.ConfigureRTLMemo;
-begin
-  // Configurer un Memo pour le texte arabe
-  Memo1.BiDiMode := bdRightToLeft;
-  Memo1.Alignment := taRightJustify;
-
-  // Définir une police qui supporte l'arabe
-  Memo1.Font.Name := 'Segoe UI';
-  Memo1.Font.Size := 12;
-
-  // Texte initial en arabe
-  Memo1.Text := 'مرحبا بالعالم. هذا مثال على النص العربي.';
-
-  // Configurer la barre de défilement
-  Memo1.ScrollBars := ssVertical;  // Généralement à gauche en mode RTL
-end;
-```
-
-## Adapter les raccourcis clavier
-
-En mode RTL, il peut être judicieux d'adapter certains raccourcis clavier :
-
-```pascal
-procedure TForm1.UpdateShortcuts(IsRTL: Boolean);
-begin
-  if IsRTL then
-  begin
-    // Adapter les raccourcis pour RTL
-    ActionNext.ShortCut := TextToShortCut('Alt+Left');  // Contre-intuitif mais utilisé
-    ActionPrevious.ShortCut := TextToShortCut('Alt+Right');
-  end
-  else
-  begin
-    // Raccourcis standards LTR
-    ActionNext.ShortCut := TextToShortCut('Alt+Right');
-    ActionPrevious.ShortCut := TextToShortCut('Alt+Left');
+      // Forcer la mise à jour
+      Control.BiDiMode := Form.BiDiMode;
+      Control.Invalidate;
+    end;
   end;
 end;
 ```
 
-## Adaptation des formulaires de données
+### Problème 3 : Texte dans les dialogues système
 
-Pour les applications de bases de données, des adaptations supplémentaires peuvent être nécessaires :
+**Symptôme :** MessageDlg et InputBox restent en LTR
+
+**Solution :**
 
 ```pascal
-procedure TForm1.ConfigureDataControls;
+uses
+  Vcl.Dialogs, Winapi.Windows;
+
+function MessageDlgRTL(const Msg: string; DlgType: TMsgDlgType;
+  Buttons: TMsgDlgButtons): Integer;
+var
+  Dialog: TForm;
 begin
-  // Grille de données
-  DBGrid1.BiDiMode := BiDiMode;
+  // Créer le dialogue
+  Dialog := CreateMessageDialog(Msg, DlgType, Buttons);
+  try
+    // Configurer en RTL
+    Dialog.BiDiMode := bdRightToLeft;
 
-  // Champs d'édition liés à des données
-  DBEdit1.BiDiMode := BiDiMode;
+    // Afficher
+    Result := Dialog.ShowModal;
+  finally
+    Dialog.Free;
+  end;
+end;
 
-  // Navigation entre enregistrements
-  if BiDiMode = bdRightToLeft then
+// Utilisation
+procedure TForm1.AfficherMessageRTL;
+begin
+  MessageDlgRTL('هل أنت متأكد؟', mtConfirmation, [mbYes, mbNo]);
+end;
+```
+
+### Problème 4 : Ordre de tabulation incorrect
+
+**Symptôme :** La touche Tab ne suit pas l'ordre visuel
+
+**Solution :**
+
+```pascal
+procedure InverserOrdreTabulation(Form: TForm);
+var
+  i: Integer;
+  Controls: TList;
+begin
+  if Form.BiDiMode = bdRightToLeft then
   begin
-    btnNext.Left := btnPrevious.Left;
-    btnPrevious.Left := btnNext.Left + btnNext.Width + 10;
-  end
-  else
-  begin
-    btnPrevious.Left := btnNext.Left;
-    btnNext.Left := btnPrevious.Left + btnPrevious.Width + 10;
+    Controls := TList.Create;
+    try
+      // Collecter tous les contrôles
+      for i := 0 to Form.ControlCount - 1 do
+        Controls.Add(Form.Controls[i]);
+
+      // Inverser l'ordre de tabulation
+      for i := 0 to Controls.Count - 1 do
+        TControl(Controls[i]).TabOrder := Controls.Count - 1 - i;
+    finally
+      Controls.Free;
+    end;
   end;
 end;
 ```
 
-## Intégration avec le système de traduction
+## Classe de gestion RTL
 
-Combinez le support RTL avec votre système de traduction :
-
-```pascal
-procedure TForm1.ApplyLanguage(const LangCode: string);
-begin
-  // Charger les chaînes traduites
-  TranslationManager.LoadLanguage(LangCode);
-
-  // Définir RTL pour les langues qui le nécessitent
-  case LangCode of
-    'ar', 'he', 'fa', 'ur':
-      BiDiMode := bdRightToLeft;
-    else
-      BiDiMode := bdLeftToRight;
-  end;
-
-  // Appliquer les traductions
-  Caption := TranslationManager.GetString('MainForm.Caption');
-  btnOK.Caption := TranslationManager.GetString('Common.OK');
-  // etc.
-
-  // Mettre à jour l'interface
-  RecreateWnd;
-end;
-```
-
-## Exemple complet : Formulaire avec support RTL
-
-Voici un exemple complet d'un formulaire qui prend en charge la bidirectionnalité :
+Créons une classe pour faciliter la gestion RTL :
 
 ```pascal
-unit RTLSupportForm;
+unit GestionnaireRTL;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls;
+  Vcl.Forms, Vcl.Controls, System.Classes, System.SysUtils;
 
 type
-  TfrmRTLSupport = class(TForm)
-    pnlTop: TPanel;
-    lblLanguage: TLabel;
-    cmbLanguage: TComboBox;
-    btnApply: TButton;
-    memText: TMemo;
-    lblName: TLabel;
-    edtName: TEdit;
-    lblEmail: TLabel;
-    edtEmail: TEdit;
-    btnSubmit: TButton;
-    btnCancel: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnApplyClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+  TGestionnaireRTL = class
   private
-    procedure ApplyLanguageSettings;
-    procedure UpdateControlsAlignment;
+    FModeRTL: Boolean;
+  public
+    constructor Create;
+
+    // Configuration
+    procedure ActiverRTL(Form: TForm);
+    procedure DesactiverRTL(Form: TForm);
+    procedure BasculerRTL(Form: TForm);
+
+    // Vérification
+    function EstRTLActif: Boolean;
+    function EstLangueRTL(const CodeLangue: string): Boolean;
+
+    // Application
+    procedure AppliquerATousLesFormulaires;
+    procedure AppliquerAuxComposants(Container: TWinControl);
+
+    // Mise en page
+    procedure InverserBoutons(BtnGauche, BtnDroit: TControl);
+    procedure RealignerPanels(Form: TForm);
+    procedure AjusterAnchors(Control: TControl);
+
+    property ModeRTL: Boolean read FModeRTL write FModeRTL;
   end;
 
 var
-  frmRTLSupport: TfrmRTLSupport;
+  GestRTL: TGestionnaireRTL;
 
 implementation
 
-{$R *.dfm}
-
-procedure TfrmRTLSupport.FormCreate(Sender: TObject);
+constructor TGestionnaireRTL.Create;
 begin
-  // Initialiser la liste des langues
-  cmbLanguage.Items.Clear;
-  cmbLanguage.Items.Add('Français');
-  cmbLanguage.Items.Add('English');
-  cmbLanguage.Items.Add('العربية');  // Arabe
-  cmbLanguage.Items.Add('עברית');    // Hébreu
-
-  // Langue par défaut
-  cmbLanguage.ItemIndex := 0;
+  inherited;
+  FModeRTL := False;
 end;
 
-procedure TfrmRTLSupport.FormShow(Sender: TObject);
+procedure TGestionnaireRTL.ActiverRTL(Form: TForm);
 begin
-  // Appliquer les paramètres initiaux
-  ApplyLanguageSettings;
+  FModeRTL := True;
+  Form.BiDiMode := bdRightToLeft;
+  AppliquerAuxComposants(Form);
 end;
 
-procedure TfrmRTLSupport.btnApplyClick(Sender: TObject);
+procedure TGestionnaireRTL.DesactiverRTL(Form: TForm);
 begin
-  ApplyLanguageSettings;
+  FModeRTL := False;
+  Form.BiDiMode := bdLeftToRight;
+  AppliquerAuxComposants(Form);
 end;
 
-procedure TfrmRTLSupport.ApplyLanguageSettings;
-var
-  IsRTL: Boolean;
+procedure TGestionnaireRTL.BasculerRTL(Form: TForm);
 begin
-  // Déterminer si la langue sélectionnée est RTL
-  IsRTL := (cmbLanguage.ItemIndex >= 2);
-
-  // Définir le mode BiDi du formulaire
-  if IsRTL then
-    BiDiMode := bdRightToLeft
+  if FModeRTL then
+    DesactiverRTL(Form)
   else
-    BiDiMode := bdLeftToRight;
-
-  // Charger les textes selon la langue
-  case cmbLanguage.ItemIndex of
-    0: // Français
-      begin
-        Caption := 'Formulaire avec support RTL';
-        lblLanguage.Caption := 'Langue:';
-        btnApply.Caption := 'Appliquer';
-        lblName.Caption := 'Nom:';
-        lblEmail.Caption := 'Email:';
-        btnSubmit.Caption := 'Envoyer';
-        btnCancel.Caption := 'Annuler';
-        memText.Text := 'Exemple de texte en français. Ce texte s''affiche de gauche à droite.';
-      end;
-    1: // Anglais
-      begin
-        Caption := 'Form with RTL Support';
-        lblLanguage.Caption := 'Language:';
-        btnApply.Caption := 'Apply';
-        lblName.Caption := 'Name:';
-        lblEmail.Caption := 'Email:';
-        btnSubmit.Caption := 'Submit';
-        btnCancel.Caption := 'Cancel';
-        memText.Text := 'Example text in English. This text displays from left to right.';
-      end;
-    2: // Arabe
-      begin
-        Caption := 'نموذج مع دعم RTL';
-        lblLanguage.Caption := 'اللغة:';
-        btnApply.Caption := 'تطبيق';
-        lblName.Caption := 'الاسم:';
-        lblEmail.Caption := 'البريد الإلكتروني:';
-        btnSubmit.Caption := 'إرسال';
-        btnCancel.Caption := 'إلغاء';
-        memText.Text := 'مثال على النص باللغة العربية. يتم عرض هذا النص من اليمين إلى اليسار.';
-      end;
-    3: // Hébreu
-      begin
-        Caption := 'טופס עם תמיכה ב-RTL';
-        lblLanguage.Caption := 'שפה:';
-        btnApply.Caption := 'החל';
-        lblName.Caption := 'שם:';
-        lblEmail.Caption := 'אימייל:';
-        btnSubmit.Caption := 'שלח';
-        btnCancel.Caption := 'בטל';
-        memText.Text := 'טקסט לדוגמה בעברית. טקסט זה מוצג מימין לשמאל.';
-      end;
-  end;
-
-  // Mettre à jour l'alignement des contrôles
-  UpdateControlsAlignment;
-
-  // Forcer la mise à jour de l'interface
-  RecreateWnd;
+    ActiverRTL(Form);
 end;
 
-procedure TfrmRTLSupport.UpdateControlsAlignment;
-var
-  IsRTL: Boolean;
+function TGestionnaireRTL.EstRTLActif: Boolean;
 begin
-  IsRTL := (BiDiMode = bdRightToLeft);
+  Result := FModeRTL;
+end;
 
-  // Ajuster les contrôles qui nécessitent une attention particulière
+function TGestionnaireRTL.EstLangueRTL(const CodeLangue: string): Boolean;
+begin
+  Result := (CodeLangue = 'ar') or  // Arabe
+            (CodeLangue = 'he') or  // Hébreu
+            (CodeLangue = 'fa') or  // Persan
+            (CodeLangue = 'ur');    // Ourdou
+end;
 
-  // Email est toujours LTR
-  edtEmail.BiDiMode := bdLeftToRight;
-  edtEmail.ParentBiDiMode := False;
-
-  // Mais l'étiquette suit la direction générale
-  lblEmail.BiDiMode := BiDiMode;
-  lblEmail.ParentBiDiMode := True;
-
-  // Ajuster la position des boutons
-  if IsRTL then
+procedure TGestionnaireRTL.AppliquerATousLesFormulaires;
+var
+  i: Integer;
+begin
+  for i := 0 to Screen.FormCount - 1 do
   begin
-    // En RTL, le bouton Submit est à gauche et Cancel à droite
-    btnSubmit.Left := ClientWidth - btnSubmit.Width - 20;
-    btnCancel.Left := btnSubmit.Left - btnCancel.Width - 10;
-  end
-  else
-  begin
-    // En LTR, le bouton Submit est à droite et Cancel à gauche
-    btnCancel.Left := ClientWidth - btnCancel.Width - 20;
-    btnSubmit.Left := btnCancel.Left - btnSubmit.Width - 10;
+    if FModeRTL then
+      Screen.Forms[i].BiDiMode := bdRightToLeft
+    else
+      Screen.Forms[i].BiDiMode := bdLeftToRight;
+
+    AppliquerAuxComposants(Screen.Forms[i]);
   end;
 end;
+
+procedure TGestionnaireRTL.AppliquerAuxComposants(Container: TWinControl);
+var
+  i: Integer;
+  Control: TControl;
+begin
+  for i := 0 to Container.ControlCount - 1 do
+  begin
+    Control := Container.Controls[i];
+
+    if FModeRTL then
+      Control.BiDiMode := bdRightToLeft
+    else
+      Control.BiDiMode := bdLeftToRight;
+
+    // Récursif pour les conteneurs
+    if Control is TWinControl then
+      AppliquerAuxComposants(TWinControl(Control));
+  end;
+end;
+
+procedure TGestionnaireRTL.InverserBoutons(BtnGauche, BtnDroit: TControl);
+var
+  TempLeft: Integer;
+begin
+  if FModeRTL then
+  begin
+    TempLeft := BtnGauche.Left;
+    BtnGauche.Left := BtnDroit.Left;
+    BtnDroit.Left := TempLeft;
+  end;
+end;
+
+procedure TGestionnaireRTL.RealignerPanels(Form: TForm);
+var
+  i: Integer;
+  Control: TControl;
+begin
+  for i := 0 to Form.ControlCount - 1 do
+  begin
+    Control := Form.Controls[i];
+
+    // Forcer le réalignement
+    if Control is TPanel then
+      Control.Realign;
+  end;
+end;
+
+procedure TGestionnaireRTL.AjusterAnchors(Control: TControl);
+begin
+  // Les anchors s'inversent automatiquement avec BiDiMode
+  // Cette méthode force la mise à jour
+  Control.Anchors := Control.Anchors;
+end;
+
+initialization
+  GestRTL := TGestionnaireRTL.Create;
+
+finalization
+  GestRTL.Free;
 
 end.
 ```
 
-## Test du support RTL
+### Utilisation de la classe
 
-Pour tester efficacement votre application en mode RTL :
+```pascal
+uses
+  GestionnaireRTL;
 
-1. **Changez les paramètres régionaux** de votre système d'exploitation à une langue RTL
-2. **Utilisez des données réelles** en langues RTL, pas seulement des traductions
-3. **Vérifiez les alignements** de tous les contrôles dans votre application
-4. **Testez les interactions utilisateur** comme le glisser-déposer ou les raccourcis clavier
-5. **Vérifiez les textes mixtes** contenant à la fois des parties RTL et LTR
+procedure TFormPrincipal.ChangerLangue(const CodeLangue: string);
+begin
+  // Charger les traductions
+  GestionnaireTraduction.DefinirLangue(CodeLangue);
 
-## Bonnes pratiques pour le support RTL
+  // Appliquer RTL si nécessaire
+  if GestRTL.EstLangueRTL(CodeLangue) then
+    GestRTL.ActiverRTL(Self)
+  else
+    GestRTL.DesactiverRTL(Self);
 
-1. **Définissez le BiDiMode au niveau de l'application** si possible, plutôt que formulaire par formulaire
+  // Mettre à jour l'interface
+  AppliquerTraductions;
+end;
 
-2. **Utilisez ParentBiDiMode à True** pour la plupart des contrôles afin d'hériter automatiquement de la direction du formulaire
+procedure TFormPrincipal.BtnTestRTLClick(Sender: TObject);
+begin
+  // Basculer entre RTL et LTR pour tester
+  GestRTL.BasculerRTL(Self);
+end;
+```
 
-3. **Faites attention aux contrôles avec disposition fixe** comme les panneaux ou les boîtes de groupe
+## Tests spécifiques RTL
 
-4. **Testez avec des utilisateurs natifs** de langues RTL si possible
+### Checklist de test RTL
 
-5. **Gardez les champs numériques en mode LTR** même dans les interfaces RTL
+```
+Affichage:
+  □ Le texte est aligné à droite
+  □ Les menus s'ouvrent vers la gauche
+  □ Les barres de défilement sont à gauche
+  □ Les onglets commencent à droite
+  □ L'interface est "miroir" de la version LTR
 
-6. **Évitez de coder en dur les positions des contrôles**, utilisez plutôt l'alignement ou l'ancrage
+Navigation:
+  □ La touche Tab suit l'ordre visuel (droite → gauche)
+  □ Les flèches clavier fonctionnent correctement
+  □ Les raccourcis clavier sont accessibles
 
-7. **Adaptez les icônes directionnelles** (flèches, etc.) pour qu'elles aient du sens en mode RTL
+Composants:
+  □ Les dialogues système sont en RTL
+  □ Les messages d'erreur sont alignés correctement
+  □ Les tooltips s'affichent correctement
+  □ Les listes déroulantes s'ouvrent vers la gauche
 
-8. **Utilisez des méthodes comme FlipChildren** pour inverser la disposition des contrôles enfants si nécessaire
+Mise en page:
+  □ Aucun débordement de texte
+  □ Les boutons sont dans le bon ordre
+  □ Les icônes directionnelles sont inversées
+  □ Les panels sont correctement positionnés
+
+Texte mixte:
+  □ Les nombres s'affichent correctement
+  □ Les mots anglais dans le texte RTL sont lisibles
+  □ Les URLs et emails sont corrects
+  □ Les caractères de ponctuation sont bien placés
+```
+
+### Tests avec données réelles
+
+```pascal
+procedure TesterAffichageRTL;
+const
+  // Textes de test en arabe
+  TEXTE_COURT = 'مرحبا';
+  TEXTE_LONG = 'هذا نص طويل لاختبار التفاف النص في وضع RTL';
+  TEXTE_MIXTE = 'مرحبا Hello عالم 123 www.example.com';
+begin
+  Label1.Caption := TEXTE_COURT;
+  Memo1.Text := TEXTE_LONG;
+  Edit1.Text := TEXTE_MIXTE;
+
+  // Vérifier visuellement l'affichage
+end;
+```
+
+## Bonnes pratiques RTL
+
+### Recommandations
+
+| Pratique | Description | Importance |
+|----------|-------------|------------|
+| **Tester tôt** | Tester RTL dès le début du développement | ⭐⭐⭐ |
+| **Utiliser BiDiMode** | Toujours utiliser BiDiMode, pas de calculs manuels | ⭐⭐⭐ |
+| **Anchors** | Privilégier Anchors aux positions fixes | ⭐⭐⭐ |
+| **Locuteur natif** | Faire tester par un utilisateur RTL natif | ⭐⭐⭐ |
+| **Images** | Inverser les images directionnelles | ⭐⭐ |
+| **Texte mixte** | Tester avec du texte bidirectionnel réel | ⭐⭐ |
+| **Ordre Tab** | Vérifier l'ordre de tabulation | ⭐⭐ |
+
+### Ce qu'il faut éviter
+
+```pascal
+// ❌ MAUVAIS : Calculs de position manuels
+if RTL then
+  Button1.Left := Form.Width - Button1.Width - 10
+else
+  Button1.Left := 10;
+
+// ✅ BON : Utiliser Anchors
+Button1.Anchors := [akRight, akTop];  // S'adapte automatiquement
+
+
+// ❌ MAUVAIS : Supposer la direction
+Label1.Alignment := taLeftJustify;
+
+// ✅ BON : Laisser BiDiMode gérer
+// L'alignement s'adapte automatiquement
+
+
+// ❌ MAUVAIS : Hardcoder l'ordre
+Panel1.Left := 0;
+Panel2.Left := 200;
+
+// ✅ BON : Utiliser Align
+Panel1.Align := alLeft;
+Panel2.Align := alClient;
+```
+
+## Ressources et outils
+
+### Polices recommandées pour RTL
+
+| Police | Langues | Qualité | Disponibilité |
+|--------|---------|---------|---------------|
+| Arial | Arabe, hébreu | Moyenne | Windows |
+| Tahoma | Arabe, hébreu | Bonne | Windows |
+| Segoe UI | Arabe, hébreu | Excellente | Windows 7+ |
+| Noto Sans Arabic | Arabe | Excellente | Google Fonts |
+| Noto Sans Hebrew | Hébreu | Excellente | Google Fonts |
+
+### Outils de test
+
+```pascal
+// Outil simple pour tester RTL/LTR
+procedure CreerOutilTestRTL;
+var
+  Form: TForm;
+  BtnBasculer: TButton;
+  MemoTest: TMemo;
+begin
+  Form := TForm.Create(nil);
+  Form.Caption := 'Test RTL/LTR';
+  Form.Width := 600;
+  Form.Height := 400;
+
+  BtnBasculer := TButton.Create(Form);
+  BtnBasculer.Parent := Form;
+  BtnBasculer.Caption := 'Basculer RTL/LTR';
+  BtnBasculer.Top := 10;
+  BtnBasculer.Left := 10;
+  BtnBasculer.OnClick := procedure(Sender: TObject)
+    begin
+      if Form.BiDiMode = bdLeftToRight then
+        Form.BiDiMode := bdRightToLeft
+      else
+        Form.BiDiMode := bdLeftToRight;
+    end;
+
+  MemoTest := TMemo.Create(Form);
+  MemoTest.Parent := Form;
+  MemoTest.Top := 50;
+  MemoTest.Left := 10;
+  MemoTest.Width := Form.ClientWidth - 20;
+  MemoTest.Height := Form.ClientHeight - 60;
+  MemoTest.Anchors := [akLeft, akTop, akRight, akBottom];
+  MemoTest.Text := 'مرحبا بالعالم' + #13#10 + 'Hello World' + #13#10 + '你好世界';
+
+  Form.ShowModal;
+  Form.Free;
+end;
+```
 
 ## Conclusion
 
-La prise en charge des écritures bidirectionnelles est essentielle pour créer des applications véritablement internationales. Delphi fournit un bon support de base pour les langues RTL grâce à la propriété `BiDiMode` et à ses valeurs associées.
+Le support des langues RTL est essentiel pour toucher un public international de plusieurs centaines de millions de personnes. Delphi offre un excellent support pour RTL via la propriété `BiDiMode`, qui gère automatiquement la plupart des adaptations nécessaires.
 
-En comprenant les principes de la bidirectionnalité et en appliquant les techniques présentées dans cette section, vous pouvez adapter vos applications Delphi pour qu'elles offrent une expérience utilisateur intuitive et naturelle aux utilisateurs de langues RTL comme l'arabe et l'hébreu.
+**Points clés à retenir :**
 
-Les points clés à retenir :
+- **BiDiMode** : Utiliser cette propriété pour tout le support RTL
+- **Tester tôt** : Intégrer les tests RTL dès le début
+- **Anchors** : Privilégier les anchors aux positions fixes
+- **Images** : Inverser les images directionnelles
+- **Locuteurs natifs** : Faire valider par des utilisateurs RTL
+- **Texte mixte** : Tester avec du contenu bidirectionnel réel
+- **Automatique** : Laisser Delphi gérer l'inversion, éviter les calculs manuels
 
-1. Utilisez la propriété `BiDiMode` pour contrôler la direction du texte et des contrôles
-2. Définissez la direction au niveau du formulaire ou de l'application et utilisez `ParentBiDiMode` pour propager
-3. Faites attention aux textes mixtes qui contiennent à la fois des parties RTL et LTR
-4. Adaptez la disposition des contrôles pour qu'elle soit cohérente avec la direction du texte
-5. Testez votre application avec de vraies données en langues RTL
-
----
-
-Dans la prochaine section, nous explorerons les outils de traduction et les flux de travail pour faciliter l'internationalisation de vos applications Delphi.
+En suivant ces recommandations et en utilisant les outils présentés dans cette section, vous pourrez créer des applications qui offrent une expérience utilisateur naturelle et professionnelle pour les utilisateurs de langues RTL.
 
 ⏭️ [Outils de traduction et flux de travail](/13-internationalisation-et-localisation/08-outils-de-traduction-et-flux-de-travail.md)

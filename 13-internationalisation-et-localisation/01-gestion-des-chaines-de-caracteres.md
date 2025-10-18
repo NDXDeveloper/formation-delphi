@@ -1,8 +1,10 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.1 Gestion des chaînes de caractères
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-L'internationalisation d'une application commence par une bonne gestion des chaînes de caractères. Delphi offre des outils puissants pour manipuler le texte dans différentes langues et encodages.
+Les chaînes de caractères sont parmi les types de données les plus utilisés en programmation. Elles permettent de stocker et manipuler du texte, que ce soit pour afficher des messages à l'utilisateur, traiter des données, ou gérer l'internationalisation d'une application. Dans Delphi, la gestion des chaînes de caractères est puissante et flexible.
 
 ## Les types de chaînes en Delphi
 
@@ -18,292 +20,601 @@ Delphi propose plusieurs types pour représenter les chaînes de caractères :
 
 > 💡 Dans les versions modernes de Delphi, `string` est équivalent à `UnicodeString`, ce qui permet nativement la gestion de tous les caractères internationaux.
 
-## Manipulation de base des chaînes
+### String (le type principal)
 
-### Déclaration et affectation
+Le type `string` est le type de chaîne par défaut et le plus couramment utilisé. Depuis les versions modernes de Delphi, `string` est un alias pour `UnicodeString`, ce qui signifie qu'il gère automatiquement les caractères Unicode.
 
 ```pascal
 var
-  MaChaine: string;
+  Nom: string;
+  Message: string;
 begin
-  MaChaine := 'Bonjour le monde';
-  ShowMessage(MaChaine);
+  Nom := 'Alice';
+  Message := 'Bonjour ' + Nom;
 end;
 ```
 
-### Concaténation de chaînes
+**Caractéristiques principales :**
+- Gestion automatique de la mémoire (pas besoin de libérer manuellement)
+- Support complet d'Unicode (tous les alphabets du monde)
+- Longueur dynamique (s'adapte automatiquement)
+- Indexation à partir de 1 (le premier caractère est à l'index 1)
+
+### AnsiString
+
+`AnsiString` est un type de chaîne qui utilise l'encodage ANSI (un caractère = un octet). Il est principalement utilisé pour la compatibilité avec du code ancien ou des APIs qui nécessitent cet encodage.
 
 ```pascal
 var
-  Prenom, NomComplet: string;
+  TexteAnsi: AnsiString;
 begin
-  Prenom := 'Marie';
-  NomComplet := 'Bonjour ' + Prenom + ' !';
-  // Ou avec l'opérateur +=
-  NomComplet := 'Bonjour ';
-  NomComplet += Prenom;
-  NomComplet += ' !';
+  TexteAnsi := 'Texte en ANSI';
+end;
+```
+
+### WideString
+
+`WideString` stocke les caractères en Unicode (UTF-16), similaire à `UnicodeString`, mais avec une gestion mémoire différente. Il est principalement utilisé pour l'interopérabilité COM.
+
+### Char et les caractères individuels
+
+Le type `Char` représente un seul caractère Unicode. Pour accéder à un caractère dans une chaîne, on utilise la notation entre crochets.
+
+```pascal
+var
+  Texte: string;
+  PremierCaractere: Char;
+begin
+  Texte := 'Bonjour';
+  PremierCaractere := Texte[1]; // 'B'
+end;
+```
+
+## Déclaration et initialisation
+
+### Déclaration simple
+
+```pascal
+var
+  Prenom: string;
+  Ville: string;
+```
+
+### Initialisation lors de la déclaration
+
+```pascal
+var
+  Prenom: string = 'Marie';
+  Ville: string = 'Paris';
+```
+
+### Chaînes vides
+
+Une chaîne peut être vide (ne contenir aucun caractère).
+
+```pascal
+var
+  TexteVide: string;
+begin
+  TexteVide := ''; // Chaîne vide
+  // ou
+  TexteVide := EmptyStr; // Constante pour chaîne vide
+end;
+```
+
+## Opérations de base sur les chaînes
+
+### Concaténation (assemblage de chaînes)
+
+La concaténation permet d'assembler plusieurs chaînes en une seule.
+
+```pascal
+var
+  Prenom, Nom, NomComplet: string;
+begin
+  Prenom := 'Jean';
+  Nom := 'Dupont';
+
+  // Méthode 1 : opérateur +
+  NomComplet := Prenom + ' ' + Nom; // 'Jean Dupont'
+
+  // Méthode 2 : fonction Concat
+  NomComplet := Concat(Prenom, ' ', Nom);
 end;
 ```
 
 ### Longueur d'une chaîne
 
+Pour connaître le nombre de caractères dans une chaîne, on utilise la fonction `Length`.
+
 ```pascal
 var
-  MaChaine: string;
+  Texte: string;
   Longueur: Integer;
 begin
-  MaChaine := 'Bonjour';
-  Longueur := Length(MaChaine); // Retourne 7
+  Texte := 'Bonjour';
+  Longueur := Length(Texte); // 7
 end;
 ```
 
-## Fonctions utiles pour les chaînes
+### Accès aux caractères individuels
 
-Delphi offre de nombreuses fonctions pour manipuler les chaînes :
-
-### Recherche dans une chaîne
+On accède aux caractères d'une chaîne par leur index (position), en commençant à 1.
 
 ```pascal
 var
-  Position: Integer;
+  Mot: string;
+  Premier, Dernier: Char;
 begin
-  // Recherche la position du mot "monde" (commence à 1, pas à 0)
-  Position := Pos('monde', 'Bonjour le monde');
-  // Position vaut 12
+  Mot := 'Delphi';
+  Premier := Mot[1];              // 'D'
+  Dernier := Mot[Length(Mot)];    // 'i'
 end;
 ```
 
 ### Extraction de sous-chaînes
 
+La fonction `Copy` permet d'extraire une partie d'une chaîne.
+
 ```pascal
+// Copy(Chaîne, Position, Nombre)
 var
-  MaChaine, SousChaine: string;
+  Texte, SousTexte: string;
 begin
-  MaChaine := 'Bonjour le monde';
+  Texte := 'Bonjour le monde';
 
-  // Extraction avec Copy (chaîne, position de départ, nombre de caractères)
-  SousChaine := Copy(MaChaine, 9, 2); // Résultat : "le"
+  // Extraire 7 caractères à partir de la position 1
+  SousTexte := Copy(Texte, 1, 7); // 'Bonjour'
 
-  // Extraction du début (gauche)
-  SousChaine := LeftStr(MaChaine, 7); // Résultat : "Bonjour"
-
-  // Extraction de la fin (droite)
-  SousChaine := RightStr(MaChaine, 5); // Résultat : "monde"
-
-  // Extraction du milieu
-  SousChaine := MidStr(MaChaine, 9, 2); // Résultat : "le"
+  // Extraire à partir de la position 9
+  SousTexte := Copy(Texte, 9, 2); // 'le'
 end;
 ```
 
-> ⚠️ Les fonctions `LeftStr`, `RightStr` et `MidStr` nécessitent d'ajouter `StrUtils` dans la clause `uses`.
+## Fonctions de manipulation courantes
 
-### Modification de chaînes
+### Conversion de casse (majuscules/minuscules)
 
 ```pascal
 var
-  MaChaine: string;
+  Texte: string;
 begin
-  MaChaine := 'Bonjour le monde';
+  Texte := 'Bonjour';
 
-  // Remplacement
-  MaChaine := StringReplace(MaChaine, 'monde', 'Delphi', [rfReplaceAll]);
-  // Résultat : "Bonjour le Delphi"
+  // Convertir en majuscules
+  Texte := UpperCase(Texte); // 'BONJOUR'
 
-  // Conversion en majuscules
-  MaChaine := UpperCase(MaChaine);
-  // Résultat : "BONJOUR LE DELPHI"
-
-  // Conversion en minuscules
-  MaChaine := LowerCase(MaChaine);
-  // Résultat : "bonjour le delphi"
-
-  // Première lettre en majuscule
-  MaChaine := UpperCase(MaChaine[1]) + Copy(MaChaine, 2, Length(MaChaine) - 1);
-  // Résultat : "Bonjour le delphi"
+  // Convertir en minuscules
+  Texte := LowerCase('MONDE'); // 'monde'
 end;
 ```
 
-## Chaînes formatées
-
-La fonction `Format` permet de créer des chaînes complexes en insérant des valeurs à des emplacements spécifiques :
+### Suppression des espaces
 
 ```pascal
 var
-  Nom, Prenom, Message: string;
-  Age: Integer;
+  Texte: string;
 begin
-  Nom := 'Dupont';
-  Prenom := 'Jean';
-  Age := 35;
+  Texte := '  Bonjour  ';
 
-  // %s pour les chaînes, %d pour les entiers
-  Message := Format('Bonjour %s %s, vous avez %d ans.', [Prenom, Nom, Age]);
-  // Résultat : "Bonjour Jean Dupont, vous avez 35 ans."
+  // Supprimer les espaces à gauche et à droite
+  Texte := Trim(Texte); // 'Bonjour'
+
+  // Supprimer uniquement les espaces à gauche
+  Texte := TrimLeft('  Bonjour'); // 'Bonjour'
+
+  // Supprimer uniquement les espaces à droite
+  Texte := TrimRight('Bonjour  '); // 'Bonjour'
 end;
 ```
 
-## Conversion entre types de chaînes
+### Recherche dans une chaîne
 
-Il est parfois nécessaire de convertir entre différents formats de chaînes :
-
-```pascal
-var
-  S: string;
-  U: UTF8String;
-  A: AnsiString;
-begin
-  S := 'Caractères spéciaux: é à ç ê';
-
-  // Conversion en UTF-8
-  U := UTF8Encode(S);
-
-  // Conversion d'UTF-8 vers string (UnicodeString)
-  S := UTF8ToString(U);
-
-  // Conversion en AnsiString (attention à la perte possible de caractères)
-  A := AnsiString(S);
-
-  // Reconversion en string
-  S := string(A);
-end;
-```
-
-## Manipuler des chaînes avec TStringHelper
-
-À partir de Delphi XE3, le type `string` dispose d'un helper qui ajoute des méthodes directement à la chaîne :
+La fonction `Pos` permet de trouver la position d'une sous-chaîne dans une chaîne.
 
 ```pascal
 var
-  S: string;
-  Contient: Boolean;
+  Texte: string;
   Position: Integer;
 begin
-  S := 'Bonjour le monde';
+  Texte := 'Bonjour le monde';
 
-  // Test si la chaîne contient "monde"
-  Contient := S.Contains('monde');
+  // Chercher 'monde'
+  Position := Pos('monde', Texte); // 12
 
-  // Recherche de "monde" (commence à 0, pas à 1 comme Pos())
-  Position := S.IndexOf('monde');
-
-  // Débute par
-  if S.StartsWith('Bon') then
-    ShowMessage('La chaîne commence par "Bon"');
-
-  // Termine par
-  if S.EndsWith('de') then
-    ShowMessage('La chaîne finit par "de"');
-
-  // Supprimer des espaces en début et fin
-  S := ' Texte avec espaces  '.Trim;  // "Texte avec espaces"
-  S := ' Texte avec espaces  '.TrimLeft;  // "Texte avec espaces  "
-  S := ' Texte avec espaces  '.TrimRight;  // " Texte avec espaces"
-
-  // Autres méthodes utiles
-  S := 'bonjour'.ToUpper;  // "BONJOUR"
-  S := 'BONJOUR'.ToLower;  // "bonjour"
-  S := 'Bonjour le monde'.Substring(8, 2);  // "le"
+  // Si la sous-chaîne n'est pas trouvée, Pos retourne 0
+  Position := Pos('salut', Texte); // 0
 end;
 ```
 
-> 💡 L'utilisation de `TStringHelper` rend le code plus lisible et orienté objet.
+### Remplacement de texte
 
-## Gestion des caractères spéciaux
-
-### Caractères d'échappement
-
-Pour inclure des caractères spéciaux dans une chaîne :
+La fonction `StringReplace` permet de remplacer des occurrences dans une chaîne.
 
 ```pascal
+uses
+  System.SysUtils;
+
 var
-  S: string;
+  Texte, Resultat: string;
 begin
-  // Utilisation du caractère #13#10 pour un retour à la ligne
-  S := 'Première ligne' + #13#10 + 'Deuxième ligne';
+  Texte := 'Bonjour le monde';
 
-  // Utilisation de guillemets dans une chaîne
-  S := 'Il a dit: "Bonjour"';
+  // Remplacer 'monde' par 'univers'
+  Resultat := StringReplace(Texte, 'monde', 'univers', [rfReplaceAll]);
+  // 'Bonjour le univers'
 
-  // Doubler les apostrophes pour les inclure
-  S := 'L''apostrophe est doublée';
+  // Options disponibles :
+  // rfReplaceAll : remplacer toutes les occurrences
+  // rfIgnoreCase : ignorer la casse (majuscules/minuscules)
 end;
 ```
 
-### Chaînes multilignes
+## Comparaison de chaînes
 
-Pour des chaînes multilignes, on peut utiliser la syntaxe de l'apostrophe répétée :
+### Comparaison simple
 
 ```pascal
 var
-  S: string;
+  Chaine1, Chaine2: string;
 begin
-  S := 'Ceci est une chaîne'
-     + ' qui s''étend sur'
-     + ' plusieurs lignes de code';
+  Chaine1 := 'Bonjour';
+  Chaine2 := 'Bonjour';
 
-  // Ou avec des constantes
-  S := 'Première ligne' + sLineBreak + 'Deuxième ligne';
+  if Chaine1 = Chaine2 then
+    ShowMessage('Les chaînes sont identiques');
+
+  if Chaine1 <> 'Au revoir' then
+    ShowMessage('Les chaînes sont différentes');
 end;
 ```
 
-## Conseils pour l'internationalisation
+### Comparaison avec fonction
 
-1. **Évitez les chaînes codées en dur** dans votre code. Utilisez plutôt des ressources de chaînes ou des fichiers de ressources.
-
-2. **Utilisez toujours le type `string`** (UnicodeString) pour assurer la compatibilité avec tous les caractères internationaux.
-
-3. **Attention aux opérations de comparaison** qui peuvent être sensibles à la casse et aux accents selon les paramètres régionaux.
-
-4. **Pour les comparaisons insensibles à la casse**, utilisez `SameText` ou `CompareText` plutôt que de convertir les chaînes en majuscules :
+Pour des comparaisons plus sophistiquées, utilisez `CompareText` (insensible à la casse) ou `CompareStr` (sensible à la casse).
 
 ```pascal
-if SameText(Chaine1, Chaine2) then
-  ShowMessage('Les chaînes sont identiques (insensible à la casse)');
+var
+  Resultat: Integer;
+begin
+  // CompareText : insensible à la casse
+  Resultat := CompareText('Bonjour', 'bonjour'); // 0 (identiques)
 
-if CompareText(Chaine1, Chaine2) = 0 then
-  ShowMessage('Les chaînes sont identiques (insensible à la casse)');
+  // CompareStr : sensible à la casse
+  Resultat := CompareStr('Bonjour', 'bonjour'); // <> 0 (différentes)
+
+  // La fonction retourne :
+  // 0 si les chaînes sont égales
+  // < 0 si la première chaîne est "plus petite"
+  // > 0 si la première chaîne est "plus grande"
+end;
 ```
 
-## Exemple complet : Manipulation de texte
-
-Voici un exemple qui illustre plusieurs techniques de manipulation de chaînes :
+### Vérifier le début ou la fin d'une chaîne
 
 ```pascal
-procedure TForm1.btnTraiterClick(Sender: TObject);
 var
-  Texte, Mot, Resultat: string;
-  Position, Compteur: Integer;
+  Texte: string;
 begin
-  Texte := edtTexte.Text;
-  Mot := edtMot.Text;
-  Compteur := 0;
-  Resultat := '';
+  Texte := 'Bonjour le monde';
 
-  // Conversion en minuscules pour recherche insensible à la casse
-  Texte := LowerCase(Texte);
-  Mot := LowerCase(Mot);
+  // Vérifier si commence par
+  if Texte.StartsWith('Bonjour') then
+    ShowMessage('Commence par Bonjour');
 
-  // Recherche de toutes les occurrences du mot
-  Position := Pos(Mot, Texte);
-  while Position > 0 do
+  // Vérifier si se termine par
+  if Texte.EndsWith('monde') then
+    ShowMessage('Se termine par monde');
+end;
+```
+
+## Formatage de chaînes
+
+### Format simple avec Format()
+
+La fonction `Format` permet de créer des chaînes formatées de manière élégante.
+
+```pascal
+var
+  Nom: string;
+  Age: Integer;
+  Message: string;
+begin
+  Nom := 'Alice';
+  Age := 25;
+
+  // %s pour les chaînes, %d pour les entiers
+  Message := Format('Bonjour %s, vous avez %d ans', [Nom, Age]);
+  // 'Bonjour Alice, vous avez 25 ans'
+end;
+```
+
+### Spécificateurs de format courants
+
+```pascal
+var
+  Entier: Integer;
+  Reel: Double;
+  Texte: string;
+begin
+  Entier := 42;
+  Reel := 3.14159;
+
+  // %d : entier décimal
+  Texte := Format('Entier : %d', [Entier]); // 'Entier : 42'
+
+  // %f : nombre à virgule flottante
+  Texte := Format('Pi : %f', [Reel]); // 'Pi : 3.14159000000000'
+
+  // %.2f : deux décimales
+  Texte := Format('Pi : %.2f', [Reel]); // 'Pi : 3.14'
+
+  // %s : chaîne de caractères
+  Texte := Format('Texte : %s', ['Hello']); // 'Texte : Hello'
+
+  // %x : hexadécimal
+  Texte := Format('Hexa : %x', [255]); // 'Hexa : FF'
+end;
+```
+
+## Conversion entre types
+
+### Chaîne vers nombre
+
+```pascal
+var
+  TexteNombre: string;
+  Nombre: Integer;
+  NombreReel: Double;
+begin
+  TexteNombre := '42';
+
+  // Conversion en entier
+  Nombre := StrToInt(TexteNombre); // 42
+
+  // Conversion en entier avec valeur par défaut en cas d'erreur
+  Nombre := StrToIntDef('abc', 0); // 0 (car 'abc' n'est pas un nombre)
+
+  // Conversion en réel
+  NombreReel := StrToFloat('3.14'); // 3.14
+end;
+```
+
+### Nombre vers chaîne
+
+```pascal
+var
+  Nombre: Integer;
+  NombreReel: Double;
+  Texte: string;
+begin
+  Nombre := 42;
+  NombreReel := 3.14159;
+
+  // Entier vers chaîne
+  Texte := IntToStr(Nombre); // '42'
+
+  // Réel vers chaîne
+  Texte := FloatToStr(NombreReel); // '3.14159'
+
+  // Avec format spécifique
+  Texte := FloatToStrF(NombreReel, ffFixed, 15, 2); // '3.14'
+end;
+```
+
+## Parcours d'une chaîne
+
+### Parcours caractère par caractère
+
+```pascal
+var
+  Texte: string;
+  Caractere: Char;
+  i: Integer;
+begin
+  Texte := 'Bonjour';
+
+  // Méthode 1 : boucle for classique
+  for i := 1 to Length(Texte) do
   begin
-    Inc(Compteur);
-    // Continue la recherche après l'occurrence trouvée
-    Position := Pos(Mot, Texte, Position + Length(Mot));
+    Caractere := Texte[i];
+    // Traiter le caractère
   end;
 
-  Resultat := Format('Le mot "%s" apparaît %d fois dans le texte.', [edtMot.Text, Compteur]);
-
-  // Affichage du résultat
-  memResultat.Lines.Add(Resultat);
+  // Méthode 2 : boucle for-in (plus moderne)
+  for Caractere in Texte do
+  begin
+    // Traiter le caractère
+  end;
 end;
 ```
 
-> ⚠️ La fonction `Pos` avec trois paramètres (pour spécifier la position de départ) nécessite Delphi 10.4 ou supérieur. Pour les versions antérieures, utilisez `PosEx` de l'unité `StrUtils`.
+## Division de chaînes (Split)
 
----
+Pour diviser une chaîne en plusieurs parties selon un séparateur.
 
-En maîtrisant ces techniques de gestion des chaînes de caractères, vous serez en mesure de créer des applications Delphi qui gèrent correctement les textes de différentes langues, ce qui est essentiel pour l'internationalisation de vos logiciels.
+```pascal
+uses
+  System.StrUtils;
+
+var
+  Texte: string;
+  Parties: TArray<string>;
+  Partie: string;
+begin
+  Texte := 'Pomme,Poire,Banane';
+
+  // Diviser selon la virgule
+  Parties := SplitString(Texte, ',');
+
+  // Parcourir les parties
+  for Partie in Parties do
+    ShowMessage(Partie); // Affiche 'Pomme', puis 'Poire', puis 'Banane'
+end;
+```
+
+## Construction efficace de chaînes
+
+Lorsqu'on doit construire une longue chaîne par concaténations successives, il est préférable d'utiliser `TStringBuilder` pour de meilleures performances.
+
+```pascal
+uses
+  System.SysUtils;
+
+var
+  Builder: TStringBuilder;
+  Resultat: string;
+  i: Integer;
+begin
+  Builder := TStringBuilder.Create;
+  try
+    // Ajouter des morceaux de texte
+    Builder.Append('Bonjour ');
+    Builder.Append('le ');
+    Builder.Append('monde');
+
+    // Ajouter avec retour à la ligne
+    Builder.AppendLine('Ligne 1');
+    Builder.AppendLine('Ligne 2');
+
+    // Ajouter avec format
+    Builder.AppendFormat('Nombre : %d', [42]);
+
+    // Récupérer la chaîne finale
+    Resultat := Builder.ToString;
+  finally
+    Builder.Free;
+  end;
+end;
+```
+
+## Bonnes pratiques
+
+### Éviter les concaténations multiples en boucle
+
+**Mauvaise pratique :**
+```pascal
+var
+  Resultat: string;
+  i: Integer;
+begin
+  Resultat := '';
+  for i := 1 to 1000 do
+    Resultat := Resultat + IntToStr(i) + '; '; // Très lent !
+end;
+```
+
+**Bonne pratique :**
+```pascal
+var
+  Builder: TStringBuilder;
+  Resultat: string;
+  i: Integer;
+begin
+  Builder := TStringBuilder.Create;
+  try
+    for i := 1 to 1000 do
+      Builder.Append(IntToStr(i)).Append('; ');
+    Resultat := Builder.ToString;
+  finally
+    Builder.Free;
+  end;
+end;
+```
+
+### Vérifier si une chaîne est vide
+
+```pascal
+var
+  Texte: string;
+begin
+  // Méthode standard
+  if Texte = '' then
+    ShowMessage('Chaîne vide');
+
+  // Méthode alternative
+  if Length(Texte) = 0 then
+    ShowMessage('Chaîne vide');
+
+  // Méthode moderne (Delphi récent)
+  if Texte.IsEmpty then
+    ShowMessage('Chaîne vide');
+end;
+```
+
+### Gérer les erreurs de conversion
+
+```pascal
+var
+  TexteSaisi: string;
+  Nombre: Integer;
+begin
+  TexteSaisi := '123abc'; // Texte invalide
+
+  // Avec gestion d'erreur
+  if TryStrToInt(TexteSaisi, Nombre) then
+    ShowMessage('Conversion réussie : ' + IntToStr(Nombre))
+  else
+    ShowMessage('Erreur : texte invalide');
+
+  // Ou avec valeur par défaut
+  Nombre := StrToIntDef(TexteSaisi, -1);
+  if Nombre = -1 then
+    ShowMessage('Erreur de conversion');
+end;
+```
+
+## Encodage et Unicode
+
+Delphi gère nativement Unicode depuis plusieurs versions. Le type `string` peut donc contenir n'importe quel caractère de n'importe quel alphabet.
+
+```pascal
+var
+  TexteMultilingue: string;
+begin
+  // Tous ces caractères sont gérés correctement
+  TexteMultilingue := 'Bonjour 你好 مرحبا Привет 🎉';
+
+  ShowMessage(TexteMultilingue); // Affiche correctement tous les caractères
+end;
+```
+
+### Points d'attention avec Unicode
+
+Certains caractères Unicode peuvent être composés de plusieurs "code points". Par exemple, un emoji avec une variation de couleur de peau est techniquement composé de plusieurs caractères Unicode.
+
+```pascal
+var
+  Emoji: string;
+  Longueur: Integer;
+begin
+  Emoji := '👋'; // Un emoji simple
+  Longueur := Length(Emoji); // Peut retourner 1 ou 2 selon l'emoji
+
+  // Pour un comptage précis des "caractères visuels",
+  // utilisez des fonctions spécialisées
+end;
+```
+
+## Résumé des fonctions essentielles
+
+| Fonction | Description | Exemple |
+|----------|-------------|---------|
+| `Length(s)` | Longueur de la chaîne | `Length('Hello')` → 5 |
+| `Copy(s, pos, len)` | Extraire une sous-chaîne | `Copy('Bonjour', 1, 3)` → 'Bon' |
+| `Pos(sub, s)` | Position d'une sous-chaîne | `Pos('jour', 'Bonjour')` → 4 |
+| `UpperCase(s)` | Convertir en majuscules | `UpperCase('hello')` → 'HELLO' |
+| `LowerCase(s)` | Convertir en minuscules | `LowerCase('HELLO')` → 'hello' |
+| `Trim(s)` | Supprimer espaces début/fin | `Trim('  Hi  ')` → 'Hi' |
+| `IntToStr(n)` | Entier vers chaîne | `IntToStr(42)` → '42' |
+| `StrToInt(s)` | Chaîne vers entier | `StrToInt('42')` → 42 |
+| `Format(fmt, params)` | Formatage de chaîne | `Format('%s: %d', ['Age', 25])` |
+| `StringReplace(s, old, new, flags)` | Remplacement | `StringReplace('Hi', 'i', 'ello', [])` |
+
+## Conclusion
+
+La gestion des chaînes de caractères en Delphi est riche et intuitive. Le type `string` moderne gère automatiquement la mémoire et supporte pleinement Unicode, ce qui facilite grandement le développement d'applications internationales. Les nombreuses fonctions disponibles permettent de manipuler le texte de manière efficace et élégante.
+
+Dans les prochaines sections, nous explorerons comment utiliser ces connaissances pour gérer l'internationalisation complète d'une application, avec les ressources linguistiques et l'adaptation aux différentes cultures.
 
 ⏭️ [Ressources linguistiques](/13-internationalisation-et-localisation/02-ressources-linguistiques.md)

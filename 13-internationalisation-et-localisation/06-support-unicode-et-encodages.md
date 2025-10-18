@@ -1,665 +1,885 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.6 Support Unicode et encodages
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Le support des différents encodages de caractères, et notamment d'Unicode, est essentiel pour créer des applications véritablement internationales. Dans cette section, nous allons explorer comment Delphi gère les encodages et comment vous pouvez travailler efficacement avec Unicode.
+L'encodage des caractères est un sujet fondamental mais souvent mal compris en programmation. Comprendre Unicode et les différents encodages est essentiel pour créer des applications internationales robustes. Dans cette section, nous allons démystifier ces concepts et voir comment Delphi gère l'Unicode.
 
-## Comprendre les encodages de caractères
+## Qu'est-ce que l'encodage de caractères ?
 
-Avant de plonger dans les détails techniques, prenons un moment pour comprendre les concepts de base.
+### Le problème historique
 
-### Qu'est-ce qu'un encodage de caractères ?
+Au début de l'informatique, chaque caractère était représenté par un nombre. Par exemple, la lettre 'A' était représentée par le nombre 65. Mais chaque pays a créé son propre système d'encodage :
 
-Un encodage de caractères est une méthode qui associe des caractères textuels (lettres, chiffres, symboles) à des valeurs numériques que l'ordinateur peut traiter. C'est comme un dictionnaire qui indique à l'ordinateur comment représenter et interpréter les caractères.
+| Encodage | Région | Caractères supportés | Problème |
+|----------|--------|---------------------|----------|
+| **ASCII** | Amérique | 128 caractères (0-127) | Pas d'accents |
+| **ISO-8859-1** | Europe occidentale | 256 caractères | Pas de cyrillique |
+| **ISO-8859-5** | Europe de l'Est | Alphabet cyrillique | Incompatible avec ISO-8859-1 |
+| **Windows-1252** | Windows | Extension d'ISO-8859-1 | Non standard |
+| **Shift-JIS** | Japon | Caractères japonais | Incompatible avec tout |
 
-### Les principaux types d'encodages
+**Le cauchemar** : Un fichier créé en russe (ISO-8859-5) affiché avec l'encodage français (ISO-8859-1) montrait des caractères complètement différents !
 
-Il existe plusieurs encodages différents, chacun ayant ses propres caractéristiques :
+### La solution : Unicode
 
-- **ASCII** : L'encodage le plus ancien, ne gère que 128 caractères (principalement l'alphabet latin non accentué et quelques symboles)
-- **ANSI/Windows-1252** : Extension d'ASCII avec 256 caractères, utilisé par les anciennes versions de Windows
-- **UTF-8** : Encodage Unicode variable (1 à 4 octets par caractère), très répandu sur le web
-- **UTF-16** : Encodage Unicode utilisant 2 ou 4 octets par caractère, utilisé par Windows pour l'interface utilisateur
-- **UTF-32** : Encodage Unicode utilisant 4 octets par caractère, rarement utilisé mais simple car à taille fixe
+Unicode est un **standard universel** qui attribue un numéro unique (appelé "code point") à **chaque caractère** de **toutes les langues** du monde.
 
-### Qu'est-ce qu'Unicode ?
+```
+Exemples de code points Unicode :
+U+0041 = 'A' (lettre latine majuscule A)
+U+00E9 = 'é' (e accent aigu)
+U+4E2D = '中' (caractère chinois)
+U+0623 = 'أ' (lettre arabe)
+U+1F600 = '😀' (emoji visage souriant)
+```
 
-Unicode est une norme informatique qui vise à représenter tous les caractères de toutes les langues écrites. Au lieu des 256 caractères maximum des encodages traditionnels, Unicode peut représenter plus d'un million de caractères, couvrant pratiquement toutes les langues et symboles du monde.
+> 💡 **Unicode** résout le problème : un seul système pour tous les caractères du monde !
 
-## L'évolution du support Unicode dans Delphi
+## Les différents encodages Unicode
 
-Le support d'Unicode dans Delphi a considérablement évolué au fil des versions :
+Unicode définit les caractères, mais il existe plusieurs façons de les **encoder en octets** :
 
-- **Delphi 1-2007** : Le type `string` par défaut était `AnsiString` (limité aux jeux de caractères locaux)
-- **Delphi 2009 et ultérieur** : Le type `string` par défaut est désormais `UnicodeString` (compatible avec tous les caractères Unicode)
+### Tableau comparatif des encodages
 
-> 💡 Dans les versions modernes de Delphi (à partir de Delphi 2009), vous n'avez généralement pas besoin de vous préoccuper des encodages pour les chaînes en mémoire, car le type `string` gère automatiquement Unicode.
+| Encodage | Taille par caractère | Avantages | Inconvénients | Usage |
+|----------|---------------------|-----------|---------------|-------|
+| **UTF-8** | 1 à 4 octets | Compatible ASCII, économe | Taille variable | Web, fichiers texte |
+| **UTF-16** | 2 ou 4 octets | Bon compromis | Taille variable | Windows, Delphi interne |
+| **UTF-32** | 4 octets fixes | Taille fixe, simple | Très lourd | Rare, traitement interne |
+| **ANSI** | 1 octet | Compact | Limité à 256 caractères | Héritage, compatibilité |
 
-## Types de chaînes dans Delphi moderne
+### UTF-8 : L'encodage universel du Web
 
-Delphi offre plusieurs types de chaînes différents, chacun avec son propre encodage :
+UTF-8 est l'encodage le plus populaire aujourd'hui car :
+- Compatible avec ASCII (les 128 premiers caractères sont identiques)
+- Économe en espace pour les textes latins
+- Utilisé par défaut sur le Web
 
-| Type | Description | Encodage | Usage |
-|------|-------------|----------|-------|
-| `string` | Type de chaîne par défaut | UTF-16 | Usage général |
-| `UnicodeString` | Identique à `string` | UTF-16 | Usage général |
-| `AnsiString` | Chaîne 8 bits | Selon page de code | Compatibilité avec du code ancien |
-| `UTF8String` | Chaîne en UTF-8 | UTF-8 | Échanges web, fichiers texte |
-| `RawByteString` | Chaîne d'octets sans encodage spécifique | Non défini | Données binaires |
-| `WideString` | Chaîne Unicode compatible COM | UTF-16 | Interopération avec COM |
+**Exemples de taille en UTF-8 :**
 
-> ⚠️ Attention : Bien que ces différents types existent, dans le code moderne, vous devriez principalement utiliser le type `string` (qui est `UnicodeString`), sauf en cas de besoin spécifique.
+| Caractère | Code point | UTF-8 (octets) | Nombre d'octets |
+|-----------|------------|----------------|-----------------|
+| A | U+0041 | 41 | 1 octet |
+| é | U+00E9 | C3 A9 | 2 octets |
+| € | U+20AC | E2 82 AC | 3 octets |
+| 中 | U+4E2D | E4 B8 AD | 3 octets |
+| 😀 | U+1F600 | F0 9F 98 80 | 4 octets |
+
+### UTF-16 : L'encodage de Windows et Delphi
+
+UTF-16 utilise 2 octets pour la plupart des caractères courants, et 4 octets pour les caractères plus rares.
+
+**Avantages pour Delphi :**
+- Efficace pour les langues européennes et asiatiques
+- Utilisé nativement par Windows
+- Support direct dans Delphi moderne
+
+### UTF-32 : Le plus simple mais le plus lourd
+
+UTF-32 utilise toujours 4 octets par caractère. Simple mais très gourmand en mémoire.
+
+## Support Unicode dans Delphi
+
+### Évolution du support Unicode
+
+| Version Delphi | Type string | Encodage | Support Unicode |
+|----------------|-------------|----------|-----------------|
+| Delphi 1-2007 | AnsiString | ANSI | ❌ Limité |
+| Delphi 2009+ | UnicodeString | UTF-16 | ✅ Complet |
+| Delphi actuel | string = UnicodeString | UTF-16 | ✅ Natif |
+
+> 💡 Depuis Delphi 2009, le type `string` est équivalent à `UnicodeString`, ce qui signifie que **l'Unicode est géré nativement**.
+
+### Types de chaînes et leur encodage
+
+```pascal
+type
+  // Types de chaînes disponibles
+  AnsiString;        // Encodage ANSI (1 octet par caractère)
+  UnicodeString;     // UTF-16 (2 ou 4 octets par caractère)
+  WideString;        // UTF-16 (compatible COM)
+  UTF8String;        // UTF-8 (1 à 4 octets par caractère)
+  RawByteString;     // Octets bruts sans encodage spécifique
+
+  // Alias pratique
+  string = UnicodeString;  // Par défaut dans Delphi moderne
+```
+
+### Déclaration et utilisation
+
+```pascal
+var
+  TexteUnicode: string;           // UTF-16 (recommandé)
+  TexteUTF8: UTF8String;          // UTF-8
+  TexteAnsi: AnsiString;          // ANSI (ancien)
+  TexteBrut: RawByteString;       // Octets bruts
+begin
+  // Delphi gère automatiquement l'Unicode
+  TexteUnicode := 'Bonjour 你好 مرحبا 😀';
+
+  // Tous les caractères du monde sont supportés !
+  ShowMessage(TexteUnicode);
+end;
+```
 
 ## Conversion entre encodages
 
-### Conversion entre les types de chaînes
+### Conversion automatique
 
-Delphi gère automatiquement les conversions entre différents types de chaînes :
+Delphi effectue automatiquement les conversions entre types de chaînes :
 
 ```pascal
 var
-  S: string;           // UnicodeString (UTF-16)
-  U8: UTF8String;      // UTF-8
-  A: AnsiString;       // ANSI selon la page de code système
+  TexteUnicode: string;
+  TexteUTF8: UTF8String;
+  TexteAnsi: AnsiString;
 begin
-  // Assignation d'une chaîne Unicode
-  S := 'Bonjour à tous ! こんにちは';
+  TexteUnicode := 'Café';
 
-  // Conversion en UTF-8
-  U8 := UTF8String(S);
+  // Conversion automatique Unicode → UTF-8
+  TexteUTF8 := UTF8String(TexteUnicode);
 
-  // Conversion en ANSI (attention : caractères non-ANSI seront altérés)
-  A := AnsiString(S);
-
-  // Conversion depuis UTF-8 vers Unicode
-  S := string(U8);
-
-  // Affichage des longueurs (nombre de caractères vs octets)
-  ShowMessage(Format('Unicode: %d caractères', [Length(S)]));
-  ShowMessage(Format('UTF-8: %d octets', [Length(U8)]));
-  ShowMessage(Format('ANSI: %d octets', [Length(A)]));
+  // Conversion automatique Unicode → ANSI
+  TexteAnsi := AnsiString(TexteUnicode);
+  // ⚠️ Attention : risque de perte de caractères si ANSI ne supporte pas
 end;
 ```
 
-### Fonctions de conversion explicites
-
-Pour plus de contrôle, Delphi fournit des fonctions de conversion explicites :
+### Conversion explicite avec System.SysUtils
 
 ```pascal
 uses
   System.SysUtils;
 
 var
-  S: string;
-  U8Bytes: TBytes;
-  U8String: UTF8String;
+  TexteUnicode: string;
+  OctetsUTF8: TBytes;
 begin
-  S := 'こんにちは'; // "Bonjour" en japonais
+  TexteUnicode := 'Bonjour le monde 🌍';
 
-  // Conversion de Unicode (UTF-16) vers UTF-8
-  U8Bytes := TEncoding.UTF8.GetBytes(S);
+  // Convertir string → UTF-8 bytes
+  OctetsUTF8 := TEncoding.UTF8.GetBytes(TexteUnicode);
 
-  // Conversion de UTF-8 vers Unicode
-  S := TEncoding.UTF8.GetString(U8Bytes);
-
-  // Autre méthode pour UTF-8
-  U8String := UTF8Encode(S);
-  S := UTF8ToString(U8String);
+  // Reconvertir UTF-8 bytes → string
+  TexteUnicode := TEncoding.UTF8.GetString(OctetsUTF8);
 end;
 ```
 
-## La classe TEncoding
+### Classe TEncoding
 
-À partir de Delphi 2009, la classe `TEncoding` fournit une approche unifiée pour gérer les différents encodages :
+La classe `TEncoding` fournit des méthodes pour gérer tous les encodages :
 
 ```pascal
 uses
-  System.SysUtils;
+  System.SysUtils, System.Classes;
 
 var
-  S: string;
-  Bytes: TBytes;
+  Texte: string;
+  OctetsUTF8, OctetsUTF16, OctetsAnsi: TBytes;
 begin
-  S := 'Texte avec des caractères accentués : é à ç';
+  Texte := 'Héllo Wörld! 世界';
 
-  // Conversion en différents encodages
-  Bytes := TEncoding.ASCII.GetBytes(S);    // ASCII (attention aux pertes)
-  Bytes := TEncoding.ANSI.GetBytes(S);     // ANSI (page de code système)
-  Bytes := TEncoding.UTF8.GetBytes(S);     // UTF-8
-  Bytes := TEncoding.Unicode.GetBytes(S);  // UTF-16 Little Endian
-  Bytes := TEncoding.BigEndianUnicode.GetBytes(S); // UTF-16 Big Endian
+  // Obtenir les octets dans différents encodages
+  OctetsUTF8 := TEncoding.UTF8.GetBytes(Texte);
+  OctetsUTF16 := TEncoding.Unicode.GetBytes(Texte);  // UTF-16
+  OctetsAnsi := TEncoding.ANSI.GetBytes(Texte);
 
-  // Reconversion vers chaîne
-  S := TEncoding.UTF8.GetString(Bytes);
+  ShowMessage(Format(
+    'Taille en UTF-8: %d octets'#13#10 +
+    'Taille en UTF-16: %d octets'#13#10 +
+    'Taille en ANSI: %d octets',
+    [Length(OctetsUTF8), Length(OctetsUTF16), Length(OctetsAnsi)]
+  ));
 end;
 ```
 
-### Encodages disponibles dans TEncoding
+### Encodages disponibles
 
-La classe `TEncoding` propose plusieurs encodages prédéfinis :
+| Encodage | Classe TEncoding | Description |
+|----------|------------------|-------------|
+| UTF-8 | `TEncoding.UTF8` | Encodage standard du Web |
+| UTF-16 LE | `TEncoding.Unicode` | UTF-16 Little Endian (Windows) |
+| UTF-16 BE | `TEncoding.BigEndianUnicode` | UTF-16 Big Endian |
+| UTF-7 | `TEncoding.UTF7` | Ancien standard email |
+| UTF-32 | `TEncoding.UTF32` | 4 octets par caractère |
+| ANSI | `TEncoding.ANSI` | Page de code système |
+| ASCII | `TEncoding.ASCII` | 7 bits, caractères basiques |
 
-- `TEncoding.ASCII` : Encodage ASCII 7 bits
-- `TEncoding.ANSI` : Encodage ANSI (page de code système)
-- `TEncoding.UTF8` : Encodage UTF-8
-- `TEncoding.Unicode` : Encodage UTF-16 Little Endian (ordre des octets Windows)
-- `TEncoding.BigEndianUnicode` : Encodage UTF-16 Big Endian (ordre des octets inverse)
-- `TEncoding.UTF7` : Encodage UTF-7 (obsolète, pour compatibilité)
+## Lecture et écriture de fichiers
 
-> 💡 Pour la plupart des cas d'utilisation modernes, UTF-8 est recommandé pour l'échange de données et les fichiers texte, car il est compact et universellement compatible.
+### Le BOM (Byte Order Mark)
 
-### Détection automatique d'encodage
+Le BOM est une séquence d'octets au début d'un fichier qui indique son encodage.
 
-`TEncoding` peut également détecter automatiquement l'encodage d'un fichier texte grâce à la marque d'ordre des octets (BOM) :
+| Encodage | BOM (octets) | BOM (hexa) |
+|----------|--------------|------------|
+| UTF-8 | EF BB BF | `$EFBBBF` |
+| UTF-16 LE | FF FE | `$FEFF` |
+| UTF-16 BE | FE FF | `$FFFE` |
+| UTF-32 LE | FF FE 00 00 | `$FFFE0000` |
+| UTF-32 BE | 00 00 FE FF | `$0000FEFF` |
 
-```pascal
-var
-  Bytes: TBytes;
-  Encoding: TEncoding;
-  OffsetToText: Integer;
-  S: string;
-begin
-  // Lire le fichier en mémoire
-  Bytes := TFile.ReadAllBytes('monfichier.txt');
+> 💡 Le BOM n'est **pas obligatoire** mais **recommandé** car il permet de détecter automatiquement l'encodage.
 
-  // Détecter l'encodage
-  Encoding := nil;
-  OffsetToText := TEncoding.GetBufferEncoding(Bytes, Encoding);
-
-  // Si aucun encodage n'est détecté, supposer UTF-8
-  if Encoding = nil then
-    Encoding := TEncoding.UTF8;
-
-  // Convertir en chaîne en ignorant le BOM
-  S := Encoding.GetString(Bytes, OffsetToText, Length(Bytes) - OffsetToText);
-
-  ShowMessage('Encodage détecté : ' + Encoding.ClassName);
-  ShowMessage('Contenu : ' + S);
-end;
-```
-
-## Lecture et écriture de fichiers texte avec différents encodages
-
-### Écriture d'un fichier texte
+### Écriture de fichiers avec encodage
 
 ```pascal
-procedure WriteTextFile(const FileName, Text: string; Encoding: TEncoding);
+uses
+  System.IOUtils, System.SysUtils, System.Classes;
+
+procedure EcrireFichierUTF8(const NomFichier, Contenu: string);
 var
-  Stream: TStreamWriter;
+  Fichier: TStreamWriter;
 begin
-  Stream := TStreamWriter.Create(FileName, False, Encoding);
+  // Créer un fichier en UTF-8 avec BOM
+  Fichier := TStreamWriter.Create(NomFichier, False, TEncoding.UTF8);
   try
-    Stream.Write(Text);
+    Fichier.Write(Contenu);
   finally
-    Stream.Free;
+    Fichier.Free;
   end;
 end;
 
-// Utilisation
+procedure EcrireFichierSansEncodage;
 begin
-  // Écrire un fichier UTF-8 avec BOM
-  WriteTextFile('fichier_utf8.txt', 'Texte avec des caractères spéciaux: é à ç', TEncoding.UTF8);
-
-  // Écrire un fichier ANSI
-  WriteTextFile('fichier_ansi.txt', 'Texte ANSI', TEncoding.ANSI);
-
-  // Écrire un fichier Unicode (UTF-16)
-  WriteTextFile('fichier_unicode.txt', 'Texte Unicode', TEncoding.Unicode);
+  // Méthode simple : UTF-8 par défaut avec BOM
+  TFile.WriteAllText('fichier.txt', 'Contenu avec accents: é à ç', TEncoding.UTF8);
 end;
 ```
 
-### Lecture d'un fichier texte
+### Lecture de fichiers avec détection d'encodage
 
 ```pascal
-function ReadTextFile(const FileName: string; Encoding: TEncoding = nil): string;
-var
-  Stream: TStreamReader;
-begin
-  // Si aucun encodage n'est spécifié, la détection automatique est utilisée
-  if Encoding = nil then
-    Stream := TStreamReader.Create(FileName)
-  else
-    Stream := TStreamReader.Create(FileName, Encoding);
+uses
+  System.IOUtils, System.SysUtils, System.Classes;
 
+function LireFichierAvecDetection(const NomFichier: string): string;
+var
+  Fichier: TStreamReader;
+begin
+  // TStreamReader détecte automatiquement l'encodage via le BOM
+  Fichier := TStreamReader.Create(NomFichier, True); // True = détecter encodage
   try
-    Result := Stream.ReadToEnd;
+    Result := Fichier.ReadToEnd;
   finally
-    Stream.Free;
+    Fichier.Free;
   end;
 end;
 
-// Utilisation
+function LireFichierUTF8(const NomFichier: string): string;
 begin
-  // Lecture avec détection automatique d'encodage
-  Memo1.Text := ReadTextFile('monfichier.txt');
-
   // Forcer la lecture en UTF-8
-  Memo1.Text := ReadTextFile('monfichier.txt', TEncoding.UTF8);
+  Result := TFile.ReadAllText(NomFichier, TEncoding.UTF8);
+end;
 
-  // Forcer la lecture en ANSI
-  Memo1.Text := ReadTextFile('monfichier.txt', TEncoding.ANSI);
+function LireFichierAnsi(const NomFichier: string): string;
+begin
+  // Lire un ancien fichier ANSI
+  Result := TFile.ReadAllText(NomFichier, TEncoding.ANSI);
 end;
 ```
 
-## Gestion des fichiers sans BOM
-
-Certains fichiers UTF-8 n'incluent pas de BOM (Byte Order Mark), notamment ceux créés sur des systèmes Unix/Linux. Pour gérer ces fichiers :
+### Détection manuelle de l'encodage
 
 ```pascal
-function ReadUTF8FileWithoutBOM(const FileName: string): string;
+uses
+  System.SysUtils, System.Classes;
+
+function DetecterEncodage(const NomFichier: string): TEncoding;
 var
   Stream: TFileStream;
-  Bytes: TBytes;
+  Buffer: TBytes;
 begin
-  Stream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-  try
-    // Lire tout le contenu du fichier
-    SetLength(Bytes, Stream.Size);
-    Stream.ReadBuffer(Bytes, 0, Length(Bytes));
+  Result := nil;
 
-    // Convertir en supposant que c'est de l'UTF-8 sans BOM
-    Result := TEncoding.UTF8.GetString(Bytes);
+  Stream := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Buffer, 4);
+    Stream.Read(Buffer[0], 4);
+
+    // Vérifier le BOM
+    if (Length(Buffer) >= 3) and
+       (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
+      Result := TEncoding.UTF8
+    else if (Length(Buffer) >= 2) and
+            (Buffer[0] = $FF) and (Buffer[1] = $FE) then
+      Result := TEncoding.Unicode  // UTF-16 LE
+    else if (Length(Buffer) >= 2) and
+            (Buffer[0] = $FE) and (Buffer[1] = $FF) then
+      Result := TEncoding.BigEndianUnicode  // UTF-16 BE
+    else
+      Result := TEncoding.ANSI;  // Par défaut
   finally
     Stream.Free;
   end;
 end;
 ```
 
-## Travailler avec les contrôles VCL et Unicode
+## Gestion des caractères spéciaux
 
-La plupart des contrôles VCL supportent nativement Unicode dans les versions modernes de Delphi :
+### Émojis et caractères au-delà du BMP
 
-```pascal
-procedure TForm1.btnSetTextClick(Sender: TObject);
-begin
-  // Les contrôles VCL supportent Unicode
-  Label1.Caption := 'Texte Unicode: こんにちは';
-  Edit1.Text := 'Éditeur avec caractères spéciaux: é à ç';
-  Memo1.Lines.Add('Mémo avec support multilingue: français, русский, 中文');
-
-  // Les boîtes de dialogue aussi
-  ShowMessage('Message Unicode: ¡Hola! שלום! Привет!');
-end;
-```
-
-### Utilisation de polices avec support Unicode
-
-Pour afficher correctement tous les caractères Unicode, assurez-vous d'utiliser une police qui les prend en charge :
-
-```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // Polices recommandées pour Unicode
-  Memo1.Font.Name := 'Arial Unicode MS';  // Large couverture Unicode
-  // ou
-  Memo1.Font.Name := 'Segoe UI';          // Police moderne Windows
-  // ou
-  Memo1.Font.Name := 'Noto Sans';         // Police Google avec large support
-end;
-```
-
-> 💡 Les polices modernes comme Arial Unicode MS, Segoe UI, Noto Sans, ou Microsoft Sans Serif offrent une bonne couverture Unicode pour la plupart des langues.
-
-## Manipuler des caractères Unicode spécifiques
-
-### Codes de caractères Unicode
-
-Vous pouvez insérer des caractères Unicode spécifiques en utilisant leur code :
+Les émojis utilisent des "code points" au-delà du plan multilingue de base (BMP), nécessitant 4 octets en UTF-16.
 
 ```pascal
 var
-  S: string;
+  TexteEmoji: string;
+  Longueur: Integer;
 begin
-  // Insérer des caractères Unicode par leur code (format hexadécimal)
-  S := 'Symbole euro: ' + Char($20AC);       // € (U+20AC)
-  S := S + #13#10 + 'Copyright: ' + Char($00A9);  // © (U+00A9)
-  S := S + #13#10 + 'Cœur: ' + Char($2764);       // ❤ (U+2764)
-  S := S + #13#10 + 'Smiley: ' + Char($263A);     // ☺ (U+263A)
+  TexteEmoji := 'Hello 😀 World';
 
-  Memo1.Text := S;
+  // Attention : Length() compte les unités de code, pas les caractères visuels
+  Longueur := Length(TexteEmoji); // Peut être 13 ou 14 selon l'emoji
+
+  ShowMessage('Longueur: ' + IntToStr(Longueur));
+  // L'emoji 😀 peut être compté comme 1 ou 2 unités selon l'implémentation
 end;
 ```
 
-### Manipulation de chaînes Unicode
+### Comptage correct des caractères
 
-Pour manipuler des chaînes Unicode, tenez compte du fait que certains caractères peuvent être composés de plusieurs unités de code :
+Pour compter les vrais caractères (graphèmes), utilisez des fonctions spécialisées :
 
 ```pascal
 uses
   System.Character;
 
-procedure ManipulateUnicode;
+function CompterCaracteres(const Texte: string): Integer;
 var
-  S: string;
-  I: Integer;
-  C: Char;
+  i: Integer;
+  Surrogate: Boolean;
 begin
-  S := 'Texte Unicode: こんにちは';
+  Result := 0;
+  Surrogate := False;
 
-  Memo1.Lines.Add('Analyse de la chaîne:');
-
-  // Parcourir les caractères
-  for I := 1 to Length(S) do
+  for i := 1 to Length(Texte) do
   begin
-    C := S[I];
-
-    // Analyser le type de caractère
-    if TCharacter.IsLetter(C) then
+    // Vérifier si c'est une paire de substitution (surrogate pair)
+    if Char.IsSurrogate(Texte[i]) then
     begin
-      if TCharacter.IsUpper(C) then
-        Memo1.Lines.Add(Format('Caractère %d: %s (Lettre majuscule)', [I, C]))
-      else if TCharacter.IsLower(C) then
-        Memo1.Lines.Add(Format('Caractère %d: %s (Lettre minuscule)', [I, C]))
-      else
-        Memo1.Lines.Add(Format('Caractère %d: %s (Lettre)', [I, C]));
+      if Char.IsHighSurrogate(Texte[i]) then
+      begin
+        Surrogate := True;
+      end
+      else if Char.IsLowSurrogate(Texte[i]) and Surrogate then
+      begin
+        Inc(Result);
+        Surrogate := False;
+      end;
     end
-    else if TCharacter.IsDigit(C) then
-      Memo1.Lines.Add(Format('Caractère %d: %s (Chiffre)', [I, C]))
-    else if TCharacter.IsWhiteSpace(C) then
-      Memo1.Lines.Add(Format('Caractère %d: (Espace)', [I]))
-    else if TCharacter.IsPunctuation(C) then
-      Memo1.Lines.Add(Format('Caractère %d: %s (Ponctuation)', [I, C]))
     else
-      Memo1.Lines.Add(Format('Caractère %d: %s (Autre)', [I, C]));
+    begin
+      Inc(Result);
+      Surrogate := False;
+    end;
+  end;
+end;
 
-    // Obtenir le code Unicode du caractère
-    Memo1.Lines.Add(Format('  - Code Unicode: U+%4.4X', [Ord(C)]));
+// Utilisation
+var
+  Texte: string;
+begin
+  Texte := 'Hello 😀 World';
+  ShowMessage('Caractères: ' + IntToStr(CompterCaracteres(Texte)));
+end;
+```
+
+### Manipulation de caractères Unicode
+
+```pascal
+uses
+  System.Character;
+
+var
+  Texte: string;
+  c: Char;
+begin
+  Texte := 'Héllo Wörld! 世界 123';
+
+  for c in Texte do
+  begin
+    // Tester les propriétés du caractère
+    if TCharacter.IsLetter(c) then
+      WriteLn(c + ' est une lettre');
+
+    if TCharacter.IsDigit(c) then
+      WriteLn(c + ' est un chiffre');
+
+    if TCharacter.IsWhiteSpace(c) then
+      WriteLn('Espace blanc');
+
+    if TCharacter.IsUpper(c) then
+      WriteLn(c + ' est une majuscule');
   end;
 end;
 ```
 
-## Gestion des pages de code
+## Problèmes courants et solutions
 
-Dans certains cas, notamment lors de l'interaction avec des systèmes anciens, vous pourriez avoir besoin de travailler avec des pages de code spécifiques :
+### Problème 1 : Caractères affichés incorrectement
+
+**Symptôme :** Les accents s'affichent comme "Ã©" au lieu de "é"
+
+**Cause :** Mauvais encodage lors de la lecture/écriture
+
+**Solution :**
+
+```pascal
+// ❌ MAUVAIS : Sans spécifier l'encodage
+TFile.WriteAllText('fichier.txt', 'Café');
+
+// ✅ BON : Spécifier UTF-8
+TFile.WriteAllText('fichier.txt', 'Café', TEncoding.UTF8);
+
+// Lecture
+var Texte := TFile.ReadAllText('fichier.txt', TEncoding.UTF8);
+```
+
+### Problème 2 : Perte de caractères avec ANSI
+
+**Symptôme :** Les caractères spéciaux deviennent "?" ou disparaissent
+
+**Cause :** Conversion vers ANSI qui ne supporte pas tous les caractères
+
+**Solution :**
+
+```pascal
+// ❌ MAUVAIS : Conversion vers ANSI
+var TexteAnsi: AnsiString;
+TexteAnsi := AnsiString('Café 中国'); // '中国' sera perdu !
+
+// ✅ BON : Rester en Unicode
+var TexteUnicode: string;
+TexteUnicode := 'Café 中国'; // Tout est préservé
+```
+
+### Problème 3 : Fichiers sans BOM
+
+**Symptôme :** Fichiers UTF-8 non détectés correctement
+
+**Cause :** Absence de BOM dans le fichier UTF-8
+
+**Solution :**
+
+```pascal
+// Toujours écrire avec BOM pour faciliter la détection
+procedure EcrireFichierAvecBOM(const NomFichier, Contenu: string);
+var
+  Writer: TStreamWriter;
+begin
+  Writer := TStreamWriter.Create(NomFichier, False, TEncoding.UTF8);
+  try
+    Writer.Write(Contenu);
+  finally
+    Writer.Free;
+  end;
+end;
+```
+
+### Problème 4 : Comparaison de chaînes sensible à la casse
+
+**Symptôme :** 'é' et 'É' ne sont pas reconnus comme équivalents
+
+**Solution :**
 
 ```pascal
 uses
   System.SysUtils;
 
 var
-  UnicodeStr: string;
-  AnsiStr: AnsiString;
-  CodePage: Integer;
+  Texte1, Texte2: string;
 begin
-  UnicodeStr := 'Texte avec des caractères accentués: é à ç';
+  Texte1 := 'Café';
+  Texte2 := 'CAFÉ';
 
-  // Conversion avec une page de code spécifique
-  CodePage := 1252;  // Europe occidentale (Windows)
-  AnsiStr := AnsiString(UnicodeStr);
-  SetCodePage(RawByteString(AnsiStr), CodePage, False);
+  // Comparaison insensible à la casse
+  if CompareText(Texte1, Texte2) = 0 then
+    ShowMessage('Identiques (insensible à la casse)');
 
-  // Reconversion vers Unicode
-  UnicodeStr := string(AnsiStr);
+  // Ou en utilisant les méthodes de string
+  if Texte1.ToLower = Texte2.ToLower then
+    ShowMessage('Identiques');
 end;
 ```
 
-> ⚠️ Attention : La manipulation directe des pages de code est rarement nécessaire dans le code moderne et peut entraîner des pertes de données si elle n'est pas effectuée correctement.
+## Communication avec les API et bases de données
 
-## Bases de données et Unicode
-
-### ADO et Unicode
-
-Si vous utilisez ADO pour accéder aux bases de données :
+### Envoi de données à une API REST
 
 ```pascal
-procedure TForm1.ADOQueryUnicode;
-begin
-  ADOQuery1.SQL.Text := 'SELECT * FROM Clients WHERE Nom LIKE :Nom';
-  ADOQuery1.Parameters.ParamByName('Nom').Value := '%Müller%';
-  ADOQuery1.Open;
+uses
+  System.Net.HttpClient, System.SysUtils, System.Classes;
 
-  // Les données Unicode sont automatiquement gérées
-  while not ADOQuery1.Eof do
-  begin
-    Memo1.Lines.Add(ADOQuery1.FieldByName('Nom').AsString);
-    ADOQuery1.Next;
+procedure EnvoyerDonneesUTF8;
+var
+  Client: THTTPClient;
+  Reponse: IHTTPResponse;
+  Contenu: TStringStream;
+  JSON: string;
+begin
+  Client := THTTPClient.Create;
+  try
+    // Créer le JSON avec caractères spéciaux
+    JSON := '{"nom":"Café", "ville":"Paris", "emoji":"😀"}';
+
+    // Créer un stream UTF-8
+    Contenu := TStringStream.Create(JSON, TEncoding.UTF8);
+    try
+      // Envoyer avec le bon Content-Type
+      Client.ContentType := 'application/json; charset=utf-8';
+      Reponse := Client.Post('https://api.example.com/data', Contenu);
+
+      ShowMessage('Statut: ' + Reponse.StatusCode.ToString);
+    finally
+      Contenu.Free;
+    end;
+  finally
+    Client.Free;
   end;
 end;
 ```
 
-### FireDAC et Unicode
-
-FireDAC gère nativement Unicode :
+### Interaction avec MySQL/MariaDB
 
 ```pascal
-procedure TForm1.FireDACQueryUnicode;
-begin
-  FDQuery1.SQL.Text := 'SELECT * FROM Produits WHERE Description LIKE :Desc';
-  FDQuery1.ParamByName('Desc').AsString := '%français%';
-  FDQuery1.Open;
+uses
+  FireDAC.Comp.Client, FireDAC.Stan.Param;
 
-  // Afficher les résultats Unicode
-  while not FDQuery1.Eof do
-  begin
-    ListBox1.Items.Add(FDQuery1.FieldByName('Description').AsString);
-    FDQuery1.Next;
+procedure EnregistrerDonneesUnicode;
+var
+  Connection: TFDConnection;
+  Query: TFDQuery;
+begin
+  Connection := TFDConnection.Create(nil);
+  Query := TFDQuery.Create(nil);
+  try
+    // Configuration de la connexion
+    Connection.Params.Add('CharacterSet=utf8mb4'); // Important pour Unicode complet
+    Connection.Connected := True;
+
+    Query.Connection := Connection;
+    Query.SQL.Text := 'INSERT INTO utilisateurs (nom, ville) VALUES (:nom, :ville)';
+    Query.ParamByName('nom').AsString := 'Café 中国 😀';
+    Query.ParamByName('ville').AsString := 'Paris';
+    Query.ExecSQL;
+  finally
+    Query.Free;
+    Connection.Free;
   end;
 end;
 ```
 
-### SQLite et Unicode
+## Utilitaires pour l'Unicode
 
-SQLite gère nativement l'UTF-8 :
-
-```pascal
-procedure TForm1.SQLiteUnicode;
-begin
-  // Configuration pour SQLite (généralement pas nécessaire, car UTF-8 par défaut)
-  FDConnection1.Params.Values['DriverID'] := 'SQLite';
-  FDConnection1.Params.Values['Database'] := 'mabase.db';
-
-  // Exécuter une requête avec des données Unicode
-  FDQuery1.SQL.Text := 'INSERT INTO Messages (Texte) VALUES (:Texte)';
-  FDQuery1.ParamByName('Texte').AsString := 'Message multilingue: español, русский, 日本語';
-  FDQuery1.ExecSQL;
-end;
-```
-
-## Exemple complet : Éditeur de texte multilingue
-
-Voici un exemple d'application simple d'éditeur de texte qui gère différents encodages :
+### Classe d'aide pour l'encodage
 
 ```pascal
-unit MainForm;
+unit HelperEncodage;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls;
+  System.SysUtils, System.Classes;
 
 type
-  TfrmEditor = class(TForm)
-    memText: TMemo;
-    pnlTop: TPanel;
-    lblEncoding: TLabel;
-    cmbEncoding: TComboBox;
-    btnOpen: TButton;
-    btnSave: TButton;
-    dlgOpen: TOpenDialog;
-    dlgSave: TSaveDialog;
-    lblFont: TLabel;
-    cmbFont: TComboBox;
-    procedure FormCreate(Sender: TObject);
-    procedure cmbFontChange(Sender: TObject);
-    procedure btnOpenClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-  private
-    function GetSelectedEncoding: TEncoding;
-  end;
+  THelperEncodage = class
+  public
+    // Détection
+    class function DetecterEncodageFichier(const NomFichier: string): TEncoding;
+    class function ContientBOM(const NomFichier: string): Boolean;
 
-var
-  frmEditor: TfrmEditor;
+    // Conversion
+    class function ConvertirVersUTF8(const Texte: string): UTF8String;
+    class function ConvertirDepuisUTF8(const TexteUTF8: UTF8String): string;
+
+    // Validation
+    class function EstUTF8Valide(const Octets: TBytes): Boolean;
+    class function ContientCaracteresNonASCII(const Texte: string): Boolean;
+
+    // Information
+    class function ObtenirNomEncodage(Encodage: TEncoding): string;
+    class function TailleEnOctets(const Texte: string; Encodage: TEncoding): Integer;
+  end;
 
 implementation
 
-{$R *.dfm}
-
-procedure TfrmEditor.FormCreate(Sender: TObject);
+class function THelperEncodage.DetecterEncodageFichier(const NomFichier: string): TEncoding;
 var
-  I: Integer;
+  Stream: TFileStream;
+  Buffer: TBytes;
 begin
-  // Initialiser la liste des encodages
-  cmbEncoding.Items.Clear;
-  cmbEncoding.Items.Add('UTF-8');
-  cmbEncoding.Items.Add('ANSI');
-  cmbEncoding.Items.Add('Unicode (UTF-16)');
-  cmbEncoding.Items.Add('ASCII');
-  cmbEncoding.ItemIndex := 0; // UTF-8 par défaut
+  Result := TEncoding.UTF8; // Par défaut
 
-  // Remplir la liste des polices
-  cmbFont.Items.Clear;
-  for I := 0 to Screen.Fonts.Count - 1 do
-    cmbFont.Items.Add(Screen.Fonts[I]);
+  if not FileExists(NomFichier) then
+    Exit;
 
-  // Sélectionner une police avec bon support Unicode
-  if cmbFont.Items.IndexOf('Segoe UI') >= 0 then
-    cmbFont.ItemIndex := cmbFont.Items.IndexOf('Segoe UI')
-  else if cmbFont.Items.IndexOf('Arial') >= 0 then
-    cmbFont.ItemIndex := cmbFont.Items.IndexOf('Arial')
-  else
-    cmbFont.ItemIndex := 0;
+  Stream := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
+  try
+    if Stream.Size < 3 then
+      Exit;
 
-  // Appliquer la police
-  cmbFontChange(nil);
-end;
+    SetLength(Buffer, 4);
+    Stream.Read(Buffer[0], Min(4, Stream.Size));
 
-procedure TfrmEditor.cmbFontChange(Sender: TObject);
-begin
-  // Changer la police du mémo
-  if cmbFont.ItemIndex >= 0 then
-  begin
-    memText.Font.Name := cmbFont.Items[cmbFont.ItemIndex];
-    memText.Font.Size := 11; // Taille raisonnable
+    // UTF-8 BOM
+    if (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
+      Result := TEncoding.UTF8
+    // UTF-16 LE BOM
+    else if (Buffer[0] = $FF) and (Buffer[1] = $FE) then
+      Result := TEncoding.Unicode
+    // UTF-16 BE BOM
+    else if (Buffer[0] = $FE) and (Buffer[1] = $FF) then
+      Result := TEncoding.BigEndianUnicode;
+  finally
+    Stream.Free;
   end;
 end;
 
-function TfrmEditor.GetSelectedEncoding: TEncoding;
+class function THelperEncodage.ContientBOM(const NomFichier: string): Boolean;
+var
+  Encodage: TEncoding;
 begin
-  // Obtenir l'encodage sélectionné
-  case cmbEncoding.ItemIndex of
-    0: Result := TEncoding.UTF8;
-    1: Result := TEncoding.ANSI;
-    2: Result := TEncoding.Unicode;
-    3: Result := TEncoding.ASCII;
+  Encodage := DetecterEncodageFichier(NomFichier);
+  Result := Encodage <> TEncoding.ANSI;
+end;
+
+class function THelperEncodage.ConvertirVersUTF8(const Texte: string): UTF8String;
+begin
+  Result := UTF8String(Texte);
+end;
+
+class function THelperEncodage.ConvertirDepuisUTF8(const TexteUTF8: UTF8String): string;
+begin
+  Result := string(TexteUTF8);
+end;
+
+class function THelperEncodage.EstUTF8Valide(const Octets: TBytes): Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  i := 0;
+
+  while i < Length(Octets) do
+  begin
+    if Octets[i] and $80 = 0 then
+      Inc(i) // ASCII
+    else if Octets[i] and $E0 = $C0 then
+      Inc(i, 2) // 2 octets
+    else if Octets[i] and $F0 = $E0 then
+      Inc(i, 3) // 3 octets
+    else if Octets[i] and $F8 = $F0 then
+      Inc(i, 4) // 4 octets
     else
-      Result := TEncoding.UTF8; // Par défaut
-  end;
-end;
-
-procedure TfrmEditor.btnOpenClick(Sender: TObject);
-var
-  Encoding: TEncoding;
-  FileStream: TFileStream;
-  Bytes: TBytes;
-  PreambleSize: Integer;
-begin
-  if dlgOpen.Execute then
-  begin
-    try
-      FileStream := TFileStream.Create(dlgOpen.FileName, fmOpenRead or fmShareDenyWrite);
-      try
-        // Lire tout le contenu du fichier
-        SetLength(Bytes, FileStream.Size);
-        if Length(Bytes) > 0 then
-          FileStream.ReadBuffer(Bytes[0], Length(Bytes));
-
-        // Détecter l'encodage
-        Encoding := nil;
-        PreambleSize := TEncoding.GetBufferEncoding(Bytes, Encoding);
-
-        // Si aucun encodage n'est détecté, utiliser celui sélectionné
-        if Encoding = nil then
-          Encoding := GetSelectedEncoding;
-        else
-        begin
-          // Mettre à jour la sélection dans le combobox
-          if Encoding = TEncoding.UTF8 then
-            cmbEncoding.ItemIndex := 0
-          else if Encoding = TEncoding.Unicode then
-            cmbEncoding.ItemIndex := 2
-          else if Encoding = TEncoding.ASCII then
-            cmbEncoding.ItemIndex := 3
-          else
-            cmbEncoding.ItemIndex := 1; // ANSI
-        end;
-
-        // Convertir les octets en texte
-        memText.Text := Encoding.GetString(Bytes, PreambleSize, Length(Bytes) - PreambleSize);
-      finally
-        FileStream.Free;
-      end;
-    except
-      on E: Exception do
-        ShowMessage('Erreur lors de l''ouverture du fichier: ' + E.Message);
+    begin
+      Result := False;
+      Break;
     end;
   end;
 end;
 
-procedure TfrmEditor.btnSaveClick(Sender: TObject);
+class function THelperEncodage.ContientCaracteresNonASCII(const Texte: string): Boolean;
 var
-  Encoding: TEncoding;
-  StreamWriter: TStreamWriter;
+  c: Char;
 begin
-  if dlgSave.Execute then
+  Result := False;
+  for c in Texte do
   begin
-    try
-      Encoding := GetSelectedEncoding;
-
-      // Créer un StreamWriter avec l'encodage sélectionné
-      StreamWriter := TStreamWriter.Create(dlgSave.FileName, False, Encoding);
-      try
-        StreamWriter.Write(memText.Text);
-      finally
-        StreamWriter.Free;
-      end;
-
-      ShowMessage('Fichier enregistré avec succès.');
-    except
-      on E: Exception do
-        ShowMessage('Erreur lors de l''enregistrement du fichier: ' + E.Message);
+    if Ord(c) > 127 then
+    begin
+      Result := True;
+      Break;
     end;
   end;
+end;
+
+class function THelperEncodage.ObtenirNomEncodage(Encodage: TEncoding): string;
+begin
+  if Encodage = TEncoding.UTF8 then
+    Result := 'UTF-8'
+  else if Encodage = TEncoding.Unicode then
+    Result := 'UTF-16 LE'
+  else if Encodage = TEncoding.BigEndianUnicode then
+    Result := 'UTF-16 BE'
+  else if Encodage = TEncoding.UTF7 then
+    Result := 'UTF-7'
+  else if Encodage = TEncoding.ANSI then
+    Result := 'ANSI'
+  else if Encodage = TEncoding.ASCII then
+    Result := 'ASCII'
+  else
+    Result := 'Inconnu';
+end;
+
+class function THelperEncodage.TailleEnOctets(const Texte: string; Encodage: TEncoding): Integer;
+var
+  Octets: TBytes;
+begin
+  Octets := Encodage.GetBytes(Texte);
+  Result := Length(Octets);
 end;
 
 end.
 ```
 
-## Bonnes pratiques pour le support Unicode
+### Utilisation de la classe helper
 
-1. **Utilisez toujours `string` (UnicodeString)** pour les chaînes dans votre code
+```pascal
+uses
+  HelperEncodage;
 
-2. **Préférez UTF-8 pour les fichiers externes et échanges de données**
+procedure ExempleUtilisation;
+var
+  Texte: string;
+  Encodage: TEncoding;
+  TailleUTF8, TailleUTF16: Integer;
+begin
+  Texte := 'Café 中国 😀';
 
-3. **Utilisez les classes `TStreamReader` et `TStreamWriter`** pour la lecture et l'écriture de fichiers texte
+  // Détecter l'encodage d'un fichier
+  Encodage := THelperEncodage.DetecterEncodageFichier('fichier.txt');
+  ShowMessage('Encodage: ' + THelperEncodage.ObtenirNomEncodage(Encodage));
 
-4. **Pour les bases de données, préférez les paramètres** aux chaînes SQL concaténées pour éviter les problèmes d'encodage
+  // Vérifier si contient des caractères spéciaux
+  if THelperEncodage.ContientCaracteresNonASCII(Texte) then
+    ShowMessage('Le texte contient des caractères non-ASCII');
 
-5. **Vérifiez que vos polices supportent les caractères nécessaires** à votre application
+  // Comparer les tailles
+  TailleUTF8 := THelperEncodage.TailleEnOctets(Texte, TEncoding.UTF8);
+  TailleUTF16 := THelperEncodage.TailleEnOctets(Texte, TEncoding.Unicode);
 
-6. **Testez avec des caractères de différentes langues**, pas seulement avec des caractères occidentaux
+  ShowMessage(Format(
+    'Taille en UTF-8: %d octets'#13#10 +
+    'Taille en UTF-16: %d octets',
+    [TailleUTF8, TailleUTF16]
+  ));
+end;
+```
 
-7. **Évitez les fonctions qui ne sont pas compatibles Unicode** comme `StrPos`, `StrCopy` (utilisez plutôt `Pos`, `Copy`)
+## Bonnes pratiques
 
-8. **Ne supposez pas qu'un caractère = un octet**, car en Unicode ce n'est pas toujours le cas
+### Règles d'or pour Unicode
 
-9. **Utilisez la classe `TCharacter`** pour manipuler des caractères Unicode individuels
+| Règle | Description | Exemple |
+|-------|-------------|---------|
+| **Utiliser string** | Toujours utiliser `string` (= UnicodeString) | `var Texte: string;` |
+| **UTF-8 pour fichiers** | Sauvegarder les fichiers texte en UTF-8 avec BOM | `TFile.WriteAllText(..., TEncoding.UTF8)` |
+| **Spécifier l'encodage** | Toujours spécifier l'encodage lors des I/O | `TStreamWriter.Create(..., TEncoding.UTF8)` |
+| **API REST** | Utiliser UTF-8 pour les API Web | `charset=utf-8` |
+| **Base de données** | Utiliser utf8mb4 pour MySQL | `CharacterSet=utf8mb4` |
+| **Éviter AnsiString** | Ne pas utiliser AnsiString sauf nécessité | Préférer `string` |
 
-10. **Gérez correctement les BOM (Byte Order Mark)** lors de la lecture de fichiers
+### Checklist Unicode
+
+Avant de déployer votre application :
+
+```
+□ Tous les fichiers texte sont en UTF-8 avec BOM
+□ Les fichiers sources (.pas) sont en UTF-8
+□ Les chaînes de ressources supportent Unicode
+□ Les connexions BDD utilisent utf8mb4
+□ Les API REST utilisent charset=utf-8
+□ Aucune conversion AnsiString non nécessaire
+□ Les émojis s'affichent correctement
+□ Les caractères asiatiques sont supportés
+□ Les langues RTL (arabe, hébreu) fonctionnent
+□ Aucun caractère transformé en "?"
+```
+
+### Tests recommandés
+
+Testez votre application avec ces chaînes :
+
+```pascal
+const
+  // Caractères européens
+  TEST_EUROPEEN = 'àéèêëïôùûüÿæœçÀÉÈÊËÏÔÙÛÜŸÆŒÇ';
+
+  // Caractères spéciaux
+  TEST_SPECIAUX = '€£¥©®™§¶†‡•…‹›«»‚„"'""';
+
+  // Caractères asiatiques
+  TEST_ASIATIQUE = '中国日本한국';
+
+  // Caractères arabes
+  TEST_ARABE = 'مرحبا السلام عليكم';
+
+  // Émojis
+  TEST_EMOJIS = '😀😃😄😁😆😅🤣😂🙂🙃';
+
+  // Caractères rares
+  TEST_RARES = '𝕳𝖊𝖑𝖑𝖔 𝓦𝓸𝓻𝓵𝓭'; // Mathématiques
+```
+
+## Débogage des problèmes d'encodage
+
+### Inspecteur d'octets
+
+```pascal
+procedure AfficherOctets(const Texte: string);
+var
+  Octets: TBytes;
+  i: Integer;
+  Resultat: string;
+begin
+  Octets := TEncoding.UTF8.GetBytes(Texte);
+
+  Resultat := 'Octets UTF-8 : ';
+  for i := 0 to Length(Octets) - 1 do
+    Resultat := Resultat + IntToHex(Octets[i], 2) + ' ';
+
+  ShowMessage(Resultat);
+end;
+
+// Utilisation
+AfficherOctets('Café');
+// Affiche : "43 61 66 C3 A9"
+//            C  a  f  é(2 octets)
+```
+
+### Comparaison d'encodages
+
+```pascal
+procedure ComparerEncodages(const Texte: string);
+var
+  UTF8, UTF16, ANSI: TBytes;
+begin
+  UTF8 := TEncoding.UTF8.GetBytes(Texte);
+  UTF16 := TEncoding.Unicode.GetBytes(Texte);
+  ANSI := TEncoding.ANSI.GetBytes(Texte);
+
+  ShowMessage(Format(
+    'Texte: "%s"'#13#10 +
+    'UTF-8: %d octets'#13#10 +
+    'UTF-16: %d octets'#13#10 +
+    'ANSI: %d octets',
+    [Texte, Length(UTF8), Length(UTF16), Length(ANSI)]
+  ));
+end;
+
+// Test
+ComparerEncodages('Hello');    // ASCII simple
+ComparerEncodages('Café');     // Avec accent
+ComparerEncodages('中国');     // Caractères chinois
+ComparerEncodages('😀');       // Emoji
+```
 
 ## Conclusion
 
-Le support d'Unicode dans Delphi moderne est robuste et complet, permettant de créer des applications véritablement internationales qui fonctionnent avec toutes les langues. En comprenant les principes fondamentaux des encodages et en suivant les bonnes pratiques, vous pouvez éviter la plupart des problèmes liés aux caractères internationaux.
+Le support Unicode dans Delphi moderne est excellent et transparent pour le développeur. En suivant quelques règles simples, vous pouvez créer des applications qui fonctionnent parfaitement avec toutes les langues du monde.
 
-Les points clés à retenir :
+**Points clés à retenir :**
 
-- Les versions modernes de Delphi utilisent `string` (UnicodeString) comme type par défaut, ce qui simplifie grandement la gestion des caractères internationaux
-- La classe `TEncoding` fournit une approche unifiée pour gérer les conversions entre différents encodages
-- Utilisez `TStreamReader` et `TStreamWriter` pour la lecture et l'écriture de fichiers texte avec différents encodages
-- Testez toujours votre application avec des caractères de diverses langues pour vous assurer qu'elle fonctionne correctement dans un contexte international
+- **Unicode** : Un système universel pour tous les caractères
+- **UTF-8** : L'encodage standard pour les fichiers et le Web
+- **UTF-16** : L'encodage interne de Delphi et Windows
+- **string** : Utiliser toujours `string` (= UnicodeString) dans Delphi moderne
+- **TEncoding** : Classe puissante pour gérer tous les encodages
+- **BOM** : Recommandé pour faciliter la détection automatique
+- **Spécifier l'encodage** : Toujours lors de la lecture/écriture de fichiers
 
----
-
-Dans la prochaine section, nous verrons comment gérer les écritures bidirectionnelles pour les langues comme l'arabe et l'hébreu.
+Avec ces connaissances, vous êtes maintenant équipé pour gérer correctement l'Unicode et les encodages dans vos applications Delphi internationales !
 
 ⏭️ [Gestion des écritures bidirectionnelles (RTL)](/13-internationalisation-et-localisation/07-gestion-des-ecritures-bidirectionnelles.md)

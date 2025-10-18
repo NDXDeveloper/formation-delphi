@@ -1,232 +1,203 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.8 Outils de traduction et flux de travail
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-L'internationalisation d'une application ne se limite pas à l'aspect technique. Elle implique également un processus de traduction et une organisation du travail adaptés. Dans cette section, nous explorerons les outils et méthodes qui facilitent la traduction de vos applications Delphi ainsi que les meilleures pratiques pour gérer ce processus.
+Traduire une application en plusieurs langues est un processus complexe qui nécessite organisation, outils appropriés et collaboration avec des traducteurs. Cette section présente les outils disponibles pour Delphi et les meilleures pratiques pour gérer efficacement le processus de traduction.
 
-## Organisation des ressources de traduction
+## Vue d'ensemble du processus de traduction
 
-Avant de commencer le processus de traduction, il est essentiel de bien organiser vos ressources linguistiques.
-
-### Structure des fichiers de traduction
-
-Voici une structure de projet recommandée pour faciliter la gestion des traductions :
+### Les étapes du flux de traduction
 
 ```
-MonProjet/
-├── Source/              # Code source de l'application
-├── Languages/           # Dossier de ressources linguistiques
-│   ├── fr/             # Français
-│   │   ├── strings.ini
-│   │   └── messages.ini
-│   ├── en/             # Anglais
-│   │   ├── strings.ini
-│   │   └── messages.ini
-│   ├── de/             # Allemand
-│   │   ├── strings.ini
-│   │   └── messages.ini
-│   └── templates/      # Modèles pour nouvelles traductions
-├── Assets/             # Images et autres ressources
-└── Bin/                # Exécutables et DLLs
+1. Développement
+   ↓
+2. Extraction des textes à traduire
+   ↓
+3. Préparation des fichiers pour traducteurs
+   ↓
+4. Traduction
+   ↓
+5. Révision et validation
+   ↓
+6. Intégration dans l'application
+   ↓
+7. Tests
+   ↓
+8. Correction et mise à jour
 ```
 
-> 💡 Structurer vos fichiers de traduction par langue facilite l'ajout de nouvelles langues et la maintenance.
+### Acteurs du processus
 
-### Format des fichiers de traduction
+| Rôle | Responsabilités | Compétences requises |
+|------|----------------|---------------------|
+| **Développeur** | Extraction, intégration, tests techniques | Delphi, outils de traduction |
+| **Chef de projet** | Coordination, planification, budget | Gestion de projet |
+| **Traducteur** | Traduction des textes | Langue source et cible, contexte métier |
+| **Réviseur linguistique** | Vérification qualité, cohérence | Expertise linguistique |
+| **Testeur** | Tests fonctionnels dans chaque langue | Langue cible, connaissance produit |
 
-Plusieurs formats sont possibles pour stocker vos traductions :
+## Outils intégrés de Delphi
 
-#### 1. Fichiers INI
+### Integrated Translation Manager (ITM)
 
-Simple et facile à éditer manuellement :
+Delphi inclut un gestionnaire de traduction intégré pour les fichiers DFM.
 
-```ini
-[Common]
-OK=OK
-Cancel=Annuler
-Save=Enregistrer
-Open=Ouvrir
-
-[MainForm]
-Title=Mon Application
-Welcome=Bienvenue dans mon application
-```
-
-#### 2. Fichiers XML
-
-Plus structuré et adapté aux outils de traduction :
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<translation language="fr">
-  <section name="Common">
-    <item id="OK">OK</item>
-    <item id="Cancel">Annuler</item>
-    <item id="Save">Enregistrer</item>
-    <item id="Open">Ouvrir</item>
-  </section>
-  <section name="MainForm">
-    <item id="Title">Mon Application</item>
-    <item id="Welcome">Bienvenue dans mon application</item>
-  </section>
-</translation>
-```
-
-#### 3. Fichiers PO (GNU gettext)
-
-Format standard pour les traductions :
+#### Accès à l'ITM
 
 ```
-msgid "OK"
-msgstr "OK"
-
-msgid "Cancel"
-msgstr "Annuler"
-
-msgid "Save"
-msgstr "Enregistrer"
-
-msgid "Open"
-msgstr "Ouvrir"
-
-msgid "Welcome"
-msgstr "Bienvenue dans mon application"
+Menu : Tools → Translation Manager
 ```
 
-#### 4. Fichiers de ressources (.rc)
+#### Fonctionnalités
 
-Format natif de Windows :
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Extraction** | Extrait tous les textes des fichiers DFM |
+| **Édition** | Interface pour traduire les textes |
+| **Import/Export** | Support de fichiers externes |
+| **Prévisualisation** | Voir les traductions dans l'IDE |
 
-```
-STRINGTABLE
-BEGIN
-  1, "OK"
-  2, "Annuler"
-  3, "Enregistrer"
-  4, "Ouvrir"
-  5, "Bienvenue dans mon application"
-END
-```
+#### Utilisation de l'ITM
 
-> ⚠️ Choisissez un format adapté à votre équipe et à vos outils. Pour les projets simples, les fichiers INI sont souvent suffisants. Pour des projets plus complexes, le format PO offre des fonctionnalités avancées.
-
-## Extraction des chaînes à traduire
-
-La première étape consiste à extraire toutes les chaînes à traduire de votre code source.
-
-### Extraction manuelle
-
-Pour les petits projets, vous pouvez extraire manuellement les chaînes :
+**Étape 1 : Marquer les formulaires comme localisables**
 
 ```pascal
-// Remplacer
-Label1.Caption := 'Bienvenue';
-Button1.Caption := 'Enregistrer';
-
-// Par
-Label1.Caption := TranslationManager.GetString('MainForm.Welcome');
-Button1.Caption := TranslationManager.GetString('Common.Save');
-```
-
-### Extraction automatique
-
-Pour les projets plus importants, utilisez des outils d'extraction automatique :
-
-1. **GNUGettext for Delphi** : Peut analyser votre code et extraire les chaînes marquées avec la fonction `_()`
-2. **ITE (Integrated Translation Environment)** : Outil commercial avec extraction automatique
-3. **TsiLang** : Solution commerciale complète pour l'internationalisation
-
-### Exemple d'extraction avec scripts personnalisés
-
-Vous pouvez créer un script simple pour extraire les chaînes :
-
-```pascal
-procedure ExtractStringsFromCode(const SourceDir, OutputFile: string);
-var
-  FileList: TStringList;
-  SourceFile: TStringList;
-  OutputList: TStringList;
-  FileName, Line: string;
-  I, J, Start, Finish: Integer;
-  StringsFound: TDictionary<string, string>;
+// Dans le formulaire, définir la propriété
+procedure TForm1.ConfigurerLocalisation;
 begin
-  FileList := TStringList.Create;
-  SourceFile := TStringList.Create;
-  OutputList := TStringList.Create;
-  StringsFound := TDictionary<string, string>.Create;
-
-  try
-    // Trouver tous les fichiers .pas dans le répertoire source
-    FindAllFiles(SourceDir, '*.pas', FileList);
-
-    // Parcourir chaque fichier
-    for I := 0 to FileList.Count - 1 do
-    begin
-      FileName := FileList[I];
-      SourceFile.LoadFromFile(FileName);
-
-      // Analyser chaque ligne
-      for J := 0 to SourceFile.Count - 1 do
-      begin
-        Line := SourceFile[J];
-
-        // Rechercher les chaînes entre apostrophes
-        Start := Pos('''', Line);
-        while Start > 0 do
-        begin
-          Finish := PosEx('''', Line, Start + 1);
-          if Finish > Start then
-          begin
-            // Extraire la chaîne
-            StringsFound.AddOrSetValue(
-              Copy(Line, Start + 1, Finish - Start - 1),
-              ExtractFileName(FileName) + ':' + IntToStr(J + 1)
-            );
-          end;
-
-          // Continuer la recherche
-          Start := PosEx('''', Line, Finish + 1);
-        end;
-      end;
-    end;
-
-    // Générer le fichier de sortie
-    OutputList.Add('[Strings]');
-    for var Pair in StringsFound do
-      OutputList.Add(
-        Format('"%s"="%s" ; %s', [Pair.Key, Pair.Key, Pair.Value])
-      );
-
-    // Enregistrer le fichier
-    OutputList.SaveToFile(OutputFile);
-
-  finally
-    FileList.Free;
-    SourceFile.Free;
-    OutputList.Free;
-    StringsFound.Free;
-  end;
+  Self.Localizable := True; // Active la localisation
 end;
 ```
 
-## Utilisation d'outils de traduction spécialisés
+**Étape 2 : Créer les versions linguistiques**
 
-Plusieurs outils facilitent la traduction des applications Delphi.
+1. Sélectionner le formulaire
+2. Dans l'Inspecteur d'objets : `Language` → choisir la langue (ex: `English`)
+3. Modifier les textes des composants dans cette langue
+4. Delphi crée automatiquement un fichier `.dfm` pour chaque langue
 
-### 1. Outils intégrés à Delphi
+**Structure de fichiers créée :**
 
-Delphi propose quelques outils intégrés pour la gestion des traductions :
+```
+MonFormulaire.pas           // Code source
+MonFormulaire.dfm          // Version française (défaut)
+MonFormulaire.en.dfm       // Version anglaise
+MonFormulaire.es.dfm       // Version espagnole
+MonFormulaire.de.dfm       // Version allemande
+```
 
-- **Resource DLL Wizard** : Pour créer des DLL de ressources localisées
-- **Translation Manager** : Disponible dans certaines éditions, aide à gérer les traductions
+**Étape 3 : Utiliser Translation Manager**
 
-### 2. Solutions tierces pour Delphi
+```
+1. Ouvrir Translation Manager
+2. Créer un nouveau projet de traduction
+3. Ajouter les formulaires à traduire
+4. Sélectionner les langues cibles
+5. Traduire dans l'interface ou exporter
+```
 
-Plusieurs solutions tierces existent spécifiquement pour Delphi :
+### Avantages et limitations de l'ITM
 
-#### dxgettext
+| Avantages | Limitations |
+|-----------|-------------|
+| ✅ Intégré à Delphi | ❌ Limité aux fichiers DFM |
+| ✅ Gratuit | ❌ Interface basique |
+| ✅ Prévisualisation directe | ❌ Pas de mémoire de traduction |
+| ✅ Gestion des versions | ❌ Collaboration limitée |
 
-[dxgettext](https://sourceforge.net/projects/dxgettext/) est une implémentation de GNU gettext pour Delphi :
+## Outils tiers professionnels
+
+### Comparaison des outils
+
+| Outil | Prix | Langues | Formats | Points forts |
+|-------|------|---------|---------|--------------|
+| **Sisulizer** | Payant (€€€) | 100+ | DFM, RC, EXE | Très complet, mémoire de traduction |
+| **SDL Passolo** | Payant (€€€€) | Toutes | Tous | Standard industrie, workflows avancés |
+| **LocFactory** | Payant (€€) | 50+ | DFM, RC | Simple, intégration IDE |
+| **GNU gettext** | Gratuit | Toutes | PO | Open source, communauté active |
+| **Poedit** | Gratuit/Payant | Toutes | PO | Interface moderne, suggestions |
+
+### Sisulizer
+
+Sisulizer est l'un des outils les plus populaires pour Delphi.
+
+#### Caractéristiques principales
+
+```
+✓ Scan automatique des ressources
+✓ Mémoire de traduction
+✓ Traduction automatique (Google, DeepL)
+✓ Validation et vérification
+✓ Support Delphi natif
+✓ Gestion de projet
+```
+
+#### Workflow avec Sisulizer
+
+**1. Créer un projet Sisulizer**
+
+```
+File → New Project
+→ Sélectionner l'exécutable ou les sources
+→ Choisir les langues cibles
+→ Scanner le projet
+```
+
+**2. Traduire**
+
+```
+- Interface similaire à un tableur
+- Colonne source | Colonne traduction
+- Suggestions de la mémoire de traduction
+- Validation en temps réel
+```
+
+**3. Générer les fichiers localisés**
+
+```
+Build → Build All Languages
+→ Génère les fichiers DFM localisés
+→ Ou génère un exécutable par langue
+```
+
+#### Exemple de script Sisulizer
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+  <settings>
+    <sourceLanguage>fr-FR</sourceLanguage>
+    <targetLanguages>
+      <language>en-US</language>
+      <language>es-ES</language>
+      <language>de-DE</language>
+    </targetLanguages>
+  </settings>
+  <scans>
+    <scan type="Delphi">
+      <path>C:\Projects\MonApp\Source\*.pas</path>
+      <path>C:\Projects\MonApp\Source\*.dfm</path>
+    </scan>
+  </scans>
+</project>
+```
+
+### GNU gettext et Poedit
+
+GNU gettext est le système de traduction open source le plus répandu.
+
+#### Intégration gettext dans Delphi
+
+**1. Installer les composants gettext pour Delphi**
+
+Plusieurs bibliothèques disponibles :
+- dxgettext
+- gnugettext for Delphi
+- Composants tiers
+
+**2. Utiliser les fonctions de traduction**
 
 ```pascal
 uses
@@ -234,1141 +205,981 @@ uses
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Initialisation de gettext
+  // Initialiser gettext
   TranslateComponent(Self);
 
-  // Utilisation
-  Label1.Caption := _('Welcome to my application');  // Fonction _() pour la traduction
+  // Utiliser les fonctions de traduction
+  Label1.Caption := _('Hello World');
+  Button1.Caption := _('Click me');
+  ShowMessage(_('Welcome to the application'));
 end;
 ```
 
-#### TsiLang
+**3. Extraire les chaînes**
 
-Solution commerciale complète avec éditeur visuel et outils d'extraction :
+```bash
+# Extraire toutes les chaînes du code source
+xgettext --language=Object-Pascal -o messages.pot *.pas
+
+# Créer un fichier de traduction pour une langue
+msginit --input=messages.pot --locale=fr_FR -o fr_FR.po
+```
+
+**4. Traduire avec Poedit**
+
+```
+1. Ouvrir le fichier .po avec Poedit
+2. Traduire chaque chaîne
+3. Sauvegarder (génère automatiquement le .mo)
+4. Placer le fichier .mo dans le dossier de l'application
+```
+
+#### Structure d'un fichier PO
+
+```po
+# Fichier de traduction française
+msgid ""
+msgstr ""
+"Project-Id-Version: MonApp 1.0\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: MainForm.pas:45
+msgid "Hello World"
+msgstr "Bonjour le monde"
+
+#: MainForm.pas:46
+msgid "Click me"
+msgstr "Cliquez-moi"
+
+#: MainForm.pas:50
+msgid "Welcome to the application"
+msgstr "Bienvenue dans l'application"
+```
+
+## Formats de fichiers de traduction
+
+### Formats courants
+
+| Format | Extension | Usage | Outils |
+|--------|-----------|-------|--------|
+| **XLIFF** | .xlf, .xliff | Standard XML pour traduction | Sisulizer, SDL |
+| **PO/POT** | .po, .pot | GNU gettext | Poedit, Lokalize |
+| **RESX** | .resx | Ressources .NET | Visual Studio |
+| **TMX** | .tmx | Mémoire de traduction | Tous |
+| **JSON** | .json | Format moderne, léger | Tous |
+| **CSV** | .csv | Tableur simple | Excel, LibreOffice |
+
+### XLIFF (XML Localization Interchange File Format)
+
+XLIFF est le standard industriel pour l'échange de fichiers de traduction.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2">
+  <file source-language="fr-FR" target-language="en-US" datatype="plaintext">
+    <body>
+      <trans-unit id="1">
+        <source>Bonjour le monde</source>
+        <target>Hello World</target>
+      </trans-unit>
+      <trans-unit id="2">
+        <source>Cliquez pour continuer</source>
+        <target>Click to continue</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
+```
+
+### JSON pour traduction
+
+Format moderne et lisible, facile à gérer :
+
+```json
+{
+  "app": {
+    "title": "Mon Application",
+    "welcome": "Bienvenue"
+  },
+  "buttons": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "messages": {
+    "success": "Opération réussie",
+    "error": "Une erreur est survenue"
+  }
+}
+```
+
+### CSV pour traduction
+
+Format simple pour les traducteurs non techniques :
+
+```csv
+ID,Contexte,Français,Anglais,Espagnol,Allemand
+BTN_OK,Bouton,OK,OK,Aceptar,OK
+BTN_CANCEL,Bouton,Annuler,Cancel,Cancelar,Abbrechen
+MSG_WELCOME,Message,Bienvenue,Welcome,Bienvenido,Willkommen
+LBL_NAME,Libellé,Nom,Name,Nombre,Name
+```
+
+## Création d'un système d'exportation/importation
+
+### Exportateur de ressources
 
 ```pascal
-uses
-  TsiLang;
-
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // TsiLangComponent ajouté au formulaire
-  siLang1.Active := True;
-  siLang1.SwitchTo('fr');  // Passer au français
-end;
-```
-
-#### ITE (Integrated Translation Environment)
-
-Éditeur de traduction spécialisé pour Delphi avec prévisualisation :
-
-```pascal
-uses
-  ITE;
-
-// ITE fournit des composants visuels et des outils d'extraction
-```
-
-### 3. Outils génériques de traduction
-
-Des outils génériques peuvent également être utilisés :
-
-- **Poedit** : Éditeur pour les fichiers PO (GNU gettext)
-- **OmegaT** : Outil de traduction assistée par ordinateur (TAO)
-- **SDL Trados** : Solution professionnelle de traduction
-- **memoQ** : Outil de traduction professionnel
-
-## Flux de travail de traduction
-
-Voici un flux de travail typique pour la traduction d'une application Delphi :
-
-### 1. Préparation du code
-
-Avant même de commencer la traduction :
-
-```pascal
-// ÉVITER
-Label1.Caption := 'Bienvenue ' + UserName + '! Vous avez ' + IntToStr(MessageCount) + ' messages.';
-
-// PRÉFÉRER
-Label1.Caption := Format(GetTranslatedString('Welcome'), [UserName, MessageCount]);
-```
-
-Où `'Welcome'` dans le fichier de traduction serait :
-```
-Welcome=Bienvenue %s ! Vous avez %d messages.
-```
-
-### 2. Extraction des chaînes
-
-Utilisez un des outils mentionnés pour extraire les chaînes à traduire :
-
-```
-ExtractStrings.exe -src C:\MyProject\Source -out C:\MyProject\Languages\templates\strings.ini
-```
-
-### 3. Création des fichiers modèles
-
-Préparez des fichiers modèles pour chaque langue :
-
-```pascal
-procedure CreateLanguageTemplate(const TemplateFile, OutputFile: string);
-var
-  Template, Output: TStringList;
-  I: Integer;
-  Key, Value: string;
-begin
-  Template := TStringList.Create;
-  Output := TStringList.Create;
-
-  try
-    Template.LoadFromFile(TemplateFile);
-
-    // Copier la structure mais vider les valeurs
-    for I := 0 to Template.Count - 1 do
-    begin
-      if Template[I].StartsWith('[') then
-        // Conserver les sections
-        Output.Add(Template[I])
-      else
-      begin
-        // Extraire la clé, mais laisser la valeur vide pour traduction
-        Key := Template.Names[I];
-        if Key <> '' then
-          Output.Add(Key + '=');
-      end;
-    end;
-
-    // Enregistrer le modèle
-    Output.SaveToFile(OutputFile);
-
-  finally
-    Template.Free;
-    Output.Free;
-  end;
-end;
-```
-
-### 4. Traduction
-
-Maintenant, vous pouvez procéder à la traduction elle-même :
-
-#### Option 1 : Traduction manuelle
-
-Éditez directement les fichiers de traduction avec un éditeur de texte ou un tableur.
-
-#### Option 2 : Utilisation d'un outil de traduction
-
-Utilisez des outils comme Poedit ou OmegaT pour remplir les traductions manquantes.
-
-#### Option 3 : Services de traduction professionnels
-
-Confiez les fichiers à des traducteurs professionnels qui comprennent le format de vos fichiers.
-
-#### Option 4 : Services de traduction automatique
-
-Pour un premier jet rapide, utilisez des services comme DeepL ou Google Translate :
-
-```pascal
-procedure TranslateUsingAPI(const SourceFile, TargetFile, SourceLang, TargetLang: string);
-var
-  Source, Target: TStringList;
-  I: Integer;
-  Line, Key, Value, TranslatedValue: string;
-begin
-  Source := TStringList.Create;
-  Target := TStringList.Create;
-
-  try
-    Source.LoadFromFile(SourceFile);
-
-    // Copier la structure
-    for I := 0 to Source.Count - 1 do
-    begin
-      Line := Source[I];
-
-      // Conserver les sections et commentaires
-      if Line.StartsWith('[') or Line.StartsWith(';') then
-        Target.Add(Line)
-      else
-      begin
-        // Extraire la clé et la valeur
-        Key := Source.Names[I];
-        Value := Source.ValueFromIndex[I];
-
-        if (Key <> '') and (Value <> '') then
-        begin
-          // Appeler l'API de traduction (à implémenter)
-          TranslatedValue := TranslateText(Value, SourceLang, TargetLang);
-          Target.Add(Key + '=' + TranslatedValue);
-        end
-        else
-          Target.Add(Line);
-      end;
-    end;
-
-    // Enregistrer le fichier traduit
-    Target.SaveToFile(TargetFile);
-
-  finally
-    Source.Free;
-    Target.Free;
-  end;
-end;
-```
-
-> ⚠️ La traduction automatique n'est qu'un point de départ. Une révision humaine est toujours nécessaire pour garantir la qualité.
-
-### 5. Intégration et tests
-
-Une fois les traductions prêtes, intégrez-les dans votre application :
-
-```pascal
-procedure TForm1.LoadTranslations;
-begin
-  // Charger les traductions pour la langue actuelle
-  TranslationManager.LoadLanguage(CurrentLanguage);
-
-  // Appliquer les traductions à l'interface
-  UpdateUITranslations;
-end;
-
-procedure TForm1.UpdateUITranslations;
-begin
-  // Mettre à jour le formulaire principal
-  Caption := TranslationManager.GetString('MainForm.Title');
-
-  // Mettre à jour les composants
-  lblWelcome.Caption := TranslationManager.GetString('MainForm.Welcome');
-  btnSave.Caption := TranslationManager.GetString('Common.Save');
-  btnCancel.Caption := TranslationManager.GetString('Common.Cancel');
-
-  // Etc.
-end;
-```
-
-## Gestion des mises à jour de traduction
-
-La gestion des mises à jour est une tâche importante, surtout lorsque votre application évolue.
-
-### Détection des chaînes modifiées ou supprimées
-
-Utilisez un outil de comparaison pour identifier les différences :
-
-```pascal
-procedure CompareTwoVersions(const OldFile, NewFile, ReportFile: string);
-var
-  OldStrings, NewStrings, Report: TStringList;
-  OldDict, NewDict: TDictionary<string, string>;
-  Key: string;
-begin
-  OldStrings := TStringList.Create;
-  NewStrings := TStringList.Create;
-  Report := TStringList.Create;
-  OldDict := TDictionary<string, string>.Create;
-  NewDict := TDictionary<string, string>.Create;
-
-  try
-    // Charger les fichiers
-    OldStrings.LoadFromFile(OldFile);
-    NewStrings.LoadFromFile(NewFile);
-
-    // Construire les dictionnaires pour faciliter la comparaison
-    BuildDictionaryFromIniFile(OldStrings, OldDict);
-    BuildDictionaryFromIniFile(NewStrings, NewDict);
-
-    // Rapport des chaînes ajoutées
-    Report.Add('=== CHAÎNES AJOUTÉES ===');
-    for Key in NewDict.Keys do
-    begin
-      if not OldDict.ContainsKey(Key) then
-        Report.Add('+ ' + Key + '=' + NewDict[Key]);
-    end;
-
-    // Rapport des chaînes supprimées
-    Report.Add('');
-    Report.Add('=== CHAÎNES SUPPRIMÉES ===');
-    for Key in OldDict.Keys do
-    begin
-      if not NewDict.ContainsKey(Key) then
-        Report.Add('- ' + Key + '=' + OldDict[Key]);
-    end;
-
-    // Rapport des chaînes modifiées
-    Report.Add('');
-    Report.Add('=== CHAÎNES MODIFIÉES ===');
-    for Key in NewDict.Keys do
-    begin
-      if OldDict.ContainsKey(Key) and (NewDict[Key] <> OldDict[Key]) then
-        Report.Add('* ' + Key + '=' + OldDict[Key] + ' -> ' + NewDict[Key]);
-    end;
-
-    // Enregistrer le rapport
-    Report.SaveToFile(ReportFile);
-
-  finally
-    OldStrings.Free;
-    NewStrings.Free;
-    Report.Free;
-    OldDict.Free;
-    NewDict.Free;
-  end;
-end;
-```
-
-### Mise à jour des fichiers de traduction existants
-
-Mettez à jour les fichiers de traduction sans perdre le travail déjà effectué :
-
-```pascal
-procedure UpdateTranslationFile(const TemplateFile, ExistingFile, OutputFile: string);
-var
-  Template, Existing, Output: TStringList;
-  TemplateDict, ExistingDict: TDictionary<string, string>;
-  I: Integer;
-  Key, Value, Section: string;
-  CurrentSection: string;
-begin
-  Template := TStringList.Create;
-  Existing := TStringList.Create;
-  Output := TStringList.Create;
-  TemplateDict := TDictionary<string, string>.Create;
-  ExistingDict := TDictionary<string, string>.Create;
-
-  try
-    Template.LoadFromFile(TemplateFile);
-    Existing.LoadFromFile(ExistingFile);
-
-    // Construire un dictionnaire à partir du fichier existant
-    BuildDictionaryFromIniFile(Existing, ExistingDict);
-
-    // Suivre la section actuelle
-    CurrentSection := '';
-
-    // Parcourir le modèle et créer un nouveau fichier
-    for I := 0 to Template.Count - 1 do
-    begin
-      Line := Template[I];
-
-      // Détecter les sections
-      if Line.StartsWith('[') and Line.EndsWith(']') then
-      begin
-        CurrentSection := Line;
-        Output.Add(Line);
-      end
-      else
-      begin
-        // Traiter les entrées de traduction
-        Key := Template.Names[I];
-        if Key <> '' then
-        begin
-          // Construire la clé complète avec la section
-          FullKey := CurrentSection + '.' + Key;
-
-          // Vérifier si la traduction existe déjà
-          if ExistingDict.TryGetValue(Key, Value) and (Value <> '') then
-            Output.Add(Key + '=' + Value)
-          else
-            Output.Add(Key + '=' + Template.ValueFromIndex[I]);
-        end
-        else
-          Output.Add(Line);  // Lignes vides ou commentaires
-      end;
-    end;
-
-    // Enregistrer le fichier mis à jour
-    Output.SaveToFile(OutputFile);
-
-  finally
-    Template.Free;
-    Existing.Free;
-    Output.Free;
-    TemplateDict.Free;
-    ExistingDict.Free;
-  end;
-end;
-```
-
-## Création d'un éditeur de traduction simple
-
-Pour faciliter le travail des traducteurs, vous pouvez créer un éditeur de traduction simple :
-
-```pascal
-unit TranslationEditor;
+unit ExportateurTraduction;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls;
+  System.SysUtils, System.Classes, System.IniFiles, System.Generics.Collections;
 
 type
-  TfrmTranslationEditor = class(TForm)
-    pnlTop: TPanel;
-    lblLanguages: TLabel;
-    cmbSourceLang: TComboBox;
-    cmbTargetLang: TComboBox;
-    btnLoad: TButton;
-    btnSave: TButton;
-    lvwStrings: TListView;
-    pnlEdit: TPanel;
-    lblKey: TLabel;
-    lblSource: TLabel;
-    lblTranslation: TLabel;
-    edtKey: TEdit;
-    memSource: TMemo;
-    memTranslation: TMemo;
-    btnUpdate: TButton;
-    stsBar: TStatusBar;
-    procedure FormCreate(Sender: TObject);
-    procedure btnLoadClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-    procedure lvwStringsSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-    procedure btnUpdateClick(Sender: TObject);
-  private
-    FSourceFile: string;
-    FTargetFile: string;
-    procedure LoadTranslationFiles;
-    procedure UpdateListItem(Index: Integer);
-  end;
+  TFormatExport = (feJSON, feCSV, feXLIFF, fePO);
 
-var
-  frmTranslationEditor: TfrmTranslationEditor;
+  TExportateurTraduction = class
+  private
+    FLangueSource: string;
+    FLanguesCibles: TArray<string>;
+  public
+    constructor Create(const LangueSource: string);
+
+    procedure ExporterVersFichier(const CheminFichier: string; Format: TFormatExport);
+    procedure ImporterDepuisFichier(const CheminFichier: string; Format: TFormatExport);
+
+    // Méthodes spécifiques par format
+    procedure ExporterJSON(const CheminFichier: string);
+    procedure ExporterCSV(const CheminFichier: string);
+    procedure ExporterXLIFF(const CheminFichier: string);
+
+    property LanguesCibles: TArray<string> read FLanguesCibles write FLanguesCibles;
+  end;
 
 implementation
 
-{$R *.dfm}
+uses
+  System.JSON, System.IOUtils;
 
-procedure TfrmTranslationEditor.FormCreate(Sender: TObject);
+constructor TExportateurTraduction.Create(const LangueSource: string);
 begin
-  // Configurer la liste des langues
-  cmbSourceLang.Items.Clear;
-  cmbSourceLang.Items.Add('English');
-  cmbSourceLang.Items.Add('French');
-  cmbSourceLang.Items.Add('German');
-  cmbSourceLang.ItemIndex := 0;
-
-  cmbTargetLang.Items := cmbSourceLang.Items;
-  cmbTargetLang.ItemIndex := 1;
-
-  // Configurer la liste des chaînes
-  lvwStrings.Columns.Clear;
-  with lvwStrings.Columns.Add do
-  begin
-    Caption := 'Key';
-    Width := 150;
-  end;
-  with lvwStrings.Columns.Add do
-  begin
-    Caption := 'Source';
-    Width := 200;
-  end;
-  with lvwStrings.Columns.Add do
-  begin
-    Caption := 'Translation';
-    Width := 200;
-  end;
-  with lvwStrings.Columns.Add do
-  begin
-    Caption := 'Status';
-    Width := 80;
-  end;
+  inherited Create;
+  FLangueSource := LangueSource;
 end;
 
-procedure TfrmTranslationEditor.btnLoadClick(Sender: TObject);
-begin
-  LoadTranslationFiles;
-end;
-
-procedure TfrmTranslationEditor.LoadTranslationFiles;
+procedure TExportateurTraduction.ExporterJSON(const CheminFichier: string);
 var
-  SourceDir, TargetDir: string;
-  SourceLang, TargetLang: string;
-  SourceIni, TargetIni: TIniFile;
-  Sections: TStringList;
-  Keys: TStringList;
-  I, J: Integer;
-  Section, Key: string;
-  SourceText, TargetText: string;
-  Item: TListItem;
-  Status: string;
+  JSONRoot, JSONSection: TJSONObject;
+  IniFile: TIniFile;
+  Sections, Cles: TStringList;
+  i, j: Integer;
+  Cle, Valeur: string;
 begin
-  // Déterminer les répertoires de langue
-  SourceLang := LowerCase(cmbSourceLang.Text);
-  TargetLang := LowerCase(cmbTargetLang.Text);
-
-  SourceDir := ExtractFilePath(Application.ExeName) + 'Languages\' + SourceLang;
-  TargetDir := ExtractFilePath(Application.ExeName) + 'Languages\' + TargetLang;
-
-  // Vérifier si les répertoires existent
-  if not DirectoryExists(SourceDir) then
-  begin
-    ShowMessage('Source language directory not found: ' + SourceDir);
-    Exit;
-  end;
-
-  if not DirectoryExists(TargetDir) then
-  begin
-    ShowMessage('Target language directory not found: ' + TargetDir);
-    Exit;
-  end;
-
-  // Fichiers de traduction
-  FSourceFile := SourceDir + '\strings.ini';
-  FTargetFile := TargetDir + '\strings.ini';
-
-  // Vérifier si les fichiers existent
-  if not FileExists(FSourceFile) then
-  begin
-    ShowMessage('Source language file not found: ' + FSourceFile);
-    Exit;
-  end;
-
-  if not FileExists(FTargetFile) then
-  begin
-    ShowMessage('Target language file not found: ' + FTargetFile);
-    if MessageDlg('Create target file?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      CopyFile(PChar(FSourceFile), PChar(FTargetFile), True)
-    else
-      Exit;
-  end;
-
-  // Charger les fichiers INI
-  SourceIni := TIniFile.Create(FSourceFile);
-  TargetIni := TIniFile.Create(FTargetFile);
+  JSONRoot := TJSONObject.Create;
   Sections := TStringList.Create;
-  Keys := TStringList.Create;
-
+  Cles := TStringList.Create;
   try
-    // Effacer la liste existante
-    lvwStrings.Items.Clear;
+    // Charger depuis le fichier INI source
+    IniFile := TIniFile.Create(Format('Lang\%s.ini', [FLangueSource]));
+    try
+      IniFile.ReadSections(Sections);
 
-    // Lire les sections du fichier source
-    SourceIni.ReadSections(Sections);
-
-    // Pour chaque section, lire les clés
-    for I := 0 to Sections.Count - 1 do
-    begin
-      Section := Sections[I];
-      Keys.Clear;
-      SourceIni.ReadSection(Section, Keys);
-
-      // Pour chaque clé, ajouter une entrée à la liste
-      for J := 0 to Keys.Count - 1 do
+      for i := 0 to Sections.Count - 1 do
       begin
-        Key := Keys[J];
-        SourceText := SourceIni.ReadString(Section, Key, '');
-        TargetText := TargetIni.ReadString(Section, Key, '');
+        JSONSection := TJSONObject.Create;
+        Cles.Clear;
+        IniFile.ReadSection(Sections[i], Cles);
 
-        // Déterminer le statut
-        if TargetText = '' then
-          Status := 'Missing'
-        else if TargetText = SourceText then
-          Status := 'Identical'
-        else
-          Status := 'Translated';
+        for j := 0 to Cles.Count - 1 do
+        begin
+          Cle := Cles[j];
+          Valeur := IniFile.ReadString(Sections[i], Cle, '');
+          JSONSection.AddPair(Cle, Valeur);
+        end;
 
-        // Ajouter à la liste
-        Item := lvwStrings.Items.Add;
-        Item.Caption := Section + '.' + Key;
-        Item.SubItems.Add(SourceText);
-        Item.SubItems.Add(TargetText);
-        Item.SubItems.Add(Status);
+        JSONRoot.AddPair(Sections[i], JSONSection);
       end;
+    finally
+      IniFile.Free;
     end;
 
-    // Mise à jour du statut
-    stsBar.SimpleText := Format('Loaded: %d strings, %d sections',
-      [lvwStrings.Items.Count, Sections.Count]);
-
+    // Sauvegarder le JSON
+    TFile.WriteAllText(CheminFichier, JSONRoot.ToJSON, TEncoding.UTF8);
   finally
-    SourceIni.Free;
-    TargetIni.Free;
+    Cles.Free;
     Sections.Free;
-    Keys.Free;
+    JSONRoot.Free;
   end;
 end;
 
-procedure TfrmTranslationEditor.lvwStringsSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+procedure TExportateurTraduction.ExporterCSV(const CheminFichier: string);
 var
-  FullKey: string;
-  DotPos: Integer;
-  Section, Key: string;
+  CSV: TStringList;
+  IniFile: TIniFile;
+  Sections, Cles: TStringList;
+  i, j, k: Integer;
+  Ligne: string;
+  IniCible: TIniFile;
+  ValeurSource, ValeurCible: string;
 begin
-  if Selected and Assigned(Item) then
-  begin
-    // Extraire la section et la clé
-    FullKey := Item.Caption;
-    DotPos := Pos('.', FullKey);
-    if DotPos > 0 then
-    begin
-      Section := Copy(FullKey, 1, DotPos - 1);
-      Key := Copy(FullKey, DotPos + 1, Length(FullKey) - DotPos);
-
-      // Afficher les informations
-      edtKey.Text := FullKey;
-      memSource.Text := Item.SubItems[0];
-      memTranslation.Text := Item.SubItems[1];
-    end;
-  end;
-end;
-
-procedure TfrmTranslationEditor.btnUpdateClick(Sender: TObject);
-var
-  Index: Integer;
-begin
-  // Mettre à jour la traduction sélectionnée
-  Index := lvwStrings.ItemIndex;
-  if Index >= 0 then
-  begin
-    lvwStrings.Items[Index].SubItems[1] := memTranslation.Text;
-
-    // Mettre à jour le statut
-    if memTranslation.Text = '' then
-      lvwStrings.Items[Index].SubItems[2] := 'Missing'
-    else if memTranslation.Text = memSource.Text then
-      lvwStrings.Items[Index].SubItems[2] := 'Identical'
-    else
-      lvwStrings.Items[Index].SubItems[2] := 'Translated';
-  end;
-end;
-
-procedure TfrmTranslationEditor.btnSaveClick(Sender: TObject);
-var
-  TargetIni: TIniFile;
-  I: Integer;
-  FullKey: string;
-  DotPos: Integer;
-  Section, Key: string;
-  Translation: string;
-begin
-  if FTargetFile = '' then
-  begin
-    ShowMessage('No target file loaded');
-    Exit;
-  end;
-
-  // Sauvegarder les traductions
-  TargetIni := TIniFile.Create(FTargetFile);
+  CSV := TStringList.Create;
+  Sections := TStringList.Create;
+  Cles := TStringList.Create;
   try
-    for I := 0 to lvwStrings.Items.Count - 1 do
-    begin
-      // Extraire la section et la clé
-      FullKey := lvwStrings.Items[I].Caption;
-      DotPos := Pos('.', FullKey);
-      if DotPos > 0 then
-      begin
-        Section := Copy(FullKey, 1, DotPos - 1);
-        Key := Copy(FullKey, DotPos + 1, Length(FullKey) - DotPos);
-        Translation := lvwStrings.Items[I].SubItems[1];
+    // En-tête
+    Ligne := 'ID;Contexte;' + FLangueSource;
+    for i := 0 to High(FLanguesCibles) do
+      Ligne := Ligne + ';' + FLanguesCibles[i];
+    CSV.Add(Ligne);
 
-        // Enregistrer dans le fichier INI
-        TargetIni.WriteString(Section, Key, Translation);
+    // Charger les données source
+    IniFile := TIniFile.Create(Format('Lang\%s.ini', [FLangueSource]));
+    try
+      IniFile.ReadSections(Sections);
+
+      for i := 0 to Sections.Count - 1 do
+      begin
+        Cles.Clear;
+        IniFile.ReadSection(Sections[i], Cles);
+
+        for j := 0 to Cles.Count - 1 do
+        begin
+          ValeurSource := IniFile.ReadString(Sections[i], Cles[j], '');
+          Ligne := Format('%s.%s;%s;%s',
+            [Sections[i], Cles[j], Sections[i], ValeurSource]);
+
+          // Ajouter les traductions existantes
+          for k := 0 to High(FLanguesCibles) do
+          begin
+            if FileExists(Format('Lang\%s.ini', [FLanguesCibles[k]])) then
+            begin
+              IniCible := TIniFile.Create(Format('Lang\%s.ini', [FLanguesCibles[k]]));
+              try
+                ValeurCible := IniCible.ReadString(Sections[i], Cles[j], '');
+                Ligne := Ligne + ';' + ValeurCible;
+              finally
+                IniCible.Free;
+              end;
+            end
+            else
+              Ligne := Ligne + ';';
+          end;
+
+          CSV.Add(Ligne);
+        end;
       end;
+    finally
+      IniFile.Free;
     end;
 
-    ShowMessage('Translations saved successfully');
-
+    // Sauvegarder le CSV
+    CSV.SaveToFile(CheminFichier, TEncoding.UTF8);
   finally
-    TargetIni.Free;
+    Cles.Free;
+    Sections.Free;
+    CSV.Free;
+  end;
+end;
+
+procedure TExportateurTraduction.ExporterXLIFF(const CheminFichier: string);
+var
+  XML: TStringList;
+  IniFile: TIniFile;
+  Sections, Cles: TStringList;
+  i, j: Integer;
+  ID: Integer;
+  Cle, Valeur: string;
+begin
+  XML := TStringList.Create;
+  Sections := TStringList.Create;
+  Cles := TStringList.Create;
+  try
+    // En-tête XLIFF
+    XML.Add('<?xml version="1.0" encoding="UTF-8"?>');
+    XML.Add('<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">');
+    XML.Add(Format('  <file source-language="%s" datatype="plaintext">', [FLangueSource]));
+    XML.Add('    <body>');
+
+    // Charger les données
+    IniFile := TIniFile.Create(Format('Lang\%s.ini', [FLangueSource]));
+    try
+      IniFile.ReadSections(Sections);
+      ID := 1;
+
+      for i := 0 to Sections.Count - 1 do
+      begin
+        Cles.Clear;
+        IniFile.ReadSection(Sections[i], Cles);
+
+        for j := 0 to Cles.Count - 1 do
+        begin
+          Cle := Sections[i] + '.' + Cles[j];
+          Valeur := IniFile.ReadString(Sections[i], Cles[j], '');
+
+          XML.Add(Format('      <trans-unit id="%d">', [ID]));
+          XML.Add(Format('        <source>%s</source>', [Valeur]));
+          XML.Add('        <target></target>');
+          XML.Add(Format('        <note>%s</note>', [Cle]));
+          XML.Add('      </trans-unit>');
+
+          Inc(ID);
+        end;
+      end;
+    finally
+      IniFile.Free;
+    end;
+
+    // Pied XLIFF
+    XML.Add('    </body>');
+    XML.Add('  </file>');
+    XML.Add('</xliff>');
+
+    // Sauvegarder
+    XML.SaveToFile(CheminFichier, TEncoding.UTF8);
+  finally
+    Cles.Free;
+    Sections.Free;
+    XML.Free;
+  end;
+end;
+
+procedure TExportateurTraduction.ExporterVersFichier(const CheminFichier: string;
+  Format: TFormatExport);
+begin
+  case Format of
+    feJSON: ExporterJSON(CheminFichier);
+    feCSV: ExporterCSV(CheminFichier);
+    feXLIFF: ExporterXLIFF(CheminFichier);
+  end;
+end;
+
+procedure TExportateurTraduction.ImporterDepuisFichier(const CheminFichier: string;
+  Format: TFormatExport);
+begin
+  // À implémenter selon le format
+  case Format of
+    feJSON: ; // ImporterJSON
+    feCSV: ; // ImporterCSV
+    feXLIFF: ; // ImporterXLIFF
   end;
 end;
 
 end.
 ```
 
-## Utilisation des services de traduction en ligne
+## Flux de travail recommandé
 
-Pour accélérer le processus de traduction, vous pouvez intégrer des services de traduction en ligne :
+### Workflow pour petits projets
+
+```
+1. Développeur : Développement en langue source
+   ↓
+2. Développeur : Extraction vers CSV
+   ↓
+3. Traducteur : Traduction dans Excel/LibreOffice
+   ↓
+4. Développeur : Import du CSV
+   ↓
+5. Développeur : Tests
+```
+
+### Workflow pour projets moyens
+
+```
+1. Développeur : Développement avec ResourceString
+   ↓
+2. Développeur : Export vers fichiers PO avec gettext
+   ↓
+3. Chef de projet : Distribution aux traducteurs
+   ↓
+4. Traducteurs : Traduction avec Poedit
+   ↓
+5. Réviseur : Validation des traductions
+   ↓
+6. Développeur : Import et compilation
+   ↓
+7. Testeurs : Tests dans chaque langue
+   ↓
+8. Équipe : Corrections si nécessaire
+```
+
+### Workflow pour grands projets
+
+```
+1. Équipe dev : Développement + Extraction automatique
+   ↓
+2. PM : Création de packages de traduction (XLIFF)
+   ↓
+3. Plateforme de traduction : Distribution (Crowdin, Lokalise)
+   ↓
+4. Traducteurs : Traduction en ligne avec mémoire
+   ↓
+5. Réviseurs : Validation et QA
+   ↓
+6. CI/CD : Import et build automatique
+   ↓
+7. QA : Tests automatisés + manuels
+   ↓
+8. Déploiement : Publication multi-langue
+```
+
+## Plateformes de traduction en ligne
+
+### Services cloud de traduction
+
+| Plateforme | Prix | Fonctionnalités | Best for |
+|------------|------|----------------|----------|
+| **Crowdin** | Gratuit/Payant | Collaboration, API, mémoire | Projets open source et entreprise |
+| **Lokalise** | Payant | CI/CD, design tools | Équipes agiles |
+| **Transifex** | Gratuit/Payant | Interface simple, TM | Projets communautaires |
+| **Phrase** | Payant | Workflows avancés | Grandes entreprises |
+| **POEditor** | Gratuit/Payant | Simple, abordable | Petites équipes |
+
+### Intégration avec Crowdin
+
+**1. Configuration du projet**
+
+```yaml
+# crowdin.yml
+project_id: "123456"
+api_token: "votre_token_api"
+base_path: "."
+
+files:
+  - source: /Lang/fr.ini
+    translation: /Lang/%two_letters_code%.ini
+```
+
+**2. Script d'upload**
 
 ```pascal
-unit OnlineTranslationService;
+// Appeler l'API Crowdin
+procedure UploadVersCrowdin(const CheminFichier: string);
+var
+  Client: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TMultipartFormData;
+begin
+  Client := THTTPClient.Create;
+  FormData := TMultipartFormData.Create;
+  try
+    FormData.AddFile('files[fr.ini]', CheminFichier);
+
+    Response := Client.Post(
+      'https://api.crowdin.com/api/v2/projects/123456/files',
+      FormData
+    );
+
+    if Response.StatusCode = 200 then
+      ShowMessage('Upload réussi')
+    else
+      ShowMessage('Erreur: ' + Response.StatusCode.ToString);
+  finally
+    FormData.Free;
+    Client.Free;
+  end;
+end;
+```
+
+## Mémoire de traduction
+
+### Qu'est-ce qu'une mémoire de traduction ?
+
+Une mémoire de traduction (Translation Memory - TM) est une base de données qui stocke les segments traduits pour réutilisation.
+
+**Avantages :**
+- ✅ Cohérence des traductions
+- ✅ Gain de temps (réutilisation)
+- ✅ Réduction des coûts
+- ✅ Qualité améliorée
+
+### Format TMX (Translation Memory eXchange)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<tmx version="1.4">
+  <header creationtool="MonApp" creationtoolversion="1.0"
+          srclang="fr-FR" datatype="plaintext"/>
+  <body>
+    <tu>
+      <tuv xml:lang="fr-FR">
+        <seg>Bienvenue dans l'application</seg>
+      </tuv>
+      <tuv xml:lang="en-US">
+        <seg>Welcome to the application</seg>
+      </tuv>
+      <tuv xml:lang="es-ES">
+        <seg>Bienvenido a la aplicación</seg>
+      </tuv>
+    </tu>
+  </body>
+</tmx>
+```
+
+### Gestionnaire de mémoire de traduction simple
+
+```pascal
+unit MemoireTraduction;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Net.HttpClient, System.JSON;
+  System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
-  TTranslationService = class
+  TSegmentTraduction = record
+    Source: string;
+    Cible: string;
+    Langue: string;
+  end;
+
+  TMemoireTraduction = class
   private
-    FApiKey: string;
-    FHttpClient: THTTPClient;
+    FSegments: TDictionary<string, TList<TSegmentTraduction>>;
   public
-    constructor Create(const ApiKey: string);
+    constructor Create;
     destructor Destroy; override;
-    function Translate(const Text, SourceLang, TargetLang: string): string;
+
+    procedure Ajouter(const TexteSource: string; const TexteCible: string;
+      const Langue: string);
+    function Rechercher(const TexteSource: string; const Langue: string): string;
+    function RechercherSimilaire(const TexteSource: string; const Langue: string;
+      SeuilSimilarite: Integer = 80): TArray<TSegmentTraduction>;
+
+    procedure ChargerDepuisTMX(const CheminFichier: string);
+    procedure SauvegarderVersTMX(const CheminFichier: string);
+
+    function NombreSegments: Integer;
   end;
 
 implementation
 
-constructor TTranslationService.Create(const ApiKey: string);
+uses
+  System.Math;
+
+constructor TMemoireTraduction.Create;
 begin
-  inherited Create;
-  FApiKey := ApiKey;
-  FHttpClient := THTTPClient.Create;
+  inherited;
+  FSegments := TDictionary<string, TList<TSegmentTraduction>>.Create;
 end;
 
-destructor TTranslationService.Destroy;
+destructor TMemoireTraduction.Destroy;
+var
+  Liste: TList<TSegmentTraduction>;
 begin
-  FHttpClient.Free;
+  for Liste in FSegments.Values do
+    Liste.Free;
+  FSegments.Free;
   inherited;
 end;
 
-function TTranslationService.Translate(const Text, SourceLang, TargetLang: string): string;
+procedure TMemoireTraduction.Ajouter(const TexteSource, TexteCible, Langue: string);
 var
-  URL: string;
-  Response: IHTTPResponse;
-  RequestContent: TStringStream;
-  ResponseJson: TJSONObject;
-  JsonValue: TJSONValue;
+  Segment: TSegmentTraduction;
+  Liste: TList<TSegmentTraduction>;
 begin
-  Result := Text;  // Par défaut, retourner le texte d'origine en cas d'échec
+  Segment.Source := TexteSource;
+  Segment.Cible := TexteCible;
+  Segment.Langue := Langue;
 
-  if Text = '' then
-    Exit;
+  if not FSegments.TryGetValue(TexteSource, Liste) then
+  begin
+    Liste := TList<TSegmentTraduction>.Create;
+    FSegments.Add(TexteSource, Liste);
+  end;
 
-  try
-    // Exemple avec l'API DeepL (à adapter selon le service utilisé)
-    URL := 'https://api-free.deepl.com/v2/translate';
+  Liste.Add(Segment);
+end;
 
-    // Préparer les données de la requête
-    RequestContent := TStringStream.Create(
-      Format('auth_key=%s&text=%s&source_lang=%s&target_lang=%s',
-      [FApiKey,
-       TNetEncoding.URL.Encode(Text),
-       SourceLang,
-       TargetLang]));
-    try
-      // Envoyer la requête POST
-      Response := FHttpClient.Post(URL, RequestContent, nil,
-                                  TNetEncoding.URL.EncodeQuery('application/x-www-form-urlencoded'));
+function TMemoireTraduction.Rechercher(const TexteSource, Langue: string): string;
+var
+  Liste: TList<TSegmentTraduction>;
+  Segment: TSegmentTraduction;
+begin
+  Result := '';
 
-      // Traiter la réponse
-      if Response.StatusCode = 200 then
-      begin
-        ResponseJson := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
-        try
-          if ResponseJson <> nil then
-          begin
-            // Extraire la traduction (structure spécifique à DeepL)
-            JsonValue := ResponseJson.GetValue('translations[0].text');
-            if JsonValue <> nil then
-              Result := JsonValue.Value;
-          end;
-        finally
-          ResponseJson.Free;
-        end;
-      end
-      else
-        raise Exception.CreateFmt('Translation service error: %d - %s',
-                                [Response.StatusCode, Response.StatusText]);
-    finally
-      RequestContent.Free;
-    end;
-  except
-    on E: Exception do
+  if FSegments.TryGetValue(TexteSource, Liste) then
+  begin
+    for Segment in Liste do
     begin
-      // Journaliser l'erreur mais retourner le texte original
-      // pour ne pas bloquer l'application
-      OutputDebugString(PChar('Translation error: ' + E.Message));
+      if Segment.Langue = Langue then
+        Exit(Segment.Cible);
     end;
   end;
+end;
+
+function CalculerSimilarite(const S1, S2: string): Integer;
+var
+  Distance: Integer;
+  MaxLen: Integer;
+begin
+  // Algorithme simple de distance de Levenshtein simplifiée
+  // Dans un vrai système, utiliser un algorithme plus sophistiqué
+  Distance := Abs(Length(S1) - Length(S2));
+  MaxLen := Max(Length(S1), Length(S2));
+
+  if MaxLen = 0 then
+    Result := 100
+  else
+    Result := 100 - (Distance * 100 div MaxLen);
+end;
+
+function TMemoireTraduction.RechercherSimilaire(const TexteSource, Langue: string;
+  SeuilSimilarite: Integer): TArray<TSegmentTraduction>;
+var
+  Resultats: TList<TSegmentTraduction>;
+  Cle: string;
+  Liste: TList<TSegmentTraduction>;
+  Segment: TSegmentTraduction;
+  Similarite: Integer;
+begin
+  Resultats := TList<TSegmentTraduction>.Create;
+  try
+    for Cle in FSegments.Keys do
+    begin
+      Similarite := CalculerSimilarite(TexteSource, Cle);
+
+      if Similarite >= SeuilSimilarite then
+      begin
+        Liste := FSegments[Cle];
+        for Segment in Liste do
+        begin
+          if Segment.Langue = Langue then
+            Resultats.Add(Segment);
+        end;
+      end;
+    end;
+
+    Result := Resultats.ToArray;
+  finally
+    Resultats.Free;
+  end;
+end;
+
+function TMemoireTraduction.NombreSegments: Integer;
+var
+  Liste: TList<TSegmentTraduction>;
+begin
+  Result := 0;
+  for Liste in FSegments.Values do
+    Inc(Result, Liste.Count);
+end;
+
+procedure TMemoireTraduction.ChargerDepuisTMX(const CheminFichier: string);
+begin
+  // À implémenter : parser le fichier TMX
+end;
+
+procedure TMemoireTraduction.SauvegarderVersTMX(const CheminFichier: string);
+begin
+  // À implémenter : générer le fichier TMX
 end;
 
 end.
 ```
 
-### Intégration avec l'éditeur de traduction
+## API de traduction automatique
 
-Vous pouvez intégrer ce service à votre éditeur de traduction :
+### Services de traduction automatique
+
+| Service | Prix | Qualité | API | Limites |
+|---------|------|---------|-----|---------|
+| **Google Translate** | Payant | Très bonne | ✅ | Quota |
+| **DeepL** | Gratuit/Payant | Excellente | ✅ | 500k caractères/mois (gratuit) |
+| **Microsoft Translator** | Payant | Bonne | ✅ | Quota |
+| **Amazon Translate** | Payant | Bonne | ✅ | Quota |
+| **LibreTranslate** | Gratuit | Moyenne | ✅ | Auto-hébergé |
+
+### Utilisation de DeepL API
 
 ```pascal
-procedure TfrmTranslationEditor.btnAutoTranslateClick(Sender: TObject);
+uses
+  System.Net.HttpClient, System.JSON;
+
+function TraduireAvecDeepL(const Texte: string; LangueSource, LangueCible: string): string;
 var
-  TranslationService: TTranslationService;
-  SourceLang, TargetLang: string;
-  Index: Integer;
-  SourceText, TranslatedText: string;
+  Client: THTTPClient;
+  Response: IHTTPResponse;
+  URL: string;
+  JSON: TJSONObject;
+  Traductions: TJSONArray;
+const
+  API_KEY = 'votre_cle_api_deepl';
 begin
-  // Obtenir les codes de langue
-  SourceLang := GetLanguageCode(cmbSourceLang.Text);
-  TargetLang := GetLanguageCode(cmbTargetLang.Text);
-
-  // Créer le service de traduction
-  TranslationService := TTranslationService.Create('YOUR_API_KEY_HERE');
+  Client := THTTPClient.Create;
   try
-    // Traduire l'élément sélectionné ou tous les éléments manquants
-    if cbxTranslateAll.Checked then
+    URL := Format('https://api-free.deepl.com/v2/translate?auth_key=%s&text=%s&source_lang=%s&target_lang=%s',
+      [API_KEY, TNetEncoding.URL.Encode(Texte), LangueSource, LangueCible]);
+
+    Response := Client.Get(URL);
+
+    if Response.StatusCode = 200 then
     begin
-      // Pour chaque élément non traduit
-      for Index := 0 to lvwStrings.Items.Count - 1 do
-      begin
-        if lvwStrings.Items[Index].SubItems[2] = 'Missing' then
-        begin
-          SourceText := lvwStrings.Items[Index].SubItems[0];
-
-          // Traduire avec le service en ligne
-          TranslatedText := TranslationService.Translate(
-            SourceText, SourceLang, TargetLang);
-
-          // Mettre à jour la liste
-          lvwStrings.Items[Index].SubItems[1] := TranslatedText;
-          lvwStrings.Items[Index].SubItems[2] :=
-            IfThen(TranslatedText = '', 'Missing', 'Auto');
-
-          // Afficher la progression
-          stsBar.SimpleText := Format('Translating: %d/%d',
-            [Index + 1, lvwStrings.Items.Count]);
-          Application.ProcessMessages;
-        end;
+      JSON := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Traductions := JSON.GetValue<TJSONArray>('translations');
+        Result := Traductions.Items[0].GetValue<string>('text');
+      finally
+        JSON.Free;
       end;
     end
     else
-    begin
-      // Traduire uniquement l'élément sélectionné
-      Index := lvwStrings.ItemIndex;
-      if Index >= 0 then
-      begin
-        SourceText := memSource.Text;
-
-        // Traduire avec le service en ligne
-        TranslatedText := TranslationService.Translate(
-          SourceText, SourceLang, TargetLang);
-
-        // Mettre à jour l'interface
-        memTranslation.Text := TranslatedText;
-        btnUpdateClick(Sender);  // Mettre à jour la liste
-      end;
-    end;
-
-    ShowMessage('Translation completed.');
-
+      raise Exception.Create('Erreur API DeepL: ' + Response.StatusCode.ToString);
   finally
-    TranslationService.Free;
+    Client.Free;
   end;
 end;
 
-function TfrmTranslationEditor.GetLanguageCode(const Language: string): string;
-begin
-  // Convertir le nom de la langue en code ISO
-  if Language = 'English' then
-    Result := 'EN'
-  else if Language = 'French' then
-    Result := 'FR'
-  else if Language = 'German' then
-    Result := 'DE'
-  else if Language = 'Spanish' then
-    Result := 'ES'
-  else if Language = 'Italian' then
-    Result := 'IT'
-  else if Language = 'Portuguese' then
-    Result := 'PT'
-  else if Language = 'Russian' then
-    Result := 'RU'
-  else if Language = 'Chinese' then
-    Result := 'ZH'
-  else if Language = 'Japanese' then
-    Result := 'JA'
-  else if Language = 'Arabic' then
-    Result := 'AR'
-  else
-    Result := 'EN';  // Par défaut
-end;
-```
-
-> ⚠️ La plupart des services de traduction en ligne sont payants et nécessitent une clé API. Lisez attentivement les conditions d'utilisation et les tarifs avant d'intégrer un service.
-
-## Bonnes pratiques pour un processus de traduction efficace
-
-### 1. Planifiez l'internationalisation dès le début
-
-Ne considérez pas la traduction comme une fonctionnalité à ajouter à la fin du développement :
-
-- Concevez votre architecture pour faciliter l'internationalisation
-- Utilisez des identifiants cohérents pour les chaînes
-- Documentez les contextes d'utilisation des chaînes
-
-### 2. Utilisez une méthode cohérente pour les identifiants de chaînes
-
-Adoptez une convention de nommage claire pour les identifiants de chaînes :
-
-```
-[Formulaire/Module].[Contexte].[Identifiant]
-```
-
-Par exemple :
-- `MainForm.Title` - Titre du formulaire principal
-- `MainForm.Welcome` - Message de bienvenue
-- `Common.OK` - Texte du bouton OK
-- `Messages.FileNotFound` - Message d'erreur
-
-### 3. Fournissez du contexte aux traducteurs
-
-Incluez des informations contextuelles pour aider les traducteurs :
-
-```ini
-[Common]
-; Button labels
-OK=OK
-Cancel=Annuler
-Save=Enregistrer
-; %s = username
-Welcome=Bienvenue, %s !
-; %d = number of messages
-MessageCount=Vous avez %d messages.
-```
-
-### 4. Utilisez des paramètres plutôt que des concaténations
-
-```pascal
-// MAUVAIS EXEMPLE
-LabelMessage.Caption := 'Vous avez ' + IntToStr(Count) + ' messages non lus.';
-
-// BON EXEMPLE
-LabelMessage.Caption := Format(GetTranslatedString('Messages.Count'), [Count]);
-```
-
-### 5. Créez un glossaire technique
-
-Pour les termes spécifiques à votre domaine, créez un glossaire pour assurer la cohérence des traductions :
-
-```
-Terme         | Description                                  | Traduction
---------------|----------------------------------------------|------------
-Item          | Un élément individuel dans une liste         | Élément (fr), Elemento (es)
-Batch process | Traitement automatique de plusieurs éléments | Traitement par lot (fr), Proceso por lotes (es)
-```
-
-### 6. Impliquez des traducteurs natifs
-
-Les traductions automatiques ne sont jamais parfaites :
-
-- Faites réviser les traductions par des locuteurs natifs
-- Tenez compte des spécificités culturelles
-- Vérifiez la cohérence terminologique
-
-### 7. Mettez en place un système de validation
-
-Implémentez une étape de validation des traductions :
-
-```pascal
-procedure ValidateTranslations(const LangFile: string);
+// Utilisation
+procedure TForm1.BtnTraduireClick(Sender: TObject);
 var
-  Ini: TIniFile;
-  Sections, Keys: TStringList;
-  I, J: Integer;
-  Section, Key, Value: string;
-  NumEmpty, NumWithPlaceholders, NumWithIssues: Integer;
-  Report: TStringList;
+  TexteTraduit: string;
 begin
-  Ini := TIniFile.Create(LangFile);
-  Sections := TStringList.Create;
-  Keys := TStringList.Create;
-  Report := TStringList.Create;
-
   try
-    NumEmpty := 0;
-    NumWithPlaceholders := 0;
-    NumWithIssues := 0;
-
-    // Lire toutes les sections
-    Ini.ReadSections(Sections);
-
-    Report.Add('Validation report for: ' + LangFile);
-    Report.Add('Generated: ' + DateTimeToStr(Now));
-    Report.Add('');
-    Report.Add('=== ISSUES ===');
-
-    // Pour chaque section
-    for I := 0 to Sections.Count - 1 do
-    begin
-      Section := Sections[I];
-      Keys.Clear;
-      Ini.ReadSection(Section, Keys);
-
-      // Pour chaque clé
-      for J := 0 to Keys.Count - 1 do
-      begin
-        Key := Keys[J];
-        Value := Ini.ReadString(Section, Key, '');
-
-        // Vérifier les valeurs vides
-        if Value = '' then
-        begin
-          Inc(NumEmpty);
-          Report.Add(Format('EMPTY: [%s] %s', [Section, Key]));
-        end
-        // Vérifier les placeholders
-        else if (Pos('%s', Value) > 0) or (Pos('%d', Value) > 0) then
-        begin
-          Inc(NumWithPlaceholders);
-          // Vérifier si le nombre de placeholders est correct
-          if CountOccurrences('%s', Value) <> CountExpectedPlaceholders(Section, Key, '%s') then
-          begin
-            Inc(NumWithIssues);
-            Report.Add(Format('PLACEHOLDER MISMATCH: [%s] %s has incorrect number of %%s',
-              [Section, Key]));
-          end;
-          if CountOccurrences('%d', Value) <> CountExpectedPlaceholders(Section, Key, '%d') then
-          begin
-            Inc(NumWithIssues);
-            Report.Add(Format('PLACEHOLDER MISMATCH: [%s] %s has incorrect number of %%d',
-              [Section, Key]));
-          end;
-        end;
-      end;
-    end;
-
-    // Résumé
-    Report.Add('');
-    Report.Add('=== SUMMARY ===');
-    Report.Add(Format('Total strings: %d', [GetTotalStringCount(Sections, Keys, Ini)]));
-    Report.Add(Format('Empty strings: %d', [NumEmpty]));
-    Report.Add(Format('Strings with placeholders: %d', [NumWithPlaceholders]));
-    Report.Add(Format('Strings with issues: %d', [NumWithIssues]));
-
-    // Enregistrer le rapport
-    Report.SaveToFile(ChangeFileExt(LangFile, '.validation.txt'));
-
-  finally
-    Ini.Free;
-    Sections.Free;
-    Keys.Free;
-    Report.Free;
+    TexteTraduit := TraduireAvecDeepL(EditSource.Text, 'FR', 'EN');
+    EditCible.Text := TexteTraduit;
+  except
+    on E: Exception do
+      ShowMessage('Erreur: ' + E.Message);
   end;
 end;
 ```
 
-## Exemples de flux de travail complets
+> ⚠️ **Important** : La traduction automatique ne remplace PAS un traducteur humain. Utilisez-la pour :
+> - Traductions provisoires
+> - Suggestions aux traducteurs
+> - Contenu non critique
 
-### Petite équipe avec traduction manuelle
+## Automatisation et scripts
 
-Pour une petite application ou une petite équipe :
+### Script de génération automatique
 
-1. **Préparation**
-   - Créez une structure de répertoires pour les langues
-   - Définissez un gestionnaire de traduction simple
+```pascal
+program GenerateurTraductions;
 
-2. **Développement**
-   - Utilisez la fonction `GetTranslatedString()` dans tout le code
-   - Ajoutez les chaînes au fichier de la langue principale au fur et à mesure
+{$APPTYPE CONSOLE}
 
-3. **Extraction et traduction**
-   - À la fin de chaque itération, extrayez les nouvelles chaînes
-   - Créez/mettez à jour les fichiers de traduction pour chaque langue
-   - Traduisez manuellement ou avec l'aide d'un service en ligne
+uses
+  System.SysUtils,
+  System.Classes,
+  ExportateurTraduction in 'ExportateurTraduction.pas';
 
-4. **Test et validation**
-   - Testez l'application dans toutes les langues supportées
-   - Vérifiez les problèmes d'interface (troncatures, alignements)
+procedure GenererFichiersTraduction;
+var
+  Exportateur: TExportateurTraduction;
+  Langues: TArray<string>;
+begin
+  WriteLn('=== Générateur de fichiers de traduction ===');
+  WriteLn;
 
-### Équipe moyenne avec traducteurs externes
+  Exportateur := TExportateurTraduction.Create('fr');
+  try
+    Langues := ['en', 'es', 'de', 'it'];
+    Exportateur.LanguesCibles := Langues;
 
-Pour une application plus importante :
+    WriteLn('Export JSON...');
+    Exportateur.ExporterJSON('Export\traductions.json');
 
-1. **Préparation**
-   - Mettez en place un système de gestion des chaînes (ex: GNU gettext)
-   - Documentez le processus de traduction
+    WriteLn('Export CSV...');
+    Exportateur.ExporterCSV('Export\traductions.csv');
 
-2. **Développement**
-   - Utilisez les fonctions de marquage de chaînes (ex: `_()`)
-   - Révisez régulièrement le code pour vérifier l'internationalisation
+    WriteLn('Export XLIFF...');
+    Exportateur.ExporterXLIFF('Export\traductions.xlf');
 
-3. **Extraction et préparation des traductions**
-   - Extrayez les chaînes avec l'outil approprié (ex: `xgettext`)
-   - Mettez à jour les fichiers de traduction existants (ex: `msgmerge`)
-   - Préparez des packages pour les traducteurs
+    WriteLn;
+    WriteLn('Export terminé avec succès!');
+  finally
+    Exportateur.Free;
+  end;
+end;
 
-4. **Traduction externe**
-   - Envoyez les fichiers aux traducteurs
-   - Fournissez un contexte et un glossaire
-   - Définissez un calendrier de livraison
+begin
+  try
+    GenererFichiersTraduction;
+  except
+    on E: Exception do
+    begin
+      WriteLn('ERREUR: ' + E.Message);
+      ExitCode := 1;
+    end;
+  end;
 
-5. **Intégration et validation**
-   - Intégrez les traductions reçues (ex: `msgfmt`)
-   - Validez le formatage et les placeholders
-   - Testez l'application dans toutes les langues
+  WriteLn;
+  WriteLn('Appuyez sur Entrée pour quitter...');
+  ReadLn;
+end.
+```
 
-### Grande équipe avec gestion continue des traductions
+### Intégration CI/CD
 
-Pour les grands projets avec de nombreuses langues :
+**Script pour intégration continue (GitHub Actions) :**
 
-1. **Mise en place d'une infrastructure**
-   - Utilisez un système de gestion des traductions en ligne (ex: Crowdin, Lokalise)
-   - Intégrez-le dans votre pipeline CI/CD
+```yaml
+name: Translation Workflow
 
-2. **Développement continu**
-   - Les développeurs marquent les chaînes avec les fonctions appropriées
-   - Le système détecte automatiquement les nouvelles chaînes
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-3. **Traduction en parallèle**
-   - Les traducteurs travaillent en continu sur la plateforme
-   - Les révisions sont effectuées par des réviseurs désignés
+jobs:
+  export-translations:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
 
-4. **Intégration et déploiement**
-   - Les traductions validées sont automatiquement intégrées
-   - Les builds quotidiens incluent les dernières traductions
-   - Les tests automatisés vérifient l'affichage dans toutes les langues
+      - name: Setup Delphi
+        uses: actions/setup-delphi@v1
 
-## Outils populaires pour la traduction de logiciels
+      - name: Export translations
+        run: |
+          dcc32 GenerateurTraductions.dpr
+          GenerateurTraductions.exe
 
-### Outils spécifiques à Delphi
+      - name: Upload to Crowdin
+        run: |
+          crowdin upload sources
 
-1. **dxgettext** - Implémentation de GNU gettext pour Delphi
-   - Extraction automatique des chaînes
-   - Support des fichiers PO/MO
-   - Documentation en anglais
+      - name: Archive exports
+        uses: actions/upload-artifact@v2
+        with:
+          name: translation-files
+          path: Export/
+```
 
-2. **TsiLang** - Solution commerciale complète
-   - Éditeur visuel intégré
-   - Prévisualisation des traductions
-   - Support multiformat
+## Bonnes pratiques
 
-3. **ITE (Integrated Translation Environment)**
-   - Environnement dédié pour la traduction
-   - Support de plusieurs formats
-   - Fonctionnalités avancées pour les traducteurs
+### Recommandations pour la traduction
 
-### Outils génériques
+| Pratique | Description | Priorité |
+|----------|-------------|----------|
+| **Contexte** | Fournir du contexte aux traducteurs | ⭐⭐⭐ |
+| **Glossaire** | Maintenir un glossaire de termes | ⭐⭐⭐ |
+| **Screenshots** | Inclure des captures d'écran | ⭐⭐⭐ |
+| **Mémoire TM** | Utiliser une mémoire de traduction | ⭐⭐⭐ |
+| **Révision** | Faire réviser par un natif | ⭐⭐⭐ |
+| **Longueur max** | Indiquer les limites de caractères | ⭐⭐ |
+| **Format** | Expliquer les variables (%s, %d) | ⭐⭐ |
+| **Testing** | Tester chaque langue | ⭐⭐⭐ |
 
-1. **Poedit** - Éditeur de fichiers PO
-   - Interface conviviale
-   - Support des mémoires de traduction
-   - Vérification orthographique
+### Checklist du processus
 
-2. **OmegaT** - Outil de traduction assistée par ordinateur
-   - Open source et gratuit
-   - Mémoire de traduction puissante
-   - Support de nombreux formats
+```
+Préparation:
+  □ Code source finalisé
+  □ Extraction des chaînes complète
+  □ Glossaire créé
+  □ Captures d'écran préparées
+  □ Contexte documenté
 
-3. **Crowdin** - Plateforme de traduction collaborative en ligne
-   - Interface web intuitive
-   - Gestion des versions
-   - API pour l'intégration
+Distribution:
+  □ Fichiers exportés au bon format
+  □ Instructions pour les traducteurs
+  □ Deadline communiquée
+  □ Point de contact désigné
 
-4. **Lokalise** - Plateforme de gestion des traductions
-   - Intégration CI/CD
-   - Outils de collaboration
-   - Support de screenshots pour le contexte
+Traduction:
+  □ Traducteurs qualifiés
+  □ Outils appropriés fournis
+  □ Questions répondues rapidement
+  □ Progression suivie
+
+Révision:
+  □ Vérification par réviseur natif
+  □ Cohérence terminologique
+  □ Respect des longueurs
+  □ Qualité linguistique
+
+Intégration:
+  □ Import dans l'application
+  □ Compilation réussie
+  □ Tests fonctionnels
+  □ Tests visuels
+
+Validation:
+  □ Tous les textes traduits
+  □ Pas d'erreurs d'affichage
+  □ Formats corrects
+  □ Validation utilisateur final
+```
+
+## Documentation pour traducteurs
+
+### Package de traduction type
+
+Un package complet pour traducteurs devrait contenir :
+
+```
+📦 Package_Traduction_v1.0/
+├── 📄 README.md (Instructions)
+├── 📄 GLOSSAIRE.md (Termes techniques)
+├── 📁 Fichiers/
+│   ├── 📄 traductions.csv (À traduire)
+│   └── 📄 traductions_exemple.csv (Exemple)
+├── 📁 Screenshots/
+│   ├── 🖼 ecran_principal.png
+│   ├── 🖼 dialogue_options.png
+│   └── 🖼 formulaire_saisie.png
+└── 📁 Contexte/
+    └── 📄 notes_contexte.pdf
+```
+
+### Exemple de README pour traducteurs
+
+```markdown
+# Guide de traduction - MonApplication v1.0
+
+## Instructions générales
+
+1. Ouvrez le fichier `traductions.csv` avec Excel ou LibreOffice
+2. Traduisez uniquement la colonne correspondant à votre langue
+3. Ne modifiez PAS la colonne "ID" ni "Contexte"
+4. Sauvegardez au format CSV UTF-8
+
+## Règles de traduction
+
+### Variables
+- `%s` : Sera remplacé par du texte
+- `%d` : Sera remplacé par un nombre
+- Exemple: "Vous avez %d messages" → "You have %d messages"
+
+### Longueur
+- Respectez les limites indiquées dans "Contexte"
+- Si trop long, trouvez une formulation plus courte
+
+### Ton
+- Tutoiement en français, vous en contexte formel
+- Adapter selon les conventions de votre langue
+
+### Termes techniques
+- Consultez le GLOSSAIRE.md
+- En cas de doute, demandez!
+
+## Contact
+- Email: traduction@monapp.com
+- Deadline: 15/06/2024
+```
 
 ## Conclusion
 
-La mise en place d'un bon flux de travail de traduction est essentielle pour créer des applications internationales de qualité. Voici les points clés à retenir :
+La gestion efficace des traductions nécessite les bons outils, un workflow bien défini et une bonne collaboration entre développeurs et traducteurs. En choisissant les outils adaptés à la taille de votre projet et en suivant les bonnes pratiques, vous pouvez créer et maintenir des applications multilingues de qualité.
 
-1. **Planifiez l'internationalisation dès le début** du développement
-2. **Choisissez des outils adaptés** à la taille de votre projet et à votre équipe
-3. **Fournissez du contexte** pour aider les traducteurs
-4. **Automatisez ce qui peut l'être** pour gagner du temps et réduire les erreurs
-5. **Testez régulièrement** votre application dans toutes les langues supportées
-6. **Impliquez des locuteurs natifs** pour garantir la qualité des traductions
-7. **Maintenez la cohérence** terminologique tout au long du projet
+**Points clés à retenir :**
 
-En suivant ces conseils et en utilisant les outils appropriés, vous faciliterez grandement le processus de traduction de votre application Delphi, ce qui vous permettra d'atteindre un public international plus large avec une expérience utilisateur de qualité.
+- **Outils** : Choisir selon la taille du projet (ITM → Sisulizer → Plateforme cloud)
+- **Formats** : Privilégier XLIFF ou PO pour l'interopérabilité
+- **Workflow** : Définir un processus clair et le documenter
+- **Mémoire TM** : Utiliser pour cohérence et efficacité
+- **Automatisation** : Intégrer dans le CI/CD
+- **Contexte** : Toujours fournir du contexte aux traducteurs
+- **Révision** : Faire réviser par des locuteurs natifs
+- **Tests** : Tester systématiquement chaque langue
 
----
-
-Avec cette section sur les outils de traduction et les flux de travail, vous avez maintenant tous les éléments nécessaires pour internationaliser efficacement vos applications Delphi. Dans le prochain chapitre, nous aborderons l'utilisation d'API et de bibliothèques externes pour étendre les fonctionnalités de vos applications.
+Avec ces outils et méthodes, vous êtes équipé pour gérer professionnellement la traduction de vos applications Delphi vers de multiples langues.
 
 ⏭️ [Utilisation d'API et bibliothèques externes](/14-utilisation-dapi-et-bibliotheques-externes/README.md)

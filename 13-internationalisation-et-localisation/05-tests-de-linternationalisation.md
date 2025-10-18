@@ -1,407 +1,129 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.5 Tests de l'internationalisation
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Après avoir implémenté l'internationalisation dans votre application Delphi, il est crucial de tester rigoureusement toutes les fonctionnalités liées aux différentes langues et cultures. Les tests d'internationalisation permettent de s'assurer que votre application fonctionnera correctement pour tous les utilisateurs, indépendamment de leur langue ou région.
+Tester l'internationalisation (i18n) d'une application est une étape cruciale souvent négligée. Une application peut fonctionner parfaitement dans sa langue d'origine, mais présenter de nombreux problèmes dans d'autres langues. Cette section vous guidera à travers les différentes méthodes et stratégies pour tester efficacement l'internationalisation de vos applications Delphi.
 
 ## Pourquoi tester l'internationalisation ?
 
-Les tests d'internationalisation sont essentiels car :
+Les problèmes d'internationalisation peuvent se manifester de nombreuses façons :
 
-1. **Les bugs d'internationalisation sont souvent invisibles** dans la langue de développement
-2. **Les problèmes peuvent varier selon les langues** (certaines langues posent des défis spécifiques)
-3. **La correction tardive des problèmes d'internationalisation est coûteuse**
-4. **Une mauvaise expérience linguistique peut compromettre l'adoption** de votre application
+| Type de problème | Exemple | Impact |
+|------------------|---------|--------|
+| **Textes tronqués** | Bouton trop petit pour "Enregistrer sous..." en allemand | Interface illisible |
+| **Mauvais encodage** | Caractères spéciaux affichés incorrectement (é → Ã©) | Confusion utilisateur |
+| **Format incorrect** | Date affichée en MM/DD/YYYY pour un utilisateur français | Erreur d'interprétation |
+| **Textes non traduits** | Messages en anglais dans une interface française | Expérience incohérente |
+| **Débordement de mise en page** | Texte qui sort du cadre prévu | Interface cassée |
+| **Caractères manquants** | Police ne supportant pas les caractères arabes ou chinois | Contenu illisible |
 
 ## Types de tests d'internationalisation
 
-### 1. Tests fonctionnels de base
+### 1. Tests visuels (manuels)
 
-Commencez par vérifier que les fonctionnalités essentielles marchent dans toutes les langues supportées :
+Les tests visuels consistent à vérifier l'apparence de l'interface dans chaque langue.
 
-- **Affichage correct des menus et formulaires**
-- **Fonctionnement des boutons et contrôles**
-- **Passage d'une langue à l'autre**
-- **Persistance des paramètres linguistiques**
-
-### 2. Tests d'interface utilisateur
-
-Vérifiez que l'interface s'adapte correctement aux différentes langues :
-
-- **Vérification des troncatures de texte**
-- **Alignement et espacement des contrôles**
-- **Affichage des caractères spéciaux**
-- **Comportement des langues de droite à gauche (RTL)**
-
-### 3. Tests de saisie et validation
-
-Assurez-vous que la saisie et la validation des données fonctionnent dans toutes les langues :
-
-- **Saisie de caractères spéciaux**
-- **Validation des formulaires**
-- **Conversion des formats de date et nombres**
-- **Gestion des erreurs multilingues**
-
-### 4. Tests de performance
-
-Vérifiez que les performances restent acceptables :
-
-- **Temps de chargement des ressources linguistiques**
-- **Réactivité de l'interface utilisateur**
-- **Utilisation de la mémoire**
-
-## Préparation de l'environnement de test
-
-Avant de commencer les tests, assurez-vous que votre environnement est correctement configuré :
-
-### Configuration du système pour différentes langues
+#### Checklist de test visuel
 
 ```pascal
-// Vérifier les langues disponibles sur le système
-procedure TForm1.CheckAvailableLanguages;
-var
-  Locales: TStringList;
-  I: Integer;
-begin
-  Locales := TStringList.Create;
-  try
-    // Récupérer toutes les locales disponibles
-    for I := 1 to GetLocaleCount do
-      Locales.Add(GetLocaleStr(I));
-
-    // Afficher les locales disponibles
-    ShowMessage('Locales disponibles : ' + Locales.Text);
-  finally
-    Locales.Free;
-  end;
-end;
-```
-
-> 💡 Vous pouvez également modifier temporairement les paramètres régionaux de Windows pour tester votre application dans des environnements localisés.
-
-### Création d'un formulaire de test
-
-Créez un formulaire dédié aux tests d'internationalisation :
-
-```pascal
-unit TestI18NForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls;
-
 type
-  TfrmTestI18N = class(TForm)
-    cmbLanguages: TComboBox;
-    lblSelectLanguage: TLabel;
-    btnApplyLanguage: TButton;
-    mmoResults: TMemo;
-    btnTestUI: TButton;
-    btnTestDates: TButton;
-    btnTestNumbers: TButton;
-    btnTestBiDi: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnApplyLanguageClick(Sender: TObject);
-    procedure btnTestUIClick(Sender: TObject);
-    procedure btnTestDatesClick(Sender: TObject);
-    procedure btnTestNumbersClick(Sender: TObject);
-    procedure btnTestBiDiClick(Sender: TObject);
+  TTestVisuel = class
   private
-    procedure LogResult(const Test, Result: string);
+    FLangueTeste: string;
+    FProblemesTrouves: TStringList;
+  public
+    constructor Create(const Langue: string);
+    destructor Destroy; override;
+
+    procedure VerifierFormulaire(Form: TForm);
+    procedure AjouterProbleme(const Description: string);
+    function GenererRapport: string;
   end;
 
-var
-  frmTestI18N: TfrmTestI18N;
-
-implementation
-
-{$R *.dfm}
-
-uses
-  LocalizationManager; // Votre module de gestion de localisation
-
-// Implémentation des méthodes...
-```
-
-## Méthodes de test et vérification
-
-### 1. Test de l'interface utilisateur
-
-Voici comment vérifier l'adaptation de l'interface utilisateur :
-
-```pascal
-procedure TfrmTestI18N.btnTestUIClick(Sender: TObject);
-var
-  Form: TForm;
-  I: Integer;
-  MaxWidth, MaxHeight: Integer;
-  Control: TControl;
-  OverflowFound: Boolean;
+constructor TTestVisuel.Create(const Langue: string);
 begin
-  mmoResults.Clear;
-  LogResult('Test UI', 'Démarrage des tests d''interface...');
-
-  // Créer un formulaire temporaire pour les tests
-  Form := TForm.Create(nil);
-  try
-    // Appliquer la localisation au formulaire
-    LocalizationManager.ApplyTranslations(Form);
-
-    // Vérifier les dimensions des contrôles
-    MaxWidth := Form.ClientWidth;
-    MaxHeight := Form.ClientHeight;
-    OverflowFound := False;
-
-    for I := 0 to Form.ComponentCount - 1 do
-    begin
-      if Form.Components[I] is TControl then
-      begin
-        Control := TControl(Form.Components[I]);
-
-        // Vérifier si un contrôle dépasse les limites du formulaire
-        if (Control.Left + Control.Width > MaxWidth) or
-           (Control.Top + Control.Height > MaxHeight) then
-        begin
-          LogResult('Overflow', Format('Le contrôle %s dépasse les limites (%d,%d)',
-            [Control.Name, Control.Left + Control.Width, Control.Top + Control.Height]));
-          OverflowFound := True;
-        end;
-
-        // Vérifier si le texte est tronqué (pour les labels, boutons, etc.)
-        if (Control is TLabel) or (Control is TButton) then
-        begin
-          // Cette vérification est simplifiée, à adapter selon vos besoins
-          if Control.Width < Canvas.TextWidth(TLabel(Control).Caption) + 10 then
-            LogResult('Troncature', Format('Le texte "%s" est probablement tronqué',
-              [TLabel(Control).Caption]));
-        end;
-      end;
-    end;
-
-    if not OverflowFound then
-      LogResult('Overflow', 'Aucun débordement détecté');
-
-  finally
-    Form.Free;
-  end;
+  inherited Create;
+  FLangueTeste := Langue;
+  FProblemesTrouves := TStringList.Create;
 end;
-```
 
-### 2. Test des formats de date
-
-```pascal
-procedure TfrmTestI18N.btnTestDatesClick(Sender: TObject);
-const
-  TEST_DATES: array[0..2] of TDateTime = (
-    42736.0,  // Une date arbitraire
-    Now,      // Date et heure actuelles
-    0.0       // 30/12/1899, date de référence Delphi
-  );
-var
-  DateStr: string;
-  ParsedDate: TDateTime;
-  I: Integer;
-  Success: Boolean;
+destructor TTestVisuel.Destroy;
 begin
-  mmoResults.Clear;
-  LogResult('Test Dates', 'Démarrage des tests de format de date...');
+  FProblemesTrouves.Free;
+  inherited;
+end;
 
-  for I := 0 to High(TEST_DATES) do
+procedure TTestVisuel.VerifierFormulaire(Form: TForm);
+var
+  i: Integer;
+  Composant: TComponent;
+begin
+  // Vérifier chaque composant du formulaire
+  for i := 0 to Form.ComponentCount - 1 do
   begin
-    // Formater la date selon les paramètres régionaux actuels
-    DateStr := DateToStr(TEST_DATES[I]);
-    LogResult('Format', Format('Date %d formatée : %s', [I, DateStr]));
+    Composant := Form.Components[i];
 
-    // Essayer de reconvertir en TDateTime
-    Success := True;
-    try
-      ParsedDate := StrToDate(DateStr);
-      // Vérifier si la conversion est correcte (à la journée près)
-      if Trunc(ParsedDate) = Trunc(TEST_DATES[I]) then
-        LogResult('Parsing', Format('Date %d correctement analysée', [I]))
-      else
-        LogResult('Parsing', Format('Erreur d''analyse : attendu %s, obtenu %s',
-          [DateToStr(TEST_DATES[I]), DateToStr(ParsedDate)]));
-    except
-      on E: Exception do
-      begin
-        LogResult('Parsing', Format('Exception lors de l''analyse de la date : %s',
-          [E.Message]));
-        Success := False;
-      end;
-    end;
+    // Vérifier les boutons
+    if Composant is TButton then
+      VerifierBouton(TButton(Composant));
 
-    if Success then
-      LogResult('Résultat', Format('Test de date %d : RÉUSSI', [I]))
-    else
-      LogResult('Résultat', Format('Test de date %d : ÉCHEC', [I]));
+    // Vérifier les labels
+    if Composant is TLabel then
+      VerifierLabel(TLabel(Composant));
+
+    // Vérifier les menus
+    if Composant is TMenuItem then
+      VerifierMenuItem(TMenuItem(Composant));
   end;
 end;
-```
 
-### 3. Test des formats de nombres
-
-```pascal
-procedure TfrmTestI18N.btnTestNumbersClick(Sender: TObject);
-const
-  TEST_NUMBERS: array[0..3] of Double = (
-    1234.56,      // Nombre décimal simple
-    -9876.54,     // Nombre négatif
-    0.123456789,  // Petit nombre décimal
-    1000000.01    // Grand nombre avec décimales
-  );
-var
-  NumStr: string;
-  ParsedNum: Double;
-  I: Integer;
-  Success: Boolean;
-  Epsilon: Double;
+procedure TTestVisuel.AjouterProbleme(const Description: string);
 begin
-  mmoResults.Clear;
-  LogResult('Test Nombres', 'Démarrage des tests de format de nombre...');
-  Epsilon := 0.0001; // Tolérance pour la comparaison de nombres à virgule flottante
+  FProblemesTrouves.Add(Format('[%s] %s', [FLangueTeste, Description]));
+end;
 
-  for I := 0 to High(TEST_NUMBERS) do
-  begin
-    // Formater le nombre selon les paramètres régionaux actuels
-    NumStr := FloatToStr(TEST_NUMBERS[I]);
-    LogResult('Format', Format('Nombre %d formaté : %s', [I, NumStr]));
-
-    // Essayer de reconvertir en Double
-    Success := True;
-    try
-      ParsedNum := StrToFloat(NumStr);
-      // Vérifier si la conversion est correcte (à la tolérance près)
-      if Abs(ParsedNum - TEST_NUMBERS[I]) < Epsilon then
-        LogResult('Parsing', Format('Nombre %d correctement analysé', [I]))
-      else
-        LogResult('Parsing', Format('Erreur d''analyse : attendu %f, obtenu %f',
-          [TEST_NUMBERS[I], ParsedNum]));
-    except
-      on E: Exception do
-      begin
-        LogResult('Parsing', Format('Exception lors de l''analyse du nombre : %s',
-          [E.Message]));
-        Success := False;
-      end;
-    end;
-
-    if Success then
-      LogResult('Résultat', Format('Test de nombre %d : RÉUSSI', [I]))
-    else
-      LogResult('Résultat', Format('Test de nombre %d : ÉCHEC', [I]));
-  end;
+function TTestVisuel.GenererRapport: string;
+begin
+  if FProblemesTrouves.Count = 0 then
+    Result := Format('Aucun problème trouvé pour la langue %s', [FLangueTeste])
+  else
+    Result := Format('Problèmes trouvés pour %s :'#13#10'%s',
+      [FLangueTeste, FProblemesTrouves.Text]);
 end;
 ```
 
-### 4. Test de la prise en charge RTL (droite à gauche)
+### 2. Tests fonctionnels
+
+Vérifier que toutes les fonctionnalités marchent dans chaque langue.
+
+#### Liste de vérification fonctionnelle
+
+| Fonctionnalité | Points à vérifier |
+|----------------|-------------------|
+| **Saisie de données** | Les formats de date/nombre sont acceptés correctement |
+| **Affichage** | Les données sont formatées selon la culture |
+| **Validation** | Les messages d'erreur sont dans la bonne langue |
+| **Navigation** | Les raccourcis clavier fonctionnent |
+| **Export/Import** | Les fichiers conservent l'encodage correct |
+| **Recherche** | La recherche fonctionne avec les caractères accentués |
+
+### 3. Tests automatisés
+
+Automatiser les tests permet de détecter rapidement les régressions.
 
 ```pascal
-procedure TfrmTestI18N.btnTestBiDiClick(Sender: TObject);
-var
-  TestForm: TForm;
-  Edit: TEdit;
-  Memo: TMemo;
-  RTLSupported: Boolean;
-begin
-  mmoResults.Clear;
-  LogResult('Test BiDi', 'Démarrage des tests bidirectionnels...');
-
-  // Créer un formulaire temporaire pour les tests
-  TestForm := TForm.Create(nil);
-  try
-    TestForm.BiDiMode := bdRightToLeft;
-    RTLSupported := (TestForm.BiDiMode = bdRightToLeft);
-
-    if RTLSupported then
-    begin
-      LogResult('BiDi', 'Support RTL détecté dans les formulaires');
-
-      // Tester l'alignement des contrôles
-      Edit := TEdit.Create(TestForm);
-      Edit.Parent := TestForm;
-      Edit.ParentBiDiMode := True;
-
-      if Edit.BiDiMode = bdRightToLeft then
-        LogResult('BiDi', 'Les contrôles héritent correctement du mode RTL')
-      else
-        LogResult('BiDi', 'PROBLÈME : Les contrôles n''héritent pas du mode RTL');
-
-      // Tester la saisie de texte RTL
-      Memo := TMemo.Create(TestForm);
-      Memo.Parent := TestForm;
-      Memo.ParentBiDiMode := True;
-      Memo.Text := 'مرحبا بالعالم'; // "Hello World" en arabe
-
-      LogResult('BiDi', 'Test de texte arabe effectué');
-    end
-    else
-      LogResult('BiDi', 'PROBLÈME : Le support RTL n''est pas activé correctement');
-
-  finally
-    TestForm.Free;
-  end;
-end;
-```
-
-### 5. Fonction utilitaire pour enregistrer les résultats
-
-```pascal
-procedure TfrmTestI18N.LogResult(const Test, Result: string);
-begin
-  mmoResults.Lines.Add(Format('[%s] %s: %s', [FormatDateTime('hh:nn:ss', Now), Test, Result]));
-end;
-```
-
-## Liste de contrôle pour les tests manuels
-
-Voici une liste de vérification que vous pouvez suivre pour tester manuellement l'internationalisation de votre application :
-
-### Interface utilisateur
-- [ ] Tous les textes sont-ils traduits ?
-- [ ] Les textes sont-ils correctement alignés ?
-- [ ] Les textes sont-ils lisibles (non tronqués) ?
-- [ ] Les raccourcis clavier fonctionnent-ils ?
-- [ ] Les images contenant du texte sont-elles localisées ?
-- [ ] Les contrôles s'adaptent-ils aux différentes longueurs de texte ?
-
-### Formats régionaux
-- [ ] Les dates s'affichent-elles correctement ?
-- [ ] Les nombres s'affichent-ils correctement ?
-- [ ] Les devises s'affichent-elles correctement ?
-- [ ] La saisie de dates/nombres avec les formats locaux fonctionne-t-elle ?
-- [ ] Les tri et filtres fonctionnent-ils correctement avec les caractères accentués ?
-
-### Bidirectionnalité (RTL)
-- [ ] L'interface s'adapte-t-elle correctement en mode RTL ?
-- [ ] Les menus et barres d'outils sont-ils correctement inversés ?
-- [ ] Les contrôles personnalisés supportent-ils le mode RTL ?
-- [ ] Le texte bidirectionnel (mélange RTL/LTR) s'affiche-t-il correctement ?
-
-### Fonctionnalités générales
-- [ ] Le changement de langue en cours d'exécution fonctionne-t-il ?
-- [ ] Les messages d'erreur sont-ils traduits ?
-- [ ] L'aide et la documentation sont-elles disponibles dans toutes les langues ?
-- [ ] L'impression fonctionne-t-elle avec les différentes langues ?
-
-## Automatisation des tests d'internationalisation
-
-Pour les applications complexes, l'automatisation des tests peut être une bonne approche :
-
-```pascal
-unit AutomatedI18NTests;
+unit TestsInternationalisation;
 
 interface
 
 uses
-  DUnitX.TestFramework;
+  DUnitX.TestFramework, System.SysUtils, GestionnaireTraduction;
 
 type
   [TestFixture]
-  TInternationalizationTests = class
+  TTestsI18N = class
   public
     [Setup]
     procedure Setup;
@@ -409,364 +131,1071 @@ type
     procedure TearDown;
 
     [Test]
-    procedure TestAllTranslationsExist;
+    procedure TestToutesLesLanguesDisponibles;
     [Test]
-    procedure TestDateFormatting;
+    procedure TestToutesLesClesTraduitesEnFrancais;
     [Test]
-    procedure TestNumberFormatting;
+    procedure TestToutesLesClesTraduitesEnAnglais;
     [Test]
-    procedure TestRTLSupport;
+    procedure TestFormatDateFrancais;
     [Test]
-    [TestCase('French', 'fr-FR')]
-    [TestCase('English', 'en-US')]
-    [TestCase('German', 'de-DE')]
-    [TestCase('Arabic', 'ar-SA')]
-    procedure TestSpecificLocale(const LocaleName: string);
+    procedure TestFormatDateAmericain;
+    [Test]
+    procedure TestFormatNombreFrancais;
+  end;
+
+implementation
+
+procedure TTestsI18N.Setup;
+begin
+  // Initialisation avant chaque test
+end;
+
+procedure TTestsI18N.TearDown;
+begin
+  // Nettoyage après chaque test
+end;
+
+procedure TTestsI18N.TestToutesLesLanguesDisponibles;
+var
+  Langues: TArray<string>;
+begin
+  Langues := ['fr', 'en', 'es', 'de', 'it'];
+
+  // Vérifier que chaque fichier de langue existe
+  for var Langue in Langues do
+    Assert.IsTrue(FileExists('Lang\' + Langue + '.ini'),
+      'Fichier de langue manquant : ' + Langue);
+end;
+
+procedure TTestsI18N.TestToutesLesClesTraduitesEnFrancais;
+var
+  ClesRequises: TArray<string>;
+  Valeur: string;
+begin
+  GestionnaireTraduction.DefinirLangue('fr');
+
+  // Liste des clés qui doivent exister
+  ClesRequises := ['Boutons.Valider', 'Boutons.Annuler',
+                   'Messages.Bienvenue', 'Libelles.Nom'];
+
+  for var Cle in ClesRequises do
+  begin
+    Valeur := T(Cle);
+    Assert.AreNotEqual(Cle, Valeur,
+      'Traduction manquante pour : ' + Cle);
+  end;
+end;
+
+procedure TTestsI18N.TestFormatDateFrancais;
+var
+  FormatFR: TFormatSettings;
+  MaDate: TDateTime;
+  DateStr: string;
+begin
+  FormatFR := TFormatSettings.Create('fr-FR');
+  MaDate := EncodeDate(2024, 12, 25);
+
+  DateStr := DateToStr(MaDate, FormatFR);
+  Assert.AreEqual('25/12/2024', DateStr);
+end;
+
+procedure TTestsI18N.TestFormatNombreFrancais;
+var
+  FormatFR: TFormatSettings;
+  Nombre: Double;
+  NombreStr: string;
+begin
+  FormatFR := TFormatSettings.Create('fr-FR');
+  Nombre := 1234.56;
+
+  NombreStr := FormatFloat('#,##0.00', Nombre, FormatFR);
+  Assert.IsTrue(Pos(',', NombreStr) > 0,
+    'Le séparateur décimal devrait être une virgule');
+end;
+
+end.
+```
+
+## Stratégie de test par langue
+
+### Phases de test
+
+```
+Phase 1: Test de la langue par défaut (français)
+   ↓
+Phase 2: Test d'une langue majeure (anglais)
+   ↓
+Phase 3: Test des autres langues européennes
+   ↓
+Phase 4: Test des langues avec caractères spéciaux (chinois, arabe)
+   ↓
+Phase 5: Test des langues RTL (arabe, hébreu)
+```
+
+### Priorisation des langues
+
+| Priorité | Langues | Raison |
+|----------|---------|--------|
+| **Haute** | Langues cibles principales | Marché principal |
+| **Moyenne** | Langues européennes courantes | Expansion internationale |
+| **Basse** | Langues spécialisées | Marchés de niche |
+
+## Outils de test
+
+### 1. Outil de changement rapide de langue
+
+Créez un outil pour tester rapidement toutes les langues :
+
+```pascal
+unit OutilTestLangue;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls,
+  Vcl.ExtCtrls, GestionnaireTraduction;
+
+type
+  TFormTestLangue = class(TForm)
+    PanelHaut: TPanel;
+    ComboLangue: TComboBox;
+    BtnAppliquer: TButton;
+    BtnCaptureEcran: TButton;
+    BtnSuivant: TButton;
+    MemoRapport: TMemo;
+    procedure FormCreate(Sender: TObject);
+    procedure BtnAppliquerClick(Sender: TObject);
+    procedure BtnCaptureEcranClick(Sender: TObject);
+    procedure BtnSuivantClick(Sender: TObject);
+  private
+    FIndexLangue: Integer;
+    FLangues: TArray<string>;
+    procedure ChargerLangues;
+    procedure AppliquerLangue(const CodeLangue: string);
+    procedure CaptureEcranFormulaire(Form: TForm);
+    procedure TestLangueSuivante;
   end;
 
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections, LocalizationManager;
+  Vcl.Imaging.pngimage, Vcl.Graphics;
 
-// Implémentation des méthodes de test...
+{$R *.dfm}
+
+procedure TFormTestLangue.FormCreate(Sender: TObject);
+begin
+  ChargerLangues;
+  FIndexLangue := 0;
+end;
+
+procedure TFormTestLangue.ChargerLangues;
+begin
+  FLangues := ['fr', 'en', 'es', 'de', 'it'];
+  ComboLangue.Items.Clear;
+  ComboLangue.Items.AddStrings(['Français', 'English', 'Español', 'Deutsch', 'Italiano']);
+  ComboLangue.ItemIndex := 0;
+end;
+
+procedure TFormTestLangue.BtnAppliquerClick(Sender: TObject);
+begin
+  if ComboLangue.ItemIndex >= 0 then
+    AppliquerLangue(FLangues[ComboLangue.ItemIndex]);
+end;
+
+procedure TFormTestLangue.AppliquerLangue(const CodeLangue: string);
+begin
+  GestionnaireTraduction.DefinirLangue(CodeLangue);
+
+  // Recharger tous les formulaires ouverts
+  for var i := 0 to Screen.FormCount - 1 do
+  begin
+    if Screen.Forms[i] <> Self then
+      (Screen.Forms[i] as TForm).Perform(WM_LANGUAGECHANGE, 0, 0);
+  end;
+
+  MemoRapport.Lines.Add(Format('Langue changée vers : %s', [CodeLangue]));
+end;
+
+procedure TFormTestLangue.BtnCaptureEcranClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  // Capturer tous les formulaires
+  for i := 0 to Screen.FormCount - 1 do
+  begin
+    if Screen.Forms[i] <> Self then
+      CaptureEcranFormulaire(Screen.Forms[i]);
+  end;
+
+  MemoRapport.Lines.Add('Captures d''écran enregistrées');
+end;
+
+procedure TFormTestLangue.CaptureEcranFormulaire(Form: TForm);
+var
+  Bitmap: TBitmap;
+  PNG: TPngImage;
+  NomFichier: string;
+begin
+  Bitmap := TBitmap.Create;
+  PNG := TPngImage.Create;
+  try
+    // Capturer le formulaire
+    Bitmap.Width := Form.ClientWidth;
+    Bitmap.Height := Form.ClientHeight;
+    Form.PaintTo(Bitmap.Canvas, 0, 0);
+
+    // Convertir en PNG et sauvegarder
+    PNG.Assign(Bitmap);
+    NomFichier := Format('Screenshots\%s_%s.png',
+      [Form.Name, FLangues[ComboLangue.ItemIndex]]);
+    PNG.SaveToFile(NomFichier);
+  finally
+    PNG.Free;
+    Bitmap.Free;
+  end;
+end;
+
+procedure TFormTestLangue.BtnSuivantClick(Sender: TObject);
+begin
+  TestLangueSuivante;
+end;
+
+procedure TFormTestLangue.TestLangueSuivante;
+begin
+  Inc(FIndexLangue);
+  if FIndexLangue >= Length(FLangues) then
+  begin
+    ShowMessage('Test de toutes les langues terminé !');
+    FIndexLangue := 0;
+  end;
+
+  ComboLangue.ItemIndex := FIndexLangue;
+  AppliquerLangue(FLangues[FIndexLangue]);
+end;
+
+end.
 ```
 
-> 💡 L'utilisation de DUnitX ou d'un autre framework de test permet d'exécuter automatiquement des tests d'internationalisation à chaque compilation.
+### 2. Validateur de traductions
 
-## Tester avec des scripts spécifiques
-
-Pour les langues utilisant des scripts spéciaux, assurez-vous de tester avec des textes réels :
-
-### Exemples de textes de test dans différents scripts
+Vérifier que toutes les clés sont traduites :
 
 ```pascal
-procedure TfrmTestI18N.TestSpecialScripts;
-const
-  TEST_STRINGS: array[0..5] of record
-    Language: string;
-    Sample: string;
-  end = (
-    (Language: 'Arabe'; Sample: 'مرحبا بالعالم'),
-    (Language: 'Chinois'; Sample: '你好，世界'),
-    (Language: 'Japonais'; Sample: 'こんにちは世界'),
-    (Language: 'Coréen'; Sample: '안녕하세요 세계'),
-    (Language: 'Russe'; Sample: 'Привет, мир'),
-    (Language: 'Thaï'; Sample: 'สวัสดีชาวโลก')
-  );
-var
-  I: Integer;
+unit ValidateurTraductions;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.Generics.Collections, System.IniFiles;
+
+type
+  TProblemeTraduction = record
+    Langue: string;
+    Cle: string;
+    TypeProbleme: string; // 'Manquant', 'Vide', 'Identique'
+  end;
+
+  TValidateurTraductions = class
+  private
+    FLangueReference: string;
+    FProblemes: TList<TProblemeTraduction>;
+    function ChargerCles(const Langue: string): TStringList;
+  public
+    constructor Create(const LangueReference: string = 'fr');
+    destructor Destroy; override;
+
+    procedure ValiderLangue(const CodeLangue: string);
+    procedure ValiderToutesLesLangues;
+    function GenererRapport: string;
+    property Problemes: TList<TProblemeTraduction> read FProblemes;
+  end;
+
+implementation
+
+constructor TValidateurTraductions.Create(const LangueReference: string);
 begin
-  mmoResults.Clear;
-  LogResult('Scripts spéciaux', 'Test de rendu pour différents scripts...');
+  inherited Create;
+  FLangueReference := LangueReference;
+  FProblemes := TList<TProblemeTraduction>.Create;
+end;
 
-  for I := 0 to High(TEST_STRINGS) do
+destructor TValidateurTraductions.Destroy;
+begin
+  FProblemes.Free;
+  inherited;
+end;
+
+function TValidateurTraductions.ChargerCles(const Langue: string): TStringList;
+var
+  IniFile: TIniFile;
+  Sections, Cles: TStringList;
+  i, j: Integer;
+  Cle, Valeur: string;
+begin
+  Result := TStringList.Create;
+  IniFile := TIniFile.Create(Format('Lang\%s.ini', [Langue]));
+  Sections := TStringList.Create;
+  Cles := TStringList.Create;
+  try
+    IniFile.ReadSections(Sections);
+
+    for i := 0 to Sections.Count - 1 do
+    begin
+      Cles.Clear;
+      IniFile.ReadSection(Sections[i], Cles);
+
+      for j := 0 to Cles.Count - 1 do
+      begin
+        Cle := Sections[i] + '.' + Cles[j];
+        Valeur := IniFile.ReadString(Sections[i], Cles[j], '');
+        Result.AddObject(Cle, TObject(Pointer(Valeur)));
+      end;
+    end;
+  finally
+    Cles.Free;
+    Sections.Free;
+    IniFile.Free;
+  end;
+end;
+
+procedure TValidateurTraductions.ValiderLangue(const CodeLangue: string);
+var
+  ClesReference, ClesLangue: TStringList;
+  i: Integer;
+  Probleme: TProblemeTraduction;
+  CleRef, ValeurLangue: string;
+begin
+  ClesReference := ChargerCles(FLangueReference);
+  ClesLangue := ChargerCles(CodeLangue);
+  try
+    // Vérifier que toutes les clés de référence existent
+    for i := 0 to ClesReference.Count - 1 do
+    begin
+      CleRef := ClesReference[i];
+
+      // Clé manquante ?
+      if ClesLangue.IndexOf(CleRef) < 0 then
+      begin
+        Probleme.Langue := CodeLangue;
+        Probleme.Cle := CleRef;
+        Probleme.TypeProbleme := 'Manquant';
+        FProblemes.Add(Probleme);
+      end
+      else
+      begin
+        ValeurLangue := string(Pointer(ClesLangue.Objects[ClesLangue.IndexOf(CleRef)]));
+
+        // Valeur vide ?
+        if Trim(ValeurLangue) = '' then
+        begin
+          Probleme.Langue := CodeLangue;
+          Probleme.Cle := CleRef;
+          Probleme.TypeProbleme := 'Vide';
+          FProblemes.Add(Probleme);
+        end;
+      end;
+    end;
+  finally
+    ClesLangue.Free;
+    ClesReference.Free;
+  end;
+end;
+
+procedure TValidateurTraductions.ValiderToutesLesLangues;
+var
+  Langues: TArray<string>;
+  Langue: string;
+begin
+  FProblemes.Clear;
+  Langues := ['en', 'es', 'de', 'it']; // Toutes sauf la référence
+
+  for Langue in Langues do
   begin
-    // Tester l'affichage
-    mmoResults.Lines.Add(Format('%s: %s', [TEST_STRINGS[I].Language, TEST_STRINGS[I].Sample]));
+    if FileExists(Format('Lang\%s.ini', [Langue])) then
+      ValiderLangue(Langue);
+  end;
+end;
 
-    // Vérifier que le nombre de caractères correspond
-    LogResult(TEST_STRINGS[I].Language,
-      Format('Longueur correcte : %d', [Length(TEST_STRINGS[I].Sample)]));
+function TValidateurTraductions.GenererRapport: string;
+var
+  Rapport: TStringBuilder;
+  Probleme: TProblemeTraduction;
+  DernierLangue: string;
+begin
+  Rapport := TStringBuilder.Create;
+  try
+    if FProblemes.Count = 0 then
+    begin
+      Rapport.AppendLine('✓ Aucun problème de traduction détecté');
+    end
+    else
+    begin
+      Rapport.AppendLine(Format('⚠ %d problème(s) de traduction détecté(s) :'#13#10,
+        [FProblemes.Count]));
+
+      DernierLangue := '';
+      for Probleme in FProblemes do
+      begin
+        if Probleme.Langue <> DernierLangue then
+        begin
+          Rapport.AppendLine(#13#10'--- ' + Probleme.Langue + ' ---');
+          DernierLangue := Probleme.Langue;
+        end;
+
+        Rapport.AppendLine(Format('  [%s] %s',
+          [Probleme.TypeProbleme, Probleme.Cle]));
+      end;
+    end;
+
+    Result := Rapport.ToString;
+  finally
+    Rapport.Free;
+  end;
+end;
+
+end.
+```
+
+### 3. Analyseur de mise en page
+
+Détecte les problèmes de débordement de texte :
+
+```pascal
+unit AnalyseurMiseEnPage;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls;
+
+type
+  TProblemeMiseEnPage = record
+    NomComposant: string;
+    TypeProbleme: string;
+    Description: string;
+  end;
+
+  TAnalyseurMiseEnPage = class
+  private
+    FProblemes: TList<TProblemeMiseEnPage>;
+    procedure VerifierDebordementBouton(Bouton: TButton);
+    procedure VerifierDebordementLabel(Lbl: TLabel);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AnalyserFormulaire(Form: TForm);
+    function GenererRapport: string;
+    property Problemes: TList<TProblemeMiseEnPage> read FProblemes;
+  end;
+
+implementation
+
+constructor TAnalyseurMiseEnPage.Create;
+begin
+  inherited;
+  FProblemes := TList<TProblemeMiseEnPage>.Create;
+end;
+
+destructor TAnalyseurMiseEnPage.Destroy;
+begin
+  FProblemes.Free;
+  inherited;
+end;
+
+procedure TAnalyseurMiseEnPage.AnalyserFormulaire(Form: TForm);
+var
+  i: Integer;
+  Composant: TComponent;
+begin
+  FProblemes.Clear;
+
+  for i := 0 to Form.ComponentCount - 1 do
+  begin
+    Composant := Form.Components[i];
+
+    if Composant is TButton then
+      VerifierDebordementBouton(TButton(Composant))
+    else if Composant is TLabel then
+      VerifierDebordementLabel(TLabel(Composant));
+  end;
+end;
+
+procedure TAnalyseurMiseEnPage.VerifierDebordementBouton(Bouton: TButton);
+var
+  LargeurTexte: Integer;
+  Probleme: TProblemeMiseEnPage;
+begin
+  // Calculer la largeur nécessaire pour le texte
+  LargeurTexte := Bouton.Canvas.TextWidth(Bouton.Caption) + 20; // Marge
+
+  if LargeurTexte > Bouton.Width then
+  begin
+    Probleme.NomComposant := Bouton.Name;
+    Probleme.TypeProbleme := 'Débordement de texte';
+    Probleme.Description := Format(
+      'Le bouton "%s" est trop petit. Largeur actuelle : %d, Nécessaire : %d',
+      [Bouton.Caption, Bouton.Width, LargeurTexte]);
+    FProblemes.Add(Probleme);
+  end;
+end;
+
+procedure TAnalyseurMiseEnPage.VerifierDebordementLabel(Lbl: TLabel);
+var
+  LargeurTexte: Integer;
+  Probleme: TProblemeMiseEnPage;
+begin
+  if not Lbl.AutoSize then
+  begin
+    LargeurTexte := Lbl.Canvas.TextWidth(Lbl.Caption);
+
+    if LargeurTexte > Lbl.Width then
+    begin
+      Probleme.NomComposant := Lbl.Name;
+      Probleme.TypeProbleme := 'Débordement de texte';
+      Probleme.Description := Format(
+        'Le label "%s" est trop petit. Activez AutoSize ou agrandissez le composant.',
+        [Lbl.Caption]);
+      FProblemes.Add(Probleme);
+    end;
+  end;
+end;
+
+function TAnalyseurMiseEnPage.GenererRapport: string;
+var
+  Rapport: TStringBuilder;
+  Probleme: TProblemeMiseEnPage;
+begin
+  Rapport := TStringBuilder.Create;
+  try
+    if FProblemes.Count = 0 then
+    begin
+      Rapport.AppendLine('✓ Aucun problème de mise en page détecté');
+    end
+    else
+    begin
+      Rapport.AppendLine(Format('⚠ %d problème(s) de mise en page :'#13#10,
+        [FProblemes.Count]));
+
+      for Probleme in FProblemes do
+      begin
+        Rapport.AppendLine(Format('[%s] %s',
+          [Probleme.NomComposant, Probleme.Description]));
+      end;
+    end;
+
+    Result := Rapport.ToString;
+  finally
+    Rapport.Free;
+  end;
+end;
+
+end.
+```
+
+## Checklist complète de test
+
+### Tests de base (toutes langues)
+
+| Test | Description | Critique |
+|------|-------------|----------|
+| ✓ Textes affichés | Tous les textes sont visibles et lisibles | ⭐⭐⭐ |
+| ✓ Pas de débordement | Aucun texte ne dépasse de son conteneur | ⭐⭐⭐ |
+| ✓ Encodage correct | Les caractères spéciaux s'affichent bien | ⭐⭐⭐ |
+| ✓ Traductions complètes | Aucun texte dans la mauvaise langue | ⭐⭐⭐ |
+| ✓ Formats de date | Les dates utilisent le format local | ⭐⭐ |
+| ✓ Formats de nombre | Les nombres utilisent les bons séparateurs | ⭐⭐ |
+| ✓ Symboles monétaires | La devise est correcte | ⭐⭐ |
+| ✓ Raccourcis clavier | Les raccourcis sont cohérents | ⭐ |
+
+### Tests spécifiques par type de langue
+
+#### Langues européennes (FR, EN, ES, DE, IT)
+
+```
+□ Accents et caractères spéciaux (é, ñ, ü, etc.)
+□ Guillemets typographiques (« », ", ")
+□ Format de date approprié
+□ Séparateurs de nombres corrects
+□ Longueur des textes (allemand = textes longs)
+□ Symboles monétaires (€, £, etc.)
+```
+
+#### Langues asiatiques (ZH, JA, KO)
+
+```
+□ Police supportant les caractères CJK
+□ Largeur des caractères (caractères doubles)
+□ Césure des mots (pas d'espaces en chinois/japonais)
+□ Format de date asiatique (YYYY/MM/DD)
+□ Taille de police appropriée
+```
+
+#### Langues RTL (AR, HE)
+
+```
+□ Interface miroir (droite à gauche)
+□ Alignement du texte correct
+□ Position des icônes inversée
+□ Barres de défilement à gauche
+□ Ordre de lecture des colonnes
+□ Navigation au clavier inversée
+```
+
+## Scénarios de test
+
+### Scénario 1 : Changement de langue dynamique
+
+```pascal
+procedure TesterChangementLangue;
+var
+  Form: TForm;
+  LanguesATest: TArray<string>;
+  Langue: string;
+begin
+  Form := TFormPrincipal.Create(nil);
+  try
+    LanguesATest := ['fr', 'en', 'es', 'de'];
+
+    for Langue in LanguesATest do
+    begin
+      // Changer la langue
+      GestionnaireTraduction.DefinirLangue(Langue);
+      Form.AppliquerTraductions;
+
+      // Vérifier l'affichage
+      VerifierAffichage(Form, Langue);
+
+      // Capturer une image
+      CaptureEcran(Form, Langue);
+
+      // Attendre un peu pour visualiser
+      Sleep(1000);
+      Application.ProcessMessages;
+    end;
+  finally
+    Form.Free;
+  end;
+end;
+```
+
+### Scénario 2 : Saisie et validation
+
+```pascal
+procedure TesterSaisieValidation(const Langue: string);
+var
+  Form: TFormSaisie;
+  DonneesTest: array of record
+    DateStr: string;
+    NombreStr: string;
+    Valide: Boolean;
+  end;
+begin
+  GestionnaireTraduction.DefinirLangue(Langue);
+  Form := TFormSaisie.Create(nil);
+  try
+    // Définir les données de test selon la langue
+    if Langue = 'fr' then
+    begin
+      SetLength(DonneesTest, 3);
+      DonneesTest[0].DateStr := '25/12/2024';
+      DonneesTest[0].NombreStr := '1234,56';
+      DonneesTest[0].Valide := True;
+
+      DonneesTest[1].DateStr := '12/25/2024'; // Format US - invalide en FR
+      DonneesTest[1].NombreStr := '1234.56';  // Point - invalide en FR
+      DonneesTest[1].Valide := False;
+    end
+    else if Langue = 'en' then
+    begin
+      SetLength(DonneesTest, 3);
+      DonneesTest[0].DateStr := '12/25/2024';
+      DonneesTest[0].NombreStr := '1234.56';
+      DonneesTest[0].Valide := True;
+
+      DonneesTest[1].DateStr := '25/12/2024'; // Format FR - invalide en US
+      DonneesTest[1].NombreStr := '1234,56';  // Virgule - invalide en US
+      DonneesTest[1].Valide := False;
+    end;
+
+    // Tester chaque cas
+    for var i := 0 to High(DonneesTest) do
+    begin
+      Form.EditDate.Text := DonneesTest[i].DateStr;
+      Form.EditNombre.Text := DonneesTest[i].NombreStr;
+
+      var Resultat := Form.ValiderSaisie;
+
+      if Resultat = DonneesTest[i].Valide then
+        WriteLn(Format('[OK] Test %d réussi', [i]))
+      else
+        WriteLn(Format('[ERREUR] Test %d échoué', [i]));
+    end;
+  finally
+    Form.Free;
+  end;
+end;
+```
+
+### Scénario 3 : Import/Export de données
+
+```pascal
+procedure TesterImportExport(const Langue: string);
+var
+  DonneesOriginales: TDataSet;
+  CheminFichier: string;
+begin
+  GestionnaireTraduction.DefinirLangue(Langue);
+
+  // Créer des données de test
+  DonneesOriginales := CreerDonneesTest;
+  try
+    // Exporter
+    CheminFichier := Format('Export_%s.csv', [Langue]);
+    ExporterVersCsv(DonneesOriginales, CheminFichier);
+
+    // Réimporter
+    var DonneesReimportees := ImporterDepuisCsv(CheminFichier);
+    try
+      // Vérifier que les données sont identiques
+      if ComparerDataSets(DonneesOriginales, DonneesReimportees) then
+        WriteLn('[OK] Import/Export réussi pour ' + Langue)
+      else
+        WriteLn('[ERREUR] Données corrompues pour ' + Langue);
+    finally
+      DonneesReimportees.Free;
+    end;
+  finally
+    DonneesOriginales.Free;
   end;
 end;
 ```
 
 ## Détection des problèmes courants
 
-Voici quelques problèmes courants à surveiller lors des tests d'internationalisation :
+### 1. Textes codés en dur
 
-### 1. Problèmes de troncature de texte
-
-```pascal
-procedure DetectTruncationIssues(AForm: TForm);
-var
-  I: Integer;
-  Control: TControl;
-  TextWidth: Integer;
-begin
-  for I := 0 to AForm.ComponentCount - 1 do
-  begin
-    if AForm.Components[I] is TLabel then
-    begin
-      Control := TLabel(AForm.Components[I]);
-
-      // Calculer la largeur du texte
-      TextWidth := AForm.Canvas.TextWidth(TLabel(Control).Caption);
-
-      // Si le texte est plus large que le contrôle
-      if TextWidth > Control.Width then
-        ShowMessage(Format('Texte tronqué détecté pour %s: "%s"',
-          [Control.Name, TLabel(Control).Caption]));
-    end;
-  end;
-end;
-```
-
-### 2. Problèmes de conversion de format
+Créer un outil pour détecter les chaînes en dur dans le code :
 
 ```pascal
-procedure TestFormatConversions;
+procedure RechercherTextesEnDur(const CheminSource: string);
 var
-  DateStr, NumStr: string;
-  TestDate: TDateTime;
-  TestNumber: Double;
-  Success: Boolean;
+  Fichiers: TStringDynArray;
+  Fichier, Ligne: string;
+  NumLigne: Integer;
+  Lignes: TStringList;
 begin
-  // Test avec différentes locales
-  SetFormatsForLocale('fr-FR');
+  // Trouver tous les fichiers .pas
+  Fichiers := TDirectory.GetFiles(CheminSource, '*.pas', TSearchOption.soAllDirectories);
 
-  // Tester une date
-  TestDate := EncodeDate(2023, 4, 15);
-  DateStr := DateToStr(TestDate);
-
-  // Essayer de reconvertir
-  Success := True;
+  Lignes := TStringList.Create;
   try
-    TestDate := StrToDate(DateStr);
-  except
-    Success := False;
-  end;
-
-  if not Success then
-    ShowMessage('Problème de conversion de date détecté pour fr-FR');
-
-  // Tester un nombre
-  TestNumber := 1234.56;
-  NumStr := FloatToStr(TestNumber);
-
-  // Essayer de reconvertir
-  Success := True;
-  try
-    TestNumber := StrToFloat(NumStr);
-  except
-    Success := False;
-  end;
-
-  if not Success then
-    ShowMessage('Problème de conversion de nombre détecté pour fr-FR');
-end;
-```
-
-## Outils et ressources pour les tests d'internationalisation
-
-### Création d'un outil de pseudo-localisation
-
-La pseudo-localisation est une technique qui remplace les caractères par des équivalents accentués pour simuler une traduction, sans réellement traduire :
-
-```pascal
-function PseudoLocalize(const AString: string): string;
-const
-  // Tableau de remplacement des caractères
-  CHAR_MAP: array[0..25] of record
-    Original, Replacement: Char;
-  end = (
-    (Original: 'a'; Replacement: 'á'),
-    (Original: 'b'; Replacement: 'ƀ'),
-    (Original: 'c'; Replacement: 'ç'),
-    (Original: 'd'; Replacement: 'ð'),
-    (Original: 'e'; Replacement: 'é'),
-    (Original: 'f'; Replacement: 'ƒ'),
-    (Original: 'g'; Replacement: 'ğ'),
-    (Original: 'h'; Replacement: 'ĥ'),
-    (Original: 'i'; Replacement: 'í'),
-    (Original: 'j'; Replacement: 'ĵ'),
-    (Original: 'k'; Replacement: 'ķ'),
-    (Original: 'l'; Replacement: 'ł'),
-    (Original: 'm'; Replacement: 'ɱ'),
-    (Original: 'n'; Replacement: 'ñ'),
-    (Original: 'o'; Replacement: 'ô'),
-    (Original: 'p'; Replacement: 'þ'),
-    (Original: 'q'; Replacement: 'q'),
-    (Original: 'r'; Replacement: 'ŕ'),
-    (Original: 's'; Replacement: 'š'),
-    (Original: 't'; Replacement: 'ŧ'),
-    (Original: 'u'; Replacement: 'ú'),
-    (Original: 'v'; Replacement: 'ṽ'),
-    (Original: 'w'; Replacement: 'ŵ'),
-    (Original: 'x'; Replacement: 'ẋ'),
-    (Original: 'y'; Replacement: 'ý'),
-    (Original: 'z'; Replacement: 'ž')
-  );
-var
-  I, J: Integer;
-  Ch: Char;
-  Found: Boolean;
-begin
-  // Augmenter la longueur pour simuler l'expansion du texte
-  Result := '[' + AString + ']';
-
-  // Remplacer les caractères
-  for I := 1 to Length(Result) do
-  begin
-    Ch := LowerCase(Result[I]);
-    Found := False;
-
-    for J := 0 to High(CHAR_MAP) do
+    for Fichier in Fichiers do
     begin
-      if Ch = CHAR_MAP[J].Original then
+      Lignes.LoadFromFile(Fichier);
+
+      for NumLigne := 0 to Lignes.Count - 1 do
       begin
-        if Result[I] = UpperCase(Result[I])[1] then
-          Result[I] := UpperCase(CHAR_MAP[J].Replacement)[1]
-        else
-          Result[I] := CHAR_MAP[J].Replacement;
+        Ligne := Lignes[NumLigne];
 
-        Found := True;
-        Break;
-      end;
-    end;
-  end;
-end;
-```
-
-### Création d'un fichier de traduction de test
-
-```pascal
-procedure CreateTestTranslationFile;
-var
-  StrList: TStringList;
-  Sections: TStringList;
-  Keys: TStringList;
-  I, J: Integer;
-begin
-  StrList := TStringList.Create;
-  Sections := TStringList.Create;
-  Keys := TStringList.Create;
-
-  try
-    // Extraire les sections et clés du fichier de traduction existant
-    // ...
-
-    // Créer un fichier de pseudo-traduction
-    for I := 0 to Sections.Count - 1 do
-    begin
-      StrList.Add('[' + Sections[I] + ']');
-
-      for J := 0 to Keys.Count - 1 do
-      begin
-        if Keys.Names[J] = Sections[I] then
+        // Chercher des assignations de Caption, Text, Hint
+        if ContientTexteEnDur(Ligne) then
         begin
-          // Pseudo-localiser la valeur
-          StrList.Add(Format('%s=%s',
-            [Keys.ValueFromIndex[J], PseudoLocalize(Keys.ValueFromIndex[J])]));
+          WriteLn(Format('%s (ligne %d): %s',
+            [ExtractFileName(Fichier), NumLigne + 1, Trim(Ligne)]));
         end;
       end;
-
-      StrList.Add('');
     end;
-
-    // Sauvegarder le fichier de test
-    StrList.SaveToFile('pseudo_translation.ini');
-    ShowMessage('Fichier de pseudo-traduction créé avec succès');
-
   finally
-    StrList.Free;
-    Sections.Free;
-    Keys.Free;
+    Lignes.Free;
+  end;
+end;
+
+function ContientTexteEnDur(const Ligne: string): Boolean;
+var
+  Motifs: TArray<string>;
+  Motif: string;
+begin
+  Result := False;
+
+  // Motifs à rechercher
+  Motifs := ['.Caption := ''', '.Text := ''', '.Hint := ''',
+             'ShowMessage(''', 'MessageDlg('''];
+
+  for Motif in Motifs do
+  begin
+    if Pos(Motif, Ligne) > 0 then
+    begin
+      // Vérifier que ce n'est pas dans un commentaire
+      if Pos('//', Ligne) = 0 then
+        Exit(True);
+    end;
   end;
 end;
 ```
 
-## Bonnes pratiques pour les tests d'internationalisation
-
-1. **Testez dès le début du développement**, pas uniquement à la fin
-
-2. **Créez une suite de tests automatisés** pour vérifier régulièrement l'internationalisation
-
-3. **Utilisez des données de test réelles** pour chaque langue
-
-4. **Vérifiez les limites et cas particuliers**, comme les très longues chaînes ou les caractères spéciaux
-
-5. **Testez sur différentes plateformes et configurations** si votre application est multi-plateforme
-
-6. **Impliquez des utilisateurs natifs** si possible pour valider les traductions et l'expérience utilisateur
-
-7. **Documentez les problèmes spécifiques à chaque langue** pour référence future
-
-8. **Intégrez les tests d'internationalisation dans votre pipeline CI/CD** (Intégration Continue/Déploiement Continu)
-
-## Exemple complet : Création d'un outil de test d'internationalisation
-
-Pour faciliter les tests, vous pouvez créer un outil de test complet :
+### 2. Traductions manquantes
 
 ```pascal
-unit I18NTestTool;
+procedure DetecterTraductionsManquantes;
+var
+  ValidateurTrad: TValidateurTraductions;
+  Rapport: string;
+begin
+  ValidateurTrad := TValidateurTraductions.Create('fr');
+  try
+    ValidateurTrad.ValiderToutesLesLangues;
+    Rapport := ValidateurTrad.GenererRapport;
 
-interface
+    WriteLn(Rapport);
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls;
+    // Sauvegarder le rapport
+    TFile.WriteAllText('RapportTraductions.txt', Rapport);
+  finally
+    ValidateurTrad.Free;
+  end;
+end;
+```
 
+### 3. Problèmes d'encodage
+
+```pascal
+procedure VerifierEncodageFichiers;
+var
+  FichiersLangue: TStringDynArray;
+  Fichier: string;
+  Contenu: TBytes;
+begin
+  FichiersLangue := TDirectory.GetFiles('Lang', '*.ini');
+
+  for Fichier in FichiersLangue do
+  begin
+    Contenu := TFile.ReadAllBytes(Fichier);
+
+    // Vérifier la présence du BOM UTF-8
+    if (Length(Contenu) < 3) or
+       (Contenu[0] <> $EF) or
+       (Contenu[1] <> $BB) or
+       (Contenu[2] <> $BF) then
+    begin
+      WriteLn('[ATTENTION] Fichier sans BOM UTF-8 : ' + Fichier);
+    end;
+  end;
+end;
+```
+
+## Rapport de test
+
+### Structure d'un rapport de test
+
+```pascal
 type
-  TfrmI18NTester = class(TForm)
-    PageControl1: TPageControl;
-    tabGeneral: TTabSheet;
-    tabDateFormats: TTabSheet;
-    tabNumberFormats: TTabSheet;
-    tabUITests: TTabSheet;
-    tabRTL: TTabSheet;
-    cmbLanguages: TComboBox;
-    lblSelectLanguage: TLabel;
-    btnApplyLanguage: TButton;
-    lvwResults: TListView;
-    btnRunAllTests: TButton;
-    edtTestDate: TEdit;
-    btnTestDate: TButton;
-    lblDateFormat: TLabel;
-    edtTestNumber: TEdit;
-    btnTestNumber: TButton;
-    lblNumberFormat: TLabel;
-    btnTestUI: TButton;
-    chkAutomaticUICheck: TCheckBox;
-    btnTestRTL: TButton;
-    chkCreateScreenshots: TCheckBox;
-    procedure FormCreate(Sender: TObject);
-    procedure btnApplyLanguageClick(Sender: TObject);
-    procedure btnRunAllTestsClick(Sender: TObject);
-    procedure btnTestDateClick(Sender: TObject);
-    procedure btnTestNumberClick(Sender: TObject);
-    procedure btnTestUIClick(Sender: TObject);
-    procedure btnTestRTLClick(Sender: TObject);
+  TRapportTest = class
   private
-    procedure LogResult(const TestType, TestName, Result, Status: string);
-    procedure RunDateTests;
-    procedure RunNumberTests;
-    procedure RunUITests;
-    procedure RunRTLTests;
-    procedure CreateScreenshot(const FormName, FileName: string);
+    FLangueTeste: string;
+    FDateTest: TDateTime;
+    FTestsReussis: Integer;
+    FTestsEchoues: Integer;
+    FProblemesTrouves: TStringList;
+  public
+    constructor Create(const Langue: string);
+    destructor Destroy; override;
+
+    procedure AjouterReussite(const Description: string);
+    procedure AjouterEchec(const Description: string);
+    procedure AjouterProbleme(const Categorie, Description: string);
+    function GenererRapportHTML: string;
+    procedure SauvegarderRapport(const CheminFichier: string);
   end;
 
+function TRapportTest.GenererRapportHTML: string;
 var
-  frmI18NTester: TfrmI18NTester;
+  HTML: TStringBuilder;
+begin
+  HTML := TStringBuilder.Create;
+  try
+    HTML.AppendLine('<!DOCTYPE html>');
+    HTML.AppendLine('<html>');
+    HTML.AppendLine('<head>');
+    HTML.AppendLine('  <meta charset="UTF-8">');
+    HTML.AppendLine(Format('  <title>Rapport de test i18n - %s</title>', [FLangueTeste]));
+    HTML.AppendLine('  <style>');
+    HTML.AppendLine('    body { font-family: Arial, sans-serif; margin: 20px; }');
+    HTML.AppendLine('    .success { color: green; }');
+    HTML.AppendLine('    .error { color: red; }');
+    HTML.AppendLine('    .warning { color: orange; }');
+    HTML.AppendLine('  </style>');
+    HTML.AppendLine('</head>');
+    HTML.AppendLine('<body>');
 
-implementation
+    HTML.AppendLine(Format('<h1>Rapport de test - %s</h1>', [FLangueTeste]));
+    HTML.AppendLine(Format('<p>Date : %s</p>',
+      [FormatDateTime('dd/mm/yyyy hh:nn', FDateTest)]));
 
-{$R *.dfm}
+    HTML.AppendLine('<h2>Résumé</h2>');
+    HTML.AppendLine(Format('<p class="success">Tests réussis : %d</p>', [FTestsReussis]));
+    HTML.AppendLine(Format('<p class="error">Tests échoués : %d</p>', [FTestsEchoues]));
+
+    if FProblemesTrouves.Count > 0 then
+    begin
+      HTML.AppendLine('<h2>Problèmes détectés</h2>');
+      HTML.AppendLine('<ul>');
+      for var i := 0 to FProblemesTrouves.Count - 1 do
+        HTML.AppendLine(Format('<li class="warning">%s</li>', [FProblemesTrouves[i]]));
+      HTML.AppendLine('</ul>');
+    end;
+
+    HTML.AppendLine('</body>');
+    HTML.AppendLine('</html>');
+
+    Result := HTML.ToString;
+  finally
+    HTML.Free;
+  end;
+end;
+```
+
+## Automatisation avec CI/CD
+
+### Script de test pour intégration continue
+
+```pascal
+program TestsI18N_CI;
+
+{$APPTYPE CONSOLE}
 
 uses
-  LocalizationManager, System.DateUtils, System.IOUtils;
+  System.SysUtils,
+  ValidateurTraductions in 'ValidateurTraductions.pas',
+  AnalyseurMiseEnPage in 'AnalyseurMiseEnPage.pas';
 
-// Implémentation des méthodes...
+var
+  CodeSortie: Integer;
+
+procedure ExecuterTests;
+var
+  Validateur: TValidateurTraductions;
+  NbProblemes: Integer;
+begin
+  WriteLn('=== Tests d''internationalisation ===');
+  WriteLn;
+
+  // Test des traductions
+  WriteLn('Vérification des traductions...');
+  Validateur := TValidateurTraductions.Create;
+  try
+    Validateur.ValiderToutesLesLangues;
+    NbProblemes := Validateur.Problemes.Count;
+
+    WriteLn(Validateur.GenererRapport);
+
+    if NbProblemes > 0 then
+      CodeSortie := 1; // Échec
+  finally
+    Validateur.Free;
+  end;
+
+  // Autres tests...
+
+  WriteLn;
+  if CodeSortie = 0 then
+    WriteLn('✓ Tous les tests sont passés')
+  else
+    WriteLn('✗ Certains tests ont échoué');
+end;
+
+begin
+  CodeSortie := 0;
+  try
+    ExecuterTests;
+  except
+    on E: Exception do
+    begin
+      WriteLn('ERREUR: ' + E.Message);
+      CodeSortie := 2;
+    end;
+  end;
+
+  ExitCode := CodeSortie;
+end.
+```
+
+## Bonnes pratiques de test
+
+### 1. Tester tôt et souvent
+
+```
+Ne pas attendre : Tester dès qu'une langue est ajoutée
+Tester régulièrement : À chaque modification importante
+Automatiser : Intégrer dans le processus de build
+```
+
+### 2. Impliquer des locuteurs natifs
+
+Les meilleurs testeurs pour une langue sont les personnes qui la parlent nativement. Ils détecteront :
+- Les traductions maladroites ou incorrectes
+- Les formulations non naturelles
+- Les erreurs culturelles
+- Les problèmes de contexte
+
+### 3. Documenter les problèmes
+
+Pour chaque problème trouvé :
+- Capturer une capture d'écran
+- Noter les étapes pour reproduire
+- Indiquer la langue concernée
+- Évaluer la sévérité (critique, majeur, mineur)
+
+### 4. Créer un environnement de test dédié
+
+```pascal
+procedure ConfigurerEnvironnementTest;
+begin
+  // Utiliser des données de test dans toutes les langues
+  ChargerDonneesTest;
+
+  // Activer les outils de développement
+  ActiverModeDebug;
+
+  // Logger tous les changements de langue
+  ActiverJournalisationI18N;
+end;
+```
+
+## Checklist finale avant release
+
+```
+Production:
+  □ Toutes les langues ont été testées visuellement
+  □ Tous les tests automatisés passent
+  □ Les traductions ont été validées par des natifs
+  □ Les captures d'écran dans chaque langue sont OK
+  □ Les formats de date/nombre fonctionnent correctement
+  □ L'export/import de données est testé dans chaque langue
+  □ Les langues RTL sont testées (si applicable)
+  □ La documentation utilisateur est traduite
+  □ Les messages d'erreur sont tous traduits
+  □ Le changement de langue fonctionne sans redémarrage
+  □ Aucun texte codé en dur n'a été détecté
+  □ Les fichiers de langue sont en UTF-8 avec BOM
+  □ Les polices supportent tous les caractères
 ```
 
 ## Conclusion
 
-Les tests d'internationalisation sont une étape essentielle pour garantir la qualité et l'utilisabilité de votre application Delphi dans un contexte international. En suivant une approche méthodique et en utilisant les techniques présentées dans cette section, vous pouvez identifier et résoudre les problèmes d'internationalisation avant qu'ils n'atteignent vos utilisateurs.
+Les tests d'internationalisation sont essentiels pour garantir une expérience utilisateur de qualité dans toutes les langues. En combinant tests manuels, automatisés et validation par des locuteurs natifs, vous pouvez vous assurer que votre application fonctionne parfaitement pour tous vos utilisateurs, quelle que soit leur langue.
 
-Les principaux points à retenir sont :
+**Points clés à retenir :**
 
-1. **Testez toutes les langues supportées**, pas seulement la langue principale
-2. **Vérifiez l'interface utilisateur, les formats de données et les fonctionnalités spécifiques** à chaque langue
-3. **Automatisez autant que possible les tests** pour faciliter les vérifications régulières
-4. **Utilisez des outils comme la pseudo-localisation** pour détecter les problèmes potentiels
-5. **Documentez les résultats des tests** pour référence future
+- **Testez tôt** : Ne pas attendre la fin du développement
+- **Automatisez** : Créer des outils et scripts de test
+- **Documentez** : Garder une trace de tous les problèmes
+- **Impliquez des natifs** : Essentiels pour la qualité des traductions
+- **Utilisez des checklists** : Ne rien oublier
+- **Intégrez au CI/CD** : Tests automatiques à chaque commit
 
-En investissant du temps dans les tests d'internationalisation, vous améliorerez considérablement l'expérience utilisateur de votre application pour tous vos utilisateurs, quelle que soit leur langue ou leur région.
-
----
-
-Dans la prochaine section, nous verrons comment gérer les encodages et le support Unicode dans vos applications Delphi.
+Avec ces outils et méthodes, vous pouvez maintenir un haut niveau de qualité pour l'internationalisation de vos applications Delphi tout au long de leur cycle de vie.
 
 ⏭️ [Support Unicode et encodages](/13-internationalisation-et-localisation/06-support-unicode-et-encodages.md)

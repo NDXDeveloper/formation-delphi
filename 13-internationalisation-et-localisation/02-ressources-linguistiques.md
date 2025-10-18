@@ -1,441 +1,728 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 13.2 Ressources linguistiques
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Pour créer des applications multilingues, il est essentiel de séparer les chaînes de caractères de votre code source. Delphi propose plusieurs mécanismes pour gérer les ressources linguistiques, permettant ainsi une internationalisation efficace de vos applications.
+Les ressources linguistiques permettent de gérer les textes et éléments textuels d'une application de manière centralisée. Cela facilite grandement la traduction de votre application dans différentes langues sans avoir à modifier le code source. Dans cette section, nous allons découvrir comment Delphi gère ces ressources et comment les exploiter efficacement.
 
 ## Pourquoi utiliser des ressources linguistiques ?
 
-Avant de plonger dans les détails techniques, comprenons pourquoi les ressources linguistiques sont importantes :
-
-1. **Séparation des préoccupations** : Le code et le texte affiché sont séparés, facilitant la maintenance
-2. **Internationalisation simplifiée** : Ajout facile de nouvelles langues sans modifier le code
-3. **Cohérence** : Gestion centralisée des textes pour une uniformité dans l'application
-4. **Productivité** : Possibilité de confier la traduction à des spécialistes qui n'ont pas besoin de connaître le code
-
-## Méthodes de gestion des ressources linguistiques
-
-Delphi offre plusieurs approches pour gérer les ressources linguistiques :
-
-### 1. Fichiers de ressources (.rc et .res)
-
-Les fichiers de ressources sont la méthode traditionnelle pour stocker des chaînes et d'autres ressources :
-
-#### Création d'un fichier de ressources (.rc)
-
-Créez un fichier texte avec l'extension `.rc` contenant vos chaînes :
-
-```
-STRINGTABLE
-BEGIN
-  1, "Fichier"
-  2, "Édition"
-  3, "Affichage"
-  4, "Outils"
-  5, "Aide"
-END
-```
-
-#### Compilation du fichier de ressources
-
-Utilisez l'utilitaire BRCC32.EXE pour compiler votre fichier .rc en fichier .res :
-
-```
-brcc32 strings.rc
-```
-
-Vous pouvez également inclure cette commande dans votre projet pour que la compilation se fasse automatiquement.
-
-#### Utilisation dans votre code
+Imaginez que vous ayez développé une application avec tous les textes écrits directement dans le code :
 
 ```pascal
-{$R strings.res}  // Inclure le fichier de ressources
-
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  Buffer: array[0..255] of Char;
-begin
-  // Chargement d'une chaîne depuis les ressources
-  LoadString(HInstance, 1, Buffer, SizeOf(Buffer));
-
-  // Utilisation de la chaîne
-  MenuItem1.Caption := Buffer;
-end;
+Button1.Caption := 'Valider';
+ShowMessage('Fichier sauvegardé avec succès');
+Label1.Caption := 'Nom de l\'utilisateur :';
 ```
 
-### 2. Fichiers DFM pour les formulaires
+Si vous souhaitez traduire votre application en anglais, espagnol ou toute autre langue, vous devriez modifier chaque ligne de code contenant du texte. C'est fastidieux, source d'erreurs, et difficile à maintenir.
 
-Les propriétés des composants VCL comme `Caption`, `Text`, etc. sont stockées dans les fichiers DFM, qui peuvent être localisés :
+**Avec les ressources linguistiques**, vous centralisez tous les textes, et il devient très simple de basculer d'une langue à l'autre.
+
+## Les différents types de ressources en Delphi
+
+| Type de ressource | Description | Format | Usage |
+|-------------------|-------------|--------|-------|
+| **ResourceString** | Constantes de chaînes dans le code | `.pas` | Messages, textes constants |
+| **Fichiers DFM** | Propriétés visuelles des formulaires | `.dfm` | Captions, libellés des composants |
+| **Fichiers de ressources** | Ressources compilées | `.rc`, `.res` | Textes, images, sons |
+| **Fichiers externes** | Fichiers de traduction | `.ini`, `.xml`, `.json` | Dictionnaires de traduction |
+
+## ResourceString : Les chaînes de ressources
+
+`ResourceString` est la méthode la plus simple et la plus élégante pour gérer les chaînes de caractères localisables directement dans votre code.
+
+### Déclaration des ResourceString
+
+Au lieu de déclarer des constantes normales, vous utilisez la section `resourcestring` :
 
 ```pascal
-object Form1: TForm1
-  Caption = 'Mon application'
-  ...
-  object Label1: TLabel
-    Caption = 'Bonjour !'
-  end
-end
-```
-
-### 3. Fichiers de ressources de chaînes (.dfm)
-
-Delphi permet de créer des modules de données contenant uniquement des chaînes :
-
-#### Création d'un module de données de chaînes
-
-1. Choisissez **Fichier > Nouveau > Autre > Module de données**
-2. Ajoutez des composants `TStringList` ou `TMemo` pour stocker vos chaînes
-3. Définissez les propriétés `Name` et `Strings` pour chaque composant
-
-```pascal
-object StringRes: TStringRes
-  object StringList1: TStringList
-    Strings.Strings = (
-      'Bonjour'
-      'Au revoir'
-      'Fichier'
-      'Édition'
-    )
-  end
-end
-```
-
-#### Utilisation dans votre code
-
-```pascal
-// Utilisation du module de données
-uses StringRes;
-
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  Label1.Caption := StringRes.StringList1[0];  // "Bonjour"
-end;
-```
-
-### 4. Fichiers de ressources externes (.txt ou .ini)
-
-Pour une plus grande flexibilité, vous pouvez utiliser des fichiers externes :
-
-#### Création d'un fichier de ressources .ini
-
-```ini
-[French]
-Greeting=Bonjour
-Farewell=Au revoir
-
-[English]
-Greeting=Hello
-Farewell=Goodbye
-```
-
-#### Utilisation avec TIniFile
-
-```pascal
-uses IniFiles;
-
-procedure TForm1.LoadLanguage(const Language: string);
-var
-  IniFile: TIniFile;
-begin
-  IniFile := TIniFile.Create(ExtractFilePath(Application.ExeName) + 'languages.ini');
-  try
-    Label1.Caption := IniFile.ReadString(Language, 'Greeting', 'Bonjour');
-    Label2.Caption := IniFile.ReadString(Language, 'Farewell', 'Au revoir');
-  finally
-    IniFile.Free;
-  end;
-end;
-```
-
-## La classe TResourceStream
-
-Pour des ressources plus complexes ou volumineuses, vous pouvez utiliser `TResourceStream` :
-
-```pascal
-uses Classes;
-
-procedure TForm1.LoadResourceText;
-var
-  ResStream: TResourceStream;
-  StrList: TStringList;
-begin
-  ResStream := TResourceStream.Create(HInstance, 'TEXTFILE', RT_RCDATA);
-  try
-    StrList := TStringList.Create;
-    try
-      StrList.LoadFromStream(ResStream);
-      Memo1.Lines.Text := StrList.Text;
-    finally
-      StrList.Free;
-    end;
-  finally
-    ResStream.Free;
-  end;
-end;
-```
-
-## Utilisation avancée : La bibliothèque GNU gettext
-
-Pour des projets plus complexes, vous pouvez utiliser la bibliothèque GNU gettext, qui offre des fonctionnalités avancées pour l'internationalisation :
-
-> 💡 Il existe plusieurs adaptations de GNU gettext pour Delphi, comme "dxgettext" ou "GnuGetText.pas".
-
-### Installation de GNU gettext pour Delphi
-
-1. Téléchargez une implémentation de GNU gettext pour Delphi
-2. Ajoutez le répertoire d'installation à votre chemin de recherche de projet
-
-### Utilisation de base
-
-```pascal
-uses
-  gnugettext;
-
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  // Initialisation de gettext
-  TranslateComponent(Self);
-
-  // Traduction de chaînes individuelles
-  Label1.Caption := _('Bonjour');  // La fonction _() recherche la traduction
-end;
-```
-
-### Fichiers de traduction (.po et .mo)
-
-GNU gettext utilise des fichiers .po (Portable Object) pour les traductions et des fichiers .mo (Machine Object) pour le runtime :
-
-Exemple de fichier .po :
-```
-msgid "Bonjour"
-msgstr "Hello"
-
-msgid "Au revoir"
-msgstr "Goodbye"
-```
-
-## Bibliothèques tierces pour la localisation
-
-Plusieurs bibliothèques tierces offrent des solutions plus avancées pour la gestion des ressources linguistiques :
-
-- **ITE (Integrated Translation Environment)**
-- **TsiLang**
-- **MultiLanguage Component**
-
-Ces bibliothèques payantes offrent généralement des éditeurs visuels et des outils pour faciliter la gestion des traductions.
-
-## Mise en œuvre pratique : Un gestionnaire de langues simple
-
-Voici un exemple d'implémentation d'un gestionnaire de langues simple basé sur des fichiers INI :
-
-```pascal
-unit LanguageManager;
+unit MesMessages;
 
 interface
 
-uses
-  System.Classes, System.SysUtils, System.IniFiles;
+resourcestring
+  // Messages de l'application
+  MSG_BIENVENUE = 'Bienvenue dans l\'application';
+  MSG_CONFIRMATION = 'Êtes-vous sûr de vouloir continuer ?';
+  MSG_ENREGISTREMENT_OK = 'Données enregistrées avec succès';
+  MSG_ERREUR_CHARGEMENT = 'Erreur lors du chargement du fichier';
 
-type
-  TLanguageManager = class
-  private
-    FLanguageFile: string;
-    FCurrentLanguage: string;
-    FIniFile: TIniFile;
-    function GetString(const Identifier: string): string;
-  public
-    constructor Create(const ALanguageFile: string);
-    destructor Destroy; override;
-    procedure SetLanguage(const Language: string);
-    property CurrentLanguage: string read FCurrentLanguage;
-    property Strings[const Identifier: string]: string read GetString; default;
-  end;
+  // Libellés d'interface
+  LBL_NOM = 'Nom :';
+  LBL_PRENOM = 'Prénom :';
+  LBL_EMAIL = 'Adresse e-mail :';
+
+  // Boutons
+  BTN_VALIDER = 'Valider';
+  BTN_ANNULER = 'Annuler';
+  BTN_FERMER = 'Fermer';
 
 implementation
 
-constructor TLanguageManager.Create(const ALanguageFile: string);
+end.
+```
+
+### Utilisation des ResourceString
+
+Une fois déclarées, vous utilisez ces ressources comme des constantes normales :
+
+```pascal
+uses
+  MesMessages;
+
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  inherited Create;
-  FLanguageFile := ALanguageFile;
-  FIniFile := TIniFile.Create(FLanguageFile);
-  // Langue par défaut
-  FCurrentLanguage := 'French';
+  ShowMessage(MSG_BIENVENUE);
+  Button1.Caption := BTN_VALIDER;
+  Label1.Caption := LBL_NOM;
+end;
+```
+
+### Avantages des ResourceString
+
+- ✅ Centralisation de tous les textes
+- ✅ Facilite la traduction (fichiers de traduction séparés)
+- ✅ Pas de modification du code pour changer la langue
+- ✅ Support natif de Delphi pour l'extraction et la traduction
+- ✅ Type-safe (vérification à la compilation)
+
+## Organisation des ResourceString
+
+Il est recommandé de bien organiser vos ressources pour faciliter la maintenance.
+
+### Structure par modules
+
+```pascal
+unit MessagesAuthentification;
+
+interface
+
+resourcestring
+  // Connexion
+  MSG_AUTH_CONNEXION = 'Connexion';
+  MSG_AUTH_IDENTIFIANT = 'Identifiant';
+  MSG_AUTH_MOT_DE_PASSE = 'Mot de passe';
+  MSG_AUTH_SE_CONNECTER = 'Se connecter';
+  MSG_AUTH_ERREUR = 'Identifiant ou mot de passe incorrect';
+  MSG_AUTH_SUCCES = 'Connexion réussie';
+
+implementation
+
+end.
+```
+
+```pascal
+unit MessagesDocument;
+
+interface
+
+resourcestring
+  // Gestion de documents
+  MSG_DOC_NOUVEAU = 'Nouveau document';
+  MSG_DOC_OUVRIR = 'Ouvrir un document';
+  MSG_DOC_ENREGISTRER = 'Enregistrer';
+  MSG_DOC_ENREGISTRER_SOUS = 'Enregistrer sous...';
+  MSG_DOC_FERMER = 'Fermer le document';
+  MSG_DOC_MODIFIE = 'Le document a été modifié. Voulez-vous l\'enregistrer ?';
+
+implementation
+
+end.
+```
+
+### Convention de nommage
+
+Une bonne pratique consiste à utiliser des préfixes pour identifier le type de texte :
+
+| Préfixe | Utilisation | Exemple |
+|---------|-------------|---------|
+| `MSG_` | Messages d'information ou d'erreur | `MSG_ERREUR_FICHIER` |
+| `LBL_` | Libellés de composants | `LBL_NOM_UTILISATEUR` |
+| `BTN_` | Textes de boutons | `BTN_VALIDER` |
+| `TITLE_` | Titres de fenêtres | `TITLE_PARAMÈTRES` |
+| `HINT_` | Bulles d'aide (hints) | `HINT_BOUTON_SAUVEGARDER` |
+| `ERR_` | Messages d'erreur spécifiques | `ERR_CONNEXION_BDD` |
+| `CONFIRM_` | Messages de confirmation | `CONFIRM_SUPPRESSION` |
+
+## Localisation des formulaires (fichiers DFM)
+
+Les formulaires Delphi stockent leurs propriétés visuelles dans des fichiers `.dfm`. Ces fichiers contiennent les textes des composants (captions, hints, etc.).
+
+### Structure d'un fichier DFM
+
+Un fichier DFM ressemble à ceci :
+
+```
+object Form1: TForm1
+  Caption = 'Ma Première Application'
+
+  object Button1: TButton
+    Caption = 'Cliquez ici'
+    Hint = 'Cliquez pour valider'
+  end
+
+  object Label1: TLabel
+    Caption = 'Nom :'
+  end
+end
+```
+
+### Activation de la localisation
+
+Pour rendre un formulaire localisable, vous devez activer la propriété `Localizable` du formulaire :
+
+1. Sélectionnez le formulaire dans l'IDE
+2. Dans l'Inspecteur d'objets, trouvez la propriété `Localizable`
+3. Changez sa valeur à `True`
+
+> 💡 **Important** : Une fois `Localizable` activé, Delphi créera automatiquement des fichiers de ressources pour chaque langue.
+
+### Création de versions linguistiques
+
+Une fois la localisation activée :
+
+1. Sélectionnez le formulaire
+2. Dans l'Inspecteur d'objets, modifiez la propriété `Language`
+3. Choisissez une langue (par exemple, `English`)
+4. Modifiez les textes des composants dans cette langue
+
+Delphi créera automatiquement un fichier `.dfm` séparé pour chaque langue.
+
+**Exemple de structure de fichiers :**
+
+```
+MonFormulaire.pas          // Code source
+MonFormulaire.dfm          // Version française (par défaut)
+MonFormulaire.en.dfm       // Version anglaise
+MonFormulaire.es.dfm       // Version espagnole
+MonFormulaire.de.dfm       // Version allemande
+```
+
+### Changement de langue à l'exécution
+
+Pour changer la langue de votre application à l'exécution, utilisez l'unit `System.SysUtils` :
+
+```pascal
+uses
+  System.SysUtils;
+
+procedure TForm1.ChangerLangue(const Langue: string);
+begin
+  // 'fr' pour français, 'en' pour anglais, 'es' pour espagnol, etc.
+  SetCurrentLanguage(Langue);
+
+  // Recharger les formulaires pour appliquer la nouvelle langue
+  // (nécessite généralement un redémarrage de l'application
+  // ou une recréation des formulaires)
+end;
+```
+
+## Fichiers de ressources RC/RES
+
+Les fichiers de ressources permettent d'embarquer du contenu (textes, images, sons) directement dans l'exécutable.
+
+### Création d'un fichier de ressources (.RC)
+
+Créez un fichier texte avec l'extension `.rc` :
+
+```
+// Fichier : MesRessources.rc
+
+STRINGTABLE
+BEGIN
+  1, "Bienvenue"
+  2, "Au revoir"
+  3, "Erreur"
+  4, "Succès"
+END
+```
+
+### Compilation du fichier RC
+
+Delphi compile automatiquement les fichiers `.rc` en fichiers `.res` lors de la compilation du projet.
+
+### Utilisation des ressources dans le code
+
+```pascal
+uses
+  Winapi.Windows;
+
+function ChargerChaineRessource(ID: Integer): string;
+var
+  Buffer: array[0..255] of Char;
+begin
+  LoadString(HInstance, ID, Buffer, SizeOf(Buffer));
+  Result := Buffer;
 end;
 
-destructor TLanguageManager.Destroy;
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Message: string;
+begin
+  Message := ChargerChaineRessource(1); // Charge "Bienvenue"
+  ShowMessage(Message);
+end;
+```
+
+## Fichiers externes de traduction
+
+Pour plus de flexibilité, vous pouvez stocker vos traductions dans des fichiers externes.
+
+### Format INI
+
+```ini
+; Fichier : Traduction_FR.ini
+
+[Messages]
+Bienvenue=Bienvenue dans l'application
+AuRevoir=Au revoir et à bientôt
+ErreurFichier=Impossible de charger le fichier
+
+[Boutons]
+Valider=Valider
+Annuler=Annuler
+Fermer=Fermer
+
+[Libelles]
+Nom=Nom :
+Prenom=Prénom :
+Email=E-mail :
+```
+
+### Chargement d'un fichier INI
+
+```pascal
+uses
+  System.IniFiles, System.SysUtils;
+
+type
+  TTraducteur = class
+  private
+    FIniFile: TIniFile;
+  public
+    constructor Create(const CheminFichier: string);
+    destructor Destroy; override;
+    function Traduire(const Section, Cle: string): string;
+  end;
+
+constructor TTraducteur.Create(const CheminFichier: string);
+begin
+  inherited Create;
+  FIniFile := TIniFile.Create(CheminFichier);
+end;
+
+destructor TTraducteur.Destroy;
 begin
   FIniFile.Free;
   inherited;
 end;
 
-procedure TLanguageManager.SetLanguage(const Language: string);
+function TTraducteur.Traduire(const Section, Cle: string): string;
 begin
-  FCurrentLanguage := Language;
+  Result := FIniFile.ReadString(Section, Cle, Cle); // Retourne la clé si non trouvée
 end;
 
-function TLanguageManager.GetString(const Identifier: string): string;
-begin
-  Result := FIniFile.ReadString(FCurrentLanguage, Identifier, Identifier);
-end;
-
-end.
-```
-
-### Utilisation du gestionnaire de langues
-
-```pascal
-var
-  LangManager: TLanguageManager;
-
+// Utilisation
 procedure TForm1.FormCreate(Sender: TObject);
+var
+  Traducteur: TTraducteur;
 begin
-  LangManager := TLanguageManager.Create(ExtractFilePath(Application.ExeName) + 'languages.ini');
-
-  // Définir la langue
-  LangManager.SetLanguage('French');
-
-  // Utiliser les chaînes
-  Button1.Caption := LangManager['BtnOK'];
-  Label1.Caption := LangManager['Welcome'];
-end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  LangManager.Free;
-end;
-
-procedure TForm1.cbLanguageChange(Sender: TObject);
-begin
-  case cbLanguage.ItemIndex of
-    0: LangManager.SetLanguage('French');
-    1: LangManager.SetLanguage('English');
-    2: LangManager.SetLanguage('Spanish');
+  Traducteur := TTraducteur.Create('Traduction_FR.ini');
+  try
+    Button1.Caption := Traducteur.Traduire('Boutons', 'Valider');
+    Label1.Caption := Traducteur.Traduire('Libelles', 'Nom');
+    ShowMessage(Traducteur.Traduire('Messages', 'Bienvenue'));
+  finally
+    Traducteur.Free;
   end;
-
-  // Mettre à jour les chaînes
-  UpdateUILanguage;
-end;
-
-procedure TForm1.UpdateUILanguage;
-begin
-  // Mettre à jour toutes les chaînes de l'interface
-  Button1.Caption := LangManager['BtnOK'];
-  Label1.Caption := LangManager['Welcome'];
-  // ... autres composants
 end;
 ```
 
-## Bonnes pratiques pour la gestion des ressources linguistiques
+### Format JSON
 
-1. **Planifiez l'internationalisation dès le début** : Ne considérez pas la localisation comme une fonctionnalité à ajouter plus tard
+Les fichiers JSON sont de plus en plus populaires pour stocker les traductions.
 
-2. **Utilisez des identifiants clairs** : Nommez vos chaînes de façon descriptive, par exemple `msg_welcome` plutôt que `str1`
+```json
+{
+  "messages": {
+    "bienvenue": "Bienvenue dans l'application",
+    "auRevoir": "Au revoir et à bientôt",
+    "erreurFichier": "Impossible de charger le fichier"
+  },
+  "boutons": {
+    "valider": "Valider",
+    "annuler": "Annuler",
+    "fermer": "Fermer"
+  },
+  "libelles": {
+    "nom": "Nom :",
+    "prenom": "Prénom :",
+    "email": "E-mail :"
+  }
+}
+```
 
-3. **Évitez les chaînes concaténées** : Utilisez des paramètres pour les chaînes variables
-   ```pascal
-   // Mauvais
-   Label1.Caption := 'Bonjour ' + UserName;
-
-   // Bon
-   Label1.Caption := Format(LangManager['msg_welcome'], [UserName]);
-   ```
-
-4. **Gérez les différences culturelles** : Pas uniquement les traductions, mais aussi les formats de date, heure, monnaie, etc.
-
-5. **Testez avec différentes langues** : Certaines langues peuvent nécessiter plus d'espace ou un alignement différent
-
-6. **Utilisez Unicode** : Assurez-vous que votre application prend en charge tous les caractères des langues cibles
-
-7. **Créez des outils pour faciliter la traduction** : Un éditeur simple peut aider les traducteurs non-techniciens
-
-## Exemple complet : Changement de langue à la volée
-
-Voici un exemple complet montrant comment implémenter un changement de langue dynamique dans une application Delphi :
+### Chargement d'un fichier JSON
 
 ```pascal
-unit MainForm;
+uses
+  System.JSON, System.IOUtils;
+
+function ChargerTraductionJSON(const CheminFichier: string): TJSONObject;
+var
+  ContenuJSON: string;
+begin
+  ContenuJSON := TFile.ReadAllText(CheminFichier, TEncoding.UTF8);
+  Result := TJSONObject.ParseJSONValue(ContenuJSON) as TJSONObject;
+end;
+
+function ObtenirTraduction(JSON: TJSONObject; const Categorie, Cle: string): string;
+var
+  Section: TJSONObject;
+begin
+  Result := Cle; // Valeur par défaut
+
+  Section := JSON.GetValue<TJSONObject>(Categorie);
+  if Assigned(Section) then
+    Result := Section.GetValue<string>(Cle);
+end;
+
+// Utilisation
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  Traductions: TJSONObject;
+begin
+  Traductions := ChargerTraductionJSON('Traduction_FR.json');
+  try
+    Button1.Caption := ObtenirTraduction(Traductions, 'boutons', 'valider');
+    Label1.Caption := ObtenirTraduction(Traductions, 'libelles', 'nom');
+    ShowMessage(ObtenirTraduction(Traductions, 'messages', 'bienvenue'));
+  finally
+    Traductions.Free;
+  end;
+end;
+```
+
+## Système de traduction centralisé
+
+Pour gérer efficacement les traductions dans une grande application, il est recommandé de créer un gestionnaire de traduction centralisé.
+
+### Classe de gestion des traductions
+
+```pascal
+unit GestionnaireTraduction;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, LanguageManager;
+  System.SysUtils, System.Generics.Collections, System.IniFiles;
 
 type
-  TfrmMain = class(TForm)
-    lblWelcome: TLabel;
-    btnOK: TButton;
-    btnCancel: TButton;
-    rgLanguage: TRadioGroup;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure rgLanguageClick(Sender: TObject);
+  TGestionnaireTraduction = class
   private
-    FLangManager: TLanguageManager;
-    procedure UpdateUILanguage;
+    FLangueActive: string;
+    FTraductions: TDictionary<string, string>;
+    procedure ChargerLangue(const CodeLangue: string);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function T(const Cle: string): string; // T = Traduire
+    procedure DefinirLangue(const CodeLangue: string);
+    function LangueActive: string;
   end;
 
 var
-  frmMain: TfrmMain;
+  Traduction: TGestionnaireTraduction; // Instance globale
 
 implementation
 
-{$R *.dfm}
-
-procedure TfrmMain.FormCreate(Sender: TObject);
+constructor TGestionnaireTraduction.Create;
 begin
-  FLangManager := TLanguageManager.Create(
-    ExtractFilePath(Application.ExeName) + 'languages.ini');
-
-  // Configurer le RadioGroup
-  rgLanguage.Items.Clear;
-  rgLanguage.Items.Add('Français');
-  rgLanguage.Items.Add('English');
-  rgLanguage.Items.Add('Español');
-
-  // Langue par défaut: Français
-  rgLanguage.ItemIndex := 0;
-  FLangManager.SetLanguage('French');
-
-  UpdateUILanguage;
+  inherited;
+  FTraductions := TDictionary<string, string>.Create;
+  FLangueActive := 'fr'; // Langue par défaut
+  ChargerLangue(FLangueActive);
 end;
 
-procedure TfrmMain.FormDestroy(Sender: TObject);
+destructor TGestionnaireTraduction.Destroy;
 begin
-  FLangManager.Free;
+  FTraductions.Free;
+  inherited;
 end;
 
-procedure TfrmMain.rgLanguageClick(Sender: TObject);
+procedure TGestionnaireTraduction.ChargerLangue(const CodeLangue: string);
+var
+  IniFile: TIniFile;
+  Sections, Cles: TStringList;
+  i, j: Integer;
+  Cle, Valeur: string;
 begin
-  case rgLanguage.ItemIndex of
-    0: FLangManager.SetLanguage('French');
-    1: FLangManager.SetLanguage('English');
-    2: FLangManager.SetLanguage('Spanish');
+  FTraductions.Clear;
+
+  IniFile := TIniFile.Create(Format('Lang\%s.ini', [CodeLangue]));
+  Sections := TStringList.Create;
+  Cles := TStringList.Create;
+  try
+    // Charger toutes les sections
+    IniFile.ReadSections(Sections);
+
+    // Pour chaque section
+    for i := 0 to Sections.Count - 1 do
+    begin
+      Cles.Clear;
+      IniFile.ReadSection(Sections[i], Cles);
+
+      // Pour chaque clé dans la section
+      for j := 0 to Cles.Count - 1 do
+      begin
+        Cle := Sections[i] + '.' + Cles[j];
+        Valeur := IniFile.ReadString(Sections[i], Cles[j], '');
+        FTraductions.Add(Cle, Valeur);
+      end;
+    end;
+  finally
+    Cles.Free;
+    Sections.Free;
+    IniFile.Free;
   end;
-
-  UpdateUILanguage;
 end;
 
-procedure TfrmMain.UpdateUILanguage;
+function TGestionnaireTraduction.T(const Cle: string): string;
 begin
-  lblWelcome.Caption := FLangManager['msg_welcome'];
-  btnOK.Caption := FLangManager['btn_ok'];
-  btnCancel.Caption := FLangManager['btn_cancel'];
-  Caption := FLangManager['form_title'];
+  if not FTraductions.TryGetValue(Cle, Result) then
+    Result := Cle; // Retourne la clé si la traduction n'existe pas
 end;
+
+procedure TGestionnaireTraduction.DefinirLangue(const CodeLangue: string);
+begin
+  FLangueActive := CodeLangue;
+  ChargerLangue(CodeLangue);
+end;
+
+function TGestionnaireTraduction.LangueActive: string;
+begin
+  Result := FLangueActive;
+end;
+
+initialization
+  Traduction := TGestionnaireTraduction.Create;
+
+finalization
+  Traduction.Free;
 
 end.
 ```
 
+### Utilisation du gestionnaire
+
+```pascal
+uses
+  GestionnaireTraduction;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  // Utilisation simple avec la fonction T()
+  Button1.Caption := Traduction.T('Boutons.Valider');
+  Button2.Caption := Traduction.T('Boutons.Annuler');
+  Label1.Caption := Traduction.T('Libelles.Nom');
+  ShowMessage(Traduction.T('Messages.Bienvenue'));
+end;
+
+procedure TForm1.ChangerLangueEnAnglais;
+begin
+  Traduction.DefinirLangue('en');
+
+  // Mettre à jour l'interface
+  Button1.Caption := Traduction.T('Boutons.Valider');
+  Button2.Caption := Traduction.T('Boutons.Annuler');
+  Label1.Caption := Traduction.T('Libelles.Nom');
+end;
+```
+
+## Structure de fichiers recommandée
+
+Pour un projet multilingue professionnel, voici une organisation recommandée :
+
+```
+MonProjet/
+│
+├── Lang/                    # Dossier des traductions
+│   ├── fr.ini              # Traduction française
+│   ├── en.ini              # Traduction anglaise
+│   ├── es.ini              # Traduction espagnole
+│   └── de.ini              # Traduction allemande
+│
+├── Resources/              # Ressources compilées
+│   ├── Strings.rc          # Chaînes de ressources
+│   └── Strings.res         # Ressources compilées
+│
+└── Source/
+    ├── GestionnaireTraduction.pas
+    └── Messages.pas         # ResourceStrings
+```
+
+## Outils de traduction
+
+### Extraction des textes à traduire
+
+Delphi propose des outils pour extraire automatiquement tous les textes de votre application :
+
+1. **Gestionnaire de traduction intégré** (Integrated Translation Manager)
+2. **Outils tiers** comme :
+   - Sisulizer
+   - SDL Passolo
+   - LocFactory
+
+### Processus de traduction typique
+
+```
+1. Développement en langue source (français)
+   ↓
+2. Extraction des textes à traduire
+   ↓
+3. Envoi aux traducteurs
+   ↓
+4. Réception des traductions
+   ↓
+5. Intégration dans l'application
+   ↓
+6. Tests dans chaque langue
+```
+
+## Bonnes pratiques
+
+### 1. Utiliser des clés descriptives
+
+**Mauvais :**
+```pascal
+resourcestring
+  STR001 = 'Enregistrer';
+  STR002 = 'Annuler';
+```
+
+**Bon :**
+```pascal
+resourcestring
+  BTN_ENREGISTRER = 'Enregistrer';
+  BTN_ANNULER = 'Annuler';
+```
+
+### 2. Éviter les concaténations
+
+**Mauvais :**
+```pascal
+Message := 'Bonjour ' + Nom + ', vous avez ' + IntToStr(Age) + ' ans';
+```
+
+Les traducteurs ne pourront pas réorganiser les mots selon la grammaire de leur langue.
+
+**Bon :**
+```pascal
+resourcestring
+  MSG_ACCUEIL = 'Bonjour %s, vous avez %d ans';
+
+// Utilisation
+Message := Format(MSG_ACCUEIL, [Nom, Age]);
+```
+
+### 3. Prévoir de l'espace pour les traductions
+
+Certaines langues (comme l'allemand) produisent des textes plus longs. Prévoyez de l'espace supplémentaire dans votre interface.
+
+```
+Français : "Enregistrer"    → 11 caractères
+Anglais  : "Save"           →  4 caractères
+Allemand : "Speichern"      → 10 caractères
+Italien  : "Salva"          →  5 caractères
+```
+
+### 4. Documenter le contexte
+
+Ajoutez des commentaires pour aider les traducteurs :
+
+```pascal
+resourcestring
+  // Bouton pour valider un formulaire de saisie
+  BTN_VALIDER = 'Valider';
+
+  // Message affiché après un enregistrement réussi
+  MSG_ENREGISTREMENT_OK = 'Vos données ont été enregistrées avec succès';
+
+  // Titre de la fenêtre de paramètres (max 30 caractères)
+  TITLE_PARAMETRES = 'Paramètres de l''application';
+```
+
+### 5. Tester dans toutes les langues
+
+Créez une checklist de vérification pour chaque langue :
+
+- [ ] Tous les textes sont traduits
+- [ ] Aucun texte ne dépasse les limites de l'interface
+- [ ] Les raccourcis clavier sont cohérents
+- [ ] Les formats de date/heure sont corrects
+- [ ] Les symboles monétaires sont appropriés
+- [ ] Les caractères spéciaux s'affichent correctement
+
+## Gestion des pluriels
+
+Certaines langues ont des règles de pluriel complexes. Voici comment les gérer :
+
+```pascal
+resourcestring
+  MSG_FICHIER_SINGULIER = '%d fichier sélectionné';
+  MSG_FICHIER_PLURIEL = '%d fichiers sélectionnés';
+
+function MessageFichiers(Nombre: Integer): string;
+begin
+  if Nombre <= 1 then
+    Result := Format(MSG_FICHIER_SINGULIER, [Nombre])
+  else
+    Result := Format(MSG_FICHIER_PLURIEL, [Nombre]);
+end;
+```
+
+> ⚠️ **Attention** : Les règles de pluriel varient selon les langues. Le russe, par exemple, a trois formes de pluriel !
+
+## Fallback (retour à une langue par défaut)
+
+Il est important de gérer les cas où une traduction est manquante :
+
+```pascal
+function TGestionnaireTraduction.T(const Cle: string): string;
+begin
+  // Essayer dans la langue active
+  if not FTraductions.TryGetValue(Cle, Result) then
+  begin
+    // Si non trouvé, essayer en français (langue par défaut)
+    if FLangueActive <> 'fr' then
+    begin
+      ChargerLangue('fr');
+      if not FTraductions.TryGetValue(Cle, Result) then
+        Result := Cle; // En dernier recours, retourner la clé
+      ChargerLangue(FLangueActive); // Recharger la langue active
+    end
+    else
+      Result := Cle;
+  end;
+end;
+```
+
 ## Conclusion
 
-La gestion des ressources linguistiques est un aspect essentiel du développement d'applications internationales. Delphi offre plusieurs méthodes pour gérer ces ressources, allant des simples fichiers de ressources aux solutions plus avancées comme GNU gettext.
+Les ressources linguistiques sont essentielles pour créer des applications internationales de qualité. Delphi offre plusieurs approches, de la plus simple (`ResourceString`) à la plus sophistiquée (systèmes de traduction externes).
 
-En choisissant la bonne approche pour votre projet et en suivant les bonnes pratiques, vous pouvez créer des applications multilingues facilement maintenables et évolutives.
+**Recommandations selon la taille du projet :**
 
----
+| Taille du projet | Approche recommandée |
+|------------------|---------------------|
+| Petite application | `ResourceString` uniquement |
+| Application moyenne | `ResourceString` + Localisation des formulaires |
+| Grande application | Gestionnaire de traduction centralisé + Fichiers externes |
+| Application d'entreprise | Système complet avec outils de traduction professionnels |
 
-Dans la prochaine section, nous verrons comment adapter votre application à différentes langues au-delà de la simple traduction des chaînes de caractères.
+Dans la prochaine section, nous verrons comment adapter concrètement votre application à différentes langues et cultures, en exploitant ces ressources linguistiques.
 
 ⏭️ [Adaptation à différentes langues](/13-internationalisation-et-localisation/03-adaptation-a-differentes-langues.md)
