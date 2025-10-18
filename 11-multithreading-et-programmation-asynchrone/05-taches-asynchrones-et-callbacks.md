@@ -1,259 +1,293 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.5 Tâches asynchrones et callbacks
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Qu'est-ce qu'une tâche asynchrone ?
 
-## Introduction
+Une **tâche asynchrone** est une opération qui s'exécute en arrière-plan et qui vous notifie quand elle est terminée, sans bloquer votre application.
 
-Dans les sections précédentes, nous avons exploré les threads et les tâches parallèles pour exécuter du code en arrière-plan. Dans cette partie, nous allons découvrir une approche plus élégante pour gérer les opérations de longue durée : la programmation asynchrone.
+### Analogie : Commander au restaurant
 
-La programmation asynchrone permet d'écrire du code qui peut "attendre" qu'une opération se termine sans bloquer le thread principal. Delphi offre plusieurs mécanismes pour implémenter ces fonctionnalités, notamment le modèle async/await et les callbacks.
+**Mode synchrone (bloquant)** :
+1. Vous commandez un plat
+2. Vous attendez debout devant le comptoir
+3. Le cuisinier prépare votre plat
+4. Vous recevez votre plat
+5. Vous pouvez enfin faire autre chose
 
-## Différence entre parallèle et asynchrone
+**Mode asynchrone (non-bloquant)** :
+1. Vous commandez un plat
+2. On vous donne un numéro
+3. Vous retournez à votre table et discutez avec vos amis (vous êtes libre !)
+4. Quand c'est prêt, on vous appelle avec votre numéro
+5. Vous allez chercher votre plat
 
-Avant d'entrer dans les détails, clarifions la différence entre programmation parallèle et asynchrone :
+Dans le mode asynchrone, vous n'êtes pas bloqué à attendre !
 
-- **Parallèle** : Exécuter plusieurs opérations en même temps sur des threads différents.
-- **Asynchrone** : Démarrer une opération et continuer à exécuter d'autres tâches sans attendre qu'elle se termine.
-
-Un programme peut être :
-- Asynchrone sans être parallèle (un seul thread qui bascule entre différentes tâches)
-- Parallèle sans être asynchrone (plusieurs threads qui exécutent des opérations synchrones)
-- Les deux à la fois (plusieurs threads exécutant des opérations asynchrones)
-
-## Modèle de programmation asynchrone en Delphi
-
-### Le modèle de promesse avec IFuture<T>
-
-L'interface `IFuture<T>` représente le résultat futur d'une opération asynchrone. Elle est similaire à `TTask<T>` mais est conçue spécifiquement pour les opérations asynchrones.
+### Synchrone vs Asynchrone en programmation
 
 ```pascal
-uses
-  System.Threading;
-
-var
-  MonFutur: IFuture<string>;
+// MODE SYNCHRONE (bloquant)
+procedure TForm1.ButtonClick(Sender: TObject);
 begin
-  // Démarrer une opération asynchrone
-  MonFutur := TTask.Future<string>(
-    function: string
+  Label1.Caption := 'Téléchargement en cours...';
+
+  // L'interface se fige pendant 5 secondes !
+  TelechargerFichier('http://example.com/data.json');
+
+  Label1.Caption := 'Téléchargement terminé';
+end;
+
+// MODE ASYNCHRONE (non-bloquant)
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  Label1.Caption := 'Téléchargement en cours...';
+
+  // Lance le téléchargement et continue immédiatement
+  TelechargerFichierAsync('http://example.com/data.json',
+    procedure
     begin
-      // Simuler une opération longue
-      Sleep(3000);
-      Result := 'Opération terminée';
+      // Ce code s'exécute quand le téléchargement est terminé
+      Label1.Caption := 'Téléchargement terminé';
     end
   );
 
-  // Le code continue immédiatement, sans attendre la fin de l'opération
-  Label1.Caption := 'Opération en cours...';
-
-  // Plus tard, quand nous avons besoin du résultat :
-  ShowMessage(MonFutur.Value); // Cette ligne attend si nécessaire
+  // L'interface reste réactive !
+  // L'utilisateur peut continuer à utiliser l'application
 end;
 ```
 
-### Les méthodes asynchrones avec "async/await"
+## Les callbacks (fonctions de rappel)
 
-Delphi XE8 et versions ultérieures proposent un modèle similaire à l'async/await de C# avec les méthodes `TTask.Run` et `TTask.Await` :
+Un **callback** (ou fonction de rappel) est une fonction que vous passez à une autre fonction, et qui sera appelée plus tard quand une opération sera terminée.
+
+### Structure d'un callback
 
 ```pascal
-procedure TForm1.ButtonStartClick(Sender: TObject);
+// Définir un type de callback
+type
+  TCallbackProcedure = reference to procedure(const Resultat: string);
+
+// Fonction qui accepte un callback
+procedure FaireQuelqueChoseAsync(ACallback: TCallbackProcedure);
 begin
-  // Démarrer une opération asynchrone
   TTask.Run(
     procedure
+    var
+      Resultat: string;
     begin
-      // Simuler une opération longue
-      Sleep(3000);
+      // Faire un travail long
+      Sleep(2000);
+      Resultat := 'Travail terminé !';
 
-      TThread.Synchronize(nil,
+      // Appeler le callback avec le résultat
+      TThread.Queue(nil,
         procedure
         begin
-          Label1.Caption := 'Opération terminée';
+          ACallback(Resultat);
         end
       );
     end
   );
+end;
 
-  // Le code continue sans attendre
-  Label1.Caption := 'Opération en cours...';
+// Utilisation
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  FaireQuelqueChoseAsync(
+    procedure(const Resultat: string)
+    begin
+      // Ce code s'exécute quand c'est terminé
+      ShowMessage(Resultat);
+    end
+  );
 end;
 ```
 
-## Utilisation des callbacks
+## Callbacks avec TTask
 
-Les callbacks sont des fonctions ou procédures que vous définissez pour être exécutées lorsqu'une opération asynchrone est terminée. C'est un modèle très courant en programmation asynchrone.
-
-### Callbacks avec TTask
+### Exemple simple : Callback de succès
 
 ```pascal
-procedure TForm1.ButtonStartClick(Sender: TObject);
+procedure TelechargerAsync(const URL: string; OnTermine: TProc);
 begin
-  Label1.Caption := 'Démarrage...';
-
   TTask.Run(
     procedure
     begin
-      // Simuler une opération longue
-      Sleep(3000);
-    end
-  ).ContinueWith(
-    procedure(Task: ITask)
-    begin
-      // Ce code s'exécute quand la tâche est terminée
-      TThread.Synchronize(nil,
+      // Télécharger le fichier
+      TelechargerFichier(URL);
+
+      // Notifier que c'est terminé
+      TThread.Queue(nil,
         procedure
         begin
-          Label1.Caption := 'Opération terminée';
-          ButtonStart.Enabled := True;
+          if Assigned(OnTermine) then
+            OnTermine();
         end
       );
     end
   );
+end;
 
-  ButtonStart.Enabled := False;
-  Label1.Caption := 'Opération en cours...';
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  TelechargerAsync('http://example.com/data.json',
+    procedure
+    begin
+      ShowMessage('Téléchargement terminé !');
+    end
+  );
 end;
 ```
 
-Le callback défini avec `ContinueWith` sera exécuté automatiquement lorsque la tâche sera terminée.
-
-### Chaînes de callbacks
-
-Vous pouvez enchaîner plusieurs callbacks pour créer des séquences d'opérations asynchrones :
+### Callbacks avec paramètres
 
 ```pascal
-TTask.Run(
-  procedure
-  begin
-    // Première opération
-    Sleep(1000);
-  end
-).ContinueWith(
-  function(Task: ITask): ITask
-  begin
-    // Deuxième opération, exécutée après la première
-    Result := TTask.Run(
-      procedure
-      begin
-        Sleep(1000);
-      end
-    );
-  end
-).Unwrap.ContinueWith(
-  procedure(Task: ITask)
-  begin
-    // Troisième opération, exécutée après la deuxième
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        ShowMessage('Toutes les opérations sont terminées !');
-      end
-    );
-  end
-);
+type
+  TResultCallback = reference to procedure(const Donnees: string; Erreur: Boolean);
+
+procedure ChargerDonneesAsync(const URL: string; OnTermine: TResultCallback);
+begin
+  TTask.Run(
+    procedure
+    var
+      Donnees: string;
+      ErreurRencontree: Boolean;
+    begin
+      ErreurRencontree := False;
+
+      try
+        // Charger les données
+        Donnees := TelechargerContenu(URL);
+      except
+        on E: Exception do
+        begin
+          ErreurRencontree := True;
+          Donnees := E.Message;
+        end;
+      end;
+
+      // Appeler le callback
+      TThread.Queue(nil,
+        procedure
+        begin
+          if Assigned(OnTermine) then
+            OnTermine(Donnees, ErreurRencontree);
+        end
+      );
+    end
+  );
+end;
+
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  ChargerDonneesAsync('http://example.com/api/users',
+    procedure(const Donnees: string; Erreur: Boolean)
+    begin
+      if Erreur then
+        ShowMessage('Erreur : ' + Donnees)
+      else
+        Memo1.Text := Donnees;
+    end
+  );
+end;
 ```
 
-La méthode `Unwrap` est nécessaire pour "déballer" le résultat de la tâche intermédiaire.
+## Callbacks multiples : Succès et Échec
 
-## Exemple pratique : téléchargement asynchrone avec callbacks
-
-Voici un exemple plus réaliste de téléchargement asynchrone avec callbacks :
+Une approche courante consiste à avoir deux callbacks : un pour le succès, un pour l'échec.
 
 ```pascal
-procedure TForm1.ButtonDownloadClick(Sender: TObject);
-var
-  URL: string;
-begin
-  URL := EditURL.Text;
-  ButtonDownload.Enabled := False;
-  ProgressBar1.Position := 0;
-  LabelStatus.Caption := 'Préparation du téléchargement...';
+type
+  TSuccessCallback = reference to procedure(const Resultat: string);
+  TErrorCallback = reference to procedure(const MessageErreur: string);
 
-  // Tâche 1 : Vérification de l'URL
+procedure ExecuterAsync(
+  const Operation: string;
+  OnSuccess: TSuccessCallback;
+  OnError: TErrorCallback);
+begin
   TTask.Run(
-    function: Boolean
+    procedure
+    var
+      Resultat: string;
     begin
-      // Simuler une vérification
-      Sleep(1000);
-      Result := True; // URL valide
-    end
-  ).ContinueWith(
-    function(AntecedentTask: ITask<Boolean>): ITask
-    begin
-      if AntecedentTask.Value then
-      begin
-        // URL valide, continuer avec le téléchargement
+      try
+        // Exécuter l'opération
+        Resultat := FaireOperation(Operation);
+
+        // Succès
         TThread.Queue(nil,
           procedure
           begin
-            LabelStatus.Caption := 'Téléchargement en cours...';
+            if Assigned(OnSuccess) then
+              OnSuccess(Resultat);
           end
         );
-
-        // Tâche 2 : Téléchargement
-        Result := TTask.Run(
-          procedure
-          var
-            HTTPClient: TNetHTTPClient;
-            HTTPRequest: TNetHTTPRequest;
-            ResponseStream: TFileStream;
-          begin
-            HTTPClient := TNetHTTPClient.Create(nil);
-            HTTPRequest := TNetHTTPRequest.Create(nil);
-            try
-              HTTPRequest.Client := HTTPClient;
-
-              // Événement pour suivre la progression
-              HTTPClient.OnReceiveData := procedure(const Sender: TObject; AContentLength, AReadCount: Int64; var AAbort: Boolean)
-              begin
-                if AContentLength > 0 then
-                  TThread.Queue(nil,
-                    procedure
-                    begin
-                      ProgressBar1.Position := Round((AReadCount / AContentLength) * 100);
-                    end
-                  );
-              end;
-
-              // Création du fichier de destination
-              ResponseStream := TFileStream.Create('downloaded_file.dat', fmCreate);
-              try
-                // Téléchargement du fichier
-                HTTPRequest.Get(URL, ResponseStream);
-              finally
-                ResponseStream.Free;
-              end;
-            finally
-              HTTPRequest.Free;
-              HTTPClient.Free;
-            end;
-          end
-        );
-      end
-      else
-      begin
-        // URL invalide, afficher un message d'erreur
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ShowMessage('URL invalide !');
-            ButtonDownload.Enabled := True;
-            LabelStatus.Caption := 'Téléchargement annulé';
-          end
-        );
-        Result := nil;
+      except
+        on E: Exception do
+        begin
+          // Échec
+          TThread.Queue(nil,
+            procedure
+            begin
+              if Assigned(OnError) then
+                OnError(E.Message);
+            end
+          );
+        end;
       end;
     end
-  ).Unwrap.ContinueWith(
-    procedure(Task: ITask)
+  );
+end;
+
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  ExecuterAsync('Traiter les données',
+    // Callback de succès
+    procedure(const Resultat: string)
     begin
-      // Dernière étape : mise à jour de l'interface
-      TThread.Synchronize(nil,
-        procedure
+      ShowMessage('Succès : ' + Resultat);
+    end,
+    // Callback d'erreur
+    procedure(const MessageErreur: string)
+    begin
+      ShowMessage('Erreur : ' + MessageErreur);
+    end
+  );
+end;
+```
+
+## Chaînage de callbacks
+
+Parfois, vous devez exécuter plusieurs opérations asynchrones l'une après l'autre.
+
+### Le problème du "Callback Hell"
+
+```pascal
+// ❌ Code difficile à lire (pyramide de doom)
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  OperationAsync1(
+    procedure(Resultat1: string)
+    begin
+      OperationAsync2(Resultat1,
+        procedure(Resultat2: string)
         begin
-          ButtonDownload.Enabled := True;
-          LabelStatus.Caption := 'Téléchargement terminé !';
-          ShowMessage('Fichier téléchargé avec succès !');
+          OperationAsync3(Resultat2,
+            procedure(Resultat3: string)
+            begin
+              OperationAsync4(Resultat3,
+                procedure(ResultatFinal: string)
+                begin
+                  ShowMessage(ResultatFinal);
+                end
+              );
+            end
+          );
         end
       );
     end
@@ -261,117 +295,307 @@ begin
 end;
 ```
 
-Cette approche vous permet de diviser une opération complexe en étapes distinctes, chacune s'exécutant après que la précédente soit terminée.
-
-## Gestion des erreurs dans les callbacks
-
-La gestion des erreurs est importante dans les opérations asynchrones. Voici comment gérer les exceptions dans les callbacks :
+### Solution : Méthodes séparées
 
 ```pascal
-TTask.Run(
-  procedure
-  begin
-    // Code qui peut générer une exception
-    raise Exception.Create('Erreur dans la tâche');
-  end
-).ContinueWith(
-  procedure(AntecedentTask: ITask)
-  begin
-    if AntecedentTask.Status = TTaskStatus.Faulted then
+// ✅ Code plus lisible
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  Etape1;
+end;
+
+procedure TForm1.Etape1;
+begin
+  OperationAsync1(
+    procedure(Resultat1: string)
     begin
-      // Gestion de l'erreur
-      TThread.Synchronize(nil,
+      FResultat1 := Resultat1;
+      Etape2;
+    end
+  );
+end;
+
+procedure TForm1.Etape2;
+begin
+  OperationAsync2(FResultat1,
+    procedure(Resultat2: string)
+    begin
+      FResultat2 := Resultat2;
+      Etape3;
+    end
+  );
+end;
+
+procedure TForm1.Etape3;
+begin
+  OperationAsync3(FResultat2,
+    procedure(ResultatFinal: string)
+    begin
+      ShowMessage(ResultatFinal);
+    end
+  );
+end;
+```
+
+## Callbacks avec progression
+
+Pour les opérations longues, il est utile de notifier la progression.
+
+```pascal
+type
+  TProgressCallback = reference to procedure(Pourcentage: Integer);
+  TCompleteCallback = reference to procedure;
+
+procedure TelechargerGrossFichierAsync(
+  const URL: string;
+  OnProgress: TProgressCallback;
+  OnComplete: TCompleteCallback);
+begin
+  TTask.Run(
+    procedure
+    var
+      i: Integer;
+    begin
+      // Simuler un téléchargement par morceaux
+      for i := 1 to 100 do
+      begin
+        Sleep(50); // Simuler le téléchargement d'un morceau
+
+        // Notifier la progression
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnProgress) then
+              OnProgress(i);
+          end
+        );
+      end;
+
+      // Téléchargement terminé
+      TThread.Queue(nil,
         procedure
-        var
-          E: Exception;
         begin
-          E := AntecedentTask.Exception.InnerException;
-          ShowMessage('Erreur : ' + E.Message);
+          if Assigned(OnComplete) then
+            OnComplete();
         end
       );
     end
-    else
-    begin
-      // Code exécuté si tout s'est bien passé
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          ShowMessage('Tâche terminée avec succès !');
-        end
-      );
-    end;
-  end
-);
-```
+  );
+end;
 
-## Bonnes pratiques pour les méthodes asynchrones
-
-### 1. Rendre les méthodes asynchrones "awaitable"
-
-Pour créer vos propres méthodes asynchrones que d'autres peuvent attendre, renvoyez un `ITask` ou `IFuture<T>` :
-
-```pascal
-function TéléchargerFichierAsync(const URL: string): ITask;
+// Utilisation
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  Result := TTask.Run(
+  ProgressBar1.Position := 0;
+
+  TelechargerGrossFichierAsync('http://example.com/bigfile.zip',
+    // Callback de progression
+    procedure(Pourcentage: Integer)
+    begin
+      ProgressBar1.Position := Pourcentage;
+      Label1.Caption := Format('Téléchargement : %d%%', [Pourcentage]);
+    end,
+    // Callback de fin
     procedure
     begin
-      // Code de téléchargement...
-    end
-  );
-end;
-
-// Utilisation
-procedure TForm1.ButtonClick(Sender: TObject);
-var
-  TâcheTéléchargement: ITask;
-begin
-  TâcheTéléchargement := TéléchargerFichierAsync('http://exemple.com/fichier.txt');
-
-  // Ajouter un callback
-  TâcheTéléchargement.ContinueWith(
-    procedure(Task: ITask)
-    begin
-      // Code à exécuter après le téléchargement...
+      ShowMessage('Téléchargement terminé !');
     end
   );
 end;
 ```
 
-### 2. Créer des méthodes asynchrones avec valeur de retour
+## Pattern Future et Continuation
+
+Utiliser IFuture avec des continuations permet d'enchaîner des opérations de manière élégante.
 
 ```pascal
-function CalculerAsync(const Valeur: Integer): IFuture<Integer>;
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Future: IFuture<string>;
 begin
-  Result := TTask.Future<Integer>(
-    function: Integer
+  // Première opération asynchrone
+  Future := TTask.Future<string>(
+    function: string
     begin
-      // Simuler un calcul long
       Sleep(2000);
-      Result := Valeur * Valeur;
+      Result := 'Données chargées';
+    end
+  );
+
+  // Continuer avec une autre tâche quand la première est terminée
+  TTask.Run(
+    procedure
+    var
+      Resultat: string;
+    begin
+      // Attendre la fin de la première tâche
+      Resultat := Future.Value;
+
+      // Traiter le résultat
+      Resultat := Resultat + ' et traitées';
+
+      // Mettre à jour l'interface
+      TThread.Queue(nil,
+        procedure
+        begin
+          ShowMessage(Resultat);
+        end
+      );
+    end
+  );
+end;
+```
+
+## Exemple pratique : Requête HTTP asynchrone
+
+```pascal
+uses
+  System.Net.HttpClient;
+
+type
+  TForm1 = class(TForm)
+  private
+    procedure RequeteHTTPAsync(
+      const URL: string;
+      OnSuccess: TProc<string>;
+      OnError: TProc<string>);
+  end;
+
+procedure TForm1.RequeteHTTPAsync(
+  const URL: string;
+  OnSuccess: TProc<string>;
+  OnError: TProc<string>);
+begin
+  TTask.Run(
+    procedure
+    var
+      HttpClient: THTTPClient;
+      Response: IHTTPResponse;
+      Contenu: string;
+    begin
+      HttpClient := THTTPClient.Create;
+      try
+        try
+          // Faire la requête HTTP
+          Response := HttpClient.Get(URL);
+
+          if Response.StatusCode = 200 then
+          begin
+            Contenu := Response.ContentAsString;
+
+            // Succès
+            TThread.Queue(nil,
+              procedure
+              begin
+                if Assigned(OnSuccess) then
+                  OnSuccess(Contenu);
+              end
+            );
+          end
+          else
+          begin
+            // Erreur HTTP
+            TThread.Queue(nil,
+              procedure
+              begin
+                if Assigned(OnError) then
+                  OnError('Erreur HTTP : ' + IntToStr(Response.StatusCode));
+              end
+            );
+          end;
+        except
+          on E: Exception do
+          begin
+            // Erreur exception
+            TThread.Queue(nil,
+              procedure
+              begin
+                if Assigned(OnError) then
+                  OnError('Exception : ' + E.Message);
+              end
+            );
+          end;
+        end;
+      finally
+        HttpClient.Free;
+      end;
     end
   );
 end;
 
 // Utilisation
-procedure TForm1.ButtonClick(Sender: TObject);
-var
-  Résultat: IFuture<Integer>;
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  Résultat := CalculerAsync(5);
+  Label1.Caption := 'Chargement...';
 
-  // Ajouter un callback pour traiter le résultat
+  RequeteHTTPAsync('https://api.github.com/users/embarcadero',
+    // Succès
+    procedure(const Contenu: string)
+    begin
+      Memo1.Text := Contenu;
+      Label1.Caption := 'Chargé !';
+    end,
+    // Erreur
+    procedure(const MessageErreur: string)
+    begin
+      ShowMessage(MessageErreur);
+      Label1.Caption := 'Erreur';
+    end
+  );
+
+  // L'interface reste réactive immédiatement !
+end;
+```
+
+## Gestion de plusieurs opérations asynchrones
+
+### Exécuter plusieurs tâches et attendre toutes les réponses
+
+```pascal
+procedure TForm1.ChargerPlusieursFichiersAsync;
+var
+  Taches: TArray<ITask>;
+  Resultats: TArray<string>;
+begin
+  SetLength(Resultats, 3);
+  SetLength(Taches, 3);
+
+  // Lancer 3 téléchargements en parallèle
+  Taches[0] := TTask.Run(
+    procedure
+    begin
+      Resultats[0] := TelechargerContenu('http://example.com/file1.txt');
+    end
+  );
+
+  Taches[1] := TTask.Run(
+    procedure
+    begin
+      Resultats[1] := TelechargerContenu('http://example.com/file2.txt');
+    end
+  );
+
+  Taches[2] := TTask.Run(
+    procedure
+    begin
+      Resultats[2] := TelechargerContenu('http://example.com/file3.txt');
+    end
+  );
+
+  // Attendre que toutes les tâches soient terminées
   TTask.Run(
     procedure
     begin
-      // Attendre le résultat (dans un thread secondaire)
-      var Valeur := Résultat.Value;
+      TTask.WaitForAll(Taches);
 
-      // Mettre à jour l'interface
-      TThread.Synchronize(nil,
+      // Toutes les tâches sont terminées
+      TThread.Queue(nil,
         procedure
         begin
-          Label1.Caption := 'Résultat : ' + IntToStr(Valeur);
+          Memo1.Lines.Add('Fichier 1 : ' + Resultats[0]);
+          Memo1.Lines.Add('Fichier 2 : ' + Resultats[1]);
+          Memo1.Lines.Add('Fichier 3 : ' + Resultats[2]);
+          ShowMessage('Tous les fichiers sont chargés !');
         end
       );
     end
@@ -379,306 +603,274 @@ begin
 end;
 ```
 
-### 3. Éviter de bloquer le thread principal
+## Annulation avec callbacks
 
-Évitez d'appeler directement `.Value` ou `.Wait` sur une tâche depuis le thread principal. Utilisez plutôt des callbacks ou exécutez ces appels dans un thread secondaire.
+Permettre d'annuler une opération asynchrone en cours.
 
 ```pascal
-// À éviter dans le thread principal
-ShowMessage(MonFutur.Value); // Bloque le thread principal
+type
+  TOperationAsyncHandle = class
+  private
+    FToken: ICancellationToken;
+    FTask: ITask;
+  public
+    constructor Create(AToken: ICancellationToken; ATask: ITask);
+    procedure Cancel;
+  end;
 
-// Préférer
-MonFutur.ContinueWith(
-  procedure(Task: ITask<string>)
-  begin
-    TThread.Synchronize(nil,
-      procedure
+constructor TOperationAsyncHandle.Create(AToken: ICancellationToken; ATask: ITask);
+begin
+  FToken := AToken;
+  FTask := ATask;
+end;
+
+procedure TOperationAsyncHandle.Cancel;
+begin
+  FToken.Cancel;
+end;
+
+function ExecuterOperationAnnulable(
+  OnProgress: TProc<Integer>;
+  OnComplete: TProc): TOperationAsyncHandle;
+var
+  TokenSource: ICancellationTokenSource;
+  Token: ICancellationToken;
+  Task: ITask;
+begin
+  TokenSource := TCancellationTokenSource.Create;
+  Token := TokenSource.Token;
+
+  Task := TTask.Run(
+    procedure
+    var
+      i: Integer;
+    begin
+      for i := 1 to 100 do
       begin
-        ShowMessage(Task.Value);
-      end
-    );
-  end
-);
+        // Vérifier l'annulation
+        if Token.IsCancelled then
+        begin
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Opération annulée');
+            end
+          );
+          Exit;
+        end;
+
+        Sleep(50);
+
+        // Notifier la progression
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(OnProgress) then
+              OnProgress(i);
+          end
+        );
+      end;
+
+      // Terminé
+      TThread.Queue(nil,
+        procedure
+        begin
+          if Assigned(OnComplete) then
+            OnComplete();
+        end
+      );
+    end
+  );
+
+  Result := TOperationAsyncHandle.Create(Token, Task);
+end;
+
+// Utilisation
+var
+  OperationEnCours: TOperationAsyncHandle;
+
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);
+begin
+  OperationEnCours := ExecuterOperationAnnulable(
+    // Progression
+    procedure(Pourcentage: Integer)
+    begin
+      ProgressBar1.Position := Pourcentage;
+    end,
+    // Complet
+    procedure
+    begin
+      ShowMessage('Opération terminée !');
+      OperationEnCours := nil;
+    end
+  );
+end;
+
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);
+begin
+  if Assigned(OperationEnCours) then
+  begin
+    OperationEnCours.Cancel;
+    OperationEnCours := nil;
+  end;
+end;
 ```
 
-## Utilisation des opérations asynchrones intégrées
+## Bonnes pratiques avec les callbacks
 
-Delphi fournit des versions asynchrones de nombreuses opérations courantes, notamment pour les entrées/sorties et les communications réseau.
-
-### Exemple avec THTTPClient asynchrone
+### 1. Toujours vérifier si le callback est assigné
 
 ```pascal
-procedure TForm1.ButtonDownloadClick(Sender: TObject);
+// ✅ BON
+if Assigned(OnComplete) then
+  OnComplete();
+
+// ❌ MAUVAIS (peut planter si OnComplete est nil)
+OnComplete();
+```
+
+### 2. Utiliser TThread.Queue pour les callbacks qui modifient l'interface
+
+```pascal
+// ✅ BON
+TThread.Queue(nil,
+  procedure
+  begin
+    OnComplete(); // Sûr pour l'interface
+  end
+);
+
+// ❌ DANGEREUX (si appelé depuis un thread)
+OnComplete(); // Peut planter l'interface
+```
+
+### 3. Éviter les captures de variables dangereuses
+
+```pascal
+// ❌ DANGEREUX
+procedure TForm1.MauvaiseMethode;
 var
-  Client: TNetHTTPClient;
-  Request: TNetHTTPRequest;
-  URL: string;
+  i: Integer;
 begin
-  URL := EditURL.Text;
-  ButtonDownload.Enabled := False;
-  LabelStatus.Caption := 'Téléchargement en cours...';
+  for i := 1 to 10 do
+  begin
+    TTask.Run(
+      procedure
+      begin
+        // i peut avoir changé !
+        ShowMessage(IntToStr(i));
+      end
+    );
+  end;
+end;
 
-  Client := TNetHTTPClient.Create(nil);
-  Request := TNetHTTPRequest.Create(nil);
+// ✅ BON
+procedure TForm1.BonneMethode;
+var
+  i: Integer;
+begin
+  for i := 1 to 10 do
+  begin
+    TTask.Run(
+      procedure
+      var
+        Valeur: Integer;
+      begin
+        Valeur := i; // Copie locale
+        TThread.Queue(nil,
+          procedure
+          begin
+            ShowMessage(IntToStr(Valeur));
+          end
+        );
+      end
+    );
+  end;
+end;
+```
+
+### 4. Gérer les erreurs dans les callbacks
+
+```pascal
+procedure MonCallback(const Resultat: string);
+begin
   try
-    Request.Client := Client;
-
-    // Définir un callback pour lorsque le téléchargement est terminé
-    Request.OnRequestCompleted := procedure(const Sender: TObject; const AResponse: IHTTPResponse)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          ButtonDownload.Enabled := True;
-          LabelStatus.Caption := 'Téléchargement terminé !';
-          MemoResponse.Text := AResponse.ContentAsString;
-        end
-      );
-    end;
-
-    // Définir un callback en cas d'erreur
-    Request.OnRequestError := procedure(const Sender: TObject; const AError: string)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          ButtonDownload.Enabled := True;
-          LabelStatus.Caption := 'Erreur !';
-          ShowMessage('Erreur : ' + AError);
-        end
-      );
-    end;
-
-    // Lancer le téléchargement asynchrone
-    Request.GetAsync(URL);
+    // Traiter le résultat
+    TraiterResultat(Resultat);
   except
     on E: Exception do
     begin
-      ShowMessage('Erreur : ' + E.Message);
-      Client.Free;
-      Request.Free;
-      ButtonDownload.Enabled := True;
-      LabelStatus.Caption := 'Erreur !';
+      // Logger ou notifier l'erreur
+      ShowMessage('Erreur dans le callback : ' + E.Message);
     end;
   end;
 end;
 ```
 
-Cette méthode utilise les événements intégrés `OnRequestCompleted` et `OnRequestError` pour gérer de manière asynchrone la fin du téléchargement.
+### 5. Nettoyer les ressources
 
-## Combiner callbacks et méthodes anonymes
-
-Les méthodes anonymes (ou lambdas) sont particulièrement utiles avec les callbacks. Elles permettent de définir directement le comportement à exécuter, rendant le code plus concis et plus lisible :
+Si votre callback capture des objets, assurez-vous qu'ils sont toujours valides :
 
 ```pascal
-ButtonCalculer.OnClick := procedure(Sender: TObject)
-begin
-  // Désactiver le bouton pendant le calcul
-  ButtonCalculer.Enabled := False;
-
-  // Lancer le calcul en arrière-plan
-  TTask.Run(
-    function: Integer
-    begin
-      // Simuler un calcul long
-      Sleep(3000);
-      Result := 42;
-    end
-  ).ContinueWith(
-    procedure(AntecedentTask: ITask<Integer>)
-    begin
-      // Récupérer le résultat
-      var Résultat := AntecedentTask.Value;
-
-      // Mettre à jour l'interface
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          EditRésultat.Text := IntToStr(Résultat);
-          ButtonCalculer.Enabled := True;
-        end
-      );
-    end
-  );
-end;
-```
-
-## Exemple avancé : opérations asynchrones multiples
-
-Parfois, vous devez exécuter plusieurs opérations asynchrones et attendre qu'elles soient toutes terminées. Voici comment procéder :
-
-```pascal
-procedure TForm1.ButtonStartClick(Sender: TObject);
+// ❌ DANGEREUX
+procedure TForm1.MauvaiseMethode;
 var
-  Tâches: array[0..2] of ITask;
+  Liste: TStringList;
 begin
-  ButtonStart.Enabled := False;
-  LabelStatus.Caption := 'Opérations en cours...';
+  Liste := TStringList.Create;
 
-  // Créer trois tâches asynchrones
-  Tâches[0] := TTask.Run(
-    procedure
-    begin
-      // Première opération
-      Sleep(2000);
-    end
-  );
-
-  Tâches[1] := TTask.Run(
-    procedure
-    begin
-      // Deuxième opération
-      Sleep(3000);
-    end
-  );
-
-  Tâches[2] := TTask.Run(
-    procedure
-    begin
-      // Troisième opération
-      Sleep(1500);
-    end
-  );
-
-  // Créer une tâche qui attend que toutes les autres soient terminées
   TTask.Run(
     procedure
     begin
-      // Attendre que toutes les tâches soient terminées
-      TTask.WaitForAll(Tâches);
+      Sleep(2000);
+      // Liste peut avoir été libérée entre-temps !
+      Liste.Add('Danger');
+    end
+  );
 
-      // Mettre à jour l'interface
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          ButtonStart.Enabled := True;
-          LabelStatus.Caption := 'Toutes les opérations sont terminées !';
-          ShowMessage('Traitement terminé avec succès !');
-        end
-      );
+  Liste.Free; // Libéré avant la fin de la tâche !
+end;
+
+// ✅ BON
+procedure TForm1.BonneMethode;
+var
+  Liste: TStringList;
+begin
+  Liste := TStringList.Create;
+
+  TTask.Run(
+    procedure
+    begin
+      try
+        Sleep(2000);
+
+        TThread.Queue(nil,
+          procedure
+          begin
+            Liste.Add('Sûr');
+          end
+        );
+      finally
+        Liste.Free; // Libéré dans le thread
+      end;
     end
   );
 end;
 ```
 
-## TPromise : un mécanisme complet pour les opérations asynchrones
+## Points clés à retenir
 
-Dans les versions récentes de Delphi, la classe `TPromise<T>` offre un mécanisme complet pour gérer les opérations asynchrones avec les états de réussite, d'échec et de progression :
+- Les **tâches asynchrones** permettent de garder l'interface réactive pendant les opérations longues
+- Les **callbacks** sont des fonctions appelées quand une opération est terminée
+- Utilisez `TProc` et `reference to procedure` pour définir des callbacks
+- Séparez les callbacks de succès et d'erreur pour une meilleure gestion
+- Les callbacks avec progression améliorent l'expérience utilisateur
+- Évitez le "callback hell" en décomposant votre code en méthodes
+- Toujours vérifier si un callback est assigné avec `Assigned()`
+- Utilisez `TThread.Queue` pour les callbacks qui modifient l'interface
+- Gérez proprement les erreurs dans vos callbacks
+- Faites attention aux captures de variables et à la durée de vie des objets
 
-```pascal
-// Création d'une promesse pour un téléchargement
-var Promise := TPromise<TBytes>.Create(
-  // Executor - code qui sera exécuté par la promesse
-  procedure(
-    const Resolve: TProc<TBytes>;   // Procédure appelée en cas de succès
-    const Reject: TProc<Exception>; // Procédure appelée en cas d'échec
-    const OnProgress: TProc<Integer> // Procédure pour signaler la progression
-  )
-  var
-    HTTPClient: TNetHTTPClient;
-    HTTPRequest: TNetHTTPRequest;
-    URL: string;
-    BytesLus: Integer;
-    TailleTotale: Integer;
-  begin
-    try
-      URL := 'https://exemple.com/fichier.zip';
-
-      HTTPClient := TNetHTTPClient.Create(nil);
-      HTTPRequest := TNetHTTPRequest.Create(nil);
-      try
-        HTTPRequest.Client := HTTPClient;
-
-        // Événement pour suivre la progression
-        HTTPClient.OnReceiveData := procedure(const Sender: TObject; AContentLength, AReadCount: Int64; var AAbort: Boolean)
-        begin
-          if AContentLength > 0 then
-          begin
-            BytesLus := AReadCount;
-            TailleTotale := AContentLength;
-            OnProgress(Round((BytesLus / TailleTotale) * 100));
-          end;
-        end;
-
-        // Télécharger le fichier
-        var Response := HTTPRequest.Get(URL);
-
-        // Résoudre la promesse avec les données téléchargées
-        Resolve(Response.ContentAsBytes);
-      finally
-        HTTPRequest.Free;
-        HTTPClient.Free;
-      end;
-    except
-      on E: Exception do
-        Reject(E); // Rejeter la promesse en cas d'erreur
-    end;
-  end
-);
-
-// Utilisation de la promesse
-Promise.Then(
-  // Succès
-  procedure(const DataBytes: TBytes)
-  begin
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        ShowMessage('Téléchargement réussi ! Taille : ' + IntToStr(Length(DataBytes)) + ' octets');
-        // Traiter les données...
-      end
-    );
-  end
-).Catch(
-  // Échec
-  procedure(const E: Exception)
-  begin
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        ShowMessage('Erreur : ' + E.Message);
-      end
-    );
-  end
-).Progress(
-  // Progression
-  procedure(const ProgressValue: Integer)
-  begin
-    TThread.Queue(nil,
-      procedure
-      begin
-        ProgressBar1.Position := ProgressValue;
-        LabelProgress.Caption := IntToStr(ProgressValue) + '%';
-      end
-    );
-  end
-);
-```
-
-> ⚠️ **Note** : `TPromise` nécessite Delphi 12 ou supérieur.
-
-## Exercice pratique
-
-Créez une application qui télécharge simultanément plusieurs images à partir d'une liste d'URLs. L'application devrait :
-
-1. Permettre à l'utilisateur d'ajouter des URLs à une liste
-2. Avoir un bouton pour démarrer le téléchargement de toutes les images
-3. Afficher la progression individuelle de chaque téléchargement
-4. Afficher les images au fur et à mesure qu'elles sont téléchargées
-5. Afficher un message lorsque tous les téléchargements sont terminés
-
-Utilisez les concepts de tâches asynchrones et de callbacks pour implémenter cette fonctionnalité.
-
-## Résumé
-
-- La programmation asynchrone permet d'exécuter des opérations de longue durée sans bloquer le thread principal
-- Les callbacks sont des fonctions qui s'exécutent lorsqu'une opération asynchrone est terminée
-- Vous pouvez enchaîner plusieurs callbacks pour créer des séquences d'opérations
-- Delphi offre plusieurs mécanismes pour la programmation asynchrone : `TTask`, `IFuture<T>`, `TPromise<T>`, etc.
-- Utilisez `ContinueWith` pour ajouter des callbacks à vos tâches
-- Évitez de bloquer le thread principal en appelant directement `.Value` ou `.Wait`
-- Utilisez les méthodes asynchrones intégrées pour les opérations d'entrée/sortie et de réseau
-
-La programmation asynchrone et les callbacks sont des outils puissants pour créer des applications réactives qui peuvent effectuer des opérations complexes sans bloquer l'interface utilisateur. En maîtrisant ces concepts, vous pourrez développer des applications Delphi modernes et performantes.
+Les tâches asynchrones et les callbacks sont essentiels pour créer des applications modernes et réactives. Ils permettent d'offrir une excellente expérience utilisateur en évitant que l'interface ne se fige pendant les opérations longues.
 
 ⏭️ [Files d'attente et pools de threads](/11-multithreading-et-programmation-asynchrone/06-files-dattente-et-pools-de-threads.md)

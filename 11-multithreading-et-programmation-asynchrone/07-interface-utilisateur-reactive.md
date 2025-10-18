@@ -1,84 +1,187 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.7 Interface utilisateur réactive
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Qu'est-ce qu'une interface réactive ?
 
-## Introduction
+Une **interface utilisateur réactive** reste fluide et répond immédiatement aux actions de l'utilisateur, même pendant l'exécution d'opérations longues.
 
-Une application bien conçue doit rester fluide et réactive, même lorsqu'elle exécute des opérations longues ou complexes en arrière-plan. Les utilisateurs s'attendent à pouvoir interagir avec l'interface à tout moment, sans blocages ni gel de l'application. Dans ce chapitre, nous allons découvrir comment créer des interfaces utilisateur réactives en Delphi en tirant parti des techniques de multithreading que nous avons apprises.
+### Le problème : L'interface qui se fige
 
-## Pourquoi une interface utilisateur réactive est-elle importante ?
+Vous avez probablement déjà vécu cette expérience frustrante :
+- Vous cliquez sur un bouton
+- L'application "se fige" pendant plusieurs secondes
+- Le curseur se transforme en sablier
+- Impossible de cliquer ailleurs ou de fermer la fenêtre
+- L'application semble "plantée" (même si elle fonctionne en coulisses)
 
-Imaginez que vous utilisez une application qui se fige complètement pendant plusieurs secondes (ou minutes) chaque fois que vous effectuez une opération. Cette expérience utilisateur médiocre peut :
+**Pourquoi cela arrive-t-il ?**
 
-- Frustrer les utilisateurs qui pensent que l'application a planté
-- Réduire la productivité
-- Donner une impression de mauvaise qualité
-- Dans certains cas, pousser les utilisateurs à forcer l'arrêt de l'application
+### Le thread principal et la boucle de messages
 
-Heureusement, avec les techniques de multithreading, nous pouvons éviter ces problèmes et créer des applications qui restent réactives en toutes circonstances.
+Chaque application Delphi possède un **thread principal** (aussi appelé thread UI) qui :
+1. Gère l'affichage de l'interface
+2. Reçoit et traite les événements (clics, saisies, mouvements de souris)
+3. Redessine les fenêtres
 
-## Le thread principal et l'interface utilisateur
+**La règle d'or** : Ce thread doit TOUJOURS être disponible pour traiter les événements.
 
-Comme nous l'avons vu précédemment, Delphi (comme la plupart des frameworks d'interface graphique) utilise un modèle où l'interface utilisateur est gérée par un seul thread : le thread principal. Tous les contrôles visuels, les événements et les messages Windows sont traités par ce thread.
-
-### La règle fondamentale
-
-**Règle d'or** : Ne jamais bloquer le thread principal avec des opérations longues.
-
-Si vous effectuez une opération qui prend plus de quelques dizaines de millisecondes dans le thread principal, l'interface utilisateur sera gelée pendant cette durée.
-
-## Identification des opérations qui bloquent l'interface
-
-Voici les types d'opérations qui peuvent bloquer l'interface utilisateur si elles sont exécutées dans le thread principal :
-
-1. **Opérations d'entrée/sortie** :
-   - Lecture/écriture de fichiers volumineux
-   - Requêtes réseau/web
-   - Requêtes de base de données complexes
-
-2. **Calculs intensifs** :
-   - Traitement d'images ou de vidéos
-   - Calculs mathématiques complexes
-   - Analyses de données volumineuses
-
-3. **Attentes explicites** :
-   - Appels à `Sleep()`, `WaitFor()`, etc.
-   - Boucles d'attente active
-
-## Techniques pour maintenir une interface réactive
-
-### 1. Déplacer les opérations longues dans des threads secondaires
-
-La technique la plus fondamentale consiste à déplacer toutes les opérations longues ou bloquantes dans des threads secondaires. Voici un exemple simple :
+### Exemple du problème
 
 ```pascal
-// Approche qui bloque l'interface (à éviter)
-procedure TForm1.ButtonProcessClick(Sender: TObject);
+// ❌ MAUVAIS : Bloque l'interface
+procedure TForm1.ButtonTelechargerClick(Sender: TObject);
+var
+  i: Integer;
 begin
-  // Cette opération bloque l'interface pendant son exécution
-  ProcesserDonnéesVolumineuses;
-  ShowMessage('Traitement terminé !');
+  Label1.Caption := 'Téléchargement en cours...';
+
+  // Opération longue dans le thread principal
+  for i := 1 to 1000000 do
+  begin
+    // Traitement lourd
+    EffectuerCalculComplexe(i);
+  end;
+
+  // Pendant ces secondes, l'interface est complètement figée !
+  Label1.Caption := 'Terminé';
 end;
+```
 
-// Approche réactive (recommandée)
-procedure TForm1.ButtonProcessClick(Sender: TObject);
+**Conséquence** : Pendant l'exécution de la boucle, le thread principal ne peut pas :
+- Traiter les clics de souris
+- Redessiner l'interface
+- Répondre aux touches clavier
+- Même fermer l'application !
+
+## Solutions pour garder l'interface réactive
+
+### Solution 1 : Application.ProcessMessages
+
+La méthode la plus simple (mais pas idéale) : permettre au thread principal de traiter les messages pendant une opération longue.
+
+```pascal
+// ⚠️ Solution simple mais limitée
+procedure TForm1.ButtonTraiterClick(Sender: TObject);
+var
+  i: Integer;
 begin
-  // Désactiver le bouton pour éviter les clics multiples
-  ButtonProcess.Enabled := False;
+  for i := 1 to 1000 do
+  begin
+    // Traitement
+    TraiterElement(i);
 
-  // Créer et démarrer un thread pour l'opération longue
+    // Permettre à l'interface de se rafraîchir
+    Application.ProcessMessages;
+
+    // Mise à jour de la progression
+    ProgressBar1.Position := (i * 100) div 1000;
+  end;
+end;
+```
+
+**Avantages** :
+- Simple à mettre en œuvre
+- Pas de gestion de threads
+
+**Inconvénients** :
+- L'utilisateur peut cliquer plusieurs fois sur le bouton
+- Peut causer des comportements imprévisibles
+- Ne profite pas des processeurs multi-cœurs
+
+### Solution 2 : Utiliser TTask (RECOMMANDÉ)
+
+La meilleure approche moderne : déporter le travail dans un thread séparé.
+
+```pascal
+// ✅ BON : Interface réactive
+procedure TForm1.ButtonTraiterClick(Sender: TObject);
+begin
+  // Désactiver le bouton pendant le traitement
+  Button1.Enabled := False;
+  ProgressBar1.Position := 0;
+  Label1.Caption := 'Traitement en cours...';
+
+  // Lancer le traitement dans un thread séparé
   TTask.Run(
     procedure
+    var
+      i: Integer;
     begin
-      // Opération longue exécutée dans un thread secondaire
-      ProcesserDonnéesVolumineuses;
+      for i := 1 to 1000 do
+      begin
+        // Traitement lourd dans le thread
+        TraiterElement(i);
 
-      // Mettre à jour l'interface dans le thread principal
+        // Mise à jour de l'interface (de manière sûre)
+        TThread.Queue(nil,
+          procedure
+          begin
+            ProgressBar1.Position := (i * 100) div 1000;
+          end
+        );
+      end;
+
+      // Traitement terminé
+      TThread.Queue(nil,
+        procedure
+        begin
+          Label1.Caption := 'Terminé !';
+          Button1.Enabled := True;
+        end
+      );
+    end
+  );
+
+  // Le code continue immédiatement
+  // L'interface reste réactive !
+end;
+```
+
+## Mise à jour progressive de l'interface
+
+### Barre de progression
+
+Une barre de progression informe l'utilisateur de l'avancement et montre que l'application n'est pas figée.
+
+```pascal
+procedure TForm1.ButtonCalculerClick(Sender: TObject);
+var
+  Total: Integer;
+begin
+  Total := 5000;
+  ProgressBar1.Max := Total;
+  ProgressBar1.Position := 0;
+
+  TTask.Run(
+    procedure
+    var
+      i: Integer;
+    begin
+      for i := 1 to Total do
+      begin
+        // Traitement
+        EffectuerCalcul(i);
+
+        // Mettre à jour la barre tous les 50 éléments (pour ne pas surcharger)
+        if (i mod 50) = 0 then
+        begin
+          TThread.Queue(nil,
+            procedure
+            begin
+              ProgressBar1.Position := i;
+              Label1.Caption := Format('Progression : %d%%', [(i * 100) div Total]);
+            end
+          );
+        end;
+      end;
+
+      // Fin
       TThread.Synchronize(nil,
         procedure
         begin
-          ButtonProcess.Enabled := True;
-          ShowMessage('Traitement terminé !');
+          ProgressBar1.Position := Total;
+          ShowMessage('Calcul terminé !');
         end
       );
     end
@@ -86,229 +189,221 @@ begin
 end;
 ```
 
-### 2. Indiquer la progression des opérations longues
-
-Les utilisateurs apprécient de savoir qu'une opération est en cours et de voir sa progression. Cela réduit l'impression que l'application est bloquée.
+### Affichage de messages intermédiaires
 
 ```pascal
-procedure TForm1.ButtonDownloadClick(Sender: TObject);
+procedure TForm1.ButtonImporterClick(Sender: TObject);
 begin
-  // Configurer l'interface pour l'opération
-  ButtonDownload.Enabled := False;
-  ProgressBar1.Visible := True;
-  ProgressBar1.Position := 0;
-  LabelStatus.Caption := 'Téléchargement en cours...';
+  Memo1.Clear;
 
-  // Démarrer l'opération dans un thread
-  TTask.Run(
-    procedure
-    var
-      HTTPClient: TNetHTTPClient;
-      HTTPRequest: TNetHTTPRequest;
-      ResponseStream: TFileStream;
-    begin
-      HTTPClient := TNetHTTPClient.Create(nil);
-      HTTPRequest := TNetHTTPRequest.Create(nil);
-      try
-        HTTPRequest.Client := HTTPClient;
-
-        // Configurer l'événement de progression
-        HTTPClient.OnReceiveData := procedure(const Sender: TObject; AContentLength, AReadCount: Int64; var AAbort: Boolean)
-        begin
-          if AContentLength > 0 then
-            // Mettre à jour la barre de progression de manière asynchrone
-            TThread.Queue(nil,
-              procedure
-              begin
-                ProgressBar1.Position := Round((AReadCount / AContentLength) * 100);
-                LabelStatus.Caption := Format('Téléchargement en cours... %d%%',
-                                            [ProgressBar1.Position]);
-              end
-            );
-        end;
-
-        // Créer le fichier de destination
-        ResponseStream := TFileStream.Create('downloaded_file.dat', fmCreate);
-        try
-          // Télécharger le fichier
-          HTTPRequest.Get('https://exemple.com/fichier.zip', ResponseStream);
-
-          // Mettre à jour l'interface à la fin
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              ButtonDownload.Enabled := True;
-              ProgressBar1.Visible := False;
-              LabelStatus.Caption := 'Téléchargement terminé !';
-              ShowMessage('Fichier téléchargé avec succès !');
-            end
-          );
-        finally
-          ResponseStream.Free;
-        end;
-      finally
-        HTTPRequest.Free;
-        HTTPClient.Free;
-      end;
-    end
-  );
-end;
-```
-
-### 3. Permettre l'annulation des opérations longues
-
-Les utilisateurs apprécient de pouvoir annuler une opération longue s'ils changent d'avis ou s'ils l'ont lancée par erreur.
-
-```pascal
-var
-  CancellationTokenSource: TCancellationTokenSource;
-
-procedure TForm1.ButtonStartClick(Sender: TObject);
-begin
-  // Préparer l'interface
-  ButtonStart.Enabled := False;
-  ButtonCancel.Enabled := True;
-  ProgressBar1.Position := 0;
-
-  // Créer un token d'annulation
-  CancellationTokenSource := TCancellationTokenSource.Create;
-
-  // Démarrer la tâche avec le token d'annulation
   TTask.Run(
     procedure
     var
       i: Integer;
+      Message: string;
     begin
       for i := 1 to 100 do
       begin
-        // Vérifier si l'opération a été annulée
-        if CancellationTokenSource.Token.IsCancellationRequested then
-        begin
-          // Mettre à jour l'interface pour indiquer l'annulation
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              LabelStatus.Caption := 'Opération annulée';
-              ButtonStart.Enabled := True;
-              ButtonCancel.Enabled := False;
-            end
-          );
-          Exit; // Sortir de la procédure
-        end;
+        // Traiter un fichier
+        Message := Format('Traitement du fichier %d...', [i]);
 
-        // Simuler une étape de travail
-        Sleep(100);
-
-        // Mettre à jour la progression
         TThread.Queue(nil,
           procedure
           begin
-            ProgressBar1.Position := i;
-            LabelStatus.Caption := Format('Progression : %d%%', [i]);
+            Memo1.Lines.Add(Message);
           end
         );
+
+        TraiterFichier(i);
+        Sleep(100);
       end;
 
-      // Opération terminée avec succès
-      TThread.Synchronize(nil,
+      TThread.Queue(nil,
         procedure
         begin
-          LabelStatus.Caption := 'Opération terminée';
-          ButtonStart.Enabled := True;
-          ButtonCancel.Enabled := False;
+          Memo1.Lines.Add('');
+          Memo1.Lines.Add('=== Import terminé ===');
         end
       );
-    end,
-    CancellationTokenSource.Token
+    end
   );
-end;
-
-procedure TForm1.ButtonCancelClick(Sender: TObject);
-begin
-  // Demander l'annulation
-  if Assigned(CancellationTokenSource) then
-    CancellationTokenSource.Cancel;
-
-  ButtonCancel.Enabled := False;
-  LabelStatus.Caption := 'Annulation en cours...';
-end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  // Libérer le token d'annulation
-  if Assigned(CancellationTokenSource) then
-    CancellationTokenSource.Free;
 end;
 ```
 
-### 4. Mise à jour incrémentale de l'interface
+## Annulation des opérations longues
 
-Pour certaines opérations, vous pouvez afficher les résultats progressivement, au fur et à mesure qu'ils sont disponibles, plutôt que d'attendre la fin de l'opération complète.
+Permettre à l'utilisateur d'annuler une opération améliore grandement l'expérience.
+
+### Avec une variable booléenne
 
 ```pascal
-procedure TForm1.ButtonSearchClick(Sender: TObject);
-var
-  SearchTerm: string;
-  Files: TStringDynArray;
+type
+  TForm1 = class(TForm)
+  private
+    FAnnuler: Boolean;
+  end;
+
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);
 begin
-  SearchTerm := EditSearch.Text;
-  ListBoxResults.Clear;
-  LabelStatus.Caption := 'Recherche en cours...';
+  FAnnuler := False;
+  ButtonDemarrer.Enabled := False;
+  ButtonAnnuler.Enabled := True;
 
-  // Récupérer la liste des fichiers à analyser
-  Files := TDirectory.GetFiles('C:\Documents', '*.txt', TSearchOption.soAllDirectories);
-  LabelStatus.Caption := Format('Recherche dans %d fichiers...', [Length(Files)]);
-
-  // Démarrer la recherche dans un thread
   TTask.Run(
     procedure
     var
       i: Integer;
-      FileName: string;
-      FileContent: string;
     begin
-      for i := 0 to Length(Files) - 1 do
+      for i := 1 to 10000 do
       begin
-        FileName := Files[i];
-
-        try
-          // Lire le contenu du fichier
-          FileContent := TFile.ReadAllText(FileName);
-
-          // Chercher le terme dans le contenu
-          if Pos(SearchTerm, FileContent) > 0 then
-          begin
-            // Ajouter immédiatement ce résultat à la liste
-            TThread.Queue(nil,
-              procedure
-              begin
-                ListBoxResults.Items.Add(FileName);
-              end
-            );
-          end;
-        except
-          // Ignorer les erreurs de lecture de fichier
-        end;
-
-        // Mettre à jour la progression
-        if i mod 10 = 0 then
+        // Vérifier si l'utilisateur a annulé
+        if FAnnuler then
         begin
           TThread.Queue(nil,
             procedure
             begin
-              LabelStatus.Caption := Format('Recherche... %d/%d fichiers analysés',
-                                          [i + 1, Length(Files)]);
+              ShowMessage('Opération annulée par l''utilisateur');
+              ButtonDemarrer.Enabled := True;
+              ButtonAnnuler.Enabled := False;
+            end
+          );
+          Exit; // Sortir de la boucle
+        end;
+
+        // Traitement
+        TraiterElement(i);
+
+        // Mise à jour
+        if (i mod 100) = 0 then
+        begin
+          TThread.Queue(nil,
+            procedure
+            begin
+              ProgressBar1.Position := (i * 100) div 10000;
             end
           );
         end;
       end;
 
-      // Recherche terminée
-      TThread.Synchronize(nil,
+      // Terminé normalement
+      TThread.Queue(nil,
         procedure
         begin
-          LabelStatus.Caption := Format('Recherche terminée. %d fichiers trouvés.',
-                                        [ListBoxResults.Items.Count]);
+          ShowMessage('Opération terminée');
+          ButtonDemarrer.Enabled := True;
+          ButtonAnnuler.Enabled := False;
+        end
+      );
+    end
+  );
+end;
+
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);
+begin
+  FAnnuler := True;
+end;
+```
+
+### Avec un token d'annulation
+
+```pascal
+type
+  TForm1 = class(TForm)
+  private
+    FTokenSource: ICancellationTokenSource;
+  end;
+
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);
+var
+  Token: ICancellationToken;
+begin
+  // Créer un token d'annulation
+  FTokenSource := TCancellationTokenSource.Create;
+  Token := FTokenSource.Token;
+
+  ButtonDemarrer.Enabled := False;
+  ButtonAnnuler.Enabled := True;
+
+  TTask.Run(
+    procedure
+    var
+      i: Integer;
+    begin
+      for i := 1 to 10000 do
+      begin
+        // Vérifier l'annulation
+        if Token.IsCancelled then
+        begin
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Annulé');
+              ButtonDemarrer.Enabled := True;
+              ButtonAnnuler.Enabled := False;
+            end
+          );
+          Exit;
+        end;
+
+        TraiterElement(i);
+      end;
+
+      // Terminé
+      TThread.Queue(nil,
+        procedure
+        begin
+          ShowMessage('Terminé');
+          ButtonDemarrer.Enabled := True;
+          ButtonAnnuler.Enabled := False;
+        end
+      );
+    end
+  );
+end;
+
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);
+begin
+  if Assigned(FTokenSource) then
+    FTokenSource.Cancel;
+end;
+```
+
+## Indicateur d'activité (Activity Indicator)
+
+Pour les opérations dont on ne connaît pas la durée, utilisez un indicateur d'activité.
+
+```pascal
+procedure TForm1.ButtonConnecterClick(Sender: TObject);
+begin
+  ActivityIndicator1.Animate := True;
+  Label1.Caption := 'Connexion au serveur...';
+  ButtonConnecter.Enabled := False;
+
+  TTask.Run(
+    procedure
+    var
+      Succes: Boolean;
+    begin
+      // Tentative de connexion (durée inconnue)
+      Succes := TenterConnexionServeur;
+
+      // Résultat
+      TThread.Queue(nil,
+        procedure
+        begin
+          ActivityIndicator1.Animate := False;
+
+          if Succes then
+          begin
+            Label1.Caption := 'Connecté !';
+            ShowMessage('Connexion réussie');
+          end
+          else
+          begin
+            Label1.Caption := 'Échec de la connexion';
+            ShowMessage('Impossible de se connecter');
+            ButtonConnecter.Enabled := True;
+          end;
         end
       );
     end
@@ -316,476 +411,419 @@ begin
 end;
 ```
 
-### 5. Throttling des mises à jour de l'interface
+## Empêcher les clics multiples
 
-Si une opération génère des mises à jour très fréquentes (plusieurs fois par seconde), mettre à jour l'interface à chaque fois peut ralentir l'application. Il est préférable de limiter (throttle) la fréquence des mises à jour.
+Éviter que l'utilisateur lance plusieurs fois la même opération.
 
 ```pascal
 type
-  TUpdateThrottler = class
+  TForm1 = class(TForm)
   private
-    FLastUpdate: TDateTime;
-    FMinInterval: TTimeSpan;
-  public
-    constructor Create(MinIntervalMS: Integer);
-    function ShouldUpdate: Boolean;
+    FEnTraitement: Boolean;
   end;
 
-constructor TUpdateThrottler.Create(MinIntervalMS: Integer);
+procedure TForm1.ButtonTraiterClick(Sender: TObject);
 begin
-  inherited Create;
-  FMinInterval := TTimeSpan.FromMilliseconds(MinIntervalMS);
-  FLastUpdate := Now - 1; // Pour garantir la première mise à jour
-end;
+  // Vérifier si un traitement est déjà en cours
+  if FEnTraitement then
+  begin
+    ShowMessage('Un traitement est déjà en cours');
+    Exit;
+  end;
 
-function TUpdateThrottler.ShouldUpdate: Boolean;
-var
-  CurrentTime: TDateTime;
-begin
-  CurrentTime := Now;
-  Result := (CurrentTime - FLastUpdate) * 86400000 >= FMinInterval.TotalMilliseconds;
-  if Result then
-    FLastUpdate := CurrentTime;
-end;
+  FEnTraitement := True;
+  ButtonTraiter.Enabled := False;
 
-// Utilisation
-procedure TForm1.ExecuteLongTask;
-var
-  Throttler: TUpdateThrottler;
-begin
-  Throttler := TUpdateThrottler.Create(100); // Mettre à jour au maximum 10 fois par seconde
-  try
-    TTask.Run(
-      procedure
-      var
-        i: Integer;
-      begin
-        for i := 1 to 10000 do
-        begin
-          // Traitement...
-
-          // Vérifier s'il faut mettre à jour l'interface
-          if Throttler.ShouldUpdate then
+  TTask.Run(
+    procedure
+    begin
+      try
+        // Traitement long
+        EffectuerTraitement;
+      finally
+        // Toujours réactiver, même en cas d'erreur
+        TThread.Queue(nil,
+          procedure
           begin
+            FEnTraitement := False;
+            ButtonTraiter.Enabled := True;
+          end
+        );
+      end;
+    end
+  );
+end;
+```
+
+## Exemple complet : Téléchargement avec contrôle total
+
+```pascal
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    ButtonAnnuler: TButton;
+    ProgressBar1: TProgressBar;
+    Label1: TLabel;
+    Label2: TLabel;
+  private
+    FAnnuler: Boolean;
+    FEnCours: Boolean;
+    procedure TelechargerFichier(const URL, Destination: string);
+  end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  if FEnCours then Exit;
+
+  FEnCours := True;
+  FAnnuler := False;
+  Button1.Enabled := False;
+  ButtonAnnuler.Enabled := True;
+  ProgressBar1.Position := 0;
+
+  TelechargerFichier(
+    'http://example.com/bigfile.zip',
+    'C:\Temp\download.zip'
+  );
+end;
+
+procedure TForm1.TelechargerFichier(const URL, Destination: string);
+begin
+  TTask.Run(
+    procedure
+    var
+      HttpClient: THTTPClient;
+      FileStream: TFileStream;
+      Response: IHTTPResponse;
+      TailleTotal, TailleRecue: Int64;
+      Buffer: TBytes;
+      BytesLus: Integer;
+      Pourcentage: Integer;
+      Vitesse: Double;
+      Debut: TDateTime;
+    begin
+      HttpClient := THTTPClient.Create;
+      FileStream := nil;
+
+      try
+        try
+          // Démarrer le téléchargement
+          Response := HttpClient.Get(URL);
+          TailleTotal := Response.ContentLength;
+          TailleRecue := 0;
+          Debut := Now;
+
+          // Créer le fichier de destination
+          FileStream := TFileStream.Create(Destination, fmCreate);
+
+          // Lire par morceaux
+          SetLength(Buffer, 8192); // 8 Ko à la fois
+
+          while not FAnnuler do
+          begin
+            BytesLus := Response.ContentStream.Read(Buffer[0], Length(Buffer));
+
+            if BytesLus <= 0 then
+              Break; // Fin du téléchargement
+
+            // Écrire dans le fichier
+            FileStream.Write(Buffer[0], BytesLus);
+            Inc(TailleRecue, BytesLus);
+
+            // Calculer la progression
+            if TailleTotal > 0 then
+              Pourcentage := (TailleRecue * 100) div TailleTotal
+            else
+              Pourcentage := 0;
+
+            // Calculer la vitesse
+            Vitesse := TailleRecue / (1024 * 1024) / ((Now - Debut) * 24 * 60 * 60);
+
+            // Mettre à jour l'interface
             TThread.Queue(nil,
               procedure
               begin
-                LabelStatus.Caption := Format('Traitement... %d/10000', [i]);
-                ProgressBar1.Position := i div 100;
+                ProgressBar1.Position := Pourcentage;
+                Label1.Caption := Format('Téléchargé : %d Mo / %d Mo',
+                  [TailleRecue div (1024 * 1024), TailleTotal div (1024 * 1024)]);
+                Label2.Caption := Format('Vitesse : %.2f Mo/s', [Vitesse]);
+              end
+            );
+          end;
+
+          // Vérifier si annulé ou terminé
+          if FAnnuler then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                ShowMessage('Téléchargement annulé');
+              end
+            );
+
+            // Supprimer le fichier partiel
+            if FileExists(Destination) then
+              DeleteFile(Destination);
+          end
+          else
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                ShowMessage('Téléchargement terminé !');
+              end
+            );
+          end;
+
+        except
+          on E: Exception do
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                ShowMessage('Erreur : ' + E.Message);
               end
             );
           end;
         end;
-      end
-    );
-  finally
-    Throttler.Free;
+
+      finally
+        FileStream.Free;
+        HttpClient.Free;
+
+        // Réactiver les contrôles
+        TThread.Queue(nil,
+          procedure
+          begin
+            Button1.Enabled := True;
+            ButtonAnnuler.Enabled := False;
+            FEnCours := False;
+          end
+        );
+      end;
+    end
+  );
+end;
+
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);
+begin
+  FAnnuler := True;
+end;
+```
+
+## Feedback visuel pendant l'attente
+
+### Changer le curseur
+
+```pascal
+procedure TForm1.ButtonTraiterClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass; // Sablier
+
+  TTask.Run(
+    procedure
+    begin
+      try
+        // Traitement
+        EffectuerTraitement;
+      finally
+        TThread.Queue(nil,
+          procedure
+          begin
+            Screen.Cursor := crDefault; // Retour au curseur normal
+          end
+        );
+      end;
+    end
+  );
+end;
+```
+
+### Désactiver temporairement les contrôles
+
+```pascal
+procedure TForm1.DesactiverInterface;
+begin
+  Panel1.Enabled := False; // Désactive tous les contrôles du panel
+  Cursor := crHourGlass;
+end;
+
+procedure TForm1.ReactiverInterface;
+begin
+  Panel1.Enabled := True;
+  Cursor := crDefault;
+end;
+
+procedure TForm1.ButtonTraiterClick(Sender: TObject);
+begin
+  DesactiverInterface;
+
+  TTask.Run(
+    procedure
+    begin
+      try
+        EffectuerTraitement;
+      finally
+        TThread.Queue(nil, ReactiverInterface);
+      end;
+    end
+  );
+end;
+```
+
+## Optimisation : Limiter les mises à jour
+
+Mettre à jour l'interface trop fréquemment peut ralentir l'application.
+
+```pascal
+// ❌ MAUVAIS : Mise à jour à chaque itération (lent)
+for i := 1 to 100000 do
+begin
+  TraiterElement(i);
+  TThread.Queue(nil,
+    procedure
+    begin
+      Label1.Caption := IntToStr(i);
+    end
+  );
+end;
+
+// ✅ BON : Mise à jour périodique (rapide)
+var
+  DerniereMAJ: TDateTime;
+begin
+  DerniereMAJ := 0;
+
+  for i := 1 to 100000 do
+  begin
+    TraiterElement(i);
+
+    // Mettre à jour seulement toutes les 100ms
+    if MilliSecondsBetween(Now, DerniereMAJ) > 100 then
+    begin
+      TThread.Queue(nil,
+        procedure
+        begin
+          Label1.Caption := IntToStr(i);
+          ProgressBar1.Position := (i * 100) div 100000;
+        end
+      );
+      DerniereMAJ := Now;
+    end;
   end;
 end;
 ```
 
-## Améliorer l'expérience utilisateur pendant les opérations longues
+## TThread.Queue vs TThread.Synchronize
 
-### 1. Donner un retour immédiat
-
-Même si l'opération complète prendra du temps, donnez un retour immédiat à l'utilisateur pour confirmer que son action a été prise en compte.
+Comprendre la différence pour optimiser la réactivité.
 
 ```pascal
-procedure TForm1.ButtonGenerateReportClick(Sender: TObject);
+// TThread.Synchronize : BLOQUE le thread jusqu'à l'exécution
+TThread.Synchronize(nil,
+  procedure
+  begin
+    Label1.Caption := 'Message';
+  end
+);
+// Le thread attend ici que l'interface soit mise à jour
+
+// TThread.Queue : NE BLOQUE PAS, continue immédiatement
+TThread.Queue(nil,
+  procedure
+  begin
+    Label1.Caption := 'Message';
+  end
+);
+// Le thread continue sans attendre
+```
+
+**Recommandation** : Utilisez `Queue` autant que possible pour une meilleure réactivité.
+
+## Bonnes pratiques
+
+### 1. Ne jamais bloquer le thread principal
+
+```pascal
+// ❌ MAUVAIS
+procedure TForm1.ButtonClick(Sender: TObject);
 begin
-  // Retour immédiat
-  ButtonGenerateReport.Enabled := False;
-  LabelStatus.Caption := 'Génération du rapport en cours...';
+  OperationLongue(); // Bloque l'interface
+end;
+
+// ✅ BON
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  TTask.Run(
+    procedure
+    begin
+      OperationLongue(); // Dans un thread séparé
+    end
+  );
+end;
+```
+
+### 2. Toujours donner du feedback
+
+```pascal
+// ✅ BON : L'utilisateur sait ce qui se passe
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  Label1.Caption := 'Traitement en cours...';
   ProgressBar1.Visible := True;
 
-  // Bref délai pour que l'interface se mette à jour
-  TThread.CreateAnonymousThread(
-    procedure
-    begin
-      Sleep(50); // Délai court pour laisser l'interface se rafraîchir
-
-      // Démarrer l'opération longue
-      TThread.Synchronize(nil, GenerateReportInBackground);
-    end
-  ).Start;
-end;
-
-procedure TForm1.GenerateReportInBackground;
-begin
   TTask.Run(
     procedure
     begin
-      // Code de génération du rapport...
+      // ...
     end
   );
 end;
 ```
 
-### 2. Afficher des animations ou indicateurs d'activité
-
-Les animations donnent une indication visuelle que l'application est toujours en train de travailler, même si la progression exacte n'est pas connue.
+### 3. Permettre l'annulation pour les opérations longues
 
 ```pascal
-procedure TForm1.StartAnimation;
-begin
-  // Vous pouvez utiliser un TTimer ou un composant d'animation
-  Timer1.Enabled := True;
-
-  // Ou utiliser une image animée
-  AnimatedImage1.Visible := True;
-  AnimatedImage1.Active := True;
-end;
-
-procedure TForm1.StopAnimation;
-begin
-  Timer1.Enabled := False;
-  AnimatedImage1.Active := False;
-  AnimatedImage1.Visible := False;
-end;
+// ✅ BON : L'utilisateur garde le contrôle
+if FAnnuler then Exit;
 ```
 
-### 3. Permettre l'interaction avec d'autres parties de l'application
-
-Même pendant une opération longue, l'utilisateur devrait pouvoir interagir avec les autres parties de l'application qui ne sont pas directement affectées.
+### 4. Réactiver les contrôles, même en cas d'erreur
 
 ```pascal
-procedure TForm1.ConfigureUIForLongOperation(IsProcessing: Boolean);
-begin
-  // Désactiver uniquement les contrôles liés à l'opération en cours
-  ButtonProcess.Enabled := not IsProcessing;
-  ProgressBar1.Visible := IsProcessing;
-
-  // Les autres contrôles restent actifs
-  ButtonSettings.Enabled := True;
-  MenuFile.Enabled := True;
-  // ...etc.
-end;
-```
-
-## Gestion des erreurs dans les interfaces réactives
-
-Lorsqu'une erreur se produit dans un thread secondaire, elle ne sera pas automatiquement propagée à l'interface utilisateur. Vous devez la capturer et l'afficher explicitement.
-
-```pascal
-procedure TForm1.ButtonProcessClick(Sender: TObject);
-begin
-  ButtonProcess.Enabled := False;
-  LabelStatus.Caption := 'Traitement en cours...';
-
-  TTask.Run(
+// ✅ BON : Toujours dans un try-finally
+try
+  EffectuerTraitement;
+finally
+  TThread.Queue(nil,
     procedure
     begin
-      try
-        // Opération qui peut générer une exception
-        ProcesserDonnées;
-
-        // Traitement terminé avec succès
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ButtonProcess.Enabled := True;
-            LabelStatus.Caption := 'Traitement terminé avec succès !';
-          end
-        );
-      except
-        on E: Exception do
-        begin
-          // Capturer et afficher l'erreur
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              ButtonProcess.Enabled := True;
-              LabelStatus.Caption := 'Erreur de traitement';
-              ShowMessage('Une erreur est survenue : ' + E.Message);
-            end
-          );
-        end;
-      end;
+      Button1.Enabled := True;
     end
   );
 end;
 ```
 
-## Exemple complet : explorateur de fichiers réactif
-
-Voici un exemple plus complet d'une application qui reste réactive pendant la recherche de fichiers :
+### 5. Tester avec des opérations réellement longues
 
 ```pascal
-type
-  TMainForm = class(TForm)
-    EditPath: TEdit;
-    ButtonBrowse: TButton;
-    EditSearchPattern: TEdit;
-    ButtonSearch: TButton;
-    ButtonCancel: TButton;
-    ProgressBar1: TProgressBar;
-    LabelStatus: TLabel;
-    ListViewFiles: TListView;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonBrowseClick(Sender: TObject);
-    procedure ButtonSearchClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
-  private
-    FCancellationTokenSource: TCancellationTokenSource;
-    procedure ConfigureUIForSearch(IsSearching: Boolean);
-  end;
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  FCancellationTokenSource := nil;
-  ConfigureUIForSearch(False);
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  if Assigned(FCancellationTokenSource) then
-    FCancellationTokenSource.Free;
-end;
-
-procedure TMainForm.ButtonBrowseClick(Sender: TObject);
-var
-  SelectDirDialog: TSelectDirectoryDialog;
-begin
-  SelectDirDialog := TSelectDirectoryDialog.Create(Self);
-  try
-    if SelectDirDialog.Execute then
-      EditPath.Text := SelectDirDialog.FileName;
-  finally
-    SelectDirDialog.Free;
-  end;
-end;
-
-procedure TMainForm.ConfigureUIForSearch(IsSearching: Boolean);
-begin
-  ButtonSearch.Enabled := not IsSearching;
-  ButtonCancel.Enabled := IsSearching;
-  EditPath.Enabled := not IsSearching;
-  EditSearchPattern.Enabled := not IsSearching;
-  ButtonBrowse.Enabled := not IsSearching;
-  ProgressBar1.Visible := IsSearching;
-
-  if not IsSearching then
-  begin
-    ProgressBar1.Position := 0;
-    LabelStatus.Caption := 'Prêt';
-  end;
-end;
-
-procedure TMainForm.ButtonSearchClick(Sender: TObject);
-var
-  SearchPath, SearchPattern: string;
-begin
-  SearchPath := EditPath.Text;
-  SearchPattern := EditSearchPattern.Text;
-
-  if (SearchPath = '') or (not DirectoryExists(SearchPath)) then
-  begin
-    ShowMessage('Veuillez sélectionner un dossier valide.');
-    Exit;
-  end;
-
-  if SearchPattern = '' then
-    SearchPattern := '*.*';
-
-  // Préparer l'interface
-  ListViewFiles.Clear;
-  ConfigureUIForSearch(True);
-  LabelStatus.Caption := 'Préparation de la recherche...';
-
-  // Créer un nouveau token d'annulation
-  if Assigned(FCancellationTokenSource) then
-    FCancellationTokenSource.Free;
-  FCancellationTokenSource := TCancellationTokenSource.Create;
-
-  // Démarrer la recherche dans un thread
-  TTask.Run(
-    procedure
-    var
-      FoundFiles: TStringDynArray;
-      FileCount, ProcessedCount, AddedCount: Integer;
-      Throttler: TUpdateThrottler;
-    begin
-      try
-        // Afficher un message pendant la recherche
-        TThread.Queue(nil,
-          procedure
-          begin
-            LabelStatus.Caption := 'Recherche des fichiers...';
-          end
-        );
-
-        // Obtenir tous les fichiers correspondant au pattern
-        FoundFiles := TDirectory.GetFiles(SearchPath, SearchPattern, TSearchOption.soAllDirectories);
-        FileCount := Length(FoundFiles);
-
-        // Mettre à jour l'interface pour indiquer le nombre de fichiers trouvés
-        TThread.Queue(nil,
-          procedure
-          begin
-            LabelStatus.Caption := Format('Traitement de %d fichiers...', [FileCount]);
-            ProgressBar1.Max := FileCount;
-          end
-        );
-
-        // Créer un throttler pour limiter les mises à jour de l'interface
-        Throttler := TUpdateThrottler.Create(200); // Max 5 updates per second
-        try
-          ProcessedCount := 0;
-          AddedCount := 0;
-
-          // Traiter chaque fichier
-          for var FileName in FoundFiles do
-          begin
-            Inc(ProcessedCount);
-
-            // Vérifier si l'opération a été annulée
-            if FCancellationTokenSource.Token.IsCancellationRequested then
-            begin
-              TThread.Queue(nil,
-                procedure
-                begin
-                  LabelStatus.Caption := 'Recherche annulée.';
-                  ConfigureUIForSearch(False);
-                end
-              );
-              Exit;
-            end;
-
-            try
-              // Obtenir les informations sur le fichier
-              var FileInfo := TFileInfo.Create(FileName);
-              try
-                // Ajouter le fichier à la liste
-                Inc(AddedCount);
-
-                TThread.Queue(nil,
-                  procedure
-                  var
-                    Item: TListItem;
-                  begin
-                    Item := ListViewFiles.Items.Add;
-                    Item.Caption := ExtractFileName(FileName);
-                    Item.SubItems.Add(ExtractFilePath(FileName));
-                    Item.SubItems.Add(FormatFloat('#,##0', FileInfo.Size) + ' octets');
-                    Item.SubItems.Add(DateTimeToStr(FileInfo.Modified));
-                  end
-                );
-              finally
-                FileInfo.Free;
-              end;
-            except
-              // Ignorer les erreurs individuelles de fichier
-            end;
-
-            // Mettre à jour la progression si nécessaire
-            if Throttler.ShouldUpdate then
-            begin
-              TThread.Queue(nil,
-                procedure
-                begin
-                  ProgressBar1.Position := ProcessedCount;
-                  LabelStatus.Caption := Format('Traitement... %d/%d fichiers',
-                                               [ProcessedCount, FileCount]);
-                end
-              );
-            end;
-          end;
-
-          // Recherche terminée
-          TThread.Queue(nil,
-            procedure
-            begin
-              LabelStatus.Caption := Format('Recherche terminée. %d fichiers trouvés.', [AddedCount]);
-              ConfigureUIForSearch(False);
-            end
-          );
-        finally
-          Throttler.Free;
-        end;
-      except
-        on E: Exception do
-        begin
-          // Gérer les erreurs globales
-          TThread.Queue(nil,
-            procedure
-            begin
-              LabelStatus.Caption := 'Erreur pendant la recherche.';
-              ShowMessage('Une erreur est survenue : ' + E.Message);
-              ConfigureUIForSearch(False);
-            end
-          );
-        end;
-      end;
-    end,
-    FCancellationTokenSource.Token
-  );
-end;
-
-procedure TMainForm.ButtonCancelClick(Sender: TObject);
-begin
-  if Assigned(FCancellationTokenSource) then
-  begin
-    FCancellationTokenSource.Cancel;
-    LabelStatus.Caption := 'Annulation en cours...';
-    ButtonCancel.Enabled := False;
-  end;
-end;
+// Pour tester, simulez des délais
+Sleep(3000); // 3 secondes
 ```
 
-## Bonnes pratiques pour une interface utilisateur réactive
+## Points clés à retenir
 
-### 1. Planifier dès le début
+- Le **thread principal** doit toujours rester disponible pour l'interface
+- Utilisez **TTask.Run** pour déporter le travail lourd dans des threads séparés
+- **Application.ProcessMessages** est une solution simple mais limitée
+- Toujours utiliser **TThread.Queue** ou **TThread.Synchronize** pour modifier l'interface
+- Fournissez un **feedback visuel** (barres de progression, messages)
+- Permettez l'**annulation** des opérations longues
+- **Désactivez les boutons** pour éviter les clics multiples
+- **Limitez la fréquence** des mises à jour d'interface pour les performances
+- Préférez **TThread.Queue** à **TThread.Synchronize** pour la réactivité
+- Toujours **réactiver les contrôles** dans un bloc finally
 
-Identifiez toutes les opérations potentiellement longues dans votre application et planifiez leur exécution en arrière-plan dès la phase de conception.
-
-### 2. Utiliser TThread.Queue pour les mises à jour fréquentes
-
-Pour les mises à jour fréquentes de l'interface, préférez `TThread.Queue` à `TThread.Synchronize`, car il ne bloque pas le thread secondaire.
-
-### 3. Limiter les mises à jour de l'interface
-
-Trop de mises à jour de l'interface peuvent ralentir l'application. Utilisez des techniques de "throttling" pour limiter la fréquence des mises à jour.
-
-### 4. Toujours permettre l'annulation
-
-Les utilisateurs apprécient de pouvoir annuler une opération longue. Implémentez cette fonctionnalité dès que possible.
-
-### 5. Tester sur des machines lentes
-
-Testez votre application sur des machines plus lentes que votre environnement de développement pour identifier les problèmes de réactivité.
-
-### 6. Utiliser des animations subtiles
-
-Les animations subtiles pendant les opérations longues donnent l'impression que l'application est toujours active.
-
-### 7. Maintenir l'état de l'interface cohérent
-
-Assurez-vous que l'interface reste dans un état cohérent, même si une opération est annulée ou échoue. Restaurez toujours l'interface dans un état utilisable.
-
-## Exercice pratique
-
-Créez une application de recherche de texte dans des fichiers qui reste réactive pendant la recherche :
-
-1. Permettre à l'utilisateur de sélectionner un dossier
-2. Permettre à l'utilisateur d'entrer un texte à rechercher
-3. Rechercher ce texte dans tous les fichiers du dossier (et sous-dossiers)
-4. Afficher les résultats au fur et à mesure qu'ils sont trouvés
-5. Permettre d'annuler la recherche à tout moment
-6. Afficher une barre de progression et des statistiques (fichiers analysés, occurrences trouvées)
-
-Cet exercice vous permettra de mettre en pratique les concepts d'interface utilisateur réactive dans un contexte réel.
-
-## Résumé
-
-- Une interface utilisateur réactive est essentielle pour une bonne expérience utilisateur.
-- Le thread principal doit toujours rester libre pour traiter les interactions avec l'interface.
-- Déplacez toutes les opérations longues dans des threads secondaires.
-- Indiquez la progression des opérations longues.
-- Permettez l'annulation des opérations longues.
-- Limitez la fréquence des mises à jour de l'interface pour maintenir de bonnes performances.
-- Gérez correctement les erreurs qui se produisent dans les threads secondaires.
-
-Dans la prochaine section, nous explorerons des cas d'usage concrets du multithreading dans différents types d'applications.
+Une interface réactive est essentielle pour une bonne expérience utilisateur. Elle donne l'impression d'une application rapide et professionnelle, même si les opérations prennent du temps. Le multithreading avec TTask rend cette réactivité facile à implémenter dans vos applications Delphi.
 
 ⏭️ [Cas d'usage concrets](/11-multithreading-et-programmation-asynchrone/08-cas-dusage-concrets.md)

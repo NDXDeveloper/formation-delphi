@@ -1,439 +1,131 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.4 TTask et programmation parallèle
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction à TTask
 
-## Introduction
+`TTask` est une approche moderne et simplifiée du multithreading introduite dans Delphi. Elle fait partie de la **Parallel Programming Library (PPL)**, qui permet de créer des applications parallèles sans gérer manuellement les threads.
 
-Jusqu'à présent, nous avons étudié la création et la gestion de threads avec la classe `TThread`, qui offre un contrôle précis mais nécessite une certaine quantité de code. Delphi propose une approche plus moderne et plus simple pour la programmation parallèle : la classe `TTask`.
+### Pourquoi TTask plutôt que TThread ?
 
-`TTask` fait partie du framework de programmation parallèle (PPL - Parallel Programming Library) introduit dans Delphi XE7. Il offre une syntaxe plus concise et s'intègre parfaitement avec les fonctionnalités modernes du langage comme les expressions lambda et les méthodes anonymes.
+| TThread | TTask |
+|---------|-------|
+| Gestion manuelle des threads | Gestion automatique |
+| Code plus verbeux | Code plus concis |
+| Créer une classe pour chaque tâche | Code anonyme (inline) possible |
+| Gestion manuelle du pool de threads | Pool de threads intégré |
 
-## Avantages de TTask par rapport à TThread
+**TThread** reste utile pour les threads de longue durée, tandis que **TTask** excelle pour les tâches courtes et ponctuelles.
 
-- Code plus compact et plus lisible
-- Pas besoin de créer une classe séparée pour chaque type de thread
-- Gestion automatique du cycle de vie des tâches
-- Prise en charge intégrée des callbacks (actions à exécuter à la fin de la tâche)
-- Possibilité d'attendre facilement plusieurs tâches
+### Analogie simple
 
-## Premiers pas avec TTask
+Imaginez que vous devez embaucher des personnes pour différents travaux :
 
-### Créer et démarrer une tâche simple
+- **TThread** : Vous embauchez des employés permanents. Vous gérez leurs contrats, leurs horaires, leur formation.
+- **TTask** : Vous faites appel à des intérimaires via une agence. L'agence gère tout, vous donnez juste les tâches à accomplir.
 
-Voici comment créer une tâche simple avec `TTask` :
+## Première utilisation de TTask
+
+Pour utiliser TTask, vous devez inclure l'unité `System.Threading` :
 
 ```pascal
 uses
   System.Threading;
+```
 
-procedure TForm1.ButtonStartClick(Sender: TObject);
+### Créer et exécuter une tâche simple
+
+```pascal
+procedure TForm1.ButtonClick(Sender: TObject);
 begin
+  // Créer et démarrer une tâche
   TTask.Run(
     procedure
     begin
-      // Code à exécuter dans la tâche
-      Sleep(2000);  // Simuler un travail qui prend du temps
+      // Ce code s'exécute dans un thread séparé
+      Sleep(2000); // Simuler un travail de 2 secondes
 
-      // Mettre à jour l'interface utilisateur
-      TThread.Synchronize(nil,
+      // Pour mettre à jour l'interface, utiliser TThread.Queue
+      TThread.Queue(nil,
         procedure
         begin
-          Label1.Caption := 'Tâche terminée !';
+          ShowMessage('Tâche terminée !');
         end
       );
     end
   );
+
+  // Le code continue immédiatement ici
+  // L'interface reste réactive
 end;
 ```
 
-Notez que nous utilisons une procédure anonyme pour définir le code de la tâche. Cela nous évite de créer une classe séparée.
+**C'est tout !** Vous venez de créer votre première tâche parallèle avec seulement quelques lignes de code.
 
-### Attendre la fin d'une tâche
+## Les différentes façons de créer une TTask
 
-Si vous avez besoin d'attendre qu'une tâche se termine, vous pouvez utiliser la méthode `Wait` :
+### 1. TTask.Run - Exécution immédiate
 
-```pascal
-var
-  MaTache: ITask;
-begin
-  MaTache := TTask.Run(
-    procedure
-    begin
-      // Code de la tâche...
-    end
-  );
-
-  // Faire autre chose pendant que la tâche s'exécute...
-
-  // Attendre que la tâche se termine
-  MaTache.Wait;
-
-  // Continuer l'exécution après la fin de la tâche
-end;
-```
-
-> ⚠️ **Attention** : N'appelez jamais `Wait` directement depuis le thread principal dans une application avec interface utilisateur, car cela bloquerait l'interface. Utilisez plutôt les mécanismes asynchrones décrits plus loin.
-
-## Traiter le résultat d'une tâche
-
-### Obtenir une valeur de retour avec TTask<T>
-
-Pour récupérer une valeur calculée par une tâche, utilisez `TTask<T>` :
-
-```pascal
-var
-  TacheCalcul: ITask<Integer>;
-begin
-  TacheCalcul := TTask.Future<Integer>(
-    function: Integer
-    begin
-      // Simuler un calcul long
-      Sleep(3000);
-      Result := 42;  // Valeur calculée
-    end
-  );
-
-  // La tâche s'exécute en arrière-plan
-
-  // Récupérer le résultat (cette ligne attend automatiquement la fin de la tâche)
-  ShowMessage('Résultat : ' + IntToStr(TacheCalcul.Value));
-end;
-```
-
-La propriété `Value` renvoie le résultat de la tâche. Si la tâche n'est pas encore terminée, l'accès à `Value` bloquera jusqu'à ce qu'elle se termine.
-
-### Exécuter du code à la fin d'une tâche
-
-Au lieu d'attendre activement la fin d'une tâche, vous pouvez spécifier une action à exécuter lorsqu'elle se termine :
+La méthode la plus simple :
 
 ```pascal
 TTask.Run(
   procedure
   begin
-    // Code de la tâche...
-  end
-).ContinueWith(
-  procedure(AntecedentTask: ITask)
-  begin
-    // Ce code s'exécute quand la tâche est terminée
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        ShowMessage('Tâche terminée !');
-      end
-    );
+    // Votre code ici
   end
 );
 ```
 
-Le paramètre `AntecedentTask` vous donne accès à la tâche qui vient de se terminer.
+### 2. TTask.Create - Exécution contrôlée
 
-## Exemples pratiques avec TTask
-
-### Exemple 1 : Téléchargement de fichier avec indicateur de progression
-
-```pascal
-procedure TForm1.ButtonDownloadClick(Sender: TObject);
-var
-  URL: string;
-begin
-  URL := EditURL.Text;
-  ButtonDownload.Enabled := False;
-  ProgressBar1.Position := 0;
-  ProgressBar1.Visible := True;
-
-  TTask.Run(
-    procedure
-    var
-      HTTPClient: TNetHTTPClient;
-      HTTPRequest: TNetHTTPRequest;
-      ResponseStream: TFileStream;
-    begin
-      HTTPClient := TNetHTTPClient.Create(nil);
-      HTTPRequest := TNetHTTPRequest.Create(nil);
-      try
-        HTTPRequest.Client := HTTPClient;
-
-        // Événement pour suivre la progression
-        HTTPClient.OnReceiveData := procedure(const Sender: TObject; AContentLength, AReadCount: Int64; var AAbort: Boolean)
-        begin
-          if AContentLength > 0 then
-            TThread.Queue(nil,
-              procedure
-              begin
-                ProgressBar1.Position := Round((AReadCount / AContentLength) * 100);
-              end
-            );
-        end;
-
-        // Création du fichier de destination
-        ResponseStream := TFileStream.Create('downloaded_file.dat', fmCreate);
-        try
-          // Téléchargement du fichier
-          HTTPRequest.Get(URL, ResponseStream);
-        finally
-          ResponseStream.Free;
-        end;
-
-        // Mise à jour de l'interface à la fin
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ButtonDownload.Enabled := True;
-            ShowMessage('Téléchargement terminé !');
-          end
-        );
-      finally
-        HTTPRequest.Free;
-        HTTPClient.Free;
-      end;
-    end
-  );
-end;
-```
-
-### Exemple 2 : Traitement d'image parallèle
-
-```pascal
-procedure TForm1.ButtonProcessImageClick(Sender: TObject);
-begin
-  TTask.Run(
-    procedure
-    var
-      Bitmap: TBitmap;
-    begin
-      // Charger l'image
-      Bitmap := TBitmap.Create;
-      try
-        Bitmap.LoadFromFile('image.bmp');
-
-        // Appliquer un effet (simulé)
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            LabelStatus.Caption := 'Application de l''effet...';
-          end
-        );
-
-        // Simuler un traitement long
-        Sleep(3000);
-
-        // Sauvegarder le résultat
-        Bitmap.SaveToFile('image_processed.bmp');
-
-        // Mise à jour de l'interface
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ImageProcessed.Picture.LoadFromFile('image_processed.bmp');
-            LabelStatus.Caption := 'Traitement terminé !';
-          end
-        );
-      finally
-        Bitmap.Free;
-      end;
-    end
-  );
-end;
-```
-
-## TThread.Queue vs TThread.Synchronize
-
-Lorsque vous utilisez `TTask`, vous aurez souvent besoin de mettre à jour l'interface utilisateur. Delphi propose deux méthodes pour cela :
-
-1. **TThread.Synchronize** : Exécute le code immédiatement, en bloquant le thread appelant jusqu'à ce que l'exécution soit terminée.
-
-   ```pascal
-   TThread.Synchronize(nil,
-     procedure
-     begin
-       Label1.Caption := 'Terminé';
-     end
-   );
-   ```
-
-2. **TThread.Queue** : Place le code dans une file d'attente pour qu'il soit exécuté plus tard par le thread principal, sans bloquer le thread appelant.
-
-   ```pascal
-   TThread.Queue(nil,
-     procedure
-     begin
-       Label1.Caption := 'Terminé';
-     end
-   );
-   ```
-
-Quand utiliser l'un ou l'autre ?
-- Utilisez `TThread.Synchronize` quand le thread secondaire a besoin d'attendre que l'action soit complétée.
-- Utilisez `TThread.Queue` pour des mises à jour plus légères de l'interface, où le thread peut continuer son travail sans attendre.
-
-## Exécution de plusieurs tâches en parallèle
-
-### Exécuter plusieurs tâches indépendantes
+Pour créer une tâche sans la démarrer immédiatement :
 
 ```pascal
 var
-  Taches: array[1..3] of ITask;
+  MaTache: ITask;
 begin
-  // Créer trois tâches
-  Taches[1] := TTask.Run(
+  // Créer la tâche
+  MaTache := TTask.Create(
     procedure
     begin
-      // Code de la tâche 1...
+      // Votre code ici
     end
   );
 
-  Taches[2] := TTask.Run(
-    procedure
+  // Démarrer plus tard
+  MaTache.Start;
+end;
+```
+
+### 3. TTask.Future - Récupérer un résultat
+
+Pour obtenir un résultat d'une tâche :
+
+```pascal
+var
+  Resultat: IFuture<Integer>;
+begin
+  // Créer une tâche qui retourne un entier
+  Resultat := TTask.Future<Integer>(
+    function: Integer
     begin
-      // Code de la tâche 2...
+      Sleep(2000); // Calcul long
+      Result := 42; // Le résultat
     end
   );
 
-  Taches[3] := TTask.Run(
-    procedure
-    begin
-      // Code de la tâche 3...
-    end
-  );
+  // Faire autre chose pendant que la tâche s'exécute
+  // ...
 
-  // Attendre que toutes les tâches soient terminées
-  TTask.WaitForAll(Taches);
-
-  // Continuer après que toutes les tâches sont terminées
+  // Récupérer le résultat (attend la fin de la tâche si nécessaire)
+  ShowMessage('Résultat : ' + IntToStr(Resultat.Value));
 end;
 ```
 
-### Attendre la première tâche terminée
+## Attendre la fin d'une tâche
 
-Si vous avez besoin d'attendre qu'au moins une tâche se termine :
-
-```pascal
-var
-  Taches: array[1..3] of ITask;
-  IndexTermine: Integer;
-begin
-  // Créer trois tâches...
-
-  // Attendre qu'au moins une tâche se termine
-  IndexTermine := TTask.WaitForAny(Taches);
-
-  // IndexTermine contient l'index de la première tâche terminée
-  ShowMessage('La tâche ' + IntToStr(IndexTermine) + ' a terminé en premier !');
-end;
-```
-
-## Parallélisme de données avec Parallel.For
-
-Pour traiter un grand nombre d'éléments en parallèle, vous pouvez utiliser `Parallel.For` :
-
-```pascal
-uses
-  System.Threading;
-
-procedure TraiterDonneesMassives;
-const
-  NOMBRE_ELEMENTS = 10000;
-var
-  Donnees: array[0..NOMBRE_ELEMENTS-1] of Integer;
-  i: Integer;
-begin
-  // Initialiser les données
-  for i := 0 to NOMBRE_ELEMENTS-1 do
-    Donnees[i] := i;
-
-  // Traitement parallèle
-  TParallel.For(0, NOMBRE_ELEMENTS-1,
-    procedure(Index: Integer)
-    begin
-      // Traiter Donnees[Index]
-      Donnees[Index] := Donnees[Index] * 2;
-    end
-  );
-
-  // À ce stade, toutes les données ont été traitées
-end;
-```
-
-`Parallel.For` divise automatiquement la plage d'indices en blocs et les traite en parallèle sur plusieurs threads. C'est idéal pour les opérations indépendantes sur de grands ensembles de données.
-
-> ⚠️ **Attention** : Assurez-vous que les opérations dans la boucle parallèle sont indépendantes. Si elles modifient des données partagées, vous devrez utiliser des mécanismes de synchronisation comme les sections critiques.
-
-## Parallélisme de données avec Parallel.ForEach
-
-Pour itérer sur une collection en parallèle :
-
-```pascal
-var
-  MaListe: TList<string>;
-begin
-  MaListe := TList<string>.Create;
-  try
-    // Remplir la liste...
-
-    // Traitement parallèle de tous les éléments
-    TParallel.ForEach(MaListe,
-      procedure(const Element: string)
-      begin
-        // Traiter chaque élément
-      end
-    );
-  finally
-    MaListe.Free;
-  end;
-end;
-```
-
-## Annulation de tâches
-
-Delphi fournit un mécanisme d'annulation pour les tâches via la classe `TThreadPool` :
-
-```pascal
-var
-  Annulation: ICancellationToken;
-  Tache: ITask;
-begin
-  // Créer un token d'annulation
-  Annulation := TCancellationTokenSource.Create.Token;
-
-  // Créer une tâche qui vérifie périodiquement le token d'annulation
-  Tache := TTask.Run(
-    procedure
-    var
-      i: Integer;
-    begin
-      for i := 1 to 100 do
-      begin
-        // Vérifier si la tâche doit être annulée
-        if Annulation.IsCancellationRequested then
-          Exit;
-
-        // Faire le travail...
-        Sleep(100);
-
-        // Mettre à jour la progression
-        TThread.Queue(nil,
-          procedure
-          begin
-            ProgressBar1.Position := i;
-          end
-        );
-      end;
-    end,
-    Annulation
-  );
-
-  // Pour annuler la tâche plus tard
-  ButtonCancel.OnClick := procedure(Sender: TObject)
-  begin
-    TCancellationTokenSource(Annulation).Cancel;
-  end;
-end;
-```
-
-## Gestion des exceptions dans les tâches
-
-Lorsqu'une exception se produit dans une tâche, elle n'est pas automatiquement propagée au thread principal. Vous devez explicitement récupérer et gérer ces exceptions :
+### Wait - Attendre la fin
 
 ```pascal
 var
@@ -442,170 +134,550 @@ begin
   MaTache := TTask.Run(
     procedure
     begin
-      // Code qui peut générer une exception
-      raise Exception.Create('Erreur dans la tâche');
+      Sleep(3000);
     end
   );
 
-  try
-    // Attendre la fin de la tâche
-    MaTache.Wait;
-  except
-    on E: Exception do
+  // Attendre que la tâche se termine
+  MaTache.Wait;
+
+  ShowMessage('La tâche est terminée !');
+end;
+```
+
+### Wait avec timeout
+
+```pascal
+var
+  MaTache: ITask;
+begin
+  MaTache := TTask.Run(
+    procedure
     begin
-      ShowMessage('Exception dans la tâche : ' + E.Message);
-    end;
+      Sleep(5000);
+    end
+  );
+
+  // Attendre maximum 2 secondes
+  if MaTache.Wait(2000) then
+    ShowMessage('Tâche terminée à temps')
+  else
+    ShowMessage('Timeout ! La tâche continue en arrière-plan');
+end;
+```
+
+## Attendre plusieurs tâches
+
+### TTask.WaitForAll - Attendre toutes les tâches
+
+```pascal
+var
+  Taches: array[0..2] of ITask;
+  i: Integer;
+begin
+  // Créer plusieurs tâches
+  for i := 0 to 2 do
+  begin
+    Taches[i] := TTask.Run(
+      procedure
+      var
+        Numero: Integer;
+      begin
+        Numero := i;
+        Sleep(1000 * (Numero + 1)); // Temps différent pour chaque tâche
+        TThread.Queue(nil,
+          procedure
+          begin
+            Memo1.Lines.Add('Tâche ' + IntToStr(Numero) + ' terminée');
+          end
+        );
+      end
+    );
+  end;
+
+  // Attendre que TOUTES les tâches soient terminées
+  TTask.WaitForAll(Taches);
+
+  ShowMessage('Toutes les tâches sont terminées !');
+end;
+```
+
+### TTask.WaitForAny - Attendre la première tâche
+
+```pascal
+var
+  Taches: array[0..2] of ITask;
+  Indice: Integer;
+begin
+  // Créer plusieurs tâches
+  // ...
+
+  // Attendre que N'IMPORTE QUELLE tâche se termine
+  Indice := TTask.WaitForAny(Taches);
+
+  ShowMessage('La tâche ' + IntToStr(Indice) + ' est la première terminée !');
+end;
+```
+
+## Parallélisation de boucles
+
+Une des fonctionnalités les plus puissantes de la PPL : paralléliser automatiquement les boucles.
+
+### TParallel.For - Boucle parallèle
+
+```pascal
+uses
+  System.Threading;
+
+procedure TForm1.ButtonClick(Sender: TObject);
+var
+  i: Integer;
+  Temps: TDateTime;
+begin
+  Temps := Now;
+
+  // Boucle parallèle : les itérations s'exécutent en parallèle
+  TParallel.For(1, 100,
+    procedure(Index: Integer)
+    begin
+      // Chaque itération peut s'exécuter dans un thread différent
+      // Traitement sur l'élément Index
+      Sleep(50); // Simuler un traitement
+    end
+  );
+
+  ShowMessage('Terminé en ' +
+    FormatDateTime('ss.zzz', Now - Temps) + ' secondes');
+end;
+```
+
+### Comparaison : Boucle séquentielle vs parallèle
+
+```pascal
+// SÉQUENTIEL (lent)
+procedure TraitementSequentiel;
+var
+  i: Integer;
+begin
+  for i := 1 to 1000 do
+  begin
+    TraiterElement(i); // S'exécute l'un après l'autre
+  end;
+end;
+
+// PARALLÈLE (rapide sur multi-cœurs)
+procedure TraitementParallele;
+begin
+  TParallel.For(1, 1000,
+    procedure(Index: Integer)
+    begin
+      TraiterElement(Index); // Plusieurs éléments traités simultanément
+    end
+  );
+end;
+```
+
+### TParallel.For avec options
+
+Vous pouvez contrôler le comportement de la boucle parallèle :
+
+```pascal
+var
+  Options: TParallel.TLoopOptions;
+begin
+  Options := TParallel.TLoopOptions.Create;
+  Options.MaxWorkers := 4; // Limiter à 4 threads
+
+  TParallel.For(1, 1000, Options,
+    procedure(Index: Integer)
+    begin
+      TraiterElement(Index);
+    end
+  );
+end;
+```
+
+## TParallel.ForEach - Itérer sur des collections
+
+Pour parcourir les éléments d'une liste en parallèle :
+
+```pascal
+var
+  Liste: TList<string>;
+begin
+  Liste := TList<string>.Create;
+  try
+    // Remplir la liste
+    Liste.Add('Fichier1.txt');
+    Liste.Add('Fichier2.txt');
+    Liste.Add('Fichier3.txt');
+
+    // Traiter chaque élément en parallèle
+    TParallel.ForEach<string>(Liste,
+      procedure(const Element: string)
+      begin
+        TraiterFichier(Element);
+      end
+    );
+  finally
+    Liste.Free;
   end;
 end;
 ```
 
-Pour les tâches avec valeur de retour, vous pouvez vérifier si une exception s'est produite avec la propriété `Status` :
+## Annuler une tâche
+
+### Utilisation de TTask avec annulation
 
 ```pascal
 var
-  TacheCalcul: ITask<Integer>;
+  MaTache: ITask;
+  Token: ICancellationToken;
 begin
-  TacheCalcul := TTask.Future<Integer>(
-    function: Integer
+  // Créer un token d'annulation
+  Token := TCancellationTokenSource.Create.Token;
+
+  MaTache := TTask.Run(
+    procedure
+    var
+      i: Integer;
     begin
-      // Code qui peut générer une exception
-      raise Exception.Create('Erreur de calcul');
-      Result := 0; // Jamais atteint
-    end
-  );
-
-  // Attendre la fin de la tâche
-  TacheCalcul.Wait;
-
-  // Vérifier le statut
-  if TacheCalcul.Status = TTaskStatus.Faulted then
-    ShowMessage('La tâche a échoué avec une exception')
-  else
-    ShowMessage('Résultat : ' + IntToStr(TacheCalcul.Value));
-end;
-```
-
-## Pool de threads et paramètres
-
-Les tâches créées avec `TTask.Run` utilisent un pool de threads géré par Delphi. Vous pouvez configurer ce pool :
-
-```pascal
-// Définir le nombre maximum de threads
-TThreadPool.Default.MaxWorkerThreads := ProcessorCount * 2;
-```
-
-En général, il est recommandé de laisser Delphi gérer automatiquement le pool, mais ces paramètres peuvent être utiles dans certains cas avancés.
-
-## Exemple complet : Traitement d'images en parallèle
-
-Voici un exemple plus complet qui traite plusieurs images en parallèle :
-
-```pascal
-procedure TForm1.ButtonProcessImagesClick(Sender: TObject);
-var
-  Fichiers: TStringList;
-  TotalTraite: Integer;
-  Section: TCriticalSection;
-begin
-  // Liste des fichiers à traiter
-  Fichiers := TStringList.Create;
-  try
-    Fichiers.LoadFromFile('liste_images.txt');
-
-    // Initialisation
-    TotalTraite := 0;
-    Section := TCriticalSection.Create;
-    try
-      ProgressBar1.Max := Fichiers.Count;
-      ProgressBar1.Position := 0;
-      LabelStatus.Caption := 'Traitement en cours...';
-
-      // Traiter toutes les images en parallèle
-      TParallel.For(0, Fichiers.Count - 1,
-        procedure(Index: Integer)
-        var
-          NomFichier: string;
+      for i := 1 to 1000 do
+      begin
+        // Vérifier si l'annulation est demandée
+        if Token.IsCancelled then
         begin
-          NomFichier := Fichiers[Index];
-
-          // Simuler un traitement d'image
-          Sleep(500 + Random(1000));
-
-          // Mettre à jour le compteur et la barre de progression
-          Section.Enter;
-          try
-            Inc(TotalTraite);
-          finally
-            Section.Leave;
-          end;
-
-          // Mettre à jour l'interface
           TThread.Queue(nil,
             procedure
             begin
-              ProgressBar1.Position := TotalTraite;
-              LabelStatus.Caption := Format('Traitement en cours... %d/%d',
-                                           [TotalTraite, Fichiers.Count]);
-
-              // Ajouter le fichier à la liste des traitements terminés
-              ListBoxCompleted.Items.Add(NomFichier);
-
-              // Vérifier si tout est terminé
-              if TotalTraite = Fichiers.Count then
-                ShowMessage('Traitement terminé !');
+              ShowMessage('Tâche annulée !');
             end
           );
-        end
-      );
-    finally
-      Section.Free;
-    end;
+          Exit;
+        end;
+
+        // Travail
+        Sleep(10);
+      end;
+    end
+  );
+
+  // Plus tard, pour annuler :
+  // Token.Cancel;
+end;
+```
+
+## Pool de threads
+
+Le pool de threads gère automatiquement un ensemble de threads réutilisables.
+
+### Configuration du pool
+
+```pascal
+uses
+  System.Threading;
+
+// Définir le nombre minimum et maximum de threads
+TThreadPool.Default.SetMinWorkerThreads(2);
+TThreadPool.Default.SetMaxWorkerThreads(8);
+```
+
+### Avantages du pool de threads
+
+1. **Performance** : Réutilise les threads au lieu d'en créer de nouveaux
+2. **Gestion automatique** : Ajuste le nombre de threads selon la charge
+3. **Simplicité** : Vous n'avez rien à gérer manuellement
+
+## Exemple pratique : Traitement d'images
+
+```pascal
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    ProgressBar1: TProgressBar;
+    Label1: TLabel;
+    procedure Button1Click(Sender: TObject);
+  end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Fichiers: TArray<string>;
+  NbTraites: Integer;
+  CS: TCriticalSection;
+begin
+  // Liste de fichiers à traiter
+  Fichiers := TDirectory.GetFiles('C:\Images', '*.jpg');
+
+  NbTraites := 0;
+  CS := TCriticalSection.Create;
+  try
+    ProgressBar1.Max := Length(Fichiers);
+    ProgressBar1.Position := 0;
+
+    // Traiter les images en parallèle
+    TParallel.For(0, Length(Fichiers) - 1,
+      procedure(Index: Integer)
+      begin
+        // Traiter l'image (redimensionner, convertir, etc.)
+        TraiterImage(Fichiers[Index]);
+
+        // Incrémenter le compteur de manière thread-safe
+        CS.Enter;
+        try
+          Inc(NbTraites);
+        finally
+          CS.Leave;
+        end;
+
+        // Mettre à jour l'interface
+        TThread.Queue(nil,
+          procedure
+          begin
+            ProgressBar1.Position := NbTraites;
+            Label1.Caption := Format('Traité : %d / %d',
+              [NbTraites, Length(Fichiers)]);
+          end
+        );
+      end
+    );
+
+    ShowMessage('Toutes les images ont été traitées !');
   finally
-    Fichiers.Free;
+    CS.Free;
+  end;
+end;
+```
+
+## Future et résultats multiples
+
+### Lancer plusieurs calculs en parallèle
+
+```pascal
+var
+  Future1, Future2, Future3: IFuture<Integer>;
+  Total: Integer;
+begin
+  // Lancer trois calculs en parallèle
+  Future1 := TTask.Future<Integer>(
+    function: Integer
+    begin
+      Sleep(1000);
+      Result := 10 * 10;
+    end
+  );
+
+  Future2 := TTask.Future<Integer>(
+    function: Integer
+    begin
+      Sleep(1000);
+      Result := 20 * 20;
+    end
+  );
+
+  Future3 := TTask.Future<Integer>(
+    function: Integer
+    begin
+      Sleep(1000);
+      Result := 30 * 30;
+    end
+  );
+
+  // Récupérer les résultats (attend que toutes les tâches soient terminées)
+  Total := Future1.Value + Future2.Value + Future3.Value;
+
+  ShowMessage('Total : ' + IntToStr(Total)); // 10 + 400 + 900 = 1410
+end;
+```
+
+## Gestion des exceptions dans TTask
+
+Les exceptions dans les tâches doivent être gérées avec soin :
+
+```pascal
+var
+  MaTache: ITask;
+begin
+  MaTache := TTask.Run(
+    procedure
+    begin
+      try
+        // Code qui peut lever une exception
+        raise Exception.Create('Erreur dans la tâche !');
+      except
+        on E: Exception do
+        begin
+          // Logger l'erreur ou notifier l'utilisateur
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Erreur : ' + E.Message);
+            end
+          );
+        end;
+      end;
+    end
+  );
+end;
+```
+
+### Vérifier le statut d'une tâche
+
+```pascal
+var
+  MaTache: ITask;
+begin
+  MaTache := TTask.Run(
+    procedure
+    begin
+      // ...
+    end
+  );
+
+  // Attendre la fin
+  MaTache.Wait;
+
+  // Vérifier le statut
+  case MaTache.Status of
+    TTaskStatus.Created:
+      ShowMessage('Tâche créée');
+    TTaskStatus.Running:
+      ShowMessage('Tâche en cours');
+    TTaskStatus.Completed:
+      ShowMessage('Tâche terminée avec succès');
+    TTaskStatus.Canceled:
+      ShowMessage('Tâche annulée');
+    TTaskStatus.Exception:
+      ShowMessage('Tâche terminée avec erreur');
   end;
 end;
 ```
 
 ## Bonnes pratiques avec TTask
 
-1. **Évitez de créer trop de tâches**
-   Le nombre optimal de tâches parallèles est généralement proche du nombre de cœurs de processeur disponibles. Créer trop de tâches peut réduire les performances à cause du coût des changements de contexte.
+### 1. Utiliser TTask pour les tâches courtes
 
-2. **Utilisez TThread.Queue pour les mises à jour fréquentes de l'interface**
-   Pour éviter de bloquer votre tâche, préférez `TThread.Queue` à `TThread.Synchronize` lorsque vous mettez fréquemment à jour l'interface utilisateur.
+```pascal
+// ✅ BON : Tâche ponctuelle
+TTask.Run(
+  procedure
+  begin
+    TelechargerFichier('http://example.com/data.json');
+  end
+);
 
-3. **Gérez correctement les ressources**
-   Assurez-vous que les ressources sont correctement libérées, même en cas d'exception dans la tâche.
+// ❌ MAUVAIS : Utiliser TThread pour les services de longue durée
+// (comme surveiller un port réseau en continu)
+```
 
-4. **Évitez les dépendances entre tâches**
-   Les tâches parallèles sont plus efficaces lorsqu'elles sont indépendantes. Si vous avez des dépendances, envisagez d'utiliser `ContinueWith`.
+### 2. Ne pas capturer de variables locales dangereuses
 
-5. **Protégez les données partagées**
-   Si plusieurs tâches accèdent aux mêmes données, utilisez des mécanismes de synchronisation comme les sections critiques.
+```pascal
+// ❌ DANGEREUX
+procedure TForm1.ButtonClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 1 to 10 do
+  begin
+    TTask.Run(
+      procedure
+      begin
+        // i peut avoir changé entre le moment de création et l'exécution !
+        ShowMessage(IntToStr(i));
+      end
+    );
+  end;
+end;
 
-## Exercice pratique
+// ✅ CORRECT : Capturer dans une variable locale
+procedure TForm1.ButtonClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 1 to 10 do
+  begin
+    TTask.Run(
+      procedure
+      var
+        Numero: Integer;
+      begin
+        Numero := i; // Copie locale
+        ShowMessage(IntToStr(Numero));
+      end
+    );
+  end;
+end;
+```
 
-Créez une application qui calcule les nombres premiers dans un intervalle donné en utilisant le parallélisme. L'application devrait :
+### 3. Synchroniser l'accès aux ressources partagées
 
-1. Permettre à l'utilisateur de spécifier l'intervalle (ex. de 1 à 1 000 000)
-2. Diviser l'intervalle en sous-intervalles pour un traitement parallèle
-3. Afficher la progression en temps réel
-4. Afficher le temps d'exécution total
-5. Permettre d'annuler le calcul
+Même avec TTask, vous devez protéger les accès concurrents :
 
-Cet exercice vous permettra d'appliquer les concepts de `TTask`, `TParallel.For`, l'annulation, et la mise à jour de l'interface utilisateur depuis des tâches parallèles.
+```pascal
+var
+  CS: TCriticalSection;
+  Compteur: Integer;
 
-## Résumé
+begin
+  CS := TCriticalSection.Create;
+  try
+    TParallel.For(1, 1000,
+      procedure(Index: Integer)
+      begin
+        CS.Enter;
+        try
+          Inc(Compteur); // Protégé
+        finally
+          CS.Leave;
+        end;
+      end
+    );
+  finally
+    CS.Free;
+  end;
+end;
+```
 
-- `TTask` offre une approche moderne et plus simple pour la programmation parallèle
-- Vous pouvez créer des tâches sans avoir à définir de nouvelles classes
-- `TTask<T>` permet de récupérer des résultats calculés par des tâches
-- `TParallel.For` et `TParallel.ForEach` facilitent le traitement parallèle des collections
-- Utilisez `TThread.Synchronize` ou `TThread.Queue` pour mettre à jour l'interface utilisateur
-- La gestion des exceptions et l'annulation nécessitent une attention particulière
+### 4. Limiter le nombre de tâches simultanées
 
-La programmation parallèle avec `TTask` est puissante et plus facile à utiliser que les threads traditionnels. Elle vous permet d'exploiter au maximum les processeurs multi-cœurs modernes tout en simplifiant votre code.
+```pascal
+// ❌ MAUVAIS : Créer 10000 tâches d'un coup
+for i := 1 to 10000 do
+  TTask.Run(procedure begin ... end);
 
-Dans la prochaine section, nous explorerons les tâches asynchrones et les callbacks, qui constituent une autre approche élégante pour la programmation concurrente.
+// ✅ BON : Utiliser TParallel.For qui gère le pool
+TParallel.For(1, 10000,
+  procedure(Index: Integer)
+  begin
+    // ...
+  end
+);
+```
+
+## Comparaison : TThread vs TTask
+
+| Critère | TThread | TTask |
+|---------|---------|-------|
+| **Complexité** | Plus complexe | Plus simple |
+| **Verbosité** | Nécessite une classe | Code inline possible |
+| **Gestion mémoire** | Manuelle | Automatique |
+| **Pool de threads** | Non | Oui |
+| **Idéal pour** | Threads de longue durée | Tâches ponctuelles |
+| **Parallélisation** | Manuelle | Automatique (TParallel) |
+| **Courbe d'apprentissage** | Plus longue | Plus courte |
+
+## Points clés à retenir
+
+- **TTask** simplifie grandement la programmation parallèle en Delphi
+- Utilisez `TTask.Run` pour les tâches simples et ponctuelles
+- `TTask.Future` permet de récupérer un résultat d'une tâche
+- `TParallel.For` parallélise automatiquement les boucles sur les processeurs multi-cœurs
+- Le pool de threads gère automatiquement la réutilisation des threads
+- Toujours protéger les accès aux ressources partagées
+- Utiliser `TThread.Queue` ou `TThread.Synchronize` pour mettre à jour l'interface
+- TTask est idéal pour les tâches courtes, TThread pour les services de longue durée
+- Attention à la capture des variables dans les procédures anonymes
+
+TTask et la Parallel Programming Library rendent la programmation parallèle accessible à tous, même aux débutants. C'est l'approche recommandée pour la plupart des besoins de multithreading dans les applications Delphi modernes.
 
 ⏭️ [Tâches asynchrones et callbacks](/11-multithreading-et-programmation-asynchrone/05-taches-asynchrones-et-callbacks.md)

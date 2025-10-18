@@ -1,426 +1,512 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.2 Création et gestion de threads
-
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
-
-## Introduction
-
-Après avoir découvert les principes fondamentaux du multithreading, nous allons maintenant explorer la création et la gestion des threads dans Delphi. Ce chapitre vous donnera les connaissances pratiques pour implémenter vos propres threads et les gérer efficacement.
 
 ## La classe TThread
 
-Dans Delphi, la création de threads se fait principalement à l'aide de la classe `TThread`, située dans l'unité `System.Classes`. Cette classe encapsule toute la complexité de la gestion des threads au niveau du système d'exploitation.
-
-### Création d'un thread personnalisé
+En Delphi, la création de threads repose principalement sur la classe **TThread**. C'est une classe abstraite qui encapsule toute la complexité de la gestion des threads au niveau du système d'exploitation.
 
 Pour créer votre propre thread, vous devez :
+1. Créer une classe qui hérite de `TThread`
+2. Redéfinir la méthode `Execute`
+3. Instancier et démarrer votre thread
 
-1. Créer une classe dérivée de `TThread`
-2. Remplacer (override) la méthode `Execute`
-3. Implémenter votre logique dans cette méthode
+## Créer votre premier thread
 
-Voici la structure de base :
+### Structure de base
+
+Voici la structure minimale d'un thread personnalisé :
 
 ```pascal
 type
   TMonThread = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
+
+implementation
+
+procedure TMonThread.Execute;
+begin
+  // Le code qui s'exécutera dans le thread
+  // Cette méthode est appelée automatiquement au démarrage du thread
+end;
+```
+
+### Exemple simple et commenté
+
+Créons un thread qui effectue un comptage simple :
+
+```pascal
+type
+  TThreadCompteur = class(TThread)
   private
-    // Variables et méthodes privées
+    FCompteur: Integer;
   protected
     procedure Execute; override;
   public
     constructor Create;
-    // Méthodes publiques
   end;
-```
 
-### Implémentation du constructeur
+implementation
 
-Le constructeur de `TThread` accepte un paramètre booléen qui détermine si le thread démarre immédiatement ou non :
-
-```pascal
-constructor TMonThread.Create;
+constructor TThreadCompteur.Create;
 begin
-  // Initialisation des variables
-
-  // False = démarrer immédiatement, True = thread suspendu
+  // Appeler le constructeur parent
+  // False = le thread démarre immédiatement
+  // True = le thread est créé en pause
   inherited Create(False);
+
+  // Initialisation
+  FCompteur := 0;
+
+  // Le thread se libérera automatiquement à la fin
+  FreeOnTerminate := True;
+end;
+
+procedure TThreadCompteur.Execute;
+var
+  i: Integer;
+begin
+  // Ce code s'exécute dans un thread séparé
+  for i := 1 to 100 do
+  begin
+    // Vérifier si on demande l'arrêt du thread
+    if Terminated then
+      Exit;
+
+    Inc(FCompteur);
+
+    // Petite pause pour simuler un traitement
+    Sleep(100); // 100 millisecondes
+  end;
 end;
 ```
 
-### Implémentation de la méthode Execute
+### Démarrer le thread
 
-La méthode `Execute` est le cœur de votre thread. C'est ici que vous placerez le code qui s'exécutera dans le thread secondaire :
+Pour utiliser ce thread dans votre application :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  MonThread: TThreadCompteur;
+begin
+  // Créer et démarrer le thread
+  MonThread := TThreadCompteur.Create;
+  // Le thread démarre automatiquement car on a passé False au constructeur
+end;
+```
+
+## Le cycle de vie d'un thread
+
+### 1. Création
+
+Deux façons de créer un thread :
+
+```pascal
+// Démarrage immédiat
+MonThread := TMonThread.Create(False);
+
+// Création en pause (il faudra appeler Start)
+MonThread := TMonThread.Create(True);
+MonThread.Start; // Démarrage manuel
+```
+
+### 2. Exécution
+
+La méthode `Execute` contient le code qui s'exécutera dans le thread. Elle est appelée automatiquement lorsque le thread démarre.
 
 ```pascal
 procedure TMonThread.Execute;
 begin
-  // Vérifier périodiquement si le thread doit s'arrêter
+  // Votre code ici
+  // Cette méthode s'exécute dans un thread séparé
+
+  // Boucle typique avec vérification d'arrêt
   while not Terminated do
   begin
-    // Code à exécuter dans le thread
+    // Faire quelque chose
+    // ...
 
-    // Optionnel : pause courte pour libérer du temps CPU
-    Sleep(10);
+    Sleep(100); // Pause pour ne pas saturer le CPU
   end;
 end;
 ```
 
-## Exemple complet d'un thread simple
+### 3. Arrêt
 
-Voici un exemple de thread qui effectue un décompte :
+Pour arrêter proprement un thread :
+
+```pascal
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  if Assigned(MonThread) then
+  begin
+    // Demander l'arrêt du thread
+    MonThread.Terminate;
+
+    // Attendre que le thread se termine (optionnel)
+    // ATTENTION : peut bloquer l'interface !
+    // MonThread.WaitFor;
+  end;
+end;
+```
+
+### 4. Destruction
+
+Deux approches pour libérer la mémoire :
+
+**Approche 1 : Libération automatique**
+```pascal
+constructor TMonThread.Create;
+begin
+  inherited Create(False);
+  FreeOnTerminate := True; // Le thread se libère tout seul
+end;
+```
+
+**Approche 2 : Libération manuelle**
+```pascal
+constructor TMonThread.Create;
+begin
+  inherited Create(False);
+  FreeOnTerminate := False; // On gère manuellement
+end;
+
+// Plus tard, dans votre code
+MonThread.Terminate;
+MonThread.WaitFor; // Attendre la fin
+MonThread.Free;    // Libérer manuellement
+```
+
+## Communiquer avec l'interface utilisateur
+
+**RAPPEL IMPORTANT** : Un thread ne peut PAS modifier directement l'interface utilisateur !
+
+### La méthode Synchronize
+
+`Synchronize` permet d'exécuter du code dans le thread principal de manière sécurisée :
 
 ```pascal
 type
-  TCountdownThread = class(TThread)
+  TThreadTelecharge = class(TThread)
   private
-    FCurrentValue: Integer;
-    FStartValue: Integer;
-    procedure UpdateDisplay;
+    FProgression: Integer;
+    FMessage: string;
+    procedure MettreAJourInterface;
   protected
     procedure Execute; override;
-  public
-    constructor Create(StartValue: Integer);
-    property CurrentValue: Integer read FCurrentValue;
   end;
 
-constructor TCountdownThread.Create(StartValue: Integer);
+procedure TThreadTelecharge.MettreAJourInterface;
 begin
-  FStartValue := StartValue;
-  FCurrentValue := StartValue;
-  FreeOnTerminate := True; // Le thread libérera sa mémoire automatiquement
-  inherited Create(False); // Démarrer immédiatement
+  // Ce code s'exécute dans le thread principal
+  // On peut modifier l'interface en toute sécurité
+  Form1.ProgressBar1.Position := FProgression;
+  Form1.Label1.Caption := FMessage;
 end;
 
-procedure TCountdownThread.UpdateDisplay;
+procedure TThreadTelecharge.Execute;
+var
+  i: Integer;
 begin
-  // Cette méthode sera exécutée dans le thread principal
-  Form1.LabelCounter.Caption := IntToStr(FCurrentValue);
-  Form1.ProgressBar1.Position := FStartValue - FCurrentValue;
-end;
-
-procedure TCountdownThread.Execute;
-begin
-  while (not Terminated) and (FCurrentValue > 0) do
+  for i := 1 to 100 do
   begin
-    Dec(FCurrentValue);
+    if Terminated then Exit;
 
-    // Synchroniser avec le thread principal pour mettre à jour l'interface
-    Synchronize(UpdateDisplay);
+    // Simulation de travail
+    Sleep(50);
 
-    // Attendre un peu pour simuler une tâche qui prend du temps
-    Sleep(1000); // 1 seconde
+    // Préparer les données à afficher
+    FProgression := i;
+    FMessage := Format('Progression : %d%%', [i]);
+
+    // Demander au thread principal de mettre à jour l'interface
+    Synchronize(MettreAJourInterface);
   end;
 
-  // Mise à jour finale (si nécessaire)
-  if not Terminated then
-    Synchronize(UpdateDisplay);
+  FMessage := 'Terminé !';
+  Synchronize(MettreAJourInterface);
 end;
 ```
 
-## Utilisation du thread dans un formulaire
+### La méthode Queue
 
-Voici comment utiliser ce thread depuis les événements d'un formulaire :
+Similaire à `Synchronize`, mais asynchrone :
 
 ```pascal
-var
-  CountdownThread: TCountdownThread;
-
-procedure TForm1.ButtonStartClick(Sender: TObject);
+procedure TMonThread.Execute;
 begin
-  // Désactive le bouton pendant l'exécution du thread
-  ButtonStart.Enabled := False;
-  ButtonStop.Enabled := True;
+  // Queue ne bloque pas le thread
+  // La mise à jour se fera "quand le thread principal aura le temps"
+  Queue(MettreAJourInterface);
 
-  // Crée et démarre le thread
-  CountdownThread := TCountdownThread.Create(10);
-end;
-
-procedure TForm1.ButtonStopClick(Sender: TObject);
-begin
-  // Demande l'arrêt du thread
-  if CountdownThread <> nil then
-    CountdownThread.Terminate;
-
-  ButtonStart.Enabled := True;
-  ButtonStop.Enabled := False;
-end;
-
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  // Important : s'assurer que le thread est terminé avant de fermer l'application
-  if CountdownThread <> nil then
-  begin
-    CountdownThread.Terminate;
-    // Attendre que le thread se termine
-    CountdownThread.WaitFor;
-    CountdownThread.Free;
-  end;
+  // Le code continue immédiatement
+  // ...
 end;
 ```
 
-## Options importantes pour la création de threads
+**Différence entre Synchronize et Queue** :
+- **Synchronize** : Bloque le thread secondaire jusqu'à ce que l'interface soit mise à jour
+- **Queue** : Le thread secondaire continue sans attendre
+
+## Propriétés importantes de TThread
+
+### Terminated
+
+Indique si on a demandé l'arrêt du thread :
+
+```pascal
+procedure TMonThread.Execute;
+begin
+  while not Terminated do
+  begin
+    // Traitement
+    // Vérifier régulièrement Terminated pour pouvoir s'arrêter proprement
+  end;
+end;
+```
 
 ### FreeOnTerminate
 
-Cette propriété détermine si le thread doit libérer automatiquement sa mémoire après la fin de son exécution :
+Détermine si le thread se libère automatiquement :
 
 ```pascal
-MonThread.FreeOnTerminate := True; // Libération automatique
+constructor TMonThread.Create;
+begin
+  inherited Create(False);
+  FreeOnTerminate := True; // Libération automatique
+end;
 ```
 
-Quand utiliser chaque option :
-- `True`: Utile pour les threads "fire and forget" (lancer et oublier)
-- `False`: Quand vous avez besoin de contrôler le cycle de vie du thread ou de récupérer des résultats après son exécution
+**Attention** : Si `FreeOnTerminate = True`, ne gardez PAS de référence au thread et ne tentez pas de le libérer manuellement !
 
-### Priorité des threads
+### Priority (Priorité)
 
-Vous pouvez ajuster la priorité d'un thread pour influencer l'allocation du temps CPU :
+Définit la priorité du thread :
 
 ```pascal
-MonThread.Priority := tpNormal; // Priorité normale
+constructor TMonThread.Create;
+begin
+  inherited Create(False);
+  Priority := tpNormal; // Priorité par défaut
+end;
 ```
 
-Options disponibles :
-- `tpIdle` : Très faible priorité
-- `tpLowest` : Priorité la plus basse
-- `tpLower` : Priorité basse
+Valeurs possibles :
+- `tpIdle` : Priorité très basse
+- `tpLowest` : Priorité basse
+- `tpLower` : Légèrement en dessous de normal
 - `tpNormal` : Priorité normale (par défaut)
-- `tpHigher` : Priorité haute
-- `tpHighest` : Priorité la plus haute
-- `tpTimeCritical` : Priorité critique (à utiliser avec précaution)
+- `tpHigher` : Légèrement au-dessus de normal
+- `tpHighest` : Priorité haute
+- `tpTimeCritical` : Priorité critique (à utiliser avec précaution !)
 
-> ⚠️ **Attention** : Utiliser une priorité élevée peut affecter les performances globales du système. Utilisez `tpHighest` et `tpTimeCritical` avec parcimonie.
+## Passer des paramètres à un thread
 
-## Contrôle du cycle de vie d'un thread
-
-### Démarrer un thread suspendu
-
-Si vous créez un thread avec le paramètre `CreateSuspended` à `True`, vous devez explicitement le démarrer :
-
-```pascal
-var
-  MonThread: TMonThread;
-begin
-  MonThread := TMonThread.Create(True); // Thread suspendu
-  // Configuration du thread...
-  MonThread.Start; // Démarrage manuel du thread
-end;
-```
-
-### Terminer un thread
-
-Pour demander l'arrêt d'un thread :
-
-```pascal
-MonThread.Terminate;
-```
-
-> ℹ️ **Important** : `Terminate` ne force pas l'arrêt du thread. Il définit simplement la propriété `Terminated` à `True`. Votre thread doit vérifier régulièrement cette propriété et s'arrêter proprement.
-
-### Attendre la fin d'un thread
-
-Pour attendre qu'un thread se termine :
-
-```pascal
-MonThread.WaitFor;
-```
-
-> ⚠️ **Attention** : N'appelez jamais `WaitFor` depuis le thread principal dans une application avec interface utilisateur, car cela bloquerait l'interface. Utilisez-le uniquement lors de la fermeture de l'application ou dans d'autres threads.
-
-## Passage de paramètres à un thread
-
-Pour passer des paramètres à un thread, ajoutez des propriétés à votre classe et initialisez-les dans le constructeur :
+### Méthode 1 : Via le constructeur
 
 ```pascal
 type
-  TProcessingThread = class(TThread)
+  TThreadCalcul = class(TThread)
   private
-    FInputFile: string;
-    FOutputFile: string;
+    FValeur1: Integer;
+    FValeur2: Integer;
+    FResultat: Integer;
   protected
     procedure Execute; override;
   public
-    constructor Create(const InputFile, OutputFile: string);
+    constructor Create(AValeur1, AValeur2: Integer);
+    property Resultat: Integer read FResultat;
   end;
 
-constructor TProcessingThread.Create(const InputFile, OutputFile: string);
+constructor TThreadCalcul.Create(AValeur1, AValeur2: Integer);
 begin
-  FInputFile := InputFile;
-  FOutputFile := OutputFile;
-  inherited Create(False);
+  inherited Create(True); // Créer en pause
+  FValeur1 := AValeur1;
+  FValeur2 := AValeur2;
+  FreeOnTerminate := False; // On veut récupérer le résultat
+end;
+
+procedure TThreadCalcul.Execute;
+begin
+  // Simulation d'un calcul long
+  Sleep(2000);
+  FResultat := FValeur1 + FValeur2;
+end;
+
+// Utilisation
+procedure TForm1.ButtonClick(Sender: TObject);
+var
+  ThreadCalcul: TThreadCalcul;
+begin
+  ThreadCalcul := TThreadCalcul.Create(10, 20);
+  ThreadCalcul.Start;
+  ThreadCalcul.WaitFor; // Attendre la fin
+  ShowMessage('Résultat : ' + IntToStr(ThreadCalcul.Resultat));
+  ThreadCalcul.Free;
 end;
 ```
 
-## Récupération des résultats d'un thread
-
-Pour récupérer des résultats calculés par un thread :
-
-1. Ajoutez des propriétés pour stocker les résultats
-2. Utilisez un événement de notification quand le traitement est terminé
+### Méthode 2 : Via des propriétés
 
 ```pascal
 type
-  TCalculationThread = class(TThread)
+  TThreadTraitement = class(TThread)
   private
-    FInput: Integer;
-    FResult: Integer;
-    FOnCalculationComplete: TNotifyEvent;
-    procedure DoCalculationComplete;
+    FFichier: string;
   protected
     procedure Execute; override;
   public
-    constructor Create(Input: Integer);
-    property Result: Integer read FResult;
-    property OnCalculationComplete: TNotifyEvent write FOnCalculationComplete;
+    property Fichier: string read FFichier write FFichier;
   end;
 
-constructor TCalculationThread.Create(Input: Integer);
-begin
-  FInput := Input;
-  inherited Create(False);
-end;
-
-procedure TCalculationThread.Execute;
-begin
-  // Simuler un calcul complexe
-  Sleep(3000);
-  FResult := FInput * FInput; // Exemple: calcul du carré
-
-  // Notifier que le calcul est terminé
-  if Assigned(FOnCalculationComplete) then
-    Synchronize(DoCalculationComplete);
-end;
-
-procedure TCalculationThread.DoCalculationComplete;
-begin
-  if Assigned(FOnCalculationComplete) then
-    FOnCalculationComplete(Self);
-end;
+// Utilisation
+MonThread := TThreadTraitement.Create(True);
+MonThread.Fichier := 'C:\data.txt';
+MonThread.Start;
 ```
 
-Utilisation du thread avec récupération du résultat :
+## Gestion des erreurs dans les threads
+
+Les exceptions dans un thread doivent être gérées avec soin :
 
 ```pascal
-procedure TForm1.ButtonCalculateClick(Sender: TObject);
-var
-  CalcThread: TCalculationThread;
+procedure TMonThread.Execute;
 begin
-  CalcThread := TCalculationThread.Create(StrToIntDef(EditInput.Text, 0));
-  CalcThread.OnCalculationComplete := CalculationCompleted;
-end;
-
-procedure TForm1.CalculationCompleted(Sender: TObject);
-begin
-  // Récupération et affichage du résultat
-  if Sender is TCalculationThread then
-    LabelResult.Caption := 'Résultat : ' + IntToStr(TCalculationThread(Sender).Result);
-end;
-```
-
-## Meilleures pratiques
-
-1. **Toujours vérifier `Terminated`** régulièrement dans la méthode `Execute` pour permettre un arrêt propre du thread.
-
-2. **Protéger les ressources partagées** avec des mécanismes de synchronisation (nous verrons cela en détail dans la prochaine section).
-
-3. **Ne jamais accéder directement aux composants de l'interface** depuis un thread secondaire, utilisez toujours `Synchronize` ou `Queue`.
-
-4. **Libérer correctement les threads** avant de fermer l'application pour éviter les fuites de mémoire.
-
-5. **Éviter de créer trop de threads** : le nombre optimal de threads dépend du nombre de cœurs de processeur disponibles.
-
-## Exemple pratique : téléchargement de fichier
-
-Voici un exemple plus complet qui télécharge un fichier en arrière-plan :
-
-```pascal
-type
-  TDownloadThread = class(TThread)
-  private
-    FURL: string;
-    FDestination: string;
-    FProgress: Integer;
-    FTotalSize: Int64;
-    FDownloadedSize: Int64;
-    procedure UpdateProgress;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(const URL, Destination: string);
-    property Progress: Integer read FProgress;
-  end;
-
-constructor TDownloadThread.Create(const URL, Destination: string);
-begin
-  FURL := URL;
-  FDestination := Destination;
-  FProgress := 0;
-  FreeOnTerminate := True;
-  inherited Create(False);
-end;
-
-procedure TDownloadThread.UpdateProgress;
-begin
-  Form1.ProgressBar1.Position := FProgress;
-  Form1.LabelStatus.Caption := Format('Téléchargement: %d%%', [FProgress]);
-end;
-
-procedure TDownloadThread.Execute;
-var
-  HTTPClient: TNetHTTPClient;
-  HTTPRequest: TNetHTTPRequest;
-  ResponseStream: TFileStream;
-begin
-  HTTPClient := TNetHTTPClient.Create(nil);
-  HTTPRequest := TNetHTTPRequest.Create(nil);
   try
-    HTTPRequest.Client := HTTPClient;
-
-    // Événement pour suivre la progression
-    HTTPClient.OnReceiveData := procedure(const Sender: TObject; AContentLength, AReadCount: Int64; var AAbort: Boolean)
+    // Code qui peut lever une exception
+    // ...
+  except
+    on E: Exception do
     begin
-      FTotalSize := AContentLength;
-      FDownloadedSize := AReadCount;
-      if FTotalSize > 0 then
-        FProgress := Round((FDownloadedSize / FTotalSize) * 100);
-
-      Synchronize(UpdateProgress);
-      AAbort := Terminated;
+      // Enregistrer l'erreur dans un log
+      // Ou notifier l'utilisateur via Synchronize
     end;
-
-    // Création du fichier de destination
-    ResponseStream := TFileStream.Create(FDestination, fmCreate);
-    try
-      // Téléchargement du fichier
-      HTTPRequest.Get(FURL, ResponseStream);
-    finally
-      ResponseStream.Free;
-    end;
-  finally
-    HTTPRequest.Free;
-    HTTPClient.Free;
   end;
 end;
 ```
 
-## Résumé
+## Bonnes pratiques
 
-- La classe `TThread` est la base pour créer des threads dans Delphi
-- Remplacez la méthode `Execute` pour définir le comportement du thread
-- Utilisez `Synchronize` ou `Queue` pour interagir avec l'interface utilisateur
-- Contrôlez le cycle de vie des threads avec `Create`, `Start`, `Terminate` et `WaitFor`
-- Passez des paramètres via le constructeur et récupérez les résultats via des propriétés
+### 1. Toujours vérifier Terminated
 
-Dans la prochaine section, nous approfondirons les techniques de synchronisation entre threads pour éviter les problèmes liés à l'accès concurrent aux données.
+```pascal
+procedure TMonThread.Execute;
+begin
+  while not Terminated do
+  begin
+    // Traitement
+  end;
+end;
+```
 
-## Exercice pratique
+### 2. Ne pas bloquer indéfiniment
 
-Pour vous entraîner, essayez de créer une application simple avec :
-1. Un bouton pour démarrer un thread qui compte de 1 à 100
-2. Un bouton pour arrêter le thread
-3. Une barre de progression qui se met à jour pendant le comptage
-4. Un label qui affiche la valeur actuelle
+Évitez les boucles infinies sans condition d'arrêt :
 
-Ce petit exercice vous permettra de mettre en pratique les concepts abordés dans ce chapitre.
+```pascal
+// ❌ MAUVAIS
+while True do
+begin
+  // ...
+end;
+
+// ✅ BON
+while not Terminated do
+begin
+  // ...
+end;
+```
+
+### 3. Gérer proprement la mémoire
+
+Si `FreeOnTerminate = False`, n'oubliez pas de libérer le thread :
+
+```pascal
+try
+  MonThread := TMonThread.Create(False);
+  MonThread.WaitFor;
+finally
+  MonThread.Free;
+end;
+```
+
+### 4. Éviter les accès concurrents
+
+Ne modifiez pas les mêmes données depuis plusieurs threads sans protection (nous verrons la synchronisation dans la section suivante).
+
+### 5. Limiter le nombre de threads
+
+Créer trop de threads peut ralentir votre application. Le système d'exploitation doit gérer chaque thread, ce qui a un coût.
+
+## Exemple complet : Téléchargement simulé
+
+```pascal
+type
+  TThreadTelechargement = class(TThread)
+  private
+    FNomFichier: string;
+    FProgression: Integer;
+    procedure AfficherProgression;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const ANomFichier: string);
+  end;
+
+constructor TThreadTelechargement.Create(const ANomFichier: string);
+begin
+  inherited Create(False);
+  FNomFichier := ANomFichier;
+  FreeOnTerminate := True;
+end;
+
+procedure TThreadTelechargement.AfficherProgression;
+begin
+  Form1.ProgressBar1.Position := FProgression;
+  Form1.Label1.Caption := Format('Téléchargement de %s : %d%%',
+    [FNomFichier, FProgression]);
+end;
+
+procedure TThreadTelechargement.Execute;
+var
+  i: Integer;
+begin
+  for i := 0 to 100 do
+  begin
+    if Terminated then Exit;
+
+    // Simulation du téléchargement
+    Sleep(50);
+
+    FProgression := i;
+    Synchronize(AfficherProgression);
+  end;
+
+  // Notification de fin
+  FProgression := 100;
+  Synchronize(
+    procedure
+    begin
+      Form1.Label1.Caption := 'Téléchargement terminé !';
+      ShowMessage('Le fichier ' + FNomFichier + ' a été téléchargé.');
+    end
+  );
+end;
+```
+
+## Points clés à retenir
+
+- Toujours hériter de `TThread` pour créer un thread personnalisé
+- Redéfinir la méthode `Execute` qui contient le code du thread
+- Utiliser `Synchronize` ou `Queue` pour mettre à jour l'interface utilisateur
+- Vérifier régulièrement `Terminated` pour permettre l'arrêt propre du thread
+- Choisir entre `FreeOnTerminate = True` (automatique) ou False (manuel)
+- Gérer les exceptions dans la méthode `Execute`
+- Ne jamais modifier l'interface directement depuis un thread secondaire
+
+Dans la prochaine section, nous verrons comment synchroniser l'accès aux ressources partagées entre plusieurs threads.
 
 ⏭️ [Synchronisation et sections critiques](/11-multithreading-et-programmation-asynchrone/03-synchronisation-et-sections-critiques.md)

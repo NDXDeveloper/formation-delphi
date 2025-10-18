@@ -1,520 +1,538 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.3 Synchronisation et sections critiques
-
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
-
-## Introduction
-
-Lorsque vous utilisez plusieurs threads dans votre application, ils peuvent accéder simultanément aux mêmes ressources (variables, fichiers, connexions réseau, etc.). Ces accès concurrents peuvent provoquer des problèmes difficiles à détecter et à résoudre. La synchronisation est un concept essentiel qui vous permet de coordonner les threads et d'éviter ces problèmes.
-
-Dans ce chapitre, nous allons découvrir les techniques de synchronisation en Delphi, en commençant par les sections critiques, l'outil le plus couramment utilisé.
 
 ## Le problème de l'accès concurrent
 
-Pour comprendre l'importance de la synchronisation, examinons un problème classique :
+Lorsque plusieurs threads accèdent simultanément aux mêmes données, des problèmes peuvent survenir. Imaginez deux personnes qui essaient de modifier le même document Word en même temps : le chaos est garanti !
 
-Imaginons deux threads qui incrémentent une même variable globale :
+### Exemple du problème
 
-```pascal
-var
-  CompteurGlobal: Integer = 0;
-
-// Dans le Thread 1
-CompteurGlobal := CompteurGlobal + 1;
-
-// Dans le Thread 2 (en même temps)
-CompteurGlobal := CompteurGlobal + 1;
-```
-
-À première vue, on pourrait penser que `CompteurGlobal` finira avec la valeur 2. Mais ce n'est pas toujours le cas ! Voici pourquoi :
-
-1. Le Thread 1 lit la valeur de `CompteurGlobal` (0)
-2. Le Thread 2 lit également la valeur de `CompteurGlobal` (0)
-3. Le Thread 1 ajoute 1 et écrit 1 dans `CompteurGlobal`
-4. Le Thread 2 ajoute 1 à sa valeur lue (0) et écrit également 1 dans `CompteurGlobal`
-
-Résultat final : `CompteurGlobal` vaut 1, et non 2 comme prévu !
-
-Ce phénomène s'appelle une **condition de course** (race condition). Il se produit lorsque le résultat d'une opération dépend de l'ordre d'exécution des threads, qui est imprévisible.
-
-## Sections critiques
-
-Une **section critique** est une zone de code qui ne doit être exécutée que par un seul thread à la fois. C'est l'outil de synchronisation le plus simple et le plus efficace dans Delphi.
-
-### Création et utilisation d'une section critique
+Prenons un compteur simple que deux threads incrémentent :
 
 ```pascal
 var
-  MaSection: TCriticalSection;
+  Compteur: Integer = 0;
 
-begin
-  // Création de la section critique
-  MaSection := TCriticalSection.Create;
-  try
-    // Utilisation de la section critique
-    // ...
-  finally
-    // Libération de la section critique
-    MaSection.Free;
-  end;
-end;
+// Thread 1 et Thread 2 exécutent ce code
+Inc(Compteur); // Compteur := Compteur + 1;
 ```
 
-### Protection d'un bloc de code
+**Ce qui devrait se passer** : Si chaque thread incrémente 1000 fois, on devrait avoir 2000 à la fin.
 
-Pour protéger l'accès à une ressource partagée :
+**Ce qui peut réellement arriver** : On peut obtenir 1847, 1923, ou n'importe quelle valeur inférieure à 2000 !
 
-```pascal
-MaSection.Enter;  // Verrouille la section critique
-try
-  // Code protégé - un seul thread à la fois peut exécuter ce bloc
-  CompteurGlobal := CompteurGlobal + 1;
-finally
-  MaSection.Leave;  // Déverrouille la section critique
-end;
+### Pourquoi ce problème survient-il ?
+
+L'opération `Inc(Compteur)` semble simple, mais en réalité elle se décompose en plusieurs étapes :
+
+1. Lire la valeur actuelle de Compteur (exemple : 100)
+2. Ajouter 1 à cette valeur (100 + 1 = 101)
+3. Écrire le résultat dans Compteur (101)
+
+**Le problème** : Un autre thread peut s'exécuter entre ces étapes !
+
+```
+Thread 1 : Lit Compteur (100)
+Thread 2 : Lit Compteur (100)     ← Lit la même valeur !
+Thread 1 : Calcule 100 + 1 = 101
+Thread 2 : Calcule 100 + 1 = 101  ← Calcule la même chose !
+Thread 1 : Écrit 101 dans Compteur
+Thread 2 : Écrit 101 dans Compteur ← Écrase avec la même valeur !
 ```
 
-Cette structure `try...finally` est cruciale car elle garantit que la section critique sera toujours déverrouillée, même si une exception se produit.
+Résultat : Au lieu de 102, on a 101. Une incrémentation a été "perdue" !
 
-### Exemple complet avec une section critique
+## Qu'est-ce que la synchronisation ?
 
-Voici un exemple qui corrige le problème de compteur partagé :
+La **synchronisation** consiste à coordonner l'accès aux ressources partagées pour éviter ces conflits. C'est comme installer un verrou sur une porte : une seule personne peut entrer à la fois.
+
+### Analogie : La salle de bain
+
+Imaginez une salle de bain partagée dans une maison :
+- **Sans verrou** : Plusieurs personnes peuvent entrer en même temps → chaos
+- **Avec verrou** : Une personne entre, ferme à clé, utilise la salle de bain, puis déverrouille en sortant → ordre
+
+En programmation, c'est exactement le même principe !
+
+## Les sections critiques (TCriticalSection)
+
+Une **section critique** est une zone de code où un seul thread peut s'exécuter à la fois. En Delphi, on utilise la classe `TCriticalSection`.
+
+### Déclaration et utilisation de base
 
 ```pascal
+uses
+  System.SyncObjs; // N'oubliez pas cette unité !
+
 var
-  CompteurGlobal: Integer = 0;
-  CompteurSection: TCriticalSection;
+  SectionCritique: TCriticalSection;
+  Compteur: Integer;
 
-type
-  TCompteurThread = class(TThread)
-  protected
-    procedure Execute; override;
-  end;
+initialization
+  SectionCritique := TCriticalSection.Create;
+  Compteur := 0;
 
-procedure TCompteurThread.Execute;
+finalization
+  SectionCritique.Free;
+```
+
+### Protéger une ressource partagée
+
+```pascal
+procedure TMonThread.Execute;
 var
   i: Integer;
 begin
   for i := 1 to 1000 do
   begin
-    // Protection de l'accès à CompteurGlobal
-    CompteurSection.Enter;
+    // Entrer dans la section critique
+    SectionCritique.Enter;
     try
-      CompteurGlobal := CompteurGlobal + 1;
+      // Code protégé : un seul thread peut être ici à la fois
+      Inc(Compteur);
     finally
-      CompteurSection.Leave;
+      // Sortir de la section critique (TOUJOURS dans finally !)
+      SectionCritique.Leave;
+    end;
+  end;
+end;
+```
+
+**Important** : Utilisez toujours `try...finally` pour garantir que `Leave` est appelé, même en cas d'exception.
+
+### Fonctionnement détaillé
+
+```pascal
+// Thread 1 arrive
+SectionCritique.Enter;  // "Je ferme la porte à clé"
+  Inc(Compteur);        // Fait son travail tranquillement
+SectionCritique.Leave;  // "Je déverrouille et je sors"
+
+// Thread 2 arrive pendant que Thread 1 est à l'intérieur
+SectionCritique.Enter;  // "La porte est verrouillée, j'attends..."
+                        // Thread 2 est bloqué ici jusqu'à ce que Thread 1 sorte
+```
+
+## Exemple complet avec TCriticalSection
+
+```pascal
+type
+  TThreadCompteur = class(TThread)
+  protected
+    procedure Execute; override;
+  public
+    constructor Create;
+  end;
+
+var
+  Form1: TForm1;
+  CS: TCriticalSection;
+  CompteurGlobal: Integer;
+
+implementation
+
+constructor TThreadCompteur.Create;
+begin
+  inherited Create(False);
+  FreeOnTerminate := True;
+end;
+
+procedure TThreadCompteur.Execute;
+var
+  i: Integer;
+  ValeurLocale: Integer;
+begin
+  for i := 1 to 1000 do
+  begin
+    if Terminated then Exit;
+
+    // Protection de l'accès au compteur partagé
+    CS.Enter;
+    try
+      Inc(CompteurGlobal);
+      ValeurLocale := CompteurGlobal;
+    finally
+      CS.Leave;
     end;
 
-    // Simuler d'autres traitements
-    Sleep(1);
+    // Mise à jour de l'interface (en dehors de la section critique)
+    if (ValeurLocale mod 100) = 0 then
+    begin
+      Synchronize(
+        procedure
+        begin
+          Form1.Label1.Caption := IntToStr(ValeurLocale);
+        end
+      );
+    end;
   end;
 end;
 
-// Dans le formulaire principal
+// Dans le formulaire
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  CompteurSection := TCriticalSection.Create;
+  CS := TCriticalSection.Create;
+  CompteurGlobal := 0;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  CompteurSection.Free;
+  CS.Free;
 end;
 
-procedure TForm1.ButtonStartClick(Sender: TObject);
-begin
-  CompteurGlobal := 0;
-
-  // Création de deux threads qui incrémentent le compteur
-  TCompteurThread.Create(False);
-  TCompteurThread.Create(False);
-end;
-
-procedure TForm1.ButtonShowClick(Sender: TObject);
-begin
-  ShowMessage('Valeur du compteur : ' + IntToStr(CompteurGlobal));
-end;
-```
-
-## Utilisation de TMonitor
-
-Depuis Delphi 2009, la classe `TMonitor` offre une approche plus moderne et plus sûre pour la synchronisation :
-
-```pascal
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);
 var
-  CompteurGlobal: Integer = 0;
-
-procedure IncrementCompteur;
+  i: Integer;
 begin
-  TMonitor.Enter(CompteurGlobal);
-  try
-    CompteurGlobal := CompteurGlobal + 1;
-  finally
-    TMonitor.Exit(CompteurGlobal);
-  end;
+  // Créer plusieurs threads qui incrémentent le même compteur
+  for i := 1 to 5 do
+    TThreadCompteur.Create;
 end;
 ```
 
-L'avantage de `TMonitor` est qu'il peut verrouiller n'importe quel objet, pas seulement une section critique dédiée. Cela rend le code plus élégant dans certains cas.
+## TryEnter : Entrer sans attendre
 
-## TryEnter : éviter les blocages
-
-Les sections critiques offrent une méthode `TryEnter` qui tente de verrouiller la section mais n'attend pas si elle est déjà verrouillée :
+Parfois, vous ne voulez pas que le thread attende. `TryEnter` tente d'entrer et retourne immédiatement :
 
 ```pascal
-if MaSection.TryEnter then
+procedure TMonThread.Execute;
 begin
-  try
-    // Code protégé
-  finally
-    MaSection.Leave;
-  end;
-end
-else
-begin
-  // La section est déjà verrouillée par un autre thread
-  // Faire autre chose en attendant
-end;
-```
-
-Cette technique est utile pour éviter les blocages lorsqu'un thread ne peut pas attendre indéfiniment.
-
-## Protéger une classe ou un objet
-
-Lorsque vous avez une classe dont les instances peuvent être utilisées par plusieurs threads, vous pouvez intégrer une section critique à la classe :
-
-```pascal
-type
-  TCompteurThreadSafe = class
-  private
-    FValeur: Integer;
-    FSection: TCriticalSection;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Incrementer;
-    function Lire: Integer;
-  end;
-
-constructor TCompteurThreadSafe.Create;
-begin
-  inherited;
-  FValeur := 0;
-  FSection := TCriticalSection.Create;
-end;
-
-destructor TCompteurThreadSafe.Destroy;
-begin
-  FSection.Free;
-  inherited;
-end;
-
-procedure TCompteurThreadSafe.Incrementer;
-begin
-  FSection.Enter;
-  try
-    FValeur := FValeur + 1;
-  finally
-    FSection.Leave;
-  end;
-end;
-
-function TCompteurThreadSafe.Lire: Integer;
-begin
-  FSection.Enter;
-  try
-    Result := FValeur;
-  finally
-    FSection.Leave;
+  if SectionCritique.TryEnter then
+  begin
+    try
+      // La section critique est disponible, on fait notre travail
+      Inc(Compteur);
+    finally
+      SectionCritique.Leave;
+    end;
+  end
+  else
+  begin
+    // La section critique est occupée, on fait autre chose
+    // ou on réessaie plus tard
   end;
 end;
 ```
-
-Cette approche crée une classe "thread-safe" que vous pouvez utiliser sans vous soucier de la synchronisation.
 
 ## Autres mécanismes de synchronisation
 
-### TMutex (Mutex)
+### TMonitor : Synchronisation simplifiée
 
-Un Mutex (Mutual Exclusion) est similaire à une section critique, mais peut être utilisé pour synchroniser des threads entre différentes applications :
+Depuis Delphi 2009, `TMonitor` offre une alternative plus moderne :
 
 ```pascal
 var
-  MonMutex: TMutex;
+  MonObjet: TObject;
+
+// Dans un thread
+TMonitor.Enter(MonObjet);
+try
+  // Section critique
+  Inc(Compteur);
+finally
+  TMonitor.Exit(MonObjet);
+end;
+```
+
+Avantage : Pas besoin de créer un objet TCriticalSection séparé.
+
+### TMutex : Synchronisation inter-processus
+
+Un **Mutex** (Mutual Exclusion) peut synchroniser des threads de différents processus :
+
+```pascal
+uses
+  System.SyncObjs;
+
+var
+  Mutex: TMutex;
 
 begin
-  // Création d'un mutex nommé
-  MonMutex := TMutex.Create(nil, False, 'MonApplication.Mutex');
+  // Créer un mutex nommé
+  Mutex := TMutex.Create(nil, False, 'MonApplicationUnique');
   try
-    // Attendre l'accès
-    MonMutex.Acquire;
-    try
-      // Code protégé
-    finally
-      MonMutex.Release;
-    end;
+    // Tenter d'acquérir le mutex
+    if Mutex.WaitFor(0) = wrSignaled then
+    begin
+      try
+        // Nous avons le mutex, l'application peut démarrer
+        Application.Run;
+      finally
+        Mutex.Release;
+      end;
+    end
+    else
+      ShowMessage('L''application est déjà en cours d''exécution !');
   finally
-    MonMutex.Free;
+    Mutex.Free;
   end;
 end;
 ```
 
-### TSemaphore (Sémaphore)
+### TEvent : Signaler entre threads
 
-Un sémaphore permet à un nombre limité de threads d'accéder simultanément à une ressource :
+Un **Event** permet à un thread de signaler un événement à d'autres threads :
 
 ```pascal
 var
-  MonSemaphore: TSemaphore;
+  Event: TEvent;
 
+// Thread 1 : Attendre un signal
+procedure TThread1.Execute;
 begin
-  // Création d'un sémaphore permettant 3 accès simultanés
-  MonSemaphore := TSemaphore.Create(nil, 3, 3, 'MonSemaphore');
+  Event.WaitFor(INFINITE); // Attendre indéfiniment
+  // Le signal est reçu, continuer...
+end;
+
+// Thread 2 : Envoyer un signal
+procedure TThread2.Execute;
+begin
+  // Faire quelque chose...
+  Event.SetEvent; // Signaler aux threads en attente
+end;
+```
+
+### TSemaphore : Limiter le nombre d'accès
+
+Un **Sémaphore** limite le nombre de threads pouvant accéder à une ressource :
+
+```pascal
+var
+  Semaphore: TSemaphore;
+
+initialization
+  // Permettre à 3 threads maximum d'accéder simultanément
+  Semaphore := TSemaphore.Create(nil, 3, 3, '');
+
+// Dans un thread
+procedure TMonThread.Execute;
+begin
+  Semaphore.Acquire; // Attendre une place disponible
   try
-    // Attendre un jeton
-    MonSemaphore.Acquire;
-    try
-      // Code protégé (3 threads maximum peuvent être ici en même temps)
-    finally
-      // Libérer le jeton
-      MonSemaphore.Release;
-    end;
+    // Maximum 3 threads peuvent être ici en même temps
+    // Accéder à la ressource limitée
   finally
-    MonSemaphore.Free;
+    Semaphore.Release; // Libérer une place
   end;
 end;
 ```
 
-Les sémaphores sont utiles pour limiter l'accès à des ressources comme les connexions de base de données.
+## Variables locales aux threads (TThreadLocalStorage)
 
-### TEvent (Événement)
-
-Un événement permet à un thread de signaler à d'autres threads qu'un certain état a été atteint :
+Parfois, chaque thread doit avoir sa propre copie d'une variable :
 
 ```pascal
 var
-  MonEvent: TEvent;
+  TLS: TThreadLocalStorage;
 
-// Dans le thread 1
+initialization
+  TLS := TThreadLocalStorage.Create;
+
+// Dans un thread
+procedure TMonThread.Execute;
 begin
-  // Création d'un événement
-  MonEvent := TEvent.Create(nil, True, False, 'MonEvent');
-  try
-    // Faire quelque chose...
+  // Chaque thread a sa propre valeur
+  TLS.Value := Pointer(ThreadID);
 
-    // Signaler que c'est prêt
-    MonEvent.SetEvent;
+  // Récupérer la valeur spécifique à ce thread
+  MaValeur := Integer(TLS.Value);
+end;
+```
 
+## Bonnes pratiques de synchronisation
+
+### 1. Minimiser le temps dans les sections critiques
+
+```pascal
+// ❌ MAUVAIS : Trop de code dans la section critique
+CS.Enter;
+try
+  Lire_Donnees_Du_Disque();     // Opération lente !
+  Traiter_Donnees();             // Opération lente !
+  Inc(Compteur);
+finally
+  CS.Leave;
+end;
+
+// ✅ BON : Seulement le nécessaire
+Lire_Donnees_Du_Disque();       // En dehors
+Traiter_Donnees();               // En dehors
+
+CS.Enter;
+try
+  Inc(Compteur);                 // Rapide et protégé
+finally
+  CS.Leave;
+end;
+```
+
+### 2. Toujours libérer dans un bloc finally
+
+```pascal
+// ✅ CORRECT
+CS.Enter;
+try
+  // Code protégé
+finally
+  CS.Leave; // Garanti d'être appelé
+end;
+```
+
+### 3. Éviter les deadlocks
+
+Un **deadlock** (étreinte fatale) survient quand deux threads s'attendent mutuellement :
+
+```pascal
+// Thread 1
+CS1.Enter;
+  CS2.Enter;  // Attend CS2
     // ...
-  finally
-    MonEvent.Free;
-  end;
-end;
+  CS2.Leave;
+CS1.Leave;
 
-// Dans le thread 2
-begin
-  // Attendre que l'événement soit signalé
-  MonEvent.WaitFor(INFINITE);
-
-  // Continuer le traitement
-end;
+// Thread 2
+CS2.Enter;
+  CS1.Enter;  // Attend CS1 → DEADLOCK !
+    // ...
+  CS1.Leave;
+CS2.Leave;
 ```
 
-Les événements sont parfaits pour la synchronisation basée sur des conditions.
+**Solution** : Toujours acquérir les verrous dans le même ordre :
 
-## Exemple pratique : producteur-consommateur
+```pascal
+// Les deux threads acquièrent d'abord CS1, puis CS2
+// Thread 1
+CS1.Enter;
+  CS2.Enter;
+    // ...
+  CS2.Leave;
+CS1.Leave;
 
-Un problème classique en programmation concurrente est le "producteur-consommateur", où un thread produit des données et un autre les consomme. Voici une implémentation simple :
+// Thread 2
+CS1.Enter;  // Même ordre !
+  CS2.Enter;
+    // ...
+  CS2.Leave;
+CS1.Leave;
+```
+
+### 4. Éviter les sections critiques imbriquées
+
+Limitez l'imbrication des sections critiques pour réduire les risques de deadlock.
+
+### 5. Documenter les ressources partagées
+
+```pascal
+var
+  CompteurGlobal: Integer;     // Protégé par CS_Compteur
+  CS_Compteur: TCriticalSection;
+```
+
+## Exemple pratique : File d'attente thread-safe
 
 ```pascal
 type
-  TFileAttente = class
+  TFileThreadSafe = class
   private
-    FItems: TList<string>;
-    FSection: TCriticalSection;
-    FEventNouveau: TEvent;
+    FListe: TList<Integer>;
+    FCS: TCriticalSection;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Ajouter(const Item: string);
-    function Retirer(var Item: string): Boolean;
+    procedure Ajouter(AValeur: Integer);
+    function Retirer: Integer;
+    function EstVide: Boolean;
   end;
 
-constructor TFileAttente.Create;
+constructor TFileThreadSafe.Create;
 begin
   inherited;
-  FItems := TList<string>.Create;
-  FSection := TCriticalSection.Create;
-  FEventNouveau := TEvent.Create(nil, True, False, '');
+  FListe := TList<Integer>.Create;
+  FCS := TCriticalSection.Create;
 end;
 
-destructor TFileAttente.Destroy;
+destructor TFileThreadSafe.Destroy;
 begin
-  FItems.Free;
-  FSection.Free;
-  FEventNouveau.Free;
+  FCS.Free;
+  FListe.Free;
   inherited;
 end;
 
-procedure TFileAttente.Ajouter(const Item: string);
+procedure TFileThreadSafe.Ajouter(AValeur: Integer);
 begin
-  FSection.Enter;
+  FCS.Enter;
   try
-    FItems.Add(Item);
-    // Signaler qu'un nouvel élément est disponible
-    FEventNouveau.SetEvent;
+    FListe.Add(AValeur);
   finally
-    FSection.Leave;
+    FCS.Leave;
   end;
 end;
 
-function TFileAttente.Retirer(var Item: string): Boolean;
+function TFileThreadSafe.Retirer: Integer;
 begin
-  Result := False;
-  FSection.Enter;
+  FCS.Enter;
   try
-    if FItems.Count > 0 then
+    if FListe.Count > 0 then
     begin
-      Item := FItems[0];
-      FItems.Delete(0);
-      Result := True;
-
-      // Réinitialiser l'événement si la file est vide
-      if FItems.Count = 0 then
-        FEventNouveau.ResetEvent;
-    end;
-  finally
-    FSection.Leave;
-  end;
-end;
-```
-
-Utilisation dans les threads producteur et consommateur :
-
-```pascal
-// Thread producteur
-procedure TProducteurThread.Execute;
-var
-  i: Integer;
-  Item: string;
-begin
-  for i := 1 to 100 do
-  begin
-    Item := 'Item ' + IntToStr(i);
-    FilePartagee.Ajouter(Item);
-    Sleep(Random(100));  // Simuler du travail
-  end;
-end;
-
-// Thread consommateur
-procedure TConsommateurThread.Execute;
-var
-  Item: string;
-begin
-  while not Terminated do
-  begin
-    if FilePartagee.Retirer(Item) then
-    begin
-      // Traiter l'item
-      Synchronize(procedure
-        begin
-          Form1.Memo1.Lines.Add('Consommé: ' + Item);
-        end);
+      Result := FListe[0];
+      FListe.Delete(0);
     end
     else
-    begin
-      // Attendre qu'un nouvel élément soit disponible
-      FilePartagee.FEventNouveau.WaitFor(100);
-    end;
-  end;
-end;
-```
-
-## Bonnes pratiques
-
-### 1. Minimiser la taille des sections critiques
-
-Plus une section critique est longue, plus elle risque de bloquer d'autres threads. Essayez de minimiser le code à l'intérieur :
-
-```pascal
-// Moins efficace
-FSection.Enter;
-try
-  // Calcul complexe qui prend du temps
-  // ...
-  // Mise à jour de la variable partagée
-  VariablePartagee := ResultatCalcul;
-finally
-  FSection.Leave;
-end;
-
-// Plus efficace
-// Calcul complexe en dehors de la section critique
-ResultatCalcul := CalculerValeur;
-
-// Section critique minimale
-FSection.Enter;
-try
-  VariablePartagee := ResultatCalcul;
-finally
-  FSection.Leave;
-end;
-```
-
-### 2. Éviter les sections critiques imbriquées
-
-Les sections critiques imbriquées peuvent facilement conduire à des blocages (deadlocks). Évitez-les si possible, ou utilisez-les avec précaution.
-
-### 3. Utiliser des structures thread-safe
-
-Plutôt que de créer vos propres mécanismes de synchronisation, utilisez des classes déjà thread-safe. Par exemple, Delphi propose `TThreadList<T>` qui encapsule une liste avec sa propre synchronisation :
-
-```pascal
-var
-  ListePartagee: TThreadList<string>;
-
-begin
-  ListePartagee := TThreadList<string>.Create;
-  try
-    // Pour ajouter un élément
-    ListePartagee.Add('Nouvel élément');
-
-    // Pour accéder à la liste en lecture/écriture
-    var MaListe := ListePartagee.LockList;
-    try
-      // Manipuler MaListe en toute sécurité
-    finally
-      ListePartagee.UnlockList;
-    end;
+      Result := -1; // Valeur par défaut si vide
   finally
-    ListePartagee.Free;
+    FCS.Leave;
+  end;
+end;
+
+function TFileThreadSafe.EstVide: Boolean;
+begin
+  FCS.Enter;
+  try
+    Result := FListe.Count = 0;
+  finally
+    FCS.Leave;
   end;
 end;
 ```
 
-### 4. Toujours utiliser try...finally
+## Quand utiliser la synchronisation ?
 
-N'oubliez jamais de déverrouiller une section critique, même en cas d'exception. La structure `try...finally` est indispensable.
+### Vous DEVEZ synchroniser si :
 
-## Exercice pratique
+- Plusieurs threads modifient la même variable
+- Un thread lit pendant qu'un autre modifie
+- Vous accédez à des structures de données non thread-safe (listes, dictionnaires, etc.)
+- Vous accédez à des ressources externes partagées (fichiers, bases de données)
 
-Créez une application avec :
+### Vous n'avez PAS besoin de synchroniser si :
 
-1. Un compteur partagé entre plusieurs threads
-2. Des boutons pour démarrer 1, 2 ou 5 threads qui incrémentent le compteur
-3. Un bouton pour afficher la valeur actuelle du compteur
-4. Une option pour activer/désactiver la protection par section critique
+- Chaque thread travaille sur ses propres données
+- Les données sont en lecture seule
+- Vous utilisez des structures thread-safe (comme `TThreadList`)
 
-Cet exercice vous permettra de voir concrètement la différence entre un code protégé et non protégé dans un environnement multithread.
+## Tableaux de comparaison des mécanismes
 
-## Résumé
+| Mécanisme | Usage principal | Portée |
+|-----------|----------------|--------|
+| TCriticalSection | Protection de sections de code | Même processus |
+| TMonitor | Alternative moderne à TCriticalSection | Même processus |
+| TMutex | Synchronisation inter-processus | Inter-processus |
+| TEvent | Signalisation entre threads | Même processus |
+| TSemaphore | Limiter le nombre d'accès | Même/Inter-processus |
 
-- La synchronisation est essentielle pour éviter les problèmes d'accès concurrent
-- Les sections critiques sont le mécanisme de base pour protéger les ressources partagées
-- D'autres mécanismes comme les mutex, les sémaphores et les événements offrent des fonctionnalités plus avancées
-- Minimisez toujours la taille des sections critiques pour de meilleures performances
-- Utilisez systématiquement `try...finally` pour garantir le déverrouillage
-- Pensez à utiliser les classes thread-safe intégrées quand c'est possible
+## Points clés à retenir
 
-Dans le prochain chapitre, nous explorerons `TTask` et la programmation parallèle, qui offrent une approche plus moderne et plus simple pour le multithreading.
+- L'accès concurrent aux données partagées peut causer des bugs imprévisibles
+- Utilisez `TCriticalSection` pour protéger les ressources partagées
+- Toujours utiliser `try...finally` avec `Enter` et `Leave`
+- Minimisez le temps passé dans les sections critiques
+- Attention aux deadlocks lors de l'utilisation de plusieurs verrous
+- Documentez clairement quelles ressources sont protégées et par quoi
+- Préférez les structures thread-safe quand elles existent
+- TMonitor offre une alternative moderne à TCriticalSection
+
+Dans la prochaine section, nous verrons comment Delphi simplifie encore la programmation parallèle avec TTask et la bibliothèque Parallel Programming Library (PPL).
 
 ⏭️ [TTask et programmation parallèle](/11-multithreading-et-programmation-asynchrone/04-ttask-et-programmation-parallele.md)

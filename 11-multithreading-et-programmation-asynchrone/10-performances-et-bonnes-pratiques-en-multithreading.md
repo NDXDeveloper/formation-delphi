@@ -1,822 +1,796 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 11.10 Performances et bonnes pratiques en multithreading
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+Cette section finale du chapitre multithreading rassemble les meilleures pratiques, les pièges à éviter, et les conseils d'optimisation pour créer des applications multithreadées performantes et fiables.
 
-## Introduction
+## Règles d'or du multithreading
 
-Nous avons exploré en détail comment implémenter le multithreading dans Delphi. Cependant, le simple fait d'utiliser des threads ne garantit pas de meilleures performances. En fait, une implémentation incorrecte peut conduire à des applications plus lentes, moins stables et plus difficiles à déboguer. Dans ce chapitre, nous allons examiner les bonnes pratiques pour optimiser les performances de vos applications multithreads et éviter les pièges courants.
+### 1. Le thread principal ne doit JAMAIS être bloqué
 
-## Optimisation du nombre de threads
-
-### Comprendre les limites matérielles
-
-Le nombre de cœurs du processeur est un facteur clé pour déterminer combien de threads peuvent s'exécuter véritablement en parallèle. En Delphi, vous pouvez obtenir cette information facilement :
+**Règle absolue** : Le thread principal (UI) doit toujours rester disponible pour traiter les événements utilisateur.
 
 ```pascal
-var
-  NbCoeurs: Integer;
+// ❌ MAUVAIS : Bloque l'interface
+procedure TForm1.ButtonClick(Sender: TObject);
 begin
-  NbCoeurs := TThread.ProcessorCount;
-  ShowMessage('Votre ordinateur possède ' + IntToStr(NbCoeurs) + ' cœurs logiques');
+  Sleep(5000); // L'interface se fige pendant 5 secondes !
+  ShowMessage('Terminé');
+end;
+
+// ✅ BON : Interface réactive
+procedure TForm1.ButtonClick(Sender: TObject);
+begin
+  TTask.Run(
+    procedure
+    begin
+      Sleep(5000); // Dans un thread séparé
+      TThread.Queue(nil,
+        procedure
+        begin
+          ShowMessage('Terminé');
+        end
+      );
+    end
+  );
 end;
 ```
 
-### Distinguer les tâches CPU-bound et I/O-bound
+### 2. Ne jamais modifier l'interface depuis un thread secondaire
 
-- **Tâches CPU-bound** : Ces tâches utilisent intensivement le processeur (calculs complexes, traitement d'images, etc.). Pour ces tâches, le nombre optimal de threads est généralement égal au nombre de cœurs disponibles.
+**Règle absolue** : Toujours utiliser `Synchronize` ou `Queue` pour mettre à jour l'interface.
 
 ```pascal
-// Pour les tâches CPU-bound (intensives en calcul)
-var NbThreadsOptimal := TThread.ProcessorCount;
+// ❌ DANGEREUX : Peut planter l'application
+TTask.Run(
+  procedure
+  begin
+    Label1.Caption := 'Nouveau texte'; // ERREUR !
+  end
+);
+
+// ✅ CORRECT : Via Synchronize ou Queue
+TTask.Run(
+  procedure
+  begin
+    TThread.Queue(nil,
+      procedure
+      begin
+        Label1.Caption := 'Nouveau texte'; // Sûr
+      end
+    );
+  end
+);
 ```
 
-- **Tâches I/O-bound** : Ces tâches passent la plupart de leur temps à attendre (lecture/écriture de fichiers, requêtes réseau, etc.). Pour ces tâches, vous pouvez utiliser plus de threads que le nombre de cœurs disponibles.
+### 3. Protéger les ressources partagées
+
+**Règle absolue** : Utiliser des sections critiques pour les données accessibles par plusieurs threads.
 
 ```pascal
-// Pour les tâches I/O-bound (attente d'entrées/sorties)
-var NbThreadsOptimal := TThread.ProcessorCount * 2; // ou plus, selon les cas
+var
+  Compteur: Integer; // Partagé entre threads
+  CS: TCriticalSection;
+
+// ❌ DANGEREUX : Race condition
+TTask.Run(
+  procedure
+  begin
+    Inc(Compteur); // Non protégé !
+  end
+);
+
+// ✅ CORRECT : Protégé
+TTask.Run(
+  procedure
+  begin
+    CS.Enter;
+    try
+      Inc(Compteur); // Protégé
+    finally
+      CS.Leave;
+    end;
+  end
+);
 ```
 
-### Éviter de créer trop de threads
+## Quand utiliser le multithreading ?
 
-La création de trop nombreux threads peut dégrader les performances en raison du surcoût des changements de contexte.
+### Scénarios appropriés ✅
+
+1. **Opérations I/O longues** : Lecture/écriture de fichiers, requêtes réseau, accès base de données
+2. **Calculs intensifs** : Traitement d'images, analyses de données, cryptographie
+3. **Opérations parallélisables** : Traitement de listes, conversion de fichiers multiples
+4. **Tâches d'arrière-plan** : Synchronisation, sauvegarde automatique, surveillance
+5. **Interface réactive** : Éviter le gel pendant les traitements
+
+### Scénarios inappropriés ❌
+
+1. **Opérations très rapides** : Moins de 100ms, le coût du thread est supérieur au gain
+2. **Accès séquentiels obligatoires** : Quand les opérations doivent être dans un ordre strict
+3. **Ressources uniques** : Un seul accès possible à la fois (certains drivers matériels)
+4. **Code simple** : Si la complexité ajoutée n'en vaut pas la peine
 
 ```pascal
-// À éviter : création excessive de threads
+// ❌ PAS NÉCESSAIRE : Trop rapide
+TTask.Run(
+  procedure
+  begin
+    X := Y + Z; // Calcul instantané
+  end
+);
+
+// ✅ NÉCESSAIRE : Opération longue
+TTask.Run(
+  procedure
+  begin
+    TelechargerGrossFichier('http://example.com/1GB.zip');
+  end
+);
+```
+
+## Dimensionner le nombre de threads
+
+### La règle du nombre de cœurs
+
+**Règle empirique** : Pour les tâches CPU-intensives, limiter à `Nombre de cœurs × 1.5 à 2`
+
+```pascal
+var
+  NbThreadsOptimal: Integer;
+begin
+  NbThreadsOptimal := TThread.ProcessorCount * 2;
+  TThreadPool.Default.SetMaxWorkerThreads(NbThreadsOptimal);
+end;
+```
+
+### Trop de threads = Performance dégradée
+
+```pascal
+// ❌ MAUVAIS : Trop de threads
+for i := 1 to 10000 do
+begin
+  TTask.Run(
+    procedure
+    begin
+      TraiterElement(i);
+    end
+  );
+end;
+// Crée 10000 threads ! Le système passe son temps à les gérer
+
+// ✅ BON : Utiliser TParallel qui gère le pool
+TParallel.For(1, 10000,
+  procedure(Index: Integer)
+  begin
+    TraiterElement(Index);
+  end
+);
+// Utilise automatiquement le nombre optimal de threads
+```
+
+### Règles selon le type de tâche
+
+| Type de tâche | Nombre de threads recommandé |
+|---------------|------------------------------|
+| CPU-intensive (calculs) | Nombre de cœurs × 1-2 |
+| I/O-intensive (réseau, fichiers) | Nombre de cœurs × 2-4 |
+| Mixte | Nombre de cœurs × 2 |
+
+## Minimiser le temps dans les sections critiques
+
+Plus une section critique est longue, plus elle crée de contention et ralentit l'application.
+
+```pascal
+// ❌ MAUVAIS : Section critique trop longue
+CS.Enter;
+try
+  LireFichier(); // Opération lente
+  TraiterDonnees(); // Opération lente
+  Inc(Compteur); // Opération rapide
+finally
+  CS.Leave;
+end;
+
+// ✅ BON : Minimiser la section critique
+LireFichier(); // En dehors
+TraiterDonnees(); // En dehors
+
+CS.Enter;
+try
+  Inc(Compteur); // Seulement ce qui doit être protégé
+finally
+  CS.Leave;
+end;
+```
+
+### Préparer les données avant la section critique
+
+```pascal
+// ✅ EXCELLENT : Préparer puis protéger
+var
+  NouvellesValeursLocales: TArray<Integer>;
+begin
+  // Préparer les données en dehors de la section critique
+  SetLength(NouvellesValeursLocales, 1000);
+  for i := 0 to 999 do
+    NouvellesValeursLocales[i] := CalculerValeur(i);
+
+  // Section critique minimale pour la mise à jour
+  CS.Enter;
+  try
+    FValeurs := NouvellesValeursLocales;
+  finally
+    CS.Leave;
+  end;
+end;
+```
+
+## Éviter les deadlocks
+
+Un **deadlock** (étreinte fatale) survient quand deux threads s'attendent mutuellement.
+
+### Cause du deadlock
+
+```pascal
+// ❌ DANGEREUX : Deadlock possible
+var
+  CS1, CS2: TCriticalSection;
+
+// Thread 1
+CS1.Enter;
+  CS2.Enter; // Attend CS2
+    // Traitement
+  CS2.Leave;
+CS1.Leave;
+
+// Thread 2
+CS2.Enter;
+  CS1.Enter; // Attend CS1 → DEADLOCK !
+    // Traitement
+  CS1.Leave;
+CS2.Leave;
+```
+
+### Solutions
+
+**1. Toujours acquérir les verrous dans le même ordre**
+
+```pascal
+// ✅ BON : Ordre cohérent
+// Thread 1
+CS1.Enter;
+  CS2.Enter;
+    // Traitement
+  CS2.Leave;
+CS1.Leave;
+
+// Thread 2 : MÊME ORDRE
+CS1.Enter;
+  CS2.Enter;
+    // Traitement
+  CS2.Leave;
+CS1.Leave;
+```
+
+**2. Utiliser TryEnter avec timeout**
+
+```pascal
+// ✅ BON : Éviter le blocage infini
+if CS1.TryEnter then
+begin
+  try
+    if CS2.TryEnter then
+    begin
+      try
+        // Traitement
+      finally
+        CS2.Leave;
+      end;
+    end
+    else
+    begin
+      // CS2 non disponible, réessayer plus tard
+    end;
+  finally
+    CS1.Leave;
+  end;
+end;
+```
+
+**3. Limiter les sections critiques imbriquées**
+
+```pascal
+// ✅ BON : Éviter l'imbrication
+CS1.Enter;
+try
+  // Traitement 1
+finally
+  CS1.Leave;
+end;
+
+// Séparé
+CS2.Enter;
+try
+  // Traitement 2
+finally
+  CS2.Leave;
+end;
+```
+
+## Gérer les fuites mémoire
+
+### FreeOnTerminate et gestion mémoire
+
+```pascal
+// ❌ DANGEREUX : Fuite mémoire
+var
+  MonThread: TThread;
+begin
+  MonThread := TThread.Create(False);
+  MonThread.FreeOnTerminate := True;
+  // Ne PAS garder de référence !
+  // MonThread.Free; ← NE JAMAIS FAIRE !
+end;
+
+// ✅ BON : Soit auto, soit manuel, mais pas les deux
+var
+  MonThread: TThread;
+begin
+  MonThread := TThread.Create(False);
+  MonThread.FreeOnTerminate := False;
+  try
+    MonThread.WaitFor;
+  finally
+    MonThread.Free; // Libération manuelle
+  end;
+end;
+```
+
+### Capture de variables dans TTask
+
+```pascal
+// ❌ DANGEREUX : Capture d'objet qui peut être libéré
+var
+  Liste: TStringList;
+begin
+  Liste := TStringList.Create;
+
+  TTask.Run(
+    procedure
+    begin
+      Sleep(2000);
+      Liste.Add('Test'); // Liste peut déjà être libérée !
+    end
+  );
+
+  Liste.Free; // Libéré avant la fin de la tâche !
+end;
+
+// ✅ BON : Créer et libérer dans la tâche
+TTask.Run(
+  procedure
+  var
+    Liste: TStringList;
+  begin
+    Liste := TStringList.Create;
+    try
+      Sleep(2000);
+      Liste.Add('Test');
+    finally
+      Liste.Free; // Libéré au bon moment
+    end;
+  end
+);
+```
+
+## Optimiser les mises à jour d'interface
+
+### Limiter la fréquence des mises à jour
+
+```pascal
+// ❌ LENT : Mise à jour à chaque itération
+for i := 1 to 100000 do
+begin
+  TraiterElement(i);
+  TThread.Queue(nil,
+    procedure
+    begin
+      ProgressBar1.Position := i;
+    end
+  );
+end;
+
+// ✅ RAPIDE : Mise à jour périodique
+var
+  DerniereMAJ: TDateTime;
+begin
+  DerniereMAJ := 0;
+
+  for i := 1 to 100000 do
+  begin
+    TraiterElement(i);
+
+    // Mettre à jour seulement toutes les 100ms
+    if MilliSecondsBetween(Now, DerniereMAJ) > 100 then
+    begin
+      TThread.Queue(nil,
+        procedure
+        begin
+          ProgressBar1.Position := (i * 100) div 100000;
+        end
+      );
+      DerniereMAJ := Now;
+    end;
+  end;
+end;
+```
+
+### Queue vs Synchronize
+
+```pascal
+// Synchronize : Bloque le thread jusqu'à exécution
+TThread.Synchronize(nil,
+  procedure
+  begin
+    Label1.Caption := 'Message';
+  end
+);
+// Le thread attend ici
+
+// Queue : Ne bloque pas, continue immédiatement
+TThread.Queue(nil,
+  procedure
+  begin
+    Label1.Caption := 'Message';
+  end
+);
+// Le thread continue sans attendre
+```
+
+**Recommandation** : Préférez `Queue` pour de meilleures performances, sauf si vous devez attendre la mise à jour.
+
+## Mesurer les performances
+
+### Utiliser TStopwatch pour mesurer
+
+```pascal
+uses
+  System.Diagnostics;
+
+var
+  Chrono: TStopwatch;
+begin
+  Chrono := TStopwatch.StartNew;
+
+  // Code à mesurer
+  TraiterDonnees;
+
+  Chrono.Stop;
+  ShowMessage(Format('Temps écoulé : %d ms', [Chrono.ElapsedMilliseconds]));
+end;
+```
+
+### Comparer séquentiel vs parallèle
+
+```pascal
+procedure TForm1.ComparerPerformances;
+var
+  Chrono: TStopwatch;
+  TempsSeq, TempsParallele: Int64;
+begin
+  // Test séquentiel
+  Chrono := TStopwatch.StartNew;
+  for i := 1 to 10000 do
+    TraiterElement(i);
+  TempsSeq := Chrono.ElapsedMilliseconds;
+
+  // Test parallèle
+  Chrono := TStopwatch.StartNew;
+  TParallel.For(1, 10000,
+    procedure(Index: Integer)
+    begin
+      TraiterElement(Index);
+    end
+  );
+  TempsParallele := Chrono.ElapsedMilliseconds;
+
+  ShowMessage(Format(
+    'Séquentiel : %d ms' + sLineBreak +
+    'Parallèle : %d ms' + sLineBreak +
+    'Accélération : %.2fx',
+    [TempsSeq, TempsParallele, TempsSeq / TempsParallele]
+  ));
+end;
+```
+
+## Anti-patterns à éviter
+
+### 1. Polling intensif
+
+```pascal
+// ❌ MAUVAIS : Consomme du CPU inutilement
+while not FTerminer do
+begin
+  if FNouvelleDonnee then
+  begin
+    Traiter;
+    FNouvelleDonnee := False;
+  end;
+  // Boucle très rapide qui consomme du CPU !
+end;
+
+// ✅ BON : Avec pause
+while not FTerminer do
+begin
+  if FNouvelleDonnee then
+  begin
+    Traiter;
+    FNouvelleDonnee := False;
+  end;
+  Sleep(100); // Laisser respirer le CPU
+end;
+
+// ✅ MEILLEUR : Utiliser un Event
+while not FTerminer do
+begin
+  if FEvent.WaitFor(1000) = wrSignaled then
+  begin
+    Traiter;
+  end;
+end;
+```
+
+### 2. Création/destruction excessive de threads
+
+```pascal
+// ❌ MAUVAIS : Créer un thread par requête
 for i := 1 to 1000 do
 begin
   TThread.CreateAnonymousThread(
     procedure
     begin
-      // Tâche très courte
-      DoSmallTask;
+      TraiterRequete(i);
     end
   ).Start;
 end;
 
-// Préférable : utilisation d'un pool de threads
-TParallel.For(1, 1000,
-  procedure(Index: Integer)
-  begin
-    DoSmallTask;
-  end
-);
-```
-
-## Réduction des contentions
-
-### Minimiser la taille des sections critiques
-
-Plus une section critique est longue, plus elle bloque les autres threads. Réduisez au minimum le code protégé.
-
-```pascal
-// Moins efficace
-FLock.Enter;
-try
-  // Calcul long et complexe
-  Result := CalculateComplexValue;
-
-  // Mise à jour de la variable partagée
-  FSharedVariable := Result;
-finally
-  FLock.Leave;
-end;
-
-// Plus efficace
-// Calcul en dehors de la section critique
-Result := CalculateComplexValue;
-
-// Section critique minimale
-FLock.Enter;
-try
-  FSharedVariable := Result;
-finally
-  FLock.Leave;
+// ✅ BON : Utiliser le pool de threads
+for i := 1 to 1000 do
+begin
+  TTask.Run(
+    procedure
+    var
+      Index: Integer;
+    begin
+      Index := i;
+      TraiterRequete(Index);
+    end
+  );
 end;
 ```
 
-### Utiliser des verrous à granularité fine
-
-Créez des verrous distincts pour protéger différentes ressources au lieu d'un verrou global.
+### 3. Synchronisation excessive
 
 ```pascal
-// Moins efficace
-type
-  TDataManager = class
-  private
-    FGlobalLock: TCriticalSection;
-    FUsers: TList<TUser>;
-    FProducts: TList<TProduct>;
+// ❌ LENT : Trop de synchronisation
+for i := 1 to 10000 do
+begin
+  CS.Enter;
+  try
+    Inc(Compteur);
+  finally
+    CS.Leave;
   end;
+end;
 
-// Plus efficace
-type
-  TDataManager = class
-  private
-    FUserLock: TCriticalSection;
-    FProductLock: TCriticalSection;
-    FUsers: TList<TUser>;
-    FProducts: TList<TProduct>;
-  end;
-```
-
-### Utiliser des structures de données thread-safe
-
-Delphi propose plusieurs structures de données thread-safe comme `TThreadList` et `TThreadedQueue`. Utilisez-les plutôt que de synchroniser manuellement des structures standard.
-
-```pascal
-// Moins efficace
-type
-  TWorkQueue = class
-  private
-    FQueue: TQueue<TWorkItem>;
-    FLock: TCriticalSection;
-  public
-    procedure Enqueue(Item: TWorkItem);
-    function TryDequeue(out Item: TWorkItem): Boolean;
-  end;
-
-// Plus efficace
-type
-  TWorkQueue = class
-  private
-    FQueue: TThreadedQueue<TWorkItem>;
-  public
-    procedure Enqueue(Item: TWorkItem);
-    function TryDequeue(out Item: TWorkItem): Boolean;
-  end;
-```
-
-### Réduire le partage de données entre threads
-
-Quand c'est possible, faites en sorte que chaque thread travaille sur ses propres données et ne partage que les résultats finaux.
-
-```pascal
-// Accumulation locale puis mise à jour globale
-procedure TThreadProcessor.ProcessChunk;
+// ✅ RAPIDE : Compteur local puis synchronisation finale
 var
-  LocalSum: Integer;
-  i: Integer;
+  CompteurLocal: Integer;
 begin
-  // Accumulation locale (pas de synchronisation nécessaire)
-  LocalSum := 0;
-  for i := FStartIndex to FEndIndex do
-    LocalSum := LocalSum + ProcessItem(FData[i]);
+  CompteurLocal := 0;
+  for i := 1 to 10000 do
+    Inc(CompteurLocal);
 
-  // Une seule synchronisation pour la mise à jour globale
-  FLock.Enter;
+  CS.Enter;
   try
-    FGlobalSum := FGlobalSum + LocalSum;
+    Inc(CompteurGlobal, CompteurLocal);
   finally
-    FLock.Leave;
+    CS.Leave;
   end;
 end;
 ```
 
-## Éviter les blocages (deadlocks)
-
-Les blocages surviennent lorsque deux threads ou plus sont bloqués indéfiniment, chacun attendant une ressource détenue par l'autre.
-
-### Respecter un ordre d'acquisition des verrous
-
-Toujours acquérir les verrous dans le même ordre pour éviter les blocages circulaires.
+### 4. Capture de variables de boucle
 
 ```pascal
-// Risque de blocage (deadlock)
-// Thread 1 :
-FLockA.Enter;
-// ... quelque chose se passe ...
-FLockB.Enter;
-
-// Thread 2 (simultanément) :
-FLockB.Enter;
-// ... quelque chose se passe ...
-FLockA.Enter;  // Blocage car FLockA est détenu par Thread 1
-
-// Solution : toujours acquérir les verrous dans le même ordre
-// Dans tous les threads :
-FLockA.Enter;
-try
-  // ...
-  FLockB.Enter;
-  try
-    // ...
-  finally
-    FLockB.Leave;
-  end;
-finally
-  FLockA.Leave;
-end;
-```
-
-### Utiliser TryEnter avec timeout
-
-Pour éviter les blocages indéfinis, utilisez `TryEnter` avec un délai d'attente :
-
-```pascal
-// Tentative d'acquisition avec timeout
-if FLock.TryEnter(1000) then // 1 seconde maximum d'attente
-try
-  // Code protégé...
-finally
-  FLock.Leave;
-end
-else
+// ❌ DANGEREUX : Variable de boucle capturée
+for i := 1 to 10 do
 begin
-  // Gérer l'échec d'acquisition du verrou
-  Log('Impossible d''acquérir le verrou après 1 seconde d''attente');
-  // Alternative ou nouvelle tentative...
-end;
-```
-
-### Éviter les appels entre méthodes verrouillées
-
-Évitez d'appeler une méthode qui prend un verrou à partir d'une méthode qui détient déjà ce verrou.
-
-```pascal
-// Risque de blocage
-procedure TMyClass.MethodA;
-begin
-  FLock.Enter;
-  try
-    // ...
-    MethodB; // MethodB tente aussi d'acquérir FLock -> Blocage !
-  finally
-    FLock.Leave;
-  end;
-end;
-
-procedure TMyClass.MethodB;
-begin
-  FLock.Enter; // Bloque car FLock est déjà détenu par MethodA
-  try
-    // ...
-  finally
-    FLock.Leave;
-  end;
-end;
-
-// Solution : utiliser des méthodes internes non verrouillées
-procedure TMyClass.MethodA;
-begin
-  FLock.Enter;
-  try
-    // ...
-    InternalMethodB; // Version non verrouillée
-  finally
-    FLock.Leave;
-  end;
-end;
-
-procedure TMyClass.MethodB;
-begin
-  FLock.Enter;
-  try
-    InternalMethodB;
-  finally
-    FLock.Leave;
-  end;
-end;
-
-procedure TMyClass.InternalMethodB;
-begin
-  // Logique commune sans verrouillage
-end;
-```
-
-## Gestion de la mémoire et des ressources
-
-### Éviter les fuites de mémoire
-
-Assurez-vous que tous les objets créés dans un thread sont correctement libérés, même en cas d'exception.
-
-```pascal
-procedure TMyThread.Execute;
-var
-  Obj: TObject;
-begin
-  Obj := TObject.Create;
-  try
-    // Utiliser Obj...
-
-    // Si une exception se produit ici, Obj sera quand même libéré
-  finally
-    Obj.Free;
-  end;
-end;
-```
-
-### Utiliser FreeOnTerminate avec précaution
-
-La propriété `FreeOnTerminate` permet à un thread de se libérer automatiquement quand il se termine. C'est pratique, mais cela peut compliquer la gestion des références.
-
-```pascal
-var
-  Thread: TThread;
-begin
-  Thread := TThread.CreateAnonymousThread(
+  TTask.Run(
     procedure
     begin
-      // Travail du thread...
-    end
-  );
-
-  Thread.FreeOnTerminate := True; // Le thread se libérera automatiquement
-  Thread.Start;
-
-  // ATTENTION : Thread est maintenant potentiellement invalide !
-  // N'utilisez plus Thread après cette ligne, sauf si vous savez
-  // qu'il est encore en cours d'exécution
-end;
-```
-
-### Partage sécurisé d'objets entre threads
-
-Si vous devez partager des objets entre threads, assurez-vous qu'ils ne sont pas libérés tant qu'ils sont utilisés.
-
-```pascal
-type
-  TSharedObjectManager = class
-  private
-    FObject: TObject;
-    FRefCount: Integer;
-    FLock: TCriticalSection;
-  public
-    constructor Create(AObject: TObject);
-    destructor Destroy; override;
-    procedure AddReference;
-    procedure ReleaseReference;
-    function GetObject: TObject;
-  end;
-
-procedure TSharedObjectManager.AddReference;
-begin
-  FLock.Enter;
-  try
-    Inc(FRefCount);
-  finally
-    FLock.Leave;
-  end;
-end;
-
-procedure TSharedObjectManager.ReleaseReference;
-var
-  ShouldFree: Boolean;
-begin
-  FLock.Enter;
-  try
-    Dec(FRefCount);
-    ShouldFree := FRefCount <= 0;
-  finally
-    FLock.Leave;
-  end;
-
-  if ShouldFree then
-    Free; // Se libère uniquement quand toutes les références sont relâchées
-end;
-```
-
-## Gestion des performances
-
-### Éviter le thrashing
-
-Le "thrashing" se produit lorsque le système passe plus de temps à changer de contexte entre threads qu'à effectuer un travail utile. Évitez de créer trop de threads ou de les créer/détruire fréquemment.
-
-```pascal
-// Mauvaise pratique : création/destruction fréquente de threads
-procedure ProcessItems(const Items: TArray<TItem>);
-var
-  i: Integer;
-begin
-  for i := 0 to High(Items) do
-  begin
-    TThread.CreateAnonymousThread(
-      procedure
-      begin
-        ProcessItem(Items[i]);
-      end
-    ).Start;
-  end;
-end;
-
-// Bonne pratique : réutilisation des threads via un pool
-var
-  ThreadPool: TThreadPool;
-begin
-  ThreadPool := TThreadPool.Create(TThread.ProcessorCount);
-  try
-    // Utiliser le pool pour toutes les tâches
-    for i := 0 to High(Items) do
-      ThreadPool.AddTask(procedure
-        begin
-          ProcessItem(Items[i]);
-        end);
-  finally
-    ThreadPool.Free;
-  end;
-end;
-```
-
-### Équilibrage de charge
-
-Distribuez le travail équitablement entre les threads pour éviter que certains threads finissent trop tôt tandis que d'autres travaillent encore.
-
-```pascal
-// Mauvaise répartition
-procedure ProcessData(const Data: TArray<TItem>);
-var
-  ThreadCount, ItemsPerThread, i: Integer;
-  Threads: array of TThread;
-begin
-  ThreadCount := TThread.ProcessorCount;
-  SetLength(Threads, ThreadCount);
-  ItemsPerThread := Length(Data) div ThreadCount;
-
-  // Chaque thread traite un bloc contigu d'éléments
-  for i := 0 to ThreadCount - 1 do
-  begin
-    Threads[i] := TThread.CreateAnonymousThread(
-      procedure
-      var
-        j: Integer;
-      begin
-        for j := i * ItemsPerThread to (i + 1) * ItemsPerThread - 1 do
-          ProcessItem(Data[j]);
-      end
-    );
-    Threads[i].Start;
-  end;
-
-  // Attendre que tous les threads se terminent
-  for i := 0 to ThreadCount - 1 do
-  begin
-    Threads[i].WaitFor;
-    Threads[i].Free;
-  end;
-end;
-
-// Meilleure répartition : entrelacement
-procedure ProcessDataInterleaved(const Data: TArray<TItem>);
-var
-  ThreadCount, i: Integer;
-  Threads: array of TThread;
-begin
-  ThreadCount := TThread.ProcessorCount;
-  SetLength(Threads, ThreadCount);
-
-  // Chaque thread traite des éléments répartis dans le tableau
-  for i := 0 to ThreadCount - 1 do
-  begin
-    Threads[i] := TThread.CreateAnonymousThread(
-      procedure
-      var
-        j: Integer;
-      begin
-        // Le thread i traite les éléments i, i+ThreadCount, i+2*ThreadCount, etc.
-        j := i;
-        while j < Length(Data) do
-        begin
-          ProcessItem(Data[j]);
-          Inc(j, ThreadCount); // Sauter au prochain élément pour ce thread
-        end;
-      end
-    );
-    Threads[i].Start;
-  end;
-
-  // Attendre que tous les threads se terminent
-  for i := 0 to ThreadCount - 1 do
-  begin
-    Threads[i].WaitFor;
-    Threads[i].Free;
-  end;
-end;
-```
-
-### Utiliser TTask et TParallel quand c'est possible
-
-Les classes `TTask` et `TParallel` de Delphi simplifient la gestion des threads et offrent de bonnes performances par défaut.
-
-```pascal
-// Utilisation de TParallel.For pour traiter des éléments en parallèle
-procedure ProcessItemsParallel(const Items: TArray<TItem>);
-begin
-  TParallel.For(0, High(Items),
-    procedure(Index: Integer)
-    begin
-      ProcessItem(Items[Index]);
+      ShowMessage(IntToStr(i)); // i peut avoir changé !
     end
   );
 end;
 
-// Utilisation de TTask.WaitForAll pour attendre plusieurs tâches
-procedure RunMultipleTasks;
-var
-  Tasks: array[0..2] of ITask;
+// ✅ CORRECT : Copie locale
+for i := 1 to 10 do
 begin
-  Tasks[0] := TTask.Run(procedure
+  TTask.Run(
+    procedure
+    var
+      Index: Integer;
     begin
-      Task1Work;
-    end);
-
-  Tasks[1] := TTask.Run(procedure
-    begin
-      Task2Work;
-    end);
-
-  Tasks[2] := TTask.Run(procedure
-    begin
-      Task3Work;
-    end);
-
-  // Attendre que toutes les tâches soient terminées
-  TTask.WaitForAll(Tasks);
+      Index := i; // Copie locale
+      ShowMessage(IntToStr(Index));
+    end
+  );
 end;
 ```
 
-## Débogage des applications multithreads
+## Débogage du code multithread
 
-### Journalisation thread-safe
+### Activer les options de débogage
 
-Implémentez un système de journalisation thread-safe pour suivre l'exécution des threads.
+Dans les options de projet (Project > Options > Delphi Compiler > Debugging) :
+- Activer "Debug information"
+- Activer "Use Debug DCUs"
+- Dans "Linker", activer "Include TD32 debug info"
 
-```pascal
-type
-  TThreadLogger = class
-  private
-    FLogFile: TextFile;
-    FLock: TCriticalSection;
-  public
-    constructor Create(const FileName: string);
-    destructor Destroy; override;
-    procedure Log(const ThreadID: Integer; const Message: string);
-  end;
-
-constructor TThreadLogger.Create(const FileName: string);
-begin
-  inherited Create;
-  FLock := TCriticalSection.Create;
-  AssignFile(FLogFile, FileName);
-  if FileExists(FileName) then
-    Append(FLogFile)
-  else
-    Rewrite(FLogFile);
-end;
-
-destructor TThreadLogger.Destroy;
-begin
-  CloseFile(FLogFile);
-  FLock.Free;
-  inherited;
-end;
-
-procedure TThreadLogger.Log(const ThreadID: Integer; const Message: string);
-begin
-  FLock.Enter;
-  try
-    Writeln(FLogFile, Format('[%s] Thread #%d: %s',
-                           [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
-                            ThreadID, Message]));
-    Flush(FLogFile);
-  finally
-    FLock.Leave;
-  end;
-end;
-```
-
-### Isolation des problèmes liés aux threads
-
-Pour isoler les problèmes liés aux threads :
-
-1. Commencez avec un seul thread pour vérifier que la logique fonctionne correctement
-2. Ajoutez des threads un par un pour identifier où les problèmes apparaissent
-3. Utilisez des assertions et des vérifications d'état pour détecter les incohérences
+### Points d'arrêt conditionnels
 
 ```pascal
-procedure TMyClass.ThreadSafeMethod;
-begin
-  FLock.Enter;
-  try
-    // Vérifier la cohérence des données
-    Assert(FCounter >= 0, 'FCounter négatif détecté');
-
-    // Opération thread-safe
-    Inc(FCounter);
-
-    // Nouvelle vérification
-    Assert(FCounter > 0, 'FCounter incohérent après incrémentation');
-  finally
-    FLock.Leave;
-  end;
-end;
-```
-
-### Utiliser des outils de profilage
-
-Utilisez des outils de profilage pour identifier les goulots d'étranglement dans votre application multithread. Delphi inclut des outils de profilage dans certaines éditions.
-
-## Tester les applications multithreads
-
-### Tests de concurrence
-
-Testez votre application avec différents niveaux de concurrence pour vous assurer qu'elle fonctionne correctement quel que soit le nombre de threads.
-
-```pascal
-procedure TestConcurrency;
-const
-  DataSize = 1000;
+procedure TMonThread.Execute;
 var
-  Data: TArray<Integer>;
-  ExpectedSum, ActualSum: Integer;
-  i, ThreadCount: Integer;
-begin
-  // Préparer les données
-  SetLength(Data, DataSize);
-  ExpectedSum := 0;
-  for i := 0 to DataSize - 1 do
-  begin
-    Data[i] := i;
-    ExpectedSum := ExpectedSum + i;
-  end;
-
-  // Tester avec différents nombres de threads
-  for ThreadCount := 1 to TThread.ProcessorCount * 2 do
-  begin
-    ActualSum := SumArrayParallel(Data, ThreadCount);
-    Assert(ActualSum = ExpectedSum,
-      Format('Échec avec %d threads: %d != %d', [ThreadCount, ActualSum, ExpectedSum]));
-  end;
-end;
-```
-
-### Tests de stress
-
-Soumettez votre application à des tests de stress pour détecter les problèmes qui n'apparaissent que sous charge élevée.
-
-```pascal
-procedure StressTest;
-const
-  IterationCount = 1000;
-var
-  Tasks: array of ITask;
   i: Integer;
 begin
-  // Créer de nombreuses tâches simultanées
-  SetLength(Tasks, IterationCount);
-  for i := 0 to IterationCount - 1 do
-    Tasks[i] := TTask.Run(
-      procedure
-      begin
-        TestThreadSafeOperation;
-      end
-    );
+  for i := 1 to 1000 do
+  begin
+    // Point d'arrêt conditionnel : s'arrêter seulement quand i = 500
+    if i = 500 then
+      DebugBreak; // ou mettre un point d'arrêt normal ici
 
-  // Attendre toutes les tâches
-  TTask.WaitForAll(Tasks);
-
-  // Vérifier l'état final
-  VerifySystemState;
+    TraiterElement(i);
+  end;
 end;
 ```
 
-## Bonnes pratiques générales
-
-### Documenter les exigences de thread-safety
-
-Indiquez clairement quelles méthodes et classes sont thread-safe dans votre documentation.
+### Logger les événements
 
 ```pascal
-/// <summary>
-///   Traite un élément de données.
-///   Cette méthode est thread-safe et peut être appelée simultanément
-///   depuis plusieurs threads.
-/// </summary>
-procedure ProcessItem(const Item: TItem);
+procedure Log(const Msg: string);
+var
+  CS: TCriticalSection; // Global
+begin
+  CS.Enter;
+  try
+    TFile.AppendAllText('debug.log',
+      Format('[%s] Thread %d: %s' + sLineBreak,
+        [FormatDateTime('hh:nn:ss.zzz', Now),
+         TThread.CurrentThread.ThreadID,
+         Msg]));
+  finally
+    CS.Leave;
+  end;
+end;
 
-/// <summary>
-///   Ajoute un élément à la liste.
-///   ATTENTION: Cette méthode n'est PAS thread-safe et doit être
-///   appelée uniquement depuis le thread principal.
-/// </summary>
-procedure AddItem(const Item: TItem);
+// Utilisation
+procedure TMonThread.Execute;
+begin
+  Log('Thread démarré');
+  try
+    TraiterDonnees;
+    Log('Traitement terminé');
+  except
+    on E: Exception do
+      Log('ERREUR: ' + E.Message);
+  end;
+end;
 ```
 
-### Encapsuler la logique de synchronisation
+## Checklist des bonnes pratiques
 
-Encapsulez la logique de synchronisation dans des classes dédiées pour simplifier son utilisation et réduire les risques d'erreur.
+### ✅ Avant de coder
+
+- [ ] Le multithreading est-il vraiment nécessaire ?
+- [ ] L'opération est-elle assez longue pour justifier un thread ?
+- [ ] Ai-je identifié les ressources partagées ?
+- [ ] Ai-je un plan pour protéger ces ressources ?
+
+### ✅ Pendant le développement
+
+- [ ] Utiliser TTask plutôt que TThread quand possible
+- [ ] Toujours protéger les ressources partagées
+- [ ] Utiliser Queue/Synchronize pour l'interface
+- [ ] Vérifier Terminated dans les boucles
+- [ ] Gérer les exceptions dans les threads
+- [ ] Ne pas capturer des variables dangereuses
+
+### ✅ Pour les performances
+
+- [ ] Limiter le nombre de threads actifs
+- [ ] Minimiser le temps dans les sections critiques
+- [ ] Limiter la fréquence des mises à jour d'interface
+- [ ] Utiliser TParallel.For pour les boucles
+- [ ] Éviter la création/destruction excessive de threads
+
+### ✅ Pour la fiabilité
+
+- [ ] Gérer proprement FreeOnTerminate
+- [ ] Se désabonner des événements
+- [ ] Vérifier les références nulles
+- [ ] Tester avec différentes charges
+- [ ] Logger pour le débogage
+
+### ✅ Avant la mise en production
+
+- [ ] Tester sur machines mono-cœur ET multi-cœurs
+- [ ] Tester avec beaucoup d'utilisateurs simultanés
+- [ ] Vérifier les fuites mémoire (FastMM en mode debug)
+- [ ] Profiler les performances
+- [ ] Documenter le comportement multithread
+
+## Outils utiles
+
+### FastMM pour détecter les fuites
+
+Activez FastMM en mode full debug dans votre projet :
 
 ```pascal
-type
-  TThreadSafeCounter = class
-  private
-    FValue: Integer;
-    FLock: TCriticalSection;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function Increment: Integer;
-    function Decrement: Integer;
-    function GetValue: Integer;
-  end;
+program MonApplication;
 
-constructor TThreadSafeCounter.Create;
-begin
-  inherited;
-  FValue := 0;
-  FLock := TCriticalSection.Create;
-end;
+{$IFDEF DEBUG}
+  {$DEFINE FullDebugMode}
+{$ENDIF}
 
-destructor TThreadSafeCounter.Destroy;
-begin
-  FLock.Free;
-  inherited;
-end;
-
-function TThreadSafeCounter.Increment: Integer;
-begin
-  FLock.Enter;
-  try
-    Inc(FValue);
-    Result := FValue;
-  finally
-    FLock.Leave;
-  end;
-end;
-
-function TThreadSafeCounter.Decrement: Integer;
-begin
-  FLock.Enter;
-  try
-    Dec(FValue);
-    Result := FValue;
-  finally
-    FLock.Leave;
-  end;
-end;
-
-function TThreadSafeCounter.GetValue: Integer;
-begin
-  FLock.Enter;
-  try
-    Result := FValue;
-  finally
-    FLock.Leave;
-  end;
-end;
+uses
+  FastMM4,
+  // ... autres units
 ```
 
-### Éviter le verrouillage excessif
+### AQTime ou Sampling Profiler
 
-Si une ressource est rarement modifiée mais souvent lue, envisagez d'utiliser un verrou de lecture-écriture plutôt qu'une section critique.
+Pour analyser les performances et identifier les goulots d'étranglement.
+
+### CodeSite pour le logging
 
 ```pascal
-type
-  TReadWriteLock = class
-  private
-    FReaderCount: Integer;
-    FWriterActive: Boolean;
-    FLock: TCriticalSection;
-    FReadEvent: TEvent;
-    FWriteEvent: TEvent;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure BeginRead;
-    procedure EndRead;
-    procedure BeginWrite;
-    procedure EndWrite;
-  end;
+uses
+  CodeSite;
+
+procedure TMonThread.Execute;
+begin
+  CodeSite.Send('Thread démarré', Self);
+  // ...
+end;
 ```
 
-### Tester sur différentes machines
+## Résumé des performances par approche
 
-Testez votre application sur des ordinateurs avec différents nombres de cœurs pour vous assurer qu'elle s'adapte correctement.
+| Approche | Performance | Complexité | Quand utiliser |
+|----------|-------------|------------|----------------|
+| Pas de thread | ⭐⭐⭐⭐⭐ | ⭐ | Opérations rapides (<100ms) |
+| Application.ProcessMessages | ⭐⭐⭐ | ⭐⭐ | Petites applications simples |
+| TThread | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Threads de longue durée, contrôle fin |
+| TTask.Run | ⭐⭐⭐⭐⭐ | ⭐⭐ | Tâches ponctuelles (recommandé) |
+| TParallel.For | ⭐⭐⭐⭐⭐ | ⭐⭐ | Boucles parallélisables (recommandé) |
+| TThreadedQueue | ⭐⭐⭐⭐ | ⭐⭐⭐ | Producteur-consommateur |
 
-## Résumé
+## Points clés finaux
 
-Dans ce chapitre, nous avons exploré les meilleures pratiques pour optimiser les performances et éviter les pièges dans les applications multithreads :
+1. **Simplicité d'abord** : N'ajoutez du multithreading que si nécessaire
+2. **TTask est votre ami** : Utilisez-le par défaut pour 80% des cas
+3. **Protégez tout** : Les ressources partagées doivent TOUJOURS être protégées
+4. **Interface sacrée** : JAMAIS de modification directe depuis un thread secondaire
+5. **Mesurez** : Vérifiez que le multithreading apporte réellement un gain
+6. **Testez** : Le multithreading crée des bugs subtils, testez intensivement
+7. **Documentez** : Expliquez votre stratégie de threading dans les commentaires
+8. **Limitez** : Trop de threads = performance dégradée
+9. **Gérez les erreurs** : Les exceptions dans les threads doivent être capturées
+10. **Nettoyez** : Libérez proprement toutes les ressources
 
-1. **Optimisation du nombre de threads** en fonction des caractéristiques de la tâche et du matériel disponible.
-2. **Réduction des contentions** en minimisant les sections critiques et en utilisant des verrous à granularité fine.
-3. **Prévention des blocages** en respectant un ordre d'acquisition cohérent des verrous et en utilisant des timeouts.
-4. **Gestion sécurisée de la mémoire** pour éviter les fuites et les accès illégaux.
-5. **Équilibrage de charge** pour optimiser les performances en répartissant équitablement le travail.
-6. **Techniques de débogage et de test** adaptées aux applications multithreads.
-
-En suivant ces bonnes pratiques, vous pourrez créer des applications Delphi multithreads robustes, performantes et faciles à maintenir.
-
-## Exercice pratique
-
-Créez une application qui simule un système de traitement de commandes avec les composants suivants :
-
-1. Un générateur de commandes qui crée des commandes aléatoires
-2. Un pool de threads "processeurs de commandes" qui traitent les commandes
-3. Un système de journalisation thread-safe pour suivre toutes les opérations
-4. Une interface utilisateur qui affiche en temps réel :
-   - Le nombre de commandes en attente
-   - Le nombre de commandes traitées
-   - L'activité de chaque thread
-
-Implémentez ce système en suivant les bonnes pratiques décrites dans ce chapitre. Testez-le avec différents nombres de threads et de commandes pour voir comment les performances évoluent.
+Le multithreading est un outil puissant mais exigeant. Avec les bonnes pratiques et les outils modernes de Delphi (TTask, TParallel), vous pouvez créer des applications performantes, réactives et fiables. La clé est de rester simple, de bien comprendre les principes fondamentaux, et de toujours penser à la sécurité des threads.
 
 ⏭️ [Débogage et tests](/12-debogage-et-tests/README.md)
