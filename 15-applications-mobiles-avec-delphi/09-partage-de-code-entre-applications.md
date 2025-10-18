@@ -1,1553 +1,1408 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.9 Partage de code entre applications mobile et desktop
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-L'un des grands avantages de Delphi est la possibilité de partager du code entre différentes plateformes. Cette fonctionnalité vous permet de développer une base de code commune qui peut être déployée sur des applications mobiles (Android et iOS) ainsi que sur des applications desktop (Windows, macOS et Linux). Dans cette section, nous explorerons les techniques et les meilleures pratiques pour maximiser la réutilisation du code tout en respectant les spécificités de chaque plateforme.
+L'un des avantages majeurs de Delphi est sa capacité à créer des applications pour multiples plateformes à partir d'une seule base de code. Plutôt que d'écrire votre application trois fois (une fois en Java/Kotlin pour Android, une fois en Swift pour iOS, et une fois en Delphi pour Windows), vous pouvez écrire votre code une seule fois et le compiler pour toutes ces plateformes.
+
+Cependant, partager du code entre mobile et desktop ne signifie pas que vous écrivez exactement la même application pour toutes les plateformes. Les utilisateurs mobiles et desktop ont des attentes différentes, des modes d'interaction différents, et les appareils ont des capacités différentes. Le secret est de **partager intelligemment** : partager ce qui peut l'être (logique métier, accès aux données, algorithmes) tout en adaptant ce qui doit l'être (interface utilisateur, navigation, gestion des entrées).
+
+Dans cette section, nous allons explorer comment structurer vos projets Delphi pour maximiser le partage de code tout en offrant une expérience optimale sur chaque plateforme.
 
 ## Pourquoi partager du code ?
 
-Avant de plonger dans les détails techniques, voyons les avantages du partage de code :
+### Avantages du partage de code
 
-1. **Réduction du temps de développement** : Écrire le code une seule fois plutôt que de le réécrire pour chaque plateforme
-2. **Maintenance simplifiée** : Les corrections de bugs et les améliorations s'appliquent à toutes les plateformes
-3. **Cohérence fonctionnelle** : Assurer un comportement identique sur toutes les plateformes
-4. **Rentabilité accrue** : Réduction des coûts de développement et de maintenance
+**Réduction du temps de développement** :
+- Écrire la logique métier une seule fois
+- Moins de code à maintenir
+- Développement plus rapide de nouvelles fonctionnalités
 
-## Les défis du développement multi-plateformes
+**Cohérence entre plateformes** :
+- Même logique = même comportement
+- Moins de risques d'incohérences
+- Tests centralisés
 
-Malgré ses avantages, le développement multi-plateformes présente certains défis :
+**Maintenance simplifiée** :
+- Correction de bug une seule fois
+- Évolutions simultanées sur toutes les plateformes
+- Documentation unifiée
 
-1. **Différences d'interface utilisateur** : Les attentes des utilisateurs varient selon les plateformes
-2. **Fonctionnalités spécifiques** : Certaines fonctionnalités existent sur une plateforme mais pas sur les autres
-3. **Contraintes de performance** : Les appareils mobiles ont généralement moins de ressources
-4. **Cycle de vie des applications** : Les applications mobiles et desktop ont des cycles de vie différents
+**Expertise concentrée** :
+- Une seule équipe de développement
+- Un seul langage (Object Pascal)
+- Courbe d'apprentissage unique
 
-Heureusement, Delphi offre des outils pour relever ces défis tout en maximisant le partage de code.
+### Exemples concrets
 
-## Architecture pour le partage de code
+Imaginez une application de gestion de tâches :
 
-La clé d'un partage de code réussi est une bonne architecture. Voici l'approche recommandée :
+**Code à partager** :
+- Modèle de données (classes TTache, TProjet, TUtilisateur)
+- Logique métier (calcul des échéances, priorités, notifications)
+- Accès à la base de données
+- Synchronisation avec le serveur
+- Validation des données
+- Algorithmes de tri et de filtrage
 
-### Architecture en couches
+**Code spécifique à chaque plateforme** :
+- Interface utilisateur (VCL pour Windows, FMX pour mobile)
+- Navigation (menu vs onglets)
+- Gestion des gestes tactiles
+- Accès aux APIs spécifiques (notifications, GPS)
+- Taille et disposition des contrôles
 
-Une architecture en couches bien définie facilite le partage de code :
+## Architecture en couches
 
-1. **Couche métier** : Logique d'affaires, entités et règles métier (partageable à 100%)
-2. **Couche d'accès aux données** : Interactions avec la base de données et les services (partageable à 90-100%)
-3. **Couche présentation** : Interface utilisateur (partageable partiellement)
-4. **Couche spécifique à la plateforme** : Fonctionnalités propres à chaque plateforme (non partageable)
+La clé d'un partage de code réussi est une architecture bien structurée en couches distinctes.
 
-![Architecture en couches](https://votre-serveur.com/images/layered-architecture.png)
+### Modèle à trois couches
 
-### Modèle MVVM (Model-View-ViewModel)
+```
+┌─────────────────────────────────────┐
+│   Couche Présentation (UI)          │  ← Spécifique à chaque plateforme
+│   - VCL (Windows Desktop)           │
+│   - FMX (Mobile, macOS, Linux)      │
+└─────────────────────────────────────┘
+              ↓  ↑
+┌─────────────────────────────────────┐
+│   Couche Logique Métier             │  ← Code partagé
+│   - Règles métier                   │
+│   - Traitement des données          │
+│   - Validation                      │
+└─────────────────────────────────────┘
+              ↓  ↑
+┌─────────────────────────────────────┐
+│   Couche Accès aux Données          │  ← Code partagé
+│   - Bases de données                │
+│   - Services REST                   │
+│   - Fichiers                        │
+└─────────────────────────────────────┘
+```
 
-Le modèle d'architecture MVVM est particulièrement adapté au partage de code :
-
-- **Model** : Les données et la logique métier (partageable à 100%)
-- **ViewModel** : La logique de présentation (partageable à 80-90%)
-- **View** : L'interface utilisateur spécifique à chaque plateforme (moins partageable)
-
-## Techniques de partage de code avec Delphi
-
-Delphi offre plusieurs techniques pour partager du code entre les plateformes :
-
-### 1. Projets multi-plateformes avec FireMonkey
-
-FireMonkey (FMX) est le framework d'interface utilisateur multi-plateformes de Delphi qui permet de créer des interfaces qui fonctionnent sur Windows, macOS, iOS et Android.
-
-Pour créer un projet multi-plateformes avec FireMonkey :
-
-1. Sélectionnez **File > New > Multi-Device Application**
-2. Choisissez un modèle de départ (Vide, Application principale, etc.)
-3. Dans le **Project Manager**, vous verrez les plateformes cibles disponibles
-
-![Projet Multi-Plateformes](https://votre-serveur.com/images/multi-platform-project.png)
-
-### 2. Unités partagées
-
-Les unités sont la base du partage de code en Delphi. Vous pouvez créer des unités qui contiennent du code commun à toutes les plateformes.
+### Exemple de structure de classes
 
 ```pascal
-unit BusinessLogic;
+// ========================================
+// Unité partagée : Modèle de données
+// Fichier: Model.Tache.pas
+// ========================================
+unit Model.Tache;
 
 interface
 
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections;
-
 type
-  TCustomer = class
+  TPriorite = (prBasse, prMoyenne, prHaute, prUrgente);
+  TStatut = (stAFaire, stEnCours, stTerminee, stAnnulee);
+
+  TTache = class
   private
     FID: Integer;
-    FName: string;
-    FEmail: string;
-  public
-    constructor Create(AID: Integer; const AName, AEmail: string);
-
-    function ValidateEmail: Boolean;
-    procedure SaveToDatabase;
-
-    property ID: Integer read FID write FID;
-    property Name: string read FName write FName;
-    property Email: string read FEmail write FEmail;
-  end;
-
-  TCustomerManager = class
-  private
-    FCustomers: TObjectList<TCustomer>;
+    FTitre: string;
+    FDescription: string;
+    FDateEcheance: TDateTime;
+    FPriorite: TPriorite;
+    FStatut: TStatut;
+    FDateCreation: TDateTime;
   public
     constructor Create;
-    destructor Destroy; override;
 
-    procedure LoadCustomers;
-    function FindCustomerByEmail(const Email: string): TCustomer;
-    procedure AddCustomer(Customer: TCustomer);
+    // Propriétés
+    property ID: Integer read FID write FID;
+    property Titre: string read FTitre write FTitre;
+    property Description: string read FDescription write FDescription;
+    property DateEcheance: TDateTime read FDateEcheance write FDateEcheance;
+    property Priorite: TPriorite read FPriorite write FPriorite;
+    property Statut: TStatut read FStatut write FStatut;
+    property DateCreation: TDateTime read FDateCreation write FDateCreation;
 
-    property Customers: TObjectList<TCustomer> read FCustomers;
+    // Méthodes métier partagées
+    function EstEnRetard: Boolean;
+    function EstUrgente: Boolean;
+    function JoursRestants: Integer;
+    procedure Terminer;
+    function Valider: string; // Retourne un message d'erreur ou chaîne vide
   end;
 
 implementation
 
-// Implémentations...
+uses
+  System.SysUtils, System.DateUtils;
+
+constructor TTache.Create;
+begin
+  inherited;
+  FDateCreation := Now;
+  FStatut := stAFaire;
+  FPriorite := prMoyenne;
+end;
+
+function TTache.EstEnRetard: Boolean;
+begin
+  Result := (FStatut <> stTerminee) and
+            (FStatut <> stAnnulee) and
+            (FDateEcheance < Now);
+end;
+
+function TTache.EstUrgente: Boolean;
+begin
+  // Une tâche est urgente si échéance dans moins de 2 jours
+  Result := (FStatut = stAFaire) and
+            (JoursRestants <= 2) and
+            (JoursRestants >= 0);
+end;
+
+function TTache.JoursRestants: Integer;
+begin
+  Result := DaysBetween(Now, FDateEcheance);
+  if FDateEcheance < Now then
+    Result := -Result;
+end;
+
+procedure TTache.Terminer;
+begin
+  FStatut := stTerminee;
+end;
+
+function TTache.Valider: string;
+begin
+  Result := '';
+
+  if Trim(FTitre).IsEmpty then
+    Result := 'Le titre est obligatoire'
+  else if Length(FTitre) < 3 then
+    Result := 'Le titre doit contenir au moins 3 caractères'
+  else if FDateEcheance < Date then
+    Result := 'La date d''échéance ne peut pas être dans le passé';
+end;
 
 end.
 ```
 
-Cette unité peut être utilisée à l'identique sur toutes les plateformes.
-
-### 3. Compilation conditionnelle
-
-Delphi permet d'utiliser des directives de compilation conditionnelle pour adapter le code aux différentes plateformes :
-
 ```pascal
-{$IF DEFINED(MSWINDOWS)}
-  // Code spécifique à Windows
-{$ELSEIF DEFINED(MACOS)}
-  // Code spécifique à macOS
-{$ELSEIF DEFINED(IOS)}
-  // Code spécifique à iOS
-{$ELSEIF DEFINED(ANDROID)}
-  // Code spécifique à Android
-{$ELSE}
-  // Code par défaut pour les autres plateformes
-{$ENDIF}
-```
-
-Vous pouvez utiliser ces directives pour adapter certaines parties de votre code tout en conservant une base commune.
-
-Exemple plus complet pour l'accès aux fichiers :
-
-```pascal
-function GetAppDataPath: string;
-begin
-{$IF DEFINED(MSWINDOWS)}
-  Result := TPath.GetHomePath + '\AppData\Roaming\MyApp\';
-{$ELSEIF DEFINED(MACOS)}
-  Result := TPath.GetHomePath + '/Library/Application Support/MyApp/';
-{$ELSEIF DEFINED(IOS) or DEFINED(ANDROID)}
-  Result := TPath.GetDocumentsPath + '/';
-{$ELSE}
-  Result := './';
-{$ENDIF}
-end;
-```
-
-### 4. Packages d'exécution (Runtime Packages)
-
-Les packages d'exécution permettent de partager du code sous forme de bibliothèques dynamiques (.bpl).
-
-Avantages :
-- Modularisation du code
-- Mise à jour indépendante des modules
-- Réduction de la taille de l'application
-
-Pour créer un package :
-
-1. Sélectionnez **File > New > Package**
-2. Ajoutez les unités que vous souhaitez inclure
-3. Compilez le package
-4. Référencez-le dans vos projets d'application
-
-### 5. Groupe de projets
-
-Un groupe de projets permet de gérer plusieurs projets liés dans une structure unique :
-
-1. Sélectionnez **File > New > Project Group**
-2. Ajoutez vos projets (desktop, mobile, packages partagés, etc.)
-
-Cette approche facilite la gestion de plusieurs applications qui partagent du code commun.
-
-## Stratégies de partage de code
-
-### Stratégie 1 : Séparation interface/implémentation
-
-Une approche efficace consiste à séparer clairement l'interface (déclarations) de l'implémentation (code). Cette méthode utilise les interfaces Delphi pour définir des contrats que différentes plateformes peuvent implémenter :
-
-```pascal
-// Unit: DataModule.pas
-unit DataModule;
+// ========================================
+// Unité partagée : Gestionnaire de tâches
+// Fichier: Business.TacheManager.pas
+// ========================================
+unit Business.TacheManager;
 
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Generics.Collections, Model.Tache;
+
+type
+  TTacheManager = class
+  private
+    FTaches: TObjectList<TTache>;
+    FOnTacheModifiee: TNotifyEvent;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    // CRUD Operations (partagé entre toutes les plateformes)
+    function AjouterTache(const Titre, Description: string;
+      DateEcheance: TDateTime; Priorite: TPriorite): TTache;
+    procedure SupprimerTache(TacheID: Integer);
+    procedure ModifierTache(Tache: TTache);
+    function ObtenirTache(TacheID: Integer): TTache;
+    function ObtenirToutesLesTaches: TArray<TTache>;
+
+    // Filtres et recherches
+    function ObtenirTachesEnRetard: TArray<TTache>;
+    function ObtenirTachesUrgentes: TArray<TTache>;
+    function ObtenirTachesParPriorite(Priorite: TPriorite): TArray<TTache>;
+    function RechercherTaches(const Texte: string): TArray<TTache>;
+
+    // Statistiques
+    function CompterTachesTerminees: Integer;
+    function CompterTachesEnCours: Integer;
+    function TauxCompletionPourcentage: Double;
+
+    // Persistance (interface à implémenter spécifiquement)
+    procedure Sauvegarder;
+    procedure Charger;
+
+    // Événements
+    property OnTacheModifiee: TNotifyEvent read FOnTacheModifiee write FOnTacheModifiee;
+  end;
+
+implementation
+
+uses
+  System.SysUtils;
+
+constructor TTacheManager.Create;
+begin
+  inherited;
+  FTaches := TObjectList<TTache>.Create(True); // True = possède les objets
+end;
+
+destructor TTacheManager.Destroy;
+begin
+  FTaches.Free;
+  inherited;
+end;
+
+function TTacheManager.AjouterTache(const Titre, Description: string;
+  DateEcheance: TDateTime; Priorite: TPriorite): TTache;
+begin
+  Result := TTache.Create;
+  Result.Titre := Titre;
+  Result.Description := Description;
+  Result.DateEcheance := DateEcheance;
+  Result.Priorite := Priorite;
+
+  // Valider avant d'ajouter
+  var MessageErreur := Result.Valider;
+  if not MessageErreur.IsEmpty then
+  begin
+    Result.Free;
+    raise Exception.Create(MessageErreur);
+  end;
+
+  // Générer un ID unique (en production, utiliser la BD)
+  Result.ID := FTaches.Count + 1;
+
+  FTaches.Add(Result);
+
+  if Assigned(FOnTacheModifiee) then
+    FOnTacheModifiee(Self);
+end;
+
+procedure TTacheManager.SupprimerTache(TacheID: Integer);
+var
+  Tache: TTache;
+begin
+  Tache := ObtenirTache(TacheID);
+  if Assigned(Tache) then
+  begin
+    FTaches.Remove(Tache);
+
+    if Assigned(FOnTacheModifiee) then
+      FOnTacheModifiee(Self);
+  end;
+end;
+
+function TTacheManager.ObtenirTache(TacheID: Integer): TTache;
+var
+  Tache: TTache;
+begin
+  Result := nil;
+  for Tache in FTaches do
+  begin
+    if Tache.ID = TacheID then
+      Exit(Tache);
+  end;
+end;
+
+function TTacheManager.ObtenirTachesEnRetard: TArray<TTache>;
+var
+  Liste: TList<TTache>;
+  Tache: TTache;
+begin
+  Liste := TList<TTache>.Create;
+  try
+    for Tache in FTaches do
+    begin
+      if Tache.EstEnRetard then
+        Liste.Add(Tache);
+    end;
+
+    Result := Liste.ToArray;
+  finally
+    Liste.Free;
+  end;
+end;
+
+function TTacheManager.CompterTachesTerminees: Integer;
+var
+  Tache: TTache;
+begin
+  Result := 0;
+  for Tache in FTaches do
+  begin
+    if Tache.Statut = stTerminee then
+      Inc(Result);
+  end;
+end;
+
+function TTacheManager.TauxCompletionPourcentage: Double;
+begin
+  if FTaches.Count = 0 then
+    Result := 0
+  else
+    Result := (CompterTachesTerminees / FTaches.Count) * 100;
+end;
+
+procedure TTacheManager.Sauvegarder;
+begin
+  // Implémentation spécifique à chaque plateforme
+  // Sera surchargée dans les classes dérivées
+end;
+
+procedure TTacheManager.Charger;
+begin
+  // Implémentation spécifique à chaque plateforme
+  // Sera surchargée dans les classes dérivées
+end;
+
+end.
+```
+
+## Organisation des projets
+
+### Structure recommandée des dossiers
+
+```
+MonProjet/
+├── Shared/                      ← Code partagé
+│   ├── Models/                  ← Modèles de données
+│   │   ├── Model.Tache.pas
+│   │   ├── Model.Utilisateur.pas
+│   │   └── Model.Projet.pas
+│   ├── Business/                ← Logique métier
+│   │   ├── Business.TacheManager.pas
+│   │   └── Business.ValidationService.pas
+│   ├── Data/                    ← Accès aux données
+│   │   ├── Data.Database.pas
+│   │   └── Data.ApiClient.pas
+│   └── Utils/                   ← Utilitaires
+│       ├── Utils.DateHelper.pas
+│       └── Utils.StringHelper.pas
+│
+├── Desktop/                     ← Application Windows (VCL)
+│   ├── Forms/
+│   │   ├── Main.Form.pas
+│   │   └── TaskEdit.Form.pas
+│   ├── DesktopApp.dpr          ← Projet principal
+│   └── DesktopApp.dproj
+│
+├── Mobile/                      ← Application Mobile (FMX)
+│   ├── Forms/
+│   │   ├── Main.Form.pas
+│   │   └── TaskEdit.Form.pas
+│   ├── MobileApp.dpr           ← Projet principal
+│   └── MobileApp.dproj
+│
+└── Tests/                       ← Tests unitaires
+    ├── Test.Model.Tache.pas
+    └── Test.Business.TacheManager.pas
+```
+
+### Configuration des chemins de recherche
+
+Dans chaque projet (Desktop et Mobile), configurez les chemins pour accéder au code partagé :
+
+```
+Project > Options > Delphi Compiler > Search Path
+Ajouter : ..\Shared\Models;..\Shared\Business;..\Shared\Data;..\Shared\Utils
+```
+
+## Directives de compilation conditionnelle
+
+Les directives de compilation permettent d'adapter le code selon la plateforme cible.
+
+### Directives de plateforme principales
+
+```pascal
+unit Utils.PlatformHelper;
+
+interface
+
+type
+  TPlatformHelper = class
+  public
+    class function NomPlateforme: string;
+    class function EstMobile: Boolean;
+    class function EstDesktop: Boolean;
+    class function CheminDocuments: string;
+    class function SeparateurChemin: Char;
+  end;
+
+implementation
+
+uses
+  System.IOUtils, System.SysUtils;
+
+class function TPlatformHelper.NomPlateforme: string;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := 'Windows';
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+    {$IFDEF IOS}
+    Result := 'iOS';
+    {$ELSE}
+    Result := 'macOS';
+    {$ENDIF}
+  {$ENDIF}
+
+  {$IFDEF ANDROID}
+  Result := 'Android';
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  Result := 'Linux';
+  {$ENDIF}
+end;
+
+class function TPlatformHelper.EstMobile: Boolean;
+begin
+  {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
+  Result := True;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
+class function TPlatformHelper.EstDesktop: Boolean;
+begin
+  Result := not EstMobile;
+end;
+
+class function TPlatformHelper.CheminDocuments: string;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := TPath.GetDocumentsPath; // C:\Users\[User]\Documents
+  {$ENDIF}
+
+  {$IFDEF ANDROID}
+  Result := TPath.GetDocumentsPath; // /data/data/[package]/files
+  {$ENDIF}
+
+  {$IFDEF IOS}
+  Result := TPath.GetDocumentsPath; // /Documents
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  Result := TPath.GetHomePath + '/Documents';
+  {$ENDIF}
+end;
+
+class function TPlatformHelper.SeparateurChemin: Char;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := '\';
+  {$ELSE}
+  Result := '/';
+  {$ENDIF}
+end;
+
+end.
+```
+
+### Adapter le code selon la plateforme
+
+```pascal
+// Exemple : Ouvrir un URL dans le navigateur
+procedure TOuvreursURL;
+var
+  URL: string;
+begin
+  URL := 'https://www.example.com';
+
+  {$IFDEF MSWINDOWS}
+  ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
+  {$ENDIF}
+
+  {$IFDEF ANDROID}
+  var Intent := TJIntent.Create;
+  Intent.setAction(TJIntent.JavaClass.ACTION_VIEW);
+  Intent.setData(StrToJURI(URL));
+  TAndroidHelper.Context.startActivity(Intent);
+  {$ENDIF}
+
+  {$IFDEF IOS}
+  SharedApplication.openURL(StrToNSUrl(URL));
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  _system(PAnsiChar('open ' + AnsiString(URL)));
+  {$ENDIF}
+end;
+```
+
+### Code avec alternatives selon la plateforme
+
+```pascal
+// Afficher une notification
+procedure TAfficherNotification(const Titre, Message: string);
+begin
+  {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
+  // Sur mobile : notification système
+  var NotificationCenter := TNotificationCenter.Create(nil);
+  try
+    var Notification := NotificationCenter.CreateNotification;
+    try
+      Notification.Name := 'notif_' + FormatDateTime('hhnnss', Now);
+      Notification.Title := Titre;
+      Notification.AlertBody := Message;
+      Notification.FireDate := Now;
+
+      NotificationCenter.PresentNotification(Notification);
+    finally
+      Notification.Free;
+    end;
+  finally
+    NotificationCenter.Free;
+  end;
+  {$ELSE}
+  // Sur desktop : MessageBox simple
+  ShowMessage(Titre + sLineBreak + sLineBreak + Message);
+  {$ENDIF}
+end;
+```
+
+## Patterns d'architecture pour le partage de code
+
+### Pattern MVVM (Model-View-ViewModel)
+
+Le pattern MVVM sépare clairement la logique de l'interface, facilitant le partage de code.
+
+```pascal
+// ========================================
+// ViewModel partagé entre mobile et desktop
+// Fichier: ViewModel.TacheList.pas
+// ========================================
+unit ViewModel.TacheList;
+
+interface
+
+uses
+  System.Generics.Collections, Model.Tache, Business.TacheManager;
+
+type
+  // Interface pour la Vue (implémentée différemment sur VCL et FMX)
+  ITacheListView = interface
+    ['{12345678-1234-1234-1234-123456789012}']
+    procedure AfficherTaches(Taches: TArray<TTache>);
+    procedure AfficherMessage(const Message: string);
+    procedure AfficherChargement(Visible: Boolean);
+  end;
+
+  // ViewModel partagé
+  TTacheListViewModel = class
+  private
+    FView: ITacheListView;
+    FManager: TTacheManager;
+    FFiltreActuel: string;
+  public
+    constructor Create(View: ITacheListView);
+    destructor Destroy; override;
+
+    // Commandes (appelées par la vue)
+    procedure Charger;
+    procedure AjouterNouvelleTache(const Titre, Description: string;
+      DateEcheance: TDateTime; Priorite: TPriorite);
+    procedure SupprimerTache(TacheID: Integer);
+    procedure FiltrerTaches(const Texte: string);
+    procedure AfficherTachesUrgentes;
+    procedure AfficherTachesEnRetard;
+
+    // Propriétés
+    property Manager: TTacheManager read FManager;
+  end;
+
+implementation
+
+uses
+  System.SysUtils;
+
+constructor TTacheListViewModel.Create(View: ITacheListView);
+begin
+  inherited Create;
+  FView := View;
+  FManager := TTacheManager.Create;
+end;
+
+destructor TTacheListViewModel.Destroy;
+begin
+  FManager.Free;
+  inherited;
+end;
+
+procedure TTacheListViewModel.Charger;
+begin
+  FView.AfficherChargement(True);
+  try
+    // Charger les tâches depuis la source de données
+    FManager.Charger;
+
+    // Afficher dans la vue
+    FView.AfficherTaches(FManager.ObtenirToutesLesTaches);
+  finally
+    FView.AfficherChargement(False);
+  end;
+end;
+
+procedure TTacheListViewModel.AjouterNouvelleTache(const Titre, Description: string;
+  DateEcheance: TDateTime; Priorite: TPriorite);
+begin
+  try
+    FManager.AjouterTache(Titre, Description, DateEcheance, Priorite);
+    FManager.Sauvegarder;
+
+    // Rafraîchir l'affichage
+    FView.AfficherTaches(FManager.ObtenirToutesLesTaches);
+    FView.AfficherMessage('Tâche ajoutée avec succès');
+  except
+    on E: Exception do
+      FView.AfficherMessage('Erreur : ' + E.Message);
+  end;
+end;
+
+procedure TTacheListViewModel.FiltrerTaches(const Texte: string);
+begin
+  FFiltreActuel := Texte;
+
+  if Texte.IsEmpty then
+    FView.AfficherTaches(FManager.ObtenirToutesLesTaches)
+  else
+    FView.AfficherTaches(FManager.RechercherTaches(Texte));
+end;
+
+procedure TTacheListViewModel.AfficherTachesUrgentes;
+begin
+  FView.AfficherTaches(FManager.ObtenirTachesUrgentes);
+end;
+
+end.
+```
+
+```pascal
+// ========================================
+// Vue VCL pour Desktop
+// Fichier: Desktop/Forms/Main.Form.pas
+// ========================================
+unit Main.Form;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Model.Tache, ViewModel.TacheList;
+
+type
+  TFormMain = class(TForm, ITacheListView)
+    ListView1: TListView;
+    Panel1: TPanel;
+    BtnAjouter: TButton;
+    BtnSupprimer: TButton;
+    EditRecherche: TEdit;
+    BtnUrgentes: TButton;
+    StatusBar1: TStatusBar;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure BtnAjouterClick(Sender: TObject);
+    procedure EditRechercheChange(Sender: TObject);
+    procedure BtnUrgentesClick(Sender: TObject);
+  private
+    FViewModel: TTacheListViewModel;
+
+    // Implémentation de ITacheListView
+    procedure AfficherTaches(Taches: TArray<TTache>);
+    procedure AfficherMessage(const Message: string);
+    procedure AfficherChargement(Visible: Boolean);
+  end;
+
+var
+  FormMain: TFormMain;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FViewModel := TTacheListViewModel.Create(Self);
+  FViewModel.Charger;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  FViewModel.Free;
+end;
+
+procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);
+var
+  Tache: TTache;
+  Item: TListItem;
+begin
+  ListView1.Items.BeginUpdate;
+  try
+    ListView1.Items.Clear;
+
+    for Tache in Taches do
+    begin
+      Item := ListView1.Items.Add;
+      Item.Caption := Tache.Titre;
+      Item.SubItems.Add(Tache.Description);
+      Item.SubItems.Add(DateToStr(Tache.DateEcheance));
+      Item.Data := Pointer(Tache.ID);
+
+      // Couleur selon l'urgence
+      if Tache.EstEnRetard then
+        Item.MakeVisible(False); // Ou autre style
+    end;
+  finally
+    ListView1.Items.EndUpdate;
+  end;
+end;
+
+procedure TFormMain.AfficherMessage(const Message: string);
+begin
+  StatusBar1.SimpleText := Message;
+  ShowMessage(Message);
+end;
+
+procedure TFormMain.AfficherChargement(Visible: Boolean);
+begin
+  // Sur desktop, on pourrait afficher une barre de progression
+  Screen.Cursor := IfThen(Visible, crHourGlass, crDefault);
+end;
+
+procedure TFormMain.BtnAjouterClick(Sender: TObject);
+var
+  Titre, Description: string;
+begin
+  // Dialogue d'ajout de tâche (simplifié)
+  Titre := InputBox('Nouvelle tâche', 'Titre :', '');
+  if not Titre.IsEmpty then
+  begin
+    Description := InputBox('Nouvelle tâche', 'Description :', '');
+    FViewModel.AjouterNouvelleTache(Titre, Description, Now + 7, prMoyenne);
+  end;
+end;
+
+procedure TFormMain.EditRechercheChange(Sender: TObject);
+begin
+  FViewModel.FiltrerTaches(EditRecherche.Text);
+end;
+
+procedure TFormMain.BtnUrgentesClick(Sender: TObject);
+begin
+  FViewModel.AfficherTachesUrgentes;
+end;
+
+end.
+```
+
+```pascal
+// ========================================
+// Vue FMX pour Mobile
+// Fichier: Mobile/Forms/Main.Form.pas
+// ========================================
+unit Main.Form;
+
+interface
+
+uses
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
+  FMX.StdCtrls, FMX.ListView, FMX.Layouts, FMX.Edit,
+  Model.Tache, ViewModel.TacheList;
+
+type
+  TFormMain = class(TForm, ITacheListView)
+    ListView1: TListView;
+    ToolBar1: TToolBar;
+    BtnAjouter: TSpeedButton;
+    EditRecherche: TEdit;
+    BtnUrgentes: TSpeedButton;
+    AniIndicator1: TAniIndicator;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure BtnAjouterClick(Sender: TObject);
+    procedure EditRechercheChange(Sender: TObject);
+    procedure BtnUrgentesClick(Sender: TObject);
+  private
+    FViewModel: TTacheListViewModel;
+
+    // Implémentation de ITacheListView
+    procedure AfficherTaches(Taches: TArray<TTache>);
+    procedure AfficherMessage(const Message: string);
+    procedure AfficherChargement(Visible: Boolean);
+  end;
+
+var
+  FormMain: TFormMain;
+
+implementation
+
+{$R *.fmx}
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FViewModel := TTacheListViewModel.Create(Self);
+  FViewModel.Charger;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  FViewModel.Free;
+end;
+
+procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);
+var
+  Tache: TTache;
+  Item: TListViewItem;
+begin
+  ListView1.Items.BeginUpdate;
+  try
+    ListView1.Items.Clear;
+
+    for Tache in Taches do
+    begin
+      Item := ListView1.Items.Add;
+      Item.Text := Tache.Titre;
+      Item.Detail := Tache.Description;
+      Item.TagString := Tache.ID.ToString;
+
+      // Indicateur visuel pour les tâches urgentes
+      if Tache.EstUrgente then
+        Item.Objects.TextObject.TextColor := TAlphaColors.Red;
+    end;
+  finally
+    ListView1.Items.EndUpdate;
+  end;
+end;
+
+procedure TFormMain.AfficherMessage(const Message: string);
+begin
+  ShowMessage(Message);
+end;
+
+procedure TFormMain.AfficherChargement(Visible: Boolean);
+begin
+  AniIndicator1.Enabled := Visible;
+  AniIndicator1.Visible := Visible;
+end;
+
+procedure TFormMain.BtnAjouterClick(Sender: TObject);
+var
+  Titre, Description: string;
+begin
+  // Sur mobile, on utiliserait un dialogue ou un formulaire dédié
+  // Ici simplifié avec InputQuery
+  if InputQuery('Nouvelle tâche', ['Titre', 'Description'],
+    [Titre, Description]) then
+  begin
+    if not Titre.IsEmpty then
+      FViewModel.AjouterNouvelleTache(Titre, Description, Now + 7, prMoyenne);
+  end;
+end;
+
+procedure TFormMain.EditRechercheChange(Sender: TObject);
+begin
+  FViewModel.FiltrerTaches(EditRecherche.Text);
+end;
+
+procedure TFormMain.BtnUrgentesClick(Sender: TObject);
+begin
+  FViewModel.AfficherTachesUrgentes;
+end;
+
+end.
+```
+
+## Gestion de la persistance multi-plateforme
+
+### Interface abstraite pour la persistance
+
+```pascal
+// ========================================
+// Interface de persistance (partagée)
+// Fichier: Shared/Data/Data.Storage.Interfaces.pas
+// ========================================
+unit Data.Storage.Interfaces;
+
+interface
+
+uses
+  Model.Tache, System.Generics.Collections;
 
 type
   IDataStorage = interface
-    ['{A1234567-1234-1234-1234-1234567890AB}']
-    function SaveData(const Data: string): Boolean;
-    function LoadData: string;
-  end;
-
-  TDataHelper = class
-  private
-    FStorage: IDataStorage;
-  public
-    constructor Create(AStorage: IDataStorage);
-
-    function ProcessAndSaveData(const InputData: string): Boolean;
-    function LoadAndProcessData: string;
+    ['{ABCDEF12-3456-7890-ABCD-EF1234567890}']
+    procedure SauvegarderTaches(Taches: TObjectList<TTache>);
+    function ChargerTaches: TObjectList<TTache>;
+    procedure Vider;
   end;
 
 implementation
-
-constructor TDataHelper.Create(AStorage: IDataStorage);
-begin
-  inherited Create;
-  FStorage := AStorage;
-end;
-
-function TDataHelper.ProcessAndSaveData(const InputData: string): Boolean;
-var
-  ProcessedData: string;
-begin
-  // Logique métier commune
-  ProcessedData := InputData + ' (processed)';
-
-  // Utiliser l'implémentation spécifique à la plateforme
-  Result := FStorage.SaveData(ProcessedData);
-end;
-
-function TDataHelper.LoadAndProcessData: string;
-var
-  RawData: string;
-begin
-  // Utiliser l'implémentation spécifique à la plateforme
-  RawData := FStorage.LoadData;
-
-  // Logique métier commune
-  Result := 'Processed: ' + RawData;
-end;
 
 end.
 ```
 
-Pour chaque plateforme, vous implémentez l'interface :
+### Implémentation SQLite (partagée)
 
 ```pascal
-// Unit: DataModuleDesktop.pas
-unit DataModuleDesktop;
+// ========================================
+// Implémentation SQLite (utilisable partout)
+// Fichier: Shared/Data/Data.Storage.SQLite.pas
+// ========================================
+unit Data.Storage.SQLite;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.IniFiles,
-  DataModule;
+  Data.Storage.Interfaces, Model.Tache, System.Generics.Collections,
+  FireDAC.Comp.Client, FireDAC.Stan.Def;
 
 type
-  TDesktopDataStorage = class(TInterfacedObject, IDataStorage)
+  TSQLiteStorage = class(TInterfacedObject, IDataStorage)
   private
-    FIniFile: string;
+    FConnection: TFDConnection;
+    procedure ConfigurerConnexion;
+    procedure CreerTables;
   public
-    constructor Create(const IniFileName: string);
+    constructor Create;
     destructor Destroy; override;
 
-    // Implémentation de l'interface IDataStorage
-    function SaveData(const Data: string): Boolean;
-    function LoadData: string;
+    // IDataStorage
+    procedure SauvegarderTaches(Taches: TObjectList<TTache>);
+    function ChargerTaches: TObjectList<TTache>;
+    procedure Vider;
   end;
 
 implementation
 
-constructor TDesktopDataStorage.Create(const IniFileName: string);
+uses
+  System.IOUtils, System.SysUtils, Utils.PlatformHelper;
+
+constructor TSQLiteStorage.Create;
 begin
-  inherited Create;
-  FIniFile := IniFileName;
+  inherited;
+  FConnection := TFDConnection.Create(nil);
+  ConfigurerConnexion;
+  CreerTables;
 end;
 
-destructor TDesktopDataStorage.Destroy;
+destructor TSQLiteStorage.Destroy;
 begin
+  FConnection.Free;
   inherited;
 end;
 
-function TDesktopDataStorage.SaveData(const Data: string): Boolean;
+procedure TSQLiteStorage.ConfigurerConnexion;
 var
-  Ini: TIniFile;
+  CheminBD: string;
 begin
-  Result := False;
+  // Utiliser le bon chemin selon la plateforme
+  CheminBD := TPath.Combine(TPlatformHelper.CheminDocuments, 'taches.db');
 
+  FConnection.DriverName := 'SQLite';
+  FConnection.Params.Database := CheminBD;
+  FConnection.LoginPrompt := False;
+  FConnection.Connected := True;
+end;
+
+procedure TSQLiteStorage.CreerTables;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
   try
-    Ini := TIniFile.Create(FIniFile);
-    try
-      Ini.WriteString('Data', 'Content', Data);
-      Result := True;
-    finally
-      Ini.Free;
-    end;
-  except
-    // Gérer les erreurs
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'CREATE TABLE IF NOT EXISTS taches (' +
+      '  id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      '  titre TEXT NOT NULL, ' +
+      '  description TEXT, ' +
+      '  date_echeance DATETIME, ' +
+      '  priorite INTEGER, ' +
+      '  statut INTEGER, ' +
+      '  date_creation DATETIME' +
+      ')';
+    Query.ExecSQL;
+  finally
+    Query.Free;
   end;
 end;
 
-function TDesktopDataStorage.LoadData: string;
+procedure TSQLiteStorage.SauvegarderTaches(Taches: TObjectList<TTache>);
 var
-  Ini: TIniFile;
+  Query: TFDQuery;
+  Tache: TTache;
 begin
-  Result := '';
-
+  Query := TFDQuery.Create(nil);
   try
-    if FileExists(FIniFile) then
+    Query.Connection := FConnection;
+
+    // Vider la table
+    Query.SQL.Text := 'DELETE FROM taches';
+    Query.ExecSQL;
+
+    // Insérer toutes les tâches
+    Query.SQL.Text :=
+      'INSERT INTO taches (titre, description, date_echeance, ' +
+      'priorite, statut, date_creation) ' +
+      'VALUES (:titre, :desc, :echeance, :prio, :statut, :creation)';
+
+    for Tache in Taches do
     begin
-      Ini := TIniFile.Create(FIniFile);
-      try
-        Result := Ini.ReadString('Data', 'Content', '');
-      finally
-        Ini.Free;
-      end;
-    end;
-  except
-    // Gérer les erreurs
-  end;
-end;
-
-end.
-```
-
-```pascal
-// Unit: DataModuleMobile.pas
-unit DataModuleMobile;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.IOUtils,
-  DataModule;
-
-type
-  TMobileDataStorage = class(TInterfacedObject, IDataStorage)
-  private
-    FFileName: string;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    // Implémentation de l'interface IDataStorage
-    function SaveData(const Data: string): Boolean;
-    function LoadData: string;
-  end;
-
-implementation
-
-constructor TMobileDataStorage.Create;
-begin
-  inherited Create;
-  FFileName := TPath.Combine(TPath.GetDocumentsPath, 'appdata.txt');
-end;
-
-destructor TMobileDataStorage.Destroy;
-begin
-  inherited;
-end;
-
-function TMobileDataStorage.SaveData(const Data: string): Boolean;
-begin
-  Result := False;
-
-  try
-    TFile.WriteAllText(FFileName, Data);
-    Result := True;
-  except
-    // Gérer les erreurs
-  end;
-end;
-
-function TMobileDataStorage.LoadData: string;
-begin
-  Result := '';
-
-  try
-    if TFile.Exists(FFileName) then
-      Result := TFile.ReadAllText(FFileName);
-  except
-    // Gérer les erreurs
-  end;
-end;
-
-end.
-```
-
-### Stratégie 2 : Factory Method pour la création d'objets spécifiques
-
-Le pattern Factory permet de créer des objets spécifiques à chaque plateforme tout en conservant une interface commune :
-
-```pascal
-// Unit: PlatformFactory.pas
-unit PlatformFactory;
-
-interface
-
-uses
-  System.Classes, System.SysUtils,
-  DataModule;
-
-type
-  TPlatformFactory = class
-  public
-    class function CreateDataStorage: IDataStorage;
-  end;
-
-implementation
-
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-uses
-  DataModuleDesktop;
-{$ELSE}
-uses
-  DataModuleMobile;
-{$ENDIF}
-
-class function TPlatformFactory.CreateDataStorage: IDataStorage;
-begin
-{$IF DEFINED(MSWINDOWS)}
-  Result := TDesktopDataStorage.Create(TPath.Combine(
-    TPath.GetHomePath, 'AppData\Roaming\MyApp\settings.ini'));
-{$ELSEIF DEFINED(MACOS)}
-  Result := TDesktopDataStorage.Create(TPath.Combine(
-    TPath.GetHomePath, 'Library/Application Support/MyApp/settings.ini'));
-{$ELSE}
-  Result := TMobileDataStorage.Create;
-{$ENDIF}
-end;
-
-end.
-```
-
-### Stratégie 3 : Utilisation des LiveBindings
-
-Les LiveBindings de Delphi permettent de lier visuellement des données à l'interface utilisateur, ce qui facilite la séparation entre la logique métier et la présentation :
-
-1. Créez un objet de données partageable
-2. Utilisez l'éditeur LiveBindings dans Delphi pour lier les propriétés aux contrôles visuels
-3. Le moteur LiveBindings s'occupe de la synchronisation
-
-Cette approche aide à maintenir des interfaces cohérentes tout en partageant le modèle de données.
-
-## Bonnes pratiques pour le partage de code
-
-Pour maximiser l'efficacité du partage de code, suivez ces bonnes pratiques :
-
-### 1. Planifiez votre architecture dès le début
-
-Avant de commencer le développement, définissez clairement :
-- Quelles parties du code seront partagées
-- Comment gérer les différences entre plateformes
-- Où placer le code spécifique à chaque plateforme
-
-### 2. Utilisez des abstractions
-
-- Créez des interfaces pour définir des comportements
-- Utilisez des classes abstraites pour le code commun
-- Implémentez des classes concrètes pour chaque plateforme
-
-```pascal
-type
-  TAbstractPlatformServices = class abstract
-  public
-    class function GetDeviceID: string; virtual; abstract;
-    class function GetOSVersion: string; virtual; abstract;
-    class function IsTablet: Boolean; virtual; abstract;
-  end;
-
-  {$IF DEFINED(ANDROID)}
-  TAndroidPlatformServices = class(TAbstractPlatformServices)
-  public
-    class function GetDeviceID: string; override;
-    class function GetOSVersion: string; override;
-    class function IsTablet: Boolean; override;
-  end;
-  {$ENDIF}
-
-  {$IF DEFINED(IOS)}
-  TiOSPlatformServices = class(TAbstractPlatformServices)
-  public
-    class function GetDeviceID: string; override;
-    class function GetOSVersion: string; override;
-    class function IsTablet: Boolean; override;
-  end;
-  {$ENDIF}
-
-  // etc.
-```
-
-### 3. Organisez efficacement vos unités
-
-- Regroupez le code commun dans des unités partagées
-- Nommez clairement les unités spécifiques (ex: `FileUtils.Windows.pas`)
-- Utilisez des alias d'unités pour simplifier les références
-
-### 4. Minimisez les dépendances
-
-- Évitez les dépendances inutiles entre les modules
-- Privilégiez la composition plutôt que l'héritage
-- Utilisez l'injection de dépendances pour plus de flexibilité
-
-### 5. Testez sur toutes les plateformes
-
-- Créez des tests unitaires pour le code partagé
-- Vérifiez que le comportement est cohérent sur toutes les plateformes
-- Automatisez les tests autant que possible
-
-## Exemple complet : Application de gestion de notes multi-plateformes
-
-Voici un exemple plus complet d'une application de notes qui partage du code entre desktop et mobile.
-
-### 1. Structure du projet
-
-- `NotesApp.groupproj` - Groupe de projets
-  - `NotesApp.Desktop.dproj` - Application desktop
-  - `NotesApp.Mobile.dproj` - Application mobile
-  - `NotesApp.Core.dproj` - Package partagé contenant la logique métier
-
-### 2. Modèle de données partagé
-
-```pascal
-// Unit: Notes.Model.pas (dans NotesApp.Core)
-unit Notes.Model;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections, System.JSON;
-
-type
-  TNoteCategory = (ncPersonal, ncWork, ncShopping, ncIdeas);
-
-  TNote = class
-  private
-    FID: string;
-    FTitle: string;
-    FContent: string;
-    FCreatedDate: TDateTime;
-    FModifiedDate: TDateTime;
-    FCategory: TNoteCategory;
-  public
-    constructor Create; overload;
-    constructor Create(const ATitle, AContent: string;
-                      ACategory: TNoteCategory); overload;
-
-    function ToJSON: TJSONObject;
-    procedure FromJSON(const JSONObj: TJSONObject);
-
-    property ID: string read FID;
-    property Title: string read FTitle write FTitle;
-    property Content: string read FContent write FContent;
-    property CreatedDate: TDateTime read FCreatedDate;
-    property ModifiedDate: TDateTime read FModifiedDate write FModifiedDate;
-    property Category: TNoteCategory read FCategory write FCategory;
-  end;
-
-  INoteRepository = interface
-    ['{B1234567-1234-1234-1234-1234567890AB}']
-    function GetNotes: TObjectList<TNote>;
-    function GetNote(const ID: string): TNote;
-    procedure SaveNote(Note: TNote);
-    procedure DeleteNote(const ID: string);
-    procedure SearchNotes(const SearchText: string;
-                       Result: TObjectList<TNote>);
-  end;
-
-  TNoteManager = class
-  private
-    FRepository: INoteRepository;
-  public
-    constructor Create(ARepository: INoteRepository);
-    destructor Destroy; override;
-
-    function GetAllNotes: TObjectList<TNote>;
-    function GetNotesByCategory(Category: TNoteCategory): TObjectList<TNote>;
-    function CreateNewNote(const Title, Content: string;
-                         Category: TNoteCategory): TNote;
-    procedure UpdateNote(Note: TNote);
-    procedure DeleteNote(const ID: string);
-    function SearchNotes(const SearchText: string): TObjectList<TNote>;
-
-    property Repository: INoteRepository read FRepository;
-  end;
-
-implementation
-
-// Implémentations...
-
-end.
-```
-
-### 3. Implémentations spécifiques aux plateformes
-
-```pascal
-// Unit: Notes.Repository.Desktop.pas
-unit Notes.Repository.Desktop;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
-  System.IOUtils, Notes.Model;
-
-type
-  TDesktopNoteRepository = class(TInterfacedObject, INoteRepository)
-  private
-    FNotes: TObjectList<TNote>;
-    FStoragePath: string;
-    procedure LoadFromFile;
-    procedure SaveToFile;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function GetNotes: TObjectList<TNote>;
-    function GetNote(const ID: string): TNote;
-    procedure SaveNote(Note: TNote);
-    procedure DeleteNote(const ID: string);
-    procedure SearchNotes(const SearchText: string;
-                       Result: TObjectList<TNote>);
-  end;
-
-implementation
-
-// Implémentation pour desktop qui utilise un fichier JSON local
-
-end.
-```
-
-```pascal
-// Unit: Notes.Repository.Mobile.pas
-unit Notes.Repository.Mobile;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.JSON, System.Generics.Collections,
-  System.IOUtils, Notes.Model;
-
-type
-  TMobileNoteRepository = class(TInterfacedObject, INoteRepository)
-  private
-    FNotes: TObjectList<TNote>;
-    FStoragePath: string;
-    procedure LoadFromFile;
-    procedure SaveToFile;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function GetNotes: TObjectList<TNote>;
-    function GetNote(const ID: string): TNote;
-    procedure SaveNote(Note: TNote);
-    procedure DeleteNote(const ID: string);
-    procedure SearchNotes(const SearchText: string;
-                       Result: TObjectList<TNote>);
-  end;
-
-implementation
-
-// Implémentation pour mobile qui utilise un fichier dans le répertoire Documents
-
-end.
-```
-
-### 4. Factory pour la création des objets spécifiques
-
-```pascal
-// Unit: Notes.Factory.pas
-unit Notes.Factory;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, Notes.Model;
-
-type
-  TNotesFactory = class
-  public
-    class function CreateRepository: INoteRepository;
-  end;
-
-implementation
-
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-uses
-  Notes.Repository.Desktop;
-{$ELSE}
-uses
-  Notes.Repository.Mobile;
-{$ENDIF}
-
-class function TNotesFactory.CreateRepository: INoteRepository;
-begin
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-  Result := TDesktopNoteRepository.Create;
-{$ELSE}
-  Result := TMobileNoteRepository.Create;
-{$ENDIF}
-end;
-
-end.
-```
-
-### 5. Interface utilisateur spécifique à chaque plateforme
-
-Pour l'application desktop (VCL ou FireMonkey) :
-
-```pascal
-// Unit: MainForm.Desktop.pas
-unit MainForm.Desktop;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
-  FMX.ListView, FMX.StdCtrls, FMX.Edit, FMX.ComboEdit, FMX.Layouts,
-  FMX.TabControl, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  Notes.Model, Notes.Factory;
-
-type
-  TMainFormDesktop = class(TForm)
-    ToolBar1: TToolBar;
-    btnNew: TButton;
-    btnDelete: TButton;
-    ListView1: TListView;
-    Layout1: TLayout;
-    edtTitle: TEdit;
-    cmbCategory: TComboBox;
-    Label1: TLabel;
-    Label2: TLabel;
-    memoContent: TMemo;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnNewClick(Sender: TObject);
-    procedure btnDeleteClick(Sender: TObject);
-    procedure ListView1ItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
-    procedure edtTitleChange(Sender: TObject);
-    procedure memoContentChange(Sender: TObject);
-    procedure cmbCategoryChange(Sender: TObject);
-  private
-    FNoteManager: TNoteManager;
-    FCurrentNote: TNote;
-    procedure LoadNotes;
-    procedure UpdateCurrentNote;
-    procedure ClearNoteForm;
-  public
-    { Public declarations }
-  end;
-
-var
-  MainFormDesktop: TMainFormDesktop;
-
-implementation
-
-{$R *.fmx}
-
-// Implémentations...
-
-end.
-```
-
-Pour l'application mobile (FireMonkey) :
-
-```pascal
-// Unit: MainForm.Mobile.pas
-unit MainForm.Mobile;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
-  FMX.ListView, FMX.StdCtrls, FMX.TabControl, FMX.Edit, FMX.Layouts,
-  FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, FMX.Controls.Presentation,
-  Notes.Model, Notes.Factory;
-
-type
-  TMainFormMobile = class(TForm)
-    TabControl1: TTabControl;
-    TabItem1: TTabItem;
-    TabItem2: TTabItem;
-    ToolBar1: TToolBar;
-    ToolBar2: TToolBar;
-    btnAdd: TSpeedButton;
-    ListView1: TListView;
-    btnBack: TSpeedButton;
-    btnSave: TSpeedButton;
-    lblTitle: TLabel;
-    edtTitle: TEdit;
-    Layout1: TLayout;
-    Label1: TLabel;
-    cmbCategory: TComboBox;
-    memoContent: TMemo;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
-    procedure ListView1ItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
-    procedure btnBackClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-  private
-    FNoteManager: TNoteManager;
-    FCurrentNote: TNote;
-    FNewNote: Boolean;
-    procedure LoadNotes;
-    procedure SaveCurrentNote;
-    procedure ClearNoteForm;
-  public
-    { Public declarations }
-  end;
-
-var
-  MainFormMobile: TMainFormMobile;
-
-implementation
-
-{$R *.fmx}
-
-// Implémentations...
-
-end.
-```
-
-### 6. Programme principal
-
-Pour l'application desktop :
-
-```pascal
-program NotesApp.Desktop;
-
-uses
-  System.StartUpCopy,
-  FMX.Forms,
-  MainForm.Desktop in 'MainForm.Desktop.pas' {MainFormDesktop},
-  Notes.Model in '..\Common\Notes.Model.pas',
-  Notes.Repository.Desktop in '..\Common\Notes.Repository.Desktop.pas',
-  Notes.Factory in '..\Common\Notes.Factory.pas';
-
-{$R *.res}
-
-begin
-  Application.Initialize;
-  Application.CreateForm(TMainFormDesktop, MainFormDesktop);
-  Application.Run;
-end.
-```
-
-Pour l'application mobile :
-
-```pascal
-program NotesApp.Mobile;
-
-uses
-  System.StartUpCopy,
-  FMX.Forms,
-  MainForm.Mobile in 'MainForm.Mobile.pas' {MainFormMobile},
-  Notes.Model in '..\Common\Notes.Model.pas',
-  Notes.Repository.Mobile in '..\Common\Notes.Repository.Mobile.pas',
-  Notes.Factory in '..\Common\Notes.Factory.pas';
-
-{$R *.res}
-
-begin
-  Application.Initialize;
-  Application.CreateForm(TMainFormMobile, MainFormMobile);
-  Application.Run;
-end.
-```
-
-## Techniques avancées de partage de code
-
-### Services locaux
-
-Pour les fonctionnalités complexes, vous pouvez utiliser des services locaux :
-
-```pascal
-type
-  IBackupService = interface
-    ['{C1234567-1234-1234-1234-1234567890AB}']
-    function BackupData(const DestinationPath: string): Boolean;
-    function RestoreData(const SourcePath: string): Boolean;
-  end;
-
-  TCloudBackupService = class(TInterfacedObject, IBackupService)
-  private
-    // Implémentation commune
-  end;
-
-  {$IF DEFINED(MSWINDOWS)}
-  TWindowsBackupService = class(TCloudBackupService)
-  private
-    // Implémentation spécifique à Windows
-  end;
-  {$ENDIF}
-```
-
-### Communication entre modules
-
-Pour la communication entre modules, utilisez le pattern Observer ou un bus d'événements :
-
-```pascal
-type
-  TNotificationCenter = class
-  private
-    class var FInstance: TNotificationCenter;
-    FObservers: TDictionary<string, TList<TPair<TObject, TProc<TObject>>>>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure AddObserver(Observer: TObject; const NotificationName: string;
-                        Handler: TProc<TObject>);
-    procedure RemoveObserver(Observer: TObject; const NotificationName: string);
-    procedure PostNotification(const NotificationName: string; Sender: TObject);
-
-    class function Instance: TNotificationCenter;
-    class procedure ReleaseInstance;
-  end;
-```
-
-Cette approche permet une communication découplée entre les différentes parties de votre application.
-
-## Conseils pour optimiser le partage de code
-
-### 1. Adoptez une approche incrémentale
-
-Ne cherchez pas à partager 100% du code dès le début :
-
-1. Commencez par partager la logique métier fondamentale
-2. Étendez progressivement le partage aux autres couches
-3. Refactorisez régulièrement pour améliorer la structure
-
-### 2. Comprenez les différences entre plateformes
-
-Certaines fonctionnalités nécessitent des approches différentes selon la plateforme :
-
-- **Stockage** : Les chemins d'accès et les permissions varient
-- **Réseau** : La gestion de la connectivité diffère
-- **Interface utilisateur** : Les paradigmes d'interaction sont différents
-- **Performances** : Les optimisations peuvent être spécifiques
-
-### 3. Documentez les interfaces partagées
-
-Une bonne documentation facilite l'utilisation du code partagé :
-
-- Documentez clairement les interfaces et les classes abstraites
-- Spécifiez les comportements attendus des implémentations
-- Indiquez les limitations spécifiques à chaque plateforme
-
-### 4. Testez la compatibilité régulièrement
-
-Les environnements de développement et les OS évoluent constamment :
-
-- Testez fréquemment sur toutes les plateformes cibles
-- Maintenez des appareils de test à jour (ou utilisez des services de test cloud)
-- Automatisez les tests pour détecter les problèmes de compatibilité rapidement
-
-### 5. Utilisez les gestionnaires de dépendances
-
-Pour les projets complexes, structurez bien vos dépendances :
-
-- Utilisez GetIt (le gestionnaire de packages Delphi) pour les composants
-- Organisez clairement les dépendances de projets avec Project Manager
-- Considérez l'utilisation d'outils de gestion de version comme Git avec une structure modulaire
-
-## Cas d'usage courants du partage de code
-
-### Modèles de données
-
-Les modèles de données sont parfaits pour le partage de code car ils ne dépendent généralement pas de la plateforme :
-
-```pascal
-unit App.Models;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections, System.JSON;
-
-type
-  TProduct = class
-  private
-    FID: Integer;
-    FName: string;
-    FPrice: Double;
-    FDescription: string;
-    FCategory: string;
-    FImageURL: string;
-    FRating: Double;
-  public
-    constructor Create; overload;
-    constructor Create(JOBJ: TJSONObject); overload;
-
-    function ToJSON: TJSONObject;
-
-    property ID: Integer read FID write FID;
-    property Name: string read FName write FName;
-    property Price: Double read FPrice write FPrice;
-    property Description: string read FDescription write FDescription;
-    property Category: string read FCategory write FCategory;
-    property ImageURL: string read FImageURL write FImageURL;
-    property Rating: Double read FRating write FRating;
-  end;
-
-  TProductList = class
-  private
-    FItems: TObjectList<TProduct>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure Clear;
-    procedure AddProduct(Product: TProduct);
-    procedure LoadFromJSON(JSONArray: TJSONArray);
-    function ToJSON: TJSONArray;
-
-    property Items: TObjectList<TProduct> read FItems;
-  end;
-
-implementation
-
-// Implémentations...
-
-end.
-```
-
-Ce type de code peut être utilisé sans modification sur toutes les plateformes.
-
-### Services d'accès aux données
-
-Les services qui encapsulent l'accès aux API REST peuvent être largement partagés :
-
-```pascal
-unit App.Services;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Net.HttpClient, System.Net.URLClient,
-  System.JSON, App.Models;
-
-type
-  TProductService = class
-  private
-    FBaseURL: string;
-    FAuthToken: string;
-  public
-    constructor Create(const BaseURL, AuthToken: string);
-
-    function GetProducts: TProductList;
-    function GetProductById(ID: Integer): TProduct;
-    function SearchProducts(const Query: string): TProductList;
-    function AddProduct(Product: TProduct): Boolean;
-    function UpdateProduct(Product: TProduct): Boolean;
-    function DeleteProduct(ID: Integer): Boolean;
-  end;
-
-implementation
-
-constructor TProductService.Create(const BaseURL, AuthToken: string);
-begin
-  inherited Create;
-  FBaseURL := BaseURL;
-  FAuthToken := AuthToken;
-end;
-
-function TProductService.GetProducts: TProductList;
-var
-  Client: THTTPClient;
-  Response: IHTTPResponse;
-  URL: string;
-  JSONArray: TJSONArray;
-begin
-  Result := TProductList.Create;
-  Client := THTTPClient.Create;
-  try
-    // Configurer l'en-tête d'autorisation
-    Client.CustomHeaders['Authorization'] := 'Bearer ' + FAuthToken;
-
-    // Construire l'URL
-    URL := FBaseURL + '/api/products';
-
-    // Faire la requête
-    Response := Client.Get(URL);
-
-    // Vérifier la réponse
-    if Response.StatusCode = 200 then
-    begin
-      JSONArray := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
-      if JSONArray <> nil then
-      try
-        Result.LoadFromJSON(JSONArray);
-      finally
-        JSONArray.Free;
-      end;
+      Query.ParamByName('titre').AsString := Tache.Titre;
+      Query.ParamByName('desc').AsString := Tache.Description;
+      Query.ParamByName('echeance').AsDateTime := Tache.DateEcheance;
+      Query.ParamByName('prio').AsInteger := Ord(Tache.Priorite);
+      Query.ParamByName('statut').AsInteger := Ord(Tache.Statut);
+      Query.ParamByName('creation').AsDateTime := Tache.DateCreation;
+
+      Query.ExecSQL;
     end;
   finally
-    Client.Free;
+    Query.Free;
   end;
 end;
 
-// Autres implémentations...
-
-end.
-```
-
-### Logique métier
-
-La logique métier est idéale pour le partage de code, car elle encapsule les règles de votre application :
-
-```pascal
-unit App.BusinessLogic;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Math, System.Generics.Collections,
-  App.Models;
-
-type
-  TShoppingCart = class
-  private
-    FItems: TObjectList<TProduct>;
-    FDiscountCode: string;
-    FDiscountPercentage: Double;
-
-    function CalculateSubtotal: Double;
-    function CalculateDiscount: Double;
-    function CalculateTax: Double;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure AddProduct(Product: TProduct; Quantity: Integer = 1);
-    procedure RemoveProduct(ProductID: Integer);
-    procedure UpdateQuantity(ProductID: Integer; Quantity: Integer);
-    procedure ApplyDiscountCode(const Code: string);
-    procedure ClearCart;
-
-    function GetItemCount: Integer;
-    function GetTotal: Double;
-
-    property Items: TObjectList<TProduct> read FItems;
-    property DiscountCode: string read FDiscountCode;
-    property DiscountPercentage: Double read FDiscountPercentage;
-  end;
-
-implementation
-
-// Implémentations...
-
-end.
-```
-
-### Utilitaires et helpers
-
-Les fonctions utilitaires peuvent être partagées entre plateformes :
-
-```pascal
-unit App.Utils;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.DateUtils, System.NetEncoding;
-
-type
-  TDateUtils = class
-  public
-    class function FormatRelativeDate(ADate: TDateTime): string;
-    class function IsToday(ADate: TDateTime): Boolean;
-    class function IsYesterday(ADate: TDateTime): Boolean;
-  end;
-
-  TStringUtils = class
-  public
-    class function Truncate(const Text: string; MaxLength: Integer): string;
-    class function StripHTML(const HTML: string): string;
-    class function SanitizeFileName(const FileName: string): string;
-  end;
-
-  TCurrencyUtils = class
-  public
-    class function FormatCurrency(const Value: Double;
-                                const CurrencyCode: string = 'EUR'): string;
-    class function ConvertCurrency(const Value: Double;
-                                 const FromCurrency, ToCurrency: string): Double;
-  end;
-
-implementation
-
-// Implémentations...
-
-end.
-```
-
-## Adaptation des interfaces utilisateur
-
-Bien que le code d'interface ne soit pas totalement partageable, vous pouvez optimiser la réutilisation :
-
-### Partager les ViewModels (MVVM)
-
-Si vous utilisez le pattern MVVM, les ViewModels peuvent être largement partagés :
-
-```pascal
-unit App.ViewModels;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  App.Models, App.Services;
-
-type
-  TProductListViewModel = class
-  private
-    FProducts: TProductList;
-    FService: TProductService;
-    FIsLoading: Boolean;
-    FSearchQuery: string;
-    FOnProductsLoaded: TNotifyEvent;
-    FOnError: TProc<string>;
-
-    procedure SetSearchQuery(const Value: string);
-  public
-    constructor Create(AService: TProductService);
-    destructor Destroy; override;
-
-    procedure LoadProducts;
-    procedure SearchProducts;
-    procedure RefreshData;
-
-    property Products: TProductList read FProducts;
-    property IsLoading: Boolean read FIsLoading;
-    property SearchQuery: string read FSearchQuery write SetSearchQuery;
-    property OnProductsLoaded: TNotifyEvent read FOnProductsLoaded write FOnProductsLoaded;
-    property OnError: TProc<string> read FOnError write FOnError;
-  end;
-
-implementation
-
-// Implémentations...
-
-end.
-```
-
-### Adaptateurs d'interface conditionnels
-
-Utilisez des adaptateurs pour gérer les différences d'interface spécifiques à la plateforme :
-
-```pascal
-unit App.UIAdapters;
-
-interface
-
-uses
-  System.SysUtils, System.Classes;
-
-type
-  IDialogService = interface
-    ['{D1234567-1234-1234-1234-1234567890AB}']
-    procedure ShowMessage(const Msg: string);
-    function Confirm(const Msg: string): Boolean;
-    function InputBox(const Title, Prompt: string; var Value: string): Boolean;
-  end;
-
-  INavigationService = interface
-    ['{E1234567-1234-1234-1234-1234567890AB}']
-    procedure NavigateTo(const ViewName: string);
-    procedure NavigateBack;
-    procedure ShowModal(const ViewName: string);
-  end;
-
-implementation
-
-uses
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-  App.Desktop.UIAdapters;
-{$ELSE}
-  App.Mobile.UIAdapters;
-{$ENDIF}
-
-function CreateDialogService: IDialogService;
-begin
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-  Result := TDesktopDialogService.Create;
-{$ELSE}
-  Result := TMobileDialogService.Create;
-{$ENDIF}
-end;
-
-function CreateNavigationService: INavigationService;
-begin
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-  Result := TDesktopNavigationService.Create;
-{$ELSE}
-  Result := TMobileNavigationService.Create;
-{$ENDIF}
-end;
-
-end.
-```
-
-### Ressources adaptatives
-
-Gérez les différentes ressources (images, styles) selon la plateforme :
-
-```pascal
-function GetImageResourcePath(const ResourceName: string): string;
-begin
-{$IF DEFINED(MSWINDOWS)}
-  Result := TPath.Combine('Resources\Images\Windows', ResourceName);
-{$ELSEIF DEFINED(MACOS)}
-  Result := TPath.Combine('Resources/Images/macOS', ResourceName);
-{$ELSEIF DEFINED(IOS)}
-  Result := TPath.Combine(TPath.GetDocumentsPath, 'Images/' + ResourceName);
-{$ELSEIF DEFINED(ANDROID)}
-  Result := TPath.Combine('assets/images', ResourceName);
-{$ELSE}
-  Result := 'images/' + ResourceName;
-{$ENDIF}
-end;
-```
-
-## Gestion des projets multi-plateformes
-
-### Structure de répertoires recommandée
-
-Une structure bien organisée facilite la maintenance :
-
-```
-ProjectRoot/
-  ├── Source/
-  │   ├── Common/            # Code partagé
-  │   │   ├── Models/        # Modèles de données
-  │   │   ├── Services/      # Services métier
-  │   │   ├── Utils/         # Utilitaires
-  │   │   └── ViewModels/    # ViewModels MVVM
-  │   │
-  │   ├── Desktop/           # Code spécifique Desktop
-  │   │   ├── Views/         # Formulaires et vues
-  │   │   ├── Adapters/      # Adaptateurs spécifiques
-  │   │   └── Resources/     # Ressources desktop
-  │   │
-  │   └── Mobile/            # Code spécifique Mobile
-  │       ├── Views/         # Formulaires et vues
-  │       ├── Adapters/      # Adaptateurs spécifiques
-  │       └── Resources/     # Ressources mobiles
-  │
-  ├── Projects/
-  │   ├── Desktop/           # Projet Desktop
-  │   │   ├── Win32/         # Fichiers de build Win32
-  │   │   ├── Win64/         # Fichiers de build Win64
-  │   │   └── macOS/         # Fichiers de build macOS
-  │   │
-  │   └── Mobile/            # Projet Mobile
-  │       ├── Android/       # Fichiers de build Android
-  │       └── iOS/           # Fichiers de build iOS
-  │
-  ├── Tests/                 # Tests unitaires et d'intégration
-  ├── Docs/                  # Documentation
-  └── Libs/                  # Bibliothèques tierces
-```
-
-### Configuration du groupe de projets
-
-Dans Delphi, configurez correctement votre groupe de projets :
-
-1. Créez un groupe de projets (**File > New > Project Group**)
-2. Ajoutez vos projets (**Project > Add to Project**)
-3. Configurez les dépendances si nécessaire (**Project > Project Dependencies**)
-4. Configurez les chemins d'inclusion pour tous les projets
-
-### Configuration des chemins d'inclusion
-
-Pour chaque projet, configurez les chemins d'inclusion pour référencer les unités partagées :
-
-1. Ouvrez les options du projet (**Project > Options**)
-2. Accédez à **Delphi Compiler > Search path**
-3. Ajoutez les chemins vers vos dossiers de code partagé :
-   - `..\..\..\Source\Common\Models`
-   - `..\..\..\Source\Common\Services`
-   - `..\..\..\Source\Common\Utils`
-   - `..\..\..\Source\Common\ViewModels`
-
-## Défis courants et solutions
-
-### Gestion des différences d'interface utilisateur
-
-**Défi** : Les interfaces utilisateur desktop et mobile sont fondamentalement différentes.
-
-**Solution** :
-- Utilisez le pattern MVVM pour séparer la logique de présentation
-- Créez des interfaces utilisateur distinctes mais connectées au même ViewModel
-- Utilisez LiveBindings pour lier les données aux contrôles visuels
-
-### Gestion des permissions spécifiques à la plateforme
-
-**Défi** : Les plateformes mobiles ont des systèmes de permissions stricts.
-
-**Solution** :
-- Créez une interface pour les services nécessitant des permissions
-- Implémentez cette interface différemment selon la plateforme
-- Utilisez une Factory pour créer l'implémentation appropriée
-
-```pascal
-type
-  ILocationService = interface
-    ['{F1234567-1234-1234-1234-1234567890AB}']
-    function GetCurrentLocation: TLocationCoord2D;
-    procedure RequestLocationPermission;
-    function HasLocationPermission: Boolean;
-  end;
-
-  TLocationServiceFactory = class
-  public
-    class function CreateLocationService: ILocationService;
-  end;
-```
-
-### Gestion du cycle de vie de l'application
-
-**Défi** : Les applications mobiles ont un cycle de vie différent des applications desktop.
-
-**Solution** :
-- Utilisez des gestionnaires d'événements standardisés
-- Implémentez une interface commune pour les événements du cycle de vie
-
-```pascal
-type
-  IApplicationLifecycle = interface
-    ['{G1234567-1234-1234-1234-1234567890AB}']
-    procedure OnApplicationStart;
-    procedure OnApplicationResume;
-    procedure OnApplicationPause;
-    procedure OnApplicationStop;
-    procedure OnApplicationMemoryWarning;
-
-    procedure RegisterLifecycleObserver(Observer: TObject;
-                                     EventHandler: TProc<string, TObject>);
-    procedure UnregisterLifecycleObserver(Observer: TObject);
-  end;
-```
-
-### Performances sur différentes plateformes
-
-**Défi** : Les performances varient considérablement entre desktop et mobiles.
-
-**Solution** :
-- Optimisez les opérations lourdes pour les appareils mobiles
-- Utilisez des stratégies adaptatives pour gérer les ressources
-
-```pascal
-procedure ProcessData(const Data: TStream);
-{$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-// Version optimisée pour desktop avec plus de mémoire
+function TSQLiteStorage.ChargerTaches: TObjectList<TTache>;
 var
-  MemoryStream: TMemoryStream;
+  Query: TFDQuery;
+  Tache: TTache;
 begin
-  MemoryStream := TMemoryStream.Create;
+  Result := TObjectList<TTache>.Create(True);
+
+  Query := TFDQuery.Create(nil);
   try
-    MemoryStream.LoadFromStream(Data);
-    // Traitement en mémoire
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'SELECT * FROM taches ORDER BY date_echeance';
+    Query.Open;
+
+    while not Query.Eof do
+    begin
+      Tache := TTache.Create;
+      Tache.ID := Query.FieldByName('id').AsInteger;
+      Tache.Titre := Query.FieldByName('titre').AsString;
+      Tache.Description := Query.FieldByName('description').AsString;
+      Tache.DateEcheance := Query.FieldByName('date_echeance').AsDateTime;
+      Tache.Priorite := TPriorite(Query.FieldByName('priorite').AsInteger);
+      Tache.Statut := TStatut(Query.FieldByName('statut').AsInteger);
+      Tache.DateCreation := Query.FieldByName('date_creation').AsDateTime;
+
+      Result.Add(Tache);
+
+      Query.Next;
+    end;
   finally
-    MemoryStream.Free;
+    Query.Free;
   end;
 end;
-{$ELSE}
-// Version optimisée pour mobile avec moins de mémoire
+
+procedure TSQLiteStorage.Vider;
 var
-  Buffer: array[0..4095] of Byte;
-  BytesRead: Integer;
+  Query: TFDQuery;
 begin
-  while True do
-  begin
-    BytesRead := Data.Read(Buffer, SizeOf(Buffer));
-    if BytesRead = 0 then
-      Break;
-
-    // Traitement par petits blocs
-
-    // Permettre au système de respirer entre les blocs
-    TThread.Sleep(0);
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'DELETE FROM taches';
+    Query.ExecSQL;
+  finally
+    Query.Free;
   end;
 end;
+
+end.
+```
+
+## Fonctionnalités spécifiques à adapter
+
+### Gestion des dialogues
+
+```pascal
+// Classe utilitaire pour les dialogues multi-plateformes
+unit Utils.Dialogues;
+
+interface
+
+type
+  TDialogueHelper = class
+  public
+    class procedure AfficherMessage(const Titre, Message: string);
+    class function Confirmer(const Message: string): Boolean;
+    class function DemanderTexte(const Prompt: string;
+      var Valeur: string): Boolean;
+  end;
+
+implementation
+
+uses
+  {$IFDEF MSWINDOWS}
+  Vcl.Dialogs,
+  {$ELSE}
+  FMX.Dialogs,
+  {$ENDIF}
+  System.UITypes;
+
+class procedure TDialogueHelper.AfficherMessage(const Titre, Message: string);
+begin
+  {$IFDEF MSWINDOWS}
+  MessageDlg(Message, TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+  {$ELSE}
+  ShowMessage(Message);
+  {$ENDIF}
+end;
+
+class function TDialogueHelper.Confirmer(const Message: string): Boolean;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := MessageDlg(Message, TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes;
+  {$ELSE}
+  Result := MessageDlg(Message, TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes;
+  {$ENDIF}
+end;
+
+class function TDialogueHelper.DemanderTexte(const Prompt: string;
+  var Valeur: string): Boolean;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := InputQuery('Saisie', Prompt, Valeur);
+  {$ELSE}
+  Result := InputQuery('Saisie', [Prompt], [Valeur]);
+  if Result then
+    Valeur := Valeur; // FMX retourne un tableau
+  {$ENDIF}
+end;
+
+end.
+```
+
+## Tests unitaires du code partagé
+
+Les tests unitaires sont cruciaux pour le code partagé.
+
+```pascal
+// ========================================
+// Tests unitaires pour TTache
+// Fichier: Tests/Test.Model.Tache.pas
+// ========================================
+unit Test.Model.Tache;
+
+interface
+
+uses
+  DUnitX.TestFramework, Model.Tache;
+
+type
+  [TestFixture]
+  TTestTache = class
+  private
+    FTache: TTache;
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure TestCreation;
+
+    [Test]
+    procedure TestEstEnRetard;
+
+    [Test]
+    procedure TestEstUrgente;
+
+    [Test]
+    procedure TestValidation;
+  end;
+
+implementation
+
+uses
+  System.SysUtils, System.DateUtils;
+
+procedure TTestTache.Setup;
+begin
+  FTache := TTache.Create;
+end;
+
+procedure TTestTache.TearDown;
+begin
+  FTache.Free;
+end;
+
+procedure TTestTache.TestCreation;
+begin
+  Assert.IsNotNull(FTache);
+  Assert.AreEqual(stAFaire, FTache.Statut);
+  Assert.AreEqual(prMoyenne, FTache.Priorite);
+end;
+
+procedure TTestTache.TestEstEnRetard;
+begin
+  // Tâche avec échéance hier
+  FTache.DateEcheance := Yesterday;
+  FTache.Statut := stAFaire;
+  Assert.IsTrue(FTache.EstEnRetard, 'Devrait être en retard');
+
+  // Tâche avec échéance demain
+  FTache.DateEcheance := Tomorrow;
+  Assert.IsFalse(FTache.EstEnRetard, 'Ne devrait pas être en retard');
+
+  // Tâche terminée (même avec échéance passée)
+  FTache.DateEcheance := Yesterday;
+  FTache.Statut := stTerminee;
+  Assert.IsFalse(FTache.EstEnRetard, 'Tâche terminée ne peut être en retard');
+end;
+
+procedure TTestTache.TestEstUrgente;
+begin
+  // Tâche dans 1 jour
+  FTache.DateEcheance := Now + 1;
+  FTache.Statut := stAFaire;
+  Assert.IsTrue(FTache.EstUrgente, 'Devrait être urgente');
+
+  // Tâche dans 5 jours
+  FTache.DateEcheance := Now + 5;
+  Assert.IsFalse(FTache.EstUrgente, 'Ne devrait pas être urgente');
+end;
+
+procedure TTestTache.TestValidation;
+var
+  MessageErreur: string;
+begin
+  // Tâche invalide (pas de titre)
+  FTache.Titre := '';
+  MessageErreur := FTache.Valider;
+  Assert.IsFalse(MessageErreur.IsEmpty, 'Devrait avoir une erreur');
+
+  // Tâche valide
+  FTache.Titre := 'Ma tâche';
+  FTache.DateEcheance := Tomorrow;
+  MessageErreur := FTache.Valider;
+  Assert.IsTrue(MessageErreur.IsEmpty, 'Ne devrait pas avoir d''erreur');
+end;
+
+initialization
+  TDUnitX.RegisterTestFixture(TTestTache);
+
+end.
+```
+
+## Bonnes pratiques
+
+### 1. Séparer clairement les responsabilités
+
+```pascal
+// ✅ BON : Chaque couche a une responsabilité claire
+- Models/ : Structures de données uniquement
+- Business/ : Logique métier pure
+- Data/ : Accès aux données
+- ViewModels/ : Liaison entre modèle et vue
+- Views/ : Interface utilisateur spécifique
+
+// ❌ MAUVAIS : Tout mélangé
+procedure TFormMain.BtnSaveClick(Sender: TObject);
+begin
+  // Validation + Logique métier + Accès BD + UI - tout dans un bouton !
+end;
+```
+
+### 2. Utiliser des interfaces pour le découplage
+
+```pascal
+// ✅ BON : Dépendre d'interfaces, pas d'implémentations concrètes
+type
+  ILogger = interface
+    procedure Log(const Message: string);
+  end;
+
+  TTacheManager = class
+  private
+    FLogger: ILogger; // Interface, pas classe concrète
+  end;
+
+// On peut facilement changer l'implémentation
+FManager.Logger := TFileLogger.Create;  // Desktop
+FManager.Logger := TCloudLogger.Create; // Mobile
+```
+
+### 3. Minimiser les dépendances de plateforme
+
+```pascal
+// ✅ BON : Code qui fonctionne partout
+function CalculerMontantTotal(Prix: Double; Quantite: Integer): Double;
+begin
+  Result := Prix * Quantite * 1.20; // TVA 20%
+end;
+
+// ⚠️ À isoler : Code spécifique à une plateforme
+{$IFDEF MSWINDOWS}
+procedure EnvoyerNotificationWindows;
 {$ENDIF}
 ```
 
-## Études de cas
+### 4. Documenter le code partagé
 
-### Étude de cas 1 : Application de gestion d'événements
+```pascal
+/// <summary>
+/// Calcule le nombre de jours restants avant l'échéance.
+/// </summary>
+/// <returns>
+/// Nombre positif si l'échéance est future, négatif si passée.
+/// </returns>
+/// <remarks>
+/// Cette méthode est utilisée à la fois sur desktop et mobile.
+/// </remarks>
+function TTache.JoursRestants: Integer;
+begin
+  Result := DaysBetween(Now, FDateEcheance);
+  if FDateEcheance < Now then
+    Result := -Result;
+end;
+```
 
-Une application de gestion d'événements avec versions desktop et mobile :
+### 5. Tester sur toutes les plateformes cibles
 
-- **Code partagé (80%)** :
-  - Modèles de données (événements, participants, lieux)
-  - Services d'accès aux API
-  - Logique métier (inscription, paiement, notifications)
-  - ViewModels
+```pascal
+// Créer une routine de test multi-plateforme
+procedure TesterSurToutesLesPlateformes;
+begin
+  // 1. Compiler pour Windows (VCL)
+  // 2. Compiler pour Android
+  // 3. Compiler pour iOS
+  // 4. Compiler pour macOS
 
-- **Code spécifique desktop (20%)** :
-  - Interface utilisateur multi-fenêtres
-  - Rapports détaillés et impression
-  - Outils d'administration avancés
-
-- **Code spécifique mobile (20%)** :
-  - Interface utilisateur optimisée pour le tactile
-  - Intégration de la caméra pour scanner les QR codes
-  - Fonctionnalités hors ligne
-
-### Étude de cas 2 : Application de vente au détail
-
-Une application de vente au détail avec point de vente desktop et catalogue mobile :
-
-- **Code partagé (70%)** :
-  - Catalogue de produits et gestion des stocks
-  - Logique de tarification et promotions
-  - Gestion des clients et profils
-  - Synchronisation des données
-
-- **Code spécifique desktop (30%)** :
-  - Terminal de point de vente
-  - Intégration du matériel (scanners, imprimantes)
-  - Rapports de vente et analyses
-
-- **Code spécifique mobile (30%)** :
-  - Expérience de navigation dans le catalogue
-  - Fonctionnalités sociales et partage
-  - Paiement mobile et panier d'achat
+  // Vérifier que :
+  // - Pas d'erreurs de compilation
+  // - Fonctionnalités identiques
+  // - Performance acceptable
+  // - UI adaptée à chaque plateforme
+end;
+```
 
 ## Conclusion
 
-Le partage de code entre applications desktop et mobiles avec Delphi offre des avantages significatifs en termes de productivité et de maintenance. En suivant une architecture bien conçue et en appliquant les bonnes pratiques, vous pouvez atteindre un taux élevé de réutilisation de code tout en respectant les spécificités de chaque plateforme.
+Le partage de code entre applications mobile et desktop avec Delphi est l'un des grands atouts de la plateforme. En structurant correctement votre code et en suivant les bonnes pratiques d'architecture, vous pouvez :
 
-Les principales clés du succès sont :
+**Maximiser la réutilisation** :
+- 60-80% du code peut être partagé entre plateformes
+- Logique métier entièrement partageable
+- Accès aux données généralement partageable
+- UI à adapter (20-40% du code total)
 
-1. **Architecture en couches** claire avec séparation des préoccupations
-2. **Abstractions bien définies** pour isoler les différences entre plateformes
-3. **Tests réguliers** sur toutes les plateformes cibles
-4. **Approche incrémentale** qui commence par partager les éléments les plus universels
+**Points clés à retenir** :
 
-En combinant FireMonkey pour les interfaces utilisateur multi-plateformes et une architecture bien pensée pour le code partagé, vous pouvez créer des applications sophistiquées qui fonctionnent de manière native sur desktop et mobiles, tout en minimisant les efforts de développement et de maintenance.
+1. **Architecture en couches** : Séparez UI, logique métier et données
+2. **MVVM/MVC** : Utilisez un pattern qui facilite le découplage
+3. **Interfaces** : Définissez des contrats clairs entre les couches
+4. **Directives conditionnelles** : Adaptez le code selon la plateforme quand nécessaire
+5. **Tests** : Le code partagé doit être bien testé
+6. **Organisation** : Structurez vos projets de manière claire
+7. **Documentation** : Documentez le code partagé pour faciliter la maintenance
 
-Dans la prochaine section, nous explorerons les techniques pour optimiser les performances de vos applications mobiles Delphi, un aspect crucial pour offrir une expérience utilisateur fluide sur tous les appareils.
+Avec une bonne architecture, développer une application Delphi multi-plateformes devient un plaisir : vous écrivez la logique une fois, vous l'adaptez visuellement pour chaque plateforme, et vous obtenez des applications natives performantes partout. C'est le meilleur des deux mondes : productivité du développement cross-platform et qualité des applications natives.
+
+Dans les sections précédentes, nous avons exploré tous les aspects du développement mobile avec Delphi, depuis les fondamentaux jusqu'aux techniques avancées de publication et de partage de code. Vous disposez maintenant de toutes les connaissances nécessaires pour créer des applications mobiles professionnelles et robustes avec Delphi !
 
 ⏭️ [Permissions et confidentialité des données](/15-applications-mobiles-avec-delphi/10-permissions-et-confidentialite-des-donnees.md)

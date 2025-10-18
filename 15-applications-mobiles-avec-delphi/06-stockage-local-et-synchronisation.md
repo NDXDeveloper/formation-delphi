@@ -1,1568 +1,1219 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.6 Stockage local et synchronisation
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La gestion des données est un aspect fondamental des applications mobiles modernes. Les utilisateurs s'attendent à ce que leurs données soient préservées même lorsqu'ils ferment l'application et à pouvoir accéder à ces mêmes données sur différents appareils. Dans cette section, nous explorerons les techniques pour stocker les données localement et les synchroniser avec un serveur distant ou d'autres appareils.
+Les applications mobiles modernes doivent souvent fonctionner même sans connexion Internet. Que ce soit dans le métro, en avion, ou dans une zone sans couverture réseau, vos utilisateurs s'attendent à pouvoir continuer à utiliser votre application. C'est là qu'interviennent le stockage local et la synchronisation.
 
-## Défis du stockage et de la synchronisation sur mobile
+Le **stockage local** permet de sauvegarder des données directement sur l'appareil de l'utilisateur : paramètres de l'application, contenu consulté, brouillons de messages, ou toute autre information nécessaire au fonctionnement de l'application. La **synchronisation** garantit que ces données locales restent cohérentes avec celles stockées sur un serveur distant, permettant ainsi une expérience fluide entre plusieurs appareils et modes (en ligne/hors ligne).
 
-Les applications mobiles présentent plusieurs défis spécifiques concernant le stockage et la synchronisation des données :
+Dans cette section, nous allons explorer les différentes méthodes de stockage disponibles sur mobile avec Delphi, et apprendre à créer des stratégies de synchronisation efficaces.
 
-1. **Connectivité intermittente** : Les appareils mobiles peuvent régulièrement perdre leur connexion internet
-2. **Ressources limitées** : L'espace de stockage et la mémoire sont plus restreints que sur un ordinateur
-3. **Synchronisation bidirectionnelle** : Les données peuvent être modifiées à la fois sur l'appareil et sur le serveur
-4. **Conflits de données** : Des modifications contradictoires peuvent survenir sur différents appareils
-5. **Optimisation de la batterie** : Les opérations de synchronisation doivent être efficientes
+## Options de stockage local
 
-## Options de stockage local avec Delphi
+Les appareils mobiles offrent plusieurs méthodes pour stocker des données localement, chacune adaptée à des besoins spécifiques.
 
-Delphi offre plusieurs approches pour stocker des données localement sur un appareil mobile. Chacune présente des avantages et des inconvénients selon les besoins de votre application.
+### Vue d'ensemble des options
 
-### 1. Fichiers plats (texte, JSON, XML)
+**Fichiers de préférences** :
+- Pour les paramètres simples (clé-valeur)
+- Très rapide et simple à utiliser
+- Idéal pour les configurations de l'application
 
-L'approche la plus simple consiste à stocker les données dans des fichiers texte, JSON ou XML.
+**Fichiers texte et JSON** :
+- Pour des données structurées simples
+- Facilement lisibles et modifiables
+- Parfait pour des exports ou des données temporaires
 
-#### Avantages
-- Simple à mettre en œuvre
-- Aucune configuration requise
-- Facile à déboguer (vous pouvez lire le contenu des fichiers)
+**Base de données SQLite** :
+- Pour des données structurées complexes
+- Requêtes SQL puissantes
+- Idéal pour de grandes quantités de données
 
-#### Inconvénients
-- Limité pour les données complexes ou relationnelles
-- Performances réduites pour les grands volumes de données
-- Pas de requêtes ou de filtrage intégré
+**Fichiers binaires** :
+- Pour stocker des objets complexes
+- Sérialisation personnalisée
+- Utile pour la mise en cache
 
-#### Exemple : Stockage avec JSON
+## Stockage de préférences simples
 
-```pascal
-uses
-  System.JSON, System.IOUtils, System.SysUtils;
+Pour les paramètres de configuration de votre application, Delphi offre plusieurs solutions simples.
 
-type
-  TUserSettings = class
-  private
-    FUsername: string;
-    FLastLoginDate: TDateTime;
-    FPreferDarkMode: Boolean;
-    FNotificationsEnabled: Boolean;
-  public
-    constructor Create;
+### Utilisation de TIniFile
 
-    // Propriétés
-    property Username: string read FUsername write FUsername;
-    property LastLoginDate: TDateTime read FLastLoginDate write FLastLoginDate;
-    property PreferDarkMode: Boolean read FPreferDarkMode write FPreferDarkMode;
-    property NotificationsEnabled: Boolean read FNotificationsEnabled
-      write FNotificationsEnabled;
-
-    // Sauvegarde et chargement
-    procedure SaveToFile;
-    procedure LoadFromFile;
-  end;
-
-constructor TUserSettings.Create;
-begin
-  inherited Create;
-  // Valeurs par défaut
-  FUsername := '';
-  FLastLoginDate := Now;
-  FPreferDarkMode := False;
-  FNotificationsEnabled := True;
-end;
-
-procedure TUserSettings.SaveToFile;
-var
-  JsonObj: TJSONObject;
-  FilePath: string;
-begin
-  // Créer un objet JSON
-  JsonObj := TJSONObject.Create;
-  try
-    // Ajouter les propriétés
-    JsonObj.AddPair('username', FUsername);
-    JsonObj.AddPair('lastLoginDate', DateToISO8601(FLastLoginDate));
-    JsonObj.AddPair('preferDarkMode', TJSONBool.Create(FPreferDarkMode));
-    JsonObj.AddPair('notificationsEnabled', TJSONBool.Create(FNotificationsEnabled));
-
-    // Déterminer le chemin du fichier selon la plateforme
-    {$IFDEF ANDROID}
-    FilePath := TPath.Combine(TPath.GetDocumentsPath, 'settings.json');
-    {$ELSEIF DEFINED(IOS)}
-    FilePath := TPath.Combine(TPath.GetDocumentsPath, 'settings.json');
-    {$ELSE}
-    FilePath := TPath.Combine(TPath.GetHomePath, 'settings.json');
-    {$ENDIF}
-
-    // Écrire dans le fichier
-    TFile.WriteAllText(FilePath, JsonObj.ToString);
-  finally
-    JsonObj.Free;
-  end;
-end;
-
-procedure TUserSettings.LoadFromFile;
-var
-  JsonStr: string;
-  JsonObj: TJSONObject;
-  FilePath: string;
-begin
-  // Déterminer le chemin du fichier selon la plateforme
-  {$IFDEF ANDROID}
-  FilePath := TPath.Combine(TPath.GetDocumentsPath, 'settings.json');
-  {$ELSEIF DEFINED(IOS)}
-  FilePath := TPath.Combine(TPath.GetDocumentsPath, 'settings.json');
-  {$ELSE}
-  FilePath := TPath.Combine(TPath.GetHomePath, 'settings.json');
-  {$ENDIF}
-
-  // Vérifier si le fichier existe
-  if not TFile.Exists(FilePath) then
-    Exit;
-
-  try
-    // Lire le contenu du fichier
-    JsonStr := TFile.ReadAllText(FilePath);
-
-    // Analyser le JSON
-    JsonObj := TJSONObject.ParseJSONValue(JsonStr) as TJSONObject;
-    if JsonObj <> nil then
-    try
-      // Extraire les valeurs
-      if JsonObj.TryGetValue<string>('username', FUsername) then;
-
-      var LastLoginStr: string;
-      if JsonObj.TryGetValue<string>('lastLoginDate', LastLoginStr) then
-        FLastLoginDate := ISO8601ToDate(LastLoginStr);
-
-      if JsonObj.TryGetValue<Boolean>('preferDarkMode', FPreferDarkMode) then;
-      if JsonObj.TryGetValue<Boolean>('notificationsEnabled', FNotificationsEnabled) then;
-    finally
-      JsonObj.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gestion des erreurs - réinitialiser avec les valeurs par défaut
-      FUsername := '';
-      FLastLoginDate := Now;
-      FPreferDarkMode := False;
-      FNotificationsEnabled := True;
-    end;
-  end;
-end;
-```
-
-Pour utiliser cette classe dans votre application :
-
-```pascal
-var
-  UserSettings: TUserSettings;
-begin
-  // Créer l'objet de paramètres
-  UserSettings := TUserSettings.Create;
-  try
-    // Charger les paramètres existants
-    UserSettings.LoadFromFile;
-
-    // Modifier des paramètres
-    UserSettings.Username := 'NouvelUtilisateur';
-    UserSettings.PreferDarkMode := True;
-
-    // Sauvegarder les modifications
-    UserSettings.SaveToFile;
-  finally
-    UserSettings.Free;
-  end;
-end;
-```
-
-### 2. Base de données SQLite
-
-SQLite est une solution légère et puissante pour stocker des données structurées localement. Delphi offre un excellent support pour SQLite via FireDAC.
-
-#### Avantages
-- Support complet des fonctionnalités SQL
-- Excellent pour les données relationnelles
-- Bonnes performances même pour de grands volumes de données
-- Requêtes et filtrage puissants
-
-#### Inconvénients
-- Configuration initiale plus complexe
-- Nécessite des connaissances en SQL
-- Fichier binaire difficile à inspecter manuellement
-
-#### Configuration d'une base de données SQLite
-
-Commencez par ajouter les composants nécessaires à votre formulaire :
-
-1. Un `TFDConnection` pour la connexion à la base de données
-2. Un `TFDQuery` pour exécuter des requêtes
-3. Un `TFDGUIxWaitCursor` pour afficher un indicateur de chargement
-4. Un `TFDPhysSQLiteDriverLink` pour le pilote SQLite
-
-```pascal
-// Configuration de la connexion à la base de données
-procedure TMainForm.SetupDatabase;
-var
-  DBPath: string;
-begin
-  // Déterminer le chemin de la base de données
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  DBPath := TPath.Combine(TPath.GetDocumentsPath, 'appdata.db');
-  {$ELSE}
-  DBPath := TPath.Combine(TPath.GetHomePath, 'appdata.db');
-  {$ENDIF}
-
-  // Configurer la connexion
-  FDConnection1.Params.Clear;
-  FDConnection1.Params.DriverID := 'SQLite';
-  FDConnection1.Params.Database := DBPath;
-  FDConnection1.Params.Add('OpenMode=CreateUTF8'); // Pour créer le fichier s'il n'existe pas
-
-  try
-    // Ouvrir la connexion
-    FDConnection1.Connected := True;
-
-    // Créer les tables si elles n'existent pas
-    CreateTables;
-  except
-    on E: Exception do
-      ShowMessage('Erreur de connexion à la base de données: ' + E.Message);
-  end;
-end;
-
-// Création des tables
-procedure TMainForm.CreateTables;
-begin
-  FDConnection1.ExecSQL(
-    'CREATE TABLE IF NOT EXISTS Tasks (' +
-    '  ID INTEGER PRIMARY KEY AUTOINCREMENT,' +
-    '  Title TEXT NOT NULL,' +
-    '  Description TEXT,' +
-    '  DueDate DATETIME,' +
-    '  IsCompleted BOOLEAN DEFAULT 0,' +
-    '  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,' +
-    '  SyncStatus INTEGER DEFAULT 0' + // 0=NonSynchro, 1=Synchro, 2=EnConflit
-    ')'
-  );
-end;
-```
-
-#### Opérations CRUD avec SQLite
-
-```pascal
-// Ajouter une tâche
-function TMainForm.AddTask(const Title, Description: string; DueDate: TDateTime): Integer;
-begin
-  // Préparer la requête
-  FDQuery1.SQL.Text :=
-    'INSERT INTO Tasks (Title, Description, DueDate, IsCompleted, SyncStatus) ' +
-    'VALUES (:Title, :Description, :DueDate, 0, 0)';
-
-  // Définir les paramètres
-  FDQuery1.ParamByName('Title').AsString := Title;
-  FDQuery1.ParamByName('Description').AsString := Description;
-  FDQuery1.ParamByName('DueDate').AsDateTime := DueDate;
-
-  // Exécuter et obtenir l'ID généré
-  FDQuery1.ExecSQL;
-
-  // Obtenir l'ID de la dernière insertion
-  Result := FDConnection1.GetLastAutoGenValue('');
-end;
-
-// Récupérer toutes les tâches
-procedure TMainForm.LoadTasks;
-begin
-  // Préparer et exécuter la requête
-  FDQuery1.SQL.Text :=
-    'SELECT * FROM Tasks ORDER BY DueDate ASC';
-  FDQuery1.Open;
-
-  // Les données sont maintenant disponibles dans FDQuery1
-  // Vous pouvez les lier à un contrôle visuel comme TListView ou TGrid
-end;
-
-// Mettre à jour une tâche
-procedure TMainForm.UpdateTask(ID: Integer; const Title, Description: string;
-                             DueDate: TDateTime; IsCompleted: Boolean);
-begin
-  // Préparer la requête
-  FDQuery1.SQL.Text :=
-    'UPDATE Tasks SET ' +
-    'Title = :Title, Description = :Description, ' +
-    'DueDate = :DueDate, IsCompleted = :IsCompleted, ' +
-    'SyncStatus = 0 ' + // Marquer comme non synchronisé
-    'WHERE ID = :ID';
-
-  // Définir les paramètres
-  FDQuery1.ParamByName('Title').AsString := Title;
-  FDQuery1.ParamByName('Description').AsString := Description;
-  FDQuery1.ParamByName('DueDate').AsDateTime := DueDate;
-  FDQuery1.ParamByName('IsCompleted').AsBoolean := IsCompleted;
-  FDQuery1.ParamByName('ID').AsInteger := ID;
-
-  // Exécuter la requête
-  FDQuery1.ExecSQL;
-end;
-
-// Supprimer une tâche
-procedure TMainForm.DeleteTask(ID: Integer);
-begin
-  // Préparer la requête
-  FDQuery1.SQL.Text := 'DELETE FROM Tasks WHERE ID = :ID';
-
-  // Définir le paramètre
-  FDQuery1.ParamByName('ID').AsInteger := ID;
-
-  // Exécuter la requête
-  FDQuery1.ExecSQL;
-end;
-```
-
-### 3. ClientDataSet en mémoire
-
-Pour des besoins plus simples, vous pouvez utiliser un `TClientDataSet` qui maintient les données en mémoire et peut les persister dans un fichier.
-
-#### Avantages
-- Facile à utiliser avec les composants visuels
-- Pas besoin de SQL pour les opérations simples
-- Bonnes performances pour les petits ensembles de données
-
-#### Inconvénients
-- Moins flexible que SQLite pour les requêtes complexes
-- Moins performant pour les grands ensembles de données
-- Fonctionnalités limitées pour les relations
-
-#### Exemple d'utilisation de ClientDataSet
+Le format INI est simple et lisible, parfait pour les préférences utilisateur.
 
 ```pascal
 uses
-  Data.DB, Datasnap.DBClient, System.IOUtils;
+  System.IniFiles, System.IOUtils;
 
-type
-  TNotesManager = class
-  private
-    FDataSet: TClientDataSet;
-    FFileName: string;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure AddNote(const Title, Content: string);
-    procedure UpdateNote(ID: Integer; const Title, Content: string);
-    procedure DeleteNote(ID: Integer);
-    procedure SaveToFile;
-    procedure LoadFromFile;
-
-    property DataSet: TClientDataSet read FDataSet;
-  end;
-
-constructor TNotesManager.Create;
-begin
-  inherited Create;
-
-  // Créer le dataset
-  FDataSet := TClientDataSet.Create(nil);
-
-  // Définir la structure
-  FDataSet.FieldDefs.Add('ID', ftInteger);
-  FDataSet.FieldDefs.Add('Title', ftString, 100);
-  FDataSet.FieldDefs.Add('Content', ftMemo);
-  FDataSet.FieldDefs.Add('CreatedDate', ftDateTime);
-  FDataSet.FieldDefs.Add('ModifiedDate', ftDateTime);
-
-  // Créer une clé primaire
-  var IndexDef := FDataSet.IndexDefs.AddIndexDef;
-  IndexDef.Name := 'IDIndex';
-  IndexDef.Fields := 'ID';
-  IndexDef.Options := [ixPrimary, ixUnique];
-
-  // Créer le dataset en mémoire
-  FDataSet.CreateDataSet;
-
-  // Déterminer le nom du fichier
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  FFileName := TPath.Combine(TPath.GetDocumentsPath, 'notes.cds');
-  {$ELSE}
-  FFileName := TPath.Combine(TPath.GetHomePath, 'notes.cds');
-  {$ENDIF}
-
-  // Charger les données existantes
-  LoadFromFile;
-end;
-
-destructor TNotesManager.Destroy;
-begin
-  // Sauvegarder avant de libérer
-  SaveToFile;
-
-  // Libérer les ressources
-  FDataSet.Free;
-
-  inherited;
-end;
-
-procedure TNotesManager.AddNote(const Title, Content: string);
-var
-  NextID: Integer;
-begin
-  // Déterminer le prochain ID
-  if FDataSet.RecordCount = 0 then
-    NextID := 1
-  else
-  begin
-    FDataSet.Last;
-    NextID := FDataSet.FieldByName('ID').AsInteger + 1;
-  end;
-
-  // Ajouter un nouveau enregistrement
-  FDataSet.Append;
-  FDataSet.FieldByName('ID').AsInteger := NextID;
-  FDataSet.FieldByName('Title').AsString := Title;
-  FDataSet.FieldByName('Content').AsString := Content;
-  FDataSet.FieldByName('CreatedDate').AsDateTime := Now;
-  FDataSet.FieldByName('ModifiedDate').AsDateTime := Now;
-  FDataSet.Post;
-end;
-
-procedure TNotesManager.UpdateNote(ID: Integer; const Title, Content: string);
-begin
-  // Localiser l'enregistrement par ID
-  if FDataSet.Locate('ID', ID, []) then
-  begin
-    FDataSet.Edit;
-    FDataSet.FieldByName('Title').AsString := Title;
-    FDataSet.FieldByName('Content').AsString := Content;
-    FDataSet.FieldByName('ModifiedDate').AsDateTime := Now;
-    FDataSet.Post;
-  end;
-end;
-
-procedure TNotesManager.DeleteNote(ID: Integer);
-begin
-  // Localiser et supprimer l'enregistrement
-  if FDataSet.Locate('ID', ID, []) then
-    FDataSet.Delete;
-end;
-
-procedure TNotesManager.SaveToFile;
-begin
-  try
-    // Sauvegarder le dataset dans un fichier
-    FDataSet.SaveToFile(FFileName);
-  except
-    on E: Exception do
-      // Gérer l'erreur de sauvegarde
-  end;
-end;
-
-procedure TNotesManager.LoadFromFile;
-begin
-  // Vérifier si le fichier existe
-  if TFile.Exists(FFileName) then
-  try
-    // Charger le dataset depuis le fichier
-    FDataSet.LoadFromFile(FFileName);
-  except
-    on E: Exception do
-      // Gérer l'erreur de chargement
-  end;
-end;
-```
-
-Pour utiliser cette classe avec un contrôle visuel :
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-var
-  DataSource1: TDataSource;
-begin
-  // Créer le gestionnaire de notes
-  FNotesManager := TNotesManager.Create;
-
-  // Créer une source de données
-  DataSource1 := TDataSource.Create(Self);
-  DataSource1.DataSet := FNotesManager.DataSet;
-
-  // Lier à un contrôle visuel (par exemple, une grille)
-  DBGrid1.DataSource := DataSource1;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FNotesManager.Free;
-end;
-```
-
-## Synchronisation avec un serveur distant
-
-La synchronisation des données entre l'appareil mobile et un serveur distant est essentielle pour les applications modernes. Voici comment mettre en place une synchronisation efficace.
-
-### Architecture générale de synchronisation
-
-Une architecture de synchronisation robuste comprend généralement :
-
-1. **Base de données locale** : Stocke les données sur l'appareil
-2. **API REST** : Interface pour communiquer avec le serveur
-3. **Mécanisme de détection des changements** : Identifie les données modifiées
-4. **Gestion des conflits** : Résout les modifications contradictoires
-5. **File d'attente de synchronisation** : Gère les échecs temporaires de connectivité
-
-### Classe de synchronisation basique
-
-Voici une implémentation simplifiée d'un service de synchronisation :
-
-```pascal
-uses
-  System.Net.HttpClient, System.JSON, System.SysUtils, System.Classes,
-  Data.DB, FireDAC.Comp.Client;
-
-type
-  TSyncStatus = (ssNotSynced, ssSynced, ssConflict);
-
-  TSyncService = class
-  private
-    FConnection: TFDConnection;
-    FBaseURL: string;
-    FAuthToken: string;
-
-    function GetModifiedData: TFDQuery;
-    function SendToServer(const JSON: string): Boolean;
-    function ReceiveFromServer(LastSyncDate: TDateTime): string;
-    procedure UpdateLocalRecord(const JSONObj: TJSONObject);
-    procedure MarkAsSynced(ID: Integer);
-    procedure HandleConflict(LocalData, ServerData: TJSONObject);
-  public
-    constructor Create(AConnection: TFDConnection;
-                     const ABaseURL, AAuthToken: string);
-
-    function SynchronizeTasks: Boolean;
-    property BaseURL: string read FBaseURL write FBaseURL;
-    property AuthToken: string read FAuthToken write FAuthToken;
-  end;
-
-constructor TSyncService.Create(AConnection: TFDConnection;
-                               const ABaseURL, AAuthToken: string);
-begin
-  inherited Create;
-  FConnection := AConnection;
-  FBaseURL := ABaseURL;
-  FAuthToken := AAuthToken;
-end;
-
-function TSyncService.GetModifiedData: TFDQuery;
-var
-  Query: TFDQuery;
-begin
-  // Créer une requête pour récupérer les données modifiées
-  Query := TFDQuery.Create(nil);
-  Query.Connection := FConnection;
-
-  // Récupérer les enregistrements non synchronisés
-  Query.SQL.Text :=
-    'SELECT * FROM Tasks WHERE SyncStatus = :Status';
-  Query.ParamByName('Status').AsInteger := Ord(ssNotSynced);
-  Query.Open;
-
-  Result := Query;
-end;
-
-function TSyncService.SendToServer(const JSON: string): Boolean;
-var
-  Client: THTTPClient;
-  Response: IHTTPResponse;
-  URL: string;
-begin
-  Result := False;
-
-  Client := THTTPClient.Create;
-  try
-    // Configurer l'en-tête pour l'authentification
-    Client.CustomHeaders['Authorization'] := 'Bearer ' + FAuthToken;
-    Client.ContentType := 'application/json';
-
-    // Construire l'URL
-    URL := FBaseURL + '/api/tasks/sync';
-
-    // Envoyer les données au serveur
-    Response := Client.Post(URL, TStringStream.Create(JSON));
-
-    // Vérifier la réponse
-    Result := (Response.StatusCode = 200);
-  finally
-    Client.Free;
-  end;
-end;
-
-function TSyncService.ReceiveFromServer(LastSyncDate: TDateTime): string;
-var
-  Client: THTTPClient;
-  Response: IHTTPResponse;
-  URL: string;
-begin
-  Client := THTTPClient.Create;
-  try
-    // Configurer l'en-tête pour l'authentification
-    Client.CustomHeaders['Authorization'] := 'Bearer ' + FAuthToken;
-
-    // Construire l'URL avec la date de dernière synchronisation
-    URL := Format('%s/api/tasks/sync?lastSync=%s',
-                [FBaseURL, DateToISO8601(LastSyncDate)]);
-
-    // Récupérer les données du serveur
-    Response := Client.Get(URL);
-
-    if Response.StatusCode = 200 then
-      Result := Response.ContentAsString
-    else
-      Result := '';
-  finally
-    Client.Free;
-  end;
-end;
-
-procedure TSyncService.UpdateLocalRecord(const JSONObj: TJSONObject);
-var
-  Query: TFDQuery;
-  ID: Integer;
-  ServerID: Integer;
-  Title, Description: string;
-  DueDate: TDateTime;
-  IsCompleted: Boolean;
-begin
-  // Extraire les données du JSON
-  ServerID := JSONObj.GetValue<Integer>('id');
-  Title := JSONObj.GetValue<string>('title');
-  Description := JSONObj.GetValue<string>('description');
-  DueDate := ISO8601ToDate(JSONObj.GetValue<string>('dueDate'));
-  IsCompleted := JSONObj.GetValue<Boolean>('isCompleted');
-
-  // Créer une requête pour mise à jour locale
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FConnection;
-
-    // Vérifier si l'enregistrement existe déjà
-    Query.SQL.Text :=
-      'SELECT ID FROM Tasks WHERE ServerID = :ServerID';
-    Query.ParamByName('ServerID').AsInteger := ServerID;
-    Query.Open;
-
-    if not Query.IsEmpty then
-    begin
-      // Mise à jour d'un enregistrement existant
-      ID := Query.FieldByName('ID').AsInteger;
-
-      Query.SQL.Text :=
-        'UPDATE Tasks SET ' +
-        'Title = :Title, Description = :Description, ' +
-        'DueDate = :DueDate, IsCompleted = :IsCompleted, ' +
-        'SyncStatus = :Status ' +
-        'WHERE ID = :ID';
-      Query.ParamByName('ID').AsInteger := ID;
-    end
-    else
-    begin
-      // Insertion d'un nouvel enregistrement
-      Query.SQL.Text :=
-        'INSERT INTO Tasks ' +
-        '(Title, Description, DueDate, IsCompleted, ServerID, SyncStatus) ' +
-        'VALUES ' +
-        '(:Title, :Description, :DueDate, :IsCompleted, :ServerID, :Status)';
-      Query.ParamByName('ServerID').AsInteger := ServerID;
-    end;
-
-    // Définir les paramètres communs
-    Query.ParamByName('Title').AsString := Title;
-    Query.ParamByName('Description').AsString := Description;
-    Query.ParamByName('DueDate').AsDateTime := DueDate;
-    Query.ParamByName('IsCompleted').AsBoolean := IsCompleted;
-    Query.ParamByName('Status').AsInteger := Ord(ssSynced);
-
-    // Exécuter la requête
-    Query.ExecSQL;
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TSyncService.MarkAsSynced(ID: Integer);
-var
-  Query: TFDQuery;
-begin
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FConnection;
-
-    // Marquer l'enregistrement comme synchronisé
-    Query.SQL.Text :=
-      'UPDATE Tasks SET SyncStatus = :Status WHERE ID = :ID';
-    Query.ParamByName('Status').AsInteger := Ord(ssSynced);
-    Query.ParamByName('ID').AsInteger := ID;
-
-    Query.ExecSQL;
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TSyncService.HandleConflict(LocalData, ServerData: TJSONObject);
-var
-  Query: TFDQuery;
-  ID: Integer;
-begin
-  // Dans cet exemple simplifié, nous donnons la priorité aux données du serveur
-  // Une application réelle pourrait avoir une logique plus sophistiquée pour résoudre les conflits
-
-  // Mettre à jour l'enregistrement local avec les données du serveur
-  UpdateLocalRecord(ServerData);
-
-  // Marquer le conflit comme résolu
-  ID := LocalData.GetValue<Integer>('id');
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FConnection;
-
-    // Mettre à jour le statut de synchronisation
-    Query.SQL.Text :=
-      'UPDATE Tasks SET SyncStatus = :Status WHERE ID = :ID';
-    Query.ParamByName('Status').AsInteger := Ord(ssSynced);
-    Query.ParamByName('ID').AsInteger := ID;
-
-    Query.ExecSQL;
-  finally
-    Query.Free;
-  end;
-end;
-
-function TSyncService.SynchronizeTasks: Boolean;
-var
-  ModifiedData: TFDQuery;
-  JsonArray: TJSONArray;
-  JsonObj: TJSONObject;
-  TaskObj: TJSONObject;
-  I: Integer;
-  ServerResponse: string;
-  ServerData: TJSONArray;
-  LastSyncDate: TDateTime;
-begin
-  Result := False;
-
-  // Récupérer la date de dernière synchronisation
-  // (Dans une implémentation réelle, stockez cette valeur de manière persistante)
-  LastSyncDate := Now - 30; // Par exemple, les 30 derniers jours
-
-  try
-    // 1. Envoyer les modifications locales au serveur
-    ModifiedData := GetModifiedData;
-    try
-      // Créer un tableau JSON pour les données modifiées
-      JsonArray := TJSONArray.Create;
-      try
-        ModifiedData.First;
-        while not ModifiedData.Eof do
-        begin
-          // Créer un objet JSON pour chaque tâche
-          TaskObj := TJSONObject.Create;
-
-          // Ajouter les propriétés
-          TaskObj.AddPair('id', TJSONNumber.Create(ModifiedData.FieldByName('ID').AsInteger));
-          TaskObj.AddPair('title', ModifiedData.FieldByName('Title').AsString);
-          TaskObj.AddPair('description', ModifiedData.FieldByName('Description').AsString);
-          TaskObj.AddPair('dueDate', DateToISO8601(ModifiedData.FieldByName('DueDate').AsDateTime));
-          TaskObj.AddPair('isCompleted', TJSONBool.Create(ModifiedData.FieldByName('IsCompleted').AsBoolean));
-
-          // Ajouter au tableau
-          JsonArray.AddElement(TaskObj);
-
-          ModifiedData.Next;
-        end;
-
-        // Envoyer les données au serveur
-        if JsonArray.Count > 0 then
-        begin
-          if SendToServer(JsonArray.ToString) then
-          begin
-            // Marquer les enregistrements comme synchronisés
-            ModifiedData.First;
-            while not ModifiedData.Eof do
-            begin
-              MarkAsSynced(ModifiedData.FieldByName('ID').AsInteger);
-              ModifiedData.Next;
-            end;
-          end;
-        end;
-      finally
-        JsonArray.Free;
-      end;
-
-      // 2. Récupérer les modifications du serveur
-      ServerResponse := ReceiveFromServer(LastSyncDate);
-      if ServerResponse <> '' then
-      begin
-        ServerData := TJSONObject.ParseJSONValue(ServerResponse) as TJSONArray;
-        if ServerData <> nil then
-        try
-          // Traiter chaque enregistrement reçu
-          for I := 0 to ServerData.Count - 1 do
-          begin
-            JsonObj := ServerData.Items[I] as TJSONObject;
-
-            // Mettre à jour les données locales
-            UpdateLocalRecord(JsonObj);
-          end;
-        finally
-          ServerData.Free;
-        end;
-      end;
-
-      Result := True;
-    finally
-      ModifiedData.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer les erreurs de synchronisation
-      // Une implémentation réelle pourrait journaliser l'erreur et réessayer plus tard
-      Result := False;
-    end;
-  end;
-end;
-```
-
-### Intégration du service de synchronisation dans l'application
-
-Voici comment intégrer ce service de synchronisation dans une application :
-
-```pascal
-procedure TMainForm.SynchronizeData;
-begin
-  // Afficher un indicateur de progression
-  ProgressBar1.Visible := True;
-  lblStatus.Text := 'Synchronisation en cours...';
-
-  // Utiliser un thread pour ne pas bloquer l'interface utilisateur
-  TTask.Run(procedure
-  begin
-    var Success := False;
-
-    try
-      // Créer et utiliser le service de synchronisation
-      var SyncService := TSyncService.Create(
-        FDConnection1,           // Connexion à la base de données
-        'https://api.example.com', // URL de base de l'API
-        UserSession.AuthToken    // Token d'authentification
-      );
-
-      try
-        // Effectuer la synchronisation
-        Success := SyncService.SynchronizeTasks;
-      finally
-        SyncService.Free;
-      end;
-    except
-      on E: Exception do
-        Success := False;
-    end;
-
-    // Revenir au thread principal pour mettre à jour l'interface
-    TThread.Synchronize(nil, procedure
-    begin
-      // Masquer l'indicateur de progression
-      ProgressBar1.Visible := False;
-
-      if Success then
-      begin
-        lblStatus.Text := 'Synchronisation réussie';
-
-        // Rafraîchir les données affichées
-        LoadTasks;
-      end
-      else
-        lblStatus.Text := 'Échec de la synchronisation';
-    end);
-  end);
-end;
-```
-
-## Stratégies pour une synchronisation efficace
-
-Implémenter une synchronisation robuste peut être complexe. Voici quelques stratégies éprouvées :
-
-### 1. Synchronisation incrémentielle
-
-Au lieu d'envoyer et de recevoir toutes les données à chaque fois, utilisez une approche incrémentielle :
-
-```pascal
-// Stocker la date de dernière synchronisation
-procedure SaveLastSyncDate(LastSync: TDateTime);
+// Sauvegarder des préférences
+procedure TFormMain.SauvegarderPreferences;
 var
   IniFile: TIniFile;
-  FilePath: string;
+  CheminIni: string;
 begin
-  // Déterminer le chemin du fichier de configuration
-  FilePath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
+  // Obtenir le chemin du dossier Documents
+  CheminIni := TPath.Combine(TPath.GetDocumentsPath, 'preferences.ini');
 
-  // Sauvegarder la date
-  IniFile := TIniFile.Create(FilePath);
+  IniFile := TIniFile.Create(CheminIni);
   try
-    IniFile.WriteDateTime('Sync', 'LastSyncDate', LastSync);
+    // Sauvegarder différents types de données
+    IniFile.WriteString('Utilisateur', 'Nom', EditNom.Text);
+    IniFile.WriteString('Utilisateur', 'Email', EditEmail.Text);
+    IniFile.WriteBool('Parametres', 'NotificationsActives', SwitchNotif.IsChecked);
+    IniFile.WriteInteger('Parametres', 'ThemeIndex', ComboTheme.ItemIndex);
+    IniFile.WriteFloat('Parametres', 'VolumeMusique', TrackBarVolume.Value);
+
+    ShowMessage('Préférences sauvegardées');
   finally
     IniFile.Free;
   end;
 end;
 
-// Récupérer la date de dernière synchronisation
-function GetLastSyncDate: TDateTime;
+// Charger des préférences
+procedure TFormMain.ChargerPreferences;
 var
   IniFile: TIniFile;
-  FilePath: string;
+  CheminIni: string;
 begin
-  // Valeur par défaut (1 semaine en arrière)
-  Result := Now - 7;
+  CheminIni := TPath.Combine(TPath.GetDocumentsPath, 'preferences.ini');
 
-  // Déterminer le chemin du fichier de configuration
-  FilePath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
-
-  if TFile.Exists(FilePath) then
+  // Vérifier si le fichier existe
+  if not TFile.Exists(CheminIni) then
   begin
-    // Lire la date sauvegardée
-    IniFile := TIniFile.Create(FilePath);
-    try
-      Result := IniFile.ReadDateTime('Sync', 'LastSyncDate', Result);
-    finally
-      IniFile.Free;
-    end;
+    // Utiliser les valeurs par défaut
+    Exit;
+  end;
+
+  IniFile := TIniFile.Create(CheminIni);
+  try
+    // Charger les données avec valeurs par défaut si non présentes
+    EditNom.Text := IniFile.ReadString('Utilisateur', 'Nom', '');
+    EditEmail.Text := IniFile.ReadString('Utilisateur', 'Email', '');
+    SwitchNotif.IsChecked := IniFile.ReadBool('Parametres', 'NotificationsActives', True);
+    ComboTheme.ItemIndex := IniFile.ReadInteger('Parametres', 'ThemeIndex', 0);
+    TrackBarVolume.Value := IniFile.ReadFloat('Parametres', 'VolumeMusique', 50.0);
+  finally
+    IniFile.Free;
   end;
 end;
 ```
 
-### 2. Synchronisation optimiste vs pessimiste
+### Classe utilitaire pour les préférences
 
-#### Synchronisation optimiste
-
-- Permet les modifications locales sans vérification préalable
-- Détecte et résout les conflits après coup
-- Meilleure expérience utilisateur en mode hors ligne
-- Plus complexe à implémenter
-
-#### Synchronisation pessimiste
-
-- Verrouille les données avant modification
-- Empêche les conflits en amont
-- Nécessite une connexion constante
-- Plus simple à implémenter
-
-L'exemple précédent utilise une approche optimiste, idéale pour les applications mobiles.
-
-### 3. Suivi des modifications avec des timestamps
-
-Pour faciliter la détection des modifications, ajoutez des champs de suivi :
-
-```pascal
-// Modifier la structure de la table
-procedure CreateTableWithTimestamps;
-begin
-  FDConnection1.ExecSQL(
-    'CREATE TABLE IF NOT EXISTS Tasks (' +
-    '  ID INTEGER PRIMARY KEY AUTOINCREMENT,' +
-    '  Title TEXT NOT NULL,' +
-    '  Description TEXT,' +
-    '  DueDate DATETIME,' +
-    '  IsCompleted BOOLEAN DEFAULT 0,' +
-    '  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,' +
-    '  ModifiedAt DATETIME DEFAULT CURRENT_TIMESTAMP,' +
-    '  SyncStatus INTEGER DEFAULT 0,' +
-    '  ServerID INTEGER,' +
-    '  ServerModifiedAt DATETIME' +
-    ')'
-  );
-end;
-
-// Déclencher automatiquement la mise à jour du timestamp
-procedure CreateUpdateTrigger;
-begin
-  FDConnection1.ExecSQL(
-    'CREATE TRIGGER IF NOT EXISTS update_modified_at ' +
-    'AFTER UPDATE ON Tasks ' +
-    'FOR EACH ROW ' +
-    'BEGIN ' +
-    '  UPDATE Tasks SET ModifiedAt = CURRENT_TIMESTAMP, ' +
-    '                   SyncStatus = CASE WHEN old.SyncStatus = 1 ' +
-    '                                     THEN 0 ELSE SyncStatus END ' +
-    '  WHERE ID = NEW.ID; ' +
-    'END'
-  );
-end;
-```
-
-### 4. File d'attente de synchronisation
-
-Pour gérer la connectivité intermittente, implémentez une file d'attente de synchronisation :
+Pour faciliter la gestion des préférences, créons une classe utilitaire :
 
 ```pascal
 type
-  TSyncQueue = class
+  TPreferences = class
   private
-    FQueue: TList<Integer>;
-    FProcessing: Boolean;
-    FSyncService: TSyncService;
-
-    procedure ProcessNextItem;
+    FIniFile: TIniFile;
   public
-    constructor Create(ASyncService: TSyncService);
+    constructor Create;
     destructor Destroy; override;
 
-    procedure EnqueueItem(ID: Integer);
-    procedure StartProcessing;
-    procedure StopProcessing;
+    // Méthodes génériques
+    procedure SauvegarderString(Section, Cle, Valeur: string);
+    function ChargerString(Section, Cle, ValeurDefaut: string): string;
+    procedure SauvegarderBool(Section, Cle: string; Valeur: Boolean);
+    function ChargerBool(Section, Cle: string; ValeurDefaut: Boolean): Boolean;
+    procedure SauvegarderInteger(Section, Cle: string; Valeur: Integer);
+    function ChargerInteger(Section, Cle: string; ValeurDefaut: Integer): Integer;
 
-    property Processing: Boolean read FProcessing;
+    procedure Effacer;
   end;
 
-constructor TSyncQueue.Create(ASyncService: TSyncService);
+constructor TPreferences.Create;
+var
+  CheminIni: string;
 begin
-  inherited Create;
-  FQueue := TList<Integer>.Create;
-  FSyncService := ASyncService;
-  FProcessing := False;
+  CheminIni := TPath.Combine(TPath.GetDocumentsPath, 'app_preferences.ini');
+  FIniFile := TIniFile.Create(CheminIni);
 end;
 
-destructor TSyncQueue.Destroy;
+destructor TPreferences.Destroy;
 begin
-  FQueue.Free;
+  FIniFile.Free;
   inherited;
 end;
 
-procedure TSyncQueue.EnqueueItem(ID: Integer);
+procedure TPreferences.SauvegarderString(Section, Cle, Valeur: string);
 begin
-  if not FQueue.Contains(ID) then
-    FQueue.Add(ID);
-
-  if FProcessing and (FQueue.Count = 1) then
-    ProcessNextItem;
+  FIniFile.WriteString(Section, Cle, Valeur);
 end;
 
-procedure TSyncQueue.StartProcessing;
+function TPreferences.ChargerString(Section, Cle, ValeurDefaut: string): string;
 begin
-  if not FProcessing then
-  begin
-    FProcessing := True;
-
-    if FQueue.Count > 0 then
-      ProcessNextItem;
-  end;
+  Result := FIniFile.ReadString(Section, Cle, ValeurDefaut);
 end;
 
-procedure TSyncQueue.StopProcessing;
+procedure TPreferences.SauvegarderBool(Section, Cle: string; Valeur: Boolean);
 begin
-  FProcessing := False;
+  FIniFile.WriteBool(Section, Cle, Valeur);
 end;
 
-procedure TSyncQueue.ProcessNextItem;
+function TPreferences.ChargerBool(Section, Cle: string; ValeurDefaut: Boolean): Boolean;
+begin
+  Result := FIniFile.ReadBool(Section, Cle, ValeurDefaut);
+end;
+
+procedure TPreferences.Effacer;
+begin
+  TFile.Delete(FIniFile.FileName);
+end;
+
+// Utilisation
 var
-  ID: Integer;
+  Prefs: TPreferences;
+
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  if (FQueue.Count = 0) or (not FProcessing) then
-    Exit;
+  Prefs := TPreferences.Create;
 
-  // Obtenir le prochain élément
-  ID := FQueue[0];
-  FQueue.Delete(0);
+  // Charger les préférences
+  EditNom.Text := Prefs.ChargerString('User', 'Name', '');
+  SwitchMode.IsChecked := Prefs.ChargerBool('Settings', 'DarkMode', False);
+end;
 
-  // Traiter l'élément dans un thread
-  TTask.Run(procedure
-  var
-    Success: Boolean;
-  begin
-    try
-      // Essayer de synchroniser cet élément spécifique
-      Success := FSyncService.SynchronizeTask(ID);
-    except
-      Success := False;
-    end;
-
-    TThread.Synchronize(nil, procedure
-    begin
-      if not Success then
-      begin
-        // Remettre dans la file d'attente pour réessayer plus tard
-        // (avec une limite de tentatives dans une implémentation réelle)
-        FQueue.Add(ID);
-      end;
-
-      // Traiter l'élément suivant
-      if FQueue.Count > 0 then
-        ProcessNextItem;
-    end);
-  end);
+procedure TFormMain.BtnSauvegarderClick(Sender: TObject);
+begin
+  Prefs.SauvegarderString('User', 'Name', EditNom.Text);
+  Prefs.SauvegarderBool('Settings', 'DarkMode', SwitchMode.IsChecked);
 end;
 ```
 
-## Gestion du mode hors ligne
+## Stockage de données structurées avec JSON
 
-Une application mobile doit fonctionner efficacement même sans connexion internet. Voici quelques techniques pour gérer le mode hors ligne :
+JSON est un format populaire pour stocker et échanger des données structurées.
 
-### 1. Détection de la connectivité
-
-Commencez par détecter si l'appareil est connecté à internet :
+### Sauvegarder et charger des objets en JSON
 
 ```pascal
 uses
-  System.Net.HttpClient, System.Threading;
+  System.JSON, System.IOUtils;
 
-function IsNetworkAvailable: Boolean;
+type
+  TUtilisateur = class
+  public
+    Nom: string;
+    Email: string;
+    Age: Integer;
+    Preferences: TStringList;
+
+    constructor Create;
+    destructor Destroy; override;
+
+    function VersJSON: TJSONObject;
+    procedure DepuisJSON(JSON: TJSONObject);
+  end;
+
+constructor TUtilisateur.Create;
+begin
+  Preferences := TStringList.Create;
+end;
+
+destructor TUtilisateur.Destroy;
+begin
+  Preferences.Free;
+  inherited;
+end;
+
+// Convertir l'utilisateur en JSON
+function TUtilisateur.VersJSON: TJSONObject;
 var
-  Client: THTTPClient;
+  PrefArray: TJSONArray;
+  i: Integer;
+begin
+  Result := TJSONObject.Create;
+
+  Result.AddPair('nom', Nom);
+  Result.AddPair('email', Email);
+  Result.AddPair('age', TJSONNumber.Create(Age));
+
+  // Tableau de préférences
+  PrefArray := TJSONArray.Create;
+  for i := 0 to Preferences.Count - 1 do
+    PrefArray.Add(Preferences[i]);
+
+  Result.AddPair('preferences', PrefArray);
+end;
+
+// Charger depuis JSON
+procedure TUtilisateur.DepuisJSON(JSON: TJSONObject);
+var
+  PrefArray: TJSONArray;
+  i: Integer;
+begin
+  Nom := JSON.GetValue<string>('nom');
+  Email := JSON.GetValue<string>('email');
+  Age := JSON.GetValue<Integer>('age');
+
+  Preferences.Clear;
+  PrefArray := JSON.GetValue<TJSONArray>('preferences');
+  if Assigned(PrefArray) then
+  begin
+    for i := 0 to PrefArray.Count - 1 do
+      Preferences.Add(PrefArray.Items[i].Value);
+  end;
+end;
+
+// Sauvegarder dans un fichier
+procedure TFormMain.SauvegarderUtilisateurJSON;
+var
+  Utilisateur: TUtilisateur;
+  JSON: TJSONObject;
+  CheminFichier: string;
+begin
+  Utilisateur := TUtilisateur.Create;
+  try
+    // Remplir les données
+    Utilisateur.Nom := EditNom.Text;
+    Utilisateur.Email := EditEmail.Text;
+    Utilisateur.Age := StrToIntDef(EditAge.Text, 0);
+
+    // Convertir en JSON
+    JSON := Utilisateur.VersJSON;
+    try
+      // Sauvegarder dans un fichier
+      CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'utilisateur.json');
+      TFile.WriteAllText(CheminFichier, JSON.ToString, TEncoding.UTF8);
+
+      ShowMessage('Utilisateur sauvegardé');
+    finally
+      JSON.Free;
+    end;
+  finally
+    Utilisateur.Free;
+  end;
+end;
+
+// Charger depuis un fichier
+procedure TFormMain.ChargerUtilisateurJSON;
+var
+  Utilisateur: TUtilisateur;
+  JSON: TJSONObject;
+  CheminFichier: string;
+  Contenu: string;
+begin
+  CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'utilisateur.json');
+
+  if not TFile.Exists(CheminFichier) then
+  begin
+    ShowMessage('Aucun utilisateur sauvegardé');
+    Exit;
+  end;
+
+  // Lire le fichier
+  Contenu := TFile.ReadAllText(CheminFichier, TEncoding.UTF8);
+
+  JSON := TJSONObject.ParseJSONValue(Contenu) as TJSONObject;
+  try
+    Utilisateur := TUtilisateur.Create;
+    try
+      // Charger les données
+      Utilisateur.DepuisJSON(JSON);
+
+      // Afficher dans l'interface
+      EditNom.Text := Utilisateur.Nom;
+      EditEmail.Text := Utilisateur.Email;
+      EditAge.Text := Utilisateur.Age.ToString;
+    finally
+      Utilisateur.Free;
+    end;
+  finally
+    JSON.Free;
+  end;
+end;
+```
+
+### Sauvegarder une liste d'objets
+
+```pascal
+// Sauvegarder une liste de tâches en JSON
+type
+  TTache = record
+    ID: Integer;
+    Titre: string;
+    Description: string;
+    Terminee: Boolean;
+    DateCreation: TDateTime;
+  end;
+
+procedure TFormMain.SauvegarderListeTaches(Taches: TList<TTache>);
+var
+  JSONArray: TJSONArray;
+  JSONTache: TJSONObject;
+  Tache: TTache;
+  CheminFichier: string;
+begin
+  JSONArray := TJSONArray.Create;
+  try
+    // Convertir chaque tâche en JSON
+    for Tache in Taches do
+    begin
+      JSONTache := TJSONObject.Create;
+      JSONTache.AddPair('id', TJSONNumber.Create(Tache.ID));
+      JSONTache.AddPair('titre', Tache.Titre);
+      JSONTache.AddPair('description', Tache.Description);
+      JSONTache.AddPair('terminee', TJSONBool.Create(Tache.Terminee));
+      JSONTache.AddPair('dateCreation', DateToISO8601(Tache.DateCreation));
+
+      JSONArray.Add(JSONTache);
+    end;
+
+    // Sauvegarder
+    CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'taches.json');
+    TFile.WriteAllText(CheminFichier, JSONArray.ToString, TEncoding.UTF8);
+
+    ShowMessage(Taches.Count.ToString + ' tâches sauvegardées');
+  finally
+    JSONArray.Free;
+  end;
+end;
+
+procedure TFormMain.ChargerListeTaches(Taches: TList<TTache>);
+var
+  JSONArray: TJSONArray;
+  JSONTache: TJSONObject;
+  Tache: TTache;
+  CheminFichier: string;
+  Contenu: string;
+  i: Integer;
+begin
+  CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'taches.json');
+
+  if not TFile.Exists(CheminFichier) then
+    Exit;
+
+  Contenu := TFile.ReadAllText(CheminFichier, TEncoding.UTF8);
+  JSONArray := TJSONObject.ParseJSONValue(Contenu) as TJSONArray;
+  try
+    Taches.Clear;
+
+    for i := 0 to JSONArray.Count - 1 do
+    begin
+      JSONTache := JSONArray.Items[i] as TJSONObject;
+
+      Tache.ID := JSONTache.GetValue<Integer>('id');
+      Tache.Titre := JSONTache.GetValue<string>('titre');
+      Tache.Description := JSONTache.GetValue<string>('description');
+      Tache.Terminee := JSONTache.GetValue<Boolean>('terminee');
+      Tache.DateCreation := ISO8601ToDate(JSONTache.GetValue<string>('dateCreation'));
+
+      Taches.Add(Tache);
+    end;
+
+    ShowMessage(Taches.Count.ToString + ' tâches chargées');
+  finally
+    JSONArray.Free;
+  end;
+end;
+```
+
+## Base de données SQLite locale
+
+Pour des données plus complexes nécessitant des requêtes et des relations, SQLite est la solution idéale.
+
+### Configuration de FireDAC avec SQLite
+
+```pascal
+uses
+  FireDAC.Comp.Client, FireDAC.Stan.Def, FireDAC.Phys.SQLite,
+  FireDAC.Stan.Async, System.IOUtils;
+
+var
+  Connexion: TFDConnection;
+
+// Configurer la connexion SQLite
+procedure TFormMain.ConfigurerBDD;
+var
+  CheminBDD: string;
+begin
+  // Créer le chemin de la base de données
+  CheminBDD := TPath.Combine(TPath.GetDocumentsPath, 'mabase.db');
+
+  Connexion := TFDConnection.Create(Self);
+
+  // Configuration
+  Connexion.DriverName := 'SQLite';
+  Connexion.Params.Database := CheminBDD;
+  Connexion.Params.Add('LockingMode=Normal');
+
+  try
+    Connexion.Connected := True;
+    ShowMessage('Base de données connectée');
+  except
+    on E: Exception do
+      ShowMessage('Erreur de connexion : ' + E.Message);
+  end;
+end;
+```
+
+### Créer les tables
+
+```pascal
+// Créer la structure de la base de données
+procedure TFormMain.CreerTables;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+
+    // Table des utilisateurs
+    Query.SQL.Text :=
+      'CREATE TABLE IF NOT EXISTS Utilisateurs (' +
+      '  id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      '  nom TEXT NOT NULL, ' +
+      '  email TEXT UNIQUE, ' +
+      '  date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP, ' +
+      '  actif BOOLEAN DEFAULT 1' +
+      ')';
+    Query.ExecSQL;
+
+    // Table des tâches
+    Query.SQL.Text :=
+      'CREATE TABLE IF NOT EXISTS Taches (' +
+      '  id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      '  utilisateur_id INTEGER, ' +
+      '  titre TEXT NOT NULL, ' +
+      '  description TEXT, ' +
+      '  terminee BOOLEAN DEFAULT 0, ' +
+      '  date_creation DATETIME DEFAULT CURRENT_TIMESTAMP, ' +
+      '  date_modification DATETIME, ' +
+      '  FOREIGN KEY (utilisateur_id) REFERENCES Utilisateurs(id)' +
+      ')';
+    Query.ExecSQL;
+
+    // Index pour améliorer les performances
+    Query.SQL.Text :=
+      'CREATE INDEX IF NOT EXISTS idx_taches_utilisateur ' +
+      'ON Taches(utilisateur_id)';
+    Query.ExecSQL;
+
+    ShowMessage('Tables créées avec succès');
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### Opérations CRUD
+
+```pascal
+// Créer (Insérer) une tâche
+procedure TFormMain.AjouterTache(Titre, Description: string;
+  UtilisateurID: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+    Query.SQL.Text :=
+      'INSERT INTO Taches (utilisateur_id, titre, description) ' +
+      'VALUES (:userid, :titre, :desc)';
+
+    Query.ParamByName('userid').AsInteger := UtilisateurID;
+    Query.ParamByName('titre').AsString := Titre;
+    Query.ParamByName('desc').AsString := Description;
+
+    Query.ExecSQL;
+
+    ShowMessage('Tâche ajoutée avec succès');
+  finally
+    Query.Free;
+  end;
+end;
+
+// Lire (Récupérer) les tâches
+procedure TFormMain.ChargerTachesUtilisateur(UtilisateurID: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+    Query.SQL.Text :=
+      'SELECT * FROM Taches ' +
+      'WHERE utilisateur_id = :userid ' +
+      'ORDER BY date_creation DESC';
+
+    Query.ParamByName('userid').AsInteger := UtilisateurID;
+    Query.Open;
+
+    ListView1.Items.Clear;
+
+    while not Query.Eof do
+    begin
+      var Item := ListView1.Items.Add;
+      Item.Text := Query.FieldByName('titre').AsString;
+      Item.Detail := Query.FieldByName('description').AsString;
+      Item.TagString := Query.FieldByName('id').AsString;
+
+      Query.Next;
+    end;
+
+    LabelNbTaches.Text := ListView1.Items.Count.ToString + ' tâches';
+  finally
+    Query.Free;
+  end;
+end;
+
+// Mettre à jour une tâche
+procedure TFormMain.MarquerTacheTerminee(TacheID: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+    Query.SQL.Text :=
+      'UPDATE Taches ' +
+      'SET terminee = 1, date_modification = CURRENT_TIMESTAMP ' +
+      'WHERE id = :id';
+
+    Query.ParamByName('id').AsInteger := TacheID;
+    Query.ExecSQL;
+
+    ShowMessage('Tâche marquée comme terminée');
+  finally
+    Query.Free;
+  end;
+end;
+
+// Supprimer une tâche
+procedure TFormMain.SupprimerTache(TacheID: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+    Query.SQL.Text := 'DELETE FROM Taches WHERE id = :id';
+
+    Query.ParamByName('id').AsInteger := TacheID;
+    Query.ExecSQL;
+
+    ShowMessage('Tâche supprimée');
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### Requêtes complexes
+
+```pascal
+// Obtenir des statistiques
+procedure TFormMain.AfficherStatistiques(UtilisateurID: Integer);
+var
+  Query: TFDQuery;
+  TotalTaches, TachesTerminees, TachesEnCours: Integer;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+
+    // Compter le total de tâches
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as total FROM Taches WHERE utilisateur_id = :userid';
+    Query.ParamByName('userid').AsInteger := UtilisateurID;
+    Query.Open;
+    TotalTaches := Query.FieldByName('total').AsInteger;
+    Query.Close;
+
+    // Compter les tâches terminées
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as total FROM Taches ' +
+      'WHERE utilisateur_id = :userid AND terminee = 1';
+    Query.ParamByName('userid').AsInteger := UtilisateurID;
+    Query.Open;
+    TachesTerminees := Query.FieldByName('total').AsInteger;
+    Query.Close;
+
+    TachesEnCours := TotalTaches - TachesTerminees;
+
+    // Afficher les statistiques
+    LabelStats.Text := Format('Total: %d | Terminées: %d | En cours: %d',
+      [TotalTaches, TachesTerminees, TachesEnCours]);
+  finally
+    Query.Free;
+  end;
+end;
+
+// Recherche de tâches
+procedure TFormMain.RechercherTaches(TexteRecherche: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+    Query.SQL.Text :=
+      'SELECT * FROM Taches ' +
+      'WHERE titre LIKE :recherche OR description LIKE :recherche ' +
+      'ORDER BY date_creation DESC';
+
+    Query.ParamByName('recherche').AsString := '%' + TexteRecherche + '%';
+    Query.Open;
+
+    ListView1.Items.Clear;
+
+    while not Query.Eof do
+    begin
+      var Item := ListView1.Items.Add;
+      Item.Text := Query.FieldByName('titre').AsString;
+      Item.Detail := Query.FieldByName('description').AsString;
+
+      Query.Next;
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+## Synchronisation avec un serveur
+
+La synchronisation permet de garder les données cohérentes entre l'appareil local et un serveur distant.
+
+### Architecture de synchronisation
+
+Il existe plusieurs stratégies de synchronisation :
+
+**Synchronisation complète** : Remplacer toutes les données locales par celles du serveur
+**Synchronisation incrémentielle** : Ne synchroniser que les changements depuis la dernière sync
+**Synchronisation bidirectionnelle** : Envoyer les modifications locales et recevoir celles du serveur
+
+### Marquage des données pour la synchronisation
+
+```pascal
+// Ajouter des champs de synchronisation aux tables
+procedure TFormMain.AjouterChampsSynchronisation;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+
+    // Ajouter des colonnes pour la synchronisation
+    Query.SQL.Text :=
+      'ALTER TABLE Taches ADD COLUMN synced BOOLEAN DEFAULT 0';
+    try
+      Query.ExecSQL;
+    except
+      // Colonne existe déjà
+    end;
+
+    Query.SQL.Text :=
+      'ALTER TABLE Taches ADD COLUMN server_id INTEGER';
+    try
+      Query.ExecSQL;
+    except
+      // Colonne existe déjà
+    end;
+
+    Query.SQL.Text :=
+      'ALTER TABLE Taches ADD COLUMN last_sync DATETIME';
+    try
+      Query.ExecSQL;
+    except
+      // Colonne existe déjà
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### Envoyer les modifications locales au serveur
+
+```pascal
+uses
+  System.Net.HttpClient, System.JSON;
+
+// Synchroniser les tâches non synchronisées vers le serveur
+procedure TFormMain.EnvoyerModificationsLocales;
+var
+  Query: TFDQuery;
+  HttpClient: THTTPClient;
+  JSONArray: TJSONArray;
+  JSONTache: TJSONObject;
   Response: IHTTPResponse;
 begin
-  Result := False;
-
-  Client := THTTPClient.Create;
+  Query := TFDQuery.Create(nil);
+  HttpClient := THTTPClient.Create;
   try
-    Client.ConnectionTimeout := 3000; // 3 secondes
-    Client.ResponseTimeout := 3000;   // 3 secondes
+    Query.Connection := Connexion;
 
+    // Récupérer les tâches non synchronisées
+    Query.SQL.Text :=
+      'SELECT * FROM Taches WHERE synced = 0';
+    Query.Open;
+
+    if Query.RecordCount = 0 then
+    begin
+      ShowMessage('Aucune modification à synchroniser');
+      Exit;
+    end;
+
+    // Créer le JSON avec toutes les tâches à synchroniser
+    JSONArray := TJSONArray.Create;
     try
-      // Essayer d'accéder à un service fiable
-      Response := Client.Head('https://www.google.com');
-      Result := (Response.StatusCode = 200);
+      while not Query.Eof do
+      begin
+        JSONTache := TJSONObject.Create;
+        JSONTache.AddPair('local_id', Query.FieldByName('id').AsString);
+        JSONTache.AddPair('titre', Query.FieldByName('titre').AsString);
+        JSONTache.AddPair('description', Query.FieldByName('description').AsString);
+        JSONTache.AddPair('terminee', TJSONBool.Create(
+          Query.FieldByName('terminee').AsBoolean));
+
+        JSONArray.Add(JSONTache);
+        Query.Next;
+      end;
+
+      // Envoyer au serveur
+      Response := HttpClient.Post(
+        'https://votreserveur.com/api/sync/taches',
+        TStringStream.Create(JSONArray.ToString, TEncoding.UTF8),
+        nil);
+
+      if Response.StatusCode = 200 then
+      begin
+        // Marquer comme synchronisé
+        MarquerCommeSynchronise(JSONArray);
+        ShowMessage('Synchronisation réussie');
+      end
+      else
+        ShowMessage('Erreur de synchronisation : ' + Response.StatusCode.ToString);
+    finally
+      JSONArray.Free;
+    end;
+  finally
+    Query.Free;
+    HttpClient.Free;
+  end;
+end;
+
+// Marquer les tâches comme synchronisées
+procedure TFormMain.MarquerCommeSynchronise(TachesJSON: TJSONArray);
+var
+  Query: TFDQuery;
+  i: Integer;
+  LocalID: Integer;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+
+    Connexion.StartTransaction;
+    try
+      for i := 0 to TachesJSON.Count - 1 do
+      begin
+        LocalID := (TachesJSON.Items[i] as TJSONObject).GetValue<Integer>('local_id');
+
+        Query.SQL.Text :=
+          'UPDATE Taches SET synced = 1, last_sync = CURRENT_TIMESTAMP ' +
+          'WHERE id = :id';
+        Query.ParamByName('id').AsInteger := LocalID;
+        Query.ExecSQL;
+      end;
+
+      Connexion.Commit;
     except
-      // Une exception indique probablement une absence de connexion
+      Connexion.Rollback;
+      raise;
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### Recevoir les modifications du serveur
+
+```pascal
+// Télécharger les nouvelles données du serveur
+procedure TFormMain.RecevoirModificationsServeur;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONArray: TJSONArray;
+  JSONTache: TJSONObject;
+  Query: TFDQuery;
+  i: Integer;
+begin
+  HttpClient := THTTPClient.Create;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Connexion;
+
+    // Obtenir la dernière date de synchronisation
+    Query.SQL.Text := 'SELECT MAX(last_sync) as derniere_sync FROM Taches';
+    Query.Open;
+    var DerniereSync := Query.FieldByName('derniere_sync').AsDateTime;
+    Query.Close;
+
+    // Demander les modifications depuis cette date
+    var URL := Format('https://votreserveur.com/api/sync/taches?since=%s',
+      [DateToISO8601(DerniereSync)]);
+
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONArray := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
+      try
+        Connexion.StartTransaction;
+        try
+          for i := 0 to JSONArray.Count - 1 do
+          begin
+            JSONTache := JSONArray.Items[i] as TJSONObject;
+
+            // Insérer ou mettre à jour
+            InsererOuMettreAJourTache(JSONTache, Query);
+          end;
+
+          Connexion.Commit;
+          ShowMessage(JSONArray.Count.ToString + ' tâches synchronisées');
+        except
+          Connexion.Rollback;
+          raise;
+        end;
+      finally
+        JSONArray.Free;
+      end;
+    end;
+  finally
+    Query.Free;
+    HttpClient.Free;
+  end;
+end;
+
+// Insérer ou mettre à jour une tâche depuis le serveur
+procedure TFormMain.InsererOuMettreAJourTache(JSONTache: TJSONObject;
+  Query: TFDQuery);
+var
+  ServerID: Integer;
+begin
+  ServerID := JSONTache.GetValue<Integer>('id');
+
+  // Vérifier si la tâche existe déjà
+  Query.SQL.Text := 'SELECT id FROM Taches WHERE server_id = :serverid';
+  Query.ParamByName('serverid').AsInteger := ServerID;
+  Query.Open;
+
+  if Query.RecordCount > 0 then
+  begin
+    // Mise à jour
+    Query.Close;
+    Query.SQL.Text :=
+      'UPDATE Taches SET ' +
+      '  titre = :titre, ' +
+      '  description = :desc, ' +
+      '  terminee = :terminee, ' +
+      '  synced = 1, ' +
+      '  last_sync = CURRENT_TIMESTAMP ' +
+      'WHERE server_id = :serverid';
+  end
+  else
+  begin
+    // Insertion
+    Query.Close;
+    Query.SQL.Text :=
+      'INSERT INTO Taches (server_id, titre, description, terminee, ' +
+      '  synced, last_sync) ' +
+      'VALUES (:serverid, :titre, :desc, :terminee, 1, CURRENT_TIMESTAMP)';
+  end;
+
+  Query.ParamByName('serverid').AsInteger := ServerID;
+  Query.ParamByName('titre').AsString := JSONTache.GetValue<string>('titre');
+  Query.ParamByName('desc').AsString := JSONTache.GetValue<string>('description');
+  Query.ParamByName('terminee').AsBoolean := JSONTache.GetValue<Boolean>('terminee');
+
+  Query.ExecSQL;
+end;
+```
+
+### Gestion des conflits
+
+Lorsque les données sont modifiées à la fois localement et sur le serveur, des conflits peuvent survenir.
+
+```pascal
+type
+  TStrategieConflit = (scServeurGagne, scClientGagne, scPlusRecent, scDemanderUtilisateur);
+
+// Résoudre un conflit de synchronisation
+procedure TFormMain.ResoudreConflit(TacheLocale, TacheServeur: TJSONObject;
+  Strategie: TStrategieConflit);
+begin
+  case Strategie of
+    scServeurGagne:
+      // Toujours prendre la version du serveur
+      AppliquerVersionServeur(TacheServeur);
+
+    scClientGagne:
+      // Toujours garder la version locale et l'envoyer au serveur
+      EnvoyerVersionLocale(TacheLocale);
+
+    scPlusRecent:
+      // Comparer les dates de modification
+      begin
+        var DateLocale := ISO8601ToDate(TacheLocale.GetValue<string>('date_modification'));
+        var DateServeur := ISO8601ToDate(TacheServeur.GetValue<string>('date_modification'));
+
+        if DateServeur > DateLocale then
+          AppliquerVersionServeur(TacheServeur)
+        else
+          EnvoyerVersionLocale(TacheLocale);
+      end;
+
+    scDemanderUtilisateur:
+      // Afficher un dialogue pour que l'utilisateur choisisse
+      DemanderResolutionUtilisateur(TacheLocale, TacheServeur);
+  end;
+end;
+
+// Demander à l'utilisateur de résoudre le conflit
+procedure TFormMain.DemanderResolutionUtilisateur(TacheLocale,
+  TacheServeur: TJSONObject);
+begin
+  var Message := 'Conflit détecté sur la tâche "' +
+    TacheLocale.GetValue<string>('titre') + '"' + sLineBreak + sLineBreak +
+    'Version locale: ' + TacheLocale.GetValue<string>('description') + sLineBreak +
+    'Version serveur: ' + TacheServeur.GetValue<string>('description') + sLineBreak + sLineBreak +
+    'Quelle version conserver ?';
+
+  TDialogService.MessageDialog(Message, TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+    TMsgDlgBtn.mbYes, 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if AResult = mrYes then
+        EnvoyerVersionLocale(TacheLocale)
+      else
+        AppliquerVersionServeur(TacheServeur);
+    end,
+    'Garder local', 'Garder serveur');
+end;
+```
+
+## Synchronisation automatique
+
+```pascal
+// Synchroniser automatiquement en arrière-plan
+procedure TFormMain.ConfigurerSyncAuto;
+begin
+  // Timer pour synchroniser périodiquement
+  TimerSync := TTimer.Create(Self);
+  TimerSync.Interval := 300000; // 5 minutes
+  TimerSync.OnTimer := TimerSyncTimer;
+  TimerSync.Enabled := True;
+end;
+
+procedure TFormMain.TimerSyncTimer(Sender: TObject);
+begin
+  // Ne synchroniser que si connecté
+  if EstConnecteInternet then
+  begin
+    SynchroniserDonnees;
+  end;
+end;
+
+// Vérifier la connexion Internet
+function TFormMain.EstConnecteInternet: Boolean;
+var
+  HttpClient: THTTPClient;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    try
+      var Response := HttpClient.Get('https://www.google.com');
+      Result := Response.StatusCode = 200;
+    except
       Result := False;
     end;
   finally
-    Client.Free;
+    HttpClient.Free;
   end;
 end;
 
-// Utilisation avec vérification asynchrone
-procedure TMainForm.CheckConnectivity;
+// Processus complet de synchronisation
+procedure TFormMain.SynchroniserDonnees;
 begin
-  // Vérifier la connectivité en arrière-plan
-  TTask.Run(procedure
-  var
-    Connected: Boolean;
+  if FSyncEnCours then
   begin
-    Connected := IsNetworkAvailable;
+    ShowMessage('Synchronisation déjà en cours');
+    Exit;
+  end;
 
-    // Mettre à jour l'interface dans le thread principal
-    TThread.Synchronize(nil, procedure
+  FSyncEnCours := True;
+  AniIndicator1.Enabled := True;
+  AniIndicator1.Visible := True;
+
+  TTask.Run(
+    procedure
     begin
-      if Connected then
-      begin
-        lblStatus.Text := 'Connecté';
-        btnSync.Enabled := True;
+      try
+        // 1. Envoyer les modifications locales
+        EnvoyerModificationsLocales;
 
-        // Lancer la synchronisation automatique si nécessaire
-        if ckAutoSync.IsChecked then
-          SynchronizeData;
-      end
-      else
-      begin
-        lblStatus.Text := 'Hors ligne';
-        btnSync.Enabled := False;
-      end;
-    end);
-  end);
-end;
-```
+        // 2. Recevoir les modifications du serveur
+        RecevoirModificationsServeur;
 
-### 2. Mise en file d'attente des opérations de synchronisation
-
-Quand une opération de synchronisation échoue en raison d'une absence de connexion, mettez-la en file d'attente pour plus tard :
-
-```pascal
-procedure TMainForm.SyncDataWithRetry;
-begin
-  // Vérifier d'abord la connectivité
-  TTask.Run(procedure
-  var
-    Connected: Boolean;
-  begin
-    Connected := IsNetworkAvailable;
-
-    TThread.Synchronize(nil, procedure
-    begin
-      if Connected then
-      begin
-        // Si connecté, synchroniser normalement
-        SynchronizeData;
-      end
-      else
-      begin
-        // Si hors ligne, enregistrer pour synchronisation ultérieure
-        FSyncPending := True;
-        lblStatus.Text := 'Synchronisation en attente de connexion';
-
-        // Démarrer la surveillance de la connectivité
-        if not FConnectivityTimer.Enabled then
-          FConnectivityTimer.Enabled := True;
-      end;
-    end);
-  end);
-end;
-
-// Timer pour vérifier périodiquement la connectivité
-procedure TMainForm.ConnectivityTimerTimer(Sender: TObject);
-begin
-  // Vérifier si une synchronisation est en attente
-  if FSyncPending then
-  begin
-    // Vérifier la connectivité
-    TTask.Run(procedure
-    var
-      Connected: Boolean;
-    begin
-      Connected := IsNetworkAvailable;
-
-      TThread.Synchronize(nil, procedure
-      begin
-        if Connected then
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            AniIndicator1.Enabled := False;
+            AniIndicator1.Visible := False;
+            LabelDerniereSync.Text := 'Dernière sync : ' + TimeToStr(Now);
+            FSyncEnCours := False;
+          end);
+      except
+        on E: Exception do
         begin
-          // Connexion rétablie, synchroniser
-          FSyncPending := False;
-          FConnectivityTimer.Enabled := False;
-          SynchronizeData;
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ShowMessage('Erreur de synchronisation : ' + E.Message);
+              AniIndicator1.Enabled := False;
+              AniIndicator1.Visible := False;
+              FSyncEnCours := False;
+            end);
         end;
-      end);
+      end;
     end);
-  end
-  else
-    FConnectivityTimer.Enabled := False;
 end;
 ```
 
-## Encapsulation dans un modèle de données complet
+## Optimisation et bonnes pratiques
 
-Pour simplifier l'utilisation dans votre application, encapsulez toutes ces fonctionnalités dans un modèle de données complet :
+### Compression des données
 
 ```pascal
-unit TaskModel;
-
-interface
-
 uses
-  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections,
-  FireDAC.Comp.Client, FireDAC.DApt, Data.DB;
+  System.ZLib;
 
+// Compresser les données avant envoi
+function CompresserJSON(JSON: string): TBytes;
+var
+  Input, Output: TBytes;
+begin
+  Input := TEncoding.UTF8.GetBytes(JSON);
+
+  // Compresser avec ZLib
+  ZCompress(Input, Output);
+
+  Result := Output;
+end;
+
+// Décompresser les données reçues
+function DecompresserJSON(Data: TBytes): string;
+var
+  Output: TBytes;
+begin
+  ZDecompress(Data, Output);
+  Result := TEncoding.UTF8.GetString(Output);
+end;
+```
+
+### Cache intelligent
+
+```pascal
+// Mettre en cache les données fréquemment consultées
 type
-  TTaskPriority = (tpLow, tpMedium, tpHigh);
-
-  TTask = class
+  TCacheManager = class
   private
-    FID: Integer;
-    FTitle: string;
-    FDescription: string;
-    FDueDate: TDateTime;
-    FIsCompleted: Boolean;
-    FPriority: TTaskPriority;
-    FServerID: Integer;
-    FSyncStatus: Integer;
+    FCache: TDictionary<string, TJSONObject>;
+    FDureeCacheSecondes: Integer;
   public
-    constructor Create; overload;
-    constructor Create(AID: Integer; const ATitle, ADescription: string;
-      ADueDate: TDateTime; AIsCompleted: Boolean; APriority: TTaskPriority); overload;
-
-    property ID: Integer read FID write FID;
-    property Title: string read FTitle write FTitle;
-    property Description: string read FDescription write FDescription;
-    property DueDate: TDateTime read FDueDate write FDueDate;
-    property IsCompleted: Boolean read FIsCompleted write FIsCompleted;
-    property Priority: TTaskPriority read FPriority write FPriority;
-    property ServerID: Integer read FServerID write FServerID;
-    property SyncStatus: Integer read FSyncStatus write FSyncStatus;
-
-    function ToJSON: TJSONObject;
-    procedure FromJSON(const JSONObj: TJSONObject);
-  end;
-
-  TTaskManager = class
-  private
-    FConnection: TFDConnection;
-    FSyncService: TSyncService;
-    FSyncQueue: TSyncQueue;
-
-    procedure InitializeDatabase;
-    procedure CreateTables;
-    procedure CreateTriggers;
-  public
-    constructor Create(const DBPath: string);
+    constructor Create(DureeCacheSecondes: Integer = 300);
     destructor Destroy; override;
 
-    // Opérations CRUD
-    function AddTask(const Task: TTask): Integer;
-    function GetTask(ID: Integer): TTask;
-    function GetAllTasks: TObjectList<TTask>;
-    function GetTasksWithFilter(const Filter: string): TObjectList<TTask>;
-    procedure UpdateTask(const Task: TTask);
-    procedure DeleteTask(ID: Integer);
-    procedure MarkTaskAsCompleted(ID: Integer; Completed: Boolean);
-
-    // Synchronisation
-    procedure SynchronizeTasks;
-    procedure SynchronizeTasksAsync(CompletionCallback: TProc<Boolean>);
-    function IsSynchronizing: Boolean;
-
-    // Connexion
-    function IsConnected: Boolean;
-    procedure RegisterConnectionChangedCallback(Callback: TProc<Boolean>);
+    procedure Ajouter(Cle: string; Valeur: TJSONObject);
+    function Obtenir(Cle: string): TJSONObject;
+    function Existe(Cle: string): Boolean;
+    procedure Vider;
   end;
 
-implementation
+constructor TCacheManager.Create(DureeCacheSecondes: Integer);
+begin
+  FCache := TDictionary<string, TJSONObject>.Create;
+  FDureeCacheSecondes := DureeCacheSecondes;
+end;
 
-// ... Implémentation des méthodes ...
+destructor TCacheManager.Destroy;
+begin
+  Vider;
+  FCache.Free;
+  inherited;
+end;
 
-end.
+procedure TCacheManager.Ajouter(Cle: string; Valeur: TJSONObject);
+begin
+  if FCache.ContainsKey(Cle) then
+    FCache[Cle].Free;
+
+  FCache.AddOrSetValue(Cle, Valeur.Clone as TJSONObject);
+end;
+
+function TCacheManager.Obtenir(Cle: string): TJSONObject;
+begin
+  if FCache.ContainsKey(Cle) then
+    Result := FCache[Cle]
+  else
+    Result := nil;
+end;
 ```
 
-Cette classe fournit une API simple pour interagir avec les tâches, tout en gérant la complexité du stockage local et de la synchronisation en arrière-plan.
-
-## Exemple d'utilisation du modèle de données
-
-Voici comment utiliser ce modèle de données dans votre application :
+### Nettoyage des anciennes données
 
 ```pascal
-unit MainForm;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.ListView.Types,
-  FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, TaskModel;
-
-type
-  TTaskForm = class(TForm)
-    ListView1: TListView;
-    ToolBar1: TToolBar;
-    btnAdd: TButton;
-    btnSync: TButton;
-    lblStatus: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
-    procedure btnSyncClick(Sender: TObject);
-    procedure ListView1ItemClick(const Sender: TObject; const AItem: TListViewItem);
-    procedure ListView1DeleteItem(Sender: TObject; AIndex: Integer);
-  private
-    FTaskManager: TTaskManager;
-
-    procedure LoadTasks;
-    procedure UpdateConnectionStatus(Connected: Boolean);
-  public
-    { Public declarations }
-  end;
-
+// Supprimer les anciennes données synchronisées
+procedure TFormMain.NettoyerAnciennesDonnees;
 var
-  TaskForm: TTaskForm;
-
-implementation
-
-{$R *.fmx}
-
-procedure TTaskForm.FormCreate(Sender: TObject);
-var
-  DBPath: string;
+  Query: TFDQuery;
 begin
-  // Déterminer le chemin de la base de données
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  DBPath := TPath.Combine(TPath.GetDocumentsPath, 'tasks.db');
-  {$ELSE}
-  DBPath := TPath.Combine(TPath.GetHomePath, 'tasks.db');
-  {$ENDIF}
-
-  // Créer le gestionnaire de tâches
-  FTaskManager := TTaskManager.Create(DBPath);
-
-  // Enregistrer le callback de changement de connectivité
-  FTaskManager.RegisterConnectionChangedCallback(UpdateConnectionStatus);
-
-  // Charger les tâches
-  LoadTasks;
-end;
-
-procedure TTaskForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FTaskManager.Free;
-end;
-
-procedure TTaskForm.LoadTasks;
-var
-  Tasks: TObjectList<TTask>;
-  Task: TTask;
-  Item: TListViewItem;
-begin
-  // Vider la liste
-  ListView1.Items.Clear;
-
-  // Récupérer toutes les tâches
-  Tasks := FTaskManager.GetAllTasks;
+  Query := TFDQuery.Create(nil);
   try
-    // Remplir la liste
-    for Task in Tasks do
-    begin
-      Item := ListView1.Items.Add;
-      Item.Tag := Task.ID;
-      Item.Text := Task.Title;
-      Item.Detail := Task.Description;
+    Query.Connection := Connexion;
 
-      // Formatage selon priorité
-      case Task.Priority of
-        tpLow: Item.Data['Priority'] := '🟢';
-        tpMedium: Item.Data['Priority'] := '🟠';
-        tpHigh: Item.Data['Priority'] := '🔴';
-      end;
+    // Supprimer les tâches terminées depuis plus de 30 jours
+    Query.SQL.Text :=
+      'DELETE FROM Taches ' +
+      'WHERE terminee = 1 AND synced = 1 ' +
+      'AND date_modification < datetime("now", "-30 days")';
 
-      // Date d'échéance
-      Item.Data['DueDate'] := FormatDateTime('dd/mm/yyyy', Task.DueDate);
+    Query.ExecSQL;
 
-      // Statut de complétion
-      if Task.IsCompleted then
-        Item.Data['Status'] := '✓'
-      else
-        Item.Data['Status'] := '';
-
-      // Statut de synchronisation
-      if Task.SyncStatus = 0 then
-        Item.Data['Sync'] := '⚠️' // Non synchronisé
-      else
-        Item.Data['Sync'] := '✓'; // Synchronisé
-    end;
+    ShowMessage('Anciennes données nettoyées');
   finally
-    Tasks.Free;
+    Query.Free;
   end;
-end;
-
-procedure TTaskForm.btnAddClick(Sender: TObject);
-begin
-  // Ouvrir un formulaire pour ajouter une tâche
-  // ...
-
-  // Après l'ajout, rafraîchir la liste
-  LoadTasks;
-end;
-
-procedure TTaskForm.btnSyncClick(Sender: TObject);
-begin
-  // Désactiver le bouton pendant la synchronisation
-  btnSync.Enabled := False;
-  lblStatus.Text := 'Synchronisation en cours...';
-
-  // Lancer la synchronisation asynchrone
-  FTaskManager.SynchronizeTasksAsync(
-    procedure(Success: Boolean)
-    begin
-      // Callback exécuté une fois la synchronisation terminée
-      btnSync.Enabled := True;
-
-      if Success then
-      begin
-        lblStatus.Text := 'Synchronisation réussie';
-        LoadTasks; // Rafraîchir la liste
-      end
-      else
-        lblStatus.Text := 'Échec de la synchronisation';
-    end
-  );
-end;
-
-procedure TTaskForm.UpdateConnectionStatus(Connected: Boolean);
-begin
-  // Mettre à jour l'interface selon l'état de la connexion
-  if Connected then
-  begin
-    lblStatus.Text := 'Connecté';
-    btnSync.Enabled := True;
-  end
-  else
-  begin
-    lblStatus.Text := 'Hors ligne';
-    btnSync.Enabled := False;
-  end;
-end;
-
-procedure TTaskForm.ListView1ItemClick(const Sender: TObject; const AItem: TListViewItem);
-var
-  Task: TTask;
-begin
-  // Récupérer la tâche sélectionnée
-  Task := FTaskManager.GetTask(AItem.Tag);
-  if Task <> nil then
-  try
-    // Ouvrir un formulaire pour éditer la tâche
-    // ...
-
-    // Après l'édition, rafraîchir la liste
-    LoadTasks;
-  finally
-    Task.Free;
-  end;
-end;
-
-procedure TTaskForm.ListView1DeleteItem(Sender: TObject; AIndex: Integer);
-var
-  Item: TListViewItem;
-begin
-  Item := ListView1.Items[AIndex];
-
-  // Supprimer la tâche
-  FTaskManager.DeleteTask(Item.Tag);
 end;
 ```
-
-## Bonnes pratiques pour le stockage et la synchronisation
-
-Pour créer une application robuste avec stockage local et synchronisation :
-
-### 1. Planifiez votre modèle de données
-
-- Pensez à la structure de données avant d'écrire du code
-- Incluez des champs pour gérer la synchronisation (ServerID, SyncStatus, etc.)
-- Utilisez des timestamps pour suivre les modifications
-
-### 2. Optimisez pour l'expérience utilisateur
-
-- Privilégiez les opérations locales immédiates pour une meilleure réactivité
-- Effectuez la synchronisation en arrière-plan
-- Montrez clairement à l'utilisateur l'état de synchronisation de ses données
-
-### 3. Gérez bien les conflits
-
-- Définissez une stratégie claire de résolution des conflits
-- Donnez la priorité aux données du serveur ou aux données locales selon votre cas d'usage
-- Envisagez de demander à l'utilisateur de choisir en cas de conflit important
-
-### 4. Économisez les ressources
-
-- Synchronisez seulement quand c'est nécessaire
-- Utilisez la synchronisation incrémentielle
-- Compressez les données transmises si le volume est important
-
-### 5. Sécurisez les données
-
-- Chiffrez les données sensibles stockées localement
-- Utilisez HTTPS pour toutes les communications avec le serveur
-- Validez toujours les données côté serveur
 
 ## Conclusion
 
-Le stockage local et la synchronisation sont des aspects critiques des applications mobiles modernes. Delphi offre plusieurs options puissantes pour implémenter ces fonctionnalités, du simple stockage de fichiers JSON à l'utilisation de bases de données SQLite complètes.
+Le stockage local et la synchronisation sont des éléments essentiels pour créer des applications mobiles robustes qui fonctionnent dans toutes les conditions.
 
-En suivant les bonnes pratiques et en utilisant les approches décrites dans ce chapitre, vous pouvez créer des applications qui fonctionnent parfaitement en mode hors ligne tout en maintenant la synchronisation des données entre l'appareil et le serveur lorsqu'une connexion est disponible.
+Les points clés à retenir :
 
-Les utilisateurs apprécieront particulièrement une application qui :
-- Fonctionne rapidement même sans connexion internet
-- Conserve leurs données en toute sécurité
-- Synchronise automatiquement dès que possible
-- Ne perd jamais leurs modifications
+1. **Préférences** : Utilisez TIniFile pour les paramètres simples de l'application
+2. **JSON** : Format idéal pour les données structurées légères
+3. **SQLite** : Base de données puissante pour les données complexes et volumineuses
+4. **Synchronisation** : Permettez à vos utilisateurs d'accéder à leurs données partout
+5. **Hors ligne d'abord** : Concevez votre application pour fonctionner sans connexion
+6. **Conflits** : Gérez intelligemment les conflits de synchronisation
+7. **Performance** : Utilisez le cache et optimisez les requêtes
+8. **Sécurité** : Chiffrez les données sensibles stockées localement
 
-La prochaine section explorera comment publier vos applications mobiles sur l'App Store et le Play Store, une étape cruciale pour atteindre votre public cible.
+Une stratégie de stockage et de synchronisation bien pensée assure une expérience utilisateur fluide, que l'utilisateur soit en ligne ou hors ligne, sur un seul appareil ou sur plusieurs. Dans la section suivante, nous verrons comment préparer et publier vos applications sur les stores officiels.
 
 ⏭️ [Publication sur App Store / Play Store](/15-applications-mobiles-avec-delphi/07-publication-sur-app-store-play-store.md)

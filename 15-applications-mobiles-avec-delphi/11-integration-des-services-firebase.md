@@ -1,1743 +1,1180 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.11 Intégration des services Firebase
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Firebase est une plateforme de développement d'applications mobiles créée par Google qui offre de nombreux services pour améliorer vos applications. Delphi permet d'intégrer facilement Firebase dans vos projets pour Android et iOS. Dans cette section, nous explorerons comment configurer et utiliser les services Firebase les plus populaires dans vos applications mobiles Delphi.
+Firebase est une plateforme complète développée par Google qui offre une multitude de services pour faciliter le développement d'applications mobiles. Imaginez Firebase comme une boîte à outils tout-en-un qui vous fournit des solutions prêtes à l'emploi pour les problèmes courants du développement mobile : notifications push, analytics, authentification, base de données en temps réel, stockage de fichiers, et bien plus encore.
+
+L'un des grands avantages de Firebase est qu'il élimine le besoin de créer et gérer votre propre infrastructure serveur pour de nombreuses fonctionnalités. Vous pouvez vous concentrer sur le développement de votre application pendant que Firebase s'occupe du backend, de la scalabilité et de la fiabilité.
+
+Dans cette section, nous allons explorer comment intégrer les principaux services Firebase dans vos applications Delphi, étape par étape, de manière accessible même si vous n'avez jamais utilisé Firebase auparavant.
 
 ## Qu'est-ce que Firebase ?
 
-Firebase est un ensemble de services hébergés dans le cloud qui peuvent aider à :
+### Vue d'ensemble
 
-- **Développer** plus rapidement avec des outils prêts à l'emploi
-- **Améliorer la qualité** de votre application avec des services de test et de surveillance
-- **Faire croître votre base d'utilisateurs** avec des outils d'analyse et d'engagement
+Firebase est une plateforme **BaaS** (Backend as a Service) qui propose :
 
-Les services Firebase les plus couramment utilisés comprennent :
+**Services essentiels** :
+- **Authentication** : Authentification des utilisateurs (email, Google, Facebook, etc.)
+- **Realtime Database** : Base de données NoSQL synchronisée en temps réel
+- **Cloud Firestore** : Base de données NoSQL nouvelle génération, plus flexible
+- **Cloud Storage** : Stockage de fichiers (images, vidéos, documents)
+- **Cloud Messaging (FCM)** : Notifications push vers Android et iOS
 
-- **Authentication** : Système d'authentification complet
-- **Cloud Firestore** : Base de données NoSQL en temps réel
-- **Realtime Database** : Base de données JSON en temps réel
-- **Cloud Storage** : Stockage de fichiers
-- **Cloud Messaging** : Notifications push
-- **Analytics** : Analyse du comportement des utilisateurs
-- **Crashlytics** : Rapports de crash
+**Services de développement** :
+- **Analytics** : Statistiques d'utilisation détaillées
+- **Crashlytics** : Rapports de crash en temps réel
+- **Performance Monitoring** : Surveillance des performances
+- **Test Lab** : Tests sur de vrais appareils
 
-## Configuration de Firebase avec Delphi
+**Services de croissance** :
+- **Remote Config** : Configuration à distance sans mise à jour
+- **A/B Testing** : Tests de variantes de fonctionnalités
+- **Dynamic Links** : Liens intelligents pour l'acquisition d'utilisateurs
+
+### Pourquoi utiliser Firebase avec Delphi ?
+
+**Avantages** :
+- Réduction du temps de développement (pas besoin de créer un backend)
+- Infrastructure scalable automatiquement
+- Gratuit pour les petits projets (offre généreuse)
+- Documentation extensive et communauté active
+- Intégration native avec Android (Delphi compile en natif Android)
+
+**Cas d'usage idéaux** :
+- Application de chat en temps réel
+- Application avec authentification sociale
+- Application nécessitant des notifications push
+- Application avec synchronisation multi-appareils
+- MVP (Minimum Viable Product) à développer rapidement
+
+## Configuration initiale de Firebase
 
 ### Étape 1 : Créer un projet Firebase
 
-Avant d'intégrer Firebase dans votre application Delphi, vous devez créer un projet Firebase :
+1. Allez sur https://console.firebase.google.com
+2. Cliquez sur **Ajouter un projet** (ou "Add project")
+3. Donnez un nom à votre projet (ex: "MonAppDelphi")
+4. Acceptez les conditions d'utilisation
+5. Activez Google Analytics si vous le souhaitez (recommandé)
+6. Cliquez sur **Créer le projet**
 
-1. Rendez-vous sur la [console Firebase](https://console.firebase.google.com/)
-2. Cliquez sur "Ajouter un projet"
-3. Donnez un nom à votre projet et suivez les étapes de configuration
-4. Une fois le projet créé, vous serez redirigé vers le tableau de bord du projet
+### Étape 2 : Ajouter une application Android
 
-### Étape 2 : Ajouter des applications à votre projet Firebase
+1. Dans la console Firebase, cliquez sur l'icône **Android**
+2. Entrez le **nom du package** de votre application Delphi
+   - Trouvez-le dans Delphi : `Project > Options > Version Info`
+   - Exemple : `com.monentreprise.monapp`
+3. (Optionnel) Entrez un surnom et un certificat SHA-1
+4. Cliquez sur **Enregistrer l'application**
+5. **Téléchargez le fichier `google-services.json`**
+6. Cliquez sur **Suivant** puis **Continuer vers la console**
 
-Pour chaque plateforme (Android et iOS), vous devez enregistrer votre application dans Firebase :
+### Étape 3 : Ajouter une application iOS (optionnel)
 
-#### Pour Android :
+1. Dans la console Firebase, cliquez sur l'icône **iOS**
+2. Entrez le **Bundle ID** de votre application
+   - Trouvez-le dans Delphi : `Project > Options > Version Info (iOS)`
+   - Doit correspondre exactement au Bundle ID
+3. Téléchargez le fichier **GoogleService-Info.plist**
+4. Suivez les instructions de configuration iOS
 
-1. Dans le tableau de bord de votre projet Firebase, cliquez sur l'icône Android
-2. Entrez le nom du package de votre application (ex : `com.votreentreprise.votreapp`)
-   - Pour trouver le nom du package dans Delphi : Project > Options > Application > Package Name
-3. (Optionnel) Entrez un surnom pour l'application
-4. Téléchargez le fichier `google-services.json`
+### Étape 4 : Intégrer les fichiers de configuration dans Delphi
 
-#### Pour iOS :
+**Pour Android** :
 
-1. Dans le tableau de bord de votre projet Firebase, cliquez sur l'icône iOS
-2. Entrez l'ID du bundle (ex : `com.votreentreprise.votreapp`)
-   - Pour trouver l'ID du bundle dans Delphi : Project > Options > Application > Bundle Identifier
-3. (Optionnel) Entrez un surnom pour l'application
-4. Téléchargez le fichier `GoogleService-Info.plist`
-
-### Étape 3 : Installation des composants Firebase dans Delphi
-
-Delphi propose des composants natifs pour Firebase. Pour les installer :
-
-1. Ouvrez Delphi et sélectionnez Tools > GetIt Package Manager
-2. Recherchez "Firebase" dans la barre de recherche
-3. Installez les packages Firebase qui vous intéressent
-
-> **Note** : Certains services Firebase peuvent nécessiter des composants supplémentaires ou des bibliothèques tierces.
-
-### Étape 4 : Configuration de votre projet Delphi
-
-Après avoir installé les composants, vous devez configurer votre projet pour utiliser Firebase :
-
-1. Placez le fichier `google-services.json` dans le dossier `<Projet>\Android\Debug` et `<Projet>\Android\Release`
-2. Placez le fichier `GoogleService-Info.plist` dans le dossier `<Projet>\iOS\Debug` et `<Projet>\iOS\Release`
-
-3. Ajoutez les permissions nécessaires dans les options de votre projet :
-   - Pour Android : Project > Options > Uses Permissions
-   - Pour iOS : Project > Options > Version Info > Custom plist
-
-## Firebase Authentication
-
-Firebase Authentication permet de gérer l'authentification des utilisateurs avec différentes méthodes (email/mot de passe, réseaux sociaux, etc.) de manière sécurisée.
-
-### Configuration de Authentication dans Firebase
-
-1. Dans la console Firebase, allez dans "Authentication" > "Commencer"
-2. Activez les méthodes d'authentification que vous souhaitez utiliser (Email/Mot de passe, Google, Facebook, etc.)
-
-### Intégration de Authentication dans Delphi
-
-#### 1. Ajout des composants nécessaires
-
-Placez ces composants sur votre formulaire depuis la palette :
-
-```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseAuth FAuth;
+```
+1. Copiez le fichier google-services.json
+2. Dans Delphi : Project > Deployment
+3. Cliquez sur "Add Files"
+4. Sélectionnez google-services.json
+5. Remote Path : assets\internal\
+6. Condition : Android
 ```
 
-#### 2. Initialisation de Firebase dans votre application
+**Pour iOS** :
 
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Auth
-  FAuth := TFirebaseAuth.Create;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FAuth.Free;
-end;
+```
+1. Copiez le fichier GoogleService-Info.plist
+2. Dans Delphi : Project > Deployment
+3. Ajoutez le fichier
+4. Remote Path : StartUp\Documents\
+5. Condition : iOS Device
 ```
 
-#### 3. Implémentation de l'inscription par email et mot de passe
+## Firebase Cloud Messaging (Notifications Push)
+
+FCM permet d'envoyer des notifications push à vos utilisateurs sur Android et iOS.
+
+### Activation de FCM dans Firebase
+
+1. Dans la console Firebase, allez dans **Project Settings** (⚙️)
+2. Onglet **Cloud Messaging**
+3. Notez votre **Server Key** (pour envoyer des notifications depuis votre serveur)
+
+### Configuration dans Delphi
+
+**Permissions Android** :
+
+```
+Project > Options > Uses Permissions
+Cocher :
+☑ Receive Boot Completed
+☑ Internet
+☑ Access Network State
+```
+
+**Composants nécessaires** :
+
+Delphi fournit `TPushService` pour gérer FCM.
 
 ```pascal
-procedure TMainForm.btnSignUpClick(Sender: TObject);
+uses
+  System.PushNotification, System.JSON;
+
 var
-  Email, Password: string;
-begin
-  // Récupérer les informations depuis l'interface
-  Email := edtEmail.Text;
-  Password := edtPassword.Text;
+  PushService: TPushService;
 
-  // Vérifier les entrées
-  if (Email = '') or (Password = '') then
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Créer le service push
+  PushService := TPushServiceManager.Instance.GetServiceByName(
+    TPushService.TServiceNames.GCM); // GCM pour Android (Google Cloud Messaging)
+
+  if Assigned(PushService) then
   begin
-    ShowMessage('Veuillez remplir tous les champs.');
-    Exit;
-  end;
+    // Configurer les événements
+    PushService.OnChange := PushServiceChange;
+    PushService.OnReceiveNotification := PushServiceReceiveNotification;
 
-  // Afficher un indicateur de chargement
-  ShowLoadingIndicator;
-
-  // Créer un nouvel utilisateur
-  FAuth.CreateUserWithEmailAndPassword(Email, Password,
-    procedure(const AuthResult: IFirebaseUser; const Error: string)
-    begin
-      // Masquer l'indicateur de chargement
-      HideLoadingIndicator;
-
-      // Vérifier s'il y a une erreur
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur d''inscription : ' + Error);
-        Exit;
-      end;
-
-      // Succès, afficher un message
-      ShowMessage('Inscription réussie !');
-
-      // Naviguer vers l'écran suivant
-      NavigateToHome;
-    end
-  );
-end;
-```
-
-#### 4. Implémentation de la connexion par email et mot de passe
-
-```pascal
-procedure TMainForm.btnLoginClick(Sender: TObject);
-var
-  Email, Password: string;
-begin
-  // Récupérer les informations depuis l'interface
-  Email := edtEmail.Text;
-  Password := edtPassword.Text;
-
-  // Vérifier les entrées
-  if (Email = '') or (Password = '') then
-  begin
-    ShowMessage('Veuillez remplir tous les champs.');
-    Exit;
-  end;
-
-  // Afficher un indicateur de chargement
-  ShowLoadingIndicator;
-
-  // Se connecter
-  FAuth.SignInWithEmailAndPassword(Email, Password,
-    procedure(const AuthResult: IFirebaseUser; const Error: string)
-    begin
-      // Masquer l'indicateur de chargement
-      HideLoadingIndicator;
-
-      // Vérifier s'il y a une erreur
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur de connexion : ' + Error);
-        Exit;
-      end;
-
-      // Succès, afficher un message
-      ShowMessage('Connexion réussie !');
-
-      // Naviguer vers l'écran suivant
-      NavigateToHome;
-    end
-  );
-end;
-```
-
-#### 5. Implémentation de l'authentification Google
-
-```pascal
-procedure TMainForm.btnGoogleSignInClick(Sender: TObject);
-begin
-  // Afficher un indicateur de chargement
-  ShowLoadingIndicator;
-
-  // Se connecter avec Google
-  FAuth.SignInWithGoogle(
-    procedure(const AuthResult: IFirebaseUser; const Error: string)
-    begin
-      // Masquer l'indicateur de chargement
-      HideLoadingIndicator;
-
-      // Vérifier s'il y a une erreur
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur de connexion Google : ' + Error);
-        Exit;
-      end;
-
-      // Succès, afficher un message
-      ShowMessage('Connexion Google réussie !');
-
-      // Naviguer vers l'écran suivant
-      NavigateToHome;
-    end
-  );
-end;
-```
-
-#### 6. Déconnexion
-
-```pascal
-procedure TMainForm.btnLogoutClick(Sender: TObject);
-begin
-  // Déconnecter l'utilisateur
-  FAuth.SignOut;
-
-  // Naviguer vers l'écran de connexion
-  NavigateToLogin;
-end;
-```
-
-#### 7. Vérification de l'état de connexion
-
-```pascal
-procedure TMainForm.CheckAuthState;
-var
-  CurrentUser: IFirebaseUser;
-begin
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-
-  // Vérifier si un utilisateur est connecté
-  if CurrentUser <> nil then
-  begin
-    // Utilisateur connecté
-    lblStatus.Text := 'Connecté en tant que : ' + CurrentUser.Email;
-    btnLogout.Visible := True;
-    btnLogin.Visible := False;
-  end
-  else
-  begin
-    // Utilisateur non connecté
-    lblStatus.Text := 'Non connecté';
-    btnLogout.Visible := False;
-    btnLogin.Visible := True;
+    // Activer le service
+    PushService.Active := True;
   end;
 end;
 ```
 
-## Cloud Firestore
+### Obtenir le token FCM
 
-Cloud Firestore est une base de données NoSQL flexible et évolutive qui permet de stocker et de synchroniser des données entre utilisateurs et appareils.
-
-### Configuration de Firestore dans Firebase
-
-1. Dans la console Firebase, allez dans "Firestore Database" > "Créer une base de données"
-2. Choisissez le mode de démarrage (test ou production)
-3. Sélectionnez l'emplacement de votre base de données
-
-### Intégration de Firestore dans Delphi
-
-#### 1. Ajout des composants nécessaires
+Le token FCM est un identifiant unique pour chaque appareil :
 
 ```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseFirestore FFirestore;
-```
-
-#### 2. Initialisation de Firestore
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Firestore
-  FFirestore := TFirebaseFirestore.Create;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FFirestore.Free;
-end;
-```
-
-#### 3. Ajout de données dans Firestore
-
-```pascal
-procedure TMainForm.AddTaskToFirestore(const Title, Description: string; DueDate: TDateTime);
+// Gérer les changements du service push
+procedure TFormMain.PushServiceChange(Sender: TObject;
+  AChange: TPushService.TChanges);
 var
-  Collection: IFirestoreCollection;
-  Document: IFirestoreDocument;
-  TaskData: TJSONObject;
+  DeviceToken: string;
 begin
-  // Créer un objet JSON avec les données de la tâche
-  TaskData := TJSONObject.Create;
+  // Vérifier si on a reçu le token
+  if TPushService.TChange.DeviceToken in AChange then
+  begin
+    DeviceToken := PushService.DeviceTokenValue[
+      TPushService.TDeviceTokenNames.DeviceToken];
+
+    Memo1.Lines.Add('Token FCM reçu :');
+    Memo1.Lines.Add(DeviceToken);
+
+    // Envoyer ce token à votre serveur
+    EnvoyerTokenAuServeur(DeviceToken);
+  end;
+end;
+
+// Envoyer le token à votre serveur
+procedure TFormMain.EnvoyerTokenAuServeur(const Token: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONData: TJSONObject;
+begin
+  HttpClient := THTTPClient.Create;
   try
-    TaskData.AddPair('title', Title);
-    TaskData.AddPair('description', Description);
-    TaskData.AddPair('dueDate', DateToISO8601(DueDate));
-    TaskData.AddPair('completed', TJSONBool.Create(False));
-    TaskData.AddPair('createdAt', DateToISO8601(Now));
-
-    // Obtenir la référence à la collection "tasks"
-    Collection := FFirestore.Collection('tasks');
-
-    // Ajouter un nouveau document
-    Collection.Add(TaskData,
-      procedure(const Document: IFirestoreDocument; const Error: string)
-      begin
-        if Error <> '' then
-        begin
-          ShowMessage('Erreur lors de l''ajout de la tâche : ' + Error);
-          Exit;
-        end;
-
-        ShowMessage('Tâche ajoutée avec succès !');
-
-        // Actualiser la liste des tâches
-        LoadTasks;
-      end
-    );
-  finally
-    TaskData.Free;
-  end;
-end;
-```
-
-#### 4. Lecture de données depuis Firestore
-
-```pascal
-procedure TMainForm.LoadTasks;
-var
-  Collection: IFirestoreCollection;
-  Query: IFirestoreQuery;
-begin
-  // Afficher un indicateur de chargement
-  ShowLoadingIndicator;
-
-  // Obtenir la référence à la collection "tasks"
-  Collection := FFirestore.Collection('tasks');
-
-  // Créer une requête pour récupérer les tâches
-  Query := Collection.OrderBy('dueDate', ftAscending);
-
-  // Exécuter la requête
-  Query.GetDocuments(
-    procedure(const Documents: TArray<IFirestoreDocument>; const Error: string)
-    begin
-      // Masquer l'indicateur de chargement
-      HideLoadingIndicator;
-
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur lors du chargement des tâches : ' + Error);
-        Exit;
-      end;
-
-      // Effacer la liste actuelle
-      lvTasks.Items.Clear;
-
-      // Ajouter chaque tâche à la liste
-      for var Doc in Documents do
-      begin
-        var Item := lvTasks.Items.Add;
-
-        // Récupérer les données du document
-        var Data := Doc.Data;
-
-        // Configurer l'élément de la liste
-        Item.Text := Data.GetValue<string>('title');
-        Item.Detail := Data.GetValue<string>('description');
-
-        // Stocker l'ID du document pour référence future
-        Item.Tag := Integer(Doc.Id);
-
-        // Afficher un indicateur si la tâche est terminée
-        if Data.GetValue<Boolean>('completed') then
-          Item.Accessory := TListBoxItemAccessory.aCheckmark
-        else
-          Item.Accessory := TListBoxItemAccessory.aNone;
-      end;
-
-      // Afficher un message si aucune tâche n'est trouvée
-      if Length(Documents) = 0 then
-        ShowMessage('Aucune tâche trouvée');
-    end
-  );
-end;
-```
-
-#### 5. Mise à jour de données dans Firestore
-
-```pascal
-procedure TMainForm.UpdateTaskStatus(const DocumentId: string; Completed: Boolean);
-var
-  Document: IFirestoreDocument;
-  UpdateData: TJSONObject;
-begin
-  // Obtenir la référence au document
-  Document := FFirestore.Collection('tasks').Document(DocumentId);
-
-  // Créer les données à mettre à jour
-  UpdateData := TJSONObject.Create;
-  try
-    UpdateData.AddPair('completed', TJSONBool.Create(Completed));
-    UpdateData.AddPair('updatedAt', DateToISO8601(Now));
-
-    // Mettre à jour le document
-    Document.Update(UpdateData,
-      procedure(const Error: string)
-      begin
-        if Error <> '' then
-        begin
-          ShowMessage('Erreur lors de la mise à jour de la tâche : ' + Error);
-          Exit;
-        end;
-
-        ShowMessage('Tâche mise à jour avec succès !');
-
-        // Actualiser la liste des tâches
-        LoadTasks;
-      end
-    );
-  finally
-    UpdateData.Free;
-  end;
-end;
-```
-
-#### 6. Suppression de données dans Firestore
-
-```pascal
-procedure TMainForm.DeleteTask(const DocumentId: string);
-var
-  Document: IFirestoreDocument;
-begin
-  // Obtenir la référence au document
-  Document := FFirestore.Collection('tasks').Document(DocumentId);
-
-  // Supprimer le document
-  Document.Delete(
-    procedure(const Error: string)
-    begin
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur lors de la suppression de la tâche : ' + Error);
-        Exit;
-      end;
-
-      ShowMessage('Tâche supprimée avec succès !');
-
-      // Actualiser la liste des tâches
-      LoadTasks;
-    end
-  );
-end;
-```
-
-#### 7. Écoute des changements en temps réel
-
-```pascal
-procedure TMainForm.StartTasksListener;
-var
-  Collection: IFirestoreCollection;
-  Query: IFirestoreQuery;
-  ListenerRegistration: IFirestoreListenerRegistration;
-begin
-  // Obtenir la référence à la collection "tasks"
-  Collection := FFirestore.Collection('tasks');
-
-  // Créer une requête pour écouter les tâches
-  Query := Collection.OrderBy('dueDate', ftAscending);
-
-  // Écouter les changements
-  ListenerRegistration := Query.AddSnapshotListener(
-    procedure(const Documents: TArray<IFirestoreDocument>; const Error: string)
-    begin
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur d''écoute : ' + Error);
-        Exit;
-      end;
-
-      // Mettre à jour l'interface utilisateur
-      UpdateTasksList(Documents);
-    end
-  );
-
-  // Stocker l'enregistrement d'écoute pour pouvoir l'arrêter plus tard
-  FListenerRegistration := ListenerRegistration;
-end;
-
-procedure TMainForm.StopTasksListener;
-begin
-  // Arrêter l'écoute
-  if FListenerRegistration <> nil then
-  begin
-    FListenerRegistration.Remove;
-    FListenerRegistration := nil;
-  end;
-end;
-```
-
-## Cloud Storage
-
-Firebase Storage permet de stocker et de récupérer facilement des fichiers générés par les utilisateurs, tels que des images, des fichiers audio et des vidéos.
-
-### Configuration de Storage dans Firebase
-
-1. Dans la console Firebase, allez dans "Storage" > "Commencer"
-2. Choisissez le mode de sécurité (test ou production)
-3. Sélectionnez l'emplacement de votre bucket
-
-### Intégration de Storage dans Delphi
-
-#### 1. Ajout des composants nécessaires
-
-```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseStorage FStorage;
-```
-
-#### 2. Initialisation de Storage
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Storage
-  FStorage := TFirebaseStorage.Create;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FStorage.Free;
-end;
-```
-
-#### 3. Téléchargement d'une image vers Storage
-
-```pascal
-procedure TMainForm.UploadImage(const LocalFilePath: string);
-var
-  StorageReference: IStorageReference;
-  FileName: string;
-begin
-  // Générer un nom de fichier unique
-  FileName := 'images/' + FormatDateTime('yyyymmddhhnnss', Now) + '.jpg';
-
-  // Obtenir une référence au fichier dans Storage
-  StorageReference := FStorage.Reference.Child(FileName);
-
-  // Afficher un indicateur de progression
-  progressBar.Visible := True;
-
-  // Télécharger le fichier
-  StorageReference.PutFile(LocalFilePath,
-    // Callback de progression
-    procedure(const Progress: Cardinal; const Total: Cardinal)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          // Mettre à jour la barre de progression
-          if Total > 0 then
-            progressBar.Value := (Progress / Total) * 100;
-        end
-      );
-    end,
-    // Callback de fin
-    procedure(const MetaData: IStorageMetadata; const Error: string)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          // Masquer la barre de progression
-          progressBar.Visible := False;
-
-          if Error <> '' then
-          begin
-            ShowMessage('Erreur de téléchargement : ' + Error);
-            Exit;
-          end;
-
-          // Succès
-          ShowMessage('Image téléchargée avec succès !');
-
-          // Obtenir l'URL de téléchargement
-          StorageReference.GetDownloadURL(
-            procedure(const URL: string; const Error: string)
-            begin
-              if Error = '' then
-              begin
-                // Stocker l'URL dans Firestore ou l'afficher
-                edtImageURL.Text := URL;
-              end;
-            end
-          );
-        end
-      );
-    end
-  );
-end;
-```
-
-#### 4. Téléchargement d'une image depuis Storage
-
-```pascal
-procedure TMainForm.DownloadImage(const StoragePath: string; const ImageControl: TImage);
-var
-  StorageReference: IStorageReference;
-  LocalFilePath: string;
-begin
-  // Obtenir une référence au fichier dans Storage
-  StorageReference := FStorage.Reference.Child(StoragePath);
-
-  // Créer un chemin local temporaire
-  LocalFilePath := TPath.Combine(TPath.GetTempPath, TPath.GetFileName(StoragePath));
-
-  // Afficher un indicateur de progression
-  progressBar.Visible := True;
-
-  // Télécharger le fichier
-  StorageReference.GetFile(LocalFilePath,
-    // Callback de progression
-    procedure(const Progress: Cardinal; const Total: Cardinal)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          // Mettre à jour la barre de progression
-          if Total > 0 then
-            progressBar.Value := (Progress / Total) * 100;
-        end
-      );
-    end,
-    // Callback de fin
-    procedure(const Error: string)
-    begin
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          // Masquer la barre de progression
-          progressBar.Visible := False;
-
-          if Error <> '' then
-          begin
-            ShowMessage('Erreur de téléchargement : ' + Error);
-            Exit;
-          end;
-
-          // Charger l'image dans le contrôle
-          try
-            ImageControl.Bitmap.LoadFromFile(LocalFilePath);
-            ShowMessage('Image téléchargée avec succès !');
-          except
-            on E: Exception do
-              ShowMessage('Erreur lors du chargement de l''image : ' + E.Message);
-          end;
-        end
-      );
-    end
-  );
-end;
-```
-
-## Cloud Messaging (FCM)
-
-Firebase Cloud Messaging (FCM) permet d'envoyer des notifications push à vos utilisateurs sur différentes plateformes.
-
-### Configuration de FCM dans Firebase
-
-1. Dans la console Firebase, allez dans "Cloud Messaging" > "Commencer"
-2. (Pour iOS uniquement) Téléchargez votre certificat APNs
-
-### Intégration de FCM dans Delphi
-
-#### 1. Ajout des composants nécessaires
-
-```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseMessaging FMessaging;
-```
-
-#### 2. Initialisation de FCM
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Messaging
-  FMessaging := TFirebaseMessaging.Create;
-
-  // S'abonner aux événements de message
-  FMessaging.OnTokenReceived := HandleTokenReceived;
-  FMessaging.OnMessageReceived := HandleMessageReceived;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FMessaging.Free;
-end;
-```
-
-#### 3. Gestion du token FCM
-
-```pascal
-procedure TMainForm.HandleTokenReceived(Sender: TObject; const Token: string);
-begin
-  // Sauvegarder le token localement
-  TPreferencesService.Current.SetValue('FCMToken', Token);
-
-  // Afficher le token pour le débogage
-  Log('FCM Token: ' + Token);
-
-  // Envoyer le token au serveur
-  SendTokenToServer(Token);
-end;
-
-procedure TMainForm.SendTokenToServer(const Token: string);
-begin
-  // Implémenter l'envoi du token à votre serveur
-  // Ceci est nécessaire pour que votre serveur puisse envoyer des notifications
-  // à cet appareil spécifique
-
-  // Exemple avec TRESTClient
-  var Client := TRESTClient.Create('https://votre-serveur.com/api');
-  try
-    var Request := TRESTRequest.Create(Client);
+    JSONData := TJSONObject.Create;
     try
-      Request.Resource := 'devices';
-      Request.Method := TRESTRequestMethod.rmPOST;
+      JSONData.AddPair('device_token', Token);
+      JSONData.AddPair('user_id', GetUserID);
+      JSONData.AddPair('platform', 'android');
 
-      var Params := TJSONObject.Create;
-      try
-        Params.AddPair('token', Token);
-        Params.AddPair('platform', {$IFDEF ANDROID}'android'{$ELSE}'ios'{$ENDIF});
-        Params.AddPair('user_id', GetCurrentUserId);
+      Response := HttpClient.Post(
+        'https://votreserveur.com/api/register-device',
+        TStringStream.Create(JSONData.ToString, TEncoding.UTF8));
 
-        Request.Body.JSONValue := Params;
-        Request.Execute;
-      finally
-        Params.Free;
-      end;
+      if Response.StatusCode = 200 then
+        ShowMessage('Token enregistré sur le serveur')
+      else
+        ShowMessage('Erreur : ' + Response.StatusCode.ToString);
     finally
-      Request.Free;
+      JSONData.Free;
     end;
   finally
-    Client.Free;
+    HttpClient.Free;
   end;
 end;
 ```
 
-#### 4. Gestion des messages reçus
+### Recevoir des notifications
 
 ```pascal
-procedure TMainForm.HandleMessageReceived(Sender: TObject; const RemoteMessage: IFirebaseMessage);
-begin
-  // Traiter le message reçu
-  var Title := RemoteMessage.Notification.Title;
-  var Body := RemoteMessage.Notification.Body;
-
-  // Afficher une notification locale
-  ShowLocalNotification(Title, Body);
-
-  // Traiter les données du message
-  if RemoteMessage.Data.Count > 0 then
-  begin
-    // Exemple: vérifier si le message concerne un nouveau chat
-    if RemoteMessage.Data.ContainsKey('chat_id') then
-    begin
-      var ChatId := RemoteMessage.Data.Items['chat_id'];
-      OpenChatScreen(ChatId);
-    end;
-  end;
-end;
-
-procedure TMainForm.ShowLocalNotification(const Title, Body: string);
+// Gérer les notifications reçues
+procedure TFormMain.PushServiceReceiveNotification(Sender: TObject;
+  const ANotification: TPushServiceNotification);
 var
-  NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
+  Titre, Message: string;
 begin
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    Notification := NotificationCenter.CreateNotification;
-    try
-      Notification.Title := Title;
-      Notification.AlertBody := Body;
+  // Extraire les données de la notification
+  Titre := ANotification.DataKey['title'];
+  Message := ANotification.DataKey['message'];
 
-      // Configurer d'autres propriétés de notification si nécessaire
-      Notification.EnableSound := True;
+  // Afficher dans un log
+  Memo1.Lines.Add('Notification reçue :');
+  Memo1.Lines.Add('Titre : ' + Titre);
+  Memo1.Lines.Add('Message : ' + Message);
 
-      // Présenter la notification
-      NotificationCenter.PresentNotification(Notification);
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
+  // Afficher à l'utilisateur
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      ShowMessage(Titre + sLineBreak + Message);
+    end);
+
+  // Traiter les données personnalisées
+  var ActionType := ANotification.DataKey['action'];
+  if ActionType = 'open_chat' then
+  begin
+    var ChatID := ANotification.DataKey['chat_id'];
+    OuvrirChat(ChatID);
   end;
 end;
 ```
 
-#### 5. Abonnement à des sujets (topics)
+### Envoyer une notification depuis un serveur
+
+Vous pouvez envoyer des notifications depuis votre serveur ou depuis la console Firebase.
+
+**Depuis la console Firebase** (pour tester) :
+
+1. Allez dans **Cloud Messaging**
+2. Cliquez sur **Envoyer votre premier message**
+3. Rédigez le message
+4. Sélectionnez l'application cible
+5. Envoyez
+
+**Depuis votre serveur** (exemple en pseudo-code) :
 
 ```pascal
-procedure TMainForm.SubscribeToTopic(const Topic: string);
+// Exemple de requête HTTP pour envoyer une notification via FCM
+procedure EnvoyerNotificationFCM(const DeviceToken, Titre, Message: string);
+var
+  HttpClient: THTTPClient;
+  Headers: TNetHeaders;
+  JSONData: TJSONObject;
+  Response: IHTTPResponse;
 begin
-  FMessaging.Subscribe(Topic,
-    procedure(const Success: Boolean; const Error: string)
-    begin
-      if Success then
-        ShowMessage('Abonné au sujet : ' + Topic)
-      else
-        ShowMessage('Erreur d''abonnement : ' + Error);
-    end
-  );
-end;
+  HttpClient := THTTPClient.Create;
+  try
+    // Headers avec la Server Key de Firebase
+    SetLength(Headers, 2);
+    Headers[0].Name := 'Authorization';
+    Headers[0].Value := 'key=VOTRE_SERVER_KEY_FIREBASE';
+    Headers[1].Name := 'Content-Type';
+    Headers[1].Value := 'application/json';
 
-procedure TMainForm.UnsubscribeFromTopic(const Topic: string);
-begin
-  FMessaging.Unsubscribe(Topic,
-    procedure(const Success: Boolean; const Error: string)
-    begin
-      if Success then
-        ShowMessage('Désabonné du sujet : ' + Topic)
-      else
-        ShowMessage('Erreur de désabonnement : ' + Error);
-    end
-  );
+    // Corps de la requête
+    JSONData := TJSONObject.Create;
+    try
+      JSONData.AddPair('to', DeviceToken);
+
+      var Notification := TJSONObject.Create;
+      Notification.AddPair('title', Titre);
+      Notification.AddPair('body', Message);
+      Notification.AddPair('sound', 'default');
+
+      JSONData.AddPair('notification', Notification);
+
+      // Données personnalisées
+      var Data := TJSONObject.Create;
+      Data.AddPair('action', 'open_screen');
+      Data.AddPair('screen_id', 'main');
+      JSONData.AddPair('data', Data);
+
+      // Envoyer
+      Response := HttpClient.Post(
+        'https://fcm.googleapis.com/fcm/send',
+        TStringStream.Create(JSONData.ToString, TEncoding.UTF8),
+        nil,
+        Headers);
+
+      Memo1.Lines.Add('Réponse FCM : ' + Response.ContentAsString);
+    finally
+      JSONData.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
 end;
 ```
 
 ## Firebase Analytics
 
-Firebase Analytics fournit des informations sur le comportement des utilisateurs dans votre application.
+Firebase Analytics vous permet de suivre le comportement des utilisateurs dans votre application.
 
-### Configuration d'Analytics dans Firebase
+### Configuration
 
-1. Dans la console Firebase, Analytics est généralement activé par défaut
+Analytics est automatiquement activé quand vous ajoutez le fichier `google-services.json`.
 
-### Intégration d'Analytics dans Delphi
-
-#### 1. Ajout des composants nécessaires
+### Logger des événements
 
 ```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseAnalytics FAnalytics;
-```
-
-#### 2. Initialisation d'Analytics
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Analytics
-  FAnalytics := TFirebaseAnalytics.Create;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FAnalytics.Free;
-end;
-```
-
-#### 3. Suivi des événements
-
-```pascal
-procedure TMainForm.LogViewItemEvent(const ItemName, ItemCategory: string);
-begin
-  // Créer un dictionnaire de paramètres
-  var Params := TFirebaseAnalyticsParameters.Create;
-  try
-    // Ajouter des paramètres
-    Params.Add(FirebaseAnalytics.ParameterItemName, ItemName);
-    Params.Add(FirebaseAnalytics.ParameterItemCategory, ItemCategory);
-
-    // Enregistrer l'événement
-    FAnalytics.LogEvent(FirebaseAnalytics.EventViewItem, Params);
-  finally
-    Params.Free;
-  end;
-end;
-
-procedure TMainForm.LogPurchaseEvent(const Currency: string; const Value: Double;
-                                   const ItemID, ItemName: string);
-begin
-  var Params := TFirebaseAnalyticsParameters.Create;
-  try
-    Params.Add(FirebaseAnalytics.ParameterCurrency, Currency);
-    Params.Add(FirebaseAnalytics.ParameterValue, Value);
-    Params.Add(FirebaseAnalytics.ParameterItemID, ItemID);
-    Params.Add(FirebaseAnalytics.ParameterItemName, ItemName);
-
-    FAnalytics.LogEvent(FirebaseAnalytics.EventPurchase, Params);
-  finally
-    Params.Free;
-  end;
-end;
-```
-
-#### 4. Définition des propriétés utilisateur
-
-```pascal
-procedure TMainForm.SetUserProperties;
-begin
-  // Définir des propriétés utilisateur pour segmentation
-  FAnalytics.SetUserProperty('user_type', 'premium');
-  FAnalytics.SetUserProperty('subscription_level', 'gold');
-  FAnalytics.SetUserProperty('favorite_category', 'sports');
-end;
-```
-
-## Firebase Crashlytics
-
-Crashlytics est un rapporteur de plantage léger et en temps réel qui vous aide à suivre, hiérarchiser et résoudre les problèmes de stabilité afin d'améliorer la qualité de votre application.
-
-### Configuration de Crashlytics dans Firebase
-
-1. Dans la console Firebase, allez dans "Crashlytics" > "Commencer"
-2. Suivez les instructions pour configurer Crashlytics dans votre projet
-
-### Intégration de Crashlytics dans Delphi
-
-#### 1. Ajout des composants nécessaires
-
-```pascal
-// Dans le fichier .h de votre formulaire
-private:
-  TFirebaseCrashlytics FCrashlytics;
-```
-
-#### 2. Initialisation de Crashlytics
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser Firebase
-  Firebase.Core.TFirebaseApp.Initialize;
-
-  // Créer l'instance Crashlytics
-  FCrashlytics := TFirebaseCrashlytics.Create;
-
-  // Activer la collecte des rapports de plantage
-  FCrashlytics.SetCrashlyticsCollectionEnabled(True);
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FCrashlytics.Free;
-end;
-```
-
-#### 3. Journalisation des informations pour le débogage
-
-```pascal
-procedure TMainForm.LogCustomKey(const Key, Value: string);
-begin
-  // Ajouter une clé personnalisée qui apparaîtra dans les rapports de crash
-  FCrashlytics.SetCustomKey(Key, Value);
-end;
-
-procedure TMainForm.LogInfo(const Message: string);
-begin
-  // Enregistrer un message qui apparaîtra dans les rapports de crash
-  FCrashlytics.Log(Message);
-end;
-
-procedure TMainForm.SetUserIdentifier(const UserID: string);
-begin
-  // Définir un identifiant utilisateur pour les rapports de crash
-  FCrashlytics.SetUserIdentifier(UserID);
-end;
-```
-
-#### 4. Signalement d'une exception non fatale
-
-```pascal
-procedure TMainForm.ReportNonFatalException(const ErrorMessage: string; const Exception: Exception);
-begin
-  // Enregistrer une exception non fatale
-  FCrashlytics.RecordException(Exception);
-
-  // Journaliser des informations supplémentaires
-  FCrashlytics.Log('Erreur non fatale : ' + ErrorMessage);
-end;
-```
-
-#### 5. Test de Crashlytics
-
-```pascal
-procedure TMainForm.TestCrashlytics;
-begin
-  // ATTENTION : Cette méthode va intentionnellement planter l'application
-  // N'utilisez ceci que pour tester la configuration de Crashlytics
-  FCrashlytics.Crash;
-end;
-
-procedure TMainForm.btnTestCrashClick(Sender: TObject);
-begin
-  // Afficher une confirmation avant de planter
-  if MessageDlg('Cette action va planter l''application pour tester Crashlytics. Continuer ?',
-                TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
-  begin
-    // Journaliser des informations de test
-    FCrashlytics.Log('Test de crash intentionnel');
-    FCrashlytics.SetCustomKey('test_crash', 'true');
-
-    // Déclencher un crash
-    TestCrashlytics;
-  end;
-end;
-```
-
-#### 6. Gestion globale des exceptions
-
-```pascal
-procedure HandleGlobalException(Sender: TObject; E: Exception);
-begin
-  // Enregistrer l'exception dans Crashlytics
-  if Assigned(MainForm) and Assigned(MainForm.FCrashlytics) then
-  begin
-    MainForm.FCrashlytics.RecordException(E);
-    MainForm.FCrashlytics.Log('Exception globale : ' + E.Message);
-  end;
-
-  // Afficher un message d'erreur convivial
-  ShowMessage('Une erreur s''est produite : ' + E.Message);
-end;
-
-initialization
-  // Définir le gestionnaire d'exceptions global
-  Application.OnException := HandleGlobalException;
-```
-
-## Intégration de plusieurs services Firebase
-
-Dans une application réelle, vous utiliserez probablement plusieurs services Firebase ensemble. Voici un exemple d'intégration combinée :
-
-### Exemple d'application de tâches avec Firebase
-
-```pascal
-unit MainForm;
-
-interface
-
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.ListView.Types,
-  FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView, FMX.StdCtrls,
-  FMX.Controls.Presentation, FMX.Edit, FMX.DateTimeCtrls, FMX.Layouts,
-  Firebase.Core, Firebase.Auth, Firebase.Firestore, Firebase.Analytics, Firebase.Crashlytics;
+  FMX.Analytics, System.Analytics;
 
-type
-  TTaskStatus = (tsOpen, tsInProgress, tsCompleted);
-
-  TMainForm = class(TForm)
-    ToolBar1: TToolBar;
-    btnAdd: TButton;
-    btnRefresh: TButton;
-    lblTitle: TLabel;
-    ListView1: TListView;
-    PanelAdd: TPanel;
-    edtTitle: TEdit;
-    edtDescription: TMemo;
-    dtpDueDate: TDateEdit;
-    cmbStatus: TComboBox;
-    btnSave: TButton;
-    btnCancel: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure ListView1ItemClick(const Sender: TObject; const AItem: TListViewItem);
-  private
-    FAuth: TFirebaseAuth;
-    FFirestore: TFirebaseFirestore;
-    FAnalytics: TFirebaseAnalytics;
-    FCrashlytics: TFirebaseCrashlytics;
-    FCurrentTaskId: string;
-    FIsEditing: Boolean;
-
-    procedure InitializeFirebase;
-    procedure CheckAuthState;
-    procedure LoadTasks;
-    procedure AddTask;
-    procedure UpdateTask;
-    procedure DeleteTask(const TaskId: string);
-    procedure ShowAddEditPanel(Show: Boolean);
-    procedure LogTaskOperation(const Operation, TaskId, TaskTitle: string);
-  public
-    { Public declarations }
-  end;
-
+// Logger un événement simple
+procedure TFormMain.LoggerEvenement(const NomEvenement: string);
 var
-  MainForm: TMainForm;
-
-implementation
-
-{$R *.fmx}
-
-procedure TMainForm.FormCreate(Sender: TObject);
+  AnalyticsService: IFMXAnalyticsService;
 begin
-  // Initialiser Firebase
-  InitializeFirebase;
-
-  // Remplir le combobox des statuts
-  cmbStatus.Items.Clear;
-  cmbStatus.Items.Add('À faire');
-  cmbStatus.Items.Add('En cours');
-  cmbStatus.Items.Add('Terminé');
-  cmbStatus.ItemIndex := 0;
-
-  // Masquer le panneau d'ajout au démarrage
-  ShowAddEditPanel(False);
-
-  // Vérifier l'état d'authentification
-  CheckAuthState;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FAuth.Free;
-  FFirestore.Free;
-  FAnalytics.Free;
-  FCrashlytics.Free;
-end;
-
-procedure TMainForm.InitializeFirebase;
-begin
-  // Initialiser l'application Firebase
-  TFirebaseApp.Initialize;
-
-  // Créer les instances des services Firebase
-  FAuth := TFirebaseAuth.Create;
-  FFirestore := TFirebaseFirestore.Create;
-  FAnalytics := TFirebaseAnalytics.Create;
-  FCrashlytics := TFirebaseCrashlytics.Create;
-
-  // Configurer Crashlytics
-  FCrashlytics.SetCrashlyticsCollectionEnabled(True);
-
-  // Configurer Analytics
-  FAnalytics.SetAnalyticsCollectionEnabled(True);
-  FAnalytics.LogEvent('app_open', nil);
-end;
-
-procedure TMainForm.CheckAuthState;
-var
-  CurrentUser: IFirebaseUser;
-begin
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-
-  if CurrentUser <> nil then
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXAnalyticsService, AnalyticsService) then
   begin
-    // Utilisateur connecté
-    lblTitle.Text := 'Tâches de ' + CurrentUser.DisplayName;
+    AnalyticsService.TrackEvent(NomEvenement);
+  end;
+end;
 
-    // Charger les tâches de l'utilisateur
-    LoadTasks;
-
-    // Définir l'ID utilisateur pour Crashlytics
-    FCrashlytics.SetUserIdentifier(CurrentUser.UID);
-
-    // Définir les propriétés utilisateur pour Analytics
-    FAnalytics.SetUserProperty('account_type', 'registered');
-  end
-  else
+// Logger un événement avec paramètres
+procedure TFormMain.LoggerEvenementAvecParams(const NomEvenement: string;
+  Params: TArray<string>);
+var
+  AnalyticsService: IFMXAnalyticsService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXAnalyticsService, AnalyticsService) then
   begin
-    // Utilisateur non connecté - rediriger vers l'écran de connexion
-    ShowLoginScreen;
+    AnalyticsService.TrackEvent(NomEvenement, Params);
   end;
 end;
 
-procedure TMainForm.LoadTasks;
-var
-  Collection: IFirestoreCollection;
-  Query: IFirestoreQuery;
+// Exemples d'utilisation
+procedure TFormMain.BtnAcheterClick(Sender: TObject);
 begin
-  // Obtenir l'utilisateur actuel
-  var CurrentUser := FAuth.CurrentUser;
-  if CurrentUser = nil then
-    Exit;
+  // Logger l'achat
+  LoggerEvenementAvecParams('purchase',
+    ['item_id', '12345', 'price', '9.99', 'currency', 'EUR']);
 
-  // Référence à la collection des tâches de l'utilisateur
-  Collection := FFirestore.Collection('users').Document(CurrentUser.UID).Collection('tasks');
-
-  // Créer une requête pour obtenir les tâches triées par date d'échéance
-  Query := Collection.OrderBy('dueDate', ftAscending);
-
-  // Exécuter la requête
-  Query.GetDocuments(
-    procedure(const Documents: TArray<IFirestoreDocument>; const Error: string)
-    begin
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur lors du chargement des tâches : ' + Error);
-        FCrashlytics.Log('Erreur Firestore : ' + Error);
-        Exit;
-      end;
-
-      // Effacer la liste actuelle
-      ListView1.Items.Clear;
-
-      // Ajouter chaque tâche à la liste
-      for var Doc in Documents do
-      begin
-        var Item := ListView1.Items.Add;
-
-        // Récupérer les données du document
-        var Data := Doc.Data;
-
-        // Configurer l'élément de la liste
-        Item.Text := Data.GetValue<string>('title');
-        Item.Detail := Data.GetValue<string>('description');
-
-        // Stocker l'ID du document pour référence future
-        Item.TagString := Doc.Id;
-
-        // Configurer l'icône en fonction du statut
-        var Status := Data.GetValue<Integer>('status');
-        case Status of
-          0: Item.ImageIndex := 0;  // À faire
-          1: Item.ImageIndex := 1;  // En cours
-          2: Item.ImageIndex := 2;  // Terminé
-        end;
-      end;
-
-      // Analyser le chargement des tâches
-      FAnalytics.LogEvent('tasks_loaded',
-        TFirebaseAnalyticsParameters.Create.Add('count', ListView1.Items.Count));
-    end
-  );
+  // Continuer avec l'achat
+  TraiterAchat;
 end;
 
-procedure TMainForm.btnAddClick(Sender: TObject);
+procedure TFormMain.BtnPartagerClick(Sender: TObject);
 begin
-  // Préparer pour l'ajout d'une nouvelle tâche
-  FIsEditing := False;
-  FCurrentTaskId := '';
+  // Logger le partage
+  LoggerEvenementAvecParams('share',
+    ['content_type', 'article', 'item_id', 'article_123']);
 
-  // Effacer les champs
-  edtTitle.Text := '';
-  edtDescription.Text := '';
-  dtpDueDate.Date := Date + 1;  // Date d'échéance par défaut = demain
-  cmbStatus.ItemIndex := 0;     // Statut par défaut = À faire
-
-  // Afficher le panneau d'ajout
-  ShowAddEditPanel(True);
-
-  // Mettre le focus sur le champ du titre
-  edtTitle.SetFocus;
-
-  // Analyser l'ajout de tâche
-  FAnalytics.LogEvent('add_task_started', nil);
-end;
-
-procedure TMainForm.btnSaveClick(Sender: TObject);
-begin
-  // Valider les entrées
-  if edtTitle.Text.Trim = '' then
-  begin
-    ShowMessage('Veuillez entrer un titre pour la tâche');
-    edtTitle.SetFocus;
-    Exit;
-  end;
-
-  // Ajouter ou mettre à jour la tâche
-  if FIsEditing then
-    UpdateTask
-  else
-    AddTask;
-
-  // Masquer le panneau d'ajout
-  ShowAddEditPanel(False);
-end;
-
-procedure TMainForm.AddTask;
-var
-  Collection: IFirestoreCollection;
-  TaskData: TJSONObject;
-  CurrentUser: IFirebaseUser;
-begin
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-  if CurrentUser = nil then
-    Exit;
-
-  // Préparer les données de la tâche
-  TaskData := TJSONObject.Create;
-  try
-    TaskData.AddPair('title', edtTitle.Text);
-    TaskData.AddPair('description', edtDescription.Text);
-    TaskData.AddPair('dueDate', DateToISO8601(dtpDueDate.Date));
-    TaskData.AddPair('status', TJSONNumber.Create(cmbStatus.ItemIndex));
-    TaskData.AddPair('createdAt', DateToISO8601(Now));
-
-    // Obtenir la référence à la collection des tâches de l'utilisateur
-    Collection := FFirestore.Collection('users').Document(CurrentUser.UID).Collection('tasks');
-
-    // Ajouter la tâche
-    Collection.Add(TaskData,
-      procedure(const Document: IFirestoreDocument; const Error: string)
-      begin
-        if Error <> '' then
-        begin
-          ShowMessage('Erreur lors de l''ajout de la tâche : ' + Error);
-          FCrashlytics.Log('Erreur Firestore : ' + Error);
-          Exit;
-        end;
-
-        // Journaliser l'opération
-        LogTaskOperation('add', Document.Id, edtTitle.Text);
-
-        // Recharger les tâches
-        LoadTasks;
-      end
-    );
-  finally
-    TaskData.Free;
-  end;
-end;
-
-procedure TMainForm.UpdateTask;
-var
-  Document: IFirestoreDocument;
-  TaskData: TJSONObject;
-  CurrentUser: IFirebaseUser;
-begin
-  // Vérifier si nous avons un ID de tâche valide
-  if FCurrentTaskId = '' then
-    Exit;
-
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-  if CurrentUser = nil then
-    Exit;
-
-  // Préparer les données de la tâche
-  TaskData := TJSONObject.Create;
-  try
-    TaskData.AddPair('title', edtTitle.Text);
-    TaskData.AddPair('description', edtDescription.Text);
-    TaskData.AddPair('dueDate', DateToISO8601(dtpDueDate.Date));
-    TaskData.AddPair('status', TJSONNumber.Create(cmbStatus.ItemIndex));
-    TaskData.AddPair('updatedAt', DateToISO8601(Now));
-
-    // Obtenir la référence au document
-    Document := FFirestore.Collection('users').Document(CurrentUser.UID)
-                          .Collection('tasks').Document(FCurrentTaskId);
-
-    // Mettre à jour la tâche
-    Document.Update(TaskData,
-      procedure(const Error: string)
-      begin
-        if Error <> '' then
-        begin
-          ShowMessage('Erreur lors de la mise à jour de la tâche : ' + Error);
-          FCrashlytics.Log('Erreur Firestore : ' + Error);
-          Exit;
-        end;
-
-        // Journaliser l'opération
-        LogTaskOperation('update', FCurrentTaskId, edtTitle.Text);
-
-        // Recharger les tâches
-        LoadTasks;
-      end
-    );
-  finally
-    TaskData.Free;
-  end;
-end;
-
-procedure TMainForm.DeleteTask(const TaskId: string);
-var
-  Document: IFirestoreDocument;
-  CurrentUser: IFirebaseUser;
-begin
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-  if CurrentUser = nil then
-    Exit;
-
-  // Confirmer la suppression
-  if MessageDlg('Êtes-vous sûr de vouloir supprimer cette tâche ?',
-                TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
-    Exit;
-
-  // Obtenir la référence au document
-  Document := FFirestore.Collection('users').Document(CurrentUser.UID)
-                        .Collection('tasks').Document(TaskId);
-
-  // Supprimer la tâche
-  Document.Delete(
-    procedure(const Error: string)
-    begin
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur lors de la suppression de la tâche : ' + Error);
-        FCrashlytics.Log('Erreur Firestore : ' + Error);
-        Exit;
-      end;
-
-      // Journaliser l'opération
-      LogTaskOperation('delete', TaskId, '');
-
-      // Recharger les tâches
-      LoadTasks;
-    end
-  );
-end;
-
-procedure TMainForm.ListView1ItemClick(const Sender: TObject; const AItem: TListViewItem);
-var
-  Document: IFirestoreDocument;
-  CurrentUser: IFirebaseUser;
-begin
-  // Obtenir l'utilisateur actuel
-  CurrentUser := FAuth.CurrentUser;
-  if CurrentUser = nil then
-    Exit;
-
-  // Stocker l'ID de la tâche sélectionnée
-  FCurrentTaskId := AItem.TagString;
-
-  // Obtenir la référence au document
-  Document := FFirestore.Collection('users').Document(CurrentUser.UID)
-                        .Collection('tasks').Document(FCurrentTaskId);
-
-  // Récupérer les données de la tâche
-  Document.GetDocument(
-    procedure(const Document: IFirestoreDocument; const Error: string)
-    begin
-      if Error <> '' then
-      begin
-        ShowMessage('Erreur lors de la récupération de la tâche : ' + Error);
-        FCrashlytics.Log('Erreur Firestore : ' + Error);
-        Exit;
-      end;
-
-      // Préparer pour l'édition
-      FIsEditing := True;
-
-      // Remplir les champs avec les données de la tâche
-      var Data := Document.Data;
-      edtTitle.Text := Data.GetValue<string>('title');
-      edtDescription.Text := Data.GetValue<string>('description');
-
-      // Convertir la date d'échéance
-      var DueDateStr := Data.GetValue<string>('dueDate');
-      if DueDateStr <> '' then
-        dtpDueDate.Date := ISO8601ToDate(DueDateStr)
-      else
-        dtpDueDate.Date := Date + 1;
-
-      // Définir le statut
-      cmbStatus.ItemIndex := Data.GetValue<Integer>('status');
-
-      // Afficher le panneau d'édition
-      ShowAddEditPanel(True);
-
-      // Analyser l'édition de tâche
-      FAnalytics.LogEvent('edit_task_started',
-        TFirebaseAnalyticsParameters.Create.Add('task_id', FCurrentTaskId));
-    end
-  );
-end;
-
-procedure TMainForm.btnRefreshClick(Sender: TObject);
-begin
-  // Actualiser la liste des tâches
-  LoadTasks;
-
-  // Analyser l'actualisation
-  FAnalytics.LogEvent('tasks_refreshed', nil);
-end;
-
-procedure TMainForm.btnCancelClick(Sender: TObject);
-begin
-  // Masquer le panneau d'ajout/édition
-  ShowAddEditPanel(False);
-
-  // Analyser l'annulation
-  if FIsEditing then
-    FAnalytics.LogEvent('edit_task_cancelled', nil)
-  else
-    FAnalytics.LogEvent('add_task_cancelled', nil);
-end;
-
-procedure TMainForm.ShowAddEditPanel(Show: Boolean);
-begin
-  // Afficher ou masquer le panneau d'ajout/édition
-  PanelAdd.Visible := Show;
-
-  // Afficher ou masquer les contrôles principaux
-  ListView1.Visible := not Show;
-  ToolBar1.Visible := not Show;
-end;
-
-procedure TMainForm.LogTaskOperation(const Operation, TaskId, TaskTitle: string);
-begin
-  // Journaliser l'opération pour Crashlytics
-  FCrashlytics.Log(Format('Task operation: %s, ID: %s, Title: %s',
-                         [Operation, TaskId, TaskTitle]));
-
-  // Analyser l'opération
-  var Params := TFirebaseAnalyticsParameters.Create;
-  try
-    Params.Add('operation', Operation);
-
-    if TaskId <> '' then
-      Params.Add('task_id', TaskId);
-
-    if TaskTitle <> '' then
-      Params.Add('task_title', TaskTitle);
-
-    FAnalytics.LogEvent('task_operation', Params);
-  finally
-    Params.Free;
-  end;
+  PartagerContenu;
 end;
 ```
 
-## Bonnes pratiques pour l'intégration de Firebase
+### Événements prédéfinis
 
-### 1. Gestion des clés et secrets
-
-- Ne jamais stocker les clés API ou secrets directement dans le code source
-- Utiliser des fichiers de configuration externes (`google-services.json` et `GoogleService-Info.plist`)
-- Protéger l'accès à votre projet Firebase avec des règles de sécurité appropriées
-
-### 2. Optimisation des performances
-
-- Utiliser la mise en cache pour les requêtes fréquentes
-- Utiliser les transactions Firestore pour les opérations complexes
-- Limiter le nombre de documents récupérés dans les requêtes
+Firebase propose des événements standards pour les cas d'usage courants :
 
 ```pascal
-// Exemple de limitation du nombre de documents récupérés
-procedure TMainForm.LoadRecentTasks;
-var
-  Collection: IFirestoreCollection;
-  Query: IFirestoreQuery;
+// Ouverture de l'application
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  Collection := FFirestore.Collection('tasks');
+  LoggerEvenement('app_open');
+end;
 
-  // Limiter à 10 tâches récentes
-  Query := Collection.OrderBy('createdAt', ftDescending).Limit(10);
+// Connexion utilisateur
+procedure TFormMain.UtilisateurConnecte;
+begin
+  LoggerEvenementAvecParams('login',
+    ['method', 'email']);
+end;
 
-  Query.GetDocuments(
-    procedure(const Documents: TArray<IFirestoreDocument>; const Error: string)
-    begin
-      // Traiter les documents...
-    end
-  );
+// Inscription
+procedure TFormMain.UtilisateurInscrit;
+begin
+  LoggerEvenementAvecParams('sign_up',
+    ['method', 'email']);
+end;
+
+// Vue d'écran
+procedure TFormMain.EcranAffiche(const NomEcran: string);
+begin
+  LoggerEvenementAvecParams('screen_view',
+    ['screen_name', NomEcran]);
+end;
+
+// Recherche
+procedure TFormMain.RechercheEffectuee(const Termes: string);
+begin
+  LoggerEvenementAvecParams('search',
+    ['search_term', Termes]);
 end;
 ```
 
-### 3. Gestion du mode hors ligne
+### Propriétés utilisateur
 
-Firebase Firestore prend en charge le mode hors ligne, ce qui permet à votre application de fonctionner même sans connexion internet :
+Vous pouvez définir des propriétés pour segmenter vos utilisateurs :
 
 ```pascal
-procedure TMainForm.ConfigureOfflineMode;
+procedure TFormMain.DefinirProprietesUtilisateur;
+var
+  AnalyticsService: IFMXAnalyticsService;
 begin
-  // Activer la persistance des données pour Firestore
-  FFirestore.EnablePersistence(
-    procedure(const Success: Boolean; const Error: string)
-    begin
-      if Success then
-        ShowMessage('Mode hors ligne activé')
-      else
-        ShowMessage('Erreur lors de l''activation du mode hors ligne : ' + Error);
-    end
-  );
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXAnalyticsService, AnalyticsService) then
+  begin
+    // Définir l'âge de l'utilisateur
+    AnalyticsService.SetUserProperty('age_group', '25-34');
+
+    // Définir le type d'abonnement
+    AnalyticsService.SetUserProperty('subscription', 'premium');
+
+    // Définir les préférences
+    AnalyticsService.SetUserProperty('theme', 'dark');
+  end;
 end;
 ```
 
-### 4. Sécurité et règles Firestore
+### Consulter les Analytics
 
-Pour sécuriser vos données Firestore, configurez des règles dans la console Firebase. Exemple de règles de base :
+1. Ouvrez la console Firebase
+2. Allez dans **Analytics** > **Dashboard**
+3. Visualisez les statistiques en temps réel
+4. Explorez les événements, les audiences et les conversions
 
-```javascript
-// Règles Firestore dans la console Firebase
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Authentification requise pour toutes les opérations
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+## Firebase Realtime Database
+
+La Realtime Database est une base de données NoSQL qui synchronise les données en temps réel entre tous les clients.
+
+### Structure de données
+
+Firebase utilise une structure JSON :
+
+```json
+{
+  "users": {
+    "user1": {
+      "name": "Jean Dupont",
+      "email": "jean@example.com",
+      "age": 30
+    },
+    "user2": {
+      "name": "Marie Martin",
+      "email": "marie@example.com",
+      "age": 25
     }
-
-    // Les utilisateurs ne peuvent accéder qu'à leurs propres documents
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth.uid == userId;
-    }
-
-    // Les tâches publiques peuvent être lues par tous les utilisateurs authentifiés
-    match /publicTasks/{taskId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+  },
+  "messages": {
+    "message1": {
+      "text": "Bonjour !",
+      "sender": "user1",
+      "timestamp": 1634567890
     }
   }
 }
 ```
 
-### 5. Gestion des coûts
+### Configuration des règles de sécurité
 
-Firebase propose un niveau gratuit généreux, mais une utilisation intensive peut entraîner des coûts. Quelques conseils pour gérer les coûts :
+Dans la console Firebase :
 
-- Limiter les lectures/écritures Firestore en utilisant efficacement la mise en cache
-- Optimiser les requêtes pour récupérer uniquement les données nécessaires
-- Surveiller régulièrement l'utilisation dans la console Firebase
-- Définir des alertes de budget dans Google Cloud Platform
+```json
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
 
-## Résolution des problèmes courants
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}
+```
 
-### 1. Problèmes de configuration
+### Accès à la base de données avec REST
 
-**Problème** : Firebase ne s'initialise pas correctement.
-
-**Solution** :
-- Vérifier que les fichiers `google-services.json` et `GoogleService-Info.plist` sont correctement placés dans les dossiers appropriés
-- Vérifier que le nom du package et l'ID du bundle correspondent exactement à ceux enregistrés dans Firebase
-- Vérifier que toutes les dépendances nécessaires sont installées
-
-### 2. Erreurs d'authentification
-
-**Problème** : Les opérations d'authentification échouent.
-
-**Solution** :
-- Vérifier que la méthode d'authentification est activée dans la console Firebase
-- Vérifier les règles de sécurité dans la console Firebase
-- Examiner les messages d'erreur détaillés dans les callbacks d'authentification
+Firebase expose la Realtime Database via une API REST :
 
 ```pascal
-procedure TMainForm.DiagnoseAuthError(const Error: string);
-begin
-  FCrashlytics.Log('Erreur d''authentification : ' + Error);
+uses
+  System.Net.HttpClient, System.JSON;
 
-  // Analyser le message d'erreur pour fournir des conseils spécifiques
-  if Error.Contains('network') then
-    ShowMessage('Vérifiez votre connexion internet')
-  else if Error.Contains('password') then
-    ShowMessage('Mot de passe incorrect ou compte inexistant')
-  else if Error.Contains('badly-formatted') then
-    ShowMessage('Adresse e-mail invalide')
-  else
-    ShowMessage('Erreur d''authentification : ' + Error);
+// Lire des données
+procedure TFormMain.LireDonnees;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONData: TJSONValue;
+  URL: string;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    // URL de votre base Firebase
+    URL := 'https://votre-projet.firebaseio.com/users/user1.json';
+
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONData := TJSONObject.ParseJSONValue(Response.ContentAsString);
+      try
+        // Extraire les données
+        var Nom := JSONData.GetValue<string>('name');
+        var Email := JSONData.GetValue<string>('email');
+
+        Memo1.Lines.Add('Nom : ' + Nom);
+        Memo1.Lines.Add('Email : ' + Email);
+      finally
+        JSONData.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Écrire des données
+procedure TFormMain.EcrireDonnees;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONData: TJSONObject;
+  URL: string;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    URL := 'https://votre-projet.firebaseio.com/users/user3.json';
+
+    JSONData := TJSONObject.Create;
+    try
+      JSONData.AddPair('name', 'Paul Bernard');
+      JSONData.AddPair('email', 'paul@example.com');
+      JSONData.AddPair('age', TJSONNumber.Create(28));
+
+      Response := HttpClient.Put(URL,
+        TStringStream.Create(JSONData.ToString, TEncoding.UTF8));
+
+      if Response.StatusCode = 200 then
+        ShowMessage('Données enregistrées')
+      else
+        ShowMessage('Erreur : ' + Response.StatusCode.ToString);
+    finally
+      JSONData.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Mettre à jour des données
+procedure TFormMain.MettreAJourDonnees;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONData: TJSONObject;
+  URL: string;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    URL := 'https://votre-projet.firebaseio.com/users/user1.json';
+
+    JSONData := TJSONObject.Create;
+    try
+      // Mettre à jour seulement l'âge
+      JSONData.AddPair('age', TJSONNumber.Create(31));
+
+      Response := HttpClient.Patch(URL,
+        TStringStream.Create(JSONData.ToString, TEncoding.UTF8));
+
+      if Response.StatusCode = 200 then
+        ShowMessage('Données mises à jour');
+    finally
+      JSONData.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Supprimer des données
+procedure TFormMain.SupprimerDonnees;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  URL: string;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    URL := 'https://votre-projet.firebaseio.com/users/user3.json';
+
+    Response := HttpClient.Delete(URL);
+
+    if Response.StatusCode = 200 then
+      ShowMessage('Données supprimées');
+  finally
+    HttpClient.Free;
+  end;
 end;
 ```
 
-### 3. Problèmes de temps de réponse
+### Authentification avec Firebase Auth
 
-**Problème** : Les opérations Firebase sont lentes.
-
-**Solution** :
-- Utiliser des indicateurs de chargement pour informer l'utilisateur
-- Optimiser les requêtes Firestore
-- Vérifier la qualité de la connexion internet
-- Implémenter la mise en cache côté client
+Pour sécuriser l'accès, utilisez un token d'authentification :
 
 ```pascal
-procedure TMainForm.ShowLoadingIndicator(const Message: string);
+// Lire avec authentification
+procedure TFormMain.LireAvecAuth;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  URL: string;
+  AuthToken: string;
 begin
-  // Afficher un indicateur de chargement
-  lblLoading.Text := Message;
-  aniLoading.Visible := True;
-  aniLoading.Enabled := True;
+  AuthToken := ObtenirTokenAuthentification; // Voir section Authentication
+
+  HttpClient := THTTPClient.Create;
+  try
+    URL := Format('https://votre-projet.firebaseio.com/users/user1.json?auth=%s',
+      [AuthToken]);
+
+    Response := HttpClient.Get(URL);
+
+    // Traiter la réponse...
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Firebase Authentication
+
+Firebase Authentication gère l'authentification des utilisateurs avec différentes méthodes.
+
+### Méthodes d'authentification disponibles
+
+- Email/Mot de passe
+- Google
+- Facebook
+- Twitter
+- Téléphone (SMS)
+- Anonyme
+- Apple (iOS)
+
+### Activation dans Firebase
+
+1. Console Firebase > **Authentication**
+2. Onglet **Sign-in method**
+3. Activez les méthodes souhaitées (ex: Email/Password)
+
+### API REST pour l'authentification
+
+Firebase fournit une API REST pour l'authentification :
+
+```pascal
+// Inscription avec email/mot de passe
+procedure TFormMain.InscrireUtilisateur(const Email, MotDePasse: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONRequest, JSONResponse: TJSONObject;
+  URL: string;
+  APIKey: string;
+begin
+  APIKey := 'VOTRE_API_KEY_FIREBASE'; // Dans Project Settings
+
+  HttpClient := THTTPClient.Create;
+  try
+    URL := Format(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s',
+      [APIKey]);
+
+    JSONRequest := TJSONObject.Create;
+    try
+      JSONRequest.AddPair('email', Email);
+      JSONRequest.AddPair('password', MotDePasse);
+      JSONRequest.AddPair('returnSecureToken', TJSONBool.Create(True));
+
+      Response := HttpClient.Post(URL,
+        TStringStream.Create(JSONRequest.ToString, TEncoding.UTF8));
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(
+          Response.ContentAsString) as TJSONObject;
+        try
+          var IDToken := JSONResponse.GetValue<string>('idToken');
+          var UserID := JSONResponse.GetValue<string>('localId');
+
+          // Sauvegarder le token
+          SauvegarderToken(IDToken);
+
+          ShowMessage('Inscription réussie !');
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+      begin
+        ShowMessage('Erreur d''inscription : ' + Response.ContentAsString);
+      end;
+    finally
+      JSONRequest.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
 end;
 
-procedure TMainForm.HideLoadingIndicator;
+// Connexion avec email/mot de passe
+procedure TFormMain.ConnecterUtilisateur(const Email, MotDePasse: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONRequest, JSONResponse: TJSONObject;
+  URL: string;
+  APIKey: string;
 begin
-  // Masquer l'indicateur de chargement
-  aniLoading.Enabled := False;
-  aniLoading.Visible := False;
+  APIKey := 'VOTRE_API_KEY_FIREBASE';
+
+  HttpClient := THTTPClient.Create;
+  try
+    URL := Format(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s',
+      [APIKey]);
+
+    JSONRequest := TJSONObject.Create;
+    try
+      JSONRequest.AddPair('email', Email);
+      JSONRequest.AddPair('password', MotDePasse);
+      JSONRequest.AddPair('returnSecureToken', TJSONBool.Create(True));
+
+      Response := HttpClient.Post(URL,
+        TStringStream.Create(JSONRequest.ToString, TEncoding.UTF8));
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(
+          Response.ContentAsString) as TJSONObject;
+        try
+          var IDToken := JSONResponse.GetValue<string>('idToken');
+          var UserID := JSONResponse.GetValue<string>('localId');
+          var Email := JSONResponse.GetValue<string>('email');
+
+          SauvegarderToken(IDToken);
+          SauvegarderUserID(UserID);
+
+          ShowMessage('Connexion réussie !');
+          AfficherEcranPrincipal;
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+      begin
+        ShowMessage('Identifiants incorrects');
+      end;
+    finally
+      JSONRequest.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Réinitialisation du mot de passe
+procedure TFormMain.ReinitialiserMotDePasse(const Email: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONRequest: TJSONObject;
+  URL: string;
+  APIKey: string;
+begin
+  APIKey := 'VOTRE_API_KEY_FIREBASE';
+
+  HttpClient := THTTPClient.Create;
+  try
+    URL := Format(
+      'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=%s',
+      [APIKey]);
+
+    JSONRequest := TJSONObject.Create;
+    try
+      JSONRequest.AddPair('requestType', 'PASSWORD_RESET');
+      JSONRequest.AddPair('email', Email);
+
+      Response := HttpClient.Post(URL,
+        TStringStream.Create(JSONRequest.ToString, TEncoding.UTF8));
+
+      if Response.StatusCode = 200 then
+        ShowMessage('Email de réinitialisation envoyé à ' + Email)
+      else
+        ShowMessage('Erreur : ' + Response.ContentAsString);
+    finally
+      JSONRequest.Free;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Firebase Cloud Storage
+
+Firebase Storage permet de stocker des fichiers (images, vidéos, documents).
+
+### Configuration des règles
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+### Upload de fichier
+
+```pascal
+uses
+  System.Net.HttpClient, System.IOUtils;
+
+// Uploader une image vers Firebase Storage
+procedure TFormMain.UploaderImage(const CheminLocal: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  FileStream: TFileStream;
+  URL: string;
+  Headers: TNetHeaders;
+  NomFichier: string;
+begin
+  if not TFile.Exists(CheminLocal) then
+  begin
+    ShowMessage('Fichier introuvable');
+    Exit;
+  end;
+
+  HttpClient := THTTPClient.Create;
+  FileStream := TFileStream.Create(CheminLocal, fmOpenRead);
+  try
+    NomFichier := TPath.GetFileName(CheminLocal);
+
+    // URL de Firebase Storage
+    URL := Format(
+      'https://firebasestorage.googleapis.com/v0/b/votre-projet.appspot.com/o/images%%2F%s',
+      [NomFichier]);
+
+    // Headers
+    SetLength(Headers, 1);
+    Headers[0].Name := 'Content-Type';
+    Headers[0].Value := 'image/jpeg';
+
+    // Upload
+    Response := HttpClient.Post(URL, FileStream, nil, Headers);
+
+    if Response.StatusCode in [200, 201] then
+    begin
+      var JSONResponse := TJSONObject.ParseJSONValue(
+        Response.ContentAsString) as TJSONObject;
+      try
+        var DownloadURL := JSONResponse.GetValue<string>('downloadTokens');
+        ShowMessage('Image uploadée avec succès !');
+        Memo1.Lines.Add('URL : ' + DownloadURL);
+      finally
+        JSONResponse.Free;
+      end;
+    end
+    else
+    begin
+      ShowMessage('Erreur d''upload : ' + Response.StatusCode.ToString);
+    end;
+  finally
+    FileStream.Free;
+    HttpClient.Free;
+  end;
+end;
+
+// Télécharger une image depuis Firebase Storage
+procedure TFormMain.TelevergerImage(const NomFichier, CheminDestination: string);
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  FileStream: TFileStream;
+  URL: string;
+begin
+  HttpClient := THTTPClient.Create;
+  try
+    URL := Format(
+      'https://firebasestorage.googleapis.com/v0/b/votre-projet.appspot.com/o/images%%2F%s?alt=media',
+      [NomFichier]);
+
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      FileStream := TFileStream.Create(CheminDestination, fmCreate);
+      try
+        FileStream.CopyFrom(Response.ContentStream, 0);
+        ShowMessage('Image téléchargée avec succès !');
+      finally
+        FileStream.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Firebase Crashlytics
+
+Crashlytics rapporte automatiquement les crashs de votre application.
+
+### Configuration
+
+1. Console Firebase > **Crashlytics**
+2. Suivez les instructions d'intégration
+3. Ajoutez le SDK Crashlytics à votre projet Delphi
+
+### Logger des informations personnalisées
+
+```pascal
+// Logger des événements personnalisés avant un crash
+procedure TFormMain.LoggerEvenementCrashlytics(const Message: string);
+begin
+  // Note : Nécessite l'intégration native du SDK Crashlytics
+  // Exemple conceptuel
+
+  // Crashlytics.log(Message);
+end;
+
+// Définir des clés personnalisées
+procedure TFormMain.DefinirClesPersonnalisees;
+begin
+  // Crashlytics.setCustomKey('user_id', GetUserID);
+  // Crashlytics.setCustomKey('screen', 'MainScreen');
+end;
+
+// Logger une exception non fatale
+procedure TFormMain.LoggerException(E: Exception);
+begin
+  // Crashlytics.recordError(E);
+end;
+```
+
+## Bonnes pratiques
+
+### 1. Gestion des quotas
+
+Firebase offre un plan gratuit généreux, mais avec des limites :
+
+```pascal
+// Limites quotidiennes du plan gratuit (Spark)
+const
+  QUOTA_REALTIME_DB_DOWNLOAD = 10 * 1024 * 1024 * 1024; // 10 GB/mois
+  QUOTA_STORAGE_DOWNLOAD = 1 * 1024 * 1024 * 1024;      // 1 GB/jour
+  QUOTA_FCM_MESSAGES = 10000;                           // illimité en fait
+
+// Optimiser les requêtes
+procedure TFormMain.OptimiserRequetes;
+begin
+  // ✅ BON : Charger seulement ce qui est nécessaire
+  ChargerDonnees('users/user1');
+
+  // ❌ MAUVAIS : Charger toute la base
+  // ChargerDonnees('');
+end;
+```
+
+### 2. Sécurité des règles
+
+```json
+// ❌ MAUVAIS : Tout le monde peut tout lire/écrire
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+
+// ✅ BON : Seulement les utilisateurs authentifiés
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "users": {
+      "$uid": {
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}
+```
+
+### 3. Gestion des erreurs
+
+```pascal
+procedure TFormMain.RequeteFirebaseSafe;
+begin
+  try
+    // Requête Firebase
+    LireDonnees;
+  except
+    on E: ENetHTTPClientException do
+    begin
+      case E.StatusCode of
+        401: ShowMessage('Non authentifié');
+        403: ShowMessage('Accès refusé');
+        404: ShowMessage('Donnée introuvable');
+        500: ShowMessage('Erreur serveur Firebase');
+      else
+        ShowMessage('Erreur : ' + E.Message);
+      end;
+    end;
+    on E: Exception do
+      ShowMessage('Erreur inattendue : ' + E.Message);
+  end;
+end;
+```
+
+### 4. Cache et mode hors ligne
+
+```pascal
+// Mettre en cache les données Firebase
+type
+  TFirebaseCache = class
+  private
+    FCache: TDictionary<string, TJSONValue>;
+  public
+    procedure AjouterAuCache(const Cle: string; Valeur: TJSONValue);
+    function ObtenirDuCache(const Cle: string): TJSONValue;
+    function EstEnCache(const Cle: string): Boolean;
+  end;
+
+// Utilisation
+procedure TFormMain.ChargerAvecCache(const Path: string);
+begin
+  if Cache.EstEnCache(Path) then
+  begin
+    // Utiliser le cache
+    var Donnees := Cache.ObtenirDuCache(Path);
+    AfficherDonnees(Donnees);
+  end
+  else
+  begin
+    // Charger depuis Firebase
+    ChargerDepuisFirebase(Path,
+      procedure(Donnees: TJSONValue)
+      begin
+        Cache.AjouterAuCache(Path, Donnees);
+        AfficherDonnees(Donnees);
+      end);
+  end;
+end;
+```
+
+### 5. Monitoring et analytics
+
+```pascal
+// Logger toutes les interactions Firebase importantes
+procedure TFormMain.LoggerInteractionFirebase(const Action, Resource: string);
+begin
+  LoggerEvenementAvecParams('firebase_interaction',
+    ['action', Action, 'resource', Resource]);
+end;
+
+// Utilisation
+procedure TFormMain.SauvegarderDonnees;
+begin
+  LoggerInteractionFirebase('write', 'users/user1');
+  EcrireDonneesFirebase;
+end;
+```
+
+## Dépannage des problèmes courants
+
+### Le token FCM ne s'affiche pas
+
+```pascal
+// Vérifier la configuration
+procedure TFormMain.VerifierConfigurationFCM;
+begin
+  if not Assigned(PushService) then
+  begin
+    ShowMessage('PushService non disponible');
+    Exit;
+  end;
+
+  if not PushService.Active then
+  begin
+    ShowMessage('PushService non activé');
+    PushService.Active := True;
+  end;
+
+  // Vérifier les permissions
+  {$IFDEF ANDROID}
+  if not PermissionsService.IsPermissionGranted(
+    'android.permission.POST_NOTIFICATIONS') then
+  begin
+    ShowMessage('Permission notifications manquante');
+  end;
+  {$ENDIF}
+end;
+```
+
+### Erreur d'authentification Firebase
+
+```pascal
+// Vérifier le fichier de configuration
+procedure TFormMain.VerifierConfiguration;
+begin
+  {$IFDEF ANDROID}
+  var CheminConfig := TPath.Combine(
+    TPath.GetDocumentsPath, 'google-services.json');
+
+  if not TFile.Exists(CheminConfig) then
+    ShowMessage('Fichier google-services.json manquant !');
+  {$ENDIF}
 end;
 ```
 
 ## Conclusion
 
-L'intégration des services Firebase dans vos applications Delphi vous permet d'ajouter rapidement des fonctionnalités puissantes comme l'authentification, le stockage de données en temps réel, les notifications push et l'analyse. Firebase offre une infrastructure backend complète qui vous permet de vous concentrer sur le développement de votre application plutôt que sur la gestion des serveurs.
+Firebase est un outil puissant qui peut considérablement accélérer le développement de vos applications mobiles Delphi. En éliminant le besoin de créer et gérer votre propre infrastructure backend, vous pouvez vous concentrer sur ce qui compte vraiment : créer une excellente expérience utilisateur.
 
-En suivant les bonnes pratiques et en comprenant comment intégrer efficacement chaque service, vous pouvez créer des applications mobiles robustes et évolutives qui offrent une excellente expérience utilisateur.
+**Points clés à retenir** :
 
-N'oubliez pas que Firebase est une plateforme en constante évolution, avec de nouvelles fonctionnalités ajoutées régulièrement. Consultez la documentation officielle de Firebase et les ressources Delphi pour rester à jour avec les dernières améliorations et capacités.
+1. **Configuration** : Créez un projet Firebase et intégrez les fichiers de configuration
+2. **FCM** : Utilisez TPushService pour les notifications push
+3. **Analytics** : Suivez le comportement des utilisateurs avec Firebase Analytics
+4. **Realtime Database** : Synchronisez les données en temps réel via REST API
+5. **Authentication** : Gérez l'authentification des utilisateurs simplement
+6. **Storage** : Stockez des fichiers avec Firebase Cloud Storage
+7. **Sécurité** : Configurez correctement les règles de sécurité
+8. **Optimisation** : Utilisez le cache et surveillez les quotas
 
-Dans la prochaine section, nous explorerons comment développer des jeux mobiles avec Delphi et FireMonkey, en utilisant les capacités graphiques avancées et les API de jeu pour créer des expériences interactives engageantes.
+Firebase offre bien plus que ce que nous avons couvert ici : Remote Config, A/B Testing, Dynamic Links, App Indexing, etc. N'hésitez pas à explorer la documentation officielle pour découvrir toutes les possibilités.
+
+En combinant la puissance de Delphi pour le développement rapide d'applications natives et les services cloud de Firebase, vous disposez d'une stack technologique moderne et efficace pour créer des applications mobiles de qualité professionnelle !
+
+**Ressources utiles** :
+- Documentation Firebase : https://firebase.google.com/docs
+- Console Firebase : https://console.firebase.google.com
+- Status Firebase : https://status.firebase.google.com
+- Firebase Blog : https://firebase.googleblog.com
 
 ⏭️ [Sécurité des applications](/16-securite-des-applications/README.md)

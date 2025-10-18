@@ -1,474 +1,620 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.2 Interface utilisateur tactile
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La création d'interfaces tactiles efficaces constitue l'un des défis majeurs du développement mobile. Avec Delphi et FireMonkey (FMX), vous disposez des outils nécessaires pour concevoir des interfaces adaptées au toucher qui offrent une expérience utilisateur intuitive et agréable.
+L'interface tactile a révolutionné la façon dont les utilisateurs interagissent avec les applications. Contrairement à une souris qui permet une précision au pixel près, un doigt est moins précis mais offre des interactions plus naturelles et intuitives. Concevoir une interface utilisateur tactile efficace nécessite de comprendre ces différences et d'adapter votre approche de conception en conséquence.
 
-## Principes fondamentaux des interfaces tactiles
+Dans cette section, nous allons explorer comment créer des interfaces utilisateur adaptées au tactile avec Delphi et FireMonkey, en respectant les bonnes pratiques et en offrant une expérience utilisateur optimale.
 
-### Différences avec les interfaces desktop traditionnelles
+## Différences entre interaction souris et tactile
 
-Avant de plonger dans les aspects techniques, comprenons les différences essentielles entre les interfaces tactiles et les interfaces traditionnelles contrôlées par souris/clavier :
+### Précision et taille des cibles
 
-| Interface desktop | Interface tactile |
-|-------------------|-------------------|
-| Pointeur précis (souris) | Toucher moins précis (doigt) |
-| Survol possible (hover) | Pas d'état de survol |
-| Clic droit disponible | Actions secondaires différentes |
-| Taille des contrôles variable | Taille minimale nécessaire pour les contrôles |
-| Clavier physique | Clavier virtuel occupant l'écran |
+**Avec une souris**, le curseur est représenté par un point précis à l'écran. L'utilisateur peut cliquer sur de très petits éléments (quelques pixels) sans difficulté.
 
-### Taille et espacement des contrôles
+**Avec le doigt**, la zone de contact est beaucoup plus large (environ 8-10mm de diamètre). De plus, le doigt cache partiellement l'élément sur lequel l'utilisateur appuie, ce qui rend l'interaction moins précise.
 
-L'un des principes les plus importants pour les interfaces tactiles est d'offrir des cibles suffisamment grandes :
-
-- **Taille minimale recommandée** : 44×44 points pour tous les éléments interactifs
-- **Espacement minimal** : 8-10 points entre les éléments interactifs
-- **Zone de toucher** : Peut être plus grande que l'élément visuel (utilisez `HitTest` pour cela)
+**Règle d'or** : Les éléments interactifs (boutons, liens, contrôles) doivent mesurer au minimum **44x44 points** (environ 7-9mm), et idéalement **48x48 points** pour être confortables à utiliser.
 
 ```pascal
-// Exemple : Augmenter la zone de toucher d'un bouton
-procedure TMyForm.Button1ApplyStyleLookup(Sender: TObject);
-var
-  HitTestObj: TControl;
+// Dans Delphi, définir une taille minimale pour un bouton
+procedure TFormMain.ConfigurerBouton(Bouton: TButton);
 begin
-  // Récupérer l'objet de HitTest du bouton
-  HitTestObj := TControl(Button1.FindStyleResource('hitTest'));
-
-  if Assigned(HitTestObj) then
-  begin
-    // Agrandir la zone de toucher de 10 pixels dans chaque direction
-    HitTestObj.Margins.Left := -10;
-    HitTestObj.Margins.Top := -10;
-    HitTestObj.Margins.Right := -10;
-    HitTestObj.Margins.Bottom := -10;
-  end;
+  Bouton.Width := 48;  // En points (pixels indépendants)
+  Bouton.Height := 48;
+  Bouton.Text := 'OK';
 end;
 ```
 
-### Feedback visuel et haptique
+### Espacement entre les éléments
 
-Les utilisateurs s'attendent à une réponse immédiate à leurs interactions :
-
-- **Animation de pression** : Toujours montrer visuellement qu'un élément a été touché
-- **Transitions** : Utiliser des animations pour indiquer les changements d'état
-- **Retour haptique** : Sur les plateformes qui le supportent, utiliser les vibrations pour confirmer les actions importantes
+Sur mobile, il est crucial de laisser suffisamment d'espace entre les éléments interactifs pour éviter les clics accidentels. Un espacement de **8 à 16 points** minimum entre les boutons est recommandé.
 
 ```pascal
-// Exemple : Ajouter un feedback visuel simple à un contrôle personnalisé
-procedure TMyTouchControl.DoTap(Sender: TObject; const Point: TPointF);
+// Positionner des boutons avec un espacement approprié
+procedure TFormMain.CreerBoutonsEspaces;
 begin
-  // Démarrer une animation d'opacité (flash)
-  FadeAnimation.StartValue := 1;
-  FadeAnimation.StopValue := 0.7;
-  FadeAnimation.Duration := 0.1;
-  FadeAnimation.Start;
-
-  // Appeler une vibration (Android)
-  {$IFDEF ANDROID}
-  CallInUIThread(procedure
-  begin
-    MainActivity.getSystemService(TJContext.JavaClass.VIBRATOR_SERVICE).vibrate(50);
-  end);
-  {$ENDIF}
-
-  // Exécuter l'action principale
-  if Assigned(FOnTap) then
-    FOnTap(Self, Point);
+  Bouton1.Position.Y := 100;
+  Bouton2.Position.Y := Bouton1.Position.Y + Bouton1.Height + 12; // Espacement de 12 points
+  Bouton3.Position.Y := Bouton2.Position.Y + Bouton2.Height + 12;
 end;
 ```
 
-## Gestes tactiles dans FireMonkey
+### Feedback visuel immédiat
 
-FireMonkey inclut un système complet de gestion des gestes tactiles qui vous permet de capturer et de réagir à différentes interactions.
-
-### Gestes standard supportés
-
-- **Tap** (toucher simple)
-- **Double Tap** (double toucher)
-- **Long Tap** (toucher prolongé)
-- **Pan** (glissement)
-- **Swipe** (balayage)
-- **Pinch** (pincement à deux doigts)
-- **Rotation** (rotation à deux doigts)
-
-### Configuration des gestes dans l'IDE
-
-La façon la plus simple d'activer les gestes est d'utiliser l'Inspecteur d'objets :
-
-1. Sélectionnez un contrôle dans le concepteur de formulaire
-2. Localisez la section **Touch** dans l'Inspecteur d'objets
-3. Cochez les gestes que vous souhaitez activer
-4. Configurez les paramètres spécifiques (comme la distance minimale pour un swipe)
-5. Implémentez les gestionnaires d'événements correspondants
-
-![Configuration des gestes dans l'IDE](https://i.imgur.com/placeholder.png)
-
-### Programmation des gestes
-
-Voici comment traiter les gestes courants :
+L'utilisateur doit recevoir un retour visuel instantané lorsqu'il touche un élément. Sans le survol de la souris, ce feedback est encore plus important sur mobile.
 
 ```pascal
-// Gestionnaire de toucher simple (Tap)
-procedure TMyForm.Rectangle1Tap(Sender: TObject; const Point: TPointF);
+// Changer l'apparence d'un bouton lors de l'appui
+procedure TFormMain.BoutonMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
 begin
-  ShowMessage('Toucher à la position X: ' + Point.X.ToString + ', Y: ' + Point.Y.ToString);
+  TButton(Sender).Opacity := 0.7; // Réduire l'opacité
 end;
 
-// Gestionnaire de glissement (Pan)
-procedure TMyForm.Rectangle1Pan(Sender: TObject; const Point: TPointF;
-  var Handled: Boolean);
+procedure TFormMain.BoutonMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
 begin
-  // Déplacer le contrôle avec le doigt
-  Rectangle1.Position.X := Rectangle1.Position.X + Point.X;
-  Rectangle1.Position.Y := Rectangle1.Position.Y + Point.Y;
-  Handled := True; // Marquer l'événement comme traité
-end;
-
-// Gestionnaire de pincement (Zoom)
-procedure TMyForm.Image1Pinch(Sender: TObject; const Point: TPointF;
-  const Distance: Integer; var Handled: Boolean);
-begin
-  // Changer l'échelle de l'image pendant le pincement
-  Image1.Scale.X := Image1.Scale.X * (1 + (Distance / 1000));
-  Image1.Scale.Y := Image1.Scale.Y * (1 + (Distance / 1000));
-  Handled := True;
+  TButton(Sender).Opacity := 1.0; // Restaurer l'opacité
 end;
 ```
 
-### Gestes personnalisés
+## Gestes tactiles fondamentaux
 
-Pour les besoins plus spécifiques, vous pouvez créer des gestes personnalisés :
+Les utilisateurs mobiles s'attendent à pouvoir utiliser des gestes naturels dans vos applications.
+
+### Le Tap (Toucher simple)
+
+C'est l'équivalent du clic de souris. L'utilisateur touche brièvement un élément pour l'activer.
 
 ```pascal
-// Exemple simple de détection d'un geste en Z
-procedure TMyForm.FormCreate(Sender: TObject);
+// Gérer un simple toucher
+procedure TFormMain.ImageTap(Sender: TObject; const Point: TPointF);
 begin
-  // Créer un gestionnaire de gestes personnalisé
-  MyGestureManager := TGestureManager.Create(Self);
+  ShowMessage('Image touchée à la position: ' +
+    Point.X.ToString + ', ' + Point.Y.ToString);
+end;
+```
 
-  // Définir les points du geste en Z
-  SetLength(FZGesturePoints, 4);
-  FZGesturePoints[0] := TPointF.Create(0, 0);
-  FZGesturePoints[1] := TPointF.Create(100, 0);
-  FZGesturePoints[2] := TPointF.Create(0, 100);
-  FZGesturePoints[3] := TPointF.Create(100, 100);
+### Le Long Press (Appui long)
 
-  // Enregistrer le geste
-  FZGestureID := MyGestureManager.AddRecordedGesture('ZGesture', FZGesturePoints);
+L'utilisateur maintient son doigt sur un élément pendant une seconde ou plus. Cela sert souvent à afficher un menu contextuel ou des options supplémentaires.
 
-  // Attacher le gestionnaire au contrôle
-  Rectangle1.Touch.GestureManager := MyGestureManager;
-  Rectangle1.Touch.StandardGestures := Rectangle1.Touch.StandardGestures + [TStandardGesture.sgCustom];
-  Rectangle1.OnGesture := HandleCustomGesture;
+```pascal
+uses
+  FMX.Gestures;
+
+// Configurer la détection d'appui long
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  Image1.Touch.GestureManager := GestureManager1;
+  Image1.Touch.InteractiveGestures := [TInteractiveGesture.LongTap];
 end;
 
-procedure TMyForm.HandleCustomGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
+// Gérer l'appui long
+procedure TFormMain.Image1Gesture(Sender: TObject;
+  const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  if EventInfo.GestureID = FZGestureID then
+  if EventInfo.GestureID = igiLongTap then
   begin
-    ShowMessage('Geste en Z détecté!');
+    ShowMessage('Appui long détecté !');
     Handled := True;
   end;
 end;
 ```
 
-## Composants adaptés aux interfaces tactiles
+### Le Swipe (Glissement)
 
-FireMonkey inclut plusieurs contrôles spécifiquement conçus ou adaptés pour les interfaces tactiles :
-
-### 1. TSpeedButton vs TButton
-
-Les `TSpeedButton` sont généralement préférables aux `TButton` standard pour les interfaces tactiles car :
-- Ils sont plus légers visuellement
-- Ils s'adaptent mieux aux différents styles mobiles
-- Ils offrent un rendu plus proche des conventions des plateformes mobiles
-
-### 2. TListView optimisé pour mobile
-
-Le `TListView` de FireMonkey est spécialement conçu pour les performances mobiles :
+L'utilisateur glisse rapidement son doigt dans une direction (gauche, droite, haut, bas). Ce geste est couramment utilisé pour naviguer entre des écrans ou supprimer des éléments.
 
 ```pascal
-// Configuration basique d'une ListView mobile
-procedure TMyForm.SetupMobileListView;
+// Activer la détection de swipe
+procedure TFormMain.ConfigurerSwipe;
 begin
-  ListView1.ItemAppearance.ItemAppearance := 'ImageListItem';
-  ListView1.ItemAppearanceObjects.ItemObjects.Image.Visible := True;
-  ListView1.SearchVisible := True; // Ajoute une barre de recherche
-
-  // Ajouter quelques éléments de test
-  for var i := 1 to 50 do
-  begin
-    var Item := ListView1.Items.Add;
-    Item.Text := 'Item ' + i.ToString;
-    Item.Detail := 'Description pour item ' + i.ToString;
-    // L'image serait définie ici également
-  end;
-end;
-```
-
-### 3. Actions tactiles avec ActionList
-
-La combinaison de `TActionList` avec des contrôles tactiles permet de centraliser la logique :
-
-```pascal
-// Dans FormCreate
-procedure TMyForm.FormCreate(Sender: TObject);
-begin
-  // Configurer l'action
-  SaveAction.Caption := 'Enregistrer';
-  SaveAction.OnExecute := SaveActionExecute;
-
-  // Assigner l'action à un SpeedButton
-  SpeedButton1.Action := SaveAction;
-
-  // Et à un élément de menu
-  MenuItem1.Action := SaveAction;
+  Panel1.Touch.GestureManager := GestureManager1;
+  Panel1.Touch.InteractiveGestures := [TInteractiveGesture.Left,
+                                        TInteractiveGesture.Right];
 end;
 
-// Logique centralisée
-procedure TMyForm.SaveActionExecute(Sender: TObject);
-begin
-  // Code pour sauvegarder les données
-  SaveData;
-  ShowMessage('Données enregistrées');
-end;
-```
-
-## Patron de conception pour interfaces tactiles
-
-### Navigation par glissement (Swipe Navigation)
-
-Un modèle courant dans les applications mobiles est la navigation par glissement :
-
-```pascal
-procedure TMainForm.SetupSwipeNavigation;
-begin
-  // Activer le geste de balayage horizontal
-  Layout1.Touch.StandardGestures := Layout1.Touch.StandardGestures + [TStandardGesture.sgLeft, TStandardGesture.sgRight];
-  Layout1.OnGesture := HandleNavigationGesture;
-end;
-
-procedure TMainForm.HandleNavigationGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
+// Gérer le swipe
+procedure TFormMain.Panel1Gesture(Sender: TObject;
+  const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
   case EventInfo.GestureID of
-    sgiLeft:
+    igiLeft:
       begin
-        // Navigation vers la page suivante
-        TabControl1.GotoNextTab;
+        // Swipe vers la gauche - aller à l'écran suivant
+        AfficherEcranSuivant;
         Handled := True;
       end;
-    sgiRight:
+    igiRight:
       begin
-        // Navigation vers la page précédente
-        TabControl1.GotoPriorTab;
+        // Swipe vers la droite - retourner à l'écran précédent
+        AfficherEcranPrecedent;
         Handled := True;
       end;
   end;
 end;
 ```
 
-### Menu "hamburger" et tiroirs de navigation
+### Le Pinch (Pincement)
 
-Le menu hamburger est un modèle d'interface tactile extrêmement répandu :
+L'utilisateur utilise deux doigts pour zoomer (écarter) ou dézoomer (pincer). Ce geste est essentiel pour les images, les cartes et les documents.
 
 ```pascal
-// Exemple simplifié de menu hamburger
-procedure TMainForm.SetupHamburgerMenu;
+// Configurer le zoom par pincement
+procedure TFormMain.ConfigurerZoom;
 begin
-  // Configurer le panneau de menu pour qu'il soit initialement hors écran
-  MenuPanel.Position.X := -MenuPanel.Width;
-  MenuPanel.Visible := True;
-
-  // Gestionnaire pour le bouton hamburger
-  HamburgerButton.OnClick := ToggleMenu;
-
-  // Gestionnaire pour fermer le menu en touchant en dehors
-  OverlayRectangle.OnClick := CloseMenu;
-  OverlayRectangle.Visible := False;
+  Image1.Touch.GestureManager := GestureManager1;
+  Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom];
 end;
 
-procedure TMainForm.ToggleMenu(Sender: TObject);
+// Gérer le zoom
+procedure TFormMain.Image1Gesture(Sender: TObject;
+  const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  if MenuPanel.Position.X < 0 then
-    OpenMenu
+  if EventInfo.GestureID = igiZoom then
+  begin
+    // Appliquer le facteur de zoom
+    Image1.Scale.X := Image1.Scale.X * EventInfo.Distance / EventInfo.InertialVelocity.X;
+    Image1.Scale.Y := Image1.Scale.Y * EventInfo.Distance / EventInfo.InertialVelocity.Y;
+    Handled := True;
+  end;
+end;
+```
+
+### Le Scroll (Défilement)
+
+L'utilisateur fait défiler le contenu en glissant son doigt verticalement ou horizontalement. FireMonkey gère automatiquement le scroll avec les composants `TVertScrollBox` et `THorzScrollBox`.
+
+```pascal
+// Créer une zone de défilement vertical
+procedure TFormMain.CreerZoneDefilement;
+var
+  ScrollBox: TVertScrollBox;
+  i: Integer;
+begin
+  ScrollBox := TVertScrollBox.Create(Self);
+  ScrollBox.Parent := Self;
+  ScrollBox.Align := TAlignLayout.Client;
+
+  // Ajouter du contenu qui dépasse la hauteur visible
+  for i := 1 to 20 do
+  begin
+    var Btn := TButton.Create(ScrollBox);
+    Btn.Parent := ScrollBox;
+    Btn.Text := 'Bouton ' + i.ToString;
+    Btn.Position.Y := (i - 1) * 60;
+    Btn.Width := 200;
+    Btn.Height := 48;
+  end;
+end;
+```
+
+## Adaptation aux différentes tailles d'écran
+
+Les appareils mobiles existent dans une multitude de tailles et de résolutions. Votre interface doit s'adapter élégamment à toutes ces variations.
+
+### Layouts adaptatifs avec Anchors
+
+Les **Anchors** (ancres) permettent à vos contrôles de s'adapter automatiquement lorsque la taille du formulaire change.
+
+```pascal
+// Ancrer un bouton en bas à droite
+procedure TFormMain.ConfigurerAnchors;
+begin
+  BoutonValider.Anchors := [TAnchorKind.akRight, TAnchorKind.akBottom];
+  // Le bouton restera toujours en bas à droite, quelle que soit la taille de l'écran
+end;
+```
+
+### Alignement automatique
+
+La propriété `Align` est votre meilleure amie pour créer des layouts qui s'adaptent automatiquement.
+
+```pascal
+// Créer une interface avec en-tête, contenu et pied de page
+procedure TFormMain.CreerLayoutAdaptatif;
+begin
+  // En-tête fixe en haut
+  PanelEntete.Align := TAlignLayout.Top;
+  PanelEntete.Height := 60;
+
+  // Pied de page fixe en bas
+  PanelPied.Align := TAlignLayout.Bottom;
+  PanelPied.Height := 60;
+
+  // Le contenu occupe tout l'espace restant
+  PanelContenu.Align := TAlignLayout.Client;
+end;
+```
+
+### Layouts pour différentes orientations
+
+Votre application doit gérer à la fois le mode portrait (vertical) et paysage (horizontal).
+
+```pascal
+uses
+  FMX.Types;
+
+// Détecter le changement d'orientation
+procedure TFormMain.FormResize(Sender: TObject);
+begin
+  if Width > Height then
+  begin
+    // Mode paysage
+    AdapterInterfacePaysage;
+  end
   else
-    CloseMenu(nil);
-end;
-
-procedure TMainForm.OpenMenu;
-begin
-  // Afficher l'overlay semi-transparent
-  OverlayRectangle.Opacity := 0;
-  OverlayRectangle.Visible := True;
-
-  // Animations
-  MenuAnimation.StartValue := -MenuPanel.Width;
-  MenuAnimation.StopValue := 0;
-  OverlayAnimation.StartValue := 0;
-  OverlayAnimation.StopValue := 0.5;
-
-  MenuAnimation.Start;
-  OverlayAnimation.Start;
-end;
-
-procedure TMainForm.CloseMenu(Sender: TObject);
-begin
-  // Animations inverses
-  MenuAnimation.StartValue := 0;
-  MenuAnimation.StopValue := -MenuPanel.Width;
-  OverlayAnimation.StartValue := 0.5;
-  OverlayAnimation.StopValue := 0;
-
-  MenuAnimation.Start;
-  OverlayAnimation.Start;
-
-  // Cacher l'overlay quand l'animation est terminée
-  OverlayAnimation.OnFinish := procedure(Sender: TObject)
   begin
-    OverlayRectangle.Visible := False;
+    // Mode portrait
+    AdapterInterfacePortrait;
   end;
+end;
+
+procedure TFormMain.AdapterInterfacePortrait;
+begin
+  // Affichage vertical : empiler les éléments
+  Layout1.Orientation := TOrientation.Vertical;
+  Image1.Width := ClientWidth - 20;
+  Image1.Height := 200;
+end;
+
+procedure TFormMain.AdapterInterfacePaysage;
+begin
+  // Affichage horizontal : placer côte à côte
+  Layout1.Orientation := TOrientation.Horizontal;
+  Image1.Width := ClientWidth / 2;
+  Image1.Height := ClientHeight - 40;
 end;
 ```
 
-## Adaptation aux différentes orientations
+### Responsive Design avec TLayout
 
-Les applications mobiles doivent souvent prendre en charge à la fois les orientations portrait et paysage :
+Le composant `TLayout` est un conteneur invisible qui aide à organiser vos contrôles de manière flexible.
 
 ```pascal
-// Réagir aux changements d'orientation
-procedure TMyForm.FormResize(Sender: TObject);
+// Créer une grille responsive de cartes
+procedure TFormMain.CreerGrilleResponsive;
+var
+  Layout: TLayout;
+  i, ColCount: Integer;
 begin
-  // Déterminer l'orientation actuelle
-  FIsPortrait := Height > Width;
-
-  if FIsPortrait then
-    AdaptLayoutToPortrait
+  // Déterminer le nombre de colonnes selon la largeur
+  if Width < 600 then
+    ColCount := 1  // 1 colonne sur petit écran
+  else if Width < 900 then
+    ColCount := 2  // 2 colonnes sur écran moyen
   else
-    AdaptLayoutToLandscape;
-end;
+    ColCount := 3; // 3 colonnes sur grand écran
 
-procedure TMyForm.AdaptLayoutToPortrait;
-begin
-  // Réorganiser les contrôles pour l'orientation portrait
-  Panel1.Align := TAlignLayout.Top;
-  Panel1.Height := 120;
-  Panel2.Align := TAlignLayout.Client;
-  // etc.
-end;
-
-procedure TMyForm.AdaptLayoutToLandscape;
-begin
-  // Réorganiser les contrôles pour l'orientation paysage
-  Panel1.Align := TAlignLayout.Left;
-  Panel1.Width := 200;
-  Panel2.Align := TAlignLayout.Client;
-  // etc.
+  // Créer les cartes avec le bon nombre de colonnes
+  for i := 0 to 11 do
+  begin
+    Layout := TLayout.Create(Self);
+    Layout.Parent := FlowLayout1;
+    Layout.Width := (ClientWidth / ColCount) - 10;
+    Layout.Height := 150;
+    // Ajouter le contenu de la carte
+  end;
 end;
 ```
 
-## Test et optimisation des interfaces tactiles
+## Composants tactiles essentiels de FireMonkey
 
-### Conseils pour les tests
+FireMonkey offre de nombreux composants spécialement conçus pour le tactile.
 
-1. **Testez sur de vrais appareils** - Les émulateurs ne reproduisent pas parfaitement l'expérience tactile
-2. **Testez avec différentes tailles de doigts** - Les utilisateurs ont des doigts de différentes tailles
-3. **Testez avec une main** - De nombreux utilisateurs tiennent leur téléphone et l'utilisent d'une seule main
-4. **Vérifiez la lisibilité en extérieur** - Les écrans sont souvent difficiles à lire en plein soleil
+### TButton - Le bouton standard
 
-### Optimisation des performances
-
-Les interfaces tactiles doivent être particulièrement fluides pour offrir une bonne expérience :
-
-1. Réduisez le nombre de contrôles visibles simultanément
-2. Utilisez `TListView` au lieu de `TScrollBox` avec de nombreux contrôles
-3. Activez le double buffering pour éviter les scintillements
-4. Utilisez des images de taille optimisée
+Le bouton est l'élément interactif le plus courant. Assurez-vous qu'il soit suffisamment grand et visible.
 
 ```pascal
-// Exemple : Optimisation d'une liste avec virtualisation
-procedure TMyForm.SetupOptimizedList;
+// Créer un bouton tactile optimal
+procedure TFormMain.CreerBoutonTactile;
 begin
-  // Configuration d'un ListView virtuel (données chargées à la demande)
-  ListView1.BeginUpdate;
-  try
-    ListView1.ItemCount := FTotalItemCount; // Peut être des milliers
-    ListView1.OnItemAppearance := OnListItemAppearance;
-  finally
-    ListView1.EndUpdate;
-  end;
-end;
-
-procedure TMyForm.OnListItemAppearance(const Sender: TObject; const AItem: TListViewItem);
-begin
-  // Cet événement est appelé uniquement pour les éléments visibles
-  // Charger les données uniquement pour les éléments visibles
-  AItem.Text := GetItemText(AItem.Index);
-  AItem.Detail := GetItemDetail(AItem.Index);
-
-  // Charger l'image en arrière-plan si nécessaire
-  TThread.CreateAnonymousThread(procedure
-  begin
-    var Bitmap := LoadImageForItem(AItem.Index);
-    TThread.Synchronize(nil, procedure
-    begin
-      if ListView1.Items[AItem.Index] = AItem then // Vérifier si l'élément est encore visible
-        AItem.Bitmap := Bitmap;
-    end);
-  end).Start;
+  var Btn := TButton.Create(Self);
+  Btn.Parent := Self;
+  Btn.Width := 150;
+  Btn.Height := 48;
+  Btn.Text := 'Valider';
+  Btn.Position.X := 100;
+  Btn.Position.Y := 200;
+  Btn.OnClick := BoutonClick;
 end;
 ```
 
-## Directives spécifiques aux plateformes
+### TSpeedButton - Bouton avec icône
 
-### iOS
-
-- Suivez les [Human Interface Guidelines d'Apple](https://developer.apple.com/design/human-interface-guidelines/)
-- Utilisez les gestes standard d'iOS (ex: retour par balayage de gauche à droite)
-- Respectez les zones de sécurité (safe areas) pour éviter les encoches et les coins arrondis
-
-### Android
-
-- Suivez les [Material Design Guidelines de Google](https://material.io/design)
-- Utilisez le bouton de retour physique/virtuel d'Android
-- Supportez les différentes densités d'écran avec des ressources adaptées
+Idéal pour les barres d'outils tactiles.
 
 ```pascal
-// Exemple : Adapter le code selon la plateforme
-procedure TMyForm.SetupBackNavigation;
+// Créer une barre d'outils tactile
+procedure TFormMain.CreerBarreOutils;
+var
+  BtnNouveau, BtnEditer, BtnSupprimer: TSpeedButton;
 begin
-  {$IFDEF IOS}
-  // Pour iOS, configurer le geste de balayage
-  EnableBackSwipeGesture;
-  {$ENDIF}
+  // Bouton Nouveau
+  BtnNouveau := TSpeedButton.Create(Self);
+  BtnNouveau.Parent := ToolBar1;
+  BtnNouveau.Width := 48;
+  BtnNouveau.Height := 48;
+  BtnNouveau.StyleLookup := 'addtoolbutton'; // Style avec icône +
 
-  {$IFDEF ANDROID}
-  // Pour Android, intercepter le bouton retour physique
-  FKeyboardService := TPlatformServices.Current.GetPlatformService(IFMXKeyboardService) as IFMXKeyboardService;
-  FKeyboardService.SetKeyboardToolbarMode(TKeyboardToolbarMode.ToolbarMode);
-  FKeyboardService.SetKeyboardServiceMode(TKeyboardServiceMode.Manual);
-  KeyboardShownHandler := TMessageManager.DefaultManager.SubscribeToMessage(TFormKeyDown, HandleKeyDown);
-  {$ENDIF}
+  // Bouton Éditer
+  BtnEditer := TSpeedButton.Create(Self);
+  BtnEditer.Parent := ToolBar1;
+  BtnEditer.Width := 48;
+  BtnEditer.Height := 48;
+  BtnEditer.StyleLookup := 'composetoolbutton'; // Style avec icône édition
+end;
+```
+
+### TSwitch - Interrupteur
+
+Parfait pour les options on/off, plus tactile qu'une case à cocher.
+
+```pascal
+// Utiliser un switch pour une option
+procedure TFormMain.CreerSwitch;
+begin
+  var Switch := TSwitch.Create(Self);
+  Switch.Parent := Self;
+  Switch.Position.X := 100;
+  Switch.Position.Y := 150;
+  Switch.OnSwitch := SwitchChange;
 end;
 
-{$IFDEF ANDROID}
-procedure TMyForm.HandleKeyDown(const Sender: TObject; const M: TMessage);
+procedure TFormMain.SwitchChange(Sender: TObject);
 begin
-  if (M is TFormKeyDown) and (TFormKeyDown(M).Key = vkHardwareBack) then
+  if TSwitch(Sender).IsChecked then
+    ShowMessage('Option activée')
+  else
+    ShowMessage('Option désactivée');
+end;
+```
+
+### TListView - Liste tactile
+
+Pour afficher des listes d'éléments avec des interactions tactiles (swipe pour supprimer, etc.).
+
+```pascal
+// Créer une liste avec actions de swipe
+procedure TFormMain.CreerListeTactile;
+var
+  Item: TListViewItem;
+  DeleteButton: TListItemButton;
+begin
+  ListView1.ItemAppearance.ItemAppearance := 'ListItemRightDetail';
+
+  // Ajouter des éléments
+  Item := ListView1.Items.Add;
+  Item.Text := 'Élément 1';
+  Item.Detail := 'Description';
+
+  // Ajouter un bouton de suppression qui apparaît au swipe
+  DeleteButton := Item.Objects.ButtonObjects.Add;
+  DeleteButton.Text := 'Supprimer';
+  DeleteButton.ButtonType := TListItemButton.TButtonType.Delete;
+  DeleteButton.OnClick := SupprimerElement;
+end;
+```
+
+### TTabControl - Navigation par onglets
+
+Excellent pour organiser différentes sections de votre application.
+
+```pascal
+// Créer une navigation par onglets
+procedure TFormMain.CreerOnglets;
+var
+  TabItem1, TabItem2: TTabItem;
+begin
+  TabControl1.Align := TAlignLayout.Client;
+
+  // Premier onglet
+  TabItem1 := TTabItem.Create(TabControl1);
+  TabItem1.Parent := TabControl1;
+  TabItem1.Text := 'Accueil';
+
+  // Deuxième onglet
+  TabItem2 := TTabItem.Create(TabControl1);
+  TabItem2.Parent := TabControl1;
+  TabItem2.Text := 'Paramètres';
+end;
+```
+
+## Principes de conception tactile
+
+### Hiérarchie visuelle claire
+
+Sur un petit écran, l'espace est précieux. Établissez une hiérarchie claire avec :
+- Des titres plus grands et en gras
+- Des espacements généreux entre les sections
+- Des groupements logiques d'informations
+
+### Zones de confort du pouce
+
+Sur mobile, les utilisateurs tiennent souvent leur téléphone d'une main et interagissent avec le pouce. Les zones faciles à atteindre se situent :
+- **Facile** : Bas et milieu de l'écran
+- **Difficile** : Haut et coins opposés
+
+Placez les actions principales dans les zones faciles d'accès.
+
+```pascal
+// Placer un bouton d'action principal en bas
+procedure TFormMain.PlacerBoutonPrincipal;
+begin
+  BoutonPrincipal.Align := TAlignLayout.Bottom;
+  BoutonPrincipal.Height := 60;
+  BoutonPrincipal.Margins.Rect := RectF(10, 10, 10, 10);
+end;
+```
+
+### Contrastes et lisibilité
+
+Les écrans mobiles sont souvent utilisés en extérieur avec beaucoup de lumière. Assurez-vous d'avoir :
+- Un contraste élevé entre le texte et le fond
+- Une taille de police suffisante (minimum 14-16 points pour le corps de texte)
+- Des couleurs distinctes pour les éléments interactifs
+
+```pascal
+// Configurer un style avec bon contraste
+procedure TFormMain.ConfigurerStyle;
+begin
+  Label1.TextSettings.Font.Size := 16;
+  Label1.TextSettings.FontColor := TAlphaColors.Black;
+  Label1.Fill.Color := TAlphaColors.White;
+end;
+```
+
+### Minimalisme et focus
+
+Ne surchargez pas l'écran. Chaque écran devrait avoir :
+- Un objectif principal clair
+- Peu d'options (5-7 maximum)
+- Des espaces blancs pour respirer
+
+## Animations et transitions
+
+Les animations rendent l'interface plus fluide et aident l'utilisateur à comprendre les changements d'état.
+
+### Animation de transition entre écrans
+
+```pascal
+uses
+  FMX.Ani;
+
+// Faire glisser un nouvel écran depuis la droite
+procedure TFormMain.AnimerTransition;
+begin
+  // Positionner le nouvel écran hors de vue à droite
+  NouvelEcran.Position.X := ClientWidth;
+  NouvelEcran.Visible := True;
+
+  // Animer le glissement
+  TAnimator.AnimateFloat(NouvelEcran, 'Position.X', 0, 0.3,
+    TAnimationType.In, TInterpolationType.Cubic);
+end;
+```
+
+### Animation de bouton au clic
+
+```pascal
+// Créer un effet "rebond" lors du clic
+procedure TFormMain.AnimerBoutonClic(Sender: TObject);
+begin
+  // Réduire légèrement
+  TAnimator.AnimateFloat(Sender, 'Scale.X', 0.95, 0.1);
+  TAnimator.AnimateFloat(Sender, 'Scale.Y', 0.95, 0.1);
+
+  // Puis revenir à la normale
+  TAnimator.AnimateFloatDelay(Sender, 'Scale.X', 1.0, 0.1, 0.1);
+  TAnimator.AnimateFloatDelay(Sender, 'Scale.Y', 1.0, 0.1, 0.1);
+end;
+```
+
+### Animation de feedback visuel
+
+```pascal
+// Animer un changement de couleur pour indiquer une action
+procedure TFormMain.AnimerFeedback;
+begin
+  Rectangle1.Fill.Color := TAlphaColors.Green;
+
+  // Revenir à la couleur normale après 0.5 secondes
+  TAnimator.AnimateColorDelay(Rectangle1, 'Fill.Color',
+    TAlphaColors.Lightgray, 0.3, 0.5);
+end;
+```
+
+## Clavier virtuel et saisie de texte
+
+Sur mobile, le clavier occupe une grande partie de l'écran lorsqu'il apparaît.
+
+### Gérer l'apparition du clavier
+
+```pascal
+// Ajuster l'interface quand le clavier apparaît
+procedure TFormMain.FormVirtualKeyboardShown(Sender: TObject;
+  KeyboardVisible: Boolean; const Bounds: TRect);
+begin
+  if KeyboardVisible then
   begin
-    TFormKeyDown(M).Key := 0; // Consommer l'événement
-    DoBackNavigation;
+    // Réduire la zone de contenu pour ne pas être cachée par le clavier
+    ScrollBox1.Height := ClientHeight - (ClientHeight - Bounds.Top);
+  end
+  else
+  begin
+    // Restaurer la taille normale
+    ScrollBox1.Height := ClientHeight;
   end;
 end;
-{$ENDIF}
+```
+
+### Types de clavier appropriés
+
+Utilisez le bon type de clavier selon le contenu attendu :
+
+```pascal
+// Configurer le type de clavier pour chaque champ
+procedure TFormMain.ConfigurerClaviers;
+begin
+  // Clavier numérique pour les nombres
+  EditAge.KeyboardType := TVirtualKeyboardType.NumberPad;
+
+  // Clavier email pour les adresses email
+  EditEmail.KeyboardType := TVirtualKeyboardType.EmailAddress;
+
+  // Clavier téléphone
+  EditTelephone.KeyboardType := TVirtualKeyboardType.PhonePad;
+
+  // Clavier URL
+  EditSiteWeb.KeyboardType := TVirtualKeyboardType.URL;
+end;
+```
+
+### Bouton "Suivant" et "Terminé"
+
+```pascal
+// Configurer les actions de retour du clavier
+procedure TFormMain.ConfigurerRetourClavier;
+begin
+  // "Suivant" pour passer au champ suivant
+  EditNom.ReturnKeyType := TReturnKeyType.Next;
+  EditNom.OnKeyDown := PasserChampSuivant;
+
+  // "Terminé" pour le dernier champ
+  EditEmail.ReturnKeyType := TReturnKeyType.Done;
+  EditEmail.OnKeyDown := FermerClavier;
+end;
+
+procedure TFormMain.PasserChampSuivant(Sender: TObject; var Key: Word;
+  var KeyChar: Char; Shift: TShiftState);
+begin
+  if Key = vkReturn then
+  begin
+    EditPrenom.SetFocus;
+    Key := 0; // Consommer l'événement
+  end;
+end;
 ```
 
 ## Conclusion
 
-La conception d'interfaces tactiles efficaces avec Delphi nécessite une compréhension approfondie des principes d'interaction mobile et des outils disponibles dans FireMonkey. En suivant les directives présentées dans ce chapitre, vous pourrez créer des applications mobiles intuitives et agréables à utiliser.
+Créer une interface utilisateur tactile efficace demande de repenser complètement votre approche de conception par rapport aux applications desktop traditionnelles. Les principes clés à retenir sont :
 
-Rappelez-vous que la meilleure façon d'améliorer vos compétences en conception d'interfaces tactiles est de tester régulièrement sur de vrais appareils et de collecter les retours des utilisateurs.
+1. **Taille des cibles** : Minimum 44x44 points pour tous les éléments interactifs
+2. **Espacement** : Laisser suffisamment d'espace entre les contrôles
+3. **Feedback visuel** : Toujours indiquer clairement les interactions
+4. **Gestes naturels** : Supporter tap, swipe, pinch selon le contexte
+5. **Adaptation** : Votre interface doit s'adapter à toutes les tailles et orientations
+6. **Simplicité** : Privilégier la clarté et le minimalisme
+7. **Performance** : Des animations fluides à 60 FPS
 
-Dans le prochain chapitre, nous explorerons comment accéder aux capteurs spécifiques des appareils mobiles pour enrichir vos applications avec des fonctionnalités comme la géolocalisation et l'accéléromètre.
+FireMonkey offre tous les outils nécessaires pour créer des interfaces tactiles modernes et réactives. En appliquant ces principes et en testant régulièrement sur de vrais appareils, vous créerez des applications mobiles agréables et intuitives à utiliser.
+
+Dans la section suivante, nous verrons comment exploiter les capteurs des appareils mobiles pour créer des expériences encore plus riches et interactives.
 
 ⏭️ [Accès aux capteurs (GPS, accéléromètre...)](/15-applications-mobiles-avec-delphi/03-acces-aux-capteurs.md)

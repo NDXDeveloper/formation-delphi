@@ -1,518 +1,835 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.7 Publication sur App Store / Play Store
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Après avoir développé votre application mobile avec Delphi, l'étape finale consiste à la distribuer aux utilisateurs via les magasins d'applications officiels : l'App Store d'Apple pour iOS et le Google Play Store pour Android. Ce processus implique plusieurs étapes allant de la préparation de l'application à sa soumission et sa maintenance après publication.
+Vous avez développé votre application mobile, l'avez testée et perfectionnée. L'étape finale, mais cruciale, consiste à la publier sur les stores officiels pour que des millions d'utilisateurs puissent la découvrir et l'installer. Cette étape peut sembler intimidante au premier abord, mais en suivant méthodiquement les différentes étapes, vous pourrez publier votre application avec succès.
 
-## Préparation de votre application à la publication
+La publication d'une application implique bien plus que simplement uploader un fichier. Vous devez préparer des éléments visuels (icônes, captures d'écran), rédiger une description attractive, configurer correctement votre application, et naviguer dans les processus de validation de Google et Apple, qui ont chacun leurs propres exigences et particularités.
 
-Avant de soumettre votre application aux stores, vous devez vous assurer qu'elle est prête pour une utilisation publique.
+Dans cette section, nous allons explorer en détail comment publier votre application Delphi sur le **Google Play Store** (Android) et l'**Apple App Store** (iOS), de la préparation initiale jusqu'à la mise en ligne effective.
 
-### 1. Finalisez et testez votre application
+## Préparation générale de l'application
 
-Vérifiez les points suivants :
+Avant même de penser à soumettre votre application aux stores, vous devez la préparer soigneusement.
 
-- Toutes les fonctionnalités sont complètes et fonctionnent comme prévu
-- L'application est exempte de bugs majeurs
-- Les performances sont optimisées (temps de chargement, utilisation de la mémoire)
-- L'interface utilisateur est cohérente et responsive sur différents appareils
-- Les contrôles de saisie et la validation des données fonctionnent correctement
+### Finalisation du code
 
-**Conseil :** Testez votre application sur plusieurs appareils physiques, pas seulement sur des émulateurs, pour vous assurer qu'elle fonctionne correctement dans des conditions réelles.
+Assurez-vous que votre application est stable et sans bugs critiques :
 
-### 2. Préparez les ressources graphiques
+```pascal
+// Désactiver les fonctionnalités de débogage en production
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  {$IFDEF DEBUG}
+  // Code de débogage actif uniquement en mode développement
+  LabelDebug.Visible := True;
+  BtnTestCrash.Visible := True;
+  {$ELSE}
+  // En production, masquer les éléments de débogage
+  LabelDebug.Visible := False;
+  BtnTestCrash.Visible := False;
+  {$ENDIF}
+end;
 
-Les deux stores nécessitent diverses ressources graphiques :
+// Gérer toutes les exceptions non capturées
+procedure TFormMain.ConfigurerGestionErreurs;
+begin
+  Application.OnException := GererExceptionGlobale;
+end;
 
-#### Icône de l'application
+procedure TFormMain.GererExceptionGlobale(Sender: TObject; E: Exception);
+begin
+  // En production, logger l'erreur au lieu de crasher
+  {$IFNDEF DEBUG}
+  LoggerErreur(E.Message);
+  ShowMessage('Une erreur est survenue. Veuillez réessayer.');
+  {$ELSE}
+  // En développement, afficher l'erreur complète
+  raise;
+  {$ENDIF}
+end;
+```
 
-Dans Delphi, vous pouvez configurer l'icône de votre application via le Project Manager :
+### Configuration du projet
 
-1. Ouvrez le gestionnaire de projet
-2. Développez le dossier correspondant à votre plateforme cible (Android ou iOS)
-3. Cliquez sur "Application"
-4. Dans l'onglet "Appearance", configurez l'icône
+Dans Delphi, configurez correctement les informations de votre application :
 
-Pour Android, vous aurez besoin de plusieurs tailles d'icônes :
-- 48x48 pixels (mdpi)
-- 72x72 pixels (hdpi)
-- 96x96 pixels (xhdpi)
-- 144x144 pixels (xxhdpi)
-- 192x192 pixels (xxxhdpi)
+**Project > Options > Version Info** :
 
-Pour iOS, vous aurez également besoin de multiples tailles d'icônes, notamment :
-- 60x60 pixels (iPhone)
-- 76x76 pixels (iPad)
-- 83.5x83.5 pixels (iPad Pro)
-- 1024x1024 pixels (App Store)
+```pascal
+// Informations essentielles à configurer dans l'IDE :
+// - Company Name : Nom de votre entreprise
+// - File Description : Description courte de l'application
+// - File Version : Version du fichier (ex: 1.0.0.0)
+// - Product Name : Nom de votre application
+// - Product Version : Version produit (ex: 1.0.0)
+// - Legal Copyright : Droits d'auteur
 
-#### Captures d'écran
+// Ces informations seront incluses dans l'APK/IPA
+```
 
-Préparez des captures d'écran de haute qualité pour différents appareils :
+**Project > Options > Application** :
 
-**Pour Android :**
-- Téléphone (par exemple : 1080x1920 pixels)
-- Tablette 7" (par exemple : 1280x800 pixels)
-- Tablette 10" (par exemple : 1920x1200 pixels)
+- **Title** : Nom affiché de l'application
+- **Package** : Identifiant unique (ex: com.votreentreprise.nomapp)
+  - Android : com.exemple.monapp
+  - iOS : com.exemple.monapp (doit correspondre à l'App ID Apple)
 
-**Pour iOS :**
-- iPhone (6.5", 5.5" et 4.7")
-- iPad (12.9" et 9.7")
+### Icônes de l'application
 
-#### Vidéo promotionnelle (facultatif mais recommandé)
+Les icônes sont cruciales car elles sont la première chose que voient les utilisateurs.
 
-Une courte vidéo présentant les principales fonctionnalités de votre application peut augmenter considérablement les taux d'installation.
+**Exigences pour Android** :
+- Multiples résolutions nécessaires : 36x36, 48x48, 72x72, 96x96, 144x144, 192x192 pixels
+- Format PNG avec fond transparent ou opaque
+- Design simple et reconnaissable
 
-### 3. Compilez en mode Release
+**Exigences pour iOS** :
+- Multiples tailles : 40x40, 60x60, 76x76, 120x120, 152x152, 180x180, 1024x1024 pixels
+- Format PNG, pas de transparence
+- Pas d'effets de brillance (iOS les applique automatiquement)
 
-Pour préparer votre application à la publication, vous devez la compiler en mode Release plutôt qu'en mode Debug :
+**Configuration dans Delphi** :
 
-1. Dans Delphi, allez dans Project > Options
-2. Sélectionnez "Building" dans la liste de gauche
-3. Changez la configuration de "Debug" à "Release"
-4. Vérifiez les options d'optimisation et activez-les pour de meilleures performances
+```
+Project > Options > Application > Icons
+- Ajouter chaque taille d'icône requise
+- Delphi génère automatiquement les ressources appropriées
+```
 
-### 4. Préparez les métadonnées de l'application
+**Conseils pour créer de bonnes icônes** :
+- Design minimaliste et clair
+- Testez l'icône à différentes tailles
+- Évitez le texte trop petit
+- Utilisez des couleurs vives et contrastées
+- Soyez cohérent avec l'identité visuelle de votre marque
 
-Les deux stores vous demanderont diverses informations sur votre application :
+### Splash Screen (Écran de démarrage)
 
-- **Nom de l'application** : Le nom affiché dans les stores (max. 30 caractères pour l'App Store, 50 pour le Play Store)
-- **Description** : Une description courte et une description complète de votre application
-- **Mots-clés** : Pour améliorer la découvrabilité de votre application
-- **Catégorie** : Choisissez la catégorie qui correspond le mieux à votre application
-- **Classification d'âge** : Indiquez le public cible de votre application
-- **Politique de confidentialité** : URL vers votre politique de confidentialité (obligatoire)
-- **Coordonnées de support** : Email et/ou site web pour le support client
+L'écran de démarrage s'affiche pendant le chargement de l'application.
+
+**Configuration dans Delphi** :
+
+```
+Project > Options > Application > Splash Images
+- Ajouter des images pour différentes résolutions et orientations
+- Portrait et Paysage
+- Différentes densités d'écran (ldpi, mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)
+```
+
+**Dimensions recommandées pour Android** :
+- 320x480 (mdpi)
+- 480x800 (hdpi)
+- 720x1280 (xhdpi)
+- 1080x1920 (xxhdpi)
+- 1440x2560 (xxxhdpi)
+
+**Dimensions pour iOS** :
+- iPhone : 640x1136, 750x1334, 1242x2208
+- iPad : 1024x768, 2048x1536
+
+### Permissions et configuration
+
+Vérifiez que toutes les permissions nécessaires sont correctement déclarées :
+
+```
+Project > Options > Uses Permissions (Android)
+```
+
+**Permissions courantes** :
+- INTERNET : Accès réseau
+- ACCESS_FINE_LOCATION : GPS précis
+- ACCESS_COARSE_LOCATION : Localisation approximative
+- CAMERA : Appareil photo
+- RECORD_AUDIO : Microphone
+- READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE : Stockage
+- VIBRATE : Vibration
+
+**Important** : Ne demandez que les permissions réellement nécessaires. Les utilisateurs sont méfiants envers les applications qui demandent trop de permissions.
 
 ## Publication sur Google Play Store (Android)
 
-### 1. Créez un compte développeur Google Play
+Le Google Play Store est la boutique d'applications officielle pour Android.
 
-Avant de pouvoir publier, vous devez créer un compte développeur Google Play :
+### Étape 1 : Créer un compte développeur
 
-1. Visitez la [Console Google Play Developer](https://play.google.com/console/signup)
+1. Rendez-vous sur https://play.google.com/console
 2. Connectez-vous avec un compte Google
-3. Payez les frais d'inscription (25 $ USD, paiement unique)
-4. Remplissez les informations requises sur votre profil développeur
+3. Acceptez les conditions d'utilisation
+4. Payez les frais d'inscription unique de 25$ (paiement unique, valable à vie)
+5. Complétez votre profil développeur
 
-### 2. Préparez votre APK ou App Bundle
+**Informations requises** :
+- Nom du développeur (sera visible publiquement)
+- Adresse email de contact
+- Site web (optionnel mais recommandé)
+- Numéro de téléphone
 
-Delphi permet de générer deux types de packages pour Android :
+### Étape 2 : Préparer l'APK/AAB
 
-- **APK (Android Package)** : Format traditionnel
-- **AAB (Android App Bundle)** : Format recommandé qui optimise la taille de l'application pour chaque appareil
+Delphi peut générer deux formats pour Android :
 
-Voici comment générer un App Bundle avec Delphi 11 ou supérieur :
+**APK (Android Package)** :
+- Format traditionnel
+- Un fichier pour toutes les architectures (ARM, x86)
+- Plus gros mais simple
 
-```pascal
-// Dans le menu principal de Delphi
-// Project > Deployment
-// Configurer les fichiers à inclure dans le package
+**AAB (Android App Bundle)** :
+- Format moderne recommandé par Google
+- Google génère des APK optimisés pour chaque appareil
+- Fichiers plus petits pour les utilisateurs
 
-// Ensuite, pour créer un AAB
-// Project > Build App Bundle
+**Compiler pour la production dans Delphi** :
+
+1. Sélectionnez la configuration **Release** :
+   ```
+   Project > Build Configurations > Release
+   ```
+
+2. Sélectionnez la plateforme **Android** :
+   ```
+   Project > Target Platform > Android
+   ```
+
+3. Configurez la signature de l'application :
+   ```
+   Project > Options > Provisioning (Android)
+   ```
+
+### Étape 3 : Signer l'application
+
+Android exige que toutes les applications soient signées numériquement.
+
+**Créer un keystore (trousseau de clés)** :
+
+Vous pouvez le faire directement dans Delphi :
+
+```
+Tools > Options > Environment Options > Android Keystore Manager
+- Cliquer sur "New Keystore"
+- Choisir un emplacement sécurisé
+- Définir un mot de passe fort
+- Remplir les informations (nom, organisation, ville, pays)
 ```
 
-Pour les versions antérieures de Delphi qui ne supportent pas directement l'AAB, vous pouvez générer un APK standard :
+**IMPORTANT** : Conservez précieusement ce keystore et son mot de passe ! Si vous les perdez, vous ne pourrez plus jamais mettre à jour votre application.
 
-```pascal
-// Project > Deploy
-```
-
-### 3. Signez votre application
-
-Toutes les applications Android doivent être signées numériquement avant publication :
-
-1. Dans Delphi, allez dans Project > Options > Building > Android
-2. Dans la section "Application certificate", choisissez une des options :
-   - Utiliser la clé de débogage (non recommandé pour la production)
-   - Créer une nouvelle clé
-   - Utiliser une clé existante (recommandé si vous avez déjà publié des versions)
-
-Si vous créez une nouvelle clé :
+**Configurer la signature dans le projet** :
 
 ```
-Alias : nom-de-votre-application
-Password : choisissez un mot de passe fort
-Validity : 25+ ans recommandé
-First and Last Name : Votre nom ou celui de votre entreprise
-Organizational Unit : Département (optionnel)
-Organization : Nom de votre entreprise
-Locality : Votre ville
-State : Votre état/province
-Country Code : Code pays à deux lettres (ex: FR pour France)
+Project > Options > Provisioning > Android
+- Key Store : Chemin vers votre fichier .keystore
+- Key Alias : Alias de la clé
+- Passwords : Mots de passe du keystore et de la clé
 ```
 
-**Important :** Conservez précieusement le fichier keystore et son mot de passe. Si vous les perdez, vous ne pourrez plus mettre à jour votre application !
+### Étape 4 : Compiler l'application
 
-### 4. Créez une nouvelle application dans la Google Play Console
+```
+Project > Build [Nom de votre projet]
+```
 
-1. Connectez-vous à la [Google Play Console](https://play.google.com/console)
-2. Cliquez sur "Créer une application"
-3. Sélectionnez la langue par défaut
-4. Entrez le nom de votre application
-5. Spécifiez si c'est une application ou un jeu
-6. Indiquez si elle est gratuite ou payante
-7. Cliquez sur "Créer"
+Delphi génère le fichier APK ou AAB dans le dossier de sortie (généralement dans un sous-dossier `Android\Release`).
 
-### 5. Configurez la fiche Google Play
+### Étape 5 : Créer l'application dans Play Console
 
-Après avoir créé l'application, vous devez compléter plusieurs sections :
+1. Connectez-vous à la Play Console : https://play.google.com/console
+2. Cliquez sur **Créer une application**
+3. Renseignez les informations de base :
+   - Nom de l'application
+   - Langue par défaut
+   - Type d'application (gratuite ou payante)
+   - Catégorie
 
-1. **Fiche du Play Store**
-   - Ajoutez les descriptions (courte et complète)
-   - Téléchargez les captures d'écran et vidéos
-   - Ajoutez l'icône au format correct
-   - Choisissez la catégorie et les tags
+### Étape 6 : Préparer la fiche de l'application
 
-2. **Classification du contenu**
-   - Remplissez le questionnaire de classification
+**Description courte** (80 caractères max) :
+- Phrase accrocheuse décrivant l'essence de l'application
+- Exemple : "Gérez vos tâches facilement et ne ratez plus aucune échéance"
 
-3. **Tarifs et disponibilité**
-   - Indiquez si l'application est gratuite ou payante
-   - Sélectionnez les pays où l'application sera disponible
+**Description complète** (4000 caractères max) :
+- Présentez votre application en détail
+- Listez les fonctionnalités principales
+- Expliquez les avantages pour l'utilisateur
+- Utilisez des paragraphes pour faciliter la lecture
 
-4. **Configuration de l'application**
-   - Ajoutez vos informations de contact
-   - Configurez les liens externes (politique de confidentialité, etc.)
+**Captures d'écran** :
 
-### 6. Téléchargez votre APK ou App Bundle
+Vous devez fournir au minimum 2 captures (maximum 8) :
 
-1. Dans la section "Production" du menu, cliquez sur "Créer une nouvelle version"
-2. Téléchargez votre fichier APK ou AAB
-3. Ajoutez les notes de version (ce qui est nouveau dans cette version)
-4. Enregistrez et passez à la vérification
+- Format : PNG ou JPEG
+- Dimensions minimales : 320 pixels
+- Dimensions maximales : 3840 pixels
+- Ratio d'aspect entre 16:9 et 9:16
 
-### 7. Vérification et publication
+**Conseils** :
+- Montrez les fonctionnalités principales de votre application
+- Ajoutez du texte explicatif sur les captures (avec un outil externe)
+- Utilisez des mises en situation réelles
+- Montrez l'interface dans différents contextes d'utilisation
 
-Une fois toutes les sections complétées :
+**Icône de haute résolution** :
+- 512 x 512 pixels
+- Format PNG, 32 bits
+- Taille max : 1 Mo
 
-1. Vérifiez votre application avec les outils de la Play Console
-2. Corrigez les problèmes signalés
-3. Soumettez pour examen
+**Graphic feature (optionnel mais recommandé)** :
+- 1024 x 500 pixels
+- Bannière promotionnelle affichée sur certains écrans
+- Texte lisible et design attractif
 
-Google examinera votre application, ce qui peut prendre quelques heures à quelques jours. Une fois approuvée, votre application sera publiée sur le Play Store.
+**Vidéo de présentation** (optionnel) :
+- Lien YouTube
+- Durée recommandée : 30 secondes à 2 minutes
+- Montrez l'application en action
+
+### Étape 7 : Remplir les informations obligatoires
+
+**Catégorie** :
+- Choisissez la catégorie la plus appropriée (Productivité, Jeux, Finance, etc.)
+
+**Classification du contenu** :
+- Répondez au questionnaire sur le contenu de votre application
+- Obtenez une classification d'âge (3+, 7+, 12+, 16+, 18+)
+
+**Coordonnées** :
+- Email de contact (visible publiquement)
+- Site web (optionnel)
+- Numéro de téléphone (optionnel)
+
+**Politique de confidentialité** :
+- URL vers votre politique de confidentialité
+- **Obligatoire** si vous collectez des données personnelles
+- De nombreux générateurs gratuits en ligne peuvent vous aider
+
+### Étape 8 : Uploader l'APK/AAB
+
+1. Allez dans **Production > Créer une version**
+2. Uploadez votre fichier APK ou AAB
+3. Google analyse automatiquement le fichier et détecte :
+   - Version de l'application
+   - Permissions demandées
+   - Architectures supportées
+   - Taille de l'application
+
+4. Rédigez les **notes de version** :
+   - Décrivez les nouveautés de cette version
+   - Listez les corrections de bugs
+   - Mentionnez les améliorations
+
+### Étape 9 : Configuration des prix et de la distribution
+
+**Prix** :
+- Gratuite (vous ne pourrez plus changer en payante après publication)
+- Payante (définissez le prix dans chaque devise)
+
+**Pays disponibles** :
+- Sélectionnez les pays où votre application sera disponible
+- Par défaut : tous les pays
+
+**Programme pour les enfants et les familles** :
+- Indiquez si votre application cible les enfants
+
+### Étape 10 : Soumettre pour validation
+
+1. Vérifiez que tous les éléments obligatoires sont complétés
+2. Cliquez sur **Examiner la version**
+3. Vérifiez une dernière fois toutes les informations
+4. Cliquez sur **Publier la version**
+
+**Délai de validation** :
+- Généralement quelques heures
+- Peut prendre jusqu'à 7 jours dans certains cas
+- Vous recevrez un email lorsque l'application sera publiée ou si elle est rejetée
+
+### Motifs courants de rejet sur Play Store
+
+- **Permissions excessives** : Demande de permissions non justifiées
+- **Contenu trompeur** : Description ne correspondant pas à l'application
+- **Violation de droits d'auteur** : Utilisation non autorisée de contenu protégé
+- **Politique de confidentialité manquante** : Si vous collectez des données
+- **Fonctionnalités cassées** : Bugs critiques ou crashs fréquents
+- **Contenu inapproprié** : Non conforme aux règles de Google
 
 ## Publication sur Apple App Store (iOS)
 
-La publication sur l'App Store est généralement plus complexe et stricte que sur le Play Store.
+L'App Store d'Apple a un processus plus strict et plus long que le Play Store.
 
-### 1. Inscrivez-vous au programme développeur Apple
+### Étape 1 : Compte Apple Developer
 
-1. Visitez le [site du programme développeur Apple](https://developer.apple.com/programs/)
-2. Cliquez sur "Enroll"
-3. Connectez-vous avec votre identifiant Apple
-4. Suivez les étapes et payez les frais d'adhésion (99 $ USD par an)
+1. Inscrivez-vous sur https://developer.apple.com
+2. Choisissez le type de compte :
+   - **Personnel** : 99$/an
+   - **Organisation** : 99$/an (nécessite un numéro DUNS)
+3. Complétez votre profil
+4. Payez les frais annuels
 
-### 2. Configurez les certificats et les profils de provisionnement
+**Important** : Le compte Apple Developer nécessite un renouvellement annuel, contrairement au compte Google Play.
 
-Pour compiler et soumettre des applications iOS, vous avez besoin de :
+### Étape 2 : Certificats et profils de provisionnement
 
-1. **Certificat de développement** : Pour tester sur des appareils
-2. **Certificat de distribution** : Pour soumettre à l'App Store
-3. **Identifiant d'application** : Pour identifier votre application
-4. **Profil de provisionnement** : Qui lie le certificat à l'identifiant d'application
+Cette étape est la plus complexe du processus iOS.
 
-Voici comment procéder :
+**Certificats nécessaires** :
 
-1. Allez sur le [portail développeur Apple](https://developer.apple.com/account)
-2. Dans la section "Certificates, IDs & Profiles" :
-   - Créez un certificat de distribution
-   - Enregistrez un identifiant d'application
-   - Créez un profil de provisionnement de type "App Store"
+1. **Development Certificate** : Pour tester sur appareils réels
+2. **Distribution Certificate** : Pour publier sur l'App Store
 
-3. Téléchargez et installez ces éléments sur votre Mac
+**Créer les certificats** :
 
-### 3. Configurez votre application dans Delphi
+1. Ouvrez **Keychain Access** sur Mac
+2. Menu : Keychain Access > Certificate Assistant > Request a Certificate from a Certificate Authority
+3. Entrez votre email et votre nom
+4. Sélectionnez "Saved to disk"
+5. Sauvegardez le fichier .certSigningRequest
 
-1. Dans Delphi, ouvrez Project > Options > Building > iOS Device
-2. Dans la section "Provisioning", sélectionnez votre profil de provisionnement
-3. Configurez le Bundle Identifier (doit correspondre à celui créé sur le portail Apple)
-4. Configurez la version et le numéro de build
+6. Allez sur https://developer.apple.com/account/resources/certificates
+7. Cliquez sur **+** pour créer un nouveau certificat
+8. Choisissez **iOS Distribution (App Store and Ad Hoc)**
+9. Uploadez le fichier .certSigningRequest
+10. Téléchargez le certificat généré (.cer)
+11. Double-cliquez pour l'installer dans Keychain Access
 
-### 4. Compilez pour iOS Device
+**App ID** :
 
-Pour générer un package iOS :
+1. Allez dans https://developer.apple.com/account/resources/identifiers
+2. Créez un nouvel **App ID**
+3. Choisissez **Explicit App ID**
+4. Bundle ID : com.votreentreprise.nomapp (doit correspondre exactement à celui dans Delphi)
+5. Activez les **Capabilities** nécessaires (Push Notifications, In-App Purchase, etc.)
 
-1. Connectez votre Mac à votre PC Windows (nécessaire pour la compilation iOS)
-2. Configurez la connexion à votre Mac dans Tools > Options > SDK Manager > macOS SDK
-3. Sélectionnez "iOS Device" comme cible de déploiement
-4. Choisissez Project > Build pour compiler
+**Provisioning Profile** :
 
-### 5. Créez et configurez votre application dans App Store Connect
+1. Allez dans https://developer.apple.com/account/resources/profiles
+2. Créez un nouveau profil **App Store**
+3. Sélectionnez votre App ID
+4. Sélectionnez votre Distribution Certificate
+5. Téléchargez le profil (.mobileprovision)
 
-1. Connectez-vous à [App Store Connect](https://appstoreconnect.apple.com)
-2. Cliquez sur "Mon appli" puis "+"
-3. Remplissez les informations de base :
-   - Nom de l'application
-   - Language par défaut
-   - Bundle ID (sélectionnez celui que vous avez enregistré)
-   - SKU (identifiant unique pour votre référence)
-4. Cliquez sur "Créer"
+### Étape 3 : Configurer Delphi pour iOS
 
-### 6. Configurez la fiche App Store
+**Installer PAServer sur Mac** :
 
-Après avoir créé l'application, complétez les différentes sections :
+1. Sur votre Mac, installez les outils Platform Assistant depuis le CD d'installation Delphi
+2. Ou téléchargez depuis le site Embarcadero
+3. Lancez PAServer sur le Mac
 
-1. **Informations sur l'application**
-   - Version (doit correspondre à celle dans Delphi)
-   - Informations de contact
-   - Classification d'âge
+**Configurer la connexion dans Delphi** :
 
-2. **Tarifs et disponibilité**
-   - Prix
-   - Pays de disponibilité
-
-3. **Métadonnées de l'App Store**
-   - Description
-   - Mots-clés
-   - URL du support
-   - URL marketing
-   - Screenshots
-
-### 7. Téléchargez votre application
-
-Pour soumettre votre application compilée à Apple, vous pouvez utiliser deux méthodes :
-
-#### Méthode 1 : Via Xcode (recommandée)
-
-1. Sur votre Mac, ouvrez Xcode
-2. Utilisez Window > Organizer
-3. Localisez votre application compilée
-4. Cliquez sur "Distribute App"
-5. Sélectionnez "App Store Connect"
-6. Suivez les étapes du processus
-
-#### Méthode 2 : Via Application Loader
-
-1. Dans Delphi, générez un fichier IPA (iOS App Store Package)
-2. Transférez ce fichier sur votre Mac
-3. Utilisez l'Application Loader pour soumettre le package
-
-### 8. Soumettez pour examen
-
-Une fois votre application téléchargée :
-
-1. Retournez dans App Store Connect
-2. Dans la section "Test Flight", vous pouvez ajouter des testeurs avant la publication
-3. Dans l'onglet "App Store", cliquez sur "Soumettre pour examen"
-
-Le processus d'examen d'Apple est généralement plus long et plus rigoureux que celui de Google, pouvant prendre de quelques jours à une semaine. Préparez-vous à d'éventuels rejets et à la nécessité d'effectuer des modifications.
-
-## Bonnes pratiques pour la soumission
-
-### 1. Tests rigoureux
-
-Testez exhaustivement votre application sur différents appareils avant de la soumettre pour minimiser les risques de rejet.
-
-### 2. Respectez les directives des plateformes
-
-Chaque plateforme a ses propres règles et directives de conception :
-
-- [Directives de l'App Store](https://developer.apple.com/app-store/review/guidelines/)
-- [Règles de qualité du Play Store](https://developer.android.com/docs/quality-guidelines)
-
-Familiarisez-vous avec ces documents pour éviter les rejets.
-
-### 3. Préparez une version incrémentielle
-
-Utilisez un système de versionnage cohérent :
-
-- **Version majeure.mineure.correctif** (ex : 1.2.3)
-- Incrémentez le numéro de build à chaque soumission
-
-Exemple de configuration dans Delphi :
-
-```pascal
-// Dans Project > Options > Version Info
-// Pour Android
-Major : 1
-Minor : 0
-Release : 0
-Build : 1  // Incrémentez à chaque nouvelle version
-
-// Pour iOS, configurez également :
-CFBundleVersion : 1.0.0  // La version visible
-Build : 1  // Le numéro de build, à incrémenter à chaque soumission
+```
+Tools > Options > Environment Options > Connection Profile Manager
+- Add (Ajouter un nouveau profil)
+- Platform : macOS
+- Host Name : Adresse IP de votre Mac
+- Port : 64211 (par défaut)
+- Password : Le mot de passe affiché par PAServer
+- Test Connection
 ```
 
-### 4. Utilisez des métadonnées optimisées pour l'ASO
+**Configurer le provisioning** :
 
-L'App Store Optimization (ASO) est l'équivalent du SEO pour les apps :
+```
+Project > Options > Provisioning (iOS)
+- Profile : Sélectionnez votre provisioning profile
+```
 
-- Utilisez des mots-clés pertinents dans le titre et la description
-- Écrivez une description claire qui explique les avantages de votre application
-- Créez des visuels attrayants qui montrent clairement les fonctionnalités
+### Étape 4 : Compiler pour iOS
 
-### 5. Planifiez les mises à jour
+1. Sélectionnez **Release** configuration
+2. Sélectionnez la plateforme **iOS Device - 64 bit**
+3. Project > Build
 
-Après publication, prévoyez un calendrier de mises à jour pour :
+Delphi compile l'application sur le Mac via PAServer et génère un fichier .IPA.
 
-- Corriger les bugs signalés
-- Ajouter de nouvelles fonctionnalités
-- Maintenir la conformité avec les nouvelles versions des OS
+### Étape 5 : Créer l'application dans App Store Connect
 
-## Checklist avant soumission
+1. Connectez-vous à https://appstoreconnect.apple.com
+2. Cliquez sur **My Apps**
+3. Cliquez sur **+** puis **New App**
 
-Pour éviter les erreurs courantes, utilisez cette checklist :
+**Informations requises** :
+- **Platforms** : iOS
+- **Name** : Nom de l'application (30 caractères max)
+- **Primary Language** : Langue principale
+- **Bundle ID** : Sélectionnez l'App ID créé précédemment
+- **SKU** : Identifiant unique de votre choix (ex: MONAPP001)
 
-### Pour les deux plateformes
+### Étape 6 : Préparer les métadonnées
 
-- [ ] Application testée sur plusieurs appareils réels
-- [ ] Toutes les fonctionnalités fonctionnent correctement
-- [ ] Performances optimisées (compilation en mode Release)
-- [ ] Contenu conforme aux directives des stores
-- [ ] Politique de confidentialité créée et accessible
-- [ ] Métadonnées complètes et optimisées
-- [ ] Captures d'écran et icônes préparées aux formats requis
-- [ ] Version et numéro de build configurés correctement
+**Captures d'écran** :
 
-### Spécifique à Android
+Apple exige des captures pour différentes tailles d'appareils :
 
-- [ ] APK ou AAB signé avec une clé de production (pas la clé de débogage)
-- [ ] Fichier keystore sauvegardé en lieu sûr
-- [ ] Permissions justifiées et réduites au minimum nécessaire
-- [ ] Compatibilité vérifiée avec différentes versions d'Android
+- **iPhone 6.7"** : 1290 x 2796 pixels (iPhone 14 Pro Max, etc.)
+- **iPhone 6.5"** : 1242 x 2688 pixels (iPhone 11 Pro Max, etc.)
+- **iPhone 5.5"** : 1242 x 2208 pixels (iPhone 8 Plus, etc.)
+- **iPad Pro 12.9"** : 2048 x 2732 pixels
+- **iPad Pro (3ème gen) 11"** : 1668 x 2388 pixels
 
-### Spécifique à iOS
+Minimum 3 captures, maximum 10 par taille d'appareil.
 
-- [ ] Certificats et profils de provisionnement correctement configurés
-- [ ] Bundle Identifier correspond à celui enregistré sur le portail Apple
-- [ ] App fonctionne correctement en mode multitâche
-- [ ] Supports toutes les orientations requises
-- [ ] Respecte les directives d'interface d'iOS
+**Conseils** :
+- Utilisez des captures d'écran réelles de votre application
+- Ajoutez du contexte avec du texte et des annotations (avec un outil externe)
+- Montrez les fonctionnalités clés
+- Utilisez des images de haute qualité
 
-## Gestion des révisions et mises à jour
+**Icône de l'App Store** :
+- 1024 x 1024 pixels
+- Format PNG, sans transparence
+- Pas d'effets de bord arrondis (Apple les applique automatiquement)
 
-Une fois votre application publiée, vous devrez la maintenir à jour :
+**Description** :
 
-### Processus de mise à jour pour Android
+- **Promotional Text** (170 caractères) : Texte promotionnel modifiable après publication
+- **Description** (4000 caractères) : Description complète de l'application
+- **Keywords** (100 caractères) : Mots-clés séparés par des virgules pour la recherche
+- **Support URL** : URL d'assistance obligatoire
+- **Marketing URL** : URL marketing (optionnel)
 
-1. Incrémentez le numéro de version et/ou de build
-2. Compilez une nouvelle version
-3. Signez avec la **même clé** que la version précédente
-4. Créez une nouvelle version dans la Google Play Console
-5. Téléchargez le nouveau APK ou AAB
-6. Ajoutez les notes de mise à jour
-7. Publiez la mise à jour
+**Vidéo de prévisualisation (App Preview)** (optionnel) :
+- Format MP4 ou MOV
+- Durée : 15 à 30 secondes
+- Dimensions spécifiques pour chaque taille d'appareil
+- Montrez l'application en action
 
-### Processus de mise à jour pour iOS
+### Étape 7 : Informations sur l'application
 
-1. Incrémentez le numéro de version et/ou de build
-2. Compilez une nouvelle version
-3. Créez une nouvelle version dans App Store Connect
-4. Téléchargez le nouveau package
-5. Mettez à jour les métadonnées si nécessaire
-6. Ajoutez les notes de version
-7. Soumettez pour examen
+**Catégorie** :
+- Catégorie primaire (obligatoire)
+- Catégorie secondaire (optionnel)
 
-### Déploiement progressif (Android)
+**Classification d'âge** :
+- Répondez au questionnaire sur le contenu
+- Apple détermine automatiquement la classification
 
-Pour Android, vous pouvez utiliser le déploiement progressif :
+**Prix et disponibilité** :
+- Gratuite ou payante
+- Prix par région
+- Disponibilité géographique
+- Date de publication
 
-1. Dans la Google Play Console, lors de la création d'une nouvelle version
-2. Sous "Déploiement", choisissez "Déploiement progressif"
-3. Définissez un pourcentage d'utilisateurs pour recevoir la mise à jour
-4. Augmentez progressivement ce pourcentage si aucun problème n'est signalé
+**App Privacy (Confidentialité)** :
+- Obligatoire depuis iOS 14
+- Déclarez les types de données collectées
+- Indiquez si elles sont liées à l'utilisateur
+- Indiquez si elles sont utilisées pour du tracking
 
-### Utilisation de TestFlight (iOS)
+### Étape 8 : Uploader le build avec Application Loader
 
-Pour iOS, utilisez TestFlight pour tester les mises à jour avant publication complète :
+**Option 1 : Via Xcode** (sur Mac)
+1. Ouvrez **Xcode**
+2. Window > Organizer
+3. Sélectionnez votre .IPA
+4. Cliquez sur **Upload to App Store**
 
-1. Téléchargez votre nouvelle version dans App Store Connect
-2. Configurez-la dans TestFlight
-3. Invitez des testeurs internes et externes
-4. Collectez les retours
-5. Soumettez pour publication complète quand vous êtes satisfait
+**Option 2 : Via Transporter** (application Apple)
+1. Téléchargez Transporter depuis le Mac App Store
+2. Glissez-déposez votre fichier .IPA
+3. Cliquez sur **Deliver**
 
-## Monétisation de votre application
+**Option 3 : Via ligne de commande**
+```bash
+xcrun altool --upload-app --type ios --file "chemin/vers/votre/app.ipa" \
+  --username "votre@email.com" --password "mot-de-passe-app-specific"
+```
 
-Plusieurs modèles de monétisation sont disponibles :
+### Étape 9 : Soumettre pour validation
 
-### 1. Application payante
+1. Retournez dans App Store Connect
+2. Dans la section **App Store**, sélectionnez votre build uploadé
+3. Remplissez les **App Review Information** :
+   - Coordonnées de contact pour l'équipe de validation
+   - Notes pour les testeurs (si besoin d'un compte de test, par exemple)
+   - Pièce jointe (capture ou document explicatif si nécessaire)
 
-L'utilisateur paie une fois pour télécharger votre application.
+4. Acceptez les accords de distribution
+5. Cliquez sur **Submit for Review**
 
-**Configuration dans Delphi :**
-- Aucune configuration particulière n'est nécessaire dans le code
-- Configurez simplement le prix dans les consoles de développement
+**Délai de validation** :
+- En moyenne : 24 à 48 heures
+- Peut aller jusqu'à 7 jours
+- La première soumission prend généralement plus de temps
+- Vous recevez des notifications par email à chaque étape
 
-### 2. Achats intégrés (In-App Purchases)
+### Étape 10 : Répondre aux retours d'Apple
 
-Permettez aux utilisateurs d'acheter des fonctionnalités ou du contenu supplémentaire.
+Si votre application est rejetée, Apple fournit une explication détaillée.
 
-**Pour implémenter les achats intégrés :**
+**Motifs courants de rejet sur App Store** :
 
-1. Créez les produits dans les consoles des stores
-2. Utilisez le composant `TPurchaseManager` de Delphi :
+1. **Interface non conforme** : Interface qui ne respecte pas les Human Interface Guidelines
+2. **Bugs ou crashs** : Application instable lors des tests
+3. **Métadonnées trompeuses** : Description ou captures d'écran ne reflétant pas l'application
+4. **Contenu inapproprié** : Violation des règles de contenu d'Apple
+5. **Fonctionnalités incomplètes** : Fonctionnalités annoncées mais non fonctionnelles
+6. **Permissions non justifiées** : Demande de permissions sans explication claire
+7. **Liens cassés** : Liens dans l'application qui ne fonctionnent pas
+8. **Politique de confidentialité manquante** : Si vous collectez des données
+9. **Utilisation des API non documentée** : Accès à des fonctions privées d'iOS
+10. **Design minimal** : Application trop simple ou ressemblant à un site web encapsulé
+
+**Comment répondre à un rejet** :
+1. Lisez attentivement les raisons du rejet
+2. Corrigez les problèmes identifiés
+3. Testez rigoureusement
+4. Soumettez à nouveau avec des notes explicatives si nécessaire
+
+## Gestion des mises à jour
+
+### Versionnement
+
+Utilisez un système de versionnement cohérent :
+
+**Format recommandé** : MAJEUR.MINEUR.CORRECTIF
+
+- **MAJEUR** : Changements majeurs, incompatibilités possibles
+- **MINEUR** : Nouvelles fonctionnalités, compatibles
+- **CORRECTIF** : Corrections de bugs
+
+Exemple : 1.2.3
+- Version majeure : 1
+- Version mineure : 2
+- Correctif : 3
+
+**Dans Delphi** :
+```
+Project > Options > Version Info
+- File Version : 1.2.3.0
+- Product Version : 1.2.3
+```
+
+**Important** :
+- Sur Android : Incrémentez le **Version Code** (nombre entier) à chaque nouvelle version
+- Sur iOS : Incrémentez le **CFBundleVersion** (Build Number)
+
+### Publier une mise à jour
+
+**Google Play Store** :
+1. Compilez la nouvelle version avec un Version Code supérieur
+2. Allez dans Play Console > Production
+3. Créez une nouvelle version
+4. Uploadez le nouvel APK/AAB
+5. Rédigez les notes de version
+6. Publiez
+
+**Apple App Store** :
+1. Compilez la nouvelle version avec un numéro de build supérieur
+2. Uploadez le build via Xcode/Transporter
+3. Dans App Store Connect, créez une nouvelle version
+4. Sélectionnez le nouveau build
+5. Renseignez "What's New in This Version"
+6. Soumettez pour validation
+
+### Déploiement progressif
+
+**Play Store - Déploiement progressif** :
+- Publiez d'abord à 10% des utilisateurs
+- Surveillez les crashs et les notes
+- Augmentez progressivement si tout va bien
+- Rollback rapide en cas de problème
+
+**App Store - Publication par étapes** :
+- Publication automatique après validation, ou
+- Publication manuelle à la date de votre choix
+- Version limitée avec TestFlight pour tester en production
+
+## Promotion et visibilité
+
+### Optimisation de la fiche (ASO - App Store Optimization)
+
+**Titre** :
+- Incluez des mots-clés pertinents
+- Soyez descriptif mais concis
+- Différenciez-vous de la concurrence
+
+**Description** :
+- Commencez par les avantages principaux
+- Utilisez des paragraphes courts
+- Incluez des mots-clés naturellement
+- Terminez par un appel à l'action
+
+**Mots-clés** (iOS uniquement) :
+- Recherchez les mots-clés populaires
+- Évitez la répétition (déjà dans le titre)
+- Testez et ajustez régulièrement
+- Utilisez des variations et synonymes
+
+**Captures d'écran** :
+- Montrez la valeur ajoutée en premier
+- Utilisez du texte superposé pour expliquer
+- Créez une histoire visuelle
+- Testez différentes versions (A/B testing)
+
+### Obtenir des avis positifs
+
+Les avis influencent fortement les téléchargements.
+
+**Bonnes pratiques** :
+- Demandez des avis au bon moment (après une action réussie)
+- Ne harcelez pas les utilisateurs
+- Utilisez l'API native de demande d'avis
 
 ```pascal
 uses
-  FMX.InAppPurchase;
+  FMX.Platform;
 
-procedure TMainForm.InitializePurchases;
+// Demander un avis avec l'API native
+procedure TFormMain.DemanderAvis;
 var
-  PurchManager: TPurchaseManager;
+  RatingService: IFMXRatingService;
 begin
-  // Créer le gestionnaire d'achats
-  PurchManager := TPurchaseManager.DefaultManager;
-
-  // Définir les gestionnaires d'événements
-  PurchManager.OnProductsRequestResponse := HandleProductsResponse;
-  PurchManager.OnPurchaseCompleted := HandlePurchaseCompleted;
-
-  // Récupérer les produits disponibles
-  PurchManager.QueryProducts(['votre.produit.id1', 'votre.produit.id2']);
-end;
-
-procedure TMainForm.HandleProductsResponse(Sender: TObject;
-  const Products: TIAPProductList; const InvalidProductIDs: TStrings);
-begin
-  // Traiter la liste des produits disponibles
-  for var Product in Products do
+  if TPlatformServices.Current.SupportsPlatformService(IFMXRatingService, RatingService) then
   begin
-    // Ajouter le produit à l'interface utilisateur
-    AddProductToUI(Product.ProductID, Product.Title, Product.Price);
+    RatingService.RequestReview;
   end;
 end;
 
-procedure TMainForm.BuyProduct(const ProductID: string);
+// Appeler au bon moment
+procedure TFormMain.TacheTermineeAvecSucces;
 begin
-  // Lancer l'achat
-  TPurchaseManager.DefaultManager.PurchaseProduct(ProductID);
-end;
+  // Incrémenter un compteur
+  Inc(FNombreSucces);
 
-procedure TMainForm.HandlePurchaseCompleted(Sender: TObject;
-  const ProductID: string; const Success: Boolean);
-begin
-  if Success then
-  begin
-    // Achat réussi, débloquer la fonctionnalité
-    UnlockFeature(ProductID);
-  end
-  else
-    ShowMessage('L''achat a échoué. Veuillez réessayer.');
+  // Demander un avis après 5 succès
+  if FNombreSucces = 5 then
+    DemanderAvis;
 end;
 ```
 
-### 3. Abonnements
+- Répondez à tous les avis (positifs et négatifs)
+- Corrigez les problèmes mentionnés dans les avis négatifs
 
-Similaires aux achats intégrés, mais avec renouvellement automatique.
+### Stratégies marketing
 
-### 4. Publicités intégrées
+**Avant le lancement** :
+- Créez une page de destination (landing page)
+- Constituez une liste d'emails de personnes intéressées
+- Créez du contenu de blog/vidéo sur le sujet
+- Contactez des blogueurs et influenceurs
 
-Affichez des annonces dans votre application via des réseaux publicitaires.
+**Au lancement** :
+- Annoncez sur les réseaux sociaux
+- Envoyez des communiqués de presse
+- Offrez une promotion de lancement
+- Demandez à vos premiers utilisateurs de laisser des avis
 
-Pour intégrer des publicités, vous pouvez utiliser des composants tiers comme AdMob à travers l'API FireMonkey.
+**Après le lancement** :
+- Créez du contenu régulier (blog, vidéos)
+- Restez actif sur les réseaux sociaux
+- Mettez à jour fréquemment l'application
+- Écoutez les retours utilisateurs
+- Analysez les métriques (téléchargements, rétention, etc.)
+
+## Monétisation
+
+### Modèles de monétisation
+
+**Application gratuite** :
+- Acquisition facile d'utilisateurs
+- Monétisation via publicité ou achats in-app
+
+**Application payante** :
+- Revenus dès le téléchargement
+- Plus difficile à promouvoir
+- Moins de téléchargements
+
+**Freemium** :
+- Version gratuite avec fonctionnalités limitées
+- Débloquage via achat unique ou abonnement
+- Bon compromis pour tester l'application
+
+**Abonnement** :
+- Revenus récurrents
+- Convient aux services continus
+- Nécessite de la valeur régulière
+
+### Publicité avec AdMob
+
+```pascal
+// Exemple d'intégration publicitaire (conceptuel)
+uses
+  FMX.Advertising;
+
+procedure TFormMain.AfficherBanniere;
+begin
+  BannerAd1.AdUnitID := 'ca-app-pub-XXXXXXXXX/YYYYYYYYY';
+  BannerAd1.LoadAd;
+  BannerAd1.Visible := True;
+end;
+
+procedure TFormMain.AfficherInterstitiel;
+begin
+  if InterstitialAd1.IsLoaded then
+  begin
+    InterstitialAd1.Show;
+  end;
+end;
+```
+
+### Achats in-app
+
+Les achats in-app permettent de vendre du contenu ou des fonctionnalités directement dans l'application.
+
+**Configuration Google Play** :
+1. Play Console > Votre app > Produits in-app
+2. Créez un nouveau produit
+3. Définissez l'ID du produit (ex: premium_upgrade)
+4. Fixez le prix
+
+**Configuration App Store** :
+1. App Store Connect > Fonctionnalités > Achats intégrés
+2. Créez un nouveau produit
+3. Remplissez les informations
+4. Définissez les prix par région
+
+## Analyse et amélioration continue
+
+### Firebase Analytics
+
+Intégrez Firebase pour comprendre le comportement des utilisateurs :
+
+- Nombre d'utilisateurs actifs
+- Durée des sessions
+- Écrans les plus consultés
+- Taux de rétention
+- Conversions (achats, inscriptions)
+
+### Suivi des crashs
+
+Utilisez Firebase Crashlytics ou un service similaire pour :
+- Détecter les crashs en production
+- Prioriser les corrections
+- Suivre la stabilité de l'application
+
+### Itération et amélioration
+
+1. **Analysez les données** : Métriques, avis, crashs
+2. **Identifiez les problèmes** : Bugs, points de friction
+3. **Priorisez** : Impact vs effort
+4. **Développez** : Nouvelles fonctionnalités, corrections
+5. **Testez** : Assurez-vous que tout fonctionne
+6. **Publiez** : Nouvelle version
+7. **Répétez** : C'est un cycle continu
 
 ## Conclusion
 
-La publication de votre application sur l'App Store et le Play Store représente l'aboutissement de votre travail de développement, mais c'est aussi le début d'un nouveau processus : la maintenance et l'amélioration continue de votre application.
+La publication d'une application mobile sur les stores officiels est une étape exigeante mais gratifiante. En suivant méthodiquement les étapes présentées dans cette section, vous maximisez vos chances de succès.
 
-En suivant les étapes détaillées dans ce chapitre, vous pouvez naviguer avec succès dans le processus parfois complexe de soumission d'applications. N'oubliez pas que chaque plateforme a ses propres exigences et que celles-ci peuvent évoluer avec le temps. Consultez régulièrement la documentation officielle pour rester à jour.
+**Points clés à retenir** :
 
-Une fois votre application publiée, écoutez attentivement les commentaires des utilisateurs et utilisez ces retours pour orienter vos futures mises à jour. Une application bien entretenue et régulièrement mise à jour aura plus de chances de réussir à long terme.
+1. **Préparation** : Peaufinez votre application et créez des visuels de qualité
+2. **Google Play** : Processus relativement simple et rapide
+3. **App Store** : Plus strict mais garantit une certaine qualité
+4. **Mises à jour** : Publiez régulièrement des améliorations
+5. **Marketing** : Une bonne application ne suffit pas, faites-la connaître
+6. **Écoute** : Les retours utilisateurs sont précieux
+7. **Patience** : Le succès prend du temps, persévérez
 
-Dans la prochaine section, nous explorerons comment mettre en place des mises à jour automatiques pour votre application afin de faciliter la distribution de nouvelles versions à vos utilisateurs existants.
+N'oubliez pas que la publication n'est pas une fin en soi, mais le début d'une aventure. Votre application évoluera avec les besoins de vos utilisateurs et les nouvelles possibilités technologiques. Restez à l'écoute, soyez réactif, et améliorez continuellement votre application.
+
+Félicitations pour avoir franchi cette étape importante dans votre parcours de développeur d'applications mobiles avec Delphi !
 
 ⏭️ [Mises à jour OTA (Over The Air)](/15-applications-mobiles-avec-delphi/08-mises-a-jour-ota.md)

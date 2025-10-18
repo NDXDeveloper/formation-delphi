@@ -1,1415 +1,991 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.4 Utilisation de la caméra et des médias
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les appareils mobiles modernes sont équipés de caméras de plus en plus performantes et offrent de nombreuses fonctionnalités multimédias. Intégrer ces capacités à vos applications Delphi peut considérablement enrichir l'expérience utilisateur. Dans cette section, nous allons explorer comment utiliser la caméra et manipuler différents types de médias (images, audio, vidéo) dans vos applications mobiles.
+Les capacités multimédia des smartphones modernes ont transformé ces appareils en véritables studios de création portables. Appareil photo, caméra vidéo, enregistreur audio, lecteur multimédia : tout est intégré dans un seul appareil. Pour vos applications mobiles, exploiter ces capacités peut créer des expériences utilisateur riches et engageantes.
 
-## 1. Utilisation de la caméra
+Avec Delphi et FireMonkey, accéder à la caméra et gérer les médias est simple grâce à des composants dédiés qui fonctionnent de manière unifiée sur iOS et Android. Dans cette section, nous allons explorer comment capturer des photos et vidéos, accéder à la bibliothèque multimédia, lire et enregistrer du son, et manipuler ces médias dans vos applications.
 
-Delphi offre plusieurs façons d'intégrer la caméra dans vos applications mobiles. Nous allons examiner les approches les plus courantes.
+## Vue d'ensemble des capacités multimédia
 
-### Configuration des permissions
+Les appareils mobiles offrent plusieurs fonctionnalités multimédia que vous pouvez intégrer dans vos applications :
 
-Avant de pouvoir utiliser la caméra, vous devez configurer les permissions appropriées :
+**Capture d'images** :
+- Prendre des photos avec la caméra
+- Accéder aux photos existantes dans la galerie
+- Éditer et manipuler les images
 
-#### Pour Android
+**Vidéo** :
+- Enregistrer des vidéos
+- Lire des vidéos locales ou en streaming
+- Capturer des images depuis un flux vidéo
 
-Dans le Project Manager, accédez à :
-- **Project > Options > Uses Permissions**
+**Audio** :
+- Enregistrer du son avec le microphone
+- Lire des fichiers audio
+- Contrôler la lecture (pause, volume, etc.)
 
-Cochez les permissions nécessaires :
-- `CAMERA` (pour l'accès à la caméra)
-- `WRITE_EXTERNAL_STORAGE` (pour enregistrer les photos prises)
+**Partage** :
+- Partager des médias vers d'autres applications
+- Recevoir des médias depuis d'autres applications
 
-#### Pour iOS
+## Capture de photos avec la caméra
 
-Éditez le fichier `Info.plist` en ajoutant les descriptions de permissions :
-- `NSCameraUsageDescription` (justification pour l'utilisation de la caméra)
-- `NSPhotoLibraryUsageDescription` (justification pour l'accès à la photothèque)
+La capture de photos est l'une des fonctionnalités multimédia les plus demandées dans les applications mobiles.
 
-### Méthode 1 : Utilisation du composant `TCameraComponent`
+### Configuration du composant TCameraComponent
 
-Le composant `TCameraComponent` est la manière la plus simple d'intégrer la caméra :
-
-```pascal
-uses
-  FMX.Media;
-
-type
-  TCameraForm = class(TForm)
-    CameraComponent1: TCameraComponent;
-    ImageControl1: TImageControl;
-    btnStartCamera: TButton;
-    btnTakePhoto: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnStartCameraClick(Sender: TObject);
-    procedure btnTakePhotoClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FPhotoTaken: Boolean;
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-procedure TCameraForm.FormCreate(Sender: TObject);
-begin
-  FPhotoTaken := False;
-
-  // Vérification de la disponibilité de la caméra
-  if CameraComponent1.Available then
-    btnStartCamera.Enabled := True
-  else
-  begin
-    btnStartCamera.Enabled := False;
-    ShowMessage('Aucune caméra disponible sur cet appareil');
-  end;
-end;
-
-procedure TCameraForm.btnStartCameraClick(Sender: TObject);
-begin
-  // Démarrage de la caméra
-  if not CameraComponent1.Active then
-  begin
-    CameraComponent1.Active := True;
-    btnStartCamera.Text := 'Arrêter la caméra';
-    btnTakePhoto.Enabled := True;
-  end
-  else
-  begin
-    CameraComponent1.Active := False;
-    btnStartCamera.Text := 'Démarrer la caméra';
-    btnTakePhoto.Enabled := False;
-  end;
-end;
-
-procedure TCameraForm.btnTakePhotoClick(Sender: TObject);
-begin
-  // Prise de photo
-  if CameraComponent1.Active then
-  begin
-    CameraComponent1.SampleBufferToBitmap(ImageControl1.Bitmap, True);
-    FPhotoTaken := True;
-
-    // Optionnel : Arrêter la caméra après la prise de photo
-    // CameraComponent1.Active := False;
-    // btnStartCamera.Text := 'Démarrer la caméra';
-  end;
-end;
-
-procedure TCameraForm.FormDestroy(Sender: TObject);
-begin
-  // S'assurer que la caméra est désactivée
-  if CameraComponent1.Active then
-    CameraComponent1.Active := False;
-end;
-```
-
-Pour ajouter ce code à votre application :
-
-1. Créez un nouveau formulaire
-2. Depuis la palette de composants, faites glisser :
-   - un `TCameraComponent` (onglet System)
-   - un `TImageControl` (onglet Controls)
-   - deux `TButton` (onglet Standard)
-3. Disposez-les selon vos préférences et configurez leurs propriétés
-4. Implémentez les gestionnaires d'événements comme indiqué ci-dessus
-
-### Méthode 2 : Utilisation de `TakePhotoFromCamera`
-
-Pour les cas où vous avez juste besoin de prendre une photo rapidement sans afficher de prévisualisation :
+Delphi fournit le composant `TCameraComponent` pour accéder à la caméra de l'appareil.
 
 ```pascal
 uses
   FMX.Media;
 
-type
-  TQuickPhotoForm = class(TForm)
-    ImageControl1: TImageControl;
-    btnQuickPhoto: TButton;
-    procedure btnQuickPhotoClick(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-procedure TQuickPhotoForm.btnQuickPhotoClick(Sender: TObject);
+// Configurer la caméra dans le FormCreate
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  TakePhotoFromCamera(ImageControl1.Bitmap,
-    procedure(const AResult: TTakePhotoResult)
-    begin
-      case AResult of
-        TTakePhotoResult.Success:
-          ShowMessage('Photo prise avec succès');
-        TTakePhotoResult.Canceled:
-          ShowMessage('Prise de photo annulée');
-        TTakePhotoResult.Error:
-          ShowMessage('Erreur lors de la prise de photo');
-      end;
-    end);
+  // Créer et configurer le composant caméra
+  Camera1 := TCameraComponent.Create(Self);
+  Camera1.Kind := TCameraKind.FrontCamera; // ou BackCamera
+  Camera1.Quality := TVideoCaptureQuality.MediumQuality;
+  Camera1.OnSampleBufferReady := CameraSampleBufferReady;
 end;
 ```
 
-Cette méthode est très simple car elle utilise l'interface de caméra native du système d'exploitation.
-
-### Enregistrement des photos prises
-
-Pour enregistrer une photo après l'avoir prise :
-
-```pascal
-procedure TSavePhotoForm.SavePhoto(const ABitmap: TBitmap);
-var
-  SavePath: string;
-  ImageFileName: string;
-begin
-  {$IFDEF ANDROID}
-  SavePath := TPath.GetSharedDownloadsPath;
-  {$ELSE}
-  {$IFDEF IOS}
-  SavePath := TPath.GetDocumentsPath;
-  {$ELSE}
-  SavePath := TPath.GetPicturesPath;
-  {$ENDIF}
-  {$ENDIF}
-
-  // Créer un nom de fichier unique basé sur la date et l'heure
-  ImageFileName := 'Photo_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.jpg';
-  SavePath := TPath.Combine(SavePath, ImageFileName);
-
-  // Enregistrer l'image
-  try
-    ABitmap.SaveToFile(SavePath);
-    ShowMessage('Photo enregistrée : ' + SavePath);
-  except
-    on E: Exception do
-      ShowMessage('Erreur lors de l'enregistrement : ' + E.Message);
-  end;
-end;
-```
-
-### Choisir entre caméra avant et arrière
-
-La plupart des appareils mobiles disposent de plusieurs caméras. Voici comment basculer entre elles :
-
-```pascal
-procedure TCameraForm.btnSwitchCameraClick(Sender: TObject);
-var
-  NewKind: TCameraKind;
-begin
-  // Désactiver la caméra actuelle
-  if CameraComponent1.Active then
-    CameraComponent1.Active := False;
-
-  // Basculer entre les caméras avant et arrière
-  if CameraComponent1.Kind = TCameraKind.FrontCamera then
-    NewKind := TCameraKind.BackCamera
-  else
-    NewKind := TCameraKind.FrontCamera;
-
-  // Essayer d'appliquer le changement
-  try
-    CameraComponent1.Kind := NewKind;
-    // Réactiver la caméra
-    CameraComponent1.Active := True;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Impossible de changer de caméra : ' + E.Message);
-      // Essayer de réactiver la caméra précédente
-      CameraComponent1.Active := True;
-    end;
-  end;
-end;
-```
-
-## 2. Gestion des images
-
-### Sélection d'images depuis la galerie
-
-Permettre à l'utilisateur de choisir une image depuis la galerie de photos :
+### Prendre une photo simple
 
 ```pascal
 uses
   FMX.MediaLibrary, FMX.Graphics;
 
-procedure TImageForm.btnSelectImageClick(Sender: TObject);
+// Démarrer l'aperçu de la caméra
+procedure TFormMain.BtnDemarrerCameraClick(Sender: TObject);
 begin
-  TakePhotoFromLibrary(ImageControl1.Bitmap,
-    procedure(const AResult: TTakePhotoResult)
+  // Vérifier si la caméra est disponible
+  if not Camera1.HasCamera then
+  begin
+    ShowMessage('Aucune caméra disponible sur cet appareil');
+    Exit;
+  end;
+
+  // Activer la caméra
+  Camera1.Active := True;
+end;
+
+// Capturer une photo
+procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);
+begin
+  if Camera1.Active then
+  begin
+    // La capture est asynchrone, l'événement OnSampleBufferReady sera déclenché
+    Camera1.SampleBufferToBitmap(Image1.Bitmap, True);
+  end;
+end;
+
+// Gérer l'image capturée
+procedure TFormMain.CameraSampleBufferReady(Sender: TObject;
+  const ATime: TMediaTime);
+begin
+  // Synchroniser avec le thread principal
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      Camera1.SampleBufferToBitmap(Image1.Bitmap, True);
+    end);
+end;
+```
+
+### Utiliser l'interface système de prise de photo
+
+Une approche plus simple consiste à utiliser l'interface photo native du système :
+
+```pascal
+uses
+  FMX.MediaLibrary, FMX.Platform;
+
+// Prendre une photo avec l'interface native
+procedure TFormMain.BtnPhotoNativeClick(Sender: TObject);
+var
+  MediaLibrary: IFMXCameraService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXCameraService, MediaLibrary) then
+  begin
+    MediaLibrary.TakePhotoFromCamera(Image1,
+      procedure(Image: TBitmap)
+      begin
+        if Assigned(Image) then
+        begin
+          // La photo a été prise avec succès
+          Image1.Bitmap.Assign(Image);
+          ShowMessage('Photo capturée !');
+
+          // Sauvegarder si nécessaire
+          SauvegarderPhoto(Image);
+        end
+        else
+        begin
+          // L'utilisateur a annulé
+          ShowMessage('Capture annulée');
+        end;
+      end);
+  end
+  else
+    ShowMessage('Service caméra non disponible');
+end;
+```
+
+### Choisir entre caméra avant et arrière
+
+```pascal
+// Basculer entre les caméras
+procedure TFormMain.BtnBasculerCameraClick(Sender: TObject);
+begin
+  Camera1.Active := False;
+
+  if Camera1.Kind = TCameraKind.BackCamera then
+    Camera1.Kind := TCameraKind.FrontCamera
+  else
+    Camera1.Kind := TCameraKind.BackCamera;
+
+  Camera1.Active := True;
+end;
+```
+
+### Sauvegarder une photo dans la galerie
+
+```pascal
+uses
+  System.IOUtils, FMX.Graphics;
+
+// Sauvegarder une photo dans la galerie de l'appareil
+procedure TFormMain.SauvegarderPhoto(Photo: TBitmap);
+var
+  MediaLibrary: IFMXPhotoLibrary;
+  CheminPhoto: string;
+begin
+  // Sauvegarder d'abord localement
+  CheminPhoto := TPath.Combine(TPath.GetDocumentsPath,
+    'photo_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.jpg');
+  Photo.SaveToFile(CheminPhoto);
+
+  // Ajouter à la galerie
+  if TPlatformServices.Current.SupportsPlatformService(IFMXPhotoLibrary, MediaLibrary) then
+  begin
+    MediaLibrary.AddImageToSavedPhotosAlbum(CheminPhoto,
+      procedure(Success: Boolean)
+      begin
+        if Success then
+          ShowMessage('Photo enregistrée dans la galerie')
+        else
+          ShowMessage('Erreur lors de l''enregistrement');
+      end);
+  end;
+end;
+```
+
+## Accès à la bibliothèque photo
+
+Permettre à l'utilisateur de choisir une photo existante dans sa galerie est tout aussi important que de prendre une nouvelle photo.
+
+### Sélectionner une photo depuis la galerie
+
+```pascal
+uses
+  FMX.MediaLibrary;
+
+// Choisir une photo depuis la galerie
+procedure TFormMain.BtnChoisirPhotoClick(Sender: TObject);
+var
+  MediaLibrary: IFMXPhotoLibrary;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXPhotoLibrary, MediaLibrary) then
+  begin
+    MediaLibrary.RequestPermission(
+      procedure(AGranted: Boolean)
+      begin
+        if AGranted then
+        begin
+          // Permission accordée, ouvrir la galerie
+          var TakeImageDelegate: TOnDidFinishTaking;
+          TakeImageDelegate := procedure(Image: TBitmap)
+          begin
+            if Assigned(Image) then
+            begin
+              Image1.Bitmap.Assign(Image);
+              ShowMessage('Photo chargée !');
+            end;
+          end;
+
+          MediaLibrary.TakeImageFromLibrary(Image1, TakeImageDelegate);
+        end
+        else
+          ShowMessage('Permission refusée pour accéder aux photos');
+      end);
+  end;
+end;
+```
+
+### Choisir entre caméra et galerie
+
+```pascal
+// Donner le choix à l'utilisateur
+procedure TFormMain.BtnAjouterPhotoClick(Sender: TObject);
+begin
+  // Afficher un dialogue de choix
+  TDialogService.MessageDialog('Choisir une source',
+    TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+    TMsgDlgBtn.mbYes, 0,
+    procedure(const AResult: TModalResult)
     begin
       case AResult of
-        TTakePhotoResult.Success:
-          lblStatus.Text := 'Image chargée avec succès';
-        TTakePhotoResult.Canceled:
-          lblStatus.Text := 'Sélection annulée';
-        TTakePhotoResult.Error:
-          lblStatus.Text := 'Erreur lors du chargement de l'image';
+        mrYes: PrendrePhotoAvecCamera;
+        mrNo: ChoisirPhotoGalerie;
       end;
-    end);
+    end,
+    'Caméra', 'Galerie');
 end;
 ```
 
-### Manipulation d'images
+## Manipulation d'images
 
-Delphi offre plusieurs possibilités pour manipuler des images :
+Une fois qu'une image est capturée ou chargée, vous pouvez la manipuler de diverses manières.
 
-```pascal
-procedure TImageForm.ApplyGrayscaleFilter;
-var
-  W, H: Integer;
-  X, Y: Integer;
-  P: TAlphaColorRec;
-  Gray: Byte;
-  Bitmap: TBitmap;
-begin
-  // Créer une copie de l'image originale
-  Bitmap := TBitmap.Create;
-  try
-    Bitmap.Assign(ImageControl1.Bitmap);
-
-    // Parcourir chaque pixel
-    for Y := 0 to Bitmap.Height - 1 do
-    begin
-      for X := 0 to Bitmap.Width - 1 do
-      begin
-        // Obtenir la couleur du pixel
-        P := TAlphaColorRec(Bitmap.Canvas.Pixels[X, Y]);
-
-        // Calculer la valeur de gris (formule standard)
-        Gray := Round(0.299 * P.R + 0.587 * P.G + 0.114 * P.B);
-
-        // Appliquer la nouvelle couleur
-        P.R := Gray;
-        P.G := Gray;
-        P.B := Gray;
-
-        // Mettre à jour le pixel
-        Bitmap.Canvas.Pixels[X, Y] := P.Color;
-      end;
-    end;
-
-    // Afficher l'image modifiée
-    ImageControl1.Bitmap.Assign(Bitmap);
-  finally
-    Bitmap.Free;
-  end;
-end;
-```
-
-> **Note** : Ce traitement peut être lent pour des images volumineuses. Pour de meilleures performances sur des images de grande taille, utilisez des threads ou des bibliothèques optimisées.
-
-### Partage d'images
-
-Partager une image avec d'autres applications :
+### Redimensionner une image
 
 ```pascal
 uses
-  FMX.MediaLibrary, FMX.Graphics, System.SysUtils, System.IOUtils;
+  FMX.Graphics;
 
-procedure TImageForm.ShareImage(const ABitmap: TBitmap);
+// Redimensionner une image pour optimiser la mémoire
+procedure TFormMain.RedimensionnerImage(Source: TBitmap; NouvelleWidth,
+  NouvelleHeight: Integer);
 var
-  TempPath, TempFile: string;
+  ImageRedim: TBitmap;
+  Ratio: Single;
 begin
-  // Créer un fichier temporaire
-  TempPath := TPath.GetTempPath;
-  TempFile := TPath.Combine(TempPath, 'share_image_' +
-                            FormatDateTime('yyyymmddhhnnss', Now) + '.jpg');
-
-  // Enregistrer l'image dans le fichier temporaire
+  ImageRedim := TBitmap.Create;
   try
-    ABitmap.SaveToFile(TempFile);
+    // Calculer le ratio pour conserver les proportions
+    Ratio := Min(NouvelleWidth / Source.Width,
+                 NouvelleHeight / Source.Height);
 
-    // Partager le fichier
-    {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-    ShareImage(TempFile, 'Partager cette image');
-    {$ELSE}
-    ShowMessage('Partage non supporté sur cette plateforme');
-    {$ENDIF}
-  except
-    on E: Exception do
-      ShowMessage('Erreur de partage : ' + E.Message);
+    // Définir les nouvelles dimensions
+    ImageRedim.Width := Round(Source.Width * Ratio);
+    ImageRedim.Height := Round(Source.Height * Ratio);
+
+    // Redimensionner avec interpolation
+    if ImageRedim.Canvas.BeginScene then
+    try
+      ImageRedim.Canvas.DrawBitmap(Source,
+        RectF(0, 0, Source.Width, Source.Height),
+        RectF(0, 0, ImageRedim.Width, ImageRedim.Height),
+        1.0, True);
+    finally
+      ImageRedim.Canvas.EndScene;
+    end;
+
+    // Copier le résultat
+    Source.Assign(ImageRedim);
+  finally
+    ImageRedim.Free;
+  end;
+end;
+
+// Utilisation
+procedure TFormMain.OptimiserPhoto;
+begin
+  // Redimensionner à maximum 1024x1024 pour économiser la mémoire
+  RedimensionnerImage(Image1.Bitmap, 1024, 1024);
+end;
+```
+
+### Faire pivoter une image
+
+```pascal
+// Pivoter une image de 90 degrés
+procedure TFormMain.PivoterImage90(Image: TBitmap);
+var
+  ImagePivotee: TBitmap;
+begin
+  ImagePivotee := TBitmap.Create;
+  try
+    ImagePivotee.Width := Image.Height;
+    ImagePivotee.Height := Image.Width;
+
+    if ImagePivotee.Canvas.BeginScene then
+    try
+      ImagePivotee.Canvas.SetMatrix(
+        TMatrix.CreateRotation(DegToRad(90)) *
+        TMatrix.CreateTranslation(ImagePivotee.Width, 0));
+      ImagePivotee.Canvas.DrawBitmap(Image,
+        RectF(0, 0, Image.Width, Image.Height),
+        RectF(0, 0, Image.Width, Image.Height),
+        1.0);
+    finally
+      ImagePivotee.Canvas.EndScene;
+    end;
+
+    Image.Assign(ImagePivotee);
+  finally
+    ImagePivotee.Free;
+  end;
+end;
+
+// Boutons de rotation
+procedure TFormMain.BtnPivoterDroiteClick(Sender: TObject);
+begin
+  PivoterImage90(Image1.Bitmap);
+end;
+```
+
+### Appliquer des filtres
+
+```pascal
+uses
+  FMX.Filter.Effects;
+
+// Appliquer un filtre noir et blanc
+procedure TFormMain.AppliquerNoirEtBlanc;
+var
+  Filtre: TMonochromeEffect;
+begin
+  Filtre := TMonochromeEffect.Create(Image1);
+  try
+    Filtre.Parent := Image1;
+    // Le filtre est automatiquement appliqué visuellement
+  finally
+    // Ne pas libérer si on veut garder l'effet
+    // Filtre.Free;
+  end;
+end;
+
+// Appliquer un filtre sépia
+procedure TFormMain.AppliquerSepia;
+var
+  Filtre: TSepiaEffect;
+begin
+  Filtre := TSepiaEffect.Create(Image1);
+  Filtre.Parent := Image1;
+  Filtre.Amount := 0.8; // Intensité du filtre
+end;
+
+// Flouter une image
+procedure TFormMain.AppliquerFlou;
+var
+  Filtre: TGaussianBlurEffect;
+begin
+  Filtre := TGaussianBlurEffect.Create(Image1);
+  Filtre.Parent := Image1;
+  Filtre.BlurAmount := 3.0; // Intensité du flou
+end;
+```
+
+### Recadrer une image
+
+```pascal
+// Recadrer une zone de l'image
+procedure TFormMain.RecadrerImage(Image: TBitmap; X, Y, Width, Height: Integer);
+var
+  ImageRecadree: TBitmap;
+begin
+  ImageRecadree := TBitmap.Create;
+  try
+    ImageRecadree.Width := Width;
+    ImageRecadree.Height := Height;
+
+    if ImageRecadree.Canvas.BeginScene then
+    try
+      ImageRecadree.Canvas.DrawBitmap(Image,
+        RectF(X, Y, X + Width, Y + Height),
+        RectF(0, 0, Width, Height),
+        1.0);
+    finally
+      ImageRecadree.Canvas.EndScene;
+    end;
+
+    Image.Assign(ImageRecadree);
+  finally
+    ImageRecadree.Free;
   end;
 end;
 ```
 
-## 3. Lecture et enregistrement audio
+## Enregistrement et lecture vidéo
 
-### Lecture de fichiers audio
-
-Delphi fournit le composant `TMediaPlayer` pour la lecture de fichiers audio :
+### Enregistrer une vidéo
 
 ```pascal
 uses
   FMX.Media;
 
-type
-  TAudioForm = class(TForm)
-    MediaPlayer1: TMediaPlayer;
-    btnPlay: TButton;
-    btnPause: TButton;
-    btnStop: TButton;
-    TrackBar1: TTrackBar;
-    Timer1: TTimer;
-    procedure FormCreate(Sender: TObject);
-    procedure btnPlayClick(Sender: TObject);
-    procedure btnPauseClick(Sender: TObject);
-    procedure btnStopClick(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
-    procedure TrackBar1Change(Sender: TObject);
-  private
-    FTrackBarChanging: Boolean;
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-procedure TAudioForm.FormCreate(Sender: TObject);
+// Enregistrer une vidéo avec l'interface native
+procedure TFormMain.BtnEnregistrerVideoClick(Sender: TObject);
+var
+  MediaService: IFMXCameraService;
 begin
-  FTrackBarChanging := False;
-
-  // Charger un fichier audio (à adapter selon l'emplacement de vos fichiers)
-  {$IF DEFINED(ANDROID)}
-  MediaPlayer1.FileName := TPath.Combine(TPath.GetDocumentsPath, 'sample.mp3');
-  {$ELSEIF DEFINED(IOS)}
-  MediaPlayer1.FileName := TPath.Combine(TPath.GetDocumentsPath, 'sample.mp3');
-  {$ELSE}
-  MediaPlayer1.FileName := 'C:\Samples\sample.mp3';
-  {$ENDIF}
-
-  // Configurer la TrackBar
-  TrackBar1.Min := 0;
-  Timer1.Enabled := True;
-end;
-
-procedure TAudioForm.btnPlayClick(Sender: TObject);
-begin
-  if MediaPlayer1.Media <> nil then
+  if TPlatformServices.Current.SupportsPlatformService(IFMXCameraService, MediaService) then
   begin
-    MediaPlayer1.Play;
-    TrackBar1.Max := MediaPlayer1.Duration;
+    MediaService.TakeVideoFromCamera(Image1,
+      procedure(VideoPath: string)
+      begin
+        if not VideoPath.IsEmpty then
+        begin
+          // Vidéo enregistrée avec succès
+          ShowMessage('Vidéo enregistrée : ' + VideoPath);
+          LireVideo(VideoPath);
+        end
+        else
+          ShowMessage('Enregistrement annulé');
+      end);
   end;
 end;
+```
 
-procedure TAudioForm.btnPauseClick(Sender: TObject);
+### Lire une vidéo
+
+```pascal
+uses
+  FMX.Media;
+
+// Configurer et lire une vidéo
+procedure TFormMain.LireVideo(CheminVideo: string);
 begin
-  if MediaPlayer1.Media <> nil then
-    MediaPlayer1.Pause;
+  // Créer le lecteur média si nécessaire
+  if not Assigned(MediaPlayer1) then
+  begin
+    MediaPlayer1 := TMediaPlayer.Create(Self);
+    MediaPlayer1.Parent := Self;
+  end;
+
+  // Configurer le lecteur
+  MediaPlayer1.FileName := CheminVideo;
+  MediaPlayer1.Align := TAlignLayout.Client;
+
+  // Lancer la lecture
+  MediaPlayer1.Play;
 end;
 
-procedure TAudioForm.btnStopClick(Sender: TObject);
+// Contrôles de lecture
+procedure TFormMain.BtnPlayClick(Sender: TObject);
 begin
-  if MediaPlayer1.Media <> nil then
+  if Assigned(MediaPlayer1) then
+    MediaPlayer1.Play;
+end;
+
+procedure TFormMain.BtnPauseClick(Sender: TObject);
+begin
+  if Assigned(MediaPlayer1) then
+    MediaPlayer1.Stop;
+end;
+
+procedure TFormMain.BtnStopClick(Sender: TObject);
+begin
+  if Assigned(MediaPlayer1) then
   begin
     MediaPlayer1.Stop;
-    TrackBar1.Value := 0;
-  end;
-end;
-
-procedure TAudioForm.Timer1Timer(Sender: TObject);
-begin
-  // Mettre à jour la position de la TrackBar
-  if (not FTrackBarChanging) and (MediaPlayer1.Media <> nil) and
-     (MediaPlayer1.State = TMediaState.Playing) then
-  begin
-    TrackBar1.Value := MediaPlayer1.CurrentTime;
-  end;
-end;
-
-procedure TAudioForm.TrackBar1Change(Sender: TObject);
-begin
-  if MediaPlayer1.Media <> nil then
-  begin
-    FTrackBarChanging := True;
-    try
-      MediaPlayer1.CurrentTime := Round(TrackBar1.Value);
-    finally
-      FTrackBarChanging := False;
-    end;
+    MediaPlayer1.CurrentTime := 0;
   end;
 end;
 ```
 
-### Enregistrement audio
+### Contrôles avancés de lecture vidéo
 
-Pour enregistrer de l'audio depuis le microphone :
+```pascal
+// Barre de progression de la vidéo
+procedure TFormMain.TimerVideoTimer(Sender: TObject);
+begin
+  if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
+  begin
+    TrackBar1.Value := (MediaPlayer1.CurrentTime / MediaPlayer1.Duration) * 100;
+    LabelTemps.Text := FormatDateTime('nn:ss', MediaPlayer1.CurrentTime / SecsPerDay) +
+      ' / ' + FormatDateTime('nn:ss', MediaPlayer1.Duration / SecsPerDay);
+  end;
+end;
+
+// Permettre à l'utilisateur de naviguer dans la vidéo
+procedure TFormMain.TrackBar1Change(Sender: TObject);
+begin
+  if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
+  begin
+    MediaPlayer1.CurrentTime := Round((TrackBar1.Value / 100) * MediaPlayer1.Duration);
+  end;
+end;
+
+// Contrôle du volume
+procedure TFormMain.TrackBarVolumeChange(Sender: TObject);
+begin
+  if Assigned(MediaPlayer1) then
+    MediaPlayer1.Volume := TrackBarVolume.Value / 100;
+end;
+```
+
+## Enregistrement audio
+
+L'enregistrement audio permet de créer des applications comme des dictaphones, des notes vocales, ou des applications de messagerie vocale.
+
+### Configuration de l'enregistreur audio
 
 ```pascal
 uses
   FMX.Media;
 
-type
-  TRecordForm = class(TForm)
-    MicrophoneComponent1: TAudioCaptureDevice;
-    btnStartRecording: TButton;
-    btnStopRecording: TButton;
-    lblStatus: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure btnStartRecordingClick(Sender: TObject);
-    procedure btnStopRecordingClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FAudioFileName: string;
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-procedure TRecordForm.FormCreate(Sender: TObject);
+// Configurer l'enregistreur audio
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  // Vérifier la disponibilité du microphone
-  if MicrophoneComponent1.Available then
-    btnStartRecording.Enabled := True
-  else
-  begin
-    btnStartRecording.Enabled := False;
-    lblStatus.Text := 'Microphone non disponible';
-  end;
-
-  // Définir le nom du fichier d'enregistrement
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  FAudioFileName := TPath.Combine(TPath.GetDocumentsPath,
-                              'Recording_' + FormatDateTime('yyyymmddhhnnss', Now) + '.wav');
-  {$ELSE}
-  FAudioFileName := TPath.Combine(TPath.GetMusicPath,
-                              'Recording_' + FormatDateTime('yyyymmddhhnnss', Now) + '.wav');
-  {$ENDIF}
+  MicrophoneAudioCaptureDevice1 := TMicrophone.Create;
 end;
 
-procedure TRecordForm.btnStartRecordingClick(Sender: TObject);
+procedure TFormMain.FormDestroy(Sender: TObject);
 begin
-  // Commencer l'enregistrement
-  if not MicrophoneComponent1.Active then
-  begin
-    try
-      // Configurer l'enregistrement
-      MicrophoneComponent1.FileName := FAudioFileName;
-      MicrophoneComponent1.Active := True;
-
-      // Mettre à jour l'interface
-      btnStartRecording.Enabled := False;
-      btnStopRecording.Enabled := True;
-      lblStatus.Text := 'Enregistrement en cours...';
-    except
-      on E: Exception do
-        ShowMessage('Erreur au démarrage de l''enregistrement : ' + E.Message);
-    end;
-  end;
-end;
-
-procedure TRecordForm.btnStopRecordingClick(Sender: TObject);
-begin
-  // Arrêter l'enregistrement
-  if MicrophoneComponent1.Active then
-  begin
-    MicrophoneComponent1.Active := False;
-
-    // Mettre à jour l'interface
-    btnStartRecording.Enabled := True;
-    btnStopRecording.Enabled := False;
-    lblStatus.Text := 'Enregistrement terminé : ' + FAudioFileName;
-
-    // Créer un nouveau nom de fichier pour le prochain enregistrement
-    {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-    FAudioFileName := TPath.Combine(TPath.GetDocumentsPath,
-                              'Recording_' + FormatDateTime('yyyymmddhhnnss', Now) + '.wav');
-    {$ELSE}
-    FAudioFileName := TPath.Combine(TPath.GetMusicPath,
-                              'Recording_' + FormatDateTime('yyyymmddhhnnss', Now) + '.wav');
-    {$ENDIF}
-  end;
-end;
-
-procedure TRecordForm.FormDestroy(Sender: TObject);
-begin
-  // S'assurer que l'enregistrement est arrêté
-  if MicrophoneComponent1.Active then
-    MicrophoneComponent1.Active := False;
+  MicrophoneAudioCaptureDevice1.Free;
 end;
 ```
 
-> **Note importante** : N'oubliez pas de configurer les permissions appropriées dans votre projet pour l'accès au microphone :
-> - `RECORD_AUDIO` pour Android
-> - `NSMicrophoneUsageDescription` dans Info.plist pour iOS
-
-## 4. Lecture et enregistrement vidéo
-
-### Lecture de vidéos
-
-La lecture de vidéos utilise également le composant `TMediaPlayer` :
+### Enregistrer un fichier audio
 
 ```pascal
-uses
-  FMX.Media, FMX.Types;
-
-type
-  TVideoForm = class(TForm)
-    MediaPlayer1: TMediaPlayer;
-    MediaPlayerControl1: TMediaPlayerControl;
-    btnOpenVideo: TButton;
-    procedure btnOpenVideoClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-procedure TVideoForm.btnOpenVideoClick(Sender: TObject);
+// Démarrer l'enregistrement
+procedure TFormMain.BtnDemarrerEnregistrementClick(Sender: TObject);
+var
+  CheminFichier: string;
 begin
-  // Cette fonction demandera à l'utilisateur de sélectionner une vidéo
-  // depuis sa bibliothèque (utilise les API natives du système)
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  SelectVideo(
-    procedure(const AFileName: string)
-    begin
-      if AFileName <> '' then
-      begin
-        MediaPlayer1.FileName := AFileName;
-        MediaPlayer1.Play;
-      end;
-    end);
-  {$ELSE}
-  ShowMessage('Sélection de vidéo non supportée sur cette plateforme');
-  {$ENDIF}
+  CheminFichier := TPath.Combine(TPath.GetDocumentsPath,
+    'enregistrement_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.wav');
+
+  if Assigned(MicrophoneAudioCaptureDevice1) then
+  begin
+    MicrophoneAudioCaptureDevice1.FileName := CheminFichier;
+    MicrophoneAudioCaptureDevice1.StartCapture;
+
+    BtnDemarrerEnregistrement.Enabled := False;
+    BtnArreterEnregistrement.Enabled := True;
+    LabelStatus.Text := 'Enregistrement en cours...';
+  end;
 end;
 
-procedure TVideoForm.FormResize(Sender: TObject);
+// Arrêter l'enregistrement
+procedure TFormMain.BtnArreterEnregistrementClick(Sender: TObject);
 begin
-  // Ajuster la taille du contrôle vidéo lors du redimensionnement
-  MediaPlayerControl1.Size.Width := Self.Width - 20;
-  MediaPlayerControl1.Size.Height := (MediaPlayerControl1.Size.Width * 9) / 16; // Ratio 16:9
+  if Assigned(MicrophoneAudioCaptureDevice1) then
+  begin
+    MicrophoneAudioCaptureDevice1.StopCapture;
+
+    BtnDemarrerEnregistrement.Enabled := True;
+    BtnArreterEnregistrement.Enabled := False;
+    LabelStatus.Text := 'Enregistrement terminé';
+
+    ShowMessage('Audio enregistré : ' + MicrophoneAudioCaptureDevice1.FileName);
+  end;
 end;
 ```
 
-### Enregistrement vidéo
+### Visualisation du niveau audio
 
-Pour lancer un enregistrement vidéo :
+```pascal
+// Afficher le niveau audio pendant l'enregistrement
+procedure TFormMain.TimerNiveauAudioTimer(Sender: TObject);
+var
+  Niveau: Single;
+begin
+  if Assigned(MicrophoneAudioCaptureDevice1) and
+     MicrophoneAudioCaptureDevice1.State = TCaptureDeviceState.Capturing then
+  begin
+    // Obtenir le niveau audio (0.0 à 1.0)
+    Niveau := MicrophoneAudioCaptureDevice1.AudioLevel;
+
+    // Afficher visuellement
+    ProgressBar1.Value := Niveau * 100;
+
+    // Changer la couleur selon le niveau
+    if Niveau > 0.8 then
+      ProgressBar1.Foreground.Color := TAlphaColors.Red
+    else if Niveau > 0.5 then
+      ProgressBar1.Foreground.Color := TAlphaColors.Orange
+    else
+      ProgressBar1.Foreground.Color := TAlphaColors.Green;
+  end;
+end;
+```
+
+## Lecture audio
+
+### Lire un fichier audio
 
 ```pascal
 uses
-  FMX.MediaLibrary, System.Permissions;
+  FMX.Media;
 
-type
-  TVideoRecordForm = class(TForm)
-    btnRecordVideo: TButton;
-    procedure btnRecordVideoClick(Sender: TObject);
-    procedure RecordVideoPermissionsResult(Sender: TObject;
-      const APermissions: TClassicStringDynArray; const AGrantResults: TClassicPermissionStatusDynArray);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-  end;
-
-implementation
-
-{$IF DEFINED(ANDROID)}
-procedure TVideoRecordForm.btnRecordVideoClick(Sender: TObject);
-var
-  PermissionsService: IFMXPermissionsService;
+// Lire un fichier audio
+procedure TFormMain.LireAudio(CheminFichier: string);
 begin
-  // Vérifier et demander les permissions nécessaires sur Android
-  if TPlatformServices.Current.SupportsPlatformService(
-       IFMXPermissionsService, IInterface(PermissionsService)) then
+  if not Assigned(MediaPlayer1) then
+    MediaPlayer1 := TMediaPlayer.Create(Self);
+
+  MediaPlayer1.FileName := CheminFichier;
+  MediaPlayer1.Play;
+end;
+
+// Liste de lecture simple
+var
+  ListeLecture: TStringList;
+  IndexActuel: Integer = 0;
+
+procedure TFormMain.LirePlaylist;
+begin
+  if (IndexActuel >= 0) and (IndexActuel < ListeLecture.Count) then
   begin
-    // Demander les permissions nécessaires
-    PermissionsService.RequestPermissions(
-      ['android.permission.CAMERA', 'android.permission.RECORD_AUDIO'],
-      RecordVideoPermissionsResult, nil);
-  end
-  else
-  begin
-    // Continuer si le service de permissions n'est pas disponible
-    TakeVideoFromCamera(
-      procedure(const AVideo: string; ASuccess: Boolean)
-      begin
-        if ASuccess then
-          ShowMessage('Vidéo enregistrée : ' + AVideo)
-        else
-          ShowMessage('Erreur ou annulation de l''enregistrement vidéo');
-      end);
+    LireAudio(ListeLecture[IndexActuel]);
+    LabelPiste.Text := 'Piste ' + (IndexActuel + 1).ToString +
+      ' / ' + ListeLecture.Count.ToString;
   end;
 end;
 
-procedure TVideoRecordForm.RecordVideoPermissionsResult(Sender: TObject;
-  const APermissions: TClassicStringDynArray;
-  const AGrantResults: TClassicPermissionStatusDynArray);
-var
-  AllGranted: Boolean;
-  I: Integer;
+procedure TFormMain.BtnSuivantClick(Sender: TObject);
 begin
-  // Vérifier si toutes les permissions ont été accordées
-  AllGranted := True;
-  for I := 0 to High(AGrantResults) do
-    if AGrantResults[I] <> TPermissionStatus.Granted then
-    begin
-      AllGranted := False;
-      Break;
-    end;
-
-  if AllGranted then
-  begin
-    // Lancer l'enregistrement vidéo
-    TakeVideoFromCamera(
-      procedure(const AVideo: string; ASuccess: Boolean)
-      begin
-        if ASuccess then
-          ShowMessage('Vidéo enregistrée : ' + AVideo)
-        else
-          ShowMessage('Erreur ou annulation de l''enregistrement vidéo');
-      end);
-  end
-  else
-    ShowMessage('Permissions nécessaires non accordées');
+  IndexActuel := (IndexActuel + 1) mod ListeLecture.Count;
+  LirePlaylist;
 end;
-{$ELSE}
-procedure TVideoRecordForm.btnRecordVideoClick(Sender: TObject);
+
+procedure TFormMain.BtnPrecedentClick(Sender: TObject);
 begin
-  // Pour iOS et autres plateformes
-  TakeVideoFromCamera(
-    procedure(const AVideo: string; ASuccess: Boolean)
+  IndexActuel := (IndexActuel - 1 + ListeLecture.Count) mod ListeLecture.Count;
+  LirePlaylist;
+end;
+```
+
+## Permissions pour les médias
+
+L'accès à la caméra, au microphone et à la bibliothèque photo nécessite des permissions.
+
+### Demander les permissions nécessaires
+
+```pascal
+uses
+  System.Permissions, FMX.DialogService;
+
+// Demander la permission pour la caméra
+procedure TFormMain.DemanderPermissionCamera;
+begin
+  PermissionsService.RequestPermissions(
+    [TPermissions.CAMERA],
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
     begin
-      if ASuccess then
-        ShowMessage('Vidéo enregistrée : ' + AVideo)
+      if (Length(AGrantResults) > 0) and
+         (AGrantResults[0] = TPermissionStatus.Granted) then
+      begin
+        // Permission accordée
+        ActiverCamera;
+      end
       else
-        ShowMessage('Erreur ou annulation de l''enregistrement vidéo');
-    end);
+      begin
+        TDialogService.ShowMessage(
+          'L''accès à la caméra est nécessaire pour cette fonctionnalité.');
+      end;
+    end
+  );
 end;
-{$ENDIF}
+
+// Demander la permission pour le microphone
+procedure TFormMain.DemanderPermissionMicrophone;
+begin
+  PermissionsService.RequestPermissions(
+    [TPermissions.RECORD_AUDIO],
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    begin
+      if (Length(AGrantResults) > 0) and
+         (AGrantResults[0] = TPermissionStatus.Granted) then
+        DemarrerEnregistrement
+      else
+        ShowMessage('Permission microphone refusée');
+    end
+  );
+end;
+
+// Demander la permission pour accéder aux photos
+procedure TFormMain.DemanderPermissionPhotos;
+begin
+  PermissionsService.RequestPermissions(
+    [TPermissions.READ_EXTERNAL_STORAGE, TPermissions.WRITE_EXTERNAL_STORAGE],
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    begin
+      if (Length(AGrantResults) > 0) and
+         (AGrantResults[0] = TPermissionStatus.Granted) then
+        OuvrirGalerie
+      else
+        ShowMessage('Permission refusée pour accéder aux photos');
+    end
+  );
+end;
 ```
 
-## 5. Considérations et bonnes pratiques
+### Vérifier les permissions avant utilisation
+
+```pascal
+// Vérifier si on a déjà les permissions
+function TFormMain.APermissionCamera: Boolean;
+begin
+  Result := PermissionsService.IsPermissionGranted(TPermissions.CAMERA);
+end;
+
+procedure TFormMain.BtnPhotoClick(Sender: TObject);
+begin
+  if APermissionCamera then
+    PrendrePhoto
+  else
+    DemanderPermissionCamera;
+end;
+```
+
+## Partage de médias
+
+Permettre aux utilisateurs de partager des photos ou vidéos vers d'autres applications.
+
+### Partager une image
+
+```pascal
+uses
+  FMX.MediaLibrary, System.IOUtils;
+
+// Partager une image vers d'autres applications
+procedure TFormMain.PartagerImage(Image: TBitmap);
+var
+  CheminTemp: string;
+  SharingService: IFMXShareSheetActionsService;
+begin
+  // Sauvegarder temporairement l'image
+  CheminTemp := TPath.Combine(TPath.GetTempPath, 'partage.jpg');
+  Image.SaveToFile(CheminTemp);
+
+  // Utiliser le service de partage natif
+  if TPlatformServices.Current.SupportsPlatformService(
+    IFMXShareSheetActionsService, SharingService) then
+  begin
+    SharingService.Share(Self,
+      'Partagez cette image',
+      CheminTemp);
+  end;
+end;
+
+procedure TFormMain.BtnPartagerClick(Sender: TObject);
+begin
+  PartagerImage(Image1.Bitmap);
+end;
+```
+
+## Optimisation et bonnes pratiques
 
 ### Gestion de la mémoire
 
-Les opérations multimédias peuvent consommer beaucoup de mémoire :
+```pascal
+// Libérer les ressources quand on ne les utilise plus
+procedure TFormMain.FormDeactivate(Sender: TObject);
+begin
+  // Arrêter la caméra
+  if Assigned(Camera1) and Camera1.Active then
+    Camera1.Active := False;
 
-1. **Libérez les ressources** dès qu'elles ne sont plus nécessaires
-2. **Redimensionnez les images** à une taille adaptée avant traitement
-3. **Utilisez des streams** pour gérer les fichiers volumineux
+  // Arrêter la lecture média
+  if Assigned(MediaPlayer1) then
+    MediaPlayer1.Stop;
+
+  // Libérer les grandes images
+  Image1.Bitmap.SetSize(0, 0);
+end;
+```
+
+### Compression d'images
 
 ```pascal
-// Exemple de redimensionnement d'image pour économiser de la mémoire
-procedure ResizeImageForDisplay(const SourceBitmap, DestBitmap: TBitmap;
-                                MaxWidth, MaxHeight: Integer);
+// Compresser une image avant l'envoi
+procedure TFormMain.CompresserImage(Image: TBitmap; Qualite: Integer);
 var
-  AspectRatio: Single;
-  NewWidth, NewHeight: Integer;
+  Stream: TMemoryStream;
+  Surface: TBitmapSurface;
 begin
-  AspectRatio := SourceBitmap.Width / SourceBitmap.Height;
-
-  if SourceBitmap.Width > SourceBitmap.Height then
-  begin
-    NewWidth := Min(SourceBitmap.Width, MaxWidth);
-    NewHeight := Round(NewWidth / AspectRatio);
-
-    if NewHeight > MaxHeight then
-    begin
-      NewHeight := MaxHeight;
-      NewWidth := Round(NewHeight * AspectRatio);
-    end;
-  end
-  else
-  begin
-    NewHeight := Min(SourceBitmap.Height, MaxHeight);
-    NewWidth := Round(NewHeight * AspectRatio);
-
-    if NewWidth > MaxWidth then
-    begin
-      NewWidth := MaxWidth;
-      NewHeight := Round(NewWidth / AspectRatio);
-    end;
-  end;
-
-  DestBitmap.SetSize(NewWidth, NewHeight);
-  DestBitmap.Canvas.BeginScene;
+  Stream := TMemoryStream.Create;
+  Surface := TBitmapSurface.Create;
   try
-    DestBitmap.Canvas.DrawBitmap(SourceBitmap,
-                                RectF(0, 0, SourceBitmap.Width, SourceBitmap.Height),
-                                RectF(0, 0, NewWidth, NewHeight),
-                                1);
+    Surface.Assign(Image);
+
+    // Sauvegarder avec compression JPEG
+    TBitmapCodecManager.SaveToStream(Stream, Surface, '.jpg');
+
+    // Recharger l'image compressée
+    Stream.Position := 0;
+    Image.LoadFromStream(Stream);
   finally
-    DestBitmap.Canvas.EndScene;
+    Surface.Free;
+    Stream.Free;
   end;
 end;
 ```
 
-### Adaptation aux spécificités des plateformes
-
-Les comportements peuvent différer entre Android et iOS :
-
-1. **Testez sur les deux plateformes** systématiquement
-2. **Utilisez des directives de compilation conditionnelle** pour gérer les différences
-3. **Prévoyez des chemins alternatifs** en cas de fonctionnalité non supportée
-
-### Performances et économie d'énergie
-
-Les opérations multimédias sont gourmandes en ressources :
-
-1. **Désactivez la caméra** quand elle n'est pas visible
-2. **Libérez les lecteurs multimédias** quand ils ne sont pas utilisés
-3. **Optimisez la qualité des médias** selon les besoins réels de l'application
-4. **Utilisez des threads séparés** pour les opérations de traitement d'images
+### Traitement asynchrone
 
 ```pascal
-// Exemple d'utilisation d'un thread pour le traitement d'image
-procedure TImageProcessingForm.ProcessImageInBackground(const SourceBitmap: TBitmap);
+// Traiter les images en arrière-plan pour ne pas bloquer l'UI
+procedure TFormMain.TraiterImageAsync(CheminImage: string);
 begin
-  // Afficher un indicateur de chargement
-  AniIndicator1.Visible := True;
-  AniIndicator1.Enabled := True;
+  TTask.Run(
+    procedure
+    var
+      Image: TBitmap;
+    begin
+      Image := TBitmap.Create;
+      try
+        // Charger l'image
+        Image.LoadFromFile(CheminImage);
 
-  // Lancer le traitement en arrière-plan
-  TTask.Run(procedure
-  var
-    ProcessedBitmap: TBitmap;
-  begin
-    ProcessedBitmap := TBitmap.Create;
-    try
-      // Appliquer les filtres et traitements
-      ApplyImageFilter(SourceBitmap, ProcessedBitmap);
+        // Traiter (redimensionner, appliquer filtres, etc.)
+        RedimensionnerImage(Image, 800, 800);
 
-      // Revenir au thread principal pour mettre à jour l'interface
-      TThread.Synchronize(nil, procedure
-      begin
-        ImageControl1.Bitmap.Assign(ProcessedBitmap);
-
-        // Masquer l'indicateur de chargement
-        AniIndicator1.Enabled := False;
-        AniIndicator1.Visible := False;
-      end);
-    finally
-      ProcessedBitmap.Free;
-    end;
-  end);
+        // Mettre à jour l'UI dans le thread principal
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Image1.Bitmap.Assign(Image);
+            ShowMessage('Image traitée !');
+          end);
+      finally
+        Image.Free;
+      end;
+    end);
 end;
 ```
 
-## 6. Exemple complet : Application de prise de photos avec filtres
-
-Voici un exemple plus complet d'une application simple de prise de photos avec application de filtres :
+### Gestion des erreurs
 
 ```pascal
-// Ce code est un exemple conceptuel qui montre comment structurer une telle application
-// Certaines parties sont simplifiées pour la clarté
-
-unit PhotoFilterUnit;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Media,
-  FMX.StdCtrls, FMX.Controls.Presentation, FMX.Objects, System.Threading,
-  System.Permissions, FMX.MediaLibrary;
-
-type
-  TFilterType = (ftNone, ftGrayscale, ftSepia, ftNegative, ftBlur);
-
-  TPhotoFilterForm = class(TForm)
-    CameraComponent1: TCameraComponent;
-    ImageControl1: TImageControl;
-    ButtonPanel: TPanel;
-    btnTakePhoto: TButton;
-    btnApplyFilter: TButton;
-    btnSavePhoto: TButton;
-    btnSharePhoto: TButton;
-    FilterPanel: TPanel;
-    rbNone: TRadioButton;
-    rbGrayscale: TRadioButton;
-    rbSepia: TRadioButton;
-    rbNegative: TRadioButton;
-    rbBlur: TRadioButton;
-    StatusBar: TStatusBar;
-    lblStatus: TLabel;
-    AniIndicator1: TAniIndicator;
-    btnToggleCamera: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnTakePhotoClick(Sender: TObject);
-    procedure btnApplyFilterClick(Sender: TObject);
-    procedure btnSavePhotoClick(Sender: TObject);
-    procedure btnSharePhotoClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnToggleCameraClick(Sender: TObject);
-  private
-    FOriginalBitmap: TBitmap;
-    FFilteredBitmap: TBitmap;
-    FHasPhoto: Boolean;
-
-    procedure ShowStatus(const Msg: string);
-    function GetSelectedFilter: TFilterType;
-    procedure ApplyFilter(FilterType: TFilterType;
-                         const SourceBitmap, DestBitmap: TBitmap);
-    procedure SavePhotoToGallery(const Bitmap: TBitmap);
-    procedure SharePhoto(const Bitmap: TBitmap);
-    procedure CheckPermissions;
-  public
-    { Public declarations }
-  end;
-
-var
-  PhotoFilterForm: TPhotoFilterForm;
-
-implementation
-
-{$R *.fmx}
-
-procedure TPhotoFilterForm.FormCreate(Sender: TObject);
+// Gérer les erreurs d'accès aux médias
+procedure TFormMain.PrendrePhotoSecurisee;
 begin
-  FOriginalBitmap := TBitmap.Create;
-  FFilteredBitmap := TBitmap.Create;
-  FHasPhoto := False;
-
-  // Vérifier les permissions
-  CheckPermissions;
-
-  // Initialisation de l'interface
-  AniIndicator1.Visible := False;
-  rbNone.IsChecked := True;
-
-  btnApplyFilter.Enabled := False;
-  btnSavePhoto.Enabled := False;
-  btnSharePhoto.Enabled := False;
-
-  // Vérifier la disponibilité de la caméra
-  if CameraComponent1.Available then
-  begin
-    btnTakePhoto.Enabled := True;
-    btnToggleCamera.Enabled := True;
-
-    // Démarrer automatiquement la caméra
-    try
-      CameraComponent1.Active := True;
-      ShowStatus('Caméra activée');
-    except
-      on E: Exception do
-        ShowStatus('Erreur d''activation de la caméra: ' + E.Message);
-    end;
-  end
-  else
-  begin
-    btnTakePhoto.Enabled := False;
-    btnToggleCamera.Enabled := False;
-    ShowStatus('Pas de caméra disponible');
-  end;
-end;
-
-procedure TPhotoFilterForm.CheckPermissions;
-{$IF DEFINED(ANDROID)}
-var
-  PermissionsService: IFMXPermissionsService;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(
-       IFMXPermissionsService, IInterface(PermissionsService)) then
-  begin
-    // Demander les permissions nécessaires
-    PermissionsService.RequestPermissions(
-      ['android.permission.CAMERA',
-       'android.permission.WRITE_EXTERNAL_STORAGE',
-       'android.permission.READ_EXTERNAL_STORAGE'],
-      nil, nil);
-  end;
-end;
-{$ELSE}
-begin
-  // Sur iOS, les permissions sont gérées via Info.plist
-end;
-{$ENDIF}
-
-procedure TPhotoFilterForm.btnTakePhotoClick(Sender: TObject);
-begin
-  if CameraComponent1.Active then
-  begin
-    // Capturer l'image depuis la caméra
-    try
-      CameraComponent1.SampleBufferToBitmap(FOriginalBitmap, True);
-
-      // Copier l'image originale vers l'image affichée
-      ImageControl1.Bitmap.Assign(FOriginalBitmap);
-
-      FHasPhoto := True;
-      btnApplyFilter.Enabled := True;
-      btnSavePhoto.Enabled := True;
-      btnSharePhoto.Enabled := True;
-
-      ShowStatus('Photo prise');
-    except
-      on E: Exception do
-        ShowStatus('Erreur lors de la prise de photo: ' + E.Message);
-    end;
-  end
-  else
-    ShowStatus('La caméra n''est pas active');
-end;
-
-procedure TPhotoFilterForm.btnToggleCameraClick(Sender: TObject);
-var
-  NewKind: TCameraKind;
-begin
-  // Désactiver temporairement la caméra
-  if CameraComponent1.Active then
-    CameraComponent1.Active := False;
-
-  // Changer de caméra
-  if CameraComponent1.Kind = TCameraKind.BackCamera then
-    NewKind := TCameraKind.FrontCamera
-  else
-    NewKind := TCameraKind.BackCamera;
-
   try
-    CameraComponent1.Kind := NewKind;
-    // Réactiver la caméra
-    CameraComponent1.Active := True;
+    if not APermissionCamera then
+    begin
+      DemanderPermissionCamera;
+      Exit;
+    end;
 
-    if NewKind = TCameraKind.BackCamera then
-      ShowStatus('Caméra arrière activée')
-    else
-      ShowStatus('Caméra avant activée');
+    if not Camera1.HasCamera then
+    begin
+      ShowMessage('Aucune caméra disponible');
+      Exit;
+    end;
+
+    Camera1.Active := True;
+    PrendrePhoto;
+
   except
     on E: Exception do
     begin
-      ShowStatus('Erreur lors du changement de caméra: ' + E.Message);
-      // Essayer de réactiver la caméra précédente
-      CameraComponent1.Active := True;
+      ShowMessage('Erreur lors de l''accès à la caméra : ' + E.Message);
+      Camera1.Active := False;
     end;
   end;
-end;
-
-function TPhotoFilterForm.GetSelectedFilter: TFilterType;
-begin
-  if rbGrayscale.IsChecked then
-    Result := ftGrayscale
-  else if rbSepia.IsChecked then
-    Result := ftSepia
-  else if rbNegative.IsChecked then
-    Result := ftNegative
-  else if rbBlur.IsChecked then
-    Result := ftBlur
-  else
-    Result := ftNone;
-end;
-
-procedure TPhotoFilterForm.btnApplyFilterClick(Sender: TObject);
-var
-  FilterType: TFilterType;
-begin
-  if not FHasPhoto then
-  begin
-    ShowStatus('Prenez d''abord une photo');
-    Exit;
-  end;
-
-  // Désactiver les boutons pendant le traitement
-  btnApplyFilter.Enabled := False;
-  btnSavePhoto.Enabled := False;
-  btnSharePhoto.Enabled := False;
-
-  // Afficher l'indicateur d'activité
-  AniIndicator1.Visible := True;
-  AniIndicator1.Enabled := True;
-
-  FilterType := GetSelectedFilter;
-  ShowStatus('Application du filtre...');
-
-  // Traiter l'image dans un thread séparé
-  TTask.Run(procedure
-  begin
-    try
-      // Créer une copie de l'image originale
-      FFilteredBitmap.Assign(FOriginalBitmap);
-
-      // Appliquer le filtre sélectionné
-      ApplyFilter(FilterType, FOriginalBitmap, FFilteredBitmap);
-
-      // Revenir au thread principal pour mettre à jour l'interface
-      TThread.Synchronize(nil, procedure
-      begin
-        // Afficher l'image filtrée
-        ImageControl1.Bitmap.Assign(FFilteredBitmap);
-
-        // Réactiver les boutons
-        btnApplyFilter.Enabled := True;
-        btnSavePhoto.Enabled := True;
-        btnSharePhoto.Enabled := True;
-
-        // Masquer l'indicateur d'activité
-        AniIndicator1.Enabled := False;
-        AniIndicator1.Visible := False;
-
-        ShowStatus('Filtre appliqué');
-      end);
-    except
-      on E: Exception do
-        TThread.Synchronize(nil, procedure
-        begin
-          // Gérer les erreurs
-          ShowStatus('Erreur: ' + E.Message);
-
-          // Réactiver les boutons
-          btnApplyFilter.Enabled := True;
-          btnSavePhoto.Enabled := True;
-          btnSharePhoto.Enabled := True;
-
-          // Masquer l'indicateur d'activité
-          AniIndicator1.Enabled := False;
-          AniIndicator1.Visible := False;
-        end);
-    end;
-  end);
-end;
-
-procedure TPhotoFilterForm.ApplyFilter(FilterType: TFilterType;
-                                     const SourceBitmap, DestBitmap: TBitmap);
-var
-  X, Y: Integer;
-  SrcPixel, DstPixel: TAlphaColorRec;
-  Gray: Byte;
-begin
-  // Pas de filtre - copie simple
-  if FilterType = ftNone then
-  begin
-    DestBitmap.Assign(SourceBitmap);
-    Exit;
-  end;
-
-  // Appliquer le filtre pixel par pixel
-  for Y := 0 to SourceBitmap.Height - 1 do
-  begin
-    for X := 0 to SourceBitmap.Width - 1 do
-    begin
-      // Obtenir la couleur du pixel source
-      SrcPixel := TAlphaColorRec(SourceBitmap.Canvas.Pixels[X, Y]);
-
-      case FilterType of
-        ftGrayscale:
-        begin
-          // Filtre noir et blanc
-          Gray := Round(0.299 * SrcPixel.R + 0.587 * SrcPixel.G + 0.114 * SrcPixel.B);
-          DstPixel.A := SrcPixel.A;
-          DstPixel.R := Gray;
-          DstPixel.G := Gray;
-          DstPixel.B := Gray;
-        end;
-
-        ftSepia:
-        begin
-          // Filtre sépia
-          DstPixel.A := SrcPixel.A;
-          DstPixel.R := Min(255, Round(SrcPixel.R * 0.393 + SrcPixel.G * 0.769 + SrcPixel.B * 0.189));
-          DstPixel.G := Min(255, Round(SrcPixel.R * 0.349 + SrcPixel.G * 0.686 + SrcPixel.B * 0.168));
-          DstPixel.B := Min(255, Round(SrcPixel.R * 0.272 + SrcPixel.G * 0.534 + SrcPixel.B * 0.131));
-        end;
-
-        ftNegative:
-        begin
-          // Filtre négatif
-          DstPixel.A := SrcPixel.A;
-          DstPixel.R := 255 - SrcPixel.R;
-          DstPixel.G := 255 - SrcPixel.G;
-          DstPixel.B := 255 - SrcPixel.B;
-        end;
-
-        ftBlur:
-        begin
-          // Filtre flou simplifié (moyenne des pixels voisins)
-          // Note: Un vrai filtre de flou utiliserait une matrice de convolution
-          // Ceci est une implémentation simplifiée pour l'exemple
-          DstPixel := SrcPixel; // Par défaut, garder le pixel original
-
-          // Pour les pixels non situés au bord, appliquer un flou simple
-          if (X > 0) and (X < SourceBitmap.Width - 1) and
-             (Y > 0) and (Y < SourceBitmap.Height - 1) then
-          begin
-            // Collecter les pixels voisins et calculer la moyenne
-            var SumR, SumG, SumB: Integer;
-            SumR := 0;
-            SumG := 0;
-            SumB := 0;
-
-            for var OffY := -1 to 1 do
-            begin
-              for var OffX := -1 to 1 do
-              begin
-                var NPixel := TAlphaColorRec(SourceBitmap.Canvas.Pixels[X + OffX, Y + OffY]);
-                SumR := SumR + NPixel.R;
-                SumG := SumG + NPixel.G;
-                SumB := SumB + NPixel.B;
-              end;
-            end;
-
-            // Calculer la moyenne (9 pixels)
-            DstPixel.A := SrcPixel.A;
-            DstPixel.R := SumR div 9;
-            DstPixel.G := SumG div 9;
-            DstPixel.B := SumB div 9;
-          end;
-        end;
-      end;
-
-      // Mettre à jour le pixel de destination
-      DestBitmap.Canvas.Pixels[X, Y] := DstPixel.Color;
-    end;
-  end;
-end;
-
-procedure TPhotoFilterForm.btnSavePhotoClick(Sender: TObject);
-begin
-  if not FHasPhoto then
-  begin
-    ShowStatus('Prenez d''abord une photo');
-    Exit;
-  end;
-
-  SavePhotoToGallery(ImageControl1.Bitmap);
-end;
-
-procedure TPhotoFilterForm.SavePhotoToGallery(const Bitmap: TBitmap);
-var
-  TempPath, TempFile: string;
-begin
-  TempPath := TPath.GetTempPath;
-  TempFile := TPath.Combine(TempPath, 'photo_' +
-                            FormatDateTime('yyyymmddhhnnss', Now) + '.jpg');
-
-  // Désactiver les boutons pendant l'opération
-  btnSavePhoto.Enabled := False;
-
-  ShowStatus('Enregistrement de l''image...');
-
-  // Enregistrer dans un thread séparé
-  TTask.Run(procedure
-  begin
-    try
-      // Enregistrer l'image dans un fichier temporaire
-      Bitmap.SaveToFile(TempFile);
-
-      // Ajouter le fichier à la galerie
-      {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-      TThread.Synchronize(nil, procedure
-      begin
-        // Ajouter à la galerie de photos
-        TMediaLibrary.AddImageToSavedPhotosAlbum(TempFile,
-          procedure(const AAdded: Boolean)
-          begin
-            if AAdded then
-              ShowStatus('Photo enregistrée dans la galerie')
-            else
-              ShowStatus('Erreur lors de l''enregistrement dans la galerie');
-
-            btnSavePhoto.Enabled := True;
-
-            // Supprimer le fichier temporaire
-            TFile.Delete(TempFile);
-          end);
-      end);
-      {$ELSE}
-      // Sur les autres plateformes, copier vers le dossier Images
-      var DestFile := TPath.Combine(TPath.GetPicturesPath,
-                                   'photo_' + FormatDateTime('yyyymmddhhnnss', Now) + '.jpg');
-      TFile.Copy(TempFile, DestFile);
-      TFile.Delete(TempFile);
-
-      TThread.Synchronize(nil, procedure
-      begin
-        ShowStatus('Photo enregistrée: ' + DestFile);
-        btnSavePhoto.Enabled := True;
-      end);
-      {$ENDIF}
-    except
-      on E: Exception do
-      begin
-        TThread.Synchronize(nil, procedure
-        begin
-          ShowStatus('Erreur d''enregistrement: ' + E.Message);
-          btnSavePhoto.Enabled := True;
-        end);
-      end;
-    end;
-  end);
-end;
-
-procedure TPhotoFilterForm.btnSharePhotoClick(Sender: TObject);
-begin
-  if not FHasPhoto then
-  begin
-    ShowStatus('Prenez d''abord une photo');
-    Exit;
-  end;
-
-  SharePhoto(ImageControl1.Bitmap);
-end;
-
-procedure TPhotoFilterForm.SharePhoto(const Bitmap: TBitmap);
-var
-  TempPath, TempFile: string;
-begin
-  TempPath := TPath.GetTempPath;
-  TempFile := TPath.Combine(TempPath, 'share_' +
-                            FormatDateTime('yyyymmddhhnnss', Now) + '.jpg');
-
-  // Désactiver les boutons pendant l'opération
-  btnSharePhoto.Enabled := False;
-
-  ShowStatus('Préparation du partage...');
-
-  // Préparer le partage dans un thread séparé
-  TTask.Run(procedure
-  begin
-    try
-      // Enregistrer l'image dans un fichier temporaire
-      Bitmap.SaveToFile(TempFile);
-
-      // Partager le fichier
-      TThread.Synchronize(nil, procedure
-      begin
-        {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-        var Intent := TJIntent.Create;
-        Intent.setAction(TJIntent.JavaClass.ACTION_SEND);
-        Intent.setType(StringToJString('image/jpeg'));
-
-        var Uri := TJnet_Uri.JavaClass.fromFile(TJFile.JavaClass.init(StringToJString(TempFile)));
-        Intent.putExtra(TJIntent.JavaClass.EXTRA_STREAM, TJParcelable.Wrap(Uri));
-
-        SharedActivity.startActivity(TJIntent.JavaClass.createChooser(Intent,
-                                     StringToJString('Partager l''image via')));
-        {$ELSE}
-        // Sur les autres plateformes, afficher un message
-        ShowMessage('Le partage n''est pas disponible sur cette plateforme.');
-        {$ENDIF}
-
-        ShowStatus('Image prête pour le partage');
-        btnSharePhoto.Enabled := True;
-      end);
-    except
-      on E: Exception do
-      begin
-        TThread.Synchronize(nil, procedure
-        begin
-          ShowStatus('Erreur de partage: ' + E.Message);
-          btnSharePhoto.Enabled := True;
-        end);
-      end;
-    end;
-  end);
-end;
-
-procedure TPhotoFilterForm.ShowStatus(const Msg: string);
-begin
-  lblStatus.Text := Msg;
-end;
-
-procedure TPhotoFilterForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  if CameraComponent1.Active then
-    CameraComponent1.Active := False;
-
-  FOriginalBitmap.Free;
-  FFilteredBitmap.Free;
 end;
 ```
 
-## 7. Gestion des médias sur les différentes plateformes
+## Cas d'usage pratiques
 
-### Différences entre Android et iOS
+### Application de notes avec photos
 
-Bien que Delphi offre une abstraction qui permet d'écrire du code multi-plateformes, certaines différences subsistent entre Android et iOS en matière de gestion des médias :
+```pascal
+// Structure pour une note avec photo
+type
+  TNote = class
+    Texte: string;
+    CheminPhoto: string;
+    DateCreation: TDateTime;
+  end;
 
-| Fonctionnalité | Android | iOS |
-|----------------|---------|-----|
-| Accès à la galerie | Nécessite les permissions READ_EXTERNAL_STORAGE | Nécessite NSPhotoLibraryUsageDescription |
-| Enregistrement dans la galerie | Nécessite WRITE_EXTERNAL_STORAGE | Accès via MediaLibrary API |
-| Formats de média | Plus permissif avec divers formats | Plus restrictif, préfère les formats Apple |
-| Accès aux fichiers | Accès direct au système de fichiers | Environnement plus sandboxé |
-| Performances | Variable selon les appareils | Plus homogène |
+// Créer une nouvelle note avec photo
+procedure TFormMain.CreerNoteAvecPhoto;
+var
+  Note: TNote;
+begin
+  Note := TNote.Create;
+  Note.Texte := MemoNote.Text;
+  Note.DateCreation := Now;
 
-### Adaptation aux contraintes de chaque plateforme
+  // Sauvegarder la photo
+  var CheminPhoto := TPath.Combine(TPath.GetDocumentsPath,
+    'note_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.jpg');
+  Image1.Bitmap.SaveToFile(CheminPhoto);
+  Note.CheminPhoto := CheminPhoto;
 
-Pour assurer une expérience optimale sur toutes les plateformes :
+  ListeNotes.Add(Note);
+  ShowMessage('Note créée avec succès !');
+end;
+```
 
-1. **Testez sur des appareils réels** de chaque plateforme
-2. **Utilisez des directives conditionnelles** pour gérer les différences
-3. **Définissez des chemins d'accès appropriés** pour chaque plateforme
-4. **Adaptez la qualité des médias** selon les performances des appareils cibles
+### Application de reconnaissance de texte (OCR basique)
 
-## 8. Bonnes pratiques pour utiliser la caméra et les médias
+```pascal
+// Prendre une photo d'un document et extraire le texte
+procedure TFormMain.ScannerDocument;
+begin
+  PrendrePhotoAvecCamera(
+    procedure(Image: TBitmap)
+    begin
+      // En production, utiliser une API OCR
+      // Ici, exemple simplifié
+      ExtraireTexte(Image);
+    end);
+end;
+```
 
-### Performance et réactivité
+### Application de filtres photo
 
-1. **Utilisez des threads pour les opérations intensives**
-   - Traitement d'images
-   - Encodage/décodage
-   - Opérations d'E/S
+```pascal
+// Appliquer différents filtres photo
+procedure TFormMain.CreerAppliFiltre;
+begin
+  // Liste de filtres disponibles
+  ComboBoxFiltres.Items.Clear;
+  ComboBoxFiltres.Items.Add('Aucun');
+  ComboBoxFiltres.Items.Add('Noir et Blanc');
+  ComboBoxFiltres.Items.Add('Sépia');
+  ComboBoxFiltres.Items.Add('Flou');
+  ComboBoxFiltres.Items.Add('Accentuer');
+  ComboBoxFiltres.ItemIndex := 0;
+end;
 
-2. **Surveillez l'utilisation de la mémoire**
-   - Les bitmaps de grande taille peuvent rapidement consommer toute la mémoire
-   - Redimensionnez les images quand c'est possible
-   - Libérez les ressources non utilisées
+procedure TFormMain.ComboBoxFiltresChange(Sender: TObject);
+begin
+  // Supprimer les effets précédents
+  SupprimerTousLesEffets(Image1);
 
-3. **Fournissez un retour visuel**
-   - Indicateurs de chargement
-   - Barres de progression
-   - Messages d'état
-
-### Expérience utilisateur
-
-1. **Respectez les conventions de la plateforme**
-   - Sur iOS, utilisez des contrôles qui correspondent au design d'Apple
-   - Sur Android, suivez les directives Material Design
-
-2. **Gérez correctement les orientations**
-   - Adaptez l'interface aux orientations portrait et paysage
-   - Ajustez la prévisualisation de la caméra en fonction de l'orientation
-
-3. **Optimisez les demandes de permission**
-   - Expliquez pourquoi votre app a besoin d'accéder à la caméra ou aux médias
-   - Demandez les permissions au moment approprié (pas toutes au démarrage)
-   - Prévoyez un comportement dégradé si l'accès est refusé
-
-## 9. Applications pratiques
-
-Voici quelques idées d'applications que vous pouvez réaliser avec les connaissances acquises dans ce chapitre :
-
-1. **Application de scanner de documents**
-   - Prise de photo de documents
-   - Recadrage automatique
-   - Correction de perspective
-   - Export en PDF
-
-2. **Application de retouche photo**
-   - Filtres personnalisés
-   - Ajustements (luminosité, contraste, etc.)
-   - Collages et effets
-
-3. **Application de reconnaissance**
-   - Reconnaissance de codes QR/codes-barres
-   - Reconnaissance de texte (OCR)
-   - Identification d'objets
-
-4. **Application d'enregistrement vocal**
-   - Enregistrement de mémos
-   - Organisation par catégories
-   - Transposition texte/vocal
+  // Appliquer le nouveau filtre
+  case ComboBoxFiltres.ItemIndex of
+    1: AppliquerNoirEtBlanc;
+    2: AppliquerSepia;
+    3: AppliquerFlou;
+    4: AppliquerAccentuation;
+  end;
+end;
+```
 
 ## Conclusion
 
-L'intégration de la caméra et des fonctionnalités multimédias dans vos applications Delphi ouvre un vaste champ de possibilités. En appliquant les techniques présentées dans ce chapitre, vous pourrez créer des applications mobiles riches qui tirent pleinement parti des capacités des appareils modernes.
+Les capacités multimédia des appareils mobiles offrent d'innombrables possibilités pour créer des applications riches et engageantes. Avec Delphi et FireMonkey, l'accès à ces fonctionnalités est simplifié grâce à des composants unifiés qui fonctionnent de manière identique sur iOS et Android.
 
-Les points clés à retenir sont :
-- La configuration correcte des permissions est essentielle
-- Le cycle de vie des composants multimédias doit être géré soigneusement
-- Les opérations intensives doivent être exécutées dans des threads séparés
-- Les ressources doivent être libérées dès qu'elles ne sont plus nécessaires
-- L'adaptation aux spécificités de chaque plateforme améliore l'expérience utilisateur
+Les points clés à retenir :
 
-Dans la prochaine section, nous explorerons les notifications push et locales pour maintenir l'engagement des utilisateurs avec votre application, même lorsqu'elle n'est pas au premier plan.
+1. **Caméra** : Utilisez TCameraComponent ou l'interface native pour capturer des photos
+2. **Galerie** : Accédez facilement aux photos existantes de l'utilisateur
+3. **Manipulation d'images** : Redimensionnez, pivotez et appliquez des filtres
+4. **Vidéo** : Enregistrez et lisez des vidéos avec TMediaPlayer
+5. **Audio** : Enregistrez et lisez de l'audio avec TMicrophone et TMediaPlayer
+6. **Permissions** : Demandez toujours les permissions nécessaires
+7. **Optimisation** : Gérez la mémoire et traitez les médias de façon asynchrone
+8. **Partage** : Permettez aux utilisateurs de partager leurs créations
+
+Dans la section suivante, nous verrons comment utiliser les notifications pour maintenir l'engagement de vos utilisateurs avec votre application.
 
 ⏭️ [Notifications](/15-applications-mobiles-avec-delphi/05-notifications.md)

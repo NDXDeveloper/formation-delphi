@@ -1,1300 +1,894 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.5 Notifications
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Les notifications sont un moyen essentiel de communiquer avec vos utilisateurs, même lorsqu'ils n'utilisent pas activement votre application. Elles permettent d'informer l'utilisateur d'événements importants, de lui rappeler des tâches ou de l'engager à revenir dans l'application. Dans cette section, nous explorerons comment implémenter différents types de notifications dans vos applications mobiles Delphi.
+Les notifications sont devenues un élément essentiel des applications mobiles modernes. Elles permettent à votre application de communiquer avec l'utilisateur même lorsqu'elle n'est pas active, en affichant des messages courts et pertinents sur l'écran d'accueil ou dans le centre de notifications de l'appareil.
+
+Que ce soit pour rappeler un rendez-vous, signaler un nouveau message, informer d'une mise à jour, ou simplement maintenir l'engagement de l'utilisateur, les notifications sont un outil puissant qu'il faut utiliser avec discernement. Une notification bien pensée peut améliorer considérablement l'expérience utilisateur, tandis qu'un usage excessif ou inapproprié peut rapidement agacer et conduire à la désinstallation de l'application.
+
+Avec Delphi, vous pouvez créer deux types de notifications : les **notifications locales** (générées directement par l'application) et les **notifications push** (envoyées depuis un serveur). Dans cette section, nous allons explorer ces deux approches et apprendre à les utiliser efficacement.
 
 ## Types de notifications
 
-Il existe principalement deux types de notifications que vous pouvez implémenter dans vos applications :
+### Notifications locales
 
-1. **Notifications locales** : Générées et programmées directement par votre application sur l'appareil, sans nécessiter de connexion internet.
+Les **notifications locales** sont programmées et déclenchées directement par votre application sur l'appareil de l'utilisateur. Elles ne nécessitent aucune connexion réseau et fonctionnent même lorsque l'application est fermée.
 
-2. **Notifications push (distantes)** : Envoyées depuis un serveur distant via des services comme Firebase Cloud Messaging (FCM) pour Android ou Apple Push Notification Service (APNS) pour iOS.
+**Cas d'usage typiques** :
+- Rappels et alarmes (réveil, minuteur)
+- Notifications planifiées (rappel de médicament, rendez-vous)
+- Événements déclenchés localement (fin d'un téléchargement, progression d'une tâche)
+- Rappels contextuels (basés sur la localisation ou le temps)
 
-## Notifications locales
+### Notifications push
 
-Les notifications locales sont plus simples à mettre en œuvre car elles ne nécessitent pas d'infrastructure serveur. Elles sont idéales pour les rappels, les alertes basées sur l'heure ou les événements locaux à l'appareil.
+Les **notifications push** (ou notifications distantes) sont envoyées depuis un serveur vers l'appareil de l'utilisateur via les services de notification des plateformes (Apple Push Notification Service pour iOS, Firebase Cloud Messaging pour Android).
 
-### Configuration préalable
+**Cas d'usage typiques** :
+- Nouveaux messages ou commentaires
+- Mises à jour d'actualités
+- Promotions et offres spéciales
+- Notifications en temps réel (scores sportifs, alertes)
+- Notifications personnalisées basées sur le comportement utilisateur
 
-Pour Android, vous devez ajouter certaines permissions dans les options du projet :
+## Notifications locales avec Delphi
 
-1. Ouvrez **Project > Options > Uses Permissions**
-2. Cochez `RECEIVE_BOOT_COMPLETED` si vous souhaitez que vos notifications persistent après un redémarrage de l'appareil
+Commençons par les notifications locales, qui sont plus simples à mettre en œuvre et ne nécessitent pas de configuration serveur.
 
-Pour iOS, aucune configuration spéciale n'est nécessaire dans le projet, mais vous devrez demander l'autorisation à l'utilisateur dans le code.
+### Configuration de base
 
-### Création de notifications locales basiques
-
-Voici comment créer et afficher une notification locale simple :
-
-```pascal
-uses
-  System.Notification, System.PushNotification;
-
-procedure TNotificationsForm.ShowSimpleNotification;
-var
-  NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
-begin
-  // Obtenir le centre de notification
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    // Créer une notification
-    Notification := NotificationCenter.CreateNotification;
-    try
-      // Configurer la notification
-      Notification.Title := 'Titre de la notification';
-      Notification.AlertBody := 'Ceci est le corps de la notification qui contient plus de détails.';
-
-      // Définir une icône (facultatif)
-      Notification.EnableSound := True;
-
-      {$IFDEF ANDROID}
-      // Options spécifiques à Android
-      Notification.Number := 1; // Badge numérique
-      {$ENDIF}
-
-      // Présenter immédiatement la notification
-      NotificationCenter.PresentNotification(Notification);
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
-  end;
-
-  ShowMessage('Notification envoyée');
-end;
-```
-
-Pour ajouter ce code à votre application :
-
-1. Créez un nouveau formulaire ou utilisez un formulaire existant
-2. Ajoutez un bouton pour déclencher la notification
-3. Implémentez la méthode ci-dessus et associez-la au clic du bouton
-
-### Notifications programmées
-
-Vous pouvez également programmer des notifications pour qu'elles apparaissent à un moment précis dans le futur :
-
-```pascal
-procedure TNotificationsForm.ScheduleNotification;
-var
-  NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
-  TriggerTime: TDateTime;
-begin
-  // Obtenir le centre de notification
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    // Créer une notification
-    Notification := NotificationCenter.CreateNotification;
-    try
-      // Configurer la notification
-      Notification.Title := 'Rappel programmé';
-      Notification.AlertBody := 'Cette notification était programmée pour apparaître à cette heure.';
-      Notification.EnableSound := True;
-
-      // Générer un identifiant unique pour cette notification
-      Notification.Name := 'Rappel_' + FormatDateTime('yyyymmddhhnnss', Now);
-
-      // Définir l'heure de déclenchement (5 minutes dans le futur)
-      TriggerTime := Now + (5 / (24 * 60)); // 5 minutes en fraction de jour
-      Notification.FireDate := TriggerTime;
-
-      // Programmer la notification
-      NotificationCenter.ScheduleNotification(Notification);
-
-      // Informer l'utilisateur
-      ShowMessage('Notification programmée pour ' +
-                   FormatDateTime('hh:nn:ss', TriggerTime));
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
-  end;
-end;
-```
-
-### Gestion des notifications programmées
-
-Il est important de pouvoir gérer les notifications que vous avez programmées, par exemple pour les annuler :
-
-```pascal
-// Annuler une notification spécifique par son nom
-procedure TNotificationsForm.CancelSpecificNotification(const NotificationName: string);
-var
-  NotificationCenter: TNotificationCenter;
-begin
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    NotificationCenter.CancelNotification(NotificationName);
-    ShowMessage('Notification "' + NotificationName + '" annulée');
-  finally
-    NotificationCenter.Free;
-  end;
-end;
-
-// Annuler toutes les notifications programmées
-procedure TNotificationsForm.CancelAllNotifications;
-var
-  NotificationCenter: TNotificationCenter;
-begin
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    NotificationCenter.CancelAll;
-    ShowMessage('Toutes les notifications ont été annulées');
-  finally
-    NotificationCenter.Free;
-  end;
-end;
-```
-
-### Notifications répétitives
-
-Vous pouvez également configurer des notifications qui se répètent régulièrement :
-
-```pascal
-procedure TNotificationsForm.ScheduleRepeatingNotification;
-var
-  NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
-  TriggerTime: TDateTime;
-begin
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    Notification := NotificationCenter.CreateNotification;
-    try
-      // Configuration de base
-      Notification.Title := 'Rappel quotidien';
-      Notification.AlertBody := 'N''oubliez pas de vérifier vos tâches !';
-      Notification.EnableSound := True;
-      Notification.Name := 'RappelQuotidien';
-
-      // Configurer l'heure de déclenchement initial (demain à 9h00)
-      TriggerTime := Trunc(Now + 1) + EncodeTime(9, 0, 0, 0);
-      Notification.FireDate := TriggerTime;
-
-      // Configurer la répétition
-      {$IFDEF ANDROID}
-      // Sur Android, on utilise RepeatInterval
-      Notification.RepeatInterval := TRepeatInterval.Day;
-      {$ENDIF}
-
-      {$IFDEF IOS}
-      // Sur iOS, CalendarInterval est préféré pour les répétitions précises
-      Notification.RepeatInterval := TRepeatInterval.Day;
-      {$ENDIF}
-
-      // Programmer la notification
-      NotificationCenter.ScheduleNotification(Notification);
-
-      ShowMessage('Notification quotidienne programmée à partir de ' +
-                   FormatDateTime('dd/mm/yyyy hh:nn', TriggerTime));
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
-  end;
-end;
-```
-
-### Réagir à l'activation des notifications
-
-Lorsque l'utilisateur appuie sur une notification, vous voudrez probablement exécuter une action spécifique. Voici comment configurer un gestionnaire pour traiter ces événements :
-
-```pascal
-type
-  TNotificationsForm = class(TForm)
-    // ... autres composants et méthodes
-  private
-    FNotificationCenter: TNotificationCenter;
-    procedure NotificationReceived(Sender: TObject; const Notification: TNotification);
-  public
-    // ... autres méthodes
-  end;
-
-implementation
-
-procedure TNotificationsForm.FormCreate(Sender: TObject);
-begin
-  // Créer et configurer le centre de notification
-  FNotificationCenter := TNotificationCenter.Create(Self);
-  FNotificationCenter.OnNotificationReceived := NotificationReceived;
-
-  // Autres initialisations...
-end;
-
-procedure TNotificationsForm.NotificationReceived(Sender: TObject;
-  const Notification: TNotification);
-begin
-  // Vérifier d'où vient la notification par son nom
-  if Notification.Name.StartsWith('Rappel_') then
-  begin
-    ShowMessage('Vous avez cliqué sur un rappel!');
-    // Naviguez vers l'écran approprié ou effectuez l'action nécessaire
-  end
-  else if Notification.Name = 'RappelQuotidien' then
-  begin
-    ShowMessage('Voici vos tâches du jour');
-    // Afficher les tâches du jour
-  end;
-
-  // Pour les cas génériques
-  Memo1.Lines.Add('Notification reçue: ' + Notification.Name +
-                   ' à ' + FormatDateTime('hh:nn:ss', Now));
-end;
-
-procedure TNotificationsForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  FNotificationCenter.Free;
-end;
-```
-
-### Meilleures pratiques pour les notifications locales
-
-1. **Ne pas abuser** : Limitez le nombre de notifications pour éviter de frustrer l'utilisateur
-2. **Pertinence** : Assurez-vous que chaque notification apporte une réelle valeur à l'utilisateur
-3. **Clarté** : Utilisez des titres explicites et des messages concis
-4. **Persistance** : Stockez les informations sur les notifications programmées pour pouvoir les gérer
-5. **Respect de la vie privée** : N'incluez pas d'informations sensibles dans les notifications
-
-## Notifications push (distantes)
-
-Les notifications push permettent d'envoyer des messages à vos utilisateurs depuis un serveur distant, même lorsqu'ils n'utilisent pas activement votre application. Elles sont essentielles pour les applications nécessitant des mises à jour en temps réel.
-
-### Configuration des services de notification push
-
-Pour utiliser les notifications push, vous aurez besoin de configurer votre application pour utiliser FCM (Firebase Cloud Messaging) pour Android et APNS (Apple Push Notification Service) pour iOS. Voici les étapes générales :
-
-#### Configuration pour Android (FCM)
-
-1. Créez un projet dans la [Console Firebase](https://console.firebase.google.com/)
-2. Ajoutez votre application Android au projet
-3. Téléchargez le fichier `google-services.json`
-4. Placez ce fichier dans le dossier `<Projet>\Android\Debug` et `<Projet>\Android\Release`
-
-#### Configuration pour iOS (APNS)
-
-1. Créez un certificat de notification push dans votre compte développeur Apple
-2. Téléchargez et installez le certificat dans votre keychain
-3. Configurez votre application dans le portail développeur Apple pour utiliser les notifications push
-
-### Implémentation des notifications push dans l'application
-
-Une fois les services configurés, vous pouvez implémenter la réception des notifications push dans votre application Delphi :
+Delphi fournit le composant `TNotificationCenter` pour gérer les notifications locales.
 
 ```pascal
 uses
-  System.PushNotification;
+  System.Notification;
 
-type
-  TPushNotificationsForm = class(TForm)
-    // ... autres composants
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FPushService: TPushService;
-    FServiceConnection: TPushServiceConnection;
-    procedure HandlePushNotification(Sender: TObject; const AData: TPushServiceData);
-    procedure DeviceTokenReceived(Sender: TObject; const AData: TPushServiceData);
-  public
-    // ... autres méthodes
-  end;
-
-implementation
-
-procedure TPushNotificationsForm.FormCreate(Sender: TObject);
-begin
-  // Créer et configurer le service de notification push
-  FPushService := TPushServiceManager.Instance.GetServiceByName(TPushService.TServiceNames.GCM);
-
-  if FPushService <> nil then
-  begin
-    FServiceConnection := TPushServiceConnection.Create(FPushService);
-    FServiceConnection.Active := True;
-
-    // Configurer les gestionnaires d'événements
-    FServiceConnection.OnPushNotification := HandlePushNotification;
-    FServiceConnection.OnDeviceTokenReceived := DeviceTokenReceived;
-
-    // Démarrer le service
-    FServiceConnection.Active := True;
-  end
-  else
-    ShowMessage('Service de notification push non disponible');
-end;
-
-procedure TPushNotificationsForm.DeviceTokenReceived(Sender: TObject;
-  const AData: TPushServiceData);
-var
-  DeviceToken: string;
-begin
-  // Récupérer le token d'appareil
-  DeviceToken := AData.Token;
-
-  // Afficher le token (pour le développement)
-  Memo1.Lines.Add('Token reçu: ' + DeviceToken);
-
-  // Dans une application réelle, vous enverriez ce token à votre serveur
-  // pour permettre l'envoi de notifications push à cet appareil
-end;
-
-procedure TPushNotificationsForm.HandlePushNotification(Sender: TObject;
-  const AData: TPushServiceData);
-var
-  MessageText: string;
-  NotificationData: TPushServiceNotificationData;
-begin
-  // Vérifier si c'est une notification
-  if AData is TPushServiceNotificationData then
-  begin
-    NotificationData := TPushServiceNotificationData(AData);
-
-    // Récupérer le message
-    if NotificationData.Message <> nil then
-      MessageText := NotificationData.Message.Text
-    else
-      MessageText := 'Notification sans texte';
-
-    // Traiter la notification
-    Memo1.Lines.Add('Notification push reçue: ' + MessageText);
-
-    // Vous pouvez extraire d'autres données personnalisées
-    if NotificationData.DataObject.Count > 0 then
-    begin
-      // Exemple: récupérer une valeur spécifique
-      if NotificationData.DataObject.Contains('action') then
-      begin
-        var Action := NotificationData.DataObject.GetValue('action').Value;
-        // Traiter l'action selon sa valeur
-        if Action = 'open_profile' then
-          ShowMessage('Ouverture du profil demandée');
-      end;
-    end;
-  end;
-end;
-
-procedure TPushNotificationsForm.FormDestroy(Sender: TObject);
-begin
-  // Libérer les ressources
-  if FServiceConnection <> nil then
-  begin
-    FServiceConnection.Active := False;
-    FServiceConnection.Free;
-  end;
-end;
-```
-
-### Envoi de notifications push
-
-Pour envoyer des notifications push à vos utilisateurs, vous devrez implémenter un serveur ou utiliser un service tiers. Voici un exemple de code côté serveur (en PHP) pour envoyer une notification via FCM (Firebase Cloud Messaging) :
-
-```php
-<?php
-// Exemple de code PHP pour envoyer une notification FCM
-
-$serverKey = 'VOTRE_CLÉ_SERVEUR_FCM'; // Obtenue depuis la console Firebase
-$deviceToken = 'TOKEN_DE_L_APPAREIL_CIBLE'; // Token reçu de l'application
-
-$data = [
-    'notification' => [
-        'title' => 'Nouvelle mise à jour',
-        'body' => 'Une nouvelle version de l\'application est disponible!',
-        'sound' => 'default'
-    ],
-    'data' => [
-        'action' => 'update_app',
-        'custom_data' => 'valeur_personnalisée'
-    ],
-    'to' => $deviceToken
-];
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: key=' . $serverKey,
-    'Content-Type: application/json'
-]);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-
-$result = curl_exec($ch);
-if ($result === FALSE) {
-    die('Erreur curl: ' . curl_error($ch));
-}
-
-curl_close($ch);
-echo $result;
-?>
-```
-
-> **Note** : Dans un environnement de production, vous utiliserez probablement une solution plus robuste, comme un service backend dédié ou une plateforme de notification push tierce (OneSignal, Firebase, etc.).
-
-## Mettre en œuvre des notifications avancées
-
-### Notifications avec actions
-
-Sur les plateformes modernes, vous pouvez ajouter des boutons d'action à vos notifications :
-
-```pascal
-procedure TAdvNotificationsForm.ShowNotificationWithActions;
 var
   NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
+
+// Initialiser le centre de notifications
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
   NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    Notification := NotificationCenter.CreateNotification;
-    try
-      // Configuration de base
-      Notification.Title := 'Nouveau message';
-      Notification.AlertBody := 'Vous avez reçu un nouveau message de Jean';
-      Notification.EnableSound := True;
-      Notification.Name := 'Message_' + FormatDateTime('yyyymmddhhnnss', Now);
+end;
 
-      {$IFDEF ANDROID}
-      // Actions pour Android
-      Notification.Category := 'message';
-      var Actions := TList<TNotificationAction>.Create;
-      try
-        // Action "Répondre"
-        var ActionReply := TNotificationAction.Create;
-        ActionReply.Name := 'reply';
-        ActionReply.Title := 'Répondre';
-
-        // Action "Marquer comme lu"
-        var ActionRead := TNotificationAction.Create;
-        ActionRead.Name := 'mark_read';
-        ActionRead.Title := 'Marquer comme lu';
-
-        // Ajouter les actions
-        Actions.Add(ActionReply);
-        Actions.Add(ActionRead);
-
-        // Associer les actions à la notification
-        Notification.Actions := Actions;
-      finally
-        Actions.Free;
-      end;
-      {$ENDIF}
-
-      {$IFDEF IOS}
-      // Actions pour iOS - configuration similaire mais syntaxe légèrement différente
-      // selon la version de Delphi
-      {$ENDIF}
-
-      // Présenter la notification
-      NotificationCenter.PresentNotification(Notification);
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
-  end;
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  NotificationCenter.Free;
 end;
 ```
 
-> **Note** : L'implémentation des actions de notification peut varier selon la version de Delphi et la plateforme cible. Consultez la documentation la plus récente pour votre version spécifique.
-
-### Notifications avec contenu enrichi
-
-Les notifications modernes peuvent également inclure des images ou d'autres contenus enrichis :
+### Créer et afficher une notification simple
 
 ```pascal
-procedure TRichNotificationsForm.ShowRichNotification;
-var
-  NotificationCenter: TNotificationCenter;
-  Notification: TNotification;
-begin
-  NotificationCenter := TNotificationCenter.Create(nil);
-  try
-    Notification := NotificationCenter.CreateNotification;
-    try
-      // Configuration de base
-      Notification.Title := 'Nouvelle photo';
-      Notification.AlertBody := 'Un ami a partagé une photo avec vous';
-      Notification.EnableSound := True;
-      Notification.Name := 'Photo_' + FormatDateTime('yyyymmddhhnnss', Now);
-
-      {$IFDEF ANDROID}
-      // Sur Android, vous pouvez spécifier une icône de grande taille
-      Notification.LargeIconURI := TPath.Combine(
-        TPath.GetDocumentsPath, 'notification_image.png');
-      {$ENDIF}
-
-      // Présenter la notification
-      NotificationCenter.PresentNotification(Notification);
-    finally
-      Notification.Free;
-    end;
-  finally
-    NotificationCenter.Free;
-  end;
-end;
-```
-
-## Exemple complet : Gestionnaire de rappels avec notifications
-
-Voici un exemple plus complet d'une application de rappels qui utilise les notifications locales :
-
-```pascal
-unit ReminderManager;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.Notification, System.DateUtils,
-  System.Generics.Collections, System.JSON;
-
-type
-  TReminderPriority = (Low, Medium, High);
-
-  TReminder = class
-  private
-    FId: string;
-    FTitle: string;
-    FMessage: string;
-    FDueDate: TDateTime;
-    FPriority: TReminderPriority;
-    FIsCompleted: Boolean;
-  public
-    constructor Create(const ATitle, AMessage: string; ADueDate: TDateTime;
-      APriority: TReminderPriority);
-    property Id: string read FId;
-    property Title: string read FTitle write FTitle;
-    property Message: string read FMessage write FMessage;
-    property DueDate: TDateTime read FDueDate write FDueDate;
-    property Priority: TReminderPriority read FPriority write FPriority;
-    property IsCompleted: Boolean read FIsCompleted write FIsCompleted;
-
-    function ToJSON: TJSONObject;
-    procedure FromJSON(AJson: TJSONObject);
-  end;
-
-  TReminderManager = class
-  private
-    FReminders: TObjectList<TReminder>;
-    FNotificationCenter: TNotificationCenter;
-    FStorageFileName: string;
-
-    procedure ScheduleNotification(const Reminder: TReminder);
-    procedure CancelNotification(const ReminderId: string);
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function AddReminder(const Title, Message: string; DueDate: TDateTime;
-      Priority: TReminderPriority): TReminder;
-    procedure UpdateReminder(const Reminder: TReminder);
-    procedure DeleteReminder(const ReminderId: string);
-    procedure MarkAsCompleted(const ReminderId: string);
-    function GetReminder(const ReminderId: string): TReminder;
-    function GetAllReminders: TArray<TReminder>;
-
-    procedure SaveReminders;
-    procedure LoadReminders;
-  end;
-
-implementation
-
-{ TReminder }
-
-constructor TReminder.Create(const ATitle, AMessage: string; ADueDate: TDateTime;
-  APriority: TReminderPriority);
-begin
-  inherited Create;
-  FId := TGUID.NewGuid.ToString;
-  FTitle := ATitle;
-  FMessage := AMessage;
-  FDueDate := ADueDate;
-  FPriority := APriority;
-  FIsCompleted := False;
-end;
-
-function TReminder.ToJSON: TJSONObject;
-begin
-  Result := TJSONObject.Create;
-  Result.AddPair('id', FId);
-  Result.AddPair('title', FTitle);
-  Result.AddPair('message', FMessage);
-  Result.AddPair('dueDate', DateToISO8601(FDueDate));
-  Result.AddPair('priority', TJSONNumber.Create(Ord(FPriority)));
-  Result.AddPair('isCompleted', TJSONBool.Create(FIsCompleted));
-end;
-
-procedure TReminder.FromJSON(AJson: TJSONObject);
-begin
-  FId := AJson.GetValue<string>('id');
-  FTitle := AJson.GetValue<string>('title');
-  FMessage := AJson.GetValue<string>('message');
-  FDueDate := ISO8601ToDate(AJson.GetValue<string>('dueDate'));
-  FPriority := TReminderPriority(AJson.GetValue<Integer>('priority'));
-  FIsCompleted := AJson.GetValue<Boolean>('isCompleted');
-end;
-
-{ TReminderManager }
-
-constructor TReminderManager.Create;
-begin
-  inherited Create;
-  FReminders := TObjectList<TReminder>.Create(True);
-  FNotificationCenter := TNotificationCenter.Create(nil);
-
-  // Définir le nom du fichier de stockage
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  FStorageFileName := TPath.Combine(TPath.GetDocumentsPath, 'reminders.json');
-  {$ELSE}
-  FStorageFileName := TPath.Combine(TPath.GetHomePath, 'reminders.json');
-  {$ENDIF}
-
-  // Charger les rappels existants
-  LoadReminders;
-end;
-
-destructor TReminderManager.Destroy;
-begin
-  SaveReminders;
-  FReminders.Free;
-  FNotificationCenter.Free;
-  inherited;
-end;
-
-function TReminderManager.AddReminder(const Title, Message: string;
-  DueDate: TDateTime; Priority: TReminderPriority): TReminder;
-begin
-  Result := TReminder.Create(Title, Message, DueDate, Priority);
-  FReminders.Add(Result);
-
-  // Programmer la notification si la date d'échéance est dans le futur
-  if not Result.IsCompleted and (Result.DueDate > Now) then
-    ScheduleNotification(Result);
-
-  // Sauvegarder les modifications
-  SaveReminders;
-end;
-
-procedure TReminderManager.UpdateReminder(const Reminder: TReminder);
-var
-  ExistingReminder: TReminder;
-begin
-  ExistingReminder := GetReminder(Reminder.Id);
-  if ExistingReminder <> nil then
-  begin
-    // Mettre à jour les propriétés
-    ExistingReminder.Title := Reminder.Title;
-    ExistingReminder.Message := Reminder.Message;
-    ExistingReminder.DueDate := Reminder.DueDate;
-    ExistingReminder.Priority := Reminder.Priority;
-    ExistingReminder.IsCompleted := Reminder.IsCompleted;
-
-    // Annuler la notification existante
-    CancelNotification(Reminder.Id);
-
-    // Reprogrammer si nécessaire
-    if not ExistingReminder.IsCompleted and (ExistingReminder.DueDate > Now) then
-      ScheduleNotification(ExistingReminder);
-
-    // Sauvegarder les modifications
-    SaveReminders;
-  end;
-end;
-
-procedure TReminderManager.DeleteReminder(const ReminderId: string);
-var
-  I: Integer;
-begin
-  for I := 0 to FReminders.Count - 1 do
-  begin
-    if FReminders[I].Id = ReminderId then
-    begin
-      // Annuler la notification
-      CancelNotification(ReminderId);
-
-      // Supprimer le rappel
-      FReminders.Delete(I);
-
-      // Sauvegarder les modifications
-      SaveReminders;
-      Break;
-    end;
-  end;
-end;
-
-procedure TReminderManager.MarkAsCompleted(const ReminderId: string);
-var
-  Reminder: TReminder;
-begin
-  Reminder := GetReminder(ReminderId);
-  if Reminder <> nil then
-  begin
-    Reminder.IsCompleted := True;
-
-    // Annuler la notification
-    CancelNotification(ReminderId);
-
-    // Sauvegarder les modifications
-    SaveReminders;
-  end;
-end;
-
-function TReminderManager.GetReminder(const ReminderId: string): TReminder;
-var
-  R: TReminder;
-begin
-  Result := nil;
-  for R in FReminders do
-  begin
-    if R.Id = ReminderId then
-    begin
-      Result := R;
-      Break;
-    end;
-  end;
-end;
-
-function TReminderManager.GetAllReminders: TArray<TReminder>;
-var
-  I: Integer;
-begin
-  SetLength(Result, FReminders.Count);
-  for I := 0 to FReminders.Count - 1 do
-    Result[I] := FReminders[I];
-end;
-
-procedure TReminderManager.ScheduleNotification(const Reminder: TReminder);
+// Créer et afficher une notification immédiate
+procedure TFormMain.AfficherNotificationSimple;
 var
   Notification: TNotification;
 begin
-  Notification := FNotificationCenter.CreateNotification;
+  Notification := NotificationCenter.CreateNotification;
   try
     // Configurer la notification
-    Notification.Name := 'Reminder_' + Reminder.Id;
-    Notification.Title := Reminder.Title;
-    Notification.AlertBody := Reminder.Message;
-    Notification.FireDate := Reminder.DueDate;
-    Notification.EnableSound := True;
+    Notification.Name := 'NotificationSimple';
+    Notification.Title := 'Nouvelle notification';
+    Notification.AlertBody := 'Ceci est le contenu de la notification';
 
-    // Ajouter des propriétés selon la priorité
-    case Reminder.Priority of
-      TReminderPriority.High:
-      begin
-        Notification.Title := '🔴 ' + Notification.Title;
-        {$IFDEF ANDROID}
-        Notification.Importance := TImportance.High;
-        {$ENDIF}
-      end;
-      TReminderPriority.Medium:
-      begin
-        Notification.Title := '🟠 ' + Notification.Title;
-        {$IFDEF ANDROID}
-        Notification.Importance := TImportance.Default;
-        {$ENDIF}
-      end;
-      TReminderPriority.Low:
-      begin
-        Notification.Title := '🟢 ' + Notification.Title;
-        {$IFDEF ANDROID}
-        Notification.Importance := TImportance.Low;
-        {$ENDIF}
-      end;
-    end;
+    // Afficher immédiatement (dans quelques secondes)
+    Notification.FireDate := Now + EncodeTime(0, 0, 5, 0); // Dans 5 secondes
 
     // Programmer la notification
-    FNotificationCenter.ScheduleNotification(Notification);
+    NotificationCenter.ScheduleNotification(Notification);
+
+    ShowMessage('Notification programmée !');
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Notification avec son et badge
+
+```pascal
+// Créer une notification avec son et badge
+procedure TFormMain.NotificationAvecOptions;
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'NotificationComplète';
+    Notification.Title := 'Nouveau message';
+    Notification.AlertBody := 'Vous avez reçu un nouveau message de Marie';
+
+    // Ajouter un son (utilise le son par défaut du système)
+    Notification.EnableSound := True;
+
+    // Ajouter un badge (petit chiffre sur l'icône de l'app)
+    Notification.Number := 3; // Affiche "3" sur l'icône
+
+    // Programmer pour maintenant
+    Notification.FireDate := Now;
+
+    NotificationCenter.PresentNotification(Notification);
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Notifications récurrentes
+
+```pascal
+// Créer une notification qui se répète
+procedure TFormMain.NotificationQuotidienne;
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'RappelQuotidien';
+    Notification.Title := 'Rappel quotidien';
+    Notification.AlertBody := 'N''oubliez pas de prendre vos médicaments !';
+
+    // Programmer pour demain à 9h00
+    var DemainNeufHeures := Date + 1 + EncodeTime(9, 0, 0, 0);
+    Notification.FireDate := DemainNeufHeures;
+
+    // Définir la répétition (quotidienne)
+    Notification.RepeatInterval := TRepeatInterval.Day;
+
+    NotificationCenter.ScheduleNotification(Notification);
+
+    ShowMessage('Notification quotidienne programmée pour 9h00');
   finally
     Notification.Free;
   end;
 end;
 
-procedure TReminderManager.CancelNotification(const ReminderId: string);
-begin
-  FNotificationCenter.CancelNotification('Reminder_' + ReminderId);
-end;
-
-procedure TReminderManager.SaveReminders;
+// Autres intervalles de répétition disponibles
+procedure TFormMain.ExemplesRepetition;
 var
-  JsonArray: TJSONArray;
-  R: TReminder;
-  JsonStr: string;
+  Notification: TNotification;
 begin
-  JsonArray := TJSONArray.Create;
+  // Toutes les minutes (utile pour les tests)
+  Notification.RepeatInterval := TRepeatInterval.Minute;
+
+  // Toutes les heures
+  Notification.RepeatInterval := TRepeatInterval.Hour;
+
+  // Tous les jours
+  Notification.RepeatInterval := TRepeatInterval.Day;
+
+  // Toutes les semaines
+  Notification.RepeatInterval := TRepeatInterval.Week;
+
+  // Tous les mois
+  Notification.RepeatInterval := TRepeatInterval.Month;
+
+  // Tous les ans
+  Notification.RepeatInterval := TRepeatInterval.Year;
+
+  // Aucune répétition (par défaut)
+  Notification.RepeatInterval := TRepeatInterval.None;
+end;
+```
+
+### Notification avec actions
+
+Sur certaines plateformes, vous pouvez ajouter des boutons d'action aux notifications.
+
+```pascal
+// Créer une notification avec boutons d'action
+procedure TFormMain.NotificationAvecActions;
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
   try
-    // Convertir chaque rappel en JSON
-    for R in FReminders do
-      JsonArray.AddElement(R.ToJSON);
+    Notification.Name := 'NotificationActions';
+    Notification.Title := 'Nouveau message';
+    Notification.AlertBody := 'Jean vous a envoyé un message';
+    Notification.FireDate := Now;
 
-    // Convertir en chaîne JSON
-    JsonStr := JsonArray.ToString;
+    // Ajouter des actions (boutons)
+    Notification.AlertAction := 'Voir'; // Texte du bouton principal
 
-    // Enregistrer dans un fichier
-    TFile.WriteAllText(FStorageFileName, JsonStr);
+    NotificationCenter.PresentNotification(Notification);
   finally
-    JsonArray.Free;
-  end;
-end;
-
-procedure TReminderManager.LoadReminders;
-var
-  JsonStr: string;
-  JsonArray: TJSONArray;
-  JsonObj: TJSONObject;
-  Reminder: TReminder;
-  I: Integer;
-begin
-  // Vider la liste actuelle
-  FReminders.Clear;
-
-  // Vérifier si le fichier existe
-  if not TFile.Exists(FStorageFileName) then
-    Exit;
-
-  try
-    // Lire le contenu du fichier
-    JsonStr := TFile.ReadAllText(FStorageFileName);
-
-    // Analyser le JSON
-    JsonArray := TJSONObject.ParseJSONValue(JsonStr) as TJSONArray;
-    if JsonArray <> nil then
-    try
-      // Parcourir tous les éléments
-      for I := 0 to JsonArray.Count - 1 do
-      begin
-        JsonObj := JsonArray.Items[I] as TJSONObject;
-
-        // Créer un nouveau rappel
-        Reminder := TReminder.Create('', '', Now, TReminderPriority.Medium);
-        Reminder.FromJSON(JsonObj);
-
-        // Ajouter à la liste
-        FReminders.Add(Reminder);
-
-        // Programmer la notification si nécessaire
-        if not Reminder.IsCompleted and (Reminder.DueDate > Now) then
-          ScheduleNotification(Reminder);
-      end;
-    finally
-      JsonArray.Free;
-    end;
-  except
-    // Gérer les erreurs silencieusement - fichier corrompu, etc.
-    // Dans une application réelle, vous voudriez journaliser cette erreur
+    Notification.Free;
   end;
 end;
 ```
 
-## Travailler avec le composant ReminderManager
+### Gérer la réponse aux notifications
 
-L'exemple ci-dessus fournit une classe complète pour gérer les rappels et les notifications associées. Voici comment l'utiliser dans votre application :
+Lorsque l'utilisateur clique sur une notification, votre application doit réagir de manière appropriée.
 
 ```pascal
-unit MainFormUnit;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.ListView.Types,
-  FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.DateTimeCtrls, FMX.ListBox,
-  FMX.Edit, FMX.Layouts, ReminderManager;
-
-type
-  TMainForm = class(TForm)
-    ListView1: TListView;
-    ToolBar1: TToolBar;
-    btnAdd: TButton;
-    Layout1: TLayout;
-    edtTitle: TEdit;
-    edtMessage: TEdit;
-    dtpDueDate: TDateEdit;
-    timeDueTime: TTimeEdit;
-    cmbPriority: TComboBox;
-    btnSave: TButton;
-    btnCancel: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure ListView1ItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
-    procedure ListView1DeleteItem(Sender: TObject; AIndex: Integer);
-  private
-    FReminderManager: TReminderManager;
-    FIsEditing: Boolean;
-    FCurrentReminderId: string;
-
-    procedure RefreshReminderList;
-    procedure ShowAddEditPanel(const Show: Boolean);
-    procedure PrepareForEdit(const ReminderId: string);
-  public
-    { Public declarations }
-  end;
-
-var
-  MainForm: TMainForm;
-
-implementation
-
-{$R *.fmx}
-
-procedure TMainForm.FormCreate(Sender: TObject);
+// Gérer l'événement quand l'utilisateur clique sur une notification
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  // Créer le gestionnaire de rappels
-  FReminderManager := TReminderManager.Create;
-
-  // Initialiser l'interface
-  ShowAddEditPanel(False);
-
-  // Configurer la liste déroulante des priorités
-  cmbPriority.Items.Clear;
-  cmbPriority.Items.Add('Basse');
-  cmbPriority.Items.Add('Moyenne');
-  cmbPriority.Items.Add('Haute');
-  cmbPriority.ItemIndex := 1; // Par défaut: Moyenne
-
-  // Définir l'heure par défaut à 1 heure dans le futur
-  dtpDueDate.Date := Date;
-  timeDueTime.Time := IncHour(Time, 1);
-
-  // Remplir la liste des rappels
-  RefreshReminderList;
+  NotificationCenter := TNotificationCenter.Create(nil);
+  NotificationCenter.OnReceiveLocalNotification := GererNotificationRecue;
 end;
 
-procedure TMainForm.FormDestroy(Sender: TObject);
+procedure TFormMain.GererNotificationRecue(Sender: TObject;
+  ANotification: TNotification);
 begin
-  // Libérer les ressources
-  FReminderManager.Free;
+  // L'utilisateur a cliqué sur la notification
+  ShowMessage('Notification reçue : ' + ANotification.Title);
+
+  // Agir selon le nom de la notification
+  if ANotification.Name = 'NotificationMessage' then
+    OuvrirBoiteMessages
+  else if ANotification.Name = 'RappelRendezVous' then
+    OuvrirCalendrier;
 end;
 
-procedure TMainForm.RefreshReminderList;
-var
-  Reminders: TArray<TReminder>;
-  R: TReminder;
-  Item: TListViewItem;
+procedure TFormMain.OuvrirBoiteMessages;
 begin
-  // Vider la liste
-  ListView1.Items.Clear;
+  // Naviguer vers l'écran des messages
+  TabControl1.ActiveTab := TabMessages;
+end;
+```
 
-  // Obtenir tous les rappels
-  Reminders := FReminderManager.GetAllReminders;
+### Annuler une notification programmée
 
-  // Ajouter chaque rappel à la liste
-  for R in Reminders do
-  begin
-    Item := ListView1.Items.Add;
-    Item.Tag := Integer(R); // Pour un accès rapide au rappel (pas idéal en production)
-    Item.Text := R.Title;
-    Item.Detail := R.Message;
+```pascal
+// Annuler une notification spécifique
+procedure TFormMain.AnnulerNotification(NomNotification: string);
+begin
+  NotificationCenter.CancelNotification(NomNotification);
+  ShowMessage('Notification "' + NomNotification + '" annulée');
+end;
 
-    // Formater la date et l'heure
-    Item.Data['Date'] := FormatDateTime('dd/mm/yyyy HH:mm', R.DueDate);
+// Annuler toutes les notifications en attente
+procedure TFormMain.AnnulerToutesNotifications;
+begin
+  NotificationCenter.CancelAll;
+  ShowMessage('Toutes les notifications ont été annulées');
+end;
 
-    // Ajouter un indicateur de priorité
-    case R.Priority of
-      TReminderPriority.Low:  Item.Data['Priority'] := '🟢';
-      TReminderPriority.Medium: Item.Data['Priority'] := '🟠';
-      TReminderPriority.High: Item.Data['Priority'] := '🔴';
+// Vérifier les notifications programmées
+procedure TFormMain.ListerNotificationsProgrammees;
+var
+  NotifsList: TNotificationsList;
+  Notif: TNotification;
+begin
+  NotifsList := NotificationCenter.GetScheduledNotifications;
+  try
+    Memo1.Lines.Clear;
+    Memo1.Lines.Add('Notifications programmées : ' + NotifsList.Count.ToString);
+
+    for Notif in NotifsList do
+    begin
+      Memo1.Lines.Add('');
+      Memo1.Lines.Add('Nom : ' + Notif.Name);
+      Memo1.Lines.Add('Titre : ' + Notif.Title);
+      Memo1.Lines.Add('Date : ' + DateTimeToStr(Notif.FireDate));
     end;
+  finally
+    NotifsList.Free;
+  end;
+end;
+```
 
-    // Marquer les rappels terminés
-    if R.IsCompleted then
-      Item.Data['Status'] := '✓'
+## Cas d'usage pratiques des notifications locales
+
+### Minuteur et alarme
+
+```pascal
+// Créer un minuteur
+procedure TFormMain.DemarrerMinuteur(Minutes: Integer);
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'Minuteur';
+    Notification.Title := 'Minuteur terminé !';
+    Notification.AlertBody := 'Le minuteur de ' + Minutes.ToString +
+      ' minutes est terminé.';
+    Notification.EnableSound := True;
+
+    // Programmer dans X minutes
+    Notification.FireDate := Now + EncodeTime(0, Minutes, 0, 0);
+
+    NotificationCenter.ScheduleNotification(Notification);
+
+    ShowMessage('Minuteur programmé pour ' + Minutes.ToString + ' minutes');
+  finally
+    Notification.Free;
+  end;
+end;
+
+// Créer une alarme quotidienne
+procedure TFormMain.CreerAlarme(Heure, Minute: Integer);
+var
+  Notification: TNotification;
+  DateAlarme: TDateTime;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'Alarme_' + Heure.ToString + '_' + Minute.ToString;
+    Notification.Title := 'Alarme';
+    Notification.AlertBody := 'Il est ' + Format('%.2d:%.2d', [Heure, Minute]);
+    Notification.EnableSound := True;
+
+    // Calculer la prochaine occurrence
+    DateAlarme := Date + EncodeTime(Heure, Minute, 0, 0);
+    if DateAlarme < Now then
+      DateAlarme := DateAlarme + 1; // Si l'heure est passée, programmer pour demain
+
+    Notification.FireDate := DateAlarme;
+    Notification.RepeatInterval := TRepeatInterval.Day; // Répéter chaque jour
+
+    NotificationCenter.ScheduleNotification(Notification);
+
+    ShowMessage('Alarme programmée pour ' + TimeToStr(DateAlarme));
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Rappels de tâches
+
+```pascal
+// Système de rappel de tâches
+type
+  TTache = record
+    Titre: string;
+    Description: string;
+    DateEcheance: TDateTime;
+  end;
+
+procedure TFormMain.CreerRappelTache(Tache: TTache);
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'Tache_' + Tache.Titre;
+    Notification.Title := 'Rappel : ' + Tache.Titre;
+    Notification.AlertBody := Tache.Description;
+    Notification.EnableSound := True;
+
+    // Rappel 1 heure avant l'échéance
+    Notification.FireDate := Tache.DateEcheance - EncodeTime(1, 0, 0, 0);
+
+    NotificationCenter.ScheduleNotification(Notification);
+
+    // Créer un second rappel le jour même
+    var NotificationJour := NotificationCenter.CreateNotification;
+    try
+      NotificationJour.Name := 'Tache_Jour_' + Tache.Titre;
+      NotificationJour.Title := 'Aujourd''hui : ' + Tache.Titre;
+      NotificationJour.AlertBody := Tache.Description;
+      NotificationJour.EnableSound := True;
+      NotificationJour.FireDate := Tache.DateEcheance;
+
+      NotificationCenter.ScheduleNotification(NotificationJour);
+    finally
+      NotificationJour.Free;
+    end;
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Rappels basés sur la localisation
+
+```pascal
+// Créer un rappel géolocalisé (conceptuel)
+procedure TFormMain.RappelGeolocalise;
+var
+  Notification: TNotification;
+begin
+  // Note : Les notifications géolocalisées nécessitent un service en arrière-plan
+  // qui surveille la position et déclenche la notification manuellement
+
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'RappelLieu';
+    Notification.Title := 'Vous êtes proche !';
+    Notification.AlertBody := 'Vous êtes près du supermarché, n''oubliez pas le lait !';
+    Notification.EnableSound := True;
+
+    // La notification sera déclenchée par votre code quand l'utilisateur
+    // entre dans la zone définie (géorepérage/geofencing)
+    NotificationCenter.PresentNotification(Notification);
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+## Notifications Push
+
+Les notifications push permettent d'envoyer des notifications depuis un serveur distant vers les appareils de vos utilisateurs, même lorsque votre application n'est pas en cours d'exécution.
+
+### Architecture des notifications push
+
+Le système de notifications push implique plusieurs éléments :
+
+1. **Votre serveur** : Envoie les notifications
+2. **Service de notification** :
+   - **APNs** (Apple Push Notification service) pour iOS
+   - **FCM** (Firebase Cloud Messaging) pour Android
+3. **Appareil de l'utilisateur** : Reçoit et affiche la notification
+4. **Votre application** : Réagit lorsque l'utilisateur interagit avec la notification
+
+### Configuration Firebase Cloud Messaging (Android)
+
+Pour Android, vous devez configurer Firebase Cloud Messaging :
+
+**Étapes de configuration** :
+
+1. Créer un projet dans la console Firebase (https://console.firebase.google.com)
+2. Ajouter votre application Android au projet
+3. Télécharger le fichier `google-services.json`
+4. Configurer Delphi pour utiliser FCM
+
+```pascal
+// Dans le manifest Android (Project > Options > Version Info)
+// Ajouter les permissions nécessaires :
+
+// <uses-permission android:name="android.permission.INTERNET" />
+// <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+// <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+```
+
+### Configuration Apple Push Notification Service (iOS)
+
+Pour iOS, la configuration est plus complexe :
+
+1. Créer un certificat push dans le portail développeur Apple
+2. Configurer l'identifiant de votre application avec les notifications push
+3. Générer et télécharger les certificats nécessaires
+4. Configurer Delphi avec le profil de provisionnement approprié
+
+### Recevoir un token de notification
+
+Avant de pouvoir recevoir des notifications push, votre application doit obtenir un token unique qui identifie l'appareil.
+
+```pascal
+uses
+  System.PushNotification;
+
+var
+  PushService: TPushService;
+
+// Initialiser le service de notifications push
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  PushService := TPushServiceManager.Instance.GetServiceByName(
+    TPushService.TServiceNames.GCM); // GCM pour Android
+    // ou TPushService.TServiceNames.APS pour iOS
+
+  if Assigned(PushService) then
+  begin
+    PushService.OnChange := GererChangementPush;
+    PushService.OnReceiveNotification := GererNotificationPushRecue;
+  end;
+end;
+
+// Demander l'activation des notifications push
+procedure TFormMain.ActiverNotificationsPush;
+begin
+  if Assigned(PushService) then
+  begin
+    PushService.Active := True;
+  end;
+end;
+
+// Gérer le changement de statut et récupérer le token
+procedure TFormMain.GererChangementPush(Sender: TObject;
+  AChange: TPushService.TChanges);
+begin
+  if TPushService.TChange.DeviceToken in AChange then
+  begin
+    // Token reçu, l'envoyer à votre serveur
+    var DeviceToken := PushService.DeviceTokenValue[
+      TPushService.TDeviceTokenNames.DeviceToken];
+
+    ShowMessage('Token reçu : ' + DeviceToken);
+    EnvoyerTokenAuServeur(DeviceToken);
+  end;
+end;
+
+// Envoyer le token à votre serveur
+procedure TFormMain.EnvoyerTokenAuServeur(Token: string);
+var
+  HttpClient: THTTPClient;
+  RequestBody: TStringStream;
+begin
+  HttpClient := THTTPClient.Create;
+  RequestBody := TStringStream.Create('{"token":"' + Token + '"}', TEncoding.UTF8);
+  try
+    var Response := HttpClient.Post('https://votreserveur.com/api/register-device',
+      RequestBody);
+
+    if Response.StatusCode = 200 then
+      ShowMessage('Token enregistré sur le serveur')
     else
-      Item.Data['Status'] := '';
+      ShowMessage('Erreur lors de l''enregistrement : ' + Response.StatusCode.ToString);
+  finally
+    RequestBody.Free;
+    HttpClient.Free;
   end;
 end;
+```
 
-procedure TMainForm.btnAddClick(Sender: TObject);
+### Recevoir et gérer les notifications push
+
+```pascal
+// Gérer la réception d'une notification push
+procedure TFormMain.GererNotificationPushRecue(Sender: TObject;
+  const ANotification: TPushServiceNotification);
 begin
-  // Préparer pour l'ajout d'un nouveau rappel
-  FIsEditing := False;
-  FCurrentReminderId := '';
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      // Afficher le contenu de la notification
+      ShowMessage('Notification push reçue : ' + ANotification.DataObject.ToString);
 
-  // Réinitialiser les champs
-  edtTitle.Text := '';
-  edtMessage.Text := '';
-  dtpDueDate.Date := Date;
-  timeDueTime.Time := IncHour(Time, 1);
-  cmbPriority.ItemIndex := 1; // Moyenne
+      // Extraire les données
+      var Titre := ANotification.DataKey['title'];
+      var Message := ANotification.DataKey['message'];
+      var Type := ANotification.DataKey['type'];
 
-  // Afficher le panneau d'édition
-  ShowAddEditPanel(True);
+      // Agir selon le type de notification
+      if Type = 'message' then
+        OuvrirMessages
+      else if Type = 'alerte' then
+        AfficherAlerte(Message);
+    end);
 end;
+```
 
-procedure TMainForm.PrepareForEdit(const ReminderId: string);
+### Envoyer une notification push depuis le serveur
+
+Voici un exemple de code serveur (en pseudo-code) pour envoyer une notification push :
+
+```pascal
+// Exemple conceptuel d'envoi de notification via FCM (Firebase)
+// Ce code s'exécuterait sur votre serveur, pas dans l'application mobile
+
+procedure EnvoyerNotificationPush(DeviceToken, Titre, Message: string);
 var
-  Reminder: TReminder;
+  HttpClient: THTTPClient;
+  RequestBody: TJSONObject;
+  Headers: TNetHeaders;
 begin
-  Reminder := FReminderManager.GetReminder(ReminderId);
-  if Reminder <> nil then
-  begin
-    // Mode édition
-    FIsEditing := True;
-    FCurrentReminderId := ReminderId;
+  // Créer le corps de la requête JSON
+  RequestBody := TJSONObject.Create;
+  try
+    RequestBody.AddPair('to', DeviceToken);
 
-    // Remplir les champs avec les données existantes
-    edtTitle.Text := Reminder.Title;
-    edtMessage.Text := Reminder.Message;
-    dtpDueDate.Date := DateOf(Reminder.DueDate);
-    timeDueTime.Time := TimeOf(Reminder.DueDate);
-    cmbPriority.ItemIndex := Ord(Reminder.Priority);
+    var Notification := TJSONObject.Create;
+    Notification.AddPair('title', Titre);
+    Notification.AddPair('body', Message);
+    Notification.AddPair('sound', 'default');
 
-    // Afficher le panneau d'édition
-    ShowAddEditPanel(True);
+    RequestBody.AddPair('notification', Notification);
+
+    // Configurer les en-têtes avec votre clé serveur FCM
+    SetLength(Headers, 2);
+    Headers[0].Name := 'Authorization';
+    Headers[0].Value := 'key=VOTRE_CLE_SERVEUR_FCM';
+    Headers[1].Name := 'Content-Type';
+    Headers[1].Value := 'application/json';
+
+    // Envoyer la requête à FCM
+    HttpClient := THTTPClient.Create;
+    try
+      var Response := HttpClient.Post(
+        'https://fcm.googleapis.com/fcm/send',
+        TStringStream.Create(RequestBody.ToString, TEncoding.UTF8),
+        nil,
+        Headers);
+
+      WriteLn('Notification envoyée : ' + Response.StatusCode.ToString);
+    finally
+      HttpClient.Free;
+    end;
+  finally
+    RequestBody.Free;
   end;
 end;
+```
 
-procedure TMainForm.ListView1ItemClick(const Sender: TObject;
-  const AItem: TListViewItem);
-var
-  Reminder: TReminder;
+## Permissions pour les notifications
+
+Sur les versions récentes d'Android et iOS, les applications doivent demander explicitement la permission d'afficher des notifications.
+
+### Demander la permission
+
+```pascal
+uses
+  System.Permissions, FMX.DialogService;
+
+// Vérifier et demander la permission pour les notifications
+procedure TFormMain.DemanderPermissionNotifications;
 begin
-  // Récupérer le rappel associé
-  Reminder := TReminder(AItem.Tag);
-  if Reminder <> nil then
-    PrepareForEdit(Reminder.Id);
+  // Sur Android 13+ (API 33+), il faut demander la permission
+  {$IFDEF ANDROID}
+  PermissionsService.RequestPermissions(
+    ['android.permission.POST_NOTIFICATIONS'],
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    begin
+      if (Length(AGrantResults) > 0) and
+         (AGrantResults[0] = TPermissionStatus.Granted) then
+      begin
+        ShowMessage('Permission accordée pour les notifications');
+        ActiverNotifications;
+      end
+      else
+      begin
+        TDialogService.ShowMessage(
+          'Les notifications sont désactivées. ' +
+          'Vous pouvez les activer dans les paramètres.');
+      end;
+    end);
+  {$ENDIF}
+
+  // Sur iOS, la demande est gérée automatiquement lors de la première notification
+  {$IFDEF IOS}
+  ActiverNotifications;
+  {$ENDIF}
 end;
 
-procedure TMainForm.ListView1DeleteItem(Sender: TObject; AIndex: Integer);
-var
-  Item: TListViewItem;
-  Reminder: TReminder;
+procedure TFormMain.ActiverNotifications;
 begin
-  // Récupérer l'item et le rappel associé
-  Item := ListView1.Items[AIndex];
-  Reminder := TReminder(Item.Tag);
-
-  // Supprimer le rappel
-  if Reminder <> nil then
-    FReminderManager.DeleteReminder(Reminder.Id);
+  // Activer les notifications locales et/ou push
+  if Assigned(PushService) then
+    PushService.Active := True;
 end;
+```
 
-procedure TMainForm.btnSaveClick(Sender: TObject);
-var
-  Title, Message: string;
-  DueDate: TDateTime;
-  Priority: TReminderPriority;
-  Reminder: TReminder;
+## Bonnes pratiques pour les notifications
+
+### Fréquence et pertinence
+
+```pascal
+// Éviter de spammer l'utilisateur
+type
+  TGestionnaireNotifications = class
+  private
+    FDerniereNotification: TDateTime;
+    FNombreNotificationsJour: Integer;
+  public
+    function PeutEnvoyerNotification: Boolean;
+    procedure EnregistrerNotificationEnvoyee;
+  end;
+
+function TGestionnaireNotifications.PeutEnvoyerNotification: Boolean;
+const
+  DelaiMinimum = 1 / 24; // 1 heure minimum entre deux notifications
+  MaxNotificationsParJour = 5;
 begin
-  // Récupérer les valeurs des champs
-  Title := Trim(edtTitle.Text);
-  Message := Trim(edtMessage.Text);
-  DueDate := dtpDueDate.Date + timeDueTime.Time;
-  Priority := TReminderPriority(cmbPriority.ItemIndex);
-
-  // Valider les entrées
-  if Title = '' then
+  // Vérifier le délai depuis la dernière notification
+  if Now - FDerniereNotification < DelaiMinimum then
   begin
-    ShowMessage('Veuillez saisir un titre');
+    Result := False;
     Exit;
   end;
 
-  // Ajouter ou mettre à jour le rappel
-  if FIsEditing then
+  // Vérifier le nombre de notifications aujourd'hui
+  if FNombreNotificationsJour >= MaxNotificationsParJour then
   begin
-    // Mettre à jour un rappel existant
-    Reminder := FReminderManager.GetReminder(FCurrentReminderId);
-    if Reminder <> nil then
-    begin
-      Reminder.Title := Title;
-      Reminder.Message := Message;
-      Reminder.DueDate := DueDate;
-      Reminder.Priority := Priority;
+    Result := False;
+    Exit;
+  end;
 
-      FReminderManager.UpdateReminder(Reminder);
+  Result := True;
+end;
+
+procedure TGestionnaireNotifications.EnregistrerNotificationEnvoyee;
+begin
+  FDerniereNotification := Now;
+  Inc(FNombreNotificationsJour);
+
+  // Réinitialiser le compteur à minuit
+  if Date > Trunc(FDerniereNotification) then
+    FNombreNotificationsJour := 1;
+end;
+```
+
+### Personnalisation et contexte
+
+```pascal
+// Créer des notifications personnalisées selon l'utilisateur
+procedure TFormMain.NotificationPersonnalisee(NomUtilisateur: string;
+  TypeEvenement: string);
+var
+  Notification: TNotification;
+begin
+  Notification := NotificationCenter.CreateNotification;
+  try
+    case TypeEvenement of
+      'anniversaire':
+      begin
+        Notification.Title := 'Joyeux anniversaire !';
+        Notification.AlertBody := NomUtilisateur +
+          ', nous vous souhaitons un excellent anniversaire ! 🎉';
+      end;
+
+      'objectif_atteint':
+      begin
+        Notification.Title := 'Objectif atteint ! 🎯';
+        Notification.AlertBody := 'Félicitations ' + NomUtilisateur +
+          ', vous avez atteint votre objectif !';
+      end;
+
+      'rappel_activite':
+      begin
+        Notification.Title := 'On y va ?';
+        Notification.AlertBody := NomUtilisateur +
+          ', cela fait 3 jours que vous n''avez pas ouvert l''application.';
+      end;
     end;
+
+    Notification.FireDate := Now;
+    Notification.EnableSound := True;
+    NotificationCenter.PresentNotification(Notification);
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Respect des heures de silence
+
+```pascal
+// Ne pas envoyer de notifications la nuit
+function TFormMain.EstHeureAppropriee: Boolean;
+var
+  Heure: Word;
+begin
+  Heure := HourOf(Now);
+
+  // Éviter les notifications entre 22h et 8h
+  Result := (Heure >= 8) and (Heure < 22);
+end;
+
+procedure TFormMain.ProgrammerNotificationIntelligente;
+var
+  Notification: TNotification;
+  DateNotification: TDateTime;
+begin
+  DateNotification := Now;
+
+  // Si ce n'est pas une heure appropriée, reporter au lendemain matin
+  if not EstHeureAppropriee then
+  begin
+    // Programmer pour demain à 9h00
+    DateNotification := Date + 1 + EncodeTime(9, 0, 0, 0);
+  end;
+
+  Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'NotificationIntelligente';
+    Notification.Title := 'Rappel';
+    Notification.AlertBody := 'Vous avez des tâches en attente';
+    Notification.FireDate := DateNotification;
+
+    NotificationCenter.ScheduleNotification(Notification);
+  finally
+    Notification.Free;
+  end;
+end;
+```
+
+### Permettre à l'utilisateur de contrôler les notifications
+
+```pascal
+// Interface de paramètres des notifications
+procedure TFormMain.ConfigurerPreferencesNotifications;
+begin
+  // Créer une page de paramètres
+  SwitchNotificationsActives.IsChecked := LirePreference('NotificationsActives', True);
+  SwitchNotificationsSonores.IsChecked := LirePreference('NotificationsSonores', True);
+  SwitchNotificationsNuit.IsChecked := LirePreference('NotificationsNuit', False);
+
+  ComboFrequence.ItemIndex := LirePreference('FrequenceNotifications', 1);
+  // 0 = Immédiat, 1 = Normal, 2 = Rare
+end;
+
+procedure TFormMain.SwitchNotificationsActivesSwitch(Sender: TObject);
+begin
+  SauvegarderPreference('NotificationsActives',
+    SwitchNotificationsActives.IsChecked);
+
+  if not SwitchNotificationsActives.IsChecked then
+  begin
+    // Désactiver toutes les notifications
+    NotificationCenter.CancelAll;
+    if Assigned(PushService) then
+      PushService.Active := False;
   end
   else
   begin
-    // Créer un nouveau rappel
-    FReminderManager.AddReminder(Title, Message, DueDate, Priority);
+    // Réactiver les notifications
+    if Assigned(PushService) then
+      PushService.Active := True;
   end;
-
-  // Masquer le panneau d'édition
-  ShowAddEditPanel(False);
-
-  // Rafraîchir la liste
-  RefreshReminderList;
-end;
-
-procedure TMainForm.btnCancelClick(Sender: TObject);
-begin
-  // Annuler l'édition/ajout
-  ShowAddEditPanel(False);
-end;
-
-procedure TMainForm.ShowAddEditPanel(const Show: Boolean);
-begin
-  Layout1.Visible := Show;
-  ListView1.Visible := not Show;
-  ToolBar1.Visible := not Show;
 end;
 ```
 
-Ce code suppose que vous avez créé une interface utilisateur avec les composants suivants :
-- Une `TListView` pour afficher les rappels
-- Un panneau `TLayout` contenant les contrôles d'édition
-- Des contrôles `TEdit` pour le titre et le message
-- Des contrôles `TDateEdit` et `TTimeEdit` pour la date d'échéance
-- Un contrôle `TComboBox` pour la priorité
-- Des boutons pour l'ajout, la sauvegarde et l'annulation
+## Test et débogage des notifications
 
-## Réagir aux notifications en arrière-plan
-
-Pour qu'une application puisse réagir aux notifications lorsqu'elle est en arrière-plan ou fermée, vous devez configurer un gestionnaire spécial :
-
-### Pour Android
-
-Sur Android, vous pouvez créer un service qui s'exécute en arrière-plan pour gérer les notifications :
+### Tester les notifications locales
 
 ```pascal
-// Créer dans un fichier séparé, par exemple NotificationService.pas
-unit NotificationService;
-
-interface
-
-{$IFDEF ANDROID}
-uses
-  System.SysUtils, System.Classes, Androidapi.JNI.GraphicsContentViewText,
-  Androidapi.JNIBridge, Androidapi.JNI.App, Androidapi.JNI.JavaTypes;
-
-type
-  JMyNotificationServiceClass = interface(JBroadcastReceiverClass)
-    ['{A1234567-1234-1234-1234-1234567890AB}']
-  end;
-
-  [JavaSignature('com/yourcompany/yourapp/MyNotificationService')]
-  JMyNotificationService = interface(JBroadcastReceiver)
-    ['{B1234567-1234-1234-1234-1234567890AB}']
-  end;
-
-  TJMyNotificationService = class(TJavaGenericImport<JMyNotificationServiceClass, JMyNotificationService>)
-  end;
-{$ENDIF}
-
-implementation
-
-{$IFDEF ANDROID}
-// Implémentation du service
-procedure RegisterServiceReceiver;
+// Interface de test des notifications
+procedure TFormMain.BtnTestNotificationClick(Sender: TObject);
 begin
-  // Enregistrer votre service ici
-end;
+  // Créer une notification de test qui s'affiche rapidement
+  var Notification := NotificationCenter.CreateNotification;
+  try
+    Notification.Name := 'Test';
+    Notification.Title := 'Test notification';
+    Notification.AlertBody := 'Ceci est une notification de test';
+    Notification.EnableSound := True;
 
-initialization
-  RegisterServiceReceiver;
-{$ENDIF}
+    // Afficher dans 3 secondes pour laisser le temps de mettre l'app en arrière-plan
+    Notification.FireDate := Now + EncodeTime(0, 0, 3, 0);
 
-end.
-```
+    NotificationCenter.ScheduleNotification(Notification);
 
-Vous devrez également ajouter une entrée dans le fichier AndroidManifest.template.xml pour enregistrer votre service.
-
-### Pour iOS
-
-Sur iOS, les notifications sont gérées par le système d'exploitation et peuvent lancer votre application lorsque l'utilisateur interagit avec elles. Vous devez configurer votre projet pour gérer cela :
-
-```pascal
-// Dans votre fichier principal de projet
-
-procedure HandleReceivedLocalNotification(Sender: TObject;
-  const Notification: TNotification);
-begin
-  // Gérer la notification reçue
-  if Notification.Name.StartsWith('Reminder_') then
-  begin
-    var ReminderId := Notification.Name.Substring(9); // Enlever 'Reminder_'
-    // Naviguer vers l'écran approprié
-    // ...
+    ShowMessage('Notification de test programmée. ' +
+      'Mettez l''application en arrière-plan maintenant.');
+  finally
+    Notification.Free;
   end;
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+// Afficher toutes les notifications programmées
+procedure TFormMain.BtnVoirNotificationsProgrammeesClick(Sender: TObject);
 var
-  NotificationCenter: TNotificationCenter;
+  NotifsList: TNotificationsList;
+  Notif: TNotification;
 begin
-  // ... autre code d'initialisation
+  ListBox1.Clear;
 
-  // Configurer le gestionnaire de notifications
-  NotificationCenter := TNotificationCenter.Create(Self);
-  NotificationCenter.OnReceivedLocalNotification := HandleReceivedLocalNotification;
+  NotifsList := NotificationCenter.GetScheduledNotifications;
+  try
+    for Notif in NotifsList do
+    begin
+      ListBox1.Items.Add(
+        Format('%s - %s (%s)',
+        [Notif.Title, Notif.AlertBody, DateTimeToStr(Notif.FireDate)]));
+    end;
+
+    if ListBox1.Count = 0 then
+      ListBox1.Items.Add('Aucune notification programmée');
+  finally
+    NotifsList.Free;
+  end;
 end;
 ```
-
-## Bonnes pratiques pour les notifications dans les applications mobiles
-
-1. **Respect de l'utilisateur**
-   - Ne bombardez pas l'utilisateur de notifications inutiles
-   - Offrez des paramètres pour personnaliser les notifications
-   - Respectez les choix de l'utilisateur concernant les notifications
-
-2. **Pertinence et timing**
-   - Envoyez des notifications au bon moment de la journée
-   - Assurez-vous que chaque notification apporte une valeur à l'utilisateur
-   - Utilisez des données contextuelles pour personnaliser les notifications
-
-3. **Messages clairs et concis**
-   - Utilisez des titres explicites qui identifient immédiatement la source
-   - Gardez les messages courts et directs
-   - Évitez le jargon technique ou les abréviations peu claires
-
-4. **Actions et navigation**
-   - Assurez-vous que le tap sur une notification mène à l'écran approprié
-   - Incluez des actions rapides lorsque c'est pertinent
-   - Gérez correctement le deeplink (ouverture directe d'un écran spécifique)
-
-5. **Gestion des erreurs**
-   - Prévoyez un comportement dégradé si les notifications sont désactivées
-   - Surveillez les échecs d'envoi pour les notifications push
-   - Mettez en place un système de nouvelle tentative pour les notifications importantes
-
-## Dépannage des problèmes courants
-
-### Les notifications locales ne s'affichent pas
-
-1. **Vérifiez les permissions**
-   - Assurez-vous que les permissions appropriées sont configurées
-   - Sur Android 13+, vérifiez que POST_NOTIFICATIONS est demandé
-
-2. **Vérifiez le timing**
-   - Assurez-vous que la date de déclenchement est dans le futur
-   - Vérifiez que la date est correctement formatée
-
-3. **Vérifiez les paramètres de l'appareil**
-   - Les notifications peuvent être désactivées dans les paramètres de l'appareil
-   - La mode Ne pas déranger peut bloquer les notifications
-
-### Problèmes avec les notifications push
-
-1. **Vérifiez la configuration du service**
-   - Assurez-vous que les clés FCM/APNS sont correctes
-   - Vérifiez que les certificats ne sont pas expirés
-
-2. **Vérifiez la connectivité**
-   - Les notifications push nécessitent une connexion internet
-   - Vérifiez que les pare-feux n'interfèrent pas
-
-3. **Vérifiez l'enregistrement du token**
-   - Assurez-vous que le token d'appareil est correctement enregistré sur votre serveur
-   - Vérifiez que les tokens sont mis à jour lors des changements
 
 ## Conclusion
 
-Les notifications sont un outil puissant pour maintenir l'engagement des utilisateurs avec votre application. En utilisant Delphi, vous pouvez facilement implémenter des notifications locales et push dans vos applications mobiles cross-plateformes.
+Les notifications sont un outil puissant pour maintenir l'engagement des utilisateurs et améliorer l'expérience de votre application mobile. Cependant, elles doivent être utilisées avec discernement et respect envers l'utilisateur.
 
-L'exemple du gestionnaire de rappels présenté dans ce chapitre montre comment intégrer les notifications dans une application réelle, en utilisant une approche modulaire et réutilisable. En suivant les bonnes pratiques et en tenant compte des spécificités de chaque plateforme, vous pouvez créer une expérience de notification qui améliore réellement l'utilité de votre application.
+Les points clés à retenir :
 
-N'oubliez pas que les notifications, bien qu'utiles, doivent être utilisées avec parcimonie. Une application qui envoie trop de notifications risque d'être désinstallée ou de voir ses notifications désactivées par l'utilisateur. Concentrez-vous sur la qualité plutôt que sur la quantité, et assurez-vous que chaque notification apporte une réelle valeur à l'utilisateur.
+1. **Notifications locales** : Simples à implémenter, ne nécessitent pas de serveur, idéales pour les rappels
+2. **Notifications push** : Permettent la communication en temps réel depuis un serveur, nécessitent une configuration plus complexe
+3. **Pertinence** : N'envoyez que des notifications utiles et contextuelles
+4. **Fréquence** : Limitez le nombre de notifications pour éviter d'agacer l'utilisateur
+5. **Timing** : Respectez les heures appropriées (évitez la nuit)
+6. **Personnalisation** : Adaptez les notifications au contexte et aux préférences de l'utilisateur
+7. **Contrôle** : Donnez toujours à l'utilisateur la possibilité de désactiver les notifications
+8. **Permissions** : Demandez et gérez correctement les permissions nécessaires
 
-Dans la prochaine section, nous aborderons le stockage local et la synchronisation des données, essentiels pour créer des applications mobiles qui fonctionnent efficacement même en l'absence de connexion internet.
+Une stratégie de notification bien pensée peut transformer une application ordinaire en un compagnon indispensable pour l'utilisateur. Dans la section suivante, nous verrons comment gérer le stockage local et la synchronisation des données pour que vos applications fonctionnent même hors ligne.
 
 ⏭️ [Stockage local et synchronisation](/15-applications-mobiles-avec-delphi/06-stockage-local-et-synchronisation.md)

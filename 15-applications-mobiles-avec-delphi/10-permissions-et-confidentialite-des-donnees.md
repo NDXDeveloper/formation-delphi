@@ -1,1506 +1,1109 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 15.10 Permissions et confidentialité des données
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La gestion des permissions et la protection de la confidentialité des données sont des aspects fondamentaux du développement d'applications mobiles modernes. Les utilisateurs sont de plus en plus sensibles à la façon dont leurs données personnelles sont utilisées, et les réglementations comme le RGPD (Règlement Général sur la Protection des Données) en Europe ou le CCPA (California Consumer Privacy Act) aux États-Unis imposent des exigences strictes aux développeurs. Dans cette section, nous explorerons comment gérer correctement les permissions et protéger la confidentialité des utilisateurs dans vos applications Delphi.
+Dans le monde mobile moderne, la protection de la vie privée est devenue une priorité absolue. Chaque jour, nous utilisons des applications qui accèdent à nos photos, notre localisation, nos contacts, notre microphone... Ces accès peuvent être légitimes et nécessaires au fonctionnement de l'application, mais ils peuvent aussi représenter des risques pour notre vie privée s'ils sont mal gérés.
 
-## Comprendre les permissions mobiles
+C'est pourquoi iOS et Android ont mis en place des systèmes de permissions sophistiqués qui donnent le contrôle à l'utilisateur. Avant qu'une application puisse accéder à des données sensibles ou à des fonctionnalités matérielles, elle doit explicitement demander l'autorisation, et l'utilisateur peut refuser ou révoquer ces permissions à tout moment.
 
-### Qu'est-ce qu'une permission ?
+En tant que développeur, vous devez non seulement respecter ces règles techniques, mais aussi adopter une approche éthique de la confidentialité : ne demandez que les permissions vraiment nécessaires, expliquez clairement pourquoi vous en avez besoin, et protégez les données que vous collectez.
 
-Une permission est une autorisation que l'utilisateur accorde à votre application pour accéder à certaines fonctionnalités du système ou à des données personnelles. Par exemple :
+Dans cette section, nous allons explorer comment gérer correctement les permissions dans vos applications Delphi, comment respecter la confidentialité des utilisateurs, et comment vous conformer aux réglementations comme le RGPD.
 
-- Accès à la caméra ou au microphone
-- Accès à la localisation (GPS)
-- Accès aux contacts ou au calendrier
-- Accès aux photos et aux fichiers
-- Envoi de notifications
+## Comprendre le système de permissions
 
-### Types de permissions
+### Évolution des permissions mobiles
 
-Les systèmes d'exploitation mobiles classifient généralement les permissions en différentes catégories selon leur niveau de sensibilité :
+**Avant (Android < 6.0, iOS < 8)** :
+- Permissions demandées à l'installation
+- Tout ou rien : accepter toutes les permissions ou ne pas installer
+- Aucun contrôle granulaire pour l'utilisateur
 
-#### Android
+**Maintenant (Android 6+, iOS 8+)** :
+- Permissions demandées à l'exécution (runtime permissions)
+- L'utilisateur peut accepter ou refuser chaque permission individuellement
+- L'utilisateur peut révoquer une permission à tout moment dans les paramètres
+- Certaines permissions nécessitent une justification contextuelle
 
-- **Permissions normales** : Accordées automatiquement (accès à Internet, vibration, etc.)
-- **Permissions dangereuses** : Nécessitent l'approbation explicite de l'utilisateur (localisation, caméra, contacts, etc.)
-- **Permissions spéciales** : Nécessitent des étapes supplémentaires (accès aux notifications, usage des statistiques, etc.)
+### Différence entre Android et iOS
 
-#### iOS
+**Android** :
+- Permissions classées en "Normal" et "Dangerous"
+- Permissions normales accordées automatiquement
+- Permissions dangereuses nécessitent une demande explicite
+- Groupes de permissions (ex: toutes les permissions de localisation ensemble)
 
-- **Permissions d'utilisation** : Nécessitent l'approbation de l'utilisateur via des boîtes de dialogue système
+**iOS** :
+- Toutes les permissions sensibles nécessitent une demande explicite
+- Descriptions obligatoires dans Info.plist expliquant l'usage
+- Interface système standard pour toutes les demandes
+- Granularité fine (ex: "Toujours", "Pendant l'utilisation", "Jamais" pour la localisation)
 
-## Gestion des permissions dans Delphi
+## Types de permissions
 
-Delphi simplifie la gestion des permissions sur les différentes plateformes grâce à ses API unifiées, mais il reste important de comprendre les spécificités de chaque système.
+### Permissions dangereuses (nécessitant l'accord explicite)
 
-### Configuration des permissions dans votre projet
+**Localisation** :
+```pascal
+// Android
+android.permission.ACCESS_FINE_LOCATION
+android.permission.ACCESS_COARSE_LOCATION
+android.permission.ACCESS_BACKGROUND_LOCATION
 
-#### Pour Android
+// iOS (Info.plist)
+NSLocationWhenInUseUsageDescription
+NSLocationAlwaysUsageDescription
+NSLocationAlwaysAndWhenInUseUsageDescription
+```
 
-Dans Delphi, vous devez déclarer les permissions Android dans les options du projet :
+**Caméra et Photos** :
+```pascal
+// Android
+android.permission.CAMERA
+android.permission.READ_EXTERNAL_STORAGE
+android.permission.WRITE_EXTERNAL_STORAGE
 
-1. Ouvrez **Project > Options**
-2. Sélectionnez **Building > Android > Permissions**
-3. Cochez les permissions nécessaires à votre application
+// iOS
+NSCameraUsageDescription
+NSPhotoLibraryUsageDescription
+NSPhotoLibraryAddUsageDescription
+```
 
-![Permissions Android](https://votre-serveur.com/images/android-permissions.png)
+**Microphone** :
+```pascal
+// Android
+android.permission.RECORD_AUDIO
 
-Les permissions les plus courantes incluent :
+// iOS
+NSMicrophoneUsageDescription
+```
 
-- `INTERNET` : Accès Internet
-- `ACCESS_FINE_LOCATION` : Accès à la localisation précise (GPS)
-- `ACCESS_COARSE_LOCATION` : Accès à la localisation approximative (réseau)
-- `CAMERA` : Accès à la caméra
-- `READ_EXTERNAL_STORAGE` : Lecture du stockage externe
-- `WRITE_EXTERNAL_STORAGE` : Écriture sur le stockage externe
-- `READ_CONTACTS` : Lecture des contacts
-- `RECORD_AUDIO` : Enregistrement audio
+**Contacts** :
+```pascal
+// Android
+android.permission.READ_CONTACTS
+android.permission.WRITE_CONTACTS
 
-#### Pour iOS
+// iOS
+NSContactsUsageDescription
+```
 
-Pour iOS, vous devez configurer les "usage descriptions" dans le fichier Info.plist :
+**Calendrier** :
+```pascal
+// Android
+android.permission.READ_CALENDAR
+android.permission.WRITE_CALENDAR
 
-1. Ouvrez **Project > Options**
-2. Sélectionnez **Building > iOS > Version Info**
-3. Cliquez sur **Custom plist**
-4. Ajoutez les entrées NSxxxUsageDescription nécessaires
+// iOS
+NSCalendarsUsageDescription
+```
 
-![Permissions iOS](https://votre-serveur.com/images/ios-permissions.png)
+**Capteurs et matériel** :
+```pascal
+// Android
+android.permission.BODY_SENSORS
+android.permission.BLUETOOTH
+android.permission.BLUETOOTH_ADMIN
 
-Les descriptions d'usage les plus courantes incluent :
+// iOS
+NSMotionUsageDescription
+NSBluetoothPeripheralUsageDescription
+```
 
-- `NSCameraUsageDescription` : Pourquoi l'application veut accéder à la caméra
-- `NSLocationWhenInUseUsageDescription` : Pourquoi l'application veut accéder à la localisation
-- `NSPhotoLibraryUsageDescription` : Pourquoi l'application veut accéder aux photos
-- `NSMicrophoneUsageDescription` : Pourquoi l'application veut accéder au microphone
-- `NSContactsUsageDescription` : Pourquoi l'application veut accéder aux contacts
+### Permissions normales (accordées automatiquement)
 
-Ces descriptions apparaîtront dans les boîtes de dialogue de demande d'autorisation, donc assurez-vous qu'elles expliquent clairement pourquoi votre application a besoin de ces accès.
+**Android** :
+- Internet : `android.permission.INTERNET`
+- État du réseau : `android.permission.ACCESS_NETWORK_STATE`
+- WiFi : `android.permission.ACCESS_WIFI_STATE`
+- Vibration : `android.permission.VIBRATE`
+- Réveil : `android.permission.WAKE_LOCK`
 
-### Demande de permissions au moment opportun
+**iOS** :
+- Internet : Aucune permission nécessaire
+- Vibration : Aucune permission nécessaire
 
-Il est essentiel de demander les permissions au bon moment, généralement juste avant d'utiliser la fonctionnalité concernée, et non pas toutes en même temps au démarrage de l'application.
+## Configuration des permissions dans Delphi
 
-#### Utilisation du service de permissions FireMonkey
+### Android : Déclarer les permissions
 
-Delphi fournit un service unifié pour gérer les permissions avec l'interface `IFMXPermissionsService` :
+Dans Delphi, configurez les permissions Android :
+
+```
+Project > Options > Uses Permissions (Android)
+```
+
+Cochez les permissions dont vous avez besoin :
+- ☑ Camera
+- ☑ Access Fine Location
+- ☑ Record Audio
+- ☑ Read External Storage
+- etc.
+
+Ces permissions seront ajoutées au fichier `AndroidManifest.xml` généré :
+
+```xml
+<manifest>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+</manifest>
+```
+
+### iOS : Déclarer les descriptions d'usage
+
+Pour iOS, vous devez expliquer pourquoi vous avez besoin de chaque permission :
+
+```
+Project > Options > Version Info (iOS)
+```
+
+Ajoutez les clés dans le fichier Info.plist :
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Cette application a besoin d'accéder à votre appareil photo pour prendre des photos de vos documents.</string>
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Nous utilisons votre localisation pour vous montrer les magasins à proximité.</string>
+
+<key>NSMicrophoneUsageDescription</key>
+<string>Le microphone est utilisé pour enregistrer des notes vocales.</string>
+```
+
+**Important** : Ces descriptions sont visibles par l'utilisateur et par l'équipe de validation d'Apple. Elles doivent être claires, honnêtes et en français si votre application cible un public francophone.
+
+## Demander des permissions avec Delphi
+
+### Framework de base
+
+Delphi fournit le service `TPermissionsService` pour gérer les permissions de manière unifiée.
 
 ```pascal
 uses
-  System.Permissions, FMX.Platform;
+  System.Permissions, FMX.DialogService;
 
-procedure TMainForm.RequestCameraPermission;
-var
-  PermissionsService: IFMXPermissionsService;
+// Vérifier si une permission est accordée
+function TFormMain.PermissionCameraAccordee: Boolean;
 begin
-  // Récupérer le service de permissions
-  if TPlatformServices.Current.SupportsPlatformService(IFMXPermissionsService, IInterface(PermissionsService)) then
+  Result := PermissionsService.IsPermissionGranted('android.permission.CAMERA');
+end;
+```
+
+### Demander une permission simple
+
+```pascal
+procedure TFormMain.DemanderPermissionCamera;
+begin
+  // Vérifier d'abord si on a déjà la permission
+  if PermissionsService.IsPermissionGranted('android.permission.CAMERA') then
   begin
-    // Liste des permissions requises
-    var PermissionsArray: TArray<string> := [
-      {$IFDEF ANDROID}
-      'android.permission.CAMERA'
-      {$ENDIF}
-      {$IFDEF IOS}
-      'NSCameraUsageDescription'
-      {$ENDIF}
-    ];
-
-    // Demander les permissions
-    PermissionsService.RequestPermissions(PermissionsArray,
-      // Callback de résultat
-      procedure(const APermissions: TClassicStringDynArray; const AGrantResults: TClassicPermissionStatusDynArray)
-      var
-        AllGranted: Boolean;
-        I: Integer;
+    // Permission déjà accordée, utiliser la caméra
+    OuvrirCamera;
+  end
+  else
+  begin
+    // Demander la permission
+    PermissionsService.RequestPermissions(
+      ['android.permission.CAMERA'],
+      procedure(const APermissions: TArray<string>;
+                const AGrantResults: TArray<TPermissionStatus>)
       begin
-        AllGranted := True;
-        for I := 0 to High(AGrantResults) do
-          if AGrantResults[I] <> TPermissionStatus.Granted then
-          begin
-            AllGranted := False;
-            Break;
-          end;
-
-        if AllGranted then
-          OpenCamera  // Permission accordée, on peut ouvrir la caméra
+        if (Length(AGrantResults) > 0) and
+           (AGrantResults[0] = TPermissionStatus.Granted) then
+        begin
+          // Permission accordée
+          OuvrirCamera;
+        end
         else
-          ShowMessage('La permission d''accès à la caméra est nécessaire pour cette fonctionnalité');
+        begin
+          // Permission refusée
+          TDialogService.ShowMessage(
+            'L''accès à la caméra est nécessaire pour prendre des photos. ' +
+            'Veuillez activer cette autorisation dans les paramètres de l''application.');
+        end;
       end);
-  end
-  else
-    // Le service de permissions n'est pas disponible
-    ShowMessage('Service de permissions non disponible');
-end;
-```
-
-#### Vérification préalable des permissions
-
-Avant de demander une permission, il est souvent utile de vérifier si elle est déjà accordée :
-
-```pascal
-procedure TMainForm.CheckCameraPermission;
-var
-  PermissionsService: IFMXPermissionsService;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(IFMXPermissionsService, IInterface(PermissionsService)) then
-  begin
-    // Vérifier si la permission est déjà accordée
-    {$IFDEF ANDROID}
-    var Permission := 'android.permission.CAMERA';
-    {$ENDIF}
-    {$IFDEF IOS}
-    var Permission := 'NSCameraUsageDescription';
-    {$ENDIF}
-
-    if PermissionsService.IsPermissionGranted(Permission) then
-      OpenCamera  // Permission déjà accordée
-    else
-      RequestCameraPermission;  // Demander la permission
   end;
 end;
 ```
 
-### Gestion des refus de permissions
-
-Il est important de gérer correctement les cas où l'utilisateur refuse une permission :
-
-1. **Informez clairement** pourquoi la permission est nécessaire
-2. **Proposez une alternative** si possible
-3. **Évitez de redemander** immédiatement (risque d'agacement)
-4. **Guidez l'utilisateur** vers les paramètres système si nécessaire
+### Demander plusieurs permissions
 
 ```pascal
-procedure TMainForm.HandleCameraPermissionDenial;
+procedure TFormMain.DemanderPermissionsMultiples;
+const
+  PERMISSIONS: array[0..2] of string = (
+    'android.permission.CAMERA',
+    'android.permission.READ_EXTERNAL_STORAGE',
+    'android.permission.WRITE_EXTERNAL_STORAGE'
+  );
 begin
-  // Créer une boîte de dialogue explicative
-  var Dialog := TDialogBuilder.Create(Self)
-    .SetTitle('Accès à la caméra')
-    .SetMessage('Sans accès à la caméra, vous ne pourrez pas scanner de codes QR. ' +
-                'Vous pouvez activer cette permission dans les paramètres de l''application.')
-    .AddButton('Ignorer', nil)
-    .AddButton('Paramètres', procedure(Sender: TObject)
+  PermissionsService.RequestPermissions(PERMISSIONS,
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    var
+      i: Integer;
+      ToutesAccordees: Boolean;
+    begin
+      ToutesAccordees := True;
+
+      for i := 0 to High(AGrantResults) do
       begin
-        // Ouvrir les paramètres de l'application
-        {$IFDEF ANDROID}
-        OpenAppSettings;
-        {$ENDIF}
-        {$IFDEF IOS}
-        OpenIOSSettings;
-        {$ENDIF}
-      end)
-    .Build;
-
-  Dialog.Show;
-end;
-
-{$IFDEF ANDROID}
-procedure TMainForm.OpenAppSettings;
-var
-  Intent: JIntent;
-  Uri: Jnet_Uri;
-begin
-  Intent := TJIntent.Create;
-  Intent.setAction(TJSettings.JavaClass.ACTION_APPLICATION_DETAILS_SETTINGS);
-  Uri := TJnet_Uri.JavaClass.fromParts(StringToJString('package'),
-                                      StringToJString(JStringToString(TAndroidHelper.Context.getPackageName)),
-                                      nil);
-  Intent.setData(Uri);
-  TAndroidHelper.Activity.startActivity(Intent);
-end;
-{$ENDIF}
-
-{$IFDEF IOS}
-procedure TMainForm.OpenIOSSettings;
-begin
-  // Ouvrir l'URL des paramètres iOS
-  if TOSVersion.Check(10) then
-    SharedApplication.openURL(TNSURL.OCClass.URLWithString(StrToNSStr('app-settings:')))
-  else
-    SharedApplication.openURL(TNSURL.OCClass.URLWithString(StrToNSStr('prefs:root=')));
-end;
-{$ENDIF}
-```
-
-### Sensibilisation contextuelle à la demande de permissions
-
-Pour augmenter les chances d'acceptation, expliquez toujours pourquoi vous demandez une permission juste avant de la demander :
-
-```pascal
-procedure TMainForm.PrepareForLocationAccess;
-begin
-  // Afficher une explication avant de demander la permission
-  var Dialog := TDialogBuilder.Create(Self)
-    .SetTitle('Accès à la localisation')
-    .SetMessage('Pour vous montrer les restaurants à proximité, ' +
-                'nous avons besoin d''accéder à votre position. ' +
-                'Votre localisation ne sera jamais partagée avec des tiers.')
-    .AddButton('Annuler', nil)
-    .AddButton('Continuer', procedure(Sender: TObject)
-      begin
-        RequestLocationPermission;
-      end)
-    .Build;
-
-  Dialog.Show;
-end;
-```
-
-## Protection de la confidentialité des données
-
-Au-delà des permissions, la protection des données utilisateur implique plusieurs pratiques importantes :
-
-### 1. Minimisation des données collectées
-
-Ne collectez que les données strictement nécessaires au fonctionnement de votre application :
-
-- Évaluez chaque type de donnée collectée
-- Justifiez pourquoi elle est nécessaire
-- Supprimez les données qui ne sont plus nécessaires
-
-### 2. Stockage sécurisé des données sensibles
-
-Pour stocker des données sensibles localement, utilisez des méthodes de cryptage :
-
-```pascal
-uses
-  System.SysUtils, System.IOUtils, System.Hash,
-  DUnitCryptography, DUnitX.Attributes;
-
-function EncryptData(const Data, Password: string): string;
-var
-  Encryptor: TAES;
-  EncryptedData: TBytes;
-  Salt: TBytes;
-  Key: TBytes;
-begin
-  // Générer un sel aléatoire
-  SetLength(Salt, 16);
-  FillRandomBytes(Salt);
-
-  // Dériver une clé du mot de passe
-  Key := PBKDF2_HMAC_SHA256(Password, Salt, 10000, 32);
-
-  // Créer un encrypteur AES
-  Encryptor := TAES.Create;
-  try
-    Encryptor.Mode := TCipherMode.CBC;
-    Encryptor.KeySize := TKeySize.ks256;
-    Encryptor.Key := Key;
-    Encryptor.GenerateIV;
-
-    // Crypter les données
-    EncryptedData := Encryptor.EncryptStringToBytes(Data);
-
-    // Retourner le sel + IV + données cryptées en Base64
-    Result := TNetEncoding.Base64.EncodeBytesToString(
-      ConcatBytes([Salt, Encryptor.IV, EncryptedData]));
-  finally
-    Encryptor.Free;
-  end;
-end;
-
-function DecryptData(const EncryptedBase64, Password: string): string;
-var
-  Decryptor: TAES;
-  EncryptedBytes, Salt, IV, EncryptedData: TBytes;
-  Key: TBytes;
-begin
-  Result := '';
-
-  // Décoder la chaîne Base64
-  EncryptedBytes := TNetEncoding.Base64.DecodeStringToBytes(EncryptedBase64);
-  if Length(EncryptedBytes) < 48 then  // 16 (salt) + 16 (IV) + min data
-    Exit;
-
-  // Extraire le sel, l'IV et les données
-  Salt := Copy(EncryptedBytes, 0, 16);
-  IV := Copy(EncryptedBytes, 16, 16);
-  EncryptedData := Copy(EncryptedBytes, 32, Length(EncryptedBytes) - 32);
-
-  // Dériver la clé
-  Key := PBKDF2_HMAC_SHA256(Password, Salt, 10000, 32);
-
-  // Créer un déchiffreur AES
-  Decryptor := TAES.Create;
-  try
-    Decryptor.Mode := TCipherMode.CBC;
-    Decryptor.KeySize := TKeySize.ks256;
-    Decryptor.Key := Key;
-    Decryptor.IV := IV;
-
-    // Déchiffrer les données
-    Result := Decryptor.DecryptBytesToString(EncryptedData);
-  except
-    Result := '';  // Mot de passe incorrect ou données corrompues
-  finally
-    Decryptor.Free;
-  end;
-end;
-```
-
-Pour utiliser ce code pour sécuriser des données sensibles :
-
-```pascal
-procedure TSecureStorage.SaveSecureData(const Key, Value: string);
-var
-  EncryptedValue: string;
-  AppPassword: string;
-begin
-  // Obtenir un mot de passe pour l'application (idéalement stocké de manière sécurisée)
-  AppPassword := GetAppPassword;
-
-  // Crypter la valeur
-  EncryptedValue := EncryptData(Value, AppPassword);
-
-  // Enregistrer dans un fichier ou les préférences
-  SaveValueToStorage(Key, EncryptedValue);
-end;
-
-function TSecureStorage.LoadSecureData(const Key: string): string;
-var
-  EncryptedValue: string;
-  AppPassword: string;
-begin
-  // Récupérer la valeur cryptée
-  EncryptedValue := LoadValueFromStorage(Key);
-  if EncryptedValue = '' then
-    Exit('');
-
-  // Obtenir le mot de passe de l'application
-  AppPassword := GetAppPassword;
-
-  // Décrypter la valeur
-  Result := DecryptData(EncryptedValue, AppPassword);
-end;
-```
-
-### 3. Stockage sécurisé des identifiants
-
-Sur iOS, vous pouvez utiliser le trousseau (Keychain) pour stocker des données sensibles comme les identifiants :
-
-```pascal
-{$IFDEF IOS}
-uses
-  Macapi.ObjectiveC, iOSapi.Foundation, iOSapi.Security;
-
-function SaveToKeychain(const Service, Account, Password: string): Boolean;
-var
-  Query: NSMutableDictionary;
-begin
-  // Créer le dictionnaire de requête
-  Query := TNSMutableDictionary.Create;
-
-  // Configuration des attributs du trousseau
-  Query.setObject(StrToNSStr(Service), NSStr('svce'));
-  Query.setObject(StrToNSStr(Account), NSStr('acct'));
-  Query.setObject(TNSNumber.OCClass.numberWithInt(kSecClassGenericPassword), NSStr('class'));
-  Query.setObject(TNSData.OCClass.dataWithBytes(
-    PByte(MarshaledAString(Password)), Length(Password)), NSStr('v_Data'));
-
-  // Supprimer toute entrée existante
-  SecItemDelete(Query);
-
-  // Ajouter la nouvelle entrée
-  Result := SecItemAdd(Query, nil) = errSecSuccess;
-end;
-
-function LoadFromKeychain(const Service, Account: string; out Password: string): Boolean;
-var
-  Query, Results: NSMutableDictionary;
-  PasswordData: NSData;
-begin
-  Password := '';
-  Result := False;
-
-  // Créer le dictionnaire de requête
-  Query := TNSMutableDictionary.Create;
-
-  // Configuration des attributs du trousseau
-  Query.setObject(StrToNSStr(Service), NSStr('svce'));
-  Query.setObject(StrToNSStr(Account), NSStr('acct'));
-  Query.setObject(TNSNumber.OCClass.numberWithInt(kSecClassGenericPassword), NSStr('class'));
-  Query.setObject(kCFBooleanTrue, NSStr('r_Data'));
-
-  // Récupérer l'entrée
-  if SecItemCopyMatching(Query, @Results) = errSecSuccess then
-  begin
-    PasswordData := TNSData.Wrap(Results.objectForKey(NSStr('v_Data')));
-    if Assigned(PasswordData) then
-    begin
-      SetLength(Password, PasswordData.length);
-      Move(PasswordData.bytes^, PChar(Password)^, PasswordData.length);
-      Result := True;
-    end;
-  end;
-end;
-{$ENDIF}
-```
-
-Sur Android, vous pouvez utiliser le KeyStore pour les versions récentes :
-
-```pascal
-{$IFDEF ANDROID}
-uses
-  Androidapi.JNI.JavaTypes, Androidapi.JNI.Security,
-  Androidapi.Helpers, Androidapi.JNI.App;
-
-function GetMasterKey: JSecretKey;
-var
-  KeyStore: JKeyStore;
-  KeyGenerator: JKeyGenerator;
-begin
-  Result := nil;
-
-  try
-    // Accéder au KeyStore Android
-    KeyStore := TJKeyStore.JavaClass.getInstance(StringToJString('AndroidKeyStore'));
-    KeyStore.load(nil);
-
-    // Vérifier si la clé existe déjà
-    if not KeyStore.containsAlias(StringToJString('MasterKey')) then
-    begin
-      // Générer une nouvelle clé
-      KeyGenerator := TJKeyGenerator.JavaClass.getInstance(
-        StringToJString('AES'),
-        StringToJString('AndroidKeyStore'));
-
-      // Configuration du générateur de clés
-      var Builder := TJKeyGenParameterSpec_Builder.JavaClass.init(
-        StringToJString('MasterKey'),
-        TJKeyProperties.JavaClass.PURPOSE_ENCRYPT or TJKeyProperties.JavaClass.PURPOSE_DECRYPT);
-
-      Builder.setBlockModes(StringToJString('CBC'));
-      Builder.setEncryptionPaddings(StringToJString('PKCS7Padding'));
-      Builder.setUserAuthenticationRequired(False);
-
-      KeyGenerator.init(Builder.build);
-      KeyGenerator.generateKey;
-    end;
-
-    // Récupérer la clé
-    var Entry := KeyStore.getEntry(StringToJString('MasterKey'), nil);
-    Result := TJSecretKey.Wrap(TJKeyStore_SecretKeyEntry.Wrap(Entry).getSecretKey);
-  except
-    Result := nil;
-  end;
-end;
-
-function EncryptWithKeyStore(const PlainText: string): string;
-var
-  Cipher: JCipher;
-  SecretKey: JSecretKey;
-  EncryptedBytes, IVBytes: TJavaArray<Byte>;
-begin
-  Result := '';
-
-  try
-    // Obtenir la clé maître
-    SecretKey := GetMasterKey;
-    if SecretKey = nil then
-      Exit;
-
-    // Initialiser le chiffrement
-    Cipher := TJCipher.JavaClass.getInstance(StringToJString('AES/CBC/PKCS7Padding'));
-    Cipher.init(TJCipher.JavaClass.ENCRYPT_MODE, SecretKey);
-
-    // Chiffrer les données
-    var PlainBytes := StringToJString(PlainText).getBytes;
-    EncryptedBytes := Cipher.doFinal(PlainBytes);
-
-    // Récupérer le vecteur d'initialisation (IV)
-    IVBytes := Cipher.getIV;
-
-    // Concaténer IV + données chiffrées en Base64
-    var Combined := CombineByteArrays(IVBytes, EncryptedBytes);
-    Result := TAndroidHelper.Base64Encode(ArrayToBytes(Combined));
-  except
-    Result := '';
-  end;
-end;
-
-function DecryptWithKeyStore(const EncryptedBase64: string): string;
-var
-  Cipher: JCipher;
-  SecretKey: JSecretKey;
-  IVBytes, EncryptedBytes, DecryptedBytes: TJavaArray<Byte>;
-  AllBytes: TBytes;
-begin
-  Result := '';
-
-  try
-    // Obtenir la clé maître
-    SecretKey := GetMasterKey;
-    if SecretKey = nil then
-      Exit;
-
-    // Décoder la Base64
-    AllBytes := TAndroidHelper.Base64Decode(EncryptedBase64);
-
-    // Extraire l'IV (16 premiers octets) et les données chiffrées
-    IVBytes := TJavaArray<Byte>.Create(16);
-    Move(AllBytes[0], IVBytes.Data^, 16);
-
-    EncryptedBytes := TJavaArray<Byte>.Create(Length(AllBytes) - 16);
-    Move(AllBytes[16], EncryptedBytes.Data^, Length(AllBytes) - 16);
-
-    // Initialiser le déchiffrement
-    Cipher := TJCipher.JavaClass.getInstance(StringToJString('AES/CBC/PKCS7Padding'));
-    var IvSpec := TJIvParameterSpec.JavaClass.init(IVBytes);
-    Cipher.init(TJCipher.JavaClass.DECRYPT_MODE, SecretKey, IvSpec);
-
-    // Déchiffrer
-    DecryptedBytes := Cipher.doFinal(EncryptedBytes);
-
-    // Convertir en chaîne
-    var JStr := TJString.JavaClass.init(DecryptedBytes);
-    Result := JStringToString(JStr);
-  except
-    Result := '';
-  end;
-end;
-{$ENDIF}
-```
-
-### 4. Politique de confidentialité
-
-Une politique de confidentialité est un document essentiel qui explique aux utilisateurs :
-
-- Quelles données sont collectées
-- Comment les données sont utilisées
-- Avec qui les données sont partagées
-- Comment les utilisateurs peuvent contrôler leurs données
-
-Exemple d'implémentation d'un écran de politique de confidentialité :
-
-```pascal
-procedure TMainForm.ShowPrivacyPolicy;
-var
-  PrivacyForm: TForm;
-  WebBrowser: TWebBrowser;
-begin
-  // Créer un formulaire pour afficher la politique
-  PrivacyForm := TForm.Create(nil);
-  try
-    PrivacyForm.Caption := 'Politique de confidentialité';
-    PrivacyForm.Position := TFormPosition.MainFormCenter;
-    PrivacyForm.Width := 600;
-    PrivacyForm.Height := 800;
-
-    // Ajouter un navigateur web
-    WebBrowser := TWebBrowser.Create(PrivacyForm);
-    WebBrowser.Parent := PrivacyForm;
-    WebBrowser.Align := TAlignLayout.Client;
-
-    // Charger la politique depuis une ressource ou en ligne
-    {$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-    WebBrowser.URL := 'https://www.votreapp.com/privacy';
-    {$ELSE}
-    // Pour les appareils mobiles, préférez une version locale
-    // pour éviter les problèmes de connectivité
-    var PrivacyPath := TPath.Combine(TPath.GetDocumentsPath, 'privacy_policy.html');
-    if TFile.Exists(PrivacyPath) then
-      WebBrowser.Navigate('file://' + PrivacyPath)
-    else
-      WebBrowser.LoadFromStrings('<html><body><h1>Politique de confidentialité</h1>...</body></html>', '');
-    {$ENDIF}
-
-    // Afficher le formulaire modal
-    PrivacyForm.ShowModal;
-  finally
-    PrivacyForm.Free;
-  end;
-end;
-```
-
-### 5. Consentement de l'utilisateur
-
-Obtenez et enregistrez le consentement explicite des utilisateurs pour la collecte de données :
-
-```pascal
-procedure TMainForm.ShowConsentDialog;
-var
-  ConsentForm: TForm;
-  Label1: TLabel;
-  CheckAnalytics, CheckPersonalized: TCheckBox;
-  BtnAccept, BtnDecline: TButton;
-begin
-  // Créer un formulaire de consentement
-  ConsentForm := TForm.Create(nil);
-  try
-    ConsentForm.Caption := 'Votre vie privée est importante';
-    ConsentForm.Position := TFormPosition.MainFormCenter;
-    ConsentForm.Width := 400;
-    ConsentForm.Height := 300;
-
-    // Ajouter une description
-    Label1 := TLabel.Create(ConsentForm);
-    Label1.Parent := ConsentForm;
-    Label1.Align := TAlignLayout.Top;
-    Label1.Height := 100;
-    Label1.WordWrap := True;
-    Label1.Text := 'Nous respectons votre vie privée. Veuillez choisir ' +
-                   'comment vous souhaitez que vos données soient utilisées.';
-
-    // Checkbox pour les analytiques
-    CheckAnalytics := TCheckBox.Create(ConsentForm);
-    CheckAnalytics.Parent := ConsentForm;
-    CheckAnalytics.Position.Y := 120;
-    CheckAnalytics.Position.X := 20;
-    CheckAnalytics.Width := 360;
-    CheckAnalytics.Text := 'Autoriser les statistiques anonymes d''utilisation';
-
-    // Checkbox pour le contenu personnalisé
-    CheckPersonalized := TCheckBox.Create(ConsentForm);
-    CheckPersonalized.Parent := ConsentForm;
-    CheckPersonalized.Position.Y := 150;
-    CheckPersonalized.Position.X := 20;
-    CheckPersonalized.Width := 360;
-    CheckPersonalized.Text := 'Autoriser le contenu personnalisé';
-
-    // Boutons
-    BtnAccept := TButton.Create(ConsentForm);
-    BtnAccept.Parent := ConsentForm;
-    BtnAccept.Text := 'Accepter la sélection';
-    BtnAccept.Position.X := 20;
-    BtnAccept.Position.Y := 200;
-    BtnAccept.Width := 170;
-    BtnAccept.OnClick := procedure(Sender: TObject)
-    begin
-      // Enregistrer les préférences de consentement
-      SaveConsentPreferences(CheckAnalytics.IsChecked, CheckPersonalized.IsChecked);
-      ConsentForm.ModalResult := mrOk;
-    end;
-
-    BtnDecline := TButton.Create(ConsentForm);
-    BtnDecline.Parent := ConsentForm;
-    BtnDecline.Text := 'Tout refuser';
-    BtnDecline.Position.X := 210;
-    BtnDecline.Position.Y := 200;
-    BtnDecline.Width := 170;
-    BtnDecline.OnClick := procedure(Sender: TObject)
-    begin
-      // Enregistrer un refus global
-      SaveConsentPreferences(False, False);
-      ConsentForm.ModalResult := mrCancel;
-    end;
-
-    // Afficher le formulaire modal
-    ConsentForm.ShowModal;
-  finally
-    ConsentForm.Free;
-  end;
-end;
-
-procedure TMainForm.SaveConsentPreferences(AllowAnalytics, AllowPersonalized: Boolean);
-begin
-  // Enregistrer les préférences dans un stockage sécurisé
-  {$IF DEFINED(MSWINDOWS) or DEFINED(MACOS)}
-  var Registry := TRegistry.Create;
-  try
-    Registry.RootKey := HKEY_CURRENT_USER;
-    if Registry.OpenKey('Software\YourCompany\YourApp', True) then
-    begin
-      Registry.WriteBool('ConsentAnalytics', AllowAnalytics);
-      Registry.WriteBool('ConsentPersonalized', AllowPersonalized);
-      Registry.WriteDateTime('ConsentDate', Now);
-    end;
-  finally
-    Registry.Free;
-  end;
-  {$ELSE}
-  // Pour les plateformes mobiles
-  TPreferencesService.Current.SetValue('ConsentAnalytics', AllowAnalytics);
-  TPreferencesService.Current.SetValue('ConsentPersonalized', AllowPersonalized);
-  TPreferencesService.Current.SetValue('ConsentDate', DateTimeToStr(Now));
-  {$ENDIF}
-end;
-```
-
-## Bonnes pratiques pour les permissions et la confidentialité
-
-### 1. Suivez le principe du moindre privilège
-
-Demandez uniquement les permissions essentielles au fonctionnement de votre application :
-
-- Évitez de demander l'accès à la localisation si vous avez seulement besoin du pays
-- Préférez la localisation approximative à la localisation précise si possible
-- Utilisez les alternatives moins intrusives quand elles existent
-
-### 2. Timing approprié pour les demandes de permissions
-
-Demandez les permissions au moment où l'utilisateur en a besoin, dans le bon contexte :
-
-```pascal
-procedure TMainForm.ButtonTakePhotoClick(Sender: TObject);
-begin
-  // Demander la permission au moment où l'utilisateur veut utiliser la caméra
-  RequestCameraPermission;
-end;
-```
-
-### 3. Soyez transparent sur l'utilisation des données
-
-Expliquez clairement :
-
-- Pourquoi vous collectez des données
-- Comment vous les utilisez
-- Avec qui vous les partagez
-
-### 4. Fournissez un contrôle à l'utilisateur
-
-Permettez aux utilisateurs de :
-
-- Consulter leurs données
-- Modifier leurs préférences de confidentialité
-- Supprimer leurs données
-
-```pascal
-procedure TMainForm.ShowPrivacySettingsScreen;
-var
-  SettingsForm: TForm;
-  CheckLocation, CheckCamera, CheckContacts, CheckAnalytics: TCheckBox;
-  BtnDelete, BtnSave: TButton;
-  ScrollBox: TScrollBox;
-  Panel: TPanel;
-begin
-  // Créer un formulaire pour les paramètres de confidentialité
-  SettingsForm := TForm.Create(nil);
-  try
-    SettingsForm.Caption := 'Paramètres de confidentialité';
-    SettingsForm.Position := TFormPosition.MainFormCenter;
-    SettingsForm.Width := 400;
-    SettingsForm.Height := 500;
-
-    // Ajouter un ScrollBox pour permettre le défilement
-    ScrollBox := TScrollBox.Create(SettingsForm);
-    ScrollBox.Parent := SettingsForm;
-    ScrollBox.Align := TAlignLayout.Client;
-
-    // Panneau de contenu dans le ScrollBox
-    Panel := TPanel.Create(SettingsForm);
-    Panel.Parent := ScrollBox;
-    Panel.Width := ScrollBox.Width;
-    Panel.Height := 600; // Plus grand que le ScrollBox pour permettre le défilement
-    Panel.Align := TAlignLayout.Top;
-
-    // En-tête explicatif
-    var LabelHeader := TLabel.Create(SettingsForm);
-    LabelHeader.Parent := Panel;
-    LabelHeader.Position.X := 20;
-    LabelHeader.Position.Y := 20;
-    LabelHeader.Width := Panel.Width - 40;
-    LabelHeader.Height := 80;
-    LabelHeader.TextSettings.WordWrap := True;
-    LabelHeader.Text := 'Gérez vos préférences de confidentialité. ' +
-                        'Désactiver certaines fonctionnalités peut limiter ' +
-                        'l''expérience utilisateur de l''application.';
-
-    // Checkbox pour la localisation
-    CheckLocation := TCheckBox.Create(SettingsForm);
-    CheckLocation.Parent := Panel;
-    CheckLocation.Position.X := 20;
-    CheckLocation.Position.Y := 120;
-    CheckLocation.Width := Panel.Width - 40;
-    CheckLocation.Text := 'Autoriser l''accès à ma localisation';
-    CheckLocation.IsChecked := TPreferencesService.Current.GetValue('ConsentLocation', False);
-
-    // Explication sous la checkbox
-    var LabelLocation := TLabel.Create(SettingsForm);
-    LabelLocation.Parent := Panel;
-    LabelLocation.Position.X := 40;
-    LabelLocation.Position.Y := 150;
-    LabelLocation.Width := Panel.Width - 60;
-    LabelLocation.Height := 40;
-    LabelLocation.TextSettings.WordWrap := True;
-    LabelLocation.TextSettings.FontColor := TAlphaColors.Gray;
-    LabelLocation.Text := 'Utilisé pour vous montrer des services à proximité ' +
-                         'et personnaliser les résultats de recherche.';
-
-    // Checkbox pour la caméra
-    CheckCamera := TCheckBox.Create(SettingsForm);
-    CheckCamera.Parent := Panel;
-    CheckCamera.Position.X := 20;
-    CheckCamera.Position.Y := 200;
-    CheckCamera.Width := Panel.Width - 40;
-    CheckCamera.Text := 'Autoriser l''accès à la caméra';
-    CheckCamera.IsChecked := TPreferencesService.Current.GetValue('ConsentCamera', False);
-
-    // Explication sous la checkbox
-    var LabelCamera := TLabel.Create(SettingsForm);
-    LabelCamera.Parent := Panel;
-    LabelCamera.Position.X := 40;
-    LabelCamera.Position.Y := 230;
-    LabelCamera.Width := Panel.Width - 60;
-    LabelCamera.Height := 40;
-    LabelCamera.TextSettings.WordWrap := True;
-    LabelCamera.TextSettings.FontColor := TAlphaColors.Gray;
-    LabelCamera.Text := 'Utilisé pour scanner des codes QR et prendre des photos.';
-
-    // Checkbox pour les contacts
-    CheckContacts := TCheckBox.Create(SettingsForm);
-    CheckContacts.Parent := Panel;
-    CheckContacts.Position.X := 20;
-    CheckContacts.Position.Y := 280;
-    CheckContacts.Width := Panel.Width - 40;
-    CheckContacts.Text := 'Autoriser l''accès à mes contacts';
-    CheckContacts.IsChecked := TPreferencesService.Current.GetValue('ConsentContacts', False);
-
-    // Explication sous la checkbox
-    var LabelContacts := TLabel.Create(SettingsForm);
-    LabelContacts.Parent := Panel;
-    LabelContacts.Position.X := 40;
-    LabelContacts.Position.Y := 310;
-    LabelContacts.Width := Panel.Width - 60;
-    LabelContacts.Height := 40;
-    LabelContacts.TextSettings.WordWrap := True;
-    LabelContacts.TextSettings.FontColor := TAlphaColors.Gray;
-    LabelContacts.Text := 'Utilisé pour vous permettre de partager du contenu ' +
-                         'avec vos contacts.';
-
-    // Checkbox pour les analytics
-    CheckAnalytics := TCheckBox.Create(SettingsForm);
-    CheckAnalytics.Parent := Panel;
-    CheckAnalytics.Position.X := 20;
-    CheckAnalytics.Position.Y := 360;
-    CheckAnalytics.Width := Panel.Width - 40;
-    CheckAnalytics.Text := 'Autoriser les statistiques d''utilisation anonymes';
-    CheckAnalytics.IsChecked := TPreferencesService.Current.GetValue('ConsentAnalytics', False);
-
-    // Explication sous la checkbox
-    var LabelAnalytics := TLabel.Create(SettingsForm);
-    LabelAnalytics.Parent := Panel;
-    LabelAnalytics.Position.X := 40;
-    LabelAnalytics.Position.Y := 390;
-    LabelAnalytics.Width := Panel.Width - 60;
-    LabelAnalytics.Height := 40;
-    LabelAnalytics.TextSettings.WordWrap := True;
-    LabelAnalytics.TextSettings.FontColor := TAlphaColors.Gray;
-    LabelAnalytics.Text := 'Nous aide à améliorer l''application en analysant ' +
-                          'comment elle est utilisée.';
-
-    // Bouton pour supprimer toutes les données
-    BtnDelete := TButton.Create(SettingsForm);
-    BtnDelete.Parent := Panel;
-    BtnDelete.Position.X := 20;
-    BtnDelete.Position.Y := 450;
-    BtnDelete.Width := Panel.Width - 40;
-    BtnDelete.Height := 44;
-    BtnDelete.Text := 'Supprimer toutes mes données';
-    BtnDelete.OnClick := procedure(Sender: TObject)
-    begin
-      // Demander confirmation
-      if MessageDlg('Êtes-vous sûr de vouloir supprimer toutes vos données ? ' +
-                   'Cette action est irréversible.',
-                   TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
-      begin
-        DeleteUserData;
-        ShowMessage('Toutes vos données ont été supprimées.');
-        SettingsForm.Close;
+        if AGrantResults[i] <> TPermissionStatus.Granted then
+        begin
+          ToutesAccordees := False;
+          ShowMessage('Permission refusée : ' + APermissions[i]);
+        end;
       end;
-    end;
 
-    // Bouton pour sauvegarder les paramètres
-    BtnSave := TButton.Create(SettingsForm);
-    BtnSave.Parent := Panel;
-    BtnSave.Position.X := 20;
-    BtnSave.Position.Y := 510;
-    BtnSave.Width := Panel.Width - 40;
-    BtnSave.Height := 44;
-    BtnSave.Text := 'Enregistrer les paramètres';
-    BtnSave.OnClick := procedure(Sender: TObject)
-    begin
-      // Sauvegarder les préférences
-      TPreferencesService.Current.SetValue('ConsentLocation', CheckLocation.IsChecked);
-      TPreferencesService.Current.SetValue('ConsentCamera', CheckCamera.IsChecked);
-      TPreferencesService.Current.SetValue('ConsentContacts', CheckContacts.IsChecked);
-      TPreferencesService.Current.SetValue('ConsentAnalytics', CheckAnalytics.IsChecked);
-
-      // Appliquer les changements
-      ApplyPrivacySettings;
-
-      ShowMessage('Vos préférences de confidentialité ont été enregistrées.');
-      SettingsForm.Close;
-    end;
-
-    // Afficher le formulaire
-    SettingsForm.ShowModal;
-  finally
-    SettingsForm.Free;
-  end;
-end;
-
-procedure TMainForm.DeleteUserData;
-begin
-  // Supprimer toutes les données utilisateur
-
-  // 1. Effacer les préférences
-  TPreferencesService.Current.RemoveAll;
-
-  // 2. Effacer les fichiers locaux
-  var UserDataPath := TPath.Combine(TPath.GetDocumentsPath, 'UserData');
-  if TDirectory.Exists(UserDataPath) then
-    TDirectory.Delete(UserDataPath, True);
-
-  // 3. Effacer les données de la base de données locale
-  var DB := FDatabaseHelper.GetConnection;
-  try
-    DB.ExecSQL('DELETE FROM user_data');
-    DB.ExecSQL('DELETE FROM user_preferences');
-    DB.ExecSQL('DELETE FROM user_history');
-  except
-    // Gérer les erreurs silencieusement
-  end;
-
-  // 4. Demander au serveur de supprimer les données utilisateur (si applicable)
-  if IsLoggedIn then
-  begin
-    var UserService := TUserService.Create;
-    try
-      UserService.DeleteUserData(GetUserID);
-    finally
-      UserService.Free;
-    end;
-  end;
-
-  // 5. Déconnecter l'utilisateur
-  Logout;
-end;
-
-procedure TMainForm.ApplyPrivacySettings;
-begin
-  // Appliquer les paramètres de confidentialité à l'application
-
-  // 1. Gestion des données de localisation
-  var AllowLocation := TPreferencesService.Current.GetValue('ConsentLocation', False);
-  if AllowLocation then
-    StartLocationServices
-  else
-    StopLocationServices;
-
-  // 2. Gestion des analytics
-  var AllowAnalytics := TPreferencesService.Current.GetValue('ConsentAnalytics', False);
-  if AllowAnalytics then
-    StartAnalyticsTracking
-  else
-    StopAnalyticsTracking;
-
-  // Etc. pour les autres paramètres
+      if ToutesAccordees then
+      begin
+        ShowMessage('Toutes les permissions ont été accordées');
+        InitialiserFonctionnalites;
+      end
+      else
+      begin
+        ShowMessage('Certaines fonctionnalités seront limitées.');
+      end;
+    end);
 end;
 ```
 
-### 5. Respectez les réglementations locales
+### Classe utilitaire pour gérer les permissions
 
-Adaptez votre application aux différentes réglementations en fonction de la localisation de l'utilisateur :
-
-```pascal
-procedure TMainForm.ApplyRegionalPrivacySettings;
-var
-  UserCountry: string;
-begin
-  // Déterminer le pays de l'utilisateur
-  UserCountry := GetUserCountry;
-
-  // Appliquer des paramètres spécifiques selon la région
-  if (UserCountry = 'FR') or (UserCountry = 'DE') or (UserCountry = 'IT') or
-     (UserCountry = 'ES') or (UserCountry = 'NL') then
-  begin
-    // Application du RGPD pour les utilisateurs européens
-    ApplyGDPRSettings;
-  end
-  else if UserCountry = 'US' then
-  begin
-    // Vérifier si l'utilisateur est en Californie
-    if IsUserInCalifornia then
-      // Application du CCPA
-      ApplyCCPASettings;
-  end
-  else if UserCountry = 'BR' then
-  begin
-    // Application de la LGPD brésilienne
-    ApplyLGPDSettings;
-  end
-  // Etc. pour d'autres réglementations régionales
-end;
-
-function TMainForm.GetUserCountry: string;
-begin
-  // Essayer d'obtenir le pays à partir des paramètres de l'appareil
-  Result := '';
-
-  {$IFDEF ANDROID}
-  var Locale := TJLocale.JavaClass.getDefault;
-  Result := JStringToString(Locale.getCountry);
-  {$ENDIF}
-
-  {$IFDEF IOS}
-  var Locale := TNSLocale.Wrap(TNSLocale.OCClass.currentLocale);
-  Result := NSStrToStr(Locale.countryCode);
-  {$ENDIF}
-
-  // Si le pays n'est pas disponible, utiliser l'adresse IP (si l'utilisateur a donné son consentement)
-  if (Result = '') and TPreferencesService.Current.GetValue('ConsentLocation', False) then
-  begin
-    var IPGeolocationService := TIPGeolocationService.Create;
-    try
-      Result := IPGeolocationService.GetCountryCode;
-    finally
-      IPGeolocationService.Free;
-    end;
-  end;
-end;
-
-procedure TMainForm.ApplyGDPRSettings;
-begin
-  // Implémenter des paramètres conformes au RGPD
-
-  // 1. S'assurer que le consentement est explicite
-  if not TPreferencesService.Current.GetValue('ConsentExplicit', False) then
-    ShowConsentDialog;
-
-  // 2. S'assurer que l'utilisateur peut facilement accéder à ses données
-  AddGDPRMenuItems;
-
-  // 3. Limiter la durée de conservation des données
-  SetupDataRetentionPolicy(180); // 180 jours pour l'UE
-end;
-
-procedure TMainForm.ApplyCCPASettings;
-begin
-  // Implémenter des paramètres conformes au CCPA
-
-  // 1. Ajouter un lien "Ne pas vendre mes informations"
-  AddDoNotSellMenuItem;
-
-  // 2. S'assurer que l'utilisateur peut voir et supprimer ses données
-  AddCCPAPrivacyControls;
-end;
-```
-
-## Audit et conformité des permissions
-
-### Automatisation des tests de permissions
-
-Pour vous assurer que votre application demande correctement les permissions, créez des tests automatisés :
+Créons une classe réutilisable pour simplifier la gestion des permissions :
 
 ```pascal
-procedure TPermissionTests.TestCameraPermission;
-begin
-  // Simuler un clic sur le bouton qui devrait déclencher la demande de permission caméra
-  FMainForm.btnTakePhoto.Click;
-
-  // Vérifier qu'une demande de permission a été effectuée
-  Assert.IsTrue(FPermissionServiceMock.PermissionRequested('CAMERA'),
-    'La permission de caméra aurait dû être demandée');
-
-  // Simuler un refus de permission
-  FPermissionServiceMock.SimulatePermissionDenial('CAMERA');
-
-  // Vérifier que l'application gère correctement le refus
-  Assert.IsFalse(FCameraComponent.Active,
-    'La caméra ne devrait pas être active après un refus de permission');
-  Assert.IsTrue(FMainForm.lblCameraStatus.Text.Contains('permission'),
-    'Un message sur la permission devrait être affiché');
-end;
-```
-
-### Liste de vérification pour la conformité RGPD
-
-Utilisez cette liste de vérification pour vous assurer que votre application est conforme au RGPD :
-
-1. **Consentement explicite** :
-   - [ ] L'utilisateur peut donner son consentement de manière explicite
-   - [ ] Chaque type de données a son propre consentement
-   - [ ] Le consentement est stocké avec un horodatage
-
-2. **Transparence** :
-   - [ ] Politique de confidentialité claire et accessible
-   - [ ] Explication de chaque demande de permission
-   - [ ] Information sur les tiers qui reçoivent des données
-
-3. **Contrôle utilisateur** :
-   - [ ] Possibilité de consulter les données collectées
-   - [ ] Option pour télécharger les données personnelles
-   - [ ] Mécanisme de suppression des données
-
-4. **Sécurité des données** :
-   - [ ] Données sensibles cryptées
-   - [ ] Transmission sécurisée (HTTPS)
-   - [ ] Durée de conservation limitée
-
-5. **Minimisation des données** :
-   - [ ] Seules les données nécessaires sont collectées
-   - [ ] Les données sont anonymisées quand c'est possible
-   - [ ] Suppression automatique des données obsolètes
-
-## Mise en œuvre d'une stratégie de confidentialité complète
-
-Pour mettre en place une stratégie de confidentialité efficace, suivez ces étapes :
-
-### 1. Cartographiez les données collectées
-
-Documentez toutes les données personnelles que votre application collecte :
-
-```pascal
-type
-  TDataCategory = (dcIdentification, dcContact, dcLocation, dcBehavioral, dcTechnical);
-
-  TDataItem = record
-    Name: string;
-    Category: TDataCategory;
-    Purpose: string;
-    Retention: Integer; // Jours
-    RequiresConsent: Boolean;
-    ThirdPartySharing: Boolean;
-  end;
-
-procedure DocumentDataCollection;
-var
-  DataInventory: TList<TDataItem>;
-begin
-  DataInventory := TList<TDataItem>.Create;
-  try
-    // Exemples de données collectées
-    DataInventory.Add(TDataItem.Create('Email', dcContact, 'Authentification et communication',
-                                     -1, True, False));
-    DataInventory.Add(TDataItem.Create('Nom', dcIdentification, 'Personnalisation',
-                                     -1, True, False));
-    DataInventory.Add(TDataItem.Create('Localisation précise', dcLocation, 'Recherche à proximité',
-                                     30, True, False));
-    DataInventory.Add(TDataItem.Create('Historique de recherche', dcBehavioral, 'Suggestions personnalisées',
-                                     90, True, False));
-    DataInventory.Add(TDataItem.Create('Adresse IP', dcTechnical, 'Sécurité et débogage',
-                                     30, False, False));
-
-    // Exporter l'inventaire pour documentation
-    ExportDataInventory(DataInventory);
-  finally
-    DataInventory.Free;
-  end;
-end;
-```
-
-### 2. Implémentez un système de gestion du consentement
-
-Créez un système complet pour gérer le consentement des utilisateurs :
-
-```pascal
-unit ConsentManager;
+unit Utils.Permissions;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
-  System.DateUtils;
+  System.Permissions;
 
 type
-  TConsentPurpose = (cpEssential, cpFunctional, cpAnalytics, cpMarketing, cpThirdParty);
+  TPermissionResult = (prAccordee, prRefusee, prDejaAccordee);
+  TPermissionCallback = reference to procedure(Result: TPermissionResult);
 
-  TConsentManager = class
-  private
-    FConsents: TDictionary<TConsentPurpose, Boolean>;
-    FConsentDates: TDictionary<TConsentPurpose, TDateTime>;
-
-    procedure LoadConsents;
-    procedure SaveConsents;
+  TPermissionHelper = class
   public
-    constructor Create;
-    destructor Destroy; override;
+    // Constantes pour les permissions courantes
+    const PERMISSION_CAMERA = 'android.permission.CAMERA';
+    const PERMISSION_LOCATION_FINE = 'android.permission.ACCESS_FINE_LOCATION';
+    const PERMISSION_LOCATION_COARSE = 'android.permission.ACCESS_COARSE_LOCATION';
+    const PERMISSION_RECORD_AUDIO = 'android.permission.RECORD_AUDIO';
+    const PERMISSION_READ_STORAGE = 'android.permission.READ_EXTERNAL_STORAGE';
+    const PERMISSION_WRITE_STORAGE = 'android.permission.WRITE_EXTERNAL_STORAGE';
+    const PERMISSION_READ_CONTACTS = 'android.permission.READ_CONTACTS';
 
-    function HasConsent(Purpose: TConsentPurpose): Boolean;
-    procedure SetConsent(Purpose: TConsentPurpose; Granted: Boolean);
-    function GetConsentDate(Purpose: TConsentPurpose): TDateTime;
-    procedure RevokeAllConsents;
-
-    procedure ShowConsentDialog;
-    function NeedsConsentUpdate: Boolean;
+    // Méthodes principales
+    class function EstAccordee(const Permission: string): Boolean;
+    class procedure Demander(const Permission: string;
+      Callback: TPermissionCallback);
+    class procedure DemanderPlusieurs(const Permissions: TArray<string>;
+      CallbackTousAccordes: TProc;
+      CallbackRefus: TProc);
   end;
 
 implementation
 
-const
-  CONSENT_VERSION = 2; // Incrémenter quand les politiques changent
+uses
+  FMX.DialogService;
 
-constructor TConsentManager.Create;
+class function TPermissionHelper.EstAccordee(const Permission: string): Boolean;
 begin
-  inherited Create;
-  FConsents := TDictionary<TConsentPurpose, Boolean>.Create;
-  FConsentDates := TDictionary<TConsentPurpose, TDateTime>.Create;
-
-  LoadConsents;
+  Result := PermissionsService.IsPermissionGranted(Permission);
 end;
 
-destructor TConsentManager.Destroy;
+class procedure TPermissionHelper.Demander(const Permission: string;
+  Callback: TPermissionCallback);
 begin
-  SaveConsents;
-  FConsents.Free;
-  FConsentDates.Free;
-  inherited;
-end;
-
-procedure TConsentManager.LoadConsents;
-var
-  JSON: string;
-  JSONObj: TJSONObject;
-  Purpose: TConsentPurpose;
-begin
-  // Initialiser avec des valeurs par défaut
-  for Purpose := Low(TConsentPurpose) to High(TConsentPurpose) do
+  // Si déjà accordée, callback immédiat
+  if EstAccordee(Permission) then
   begin
-    FConsents.Add(Purpose, False);
-    FConsentDates.Add(Purpose, 0);
+    if Assigned(Callback) then
+      Callback(TPermissionResult.prDejaAccordee);
+    Exit;
   end;
 
-  // Seuls les éléments essentiels sont activés par défaut
-  FConsents[cpEssential] := True;
-
-  // Charger les consentements sauvegardés
-  JSON := TPreferencesService.Current.GetValue('UserConsents', '');
-  if JSON <> '' then
-  begin
-    JSONObj := TJSONObject.ParseJSONValue(JSON) as TJSONObject;
-    if JSONObj <> nil then
-    try
-      // Vérifier la version du consentement
-      var Version := JSONObj.GetValue<Integer>('version', 0);
-
-      // Si la version est obsolète, ne pas charger les anciens consentements
-      if Version = CONSENT_VERSION then
+  // Sinon, demander
+  PermissionsService.RequestPermissions([Permission],
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    begin
+      if Assigned(Callback) then
       begin
-        // Charger les consentements
-        var Consents := JSONObj.GetValue('consents') as TJSONObject;
-        if Consents <> nil then
+        if (Length(AGrantResults) > 0) and
+           (AGrantResults[0] = TPermissionStatus.Granted) then
+          Callback(TPermissionResult.prAccordee)
+        else
+          Callback(TPermissionResult.prRefusee);
+      end;
+    end);
+end;
+
+class procedure TPermissionHelper.DemanderPlusieurs(
+  const Permissions: TArray<string>;
+  CallbackTousAccordes: TProc;
+  CallbackRefus: TProc);
+var
+  i: Integer;
+  ToutesDejaAccordees: Boolean;
+begin
+  // Vérifier si toutes sont déjà accordées
+  ToutesDejaAccordees := True;
+  for i := 0 to High(Permissions) do
+  begin
+    if not EstAccordee(Permissions[i]) then
+    begin
+      ToutesDejaAccordees := False;
+      Break;
+    end;
+  end;
+
+  if ToutesDejaAccordees then
+  begin
+    if Assigned(CallbackTousAccordes) then
+      CallbackTousAccordes;
+    Exit;
+  end;
+
+  // Demander les permissions
+  PermissionsService.RequestPermissions(Permissions,
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
+    var
+      j: Integer;
+      ToutesAccordees: Boolean;
+    begin
+      ToutesAccordees := True;
+      for j := 0 to High(AGrantResults) do
+      begin
+        if AGrantResults[j] <> TPermissionStatus.Granted then
         begin
-          for Purpose := Low(TConsentPurpose) to High(TConsentPurpose) do
-          begin
-            var PurposeName := GetEnumName(TypeInfo(TConsentPurpose), Ord(Purpose));
-            PurposeName := PurposeName.Substring(2); // Supprimer le préfixe 'cp'
-
-            if Consents.TryGetValue(PurposeName, var ConsentsValue) and (ConsentsValue is TJSONObject) then
-            begin
-              var ConsentObj := ConsentsValue as TJSONObject;
-              FConsents[Purpose] := ConsentObj.GetValue<Boolean>('granted', False);
-
-              var DateStr := ConsentObj.GetValue<string>('date', '');
-              if DateStr <> '' then
-                FConsentDates[Purpose] := ISO8601ToDate(DateStr);
-            end;
-          end;
+          ToutesAccordees := False;
+          Break;
         end;
       end;
-    finally
-      JSONObj.Free;
-    end;
-  end;
-end;
 
-procedure TConsentManager.SaveConsents;
-var
-  JSONObj, ConsentsObj: TJSONObject;
-  Purpose: TConsentPurpose;
-begin
-  JSONObj := TJSONObject.Create;
-  try
-    // Enregistrer la version
-    JSONObj.AddPair('version', TJSONNumber.Create(CONSENT_VERSION));
-
-    // Créer l'objet des consentements
-    ConsentsObj := TJSONObject.Create;
-    JSONObj.AddPair('consents', ConsentsObj);
-
-    // Ajouter chaque consentement
-    for Purpose := Low(TConsentPurpose) to High(TConsentPurpose) do
-    begin
-      var PurposeName := GetEnumName(TypeInfo(TConsentPurpose), Ord(Purpose));
-      PurposeName := PurposeName.Substring(2); // Supprimer le préfixe 'cp'
-
-      var ConsentObj := TJSONObject.Create;
-      ConsentObj.AddPair('granted', TJSONBool.Create(FConsents[Purpose]));
-
-      if FConsentDates[Purpose] > 0 then
-        ConsentObj.AddPair('date', DateToISO8601(FConsentDates[Purpose]));
-
-      ConsentsObj.AddPair(PurposeName, ConsentObj);
-    end;
-
-    // Sauvegarder dans les préférences
-    TPreferencesService.Current.SetValue('UserConsents', JSONObj.ToString);
-  finally
-    JSONObj.Free;
-  end;
-end;
-
-function TConsentManager.HasConsent(Purpose: TConsentPurpose): Boolean;
-begin
-  Result := FConsents.ContainsKey(Purpose) and FConsents[Purpose];
-end;
-
-procedure TConsentManager.SetConsent(Purpose: TConsentPurpose; Granted: Boolean);
-begin
-  FConsents[Purpose] := Granted;
-  FConsentDates[Purpose] := Now;
-  SaveConsents;
-end;
-
-function TConsentManager.GetConsentDate(Purpose: TConsentPurpose): TDateTime;
-begin
-  Result := FConsentDates[Purpose];
-end;
-
-procedure TConsentManager.RevokeAllConsents;
-var
-  Purpose: TConsentPurpose;
-begin
-  for Purpose := Low(TConsentPurpose) to High(TConsentPurpose) do
-  begin
-    // Les consentements essentiels ne peuvent pas être révoqués
-    if Purpose <> cpEssential then
-      FConsents[Purpose] := False;
-  end;
-
-  SaveConsents;
-end;
-
-function TConsentManager.NeedsConsentUpdate: Boolean;
-var
-  LastConsentVersion: Integer;
-begin
-  // Vérifier si la version du consentement a changé
-  LastConsentVersion := TPreferencesService.Current.GetValue('LastConsentVersion', 0);
-  Result := LastConsentVersion < CONSENT_VERSION;
-
-  // Si un consentement essentiel n'a jamais été donné
-  if not Result then
-    Result := FConsentDates[cpEssential] = 0;
-end;
-
-procedure TConsentManager.ShowConsentDialog;
-begin
-  // Implémentation du dialogue de consentement
-  // ...
-
-  // Mettre à jour la version du consentement
-  TPreferencesService.Current.SetValue('LastConsentVersion', CONSENT_VERSION);
+      if ToutesAccordees then
+      begin
+        if Assigned(CallbackTousAccordes) then
+          CallbackTousAccordes;
+      end
+      else
+      begin
+        if Assigned(CallbackRefus) then
+          CallbackRefus;
+      end;
+    end);
 end;
 
 end.
 ```
 
-### 3. Vérifiez le consentement avant d'utiliser les données
-
-Assurez-vous de vérifier le consentement avant d'utiliser les données personnelles :
+**Utilisation de la classe utilitaire** :
 
 ```pascal
-procedure TAnalyticsService.TrackEvent(const Category, Action, Label: string);
+uses
+  Utils.Permissions;
+
+// Exemple simple
+procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);
 begin
-  // Vérifier le consentement avant de collecter des analytics
-  if ConsentManager.HasConsent(cpAnalytics) then
-  begin
-    // Collecter et envoyer les données analytiques
-    // ...
-  end
-  else
-  begin
-    // Logger localement sans données personnelles
-    LogEventWithoutPersonalData(Category, Action);
-  end;
+  TPermissionHelper.Demander(TPermissionHelper.PERMISSION_CAMERA,
+    procedure(Result: TPermissionResult)
+    begin
+      case Result of
+        prAccordee, prDejaAccordee:
+          PrendrePhoto;
+        prRefusee:
+          ShowMessage('Impossible de prendre une photo sans accès à la caméra.');
+      end;
+    end);
 end;
 
-procedure TLocationService.GetUserLocation(Callback: TProc<TLocationCoord2D>);
+// Exemple avec plusieurs permissions
+procedure TFormMain.BtnDemarrerTrackingClick(Sender: TObject);
 begin
-  // Vérifier le consentement avant d'accéder à la localisation
-  if ConsentManager.HasConsent(cpFunctional) then
-  begin
-    // Demander la localisation
-    RequestLocationPermission(
-      procedure(Granted: Boolean)
+  TPermissionHelper.DemanderPlusieurs(
+    [TPermissionHelper.PERMISSION_LOCATION_FINE,
+     TPermissionHelper.PERMISSION_LOCATION_COARSE],
+    procedure
+    begin
+      // Toutes les permissions accordées
+      DemarrerTracking;
+    end,
+    procedure
+    begin
+      // Au moins une refusée
+      ShowMessage('Le tracking nécessite l''accès à votre localisation.');
+    end);
+end;
+```
+
+## Expliquer avant de demander
+
+Il est fortement recommandé d'expliquer à l'utilisateur **pourquoi** vous avez besoin d'une permission **avant** de la demander.
+
+### Dialogue explicatif
+
+```pascal
+procedure TFormMain.DemanderPermissionAvecExplication;
+begin
+  // D'abord, expliquer
+  TDialogService.MessageDialog(
+    'Pour vous permettre de prendre des photos de vos reçus et de les ' +
+    'joindre à vos notes de frais, nous avons besoin d''accéder à votre ' +
+    'appareil photo.' + sLineBreak + sLineBreak +
+    'Nous ne stockons ces photos que localement sur votre appareil et ne ' +
+    'les partageons jamais avec des tiers.',
+    TMsgDlgType.mtInformation,
+    [TMsgDlgBtn.mbOK, TMsgDlgBtn.mbCancel],
+    TMsgDlgBtn.mbOK, 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if AResult = mrOK then
       begin
-        if Granted then
-        begin
-          // Obtenir et retourner la localisation
-          GetCurrentLocation(Callback);
-        end
-        else
-          Callback(TLocationCoord2D.Create(0, 0));
+        // L'utilisateur comprend, maintenant demander la permission
+        TPermissionHelper.Demander(TPermissionHelper.PERMISSION_CAMERA,
+          procedure(Result: TPermissionResult)
+          begin
+            if Result in [prAccordee, prDejaAccordee] then
+              OuvrirCamera
+            else
+              ShowMessage('Vous pourrez activer cette permission plus tard ' +
+                'dans les paramètres de l''application.');
+          end);
+      end;
+    end);
+end;
+```
+
+### Afficher une explication contextuelle
+
+```pascal
+// Afficher l'explication seulement la première fois
+procedure TFormMain.DemanderPermissionIntelligente(const Permission: string;
+  const Explication: string; Callback: TProc);
+var
+  DejaExplique: Boolean;
+begin
+  // Vérifier si on a déjà expliqué cette permission
+  DejaExplique := LirePreference('permission_expliquee_' + Permission, False);
+
+  if not DejaExplique then
+  begin
+    // Première fois : expliquer
+    TDialogService.MessageDialog(Explication,
+      TMsgDlgType.mtInformation,
+      [TMsgDlgBtn.mbOK],
+      TMsgDlgBtn.mbOK, 0,
+      procedure(const AResult: TModalResult)
+      begin
+        SauvegarderPreference('permission_expliquee_' + Permission, True);
+        DemanderPermissionSimple(Permission, Callback);
       end);
   end
   else
   begin
-    // Informer que le consentement est nécessaire
-    ShowConsentRequiredMessage('localisation', cpFunctional);
-    Callback(TLocationCoord2D.Create(0, 0));
+    // Déjà expliqué, demander directement
+    DemanderPermissionSimple(Permission, Callback);
   end;
+end;
+
+procedure TFormMain.DemanderPermissionSimple(const Permission: string;
+  Callback: TProc);
+begin
+  TPermissionHelper.Demander(Permission,
+    procedure(Result: TPermissionResult)
+    begin
+      if Result in [prAccordee, prDejaAccordee] then
+      begin
+        if Assigned(Callback) then
+          Callback;
+      end;
+    end);
 end;
 ```
 
-### 4. Mettez en place un système de journalisation des accès
+## Gérer le refus de permissions
 
-Conservez un journal des accès aux données sensibles :
+### Détecter un refus permanent
+
+Sur Android, si l'utilisateur refuse une permission et coche "Ne plus demander", vous ne pourrez plus afficher le dialogue de permission. Vous devez détecter cette situation et guider l'utilisateur vers les paramètres.
 
 ```pascal
-type
-  TDataAccessType = (datRead, datWrite, datExport, datDelete);
-
-  TDataAccessLog = class
-  private
-    FLogFile: string;
-  public
-    constructor Create;
-
-    procedure LogAccess(const UserID, DataCategory: string;
-                      AccessType: TDataAccessType; Success: Boolean);
-    function GetAccessLogs(const UserID: string): TArray<string>;
-    procedure PurgeOldLogs(DaysToKeep: Integer);
-  end;
-
-constructor TDataAccessLog.Create;
+procedure TFormMain.GererRefusPermission(const Permission: string);
 begin
-  inherited Create;
-  FLogFile := TPath.Combine(TPath.GetDocumentsPath, 'data_access.log');
+  {$IFDEF ANDROID}
+  // Sur Android, vérifier si l'utilisateur a coché "Ne plus demander"
+  var Activity := TAndroidHelper.Activity;
+  if not Activity.shouldShowRequestPermissionRationale(
+    StringToJString(Permission)) then
+  begin
+    // L'utilisateur a refusé définitivement
+    TDialogService.MessageDialog(
+      'Pour utiliser cette fonctionnalité, vous devez activer l''autorisation ' +
+      'dans les paramètres de l''application.' + sLineBreak + sLineBreak +
+      'Paramètres > Applications > ' + GetNomApplication + ' > Autorisations',
+      TMsgDlgType.mtInformation,
+      [TMsgDlgBtn.mbOK, TMsgDlgBtn.mbCancel],
+      TMsgDlgBtn.mbOK, 0,
+      procedure(const AResult: TModalResult)
+      begin
+        if AResult = mrOK then
+          OuvrirParametresApplication;
+      end,
+      'Ouvrir paramètres', 'Annuler');
+  end
+  else
+  begin
+    // Simple refus, on peut redemander plus tard
+    ShowMessage('Cette fonctionnalité nécessite votre autorisation.');
+  end;
+  {$ENDIF}
+
+  {$IFDEF IOS}
+  // Sur iOS, guider vers les paramètres
+  TDialogService.MessageDialog(
+    'Pour utiliser cette fonctionnalité, activez l''autorisation dans :' +
+    sLineBreak + 'Réglages > ' + GetNomApplication,
+    TMsgDlgType.mtInformation,
+    [TMsgDlgBtn.mbOK],
+    TMsgDlgBtn.mbOK, 0);
+  {$ENDIF}
 end;
 
-procedure TDataAccessLog.LogAccess(const UserID, DataCategory: string;
-                                 AccessType: TDataAccessType; Success: Boolean);
-var
-  LogEntry: string;
-  LogStream: TStreamWriter;
+// Ouvrir les paramètres de l'application
+procedure TFormMain.OuvrirParametresApplication;
 begin
-  // Créer l'entrée de journal
-  LogEntry := Format('%s|%s|%s|%s|%s|%d', [
-    FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
-    UserID,
-    DataCategory,
-    GetEnumName(TypeInfo(TDataAccessType), Ord(AccessType)),
-    BoolToStr(Success, True),
-    GetDeviceInfo
-  ]);
+  {$IFDEF ANDROID}
+  var Intent := TJIntent.Create;
+  Intent.setAction(TJSettings.JavaClass.ACTION_APPLICATION_DETAILS_SETTINGS);
+  Intent.setData(StrToJURI('package:' +
+    JStringToString(TAndroidHelper.Context.getPackageName)));
+  TAndroidHelper.Context.startActivity(Intent);
+  {$ENDIF}
 
-  // Ajouter au fichier de journal
+  {$IFDEF IOS}
+  var URL := StrToNSUrl('app-settings:');
+  SharedApplication.openURL(URL);
+  {$ENDIF}
+end;
+```
+
+### Mode dégradé
+
+Proposez toujours une alternative quand une permission est refusée :
+
+```pascal
+procedure TFormMain.BtnAjouterPhotoClick(Sender: TObject);
+begin
+  TPermissionHelper.Demander(TPermissionHelper.PERMISSION_CAMERA,
+    procedure(Result: TPermissionResult)
+    begin
+      case Result of
+        prAccordee, prDejaAccordee:
+          // Prendre une photo avec la caméra
+          PrendrePhotoCamera;
+        prRefusee:
+          // Proposer de choisir une photo existante
+          TDialogService.MessageDialog(
+            'Voulez-vous choisir une photo existante depuis votre galerie ?',
+            TMsgDlgType.mtConfirmation,
+            [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+            TMsgDlgBtn.mbYes, 0,
+            procedure(const AResult: TModalResult)
+            begin
+              if AResult = mrYes then
+                ChoisirPhotoGalerie;
+            end);
+      end;
+    end);
+end;
+```
+
+## Confidentialité des données
+
+### Principes du RGPD
+
+Le Règlement Général sur la Protection des Données (RGPD) s'applique à toutes les applications qui traitent des données de citoyens européens. Voici les principes clés :
+
+**1. Consentement explicite** :
+- L'utilisateur doit donner son accord clair
+- Le consentement doit être libre, spécifique et informé
+- Doit être aussi facile de retirer son consentement que de le donner
+
+**2. Minimisation des données** :
+- Ne collectez que les données strictement nécessaires
+- Ne gardez les données que le temps nécessaire
+
+**3. Transparence** :
+- Informez clairement sur les données collectées
+- Expliquez comment et pourquoi elles sont utilisées
+- Indiquez avec qui elles sont partagées
+
+**4. Droit d'accès et de rectification** :
+- L'utilisateur peut consulter ses données
+- L'utilisateur peut corriger des données erronées
+- L'utilisateur peut demander la suppression de ses données
+
+**5. Sécurité** :
+- Protégez les données contre les accès non autorisés
+- Chiffrez les données sensibles
+- Notifiez en cas de violation de données
+
+### Politique de confidentialité
+
+Toute application collectant des données personnelles **doit** avoir une politique de confidentialité :
+
+```pascal
+procedure TFormMain.AfficherPolitiqueConfidentialite;
+begin
+  {$IFDEF MSWINDOWS}
+  ShellExecute(0, 'open',
+    PChar('https://votresite.com/politique-confidentialite'),
+    nil, nil, SW_SHOWNORMAL);
+  {$ELSE}
+  // Sur mobile
+  var URL := 'https://votresite.com/politique-confidentialite';
+  {$IFDEF ANDROID}
+  var Intent := TJIntent.Create;
+  Intent.setAction(TJIntent.JavaClass.ACTION_VIEW);
+  Intent.setData(StrToJURI(URL));
+  TAndroidHelper.Context.startActivity(Intent);
+  {$ENDIF}
+  {$IFDEF IOS}
+  SharedApplication.openURL(StrToNSUrl(URL));
+  {$ENDIF}
+  {$ENDIF}
+end;
+
+// Afficher lors de la première utilisation
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  if not LirePreference('politique_acceptee', False) then
+  begin
+    TDialogService.MessageDialog(
+      'Bienvenue !' + sLineBreak + sLineBreak +
+      'Pour utiliser cette application, veuillez lire et accepter notre ' +
+      'politique de confidentialité.',
+      TMsgDlgType.mtInformation,
+      [TMsgDlgBtn.mbOK],
+      TMsgDlgBtn.mbOK, 0,
+      procedure(const AResult: TModalResult)
+      begin
+        AfficherDialogueConsentement;
+      end);
+  end;
+end;
+
+procedure TFormMain.AfficherDialogueConsentement;
+begin
+  // Créer un formulaire avec la politique et une case à cocher
+  var Form := TFormConsentement.Create(Self);
   try
-    LogStream := TStreamWriter.Create(FLogFile, True, TEncoding.UTF8);
-    try
-      LogStream.WriteLine(LogEntry);
-    finally
-      LogStream.Free;
-    end;
-  except
-    // Gérer silencieusement les erreurs de journalisation
+    Form.ShowModal(
+      procedure(ModalResult: TModalResult)
+      begin
+        if ModalResult = mrOK then
+        begin
+          SauvegarderPreference('politique_acceptee', True);
+          SauvegarderPreference('date_acceptation', DateTimeToStr(Now));
+        end
+        else
+        begin
+          // L'utilisateur n'accepte pas : fermer l'application
+          Application.Terminate;
+        end;
+      end);
+  finally
+    Form.Free;
   end;
 end;
 ```
+
+### Consentement pour le tracking
+
+Depuis iOS 14.5, vous devez demander explicitement la permission pour tracker l'utilisateur :
+
+```pascal
+{$IFDEF IOS}
+uses
+  iOSapi.AppTrackingTransparency;
+
+procedure TFormMain.DemanderPermissionTracking;
+begin
+  // Demander la permission de tracking sur iOS 14.5+
+  if TOSVersion.Major >= 14 then
+  begin
+    ATTrackingManager.requestTrackingAuthorizationWithCompletionHandler(
+      procedure(status: ATTrackingManagerAuthorizationStatus)
+      begin
+        case status of
+          ATTrackingManagerAuthorizationStatusAuthorized:
+            begin
+              // Tracking autorisé
+              ActiverAnalytics;
+            end;
+          ATTrackingManagerAuthorizationStatusDenied,
+          ATTrackingManagerAuthorizationStatusRestricted:
+            begin
+              // Tracking refusé
+              DesactiverAnalytics;
+            end;
+        end;
+      end);
+  end;
+end;
+{$ENDIF}
+```
+
+### Gestion du consentement dans l'application
+
+Créez une page de paramètres de confidentialité :
+
+```pascal
+procedure TFormMain.AfficherParametresConfidentialite;
+begin
+  // Afficher les options de confidentialité
+  SwitchAnalytics.IsChecked := LirePreference('analytics_enabled', False);
+  SwitchPartageUsage.IsChecked := LirePreference('usage_sharing', False);
+  SwitchNotificationsMarketing.IsChecked :=
+    LirePreference('marketing_notif', False);
+end;
+
+procedure TFormMain.SwitchAnalyticsSwitch(Sender: TObject);
+begin
+  SauvegarderPreference('analytics_enabled', SwitchAnalytics.IsChecked);
+
+  if SwitchAnalytics.IsChecked then
+    ActiverAnalytics
+  else
+    DesactiverAnalytics;
+end;
+
+procedure TFormMain.BtnSupprimerDonneesClick(Sender: TObject);
+begin
+  TDialogService.MessageDialog(
+    'Êtes-vous sûr de vouloir supprimer toutes vos données ?' + sLineBreak +
+    'Cette action est irréversible.',
+    TMsgDlgType.mtWarning,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+    TMsgDlgBtn.mbNo, 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if AResult = mrYes then
+      begin
+        SupprimerToutesLesDonnees;
+        ShowMessage('Vos données ont été supprimées.');
+      end;
+    end);
+end;
+```
+
+## Stockage sécurisé des données sensibles
+
+### Ne jamais stocker en clair
+
+```pascal
+// ❌ MAUVAIS : Mot de passe en clair
+procedure SauvegarderMotDePasse(const MotDePasse: string);
+begin
+  SauvegarderPreference('password', MotDePasse); // DANGEREUX !
+end;
+
+// ✅ BON : Utiliser un hash
+uses
+  System.Hash;
+
+procedure SauvegarderMotDePasseSecurise(const MotDePasse: string);
+var
+  Hash: string;
+begin
+  // Hasher avec SHA256
+  Hash := THashSHA2.GetHashString(MotDePasse);
+  SauvegarderPreference('password_hash', Hash);
+end;
+
+function VerifierMotDePasse(const MotDePasse: string): Boolean;
+var
+  HashStocke, HashSaisi: string;
+begin
+  HashStocke := LirePreference('password_hash', '');
+  HashSaisi := THashSHA2.GetHashString(MotDePasse);
+  Result := HashStocke = HashSaisi;
+end;
+```
+
+### Chiffrement des données sensibles
+
+```pascal
+uses
+  System.NetEncoding;
+
+// Chiffrer une chaîne (exemple simple avec Base64)
+// En production, utilisez un vrai chiffrement (AES)
+function ChiffrerDonnee(const Donnee: string): string;
+begin
+  Result := TNetEncoding.Base64.Encode(Donnee);
+end;
+
+function DechiffrerDonnee(const DonneeChiffree: string): string;
+begin
+  Result := TNetEncoding.Base64.Decode(DonneeChiffree);
+end;
+
+// Sauvegarder des données sensibles
+procedure SauvegarderTokenAPI(const Token: string);
+var
+  TokenChiffre: string;
+begin
+  TokenChiffre := ChiffrerDonnee(Token);
+  SauvegarderPreference('api_token', TokenChiffre);
+end;
+
+function RecupererTokenAPI: string;
+var
+  TokenChiffre: string;
+begin
+  TokenChiffre := LirePreference('api_token', '');
+  if not TokenChiffre.IsEmpty then
+    Result := DechiffrerDonnee(TokenChiffre)
+  else
+    Result := '';
+end;
+```
+
+### Utiliser le Keychain (iOS) et Keystore (Android)
+
+Pour les données très sensibles, utilisez les systèmes sécurisés du système :
+
+```pascal
+// Note : Ceci nécessite des composants tiers ou des API natives
+// Exemple conceptuel
+
+{$IFDEF IOS}
+procedure SauvegarderDansKeychain(const Cle, Valeur: string);
+begin
+  // Utiliser l'API Keychain d'iOS
+  // La valeur est stockée de manière sécurisée par le système
+end;
+{$ENDIF}
+
+{$IFDEF ANDROID}
+procedure SauvegarderDansKeystore(const Cle, Valeur: string);
+begin
+  // Utiliser l'API Keystore d'Android
+  // Les clés sont protégées par le matériel sur les appareils récents
+end;
+{$ENDIF}
+```
+
+## Bonnes pratiques
+
+### 1. Principe du moindre privilège
+
+Ne demandez que les permissions strictement nécessaires :
+
+```pascal
+// ❌ MAUVAIS : Demander toutes les permissions "au cas où"
+DemanderPermissions([CAMERA, LOCATION, CONTACTS, MICROPHONE, ...]);
+
+// ✅ BON : Demander seulement ce qui est nécessaire
+if FonctionnaliteNecessiteCamera then
+  DemanderPermission(CAMERA);
+```
+
+### 2. Demander au bon moment
+
+```pascal
+// ❌ MAUVAIS : Demander toutes les permissions au démarrage
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  DemanderToutesLesPermissions; // Bombardement de dialogues !
+end;
+
+// ✅ BON : Demander juste avant d'utiliser la fonctionnalité
+procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);
+begin
+  // Demander seulement quand l'utilisateur veut prendre une photo
+  DemanderPermission(CAMERA);
+end;
+```
+
+### 3. Respecter les choix de l'utilisateur
+
+```pascal
+// Sauvegarder si l'utilisateur a explicitement refusé
+procedure TFormMain.EnregistrerRefusPermission(const Permission: string);
+begin
+  SauvegarderPreference('permission_refusee_' + Permission, True);
+  SauvegarderPreference('date_refus_' + Permission, DateTimeToStr(Now));
+end;
+
+// Ne pas harceler l'utilisateur
+procedure TFormMain.DemanderPermissionRespectueuse(const Permission: string);
+var
+  DateRefus: TDateTime;
+  JoursDepuisRefus: Integer;
+begin
+  if LirePreference('permission_refusee_' + Permission, False) then
+  begin
+    DateRefus := StrToDateTimeDef(
+      LirePreference('date_refus_' + Permission, ''), 0);
+    JoursDepuisRefus := DaysBetween(Now, DateRefus);
+
+    // Ne redemander qu'après 7 jours
+    if JoursDepuisRefus < 7 then
+    begin
+      ShowMessage('Cette fonctionnalité nécessite une autorisation que ' +
+        'vous avez précédemment refusée.');
+      Exit;
+    end;
+  end;
+
+  // Demander la permission
+  DemanderPermission(Permission);
+end;
+```
+
+### 4. Transparence totale
+
+```pascal
+procedure TFormMain.AfficherUtilisationDonnees;
+begin
+  var Message :=
+    'Données collectées par cette application :' + sLineBreak + sLineBreak +
+    '• Votre adresse email (pour l''authentification)' + sLineBreak +
+    '• Votre localisation (uniquement pendant l''utilisation)' + sLineBreak +
+    '• Vos photos (stockées localement)' + sLineBreak + sLineBreak +
+    'Ces données ne sont JAMAIS :' + sLineBreak +
+    '• Vendues à des tiers' + sLineBreak +
+    '• Partagées sans votre consentement' + sLineBreak +
+    '• Utilisées à des fins publicitaires' + sLineBreak + sLineBreak +
+    'Vous pouvez supprimer toutes vos données à tout moment dans les paramètres.';
+
+  ShowMessage(Message);
+end;
+```
+
+### 5. Anonymisation des données
+
+```pascal
+// Anonymiser les données avant l'envoi au serveur
+function AnonymizerDonnees(const UserID: string): string;
+var
+  Hash: string;
+begin
+  // Utiliser un hash au lieu de l'ID réel
+  Hash := THashSHA2.GetHashString(UserID + 'sel_secret');
+  Result := Hash.Substring(0, 16); // Tronquer pour plus d'anonymat
+end;
+
+procedure EnvoyerStatistiques;
+var
+  Stats: TJSONObject;
+begin
+  Stats := TJSONObject.Create;
+  try
+    // Utiliser un ID anonyme
+    Stats.AddPair('user_hash', AnonymizerDonnees(GetUserID));
+
+    // Données agrégées seulement
+    Stats.AddPair('actions_count', TJSONNumber.Create(GetActionsCount));
+    Stats.AddPair('session_duration', TJSONNumber.Create(GetSessionDuration));
+
+    // PAS de données personnelles identifiables
+    // Stats.AddPair('email', UserEmail); // ❌ NON !
+
+    EnvoyerAuServeur(Stats);
+  finally
+    Stats.Free;
+  end;
+end;
+```
+
+### 6. Audit et logs
+
+```pascal
+// Logger tous les accès aux données sensibles
+procedure TFormMain.LoggerAccesDonnees(const Action, Donnee: string);
+var
+  LogEntry: TJSONObject;
+begin
+  LogEntry := TJSONObject.Create;
+  try
+    LogEntry.AddPair('timestamp', DateTimeToStr(Now));
+    LogEntry.AddPair('action', Action);
+    LogEntry.AddPair('data_type', Donnee);
+    LogEntry.AddPair('user_id', AnonymizerDonnees(GetUserID));
+
+    // Sauvegarder le log localement
+    AjouterAuFichierLog(LogEntry.ToString);
+  finally
+    LogEntry.Free;
+  end;
+end;
+
+// Utilisation
+procedure TFormMain.AccederContacts;
+begin
+  LoggerAccesDonnees('READ', 'CONTACTS');
+  // ... accéder aux contacts
+end;
+```
+
+## Conformité avec les stores
+
+### Google Play Store
+
+Google exige maintenant une déclaration de sécurité des données :
+
+**Informations à fournir** :
+- Types de données collectées (localisation, contacts, photos, etc.)
+- Si les données sont partagées avec des tiers
+- Si les données sont chiffrées en transit
+- Si l'utilisateur peut demander la suppression de ses données
+
+**Dans Play Console** :
+1. Allez dans "Contenu de l'application"
+2. Remplissez la section "Sécurité des données"
+3. Soyez honnête et complet
+
+### Apple App Store
+
+Apple est très strict sur la confidentialité :
+
+**Privacy Nutrition Labels** (obligatoire) :
+- Déclarez toutes les données collectées
+- Précisez si elles sont liées à l'identité de l'utilisateur
+- Indiquez si elles sont utilisées pour le tracking
+
+**App Tracking Transparency** (iOS 14.5+) :
+- Demandez la permission pour tout tracking cross-app
+- Fournissez une explication claire dans le dialogue système
 
 ## Conclusion
 
-La gestion des permissions et la protection de la confidentialité des données sont des aspects cruciaux du développement d'applications mobiles modernes. En suivant les bonnes pratiques présentées dans ce chapitre, vous pourrez :
+La gestion des permissions et la protection de la vie privée ne sont pas des contraintes, mais des opportunités de créer une relation de confiance avec vos utilisateurs. En respectant leur vie privée, vous construisez une application durable et appréciée.
 
-1. **Respecter les réglementations** comme le RGPD, le CCPA et autres lois sur la protection des données
-2. **Gagner la confiance de vos utilisateurs** en étant transparent sur l'utilisation de leurs données
-3. **Éviter les problèmes juridiques** potentiellement coûteux
-4. **Offrir une meilleure expérience utilisateur** en demandant les permissions au bon moment
+**Points clés à retenir** :
 
-Rappelez-vous que la protection de la vie privée doit être intégrée dès la conception de votre application ("Privacy by Design") et non ajoutée comme une réflexion après coup. En prenant en compte ces considérations dès le début de votre projet, vous créerez des applications plus respectueuses et plus susceptibles d'être appréciées par vos utilisateurs.
+1. **Permissions** : Ne demandez que ce qui est nécessaire, au bon moment
+2. **Transparence** : Expliquez clairement pourquoi vous avez besoin de chaque permission
+3. **Respect** : Acceptez les refus et proposez des alternatives
+4. **Sécurité** : Protégez les données que vous collectez
+5. **RGPD** : Respectez les droits des utilisateurs (accès, rectification, suppression)
+6. **Consentement** : Obtenez un accord explicite et informé
+7. **Minimisation** : Collectez le minimum de données nécessaires
+8. **Audit** : Loggez et surveillez les accès aux données sensibles
 
-Dans la prochaine section, nous explorerons l'intégration des services Firebase dans vos applications mobiles Delphi pour ajouter des fonctionnalités puissantes comme les notifications push, l'authentification et l'analyse en temps réel.
+Une application respectueuse de la vie privée n'est pas seulement une obligation légale, c'est aussi un avantage concurrentiel. Les utilisateurs sont de plus en plus conscients de leurs droits et choisissent les applications qui les respectent.
+
+En suivant ces principes et en implémentant correctement les systèmes de permissions, vous créerez des applications mobiles sécurisées, conformes aux réglementations et dignes de confiance. Vos utilisateurs vous en remercieront, et les stores aussi !
 
 ⏭️ [Intégration des services Firebase](/15-applications-mobiles-avec-delphi/11-integration-des-services-firebase.md)
