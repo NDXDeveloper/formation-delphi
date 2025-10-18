@@ -1,327 +1,454 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 14.1 Appels aux DLLs
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction aux DLLs
 
-## Introduction
+### Qu'est-ce qu'une DLL ?
 
-Les DLLs (Dynamic Link Libraries) sont des bibliothèques de code compilé qui peuvent être partagées entre plusieurs applications. Elles offrent plusieurs avantages :
+Une **DLL** (Dynamic Link Library, ou bibliothèque de liens dynamiques) est un fichier qui contient du code et des données pouvant être utilisés par plusieurs programmes simultanément. C'est comme une boîte à outils partagée : au lieu que chaque programme ait sa propre copie des mêmes outils, tous peuvent utiliser la même boîte.
 
-- **Réutilisation du code** : les mêmes fonctionnalités peuvent être utilisées par différentes applications
-- **Économie de mémoire** : le code n'est chargé qu'une seule fois en mémoire
-- **Facilité de maintenance** : une mise à jour de la DLL bénéficie à toutes les applications qui l'utilisent
-- **Modularité** : séparation claire des fonctionnalités
+Les DLLs ont l'extension `.dll` sous Windows (par exemple : `user32.dll`, `kernel32.dll`).
 
-Delphi permet d'interagir facilement avec des DLLs, qu'elles soient créées avec Delphi ou d'autres langages comme C/C++.
+### Pourquoi utiliser des DLLs ?
 
-## Déclaration des fonctions externes
+Les DLLs présentent plusieurs avantages :
 
-Pour appeler une fonction contenue dans une DLL, nous devons d'abord la déclarer dans notre code Delphi. Cette déclaration spécifie :
-- Le nom de la fonction
-- Les paramètres qu'elle accepte
-- Le type de valeur retournée
-- Le nom de la DLL qui contient cette fonction
+**Réutilisation du code** : Une même fonctionnalité peut être utilisée par plusieurs applications sans dupliquer le code.
 
-### Syntaxe de base
+**Économie de mémoire** : Plusieurs programmes peuvent partager une seule copie de la DLL en mémoire.
+
+**Mise à jour facilitée** : On peut mettre à jour une DLL sans recompiler toutes les applications qui l'utilisent.
+
+**Modularité** : Le code peut être organisé en modules logiques indépendants.
+
+**Accès aux fonctionnalités système** : Windows expose beaucoup de ses fonctionnalités via des DLLs.
+
+### Types d'appels de DLL
+
+Il existe deux méthodes principales pour appeler des fonctions dans une DLL :
+
+1. **Liaison statique** : La DLL est chargée au démarrage du programme
+2. **Liaison dynamique** : La DLL est chargée uniquement quand on en a besoin
+
+## Liaison statique avec une DLL
+
+### Déclaration d'une fonction externe
+
+Pour utiliser une fonction d'une DLL, vous devez d'abord la déclarer dans votre code Delphi. La syntaxe de base est :
 
 ```pascal
-function NomFonction(Paramètres): TypeRetour; stdcall; external 'NomDeLaDLL.dll';
+function NomDeLaFonction(parametres): TypeRetour; stdcall; external 'NomDLL.dll';
 ```
 
-L'attribut `stdcall` indique la convention d'appel, qui définit comment les paramètres sont passés à la fonction. C'est la convention généralement utilisée par les DLLs Windows.
+### Exemple simple : MessageBox de Windows
 
-### Exemple simple
-
-Imaginons une DLL nommée `MathLib.dll` contenant une fonction `Addition` qui additionne deux nombres entiers :
+Voici comment appeler la fonction MessageBox de Windows, qui affiche une boîte de dialogue :
 
 ```pascal
-function Addition(A, B: Integer): Integer; stdcall; external 'MathLib.dll';
+function MessageBox(hWnd: HWND; lpText, lpCaption: PChar; uType: UINT): Integer;
+  stdcall; external 'user32.dll' name 'MessageBoxA';
+```
 
-procedure TForm1.ButtonCalculerClick(Sender: TObject);
-var
-  Resultat: Integer;
+**Explication des éléments :**
+
+- `function MessageBox` : nom de la fonction dans votre code
+- `(hWnd: HWND; ...)` : paramètres de la fonction
+- `Integer` : type de retour
+- `stdcall` : convention d'appel (comment les paramètres sont passés)
+- `external 'user32.dll'` : indique que la fonction se trouve dans user32.dll
+- `name 'MessageBoxA'` : nom réel de la fonction dans la DLL (si différent)
+
+### Utilisation de la fonction
+
+Une fois déclarée, vous pouvez utiliser la fonction comme n'importe quelle autre fonction Delphi :
+
+```pascal
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  Resultat := Addition(10, 20);
-  ShowMessage('10 + 20 = ' + IntToStr(Resultat));
+  MessageBox(0, 'Ceci est un message', 'Titre', MB_OK);
 end;
 ```
 
-## Chargement dynamique des DLLs
+### Conventions d'appel
 
-La méthode précédente (liaison statique) charge automatiquement la DLL au démarrage de l'application. Si la DLL n'est pas trouvée, l'application ne démarre pas. Une approche plus flexible consiste à charger la DLL dynamiquement à l'exécution :
+Les conventions d'appel définissent comment les paramètres sont passés à la fonction. Les plus courantes sont :
+
+**stdcall** : Convention standard de Windows, utilisée par la plupart des DLLs Windows.
+
+**cdecl** : Convention utilisée par les DLLs C/C++.
+
+**pascal** : Ancienne convention, rarement utilisée aujourd'hui.
+
+**register** : Convention Delphi par défaut (pas pour les DLLs externes).
+
+Il est crucial d'utiliser la bonne convention, sinon votre programme peut planter.
+
+## Liaison dynamique avec une DLL
+
+### Pourquoi la liaison dynamique ?
+
+La liaison dynamique est utile quand :
+
+- La DLL n'est pas toujours disponible
+- Vous voulez charger la DLL seulement si nécessaire
+- Vous voulez gérer l'absence de la DLL de manière élégante
+
+### Étapes de la liaison dynamique
+
+La liaison dynamique se fait en trois étapes :
+
+1. **Charger la DLL** avec `LoadLibrary`
+2. **Obtenir l'adresse de la fonction** avec `GetProcAddress`
+3. **Libérer la DLL** avec `FreeLibrary` quand on a fini
+
+### Exemple complet
+
+```pascal
+type
+  TMessageBoxFunc = function(hWnd: HWND; lpText, lpCaption: PChar;
+    uType: UINT): Integer; stdcall;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  DLLHandle: THandle;
+  MessageBoxFunc: TMessageBoxFunc;
+begin
+  // 1. Charger la DLL
+  DLLHandle := LoadLibrary('user32.dll');
+
+  if DLLHandle = 0 then
+  begin
+    ShowMessage('Impossible de charger la DLL');
+    Exit;
+  end;
+
+  try
+    // 2. Obtenir l'adresse de la fonction
+    @MessageBoxFunc := GetProcAddress(DLLHandle, 'MessageBoxA');
+
+    if @MessageBoxFunc = nil then
+    begin
+      ShowMessage('Fonction introuvable dans la DLL');
+      Exit;
+    end;
+
+    // 3. Utiliser la fonction
+    MessageBoxFunc(0, 'Message dynamique', 'Titre', MB_OK);
+
+  finally
+    // 4. Libérer la DLL
+    FreeLibrary(DLLHandle);
+  end;
+end;
+```
+
+**Explication détaillée :**
+
+1. On définit un type de fonction (`TMessageBoxFunc`) qui correspond à la signature de la fonction dans la DLL
+2. `LoadLibrary` charge la DLL et retourne un handle (identificateur)
+3. `GetProcAddress` retourne l'adresse de la fonction dans la DLL
+4. On utilise `@` pour obtenir l'adresse de notre variable de fonction
+5. Le bloc `try...finally` garantit que la DLL sera libérée même en cas d'erreur
+
+## Types de données et paramètres
+
+### Correspondance des types
+
+Lors de l'appel de DLLs, il est important de faire correspondre correctement les types :
+
+**Types numériques :**
+- `Integer` → `int` (C/C++)
+- `Cardinal` → `unsigned int`
+- `Int64` → `__int64`
+- `Single` → `float`
+- `Double` → `double`
+
+**Chaînes de caractères :**
+- `PChar` → `char*` (chaîne C)
+- `PWideChar` → `wchar_t*` (chaîne Unicode)
+- `PAnsiChar` → `char*` (chaîne ANSI)
+
+**Pointeurs :**
+- `Pointer` → `void*`
+- `HWND`, `HANDLE` → handles Windows
+
+### Passage de chaînes
+
+Les chaînes nécessitent une attention particulière :
+
+```pascal
+// Pour une fonction qui attend une chaîne ANSI
+function MaFonction(texte: PAnsiChar): Integer;
+  stdcall; external 'madll.dll';
+
+procedure Exemple;
+var
+  chaine: AnsiString;
+begin
+  chaine := 'Mon texte';
+  MaFonction(PAnsiChar(chaine));
+end;
+```
+
+### Passage de structures
+
+Pour passer des structures (records) à une DLL :
+
+```pascal
+type
+  TPoint = record
+    X: Integer;
+    Y: Integer;
+  end;
+
+function CalculerDistance(const point1, point2: TPoint): Double;
+  stdcall; external 'geometrie.dll';
+
+procedure Utilisation;
+var
+  p1, p2: TPoint;
+  distance: Double;
+begin
+  p1.X := 10;
+  p1.Y := 20;
+  p2.X := 30;
+  p2.Y := 40;
+
+  distance := CalculerDistance(p1, p2);
+end;
+```
+
+## DLLs Windows courantes
+
+### user32.dll
+
+Contient les fonctions d'interface utilisateur Windows :
+
+```pascal
+// Obtenir la position de la souris
+function GetCursorPos(var lpPoint: TPoint): BOOL;
+  stdcall; external 'user32.dll';
+
+// Masquer/afficher le curseur
+function ShowCursor(bShow: BOOL): Integer;
+  stdcall; external 'user32.dll';
+```
+
+### kernel32.dll
+
+Contient les fonctions système de base :
+
+```pascal
+// Obtenir le nom de l'ordinateur
+function GetComputerName(lpBuffer: PChar; var nSize: DWORD): BOOL;
+  stdcall; external 'kernel32.dll' name 'GetComputerNameA';
+
+// Mettre en pause l'exécution
+procedure Sleep(dwMilliseconds: DWORD);
+  stdcall; external 'kernel32.dll';
+```
+
+### shell32.dll
+
+Contient les fonctions du shell Windows :
+
+```pascal
+// Ouvrir un fichier avec l'application associée
+function ShellExecute(hWnd: HWND; Operation, FileName, Parameters,
+  Directory: PChar; ShowCmd: Integer): HINST;
+  stdcall; external 'shell32.dll' name 'ShellExecuteA';
+```
+
+## Gestion des erreurs
+
+### Vérification du chargement
+
+Toujours vérifier que le chargement de la DLL a réussi :
 
 ```pascal
 var
   DLLHandle: THandle;
-  AdditionFunc: function(A, B: Integer): Integer; stdcall;
-
 begin
-  // Chargement de la DLL
-  DLLHandle := LoadLibrary('MathLib.dll');
+  DLLHandle := LoadLibrary('madll.dll');
 
-  if DLLHandle <> 0 then
+  if DLLHandle = 0 then
   begin
-    try
-      // Récupération de l'adresse de la fonction
-      @AdditionFunc := GetProcAddress(DLLHandle, 'Addition');
-
-      if Assigned(AdditionFunc) then
-      begin
-        // Appel de la fonction
-        ShowMessage('10 + 20 = ' + IntToStr(AdditionFunc(10, 20)));
-      end
-      else
-        ShowMessage('Fonction non trouvée dans la DLL');
-    finally
-      // Libération de la DLL
-      FreeLibrary(DLLHandle);
-    end;
-  end
-  else
-    ShowMessage('Impossible de charger la DLL');
-end;
-```
-
-Cette méthode permet de :
-- Gérer l'absence de la DLL de façon élégante
-- Charger/décharger les DLLs uniquement quand nécessaire
-- Utiliser différentes versions de DLLs selon les besoins
-
-## Création d'une classe d'encapsulation
-
-Pour une approche plus organisée, il est recommandé de créer une classe qui encapsule l'accès à la DLL :
-
-```pascal
-type
-  TMathLibrary = class
-  private
-    FDLLHandle: THandle;
-    FAddition: function(A, B: Integer): Integer; stdcall;
-    FMultiplication: function(A, B: Integer): Integer; stdcall;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function EstChargee: Boolean;
-    function Additionner(A, B: Integer): Integer;
-    function Multiplier(A, B: Integer): Integer;
+    ShowMessage('Erreur : ' + SysErrorMessage(GetLastError));
+    Exit;
   end;
 
-constructor TMathLibrary.Create;
-begin
-  inherited;
-  FDLLHandle := LoadLibrary('MathLib.dll');
-  if FDLLHandle <> 0 then
-  begin
-    @FAddition := GetProcAddress(FDLLHandle, 'Addition');
-    @FMultiplication := GetProcAddress(FDLLHandle, 'Multiplication');
-  end;
-end;
-
-destructor TMathLibrary.Destroy;
-begin
-  if FDLLHandle <> 0 then
-    FreeLibrary(FDLLHandle);
-  inherited;
-end;
-
-function TMathLibrary.EstChargee: Boolean;
-begin
-  Result := (FDLLHandle <> 0);
-end;
-
-function TMathLibrary.Additionner(A, B: Integer): Integer;
-begin
-  if Assigned(FAddition) then
-    Result := FAddition(A, B)
-  else
-    raise Exception.Create('Fonction Addition non disponible');
-end;
-
-function TMathLibrary.Multiplier(A, B: Integer): Integer;
-begin
-  if Assigned(FMultiplication) then
-    Result := FMultiplication(A, B)
-  else
-    raise Exception.Create('Fonction Multiplication non disponible');
-end;
-```
-
-Utilisation :
-
-```pascal
-procedure TForm1.ButtonCalculerClick(Sender: TObject);
-var
-  MathLib: TMathLibrary;
-begin
-  MathLib := TMathLibrary.Create;
   try
-    if MathLib.EstChargee then
-    begin
-      ShowMessage('10 + 20 = ' + IntToStr(MathLib.Additionner(10, 20)));
-      ShowMessage('10 * 20 = ' + IntToStr(MathLib.Multiplier(10, 20)));
-    end
-    else
-      ShowMessage('La bibliothèque mathématique n''a pas pu être chargée');
+    // Utilisation de la DLL
   finally
-    MathLib.Free;
+    FreeLibrary(DLLHandle);
   end;
 end;
 ```
 
-## Gestion des types de données
+### Gestion des exceptions
 
-La conversion des types de données entre Delphi et les DLLs peut être complexe, surtout si la DLL a été écrite dans un autre langage.
-
-### Types simples
-
-Les types simples se correspondent généralement bien :
-
-| Type Delphi | Type C/C++ |
-|-------------|------------|
-| Integer     | int        |
-| Cardinal    | unsigned int |
-| Single      | float      |
-| Double      | double     |
-| Boolean     | bool       |
-| PChar       | char*      |
-| PWideChar   | wchar_t*   |
-
-### Types complexes et structures
-
-Pour les structures et types complexes, nous devons déclarer des types équivalents :
+Protégez vos appels de DLL avec des blocs try-except :
 
 ```pascal
-// Structure côté C/C++
-// struct Point {
-//   int x;
-//   int y;
-// };
-
-// Déclaration équivalente en Delphi
-type
-  TPoint = record
-    x: Integer;
-    y: Integer;
+procedure AppelerDLL;
+begin
+  try
+    // Appel de fonction DLL
+    Resultat := MaFonctionDLL(param1, param2);
+  except
+    on E: Exception do
+      ShowMessage('Erreur lors de l appel DLL: ' + E.Message);
   end;
-
-// Fonction DLL qui utilise cette structure
-function CalculerDistance(A, B: TPoint): Double; stdcall; external 'GeometrieLib.dll';
-```
-
-## Passage de chaînes de caractères
-
-Le passage de chaînes nécessite une attention particulière :
-
-```pascal
-// Déclaration de la fonction dans la DLL
-function AfficherMessage(Message: PChar): Integer; stdcall; external 'MessageLib.dll';
-
-// Utilisation
-var
-  Message: string;
-begin
-  Message := 'Bonjour depuis Delphi !';
-  AfficherMessage(PChar(Message));
 end;
 ```
-
-Pour les chaînes Unicode (WideString) :
-
-```pascal
-function AfficherMessageUnicode(Message: PWideChar): Integer; stdcall; external 'MessageLib.dll';
-
-// Utilisation
-var
-  Message: string;  // string est Unicode par défaut depuis Delphi 2009
-begin
-  Message := 'Bonjour avec caractères spéciaux : éàçèù';
-  AfficherMessageUnicode(PWideChar(Message));
-end;
-```
-
-## Cas pratique : utilisation d'une DLL Windows
-
-Voici un exemple d'utilisation de la DLL `user32.dll`, qui fait partie de Windows :
-
-```pascal
-// Déclaration de la fonction MessageBox de user32.dll
-function MessageBox(hWnd: THandle; lpText, lpCaption: PChar; uType: Cardinal): Integer; stdcall; external 'user32.dll' name 'MessageBoxA';
-
-// Pour la version Unicode
-function MessageBoxW(hWnd: THandle; lpText, lpCaption: PWideChar; uType: Cardinal): Integer; stdcall; external 'user32.dll' name 'MessageBoxW';
-
-procedure TForm1.ButtonDemoClick(Sender: TObject);
-begin
-  // Version ANSI
-  MessageBox(0, 'Message de test', 'Titre', 0);
-
-  // Version Unicode (recommandé pour Delphi moderne)
-  MessageBoxW(0, 'Message avec caractères spéciaux: éèàù', 'Titre', 0);
-end;
-```
-
-Notez l'utilisation de `name 'MessageBoxA'` et `name 'MessageBoxW'` pour spécifier le nom exact de la fonction dans la DLL. Cela est utile quand le nom de la fonction Pascal diffère du nom dans la DLL.
 
 ## Bonnes pratiques
 
-1. **Vérification des erreurs** : Toujours vérifier si la DLL est correctement chargée et si les fonctions sont disponibles.
+### Encapsulation
 
-2. **Libération des ressources** : Assurez-vous de libérer la DLL avec `FreeLibrary` quand vous n'en avez plus besoin.
-
-3. **Documentation** : Conservez la documentation des fonctions de la DLL, particulièrement si elle a été développée par un tiers.
-
-4. **Versionnement** : Soyez attentif aux versions des DLLs. Un changement de version peut modifier le comportement des fonctions.
-
-5. **Encapsulation** : Créez des classes ou unités dédiées pour encapsuler l'accès aux DLLs.
-
-6. **Recherche de chemins** : Si la DLL n'est pas dans le même dossier que l'application ou dans le chemin système, spécifiez son chemin complet :
+Créez une classe ou une unité pour encapsuler les appels à la DLL :
 
 ```pascal
-DLLHandle := LoadLibrary('C:\Chemin\Vers\MaDLL.dll');
-```
+unit MaDLLWrapper;
 
-## Création de vos propres DLLs avec Delphi
+interface
 
-Delphi permet également de créer vos propres DLLs. Pour cela, créez un nouveau projet de type "DLL" dans Delphi :
+type
+  TMaDLLWrapper = class
+  private
+    FDLLHandle: THandle;
+    FChargee: Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function ChargerDLL: Boolean;
+    procedure DechargerDLL;
+    function AppelerFonction(param: Integer): Integer;
+  end;
 
-1. **File** → **New** → **Other** → **Delphi Projects** → **DLL**
-2. Définissez les fonctions à exporter :
+implementation
 
-```pascal
-library MathLib;
-
-uses
-  System.SysUtils;
-
-function Addition(A, B: Integer): Integer; stdcall;
+constructor TMaDLLWrapper.Create;
 begin
-  Result := A + B;
+  inherited;
+  FDLLHandle := 0;
+  FChargee := False;
 end;
 
-function Multiplication(A, B: Integer): Integer; stdcall;
+destructor TMaDLLWrapper.Destroy;
 begin
-  Result := A * B;
+  if FChargee then
+    DechargerDLL;
+  inherited;
 end;
 
-exports
-  Addition,
-  Multiplication;
-
+function TMaDLLWrapper.ChargerDLL: Boolean;
 begin
+  FDLLHandle := LoadLibrary('madll.dll');
+  FChargee := FDLLHandle <> 0;
+  Result := FChargee;
+end;
+
+procedure TMaDLLWrapper.DechargerDLL;
+begin
+  if FDLLHandle <> 0 then
+  begin
+    FreeLibrary(FDLLHandle);
+    FDLLHandle := 0;
+    FChargee := False;
+  end;
+end;
+
 end.
 ```
 
-La section `exports` déclare les fonctions qui seront disponibles pour les applications qui utiliseront cette DLL.
+### Vérification de la présence
 
-## Conclusion
+Avant de charger une DLL, vérifiez qu'elle existe :
 
-L'utilisation des DLLs en Delphi offre une grande flexibilité et permet d'étendre les capacités de vos applications en intégrant du code externe. Que vous utilisiez des DLLs existantes ou que vous créiez les vôtres, cette approche modulaire favorise la réutilisation du code et facilite la maintenance.
+```pascal
+uses
+  System.SysUtils;
 
-Les DLLs sont particulièrement utiles pour :
-- Partager du code entre plusieurs applications
+function DLLExiste(const NomDLL: string): Boolean;
+begin
+  Result := FileExists(NomDLL);
+end;
+
+procedure ChargerMaDLL;
+const
+  NOM_DLL = 'madll.dll';
+begin
+  if not DLLExiste(NOM_DLL) then
+  begin
+    ShowMessage('La DLL ' + NOM_DLL + ' est introuvable');
+    Exit;
+  end;
+
+  // Charger la DLL...
+end;
+```
+
+### Documentation
+
+Documentez toujours vos déclarations de DLL :
+
+```pascal
+/// <summary>
+/// Affiche une boîte de message Windows standard
+/// </summary>
+/// <param name="hWnd">Handle de la fenêtre parente (0 pour aucune)</param>
+/// <param name="lpText">Texte du message</param>
+/// <param name="lpCaption">Titre de la boîte de dialogue</param>
+/// <param name="uType">Type de boîte (MB_OK, MB_YESNO, etc.)</param>
+/// <returns>ID du bouton cliqué</returns>
+function MessageBox(hWnd: HWND; lpText, lpCaption: PChar;
+  uType: UINT): Integer; stdcall; external 'user32.dll' name 'MessageBoxA';
+```
+
+## Compatibilité 32-bit et 64-bit
+
+### Différences importantes
+
+Les DLLs 32-bit ne peuvent pas être chargées par des applications 64-bit et vice-versa. Vous devez :
+
+1. Compiler votre application en 32-bit pour utiliser des DLLs 32-bit
+2. Compiler votre application en 64-bit pour utiliser des DLLs 64-bit
+
+### Chargement conditionnel
+
+Pour gérer les deux architectures :
+
+```pascal
+function ChargerDLLCompatible: THandle;
+begin
+  {$IFDEF WIN64}
+  Result := LoadLibrary('madll64.dll');
+  {$ELSE}
+  Result := LoadLibrary('madll32.dll');
+  {$ENDIF}
+end;
+```
+
+## Résumé
+
+Les DLLs sont un outil puissant pour :
+- Réutiliser du code existant
+- Accéder aux fonctionnalités système Windows
 - Intégrer des bibliothèques tierces
-- Accéder aux fonctionnalités du système d'exploitation
-- Créer des architectures modulaires et extensibles
+- Modulariser votre application
 
-En maîtrisant les techniques présentées dans ce chapitre, vous pourrez tirer pleinement parti de cet aspect puissant de la programmation Delphi.
+**Points clés à retenir :**
+
+1. Utilisez la **liaison statique** pour les DLLs toujours présentes
+2. Utilisez la **liaison dynamique** pour les DLLs optionnelles
+3. Respectez la **convention d'appel** (stdcall, cdecl, etc.)
+4. Faites correspondre correctement les **types de données**
+5. Gérez toujours les **erreurs** de chargement
+6. **Libérez** les DLLs chargées dynamiquement
+7. Attention à la **compatibilité 32/64-bit**
+
+Dans la section suivante, nous verrons comment intégrer des bibliothèques C/C++ plus complexes.
 
 ⏭️ [Intégration de bibliothèques C/C++](/14-utilisation-dapi-et-bibliotheques-externes/02-integration-de-bibliotheques-c-cpp.md)

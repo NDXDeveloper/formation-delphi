@@ -1,437 +1,765 @@
-# 14.2 Intégration de bibliothèques C/C++
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 14.2 Intégration de bibliothèques C/C++
 
 ## Introduction
 
-Delphi est un environnement de développement très puissant, mais parfois vous aurez besoin d'utiliser des fonctionnalités développées en C ou C++. Cela peut être nécessaire pour :
+### Pourquoi intégrer des bibliothèques C/C++ ?
 
-- Utiliser des bibliothèques populaires disponibles uniquement en C/C++
-- Intégrer du code existant écrit dans ces langages
-- Tirer parti des performances optimisées de certaines bibliothèques C/C++
-- Accéder à des API système de bas niveau
+Le monde du développement C/C++ possède un vaste écosystème de bibliothèques pour tous les domaines : traitement d'images, intelligence artificielle, cryptographie, compression, mathématiques avancées, etc. Pouvoir utiliser ces bibliothèques dans vos applications Delphi vous ouvre de nombreuses possibilités.
 
-Ce chapitre vous guidera dans l'intégration de bibliothèques C/C++ à vos projets Delphi, en expliquant les différentes approches disponibles.
+### Différence avec les DLLs Windows
 
-## Méthodes d'intégration
+Contrairement aux DLLs Windows standard que nous avons vues précédemment, les bibliothèques C/C++ :
 
-Il existe plusieurs façons d'intégrer des bibliothèques C/C++ dans vos projets Delphi :
+- Utilisent des conventions de nommage différentes
+- Peuvent avoir des structures de données complexes
+- Utilisent souvent la convention d'appel `cdecl` au lieu de `stdcall`
+- Nécessitent parfois la traduction de fichiers d'en-tête (.h)
+- Peuvent manipuler des pointeurs de manière intensive
 
-1. **Utilisation via des DLLs** - La méthode la plus courante
-2. **Intégration directe via des fichiers objets** - Pour une intégration plus étroite
-3. **Wrappers statiques** - Via des classes d'encapsulation
-4. **Création de projets mixtes** - En combinant du code Delphi et C++ Builder
+## Concepts fondamentaux
 
-Nous allons explorer ces différentes approches, en commençant par la plus simple.
+### Conventions d'appel
 
-## 1. Intégration via DLLs
+La plupart des bibliothèques C/C++ utilisent la convention **cdecl** :
 
-La méthode la plus courante et la plus simple est d'utiliser les bibliothèques C/C++ compilées sous forme de DLLs.
+```pascal
+// Convention Windows (DLLs système)
+function FonctionWindows(param: Integer): Integer; stdcall; external 'ma.dll';
 
-### Étapes de base
+// Convention C/C++ (bibliothèques tierces)
+function FonctionC(param: Integer): Integer; cdecl; external 'ma.dll';
+```
 
-1. **Obtenir ou compiler la DLL C/C++**
-2. **Créer des déclarations d'imports pour les fonctions**
-3. **Appeler les fonctions depuis votre code Delphi**
+La différence principale : avec `cdecl`, c'est l'appelant qui nettoie la pile, pas la fonction appelée. Cela permet les fonctions avec un nombre variable de paramètres (comme `printf` en C).
 
-### Exemple concret
+### Name Mangling (décoration de noms)
 
-Imaginons que nous souhaitons utiliser la bibliothèque mathématique avancée `MathLib.dll` écrite en C. Elle contient une fonction pour calculer la factorielle :
+En C++, les noms de fonctions sont "décorés" pour inclure des informations sur les types de paramètres. Par exemple, une fonction C++ `int Add(int a, int b)` pourrait devenir `?Add@@YAHHH@Z` dans la DLL.
+
+Pour éviter ce problème, les bibliothèques C/C++ bien conçues exposent leurs fonctions en C pur avec le mot-clé `extern "C"` :
 
 ```cpp
-// Définition C++ dans MathLib.cpp
-extern "C" __declspec(dllexport) long long CalculateFactorial(int number) {
-    if (number <= 1) return 1;
-    return number * CalculateFactorial(number - 1);
+// Dans la bibliothèque C++
+extern "C" {
+    int __cdecl Add(int a, int b);
 }
 ```
 
-Voici comment l'intégrer dans Delphi :
+Cela produit un nom simple `Add` que Delphi peut utiliser facilement.
+
+### Vérifier les noms exportés
+
+Pour connaître les noms réels des fonctions dans une DLL, utilisez des outils comme :
+
+- **Dependency Walker** (depends.exe)
+- **DLL Export Viewer** de NirSoft
+- **dumpbin** (fourni avec Visual Studio)
+
+Ces outils vous montreront les noms exacts des fonctions exportées.
+
+## Conversion des types de données
+
+### Types numériques de base
+
+Correspondance entre C/C++ et Delphi :
 
 ```pascal
-// Déclaration d'import dans Delphi
-function CalculateFactorial(Number: Integer): Int64; stdcall; external 'MathLib.dll';
-
-procedure TForm1.CalculateButtonClick(Sender: TObject);
-var
-  Number, Result: Int64;
-begin
-  Number := StrToIntDef(InputBox('Factorielle', 'Entrez un nombre:', '5'), 5);
-
-  try
-    Result := CalculateFactorial(Number);
-    ShowMessage('Factorielle de ' + IntToStr(Number) + ' = ' + IntToStr(Result));
-  except
-    on E: Exception do
-      ShowMessage('Erreur: ' + E.Message);
-  end;
-end;
-```
-
-### Gestion des conventions d'appel
-
-Les bibliothèques C/C++ peuvent utiliser différentes conventions d'appel :
-
-- **cdecl** - Convention d'appel C standard
-- **stdcall** - Convention d'appel standard Win32 API
-- **fastcall** - Optimisée pour la vitesse (moins courante)
-
-Dans votre déclaration d'import, vous devez préciser la bonne convention :
-
-```pascal
-// Pour une fonction 'cdecl'
-function MaFonctionC(Param: Integer): Integer; cdecl; external 'MaBibliotheque.dll';
-
-// Pour une fonction 'stdcall'
-function MaFonctionStd(Param: Integer): Integer; stdcall; external 'MaBibliotheque.dll';
-```
-
-### Différence de nommage
-
-En C/C++, les noms de fonctions sont souvent modifiés par le compilateur (name mangling). Pour éviter ce problème, les fonctions sont généralement déclarées avec `extern "C"` dans le code C++, ce qui préserve leurs noms.
-
-Si la fonction a un nom modifié ou différent dans la DLL, utilisez la clause `name` :
-
-```pascal
-function MaFonction(Param1, Param2: Integer): Integer; stdcall;
-  external 'MaBibliotheque.dll' name '_MaFonction@8';
-```
-
-## 2. Gestion des types de données
-
-La correspondance entre les types de données Delphi et C/C++ est cruciale pour une intégration réussie.
-
-### Types simples
-
-| Type Delphi     | Type C/C++          | Taille (bits) |
-|-----------------|---------------------|--------------|
-| Byte            | unsigned char       | 8            |
-| ShortInt        | signed char         | 8            |
-| Word            | unsigned short      | 16           |
-| SmallInt        | short               | 16           |
-| Cardinal        | unsigned int        | 32           |
-| Integer         | int                 | 32           |
-| Int64           | long long           | 64           |
-| UInt64          | unsigned long long  | 64           |
-| Single          | float               | 32           |
-| Double          | double              | 64           |
-| Boolean         | bool                | 8            |
-| Char            | char                | 8            |
-| WideChar        | wchar_t             | 16           |
-
-### Structures et types complexes
-
-Pour les structures, vous devez déclarer une structure équivalente en Delphi :
-
-```cpp
-// Structure C++
-struct Rectangle {
-    int x, y;
-    int width, height;
-};
-```
-
-```pascal
-// Structure Delphi équivalente
+// Types entiers
 type
-  TRectangle = record
-    x, y: Integer;
-    width, height: Integer;
-  end;
+  c_char = AnsiChar;          // char (C)
+  c_int = Integer;            // int (C)
+  c_uint = Cardinal;          // unsigned int (C)
+  c_long = Longint;           // long (C, 32-bit)
+  c_ulong = LongWord;         // unsigned long (C, 32-bit)
+  c_int64 = Int64;            // long long (C)
+  c_uint64 = UInt64;          // unsigned long long (C)
+
+// Types à virgule flottante
+  c_float = Single;           // float (C)
+  c_double = Double;          // double (C)
+
+// Types de taille
+  size_t = NativeUInt;        // size_t (C)
 ```
 
-### Pointeurs et tableaux
+### Pointeurs
 
-Les pointeurs en C/C++ correspondent généralement aux pointeurs en Delphi :
-
-```cpp
-// Fonction C qui manipule un tableau via pointeur
-void ProcessArray(int* data, int length);
-```
+Les pointeurs C/C++ se traduisent par des pointeurs Delphi :
 
 ```pascal
-// Déclaration Delphi
-procedure ProcessArray(data: PInteger; length: Integer); cdecl; external 'MaLib.dll';
-
-// Utilisation
+// En C: int* ptr
 var
-  MyArray: array[0..9] of Integer;
-  i: Integer;
-begin
-  for i := 0 to 9 do
-    MyArray[i] := i * 10;
+  ptr: PInteger;  // En Delphi
 
-  ProcessArray(@MyArray[0], 10);
-end;
+// En C: void* ptr
+var
+  ptr: Pointer;   // En Delphi
+
+// En C: char* str
+var
+  str: PAnsiChar; // En Delphi
 ```
 
 ### Chaînes de caractères
 
-Le passage de chaînes nécessite une attention particulière :
+Les chaînes C sont des tableaux de caractères terminés par un zéro :
 
 ```pascal
-// Fonction C qui attend une chaîne de caractères
-function ProcessString(text: PAnsiChar): Integer; cdecl; external 'MaLib.dll';
+// Fonction C qui attend une chaîne
+function StrLen(s: PAnsiChar): size_t; cdecl; external 'msvcrt.dll';
 
-// Pour chaînes ANSI
+// Utilisation
+procedure Exemple;
 var
-  s: AnsiString;
+  texte: AnsiString;
+  longueur: NativeUInt;
 begin
-  s := 'Test';
-  ProcessString(PAnsiChar(s));
-end;
-
-// Pour chaînes Unicode (avec conversion)
-var
-  s: string;  // Unicode par défaut dans Delphi moderne
-begin
-  s := 'Test Unicode';
-  ProcessString(PAnsiChar(AnsiString(s)));
+  texte := 'Bonjour';
+  longueur := StrLen(PAnsiChar(texte));
+  ShowMessage('Longueur: ' + IntToStr(longueur));
 end;
 ```
 
-## 3. Utilisation de bibliothèques statiques (.lib)
+**Important :** Les chaînes Delphi (String) doivent être converties en PAnsiChar ou PWideChar avant d'être passées aux fonctions C.
 
-Parfois, les bibliothèques C/C++ sont disponibles sous forme de fichiers `.lib` (bibliothèques statiques) plutôt que de DLLs. Delphi ne peut pas les utiliser directement, mais vous pouvez :
+### Structures (struct)
 
-1. **Créer une DLL wrapper** - En C/C++, créez une DLL qui expose les fonctionnalités de la bibliothèque statique
-2. **Compiler les sources** - Si vous disposez du code source, recompilez-le en DLL
-
-### Exemple de wrapper C++
-
-```cpp
-// Wrapper.cpp
-#include "BibliothequeStatique.h"
-
-extern "C" {
-    __declspec(dllexport) int WINAPI FonctionWrapper(int param) {
-        return FonctionBibliothequeStatique(param);
-    }
-}
-```
-
-Compilez ce code en DLL, puis utilisez-le depuis Delphi comme expliqué précédemment.
-
-## 4. Création d'une classe d'encapsulation
-
-Pour une utilisation plus propre et sécurisée, créez une classe Delphi qui encapsule l'accès à la bibliothèque C/C++ :
+Les structures C se traduisent par des records Delphi :
 
 ```pascal
+// En C:
+// struct Point {
+//     int x;
+//     int y;
+// };
+
+// En Delphi:
 type
-  TMathLibrary = class
-  private
-    FDLLHandle: THandle;
-    FCalculateFactorial: function(Number: Integer): Int64; stdcall;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function IsLoaded: Boolean;
-    function Factorial(Number: Integer): Int64;
+  TPoint = record
+    x: Integer;
+    y: Integer;
   end;
-
-constructor TMathLibrary.Create;
-begin
-  inherited;
-  FDLLHandle := LoadLibrary('MathLib.dll');
-  if FDLLHandle <> 0 then
-    @FCalculateFactorial := GetProcAddress(FDLLHandle, 'CalculateFactorial');
-end;
-
-destructor TMathLibrary.Destroy;
-begin
-  if FDLLHandle <> 0 then
-    FreeLibrary(FDLLHandle);
-  inherited;
-end;
-
-function TMathLibrary.IsLoaded: Boolean;
-begin
-  Result := (FDLLHandle <> 0) and Assigned(FCalculateFactorial);
-end;
-
-function TMathLibrary.Factorial(Number: Integer): Int64;
-begin
-  if IsLoaded then
-    Result := FCalculateFactorial(Number)
-  else
-    raise Exception.Create('La bibliothèque mathématique n''est pas chargée');
-end;
 ```
 
-## 5. Utilisation de headers C/C++ avec HeaderConverter
-
-Delphi inclut un outil appelé "HeaderConverter" qui peut convertir des fichiers d'en-tête C/C++ (`.h`) en unités Delphi. Cet outil est particulièrement utile pour les bibliothèques complexes.
-
-### Utilisation du HeaderConverter
-
-1. Dans Delphi, allez dans **Menu** → **Projet** → **Import Component** → **Import C header file**
-2. Sélectionnez le fichier d'en-tête `.h` de votre bibliothèque
-3. Suivez les étapes de l'assistant
-
-Le résultat sera une unité Delphi contenant toutes les déclarations nécessaires.
-
-## 6. Gestion des callbacks
-
-Les bibliothèques C/C++ utilisent souvent des callbacks (fonctions de rappel). Voici comment les gérer en Delphi :
-
-```cpp
-// Définition du callback en C++
-typedef void (*CallbackFunc)(int value);
-
-// Fonction qui prend un callback
-void RegisterCallback(CallbackFunc callback);
-```
+**Attention à l'alignement :** Les structures C peuvent avoir un alignement différent. Utilisez la directive `{$ALIGN}` si nécessaire :
 
 ```pascal
-// Implémentation en Delphi
 type
-  TCallbackFunc = procedure(Value: Integer); cdecl;
-
-var
-  OriginalCallback: TCallbackFunc;
-
-procedure CallbackFunc(Value: Integer); cdecl;
-begin
-  // Traitement du callback
-  ShowMessage('Callback reçu avec valeur: ' + IntToStr(Value));
-end;
-
-procedure RegisterCallback(callback: TCallbackFunc); cdecl; external 'MaLib.dll';
-
-procedure TForm1.ButtonRegisterClick(Sender: TObject);
-begin
-  // Sauvegarde de la référence de la fonction pour éviter qu'elle soit libérée
-  OriginalCallback := CallbackFunc;
-
-  // Enregistrement du callback
-  RegisterCallback(OriginalCallback);
-end;
+  {$ALIGN 1}  // Alignement sur 1 octet (packed)
+  TStructurePacked = record
+    a: Byte;
+    b: Integer;
+  end;
+  {$ALIGN ON}  // Retour à l'alignement par défaut
 ```
 
-> ⚠️ **Important** : Conservez une référence globale à votre fonction de callback pour éviter qu'elle soit libérée par le garbage collector.
+### Tableaux
 
-## 7. Exemple pratique : Intégration de OpenCV (bibliothèque de vision par ordinateur)
-
-OpenCV est une bibliothèque de vision par ordinateur populaire écrite en C++. Voici comment l'intégrer à Delphi :
-
-### 1. Obtenir les DLLs OpenCV
-
-Téléchargez OpenCV et récupérez les fichiers DLL (par exemple : `opencv_world460.dll`).
-
-### 2. Créer des déclarations pour les fonctions
+Les tableaux C se traduisent de différentes manières :
 
 ```pascal
-unit OpenCV_Core;
+// Tableau de taille fixe
+// En C: int array[10];
+type
+  TArrayInt10 = array[0..9] of Integer;
+
+// Tableau dynamique (pointeur)
+// En C: int* array;
+type
+  PIntArray = ^Integer;  // Ou utiliser un tableau dynamique Delphi
+```
+
+### Énumérations
+
+Les énumérations C deviennent des énumérations ou constantes Delphi :
+
+```pascal
+// En C:
+// enum Color { RED, GREEN, BLUE };
+
+// En Delphi (énumération):
+type
+  TColor = (RED, GREEN, BLUE);
+
+// Ou en constantes:
+const
+  RED = 0;
+  GREEN = 1;
+  BLUE = 2;
+```
+
+## Exemple pratique : Bibliothèque zlib
+
+La bibliothèque zlib est une bibliothèque C populaire pour la compression de données.
+
+### Déclaration des fonctions
+
+```pascal
+unit ZLibWrapper;
 
 interface
 
-uses
-  System.SysUtils, System.Types, Winapi.Windows;
+const
+  ZLIB_DLL = 'zlib1.dll';
 
-// Types OpenCV
 type
-  PCvMat = Pointer;
-  PCvSize = Pointer;
+  z_stream = record
+    next_in: PAnsiChar;      // Données en entrée
+    avail_in: Cardinal;      // Taille disponible en entrée
+    total_in: Cardinal;      // Total traité en entrée
 
-// Création/destruction de matrices
-function cvCreateMat(rows, cols, type_: Integer): PCvMat; cdecl; external 'opencv_world460.dll';
-procedure cvReleaseMat(var mat: PCvMat); cdecl; external 'opencv_world460.dll';
+    next_out: PAnsiChar;     // Données en sortie
+    avail_out: Cardinal;     // Taille disponible en sortie
+    total_out: Cardinal;     // Total produit en sortie
 
-// Fonction de traitement d'image
-function cvCanny(src, dst: PCvMat; threshold1, threshold2: Double; aperture_size: Integer): PCvMat; cdecl;
-  external 'opencv_world460.dll';
+    msg: PAnsiChar;          // Message d'erreur
+    state: Pointer;          // État interne
+
+    // Champs additionnels...
+    zalloc: Pointer;
+    zfree: Pointer;
+    opaque: Pointer;
+  end;
+
+// Constantes zlib
+const
+  Z_OK = 0;
+  Z_STREAM_END = 1;
+  Z_NEED_DICT = 2;
+  Z_ERRNO = -1;
+  Z_STREAM_ERROR = -2;
+  Z_DATA_ERROR = -3;
+  Z_MEM_ERROR = -4;
+  Z_BUF_ERROR = -5;
+  Z_VERSION_ERROR = -6;
+
+// Niveaux de compression
+const
+  Z_NO_COMPRESSION = 0;
+  Z_BEST_SPEED = 1;
+  Z_BEST_COMPRESSION = 9;
+  Z_DEFAULT_COMPRESSION = -1;
+
+// Déclaration des fonctions
+function deflateInit_(strm: Pointer; level: Integer;
+  version: PAnsiChar; stream_size: Integer): Integer;
+  cdecl; external ZLIB_DLL;
+
+function deflate(strm: Pointer; flush: Integer): Integer;
+  cdecl; external ZLIB_DLL;
+
+function deflateEnd(strm: Pointer): Integer;
+  cdecl; external ZLIB_DLL;
 
 implementation
 
 end.
 ```
 
-### 3. Utiliser les fonctions dans votre application
+### Utilisation de la bibliothèque
 
 ```pascal
 uses
-  OpenCV_Core;
+  ZLibWrapper;
 
-procedure TForm1.DetectEdgesButtonClick(Sender: TObject);
+function CompresserDonnees(const Donnees: AnsiString): AnsiString;
 var
-  SourceMatrix, ResultMatrix: PCvMat;
+  strm: z_stream;
+  ret: Integer;
+  sortie: AnsiString;
 begin
-  // Création des matrices
-  SourceMatrix := cvCreateMat(ImageHeight, ImageWidth, CV_8UC3);
-  ResultMatrix := cvCreateMat(ImageHeight, ImageWidth, CV_8UC1);
+  // Initialiser la structure
+  FillChar(strm, SizeOf(strm), 0);
+
+  // Préparer les données d'entrée
+  strm.next_in := PAnsiChar(Donnees);
+  strm.avail_in := Length(Donnees);
+
+  // Préparer le buffer de sortie
+  SetLength(sortie, Length(Donnees));
+  strm.next_out := PAnsiChar(sortie);
+  strm.avail_out := Length(sortie);
+
+  // Initialiser la compression
+  ret := deflateInit_(
+    @strm,
+    Z_DEFAULT_COMPRESSION,
+    PAnsiChar(AnsiString('1.2.11')),  // Version de zlib
+    SizeOf(z_stream)
+  );
+
+  if ret <> Z_OK then
+  begin
+    Result := '';
+    Exit;
+  end;
 
   try
-    // Copie de l'image vers la matrice source (code non montré)
-    // ...
+    // Compresser
+    ret := deflate(@strm, Z_FINISH);
 
-    // Détection de contours avec Canny
-    cvCanny(SourceMatrix, ResultMatrix, 50, 150, 3);
-
-    // Affichage ou traitement du résultat (code non montré)
-    // ...
+    if ret = Z_STREAM_END then
+    begin
+      // Ajuster la taille du résultat
+      SetLength(sortie, strm.total_out);
+      Result := sortie;
+    end
+    else
+      Result := '';
 
   finally
-    // Libération des ressources
-    cvReleaseMat(ResultMatrix);
-    cvReleaseMat(SourceMatrix);
+    // Libérer les ressources
+    deflateEnd(@strm);
   end;
 end;
 ```
 
-## 8. Projet mixte avec C++ Builder
+## Gestion de la mémoire
 
-Si vous disposez de Delphi dans la suite RAD Studio, vous pouvez créer des projets mixtes utilisant à la fois du code Delphi et C++ Builder :
+### Allocation mémoire côté C
 
-1. Créez une bibliothèque de paquets Delphi (BPL)
-2. Utilisez C++ Builder pour créer un package qui utilise le BPL Delphi
-3. Importez vos bibliothèques C/C++ dans le package C++ Builder
-4. Exposez les fonctionnalités via des classes C++ accessible depuis Delphi
+Certaines bibliothèques C allouent de la mémoire qu'il faut libérer :
 
-Cette approche avancée est idéale pour des projets complexes nécessitant une intégration étroite des deux langages.
+```pascal
+// Fonction C qui alloue de la mémoire
+function CreerObjet: Pointer; cdecl; external 'ma.dll';
+
+// Fonction C qui libère la mémoire
+procedure DetruireObjet(obj: Pointer); cdecl; external 'ma.dll';
+
+// Utilisation
+procedure Exemple;
+var
+  obj: Pointer;
+begin
+  obj := CreerObjet;
+  try
+    // Utiliser l'objet...
+  finally
+    DetruireObjet(obj);  // TOUJOURS libérer !
+  end;
+end;
+```
+
+### Allocation mémoire côté Delphi
+
+Quand vous passez de la mémoire allouée par Delphi à une fonction C :
+
+```pascal
+function RemplirBuffer(buffer: PAnsiChar; taille: Integer): Integer;
+  cdecl; external 'ma.dll';
+
+procedure Exemple;
+var
+  buffer: PAnsiChar;
+  taille: Integer;
+begin
+  taille := 1024;
+  GetMem(buffer, taille);  // Allocation
+  try
+    RemplirBuffer(buffer, taille);
+    // Utiliser le buffer...
+  finally
+    FreeMem(buffer);  // Libération
+  end;
+end;
+```
+
+## Callbacks (fonctions de rappel)
+
+Certaines bibliothèques C utilisent des callbacks, c'est-à-dire des fonctions que vous fournissez et qui seront appelées par la bibliothèque.
+
+### Déclaration d'un callback
+
+```pascal
+// Type de callback
+type
+  TMonCallback = function(valeur: Integer; userData: Pointer): Integer; cdecl;
+
+// Fonction C qui prend un callback
+procedure TraiterAvecCallback(callback: TMonCallback; userData: Pointer);
+  cdecl; external 'ma.dll';
+```
+
+### Implémentation du callback
+
+```pascal
+// Le callback DOIT utiliser la convention cdecl
+function MonCallbackImpl(valeur: Integer; userData: Pointer): Integer; cdecl;
+begin
+  ShowMessage('Valeur reçue: ' + IntToStr(valeur));
+  Result := 0;
+end;
+
+// Utilisation
+procedure Exemple;
+begin
+  TraiterAvecCallback(@MonCallbackImpl, nil);
+end;
+```
+
+**Important :** Le callback doit être une fonction globale ou une méthode statique de classe, pas une méthode d'instance classique.
+
+### Callback avec méthode de classe
+
+Pour utiliser une méthode d'instance comme callback, il faut une astuce :
+
+```pascal
+type
+  TMonObjet = class
+  private
+    FValeur: Integer;
+    // Méthode statique qui fait le pont
+    class procedure CallbackStatique(valeur: Integer; userData: Pointer); cdecl; static;
+  public
+    procedure TraiterCallback(valeur: Integer);
+    procedure Executer;
+  end;
+
+class procedure TMonObjet.CallbackStatique(valeur: Integer; userData: Pointer); cdecl;
+var
+  Instance: TMonObjet;
+begin
+  Instance := TMonObjet(userData);
+  Instance.TraiterCallback(valeur);
+end;
+
+procedure TMonObjet.TraiterCallback(valeur: Integer);
+begin
+  FValeur := valeur;
+  ShowMessage('Traitement: ' + IntToStr(FValeur));
+end;
+
+procedure TMonObjet.Executer;
+begin
+  // Passer Self comme userData
+  TraiterAvecCallback(@TMonObjet.CallbackStatique, Self);
+end;
+```
+
+## Gestion des fichiers d'en-tête (.h)
+
+### Traduction manuelle
+
+Les fichiers d'en-tête C (.h) définissent les structures et fonctions. Il faut les traduire en Delphi :
+
+```c
+// Fichier C: exemple.h
+#define MAX_SIZE 100
+
+typedef struct {
+    int id;
+    char name[50];
+} Person;
+
+int CreatePerson(Person* p, int id, const char* name);
+```
+
+Devient en Delphi :
+
+```pascal
+// Traduction Delphi
+const
+  MAX_SIZE = 100;
+
+type
+  TPerson = record
+    id: Integer;
+    name: array[0..49] of AnsiChar;
+  end;
+  PPerson = ^TPerson;
+
+function CreatePerson(p: PPerson; id: Integer; name: PAnsiChar): Integer;
+  cdecl; external 'exemple.dll';
+```
+
+### Outils d'aide à la traduction
+
+Plusieurs outils peuvent vous aider :
+
+- **h2pas** : Outil en ligne de commande pour convertir .h en .pas
+- **C to Delphi converter** : Outils en ligne
+- **Recherche de traductions existantes** : Beaucoup de bibliothèques populaires ont déjà des en-têtes Delphi
+
+## Exemple complet : SQLite
+
+SQLite est une base de données C très populaire. Voyons comment l'intégrer :
+
+### Déclarations
+
+```pascal
+unit SQLite3;
+
+interface
+
+const
+  SQLITE_DLL = 'sqlite3.dll';
+
+type
+  TSQLite3 = Pointer;
+  TSQLite3Stmt = Pointer;
+
+// Codes de retour
+const
+  SQLITE_OK = 0;
+  SQLITE_ERROR = 1;
+  SQLITE_ROW = 100;
+  SQLITE_DONE = 101;
+
+// Fonctions principales
+function sqlite3_open(filename: PAnsiChar; var db: TSQLite3): Integer;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_close(db: TSQLite3): Integer;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_prepare_v2(db: TSQLite3; sql: PAnsiChar; nByte: Integer;
+  var stmt: TSQLite3Stmt; var pzTail: PAnsiChar): Integer;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_step(stmt: TSQLite3Stmt): Integer;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_finalize(stmt: TSQLite3Stmt): Integer;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_column_text(stmt: TSQLite3Stmt; iCol: Integer): PAnsiChar;
+  cdecl; external SQLITE_DLL;
+
+function sqlite3_errmsg(db: TSQLite3): PAnsiChar;
+  cdecl; external SQLITE_DLL;
+
+implementation
+
+end.
+```
+
+### Utilisation
+
+```pascal
+uses
+  SQLite3;
+
+procedure ExempleUtilisation;
+var
+  db: TSQLite3;
+  stmt: TSQLite3Stmt;
+  ret: Integer;
+  texte: string;
+begin
+  // Ouvrir la base de données
+  ret := sqlite3_open(PAnsiChar(AnsiString('test.db')), db);
+  if ret <> SQLITE_OK then
+  begin
+    ShowMessage('Erreur ouverture');
+    Exit;
+  end;
+
+  try
+    // Préparer une requête
+    ret := sqlite3_prepare_v2(
+      db,
+      PAnsiChar(AnsiString('SELECT * FROM users')),
+      -1,
+      stmt,
+      nil
+    );
+
+    if ret <> SQLITE_OK then
+    begin
+      ShowMessage('Erreur préparation: ' +
+        string(sqlite3_errmsg(db)));
+      Exit;
+    end;
+
+    try
+      // Exécuter et lire les résultats
+      while sqlite3_step(stmt) = SQLITE_ROW do
+      begin
+        texte := string(AnsiString(sqlite3_column_text(stmt, 0)));
+        ShowMessage('Résultat: ' + texte);
+      end;
+    finally
+      sqlite3_finalize(stmt);
+    end;
+
+  finally
+    sqlite3_close(db);
+  end;
+end;
+```
+
+## Débogage
+
+### Problèmes courants
+
+**Violation d'accès :** Souvent causée par :
+- Mauvaise convention d'appel (cdecl vs stdcall)
+- Types de paramètres incorrects
+- Pointeurs invalides
+- Mauvais alignement de structures
+
+**DLL introuvable :**
+- Vérifiez que la DLL est dans le même dossier que l'exécutable
+- Ou dans le PATH système
+- Utilisez un chemin complet si nécessaire
+
+**Fonction introuvable :**
+- Vérifiez le nom exact avec Dependency Walker
+- Attention au name mangling en C++
+
+### Techniques de débogage
+
+**Vérification pas à pas :**
+
+```pascal
+procedure DebugAppelC;
+var
+  handle: THandle;
+  proc: Pointer;
+begin
+  // 1. Vérifier que la DLL existe
+  if not FileExists('ma.dll') then
+  begin
+    ShowMessage('DLL introuvable');
+    Exit;
+  end;
+
+  // 2. Charger la DLL
+  handle := LoadLibrary('ma.dll');
+  if handle = 0 then
+  begin
+    ShowMessage('Échec chargement DLL: ' +
+      SysErrorMessage(GetLastError));
+    Exit;
+  end;
+
+  try
+    // 3. Chercher la fonction
+    proc := GetProcAddress(handle, 'MaFonction');
+    if proc = nil then
+    begin
+      ShowMessage('Fonction introuvable');
+      Exit;
+    end;
+
+    ShowMessage('Tout est OK !');
+
+  finally
+    FreeLibrary(handle);
+  end;
+end;
+```
 
 ## Bonnes pratiques
 
-1. **Gérez bien la libération des ressources** - Particulièrement important avec du code C/C++ qui peut allouer de la mémoire
-2. **Protégez les appels** - Utilisez `try..except` pour éviter les plantages en cas d'erreur dans la bibliothèque
-3. **Testez minutieusement** - Les différences de conventions d'appel et de types peuvent causer des problèmes subtils
-4. **Documentez vos wrappers** - Précisez les correspondances de types et les particularités d'utilisation
-5. **Validez les valeurs de retour** - Beaucoup de fonctions C renvoient des codes d'erreur qu'il faut vérifier
+### Encapsulation dans une classe
 
-## Dépannage
+Créez une classe wrapper pour faciliter l'utilisation :
 
-### Erreur "Fonction introuvable"
+```pascal
+type
+  TSQLiteDatabase = class
+  private
+    FHandle: TSQLite3;
+    FConnected: Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Connect(const FileName: string): Boolean;
+    procedure Disconnect;
+    function Execute(const SQL: string): Boolean;
+    function Query(const SQL: string): TStringList;
+    property Connected: Boolean read FConnected;
+  end;
+```
 
-Si Delphi ne trouve pas une fonction dans la DLL :
+### Gestion centralisée des erreurs
 
-1. Vérifiez l'orthographe exacte du nom de la fonction
-2. Utilisez l'outil `DependencyWalker` pour voir les fonctions exportées par la DLL
-3. Vérifiez si la fonction utilise le décorateur "C" (`extern "C"`) dans le code source C++
-4. Essayez d'ajouter un underscore devant le nom (`name '_MaFonction'`)
+```pascal
+type
+  ESQLiteError = class(Exception);
 
-### Corruption de mémoire et plantages
+procedure CheckSQLiteResult(db: TSQLite3; ret: Integer);
+begin
+  if ret <> SQLITE_OK then
+    raise ESQLiteError.Create(
+      'Erreur SQLite: ' + string(sqlite3_errmsg(db))
+    );
+end;
+```
 
-Si votre application plante lors de l'appel à une fonction C/C++ :
+### Documentation
 
-1. Vérifiez la correspondance exacte des types de paramètres
-2. Assurez-vous d'utiliser la bonne convention d'appel (`stdcall`, `cdecl`, etc.)
-3. Vérifiez les tailles de structures et l'alignement
-4. Vérifiez que les strings sont correctement terminées par un zéro
-5. Utilisez des outils de débogage comme `Process Monitor` ou les points d'arrêt sur exceptions
+Documentez les spécificités de chaque bibliothèque :
 
-## Pour aller plus loin
+```pascal
+/// <summary>
+/// Wrapper pour la bibliothèque SQLite3
+/// </summary>
+/// <remarks>
+/// Nécessite sqlite3.dll (version 3.36+)
+/// Convention d'appel: cdecl
+/// Thread-safe: Non (utiliser un mutex)
+/// </remarks>
+unit SQLite3Wrapper;
+```
 
-Pour les intégrations complexes, envisagez ces approches avancées :
+### Tests unitaires
 
-1. **COM** - Créez des composants COM en C++ utilisables depuis Delphi
-2. **WebAssembly** - Pour les applications web, intégrez du code C/C++ via WebAssembly
-3. **FFI (Foreign Function Interface)** - Des bibliothèques tiers comme FFIDELPHI
+Testez vos wrappers de bibliothèques :
 
-## Conclusion
+```pascal
+procedure TTestSQLite.TestConnection;
+var
+  db: TSQLiteDatabase;
+begin
+  db := TSQLiteDatabase.Create;
+  try
+    CheckTrue(db.Connect('test.db'), 'Échec connexion');
+    CheckTrue(db.Connected, 'Pas connecté');
+  finally
+    db.Free;
+  end;
+end;
+```
 
-L'intégration de bibliothèques C/C++ dans Delphi ouvre d'immenses possibilités en vous permettant d'exploiter l'écosystème riche des bibliothèques C/C++ tout en conservant la productivité et l'élégance de Delphi.
+## Compatibilité multi-plateforme
 
-Bien que cette intégration puisse sembler complexe au premier abord, les techniques présentées dans ce chapitre vous permettront de créer des ponts robustes entre ces mondes de programmation. Commencez par des intégrations simples via DLL, puis progressez vers des techniques plus avancées à mesure que vos besoins évoluent.
+Si vous développez pour plusieurs plateformes (Windows, macOS, Linux), considérez :
 
-La clé du succès réside dans une bonne compréhension des conventions d'appel, de la gestion des types, et des bonnes pratiques pour la gestion des ressources.
+```pascal
+const
+  {$IFDEF MSWINDOWS}
+  SQLITE_LIB = 'sqlite3.dll';
+  {$ENDIF}
+  {$IFDEF MACOS}
+  SQLITE_LIB = 'libsqlite3.dylib';
+  {$ENDIF}
+  {$IFDEF LINUX}
+  SQLITE_LIB = 'libsqlite3.so';
+  {$ENDIF}
+```
+
+## Résumé
+
+L'intégration de bibliothèques C/C++ dans Delphi permet d'accéder à un vaste écosystème de fonctionnalités.
+
+**Points clés :**
+
+1. Utilisez la convention d'appel **cdecl** (pas stdcall)
+2. Traduisez correctement les **types de données**
+3. Faites attention à l'**alignement des structures**
+4. Gérez correctement la **mémoire** (qui alloue, qui libère)
+5. Vérifiez les **noms exportés** avec des outils appropriés
+6. **Encapsulez** les appels dans des classes Delphi
+7. **Testez** minutieusement chaque fonction
+8. **Documentez** les spécificités de chaque bibliothèque
+9. Attention au **name mangling** en C++
+10. Gérez les **callbacks** correctement
+
+Avec ces connaissances, vous pouvez maintenant intégrer pratiquement n'importe quelle bibliothèque C/C++ dans vos applications Delphi !
 
 ⏭️ [API Windows natif](/14-utilisation-dapi-et-bibliotheques-externes/03-api-windows-natif.md)

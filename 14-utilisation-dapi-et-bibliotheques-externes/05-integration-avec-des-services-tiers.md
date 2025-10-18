@@ -1,659 +1,1286 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 14.5 Intégration avec des services tiers
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction aux services tiers
 
-## Introduction
+### Qu'est-ce qu'un service tiers ?
 
-Dans le monde moderne du développement logiciel, une application rarement fonctionne de manière isolée. L'intégration avec des services tiers permet d'enrichir considérablement vos applications Delphi en y ajoutant des fonctionnalités comme le stockage cloud, la géolocalisation, les paiements en ligne, l'authentification sociale, ou encore l'intelligence artificielle.
+Un **service tiers** est une application ou un service web externe que vous pouvez utiliser dans votre propre application. C'est comme utiliser les services d'un expert : au lieu de tout créer vous-même, vous faites appel à des spécialistes.
 
-Ce chapitre vous guidera à travers les différentes méthodes pour intégrer des services tiers à vos applications Delphi, avec des exemples concrets et accessibles.
+**Exemples courants :**
+- **Google Maps** : Afficher des cartes et calculer des itinéraires
+- **Stripe/PayPal** : Traiter des paiements en ligne
+- **Twilio** : Envoyer des SMS
+- **SendGrid** : Envoyer des emails en masse
+- **OpenAI** : Intelligence artificielle et traitement du langage
+- **Weather API** : Obtenir des prévisions météo
+- **Firebase** : Base de données en temps réel et authentification
 
-## Qu'est-ce qu'un service tiers ?
+### Pourquoi utiliser des services tiers ?
 
-Un service tiers est une application, une API ou une plateforme externe à votre application, généralement accessible via Internet, qui fournit des fonctionnalités spécifiques que vous pouvez utiliser dans votre logiciel. Ces services sont généralement proposés par d'autres entreprises et peuvent être gratuits ou payants.
+**Gain de temps** : Pas besoin de réinventer la roue. Des fonctionnalités complexes sont prêtes à l'emploi.
 
-Exemples de services tiers populaires :
-- Services d'authentification (Google, Facebook, Twitter)
-- Services de stockage cloud (Dropbox, Google Drive, OneDrive)
-- Services de paiement (PayPal, Stripe)
-- Services de cartographie (Google Maps, OpenStreetMap)
-- Plateformes d'analyse (Google Analytics)
-- Services de messagerie (Twilio, SendGrid)
+**Expertise** : Utiliser des solutions développées et maintenues par des spécialistes.
 
-## Méthodes d'intégration
+**Mise à l'échelle** : Les services tiers gèrent la montée en charge pour vous.
 
-### 1. Intégration via API REST
+**Coût** : Souvent moins cher que de développer et maintenir soi-même.
 
-La méthode la plus courante pour intégrer des services tiers est l'utilisation d'API REST. Une API REST utilise les méthodes HTTP (GET, POST, PUT, DELETE) pour interagir avec un service web.
+**Mises à jour** : Les services sont constamment améliorés sans effort de votre part.
 
-#### Exemple : Utilisation de l'API REST OpenWeatherMap
+### Types d'intégration
 
-Voici un exemple simple d'intégration du service météorologique OpenWeatherMap :
+**API REST** : Le plus courant, communication via HTTP avec JSON.
 
-```pascal
-procedure TForm1.ButtonGetWeatherClick(Sender: TObject);
-var
-  Client: TRESTClient;
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  JsonObj: TJSONObject;
-  ApiKey: string;
-  City: string;
-  Temperature: Double;
-  WeatherDescription: string;
-begin
-  // Paramètres de l'API
-  ApiKey := 'votre_clé_api_ici'; // Obtenir une clé sur openweathermap.org
-  City := EditCity.Text;
+**API SOAP** : Plus ancien, utilise XML (encore utilisé dans certaines entreprises).
 
-  try
-    // Création des composants REST
-    Client := TRESTClient.Create(nil);
-    Request := TRESTRequest.Create(nil);
-    Response := TRESTResponse.Create(nil);
+**WebHooks** : Le service vous envoie des notifications quand quelque chose se passe.
 
-    try
-      // Configuration des composants
-      Client.BaseURL := 'https://api.openweathermap.org/data/2.5';
-      Request.Client := Client;
-      Request.Response := Response;
+**SDK** : Bibliothèques spécifiques fournies par le service.
 
-      // Configuration de la requête
-      Request.Method := rmGET;
-      Request.Resource := 'weather';
+**OAuth** : Authentification via un service tiers (Se connecter avec Google, Facebook...).
 
-      // Ajout des paramètres
-      Request.AddParameter('q', City);
-      Request.AddParameter('appid', ApiKey);
-      Request.AddParameter('units', 'metric'); // Pour avoir la température en Celsius
+## Authentification avec les services tiers
 
-      // Exécution de la requête
-      Request.Execute;
+### Types d'authentification
 
-      // Traitement de la réponse
-      if Response.StatusCode = 200 then
-      begin
-        JsonObj := Response.JSONValue as TJSONObject;
+#### API Key (Clé API)
 
-        // Extraction des données
-        Temperature := JsonObj.GetValue<TJSONObject>('main').GetValue<Double>('temp');
-        WeatherDescription := JsonObj.GetValue<TJSONArray>('weather')
-                               .Items[0].GetValue<string>('description');
-
-        // Affichage des résultats
-        LabelWeather.Caption := Format(
-          'Météo à %s : %.1f°C, %s',
-          [City, Temperature, WeatherDescription]
-        );
-      end
-      else
-      begin
-        ShowMessage('Erreur : ' + Response.StatusText);
-      end;
-    finally
-      // Libération des ressources
-      Client.Free;
-      Request.Free;
-      Response.Free;
-    end;
-  except
-    on E: Exception do
-      ShowMessage('Erreur : ' + E.Message);
-  end;
-end;
-```
-
-Pour utiliser ce code, vous devez ajouter les unités suivantes :
+La méthode la plus simple : une chaîne unique qui identifie votre application.
 
 ```pascal
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, REST.Client, REST.Types, System.JSON;
-```
+  System.Net.HttpClient;
 
-> **Note** : Vous devez créer un compte sur [OpenWeatherMap](https://openweathermap.org) pour obtenir une clé API gratuite.
-
-### 2. Intégration via SDK (Software Development Kit)
-
-Certains services fournissent des SDK spécifiques pour Delphi, ce qui facilite grandement l'intégration.
-
-#### Installation d'un SDK tiers
-
-Pour installer un SDK tiers dans Delphi :
-
-1. Téléchargez le SDK depuis le site officiel du service ou depuis GitHub
-2. Décompressez les fichiers dans un dossier
-3. Dans Delphi, allez dans **Outils > Options > Bibliothèque**
-4. Ajoutez le chemin vers les dossiers du SDK dans les chemins de bibliothèque
-5. Pour les composants visuels, installez le package en allant dans **Composant > Installer des packages**
-
-#### Exemple : Utilisation du SDK Dropbox
-
-Si un SDK Dropbox pour Delphi est disponible (fictif pour cet exemple) :
-
-```pascal
-procedure TForm1.ButtonUploadClick(Sender: TObject);
+procedure AppelerAPIAvecCle;
 var
-  DropboxClient: TDropboxClient;
-  FileToUpload: string;
-  DestinationPath: string;
-  Response: TDropboxResponse;
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  URL: string;
 begin
-  // Initialisation du client Dropbox
-  DropboxClient := TDropboxClient.Create('votre_token_acces');
-
+  HttpClient := THTTPClient.Create;
   try
-    // Paramètres pour l'upload
-    FileToUpload := 'C:\Documents\rapport.pdf';
-    DestinationPath := '/Documents/rapport.pdf';
+    URL := 'https://api.example.com/data?apikey=VOTRE_CLE_API';
+    Response := HttpClient.Get(URL);
 
-    // Upload du fichier
-    Response := DropboxClient.UploadFile(FileToUpload, DestinationPath);
-
-    // Vérification du résultat
-    if Response.Success then
-      ShowMessage('Fichier uploadé avec succès !')
+    if Response.StatusCode = 200 then
+      ShowMessage(Response.ContentAsString)
     else
-      ShowMessage('Erreur lors de l''upload : ' + Response.ErrorMessage);
+      ShowMessage('Erreur: ' + IntToStr(Response.StatusCode));
   finally
-    DropboxClient.Free;
+    HttpClient.Free;
   end;
 end;
 ```
 
-### 3. Intégration via WebView
+**Important :** Ne jamais inclure votre clé API directement dans le code source. Utilisez un fichier de configuration ou des variables d'environnement.
 
-Pour les services qui ne proposent pas d'API ou de SDK, vous pouvez utiliser un composant WebView pour intégrer directement leur interface web.
+#### Bearer Token
 
-#### Exemple : Intégration de Google Maps via WebView
+Un token qui est envoyé dans l'en-tête HTTP :
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
+procedure AppelerAPIAvecToken;
 var
-  HTML: string;
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
 begin
-  // HTML pour intégrer Google Maps
-  HTML :=
-    '<!DOCTYPE html>' +
-    '<html>' +
-    '<head>' +
-    '  <style>' +
-    '    html, body, #map {' +
-    '      height: 100%;' +
-    '      margin: 0;' +
-    '      padding: 0;' +
-    '    }' +
-    '  </style>' +
-    '  <script src="https://maps.googleapis.com/maps/api/js?key=VOTRE_CLE_API"></script>' +
-    '  <script>' +
-    '    function initMap() {' +
-    '      var paris = {lat: 48.8566, lng: 2.3522};' +
-    '      var map = new google.maps.Map(document.getElementById("map"), {' +
-    '        zoom: 12,' +
-    '        center: paris' +
-    '      });' +
-    '      var marker = new google.maps.Marker({' +
-    '        position: paris,' +
-    '        map: map,' +
-    '        title: "Paris"' +
-    '      });' +
-    '    }' +
-    '  </script>' +
-    '</head>' +
-    '<body onload="initMap()">' +
-    '  <div id="map"></div>' +
-    '</body>' +
-    '</html>';
+  HttpClient := THTTPClient.Create;
+  try
+    // Ajouter le token dans l'en-tête
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer VOTRE_TOKEN');
 
-  // Affichage de la carte dans le WebBrowser
-  WebBrowser1.Navigate('about:blank');
-  while WebBrowser1.ReadyState <> READYSTATE_COMPLETE do
-    Application.ProcessMessages;
+    Response := HttpClient.Get('https://api.example.com/data', nil, Headers);
 
-  (WebBrowser1.Document as IHTMLDocument2).write(HTML);
+    if Response.StatusCode = 200 then
+      ShowMessage(Response.ContentAsString);
+  finally
+    HttpClient.Free;
+  end;
 end;
 ```
 
-Pour utiliser ce code, vous devez ajouter un composant TWebBrowser à votre formulaire et inclure les unités suivantes :
+#### Basic Authentication
+
+Authentification avec nom d'utilisateur et mot de passe :
 
 ```pascal
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.OleCtrls, SHDocVw, MSHTML;
-```
+  System.NetEncoding;
 
-> **Note** : Pour une application moderne, considérez l'utilisation du composant TEdgeBrowser disponible dans les versions récentes de Delphi.
-
-## 4. Authentification et autorisation
-
-La plupart des services tiers nécessitent une forme d'authentification. Les méthodes courantes sont :
-
-### Authentification par clé API
-
-C'est la méthode la plus simple : vous recevez une clé API que vous incluez dans chaque requête.
-
-```pascal
-Request.AddParameter('api_key', 'votre_clé_api_ici');
-```
-
-### Authentification OAuth 2.0
-
-OAuth 2.0 est un protocole d'autorisation standard utilisé par de nombreux services (Google, Facebook, Twitter, etc.).
-
-#### Exemple simplifié d'authentification OAuth 2.0
-
-```pascal
-procedure TForm1.ButtonAuthClick(Sender: TObject);
+function CreerHeaderBasicAuth(const Username, Password: string): string;
 var
-  AuthURL: string;
+  Credentials: string;
 begin
-  // Construction de l'URL d'authentification
-  AuthURL := 'https://accounts.google.com/o/oauth2/auth' +
-             '?client_id=VOTRE_CLIENT_ID' +
-             '&redirect_uri=http://localhost:8080/callback' +
-             '&response_type=code' +
-             '&scope=profile email' +
-             '&state=random_state_string';
-
-  // Ouverture du navigateur pour l'authentification
-  ShellExecute(0, 'open', PChar(AuthURL), nil, nil, SW_SHOWNORMAL);
-
-  // Dans une application réelle, vous devriez :
-  // 1. Démarrer un petit serveur web local pour recevoir le code d'autorisation
-  // 2. Échanger ce code contre un token d'accès
-  // 3. Utiliser ce token pour les requêtes API
+  Credentials := Username + ':' + Password;
+  Result := 'Basic ' + TNetEncoding.Base64.Encode(Credentials);
 end;
-```
 
-Pour une implémentation complète, vous auriez besoin de gérer un serveur local pour recevoir le callback et échanger le code d'autorisation contre un token d'accès.
-
-## Exemples pratiques d'intégration de services populaires
-
-### Intégration de PayPal pour les paiements
-
-```pascal
-procedure TForm1.ButtonPayWithPayPalClick(Sender: TObject);
+procedure AppelerAPIAvecBasicAuth;
 var
-  Client: TRESTClient;
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  JsonObj: TJSONObject;
-  Token: string;
-  PaymentID: string;
-  ApprovalURL: string;
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
 begin
-  // Création du token d'accès (simplifiée)
-  Client := TRESTClient.Create('https://api.sandbox.paypal.com/v1/oauth2/token');
-  Request := TRESTRequest.Create(nil);
-  Response := TRESTResponse.Create(nil);
-
+  HttpClient := THTTPClient.Create;
   try
-    Request.Client := Client;
-    Request.Response := Response;
-    Request.Method := rmPOST;
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization',
+      CreerHeaderBasicAuth('utilisateur', 'motdepasse'));
 
-    // Authentification Basic avec les identifiants Client
-    Client.Authenticator := THTTPBasicAuthenticator.Create('votre_client_id', 'votre_secret');
+    Response := HttpClient.Get('https://api.example.com/data', nil, Headers);
 
-    // Paramètres de la requête
-    Request.AddParameter('grant_type', 'client_credentials');
-    Request.Execute;
-
-    // Extraction du token
-    Token := Response.JSONValue.GetValue<string>('access_token');
-
-    // Création d'un paiement
-    Client.BaseURL := 'https://api.sandbox.paypal.com/v1';
-    Client.Authenticator := nil;
-
-    Request.Resource := 'payments/payment';
-    Request.Method := rmPOST;
-    Request.AddHeader('Authorization', 'Bearer ' + Token);
-    Request.AddHeader('Content-Type', 'application/json');
-
-    // Création du corps de la requête (simplifié)
-    Request.Body.Add('{' +
-      '"intent": "sale",' +
-      '"payer": {' +
-        '"payment_method": "paypal"' +
-      '},' +
-      '"transactions": [{' +
-        '"amount": {' +
-          '"total": "30.00",' +
-          '"currency": "EUR"' +
-        '},' +
-        '"description": "Achat sur Mon Application"' +
-      '}],' +
-      '"redirect_urls": {' +
-        '"return_url": "http://localhost:8080/success",' +
-        '"cancel_url": "http://localhost:8080/cancel"' +
-      '}' +
-    '}');
-
-    Request.Execute;
-
-    // Traiter la réponse
-    JsonObj := Response.JSONValue as TJSONObject;
-    PaymentID := JsonObj.GetValue<string>('id');
-
-    // Trouver l'URL d'approbation
-    var Links := JsonObj.GetValue<TJSONArray>('links');
-    for var i := 0 to Links.Count - 1 do
-    begin
-      var Link := Links.Items[i] as TJSONObject;
-      if Link.GetValue<string>('rel') = 'approval_url' then
-      begin
-        ApprovalURL := Link.GetValue<string>('href');
-        break;
-      end;
-    end;
-
-    // Rediriger l'utilisateur vers la page de paiement PayPal
-    ShellExecute(0, 'open', PChar(ApprovalURL), nil, nil, SW_SHOWNORMAL);
-
+    ShowMessage(Response.ContentAsString);
   finally
-    Client.Free;
-    Request.Free;
-    Response.Free;
+    HttpClient.Free;
   end;
 end;
 ```
 
-### Intégration de Firebase pour l'authentification
+### Stockage sécurisé des identifiants
 
 ```pascal
-procedure TForm1.ButtonFirebaseLoginClick(Sender: TObject);
-var
-  Client: TRESTClient;
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  JsonBody: TJSONObject;
-  JsonResponse: TJSONObject;
-  Email, Password: string;
-  IdToken, RefreshToken: string;
-begin
-  Email := EditEmail.Text;
-  Password := EditPassword.Text;
-
-  Client := TRESTClient.Create(nil);
-  Request := TRESTRequest.Create(nil);
-  Response := TRESTResponse.Create(nil);
-
-  try
-    // Configuration des composants
-    Client.BaseURL := 'https://identitytoolkit.googleapis.com/v1';
-    Request.Client := Client;
-    Request.Response := Response;
-
-    // Configuration de la requête
-    Request.Method := rmPOST;
-    Request.Resource := 'accounts:signInWithPassword';
-
-    // Ajout des paramètres
-    Request.AddParameter('key', 'votre_cle_api_firebase');
-
-    // Création du corps de la requête
-    JsonBody := TJSONObject.Create;
-    try
-      JsonBody.AddPair('email', Email);
-      JsonBody.AddPair('password', Password);
-      JsonBody.AddPair('returnSecureToken', TJSONTrue.Create);
-
-      Request.Body.Add(JsonBody.ToString);
-      Request.Execute;
-
-      // Traitement de la réponse
-      if Response.StatusCode = 200 then
-      begin
-        JsonResponse := Response.JSONValue as TJSONObject;
-
-        // Extraction des tokens
-        IdToken := JsonResponse.GetValue<string>('idToken');
-        RefreshToken := JsonResponse.GetValue<string>('refreshToken');
-
-        // Stockage des tokens (à faire de manière sécurisée dans une application réelle)
-        // ...
-
-        ShowMessage('Connexion réussie !');
-
-        // Navigation vers l'écran principal
-        // ...
-      end
-      else
-      begin
-        ShowMessage('Erreur de connexion : ' + Response.Content);
-      end;
-    finally
-      JsonBody.Free;
-    end;
-  finally
-    Client.Free;
-    Request.Free;
-    Response.Free;
-  end;
-end;
-```
-
-## Bonnes pratiques pour l'intégration de services tiers
-
-### 1. Sécurité
-
-- Ne stockez jamais les clés API ou secrets dans votre code source
-- Utilisez des variables d'environnement ou un fichier de configuration chiffré
-- Utilisez HTTPS pour toutes les communications avec les services tiers
-- Vérifiez et validez toutes les données reçues des services externes
-
-```pascal
-// Mauvaise pratique (à éviter)
+// Mauvaise pratique : Ne JAMAIS faire cela
 const
-  API_KEY = 'abc123secret';
+  API_KEY = 'ma_cle_secrete_123';  // Visible dans le code !
 
-// Bonne pratique
-function GetApiKey: string;
+// Bonne pratique : Utiliser un fichier de configuration
+uses
+  System.IniFiles;
+
+function ChargerCleAPI: string;
 var
   IniFile: TIniFile;
 begin
-  IniFile := TIniFile.Create(ExtractFilePath(Application.ExeName) + 'config.ini');
+  IniFile := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'config.ini');
   try
     Result := IniFile.ReadString('API', 'Key', '');
-    // Idéalement, déchiffrer la clé ici
+    if Result = '' then
+      raise Exception.Create('Clé API non configurée');
   finally
     IniFile.Free;
   end;
 end;
+
+// Fichier config.ini :
+// [API]
+// Key=votre_cle_ici
 ```
 
-### 2. Gestion des erreurs
+## Services de géolocalisation
 
-- Gérez toujours les erreurs de connexion et de réponse
-- Implémentez des mécanismes de nouvelle tentative avec backoff exponentiel
-- Fournissez des messages d'erreur clairs à l'utilisateur
+### API Google Maps
+
+#### Obtenir les coordonnées d'une adresse (Geocoding)
 
 ```pascal
-function TryAPIRequest(MaxRetries: Integer = 3): Boolean;
+uses
+  System.Net.HttpClient, System.JSON;
+
+function GeocoderAdresse(const Adresse: string; out Latitude, Longitude: Double): Boolean;
 var
-  RetryCount: Integer;
-  DelayMs: Integer;
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse, JSONLocation: TJSONObject;
+  JSONResults: TJSONArray;
+  URL, APIKey: string;
 begin
   Result := False;
-  RetryCount := 0;
-  DelayMs := 1000; // Délai initial de 1 seconde
+  APIKey := ChargerCleAPI; // Charger depuis config
 
-  while (RetryCount < MaxRetries) and (not Result) do
-  begin
+  // URL encoder l'adresse
+  URL := Format('https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s',
+    [TNetEncoding.URL.Encode(Adresse), APIKey]);
+
+  HttpClient := THTTPClient.Create;
+  try
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        if JSONResponse.GetValue<string>('status') = 'OK' then
+        begin
+          JSONResults := JSONResponse.GetValue<TJSONArray>('results');
+          if JSONResults.Count > 0 then
+          begin
+            JSONLocation := (JSONResults.Items[0] as TJSONObject)
+              .GetValue<TJSONObject>('geometry')
+              .GetValue<TJSONObject>('location');
+
+            Latitude := JSONLocation.GetValue<Double>('lat');
+            Longitude := JSONLocation.GetValue<Double>('lng');
+            Result := True;
+          end;
+        end;
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.ButtonGeocoderClick(Sender: TObject);
+var
+  Lat, Lng: Double;
+begin
+  if GeocoderAdresse('Tour Eiffel, Paris', Lat, Lng) then
+    ShowMessage(Format('Latitude: %.6f, Longitude: %.6f', [Lat, Lng]))
+  else
+    ShowMessage('Adresse non trouvée');
+end;
+```
+
+#### Calculer la distance entre deux points
+
+```pascal
+function CalculerDistanceGoogleMaps(const Origine, Destination: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse: TJSONObject;
+  JSONRows, JSONElements: TJSONArray;
+  URL, APIKey: string;
+begin
+  Result := '';
+  APIKey := ChargerCleAPI;
+
+  URL := Format('https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s',
+    [TNetEncoding.URL.Encode(Origine),
+     TNetEncoding.URL.Encode(Destination),
+     APIKey]);
+
+  HttpClient := THTTPClient.Create;
+  try
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        JSONRows := JSONResponse.GetValue<TJSONArray>('rows');
+        JSONElements := (JSONRows.Items[0] as TJSONObject).GetValue<TJSONArray>('elements');
+
+        Result := (JSONElements.Items[0] as TJSONObject)
+          .GetValue<TJSONObject>('distance')
+          .GetValue<string>('text');
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+### API OpenStreetMap (Alternative gratuite)
+
+```pascal
+function GeocoderAvecOpenStreetMap(const Adresse: string;
+  out Latitude, Longitude: Double): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONArray: TJSONArray;
+  JSONObject: TJSONObject;
+  URL: string;
+begin
+  Result := False;
+
+  URL := 'https://nominatim.openstreetmap.org/search?format=json&q=' +
+    TNetEncoding.URL.Encode(Adresse);
+
+  HttpClient := THTTPClient.Create;
+  try
+    // OpenStreetMap demande un User-Agent
+    HttpClient.UserAgent := 'MonApplicationDelphi/1.0';
+
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONArray := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
+      try
+        if JSONArray.Count > 0 then
+        begin
+          JSONObject := JSONArray.Items[0] as TJSONObject;
+          Latitude := StrToFloat(JSONObject.GetValue<string>('lat'));
+          Longitude := StrToFloat(JSONObject.GetValue<string>('lon'));
+          Result := True;
+        end;
+      finally
+        JSONArray.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Services météo
+
+### API OpenWeatherMap
+
+```pascal
+type
+  TMeteoInfo = record
+    Ville: string;
+    Temperature: Double;
+    Description: string;
+    Humidite: Integer;
+    VitesseVent: Double;
+  end;
+
+function ObtenirMeteo(const Ville: string): TMeteoInfo;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse, JSONMain, JSONWeather, JSONWind: TJSONObject;
+  JSONWeatherArray: TJSONArray;
+  URL, APIKey: string;
+begin
+  APIKey := ChargerCleAPI;
+
+  URL := Format('https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric&lang=fr',
+    [TNetEncoding.URL.Encode(Ville), APIKey]);
+
+  HttpClient := THTTPClient.Create;
+  try
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result.Ville := JSONResponse.GetValue<string>('name');
+
+        JSONMain := JSONResponse.GetValue<TJSONObject>('main');
+        Result.Temperature := JSONMain.GetValue<Double>('temp');
+        Result.Humidite := JSONMain.GetValue<Integer>('humidity');
+
+        JSONWeatherArray := JSONResponse.GetValue<TJSONArray>('weather');
+        JSONWeather := JSONWeatherArray.Items[0] as TJSONObject;
+        Result.Description := JSONWeather.GetValue<string>('description');
+
+        JSONWind := JSONResponse.GetValue<TJSONObject>('wind');
+        Result.VitesseVent := JSONWind.GetValue<Double>('speed');
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.ButtonMeteoClick(Sender: TObject);
+var
+  Meteo: TMeteoInfo;
+begin
+  Meteo := ObtenirMeteo('Paris');
+  Memo1.Lines.Add('Ville: ' + Meteo.Ville);
+  Memo1.Lines.Add(Format('Température: %.1f°C', [Meteo.Temperature]));
+  Memo1.Lines.Add('Description: ' + Meteo.Description);
+  Memo1.Lines.Add(Format('Humidité: %d%%', [Meteo.Humidite]));
+  Memo1.Lines.Add(Format('Vent: %.1f m/s', [Meteo.VitesseVent]));
+end;
+```
+
+### Prévisions sur plusieurs jours
+
+```pascal
+function ObtenirPrevisions(const Ville: string; NbJours: Integer): TArray<TMeteoInfo>;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse, JSONItem, JSONMain, JSONWeather: TJSONObject;
+  JSONList, JSONWeatherArray: TJSONArray;
+  URL, APIKey: string;
+  I: Integer;
+begin
+  APIKey := ChargerCleAPI;
+
+  URL := Format('https://api.openweathermap.org/data/2.5/forecast?q=%s&appid=%s&units=metric&lang=fr',
+    [TNetEncoding.URL.Encode(Ville), APIKey]);
+
+  HttpClient := THTTPClient.Create;
+  try
+    Response := HttpClient.Get(URL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        JSONList := JSONResponse.GetValue<TJSONArray>('list');
+
+        // Limiter au nombre de jours demandés (8 prévisions par jour)
+        SetLength(Result, Min(JSONList.Count, NbJours * 8));
+
+        for I := 0 to High(Result) do
+        begin
+          JSONItem := JSONList.Items[I] as TJSONObject;
+
+          Result[I].Ville := Ville;
+
+          JSONMain := JSONItem.GetValue<TJSONObject>('main');
+          Result[I].Temperature := JSONMain.GetValue<Double>('temp');
+          Result[I].Humidite := JSONMain.GetValue<Integer>('humidity');
+
+          JSONWeatherArray := JSONItem.GetValue<TJSONArray>('weather');
+          JSONWeather := JSONWeatherArray.Items[0] as TJSONObject;
+          Result[I].Description := JSONWeather.GetValue<string>('description');
+        end;
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Services de paiement
+
+### Stripe (Traitement de paiements)
+
+#### Créer un paiement
+
+```pascal
+uses
+  System.Net.HttpClient, System.JSON;
+
+function CreerPaiementStripe(Montant: Integer; const Devise, Token: string): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  PostData: TStringStream;
+  SecretKey: string;
+begin
+  Result := False;
+  SecretKey := ChargerCleAPI; // Clé secrète Stripe
+
+  HttpClient := THTTPClient.Create;
+  PostData := TStringStream.Create('');
+  try
+    // En-têtes
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + SecretKey);
+
+    // Données POST
+    PostData.WriteString(Format('amount=%d&currency=%s&source=%s',
+      [Montant, Devise, Token]));
+    PostData.Position := 0;
+
+    // Envoyer la requête
+    Response := HttpClient.Post('https://api.stripe.com/v1/charges',
+      PostData, nil, Headers);
+
+    Result := Response.StatusCode = 200;
+
+    if Result then
+      ShowMessage('Paiement réussi !')
+    else
+      ShowMessage('Erreur paiement: ' + Response.ContentAsString);
+  finally
+    PostData.Free;
+    HttpClient.Free;
+  end;
+end;
+
+// Utilisation (montant en centimes)
+procedure TForm1.ButtonPayerClick(Sender: TObject);
+begin
+  // 2500 centimes = 25.00 EUR
+  if CreerPaiementStripe(2500, 'eur', 'tok_visa') then
+    ShowMessage('Paiement de 25€ effectué');
+end;
+```
+
+#### Vérifier le statut d'un paiement
+
+```pascal
+function VerifierStatutPaiement(const ChargeID: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  JSONResponse: TJSONObject;
+  SecretKey: string;
+begin
+  Result := 'inconnu';
+  SecretKey := ChargerCleAPI;
+
+  HttpClient := THTTPClient.Create;
+  try
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + SecretKey);
+
+    Response := HttpClient.Get('https://api.stripe.com/v1/charges/' + ChargeID,
+      nil, Headers);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result := JSONResponse.GetValue<string>('status');
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+### PayPal (Alternative)
+
+```pascal
+function ObtenirTokenPayPal: string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  PostData: TStringStream;
+  JSONResponse: TJSONObject;
+  ClientID, Secret: string;
+begin
+  ClientID := 'votre_client_id';
+  Secret := 'votre_secret';
+
+  HttpClient := THTTPClient.Create;
+  PostData := TStringStream.Create('grant_type=client_credentials');
+  try
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization',
+      CreerHeaderBasicAuth(ClientID, Secret));
+
+    Response := HttpClient.Post(
+      'https://api.sandbox.paypal.com/v1/oauth2/token',
+      PostData, nil, Headers);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result := JSONResponse.GetValue<string>('access_token');
+      finally
+        JSONResponse.Free;
+      end;
+    end;
+  finally
+    PostData.Free;
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Services de communication
+
+### Twilio (Envoi de SMS)
+
+```pascal
+function EnvoyerSMS(const NumeroDestinataire, Message: string): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  PostData: TStringStream;
+  AccountSID, AuthToken, NumeroTwilio: string;
+  URL: string;
+begin
+  Result := False;
+
+  AccountSID := 'votre_account_sid';
+  AuthToken := 'votre_auth_token';
+  NumeroTwilio := '+33123456789'; // Votre numéro Twilio
+
+  URL := Format('https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json',
+    [AccountSID]);
+
+  HttpClient := THTTPClient.Create;
+  PostData := TStringStream.Create('');
+  try
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization',
+      CreerHeaderBasicAuth(AccountSID, AuthToken));
+
+    PostData.WriteString(Format('From=%s&To=%s&Body=%s',
+      [NumeroTwilio, NumeroDestinataire, TNetEncoding.URL.Encode(Message)]));
+    PostData.Position := 0;
+
+    Response := HttpClient.Post(URL, PostData, nil, Headers);
+    Result := Response.StatusCode = 201;
+
+    if Result then
+      ShowMessage('SMS envoyé avec succès')
+    else
+      ShowMessage('Erreur: ' + Response.ContentAsString);
+  finally
+    PostData.Free;
+    HttpClient.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.ButtonEnvoyerSMSClick(Sender: TObject);
+begin
+  EnvoyerSMS('+33612345678', 'Bonjour depuis Delphi !');
+end;
+```
+
+### SendGrid (Envoi d'emails en masse)
+
+```pascal
+function EnvoyerEmailSendGrid(const Destinataire, Sujet, Contenu: string): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  JSONBody, JSONPersonalization, JSONContent: TJSONObject;
+  JSONPersonalizations, JSONTo, JSONContents: TJSONArray;
+  PostData: TStringStream;
+  APIKey: string;
+begin
+  Result := False;
+  APIKey := ChargerCleAPI;
+
+  // Construire le JSON
+  JSONBody := TJSONObject.Create;
+  try
+    // Personnalisations
+    JSONPersonalizations := TJSONArray.Create;
+    JSONPersonalization := TJSONObject.Create;
+    JSONTo := TJSONArray.Create;
+    JSONTo.Add(TJSONObject.Create.AddPair('email', Destinataire));
+    JSONPersonalization.AddPair('to', JSONTo);
+    JSONPersonalizations.Add(JSONPersonalization);
+    JSONBody.AddPair('personalizations', JSONPersonalizations);
+
+    // Expéditeur
+    JSONBody.AddPair('from', TJSONObject.Create.AddPair('email', 'votre@email.com'));
+
+    // Sujet
+    JSONBody.AddPair('subject', Sujet);
+
+    // Contenu
+    JSONContents := TJSONArray.Create;
+    JSONContent := TJSONObject.Create;
+    JSONContent.AddPair('type', 'text/plain');
+    JSONContent.AddPair('value', Contenu);
+    JSONContents.Add(JSONContent);
+    JSONBody.AddPair('content', JSONContents);
+
+    // Envoyer
+    HttpClient := THTTPClient.Create;
+    PostData := TStringStream.Create(JSONBody.ToString, TEncoding.UTF8);
     try
-      // Tentative de requête API
-      Request.Execute;
+      SetLength(Headers, 2);
+      Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + APIKey);
+      Headers[1] := TNetHeader.Create('Content-Type', 'application/json');
+
+      Response := HttpClient.Post('https://api.sendgrid.com/v3/mail/send',
+        PostData, nil, Headers);
+
+      Result := Response.StatusCode = 202;
+    finally
+      PostData.Free;
+      HttpClient.Free;
+    end;
+  finally
+    JSONBody.Free;
+  end;
+end;
+```
+
+## Intelligence Artificielle
+
+### OpenAI (ChatGPT)
+
+```pascal
+function InterrogerChatGPT(const Question: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  JSONRequest, JSONResponse, JSONChoice, JSONMessage: TJSONObject;
+  JSONMessages, JSONChoices: TJSONArray;
+  PostData: TStringStream;
+  APIKey: string;
+begin
+  Result := '';
+  APIKey := ChargerCleAPI;
+
+  // Construire la requête JSON
+  JSONRequest := TJSONObject.Create;
+  try
+    JSONRequest.AddPair('model', 'gpt-3.5-turbo');
+
+    JSONMessages := TJSONArray.Create;
+    JSONMessage := TJSONObject.Create;
+    JSONMessage.AddPair('role', 'user');
+    JSONMessage.AddPair('content', Question);
+    JSONMessages.Add(JSONMessage);
+    JSONRequest.AddPair('messages', JSONMessages);
+
+    JSONRequest.AddPair('temperature', TJSONNumber.Create(0.7));
+
+    HttpClient := THTTPClient.Create;
+    PostData := TStringStream.Create(JSONRequest.ToString, TEncoding.UTF8);
+    try
+      SetLength(Headers, 2);
+      Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + APIKey);
+      Headers[1] := TNetHeader.Create('Content-Type', 'application/json');
+
+      Response := HttpClient.Post('https://api.openai.com/v1/chat/completions',
+        PostData, nil, Headers);
 
       if Response.StatusCode = 200 then
       begin
-        Result := True;
-        Exit;
-      end
-      else if (Response.StatusCode >= 500) or (Response.StatusCode = 429) then
-      begin
-        // Erreur serveur ou limitation de débit, on réessaye
-        Inc(RetryCount);
-        Sleep(DelayMs);
-        DelayMs := DelayMs * 2; // Backoff exponentiel
-      end
-      else
-      begin
-        // Autre type d'erreur, on abandonne
-        ShowMessage('Erreur API : ' + Response.StatusText);
-        Exit;
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          JSONChoices := JSONResponse.GetValue<TJSONArray>('choices');
+          JSONChoice := JSONChoices.Items[0] as TJSONObject;
+          JSONMessage := JSONChoice.GetValue<TJSONObject>('message');
+          Result := JSONMessage.GetValue<string>('content');
+        finally
+          JSONResponse.Free;
+        end;
       end;
-    except
-      on E: Exception do
-      begin
-        Inc(RetryCount);
-        Sleep(DelayMs);
-        DelayMs := DelayMs * 2;
+    finally
+      PostData.Free;
+      HttpClient.Free;
+    end;
+  finally
+    JSONRequest.Free;
+  end;
+end;
 
-        if RetryCount >= MaxRetries then
-          ShowMessage('Erreur de connexion après ' + IntToStr(MaxRetries) + ' tentatives : ' + E.Message);
+// Utilisation
+procedure TForm1.ButtonChatGPTClick(Sender: TObject);
+var
+  Question, Reponse: string;
+begin
+  Question := EditQuestion.Text;
+  Reponse := InterrogerChatGPT(Question);
+  Memo1.Lines.Add('Q: ' + Question);
+  Memo1.Lines.Add('R: ' + Reponse);
+  Memo1.Lines.Add('---');
+end;
+```
+
+### Génération d'images avec DALL-E
+
+```pascal
+function GenererImageDALLE(const Description: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  JSONRequest, JSONResponse, JSONData: TJSONObject;
+  JSONDataArray: TJSONArray;
+  PostData: TStringStream;
+  APIKey, URLImage: string;
+begin
+  Result := '';
+  APIKey := ChargerCleAPI;
+
+  JSONRequest := TJSONObject.Create;
+  try
+    JSONRequest.AddPair('prompt', Description);
+    JSONRequest.AddPair('n', TJSONNumber.Create(1));
+    JSONRequest.AddPair('size', '1024x1024');
+
+    HttpClient := THTTPClient.Create;
+    PostData := TStringStream.Create(JSONRequest.ToString, TEncoding.UTF8);
+    try
+      SetLength(Headers, 2);
+      Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + APIKey);
+      Headers[1] := TNetHeader.Create('Content-Type', 'application/json');
+
+      Response := HttpClient.Post('https://api.openai.com/v1/images/generations',
+        PostData, nil, Headers);
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          JSONDataArray := JSONResponse.GetValue<TJSONArray>('data');
+          JSONData := JSONDataArray.Items[0] as TJSONObject;
+          Result := JSONData.GetValue<string>('url');
+        finally
+          JSONResponse.Free;
+        end;
+      end;
+    finally
+      PostData.Free;
+      HttpClient.Free;
+    end;
+  finally
+    JSONRequest.Free;
+  end;
+end;
+```
+
+## Services de stockage cloud
+
+### Dropbox
+
+```pascal
+function TelechargerVersDrop box(const CheminLocal: string; const CheminDropbox: string): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  FileStream: TFileStream;
+  Token: string;
+begin
+  Result := False;
+  Token := ChargerCleAPI;
+
+  if not FileExists(CheminLocal) then
+  begin
+    ShowMessage('Fichier introuvable');
+    Exit;
+  end;
+
+  HttpClient := THTTPClient.Create;
+  FileStream := TFileStream.Create(CheminLocal, fmOpenRead);
+  try
+    SetLength(Headers, 3);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + Token);
+    Headers[1] := TNetHeader.Create('Content-Type', 'application/octet-stream');
+    Headers[2] := TNetHeader.Create('Dropbox-API-Arg',
+      Format('{"path":"%s","mode":"add","autorename":true}', [CheminDropbox]));
+
+    Response := HttpClient.Post('https://content.dropboxapi.com/2/files/upload',
+      FileStream, nil, Headers);
+
+    Result := Response.StatusCode = 200;
+
+    if Result then
+      ShowMessage('Fichier téléchargé sur Dropbox')
+    else
+      ShowMessage('Erreur: ' + Response.ContentAsString);
+  finally
+    FileStream.Free;
+    HttpClient.Free;
+  end;
+end;
+```
+
+### Google Drive
+
+```pascal
+// Note: Nécessite OAuth 2.0 (voir section suivante)
+function TelechargerVersGoogleDrive(const CheminLocal, NomFichier: string;
+  const AccessToken: string): Boolean;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+  MultipartData: TMultipartFormData;
+begin
+  Result := False;
+
+  HttpClient := THTTPClient.Create;
+  MultipartData := TMultipartFormData.Create;
+  try
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + AccessToken);
+
+    MultipartData.AddField('name', NomFichier);
+    MultipartData.AddFile('file', CheminLocal);
+
+    Response := HttpClient.Post(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      MultipartData, nil, Headers);
+
+    Result := Response.StatusCode = 200;
+  finally
+    MultipartData.Free;
+    HttpClient.Free;
+  end;
+end;
+```
+
+## OAuth 2.0 (Authentification tierce)
+
+### Principe de base
+
+OAuth 2.0 permet à vos utilisateurs de se connecter via Google, Facebook, Microsoft, etc. sans partager leur mot de passe avec votre application.
+
+**Flux simplifié :**
+1. Rediriger l'utilisateur vers le service (Google, Facebook...)
+2. L'utilisateur autorise votre application
+3. Le service renvoie un code d'autorisation
+4. Échanger ce code contre un token d'accès
+5. Utiliser le token pour accéder aux données
+
+### Exemple avec Google OAuth
+
+```pascal
+type
+  TOAuthHelper = class
+  private
+    FClientID: string;
+    FClientSecret: string;
+    FRedirectURI: string;
+  public
+    constructor Create(const ClientID, ClientSecret, RedirectURI: string);
+    function GenererURLAutorisation: string;
+    function EchangerCodeContreToken(const Code: string): string;
+    function ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;
+  end;
+
+constructor TOAuthHelper.Create(const ClientID, ClientSecret, RedirectURI: string);
+begin
+  FClientID := ClientID;
+  FClientSecret := ClientSecret;
+  FRedirectURI := RedirectURI;
+end;
+
+function TOAuthHelper.GenererURLAutorisation: string;
+begin
+  Result := 'https://accounts.google.com/o/oauth2/v2/auth?' +
+    'client_id=' + FClientID +
+    '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
+    '&response_type=code' +
+    '&scope=email%20profile';
+end;
+
+function TOAuthHelper.EchangerCodeContreToken(const Code: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  PostData: TStringStream;
+  JSONResponse: TJSONObject;
+begin
+  Result := '';
+
+  HttpClient := THTTPClient.Create;
+  PostData := TStringStream.Create('');
+  try
+    PostData.WriteString(Format('code=%s&client_id=%s&client_secret=%s&redirect_uri=%s&grant_type=authorization_code',
+      [Code, FClientID, FClientSecret, TNetEncoding.URL.Encode(FRedirectURI)]));
+    PostData.Position := 0;
+
+    Response := HttpClient.Post('https://oauth2.googleapis.com/token', PostData);
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result := JSONResponse.GetValue<string>('access_token');
+      finally
+        JSONResponse.Free;
       end;
     end;
-  end;
-end;
-```
-
-### 3. Performances
-
-- Minimisez le nombre de requêtes au service tiers
-- Mettez en cache les réponses lorsque c'est possible
-- Utilisez des requêtes asynchrones pour ne pas bloquer l'interface utilisateur
-
-```pascal
-procedure TForm1.ButtonGetDataAsyncClick(Sender: TObject);
-begin
-  // Désactiver le bouton pendant le chargement
-  ButtonGetDataAsync.Enabled := False;
-  LabelStatus.Caption := 'Chargement en cours...';
-
-  // Lancer la requête en arrière-plan
-  TTask.Run(
-    procedure
-    var
-      Client: TRESTClient;
-      Request: TRESTRequest;
-      Response: TRESTResponse;
-      JsonData: TJSONValue;
-    begin
-      Client := TRESTClient.Create('https://api.exemple.com');
-      Request := TRESTRequest.Create(nil);
-      Response := TRESTResponse.Create(nil);
-
-      try
-        Request.Client := Client;
-        Request.Response := Response;
-        Request.Method := rmGET;
-        Request.Resource := 'data';
-        Request.Execute;
-
-        JsonData := Response.JSONValue;
-
-        // Mise à jour de l'interface sur le thread principal
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            // Traiter les données...
-            Memo1.Lines.Text := JsonData.ToString;
-
-            ButtonGetDataAsync.Enabled := True;
-            LabelStatus.Caption := 'Données chargées avec succès';
-          end
-        );
-      finally
-        Client.Free;
-        Request.Free;
-        Response.Free;
-      end;
-    end
-  );
-end;
-```
-
-Pour utiliser ce code, vous devez ajouter l'unité `System.Threading` à la clause `uses`.
-
-### 4. Conformité aux conditions d'utilisation
-
-- Respectez les quotas et limites d'utilisation des API
-- Lisez attentivement les conditions d'utilisation du service
-- Vérifiez si vous avez besoin d'afficher des attributions (ex: "Propulsé par Google Maps")
-
-## Tests et débogage
-
-### Utilisation d'outils de test d'API
-
-Des outils comme Postman, Insomnia ou curl peuvent être très utiles pour tester les API avant de les intégrer dans votre code :
-
-```bash
-# Exemple de test d'API avec curl
-curl -X GET "https://api.exemple.com/data" -H "Authorization: Bearer votre_token"
-```
-
-### Journalisation des requêtes et réponses
-
-Pour faciliter le débogage, enregistrez les détails des requêtes et des réponses :
-
-```pascal
-procedure LogApiRequest(const Request: TRESTRequest; const Response: TRESTResponse);
-var
-  LogFile: TextFile;
-  LogFileName: string;
-begin
-  LogFileName := ExtractFilePath(Application.ExeName) + 'api_log.txt';
-
-  AssignFile(LogFile, LogFileName);
-
-  if FileExists(LogFileName) then
-    Append(LogFile)
-  else
-    Rewrite(LogFile);
-
-  try
-    WriteLn(LogFile, '--- ' + DateTimeToStr(Now) + ' ---');
-    WriteLn(LogFile, 'URL: ' + Request.GetFullRequestURL);
-    WriteLn(LogFile, 'Method: ' + Request.Method.ToString);
-
-    WriteLn(LogFile, 'Headers:');
-    for var Header in Request.Params do
-      if Header.Kind = pkHTTPHEADER then
-        WriteLn(LogFile, '  ' + Header.Name + ': ' + Header.Value);
-
-    WriteLn(LogFile, 'Body: ' + Request.Body.ToString);
-
-    WriteLn(LogFile, 'Response Status: ' + IntToStr(Response.StatusCode) + ' ' + Response.StatusText);
-    WriteLn(LogFile, 'Response: ' + Response.Content);
-    WriteLn(LogFile, '-------------------');
   finally
-    CloseFile(LogFile);
+    PostData.Free;
+    HttpClient.Free;
+  end;
+end;
+
+function TOAuthHelper.ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Headers: TNetHeaders;
+begin
+  Result := nil;
+
+  HttpClient := THTTPClient.Create;
+  try
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + AccessToken);
+
+    Response := HttpClient.Get('https://www.googleapis.com/oauth2/v2/userinfo',
+      nil, Headers);
+
+    if Response.StatusCode = 200 then
+      Result := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+  finally
+    HttpClient.Free;
   end;
 end;
 ```
 
-## Conclusion
+## Gestion des erreurs et limites de taux
 
-L'intégration de services tiers dans vos applications Delphi ouvre un monde de possibilités, vous permettant d'ajouter rapidement des fonctionnalités avancées sans avoir à tout développer vous-même. Que ce soit pour l'authentification, le stockage cloud, les paiements, ou d'autres services spécialisés, Delphi offre tous les outils nécessaires pour une intégration harmonieuse.
+### Gérer les codes d'erreur HTTP
 
-Les points clés à retenir :
+```pascal
+procedure TraiterReponseHTTP(Response: IHTTPResponse);
+begin
+  case Response.StatusCode of
+    200..299:
+      ShowMessage('Succès');
 
-1. Utilisez les API REST pour la plupart des intégrations modernes
-2. Considérez les SDK officiels lorsqu'ils sont disponibles
-3. Utilisez les WebViews pour les services sans API accessible
-4. Gérez correctement l'authentification et la sécurité
-5. Implémentez une gestion robuste des erreurs
-6. Respectez les bonnes pratiques de performance
+    400:
+      ShowMessage('Requête invalide');
 
-En suivant ces principes, vous pourrez enrichir considérablement vos applications Delphi tout en profitant des services et infrastructures développés par des tiers.
+    401:
+      ShowMessage('Non autorisé - vérifiez vos identifiants');
 
-## Ressources complémentaires
+    403:
+      ShowMessage('Accès interdit');
 
-- Documentation officielle des services que vous intégrez
-- Communauté Delphi et forums pour des exemples spécifiques
-- Sites comme GitHub pour trouver des composants et bibliothèques d'intégration existants
+    404:
+      ShowMessage('Ressource introuvable');
 
-N'oubliez pas que chaque service a ses propres particularités et que cette introduction n'est qu'un point de départ. Consultez toujours la documentation officielle du service que vous souhaitez intégrer pour les détails spécifiques à ce service.
+    429:
+      ShowMessage('Trop de requêtes - attendez avant de réessayer');
+
+    500..599:
+      ShowMessage('Erreur serveur');
+  else
+    ShowMessage('Erreur inconnue: ' + IntToStr(Response.StatusCode));
+  end;
+end;
+```
+
+### Respecter les limites de taux (Rate Limiting)
+
+```pascal
+type
+  TRateLimiter = class
+  private
+    FDerniereRequete: TDateTime;
+    FDelaiMinimum: Integer; // en millisecondes
+  public
+    constructor Create(DelaiMinimumMS: Integer);
+    procedure Attendre;
+  end;
+
+constructor TRateLimiter.Create(DelaiMinimumMS: Integer);
+begin
+  FDelaiMinimum := DelaiMinimumMS;
+  FDerniereRequete := 0;
+end;
+
+procedure TRateLimiter.Attendre;
+var
+  Ecoule, AAttendre: Integer;
+begin
+  if FDerniereRequete > 0 then
+  begin
+    Ecoule := MilliSecondsBetween(Now, FDerniereRequete);
+    if Ecoule < FDelaiMinimum then
+    begin
+      AAttendre := FDelaiMinimum - Ecoule;
+      Sleep(AAttendre);
+    end;
+  end;
+  FDerniereRequete := Now;
+end;
+
+// Utilisation
+var
+  Limiter: TRateLimiter;
+begin
+  Limiter := TRateLimiter.Create(1000); // 1 seconde entre chaque requête
+  try
+    Limiter.Attendre;
+    // Faire la première requête
+
+    Limiter.Attendre;
+    // Faire la deuxième requête
+  finally
+    Limiter.Free;
+  end;
+end;
+```
+
+### Retry avec backoff exponentiel
+
+```pascal
+function RequeteAvecRetry(const URL: string; MaxTentatives: Integer): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  Tentative: Integer;
+  Delai: Integer;
+begin
+  Result := '';
+  Delai := 1000; // Commencer avec 1 seconde
+
+  HttpClient := THTTPClient.Create;
+  try
+    for Tentative := 1 to MaxTentatives do
+    begin
+      try
+        Response := HttpClient.Get(URL);
+
+        if Response.StatusCode = 200 then
+        begin
+          Result := Response.ContentAsString;
+          Exit; // Succès !
+        end
+        else if Response.StatusCode = 429 then
+        begin
+          // Trop de requêtes, attendre plus longtemps
+          Sleep(Delai);
+          Delai := Delai * 2; // Backoff exponentiel
+        end
+        else
+          Break; // Autre erreur, arrêter
+
+      except
+        on E: Exception do
+        begin
+          if Tentative = MaxTentatives then
+            raise; // Relancer l'exception à la dernière tentative
+          Sleep(Delai);
+          Delai := Delai * 2;
+        end;
+      end;
+    end;
+  finally
+    HttpClient.Free;
+  end;
+end;
+```
+
+## Bonnes pratiques
+
+### Créer une classe wrapper réutilisable
+
+```pascal
+type
+  TServiceAPIBase = class
+  private
+    FAPIKey: string;
+    FBaseURL: string;
+    FHttpClient: THTTPClient;
+  protected
+    function Get(const Endpoint: string): string;
+    function Post(const Endpoint: string; const Data: string): string;
+    function CreerHeaders: TNetHeaders; virtual;
+  public
+    constructor Create(const BaseURL, APIKey: string);
+    destructor Destroy; override;
+  end;
+
+constructor TServiceAPIBase.Create(const BaseURL, APIKey: string);
+begin
+  FBaseURL := BaseURL;
+  FAPIKey := APIKey;
+  FHttpClient := THTTPClient.Create;
+end;
+
+destructor TServiceAPIBase.Destroy;
+begin
+  FHttpClient.Free;
+  inherited;
+end;
+
+function TServiceAPIBase.CreerHeaders: TNetHeaders;
+begin
+  SetLength(Result, 1);
+  Result[0] := TNetHeader.Create('Authorization', 'Bearer ' + FAPIKey);
+end;
+
+function TServiceAPIBase.Get(const Endpoint: string): string;
+var
+  Response: IHTTPResponse;
+begin
+  Response := FHttpClient.Get(FBaseURL + Endpoint, nil, CreerHeaders);
+  Result := Response.ContentAsString;
+end;
+
+// Utilisation :
+type
+  TMonServiceAPI = class(TServiceAPIBase)
+  public
+    function ObtenirDonnees: string;
+  end;
+
+function TMonServiceAPI.ObtenirDonnees: string;
+begin
+  Result := Get('/data');
+end;
+```
+
+### Logging des requêtes
+
+```pascal
+procedure LogRequete(const Methode, URL: string; StatusCode: Integer);
+var
+  Log: TStringList;
+begin
+  Log := TStringList.Create;
+  try
+    if FileExists('api_log.txt') then
+      Log.LoadFromFile('api_log.txt');
+
+    Log.Add(Format('[%s] %s %s - Status: %d',
+      [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), Methode, URL, StatusCode]));
+
+    Log.SaveToFile('api_log.txt');
+  finally
+    Log.Free;
+  end;
+end;
+```
+
+### Cache des résultats
+
+```pascal
+type
+  TCacheAPI = class
+  private
+    FCache: TDictionary<string, string>;
+    FDureeCache: Integer; // en secondes
+  public
+    constructor Create(DureeCacheSecondes: Integer);
+    destructor Destroy; override;
+    function Obtenir(const Cle: string): string;
+    procedure Stocker(const Cle, Valeur: string);
+    procedure Vider;
+  end;
+
+// Utilisation pour éviter trop de requêtes
+function ObtenirAvecCache(const URL: string): string;
+begin
+  Result := Cache.Obtenir(URL);
+  if Result = '' then
+  begin
+    Result := FaireRequeteHTTP(URL);
+    Cache.Stocker(URL, Result);
+  end;
+end;
+```
+
+## Résumé
+
+L'intégration avec des services tiers ouvre des possibilités infinies pour vos applications.
+
+**Points clés :**
+
+1. **API REST** est le standard actuel avec JSON
+2. **Authentification** : API Keys, Bearer Tokens, OAuth 2.0
+3. **Sécurité** : Ne jamais coder les clés en dur, utilisez des fichiers de configuration
+4. **Gestion d'erreurs** : Vérifiez toujours les codes HTTP
+5. **Rate Limiting** : Respectez les limites des services
+6. **Retry** : Implémentez des mécanismes de nouvelle tentative
+7. **Cache** : Réduisez les appels avec un cache intelligent
+8. **Logging** : Enregistrez toutes les requêtes pour le débogage
+9. **Encapsulation** : Créez des wrappers réutilisables
+10. **Documentation** : Consultez toujours la documentation officielle de l'API
+
+Les services tiers évoluent constamment. Consultez leur documentation officielle pour les dernières fonctionnalités et bonnes pratiques.
 
 ⏭️ [Liaisons avec d'autres langages](/14-utilisation-dapi-et-bibliotheques-externes/06-liaisons-avec-dautres-langages.md)
