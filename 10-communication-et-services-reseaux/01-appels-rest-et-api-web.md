@@ -1,176 +1,143 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 10.1 Appels REST et API Web (TRESTClient)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction aux API REST
 
-## Introduction
+### Qu'est-ce qu'une API REST ?
 
-Dans ce chapitre, nous allons découvrir comment interagir avec des API Web en utilisant le composant `TRESTClient` disponible dans de nombreux environnements de développement. Cette fonctionnalité est essentielle pour créer des applications modernes qui communiquent avec des services distants.
+Une **API REST** (Representational State Transfer) est un moyen standardisé pour permettre à des applications de communiquer entre elles via Internet. Imaginez-la comme un serveur dans un restaurant : vous passez une commande (requête), et le serveur vous apporte ce que vous avez demandé (réponse).
 
-## Qu'est-ce que REST?
+Les API REST utilisent le protocole HTTP, le même qui permet de naviguer sur le web. Elles sont devenues le standard pour échanger des données entre applications modernes.
 
-REST (Representational State Transfer) est un style d'architecture utilisé pour la conception d'applications en réseau. Une API REST est une interface qui permet à différentes applications de communiquer entre elles via le protocole HTTP.
+### Les principes de base
 
-### Concepts clés de REST:
-- **Ressources**: Identifiées par des URLs
-- **Méthodes HTTP**: GET, POST, PUT, DELETE, etc.
-- **Sans état**: Chaque requête contient toutes les informations nécessaires
-- **Format des données**: Généralement JSON ou XML
+**Les méthodes HTTP principales :**
 
-## Le composant TRESTClient
+- **GET** : Récupérer des données (comme lire une page web)
+- **POST** : Créer de nouvelles données (comme soumettre un formulaire)
+- **PUT** : Modifier des données existantes
+- **DELETE** : Supprimer des données
 
-`TRESTClient` est un composant qui simplifie l'envoi et la réception de requêtes REST. Il offre une interface facile à utiliser pour communiquer avec des API Web sans avoir à gérer manuellement les détails de bas niveau des connexions HTTP.
+**Le format des données :**
 
-### Configuration de base
+Les API REST échangent généralement des données au format **JSON** (JavaScript Object Notation), qui est facile à lire et à manipuler.
 
-Pour commencer à utiliser `TRESTClient`, suivez ces étapes:
-
-1. Ajoutez le composant `TRESTClient` à votre projet
-2. Configurez les propriétés de base:
-
-```pascal
-RESTClient1.BaseURL := 'https://api.exemple.com';
-RESTClient1.Accept := 'application/json';
-RESTClient1.ContentType := 'application/json';
+Exemple de données JSON :
+```json
+{
+  "id": 1,
+  "nom": "Dupont",
+  "prenom": "Jean",
+  "email": "jean.dupont@example.com"
+}
 ```
 
-## Effectuer des requêtes HTTP
+## Les composants REST dans Delphi
 
-### Requête GET (Récupérer des données)
+Delphi intègre des composants puissants pour travailler avec les API REST, regroupés dans la palette **REST Client**.
 
-La méthode GET permet de récupérer des données depuis une API:
+### Les composants essentiels
+
+1. **TRESTClient** : Le client qui établit la connexion avec l'API
+2. **TRESTRequest** : La requête que vous envoyez à l'API
+3. **TRESTResponse** : La réponse renvoyée par l'API
+
+Ces trois composants fonctionnent ensemble pour effectuer des appels REST.
+
+## Configuration de base
+
+### Étape 1 : Ajouter les composants
+
+Sur votre formulaire, ajoutez depuis la palette **REST Client** :
+
+- Un composant `TRESTClient`
+- Un composant `TRESTRequest`
+- Un composant `TRESTResponse`
+
+### Étape 2 : Lier les composants
+
+Dans l'Inspecteur d'objets :
+
+1. Sélectionnez `RESTRequest1`
+2. Dans la propriété `Client`, choisissez `RESTClient1`
+3. Dans la propriété `Response`, choisissez `RESTResponse1`
+
+Vos composants sont maintenant connectés et prêts à communiquer.
+
+## Premier appel REST simple
+
+### Récupérer des données avec GET
+
+Imaginons que vous voulez récupérer des informations depuis une API publique. Voici comment procéder :
+
+**Configuration du TRESTClient :**
 
 ```pascal
-procedure TForm1.BtnGetDataClick(Sender: TObject);
-var
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Création des composants
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration
-    RESTRequest.Client := RESTClient1;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmGET;
-    RESTRequest.Resource := '/users';  // Le chemin après l'URL de base
-
-    // Exécution de la requête
-    RESTRequest.Execute;
-
-    // Traitement de la réponse
-    if RESTResponse.StatusCode = 200 then
-      Memo1.Lines.Text := RESTResponse.Content
-    else
-      ShowMessage('Erreur: ' + IntToStr(RESTResponse.StatusCode));
-
-  finally
-    // Libération des ressources
-    RESTRequest.Free;
-    RESTResponse.Free;
-  end;
+  // Définir l'URL de base de l'API
+  RESTClient1.BaseURL := 'https://jsonplaceholder.typicode.com';
 end;
 ```
 
-### Requête POST (Envoyer des données)
-
-La méthode POST permet d'envoyer des données à l'API:
+**Effectuer une requête GET :**
 
 ```pascal
-procedure TForm1.BtnPostDataClick(Sender: TObject);
-var
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  JsonBody: TJSONObject;
+procedure TForm1.ButtonGetDataClick(Sender: TObject);
 begin
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-  JsonBody := TJSONObject.Create;
+  // Configurer la requête
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Resource := 'users/1';
 
-  try
-    // Préparation du corps JSON à envoyer
-    JsonBody.AddPair('nom', 'Dupont');
-    JsonBody.AddPair('prenom', 'Jean');
-    JsonBody.AddPair('email', 'jean.dupont@exemple.com');
+  // Exécuter la requête
+  RESTRequest1.Execute;
 
-    // Configuration
-    RESTRequest.Client := RESTClient1;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
-    RESTRequest.Resource := '/users';
-    RESTRequest.AddBody(JsonBody.ToString, ContentTypeFromString('application/json'));
-
-    // Exécution
-    RESTRequest.Execute;
-
-    // Traitement de la réponse
-    if (RESTResponse.StatusCode = 200) or (RESTResponse.StatusCode = 201) then
-      ShowMessage('Utilisateur créé avec succès!')
-    else
-      ShowMessage('Erreur: ' + IntToStr(RESTResponse.StatusCode));
-
-  finally
-    JsonBody.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
-  end;
+  // Afficher la réponse
+  Memo1.Text := RESTResponse1.Content;
 end;
 ```
 
-## Gestion des paramètres
+**Explication du code :**
 
-### Paramètres d'URL
+- `BaseURL` : L'adresse de base de l'API
+- `Resource` : Le chemin spécifique que vous voulez interroger
+- `Method` : Le type de requête (ici GET)
+- `Execute` : Lance l'appel à l'API
+- `Content` : Le contenu de la réponse au format texte
 
-Pour ajouter des paramètres à l'URL (par exemple, `/users?id=123`):
+## Analyser les réponses JSON
 
-```pascal
-RESTRequest.AddParameter('id', '123', pkGETorPOST);
-```
+### Utiliser TJSONObject
 
-### En-têtes personnalisés
-
-Pour ajouter des en-têtes HTTP personnalisés:
-
-```pascal
-RESTRequest.AddParameter('Authorization', 'Bearer ' + MonToken, pkHTTPHEADER);
-```
-
-## Traitement des réponses JSON
-
-La plupart des API modernes renvoient des données au format JSON. Voici comment les traiter:
+Delphi propose la classe `TJSONObject` pour manipuler facilement les données JSON.
 
 ```pascal
-procedure TraiterReponseJSON(const JSONString: string);
+uses
+  System.JSON;
+
+procedure TForm1.ButtonParseJSONClick(Sender: TObject);
 var
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
-  JSONArray: TJSONArray;
-  i: Integer;
+  Nom, Email: string;
 begin
-  JSONValue := TJSONObject.ParseJSONValue(JSONString);
+  // Exécuter la requête
+  RESTRequest1.Execute;
 
+  // Parser la réponse JSON
+  JSONValue := TJSONObject.ParseJSONValue(RESTResponse1.Content);
   try
     if JSONValue is TJSONObject then
     begin
-      // Traitement d'un objet JSON unique
       JSONObject := JSONValue as TJSONObject;
-      ShowMessage('Nom: ' + JSONObject.GetValue<string>('nom'));
-    end
-    else if JSONValue is TJSONArray then
-    begin
-      // Traitement d'un tableau d'objets JSON
-      JSONArray := JSONValue as TJSONArray;
 
-      for i := 0 to JSONArray.Count - 1 do
-      begin
-        if JSONArray.Items[i] is TJSONObject then
-        begin
-          JSONObject := JSONArray.Items[i] as TJSONObject;
-          Memo1.Lines.Add('Élément ' + IntToStr(i) + ': ' +
-                          JSONObject.GetValue<string>('nom'));
-        end;
-      end;
+      // Extraire les valeurs
+      Nom := JSONObject.GetValue<string>('name');
+      Email := JSONObject.GetValue<string>('email');
+
+      // Afficher les résultats
+      ShowMessage('Nom: ' + Nom + #13#10 + 'Email: ' + Email);
     end;
   finally
     JSONValue.Free;
@@ -178,29 +145,158 @@ begin
 end;
 ```
 
-## Gestion des erreurs
+**Points importants :**
 
-Il est important de gérer correctement les erreurs lors des appels d'API:
+- Toujours libérer la mémoire avec `Free`
+- Vérifier que le parsing a réussi avant d'utiliser les données
+- Utiliser `GetValue<Type>` pour extraire des valeurs typées
+
+## Envoyer des données avec POST
+
+### Créer une nouvelle ressource
+
+Pour envoyer des données à une API, vous utilisez la méthode POST :
 
 ```pascal
-procedure ExecuterRequeteSecurisee(RESTRequest: TRESTRequest);
+procedure TForm1.ButtonCreateUserClick(Sender: TObject);
+var
+  JSONObject: TJSONObject;
+begin
+  // Créer un objet JSON avec les données
+  JSONObject := TJSONObject.Create;
+  try
+    JSONObject.AddPair('name', 'Marie Martin');
+    JSONObject.AddPair('email', 'marie.martin@example.com');
+    JSONObject.AddPair('username', 'mmartin');
+
+    // Configurer la requête POST
+    RESTRequest1.Method := rmPOST;
+    RESTRequest1.Resource := 'users';
+
+    // Ajouter le corps de la requête
+    RESTRequest1.ClearBody;
+    RESTRequest1.AddBody(JSONObject.ToString, ctAPPLICATION_JSON);
+
+    // Exécuter
+    RESTRequest1.Execute;
+
+    // Vérifier le résultat
+    if RESTResponse1.StatusCode = 201 then
+      ShowMessage('Utilisateur créé avec succès!')
+    else
+      ShowMessage('Erreur: ' + RESTResponse1.StatusText);
+
+  finally
+    JSONObject.Free;
+  end;
+end;
+```
+
+**Nouveaux concepts :**
+
+- `AddPair` : Ajoute des paires clé-valeur au JSON
+- `ClearBody` : Nettoie le corps de la requête précédente
+- `AddBody` : Ajoute le contenu à envoyer
+- `StatusCode` : Le code de statut HTTP (201 = création réussie)
+
+## Gérer les paramètres d'URL
+
+### Paramètres de requête (Query Parameters)
+
+Les paramètres de requête s'ajoutent à l'URL après un `?` :
+
+```pascal
+procedure TForm1.ButtonSearchClick(Sender: TObject);
+begin
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Resource := 'posts';
+
+  // Effacer les paramètres précédents
+  RESTRequest1.Params.Clear;
+
+  // Ajouter des paramètres
+  RESTRequest1.AddParameter('userId', '1', pkGETorPOST);
+  RESTRequest1.AddParameter('_limit', '5', pkGETorPOST);
+
+  RESTRequest1.Execute;
+
+  Memo1.Text := RESTResponse1.Content;
+end;
+```
+
+Cela générera l'URL : `posts?userId=1&_limit=5`
+
+### Paramètres dans le chemin
+
+Vous pouvez aussi inclure des paramètres directement dans le chemin :
+
+```pascal
+procedure TForm1.ButtonGetUserClick(Sender: TObject);
+var
+  UserID: string;
+begin
+  UserID := Edit1.Text;
+
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Resource := 'users/{id}';
+
+  // Remplacer {id} par la valeur
+  RESTRequest1.Params.Clear;
+  RESTRequest1.AddParameter('id', UserID, pkURLSEGMENT);
+
+  RESTRequest1.Execute;
+end;
+```
+
+## Gérer les en-têtes HTTP
+
+### Ajouter des en-têtes personnalisés
+
+Certaines API nécessitent des en-têtes spécifiques, comme une clé d'authentification :
+
+```pascal
+procedure TForm1.ConfigurerEnTetes;
+begin
+  // Ajouter un en-tête d'authentification
+  RESTRequest1.Params.AddHeader('Authorization', 'Bearer votre-token-ici');
+
+  // Ajouter un en-tête personnalisé
+  RESTRequest1.Params.AddHeader('X-Custom-Header', 'valeur');
+
+  // Définir le type de contenu
+  RESTRequest1.Params.AddHeader('Content-Type', 'application/json');
+end;
+```
+
+**Types d'en-têtes courants :**
+
+- `Authorization` : Pour l'authentification
+- `Content-Type` : Type de données envoyées
+- `Accept` : Type de données acceptées en retour
+- `User-Agent` : Identifie votre application
+
+## Gestion des erreurs
+
+### Vérifier les codes de statut
+
+Il est essentiel de vérifier si la requête s'est bien déroulée :
+
+```pascal
+procedure TForm1.ButtonAppelSecuriseClick(Sender: TObject);
 begin
   try
-    RESTRequest.Execute;
+    RESTRequest1.Execute;
 
-    case RESTResponse.StatusCode of
-      200..299: // Succès
-        TraiterReponseSuccess(RESTResponse.Content);
-      401:      // Non autorisé
-        ShowMessage('Authentification requise');
-      403:      // Interdit
-        ShowMessage('Accès refusé');
-      404:      // Non trouvé
-        ShowMessage('Ressource non trouvée');
-      500..599: // Erreur serveur
-        ShowMessage('Erreur serveur: ' + RESTResponse.Content);
-      else
-        ShowMessage('Erreur non gérée: ' + IntToStr(RESTResponse.StatusCode));
+    // Vérifier le code de statut
+    case RESTResponse1.StatusCode of
+      200: ShowMessage('Succès !');
+      201: ShowMessage('Ressource créée !');
+      400: ShowMessage('Requête invalide');
+      401: ShowMessage('Non autorisé - vérifiez vos identifiants');
+      404: ShowMessage('Ressource non trouvée');
+      500: ShowMessage('Erreur serveur');
+    else
+      ShowMessage('Code de statut: ' + IntToStr(RESTResponse1.StatusCode));
     end;
 
   except
@@ -210,91 +306,274 @@ begin
 end;
 ```
 
-## Exemple complet: Connexion à une API météo
+**Codes HTTP importants :**
 
-Voici un exemple complet utilisant une API publique de météo:
+- **2xx** : Succès (200 OK, 201 Created)
+- **3xx** : Redirection
+- **4xx** : Erreur client (400 Bad Request, 404 Not Found)
+- **5xx** : Erreur serveur (500 Internal Server Error)
+
+## Authentification
+
+### Authentification basique
+
+Certaines API utilisent l'authentification HTTP basique :
 
 ```pascal
-procedure TForm1.BtnMeteoClick(Sender: TObject);
+procedure TForm1.ConfigurerAuthBasique;
+begin
+  RESTClient1.Authenticator := THTTPBasicAuthenticator.Create(
+    'nom_utilisateur',
+    'mot_de_passe'
+  );
+end;
+```
+
+### Authentification par token Bearer
+
+Plus courant dans les API modernes :
+
+```pascal
+procedure TForm1.ConfigurerAuthToken;
 var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  JSONValue: TJSONValue;
+  OAuth2: TOAuth2Authenticator;
+begin
+  OAuth2 := TOAuth2Authenticator.Create(nil);
+  OAuth2.AccessToken := 'votre_token_jwt_ici';
+  RESTClient1.Authenticator := OAuth2;
+end;
+```
+
+## Timeout et performances
+
+### Configurer le timeout
+
+Pour éviter que votre application ne se bloque indéfiniment :
+
+```pascal
+procedure TForm1.ConfigurerTimeout;
+begin
+  // Timeout de connexion en millisecondes (5 secondes)
+  RESTClient1.ConnectTimeout := 5000;
+
+  // Timeout de lecture (10 secondes)
+  RESTClient1.ReadTimeout := 10000;
+end;
+```
+
+## Exemple complet : Application météo
+
+Voici un exemple complet d'utilisation d'une API REST pour récupérer la météo :
+
+```pascal
+unit Unit1;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
+  REST.Types, REST.Client, Data.Bind.Components, Data.Bind.ObjectScope;
+
+type
+  TForm1 = class(TForm)
+    RESTClient1: TRESTClient;
+    RESTRequest1: TRESTRequest;
+    RESTResponse1: TRESTResponse;
+    ButtonGetWeather: TButton;
+    EditCity: TEdit;
+    MemoResult: TMemo;
+    LabelCity: TLabel;
+    procedure ButtonGetWeatherClick(Sender: TObject);
+  private
+    procedure AfficherMeteo(const JSONResponse: string);
+  public
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.ButtonGetWeatherClick(Sender: TObject);
+var
   Ville: string;
 begin
-  Ville := EditVille.Text;
-  if Ville = '' then
+  Ville := EditCity.Text;
+
+  if Ville.IsEmpty then
   begin
-    ShowMessage('Veuillez saisir une ville');
+    ShowMessage('Veuillez entrer un nom de ville');
     Exit;
   end;
 
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
   try
-    // Configuration
-    RESTClient.BaseURL := 'https://api.openweathermap.org/data/2.5';
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmGET;
-    RESTRequest.Resource := '/weather';
+    // Configuration de la requête
+    RESTClient1.BaseURL := 'https://api.openweathermap.org/data/2.5';
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'weather';
 
     // Paramètres
-    RESTRequest.AddParameter('q', Ville);
-    RESTRequest.AddParameter('units', 'metric');
-    RESTRequest.AddParameter('lang', 'fr');
-    RESTRequest.AddParameter('appid', 'VOTRE_CLE_API');  // Remplacez par votre clé API
+    RESTRequest1.Params.Clear;
+    RESTRequest1.AddParameter('q', Ville, pkGETorPOST);
+    RESTRequest1.AddParameter('appid', 'VOTRE_CLE_API', pkGETorPOST);
+    RESTRequest1.AddParameter('units', 'metric', pkGETorPOST);
+    RESTRequest1.AddParameter('lang', 'fr', pkGETorPOST);
 
     // Exécution
-    RESTRequest.Execute;
+    RESTRequest1.Execute;
 
-    // Traitement
-    if RESTResponse.StatusCode = 200 then
-    begin
-      JSONValue := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        LabelTemperature.Caption := 'Température: ' +
-                                   JSONValue.GetValue<TJSONObject>('main')
-                                           .GetValue<string>('temp') + '°C';
-        LabelDescription.Caption := 'Conditions: ' +
-                                   JSONValue.GetValue<TJSONArray>('weather')
-                                           .Items[0].GetValue<string>('description');
-      finally
-        JSONValue.Free;
-      end;
-    end
+    // Traitement de la réponse
+    if RESTResponse1.StatusCode = 200 then
+      AfficherMeteo(RESTResponse1.Content)
     else
-      ShowMessage('Erreur: ' + RESTResponse.Content);
+      ShowMessage('Erreur: ' + RESTResponse1.StatusText);
 
-  finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
+  except
+    on E: Exception do
+      ShowMessage('Erreur de connexion: ' + E.Message);
   end;
 end;
+
+procedure TForm1.AfficherMeteo(const JSONResponse: string);
+var
+  JSONValue: TJSONValue;
+  JSONObject, MainObject: TJSONObject;
+  Temperature, Ressenti: Double;
+  Description, VilleNom: string;
+begin
+  JSONValue := TJSONObject.ParseJSONValue(JSONResponse);
+  try
+    if JSONValue is TJSONObject then
+    begin
+      JSONObject := JSONValue as TJSONObject;
+
+      // Extraire les informations
+      VilleNom := JSONObject.GetValue<string>('name');
+
+      MainObject := JSONObject.GetValue<TJSONObject>('main');
+      Temperature := MainObject.GetValue<Double>('temp');
+      Ressenti := MainObject.GetValue<Double>('feels_like');
+
+      // Afficher dans le Memo
+      MemoResult.Lines.Clear;
+      MemoResult.Lines.Add('Météo pour : ' + VilleNom);
+      MemoResult.Lines.Add('');
+      MemoResult.Lines.Add('Température : ' + FormatFloat('0.0', Temperature) + '°C');
+      MemoResult.Lines.Add('Ressenti : ' + FormatFloat('0.0', Ressenti) + '°C');
+    end;
+  finally
+    JSONValue.Free;
+  end;
+end;
+
+end.
 ```
 
 ## Bonnes pratiques
 
-1. **Libérez toujours les ressources** : Utilisez des blocs `try...finally` pour vous assurer que les objets sont libérés.
-2. **Gérez les délais d'attente** : Configurez `RESTClient.Timeout` pour éviter les blocages.
-3. **Vérifiez les codes de statut** : Ne supposez pas que la requête a réussi.
-4. **Sécurisez vos clés API** : Ne codez pas en dur les clés API dans votre application.
-5. **Utilisez les composants non-visuels** : Placez `TRESTClient`, `TRESTRequest` et `TRESTResponse` sur votre formulaire pour une réutilisation facile.
+### 1. Gestion de la mémoire
+
+Toujours libérer les objets JSON créés :
+
+```pascal
+JSONObject := TJSONObject.Create;
+try
+  // Utilisation
+finally
+  JSONObject.Free;
+end;
+```
+
+### 2. Ne jamais exposer les clés API
+
+Ne mettez jamais vos clés API directement dans le code. Utilisez plutôt :
+
+- Des fichiers de configuration
+- Des variables d'environnement
+- Un système de gestion des secrets
+
+### 3. Gérer les timeouts
+
+Toujours configurer des timeouts pour éviter les blocages :
+
+```pascal
+RESTClient1.ConnectTimeout := 5000;
+RESTClient1.ReadTimeout := 10000;
+```
+
+### 4. Logger les erreurs
+
+Conservez une trace des erreurs pour faciliter le débogage :
+
+```pascal
+try
+  RESTRequest1.Execute;
+except
+  on E: Exception do
+  begin
+    // Logger l'erreur
+    MemoLog.Lines.Add(DateTimeToStr(Now) + ' - ' + E.Message);
+    raise;
+  end;
+end;
+```
+
+### 5. Utiliser HTTPS
+
+Privilégiez toujours les connexions sécurisées (HTTPS) pour protéger les données :
+
+```pascal
+RESTClient1.BaseURL := 'https://api.example.com';  // HTTPS, pas HTTP
+```
+
+## Débogage
+
+### Inspecter les requêtes et réponses
+
+Pour comprendre ce qui se passe, affichez les détails :
+
+```pascal
+procedure TForm1.DeboguerRequete;
+begin
+  RESTRequest1.Execute;
+
+  Memo1.Lines.Add('=== REQUÊTE ===');
+  Memo1.Lines.Add('URL: ' + RESTRequest1.GetFullRequestURL);
+  Memo1.Lines.Add('Méthode: ' + RESTRequest1.Method.ToString);
+  Memo1.Lines.Add('');
+  Memo1.Lines.Add('=== RÉPONSE ===');
+  Memo1.Lines.Add('Code: ' + IntToStr(RESTResponse1.StatusCode));
+  Memo1.Lines.Add('Texte: ' + RESTResponse1.StatusText);
+  Memo1.Lines.Add('Contenu: ' + RESTResponse1.Content);
+end;
+```
+
+## Ressources complémentaires
+
+### API publiques pour s'entraîner
+
+- **JSONPlaceholder** (https://jsonplaceholder.typicode.com) : API de test gratuite
+- **OpenWeatherMap** (https://openweathermap.org/api) : Données météo
+- **REST Countries** (https://restcountries.com) : Informations sur les pays
+- **The Cat API** (https://thecatapi.com) : Images de chats aléatoires
+
+### Documentation Delphi
+
+Consultez la documentation officielle Embarcadero pour plus de détails sur les composants REST.
 
 ## Conclusion
 
-`TRESTClient` est un outil puissant pour intégrer des API Web dans vos applications. En comprenant les principes de base des appels REST et en suivant les bonnes pratiques, vous pouvez facilement connecter vos applications à de nombreux services en ligne.
+Les composants REST de Delphi (`TRESTClient`, `TRESTRequest`, `TRESTResponse`) offrent une solution puissante et intuitive pour communiquer avec des API Web. Avec ces bases, vous pouvez maintenant :
 
-## Exercices pratiques
+- Récupérer des données depuis des API
+- Envoyer des informations
+- Gérer l'authentification
+- Traiter les réponses JSON
+- Gérer les erreurs correctement
 
-1. Créez une application qui affiche les derniers articles d'un blog en utilisant une API REST.
-2. Modifiez l'exemple météo pour permettre d'afficher les prévisions sur plusieurs jours.
-3. Créez un client pour une API de votre choix (par exemple, une API de films, de livres ou de musique).
-
-N'oubliez pas que la documentation de l'API que vous utilisez est votre meilleure alliée. Consultez-la pour comprendre les points d'accès disponibles, les paramètres requis et les formats de réponse attendus.
+Les API REST sont au cœur de nombreuses applications modernes, et Delphi facilite grandement leur intégration dans vos projets.
 
 ⏭️ [Manipulation de JSON et XML](/10-communication-et-services-reseaux/02-manipulation-de-json-et-xml.md)

@@ -1,219 +1,832 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 10.4 Services SOAP et WebServices
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
-
-## Introduction
-
-Les WebServices constituent un moyen standardisé permettant à des applications de communiquer entre elles via Internet, indépendamment des langages de programmation ou des systèmes d'exploitation utilisés. Dans ce chapitre, nous allons explorer les services SOAP (Simple Object Access Protocol) et les WebServices, comprendre leur fonctionnement et apprendre à les implémenter dans nos applications.
-
-## Comprendre les WebServices
+## Introduction aux Services Web
 
 ### Qu'est-ce qu'un WebService ?
 
-Un WebService est une technologie qui permet à des applications de communiquer via un réseau en utilisant des formats standardisés. L'idée fondamentale est de permettre à des systèmes hétérogènes (développés dans différents langages et sur différentes plateformes) d'interagir facilement.
+Un **WebService** (service web) est une application accessible via Internet qui permet à différents systèmes d'échanger des données et de communiquer entre eux, indépendamment de leurs langages de programmation ou de leurs plateformes.
 
-### Principaux types de WebServices
+**Analogie simple :**
+Imaginez un restaurant avec un service de livraison. Vous passez commande par téléphone (requête), le restaurant prépare le plat (traitement), et vous livre le résultat (réponse). Le WebService fonctionne de la même manière, mais pour les applications informatiques.
 
-Il existe plusieurs approches pour créer des WebServices, mais les deux principales sont :
+**Avantages des WebServices :**
+- **Interopérabilité** : Une application Delphi peut communiquer avec un serveur Java, .NET, PHP, etc.
+- **Standardisation** : Protocoles reconnus mondialement
+- **Réutilisabilité** : Un même service peut être utilisé par plusieurs applications
+- **Intégration** : Permet de connecter des systèmes hétérogènes
 
-1. **Services SOAP** (Simple Object Access Protocol)
-   - Basés sur XML
-   - Utilisent un format de message très structuré
-   - Généralement plus formels et rigides
-   - Souvent utilisés dans les environnements d'entreprise
+### Qu'est-ce que SOAP ?
 
-2. **Services REST** (Representational State Transfer)
-   - Plus légers et flexibles
-   - Généralement basés sur le format JSON
-   - Utilisent directement les méthodes HTTP (GET, POST, PUT, DELETE)
-   - Plus populaires pour les applications web et mobiles modernes
+**SOAP** (Simple Object Access Protocol) est un protocole standardisé pour l'échange de messages structurés dans les services web. Il utilise le format **XML** pour encapsuler les données.
 
-Dans ce chapitre, nous nous concentrerons principalement sur les services SOAP, bien que nous mentionnerons également les services REST pour compléter votre compréhension.
+**Caractéristiques de SOAP :**
+- Protocole basé sur XML
+- Indépendant du langage et de la plateforme
+- Supporte différents protocoles de transport (HTTP, SMTP, etc.)
+- Intègre la sécurité et la gestion des transactions
+- Standard W3C
 
-## Services SOAP en détail
+**Cas d'utilisation typiques :**
+- Systèmes bancaires et financiers
+- Applications d'entreprise (ERP, CRM)
+- Services gouvernementaux
+- Intégration B2B (Business-to-Business)
+- Systèmes nécessitant une sécurité stricte
 
-### Principes de base de SOAP
+## SOAP vs REST : Les différences
 
-SOAP est un protocole basé sur XML pour l'échange d'informations structurées. Voici ses caractéristiques principales :
+### Comparaison
 
-- **Indépendance** : Fonctionne sur n'importe quel système d'exploitation avec n'importe quel langage de programmation
-- **Standard** : Suit des spécifications W3C précises
-- **Extensibilité** : Peut être étendu avec des fonctionnalités supplémentaires
-- **Transport flexible** : Généralement transmis via HTTP, mais peut utiliser d'autres protocoles
+| Critère | SOAP | REST |
+|---------|------|------|
+| **Type** | Protocole strict | Style architectural |
+| **Format** | XML uniquement | JSON, XML, HTML, texte |
+| **Verbosité** | Très verbeux | Léger et concis |
+| **Complexité** | Plus complexe | Plus simple |
+| **Sécurité** | WS-Security intégré | HTTPS, OAuth |
+| **Transactions** | Support natif (ACID) | Non standardisé |
+| **Cache** | Difficile | Facile (HTTP) |
+| **Vitesse** | Plus lent | Plus rapide |
+| **Standards** | WSDL, WS-* | Pas de standard strict |
+| **Cas d'usage** | Entreprise, banque | Web, mobile, API publiques |
 
-### Structure d'un message SOAP
+### Quand utiliser SOAP ?
 
-Un message SOAP est un document XML structuré de la façon suivante :
+**Choisissez SOAP pour :**
+- Applications d'entreprise critiques
+- Transactions financières
+- Exigences de sécurité strictes (WS-Security)
+- Besoin de transactions ACID
+- Interopérabilité avec des systèmes legacy
+- Contrats formels (WSDL)
+
+**Choisissez REST pour :**
+- Applications web et mobiles
+- API publiques
+- Besoins de performance
+- Simplicité et rapidité de développement
+- Consommation de ressources limitée
+
+## Structure d'un message SOAP
+
+### Anatomie d'un message SOAP
+
+Un message SOAP est composé de plusieurs parties :
 
 ```xml
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+
+  <!-- En-tête (optionnel) -->
   <soap:Header>
-    <!-- Informations d'en-tête (optionnelles) -->
+    <Authentication>
+      <Username>utilisateur</Username>
+      <Password>motdepasse</Password>
+    </Authentication>
   </soap:Header>
+
+  <!-- Corps du message (obligatoire) -->
   <soap:Body>
-    <!-- Corps du message (données) -->
-    <m:GetPrice xmlns:m="http://www.example.org/stock">
-      <m:StockName>IBM</m:StockName>
-    </m:GetPrice>
+    <GetUserInfo xmlns="http://example.com/webservice">
+      <UserId>12345</UserId>
+    </GetUserInfo>
+  </soap:Body>
+
+</soap:Envelope>
+```
+
+**Composants d'un message SOAP :**
+
+1. **Envelope** (Enveloppe) : Élément racine qui encapsule tout le message
+2. **Header** (En-tête) : Informations optionnelles (authentification, métadonnées)
+3. **Body** (Corps) : Contient la requête ou la réponse
+4. **Fault** (Erreur) : Gestion des erreurs (dans le Body)
+
+### Message de réponse SOAP
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <GetUserInfoResponse xmlns="http://example.com/webservice">
+      <User>
+        <Id>12345</Id>
+        <Name>Jean Dupont</Name>
+        <Email>jean.dupont@example.com</Email>
+        <Active>true</Active>
+      </User>
+    </GetUserInfoResponse>
   </soap:Body>
 </soap:Envelope>
 ```
 
-Les principales parties sont :
-- **Envelope** (enveloppe) : L'élément racine qui identifie le document XML comme un message SOAP
-- **Header** (en-tête) : Contient des informations supplémentaires comme l'authentification ou la gestion des transactions (optionnel)
-- **Body** (corps) : Contient les données réelles à échanger
-- **Fault** (erreur) : Un élément spécial du corps qui fournit des informations sur les erreurs (si nécessaire)
-
-### WSDL (Web Services Description Language)
-
-Le WSDL est un document XML qui décrit un WebService SOAP. Il spécifie :
-
-- Les opérations (méthodes) disponibles
-- Les formats des messages d'entrée/sortie
-- Les types de données utilisés
-- Les protocoles de transport et les adresses du service
-
-Voici un exemple simplifié de WSDL :
+### Message d'erreur SOAP (Fault)
 
 ```xml
-<definitions name="StockQuote"
-             targetNamespace="http://example.com/stockquote.wsdl"
-             xmlns="http://schemas.xmlsoap.org/wsdl/">
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <soap:Fault>
+      <faultcode>soap:Client</faultcode>
+      <faultstring>Utilisateur introuvable</faultstring>
+      <detail>
+        <ErrorCode>404</ErrorCode>
+        <Message>Aucun utilisateur avec l'ID 12345</Message>
+      </detail>
+    </soap:Fault>
+  </soap:Body>
+</soap:Envelope>
+```
 
-  <message name="GetStockPriceInput">
-    <part name="symbol" type="xsd:string"/>
+## WSDL : Le contrat du service
+
+### Qu'est-ce que WSDL ?
+
+**WSDL** (Web Services Description Language) est un document XML qui décrit complètement un service SOAP :
+- Les opérations disponibles
+- Les paramètres d'entrée et de sortie
+- Les types de données utilisés
+- L'adresse du service
+
+**Analogie :**
+Le WSDL est comme un mode d'emploi détaillé d'un appareil. Il vous dit exactement comment l'utiliser, quels boutons presser, et ce que vous obtiendrez en retour.
+
+### Exemple de WSDL simplifié
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="http://example.com/webservice"
+             targetNamespace="http://example.com/webservice">
+
+  <!-- Types de données -->
+  <types>
+    <schema xmlns="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://example.com/webservice">
+      <element name="GetUserRequest">
+        <complexType>
+          <sequence>
+            <element name="UserId" type="int"/>
+          </sequence>
+        </complexType>
+      </element>
+
+      <element name="GetUserResponse">
+        <complexType>
+          <sequence>
+            <element name="Name" type="string"/>
+            <element name="Email" type="string"/>
+          </sequence>
+        </complexType>
+      </element>
+    </schema>
+  </types>
+
+  <!-- Messages -->
+  <message name="GetUserRequestMessage">
+    <part name="parameters" element="tns:GetUserRequest"/>
   </message>
 
-  <message name="GetStockPriceOutput">
-    <part name="price" type="xsd:float"/>
+  <message name="GetUserResponseMessage">
+    <part name="parameters" element="tns:GetUserResponse"/>
   </message>
 
-  <portType name="StockQuotePortType">
-    <operation name="GetStockPrice">
-      <input message="tns:GetStockPriceInput"/>
-      <output message="tns:GetStockPriceOutput"/>
+  <!-- Interface du service (Port Type) -->
+  <portType name="UserServicePortType">
+    <operation name="GetUser">
+      <input message="tns:GetUserRequestMessage"/>
+      <output message="tns:GetUserResponseMessage"/>
     </operation>
   </portType>
 
-  <!-- Binding et service omis pour la simplicité -->
+  <!-- Liaison (Binding) -->
+  <binding name="UserServiceBinding" type="tns:UserServicePortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="GetUser">
+      <soap:operation soapAction="http://example.com/webservice/GetUser"/>
+      <input>
+        <soap:body use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+  </binding>
+
+  <!-- Point d'accès (Service) -->
+  <service name="UserService">
+    <port name="UserServicePort" binding="tns:UserServiceBinding">
+      <soap:address location="http://example.com/services/UserService"/>
+    </port>
+  </service>
 
 </definitions>
 ```
 
-## Consommer un WebService SOAP
+**Sections importantes du WSDL :**
+- **Types** : Définit les structures de données
+- **Message** : Définit les messages échangés
+- **PortType** : Définit les opérations disponibles
+- **Binding** : Spécifie le protocole (SOAP/HTTP)
+- **Service** : Indique l'URL du service
 
-Voyons maintenant comment consommer (utiliser) un WebService SOAP existant dans vos applications.
+## Consommer un service SOAP dans Delphi
 
-### Création d'un client SOAP
+### Utiliser l'assistant WSDL Importer
 
-La première étape consiste à créer un client SOAP à partir d'un WSDL. Voici comment procéder :
+Delphi facilite grandement l'utilisation de services SOAP grâce à l'assistant **WSDL Importer**.
 
-```pascal
-procedure TForm1.CreerClientSOAP;
-var
-  HTTPRIO: THTTPRIO;
-begin
-  // Créer l'objet HTTPRIO qui va gérer la communication
-  HTTPRIO := THTTPRIO.Create(nil);
-  try
-    // Configurer l'URL du service
-    HTTPRIO.URL := 'http://www.example.com/stockquote';
+**Étapes pour importer un service SOAP :**
 
-    // Spécifier le WSDL (peut être un fichier local ou une URL)
-    HTTPRIO.WSDLLocation := 'http://www.example.com/stockquote.wsdl';
+1. **Menu** : File → New → Other → WebServices → WSDL Importer
+2. **URL ou Fichier** : Entrez l'URL du WSDL ou sélectionnez un fichier local
+3. **Options** : Configurez les options d'importation
+4. **Génération** : Delphi génère automatiquement les units Pascal
 
-    // Créer l'interface du service
-    FStockService := HTTPRIO as IStockQuoteService;
-
-    ShowMessage('Client SOAP créé avec succès');
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur lors de la création du client SOAP: ' + E.Message);
-      HTTPRIO.Free;
-    end;
-  end;
-end;
+**Exemple d'URL WSDL publique pour tester :**
+```
+http://www.dneonline.com/calculator.asmx?WSDL
 ```
 
-### Utilisation de l'assistant WebService
+### Code généré automatiquement
 
-La plupart des environnements de développement offrent des assistants pour faciliter la création de clients SOAP. Voici comment l'utiliser :
+Delphi génère automatiquement une unit avec :
+- Les interfaces des services
+- Les types de données
+- Les méthodes pour appeler le service
 
-1. Dans votre IDE, sélectionnez **Fichier > Nouveau > Autre**
-2. Cherchez "Web Services" ou "SOAP Client" dans les options
-3. Entrez l'URL du WSDL du service que vous souhaitez utiliser
-4. L'assistant va automatiquement :
-   - Télécharger et analyser le WSDL
-   - Générer les interfaces nécessaires
-   - Créer le code pour communiquer avec le service
-
-### Appel d'une méthode du WebService
-
-Une fois le client SOAP créé, vous pouvez appeler les méthodes du service comme si elles étaient des méthodes locales :
+**Exemple de code généré :**
 
 ```pascal
-procedure TForm1.BtnGetPriceClick(Sender: TObject);
+unit CalculatorService;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Soap.InvokeRegistry, Soap.Rio,
+  Soap.SOAPHTTPClient, System.Types;
+
+type
+  // Interface du service
+  ICalculatorSoap = interface(IInvokable)
+    ['{...GUID...}']
+    function Add(intA: Integer; intB: Integer): Integer; stdcall;
+    function Subtract(intA: Integer; intB: Integer): Integer; stdcall;
+    function Multiply(intA: Integer; intB: Integer): Integer; stdcall;
+    function Divide(intA: Integer; intB: Integer): Integer; stdcall;
+  end;
+
+function GetICalculatorSoap(UseWSDL: Boolean = False;
+  Addr: string = ''; HTTPRIO: THTTPRIO = nil): ICalculatorSoap;
+
+implementation
+
+function GetICalculatorSoap(UseWSDL: Boolean; Addr: string;
+  HTTPRIO: THTTPRIO): ICalculatorSoap;
+const
+  defWSDL = 'http://www.dneonline.com/calculator.asmx?WSDL';
+  defURL = 'http://www.dneonline.com/calculator.asmx';
+  defSvc = 'Calculator';
+  defPrt = 'CalculatorSoap';
 var
-  StockSymbol: string;
-  Price: Double;
+  RIO: THTTPRIO;
+begin
+  Result := nil;
+  if (Addr = '') then
+  begin
+    if UseWSDL then
+      Addr := defWSDL
+    else
+      Addr := defURL;
+  end;
+
+  if HTTPRIO = nil then
+    RIO := THTTPRIO.Create(nil)
+  else
+    RIO := HTTPRIO;
+
+  try
+    Result := (RIO as ICalculatorSoap);
+    if UseWSDL then
+    begin
+      RIO.WSDLLocation := Addr;
+      RIO.Service := defSvc;
+      RIO.Port := defPrt;
+    end
+    else
+      RIO.URL := Addr;
+  finally
+    if (Result = nil) and (HTTPRIO = nil) then
+      RIO.Free;
+  end;
+end;
+
+initialization
+  InvRegistry.RegisterInterface(TypeInfo(ICalculatorSoap),
+    'http://tempuri.org/', 'utf-8');
+  InvRegistry.RegisterDefaultSOAPAction(TypeInfo(ICalculatorSoap),
+    'http://tempuri.org/%operationName%');
+
+end.
+```
+
+### Utiliser le service généré
+
+Une fois l'unit générée, l'utilisation est très simple :
+
+```pascal
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  CalculatorService; // Unit générée par WSDL Importer
+
+type
+  TForm1 = class(TForm)
+    Edit1: TEdit;
+    Edit2: TEdit;
+    ButtonAddition: TButton;
+    LabelResultat: TLabel;
+    procedure ButtonAdditionClick(Sender: TObject);
+  private
+  public
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.ButtonAdditionClick(Sender: TObject);
+var
+  Calculator: ICalculatorSoap;
+  Nombre1, Nombre2, Resultat: Integer;
 begin
   try
-    // Récupérer le symbole de l'action
-    StockSymbol := EditSymbol.Text;
+    // Récupérer les valeurs
+    Nombre1 := StrToInt(Edit1.Text);
+    Nombre2 := StrToInt(Edit2.Text);
 
-    // Appeler la méthode du WebService
-    Price := FStockService.GetStockPrice(StockSymbol);
+    // Obtenir l'interface du service
+    Calculator := GetICalculatorSoap(False);
+
+    // Appeler la méthode du service
+    Resultat := Calculator.Add(Nombre1, Nombre2);
 
     // Afficher le résultat
-    LabelPrice.Caption := Format('Prix: %.2f €', [Price]);
+    LabelResultat.Caption := 'Résultat: ' + IntToStr(Resultat);
+
   except
-    on E: Exception do
-      ShowMessage('Erreur lors de l'appel du service: ' + E.Message);
-  end;
-end;
-```
-
-### Gestion des erreurs SOAP
-
-Les erreurs dans SOAP sont retournées via l'élément `Fault`. Voici comment les gérer :
-
-```pascal
-procedure TForm1.AppelerServiceAvecGestionErreurs;
-var
-  Response: TStockPriceResponse;
-begin
-  try
-    Response := FStockService.GetDetailedStockInfo(EditSymbol.Text);
-
-    if Response.Success then
-      LabelPrice.Caption := Format('Prix: %.2f €', [Response.Price])
-    else
-      ShowMessage('Erreur du service: ' + Response.ErrorMessage);
-  except
-    on E: ESOAPHTTPException do
-    begin
-      // Exception spécifique aux erreurs HTTP dans SOAP
-      ShowMessage('Erreur HTTP: ' + E.Message + ' (Code: ' +
-                 IntToStr(E.StatusCode) + ')');
-    end;
     on E: Exception do
       ShowMessage('Erreur: ' + E.Message);
   end;
 end;
+
+end.
 ```
 
-## Créer un WebService SOAP
+**Explication :**
+- `GetICalculatorSoap` : Fonction générée qui retourne l'interface du service
+- `Calculator.Add` : Appel direct de la méthode du service
+- Tout est typé, pas besoin de manipuler le XML manuellement
 
-Maintenant, voyons comment créer votre propre WebService SOAP.
+## Appel manuel de services SOAP
 
-### Configuration de base d'un serveur SOAP
+### Utiliser THTTPRIO directement
 
-Voici comment créer un serveur SOAP simple :
+Pour plus de contrôle, vous pouvez utiliser directement `THTTPRIO` :
 
 ```pascal
-unit StockQuoteService;
+uses
+  Soap.Rio, Soap.SOAPHTTPClient;
+
+procedure TForm1.AppelSOAPManuel;
+var
+  HTTPRIO: THTTPRIO;
+  Service: ICalculatorSoap;
+  Resultat: Integer;
+begin
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    // Configuration
+    HTTPRIO.URL := 'http://www.dneonline.com/calculator.asmx';
+    HTTPRIO.Converter.Options := HTTPRIO.Converter.Options + [soSendMultiRefObj, soTryAllSchema];
+
+    // Obtenir l'interface
+    Service := HTTPRIO as ICalculatorSoap;
+
+    // Appeler la méthode
+    Resultat := Service.Add(10, 20);
+
+    ShowMessage('Résultat: ' + IntToStr(Resultat));
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+```
+
+### Envoyer un message SOAP brut
+
+Pour un contrôle total, vous pouvez construire le XML manuellement :
+
+```pascal
+uses
+  System.Net.HttpClient, System.Net.URLClient;
+
+procedure TForm1.EnvoyerSOAPBrut;
+var
+  HTTPClient: THTTPClient;
+  RequestSOAP, ResponseSOAP: string;
+  Response: IHTTPResponse;
+  Stream: TStringStream;
+begin
+  // Construire le message SOAP
+  RequestSOAP :=
+    '<?xml version="1.0" encoding="utf-8"?>' +
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    '  <soap:Body>' +
+    '    <Add xmlns="http://tempuri.org/">' +
+    '      <intA>10</intA>' +
+    '      <intB>20</intB>' +
+    '    </Add>' +
+    '  </soap:Body>' +
+    '</soap:Envelope>';
+
+  HTTPClient := THTTPClient.Create;
+  Stream := TStringStream.Create(RequestSOAP, TEncoding.UTF8);
+  try
+    // Configurer les en-têtes
+    HTTPClient.ContentType := 'text/xml; charset=utf-8';
+    HTTPClient.CustomHeaders['SOAPAction'] := 'http://tempuri.org/Add';
+
+    // Envoyer la requête
+    Response := HTTPClient.Post('http://www.dneonline.com/calculator.asmx', Stream);
+
+    // Récupérer la réponse
+    ResponseSOAP := Response.ContentAsString;
+
+    Memo1.Text := ResponseSOAP;
+
+  finally
+    Stream.Free;
+    HTTPClient.Free;
+  end;
+end;
+```
+
+## Gestion de l'authentification
+
+### Authentification de base (Basic Auth)
+
+```pascal
+procedure TForm1.SOAPAvecAuthentification;
+var
+  HTTPRIO: THTTPRIO;
+  Service: IMonService;
+begin
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    HTTPRIO.URL := 'http://example.com/service.asmx';
+
+    // Configurer l'authentification
+    HTTPRIO.HTTPWebNode.UserName := 'utilisateur';
+    HTTPRIO.HTTPWebNode.Password := 'motdepasse';
+
+    Service := HTTPRIO as IMonService;
+
+    // Appeler le service
+    Service.MaMethode;
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+```
+
+### WS-Security (Username Token)
+
+Pour une authentification WS-Security plus robuste :
+
+```pascal
+uses
+  Soap.SOAPHTTPClient, Soap.WSDLBind;
+
+procedure TForm1.SOAPAvecWSSecurity;
+var
+  HTTPRIO: THTTPRIO;
+  Service: IMonService;
+begin
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    HTTPRIO.URL := 'http://example.com/service.asmx';
+
+    // Activer WS-Security
+    HTTPRIO.Converter.Options := HTTPRIO.Converter.Options + [soSendWSSecurity];
+
+    // Ajouter les credentials
+    (HTTPRIO.HTTPWebNode as THTTPReqResp).Username := 'utilisateur';
+    (HTTPRIO.HTTPWebNode as THTTPReqResp).Password := 'motdepasse';
+
+    Service := HTTPRIO as IMonService;
+    Service.MaMethode;
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+```
+
+### Authentification par certificat SSL
+
+```pascal
+procedure TForm1.SOAPAvecCertificat;
+var
+  HTTPRIO: THTTPRIO;
+  HTTPReqResp: THTTPReqResp;
+  Service: IMonService;
+begin
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    HTTPRIO.URL := 'https://example.com/service.asmx';
+
+    // Accéder au client HTTP
+    HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
+
+    // Configurer le certificat
+    HTTPReqResp.InvokeOptions := HTTPReqResp.InvokeOptions + [soIgnoreInvalidCerts];
+
+    // Pour utiliser un certificat client spécifique,
+    // vous devrez utiliser Indy ou WinHTTP avec configuration avancée
+
+    Service := HTTPRIO as IMonService;
+    Service.MaMethode;
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+```
+
+## Gestion des erreurs SOAP
+
+### Intercepter les erreurs SOAP Fault
+
+```pascal
+uses
+  Soap.InvokeRegistry, Soap.SOAPHTTPClient;
+
+procedure TForm1.GererErreurSOAP;
+var
+  Calculator: ICalculatorSoap;
+  Resultat: Integer;
+begin
+  try
+    Calculator := GetICalculatorSoap(False);
+
+    // Cette opération pourrait échouer
+    Resultat := Calculator.Divide(10, 0); // Division par zéro
+
+    ShowMessage('Résultat: ' + IntToStr(Resultat));
+
+  except
+    on E: ERemotableException do
+    begin
+      // Erreur SOAP spécifique
+      ShowMessage('Erreur SOAP: ' + E.Message + #13#10 +
+                  'Fault Code: ' + E.FaultCode + #13#10 +
+                  'Fault String: ' + E.FaultString);
+    end;
+
+    on E: Exception do
+    begin
+      // Autres erreurs (réseau, timeout, etc.)
+      ShowMessage('Erreur: ' + E.Message);
+    end;
+  end;
+end;
+```
+
+### Logger les messages SOAP
+
+Pour déboguer, il est utile de voir les messages échangés :
+
+```pascal
+uses
+  Soap.Rio, Soap.SOAPHTTPClient;
+
+type
+  TSOAPLogger = class(TInterfacedObject, IInterface)
+  private
+    FMemo: TMemo;
+  public
+    constructor Create(AMemo: TMemo);
+    procedure BeforeExecute(const MethodName: string; SOAPRequest: TStream);
+    procedure AfterExecute(const MethodName: string; SOAPResponse: TStream);
+  end;
+
+constructor TSOAPLogger.Create(AMemo: TMemo);
+begin
+  inherited Create;
+  FMemo := AMemo;
+end;
+
+procedure TSOAPLogger.BeforeExecute(const MethodName: string; SOAPRequest: TStream);
+var
+  Request: TStringStream;
+begin
+  Request := TStringStream.Create('', TEncoding.UTF8);
+  try
+    SOAPRequest.Position := 0;
+    Request.CopyFrom(SOAPRequest, SOAPRequest.Size);
+
+    FMemo.Lines.Add('=== REQUÊTE ' + MethodName + ' ===');
+    FMemo.Lines.Add(Request.DataString);
+    FMemo.Lines.Add('');
+  finally
+    Request.Free;
+  end;
+end;
+
+procedure TSOAPLogger.AfterExecute(const MethodName: string; SOAPResponse: TStream);
+var
+  Response: TStringStream;
+begin
+  Response := TStringStream.Create('', TEncoding.UTF8);
+  try
+    SOAPResponse.Position := 0;
+    Response.CopyFrom(SOAPResponse, SOAPResponse.Size);
+
+    FMemo.Lines.Add('=== RÉPONSE ' + MethodName + ' ===');
+    FMemo.Lines.Add(Response.DataString);
+    FMemo.Lines.Add('');
+  finally
+    Response.Free;
+  end;
+end;
+```
+
+### Configurer les timeouts
+
+```pascal
+procedure TForm1.ConfigurerTimeouts;
+var
+  HTTPRIO: THTTPRIO;
+  HTTPReqResp: THTTPReqResp;
+begin
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    HTTPRIO.URL := 'http://example.com/service.asmx';
+
+    // Accéder au client HTTP
+    HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
+
+    // Configurer les timeouts (en millisecondes)
+    HTTPReqResp.ConnectTimeout := 5000;   // 5 secondes pour se connecter
+    HTTPReqResp.SendTimeout := 10000;     // 10 secondes pour envoyer
+    HTTPReqResp.ReceiveTimeout := 30000;  // 30 secondes pour recevoir
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+```
+
+## Exemple complet : Consommer un service météo
+
+Voici un exemple complet utilisant un service SOAP de météo :
+
+```pascal
+unit UnitMeteoSOAP;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Soap.InvokeRegistry, Soap.Rio,
+  Soap.SOAPHTTPClient;
+
+type
+  TFormMeteo = class(TForm)
+    EditVille: TEdit;
+    ButtonRechercher: TButton;
+    MemoResultat: TMemo;
+    LabelVille: TLabel;
+    PanelHaut: TPanel;
+    procedure ButtonRechercherClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    procedure AfficherMeteo(const Ville, Temperature, Description: string);
+  public
+  end;
+
+var
+  FormMeteo: TFormMeteo;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormMeteo.FormCreate(Sender: TObject);
+begin
+  MemoResultat.Clear;
+  MemoResultat.Lines.Add('Entrez un nom de ville et cliquez sur Rechercher');
+end;
+
+procedure TFormMeteo.ButtonRechercherClick(Sender: TObject);
+var
+  Ville: string;
+  HTTPRIO: THTTPRIO;
+  HTTPReqResp: THTTPReqResp;
+begin
+  Ville := EditVille.Text.Trim;
+
+  if Ville.IsEmpty then
+  begin
+    ShowMessage('Veuillez entrer un nom de ville');
+    Exit;
+  end;
+
+  HTTPRIO := THTTPRIO.Create(nil);
+  try
+    try
+      // Configuration du service
+      HTTPRIO.URL := 'http://www.webservicex.net/globalweather.asmx';
+      HTTPRIO.WSDLLocation := 'http://www.webservicex.net/globalweather.asmx?WSDL';
+
+      // Configurer les timeouts
+      HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
+      HTTPReqResp.ConnectTimeout := 5000;
+      HTTPReqResp.ReceiveTimeout := 10000;
+
+      MemoResultat.Lines.Clear;
+      MemoResultat.Lines.Add('Recherche en cours pour : ' + Ville);
+      MemoResultat.Lines.Add('Connexion au service SOAP...');
+
+      // Note: Ce service peut ne plus être disponible
+      // C'est un exemple à but pédagogique
+
+      // Dans un cas réel, vous appelleriez les méthodes du service ici
+      // Exemple: Resultat := (HTTPRIO as IGlobalWeather).GetWeather(Ville, 'France');
+
+      MemoResultat.Lines.Add('Service contacté avec succès');
+
+    except
+      on E: ERemotableException do
+      begin
+        MemoResultat.Lines.Add('Erreur SOAP:');
+        MemoResultat.Lines.Add('Code: ' + E.FaultCode);
+        MemoResultat.Lines.Add('Message: ' + E.FaultString);
+      end;
+
+      on E: Exception do
+      begin
+        MemoResultat.Lines.Add('Erreur: ' + E.Message);
+        ShowMessage('Impossible de contacter le service: ' + E.Message);
+      end;
+    end;
+
+  finally
+    HTTPRIO.Free;
+  end;
+end;
+
+procedure TFormMeteo.AfficherMeteo(const Ville, Temperature, Description: string);
+begin
+  MemoResultat.Lines.Clear;
+  MemoResultat.Lines.Add('Météo pour : ' + Ville);
+  MemoResultat.Lines.Add('');
+  MemoResultat.Lines.Add('Température : ' + Temperature);
+  MemoResultat.Lines.Add('Description : ' + Description);
+end;
+
+end.
+```
+
+## Créer un serveur SOAP avec Delphi
+
+### Utiliser l'assistant WebService Application
+
+Pour créer votre propre service SOAP :
+
+**Étapes :**
+1. File → New → Other → WebServices → SOAP Server Application
+2. Choisir le type de serveur (ISAPI, CGI, ou Standalone)
+3. Définir l'interface du service
+4. Implémenter les méthodes
+
+**Exemple d'interface de service :**
+
+```pascal
+unit InterfaceCalculateur;
 
 interface
 
@@ -221,467 +834,341 @@ uses
   System.SysUtils, Soap.InvokeRegistry, System.Types, Soap.XSBuiltIns;
 
 type
-  IStockQuoteService = interface(IInvokable)
-    ['{A1B2C3D4-E5F6-4321-8765-9ABCDEF01234}']
-    function GetStockPrice(const Symbol: string): Double; stdcall;
-    function GetCompanyInfo(const Symbol: string): string; stdcall;
-  end;
+  // Interface du service (contrat)
+  ICalculateur = interface(IInvokable)
+    ['{12345678-1234-1234-1234-123456789012}']
 
-  TStockQuoteService = class(TInvokableClass, IStockQuoteService)
-  public
-    function GetStockPrice(const Symbol: string): Double; stdcall;
-    function GetCompanyInfo(const Symbol: string): string; stdcall;
+    function Addition(A, B: Double): Double; stdcall;
+    function Soustraction(A, B: Double): Double; stdcall;
+    function Multiplication(A, B: Double): Double; stdcall;
+    function Division(A, B: Double): Double; stdcall;
+    function Puissance(Base, Exposant: Double): Double; stdcall;
   end;
 
 implementation
 
-function TStockQuoteService.GetStockPrice(const Symbol: string): Double;
-begin
-  // Dans une application réelle, vous récupéreriez le prix
-  // depuis une base de données ou un autre service
-  if Symbol = 'AAPL' then
-    Result := 142.56
-  else if Symbol = 'MSFT' then
-    Result := 265.23
-  else if Symbol = 'GOOG' then
-    Result := 2350.72
-  else
-    Result := 0.0;
-end;
-
-function TStockQuoteService.GetCompanyInfo(const Symbol: string): string;
-begin
-  if Symbol = 'AAPL' then
-    Result := 'Apple Inc. - Entreprise technologique basée à Cupertino, Californie.'
-  else if Symbol = 'MSFT' then
-    Result := 'Microsoft Corporation - Entreprise technologique basée à Redmond, Washington.'
-  else if Symbol = 'GOOG' then
-    Result := 'Alphabet Inc. (Google) - Entreprise technologique basée à Mountain View, Californie.'
-  else
-    Result := 'Information non disponible pour ' + Symbol;
-end;
-
 initialization
-  // Enregistrer la classe de service
-  InvRegistry.RegisterInvokableClass(TStockQuoteService);
   // Enregistrer l'interface
-  InvRegistry.RegisterInterface(TypeInfo(IStockQuoteService));
+  InvRegistry.RegisterInterface(TypeInfo(ICalculateur),
+    'urn:CalculateurIntf', 'utf-8');
+  InvRegistry.RegisterDefaultSOAPAction(TypeInfo(ICalculateur),
+    'urn:CalculateurIntf-ICalculateur#%operationName%');
+
 end.
 ```
 
-### Déploiement du WebService
-
-Pour déployer le WebService, vous devez créer un serveur Web qui expose votre service. Voici un exemple simple d'application serveur :
+**Implémentation du service :**
 
 ```pascal
-program StockQuoteServer;
-
-{$APPTYPE CONSOLE}
-
-uses
-  System.SysUtils,
-  Soap.WebBroker,
-  Soap.WSDLPub,
-  Soap.WSDLIntf,
-  IdHTTPWebBrokerBridge,
-  StockQuoteService in 'StockQuoteService.pas';
-
-{$R *.res}
-
-var
-  Server: TIdHTTPWebBrokerBridge;
-  Port: Integer;
-
-begin
-  try
-    // Demander le port d'écoute
-    Writeln('Sur quel port souhaitez-vous démarrer le serveur (8080 par défaut) ?');
-    Port := StrToIntDef(Readln, 8080);
-
-    // Créer et configurer le serveur
-    Server := TIdHTTPWebBrokerBridge.Create(nil);
-    try
-      Server.DefaultPort := Port;
-
-      // Démarrer le serveur
-      Server.Active := True;
-
-      Writeln('Serveur démarré sur le port ' + IntToStr(Port));
-      Writeln('Appuyez sur Entrée pour arrêter le serveur');
-
-      // Attendre que l'utilisateur appuie sur Entrée
-      Readln;
-    finally
-      Server.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      Writeln('Erreur : ' + E.Message);
-      Readln;
-    end;
-  end;
-end.
-```
-
-### Types de données complexes
-
-Les WebServices supportent également des types de données plus complexes :
-
-```pascal
-// Définir des types complexes
-type
-  TStockInfo = class(TRemotable)
-  private
-    FSymbol: string;
-    FPrice: Double;
-    FCompanyName: string;
-    FLastUpdate: TDateTime;
-  published
-    property Symbol: string read FSymbol write FSymbol;
-    property Price: Double read FPrice write FPrice;
-    property CompanyName: string read FCompanyName write FCompanyName;
-    property LastUpdate: TDateTime read FLastUpdate write FLastUpdate;
-  end;
-
-  // Ajouter à l'interface
-  IStockQuoteService = interface(IInvokable)
-    ['{A1B2C3D4-E5F6-4321-8765-9ABCDEF01234}']
-    function GetStockPrice(const Symbol: string): Double; stdcall;
-    function GetCompanyInfo(const Symbol: string): string; stdcall;
-    function GetDetailedStockInfo(const Symbol: string): TStockInfo; stdcall;
-  end;
-
-// Implémentation
-function TStockQuoteService.GetDetailedStockInfo(const Symbol: string): TStockInfo;
-begin
-  Result := TStockInfo.Create;
-
-  Result.Symbol := Symbol;
-  Result.LastUpdate := Now;
-
-  if Symbol = 'AAPL' then
-  begin
-    Result.Price := 142.56;
-    Result.CompanyName := 'Apple Inc.';
-  end
-  else if Symbol = 'MSFT' then
-  begin
-    Result.Price := 265.23;
-    Result.CompanyName := 'Microsoft Corporation';
-  end
-  else
-  begin
-    Result.Price := 0.0;
-    Result.CompanyName := 'Inconnu';
-  end;
-end;
-
-// Dans l'initialisation
-initialization
-  // Enregistrer le type complexe
-  RemClassRegistry.RegisterXSClass(TStockInfo, 'http://tempuri.org', 'TStockInfo');
-  // ... autres enregistrements
-```
-
-### Sécurisation du WebService
-
-Pour sécuriser votre WebService, vous pouvez ajouter une authentification :
-
-```pascal
-// Dans la classe de service
-TSecureStockService = class(TInvokableClass, IStockQuoteService)
-private
-  function VerifierAuthentification(const Username, Password: string): Boolean;
-public
-  function GetStockPrice(const Symbol, Username, Password: string): Double; stdcall;
-  // ... autres méthodes
-end;
-
-function TSecureStockService.VerifierAuthentification(const Username, Password: string): Boolean;
-begin
-  // Dans une application réelle, vérifiez dans une base de données
-  Result := (Username = 'admin') and (Password = 'secret123');
-end;
-
-function TSecureStockService.GetStockPrice(const Symbol, Username, Password: string): Double;
-begin
-  // Vérifier l'authentification avant de traiter la demande
-  if not VerifierAuthentification(Username, Password) then
-    raise Exception.Create('Authentification échouée');
-
-  // Si l'authentification réussit, continuer normalement
-  if Symbol = 'AAPL' then
-    Result := 142.56
-  else if Symbol = 'MSFT' then
-    Result := 265.23
-  else
-    Result := 0.0;
-end;
-```
-
-Une approche plus moderne consiste à utiliser SSL/TLS et des jetons d'authentification :
-
-```pascal
-// Configuration du serveur avec SSL
-Server.IOHandler := TIdServerIOHandlerSSLOpenSSL.Create(Server);
-TIdServerIOHandlerSSLOpenSSL(Server.IOHandler).SSLOptions.CertFile := 'server.crt';
-TIdServerIOHandlerSSLOpenSSL(Server.IOHandler).SSLOptions.KeyFile := 'server.key';
-TIdServerIOHandlerSSLOpenSSL(Server.IOHandler).SSLOptions.Method := sslvTLSv1_2;
-```
-
-## Différences entre SOAP et REST
-
-Pour vous aider à choisir le bon type de WebService pour votre application, voici les principales différences entre SOAP et REST :
-
-| Caractéristique | SOAP | REST |
-|----------------|------|------|
-| **Format** | XML uniquement | Plusieurs formats (JSON, XML, etc.) |
-| **Protocole** | Indépendant (souvent HTTP) | HTTP |
-| **Structure** | Très formelle et stricte | Flexible et légère |
-| **Contrat** | WSDL obligatoire | Optionnel (OpenAPI/Swagger) |
-| **État** | Peut être avec ou sans état | Sans état |
-| **Performances** | Plus lourd | Plus léger |
-| **Utilisation** | Applications d'entreprise | Web, Mobile, API publiques |
-| **Complexité** | Plus complexe | Plus simple |
-
-### Quand utiliser SOAP ou REST ?
-
-**Utilisez SOAP si :**
-- Vous avez besoin d'une grande formalisation
-- Vous travaillez dans un environnement d'entreprise plus traditionnel
-- Vous avez besoin de fonctionnalités avancées comme les transactions distribuées
-- La sécurité de niveau entreprise est primordiale
-
-**Utilisez REST si :**
-- Vous développez pour le web ou les applications mobiles
-- Vous voulez une API légère et facile à consommer
-- Les performances sont importantes
-- Vous souhaitez une API plus facile à comprendre et à utiliser
-
-## Exemple pratique : Client de service météo
-
-Voici un exemple complet d'un client SOAP qui utilise un service météo public :
-
-```pascal
-unit WeatherClientMain;
+unit ImplementationCalculateur;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Soap.InvokeRegistry, Soap.Rio, Soap.SOAPHTTPClient;
+  System.SysUtils, Soap.InvokeRegistry, System.Types, Soap.XSBuiltIns,
+  InterfaceCalculateur;
 
 type
-  TWeatherInfo = class(TRemotable)
-  private
-    FTemperature: Double;
-    FHumidity: Integer;
-    FCondition: string;
-    FCity: string;
-  published
-    property Temperature: Double read FTemperature write FTemperature;
-    property Humidity: Integer read FHumidity write FHumidity;
-    property Condition: string read FCondition write FCondition;
-    property City: string read FCity write FCity;
-  end;
-
-  IWeatherService = interface(IInvokable)
-    ['{4D41B746-2D8F-4433-A4E0-8E3F0B3F6A42}']
-    function GetWeather(const City: string): TWeatherInfo; stdcall;
-  end;
-
-  TFormWeather = class(TForm)
-    EditCity: TEdit;
-    BtnGetWeather: TButton;
-    LabelTemperature: TLabel;
-    LabelHumidity: TLabel;
-    LabelCondition: TLabel;
-    PanelWeather: TPanel;
-    Label1: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure BtnGetWeatherClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FHTTPRIO: THTTPRIO;
-    FWeatherService: IWeatherService;
+  // Classe d'implémentation
+  TCalculateur = class(TInvokableClass, ICalculateur)
   public
-    procedure DisplayWeather(WeatherInfo: TWeatherInfo);
+    function Addition(A, B: Double): Double; stdcall;
+    function Soustraction(A, B: Double): Double; stdcall;
+    function Multiplication(A, B: Double): Double; stdcall;
+    function Division(A, B: Double): Double; stdcall;
+    function Puissance(Base, Exposant: Double): Double; stdcall;
+  end;
+
+implementation
+
+uses
+  System.Math;
+
+{ TCalculateur }
+
+function TCalculateur.Addition(A, B: Double): Double;
+begin
+  Result := A + B;
+end;
+
+function TCalculateur.Soustraction(A, B: Double): Double;
+begin
+  Result := A - B;
+end;
+
+function TCalculateur.Multiplication(A, B: Double): Double;
+begin
+  Result := A * B;
+end;
+
+function TCalculateur.Division(A, B: Double): Double;
+begin
+  if B = 0 then
+    raise Exception.Create('Division par zéro impossible');
+  Result := A / B;
+end;
+
+function TCalculateur.Puissance(Base, Exposant: Double): Double;
+begin
+  Result := Power(Base, Exposant);
+end;
+
+initialization
+  // Enregistrer l'implémentation
+  InvRegistry.RegisterInvokableClass(TCalculateur);
+
+end.
+```
+
+**Module WebService :**
+
+```pascal
+unit WebModuleCalculateur;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Web.HTTPApp, Soap.InvokeRegistry,
+  Soap.WSDLIntf, Soap.WebServExp, Soap.WSDLBind, Xml.XMLSchema,
+  InterfaceCalculateur, ImplementationCalculateur;
+
+type
+  TWebModule1 = class(TWebModule)
+    HTTPSoapDispatcher1: THTTPSoapDispatcher;
+    HTTPSoapPascalInvoker1: THTTPSoapPascalInvoker;
+    WSDLHTMLPublish1: TWSDLHTMLPublish;
+    procedure WebModule1DefaultHandlerAction(Sender: TObject;
+      Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+  private
+  public
   end;
 
 var
-  FormWeather: TFormWeather;
+  WebModuleClass: TComponentClass = TWebModule1;
 
 implementation
 
 {$R *.dfm}
 
-procedure TFormWeather.FormCreate(Sender: TObject);
+procedure TWebModule1.WebModule1DefaultHandlerAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 begin
-  FHTTPRIO := THTTPRIO.Create(nil);
-  FHTTPRIO.URL := 'http://example.com/WeatherService';
-
-  // Dans une application réelle, utilisez une URL de service fonctionnelle
-  // Ici nous utilisons une URL fictive pour l'exemple
-
-  FWeatherService := FHTTPRIO as IWeatherService;
-
-  PanelWeather.Visible := False;
-end;
-
-procedure TFormWeather.FormDestroy(Sender: TObject);
-begin
-  FHTTPRIO.Free;
-end;
-
-procedure TFormWeather.BtnGetWeatherClick(Sender: TObject);
-var
-  City: string;
-  WeatherInfo: TWeatherInfo;
-begin
-  City := EditCity.Text;
-
-  if City = '' then
-  begin
-    ShowMessage('Veuillez entrer un nom de ville');
-    Exit;
-  end;
-
-  BtnGetWeather.Enabled := False;
-  Screen.Cursor := crHourGlass;
-
-  try
-    try
-      // Appel au WebService
-      WeatherInfo := FWeatherService.GetWeather(City);
-      DisplayWeather(WeatherInfo);
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Erreur lors de l''obtention des données météo: ' + E.Message);
-        PanelWeather.Visible := False;
-      end;
-    end;
-  finally
-    BtnGetWeather.Enabled := True;
-    Screen.Cursor := crDefault;
-  end;
-end;
-
-procedure TFormWeather.DisplayWeather(WeatherInfo: TWeatherInfo);
-begin
-  // Afficher les informations météo
-  LabelTemperature.Caption := Format('Température: %.1f °C', [WeatherInfo.Temperature]);
-  LabelHumidity.Caption := Format('Humidité: %d %%', [WeatherInfo.Humidity]);
-  LabelCondition.Caption := Format('Conditions: %s', [WeatherInfo.Condition]);
-
-  PanelWeather.Caption := 'Météo pour ' + WeatherInfo.City;
-  PanelWeather.Visible := True;
+  // Publier le WSDL
+  WSDLHTMLPublish1.ServiceInfo(Sender, Request, Response, Handled);
 end;
 
 end.
 ```
 
-## Débogage des WebServices
+### Tester le service SOAP
 
-Le débogage des WebServices peut être difficile en raison de leur nature distribuée. Voici quelques astuces :
+Une fois le serveur démarré, vous pouvez :
 
-### Capture et analyse des messages SOAP
+1. Accéder au WSDL : `http://localhost:8080/wsdl/ICalculateur`
+2. Voir la page d'accueil : `http://localhost:8080`
+3. Utiliser le service avec un client SOAP
 
-Pour voir les messages SOAP échangés :
+## Outils et bibliothèques utiles
 
-```pascal
-procedure TForm1.ConfigurerDebogage;
-begin
-  // Activer la journalisation des messages SOAP
-  FHTTPRIO.Converter.Options := FHTTPRIO.Converter.Options + [soSaveToFile];
+### SoapUI
 
-  // Dossier où les fichiers seront enregistrés
-  FHTTPRIO.Converter.TempDir := 'C:\Temp\SOAP';
-end;
-```
+**SoapUI** est un outil gratuit pour tester les services SOAP :
+- Importer un WSDL
+- Créer des requêtes de test
+- Valider les réponses
+- Tester la performance
+- Simuler des services (mock)
 
-### Utilisation d'outils d'inspection réseau
+**Utilisation :**
+1. Télécharger SoapUI (https://www.soapui.org/)
+2. New SOAP Project
+3. Entrer l'URL du WSDL
+4. Tester les opérations
 
-Des outils comme Wireshark ou Fiddler peuvent être utilisés pour capturer et analyser les échanges HTTP entre le client et le serveur.
+### Postman
 
-### Tests unitaires pour WebServices
+**Postman** supporte également SOAP :
+- Créer des requêtes SOAP
+- Gérer les en-têtes
+- Sauvegarder les requêtes
+- Partager avec l'équipe
 
-Voici comment créer un test unitaire simple pour un WebService :
+### Composants tiers pour Delphi
 
-```pascal
-procedure TTestStockService.TestGetStockPrice;
-var
-  Service: IStockQuoteService;
-  HTTPRIO: THTTPRIO;
-  Price: Double;
-begin
-  // Créer le client SOAP
-  HTTPRIO := THTTPRIO.Create(nil);
-  try
-    HTTPRIO.URL := 'http://localhost:8080/soap/IStockQuoteService';
-    Service := HTTPRIO as IStockQuoteService;
-
-    // Appeler la méthode et vérifier le résultat
-    Price := Service.GetStockPrice('AAPL');
-
-    // Vérifier que le prix est positif
-    CheckTrue(Price > 0, 'Le prix devrait être positif');
-
-    // Vérifier que le prix pour un symbole invalide est 0
-    Price := Service.GetStockPrice('INVALID');
-    CheckEquals(0, Price, 'Le prix pour un symbole invalide devrait être 0');
-  finally
-    HTTPRIO.Free;
-  end;
-end;
-```
+- **RemObjects SDK** : Framework complet pour services web
+- **kbmMW** : Middleware multi-niveaux avec support SOAP
+- **TMS XData** : Services REST et OData
 
 ## Bonnes pratiques
 
-1. **Versionnez vos services** - Utilisez le versionnement pour éviter de casser les clients existants lors des mises à jour
-2. **Documentez vos WebServices** - Une bonne documentation est essentielle pour les développeurs qui vont consommer votre service
-3. **Évitez les dépendances inutiles** - Rendez vos WebServices aussi autonomes que possible
-4. **Gérez correctement les erreurs** - Retournez des messages d'erreur clairs et utiles
-5. **Testez rigoureusement** - Les WebServices sont difficiles à déboguer une fois déployés
-6. **Surveillez les performances** - Les WebServices peuvent devenir des goulots d'étranglement
-7. **Sécurisez vos données** - Utilisez HTTPS et des mécanismes d'authentification appropriés
+### 1. Utiliser WSDL Importer
 
-## Tendances modernes
+Toujours utiliser l'assistant WSDL Importer plutôt que coder manuellement :
+```pascal
+// ✅ Bon - Généré automatiquement
+Calculator := GetICalculatorSoap(False);
+Result := Calculator.Add(10, 20);
 
-Les tendances actuelles dans le domaine des WebServices sont :
+// ❌ Éviter - Construction XML manuelle
+// Trop verbeux et sujet aux erreurs
+```
 
-- Migration de SOAP vers REST et GraphQL
-- Utilisation de formats plus légers (JSON au lieu de XML)
-- Architecture de microservices
-- API as a Service (AaaS)
-- Sécurité basée sur les jetons (JWT, OAuth 2.0)
+### 2. Gérer les timeouts
 
-Cependant, SOAP reste pertinent dans de nombreux environnements d'entreprise et pour les systèmes existants.
+Toujours configurer des timeouts appropriés :
+```pascal
+HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
+HTTPReqResp.ConnectTimeout := 5000;
+HTTPReqResp.ReceiveTimeout := 30000;
+```
 
-## Conclusion
+### 3. Gérer les erreurs proprement
 
-Les WebServices SOAP offrent un moyen puissant et standardisé pour créer des applications distribuées. Bien que plus complexes que les services REST, ils offrent des fonctionnalités avancées et une formalisation qui conviennent parfaitement à certains contextes, notamment dans les environnements d'entreprise.
+```pascal
+try
+  Result := Service.MaMethode;
+except
+  on E: ERemotableException do
+    // Erreur SOAP
+  on E: Exception do
+    // Erreur réseau/autre
+end;
+```
 
-En maîtrisant les concepts présentés dans ce chapitre, vous serez capable de consommer des WebServices existants et de créer vos propres services pour exposer vos fonctionnalités à d'autres applications.
+### 4. Libérer les ressources
 
-## Exercices pratiques
+```pascal
+HTTPRIO := THTTPRIO.Create(nil);
+try
+  // Utilisation
+finally
+  HTTPRIO.Free;
+end;
+```
 
-1. **Client météo**
-   - Créez un client qui se connecte à un WebService météo public
-   - Affichez les prévisions pour plusieurs jours
+### 5. Logger pour le débogage
 
-2. **Service de conversion de devises**
-   - Créez un WebService simple qui convertit entre différentes devises
-   - Ajoutez une mise en cache des taux de change
+En développement, activez le logging des messages :
+```pascal
+// Afficher les requêtes/réponses SOAP
+// Aide énormément au débogage
+```
 
-3. **Application de gestion de tâches**
-   - Créez un WebService pour gérer une liste de tâches
-   - Implémentez les opérations CRUD (Create, Read, Update, Delete)
-   - Ajoutez une authentification simple
+### 6. Valider les données
 
-4. **Comparaison SOAP vs REST**
-   - Implémentez le même service en utilisant SOAP et REST
-   - Comparez les performances et la facilité d'utilisation
+Avant d'envoyer, validez les paramètres :
+```pascal
+if Montant <= 0 then
+  raise Exception.Create('Le montant doit être positif');
+
+if Email.IsEmpty or not ContainsText(Email, '@') then
+  raise Exception.Create('Email invalide');
+```
+
+### 7. Utiliser HTTPS en production
+
+Pour la sécurité, toujours utiliser HTTPS :
+```pascal
+HTTPRIO.URL := 'https://secure.example.com/service.asmx';
+```
+
+### 8. Mettre en cache les services
+
+Si vous appelez souvent le même service, conservez l'instance :
+```pascal
+type
+  TFormPrincipale = class(TForm)
+  private
+    FServiceCalculateur: ICalculateur;
+    function GetServiceCalculateur: ICalculateur;
+  end;
+
+function TFormPrincipale.GetServiceCalculateur: ICalculateur;
+begin
+  if not Assigned(FServiceCalculateur) then
+    FServiceCalculateur := GetICalculateurSoap(False);
+  Result := FServiceCalculateur;
+end;
+```
+
+## Migration de SOAP vers REST
+
+### Pourquoi migrer ?
+
+De nombreuses organisations migrent de SOAP vers REST pour :
+- Simplicité accrue
+- Meilleures performances
+- Support mobile facilité
+- Moins de verbosité
+
+### Approche de migration
+
+**Étape 1 : Maintenir SOAP et REST en parallèle**
+```pascal
+// Offrir les deux options
+if PreferencesUtilisateur.UseREST then
+  Result := AppelerServiceREST
+else
+  Result := AppelerServiceSOAP;
+```
+
+**Étape 2 : Créer une couche d'abstraction**
+```pascal
+type
+  IServiceCalculateur = interface
+    function Additionner(A, B: Double): Double;
+  end;
+
+  TServiceSOAP = class(TInterfacedObject, IServiceCalculateur)
+    function Additionner(A, B: Double): Double;
+  end;
+
+  TServiceREST = class(TInterfacedObject, IServiceCalculateur)
+    function Additionner(A, B: Double): Double;
+  end;
+```
+
+**Étape 3 : Migrer progressivement**
+- Commencer par les nouvelles fonctionnalités en REST
+- Migrer les services les moins critiques
+- Tester exhaustivement
+- Migrer les services critiques en dernier
+
+## Résumé
+
+### Points clés SOAP
+
+✅ **Concepts fondamentaux :**
+- SOAP = protocole basé XML pour services web
+- WSDL = contrat décrivant le service
+- Structure : Envelope → Header → Body
+- Support des transactions et sécurité WS-*
+
+✅ **Utilisation dans Delphi :**
+- WSDL Importer pour générer le code
+- THTTPRIO pour les appels
+- Gestion d'erreurs avec ERemotableException
+- Configuration des timeouts
+
+✅ **Quand utiliser SOAP :**
+- Applications d'entreprise
+- Transactions critiques
+- Sécurité stricte (WS-Security)
+- Interopérabilité avec systèmes legacy
+
+✅ **Bonnes pratiques :**
+- Utiliser WSDL Importer
+- Configurer les timeouts
+- Gérer les erreurs proprement
+- Logger en développement
+- Utiliser HTTPS en production
+- Valider les données
+
+✅ **Alternatives modernes :**
+- REST pour nouvelles API
+- JSON pour légèreté
+- GraphQL pour flexibilité
+
+SOAP reste pertinent pour les systèmes d'entreprise nécessitant robustesse, sécurité et transactions, même si REST domine les nouvelles applications web et mobiles.
 
 ⏭️ [Architecture client-serveur](/10-communication-et-services-reseaux/05-architecture-client-serveur.md)

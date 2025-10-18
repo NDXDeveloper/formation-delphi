@@ -1,64 +1,372 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 10.8 GraphQL et nouvelles API
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction à GraphQL
 
-## Introduction
+### Qu'est-ce que GraphQL ?
 
-Les API (Interfaces de Programmation d'Applications) modernes évoluent rapidement pour répondre aux besoins croissants des développeurs. Parmi ces évolutions, GraphQL se distingue comme une alternative puissante aux API REST traditionnelles. Dans ce chapitre, nous explorerons GraphQL et d'autres nouvelles API, ainsi que leur intégration dans les applications Delphi.
+**GraphQL** est un langage de requête pour les API et un runtime pour exécuter ces requêtes. Développé par Facebook en 2012 et rendu open source en 2015, GraphQL révolutionne la façon dont les clients communiquent avec les serveurs.
 
-## Qu'est-ce que GraphQL ?
+**Analogie simple :**
+Imaginez un restaurant avec deux styles de service :
 
-GraphQL est un langage de requête pour API et un environnement d'exécution développé par Facebook en 2015, puis rendu open source. Contrairement aux API REST, où plusieurs endpoints renvoient des structures de données fixes, GraphQL utilise un seul endpoint et permet aux clients de demander exactement les données dont ils ont besoin.
+**REST (Style traditionnel) :**
+- Menu fixe avec des plats prédéfinis
+- Vous commandez "Menu 1" et recevez entrée + plat + dessert
+- Même si vous voulez seulement le plat principal
+- Plusieurs allers-retours pour commander boisson, pain, etc.
 
-![Comparaison REST vs GraphQL](https://via.placeholder.com/800x400)
+**GraphQL (Style à la carte) :**
+- Vous dites exactement ce que vous voulez
+- "Je veux le poulet sans la sauce, des légumes et un verre d'eau"
+- Tout arrive en une seule fois
+- Vous ne payez/recevez que ce que vous demandez
 
-### Avantages de GraphQL
+### Problèmes résolus par GraphQL
 
-- **Requêtes précises** : Vous récupérez uniquement les données dont vous avez besoin
-- **Une seule requête** : Évite les problèmes de sur-récupération ou sous-récupération de données
-- **Forte typage** : Le schéma définit clairement la structure des données
-- **Évolution sans versionnage** : Ajoutez des champs sans casser les applications existantes
-- **Introspection** : L'API peut être interrogée pour ses propres capacités
+**1. Over-fetching (Trop de données)**
+```
+REST: GET /users/123
+→ Reçoit TOUT: id, nom, email, adresse, téléphone, historique...
+Mais vous voulez juste le nom !
+```
 
-## Bases de GraphQL
+**2. Under-fetching (Pas assez de données)**
+```
+REST:
+GET /users/123 → Données utilisateur
+GET /users/123/posts → Posts de l'utilisateur
+GET /users/123/friends → Amis de l'utilisateur
+= 3 requêtes !
+```
 
-### Structure d'une requête GraphQL
+**3. Versionning d'API**
+```
+REST:
+/api/v1/users (ancienne version)
+/api/v2/users (nouvelle version)
+→ Maintenance de plusieurs versions
 
-Une requête GraphQL ressemble à ceci :
+GraphQL:
+/graphql (une seule entrée)
+→ Ajout de champs sans casser l'existant
+```
 
+### Les concepts clés
+
+**Query (Requête)**
+- Lire des données
+- Équivalent de GET en REST
+
+**Mutation**
+- Modifier des données (créer, mettre à jour, supprimer)
+- Équivalent de POST, PUT, DELETE en REST
+
+**Subscription**
+- Recevoir des mises à jour en temps réel
+- Utilise WebSockets
+- Pas d'équivalent direct en REST
+
+**Schema (Schéma)**
+- Définit les types de données disponibles
+- Contrat entre client et serveur
+- Auto-documenté
+
+## Syntaxe GraphQL de base
+
+### Structure d'une requête
+
+**Format général :**
 ```graphql
-{
-  utilisateur(id: 123) {
-    nom
-    email
-    articles {
-      titre
-      datePublication
+query {
+  nomDeLaRessource(paramètres) {
+    champ1
+    champ2
+    champImbriqué {
+      sousChamp1
+      sousChamp2
     }
   }
 }
 ```
 
-Cette requête demande les informations d'un utilisateur avec l'ID 123, incluant son nom, son email, et les titres et dates de publication de ses articles.
+**Exemple concret :**
+```graphql
+query {
+  user(id: "123") {
+    name
+    email
+    posts {
+      title
+      createdAt
+    }
+  }
+}
+```
 
-### Les trois opérations principales
+**Réponse :**
+```json
+{
+  "data": {
+    "user": {
+      "name": "Jean Dupont",
+      "email": "jean.dupont@example.com",
+      "posts": [
+        {
+          "title": "Mon premier article",
+          "createdAt": "2024-01-15"
+        },
+        {
+          "title": "GraphQL c'est génial",
+          "createdAt": "2024-01-20"
+        }
+      ]
+    }
+  }
+}
+```
 
-1. **Query** : Pour récupérer des données (lecture seule)
-2. **Mutation** : Pour modifier des données (création, mise à jour, suppression)
-3. **Subscription** : Pour écouter des événements en temps réel
+### Query avec arguments
 
-## Intégration de GraphQL dans Delphi
+**Filtrage :**
+```graphql
+query {
+  users(limit: 10, role: "admin") {
+    id
+    name
+    email
+  }
+}
+```
 
-### Configuration des outils nécessaires
+**Tri :**
+```graphql
+query {
+  posts(orderBy: "createdAt", direction: DESC) {
+    title
+    createdAt
+  }
+}
+```
 
-Pour travailler avec GraphQL dans Delphi, vous utiliserez principalement les composants REST associés à un traitement JSON personnalisé :
+**Variables :**
+```graphql
+query GetUser($userId: ID!) {
+  user(id: $userId) {
+    name
+    email
+  }
+}
 
-1. Installez les packages REST client si ce n'est pas déjà fait
-2. Utilisez les composants TRESTClient, TRESTRequest et TRESTResponse
+# Variables (envoyées séparément)
+{
+  "userId": "123"
+}
+```
 
-### Création d'une classe utilitaire pour GraphQL
+### Mutations
 
-Commençons par créer une classe qui nous aidera à interagir avec les API GraphQL :
+**Créer :**
+```graphql
+mutation {
+  createUser(input: {
+    name: "Marie Martin"
+    email: "marie@example.com"
+    age: 28
+  }) {
+    id
+    name
+    email
+  }
+}
+```
+
+**Mettre à jour :**
+```graphql
+mutation {
+  updateUser(id: "123", input: {
+    name: "Marie Dupont-Martin"
+  }) {
+    id
+    name
+    updatedAt
+  }
+}
+```
+
+**Supprimer :**
+```graphql
+mutation {
+  deleteUser(id: "123") {
+    success
+    message
+  }
+}
+```
+
+### Subscriptions
+
+**S'abonner à des événements :**
+```graphql
+subscription {
+  newMessage(chatId: "456") {
+    id
+    text
+    sender {
+      name
+      avatar
+    }
+    timestamp
+  }
+}
+```
+
+### Fragments (réutilisation)
+
+**Définir un fragment :**
+```graphql
+fragment UserInfo on User {
+  id
+  name
+  email
+  avatar
+}
+
+query {
+  user(id: "123") {
+    ...UserInfo
+    posts {
+      title
+    }
+  }
+
+  friends {
+    ...UserInfo
+  }
+}
+```
+
+### Aliases (renommage)
+
+```graphql
+query {
+  adminUser: user(id: "1") {
+    name
+    role
+  }
+
+  regularUser: user(id: "2") {
+    name
+    role
+  }
+}
+```
+
+**Réponse :**
+```json
+{
+  "data": {
+    "adminUser": {
+      "name": "Admin",
+      "role": "ADMIN"
+    },
+    "regularUser": {
+      "name": "User",
+      "role": "USER"
+    }
+  }
+}
+```
+
+## GraphQL vs REST : Comparaison détaillée
+
+### Exemple comparatif
+
+**Scénario :** Afficher un utilisateur avec ses 5 derniers posts et ses amis
+
+**Approche REST :**
+```
+GET /users/123
+{
+  "id": 123,
+  "name": "Jean",
+  "email": "jean@example.com",
+  "address": "...",        ← Non nécessaire
+  "phone": "...",          ← Non nécessaire
+  "birthdate": "...",      ← Non nécessaire
+  "preferences": {...}     ← Non nécessaire
+}
+
+GET /users/123/posts?limit=5
+[...]
+
+GET /users/123/friends
+[...]
+
+Total: 3 requêtes HTTP
+```
+
+**Approche GraphQL :**
+```graphql
+query {
+  user(id: "123") {
+    name
+    posts(limit: 5) {
+      title
+      createdAt
+    }
+    friends {
+      name
+      avatar
+    }
+  }
+}
+
+Total: 1 requête HTTP
+Seulement les données demandées
+```
+
+### Tableau comparatif
+
+| Critère | REST | GraphQL |
+|---------|------|---------|
+| **Requêtes** | Multiples endpoints | Un seul endpoint |
+| **Données** | Fixes par endpoint | À la demande du client |
+| **Over-fetching** | Fréquent | Jamais |
+| **Under-fetching** | Fréquent (N+1) | Jamais |
+| **Versionning** | /v1, /v2, /v3 | Pas nécessaire |
+| **Documentation** | Manuelle (Swagger) | Auto-générée (Schema) |
+| **Cache HTTP** | Natif (GET) | Nécessite implémentation |
+| **Courbe apprentissage** | Faible | Moyenne |
+| **Complexité serveur** | Simple | Plus complexe |
+| **File upload** | Simple | Plus complexe |
+| **Performance** | Bonne | Excellente (moins de requêtes) |
+| **Temps réel** | Polling/SSE | Subscriptions natives |
+
+### Quand utiliser GraphQL ?
+
+**✅ GraphQL est idéal pour :**
+- Applications mobiles (économie de bande passante)
+- Interfaces riches avec données complexes
+- Multiples clients avec besoins différents
+- Développement rapide (pas besoin de modifier le serveur)
+- Données relationnelles imbriquées
+- Micro-frontends
+
+**✅ REST est préférable pour :**
+- APIs simples CRUD
+- Cache HTTP important
+- Upload de fichiers massif
+- Services publics simples
+- Équipe débutante
+- Intégration avec systèmes legacy
+
+## Implémentation GraphQL avec Delphi
+
+### Client GraphQL de base
+
+**Classe client GraphQL :**
 
 ```pascal
 unit GraphQLClient;
@@ -66,431 +374,401 @@ unit GraphQLClient;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, REST.Client, REST.Types;
+  System.SysUtils, System.Classes, System.JSON, System.Net.HttpClient,
+  System.Net.URLClient;
 
 type
-  TGraphQLVariable = TPair<string, TJSONValue>;
-  TGraphQLVariables = TArray<TGraphQLVariable>;
-
   TGraphQLClient = class
   private
-    FRESTClient: TRESTClient;
     FEndpoint: string;
-    FHeaders: TStrings;
-    FOnError: TProc<string>;
-
-    function CreateRequest: TRESTRequest;
-    function WrapQuery(const Query: string; Variables: TJSONObject = nil): string;
+    FHTTPClient: THTTPClient;
+    FAuthToken: string;
   public
     constructor Create(const Endpoint: string);
     destructor Destroy; override;
 
-    procedure AddHeader(const Name, Value: string);
-    function ExecuteQuery(const Query: string; Variables: TJSONObject = nil): TJSONObject;
-    function ExecuteMutation(const Mutation: string; Variables: TJSONObject = nil): TJSONObject;
+    function Query(const QueryText: string; const Variables: TJSONObject = nil): TJSONObject;
+    function Mutate(const MutationText: string; const Variables: TJSONObject = nil): TJSONObject;
 
-    property Headers: TStrings read FHeaders;
-    property OnError: TProc<string> read FOnError write FOnError;
+    property AuthToken: string read FAuthToken write FAuthToken;
   end;
 
 implementation
 
-{ TGraphQLClient }
+uses
+  System.NetEncoding;
 
 constructor TGraphQLClient.Create(const Endpoint: string);
 begin
   inherited Create;
   FEndpoint := Endpoint;
-  FHeaders := TStringList.Create;
-
-  // Créer le client REST
-  FRESTClient := TRESTClient.Create(nil);
-  FRESTClient.BaseURL := FEndpoint;
-
-  // Par défaut, on ajoute l'entête Content-Type pour GraphQL
-  AddHeader('Content-Type', 'application/json');
+  FHTTPClient := THTTPClient.Create;
 end;
 
 destructor TGraphQLClient.Destroy;
 begin
-  FRESTClient.Free;
-  FHeaders.Free;
+  FHTTPClient.Free;
   inherited;
 end;
 
-procedure TGraphQLClient.AddHeader(const Name, Value: string);
-begin
-  FHeaders.Values[Name] := Value;
-end;
-
-function TGraphQLClient.CreateRequest: TRESTRequest;
+function TGraphQLClient.Query(const QueryText: string;
+  const Variables: TJSONObject): TJSONObject;
 var
-  Request: TRESTRequest;
-  Header: string;
-begin
-  Request := TRESTRequest.Create(nil);
-  try
-    Request.Client := FRESTClient;
-    Request.Method := TRESTRequestMethod.rmPOST;
-
-    // Ajouter les entêtes
-    for Header in FHeaders do
-      Request.Params.AddHeader(FHeaders.Names[FHeaders.IndexOf(Header)],
-                               FHeaders.ValueFromIndex[FHeaders.IndexOf(Header)]);
-
-    Result := Request;
-  except
-    Request.Free;
-    raise;
-  end;
-end;
-
-function TGraphQLClient.WrapQuery(const Query: string; Variables: TJSONObject): string;
-var
-  RequestObj: TJSONObject;
-begin
-  RequestObj := TJSONObject.Create;
-  try
-    RequestObj.AddPair('query', Query);
-
-    if Assigned(Variables) and (Variables.Count > 0) then
-      RequestObj.AddPair('variables', Variables.Clone as TJSONObject);
-
-    Result := RequestObj.ToString;
-  finally
-    RequestObj.Free;
-  end;
-end;
-
-function TGraphQLClient.ExecuteQuery(const Query: string; Variables: TJSONObject): TJSONObject;
-var
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  RequestBody: string;
-  ResponseObj: TJSONObject;
+  RequestBody: TJSONObject;
+  RequestStream: TStringStream;
+  Response: IHTTPResponse;
+  ResponseJSON: TJSONObject;
 begin
   Result := nil;
-  Request := CreateRequest;
-  Response := TRESTResponse.Create(nil);
 
+  // Construire le corps de la requête
+  RequestBody := TJSONObject.Create;
   try
-    Request.Response := Response;
+    RequestBody.AddPair('query', QueryText);
 
-    // Préparer le corps de la requête
-    RequestBody := WrapQuery(Query, Variables);
-    Request.Body.Add(RequestBody, TRESTContentType.ctAPPLICATION_JSON);
+    if Assigned(Variables) then
+      RequestBody.AddPair('variables', Variables);
 
-    // Exécuter la requête
-    Request.Execute;
+    // Préparer la requête HTTP
+    RequestStream := TStringStream.Create(RequestBody.ToString, TEncoding.UTF8);
+    try
+      FHTTPClient.ContentType := 'application/json';
 
-    // Traiter la réponse
-    if (Response.StatusCode = 200) then
-    begin
-      ResponseObj := TJSONObject.ParseJSONValue(Response.Content) as TJSONObject;
+      // Ajouter le token d'authentification si présent
+      if not FAuthToken.IsEmpty then
+        FHTTPClient.CustomHeaders['Authorization'] := 'Bearer ' + FAuthToken;
 
-      // Vérifier s'il y a des erreurs
-      if ResponseObj.GetValue('errors') <> nil then
+      // Envoyer la requête POST
+      Response := FHTTPClient.Post(FEndpoint, RequestStream);
+
+      if Response.StatusCode = 200 then
       begin
-        if Assigned(FOnError) then
-          FOnError(Response.Content);
-        ResponseObj.Free;
+        ResponseJSON := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+
+        // Vérifier les erreurs GraphQL
+        if ResponseJSON.TryGetValue<TJSONObject>('errors', Result) then
+        begin
+          raise Exception.Create('Erreur GraphQL: ' +
+            ResponseJSON.GetValue('errors').ToString);
+        end;
+
+        // Retourner les données
+        Result := ResponseJSON.GetValue<TJSONObject>('data').Clone as TJSONObject;
+        ResponseJSON.Free;
       end
       else
-        Result := ResponseObj;
-    end
-    else
-    begin
-      if Assigned(FOnError) then
-        FOnError(Format('Erreur HTTP %d: %s', [Response.StatusCode, Response.StatusText]));
+        raise Exception.CreateFmt('Erreur HTTP: %d - %s',
+          [Response.StatusCode, Response.StatusText]);
+
+    finally
+      RequestStream.Free;
     end;
   finally
-    Request.Free;
-    Response.Free;
+    RequestBody.Free;
   end;
 end;
 
-function TGraphQLClient.ExecuteMutation(const Mutation: string; Variables: TJSONObject): TJSONObject;
+function TGraphQLClient.Mutate(const MutationText: string;
+  const Variables: TJSONObject): TJSONObject;
 begin
-  // Les mutations utilisent le même mécanisme que les requêtes
-  Result := ExecuteQuery(Mutation, Variables);
+  // Les mutations utilisent le même mécanisme que les queries
+  Result := Query(MutationText, Variables);
 end;
 
 end.
 ```
 
-### Exemple d'utilisation de base
+### Utilisation du client
 
-Voyons maintenant comment utiliser cette classe pour effectuer une requête GraphQL simple :
+**Exemple 1 : Query simple**
 
 ```pascal
-procedure TForm1.ExecuterRequeteGraphQL;
 var
-  Client: TGraphQLClient;
-  Response: TJSONObject;
-  Query: string;
+  GraphQL: TGraphQLClient;
+  QueryText: string;
+  Result: TJSONObject;
+  UserName: string;
 begin
-  Client := TGraphQLClient.Create('https://api.example.com/graphql');
+  GraphQL := TGraphQLClient.Create('https://api.example.com/graphql');
   try
-    // Définir une requête GraphQL
-    Query :=
-      'query GetUser($id: ID!) {' +
-      '  user(id: $id) {' +
+    // Définir la requête
+    QueryText :=
+      'query {' +
+      '  user(id: "123") {' +
       '    name' +
       '    email' +
       '  }' +
       '}';
 
-    // Créer les variables
-    var Variables := TJSONObject.Create;
+    // Exécuter
+    Result := GraphQL.Query(QueryText);
     try
-      Variables.AddPair('id', '123');
+      // Extraire les données
+      UserName := Result.GetValue<TJSONObject>('user')
+                        .GetValue<string>('name');
 
-      // Exécuter la requête
-      Response := Client.ExecuteQuery(Query, Variables);
-
-      if Assigned(Response) then
-      try
-        // Afficher la réponse
-        Memo1.Lines.Text := Response.ToString;
-
-        // Accéder aux données spécifiques
-        var Data := Response.GetValue('data') as TJSONObject;
-        var User := Data.GetValue('user') as TJSONObject;
-        var Name := User.GetValue('name').Value;
-
-        ShowMessage('Nom de l''utilisateur: ' + Name);
-      finally
-        Response.Free;
-      end;
+      ShowMessage('Utilisateur: ' + UserName);
     finally
-      Variables.Free;
+      Result.Free;
     end;
+
   finally
-    Client.Free;
+    GraphQL.Free;
   end;
 end;
 ```
 
-## Exemple concret : Application de liste de tâches avec GraphQL
-
-Créons maintenant une application plus complète qui gère une liste de tâches en utilisant une API GraphQL :
-
-### Étape 1 : Définir les requêtes GraphQL
+**Exemple 2 : Query avec variables**
 
 ```pascal
-unit TaskQueries;
+var
+  GraphQL: TGraphQLClient;
+  QueryText: string;
+  Variables: TJSONObject;
+  Result: TJSONObject;
+begin
+  GraphQL := TGraphQLClient.Create('https://api.example.com/graphql');
+  try
+    // Query avec variable
+    QueryText :=
+      'query GetUser($userId: ID!) {' +
+      '  user(id: $userId) {' +
+      '    name' +
+      '    email' +
+      '    posts {' +
+      '      title' +
+      '    }' +
+      '  }' +
+      '}';
+
+    // Définir les variables
+    Variables := TJSONObject.Create;
+    try
+      Variables.AddPair('userId', '123');
+
+      // Exécuter
+      Result := GraphQL.Query(QueryText, Variables);
+      try
+        Memo1.Text := Result.Format(2);
+      finally
+        Result.Free;
+      end;
+    finally
+      Variables.Free;
+    end;
+
+  finally
+    GraphQL.Free;
+  end;
+end;
+```
+
+**Exemple 3 : Mutation**
+
+```pascal
+var
+  GraphQL: TGraphQLClient;
+  MutationText: string;
+  Variables: TJSONObject;
+  Result: TJSONObject;
+  Input: TJSONObject;
+begin
+  GraphQL := TGraphQLClient.Create('https://api.example.com/graphql');
+  try
+    MutationText :=
+      'mutation CreateUser($input: UserInput!) {' +
+      '  createUser(input: $input) {' +
+      '    id' +
+      '    name' +
+      '    email' +
+      '  }' +
+      '}';
+
+    // Préparer les données
+    Input := TJSONObject.Create;
+    Input.AddPair('name', 'Marie Martin');
+    Input.AddPair('email', 'marie@example.com');
+    Input.AddPair('age', TJSONNumber.Create(28));
+
+    Variables := TJSONObject.Create;
+    try
+      Variables.AddPair('input', Input);
+
+      // Exécuter la mutation
+      Result := GraphQL.Mutate(MutationText, Variables);
+      try
+        ShowMessage('Utilisateur créé avec ID: ' +
+          Result.GetValue<TJSONObject>('createUser')
+                .GetValue<string>('id'));
+      finally
+        Result.Free;
+      end;
+    finally
+      Variables.Free;
+    end;
+
+  finally
+    GraphQL.Free;
+  end;
+end;
+```
+
+### Helper pour simplifier les requêtes
+
+```pascal
+unit GraphQLHelper;
 
 interface
 
-const
-  // Requête pour obtenir toutes les tâches
-  QUERY_GET_TASKS =
-    'query GetTasks {' +
-    '  tasks {' +
+uses
+  System.SysUtils, System.Classes, System.JSON, GraphQLClient;
+
+type
+  TGraphQLHelper = class
+  private
+    FClient: TGraphQLClient;
+  public
+    constructor Create(const Endpoint: string);
+    destructor Destroy; override;
+
+    // Méthodes simplifiées
+    function GetUser(const UserID: string): TJSONObject;
+    function GetUsers(Limit: Integer = 10): TJSONArray;
+    function CreateUser(const Name, Email: string): string; // Retourne l'ID
+    function UpdateUser(const UserID, Name: string): Boolean;
+    function DeleteUser(const UserID: string): Boolean;
+  end;
+
+implementation
+
+constructor TGraphQLHelper.Create(const Endpoint: string);
+begin
+  inherited Create;
+  FClient := TGraphQLClient.Create(Endpoint);
+end;
+
+destructor TGraphQLHelper.Destroy;
+begin
+  FClient.Free;
+  inherited;
+end;
+
+function TGraphQLHelper.GetUser(const UserID: string): TJSONObject;
+var
+  QueryText: string;
+  Variables: TJSONObject;
+  Response: TJSONObject;
+begin
+  QueryText :=
+    'query GetUser($id: ID!) {' +
+    '  user(id: $id) {' +
     '    id' +
-    '    title' +
-    '    completed' +
+    '    name' +
+    '    email' +
+    '    createdAt' +
     '  }' +
     '}';
 
-  // Requête pour obtenir une tâche spécifique
-  QUERY_GET_TASK =
-    'query GetTask($id: ID!) {' +
-    '  task(id: $id) {' +
+  Variables := TJSONObject.Create;
+  try
+    Variables.AddPair('id', UserID);
+
+    Response := FClient.Query(QueryText, Variables);
+    try
+      Result := Response.GetValue<TJSONObject>('user').Clone as TJSONObject;
+    finally
+      Response.Free;
+    end;
+  finally
+    Variables.Free;
+  end;
+end;
+
+function TGraphQLHelper.GetUsers(Limit: Integer): TJSONArray;
+var
+  QueryText: string;
+  Variables: TJSONObject;
+  Response: TJSONObject;
+begin
+  QueryText :=
+    'query GetUsers($limit: Int!) {' +
+    '  users(limit: $limit) {' +
     '    id' +
-    '    title' +
-    '    description' +
-    '    completed' +
-    '    dueDate' +
+    '    name' +
+    '    email' +
     '  }' +
     '}';
 
-  // Mutation pour créer une nouvelle tâche
-  MUTATION_CREATE_TASK =
-    'mutation CreateTask($title: String!, $description: String, $dueDate: String) {' +
-    '  createTask(input: {title: $title, description: $description, dueDate: $dueDate}) {' +
+  Variables := TJSONObject.Create;
+  try
+    Variables.AddPair('limit', TJSONNumber.Create(Limit));
+
+    Response := FClient.Query(QueryText, Variables);
+    try
+      Result := Response.GetValue<TJSONArray>('users').Clone as TJSONArray;
+    finally
+      Response.Free;
+    end;
+  finally
+    Variables.Free;
+  end;
+end;
+
+function TGraphQLHelper.CreateUser(const Name, Email: string): string;
+var
+  MutationText: string;
+  Variables, Input: TJSONObject;
+  Response: TJSONObject;
+begin
+  MutationText :=
+    'mutation CreateUser($input: UserInput!) {' +
+    '  createUser(input: $input) {' +
     '    id' +
-    '    title' +
-    '    completed' +
     '  }' +
     '}';
 
-  // Mutation pour mettre à jour une tâche
-  MUTATION_UPDATE_TASK =
-    'mutation UpdateTask($id: ID!, $completed: Boolean!) {' +
-    '  updateTask(id: $id, input: {completed: $completed}) {' +
-    '    id' +
-    '    completed' +
-    '  }' +
-    '}';
+  Input := TJSONObject.Create;
+  Input.AddPair('name', Name);
+  Input.AddPair('email', Email);
 
-  // Mutation pour supprimer une tâche
-  MUTATION_DELETE_TASK =
-    'mutation DeleteTask($id: ID!) {' +
-    '  deleteTask(id: $id) {' +
+  Variables := TJSONObject.Create;
+  try
+    Variables.AddPair('input', Input);
+
+    Response := FClient.Mutate(MutationText, Variables);
+    try
+      Result := Response.GetValue<TJSONObject>('createUser')
+                       .GetValue<string>('id');
+    finally
+      Response.Free;
+    end;
+  finally
+    Variables.Free;
+  end;
+end;
+
+function TGraphQLHelper.UpdateUser(const UserID, Name: string): Boolean;
+var
+  MutationText: string;
+  Variables: TJSONObject;
+  Response: TJSONObject;
+begin
+  MutationText :=
+    'mutation UpdateUser($id: ID!, $name: String!) {' +
+    '  updateUser(id: $id, name: $name) {' +
     '    success' +
     '  }' +
     '}';
 
-implementation
-
-end.
-```
-
-### Étape 2 : Créer un gestionnaire de tâches
-
-```pascal
-unit TaskManager;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON,
-  GraphQLClient, TaskQueries;
-
-type
-  TTask = record
-    ID: string;
-    Title: string;
-    Description: string;
-    Completed: Boolean;
-    DueDate: TDateTime;
-
-    procedure FromJSON(const JSON: TJSONObject);
-    function ToJSON: TJSONObject;
-  end;
-
-  TTaskList = TArray<TTask>;
-
-  TTaskManager = class
-  private
-    FGraphQLClient: TGraphQLClient;
-  public
-    constructor Create(const GraphQLEndpoint: string);
-    destructor Destroy; override;
-
-    function GetAllTasks: TTaskList;
-    function GetTask(const ID: string): TTask;
-    function CreateTask(const Title, Description: string; DueDate: TDateTime): string; // Retourne l'ID
-    function UpdateTaskStatus(const ID: string; Completed: Boolean): Boolean;
-    function DeleteTask(const ID: string): Boolean;
-  end;
-
-implementation
-
-{ TTask }
-
-procedure TTask.FromJSON(const JSON: TJSONObject);
-begin
-  ID := JSON.GetValue('id').Value;
-  Title := JSON.GetValue('title').Value;
-
-  // La description peut être null
-  if JSON.GetValue('description') <> nil then
-    Description := JSON.GetValue('description').Value
-  else
-    Description := '';
-
-  Completed := (JSON.GetValue('completed') as TJSONBool).AsBoolean;
-
-  // La date d'échéance peut être null
-  if JSON.GetValue('dueDate') <> nil then
-    DueDate := ISO8601ToDate(JSON.GetValue('dueDate').Value)
-  else
-    DueDate := 0;
-end;
-
-function TTask.ToJSON: TJSONObject;
-begin
-  Result := TJSONObject.Create;
-  Result.AddPair('id', ID);
-  Result.AddPair('title', Title);
-
-  if Description <> '' then
-    Result.AddPair('description', Description);
-
-  Result.AddPair('completed', TJSONBool.Create(Completed));
-
-  if DueDate > 0 then
-    Result.AddPair('dueDate', DateToISO8601(DueDate));
-end;
-
-{ TTaskManager }
-
-constructor TTaskManager.Create(const GraphQLEndpoint: string);
-begin
-  inherited Create;
-  FGraphQLClient := TGraphQLClient.Create(GraphQLEndpoint);
-end;
-
-destructor TTaskManager.Destroy;
-begin
-  FGraphQLClient.Free;
-  inherited;
-end;
-
-function TTaskManager.GetAllTasks: TTaskList;
-var
-  Response: TJSONObject;
-  Data, TasksArray: TJSONValue;
-  I: Integer;
-begin
-  SetLength(Result, 0);
-
-  Response := FGraphQLClient.ExecuteQuery(QUERY_GET_TASKS);
-  if not Assigned(Response) then
-    Exit;
-
-  try
-    Data := Response.GetValue('data');
-    if not Assigned(Data) then
-      Exit;
-
-    TasksArray := (Data as TJSONObject).GetValue('tasks');
-    if not (TasksArray is TJSONArray) then
-      Exit;
-
-    SetLength(Result, (TasksArray as TJSONArray).Count);
-
-    for I := 0 to (TasksArray as TJSONArray).Count - 1 do
-    begin
-      Result[I].FromJSON((TasksArray as TJSONArray).Items[I] as TJSONObject);
-    end;
-  finally
-    Response.Free;
-  end;
-end;
-
-function TTaskManager.GetTask(const ID: string): TTask;
-var
-  Variables: TJSONObject;
-  Response: TJSONObject;
-  Data, TaskObj: TJSONValue;
-begin
-  // Initialiser le résultat
-  Result.ID := '';
-
-  // Créer les variables
   Variables := TJSONObject.Create;
   try
-    Variables.AddPair('id', ID);
+    Variables.AddPair('id', UserID);
+    Variables.AddPair('name', Name);
 
-    // Exécuter la requête
-    Response := FGraphQLClient.ExecuteQuery(QUERY_GET_TASK, Variables);
-    if not Assigned(Response) then
-      Exit;
-
+    Response := FClient.Mutate(MutationText, Variables);
     try
-      Data := Response.GetValue('data');
-      if not Assigned(Data) then
-        Exit;
-
-      TaskObj := (Data as TJSONObject).GetValue('task');
-      if not (TaskObj is TJSONObject) then
-        Exit;
-
-      // Remplir l'objet tâche
-      Result.FromJSON(TaskObj as TJSONObject);
+      Result := Response.GetValue<TJSONObject>('updateUser')
+                       .GetValue<Boolean>('success');
     finally
       Response.Free;
     end;
@@ -499,108 +777,27 @@ begin
   end;
 end;
 
-function TTaskManager.CreateTask(const Title, Description: string; DueDate: TDateTime): string;
+function TGraphQLHelper.DeleteUser(const UserID: string): Boolean;
 var
-  Variables: TJSONObject;
-  Response: TJSONObject;
-  Data, TaskObj: TJSONValue;
-begin
-  Result := '';
-
-  // Créer les variables
-  Variables := TJSONObject.Create;
-  try
-    Variables.AddPair('title', Title);
-
-    if Description <> '' then
-      Variables.AddPair('description', Description);
-
-    if DueDate > 0 then
-      Variables.AddPair('dueDate', DateToISO8601(DueDate));
-
-    // Exécuter la mutation
-    Response := FGraphQLClient.ExecuteMutation(MUTATION_CREATE_TASK, Variables);
-    if not Assigned(Response) then
-      Exit;
-
-    try
-      Data := Response.GetValue('data');
-      if not Assigned(Data) then
-        Exit;
-
-      TaskObj := (Data as TJSONObject).GetValue('createTask');
-      if not (TaskObj is TJSONObject) then
-        Exit;
-
-      // Récupérer l'ID de la tâche créée
-      Result := (TaskObj as TJSONObject).GetValue('id').Value;
-    finally
-      Response.Free;
-    end;
-  finally
-    Variables.Free;
-  end;
-end;
-
-function TTaskManager.UpdateTaskStatus(const ID: string; Completed: Boolean): Boolean;
-var
+  MutationText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
 begin
-  Result := False;
+  MutationText :=
+    'mutation DeleteUser($id: ID!) {' +
+    '  deleteUser(id: $id) {' +
+    '    success' +
+    '  }' +
+    '}';
 
-  // Créer les variables
   Variables := TJSONObject.Create;
   try
-    Variables.AddPair('id', ID);
-    Variables.AddPair('completed', TJSONBool.Create(Completed));
+    Variables.AddPair('id', UserID);
 
-    // Exécuter la mutation
-    Response := FGraphQLClient.ExecuteMutation(MUTATION_UPDATE_TASK, Variables);
-    if not Assigned(Response) then
-      Exit;
-
+    Response := FClient.Mutate(MutationText, Variables);
     try
-      // Si nous avons une réponse, considérer que la mise à jour a réussi
-      Result := True;
-    finally
-      Response.Free;
-    end;
-  finally
-    Variables.Free;
-  end;
-end;
-
-function TTaskManager.DeleteTask(const ID: string): Boolean;
-var
-  Variables: TJSONObject;
-  Response: TJSONObject;
-  Data, DeleteResult: TJSONValue;
-begin
-  Result := False;
-
-  // Créer les variables
-  Variables := TJSONObject.Create;
-  try
-    Variables.AddPair('id', ID);
-
-    // Exécuter la mutation
-    Response := FGraphQLClient.ExecuteMutation(MUTATION_DELETE_TASK, Variables);
-    if not Assigned(Response) then
-      Exit;
-
-    try
-      Data := Response.GetValue('data');
-      if not Assigned(Data) then
-        Exit;
-
-      DeleteResult := (Data as TJSONObject).GetValue('deleteTask');
-      if not (DeleteResult is TJSONObject) then
-        Exit;
-
-      // Vérifier si la suppression a réussi
-      if (DeleteResult as TJSONObject).GetValue('success') <> nil then
-        Result := ((DeleteResult as TJSONObject).GetValue('success') as TJSONBool).AsBoolean;
+      Result := Response.GetValue<TJSONObject>('deleteUser')
+                       .GetValue<Boolean>('success');
     finally
       Response.Free;
     end;
@@ -612,2201 +809,711 @@ end;
 end.
 ```
 
-### Étape 3 : Créer l'interface utilisateur
+## API GraphQL publiques pour tester
+
+### GitHub GraphQL API
+
+**Configuration :**
 
 ```pascal
-unit MainForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls,
-  Vcl.ComCtrls, TaskManager;
-
-type
-  TForm1 = class(TForm)
-    pnlTop: TPanel;
-    btnAddTask: TButton;
-    edtNewTask: TEdit;
-    clbTasks: TCheckListBox;
-    btnRefresh: TButton;
-    btnDelete: TButton;
-    btnDetails: TButton;
-    StatusBar1: TStatusBar;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
-    procedure btnAddTaskClick(Sender: TObject);
-    procedure clbTasksClickCheck(Sender: TObject);
-    procedure btnDeleteClick(Sender: TObject);
-    procedure btnDetailsClick(Sender: TObject);
-  private
-    FTaskManager: TTaskManager;
-    FTasks: TTaskList;
-    procedure RefreshTaskList;
-    function GetSelectedTaskIndex: Integer;
-  public
-
-  end;
-
-var
-  Form1: TForm1;
-
-implementation
-
-{$R *.dfm}
-
-uses
-  TaskDetailForm;
-
-procedure TForm1.FormCreate(Sender: TObject);
+procedure ConfigurerGitHubGraphQL(Client: TGraphQLClient; const Token: string);
 begin
-  // Remplacer par votre endpoint GraphQL
-  FTaskManager := TTaskManager.Create('https://api.example.com/graphql');
-
-  // Charger les tâches initiales
-  RefreshTaskList;
+  Client.AuthToken := Token; // Personal Access Token de GitHub
+  // Endpoint: https://api.github.com/graphql
 end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  FTaskManager.Free;
-end;
-
-procedure TForm1.RefreshTaskList;
-var
-  I: Integer;
-begin
-  StatusBar1.SimpleText := 'Chargement des tâches...';
-  Screen.Cursor := crHourGlass;
-  try
-    // Obtenir les tâches
-    FTasks := FTaskManager.GetAllTasks;
-
-    // Mettre à jour l'interface
-    clbTasks.Items.Clear;
-    for I := 0 to Length(FTasks) - 1 do
-    begin
-      clbTasks.Items.Add(FTasks[I].Title);
-      clbTasks.Checked[I] := FTasks[I].Completed;
-    end;
-
-    StatusBar1.SimpleText := Format('%d tâches chargées', [Length(FTasks)]);
-  finally
-    Screen.Cursor := crDefault;
-  end;
-end;
-
-function TForm1.GetSelectedTaskIndex: Integer;
-begin
-  Result := clbTasks.ItemIndex;
-end;
-
-procedure TForm1.btnRefreshClick(Sender: TObject);
-begin
-  RefreshTaskList;
-end;
-
-procedure TForm1.btnAddTaskClick(Sender: TObject);
-var
-  Title: string;
-  TaskID: string;
-begin
-  Title := Trim(edtNewTask.Text);
-  if Title = '' then
-  begin
-    ShowMessage('Veuillez entrer un titre pour la tâche');
-    Exit;
-  end;
-
-  Screen.Cursor := crHourGlass;
-  try
-    // Créer la tâche
-    TaskID := FTaskManager.CreateTask(Title, '', 0);
-
-    if TaskID <> '' then
-    begin
-      // Effacer le champ de texte
-      edtNewTask.Text := '';
-
-      // Actualiser la liste
-      RefreshTaskList;
-
-      StatusBar1.SimpleText := 'Tâche créée avec succès';
-    end
-    else
-      StatusBar1.SimpleText := 'Erreur lors de la création de la tâche';
-  finally
-    Screen.Cursor := crDefault;
-  end;
-end;
-
-procedure TForm1.clbTasksClickCheck(Sender: TObject);
-var
-  Index: Integer;
-  Success: Boolean;
-begin
-  Index := GetSelectedTaskIndex;
-  if (Index >= 0) and (Index < Length(FTasks)) then
-  begin
-    Screen.Cursor := crHourGlass;
-    try
-      // Mettre à jour le statut de la tâche
-      Success := FTaskManager.UpdateTaskStatus(
-        FTasks[Index].ID,
-        clbTasks.Checked[Index]
-      );
-
-      if Success then
-      begin
-        // Mettre à jour notre liste locale
-        FTasks[Index].Completed := clbTasks.Checked[Index];
-
-        if clbTasks.Checked[Index] then
-          StatusBar1.SimpleText := 'Tâche marquée comme terminée'
-        else
-          StatusBar1.SimpleText := 'Tâche marquée comme non terminée';
-      end
-      else
-      begin
-        // Restaurer l'état précédent
-        clbTasks.Checked[Index] := FTasks[Index].Completed;
-        StatusBar1.SimpleText := 'Erreur lors de la mise à jour de la tâche';
-      end;
-    finally
-      Screen.Cursor := crDefault;
-    end;
-  end;
-end;
-
-procedure TForm1.btnDeleteClick(Sender: TObject);
-var
-  Index: Integer;
-  Success: Boolean;
-begin
-  Index := GetSelectedTaskIndex;
-  if (Index >= 0) and (Index < Length(FTasks)) then
-  begin
-    if MessageDlg('Êtes-vous sûr de vouloir supprimer cette tâche ?',
-                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      Screen.Cursor := crHourGlass;
-      try
-        // Supprimer la tâche
-        Success := FTaskManager.DeleteTask(FTasks[Index].ID);
-
-        if Success then
-        begin
-          // Actualiser la liste
-          RefreshTaskList;
-          StatusBar1.SimpleText := 'Tâche supprimée avec succès';
-        end
-        else
-          StatusBar1.SimpleText := 'Erreur lors de la suppression de la tâche';
-      finally
-        Screen.Cursor := crDefault;
-      end;
-    end;
-  end;
-end;
-
-procedure TForm1.btnDetailsClick(Sender: TObject);
-var
-  Index: Integer;
-  DetailForm: TTaskDetailForm;
-  FullTask: TTask;
-begin
-  Index := GetSelectedTaskIndex;
-  if (Index >= 0) and (Index < Length(FTasks)) then
-  begin
-    Screen.Cursor := crHourGlass;
-    try
-      // Charger les détails complets de la tâche
-      FullTask := FTaskManager.GetTask(FTasks[Index].ID);
-
-      if FullTask.ID <> '' then
-      begin
-        // Créer et afficher le formulaire de détails
-        DetailForm := TTaskDetailForm.Create(Self);
-        try
-          DetailForm.LoadTask(FullTask);
-          DetailForm.ShowModal;
-        finally
-          DetailForm.Free;
-        end;
-      end
-      else
-        StatusBar1.SimpleText := 'Erreur lors du chargement des détails de la tâche';
-    finally
-      Screen.Cursor := crDefault;
-    end;
-  end;
-end;
-
-end.
 ```
 
-## Autres types d'API modernes
-
-### gRPC (Google Remote Procedure Call)
-
-gRPC est un framework RPC (Remote Procedure Call) développé par Google qui utilise HTTP/2 pour le transport et Protocol Buffers pour la sérialisation.
+**Exemple de requête :**
 
 ```pascal
-// REMARQUE : Nécessite un support tiers pour Delphi
-// Exemple conceptuel d'utilisation de gRPC
-
-// Définition du service dans un fichier .proto
-// service TaskService {
-//   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse);
-//   rpc CreateTask(CreateTaskRequest) returns (Task);
-// }
-
-// Utilisation dans Delphi (avec un wrapper généré)
 var
-  TaskClient: TTaskServiceClient;
-  Request: TGetTasksRequest;
-  Response: TGetTasksResponse;
+  GraphQL: TGraphQLClient;
+  QueryText: string;
+  Result: TJSONObject;
 begin
-  TaskClient := TTaskServiceClient.Create('localhost:50051');
+  GraphQL := TGraphQLClient.Create('https://api.github.com/graphql');
   try
-    Request := TGetTasksRequest.Create;
-    try
-      Response := TaskClient.GetTasks(Request);
-      // Traiter la réponse
-    finally
-      Request.Free;
-    end;
-  finally
-    TaskClient.Free;
-  end;
-end;
-```
-
-### APIs WebSocket
-
-Les WebSockets permettent une communication bidirectionnelle en temps réel :
-
-```pascal
-// Exemple d'utilisation des WebSockets
-procedure TForm1.ConnecterWebSocket;
-var
-  WebSocket: TsgcWebSocketClient;
-begin
-  WebSocket := TsgcWebSocketClient.Create(nil);
-  try
-    WebSocket.URL := 'wss://api.example.com/ws';
-    WebSocket.OnMessage := WebSocketMessage;
-    WebSocket.OnConnect := WebSocketConnect;
-    WebSocket.Active := True;
-  except
-    WebSocket.Free;
-    raise;
-  end;
-end;
-
-procedure TForm1.WebSocketConnect(Sender: TObject);
-begin
-  // Envoyer un message d'identification
-  (Sender as TsgcWebSocketClient).WriteData(
-    '{"type": "identify", "userId": "123"}'
-  );
-end;
-
-procedure TForm1.WebSocketMessage(Sender: TObject; const Text: string);
-var
-  JSON: TJSONObject;
-begin
-  JSON := TJSONObject.ParseJSONValue(Text) as TJSONObject;
-  try
-    // Traiter le message reçu
-    if JSON.GetValue('type').Value = 'taskUpdate' then
-    begin
-      // Mettre à jour l'interface utilisateur
-      RefreshTaskList;
-    end;
-  finally
-    JSON.Free;
-  end;
-end;
-```
-
-## Considérations de performance
-
-### Optimisation des requêtes GraphQL
-
-1. **Demandez uniquement ce dont vous avez besoin** :
-
-```graphql
-# Mauvais exemple - récupère trop de données
-{
-  users {
-    id
-    name
-    email
-    phone
-    address
-    profilePicture
-    orders {
-      id
-      date
-      products {
-        id
-        name
-        price
-      }
-    }
-  }
-}
-
-# Bon exemple - récupère uniquement les données nécessaires
-{
-  users {
-    id
-    name
-    email
-  }
-}
-```
-
-2. **Utilisez les fragments pour réutiliser des parties de requêtes** :
-
-```graphql
-fragment UserBasicInfo on User {
-  id
-  name
-  email
-}
-
-query GetUsers {
-  users {
-    ...UserBasicInfo
-  }
-}
-
-query GetUser($id: ID!) {
-  user(id: $id) {
-    ...UserBasicInfo
-    phone
-    address
-  }
-}
-```
-
-### Gestion du cache
-
-Implémentez un système de cache pour éviter des requêtes répétitives :
-
-```pascal
-unit GraphQLCache;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.Generics.Collections, System.JSON;
-
-type
-  TCacheEntry = record
-    Data: TJSONObject;
-    Expiration: TDateTime;
-  end;
-
-  TGraphQLCache = class
-  private
-    FCache: TDictionary<string, TCacheEntry>;
-    FDefaultExpiration: Integer; // Secondes
-  public
-    constructor Create(DefaultExpiration: Integer = 300); // 5 minutes par défaut
-    destructor Destroy; override;
-
-    procedure StoreResult(const QueryKey: string; Data: TJSONObject;
-                         ExpirationSeconds: Integer = -1);
-    function GetResult(const QueryKey: string): TJSONObject;
-    procedure Clear;
-    procedure ClearExpired;
-  end;
-
-implementation
-
-{ TGraphQLCache }
-
-constructor TGraphQLCache.Create(DefaultExpiration: Integer);
-begin
-  inherited Create;
-  FCache := TDictionary<string, TCacheEntry>.Create;
-  FDefaultExpiration := DefaultExpiration;
-end;
-
-destructor TGraphQLCache.Destroy;
-begin
-  Clear;
-  FCache.Free;
-  inherited;
-end;
-
-procedure TGraphQLCache.StoreResult(const QueryKey: string; Data: TJSONObject;
-  ExpirationSeconds: Integer);
-var
-  Entry: TCacheEntry;
-  ExpirationTime: Integer;
-begin
-  // Supprimer l'entrée existante si elle existe
-  if FCache.ContainsKey(QueryKey) then
-  begin
-    FCache[QueryKey].Data.Free;
-    FCache.Remove(QueryKey);
-  end;
-
-  // Définir le délai d'expiration
-  if ExpirationSeconds < 0 then
-    ExpirationTime := FDefaultExpiration
-  else
-    ExpirationTime := ExpirationSeconds;
-
-  // Créer la nouvelle entrée de cache
-  Entry.Data := Data.Clone as TJSONObject;
-  Entry.Expiration := Now + (ExpirationTime / 86400); // Convertir secondes en jours
-
-  // Stocker l'entrée
-  FCache.Add(QueryKey, Entry);
-end;
-
-function TGraphQLCache.GetResult(const QueryKey: string): TJSONObject;
-var
-  Entry: TCacheEntry;
-begin
-  Result := nil;
-
-  if FCache.TryGetValue(QueryKey, Entry) then
-  begin
-    // Vérifier si l'entrée est expirée
-    if Now > Entry.Expiration then
-    begin
-      // Supprimer l'entrée expirée
-      Entry.Data.Free;
-      FCache.Remove(QueryKey);
-    end
-    else
-    begin
-      // Retourner une copie des données
-      Result := Entry.Data.Clone as TJSONObject;
-    end;
-  end;
-end;
-
-procedure TGraphQLCache.Clear;
-var
-  Entry: TCacheEntry;
-begin
-  for Entry in FCache.Values do
-    Entry.Data.Free;
-
-  FCache.Clear;
-end;
-
-procedure TGraphQLCache.ClearExpired;
-var
-  Keys: TArray<string>;
-  Key: string;
-  Entry: TCacheEntry;
-begin
-  // Obtenir toutes les clés
-  Keys := FCache.Keys.ToArray;
-
-  // Supprimer les entrées expirées
-  for Key in Keys do
-  begin
-    if FCache.TryGetValue(Key, Entry) then
-    begin
-      if Now > Entry.Expiration then
-      begin
-        Entry.Data.Free;
-        FCache.Remove(Key);
-      end;
-    end;
-  end;
-end;
-
-end.
-```
-
-### Intégration du cache avec le client GraphQL
-
-Maintenant, modifions notre client GraphQL pour utiliser ce cache :
-
-```pascal
-unit GraphQLClient;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, REST.Client, REST.Types,
-  GraphQLCache;
-
-type
-  TGraphQLClient = class
-  private
-    FRESTClient: TRESTClient;
-    FEndpoint: string;
-    FHeaders: TStrings;
-    FOnError: TProc<string>;
-    FCache: TGraphQLCache;
-    FUseCaching: Boolean;
-
-    function CreateRequest: TRESTRequest;
-    function WrapQuery(const Query: string; Variables: TJSONObject = nil): string;
-    function GenerateCacheKey(const Query: string; Variables: TJSONObject): string;
-  public
-    constructor Create(const Endpoint: string);
-    destructor Destroy; override;
-
-    procedure AddHeader(const Name, Value: string);
-    function ExecuteQuery(const Query: string; Variables: TJSONObject = nil;
-                         SkipCache: Boolean = False): TJSONObject;
-    function ExecuteMutation(const Mutation: string; Variables: TJSONObject = nil): TJSONObject;
-    procedure ClearCache;
-
-    property Headers: TStrings read FHeaders;
-    property OnError: TProc<string> read FOnError write FOnError;
-    property UseCaching: Boolean read FUseCaching write FUseCaching default True;
-  end;
-
-implementation
-
-uses
-  System.Hash;
-
-{ TGraphQLClient }
-
-constructor TGraphQLClient.Create(const Endpoint: string);
-begin
-  inherited Create;
-  FEndpoint := Endpoint;
-  FHeaders := TStringList.Create;
-  FCache := TGraphQLCache.Create;
-  FUseCaching := True;
-
-  // Créer le client REST
-  FRESTClient := TRESTClient.Create(nil);
-  FRESTClient.BaseURL := FEndpoint;
-
-  // Par défaut, on ajoute l'entête Content-Type pour GraphQL
-  AddHeader('Content-Type', 'application/json');
-end;
-
-destructor TGraphQLClient.Destroy;
-begin
-  FRESTClient.Free;
-  FHeaders.Free;
-  FCache.Free;
-  inherited;
-end;
-
-function TGraphQLClient.GenerateCacheKey(const Query: string; Variables: TJSONObject): string;
-var
-  CacheKeyStr: string;
-begin
-  CacheKeyStr := Query;
-
-  if Assigned(Variables) and (Variables.Count > 0) then
-    CacheKeyStr := CacheKeyStr + '_' + Variables.ToString;
-
-  // Générer une clé de hachage unique pour cette requête et ses variables
-  Result := THashSHA2.GetHashString(CacheKeyStr, THashSHA2.TSHA2Version.SHA256);
-end;
-
-function TGraphQLClient.ExecuteQuery(const Query: string; Variables: TJSONObject;
-  SkipCache: Boolean): TJSONObject;
-var
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  RequestBody: string;
-  ResponseObj: TJSONObject;
-  CacheKey: string;
-begin
-  Result := nil;
-
-  // Vérifier le cache si activé et si ce n'est pas une requête qui ignore le cache
-  if FUseCaching and not SkipCache then
-  begin
-    CacheKey := GenerateCacheKey(Query, Variables);
-    Result := FCache.GetResult(CacheKey);
-
-    if Assigned(Result) then
-      Exit; // Résultat trouvé dans le cache, on le retourne directement
-  end;
-
-  // Si on arrive ici, soit le cache est désactivé, soit le résultat n'est pas dans le cache
-  Request := CreateRequest;
-  Response := TRESTResponse.Create(nil);
-
-  try
-    Request.Response := Response;
-
-    // Préparer le corps de la requête
-    RequestBody := WrapQuery(Query, Variables);
-    Request.Body.Add(RequestBody, TRESTContentType.ctAPPLICATION_JSON);
-
-    // Exécuter la requête
-    Request.Execute;
-
-    // Traiter la réponse
-    if (Response.StatusCode = 200) then
-    begin
-      ResponseObj := TJSONObject.ParseJSONValue(Response.Content) as TJSONObject;
-
-      // Vérifier s'il y a des erreurs
-      if ResponseObj.GetValue('errors') <> nil then
-      begin
-        if Assigned(FOnError) then
-          FOnError(Response.Content);
-        ResponseObj.Free;
-      end
-      else
-      begin
-        Result := ResponseObj;
-
-        // Stocker dans le cache si le caching est activé
-        if FUseCaching and not SkipCache then
-        begin
-          CacheKey := GenerateCacheKey(Query, Variables);
-          FCache.StoreResult(CacheKey, Result);
-        end;
-      end;
-    end
-    else
-    begin
-      if Assigned(FOnError) then
-        FOnError(Format('Erreur HTTP %d: %s', [Response.StatusCode, Response.StatusText]));
-    end;
-  finally
-    Request.Free;
-    Response.Free;
-  end;
-end;
-
-// Les autres méthodes restent inchangées
-// ...
-
-end.
-```
-
-## Gestion des erreurs avec GraphQL
-
-GraphQL a une approche unique pour la gestion des erreurs. Contrairement aux API REST qui utilisent des codes d'état HTTP, GraphQL renvoie presque toujours un code 200 OK, mais inclut un champ `errors` dans la réponse s'il y a des problèmes.
-
-### Structure d'une réponse d'erreur GraphQL
-
-```json
-{
-  "errors": [
-    {
-      "message": "Task not found",
-      "locations": [{"line": 2, "column": 3}],
-      "path": ["task", "123"],
-      "extensions": {
-        "code": "NOT_FOUND",
-        "classification": "DataFetchingException"
-      }
-    }
-  ],
-  "data": {
-    "task": null
-  }
-}
-```
-
-### Traitement des erreurs dans Delphi
-
-Créons une classe pour gérer ces erreurs :
-
-```pascal
-unit GraphQLErrors;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections;
-
-type
-  TGraphQLErrorLocation = record
-    Line: Integer;
-    Column: Integer;
-  end;
-
-  TGraphQLError = class
-  private
-    FMessage: string;
-    FLocations: TArray<TGraphQLErrorLocation>;
-    FPath: TArray<string>;
-    FCode: string;
-    FClassification: string;
-  public
-    constructor Create(ErrorObj: TJSONObject);
-
-    property Message: string read FMessage;
-    property Locations: TArray<TGraphQLErrorLocation> read FLocations;
-    property Path: TArray<string> read FPath;
-    property Code: string read FCode;
-    property Classification: string read FClassification;
-  end;
-
-  TGraphQLErrorHandler = class
-  private
-    FErrors: TObjectList<TGraphQLError>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure Clear;
-    procedure ParseResponse(Response: TJSONObject);
-    function HasErrors: Boolean;
-    function GetFirstMessage: string;
-    function GetErrorsAsText: string;
-
-    property Errors: TObjectList<TGraphQLError> read FErrors;
-  end;
-
-implementation
-
-{ TGraphQLError }
-
-constructor TGraphQLError.Create(ErrorObj: TJSONObject);
-var
-  LocationsArray: TJSONArray;
-  PathArray: TJSONArray;
-  ExtensionsObj: TJSONObject;
-  I: Integer;
-  Location: TGraphQLErrorLocation;
-  PathItem: TJSONValue;
-begin
-  inherited Create;
-
-  // Message est obligatoire
-  FMessage := ErrorObj.GetValue('message').Value;
-
-  // Traiter les locations (optionnel)
-  if ErrorObj.TryGetValue<TJSONArray>('locations', LocationsArray) then
-  begin
-    SetLength(FLocations, LocationsArray.Count);
-    for I := 0 to LocationsArray.Count - 1 do
-    begin
-      Location.Line := (LocationsArray.Items[I] as TJSONObject).GetValue<Integer>('line');
-      Location.Column := (LocationsArray.Items[I] as TJSONObject).GetValue<Integer>('column');
-      FLocations[I] := Location;
-    end;
-  end;
-
-  // Traiter le chemin (optionnel)
-  if ErrorObj.TryGetValue<TJSONArray>('path', PathArray) then
-  begin
-    SetLength(FPath, PathArray.Count);
-    for I := 0 to PathArray.Count - 1 do
-    begin
-      PathItem := PathArray.Items[I];
-
-      if PathItem is TJSONString then
-        FPath[I] := PathItem.Value
-      else if PathItem is TJSONNumber then
-        FPath[I] := PathItem.ToString;
-    end;
-  end;
-
-  // Traiter les extensions (optionnel)
-  if ErrorObj.TryGetValue<TJSONObject>('extensions', ExtensionsObj) then
-  begin
-    if ExtensionsObj.TryGetValue<string>('code', FCode) then;
-    if ExtensionsObj.TryGetValue<string>('classification', FClassification) then;
-  end;
-end;
-
-{ TGraphQLErrorHandler }
-
-constructor TGraphQLErrorHandler.Create;
-begin
-  inherited;
-  FErrors := TObjectList<TGraphQLError>.Create(True);
-end;
-
-destructor TGraphQLErrorHandler.Destroy;
-begin
-  FErrors.Free;
-  inherited;
-end;
-
-procedure TGraphQLErrorHandler.Clear;
-begin
-  FErrors.Clear;
-end;
-
-procedure TGraphQLErrorHandler.ParseResponse(Response: TJSONObject);
-var
-  ErrorsArray: TJSONArray;
-  I: Integer;
-  Error: TGraphQLError;
-begin
-  Clear;
-
-  if not Assigned(Response) then
-    Exit;
-
-  if Response.TryGetValue<TJSONArray>('errors', ErrorsArray) then
-  begin
-    for I := 0 to ErrorsArray.Count - 1 do
-    begin
-      Error := TGraphQLError.Create(ErrorsArray.Items[I] as TJSONObject);
-      FErrors.Add(Error);
-    end;
-  end;
-end;
-
-function TGraphQLErrorHandler.HasErrors: Boolean;
-begin
-  Result := FErrors.Count > 0;
-end;
-
-function TGraphQLErrorHandler.GetFirstMessage: string;
-begin
-  if HasErrors then
-    Result := FErrors[0].Message
-  else
-    Result := '';
-end;
-
-function TGraphQLErrorHandler.GetErrorsAsText: string;
-var
-  I: Integer;
-  SB: TStringBuilder;
-begin
-  if not HasErrors then
-    Exit('');
-
-  SB := TStringBuilder.Create;
-  try
-    for I := 0 to FErrors.Count - 1 do
-    begin
-      SB.AppendLine(Format('Erreur %d: %s', [I + 1, FErrors[I].Message]));
-
-      if FErrors[I].Code <> '' then
-        SB.AppendLine(Format('  Code: %s', [FErrors[I].Code]));
-
-      if Length(FErrors[I].Path) > 0 then
-        SB.AppendLine(Format('  Chemin: %s', [string.Join('.', FErrors[I].Path)]));
-
-      SB.AppendLine('');
-    end;
-
-    Result := SB.ToString;
-  finally
-    SB.Free;
-  end;
-end;
-
-end.
-```
-
-### Utilisation de notre gestionnaire d'erreurs
-
-```pascal
-procedure TForm1.ExecuterRequeteGraphQL;
-var
-  Client: TGraphQLClient;
-  Response: TJSONObject;
-  ErrorHandler: TGraphQLErrorHandler;
-  Query: string;
-begin
-  Client := TGraphQLClient.Create('https://api.example.com/graphql');
-  ErrorHandler := TGraphQLErrorHandler.Create;
-  try
-    // Définir une requête GraphQL
-    Query :=
-      'query GetUser($id: ID!) {' +
-      '  user(id: $id) {' +
+    GraphQL.AuthToken := 'ghp_VotreTokenPersonnel';
+
+    QueryText :=
+      'query {' +
+      '  viewer {' +
+      '    login' +
       '    name' +
-      '    email' +
-      '  }' +
-      '}';
-
-    // Créer les variables
-    var Variables := TJSONObject.Create;
-    try
-      Variables.AddPair('id', '123');
-
-      // Exécuter la requête
-      Response := Client.ExecuteQuery(Query, Variables);
-
-      // Vérifier les erreurs
-      ErrorHandler.ParseResponse(Response);
-
-      if ErrorHandler.HasErrors then
-      begin
-        ShowMessage('Des erreurs sont survenues :' + sLineBreak +
-                   ErrorHandler.GetErrorsAsText);
-      end
-      else if Assigned(Response) then
-      begin
-        try
-          // Afficher la réponse
-          Memo1.Lines.Text := Response.ToString;
-
-          // Accéder aux données spécifiques
-          var Data := Response.GetValue('data') as TJSONObject;
-          var User := Data.GetValue('user') as TJSONObject;
-          var Name := User.GetValue('name').Value;
-
-          ShowMessage('Nom de l''utilisateur: ' + Name);
-        finally
-          Response.Free;
-        end;
-      end;
-    finally
-      Variables.Free;
-    end;
-  finally
-    Client.Free;
-    ErrorHandler.Free;
-  end;
-end;
-```
-
-## Utilisation avancée de GraphQL dans Delphi
-
-### Introspection : découvrir le schéma de l'API
-
-GraphQL permet d'interroger le schéma de l'API grâce à l'introspection :
-
-```pascal
-procedure TForm1.ObtenirSchemaGraphQL;
-var
-  Client: TGraphQLClient;
-  Response: TJSONObject;
-  SchemaQuery: string;
-begin
-  Client := TGraphQLClient.Create('https://api.example.com/graphql');
-  try
-    // Requête d'introspection pour obtenir le schéma
-    SchemaQuery :=
-      'query IntrospectionQuery {' +
-      '  __schema {' +
-      '    types {' +
-      '      name' +
-      '      kind' +
-      '      fields {' +
+      '    repositories(first: 5) {' +
+      '      nodes {' +
       '        name' +
-      '        type {' +
-      '          name' +
-      '          kind' +
-      '        }' +
+      '        description' +
+      '        stargazerCount' +
       '      }' +
       '    }' +
       '  }' +
       '}';
 
-    Response := Client.ExecuteQuery(SchemaQuery);
-
-    if Assigned(Response) then
+    Result := GraphQL.Query(QueryText);
     try
-      // Analyser le schéma pour comprendre l'API
-      AfficherTypesDisponibles(Response);
+      Memo1.Text := Result.Format(2);
     finally
-      Response.Free;
+      Result.Free;
     end;
+
   finally
-    Client.Free;
+    GraphQL.Free;
+  end;
+end;
+```
+
+### SpaceX GraphQL API
+
+**API publique sans authentification :**
+
+```pascal
+var
+  GraphQL: TGraphQLClient;
+  QueryText: string;
+  Result: TJSONObject;
+begin
+  GraphQL := TGraphQLClient.Create('https://spacex-production.up.railway.app/');
+  try
+    QueryText :=
+      'query {' +
+      '  launches(limit: 5) {' +
+      '    mission_name' +
+      '    launch_date_local' +
+      '    launch_success' +
+      '    rocket {' +
+      '      rocket_name' +
+      '    }' +
+      '  }' +
+      '}';
+
+    Result := GraphQL.Query(QueryText);
+    try
+      // Afficher les résultats
+      DisplayLaunches(Result.GetValue<TJSONArray>('launches'));
+    finally
+      Result.Free;
+    end;
+
+  finally
+    GraphQL.Free;
   end;
 end;
 
-procedure TForm1.AfficherTypesDisponibles(SchemaResponse: TJSONObject);
+procedure DisplayLaunches(Launches: TJSONArray);
 var
-  Data, Schema, Types: TJSONValue;
-  TypesArray: TJSONArray;
-  I: Integer;
-  TypeName, TypeKind: string;
+  i: Integer;
+  Launch: TJSONObject;
 begin
   Memo1.Lines.Clear;
-  Memo1.Lines.Add('Types disponibles dans l''API :');
+  Memo1.Lines.Add('Derniers lancements SpaceX:');
   Memo1.Lines.Add('');
 
-  Data := SchemaResponse.GetValue('data');
-  if not Assigned(Data) then Exit;
-
-  Schema := (Data as TJSONObject).GetValue('__schema');
-  if not Assigned(Schema) then Exit;
-
-  Types := (Schema as TJSONObject).GetValue('types');
-  if not (Types is TJSONArray) then Exit;
-
-  TypesArray := Types as TJSONArray;
-
-  for I := 0 to TypesArray.Count - 1 do
+  for i := 0 to Launches.Count - 1 do
   begin
-    var TypeObj := TypesArray.Items[I] as TJSONObject;
+    Launch := Launches.Items[i] as TJSONObject;
 
-    TypeName := TypeObj.GetValue('name').Value;
-    TypeKind := TypeObj.GetValue('kind').Value;
-
-    // Ne pas afficher les types internes de GraphQL
-    if not TypeName.StartsWith('__') then
-      Memo1.Lines.Add(Format('- %s (%s)', [TypeName, TypeKind]));
+    Memo1.Lines.Add(Format('Mission: %s',
+      [Launch.GetValue<string>('mission_name')]));
+    Memo1.Lines.Add(Format('Date: %s',
+      [Launch.GetValue<string>('launch_date_local')]));
+    Memo1.Lines.Add(Format('Fusée: %s',
+      [Launch.GetValue<TJSONObject>('rocket').GetValue<string>('rocket_name')]));
+    Memo1.Lines.Add('');
   end;
 end;
 ```
 
-### GraphQL Subscriptions
+## Autres types d'API modernes
 
-Les subscriptions GraphQL permettent d'obtenir des mises à jour en temps réel, généralement via WebSocket :
+### gRPC
+
+**Qu'est-ce que gRPC ?**
+
+**gRPC** (Google Remote Procedure Call) est un framework RPC haute performance développé par Google.
+
+**Caractéristiques :**
+- Utilise Protocol Buffers (protobuf) au lieu de JSON
+- Communication binaire (plus rapide que JSON)
+- Support du streaming bidirectionnel
+- Génération automatique de code client/serveur
+- Idéal pour microservices
+
+**Comparaison :**
+
+| Critère | REST | GraphQL | gRPC |
+|---------|------|---------|------|
+| **Format** | JSON/XML | JSON | Protobuf (binaire) |
+| **Transport** | HTTP/1.1 | HTTP/1.1 | HTTP/2 |
+| **Streaming** | Non natif | Subscriptions | Natif |
+| **Performance** | Bonne | Bonne | Excellente |
+| **Taille** | Grande | Moyenne | Petite |
+| **Lisibilité** | Haute | Haute | Faible (binaire) |
+| **Browser** | Oui | Oui | Non direct |
+
+**Utilisation basique avec Delphi :**
+
+gRPC nécessite des bibliothèques spécifiques. Voici un exemple conceptuel :
 
 ```pascal
-unit GraphQLSubscription;
+// Définition du service (.proto)
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);
+  rpc ListUsers (Empty) returns (stream UserResponse);
+}
+
+message UserRequest {
+  string id = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+```
+
+**Note :** L'implémentation complète de gRPC en Delphi nécessite des bibliothèques tierces ou des wrappers C++.
+
+### WebSockets (Communication temps réel)
+
+**Qu'est-ce que WebSocket ?**
+
+WebSocket permet une communication bidirectionnelle persistante entre client et serveur.
+
+**Caractéristiques :**
+- Connexion persistante (pas de requêtes répétées)
+- Communication temps réel
+- Push du serveur vers le client
+- Faible latence
+
+**Implémentation avec Indy :**
+
+```pascal
+unit WebSocketClient;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON,
-  sgcWebSocket_Classes, sgcWebSocket_Client;
+  System.SysUtils, System.Classes, IdHTTP, IdTCPClient, IdGlobal,
+  System.NetEncoding;
 
 type
-  TSubscriptionMessageEvent = procedure(Sender: TObject; const Data: TJSONObject) of object;
-
-  TGraphQLSubscription = class
+  TWebSocketClient = class
   private
-    FWebSocket: TsgcWebSocketClient;
-    FSubscriptionId: string;
-    FQuery: string;
-    FVariables: TJSONObject;
-    FOnMessageReceived: TSubscriptionMessageEvent;
-    FOnConnected: TNotifyEvent;
-    FOnDisconnected: TNotifyEvent;
-
-    procedure WebSocketConnect(Sender: TObject);
-    procedure WebSocketDisconnect(Sender: TObject);
-    procedure WebSocketMessage(Sender: TObject; const Text: string);
-
-    procedure SendInitMessage;
-    procedure SendSubscriptionStart;
+    FTCPClient: TIdTCPClient;
+    FConnected: Boolean;
+    FOnMessage: TProc<string>;
+    procedure PerformHandshake(const URL: string);
   public
-    constructor Create(const WebSocketURL: string);
+    constructor Create;
     destructor Destroy; override;
 
-    procedure Connect;
+    procedure Connect(const URL: string);
+    procedure Send(const Message: string);
     procedure Disconnect;
-    procedure Subscribe(const SubscriptionQuery: string; Variables: TJSONObject = nil);
-    procedure Unsubscribe;
 
-    property OnMessageReceived: TSubscriptionMessageEvent read FOnMessageReceived write FOnMessageReceived;
-    property OnConnected: TNotifyEvent read FOnConnected write FOnConnected;
-    property OnDisconnected: TNotifyEvent read FOnDisconnected write FOnDisconnected;
+    property OnMessage: TProc<string> read FOnMessage write FOnMessage;
+    property Connected: Boolean read FConnected;
   end;
 
 implementation
 
 uses
-  System.UITypes;
+  System.Hash, IdSSLOpenSSL;
 
-const
-  MSG_TYPE_CONNECTION_INIT = 'connection_init';
-  MSG_TYPE_CONNECTION_ACK = 'connection_ack';
-  MSG_TYPE_START = 'start';
-  MSG_TYPE_DATA = 'data';
-  MSG_TYPE_STOP = 'stop';
-
-{ TGraphQLSubscription }
-
-constructor TGraphQLSubscription.Create(const WebSocketURL: string);
+constructor TWebSocketClient.Create;
 begin
-  inherited Create;
-
-  FWebSocket := TsgcWebSocketClient.Create(nil);
-  FWebSocket.URL := WebSocketURL;
-  FWebSocket.OnConnect := WebSocketConnect;
-  FWebSocket.OnDisconnect := WebSocketDisconnect;
-  FWebSocket.OnMessage := WebSocketMessage;
-
-  // Générer un ID de souscription unique
-  FSubscriptionId := TGUID.NewGuid.ToString;
-  FSubscriptionId := StringReplace(FSubscriptionId, '{', '', [rfReplaceAll]);
-  FSubscriptionId := StringReplace(FSubscriptionId, '}', '', [rfReplaceAll]);
+  inherited;
+  FTCPClient := TIdTCPClient.Create(nil);
+  FConnected := False;
 end;
 
-destructor TGraphQLSubscription.Destroy;
+destructor TWebSocketClient.Destroy;
 begin
   Disconnect;
-  FWebSocket.Free;
-  FVariables.Free;
+  FTCPClient.Free;
   inherited;
 end;
 
-procedure TGraphQLSubscription.Connect;
+procedure TWebSocketClient.Connect(const URL: string);
 begin
-  if not FWebSocket.Active then
-    FWebSocket.Active := True;
+  // Parser l'URL
+  // ws://example.com:8080/path ou wss://example.com/path
+
+  FTCPClient.Host := 'example.com';
+  FTCPClient.Port := 8080;
+  FTCPClient.Connect;
+
+  PerformHandshake(URL);
+  FConnected := True;
 end;
 
-procedure TGraphQLSubscription.Disconnect;
-begin
-  Unsubscribe;
-
-  if FWebSocket.Active then
-    FWebSocket.Active := False;
-end;
-
-procedure TGraphQLSubscription.WebSocketConnect(Sender: TObject);
-begin
-  // Envoyer le message d'initialisation
-  SendInitMessage;
-
-  if Assigned(FOnConnected) then
-    FOnConnected(Self);
-end;
-
-procedure TGraphQLSubscription.WebSocketDisconnect(Sender: TObject);
-begin
-  if Assigned(FOnDisconnected) then
-    FOnDisconnected(Self);
-end;
-
-procedure TGraphQLSubscription.WebSocketMessage(Sender: TObject; const Text: string);
+procedure TWebSocketClient.PerformHandshake(const URL: string);
 var
-  MessageObj: TJSONObject;
-  MessageType: string;
-  Payload: TJSONObject;
+  Key, Accept: string;
+  Request, Response: string;
 begin
-  MessageObj := TJSONObject.ParseJSONValue(Text) as TJSONObject;
-  try
-    if MessageObj.TryGetValue<string>('type', MessageType) then
-    begin
-      if MessageType = MSG_TYPE_CONNECTION_ACK then
-      begin
-        // Connexion acceptée, on peut démarrer la souscription
-        if FQuery <> '' then
-          SendSubscriptionStart;
-      end
-      else if MessageType = MSG_TYPE_DATA then
-      begin
-        // Données reçues pour notre souscription
-        if MessageObj.TryGetValue<TJSONObject>('payload', Payload) then
-        begin
-          if Assigned(FOnMessageReceived) then
-            FOnMessageReceived(Self, Payload);
-        end;
-      end;
-    end;
-  finally
-    MessageObj.Free;
-  end;
+  // Générer une clé aléatoire
+  Key := TNetEncoding.Base64.Encode(THashSHA1.GetHashString(
+    TGUID.NewGuid.ToString));
+
+  // Construire la requête de handshake
+  Request :=
+    'GET /socket HTTP/1.1' + #13#10 +
+    'Host: example.com' + #13#10 +
+    'Upgrade: websocket' + #13#10 +
+    'Connection: Upgrade' + #13#10 +
+    'Sec-WebSocket-Key: ' + Key + #13#10 +
+    'Sec-WebSocket-Version: 13' + #13#10 +
+    #13#10;
+
+  // Envoyer
+  FTCPClient.IOHandler.WriteLn(Request);
+
+  // Lire la réponse
+  Response := FTCPClient.IOHandler.AllData;
+
+  // Vérifier le handshake
+  if not Response.Contains('101 Switching Protocols') then
+    raise Exception.Create('Handshake WebSocket échoué');
 end;
 
-procedure TGraphQLSubscription.SendInitMessage;
+procedure TWebSocketClient.Send(const Message: string);
 var
-  InitMessage: TJSONObject;
+  Frame: TBytes;
+  MessageBytes: TBytes;
+  i: Integer;
 begin
-  InitMessage := TJSONObject.Create;
-  try
-    InitMessage.AddPair('type', MSG_TYPE_CONNECTION_INIT);
-    InitMessage.AddPair('payload', TJSONObject.Create);
+  if not FConnected then
+    raise Exception.Create('Non connecté');
 
-    FWebSocket.WriteData(InitMessage.ToString);
-  finally
-    InitMessage.Free;
-  end;
+  MessageBytes := TEncoding.UTF8.GetBytes(Message);
+
+  // Construire une frame WebSocket (texte)
+  SetLength(Frame, 2 + 4 + Length(MessageBytes));
+
+  // Byte 0: FIN=1, opcode=1 (text)
+  Frame[0] := $81;
+
+  // Byte 1: MASK=1, payload length
+  Frame[1] := $80 or Byte(Length(MessageBytes));
+
+  // Masking key (4 bytes aléatoires)
+  for i := 2 to 5 do
+    Frame[i] := Random(256);
+
+  // Payload masqué
+  for i := 0 to High(MessageBytes) do
+    Frame[6 + i] := MessageBytes[i] xor Frame[2 + (i mod 4)];
+
+  // Envoyer
+  FTCPClient.IOHandler.Write(Frame);
 end;
 
-procedure TGraphQLSubscription.SendSubscriptionStart;
-var
-  StartMessage, PayloadObj: TJSONObject;
+procedure TWebSocketClient.Disconnect;
 begin
-  StartMessage := TJSONObject.Create;
-  PayloadObj := TJSONObject.Create;
-
-  try
-    // Créer l'objet payload
-    PayloadObj.AddPair('query', FQuery);
-
-    if Assigned(FVariables) and (FVariables.Count > 0) then
-      PayloadObj.AddPair('variables', FVariables.Clone as TJSONObject);
-
-    // Créer le message complet
-    StartMessage.AddPair('type', MSG_TYPE_START);
-    StartMessage.AddPair('id', FSubscriptionId);
-    StartMessage.AddPair('payload', PayloadObj);
-
-    // Envoyer le message (PayloadObj est maintenant détenu par StartMessage)
-    FWebSocket.WriteData(StartMessage.ToString);
-  finally
-    StartMessage.Free;
-  end;
-end;
-
-procedure TGraphQLSubscription.Subscribe(const SubscriptionQuery: string;
-  Variables: TJSONObject);
-begin
-  // Stocker la requête et les variables
-  FQuery := SubscriptionQuery;
-
-  FVariables.Free;
-  if Assigned(Variables) then
-    FVariables := Variables.Clone as TJSONObject
-  else
-    FVariables := nil;
-
-  // Si déjà connecté, démarrer la souscription
-  if FWebSocket.Active then
-    SendSubscriptionStart
-  else
-    Connect; // La souscription sera démarrée après la connexion
-end;
-
-procedure TGraphQLSubscription.Unsubscribe;
-var
-  StopMessage: TJSONObject;
-begin
-  if FWebSocket.Active and (FSubscriptionId <> '') then
+  if FConnected then
   begin
-    StopMessage := TJSONObject.Create;
-    try
-      StopMessage.AddPair('type', MSG_TYPE_STOP);
-      StopMessage.AddPair('id', FSubscriptionId);
-
-      FWebSocket.WriteData(StopMessage.ToString);
-    finally
-      StopMessage.Free;
-    end;
+    // Envoyer frame de fermeture
+    FTCPClient.Disconnect;
+    FConnected := False;
   end;
 end;
 
 end.
 ```
 
-### Exemple d'utilisation des souscriptions
+**Utilisation :**
 
 ```pascal
-procedure TForm1.SubscribeToTaskChanges;
 var
-  Subscription: TGraphQLSubscription;
+  WS: TWebSocketClient;
 begin
-  Subscription := TGraphQLSubscription.Create('wss://api.example.com/graphql');
-
-  // Stocker la référence à la souscription pour pouvoir la libérer plus tard
-  FSubscription := Subscription;
-
-  // Définir les gestionnaires d'événements
-  Subscription.OnConnected := SubscriptionConnected;
-  Subscription.OnDisconnected := SubscriptionDisconnected;
-  Subscription.OnMessageReceived := TaskChangesReceived;
-
-  // Définir la requête de souscription
-  Subscription.Subscribe(
-    'subscription TaskChanges {' +
-    '  taskChanged {' +
-    '    id' +
-    '    title' +
-    '    completed' +
-    '    action' +
-    '  }' +
-    '}'
-  );
-end;
-
-procedure TForm1.SubscriptionConnected(Sender: TObject);
-begin
-  StatusBar1.SimpleText := 'Connecté aux mises à jour en temps réel';
-end;
-
-procedure TForm1.SubscriptionDisconnected(Sender: TObject);
-begin
-  StatusBar1.SimpleText := 'Déconnecté des mises à jour en temps réel';
-end;
-
-procedure TForm1.TaskChangesReceived(Sender: TObject; const Data: TJSONObject);
-var
-  TaskData, Task: TJSONObject;
-  Action, ID: string;
-begin
-  // Extraire les données de la tâche
-  if Data.TryGetValue<TJSONObject>('data', TaskData) then
-  begin
-    if TaskData.TryGetValue<TJSONObject>('taskChanged', Task) then
+  WS := TWebSocketClient.Create;
+  try
+    WS.OnMessage := procedure(const Msg: string)
     begin
-      ID := Task.GetValue('id').Value;
-      Action := Task.GetValue('action').Value;
-
-      // Mettre à jour l'interface utilisateur
-      StatusBar1.SimpleText := Format('Tâche %s: %s', [ID, Action]);
-
-      // Actualiser la liste des tâches
-      RefreshTaskList;
+      TThread.Synchronize(nil, procedure
+      begin
+        Memo1.Lines.Add('Reçu: ' + Msg);
+      end);
     end;
-  end;
-end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  // Libérer la souscription
-  if Assigned(FSubscription) then
-  begin
-    FSubscription.Disconnect;
-    FSubscription.Free;
+    WS.Connect('ws://echo.websocket.org');
+    WS.Send('Hello WebSocket!');
+
+    Sleep(2000);
+
+    WS.Disconnect;
+  finally
+    WS.Free;
   end;
 end;
 ```
 
-## Nouvelles tendances dans les API
+### Server-Sent Events (SSE)
 
-### API REST avec Hypermedia (HATEOAS)
+**Qu'est-ce que SSE ?**
 
-HATEOAS (Hypermedia as the Engine of Application State) est une contrainte de l'architecture REST qui améliore la découvrabilité des API :
+Server-Sent Events permet au serveur d'envoyer des mises à jour au client via HTTP.
 
-```pascal
-procedure TForm1.AppelerAPIHateoas;
-var
-  Client: TRESTClient;
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  ResponseObj, LinksObj: TJSONObject;
-  Links: TStringList;
-  I: Integer;
-begin
-  Client := TRESTClient.Create('https://api.example.com');
-  Request := TRESTRequest.Create(nil);
-  Response := TRESTResponse.Create(nil);
-  Links := TStringList.Create;
+**Caractéristiques :**
+- Unidirectionnel (serveur → client)
+- Plus simple que WebSocket
+- Reconnexion automatique
+- Basé sur HTTP standard
 
-  try
-    Request.Client := Client;
-    Request.Response := Response;
-
-    // Appeler l'endpoint principal
-    Request.Method := TRESTRequestMethod.rmGET;
-    Request.Resource := 'tasks';
-    Request.Execute;
-
-    // Analyser la réponse pour trouver les liens hypermedia
-    ResponseObj := TJSONObject.ParseJSONValue(Response.Content) as TJSONObject;
-    try
-      // Récupérer les liens disponibles
-      if ResponseObj.TryGetValue<TJSONObject>('_links', LinksObj) then
-      begin
-        // Remplir la liste des liens disponibles
-        for I := 0 to LinksObj.Count - 1 do
-        begin
-          Links.Add(Format('%s: %s', [
-            LinksObj.Pairs[I].JsonString.Value,
-            (LinksObj.Pairs[I].JsonValue as TJSONObject).GetValue('href').Value
-          ]));
-        end;
-
-        // Afficher les liens disponibles
-        ShowMessage('Liens disponibles dans l''API:' + sLineBreak + Links.Text);
-
-        // On peut maintenant suivre ces liens pour naviguer dans l'API
-        // Par exemple, pour accéder au lien "create"
-        if LinksObj.TryGetValue<TJSONObject>('create', TJSONObject(LinksObj)) then
-        begin
-          var CreateLink := LinksObj.GetValue('href').Value;
-          // Utiliser ce lien pour créer une nouvelle tâche...
-        end;
-      end;
-    finally
-      ResponseObj.Free;
-    end;
-  finally
-    Client.Free;
-    Request.Free;
-    Response.Free;
-    Links.Free;
-  end;
-end;
-```
-
-### API GraphQL sur WebSocket
-
-Les API GraphQL peuvent également fonctionner sur WebSocket pour des opérations en temps réel :
+**Implémentation :**
 
 ```pascal
-procedure TForm1.ConnecterGraphQLWebSocket;
-var
-  WebSocket: TsgcWebSocketClient;
-  InitMessage: TJSONObject;
-begin
-  WebSocket := TsgcWebSocketClient.Create(nil);
-
-  // Stocker la référence pour pouvoir la libérer plus tard
-  FWebSocketClient := WebSocket;
-
-  WebSocket.URL := 'wss://api.example.com/graphql';
-  WebSocket.OnConnect := WebSocketConnected;
-  WebSocket.OnMessage := WebSocketMessage;
-  WebSocket.OnDisconnect := WebSocketDisconnected;
-
-  // Se connecter
-  WebSocket.Active := True;
-end;
-
-procedure TForm1.WebSocketConnected(Sender: TObject);
-var
-  InitMessage, Payload: TJSONObject;
-begin
-  // Envoyer le message d'initialisation pour le protocole GraphQL sur WebSocket
-  InitMessage := TJSONObject.Create;
-  Payload := TJSONObject.Create;
-
-  try
-    InitMessage.AddPair('type', 'connection_init');
-    InitMessage.AddPair('payload', Payload);
-
-    FWebSocketClient.WriteData(InitMessage.ToString);
-
-    StatusBar1.SimpleText := 'Connecté au serveur GraphQL via WebSocket';
-  finally
-    InitMessage.Free;
-  end;
-end;
-
-procedure TForm1.WebSocketMessage(Sender: TObject; const Text: string);
-var
-  Message: TJSONObject;
-  MsgType: string;
-begin
-  try
-    Message := TJSONObject.ParseJSONValue(Text) as TJSONObject;
-
-    if Message.TryGetValue<string>('type', MsgType) then
-    begin
-      if MsgType = 'connection_ack' then
-      begin
-        // Connexion confirmée, on peut envoyer des requêtes
-        EnvoyerRequeteGraphQL('query { tasks { id title completed } }');
-      end
-      else if MsgType = 'data' then
-      begin
-        // Données reçues, les traiter
-        TraiterReponseGraphQL(Message.GetValue('payload') as TJSONObject);
-      end;
-    end;
-  finally
-    Message.Free;
-  end;
-end;
-
-procedure TForm1.EnvoyerRequeteGraphQL(const Query: string);
-var
-  Message, Payload: TJSONObject;
-begin
-  // Préparer le message à envoyer
-  Message := TJSONObject.Create;
-  Payload := TJSONObject.Create;
-
-  try
-    // Identifiant unique pour cette requête
-    FCurrentQueryId := Format('query_%d', [GetTickCount]);
-
-    Payload.AddPair('query', Query);
-
-    Message.AddPair('type', 'start');
-    Message.AddPair('id', FCurrentQueryId);
-    Message.AddPair('payload', Payload);
-
-    // Envoyer la requête
-    FWebSocketClient.WriteData(Message.ToString);
-  finally
-    Message.Free;
-  end;
-end;
-
-procedure TForm1.TraiterReponseGraphQL(const Payload: TJSONObject);
-var
-  Data, Tasks: TJSONValue;
-begin
-  // Extraire les données
-  if Payload.TryGetValue<TJSONObject>('data', TJSONObject(Data)) then
-  begin
-    if (Data as TJSONObject).TryGetValue<TJSONArray>('tasks', TJSONArray(Tasks)) then
-    begin
-      // Mettre à jour l'interface utilisateur avec les tâches
-      AfficherTaches(Tasks as TJSONArray);
-    end;
-  end;
-end;
-```
-
-### API basées sur JSON-RPC
-
-JSON-RPC est un protocole d'appel de procédure à distance (RPC) léger et sans état, utilisant JSON pour l'encodage :
-
-```pascal
-unit JsonRpcClient;
+unit SSEClient;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, REST.Client, REST.Types;
+  System.SysUtils, System.Classes, System.Net.HttpClient;
 
 type
-  TJsonRpcResponse = record
-    Result: TJSONValue;
-    Error: TJSONObject;
-    Id: string;
-    HasError: Boolean;
-  end;
-
-  TJsonRpcClient = class
+  TSSEClient = class
   private
-    FRESTClient: TRESTClient;
-    FEndpoint: string;
-    FNextId: Integer;
-
-    function GenerateId: string;
+    FHTTPClient: THTTPClient;
+    FStream: TStream;
+    FOnMessage: TProc<string>;
+    FActive: Boolean;
+    procedure ProcessStream;
   public
-    constructor Create(const Endpoint: string);
+    constructor Create;
     destructor Destroy; override;
 
-    function Call(const Method: string; Params: TJSONValue = nil): TJsonRpcResponse;
-    function CallBatch(const Methods: TArray<string>; Params: TArray<TJSONValue>): TArray<TJsonRpcResponse>;
+    procedure Connect(const URL: string);
+    procedure Disconnect;
+
+    property OnMessage: TProc<string> read FOnMessage write FOnMessage;
   end;
 
 implementation
 
-{ TJsonRpcClient }
-
-constructor TJsonRpcClient.Create(const Endpoint: string);
+constructor TSSEClient.Create;
 begin
-  inherited Create;
-  FEndpoint := Endpoint;
-  FNextId := 1;
-
-  FRESTClient := TRESTClient.Create(nil);
-  FRESTClient.BaseURL := FEndpoint;
+  inherited;
+  FHTTPClient := THTTPClient.Create;
+  FActive := False;
 end;
 
-destructor TJsonRpcClient.Destroy;
+destructor TSSEClient.Destroy;
 begin
-  FRESTClient.Free;
+  Disconnect;
+  FHTTPClient.Free;
   inherited;
 end;
 
-function TJsonRpcClient.GenerateId: string;
-begin
-  Result := IntToStr(FNextId);
-  Inc(FNextId);
-end;
-
-function TJsonRpcClient.Call(const Method: string; Params: TJSONValue): TJsonRpcResponse;
+procedure TSSEClient.Connect(const URL: string);
 var
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  RequestObj, ResponseObj: TJSONObject;
+  Response: IHTTPResponse;
 begin
-  // Initialiser le résultat
-  Result.Result := nil;
-  Result.Error := nil;
-  Result.HasError := False;
+  FActive := True;
 
-  // Créer l'objet de requête JSON-RPC
-  RequestObj := TJSONObject.Create;
-  try
-    RequestObj.AddPair('jsonrpc', '2.0');
-    RequestObj.AddPair('method', Method);
-
-    if Assigned(Params) then
-      RequestObj.AddPair('params', Params)
-    else
-      RequestObj.AddPair('params', TJSONArray.Create);
-
-    Result.Id := GenerateId;
-    RequestObj.AddPair('id', Result.Id);
-
-    // Préparer la requête REST
-    Request := TRESTRequest.Create(nil);
-    Response := TRESTResponse.Create(nil);
-
-    try
-      Request.Client := FRESTClient;
-      Request.Response := Response;
-      Request.Method := TRESTRequestMethod.rmPOST;
-
-      // Ajouter le corps de la requête
-      Request.Body.Add(RequestObj.ToString, TRESTContentType.ctAPPLICATION_JSON);
-
-      // Exécuter la requête
-      Request.Execute;
-
-      // Traiter la réponse
-      if Response.StatusCode = 200 then
-      begin
-        ResponseObj := TJSONObject.ParseJSONValue(Response.Content) as TJSONObject;
-
-        if ResponseObj.TryGetValue<TJSONObject>('error', Result.Error) then
-        begin
-          Result.HasError := True;
-          // Cloner l'erreur pour qu'elle survive après la libération de ResponseObj
-          Result.Error := Result.Error.Clone as TJSONObject;
-        end
-        else if ResponseObj.TryGetValue<TJSONValue>('result', Result.Result) then
-        begin
-          // Cloner le résultat pour qu'il survive après la libération de ResponseObj
-          Result.Result := Result.Result.Clone;
-        end;
-
-        ResponseObj.Free;
-      end
-      else
-      begin
-        // Créer une erreur pour les problèmes HTTP
-        Result.HasError := True;
-        Result.Error := TJSONObject.Create;
-        Result.Error.AddPair('code', TJSONNumber.Create(Response.StatusCode));
-        Result.Error.AddPair('message', Format('HTTP Error: %d %s',
-                                             [Response.StatusCode, Response.StatusText]));
-      end;
-    finally
-      Request.Free;
-      Response.Free;
-    end;
-  finally
-    RequestObj.Free;
-  end;
-end;
-
-function TJsonRpcClient.CallBatch(const Methods: TArray<string>;
-  Params: TArray<TJSONValue>): TArray<TJsonRpcResponse>;
-var
-  Request: TRESTRequest;
-  Response: TRESTResponse;
-  BatchArray: TJSONArray;
-  ResponseArray: TJSONArray;
-  RequestObj: TJSONObject;
-  I: Integer;
-begin
-  // Vérifier que les tableaux ont la même taille
-  if Length(Methods) <> Length(Params) then
-    raise Exception.Create('Le nombre de méthodes et de paramètres doit être identique');
-
-  // Initialiser le résultat
-  SetLength(Result, Length(Methods));
-
-  // Créer le tableau de requêtes JSON-RPC
-  BatchArray := TJSONArray.Create;
-  try
-    for I := 0 to Length(Methods) - 1 do
+  TThread.CreateAnonymousThread(
+    procedure
     begin
-      RequestObj := TJSONObject.Create;
-      RequestObj.AddPair('jsonrpc', '2.0');
-      RequestObj.AddPair('method', Methods[I]);
+      Response := FHTTPClient.Get(URL, FStream);
 
-      if Assigned(Params[I]) then
-        RequestObj.AddPair('params', Params[I].Clone)
-      else
-        RequestObj.AddPair('params', TJSONArray.Create);
-
-      Result[I].Id := GenerateId;
-      RequestObj.AddPair('id', Result[I].Id);
-
-      BatchArray.Add(RequestObj);
-    end;
-
-    // Préparer la requête REST
-    Request := TRESTRequest.Create(nil);
-    Response := TRESTResponse.Create(nil);
-
-    try
-      Request.Client := FRESTClient;
-      Request.Response := Response;
-      Request.Method := TRESTRequestMethod.rmPOST;
-
-      // Ajouter le corps de la requête batch
-      Request.Body.Add(BatchArray.ToString, TRESTContentType.ctAPPLICATION_JSON);
-
-      // Exécuter la requête
-      Request.Execute;
-
-      // Traiter la réponse
-      if Response.StatusCode = 200 then
+      while FActive do
       begin
-        ResponseArray := TJSONObject.ParseJSONValue(Response.Content) as TJSONArray;
+        ProcessStream;
+        Sleep(100);
+      end;
+    end).Start;
+end;
 
-        for I := 0 to ResponseArray.Count - 1 do
-        begin
-          var ResponseObj := ResponseArray.Items[I] as TJSONObject;
-          var ResponseId := ResponseObj.GetValue('id').Value;
+procedure TSSEClient.ProcessStream;
+var
+  Reader: TStreamReader;
+  Line: string;
+  EventData: string;
+begin
+  if not Assigned(FStream) then
+    Exit;
 
-          // Trouver l'index correspondant à cet ID
-          var Index := -1;
-          for var J := 0 to Length(Result) - 1 do
-          begin
-            if Result[J].Id = ResponseId then
-            begin
-              Index := J;
-              Break;
-            end;
-          end;
+  Reader := TStreamReader.Create(FStream, TEncoding.UTF8, False);
+  try
+    while not Reader.EndOfStream do
+    begin
+      Line := Reader.ReadLine;
 
-          if Index >= 0 then
-          begin
-            if ResponseObj.TryGetValue<TJSONObject>('error', Result[Index].Error) then
-            begin
-              Result[Index].HasError := True;
-              Result[Index].Error := Result[Index].Error.Clone as TJSONObject;
-            end
-            else if ResponseObj.TryGetValue<TJSONValue>('result', Result[Index].Result) then
-            begin
-              Result[Index].Result := Result[Index].Result.Clone;
-            end;
-          end;
-        end;
-
-        ResponseArray.Free;
-      end
-      else
+      if Line.StartsWith('data: ') then
       begin
-        // Créer une erreur pour toutes les réponses en cas de problème HTTP
-        for I := 0 to Length(Result) - 1 do
+        EventData := Line.Substring(6);
+
+        if Assigned(FOnMessage) then
         begin
-          Result[I].HasError := True;
-          Result[I].Error := TJSONObject.Create;
-          Result[I].Error.AddPair('code', TJSONNumber.Create(Response.StatusCode));
-          Result[I].Error.AddPair('message', Format('HTTP Error: %d %s',
-                                                  [Response.StatusCode, Response.StatusText]));
+          TThread.Synchronize(nil, procedure
+          begin
+            FOnMessage(EventData);
+          end);
         end;
       end;
-    finally
-      Request.Free;
-      Response.Free;
     end;
   finally
-    BatchArray.Free;
+    Reader.Free;
   end;
+end;
+
+procedure TSSEClient.Disconnect;
+begin
+  FActive := False;
 end;
 
 end.
 ```
 
-### Exemple d'utilisation de JSON-RPC
+## Bonnes pratiques GraphQL
+
+### 1. Utiliser des fragments pour la réutilisation
 
 ```pascal
-procedure TForm1.AppelerJsonRpc;
+// ❌ Répétition
+QueryText :=
+  'query {' +
+  '  user(id: "1") { id name email avatar }' +
+  '  friend(id: "2") { id name email avatar }' +
+  '}';
+
+// ✅ Avec fragment
+QueryText :=
+  'fragment UserFields on User {' +
+  '  id name email avatar' +
+  '}' +
+  'query {' +
+  '  user(id: "1") { ...UserFields }' +
+  '  friend(id: "2") { ...UserFields }' +
+  '}';
+```
+
+### 2. Gérer les erreurs GraphQL
+
+```pascal
+function SafeGraphQLQuery(Client: TGraphQLClient;
+  const Query: string): TJSONObject;
 var
-  Client: TJsonRpcClient;
-  Response: TJsonRpcResponse;
-  Params: TJSONObject;
+  Response: TJSONObject;
+  Errors: TJSONArray;
 begin
-  Client := TJsonRpcClient.Create('https://api.example.com/rpc');
+  Result := nil;
+
   try
-    // Créer les paramètres
-    Params := TJSONObject.Create;
-    try
-      Params.AddPair('title', 'Nouvelle tâche');
-      Params.AddPair('completed', TJSONBool.Create(False));
+    Response := Client.Query(Query);
 
-      // Appeler la méthode RPC
-      Response := Client.Call('createTask', Params);
-
-      // Traiter la réponse
-      if Response.HasError then
-      begin
-        ShowMessage(Format('Erreur: %s', [(Response.Error.GetValue('message') as TJSONString).Value]));
-        Response.Error.Free;
-      end
-      else if Assigned(Response.Result) then
-      begin
-        // Afficher le résultat
-        Memo1.Lines.Text := Response.Result.ToString;
-        Response.Result.Free;
-      end;
-    finally
-      Params.Free;
-    end;
-
-    // Exemple d'appel batch (plusieurs méthodes en une seule requête)
-    var Methods: TArray<string> := ['getTasks', 'getUsers'];
-    var BatchParams: TArray<TJSONValue> := [nil, nil];
-
-    var BatchResponses := Client.CallBatch(Methods, BatchParams);
-
-    // Traiter les réponses du batch
-    for var I := 0 to Length(BatchResponses) - 1 do
+    // GraphQL peut retourner des données partielles avec des erreurs
+    if Response.TryGetValue<TJSONArray>('errors', Errors) then
     begin
-      if not BatchResponses[I].HasError and Assigned(BatchResponses[I].Result) then
-      begin
-        Memo1.Lines.Add(Format('Résultat de %s:', [Methods[I]]));
-        Memo1.Lines.Add(BatchResponses[I].Result.ToString);
-        BatchResponses[I].Result.Free;
-      end
-      else if BatchResponses[I].HasError then
-      begin
-        Memo1.Lines.Add(Format('Erreur pour %s: %s',
-                             [Methods[I], BatchResponses[I].Error.GetValue('message').Value]));
-        BatchResponses[I].Error.Free;
-      end;
+      // Logger les erreurs
+      LogGraphQLErrors(Errors);
+
+      // Décider si on continue avec les données partielles
+      if Response.TryGetValue<TJSONObject>('data', Result) then
+        Result := Result.Clone as TJSONObject
+      else
+        raise Exception.Create('Erreur GraphQL sans données');
+    end
+    else
+    begin
+      Result := Response.GetValue<TJSONObject>('data').Clone as TJSONObject;
     end;
+
   finally
-    Client.Free;
+    Response.Free;
   end;
 end;
 ```
 
-## Comparaison des différentes approches d'API
-
-### REST vs GraphQL vs JSON-RPC
-
-| Caractéristique | REST | GraphQL | JSON-RPC |
-|-----------------|------|---------|----------|
-| **Principe** | Ressources et état | Requêtes précises | Appels de procédure |
-| **Endpoints** | Multiples | Un seul | Un seul |
-| **Format des requêtes** | URL + paramètres | Langage de requête | Objets JSON |
-| **Sur/sous-récupération** | Fréquente | Évitée | Dépend de l'implémentation |
-| **Cache HTTP** | Natif | Difficile | Difficile |
-| **Versionnage** | Souvent nécessaire | Évolution sans version | Souvent nécessaire |
-| **Documentation** | OpenAPI/Swagger | Introspection | Varie |
-| **Utilisation courante** | Applications générales | Applications complexes avec besoins précis | Services backend |
-
-### Comment choisir la bonne API pour votre application Delphi
-
-- **REST** : Idéal pour les applications simples et lorsque vous avez besoin de mise en cache HTTP
-- **GraphQL** : Parfait pour les applications complexes nécessitant des données précises et évolutives
-- **JSON-RPC** : Adapté aux communications système à système et aux architectures orientées services
-
-## Bonnes pratiques pour travailler avec les API modernes
-
-### 1. Gestion des tokens et de l'authentification
+### 3. Paginer les résultats
 
 ```pascal
-type
-  TAuthManager = class
-  private
-    FAccessToken: string;
-    FRefreshToken: string;
-    FTokenExpiry: TDateTime;
-    FClientId: string;
-    FClientSecret: string;
-    FOnTokenRefreshed: TNotifyEvent;
-
-    function IsTokenExpired: Boolean;
-    function RefreshAccessToken: Boolean;
-  public
-    constructor Create(const AClientId, AClientSecret: string);
-
-    function GetValidToken: string;
-    function Login(const Username, Password: string): Boolean;
-    procedure Logout;
-
-    property OnTokenRefreshed: TNotifyEvent read FOnTokenRefreshed write FOnTokenRefreshed;
-  end;
-```
-
-### 2. Gestion des erreurs et retries
-
-```pascal
-function TApiClient.ExecuteWithRetry(
-  ExecuteFunc: TFunc<Boolean>; MaxRetries: Integer = 3): Boolean;
+function GetUsersPaginated(Page: Integer; PageSize: Integer): TJSONArray;
 var
-  RetryCount: Integer;
-  ShouldRetry: Boolean;
-  WaitTime: Integer;
-begin
-  RetryCount := 0;
-  Result := False;
-
-  repeat
-    try
-      Result := ExecuteFunc();
-      ShouldRetry := False;
-    except
-      on E: ENetworkError do
-      begin
-        // Problème réseau, on peut réessayer
-        Inc(RetryCount);
-        ShouldRetry := RetryCount < MaxRetries;
-
-        if ShouldRetry then
-        begin
-          // Attendre de plus en plus longtemps entre les tentatives (backoff exponentiel)
-          WaitTime := 500 * (1 shl RetryCount); // 500ms, 1s, 2s, 4s, etc.
-          Sleep(WaitTime);
-        end
-        else
-          raise; // Plus de tentatives, on propage l'erreur
-      end;
-      on E: Exception do
-        raise; // Pour les autres erreurs, on ne réessaie pas
-    end;
-  until Result or not ShouldRetry;
-end;
-```
-
-### 3. Mise en cache intelligente
-
-```pascal
-type
-  TCacheStrategy = (csDefault, csNoCache, csRefreshCache);
-
-function TApiClient.FetchData(
-  const Endpoint: string;
-  CacheStrategy: TCacheStrategy = csDefault): TJSONValue;
-var
-  CacheKey: string;
-  CachedData: TJSONValue;
-begin
-  // Générer une clé de cache basée sur l'endpoint
-  CacheKey := GenerateCacheKey(Endpoint);
-
-  case CacheStrategy of
-    csNoCache:
-      // Ignorer le cache et rafraîchir les données
-      Result := FetchFromApi(Endpoint);
-
-    csRefreshCache:
-      begin
-        // Récupérer les données et mettre à jour le cache
-        Result := FetchFromApi(Endpoint);
-        FCache.StoreData(CacheKey, Result);
-      end;
-
-    csDefault:
-      begin
-        // Vérifier le cache d'abord
-        CachedData := FCache.GetData(CacheKey);
-
-        if Assigned(CachedData) then
-          Result := CachedData
-        else
-        begin
-          // Rien dans le cache, récupérer les données et les stocker
-          Result := FetchFromApi(Endpoint);
-          FCache.StoreData(CacheKey, Result);
-        end;
-      end;
-  end;
-end;
-```
-
-### 4. Surveillance et journalisation des appels API
-
-```pascal
-type
-  TApiLogEntry = record
-    Timestamp: TDateTime;
-    Endpoint: string;
-    Method: string;
-    RequestPayload: string;
-    ResponsePayload: string;
-    StatusCode: Integer;
-    DurationMs: Int64;
-  end;
-
-procedure TApiLogger.LogApiCall(const LogEntry: TApiLogEntry);
-var
-  LogText: string;
-begin
-  LogText := Format('[%s] %s %s - %d ms - Status: %d', [
-    FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', LogEntry.Timestamp),
-    LogEntry.Method,
-    LogEntry.Endpoint,
-    LogEntry.DurationMs,
-    LogEntry.StatusCode
-  ]);
-
-  // Ajouter au fichier journal
-  FLogFile.Add(LogText);
-
-  // Analyser les performances
-  if LogEntry.DurationMs > 1000 then
-    AddToSlowCallsReport(LogEntry);
-
-  // Enregistrer les erreurs
-  if LogEntry.StatusCode >= 400 then
-    AddToErrorReport(LogEntry);
-end;
-```
-
-## Exercice pratique : Créer un client d'API météo
-
-Voici un exemple d'application complète utilisant GraphQL pour récupérer les données météo :
-
-### 1. Interface de l'application
-
-```pascal
-unit MainForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  GraphQLClient;
-
-type
-  TForm1 = class(TForm)
-    pnlTop: TPanel;
-    edtCity: TEdit;
-    btnSearch: TButton;
-    pnlWeather: TPanel;
-    lblCity: TLabel;
-    lblTemperature: TLabel;
-    lblCondition: TLabel;
-    lblHumidity: TLabel;
-    lblWind: TLabel;
-    btnRefresh: TButton;
-    StatusBar1: TStatusBar;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnSearchClick(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
-  private
-    FGraphQLClient: TGraphQLClient;
-    FCurrentCity: string;
-
-    procedure QueryWeatherData(const City: string);
-    procedure DisplayWeatherData(const WeatherData: TJSONObject);
-    procedure HandleError(const ErrorMessage: string);
-  public
-
-  end;
-
-var
-  Form1: TForm1;
-
-implementation
-
-{$R *.dfm}
-
-const
-  WEATHER_QUERY =
-    'query GetWeather($city: String!) {' +
-    '  weather(city: $city) {' +
-    '    city' +
-    '    temperature' +
-    '    condition' +
-    '    humidity' +
-    '    windSpeed' +
-    '    windDirection' +
-    '    lastUpdated' +
-    '  }' +
-    '}';
-
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  FGraphQLClient := TGraphQLClient.Create('https://api.weather.example.com/graphql');
-  FGraphQLClient.OnError := HandleError;
-end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  FGraphQLClient.Free;
-end;
-
-procedure TForm1.btnSearchClick(Sender: TObject);
-var
-  City: string;
-begin
-  City := Trim(edtCity.Text);
-
-  if City = '' then
-  begin
-    ShowMessage('Veuillez entrer une ville');
-    Exit;
-  end;
-
-  FCurrentCity := City;
-  QueryWeatherData(City);
-end;
-
-procedure TForm1.btnRefreshClick(Sender: TObject);
-begin
-  if FCurrentCity <> '' then
-    QueryWeatherData(FCurrentCity);
-end;
-
-procedure TForm1.QueryWeatherData(const City: string);
-var
+  QueryText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
 begin
-  StatusBar1.SimpleText := 'Chargement des données météo...';
-  Screen.Cursor := crHourGlass;
+  QueryText :=
+    'query GetUsers($limit: Int!, $offset: Int!) {' +
+    '  users(limit: $limit, offset: $offset) {' +
+    '    id' +
+    '    name' +
+    '    email' +
+    '  }' +
+    '}';
 
+  Variables := TJSONObject.Create;
   try
-    // Créer les variables pour la requête
-    Variables := TJSONObject.Create;
+    Variables.AddPair('limit', TJSONNumber.Create(PageSize));
+    Variables.AddPair('offset', TJSONNumber.Create((Page - 1) * PageSize));
+
+    Response := GraphQL.Query(QueryText, Variables);
     try
-      Variables.AddPair('city', City);
-
-      // Exécuter la requête GraphQL
-      Response := FGraphQLClient.ExecuteQuery(WEATHER_QUERY, Variables);
-
-      if Assigned(Response) then
-      try
-        // Extraire les données météo
-        var Data := Response.GetValue('data') as TJSONObject;
-        var Weather := Data.GetValue('weather') as TJSONObject;
-
-        // Afficher les données
-        DisplayWeatherData(Weather);
-
-        // Mettre à jour la barre d'état
-        StatusBar1.SimpleText := Format('Données mises à jour le %s', [
-          Weather.GetValue('lastUpdated').Value
-        ]);
-      finally
-        Response.Free;
-      end;
+      Result := Response.GetValue<TJSONArray>('users').Clone as TJSONArray;
     finally
-      Variables.Free;
+      Response.Free;
     end;
   finally
-    Screen.Cursor := crDefault;
+    Variables.Free;
   end;
 end;
-
-procedure TForm1.DisplayWeatherData(const WeatherData: TJSONObject);
-begin
-  // Afficher les données dans l'interface
-  lblCity.Caption := WeatherData.GetValue('city').Value;
-  lblTemperature.Caption := Format('Température: %s°C', [WeatherData.GetValue('temperature').Value]);
-  lblCondition.Caption := Format('Conditions: %s', [WeatherData.GetValue('condition').Value]);
-  lblHumidity.Caption := Format('Humidité: %s%%', [WeatherData.GetValue('humidity').Value]);
-  lblWind.Caption := Format('Vent: %s km/h %s', [
-    WeatherData.GetValue('windSpeed').Value,
-    WeatherData.GetValue('windDirection').Value
-  ]);
-
-  // Rendre le panneau météo visible
-  pnlWeather.Visible := True;
-end;
-
-procedure TForm1.HandleError(const ErrorMessage: string);
-begin
-  StatusBar1.SimpleText := 'Erreur lors de la récupération des données';
-  ShowMessage('Une erreur est survenue: ' + ErrorMessage);
-end;
-
-end.
 ```
 
-## Conclusion
+### 4. Mettre en cache les requêtes
 
-Les API modernes comme GraphQL et les nouvelles approches REST offrent des moyens puissants et flexibles pour connecter vos applications Delphi à des services externes. Voici ce que nous avons appris dans ce chapitre :
+```pascal
+type
+  TGraphQLCache = class
+  private
+    FCache: TDictionary<string, TJSONObject>;
+    FCacheDuration: Integer; // secondes
+  public
+    constructor Create(CacheDuration: Integer = 300);
+    destructor Destroy; override;
 
-- **GraphQL** permet de demander exactement les données dont vous avez besoin, évitant la sur-récupération et réduisant la taille des réponses
-- Les **souscriptions GraphQL** permettent des mises à jour en temps réel
-- **REST avec HATEOAS** améliore la découvrabilité des API
-- **JSON-RPC** offre une approche simple pour les appels de procédure à distance
-- La **mise en cache** des réponses API peut améliorer considérablement les performances
-- La **gestion des erreurs** est cruciale pour créer des applications robustes
+    function GetCached(const QueryHash: string): TJSONObject;
+    procedure SetCached(const QueryHash: string; Data: TJSONObject);
+    procedure Clear;
+  end;
 
-Chaque approche a ses forces et ses faiblesses, et le choix dépendra des besoins spécifiques de votre application. Avec Delphi, vous avez tous les outils nécessaires pour travailler efficacement avec ces différentes API.
+function ExecuteWithCache(const QueryText: string): TJSONObject;
+var
+  QueryHash: string;
+begin
+  QueryHash := THashSHA2.GetHashString(QueryText);
 
-## Ressources supplémentaires
+  // Vérifier le cache
+  Result := Cache.GetCached(QueryHash);
 
-- Documentation officielle GraphQL: [graphql.org](https://graphql.org/)
-- Spécification JSON-RPC 2.0: [jsonrpc.org](https://www.jsonrpc.org/specification)
-- Documentation REST avec HATEOAS: [restfulapi.net/hateoas](https://restfulapi.net/hateoas/)
-- Bibliothèques tierces pour Delphi:
-  - GraphQL4Delphi sur GitHub
-  - REST Debugger (inclus dans Delphi)
+  if not Assigned(Result) then
+  begin
+    // Exécuter la requête
+    Result := GraphQL.Query(QueryText);
 
----
+    // Mettre en cache
+    Cache.SetCached(QueryHash, Result);
+  end;
+end;
+```
 
-*Note : Ce tutoriel est basé sur Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria.*
+### 5. Typer les réponses
+
+```pascal
+type
+  TUser = record
+    ID: string;
+    Name: string;
+    Email: string;
+    CreatedAt: TDateTime;
+  end;
+
+function JSONToUser(JSON: TJSONObject): TUser;
+begin
+  Result.ID := JSON.GetValue<string>('id');
+  Result.Name := JSON.GetValue<string>('name');
+  Result.Email := JSON.GetValue<string>('email');
+  Result.CreatedAt := ISO8601ToDate(JSON.GetValue<string>('createdAt'));
+end;
+
+function GetUser(const UserID: string): TUser;
+var
+  Response: TJSONObject;
+begin
+  Response := GraphQLHelper.GetUser(UserID);
+  try
+    Result := JSONToUser(Response);
+  finally
+    Response.Free;
+  end;
+end;
+```
+
+### 6. Builder pattern pour les requêtes complexes
+
+```pascal
+type
+  TGraphQLQueryBuilder = class
+  private
+    FQuery: TStringBuilder;
+    FVariables: TJSONObject;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function AddField(const FieldName: string): TGraphQLQueryBuilder;
+    function AddNestedField(const FieldName: string;
+      Fields: TArray<string>): TGraphQLQueryBuilder;
+    function AddVariable(const Name, Value: string): TGraphQLQueryBuilder;
+
+    function Build: string;
+    function GetVariables: TJSONObject;
+  end;
+
+// Utilisation
+var
+  Builder: TGraphQLQueryBuilder;
+  Query: string;
+begin
+  Builder := TGraphQLQueryBuilder.Create;
+  try
+    Query := Builder
+      .AddField('id')
+      .AddField('name')
+      .AddNestedField('posts', ['title', 'createdAt'])
+      .AddVariable('userId', '123')
+      .Build;
+  finally
+    Builder.Free;
+  end;
+end;
+```
+
+## Résumé
+
+### Points clés GraphQL
+
+✅ **Concepts fondamentaux :**
+- **Query** : Lire des données (GET)
+- **Mutation** : Modifier des données (POST/PUT/DELETE)
+- **Subscription** : Temps réel (WebSocket)
+- **Schema** : Contrat auto-documenté
+
+✅ **Avantages GraphQL :**
+- Une seule requête pour données complexes
+- Pas d'over-fetching ni under-fetching
+- Pas de versionning d'API
+- Documentation automatique
+- Typage fort
+
+✅ **Implémentation Delphi :**
+- Client HTTP simple (TNetHTTPClient)
+- Format JSON standard
+- Variables pour requêtes dynamiques
+- Helper classes pour simplifier
+
+✅ **API publiques pour tester :**
+- GitHub GraphQL API
+- SpaceX API
+- Shopify GraphQL
+- Pokemon GraphQL
+
+✅ **Autres API modernes :**
+- **gRPC** : Performance maximale, binaire
+- **WebSocket** : Communication bidirectionnelle
+- **SSE** : Push serveur simple
+
+✅ **Bonnes pratiques :**
+- Fragments pour réutilisation
+- Gestion d'erreurs robuste
+- Pagination systématique
+- Cache intelligent
+- Typage des réponses
+- Builder pattern
+
+GraphQL révolutionne la communication client-serveur en donnant au client le contrôle total sur les données récupérées, tout en maintenant un contrat fort via le schéma. C'est l'avenir des API modernes !
 
 ⏭️ [Intégration avec les services cloud (AWS, Azure, Google Cloud)](/10-communication-et-services-reseaux/09-integration-avec-les-services-cloud.md)
