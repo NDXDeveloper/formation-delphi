@@ -1,643 +1,1528 @@
-# 9.6 Exportation vers différents formats (PDF, Excel, HTML...)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 9.6 Exportation vers différents formats (PDF, Excel, HTML...)
 
 ## Introduction
 
-L'une des fonctionnalités les plus appréciées des systèmes de rapports est la possibilité d'exporter les documents générés vers différents formats. Cette exportation permet de partager facilement les rapports avec d'autres personnes, de les archiver ou de les traiter ultérieurement dans d'autres applications.
+L'exportation de données vers différents formats est une fonctionnalité cruciale dans les applications professionnelles. Elle permet aux utilisateurs de partager, analyser et archiver les informations dans le format le plus adapté à leurs besoins. Que ce soit un rapport PDF pour impression, un fichier Excel pour analyse, ou du HTML pour publication web, Delphi offre de nombreuses solutions pour exporter vos données.
 
-Dans cette section, nous allons découvrir comment exporter vos rapports Delphi vers les formats les plus courants comme PDF, Excel, Word, HTML et d'autres formats utiles. Nous nous concentrerons principalement sur FastReport, car c'est la solution la plus complète, mais les concepts sont similaires pour QuickReport et d'autres générateurs de rapports.
+## Pourquoi exporter vers différents formats ?
 
-## Exportation avec FastReport
+Les différents formats répondent à des besoins variés :
 
-FastReport propose de nombreux formats d'exportation grâce à des composants spécialisés. Pour chaque format d'exportation souhaité, vous devez ajouter le composant correspondant à votre formulaire.
+- **PDF** : archivage, impression, partage officiel, documents immuables
+- **Excel** : analyse de données, calculs, tableaux croisés dynamiques
+- **HTML** : publication web, emails, documentation en ligne
+- **CSV** : interopérabilité, import dans d'autres systèmes
+- **Word** : rapports éditables, documentation
+- **XML/JSON** : échange de données, APIs, intégration
+- **Images** : présentations, captures, documentation visuelle
 
-### Configuration de base pour l'exportation
+## Vue d'ensemble des solutions
 
-Voici les étapes générales pour exporter un rapport vers n'importe quel format :
+### Solutions natives Delphi
 
-1. Ajouter le composant d'exportation approprié au formulaire
-2. Configurer les options d'exportation spécifiques au format
-3. Préparer le rapport (données, mise en page, etc.)
-4. Exécuter l'exportation
+- **Manipulation de fichiers** : création manuelle de CSV, TXT
+- **Composants VCL** : TWebBrowser pour HTML
+- **RTL** : classes pour JSON, XML
 
-```pascal
-procedure TForm1.ExportReport;
-begin
-  // 1. Préparer le rapport
-  frxReport1.LoadFromFile('MonRapport.fr3');
-  frxReport1.PrepareReport;  // Prépare le rapport avec les données actuelles
+### Bibliothèques tierces
 
-  // 2. Exporter (exemple avec PDF)
-  frxPDFExport1.FileName := 'MonRapport.pdf';
-  frxPDFExport1.ShowDialog := True;  // Affiche une boîte de dialogue pour confirmer
-  frxReport1.Export(frxPDFExport1);
-end;
-```
+- **FastReport** : export PDF, Excel, Word, HTML et plus
+- **DevExpress** : suite complète d'export
+- **Gnostice** : solutions PDF professionnelles
+- **TMS Software** : composants d'export spécialisés
+- **Synopse PDF** : bibliothèque PDF open source
+- **SheetJS** : manipulation Excel avancée
 
-### Exportation vers PDF
+### Approches par format
 
-Le format PDF (Portable Document Format) est idéal pour préserver la mise en page exacte de vos rapports. Il est parfait pour l'archivage, l'impression et le partage de documents.
+Chaque format peut être généré de plusieurs façons. Nous allons explorer les méthodes les plus courantes et pratiques.
 
-```pascal
-procedure TForm1.ExportToPDF;
-begin
-  // Vérifier que le composant d'exportation est présent
-  if not Assigned(frxPDFExport1) then
-    frxPDFExport1 := TfrxPDFExport.Create(Self);
+## Export PDF
 
-  // Configurer les options PDF
-  frxPDFExport1.FileName := 'MonRapport.pdf';  // Nom du fichier de sortie
-  frxPDFExport1.ShowDialog := True;            // Afficher le dialogue de sauvegarde
-  frxPDFExport1.Subject := 'Mon rapport';      // Métadonnées PDF
-  frxPDFExport1.Author := 'Mon Application';
-  frxPDFExport1.Creator := 'Mon Application Delphi';
+Le PDF est le format universel pour les documents finaux. Il préserve la mise en forme et est lisible sur toutes les plateformes.
 
-  // Options avancées
-  frxPDFExport1.Background := False;           // Pas de fond de page
-  frxPDFExport1.EmbeddedFonts := False;        // Ne pas incorporer les polices
-  frxPDFExport1.PrintOptimized := True;        // Optimiser pour l'impression
-  frxPDFExport1.Quality := 90;                 // Qualité des images (0-100)
+### Méthode 1 : Avec FastReport
 
-  // Sécurité (optionnel)
-  frxPDFExport1.ProtectionFlags := []; // Aucune restriction
-  //frxPDFExport1.ProtectionFlags := [pfPrint, pfModify]; // Restreindre certaines actions
-  //frxPDFExport1.UserPassword := 'motdepasse';  // Mot de passe utilisateur
-  //frxPDFExport1.OwnerPassword := 'admin';      // Mot de passe propriétaire
-
-  // Exporter
-  frxReport1.Export(frxPDFExport1);
-end;
-```
-
-Options importantes pour l'exportation PDF :
-- `PrintOptimized` : optimise le PDF pour l'impression
-- `EmbeddedFonts` : incorpore les polices dans le fichier
-- `ProtectionFlags` : définit les restrictions sur le PDF
-- `UserPassword` / `OwnerPassword` : protège le document par mot de passe
-
-### Exportation vers Excel
-
-L'exportation vers Excel est particulièrement utile lorsque les utilisateurs doivent manipuler ou analyser les données du rapport.
+C'est la méthode la plus simple et professionnelle.
 
 ```pascal
-procedure TForm1.ExportToExcel;
-begin
-  // Vérifier que le composant d'exportation est présent
-  if not Assigned(frxXLSExport1) then
-    frxXLSExport1 := TfrxXLSExport.Create(Self);
+uses
+  frxClass, frxExportPDF;
 
-  // Configurer les options Excel
-  frxXLSExport1.FileName := 'MonRapport.xls';  // Nom du fichier de sortie
-  frxXLSExport1.ShowDialog := True;            // Afficher le dialogue de sauvegarde
-
-  // Options spécifiques à Excel
-  frxXLSExport1.ExportPageBreaks := True;      // Conserve les sauts de page
-  frxXLSExport1.MinRowHeight := 0;             // Hauteur minimale des lignes
-  frxXLSExport1.MaxRowHeight := 0;             // Hauteur maximale des lignes
-  frxXLSExport1.WorksheetName := 'Données';    // Nom de la feuille de calcul
-  frxXLSExport1.Wysiwyg := True;               // "What You See Is What You Get"
-
-  // Exporter
-  frxReport1.Export(frxXLSExport1);
-end;
-```
-
-FastReport prend en charge deux formats Excel :
-- `.xls` - Format Excel classique
-- `.xlsx` - Format Excel moderne (Open XML), via le composant `TfrxXLSXExport`
-
-La différence principale d'utilisation est le nom du composant et le format de fichier par défaut.
-
-### Exportation vers Word (RTF/DOCX)
-
-Exporter vers Word permet de modifier le rapport dans un traitement de texte.
-
-```pascal
-procedure TForm1.ExportToWord;
-begin
-  // Pour le format RTF
-  if not Assigned(frxRTFExport1) then
-    frxRTFExport1 := TfrxRTFExport.Create(Self);
-
-  frxRTFExport1.FileName := 'MonRapport.rtf';
-  frxRTFExport1.ShowDialog := True;
-
-  // Quelques options RTF
-  frxRTFExport1.ExportPageBreaks := True;    // Conserver les sauts de page
-  frxRTFExport1.Wysiwyg := True;             // Préserver la mise en page
-
-  // Exporter en RTF
-  frxReport1.Export(frxRTFExport1);
-
-  // Pour le format DOCX (Word moderne)
-  if not Assigned(frxDOCXExport1) then
-    frxDOCXExport1 := TfrxDOCXExport.Create(Self);
-
-  frxDOCXExport1.FileName := 'MonRapport.docx';
-  frxDOCXExport1.ShowDialog := True;
-
-  // Exporter en DOCX
-  frxReport1.Export(frxDOCXExport1);
-end;
-```
-
-Le format RTF (Rich Text Format) est plus ancien mais largement compatible, tandis que DOCX est le format moderne de Microsoft Word.
-
-### Exportation vers HTML
-
-L'exportation HTML est parfaite pour publier des rapports sur le web ou les intégrer dans des applications web.
-
-```pascal
-procedure TForm1.ExportToHTML;
-begin
-  if not Assigned(frxHTMLExport1) then
-    frxHTMLExport1 := TfrxHTMLExport.Create(Self);
-
-  frxHTMLExport1.FileName := 'MonRapport.html';
-  frxHTMLExport1.ShowDialog := True;
-
-  // Options HTML
-  frxHTMLExport1.FixedWidth := True;         // Utiliser une largeur fixe
-  frxHTMLExport1.Background := True;         // Exporter la couleur de fond
-  frxHTMLExport1.Pictures := True;           // Inclure les images
-  frxHTMLExport1.EmbeddedPictures := False;  // Images externes (non intégrées)
-  frxHTMLExport1.Navigator := False;         // Ne pas inclure les boutons de navigation
-  frxHTMLExport1.MultiPage := True;          // Générer plusieurs pages HTML
-
-  // Styles HTML
-  frxHTMLExport1.UseCSS := True;             // Utiliser des feuilles de style CSS
-
-  // Exporter
-  frxReport1.Export(frxHTMLExport1);
-end;
-```
-
-Options importantes pour l'exportation HTML :
-- `MultiPage` : crée un fichier par page ou un seul fichier
-- `Pictures` : inclut ou non les images
-- `EmbeddedPictures` : intègre les images en base64 ou crée des fichiers séparés
-- `UseCSS` : utilise les feuilles de style CSS pour la mise en page
-
-### Autres formats d'exportation
-
-FastReport prend en charge de nombreux autres formats utiles :
-
-#### CSV (données séparées par des virgules)
-```pascal
-procedure TForm1.ExportToCSV;
-begin
-  if not Assigned(frxCSVExport1) then
-    frxCSVExport1 := TfrxCSVExport.Create(Self);
-
-  frxCSVExport1.FileName := 'MonRapport.csv';
-  frxCSVExport1.ShowDialog := True;
-
-  // Options CSV
-  frxCSVExport1.Separator := ';';            // Séparateur (virgule, point-virgule, etc.)
-  frxCSVExport1.OEMCodepage := False;        // Utiliser l'encodage OEM
-
-  // Exporter
-  frxReport1.Export(frxCSVExport1);
-end;
-```
-
-#### Image (PNG, JPEG, BMP, TIFF)
-```pascal
-procedure TForm1.ExportToPNG;
-begin
-  if not Assigned(frxPNGExport1) then
-    frxPNGExport1 := TfrxPNGExport.Create(Self);
-
-  frxPNGExport1.FileName := 'MonRapport.png';
-  frxPNGExport1.ShowDialog := True;
-
-  // Options d'image
-  frxPNGExport1.Resolution := 300;           // Résolution en DPI
-  frxPNGExport1.JpegQuality := 90;           // Qualité JPEG (0-100)
-  frxPNGExport1.MonochromeBmpCompression := True; // Compression pour BMP monochrome
-
-  // Autres formats disponibles : JPEG, BMP, TIFF...
-
-  // Exporter
-  frxReport1.Export(frxPNGExport1);
-end;
-```
-
-#### XML (données structurées)
-```pascal
-procedure TForm1.ExportToXML;
-begin
-  if not Assigned(frxXMLExport1) then
-    frxXMLExport1 := TfrxXMLExport.Create(Self);
-
-  frxXMLExport1.FileName := 'MonRapport.xml';
-  frxXMLExport1.ShowDialog := True;
-
-  // Exporter
-  frxReport1.Export(frxXMLExport1);
-end;
-```
-
-## Dialogue d'exportation simplifié
-
-FastReport offre également une approche simplifiée avec un dialogue d'exportation tout-en-un :
-
-```pascal
-procedure TForm1.ShowExportDialog;
-begin
-  // Préparer le rapport
-  frxReport1.PrepareReport;
-
-  // Afficher le dialogue d'exportation
-  frxReport1.ShowExportDialog;
-end;
-```
-
-Ce dialogue présente à l'utilisateur tous les formats d'exportation disponibles dans une seule interface.
-
-## Exportation par lots
-
-Pour exporter un rapport vers plusieurs formats en une seule opération :
-
-```pascal
-procedure TForm1.BatchExport;
-begin
-  // Préparer le rapport
-  frxReport1.LoadFromFile('MonRapport.fr3');
-  frxReport1.PrepareReport;
-
-  // Exporter vers PDF
-  frxPDFExport1.FileName := 'MonRapport.pdf';
-  frxPDFExport1.ShowDialog := False; // Pas de dialogue
-  frxReport1.Export(frxPDFExport1);
-
-  // Exporter vers Excel
-  frxXLSExport1.FileName := 'MonRapport.xlsx';
-  frxXLSExport1.ShowDialog := False;
-  frxReport1.Export(frxXLSExport1);
-
-  // Exporter vers HTML
-  frxHTMLExport1.FileName := 'MonRapport.html';
-  frxHTMLExport1.ShowDialog := False;
-  frxReport1.Export(frxHTMLExport1);
-
-  ShowMessage('Exportation terminée vers PDF, Excel et HTML');
-end;
-```
-
-## Envoi par email
-
-Vous pouvez facilement exporter un rapport et l'envoyer directement par email :
-
-```pascal
-procedure TForm1.EmailPDFReport;
-begin
-  // Préparer le rapport
-  frxReport1.PrepareReport;
-
-  // Exporter vers PDF dans un fichier temporaire
-  frxPDFExport1.FileName := GetTempDir + 'RapportTemporaire.pdf';
-  frxPDFExport1.ShowDialog := False;
-  frxReport1.Export(frxPDFExport1);
-
-  // Envoyer par email
-  if FileExists(frxPDFExport1.FileName) then
-  begin
-    // Utiliser l'API de messagerie de Windows
-    ShellExecute(0, 'open',
-      PChar('mailto:destinataire@example.com?subject=Mon Rapport&body=Veuillez trouver ci-joint le rapport demandé.&attachment=' +
-      frxPDFExport1.FileName),
-      nil, nil, SW_SHOW);
-
-    // Note: cette méthode ouvre le client email par défaut de l'utilisateur
-    // Pour des solutions plus avancées, utilisez Indy ou autre composant email
-  end;
-end;
-```
-
-## Exportation à partir de QuickReport
-
-Si vous utilisez QuickReport au lieu de FastReport, le principe est similaire mais avec des composants différents :
-
-```pascal
-procedure TForm1.ExportQuickReportToPDF;
+procedure TForm1.ExporterEnPDF_FastReport(const NomFichier: string);
 var
-  QRExportFilter: TQRPDFFilter;
+  PDFExport: TfrxPDFExport;
 begin
-  QRExportFilter := TQRPDFFilter.Create(Self);
+  PDFExport := TfrxPDFExport.Create(nil);
   try
-    QuickRep1.ExportToFilter(QRExportFilter);
-    QRExportFilter.Filename := 'MonRapport.pdf';
-    QuickRep1.Prepare;
-    QuickRep1.Print;
-  finally
-    QRExportFilter.Free;
-  end;
-end;
-```
+    // Configuration de base
+    PDFExport.FileName := NomFichier;
+    PDFExport.ShowDialog := False;
+    PDFExport.ShowProgress := True;
+    PDFExport.OverwritePrompt := True;
 
-Pour d'autres formats avec QuickReport, utilisez les filtres correspondants :
-- `TQRCSVFilter` pour CSV
-- `TQRXLSFilter` pour Excel
-- `TQRHTMLFilter` pour HTML
-- `TQRRTFFilter` pour RTF
+    // Qualité
+    PDFExport.Quality := 95;
+    PDFExport.Compressed := True;
+    PDFExport.EmbeddedFonts := True;
+    PDFExport.Background := True;
 
-## Exportation programmatique sans dialogue
+    // Métadonnées
+    PDFExport.Title := 'Rapport des ventes';
+    PDFExport.Author := 'MonEntreprise';
+    PDFExport.Subject := 'Statistiques mensuelles';
+    PDFExport.Keywords := 'ventes, rapport, statistiques';
+    PDFExport.Creator := 'Application Gestion v1.0';
 
-Pour automatiser l'exportation sans interaction de l'utilisateur (par exemple dans un traitement par lots) :
-
-```pascal
-procedure TForm1.BatchExportReports;
-var
-  i: Integer;
-  ReportFiles: TStringList;
-  OutputDir: string;
-begin
-  ReportFiles := TStringList.Create;
-  try
-    // Liste des rapports à traiter
-    ReportFiles.Add('Rapport1.fr3');
-    ReportFiles.Add('Rapport2.fr3');
-    ReportFiles.Add('Rapport3.fr3');
-
-    // Répertoire de sortie
-    OutputDir := ExtractFilePath(Application.ExeName) + 'Exports\';
-    if not DirectoryExists(OutputDir) then
-      ForceDirectories(OutputDir);
-
-    // Désactiver les dialogues
-    frxPDFExport1.ShowDialog := False;
-
-    // Traiter chaque rapport
-    for i := 0 to ReportFiles.Count - 1 do
-    begin
-      // Charger et préparer le rapport
-      frxReport1.Clear;
-      frxReport1.LoadFromFile(ReportFiles[i]);
-      frxReport1.PrepareReport;
-
-      // Exporter en PDF
-      frxPDFExport1.FileName := OutputDir + ChangeFileExt(ExtractFileName(ReportFiles[i]), '.pdf');
-      frxReport1.Export(frxPDFExport1);
-    end;
-
-    ShowMessage('Exportation par lots terminée!');
-  finally
-    ReportFiles.Free;
-  end;
-end;
-```
-
-## Personnalisation des noms de fichiers exportés
-
-Pour une meilleure organisation, vous pouvez générer des noms de fichiers dynamiques :
-
-```pascal
-procedure TForm1.ExportWithDynamicFilename;
-var
-  Filename: string;
-begin
-  // Générer un nom de fichier basé sur la date et l'heure
-  Filename := 'Rapport_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.pdf';
-
-  // Ou basé sur des données du rapport
-  // Filename := 'Facture_' + ClientDataSet1.FieldByName('NumFacture').AsString + '.pdf';
-
-  // Exporter
-  frxPDFExport1.FileName := Filename;
-  frxPDFExport1.ShowDialog := True;
-  frxReport1.Export(frxPDFExport1);
-end;
-```
-
-## Options d'exportation avancées
-
-### Gestion des pages à exporter
-
-Vous pouvez choisir quelles pages du rapport exporter :
-
-```pascal
-procedure TForm1.ExportSelectedPages;
-begin
-  // Exporter uniquement les pages 2 à 5
-  frxPDFExport1.FileName := 'PagesSelectionnees.pdf';
-  frxPDFExport1.ShowDialog := True;
-
-  // Définir les pages à exporter
-  frxPDFExport1.PageNumbers := '2-5';
-  // Autres exemples: '1,3,5' ou '1-3,5,7-9'
-
-  frxReport1.Export(frxPDFExport1);
-end;
-```
-
-### Exportation de rapports avec graphiques
-
-Lorsque vous exportez des rapports contenant des graphiques, certains formats préservent mieux les graphiques que d'autres :
-
-- **PDF** : Préserve parfaitement les graphiques
-- **HTML** : Convertit les graphiques en images
-- **Excel** : Selon la complexité, peut perdre certains détails
-- **Word** : Préserve généralement bien les graphiques
-
-Pour une meilleure qualité des graphiques exportés :
-
-```pascal
-procedure TForm1.ExportWithCharts;
-begin
-  // Pour les graphiques, augmenter la résolution
-  frxPDFExport1.Resolution := 300; // 300 DPI pour une bonne qualité
-
-  // Si vous utilisez l'export HTML, assurez-vous que les images sont activées
-  frxHTMLExport1.Pictures := True;
-
-  // Exporter
-  frxReport1.Export(frxPDFExport1);
-end;
-```
-
-## Intégration dans une application complète
-
-Pour intégrer les fonctionnalités d'exportation dans une application réelle, voici un exemple plus complet :
-
-```pascal
-procedure TForm1.btnExportClick(Sender: TObject);
-var
-  ExportPath: string;
-begin
-  // Vérifier que le rapport est prêt
-  if not frxReport1.PreviewPages.Count > 0 then
-  begin
-    ShowMessage('Veuillez d''abord générer le rapport!');
-    Exit;
-  end;
-
-  // Déterminer le chemin d'exportation
-  ExportPath := ExtractFilePath(Application.ExeName) + 'Exports\';
-  if not DirectoryExists(ExportPath) then
-    ForceDirectories(ExportPath);
-
-  // Configurer l'exportation selon le format choisi
-  case RadioGroup1.ItemIndex of
-    0: // PDF
-      begin
-        frxPDFExport1.FileName := ExportPath + 'Rapport.pdf';
-        frxPDFExport1.Description := 'Fichier PDF';
-        frxPDFExport1.ShowDialog := True;
-        frxReport1.Export(frxPDFExport1);
-      end;
-
-    1: // Excel
-      begin
-        frxXLSExport1.FileName := ExportPath + 'Rapport.xlsx';
-        frxXLSExport1.ShowDialog := True;
-        frxReport1.Export(frxXLSExport1);
-      end;
-
-    2: // Word
-      begin
-        frxDOCXExport1.FileName := ExportPath + 'Rapport.docx';
-        frxDOCXExport1.ShowDialog := True;
-        frxReport1.Export(frxDOCXExport1);
-      end;
-
-    3: // HTML
-      begin
-        frxHTMLExport1.FileName := ExportPath + 'Rapport.html';
-        frxHTMLExport1.ShowDialog := True;
-        frxReport1.Export(frxHTMLExport1);
-      end;
-
-    4: // Image PNG
-      begin
-        frxPNGExport1.FileName := ExportPath + 'Rapport.png';
-        frxPNGExport1.ShowDialog := True;
-        frxReport1.Export(frxPNGExport1);
-      end;
-
-    5: // CSV
-      begin
-        frxCSVExport1.FileName := ExportPath + 'Rapport.csv';
-        frxCSVExport1.ShowDialog := True;
-        frxReport1.Export(frxCSVExport1);
-      end;
-  end;
-end;
-```
-
-## Astuces et bonnes pratiques
-
-### 1. Prévisualisation avant exportation
-
-Permettez aux utilisateurs de prévisualiser le rapport avant de l'exporter :
-
-```pascal
-procedure TForm1.GenerateAndExport;
-begin
-  // Préparer le rapport
-  frxReport1.LoadFromFile('MonRapport.fr3');
-  frxReport1.PrepareReport;
-
-  // Afficher la prévisualisation
-  if frxReport1.ShowReport then
-  begin
-    // Après la fermeture de la prévisualisation, proposer l'exportation
-    if MessageDlg('Voulez-vous exporter ce rapport?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      frxReport1.ShowExportDialog;
-    end;
-  end;
-end;
-```
-
-### 2. Gestion des erreurs
-
-```pascal
-procedure TForm1.ExportWithErrorHandling;
-begin
-  try
-    // Préparer le rapport
+    // Préparer et exporter le rapport
+    frxReport1.LoadFromFile('MonRapport.fr3');
     frxReport1.PrepareReport;
+    frxReport1.Export(PDFExport);
 
-    // Exporter
-    frxPDFExport1.FileName := 'MonRapport.pdf';
-    frxPDFExport1.ShowDialog := True;
-    frxReport1.Export(frxPDFExport1);
-  except
-    on E: Exception do
+    ShowMessage('PDF créé avec succès : ' + NomFichier);
+  finally
+    PDFExport.Free;
+  end;
+end;
+```
+
+### Méthode 2 : Avec Synopse PDF
+
+Bibliothèque PDF open source très performante.
+
+```pascal
+uses
+  SynPdf, SynGdiPlus;
+
+procedure TForm1.ExporterEnPDF_Synopse(const NomFichier: string);
+var
+  PDF: TPdfDocumentGDI;
+  Page: TPdfPage;
+  Y: Integer;
+begin
+  PDF := TPdfDocumentGDI.Create;
+  try
+    // Métadonnées
+    PDF.Info.Title := 'Rapport des ventes';
+    PDF.Info.Author := 'MonEntreprise';
+    PDF.Info.Subject := 'Statistiques';
+    PDF.Info.CreationDate := Now;
+
+    // Ajouter une page
+    PDF.AddPage;
+    Page := PDF.CurrentPage;
+
+    // Configuration de la police
+    PDF.Canvas.SetFont('Arial', 12);
+    Y := 50;
+
+    // Ajouter du contenu
+    PDF.Canvas.TextOut(50, Y, 'RAPPORT DES VENTES');
+    Inc(Y, 30);
+
+    PDF.Canvas.SetFont('Arial', 10);
+    PDF.Canvas.TextOut(50, Y, 'Date : ' + DateToStr(Date));
+    Inc(Y, 20);
+
+    // Parcourir les données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
     begin
-      ShowMessage('Erreur lors de l''exportation: ' + E.Message);
-      // Journaliser l'erreur, etc.
+      PDF.Canvas.TextOut(50, Y,
+        Format('%s : %.2f €',
+          [FDQueryVentes.FieldByName('produit').AsString,
+           FDQueryVentes.FieldByName('montant').AsFloat]));
+      Inc(Y, 20);
+
+      // Nouvelle page si nécessaire
+      if Y > 750 then
+      begin
+        PDF.AddPage;
+        Y := 50;
+      end;
+
+      FDQueryVentes.Next;
+    end;
+
+    // Sauvegarder
+    PDF.SaveToFile(NomFichier);
+    ShowMessage('PDF créé avec succès');
+  finally
+    PDF.Free;
+  end;
+end;
+```
+
+### Export PDF avec sécurité
+
+Protégez vos PDF avec des mots de passe.
+
+```pascal
+procedure TForm1.ExporterPDFProtege(const NomFichier: string);
+var
+  PDFExport: TfrxPDFExport;
+begin
+  PDFExport := TfrxPDFExport.Create(nil);
+  try
+    PDFExport.FileName := NomFichier;
+
+    // Mots de passe
+    PDFExport.UserPassword := 'motdepasse_lecture';
+    PDFExport.OwnerPassword := 'motdepasse_admin';
+
+    // Permissions
+    PDFExport.ProtectionFlags := [ePrint, eCopy]; // Autoriser impression et copie
+    // ou
+    // PDFExport.ProtectionFlags := []; // Tout interdire
+
+    // Options disponibles :
+    // ePrint - autoriser l'impression
+    // eModify - autoriser la modification
+    // eCopy - autoriser la copie de texte
+    // eAnnot - autoriser les annotations
+
+    frxReport1.PrepareReport;
+    frxReport1.Export(PDFExport);
+  finally
+    PDFExport.Free;
+  end;
+end;
+```
+
+### PDF avec signets et hyperliens
+
+Créez des PDF interactifs avec navigation.
+
+```pascal
+procedure TForm1.CreerPDFInteractif;
+var
+  PDFExport: TfrxPDFExport;
+begin
+  PDFExport := TfrxPDFExport.Create(nil);
+  try
+    PDFExport.FileName := 'RapportInteractif.pdf';
+
+    // Activer les signets
+    PDFExport.Outline := True;
+
+    // Activer les hyperliens
+    PDFExport.HideToolbar := False;
+    PDFExport.HideMenubar := False;
+    PDFExport.PrintScaling := psNone;
+
+    // Dans le rapport FastReport, configurez les signets :
+    // - Propriété Bookmark sur les objets pour créer des signets
+    // - Propriété Hyperlink pour ajouter des liens
+
+    frxReport1.PrepareReport;
+    frxReport1.Export(PDFExport);
+  finally
+    PDFExport.Free;
+  end;
+end;
+```
+
+## Export Excel
+
+Excel est le format de prédilection pour l'analyse de données et les calculs.
+
+### Méthode 1 : Avec FastReport
+
+```pascal
+uses
+  frxClass, frxExportXLSX;
+
+procedure TForm1.ExporterEnExcel_FastReport(const NomFichier: string);
+var
+  ExcelExport: TfrxXLSXExport;
+begin
+  ExcelExport := TfrxXLSXExport.Create(nil);
+  try
+    ExcelExport.FileName := NomFichier;
+    ExcelExport.ShowDialog := False;
+
+    // Options d'export
+    ExcelExport.Wysiwyg := True; // Reproduire la mise en forme
+    ExcelExport.PageBreaks := True; // Respecter les sauts de page
+    ExcelExport.ChunkSize := 50; // Taille des chunks (performance)
+    ExcelExport.ExportPictures := True; // Exporter les images
+    ExcelExport.ExportFormulas := False; // Formules ou valeurs
+    ExcelExport.OpenAfterExport := False; // Ouvrir automatiquement
+
+    // Préparer et exporter
+    frxReport1.PrepareReport;
+    frxReport1.Export(ExcelExport);
+
+    ShowMessage('Excel créé avec succès');
+  finally
+    ExcelExport.Free;
+  end;
+end;
+```
+
+### Méthode 2 : Avec OLE Automation
+
+Contrôle direct d'Excel via COM.
+
+```pascal
+uses
+  ComObj, Variants;
+
+procedure TForm1.ExporterEnExcel_OLE(const NomFichier: string);
+var
+  ExcelApp, Workbook, Worksheet: Variant;
+  Ligne: Integer;
+begin
+  try
+    // Créer l'application Excel
+    ExcelApp := CreateOleObject('Excel.Application');
+    ExcelApp.Visible := False; // Masquer Excel pendant le traitement
+
+    // Créer un nouveau classeur
+    Workbook := ExcelApp.Workbooks.Add;
+    Worksheet := Workbook.Worksheets[1];
+
+    // Titre
+    Worksheet.Cells[1, 1] := 'RAPPORT DES VENTES';
+    Worksheet.Range['A1:D1'].Merge;
+    Worksheet.Range['A1'].Font.Size := 16;
+    Worksheet.Range['A1'].Font.Bold := True;
+    Worksheet.Range['A1'].HorizontalAlignment := -4108; // xlCenter
+
+    // En-têtes de colonnes
+    Ligne := 3;
+    Worksheet.Cells[Ligne, 1] := 'Date';
+    Worksheet.Cells[Ligne, 2] := 'Produit';
+    Worksheet.Cells[Ligne, 3] := 'Quantité';
+    Worksheet.Cells[Ligne, 4] := 'Montant';
+
+    // Mise en forme des en-têtes
+    Worksheet.Range['A3:D3'].Font.Bold := True;
+    Worksheet.Range['A3:D3'].Interior.Color := RGB(200, 200, 200);
+
+    // Remplir les données
+    FDQueryVentes.First;
+    Inc(Ligne);
+
+    while not FDQueryVentes.Eof do
+    begin
+      Worksheet.Cells[Ligne, 1] := FDQueryVentes.FieldByName('date_vente').AsString;
+      Worksheet.Cells[Ligne, 2] := FDQueryVentes.FieldByName('produit').AsString;
+      Worksheet.Cells[Ligne, 3] := FDQueryVentes.FieldByName('quantite').AsInteger;
+      Worksheet.Cells[Ligne, 4] := FDQueryVentes.FieldByName('montant').AsFloat;
+
+      Inc(Ligne);
+      FDQueryVentes.Next;
+    end;
+
+    // Formule de total
+    Inc(Ligne);
+    Worksheet.Cells[Ligne, 3] := 'TOTAL :';
+    Worksheet.Cells[Ligne, 3].Font.Bold := True;
+    Worksheet.Cells[Ligne, 4] := Format('=SUM(D4:D%d)', [Ligne - 1]);
+    Worksheet.Cells[Ligne, 4].Font.Bold := True;
+
+    // Formatage des nombres
+    Worksheet.Range[Format('D4:D%d', [Ligne])].NumberFormat := '#,##0.00 €';
+
+    // Ajuster la largeur des colonnes
+    Worksheet.Columns.AutoFit;
+
+    // Enregistrer
+    Workbook.SaveAs(NomFichier);
+    Workbook.Close;
+
+    ShowMessage('Fichier Excel créé avec succès');
+  finally
+    ExcelApp.Quit;
+    ExcelApp := Unassigned;
+  end;
+end;
+```
+
+### Méthode 3 : Export direct vers XLSX avec bibliothèque
+
+Utilisation de la bibliothèque XLSX (SheetJS via FireDAC ou composants tiers).
+
+```pascal
+uses
+  FireDAC.Comp.BatchMove,
+  FireDAC.Comp.BatchMove.Dataset,
+  FireDAC.Comp.BatchMove.XLSX;
+
+procedure TForm1.ExporterEnXLSX_FireDAC(const NomFichier: string);
+var
+  BatchMove: TFDBatchMove;
+  Reader: TFDBatchMoveDataSetReader;
+  Writer: TFDBatchMoveXLSXWriter;
+begin
+  BatchMove := TFDBatchMove.Create(nil);
+  Reader := TFDBatchMoveDataSetReader.Create(BatchMove);
+  Writer := TFDBatchMoveXLSXWriter.Create(BatchMove);
+
+  try
+    // Configuration du lecteur
+    Reader.DataSet := FDQueryVentes;
+
+    // Configuration de l'écriture
+    Writer.FileName := NomFichier;
+    Writer.SheetName := 'Ventes';
+
+    // Options
+    Writer.DataDefs.Add.DestName := 'Date';
+    Writer.DataDefs.Add.DestName := 'Produit';
+    Writer.DataDefs.Add.DestName := 'Quantité';
+    Writer.DataDefs.Add.DestName := 'Montant';
+
+    // Associer lecteur et écrivain
+    BatchMove.Reader := Reader;
+    BatchMove.Writer := Writer;
+
+    // Exécuter
+    BatchMove.Execute;
+
+    ShowMessage('Export Excel terminé');
+  finally
+    Writer.Free;
+    Reader.Free;
+    BatchMove.Free;
+  end;
+end;
+```
+
+### Excel avec plusieurs feuilles
+
+```pascal
+procedure TForm1.ExporterExcelMultiFeuilles(const NomFichier: string);
+var
+  ExcelApp, Workbook: Variant;
+begin
+  ExcelApp := CreateOleObject('Excel.Application');
+  try
+    Workbook := ExcelApp.Workbooks.Add;
+
+    // Feuille 1 : Ventes
+    RemplirFeuilleVentes(Workbook.Worksheets[1]);
+    Workbook.Worksheets[1].Name := 'Ventes';
+
+    // Feuille 2 : Statistiques
+    Workbook.Worksheets.Add;
+    RemplirFeuilleStatistiques(Workbook.Worksheets[2]);
+    Workbook.Worksheets[2].Name := 'Statistiques';
+
+    // Feuille 3 : Graphique
+    Workbook.Worksheets.Add;
+    CreerGraphiqueExcel(Workbook.Worksheets[3]);
+    Workbook.Worksheets[3].Name := 'Graphique';
+
+    Workbook.SaveAs(NomFichier);
+    Workbook.Close;
+  finally
+    ExcelApp.Quit;
+  end;
+end;
+
+procedure TForm1.RemplirFeuilleVentes(Worksheet: Variant);
+var
+  Ligne: Integer;
+begin
+  // En-têtes
+  Worksheet.Cells[1, 1] := 'Date';
+  Worksheet.Cells[1, 2] := 'Montant';
+
+  // Données
+  FDQueryVentes.First;
+  Ligne := 2;
+  while not FDQueryVentes.Eof do
+  begin
+    Worksheet.Cells[Ligne, 1] := FDQueryVentes.FieldByName('date_vente').AsString;
+    Worksheet.Cells[Ligne, 2] := FDQueryVentes.FieldByName('montant').AsFloat;
+    Inc(Ligne);
+    FDQueryVentes.Next;
+  end;
+end;
+```
+
+### Excel avec mise en forme conditionnelle
+
+```pascal
+procedure TForm1.AjouterMiseEnFormeConditionnelle(Worksheet: Variant; Plage: string);
+var
+  FormatCondition: Variant;
+begin
+  // Ajouter une règle de mise en forme conditionnelle
+  FormatCondition := Worksheet.Range[Plage].FormatConditions.Add(
+    1, // xlCellValue
+    3, // xlGreater
+    '=1000'
+  );
+
+  // Configurer le format
+  FormatCondition.Interior.Color := RGB(255, 200, 200); // Fond rouge clair
+  FormatCondition.Font.Bold := True;
+  FormatCondition.Font.Color := RGB(200, 0, 0); // Texte rouge
+end;
+```
+
+## Export CSV
+
+Le CSV est le format le plus simple pour l'échange de données.
+
+### Export CSV basique
+
+```pascal
+procedure TForm1.ExporterEnCSV(const NomFichier: string);
+var
+  Fichier: TextFile;
+  i: Integer;
+  Ligne: string;
+begin
+  AssignFile(Fichier, NomFichier);
+  try
+    Rewrite(Fichier);
+
+    // En-têtes (noms des colonnes)
+    Ligne := '';
+    for i := 0 to FDQueryVentes.FieldCount - 1 do
+    begin
+      if i > 0 then
+        Ligne := Ligne + ';';
+      Ligne := Ligne + FDQueryVentes.Fields[i].FieldName;
+    end;
+    WriteLn(Fichier, Ligne);
+
+    // Données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      Ligne := '';
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        if i > 0 then
+          Ligne := Ligne + ';';
+
+        // Gérer les guillemets et points-virgules dans les données
+        var Valeur := FDQueryVentes.Fields[i].AsString;
+        if (Pos(';', Valeur) > 0) or (Pos('"', Valeur) > 0) then
+        begin
+          Valeur := StringReplace(Valeur, '"', '""', [rfReplaceAll]);
+          Valeur := '"' + Valeur + '"';
+        end;
+
+        Ligne := Ligne + Valeur;
+      end;
+      WriteLn(Fichier, Ligne);
+      FDQueryVentes.Next;
+    end;
+
+    ShowMessage('Export CSV terminé');
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+### Export CSV avec encodage UTF-8
+
+```pascal
+uses
+  System.IOUtils;
+
+procedure TForm1.ExporterEnCSV_UTF8(const NomFichier: string);
+var
+  Lignes: TStringList;
+  i: Integer;
+  Ligne: string;
+begin
+  Lignes := TStringList.Create;
+  try
+    // En-têtes
+    Ligne := '';
+    for i := 0 to FDQueryVentes.FieldCount - 1 do
+    begin
+      if i > 0 then Ligne := Ligne + ';';
+      Ligne := Ligne + FDQueryVentes.Fields[i].FieldName;
+    end;
+    Lignes.Add(Ligne);
+
+    // Données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      Ligne := '';
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        if i > 0 then Ligne := Ligne + ';';
+        Ligne := Ligne + FDQueryVentes.Fields[i].AsString;
+      end;
+      Lignes.Add(Ligne);
+      FDQueryVentes.Next;
+    end;
+
+    // Sauvegarder en UTF-8 avec BOM
+    Lignes.SaveToFile(NomFichier, TEncoding.UTF8);
+
+    ShowMessage('Export CSV UTF-8 terminé');
+  finally
+    Lignes.Free;
+  end;
+end;
+```
+
+### Export CSV avec configuration
+
+```pascal
+type
+  TCSVExportOptions = record
+    Separateur: Char;
+    DelimiteurTexte: Char;
+    IncluireEnTetes: Boolean;
+    Encodage: TEncoding;
+  end;
+
+procedure TForm1.ExporterCSVAvecOptions(const NomFichier: string; Options: TCSVExportOptions);
+var
+  Lignes: TStringList;
+  i: Integer;
+  Ligne: string;
+
+  function FormatValeur(const Valeur: string): string;
+  begin
+    Result := Valeur;
+    // Si la valeur contient le séparateur ou le délimiteur
+    if (Pos(Options.Separateur, Result) > 0) or
+       (Pos(Options.DelimiteurTexte, Result) > 0) then
+    begin
+      // Doubler les délimiteurs de texte
+      Result := StringReplace(Result, Options.DelimiteurTexte,
+        Options.DelimiteurTexte + Options.DelimiteurTexte, [rfReplaceAll]);
+      // Entourer de délimiteurs
+      Result := Options.DelimiteurTexte + Result + Options.DelimiteurTexte;
+    end;
+  end;
+
+begin
+  Lignes := TStringList.Create;
+  try
+    // En-têtes
+    if Options.IncluireEnTetes then
+    begin
+      Ligne := '';
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        if i > 0 then Ligne := Ligne + Options.Separateur;
+        Ligne := Ligne + FormatValeur(FDQueryVentes.Fields[i].FieldName);
+      end;
+      Lignes.Add(Ligne);
+    end;
+
+    // Données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      Ligne := '';
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        if i > 0 then Ligne := Ligne + Options.Separateur;
+        Ligne := Ligne + FormatValeur(FDQueryVentes.Fields[i].AsString);
+      end;
+      Lignes.Add(Ligne);
+      FDQueryVentes.Next;
+    end;
+
+    Lignes.SaveToFile(NomFichier, Options.Encodage);
+  finally
+    Lignes.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.btnExporterCSVClick(Sender: TObject);
+var
+  Options: TCSVExportOptions;
+begin
+  Options.Separateur := ';';
+  Options.DelimiteurTexte := '"';
+  Options.IncluireEnTetes := True;
+  Options.Encodage := TEncoding.UTF8;
+
+  ExporterCSVAvecOptions('export.csv', Options);
+end;
+```
+
+## Export HTML
+
+HTML est parfait pour la publication web et les emails.
+
+### Export HTML simple
+
+```pascal
+procedure TForm1.ExporterEnHTML(const NomFichier: string);
+var
+  HTML: TStringList;
+  i: Integer;
+begin
+  HTML := TStringList.Create;
+  try
+    // Structure HTML
+    HTML.Add('<!DOCTYPE html>');
+    HTML.Add('<html>');
+    HTML.Add('<head>');
+    HTML.Add('  <meta charset="UTF-8">');
+    HTML.Add('  <title>Rapport des Ventes</title>');
+    HTML.Add('  <style>');
+    HTML.Add('    body { font-family: Arial, sans-serif; margin: 20px; }');
+    HTML.Add('    h1 { color: #333; }');
+    HTML.Add('    table { border-collapse: collapse; width: 100%; }');
+    HTML.Add('    th { background-color: #4CAF50; color: white; padding: 10px; text-align: left; }');
+    HTML.Add('    td { border: 1px solid #ddd; padding: 8px; }');
+    HTML.Add('    tr:nth-child(even) { background-color: #f2f2f2; }');
+    HTML.Add('    tr:hover { background-color: #ddd; }');
+    HTML.Add('  </style>');
+    HTML.Add('</head>');
+    HTML.Add('<body>');
+
+    // Titre
+    HTML.Add('  <h1>Rapport des Ventes</h1>');
+    HTML.Add('  <p>Généré le : ' + DateTimeToStr(Now) + '</p>');
+
+    // Tableau
+    HTML.Add('  <table>');
+
+    // En-têtes
+    HTML.Add('    <tr>');
+    for i := 0 to FDQueryVentes.FieldCount - 1 do
+      HTML.Add('      <th>' + FDQueryVentes.Fields[i].FieldName + '</th>');
+    HTML.Add('    </tr>');
+
+    // Données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      HTML.Add('    <tr>');
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+        HTML.Add('      <td>' + FDQueryVentes.Fields[i].AsString + '</td>');
+      HTML.Add('    </tr>');
+      FDQueryVentes.Next;
+    end;
+
+    HTML.Add('  </table>');
+    HTML.Add('</body>');
+    HTML.Add('</html>');
+
+    // Sauvegarder
+    HTML.SaveToFile(NomFichier, TEncoding.UTF8);
+
+    ShowMessage('Export HTML terminé');
+  finally
+    HTML.Free;
+  end;
+end;
+```
+
+### Export HTML avec graphique
+
+```pascal
+procedure TForm1.ExporterHTMLAvecGraphique(const NomFichier: string);
+var
+  HTML: TStringList;
+begin
+  HTML := TStringList.Create;
+  try
+    HTML.Add('<!DOCTYPE html>');
+    HTML.Add('<html>');
+    HTML.Add('<head>');
+    HTML.Add('  <meta charset="UTF-8">');
+    HTML.Add('  <title>Rapport avec Graphique</title>');
+    HTML.Add('  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>');
+    HTML.Add('  <style>');
+    HTML.Add('    body { font-family: Arial; margin: 20px; }');
+    HTML.Add('    .chart-container { width: 80%; margin: 20px auto; }');
+    HTML.Add('  </style>');
+    HTML.Add('</head>');
+    HTML.Add('<body>');
+    HTML.Add('  <h1>Rapport des Ventes</h1>');
+
+    // Conteneur du graphique
+    HTML.Add('  <div class="chart-container">');
+    HTML.Add('    <canvas id="myChart"></canvas>');
+    HTML.Add('  </div>');
+
+    // Script pour le graphique
+    HTML.Add('  <script>');
+    HTML.Add('    const ctx = document.getElementById("myChart");');
+    HTML.Add('    new Chart(ctx, {');
+    HTML.Add('      type: "bar",');
+    HTML.Add('      data: {');
+    HTML.Add('        labels: ["Jan", "Fév", "Mar", "Avr", "Mai"],');
+    HTML.Add('        datasets: [{');
+    HTML.Add('          label: "Ventes",');
+    HTML.Add('          data: [120, 150, 135, 180, 165],');
+    HTML.Add('          backgroundColor: "rgba(54, 162, 235, 0.5)",');
+    HTML.Add('          borderColor: "rgba(54, 162, 235, 1)",');
+    HTML.Add('          borderWidth: 1');
+    HTML.Add('        }]');
+    HTML.Add('      }');
+    HTML.Add('    });');
+    HTML.Add('  </script>');
+
+    HTML.Add('</body>');
+    HTML.Add('</html>');
+
+    HTML.SaveToFile(NomFichier, TEncoding.UTF8);
+  finally
+    HTML.Free;
+  end;
+end;
+```
+
+### Export HTML responsive
+
+```pascal
+procedure TForm1.ExporterHTMLResponsive(const NomFichier: string);
+var
+  HTML: TStringList;
+begin
+  HTML := TStringList.Create;
+  try
+    HTML.Add('<!DOCTYPE html>');
+    HTML.Add('<html>');
+    HTML.Add('<head>');
+    HTML.Add('  <meta charset="UTF-8">');
+    HTML.Add('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    HTML.Add('  <title>Rapport Responsive</title>');
+    HTML.Add('  <style>');
+    HTML.Add('    * { box-sizing: border-box; }');
+    HTML.Add('    body { font-family: Arial; margin: 0; padding: 20px; }');
+    HTML.Add('    .container { max-width: 1200px; margin: 0 auto; }');
+    HTML.Add('    table { width: 100%; border-collapse: collapse; }');
+    HTML.Add('    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }');
+    HTML.Add('    @media screen and (max-width: 600px) {');
+    HTML.Add('      table { font-size: 12px; }');
+    HTML.Add('      th, td { padding: 6px; }');
+    HTML.Add('    }');
+    HTML.Add('  </style>');
+    HTML.Add('</head>');
+    HTML.Add('<body>');
+    HTML.Add('  <div class="container">');
+
+    // Contenu...
+
+    HTML.Add('  </div>');
+    HTML.Add('</body>');
+    HTML.Add('</html>');
+
+    HTML.SaveToFile(NomFichier, TEncoding.UTF8);
+  finally
+    HTML.Free;
+  end;
+end;
+```
+
+## Export XML
+
+XML est un format structuré idéal pour l'échange de données.
+
+### Export XML simple
+
+```pascal
+uses
+  Xml.XMLDoc, Xml.XMLIntf;
+
+procedure TForm1.ExporterEnXML(const NomFichier: string);
+var
+  XMLDoc: IXMLDocument;
+  RootNode, RecordNode, FieldNode: IXMLNode;
+  i: Integer;
+begin
+  XMLDoc := TXMLDocument.Create(nil);
+  try
+    XMLDoc.Active := True;
+    XMLDoc.Version := '1.0';
+    XMLDoc.Encoding := 'UTF-8';
+
+    // Nœud racine
+    RootNode := XMLDoc.AddChild('Ventes');
+    RootNode.Attributes['date_export'] := DateTimeToStr(Now);
+
+    // Parcourir les données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      RecordNode := RootNode.AddChild('Vente');
+
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        FieldNode := RecordNode.AddChild(FDQueryVentes.Fields[i].FieldName);
+        FieldNode.Text := FDQueryVentes.Fields[i].AsString;
+      end;
+
+      FDQueryVentes.Next;
+    end;
+
+    // Sauvegarder
+    XMLDoc.SaveToFile(NomFichier);
+
+    ShowMessage('Export XML terminé');
+  finally
+    XMLDoc := nil;
+  end;
+end;
+```
+
+### Export XML avec attributs
+
+```pascal
+procedure TForm1.ExporterXMLAvecAttributs(const NomFichier: string);
+var
+  XMLDoc: IXMLDocument;
+  RootNode, RecordNode: IXMLNode;
+begin
+  XMLDoc := TXMLDocument.Create(nil);
+  try
+    XMLDoc.Active := True;
+
+    RootNode := XMLDoc.AddChild('Ventes');
+
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      RecordNode := RootNode.AddChild('Vente');
+
+      // Utiliser des attributs au lieu de nœuds enfants
+      RecordNode.Attributes['id'] := FDQueryVentes.FieldByName('id').AsString;
+      RecordNode.Attributes['date'] := FDQueryVentes.FieldByName('date_vente').AsString;
+      RecordNode.Attributes['montant'] := FDQueryVentes.FieldByName('montant').AsString;
+      RecordNode.Attributes['produit'] := FDQueryVentes.FieldByName('produit').AsString;
+
+      FDQueryVentes.Next;
+    end;
+
+    XMLDoc.SaveToFile(NomFichier);
+  finally
+    XMLDoc := nil;
+  end;
+end;
+```
+
+## Export JSON
+
+JSON est le format moderne pour les APIs et applications web.
+
+### Export JSON simple
+
+```pascal
+uses
+  System.JSON;
+
+procedure TForm1.ExporterEnJSON(const NomFichier: string);
+var
+  JSONArray: TJSONArray;
+  JSONObject: TJSONObject;
+  i: Integer;
+  JSONString: string;
+begin
+  JSONArray := TJSONArray.Create;
+  try
+    // Parcourir les données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      JSONObject := TJSONObject.Create;
+
+      for i := 0 to FDQueryVentes.FieldCount - 1 do
+      begin
+        case FDQueryVentes.Fields[i].DataType of
+          ftInteger, ftSmallint, ftWord:
+            JSONObject.AddPair(FDQueryVentes.Fields[i].FieldName,
+              TJSONNumber.Create(FDQueryVentes.Fields[i].AsInteger));
+
+          ftFloat, ftCurrency, ftBCD:
+            JSONObject.AddPair(FDQueryVentes.Fields[i].FieldName,
+              TJSONNumber.Create(FDQueryVentes.Fields[i].AsFloat));
+
+          ftBoolean:
+            JSONObject.AddPair(FDQueryVentes.Fields[i].FieldName,
+              TJSONBool.Create(FDQueryVentes.Fields[i].AsBoolean));
+
+          ftDate, ftDateTime, ftTime:
+            JSONObject.AddPair(FDQueryVentes.Fields[i].FieldName,
+              DateTimeToStr(FDQueryVentes.Fields[i].AsDateTime));
+        else
+          JSONObject.AddPair(FDQueryVentes.Fields[i].FieldName,
+            FDQueryVentes.Fields[i].AsString);
+        end;
+      end;
+
+      JSONArray.AddElement(JSONObject);
+      FDQueryVentes.Next;
+    end;
+
+    // Sauvegarder avec indentation
+    JSONString := JSONArray.Format(2); // 2 espaces d'indentation
+    TFile.WriteAllText(NomFichier, JSONString, TEncoding.UTF8);
+
+    ShowMessage('Export JSON terminé');
+  finally
+    JSONArray.Free;
+  end;
+end;
+```
+
+### Export JSON structuré
+
+```pascal
+procedure TForm1.ExporterJSONStructure(const NomFichier: string);
+var
+  RootObject: TJSONObject;
+  MetaData: TJSONObject;
+  DataArray: TJSONArray;
+  RecordObject: TJSONObject;
+begin
+  RootObject := TJSONObject.Create;
+  try
+    // Métadonnées
+    MetaData := TJSONObject.Create;
+    MetaData.AddPair('date_export', DateTimeToStr(Now));
+    MetaData.AddPair('version', '1.0');
+    MetaData.AddPair('nombre_enregistrements', TJSONNumber.Create(FDQueryVentes.RecordCount));
+    RootObject.AddPair('metadata', MetaData);
+
+    // Données
+    DataArray := TJSONArray.Create;
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      RecordObject := TJSONObject.Create;
+      RecordObject.AddPair('id', TJSONNumber.Create(FDQueryVentes.FieldByName('id').AsInteger));
+      RecordObject.AddPair('produit', FDQueryVentes.FieldByName('produit').AsString);
+      RecordObject.AddPair('montant', TJSONNumber.Create(FDQueryVentes.FieldByName('montant').AsFloat));
+
+      DataArray.AddElement(RecordObject);
+      FDQueryVentes.Next;
+    end;
+    RootObject.AddPair('data', DataArray);
+
+    // Sauvegarder
+    TFile.WriteAllText(NomFichier, RootObject.Format(2), TEncoding.UTF8);
+  finally
+    RootObject.Free;
+  end;
+end;
+```
+
+## Export Word
+
+Pour créer des documents Word éditables.
+
+### Export vers Word via OLE
+
+```pascal
+uses
+  ComObj;
+
+procedure TForm1.ExporterEnWord(const NomFichier: string);
+var
+  WordApp, Document, Range: Variant;
+begin
+  WordApp := CreateOleObject('Word.Application');
+  try
+    WordApp.Visible := False;
+
+    // Nouveau document
+    Document := WordApp.Documents.Add;
+
+    // Titre
+    Range := Document.Range;
+    Range.Text := 'RAPPORT DES VENTES'#13#10;
+    Range.Font.Size := 18;
+    Range.Font.Bold := True;
+    Range.ParagraphFormat.Alignment := 1; // wdAlignParagraphCenter
+
+    // Date
+    Range := Document.Range;
+    Range.Start := Range.End;
+    Range.Text := 'Date : ' + DateToStr(Date) + #13#10#13#10;
+
+    // Tableau
+    var Table := Document.Tables.Add(
+      Document.Range(Range.End, Range.End),
+      FDQueryVentes.RecordCount + 1,  // lignes (+ en-tête)
+      FDQueryVentes.FieldCount        // colonnes
+    );
+
+    // En-têtes
+    for var i := 0 to FDQueryVentes.FieldCount - 1 do
+    begin
+      Table.Cell(1, i + 1).Range.Text := FDQueryVentes.Fields[i].FieldName;
+      Table.Cell(1, i + 1).Range.Font.Bold := True;
+      Table.Cell(1, i + 1).Shading.BackgroundPatternColor := RGB(200, 200, 200);
+    end;
+
+    // Données
+    FDQueryVentes.First;
+    var Ligne := 2;
+    while not FDQueryVentes.Eof do
+    begin
+      for var i := 0 to FDQueryVentes.FieldCount - 1 do
+        Table.Cell(Ligne, i + 1).Range.Text := FDQueryVentes.Fields[i].AsString;
+
+      Inc(Ligne);
+      FDQueryVentes.Next;
+    end;
+
+    // Mise en forme du tableau
+    Table.AutoFitBehavior(2); // wdAutoFitContent
+    Table.Borders.Enable := True;
+
+    // Sauvegarder
+    Document.SaveAs2(NomFichier);
+    Document.Close;
+
+    ShowMessage('Document Word créé');
+  finally
+    WordApp.Quit;
+  end;
+end;
+```
+
+## Export texte formaté (RTF)
+
+RTF est un format texte enrichi compatible avec Word et autres traitements de texte.
+
+```pascal
+procedure TForm1.ExporterEnRTF(const NomFichier: string);
+var
+  RTF: TStringList;
+begin
+  RTF := TStringList.Create;
+  try
+    // En-tête RTF
+    RTF.Add('{\rtf1\ansi\deff0');
+    RTF.Add('{\fonttbl{\f0 Arial;}}');
+    RTF.Add('{\colortbl;\red0\green0\blue0;\red255\green0\blue0;}');
+
+    // Titre
+    RTF.Add('\f0\fs32\b RAPPORT DES VENTES\b0\fs20\par');
+    RTF.Add('\par');
+
+    // Date
+    RTF.Add('Date : ' + DateToStr(Date) + '\par');
+    RTF.Add('\par');
+
+    // Données
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      RTF.Add(Format('%s : %s\par',
+        [FDQueryVentes.FieldByName('produit').AsString,
+         FDQueryVentes.FieldByName('montant').AsString]));
+      FDQueryVentes.Next;
+    end;
+
+    RTF.Add('}');
+
+    RTF.SaveToFile(NomFichier);
+  finally
+    RTF.Free;
+  end;
+end;
+```
+
+## Export d'images
+
+Exportez vos graphiques et visualisations en images.
+
+### Export graphique TeeChart
+
+```pascal
+uses
+  VCLTee.TeeProcs, VCLTee.TeePNG, VCLTee.TeeJPEG;
+
+procedure TForm1.ExporterGraphiqueEnImage(const NomFichier: string);
+var
+  Extension: string;
+begin
+  Extension := LowerCase(ExtractFileExt(NomFichier));
+
+  case Extension of
+    '.png':
+      begin
+        var PNG := TTeePNGExport.Create;
+        try
+          PNG.Panel := Chart1;
+          PNG.Width := Chart1.Width;
+          PNG.Height := Chart1.Height;
+          PNG.SaveToFile(NomFichier);
+        finally
+          PNG.Free;
+        end;
+      end;
+
+    '.jpg', '.jpeg':
+      begin
+        var JPEG := TTeeJPEGExport.Create;
+        try
+          JPEG.Panel := Chart1;
+          JPEG.Width := Chart1.Width;
+          JPEG.Height := Chart1.Height;
+          JPEG.SaveToFile(NomFichier);
+        finally
+          JPEG.Free;
+        end;
+      end;
+
+    '.bmp':
+      Chart1.SaveToBitmapFile(NomFichier);
+  end;
+end;
+```
+
+### Capture d'écran d'un formulaire
+
+```pascal
+procedure TForm1.CapturerFormulaire(const NomFichier: string);
+var
+  Bitmap: TBitmap;
+begin
+  Bitmap := TBitmap.Create;
+  try
+    Bitmap.Width := Width;
+    Bitmap.Height := Height;
+
+    // Capturer le formulaire
+    var DC := GetDC(Handle);
+    try
+      BitBlt(Bitmap.Canvas.Handle, 0, 0, Width, Height, DC, 0, 0, SRCCOPY);
+    finally
+      ReleaseDC(Handle, DC);
+    end;
+
+    // Sauvegarder
+    Bitmap.SaveToFile(NomFichier);
+  finally
+    Bitmap.Free;
+  end;
+end;
+```
+
+## Interface utilisateur pour l'export
+
+### Dialogue de sélection de format
+
+```pascal
+procedure TForm1.btnExporterClick(Sender: TObject);
+var
+  SaveDialog: TSaveDialog;
+begin
+  SaveDialog := TSaveDialog.Create(Self);
+  try
+    SaveDialog.Title := 'Exporter les données';
+    SaveDialog.Filter :=
+      'Fichiers PDF (*.pdf)|*.pdf|' +
+      'Fichiers Excel (*.xlsx)|*.xlsx|' +
+      'Fichiers CSV (*.csv)|*.csv|' +
+      'Fichiers HTML (*.html)|*.html|' +
+      'Fichiers XML (*.xml)|*.xml|' +
+      'Fichiers JSON (*.json)|*.json|' +
+      'Tous les fichiers (*.*)|*.*';
+    SaveDialog.DefaultExt := 'pdf';
+
+    if SaveDialog.Execute then
+    begin
+      var Extension := LowerCase(ExtractFileExt(SaveDialog.FileName));
+
+      Screen.Cursor := crHourGlass;
+      try
+        case Extension of
+          '.pdf': ExporterEnPDF_FastReport(SaveDialog.FileName);
+          '.xlsx': ExporterEnExcel_FastReport(SaveDialog.FileName);
+          '.csv': ExporterEnCSV(SaveDialog.FileName);
+          '.html': ExporterEnHTML(SaveDialog.FileName);
+          '.xml': ExporterEnXML(SaveDialog.FileName);
+          '.json': ExporterEnJSON(SaveDialog.FileName);
+        else
+          ShowMessage('Format non supporté');
+        end;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+    end;
+  finally
+    SaveDialog.Free;
+  end;
+end;
+```
+
+### Formulaire d'options d'export
+
+```pascal
+type
+  TFormOptionsExport = class(TForm)
+    RadioGroupFormat: TRadioGroup;
+    CheckBoxOuvrirApres: TCheckBox;
+    CheckBoxInclureEnTetes: TCheckBox;
+    ComboBoxEncodage: TComboBox;
+    btnExporter: TButton;
+    btnAnnuler: TButton;
+  end;
+
+procedure TFormOptionsExport.btnExporterClick(Sender: TObject);
+begin
+  var Format := '';
+  case RadioGroupFormat.ItemIndex of
+    0: Format := 'PDF';
+    1: Format := 'Excel';
+    2: Format := 'CSV';
+    3: Format := 'HTML';
+  end;
+
+  // Appeler la fonction d'export appropriée avec les options
+  ModalResult := mrOk;
+end;
+```
+
+### Barre de progression pour export
+
+```pascal
+procedure TForm1.ExporterAvecProgression(const NomFichier: string);
+var
+  TotalLignes, LigneActuelle: Integer;
+begin
+  TotalLignes := FDQueryVentes.RecordCount;
+  LigneActuelle := 0;
+
+  ProgressBar1.Max := TotalLignes;
+  ProgressBar1.Position := 0;
+  ProgressBar1.Visible := True;
+
+  try
+    FDQueryVentes.First;
+    while not FDQueryVentes.Eof do
+    begin
+      // Traiter la ligne...
+
+      Inc(LigneActuelle);
+      ProgressBar1.Position := LigneActuelle;
+      Application.ProcessMessages; // Rafraîchir l'interface
+
+      FDQueryVentes.Next;
+    end;
+
+    ShowMessage('Export terminé');
+  finally
+    ProgressBar1.Visible := False;
+  end;
+end;
+```
+
+## Gestion des erreurs et validation
+
+### Gestion robuste des erreurs
+
+```pascal
+procedure TForm1.ExporterAvecGestionErreurs(const NomFichier: string);
+begin
+  try
+    // Vérifier que le dataset contient des données
+    if FDQueryVentes.IsEmpty then
+    begin
+      ShowMessage('Aucune donnée à exporter');
+      Exit;
+    end;
+
+    // Vérifier que le chemin est accessible
+    var Repertoire := ExtractFilePath(NomFichier);
+    if not DirectoryExists(Repertoire) then
+      ForceDirectories(Repertoire);
+
+    // Vérifier que le fichier n'est pas en lecture seule
+    if FileExists(NomFichier) and FileIsReadOnly(NomFichier) then
+    begin
+      ShowMessage('Le fichier est en lecture seule');
+      Exit;
+    end;
+
+    // Effectuer l'export
+    ExporterEnPDF_FastReport(NomFichier);
+
+  except
+    on E: EFOpenError do
+      ShowMessage('Impossible d''ouvrir le fichier : ' + E.Message);
+    on E: EInOutError do
+      ShowMessage('Erreur d''entrée/sortie : ' + E.Message);
+    on E: Exception do
+      ShowMessage('Erreur lors de l''export : ' + E.Message);
+  end;
+end;
+```
+
+### Validation avant export
+
+```pascal
+function TForm1.ValiderAvantExport: Boolean;
+begin
+  Result := True;
+
+  // Vérifier la connexion
+  if not FDConnection1.Connected then
+  begin
+    ShowMessage('Base de données non connectée');
+    Exit(False);
+  end;
+
+  // Vérifier les données
+  if FDQueryVentes.IsEmpty then
+  begin
+    if MessageDlg('Aucune donnée à exporter. Continuer quand même ?',
+       mtWarning, [mbYes, mbNo], 0) = mrNo then
+      Exit(False);
+  end;
+
+  // Vérifier l'espace disque (exemple simplifié)
+  var DisponibleMo := DiskFree(0) div (1024 * 1024);
+  if DisponibleMo < 10 then
+  begin
+    ShowMessage('Espace disque insuffisant');
+    Exit(False);
+  end;
+end;
+```
+
+## Optimisation et performance
+
+### Export asynchrone
+
+```pascal
+uses
+  System.Threading;
+
+procedure TForm1.ExporterAsync(const NomFichier: string);
+begin
+  btnExporter.Enabled := False;
+  ProgressBar1.Visible := True;
+
+  TTask.Run(
+    procedure
+    begin
+      try
+        // Export dans le thread
+        ExporterEnPDF_FastReport(NomFichier);
+
+        // Retour au thread principal
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            ShowMessage('Export terminé');
+            btnExporter.Enabled := True;
+            ProgressBar1.Visible := False;
+          end
+        );
+      except
+        on E: Exception do
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ShowMessage('Erreur : ' + E.Message);
+              btnExporter.Enabled := True;
+              ProgressBar1.Visible := False;
+            end
+          );
+      end;
+    end
+  );
+end;
+```
+
+### Export par lots (batch)
+
+```pascal
+procedure TForm1.ExporterParLots(const CheminBase: string);
+const
+  TAILLE_LOT = 1000;
+var
+  NumeroLot: Integer;
+begin
+  NumeroLot := 0;
+  FDQueryVentes.First;
+
+  while not FDQueryVentes.Eof do
+  begin
+    Inc(NumeroLot);
+    var NomFichier := Format('%s_lot_%d.csv', [CheminBase, NumeroLot]);
+
+    // Exporter un lot
+    var LignesExportees := 0;
+    // ... code d'export ...
+
+    // Avancer jusqu'au prochain lot
+    while (LignesExportees < TAILLE_LOT) and not FDQueryVentes.Eof do
+    begin
+      FDQueryVentes.Next;
+      Inc(LignesExportees);
     end;
   end;
 end;
 ```
 
-### 3. Configuration des composants au design-time
+## Conseils et bonnes pratiques
 
-Au lieu de créer les composants d'exportation par code, vous pouvez les ajouter à votre formulaire en design-time :
+### Choix du format
 
-1. Cliquez avec le bouton droit dans l'éditeur de formulaire
-2. Sélectionnez "Ajouter un composant..."
-3. Recherchez et ajoutez les composants d'exportation (TfrxPDFExport, etc.)
-4. Configurez leurs propriétés dans l'Object Inspector
+- **PDF** : documents finaux, archivage, partage officiel
+- **Excel** : analyse de données, calculs, rapports interactifs
+- **CSV** : simplicité, universalité, import dans d'autres systèmes
+- **HTML** : publication web, emails, documentation
+- **XML/JSON** : échange de données structurées, APIs
+- **Word** : documents éditables, modèles personnalisables
 
-### 4. Conservation des métadonnées
+### Qualité des exports
 
-Pour les formats qui supportent les métadonnées (comme PDF) :
+- **Encodage** : utilisez UTF-8 pour la compatibilité internationale
+- **Métadonnées** : incluez date, version, source des données
+- **Validation** : vérifiez les données avant export
+- **Formatage** : respectez les conventions du format cible
+- **Taille** : compressez ou divisez les gros fichiers
 
-```pascal
-procedure TForm1.ExportWithMetadata;
-begin
-  // Configurer les métadonnées
-  frxPDFExport1.Author := 'Mon Application';
-  frxPDFExport1.Creator := 'FastReport';
-  frxPDFExport1.Subject := 'Rapport mensuel';
-  frxPDFExport1.Title := 'Rapport de ventes - ' + FormatDateTime('mmmm yyyy', Date);
-  frxPDFExport1.Keywords := 'rapport, ventes, mensuel';
+### Performance
 
-  // Exporter
-  frxReport1.Export(frxPDFExport1);
-end;
-```
+- **Asynchrone** : ne bloquez pas l'interface utilisateur
+- **Progression** : informez l'utilisateur de l'avancement
+- **Mémoire** : libérez les ressources après usage
+- **Lots** : divisez les gros volumes en plusieurs fichiers
+- **Cache** : réutilisez les connexions et ressources
 
-### 5. Optimisation des performances
+### Sécurité
 
-Pour les grands rapports, optimisez l'exportation :
+- **Validation** : vérifiez les chemins et noms de fichiers
+- **Permissions** : contrôlez l'accès aux exports
+- **Chiffrement** : protégez les exports sensibles (PDF avec mot de passe)
+- **Logs** : journalisez les exports pour audit
+- **Nettoyage** : supprimez les fichiers temporaires
 
-```pascal
-procedure TForm1.OptimizedExport;
-begin
-  // Activer le cache de fichier pour réduire l'utilisation de la mémoire
-  frxReport1.ReportOptions.UseFileCache := True;
-  frxReport1.ReportOptions.MaxMemSize := 10; // MB
+### Expérience utilisateur
 
-  // Désactiver les éléments inutiles selon le format
-  if ExportFormat = 'CSV' then
-  begin
-    // Pour CSV, pas besoin d'images
-    frxReport1.ReportOptions.EnableImages := False;
-  end;
+- **Dialogue clair** : interface simple et intuitive
+- **Options** : offrez des choix pertinents sans surcharger
+- **Feedback** : informez sur la réussite ou l'échec
+- **Raccourcis** : mémorisez les préférences utilisateur
+- **Aide** : expliquez les formats et leurs usages
 
-  // Exporter
-  frxReport1.Export(frxPDFExport1);
-end;
-```
+## Résumé
 
-## Conclusion
+L'exportation de données vers différents formats est une fonctionnalité essentielle des applications professionnelles. Les points clés :
 
-L'exportation de rapports vers différents formats est une fonctionnalité essentielle qui ajoute une grande valeur à vos applications Delphi. Les formats les plus utilisés sont :
+- **Multiples formats** : PDF, Excel, CSV, HTML, XML, JSON, Word et images
+- **FastReport** : solution complète pour les exports professionnels
+- **OLE Automation** : contrôle direct d'Excel et Word
+- **Formats texte** : CSV, XML, JSON pour l'interopérabilité
+- **Gestion d'erreurs** : validation et récupération robustes
+- **Performance** : export asynchrone pour les gros volumes
+- **Interface utilisateur** : dialogue intuitif avec progression
+- **Bonnes pratiques** : encodage UTF-8, métadonnées, validation
 
-- **PDF** : Pour l'archivage et l'impression fidèle
-- **Excel** : Pour l'analyse ultérieure des données
-- **Word** : Pour la modification et personnalisation
-- **HTML** : Pour la publication web
-- **CSV** : Pour l'importation dans d'autres systèmes
-- **Images** : Pour l'inclusion dans d'autres documents
-
-Avec les composants d'exportation de FastReport, vous pouvez facilement proposer ces options à vos utilisateurs, soit individuellement, soit via un dialogue unifié.
-
-Dans la prochaine section, nous verrons comment créer des rapports interactifs qui offrent encore plus de flexibilité à vos utilisateurs.
+Maîtriser l'exportation vers différents formats permet de créer des applications flexibles qui s'intègrent parfaitement dans l'écosystème informatique de l'entreprise.
 
 ⏭️ [Rapports interactifs](/09-rapports-et-impressions/07-rapports-interactifs.md)

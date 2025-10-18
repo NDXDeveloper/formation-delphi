@@ -1,1256 +1,956 @@
-# 9.3 Générateurs de rapports (FastReport, QuickReport)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 9.3 Générateurs de rapports (FastReport, QuickReport)
 
 ## Introduction
 
-Bien que Delphi offre des composants natifs pour l'impression, la création de rapports complexes nécessite souvent des outils plus spécialisés. Les générateurs de rapports sont des composants tiers qui simplifient considérablement la création, la conception et l'impression de rapports professionnels.
-
-Dans cette section, nous allons explorer deux des générateurs de rapports les plus populaires pour Delphi : FastReport et QuickReport.
+Les générateurs de rapports sont des outils spécialisés qui facilitent considérablement la création de documents imprimés complexes. Alors que les composants d'impression natifs de Delphi conviennent pour des impressions simples, les générateurs de rapports offrent des fonctionnalités avancées pour créer des rapports professionnels avec mise en page sophistiquée, graphiques, sous-rapports et bien plus encore.
 
 ## Pourquoi utiliser un générateur de rapports ?
 
-Avant d'entrer dans les détails, voici pourquoi vous devriez considérer l'utilisation d'un générateur de rapports professionnel :
+### Avantages par rapport à l'impression manuelle
 
-- **Conception visuelle** : Interface de design WYSIWYG (What You See Is What You Get)
-- **Flexibilité** : Adapté aux rapports simples comme aux documents complexes multi-pages
-- **Prévisualisation intégrée** : Aperçu avant impression prêt à l'emploi
-- **Export multi-formats** : PDF, Excel, Word, HTML, XML, etc.
-- **Accès aux données** : Connexion facile aux bases de données et ensembles de données
-- **Bandes (bands)** : Organisation du rapport en sections logiques (en-tête, détails, pied de page...)
-- **Calculs automatiques** : Totaux, moyennes, compteurs et autres agrégations
-- **Graphiques et diagrammes** : Visualisation des données intégrée
+Les générateurs de rapports offrent de nombreux avantages :
 
-## FastReport
+- **Conception visuelle** : interface graphique pour créer la mise en page sans coder
+- **Aperçu intégré** : prévisualisation professionnelle avec zoom, navigation, etc.
+- **Bandes de données** : gestion automatique des en-têtes, détails, pieds de page
+- **Liaison aux données** : connexion directe aux bases de données et datasets
+- **Export multiple** : PDF, Excel, Word, HTML, XML et autres formats
+- **Sous-rapports** : inclusion de rapports dans d'autres rapports
+- **Graphiques** : intégration de graphiques et visualisations
+- **Calculs automatiques** : sommes, moyennes, compteurs automatiques
+- **Formatage conditionnel** : mise en forme basée sur les données
+- **Réutilisabilité** : les rapports sont stockés dans des fichiers séparés
 
-FastReport est l'un des générateurs de rapports les plus complets pour Delphi. Il offre un environnement de conception visuel puissant et un large éventail de fonctionnalités.
+### Cas d'utilisation typiques
 
-### Installation de FastReport
+Les générateurs de rapports sont parfaits pour :
 
-FastReport n'est pas inclus dans Delphi et doit être acheté séparément. Une version d'évaluation est généralement disponible sur le site officiel [fast-report.com](https://www.fast-report.com/).
+- Factures et devis
+- Listes et tableaux de données
+- Rapports financiers
+- Bulletins et relevés
+- Étiquettes et badges
+- Documents complexes multi-pages
+- Rapports avec graphiques et statistiques
 
-Une fois téléchargé et installé, vous devez l'ajouter à votre environnement Delphi :
+## Vue d'ensemble des solutions disponibles
 
-1. Dans Delphi, sélectionnez **Composants > Installer des packages...**
-2. Cliquez sur **Ajouter...**
-3. Naviguez jusqu'au dossier d'installation de FastReport et sélectionnez le fichier package approprié (par exemple, `FR*.bpl`)
-4. Suivez les instructions à l'écran pour terminer l'installation
+### FastReport
 
-Après l'installation, une nouvelle palette de composants FastReport devrait apparaître dans l'environnement Delphi.
+**FastReport** est actuellement le générateur de rapports le plus populaire pour Delphi.
 
-### Composants principaux de FastReport
+**Points forts :**
+- Interface moderne et intuitive
+- Excellent support et documentation
+- Mise à jour régulière
+- Large gamme de formats d'export
+- Support multi-plateforme (VCL et FMX)
+- Communauté active
 
-Voici les composants principaux que vous utiliserez avec FastReport :
+**Éditions :**
+- **FastReport VCL** : pour applications Windows VCL
+- **FastReport FMX** : pour applications multi-plateformes FireMonkey
+- **FastReport Server** : serveur de rapports centralisé
+- **Version d'évaluation** : disponible gratuitement pour tester
 
-- **TfrxReport** : Composant principal qui gère le rapport
-- **TfrxDesigner** : Designer visuel pour créer et modifier les rapports
-- **TfrxDBDataset** : Connexion aux sources de données Delphi (TDataSet)
-- **TfrxPreview** : Composant d'aperçu avant impression
+**Site officiel :** https://www.fast-report.com
 
-### Création d'un rapport simple avec FastReport
+### QuickReport
 
-Voici comment créer un rapport basique :
+**QuickReport** est un générateur de rapports qui a été inclus gratuitement dans certaines versions de Delphi.
 
-1. **Préparation du projet** :
+**Points forts :**
+- Gratuit avec Delphi (versions anciennes)
+- Simple à apprendre
+- Bien intégré à l'IDE Delphi
+- Léger et rapide
+
+**Points faibles :**
+- Plus maintenu activement
+- Fonctionnalités limitées par rapport à FastReport
+- Export limité (principalement PDF)
+- Interface vieillissante
+
+**Disponibilité :**
+QuickReport était inclus dans Delphi jusqu'à la version XE, puis retiré. Il existe des versions tierces comme QR5 disponibles séparément.
+
+### Autres alternatives
+
+D'autres solutions existent également :
+
+- **ReportBuilder** : solution professionnelle très complète
+- **Rave Reports** : inclus dans certaines versions de Delphi
+- **DevExpress Reports** : si vous utilisez la suite DevExpress
+- **FreeReport** : version open source de FastReport (ancienne)
+
+## Installation de FastReport
+
+### Téléchargement
+
+1. Rendez-vous sur le site de FastReport : https://www.fast-report.com
+2. Téléchargez la version d'évaluation ou achetez une licence
+3. Exécutez l'installeur téléchargé
+
+### Installation
+
+L'installation de FastReport est simple :
+
+1. Lancez l'installeur
+2. Choisissez le répertoire d'installation
+3. Sélectionnez votre version de Delphi
+4. L'installeur compile et installe les packages automatiquement
+5. Redémarrez Delphi
+
+### Vérification de l'installation
+
+Après installation, vous devriez voir :
+
+- Un nouvel onglet **FastReport 6** dans la palette de composants
+- Les composants principaux : `TfrxReport`, `TfrxDBDataset`, `TfrxDesigner`, etc.
+- Le menu **Tools → FastReport** dans l'IDE
+
+## Concepts fondamentaux
+
+### Architecture d'un rapport
+
+Un rapport FastReport est composé de plusieurs éléments :
+
+#### 1. Le rapport (Report)
+
+C'est le conteneur principal représenté par le composant `TfrxReport`. Il contient toutes les pages et éléments du rapport.
+
+#### 2. Les pages (Pages)
+
+Un rapport peut contenir plusieurs pages. Chaque page a :
+- Des dimensions (A4, Letter, etc.)
+- Une orientation (portrait ou paysage)
+- Des marges
+
+#### 3. Les bandes (Bands)
+
+Les bandes définissent les zones du rapport :
+
+- **Report Title** : titre du rapport (une seule fois au début)
+- **Page Header** : en-tête répété sur chaque page
+- **Master Data** : bande de détails (répétée pour chaque enregistrement)
+- **Page Footer** : pied de page répété sur chaque page
+- **Report Summary** : résumé final du rapport
+
+#### 4. Les objets (Objects)
+
+Les objets sont les éléments visuels placés dans les bandes :
+
+- **Memo** : texte statique ou lié aux données
+- **Picture** : images
+- **Line** : lignes de séparation
+- **Shape** : formes géométriques
+- **Barcode** : codes-barres
+- **Chart** : graphiques
+
+### Sources de données
+
+FastReport peut se connecter à plusieurs types de sources :
+
+- **Datasets Delphi** : via `TfrxDBDataset`
+- **Variables** : données passées par code
+- **Requêtes internes** : requêtes SQL dans le rapport
+- **Listes et collections** : données en mémoire
+
+## Premier rapport avec FastReport
+
+### Préparation du formulaire
+
+1. Créez un nouveau projet VCL
+2. Ajoutez un formulaire principal
+3. Placez les composants suivants :
+   - `TfrxReport` (onglet FastReport 6) nommé `frxReport1`
+   - `TButton` nommé `btnAfficherRapport` avec Caption = 'Afficher le rapport'
+
+### Conception du rapport
+
+Double-cliquez sur le composant `frxReport1` pour ouvrir le designer.
+
+#### Interface du designer
+
+Le designer FastReport se compose de :
+
+- **Barre d'outils** : outils de conception
+- **Palette d'objets** : objets à placer dans le rapport
+- **Zone de conception** : représentation visuelle du rapport
+- **Inspecteur d'objets** : propriétés des objets sélectionnés
+- **Arbre des objets** : structure hiérarchique du rapport
+
+#### Création d'un rapport simple
+
+**Étape 1 : Ajouter une bande Report Title**
+
+1. Cliquez sur le bouton **Insert Band** (icône avec bandes)
+2. Sélectionnez **Report Title**
+3. Une bande bleue apparaît en haut de la page
+
+**Étape 2 : Ajouter du texte**
+
+1. Cliquez sur l'icône **Text** (A) dans la palette
+2. Cliquez dans la bande Report Title
+3. Un objet Memo apparaît
+4. Double-cliquez dessus pour éditer
+5. Tapez : "Mon premier rapport FastReport"
+6. Fermez l'éditeur de texte
+
+**Étape 3 : Formater le titre**
+
+1. Sélectionnez l'objet Memo
+2. Dans la barre d'outils, changez :
+   - Police : Arial
+   - Taille : 18
+   - Style : Gras
+3. Alignez au centre avec le bouton d'alignement
+
+**Étape 4 : Enregistrer le rapport**
+
+1. Cliquez sur **File → Save**
+2. Enregistrez le rapport : `MonPremierRapport.fr3`
+
+### Affichage du rapport
+
+Retournez dans Delphi et écrivez le code pour afficher le rapport :
 
 ```pascal
-// Assurez-vous d'inclure les unités nécessaires
-uses
-  frxClass, frxDBSet, frxPreview;
-```
-
-2. **Ajout des composants** :
-
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TForm1.btnAfficherRapportClick(Sender: TObject);
 begin
-  // Créer les composants FastReport
-  frxReport1 := TfrxReport.Create(Self);
-  frxDBDataset1 := TfrxDBDataset.Create(Self);
+  // Charger le fichier rapport
+  frxReport1.LoadFromFile('MonPremierRapport.fr3');
 
-  // Configurer la source de données (par exemple, si vous avez un ClientDataSet)
-  frxDBDataset1.DataSet := ClientDataSet1;
-  frxDBDataset1.UserName := 'Clients'; // Nom utilisé dans le designer
-end;
-```
-
-3. **Création et exécution du rapport** :
-
-```pascal
-procedure TMainForm.btnCreateReportClick(Sender: TObject);
-var
-  Page: TfrxReportPage;
-  Band: TfrxBand;
-  Memo: TfrxMemoView;
-begin
-  // Créer un nouveau rapport
-  frxReport1.Clear;
-
-  // Ajouter une page
-  Page := TfrxReportPage.Create(frxReport1);
-  frxReport1.Pages.Add(Page);
-
-  // Configurer la page
-  Page.Orientation := poPortrait;
-  Page.PaperWidth := 210;  // A4
-  Page.PaperHeight := 297;
-  Page.LeftMargin := 10;
-  Page.RightMargin := 10;
-  Page.TopMargin := 10;
-  Page.BottomMargin := 10;
-
-  // Créer une bande d'en-tête de rapport (Report Title)
-  Band := TfrxReportTitle.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Height := 20;
-
-  // Ajouter un titre
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 20;
-  Memo.Text := 'Liste des Clients';
-  Memo.HAlign := haCenter;
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-
-  // Créer une bande d'en-tête de page (Page Header)
-  Band := TfrxPageHeader.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 30;
-  Band.Height := 20;
-
-  // Ajouter les en-têtes de colonnes
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'Nom';
-  Memo.Font.Style := [fsBold];
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 110;
-  Memo.Top := 0;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'Adresse';
-  Memo.Font.Style := [fsBold];
-
-  // Créer une bande de détails (Master Data)
-  Band := TfrxMasterData.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 60;
-  Band.Height := 20;
-  Band.DataSet := frxDBDataset1; // Lier à notre dataset
-
-  // Ajouter les champs de données
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := '[Clients."NomClient"]'; // Nom du champ dans la table
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 110;
-  Memo.Top := 0;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := '[Clients."Adresse"]'; // Nom du champ dans la table
-
-  // Prévisualiser le rapport
+  // Afficher l'aperçu
   frxReport1.ShowReport;
 end;
 ```
 
-### Utilisation du designer visuel de FastReport
+**Alternative sans fichier externe :**
 
-La création manuelle par code comme ci-dessus est rarement utilisée en pratique. FastReport brille par son designer visuel :
+Vous pouvez aussi concevoir le rapport directement dans le composant :
 
 ```pascal
-procedure TMainForm.btnDesignReportClick(Sender: TObject);
+procedure TForm1.btnAfficherRapportClick(Sender: TObject);
 begin
-  // Créer un rapport vide si nécessaire
-  if frxReport1.IsEmpty then
-    frxReport1.LoadFromFile('RapportVide.fr3');
-
-  // Ouvrir le designer
-  frxReport1.DesignReport;
-end;
-```
-
-Le designer visuel offre une interface intuitive avec :
-- Une barre d'outils pour ajouter des objets (texte, images, lignes, etc.)
-- Un explorateur de données montrant les sources disponibles
-- Un inspecteur de propriétés pour configurer les objets
-- Une règle et une grille pour un alignement précis
-- Des options de zoom pour une mise en page détaillée
-
-### Organisation en bandes (bands)
-
-FastReport organise les rapports en bandes horizontales, chacune ayant un rôle spécifique :
-
-| Bande | Description |
-|-------|-------------|
-| Report Title | Apparaît une fois au début du rapport |
-| Report Summary | Apparaît une fois à la fin du rapport |
-| Page Header | Apparaît en haut de chaque page |
-| Page Footer | Apparaît en bas de chaque page |
-| Master Data | Se répète pour chaque enregistrement dans le dataset principal |
-| Detail | Se répète pour les enregistrements détaillés (relations maître-détail) |
-| Group Header | Apparaît au début de chaque groupe |
-| Group Footer | Apparaît à la fin de chaque groupe |
-
-### Expressions et calculs
-
-FastReport permet d'utiliser des expressions pour les calculs dynamiques :
-
-```
-// Exemples d'expressions
-[Clients."Prix"] * [Clients."Quantite"]  // Multiplication
-[Page#]  // Numéro de page
-[Date]   // Date actuelle
-[Sum(<expression>)]  // Somme d'une expression
-```
-
-### Exportation vers différents formats
-
-FastReport excelle dans l'exportation vers différents formats :
-
-```pascal
-procedure TMainForm.btnExportToPdfClick(Sender: TObject);
-begin
-  // Préparer le rapport
-  frxReport1.PrepareReport;
-
-  // Exporter en PDF
-  frxReport1.Export(frxPDFExport1);
-end;
-```
-
-Vous devez ajouter les composants d'exportation correspondants (TfrxPDFExport, TfrxXLSExport, etc.) à votre formulaire.
-
-## QuickReport
-
-QuickReport est un autre générateur de rapports populaire pour Delphi. Il est plus léger que FastReport mais offre néanmoins des fonctionnalités essentielles pour la création de rapports professionnels.
-
-### Installation de QuickReport
-
-QuickReport était historiquement inclus dans certaines éditions de Delphi, mais les versions récentes nécessitent généralement un achat séparé. L'installation est similaire à celle de FastReport :
-
-1. Achetez et téléchargez QuickReport depuis [quickreport.co.uk](https://www.quickreport.co.uk/)
-2. Installez-le en suivant les instructions fournies
-3. Dans Delphi, utilisez le menu **Composants > Installer des packages...** pour intégrer QuickReport
-
-### Composants principaux de QuickReport
-
-Les composants essentiels de QuickReport sont :
-
-- **TQuickRep** : Composant principal du rapport
-- **TQRBand** : Bande horizontale (en-tête, détail, pied de page...)
-- **TQRLabel** : Étiquette de texte statique
-- **TQRDBText** : Affiche le contenu d'un champ de base de données
-- **TQRExpr** : Affiche le résultat d'une expression
-
-### Création d'un rapport simple avec QuickReport
-
-Voici un exemple de création d'un rapport basique avec QuickReport :
-
-```pascal
-procedure TMainForm.CreateQuickReport;
-var
-  Report: TQuickRep;
-  TitleBand: TQRBand;
-  DetailBand: TQRBand;
-  HeaderBand: TQRBand;
-  FooterBand: TQRBand;
-  Label: TQRLabel;
-  DBText: TQRDBText;
-begin
-  // Créer le rapport
-  Report := TQuickRep.Create(Self);
-  Report.Parent := Self;
-  Report.Visible := False;
-
-  // Configurer le rapport
-  Report.DataSet := ClientDataSet1; // Votre source de données
-  Report.Font.Name := 'Arial';
-  Report.Font.Size := 10;
-
-  // Créer la bande de titre
-  TitleBand := TQRBand.Create(Report);
-  TitleBand.Parent := Report;
-  TitleBand.BandType := rbTitle;
-  TitleBand.Height := 50;
-
-  // Ajouter un titre
-  Label := TQRLabel.Create(TitleBand);
-  Label.Parent := TitleBand;
-  Label.Caption := 'Liste des Clients';
-  Label.Font.Size := 18;
-  Label.Font.Style := [fsBold];
-  Label.Alignment := taCenter;
-  Label.Width := Report.Width;
-  Label.Top := 10;
-
-  // Créer une bande d'en-tête
-  HeaderBand := TQRBand.Create(Report);
-  HeaderBand.Parent := Report;
-  HeaderBand.BandType := rbColumnHeader;
-  HeaderBand.Height := 30;
-
-  // Ajouter des en-têtes de colonnes
-  Label := TQRLabel.Create(HeaderBand);
-  Label.Parent := HeaderBand;
-  Label.Caption := 'Nom';
-  Label.Font.Style := [fsBold];
-  Label.Left := 10;
-  Label.Top := 10;
-
-  Label := TQRLabel.Create(HeaderBand);
-  Label.Parent := HeaderBand;
-  Label.Caption := 'Adresse';
-  Label.Font.Style := [fsBold];
-  Label.Left := 150;
-  Label.Top := 10;
-
-  // Créer une bande de détail
-  DetailBand := TQRBand.Create(Report);
-  DetailBand.Parent := Report;
-  DetailBand.BandType := rbDetail;
-  DetailBand.Height := 20;
-
-  // Ajouter des champs de données
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'NomClient';
-  DBText.Left := 10;
-  DBText.Top := 0;
-
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'Adresse';
-  DBText.Left := 150;
-  DBText.Top := 0;
-
-  // Créer une bande de pied de page
-  FooterBand := TQRBand.Create(Report);
-  FooterBand.Parent := Report;
-  FooterBand.BandType := rbPageFooter;
-  FooterBand.Height := 30;
-
-  // Ajouter un numéro de page
-  Label := TQRLabel.Create(FooterBand);
-  Label.Parent := FooterBand;
-  Label.Caption := 'Page ';
-  Label.Left := Report.Width - 100;
-  Label.Top := 10;
-
-  // Numéro de page automatique
-  Label := TQRExpr.Create(FooterBand);
-  Label.Parent := FooterBand;
-  Label.Expression := 'PAGENUMBER';
-  Label.Left := Report.Width - 50;
-  Label.Top := 10;
-
-  // Prévisualiser le rapport
-  Report.Preview;
-end;
-```
-
-### Designer visuel de QuickReport
-
-Comme FastReport, QuickReport propose aussi un designer visuel qui facilite la création de rapports :
-
-```pascal
-procedure TMainForm.btnDesignQuickReportClick(Sender: TObject);
-begin
-  // Vérifier si le rapport existe déjà
-  if not FileExists('ClientReport.qrp') then
-  begin
-    // Créer un rapport basique
-    CreateQuickReport;
-    QuickRep1.SaveToFile('ClientReport.qrp');
-  end;
-
-  // Ouvrir le designer
-  QRDesign1.Report := QuickRep1;
-  QRDesign1.Execute;
-end;
-```
-
-## Comparaison : FastReport vs QuickReport
-
-Voici une comparaison des deux générateurs de rapports pour vous aider à choisir :
-
-| Fonctionnalité | FastReport | QuickReport |
-|----------------|------------|-------------|
-| Complexité | Plus complexe, mais très puissant | Plus simple, plus facile à apprendre |
-| Interface | Designer moderne et riche | Designer plus basique |
-| Formats d'export | Plus nombreux (PDF, Excel, Word, HTML, etc.) | Limité aux formats standard |
-| Graphiques | Outils de graphiques avancés | Support basique des graphiques |
-| Sous-rapports | Support complet | Support limité |
-| Prix | Généralement plus élevé | Généralement moins cher |
-| Documentation | Très complète | Correcte |
-
-## Exemple pratique : Rapport de facture avec FastReport
-
-Voici un exemple plus complet pour créer un rapport de facture avec FastReport :
-
-```pascal
-procedure TMainForm.CreateInvoiceReport;
-begin
-  // Créer un nouveau rapport
-  frxReport1.Clear;
-
-  // Ajouter les sources de données
-  frxReport1.DataSets.Clear;
-  frxReport1.DataSets.Add(frxDBDataset1); // Clients
-  frxReport1.DataSets.Add(frxDBDataset2); // Factures
-  frxReport1.DataSets.Add(frxDBDataset3); // Détails des factures
-
-  // Charger le modèle de rapport depuis un fichier
-  if FileExists('Modeles/Facture.fr3') then
-    frxReport1.LoadFromFile('Modeles/Facture.fr3')
-  else
-  begin
-    // Créer un rapport de facture par défaut
-    CreateDefaultInvoiceTemplate;
-    // Sauvegarder pour utilisation future
-    frxReport1.SaveToFile('Modeles/Facture.fr3');
-  end;
-
-  // Définir des variables globales
-  frxReport1.Variables['NumeroFacture'] := QuotedStr('FA-' + FormatDateTime('yyyymmdd', Date) + '-001');
-  frxReport1.Variables['DateFacture'] := QuotedStr(FormatDateTime('dd/mm/yyyy', Date));
-  frxReport1.Variables['TauxTVA'] := '20'; // 20%
-
-  // Prévisualiser le rapport
-  frxReport1.ShowReport;
-end;
-
-procedure TMainForm.CreateDefaultInvoiceTemplate;
-var
-  Page: TfrxReportPage;
-  Band: TfrxBand;
-  Memo: TfrxMemoView;
-  Picture: TfrxPictureView;
-  Line: TfrxLineView;
-begin
-  // Créer une page
-  Page := TfrxReportPage.Create(frxReport1);
-  frxReport1.Pages.Add(Page);
-  Page.Orientation := poPortrait;
-  Page.PaperWidth := 210;  // A4
-  Page.PaperHeight := 297;
-  Page.LeftMargin := 10;
-  Page.RightMargin := 10;
-  Page.TopMargin := 10;
-  Page.BottomMargin := 10;
-
-  // En-tête du rapport
-  Band := TfrxReportTitle.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Height := 90;
-
-  // Logo de l'entreprise
-  Picture := TfrxPictureView.Create(frxReport1);
-  Band.Objects.Add(Picture);
-  Picture.Left := 0;
-  Picture.Top := 0;
-  Picture.Width := 100;
-  Picture.Height := 50;
-  Picture.HightQuality := True;
-  if FileExists('logo.png') then
-    Picture.LoadFromFile('logo.png');
-
-  // Titre "FACTURE"
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 100;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 30;
-  Memo.Text := 'FACTURE';
-  Memo.Font.Size := 16;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  // Numéro de facture
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 100;
-  Memo.Top := 30;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'N° [<NumeroFacture>]';
-  Memo.HAlign := haRight;
-
-  // Date de facture
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 100;
-  Memo.Top := 50;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'Date: [<DateFacture>]';
-  Memo.HAlign := haRight;
-
-  // Coordonnées de l'entreprise
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 50;
-  Memo.Width := 200;
-  Memo.Height := 40;
-  Memo.Text := 'VOTRE ENTREPRISE' + #13#10 +
-               '123 Rue du Commerce' + #13#10 +
-               '75000 Paris, France' + #13#10 +
-               'Tél: 01 23 45 67 89';
-
-  // Informations client (Master Data)
-  Band := TfrxMasterData.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 100;
-  Band.Height := 60;
-  Band.DataSet := frxDBDataset1; // Dataset client
-
-  // Titre "FACTURÉ À"
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'FACTURÉ À:';
-  Memo.Font.Style := [fsBold];
-
-  // Coordonnées du client
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 20;
-  Memo.Width := 200;
-  Memo.Height := 40;
-  Memo.Text := '[Clients."NomClient"]' + #13#10 +
-               '[Clients."Adresse"]' + #13#10 +
-               '[Clients."CodePostal"] [Clients."Ville"]' + #13#10 +
-               'Tél: [Clients."Telephone"]';
-
-  // En-tête des lignes de facture
-  Band := TfrxHeader.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 170;
-  Band.Height := 25;
-
-  // Ligne horizontale avant l'en-tête
-  Line := TfrxLineView.Create(frxReport1);
-  Band.Objects.Add(Line);
-  Line.Left := 0;
-  Line.Top := 0;
-  Line.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Line.Height := 0;
-  Line.Frame.Typ := [ftTop];
-
-  // En-têtes des colonnes
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 5;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'QUANTITÉ';
-  Memo.Font.Style := [fsBold];
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 70;
-  Memo.Top := 5;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := 'DESCRIPTION';
-  Memo.Font.Style := [fsBold];
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 280;
-  Memo.Top := 5;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'PRIX UNIT.';
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 60;
-  Memo.Top := 5;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'TOTAL HT';
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  // Ligne horizontale après l'en-tête
-  Line := TfrxLineView.Create(frxReport1);
-  Band.Objects.Add(Line);
-  Line.Left := 0;
-  Line.Top := 24;
-  Line.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Line.Height := 0;
-  Line.Frame.Typ := [ftTop];
-
-  // Détails des lignes de facture
-  Band := TfrxDetailData.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 200;
-  Band.Height := 20;
-  Band.DataSet := frxDBDataset3; // Dataset des lignes de facture
-
-  // Colonnes de détail
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := '[DetailsFacture."Quantite"]';
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 70;
-  Memo.Top := 0;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := '[DetailsFacture."Description"]';
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 280;
-  Memo.Top := 0;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := '[DetailsFacture."PrixUnitaire"]';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.HAlign := haRight;
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 60;
-  Memo.Top := 0;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := '[DetailsFacture."Quantite"] * [DetailsFacture."PrixUnitaire"]';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.HAlign := haRight;
-
-  // Pied de facture (totaux)
-  Band := TfrxReportSummary.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 240;
-  Band.Height := 100;
-
-  // Ligne horizontale avant le total
-  Line := TfrxLineView.Create(frxReport1);
-  Band.Objects.Add(Line);
-  Line.Left := 0;
-  Line.Top := 0;
-  Line.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Line.Height := 0;
-  Line.Frame.Typ := [ftTop];
-
-  // Total HT
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 160;
-  Memo.Top := 10;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'Total HT:';
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 60;
-  Memo.Top := 10;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'SUM([DetailsFacture."Quantite"] * [DetailsFacture."PrixUnitaire"])';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.HAlign := haRight;
-
-  // TVA
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 160;
-  Memo.Top := 30;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'TVA ([<TauxTVA>]%):';
-  Memo.HAlign := haRight;
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 60;
-  Memo.Top := 30;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'SUM([DetailsFacture."Quantite"] * [DetailsFacture."PrixUnitaire"]) * [<TauxTVA>] / 100';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.HAlign := haRight;
-
-  // Total TTC
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 160;
-  Memo.Top := 50;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'Total TTC:';
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := Page.Width - Page.LeftMargin - Page.RightMargin - 60;
-  Memo.Top := 50;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'SUM([DetailsFacture."Quantite"] * [DetailsFacture."PrixUnitaire"]) * (1 + [<TauxTVA>] / 100)';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haRight;
-
-  // Conditions de paiement
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 70;
-  Memo.Width := 350;
-  Memo.Height := 30;
-  Memo.Text := 'CONDITIONS DE PAIEMENT: Paiement à 30 jours à compter de la date de facture.' + #13#10 +
-               'Merci pour votre confiance!';
-
-  // Pied de page
-  Band := TfrxPageFooter.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Top := 350;
-  Band.Height := 20;
-
-  // Ligne horizontale avant le pied de page
-  Line := TfrxLineView.Create(frxReport1);
-  Band.Objects.Add(Line);
-  Line.Left := 0;
-  Line.Top := 0;
-  Line.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Line.Height := 0;
-  Line.Frame.Typ := [ftTop];
-
-  // Numéro de page
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 5;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 15;
-  Memo.Text := 'Page [Page#] sur [TotalPages#]';
-  Memo.HAlign := haCenter;
-end;
-```
-
-### Conseils pour utiliser efficacement FastReport
-
-Pour tirer le meilleur parti de FastReport, voici quelques conseils pratiques :
-
-1. **Utiliser les modèles** : Créez des modèles réutilisables pour vos rapports fréquents.
-
-```pascal
-// Charger un modèle
-frxReport1.LoadFromFile('Modeles/Facture.fr3');
-
-// Sauvegarder un modèle
-frxReport1.SaveToFile('Modeles/Facture.fr3');
-```
-
-2. **Exploiter les variables** : Utilisez des variables pour personnaliser vos rapports sans modifier le design.
-
-```pascal
-// Définir des variables
-frxReport1.Variables['NomClient'] := QuotedStr('Dupont SA');
-frxReport1.Variables['DateFacture'] := QuotedStr(FormatDateTime('dd/mm/yyyy', Date));
-
-// Utiliser dans le rapport: [<NomClient>], [<DateFacture>]
-```
-
-3. **Créer des groupes** : Organisez vos données en groupes pour des rapports plus lisibles.
-
-```
-// Dans le designer, ajoutez une bande Group Header et définissez la condition de groupe
-// Par exemple, pour grouper par catégorie : [Produits."Categorie"]
-```
-
-4. **Utiliser des scripts** : FastReport prend en charge les scripts pour ajouter une logique complexe.
-
-```pascal
-// Exemple de script dans le rapport (en Pascal)
-procedure OnBeforePrint;
-begin
-  if <Produits."Prix"> > 1000 then
-    Font.Color := clRed
-  else
-    Font.Color := clBlack;
-end;
-```
-
-5. **Créer des graphiques** : Ajoutez des visualisations à vos rapports.
-
-```pascal
-// Dans le code, après avoir créé un rapport avec TfrxReport
-var
-  Chart: TfrxChartView;
-begin
-  Chart := TfrxChartView.Create(frxReport1);
-  // Configuration du graphique
-  Chart.Left := 10;
-  Chart.Top := 10;
-  Chart.Width := 400;
-  Chart.Height := 300;
-  Chart.Chart.Title.Text.Add('Ventes mensuelles');
-  // Ajouter séries, données, etc.
-end;
-```
-
-## Exemple pratique : Génération d'étiquettes avec QuickReport
-
-Voici un exemple de génération d'étiquettes d'adresses avec QuickReport :
-
-```pascal
-procedure TMainForm.CreateAddressLabels;
-var
-  Report: TQuickRep;
-  DetailBand: TQRBand;
-  Label: TQRLabel;
-  DBText: TQRDBText;
-begin
-  // Créer le rapport
-  Report := TQuickRep.Create(Self);
-  Report.Parent := Self;
-  Report.Visible := False;
-
-  // Configuration pour étiquettes 3x8 (24 par page)
-  Report.Page.Orientation := poPortrait;
-  Report.Page.PaperSize := Custom;
-  Report.Page.Width := 210; // A4 width in mm
-  Report.Page.Height := 297; // A4 height in mm
-
-  // Définir les marges
-  Report.Page.LeftMargin := 5;
-  Report.Page.TopMargin := 10;
-  Report.Page.RightMargin := 5;
-  Report.Page.BottomMargin := 5;
-
-  // Lier aux données
-  Report.DataSet := ClientDataSet1; // Table de clients
-
-  // Créer une bande de détail pour chaque étiquette
-  DetailBand := TQRBand.Create(Report);
-  DetailBand.Parent := Report;
-  DetailBand.BandType := rbDetail;
-
-  // Taille de l'étiquette (3 colonnes, 8 lignes)
-  DetailBand.Size.Width := (Report.Page.Width - Report.Page.LeftMargin - Report.Page.RightMargin) / 3;
-  DetailBand.Size.Height := (Report.Page.Height - Report.Page.TopMargin - Report.Page.BottomMargin) / 8;
-
-  // Options d'impression en colonnes
-  Report.Columns := 3; // 3 colonnes
-
-  // Ajouter les champs d'adresse
-  // Nom
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.Left := 5;
-  DBText.Top := 5;
-  DBText.Width := DetailBand.Width - 10;
-  DBText.Height := 20;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'NomClient';
-  DBText.Font.Style := [fsBold];
-
-  // Adresse ligne 1
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.Left := 5;
-  DBText.Top := 25;
-  DBText.Width := DetailBand.Width - 10;
-  DBText.Height := 20;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'Adresse';
-
-  // Code postal et ville
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.Left := 5;
-  DBText.Top := 45;
-  DBText.Width := DetailBand.Width - 10;
-  DBText.Height := 20;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'CodePostal';
-
-  DBText := TQRDBText.Create(DetailBand);
-  DBText.Parent := DetailBand;
-  DBText.Left := 40;
-  DBText.Top := 45;
-  DBText.Width := DetailBand.Width - 45;
-  DBText.Height := 20;
-  DBText.DataSet := ClientDataSet1;
-  DBText.DataField := 'Ville';
-
-  // Prévisualiser
-  Report.Preview;
-end;
-```
-
-## Rapport interactif avec FastReport
-
-FastReport permet de créer des rapports interactifs avec des liens et des actions :
-
-```pascal
-procedure TMainForm.CreateInteractiveReport;
-var
-  Page: TfrxReportPage;
-  Band: TfrxBand;
-  Memo: TfrxMemoView;
-begin
-  // Créer un rapport de base
-  frxReport1.Clear;
-
-  // Ajouter une page
-  Page := TfrxReportPage.Create(frxReport1);
-  frxReport1.Pages.Add(Page);
-
-  // Bande de titre
-  Band := TfrxReportTitle.Create(frxReport1);
-  Page.Bands.Add(Band);
-  Band.Height := 50;
-
-  // Titre interactif qui ouvre une URL quand on clique dessus
-  Memo := TfrxMemoView.Create(frxReport1);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'Rapport interactif - Cliquez pour plus d''informations';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-  Memo.Font.Color := clBlue;
-  Memo.Cursor := crHandPoint;
-  Memo.Underlines := True;
-
-  // Définir l'action pour ouvrir une URL
-  Memo.URL := 'http://www.example.com';
-
-  // Le reste du rapport...
-
-  // Prévisualiser
+  // Le rapport est déjà dans le composant
   frxReport1.ShowReport;
 end;
 ```
 
-## Intégration de rapports dans votre application
+## Rapport avec données de base de données
 
-Pour une meilleure intégration des rapports dans votre application, suivez ces conseils :
+### Configuration de la source de données
 
-### 1. Organisation des rapports
+**Étape 1 : Préparer les composants**
 
-Créez une structure de répertoires pour vos modèles de rapports :
+Ajoutez sur votre formulaire :
+- `TFDConnection` pour la connexion
+- `TFDQuery` nommé `FDQueryClients` avec une requête SQL
+- `TDataSource` nommé `DataSourceClients`
+- `TfrxDBDataset` nommé `frxDBDatasetClients`
 
-```
-MonApplication/
-  |- Rapports/
-      |- Modeles/
-          |- Factures.fr3
-          |- Clients.fr3
-          |- Etiquettes.qrp
-      |- Sorties/
-          |- (fichiers PDF générés)
-```
-
-### 2. Gestionnaire de rapports
-
-Créez une classe dédiée à la gestion des rapports :
+**Configuration :**
 
 ```pascal
-unit ReportManager;
+// Configuration de la connexion (déjà vue dans le chapitre 8)
+FDConnection1.DriverName := 'MySQL';
+// ... autres paramètres de connexion
 
-interface
+// Requête
+FDQueryClients.Connection := FDConnection1;
+FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
+FDQueryClients.Open;
 
-uses
-  System.SysUtils, System.Classes, frxClass, frxDBSet, frxExportPDF;
+// DataSource
+DataSourceClients.DataSet := FDQueryClients;
 
-type
-  TReportType = (rtInvoice, rtCustomerList, rtProductCatalog, rtLabels);
-
-  TReportManager = class
-  private
-    FReport: TfrxReport;
-    FPDFExport: TfrxPDFExport;
-    procedure ConfigureDataSets;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure ShowReport(ReportType: TReportType);
-    procedure ExportToPDF(ReportType: TReportType; const FileName: string);
-    procedure SetReportParameter(const ParamName: string; const ParamValue: Variant);
-  end;
-
-implementation
-
-constructor TReportManager.Create;
-begin
-  inherited Create;
-
-  FReport := TfrxReport.Create(nil);
-  FPDFExport := TfrxPDFExport.Create(nil);
-
-  // Configuration des exports
-  FPDFExport.ShowProgress := False;
-  FPDFExport.ShowDialog := False;
-  FPDFExport.Creator := 'Mon Application Delphi';
-  FPDFExport.Subject := 'Rapport généré par Mon Application';
-end;
-
-destructor TReportManager.Destroy;
-begin
-  FReport.Free;
-  FPDFExport.Free;
-
-  inherited;
-end;
-
-procedure TReportManager.ConfigureDataSets;
-var
-  ClientDataSet: TfrxDBDataset;
-begin
-  // Nettoyer les datasets existants
-  FReport.DataSets.Clear;
-
-  // Ajouter les datasets nécessaires
-  ClientDataSet := TfrxDBDataset.Create(FReport);
-  ClientDataSet.DataSet := DataModule1.ClientDataSet1; // Votre source de données
-  ClientDataSet.UserName := 'Clients';
-  FReport.DataSets.Add(ClientDataSet);
-
-  // Ajouter d'autres datasets selon vos besoins
-end;
-
-procedure TReportManager.ShowReport(ReportType: TReportType);
-var
-  TemplateFile: string;
-begin
-  // Sélectionner le bon template selon le type de rapport
-  case ReportType of
-    rtInvoice: TemplateFile := 'Rapports\Modeles\Facture.fr3';
-    rtCustomerList: TemplateFile := 'Rapports\Modeles\Clients.fr3';
-    rtProductCatalog: TemplateFile := 'Rapports\Modeles\Catalogue.fr3';
-    rtLabels: TemplateFile := 'Rapports\Modeles\Etiquettes.fr3';
-  else
-    raise Exception.Create('Type de rapport non reconnu');
-  end;
-
-  // Vérifier si le fichier existe
-  if not FileExists(TemplateFile) then
-    raise Exception.CreateFmt('Modèle de rapport introuvable: %s', [TemplateFile]);
-
-  // Configurer les datasets
-  ConfigureDataSets;
-
-  // Charger et afficher le rapport
-  FReport.LoadFromFile(TemplateFile);
-  FReport.ShowReport;
-end;
-
-procedure TReportManager.ExportToPDF(ReportType: TReportType; const FileName: string);
-begin
-  // Préparer le rapport
-  ShowReport(ReportType);
-
-  // Configurer l'export PDF
-  FPDFExport.FileName := FileName;
-
-  // Exporter
-  FReport.PrepareReport;
-  FReport.Export(FPDFExport);
-end;
-
-procedure TReportManager.SetReportParameter(const ParamName: string; const ParamValue: Variant);
-begin
-  if VarIsStr(ParamValue) then
-    FReport.Variables[ParamName] := QuotedStr(ParamValue)
-  else
-    FReport.Variables[ParamName] := ParamValue;
-end;
-
-end.
+// FastReport Dataset
+frxDBDatasetClients.DataSet := FDQueryClients;
 ```
 
-### 3. Utilisation dans votre application
+**Étape 2 : Configurer le rapport**
+
+1. Double-cliquez sur `frxReport1` pour ouvrir le designer
+2. Cliquez sur **Report → Data** dans le menu
+3. La fenêtre des sources de données s'ouvre
+4. Vous devriez voir `frxDBDatasetClients` dans la liste
+5. Cochez la case pour l'activer
+6. Cliquez sur **OK**
+
+### Création d'un rapport maître-détail
+
+**Étape 1 : Ajouter les bandes**
+
+1. Ajoutez une bande **Report Title** pour le titre
+2. Ajoutez une bande **Page Header** pour les en-têtes de colonnes
+3. Ajoutez une bande **Master Data** pour les données
+4. Ajoutez une bande **Page Footer** pour la numérotation
+
+**Étape 2 : Configurer la bande Master Data**
+
+1. Sélectionnez la bande **Master Data**
+2. Dans l'Inspecteur d'objets, propriété **DataSet**, sélectionnez `frxDBDatasetClients`
+
+**Étape 3 : Ajouter les champs**
+
+1. Dans la fenêtre **Data Tree** (arbre des données), développez `frxDBDatasetClients`
+2. Vous voyez tous les champs de la table
+3. Glissez-déposez les champs dans la bande Master Data :
+   - `nom` dans la première colonne
+   - `prenom` dans la deuxième colonne
+   - `email` dans la troisième colonne
+
+**Étape 4 : En-têtes de colonnes**
+
+Dans la bande **Page Header**, ajoutez des objets Memo avec :
+- "Nom" au-dessus de la colonne nom
+- "Prénom" au-dessus de la colonne prénom
+- "Email" au-dessus de la colonne email
+
+Mettez ces en-têtes en gras.
+
+**Étape 5 : Numérotation des pages**
+
+Dans la bande **Page Footer**, ajoutez un Memo avec :
+```
+Page [Page] sur [TotalPages]
+```
+
+Les expressions entre crochets sont automatiquement remplacées par FastReport.
+
+### Code complet
 
 ```pascal
-procedure TMainForm.btnInvoiceClick(Sender: TObject);
-var
-  ReportMgr: TReportManager;
+procedure TForm1.btnRapportClientsClick(Sender: TObject);
 begin
-  ReportMgr := TReportManager.Create;
   try
-    // Définir des paramètres si nécessaire
-    ReportMgr.SetReportParameter('NumeroFacture', 'FA-' + FormatDateTime('yyyymmdd', Date) + '-001');
-    ReportMgr.SetReportParameter('DateFacture', FormatDateTime('dd/mm/yyyy', Date));
+    // Ouvrir la connexion et la requête
+    FDConnection1.Connected := True;
+    FDQueryClients.Open;
 
-    // Afficher le rapport
-    ReportMgr.ShowReport(rtInvoice);
+    // Charger et afficher le rapport
+    frxReport1.LoadFromFile('RapportClients.fr3');
+    frxReport1.ShowReport;
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
+end;
+```
+
+## Formatage et expressions
+
+### Expressions FastReport
+
+FastReport utilise un langage de script (PascalScript) pour les expressions :
+
+#### Champs de données
+
+```
+[frxDBDatasetClients."nom"]
+```
+
+#### Variables système
+
+```
+[Page]           // Numéro de page actuelle
+[TotalPages]     // Nombre total de pages
+[Date]           // Date du jour
+[Time]           // Heure actuelle
+[Line]           // Numéro de ligne
+```
+
+#### Opérations
+
+```
+[<Total>]        // Somme d'un champ
+[<Count>]        // Nombre d'enregistrements
+[<Avg>]          // Moyenne
+[<Min>]          // Minimum
+[<Max>]          // Maximum
+```
+
+### Formatage des nombres
+
+Pour formater un nombre avec 2 décimales :
+
+```
+[FormatFloat('#,##0.00', <frxDBDatasetFactures."montant">)]
+```
+
+### Formatage des dates
+
+Pour formater une date :
+
+```
+[FormatDateTime('dd/mm/yyyy', <frxDBDatasetFactures."date">)]
+```
+
+### Expressions conditionnelles
+
+Vous pouvez utiliser des conditions :
+
+```
+[IIF(<frxDBDatasetFactures."montant"> > 1000, 'Élevé', 'Normal')]
+```
+
+## Mise en forme conditionnelle
+
+### Changer la couleur selon une condition
+
+**Exemple : colorer en rouge les montants supérieurs à 1000 €**
+
+1. Sélectionnez l'objet Memo contenant le montant
+2. Cliquez sur **Highlight** dans la barre d'outils
+3. Cliquez sur **Add** pour ajouter une condition
+4. Configurez :
+   - **Condition** : `<frxDBDatasetFactures."montant"> > 1000`
+   - **Font Color** : clRed
+5. Cliquez sur **OK**
+
+### Bandes alternées
+
+Pour alterner les couleurs de fond des lignes :
+
+1. Sélectionnez la bande **Master Data**
+2. Dans l'Inspecteur d'objets, trouvez **OnBeforePrint**
+3. Double-cliquez pour créer l'événement
+4. Ajoutez le code :
+
+```pascal
+begin
+  if <Line> mod 2 = 0 then
+    MasterData1.Color := clWhite
+  else
+    MasterData1.Color := $00F0F0F0;  // Gris clair
+end;
+```
+
+## Groupes et sous-totaux
+
+### Créer un groupe
+
+Pour grouper par catégorie par exemple :
+
+**Étape 1 : Ajouter les bandes de groupe**
+
+1. Cliquez sur **Insert Band**
+2. Sélectionnez **Group Header**
+3. Dans la fenêtre qui s'ouvre :
+   - **Dataset** : sélectionnez votre dataset
+   - **Group Condition** : `<frxDBDataset."categorie">`
+4. Cochez **Add Group Footer** pour avoir un pied de groupe
+
+**Étape 2 : Configurer l'en-tête de groupe**
+
+1. Dans la bande **Group Header**, ajoutez un Memo
+2. Contenu : `Catégorie : [frxDBDataset."categorie"]`
+3. Mettez-le en gras
+
+**Étape 3 : Ajouter des sous-totaux**
+
+1. Dans la bande **Group Footer**, ajoutez un Memo
+2. Contenu : `Total : [SUM(<frxDBDataset."montant">,MasterData1)]`
+
+La fonction `SUM` calcule automatiquement le total pour chaque groupe.
+
+## Sous-rapports
+
+Les sous-rapports permettent d'inclure un rapport dans un autre.
+
+### Utilisation typique
+
+Exemple : une facture avec les détails des lignes
+
+**Rapport principal :** informations de la facture (client, date, numéro)
+**Sous-rapport :** lignes de la facture (articles, quantités, prix)
+
+### Création d'un sous-rapport
+
+**Étape 1 : Ajouter l'objet Subreport**
+
+1. Dans la palette, cliquez sur **Subreport**
+2. Placez-le dans votre rapport principal
+3. Double-cliquez dessus pour ouvrir son designer
+
+**Étape 2 : Concevoir le sous-rapport**
+
+1. Le sous-rapport a sa propre structure avec ses bandes
+2. Ajoutez une bande **Master Data**
+3. Liez-la à votre dataset de détails
+4. Ajoutez les champs nécessaires
+
+**Étape 3 : Liaison maître-détail**
+
+```pascal
+// Dans le code
+frxDBDatasetFactures.DataSet := FDQueryFactures;
+frxDBDatasetLignes.DataSet := FDQueryLignes;
+
+// Définir la relation
+FDQueryLignes.MasterSource := DataSourceFactures;
+FDQueryLignes.MasterFields := 'id_facture';
+```
+
+## Graphiques dans les rapports
+
+FastReport permet d'intégrer des graphiques facilement.
+
+### Ajout d'un graphique
+
+**Étape 1 : Insérer un graphique**
+
+1. Cliquez sur l'icône **Chart** dans la palette
+2. Placez-le dans une bande (Report Summary par exemple)
+3. Redimensionnez-le
+
+**Étape 2 : Configurer le graphique**
+
+1. Double-cliquez sur le graphique
+2. L'éditeur de graphique s'ouvre
+3. Onglet **Data** :
+   - **Dataset** : sélectionnez votre source
+   - **Value** : champ pour les valeurs
+   - **Argument** : champ pour les étiquettes
+4. Onglet **Series** :
+   - Choisissez le type (camembert, barres, courbes, etc.)
+5. Onglet **Options** :
+   - Personnalisez l'apparence
+
+### Exemple de graphique
+
+Graphique des ventes par mois :
+
+- **Dataset** : requête avec les ventes mensuelles
+- **Value** : `total_ventes`
+- **Argument** : `mois`
+- **Type** : Bar Chart (histogramme)
+
+## Export de rapports
+
+FastReport offre de nombreux formats d'export.
+
+### Export via l'aperçu
+
+Lorsque l'aperçu est affiché, l'utilisateur peut :
+
+1. Cliquer sur le bouton **Export**
+2. Choisir le format (PDF, Excel, Word, etc.)
+3. Sélectionner l'emplacement
+4. Le rapport est exporté
+
+### Export par code
+
+Vous pouvez aussi exporter directement par code :
+
+#### Export en PDF
+
+```pascal
+uses
+  frxClass, frxExportPDF;
+
+procedure TForm1.ExporterEnPDF;
+var
+  PDFExport: TfrxPDFExport;
+begin
+  PDFExport := TfrxPDFExport.Create(nil);
+  try
+    frxReport1.LoadFromFile('MonRapport.fr3');
+    frxReport1.PrepareReport;  // Préparer le rapport
+
+    PDFExport.FileName := 'C:\Rapports\MonRapport.pdf';
+    PDFExport.ShowDialog := False;  // Pas de dialogue
+    PDFExport.DefaultPath := 'C:\Rapports';
+
+    frxReport1.Export(PDFExport);
+
+    ShowMessage('Rapport exporté en PDF');
   finally
-    ReportMgr.Free;
+    PDFExport.Free;
+  end;
+end;
+```
+
+#### Export en Excel
+
+```pascal
+uses
+  frxClass, frxExportXLS;
+
+procedure TForm1.ExporterEnExcel;
+var
+  ExcelExport: TfrxXLSExport;
+begin
+  ExcelExport := TfrxXLSExport.Create(nil);
+  try
+    frxReport1.LoadFromFile('MonRapport.fr3');
+    frxReport1.PrepareReport;
+
+    ExcelExport.FileName := 'C:\Rapports\MonRapport.xls';
+    ExcelExport.ShowDialog := False;
+    ExcelExport.OpenAfterExport := True;  // Ouvrir automatiquement
+
+    frxReport1.Export(ExcelExport);
+  finally
+    ExcelExport.Free;
+  end;
+end;
+```
+
+#### Autres formats disponibles
+
+- **HTML** : `TfrxHTMLExport`
+- **RTF (Word)** : `TfrxRTFExport`
+- **XML** : `TfrxXMLExport`
+- **CSV** : `TfrxCSVExport`
+- **Image** : `TfrxBMPExport`, `TfrxJPEGExport`, `TfrxPNGExport`
+
+## Passage de paramètres au rapport
+
+Vous pouvez passer des variables au rapport depuis votre code.
+
+### Déclaration de variables
+
+**Dans le designer FastReport :**
+
+1. Cliquez sur **Report → Variables**
+2. Cliquez sur **Add Category** : nommez-la "Parametres"
+3. Cliquez sur **Add** pour ajouter une variable
+4. Nom : `NomClient`, Type : `String`
+
+### Affectation par code
+
+```pascal
+procedure TForm1.AfficherRapportAvecParametre;
+begin
+  frxReport1.LoadFromFile('MonRapport.fr3');
+
+  // Affecter la valeur de la variable
+  frxReport1.Variables['NomClient'] := QuotedStr('Dupont');
+  frxReport1.Variables['DateRapport'] := QuotedStr(DateToStr(Date));
+
+  frxReport1.ShowReport;
+end;
+```
+
+### Utilisation dans le rapport
+
+Dans un Memo du rapport, utilisez :
+
+```
+Client : [NomClient]
+Date : [DateRapport]
+```
+
+## QuickReport : présentation
+
+Bien que moins utilisé aujourd'hui, QuickReport mérite d'être mentionné car il est encore présent dans des applications existantes.
+
+### Composants principaux
+
+- **TQuickRep** : composant principal du rapport
+- **TQRBand** : bandes du rapport
+- **TQRLabel** : texte statique
+- **TQRDBText** : texte lié aux données
+- **TQRImage** : images
+- **TQRShape** : formes
+- **TQRChart** : graphiques
+
+### Structure d'un rapport QuickReport
+
+Un rapport QuickReport se construit directement sur un formulaire Delphi :
+
+1. Créez un nouveau formulaire
+2. Placez un composant `TQuickRep`
+3. Ajoutez des bandes (`TQRBand`)
+4. Placez des composants dans les bandes
+
+### Exemple simple avec QuickReport
+
+```pascal
+// Sur le formulaire principal
+procedure TForm1.btnRapportQRClick(Sender: TObject);
+begin
+  FormRapportQR := TFormRapportQR.Create(Self);
+  try
+    FormRapportQR.QuickRep1.Preview;
+  finally
+    FormRapportQR.Free;
   end;
 end;
 
-procedure TMainForm.btnExportPdfClick(Sender: TObject);
-var
-  ReportMgr: TReportManager;
-  SaveDialog: TSaveDialog;
+// Sur le formulaire du rapport
+procedure TFormRapportQR.QuickRep1BeforePrint(Sender: TCustomQuickRep; var PrintReport: Boolean);
 begin
-  SaveDialog := TSaveDialog.Create(nil);
-  try
-    SaveDialog.Title := 'Enregistrer la facture en PDF';
-    SaveDialog.DefaultExt := 'pdf';
-    SaveDialog.Filter := 'Fichiers PDF (*.pdf)|*.pdf';
-    SaveDialog.InitialDir := ExtractFilePath(Application.ExeName) + 'Rapports\Sorties';
+  // Préparation du rapport
+  QRLabel1.Caption := 'Rapport du ' + DateToStr(Date);
+end;
+```
 
-    if SaveDialog.Execute then
+### Liaison aux données
+
+```pascal
+// Configuration
+QuickRep1.DataSet := FDQueryClients;
+QRDBText1.DataSet := FDQueryClients;
+QRDBText1.DataField := 'nom';
+```
+
+### Limitations de QuickReport
+
+- Interface moins moderne que FastReport
+- Fonctionnalités d'export limitées
+- Plus maintenu activement
+- Moins flexible pour les mises en page complexes
+
+## Comparaison FastReport vs QuickReport
+
+| Critère | FastReport | QuickReport |
+|---------|-----------|-------------|
+| **Interface** | Moderne, designer séparé | Intégrée à l'IDE |
+| **Facilité** | Courbe d'apprentissage moyenne | Plus simple pour débuter |
+| **Exports** | Nombreux formats (PDF, Excel, etc.) | Limité (principalement PDF) |
+| **Prix** | Payant (version d'évaluation) | Gratuit (si inclus dans Delphi) |
+| **Maintenance** | Mise à jour régulière | Plus maintenu |
+| **Fonctionnalités** | Très complet | Basique |
+| **Performance** | Excellente | Bonne |
+| **Support** | Actif, documentation complète | Limité |
+
+### Recommandation
+
+- **Pour nouveaux projets** : FastReport
+- **Pour maintenance d'anciens projets** : conserver QuickReport si déjà utilisé
+- **Pour rapports simples** : composants natifs Delphi suffisent
+- **Pour rapports complexes** : FastReport est le meilleur choix
+
+## Fonctionnalités avancées de FastReport
+
+### Scripts dans les rapports
+
+FastReport intègre un moteur de script PascalScript qui permet d'ajouter de la logique.
+
+**Exemple : calcul personnalisé**
+
+1. Sélectionnez un objet Memo
+2. Dans l'Inspecteur d'objets, trouvez l'événement **OnBeforePrint**
+3. Cliquez sur le bouton [...] pour ouvrir l'éditeur de script
+4. Écrivez votre code :
+
+```pascal
+begin
+  if <frxDBDataset."montant"> > 1000 then
+    Memo1.Text := 'Montant élevé : ' + FormatFloat('#,##0.00', <frxDBDataset."montant">)
+  else
+    Memo1.Text := FormatFloat('#,##0.00', <frxDBDataset."montant">);
+end;
+```
+
+### Rapports maître-détail-détail
+
+Vous pouvez créer des structures complexes :
+
+- **Niveau 1** : Catégories
+- **Niveau 2** : Produits par catégorie
+- **Niveau 3** : Ventes par produit
+
+Chaque niveau a ses propres bandes Header/Footer avec sous-totaux.
+
+### Codes-barres
+
+FastReport supporte de nombreux types de codes-barres :
+
+1. Cliquez sur l'icône **Barcode**
+2. Placez-le dans le rapport
+3. Double-cliquez pour configurer :
+   - **Type** : EAN13, Code128, QR Code, etc.
+   - **Text** : `[frxDBDataset."code_article"]`
+   - **Options** : taille, bordures, etc.
+
+### Rapports croisés (crosstabs)
+
+Les rapports croisés affichent des données en tableau à double entrée.
+
+**Exemple :** Ventes par mois et par vendeur
+
+1. Cliquez sur **Insert → Cross-table**
+2. Configurez :
+   - **Rows** : vendeur
+   - **Columns** : mois
+   - **Cells** : total des ventes
+3. FastReport génère automatiquement le tableau
+
+### Watermark (filigrane)
+
+Ajoutez un filigrane à vos pages :
+
+1. Sélectionnez la page
+2. Dans l'Inspecteur d'objets, trouvez **Watermark**
+3. Configurez :
+   - **Enabled** : True
+   - **Text** : "CONFIDENTIEL"
+   - **Font** : taille, couleur, angle
+
+## Optimisation des performances
+
+### Rapports volumineux
+
+Pour les rapports avec beaucoup de données :
+
+**Mode Double-Pass**
+
+```pascal
+frxReport1.EngineOptions.DoublePass := True;
+```
+
+Permet de faire deux passes : une pour compter, une pour imprimer.
+
+**Gestion de la mémoire**
+
+```pascal
+frxReport1.EngineOptions.UseFileCache := True;
+frxReport1.EngineOptions.TempDir := 'C:\Temp';
+```
+
+Utilise le disque plutôt que la mémoire pour les gros rapports.
+
+### Préparation en arrière-plan
+
+```pascal
+procedure TForm1.PreparerRapportAsync;
+begin
+  TTask.Run(
+    procedure
     begin
-      ReportMgr := TReportManager.Create;
-      try
-        // Exporter en PDF
-        ReportMgr.ExportToPDF(rtInvoice, SaveDialog.FileName);
+      frxReport1.PrepareReport;
 
-        // Ouvrir le PDF si l'utilisateur le souhaite
-        if MessageDlg('Le PDF a été généré avec succès. Voulez-vous l''ouvrir?',
-                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      TThread.Synchronize(nil,
+        procedure
         begin
-          ShellExecute(0, 'open', PChar(SaveDialog.FileName), nil, nil, SW_SHOWNORMAL);
-        end;
-      finally
-        ReportMgr.Free;
-      end;
-    end;
-  finally
-    SaveDialog.Free;
-  end;
+          frxReport1.ShowPreparedReport;
+        end
+      );
+    end
+  );
 end;
 ```
 
-## Dépannage et astuces
+## Sécurité des rapports
 
-### Problèmes courants et solutions
+### Protection par mot de passe
 
-#### 1. "Impossible de trouver le fichier modèle de rapport"
+Protégez vos fichiers de rapport :
 
 ```pascal
-// Vérifier le chemin complet du fichier
+frxReport1.Password := 'MonMotDePasse';
+frxReport1.SaveToFile('RapportProtege.fr3');
+```
+
+Pour charger :
+
+```pascal
+frxReport1.Password := 'MonMotDePasse';
+frxReport1.LoadFromFile('RapportProtege.fr3');
+```
+
+### PDF avec restrictions
+
+Créez des PDF protégés :
+
+```pascal
+PDFExport.UserPassword := 'lecture';
+PDFExport.OwnerPassword := 'admin';
+PDFExport.ProtectionFlags := [ePrint, eModify];
+```
+
+## Internationalisation
+
+### Rapports multilingues
+
+**Approche 1 : Variables**
+
+```pascal
+frxReport1.Variables['TitreRapport'] := QuotedStr(GetTranslation('titre'));
+```
+
+**Approche 2 : Fichiers séparés**
+
+Créez un rapport par langue :
+- `Rapport_FR.fr3`
+- `Rapport_EN.fr3`
+- `Rapport_ES.fr3`
+
+Chargez le bon fichier selon la langue :
+
+```pascal
 var
-  FullPath: string;
+  LangueCode: string;
 begin
-  FullPath := ExtractFilePath(Application.ExeName) + 'Rapports\Modeles\Facture.fr3';
-  if not FileExists(FullPath) then
-    ShowMessage('Fichier introuvable: ' + FullPath)
-  else
-    frxReport1.LoadFromFile(FullPath);
+  LangueCode := 'FR';  // Déterminé selon les préférences
+  frxReport1.LoadFromFile('Rapport_' + LangueCode + '.fr3');
 end;
 ```
 
-#### 2. "Le rapport ne s'affiche pas correctement"
+## Déploiement
 
-```pascal
-// Activer le mode de débogage dans FastReport
-frxReport1.ReportOptions.ShowProgress := True;
-frxReport1.ReportOptions.ShowPreparedReport := True;
-```
+### Fichiers nécessaires
 
-#### 3. "Les données ne s'affichent pas dans le rapport"
+Pour distribuer votre application avec FastReport :
 
-```pascal
-// Vérifier que les datasets sont correctement assignés
-if not Assigned(frxDBDataset1.DataSet) then
-  ShowMessage('Dataset non assigné')
-else if frxDBDataset1.DataSet.IsEmpty then
-  ShowMessage('Dataset vide')
-else
-  ShowMessage('Dataset OK: ' + IntToStr(frxDBDataset1.DataSet.RecordCount) + ' enregistrements');
-```
+**DLLs requises :**
+- `fs26.bpl` : moteur de script
+- `fsDB26.bpl` : accès aux données
+- `frx26.bpl` : moteur FastReport
+- `frxDB26.bpl` : composants base de données
+- `frxe26.bpl` : composants export
 
-### Astuces pour optimiser les performances
+**Remarque :** Le nombre (26) correspond à la version de Delphi.
 
-1. **Précharger les modèles** : Chargez les modèles de rapports au démarrage de l'application.
+### Installation minimale
 
-```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Précharger les modèles fréquemment utilisés
-  frxReport1.LoadFromFile('Rapports\Modeles\Facture.fr3');
-  frxReport2.LoadFromFile('Rapports\Modeles\Clients.fr3');
-end;
-```
+Pour une distribution sans installation :
+1. Copiez les BPL dans le dossier de l'application
+2. Incluez les fichiers `.fr3` des rapports
+3. Vérifiez les licences FastReport pour la redistribution
 
-2. **Limiter les données** : Ne chargez que les données nécessaires.
+## Conseils et bonnes pratiques
 
-```pascal
-// Exemple avec une requête SQL filtrée
-ADOQuery1.SQL.Text := 'SELECT * FROM Clients WHERE DateCommande >= :Date';
-ADOQuery1.Parameters.ParamByName('Date').Value := StartOfTheMonth(Date);
-ADOQuery1.Open;
-```
+### Conception de rapports
 
-3. **Utiliser des pages virtuelles** pour les grands rapports.
+- **Simplicité** : ne surchargez pas la mise en page
+- **Cohérence** : utilisez les mêmes polices et couleurs
+- **Lisibilité** : marges suffisantes, texte bien espacé
+- **Tests** : testez avec différents volumes de données
+- **Performance** : optimisez les requêtes SQL
 
-```pascal
-frxReport1.ReportOptions.UseFileCache := True;
-frxReport1.ReportOptions.MaxMemSize := 10; // MB
-```
+### Organisation
 
-## Conclusion
+- **Fichiers séparés** : stockez les rapports dans des fichiers `.fr3`
+- **Nomenclature** : nommez clairement vos rapports
+- **Versions** : utilisez un système de contrôle de version
+- **Documentation** : documentez les paramètres et variables
 
-Les générateurs de rapports comme FastReport et QuickReport sont des outils puissants qui simplifient considérablement la création de rapports professionnels dans vos applications Delphi. Ils offrent :
+### Développement
 
-- Une interface de conception visuelle intuitive
-- Des fonctionnalités d'impression et de prévisualisation avancées
-- L'exportation vers différents formats
-- L'intégration facile avec les sources de données
+- **Réutilisabilité** : créez des modèles de rapports
+- **Modularité** : utilisez des sous-rapports pour les parties communes
+- **Variables** : utilisez des variables plutôt que du texte codé en dur
+- **Tests** : testez tous les cas (données vides, beaucoup de données, etc.)
 
-Bien que FastReport soit généralement plus riche en fonctionnalités, QuickReport reste une option viable pour des besoins plus simples. Le choix entre les deux dépendra de la complexité de vos rapports, de votre budget et de vos préférences personnelles.
+## Résumé
 
-En pratique, il est recommandé de :
-1. Structurer vos rapports en modèles réutilisables
-2. Créer une classe de gestion des rapports pour centraliser la logique
-3. Utiliser des variables pour personnaliser les rapports sans modifier le design
-4. Profiter des fonctionnalités interactives pour une meilleure expérience utilisateur
+Les générateurs de rapports sont des outils indispensables pour créer des documents professionnels. Les points clés :
 
-Dans la prochaine section, nous aborderons la création de rapports complexes avec des fonctionnalités avancées comme les sous-rapports, les graphiques et les tableaux croisés dynamiques.
+- **FastReport** est le choix privilégié pour les nouveaux projets Delphi
+- **Designer visuel** facilite grandement la création de rapports
+- **Liaison aux données** automatique avec les datasets Delphi
+- **Export multiple** vers PDF, Excel, Word et autres formats
+- **Fonctionnalités avancées** : graphiques, sous-rapports, codes-barres
+- **Scripts intégrés** pour la logique personnalisée
+- **Performance optimisée** pour les gros volumes de données
+
+Dans la prochaine section, nous verrons comment créer des rapports encore plus complexes avec des fonctionnalités avancées comme les tableaux de bord et les visualisations de données interactives.
 
 ⏭️ [Création de rapports complexes](/09-rapports-et-impressions/04-creation-de-rapports-complexes.md)

@@ -1,1946 +1,1570 @@
-# 9.7 Rapports interactifs
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 9.7 Rapports interactifs
 
 ## Introduction
 
-Les rapports interactifs constituent une évolution majeure dans le domaine de la génération de rapports. Contrairement aux rapports statiques qui présentent simplement des informations, les rapports interactifs permettent aux utilisateurs d'explorer les données, de naviguer entre différentes sections, de filtrer les informations et même d'effectuer des actions directement dans le rapport.
+Les rapports interactifs transforment des documents statiques en outils d'exploration de données dynamiques. Contrairement aux rapports traditionnels qui présentent simplement l'information, les rapports interactifs permettent aux utilisateurs de naviguer, filtrer, approfondir et personnaliser l'affichage des données en temps réel. Cette approche améliore considérablement l'expérience utilisateur et la valeur analytique des rapports.
 
-Dans cette section, nous découvrirons comment créer des rapports interactifs avec FastReport, offrant ainsi à vos utilisateurs une expérience plus riche et personnalisée.
+## Qu'est-ce qu'un rapport interactif ?
 
-## Éléments d'interactivité dans les rapports
+Un rapport interactif est un rapport qui offre des fonctionnalités permettant à l'utilisateur d'interagir avec le contenu :
 
-FastReport propose plusieurs façons de rendre vos rapports interactifs :
+- **Navigation** : liens cliquables, signets, table des matières
+- **Drill-down** : exploration progressive des données (du général au détail)
+- **Drill-through** : passage d'un rapport à un autre
+- **Filtres dynamiques** : sélection des données à afficher
+- **Tri interactif** : réorganisation des données par l'utilisateur
+- **Expansion/Réduction** : affichage/masquage de sections
+- **Paramètres** : personnalisation du rapport avant affichage
+- **Recherche** : localisation rapide d'informations
+- **Export sélectif** : choix des données à exporter
 
-1. **Navigation entre pages** : boutons et liens pour se déplacer
-2. **Hyperliens** : liens vers des sites web ou d'autres documents
-3. **Signets** : navigation rapide vers des sections spécifiques
-4. **Données détaillées** : affichage de détails à la demande
-5. **Formulaires de saisie** : collecte de paramètres utilisateur
-6. **Contenu conditionnel** : adaptation du contenu selon les interactions
+## Avantages des rapports interactifs
 
-## Navigation entre pages
+### Pour les utilisateurs
 
-La navigation de base permet aux utilisateurs de se déplacer facilement dans un rapport multi-pages.
+- **Exploration autonome** : trouvent leurs propres réponses
+- **Gain de temps** : pas besoin de générer plusieurs rapports
+- **Personnalisation** : adaptent le rapport à leurs besoins
+- **Découverte** : révèlent des insights cachés
+- **Efficacité** : accès direct aux informations pertinentes
+
+### Pour les développeurs
+
+- **Moins de rapports à créer** : un rapport interactif remplace plusieurs rapports statiques
+- **Maintenance simplifiée** : modifications centralisées
+- **Satisfaction utilisateur** : fonctionnalités appréciées
+- **Valeur ajoutée** : différenciation de l'application
+
+## Configuration de base dans FastReport
+
+### Activation de l'interactivité
+
+FastReport offre un excellent support pour les rapports interactifs.
 
 ```pascal
-procedure TForm1.CreateNavigationReport;
-var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  Band: TfrxReportTitle;
-  Memo: TfrxMemoView;
+procedure TForm1.ConfigurerRapportInteractif;
 begin
-  Report := frxReport1;
-  Report.Clear;
+  // Charger le rapport
+  frxReport1.LoadFromFile('RapportInteractif.fr3');
 
-  // Créer une page
-  Page := TfrxReportPage.Create(Report);
-  Report.Pages.Add(Page);
+  // Options d'aperçu pour l'interactivité
+  frxReport1.PreviewOptions.AllowEdit := False; // Désactiver l'édition
+  frxReport1.PreviewOptions.Buttons := [pbPrint, pbSave, pbZoom, pbFind, pbOutline];
 
-  // Ajouter une bande de titre
-  Band := TfrxReportTitle.Create(Report);
-  Page.Bands.Add(Band);
-  Band.Height := 50;
+  // Activer la barre de navigation
+  frxReport1.PreviewOptions.ShowOutline := True; // Table des matières
 
-  // Ajouter un titre
-  Memo := TfrxMemoView.Create(Report);
-  Band.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'RAPPORT INTERACTIF';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
+  // Options de recherche
+  frxReport1.PreviewOptions.ShowCaptions := True;
 
-  // Ajouter des boutons de navigation
-  Memo := TfrxMemoView.Create(Report);
-  Band.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 30;
-  Memo.Width := 80;
-  Memo.Height := 20;
-  Memo.Text := 'Page suivante';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'NextPage';
+  // Mode plein écran disponible
+  frxReport1.PreviewOptions.ShowInTaskbar := True;
 
-  Memo := TfrxMemoView.Create(Report);
-  Band.Objects.Add(Memo);
-  Memo.Left := 100;
-  Memo.Top := 30;
-  Memo.Width := 80;
-  Memo.Height := 20;
-  Memo.Text := 'Dernière page';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'LastPage';
-
-  // Ajouter un script pour gérer les clics
-  Report.Script.Text :=
-    'procedure NextPage;' + #13#10 +
-    'begin' + #13#10 +
-    '  Engine.GotoNextPage;' + #13#10 +
-    'end;' + #13#10 +
-    #13#10 +
-    'procedure LastPage;' + #13#10 +
-    'begin' + #13#10 +
-    '  Engine.GotoLastPage;' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
+  // Afficher le rapport
+  frxReport1.ShowReport;
 end;
 ```
 
-### Ajout d'une fonctionnalité de navigation avancée
+### Aperçu personnalisé
 
-Pour une navigation plus élaborée, vous pouvez créer une barre de navigation complète :
-
-```pascal
-// Créer une bande de pied de page pour la navigation
-BandFooter := TfrxPageFooter.Create(Report);
-Page.Bands.Add(BandFooter);
-BandFooter.Height := 30;
-
-// Première page
-Memo := TfrxMemoView.Create(Report);
-BandFooter.Objects.Add(Memo);
-Memo.Left := 10;
-Memo.Top := 5;
-Memo.Width := 20;
-Memo.Height := 20;
-Memo.Text := '<<';
-Memo.Font.Color := clBlue;
-Memo.Cursor := crHandPoint;
-Memo.OnClick := 'FirstPage';
-
-// Page précédente
-Memo := TfrxMemoView.Create(Report);
-BandFooter.Objects.Add(Memo);
-Memo.Left := 40;
-Memo.Top := 5;
-Memo.Width := 20;
-Memo.Height := 20;
-Memo.Text := '<';
-Memo.Font.Color := clBlue;
-Memo.Cursor := crHandPoint;
-Memo.OnClick := 'PrevPage';
-
-// Page actuelle / Total
-Memo := TfrxMemoView.Create(Report);
-BandFooter.Objects.Add(Memo);
-Memo.Left := 70;
-Memo.Top := 5;
-Memo.Width := 100;
-Memo.Height := 20;
-Memo.Text := 'Page [Page#] sur [TotalPages#]';
-Memo.HAlign := haCenter;
-
-// Page suivante
-Memo := TfrxMemoView.Create(Report);
-BandFooter.Objects.Add(Memo);
-Memo.Left := 180;
-Memo.Top := 5;
-Memo.Width := 20;
-Memo.Height := 20;
-Memo.Text := '>';
-Memo.Font.Color := clBlue;
-Memo.Cursor := crHandPoint;
-Memo.OnClick := 'NextPage';
-
-// Dernière page
-Memo := TfrxMemoView.Create(Report);
-BandFooter.Objects.Add(Memo);
-Memo.Left := 210;
-Memo.Top := 5;
-Memo.Width := 20;
-Memo.Height := 20;
-Memo.Text := '>>';
-Memo.Font.Color := clBlue;
-Memo.Cursor := crHandPoint;
-Memo.OnClick := 'LastPage';
-```
-
-Ajoutez ces fonctions au script :
+Créez un formulaire d'aperçu personnalisé pour plus de contrôle.
 
 ```pascal
-Report.Script.Text :=
-  'procedure FirstPage;' + #13#10 +
-  'begin' + #13#10 +
-  '  Engine.GotoFirstPage;' + #13#10 +
-  'end;' + #13#10 +
-  #13#10 +
-  'procedure PrevPage;' + #13#10 +
-  'begin' + #13#10 +
-  '  Engine.GotoPriorPage;' + #13#10 +
-  'end;' + #13#10 +
-  #13#10 +
-  'procedure NextPage;' + #13#10 +
-  'begin' + #13#10 +
-  '  Engine.GotoNextPage;' + #13#10 +
-  'end;' + #13#10 +
-  #13#10 +
-  'procedure LastPage;' + #13#10 +
-  'begin' + #13#10 +
-  '  Engine.GotoLastPage;' + #13#10 +
-  'end;';
-```
+type
+  TFormApercuInteractif = class(TForm)
+    frxPreview: TfrxPreview;
+    PanelTop: TPanel;
+    btnNavigationPrecedent: TButton;
+    btnNavigationSuivant: TButton;
+    ComboBoxZoom: TComboBox;
+    EditRecherche: TEdit;
+    btnRechercher: TButton;
+    TreeViewSignets: TTreeView;
 
-## Hyperliens dans les rapports
+    procedure btnNavigationPrecedentClick(Sender: TObject);
+    procedure btnNavigationSuivantClick(Sender: TObject);
+    procedure ComboBoxZoomChange(Sender: TObject);
+    procedure btnRechercherClick(Sender: TObject);
+  end;
 
-Les hyperliens permettent de connecter votre rapport à des ressources externes ou à d'autres sections.
-
-### Lien vers un site web
-
-```pascal
-// Créer un lien vers un site web
-Memo := TfrxMemoView.Create(Report);
-Band.Objects.Add(Memo);
-Memo.Left := 10;
-Memo.Top := 10;
-Memo.Width := 200;
-Memo.Height := 20;
-Memo.Text := 'Visiter notre site web';
-Memo.Font.Color := clBlue;
-Memo.Font.Style := [fsUnderline];
-Memo.Cursor := crHandPoint;
-Memo.URL := 'http://www.example.com';
-```
-
-### Lien vers un email
-
-```pascal
-// Créer un lien email
-Memo := TfrxMemoView.Create(Report);
-Band.Objects.Add(Memo);
-Memo.Left := 10;
-Memo.Top := 40;
-Memo.Width := 200;
-Memo.Height := 20;
-Memo.Text := 'Contacter le support';
-Memo.Font.Color := clBlue;
-Memo.Font.Style := [fsUnderline];
-Memo.Cursor := crHandPoint;
-Memo.URL := 'mailto:support@example.com?subject=Demande d''assistance';
-```
-
-### Lien vers un fichier local
-
-```pascal
-// Créer un lien vers un fichier local
-Memo := TfrxMemoView.Create(Report);
-Band.Objects.Add(Memo);
-Memo.Left := 10;
-Memo.Top := 70;
-Memo.Width := 200;
-Memo.Height := 20;
-Memo.Text := 'Ouvrir le manuel utilisateur';
-Memo.Font.Color := clBlue;
-Memo.Font.Style := [fsUnderline];
-Memo.Cursor := crHandPoint;
-Memo.URL := 'file://C:\Manuel\Guide.pdf';
-```
-
-## Utilisation des signets (bookmarks)
-
-Les signets permettent de naviguer rapidement vers des sections spécifiques du rapport.
-
-### Définir des signets
-
-```pascal
-procedure TForm1.CreateReportWithBookmarks;
-var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  BandTitle, BandHeader, BandDetail: TfrxBand;
-  Memo: TfrxMemoView;
+procedure TFormApercuInteractif.FormCreate(Sender: TObject);
 begin
-  Report := frxReport1;
-  Report.Clear;
+  // Lier le preview au rapport
+  frxReport1.Preview := frxPreview;
+  frxReport1.ShowReport(True); // True = mode modal
 
-  // Créer une page
-  Page := TfrxReportPage.Create(Report);
-  Report.Pages.Add(Page);
+  // Remplir les options de zoom
+  ComboBoxZoom.Items.AddStrings(['50%', '75%', '100%', '125%', '150%', '200%']);
+  ComboBoxZoom.ItemIndex := 2; // 100%
+end;
 
-  // Bande de titre
-  BandTitle := TfrxReportTitle.Create(Report);
-  Page.Bands.Add(BandTitle);
-  BandTitle.Height := 100;
+procedure TFormApercuInteractif.ComboBoxZoomChange(Sender: TObject);
+begin
+  case ComboBoxZoom.ItemIndex of
+    0: frxPreview.Zoom := 0.5;
+    1: frxPreview.Zoom := 0.75;
+    2: frxPreview.Zoom := 1.0;
+    3: frxPreview.Zoom := 1.25;
+    4: frxPreview.Zoom := 1.5;
+    5: frxPreview.Zoom := 2.0;
+  end;
+end;
 
-  // Titre avec table des matières
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'RAPPORT AVEC SIGNETS';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-
-  // Liens vers les sections
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 40;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := '1. Section Clients';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'GotoClients';
-
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 60;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := '2. Section Produits';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'GotoProduits';
-
-  // Section Clients avec signet
-  BandHeader := TfrxHeader.Create(Report);
-  Page.Bands.Add(BandHeader);
-  BandHeader.Top := 120;
-  BandHeader.Height := 30;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := '1. SECTION CLIENTS';
-  Memo.Font.Size := 12;
-  Memo.Font.Style := [fsBold];
-  Memo.Bookmark := 'Clients'; // Définir un signet
-
-  // Ajouter plus de contenu pour la section Clients...
-
-  // Section Produits avec signet
-  BandHeader := TfrxHeader.Create(Report);
-  Page.Bands.Add(BandHeader);
-  BandHeader.Top := 300; // Position plus bas dans le rapport
-  BandHeader.Height := 30;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := '2. SECTION PRODUITS';
-  Memo.Font.Size := 12;
-  Memo.Font.Style := [fsBold];
-  Memo.Bookmark := 'Produits'; // Définir un signet
-
-  // Ajouter script pour la navigation
-  Report.Script.Text :=
-    'procedure GotoClients;' + #13#10 +
-    'begin' + #13#10 +
-    '  Engine.GotoBookmark(''Clients'');' + #13#10 +
-    'end;' + #13#10 +
-    #13#10 +
-    'procedure GotoProduits;' + #13#10 +
-    'begin' + #13#10 +
-    '  Engine.GotoBookmark(''Produits'');' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
+procedure TFormApercuInteractif.btnRechercherClick(Sender: TObject);
+begin
+  frxPreview.Find(EditRecherche.Text);
 end;
 ```
 
-### Créer une table des matières automatique
+## Navigation et signets
 
-FastReport peut générer automatiquement une table des matières basée sur vos signets :
+### Création de signets
+
+Les signets permettent une navigation rapide dans le rapport.
+
+**Dans le designer FastReport :**
+
+1. Sélectionnez un objet (titre de section, par exemple)
+2. Dans l'Inspecteur d'objets, propriété **Bookmark**
+3. Entrez une expression : `<frxDBDataset."nom_categorie">`
+
+**Par code :**
 
 ```pascal
-procedure TForm1.CreateTableOfContents;
-var
-  Report: TfrxReport;
-  Page, TOCPage: TfrxReportPage;
-  BandTitle, BandContent: TfrxBand;
-  Memo: TfrxMemoView;
+// Dans l'événement OnBeforePrint du band ou de l'objet
 begin
-  Report := frxReport1;
-  Report.Clear;
-
-  // Créer une page pour la table des matières
-  TOCPage := TfrxReportPage.Create(Report);
-  Report.Pages.Add(TOCPage);
-
-  // Titre de la table des matières
-  BandTitle := TfrxReportTitle.Create(Report);
-  TOCPage.Bands.Add(BandTitle);
-  BandTitle.Height := 40;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := TOCPage.Width - TOCPage.LeftMargin - TOCPage.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'TABLE DES MATIÈRES';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-
-  // Contenu de la table des matières
-  BandContent := TfrxBand.Create(Report);
-  TOCPage.Bands.Add(BandContent);
-  BandContent.Height := 20;
-
-  // Cette bande sera automatiquement remplie avec les signets du rapport
-  BandContent.Object := 'TableOfContents';
-
-  // Créer le reste du rapport avec des signets...
-
-  // Dans le designer, vous pouvez aussi placer un objet TfrxTableOfContents
+  // Créer un signet avec le nom de la catégorie
+  Engine.AddBookmark(<frxDBDataset."nom_categorie">);
 end;
 ```
 
-## Affichage de détails à la demande (drill-down)
+### Table des matières automatique
 
-La fonctionnalité "drill-down" permet aux utilisateurs de voir des détails supplémentaires en cliquant sur un élément.
+FastReport génère automatiquement une table des matières basée sur les signets.
 
 ```pascal
-procedure TForm1.CreateDrillDownReport;
-var
-  Report: TfrxReport;
-  MasterPage, DetailPage: TfrxReportPage;
-  BandHeader, BandMaster, BandDetail: TfrxBand;
-  Memo: TfrxMemoView;
+procedure TForm1.CreerRapportAvecTDM;
 begin
-  Report := frxReport1;
-  Report.Clear;
+  // Le rapport doit avoir des signets configurés
+  frxReport1.LoadFromFile('RapportAvecSignets.fr3');
 
-  // Page principale avec résumé
-  MasterPage := TfrxReportPage.Create(Report);
-  Report.Pages.Add(MasterPage);
-  MasterPage.Name := 'MasterPage';
+  // Activer l'affichage de la table des matières
+  frxReport1.PreviewOptions.ShowOutline := True;
+  frxReport1.PreviewOptions.OutlineVisible := True;
+  frxReport1.PreviewOptions.OutlineWidth := 200; // Largeur en pixels
 
-  // Titre
-  BandHeader := TfrxReportTitle.Create(Report);
-  MasterPage.Bands.Add(BandHeader);
-  BandHeader.Height := 40;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := MasterPage.Width - MasterPage.LeftMargin - MasterPage.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'RÉSUMÉ DES VENTES PAR RÉGION';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-
-  // Bande maître avec données cliquables
-  BandMaster := TfrxMasterData.Create(Report);
-  MasterPage.Bands.Add(BandMaster);
-  BandMaster.Height := 25;
-  BandMaster.DataSet := frxDBDataset1; // Dataset des régions
-
-  // Région
-  Memo := TfrxMemoView.Create(Report);
-  BandMaster.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := '[frxDBDataset1."Region"]';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'ShowDetails'; // Script pour afficher les détails
-
-  // Total des ventes
-  Memo := TfrxMemoView.Create(Report);
-  BandMaster.Objects.Add(Memo);
-  Memo.Left := 150;
-  Memo.Top := 0;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := '[frxDBDataset1."TotalVentes"]';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.HAlign := haRight;
-
-  // Page de détails (cachée initialement)
-  DetailPage := TfrxReportPage.Create(Report);
-  Report.Pages.Add(DetailPage);
-  DetailPage.Name := 'DetailPage';
-  DetailPage.Visible := False; // Page cachée
-
-  // Titre de la page de détails
-  BandHeader := TfrxReportTitle.Create(Report);
-  DetailPage.Bands.Add(BandHeader);
-  BandHeader.Height := 40;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := DetailPage.Width - DetailPage.LeftMargin - DetailPage.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'DÉTAILS DES VENTES POUR LA RÉGION: [Region]';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-
-  // Bouton de retour
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 30;
-  Memo.Width := 100;
-  Memo.Height := 20;
-  Memo.Text := 'Retour au résumé';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'ReturnToMaster';
-
-  // Détails des ventes
-  BandDetail := TfrxDetailData.Create(Report);
-  DetailPage.Bands.Add(BandDetail);
-  BandDetail.Height := 20;
-  BandDetail.DataSet := frxDBDataset2; // Dataset des ventes détaillées
-
-  // Ajouter les champs détaillés...
-
-  // Script pour la navigation entre pages
-  Report.Script.Text :=
-    'var Region: String;' + #13#10 +
-    #13#10 +
-    'procedure ShowDetails;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Stocker la région sélectionnée' + #13#10 +
-    '  Region := <frxDBDataset1."Region">;' + #13#10 +
-    #13#10 +
-    '  // Filtrer les données détaillées' + #13#10 +
-    '  // (à implémenter côté Delphi)' + #13#10 +
-    '  Report.Variables["Region"] := Region;' + #13#10 +
-    #13#10 +
-    '  // Afficher la page de détails' + #13#10 +
-    '  Engine.ShowBand(FindObject("DetailPage.ReportTitle1"));' + #13#10 +
-    'end;' + #13#10 +
-    #13#10 +
-    'procedure ReturnToMaster;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Retourner à la page principale' + #13#10 +
-    '  Engine.ShowBand(FindObject("MasterPage.ReportTitle1"));' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
+  frxReport1.ShowReport;
 end;
 ```
 
-Pour implémenter le filtrage côté Delphi :
+### Navigation hiérarchique
+
+Créez une structure de navigation à plusieurs niveaux.
+
+**Exemple : Structure Région → Ville → Magasin**
 
 ```pascal
-procedure TForm1.frxReport1GetValue(const VarName: string; var Value: Variant);
+// Dans le Group Header Région
+procedure RegionHeaderOnBeforePrint;
 begin
-  if VarName = 'Region' then
-  begin
-    // Utiliser la région sélectionnée pour filtrer les données détaillées
-    qryVentesDetail.Close;
-    qryVentesDetail.Parameters.ParamByName('Region').Value := Value;
-    qryVentesDetail.Open;
+  Engine.AddBookmark(<frxDBDataset."nom_region">, 0); // Niveau 0
+end;
+
+// Dans le Group Header Ville
+procedure VilleHeaderOnBeforePrint;
+begin
+  Engine.AddBookmark(<frxDBDataset."nom_ville">, 1); // Niveau 1
+end;
+
+// Dans le Group Header Magasin
+procedure MagasinHeaderOnBeforePrint;
+begin
+  Engine.AddBookmark(<frxDBDataset."nom_magasin">, 2); // Niveau 2
+end;
+```
+
+### Hyperliens internes
+
+Créez des liens vers d'autres parties du rapport.
+
+**Dans le designer :**
+
+1. Sélectionnez un objet Memo
+2. Propriété **Hyperlink.Kind** = `hkURL` ou `hkBookmark`
+3. Propriété **Hyperlink.Value** :
+   - Pour une URL : `'http://www.exemple.com'`
+   - Pour un signet : `'#NomDuSignet'`
+   - Pour un signet dynamique : `'#' + <frxDBDataset."nom_categorie">`
+
+**Exemple de navigation :**
+
+```
+┌─ Page 1 : Sommaire ─────────────────────┐
+│ Cliquez sur une catégorie :             │
+│ • [Électronique] (lien vers page 2)     │
+│ • [Vêtements] (lien vers page 5)        │
+│ • [Alimentation] (lien vers page 8)     │
+└─────────────────────────────────────────┘
+```
+
+## Drill-down : exploration progressive
+
+Le drill-down permet d'explorer les données du général au détail.
+
+### Drill-down avec groupes extensibles
+
+**Configuration dans FastReport :**
+
+1. Sélectionnez un Group Header
+2. Propriété **Collapsed** = `True` (démarrer réduit)
+3. Propriété **AllowCollapse** = `True` (permettre expansion/réduction)
+4. Ajoutez un indicateur visuel (▶ ou ▼)
+
+**Exemple visuel :**
+
+```
+▶ Électronique (cliquer pour développer)
+
+▼ Vêtements (développé)
+  ├─ T-shirts : 150 ventes
+  ├─ Pantalons : 120 ventes
+  └─ Chaussures : 180 ventes
+
+▶ Alimentation (cliquer pour développer)
+```
+
+### Drill-down par code
+
+```pascal
+procedure TForm1.CreerDrillDown;
+begin
+  // Dans le designer, configurez les groupes avec Collapsed = True
+  frxReport1.LoadFromFile('RapportDrillDown.fr3');
+
+  // L'utilisateur peut cliquer sur les + pour développer
+  frxReport1.ShowReport;
+end;
+```
+
+### Drill-down avec niveaux de détail
+
+Montrez différents niveaux de détail selon les besoins.
+
+```pascal
+// Variable globale dans le rapport : NiveauDetail (Integer)
+
+// Dans le designer, événement OnBeforePrint de la bande de détail
+procedure DetailBandOnBeforePrint;
+begin
+  // Afficher plus ou moins de détails selon le niveau
+  case <NiveauDetail> of
+    1: // Niveau résumé
+      begin
+        MemoDetail1.Visible := False;
+        MemoDetail2.Visible := False;
+      end;
+    2: // Niveau standard
+      begin
+        MemoDetail1.Visible := True;
+        MemoDetail2.Visible := False;
+      end;
+    3: // Niveau complet
+      begin
+        MemoDetail1.Visible := True;
+        MemoDetail2.Visible := True;
+      end;
   end;
 end;
 ```
 
-## Formulaires de saisie pour les paramètres
+### Indicateurs visuels pour drill-down
 
-Les formulaires de saisie permettent aux utilisateurs de définir des paramètres avant ou pendant l'exécution du rapport.
-
-### Dialogue de paramètres avant le rapport
+Ajoutez des symboles pour indiquer la possibilité d'expansion.
 
 ```pascal
-procedure TForm1.CreateParameterizedReport;
-var
-  Report: TfrxReport;
-  DialogPage: TfrxDialogPage;
-  DateFrom, DateTo: TfrxDateEditControl;
-  RegionList: TfrxComboBoxControl;
-  Button: TfrxButtonControl;
-  Label: TfrxLabelControl;
+// Dans l'événement OnBeforePrint du Group Header
+procedure GroupHeaderOnBeforePrint;
 begin
-  Report := frxReport1;
-  Report.Clear;
-
-  // Créer une page de dialogue
-  DialogPage := TfrxDialogPage.Create(Report);
-  Report.Pages.Add(DialogPage);
-  DialogPage.Name := 'DialogPage';
-  DialogPage.Width := 400;
-  DialogPage.Height := 300;
-  DialogPage.Caption := 'Paramètres du rapport';
-
-  // Titre
-  Label := TfrxLabelControl.Create(DialogPage);
-  Label.Parent := DialogPage;
-  Label.Left := 100;
-  Label.Top := 20;
-  Label.Width := 200;
-  Label.Height := 24;
-  Label.Caption := 'SÉLECTION DES PARAMÈTRES';
-  Label.Font.Size := 12;
-  Label.Font.Style := [fsBold];
-
-  // Paramètre de date début
-  Label := TfrxLabelControl.Create(DialogPage);
-  Label.Parent := DialogPage;
-  Label.Left := 20;
-  Label.Top := 60;
-  Label.Width := 100;
-  Label.Height := 24;
-  Label.Caption := 'Date début:';
-
-  DateFrom := TfrxDateEditControl.Create(DialogPage);
-  DateFrom.Parent := DialogPage;
-  DateFrom.Left := 140;
-  DateFrom.Top := 60;
-  DateFrom.Width := 150;
-  DateFrom.Height := 24;
-  DateFrom.Date := EncodeDate(Year(Now), Month(Now), 1); // Premier jour du mois
-  DateFrom.Name := 'edDateFrom';
-
-  // Paramètre de date fin
-  Label := TfrxLabelControl.Create(DialogPage);
-  Label.Parent := DialogPage;
-  Label.Left := 20;
-  Label.Top := 100;
-  Label.Width := 100;
-  Label.Height := 24;
-  Label.Caption := 'Date fin:';
-
-  DateTo := TfrxDateEditControl.Create(DialogPage);
-  DateTo.Parent := DialogPage;
-  DateTo.Left := 140;
-  DateTo.Top := 100;
-  DateTo.Width := 150;
-  DateTo.Height := 24;
-  DateTo.Date := Now; // Date actuelle
-  DateTo.Name := 'edDateTo';
-
-  // Liste des régions
-  Label := TfrxLabelControl.Create(DialogPage);
-  Label.Parent := DialogPage;
-  Label.Left := 20;
-  Label.Top := 140;
-  Label.Width := 100;
-  Label.Height := 24;
-  Label.Caption := 'Région:';
-
-  RegionList := TfrxComboBoxControl.Create(DialogPage);
-  RegionList.Parent := DialogPage;
-  RegionList.Left := 140;
-  RegionList.Top := 140;
-  RegionList.Width := 150;
-  RegionList.Height := 24;
-  RegionList.Items.Add('Toutes');
-  RegionList.Items.Add('Nord');
-  RegionList.Items.Add('Sud');
-  RegionList.Items.Add('Est');
-  RegionList.Items.Add('Ouest');
-  RegionList.ItemIndex := 0;
-  RegionList.Name := 'cbRegion';
-
-  // Boutons
-  Button := TfrxButtonControl.Create(DialogPage);
-  Button.Parent := DialogPage;
-  Button.Left := 100;
-  Button.Top := 200;
-  Button.Width := 80;
-  Button.Height := 30;
-  Button.Caption := 'OK';
-  Button.ModalResult := mrOk;
-  Button.Default := True;
-
-  Button := TfrxButtonControl.Create(DialogPage);
-  Button.Parent := DialogPage;
-  Button.Left := 220;
-  Button.Top := 200;
-  Button.Width := 80;
-  Button.Height := 30;
-  Button.Caption := 'Annuler';
-  Button.ModalResult := mrCancel;
-  Button.Cancel := True;
-
-  // Créer le reste du rapport qui utilisera ces paramètres...
-
-  // Script pour récupérer les valeurs
-  Report.Script.Text :=
-    'var DateFrom, DateTo: TDateTime;' + #13#10 +
-    'var Region: String;' + #13#10 +
-    #13#10 +
-    'procedure DialogPage1OnActivate(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  // Code exécuté quand le dialogue s''affiche' + #13#10 +
-    'end;' + #13#10 +
-    #13#10 +
-    'procedure DialogPage1OnDeactivate(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer les valeurs' + #13#10 +
-    '  DateFrom := edDateFrom.Date;' + #13#10 +
-    '  DateTo := edDateTo.Date;' + #13#10 +
-    '  Region := cbRegion.Text;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Les stocker comme variables' + #13#10 +
-    '  Report.Variables["DateFrom"] := DateFrom;' + #13#10 +
-    '  Report.Variables["DateTo"] := DateTo;' + #13#10 +
-    '  Report.Variables["Region"] := Region;' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
+  if <GroupHeader1.Collapsed> then
+    MemoIndicateur.Text := '▶'
+  else
+    MemoIndicateur.Text := '▼';
 end;
 ```
 
-### Application des paramètres côté Delphi
+## Drill-through : navigation entre rapports
 
-Dans votre application Delphi, vous pouvez récupérer les paramètres :
+Le drill-through permet de passer d'un rapport à un rapport détaillé.
+
+### Implémentation de base
 
 ```pascal
-procedure TForm1.frxReport1GetValue(const VarName: string; var Value: Variant);
-begin
-  // Récupérer les paramètres du rapport
-  if VarName = 'DateFrom' then
-    Value := frxReport1.Variables['DateFrom']
-  else if VarName = 'DateTo' then
-    Value := frxReport1.Variables['DateTo']
-  else if VarName = 'Region' then
-  begin
-    Value := frxReport1.Variables['Region'];
+type
+  TGestionnaireRapports = class
+  private
+    FRapportPrincipal: TfrxReport;
+    FRapportDetail: TfrxReport;
+  public
+    procedure AfficherRapportPrincipal;
+    procedure AfficherRapportDetail(ID: Integer);
+  end;
 
-    // Filtrer les données si nécessaire
-    if Value <> 'Toutes' then
+procedure TGestionnaireRapports.AfficherRapportPrincipal;
+begin
+  FRapportPrincipal.LoadFromFile('RapportVentes.fr3');
+  FRapportPrincipal.ShowReport;
+end;
+
+procedure TGestionnaireRapports.AfficherRapportDetail(ID: Integer);
+begin
+  // Charger le rapport détaillé
+  FRapportDetail.LoadFromFile('RapportDetailVente.fr3');
+
+  // Passer le paramètre
+  FRapportDetail.Variables['ID_Vente'] := QuotedStr(IntToStr(ID));
+
+  // Afficher
+  FRapportDetail.ShowReport;
+end;
+```
+
+### Liens drill-through dans les rapports
+
+**Dans le rapport principal :**
+
+1. Sélectionnez un objet (numéro de commande, par exemple)
+2. Propriété **Hyperlink.Kind** = `hkCustom`
+3. Événement **OnClick** de l'objet :
+
+```pascal
+procedure MemoNumeroCommandeOnClick;
+begin
+  // Appeler une procédure Delphi
+  frxReport1.DoScript('AfficherDetailCommande', <frxDBDataset."id_commande">);
+end;
+```
+
+**Dans le code Delphi :**
+
+```pascal
+procedure TForm1.frxReport1UserFunction(const MethodName: String;
+  var Params: Variant);
+begin
+  if MethodName = 'AFFICHERDETAILCOMMANDE' then
+  begin
+    var ID := Integer(Params[0]);
+    GestionnaireRapports.AfficherRapportDetail(ID);
+  end;
+end;
+```
+
+### Navigation avec historique
+
+Implémentez un système de navigation avec retour arrière.
+
+```pascal
+type
+  THistoriqueNavigation = class
+  private
+    FHistorique: TList<TRapportInfo>;
+    FPosition: Integer;
+  public
+    procedure AjouterRapport(const NomRapport: string; Params: TDictionary<string, string>);
+    function PeutRetourner: Boolean;
+    function PeutAvancer: Boolean;
+    procedure Retourner;
+    procedure Avancer;
+  end;
+
+procedure TForm1.btnRetourClick(Sender: TObject);
+begin
+  if HistoriqueNavigation.PeutRetourner then
+  begin
+    HistoriqueNavigation.Retourner;
+    // Recharger le rapport précédent
+    ChargerRapport(HistoriqueNavigation.RapportActuel);
+  end;
+end;
+```
+
+## Filtres et paramètres interactifs
+
+### Panneau de filtres
+
+Créez une interface pour que l'utilisateur filtre les données.
+
+```pascal
+type
+  TFormRapportAvecFiltres = class(TForm)
+    PanelFiltres: TPanel;
+    DateEdit1: TDateTimePicker;
+    DateEdit2: TDateTimePicker;
+    ComboCategorie: TComboBox;
+    CheckBoxInclureClotures: TCheckBox;
+    btnAppliquer: TButton;
+    frxReport1: TfrxReport;
+
+    procedure btnAppliquerClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  end;
+
+procedure TFormRapportAvecFiltres.FormCreate(Sender: TObject);
+begin
+  // Initialiser les filtres
+  DateEdit1.Date := StartOfTheMonth(Date);
+  DateEdit2.Date := EndOfTheMonth(Date);
+
+  // Remplir le combo des catégories
+  ChargerCategories;
+end;
+
+procedure TFormRapportAvecFiltres.btnAppliquerClick(Sender: TObject);
+begin
+  // Construire la requête avec les filtres
+  var SQL := 'SELECT * FROM ventes WHERE 1=1';
+
+  // Filtre par date
+  SQL := SQL + Format(' AND date_vente BETWEEN %s AND %s',
+    [QuotedStr(DateToStr(DateEdit1.Date)), QuotedStr(DateToStr(DateEdit2.Date))]);
+
+  // Filtre par catégorie
+  if ComboCategorie.ItemIndex > 0 then
+    SQL := SQL + Format(' AND categorie = %s', [QuotedStr(ComboCategorie.Text)]);
+
+  // Filtre par statut
+  if not CheckBoxInclureClotures.Checked then
+    SQL := SQL + ' AND statut <> ''Cloturé''';
+
+  // Appliquer les filtres
+  FDQueryVentes.SQL.Text := SQL;
+  FDQueryVentes.Open;
+
+  // Passer les informations au rapport pour affichage
+  frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
+  frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
+  frxReport1.Variables['Categorie'] := QuotedStr(ComboCategorie.Text);
+
+  // Générer le rapport
+  frxReport1.ShowReport;
+end;
+```
+
+### Filtres dans le rapport FastReport
+
+FastReport permet d'intégrer des filtres directement dans l'aperçu.
+
+**Utilisation de variables interactives :**
+
+1. Menu **Report → Variables**
+2. Créez des variables (ex: `DateDebut`, `DateFin`)
+3. Dans l'aperçu, l'utilisateur peut modifier les valeurs
+4. Le rapport se régénère automatiquement
+
+### Filtres en cascade
+
+Les filtres en cascade se mettent à jour selon les sélections précédentes.
+
+```pascal
+procedure TFormRapportFiltres.ComboCategorieChange(Sender: TObject);
+begin
+  // Mettre à jour les sous-catégories selon la catégorie
+  ChargerSousCategories(ComboCategorie.Text);
+
+  // Réinitialiser les produits
+  ComboBoxProduit.Items.Clear;
+  ComboBoxProduit.Enabled := False;
+end;
+
+procedure TFormRapportFiltres.ComboSousCategorieChange(Sender: TObject);
+begin
+  // Mettre à jour les produits selon la sous-catégorie
+  ChargerProduits(ComboCategorie.Text, ComboSousCategorie.Text);
+  ComboBoxProduit.Enabled := True;
+end;
+```
+
+### Sauvegarde des filtres
+
+Permettez aux utilisateurs de sauvegarder leurs filtres favoris.
+
+```pascal
+type
+  TFiltreSauvegarde = record
+    Nom: string;
+    DateDebut: TDate;
+    DateFin: TDate;
+    Categorie: string;
+    Parametres: TDictionary<string, string>;
+  end;
+
+procedure TFormRapportFiltres.btnSauvegarderFiltreClick(Sender: TObject);
+var
+  Filtre: TFiltreSauvegarde;
+  NomFiltre: string;
+begin
+  if InputQuery('Sauvegarder le filtre', 'Nom du filtre :', NomFiltre) then
+  begin
+    Filtre.Nom := NomFiltre;
+    Filtre.DateDebut := DateEdit1.Date;
+    Filtre.DateFin := DateEdit2.Date;
+    Filtre.Categorie := ComboCategorie.Text;
+
+    SauvegarderFiltre(Filtre);
+    ChargerListeFiltres;
+
+    ShowMessage('Filtre sauvegardé');
+  end;
+end;
+
+procedure TFormRapportFiltres.ChargerFiltre(const Filtre: TFiltreSauvegarde);
+begin
+  DateEdit1.Date := Filtre.DateDebut;
+  DateEdit2.Date := Filtre.DateFin;
+  ComboCategorie.Text := Filtre.Categorie;
+
+  btnAppliquerClick(nil);
+end;
+```
+
+## Tri interactif
+
+Permettez à l'utilisateur de réorganiser les données.
+
+### Tri par clic sur les colonnes
+
+```pascal
+type
+  TFormRapportTriable = class(TForm)
+    frxReport1: TfrxReport;
+  private
+    FColonneTri: string;
+    FOrdreTri: string; // 'ASC' ou 'DESC'
+  public
+    procedure TrierPar(const Colonne: string);
+  end;
+
+procedure TFormRapportTriable.TrierPar(const Colonne: string);
+begin
+  // Inverser l'ordre si on clique sur la même colonne
+  if FColonneTri = Colonne then
+  begin
+    if FOrdreTri = 'ASC' then
+      FOrdreTri := 'DESC'
+    else
+      FOrdreTri := 'ASC';
+  end
+  else
+  begin
+    FColonneTri := Colonne;
+    FOrdreTri := 'ASC';
+  end;
+
+  // Reconstruire la requête avec le nouveau tri
+  var SQL := 'SELECT * FROM ventes ORDER BY ' + FColonneTri + ' ' + FOrdreTri;
+  FDQueryVentes.SQL.Text := SQL;
+  FDQueryVentes.Open;
+
+  // Régénérer le rapport
+  frxReport1.ShowReport;
+end;
+```
+
+### Interface de tri
+
+Créez un panneau permettant de configurer le tri.
+
+```pascal
+procedure TFormRapportTriable.CreerPanneauTri;
+var
+  Panel: TPanel;
+  ComboColonne: TComboBox;
+  ComboOrdre: TComboBox;
+  btnAppliquer: TButton;
+begin
+  Panel := TPanel.Create(Self);
+  Panel.Parent := Self;
+  Panel.Align := alTop;
+  Panel.Height := 50;
+
+  // Sélection de colonne
+  ComboColonne := TComboBox.Create(Panel);
+  ComboColonne.Parent := Panel;
+  ComboColonne.Left := 10;
+  ComboColonne.Top := 10;
+  ComboColonne.Items.AddStrings(['Date', 'Produit', 'Montant', 'Quantité']);
+  ComboColonne.ItemIndex := 0;
+
+  // Ordre de tri
+  ComboOrdre := TComboBox.Create(Panel);
+  ComboOrdre.Parent := Panel;
+  ComboOrdre.Left := 150;
+  ComboOrdre.Top := 10;
+  ComboOrdre.Items.AddStrings(['Croissant', 'Décroissant']);
+  ComboOrdre.ItemIndex := 0;
+
+  // Bouton appliquer
+  btnAppliquer := TButton.Create(Panel);
+  btnAppliquer.Parent := Panel;
+  btnAppliquer.Left := 290;
+  btnAppliquer.Top := 10;
+  btnAppliquer.Caption := 'Trier';
+  btnAppliquer.OnClick := procedure(Sender: TObject)
+  begin
+    var Colonne := ComboColonne.Text;
+    var Ordre := IfThen(ComboOrdre.ItemIndex = 0, 'ASC', 'DESC');
+    TrierPar(Colonne);
+  end;
+end;
+```
+
+### Tri multiple
+
+Permettez le tri sur plusieurs colonnes.
+
+```pascal
+type
+  TCriterieTri = record
+    Colonne: string;
+    Ordre: string;
+  end;
+
+var
+  CriteresTri: TList<TCriterieTri>;
+
+procedure TFormRapportTriable.AjouterCriterieTri(const Colonne, Ordre: string);
+var
+  Critere: TCriterieTri;
+begin
+  Critere.Colonne := Colonne;
+  Critere.Ordre := Ordre;
+  CriteresTri.Add(Critere);
+
+  AppliquerTri;
+end;
+
+procedure TFormRapportTriable.AppliquerTri;
+var
+  SQL, ClauseOrderBy: string;
+  i: Integer;
+begin
+  SQL := 'SELECT * FROM ventes';
+
+  if CriteresTri.Count > 0 then
+  begin
+    ClauseOrderBy := ' ORDER BY ';
+    for i := 0 to CriteresTri.Count - 1 do
     begin
-      qryVentes.Close;
-      qryVentes.Parameters.ParamByName('Region').Value := Value;
-      qryVentes.Parameters.ParamByName('DateFrom').Value := frxReport1.Variables['DateFrom'];
-      qryVentes.Parameters.ParamByName('DateTo').Value := frxReport1.Variables['DateTo'];
-      qryVentes.Open;
+      if i > 0 then
+        ClauseOrderBy := ClauseOrderBy + ', ';
+      ClauseOrderBy := ClauseOrderBy + CriteresTri[i].Colonne + ' ' + CriteresTri[i].Ordre;
+    end;
+    SQL := SQL + ClauseOrderBy;
+  end;
+
+  FDQueryVentes.SQL.Text := SQL;
+  FDQueryVentes.Open;
+  frxReport1.ShowReport;
+end;
+```
+
+## Recherche dans les rapports
+
+### Fonction de recherche intégrée
+
+FastReport offre une fonction de recherche native.
+
+```pascal
+procedure TForm1.btnRechercherClick(Sender: TObject);
+begin
+  // Ouvrir la boîte de dialogue de recherche
+  frxPreview.Find;
+
+  // Ou rechercher directement un texte
+  // frxPreview.Find('mot_à_rechercher');
+end;
+
+procedure TForm1.EditRechercheKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then // Entrée
+  begin
+    frxPreview.Find(EditRecherche.Text);
+    Key := #0;
+  end;
+end;
+```
+
+### Mise en évidence des résultats
+
+```pascal
+procedure TForm1.RechercherEtSurligner(const Texte: string);
+begin
+  // Rechercher
+  var Trouve := frxPreview.Find(Texte, []);
+
+  if not Trouve then
+    ShowMessage('Aucun résultat trouvé pour : ' + Texte)
+  else
+    // Le texte trouvé est automatiquement surligné par FastReport
+    StatusBar1.SimpleText := Format('"%s" trouvé', [Texte]);
+end;
+```
+
+### Recherche avancée avec filtres
+
+```pascal
+type
+  TOptionsRecherche = record
+    Texte: string;
+    SensibleCasse: Boolean;
+    MotEntier: Boolean;
+    RechercheDans: string; // 'Tout', 'Colonnes', 'Titres'
+  end;
+
+procedure TForm1.RechercheAvancee(Options: TOptionsRecherche);
+var
+  Flags: TfrxSearchFlags;
+begin
+  Flags := [];
+
+  if Options.SensibleCasse then
+    Include(Flags, sfMatchCase);
+
+  if Options.MotEntier then
+    Include(Flags, sfWholeWord);
+
+  var Trouve := frxPreview.Find(Options.Texte, Flags);
+
+  if Trouve then
+    LabelResultat.Caption := 'Résultat trouvé'
+  else
+    LabelResultat.Caption := 'Aucun résultat';
+end;
+```
+
+## Rapports avec actions personnalisées
+
+### Boutons d'action dans le rapport
+
+Ajoutez des boutons cliquables dans le rapport.
+
+**Dans le designer FastReport :**
+
+1. Ajoutez un objet Shape (rectangle) pour simuler un bouton
+2. Ajoutez un Memo dessus avec le texte du bouton
+3. Dans l'événement OnClick du Shape :
+
+```pascal
+procedure ShapeBoutonOnClick;
+begin
+  // Appeler une fonction Delphi
+  frxReport1.DoScript('ExporterSelectionPDF', <frxDBDataset."id">);
+end;
+```
+
+**Dans Delphi :**
+
+```pascal
+procedure TForm1.frxReport1UserFunction(const MethodName: String; var Params: Variant);
+begin
+  if MethodName = 'EXPORTERSELECTIONPDF' then
+  begin
+    var ID := Integer(Params[0]);
+    ExporterEnregistrementPDF(ID);
+  end
+  else if MethodName = 'ENVOYEREMAIL' then
+  begin
+    var Email := string(Params[0]);
+    EnvoyerEmail(Email);
+  end;
+end;
+```
+
+### Actions contextuelles
+
+Proposez des actions différentes selon le contexte.
+
+```pascal
+procedure TForm1.frxReport1ClickObject(Sender: TView; Button: TMouseButton;
+  Shift: TShiftState; var Modified: Boolean);
+var
+  Menu: TPopupMenu;
+  MenuItem: TMenuItem;
+begin
+  if Button = mbRight then
+  begin
+    // Créer un menu contextuel
+    Menu := TPopupMenu.Create(Self);
+    try
+      // Action 1 : Voir les détails
+      MenuItem := TMenuItem.Create(Menu);
+      MenuItem.Caption := 'Voir les détails';
+      MenuItem.OnClick := procedure(Sender: TObject)
+      begin
+        AfficherDetails;
+      end;
+      Menu.Items.Add(MenuItem);
+
+      // Action 2 : Exporter cette ligne
+      MenuItem := TMenuItem.Create(Menu);
+      MenuItem.Caption := 'Exporter en PDF';
+      MenuItem.OnClick := procedure(Sender: TObject)
+      begin
+        ExporterLignePDF;
+      end;
+      Menu.Items.Add(MenuItem);
+
+      // Afficher le menu
+      Menu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+    finally
+      Menu.Free;
     end;
   end;
 end;
 ```
 
-## Contenu conditionnel dans les rapports
-
-Une autre fonctionnalité interactive puissante est la possibilité d'afficher ou de masquer du contenu en fonction des interactions de l'utilisateur ou des paramètres sélectionnés.
-
-### Affichage conditionnel basé sur les paramètres
+### Validation et actions conditionnelles
 
 ```pascal
-procedure TForm1.CreateConditionalReport;
-var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  BandHeader, BandDetail: TfrxBand;
-  Memo: TfrxMemoView;
+// Dans l'événement OnClick d'un objet du rapport
+procedure BoutonValiderOnClick;
 begin
-  Report := frxReport1;
-
-  // Supposons que le dialogue de paramètres est déjà configuré
-  // et que nous avons une variable "AfficherDetails" (booléen)
-
-  // Ajouter une bande conditionnelle pour les détails
-  BandDetail := TfrxDetailData.Create(Report);
-  Page.Bands.Add(BandDetail);
-  BandDetail.Height := 20;
-  BandDetail.DataSet := frxDBDataset1;
-
-  // Cette bande ne sera visible que si l'utilisateur a coché "Afficher détails"
-  BandDetail.Visible := False; // Par défaut, invisible
-
-  // Script pour contrôler la visibilité
-  BandDetail.Script :=
-    'procedure OnBeforePrint(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  // Vérifier le paramètre' + #13#10 +
-    '  if <AfficherDetails> = True then' + #13#10 +
-    '    Visible := True' + #13#10 +
-    '  else' + #13#10 +
-    '    Visible := False;' + #13#10 +
-    'end;';
-
-  // Ou au niveau d'un objet individuel
-  Memo := TfrxMemoView.Create(Report);
-  BandHeader.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 30;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := 'Informations détaillées';
-
-  Memo.Script :=
-    'procedure OnBeforePrint(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  // N''afficher ce texte que pour certaines régions' + #13#10 +
-    '  if <Region> = ''Nord'' then' + #13#10 +
-    '    Visible := True' + #13#10 +
-    '  else' + #13#10 +
-    '    Visible := False;' + #13#10 +
-    'end;';
-end;
-```
-
-### Formatage conditionnel
-
-Le formatage conditionnel permet de modifier l'apparence des éléments selon certaines conditions :
-
-```pascal
-// Formatage conditionnel pour mettre en évidence les valeurs importantes
-Memo := TfrxMemoView.Create(Report);
-BandDetail.Objects.Add(Memo);
-Memo.Left := 300;
-Memo.Top := 0;
-Memo.Width := 100;
-Memo.Height := 20;
-Memo.Text := '[frxDBDataset1."Montant"]';
-Memo.DisplayFormat.FormatStr := '%2.2f €';
-Memo.DisplayFormat.Kind := fkNumeric;
-Memo.HAlign := haRight;
-
-// Script pour le formatage conditionnel
-Memo.Script :=
-  'procedure OnBeforePrint(Sender: TfrxComponent);' + #13#10 +
-  'begin' + #13#10 +
-  '  // Changer la couleur selon le montant' + #13#10 +
-  '  if <frxDBDataset1."Montant"> > 1000 then begin' + #13#10 +
-  '    Font.Color := clRed;' + #13#10 +
-  '    Font.Style := [fsBold];' + #13#10 +
-  '  end else if <frxDBDataset1."Montant"> < 0 then begin' + #13#10 +
-  '    Font.Color := clBlue;' + #13#10 +
-  '    Font.Style := [fsBold, fsItalic];' + #13#10 +
-  '  end else begin' + #13#10 +
-  '    Font.Color := clBlack;' + #13#10 +
-  '    Font.Style := [];' + #13#10 +
-  '  end;' + #13#10 +
-  'end;';
-```
-
-## Graphiques interactifs dans les rapports
-
-Les graphiques peuvent également être rendus interactifs, permettant à l'utilisateur d'explorer les données visuellement.
-
-### Graphique cliquable pour explorer les données
-
-```pascal
-procedure TForm1.CreateInteractiveChart;
-var
-  Report: TfrxReport;
-  MasterPage, DetailPage: TfrxReportPage;
-  BandTitle, BandChart: TfrxBand;
-  Chart: TfrxChartView;
-begin
-  Report := frxReport1;
-  Report.Clear;
-
-  // Page principale avec graphique
-  MasterPage := TfrxReportPage.Create(Report);
-  Report.Pages.Add(MasterPage);
-  MasterPage.Name := 'MasterPage';
-
-  // Titre
-  BandTitle := TfrxReportTitle.Create(Report);
-  MasterPage.Bands.Add(BandTitle);
-  BandTitle.Height := 40;
-
-  // Configurer le titre...
-
-  // Bande pour le graphique
-  BandChart := TfrxBand.Create(Report);
-  MasterPage.Bands.Add(BandChart);
-  BandChart.Top := 50;
-  BandChart.Height := 300;
-
-  // Ajouter un graphique
-  Chart := TfrxChartView.Create(Report);
-  BandChart.Objects.Add(Chart);
-  Chart.Left := 10;
-  Chart.Top := 0;
-  Chart.Width := MasterPage.Width - MasterPage.LeftMargin - MasterPage.RightMargin - 20;
-  Chart.Height := 250;
-  Chart.Title.Text.Add('Ventes par région');
-
-  // Configurer le graphique en camembert
-  Chart.Chart.SeriesType := stPie;
-
-  // Ajouter des données
-  with Chart.Chart.Series.Add do
+  if <frxDBDataset."statut"> = 'En attente' then
   begin
-    ColorEachPoint := True;
-    XSource := 'frxDBDataset1."Region"';
-    YSource := 'frxDBDataset1."TotalVentes"';
-    Name := 'Ventes';
-  end;
-
-  // Rendre le graphique interactif
-  Chart.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'var' + #13#10 +
-    '  ClickedRegion: String;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer la région sur laquelle l''utilisateur a cliqué' + #13#10 +
-    '  if Chart.CalcClick(X, Y) then begin' + #13#10 +
-    '    ClickedRegion := Chart.ClickedSeries.XValue;' + #13#10 +
-    '    ShowMessage(''Vous avez sélectionné la région: '' + ClickedRegion);' + #13#10 +
-    '    ' + #13#10 +
-    '    // Filtrer les données et afficher les détails' + #13#10 +
-    '    Report.Variables["SelectedRegion"] := ClickedRegion;' + #13#10 +
-    '    // Afficher une page détaillée...' + #13#10 +
-    '  end;' + #13#10 +
-    'end;';
-
-  // Page de détails (similaire à l'exemple précédent)...
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
-end;
-```
-
-## Objets Rich Text pour le contenu interactif
-
-FastReport prend en charge les objets Rich Text qui permettent d'intégrer du contenu formaté avec des liens.
-
-```pascal
-procedure TForm1.CreateRichTextReport;
-var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  BandTitle: TfrxBand;
-  RichView: TfrxRichView;
-begin
-  Report := frxReport1;
-  Report.Clear;
-
-  // Créer une page
-  Page := TfrxReportPage.Create(Report);
-  Report.Pages.Add(Page);
-
-  // Titre
-  BandTitle := TfrxReportTitle.Create(Report);
-  Page.Bands.Add(BandTitle);
-  BandTitle.Height := 400; // Hauteur pour le contenu rich text
-
-  // Ajouter un objet Rich Text
-  RichView := TfrxRichView.Create(Report);
-  BandTitle.Objects.Add(RichView);
-  RichView.Left := 10;
-  RichView.Top := 10;
-  RichView.Width := Page.Width - Page.LeftMargin - Page.RightMargin - 20;
-  RichView.Height := 380;
-
-  // Ajouter du contenu rich text
-  RichView.RichEdit.Lines.Clear;
-  RichView.RichEdit.Lines.Add('{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Arial;}}');
-  RichView.RichEdit.Lines.Add('{\colortbl ;\red0\green0\blue255;}');
-  RichView.RichEdit.Lines.Add('\viewkind4\uc1\pard\cf0\f0\fs28\b Guide interactif des fonctionnalités\b0\fs22\par');
-  RichView.RichEdit.Lines.Add('\par');
-  RichView.RichEdit.Lines.Add('Ce document contient des liens interactifs vers différentes sections:\par');
-  RichView.RichEdit.Lines.Add('\par');
-  RichView.RichEdit.Lines.Add('\cf1\ul\fs24 1. Présentation des produits\cf0\ulnone\fs22\par');
-  RichView.RichEdit.Lines.Add('\par');
-  RichView.RichEdit.Lines.Add('\cf1\ul\fs24 2. Guide d''utilisation\cf0\ulnone\fs22\par');
-  RichView.RichEdit.Lines.Add('\par');
-  RichView.RichEdit.Lines.Add('\cf1\ul\fs24 3. Support technique\cf0\ulnone\fs22\par');
-  RichView.RichEdit.Lines.Add('\par');
-  RichView.RichEdit.Lines.Add('Vous pouvez également visiter notre \cf1\ul site web\cf0\ulnone pour plus d''informations.\par');
-  RichView.RichEdit.Lines.Add('}');
-
-  // Configurer les liens
-  RichView.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'var' + #13#10 +
-    '  Pos: Integer;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer la position du clic dans le texte' + #13#10 +
-    '  Pos := RichEdit.SelStart;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Déterminer quelle section a été cliquée' + #13#10 +
-    '  if (Pos >= 150) and (Pos <= 180) then begin' + #13#10 +
-    '    // Section 1: Présentation des produits' + #13#10 +
-    '    ShowMessage(''Affichage de la section Produits'');' + #13#10 +
-    '    // Navigation vers cette section...' + #13#10 +
-    '  end else if (Pos >= 210) and (Pos <= 230) then begin' + #13#10 +
-    '    // Section 2: Guide d''utilisation' + #13#10 +
-    '    ShowMessage(''Affichage du guide d''''utilisation'');' + #13#10 +
-    '  end else if (Pos >= 260) and (Pos <= 280) then begin' + #13#10 +
-    '    // Section 3: Support technique' + #13#10 +
-    '    ShowMessage(''Affichage du support technique'');' + #13#10 +
-    '  end else if (Pos >= 350) and (Pos <= 380) then begin' + #13#10 +
-    '    // Lien vers le site web' + #13#10 +
-    '    ShellExecute(0, ''open'', ''http://www.example.com'', '''', '''', 0);' + #13#10 +
-    '  end;' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
-end;
-```
-
-## Interface utilisateur personnalisée pour les rapports
-
-Vous pouvez créer une interface utilisateur personnalisée pour la prévisualisation des rapports.
-
-```pascal
-procedure TForm1.CreateCustomUIReport;
-begin
-  // 1. Créer un formulaire de prévisualisation personnalisé
-  frmCustomPreview := TfrmCustomPreview.Create(Self);
-  try
-    // 2. Configurer le composant TfrxPreview du formulaire
-    frmCustomPreview.frxPreview1.Report := frxReport1;
-
-    // 3. Préparer le rapport
-    frxReport1.PrepareReport;
-
-    // 4. Afficher la prévisualisation personnalisée
-    frmCustomPreview.ShowModal;
-  finally
-    frmCustomPreview.Free;
-  end;
-end;
-```
-
-Voici un exemple simplifié d'un formulaire de prévisualisation personnalisé :
-
-```pascal
-unit CustomPreviewForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Vcl.Buttons, frxClass, frxPreview;
-
-type
-  TfrmCustomPreview = class(TForm)
-    pnlTop: TPanel;
-    pnlBottom: TPanel;
-    frxPreview1: TfrxPreview;
-    btnPrint: TSpeedButton;
-    btnExport: TSpeedButton;
-    btnZoomIn: TSpeedButton;
-    btnZoomOut: TSpeedButton;
-    btnFirstPage: TSpeedButton;
-    btnPrevPage: TSpeedButton;
-    btnNextPage: TSpeedButton;
-    btnLastPage: TSpeedButton;
-    edtPage: TEdit;
-    lblPageCount: TLabel;
-    btnClose: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnPrintClick(Sender: TObject);
-    procedure btnExportClick(Sender: TObject);
-    procedure btnZoomInClick(Sender: TObject);
-    procedure btnZoomOutClick(Sender: TObject);
-    procedure btnFirstPageClick(Sender: TObject);
-    procedure btnPrevPageClick(Sender: TObject);
-    procedure btnNextPageClick(Sender: TObject);
-    procedure btnLastPageClick(Sender: TObject);
-    procedure edtPageChange(Sender: TObject);
-    procedure frxPreview1PageChanged(Sender: TObject);
-    procedure btnCloseClick(Sender: TObject);
-  private
-    { Déclarations privées }
-    procedure UpdatePageInfo;
-  public
-    { Déclarations publiques }
-  end;
-
-implementation
-
-{$R *.dfm}
-
-procedure TfrmCustomPreview.FormCreate(Sender: TObject);
-begin
-  // Configurer la prévisualisation
-  frxPreview1.Align := alClient;
-
-  // Mettre à jour l'affichage du numéro de page
-  UpdatePageInfo;
-end;
-
-procedure TfrmCustomPreview.UpdatePageInfo;
-begin
-  // Mettre à jour le numéro de page et le nombre total de pages
-  edtPage.Text := IntToStr(frxPreview1.CurPage);
-  lblPageCount.Caption := 'sur ' + IntToStr(frxPreview1.PagesCount);
-
-  // Activer/désactiver les boutons de navigation
-  btnFirstPage.Enabled := frxPreview1.CurPage > 1;
-  btnPrevPage.Enabled := frxPreview1.CurPage > 1;
-  btnNextPage.Enabled := frxPreview1.CurPage < frxPreview1.PagesCount;
-  btnLastPage.Enabled := frxPreview1.CurPage < frxPreview1.PagesCount;
-end;
-
-procedure TfrmCustomPreview.btnPrintClick(Sender: TObject);
-begin
-  frxPreview1.Print;
-end;
-
-procedure TfrmCustomPreview.btnExportClick(Sender: TObject);
-begin
-  frxPreview1.Export;
-end;
-
-procedure TfrmCustomPreview.btnZoomInClick(Sender: TObject);
-begin
-  frxPreview1.Zoom := frxPreview1.Zoom + 0.25;
-end;
-
-procedure TfrmCustomPreview.btnZoomOutClick(Sender: TObject);
-begin
-  if frxPreview1.Zoom > 0.5 then
-    frxPreview1.Zoom := frxPreview1.Zoom - 0.25;
-end;
-
-procedure TfrmCustomPreview.btnFirstPageClick(Sender: TObject);
-begin
-  frxPreview1.First;
-end;
-
-procedure TfrmCustomPreview.btnPrevPageClick(Sender: TObject);
-begin
-  frxPreview1.Prior;
-end;
-
-procedure TfrmCustomPreview.btnNextPageClick(Sender: TObject);
-begin
-  frxPreview1.Next;
-end;
-
-procedure TfrmCustomPreview.btnLastPageClick(Sender: TObject);
-begin
-  frxPreview1.Last;
-end;
-
-procedure TfrmCustomPreview.edtPageChange(Sender: TObject);
-var
-  Page: Integer;
-begin
-  // Changer la page si l'utilisateur saisit un numéro valide
-  if TryStrToInt(edtPage.Text, Page) then
-  begin
-    if (Page >= 1) and (Page <= frxPreview1.PagesCount) then
-      frxPreview1.PageNo := Page;
-  end;
-end;
-
-procedure TfrmCustomPreview.frxPreview1PageChanged(Sender: TObject);
-begin
-  // Mettre à jour l'affichage quand la page change
-  UpdatePageInfo;
-end;
-
-procedure TfrmCustomPreview.btnCloseClick(Sender: TObject);
-begin
-  Close;
-end;
-
-end.
-```
-
-## Intégration d'actions utilisateur complexes
-
-Les rapports interactifs peuvent également inclure des actions plus complexes comme l'enregistrement de modifications ou l'envoi d'emails.
-
-### Exemple d'un rapport de validation avec action utilisateur
-
-```pascal
-procedure TForm1.CreateActionReport;
-var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  BandDetail: TfrxBand;
-  Memo, Action: TfrxMemoView;
-begin
-  Report := frxReport1;
-  Report.Clear;
-
-  // Créer une page
-  Page := TfrxReportPage.Create(Report);
-  Report.Pages.Add(Page);
-
-  // Configurer les bandes et le titre...
-
-  // Bande de détail avec actions utilisateur
-  BandDetail := TfrxDetailData.Create(Report);
-  Page.Bands.Add(BandDetail);
-  BandDetail.Height := 25;
-  BandDetail.DataSet := frxDBDataset1; // Factures en attente de validation
-
-  // Informations de facture
-  Memo := TfrxMemoView.Create(Report);
-  BandDetail.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 0;
-  Memo.Width := 300;
-  Memo.Height := 20;
-  Memo.Text := 'Facture #[frxDBDataset1."NumeroFacture"] - [frxDBDataset1."DateFacture"] - [frxDBDataset1."MontantTotal"]€';
-
-  // Bouton "Valider"
-  Action := TfrxMemoView.Create(Report);
-  BandDetail.Objects.Add(Action);
-  Action.Left := 350;
-  Action.Top := 0;
-  Action.Width := 60;
-  Action.Height := 20;
-  Action.Text := 'Valider';
-  Action.HAlign := haCenter;
-  Action.Color := clGreen;
-  Action.Font.Color := clWhite;
-  Action.Font.Style := [fsBold];
-  Action.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Action.Frame.Width := 1;
-  Action.Cursor := crHandPoint;
-
-  // Script pour l'action de validation
-  Action.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'var' + #13#10 +
-    '  FactureID: Integer;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer l''ID de la facture à valider' + #13#10 +
-    '  FactureID := <frxDBDataset1."ID">;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Confirmer l''action' + #13#10 +
-    '  if MessageDlg(''Voulez-vous vraiment valider la facture #'' + <frxDBDataset1."NumeroFacture">, mtConfirmation, mbYesNo, 0) = mrYes then' + #13#10 +
-    '  begin' + #13#10 +
-    '    // Stocker l''ID pour traitement côté Delphi' + #13#10 +
-    '    Report.Variables["ActionType"] := ''Validate'';' + #13#10 +
-    '    Report.Variables["FactureID"] := FactureID;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Déclencher l''événement OnManualBuild pour notifier l''application' + #13#10 +
-    '    Engine.OnManualBuild;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Changer l''apparence du bouton' + #13#10 +
-    '    Sender.Color := clGray;' + #13#10 +
-    '    Sender.Text := ''Validé'';' + #13#10 +
-    '  end;' + #13#10 +
-    'end;';
-
-  // Bouton "Rejeter"
-  Action := TfrxMemoView.Create(Report);
-  BandDetail.Objects.Add(Action);
-  Action.Left := 420;
-  Action.Top := 0;
-  Action.Width := 60;
-  Action.Height := 20;
-  Action.Text := 'Rejeter';
-  Action.HAlign := haCenter;
-  Action.Color := clRed;
-  Action.Font.Color := clWhite;
-  Action.Font.Style := [fsBold];
-  Action.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Action.Frame.Width := 1;
-  Action.Cursor := crHandPoint;
-
-  // Script pour l'action de rejet
-  Action.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'var' + #13#10 +
-    '  FactureID: Integer;' + #13#10 +
-    '  Motif: String;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer l''ID de la facture à rejeter' + #13#10 +
-    '  FactureID := <frxDBDataset1."ID">;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Demander un motif de rejet' + #13#10 +
-    '  Motif := InputBox(''Rejet de facture'', ''Veuillez indiquer le motif du rejet :'', '''');' + #13#10 +
-    '  ' + #13#10 +
-    '  if Motif <> '''' then' + #13#10 +
-    '  begin' + #13#10 +
-    '    // Stocker les informations pour traitement côté Delphi' + #13#10 +
-    '    Report.Variables["ActionType"] := ''Reject'';' + #13#10 +
-    '    Report.Variables["FactureID"] := FactureID;' + #13#10 +
-    '    Report.Variables["Motif"] := Motif;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Déclencher l''événement' + #13#10 +
-    '    Engine.OnManualBuild;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Changer l''apparence du bouton' + #13#10 +
-    '    Sender.Color := clGray;' + #13#10 +
-    '    Sender.Text := ''Rejeté'';' + #13#10 +
-    '  end;' + #13#10 +
-    'end;';
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
-end;
-```
-
-Dans votre application Delphi, gérez les actions déclenchées depuis le rapport :
-
-```pascal
-procedure TForm1.frxReport1ManualBuild(Sender: TObject);
-var
-  ActionType: string;
-  FactureID: Integer;
-  Motif: string;
-begin
-  // Récupérer les informations de l'action
-  ActionType := frxReport1.Variables['ActionType'];
-  FactureID := frxReport1.Variables['FactureID'];
-
-  if ActionType = 'Validate' then
-  begin
-    // Valider la facture dans la base de données
-    qryValiderFacture.Close;
-    qryValiderFacture.Parameters.ParamByName('ID').Value := FactureID;
-    qryValiderFacture.ExecSQL;
-
-    // Journal d'audit
-    LogAction('Validation facture #' + IntToStr(FactureID));
+    // Valider l'enregistrement
+    frxReport1.DoScript('ValiderEnregistrement', <frxDBDataset."id">);
   end
-  else if ActionType = 'Reject' then
+  else
   begin
-    // Récupérer le motif de rejet
-    Motif := frxReport1.Variables['Motif'];
+    ShowMessage('Cet enregistrement ne peut pas être validé');
+  end;
+end;
+```
 
-    // Rejeter la facture dans la base de données
-    qryRejeterFacture.Close;
-    qryRejeterFacture.Parameters.ParamByName('ID').Value := FactureID;
-    qryRejeterFacture.Parameters.ParamByName('Motif').Value := Motif;
-    qryRejeterFacture.ExecSQL;
+## Tableaux de bord interactifs
 
-    // Journal d'audit
-    LogAction('Rejet facture #' + IntToStr(FactureID) + ' - Motif: ' + Motif);
+### Tableau de bord avec filtres globaux
+
+```pascal
+type
+  TFormTableauBordInteractif = class(TForm)
+    PanelFiltres: TPanel;
+    PanelGraphiques: TPanel;
+    Chart1: TChart;
+    Chart2: TChart;
+    Chart3: TChart;
+    Grid1: TDBGrid;
+    DateEdit1: TDateTimePicker;
+    DateEdit2: TDateTimePicker;
+    ComboFiltre: TComboBox;
+
+    procedure AppliquerFiltres;
+    procedure MettreAJourTableauBord;
+  end;
+
+procedure TFormTableauBordInteractif.AppliquerFiltres;
+begin
+  // Appliquer les filtres à toutes les requêtes
+  var DateDebut := DateEdit1.Date;
+  var DateFin := DateEdit2.Date;
+  var Filtre := ComboFiltre.Text;
+
+  // Mettre à jour tous les composants
+  MettreAJourGraphique1(DateDebut, DateFin, Filtre);
+  MettreAJourGraphique2(DateDebut, DateFin, Filtre);
+  MettreAJourGraphique3(DateDebut, DateFin, Filtre);
+  MettreAJourGrille(DateDebut, DateFin, Filtre);
+end;
+
+procedure TFormTableauBordInteractif.MettreAJourTableauBord;
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    AppliquerFiltres;
+    StatusBar1.SimpleText := 'Tableau de bord mis à jour : ' + TimeToStr(Now);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+```
+
+### Graphiques cliquables
+
+Rendez les graphiques interactifs avec drill-down.
+
+```pascal
+procedure TFormTableauBordInteractif.Chart1ClickSeries(Sender: TCustomChart;
+  Series: TChartSeries; ValueIndex: Integer; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  Categorie: string;
+begin
+  // Obtenir la catégorie cliquée
+  Categorie := Series.Labels[ValueIndex];
+
+  // Ouvrir un rapport détaillé pour cette catégorie
+  AfficherRapportDetailCategorie(Categorie);
+end;
+
+procedure TFormTableauBordInteractif.AfficherRapportDetailCategorie(const Categorie: string);
+begin
+  frxReportDetail.Variables['Categorie'] := QuotedStr(Categorie);
+  frxReportDetail.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
+  frxReportDetail.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
+
+  frxReportDetail.ShowReport;
+end;
+```
+
+### Actualisation automatique
+
+Mettez à jour le tableau de bord périodiquement.
+
+```pascal
+procedure TFormTableauBordInteractif.FormCreate(Sender: TObject);
+begin
+  // Activer le timer pour actualisation automatique
+  Timer1.Interval := 60000; // 60 secondes
+  Timer1.Enabled := True;
+
+  // Première mise à jour
+  MettreAJourTableauBord;
+end;
+
+procedure TFormTableauBordInteractif.Timer1Timer(Sender: TObject);
+begin
+  if CheckBoxActualisationAuto.Checked then
+    MettreAJourTableauBord;
+end;
+```
+
+## Export interactif
+
+### Sélection du contenu à exporter
+
+Permettez à l'utilisateur de choisir ce qu'il veut exporter.
+
+```pascal
+type
+  TFormExportInteractif = class(TForm)
+    CheckListBoxSections: TCheckListBox;
+    RadioGroupFormat: TRadioGroup;
+    CheckBoxInclureGraphiques: TCheckBox;
+    btnExporter: TButton;
+  end;
+
+procedure TFormExportInteractif.btnExporterClick(Sender: TObject);
+var
+  SectionsAExporter: TStringList;
+  i: Integer;
+begin
+  SectionsAExporter := TStringList.Create;
+  try
+    // Collecter les sections sélectionnées
+    for i := 0 to CheckListBoxSections.Count - 1 do
+    begin
+      if CheckListBoxSections.Checked[i] then
+        SectionsAExporter.Add(CheckListBoxSections.Items[i]);
+    end;
+
+    if SectionsAExporter.Count = 0 then
+    begin
+      ShowMessage('Veuillez sélectionner au moins une section');
+      Exit;
+    end;
+
+    // Configurer le rapport pour n'exporter que les sections sélectionnées
+    ConfigurerSectionsVisibles(SectionsAExporter);
+
+    // Exporter selon le format choisi
+    case RadioGroupFormat.ItemIndex of
+      0: ExporterPDF;
+      1: ExporterExcel;
+      2: ExporterHTML;
+    end;
+  finally
+    SectionsAExporter.Free;
+  end;
+end;
+
+procedure TFormExportInteractif.ConfigurerSectionsVisibles(Sections: TStringList);
+begin
+  // Masquer toutes les sections
+  frxReport1.FindObject('SectionVentes').Visible := False;
+  frxReport1.FindObject('SectionStatistiques').Visible := False;
+  frxReport1.FindObject('SectionGraphiques').Visible := False;
+
+  // Afficher uniquement les sections sélectionnées
+  if Sections.IndexOf('Ventes') >= 0 then
+    frxReport1.FindObject('SectionVentes').Visible := True;
+
+  if Sections.IndexOf('Statistiques') >= 0 then
+    frxReport1.FindObject('SectionStatistiques').Visible := True;
+
+  if Sections.IndexOf('Graphiques') >= 0 then
+    frxReport1.FindObject('SectionGraphiques').Visible := True;
+end;
+```
+
+### Aperçu avant export
+
+Montrez un aperçu de ce qui sera exporté.
+
+```pascal
+procedure TFormExportInteractif.btnApercuClick(Sender: TObject);
+begin
+  // Configurer le rapport selon les sélections
+  ConfigurerSectionsVisibles(GetSectionsSelectionnees);
+
+  // Afficher l'aperçu
+  frxReport1.ShowReport;
+end;
+
+procedure TFormExportInteractif.btnExporterDepuisApercuClick(Sender: TObject);
+begin
+  // L'utilisateur a vu l'aperçu et veut exporter
+  if frxReport1.PreparedPages.Count = 0 then
+  begin
+    ShowMessage('Veuillez d''abord afficher l''aperçu');
+    Exit;
+  end;
+
+  // Exporter directement le rapport préparé
+  ExporterRapportPrepare;
+end;
+```
+
+## Personnalisation de l'aperçu
+
+### Aperçu avec fonctionnalités personnalisées
+
+```pascal
+type
+  TFormApercuPersonnalise = class(TForm)
+    frxPreview: TfrxPreview;
+    ToolBar1: TToolBar;
+    btnImprimer: TToolButton;
+    btnExporter: TToolButton;
+    btnEmail: TToolButton;
+    btnPartager: TToolButton;
+    Separator1: TToolButton;
+    btnZoomPlus: TToolButton;
+    btnZoomMoins: TToolButton;
+    btnPagePrec: TToolButton;
+    btnPageSuiv: TToolButton;
+    ComboBoxPages: TComboBox;
+    btnRechercher: TToolButton;
+    EditRecherche: TEdit;
+
+    procedure btnImprimerClick(Sender: TObject);
+    procedure btnExporterClick(Sender: TObject);
+    procedure btnEmailClick(Sender: TObject);
+    procedure btnPartagerClick(Sender: TObject);
+    procedure btnRechercherClick(Sender: TObject);
+  end;
+
+procedure TFormApercuPersonnalise.btnEmailClick(Sender: TObject);
+var
+  SaveDialog: TSaveDialog;
+  FichierPDF: string;
+begin
+  // Générer un PDF temporaire
+  FichierPDF := TPath.GetTempFileName + '.pdf';
+  ExporterPDF(FichierPDF);
+
+  // Ouvrir le client email avec le PDF en pièce jointe
+  EnvoyerEmailAvecPieceJointe(FichierPDF);
+end;
+
+procedure TFormApercuPersonnalise.btnPartagerClick(Sender: TObject);
+var
+  Menu: TPopupMenu;
+begin
+  // Créer un menu avec différentes options de partage
+  Menu := TPopupMenu.Create(Self);
+  try
+    AjouterMenuItemPartage(Menu, 'Envoyer par email', @PartagerEmail);
+    AjouterMenuItemPartage(Menu, 'Sauvegarder dans le cloud', @PartagerCloud);
+    AjouterMenuItemPartage(Menu, 'Copier le lien', @PartagerLien);
+
+    Menu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+  finally
+    Menu.Free;
+  end;
+end;
+```
+
+### Barre d'outils personnalisée
+
+```pascal
+procedure TFormApercuPersonnalise.ConfigurerBarreOutils;
+begin
+  // Configurer les boutons de la barre d'outils
+  with ToolBar1 do
+  begin
+    ShowCaptions := True;
+    ButtonHeight := 32;
+    ButtonWidth := 32;
+  end;
+
+  // Ajouter des icônes
+  btnImprimer.ImageIndex := 0;
+  btnExporter.ImageIndex := 1;
+  btnEmail.ImageIndex := 2;
+
+  // Configurer les raccourcis
+  btnImprimer.ShortCut := ShortCut(Ord('P'), [ssCtrl]);
+  btnExporter.ShortCut := ShortCut(Ord('S'), [ssCtrl]);
+  btnRechercher.ShortCut := ShortCut(Ord('F'), [ssCtrl]);
+end;
+```
+
+## Rapports collaboratifs
+
+### Annotations et commentaires
+
+Permettez aux utilisateurs d'ajouter des notes sur les rapports.
+
+```pascal
+type
+  TAnnotation = record
+    ID: Integer;
+    Page: Integer;
+    X, Y: Integer;
+    Texte: string;
+    Auteur: string;
+    DateCreation: TDateTime;
+  end;
+
+procedure TFormRapportCollaboratif.AjouterAnnotation(Page, X, Y: Integer; const Texte: string);
+var
+  Annotation: TAnnotation;
+begin
+  Annotation.ID := GenererID;
+  Annotation.Page := Page;
+  Annotation.X := X;
+  Annotation.Y := Y;
+  Annotation.Texte := Texte;
+  Annotation.Auteur := GetNomUtilisateur;
+  Annotation.DateCreation := Now;
+
+  SauvegarderAnnotation(Annotation);
+  AfficherAnnotations;
+end;
+
+procedure TFormRapportCollaboratif.frxPreviewMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (Button = mbRight) and (ssCtrl in Shift) then
+  begin
+    // Ctrl + Clic droit = ajouter une annotation
+    var Texte: string;
+    if InputQuery('Nouvelle annotation', 'Commentaire :', Texte) then
+    begin
+      var Page := frxPreview.PageNo;
+      AjouterAnnotation(Page, X, Y, Texte);
+    end;
+  end;
+end;
+```
+
+### Partage de rapports
+
+```pascal
+procedure TFormRapportCollaboratif.PartagerRapport;
+var
+  Destinataires: TStringList;
+  i: Integer;
+begin
+  Destinataires := TStringList.Create;
+  try
+    // Sélectionner les destinataires
+    if SelectionnerDestinataires(Destinataires) then
+    begin
+      // Générer le rapport
+      var CheminPDF := GenererPDFTemporaire;
+
+      // Envoyer à chaque destinataire
+      for i := 0 to Destinataires.Count - 1 do
+      begin
+        EnvoyerRapportParEmail(Destinataires[i], CheminPDF);
+      end;
+
+      // Logger le partage
+      LoggerPartage(Destinataires, CheminPDF);
+
+      ShowMessage(Format('Rapport partagé avec %d personne(s)', [Destinataires.Count]));
+    end;
+  finally
+    Destinataires.Free;
+  end;
+end;
+```
+
+## Performance et optimisation
+
+### Chargement progressif
+
+Pour les gros rapports, chargez les données progressivement.
+
+```pascal
+procedure TForm1.GenererRapportProgressif;
+const
+  TAILLE_BLOC = 1000;
+var
+  Offset: Integer;
+begin
+  Offset := 0;
+
+  frxReport1.PrepareReport(False); // Ne pas tout charger
+
+  repeat
+    // Charger un bloc de données
+    ChargerBlocDonnees(Offset, TAILLE_BLOC);
+
+    // Ajouter au rapport
+    frxReport1.PreparePage(frxReport1.PreviewPages.Count);
+
+    Offset := Offset + TAILLE_BLOC;
+
+    // Mise à jour de la progression
+    ProgressBar1.Position := Offset;
+    Application.ProcessMessages;
+
+  until FDQueryVentes.Eof;
+
+  frxReport1.ShowPreparedReport;
+end;
+```
+
+### Cache des rapports
+
+Mettez en cache les rapports fréquemment consultés.
+
+```pascal
+type
+  TCacheRapport = class
+  private
+    FCacheDir: string;
+    FDureeValidite: Integer; // en heures
+  public
+    function ObtenirRapport(const CleRapport: string): Boolean;
+    procedure SauvegarderRapport(const CleRapport: string);
+    function EstValide(const CleRapport: string): Boolean;
+  end;
+
+procedure TForm1.AfficherRapportAvecCache(const Parametres: string);
+var
+  CleCache: string;
+begin
+  CleCache := GenererCleCacheRapport(Parametres);
+
+  if CacheRapport.EstValide(CleCache) and CacheRapport.ObtenirRapport(CleCache) then
+  begin
+    // Charger depuis le cache
+    frxReport1.LoadPreparedReportFromFile(CacheRapport.CheminCache(CleCache));
+    frxReport1.ShowPreparedReport;
+  end
+  else
+  begin
+    // Générer le rapport
+    frxReport1.PrepareReport;
+    frxReport1.ShowPreparedReport;
+
+    // Sauvegarder dans le cache
+    CacheRapport.SauvegarderRapport(CleCache);
   end;
 end;
 ```
 
 ## Conseils et bonnes pratiques
 
-### 1. Tester l'interactivité
+### Design d'interface
 
-Les rapports interactifs nécessitent plus de tests que les rapports statiques. Assurez-vous de tester toutes les fonctionnalités interactives avec différents scénarios et données.
+- **Intuitivité** : les fonctionnalités interactives doivent être évidentes
+- **Feedback visuel** : montrez ce qui est cliquable (curseur, survol)
+- **Cohérence** : utilisez les mêmes conventions partout
+- **Progression** : indiquez l'avancement des opérations longues
+- **Aide contextuelle** : expliquez les fonctionnalités complexes
 
-### 2. Gestion des erreurs
+### Performance
 
-Ajoutez une gestion des erreurs appropriée, surtout pour les actions qui modifient des données.
+- **Chargement différé** : ne chargez que ce qui est visible
+- **Cache intelligent** : réutilisez les résultats calculés
+- **Optimisation SQL** : filtrez au niveau de la base
+- **Pagination** : limitez les données affichées simultanément
+- **Asynchrone** : évitez de bloquer l'interface
 
-```pascal
-// Exemple d'une gestion d'erreurs robuste dans un script
-'try' + #13#10 +
-'  // Code qui pourrait générer une erreur' + #13#10 +
-'  // ...' + #13#10 +
-'except' + #13#10 +
-'  on E: Exception do' + #13#10 +
-'  begin' + #13#10 +
-'    ShowMessage(''Erreur: '' + E.Message);' + #13#10 +
-'    Report.Variables["ErrorOccurred"] := True;' + #13#10 +
-'  end;' + #13#10 +
-'end;'
-```
+### Accessibilité
 
-### 3. Privilégier la simplicité
+- **Navigation clavier** : toutes les fonctions accessibles au clavier
+- **Raccourcis** : F3 pour rechercher, Ctrl+P pour imprimer, etc.
+- **Contraste** : éléments interactifs bien visibles
+- **Tooltips** : aide sur les boutons et fonctions
+- **Alternative texte** : décrivez les actions disponibles
 
-Ne surchargez pas vos rapports avec trop d'éléments interactifs. Gardez l'interface simple et intuitive.
+### Sécurité
 
-### 4. Fournir des instructions
+- **Validation** : vérifiez les entrées utilisateur
+- **Permissions** : contrôlez l'accès aux fonctionnalités
+- **Audit** : journalisez les actions importantes
+- **Export sécurisé** : protégez les données sensibles
+- **Sessions** : gérez les droits utilisateur
 
-Pour les rapports complexes, ajoutez des instructions claires sur la façon d'utiliser les fonctionnalités interactives.
+### Expérience utilisateur
 
-```pascal
-// Ajouter une note d'aide
-Memo := TfrxMemoView.Create(Report);
-BandTitle.Objects.Add(Memo);
-Memo.Left := 10;
-Memo.Top := 40;
-Memo.Width := 400;
-Memo.Height := 20;
-Memo.Text := 'Note: Cliquez sur les régions du graphique pour voir les détails correspondants.';
-Memo.Font.Style := [fsItalic];
-Memo.Font.Color := clGray;
-```
+- **Cohérence** : comportements prévisibles
+- **Réactivité** : réponse immédiate aux actions
+- **Annulation** : possibilité de revenir en arrière
+- **Préférences** : sauvegardez les choix utilisateur
+- **Documentation** : aide intégrée et exemples
 
-### 5. Sécurité
-
-Si votre rapport peut effectuer des modifications de données, assurez-vous d'implémenter les contrôles de sécurité appropriés.
+## Exemple complet : Rapport de ventes interactif
 
 ```pascal
-// Vérifier les droits de l'utilisateur avant une action
-'if <CurrentUserHasRights> = False then' + #13#10 +
-'begin' + #13#10 +
-'  ShowMessage(''Vous n''''avez pas les droits nécessaires pour effectuer cette action.'');' + #13#10 +
-'  Exit;' + #13#10 +
-'end;'
-```
+unit URapportVentesInteractif;
 
-## Exemple complet : Tableau de bord interactif
+interface
 
-Voici un exemple plus complet qui combine plusieurs techniques pour créer un tableau de bord interactif :
+uses
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.ComCtrls, FireDAC.Comp.Client,
+  frxClass, frxDBSet, frxPreview;
 
-```pascal
-procedure TForm1.CreateDashboardReport;
+type
+  TFormRapportVentesInteractif = class(TForm)
+    // Composants visuels
+    PanelFiltres: TPanel;
+    PanelApercu: TPanel;
+    DateEdit1: TDateTimePicker;
+    DateEdit2: TDateTimePicker;
+    ComboCategorie: TComboBox;
+    ComboVendeur: TComboBox;
+    CheckBoxDetails: TCheckBox;
+    btnAppliquer: TButton;
+    btnReset: TButton;
+    btnExporter: TButton;
+    StatusBar1: TStatusBar;
+
+    // Composants FastReport
+    frxReport1: TfrxReport;
+    frxPreview1: TfrxPreview;
+    frxDBDataset1: TfrxDBDataset;
+
+    // Base de données
+    FDConnection1: TFDConnection;
+    FDQueryVentes: TFDQuery;
+
+    procedure FormCreate(Sender: TObject);
+    procedure btnAppliquerClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
+    procedure btnExporterClick(Sender: TObject);
+    procedure frxReport1UserFunction(const MethodName: String; var Params: Variant);
+  private
+    FHistorique: TList<string>;
+    procedure InitialiserFiltres;
+    procedure AppliquerFiltres;
+    procedure GenererRapport;
+    procedure AjouterHistorique(const Action: string);
+    procedure AfficherDetailVente(ID: Integer);
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormRapportVentesInteractif.FormCreate(Sender: TObject);
+begin
+  FHistorique := TList<string>.Create;
+
+  // Configuration de la connexion
+  FDConnection1.Params.Values['Database'] := 'ma_base';
+  FDConnection1.Connected := True;
+
+  // Configuration du preview
+  frxPreview1.Parent := PanelApercu;
+  frxPreview1.Align := alClient;
+  frxReport1.Preview := frxPreview1;
+
+  // Initialisation
+  InitialiserFiltres;
+  GenererRapport;
+end;
+
+procedure TFormRapportVentesInteractif.InitialiserFiltres;
+begin
+  // Dates par défaut : mois en cours
+  DateEdit1.Date := StartOfTheMonth(Date);
+  DateEdit2.Date := EndOfTheMonth(Date);
+
+  // Charger les catégories
+  ComboCategorie.Items.Clear;
+  ComboCategorie.Items.Add('Toutes');
+  FDConnection1.ExecSQL('SELECT DISTINCT categorie FROM produits ORDER BY categorie',
+    procedure(DataSet: TDataSet)
+    begin
+      while not DataSet.Eof do
+      begin
+        ComboCategorie.Items.Add(DataSet.FieldByName('categorie').AsString);
+        DataSet.Next;
+      end;
+    end);
+  ComboCategorie.ItemIndex := 0;
+
+  // Charger les vendeurs
+  ComboVendeur.Items.Clear;
+  ComboVendeur.Items.Add('Tous');
+  // ... similaire pour les vendeurs
+  ComboVendeur.ItemIndex := 0;
+end;
+
+procedure TFormRapportVentesInteractif.AppliquerFiltres;
 var
-  Report: TfrxReport;
-  Page: TfrxReportPage;
-  BandTitle, BandFilters, BandSummary, BandCharts, BandDetails: TfrxBand;
-  Memo: TfrxMemoView;
-  Chart: TfrxChartView;
-  DateFrom, DateTo: TfrxDateEditControl;
-  RegionList: TfrxComboBoxControl;
-  DetailPage: TfrxReportPage;
+  SQL: string;
 begin
-  Report := frxReport1;
-  Report.Clear;
+  SQL := 'SELECT v.*, p.nom as produit, p.categorie, u.nom as vendeur ' +
+         'FROM ventes v ' +
+         'INNER JOIN produits p ON v.id_produit = p.id ' +
+         'INNER JOIN utilisateurs u ON v.id_vendeur = u.id ' +
+         'WHERE v.date_vente BETWEEN :date_debut AND :date_fin';
 
-  // Page principale du tableau de bord
-  Page := TfrxReportPage.Create(Report);
-  Report.Pages.Add(Page);
-  Page.Name := 'DashboardPage';
-  Page.Orientation := poLandscape; // Format paysage pour le tableau de bord
+  // Filtre catégorie
+  if ComboCategorie.ItemIndex > 0 then
+    SQL := SQL + ' AND p.categorie = :categorie';
 
-  // Titre du tableau de bord
-  BandTitle := TfrxReportTitle.Create(Report);
-  Page.Bands.Add(BandTitle);
-  BandTitle.Height := 40;
+  // Filtre vendeur
+  if ComboVendeur.ItemIndex > 0 then
+    SQL := SQL + ' AND u.nom = :vendeur';
 
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := Page.Width - Page.LeftMargin - Page.RightMargin;
-  Memo.Height := 30;
-  Memo.Text := 'TABLEAU DE BORD DES VENTES';
-  Memo.Font.Size := 16;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
+  SQL := SQL + ' ORDER BY v.date_vente DESC';
 
-  // Bande pour les filtres interactifs
-  BandFilters := TfrxBand.Create(Report);
-  Page.Bands.Add(BandFilters);
-  BandFilters.Top := 50;
-  BandFilters.Height := 60;
+  // Appliquer la requête
+  FDQueryVentes.Close;
+  FDQueryVentes.SQL.Text := SQL;
+  FDQueryVentes.ParamByName('date_debut').AsDate := DateEdit1.Date;
+  FDQueryVentes.ParamByName('date_fin').AsDate := DateEdit2.Date;
 
-  // Titre des filtres
-  Memo := TfrxMemoView.Create(Report);
-  BandFilters.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 0;
-  Memo.Width := 200;
-  Memo.Height := 20;
-  Memo.Text := 'Filtres:';
-  Memo.Font.Style := [fsBold];
+  if ComboCategorie.ItemIndex > 0 then
+    FDQueryVentes.ParamByName('categorie').AsString := ComboCategorie.Text;
 
-  // Filtre de date début
-  Memo := TfrxMemoView.Create(Report);
-  BandFilters.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 25;
-  Memo.Width := 80;
-  Memo.Height := 20;
-  Memo.Text := 'Date début:';
+  if ComboVendeur.ItemIndex > 0 then
+    FDQueryVentes.ParamByName('vendeur').AsString := ComboVendeur.Text;
 
-  DateFrom := TfrxDateEditControl.Create(Report);
-  BandFilters.Objects.Add(DateFrom);
-  DateFrom.Left := 100;
-  DateFrom.Top := 25;
-  DateFrom.Width := 100;
-  DateFrom.Height := 20;
-  DateFrom.Date := EncodeDate(Year(Now), Month(Now), 1); // Premier jour du mois
-  DateFrom.Name := 'edDateFrom';
+  FDQueryVentes.Open;
 
-  // Filtre de date fin
-  Memo := TfrxMemoView.Create(Report);
-  BandFilters.Objects.Add(Memo);
-  Memo.Left := 220;
-  Memo.Top := 25;
-  Memo.Width := 70;
-  Memo.Height := 20;
-  Memo.Text := 'Date fin:';
-
-  DateTo := TfrxDateEditControl.Create(Report);
-  BandFilters.Objects.Add(DateTo);
-  DateTo.Left := 300;
-  DateTo.Top := 25;
-  DateTo.Width := 100;
-  DateTo.Height := 20;
-  DateTo.Date := Now; // Date actuelle
-  DateTo.Name := 'edDateTo';
-
-  // Filtre de région
-  Memo := TfrxMemoView.Create(Report);
-  BandFilters.Objects.Add(Memo);
-  Memo.Left := 420;
-  Memo.Top := 25;
-  Memo.Width := 60;
-  Memo.Height := 20;
-  Memo.Text := 'Région:';
-
-  RegionList := TfrxComboBoxControl.Create(Report);
-  BandFilters.Objects.Add(RegionList);
-  RegionList.Left := 490;
-  RegionList.Top := 25;
-  RegionList.Width := 120;
-  RegionList.Height := 20;
-  RegionList.Items.Add('Toutes');
-  RegionList.Items.Add('Nord');
-  RegionList.Items.Add('Sud');
-  RegionList.Items.Add('Est');
-  RegionList.Items.Add('Ouest');
-  RegionList.ItemIndex := 0;
-  RegionList.Name := 'cbRegion';
-
-  // Bouton "Appliquer les filtres"
-  Memo := TfrxMemoView.Create(Report);
-  BandFilters.Objects.Add(Memo);
-  Memo.Left := 630;
-  Memo.Top := 25;
-  Memo.Width := 100;
-  Memo.Height := 25;
-  Memo.Text := 'Appliquer';
-  Memo.Color := clBtnFace;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-  Memo.VAlign := vaCenter;
-  Memo.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Memo.Cursor := crHandPoint;
-
-  // Script pour le bouton "Appliquer"
-  Memo.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer les valeurs des filtres' + #13#10 +
-    '  Report.Variables["DateFrom"] := edDateFrom.Date;' + #13#10 +
-    '  Report.Variables["DateTo"] := edDateTo.Date;' + #13#10 +
-    '  Report.Variables["Region"] := cbRegion.Text;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Notifier l''application pour mettre à jour les données' + #13#10 +
-    '  Report.Variables["ApplyFilters"] := True;' + #13#10 +
-    '  Engine.OnManualBuild;' + #13#10 +
-    '  ' + #13#10 +
-    '  // Actualiser l''affichage' + #13#10 +
-    '  Engine.ShowBand(FindObject("DashboardPage.BandSummary"));' + #13#10 +
-    '  Engine.ShowBand(FindObject("DashboardPage.BandCharts"));' + #13#10 +
-    'end;';
-
-  // Bande pour les indicateurs de synthèse
-  BandSummary := TfrxBand.Create(Report);
-  Page.Bands.Add(BandSummary);
-  BandSummary.Name := 'BandSummary';
-  BandSummary.Top := 120;
-  BandSummary.Height := 80;
-
-  // Indicateur 1: Total des ventes
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 10;
-  Memo.Width := 160;
-  Memo.Height := 60;
-  Memo.Color := $00E0FFE0; // Vert clair
-  Memo.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Memo.Frame.Width := 1;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 15;
-  Memo.Top := 15;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'VENTES TOTALES';
-  Memo.Font.Style := [fsBold];
-  Memo.Font.Size := 10;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 15;
-  Memo.Top := 35;
-  Memo.Width := 150;
-  Memo.Height := 30;
-  Memo.Text := '[TotalVentes]';
-  Memo.DisplayFormat.FormatStr := '%2.2f €';
-  Memo.DisplayFormat.Kind := fkNumeric;
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.Cursor := crHandPoint;
-
-  // Script pour afficher les détails des ventes
-  Memo.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'begin' + #13#10 +
-    '  ShowMessage(''Affichage des détails des ventes totales'');' + #13#10 +
-    '  Report.Variables["DetailType"] := ''Ventes'';' + #13#10 +
-    '  Engine.ShowBand(FindObject("DetailPage.ReportTitle1"));' + #13#10 +
-    'end;';
-
-  // Indicateur 2: Nombre de clients
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 180;
-  Memo.Top := 10;
-  Memo.Width := 160;
-  Memo.Height := 60;
-  Memo.Color := $00E0E0FF; // Bleu clair
-  Memo.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Memo.Frame.Width := 1;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 185;
-  Memo.Top := 15;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'CLIENTS ACTIFS';
-  Memo.Font.Style := [fsBold];
-  Memo.Font.Size := 10;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 185;
-  Memo.Top := 35;
-  Memo.Width := 150;
-  Memo.Height := 30;
-  Memo.Text := '[NbClients]';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.Cursor := crHandPoint;
-
-  // Script pour afficher les détails des clients
-  Memo.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'begin' + #13#10 +
-    '  ShowMessage(''Affichage de la liste des clients'');' + #13#10 +
-    '  Report.Variables["DetailType"] := ''Clients'';' + #13#10 +
-    '  Engine.ShowBand(FindObject("DetailPage.ReportTitle1"));' + #13#10 +
-    'end;';
-
-  // Indicateur 3: Produits vendus
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 350;
-  Memo.Top := 10;
-  Memo.Width := 160;
-  Memo.Height := 60;
-  Memo.Color := $00FFE0E0; // Rouge clair
-  Memo.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Memo.Frame.Width := 1;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 355;
-  Memo.Top := 15;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'PRODUITS VENDUS';
-  Memo.Font.Style := [fsBold];
-  Memo.Font.Size := 10;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 355;
-  Memo.Top := 35;
-  Memo.Width := 150;
-  Memo.Height := 30;
-  Memo.Text := '[NbProduits]';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.Cursor := crHandPoint;
-
-  // Script pour afficher les détails des produits
-  Memo.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'begin' + #13#10 +
-    '  ShowMessage(''Affichage des détails des produits'');' + #13#10 +
-    '  Report.Variables["DetailType"] := ''Produits'';' + #13#10 +
-    '  Engine.ShowBand(FindObject("DetailPage.ReportTitle1"));' + #13#10 +
-    'end;';
-
-  // Indicateur 4: Marge moyenne
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 520;
-  Memo.Top := 10;
-  Memo.Width := 160;
-  Memo.Height := 60;
-  Memo.Color := $00FFFFE0; // Jaune clair
-  Memo.Frame.Typ := [ftLeft, ftRight, ftTop, ftBottom];
-  Memo.Frame.Width := 1;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 525;
-  Memo.Top := 15;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'MARGE MOYENNE';
-  Memo.Font.Style := [fsBold];
-  Memo.Font.Size := 10;
-
-  Memo := TfrxMemoView.Create(Report);
-  BandSummary.Objects.Add(Memo);
-  Memo.Left := 525;
-  Memo.Top := 35;
-  Memo.Width := 150;
-  Memo.Height := 30;
-  Memo.Text := '[MargeAvg]%';
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.Cursor := crHandPoint;
-
-  // Bande pour les graphiques
-  BandCharts := TfrxBand.Create(Report);
-  Page.Bands.Add(BandCharts);
-  BandCharts.Name := 'BandCharts';
-  BandCharts.Top := 210;
-  BandCharts.Height := 300;
-
-  // Graphique 1: Ventes par région (camembert)
-  Chart := TfrxChartView.Create(Report);
-  BandCharts.Objects.Add(Chart);
-  Chart.Left := 10;
-  Chart.Top := 10;
-  Chart.Width := 320;
-  Chart.Height := 280;
-  Chart.Title.Text.Add('Ventes par région');
-
-  // Configurer le graphique camembert
-  Chart.Chart.SeriesType := stPie;
-
-  with Chart.Chart.Series.Add do
-  begin
-    ColorEachPoint := True;
-    XSource := 'frxDBDataset1."Region"';
-    YSource := 'frxDBDataset1."TotalVentes"';
-    Name := 'Ventes';
-  end;
-
-  // Rendre le graphique interactif
-  Chart.Script :=
-    'procedure OnClick(Sender: TfrxComponent; Button: TMouseButton; Shift: Integer; X, Y: Integer);' + #13#10 +
-    'var' + #13#10 +
-    '  ClickedRegion: String;' + #13#10 +
-    'begin' + #13#10 +
-    '  // Récupérer la région cliquée' + #13#10 +
-    '  if Chart.CalcClick(X, Y) then begin' + #13#10 +
-    '    ClickedRegion := Chart.ClickedSeries.XValue;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Filtrer par cette région' + #13#10 +
-    '    cbRegion.Text := ClickedRegion;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Appliquer le filtre' + #13#10 +
-    '    Report.Variables["Region"] := ClickedRegion;' + #13#10 +
-    '    Report.Variables["ApplyFilters"] := True;' + #13#10 +
-    '    Engine.OnManualBuild;' + #13#10 +
-    '    ' + #13#10 +
-    '    // Actualiser l''affichage' + #13#10 +
-    '    Engine.ShowBand(FindObject("DashboardPage.BandSummary"));' + #13#10 +
-    '    Engine.ShowBand(FindObject("DashboardPage.BandCharts"));' + #13#10 +
-    '  end;' + #13#10 +
-    'end;';
-
-  // Graphique 2: Évolution des ventes (courbe)
-  Chart := TfrxChartView.Create(Report);
-  BandCharts.Objects.Add(Chart);
-  Chart.Left := 340;
-  Chart.Top := 10;
-  Chart.Width := 340;
-  Chart.Height := 280;
-  Chart.Title.Text.Add('Évolution des ventes');
-
-  // Configurer le graphique en courbe
-  Chart.Chart.SeriesType := stLine;
-
-  with Chart.Chart.Series.Add do
-  begin
-    ColorEachPoint := False;
-    Color := clRed;
-    XSource := 'frxDBDataset2."Mois"';
-    YSource := 'frxDBDataset2."MontantVentes"';
-    Name := 'Ventes';
-  end;
-
-  // Page pour les détails (cachée initialement)
-  DetailPage := TfrxReportPage.Create(Report);
-  Report.Pages.Add(DetailPage);
-  DetailPage.Name := 'DetailPage';
-  DetailPage.Visible := False;
-
-  // Titre de la page de détails
-  BandTitle := TfrxReportTitle.Create(Report);
-  DetailPage.Bands.Add(BandTitle);
-  BandTitle.Height := 50;
-
-  // Titre dynamique selon le type de détail
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 0;
-  Memo.Top := 0;
-  Memo.Width := DetailPage.Width - DetailPage.LeftMargin - DetailPage.RightMargin;
-  Memo.Height := 30;
-  Memo.Font.Size := 14;
-  Memo.Font.Style := [fsBold];
-  Memo.HAlign := haCenter;
-
-  // Script pour définir le titre dynamiquement
-  Memo.Script :=
-    'procedure OnBeforePrint(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  if <DetailType> = ''Ventes'' then' + #13#10 +
-    '    Text := ''DÉTAIL DES VENTES'';' + #13#10 +
-    '  else if <DetailType> = ''Clients'' then' + #13#10 +
-    '    Text := ''LISTE DES CLIENTS'';' + #13#10 +
-    '  else if <DetailType> = ''Produits'' then' + #13#10 +
-    '    Text := ''DÉTAIL DES PRODUITS VENDUS'';' + #13#10 +
-    'end;';
-
-  // Bouton de retour au tableau de bord
-  Memo := TfrxMemoView.Create(Report);
-  BandTitle.Objects.Add(Memo);
-  Memo.Left := 10;
-  Memo.Top := 30;
-  Memo.Width := 150;
-  Memo.Height := 20;
-  Memo.Text := 'Retour au tableau de bord';
-  Memo.Font.Color := clBlue;
-  Memo.Font.Style := [fsUnderline];
-  Memo.Cursor := crHandPoint;
-  Memo.OnClick := 'ReturnToDashboard';
-
-  // Bande de détail (contenu dynamique selon le type)
-  BandDetails := TfrxDetailData.Create(Report);
-  DetailPage.Bands.Add(BandDetails);
-  BandDetails.Height := 20;
-
-  // Script pour définir le dataset et le contenu selon le type
-  BandDetails.Script :=
-    'procedure OnBeforePrint(Sender: TfrxComponent);' + #13#10 +
-    'begin' + #13#10 +
-    '  if <DetailType> = ''Ventes'' then' + #13#10 +
-    '    DataSet := frxDBDataset3' + #13#10 +
-    '  else if <DetailType> = ''Clients'' then' + #13#10 +
-    '    DataSet := frxDBDataset4' + #13#10 +
-    '  else if <DetailType> = ''Produits'' then' + #13#10 +
-    '    DataSet := frxDBDataset5;' + #13#10 +
-    'end;';
-
-  // Ajouter les champs pour chaque type de détail...
-  // (Code omis pour concision)
-
-  // Script global pour gérer la navigation
-  Report.Script.Text :=
-    'procedure ReturnToDashboard;' + #13#10 +
-    'begin' + #13#10 +
-    '  Engine.ShowBand(FindObject("DashboardPage.ReportTitle1"));' + #13#10 +
-    'end;';
-
-  // Initialiser les variables
-  Report.Variables['TotalVentes'] := 0;
-  Report.Variables['NbClients'] := 0;
-  Report.Variables['NbProduits'] := 0;
-  Report.Variables['MargeAvg'] := 0;
-
-  // Prévisualiser le rapport
-  Report.ShowReport;
+  AjouterHistorique(Format('Filtres appliqués : %s à %s, Cat: %s, Vendeur: %s',
+    [DateToStr(DateEdit1.Date), DateToStr(DateEdit2.Date),
+     ComboCategorie.Text, ComboVendeur.Text]));
 end;
+
+procedure TFormRapportVentesInteractif.btnAppliquerClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    AppliquerFiltres;
+    GenererRapport;
+    StatusBar1.SimpleText := Format('%d ventes trouvées', [FDQueryVentes.RecordCount]);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TFormRapportVentesInteractif.GenererRapport;
+begin
+  // Passer les paramètres au rapport
+  frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
+  frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
+  frxReport1.Variables['AfficherDetails'] := BoolToStr(CheckBoxDetails.Checked, True);
+
+  // Générer
+  frxReport1.LoadFromFile('RapportVentesInteractif.fr3');
+  frxReport1.ShowReport(False); // False = non modal
+end;
+
+procedure TFormRapportVentesInteractif.frxReport1UserFunction(
+  const MethodName: String; var Params: Variant);
+begin
+  if MethodName = 'AFFICHERDETAILVENTE' then
+  begin
+    var ID := Integer(Params[0]);
+    AfficherDetailVente(ID);
+  end
+  else if MethodName = 'EXPORTERLIGNE' then
+  begin
+    var ID := Integer(Params[0]);
+    ExporterLigneEnPDF(ID);
+  end;
+end;
+
+procedure TFormRapportVentesInteractif.AfficherDetailVente(ID: Integer);
+begin
+  // Créer un nouveau formulaire pour afficher les détails
+  var FormDetail := TFormDetailVente.Create(Self);
+  try
+    FormDetail.ChargerVente(ID);
+    FormDetail.ShowModal;
+  finally
+    FormDetail.Free;
+  end;
+
+  AjouterHistorique('Détail vente #' + IntToStr(ID));
+end;
+
+procedure TFormRapportVentesInteractif.btnResetClick(Sender: TObject);
+begin
+  InitialiserFiltres;
+  CheckBoxDetails.Checked := False;
+  btnAppliquerClick(nil);
+end;
+
+procedure TFormRapportVentesInteractif.btnExporterClick(Sender: TObject);
+var
+  SaveDialog: TSaveDialog;
+begin
+  SaveDialog := TSaveDialog.Create(Self);
+  try
+    SaveDialog.Filter := 'PDF|*.pdf|Excel|*.xlsx|CSV|*.csv';
+    SaveDialog.DefaultExt := 'pdf';
+
+    if SaveDialog.Execute then
+    begin
+      case SaveDialog.FilterIndex of
+        1: ExporterPDF(SaveDialog.FileName);
+        2: ExporterExcel(SaveDialog.FileName);
+        3: ExporterCSV(SaveDialog.FileName);
+      end;
+
+      AjouterHistorique('Export : ' + SaveDialog.FileName);
+    end;
+  finally
+    SaveDialog.Free;
+  end;
+end;
+
+procedure TFormRapportVentesInteractif.AjouterHistorique(const Action: string);
+begin
+  FHistorique.Add(Format('[%s] %s', [TimeToStr(Now), Action]));
+end;
+
+end.
 ```
 
-Pour que ce tableau de bord fonctionne, vous devez implémenter l'événement `OnManualBuild` dans votre application Delphi :
+## Résumé
 
-```pascal
-procedure TForm1.frxReport1ManualBuild(Sender: TObject);
-begin
-  if frxReport1.Variables['ApplyFilters'] = True then
-  begin
-    // Récupérer les paramètres de filtrage
-    DateFrom := frxReport1.Variables['DateFrom'];
-    DateTo := frxReport1.Variables['DateTo'];
-    Region := frxReport1.Variables['Region'];
+Les rapports interactifs transforment les rapports statiques en outils d'exploration puissants. Les points clés :
 
-    // Mettre à jour les données
-    RefreshDashboardData(DateFrom, DateTo, Region);
+- **Navigation** : signets, table des matières, hyperliens pour se déplacer facilement
+- **Drill-down** : exploration progressive du général au détail
+- **Drill-through** : passage fluide entre rapports liés
+- **Filtres dynamiques** : personnalisation des données affichées
+- **Tri interactif** : réorganisation selon les besoins
+- **Recherche** : localisation rapide d'informations
+- **Actions personnalisées** : boutons et menus contextuels
+- **Tableaux de bord** : vues multiples avec interactions
+- **Export sélectif** : choix précis du contenu à exporter
+- **Performance** : optimisations pour la réactivité
 
-    // Réinitialiser le flag
-    frxReport1.Variables['ApplyFilters'] := False;
-  end;
-end;
-
-procedure TForm1.RefreshDashboardData(DateFrom, DateTo: TDateTime; const Region: string);
-begin
-  // Filtrer les requêtes selon les paramètres
-  qryVentesSummary.Close;
-  qryVentesSummary.Parameters.ParamByName('DateFrom').Value := DateFrom;
-  qryVentesSummary.Parameters.ParamByName('DateTo').Value := DateTo;
-
-  if Region <> 'Toutes' then
-    qryVentesSummary.Parameters.ParamByName('Region').Value := Region
-  else
-    qryVentesSummary.Parameters.ParamByName('Region').Value := Null;
-
-  qryVentesSummary.Open;
-
-  // Mettre à jour les indicateurs de synthèse
-  frxReport1.Variables['TotalVentes'] := qryVentesSummary.FieldByName('TotalVentes').AsFloat;
-  frxReport1.Variables['NbClients'] := qryVentesSummary.FieldByName('NbClients').AsInteger;
-  frxReport1.Variables['NbProduits'] := qryVentesSummary.FieldByName('NbProduits').AsInteger;
-  frxReport1.Variables['MargeAvg'] := qryVentesSummary.FieldByName('MargeAvg').AsFloat;
-
-  // Mettre à jour les autres datasets pour les graphiques
-  qryVentesParRegion.Close;
-  qryVentesParRegion.Parameters.ParamByName('DateFrom').Value := DateFrom;
-  qryVentesParRegion.Parameters.ParamByName('DateTo').Value := DateTo;
-  if Region <> 'Toutes' then
-    qryVentesParRegion.Parameters.ParamByName('Region').Value := Region
-  else
-    qryVentesParRegion.Parameters.ParamByName('Region').Value := Null;
-  qryVentesParRegion.Open;
-
-  qryVentesEvolution.Close;
-  qryVentesEvolution.Parameters.ParamByName('DateFrom').Value := DateFrom;
-  qryVentesEvolution.Parameters.ParamByName('DateTo').Value := DateTo;
-  if Region <> 'Toutes' then
-    qryVentesEvolution.Parameters.ParamByName('Region').Value := Region
-  else
-    qryVentesEvolution.Parameters.ParamByName('Region').Value := Null;
-  qryVentesEvolution.Open;
-end;
-```
-
-## Conclusion
-
-Les rapports interactifs représentent une avancée majeure par rapport aux rapports statiques traditionnels. Ils offrent :
-
-1. **Exploration des données** : Les utilisateurs peuvent naviguer, filtrer et explorer les informations selon leurs besoins.
-
-2. **Personnalisation** : Chaque utilisateur peut adapter le rapport à ses propres préférences et centres d'intérêt.
-
-3. **Productivité** : Les actions intégrées permettent d'effectuer des opérations directement depuis le rapport.
-
-4. **Expérience utilisateur** : Une interface plus agréable et engageante qui améliore la compréhension des données.
-
-FastReport offre un ensemble complet d'outils pour créer des rapports interactifs, notamment :
-
-- Navigation par liens et signets
-- Dialogue de paramètres
-- Affichage conditionnel
-- Actions utilisateur
-- Composants interactifs (contrôles)
-- Graphiques cliquables
-
-En combinant ces techniques, vous pouvez transformer vos rapports statiques en véritables applications de reporting interactives, permettant aux utilisateurs d'analyser les données plus efficacement et de prendre de meilleures décisions métier.
-
-Dans la prochaine section, nous explorerons les graphiques et tableaux de bord avec TeeChart, pour enrichir encore davantage vos visualisations de données dans Delphi.
+Maîtriser les rapports interactifs permet de créer des applications analytiques modernes qui donnent aux utilisateurs le pouvoir d'explorer et de comprendre leurs données de manière autonome et efficace.
 
 ⏭️ [Graphiques et tableaux de bord avec TeeChart](/09-rapports-et-impressions/08-graphiques-et-tableaux-de-bord-avec-teechart.md)
