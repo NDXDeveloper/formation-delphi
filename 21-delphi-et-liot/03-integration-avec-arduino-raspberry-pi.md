@@ -1,1651 +1,1041 @@
-# 21.3 Intégration avec Arduino / Raspberry Pi
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 21.3 Intégration avec Arduino / Raspberry Pi
 
 ## Introduction
 
-L'une des forces de Delphi dans le domaine de l'IoT est sa capacité à s'intégrer avec des plateformes matérielles populaires comme Arduino et Raspberry Pi. Cette intégration vous permet de créer des solutions IoT complètes en combinant la puissance de développement d'interface de Delphi avec la flexibilité matérielle de ces plateformes.
+Arduino et Raspberry Pi sont les deux plateformes les plus populaires dans le monde de l'électronique et de l'IoT. Bien qu'elles soient différentes dans leur conception et leur utilisation, toutes deux peuvent être facilement intégrées avec vos applications Delphi pour créer des systèmes IoT puissants et polyvalents.
 
-Dans cette section, nous allons explorer comment connecter et communiquer avec ces appareils depuis vos applications Delphi, en nous concentrant sur des exemples pratiques et accessibles.
-
-## Intégration avec Arduino
+## Arduino : Le microcontrôleur accessible
 
 ### Qu'est-ce qu'Arduino ?
 
-Arduino est une plateforme open-source de prototypage électronique basée sur du matériel et des logiciels flexibles et faciles à utiliser. Elle est idéale pour créer des objets interactifs ou pour s'initier à la programmation et à l'électronique.
+Arduino est une plateforme électronique open source basée sur un microcontrôleur. C'est essentiellement un petit ordinateur capable d'exécuter un seul programme en boucle, conçu pour interagir avec le monde physique.
 
-### Matériel nécessaire
+**Caractéristiques principales :**
+- **Simplicité** : facile à apprendre et à utiliser
+- **Prix** : très abordable (à partir de quelques euros)
+- **Communauté** : énorme base d'utilisateurs et de projets
+- **Bibliothèques** : milliers de bibliothèques disponibles
+- **Entrées/Sorties** : nombreuses broches GPIO (General Purpose Input/Output)
 
-Pour suivre cette section, vous aurez besoin de :
-- Une carte Arduino (Uno, Nano, Mega, etc.)
-- Un câble USB
-- Quelques composants de base (LEDs, résistances, capteurs)
-- Un ordinateur avec Delphi installé
+### Modèles Arduino populaires
 
-### Méthodes de communication avec Arduino
+#### Arduino Uno
+- **Microcontrôleur** : ATmega328P
+- **Tension** : 5V
+- **Broches digitales** : 14 (dont 6 PWM)
+- **Broches analogiques** : 6
+- **Mémoire** : 32 KB Flash, 2 KB SRAM
+- **Utilisation** : idéal pour débuter, projets simples
 
-Il existe plusieurs façons de connecter Delphi à Arduino :
+#### Arduino Mega
+- **Microcontrôleur** : ATmega2560
+- **Broches digitales** : 54 (dont 15 PWM)
+- **Broches analogiques** : 16
+- **Mémoire** : 256 KB Flash, 8 KB SRAM
+- **Utilisation** : projets complexes nécessitant beaucoup de broches
 
-1. **Communication série USB** : La méthode la plus simple et la plus courante
-2. **Bluetooth** : Via des modules comme HC-05 ou HC-06
-3. **WiFi** : Avec des cartes comme ESP8266 ou Arduino MKR WiFi
-4. **Ethernet** : Avec un shield Ethernet pour Arduino
+#### Arduino Nano
+- **Format** : compact, breadboard-friendly
+- **Similaire** : à l'Uno mais plus petit
+- **Utilisation** : projets embarqués compacts
 
-### Exemple 1 : Communication série simple
+#### ESP32/ESP8266
+- **WiFi/Bluetooth** : intégrés
+- **Performance** : beaucoup plus puissants
+- **Prix** : très compétitifs
+- **Utilisation** : projets IoT connectés
 
-#### Côté Arduino
+### Pourquoi combiner Arduino et Delphi ?
 
-Commençons par un sketch Arduino simple qui permet de contrôler une LED et de lire la valeur d'un capteur :
+Arduino excelle dans :
+- Lire des capteurs en temps réel
+- Contrôler des actionneurs
+- Gérer des signaux à basse latence
+- Fonctionner en continu sans OS
+
+Delphi excelle dans :
+- Créer des interfaces utilisateur riches
+- Gérer des bases de données
+- Traiter et analyser des données
+- Générer des rapports et graphiques
+
+**Ensemble, ils forment une solution complète** : Arduino collecte les données et contrôle les dispositifs, tandis que Delphi fournit l'interface, le stockage et l'intelligence.
+
+## Intégration Arduino avec Delphi
+
+### Architecture de communication
+
+L'architecture typique est la suivante :
+
+```
+[Capteurs] <---> [Arduino] <--USB/Série--> [Application Delphi] <---> [Base de données]
+                                                     |
+                                                     v
+                                              [Interface utilisateur]
+```
+
+### Protocole de communication
+
+Pour une communication efficace, définissez un protocole simple :
+
+#### Format de message recommandé
+
+```
+COMMANDE:VALEUR\n
+```
+
+**Exemples :**
+```
+TEMP:23.5\n       // Température
+HUM:65\n          // Humidité
+LED:ON\n          // Allumer LED
+MOTOR:150\n       // Vitesse moteur (0-255)
+```
+
+**Avantages de ce format :**
+- Lisible par l'humain (facilite le débogage)
+- Facile à parser
+- Extensible
+- Compatible avec le moniteur série Arduino
+
+### Code Arduino : Lecture d'un capteur de température
 
 ```cpp
-const int ledPin = 13;      // LED sur la broche 13
-const int sensorPin = A0;   // Capteur sur la broche analogique A0
+// Capteur de température LM35 sur la broche A0
 
 void setup() {
-  Serial.begin(9600);       // Initialiser la communication série à 9600 bauds
-  pinMode(ledPin, OUTPUT);  // Configurer la broche LED comme sortie
-  digitalWrite(ledPin, LOW); // LED initialement éteinte
+  Serial.begin(9600);  // Initialiser la communication série
+  pinMode(A0, INPUT);  // Broche A0 en entrée
 }
 
 void loop() {
-  // Vérifier si des données sont disponibles
-  if (Serial.available() > 0) {
-    // Lire la commande
-    char command = Serial.read();
+  // Lire la valeur du capteur (0-1023)
+  int sensorValue = analogRead(A0);
 
-    // Traiter la commande
-    if (command == 'A') {
-      digitalWrite(ledPin, HIGH);  // Allumer la LED
-      Serial.println("LED ON");
-    }
-    else if (command == 'E') {
-      digitalWrite(ledPin, LOW);   // Éteindre la LED
-      Serial.println("LED OFF");
-    }
-    else if (command == 'R') {
-      // Lire et envoyer la valeur du capteur
-      int sensorValue = analogRead(sensorPin);
-      Serial.print("SENSOR:");
-      Serial.println(sensorValue);
-    }
-  }
+  // Convertir en température (LM35: 10mV par degré)
+  float temperature = (sensorValue * 5.0 * 100.0) / 1024.0;
 
-  delay(50);  // Petit délai pour stabiliser la communication
+  // Envoyer au format COMMANDE:VALEUR
+  Serial.print("TEMP:");
+  Serial.println(temperature, 1);  // 1 décimale
+
+  delay(1000);  // Attendre 1 seconde
 }
 ```
 
-#### Côté Delphi
+### Code Delphi : Réception des données
 
-Maintenant, créons une application Delphi pour communiquer avec notre Arduino :
-
-```delphi
-unit MainUnit;
+```pascal
+unit MainForm;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Controls, Vcl.Forms,
-  Vcl.ExtCtrls, Vcl.ComCtrls, ComPort;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls,
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, CPort;
 
 type
-  TMainForm = class(TForm)
-    ComboBoxPorts: TComboBox;
+  TFormMain = class(TForm)
+    ComPort1: TComPort;
+    LabelTemp: TLabel;
     ButtonConnect: TButton;
-    ButtonLedOn: TButton;
-    ButtonLedOff: TButton;
-    ButtonReadSensor: TButton;
-    MemoLog: TMemo;
-    LabelSensorValue: TLabel;
-    TrackBarSensor: TTrackBar;
-    TimerRefresh: TTimer;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    ComboBoxPorts: TComboBox;
+    PanelDisplay: TPanel;
     procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonLedOnClick(Sender: TObject);
-    procedure ButtonLedOffClick(Sender: TObject);
-    procedure ButtonReadSensorClick(Sender: TObject);
-    procedure TimerRefreshTimer(Sender: TObject);
+    procedure ComPort1RxChar(Sender: TObject; Count: Integer);
+    procedure FormCreate(Sender: TObject);
   private
-    FComPort: TComPort;
-    FBuffer: string;
-    procedure ComPortRxChar(Sender: TObject; Count: Integer);
-    procedure RefreshPortList;
-    procedure ProcessArduinoResponse(const Response: string);
-  public
-    { Public declarations }
+    FReceivedData: string;
+    procedure ProcessArduinoMessage(const Message: string);
   end;
 
 var
-  MainForm: TMainForm;
+  FormMain: TFormMain;
 
 implementation
 
 {$R *.dfm}
 
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  // Créer le composant ComPort
-  FComPort := TComPort.Create(Self);
-  FComPort.OnRxChar := ComPortRxChar;
-  FComPort.BaudRate := br9600;
-  FBuffer := '';
+  FReceivedData := '';
 
-  // Remplir la liste des ports COM
-  RefreshPortList;
-
-  // Désactiver les boutons initialement
-  ButtonLedOn.Enabled := False;
-  ButtonLedOff.Enabled := False;
-  ButtonReadSensor.Enabled := False;
-
-  // Configurer la barre de capteur
-  TrackBarSensor.Min := 0;
-  TrackBarSensor.Max := 1023;  // Valeur max pour un capteur analogique Arduino
-  TrackBarSensor.Position := 0;
-  TrackBarSensor.Enabled := False;
+  // Configurer le port série
+  ComPort1.BaudRate := br9600;
+  ComPort1.DataBits := dbEight;
+  ComPort1.Parity.Bits := prNone;
+  ComPort1.StopBits := sbOneStopBit;
 end;
 
-procedure TMainForm.FormDestroy(Sender: TObject);
+procedure TFormMain.ButtonConnectClick(Sender: TObject);
 begin
-  if FComPort.Connected then
-    FComPort.Close;
-  FComPort.Free;
-end;
-
-procedure TMainForm.RefreshPortList;
-var
-  I: Integer;
-  Registry: TRegistry;
-  KeyNames: TStringList;
-begin
-  ComboBoxPorts.Items.Clear;
-
-  Registry := TRegistry.Create;
-  KeyNames := TStringList.Create;
-  try
-    Registry.RootKey := HKEY_LOCAL_MACHINE;
-
-    // Rechercher les ports COM disponibles dans le registre
-    if Registry.OpenKeyReadOnly('HARDWARE\DEVICEMAP\SERIALCOMM') then
-    begin
-      Registry.GetValueNames(KeyNames);
-
-      for I := 0 to KeyNames.Count - 1 do
-        ComboBoxPorts.Items.Add(Registry.ReadString(KeyNames[I]));
-
-      Registry.CloseKey;
-    end;
-
-    // Sélectionner le premier port s'il y en a
-    if ComboBoxPorts.Items.Count > 0 then
-      ComboBoxPorts.ItemIndex := 0;
-  finally
-    Registry.Free;
-    KeyNames.Free;
-  end;
-end;
-
-procedure TMainForm.ButtonConnectClick(Sender: TObject);
-begin
-  // Si déjà connecté, déconnecter
-  if FComPort.Connected then
+  if not ComPort1.Connected then
   begin
-    FComPort.Close;
-    ButtonConnect.Caption := 'Connecter';
-    ComboBoxPorts.Enabled := True;
-    ButtonLedOn.Enabled := False;
-    ButtonLedOff.Enabled := False;
-    ButtonReadSensor.Enabled := False;
-    TrackBarSensor.Enabled := False;
-    MemoLog.Lines.Add('Déconnecté');
-    Exit;
-  end;
-
-  // Si pas connecté, établir la connexion
-  if ComboBoxPorts.ItemIndex >= 0 then
-  begin
-    FComPort.Port := ComboBoxPorts.Items[ComboBoxPorts.ItemIndex];
     try
-      FComPort.Open;
+      ComPort1.Port := ComboBoxPorts.Text;
+      ComPort1.Open;
       ButtonConnect.Caption := 'Déconnecter';
-      ComboBoxPorts.Enabled := False;
-      ButtonLedOn.Enabled := True;
-      ButtonLedOff.Enabled := True;
-      ButtonReadSensor.Enabled := True;
-      TrackBarSensor.Enabled := True;
-      MemoLog.Lines.Add('Connecté à ' + FComPort.Port);
+      ShowMessage('Connecté à ' + ComboBoxPorts.Text);
     except
       on E: Exception do
-        MemoLog.Lines.Add('Erreur de connexion: ' + E.Message);
+        ShowMessage('Erreur de connexion : ' + E.Message);
     end;
+  end
+  else
+  begin
+    ComPort1.Close;
+    ButtonConnect.Caption := 'Connecter';
   end;
 end;
 
-procedure TMainForm.ComPortRxChar(Sender: TObject; Count: Integer);
+procedure TFormMain.ComPort1RxChar(Sender: TObject; Count: Integer);
 var
-  Temp: string;
-  EndLinePos: Integer;
+  Str: string;
+  P: Integer;
 begin
   // Lire les données reçues
-  FComPort.ReadStr(Temp, Count);
-  FBuffer := FBuffer + Temp;
+  ComPort1.ReadStr(Str, Count);
 
-  // Traiter les lignes complètes
-  EndLinePos := Pos(#13#10, FBuffer);
-  while EndLinePos > 0 do
+  // Accumuler dans le buffer
+  FReceivedData := FReceivedData + Str;
+
+  // Chercher le séparateur de ligne
+  P := Pos(#10, FReceivedData);
+  while P > 0 do
   begin
-    // Extraire la ligne
-    Temp := Copy(FBuffer, 1, EndLinePos - 1);
-    // Supprimer la ligne traitée du buffer
-    FBuffer := Copy(FBuffer, EndLinePos + 2, Length(FBuffer));
+    // Extraire le message complet
+    Str := Copy(FReceivedData, 1, P - 1);
+    Delete(FReceivedData, 1, P);
 
-    // Traiter la réponse
-    ProcessArduinoResponse(Temp);
+    // Nettoyer (enlever retour chariot si présent)
+    Str := Trim(Str);
 
-    // Chercher la prochaine ligne
-    EndLinePos := Pos(#13#10, FBuffer);
+    // Traiter le message
+    if Str <> '' then
+      ProcessArduinoMessage(Str);
+
+    // Chercher le prochain message
+    P := Pos(#10, FReceivedData);
   end;
 end;
 
-procedure TMainForm.ProcessArduinoResponse(const Response: string);
+procedure TFormMain.ProcessArduinoMessage(const Message: string);
 var
-  SensorValue: Integer;
+  Command, Value: string;
+  P: Integer;
+  TempValue: Double;
 begin
-  // Afficher la réponse brute
-  MemoLog.Lines.Add('Reçu: ' + Response);
+  // Parser le message au format COMMANDE:VALEUR
+  P := Pos(':', Message);
+  if P > 0 then
+  begin
+    Command := Copy(Message, 1, P - 1);
+    Value := Copy(Message, P + 1, Length(Message));
 
-  // Traiter les différentes réponses possibles
-  if Response = 'LED ON' then
-  begin
-    // La LED a été allumée
-  end
-  else if Response = 'LED OFF' then
-  begin
-    // La LED a été éteinte
-  end
-  else if Pos('SENSOR:', Response) = 1 then
-  begin
-    // Réponse du capteur
-    if TryStrToInt(Copy(Response, 8, Length(Response)), SensorValue) then
+    // Traiter selon la commande
+    if Command = 'TEMP' then
     begin
-      TrackBarSensor.Position := SensorValue;
-      LabelSensorValue.Caption := 'Valeur du capteur: ' + IntToStr(SensorValue);
+      if TryStrToFloat(Value, TempValue) then
+      begin
+        LabelTemp.Caption := Format('Température : %.1f °C', [TempValue]);
+
+        // Changer la couleur selon la température
+        if TempValue < 20 then
+          PanelDisplay.Color := clBlue
+        else if TempValue > 25 then
+          PanelDisplay.Color := clRed
+        else
+          PanelDisplay.Color := clLime;
+      end;
     end;
   end;
 end;
 
-procedure TMainForm.ButtonLedOnClick(Sender: TObject);
+end.
+```
+
+### Code Arduino : Contrôle d'une LED
+
+```cpp
+// LED sur la broche 13
+
+const int LED_PIN = 13;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);  // LED éteinte au démarrage
+}
+
+void loop() {
+  // Vérifier si des données sont disponibles
+  if (Serial.available() > 0) {
+    // Lire la ligne complète
+    String command = Serial.readStringUntil('\n');
+    command.trim();  // Enlever espaces
+
+    // Parser la commande
+    int colonPos = command.indexOf(':');
+    if (colonPos > 0) {
+      String cmd = command.substring(0, colonPos);
+      String value = command.substring(colonPos + 1);
+
+      // Traiter la commande LED
+      if (cmd == "LED") {
+        if (value == "ON") {
+          digitalWrite(LED_PIN, HIGH);
+          Serial.println("STATUS:LED_ON");
+        }
+        else if (value == "OFF") {
+          digitalWrite(LED_PIN, LOW);
+          Serial.println("STATUS:LED_OFF");
+        }
+      }
+    }
+  }
+}
+```
+
+### Code Delphi : Envoi de commandes
+
+```pascal
+procedure TFormMain.ButtonLedOnClick(Sender: TObject);
 begin
-  if FComPort.Connected then
+  if ComPort1.Connected then
   begin
-    FComPort.WriteStr('A');
-    MemoLog.Lines.Add('Envoyé: Allumer LED');
-  end;
+    ComPort1.WriteStr('LED:ON' + #13#10);
+  end
+  else
+    ShowMessage('Port série non connecté');
 end;
 
-procedure TMainForm.ButtonLedOffClick(Sender: TObject);
+procedure TFormMain.ButtonLedOffClick(Sender: TObject);
 begin
-  if FComPort.Connected then
+  if ComPort1.Connected then
   begin
-    FComPort.WriteStr('E');
-    MemoLog.Lines.Add('Envoyé: Éteindre LED');
+    ComPort1.WriteStr('LED:OFF' + #13#10);
   end;
-end;
-
-procedure TMainForm.ButtonReadSensorClick(Sender: TObject);
-begin
-  if FComPort.Connected then
-  begin
-    FComPort.WriteStr('R');
-    MemoLog.Lines.Add('Envoyé: Lire capteur');
-  end;
-end;
-
-procedure TMainForm.TimerRefreshTimer(Sender: TObject);
-begin
-  // Lecture automatique du capteur à intervalle régulier
-  if FComPort.Connected and ButtonReadSensor.Enabled then
-    ButtonReadSensorClick(nil);
 end;
 ```
 
-### Exemple 2 : Station météo avec Arduino
+### Projet complet : Station météo Arduino
 
-Construisons un exemple plus complet : une station météo utilisant un capteur DHT11 (température et humidité).
-
-#### Côté Arduino
+#### Code Arduino
 
 ```cpp
-#include <DHT.h>
+#include <DHT.h>  // Bibliothèque pour DHT22
 
-#define DHTPIN 2      // Broche de connexion du DHT
-#define DHTTYPE DHT11 // Type de capteur DHT (DHT11 ou DHT22)
+#define DHTPIN 2
+#define DHTTYPE DHT22
+#define LDR_PIN A0
 
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
   Serial.begin(9600);
   dht.begin();
+  pinMode(LDR_PIN, INPUT);
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    char command = Serial.read();
+  // Lire température et humidité
+  float temp = dht.readTemperature();
+  float humidity = dht.readHumidity();
 
-    if (command == 'T') {
-      // Lire la température
-      float temp = dht.readTemperature();
-      if (!isnan(temp)) {
-        Serial.print("TEMP:");
-        Serial.println(temp);
-      }
-      else {
-        Serial.println("ERROR:DHT_TEMP");
-      }
-    }
-    else if (command == 'H') {
-      // Lire l'humidité
-      float hum = dht.readHumidity();
-      if (!isnan(hum)) {
-        Serial.print("HUM:");
-        Serial.println(hum);
-      }
-      else {
-        Serial.println("ERROR:DHT_HUM");
-      }
-    }
-    else if (command == 'A') {
-      // Lire les deux valeurs
-      float temp = dht.readTemperature();
-      float hum = dht.readHumidity();
+  // Lire luminosité (LDR)
+  int lightLevel = analogRead(LDR_PIN);
+  int lightPercent = map(lightLevel, 0, 1023, 0, 100);
 
-      if (!isnan(temp) && !isnan(hum)) {
-        Serial.print("DATA:");
-        Serial.print(temp);
-        Serial.print(";");
-        Serial.println(hum);
-      }
-      else {
-        Serial.println("ERROR:DHT_READ");
-      }
-    }
+  // Vérifier la validité des lectures
+  if (!isnan(temp) && !isnan(humidity)) {
+    // Envoyer les données
+    Serial.print("TEMP:");
+    Serial.println(temp, 1);
+
+    Serial.print("HUM:");
+    Serial.println(humidity, 1);
+
+    Serial.print("LIGHT:");
+    Serial.println(lightPercent);
   }
 
-  delay(100);
+  delay(2000);  // Lecture toutes les 2 secondes
 }
 ```
 
-#### Côté Delphi
+#### Code Delphi (ajouts)
 
-Pour cet exemple, nous allons créer une interface plus élaborée avec des graphiques pour afficher les données de température et d'humidité :
-
-```delphi
-// Ajouter aux uses les unités nécessaires pour les graphiques
-uses
-  VclTee.TeeGDIPlus, VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs,
-  VCLTee.Chart;
-
-// Dans la classe TMainForm, ajouter les composants suivants :
-private
-  FTemperatureSeries: TLineSeries;
-  FHumiditySeries: TLineSeries;
-  FTimestamps: TStringList;
-  procedure UpdateCharts(Temperature, Humidity: Double);
-
-// Implémentation de UpdateCharts
-procedure TMainForm.UpdateCharts(Temperature, Humidity: Double);
-var
-  Timestamp: string;
-begin
-  // Limiter le nombre de points affichés (garder les 30 derniers)
-  while FTemperatureSeries.Count >= 30 do
-  begin
-    FTemperatureSeries.Delete(0);
-    FHumiditySeries.Delete(0);
-    FTimestamps.Delete(0);
+```pascal
+type
+  TWeatherData = record
+    Temperature: Double;
+    Humidity: Double;
+    Light: Integer;
+    Timestamp: TDateTime;
   end;
 
-  // Ajouter un nouveau point
-  Timestamp := FormatDateTime('hh:nn:ss', Now);
-  FTimestamps.Add(Timestamp);
-
-  FTemperatureSeries.AddY(Temperature, Timestamp);
-  FHumiditySeries.AddY(Humidity, Timestamp);
-end;
-
-// Modification de ProcessArduinoResponse
-procedure TMainForm.ProcessArduinoResponse(const Response: string);
 var
-  Prefix: string;
-  DataStr: string;
-  Parts: TArray<string>;
-  Temperature, Humidity: Double;
+  CurrentWeather: TWeatherData;
+
+procedure TFormMain.ProcessArduinoMessage(const Message: string);
+var
+  Command, Value: string;
+  P: Integer;
 begin
-  MemoLog.Lines.Add('Reçu: ' + Response);
-
-  // Trouver le préfixe et les données
-  if Pos(':', Response) > 0 then
+  P := Pos(':', Message);
+  if P > 0 then
   begin
-    Prefix := Copy(Response, 1, Pos(':', Response) - 1);
-    DataStr := Copy(Response, Pos(':', Response) + 1, Length(Response));
+    Command := Copy(Message, 1, P - 1);
+    Value := Copy(Message, P + 1, Length(Message));
 
-    if Prefix = 'TEMP' then
-    begin
-      if TryStrToFloat(DataStr, Temperature) then
-      begin
-        LabelTemperature.Caption := Format('Température: %.1f°C', [Temperature]);
-      end;
-    end
-    else if Prefix = 'HUM' then
-    begin
-      if TryStrToFloat(DataStr, Humidity) then
-      begin
-        LabelHumidity.Caption := Format('Humidité: %.1f%%', [Humidity]);
-      end;
-    end
-    else if Prefix = 'DATA' then
-    begin
-      // Format DATA:temp;hum
-      Parts := DataStr.Split([';']);
-      if Length(Parts) = 2 then
-      begin
-        if TryStrToFloat(Parts[0], Temperature) and TryStrToFloat(Parts[1], Humidity) then
-        begin
-          LabelTemperature.Caption := Format('Température: %.1f°C', [Temperature]);
-          LabelHumidity.Caption := Format('Humidité: %.1f%%', [Humidity]);
+    CurrentWeather.Timestamp := Now;
 
-          // Mettre à jour les graphiques
-          UpdateCharts(Temperature, Humidity);
-        end;
-      end;
-    end
-    else if Prefix = 'ERROR' then
+    if Command = 'TEMP' then
     begin
-      LabelStatus.Caption := 'Erreur: ' + DataStr;
+      TryStrToFloat(Value, CurrentWeather.Temperature);
+      LabelTemp.Caption := Format('%.1f °C', [CurrentWeather.Temperature]);
+    end
+    else if Command = 'HUM' then
+    begin
+      TryStrToFloat(Value, CurrentWeather.Humidity);
+      LabelHum.Caption := Format('%.1f %%', [CurrentWeather.Humidity]);
+    end
+    else if Command = 'LIGHT' then
+    begin
+      TryStrToInt(Value, CurrentWeather.Light);
+      LabelLight.Caption := Format('%d %%', [CurrentWeather.Light]);
+      ProgressBarLight.Position := CurrentWeather.Light;
     end;
+
+    // Sauvegarder dans la base de données
+    SaveToDatabase(CurrentWeather);
   end;
 end;
 
-// Initialisation des composants dans FormCreate
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TFormMain.SaveToDatabase(const Data: TWeatherData);
 begin
-  // ... code existant ...
+  // Utiliser FireDAC pour enregistrer
+  FDQuery1.SQL.Text :=
+    'INSERT INTO weather_data (timestamp, temperature, humidity, light) ' +
+    'VALUES (:ts, :temp, :hum, :light)';
 
-  // Initialiser les graphiques
-  FTemperatureSeries := TLineSeries.Create(Self);
-  FTemperatureSeries.Title := 'Température (°C)';
-  FTemperatureSeries.Color := clRed;
-  ChartData.AddSeries(FTemperatureSeries);
+  FDQuery1.ParamByName('ts').AsDateTime := Data.Timestamp;
+  FDQuery1.ParamByName('temp').AsFloat := Data.Temperature;
+  FDQuery1.ParamByName('hum').AsFloat := Data.Humidity;
+  FDQuery1.ParamByName('light').AsInteger := Data.Light;
 
-  FHumiditySeries := TLineSeries.Create(Self);
-  FHumiditySeries.Title := 'Humidité (%)';
-  FHumiditySeries.Color := clBlue;
-  ChartData.AddSeries(FHumiditySeries);
-
-  FTimestamps := TStringList.Create;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  // ... code existant ...
-
-  FTimestamps.Free;
+  FDQuery1.ExecSQL;
 end;
 ```
 
-## Intégration avec Raspberry Pi
+## Raspberry Pi : Le mini-ordinateur
 
 ### Qu'est-ce que Raspberry Pi ?
 
-Raspberry Pi est un ordinateur monocarte à processeur ARM développé pour promouvoir l'enseignement de l'informatique. Contrairement à l'Arduino, le Raspberry Pi est un ordinateur complet capable d'exécuter un système d'exploitation comme Linux.
+Le Raspberry Pi est un ordinateur complet de la taille d'une carte de crédit. Contrairement à Arduino, c'est un véritable ordinateur capable d'exécuter un système d'exploitation (généralement Linux).
 
-### Approches d'intégration Delphi-Raspberry Pi
+**Caractéristiques principales :**
+- **Système d'exploitation** : Raspberry Pi OS (basé sur Debian), Ubuntu, etc.
+- **Processeur** : ARM multi-cœurs (selon le modèle)
+- **Mémoire** : de 1 à 8 GB de RAM
+- **Connectivité** : WiFi, Ethernet, Bluetooth
+- **GPIO** : 40 broches pour interfacer avec l'électronique
+- **Périphériques** : USB, HDMI, caméra, etc.
 
-Il existe plusieurs façons d'intégrer Delphi et Raspberry Pi :
+### Modèles Raspberry Pi populaires
 
-1. **Communication réseau** : La méthode la plus courante
-2. **Web API/REST** : Créer une API sur le Raspberry Pi et y accéder depuis Delphi
-3. **Communication série** (via USB ou GPIO) : Similaire à Arduino mais moins courante
+#### Raspberry Pi 4 Model B
+- **RAM** : 2, 4 ou 8 GB
+- **CPU** : Quad-core ARM Cortex-A72
+- **USB** : 2x USB 3.0, 2x USB 2.0
+- **Réseau** : Gigabit Ethernet, WiFi, Bluetooth
+- **Utilisation** : serveur, desktop, projets gourmands
 
-### Exemple : Communication réseau avec Raspberry Pi
+#### Raspberry Pi Zero W
+- **Format** : ultra-compact
+- **RAM** : 512 MB
+- **Connectivité** : WiFi, Bluetooth
+- **Utilisation** : projets embarqués, IoT compact
 
-#### Côté Raspberry Pi
+### Différences Arduino vs Raspberry Pi
 
-Créons un script Python simple pour exposer les données du capteur sur le réseau :
+| Caractéristique | Arduino | Raspberry Pi |
+|-----------------|---------|--------------|
+| Type | Microcontrôleur | Ordinateur |
+| Système d'exploitation | Non | Oui (Linux) |
+| Entrées/Sorties | Temps réel | Indirect (via OS) |
+| Langage | C/C++ | Tous (Python, C, Java, etc.) |
+| Consommation | Très faible | Moyenne |
+| Prix | Bas (~10-30€) | Moyen (~40-80€) |
+| Complexité | Simple | Plus complexe |
+| Boot | Instantané | ~30 secondes |
+
+**En résumé :**
+- **Arduino** : parfait pour le contrôle temps réel, capteurs, actionneurs
+- **Raspberry Pi** : parfait pour traitement, réseau, interface, intelligence
+
+### Approches d'intégration Raspberry Pi avec Delphi
+
+Il existe plusieurs façons d'intégrer Raspberry Pi avec Delphi :
+
+#### Approche 1 : Raspberry Pi comme serveur
+
+Le Raspberry Pi héberge un serveur (REST API, WebSocket, etc.) et l'application Delphi s'y connecte via le réseau.
+
+**Avantages :**
+- Communication réseau standard
+- Raspberry Pi peut fonctionner de manière autonome
+- Plusieurs clients peuvent se connecter
+- Facile à déployer
+
+**Schéma :**
+```
+[Capteurs] <-> [Raspberry Pi + Serveur Python/Node.js] <-Réseau-> [Application Delphi]
+```
+
+#### Approche 2 : Application Delphi sur Raspberry Pi
+
+Delphi peut compiler pour Linux ARM, vous pouvez donc exécuter votre application Delphi directement sur le Raspberry Pi.
+
+**Avantages :**
+- Application complète sur un seul dispositif
+- Pas besoin de serveur séparé
+- Contrôle direct du GPIO via bibliothèques
+
+**Limitations :**
+- Nécessite Delphi Pro ou Enterprise
+- Interface graphique possible mais limitée en performance
+
+#### Approche 3 : Raspberry Pi comme gateway
+
+Le Raspberry Pi collecte les données de plusieurs Arduino et les transmet à l'application Delphi.
+
+**Schéma :**
+```
+[Arduino 1] --\
+[Arduino 2] ----> [Raspberry Pi] <-Réseau-> [Application Delphi]
+[Arduino 3] --/
+```
+
+### Intégration via API REST
+
+#### Code Python sur Raspberry Pi (serveur Flask)
 
 ```python
-import socket
-import json
+from flask import Flask, jsonify, request
+import RPi.GPIO as GPIO
 import time
-import Adafruit_DHT  # Bibliothèque pour le capteur DHT
-
-# Configuration du capteur
-sensor = Adafruit_DHT.DHT11
-pin = 4
-
-# Configuration du serveur
-HOST = '0.0.0.0'  # Écoute sur toutes les interfaces
-PORT = 8080      # Port à utiliser
-
-# Créer un socket TCP/IP
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind((HOST, PORT))
-sock.listen(1)
-
-print(f"Serveur démarré sur {HOST}:{PORT}")
-
-while True:
-    # Attendre une connexion
-    connection, client_address = sock.accept()
-    print(f"Connexion de {client_address}")
-
-    try:
-        # Recevoir les données
-        data = connection.recv(16)
-        command = data.decode('utf-8').strip()
-
-        if command == "READ":
-            # Lire les données du capteur
-            humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
-
-            if humidity is not None and temperature is not None:
-                response = json.dumps({
-                    "temperature": round(temperature, 1),
-                    "humidity": round(humidity, 1),
-                    "timestamp": time.time()
-                })
-            else:
-                response = json.dumps({
-                    "error": "Échec de lecture du capteur"
-                })
-
-            connection.sendall(response.encode('utf-8'))
-
-    finally:
-        # Fermer la connexion
-        connection.close()
-```
-
-#### Côté Delphi
-
-```delphi
-unit MainUnit;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.DateUtils,
-  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  IdTCPClient, IdGlobal;
-
-type
-  TMainForm = class(TForm)
-    EditIP: TEdit;
-    EditPort: TEdit;
-    ButtonConnect: TButton;
-    ButtonRead: TButton;
-    MemoLog: TMemo;
-    Timer1: TTimer;
-    LabelTemperature: TLabel;
-    LabelHumidity: TLabel;
-    CheckBoxAutoRefresh: TCheckBox;
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonReadClick(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
-    procedure CheckBoxAutoRefreshClick(Sender: TObject);
-  private
-    FTCPClient: TIdTCPClient;
-    function ReadSensorData: Boolean;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-  end;
-
-var
-  MainForm: TMainForm;
-
-implementation
-
-{$R *.dfm}
-
-constructor TMainForm.Create(AOwner: TComponent);
-begin
-  inherited;
-  FTCPClient := TIdTCPClient.Create(nil);
-
-  EditIP.Text := '192.168.1.100';  // Remplacer par l'IP de votre Raspberry Pi
-  EditPort.Text := '8080';
-
-  Timer1.Enabled := False;
-  Timer1.Interval := 5000;  // Refresh toutes les 5 secondes
-
-  ButtonRead.Enabled := False;
-  CheckBoxAutoRefresh.Enabled := False;
-end;
-
-destructor TMainForm.Destroy;
-begin
-  FTCPClient.Free;
-  inherited;
-end;
-
-procedure TMainForm.ButtonConnectClick(Sender: TObject);
-begin
-  if FTCPClient.Connected then
-  begin
-    FTCPClient.Disconnect;
-    ButtonConnect.Caption := 'Connecter';
-    ButtonRead.Enabled := False;
-    CheckBoxAutoRefresh.Enabled := False;
-    Timer1.Enabled := False;
-    MemoLog.Lines.Add('Déconnecté');
-  end
-  else
-  begin
-    try
-      FTCPClient.Host := EditIP.Text;
-      FTCPClient.Port := StrToInt(EditPort.Text);
-
-      // Tester la connexion
-      FTCPClient.Connect;
-      FTCPClient.Disconnect;
-
-      ButtonConnect.Caption := 'Déconnecter';
-      ButtonRead.Enabled := True;
-      CheckBoxAutoRefresh.Enabled := True;
-
-      MemoLog.Lines.Add('Connecté avec succès à ' + FTCPClient.Host + ':' + IntToStr(FTCPClient.Port));
-    except
-      on E: Exception do
-        MemoLog.Lines.Add('Erreur de connexion: ' + E.Message);
-    end;
-  end;
-end;
-
-function TMainForm.ReadSensorData: Boolean;
-var
-  Response: string;
-  JSONObj: TJSONObject;
-  Temperature, Humidity: Double;
-  Timestamp: TDateTime;
-begin
-  Result := False;
-
-  try
-    // Se connecter et envoyer la commande
-    FTCPClient.Connect;
-    try
-      FTCPClient.IOHandler.WriteLn('READ');
-
-      // Lire la réponse
-      Response := FTCPClient.IOHandler.ReadLn;
-      MemoLog.Lines.Add('Réponse: ' + Response);
-
-      // Analyser le JSON
-      JSONObj := TJSONObject.ParseJSONValue(Response) as TJSONObject;
-      try
-        if JSONObj.FindValue('error') <> nil then
-        begin
-          MemoLog.Lines.Add('Erreur: ' + JSONObj.GetValue<string>('error'));
-        end
-        else
-        begin
-          Temperature := JSONObj.GetValue<Double>('temperature');
-          Humidity := JSONObj.GetValue<Double>('humidity');
-          Timestamp := UnixToDateTime(JSONObj.GetValue<Int64>('timestamp'));
-
-          LabelTemperature.Caption := Format('Température: %.1f°C', [Temperature]);
-          LabelHumidity.Caption := Format('Humidité: %.1f%%', [Humidity]);
-          MemoLog.Lines.Add(Format('Données lues à %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss', Timestamp)]));
-
-          Result := True;
-        end;
-      finally
-        JSONObj.Free;
-      end;
-    finally
-      FTCPClient.Disconnect;
-    end;
-  except
-    on E: Exception do
-    begin
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
-      if FTCPClient.Connected then
-        FTCPClient.Disconnect;
-    end;
-  end;
-end;
-
-procedure TMainForm.ButtonReadClick(Sender: TObject);
-begin
-  ReadSensorData;
-end;
-
-procedure TMainForm.Timer1Timer(Sender: TObject);
-begin
-  ReadSensorData;
-end;
-
-procedure TMainForm.CheckBoxAutoRefreshClick(Sender: TObject);
-begin
-  Timer1.Enabled := CheckBoxAutoRefresh.Checked;
-end;
-```
-
-### Exemple 2 : REST API avec Raspberry Pi
-
-#### Côté Raspberry Pi
-
-Utilisons Flask pour créer une API REST simple :
-
-```python
-from flask import Flask, jsonify
-import Adafruit_DHT
 
 app = Flask(__name__)
 
-# Configuration du capteur
-sensor = Adafruit_DHT.DHT11
-pin = 4
+# Configuration GPIO
+LED_PIN = 18
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+# Simulation de capteur
+def read_sensor():
+    # Ici vous liriez un vrai capteur
+    return {
+        'temperature': 23.5,
+        'humidity': 65,
+        'timestamp': time.time()
+    }
 
 @app.route('/api/sensor', methods=['GET'])
 def get_sensor_data():
-    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
-
-    if humidity is not None and temperature is not None:
-        return jsonify({
-            'temperature': round(temperature, 1),
-            'humidity': round(humidity, 1),
-            'status': 'success'
-        })
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to read sensor'
-        }), 500
-
-@app.route('/api/status', methods=['GET'])
-def get_status():
-    return jsonify({
-        'status': 'online'
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
-```
-
-Démarrer le serveur sur le Raspberry Pi :
-```bash
-python sensor_api.py
-```
-
-#### Côté Delphi
-
-Utilisons un client REST pour accéder à l'API :
-
-```delphi
-uses
-  REST.Client, REST.Types, REST.Response.Adapter, System.JSON;
-
-// Dans la classe TMainForm, ajouter les composants REST
-private
-  FRESTClient: TRESTClient;
-  FRESTRequest: TRESTRequest;
-  FRESTResponse: TRESTResponse;
-
-// Dans le constructeur
-constructor TMainForm.Create(AOwner: TComponent);
-begin
-  inherited;
-
-  // Initialiser les composants REST
-  FRESTClient := TRESTClient.Create(Self);
-  FRESTResponse := TRESTResponse.Create(Self);
-  FRESTRequest := TRESTRequest.Create(Self);
-
-  FRESTRequest.Client := FRESTClient;
-  FRESTRequest.Response := FRESTResponse;
-
-  EditIP.Text := '192.168.1.100';  // Remplacer par l'IP de votre Raspberry Pi
-  EditPort.Text := '5000';         // Port du serveur Flask
-
-  // ... reste du code ...
-end;
-
-// Méthode pour vérifier l'état du serveur
-function TMainForm.CheckServerStatus: Boolean;
-begin
-  Result := False;
-
-  try
-    // Configurer la requête
-    FRESTClient.BaseURL := Format('http://%s:%s', [EditIP.Text, EditPort.Text]);
-    FRESTRequest.Resource := 'api/status';
-    FRESTRequest.Method := rmGET;
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    if FRESTResponse.StatusCode = 200 then
-    begin
-      MemoLog.Lines.Add('Serveur en ligne');
-      Result := True;
-    end
-    else
-    begin
-      MemoLog.Lines.Add('Erreur serveur: ' + FRESTResponse.StatusText);
-    end;
-  except
-    on E: Exception do
-      MemoLog.Lines.Add('Erreur de connexion: ' + E.Message);
-  end;
-end;
-
-// Méthode pour lire les données du capteur
-function TMainForm.ReadSensorData: Boolean;
-var
-  JSONObj: TJSONObject;
-  Temperature, Humidity: Double;
-  Status: string;
-begin
-  Result := False;
-
-  try
-    // Configurer la requête
-    FRESTClient.BaseURL := Format('http://%s:%s', [EditIP.Text, EditPort.Text]);
-    FRESTRequest.Resource := 'api/sensor';
-    FRESTRequest.Method := rmGET;
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    if FRESTResponse.StatusCode = 200 then
-    begin
-      // Analyser la réponse JSON
-      JSONObj := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject;
-      try
-        Status := JSONObj.GetValue<string>('status');
-
-        if Status = 'success' then
-        begin
-          Temperature := JSONObj.GetValue<Double>('temperature');
-          Humidity := JSONObj.GetValue<Double>('humidity');
-
-          LabelTemperature.Caption := Format('Température: %.1f°C', [Temperature]);
-          LabelHumidity.Caption := Format('Humidité: %.1f%%', [Humidity]);
-          MemoLog.Lines.Add('Données récupérées avec succès');
-
-          Result := True;
-        end
-        else
-        begin
-          MemoLog.Lines.Add('Erreur: ' + JSONObj.GetValue<string>('message'));
-        end;
-      finally
-        JSONObj.Free;
-      end;
-    end
-    else
-    begin
-      MemoLog.Lines.Add('Erreur serveur: ' + FRESTResponse.StatusText);
-    end;
-  except
-    on E: Exception do
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
-  end;
-end;
-```
-
-## Projets pratiques avancés
-
-### Système de contrôle domestique intelligent
-
-Voici un exemple plus complet qui intègre Delphi avec Arduino et Raspberry Pi pour créer un système de contrôle domotique simple :
-
-#### Architecture du système
-
-```
-[Capteurs et Actionneurs] <---> [Arduino] <---> [Raspberry Pi] <---> [Application Delphi]
-   (Température,             (Contrôleur        (Serveur central     (Interface utilisateur)
-    Humidité, Lumière,        de capteurs)       avec base de
-    Relais, LEDs)                                données SQLite)
-```
-
-#### Composants du système
-1. **Arduino** : Collecte les données des capteurs et contrôle les actionneurs
-2. **Raspberry Pi** : Fait office de serveur central, stocke les données et expose une API REST
-3. **Application Delphi** : Interface utilisateur pour visualiser et contrôler le système
-
-#### Côté Arduino
-```cpp
-#include <ArduinoJson.h>
-#include <DHT.h>
-
-// Configuration des broches
-#define DHTPIN 2           // Capteur DHT11
-#define LIGHT_SENSOR_PIN A0 // Capteur de lumière
-#define RELAY_PIN 7        // Relais pour contrôler un appareil
-#define LED_PIN 13         // LED de statut
-
-DHT dht(DHTPIN, DHT11);
-
-void setup() {
-  Serial.begin(9600);
-  dht.begin();
-
-  pinMode(LIGHT_SENSOR_PIN, INPUT);
-  pinMode(RELAY_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
-
-  digitalWrite(RELAY_PIN, LOW);  // Relais désactivé au démarrage
-  digitalWrite(LED_PIN, LOW);    // LED éteinte au démarrage
-}
-
-void loop() {
-  if (Serial.available() > 0) {
-    // Lire la commande JSON
-    String jsonStr = Serial.readStringUntil('\n');
-
-    // Allouer un buffer pour le document JSON
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc, jsonStr);
-
-    if (!error) {
-      // Traiter la commande
-      String cmd = doc["cmd"];
-
-      if (cmd == "READ") {
-        // Lire les capteurs et envoyer les données
-        float humidity = dht.readHumidity();
-        float temperature = dht.readTemperature();
-        int lightLevel = analogRead(LIGHT_SENSOR_PIN);
-
-        // Créer la réponse JSON
-        StaticJsonDocument<200> response;
-        response["temperature"] = temperature;
-        response["humidity"] = humidity;
-        response["light"] = lightLevel;
-        response["relay"] = digitalRead(RELAY_PIN) == HIGH;
-
-        // Sérialiser et envoyer
-        serializeJson(response, Serial);
-        Serial.println();
-      }
-      else if (cmd == "RELAY") {
-        // Contrôler le relais
-        bool state = doc["state"];
-        digitalWrite(RELAY_PIN, state ? HIGH : LOW);
-
-        // Confirmer l'action
-        StaticJsonDocument<100> response;
-        response["status"] = "OK";
-        response["relay"] = state;
-
-        serializeJson(response, Serial);
-        Serial.println();
-      }
-      else if (cmd == "LED") {
-        // Contrôler la LED
-        bool state = doc["state"];
-        digitalWrite(LED_PIN, state ? HIGH : LOW);
-
-        // Confirmer l'action
-        StaticJsonDocument<100> response;
-        response["status"] = "OK";
-        response["led"] = state;
-
-        serializeJson(response, Serial);
-        Serial.println();
-      }
-    }
-  }
-
-  delay(100);  // Petit délai pour stabiliser
-}
-```
-
-#### Côté Raspberry Pi
-
-Fichier Python pour communiquer avec Arduino et exposer l'API REST :
-
-```python
-import serial
-import json
-import time
-import sqlite3
-from flask import Flask, jsonify, request
-
-# Configuration
-ARDUINO_PORT = '/dev/ttyACM0'  # Adapter selon votre système
-BAUD_RATE = 9600
-DB_FILE = 'homecontrol.db'
-
-# Initialiser la connexion série
-ser = serial.Serial(ARDUINO_PORT, BAUD_RATE, timeout=1)
-time.sleep(2)  # Attendre l'initialisation d'Arduino
-
-# Initialiser la base de données
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS sensor_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        temperature REAL,
-        humidity REAL,
-        light INTEGER,
-        relay INTEGER
-    )
-    ''')
-    conn.commit()
-    conn.close()
-
-# Fonction pour lire les capteurs Arduino
-def read_sensors():
-    # Envoyer la commande de lecture
-    cmd = json.dumps({"cmd": "READ"})
-    ser.write((cmd + '\n').encode())
-
-    # Lire la réponse
-    response = ser.readline().decode().strip()
-
-    try:
-        data = json.loads(response)
-
-        # Enregistrer dans la base de données
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute(
-            'INSERT INTO sensor_data (temperature, humidity, light, relay) VALUES (?, ?, ?, ?)',
-            (data['temperature'], data['humidity'], data['light'], 1 if data['relay'] else 0)
-        )
-        conn.commit()
-        conn.close()
-
-        return data
-    except json.JSONDecodeError:
-        return {'error': 'Invalid response', 'raw': response}
-    except Exception as e:
-        return {'error': str(e)}
-
-# Contrôler le relais
-def set_relay(state):
-    cmd = json.dumps({"cmd": "RELAY", "state": state})
-    ser.write((cmd + '\n').encode())
-    response = ser.readline().decode().strip()
-
-    try:
-        return json.loads(response)
-    except:
-        return {'error': 'Invalid response'}
-
-# Contrôler la LED
-def set_led(state):
-    cmd = json.dumps({"cmd": "LED", "state": state})
-    ser.write((cmd + '\n').encode())
-    response = ser.readline().decode().strip()
-
-    try:
-        return json.loads(response)
-    except:
-        return {'error': 'Invalid response'}
-
-# Créer l'application Flask
-app = Flask(__name__)
-
-@app.route('/api/sensors', methods=['GET'])
-def get_sensors():
-    return jsonify(read_sensors())
-
-@app.route('/api/history', methods=['GET'])
-def get_history():
-    limit = request.args.get('limit', default=10, type=int)
-
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute('SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT ?', (limit,))
-    rows = c.fetchall()
-    conn.close()
-
-    # Convertir en liste de dictionnaires
-    result = [dict(row) for row in rows]
-    return jsonify(result)
-
-@app.route('/api/relay', methods=['POST'])
-def control_relay():
-    data = request.get_json()
-    state = data.get('state', False)
-    return jsonify(set_relay(state))
+    data = read_sensor()
+    return jsonify(data)
 
 @app.route('/api/led', methods=['POST'])
 def control_led():
-    data = request.get_json()
-    state = data.get('state', False)
-    return jsonify(set_led(state))
+    data = request.json
+    state = data.get('state', 'OFF')
 
-# Initialiser la base de données et démarrer le serveur
+    if state == 'ON':
+        GPIO.output(LED_PIN, GPIO.HIGH)
+    else:
+        GPIO.output(LED_PIN, GPIO.LOW)
+
+    return jsonify({'status': 'success', 'led_state': state})
+
 if __name__ == '__main__':
-    init_db()
     app.run(host='0.0.0.0', port=5000)
 ```
 
-#### Côté Delphi
+#### Code Delphi (client REST)
 
-Pour l'application Delphi, nous allons créer une interface plus élaborée avec :
-- Un tableau de bord pour afficher les données des capteurs
-- Un historique avec graphiques
-- Des contrôles pour les relais et LEDs
-
-```delphi
-unit MainUnit;
+```pascal
+unit RaspberryPiClient;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, Vcl.Forms, Vcl.Controls,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, VCLTee.TeeGDIPlus, VCLTee.TeEngine,
-  VCLTee.Series, VCLTee.TeeProcs, VCLTee.Chart, REST.Types, REST.Client,
-  REST.Response.Adapter, Data.Bind.Components, Data.Bind.ObjectScope;
+  System.SysUtils, System.Classes, System.JSON,
+  REST.Client, REST.Types, REST.Json;
 
 type
-  TMainForm = class(TForm)
-    PageControl1: TPageControl;
-    TabDashboard: TTabSheet;
-    TabHistory: TTabSheet;
-    PanelConnection: TPanel;
-    EditIP: TEdit;
-    EditPort: TEdit;
-    ButtonConnect: TButton;
-    PanelDashboard: TPanel;
-    LabelTemperature: TLabel;
-    LabelHumidity: TLabel;
-    LabelLight: TLabel;
-    LabelRelayStatus: TLabel;
-    ButtonRelayOn: TButton;
-    ButtonRelayOff: TButton;
-    ButtonLedOn: TButton;
-    ButtonLedOff: TButton;
-    TimerRefresh: TTimer;
-    ChartTemp: TChart;
-    ChartHumidity: TChart;
-    ChartLight: TChart;
-    ButtonRefreshHistory: TButton;
-    ComboBoxHistoryLimit: TComboBox;
-    MemoLog: TMemo;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure TimerRefreshTimer(Sender: TObject);
-    procedure ButtonRelayOnClick(Sender: TObject);
-    procedure ButtonRelayOffClick(Sender: TObject);
-    procedure ButtonLedOnClick(Sender: TObject);
-    procedure ButtonLedOffClick(Sender: TObject);
-    procedure ButtonRefreshHistoryClick(Sender: TObject);
-  private
-    FRESTClient: TRESTClient;
-    FSensorsRequest: TRESTRequest;
-    FHistoryRequest: TRESTRequest;
-    FControlRequest: TRESTRequest;
-    FResponse: TRESTResponse;
-
-    FTempSeries: TLineSeries;
-    FHumSeries: TLineSeries;
-    FLightSeries: TLineSeries;
-
-    function ReadSensors: Boolean;
-    function GetHistory(Limit: Integer): Boolean;
-    function ControlRelay(State: Boolean): Boolean;
-    function ControlLed(State: Boolean): Boolean;
-    procedure UpdateDashboard(const JSONObj: TJSONObject);
-    procedure UpdateHistoryCharts(const JSONArray: TJSONArray);
-  public
-    { Public declarations }
+  TSensorData = record
+    Temperature: Double;
+    Humidity: Double;
+    Timestamp: TDateTime;
   end;
 
-var
-  MainForm: TMainForm;
+  TRaspberryPiClient = class
+  private
+    FRESTClient: TRESTClient;
+    FRESTRequest: TRESTRequest;
+    FRESTResponse: TRESTResponse;
+    FBaseURL: string;
+  public
+    constructor Create(const BaseURL: string);
+    destructor Destroy; override;
+
+    function GetSensorData: TSensorData;
+    function SetLEDState(State: Boolean): Boolean;
+  end;
 
 implementation
 
-{$R *.dfm}
-
-procedure TMainForm.FormCreate(Sender: TObject);
+constructor TRaspberryPiClient.Create(const BaseURL: string);
 begin
-  // Initialiser les composants REST
-  FRESTClient := TRESTClient.Create(Self);
-  FResponse := TRESTResponse.Create(Self);
+  inherited Create;
+  FBaseURL := BaseURL;
 
-  FSensorsRequest := TRESTRequest.Create(Self);
-  FSensorsRequest.Client := FRESTClient;
-  FSensorsRequest.Response := FResponse;
-  FSensorsRequest.Resource := 'api/sensors';
-  FSensorsRequest.Method := rmGET;
+  FRESTClient := TRESTClient.Create(nil);
+  FRESTRequest := TRESTRequest.Create(nil);
+  FRESTResponse := TRESTResponse.Create(nil);
 
-  FHistoryRequest := TRESTRequest.Create(Self);
-  FHistoryRequest.Client := FRESTClient;
-  FHistoryRequest.Response := FResponse;
-  FHistoryRequest.Resource := 'api/history';
-  FHistoryRequest.Method := rmGET;
-
-  FControlRequest := TRESTRequest.Create(Self);
-  FControlRequest.Client := FRESTClient;
-  FControlRequest.Response := FResponse;
-  FControlRequest.Method := rmPOST;
-
-  // Initialiser les séries de graphiques
-  FTempSeries := TLineSeries.Create(Self);
-  FTempSeries.Title := 'Température (°C)';
-  FTempSeries.Color := clRed;
-  ChartTemp.AddSeries(FTempSeries);
-
-  FHumSeries := TLineSeries.Create(Self);
-  FHumSeries.Title := 'Humidité (%)';
-  FHumSeries.Color := clBlue;
-  ChartHumidity.AddSeries(FHumSeries);
-
-  FLightSeries := TLineSeries.Create(Self);
-  FLightSeries.Title := 'Niveau de lumière';
-  FLightSeries.Color := clGreen;
-  ChartLight.AddSeries(FLightSeries);
-
-  // Remplir le combobox pour l'historique
-  ComboBoxHistoryLimit.Items.Add('10 derniers points');
-  ComboBoxHistoryLimit.Items.Add('20 derniers points');
-  ComboBoxHistoryLimit.Items.Add('50 derniers points');
-  ComboBoxHistoryLimit.Items.Add('100 derniers points');
-  ComboBoxHistoryLimit.ItemIndex := 0;
-
-  EditIP.Text := '192.168.1.100';  // Remplacer par l'IP de votre Raspberry Pi
-  EditPort.Text := '5000';
-
-  TimerRefresh.Enabled := False;
-  ButtonRelayOn.Enabled := False;
-  ButtonRelayOff.Enabled := False;
-  ButtonLedOn.Enabled := False;
-  ButtonLedOff.Enabled := False;
-  ButtonRefreshHistory.Enabled := False;
+  FRESTClient.BaseURL := FBaseURL;
+  FRESTRequest.Client := FRESTClient;
+  FRESTRequest.Response := FRESTResponse;
 end;
 
-procedure TMainForm.ButtonConnectClick(Sender: TObject);
+destructor TRaspberryPiClient.Destroy;
 begin
-  if ButtonConnect.Caption = 'Connecter' then
-  begin
-    // Configuration de l'URL de base
-    FRESTClient.BaseURL := Format('http://%s:%s', [EditIP.Text, EditPort.Text]);
-
-    // Tester la connexion
-    try
-      FSensorsRequest.Execute;
-      if FResponse.StatusCode = 200 then
-      begin
-        ButtonConnect.Caption := 'Déconnecter';
-        TimerRefresh.Enabled := True;
-        ButtonRelayOn.Enabled := True;
-        ButtonRelayOff.Enabled := True;
-        ButtonLedOn.Enabled := True;
-        ButtonLedOff.Enabled := True;
-        ButtonRefreshHistory.Enabled := True;
-
-        ReadSensors;  // Lecture initiale
-        MemoLog.Lines.Add('Connecté avec succès');
-      end
-      else
-      begin
-        MemoLog.Lines.Add('Erreur: ' + FResponse.StatusText);
-      end;
-    except
-      on E: Exception do
-        MemoLog.Lines.Add('Erreur de connexion: ' + E.Message);
-    end;
-  end
-  else
-  begin
-    ButtonConnect.Caption := 'Connecter';
-    TimerRefresh.Enabled := False;
-    ButtonRelayOn.Enabled := False;
-    ButtonRelayOff.Enabled := False;
-    ButtonLedOn.Enabled := False;
-    ButtonLedOff.Enabled := False;
-    ButtonRefreshHistory.Enabled := False;
-    MemoLog.Lines.Add('Déconnecté');
-  end;
+  FRESTResponse.Free;
+  FRESTRequest.Free;
+  FRESTClient.Free;
+  inherited;
 end;
 
-function TMainForm.ReadSensors: Boolean;
+function TRaspberryPiClient.GetSensorData: TSensorData;
 var
-  JSONObj: TJSONObject;
+  JSONValue: TJSONValue;
+  JSONObject: TJSONObject;
 begin
-  Result := False;
+  FRESTRequest.Method := rmGET;
+  FRESTRequest.Resource := '/api/sensor';
 
   try
-    FSensorsRequest.Execute;
+    FRESTRequest.Execute;
 
-    if FResponse.StatusCode = 200 then
+    if FRESTResponse.StatusCode = 200 then
     begin
-      JSONObj := TJSONObject.ParseJSONValue(FResponse.Content) as TJSONObject;
+      JSONValue := TJSONObject.ParseJSONValue(FRESTResponse.Content);
       try
-        if JSONObj.FindValue('error') <> nil then
+        if JSONValue is TJSONObject then
         begin
-          MemoLog.Lines.Add('Erreur: ' + JSONObj.GetValue<string>('error'));
-        end
-        else
-        begin
-          UpdateDashboard(JSONObj);
-          Result := True;
+          JSONObject := JSONValue as TJSONObject;
+
+          Result.Temperature := JSONObject.GetValue<Double>('temperature');
+          Result.Humidity := JSONObject.GetValue<Double>('humidity');
+          Result.Timestamp := Now; // Ou convertir le timestamp Unix
         end;
       finally
-        JSONObj.Free;
+        JSONValue.Free;
       end;
-    end
-    else
-    begin
-      MemoLog.Lines.Add('Erreur serveur: ' + FResponse.StatusText);
     end;
   except
     on E: Exception do
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
+      raise Exception.Create('Erreur de communication avec Raspberry Pi: ' + E.Message);
   end;
 end;
 
-procedure TMainForm.UpdateDashboard(const JSONObj: TJSONObject);
+function TRaspberryPiClient.SetLEDState(State: Boolean): Boolean;
+var
+  JSONObject: TJSONObject;
+  StateStr: string;
 begin
-  LabelTemperature.Caption := Format('Température: %.1f°C', [JSONObj.GetValue<Double>('temperature')]);
-  LabelHumidity.Caption := Format('Humidité: %.1f%%', [JSONObj.GetValue<Double>('humidity')]);
-  LabelLight.Caption := Format('Niveau de lumière: %d', [JSONObj.GetValue<Integer>('light')]);
+  Result := False;
 
-  if JSONObj.GetValue<Boolean>('relay') then
-    LabelRelayStatus.Caption := 'Relais: ACTIVÉ'
+  if State then
+    StateStr := 'ON'
   else
-    LabelRelayStatus.Caption := 'Relais: DÉSACTIVÉ';
+    StateStr := 'OFF';
+
+  JSONObject := TJSONObject.Create;
+  try
+    JSONObject.AddPair('state', StateStr);
+
+    FRESTRequest.Method := rmPOST;
+    FRESTRequest.Resource := '/api/led';
+    FRESTRequest.Body.Add(JSONObject.ToString, ContentTypeFromString('application/json'));
+
+    FRESTRequest.Execute;
+
+    Result := FRESTResponse.StatusCode = 200;
+  finally
+    JSONObject.Free;
+  end;
 end;
 
-function TMainForm.GetHistory(Limit: Integer): Boolean;
+end.
+```
+
+#### Utilisation dans le formulaire
+
+```pascal
+procedure TFormMain.ButtonReadSensorClick(Sender: TObject);
 var
-  JSONArray: TJSONArray;
+  RpiClient: TRaspberryPiClient;
+  SensorData: TSensorData;
 begin
-  Result := False;
-
+  RpiClient := TRaspberryPiClient.Create('http://192.168.1.100:5000');
   try
-    // Ajouter le paramètre de limite
-    FHistoryRequest.Params.Clear;
-    FHistoryRequest.AddParameter('limit', IntToStr(Limit), pkGETorPOST);
+    SensorData := RpiClient.GetSensorData;
 
-    FHistoryRequest.Execute;
+    LabelTemp.Caption := Format('Température : %.1f °C', [SensorData.Temperature]);
+    LabelHum.Caption := Format('Humidité : %.1f %%', [SensorData.Humidity]);
+  finally
+    RpiClient.Free;
+  end;
+end;
 
-    if FResponse.StatusCode = 200 then
-    begin
-      JSONArray := TJSONObject.ParseJSONValue(FResponse.Content) as TJSONArray;
-      try
-        UpdateHistoryCharts(JSONArray);
-        Result := True;
-      finally
-        JSONArray.Free;
-      end;
-    end
+procedure TFormMain.ButtonLedOnClick(Sender: TObject);
+var
+  RpiClient: TRaspberryPiClient;
+begin
+  RpiClient := TRaspberryPiClient.Create('http://192.168.1.100:5000');
+  try
+    if RpiClient.SetLEDState(True) then
+      ShowMessage('LED allumée')
     else
-    begin
-      MemoLog.Lines.Add('Erreur serveur: ' + FResponse.StatusText);
-    end;
-  except
-    on E: Exception do
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
+      ShowMessage('Erreur lors du contrôle de la LED');
+  finally
+    RpiClient.Free;
   end;
-end;
-
-procedure TMainForm.UpdateHistoryCharts(const JSONArray: TJSONArray);
-var
-  I: Integer;
-  Item: TJSONObject;
-  Timestamp: string;
-begin
-  // Effacer les séries existantes
-  FTempSeries.Clear;
-  FHumSeries.Clear;
-  FLightSeries.Clear;
-
-  // Ajouter les points en ordre chronologique
-  for I := JSONArray.Count - 1 downto 0 do
-  begin
-    Item := JSONArray.Items[I] as TJSONObject;
-    Timestamp := Item.GetValue<string>('timestamp');
-
-    FTempSeries.AddXY(I, Item.GetValue<Double>('temperature'), Timestamp);
-    FHumSeries.AddXY(I, Item.GetValue<Double>('humidity'), Timestamp);
-    FLightSeries.AddXY(I, Item.GetValue<Integer>('light'), Timestamp);
-  end;
-end;
-
-function TMainForm.ControlRelay(State: Boolean): Boolean;
-var
-  JSONBody, JSONResponse: TJSONObject;
-begin
-  Result := False;
-
-  try
-    // Préparer le corps de la requête
-    JSONBody := TJSONObject.Create;
-    try
-      JSONBody.AddPair('state', TJSONBool.Create(State));
-
-      FControlRequest.Resource := 'api/relay';
-      FControlRequest.Body.ClearBody;
-      FControlRequest.Body.Add(JSONBody.ToString, ContentTypeFromString('application/json'));
-
-      FControlRequest.Execute;
-
-      if FResponse.StatusCode = 200 then
-      begin
-        JSONResponse := TJSONObject.ParseJSONValue(FResponse.Content) as TJSONObject;
-        try
-          if JSONResponse.FindValue('error') <> nil then
-          begin
-            MemoLog.Lines.Add('Erreur: ' + JSONResponse.GetValue<string>('error'));
-          end
-          else
-          begin
-            if State then
-              MemoLog.Lines.Add('Relais activé')
-            else
-              MemoLog.Lines.Add('Relais désactivé');
-
-            Result := True;
-            ReadSensors;  // Mettre à jour le tableau de bord
-          end;
-        finally
-          JSONResponse.Free;
-        end;
-      end
-      else
-      begin
-        MemoLog.Lines.Add('Erreur serveur: ' + FResponse.StatusText);
-      end;
-    finally
-      JSONBody.Free;
-    end;
-  except
-    on E: Exception do
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
-  end;
-end;
-
-function TMainForm.ControlLed(State: Boolean): Boolean;
-var
-  JSONBody, JSONResponse: TJSONObject;
-begin
-  Result := False;
-
-  try
-    // Préparer le corps de la requête
-    JSONBody := TJSONObject.Create;
-    try
-      JSONBody.AddPair('state', TJSONBool.Create(State));
-
-      FControlRequest.Resource := 'api/led';
-      FControlRequest.Body.ClearBody;
-      FControlRequest.Body.Add(JSONBody.ToString, ContentTypeFromString('application/json'));
-
-      FControlRequest.Execute;
-
-      if FResponse.StatusCode = 200 then
-      begin
-        JSONResponse := TJSONObject.ParseJSONValue(FResponse.Content) as TJSONObject;
-        try
-          if JSONResponse.FindValue('error') <> nil then
-          begin
-            MemoLog.Lines.Add('Erreur: ' + JSONResponse.GetValue<string>('error'));
-          end
-          else
-          begin
-            if State then
-              MemoLog.Lines.Add('LED activée')
-            else
-              MemoLog.Lines.Add('LED désactivée');
-
-            Result := True;
-          end;
-        finally
-          JSONResponse.Free;
-        end;
-      end
-      else
-      begin
-        MemoLog.Lines.Add('Erreur serveur: ' + FResponse.StatusText);
-      end;
-    finally
-      JSONBody.Free;
-    end;
-  except
-    on E: Exception do
-      MemoLog.Lines.Add('Erreur: ' + E.Message);
-  end;
-end;
-
-procedure TMainForm.TimerRefreshTimer(Sender: TObject);
-begin
-  ReadSensors;
-end;
-
-procedure TMainForm.ButtonRelayOnClick(Sender: TObject);
-begin
-  ControlRelay(True);
-end;
-
-procedure TMainForm.ButtonRelayOffClick(Sender: TObject);
-begin
-  ControlRelay(False);
-end;
-
-procedure TMainForm.ButtonLedOnClick(Sender: TObject);
-begin
-  ControlLed(True);
-end;
-
-procedure TMainForm.ButtonLedOffClick(Sender: TObject);
-begin
-  ControlLed(False);
-end;
-
-procedure TMainForm.ButtonRefreshHistoryClick(Sender: TObject);
-var
-  Limit: Integer;
-begin
-  case ComboBoxHistoryLimit.ItemIndex of
-    0: Limit := 10;
-    1: Limit := 20;
-    2: Limit := 50;
-    3: Limit := 100;
-    else Limit := 10;
-  end;
-
-  GetHistory(Limit);
 end;
 ```
 
-### Système de surveillance environnementale
+### Intégration via MQTT
 
-Un autre projet pratique consiste à créer un système de surveillance environnementale avec multiples capteurs distribués et une application centralisée pour la visualisation.
+MQTT est idéal pour l'IoT car il est léger et supporte le publish/subscribe.
 
-#### Architecture
-- **Plusieurs Arduinos** avec capteurs connectés à un Raspberry Pi central
-- **Raspberry Pi** comme passerelle collectant les données et les stockant
-- **Application Delphi** pour visualiser les données et configurer des alertes
+#### Code Python sur Raspberry Pi (MQTT Publisher)
 
-Ce type de projet pourrait être étendu pour inclure :
-- Alertes par email ou SMS
-- Interface Web supplémentaire
-- Rapports automatiques
-- Intégration avec des services cloud
+```python
+import paho.mqtt.client as mqtt
+import time
+import json
 
-## Bonnes pratiques et conseils
+# Configuration MQTT
+MQTT_BROKER = "broker.hivemq.com"  # Ou votre broker local
+MQTT_PORT = 1883
+MQTT_TOPIC = "home/raspberry/sensors"
 
-### Conseils pour l'intégration Arduino-Delphi
+client = mqtt.Client("RaspberryPi")
 
-1. **Protocole de communication robuste** : Définissez un protocole clair entre Delphi et l'Arduino, idéalement basé sur JSON pour faciliter le traitement.
+def publish_sensor_data():
+    # Simuler lecture de capteur
+    data = {
+        'temperature': 23.5,
+        'humidity': 65,
+        'device': 'raspberry_pi_salon',
+        'timestamp': time.time()
+    }
 
-2. **Gestion des erreurs** : Implémentez une gestion d'erreurs complète des deux côtés.
+    # Publier en JSON
+    client.publish(MQTT_TOPIC, json.dumps(data))
+    print(f"Données publiées : {data}")
 
-3. **Temporisation** : Ajoutez des délais appropriés pour éviter de surcharger l'Arduino avec trop de commandes.
+# Connexion au broker
+client.connect(MQTT_BROKER, MQTT_PORT)
+client.loop_start()
 
-4. **Surveillance de la connexion** : Implémentez un mécanisme de surveillance pour détecter les déconnexions.
+# Boucle principale
+try:
+    while True:
+        publish_sensor_data()
+        time.sleep(5)  # Publier toutes les 5 secondes
+except KeyboardInterrupt:
+    print("Arrêt du programme")
+    client.loop_stop()
+    client.disconnect()
+```
 
-5. **Mise en mémoire tampon** : Utilisez des tampons pour accumuler les données et éviter les pertes.
+#### Code Delphi (MQTT Subscriber)
 
-### Conseils pour l'intégration Raspberry Pi-Delphi
+Vous pouvez utiliser une bibliothèque MQTT pour Delphi comme TMQTTClient ou d'autres disponibles.
 
-1. **API RESTful** : Préférez une API REST bien structurée pour la communication entre Delphi et Raspberry Pi.
+```pascal
+// Pseudo-code avec une bibliothèque MQTT
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  MQTTClient := TMQTTClient.Create;
+  MQTTClient.OnMessageReceived := MQTTMessageReceived;
 
-2. **Authentification** : Ajoutez une authentification simple pour sécuriser l'accès à l'API.
+  MQTTClient.Host := 'broker.hivemq.com';
+  MQTTClient.Port := 1883;
+  MQTTClient.Connect;
 
-3. **Mise en cache** : Implémentez un mécanisme de mise en cache côté Delphi pour réduire les appels réseau.
+  // S'abonner au topic
+  MQTTClient.Subscribe('home/raspberry/sensors');
+end;
 
-4. **Connexions persistantes** : Utilisez des connexions HTTP persistantes pour améliorer les performances.
+procedure TFormMain.MQTTMessageReceived(const Topic: string; const Payload: string);
+var
+  JSONValue: TJSONValue;
+  JSONObject: TJSONObject;
+  Temp, Hum: Double;
+begin
+  // Parser le JSON reçu
+  JSONValue := TJSONObject.ParseJSONValue(Payload);
+  try
+    if JSONValue is TJSONObject then
+    begin
+      JSONObject := JSONValue as TJSONObject;
 
-5. **Format des données** : Standardisez le format des données échangées (JSON est recommandé).
+      Temp := JSONObject.GetValue<Double>('temperature');
+      Hum := JSONObject.GetValue<Double>('humidity');
 
-## Résolution des problèmes courants
+      // Mettre à jour l'interface (depuis le thread principal)
+      TThread.Synchronize(nil, procedure
+      begin
+        LabelTemp.Caption := Format('%.1f °C', [Temp]);
+        LabelHum.Caption := Format('%.1f %%', [Hum]);
+      end);
+    end;
+  finally
+    JSONValue.Free;
+  end;
+end;
+```
 
-### Problèmes de connexion Arduino
+## Projets combinant Arduino et Raspberry Pi
 
-| Problème | Solution |
-|----------|----------|
-| Arduino non détecté | Vérifiez le câble USB et les pilotes |
-| Déconnexions fréquentes | Ajoutez des délais et réduisez la fréquence des communications |
-| Données corrompues | Utilisez un protocole avec validation (CRC ou checksum) |
-| Arduino bloqué | Implémentez un watchdog dans le code Arduino |
+### Architecture Gateway
 
-### Problèmes de connexion Raspberry Pi
+Le Raspberry Pi agit comme un concentrateur central :
 
-| Problème | Solution |
-|----------|----------|
-| Connexion refusée | Vérifiez les pare-feu et les règles de routage |
-| Latence élevée | Optimisez la taille des requêtes et implémentez la mise en cache |
-| Erreurs HTTP | Vérifiez les logs du serveur sur le Raspberry Pi |
-| Charge CPU élevée | Réduisez la fréquence des requêtes ou optimisez le code serveur |
+```
+[Arduino 1] --USB--> [Raspberry Pi] <--WiFi--> [Application Delphi]
+[Arduino 2] --USB--> [          ]
+[Arduino 3] --Serial->          ]
+```
 
-## Ressources complémentaires
+**Avantages :**
+- Plusieurs Arduino gérés par un seul Raspberry Pi
+- Raspberry Pi traite et agrège les données
+- Communication réseau avec Delphi
+- Raspberry Pi peut fonctionner de manière autonome
 
-### Bibliothèques et outils pour Arduino
-- [ArduinoJson](https://arduinojson.org/) - Bibliothèque pour traiter le JSON
-- [PlatformIO](https://platformio.org/) - Alternative à l'IDE Arduino avec gestion de dépendances
+### Exemple : Système de surveillance multi-zones
 
-### Bibliothèques et outils pour Raspberry Pi
-- [Flask](https://flask.palletsprojects.com/) - Framework léger pour API web
-- [pySerial](https://pyserial.readthedocs.io/) - Pour la communication série avec Arduino
+**Arduino (dans chaque pièce) :**
+- Lit température, humidité, mouvement
+- Envoie les données via série au Raspberry Pi
 
-### Bibliothèques Delphi pour IoT
-- [REST Components](https://www.embarcadero.com/products/rad-studio/features/rest-client-components) - Pour communiquer avec des API REST
-- [TComPort](https://sourceforge.net/projects/comport/) - Pour la communication série
-- [TMSIntraIoT](https://www.tmssoftware.com) - Composants IoT complets
+**Raspberry Pi (central) :**
+- Collecte les données de tous les Arduino
+- Stocke localement (SQLite)
+- Expose une API REST
+- Publie sur MQTT
+
+**Application Delphi :**
+- Interface de supervision
+- Graphiques en temps réel
+- Alertes
+- Historique dans base de données centrale
+
+## Bonnes pratiques
+
+### Gestion de la connexion
+
+Toujours gérer les déconnexions et reconnexions :
+
+```pascal
+type
+  TConnectionManager = class
+  private
+    FConnected: Boolean;
+    FReconnectTimer: TTimer;
+    FLastConnectionAttempt: TDateTime;
+    procedure TryReconnect(Sender: TObject);
+  public
+    procedure Connect;
+    procedure Disconnect;
+    property Connected: Boolean read FConnected;
+  end;
+
+procedure TConnectionManager.TryReconnect(Sender: TObject);
+begin
+  if not FConnected and (SecondsBetween(Now, FLastConnectionAttempt) > 10) then
+  begin
+    FLastConnectionAttempt := Now;
+
+    try
+      Connect;
+    except
+      // Logger l'erreur mais continuer à essayer
+    end;
+  end;
+end;
+```
+
+### Gestion des erreurs réseau
+
+```pascal
+function TRaspberryPiClient.GetSensorDataSafe: TSensorData;
+var
+  RetryCount: Integer;
+  MaxRetries: Integer;
+begin
+  MaxRetries := 3;
+  RetryCount := 0;
+
+  while RetryCount < MaxRetries do
+  begin
+    try
+      Result := GetSensorData;
+      Break; // Succès
+    except
+      on E: Exception do
+      begin
+        Inc(RetryCount);
+        if RetryCount >= MaxRetries then
+          raise Exception.Create('Impossible de communiquer après ' +
+                                 IntToStr(MaxRetries) + ' tentatives: ' + E.Message);
+
+        Sleep(1000); // Attendre avant de réessayer
+      end;
+    end;
+  end;
+end;
+```
+
+### Cache des dernières valeurs
+
+En cas de perte de connexion, continuez à afficher les dernières valeurs connues :
+
+```pascal
+type
+  TSensorCache = class
+  private
+    FLastTemperature: Double;
+    FLastHumidity: Double;
+    FLastUpdate: TDateTime;
+    FMaxAge: Integer; // Secondes
+  public
+    procedure Update(Temp, Hum: Double);
+    function IsValid: Boolean;
+    property LastTemperature: Double read FLastTemperature;
+    property LastHumidity: Double read FLastHumidity;
+  end;
+
+function TSensorCache.IsValid: Boolean;
+begin
+  Result := SecondsBetween(Now, FLastUpdate) < FMaxAge;
+end;
+
+procedure TFormMain.UpdateDisplay;
+begin
+  if SensorCache.IsValid then
+  begin
+    LabelTemp.Caption := Format('%.1f °C', [SensorCache.LastTemperature]);
+    LabelStatus.Caption := 'Dernière mise à jour : ' +
+                          FormatDateTime('hh:nn:ss', SensorCache.FLastUpdate);
+  end
+  else
+  begin
+    LabelStatus.Caption := 'Données obsolètes - vérifier connexion';
+    PanelStatus.Color := clYellow;
+  end;
+end;
+```
+
+### Logging complet
+
+Toujours logger les communications pour faciliter le débogage :
+
+```pascal
+procedure TFormMain.LogMessage(const Source, MessageType, Content: string);
+var
+  LogEntry: string;
+begin
+  LogEntry := Format('[%s] %s - %s: %s',
+                     [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+                      Source,
+                      MessageType,
+                      Content]);
+
+  MemoLog.Lines.Add(LogEntry);
+
+  // Sauvegarder aussi dans un fichier
+  TFile.AppendAllText('iot_log.txt', LogEntry + sLineBreak);
+end;
+```
+
+## Conseils pour le développement
+
+### Démarrer simple
+
+1. **Test basique** : faire clignoter une LED
+2. **Lecture simple** : lire un seul capteur
+3. **Communication** : envoyer/recevoir des messages texte
+4. **Protocol** : implémenter votre protocole de communication
+5. **Interface** : créer l'interface Delphi
+6. **Base de données** : ajouter la persistance
+7. **Fonctionnalités avancées** : graphiques, alertes, etc.
+
+### Prototypage rapide
+
+Utilisez le moniteur série Arduino IDE pour tester la communication avant d'écrire le code Delphi.
+
+### Documentation
+
+Documentez votre protocole de communication :
+
+```
+# Protocole de communication Station Météo
+
+## Messages Arduino -> Delphi
+TEMP:xx.x       // Température en °C
+HUM:xx.x        // Humidité en %
+LIGHT:xxx       // Luminosité 0-100%
+ERROR:message   // Message d'erreur
+
+## Messages Delphi -> Arduino
+LED:ON/OFF      // Contrôle LED
+RESET           // Redémarrer les capteurs
+CONFIG:param:value  // Configuration
+```
+
+### Tests
+
+Testez séparément chaque composant :
+1. Arduino seul (avec moniteur série)
+2. Communication série (programme simple)
+3. Traitement des données (parser)
+4. Interface graphique
+5. Base de données
+6. Intégration complète
 
 ## Conclusion
 
-L'intégration de Delphi avec Arduino et Raspberry Pi offre des possibilités infinies pour créer des solutions IoT complètes. Que vous construisiez un système simple de surveillance ou une solution domotique complète, la combinaison de ces technologies permet de tirer parti des forces de chacune :
+L'intégration d'Arduino et Raspberry Pi avec Delphi ouvre un monde de possibilités pour créer des systèmes IoT sophistiqués. Arduino excelle dans le contrôle temps réel et l'interface avec les capteurs, Raspberry Pi offre la puissance d'un ordinateur complet pour le traitement et la connectivité, et Delphi fournit des outils professionnels pour créer des interfaces riches et gérer les données.
 
-- **Arduino** pour l'interaction directe avec les capteurs et actionneurs
-- **Raspberry Pi** pour le traitement, le stockage et la connectivité réseau
-- **Delphi** pour créer des interfaces utilisateur riches et professionnelles
+**Points clés à retenir :**
 
-Dans les prochaines sections, nous explorerons les protocoles IoT spécialisés comme MQTT et CoAP, ainsi que la gestion des dispositifs connectés à plus grande échelle.
+1. **Arduino** : parfait pour le contrôle matériel et la lecture de capteurs
+2. **Raspberry Pi** : idéal comme gateway ou serveur IoT
+3. **Communication** : définir un protocole clair et simple
+4. **Robustesse** : gérer les erreurs et les déconnexions
+5. **Architecture** : choisir l'approche adaptée à votre projet
+6. **Tests** : valider chaque composant séparément
+
+Dans les prochaines sections, nous approfondirons le contrôle de périphériques externes et l'utilisation de protocoles IoT comme MQTT et CoAP pour créer des solutions encore plus évoluées.
 
 ⏭️ [Contrôle de périphériques externes](/21-delphi-et-liot/04-controle-de-peripheriques-externes.md)

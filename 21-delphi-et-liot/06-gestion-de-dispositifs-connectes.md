@@ -1,419 +1,156 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 21.6 Gestion de dispositifs connectés
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-Une fois que vous maîtrisez la communication avec des périphériques individuels et les protocoles IoT comme MQTT et CoAP, l'étape suivante consiste à développer une solution pour gérer plusieurs dispositifs connectés simultanément. Cette section vous guidera à travers la conception et l'implémentation d'une application Delphi capable de gérer un réseau de dispositifs IoT de manière efficace et évolutive.
+Jusqu'à présent, nous avons travaillé avec un ou deux dispositifs à la fois. Dans un environnement IoT réel, vous devrez souvent gérer des dizaines, voire des centaines de dispositifs connectés simultanément : capteurs, actionneurs, passerelles, etc.
 
-## Introduction à la gestion de dispositifs
+Cette section vous apprendra à créer des applications Delphi capables de :
+- Découvrir automatiquement les dispositifs sur le réseau
+- Gérer des connexions multiples simultanées
+- Superviser l'état et la santé de chaque dispositif
+- Configurer et mettre à jour les dispositifs à distance
+- Organiser et grouper les dispositifs logiquement
+- Gérer les pannes et déconnexions
 
-La gestion de dispositifs connectés comprend plusieurs aspects essentiels :
+## Défis de la gestion multi-dispositifs
 
-- **Découverte** - Trouver et identifier les dispositifs disponibles
-- **Inventaire** - Maintenir une liste des dispositifs avec leurs caractéristiques
-- **Configuration** - Paramétrer les dispositifs selon les besoins
-- **Surveillance** - Observer l'état et les performances des dispositifs
-- **Contrôle** - Envoyer des commandes et recevoir des réponses
-- **Mise à jour** - Déployer des mises à jour logicielles (firmware)
-- **Sécurité** - Protéger les communications et l'accès aux dispositifs
+### Problématiques courantes
 
-## Conception d'une architecture de gestion de dispositifs
+#### 1. Découverte des dispositifs
+Comment trouver automatiquement tous les dispositifs disponibles sur le réseau sans configuration manuelle ?
 
-Avant de commencer à coder, établissons une architecture robuste pour notre système de gestion de dispositifs.
+#### 2. Identification unique
+Comment identifier de manière unique chaque dispositif parmi des centaines d'appareils similaires ?
 
-### Architecture en couches
+#### 3. État de connexion
+Comment savoir en temps réel quels dispositifs sont en ligne, hors ligne, ou en erreur ?
 
-Une approche efficace consiste à utiliser une architecture en couches :
+#### 4. Scalabilité
+Comment gérer efficacement 10, 100 ou 1000 dispositifs sans ralentir l'application ?
 
-1. **Couche de présentation** - Interface utilisateur (formulaires Delphi)
-2. **Couche logique** - Gestion des dispositifs et orchestration
-3. **Couche de communication** - Protocoles et échanges de données (MQTT, CoAP, série, etc.)
-4. **Couche de persistance** - Stockage des configurations et données historiques
+#### 5. Configuration
+Comment configurer ou reconfigurer des dispositifs à distance ?
 
-![Architecture en couches](https://via.placeholder.com/600x350.png?text=Architecture+en+couches+pour+gestion+IoT)
+#### 6. Mises à jour
+Comment déployer des mises à jour logicielles sur plusieurs dispositifs ?
 
-### Modèle de dispositif générique
+#### 7. Supervision
+Comment monitorer la santé globale du système et détecter les anomalies ?
 
-Commençons par définir une interface générique pour représenter n'importe quel type de dispositif connecté :
+## Architecture de gestion de dispositifs
+
+### Modèle de données
+
+Commençons par définir la structure de données pour représenter un dispositif :
 
 ```pascal
-unit DeviceInterfaces;
+unit IoTDevice;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections;
+  System.SysUtils, System.DateUtils, System.Classes;
 
 type
-  TDeviceStatus = (dsOffline, dsOnline, dsError, dsMaintenance);
-  TDeviceCapability = (dcSensor, dcActuator, dcConfiguration, dcFirmwareUpdate);
-  TDeviceCapabilities = set of TDeviceCapability;
+  TDeviceType = (dtSensor, dtActuator, dtGateway, dtController);
+  TDeviceStatus = (dsUnknown, dsOnline, dsOffline, dsError, dsMaintenance);
 
-  TDeviceValueType = (dvtString, dvtInteger, dvtFloat, dvtBoolean, dvtDateTime, dvtBinary);
-
-  TDeviceValue = record
-    Name: string;
-    ValueType: TDeviceValueType;
-    StringValue: string;
-    IntegerValue: Integer;
-    FloatValue: Double;
-    BooleanValue: Boolean;
-    DateTimeValue: TDateTime;
-    BinaryValue: TBytes;
-    function AsString: string;
-    function AsInteger: Integer;
-    function AsFloat: Double;
-    function AsBoolean: Boolean;
-    function AsDateTime: TDateTime;
-    function AsBinary: TBytes;
-    procedure SetValue(const Value: string); overload;
-    procedure SetValue(const Value: Integer); overload;
-    procedure SetValue(const Value: Double); overload;
-    procedure SetValue(const Value: Boolean); overload;
-    procedure SetValue(const Value: TDateTime); overload;
-    procedure SetValue(const Value: TBytes); overload;
-  end;
-
-  TDevicePropertyList = TDictionary<string, TDeviceValue>;
-
-  TDeviceCommandEvent = procedure(Sender: TObject; const Command: string;
-                               Params: TDevicePropertyList) of object;
-
-  IDevice = interface
-    ['{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}'] // Générez un GUID unique
-    function GetID: string;
-    function GetName: string;
-    procedure SetName(const Value: string);
-    function GetStatus: TDeviceStatus;
-    function GetCapabilities: TDeviceCapabilities;
-    function GetType: string;
-    function GetManufacturer: string;
-    function GetModel: string;
-    function GetFirmwareVersion: string;
-
-    // Propriétés et valeurs
-    function GetProperties: TDevicePropertyList;
-    function GetProperty(const PropertyName: string): TDeviceValue;
-    procedure SetProperty(const PropertyName: string; const Value: TDeviceValue);
-
-    // Commandes
-    function SupportsCommand(const Command: string): Boolean;
-    function ExecuteCommand(const Command: string;
-                           Params: TDevicePropertyList = nil): Boolean;
-
-    // Connexion
-    function Connect: Boolean;
-    procedure Disconnect;
-    function IsConnected: Boolean;
-
-    // Événements
-    procedure SetOnStatusChange(const Handler: TNotifyEvent);
-    procedure SetOnPropertyChange(const Handler: TNotifyEvent);
-    procedure SetOnCommandReceived(const Handler: TDeviceCommandEvent);
-
-    // Propriétés accessibles
-    property ID: string read GetID;
-    property Name: string read GetName write SetName;
-    property Status: TDeviceStatus read GetStatus;
-    property Capabilities: TDeviceCapabilities read GetCapabilities;
-    property DeviceType: string read GetType;
-    property Manufacturer: string read GetManufacturer;
-    property Model: string read GetModel;
-    property FirmwareVersion: string read GetFirmwareVersion;
-    property Properties: TDevicePropertyList read GetProperties;
-  end;
-end;
-```
-
-### Implémentation de base pour les dispositifs MQTT
-
-Voici une implémentation de base pour un dispositif MQTT générique :
-
-```pascal
-unit MQTTDevice;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  DeviceInterfaces, MQTT.Client;
-
-type
-  TMQTTDevice = class(TInterfacedObject, IDevice)
+  TIoTDevice = class
   private
     FID: string;
     FName: string;
+    FDeviceType: TDeviceType;
     FStatus: TDeviceStatus;
-    FCapabilities: TDeviceCapabilities;
-    FDeviceType: string;
-    FManufacturer: string;
-    FModel: string;
+    FIPAddress: string;
+    FPort: Integer;
+    FMACAddress: string;
     FFirmwareVersion: string;
-    FProperties: TDevicePropertyList;
-    FMQTTClient: IMQTTClient;
-    FBaseTopic: string;
-    FOnStatusChange: TNotifyEvent;
-    FOnPropertyChange: TNotifyEvent;
-    FOnCommandReceived: TDeviceCommandEvent;
-
-    procedure HandleMQTTMessage(Sender: TObject; Topic: string; Payload: TBytes);
-    procedure HandleStatusChange;
-    procedure HandlePropertyChange;
-    procedure ParseTelemetryMessage(const Payload: string);
-
+    FLastSeen: TDateTime;
+    FLastHeartbeat: TDateTime;
+    FProperties: TStringList;
+    FBatteryLevel: Integer;
+    FSignalStrength: Integer;
   public
-    constructor Create(const AID, AName, ABaseTopic: string;
-                    ABrokerHost: string; ABrokerPort: Integer = 1883);
+    constructor Create;
     destructor Destroy; override;
 
-    // Implémentation de IDevice
-    function GetID: string;
-    function GetName: string;
-    procedure SetName(const Value: string);
-    function GetStatus: TDeviceStatus;
-    function GetCapabilities: TDeviceCapabilities;
-    function GetType: string;
-    function GetManufacturer: string;
-    function GetModel: string;
-    function GetFirmwareVersion: string;
+    procedure UpdateHeartbeat;
+    function IsOnline(TimeoutSeconds: Integer = 30): Boolean;
+    function GetProperty(const Name: string): string;
+    procedure SetProperty(const Name, Value: string);
 
-    function GetProperties: TDevicePropertyList;
-    function GetProperty(const PropertyName: string): TDeviceValue;
-    procedure SetProperty(const PropertyName: string; const Value: TDeviceValue);
-
-    function SupportsCommand(const Command: string): Boolean;
-    function ExecuteCommand(const Command: string;
-                          Params: TDevicePropertyList = nil): Boolean;
-
-    function Connect: Boolean;
-    procedure Disconnect;
-    function IsConnected: Boolean;
-
-    procedure SetOnStatusChange(const Handler: TNotifyEvent);
-    procedure SetOnPropertyChange(const Handler: TNotifyEvent);
-    procedure SetOnCommandReceived(const Handler: TDeviceCommandEvent);
+    property ID: string read FID write FID;
+    property Name: string read FName write FName;
+    property DeviceType: TDeviceType read FDeviceType write FDeviceType;
+    property Status: TDeviceStatus read FStatus write FStatus;
+    property IPAddress: string read FIPAddress write FIPAddress;
+    property Port: Integer read FPort write FPort;
+    property MACAddress: string read FMACAddress write FMACAddress;
+    property FirmwareVersion: string read FFirmwareVersion write FFirmwareVersion;
+    property LastSeen: TDateTime read FLastSeen write FLastSeen;
+    property LastHeartbeat: TDateTime read FLastHeartbeat;
+    property BatteryLevel: Integer read FBatteryLevel write FBatteryLevel;
+    property SignalStrength: Integer read FSignalStrength write FSignalStrength;
   end;
 
 implementation
 
-uses
-  System.JSON;
-
-// ... implémentation des méthodes ...
-
-end;
-```
-
-Pour l'implémentation des méthodes, voici un exemple de quelques-unes des plus importantes :
-
-```pascal
-constructor TMQTTDevice.Create(const AID, AName, ABaseTopic: string;
-                           ABrokerHost: string; ABrokerPort: Integer = 1883);
+constructor TIoTDevice.Create;
 begin
   inherited Create;
-  FID := AID;
-  FName := AName;
-  FBaseTopic := ABaseTopic;
-  FStatus := dsOffline;
-  FProperties := TDevicePropertyList.Create;
-
-  // Création du client MQTT
-  FMQTTClient := TMQTTClient.Create(ABrokerHost, ABrokerPort);
-  FMQTTClient.ClientID := 'DevMgr_' + AID + '_' + IntToStr(Random(1000));
-  FMQTTClient.OnPublishReceived := HandleMQTTMessage;
+  FID := '';
+  FName := '';
+  FStatus := dsUnknown;
+  FLastSeen := Now;
+  FLastHeartbeat := Now;
+  FProperties := TStringList.Create;
+  FProperties.Duplicates := dupIgnore;
+  FProperties.NameValueSeparator := '=';
+  FBatteryLevel := -1;  // -1 = non applicable
+  FSignalStrength := -1;
 end;
 
-destructor TMQTTDevice.Destroy;
+destructor TIoTDevice.Destroy;
 begin
-  if IsConnected then
-    Disconnect;
-
-  FMQTTClient := nil;
   FProperties.Free;
   inherited;
 end;
 
-function TMQTTDevice.Connect: Boolean;
+procedure TIoTDevice.UpdateHeartbeat;
 begin
-  Result := False;
-  try
-    FMQTTClient.Connect;
-
-    // S'abonner aux topics pertinents
-    FMQTTClient.Subscribe(FBaseTopic + '/status');
-    FMQTTClient.Subscribe(FBaseTopic + '/telemetry/#');
-    FMQTTClient.Subscribe(FBaseTopic + '/attributes');
-
-    // Demander les informations du dispositif
-    FMQTTClient.Publish(FBaseTopic + '/command',
-                      TEncoding.UTF8.GetBytes('{"cmd":"get_info"}'),
-                      TMQTTQosLevel.AtLeastOnce,
-                      False);
-
-    FStatus := dsOnline;
-    HandleStatusChange;
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      FStatus := dsError;
-      HandleStatusChange;
-    end;
-  end;
+  FLastHeartbeat := Now;
+  FLastSeen := Now;
+  FStatus := dsOnline;
 end;
 
-procedure TMQTTDevice.HandleMQTTMessage(Sender: TObject; Topic: string; Payload: TBytes);
-var
-  PayloadStr: string;
+function TIoTDevice.IsOnline(TimeoutSeconds: Integer): Boolean;
 begin
-  PayloadStr := TEncoding.UTF8.GetString(Payload);
+  Result := SecondsBetween(Now, FLastHeartbeat) <= TimeoutSeconds;
 
-  if Topic = FBaseTopic + '/status' then
-  begin
-    // Traiter le message de statut
-    if PayloadStr = 'online' then
-      FStatus := dsOnline
-    else if PayloadStr = 'offline' then
-      FStatus := dsOffline
-    else if PayloadStr = 'maintenance' then
-      FStatus := dsMaintenance
-    else
-      FStatus := dsError;
-
-    HandleStatusChange;
-  end
-  else if Topic.StartsWith(FBaseTopic + '/telemetry') then
-  begin
-    // Traiter les données de télémétrie
-    ParseTelemetryMessage(PayloadStr);
-    HandlePropertyChange;
-  end
-  else if Topic = FBaseTopic + '/attributes' then
-  begin
-    // Traiter les attributs du dispositif
-    var JSONObj := TJSONObject.ParseJSONValue(PayloadStr) as TJSONObject;
-    try
-      if Assigned(JSONObj) then
-      begin
-        if JSONObj.TryGetValue<string>('type', FDeviceType) then ;
-        if JSONObj.TryGetValue<string>('manufacturer', FManufacturer) then ;
-        if JSONObj.TryGetValue<string>('model', FModel) then ;
-        if JSONObj.TryGetValue<string>('firmware', FFirmwareVersion) then ;
-
-        // Déterminer les capacités
-        FCapabilities := [];
-        var CapArray := JSONObj.GetValue<TJSONArray>('capabilities');
-        if Assigned(CapArray) then
-        begin
-          for var I := 0 to CapArray.Count - 1 do
-          begin
-            var CapStr := CapArray.Items[I].Value;
-            if CapStr = 'sensor' then Include(FCapabilities, dcSensor);
-            if CapStr = 'actuator' then Include(FCapabilities, dcActuator);
-            if CapStr = 'config' then Include(FCapabilities, dcConfiguration);
-            if CapStr = 'firmware' then Include(FCapabilities, dcFirmwareUpdate);
-          end;
-        end;
-      end;
-    finally
-      JSONObj.Free;
-    end;
-  end;
+  if Result then
+    FStatus := dsOnline
+  else if FStatus = dsOnline then
+    FStatus := dsOffline;
 end;
 
-function TMQTTDevice.ExecuteCommand(const Command: string;
-                                Params: TDevicePropertyList = nil): Boolean;
-var
-  JSONObj: TJSONObject;
-  JSONParams: TJSONObject;
-  ParamPair: TPair<string, TDeviceValue>;
+function TIoTDevice.GetProperty(const Name: string): string;
 begin
-  Result := False;
-
-  if not IsConnected then
-    Exit;
-
-  JSONObj := TJSONObject.Create;
-  try
-    JSONObj.AddPair('cmd', Command);
-
-    if Assigned(Params) and (Params.Count > 0) then
-    begin
-      JSONParams := TJSONObject.Create;
-      for ParamPair in Params do
-      begin
-        case ParamPair.Value.ValueType of
-          dvtString: JSONParams.AddPair(ParamPair.Key, ParamPair.Value.StringValue);
-          dvtInteger: JSONParams.AddPair(ParamPair.Key, TJSONNumber.Create(ParamPair.Value.IntegerValue));
-          dvtFloat: JSONParams.AddPair(ParamPair.Key, TJSONNumber.Create(ParamPair.Value.FloatValue));
-          dvtBoolean: JSONParams.AddPair(ParamPair.Key, TJSONBool.Create(ParamPair.Value.BooleanValue));
-          // Pour les autres types, on pourrait convertir en string
-        end;
-      end;
-      JSONObj.AddPair('params', JSONParams);
-    end;
-
-    var JSONStr := JSONObj.ToString;
-    Result := FMQTTClient.Publish(FBaseTopic + '/command',
-                                TEncoding.UTF8.GetBytes(JSONStr),
-                                TMQTTQosLevel.AtLeastOnce,
-                                False);
-  finally
-    JSONObj.Free;
-  end;
+  Result := FProperties.Values[Name];
 end;
 
-procedure TMQTTDevice.ParseTelemetryMessage(const Payload: string);
-var
-  JSONObj: TJSONObject;
-  Value: TDeviceValue;
-  Pair: TJSONPair;
+procedure TIoTDevice.SetProperty(const Name, Value: string);
 begin
-  JSONObj := TJSONObject.ParseJSONValue(Payload) as TJSONObject;
-  if not Assigned(JSONObj) then
-    Exit;
-
-  try
-    for Pair in JSONObj do
-    begin
-      Value.Name := Pair.JsonString.Value;
-
-      if Pair.JsonValue is TJSONString then
-      begin
-        Value.ValueType := dvtString;
-        Value.StringValue := Pair.JsonValue.Value;
-      end
-      else if Pair.JsonValue is TJSONNumber then
-      begin
-        var NumValue := (Pair.JsonValue as TJSONNumber).AsDouble;
-        // Déterminer si c'est un entier ou un float
-        if Frac(NumValue) = 0 then
-        begin
-          Value.ValueType := dvtInteger;
-          Value.IntegerValue := Trunc(NumValue);
-        end
-        else
-        begin
-          Value.ValueType := dvtFloat;
-          Value.FloatValue := NumValue;
-        end;
-      end
-      else if Pair.JsonValue is TJSONBool then
-      begin
-        Value.ValueType := dvtBoolean;
-        Value.BooleanValue := (Pair.JsonValue as TJSONBool).AsBoolean;
-      end;
-
-      SetProperty(Value.Name, Value);
-    end;
-  finally
-    JSONObj.Free;
-  end;
+  FProperties.Values[Name] := Value;
 end;
+
+end.
 ```
 
-## Gestionnaire de dispositifs
+### Gestionnaire de dispositifs
 
-Maintenant que nous avons défini notre interface de dispositif et créé une implémentation pour MQTT, créons un gestionnaire de dispositifs qui peut gérer plusieurs dispositifs simultanément :
+Créons maintenant un gestionnaire central pour tous les dispositifs :
 
 ```pascal
 unit DeviceManager;
@@ -421,838 +158,876 @@ unit DeviceManager;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  DeviceInterfaces;
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  IoTDevice;
 
 type
-  TDeviceDiscoveryEvent = procedure(Sender: TObject; Device: IDevice) of object;
+  TDeviceEvent = procedure(Device: TIoTDevice) of object;
+  TDeviceErrorEvent = procedure(Device: TIoTDevice; const ErrorMessage: string) of object;
 
   TDeviceManager = class
   private
-    FDevices: TDictionary<string, IDevice>;
-    FOnDeviceDiscovered: TDeviceDiscoveryEvent;
-    FOnDeviceStatusChanged: TNotifyEvent;
+    FDevices: TObjectList<TIoTDevice>;
+    FMonitorThread: TThread;
+    FOnDeviceAdded: TDeviceEvent;
+    FOnDeviceRemoved: TDeviceEvent;
+    FOnDeviceStatusChanged: TDeviceEvent;
+    FOnDeviceError: TDeviceErrorEvent;
 
-    procedure HandleDeviceStatusChange(Sender: TObject);
-    procedure HandleDevicePropertyChange(Sender: TObject);
+    function FindDeviceByID(const ID: string): TIoTDevice;
+    procedure StartMonitoring;
+    procedure StopMonitoring;
   public
     constructor Create;
     destructor Destroy; override;
 
     // Gestion des dispositifs
-    procedure AddDevice(Device: IDevice);
-    procedure RemoveDevice(const DeviceID: string);
-    function GetDevice(const DeviceID: string): IDevice;
-    function GetDeviceByName(const DeviceName: string): IDevice;
-    function GetAllDevices: TArray<IDevice>;
-    function GetDevicesByType(const DeviceType: string): TArray<IDevice>;
-    function GetDevicesByStatus(Status: TDeviceStatus): TArray<IDevice>;
+    function AddDevice(Device: TIoTDevice): Boolean;
+    function RemoveDevice(const ID: string): Boolean;
+    function GetDevice(const ID: string): TIoTDevice;
+    function GetDeviceCount: Integer;
+    function GetAllDevices: TArray<TIoTDevice>;
 
-    // Découverte de dispositifs
-    procedure StartDiscovery(const NetworkType: string = '');
-    procedure StopDiscovery;
+    // Filtres et recherche
+    function GetDevicesByType(DeviceType: TDeviceType): TArray<TIoTDevice>;
+    function GetDevicesByStatus(Status: TDeviceStatus): TArray<TIoTDevice>;
+    function GetOnlineDevices: TArray<TIoTDevice>;
 
-    // Commandes groupées
-    function ExecuteCommandOnDevices(const DeviceIDs: TArray<string>;
-                                  const Command: string;
-                                  Params: TDevicePropertyList = nil): Boolean;
+    // Opérations groupées
+    procedure UpdateAllDeviceStatus;
+    procedure SendCommandToAll(const Command: string);
+    procedure SendCommandToType(DeviceType: TDeviceType; const Command: string);
 
     // Événements
-    property OnDeviceDiscovered: TDeviceDiscoveryEvent read FOnDeviceDiscovered
-                                                     write FOnDeviceDiscovered;
-    property OnDeviceStatusChanged: TNotifyEvent read FOnDeviceStatusChanged
-                                               write FOnDeviceStatusChanged;
+    property OnDeviceAdded: TDeviceEvent read FOnDeviceAdded write FOnDeviceAdded;
+    property OnDeviceRemoved: TDeviceEvent read FOnDeviceRemoved write FOnDeviceRemoved;
+    property OnDeviceStatusChanged: TDeviceEvent read FOnDeviceStatusChanged write FOnDeviceStatusChanged;
+    property OnDeviceError: TDeviceErrorEvent read FOnDeviceError write FOnDeviceError;
   end;
 
 implementation
 
-// ... implémentation des méthodes ...
-
-end;
-```
-
-Voici l'implémentation de quelques méthodes importantes :
-
-```pascal
 constructor TDeviceManager.Create;
 begin
   inherited Create;
-  FDevices := TDictionary<string, IDevice>.Create;
+  FDevices := TObjectList<TIoTDevice>.Create(True);  // Owns objects
+  StartMonitoring;
 end;
 
 destructor TDeviceManager.Destroy;
 begin
-  // Note: Les devices gérés ne sont pas libérés automatiquement car ce sont des interfaces
+  StopMonitoring;
   FDevices.Free;
   inherited;
 end;
 
-procedure TDeviceManager.AddDevice(Device: IDevice);
+function TDeviceManager.FindDeviceByID(const ID: string): TIoTDevice;
+var
+  Device: TIoTDevice;
 begin
-  if not FDevices.ContainsKey(Device.ID) then
+  Result := nil;
+  for Device in FDevices do
   begin
-    // Ajouter le dispositif à la collection
-    FDevices.Add(Device.ID, Device);
-
-    // Configurer les gestionnaires d'événements
-    Device.SetOnStatusChange(HandleDeviceStatusChange);
-    Device.SetOnPropertyChange(HandleDevicePropertyChange);
-
-    // Tenter de se connecter au dispositif
-    Device.Connect;
+    if SameText(Device.ID, ID) then
+    begin
+      Result := Device;
+      Break;
+    end;
   end;
 end;
 
-procedure TDeviceManager.HandleDeviceStatusChange(Sender: TObject);
-var
-  Device: IDevice;
+function TDeviceManager.AddDevice(Device: TIoTDevice): Boolean;
 begin
-  if Sender is TInterfacedObject then
-  begin
-    Device := Sender as IDevice;
-    // Ici vous pourriez aussi journaliser le changement de statut
+  Result := False;
 
-    if Assigned(FOnDeviceStatusChanged) then
-      FOnDeviceStatusChanged(Self);
+  // Vérifier si le dispositif existe déjà
+  if FindDeviceByID(Device.ID) <> nil then
+    Exit;
+
+  FDevices.Add(Device);
+  Result := True;
+
+  // Déclencher l'événement
+  if Assigned(FOnDeviceAdded) then
+    FOnDeviceAdded(Device);
+end;
+
+function TDeviceManager.RemoveDevice(const ID: string): Boolean;
+var
+  Device: TIoTDevice;
+begin
+  Device := FindDeviceByID(ID);
+  Result := Device <> nil;
+
+  if Result then
+  begin
+    // Déclencher l'événement avant de supprimer
+    if Assigned(FOnDeviceRemoved) then
+      FOnDeviceRemoved(Device);
+
+    FDevices.Remove(Device);
   end;
 end;
 
-function TDeviceManager.GetDevicesByStatus(Status: TDeviceStatus): TArray<IDevice>;
-var
-  ResultList: TList<IDevice>;
-  Device: IDevice;
+function TDeviceManager.GetDevice(const ID: string): TIoTDevice;
 begin
-  ResultList := TList<IDevice>.Create;
+  Result := FindDeviceByID(ID);
+end;
+
+function TDeviceManager.GetDeviceCount: Integer;
+begin
+  Result := FDevices.Count;
+end;
+
+function TDeviceManager.GetAllDevices: TArray<TIoTDevice>;
+begin
+  Result := FDevices.ToArray;
+end;
+
+function TDeviceManager.GetDevicesByType(DeviceType: TDeviceType): TArray<TIoTDevice>;
+var
+  Device: TIoTDevice;
+  List: TList<TIoTDevice>;
+begin
+  List := TList<TIoTDevice>.Create;
   try
-    for Device in FDevices.Values do
+    for Device in FDevices do
+    begin
+      if Device.DeviceType = DeviceType then
+        List.Add(Device);
+    end;
+    Result := List.ToArray;
+  finally
+    List.Free;
+  end;
+end;
+
+function TDeviceManager.GetDevicesByStatus(Status: TDeviceStatus): TArray<TIoTDevice>;
+var
+  Device: TIoTDevice;
+  List: TList<TIoTDevice>;
+begin
+  List := TList<TIoTDevice>.Create;
+  try
+    for Device in FDevices do
     begin
       if Device.Status = Status then
-        ResultList.Add(Device);
+        List.Add(Device);
     end;
-
-    Result := ResultList.ToArray;
+    Result := List.ToArray;
   finally
-    ResultList.Free;
+    List.Free;
   end;
 end;
 
-function TDeviceManager.ExecuteCommandOnDevices(const DeviceIDs: TArray<string>;
-                                            const Command: string;
-                                            Params: TDevicePropertyList = nil): Boolean;
+function TDeviceManager.GetOnlineDevices: TArray<TIoTDevice>;
 var
-  Device: IDevice;
-  DeviceID: string;
-  AllSuccessful: Boolean;
+  Device: TIoTDevice;
+  List: TList<TIoTDevice>;
 begin
-  AllSuccessful := True;
-
-  for DeviceID in DeviceIDs do
-  begin
-    if FDevices.TryGetValue(DeviceID, Device) then
+  List := TList<TIoTDevice>.Create;
+  try
+    for Device in FDevices do
     begin
-      if not Device.ExecuteCommand(Command, Params) then
-        AllSuccessful := False;
-    end
-    else
-      AllSuccessful := False;
+      if Device.IsOnline then
+        List.Add(Device);
+    end;
+    Result := List.ToArray;
+  finally
+    List.Free;
   end;
-
-  Result := AllSuccessful;
 end;
-```
 
-## Implémentation de la découverte automatique
-
-La découverte de dispositifs est une fonctionnalité clé d'un système de gestion IoT. Voici comment vous pourriez implémenter une découverte MQTT simple :
-
-```pascal
-procedure TDeviceManager.StartDiscoveryMQTT(const BrokerHost: string; BrokerPort: Integer = 1883);
+procedure TDeviceManager.UpdateAllDeviceStatus;
 var
-  Client: IMQTTClient;
-
-  procedure HandleDiscoveryMessage(Sender: TObject; Topic: string; Payload: TBytes);
-  var
-    PayloadStr: string;
-    JSONObj: TJSONObject;
-    DeviceID, DeviceName, DeviceBaseTopic: string;
-    NewDevice: IDevice;
+  Device: TIoTDevice;
+  OldStatus: TDeviceStatus;
+begin
+  for Device in FDevices do
   begin
-    PayloadStr := TEncoding.UTF8.GetString(Payload);
-    JSONObj := TJSONObject.ParseJSONValue(PayloadStr) as TJSONObject;
+    OldStatus := Device.Status;
 
-    try
-      if Assigned(JSONObj) and
-         JSONObj.TryGetValue<string>('id', DeviceID) and
-         JSONObj.TryGetValue<string>('name', DeviceName) and
-         JSONObj.TryGetValue<string>('base_topic', DeviceBaseTopic) then
-      begin
-        // Vérifier si on connaît déjà ce dispositif
-        if not FDevices.ContainsKey(DeviceID) then
+    // Vérifier si le dispositif est toujours en ligne
+    Device.IsOnline(30);  // Timeout de 30 secondes
+
+    // Si le statut a changé, déclencher l'événement
+    if (OldStatus <> Device.Status) and Assigned(FOnDeviceStatusChanged) then
+      FOnDeviceStatusChanged(Device);
+  end;
+end;
+
+procedure TDeviceManager.SendCommandToAll(const Command: string);
+var
+  Device: TIoTDevice;
+begin
+  for Device in FDevices do
+  begin
+    if Device.IsOnline then
+    begin
+      try
+        // Envoyer la commande au dispositif
+        // Implémentation dépend du protocole utilisé
+      except
+        on E: Exception do
         begin
-          // Créer un nouveau dispositif MQTT
-          NewDevice := TMQTTDevice.Create(DeviceID, DeviceName,
-                                       DeviceBaseTopic, BrokerHost, BrokerPort);
-
-          // Ajouter au gestionnaire
-          AddDevice(NewDevice);
-
-          // Déclencher l'événement de découverte
-          if Assigned(FOnDeviceDiscovered) then
-            FOnDeviceDiscovered(Self, NewDevice);
+          if Assigned(FOnDeviceError) then
+            FOnDeviceError(Device, E.Message);
         end;
       end;
-    finally
-      JSONObj.Free;
-    end;
-  end;
-
-begin
-  // Créer un client MQTT spécifique pour la découverte
-  Client := TMQTTClient.Create(BrokerHost, BrokerPort);
-  Client.ClientID := 'DeviceDiscovery_' + IntToStr(Random(1000));
-  Client.OnPublishReceived := HandleDiscoveryMessage;
-
-  try
-    Client.Connect;
-
-    // S'abonner au topic de découverte
-    Client.Subscribe('discovery/announce');
-
-    // Envoyer une demande de découverte
-    Client.Publish('discovery/request',
-                 TEncoding.UTF8.GetBytes('{"action":"announce"}'),
-                 TMQTTQosLevel.AtMostOnce,
-                 False);
-  except
-    on E: Exception do
-    begin
-      // Gérer les erreurs de découverte
     end;
   end;
 end;
-```
 
-## Interface utilisateur pour la gestion de dispositifs
-
-Créons maintenant une interface utilisateur simple mais efficace pour notre gestionnaire de dispositifs :
-
-```pascal
-unit MainForm;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  Vcl.ExtCtrls, DeviceManager, DeviceInterfaces;
-
-type
-  TfrmDeviceManager = class(TForm)
-    pgcMain: TPageControl;
-    tabDevices: TTabSheet;
-    tabDashboard: TTabSheet;
-    tabSettings: TTabSheet;
-    lvDevices: TListView;
-    pnlDeviceActions: TPanel;
-    btnAddDevice: TButton;
-    btnRemoveDevice: TButton;
-    btnDiscoverDevices: TButton;
-    btnRefresh: TButton;
-    splVertical: TSplitter;
-    pnlDeviceDetails: TPanel;
-    lblDeviceName: TLabel;
-    edtDeviceName: TEdit;
-    lblDeviceType: TLabel;
-    lblDeviceTypeValue: TLabel;
-    lblStatus: TLabel;
-    lblStatusValue: TLabel;
-    lblProperties: TLabel;
-    lvProperties: TListView;
-    grpCommands: TGroupBox;
-    cmbCommand: TComboBox;
-    btnExecute: TButton;
-    mmoLog: TMemo;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnAddDeviceClick(Sender: TObject);
-    procedure btnRemoveDeviceClick(Sender: TObject);
-    procedure btnDiscoverDevicesClick(Sender: TObject);
-    procedure lvDevicesSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-    procedure btnExecuteClick(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
-  private
-    FDeviceManager: TDeviceManager;
-    FSelectedDevice: IDevice;
-
-    procedure HandleDeviceDiscovered(Sender: TObject; Device: IDevice);
-    procedure HandleDeviceStatusChanged(Sender: TObject);
-    procedure UpdateDeviceList;
-    procedure UpdateDeviceDetails;
-  public
-    { Public declarations }
-  end;
-
+procedure TDeviceManager.SendCommandToType(DeviceType: TDeviceType; const Command: string);
 var
-  frmDeviceManager: TfrmDeviceManager;
+  Device: TIoTDevice;
+begin
+  for Device in FDevices do
+  begin
+    if (Device.DeviceType = DeviceType) and Device.IsOnline then
+    begin
+      try
+        // Envoyer la commande
+      except
+        on E: Exception do
+        begin
+          if Assigned(FOnDeviceError) then
+            FOnDeviceError(Device, E.Message);
+        end;
+      end;
+    end;
+  end;
+end;
 
-implementation
+procedure TDeviceManager.StartMonitoring;
+begin
+  FMonitorThread := TThread.CreateAnonymousThread(procedure
+  begin
+    while not TThread.CurrentThread.CheckTerminated do
+    begin
+      TThread.Synchronize(nil, procedure
+      begin
+        UpdateAllDeviceStatus;
+      end);
 
-uses
-  MQTTDevice, AddDeviceForm;
+      Sleep(5000);  // Vérifier toutes les 5 secondes
+    end;
+  end);
 
-{$R *.dfm}
+  FMonitorThread.FreeOnTerminate := False;
+  FMonitorThread.Start;
+end;
 
-// ... implémentation des méthodes ...
+procedure TDeviceManager.StopMonitoring;
+begin
+  if Assigned(FMonitorThread) then
+  begin
+    FMonitorThread.Terminate;
+    FMonitorThread.WaitFor;
+    FMonitorThread.Free;
+    FMonitorThread := nil;
+  end;
+end;
 
 end.
 ```
 
-Voici quelques méthodes clés de l'interface utilisateur :
+## Découverte automatique de dispositifs
+
+### Méthodes de découverte
+
+#### 1. Scan réseau (IP Scan)
+
+Balayer une plage d'adresses IP pour détecter les dispositifs :
 
 ```pascal
-procedure TfrmDeviceManager.FormCreate(Sender: TObject);
-begin
-  FDeviceManager := TDeviceManager.Create;
-  FDeviceManager.OnDeviceDiscovered := HandleDeviceDiscovered;
-  FDeviceManager.OnDeviceStatusChanged := HandleDeviceStatusChanged;
+unit NetworkScanner;
 
-  UpdateDeviceList;
+interface
+
+uses
+  System.SysUtils, System.Classes, IdTCPClient, IdICMPClient;
+
+type
+  TDeviceFoundEvent = procedure(const IPAddress: string; const DeviceInfo: string) of object;
+
+  TNetworkScanner = class
+  private
+    FBaseIP: string;
+    FStartRange: Integer;
+    FEndRange: Integer;
+    FPort: Integer;
+    FOnDeviceFound: TDeviceFoundEvent;
+    FScanning: Boolean;
+
+    procedure ScanIP(const IPAddress: string);
+  public
+    constructor Create(const BaseIP: string; StartRange, EndRange: Integer; Port: Integer = 80);
+
+    procedure StartScan;
+    procedure StopScan;
+
+    property OnDeviceFound: TDeviceFoundEvent read FOnDeviceFound write FOnDeviceFound;
+    property Scanning: Boolean read FScanning;
+  end;
+
+implementation
+
+constructor TNetworkScanner.Create(const BaseIP: string; StartRange, EndRange: Integer; Port: Integer);
+begin
+  inherited Create;
+  FBaseIP := BaseIP;
+  FStartRange := StartRange;
+  FEndRange := EndRange;
+  FPort := Port;
+  FScanning := False;
 end;
 
-procedure TfrmDeviceManager.HandleDeviceDiscovered(Sender: TObject; Device: IDevice);
-begin
-  // Journaliser la découverte
-  mmoLog.Lines.Add(Format('Dispositif découvert: %s (%s)', [Device.Name, Device.ID]));
-
-  // Mettre à jour la liste des dispositifs
-  UpdateDeviceList;
-end;
-
-procedure TfrmDeviceManager.UpdateDeviceList;
+procedure TNetworkScanner.ScanIP(const IPAddress: string);
 var
-  Devices: TArray<IDevice>;
-  Device: IDevice;
-  Item: TListItem;
-  StatusText: string;
+  TCPClient: TIdTCPClient;
+  DeviceInfo: string;
 begin
-  lvDevices.Items.BeginUpdate;
+  TCPClient := TIdTCPClient.Create(nil);
   try
-    lvDevices.Items.Clear;
+    TCPClient.Host := IPAddress;
+    TCPClient.Port := FPort;
+    TCPClient.ConnectTimeout := 1000;  // 1 seconde
 
-    Devices := FDeviceManager.GetAllDevices;
-    for Device in Devices do
-    begin
-      Item := lvDevices.Items.Add;
-      Item.Caption := Device.Name;
-      Item.Data := Pointer(Device); // Attention: ne fonctionne pas directement avec des interfaces
+    try
+      TCPClient.Connect;
 
-      // Convertir le statut en texte
-      case Device.Status of
-        dsOffline: StatusText := 'Hors ligne';
-        dsOnline: StatusText := 'En ligne';
-        dsError: StatusText := 'Erreur';
-        dsMaintenance: StatusText := 'Maintenance';
+      if TCPClient.Connected then
+      begin
+        // Dispositif trouvé, tenter d'obtenir des informations
+        // Envoyer une requête d'identification
+        TCPClient.IOHandler.WriteLn('INFO');
+        DeviceInfo := TCPClient.IOHandler.ReadLn;
+
+        if Assigned(FOnDeviceFound) then
+          FOnDeviceFound(IPAddress, DeviceInfo);
+
+        TCPClient.Disconnect;
       end;
-
-      Item.SubItems.Add(StatusText);
-      Item.SubItems.Add(Device.DeviceType);
-      Item.SubItems.Add(Device.Manufacturer);
-      Item.SubItems.Add(Device.Model);
+    except
+      // Pas de dispositif à cette adresse
     end;
   finally
-    lvDevices.Items.EndUpdate;
+    TCPClient.Free;
   end;
 end;
 
-procedure TfrmDeviceManager.lvDevicesSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+procedure TNetworkScanner.StartScan;
 var
-  Devices: TArray<IDevice>;
   I: Integer;
+  IPAddress: string;
 begin
-  if Selected and Assigned(Item) then
+  if FScanning then Exit;
+
+  FScanning := True;
+
+  TThread.CreateAnonymousThread(procedure
+  var
+    J: Integer;
   begin
-    // Rechercher le dispositif par son nom (car on ne peut pas stocker l'interface directement)
-    Devices := FDeviceManager.GetAllDevices;
-    for I := 0 to High(Devices) do
+    for J := FStartRange to FEndRange do
     begin
-      if Devices[I].Name = Item.Caption then
+      if not FScanning then Break;
+
+      IPAddress := Format('%s.%d', [FBaseIP, J]);
+
+      TThread.Synchronize(nil, procedure
       begin
-        FSelectedDevice := Devices[I];
-        UpdateDeviceDetails;
-        Break;
-      end;
+        ScanIP(IPAddress);
+      end);
     end;
-  end
-  else
-    FSelectedDevice := nil;
+
+    FScanning := False;
+  end).Start;
 end;
 
-procedure TfrmDeviceManager.UpdateDeviceDetails;
-var
-  PropertyPair: TPair<string, TDeviceValue>;
-  Item: TListItem;
-  PropValue: string;
+procedure TNetworkScanner.StopScan;
 begin
-  if not Assigned(FSelectedDevice) then
-  begin
-    // Effacer les détails
-    edtDeviceName.Text := '';
-    lblDeviceTypeValue.Caption := '';
-    lblStatusValue.Caption := '';
-    lvProperties.Items.Clear;
-    Exit;
-  end;
-
-  // Mettre à jour les informations de base
-  edtDeviceName.Text := FSelectedDevice.Name;
-  lblDeviceTypeValue.Caption := FSelectedDevice.DeviceType;
-
-  // Statut
-  case FSelectedDevice.Status of
-    dsOffline: lblStatusValue.Caption := 'Hors ligne';
-    dsOnline: lblStatusValue.Caption := 'En ligne';
-    dsError: lblStatusValue.Caption := 'Erreur';
-    dsMaintenance: lblStatusValue.Caption := 'Maintenance';
-  end;
-
-  // Propriétés
-  lvProperties.Items.BeginUpdate;
-  try
-    lvProperties.Items.Clear;
-
-    for PropertyPair in FSelectedDevice.Properties do
-    begin
-      Item := lvProperties.Items.Add;
-      Item.Caption := PropertyPair.Key;
-
-      // Convertir la valeur en chaîne selon son type
-      case PropertyPair.Value.ValueType of
-        dvtString: PropValue := PropertyPair.Value.StringValue;
-        dvtInteger: PropValue := IntToStr(PropertyPair.Value.IntegerValue);
-        dvtFloat: PropValue := FormatFloat('0.##', PropertyPair.Value.FloatValue);
-        dvtBoolean: PropValue := BoolToStr(PropertyPair.Value.BooleanValue, True);
-        dvtDateTime: PropValue := DateTimeToStr(PropertyPair.Value.DateTimeValue);
-        dvtBinary: PropValue := Format('<%d bytes>', [Length(PropertyPair.Value.BinaryValue)]);
-      end;
-
-      Item.SubItems.Add(PropValue);
-    end;
-  finally
-    lvProperties.Items.EndUpdate;
-  end;
-
-  // Commandes disponibles
-  cmbCommand.Items.Clear;
-
-  if Assigned(FSelectedDevice) then
-  begin
-    // Ajouter les commandes standard
-    cmbCommand.Items.Add('refresh');
-    cmbCommand.Items.Add('reboot');
-
-    // Ajouter des commandes spécifiques selon les capacités
-    if dcActuator in FSelectedDevice.Capabilities then
-    begin
-      cmbCommand.Items.Add('turn_on');
-      cmbCommand.Items.Add('turn_off');
-      cmbCommand.Items.Add('toggle');
-    end;
-
-    if dcConfiguration in FSelectedDevice.Capabilities then
-    begin
-      cmbCommand.Items.Add('get_config');
-      cmbCommand.Items.Add('set_config');
-    end;
-
-    if dcFirmwareUpdate in FSelectedDevice.Capabilities then
-    begin
-      cmbCommand.Items.Add('check_update');
-      cmbCommand.Items.Add('start_update');
-    end;
-  end;
-
-  if cmbCommand.Items.Count > 0 then
-    cmbCommand.ItemIndex := 0;
+  FScanning := False;
 end;
 
-procedure TfrmDeviceManager.btnExecuteClick(Sender: TObject);
-var
-  Command: string;
-  Success: Boolean;
-begin
-  if not Assigned(FSelectedDevice) then
-  begin
-    ShowMessage('Veuillez sélectionner un dispositif');
-    Exit;
-  end;
-
-  if cmbCommand.ItemIndex < 0 then
-  begin
-    ShowMessage('Veuillez sélectionner une commande');
-    Exit;
-  end;
-
-  Command := cmbCommand.Items[cmbCommand.ItemIndex];
-
-  // Pour certaines commandes, on pourrait ajouter une boîte de dialogue pour les paramètres
-  Success := FSelectedDevice.ExecuteCommand(Command);
-
-  if Success then
-    mmoLog.Lines.Add(Format('Commande "%s" envoyée avec succès à %s', [Command, FSelectedDevice.Name]))
-  else
-    mmoLog.Lines.Add(Format('Échec de l''envoi de la commande "%s" à %s', [Command, FSelectedDevice.Name]));
-end;
+end.
 ```
 
-## Ajout manuel de dispositifs
+#### 2. Découverte mDNS/Bonjour
 
-Pour ajouter manuellement des dispositifs, nous avons besoin d'un formulaire dédié :
+mDNS (Multicast DNS) permet aux dispositifs de s'annoncer automatiquement :
 
 ```pascal
-unit AddDeviceForm;
+unit MDNSDiscovery;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  DeviceInterfaces, MQTTDevice;
+  System.SysUtils, System.Classes;
 
 type
-  TfrmAddDevice = class(TForm)
-    lblDeviceType: TLabel;
-    cmbDeviceType: TComboBox;
-    lblDeviceID: TLabel;
-    edtDeviceID: TEdit;
-    lblDeviceName: TLabel;
-    edtDeviceName: TEdit;
-    grpMQTTSettings: TGroupBox;
-    lblBrokerHost: TLabel;
-    edtBrokerHost: TEdit;
-    lblBrokerPort: TLabel;
-    edtBrokerPort: TEdit;
-    lblBaseTopic: TLabel;
-    edtBaseTopic: TEdit;
-    btnCancel: TButton;
-    btnAdd: TButton;
+  TServiceFoundEvent = procedure(const ServiceName, IPAddress: string; Port: Integer) of object;
+
+  TMDNSDiscovery = class
+  private
+    FServiceType: string;
+    FOnServiceFound: TServiceFoundEvent;
+
+    procedure ProcessMDNSResponse(const Response: TBytes);
+  public
+    constructor Create(const ServiceType: string);
+
+    procedure StartDiscovery;
+    procedure StopDiscovery;
+
+    property OnServiceFound: TServiceFoundEvent read FOnServiceFound write FOnServiceFound;
+  end;
+
+implementation
+
+// Note: Une implémentation complète de mDNS nécessiterait
+// une bibliothèque spécialisée ou l'utilisation de l'API système
+
+constructor TMDNSDiscovery.Create(const ServiceType: string);
+begin
+  inherited Create;
+  FServiceType := ServiceType;  // Ex: "_http._tcp.local."
+end;
+
+procedure TMDNSDiscovery.StartDiscovery;
+begin
+  // Envoyer une requête mDNS multicast
+  // Écouter les réponses
+  // Parser les réponses et déclencher OnServiceFound
+end;
+
+procedure TMDNSDiscovery.StopDiscovery;
+begin
+  // Arrêter l'écoute
+end;
+
+procedure TMDNSDiscovery.ProcessMDNSResponse(const Response: TBytes);
+begin
+  // Parser la réponse mDNS
+  // Extraire le nom du service, l'IP, le port
+  // Déclencher l'événement OnServiceFound
+end;
+
+end.
+```
+
+#### 3. Découverte MQTT (via topics spécifiques)
+
+Les dispositifs peuvent s'annoncer via MQTT :
+
+```pascal
+procedure TDeviceManager.DiscoverViaMQTT(MQTTClient: TMQTTClient);
+begin
+  // S'abonner au topic de découverte
+  MQTTClient.Subscribe('devices/announce');
+
+  // Publier une requête de découverte
+  MQTTClient.Publish('devices/discovery/request', 'DISCOVER', 0);
+end;
+
+// Les dispositifs répondent en publiant leurs informations
+// sur devices/announce
+```
+
+### Interface de découverte
+
+```pascal
+procedure TFormMain.ButtonScanClick(Sender: TObject);
+var
+  Scanner: TNetworkScanner;
+begin
+  ListBoxDevices.Clear;
+  ButtonScan.Enabled := False;
+
+  Scanner := TNetworkScanner.Create('192.168.1', 1, 254, 80);
+  try
+    Scanner.OnDeviceFound := procedure(const IPAddress, DeviceInfo: string)
+    begin
+      ListBoxDevices.Items.Add(Format('%s - %s', [IPAddress, DeviceInfo]));
+
+      // Créer et ajouter le dispositif au gestionnaire
+      var Device := TIoTDevice.Create;
+      Device.ID := IPAddress;
+      Device.Name := DeviceInfo;
+      Device.IPAddress := IPAddress;
+      Device.Status := dsOnline;
+
+      DeviceManager.AddDevice(Device);
+    end;
+
+    Scanner.StartScan;
+
+    // Attendre la fin du scan
+    while Scanner.Scanning do
+    begin
+      Application.ProcessMessages;
+      Sleep(100);
+    end;
+  finally
+    Scanner.Free;
+    ButtonScan.Enabled := True;
+  end;
+
+  ShowMessage(Format('%d dispositifs trouvés', [ListBoxDevices.Items.Count]));
+end;
+```
+
+## Visualisation et supervision
+
+### Interface de tableau de bord
+
+Créons une interface pour visualiser tous les dispositifs :
+
+```pascal
+unit DashboardForm;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls,
+  Vcl.Forms, Vcl.Grids, Vcl.StdCtrls, Vcl.ExtCtrls,
+  DeviceManager, IoTDevice;
+
+type
+  TFormDashboard = class(TForm)
+    StringGridDevices: TStringGrid;
+    PanelTop: TPanel;
+    ButtonRefresh: TButton;
+    LabelOnline: TLabel;
+    LabelOffline: TLabel;
+    LabelTotal: TLabel;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
-    procedure cmbDeviceTypeChange(Sender: TObject);
-    procedure btnAddClick(Sender: TObject);
+    procedure ButtonRefreshClick(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure StringGridDevicesDblClick(Sender: TObject);
   private
-    FDevice: IDevice;
+    FDeviceManager: TDeviceManager;
+    procedure UpdateDeviceGrid;
+    procedure UpdateStatistics;
+    procedure ShowDeviceDetails(Device: TIoTDevice);
   public
-    property Device: IDevice read FDevice;
+    property DeviceManager: TDeviceManager read FDeviceManager write FDeviceManager;
   end;
 
 implementation
 
 {$R *.dfm}
 
-procedure TfrmAddDevice.FormCreate(Sender: TObject);
+procedure TFormDashboard.FormCreate(Sender: TObject);
 begin
-  // Initialiser les types de dispositifs disponibles
-  cmbDeviceType.Items.Clear;
-  cmbDeviceType.Items.Add('MQTT');
-  cmbDeviceType.Items.Add('Serial');
-  cmbDeviceType.Items.Add('Bluetooth');
-  cmbDeviceType.Items.Add('CoAP');
+  // Configurer la grille
+  StringGridDevices.ColCount := 7;
+  StringGridDevices.RowCount := 1;
 
-  // Type par défaut
-  cmbDeviceType.ItemIndex := 0;
-  cmbDeviceTypeChange(nil);
+  StringGridDevices.Cells[0, 0] := 'État';
+  StringGridDevices.Cells[1, 0] := 'ID';
+  StringGridDevices.Cells[2, 0] := 'Nom';
+  StringGridDevices.Cells[3, 0] := 'Type';
+  StringGridDevices.Cells[4, 0] := 'IP';
+  StringGridDevices.Cells[5, 0] := 'Dernière activité';
+  StringGridDevices.Cells[6, 0] := 'Batterie';
 
-  // Valeurs par défaut
-  edtBrokerHost.Text := 'localhost';
-  edtBrokerPort.Text := '1883';
+  StringGridDevices.ColWidths[0] := 50;
+  StringGridDevices.ColWidths[1] := 150;
+  StringGridDevices.ColWidths[2] := 200;
+  StringGridDevices.ColWidths[3] := 100;
+  StringGridDevices.ColWidths[4] := 120;
+  StringGridDevices.ColWidths[5] := 150;
+  StringGridDevices.ColWidths[6] := 80;
 
-  // Générer un ID unique par défaut
-  edtDeviceID.Text := 'device_' + IntToStr(Random(10000));
+  Timer1.Enabled := True;
 end;
 
-procedure TfrmAddDevice.cmbDeviceTypeChange(Sender: TObject);
-begin
-  // Afficher/masquer les paramètres selon le type de dispositif
-  case cmbDeviceType.ItemIndex of
-    0: // MQTT
-      begin
-        grpMQTTSettings.Visible := True;
-      end;
-    // Ajouter des cas pour d'autres types de dispositifs
-  end;
-end;
-
-procedure TfrmAddDevice.btnAddClick(Sender: TObject);
+procedure TFormDashboard.UpdateDeviceGrid;
 var
-  DeviceID, DeviceName, BrokerHost, BaseTopic: string;
-  BrokerPort: Integer;
+  Devices: TArray<TIoTDevice>;
+  Device: TIoTDevice;
+  Row: Integer;
+  StatusText, TypeText: string;
 begin
-  // Validation de base
-  DeviceID := Trim(edtDeviceID.Text);
-  DeviceName := Trim(edtDeviceName.Text);
+  if not Assigned(FDeviceManager) then Exit;
 
-  if (DeviceID = '') or (DeviceName = '') then
+  Devices := FDeviceManager.GetAllDevices;
+
+  // Ajuster le nombre de lignes
+  StringGridDevices.RowCount := Length(Devices) + 1;
+
+  Row := 1;
+  for Device in Devices do
   begin
-    ShowMessage('Veuillez remplir l''ID et le nom du dispositif');
-    Exit;
-  end;
-
-  case cmbDeviceType.ItemIndex of
-    0: // MQTT
-      begin
-        BrokerHost := Trim(edtBrokerHost.Text);
-        BaseTopic := Trim(edtBaseTopic.Text);
-
-        if (BrokerHost = '') or (BaseTopic = '') then
-        begin
-          ShowMessage('Veuillez remplir tous les champs MQTT');
-          Exit;
-        end;
-
-        if not TryStrToInt(edtBrokerPort.Text, BrokerPort) then
-        begin
-          ShowMessage('Le port doit être un nombre');
-          Exit;
-        end;
-
-        // Créer le dispositif MQTT
-        FDevice := TMQTTDevice.Create(DeviceID, DeviceName, BaseTopic, BrokerHost, BrokerPort);
-      end;
-    // Autres types de dispositifs
-  end;
-
-  if Assigned(FDevice) then
-    ModalResult := mrOk
-  else
-    ShowMessage('Erreur lors de la création du dispositif');
-end;
-```
-
-Et voici comment utiliser ce formulaire dans notre application principale :
-
-```pascal
-procedure TfrmDeviceManager.btnAddDeviceClick(Sender: TObject);
-var
-  AddForm: TfrmAddDevice;
-begin
-  AddForm := TfrmAddDevice.Create(Self);
-  try
-    if AddForm.ShowModal = mrOk then
-    begin
-      // Ajouter le nouveau dispositif au gestionnaire
-      FDeviceManager.AddDevice(AddForm.Device);
-
-      // Mettre à jour la liste
-      UpdateDeviceList;
-
-      mmoLog.Lines.Add('Dispositif ajouté: ' + AddForm.Device.Name);
+    // Statut avec couleur
+    case Device.Status of
+      dsOnline: StatusText := '🟢';
+      dsOffline: StatusText := '🔴';
+      dsError: StatusText := '⚠️';
+      dsMaintenance: StatusText := '🔧';
+      else StatusText := '❓';
     end;
-  finally
-    AddForm.Free;
+
+    // Type
+    case Device.DeviceType of
+      dtSensor: TypeText := 'Capteur';
+      dtActuator: TypeText := 'Actionneur';
+      dtGateway: TypeText := 'Passerelle';
+      dtController: TypeText := 'Contrôleur';
+    end;
+
+    StringGridDevices.Cells[0, Row] := StatusText;
+    StringGridDevices.Cells[1, Row] := Device.ID;
+    StringGridDevices.Cells[2, Row] := Device.Name;
+    StringGridDevices.Cells[3, Row] := TypeText;
+    StringGridDevices.Cells[4, Row] := Device.IPAddress;
+    StringGridDevices.Cells[5, Row] := FormatDateTime('dd/mm/yyyy hh:nn:ss', Device.LastSeen);
+
+    if Device.BatteryLevel >= 0 then
+      StringGridDevices.Cells[6, Row] := Format('%d%%', [Device.BatteryLevel])
+    else
+      StringGridDevices.Cells[6, Row] := 'N/A';
+
+    Inc(Row);
   end;
+
+  UpdateStatistics;
 end;
+
+procedure TFormDashboard.UpdateStatistics;
+var
+  Total, Online, Offline: Integer;
+begin
+  if not Assigned(FDeviceManager) then Exit;
+
+  Total := FDeviceManager.GetDeviceCount;
+  Online := Length(FDeviceManager.GetOnlineDevices);
+  Offline := Length(FDeviceManager.GetDevicesByStatus(dsOffline));
+
+  LabelTotal.Caption := Format('Total: %d', [Total]);
+  LabelOnline.Caption := Format('En ligne: %d', [Online]);
+  LabelOffline.Caption := Format('Hors ligne: %d', [Offline]);
+
+  // Changer la couleur si des dispositifs sont hors ligne
+  if Offline > 0 then
+    LabelOffline.Font.Color := clRed
+  else
+    LabelOffline.Font.Color := clGreen;
+end;
+
+procedure TFormDashboard.ButtonRefreshClick(Sender: TObject);
+begin
+  UpdateDeviceGrid;
+end;
+
+procedure TFormDashboard.Timer1Timer(Sender: TObject);
+begin
+  // Mise à jour automatique toutes les 5 secondes
+  UpdateDeviceGrid;
+end;
+
+procedure TFormDashboard.StringGridDevicesDblClick(Sender: TObject);
+var
+  Row: Integer;
+  DeviceID: string;
+  Device: TIoTDevice;
+begin
+  Row := StringGridDevices.Row;
+  if Row < 1 then Exit;
+
+  DeviceID := StringGridDevices.Cells[1, Row];
+  Device := FDeviceManager.GetDevice(DeviceID);
+
+  if Assigned(Device) then
+    ShowDeviceDetails(Device);
+end;
+
+procedure TFormDashboard.ShowDeviceDetails(Device: TIoTDevice);
+var
+  Details: string;
+begin
+  Details := Format(
+    'Dispositif: %s' + sLineBreak +
+    'ID: %s' + sLineBreak +
+    'Adresse IP: %s' + sLineBreak +
+    'MAC: %s' + sLineBreak +
+    'Firmware: %s' + sLineBreak +
+    'Batterie: %d%%' + sLineBreak +
+    'Signal: %d%%' + sLineBreak +
+    'Dernière activité: %s',
+    [Device.Name, Device.ID, Device.IPAddress, Device.MACAddress,
+     Device.FirmwareVersion, Device.BatteryLevel, Device.SignalStrength,
+     FormatDateTime('dd/mm/yyyy hh:nn:ss', Device.LastSeen)]
+  );
+
+  ShowMessage(Details);
+end;
+
+end.
 ```
 
-## Tableau de bord pour visualiser les dispositifs
+## Configuration à distance
 
-Ajoutons un tableau de bord simple mais efficace pour visualiser l'état des dispositifs et leurs données :
+### Système de configuration
 
 ```pascal
-unit DashboardFrame;
+unit DeviceConfiguration;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
-  DeviceInterfaces, System.Generics.Collections;
+  System.SysUtils, System.Classes, System.JSON, IoTDevice;
 
 type
-  TDevicePanel = class(TPanel)
+  TDeviceConfig = class
   private
-    FDevice: IDevice;
-    FNameLabel: TLabel;
-    FStatusShape: TShape;
-    FValueLabels: TDictionary<string, TLabel>;
-
-    procedure UpdateUI;
-    procedure HandlePropertyChange(Sender: TObject);
-    procedure HandleStatusChange(Sender: TObject);
+    FDeviceID: string;
+    FSamplingInterval: Integer;
+    FReportingInterval: Integer;
+    FThresholdMin: Double;
+    FThresholdMax: Double;
+    FEnabled: Boolean;
   public
-    constructor Create(AOwner: TComponent; ADevice: IDevice); reintroduce;
-    destructor Destroy; override;
+    function ToJSON: string;
+    procedure FromJSON(const JSONString: string);
 
-    property Device: IDevice read FDevice;
+    property DeviceID: string read FDeviceID write FDeviceID;
+    property SamplingInterval: Integer read FSamplingInterval write FSamplingInterval;
+    property ReportingInterval: Integer read FReportingInterval write FReportingInterval;
+    property ThresholdMin: Double read FThresholdMin write FThresholdMin;
+    property ThresholdMax: Double read FThresholdMax write FThresholdMax;
+    property Enabled: Boolean read FEnabled write FEnabled;
   end;
 
-  TDashboardFrame = class(TFrame)
-    scrDashboard: TScrollBox;
-    pnlAddWidget: TPanel;
-    btnAddWidget: TButton;
-    procedure btnAddWidgetClick(Sender: TObject);
-  private
-    FDevicePanels: TObjectList<TDevicePanel>;
+  TDeviceConfigurator = class
   public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-
-    procedure AddDevice(ADevice: IDevice);
-    procedure RemoveDevice(const DeviceID: string);
-    procedure RefreshDevices;
+    class function GetConfiguration(Device: TIoTDevice): TDeviceConfig;
+    class function SetConfiguration(Device: TIoTDevice; Config: TDeviceConfig): Boolean;
   end;
 
 implementation
 
-{$R *.dfm}
-
-constructor TDashboardFrame.Create(AOwner: TComponent);
-begin
-  inherited;
-  FDevicePanels := TObjectList<TDevicePanel>.Create;
-end;
-
-destructor TDashboardFrame.Destroy;
-begin
-  FDevicePanels.Free;
-  inherited;
-end;
-
-procedure TDashboardFrame.AddDevice(ADevice: IDevice);
+function TDeviceConfig.ToJSON: string;
 var
-  DevicePanel: TDevicePanel;
+  JSONObject: TJSONObject;
 begin
-  // Vérifier si le dispositif est déjà sur le tableau de bord
-  for DevicePanel in FDevicePanels do
-  begin
-    if DevicePanel.Device.ID = ADevice.ID then
-      Exit; // Déjà présent
+  JSONObject := TJSONObject.Create;
+  try
+    JSONObject.AddPair('device_id', FDeviceID);
+    JSONObject.AddPair('sampling_interval', TJSONNumber.Create(FSamplingInterval));
+    JSONObject.AddPair('reporting_interval', TJSONNumber.Create(FReportingInterval));
+    JSONObject.AddPair('threshold_min', TJSONNumber.Create(FThresholdMin));
+    JSONObject.AddPair('threshold_max', TJSONNumber.Create(FThresholdMax));
+    JSONObject.AddPair('enabled', TJSONBool.Create(FEnabled));
+
+    Result := JSONObject.ToString;
+  finally
+    JSONObject.Free;
   end;
-
-  // Créer un nouveau panel pour ce dispositif
-  DevicePanel := TDevicePanel.Create(scrDashboard, ADevice);
-  DevicePanel.Parent := scrDashboard;
-  DevicePanel.Align := alTop;
-  DevicePanel.Height := 100;
-  DevicePanel.Margins.SetBounds(5, 5, 5, 5);
-  DevicePanel.AlignWithMargins := True;
-
-  // Ajouter à notre liste
-  FDevicePanels.Add(DevicePanel);
 end;
 
-// ...autres méthodes...
-
-constructor TDevicePanel.Create(AOwner: TComponent; ADevice: IDevice);
-begin
-  inherited Create(AOwner);
-  FDevice := ADevice;
-  FValueLabels := TDictionary<string, TLabel>.Create;
-
-  // Configurer le panel
-  BevelOuter := bvRaised;
-
-  // Créer les contrôles pour ce dispositif
-  FNameLabel := TLabel.Create(Self);
-  FNameLabel.Parent := Self;
-  FNameLabel.Align := alTop;
-  FNameLabel.Alignment := taCenter;
-  FNameLabel.Font.Style := [fsBold];
-  FNameLabel.Caption := FDevice.Name;
-
-  FStatusShape := TShape.Create(Self);
-  FStatusShape.Parent := Self;
-  FStatusShape.Width := 15;
-  FStatusShape.Height := 15;
-  FStatusShape.Left := 10;
-  FStatusShape.Top := 30;
-
-  // S'abonner aux événements du dispositif
-  FDevice.SetOnPropertyChange(HandlePropertyChange);
-  FDevice.SetOnStatusChange(HandleStatusChange);
-
-  // Initialiser l'interface
-  UpdateUI;
-end;
-
-destructor TDevicePanel.Destroy;
-begin
-  FValueLabels.Free;
-  inherited;
-end;
-
-procedure TDevicePanel.UpdateUI;
+procedure TDeviceConfig.FromJSON(const JSONString: string);
 var
-  Y: Integer;
-  PropertyPair: TPair<string, TDeviceValue>;
-  ValueLabel: TLabel;
-  DisplayValue: string;
+  JSONValue: TJSONValue;
+  JSONObject: TJSONObject;
 begin
-  // Mise à jour du statut
-  case FDevice.Status of
-    dsOffline: FStatusShape.Brush.Color := clGray;
-    dsOnline: FStatusShape.Brush.Color := clGreen;
-    dsError: FStatusShape.Brush.Color := clRed;
-    dsMaintenance: FStatusShape.Brush.Color := clYellow;
-  end;
-
-  // Mise à jour des valeurs
-  Y := 30;
-
-  for PropertyPair in FDevice.Properties do
-  begin
-    // Ne pas afficher toutes les propriétés, seulement celles intéressantes
-    if not PropertyPair.Key.StartsWith('_') then // Ignorer les propriétés internes
+  JSONValue := TJSONObject.ParseJSONValue(JSONString);
+  try
+    if JSONValue is TJSONObject then
     begin
-      // Convertir la valeur en texte d'affichage
-      case PropertyPair.Value.ValueType of
-        dvtString: DisplayValue := PropertyPair.Value.StringValue;
-        dvtInteger: DisplayValue := IntToStr(PropertyPair.Value.IntegerValue);
-        dvtFloat: DisplayValue := FormatFloat('0.##', PropertyPair.Value.FloatValue);
-        dvtBoolean: DisplayValue := BoolToStr(PropertyPair.Value.BooleanValue, True);
-        dvtDateTime: DisplayValue := DateTimeToStr(PropertyPair.Value.DateTimeValue);
-        else DisplayValue := '?';
-      end;
+      JSONObject := JSONValue as TJSONObject;
 
-      // Créer ou mettre à jour le label pour cette propriété
-      if not FValueLabels.TryGetValue(PropertyPair.Key, ValueLabel) then
-      begin
-        ValueLabel := TLabel.Create(Self);
-        ValueLabel.Parent := Self;
-        ValueLabel.Left := 30;
-        ValueLabel.Top := Y;
-        ValueLabel.AutoSize := True;
-
-        FValueLabels.Add(PropertyPair.Key, ValueLabel);
-      end;
-
-      ValueLabel.Caption := Format('%s: %s', [PropertyPair.Key, DisplayValue]);
-
-      Inc(Y, 20);
+      FDeviceID := JSONObject.GetValue<string>('device_id');
+      FSamplingInterval := JSONObject.GetValue<Integer>('sampling_interval');
+      FReportingInterval := JSONObject.GetValue<Integer>('reporting_interval');
+      FThresholdMin := JSONObject.GetValue<Double>('threshold_min');
+      FThresholdMax := JSONObject.GetValue<Double>('threshold_max');
+      FEnabled := JSONObject.GetValue<Boolean>('enabled');
     end;
+  finally
+    JSONValue.Free;
   end;
 end;
 
-procedure TDevicePanel.HandlePropertyChange(Sender: TObject);
+class function TDeviceConfigurator.GetConfiguration(Device: TIoTDevice): TDeviceConfig;
 begin
-  // Mise à jour de l'interface dans le thread principal
-  TThread.Queue(nil, procedure
-  begin
-    UpdateUI;
-  end);
+  Result := TDeviceConfig.Create;
+
+  // Envoyer une requête de configuration au dispositif
+  // Via MQTT, HTTP, ou autre protocole
+
+  // Exemple simplifié:
+  // Envoyer: GET /config
+  // Recevoir la configuration en JSON
+
+  Result.DeviceID := Device.ID;
+  // Parser la réponse et remplir Result
 end;
 
-procedure TDevicePanel.HandleStatusChange(Sender: TObject);
+class function TDeviceConfigurator.SetConfiguration(Device: TIoTDevice; Config: TDeviceConfig): Boolean;
+var
+  ConfigJSON: string;
 begin
-  // Mise à jour de l'interface dans le thread principal
-  TThread.Queue(nil, procedure
+  Result := False;
+
+  try
+    ConfigJSON := Config.ToJSON;
+
+    // Envoyer la configuration au dispositif
+    // Via MQTT: Publish sur 'devices/{id}/config'
+    // Via HTTP: POST /config
+
+    // Attendre confirmation
+    Result := True;
+  except
+    on E: Exception do
+      Result := False;
+  end;
+end;
+
+end.
+```
+
+### Interface de configuration
+
+```pascal
+procedure TFormConfig.ButtonApplyClick(Sender: TObject);
+var
+  Device: TIoTDevice;
+  Config: TDeviceConfig;
+begin
+  Device := DeviceManager.GetDevice(EditDeviceID.Text);
+  if not Assigned(Device) then
   begin
-    UpdateUI;
-  end);
+    ShowMessage('Dispositif non trouvé');
+    Exit;
+  end;
+
+  Config := TDeviceConfig.Create;
+  try
+    Config.DeviceID := Device.ID;
+    Config.SamplingInterval := StrToInt(EditSamplingInterval.Text);
+    Config.ReportingInterval := StrToInt(EditReportingInterval.Text);
+    Config.ThresholdMin := StrToFloat(EditThresholdMin.Text);
+    Config.ThresholdMax := StrToFloat(EditThresholdMax.Text);
+    Config.Enabled := CheckBoxEnabled.Checked;
+
+    if TDeviceConfigurator.SetConfiguration(Device, Config) then
+      ShowMessage('Configuration appliquée avec succès')
+    else
+      ShowMessage('Erreur lors de l''application de la configuration');
+  finally
+    Config.Free;
+  end;
 end;
 ```
 
-## Gestion des groupes de dispositifs
+## Groupes et organisation
 
-Pour les systèmes plus complexes, il peut être utile de regrouper les dispositifs par fonctionnalité ou par emplacement. Voici une implémentation simple de la gestion des groupes :
+### Gestion de groupes de dispositifs
 
 ```pascal
 unit DeviceGroups;
@@ -1260,452 +1035,497 @@ unit DeviceGroups;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  DeviceInterfaces;
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  IoTDevice;
 
 type
   TDeviceGroup = class
   private
     FName: string;
     FDescription: string;
-    FDevices: TList<IDevice>;
+    FDevices: TList<TIoTDevice>;
   public
-    constructor Create(const AName, ADescription: string);
+    constructor Create(const Name: string);
     destructor Destroy; override;
 
-    procedure AddDevice(Device: IDevice);
-    procedure RemoveDevice(const DeviceID: string);
-    function ContainsDevice(const DeviceID: string): Boolean;
-    function GetDevices: TArray<IDevice>;
-
-    function ExecuteCommandOnAll(const Command: string;
-                              Params: TDevicePropertyList = nil): Boolean;
+    procedure AddDevice(Device: TIoTDevice);
+    procedure RemoveDevice(Device: TIoTDevice);
+    function ContainsDevice(Device: TIoTDevice): Boolean;
+    function GetDeviceCount: Integer;
 
     property Name: string read FName write FName;
     property Description: string read FDescription write FDescription;
+    property Devices: TList<TIoTDevice> read FDevices;
   end;
 
-  TDeviceGroupManager = class
+  TGroupManager = class
   private
-    FGroups: TObjectDictionary<string, TDeviceGroup>;
+    FGroups: TObjectList<TDeviceGroup>;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure AddGroup(const GroupName, Description: string);
-    procedure RemoveGroup(const GroupName: string);
-    function GetGroup(const GroupName: string): TDeviceGroup;
+    function CreateGroup(const Name: string): TDeviceGroup;
+    function DeleteGroup(const Name: string): Boolean;
+    function GetGroup(const Name: string): TDeviceGroup;
     function GetAllGroups: TArray<TDeviceGroup>;
-
-    procedure AddDeviceToGroup(const GroupName: string; Device: IDevice);
-    procedure RemoveDeviceFromGroup(const GroupName, DeviceID: string);
-    function GetDevicesInGroup(const GroupName: string): TArray<IDevice>;
-
-    function ExecuteCommandOnGroup(const GroupName, Command: string;
-                                Params: TDevicePropertyList = nil): Boolean;
   end;
 
 implementation
 
-// ... implémentation des méthodes ...
-
-end.
-```
-
-## Automatisation et planification de tâches
-
-Un aspect important de la gestion de dispositifs est l'automatisation, permettant d'exécuter des commandes à des moments précis ou en réponse à des événements. Voici une implémentation simple :
-
-```pascal
-unit AutomationManager;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections, System.DateUtils,
-  DeviceInterfaces, DeviceManager;
-
-type
-  TTriggerType = (ttScheduled, ttEvent, ttCondition);
-
-  TAutomationAction = class
-  private
-    FDeviceID: string;
-    FCommand: string;
-    FParams: TDevicePropertyList;
-  public
-    constructor Create(const ADeviceID, ACommand: string);
-    destructor Destroy; override;
-
-    procedure AddParam(const ParamName: string; const Value: TDeviceValue);
-
-    property DeviceID: string read FDeviceID;
-    property Command: string read FCommand;
-    property Params: TDevicePropertyList read FParams;
-  end;
-
-  TAutomationRule = class
-  private
-    FName: string;
-    FEnabled: Boolean;
-    FTriggerType: TTriggerType;
-    FScheduledTime: TDateTime;
-    FTriggerCondition: string;
-    FActions: TObjectList<TAutomationAction>;
-  public
-    constructor Create(const AName: string);
-    destructor Destroy; override;
-
-    procedure AddAction(Action: TAutomationAction);
-    function ShouldExecute(const CurrentTime: TDateTime): Boolean;
-    procedure Execute(DeviceManager: TDeviceManager);
-
-    property Name: string read FName write FName;
-    property Enabled: Boolean read FEnabled write FEnabled;
-    property TriggerType: TTriggerType read FTriggerType write FTriggerType;
-    property ScheduledTime: TDateTime read FScheduledTime write FScheduledTime;
-    property TriggerCondition: string read FTriggerCondition write FTriggerCondition;
-  end;
-
-  TAutomationManager = class
-  private
-    FRules: TObjectList<TAutomationRule>;
-    FDeviceManager: TDeviceManager;
-    FTimer: TTimer;
-
-    procedure TimerEvent(Sender: TObject);
-  public
-    constructor Create(ADeviceManager: TDeviceManager);
-    destructor Destroy; override;
-
-    procedure AddRule(Rule: TAutomationRule);
-    procedure RemoveRule(const RuleName: string);
-    function GetRule(const RuleName: string): TAutomationRule;
-
-    procedure Start;
-    procedure Stop;
-  end;
-
-implementation
-
-// ... implémentation des méthodes ...
-
-end.
-```
-
-## Définition des règles et déclencheurs
-
-Créons maintenant un exemple de règle d'automatisation :
-
-```pascal
-// Exemple : Allumer une lampe à 18h00 tous les jours
-var
-  Rule: TAutomationRule;
-  Action: TAutomationAction;
+constructor TDeviceGroup.Create(const Name: string);
 begin
-  Rule := TAutomationRule.Create('AllumageSoir');
-  Rule.TriggerType := ttScheduled;
-  Rule.ScheduledTime := EncodeTime(18, 0, 0, 0); // 18:00:00
-  Rule.Enabled := True;
-
-  Action := TAutomationAction.Create('lampe_salon', 'turn_on');
-  Rule.AddAction(Action);
-
-  AutomationManager.AddRule(Rule);
+  inherited Create;
+  FName := Name;
+  FDevices := TList<TIoTDevice>.Create;
 end;
 
-// Exemple : Éteindre le chauffage si la température dépasse 22°C
-var
-  Rule: TAutomationRule;
-  Action: TAutomationAction;
+destructor TDeviceGroup.Destroy;
 begin
-  Rule := TAutomationRule.Create('ControleChauffage');
-  Rule.TriggerType := ttCondition;
-  Rule.TriggerCondition := 'temperature > 22';
-  Rule.Enabled := True;
+  FDevices.Free;
+  inherited;
+end;
 
-  Action := TAutomationAction.Create('chauffage_salon', 'turn_off');
-  Rule.AddAction(Action);
+procedure TDeviceGroup.AddDevice(Device: TIoTDevice);
+begin
+  if not ContainsDevice(Device) then
+    FDevices.Add(Device);
+end;
 
-  AutomationManager.AddRule(Rule);
+procedure TDeviceGroup.RemoveDevice(Device: TIoTDevice);
+begin
+  FDevices.Remove(Device);
+end;
+
+function TDeviceGroup.ContainsDevice(Device: TIoTDevice): Boolean;
+begin
+  Result := FDevices.Contains(Device);
+end;
+
+function TDeviceGroup.GetDeviceCount: Integer;
+begin
+  Result := FDevices.Count;
+end;
+
+constructor TGroupManager.Create;
+begin
+  inherited Create;
+  FGroups := TObjectList<TDeviceGroup>.Create(True);
+end;
+
+destructor TGroupManager.Destroy;
+begin
+  FGroups.Free;
+  inherited;
+end;
+
+function TGroupManager.CreateGroup(const Name: string): TDeviceGroup;
+begin
+  Result := TDeviceGroup.Create(Name);
+  FGroups.Add(Result);
+end;
+
+function TGroupManager.DeleteGroup(const Name: string): Boolean;
+var
+  Group: TDeviceGroup;
+begin
+  Result := False;
+  Group := GetGroup(Name);
+  if Assigned(Group) then
+  begin
+    FGroups.Remove(Group);
+    Result := True;
+  end;
+end;
+
+function TGroupManager.GetGroup(const Name: string): TDeviceGroup;
+var
+  Group: TDeviceGroup;
+begin
+  Result := nil;
+  for Group in FGroups do
+  begin
+    if SameText(Group.Name, Name) then
+    begin
+      Result := Group;
+      Break;
+    end;
+  end;
+end;
+
+function TGroupManager.GetAllGroups: TArray<TDeviceGroup>;
+begin
+  Result := FGroups.ToArray;
+end;
+
+end.
+```
+
+### Utilisation des groupes
+
+```pascal
+// Créer des groupes
+var
+  Salon, Chambre, Jardin: TDeviceGroup;
+begin
+  Salon := GroupManager.CreateGroup('Salon');
+  Salon.Description := 'Dispositifs du salon';
+
+  Chambre := GroupManager.CreateGroup('Chambre');
+  Jardin := GroupManager.CreateGroup('Jardin');
+
+  // Ajouter des dispositifs aux groupes
+  Salon.AddDevice(TempSensorSalon);
+  Salon.AddDevice(HumSensorSalon);
+  Salon.AddDevice(LEDStripSalon);
+
+  // Envoyer une commande à tous les dispositifs d'un groupe
+  for Device in Salon.Devices do
+  begin
+    if Device.DeviceType = dtActuator then
+      SendCommand(Device, 'TURN_OFF');
+  end;
 end;
 ```
 
-## Journalisation et surveillance
+## Alertes et notifications
 
-La journalisation est essentielle pour suivre l'activité des dispositifs et détecter les problèmes. Voici une classe simple de journalisation :
+### Système d'alertes
 
 ```pascal
-unit DeviceLogger;
+unit AlertSystem;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  DeviceInterfaces;
+  System.SysUtils, System.Classes, IoTDevice;
 
 type
-  TLogLevel = (llDebug, llInfo, llWarning, llError);
+  TAlertLevel = (alInfo, alWarning, alError, alCritical);
 
-  TLogEntry = record
-    Timestamp: TDateTime;
-    Level: TLogLevel;
-    Source: string;
-    Message: string;
-  end;
-
-  TDeviceLogger = class
+  TAlert = class
   private
-    FLogFile: string;
-    FMemoryLog: TList<TLogEntry>;
-    FMaxMemoryEntries: Integer;
-    FLogToFile: Boolean;
-
-    procedure WriteToFile(const Entry: TLogEntry);
+    FDevice: TIoTDevice;
+    FLevel: TAlertLevel;
+    FMessage: string;
+    FTimestamp: TDateTime;
+    FAcknowledged: Boolean;
   public
-    constructor Create(const ALogFile: string = ''; AMaxMemoryEntries: Integer = 1000);
-    destructor Destroy; override;
-
-    procedure Log(Level: TLogLevel; const Source, Message: string);
-    procedure Debug(const Source, Message: string);
-    procedure Info(const Source, Message: string);
-    procedure Warning(const Source, Message: string);
-    procedure Error(const Source, Message: string);
-
-    function GetRecentEntries(Count: Integer = 100): TArray<TLogEntry>;
-    procedure ClearMemoryLog;
-
-    property LogToFile: Boolean read FLogToFile write FLogToFile;
+    property Device: TIoTDevice read FDevice write FDevice;
+    property Level: TAlertLevel read FLevel write FLevel;
+    property Message: string read FMessage write FMessage;
+    property Timestamp: TDateTime read FTimestamp write FTimestamp;
+    property Acknowledged: Boolean read FAcknowledged write FAcknowledged;
   end;
 
-implementation
+  TAlertEvent = procedure(Alert: TAlert) of object;
 
-// ... implémentation des méthodes ...
-
-end.
-```
-
-## Stockage persistant des configurations
-
-Pour conserver les configurations des dispositifs et les réglages du système, nous avons besoin d'un système de stockage persistant :
-
-```pascal
-unit ConfigStorage;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.JSON, System.IOUtils,
-  DeviceInterfaces, DeviceManager, DeviceGroups, AutomationManager;
-
-type
-  TConfigStorage = class
+  TAlertManager = class
   private
-    FFileName: string;
-  public
-    constructor Create(const AFileName: string = 'config.json');
-
-    // Sauvegarde
-    procedure SaveDeviceManager(DeviceManager: TDeviceManager);
-    procedure SaveDeviceGroups(GroupManager: TDeviceGroupManager);
-    procedure SaveAutomationRules(AutomationManager: TAutomationManager);
-    procedure SaveSystemSettings(const Settings: TJSONObject);
-
-    // Chargement
-    procedure LoadDeviceManager(DeviceManager: TDeviceManager);
-    procedure LoadDeviceGroups(GroupManager: TDeviceGroupManager);
-    procedure LoadAutomationRules(AutomationManager: TAutomationManager);
-    function LoadSystemSettings: TJSONObject;
-
-    // Utilité
-    function Backup(const BackupPath: string): Boolean;
-    function Restore(const BackupPath: string): Boolean;
-  end;
-
-implementation
-
-// ... implémentation des méthodes ...
-
-end.
-```
-
-## Sécurité et authentification
-
-Pour les systèmes professionnels, il est important d'ajouter une couche de sécurité :
-
-```pascal
-unit SecurityManager;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.Generics.Collections,
-  System.Hash;
-
-type
-  TUserRole = (urGuest, urUser, urAdmin);
-
-  TUser = record
-    Username: string;
-    PasswordHash: string;
-    Role: TUserRole;
-    LastLogin: TDateTime;
-    function HasPermission(const Permission: string): Boolean;
-  end;
-
-  TSecurityManager = class
-  private
-    FUsers: TDictionary<string, TUser>;
-    FCurrentUser: TUser;
-    FIsAuthenticated: Boolean;
+    FAlerts: TObjectList<TAlert>;
+    FOnAlert: TAlertEvent;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function Authenticate(const Username, Password: string): Boolean;
-    procedure Logout;
+    procedure RaiseAlert(Device: TIoTDevice; Level: TAlertLevel; const Message: string);
+    procedure AcknowledgeAlert(Alert: TAlert);
+    function GetUnacknowledgedAlerts: TArray<TAlert>;
+    function GetAlertsByLevel(Level: TAlertLevel): TArray<TAlert>;
 
-    function CreateUser(const Username, Password: string; Role: TUserRole): Boolean;
-    function DeleteUser(const Username: string): Boolean;
-    function ChangePassword(const Username, OldPassword, NewPassword: string): Boolean;
-
-    function CheckPermission(const Permission: string): Boolean;
-
-    property IsAuthenticated: Boolean read FIsAuthenticated;
-    property CurrentUser: TUser read FCurrentUser;
+    property OnAlert: TAlertEvent read FOnAlert write FOnAlert;
   end;
 
 implementation
 
-// ... implémentation des méthodes ...
+constructor TAlertManager.Create;
+begin
+  inherited Create;
+  FAlerts := TObjectList<TAlert>.Create(True);
+end;
+
+destructor TAlertManager.Destroy;
+begin
+  FAlerts.Free;
+  inherited;
+end;
+
+procedure TAlertManager.RaiseAlert(Device: TIoTDevice; Level: TAlertLevel; const Message: string);
+var
+  Alert: TAlert;
+begin
+  Alert := TAlert.Create;
+  Alert.Device := Device;
+  Alert.Level := Level;
+  Alert.Message := Message;
+  Alert.Timestamp := Now;
+  Alert.Acknowledged := False;
+
+  FAlerts.Add(Alert);
+
+  if Assigned(FOnAlert) then
+    FOnAlert(Alert);
+end;
+
+procedure TAlertManager.AcknowledgeAlert(Alert: TAlert);
+begin
+  Alert.Acknowledged := True;
+end;
+
+function TAlertManager.GetUnacknowledgedAlerts: TArray<TAlert>;
+var
+  Alert: TAlert;
+  List: TList<TAlert>;
+begin
+  List := TList<TAlert>.Create;
+  try
+    for Alert in FAlerts do
+    begin
+      if not Alert.Acknowledged then
+        List.Add(Alert);
+    end;
+    Result := List.ToArray;
+  finally
+    List.Free;
+  end;
+end;
+
+function TAlertManager.GetAlertsByLevel(Level: TAlertLevel): TArray<TAlert>;
+var
+  Alert: TAlert;
+  List: TList<TAlert>;
+begin
+  List := TList<TAlert>.Create;
+  try
+    for Alert in FAlerts do
+    begin
+      if Alert.Level = Level then
+        List.Add(Alert);
+    end;
+    Result := List.ToArray;
+  finally
+    List.Free;
+  end;
+end;
 
 end.
 ```
 
-## Application complète: tableau de bord IoT
-
-Maintenant, assemblons tout pour créer un tableau de bord IoT complet. Voici la structure du projet principal :
+### Règles d'alerte automatiques
 
 ```pascal
-unit MainDashboard;
+procedure TDeviceManager.CheckAlertRules;
+var
+  Device: TIoTDevice;
+  Temp: Double;
+begin
+  for Device in FDevices do
+  begin
+    // Batterie faible
+    if (Device.BatteryLevel >= 0) and (Device.BatteryLevel < 20) then
+      AlertManager.RaiseAlert(Device, alWarning,
+        Format('Batterie faible: %d%%', [Device.BatteryLevel]));
+
+    // Dispositif hors ligne
+    if not Device.IsOnline(60) then
+      AlertManager.RaiseAlert(Device, alError, 'Dispositif hors ligne');
+
+    // Température hors limites
+    if Device.GetProperty('temperature') <> '' then
+    begin
+      Temp := StrToFloatDef(Device.GetProperty('temperature'), 0);
+      if (Temp < 0) or (Temp > 40) then
+        AlertManager.RaiseAlert(Device, alCritical,
+          Format('Température anormale: %.1f°C', [Temp]));
+    end;
+  end;
+end;
+```
+
+## Mise à jour OTA (Over-The-Air)
+
+### Système de mise à jour à distance
+
+```pascal
+unit FirmwareUpdate;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Menus,
-
-  // Nos unités personnalisées
-  DeviceInterfaces, DeviceManager, MQTTDevice, DeviceGroups,
-  AutomationManager, DeviceLogger, ConfigStorage, SecurityManager,
-  DashboardFrame;
+  System.SysUtils, System.Classes, IoTDevice;
 
 type
-  TfrmMainDashboard = class(TForm)
-    pgcMain: TPageControl;
-    tabDashboard: TTabSheet;
-    tabDevices: TTabSheet;
-    tabGroups: TTabSheet;
-    tabAutomation: TTabSheet;
-    tabSettings: TTabSheet;
-    mainMenu: TMainMenu;
-    mnuFile: TMenuItem;
-    mnuFileExit: TMenuItem;
-    mnuFileBackup: TMenuItem;
-    mnuFileRestore: TMenuItem;
-    mnuTools: TMenuItem;
-    mnuToolsDiscoverDevices: TMenuItem;
-    mnuToolsLog: TMenuItem;
-    mnuHelp: TMenuItem;
-    mnuHelpAbout: TMenuItem;
-    stsMain: TStatusBar;
-    // ... autres composants ...
+  TUpdateStatus = (usIdle, usDownloading, usInstalling, usSuccess, usError);
+  TUpdateProgressEvent = procedure(Device: TIoTDevice; Progress: Integer) of object;
 
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure mnuFileExitClick(Sender: TObject);
-    procedure mnuFileBackupClick(Sender: TObject);
-    procedure mnuFileRestoreClick(Sender: TObject);
-    procedure mnuToolsDiscoverDevicesClick(Sender: TObject);
-    procedure mnuToolsLogClick(Sender: TObject);
-    // ... autres gestionnaires ...
-
+  TFirmwareUpdater = class
   private
-    FDeviceManager: TDeviceManager;
-    FGroupManager: TDeviceGroupManager;
-    FAutomationManager: TAutomationManager;
-    FLogger: TDeviceLogger;
-    FConfigStorage: TConfigStorage;
-    FSecurityManager: TSecurityManager;
-
-    // Frames contenus dans les onglets
-    FDashboardFrame: TDashboardFrame;
-    // ... autres frames ...
-
-    procedure InitializeManagers;
-    procedure LoadConfiguration;
-    procedure SaveConfiguration;
-    procedure HandleDeviceDiscovered(Sender: TObject; Device: IDevice);
-    procedure HandleDeviceStatusChanged(Sender: TObject);
-    procedure UpdateStatusBar;
+    FOnProgress: TUpdateProgressEvent;
+    FCurrentStatus: TUpdateStatus;
   public
-    { Public declarations }
-  end;
+    function UpdateDevice(Device: TIoTDevice; const FirmwareURL: string): Boolean;
+    function GetUpdateStatus(Device: TIoTDevice): TUpdateStatus;
 
-var
-  frmMainDashboard: TfrmMainDashboard;
+    property OnProgress: TUpdateProgressEvent read FOnProgress write FOnProgress;
+    property CurrentStatus: TUpdateStatus read FCurrentStatus;
+  end;
 
 implementation
 
-{$R *.dfm}
+function TFirmwareUpdater.UpdateDevice(Device: TIoTDevice; const FirmwareURL: string): Boolean;
+var
+  Progress: Integer;
+begin
+  Result := False;
+  FCurrentStatus := usDownloading;
 
-// ... implémentation des méthodes ...
+  try
+    // 1. Télécharger le firmware
+    Progress := 0;
+    while Progress < 100 do
+    begin
+      // Simuler le téléchargement
+      Inc(Progress, 10);
+      if Assigned(FOnProgress) then
+        FOnProgress(Device, Progress);
+      Sleep(100);
+    end;
+
+    // 2. Envoyer le firmware au dispositif
+    FCurrentStatus := usInstalling;
+
+    // Commande de mise à jour via MQTT ou HTTP
+    // Exemple: MQTT publish sur 'devices/{id}/update' avec l'URL du firmware
+
+    // 3. Attendre confirmation
+    Sleep(5000);  // Simuler l'installation
+
+    FCurrentStatus := usSuccess;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      FCurrentStatus := usError;
+      Result := False;
+    end;
+  end;
+end;
+
+function TFirmwareUpdater.GetUpdateStatus(Device: TIoTDevice): TUpdateStatus;
+begin
+  // Interroger le dispositif pour son statut de mise à jour
+  Result := FCurrentStatus;
+end;
+
+end.
+```
+
+## Persistance des données
+
+### Sauvegarde et restauration
+
+```pascal
+unit DevicePersistence;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, DeviceManager, IoTDevice;
+
+type
+  TDevicePersistence = class
+  public
+    class procedure SaveDevices(Manager: TDeviceManager; const FileName: string);
+    class procedure LoadDevices(Manager: TDeviceManager; const FileName: string);
+  end;
+
+implementation
+
+class procedure TDevicePersistence.SaveDevices(Manager: TDeviceManager; const FileName: string);
+var
+  JSONArray: TJSONArray;
+  Devices: TArray<TIoTDevice>;
+  Device: TIoTDevice;
+  JSONDevice: TJSONObject;
+begin
+  JSONArray := TJSONArray.Create;
+  try
+    Devices := Manager.GetAllDevices;
+
+    for Device in Devices do
+    begin
+      JSONDevice := TJSONObject.Create;
+      JSONDevice.AddPair('id', Device.ID);
+      JSONDevice.AddPair('name', Device.Name);
+      JSONDevice.AddPair('type', TJSONNumber.Create(Ord(Device.DeviceType)));
+      JSONDevice.AddPair('ip', Device.IPAddress);
+      JSONDevice.AddPair('port', TJSONNumber.Create(Device.Port));
+      JSONDevice.AddPair('mac', Device.MACAddress);
+      JSONDevice.AddPair('firmware', Device.FirmwareVersion);
+
+      JSONArray.AddElement(JSONDevice);
+    end;
+
+    TFile.WriteAllText(FileName, JSONArray.ToString);
+  finally
+    JSONArray.Free;
+  end;
+end;
+
+class procedure TDevicePersistence.LoadDevices(Manager: TDeviceManager; const FileName: string);
+var
+  JSONContent: string;
+  JSONArray: TJSONArray;
+  JSONValue: TJSONValue;
+  JSONDevice: TJSONObject;
+  Device: TIoTDevice;
+  I: Integer;
+begin
+  if not TFile.Exists(FileName) then Exit;
+
+  JSONContent := TFile.ReadAllText(FileName);
+  JSONArray := TJSONObject.ParseJSONValue(JSONContent) as TJSONArray;
+  try
+    for I := 0 to JSONArray.Count - 1 do
+    begin
+      JSONDevice := JSONArray.Items[I] as TJSONObject;
+
+      Device := TIoTDevice.Create;
+      Device.ID := JSONDevice.GetValue<string>('id');
+      Device.Name := JSONDevice.GetValue<string>('name');
+      Device.DeviceType := TDeviceType(JSONDevice.GetValue<Integer>('type'));
+      Device.IPAddress := JSONDevice.GetValue<string>('ip');
+      Device.Port := JSONDevice.GetValue<Integer>('port');
+      Device.MACAddress := JSONDevice.GetValue<string>('mac');
+      Device.FirmwareVersion := JSONDevice.GetValue<string>('firmware');
+
+      Manager.AddDevice(Device);
+    end;
+  finally
+    JSONArray.Free;
+  end;
+end;
 
 end.
 ```
 
 ## Conclusion
 
-La création d'un système de gestion de dispositifs connectés est un processus complexe qui implique plusieurs couches logicielles. Dans ce tutoriel, nous avons exploré :
+La gestion efficace de dispositifs connectés est un pilier fondamental des applications IoT professionnelles. Avec Delphi, vous disposez de tous les outils nécessaires pour créer des systèmes de gestion sophistiqués capables de gérer des centaines de dispositifs.
 
-1. **L'architecture d'un système de gestion de dispositifs** - Avec des interfaces génériques permettant d'intégrer n'importe quel type de dispositif
-2. **L'implémentation de dispositifs MQTT** - Permettant la communication avec une variété d'appareils IoT
-3. **L'interface utilisateur de gestion** - Pour visualiser et contrôler les dispositifs
-4. **Le tableau de bord dynamique** - Pour surveiller l'état des dispositifs en temps réel
-5. **L'automatisation et les règles** - Pour créer des comportements intelligents
-6. **La journalisation et la persistance** - Pour suivre l'activité et conserver les configurations
-7. **La sécurité** - Pour protéger l'accès au système
+**Points clés à retenir :**
 
-Ce framework peut être étendu pour répondre à des besoins spécifiques, comme l'intégration avec d'autres protocoles IoT, l'ajout de visualisations avancées, ou la mise en œuvre de fonctionnalités d'intelligence artificielle pour l'analyse prédictive.
+1. **Architecture** : utiliser un gestionnaire central pour coordonner tous les dispositifs
+2. **Découverte** : implémenter plusieurs méthodes (scan IP, mDNS, MQTT) pour la robustesse
+3. **Identification** : chaque dispositif doit avoir un ID unique et stable
+4. **Monitoring** : surveiller continuellement l'état et la santé des dispositifs
+5. **Organisation** : utiliser des groupes pour gérer logiquement les dispositifs
+6. **Configuration** : permettre la configuration à distance pour faciliter la maintenance
+7. **Alertes** : système d'alertes proactif pour détecter rapidement les problèmes
+8. **Mise à jour** : prévoir un mécanisme de mise à jour OTA dès la conception
+9. **Persistance** : sauvegarder régulièrement la configuration et l'état
+10. **Scalabilité** : concevoir dès le départ pour supporter la croissance
 
-## Bonnes pratiques
-
-Pour finir, voici quelques bonnes pratiques à suivre lors de la création d'un système de gestion de dispositifs :
-
-1. **Architecture modulaire** - Concevez votre système avec des composants distincts et bien définis
-2. **Interfaces génériques** - Utilisez des interfaces pour permettre l'extension future
-3. **Gestion des erreurs robuste** - Les communications réseau peuvent échouer, prévoyez des mécanismes de récupération
-4. **Performances** - Utilisez des threads séparés pour les communications afin de garantir une interface réactive
-5. **Sécurité** - Protégez les communications et les accès aux dispositifs
-6. **Flexibilité** - Prévoyez l'ajout de nouveaux types de dispositifs et protocoles
-7. **Documentation** - Documentez clairement l'architecture et les interfaces pour faciliter la maintenance
-
-## Exercices pratiques
-
-1. Étendez le système pour prendre en charge les dispositifs Bluetooth Low Energy (BLE)
-2. Ajoutez une carte interactive qui montre l'emplacement des dispositifs
-3. Implémentez un système d'alertes pour les conditions anormales
-4. Créez un module de rapports pour analyser les données historiques
-5. Développez une application mobile compagnon qui se connecte au gestionnaire de dispositifs
-
-## Ressources supplémentaires
-
-- [Documentation MQTT](https://mqtt.org/)
-- [Spécification CoAP](https://tools.ietf.org/html/rfc7252)
-- [IoT Design Patterns](https://www.oreilly.com/library/view/design-patterns-for/9781492079576/)
-- [Sécurité IoT](https://www.iotsecurityfoundation.org/)
-
-Dans la prochaine section, nous explorerons le traitement des données IoT en temps réel pour extraire des informations utiles de vos dispositifs connectés.
+Dans la section suivante, nous verrons comment traiter et analyser les flux de données IoT en temps réel pour en extraire des informations utiles et créer des tableaux de bord interactifs.
 
 ⏭️ [Traitement des données IoT en temps réel](/21-delphi-et-liot/07-traitement-des-donnees-iot-en-temps-reel.md)
