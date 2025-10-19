@@ -1,752 +1,1180 @@
-# 17.9 Déploiement continu (CI/CD)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 17.9 Déploiement continu (CI/CD)
 
 ## Introduction
 
-Imaginez que vous venez d'ajouter une nouvelle fonctionnalité à votre application Delphi. Après avoir effectué vos tests locaux, vous devez maintenant compiler l'application, créer un installateur, effectuer des tests supplémentaires et finalement la déployer pour vos utilisateurs. Et si tout ce processus pouvait être automatisé ? C'est exactement ce que permet l'intégration continue et le déploiement continu (CI/CD).
+Imaginez devoir effectuer manuellement ces tâches à chaque fois que vous modifiez votre code :
 
-Dans ce chapitre, nous allons découvrir comment mettre en place un pipeline CI/CD pour vos applications Delphi, afin d'automatiser la compilation, les tests et le déploiement de vos logiciels. Même si ces concepts peuvent sembler techniques au premier abord, nous les aborderons étape par étape, avec des exemples concrets adaptés aux débutants.
+1. Compiler l'application pour Windows 32-bit
+2. Compiler pour Windows 64-bit
+3. Exécuter tous les tests unitaires
+4. Créer l'installateur
+5. Signer l'installateur numériquement
+6. Télécharger sur votre serveur
+7. Mettre à jour le fichier de version pour les mises à jour automatiques
+8. Envoyer une notification à votre équipe
+
+Si vous faites cela 5 fois par jour, vous perdez des heures de travail précieux. Et si vous oubliez une étape ? Un bug pourrait se glisser en production.
+
+C'est là qu'intervient le **CI/CD** (Continuous Integration / Continuous Deployment), l'automatisation de tous ces processus. Le CI/CD transforme un processus manuel, lent et sujet aux erreurs en un flux automatique, rapide et fiable.
 
 ## Qu'est-ce que le CI/CD ?
 
-Avant de plonger dans l'implémentation, clarifions ces termes :
+### Définitions simples
 
-### Intégration Continue (CI)
+**CI - Intégration Continue (Continuous Integration)** :
+- Automatisation de la compilation et des tests
+- Vérification automatique à chaque modification du code
+- Détection rapide des problèmes
 
-L'**Intégration Continue** consiste à fusionner fréquemment les modifications de code dans un dépôt central, puis à exécuter automatiquement des tests pour vérifier que ces modifications n'introduisent pas de problèmes. Pour une application Delphi, cela implique généralement :
+**CD - Déploiement Continu (Continuous Deployment)** :
+- Automatisation de la livraison de l'application
+- Déploiement automatique après validation
+- Mise en production sans intervention manuelle
 
-- La compilation automatique du projet
-- L'exécution de tests unitaires
-- La vérification de la qualité du code
+**Analogie** : C'est comme une usine automobile moderne. Au lieu de construire chaque voiture à la main (lent, erreurs possibles), une chaîne de montage automatisée construit rapidement et de manière identique chaque véhicule.
 
-### Déploiement Continu (CD)
+### Le flux CI/CD traditionnel
 
-Le **Déploiement Continu** va plus loin en automatisant la livraison de l'application aux utilisateurs. Cela peut inclure :
-
-- La création d'installateurs (EXE, MSI, MSIX)
-- La publication sur des canaux de distribution (site web, Windows Store)
-- La notification aux utilisateurs des nouvelles versions
-
-![Schéma du processus CI/CD](https://placeholder-image.com/cicd-workflow.png)
-
-## Avantages du CI/CD pour le développement Delphi
-
-L'adoption d'un pipeline CI/CD pour vos projets Delphi offre de nombreux avantages :
-
-1. **Détection précoce des problèmes** : Les erreurs sont identifiées rapidement après leur introduction
-2. **Cohérence** : Chaque version est construite de la même manière, éliminant les problèmes liés à "l'environnement de développement"
-3. **Gain de temps** : Les tâches répétitives sont automatisées
-4. **Meilleure qualité** : Les tests systématiques améliorent la fiabilité du code
-5. **Déploiement plus fréquent** : Possibilité de livrer des mises à jour plus régulièrement
-6. **Feedback plus rapide** : Les utilisateurs peuvent tester les nouvelles fonctionnalités plus tôt
-
-## Outils CI/CD compatibles avec Delphi
-
-Plusieurs outils CI/CD peuvent être utilisés avec Delphi. Voici les plus populaires :
-
-### 1. Jenkins
-
-[Jenkins](https://jenkins.io/) est une plateforme d'automatisation open-source très flexible.
-
-**Points forts** :
-- Gratuit et open-source
-- Hautement personnalisable
-- Grande communauté et nombreux plugins
-- Peut être hébergé sur votre propre serveur
-
-**Points faibles** :
-- Configuration initiale complexe
-- Interface utilisateur moins moderne
-
-### 2. GitHub Actions
-
-[GitHub Actions](https://github.com/features/actions) est intégré directement à GitHub et permet d'automatiser des workflows directement depuis votre dépôt.
-
-**Points forts** :
-- Intégration parfaite avec GitHub
-- Configuration par fichiers YAML simples
-- Minutes gratuites généreuses pour les projets publics
-- Interface moderne et intuitive
-
-**Points faibles** :
-- Limité aux dépôts GitHub
-- Peut devenir coûteux pour les projets privés volumineux
-
-### 3. Azure DevOps
-
-[Azure DevOps](https://azure.microsoft.com/services/devops/) (anciennement VSTS) est la solution de Microsoft pour le CI/CD.
-
-**Points forts** :
-- Bonne intégration avec les produits Microsoft
-- Interface utilisateur intuitive
-- Offre gratuite généreuse (2000 minutes/mois)
-- Fonctionnalités complètes de gestion de projet
-
-**Points faibles** :
-- Courbe d'apprentissage initiale
-- Peut devenir complexe pour les grands projets
-
-### 4. GitLab CI/CD
-
-[GitLab CI/CD](https://docs.gitlab.com/ee/ci/) est intégré à la plateforme GitLab.
-
-**Points forts** :
-- Intégration native avec GitLab
-- Configuration simple par fichier YAML
-- Version communautaire gratuite disponible
-- Documentation complète
-
-**Points faibles** :
-- Moins de runners (exécuteurs) disponibles pour Windows
-
-### 5. TeamCity
-
-[TeamCity](https://www.jetbrains.com/teamcity/) de JetBrains est particulièrement apprécié pour sa facilité d'utilisation.
-
-**Points forts** :
-- Interface utilisateur intuitive
-- Bonne prise en charge de Delphi
-- License gratuite pour les petits projets
-- Détection intelligente des problèmes
-
-**Points faibles** :
-- Version complète payante
-- Ressources système importantes requises
-
-## Configuration d'un pipeline CI/CD pour Delphi
-
-Dans ce tutoriel, nous allons utiliser **GitHub Actions** pour notre exemple, car :
-- C'est accessible gratuitement
-- La configuration est relativement simple
-- Les concepts s'appliquent facilement à d'autres outils
-
-### Prérequis
-
-Pour suivre ce tutoriel, vous aurez besoin de :
-
-1. Un compte [GitHub](https://github.com/)
-2. Un projet Delphi versionné avec Git
-3. Une licence Delphi valide (nous verrons comment l'utiliser dans un environnement CI/CD)
-
-### Étape 1 : Préparation de votre projet Delphi
-
-Avant de configurer le CI/CD, assurez-vous que votre projet Delphi peut être compilé en ligne de commande :
-
-1. Ouvrez une invite de commande
-2. Naviguez vers le dossier d'installation de Delphi
-3. Testez la compilation en ligne de commande :
-
-```batch
-"C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-msbuild "C:\Chemin\Vers\Votre\Projet\MonProjet.dproj" /t:Build /p:Config=Release /p:Platform=Win32
+```
+[1. Developer]
+    ↓ (commit code)
+[2. Version Control] (Git)
+    ↓ (trigger)
+[3. CI Server] (Compilation, Tests)
+    ↓ (si succès)
+[4. Build Artifacts] (Exécutables, Installateurs)
+    ↓ (si succès)
+[5. CD Pipeline] (Déploiement)
+    ↓
+[6. Production] (Serveurs, Store, Site Web)
+    ↓
+[7. Monitoring] (Surveillance)
 ```
 
-Si cette commande fonctionne et compile votre projet, vous êtes prêt pour le CI/CD.
+### Avantages du CI/CD
 
-### Étape 2 : Configuration de GitHub Actions
+#### 1. Gain de temps massif
 
-1. Dans votre dépôt GitHub, cliquez sur l'onglet "Actions"
-2. Cliquez sur "Set up a workflow yourself" (Configurer un workflow vous-même)
-3. GitHub créera un fichier `.github/workflows/main.yml`
-4. Remplacez le contenu par l'exemple de base suivant :
+**Sans CI/CD** : 30-60 minutes de travail manuel par déploiement
 
+**Avec CI/CD** : 0 minutes de travail manuel, tout est automatique
+
+Pour 10 déploiements par semaine, vous économisez **5-10 heures** !
+
+#### 2. Réduction des erreurs
+
+Les humains font des erreurs :
+- Oublier de compiler pour une plateforme
+- Oublier de lancer les tests
+- Oublier de signer l'application
+- Utiliser la mauvaise configuration
+
+**CI/CD ne fait jamais d'erreur** : même processus à chaque fois.
+
+#### 3. Détection précoce des bugs
+
+Les tests automatiques détectent les problèmes **immédiatement** :
+- Vous cassez quelque chose ? Vous le savez en 5 minutes
+- Plus besoin d'attendre la fin du sprint pour tester
+- Les bugs sont corrigés quand le code est frais dans votre esprit
+
+#### 4. Déploiements fréquents et sûrs
+
+Avec CI/CD, déployer devient **sans risque** :
+- Déployez plusieurs fois par jour si nécessaire
+- Chaque déploiement est testé automatiquement
+- Retour en arrière facile si problème
+
+#### 5. Collaboration améliorée
+
+Toute l'équipe bénéficie :
+- Tout le monde voit l'état du build en temps réel
+- Pas de "ça marche sur ma machine" : même environnement pour tous
+- Intégration continue des changements de chaque développeur
+
+#### 6. Documentation automatique
+
+Le pipeline CI/CD sert de **documentation vivante** :
+- Comment compiler le projet ? Voir le pipeline
+- Quelles dépendances ? Listées dans le pipeline
+- Comment déployer ? Le pipeline le montre
+
+## Concepts clés du CI/CD
+
+### Build (Compilation)
+
+Le **build** est la compilation de votre code source en exécutable.
+
+**Build manuel** :
+```
+1. Ouvrir Delphi
+2. Sélectionner la configuration Release
+3. Compiler pour Win32
+4. Compiler pour Win64
+5. Vérifier les erreurs
+```
+
+**Build automatique** :
 ```yaml
-name: Delphi CI/CD
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Permet de déclencher le workflow manuellement
-
-jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout du code
-      uses: actions/checkout@v2
-
-    - name: Configuration de Delphi
-      run: |
-        # Nous verrons cette partie dans l'étape suivante
-
-    - name: Compilation du projet
-      run: |
-        # Nous verrons cette partie dans l'étape suivante
-
-    - name: Tests unitaires
-      run: |
-        # Nous verrons cette partie dans l'étape suivante
-
-    - name: Création de l'installateur
-      run: |
-        # Nous verrons cette partie dans l'étape suivante
-
-    - name: Publication des artefacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: mon-application
-        path: |
-          # Nous verrons cette partie dans l'étape suivante
+# Le CI server fait tout automatiquement
+build:
+  - msbuild MonProjet.dproj /p:Config=Release /p:Platform=Win32
+  - msbuild MonProjet.dproj /p:Config=Release /p:Platform=Win64
 ```
 
-### Étape 3 : Installation automatique de Delphi
+### Tests automatiques
 
-L'un des défis du CI/CD avec Delphi est l'installation du compilateur sur l'agent de build. Voici deux approches :
+Les **tests** vérifient que votre code fonctionne correctement.
 
-#### Option 1 : Utilisation d'une image Docker préinstallée
+Types de tests :
+- **Tests unitaires** : Testent des fonctions individuelles
+- **Tests d'intégration** : Testent que les modules fonctionnent ensemble
+- **Tests de régression** : Vérifient qu'on n'a pas cassé quelque chose qui marchait
 
-Cette option utilise une image Docker avec Delphi déjà installé :
-
-```yaml
-- name: Configuration de Delphi avec Docker
-  run: |
-    docker pull delphicontainers/delphi-xe10.4:latest
-    docker run --name delphi-builder -v ${GITHUB_WORKSPACE}:/project delphicontainers/delphi-xe10.4:latest
-```
-
-#### Option 2 : Installation silencieuse de Delphi
-
-Cette option télécharge et installe Delphi en mode silencieux (nécessite votre fichier de licence) :
-
-```yaml
-- name: Téléchargement et installation de Delphi
-  run: |
-    # Créer un dossier pour l'installateur
-    mkdir C:\DelphiInstaller
-
-    # Télécharger l'installateur (remplacez l'URL par un lien valide)
-    curl -L "https://votre-url-de-stockage/Delphi_11_Alexandria_Setup.exe" -o "C:\DelphiInstaller\Setup.exe"
-
-    # Créer un fichier de réponses pour l'installation silencieuse
-    echo "[InstallParams]" > C:\DelphiInstaller\response.txt
-    echo "LicenseFile=C:\DelphiInstaller\license.slip" >> C:\DelphiInstaller\response.txt
-    echo "IgnoreLatestUpdate=1" >> C:\DelphiInstaller\response.txt
-    echo "AutoSelectPlatforms=1" >> C:\DelphiInstaller\response.txt
-
-    # Décoder votre fichier de licence depuis les secrets GitHub
-    echo "${{ secrets.DELPHI_LICENSE }}" > C:\DelphiInstaller\license.slip
-
-    # Exécuter l'installation silencieuse
-    C:\DelphiInstaller\Setup.exe -q -I"C:\DelphiInstaller\response.txt"
-```
-
-Pour cette approche, vous devez ajouter votre fichier de licence comme secret GitHub :
-1. Allez dans les paramètres de votre dépôt
-2. Cliquez sur "Secrets and variables" > "Actions"
-3. Ajoutez un nouveau secret nommé "DELPHI_LICENSE" avec le contenu de votre fichier de licence
-
-### Étape 4 : Compilation de votre projet Delphi
-
-Une fois Delphi configuré, ajoutez la compilation de votre projet :
-
-```yaml
-- name: Compilation du projet
-  run: |
-    # Initialiser les variables d'environnement Delphi
-    call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-
-    # Compiler le projet
-    msbuild "MonProjet.dproj" /t:Build /p:Config=Release /p:Platform=Win32
-```
-
-### Étape 5 : Exécution des tests unitaires
-
-Si votre projet inclut des tests unitaires (avec DUnit, DUnitX ou TestInsight), ajoutez leur exécution :
-
-```yaml
-- name: Tests unitaires
-  run: |
-    cd Win32\Release
-    # Exécuter les tests unitaires
-    MonProjetTests.exe -xml:tests-results.xml
-
-    # Option : Publier les résultats des tests
-    - name: Publier les résultats de test
-      uses: dorny/test-reporter@v1
-      if: always()
-      with:
-        name: Tests DUnit
-        path: Win32\Release\tests-results.xml
-        reporter: java-junit
-```
-
-### Étape 6 : Création d'un installateur
-
-Automatisez la création de votre installateur (Inno Setup, MSI, etc.) :
-
-```yaml
-- name: Installation d'Inno Setup
-  run: |
-    choco install innosetup -y
-
-- name: Création de l'installateur
-  run: |
-    cd Scripts
-    "C:\Program Files (x86)\Inno Setup 6\iscc.exe" MonProjetSetup.iss
-```
-
-### Étape 7 : Publication des artefacts
-
-Enfin, publiez les fichiers générés comme artefacts de build :
-
-```yaml
-- name: Publication des artefacts
-  uses: actions/upload-artifact@v2
-  with:
-    name: mon-application
-    path: |
-      Output/MonProjet_Setup.exe
-      Win32/Release/MonProjet.exe
-```
-
-### Workflow GitHub Actions complet
-
-Voici à quoi ressemblerait un workflow complet :
-
-```yaml
-name: Delphi CI/CD
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout du code
-      uses: actions/checkout@v2
-
-    - name: Téléchargement et installation de Delphi
-      run: |
-        mkdir C:\DelphiInstaller
-        curl -L "https://votre-url-de-stockage/Delphi_11_Alexandria_Setup.exe" -o "C:\DelphiInstaller\Setup.exe"
-        echo "[InstallParams]" > C:\DelphiInstaller\response.txt
-        echo "LicenseFile=C:\DelphiInstaller\license.slip" >> C:\DelphiInstaller\response.txt
-        echo "IgnoreLatestUpdate=1" >> C:\DelphiInstaller\response.txt
-        echo "AutoSelectPlatforms=1" >> C:\DelphiInstaller\response.txt
-        echo "${{ secrets.DELPHI_LICENSE }}" > C:\DelphiInstaller\license.slip
-        C:\DelphiInstaller\Setup.exe -q -I"C:\DelphiInstaller\response.txt"
-
-    - name: Compilation du projet
-      run: |
-        call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-        msbuild "MonProjet.dproj" /t:Build /p:Config=Release /p:Platform=Win32
-
-    - name: Tests unitaires
-      run: |
-        cd Win32\Release
-        MonProjetTests.exe -xml:tests-results.xml
-
-    - name: Publier les résultats de test
-      uses: dorny/test-reporter@v1
-      if: always()
-      with:
-        name: Tests DUnit
-        path: Win32\Release\tests-results.xml
-        reporter: java-junit
-
-    - name: Installation d'Inno Setup
-      run: |
-        choco install innosetup -y
-
-    - name: Création de l'installateur
-      run: |
-        cd Scripts
-        "C:\Program Files (x86)\Inno Setup 6\iscc.exe" MonProjetSetup.iss
-
-    - name: Publication des artefacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: mon-application
-        path: |
-          Output/MonProjet_Setup.exe
-          Win32/Release/MonProjet.exe
-```
-
-## Mise en place du Déploiement Continu
-
-Maintenant que nous avons configuré l'Intégration Continue, passons au Déploiement Continu.
-
-### Déploiement sur un site web
-
-Pour publier automatiquement votre installateur sur votre site web :
-
-```yaml
-- name: Déploiement sur le site web
-  uses: SamKirkland/FTP-Deploy-Action@4.3.0
-  with:
-    server: ${{ secrets.FTP_SERVER }}
-    username: ${{ secrets.FTP_USERNAME }}
-    password: ${{ secrets.FTP_PASSWORD }}
-    local-dir: Output/
-    server-dir: /public_html/downloads/
-```
-
-N'oubliez pas d'ajouter les secrets FTP_SERVER, FTP_USERNAME et FTP_PASSWORD dans votre dépôt GitHub.
-
-### Déploiement sur le Windows Store
-
-Pour automatiser la soumission au Windows Store :
-
-```yaml
-- name: Installation de Windows Store Uploader
-  run: |
-    dotnet tool install -g WindowsStoreUploader
-
-- name: Soumission au Windows Store
-  run: |
-    wsuploader submit -p "Output/MonProjet.msixupload" -id ${{ secrets.STORE_ID }} -t ${{ secrets.STORE_TOKEN }}
-```
-
-### Création de releases GitHub
-
-Pour créer automatiquement une release GitHub lorsqu'un tag est poussé :
-
-```yaml
-name: Delphi Release
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    # ... étapes de build comme avant ...
-
-  release:
-    needs: build
-    runs-on: windows-latest
-    steps:
-      - name: Télécharger les artefacts
-        uses: actions/download-artifact@v2
-        with:
-          name: mon-application
-          path: release-files
-
-      - name: Créer la release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release-files/*
-          body: |
-            ## Nouvelle version ${{ github.ref_name }}
-
-            Changelog:
-            - Fonctionnalité 1
-            - Correction de bug 2
-            - Amélioration 3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## Bonnes pratiques pour le CI/CD avec Delphi
-
-Pour tirer le meilleur parti de votre pipeline CI/CD avec Delphi, suivez ces bonnes pratiques :
-
-### 1. Automatisez les tests
-
-Les tests automatisés sont essentiels pour un pipeline CI/CD efficace :
+**Exemple de test unitaire Delphi avec DUnitX** :
 
 ```pascal
-// Exemple de test unitaire avec DUnitX
-procedure TMyTests.TestAddition;
+[Test]
+procedure TCalculatorTests.TestAddition;
 begin
-  Assert.AreEqual(5, Calculator.Add(2, 3), 'Addition should work');
+  Assert.AreEqual(5, Calculator.Add(2, 3), 'Addition incorrecte');
 end;
 ```
 
-### 2. Versionning sémantique
+Dans le pipeline CI/CD, ces tests s'exécutent automatiquement.
 
-Adoptez le versionnement sémantique (MAJEUR.MINEUR.CORRECTIF) et synchronisez-le avec votre système de build :
+### Artifacts (Artefacts)
 
-```pascal
-// Dans un fichier VersionInfo.pas
-const
-  VERSION_MAJOR = 1;
-  VERSION_MINOR = 2;
-  VERSION_PATCH = 3;
-  VERSION_BUILD = {$IFDEF DEFINE_BUILD_NUMBER} {$DEFINE_BUILD_NUMBER} {$ELSE} 0 {$ENDIF};
+Les **artifacts** sont les fichiers produits par le build :
+- Exécutables (.exe)
+- Installateurs (.msi, setup.exe)
+- Fichiers de symboles pour le débogage
+- Documentation générée
 
-  VERSION_STRING = FORMAT('%d.%d.%d.%d', [VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD]);
+Le CI/CD **stocke ces artifacts** pour qu'ils soient disponibles au déploiement.
+
+### Pipeline
+
+Un **pipeline** est la séquence d'étapes automatisées :
+
+```
+Pipeline "Build et Test"
+├── Stage 1: Compilation
+│   ├── Job: Compiler Win32
+│   └── Job: Compiler Win64
+├── Stage 2: Tests
+│   ├── Job: Tests unitaires
+│   └── Job: Tests d'intégration
+├── Stage 3: Package
+│   └── Job: Créer installateur
+└── Stage 4: Deploy
+    └── Job: Uploader sur serveur
 ```
 
-Dans votre workflow CI/CD, définissez le numéro de build :
+Chaque **stage** contient des **jobs** qui s'exécutent séquentiellement ou en parallèle.
 
-```yaml
-- name: Set Build Number
-  run: |
-    echo "#define DEFINE_BUILD_NUMBER ${{ github.run_number }}" > buildnumber.inc
+### Environnements
+
+Un **environnement** est une configuration de déploiement :
+
+- **Development (Dev)** : Pour les développeurs, mis à jour constamment
+- **Staging (Test)** : Environnement de pré-production, réplique de production
+- **Production (Prod)** : L'application finale utilisée par les clients
+
+Le pipeline peut déployer automatiquement vers différents environnements.
+
+## Outils CI/CD populaires
+
+### 1. GitLab CI/CD
+
+**GitLab CI** est intégré dans GitLab (plateforme Git).
+
+**Avantages** :
+- Gratuit (version communautaire)
+- Intégré dans GitLab
+- Configuration simple (fichier YAML)
+- Runners auto-hébergés ou cloud
+
+**Inconvénients** :
+- Nécessite GitLab (pas GitHub)
+- Documentation parfois complexe
+
+**Configuration** : Fichier `.gitlab-ci.yml` à la racine du projet
+
+### 2. GitHub Actions
+
+**GitHub Actions** est intégré dans GitHub.
+
+**Avantages** :
+- Intégré dans GitHub
+- Marketplace d'actions réutilisables
+- Gratuit pour les projets publics
+- 2000 minutes/mois gratuites pour privés
+
+**Inconvénients** :
+- Coût potentiel pour gros projets privés
+- Nécessite GitHub
+
+**Configuration** : Fichiers YAML dans `.github/workflows/`
+
+### 3. Azure DevOps (anciennement VSTS)
+
+**Azure DevOps** de Microsoft offre une suite complète.
+
+**Avantages** :
+- Intégration Microsoft/Windows excellente
+- Azure Pipelines très puissant
+- Gratuit jusqu'à 5 utilisateurs
+- Support natif MSBuild
+
+**Inconvénients** :
+- Interface parfois lourde
+- Courbe d'apprentissage
+
+**Configuration** : Fichier `azure-pipelines.yml` ou interface graphique
+
+### 4. Jenkins
+
+**Jenkins** est le système CI/CD open source historique.
+
+**Avantages** :
+- Totalement gratuit et open source
+- Énormément de plugins
+- Très flexible et personnalisable
+- Auto-hébergé (contrôle total)
+
+**Inconvénients** :
+- Installation et maintenance nécessaires
+- Interface ancienne
+- Configuration parfois complexe
+
+**Configuration** : Jenkinsfile ou interface web
+
+### 5. TeamCity
+
+**TeamCity** de JetBrains est un outil professionnel.
+
+**Avantages** :
+- Interface moderne et intuitive
+- Excellent support Delphi possible
+- Gratuit jusqu'à 3 agents
+- Très stable
+
+**Inconvénients** :
+- Auto-hébergé uniquement
+- Coût pour grande équipe
+
+### Tableau comparatif
+
+| Outil | Hébergement | Coût | Difficulté | Support Delphi |
+|-------|-------------|------|------------|----------------|
+| **GitLab CI** | Cloud/Self | Gratuit | Moyenne | Bon (via script) |
+| **GitHub Actions** | Cloud | Gratuit* | Facile | Bon (via script) |
+| **Azure DevOps** | Cloud | Gratuit* | Moyenne | Excellent (MSBuild natif) |
+| **Jenkins** | Self | Gratuit | Difficile | Bon (plugins) |
+| **TeamCity** | Self | Gratuit* | Facile | Bon |
+
+*Gratuit avec limitations
+
+**Recommandation pour débutants** :
+- Si vous utilisez GitHub → **GitHub Actions**
+- Si vous utilisez GitLab → **GitLab CI**
+- Pour le meilleur support Windows → **Azure DevOps**
+
+## Configuration CI/CD pour Delphi
+
+### Prérequis
+
+Pour automatiser la compilation Delphi, vous avez besoin de :
+
+1. **Delphi installé** sur le serveur CI (ou runner)
+2. **Licence ligne de commande** si utilisation en serveur
+3. **Variables d'environnement** configurées correctement
+4. **MSBuild** ou **rsvars.bat** accessible
+
+### Compilation en ligne de commande
+
+Delphi peut se compiler sans l'IDE :
+
+```batch
+REM Méthode 1 : Via rsvars.bat et msbuild
+call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32
+
+REM Méthode 2 : Via MSBuild directement
+"C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\msbuild.exe" ^
+  MonProjet.dproj ^
+  /t:Build ^
+  /p:Config=Release ^
+  /p:Platform=Win64
 ```
 
-### 3. Gestion des secrets
+**Options importantes** :
 
-Ne stockez jamais les informations sensibles directement dans vos workflows, utilisez des secrets :
+- `/t:Build` : Compiler le projet
+- `/t:Clean` : Nettoyer avant compilation
+- `/t:Rebuild` : Nettoyer puis compiler
+- `/p:Config=Release` : Configuration Release
+- `/p:Platform=Win32` : Plateforme cible
+- `/verbosity:detailed` : Logs détaillés
 
-- Fichiers de licence Delphi
-- Clés de signature de code
-- Identifiants de déploiement
-- Clés API
+## Exemple : Pipeline GitLab CI pour Delphi
 
-### 4. Matrices de build
-
-Pour les applications multi-plateformes, utilisez des matrices pour compiler pour différentes plateformes :
+### Fichier .gitlab-ci.yml
 
 ```yaml
-jobs:
-  build:
-    strategy:
-      matrix:
-        platform: [Win32, Win64, Android, iOS]
-        config: [Release, Debug]
+# Définir les stages du pipeline
+stages:
+  - build
+  - test
+  - package
+  - deploy
 
-    steps:
-      # ...
-      - name: Compilation du projet
-        run: |
-          msbuild "MonProjet.dproj" /t:Build /p:Config=${{ matrix.config }} /p:Platform=${{ matrix.platform }}
+# Variables globales
+variables:
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0"
+  PROJECT_NAME: "MonApplication"
+
+# Stage 1 : Compilation
+build_win32:
+  stage: build
+  tags:
+    - windows
+    - delphi
+  script:
+    # Activer l'environnement Delphi
+    - call "%DELPHI_PATH%\\bin\\rsvars.bat"
+
+    # Compiler pour Win32
+    - msbuild %PROJECT_NAME%.dproj /t:Rebuild /p:Config=Release /p:Platform=Win32
+
+    # Vérifier que l'exe existe
+    - if not exist "Win32\\Release\\%PROJECT_NAME%.exe" exit 1
+  artifacts:
+    paths:
+      - Win32/Release/*.exe
+      - Win32/Release/*.dll
+    expire_in: 1 week
+
+build_win64:
+  stage: build
+  tags:
+    - windows
+    - delphi
+  script:
+    - call "%DELPHI_PATH%\\bin\\rsvars.bat"
+    - msbuild %PROJECT_NAME%.dproj /t:Rebuild /p:Config=Release /p:Platform=Win64
+    - if not exist "Win64\\Release\\%PROJECT_NAME%.exe" exit 1
+  artifacts:
+    paths:
+      - Win64/Release/*.exe
+      - Win64/Release/*.dll
+    expire_in: 1 week
+
+# Stage 2 : Tests
+test_unit:
+  stage: test
+  tags:
+    - windows
+    - delphi
+  dependencies:
+    - build_win64
+  script:
+    # Compiler les tests
+    - call "%DELPHI_PATH%\\bin\\rsvars.bat"
+    - msbuild Tests\\TestProject.dproj /t:Build /p:Config=Release
+
+    # Exécuter les tests avec DUnitX
+    - Tests\\Win64\\Release\\TestProject.exe -xml:test-results.xml
+
+    # Vérifier le code de retour
+    - if %errorlevel% neq 0 exit 1
+  artifacts:
+    reports:
+      junit: test-results.xml
+    when: always
+
+# Stage 3 : Création du package
+package_installer:
+  stage: package
+  tags:
+    - windows
+    - innosetup
+  dependencies:
+    - build_win32
+    - build_win64
+  script:
+    # Compiler l'installateur avec Inno Setup
+    - "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe" Setup\\MonApp.iss
+
+    # Signer l'installateur
+    - signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /t http://timestamp.digicert.com Output\\MonApp_Setup.exe
+  artifacts:
+    paths:
+      - Output/MonApp_Setup.exe
+    expire_in: 1 month
+
+# Stage 4 : Déploiement
+deploy_staging:
+  stage: deploy
+  tags:
+    - windows
+  dependencies:
+    - package_installer
+  environment:
+    name: staging
+    url: https://staging.monapp.com
+  script:
+    # Uploader vers le serveur staging
+    - scp Output/MonApp_Setup.exe user@staging.monapp.com:/var/www/downloads/
+
+    # Mettre à jour le fichier version.json
+    - curl -X POST https://staging.monapp.com/api/update-version -d "version=1.0.%CI_PIPELINE_ID%"
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  tags:
+    - windows
+  dependencies:
+    - package_installer
+  environment:
+    name: production
+    url: https://www.monapp.com
+  script:
+    # Uploader vers le serveur production
+    - scp Output/MonApp_Setup.exe user@www.monapp.com:/var/www/downloads/
+    - curl -X POST https://www.monapp.com/api/update-version -d "version=1.0.%CI_PIPELINE_ID%"
+  only:
+    - main
+  when: manual  # Déploiement manuel en production
 ```
 
-### 5. Optimisation de la vitesse de build
+**Explication du pipeline** :
 
-Accélérez vos builds en :
+1. **build_win32 / build_win64** : Compile pour les deux plateformes en parallèle
+2. **test_unit** : Exécute les tests unitaires (dépend du build Win64)
+3. **package_installer** : Crée et signe l'installateur
+4. **deploy_staging** : Déploie automatiquement sur staging (branche develop)
+5. **deploy_production** : Déploie sur production (branche main, manuel)
 
-- Utilisant la mise en cache pour les dépendances
-- Limitant les tests en fonction des fichiers modifiés
-- Exécutant des jobs en parallèle quand c'est possible
+### Configuration du Runner GitLab
 
-```yaml
-- name: Cache des packages Delphi
-  uses: actions/cache@v2
-  with:
-    path: C:\Users\runneradmin\Documents\Embarcadero\Studio\22.0\Bpl
-    key: ${{ runner.os }}-delphi-packages-${{ hashFiles('**/*.dpk') }}
-```
+Un **runner** est la machine qui exécute les jobs.
 
-## Cas d'usage avancés
+**Installation sur Windows** :
 
-### Intégration du contrôle qualité
+1. **Télécharger le runner** :
+   - https://docs.gitlab.com/runner/install/windows.html
 
-Intégrez SonarQube ou une solution similaire pour analyser la qualité du code :
+2. **Installer** :
+   ```cmd
+   gitlab-runner.exe install
+   gitlab-runner.exe start
+   ```
 
-```yaml
-- name: Analyse SonarQube
-  uses: SonarSource/sonarqube-scan-action@master
-  env:
-    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  with:
-    args: >
-      -Dsonar.projectKey=mon-projet-delphi
-      -Dsonar.sources=.
-      -Dsonar.exclusions=Win32/**/*,Win64/**/*
-```
+3. **Enregistrer avec GitLab** :
+   ```cmd
+   gitlab-runner.exe register
+   ```
+   - URL du GitLab
+   - Token du projet (dans Settings → CI/CD → Runners)
+   - Tags : `windows`, `delphi`
+   - Executor : `shell`
 
-### Automatisation des changelogs
+4. **Configurer l'environnement** :
+   - Installer Delphi sur la machine runner
+   - Configurer les variables d'environnement
+   - Installer les outils nécessaires (Inno Setup, signtool, etc.)
 
-Générez automatiquement des changelogs à partir des messages de commit :
+## Exemple : Pipeline GitHub Actions pour Delphi
 
-```yaml
-- name: Générer le changelog
-  id: changelog
-  uses: metcalfc/changelog-generator@v0.4.4
-  with:
-    myToken: ${{ secrets.GITHUB_TOKEN }}
-    head-ref: ${{ github.ref }}
-    base-ref: ${{ github.event.before }}
-```
-
-### Notifications de build
-
-Ajoutez des notifications par e-mail ou sur des plateformes comme Slack ou Discord :
+### Fichier .github/workflows/build.yml
 
 ```yaml
-- name: Envoyer une notification Slack
-  uses: 8398a7/action-slack@v3
-  with:
-    status: ${{ job.status }}
-    fields: repo,message,commit,author,action,eventName,ref,workflow
-  env:
-    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  if: always()
-```
+name: Build and Deploy
 
-## Exemple concret : Pipeline CI/CD complet pour une application Delphi
-
-Voici un exemple plus complet et réaliste pour une application Delphi professionnelle :
-
-```yaml
-name: Delphi CI/CD Pipeline
-
+# Déclencher sur push vers main ou develop
 on:
   push:
     branches: [ main, develop ]
-    tags: [ 'v*' ]
   pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
+  # Job 1 : Compilation
   build:
+    name: Build Delphi Application
     runs-on: windows-latest
-    strategy:
-      matrix:
-        config: [Release]
-        platform: [Win32, Win64]
 
     steps:
-    - name: Checkout du code
-      uses: actions/checkout@v2
+    # Récupérer le code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Installer Delphi (via cache ou installation)
+    # Note: Nécessite une licence
+    - name: Setup Delphi
+      run: |
+        # Script d'installation/configuration de Delphi
+        # À adapter selon votre méthode
+
+    # Compiler Win32
+    - name: Build Win32
+      run: |
+        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        msbuild MonApplication.dproj /t:Rebuild /p:Config=Release /p:Platform=Win32
+      shell: cmd
+
+    # Compiler Win64
+    - name: Build Win64
+      run: |
+        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        msbuild MonApplication.dproj /t:Rebuild /p:Config=Release /p:Platform=Win64
+      shell: cmd
+
+    # Uploader les artifacts
+    - name: Upload Win32 Artifact
+      uses: actions/upload-artifact@v3
       with:
-        fetch-depth: 0  # Récupérer tout l'historique pour les numéros de version
+        name: MonApp-Win32
+        path: Win32/Release/MonApplication.exe
 
-    - name: Configuration de l'environnement Delphi
+    - name: Upload Win64 Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: MonApp-Win64
+        path: Win64/Release/MonApplication.exe
+
+  # Job 2 : Tests
+  test:
+    name: Run Tests
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: MonApp-Win64
+
+    - name: Run Unit Tests
       run: |
-        # Installation de Delphi (ici via image Docker ou installation silencieuse)
-        # ...
+        # Compiler et exécuter les tests DUnitX
+        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        msbuild Tests\TestProject.dproj /t:Build /p:Config=Release
+        Tests\Win64\Release\TestProject.exe -xml:test-results.xml
+      shell: cmd
 
-    - name: Configuration des numéros de version
-      run: |
-        $version = "1.0.0"
-        # Si c'est un tag, extraire la version du tag
-        if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
-          $version = "${{ github.ref }}".Substring(11)
-        }
-        # Définir le numéro de build
-        echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "#define VERSION_STRING ""$version.${{ github.run_number }}""" > version.inc
-
-    - name: Restauration des dépendances
-      run: |
-        # Installez les packages Delphi nécessaires
-        call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-        dpm install
-
-    - name: Compilation du projet
-      run: |
-        call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-        msbuild "MaApplication.dproj" /t:Build /p:Config=${{ matrix.config }} /p:Platform=${{ matrix.platform }}
-
-    - name: Exécution des tests unitaires
-      run: |
-        cd ${{ matrix.platform }}\${{ matrix.config }}
-        MaApplicationTests.exe -xml:test-results.xml
-
-    - name: Publication des résultats de test
-      uses: dorny/test-reporter@v1
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action/composite@v2
       if: always()
       with:
-        name: Tests ${{ matrix.platform }}-${{ matrix.config }}
-        path: ${{ matrix.platform }}\${{ matrix.config }}\test-results.xml
-        reporter: java-junit
+        files: test-results.xml
 
-    - name: Création de l'installateur
-      if: matrix.platform == 'Win64' && matrix.config == 'Release'
-      run: |
-        choco install innosetup -y
-        copy ${{ matrix.platform }}\${{ matrix.config }}\MaApplication.exe Setup\
-        # Remplacer la version dans le script InnoSetup
-        (Get-Content Setup\Setup.iss) -replace '#define AppVersion ".*"', '#define AppVersion "${{ env.VERSION }}.${{ github.run_number }}"' | Set-Content Setup\Setup.iss
-        "C:\Program Files (x86)\Inno Setup 6\iscc.exe" Setup\Setup.iss
-
-    - name: Signature du code
-      if: matrix.platform == 'Win64' && matrix.config == 'Release'
-      run: |
-        # Décoder le certificat à partir des secrets
-        echo "${{ secrets.CODE_SIGNING_CERT }}" | base64 -d > certificate.pfx
-        # Signer l'installateur
-        signtool sign /f certificate.pfx /p ${{ secrets.CERT_PASSWORD }} /tr http://timestamp.digicert.com /td sha256 /fd sha256 Setup\Output\MaApplicationSetup.exe
-
-    - name: Publication des artefacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: ma-application-${{ matrix.platform }}-${{ matrix.config }}
-        path: |
-          ${{ matrix.platform }}\${{ matrix.config }}\MaApplication.exe
-          Setup\Output\MaApplicationSetup.exe
-
-  release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+  # Job 3 : Création de l'installateur
+  package:
+    name: Create Installer
     runs-on: windows-latest
+    needs: [build, test]
+
     steps:
-      - name: Télécharger les artefacts
-        uses: actions/download-artifact@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Préparer les fichiers pour la release
-        run: |
-          mkdir release-files
-          copy ma-application-Win64-Release\Setup\Output\MaApplicationSetup.exe release-files\MaApplicationSetup_${{ github.ref_name }}.exe
-          copy ma-application-Win32-Release\Win32\Release\MaApplication.exe release-files\MaApplication_32bit_${{ github.ref_name }}.exe
-          copy ma-application-Win64-Release\Win64\Release\MaApplication.exe release-files\MaApplication_64bit_${{ github.ref_name }}.exe
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
 
-      - name: Générer le changelog
-        id: changelog
-        uses: metcalfc/changelog-generator@v0.4.4
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Inno Setup
+      run: choco install innosetup -y
 
-      - name: Créer la release GitHub
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release-files/*
-          body: |
-            ## Version ${{ github.ref_name }}
+    - name: Build Installer
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" Setup\MonApp.iss
+      shell: cmd
 
-            ${{ steps.changelog.outputs.changelog }}
+    - name: Sign Installer
+      env:
+        CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+      run: |
+        signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /t http://timestamp.digicert.com Output\MonApp_Setup.exe
+      shell: cmd
 
-      - name: Déploiement sur le site web
-        uses: SamKirkland/FTP-Deploy-Action@4.3.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: release-files/
-          server-dir: /public_html/downloads/
+    - name: Upload Installer
+      uses: actions/upload-artifact@v3
+      with:
+        name: MonApp-Installer
+        path: Output/MonApp_Setup.exe
 
-      - name: Notification de la nouvelle version
-        uses: 8398a7/action-slack@v3
-        with:
-          status: custom
-          fields: repo,message,commit,author
-          custom_payload: |
-            {
-              "attachments": [{
-                "color": "good",
-                "text": "Nouvelle version ${{ github.ref_name }} de MaApplication déployée!"
-              }]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  # Job 4 : Déploiement
+  deploy:
+    name: Deploy to Production
+    runs-on: windows-latest
+    needs: package
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://www.monapp.com
+
+    steps:
+    - name: Download Installer
+      uses: actions/download-artifact@v3
+      with:
+        name: MonApp-Installer
+
+    - name: Deploy to Server
+      env:
+        SSH_KEY: ${{ secrets.SSH_KEY }}
+      run: |
+        # Upload via SCP ou FTP
+        scp -i ssh_key MonApp_Setup.exe user@www.monapp.com:/var/www/downloads/
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
 ```
 
-## Exercice pratique : Création d'un workflow CI simple
+### Secrets GitHub
 
-Pour mettre en pratique ce que vous avez appris, suivez cet exercice :
+Pour stocker les informations sensibles (mots de passe, clés SSH) :
 
-1. Prenez un projet Delphi simple existant
-2. Créez un dépôt GitHub et poussez votre code
-3. Créez un fichier `.github/workflows/ci.yml` avec une configuration de base :
-   - Checkout du code
-   - (Simulez) l'installation de Delphi avec un simple message
-   - (Simulez) la compilation avec un autre message
-4. Activez GitHub Actions et vérifiez que le workflow s'exécute
-5. Progressivement, améliorez le workflow en ajoutant des étapes plus avancées
+1. **Repository → Settings → Secrets and variables → Actions**
+2. **New repository secret**
+3. Ajouter :
+   - `CERT_PASSWORD` : Mot de passe du certificat
+   - `SSH_KEY` : Clé SSH pour le déploiement
+   - `DEPLOY_TOKEN` : Token d'authentification
+
+Les secrets sont chiffrés et jamais affichés dans les logs.
+
+## Exemple : Pipeline Azure DevOps pour Delphi
+
+### Fichier azure-pipelines.yml
+
+```yaml
+# Pipeline Azure pour Delphi
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.dproj'
+  buildPlatform: 'Win32|Win64'
+  buildConfiguration: 'Release'
+  delphiPath: 'C:\Program Files (x86)\Embarcadero\Studio\23.0'
+
+stages:
+- stage: Build
+  displayName: 'Build Application'
+  jobs:
+  - job: BuildJob
+    displayName: 'Compile Delphi Project'
+    steps:
+
+    # Récupérer le code
+    - checkout: self
+      clean: true
+
+    # Installer Delphi (ou utiliser agent pré-configuré)
+    - task: PowerShell@2
+      displayName: 'Setup Delphi Environment'
+      inputs:
+        targetType: 'inline'
+        script: |
+          & "$(delphiPath)\bin\rsvars.bat"
+
+    # Compiler Win32
+    - task: MSBuild@1
+      displayName: 'Build Win32'
+      inputs:
+        solution: '$(solution)'
+        platform: 'Win32'
+        configuration: '$(buildConfiguration)'
+        msbuildArguments: '/t:Rebuild'
+
+    # Compiler Win64
+    - task: MSBuild@1
+      displayName: 'Build Win64'
+      inputs:
+        solution: '$(solution)'
+        platform: 'Win64'
+        configuration: '$(buildConfiguration)'
+        msbuildArguments: '/t:Rebuild'
+
+    # Publier les artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Win32 Artifacts'
+      inputs:
+        PathtoPublish: 'Win32\Release'
+        ArtifactName: 'Win32-Build'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Win64 Artifacts'
+      inputs:
+        PathtoPublish: 'Win64\Release'
+        ArtifactName: 'Win64-Build'
+
+- stage: Test
+  displayName: 'Run Tests'
+  dependsOn: Build
+  jobs:
+  - job: TestJob
+    displayName: 'Execute Unit Tests'
+    steps:
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'Win64-Build'
+
+    - task: PowerShell@2
+      displayName: 'Run DUnitX Tests'
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Exécuter les tests
+          & "Tests\Win64\Release\TestProject.exe" -xml:test-results.xml
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/test-results.xml'
+        failTaskOnFailedTests: true
+
+- stage: Package
+  displayName: 'Create Installer'
+  dependsOn: Test
+  jobs:
+  - job: PackageJob
+    steps:
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'Win32-Build'
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'Win64-Build'
+
+    # Créer l'installateur avec Inno Setup
+    - task: PowerShell@2
+      displayName: 'Build Installer'
+      inputs:
+        targetType: 'inline'
+        script: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" Setup\MonApp.iss
+
+    # Signer l'installateur
+    - task: PowerShell@2
+      displayName: 'Sign Installer'
+      inputs:
+        targetType: 'inline'
+        script: |
+          signtool sign /f Certificate.pfx /p $(CertPassword) /t http://timestamp.digicert.com Output\MonApp_Setup.exe
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: 'Output'
+        ArtifactName: 'Installer'
+
+- stage: Deploy
+  displayName: 'Deploy to Production'
+  dependsOn: Package
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployJob
+    displayName: 'Deploy Application'
+    environment: 'Production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: 'Installer'
+
+          # Déployer sur le serveur
+          - task: PowerShell@2
+            displayName: 'Upload to Server'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Upload via SCP/SFTP
+                scp $(System.ArtifactsDirectory)\Installer\MonApp_Setup.exe user@server:/path/
+```
+
+**Avantages Azure DevOps pour Delphi** :
+- MSBuild natif et bien supporté
+- Interface visuelle claire
+- Gestion des releases sophistiquée
+- Intégration Azure Cloud
+
+## Bonnes pratiques CI/CD
+
+### 1. Compiler sur une machine propre
+
+❌ **Mauvais** : Compiler sur votre machine de développement
+- Dépendances non documentées
+- "Ça marche chez moi" mais pas ailleurs
+
+✅ **Bon** : Utiliser un runner/agent dédié
+- Environnement contrôlé et reproductible
+- Détecte les dépendances manquantes
+
+### 2. Versionner tout
+
+Versionnez dans Git :
+- ✅ Code source
+- ✅ Scripts de build
+- ✅ Configuration CI/CD
+- ✅ Scripts de déploiement
+- ✅ Documentation
+- ❌ Pas les binaires compilés
+- ❌ Pas les secrets (mots de passe, clés)
+
+### 3. Builds rapides
+
+Optimisez la vitesse du pipeline :
+- **Utilisez le cache** : Dépendances, fichiers intermédiaires
+- **Parallélisez** : Win32 et Win64 en même temps
+- **Incrémental** : Ne recompilez que ce qui a changé
+- **Machines rapides** : CPU puissant, SSD
+
+**Objectif** : Build complet en moins de 10 minutes
+
+### 4. Tests automatiques obligatoires
+
+Le pipeline doit **échouer si les tests échouent** :
+
+```yaml
+test:
+  script:
+    - TestProject.exe -xml:results.xml
+    - if %errorlevel% neq 0 exit 1  # Fail si tests ratés
+```
+
+Cela empêche le code buggé d'arriver en production.
+
+### 5. Environnements multiples
+
+Utilisez au minimum 3 environnements :
+- **Dev** : Déploiement automatique à chaque commit
+- **Staging** : Réplique de production pour tests finaux
+- **Production** : L'application finale, déploiement contrôlé
+
+### 6. Déploiement progressif
+
+Ne déployez pas tout d'un coup en production :
+
+```
+Phase 1 : 10% des serveurs/utilisateurs
+  ↓ (surveiller 24h)
+Phase 2 : 50% des serveurs/utilisateurs
+  ↓ (surveiller 24h)
+Phase 3 : 100% des serveurs/utilisateurs
+```
+
+Cela limite l'impact d'un bug critique.
+
+### 7. Rollback facile
+
+Gardez toujours un moyen de revenir en arrière rapidement :
+- Tags Git pour chaque version
+- Artifacts conservés pendant 30 jours minimum
+- Script de rollback testé
+
+```yaml
+rollback_production:
+  when: manual
+  script:
+    - deploy_version.sh v1.2.0  # Version précédente stable
+```
+
+### 8. Notifications
+
+Configurez des notifications pour :
+- ✅ Build réussi (optionnel, pas trop verbeux)
+- ❌ Build échoué (obligatoire, alerte l'équipe)
+- 🚀 Déploiement production (obligatoire)
+
+**Canaux** : Email, Slack, Microsoft Teams, Discord
+
+### 9. Sécurité
+
+- **Secrets** : Jamais dans le code, toujours dans des variables sécurisées
+- **Scans** : Analyse de sécurité automatique (vulnérabilités, malware)
+- **Accès** : Limiter qui peut déployer en production
+
+### 10. Documentation
+
+Documentez votre pipeline :
+- README expliquant le processus
+- Diagramme du flux CI/CD
+- Procédure de rollback
+- Contact en cas de problème
+
+## Problèmes courants et solutions
+
+### "Delphi not found" ou "rsvars.bat not found"
+
+**Cause** : Delphi pas installé ou chemin incorrect
+
+**Solution** :
+```yaml
+# Vérifier le chemin et le mettre en variable
+variables:
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0"
+
+script:
+  - if not exist "%DELPHI_PATH%\\bin\\rsvars.bat" (
+      echo Delphi not found! && exit 1
+    )
+```
+
+### "License error" lors de la compilation
+
+**Cause** : Pas de licence ligne de commande
+
+**Solution** :
+- Acheter une licence "Command Line" auprès d'Embarcadero
+- Ou utiliser la licence desktop (selon les termes)
+- Configurer la variable d'environnement de licence
+
+### Tests échouent en CI mais passent localement
+
+**Causes** :
+- Différences d'environnement
+- Chemins de fichiers absolus dans les tests
+- Timing différent (tests trop rapides ou trop lents)
+
+**Solutions** :
+```pascal
+// ✗ Mauvais : Chemin absolu
+TestFile := 'C:\Users\moi\Documents\test.txt';
+
+// ✓ Bon : Chemin relatif
+TestFile := TPath.Combine(TPath.GetCurrentPath, 'TestData\test.txt');
+
+// ✓ Bon : Attentes avec timeout
+Assert.IsTrue(WaitForCondition(1000), 'Timeout après 1 seconde');
+```
+
+### Build trop lent (>30 minutes)
+
+**Solutions** :
+- **Cache** : Mettez en cache les dépendances
+- **Parallélisation** : Compilez Win32 et Win64 simultanément
+- **Compilation incrémentale** : Ne recompilez pas tout
+- **Machine plus rapide** : Plus de CPU/RAM
+
+```yaml
+# Exemple de cache GitLab CI
+cache:
+  paths:
+    - __history/
+    - Win32/Release/*.dcu
+    - Win64/Release/*.dcu
+```
+
+### Artifacts trop volumineux
+
+**Problème** : Les artifacts occupent trop d'espace
+
+**Solution** : Ne gardez que l'essentiel
+```yaml
+artifacts:
+  paths:
+    - Win64/Release/*.exe  # ✓ Exécutables
+    - Win64/Release/*.dll  # ✓ DLL nécessaires
+    # ✗ Pas les .dcu, .obj, etc.
+  expire_in: 1 week  # ✓ Expiration automatique
+```
+
+### Pipeline échoue de manière intermittente
+
+**Causes** :
+- Tests non déterministes (dépendent du timing)
+- Ressources externes indisponibles
+- Problèmes réseau
+
+**Solutions** :
+- **Retry automatique** :
+```yaml
+retry:
+  max: 2
+  when: script_failure
+```
+- Tests déterministes uniquement
+- Mocker les services externes
+
+## Surveillance et monitoring après déploiement
+
+Le CI/CD ne s'arrête pas au déploiement. Surveillez :
+
+### Métriques à suivre
+
+1. **Taux de succès des builds** : Doit être >90%
+2. **Temps de build** : Surveiller les ralentissements
+3. **Couverture de code** : Tests couvrent combien du code ?
+4. **Fréquence de déploiement** : Combien par semaine ?
+5. **MTTR** (Mean Time To Recovery) : Temps pour corriger un problème
+
+### Outils de monitoring
+
+- **Application Insights** (Azure) : Télémétrie d'application
+- **Sentry** : Surveillance des erreurs
+- **ELK Stack** : Logs centralisés
+- **Grafana** : Dashboards de métriques
+
+### Alertes
+
+Configurez des alertes pour :
+- 🚨 Taux d'erreur >5%
+- 🚨 Build échoué sur branche main
+- ⚠️ Temps de réponse >2 secondes
+- ⚠️ Utilisation mémoire >80%
+
+## Roadmap d'adoption CI/CD
+
+Si vous débutez avec CI/CD, progressez par étapes :
+
+### Phase 1 : Compilation automatique (Semaine 1-2)
+
+```
+Objectif : Build automatique à chaque commit
+- Installer un runner/agent
+- Créer pipeline minimal (build uniquement)
+- Corriger les erreurs de compilation
+```
+
+### Phase 2 : Tests automatiques (Semaine 3-4)
+
+```
+Objectif : Tests unitaires automatiques
+- Écrire premiers tests DUnitX
+- Intégrer tests dans pipeline
+- Configurer échec si tests ratés
+```
+
+### Phase 3 : Artifacts et packaging (Semaine 5-6)
+
+```
+Objectif : Créer installateurs automatiquement
+- Automatiser Inno Setup dans pipeline
+- Signature automatique
+- Stocker artifacts
+```
+
+### Phase 4 : Déploiement automatique (Semaine 7-8)
+
+```
+Objectif : Déployer vers environnement de test
+- Configurer environnement staging
+- Automatiser upload
+- Tester le déploiement
+```
+
+### Phase 5 : Production et monitoring (Semaine 9+)
+
+```
+Objectif : Déploiement production avec surveillance
+- Déploiement production (manuel d'abord)
+- Configurer monitoring
+- Mettre en place rollback
+- Progressivement automatiser production
+```
+
+## Coûts du CI/CD
+
+### Coûts directs
+
+| Service | Coût gratuit | Coût payant |
+|---------|--------------|-------------|
+| **GitLab CI** | Illimité (self-hosted) | 400 min/mois (cloud) | 10$/utilisateur/mois |
+| **GitHub Actions** | 2000 min/mois | 0.008$/min au-delà |
+| **Azure DevOps** | 1800 min/mois | 40$/agent parallèle/mois |
+| **Jenkins** | Gratuit (self-hosted) | Coût serveur uniquement |
+
+### Coûts indirects
+
+- **Serveur/Agent** : ~50-200$/mois selon configuration
+- **Stockage artifacts** : ~10-50$/mois
+- **Temps d'apprentissage** : 20-40 heures initialement
+- **Maintenance** : ~2-4 heures/mois
+
+### ROI (Retour sur Investissement)
+
+**Sans CI/CD** :
+- 1h manuelle par déploiement
+- 10 déploiements/semaine = 10h/semaine = 40h/mois
+- À 50€/h = **2000€/mois de temps perdu**
+
+**Avec CI/CD** :
+- Coût : ~100€/mois
+- Temps économisé : 40h/mois = 2000€
+- **ROI : 1900€/mois = 22 800€/an**
+
+Sans compter les avantages indirects (moins de bugs, déploiements plus fréquents, meilleure qualité).
+
+## Checklist de mise en place CI/CD
+
+Avant de lancer votre CI/CD :
+
+- [ ] Code dans un système de contrôle de version (Git)
+- [ ] Compilation en ligne de commande fonctionne
+- [ ] Tests unitaires existent (DUnitX recommandé)
+- [ ] Runner/Agent installé et configuré
+- [ ] Delphi installé sur le runner
+- [ ] Variables d'environnement configurées
+- [ ] Pipeline de base créé (.gitlab-ci.yml, .yml GitHub, etc.)
+- [ ] Build automatique fonctionne
+- [ ] Tests automatiques fonctionnent
+- [ ] Artifacts sauvegardés correctement
+- [ ] Notifications configurées
+- [ ] Secrets stockés de manière sécurisée
+- [ ] Documentation du pipeline rédigée
+- [ ] Procédure de rollback définie
+- [ ] Équipe formée au nouveau processus
 
 ## Conclusion
 
-La mise en place d'un pipeline CI/CD pour vos applications Delphi peut sembler complexe au départ, mais les avantages sont considérables. En automatisant la compilation, les tests et le déploiement, vous améliorez la qualité de votre code, réduisez les erreurs humaines et accélérez la livraison de nouvelles fonctionnalités à vos utilisateurs.
+Le CI/CD transforme radicalement la façon dont vous développez et déployez vos applications Delphi. Ce qui prenait des heures manuellement devient automatique et fiable.
 
-Commencez simplement, avec un pipeline basique, puis enrichissez-le progressivement. N'oubliez pas que le CI/CD est un processus d'amélioration continue, tout comme le développement logiciel lui-même.
+**Points clés à retenir** :
 
-Dans la prochaine section, nous explorerons les techniques de télémétrie et d'analyse de crash pour suivre la santé de vos applications en production et identifier rapidement les problèmes rencontrés par vos utilisateurs.
+1. **CI/CD = Automatisation** : Compilation, tests, packaging, déploiement
+2. **Gains massifs** : Temps, qualité, fréquence de livraison
+3. **Outils variés** : GitLab CI, GitHub Actions, Azure DevOps, Jenkins
+4. **Progression par étapes** : Commencez simple, évoluez progressivement
+5. **Tests automatiques** : Essentiels pour un CI/CD efficace
+6. **Environnements multiples** : Dev, Staging, Production
+7. **Sécurité** : Secrets protégés, accès contrôlés
+8. **ROI élevé** : Investissement rentabilisé en quelques mois
+
+Avec un bon pipeline CI/CD, vous pouvez :
+- Déployer plusieurs fois par jour sans stress
+- Détecter les bugs en quelques minutes
+- Revenir en arrière en cas de problème
+- Gagner des dizaines d'heures par mois
+- Améliorer la qualité de vos applications
+
+Le CI/CD n'est plus un luxe réservé aux grandes entreprises, c'est devenu un standard de l'industrie. Et avec Delphi, c'est tout à fait accessible ! Dans la dernière section de ce chapitre, nous explorerons la télémétrie et l'analyse de crash pour surveiller vos applications en production.
 
 ⏭️ [Télémétrie et analyse de crash](/17-distribution-et-deploiement/10-telemetrie-et-analyse-de-crash.md)

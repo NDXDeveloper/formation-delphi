@@ -1,344 +1,1092 @@
-# 17.5 Mise à jour automatique
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 17.5 Mise à jour automatique
 
 ## Introduction
 
-Imaginez que vous venez de corriger un bug important ou d'ajouter une fonctionnalité très attendue à votre application Delphi. Comment faire en sorte que tous vos utilisateurs en profitent rapidement ? La réponse est simple : un système de **mise à jour automatique**.
+Imaginez que vous découvrez un bug critique dans votre application ou que vous souhaitez ajouter une nouvelle fonctionnalité. Comment faire pour que vos utilisateurs bénéficient rapidement de ces améliorations ? Devez-vous les contacter un par un pour leur dire de télécharger la nouvelle version ? Bien sûr que non !
 
-Une mise à jour automatique permet à votre application de vérifier périodiquement si une nouvelle version est disponible, de la télécharger et de l'installer, le tout avec un minimum d'intervention de l'utilisateur. Cette fonctionnalité améliore considérablement l'expérience utilisateur et garantit que vos clients utilisent toujours la dernière version de votre logiciel.
+La **mise à jour automatique** (ou *auto-update*) est un mécanisme qui permet à votre application de se mettre à jour elle-même, automatiquement ou avec un minimum d'intervention de l'utilisateur. C'est devenu un standard dans l'industrie du logiciel, et vos utilisateurs s'attendent à ce que votre application puisse se maintenir à jour facilement.
 
-Dans ce chapitre, nous allons découvrir comment implémenter un système de mise à jour automatique dans vos applications Delphi, des concepts de base jusqu'à une solution complète.
+## Pourquoi implémenter un système de mise à jour ?
 
-## Concepts fondamentaux
+### 1. Correction rapide des bugs
 
-Un système de mise à jour automatique comporte généralement ces éléments essentiels :
+Quand vous découvrez un bug, vous pouvez le corriger et distribuer la mise à jour immédiatement. Sans système de mise à jour, beaucoup d'utilisateurs continueront d'utiliser la version buggée pendant des mois.
 
-1. **Vérification des mises à jour** : Déterminer si une nouvelle version est disponible
-2. **Téléchargement** : Récupérer les fichiers de mise à jour
-3. **Installation** : Appliquer la mise à jour au logiciel existant
-4. **Interface utilisateur** : Informer l'utilisateur et gérer ses choix
+### 2. Nouvelles fonctionnalités
 
-![Schéma du processus de mise à jour](https://placeholder-image.com/auto-update-process.png)
+Vous pouvez enrichir votre application au fil du temps et vos utilisateurs en bénéficient automatiquement.
 
-## Approches pour les mises à jour automatiques
+### 3. Sécurité
 
-Il existe plusieurs façons d'implémenter des mises à jour automatiques. Nous allons examiner trois approches, de la plus simple à la plus avancée :
+Les failles de sécurité doivent être corrigées rapidement. Un système de mise à jour permet de déployer des patches de sécurité en quelques heures.
 
-### 1. Approche simple : Remplacement complet
+### 4. Expérience utilisateur
 
-Cette méthode consiste à télécharger un nouvel installateur complet et à l'exécuter.
+Les utilisateurs apprécient les applications qui se maintiennent à jour sans effort de leur part. C'est un signe de qualité et de maintenance active.
 
-**Avantages :**
-- Facile à implémenter
-- Fiable car elle utilise votre installateur standard
+### 5. Support simplifié
 
-**Inconvénients :**
-- Téléchargement plus volumineux
-- Nécessite de quitter l'application
+Si tous vos utilisateurs ont des versions récentes, votre support est simplifié. Vous n'avez pas à gérer des dizaines de versions différentes.
 
-### 2. Approche intermédiaire : Mise à jour par fichiers différentiels
+### 6. Contrôle des versions en circulation
 
-Cette approche ne télécharge que les fichiers qui ont changé.
+Vous gardez le contrôle des versions utilisées et pouvez même forcer la mise à jour si une version devient trop obsolète ou dangereuse.
 
-**Avantages :**
-- Téléchargements plus petits et plus rapides
-- Processus de mise à jour plus rapide
+## Types de stratégies de mise à jour
 
-**Inconvénients :**
-- Plus complexe à implémenter
-- Nécessite un mécanisme pour comparer les versions des fichiers
+Il existe plusieurs approches pour gérer les mises à jour :
 
-### 3. Approche avancée : Mise à jour à chaud (Hot Update)
+### 1. Notification simple
 
-Cette méthode permet de mettre à jour l'application pendant qu'elle s'exécute.
+**Fonctionnement** :
+- L'application vérifie si une nouvelle version existe
+- Si oui, elle affiche un message à l'utilisateur
+- L'utilisateur doit télécharger et installer manuellement
 
-**Avantages :**
-- Expérience utilisateur optimale
-- Pas besoin de redémarrer l'application (pour certaines mises à jour)
+**Avantages** :
+- Simple à implémenter
+- Contrôle total pour l'utilisateur
 
-**Inconvénients :**
-- Complexité technique élevée
-- Ne fonctionne pas pour tous les types de modifications
+**Inconvénients** :
+- Beaucoup d'utilisateurs ignorent les notifications
+- Nécessite une action manuelle
 
-## Implémentation d'une solution simple
+### 2. Téléchargement automatique avec installation manuelle
 
-Commençons par créer un système de mise à jour automatique simple mais fonctionnel. Cette implémentation vérifiera si une nouvelle version est disponible, téléchargera le nouvel installateur et l'exécutera.
+**Fonctionnement** :
+- L'application détecte une nouvelle version
+- Elle télécharge automatiquement la mise à jour
+- Elle demande à l'utilisateur de fermer l'application pour installer
 
-### Étape 1 : Structure du serveur de mise à jour
+**Avantages** :
+- Gain de temps pour l'utilisateur
+- Mise à jour déjà prête à installer
 
-Vous aurez besoin d'un serveur web pour héberger :
+**Inconvénients** :
+- Consomme de la bande passante sans prévenir
+- Installation toujours manuelle
 
-1. Un fichier XML ou JSON contenant les informations de version
-2. Les fichiers d'installation
+### 3. Mise à jour automatique complète
 
-Voici un exemple de structure de fichier `version.xml` :
+**Fonctionnement** :
+- Détection, téléchargement et installation automatiques
+- L'utilisateur est simplement informé
+- Peut se faire au démarrage ou en arrière-plan
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<update>
-  <version>2.1.5</version>
-  <url>https://www.monsite.com/downloads/MonApp_Setup_2.1.5.exe</url>
-  <notes>
-    - Correction du bug d'affichage des rapports
-    - Amélioration des performances de recherche
-    - Nouvelle fonctionnalité d'exportation PDF
-  </notes>
-  <minVersion>2.0.0</minVersion>
-  <forceUpdate>false</forceUpdate>
-</update>
+**Avantages** :
+- Expérience optimale
+- Taux de mise à jour très élevé
+
+**Inconvénients** :
+- Complexe à implémenter
+- Nécessite des droits administrateur (parfois)
+
+### 4. Mise à jour forcée
+
+**Fonctionnement** :
+- L'application refuse de démarrer si elle n'est pas à jour
+- Force le téléchargement et l'installation
+
+**Avantages** :
+- 100% des utilisateurs sont à jour
+- Idéal pour les applications cloud qui nécessitent une version précise
+
+**Inconvénients** :
+- Peut frustrer les utilisateurs
+- Problématique si le serveur de mise à jour est inaccessible
+
+**Recommandation pour débutants** : Commencez par la stratégie 2 (téléchargement automatique avec installation manuelle), puis évoluez vers la 3.
+
+## Principes de base d'un système de mise à jour
+
+### Architecture générale
+
+Un système de mise à jour comprend plusieurs éléments :
+
+```
+[Application Client]
+       ↓
+   Vérification
+       ↓
+[Serveur de mises à jour] (fichier XML/JSON avec infos version)
+       ↓
+   Comparaison
+       ↓
+   Nouvelle version ?
+       ↓ Oui
+   Téléchargement
+       ↓
+[Fichier de mise à jour] (installateur ou fichiers)
+       ↓
+   Installation
+       ↓
+   Redémarrage
 ```
 
-Placez ce fichier sur votre serveur web à une URL fixe, par exemple :
-`https://www.monsite.com/updates/version.xml`
+### Composants nécessaires
 
-### Étape 2 : Création de la classe de mise à jour dans Delphi
+1. **Module de vérification** : Code dans votre application qui vérifie les mises à jour
+2. **Fichier de version** : Fichier sur un serveur (XML, JSON) contenant les informations de la dernière version
+3. **Fichiers de mise à jour** : L'installateur ou les fichiers à mettre à jour
+4. **Module d'installation** : Code qui installe la mise à jour
 
-Créons une classe pour gérer le processus de mise à jour :
+### Informations à gérer
+
+**Côté serveur** (fichier version.json) :
+- Numéro de la dernière version
+- URL de téléchargement
+- Taille du fichier
+- Notes de version (changelog)
+- Signature/Hash pour vérifier l'intégrité
+- Version minimum requise
+
+**Côté application** :
+- Version actuelle de l'application
+- Date de dernière vérification
+- Paramètres de mise à jour (fréquence, automatique ou non)
+
+## Implémentation d'un système de mise à jour simple
+
+### Étape 1 : Créer le fichier de version sur le serveur
+
+Créez un fichier `version.json` que vous hébergerez sur votre serveur web :
+
+```json
+{
+  "version": "1.2.0",
+  "release_date": "2025-01-20",
+  "download_url": "https://monsite.com/downloads/MonApp_Setup_1.2.0.exe",
+  "file_size": 15728640,
+  "file_hash": "SHA256:a1b2c3d4e5f6...",
+  "min_version": "1.0.0",
+  "required": false,
+  "changelog": [
+    "Correction du bug de synchronisation",
+    "Nouvelle fonctionnalité d'export PDF",
+    "Améliorations de performance"
+  ]
+}
+```
+
+Placez ce fichier à une URL fixe, par exemple :
+`https://monsite.com/updates/version.json`
+
+### Étape 2 : Ajouter la gestion des versions dans votre application
+
+Dans Delphi, définissez les informations de version :
 
 ```pascal
-unit uUpdater;
+unit AppVersion;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Net.HttpClient,
-  System.Net.URLClient, Xml.XMLDoc, Xml.XMLIntf, System.IOUtils;
+  System.SysUtils, System.Classes;
 
 type
-  TUpdateInfo = record
-    CurrentVersion: string;
-    NewVersion: string;
-    DownloadURL: string;
-    ReleaseNotes: string;
-    MinVersion: string;
-    ForceUpdate: Boolean;
-    UpdateAvailable: Boolean;
+  TVersionInfo = record
+    Major: Integer;
+    Minor: Integer;
+    Release: Integer;
+    Build: Integer;
+    function ToString: string;
+    function CompareWith(Other: TVersionInfo): Integer;
+    class function FromString(const VersionStr: string): TVersionInfo; static;
   end;
 
-  TUpdateCallback = procedure(const UpdateInfo: TUpdateInfo) of object;
-
-  TAutoUpdater = class
-  private
-    FUpdateURL: string;
-    FCurrentVersion: string;
-    FTempFilePath: string;
-    FOnUpdateAvailable: TUpdateCallback;
-    FOnNoUpdateAvailable: TNotifyEvent;
-    FOnDownloadProgress: TProc<Int64, Int64>;
-    FOnDownloadComplete: TProc<string>;
-    FOnError: TProc<string>;
-
-    function CompareVersions(Version1, Version2: string): Integer;
-    function DownloadFile(const URL, DestinationFile: string): Boolean;
-  public
-    constructor Create(const UpdateURL, CurrentVersion: string);
-    destructor Destroy; override;
-
-    function CheckForUpdates: TUpdateInfo;
-    procedure DownloadUpdate(const UpdateInfo: TUpdateInfo);
-    procedure InstallUpdate;
-
-    property OnUpdateAvailable: TUpdateCallback read FOnUpdateAvailable write FOnUpdateAvailable;
-    property OnNoUpdateAvailable: TNotifyEvent read FOnNoUpdateAvailable write FOnNoUpdateAvailable;
-    property OnDownloadProgress: TProc<Int64, Int64> read FOnDownloadProgress write FOnDownloadProgress;
-    property OnDownloadComplete: TProc<string> read FOnDownloadComplete write FOnDownloadComplete;
-    property OnError: TProc<string> read FOnError write FOnError;
-  end;
+const
+  APP_VERSION: TVersionInfo = (Major: 1; Minor: 1; Release: 0; Build: 0);
 
 implementation
 
-uses
-  Winapi.Windows, Winapi.ShellAPI;
-
-{ TAutoUpdater }
-
-constructor TAutoUpdater.Create(const UpdateURL, CurrentVersion: string);
+function TVersionInfo.ToString: string;
 begin
-  inherited Create;
-  FUpdateURL := UpdateURL;
-  FCurrentVersion := CurrentVersion;
-  FTempFilePath := TPath.Combine(TPath.GetTempPath, 'update_download.exe');
+  Result := Format('%d.%d.%d', [Major, Minor, Release]);
 end;
 
-destructor TAutoUpdater.Destroy;
+function TVersionInfo.CompareWith(Other: TVersionInfo): Integer;
 begin
-  if FileExists(FTempFilePath) then
-    TFile.Delete(FTempFilePath);
-  inherited;
+  // Retourne : -1 si inférieur, 0 si égal, 1 si supérieur
+  if Major <> Other.Major then
+    Result := Major - Other.Major
+  else if Minor <> Other.Minor then
+    Result := Minor - Other.Minor
+  else if Release <> Other.Release then
+    Result := Release - Other.Release
+  else
+    Result := Build - Other.Build;
 end;
 
-function TAutoUpdater.CompareVersions(Version1, Version2: string): Integer;
+class function TVersionInfo.FromString(const VersionStr: string): TVersionInfo;
 var
-  V1, V2: TArray<string>;
-  I, Num1, Num2: Integer;
+  Parts: TArray<string>;
 begin
-  V1 := Version1.Split(['.']);
-  V2 := Version2.Split(['.']);
-
-  Result := 0;
-  for I := 0 to Min(Length(V1), Length(V2)) - 1 do
-  begin
-    Num1 := StrToIntDef(V1[I], 0);
-    Num2 := StrToIntDef(V2[I], 0);
-
-    if Num1 < Num2 then
-      Exit(-1)
-    else if Num1 > Num2 then
-      Exit(1);
-  end;
-
-  if Length(V1) < Length(V2) then
-    Result := -1
-  else if Length(V1) > Length(V2) then
-    Result := 1;
-end;
-
-function TAutoUpdater.CheckForUpdates: TUpdateInfo;
-var
-  HTTP: THTTPClient;
-  Response: IHTTPResponse;
-  XMLDoc: IXMLDocument;
-  RootNode: IXMLNode;
-begin
-  // Initialiser le résultat
-  Result.CurrentVersion := FCurrentVersion;
-  Result.UpdateAvailable := False;
-
-  try
-    HTTP := THTTPClient.Create;
-    try
-      Response := HTTP.Get(FUpdateURL);
-
-      if Response.StatusCode = 200 then
-      begin
-        XMLDoc := TXMLDocument.Create(nil);
-        XMLDoc.LoadFromXML(Response.ContentAsString);
-        XMLDoc.Active := True;
-
-        RootNode := XMLDoc.DocumentElement;
-
-        Result.NewVersion := RootNode.ChildValues['version'];
-        Result.DownloadURL := RootNode.ChildValues['url'];
-        Result.ReleaseNotes := RootNode.ChildValues['notes'];
-        Result.MinVersion := RootNode.ChildValues['minVersion'];
-        Result.ForceUpdate := LowerCase(RootNode.ChildValues['forceUpdate']) = 'true';
-
-        // Comparer les versions
-        Result.UpdateAvailable := CompareVersions(FCurrentVersion, Result.NewVersion) < 0;
-
-        // Vérifier si la version actuelle est inférieure à la version minimale requise
-        if (Result.MinVersion <> '') and (CompareVersions(FCurrentVersion, Result.MinVersion) < 0) then
-          Result.ForceUpdate := True;
-
-        if Result.UpdateAvailable and Assigned(FOnUpdateAvailable) then
-          FOnUpdateAvailable(Result)
-        else if not Result.UpdateAvailable and Assigned(FOnNoUpdateAvailable) then
-          FOnNoUpdateAvailable(Self);
-      end
-      else if Assigned(FOnError) then
-        FOnError('Erreur HTTP: ' + Response.StatusCode.ToString);
-    finally
-      HTTP.Free;
-    end;
-  except
-    on E: Exception do
-      if Assigned(FOnError) then
-        FOnError('Erreur: ' + E.Message);
-  end;
-end;
-
-function TAutoUpdater.DownloadFile(const URL, DestinationFile: string): Boolean;
-var
-  HTTP: THTTPClient;
-  Response: IHTTPResponse;
-  FileStream: TFileStream;
-begin
-  Result := False;
-
-  try
-    HTTP := THTTPClient.Create;
-    try
-      // Configurer le callback de progression si nécessaire
-      if Assigned(FOnDownloadProgress) then
-      begin
-        HTTP.OnReceiveData := procedure(const Sender: TObject; AContentLength: Int64; AReadCount: Int64; var AAbort: Boolean)
-        begin
-          FOnDownloadProgress(AContentLength, AReadCount);
-        end;
-      end;
-
-      if FileExists(DestinationFile) then
-        TFile.Delete(DestinationFile);
-
-      FileStream := TFileStream.Create(DestinationFile, fmCreate);
-      try
-        Response := HTTP.Get(URL, FileStream);
-        Result := Response.StatusCode = 200;
-      finally
-        FileStream.Free;
-      end;
-
-      if Result and Assigned(FOnDownloadComplete) then
-        FOnDownloadComplete(DestinationFile)
-      else if not Result and Assigned(FOnError) then
-        FOnError('Erreur de téléchargement: ' + Response.StatusCode.ToString);
-    finally
-      HTTP.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      if Assigned(FOnError) then
-        FOnError('Erreur: ' + E.Message);
-      Result := False;
-    end;
-  end;
-end;
-
-procedure TAutoUpdater.DownloadUpdate(const UpdateInfo: TUpdateInfo);
-begin
-  if DownloadFile(UpdateInfo.DownloadURL, FTempFilePath) then
-  begin
-    if Assigned(FOnDownloadComplete) then
-      FOnDownloadComplete(FTempFilePath);
-  end;
-end;
-
-procedure TAutoUpdater.InstallUpdate;
-var
-  ExecuteInfo: TShellExecuteInfo;
-begin
-  if not FileExists(FTempFilePath) then
-  begin
-    if Assigned(FOnError) then
-      FOnError('Fichier d''installation introuvable');
-    Exit;
-  end;
-
-  // Préparer l'exécution de l'installateur
-  FillChar(ExecuteInfo, SizeOf(ExecuteInfo), 0);
-  ExecuteInfo.cbSize := SizeOf(ExecuteInfo);
-  ExecuteInfo.fMask := SEE_MASK_NOCLOSEPROCESS;
-  ExecuteInfo.lpFile := PChar(FTempFilePath);
-  ExecuteInfo.nShow := SW_SHOW;
-
-  // Exécuter l'installateur
-  if ShellExecuteEx(@ExecuteInfo) then
-  begin
-    // Fermer l'application actuelle pour permettre la mise à jour
-    ExitProcess(0);
-  end
-  else if Assigned(FOnError) then
-    FOnError('Erreur lors du lancement de l''installateur');
+  Parts := VersionStr.Split(['.']);
+  Result.Major := StrToIntDef(Parts[0], 0);
+  Result.Minor := StrToIntDef(Parts[1], 0);
+  Result.Release := StrToIntDef(Parts[2], 0);
+  if Length(Parts) > 3 then
+    Result.Build := StrToIntDef(Parts[3], 0)
+  else
+    Result.Build := 0;
 end;
 
 end.
 ```
 
-### Étape 3 : Intégration dans le formulaire principal
+### Étape 3 : Créer le module de vérification des mises à jour
 
-Maintenant, intégrons notre système de mise à jour dans le formulaire principal de l'application :
+```pascal
+unit UpdateChecker;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.Net.HttpClient, System.JSON,
+  AppVersion;
+
+type
+  TUpdateInfo = record
+    Available: Boolean;
+    Version: TVersionInfo;
+    DownloadURL: string;
+    FileSize: Int64;
+    FileHash: string;
+    IsRequired: Boolean;
+    ChangeLog: TArray<string>;
+  end;
+
+  TUpdateChecker = class
+  private
+    FUpdateURL: string;
+    FHttpClient: THTTPClient;
+  public
+    constructor Create(const UpdateURL: string);
+    destructor Destroy; override;
+
+    function CheckForUpdates: TUpdateInfo;
+  end;
+
+implementation
+
+constructor TUpdateChecker.Create(const UpdateURL: string);
+begin
+  inherited Create;
+  FUpdateURL := UpdateURL;
+  FHttpClient := THTTPClient.Create;
+end;
+
+destructor TUpdateChecker.Destroy;
+begin
+  FHttpClient.Free;
+  inherited;
+end;
+
+function TUpdateChecker.CheckForUpdates: TUpdateInfo;
+var
+  Response: IHTTPResponse;
+  JsonStr: string;
+  JsonObj: TJSONObject;
+  JsonArray: TJSONArray;
+  i: Integer;
+begin
+  // Initialisation
+  Result.Available := False;
+
+  try
+    // Télécharger le fichier de version
+    Response := FHttpClient.Get(FUpdateURL);
+
+    if Response.StatusCode = 200 then
+    begin
+      JsonStr := Response.ContentAsString;
+      JsonObj := TJSONObject.ParseJSONValue(JsonStr) as TJSONObject;
+
+      try
+        // Parser les informations
+        Result.Version := TVersionInfo.FromString(
+          JsonObj.GetValue<string>('version')
+        );
+
+        Result.DownloadURL := JsonObj.GetValue<string>('download_url');
+        Result.FileSize := JsonObj.GetValue<Int64>('file_size');
+        Result.FileHash := JsonObj.GetValue<string>('file_hash');
+        Result.IsRequired := JsonObj.GetValue<Boolean>('required');
+
+        // Changelog
+        JsonArray := JsonObj.GetValue<TJSONArray>('changelog');
+        SetLength(Result.ChangeLog, JsonArray.Count);
+        for i := 0 to JsonArray.Count - 1 do
+          Result.ChangeLog[i] := JsonArray.Items[i].Value;
+
+        // Vérifier si une mise à jour est disponible
+        Result.Available := Result.Version.CompareWith(APP_VERSION) > 0;
+
+      finally
+        JsonObj.Free;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      // En cas d'erreur, pas de mise à jour disponible
+      Result.Available := False;
+    end;
+  end;
+end;
+
+end.
+```
+
+### Étape 4 : Créer l'interface utilisateur de mise à jour
+
+Créez un formulaire `TFormUpdate` :
+
+```pascal
+unit FormUpdate;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.Controls,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, UpdateChecker;
+
+type
+  TFormUpdate = class(TForm)
+    LabelTitle: TLabel;
+    LabelCurrentVersion: TLabel;
+    LabelNewVersion: TLabel;
+    MemoChangelog: TMemo;
+    ProgressBar: TProgressBar;
+    ButtonDownload: TButton;
+    ButtonLater: TButton;
+    PanelProgress: TPanel;
+    LabelProgress: TLabel;
+
+    procedure FormCreate(Sender: TObject);
+    procedure ButtonDownloadClick(Sender: TObject);
+    procedure ButtonLaterClick(Sender: TObject);
+  private
+    FUpdateInfo: TUpdateInfo;
+    FDownloadThread: TThread;
+    procedure ShowUpdateInfo;
+    procedure DownloadUpdate;
+    procedure OnDownloadProgress(Sender: TObject; ContentLength, ReadCount: Int64; var Abort: Boolean);
+    procedure OnDownloadComplete(Sender: TObject);
+  public
+    class function ShowUpdateDialog(const UpdateInfo: TUpdateInfo): Boolean;
+  end;
+
+implementation
+
+uses
+  System.Net.HttpClient, AppVersion, System.IOUtils, Winapi.ShellAPI;
+
+{$R *.dfm}
+
+procedure TFormUpdate.FormCreate(Sender: TObject);
+begin
+  PanelProgress.Visible := False;
+end;
+
+class function TFormUpdate.ShowUpdateDialog(const UpdateInfo: TUpdateInfo): Boolean;
+var
+  Form: TFormUpdate;
+begin
+  Form := TFormUpdate.Create(nil);
+  try
+    Form.FUpdateInfo := UpdateInfo;
+    Form.ShowUpdateInfo;
+    Result := Form.ShowModal = mrOk;
+  finally
+    Form.Free;
+  end;
+end;
+
+procedure TFormUpdate.ShowUpdateInfo;
+var
+  i: Integer;
+  ChangelogText: string;
+begin
+  // Afficher les informations de version
+  LabelCurrentVersion.Caption := 'Version actuelle : ' + APP_VERSION.ToString;
+  LabelNewVersion.Caption := 'Nouvelle version : ' + FUpdateInfo.Version.ToString;
+
+  // Afficher le changelog
+  ChangelogText := '';
+  for i := 0 to Length(FUpdateInfo.ChangeLog) - 1 do
+    ChangelogText := ChangelogText + '• ' + FUpdateInfo.ChangeLog[i] + sLineBreak;
+  MemoChangelog.Text := ChangelogText;
+
+  // Mise à jour requise ?
+  if FUpdateInfo.IsRequired then
+  begin
+    ButtonLater.Enabled := False;
+    LabelTitle.Caption := 'Mise à jour requise';
+  end
+  else
+  begin
+    ButtonLater.Enabled := True;
+    LabelTitle.Caption := 'Mise à jour disponible';
+  end;
+end;
+
+procedure TFormUpdate.ButtonDownloadClick(Sender: TObject);
+begin
+  ButtonDownload.Enabled := False;
+  ButtonLater.Enabled := False;
+  PanelProgress.Visible := True;
+  DownloadUpdate;
+end;
+
+procedure TFormUpdate.ButtonLaterClick(Sender: TObject);
+begin
+  ModalResult := mrCancel;
+end;
+
+procedure TFormUpdate.DownloadUpdate;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  FileStream: TFileStream;
+  TempPath, FileName: string;
+begin
+  // Créer un dossier temporaire
+  TempPath := TPath.GetTempPath + 'MonAppUpdate\';
+  ForceDirectories(TempPath);
+
+  FileName := TempPath + 'setup.exe';
+
+  // Télécharger dans un thread séparé
+  FDownloadThread := TThread.CreateAnonymousThread(
+    procedure
+    var
+      HttpClient: THTTPClient;
+      FileStream: TFileStream;
+    begin
+      HttpClient := THTTPClient.Create;
+      try
+        // Gérer la progression
+        HttpClient.OnReceiveData := OnDownloadProgress;
+
+        // Télécharger le fichier
+        FileStream := TFileStream.Create(FileName, fmCreate);
+        try
+          HttpClient.Get(FUpdateInfo.DownloadURL, FileStream);
+        finally
+          FileStream.Free;
+        end;
+
+        // Téléchargement terminé
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            OnDownloadComplete(nil);
+
+            // Lancer l'installateur
+            ShellExecute(0, 'open', PChar(FileName), '/SILENT', nil, SW_SHOWNORMAL);
+
+            // Fermer l'application
+            Application.Terminate;
+          end
+        );
+      finally
+        HttpClient.Free;
+      end;
+    end
+  );
+
+  FDownloadThread.FreeOnTerminate := True;
+  FDownloadThread.Start;
+end;
+
+procedure TFormUpdate.OnDownloadProgress(Sender: TObject; ContentLength, ReadCount: Int64; var Abort: Boolean);
+var
+  Percentage: Integer;
+begin
+  if ContentLength > 0 then
+  begin
+    Percentage := Round((ReadCount / ContentLength) * 100);
+
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        ProgressBar.Position := Percentage;
+        LabelProgress.Caption := Format('Téléchargement... %d%%', [Percentage]);
+      end
+    );
+  end;
+end;
+
+procedure TFormUpdate.OnDownloadComplete(Sender: TObject);
+begin
+  LabelProgress.Caption := 'Téléchargement terminé !';
+  ProgressBar.Position := 100;
+end;
+
+end.
+```
+
+### Étape 5 : Intégrer la vérification au démarrage
+
+Dans votre formulaire principal :
+
+```pascal
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+  // Vérifier les mises à jour au démarrage
+  CheckForUpdatesAsync;
+end;
+
+procedure TMainForm.CheckForUpdatesAsync;
+begin
+  TTask.Run(
+    procedure
+    var
+      Checker: TUpdateChecker;
+      UpdateInfo: TUpdateInfo;
+    begin
+      Checker := TUpdateChecker.Create('https://monsite.com/updates/version.json');
+      try
+        UpdateInfo := Checker.CheckForUpdates;
+
+        if UpdateInfo.Available then
+        begin
+          // Afficher la boîte de dialogue dans le thread principal
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              TFormUpdate.ShowUpdateDialog(UpdateInfo);
+            end
+          );
+        end;
+      finally
+        Checker.Free;
+      end;
+    end
+  );
+end;
+```
+
+## Solutions existantes pour Delphi
+
+Au lieu de tout coder vous-même, vous pouvez utiliser des composants existants :
+
+### 1. TMS Web Update
+
+**Description** : Composant commercial de TMS Software
+
+**Avantages** :
+- Interface graphique complète
+- Support de multiples serveurs
+- Mise à jour différentielle (seuls les fichiers modifiés)
+- Détection automatique des dépendances
+
+**Inconvénients** :
+- Payant (~100-200€)
+
+**Site** : https://www.tmssoftware.com/
+
+### 2. Inno Setup avec InnoSetup Downloader
+
+**Description** : Plugin gratuit pour Inno Setup
+
+**Avantages** :
+- Totalement gratuit
+- Téléchargement de fichiers additionnels
+- Mise à jour via installateur
+
+**Inconvénients** :
+- Moins flexible qu'une solution personnalisée
+- Nécessite Inno Setup
+
+### 3. AppUpdate Component
+
+**Description** : Composant open source
+
+**Avantages** :
+- Gratuit et open source
+- Simple d'utilisation
+- Personnalisable
+
+**Inconvénients** :
+- Maintenance parfois irrégulière
+- Documentation limitée
+
+**GitHub** : Recherchez "Delphi auto update" sur GitHub
+
+### 4. Winsparkle (pour Windows)
+
+**Description** : Portage Windows du système Sparkle (macOS)
+
+**Avantages** :
+- Utilisé par de nombreuses applications
+- Bien testé et fiable
+- Support des deltas (mises à jour partielles)
+
+**Inconvénients** :
+- En C++, nécessite un wrapper pour Delphi
+- Configuration initiale complexe
+
+**Site** : https://winsparkle.org/
+
+### 5. Solution maison recommandée
+
+Pour débuter, créez votre propre système simple :
+- Fichier JSON pour les versions
+- Code Delphi de vérification
+- Téléchargement et lancement d'installateur
+
+**Avantages** :
+- Contrôle total
+- Pas de dépendances
+- Apprentissage utile
+
+## Bonnes pratiques
+
+### 1. Vérifier périodiquement, pas à chaque démarrage
+
+❌ **Mauvais** : Vérifier à chaque démarrage
+- Ralentit le démarrage
+- Consomme de la bande passante
+- Agace les utilisateurs
+
+✅ **Bon** : Vérifier tous les X jours
+```pascal
+procedure TMainForm.CheckForUpdatesIfNeeded;
+var
+  LastCheck: TDateTime;
+  DaysSinceLastCheck: Integer;
+begin
+  // Lire la date de dernière vérification
+  LastCheck := ReadLastCheckDate;
+  DaysSinceLastCheck := DaysBetween(Now, LastCheck);
+
+  // Vérifier seulement si plus de 7 jours
+  if DaysSinceLastCheck >= 7 then
+  begin
+    CheckForUpdatesAsync;
+    SaveLastCheckDate(Now);
+  end;
+end;
+```
+
+### 2. Permettre la vérification manuelle
+
+Ajoutez toujours une option dans le menu :
+```
+Menu Aide → Rechercher des mises à jour
+```
+
+Cela permet aux utilisateurs de vérifier quand ils le souhaitent.
+
+### 3. Ne pas bloquer l'interface
+
+Faites toujours la vérification et le téléchargement en arrière-plan (avec TTask ou TThread) pour ne pas geler l'interface.
+
+### 4. Gérer les erreurs réseau
+
+```pascal
+function TUpdateChecker.CheckForUpdates: TUpdateInfo;
+begin
+  Result.Available := False;
+
+  try
+    // Code de vérification...
+  except
+    on E: ENetException do
+    begin
+      // Erreur réseau : mode silencieux, pas d'alerte
+      Exit;
+    end;
+    on E: Exception do
+    begin
+      // Autre erreur : log mais pas d'alerte
+      LogError('Erreur mise à jour : ' + E.Message);
+      Exit;
+    end;
+  end;
+end;
+```
+
+Ne pas afficher d'erreur si le serveur est inaccessible. L'utilisateur ne doit pas être dérangé.
+
+### 5. Vérifier l'intégrité du téléchargement
+
+Utilisez un hash (SHA256) pour vérifier que le fichier téléchargé n'est pas corrompu :
+
+```pascal
+uses
+  System.Hash;
+
+function VerifyFileHash(const FileName, ExpectedHash: string): Boolean;
+var
+  FileStream: TFileStream;
+  Hash: string;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  try
+    Hash := THashSHA2.GetHashString(FileStream);
+    Result := SameText(Hash, ExpectedHash);
+  finally
+    FileStream.Free;
+  end;
+end;
+```
+
+### 6. Sauvegarder les préférences utilisateur
+
+Avant la mise à jour, sauvegardez :
+- Configuration
+- Données utilisateur
+- Préférences
+
+Après la mise à jour, restaurez automatiquement.
+
+### 7. Fournir un changelog visible
+
+Les utilisateurs veulent savoir ce qui change :
+
+```
+Version 1.2.0 (20 janvier 2025)
+─────────────────────────────────
+✓ Correction du bug de synchronisation
+✓ Nouvelle fonctionnalité d'export PDF
+✓ Amélioration des performances (30% plus rapide)
+✓ Interface modernisée
+```
+
+### 8. Permettre de reporter la mise à jour
+
+Sauf si c'est une mise à jour critique, laissez l'utilisateur reporter :
+
+```pascal
+if not UpdateInfo.IsRequired then
+begin
+  if MessageDlg('Une mise à jour est disponible. Installer maintenant ?',
+                mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+    Exit;
+end;
+```
+
+### 9. Gérer les versions minimales
+
+Si une version est trop ancienne, forcez la mise à jour :
+
+```pascal
+// Dans version.json
+{
+  "version": "2.0.0",
+  "min_version": "1.5.0",
+  "required": true
+}
+
+// Dans le code
+if APP_VERSION.CompareWith(MinVersion) < 0 then
+begin
+  ShowMessage('Votre version est trop ancienne. La mise à jour est obligatoire.');
+  // Forcer la mise à jour
+end;
+```
+
+### 10. Tester le mécanisme de mise à jour
+
+Testez régulièrement votre système de mise à jour :
+- Sur différentes versions de Windows
+- Avec et sans droits admin
+- Avec connexion lente
+- Avec serveur inaccessible
+
+## Sécurité des mises à jour
+
+### 1. Utiliser HTTPS
+
+**Toujours** utiliser HTTPS pour :
+- Le fichier de version (version.json)
+- Le téléchargement de la mise à jour
+
+Cela empêche les attaques "man-in-the-middle" où quelqu'un pourrait remplacer votre mise à jour par un malware.
+
+```pascal
+// ✓ Bon
+const UPDATE_URL = 'https://monsite.com/updates/version.json';
+
+// ✗ Mauvais
+const UPDATE_URL = 'http://monsite.com/updates/version.json';  // Non sécurisé !
+```
+
+### 2. Vérifier la signature du fichier téléchargé
+
+Le fichier de mise à jour doit être signé numériquement :
+
+```pascal
+function VerifySignature(const FileName: string): Boolean;
+var
+  WinTrustData: TWinTrustData;
+  FileInfo: TWinTrustFileInfo;
+begin
+  // Code de vérification de signature Windows
+  // ... (complexe, utilisez une bibliothèque)
+  Result := True; // Simplification
+end;
+```
+
+### 3. Utiliser des hashes
+
+Incluez le hash SHA256 du fichier dans version.json :
+
+```json
+{
+  "version": "1.2.0",
+  "download_url": "https://...",
+  "file_hash": "SHA256:a1b2c3d4e5f6789..."
+}
+```
+
+Vérifiez le hash après téléchargement avant d'exécuter.
+
+### 4. Ne jamais exécuter du code non vérifié
+
+Ne téléchargez et n'exécutez jamais de code arbitraire. Seuls des installateurs signés doivent être lancés.
+
+### 5. Limiter les permissions
+
+Si possible, effectuez la mise à jour sans droits administrateur. Utilisez un dossier utilisateur pour le téléchargement temporaire.
+
+## Gestion des canaux de mise à jour
+
+Pour les applications professionnelles, proposez différents canaux :
+
+### Canal Stable
+
+- Versions testées et stables
+- Mises à jour moins fréquentes
+- Pour les utilisateurs finaux
+
+### Canal Beta
+
+- Nouvelles fonctionnalités avant tout le monde
+- Plus de bugs possibles
+- Pour les early adopters
+
+### Canal Dev/Alpha
+
+- Derniers développements
+- Instable
+- Pour les testeurs
+
+**Implémentation** :
+
+```json
+// version-stable.json
+{
+  "channel": "stable",
+  "version": "1.2.0"
+}
+
+// version-beta.json
+{
+  "channel": "beta",
+  "version": "1.3.0-beta"
+}
+```
+
+```pascal
+type
+  TUpdateChannel = (ucStable, ucBeta, ucDev);
+
+function GetUpdateURL(Channel: TUpdateChannel): string;
+begin
+  case Channel of
+    ucStable: Result := 'https://monsite.com/updates/version-stable.json';
+    ucBeta:   Result := 'https://monsite.com/updates/version-beta.json';
+    ucDev:    Result := 'https://monsite.com/updates/version-dev.json';
+  end;
+end;
+```
+
+## Mises à jour différentielles (avancé)
+
+Pour les grandes applications, télécharger l'installateur complet à chaque fois peut être lourd.
+
+### Principe
+
+Au lieu de télécharger 50 MB, téléchargez seulement les 2 MB qui ont changé.
+
+### Solutions
+
+**1. Fichiers patch binaires**
+- Utilisez des outils comme `bsdiff` pour créer des patches
+- Appliquez-les avec `bspatch`
+
+**2. Mise à jour fichier par fichier**
+```json
+{
+  "version": "1.2.0",
+  "files": [
+    {
+      "name": "MonApp.exe",
+      "url": "https://...",
+      "hash": "..."
+    },
+    {
+      "name": "config.dll",
+      "url": "https://...",
+      "hash": "..."
+    }
+  ]
+}
+```
+
+Téléchargez et remplacez seulement les fichiers modifiés.
+
+## Déploiement silencieux en entreprise
+
+Pour les environnements d'entreprise, permettez les installations silencieuses :
+
+```pascal
+// Paramètres ligne de commande
+if ParamStr(1) = '/update' then
+begin
+  // Mode mise à jour silencieuse
+  SilentUpdate;
+  Exit;
+end;
+
+procedure SilentUpdate;
+begin
+  // Pas d'interface
+  // Télécharger et installer automatiquement
+  // Logger les résultats dans un fichier
+end;
+```
+
+Lancement :
+```cmd
+MonApp.exe /update
+```
+
+## Problèmes courants et solutions
+
+### L'utilisateur n'a pas les droits administrateur
+
+**Problème** : L'installation nécessite des droits admin
+
+**Solutions** :
+- Installez dans un dossier utilisateur (`%LOCALAPPDATA%`)
+- Utilisez ClickOnce pour les applications .NET
+- Demandez l'élévation seulement si nécessaire
+
+### La mise à jour échoue car le fichier est en cours d'utilisation
+
+**Problème** : Impossible de remplacer `MonApp.exe` pendant qu'il tourne
+
+**Solution** : Utilisez un "updater" externe
+
+```pascal
+// MonApp.exe détecte une mise à jour
+// Lance Updater.exe avec les paramètres
+ShellExecute(0, 'open', 'Updater.exe',
+  PChar('install "' + SetupFile + '"'), nil, SW_SHOWNORMAL);
+
+// Ferme MonApp.exe
+Application.Terminate;
+
+// Updater.exe installe la mise à jour
+// Puis relance MonApp.exe
+```
+
+### Le serveur de mise à jour est inaccessible
+
+**Problème** : Pas de connexion Internet ou serveur down
+
+**Solution** : Gestion d'erreur silencieuse
+```pascal
+try
+  CheckForUpdates;
+except
+  // Log l'erreur mais ne dérange pas l'utilisateur
+  on E: Exception do
+    LogError('Vérification mise à jour impossible : ' + E.Message);
+end;
+```
+
+### La mise à jour est bloquée par le pare-feu/antivirus
+
+**Problème** : Téléchargement bloqué
+
+**Solutions** :
+- Signez votre installateur
+- Utilisez HTTPS
+- Testez avec différents antivirus
+- Fournissez une mise à jour manuelle alternative
+
+### Plusieurs instances de l'application sont ouvertes
+
+**Problème** : Impossible de mettre à jour si plusieurs instances tournent
+
+**Solution** : Détectez et fermez toutes les instances
+```pascal
+function CloseAllInstances: Boolean;
+var
+  hWindow: HWND;
+begin
+  repeat
+    hWindow := FindWindow('TMainForm', nil);
+    if hWindow <> 0 then
+    begin
+      SendMessage(hWindow, WM_CLOSE, 0, 0);
+      Sleep(100);
+    end;
+  until hWindow = 0;
+  Result := True;
+end;
+```
+
+## Tableau de bord de mise à jour (facultatif)
+
+Pour les applications professionnelles, créez un tableau de bord qui montre :
+
+- Nombre de téléchargements par version
+- Taux d'adoption de chaque version
+- Erreurs de mise à jour rencontrées
+- Versions encore en circulation
+
+Cela vous aide à :
+- Identifier les problèmes rapidement
+- Savoir quand arrêter le support d'anciennes versions
+- Mesurer le succès des mises à jour
+
+**Outils** :
+- Google Analytics
+- Télémétrie personnalisée
+- Bases de données de statistiques
+
+## Checklist d'implémentation
+
+Avant de déployer votre système de mise à jour :
+
+- [ ] Fichier de version accessible via HTTPS
+- [ ] Format de version cohérent (X.Y.Z)
+- [ ] Vérification en arrière-plan (ne bloque pas l'UI)
+- [ ] Téléchargement avec barre de progression
+- [ ] Vérification de l'intégrité (hash)
+- [ ] Signature de l'installateur
+- [ ] Gestion des erreurs réseau
+- [ ] Option "Télécharger plus tard"
+- [ ] Changelog visible pour l'utilisateur
+- [ ] Test sur différentes versions de Windows
+- [ ] Test avec connexion lente
+- [ ] Test avec serveur inaccessible
+- [ ] Documentation pour les utilisateurs
+- [ ] Plan de rollback en cas de problème
+- [ ] Journalisation des mises à jour
+
+## Exemple d'intégration complète
+
+Voici comment intégrer tout cela dans votre application principale :
 
 ```pascal
 unit MainForm;
@@ -346,705 +1094,124 @@ unit MainForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, uUpdater;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.Menus,
+  UpdateChecker, AppVersion;
 
 type
-  TfrmMain = class(TForm)
-    btnCheckUpdates: TButton;
-    mmoLog: TMemo;
-    pbDownload: TProgressBar;
-    procedure FormCreate(Sender: TObject);
-    procedure btnCheckUpdatesClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FUpdater: TAutoUpdater;
-    FUpdateInfo: TUpdateInfo;
+  TMainForm = class(TForm)
+    MainMenu: TMainMenu;
+    MenuHelp: TMenuItem;
+    MenuCheckUpdates: TMenuItem;
 
-    procedure OnUpdateAvailable(const UpdateInfo: TUpdateInfo);
-    procedure OnNoUpdateAvailable(Sender: TObject);
-    procedure OnDownloadProgress(TotalSize, DownloadedSize: Int64);
-    procedure OnDownloadComplete(const FilePath: string);
-    procedure OnError(const ErrorMessage: string);
-  public
-    { Déclarations publiques }
+    procedure FormCreate(Sender: TObject);
+    procedure MenuCheckUpdatesClick(Sender: TObject);
+  private
+    procedure CheckForUpdatesIfNeeded;
+    procedure CheckForUpdatesAsync(ShowNoUpdateMessage: Boolean = False);
   end;
 
 var
-  frmMain: TfrmMain;
+  MainForm: TMainForm;
 
 implementation
-
-{$R *.dfm}
-
-const
-  APP_VERSION = '2.0.5';
-  UPDATE_URL = 'https://www.monsite.com/updates/version.xml';
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-begin
-  Caption := 'Mon Application - v' + APP_VERSION;
-
-  // Initialiser l'updater
-  FUpdater := TAutoUpdater.Create(UPDATE_URL, APP_VERSION);
-  FUpdater.OnUpdateAvailable := OnUpdateAvailable;
-  FUpdater.OnNoUpdateAvailable := OnNoUpdateAvailable;
-  FUpdater.OnDownloadProgress := OnDownloadProgress;
-  FUpdater.OnDownloadComplete := OnDownloadComplete;
-  FUpdater.OnError := OnError;
-
-  pbDownload.Visible := False;
-
-  // Vérification automatique au démarrage (optionnel)
-  // FUpdater.CheckForUpdates;
-end;
-
-procedure TfrmMain.FormDestroy(Sender: TObject);
-begin
-  FUpdater.Free;
-end;
-
-procedure TfrmMain.btnCheckUpdatesClick(Sender: TObject);
-begin
-  mmoLog.Lines.Add('Vérification des mises à jour...');
-  FUpdateInfo := FUpdater.CheckForUpdates;
-end;
-
-procedure TfrmMain.OnUpdateAvailable(const UpdateInfo: TUpdateInfo);
-var
-  Response: Integer;
-begin
-  mmoLog.Lines.Add('Nouvelle version disponible: ' + UpdateInfo.NewVersion);
-  mmoLog.Lines.Add('Notes de version:');
-  mmoLog.Lines.Add(UpdateInfo.ReleaseNotes);
-
-  // Stocker les informations de mise à jour
-  FUpdateInfo := UpdateInfo;
-
-  if UpdateInfo.ForceUpdate then
-    Response := mrYes
-  else
-    Response := MessageDlg('Une nouvelle version (' + UpdateInfo.NewVersion +
-                          ') est disponible. Voulez-vous la télécharger et l''installer maintenant?',
-                          mtConfirmation, [mbYes, mbNo], 0);
-
-  if Response = mrYes then
-  begin
-    mmoLog.Lines.Add('Téléchargement de la mise à jour...');
-    pbDownload.Visible := True;
-    pbDownload.Position := 0;
-
-    // Commencer le téléchargement
-    FUpdater.DownloadUpdate(UpdateInfo);
-  end;
-end;
-
-procedure TfrmMain.OnNoUpdateAvailable(Sender: TObject);
-begin
-  mmoLog.Lines.Add('Votre application est à jour!');
-
-  // Pas nécessaire de faire apparaître une boîte de dialogue si appelé au démarrage
-  if not (TComponent(Sender) is TAutoUpdater) or
-     (TComponent(Sender) = btnCheckUpdates) then
-    MessageDlg('Votre application est déjà à jour!', mtInformation, [mbOK], 0);
-end;
-
-procedure TfrmMain.OnDownloadProgress(TotalSize, DownloadedSize: Int64);
-begin
-  if TotalSize > 0 then
-  begin
-    pbDownload.Max := 100;
-    pbDownload.Position := Round((DownloadedSize / TotalSize) * 100);
-    Application.ProcessMessages; // Permet à l'interface de se mettre à jour
-  end;
-end;
-
-procedure TfrmMain.OnDownloadComplete(const FilePath: string);
-var
-  Response: Integer;
-begin
-  mmoLog.Lines.Add('Téléchargement terminé!');
-  pbDownload.Visible := False;
-
-  if FUpdateInfo.ForceUpdate then
-    Response := mrYes
-  else
-    Response := MessageDlg('La mise à jour a été téléchargée. Voulez-vous l''installer maintenant? ' +
-                          'L''application va se fermer pendant l''installation.',
-                          mtConfirmation, [mbYes, mbNo], 0);
-
-  if Response = mrYes then
-  begin
-    mmoLog.Lines.Add('Installation de la mise à jour...');
-    FUpdater.InstallUpdate;
-    // L'application se fermera ici si l'installation démarre
-  end;
-end;
-
-procedure TfrmMain.OnError(const ErrorMessage: string);
-begin
-  mmoLog.Lines.Add('Erreur: ' + ErrorMessage);
-end;
-
-end.
-```
-
-### Étape 4 : Mise en place de la vérification périodique (optionnel)
-
-Pour vérifier automatiquement les mises à jour à intervalle régulier (par exemple, une fois par jour), vous pouvez ajouter un minuteur :
-
-```pascal
-// Ajouter dans la section private de TfrmMain
-tmrCheckUpdate: TTimer;
-
-// Dans FormCreate, après l'initialisation de l'updater
-tmrCheckUpdate := TTimer.Create(Self);
-tmrCheckUpdate.Interval := 24 * 60 * 60 * 1000; // 24 heures en millisecondes
-tmrCheckUpdate.OnTimer := CheckUpdateTimer;
-tmrCheckUpdate.Enabled := True;
-
-// Ajouter cette méthode
-procedure TfrmMain.CheckUpdateTimer(Sender: TObject);
-begin
-  FUpdater.CheckForUpdates;
-end;
-```
-
-## Solutions plus avancées
-
-### Mise à jour différentielle
-
-Pour implémenter des mises à jour différentielles qui ne téléchargent que les fichiers modifiés, vous aurez besoin de :
-
-1. Un fichier de manifeste sur le serveur qui liste tous les fichiers avec leurs versions/hash
-2. Un mécanisme côté client pour comparer les fichiers locaux avec ceux du manifeste
-3. Une logique pour télécharger et remplacer seulement les fichiers nécessaires
-
-Voici un exemple simplifié de fichier manifeste (`manifest.xml`) :
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<manifest version="2.1.5">
-  <file>
-    <path>app.exe</path>
-    <version>2.1.5</version>
-    <hash>a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6</hash>
-    <url>https://www.monsite.com/downloads/app_2_1_5.exe</url>
-  </file>
-  <file>
-    <path>data/config.dat</path>
-    <version>1.0.3</version>
-    <hash>q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2</hash>
-    <url>https://www.monsite.com/downloads/config_1_0_3.dat</url>
-  </file>
-  <!-- Autres fichiers... -->
-</manifest>
-```
-
-### Bibliothèques tierces
-
-Plusieurs bibliothèques Delphi peuvent vous aider à implémenter des mises à jour automatiques plus avancées :
-
-1. **TMS Updater** : Une solution commerciale complète pour les mises à jour automatiques
-   - [https://www.tmssoftware.com/site/tmspack.asp](https://www.tmssoftware.com/site/tmspack.asp)
-
-2. **DevExpress** : Offre des composants pour la mise à jour automatique
-   - [https://www.devexpress.com/](https://www.devexpress.com/)
-
-3. **UniGUI Auto-Updater** : Pour les applications web UniGUI
-   - [https://www.unigui.com/](https://www.unigui.com/)
-
-4. **Sparkle pour Delphi** : Un portage open-source du système de mise à jour Sparkle de macOS
-   - [https://github.com/delawarefw/sparkle-delphi](https://github.com/delawarefw/sparkle-delphi)
-
-## Considérations importantes pour la mise à jour automatique
-
-### Sécurité
-
-1. **Utilisation du HTTPS** : Toujours utiliser HTTPS pour les téléchargements afin d'éviter les attaques "man-in-the-middle"
-
-2. **Validation de la signature** : Vérifier la signature numérique des fichiers téléchargés
-
-```pascal
-// Exemple simplifié de vérification de signature
-function VerifyFileSignature(const FilePath: string): Boolean;
-var
-  WinTrust: TWinTrust;
-begin
-  // Utilisation de l'API WinVerifyTrust pour vérifier la signature
-  // Code à implémenter selon la documentation Microsoft
-  // ...
-end;
-```
-
-3. **Hachage des fichiers** : Vérifier l'intégrité par des hachages SHA-256
-
-```pascal
-function CalculateFileHash(const FilePath: string): string;
-var
-  IdHash: TIdHashSHA256;
-  FileStream: TFileStream;
-begin
-  IdHash := TIdHashSHA256.Create;
-  FileStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyWrite);
-  try
-    Result := IdHash.HashStreamAsHex(FileStream);
-  finally
-    FileStream.Free;
-    IdHash.Free;
-  end;
-end;
-```
-
-### Gestion des erreurs
-
-1. **Reprise de téléchargement** : Permettre la reprise des téléchargements interrompus
-
-2. **Restauration** : Prévoir un mécanisme de restauration si la mise à jour échoue
-
-```pascal
-procedure BackupApplication(const BackupPath: string);
-begin
-  // Créer une sauvegarde avant la mise à jour
-  // ...
-end;
-
-procedure RestoreFromBackup(const BackupPath: string);
-begin
-  // Restaurer l'application depuis la sauvegarde en cas d'échec
-  // ...
-end;
-```
-
-3. **Journalisation** : Enregistrer les actions et erreurs pour le diagnostic
-
-### Expérience utilisateur
-
-1. **Options de configuration** : Permettre à l'utilisateur de contrôler les mises à jour
-
-```pascal
-procedure ConfigureUpdateSettings;
-var
-  Form: TfrmUpdateSettings;
-begin
-  Form := TfrmUpdateSettings.Create(nil);
-  try
-    // Configurer les options (fréquence, automatique/manuel, etc.)
-    if Form.ShowModal = mrOK then
-    begin
-      // Sauvegarder les préférences
-    end;
-  finally
-    Form.Free;
-  end;
-end;
-```
-
-2. **Planification** : Proposer des heures de mise à jour qui minimisent les interruptions
-
-3. **Notifications non intrusives** : Utiliser des notifications discrètes pour informer des mises à jour disponibles
-
-```pascal
-procedure ShowUpdateNotification(const Version: string);
-var
-  TrayIcon: TTrayIcon;
-begin
-  TrayIcon := TTrayIcon.Create(Self);
-  TrayIcon.Visible := True;
-  TrayIcon.BalloonTitle := 'Mise à jour disponible';
-  TrayIcon.BalloonHint := 'La version ' + Version + ' est disponible. Cliquez pour mettre à jour.';
-  TrayIcon.ShowBalloonHint;
-end;
-```
-
-## Mise à jour via Microsoft Store ou plates-formes similaires
-
-Si votre application est distribuée via le Microsoft Store ou d'autres plateformes similaires, le processus de mise à jour est généralement géré par la plateforme elle-même. Dans ce cas, vous n'avez pas besoin d'implémenter votre propre système.
-
-## Exemple complet : Formulaire de paramètres de mise à jour
-
-Voici un exemple de formulaire pour configurer les préférences de mise à jour :
-
-```pascal
-unit UpdateSettings;
-
-interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  System.IniFiles;
-
-type
-  TUpdateFrequency = (ufDaily, ufWeekly, ufMonthly, ufNever);
-
-  TfrmUpdateSettings = class(TForm)
-    rbDaily: TRadioButton;
-    rbWeekly: TRadioButton;
-    rbMonthly: TRadioButton;
-    rbNever: TRadioButton;
-    chkAutoInstall: TCheckBox;
-    chkStartup: TCheckBox;
-    btnOK: TButton;
-    btnCancel: TButton;
-    pnlMain: TPanel;
-    lblFrequency: TLabel;
-    lblOptions: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure btnOKClick(Sender: TObject);
-  private
-    function GetUpdateFrequency: TUpdateFrequency;
-    procedure SetUpdateFrequency(Value: TUpdateFrequency);
-    function GetAutoInstall: Boolean;
-    procedure SetAutoInstall(Value: Boolean);
-    function GetCheckOnStartup: Boolean;
-    procedure SetCheckOnStartup(Value: Boolean);
-    procedure LoadSettings;
-    procedure SaveSettings;
-  public
-    property UpdateFrequency: TUpdateFrequency read GetUpdateFrequency write SetUpdateFrequency;
-    property AutoInstall: Boolean read GetAutoInstall write SetAutoInstall;
-    property CheckOnStartup: Boolean read GetCheckOnStartup write SetCheckOnStartup;
-  end;
-
-implementation
+  System.Threading, System.DateUtils, System.IniFiles, FormUpdate;
 
 {$R *.dfm}
 
-const
-  INI_FILE = 'settings.ini';
-  INI_SECTION = 'Updates';
-
-procedure TfrmUpdateSettings.FormCreate(Sender: TObject);
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  LoadSettings;
+  // Vérifier les mises à jour au démarrage (si nécessaire)
+  CheckForUpdatesIfNeeded;
 end;
 
-procedure TfrmUpdateSettings.btnOKClick(Sender: TObject);
-begin
-  SaveSettings;
-  ModalResult := mrOK;
-end;
-
-function TfrmUpdateSettings.GetUpdateFrequency: TUpdateFrequency;
-begin
-  if rbDaily.Checked then
-    Result := ufDaily
-  else if rbWeekly.Checked then
-    Result := ufWeekly
-  else if rbMonthly.Checked then
-    Result := ufMonthly
-  else
-    Result := ufNever;
-end;
-
-procedure TfrmUpdateSettings.SetUpdateFrequency(Value: TUpdateFrequency);
-begin
-  case Value of
-    ufDaily: rbDaily.Checked := True;
-    ufWeekly: rbWeekly.Checked := True;
-    ufMonthly: rbMonthly.Checked := True;
-    ufNever: rbNever.Checked := True;
-  end;
-end;
-
-function TfrmUpdateSettings.GetAutoInstall: Boolean;
-begin
-  Result := chkAutoInstall.Checked;
-end;
-
-procedure TfrmUpdateSettings.SetAutoInstall(Value: Boolean);
-begin
-  chkAutoInstall.Checked := Value;
-end;
-
-function TfrmUpdateSettings.GetCheckOnStartup: Boolean;
-begin
-  Result := chkStartup.Checked;
-end;
-
-procedure TfrmUpdateSettings.SetCheckOnStartup(Value: Boolean);
-begin
-  chkStartup.Checked := Value;
-end;
-
-procedure TfrmUpdateSettings.LoadSettings;
+procedure TMainForm.CheckForUpdatesIfNeeded;
 var
   IniFile: TIniFile;
-  Frequency: Integer;
+  LastCheck: TDateTime;
+  DaysSinceLastCheck: Integer;
 begin
-  IniFile := TIniFile.Create(ExtractFilePath(ParamStr(0)) + INI_FILE);
+  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
   try
-    Frequency := IniFile.ReadInteger(INI_SECTION, 'Frequency', Ord(ufWeekly));
-    UpdateFrequency := TUpdateFrequency(Frequency);
-    AutoInstall := IniFile.ReadBool(INI_SECTION, 'AutoInstall', False);
-    CheckOnStartup := IniFile.ReadBool(INI_SECTION, 'CheckOnStartup', True);
-  finally
-    IniFile.Free;
-  end;
-end;
+    // Lire la date de dernière vérification
+    LastCheck := IniFile.ReadDateTime('Updates', 'LastCheck', 0);
+    DaysSinceLastCheck := DaysBetween(Now, LastCheck);
 
-procedure TfrmUpdateSettings.SaveSettings;
-var
-  IniFile: TIniFile;
-begin
-  IniFile := TIniFile.Create(ExtractFilePath(ParamStr(0)) + INI_FILE);
-  try
-    IniFile.WriteInteger(INI_SECTION, 'Frequency', Ord(UpdateFrequency));
-    IniFile.WriteBool(INI_SECTION, 'AutoInstall', AutoInstall);
-    IniFile.WriteBool(INI_SECTION, 'CheckOnStartup', CheckOnStartup);
-  finally
-    IniFile.Free;
-  end;
-end;
-
-end.
-```
-
-## Exercice pratique : Mise à jour en action
-
-Suivez ces étapes pour implémenter un système de mise à jour automatique dans votre application Delphi existante :
-
-1. Créez un fichier `version.xml` et hébergez-le sur un serveur web accessible
-2. Implémentez la classe `TAutoUpdater` décrite dans ce chapitre
-3. Intégrez le code de vérification des mises à jour dans votre formulaire principal
-4. Testez le système en modifiant le fichier de version sur le serveur
-5. Créez une nouvelle version de votre application et testez le processus complet de mise à jour
-
-## Mise à jour pour des applications en cours d'exécution
-
-Pour les applications qui doivent rester en service pendant la mise à jour, voici une approche utilisant un processus externe d'installation :
-
-```pascal
-procedure LaunchUpdaterProcess;
-var
-  StartupInfo: TStartupInfo;
-  ProcessInfo: TProcessInformation;
-  CurrentDir, CmdLine: string;
-begin
-  FillChar(StartupInfo, SizeOf(TStartupInfo), 0);
-  StartupInfo.cb := SizeOf(TStartupInfo);
-
-  CurrentDir := ExtractFilePath(ParamStr(0));
-
-  // Crée une ligne de commande pour l'installateur avec des paramètres spéciaux
-  CmdLine := Format('"%s" /silent /closeapp="%s" /pid=%d',
-             [FTempFilePath, ExtractFileName(ParamStr(0)), GetCurrentProcessId]);
-
-  // Démarre le processus de mise à jour
-  if CreateProcess(nil, PChar(CmdLine), nil, nil, False,
-                  CREATE_DEFAULT_ERROR_MODE, nil,
-                  PChar(CurrentDir), StartupInfo, ProcessInfo) then
-  begin
-    // Ferme les handles mais laisse le processus s'exécuter
-    CloseHandle(ProcessInfo.hThread);
-    CloseHandle(ProcessInfo.hProcess);
-
-    // Ferme l'application actuelle après un court délai
-    // pour permettre au processus de mise à jour de démarrer
-    Sleep(1000);
-    Application.Terminate;
-  end
-  else if Assigned(FOnError) then
-    FOnError('Erreur lors du lancement du processus de mise à jour: ' +
-             IntToStr(GetLastError));
-end;
-```
-
-## Organisation d'un système de mise à jour pour plusieurs applications
-
-Si vous développez plusieurs applications, vous pouvez centraliser votre système de mise à jour :
-
-### 1. Structure du serveur
-
-```
-/updates/
-  /app1/
-    version.xml
-    files/
-  /app2/
-    version.xml
-    files/
-```
-
-### 2. Classe générique de mise à jour
-
-```pascal
-TGenericUpdater = class(TAutoUpdater)
-public
-  class function CreateForApp(const AppID: string; const CurrentVersion: string): TGenericUpdater;
-end;
-
-// Implémentation
-class function TGenericUpdater.CreateForApp(const AppID: string; const CurrentVersion: string): TGenericUpdater;
-begin
-  Result := TGenericUpdater.Create(Format('https://www.monsite.com/updates/%s/version.xml', [AppID]), CurrentVersion);
-end;
-```
-
-## Bonnes pratiques de versionnement
-
-Pour que votre système de mise à jour fonctionne efficacement, adoptez une stratégie de versionnement cohérente :
-
-### Versionnement sémantique (recommandé)
-
-Format : `MAJEUR.MINEUR.CORRECTIF`
-
-- **MAJEUR** : changements incompatibles avec les versions précédentes
-- **MINEUR** : ajouts de fonctionnalités rétrocompatibles
-- **CORRECTIF** : corrections de bugs rétrocompatibles
-
-Exemple : `2.5.3`
-
-### Où stocker la version de votre application
-
-1. **Ressources de l'exécutable** : Dans les informations de version de l'exécutable
-
-```pascal
-{$R *.res}  // Inclut un fichier de ressources avec les infos de version
-```
-
-2. **Constante globale** : Dans une unité dédiée
-
-```pascal
-unit uVersion;
-
-interface
-
-const
-  APP_VERSION = '2.1.5';
-  APP_VERSION_MAJOR = 2;
-  APP_VERSION_MINOR = 1;
-  APP_VERSION_PATCH = 5;
-
-implementation
-
-end.
-```
-
-## Création d'un service Windows de mise à jour
-
-Pour les applications critiques nécessitant des mises à jour même sans utilisateur connecté, vous pouvez créer un service Windows :
-
-```pascal
-// Extrait de code pour un service de mise à jour
-procedure TUpdateService.ServiceExecute(Sender: TService);
-begin
-  while not Terminated do
-  begin
-    // Vérifier les mises à jour périodiquement
-    CheckForUpdates;
-
-    // Attendre l'intervalle configuré
-    ServiceThread.WaitFor(UpdateInterval);
-  end;
-end;
-
-procedure TUpdateService.CheckForUpdates;
-var
-  Updater: TAutoUpdater;
-  UpdateInfo: TUpdateInfo;
-begin
-  Updater := TAutoUpdater.Create(UPDATE_URL, GetInstalledVersion);
-  try
-    UpdateInfo := Updater.CheckForUpdates;
-
-    if UpdateInfo.UpdateAvailable then
+    // Vérifier seulement tous les 7 jours
+    if (LastCheck = 0) or (DaysSinceLastCheck >= 7) then
     begin
-      // Journaliser l'information
-      LogMessage('Mise à jour disponible: ' + UpdateInfo.NewVersion);
-
-      // Télécharger la mise à jour
-      if Updater.DownloadUpdate(UpdateInfo) then
-      begin
-        // Planifier l'installation à une heure appropriée
-        ScheduleInstallation(UpdateInfo);
-      end;
+      CheckForUpdatesAsync(False);
+      IniFile.WriteDateTime('Updates', 'LastCheck', Now);
     end;
   finally
-    Updater.Free;
+    IniFile.Free;
   end;
 end;
-```
 
-## Interface utilisateur moderne pour les mises à jour
-
-Pour améliorer l'expérience utilisateur, envisagez une interface plus attrayante pour les notifications de mise à jour :
-
-### Exemple avec une notification animée
-
-```pascal
-procedure ShowModernUpdateNotification(const UpdateInfo: TUpdateInfo);
-var
-  NotifyForm: TfrmUpdateNotify;
+procedure TMainForm.CheckForUpdatesAsync(ShowNoUpdateMessage: Boolean);
 begin
-  NotifyForm := TfrmUpdateNotify.Create(nil);
-  try
-    NotifyForm.lblVersion.Caption := 'Version ' + UpdateInfo.NewVersion + ' disponible';
-    NotifyForm.mmoNotes.Text := UpdateInfo.ReleaseNotes;
-
-    // Positionner en bas à droite de l'écran
-    NotifyForm.Left := Screen.Width - NotifyForm.Width - 20;
-    NotifyForm.Top := Screen.Height;
-
-    // Afficher avec animation de montée
-    NotifyForm.Show;
-    NotifyForm.AnimateIn;
-
-    // La forme se fermera d'elle-même après un délai
-    // ou l'utilisateur peut cliquer pour la fermer/mettre à jour
-  except
-    NotifyForm.Free;
-    raise;
-  end;
-end;
-```
-
-## Statistiques et télémetrie (optionnel)
-
-Pour suivre l'adoption de vos mises à jour, vous pouvez ajouter un système de télémetrie basique :
-
-```pascal
-procedure ReportUpdateStatus(const AppID, FromVersion, ToVersion: string; Success: Boolean);
-var
-  HTTP: THTTPClient;
-  Params: TStringList;
-begin
-  HTTP := THTTPClient.Create;
-  Params := TStringList.Create;
-  try
-    // Préparer les données
-    Params.Add('app_id=' + AppID);
-    Params.Add('from_version=' + FromVersion);
-    Params.Add('to_version=' + ToVersion);
-    Params.Add('success=' + BoolToStr(Success, True));
-    Params.Add('system=' + GetSystemInfo);
-
-    // Envoyer de façon asynchrone pour ne pas bloquer
-    TThread.CreateAnonymousThread(procedure
+  TTask.Run(
+    procedure
+    var
+      Checker: TUpdateChecker;
+      UpdateInfo: TUpdateInfo;
     begin
+      Checker := TUpdateChecker.Create('https://monsite.com/updates/version.json');
       try
-        HTTP.Post('https://www.monsite.com/update_stats.php', Params);
-      except
-        // Ignorer les erreurs - la télémetrie ne doit jamais interrompre l'application
+        UpdateInfo := Checker.CheckForUpdates;
+
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            if UpdateInfo.Available then
+            begin
+              // Mise à jour disponible
+              TFormUpdate.ShowUpdateDialog(UpdateInfo);
+            end
+            else if ShowNoUpdateMessage then
+            begin
+              // Vérification manuelle : informer qu'il n'y a pas de mise à jour
+              ShowMessage('Votre application est à jour.');
+            end;
+          end
+        );
+      finally
+        Checker.Free;
       end;
-    end).Start;
-  finally
-    Params.Free;
-    HTTP.Free;
-  end;
+    end
+  );
 end;
+
+procedure TMainForm.MenuCheckUpdatesClick(Sender: TObject);
+begin
+  // Vérification manuelle
+  CheckForUpdatesAsync(True);
+end;
+
+end.
 ```
 
 ## Conclusion
 
-L'implémentation d'un système de mise à jour automatique est un investissement qui améliore considérablement l'expérience de vos utilisateurs et vous permet de déployer rapidement des corrections et des améliorations.
+La mise à jour automatique est un élément essentiel d'une application moderne. Elle permet de :
 
-Les approches présentées dans ce chapitre vont d'une solution simple mais fonctionnelle à des implémentations plus avancées. Choisissez celle qui correspond le mieux à vos besoins et aux attentes de vos utilisateurs.
+- **Distribuer rapidement** les corrections de bugs et nouvelles fonctionnalités
+- **Améliorer la sécurité** en déployant des patches rapidement
+- **Simplifier le support** en gardant tous les utilisateurs à jour
+- **Offrir une meilleure expérience** avec des mises à jour transparentes
 
-N'oubliez pas que la transparence est essentielle : informez toujours vos utilisateurs des mises à jour disponibles et donnez-leur le contrôle sur quand et comment ces mises à jour sont installées, sauf si des problèmes critiques de sécurité nécessitent une mise à jour forcée.
+**Points clés à retenir** :
 
-Dans la prochaine section, nous aborderons le déploiement de vos applications Delphi sur différentes plateformes, ce qui étendra encore davantage la portée de vos logiciels.
+1. Commencez simple : fichier JSON + téléchargement + installation
+2. Vérifiez en arrière-plan, ne bloquez jamais l'interface
+3. Utilisez HTTPS et vérifiez l'intégrité des fichiers
+4. Permettez à l'utilisateur de reporter (sauf urgence)
+5. Testez abondamment votre système de mise à jour
+6. Signez vos installateurs
+7. Gérez gracieusement les erreurs réseau
+8. Fournissez un changelog clair
+
+Avec un bon système de mise à jour, vous maintenez une relation continue avec vos utilisateurs et assurez que votre application reste performante, sécurisée et à jour. Dans la prochaine section, nous verrons comment déployer votre application sur différentes plateformes (Windows, macOS, Linux, mobile).
 
 ⏭️ [Déploiement sur différentes plateformes](/17-distribution-et-deploiement/06-deploiement-sur-differentes-plateformes.md)

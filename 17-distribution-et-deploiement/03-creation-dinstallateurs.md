@@ -1,396 +1,713 @@
-# 17.3 Création d'installateurs (Inno Setup, InstallAware)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 17.3 Création d'installateurs (Inno Setup, InstallAware)
 
 ## Introduction
 
-Une application Delphi bien conçue et optimisée mérite un installateur professionnel pour faciliter son déploiement chez les utilisateurs finaux. Ce chapitre vous guide à travers la création d'installateurs pour vos applications Delphi, en vous présentant deux outils populaires : **Inno Setup** (gratuit) et **InstallAware** (commercial).
+Un installateur professionnel est la carte de visite de votre application. C'est la première chose que voient vos utilisateurs, et une installation simple et fluide crée immédiatement une impression positive. À l'inverse, une installation compliquée ou qui échoue peut conduire l'utilisateur à abandonner avant même d'avoir essayé votre application.
 
-Un bon installateur permet de :
-- Copier les fichiers de votre application au bon endroit
-- Créer des raccourcis dans le menu Démarrer et sur le Bureau
-- Enregistrer les bibliothèques et composants nécessaires
-- Configurer les paramètres initiaux
-- Offrir une désinstallation propre
+Dans cette section, nous allons explorer deux solutions populaires pour créer des installateurs professionnels pour vos applications Delphi : **Inno Setup** (gratuit et open source) et **InstallAware** (commercial avec de nombreuses fonctionnalités avancées).
 
-## Inno Setup : L'outil gratuit et puissant
+## Qu'est-ce qu'un installateur ?
 
-### Présentation d'Inno Setup
+Un installateur est un programme qui :
 
-[Inno Setup](https://jrsoftware.org/isinfo.php) est un créateur d'installateurs gratuit, open-source et très populaire. Malgré sa gratuité, il offre des fonctionnalités avancées et est largement utilisé dans l'écosystème Delphi.
+1. **Copie les fichiers** de votre application aux bons emplacements
+2. **Configure le système** (registre Windows, variables d'environnement, etc.)
+3. **Crée des raccourcis** (menu Démarrer, bureau)
+4. **Vérifie les prérequis** (système d'exploitation, frameworks nécessaires)
+5. **Enregistre l'application** pour permettre sa désinstallation
+6. **Gère les mises à jour** (détection de versions existantes)
 
-**Avantages :**
-- Totalement gratuit et open-source
-- Léger et rapide
-- Facilement scriptable
-- Génère des installateurs compacts
-- Prise en charge multilingue
-- Excellente compatibilité avec Delphi
+### Pourquoi ne pas simplement copier les fichiers ?
+
+Vous pourriez être tenté de simplement copier votre exécutable et demander aux utilisateurs de l'exécuter. C'est une mauvaise idée pour plusieurs raisons :
+
+- **Professionnalisme** : Les utilisateurs s'attendent à un vrai installateur
+- **Emplacement approprié** : Les applications doivent être installées dans `Program Files` ou `Program Files (x86)`
+- **Permissions** : L'installateur gère les droits d'accès correctement
+- **Désinstallation** : Sans installateur, difficile de supprimer proprement l'application
+- **Intégration système** : Raccourcis, associations de fichiers, etc.
+
+## Inno Setup : La solution gratuite et populaire
+
+### Présentation
+
+**Inno Setup** est un créateur d'installateurs gratuit, open source et très populaire dans l'écosystème Delphi. Il existe depuis 1997 et est utilisé par de nombreuses applications célèbres.
+
+**Avantages** :
+- Totalement gratuit et open source
+- Très léger (installateurs de quelques MB)
+- Excellente documentation
+- Langage de script puissant (Pascal Script)
+- Grande communauté et nombreux exemples
+- Intégration possible dans l'IDE Delphi
+
+**Inconvénients** :
+- Interface moins moderne qu'InstallAware
+- Courbe d'apprentissage pour les fonctionnalités avancées
+- Moins de templates visuels prédéfinis
 
 ### Installation d'Inno Setup
 
-1. Téléchargez Inno Setup depuis le site officiel : [https://jrsoftware.org/isdl.php](https://jrsoftware.org/isdl.php)
-2. Lancez l'installateur et suivez les instructions
-3. Lors de l'installation, vous pouvez choisir d'inclure les exemples (recommandé pour les débutants)
+1. **Téléchargement**
+   - Rendez-vous sur : https://jrsoftware.org/isinfo.php
+   - Téléchargez la dernière version (actuellement Inno Setup 6.x)
+   - Téléchargez aussi **ISTool** si vous préférez une interface graphique
 
-### Création d'un installateur basique avec Inno Setup
+2. **Installation**
+   - Exécutez le programme d'installation
+   - Suivez les étapes (installation standard)
+   - L'installateur lui-même est créé avec Inno Setup !
 
-Après avoir installé Inno Setup, suivez ces étapes pour créer votre premier installateur :
+3. **Premier lancement**
+   - Lancez **Inno Setup Compiler** depuis le menu Démarrer
+   - Vous verrez l'éditeur de scripts
 
-1. Lancez Inno Setup
-2. Sélectionnez "Create a new script file using the Script Wizard" (Créer un nouveau fichier script avec l'assistant)
+### Créer votre premier installateur avec Inno Setup
 
-![Assistant Inno Setup](https://placeholder-image.com/inno-setup-wizard.png)
+#### Étape 1 : Utiliser l'assistant
 
-3. Dans l'assistant, renseignez les informations de base :
-   - **Nom de l'application** : Le nom de votre application Delphi
-   - **Version** : La version actuelle (ex: 1.0.0)
-   - **Éditeur** : Votre nom ou celui de votre entreprise
-   - **Site web** : L'URL de votre site (optionnel)
+Inno Setup propose un assistant qui facilite la création d'un installateur de base.
 
-4. Sur l'écran suivant, indiquez le dossier d'installation par défaut :
-   - Généralement `{pf}\VotreApplication` (qui sera remplacé par le chemin vers Program Files)
+1. **Lancer l'assistant**
+   - Dans Inno Setup Compiler : `Fichier` → `Nouveau`
+   - Sélectionnez "Créer un nouveau fichier de script à l'aide de l'assistant Script"
+   - Cliquez sur `OK`
 
-5. Sur l'écran "Application Files", ajoutez vos fichiers :
-   - Cliquez sur "Add file(s)" et sélectionnez l'exécutable de votre application
-   - Ajoutez également les DLL et autres ressources nécessaires
+2. **Informations sur l'application**
+   - **Nom de l'application** : "Mon Application Delphi"
+   - **Version** : "1.0"
+   - **Éditeur** : Votre nom ou nom de société
+   - **Site web** : Votre site web
+   - Cliquez sur `Suivant`
 
-6. Configurez les raccourcis :
-   - Cochez les options pour créer des raccourcis dans le menu Démarrer et/ou sur le Bureau
+3. **Dossier de destination**
+   - **Dossier par défaut** : Laissez `{autopf}\Mon Application Delphi`
+     - `{autopf}` signifie "Program Files" approprié (32 ou 64 bits)
+   - **Permettre de changer le dossier** : Cochez (recommandé)
+   - Cliquez sur `Suivant`
 
-7. Pour la documentation :
-   - Ajoutez un fichier Lisez-moi ou manuel si disponible
+4. **Fichiers de l'application**
+   - **Fichier principal** : Cliquez sur `Parcourir` et sélectionnez votre `.exe`
+   - **Autres fichiers** : Ajoutez les DLL, fichiers de données, etc.
+   - **Autoriser l'utilisateur à lancer l'application** : Cochez
+   - Cliquez sur `Suivant`
 
-8. Configurez les options d'installation :
-   - Choisissez les privilèges nécessaires (administrateur ou utilisateur standard)
-   - Définissez les paramètres de langue
+5. **Raccourcis**
+   - **Menu Démarrer** : Cochez pour créer un groupe dans le menu Démarrer
+   - **Nom du groupe** : "Mon Application Delphi"
+   - **Bureau** : Cochez si vous voulez un raccourci sur le bureau
+   - **Raccourci de désinstallation** : Cochez (recommandé)
+   - Cliquez sur `Suivant`
 
-9. Terminez l'assistant et enregistrez le script généré avec l'extension `.iss`
+6. **Documentation**
+   - **Fichier Lisez-moi** : Ajoutez un README.txt si vous en avez un
+   - **Licence** : Ajoutez votre fichier LICENSE.txt
+   - Cliquez sur `Suivant`
 
-10. Compilez le script en cliquant sur le bouton "Compile" dans la barre d'outils
+7. **Langues**
+   - Sélectionnez les langues que vous souhaitez supporter
+   - Au minimum : Français et Anglais
+   - Cliquez sur `Suivant`
 
-Une fois compilé, votre installateur sera créé dans le dossier de sortie spécifié (généralement `Output`).
+8. **Options de compilation**
+   - **Nom du fichier de sortie** : "setup" (donnera setup.exe)
+   - **Icône personnalisée** : Choisissez une icône pour l'installateur
+   - **Mot de passe** : Laissez vide (sauf besoin spécifique)
+   - Cliquez sur `Suivant`
 
-### Personnalisation du script Inno Setup
+9. **Préprocesseur Inno Setup**
+   - Laissez les options par défaut pour commencer
+   - Cliquez sur `Suivant`
 
-Le script généré par l'assistant peut être personnalisé pour ajouter des fonctionnalités avancées. Voici un exemple de script commenté :
+10. **Terminer l'assistant**
+    - Cliquez sur `Terminer`
+    - L'assistant génère un script `.iss`
 
-```pascal
-; Script généré par l'assistant Inno Setup.
-; Pour plus d'informations, voir la documentation d'Inno Setup.
+#### Étape 2 : Comprendre le script généré
 
-#define MyAppName "Mon Application Delphi"
-#define MyAppVersion "1.0"
-#define MyAppPublisher "Votre Nom"
-#define MyAppURL "https://www.votresite.com"
-#define MyAppExeName "MonApp.exe"
+Inno Setup utilise des scripts texte avec l'extension `.iss`. Voici un exemple de script de base :
 
+```ini
 [Setup]
-; Identifiant unique pour cette installation (utilisez un nouveau GUID pour chaque application)
-AppId={{YOUR-GUID-HERE}
-; Informations de base sur l'application
-AppName={#MyAppName}
-AppVersion={#MyAppVersion}
-AppPublisher={#MyAppPublisher}
-AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
-; Dossier d'installation par défaut
-DefaultDirName={autopf}\{#MyAppName}
-; Désactive la demande de dossier d'installation
-DisableDirPage=no
-; Nom du groupe dans le menu Démarrer
-DefaultGroupName={#MyAppName}
-; Désactive la demande de groupe dans le menu Démarrer
-DisableProgramGroupPage=yes
-; Fichier de licence à afficher (optionnel)
-LicenseFile=C:\MesProjects\Licence.txt
-; Fichier d'informations à afficher (optionnel)
-InfoBeforeFile=C:\MesProjects\Avant.txt
-; Fichier d'informations post-installation (optionnel)
-InfoAfterFile=C:\MesProjects\Apres.txt
-; Icône de l'installateur
-SetupIconFile=C:\MesProjects\Icone.ico
-; Compression (recommandé: LZMA2/max)
+AppName=Mon Application Delphi
+AppVersion=1.0
+DefaultDirName={autopf}\Mon Application Delphi
+DefaultGroupName=Mon Application Delphi
+OutputDir=Output
+OutputBaseFilename=setup
 Compression=lzma2
 SolidCompression=yes
-; Version Windows minimale requise
-MinVersion=6.0
 
 [Languages]
-; Langues disponibles dans l'installateur
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-; Tâches optionnelles que l'utilisateur peut choisir
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; OnlyBelowVersion: 6.1
+Name: "desktopicon"; Description: "Créer un raccourci sur le bureau"; GroupDescription: "Raccourcis supplémentaires:"
 
 [Files]
-; Liste des fichiers à installer
-Source: "C:\MesProjects\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\MesProjects\Data\*"; DestDir: "{app}\Data"; Flags: ignoreversion recursesubdirs
-; NOTE: Ne pas utiliser "Flags: ignoreversion" pour les DLLs système ou partagées
+Source: "C:\MonProjet\Win32\Release\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\MonProjet\Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-; Raccourcis à créer
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\Mon Application"; Filename: "{app}\MonApp.exe"
+Name: "{group}\Désinstaller Mon Application"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\Mon Application"; Filename: "{app}\MonApp.exe"; Tasks: desktopicon
 
 [Run]
-; Actions à effectuer après l'installation
-; Propose d'exécuter l'application à la fin de l'installation
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\MonApp.exe"; Description: "Lancer Mon Application"; Flags: nowait postinstall skipifsilent
 ```
 
-### Fonctionnalités avancées d'Inno Setup
+**Explication des sections** :
 
-Voici quelques fonctionnalités avancées que vous pouvez ajouter à votre script :
+- **[Setup]** : Configuration générale de l'installateur
+- **[Languages]** : Langues supportées
+- **[Tasks]** : Options que l'utilisateur peut choisir pendant l'installation
+- **[Files]** : Fichiers à copier
+- **[Icons]** : Raccourcis à créer
+- **[Run]** : Programmes à exécuter après l'installation
 
-#### Vérification des prérequis
+#### Étape 3 : Personnaliser le script
 
-```pascal
+Vous pouvez modifier le script pour ajouter des fonctionnalités :
+
+**Ajouter des prérequis**
+
+```ini
+[Setup]
+; Nécessite Windows 10 ou supérieur
+MinVersion=10.0
+
 [Code]
-function IsDotNetInstalled(): Boolean;
-begin
-  // Vérifier si .NET est installé
-  Result := RegKeyExists(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full');
-end;
-
 function InitializeSetup(): Boolean;
 begin
   Result := True;
-
-  if not IsDotNetInstalled then begin
-    MsgBox('Cette application nécessite .NET Framework 4.0 ou supérieur. ' +
-           'Veuillez l''installer avant de continuer.', mbError, MB_OK);
+  if not IsDotNetInstalled(net462, 0) then
+  begin
+    MsgBox('Cette application nécessite .NET Framework 4.6.2.', mbError, MB_OK);
     Result := False;
   end;
 end;
 ```
 
-#### Exécution de commandes pendant l'installation
+**Créer des associations de fichiers**
 
-```pascal
-[Run]
-; Enregistre une DLL COM
-Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\MaLibrairie.dll"""; Flags: runhidden
+```ini
+[Registry]
+Root: HKCR; Subkey: ".monext"; ValueType: string; ValueData: "MonAppFile"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "MonAppFile"; ValueType: string; ValueData: "Fichier Mon Application"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "MonAppFile\DefaultIcon"; ValueType: string; ValueData: "{app}\MonApp.exe,0"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "MonAppFile\shell\open\command"; ValueType: string; ValueData: """{app}\MonApp.exe"" ""%1"""; Flags: uninsdeletekey
 ```
 
-#### Création d'un fichier de configuration
+**Ajouter des composants optionnels**
 
-```pascal
-[INI]
-Filename: "{app}\config.ini"; Section: "Settings"; Key: "UserName"; String: "{code:GetUserName}"
-```
-
-## InstallAware : Solution commerciale avancée
-
-### Présentation d'InstallAware
-
-[InstallAware](https://www.installaware.com/) est une solution commerciale plus avancée, offrant une interface graphique plus riche et des fonctionnalités supplémentaires. Elle est particulièrement intégrée avec Delphi.
-
-**Avantages :**
-- Interface visuelle complète
-- Intégration directe avec Delphi
-- Compression avancée
-- Prise en charge native des patches et mises à jour
-- Nombreux assistants prédéfinis
-- Virtualisation d'applications
-
-**Inconvénients :**
-- Solution payante
-- Courbe d'apprentissage plus importante
-
-### Installation d'InstallAware
-
-1. Téléchargez une version d'essai ou achetez une licence sur le site officiel
-2. Suivez les instructions d'installation
-3. Pour l'intégration avec Delphi, InstallAware installe généralement un menu dans l'IDE
-
-### Création d'un installateur avec InstallAware
-
-1. Lancez InstallAware ou accédez-y depuis le menu Delphi
-2. Choisissez "Nouveau projet" ou "Nouveau à partir d'un modèle"
-3. Sélectionnez un modèle adapté à votre type d'application
-
-![InstallAware Template](https://placeholder-image.com/installaware-template.png)
-
-4. Configurez les informations de base :
-   - Nom de l'application
-   - Version
-   - Éditeur
-   - Etc.
-
-5. Ajoutez vos fichiers d'application :
-   - Vous pouvez directement ajouter la sortie de votre projet Delphi
-   - InstallAware détectera automatiquement les dépendances
-
-6. Configurez les raccourcis et associations de fichiers
-
-7. Personnalisez l'interface utilisateur :
-   - Logo
-   - Couleurs
-   - Thème
-
-8. Ajoutez des prérequis si nécessaire :
-   - .NET Framework
-   - Visual C++ Redistributable
-   - Autres dépendances
-
-9. Configurez les options de mise à jour en ligne (si disponible dans votre édition)
-
-10. Compilez votre installateur
-
-### Intégration d'InstallAware avec Delphi
-
-Si vous utilisez une version d'InstallAware intégrée à Delphi, vous pouvez configurer votre projet pour générer automatiquement un installateur après une compilation réussie :
-
-1. Dans Delphi, allez dans **Project** → **Options du projet**
-2. Naviguez jusqu'à l'onglet **InstallAware**
-3. Activez la case à cocher "Générer un installateur après une compilation réussie"
-4. Configurez les paramètres selon vos besoins
-
-## Comparaison entre Inno Setup et InstallAware
-
-| Fonctionnalité | Inno Setup | InstallAware |
-|----------------|------------|--------------|
-| Prix | Gratuit | Commercial |
-| Facilité d'utilisation | Modérée (script) | Élevée (visuel) |
-| Taille de l'installateur | Très compacte | Variable |
-| Intégration Delphi | Manuelle | Native |
-| Mises à jour | Limitées | Avancées |
-| Patches | À coder manuellement | Intégrés |
-| Complexité | Simple à moyenne | Simple à avancée |
-| Temps d'apprentissage | Court | Moyen |
-
-## Bonnes pratiques pour les installateurs
-
-Quel que soit l'outil choisi, suivez ces conseils pour créer des installateurs professionnels :
-
-1. **Testez sur plusieurs versions de Windows** :
-   - Windows 10, Windows 11
-   - Versions 32 et 64 bits si pertinent
-
-2. **Vérifiez les droits d'administration** :
-   - Déterminez si votre application nécessite des droits d'administrateur
-   - Utilisez le niveau de privilège minimum nécessaire
-
-3. **Incluez tous les composants requis** :
-   - DLLs
-   - Fichiers de données
-   - Configurations par défaut
-
-4. **Proposez une désinstallation propre** :
-   - Supprimez tous les fichiers créés par l'installation
-   - Optionnellement, offrez de conserver les données utilisateur
-
-5. **Personnalisez l'apparence** :
-   - Ajoutez votre logo
-   - Utilisez des couleurs cohérentes avec votre marque
-
-6. **Fournissez des options d'installation** :
-   - Installation minimale ou complète
-   - Choix des composants à installer
-
-## Exemple pratique : Création d'un installateur pour une application de gestion
-
-Voici un exemple concret d'utilisation d'Inno Setup pour une application de gestion Delphi :
-
-```pascal
-; Script pour une application de gestion d'inventaire
-#define AppName "GestionStock"
-#define AppVersion "2.1"
-#define AppPublisher "Votre Entreprise"
-#define AppExeName "GestionStock.exe"
-
-[Setup]
-AppId={{F5E7C221-9C44-4D5B-8654-A3E24F3B9E1D}
-AppName={#AppName}
-AppVersion={#AppVersion}
-AppPublisher={#AppPublisher}
-DefaultDirName={autopf}\{#AppName}
-DefaultGroupName={#AppName}
-OutputDir=Installers
-OutputBaseFilename=GestionStock_Setup_{#AppVersion}
-Compression=lzma2/ultra
-SolidCompression=yes
-; Nécessite Windows 7 ou plus récent
-MinVersion=6.1
-; Installez pour tous les utilisateurs
-PrivilegesRequired=admin
-; Vérifiez les versions précédentes
-AppMutex=GestionStockAppMutex
-
-[Languages]
-Name: "french"; MessagesFile: "compiler:Languages\French.isl"
-
-[Tasks]
-Name: "desktopicon"; Description: "Créer un raccourci sur le bureau"; GroupDescription: "Raccourcis:"
-Name: "startupicon"; Description: "Lancer au démarrage de Windows"; GroupDescription: "Raccourcis:"
+```ini
+[Components]
+Name: "main"; Description: "Fichiers principaux"; Types: full compact custom; Flags: fixed
+Name: "help"; Description: "Fichiers d'aide"; Types: full
+Name: "samples"; Description: "Exemples"; Types: full
 
 [Files]
-; Fichier principal
-Source: "C:\Projects\GestionStock\Win64\Release\GestionStock.exe"; DestDir: "{app}"; Flags: ignoreversion
-; Fichiers de base
-Source: "C:\Projects\GestionStock\Win64\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-; Base de données par défaut
-Source: "C:\Projects\GestionStock\Database\*"; DestDir: "{app}\Database"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Manuel utilisateur
-Source: "C:\Projects\GestionStock\Docs\Manuel.pdf"; DestDir: "{app}\Docs"; Flags: ignoreversion
+Source: "MonApp.exe"; DestDir: "{app}"; Components: main
+Source: "Aide\*"; DestDir: "{app}\Aide"; Components: help
+Source: "Exemples\*"; DestDir: "{app}\Exemples"; Components: samples; Flags: recursesubdirs
+```
 
-[Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{group}\Manuel utilisateur"; Filename: "{app}\Docs\Manuel.pdf"
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
-Name: "{commonstartup}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startupicon
+#### Étape 4 : Compiler l'installateur
 
-[Registry]
-; Enregistre l'application pour qu'elle s'ouvre avec les fichiers .gst
-Root: HKCR; Subkey: ".gst"; ValueType: string; ValueName: ""; ValueData: "GestionStockFile"; Flags: uninsdeletevalue
-Root: HKCR; Subkey: "GestionStockFile"; ValueType: string; ValueName: ""; ValueData: "Fichier GestionStock"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "GestionStockFile\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"
-Root: HKCR; Subkey: "GestionStockFile\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""
+1. **Sauvegarder le script**
+   - `Fichier` → `Enregistrer sous`
+   - Donnez un nom : `MonApp.iss`
 
-[Run]
-; Exécute la configuration de la base de données si c'est une première installation
-Filename: "{app}\{#AppExeName}"; Parameters: "/setup"; Flags: runhidden; Check: IsFirstInstall
-; Propose de lancer l'application après l'installation
-Filename: "{app}\{#AppExeName}"; Description: "Lancer {#AppName} maintenant"; Flags: nowait postinstall skipifsilent
+2. **Compiler**
+   - Cliquez sur `Compiler` dans la barre d'outils (icône d'engrenage)
+   - Ou appuyez sur `Ctrl+F9`
+   - Ou menu `Compiler` → `Compiler`
 
+3. **Vérifier la compilation**
+   - La fenêtre de sortie affiche la progression
+   - Si tout va bien : "Compilation réussie"
+   - Cherchez les avertissements (warnings) et erreurs
+
+4. **Tester l'installateur**
+   - Le fichier `setup.exe` est créé dans le dossier `Output`
+   - Testez-le sur une machine propre (idéalement une VM)
+
+### Fonctionnalités avancées d'Inno Setup
+
+#### Pascal Script
+
+Inno Setup supporte un langage de script basé sur Pascal pour des logiques complexes :
+
+```pascal
 [Code]
-function IsFirstInstall: Boolean;
+var
+  DataDirPage: TInputDirWizardPage;
+
+procedure InitializeWizard;
 begin
-  Result := not RegKeyExists(HKLM, 'Software\{#AppPublisher}\{#AppName}');
+  // Créer une page personnalisée pour choisir le dossier de données
+  DataDirPage := CreateInputDirPage(wpSelectDir,
+    'Sélectionner le dossier des données',
+    'Où voulez-vous stocker les données de l''application ?',
+    'Les données de l''application seront stockées dans le dossier suivant.',
+    False, '');
+  DataDirPage.Add('');
+  DataDirPage.Values[0] := ExpandConstant('{userdocs}\MonApp');
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+function GetDataDir(Param: String): String;
 begin
-  if CurStep = ssPostInstall then
+  Result := DataDirPage.Values[0];
+end;
+```
+
+#### Vérification de versions existantes
+
+```pascal
+[Code]
+function InitializeSetup(): Boolean;
+var
+  OldVersion: String;
+  UninstallString: String;
+begin
+  Result := True;
+
+  // Chercher une installation existante
+  if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\MonApp_is1',
+     'UninstallString', UninstallString) then
   begin
-    // Enregistre l'installation dans le registre
-    RegWriteStringValue(HKLM, 'Software\{#AppPublisher}\{#AppName}', 'Version', '{#AppVersion}');
-    RegWriteStringValue(HKLM, 'Software\{#AppPublisher}\{#AppName}', 'InstallPath', ExpandConstant('{app}'));
+    if MsgBox('Une version de Mon Application est déjà installée. Voulez-vous la désinstaller ?',
+              mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      // Lancer la désinstallation
+      Exec(RemoveQuotes(UninstallString), '/SILENT', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    end
+    else
+      Result := False;
   end;
 end;
 ```
 
+## InstallAware : La solution professionnelle
+
+### Présentation
+
+**InstallAware** est une solution commerciale très complète pour créer des installateurs Windows professionnels. Elle est particulièrement appréciée pour sa facilité d'utilisation et ses nombreux templates.
+
+**Avantages** :
+- Interface graphique moderne et intuitive
+- Templates professionnels nombreux
+- Support des technologies modernes (Windows Store, AppX, MSIX)
+- Intégration complète avec Delphi
+- Support technique professionnel
+- Fonctionnalités avancées (installations réseaux, déploiement silencieux, etc.)
+- Conformité avec les standards Microsoft
+
+**Inconvénients** :
+- Payant (plusieurs centaines de dollars)
+- Installateurs plus volumineux qu'avec Inno Setup
+- Courbe d'apprentissage pour maîtriser toutes les fonctionnalités
+
+### Versions et tarifs
+
+InstallAware propose plusieurs éditions :
+
+- **Express** : Version d'entrée de gamme (~300$)
+- **Studio** : Version complète pour développeurs (~700$)
+- **Developer** : Pour les grandes équipes (~1200$)
+
+*Note : Les prix sont indicatifs et peuvent varier*
+
+### Installation d'InstallAware
+
+1. **Achat et téléchargement**
+   - Visitez https://www.installaware.com
+   - Achetez la licence appropriée
+   - Téléchargez l'installateur
+
+2. **Installation**
+   - Exécutez l'installateur
+   - Entrez votre clé de licence
+   - Suivez l'assistant d'installation
+
+3. **Intégration avec Delphi**
+   - InstallAware peut s'intégrer directement dans l'IDE Delphi
+   - Permet de créer des installateurs depuis Delphi
+
+### Créer un installateur avec InstallAware
+
+#### Étape 1 : Nouveau projet
+
+1. **Lancer InstallAware Studio**
+   - Démarrez InstallAware depuis le menu Démarrer
+
+2. **Créer un nouveau projet**
+   - Cliquez sur `File` → `New Project`
+   - Choisissez un template (par exemple : "Windows Application")
+   - Donnez un nom au projet
+
+3. **Assistant de configuration**
+   - InstallAware lance un assistant similaire à Inno Setup
+   - Remplissez les informations de base
+
+#### Étape 2 : Configuration du projet
+
+**Informations générales**
+
+Dans l'onglet `General` :
+- **Product Name** : Nom de votre application
+- **Product Version** : Version (ex: 1.0.0.0)
+- **Company Name** : Votre société
+- **Support Website** : Votre site web
+
+**Fichiers à installer**
+
+Dans l'onglet `Files` :
+1. Cliquez sur `Add Files`
+2. Naviguez vers votre dossier `Release`
+3. Sélectionnez votre `.exe` et les fichiers nécessaires
+4. InstallAware détecte automatiquement les dépendances
+
+**Destination**
+
+- **Installation Folder** : `$PROGRAMFILES$\[ProductName]`
+- Les variables sont entourées de `$` au lieu de `{}`
+
+#### Étape 3 : Configuration de l'interface
+
+**Pages de l'installateur**
+
+InstallAware utilise un système visuel de pages :
+
+1. **Welcome Page** : Page d'accueil
+   - Personnalisez le texte de bienvenue
+   - Ajoutez votre logo
+
+2. **License Agreement** : Accord de licence
+   - Ajoutez votre fichier de licence (RTF ou TXT)
+
+3. **Installation Folder** : Choix du dossier
+   - Configuré automatiquement
+   - Permettez ou non la personnalisation
+
+4. **Ready to Install** : Confirmation
+   - Résumé avant installation
+
+5. **Progress** : Barre de progression
+   - Affichage automatique
+
+6. **Finish** : Page finale
+   - Option pour lancer l'application
+   - Option pour afficher le fichier README
+
+**Personnalisation visuelle**
+
+1. Dans l'onglet `Dialogs`
+2. Double-cliquez sur une page pour la personnaliser
+3. Modifiez :
+   - Images de fond
+   - Logo de votre application
+   - Couleurs et polices
+   - Textes et messages
+
+#### Étape 4 : Fonctionnalités avancées
+
+**Prérequis et redistributables**
+
+InstallAware gère automatiquement de nombreux prérequis :
+
+1. Allez dans l'onglet `Prerequisites`
+2. Cochez les composants nécessaires :
+   - Visual C++ Redistributable
+   - .NET Framework
+   - DirectX
+   - SQL Server Express
+   - Etc.
+
+InstallAware téléchargera et installera automatiquement ces composants si nécessaires.
+
+**Raccourcis et associations**
+
+Dans l'onglet `Shortcuts` :
+- **Start Menu** : Créez des raccourcis dans le menu Démarrer
+- **Desktop** : Raccourci sur le bureau
+- **Quick Launch** : Barre de lancement rapide
+
+Dans l'onglet `File Associations` :
+- Associez des extensions de fichiers à votre application
+- Définissez les icônes et actions
+
+**Registre Windows**
+
+Dans l'onglet `Registry` :
+- Ajoutez des clés de registre nécessaires
+- Configurez les paramètres de l'application
+- Gérez les licences
+
+#### Étape 5 : Compilation
+
+1. **Configurer les options de build**
+   - `Build` → `Build Settings`
+   - Choisissez le niveau de compression
+   - Définissez le nom du fichier de sortie
+
+2. **Compiler l'installateur**
+   - Cliquez sur `Build` → `Build Setup`
+   - Ou appuyez sur `F7`
+
+3. **Résultat**
+   - Un fichier `.exe` est créé dans le dossier de sortie
+   - Testez-le sur une machine propre
+
+### InstallAware vs Inno Setup : Tableau comparatif
+
+| Critère | Inno Setup | InstallAware |
+|---------|------------|--------------|
+| **Prix** | Gratuit | Payant (300$+) |
+| **Interface** | Éditeur de texte | Interface graphique moderne |
+| **Courbe d'apprentissage** | Moyenne | Facile |
+| **Taille des installateurs** | Petite | Moyenne |
+| **Templates** | Peu | Nombreux |
+| **Support** | Communauté | Support commercial |
+| **Intégration IDE** | Manuelle | Native Delphi |
+| **Prérequis** | Script manuel | Gestion automatique |
+| **MSI/MSIX** | Non natif | Support complet |
+| **Personnalisation** | Très flexible (script) | Très flexible (visuel) |
+
+## Bonnes pratiques pour les installateurs
+
+### 1. Tester, tester, tester
+
+**Testez sur différentes configurations** :
+- Windows 10 version 21H2, 22H2
+- Windows 11
+- Machines 32 bits et 64 bits (si applicable)
+- Avec et sans droits administrateur
+- Sur des machines "propres" (machines virtuelles)
+
+**Testez différents scénarios** :
+- Installation standard
+- Installation personnalisée
+- Installation silencieuse (`/SILENT` ou `/VERYSILENT`)
+- Mise à jour d'une version existante
+- Désinstallation complète
+
+### 2. Respecter les conventions Windows
+
+**Emplacements standards** :
+- Programme : `C:\Program Files\VotreApp` (64-bit) ou `C:\Program Files (x86)\VotreApp` (32-bit)
+- Données utilisateur : `%APPDATA%\VotreApp` ou `%LOCALAPPDATA%\VotreApp`
+- Données communes : `%PROGRAMDATA%\VotreApp`
+- Documents : `%USERPROFILE%\Documents\VotreApp`
+
+**Ne jamais écrire dans** :
+- Le dossier Program Files pendant l'exécution normale
+- Le dossier Windows
+- Le dossier System32
+
+### 3. Gérer les permissions correctement
+
+**Demander les droits administrateur** uniquement si nécessaire :
+```ini
+; Inno Setup
+[Setup]
+PrivilegesRequired=admin
+```
+
+**Pour InstallAware** :
+- Définissez dans `General` → `Privileges Required`
+
+Si votre application peut fonctionner sans droits admin, privilégiez une installation utilisateur.
+
+### 4. Fournir des options d'installation
+
+**Installation typique** :
+- Tous les composants essentiels
+- Configuration par défaut
+- Pour 90% des utilisateurs
+
+**Installation personnalisée** :
+- Permet de choisir les composants
+- Choisir l'emplacement
+- Pour les utilisateurs avancés
+
+**Installation minimale** :
+- Seulement les fichiers essentiels
+- Pour économiser l'espace disque
+
+### 5. Gérer les mises à jour intelligemment
+
+**Détecter les versions existantes** :
+```pascal
+; Inno Setup - Code Pascal
+[Code]
+function InitializeSetup(): Boolean;
+var
+  Version: String;
+begin
+  if RegQueryStringValue(HKLM, 'Software\MonApp', 'Version', Version) then
+  begin
+    // Une version existe
+    if Version < '2.0' then
+      MsgBox('Mise à jour depuis la version ' + Version, mbInformation, MB_OK);
+  end;
+  Result := True;
+end;
+```
+
+**Préserver les données utilisateur** :
+- Ne supprimez pas les fichiers de configuration
+- Ne réinitialisez pas les préférences
+- Sauvegardez les données avant mise à jour si nécessaire
+
+### 6. Créer une désinstallation propre
+
+**Supprimer tous les fichiers installés** :
+- L'exécutable et les DLL
+- Les fichiers de ressources
+- Les raccourcis créés
+
+**Ne pas supprimer** :
+- Les fichiers de données utilisateur (proposer l'option)
+- Les fichiers créés par l'utilisateur
+- Les documents
+
+**Nettoyer le registre** :
+- Supprimer les clés créées par l'installateur
+- Supprimer les associations de fichiers
+
+### 7. Signature numérique
+
+Signez votre installateur avec un certificat de signature de code :
+- Établit la confiance
+- Évite les avertissements Windows SmartScreen
+- Requis pour le Microsoft Store
+
+**Pour signer avec Inno Setup** :
+```ini
+[Setup]
+SignTool=signtool sign /f "MonCertificat.pfx" /p "MotDePasse" /t http://timestamp.digicert.com $f
+SignedUninstaller=yes
+```
+
+**InstallAware** :
+- Configuration dans `Build Settings` → `Code Signing`
+
+### 8. Informations de version et propriétés
+
+**Assurez-vous que votre exécutable contient** :
+- Numéro de version
+- Nom du produit
+- Copyright
+- Description
+- Icône
+
+Dans Delphi : `Projet` → `Options` → `Version Info`
+
+### 9. Documentation et support
+
+**Inclure dans l'installateur** :
+- Fichier README avec instructions de base
+- Fichier de licence (LICENSE.txt)
+- Documentation utilisateur (optionnel)
+- Lien vers le support en ligne
+
+**Page de fin d'installation** :
+- Option "Afficher le fichier README"
+- Option "Visiter le site web"
+- Option "Lancer l'application"
+
+### 10. Installation silencieuse
+
+Permettez l'installation silencieuse pour les déploiements automatisés :
+
+**Inno Setup** :
+```
+setup.exe /SILENT      ; Installation sans interface
+setup.exe /VERYSILENT  ; Installation complètement invisible
+setup.exe /DIR="C:\MonApp"  ; Spécifier le dossier
+```
+
+**InstallAware** :
+- Support natif des installations silencieuses via MSI
+- Paramètres : `/quiet`, `/passive`
+
+## Checklist pour un installateur professionnel
+
+Avant de distribuer votre installateur, vérifiez :
+
+- [ ] L'installateur se lance sans erreur
+- [ ] Toutes les dépendances sont incluses
+- [ ] Les raccourcis sont créés correctement
+- [ ] L'application se lance après installation
+- [ ] La désinstallation supprime tout proprement
+- [ ] L'installateur est signé numériquement
+- [ ] Les informations de version sont correctes
+- [ ] La licence est incluse et affichée
+- [ ] Les prérequis sont détectés et installés
+- [ ] L'interface est traduite dans les bonnes langues
+- [ ] Les messages d'erreur sont clairs
+- [ ] La taille de l'installateur est raisonnable
+- [ ] Testé sur plusieurs configurations Windows
+- [ ] Testé avec et sans droits administrateur
+- [ ] Les mises à jour fonctionnent correctement
+
+## Problèmes courants et solutions
+
+### L'application ne se lance pas après installation
+
+**Causes possibles** :
+- DLL manquantes : Vérifiez les dépendances
+- Permissions insuffisantes : Testez l'emplacement d'installation
+- Chemins incorrects : Vérifiez les chemins relatifs/absolus
+
+**Solution** : Utilisez des outils comme **Dependency Walker** pour identifier les DLL manquantes.
+
+### Erreur "Accès refusé" pendant l'installation
+
+**Cause** : Droits insuffisants
+
+**Solution** :
+- Demandez les droits administrateur
+- Ou installez dans un dossier utilisateur
+
+### L'installateur est bloqué par Windows SmartScreen
+
+**Cause** : Installateur non signé ou nouvelle application
+
+**Solution** :
+- Signez votre installateur avec un certificat valide
+- Construisez une réputation au fil du temps
+
+### La désinstallation laisse des fichiers
+
+**Cause** : Fichiers créés après installation non gérés
+
+**Solution** :
+```ini
+; Inno Setup
+[UninstallDelete]
+Type: files; Name: "{app}\config.ini"
+Type: filesandordirs; Name: "{app}\logs"
+```
+
 ## Conclusion
 
-La création d'un installateur professionnel est une étape essentielle pour distribuer votre application Delphi. Inno Setup offre une solution gratuite et puissante pour la plupart des besoins, tandis qu'InstallAware propose des fonctionnalités avancées pour les applications commerciales complexes.
+Créer un installateur professionnel est une étape essentielle de la distribution de votre application Delphi. Que vous choisissiez **Inno Setup** pour sa simplicité et sa gratuité, ou **InstallAware** pour ses fonctionnalités avancées et son interface moderne, l'important est de créer une expérience d'installation fluide et professionnelle.
 
-Quel que soit votre choix, assurez-vous de tester votre installateur sur différentes versions de Windows et dans différentes conditions pour garantir une expérience utilisateur optimale.
+**Points clés à retenir** :
 
-Dans la prochaine section, nous aborderons la signature de code, une étape importante pour renforcer la confiance des utilisateurs et éviter les avertissements de sécurité lors de l'installation.
+- Un bon installateur crée une première impression positive
+- Testez toujours sur des machines propres
+- Respectez les conventions et emplacements Windows
+- Gérez proprement les mises à jour et la désinstallation
+- Signez votre installateur pour établir la confiance
+- Fournissez des options adaptées à différents types d'utilisateurs
 
-## Exercice pratique
-
-1. Téléchargez et installez Inno Setup
-2. Créez un installateur basique pour l'une de vos applications Delphi
-3. Ajoutez au moins une fonctionnalité avancée (vérification des prérequis, création d'un fichier de configuration, etc.)
-4. Testez l'installateur sur un autre ordinateur ou une machine virtuelle
+Avec les outils et techniques présentés dans ce chapitre, vous êtes maintenant capable de créer des installateurs professionnels pour vos applications Delphi. Dans la section suivante, nous verrons comment renforcer encore la confiance en signant numériquement votre code.
 
 ⏭️ [Signature de code](/17-distribution-et-deploiement/04-signature-de-code.md)
