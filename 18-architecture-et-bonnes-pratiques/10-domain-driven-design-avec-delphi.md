@@ -1,511 +1,663 @@
-# 18.10 Domain-Driven Design (DDD) avec Delphi
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 18.10 Domain-Driven Design (DDD) avec Delphi
 
 ## Introduction
 
-Imaginez que vous développez une application de gestion pour une école. Vous pourriez créer des tables dans une base de données, puis concevoir votre application autour de ces tables. Mais est-ce vraiment la meilleure approche ? Et si vous conceviez plutôt votre application en pensant d'abord aux concepts du monde réel comme les "Élèves", les "Cours", les "Enseignants" et les interactions entre eux ?
+Imaginez que vous devez construire une maison. Vous avez deux approches :
 
-C'est exactement ce que propose le Domain-Driven Design (DDD) : une approche qui place le domaine métier au centre de la conception logicielle.
+**Approche A - Technique d'abord :**
+```
+"J'ai besoin d'une base de données avec des tables : users, orders, products..."
+"Ensuite je fais des formulaires pour créer des users..."
+"Puis je code les CRUD..."
+```
 
-Dans ce chapitre, nous allons explorer comment appliquer les principes du Domain-Driven Design dans vos projets Delphi, même si vous débutez dans cette approche. Vous découvrirez comment créer des applications plus alignées avec les besoins métier, plus maintenables et plus évolutives.
+**Approche B - Métier d'abord (DDD) :**
+```
+"Dans notre boutique, un Client peut passer des Commandes"
+"Une Commande contient des Produits"
+"Quand un Client valide sa Commande, il devient un Acheteur"
+"Si une Commande dépasse 500€, le Client obtient le statut Premium"
+```
 
-## Qu'est-ce que le Domain-Driven Design ?
+La différence ? Dans l'approche B, vous **parlez le langage du métier**, pas le langage technique. C'est l'essence du **Domain-Driven Design** (DDD).
 
-Le Domain-Driven Design (DDD) est une approche de développement logiciel introduite par Eric Evans dans son livre "Domain-Driven Design: Tackling Complexity in the Heart of Software" (2003). Elle se concentre sur :
+### Qu'est-ce que le Domain-Driven Design ?
 
-1. **La collaboration étroite** entre experts techniques et experts métier
-2. **La modélisation du domaine** au cœur de la conception logicielle
-3. **L'élaboration d'un langage commun** (appelé "langage omniprésent" ou "Ubiquitous Language")
-4. **L'organisation du code** autour des concepts du domaine métier
+Le **Domain-Driven Design** (conception pilotée par le domaine) est une approche de développement logiciel créée par Eric Evans en 2003. L'idée centrale : **votre code doit refléter fidèlement le domaine métier**, pas la technique.
 
-### Pourquoi utiliser le DDD ?
+**Domaine** = Le secteur d'activité, le métier, les règles business
 
-Le DDD est particulièrement utile pour :
+**Le problème classique :**
+```pascal
+// Code technique qui ne parle pas métier
+type
+  TUserData = class
+    UserID: Integer;
+    UserName: string;
+    UserEmail: string;
+    OrderCount: Integer;
+  end;
 
-- Les applications métier complexes
-- Les projets où les règles métier évoluent fréquemment
-- Les systèmes qui nécessitent une bonne communication entre développeurs et experts métier
-- Les applications qui doivent être maintenues sur le long terme
+procedure UpdateUser(UserID: Integer; NewData: TUserData);
+```
+
+**Approche DDD :**
+```pascal
+// Code qui parle métier
+type
+  TCustomer = class
+  private
+    FID: TCustomerID;
+    FName: TCustomerName;
+    FEmail: TEmailAddress;
+    FOrderHistory: TOrderHistory;
+  public
+    procedure PlaceOrder(Order: TOrder);
+    function IsEligibleForPremiumStatus: Boolean;
+    property Name: TCustomerName read FName;
+  end;
+```
+
+### Pourquoi DDD ?
+
+**Les bénéfices :**
+
+1. **Communication claire** : Développeurs et experts métier parlent le même langage
+2. **Code qui vit longtemps** : Le métier évolue lentement, la technique change vite
+3. **Complexité maîtrisée** : Les règles métier sont explicites dans le code
+4. **Maintenance facilitée** : Le code raconte l'histoire du métier
+5. **Moins de bugs métier** : Les règles sont dans le domaine, pas éparpillées
+
+**Quand utiliser DDD ?**
+
+✅ **Oui si :**
+- Le domaine métier est complexe
+- Les règles métier changent fréquemment
+- Collaboration étroite avec des experts métier
+- Projet à long terme
+
+❌ **Non si :**
+- Simple CRUD sans logique métier
+- Projet très petit (< 10 écrans)
+- Pas d'accès aux experts métier
+- Prototype jetable
+
+### DDD ≠ Architecture en couches
+
+DDD peut être utilisé avec n'importe quelle architecture, mais il se marie bien avec :
+- Hexagonal Architecture (Ports & Adapters)
+- Clean Architecture
+- Onion Architecture
 
 ## Les concepts fondamentaux du DDD
 
-### 1. Le domaine et le modèle de domaine
+### 1. Ubiquitous Language (Langage Omniprésent)
 
-Le **domaine** est le secteur d'activité auquel votre application s'applique (finance, santé, éducation, etc.).
+Le **langage omniprésent** est le vocabulaire partagé par toute l'équipe : développeurs, experts métier, chefs de projet.
 
-Le **modèle de domaine** est une représentation abstraite des connaissances et activités qui composent ce domaine.
+**Principe :** Les termes utilisés dans le code doivent être **exactement** les mêmes que ceux utilisés par le métier.
 
-Par exemple, pour une application de gestion d'école :
-- Le domaine est l'éducation scolaire
-- Le modèle de domaine pourrait inclure des concepts comme Élève, Cours, Enseignant, Inscription, etc.
-
-### 2. Le langage omniprésent (Ubiquitous Language)
-
-Le langage omniprésent est un vocabulaire commun utilisé par tous les membres de l'équipe (développeurs et experts métier) pour décrire le domaine. Ce langage doit se refléter dans le code.
-
-**Exemple en Delphi :**
+**❌ Mauvais exemple :**
 ```pascal
-// Mauvais exemple (termes techniques, pas de langage métier)
-TDBRecord = class
-  ID: Integer;
-  FName: string;
-  LName: string;
-  DOB: TDateTime;
-  ClassIDs: TList<Integer>;
+// L'expert métier dit : "Un client fidèle"
+// Le code dit :
+type
+  TUser = class
+    function GetLoyaltyLevel: Integer;  // ?
+  end;
+```
+
+**✅ Bon exemple :**
+```pascal
+// L'expert métier dit : "Un client fidèle"
+// Le code dit aussi :
+type
+  TCustomer = class
+    function IsLoyalCustomer: Boolean;
+  end;
+```
+
+**En pratique :**
+
+```pascal
+// ❌ Langage technique
+procedure ProcessData(ID: Integer);
+var
+  Record: TDataRecord;
+begin
+  Record := LoadRecord(ID);
+  UpdateField(Record, 'status', 'approved');
+  SaveRecord(Record);
 end;
 
-// Bon exemple (utilise le langage du domaine)
-TStudent = class
-  StudentID: Integer;
-  FirstName: string;
-  LastName: string;
-  DateOfBirth: TDateTime;
-  EnrolledCourses: TList<TCourse>;
+// ✅ Langage métier (Ubiquitous Language)
+procedure ApproveInvoice(InvoiceID: TInvoiceID);
+var
+  Invoice: TInvoice;
+begin
+  Invoice := FInvoiceRepository.GetByID(InvoiceID);
+  Invoice.Approve;
+  FInvoiceRepository.Save(Invoice);
 end;
 ```
 
-### 3. Les entités (Entities)
+**Règle d'or :** Si un terme apparaît dans les discussions métier, il doit apparaître tel quel dans le code.
 
-Les entités sont des objets définis par leur identité plutôt que par leurs attributs. Deux entités peuvent avoir les mêmes attributs mais rester distinctes.
+### 2. Bounded Context (Contexte Délimité)
 
-**Exemple en Delphi :**
+Un **Bounded Context** est une frontière explicite dans laquelle un modèle de domaine est valide.
+
+**Exemple concret : "Client" dans une entreprise**
+
+Dans le contexte **Ventes** :
 ```pascal
-TStudent = class
-private
-  FStudentID: Integer;
-  FFirstName: string;
-  FLastName: string;
-public
-  constructor Create(AStudentID: Integer; const AFirstName, ALastName: string);
-
-  // Deux étudiants sont égaux si et seulement s'ils ont le même ID
-  function Equals(Obj: TObject): Boolean; override;
-  function GetHashCode: Integer; override;
-
-  property StudentID: Integer read FStudentID;
-  property FirstName: string read FFirstName write FFirstName;
-  property LastName: string read FLastName write FLastName;
-end;
-
-constructor TStudent.Create(AStudentID: Integer; const AFirstName, ALastName: string);
-begin
-  inherited Create;
-  FStudentID := AStudentID;
-  FFirstName := AFirstName;
-  FLastName := ALastName;
-end;
-
-function TStudent.Equals(Obj: TObject): Boolean;
-begin
-  if not (Obj is TStudent) then
-    Exit(False);
-
-  Result := TStudent(Obj).StudentID = FStudentID;
-end;
-
-function TStudent.GetHashCode: Integer;
-begin
-  Result := FStudentID;
-end;
+type
+  TCustomer = class
+    // Un client = quelqu'un qui achète
+    FOrderHistory: TList<TOrder>;
+    FCreditLimit: Currency;
+    function CanPlaceOrder(Amount: Currency): Boolean;
+  end;
 ```
 
-### 4. Les objets-valeurs (Value Objects)
-
-Les objets-valeurs sont définis uniquement par leurs attributs. Contrairement aux entités, ils n'ont pas d'identité.
-
-**Exemple en Delphi :**
+Dans le contexte **Support** :
 ```pascal
-TAddress = record
-private
-  FStreet: string;
-  FCity: string;
-  FPostalCode: string;
-  FCountry: string;
-public
-  constructor Create(const AStreet, ACity, APostalCode, ACountry: string);
-
-  // Deux adresses sont égales si tous leurs attributs sont identiques
-  function Equals(const Other: TAddress): Boolean;
-
-  property Street: string read FStreet;
-  property City: string read FCity;
-  property PostalCode: string read FPostalCode;
-  property Country: string read FCountry;
-end;
-
-constructor TAddress.Create(const AStreet, ACity, APostalCode, ACountry: string);
-begin
-  FStreet := AStreet;
-  FCity := ACity;
-  FPostalCode := APostalCode;
-  FCountry := ACountry;
-end;
-
-function TAddress.Equals(const Other: TAddress): Boolean;
-begin
-  Result := (FStreet = Other.FStreet) and
-            (FCity = Other.FCity) and
-            (FPostalCode = Other.FPostalCode) and
-            (FCountry = Other.FCountry);
-end;
+type
+  TCustomer = class
+    // Un client = quelqu'un qui a besoin d'aide
+    FTickets: TList<TSupportTicket>;
+    FPreferredContactMethod: TContactMethod;
+    function HasOpenTickets: Boolean;
+  end;
 ```
 
-### 5. Les agrégats (Aggregates)
-
-Les agrégats sont des groupes d'objets liés qui sont traités comme une unité pour les modifications de données. Chaque agrégat a une entité racine appelée "racine d'agrégat".
-
-**Exemple en Delphi :**
+Dans le contexte **Comptabilité** :
 ```pascal
-TOrder = class
-private
-  FOrderID: Integer;
-  FCustomer: TCustomer;
-  FOrderItems: TObjectList<TOrderItem>;
-  FOrderDate: TDateTime;
-  FStatus: TOrderStatus;
-public
-  constructor Create(AOrderID: Integer; ACustomer: TCustomer);
-  destructor Destroy; override;
-
-  // Méthodes qui garantissent l'intégrité de l'agrégat
-  function AddItem(AProduct: TProduct; AQuantity: Integer): TOrderItem;
-  procedure RemoveItem(AOrderItem: TOrderItem);
-  procedure ChangeStatus(ANewStatus: TOrderStatus);
-  function CalculateTotal: Currency;
-
-  property OrderID: Integer read FOrderID;
-  property Customer: TCustomer read FCustomer;
-  property OrderItems: TObjectList<TOrderItem> read FOrderItems;
-  property OrderDate: TDateTime read FOrderDate;
-  property Status: TOrderStatus read FStatus;
-end;
+type
+  TCustomer = class
+    // Un client = un compte avec des paiements
+    FInvoices: TList<TInvoice>;
+    FPaymentHistory: TPaymentHistory;
+    function GetOutstandingBalance: Currency;
+  end;
 ```
 
-Dans cet exemple, `TOrder` est la racine d'agrégat. Tout accès aux `TOrderItem` doit passer par l'objet `TOrder`.
+**C'est le même client**, mais vu sous trois angles différents ! Chaque contexte a son propre modèle.
 
-### 6. Les services de domaine (Domain Services)
-
-Les services de domaine encapsulent des opérations du domaine qui ne correspondent pas naturellement à une entité spécifique.
-
-**Exemple en Delphi :**
-```pascal
-TTransferService = class
-public
-  // Un service qui implique plusieurs objets du domaine
-  procedure TransferStudent(AStudent: TStudent;
-                           AFromClass: TClass;
-                           AToClass: TClass);
-end;
-
-procedure TTransferService.TransferStudent(AStudent: TStudent;
-                                          AFromClass: TClass;
-                                          AToClass: TClass);
-begin
-  // Vérifier si l'élève est bien dans la classe d'origine
-  if not AFromClass.HasStudent(AStudent) then
-    raise ETransferException.Create('Student not found in source class');
-
-  // Vérifier si la classe de destination a de la place
-  if AToClass.IsFull then
-    raise ETransferException.Create('Destination class is full');
-
-  // Effectuer le transfert
-  AFromClass.RemoveStudent(AStudent);
-  AToClass.AddStudent(AStudent);
-
-  // Mettre à jour l'historique
-  FTransferHistory.RecordTransfer(AStudent, AFromClass, AToClass, Now);
-end;
-```
-
-## Architecture en couches du DDD
-
-Le DDD propose généralement une architecture en couches :
-
-1. **Couche de présentation** (UI) : Interfaces utilisateur
-2. **Couche d'application** : Orchestration des cas d'utilisation
-3. **Couche de domaine** : Modèle de domaine (entités, valeurs, services...)
-4. **Couche d'infrastructure** : Accès aux données, services externes...
-
-### Mise en œuvre en Delphi
-
-Voyons comment structurer un projet Delphi suivant cette architecture :
-
+**En Delphi :**
 ```
 MonProjet/
-  ├── Domain/                 # Couche de domaine
-  │   ├── Entities/           # Entités du domaine
-  │   ├── ValueObjects/       # Objets-valeurs
-  │   ├── Services/           # Services de domaine
-  │   ├── Repositories/       # Interfaces des repositories
-  │   └── Interfaces/         # Autres interfaces du domaine
-  │
-  ├── Application/            # Couche d'application
-  │   ├── Services/           # Services d'application
-  │   ├── DTOs/               # Data Transfer Objects
-  │   └── Interfaces/         # Interfaces de la couche application
-  │
-  ├── Infrastructure/         # Couche d'infrastructure
-  │   ├── Persistence/        # Implémentation des repositories
-  │   ├── Services/           # Services externes
-  │   └── Logging/            # Journalisation
-  │
-  └── Presentation/           # Couche de présentation
-      ├── Forms/              # Formulaires
-      ├── DataModules/        # Modules de données
-      └── ViewModels/         # ViewModels (si MVVM)
+├── Source/
+│   ├── Sales/                    ← Bounded Context "Ventes"
+│   │   ├── Models/
+│   │   │   ├── Customer.pas
+│   │   │   └── Order.pas
+│   │   └── Services/
+│   │
+│   ├── Support/                  ← Bounded Context "Support"
+│   │   ├── Models/
+│   │   │   ├── Customer.pas     (différent du Sales.Customer !)
+│   │   │   └── Ticket.pas
+│   │   └── Services/
+│   │
+│   └── Accounting/               ← Bounded Context "Comptabilité"
+│       ├── Models/
+│       │   ├── Customer.pas     (encore différent !)
+│       │   └── Invoice.pas
+│       └── Services/
 ```
 
-## Exemple pratique : Application de gestion d'école
+### 3. Entities (Entités)
 
-Voyons comment appliquer le DDD à une application de gestion d'école simple.
+Une **Entité** est un objet qui a une **identité unique** qui persiste dans le temps, même si ses attributs changent.
 
-### 1. Définir le langage omniprésent
+**Caractéristiques :**
+- A un identifiant unique (ID)
+- Peut changer d'état
+- Persiste dans le temps
 
-Discutons avec les experts du domaine (personnel de l'école) pour établir un langage commun :
-
-- **Étudiant** : Personne inscrite à l'école
-- **Cours** : Matière enseignée (mathématiques, sciences, etc.)
-- **Classe** : Groupe d'étudiants suivant un ensemble de cours
-- **Enseignant** : Personne qui enseigne un ou plusieurs cours
-- **Inscription** : Lien entre un étudiant et un cours
-- **Évaluation** : Note attribuée à un étudiant pour un cours
-
-### 2. Modéliser le domaine
-
-#### Entités et objets-valeurs
-
+**Exemple :**
 ```pascal
-// Fichier: Domain\ValueObjects\TAddress.pas
-unit Domain.ValueObjects.Address;
-
-interface
-
 type
-  TAddress = record
-  private
-    FStreet: string;
-    FCity: string;
-    FPostalCode: string;
-  public
-    constructor Create(const AStreet, ACity, APostalCode: string);
-    function Equals(const Other: TAddress): Boolean;
+  TCustomerID = record
+    Value: TGUID;
+  end;
 
-    property Street: string read FStreet;
-    property City: string read FCity;
-    property PostalCode: string read FPostalCode;
+  TCustomer = class
+  private
+    FID: TCustomerID;        // Identité unique
+    FName: string;           // Peut changer
+    FEmail: string;          // Peut changer
+    FCreatedAt: TDateTime;
+  public
+    constructor Create(ID: TCustomerID; const Name, Email: string);
+
+    // L'égalité est basée sur l'ID, pas sur les attributs
+    function Equals(Other: TCustomer): Boolean;
+
+    property ID: TCustomerID read FID;
+    property Name: string read FName write FName;
+    property Email: string read FEmail write FEmail;
   end;
 
 implementation
 
-// Implémentation...
+constructor TCustomer.Create(ID: TCustomerID; const Name, Email: string);
+begin
+  inherited Create;
+  FID := ID;
+  FName := Name;
+  FEmail := Email;
+  FCreatedAt := Now;
+end;
 
-end.
+function TCustomer.Equals(Other: TCustomer): Boolean;
+begin
+  // Deux clients sont égaux s'ils ont le même ID
+  // Même si leur nom ou email a changé
+  Result := (Other <> nil) and (FID.Value = Other.ID.Value);
+end;
+```
 
-// Fichier: Domain\Entities\TStudent.pas
-unit Domain.Entities.Student;
+**Exemple réel :**
+Vous changez de nom, d'adresse, de téléphone, mais vous restez **vous**. Votre identité (numéro de sécurité sociale) ne change pas. Vous êtes une **Entité**.
 
-interface
+### 4. Value Objects (Objets Valeur)
 
-uses
-  System.Generics.Collections, Domain.ValueObjects.Address;
+Un **Value Object** est un objet défini uniquement par ses attributs, sans identité propre. Deux objets valeur avec les mêmes attributs sont **identiques**.
 
+**Caractéristiques :**
+- Pas d'identité
+- Immutable (ne change pas après création)
+- L'égalité est basée sur les attributs
+
+**❌ Mauvaise approche (types primitifs) :**
+```pascal
 type
-  TStudent = class
+  TCustomer = class
   private
-    FStudentID: Integer;
-    FFirstName: string;
-    FLastName: string;
-    FDateOfBirth: TDateTime;
-    FAddress: TAddress;
-    FEnrollments: TList<TEnrollment>;  // Inscriptions aux cours
+    FEmail: string;  // Juste un string ?
+  end;
+
+// Problème : Pas de validation
+Customer.Email := 'pas-un-email';  // Accepté !
+```
+
+**✅ Value Object :**
+```pascal
+type
+  TEmailAddress = record
+  private
+    FValue: string;
+    function GetValue: string;
   public
-    constructor Create(AStudentID: Integer; const AFirstName, ALastName: string);
+    constructor Create(const Value: string);
+    class function TryCreate(const Value: string; out Email: TEmailAddress): Boolean; static;
+
+    // Validation dans le constructeur
+    function IsValid: Boolean;
+
+    // Immutable
+    property Value: string read GetValue;
+
+    // Égalité basée sur la valeur
+    class operator Equal(const A, B: TEmailAddress): Boolean;
+  end;
+
+implementation
+
+constructor TEmailAddress.Create(const Value: string);
+begin
+  if not IsValidEmail(Value) then
+    raise Exception.Create('Invalid email address');
+  FValue := Value;
+end;
+
+class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;
+begin
+  Result := IsValidEmail(Value);
+  if Result then
+    Email.FValue := Value;
+end;
+
+function TEmailAddress.IsValid: Boolean;
+begin
+  Result := FValue.Contains('@') and (Length(FValue) > 3);
+end;
+
+function TEmailAddress.GetValue: string;
+begin
+  Result := FValue;
+end;
+
+class operator TEmailAddress.Equal(const A, B: TEmailAddress): Boolean;
+begin
+  Result := A.Value = B.Value;
+end;
+```
+
+**Utilisation :**
+```pascal
+type
+  TCustomer = class
+  private
+    FEmail: TEmailAddress;  // Plus de validation à faire ici !
+  public
+    property Email: TEmailAddress read FEmail write FEmail;
+  end;
+
+var
+  Customer: TCustomer;
+  Email: TEmailAddress;
+begin
+  Customer := TCustomer.Create;
+
+  // ✅ Valide
+  if TEmailAddress.TryCreate('john@example.com', Email) then
+    Customer.Email := Email;
+
+  // ❌ Exception levée
+  Email := TEmailAddress.Create('invalid');  // Exception !
+end;
+```
+
+**Autres exemples de Value Objects :**
+```pascal
+type
+  TMoney = record
+    Amount: Currency;
+    Currency: TCurrencyCode;
+  end;
+
+  TAddress = record
+    Street: string;
+    City: string;
+    PostalCode: string;
+    Country: string;
+  end;
+
+  TDateRange = record
+    StartDate: TDate;
+    EndDate: TDate;
+    function Contains(Date: TDate): Boolean;
+  end;
+```
+
+### 5. Aggregates (Agrégats)
+
+Un **Aggregate** est un groupe d'objets (Entités et Value Objects) traités comme une seule unité. Il a une **Entité Racine** (Aggregate Root) qui contrôle l'accès à tout l'agrégat.
+
+**Règles :**
+1. L'accès à l'agrégat passe toujours par la racine
+2. Les objets internes ne peuvent pas être modifiés directement
+3. Une transaction ne peut modifier qu'un seul agrégat à la fois
+
+**❌ Sans Aggregate (anarchie) :**
+```pascal
+var
+  Order: TOrder;
+  OrderLine: TOrderLine;
+begin
+  Order := GetOrder(123);
+
+  // Accès direct aux lignes, pas de contrôle !
+  OrderLine := Order.Lines[0];
+  OrderLine.Quantity := -10;  // ⚠️ Quantité négative !
+  OrderLine.Price := 0;        // ⚠️ Prix à zéro !
+
+  SaveOrderLine(OrderLine);    // ⚠️ Incohérence !
+end;
+```
+
+**✅ Avec Aggregate (contrôlé) :**
+```pascal
+type
+  TOrderID = record
+    Value: TGUID;
+  end;
+
+  TOrderLine = class
+  private
+    FProductID: TProductID;
+    FQuantity: Integer;
+    FPrice: Currency;
+  public
+    constructor Create(ProductID: TProductID; Quantity: Integer; Price: Currency);
+    property ProductID: TProductID read FProductID;
+    property Quantity: Integer read FQuantity;
+    property Price: Currency read FPrice;
+    function GetTotal: Currency;
+  end;
+
+  // Aggregate Root
+  TOrder = class
+  private
+    FID: TOrderID;
+    FCustomerID: TCustomerID;
+    FLines: TObjectList<TOrderLine>;
+    FStatus: TOrderStatus;
+    FTotal: Currency;
+
+    // Méthodes privées pour maintenir la cohérence
+    procedure RecalculateTotal;
+    function ValidateOrderLine(ProductID: TProductID; Quantity: Integer): Boolean;
+  public
+    constructor Create(ID: TOrderID; CustomerID: TCustomerID);
     destructor Destroy; override;
 
-    function EnrollInCourse(ACourse: TCourse): TEnrollment;
-    procedure WithdrawFromCourse(ACourse: TCourse);
-    function GetAverageGrade: Double;
+    // Seule façon d'ajouter une ligne (via la racine)
+    procedure AddLine(ProductID: TProductID; Quantity: Integer; Price: Currency);
 
-    property StudentID: Integer read FStudentID;
-    property FirstName: string read FFirstName write FFirstName;
-    property LastName: string read FLastName write FLastName;
-    property DateOfBirth: TDateTime read FDateOfBirth write FDateOfBirth;
-    property Address: TAddress read FAddress write FAddress;
+    // Seule façon de modifier une ligne (via la racine)
+    procedure UpdateLineQuantity(ProductID: TProductID; NewQuantity: Integer);
+
+    // Seule façon de supprimer une ligne (via la racine)
+    procedure RemoveLine(ProductID: TProductID);
+
+    // Transitions d'état contrôlées
+    procedure Submit;
+    procedure Cancel;
+
+    // Lecture seule de l'extérieur
+    property ID: TOrderID read FID;
+    property Status: TOrderStatus read FStatus;
+    property Total: Currency read FTotal;
+    property Lines: TObjectList<TOrderLine> read FLines;  // Read-only
   end;
 
 implementation
 
-// Implémentation...
-
-end.
-
-// Autres entités: TCourse, TTeacher, TEnrollment, etc.
-```
-
-#### Services de domaine
-
-```pascal
-// Fichier: Domain\Services\TEnrollmentService.pas
-unit Domain.Services.EnrollmentService;
-
-interface
-
-uses
-  Domain.Entities.Student, Domain.Entities.Course, Domain.Entities.Enrollment;
-
-type
-  TEnrollmentService = class
-  public
-    function EnrollStudent(AStudent: TStudent; ACourse: TCourse): TEnrollment;
-    procedure WithdrawStudent(AStudent: TStudent; ACourse: TCourse);
-    function CanEnroll(AStudent: TStudent; ACourse: TCourse): Boolean;
-  end;
-
-implementation
-
-function TEnrollmentService.CanEnroll(AStudent: TStudent; ACourse: TCourse): Boolean;
-begin
-  // Vérifier les prérequis
-  Result := ACourse.HasAvailableSeats and
-            (not ACourse.IsFull) and
-            AStudent.MeetsPrerequisites(ACourse);
-end;
-
-// Autres implémentations...
-
-end.
-```
-
-#### Repositories (interfaces)
-
-```pascal
-// Fichier: Domain\Repositories\IStudentRepository.pas
-unit Domain.Repositories.IStudentRepository;
-
-interface
-
-uses
-  System.Generics.Collections, Domain.Entities.Student;
-
-type
-  IStudentRepository = interface
-    ['{A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890}']
-    function GetById(AStudentID: Integer): TStudent;
-    function GetAll: TList<TStudent>;
-    procedure Add(AStudent: TStudent);
-    procedure Update(AStudent: TStudent);
-    procedure Remove(AStudent: TStudent);
-    function FindByName(const AFirstName, ALastName: string): TList<TStudent>;
-  end;
-
-implementation
-
-end.
-
-// Autres interfaces de repositories: ICourseRepository, ITeacherRepository, etc.
-```
-
-### 3. Implémenter la couche d'application
-
-```pascal
-// Fichier: Application\Services\TStudentService.pas
-unit Application.Services.StudentService;
-
-interface
-
-uses
-  Domain.Entities.Student, Domain.Repositories.IStudentRepository,
-  System.Generics.Collections, Application.DTOs.StudentDTO;
-
-type
-  TStudentService = class
-  private
-    FStudentRepository: IStudentRepository;
-  public
-    constructor Create(AStudentRepository: IStudentRepository);
-
-    function GetAllStudents: TList<TStudentDTO>;
-    function GetStudentById(AStudentID: Integer): TStudentDTO;
-    procedure RegisterNewStudent(AStudentDTO: TStudentDTO);
-    procedure UpdateStudentInfo(AStudentDTO: TStudentDTO);
-  end;
-
-implementation
-
-constructor TStudentService.Create(AStudentRepository: IStudentRepository);
+constructor TOrder.Create(ID: TOrderID; CustomerID: TCustomerID);
 begin
   inherited Create;
-  FStudentRepository := AStudentRepository;
+  FID := ID;
+  FCustomerID := CustomerID;
+  FLines := TObjectList<TOrderLine>.Create(True);
+  FStatus := osCreated;
+  FTotal := 0;
 end;
 
-function TStudentService.GetAllStudents: TList<TStudentDTO>;
-var
-  Students: TList<TStudent>;
-  Student: TStudent;
-  StudentDTO: TStudentDTO;
+destructor TOrder.Destroy;
 begin
-  Result := TList<TStudentDTO>.Create;
-  Students := FStudentRepository.GetAll;
-  try
-    for Student in Students do
-    begin
-      StudentDTO := TStudentDTO.Create;
-      StudentDTO.StudentID := Student.StudentID;
-      StudentDTO.FirstName := Student.FirstName;
-      StudentDTO.LastName := Student.LastName;
-      StudentDTO.DateOfBirth := Student.DateOfBirth;
-      // Mapper d'autres propriétés...
-
-      Result.Add(StudentDTO);
-    end;
-  finally
-    Students.Free;
-  end;
+  FLines.Free;
+  inherited;
 end;
 
-// Autres méthodes...
+procedure TOrder.AddLine(ProductID: TProductID; Quantity: Integer; Price: Currency);
+var
+  Line: TOrderLine;
+begin
+  // Validation
+  if not ValidateOrderLine(ProductID, Quantity) then
+    raise Exception.Create('Invalid order line');
 
-end.
+  if FStatus <> osCreated then
+    raise Exception.Create('Cannot modify submitted order');
+
+  // Création
+  Line := TOrderLine.Create(ProductID, Quantity, Price);
+  FLines.Add(Line);
+
+  // Maintien de la cohérence
+  RecalculateTotal;
+end;
+
+procedure TOrder.UpdateLineQuantity(ProductID: TProductID; NewQuantity: Integer);
+var
+  Line: TOrderLine;
+begin
+  if FStatus <> osCreated then
+    raise Exception.Create('Cannot modify submitted order');
+
+  for Line in FLines do
+  begin
+    if Line.ProductID.Equals(ProductID) then
+    begin
+      if NewQuantity <= 0 then
+        raise Exception.Create('Quantity must be positive');
+
+      // On ne peut pas modifier directement Line.FQuantity car c'est privé
+      // On doit recréer la ligne ou avoir une méthode SetQuantity protégée
+      RemoveLine(ProductID);
+      AddLine(ProductID, NewQuantity, Line.Price);
+      Break;
+    end;
+  end;
+
+  RecalculateTotal;
+end;
+
+procedure TOrder.RemoveLine(ProductID: TProductID);
+var
+  I: Integer;
+begin
+  if FStatus <> osCreated then
+    raise Exception.Create('Cannot modify submitted order');
+
+  for I := FLines.Count - 1 downto 0 do
+  begin
+    if FLines[I].ProductID.Equals(ProductID) then
+    begin
+      FLines.Delete(I);
+      Break;
+    end;
+  end;
+
+  RecalculateTotal;
+end;
+
+procedure TOrder.RecalculateTotal;
+var
+  Line: TOrderLine;
+begin
+  FTotal := 0;
+  for Line in FLines do
+    FTotal := FTotal + Line.GetTotal;
+end;
+
+function TOrder.ValidateOrderLine(ProductID: TProductID; Quantity: Integer): Boolean;
+begin
+  Result := (Quantity > 0) and (Quantity <= 1000);  // Règles métier
+end;
+
+procedure TOrder.Submit;
+begin
+  if FStatus <> osCreated then
+    raise Exception.Create('Order already submitted');
+
+  if FLines.Count = 0 then
+    raise Exception.Create('Cannot submit empty order');
+
+  FStatus := osSubmitted;
+end;
+
+procedure TOrder.Cancel;
+begin
+  if FStatus in [osShipped, osDelivered] then
+    raise Exception.Create('Cannot cancel shipped/delivered order');
+
+  FStatus := osCancelled;
+end;
 ```
 
-### 4. Implémenter l'infrastructure
-
+**Utilisation :**
 ```pascal
-// Fichier: Infrastructure\Persistence\TStudentRepository.pas
-unit Infrastructure.Persistence.StudentRepository;
+var
+  Order: TOrder;
+begin
+  Order := TOrder.Create(NewOrderID, CustomerID);
+  try
+    // ✅ Contrôle total par la racine
+    Order.AddLine(ProductID1, 2, 49.99);
+    Order.AddLine(ProductID2, 1, 29.99);
 
-interface
+    // ✅ Modifications contrôlées
+    Order.UpdateLineQuantity(ProductID1, 3);
 
-uses
-  Domain.Repositories.IStudentRepository, Domain.Entities.Student,
-  System.Generics.Collections, FireDAC.Comp.Client;
+    // ✅ Validation automatique
+    Order.Submit;
 
+    // ❌ Impossible de modifier après soumission
+    // Order.AddLine(...);  // Exception !
+
+    FOrderRepository.Save(Order);
+  finally
+    Order.Free;
+  end;
+end;
+```
+
+**Bénéfices :**
+- Cohérence garantie
+- Règles métier centralisées
+- Impossible d'avoir des états invalides
+- Transactions simplifiées
+
+### 6. Repositories (Dépôts)
+
+Un **Repository** fait abstraction de la persistance. Il donne l'impression de travailler avec une collection d'objets en mémoire.
+
+**Principe :** Le domaine ne doit pas connaître la base de données.
+
+**Interface du Repository :**
+```pascal
 type
-  TStudentRepository = class(TInterfacedObject, IStudentRepository)
+  IOrderRepository = interface
+    ['{GUID}']
+    function GetByID(ID: TOrderID): TOrder;
+    function GetByCustomer(CustomerID: TCustomerID): TList<TOrder>;
+    procedure Save(Order: TOrder);
+    procedure Delete(Order: TOrder);
+  end;
+```
+
+**Implémentation :**
+```pascal
+type
+  TOrderRepository = class(TInterfacedObject, IOrderRepository)
   private
     FConnection: TFDConnection;
+    function MapDataSetToOrder(DS: TDataSet): TOrder;
+    procedure MapOrderToDataSet(Order: TOrder; DS: TDataSet);
   public
-    constructor Create(AConnection: TFDConnection);
-
-    function GetById(AStudentID: Integer): TStudent;
-    function GetAll: TList<TStudent>;
-    procedure Add(AStudent: TStudent);
-    procedure Update(AStudent: TStudent);
-    procedure Remove(AStudent: TStudent);
-    function FindByName(const AFirstName, ALastName: string): TList<TStudent>;
+    constructor Create(Connection: TFDConnection);
+    function GetByID(ID: TOrderID): TOrder;
+    function GetByCustomer(CustomerID: TCustomerID): TList<TOrder>;
+    procedure Save(Order: TOrder);
+    procedure Delete(Order: TOrder);
   end;
 
 implementation
 
-constructor TStudentRepository.Create(AConnection: TFDConnection);
+constructor TOrderRepository.Create(Connection: TFDConnection);
 begin
   inherited Create;
-  FConnection := AConnection;
+  FConnection := Connection;
 end;
 
-function TStudentRepository.GetById(AStudentID: Integer): TStudent;
+function TOrderRepository.GetByID(ID: TOrderID): TOrder;
 var
   Query: TFDQuery;
 begin
@@ -513,327 +665,1070 @@ begin
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FConnection;
-    Query.SQL.Text := 'SELECT * FROM Students WHERE StudentID = :ID';
-    Query.ParamByName('ID').AsInteger := AStudentID;
+    Query.SQL.Text := 'SELECT * FROM orders WHERE id = :id';
+    Query.ParamByName('id').AsString := GUIDToString(ID.Value);
     Query.Open;
 
-    if not Query.Eof then
+    if not Query.IsEmpty then
+      Result := MapDataSetToOrder(Query);
+  finally
+    Query.Free;
+  end;
+end;
+
+function TOrderRepository.GetByCustomer(CustomerID: TCustomerID): TList<TOrder>;
+var
+  Query: TFDQuery;
+  Order: TOrder;
+begin
+  Result := TList<TOrder>.Create;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'SELECT * FROM orders WHERE customer_id = :customer_id';
+    Query.ParamByName('customer_id').AsString := GUIDToString(CustomerID.Value);
+    Query.Open;
+
+    while not Query.Eof do
     begin
-      Result := TStudent.Create(Query.FieldByName('StudentID').AsInteger,
-                               Query.FieldByName('FirstName').AsString,
-                               Query.FieldByName('LastName').AsString);
-      Result.DateOfBirth := Query.FieldByName('DateOfBirth').AsDateTime;
-      // Charger d'autres propriétés...
+      Order := MapDataSetToOrder(Query);
+      Result.Add(Order);
+      Query.Next;
     end;
   finally
     Query.Free;
   end;
 end;
 
-// Autres méthodes...
+procedure TOrderRepository.Save(Order: TOrder);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
 
-end.
+    // Vérifier si existe
+    Query.SQL.Text := 'SELECT COUNT(*) FROM orders WHERE id = :id';
+    Query.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
+    Query.Open;
+
+    if Query.Fields[0].AsInteger > 0 then
+    begin
+      // UPDATE
+      Query.Close;
+      Query.SQL.Text := 'UPDATE orders SET status = :status, total = :total ' +
+                        'WHERE id = :id';
+    end
+    else
+    begin
+      // INSERT
+      Query.Close;
+      Query.SQL.Text := 'INSERT INTO orders (id, customer_id, status, total) ' +
+                        'VALUES (:id, :customer_id, :status, :total)';
+    end;
+
+    MapOrderToDataSet(Order, Query);
+    Query.ExecSQL;
+
+    // Sauvegarder les lignes aussi...
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TOrderRepository.Delete(Order: TOrder);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'DELETE FROM orders WHERE id = :id';
+    Query.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+function TOrderRepository.MapDataSetToOrder(DS: TDataSet): TOrder;
+var
+  OrderID: TOrderID;
+  CustomerID: TCustomerID;
+begin
+  OrderID.Value := StringToGUID(DS.FieldByName('id').AsString);
+  CustomerID.Value := StringToGUID(DS.FieldByName('customer_id').AsString);
+
+  Result := TOrder.Create(OrderID, CustomerID);
+  // Charger les autres propriétés...
+  // Charger les lignes...
+end;
+
+procedure TOrderRepository.MapOrderToDataSet(Order: TOrder; DS: TDataSet);
+begin
+  DS.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
+  DS.ParamByName('status').AsInteger := Ord(Order.Status);
+  DS.ParamByName('total').AsCurrency := Order.Total;
+  // etc.
+end;
 ```
 
-### 5. Créer la couche présentation
-
+**Utilisation depuis le domaine :**
 ```pascal
-// Fichier: Presentation\Forms\UStudentForm.pas
-unit Presentation.Forms.StudentForm;
+var
+  OrderRepo: IOrderRepository;
+  Order: TOrder;
+begin
+  OrderRepo := TOrderRepository.Create(Connection);
 
-interface
+  // Comme si c'était une collection en mémoire !
+  Order := OrderRepo.GetByID(OrderID);
+  Order.AddLine(ProductID, 2, 49.99);
+  OrderRepo.Save(Order);
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Application.Services.StudentService,
-  Application.DTOs.StudentDTO;
+  // Le domaine ne sait pas que c'est une base de données
+end;
+```
 
+### 7. Domain Services (Services du Domaine)
+
+Un **Domain Service** contient de la logique métier qui ne rentre pas naturellement dans une Entité ou un Value Object.
+
+**Quand utiliser un Domain Service ?**
+- L'opération implique plusieurs Aggregates
+- L'opération ne concerne pas naturellement une entité particulière
+- C'est un processus métier, pas une propriété d'un objet
+
+**Exemple : Transfert d'argent entre comptes**
+```pascal
 type
-  TStudentForm = class(TForm)
-    edtFirstName: TEdit;
-    edtLastName: TEdit;
-    dtpDateOfBirth: TDateTimePicker;
-    btnSave: TButton;
-    btnCancel: TButton;
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+  // Entités
+  TAccount = class
   private
-    FStudentService: TStudentService;
-    FStudentDTO: TStudentDTO;
-    procedure UpdateUI;
-    procedure SaveStudent;
+    FID: TAccountID;
+    FBalance: TMoney;
   public
-    procedure SetStudentService(AStudentService: TStudentService);
-    procedure LoadStudent(AStudentID: Integer);
-    procedure NewStudent;
+    procedure Debit(Amount: TMoney);
+    procedure Credit(Amount: TMoney);
+    property ID: TAccountID read FID;
+    property Balance: TMoney read FBalance;
+  end;
+
+  // Domain Service
+  IMoneyTransferService = interface
+    ['{GUID}']
+    function Transfer(
+      FromAccount: TAccount;
+      ToAccount: TAccount;
+      Amount: TMoney
+    ): TTransferResult;
+  end;
+
+  TMoneyTransferService = class(TInterfacedObject, IMoneyTransferService)
+  public
+    function Transfer(
+      FromAccount: TAccount;
+      ToAccount: TAccount;
+      Amount: TMoney
+    ): TTransferResult;
   end;
 
 implementation
 
-{$R *.dfm}
+// On ne peut pas mettre cette logique dans TAccount
+// car elle concerne DEUX comptes à la fois !
 
-procedure TStudentForm.FormCreate(Sender: TObject);
+function TMoneyTransferService.Transfer(
+  FromAccount: TAccount;
+  ToAccount: TAccount;
+  Amount: TMoney
+): TTransferResult;
 begin
-  FStudentDTO := TStudentDTO.Create;
+  // Validation
+  if FromAccount.Balance.Amount < Amount.Amount then
+  begin
+    Result.Success := False;
+    Result.ErrorMessage := 'Insufficient funds';
+    Exit;
+  end;
+
+  if Amount.Amount <= 0 then
+  begin
+    Result.Success := False;
+    Result.ErrorMessage := 'Amount must be positive';
+    Exit;
+  end;
+
+  // Transaction atomique
+  try
+    FromAccount.Debit(Amount);
+    ToAccount.Credit(Amount);
+
+    Result.Success := True;
+    Result.TransactionID := GenerateTransactionID;
+  except
+    on E: Exception do
+    begin
+      Result.Success := False;
+      Result.ErrorMessage := 'Transfer failed: ' + E.Message;
+    end;
+  end;
+end;
+```
+
+### 8. Domain Events (Événements du Domaine)
+
+Un **Domain Event** représente quelque chose qui s'est passé dans le domaine et qui peut intéresser d'autres parties du système.
+
+**Caractéristiques :**
+- Immutable
+- Nom au passé (OrderPlaced, CustomerRegistered)
+- Contient toutes les informations nécessaires
+
+**Exemple :**
+```pascal
+type
+  TDomainEvent = class abstract
+  private
+    FOccurredAt: TDateTime;
+  public
+    constructor Create;
+    property OccurredAt: TDateTime read FOccurredAt;
+  end;
+
+  TOrderPlacedEvent = class(TDomainEvent)
+  private
+    FOrderID: TOrderID;
+    FCustomerID: TCustomerID;
+    FTotalAmount: Currency;
+  public
+    constructor Create(OrderID: TOrderID; CustomerID: TCustomerID; TotalAmount: Currency);
+    property OrderID: TOrderID read FOrderID;
+    property CustomerID: TCustomerID read FCustomerID;
+    property TotalAmount: Currency read FTotalAmount;
+  end;
+
+implementation
+
+constructor TDomainEvent.Create;
+begin
+  inherited Create;
+  FOccurredAt := Now;
 end;
 
-procedure TStudentForm.FormDestroy(Sender: TObject);
+constructor TOrderPlacedEvent.Create(OrderID: TOrderID; CustomerID: TCustomerID; TotalAmount: Currency);
 begin
-  FStudentDTO.Free;
+  inherited Create;
+  FOrderID := OrderID;
+  FCustomerID := CustomerID;
+  FTotalAmount := TotalAmount;
+end;
+```
+
+**Dans l'Aggregate :**
+```pascal
+type
+  TOrder = class
+  private
+    FDomainEvents: TList<TDomainEvent>;
+  public
+    constructor Create(ID: TOrderID; CustomerID: TCustomerID);
+    destructor Destroy; override;
+
+    procedure Submit;
+
+    function GetDomainEvents: TArray<TDomainEvent>;
+    procedure ClearDomainEvents;
+  end;
+
+implementation
+
+procedure TOrder.Submit;
+var
+  Event: TOrderPlacedEvent;
+begin
+  if FStatus <> osCreated then
+    raise Exception.Create('Order already submitted');
+
+  FStatus := osSubmitted;
+
+  // Lever l'événement
+  Event := TOrderPlacedEvent.Create(FID, FCustomerID, FTotal);
+  FDomainEvents.Add(Event);
 end;
 
-procedure TStudentForm.SetStudentService(AStudentService: TStudentService);
+function TOrder.GetDomainEvents: TArray<TDomainEvent>;
 begin
-  FStudentService := AStudentService;
+  Result := FDomainEvents.ToArray;
 end;
 
-procedure TStudentForm.LoadStudent(AStudentID: Integer);
+procedure TOrder.ClearDomainEvents;
 begin
-  FStudentDTO.Free;
-  FStudentDTO := FStudentService.GetStudentById(AStudentID);
-  UpdateUI;
+  FDomainEvents.Clear;
+end;
+```
+
+**Handlers d'événements :**
+```pascal
+type
+  IEventHandler<T: TDomainEvent> = interface
+    ['{GUID}']
+    procedure Handle(Event: T);
+  end;
+
+  TOrderPlacedEventHandler = class(TInterfacedObject, IEventHandler<TOrderPlacedEvent>)
+  public
+    procedure Handle(Event: TOrderPlacedEvent);
+  end;
+
+implementation
+
+procedure TOrderPlacedEventHandler.Handle(Event: TOrderPlacedEvent);
+begin
+  // Envoyer email de confirmation
+  WriteLn('Sending confirmation email for order: ', GUIDToString(Event.OrderID.Value));
+
+  // Mettre à jour les statistiques
+  WriteLn('Updating sales statistics');
+
+  // Notifier l'entrepôt
+  WriteLn('Notifying warehouse');
+end;
+```
+
+## Exemple complet : Système de réservation
+
+Construisons un système de réservation d'hôtel avec DDD.
+
+### Ubiquitous Language
+
+Vocabulaire métier :
+- **Guest** (Invité) : Personne qui réserve
+- **Room** (Chambre) : Chambre d'hôtel
+- **Booking** (Réservation) : Réservation d'une chambre
+- **Check-in** (Enregistrement) : Arrivée du client
+- **Check-out** (Départ) : Départ du client
+
+### Value Objects
+
+```pascal
+unit Domain.ValueObjects;
+
+interface
+
+type
+  TGuestName = record
+  private
+    FFirstName: string;
+    FLastName: string;
+  public
+    constructor Create(const FirstName, LastName: string);
+    function GetFullName: string;
+    property FirstName: string read FFirstName;
+    property LastName: string read FLastName;
+  end;
+
+  TEmailAddress = record
+  private
+    FValue: string;
+  public
+    constructor Create(const Value: string);
+    class function TryCreate(const Value: string; out Email: TEmailAddress): Boolean; static;
+    property Value: string read FValue;
+  end;
+
+  TDateRange = record
+  private
+    FCheckIn: TDate;
+    FCheckOut: TDate;
+  public
+    constructor Create(CheckIn, CheckOut: TDate);
+    function GetNights: Integer;
+    function Contains(Date: TDate): Boolean;
+    function Overlaps(Other: TDateRange): Boolean;
+    property CheckIn: TDate read FCheckIn;
+    property CheckOut: TDate read FCheckOut;
+  end;
+
+  TMoney = record
+  private
+    FAmount: Currency;
+    FCurrencyCode: string;
+  public
+    constructor Create(Amount: Currency; const CurrencyCode: string);
+    function Add(Other: TMoney): TMoney;
+    function Multiply(Factor: Double): TMoney;
+    property Amount: Currency read FAmount;
+    property CurrencyCode: string read FCurrencyCode;
+  end;
+
+implementation
+
+uses
+  System.SysUtils, System.DateUtils;
+
+{ TGuestName }
+
+constructor TGuestName.Create(const FirstName, LastName: string);
+begin
+  if Trim(FirstName) = '' then
+    raise Exception.Create('First name is required');
+  if Trim(LastName) = '' then
+    raise Exception.Create('Last name is required');
+
+  FFirstName := Trim(FirstName);
+  FLastName := Trim(LastName);
 end;
 
-procedure TStudentForm.NewStudent;
+function TGuestName.GetFullName: string;
 begin
-  FStudentDTO.Free;
-  FStudentDTO := TStudentDTO.Create;
-  UpdateUI;
+  Result := FFirstName + ' ' + FLastName;
 end;
 
-procedure TStudentForm.UpdateUI;
+{ TEmailAddress }
+
+constructor TEmailAddress.Create(const Value: string);
 begin
-  edtFirstName.Text := FStudentDTO.FirstName;
-  edtLastName.Text := FStudentDTO.LastName;
-  dtpDateOfBirth.Date := FStudentDTO.DateOfBirth;
+  if not TryCreate(Value, Self) then
+    raise Exception.Create('Invalid email address');
 end;
 
-procedure TStudentForm.SaveStudent;
+class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;
 begin
-  FStudentDTO.FirstName := edtFirstName.Text;
-  FStudentDTO.LastName := edtLastName.Text;
-  FStudentDTO.DateOfBirth := dtpDateOfBirth.Date;
-
-  if FStudentDTO.StudentID = 0 then
-    FStudentService.RegisterNewStudent(FStudentDTO)
-  else
-    FStudentService.UpdateStudentInfo(FStudentDTO);
+  Result := (Trim(Value) <> '') and Value.Contains('@');
+  if Result then
+    Email.FValue := LowerCase(Trim(Value));
 end;
 
-procedure TStudentForm.btnSaveClick(Sender: TObject);
+{ TDateRange }
+
+constructor TDateRange.Create(CheckIn, CheckOut: TDate);
 begin
-  SaveStudent;
-  ModalResult := mrOk;
+  if CheckIn >= CheckOut then
+    raise Exception.Create('Check-out must be after check-in');
+  if CheckIn < Date then
+    raise Exception.Create('Check-in cannot be in the past');
+
+  FCheckIn := CheckIn;
+  FCheckOut := CheckOut;
 end;
 
-procedure TStudentForm.btnCancelClick(Sender: TObject);
+function TDateRange.GetNights: Integer;
 begin
-  ModalResult := mrCancel;
+  Result := DaysBetween(FCheckOut, FCheckIn);
+end;
+
+function TDateRange.Contains(Date: TDate): Boolean;
+begin
+  Result := (Date >= FCheckIn) and (Date < FCheckOut);
+end;
+
+function TDateRange.Overlaps(Other: TDateRange): Boolean;
+begin
+  Result := (FCheckIn < Other.CheckOut) and (FCheckOut > Other.CheckIn);
+end;
+
+{ TMoney }
+
+constructor TMoney.Create(Amount: Currency; const CurrencyCode: string);
+begin
+  if Amount < 0 then
+    raise Exception.Create('Amount cannot be negative');
+  FAmount := Amount;
+  FCurrencyCode := UpperCase(CurrencyCode);
+end;
+
+function TMoney.Add(Other: TMoney): TMoney;
+begin
+  if FCurrencyCode <> Other.CurrencyCode then
+    raise Exception.Create('Cannot add different currencies');
+  Result := TMoney.Create(FAmount + Other.Amount, FCurrencyCode);
+end;
+
+function TMoney.Multiply(Factor: Double): TMoney;
+begin
+  Result := TMoney.Create(FAmount * Factor, FCurrencyCode);
 end;
 
 end.
 ```
 
-### 6. Configuration de l'application
+### Entities
 
 ```pascal
-// Fichier: UMain.pas
-unit UMain;
+unit Domain.Entities;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Forms, FireDAC.Comp.Client, FireDAC.Stan.Def,
-  Domain.Repositories.IStudentRepository,
-  Infrastructure.Persistence.StudentRepository,
-  Application.Services.StudentService,
-  Presentation.Forms.StudentForm;
+  Domain.ValueObjects, System.Generics.Collections;
 
 type
-  TMainForm = class(TForm)
-    // Composants...
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnNewStudentClick(Sender: TObject);
+  TGuestID = record
+    Value: TGUID;
+  end;
+
+  TRoomID = record
+    Value: Integer;
+  end;
+
+  TBookingID = record
+    Value: TGUID;
+  end;
+
+  TRoomType = (rtStandard, rtDeluxe, rtSuite);
+
+  TBookingStatus = (bsPending, bsConfirmed, bsCheckedIn, bsCheckedOut, bsCancelled);
+
+  TGuest = class
+  private
+    FID: TGuestID;
+    FName: TGuestName;
+    FEmail: TEmailAddress;
+    FPhone: string;
+  public
+    constructor Create(ID: TGuestID; Name: TGuestName; Email: TEmailAddress; const Phone: string);
+    property ID: TGuestID read FID;
+    property Name: TGuestName read FName;
+    property Email: TEmailAddress read FEmail;
+    property Phone: string read FPhone write FPhone;
+  end;
+
+  TRoom = class
+  private
+    FID: TRoomID;
+    FNumber: string;
+    FRoomType: TRoomType;
+    FPricePerNight: TMoney;
+    FMaxOccupancy: Integer;
+  public
+    constructor Create(ID: TRoomID; const Number: string; RoomType: TRoomType;
+      PricePerNight: TMoney; MaxOccupancy: Integer);
+    function CalculatePrice(Nights: Integer): TMoney;
+    property ID: TRoomID read FID;
+    property Number: string read FNumber;
+    property RoomType: TRoomType read FRoomType;
+    property PricePerNight: TMoney read FPricePerNight;
+    property MaxOccupancy: Integer read FMaxOccupancy;
+  end;
+
+implementation
+
+{ TGuest }
+
+constructor TGuest.Create(ID: TGuestID; Name: TGuestName; Email: TEmailAddress; const Phone: string);
+begin
+  inherited Create;
+  FID := ID;
+  FName := Name;
+  FEmail := Email;
+  FPhone := Phone;
+end;
+
+{ TRoom }
+
+constructor TRoom.Create(ID: TRoomID; const Number: string; RoomType: TRoomType;
+  PricePerNight: TMoney; MaxOccupancy: Integer);
+begin
+  inherited Create;
+  FID := ID;
+  FNumber := Number;
+  FRoomType := RoomType;
+  FPricePerNight := PricePerNight;
+  FMaxOccupancy := MaxOccupancy;
+end;
+
+function TRoom.CalculatePrice(Nights: Integer): TMoney;
+begin
+  Result := FPricePerNight.Multiply(Nights);
+end;
+
+end.
+```
+
+### Aggregate Root
+
+```pascal
+unit Domain.Aggregates;
+
+interface
+
+uses
+  Domain.Entities, Domain.ValueObjects, Domain.Events,
+  System.Generics.Collections;
+
+type
+  // Aggregate Root
+  TBooking = class
+  private
+    FID: TBookingID;
+    FGuestID: TGuestID;
+    FRoomID: TRoomID;
+    FDateRange: TDateRange;
+    FStatus: TBookingStatus;
+    FTotalPrice: TMoney;
+    FCreatedAt: TDateTime;
+    FDomainEvents: TList<TDomainEvent>;
+
+    procedure AddDomainEvent(Event: TDomainEvent);
+  public
+    constructor Create(ID: TBookingID; GuestID: TGuestID; RoomID: TRoomID;
+      DateRange: TDateRange; TotalPrice: TMoney);
+    destructor Destroy; override;
+
+    // Méthodes métier
+    procedure Confirm;
+    procedure CheckIn;
+    procedure CheckOut;
+    procedure Cancel(const Reason: string);
+
+    // Validation métier
+    function CanBeConfirmed: Boolean;
+    function CanCheckIn: Boolean;
+    function CanCheckOut: Boolean;
+    function CanBeCancelled: Boolean;
+
+    // Événements
+    function GetDomainEvents: TArray<TDomainEvent>;
+    procedure ClearDomainEvents;
+
+    // Properties
+    property ID: TBookingID read FID;
+    property GuestID: TGuestID read FGuestID;
+    property RoomID: TRoomID read FRoomID;
+    property DateRange: TDateRange read FDateRange;
+    property Status: TBookingStatus read FStatus;
+    property TotalPrice: TMoney read FTotalPrice;
+    property CreatedAt: TDateTime read FCreatedAt;
+  end;
+
+implementation
+
+uses
+  System.SysUtils;
+
+constructor TBooking.Create(ID: TBookingID; GuestID: TGuestID; RoomID: TRoomID;
+  DateRange: TDateRange; TotalPrice: TMoney);
+begin
+  inherited Create;
+  FID := ID;
+  FGuestID := GuestID;
+  FRoomID := RoomID;
+  FDateRange := DateRange;
+  FTotalPrice := TotalPrice;
+  FStatus := bsPending;
+  FCreatedAt := Now;
+  FDomainEvents := TList<TDomainEvent>.Create;
+end;
+
+destructor TBooking.Destroy;
+begin
+  FDomainEvents.Free;
+  inherited;
+end;
+
+procedure TBooking.AddDomainEvent(Event: TDomainEvent);
+begin
+  FDomainEvents.Add(Event);
+end;
+
+function TBooking.CanBeConfirmed: Boolean;
+begin
+  Result := FStatus = bsPending;
+end;
+
+procedure TBooking.Confirm;
+var
+  Event: TBookingConfirmedEvent;
+begin
+  if not CanBeConfirmed then
+    raise Exception.Create('Booking cannot be confirmed');
+
+  FStatus := bsConfirmed;
+
+  Event := TBookingConfirmedEvent.Create(FID, FGuestID, FRoomID, FDateRange);
+  AddDomainEvent(Event);
+end;
+
+function TBooking.CanCheckIn: Boolean;
+begin
+  Result := (FStatus = bsConfirmed) and (Date >= FDateRange.CheckIn);
+end;
+
+procedure TBooking.CheckIn;
+var
+  Event: TGuestCheckedInEvent;
+begin
+  if not CanCheckIn then
+    raise Exception.Create('Cannot check in');
+
+  FStatus := bsCheckedIn;
+
+  Event := TGuestCheckedInEvent.Create(FID, FGuestID, FRoomID);
+  AddDomainEvent(Event);
+end;
+
+function TBooking.CanCheckOut: Boolean;
+begin
+  Result := FStatus = bsCheckedIn;
+end;
+
+procedure TBooking.CheckOut;
+var
+  Event: TGuestCheckedOutEvent;
+begin
+  if not CanCheckOut then
+    raise Exception.Create('Cannot check out');
+
+  FStatus := bsCheckedOut;
+
+  Event := TGuestCheckedOutEvent.Create(FID, FGuestID, FRoomID);
+  AddDomainEvent(Event);
+end;
+
+function TBooking.CanBeCancelled: Boolean;
+begin
+  Result := FStatus in [bsPending, bsConfirmed];
+end;
+
+procedure TBooking.Cancel(const Reason: string);
+var
+  Event: TBookingCancelledEvent;
+begin
+  if not CanBeCancelled then
+    raise Exception.Create('Cannot cancel booking');
+
+  FStatus := bsCancelled;
+
+  Event := TBookingCancelledEvent.Create(FID, Reason);
+  AddDomainEvent(Event);
+end;
+
+function TBooking.GetDomainEvents: TArray<TDomainEvent>;
+begin
+  Result := FDomainEvents.ToArray;
+end;
+
+procedure TBooking.ClearDomainEvents;
+begin
+  FDomainEvents.Clear;
+end;
+
+end.
+```
+
+### Domain Service
+
+```pascal
+unit Domain.Services;
+
+interface
+
+uses
+  Domain.Aggregates, Domain.Entities, Domain.ValueObjects,
+  System.Generics.Collections;
+
+type
+  IBookingService = interface
+    ['{GUID}']
+    function CreateBooking(Guest: TGuest; Room: TRoom; DateRange: TDateRange): TBooking;
+    function IsRoomAvailable(RoomID: TRoomID; DateRange: TDateRange): Boolean;
+  end;
+
+  TBookingService = class(TInterfacedObject, IBookingService)
+  private
+    FBookingRepository: IBookingRepository;
+  public
+    constructor Create(BookingRepository: IBookingRepository);
+    function CreateBooking(Guest: TGuest; Room: TRoom; DateRange: TDateRange): TBooking;
+    function IsRoomAvailable(RoomID: TRoomID; DateRange: TDateRange): Boolean;
+  end;
+
+implementation
+
+uses
+  System.SysUtils;
+
+constructor TBookingService.Create(BookingRepository: IBookingRepository);
+begin
+  inherited Create;
+  FBookingRepository := BookingRepository;
+end;
+
+function TBookingService.IsRoomAvailable(RoomID: TRoomID; DateRange: TDateRange): Boolean;
+var
+  ExistingBookings: TList<TBooking>;
+  Booking: TBooking;
+begin
+  Result := True;
+
+  ExistingBookings := FBookingRepository.GetByRoomAndDateRange(RoomID, DateRange);
+  try
+    for Booking in ExistingBookings do
+    begin
+      if Booking.Status in [bsConfirmed, bsCheckedIn] then
+      begin
+        if Booking.DateRange.Overlaps(DateRange) then
+        begin
+          Result := False;
+          Break;
+        end;
+      end;
+    end;
+  finally
+    ExistingBookings.Free;
+  end;
+end;
+
+function TBookingService.CreateBooking(Guest: TGuest; Room: TRoom; DateRange: TDateRange): TBooking;
+var
+  BookingID: TBookingID;
+  TotalPrice: TMoney;
+begin
+  // Vérifier disponibilité
+  if not IsRoomAvailable(Room.ID, DateRange) then
+    raise Exception.Create('Room is not available for selected dates');
+
+  // Calculer le prix
+  TotalPrice := Room.CalculatePrice(DateRange.GetNights);
+
+  // Créer la réservation
+  BookingID.Value := TGUID.NewGuid;
+  Result := TBooking.Create(BookingID, Guest.ID, Room.ID, DateRange, TotalPrice);
+end;
+
+end.
+```
+
+### Repository
+
+```pascal
+unit Domain.Repositories;
+
+interface
+
+uses
+  Domain.Aggregates, Domain.Entities, Domain.ValueObjects,
+  System.Generics.Collections;
+
+type
+  IBookingRepository = interface
+    ['{GUID}']
+    function GetByID(ID: TBookingID): TBooking;
+    function GetByGuest(GuestID: TGuestID): TList<TBooking>;
+    function GetByRoomAndDateRange(RoomID: TRoomID; DateRange: TDateRange): TList<TBooking>;
+    procedure Save(Booking: TBooking);
+    procedure Delete(Booking: TBooking);
+  end;
+
+  // Implémentation avec FireDAC
+  TBookingRepository = class(TInterfacedObject, IBookingRepository)
   private
     FConnection: TFDConnection;
-    FStudentRepository: IStudentRepository;
-    FStudentService: TStudentService;
-    procedure ConfigureServices;
   public
-    { Public declarations }
+    constructor Create(Connection: TFDConnection);
+    function GetByID(ID: TBookingID): TBooking;
+    function GetByGuest(GuestID: TGuestID): TList<TBooking>;
+    function GetByRoomAndDateRange(RoomID: TRoomID; DateRange: TDateRange): TList<TBooking>;
+    procedure Save(Booking: TBooking);
+    procedure Delete(Booking: TBooking);
   end;
-
-var
-  MainForm: TMainForm;
 
 implementation
 
-{$R *.dfm}
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Configuration de la base de données
-  FConnection := TFDConnection.Create(Self);
-  FConnection.ConnectionDefName := 'SchoolDB';
-  FConnection.Connected := True;
-
-  // Configuration des services
-  ConfigureServices;
-end;
-
-procedure TMainForm.ConfigureServices;
-begin
-  // Mise en place du repository
-  FStudentRepository := TStudentRepository.Create(FConnection);
-
-  // Mise en place du service
-  FStudentService := TStudentService.Create(FStudentRepository);
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FStudentService.Free;
-  // Les interfaces se libèrent automatiquement
-end;
-
-procedure TMainForm.btnNewStudentClick(Sender: TObject);
-var
-  StudentForm: TStudentForm;
-begin
-  StudentForm := TStudentForm.Create(Self);
-  try
-    StudentForm.SetStudentService(FStudentService);
-    StudentForm.NewStudent;
-
-    if StudentForm.ShowModal = mrOk then
-      // Rafraîchir la liste des étudiants...
-  finally
-    StudentForm.Free;
-  end;
-end;
+// Implémentation...
 
 end.
 ```
 
-## Conseils pratiques pour appliquer le DDD en Delphi
-
-### 1. Commencez petit
-
-Le DDD peut sembler complexe au début. Commencez par appliquer les concepts à une petite partie de votre application, puis étendez progressivement.
-
-### 2. Concentrez-vous sur le domaine
-
-Ne commencez pas par la base de données ou l'interface utilisateur. Modélisez d'abord votre domaine avec les experts métier.
-
-### 3. Utilisez les interfaces
-
-Delphi supporte bien les interfaces, utilisez-les pour découpler vos composants :
+### Utilisation
 
 ```pascal
-// Définition de l'interface
-IRepository = interface
-  ['{GUID}']
-  function FindById(ID: Integer): TEntity;
-end;
+program HotelBookingSystem;
 
-// Implémentation pour SQLite
-TSQLiteRepository = class(TInterfacedObject, IRepository)
-  function FindById(ID: Integer): TEntity;
-end;
+uses
+  Domain.Entities, Domain.Aggregates, Domain.ValueObjects,
+  Domain.Services, Domain.Repositories;
 
-// Implémentation pour MySQL
-TMySQLRepository = class(TInterfacedObject, IRepository)
-  function FindById(ID: Integer): TEntity;
-end;
+var
+  BookingService: IBookingService;
+  BookingRepo: IBookingRepository;
+  Guest: TGuest;
+  Room: TRoom;
+  Booking: TBooking;
+  GuestName: TGuestName;
+  Email: TEmailAddress;
+  DateRange: TDateRange;
+  Price: TMoney;
+begin
+  // Setup
+  BookingRepo := TBookingRepository.Create(Connection);
+  BookingService := TBookingService.Create(BookingRepo);
+
+  // Créer un invité
+  GuestName := TGuestName.Create('John', 'Doe');
+  Email := TEmailAddress.Create('john.doe@example.com');
+  Guest := TGuest.Create(NewGuestID, GuestName, Email, '+33612345678');
+
+  // Créer une chambre
+  Price := TMoney.Create(120.00, 'EUR');
+  Room := TRoom.Create(NewRoomID, '101', rtDeluxe, Price, 2);
+
+  // Créer une réservation
+  DateRange := TDateRange.Create(Date + 7, Date + 10);  // 3 nuits
+
+  try
+    Booking := BookingService.CreateBooking(Guest, Room, DateRange);
+    try
+      // Confirmer
+      Booking.Confirm;
+
+      // Sauvegarder
+      BookingRepo.Save(Booking);
+
+      WriteLn('Booking created: ', GUIDToString(Booking.ID.Value));
+      WriteLn('Total price: ', Booking.TotalPrice.Amount:0:2, ' ', Booking.TotalPrice.CurrencyCode);
+
+      // Traiter les événements
+      ProcessDomainEvents(Booking.GetDomainEvents);
+      Booking.ClearDomainEvents;
+    finally
+      Booking.Free;
+    end;
+  except
+    on E: Exception do
+      WriteLn('Error: ', E.Message);
+  end;
+end.
 ```
 
-### 4. Utilisez les génériques
-
-Les génériques de Delphi sont utiles pour créer des composants réutilisables :
-
-```pascal
-// Repository générique
-IRepository<T: class> = interface
-  function GetById(ID: Integer): T;
-  procedure Save(Entity: T);
-  procedure Delete(Entity: T);
-end;
-
-// Implémentation avec FireDAC
-TFDRepository<T: class, constructor> = class(TInterfacedObject, IRepository<T>)
-private
-  FConnection: TFDConnection;
-  FTableName: string;
-public
-  constructor Create(AConnection: TFDConnection; const ATableName: string);
-  function GetById(ID: Integer): T;
-  procedure Save(Entity: T);
-  procedure Delete(Entity: T);
-end;
-```
-
-### 5. Adoptez les bonnes pratiques Delphi
-
-- Utilisez les conventions de nommage standard de Delphi (préfixes T pour les classes, I pour les interfaces)
-- Gérez correctement la mémoire avec try/finally et les destructeurs
-- Utilisez les propriétés plutôt que d'accéder directement aux champs
-
-### 6. Documentez votre modèle de domaine
-
-Créez un glossaire des termes du domaine et documentez les règles métier importantes :
-
-```pascal
-/// <summary>
-///   Un étudiant inscrit à l'école.
-/// </summary>
-/// <remarks>
-///   Un étudiant peut s'inscrire à plusieurs cours mais pas plus
-///   de 6 cours par semestre selon le règlement de l'école.
-/// </remarks>
-TStudent = class
-  // ...
-end;
-```
-
-## Avantages et inconvénients du DDD avec Delphi
+## Avantages et inconvénients du DDD
 
 ### Avantages
 
-1. **Meilleure compréhension du domaine** : Le code reflète directement les concepts métier
-2. **Communication améliorée** : Langage commun entre développeurs et experts métier
-3. **Évolutivité** : Le modèle s'adapte aux changements du domaine
-4. **Testabilité** : Les composants sont découplés et faciles à tester
-5. **Maintenabilité** : Le code est organisé selon des principes cohérents
+✅ **Compréhension partagée** : Tout le monde parle le même langage
+
+✅ **Code expressif** : Le code raconte l'histoire du métier
+
+✅ **Flexibilité** : Facile d'adapter aux changements métier
+
+✅ **Testabilité** : Logique métier isolée et testable
+
+✅ **Maintenance** : Code organisé autour du métier, pas de la technique
+
+✅ **Longévité** : Le métier évolue lentement, le code reste pertinent
 
 ### Inconvénients
 
-1. **Courbe d'apprentissage** : Il faut du temps pour maîtriser les concepts du DDD
-2. **Complexité initiale** : Plus de classes et d'interfaces qu'une approche CRUD simple
-3. **Surcharge possible** : Le DDD complet peut être excessif pour des applications simples
-4. **Performance** : Plusieurs couches peuvent impacter légèrement les performances
+❌ **Courbe d'apprentissage** : Concepts nouveaux à maîtriser
 
-## Quand utiliser le DDD ?
+❌ **Plus de code** : Plus de classes que du CRUD simple
 
-Le DDD est particulièrement adapté lorsque :
+❌ **Collaboration nécessaire** : Besoin d'accès aux experts métier
 
-- **Le domaine est complexe** avec de nombreuses règles métier
-- **La communication avec les experts métier est essentielle**
-- **L'application évoluera sur le long terme**
-- **La précision des règles métier est critique** (finance, médecine, etc.)
+❌ **Overkill pour le simple** : Trop pour un petit CRUD
 
-Pour des applications CRUD simples ou des prototypes, une approche plus légère peut être préférable.
+❌ **Temps initial** : Setup plus long qu'une approche rapide
+
+## Checklist DDD
+
+### Ubiquitous Language
+- [ ] Les termes du code correspondent aux termes métier
+- [ ] Pas de traduction technique/métier
+- [ ] Vocabulaire documenté et partagé
+
+### Bounded Context
+- [ ] Frontières de contexte clairement définies
+- [ ] Modèles séparés par contexte
+- [ ] Pas de fuite de concepts entre contextes
+
+### Entities
+- [ ] Ont une identité unique
+- [ ] Égalité basée sur l'ID
+- [ ] Comportement métier inclus
+
+### Value Objects
+- [ ] Pas d'identité
+- [ ] Immutables
+- [ ] Validation dans le constructeur
+- [ ] Égalité basée sur les valeurs
+
+### Aggregates
+- [ ] Accès via la racine uniquement
+- [ ] Cohérence maintenue par la racine
+- [ ] Règles métier dans l'agrégat
+
+### Repositories
+- [ ] Un par Aggregate Root
+- [ ] Interface dans le domaine
+- [ ] Implémentation dans l'infrastructure
+- [ ] API collection-like
+
+### Domain Services
+- [ ] Utilisés quand la logique ne rentre pas dans une entité
+- [ ] Stateless
+- [ ] Nom métier explicite
+
+### Domain Events
+- [ ] Nom au passé
+- [ ] Immutables
+- [ ] Contiennent toutes les infos nécessaires
 
 ## Conclusion
 
-Le Domain-Driven Design offre une approche puissante pour créer des applications Delphi alignées avec les besoins métier. En plaçant le domaine au centre de votre conception, vous construisez un système qui parle naturellement le langage des utilisateurs et qui s'adapte plus facilement aux évolutions.
+Le Domain-Driven Design n'est pas une silver bullet, mais une approche puissante pour les applications avec une complexité métier importante.
 
-Bien que le DDD puisse sembler complexe au début, ses principes peuvent être appliqués progressivement. Commencez par identifier et modéliser les concepts clés de votre domaine, puis structurez votre code autour de ces concepts. Avec le temps et la pratique, vous développerez une intuition pour créer des modèles de domaine expressifs et efficaces.
+**Points clés à retenir :**
 
-N'oubliez pas que le DDD n'est pas une solution universelle. Évaluez si sa complexité est justifiée par les besoins de votre projet. Pour de nombreuses applications métier complexes, l'investissement dans le DDD se traduira par un code plus maintenable, plus évolutif et mieux aligné avec les objectifs de l'entreprise.
+1. **Le domaine au centre** : Le code reflète le métier, pas la technique
+
+2. **Ubiquitous Language** : Un vocabulaire partagé par toute l'équipe
+
+3. **Building blocks** : Entities, Value Objects, Aggregates, Services, Repositories, Events
+
+4. **Bounded Context** : Des frontières claires entre les modèles
+
+5. **Collaboration** : DDD nécessite une étroite collaboration avec le métier
+
+6. **Pas pour tout** : Utilisez DDD quand la complexité le justifie
+
+**Quand appliquer DDD avec Delphi ?**
+
+✅ Applications d'entreprise complexes
+✅ Règles métier riches et changeantes
+✅ Projets à long terme
+✅ Équipe avec accès aux experts métier
+
+❌ CRUD simples
+❌ Prototypes rapides
+❌ Applications sans logique métier
+❌ Projets jetables
+
+**Commencez petit :**
+1. Identifiez votre domaine métier principal
+2. Créez le vocabulaire (Ubiquitous Language)
+3. Modélisez quelques Entities et Value Objects
+4. Créez un Aggregate simple
+5. Ajoutez un Repository
+6. Itérez et affinez
+
+**Citation finale :**
+
+> "Le cœur du logiciel est sa capacité à résoudre des problèmes liés au domaine pour son utilisateur"
+> — Eric Evans, Domain-Driven Design
+
+Le DDD transforme votre façon de penser le développement logiciel : du technique vers le métier, de la base de données vers le domaine, de la solution technique vers la solution business.
+
+---
+
+**Ressources pour aller plus loin :**
+
+- **Livre fondateur** : "Domain-Driven Design" d'Eric Evans
+- **Livre pratique** : "Implementing Domain-Driven Design" de Vaughn Vernon
+- **Site** : https://www.domainlanguage.com/
+- **Communauté** : DDD Community (forums, meetups)
+
+Bon DDD avec Delphi ! 🎯
 
 ⏭️ [Microservices et architecture distribuée](/18-architecture-et-bonnes-pratiques/11-microservices-et-architecture-distribuee.md)

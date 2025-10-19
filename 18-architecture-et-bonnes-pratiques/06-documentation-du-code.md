@@ -1,748 +1,1535 @@
-# 18.6 Documentation du code
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 18.6 Documentation du code
 
 ## Introduction
 
-Un code bien écrit raconte une histoire. Mais même la meilleure histoire peut bénéficier de quelques notes explicatives. C'est là qu'intervient la documentation du code.
+Imaginez que vous trouvez un appareil électronique complexe sans mode d'emploi. Vous appuyez sur des boutons au hasard, espérant comprendre comment ça fonctionne. Frustrant, n'est-ce pas ?
 
-Dans ce chapitre, nous allons explorer comment documenter efficacement votre code Delphi. Une bonne documentation n'est pas seulement utile pour les autres développeurs qui travailleront sur votre code, mais aussi pour vous-même lorsque vous reviendrez sur ce code dans quelques mois ou années.
+Le code sans documentation, c'est pareil. Vous (ou un collègue) ouvrez un fichier six mois après l'avoir écrit et vous vous demandez : "Mais qu'est-ce que j'ai voulu faire ici ?"
 
-## Pourquoi documenter son code ?
+La **documentation** est l'art d'expliquer votre code : ce qu'il fait, pourquoi il le fait, et comment l'utiliser. C'est un cadeau que vous faites à votre futur vous-même et à vos collègues.
 
-La documentation du code présente de nombreux avantages :
+### Pourquoi documenter ?
 
-1. **Facilite la compréhension** : Explique le "pourquoi" derrière le "comment" du code.
-2. **Accélère l'intégration** : Aide les nouveaux développeurs à comprendre rapidement votre projet.
-3. **Améliore la maintenance** : Vous rappelle (ou informe les autres) des détails importants lorsque vous modifiez le code ultérieurement.
-4. **Renforce la qualité** : L'exercice de documentation vous pousse à réfléchir à votre conception.
-5. **Permet la génération automatique** : Une documentation structurée peut être utilisée pour générer des manuels ou une aide en ligne.
+#### 1. Pour votre futur vous
 
-## Les différents niveaux de documentation
-
-La documentation du code s'applique à plusieurs niveaux :
-
-### 1. Documentation au niveau du projet
-
-Décrit l'application dans son ensemble :
-- Objectif et fonctionnalités principales
-- Architecture globale
-- Technologies utilisées
-- Guide de déploiement
-- Guide d'utilisation
-
-### 2. Documentation au niveau des unités
-
-Chaque unité (fichier .pas) devrait décrire :
-- Son rôle dans l'application
-- Les dépendances principales
-- Les classes ou fonctions importantes qu'elle contient
-
-### 3. Documentation au niveau des classes et interfaces
-
-Pour chaque classe ou interface :
-- Sa responsabilité
-- Comment l'utiliser
-- Exemples d'utilisation simples
-
-### 4. Documentation au niveau des méthodes et fonctions
-
-Pour chaque méthode ou fonction :
-- Ce qu'elle fait
-- Ses paramètres et leur signification
-- La valeur de retour
-- Les exceptions possibles
-- Les pré-conditions et post-conditions
-
-### 5. Documentation au niveau du code (commentaires en ligne)
-
-Pour les parties complexes du code :
-- Explications des algorithmes complexes
-- Raisons des choix d'implémentation
-- Avertissements sur les cas particuliers
-
-## Principes d'une bonne documentation
-
-### 1. Clarté avant tout
-
-Utilisez un langage simple et concis. Évitez le jargon inutile et les phrases trop longues.
-
-### 2. Documentez le "pourquoi", pas le "comment"
-
-Le code lui-même montre comment quelque chose est fait. Votre documentation devrait expliquer pourquoi c'est fait ainsi.
-
-**Mauvais exemple :**
+**Situation réelle :**
 ```pascal
-// Incrémente i de 1
-i := i + 1;
+// Code que vous avez écrit il y a 6 mois
+function Process(X: Integer): Integer;
+begin
+  Result := X * 3 + 7 - (X div 2);
+end;
 ```
 
-**Bon exemple :**
+**Vous aujourd'hui :** "Euh... pourquoi * 3 + 7 - (X div 2) ? C'était quoi cette formule déjà ?"
+
+**Avec documentation :**
 ```pascal
-// Passe au client suivant dans la liste
-i := i + 1;
+/// <summary>
+///   Calcule le coefficient d'ajustement selon la formule métier définie
+///   dans le cahier des charges section 4.2
+/// </summary>
+/// <remarks>
+///   Formule : (quantité × 3) + bonus_fixe - réduction_volume
+///   où réduction_volume = quantité ÷ 2
+/// </remarks>
+function CalculerCoefficientAjustement(Quantite: Integer): Integer;
+begin
+  Result := Quantite * 3 + 7 - (Quantite div 2);
+end;
 ```
 
-### 3. Maintenez la documentation à jour
+**Vous aujourd'hui :** "Ah oui, c'est la formule du cahier des charges !"
 
-Une documentation obsolète est pire que pas de documentation du tout, car elle induit en erreur.
+#### 2. Pour vos collègues
 
-### 4. Soyez cohérent
+Votre code sera lu par d'autres développeurs. La documentation les aide à :
+- Comprendre rapidement ce que fait votre code
+- Utiliser vos fonctions sans regarder l'implémentation
+- Modifier le code en toute confiance
+- Éviter de vous poser 50 questions par jour
 
-Utilisez le même style, format et niveau de détail dans tout le projet.
+#### 3. Pour les nouveaux arrivants
 
-### 5. La documentation fait partie du code
+Un nouveau développeur rejoint l'équipe. Avec une bonne documentation, il est productif en quelques jours. Sans documentation, il passe des semaines à comprendre.
 
-Considérez la documentation comme faisant partie intégrante du processus de développement, pas comme une tâche secondaire.
+#### 4. Pour la maintenabilité
 
-## Commentaires dans le code Delphi
+**Statistique importante :** Le code est lu 10 fois plus souvent qu'il n'est écrit. Investir dans la documentation fait gagner un temps considérable.
 
-Delphi supporte deux types de commentaires :
+### Les mythes sur la documentation
 
-### Commentaires sur une ligne
+❌ **Mythe 1 : "Le code se suffit à lui-même"**
+- Réalité : Le code montre CE QUE ça fait, pas POURQUOI
 
-Utilisent les caractères `//` et s'étendent jusqu'à la fin de la ligne.
+❌ **Mythe 2 : "Je n'ai pas le temps"**
+- Réalité : Vous perdrez 10 fois plus de temps à expliquer oralement
+
+❌ **Mythe 3 : "Personne ne lit la documentation"**
+- Réalité : Si elle n'existe pas, personne ne peut la lire !
+
+❌ **Mythe 4 : "Mon code est simple, pas besoin"**
+- Réalité : Ce qui est simple pour vous aujourd'hui ne le sera pas dans 6 mois
+
+✅ **Réalité :** La documentation fait partie intégrante du code professionnel
+
+## Les types de documentation
+
+Il existe plusieurs niveaux de documentation, chacun ayant son utilité.
+
+### 1. Commentaires inline
+
+Les commentaires directs dans le code, pour expliquer des lignes complexes.
 
 ```pascal
-// Ceci est un commentaire sur une ligne
-procedure MaProcedure;
+procedure TFacture.Calculer;
+var
+  Total: Currency;
+begin
+  Total := SousTotal;
+
+  // Appliquer la remise client si > 1000€
+  if Total > 1000 then
+    Total := Total * 0.9;
+
+  // TVA à 20% sauf pour les livres (5.5%)
+  if TypeProduit = tpLivre then
+    Total := Total * 1.055
+  else
+    Total := Total * 1.20;
+
+  FTotal := Total;
+end;
 ```
 
-### Commentaires sur plusieurs lignes
+### 2. Documentation XML
 
-Encadrés par `{` et `}` ou par `(*` et `*)`.
-
-```pascal
-{
-  Ceci est un commentaire
-  sur plusieurs lignes
-}
-procedure MaProcedure;
-
-(*
-  Ceci est une autre façon d'écrire
-  un commentaire sur plusieurs lignes
-*)
-function MaFonction: Integer;
-```
-
-### Commentaires de documentation
-
-Pour la documentation formelle, Delphi utilise généralement des commentaires spéciaux qui peuvent être extraits par des outils de génération de documentation :
+Documentation structurée qui peut être extraite automatiquement pour générer de la documentation HTML.
 
 ```pascal
 /// <summary>
-///   Calcule le montant total de la commande
+///   Calcule le montant total TTC d'une facture
 /// </summary>
-/// <param name="AClientID">Identifiant du client</param>
-/// <param name="AIncludeTaxes">Si true, inclut les taxes dans le calcul</param>
-/// <returns>Le montant total en euros</returns>
-/// <exception cref="EClientInvalid">Levée si le client n'existe pas</exception>
-function CalculerMontantCommande(AClientID: Integer; AIncludeTaxes: Boolean): Double;
+/// <remarks>
+///   Applique la remise client si le montant dépasse 1000€
+///   Applique le taux de TVA selon le type de produit
+/// </remarks>
+procedure TFacture.Calculer;
 ```
 
-## Structure recommandée pour les unités Delphi
+### 3. Documentation technique
 
-Une unité Delphi bien documentée pourrait suivre cette structure :
+Documents expliquant l'architecture, les choix techniques, les patterns utilisés.
+
+**Exemples :**
+- Architecture.md
+- TechnicalDecisions.md
+- DatabaseSchema.md
+
+### 4. Documentation utilisateur
+
+Guides pour les utilisateurs finaux de l'application.
+
+**Exemples :**
+- Manuel utilisateur
+- Guides de démarrage rapide
+- FAQ
+- Tutoriels vidéo
+
+### 5. README
+
+Le fichier d'accueil du projet, expliquant ce que c'est et comment l'utiliser.
+
+## Les commentaires en Delphi
+
+### Syntaxes de commentaires
+
+Delphi supporte trois types de commentaires :
 
 ```pascal
-{*******************************************************}
-{                                                       }
-{       Gestion des Clients                             }
-{                                                       }
-{       Copyright (C) 2025 Votre Entreprise             }
-{                                                       }
-{*******************************************************}
+// Commentaire sur une ligne
 
+{ Commentaire
+  sur plusieurs
+  lignes }
+
+(* Autre syntaxe pour
+   commentaires multi-lignes *)
+```
+
+**Convention :** Utilisez `//` pour les commentaires courts, et `{ }` pour les longs commentaires.
+
+### Commentaires de documentation XML
+
+Delphi supporte une syntaxe XML pour la documentation structurée :
+
+```pascal
 /// <summary>
-///   Cette unité contient les classes et fonctions pour gérer
-///   les clients de l'application, y compris leur création,
-///   validation et persistance.
+///   Description courte de la fonction
 /// </summary>
-unit UnitClients;
+/// <param name="NomParam">Description du paramètre</param>
+/// <returns>Description de ce qui est retourné</returns>
+/// <remarks>
+///   Remarques additionnelles
+/// </remarks>
+/// <exception cref="EException">Quand cette exception est levée</exception>
+function MaFonction(NomParam: Integer): string;
+```
+
+**Balises XML principales :**
+
+| Balise | Usage |
+|--------|-------|
+| `<summary>` | Description courte |
+| `<param>` | Description d'un paramètre |
+| `<returns>` | Ce qui est retourné |
+| `<remarks>` | Remarques détaillées |
+| `<exception>` | Exceptions possibles |
+| `<example>` | Exemple d'utilisation |
+| `<see>` | Référence à un autre élément |
+
+### Exemples de bonne documentation
+
+#### Fonction simple
+
+```pascal
+/// <summary>
+///   Calcule la TVA sur un montant HT
+/// </summary>
+/// <param name="MontantHT">Montant hors taxes en euros</param>
+/// <param name="TauxTVA">Taux de TVA en pourcentage (ex: 20 pour 20%)</param>
+/// <returns>Montant de la TVA en euros</returns>
+function CalculerTVA(MontantHT: Currency; TauxTVA: Double): Currency;
+begin
+  Result := MontantHT * (TauxTVA / 100);
+end;
+```
+
+#### Procédure avec exceptions
+
+```pascal
+/// <summary>
+///   Sauvegarde les données client dans la base de données
+/// </summary>
+/// <param name="Client">Objet client à sauvegarder</param>
+/// <exception cref="EClientInvalid">
+///   Si les données du client ne sont pas valides
+/// </exception>
+/// <exception cref="EDatabaseError">
+///   Si la connexion à la base échoue
+/// </exception>
+/// <remarks>
+///   Cette méthode valide automatiquement les données avant sauvegarde
+///   Si le client existe déjà (même ID), il sera mis à jour
+/// </remarks>
+procedure TClientManager.Sauvegarder(Client: TClient);
+begin
+  if not Client.EstValide then
+    raise EClientInvalid.Create('Données client invalides');
+
+  try
+    if ClientExiste(Client.ID) then
+      MettreAJour(Client)
+    else
+      Inserer(Client);
+  except
+    on E: Exception do
+      raise EDatabaseError.Create('Erreur de sauvegarde : ' + E.Message);
+  end;
+end;
+```
+
+#### Classe complète
+
+```pascal
+/// <summary>
+///   Gestionnaire de calculs de prix avec remises et taxes
+/// </summary>
+/// <remarks>
+///   Cette classe centralise tous les calculs de prix de l'application.
+///   Elle applique les règles métier suivantes :
+///   - Remise par paliers selon le montant
+///   - Remise fidélité pour les clients premium
+///   - TVA variable selon le type de produit
+/// </remarks>
+type
+  TCalculateurPrix = class
+  private
+    FTauxTVAStandard: Double;
+    FTauxTVAReduit: Double;
+
+    /// <summary>
+    ///   Détermine le taux de remise selon le montant
+    /// </summary>
+    function ObtenirTauxRemise(Montant: Currency): Double;
+  public
+    /// <summary>
+    ///   Crée une nouvelle instance du calculateur
+    /// </summary>
+    constructor Create;
+
+    /// <summary>
+    ///   Calcule le prix TTC final avec toutes les remises et taxes
+    /// </summary>
+    /// <param name="MontantHT">Prix de base hors taxes</param>
+    /// <param name="EstClientPremium">True si le client a un compte premium</param>
+    /// <param name="TypeProduit">Type de produit (influence le taux de TVA)</param>
+    /// <returns>Prix final TTC incluant remises et taxes</returns>
+    function CalculerPrixFinal(MontantHT: Currency;
+      EstClientPremium: Boolean;
+      TypeProduit: TTypeProduit): Currency;
+
+    /// <summary>
+    ///   Taux de TVA standard (20% par défaut)
+    /// </summary>
+    property TauxTVAStandard: Double read FTauxTVAStandard write FTauxTVAStandard;
+
+    /// <summary>
+    ///   Taux de TVA réduit (5.5% par défaut)
+    /// </summary>
+    property TauxTVAReduit: Double read FTauxTVAReduit write FTauxTVAReduit;
+  end;
+```
+
+## Que documenter et que ne pas documenter
+
+### ✅ À DOCUMENTER
+
+#### 1. Le "POURQUOI"
+
+Expliquez toujours POURQUOI vous faites quelque chose, surtout si ce n'est pas évident.
+
+```pascal
+// ✅ BON : Explique pourquoi
+// On attend 100ms avant de réessayer pour éviter de surcharger le serveur
+Sleep(100);
+
+// ❌ MAUVAIS : Répète juste le code
+// Attendre 100 millisecondes
+Sleep(100);
+```
+
+#### 2. Les algorithmes complexes
+
+```pascal
+/// <summary>
+///   Implémente l'algorithme de Luhn pour valider un numéro de carte bancaire
+/// </summary>
+/// <remarks>
+///   L'algorithme de Luhn (aussi appelé "modulo 10") est utilisé pour
+///   détecter les erreurs de saisie dans les numéros de carte.
+///   Voir : https://fr.wikipedia.org/wiki/Formule_de_Luhn
+/// </remarks>
+function ValiderNumeroCarte(const Numero: string): Boolean;
+var
+  Somme, Chiffre, I: Integer;
+begin
+  Somme := 0;
+
+  // Parcourir de droite à gauche
+  for I := Length(Numero) downto 1 do
+  begin
+    Chiffre := StrToInt(Numero[I]);
+
+    // Doubler un chiffre sur deux
+    if (Length(Numero) - I) mod 2 = 1 then
+    begin
+      Chiffre := Chiffre * 2;
+      // Si > 9, soustraire 9
+      if Chiffre > 9 then
+        Chiffre := Chiffre - 9;
+    end;
+
+    Somme := Somme + Chiffre;
+  end;
+
+  // Valide si la somme est divisible par 10
+  Result := (Somme mod 10) = 0;
+end;
+```
+
+#### 3. Les workarounds et solutions temporaires
+
+```pascal
+// WORKAROUND: Bug dans la version 10.4 de FireDAC avec MySQL 8.0
+// Forcer le charset à utf8mb4 explicitement
+// TODO: Retirer quand le bug sera corrigé dans FireDAC
+FDConnection.Params.Add('CharacterSet=utf8mb4');
+
+// HACK: Contourner un bug de Windows 11 avec les DPI
+// Voir ticket #1234
+if TOSVersion.Major >= 11 then
+  ScaleFactor := ScaleFactor * 1.1;
+```
+
+#### 4. Les paramètres non évidents
+
+```pascal
+/// <param name="Timeout">
+///   Délai d'attente en millisecondes (0 = attente infinie,
+///   -1 = utiliser le timeout par défaut de 30 secondes)
+/// </param>
+procedure EnvoyerRequete(const URL: string; Timeout: Integer);
+```
+
+#### 5. Les effets de bord
+
+```pascal
+/// <summary>
+///   Charge les données client depuis la base
+/// </summary>
+/// <remarks>
+///   ATTENTION: Cette méthode modifie aussi les données en cache.
+///   Appeler RefreshCache() après si vous voulez synchroniser.
+/// </remarks>
+procedure ChargerClient(ID: Integer);
+```
+
+#### 6. Les interfaces publiques
+
+Toute classe, fonction, procédure qui sera utilisée par d'autres développeurs doit être documentée.
+
+```pascal
+type
+  /// <summary>
+  ///   Interface pour les gestionnaires de données clients
+  /// </summary>
+  IClientManager = interface
+    ['{GUID-ICI}']
+
+    /// <summary>
+    ///   Récupère un client par son identifiant
+    /// </summary>
+    /// <param name="ID">Identifiant unique du client</param>
+    /// <returns>
+    ///   Objet TClient si trouvé, nil sinon
+    /// </returns>
+    function GetClient(ID: Integer): TClient;
+
+    /// <summary>
+    ///   Sauvegarde ou met à jour un client
+    /// </summary>
+    /// <param name="Client">Client à sauvegarder</param>
+    /// <returns>True si succès, False sinon</returns>
+    function SaveClient(Client: TClient): Boolean;
+  end;
+```
+
+### ❌ À NE PAS DOCUMENTER
+
+#### 1. L'évidence
+
+```pascal
+// ❌ MAUVAIS : C'est évident
+// Incrémenter I
+Inc(I);
+
+// ❌ MAUVAIS : Le nom de la fonction le dit déjà
+/// <summary>
+///   Calcule le total
+/// </summary>
+function CalculerTotal: Currency;
+
+// ✅ BON : Pas de commentaire inutile
+function CalculerTotal: Currency;
+```
+
+#### 2. La paraphrase du code
+
+```pascal
+// ❌ MAUVAIS : Répète juste le code
+// Si X est supérieur à 10
+if X > 10 then
+  // Mettre Y à 5
+  Y := 5;
+
+// ✅ BON : Explique le business
+// Appliquer la remise standard pour les commandes importantes
+if Montant > 1000 then
+  Remise := 0.05;
+```
+
+#### 3. Les détails d'implémentation évidents
+
+```pascal
+// ❌ MAUVAIS
+/// <summary>
+///   Cette fonction prend un string en paramètre et retourne un Integer
+/// </summary>
+function ConvertirEnEntier(const Texte: string): Integer;
+
+// ✅ BON : Focus sur l'objectif, pas la mécanique
+/// <summary>
+///   Convertit une chaîne en entier avec gestion des erreurs
+/// </summary>
+/// <returns>0 si la conversion échoue</returns>
+function ConvertirEnEntier(const Texte: string): Integer;
+```
+
+## Styles de documentation
+
+### Style descriptif
+
+Décrit ce que fait le code de manière neutre.
+
+```pascal
+/// <summary>
+///   Valide les données du formulaire client
+/// </summary>
+/// <returns>
+///   True si toutes les données sont valides, False sinon
+/// </returns>
+function ValiderFormulaire: Boolean;
+```
+
+### Style impératif
+
+Utilise des verbes à l'impératif, comme si vous donniez un ordre.
+
+```pascal
+/// <summary>
+///   Valide les données du formulaire client
+/// </summary>
+/// <returns>
+///   Retourne True si valide, False sinon
+/// </returns>
+function ValiderFormulaire: Boolean;
+```
+
+**Recommandation :** Choisissez un style et soyez cohérent dans tout le projet. Le style descriptif est plus courant en français.
+
+### Exemples d'utilisation
+
+Incluez des exemples pour les fonctions complexes :
+
+```pascal
+/// <summary>
+///   Formate un numéro de téléphone français
+/// </summary>
+/// <param name="Numero">Numéro brut (10 chiffres)</param>
+/// <returns>Numéro formaté avec espaces</returns>
+/// <example>
+///   <code>
+///     Resultat := FormaterTelephone('0123456789');
+///     // Resultat = '01 23 45 67 89'
+///   </code>
+/// </example>
+function FormaterTelephone(const Numero: string): string;
+begin
+  if Length(Numero) <> 10 then
+    Exit(Numero);
+
+  Result := Format('%s %s %s %s %s', [
+    Copy(Numero, 1, 2),
+    Copy(Numero, 3, 2),
+    Copy(Numero, 5, 2),
+    Copy(Numero, 7, 2),
+    Copy(Numero, 9, 2)
+  ]);
+end;
+```
+
+## Organisation de la documentation dans les fichiers
+
+### Structure d'un fichier bien documenté
+
+```pascal
+unit GestionClients;
+
+{$IFDEF DOCUMENTATION}
+///
+/// <summary>
+///   Unité de gestion des clients de l'application
+/// </summary>
+/// <remarks>
+///   Cette unité fournit toutes les fonctionnalités nécessaires pour :
+///   - Créer, modifier et supprimer des clients
+///   - Valider les données client
+///   - Calculer les remises selon les règles métier
+///
+///   Classes principales :
+///   - TClient : Représente un client
+///   - TClientManager : Gestionnaire de clients
+///   - TClientValidator : Validateur de données
+///
+///   Auteur: Jean Dupont
+///   Date: 2025-01-15
+///   Version: 1.2
+/// </remarks>
+///
+{$ENDIF}
 
 interface
 
 uses
-  System.Classes, System.SysUtils, Data.DB;
+  System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
   /// <summary>
-  ///   Exception levée lors d'erreurs liées aux clients
+  ///   Représente un client de l'application
   /// </summary>
-  EClientException = class(Exception);
-
-  /// <summary>
-  ///   Représente un client dans le système
-  /// </summary>
-  TClient = class(TObject)
+  /// <remarks>
+  ///   Cette classe contient toutes les informations d'un client
+  ///   ainsi que les méthodes de validation
+  /// </remarks>
+  TClient = class
   private
     FID: Integer;
     FNom: string;
     FEmail: string;
     FDateCreation: TDateTime;
+    FEstPremium: Boolean;
 
     /// <summary>
-    ///   Valide l'adresse email du client
+    ///   Définit le nom du client
     /// </summary>
-    /// <returns>True si l'email est valide</returns>
-    function ValiderEmail: Boolean;
+    /// <remarks>
+    ///   Nettoie automatiquement les espaces en début et fin
+    /// </remarks>
+    procedure SetNom(const Value: string);
   public
     /// <summary>
     ///   Crée une nouvelle instance de TClient
     /// </summary>
-    constructor Create; virtual;
+    constructor Create;
 
     /// <summary>
-    ///   Libère les ressources utilisées par TClient
+    ///   Valide que les données du client sont correctes
     /// </summary>
-    destructor Destroy; override;
+    /// <param name="MessageErreur">
+    ///   Reçoit le message d'erreur si validation échoue
+    /// </param>
+    /// <returns>True si valide, False sinon</returns>
+    function Valider(out MessageErreur: string): Boolean;
+
+    // Propriétés
 
     /// <summary>
-    ///   Enregistre le client dans la base de données
+    ///   Identifiant unique du client
     /// </summary>
-    /// <returns>True si l'enregistrement a réussi</returns>
-    /// <exception cref="EClientException">
-    ///   Levée si un problème survient lors de l'enregistrement
-    /// </exception>
-    function Enregistrer: Boolean;
-
     property ID: Integer read FID write FID;
-    property Nom: string read FNom write FNom;
-    property Email: string read FEmail write FEmail;
-    property DateCreation: TDateTime read FDateCreation;
-  end;
 
-/// <summary>
-///   Recherche un client par son identifiant
-/// </summary>
-/// <param name="AID">Identifiant du client à rechercher</param>
-/// <returns>Instance de TClient ou nil si non trouvé</returns>
-function RechercherClient(AID: Integer): TClient;
+    /// <summary>
+    ///   Nom complet du client (minimum 2 caractères)
+    /// </summary>
+    property Nom: string read FNom write SetNom;
+
+    /// <summary>
+    ///   Adresse email (doit être valide)
+    /// </summary>
+    property Email: string read FEmail write FEmail;
+
+    /// <summary>
+    ///   Date de création du compte client
+    /// </summary>
+    property DateCreation: TDateTime read FDateCreation write FDateCreation;
+
+    /// <summary>
+    ///   Indique si le client a un compte premium
+    /// </summary>
+    property EstPremium: Boolean read FEstPremium write FEstPremium;
+  end;
 
 implementation
 
-uses
-  UnitDatabase, RegularExpressions;
+{ TClient }
 
-{ Implémentation des fonctions et méthodes... }
+constructor TClient.Create;
+begin
+  inherited;
+  FID := 0;
+  FNom := '';
+  FEmail := '';
+  FDateCreation := Now;
+  FEstPremium := False;
+end;
+
+procedure TClient.SetNom(const Value: string);
+begin
+  FNom := Trim(Value);
+end;
+
+function TClient.Valider(out MessageErreur: string): Boolean;
+begin
+  Result := False;
+  MessageErreur := '';
+
+  // Validation du nom
+  if Length(FNom) < 2 then
+  begin
+    MessageErreur := 'Le nom doit contenir au moins 2 caractères';
+    Exit;
+  end;
+
+  // Validation de l'email
+  if not FEmail.Contains('@') then
+  begin
+    MessageErreur := 'L''adresse email n''est pas valide';
+    Exit;
+  end;
+
+  Result := True;
+end;
 
 end.
 ```
 
-## Documentation avec XMLDoc
+### En-tête de fichier
 
-Delphi supporte le format XMLDoc pour la documentation, qui permet la génération automatique de documentation HTML ou d'aide en ligne.
-
-### Format XMLDoc de base
+Ajoutez un en-tête informatif au début de chaque unité :
 
 ```pascal
+unit MonUnite;
+
+{*******************************************************************************
+  Nom: MonUnite
+  Description: Gestion des opérations sur les commandes
+  Auteur: Jean Dupont <jean.dupont@company.com>
+  Date de création: 2025-01-15
+  Dernière modification: 2025-02-20
+  Version: 2.1
+
+  Historique des modifications:
+    v2.1 (2025-02-20): Ajout de la gestion des remises saisonnières
+    v2.0 (2025-02-01): Refactoring complet de l'architecture
+    v1.5 (2025-01-20): Correction bug calcul TVA
+    v1.0 (2025-01-15): Version initiale
+
+  Dépendances:
+    - FireDAC pour l'accès base de données
+    - System.JSON pour l'export JSON
+
+  TODO:
+    - Ajouter support des codes promo
+    - Optimiser la requête GetCommandesByDate
+    - Ajouter tests unitaires
+*******************************************************************************}
+
+interface
+```
+
+## Documentation au niveau du projet
+
+### Le fichier README.md
+
+Le README est la porte d'entrée de votre projet. Il doit contenir :
+
+```markdown
+# Mon Application de Gestion
+
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)]()
+[![Delphi](https://img.shields.io/badge/Delphi-13%20Florence-red.svg)]()
+[![Licence](https://img.shields.io/badge/licence-MIT-green.svg)]()
+
+Application de gestion commerciale développée en Delphi pour Windows.
+
+## 📋 Table des matières
+
+- [Fonctionnalités](#fonctionnalités)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Contribution](#contribution)
+- [Licence](#licence)
+
+## ✨ Fonctionnalités
+
+- Gestion des clients et fournisseurs
+- Création et suivi des commandes
+- Génération de factures PDF
+- Statistiques et tableaux de bord
+- Synchronisation cloud
+- Export Excel des données
+
+## 🔧 Prérequis
+
+- Windows 10 ou supérieur
+- Delphi 13 Florence (ou version supérieure)
+- MySQL 8.0+
+- 4 GB RAM minimum
+- 500 MB d'espace disque
+
+## 📥 Installation
+
+### Installation pour développeurs
+
+1. Clonez le repository :
+```bash
+git clone https://github.com/societe/mon-application.git
+cd mon-application
+```
+
+2. Restaurez les dépendances :
+   - Ouvrez `GetIt Package Manager` dans Delphi
+   - Installez les packages listés dans `packages.txt`
+
+3. Configurez la base de données :
+```bash
+mysql -u root -p < database/schema.sql
+```
+
+4. Copiez le fichier de configuration :
+```bash
+copy config.template.ini config.local.ini
+```
+
+5. Éditez `config.local.ini` avec vos paramètres :
+```ini
+[Database]
+Server=localhost
+Database=gestion_commerciale
+Username=root
+Password=votre_mot_de_passe
+```
+
+6. Ouvrez `GestionCommerciale.dpr` dans Delphi
+
+7. Compilez et exécutez (F9)
+
+### Installation pour utilisateurs finaux
+
+Téléchargez l'installateur depuis la [page Releases](https://github.com/societe/mon-application/releases) et suivez les instructions.
+
+## ⚙️ Configuration
+
+### Base de données
+
+Le fichier `config.ini` contient les paramètres de connexion :
+
+```ini
+[Database]
+Server=localhost
+Port=3306
+Database=gestion_commerciale
+Username=root
+Password=
+```
+
+### Personnalisation
+
+L'interface peut être personnalisée via le menu **Paramètres > Préférences**.
+
+## 🚀 Usage
+
+### Démarrage rapide
+
+1. Lancez l'application
+2. Connectez-vous avec vos identifiants
+3. Créez votre premier client via **Clients > Nouveau**
+4. Créez une commande via **Commandes > Nouvelle**
+
+### Exemples
+
+**Créer un client par code :**
+
+```pascal
+var
+  Client: TClient;
+  Manager: TClientManager;
+begin
+  Client := TClient.Create;
+  try
+    Client.Nom := 'Dupont SA';
+    Client.Email := 'contact@dupont.fr';
+
+    Manager := TClientManager.Create;
+    try
+      if Manager.Sauvegarder(Client) then
+        ShowMessage('Client créé avec succès');
+    finally
+      Manager.Free;
+    end;
+  finally
+    Client.Free;
+  end;
+end;
+```
+
+## 🏗️ Architecture
+
+Le projet suit une architecture en couches :
+
+```
+GestionCommerciale/
+├── Source/
+│   ├── UI/              # Interface utilisateur (VCL)
+│   ├── Business/        # Logique métier
+│   ├── DataAccess/      # Accès aux données
+│   └── Models/          # Modèles de données
+├── Database/            # Scripts SQL
+├── Tests/               # Tests unitaires
+└── Docs/                # Documentation
+```
+
+Pour plus de détails, voir [ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les guidelines.
+
+### Processus
+
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/AmazingFeature`)
+3. Commitez vos changements (`git commit -m 'feat: Add AmazingFeature'`)
+4. Pushez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📝 Licence
+
+Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations.
+
+## 👥 Auteurs
+
+- **Jean Dupont** - *Développeur principal* - [@jeandupont](https://github.com/jeandupont)
+- **Marie Martin** - *Développeuse* - [@mariemartin](https://github.com/mariemartin)
+
+Voir aussi la liste des [contributeurs](https://github.com/societe/mon-application/contributors).
+
+## 🙏 Remerciements
+
+- L'équipe Embarcadero pour Delphi
+- La communauté Delphi francophone
+- Tous les contributeurs
+
+## 📞 Support
+
+- Documentation : https://docs.example.com
+- Issues : https://github.com/societe/mon-application/issues
+- Email : support@example.com
+
+## 📈 Roadmap
+
+- [x] Version 1.0 - Fonctionnalités de base
+- [x] Version 2.0 - Interface modernisée
+- [ ] Version 2.5 - Support multi-devises
+- [ ] Version 3.0 - Application mobile (FMX)
+```
+
+### CHANGELOG.md
+
+Documentez l'évolution du projet :
+
+```markdown
+# Changelog
+
+Toutes les modifications notables de ce projet sont documentées dans ce fichier.
+
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+
+## [Non publié]
+
+### Ajouté
+- Support des codes promotionnels
+
+### En cours
+- Optimisation des performances des requêtes
+
+## [2.1.0] - 2025-02-20
+
+### Ajouté
+- Gestion des remises saisonnières
+- Export des statistiques en PDF
+- Nouveau thème sombre
+
+### Modifié
+- Amélioration de la performance de la grille (+40%)
+- Interface utilisateur modernisée
+
+### Corrigé
+- Bug d'affichage des dates en format américain
+- Crash lors de l'export Excel avec plus de 10000 lignes
+- Problème de mémoire avec les grandes images
+
+### Sécurité
+- Correction de la vulnérabilité XSS dans les commentaires
+
+## [2.0.0] - 2025-02-01
+
+### Ajouté
+- Architecture complètement refactorisée (MVC)
+- Tests unitaires (couverture 80%)
+- Documentation API complète
+
+### Modifié
+- BREAKING: API complètement redessinée
+- Migration vers FireDAC (abandonné dbExpress)
+
+### Supprimé
+- Support de Windows 7
+
+## [1.5.0] - 2025-01-20
+
+### Corrigé
+- Correction du calcul de TVA pour les livres
+
+## [1.0.0] - 2025-01-15
+
+### Ajouté
+- Version initiale
+- Gestion des clients
+- Gestion des commandes
+- Génération de factures
+
+[Non publié]: https://github.com/user/repo/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/user/repo/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/user/repo/compare/v1.5.0...v2.0.0
+[1.5.0]: https://github.com/user/repo/compare/v1.0.0...v1.5.0
+[1.0.0]: https://github.com/user/repo/releases/tag/v1.0.0
+```
+
+### CONTRIBUTING.md
+
+Guide pour les contributeurs :
+
+```markdown
+# Guide de contribution
+
+Merci de votre intérêt pour contribuer à ce projet !
+
+## Code de conduite
+
+Ce projet adhère au [Code de conduite Contributor Covenant](CODE_OF_CONDUCT.md).
+En participant, vous vous engagez à respecter ce code.
+
+## Comment contribuer
+
+### Signaler un bug
+
+Avant de créer un rapport de bug :
+- Vérifiez que le bug n'a pas déjà été signalé
+- Vérifiez que vous utilisez la dernière version
+- Collectez les informations nécessaires
+
+Créez une issue avec ces informations :
+- Description claire du problème
+- Étapes pour reproduire
+- Comportement attendu vs comportement actuel
+- Captures d'écran si pertinent
+- Version de Delphi et Windows
+
+### Proposer une fonctionnalité
+
+1. Créez une issue décrivant la fonctionnalité
+2. Expliquez pourquoi elle est utile
+3. Attendez les retours avant de commencer le code
+
+### Soumettre une Pull Request
+
+1. Forkez le repository
+2. Créez une branche depuis `main`
+3. Écrivez votre code
+4. Ajoutez des tests
+5. Mettez à jour la documentation
+6. Assurez-vous que tout compile sans warning
+7. Commitez avec des messages clairs
+8. Pushez vers votre fork
+9. Ouvrez une Pull Request
+
+## Standards de code
+
+### Style de code
+
+- Indentation : 2 espaces
+- Noms de classes : TPascalCase
+- Noms de méthodes : PascalCase
+- Noms de variables : camelCase
+- Constantes : UPPER_SNAKE_CASE
+
+### Documentation
+
+- Toutes les classes publiques doivent être documentées
+- Toutes les méthodes publiques doivent avoir un XML doc
+- Les algorithmes complexes doivent être commentés
+
+### Tests
+
+- Ajoutez des tests pour toute nouvelle fonctionnalité
+- Assurez-vous que tous les tests passent
+- Visez une couverture de code de 80%+
+
+## Processus de revue
+
+1. Soumission de la PR
+2. Revue automatique (CI/CD)
+3. Revue par un mainteneur
+4. Corrections si nécessaires
+5. Approbation et merge
+
+## Questions ?
+
+N'hésitez pas à :
+- Ouvrir une issue pour toute question
+- Rejoindre notre Discord : https://discord.gg/...
+- Envoyer un email : dev@example.com
+```
+
+## Outils de génération de documentation
+
+### PasDoc
+
+**PasDoc** est un outil open source qui génère de la documentation HTML à partir des commentaires de votre code Delphi.
+
+**Installation :**
+1. Téléchargez depuis https://github.com/pasdoc/pasdoc
+2. Extrayez dans un dossier
+3. Ajoutez au PATH
+
+**Utilisation :**
+
+```bash
+# Générer la documentation
+pasdoc --source=Source --output=Docs\html --format=html --title="Mon Application"
+
+# Avec options avancées
+pasdoc ^
+  --source=Source\*.pas ^
+  --output=Docs\html ^
+  --format=html ^
+  --title="Gestion Commerciale" ^
+  --introduction=Docs\intro.txt ^
+  --footer=Docs\footer.html ^
+  --verbosity=3
+```
+
+**Résultat :** Documentation HTML complète navigable.
+
+### Documentation intégrée Delphi
+
+Delphi peut extraire la documentation XML :
+
+1. Project → Options → Delphi Compiler
+2. Cochez "Generate XML documentation"
+3. Compilez le projet
+
+Un fichier `.xml` est généré avec toute la documentation.
+
+### Doc-O-Matic
+
+Outil commercial puissant pour générer de la documentation professionnelle.
+
+**Fonctionnalités :**
+- Support Delphi natif
+- Multiples formats de sortie (HTML, PDF, CHM)
+- Templates personnalisables
+- Intégration CI/CD
+
+### Autres outils
+
+- **Doxygen** : Supporte Delphi via un filtre
+- **NaturalDocs** : Documentation naturelle
+- **Sphinx** : Avec extension pour Delphi
+
+## Bonnes pratiques
+
+### 1. Documentez au fur et à mesure
+
+❌ **Mauvaise approche :**
+```
+Écrire 1000 lignes de code
+→ "Je documenterai plus tard"
+→ Plus tard n'arrive jamais
+```
+
+✅ **Bonne approche :**
+```
+Écrire une fonction
+→ La documenter immédiatement
+→ Passer à la suivante
+```
+
+### 2. Maintenez la documentation à jour
+
+La documentation obsolète est pire que pas de documentation.
+
+```pascal
+// ❌ Documentation obsolète (dangereuse !)
+/// <returns>Retourne toujours True</returns>
+function Valider: Boolean;
+begin
+  // Le code a changé mais pas la doc !
+  Result := False;
+end;
+
+// ✅ Documentation mise à jour
+/// <returns>
+///   True si les données sont valides, False sinon
+/// </returns>
+function Valider: Boolean;
+begin
+  Result := FNom <> '';
+end;
+```
+
+**Règle d'or :** Quand vous modifiez du code, mettez à jour la documentation en même temps.
+
+### 3. Utilisez des TODO et FIXME
+
+Marquez les problèmes et améliorations futures :
+
+```pascal
+// TODO: Ajouter support des formats de date internationaux
+// FIXME: Bug avec les dates avant 1900
+// HACK: Contournement temporaire du bug #123
+// NOTE: Cette fonction est appelée très souvent, optimiser si possible
+// WARNING: Ne pas appeler dans un thread
+
+function FormatDate(Date: TDateTime): string;
+begin
+  // Implémentation...
+end;
+```
+
+**Dans Delphi :** Ces commentaires apparaissent dans la fenêtre "To-Do List".
+
+### 4. Documentation progressive
+
+Commencez simple et enrichissez progressivement :
+
+**Niveau 1 - Minimum :**
+```pascal
+/// <summary>Valide les données</summary>
+function Valider: Boolean;
+```
+
+**Niveau 2 - Standard :**
+```pascal
 /// <summary>
-///   Description brève de la méthode ou classe
+///   Valide que les données du formulaire sont correctes
 /// </summary>
-/// <param name="NomParametre">Description du paramètre</param>
-/// <returns>Description de la valeur de retour</returns>
-/// <exception cref="TypeException">Description de l'exception</exception>
+/// <returns>True si valide, False sinon</returns>
+function Valider: Boolean;
+```
+
+**Niveau 3 - Complet :**
+```pascal
+/// <summary>
+///   Valide que les données du formulaire sont correctes selon les règles métier
+/// </summary>
+/// <returns>True si toutes les validations passent, False sinon</returns>
 /// <remarks>
-///   Informations supplémentaires ou détaillées
+///   Vérifie :
+///   - Nom : minimum 2 caractères
+///   - Email : format valide
+///   - Téléphone : 10 chiffres
+///   - Date de naissance : entre 1900 et aujourd'hui
 /// </remarks>
 /// <example>
 ///   <code>
-///     // Exemple d'utilisation
-///     var
-///       Client: TClient;
+///     if not Valider then
 ///     begin
-///       Client := TClient.Create;
-///       try
-///         Client.Nom := 'Dupont';
-///         Client.Enregistrer;
-///       finally
-///         Client.Free;
-///       end;
+///       ShowMessage('Formulaire invalide');
+///       Exit;
+///     end;
 ///   </code>
 /// </example>
-/// <seealso cref="AutreMethode"/>
+function Valider: Boolean;
 ```
 
-### Balises XMLDoc courantes
+### 5. Revue de documentation
 
-- `<summary>` : Description courte
-- `<param>` : Description d'un paramètre
-- `<returns>` : Description de la valeur de retour
-- `<exception>` : Exception qui peut être levée
-- `<remarks>` : Informations supplémentaires
-- `<example>` : Exemple d'utilisation
-- `<code>` : Bloc de code dans un exemple
-- `<seealso>` : Référence à d'autres éléments liés
-- `<see>` : Référence à un élément dans le texte
+Lors des revues de code, vérifiez aussi la documentation :
 
-### Exemple complet avec XMLDoc
+✅ **Checklist de revue :**
+- [ ] Toutes les fonctions publiques sont documentées
+- [ ] Les paramètres sont expliqués
+- [ ] Les valeurs de retour sont décrites
+- [ ] Les exceptions possibles sont listées
+- [ ] Les effets de bord sont mentionnés
+- [ ] Les exemples sont corrects
+- [ ] Pas de documentation obsolète
+
+### 6. Templates de documentation
+
+Créez des templates pour standardiser :
 
 ```pascal
+// Template pour une fonction
 /// <summary>
-///   Représente une facture dans le système de facturation
+///   [Description courte de ce que fait la fonction]
+/// </summary>
+/// <param name="Param1">[Description du paramètre]</param>
+/// <returns>[Ce qui est retourné]</returns>
+/// <remarks>
+///   [Détails supplémentaires si nécessaires]
+/// </remarks>
+function MaFonction(Param1: Integer): string;
+
+// Template pour une classe
+/// <summary>
+///   [Description courte de la classe]
 /// </summary>
 /// <remarks>
-///   Cette classe gère toutes les opérations liées aux factures,
-///   y compris le calcul des totaux, taxes et la génération de PDF.
+///   [Responsabilités de la classe]
+///
+///   Utilisation typique :
+///   [Exemple de code]
 /// </remarks>
-TFacture = class(TObject)
-private
-  FNumero: Integer;
-  FClientID: Integer;
-  FDate: TDateTime;
-  FLignes: TObjectList<TLigneFacture>;
-  FTotalHT: Currency;
-
-  /// <summary>
-  ///   Calcule le total hors taxes de la facture
-  /// </summary>
-  procedure CalculerTotalHT;
-public
-  /// <summary>
-  ///   Crée une nouvelle facture
-  /// </summary>
-  /// <param name="AClientID">ID du client associé à la facture</param>
-  /// <exception cref="EClientInconnu">
-  ///   Levée si le client spécifié n'existe pas
-  /// </exception>
-  constructor Create(AClientID: Integer); virtual;
-
-  /// <summary>
-  ///   Libère les ressources
-  /// </summary>
-  destructor Destroy; override;
-
-  /// <summary>
-  ///   Ajoute une ligne à la facture
-  /// </summary>
-  /// <param name="AProduitID">ID du produit</param>
-  /// <param name="AQuantite">Quantité commandée</param>
-  /// <param name="APrixUnitaire">Prix unitaire (si 0, utilise le prix catalogue)</param>
-  /// <returns>La ligne de facture créée</returns>
-  /// <example>
-  ///   <code>
-  ///     Facture.AjouterLigne(1001, 5, 0); // 5 unités du produit 1001 au prix catalogue
-  ///     Facture.AjouterLigne(1002, 10, 19.99); // 10 unités du produit 1002 à 19.99€
-  ///   </code>
-  /// </example>
-  /// <seealso cref="TLigneFacture"/>
-  function AjouterLigne(AProduitID: Integer; AQuantite: Integer;
-    APrixUnitaire: Currency = 0): TLigneFacture;
-
-  /// <summary>
-  ///   Génère un fichier PDF de la facture
-  /// </summary>
-  /// <param name="ACheminFichier">Chemin où sauvegarder le PDF</param>
-  /// <returns>True si la génération a réussi</returns>
-  /// <exception cref="EFacturePDFError">
-  ///   Levée en cas d'erreur lors de la génération du PDF
-  /// </exception>
-  function GenererPDF(const ACheminFichier: string): Boolean;
-
-  property Numero: Integer read FNumero;
-  property ClientID: Integer read FClientID;
-  property Date: TDateTime read FDate write FDate;
-  property TotalHT: Currency read FTotalHT;
-end;
-```
-
-## Outils de génération de documentation pour Delphi
-
-Plusieurs outils peuvent générer une documentation HTML à partir de vos commentaires XMLDoc :
-
-### 1. Documentation Insight
-
-Intégré à Delphi depuis Delphi 2010, cet outil :
-- Affiche la documentation lors de la saisie du code
-- Permet de générer une documentation HTML
-- Supporte le format XMLDoc
-
-### 2. PasDoc
-
-[PasDoc](https://github.com/pasdoc/pasdoc) est un générateur de documentation gratuit et open-source pour Pascal :
-- Génère HTML, LaTeX, et d'autres formats
-- Fonctionnalités avancées (graphiques, diagrammes, etc.)
-- Support de différents formats de commentaires
-
-### 3. DelphiCodeToDoc
-
-[DelphiCodeToDoc](http://www.delphicodetodoc.com/) est un outil commercial :
-- Interface graphique conviviale
-- Génération de documentation riche
-- Export vers divers formats
-
-## Documentation du code pour la maintenance
-
-Certains commentaires sont particulièrement utiles pour la maintenance du code :
-
-### Marqueurs TODO et FIXME
-
-Ces marqueurs permettent d'identifier les parties du code qui nécessitent une attention future :
-
-```pascal
-// TODO: Optimiser cette boucle pour de meilleures performances
-for i := 0 to ListeClients.Count - 1 do
-begin
-  // Traitement...
-end;
-
-// FIXME: Ce calcul est incorrect pour les valeurs négatives
-Resultat := Valeur * Multiplicateur;
-```
-
-L'IDE Delphi reconnaît ces marqueurs et les affiche dans la liste des tâches (View > Tasks).
-
-### Commentaires de maintenance
-
-Documentez les modifications importantes pour l'historique :
-
-```pascal
-{
-  2025-04-30 : Jean Dupont
-  - Ajout de la gestion des devises multiples
-  - Correction du bug #123 (calcul incorrect des taxes)
-}
-```
-
-### Documentation des solutions non évidentes
-
-Expliquez pourquoi vous avez choisi une approche particulière, surtout si elle semble contre-intuitive :
-
-```pascal
-// Nous utilisons une liste liée plutôt qu'un tableau
-// car les insertions en début de liste sont fréquentes
-// et doivent être performantes
-FElementsList := TLinkedList<TElement>.Create;
-
-// Ce cast peu conventionnel est nécessaire pour contourner
-// un bug dans la bibliothèque tierce (voir issue #456)
-Result := TBaseClass(Instance).DoSomething;
-```
-
-## Documentation du code auto-documenté
-
-Le meilleur code est celui qui se documente lui-même par sa clarté. Voici quelques principes pour écrire du code auto-documenté :
-
-### 1. Nommage significatif
-
-Des noms clairs réduisent la nécessité de commentaires :
-
-**Peu clair :**
-```pascal
-var
-  i: Integer;
-  lst: TList;
-  s: string;
-  b: Boolean;
-begin
-  b := False;
-  for i := 0 to lst.Count - 1 do
-  begin
-    s := lst[i];
-    if s = 'ACTIF' then
-    begin
-      b := True;
-      Break;
-    end;
-  end;
-end;
-```
-
-**Auto-documenté :**
-```pascal
-var
-  IndexClient: Integer;
-  ListeClients: TList<string>;
-  StatutClient: string;
-  ClientEstActif: Boolean;
-begin
-  ClientEstActif := False;
-  for IndexClient := 0 to ListeClients.Count - 1 do
-  begin
-    StatutClient := ListeClients[IndexClient];
-    if StatutClient = 'ACTIF' then
-    begin
-      ClientEstActif := True;
-      Break;
-    end;
-  end;
-end;
-```
-
-### 2. Fonctions et méthodes courtes
-
-Chaque fonction ou méthode devrait faire une seule chose et la faire bien.
-
-### 3. Abstraction et encapsulation
-
-Dissimulez les détails complexes derrière des interfaces simples.
-
-### 4. Constantes nommées au lieu de "nombres magiques"
-
-**Peu clair :**
-```pascal
-if AgeClient >= 18 then
-  // Traitement pour adultes
-```
-
-**Auto-documenté :**
-```pascal
-const
-  AGE_MAJORITE = 18;
-
-if AgeClient >= AGE_MAJORITE then
-  // Traitement pour adultes
-```
-
-## Bonnes pratiques de documentation pour les équipes
-
-### 1. Établissez un guide de style de documentation
-
-Définissez clairement :
-- Format des commentaires à utiliser
-- Niveau de détail attendu
-- Éléments qui doivent obligatoirement être documentés
-
-### 2. Revues de documentation
-
-Incluez la vérification de la documentation dans vos revues de code.
-
-### 3. Encouragez la mise à jour simultanée
-
-Modifiez la documentation en même temps que le code, pas après.
-
-### 4. Générez régulièrement la documentation
-
-Intégrez la génération de documentation dans votre processus de build ou d'intégration continue.
-
-### 5. Documentation centralisée
-
-Maintenez une documentation centralisée pour l'architecture et les concepts importants, séparée du code source.
-
-## Exemple de documentation complète d'une unité Delphi
-
-Voici un exemple complet d'une unité bien documentée :
-
-```pascal
-{*******************************************************}
-{                                                       }
-{       Gestionnaire de Configuration                   }
-{                                                       }
-{       Copyright (C) 2025 MonEntreprise                }
-{                                                       }
-{*******************************************************}
-
-/// <summary>
-///   Cette unité fournit des classes pour gérer la configuration
-///   de l'application, incluant le chargement et la sauvegarde
-///   des paramètres utilisateur.
-/// </summary>
-/// <remarks>
-///   La configuration est stockée au format JSON et peut être
-///   cryptée pour les données sensibles.
-/// </remarks>
-unit ConfigManager;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils;
-
 type
-  /// <summary>
-  ///   Exception levée lors d'erreurs de configuration
-  /// </summary>
-  EConfigError = class(Exception);
+  TMaClasse = class
+```
 
-  /// <summary>
-  ///   Types de configuration supportés
-  /// </summary>
-  TConfigType = (ctUser, ctSystem, ctTemporary);
+### 7. Documentation vs nommage
 
-  /// <summary>
-  ///   Interface de base pour les gestionnaires de configuration
-  /// </summary>
-  IConfigManager = interface
-    ['{A1B2C3D4-E5F6-4321-8765-9ABCDEF01234}']
+Un bon nommage réduit le besoin de documentation :
 
-    /// <summary>
-    ///   Charge la configuration
-    /// </summary>
-    /// <returns>True si le chargement a réussi</returns>
-    function Load: Boolean;
-
-    /// <summary>
-    ///   Sauvegarde la configuration
-    /// </summary>
-    /// <returns>True si la sauvegarde a réussi</returns>
-    function Save: Boolean;
-
-    /// <summary>
-    ///   Récupère une valeur chaîne
-    /// </summary>
-    /// <param name="Section">Section de la configuration</param>
-    /// <param name="Key">Clé de la valeur</param>
-    /// <param name="DefaultValue">Valeur par défaut si la clé n'existe pas</param>
-    /// <returns>La valeur ou la valeur par défaut</returns>
-    function GetString(const Section, Key, DefaultValue: string): string;
-
-    /// <summary>
-    ///   Définit une valeur chaîne
-    /// </summary>
-    /// <param name="Section">Section de la configuration</param>
-    /// <param name="Key">Clé de la valeur</param>
-    /// <param name="Value">Nouvelle valeur</param>
-    procedure SetString(const Section, Key, Value: string);
-
-    // Autres méthodes similaires pour Integer, Boolean, etc.
-  end;
-
-  /// <summary>
-  ///   Implémentation d'un gestionnaire de configuration JSON
-  /// </summary>
-  /// <remarks>
-  ///   Cette classe stocke la configuration dans un fichier JSON.
-  ///   Pour les données sensibles, elle utilise un chiffrement AES.
-  /// </remarks>
-  /// <example>
-  ///   <code>
-  ///     var
-  ///       Config: TJSONConfigManager;
-  ///     begin
-  ///       Config := TJSONConfigManager.Create(ctUser);
-  ///       try
-  ///         Config.Load;
-  ///         Username := Config.GetString('Login', 'Username', '');
-  ///         SavePassword := Config.GetBoolean('Login', 'SavePassword', False);
-  ///         Config.Save;
-  ///       finally
-  ///         Config.Free;
-  ///       end;
-  ///   </code>
-  /// </example>
-  TJSONConfigManager = class(TInterfacedObject, IConfigManager)
-  private
-    FConfigType: TConfigType;
-    FConfigFile: string;
-    FRootObject: TJSONObject;
-    FModified: Boolean;
-
-    /// <summary>
-    ///   Détermine le chemin du fichier de configuration
-    /// </summary>
-    /// <returns>Chemin complet du fichier</returns>
-    function GetConfigFilePath: string;
-
-    /// <summary>
-    ///   Récupère ou crée une section dans le JSON
-    /// </summary>
-    /// <param name="SectionName">Nom de la section</param>
-    /// <returns>Objet JSON de la section</returns>
-    function GetOrCreateSection(const SectionName: string): TJSONObject;
-  public
-    /// <summary>
-    ///   Crée une nouvelle instance du gestionnaire
-    /// </summary>
-    /// <param name="ConfigType">Type de configuration à gérer</param>
-    constructor Create(ConfigType: TConfigType);
-
-    /// <summary>
-    ///   Libère les ressources
-    /// </summary>
-    /// <remarks>
-    ///   Si la configuration a été modifiée mais non sauvegardée,
-    ///   une sauvegarde automatique est effectuée.
-    /// </remarks>
-    destructor Destroy; override;
-
-    /// <summary>
-    ///   Charge la configuration depuis le fichier JSON
-    /// </summary>
-    /// <returns>True si le chargement a réussi</returns>
-    /// <exception cref="EConfigError">
-    ///   Levée si le fichier est corrompu ou illisible
-    /// </exception>
-    function Load: Boolean;
-
-    /// <summary>
-    ///   Sauvegarde la configuration dans le fichier JSON
-    /// </summary>
-    /// <returns>True si la sauvegarde a réussi</returns>
-    /// <exception cref="EConfigError">
-    ///   Levée si le fichier ne peut pas être écrit
-    /// </exception>
-    function Save: Boolean;
-
-    /// <summary>
-    ///   Réinitialise toute la configuration aux valeurs par défaut
-    /// </summary>
-    /// <returns>True si la réinitialisation a réussi</returns>
-    function Reset: Boolean;
-
-    // Implémentation des méthodes de IConfigManager...
-    function GetString(const Section, Key, DefaultValue: string): string;
-    procedure SetString(const Section, Key, Value: string);
-    function GetInteger(const Section, Key: string; DefaultValue: Integer): Integer;
-    procedure SetInteger(const Section, Key: string; Value: Integer);
-    function GetBoolean(const Section, Key: string; DefaultValue: Boolean): Boolean;
-    procedure SetBoolean(const Section, Key: string; Value: Boolean);
-    function GetFloat(const Section, Key: string; DefaultValue: Double): Double;
-    procedure SetFloat(const Section, Key: string; Value: Double);
-
-    /// <summary>
-    ///   Récupère une valeur cryptée
-    /// </summary>
-    /// <param name="Section">Section de la configuration</param>
-    /// <param name="Key">Clé de la valeur</param>
-    /// <param name="DefaultValue">Valeur par défaut si la clé n'existe pas</param>
-    /// <returns>La valeur décryptée ou la valeur par défaut</returns>
-    /// <seealso cref="SetEncryptedString"/>
-    function GetEncryptedString(const Section, Key, DefaultValue: string): string;
-
-    /// <summary>
-    ///   Définit une valeur cryptée
-    /// </summary>
-    /// <param name="Section">Section de la configuration</param>
-    /// <param name="Key">Clé de la valeur</param>
-    /// <param name="Value">Valeur à crypter et stocker</param>
-    /// <seealso cref="GetEncryptedString"/>
-    procedure SetEncryptedString(const Section, Key, Value: string);
-  end;
-
+```pascal
+// ❌ Mauvais nommage nécessite documentation
 /// <summary>
-///   Récupère l'instance du gestionnaire de configuration par défaut
+///   Calcule le total TTC en ajoutant la TVA au montant HT
+/// </summary>
+function Calc(X: Currency): Currency;
+
+// ✅ Bon nommage rend la documentation optionnelle
+function CalculerTotalTTC(MontantHT: Currency): Currency;
+```
+
+**Principe :** Code explicite > Documentation > Code obscur
+
+### 8. Évitez la sur-documentation
+
+```pascal
+// ❌ Trop de documentation tue la documentation
+/// <summary>
+///   Cette fonction prend un paramètre de type Integer nommé X
+///   et retourne un Integer qui est le résultat de X multiplié par 2
+/// </summary>
+/// <param name="X">
+///   Un nombre entier qui sera multiplié par 2
+/// </param>
+/// <returns>
+///   Retourne X * 2, c'est à dire X multiplié par 2
+/// </returns>
+/// <remarks>
+///   Cette fonction est utilisée pour doubler un nombre
+/// </remarks>
+/// <example>
+///   Si X = 5, le résultat sera 10
+/// </example>
+function Doubler(X: Integer): Integer;
+begin
+  Result := X * 2;
+end;
+
+// ✅ Documentation concise et utile
+/// <summary>Retourne le double de la valeur</summary>
+function Doubler(X: Integer): Integer;
+begin
+  Result := X * 2;
+end;
+```
+
+## Documentation pour les différents publics
+
+### Pour les développeurs (documentation technique)
+
+Focus sur l'implémentation, les détails techniques, les algorithmes.
+
+```pascal
+/// <summary>
+///   Implémente un cache LRU (Least Recently Used) thread-safe
 /// </summary>
 /// <remarks>
-///   Cette fonction utilise un pattern Singleton pour garantir
-///   qu'une seule instance est créée. L'instance est libérée
-///   automatiquement à la fin de l'application.
+///   Utilise un TDictionary pour O(1) lookup et une liste doublement
+///   chaînée pour O(1) éviction. Thread-safety via TCriticalSection.
+///
+///   Complexité :
+///   - Get : O(1)
+///   - Put : O(1)
+///   - Espace : O(n) où n = capacité
 /// </remarks>
-/// <returns>Instance du gestionnaire de configuration</returns>
-function GetDefaultConfig: IConfigManager;
+type
+  TLRUCache<TKey, TValue> = class
+```
 
-implementation
+### Pour les utilisateurs de l'API (documentation fonctionnelle)
 
-uses
-  System.NetEncoding, System.Hash, System.Generics.Collections;
+Focus sur ce que fait la fonction, pas comment.
 
-// Implémentation des fonctions et méthodes...
+```pascal
+/// <summary>
+///   Envoie un email avec des pièces jointes
+/// </summary>
+/// <param name="Destinataire">Adresse email du destinataire</param>
+/// <param name="Sujet">Sujet de l'email</param>
+/// <param name="Message">Corps du message</param>
+/// <param name="PiecesJointes">
+///   Liste des chemins complets des fichiers à joindre (optionnel)
+/// </param>
+/// <returns>True si l'envoi a réussi</returns>
+/// <exception cref="EEmailInvalid">
+///   Si l'adresse email n'est pas valide
+/// </exception>
+/// <exception cref="EFichierNonTrouve">
+///   Si une pièce jointe n'existe pas
+/// </exception>
+function EnvoyerEmail(const Destinataire, Sujet, Message: string;
+  PiecesJointes: TStringList = nil): Boolean;
+```
 
-end.
+### Pour les utilisateurs finaux (manuel utilisateur)
+
+Focus sur comment utiliser l'application, avec captures d'écran.
+
+```markdown
+## Envoyer un email
+
+Pour envoyer un email depuis l'application :
+
+1. Cliquez sur le bouton **Nouveau message** dans la barre d'outils
+2. Remplissez les champs :
+   - **À** : Adresse email du destinataire
+   - **Sujet** : Objet du message
+   - **Message** : Votre texte
+3. (Optionnel) Cliquez sur **Joindre** pour ajouter des fichiers
+4. Cliquez sur **Envoyer**
+
+![Capture d'écran de la fenêtre d'envoi](images/envoi-email.png)
+
+**Note :** Les pièces jointes ne peuvent pas dépasser 25 MB au total.
+```
+
+## Checklist de documentation
+
+Avant de considérer votre code comme "terminé", vérifiez :
+
+### Au niveau du code
+
+- [ ] Toutes les classes publiques ont une documentation `<summary>`
+- [ ] Toutes les méthodes publiques sont documentées
+- [ ] Les paramètres non évidents sont expliqués
+- [ ] Les valeurs de retour sont décrites
+- [ ] Les exceptions possibles sont listées
+- [ ] Les algorithmes complexes ont des commentaires explicatifs
+- [ ] Les workarounds et hacks sont marqués comme tels
+- [ ] Les TODO sont documentés
+
+### Au niveau du projet
+
+- [ ] Le README.md existe et est complet
+- [ ] Le CHANGELOG.md est à jour
+- [ ] Le fichier LICENSE existe
+- [ ] Un CONTRIBUTING.md existe si c'est open source
+- [ ] Les exemples de code fonctionnent
+- [ ] La documentation de l'architecture existe
+- [ ] Les diagrammes sont à jour
+
+### Au niveau utilisateur
+
+- [ ] Un manuel utilisateur existe
+- [ ] Des tutoriels de démarrage rapide existent
+- [ ] Une FAQ couvre les questions courantes
+- [ ] Des captures d'écran illustrent les fonctionnalités
+- [ ] Les messages d'erreur sont explicites
+- [ ] Une aide contextuelle est disponible
+
+## Erreurs courantes
+
+### 1. Documentation copier-coller
+
+```pascal
+// ❌ Documentation copiée sans modification
+/// <summary>Traite les données</summary>
+procedure TraiterClients;
+
+/// <summary>Traite les données</summary>
+procedure TraiterCommandes;
+
+/// <summary>Traite les données</summary>
+procedure TraiterFactures;
+```
+
+### 2. Documentation contradictoire
+
+```pascal
+// ❌ Le code et la doc ne correspondent pas
+/// <returns>Retourne le nombre de clients</returns>
+function GetClients: TObjectList<TClient>;  // Retourne une liste !
+```
+
+### 3. Documentation dans le mauvais format
+
+```pascal
+// ❌ Commentaire simple au lieu de XML doc
+// Cette fonction calcule le total
+function CalculerTotal: Currency;
+
+// ✅ XML doc correct
+/// <summary>Calcule le montant total TTC</summary>
+function CalculerTotal: Currency;
+```
+
+### 4. Trop de détails inutiles
+
+```pascal
+// ❌ Information évidente et verbeuse
+/// <summary>
+///   Cette méthode est appelée lorsque l'utilisateur clique sur le bouton
+///   et elle va afficher un message à l'écran en utilisant la fonction
+///   ShowMessage de Delphi qui ouvre une boîte de dialogue modale
+/// </summary>
+procedure ButtonClick(Sender: TObject);
+begin
+  ShowMessage('Bonjour');
+end;
+
+// ✅ Concis et utile
+/// <summary>Affiche le message de bienvenue</summary>
+procedure ButtonClick(Sender: TObject);
+begin
+  ShowMessage('Bonjour');
+end;
+```
+
+### 5. Documentation obsolète non maintenue
+
+```pascal
+// ❌ La doc parle de CustomerID mais le paramètre s'appelle ClientID
+/// <param name="CustomerID">Identifiant du client</param>
+procedure LoadClient(ClientID: Integer);
 ```
 
 ## Conclusion
 
-Une bonne documentation de code est un investissement qui profite à tous les développeurs du projet, y compris vous-même. En suivant les bonnes pratiques présentées dans ce chapitre, vous améliorerez considérablement la qualité, la maintenabilité et la longévité de vos applications Delphi.
+La documentation est un investissement qui rapporte rapidement. Elle permet de :
 
-N'oubliez pas que la meilleure documentation est celle qui est :
-- Claire et concise
-- Maintenue à jour
-- Appropriée au niveau de complexité du code
-- Accompagnée d'un code bien structuré et auto-documenté
+**Pour vous-même :**
+- Comprendre votre propre code des mois plus tard
+- Éviter de refaire les mêmes erreurs
+- Progresser plus vite sur de nouvelles fonctionnalités
 
-Prendre l'habitude de documenter votre code au fur et à mesure que vous le développez est beaucoup plus efficace que d'essayer de le faire a posteriori. La documentation doit faire partie intégrante de votre processus de développement, pas une corvée à accomplir à la fin du projet.
+**Pour votre équipe :**
+- Faciliter la collaboration
+- Réduire les questions répétitives
+- Accélérer l'intégration des nouveaux membres
 
-Un code bien documenté est la marque d'un développeur professionnel et responsable. C'est un signe de respect envers vos collègues et votre futur vous-même.
+**Pour les utilisateurs :**
+- Utiliser efficacement votre application/bibliothèque
+- Réduire le besoin de support
+- Augmenter la satisfaction
+
+**Points clés à retenir :**
+
+1. **Documentez au fur et à mesure** - Pas "plus tard"
+2. **Focus sur le POURQUOI** - Le code montre le comment
+3. **Gardez-la à jour** - Documentation obsolète = danger
+4. **Soyez concis** - Trop de doc tue la doc
+5. **Plusieurs niveaux** - Code, projet, utilisateurs
+6. **Utilisez des outils** - PasDoc, générateurs automatiques
+7. **Standards cohérents** - Même style dans tout le projet
+8. **Relisez** - La doc fait partie du code à revoir
+
+**Citation importante :**
+> "Le code raconte comment. Les commentaires racontent pourquoi."
+> — Jeff Atwood
+
+Commencez dès aujourd'hui à documenter votre code. Votre futur vous-même vous remerciera !
+
+Dans la prochaine section, nous explorerons la revue de code et le refactoring, deux pratiques essentielles pour maintenir la qualité du code dans la durée.
 
 ⏭️ [Revue de code et refactoring](/18-architecture-et-bonnes-pratiques/07-revue-de-code-et-refactoring.md)

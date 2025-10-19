@@ -1,206 +1,210 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 18.1 Structuration d'un projet Delphi
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-La structuration d'un projet est un aspect fondamental du développement logiciel, souvent négligé par les débutants mais essentiel pour créer des applications maintenables et évolutives. Une bonne organisation de votre projet Delphi dès le départ vous fera gagner un temps considérable lors des phases de développement, de maintenance et d'évolution. Cette section vous guidera à travers les principes et pratiques pour bien structurer vos projets Delphi.
+La structuration d'un projet Delphi est un élément fondamental pour garantir la maintenabilité, l'évolutivité et la collaboration efficace au sein d'une équipe de développement. Une bonne organisation dès le départ vous fera gagner un temps considérable et évitera de nombreux problèmes à long terme.
+
+Dans cette section, nous allons explorer les meilleures pratiques pour organiser vos projets Delphi de manière professionnelle et cohérente.
 
 ## Pourquoi structurer son projet ?
 
-Avant d'aborder le "comment", comprenons le "pourquoi" :
+Avant d'entrer dans les détails techniques, comprenons pourquoi la structuration est importante :
 
-- **Maintenabilité** : Un code bien organisé est plus facile à comprendre et à modifier
-- **Collaboration** : Permet à plusieurs développeurs de travailler efficacement sur le même projet
-- **Évolutivité** : Facilite l'ajout de nouvelles fonctionnalités sans perturber l'existant
-- **Réutilisabilité** : Les composants bien isolés peuvent être réutilisés dans d'autres projets
-- **Testabilité** : Une structure claire facilite l'écriture de tests unitaires
-- **Lisibilité** : Aide à comprendre rapidement l'architecture globale du projet
+- **Maintenabilité** : Un projet bien organisé est plus facile à comprendre et à modifier, même après plusieurs mois sans y toucher
+- **Collaboration** : Une structure claire facilite le travail en équipe et l'intégration de nouveaux développeurs
+- **Réutilisabilité** : Une bonne organisation permet d'identifier et de réutiliser facilement des portions de code
+- **Évolutivité** : Un projet structuré peut grandir sans devenir un cauchemar à gérer
+- **Débogage** : Retrouver la source d'un problème est beaucoup plus rapide dans un projet organisé
 
-## Structure de base d'un projet Delphi
+## Comprendre les fichiers d'un projet Delphi
 
-Un projet Delphi standard se compose des éléments suivants :
+Lorsque vous créez un projet Delphi, plusieurs types de fichiers sont générés automatiquement. Voici les principaux :
 
-### Fichiers principaux
+### Fichiers essentiels
 
-- **Fichier projet (.dproj)** : Fichier XML contenant les paramètres du projet
-- **Fichier programme (.dpr)** : Point d'entrée de l'application, généralement court
-- **Fichiers unités (.pas)** : Contiennent le code source de votre application
-- **Fichiers de formulaires (.dfm)** : Décrivent la disposition des formulaires et composants visuels
-- **Fichiers ressources (.res)** : Contiennent des ressources comme les icônes, images, etc.
+**Le fichier projet (.dpr ou .dproj)**
 
-### Exemple de structure minimale
-
-```
-MonProjet/
-├── MonProjet.dpr      # Fichier programme principal
-├── MonProjet.dproj    # Fichier projet
-├── MainForm.pas       # Unité du formulaire principal
-├── MainForm.dfm       # Description visuelle du formulaire principal
-└── AboutForm.pas      # Unité d'un formulaire secondaire
-└── AboutForm.dfm      # Description visuelle du formulaire secondaire
-```
-
-Cette structure basique fonctionne pour de petits projets, mais devient rapidement insuffisante pour des applications plus complexes.
-
-## Organisation avancée des dossiers
-
-Pour les projets de taille moyenne à grande, une organisation en dossiers est recommandée :
-
-```
-MonProjet/
-├── src/                     # Code source
-│   ├── forms/               # Formulaires
-│   │   ├── MainForm.pas
-│   │   ├── MainForm.dfm
-│   │   ├── AboutForm.pas
-│   │   └── AboutForm.dfm
-│   ├── data/                # Accès aux données
-│   │   ├── DataModule.pas
-│   │   └── DataModule.dfm
-│   ├── models/              # Classes de données et logique métier
-│   │   ├── Customer.pas
-│   │   └── Product.pas
-│   └── utils/               # Fonctions et classes utilitaires
-│       ├── StringUtils.pas
-│       └── DateUtils.pas
-├── res/                     # Ressources
-│   ├── images/              # Images
-│   └── strings/             # Fichiers de chaînes localisées
-├── lib/                     # Bibliothèques tierces
-├── bin/                     # Exécutables et DLL compilés
-├── docs/                    # Documentation
-└── MonProjet.dpr            # Fichier programme
-└── MonProjet.dproj          # Fichier projet
-```
-
-### Avantages de cette structure
-
-- **Séparation des préoccupations** : Chaque dossier a une responsabilité claire
-- **Navigation facilitée** : Vous trouvez rapidement où se situe un élément spécifique
-- **Isolation** : Les différentes parties de l'application sont bien séparées
-- **Extensibilité** : Facile d'ajouter de nouveaux modules sans perturber l'existant
-
-## Organisation par couches (architecture en oignons)
-
-Pour les applications complexes, une organisation par couches est souvent recommandée :
-
-```
-MonProjet/
-├── src/
-│   ├── UI/                      # Interface utilisateur
-│   │   ├── Forms/               # Formulaires standards
-│   │   └── Dialogs/             # Boîtes de dialogue
-│   ├── Presentation/            # Logique de présentation (MVVM/MVP)
-│   │   ├── ViewModels/
-│   │   └── Presenters/
-│   ├── Domain/                  # Logique métier
-│   │   ├── Entities/            # Objets métier
-│   │   ├── Services/            # Services métier
-│   │   └── Interfaces/          # Interfaces des services
-│   ├── Infrastructure/          # Accès aux données externes
-│   │   ├── Database/            # Accès aux bases de données
-│   │   ├── Network/             # Communication réseau
-│   │   └── Storage/             # Stockage local
-│   └── Common/                  # Code partagé entre les couches
-│       ├── Utils/               # Utilitaires génériques
-│       └── Constants/           # Constantes globales
-└── ...
-```
-
-Cette organisation reflète les principes d'architecture en couches où :
-
-- L'**Interface Utilisateur** gère uniquement l'affichage et l'interaction
-- La **Présentation** coordonne entre l'UI et le domaine
-- Le **Domaine** contient la logique métier pure, indépendante des détails techniques
-- L'**Infrastructure** gère les interactions avec le monde extérieur (bases de données, API...)
-
-![Architecture en couches](https://placeholder.com/Layered_Architecture.png)
-
-## Structure pour projets multi-plateformes
-
-Si vous développez une application multi-plateformes avec FireMonkey, vous pourriez adopter cette structure :
-
-```
-MonProjet/
-├── src/
-│   ├── common/                  # Code partagé entre plateformes
-│   │   ├── models/
-│   │   ├── viewmodels/
-│   │   └── services/
-│   ├── platform/                # Code spécifique à chaque plateforme
-│   │   ├── windows/
-│   │   ├── macos/
-│   │   ├── ios/
-│   │   └── android/
-│   └── ui/                      # Interface utilisateur
-│       ├── forms/
-│       ├── styles/              # Styles FireMonkey
-│       └── assets/              # Ressources graphiques
-└── ...
-```
-
-Cette approche permet de :
-- Maximiser le partage de code entre plateformes
-- Isoler clairement le code spécifique à chaque plateforme
-- Faciliter la maintenance des fonctionnalités communes et spécifiques
-
-## Structuration des unités Delphi
-
-Au-delà de l'organisation des dossiers, la structure interne de vos unités (.pas) est également importante :
-
-### Modèle d'unité bien structurée
+Le fichier `.dpr` (Delphi Project) est le point d'entrée de votre application. Il contient le code principal qui démarre l'application. Le fichier `.dproj` est le fichier de configuration du projet au format XML.
 
 ```pascal
-unit CustomerService;
+program MonApplication;
+
+uses
+  Vcl.Forms,
+  UnitPrincipale in 'UnitPrincipale.pas' {FormPrincipal};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFormPrincipal, FormPrincipal);
+  Application.Run;
+end.
+```
+
+**Les unités (.pas)**
+
+Les fichiers `.pas` contiennent le code source Object Pascal. Chaque formulaire, module ou classe a généralement sa propre unité.
+
+**Les formulaires (.dfm)**
+
+Les fichiers `.dfm` (Delphi Form) stockent la description visuelle de vos formulaires. Ils sont généralement édités via le concepteur visuel de Delphi, mais peuvent aussi être modifiés en mode texte.
+
+**Les fichiers ressources (.res)**
+
+Ces fichiers contiennent les ressources de l'application comme l'icône, le manifeste Windows, etc.
+
+### Fichiers générés (à ne pas versionner)
+
+Certains fichiers sont générés lors de la compilation et ne doivent pas être inclus dans votre système de gestion de versions :
+
+- `.dcu` : Unités compilées
+- `.exe`, `.dll` : Exécutables et bibliothèques
+- `.~pas`, `.~dfm` : Fichiers de sauvegarde automatique
+- `__history` : Dossier contenant l'historique local des modifications
+- `Win32`, `Win64`, `OSX64`, etc. : Dossiers de sortie de compilation
+
+## Structure de dossiers recommandée
+
+Voici une structure de dossiers professionnelle et évolutive pour un projet Delphi :
+
+```
+MonProjet/
+│
+├── Source/                    # Code source principal
+│   ├── Forms/                # Formulaires de l'application
+│   │   ├── Main/            # Formulaire principal
+│   │   ├── Dialogs/         # Boîtes de dialogue
+│   │   └── Reports/         # Formulaires de rapports
+│   │
+│   ├── Units/               # Unités de code (logique métier)
+│   │   ├── Models/          # Modèles de données
+│   │   ├── Controllers/     # Contrôleurs (logique)
+│   │   └── Utils/           # Utilitaires et helpers
+│   │
+│   ├── DataModules/         # Modules de données
+│   └── Resources/           # Ressources (images, icônes, fichiers)
+│
+├── Database/                # Scripts et schémas de base de données
+│   ├── Scripts/            # Scripts SQL
+│   └── Migrations/         # Scripts de migration
+│
+├── Docs/                   # Documentation
+│   ├── API/               # Documentation API
+│   ├── UserManual/        # Manuel utilisateur
+│   └── Technical/         # Documentation technique
+│
+├── Tests/                  # Tests unitaires et d'intégration
+│   ├── Unit/
+│   └── Integration/
+│
+├── Lib/                    # Bibliothèques tierces
+│   ├── Components/        # Composants externes
+│   └── Packages/          # Packages installés
+│
+├── Build/                  # Fichiers de compilation
+│   ├── Win32/
+│   ├── Win64/
+│   └── Release/
+│
+├── Config/                 # Fichiers de configuration
+│   ├── Development/
+│   ├── Production/
+│   └── Test/
+│
+└── Deploy/                 # Scripts et fichiers de déploiement
+    ├── Installers/
+    └── Updates/
+```
+
+## Organisation du code source
+
+### Principe de séparation des responsabilités
+
+Une règle d'or en développement : **une unité = une responsabilité**. Évitez de créer des "super-unités" qui font tout. Préférez plusieurs petites unités spécialisées.
+
+**Mauvaise pratique :**
+```
+Utils.pas (contenant 5000 lignes avec tout et n'importe quoi)
+```
+
+**Bonne pratique :**
+```
+StringUtils.pas      # Utilitaires pour les chaînes
+DateUtils.pas        # Utilitaires pour les dates
+FileUtils.pas        # Utilitaires pour les fichiers
+MathUtils.pas        # Utilitaires mathématiques
+```
+
+### Convention de nommage des unités
+
+Adoptez une convention de nommage cohérente pour vos unités :
+
+- **Préfixe descriptif** : Utilisez un préfixe pour identifier le type d'unité
+  - `frm` pour les formulaires : `frmMain.pas`, `frmCustomer.pas`
+  - `dm` pour les DataModules : `dmDatabase.pas`, `dmReports.pas`
+  - `u` pour les unités génériques : `uCustomer.pas`, `uOrder.pas`
+  - `intf` pour les interfaces : `intfDatabase.pas`
+
+- **Noms explicites** : Le nom doit indiquer clairement le contenu
+  - ✅ `CustomerManager.pas`
+  - ❌ `Unit1.pas`
+
+### Structure d'une unité
+
+Organisez systématiquement vos unités avec cette structure :
+
+```pascal
+unit CustomerManager;
 
 interface
 
 uses
-  // Unités standard Delphi
+  // Unités système d'abord
   System.SysUtils, System.Classes,
-
-  // Unités tierces
-  SuperLogger,
-
-  // Unités de votre projet
-  Customer, Database;
+  // Puis unités VCL/FMX
+  Vcl.Forms, Vcl.Dialogs,
+  // Enfin vos unités
+  DataModuleMain;
 
 type
-  // Déclarations d'interfaces
-  ICustomerService = interface
-    ['{GUID-UNIQUE}']
-    function GetCustomerById(const Id: Integer): TCustomer;
-    // ...
+  // Déclarations des types et classes
+  TCustomer = class
+  private
+    FName: string;
+    FEmail: string;
+    procedure SetName(const Value: string);
+  public
+    property Name: string read FName write SetName;
+    property Email: string read FEmail write FEmail;
   end;
 
-  // Déclarations de classes
-  TCustomerService = class(TInterfacedObject, ICustomerService)
-  private
-    FDatabase: TDatabase;
+  TCustomerManager = class
   public
-    constructor Create(ADatabase: TDatabase);
-    destructor Destroy; override;
-
-    // Implémentation de ICustomerService
-    function GetCustomerById(const Id: Integer): TCustomer;
+    function LoadCustomer(ID: Integer): TCustomer;
+    procedure SaveCustomer(Customer: TCustomer);
   end;
 
 implementation
 
-{ TCustomerService }
+{ TCustomer }
 
-constructor TCustomerService.Create(ADatabase: TDatabase);
+procedure TCustomer.SetName(const Value: string);
 begin
-  inherited Create;
-  FDatabase := ADatabase;
+  FName := Trim(Value);
 end;
 
-destructor TCustomerService.Destroy;
+{ TCustomerManager }
+
+function TCustomerManager.LoadCustomer(ID: Integer): TCustomer;
 begin
-  // Nettoyage si nécessaire
-  inherited;
+  // Implémentation
 end;
 
-function TCustomerService.GetCustomerById(const Id: Integer): TCustomer;
+procedure TCustomerManager.SaveCustomer(Customer: TCustomer);
 begin
   // Implémentation
 end;
@@ -208,188 +212,307 @@ end;
 end.
 ```
 
-### Bonnes pratiques pour les unités
+## Organisation par couches
 
-1. **Organiser les clauses `uses`** en groupes logiques (standard, tierces, projet)
-2. **Déclarer toutes les interfaces dans la section `interface`**
-3. **Implémenter le code dans la section `implementation`**
-4. **Regrouper les méthodes par classe** plutôt que par fonctionnalité
-5. **Conserver une seule classe principale par unité** quand c'est possible
+Pour les projets de taille moyenne à grande, adoptez une architecture en couches :
+
+### Couche Présentation (UI)
+
+Cette couche contient tous les formulaires et l'interface utilisateur.
+
+```
+Source/Forms/
+  ├── frmMain.pas          # Formulaire principal
+  ├── frmCustomerList.pas  # Liste des clients
+  └── frmCustomerEdit.pas  # Édition d'un client
+```
+
+**Responsabilité** : Affichage et interaction avec l'utilisateur uniquement. Aucune logique métier ici.
+
+### Couche Logique Métier (Business Logic)
+
+Cette couche contient toute la logique de l'application.
+
+```
+Source/Business/
+  ├── CustomerManager.pas   # Gestion des clients
+  ├── OrderProcessor.pas    # Traitement des commandes
+  └── ValidationRules.pas   # Règles de validation
+```
+
+**Responsabilité** : Traitement des données, validation, calculs, règles métier.
+
+### Couche Accès aux Données (Data Access)
+
+Cette couche gère la communication avec la base de données.
+
+```
+Source/DataAccess/
+  ├── dmDatabase.pas        # Module de données principal
+  ├── CustomerDAO.pas       # Accès aux données clients
+  └── OrderDAO.pas          # Accès aux données commandes
+```
+
+**Responsabilité** : Requêtes SQL, connexion à la base, CRUD.
+
+### Couche Modèles (Models)
+
+Cette couche définit les structures de données.
+
+```
+Source/Models/
+  ├── Customer.pas          # Modèle Client
+  ├── Order.pas            # Modèle Commande
+  └── Product.pas          # Modèle Produit
+```
+
+**Responsabilité** : Définition des classes et structures de données uniquement.
 
 ## Gestion des dépendances
 
-Un aspect crucial d'une bonne structure est la gestion des dépendances entre les différentes parties de votre application.
+### Règle des dépendances unidirectionnelles
 
-### Principes de base
+Les dépendances doivent toujours aller dans un seul sens :
 
-1. **Évitez les dépendances circulaires** : Si l'unité A utilise l'unité B, alors B ne devrait pas utiliser A
-2. **Dépendez des abstractions** : Utilisez des interfaces plutôt que des implémentations concrètes
-3. **Injection de dépendances** : Transmettez les dépendances via le constructeur ou des propriétés
+```
+Présentation → Logique Métier → Accès Données → Modèles
+```
 
-### Exemple d'injection de dépendances
+**Jamais l'inverse !** Un DataModule ne doit jamais référencer un formulaire.
+
+### Utilisation des interfaces
+
+Pour découpler vos couches, utilisez des interfaces :
 
 ```pascal
-// Mauvaise approche (dépendance directe)
-procedure TCustomerForm.LoadCustomer(const Id: Integer);
+// Interface définie dans la couche Business
+unit intfCustomerManager;
+
+interface
+
+type
+  ICustomerManager = interface
+    ['{GUID-ICI}']
+    function LoadCustomer(ID: Integer): TCustomer;
+    procedure SaveCustomer(Customer: TCustomer);
+  end;
+
+implementation
+
+end.
+```
+
+Puis implémentez cette interface dans votre couche d'accès aux données.
+
+## Gestion des ressources
+
+### Images et icônes
+
+Centralisez vos ressources visuelles :
+
+```
+Source/Resources/
+  ├── Images/
+  │   ├── Icons/        # Icônes 16x16, 32x32
+  │   ├── Logos/        # Logos de l'application
+  │   └── Backgrounds/  # Images de fond
+  └── Styles/           # Feuilles de style VCL
+```
+
+### Utilisation d'ImageList
+
+Créez un DataModule spécifique pour les ressources partagées :
+
+```pascal
+unit dmResources;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList;
+
+type
+  TdmResources = class(TDataModule)
+    ImageListIcons: TImageList;
+    ImageListToolbar: TImageList;
+  end;
+
 var
-  CustomerService: TCustomerService;
+  dmResources: TdmResources;
+
+implementation
+
+end.
+```
+
+## Fichiers de configuration
+
+### Séparez les configurations par environnement
+
+Utilisez des fichiers de configuration distincts :
+
+```
+Config/
+  ├── app.config.dev.ini      # Développement
+  ├── app.config.test.ini     # Tests
+  └── app.config.prod.ini     # Production
+```
+
+### Gestion dans le code
+
+Créez une unité dédiée à la configuration :
+
+```pascal
+unit AppConfig;
+
+interface
+
+type
+  TAppConfig = class
+  private
+    FDatabaseServer: string;
+    FDatabaseName: string;
+    procedure LoadFromFile(const FileName: string);
+  public
+    constructor Create;
+    property DatabaseServer: string read FDatabaseServer;
+    property DatabaseName: string read FDatabaseName;
+  end;
+
+implementation
+
+uses
+  System.IniFiles;
+
+constructor TAppConfig.Create;
 begin
-  CustomerService := TCustomerService.Create;
+  inherited;
+  {$IFDEF DEBUG}
+    LoadFromFile('Config\app.config.dev.ini');
+  {$ELSE}
+    LoadFromFile('Config\app.config.prod.ini');
+  {$ENDIF}
+end;
+
+procedure TAppConfig.LoadFromFile(const FileName: string);
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(FileName);
   try
-    Customer := CustomerService.GetCustomerById(Id);
+    FDatabaseServer := IniFile.ReadString('Database', 'Server', 'localhost');
+    FDatabaseName := IniFile.ReadString('Database', 'Name', 'mydb');
   finally
-    CustomerService.Free;
+    IniFile.Free;
   end;
 end;
 
-// Bonne approche (injection de dépendances)
-procedure TCustomerForm.LoadCustomer(const Id: Integer;
-                                    CustomerService: ICustomerService);
-begin
-  Customer := CustomerService.GetCustomerById(Id);
-end;
+end.
 ```
 
-## Gestion des fichiers dans l'IDE Delphi
+## Bonnes pratiques pour les projets en équipe
 
-Delphi offre plusieurs outils pour vous aider à organiser votre projet dans l'IDE :
+### Fichier README
 
-### Groupes de projet
+Créez toujours un fichier `README.md` à la racine qui explique :
+- Comment installer le projet
+- Les prérequis
+- Comment compiler
+- La structure du projet
+- Les conventions utilisées
 
-Pour les solutions comportant plusieurs projets liés :
+### Fichier .gitignore
 
-1. Créez un groupe de projet via **Fichier > Nouveau > Groupe de projets**
-2. Ajoutez vos projets existants au groupe
-3. Organisez-les en dossiers virtuels selon leur fonction
+Si vous utilisez Git, créez un `.gitignore` adapté à Delphi :
 
-![Groupe de projets Delphi](https://placeholder.com/Project_Group.png)
+```
+# Fichiers compilés
+*.dcu
+*.exe
+*.dll
 
-### Organisation des unités dans le Project Manager
+# Dossiers de build
+Win32/
+Win64/
+OSX64/
+Android/
+iOSDevice/
 
-Le Project Manager permet d'organiser visuellement vos fichiers :
+# Historique
+__history/
+*.~*
 
-1. Cliquez-droit sur le nom du projet
-2. Sélectionnez **Ajouter > Nouveau dossier**
-3. Glissez-déposez les unités dans les dossiers appropriés
+# Fichiers locaux
+*.local
+*.identcache
+*.stat
+```
 
-Cette organisation n'affecte pas la structure réelle des fichiers sur le disque, mais facilite la navigation dans l'IDE.
+### Documentation dans le code
 
-## Modèles de structuration courants
+Commentez votre code de manière utile :
 
-Voici quelques modèles courants à considérer selon la taille et le type de votre application :
+```pascal
+/// <summary>
+///   Calcule le montant total TTC d'une commande
+/// </summary>
+/// <param name="OrderID">Identifiant de la commande</param>
+/// <returns>Montant TTC en euros</returns>
+/// <remarks>
+///   Prend en compte les remises et le taux de TVA applicable
+/// </remarks>
+function CalculateTotalAmount(OrderID: Integer): Currency;
+```
 
-### 1. Modèle simple (petites applications)
+## Points clés à retenir
 
-- Un dossier principal contenant tous les fichiers
-- Préfixes de nommage pour regrouper les fichiers liés (ex: `Cust_List.pas`, `Cust_Edit.pas`)
-- Adapté aux applications de moins de 10-15 formulaires
+1. **Une unité = une responsabilité** : Ne créez pas de fichiers fourre-tout
+2. **Organisez par couches** : Séparez UI, logique métier et accès données
+3. **Nommez intelligemment** : Les noms doivent être explicites et cohérents
+4. **Gérez les dépendances** : Les dépendances vont toujours du haut vers le bas
+5. **Centralisez les ressources** : Images, icônes et configurations au même endroit
+6. **Documentez** : README, commentaires et conventions claires
+7. **Ne versionnez pas les fichiers générés** : Utilisez un .gitignore approprié
 
-### 2. Modèle MVC (Model-View-Controller)
+## Exemple de projet simple structuré
 
-- Séparation en trois types de composants :
-  - **Modèles** : Représentation des données et logique métier
-  - **Vues** : Formulaires et composants d'interface utilisateur
-  - **Contrôleurs** : Coordination entre modèles et vues
-
-### 3. Modèle modulaire
-
-- Organisation par modules fonctionnels (Clients, Produits, Facturation...)
-- Chaque module contient ses propres formes, classes et utilitaires
-- Interfaces bien définies entre les modules
-
-## Bonnes pratiques de nommage
-
-Un bon système de nommage rend votre structure plus intuitive :
-
-### Conventions pour les unités
-
-- Préfixez par le nom du projet pour les unités principales : `MonProjet.MainForm.pas`
-- Utilisez des noms complets et descriptifs : `CustomerManagement.pas` au lieu de `CustMgmt.pas`
-- Pour les classes utilitaires, indiquez leur fonction : `StringUtils.pas`
-
-### Conventions pour les classes
-
-- Préfixez par `T` comme c'est la tradition en Delphi : `TCustomer`
-- Pour les interfaces, préfixez par `I` : `ICustomerService`
-- Pour les énumérations, préfixez par `E` : `ECustomerType`
-
-### Conventions pour les fichiers de formulaires
-
-- Suffixe `Form` pour les formulaires standards : `MainForm.pas`
-- Suffixe `Dialog` pour les boîtes de dialogue : `SettingsDialog.pas`
-- Suffixe `Frame` pour les cadres (TFrame) : `CustomerListFrame.pas`
-
-## Considérations pratiques pour les débutants
-
-Si vous débutez avec Delphi, voici quelques conseils simples :
-
-1. **Commencez simple** : Ne surarchitecturez pas vos premiers projets
-2. **Évoluez progressivement** : Améliorez la structure au fur et à mesure
-3. **Réfléchissez avant d'ajouter** : Prenez l'habitude de vous demander "où ce fichier devrait-il aller ?"
-4. **Observez des projets existants** : Examinez comment les projets open source sont structurés
-5. **Soyez cohérent** : Une structure imparfaite mais cohérente est meilleure qu'une structure incohérente
-
-## Structure pour les projets d'équipe
-
-Si vous travaillez en équipe, considérez ces éléments supplémentaires :
-
-1. **Document de conventions** : Créez un document définissant les règles de structure et de nommage
-2. **Configuration d'IDE partagée** : Partagez les mêmes paramètres d'IDE entre les membres de l'équipe
-3. **Contrôle de code source** : Utilisez Git ou SVN avec une structure de branches cohérente
-4. **Revues de code** : Vérifiez que les nouvelles contributions respectent la structure convenue
-
-## Évolution de la structure
-
-Une bonne structure doit pouvoir évoluer avec votre application :
-
-1. **Revues périodiques** : Examinez régulièrement si la structure reste adaptée
-2. **Refactoring progressif** : Améliorez la structure par petites étapes
-3. **Documentation** : Maintenez un document décrivant l'architecture et sa justification
-4. **Mesure de la complexité** : Surveillez des métriques comme la complexité cyclomatique, la profondeur d'héritage, etc.
-
-## Outils pour gérer la structure
-
-Delphi et l'écosystème offrent plusieurs outils pour vous aider :
-
-1. **ModelMaker Code Explorer** : Outil de refactoring et d'exploration de code
-2. **GExperts** : Extensions pour Delphi avec des fonctionnalités d'organisation
-3. **Delphi Code Formatter** : Pour maintenir un style de code cohérent
-4. **Together** : Outil de modélisation UML intégré aux versions professionnelles de Delphi
-
-## Exemple concret : Application de gestion de clients
-
-Voyons comment structurer une petite application de gestion de clients :
+Voici à quoi pourrait ressembler un projet de gestion de clients simple mais bien structuré :
 
 ```
 GestionClients/
-├── src/
-│   ├── forms/
-│   │   ├── Main.pas            # Formulaire principal
-│   │   ├── CustomerList.pas    # Liste des clients
-│   │   ├── CustomerEdit.pas    # Édition d'un client
-│   │   └── About.pas           # À propos
-│   ├── data/
-│   │   ├── DataModule.pas      # Module de données
-│   │   └── DatabaseConnection.pas # Connexion à la base
-│   ├── models/
-│   │   ├── Customer.pas        # Classe Client
-│   │   └── Address.pas         # Classe Adresse
-│   ├── services/
-│   │   ├── CustomerService.pas # Gestion des clients
-│   │   └── ReportService.pas   # Génération de rapports
-│   └── utils/
-│       ├── StringUtils.pas     # Utilitaires de chaînes
-│       └── ValidationUtils.pas # Validation de données
-├── res/
-│   ├── icons/                  # Icônes de l'application
-│   └── reports/                # Modèles de rapports
-└── GestionClients.dpr          # Fichier projet
+│
+├── Source/
+│   ├── Forms/
+│   │   ├── frmMain.pas              # Interface principale
+│   │   └── frmCustomerEdit.pas      # Édition client
+│   │
+│   ├── Business/
+│   │   └── CustomerManager.pas      # Logique métier
+│   │
+│   ├── DataAccess/
+│   │   └── dmDatabase.pas           # Accès aux données
+│   │
+│   ├── Models/
+│   │   └── Customer.pas             # Modèle Client
+│   │
+│   └── Utils/
+│       └── StringHelper.pas         # Utilitaires
+│
+├── Config/
+│   └── app.config.ini
+│
+├── GestionClients.dpr               # Projet principal
+├── GestionClients.dproj
+├── README.md
+└── .gitignore
 ```
 
-Cette structure est simple mais évolutive, adaptée à une petite application qui pourrait grandir avec le temps.
+Cette structure simple mais efficace permet de faire évoluer facilement le projet en ajoutant de nouvelles fonctionnalités sans créer de désordre.
 
----
+## Conclusion
 
-> **Astuce pour débutants** : Ne vous sentez pas obligé d'adopter immédiatement une structure complexe. Commencez avec une organisation simple, puis restructurez progressivement à mesure que votre projet grandit et que votre compréhension s'améliore. Une bonne structure est celle qui vous aide à naviguer et à comprendre votre propre code, même après plusieurs mois sans y avoir touché.
+La structuration d'un projet Delphi n'est pas une tâche complexe, mais elle demande de la réflexion et de la discipline. En suivant ces bonnes pratiques dès le début, vous construirez des applications plus maintenables, plus évolutives et plus faciles à comprendre pour vous-même et pour vos collègues.
+
+N'oubliez pas : **le temps passé à bien organiser votre projet au début est du temps gagné tout au long du développement et de la maintenance de votre application.**
 
 ⏭️ [Patterns d'architecture (MVC, MVVM)](/18-architecture-et-bonnes-pratiques/02-patterns-darchitecture.md)

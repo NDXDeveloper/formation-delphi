@@ -1,107 +1,262 @@
-# 18.5 Versionnement et gestion de code source
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 18.5 Versionnement et gestion de code source
 
 ## Introduction
 
-Imaginez que vous travaillez sur votre application Delphi depuis plusieurs semaines. Un jour, vous décidez d'ajouter une nouvelle fonctionnalité, mais après plusieurs heures de développement, vous réalisez que votre code ne fonctionne plus correctement. Vous aimeriez revenir à la version précédente, mais comment faire ?
+Imaginez que vous écrivez un roman. Vous créez des chapitres, puis vous décidez de tout réécrire différemment. Quelques jours plus tard, vous regrettez : l'ancienne version était meilleure ! Mais vous l'avez écrasée... elle est perdue à jamais.
 
-C'est là qu'intervient le **versionnement de code source**. Il s'agit d'un système qui vous permet de suivre et de gérer les modifications apportées à votre code au fil du temps. Dans ce chapitre, nous allons explorer les principes fondamentaux du versionnement et comment l'intégrer efficacement dans vos projets Delphi.
+Ou pire : vous travaillez sur un document avec trois collègues. Chacun fait ses modifications de son côté. Comment fusionner tout ça sans perdre le travail de personne ? Comment savoir qui a modifié quoi et quand ?
 
-## Pourquoi utiliser un système de gestion de versions ?
+Le **versionnement** (ou gestion de versions) résout ces problèmes en conservant **l'historique complet** de votre code : chaque modification, chaque version, avec la possibilité de revenir en arrière à tout moment.
 
-Le versionnement de code source offre de nombreux avantages :
+### Qu'est-ce que le versionnement ?
 
-1. **Historique des modifications** : Vous pouvez voir qui a modifié quoi, quand et pourquoi.
-2. **Retour arrière** : Vous pouvez revenir à une version antérieure en cas de problème.
-3. **Travail collaboratif** : Plusieurs développeurs peuvent travailler sur le même projet sans conflits majeurs.
-4. **Branches parallèles** : Vous pouvez développer de nouvelles fonctionnalités sans affecter le code principal.
-5. **Sauvegarde** : Votre code est sauvegardé sur un serveur distant, réduisant le risque de perte de données.
-6. **Documentation** : Les messages de commit fournissent une documentation implicite des changements.
+Le versionnement est un système qui enregistre les changements apportés à vos fichiers au fil du temps. C'est comme une **machine à remonter le temps** pour votre code.
 
-## Les systèmes de gestion de versions populaires
+**Sans versionnement :**
+```
+MonProjet/
+  - MonFichier.pas
+  - MonFichier_v2.pas
+  - MonFichier_v2_final.pas
+  - MonFichier_v2_final_VRAI.pas
+  - MonFichier_v2_final_VRAI_jeudi.pas
+```
 
-Plusieurs systèmes de gestion de versions existent, mais les plus utilisés aujourd'hui sont :
+**Avec versionnement :**
+```
+MonProjet/
+  - MonFichier.pas  (avec tout l'historique accessible)
+```
 
-### Git
+### Pourquoi utiliser le versionnement ?
 
-Git est devenu le standard de l'industrie pour la gestion de versions. Créé par Linus Torvalds (le créateur de Linux), Git est :
-- Distribué (chaque développeur a une copie complète du dépôt)
-- Rapide et efficace
-- Excellent pour le travail hors ligne
-- Supporté par de nombreuses plateformes comme GitHub, GitLab, et Bitbucket
+#### 1. Historique complet
 
-### Subversion (SVN)
+Vous pouvez voir :
+- Qui a modifié quoi
+- Quand
+- Pourquoi (grâce aux messages de commit)
+- Revenir à n'importe quelle version antérieure
 
-Bien que moins populaire aujourd'hui, SVN reste utilisé dans certaines entreprises :
-- Système centralisé (un serveur central contient toutes les versions)
-- Plus simple à apprendre que Git pour les débutants
-- Bonne gestion des fichiers binaires
+#### 2. Collaboration facilitée
 
-### Mercurial
+Plusieurs développeurs peuvent travailler sur le même projet simultanément sans s'écraser mutuellement le travail.
 
-Similaire à Git en termes de fonctionnalités, Mercurial est :
-- Distribué comme Git
-- Réputé pour sa simplicité et sa courbe d'apprentissage plus douce
-- Moins répandu que Git dans l'écosystème de développement
+#### 3. Branches et expérimentation
 
-## Git pour les projets Delphi
+Vous pouvez créer des "branches" pour tester de nouvelles fonctionnalités sans affecter le code principal. Si ça ne marche pas, vous supprimez la branche. Si ça marche, vous la fusionnez.
 
-Pour la suite de ce chapitre, nous nous concentrerons sur Git, car c'est le système le plus utilisé aujourd'hui. Voyons comment l'utiliser efficacement avec Delphi.
+#### 4. Sauvegarde et sécurité
 
-### Installation de Git
+Votre code est sauvegardé sur des serveurs distants. Si votre ordinateur tombe en panne, rien n'est perdu.
 
-1. Téléchargez Git depuis [git-scm.com](https://git-scm.com/)
-2. Installez-le en suivant les instructions (les options par défaut conviennent généralement)
-3. Après l'installation, ouvrez une invite de commande et vérifiez que Git est correctement installé :
+#### 5. Travail offline puis synchronisation
+
+Vous pouvez travailler sans connexion Internet, puis synchroniser vos modifications plus tard.
+
+## Git : Le standard actuel
+
+**Git** est le système de gestion de versions le plus utilisé au monde. Il a été créé par Linus Torvalds (le créateur de Linux) en 2005.
+
+### Pourquoi Git ?
+
+- **Gratuit et open source**
+- **Décentralisé** : Chaque développeur a une copie complète de l'historique
+- **Rapide et léger**
+- **Branching puissant** : Créer et fusionner des branches est facile
+- **Standard de l'industrie** : Utilisé par la majorité des projets
+
+### Les concepts fondamentaux de Git
+
+Avant de commencer, comprenons quelques concepts clés :
+
+#### Repository (Dépôt)
+
+Un **repository** (ou "repo") est un dossier contenant votre projet et tout son historique. C'est comme une base de données qui stocke toutes les versions de vos fichiers.
+
+Il existe deux types :
+- **Repository local** : Sur votre machine
+- **Repository distant** : Sur un serveur (GitHub, GitLab, etc.)
+
+#### Commit
+
+Un **commit** est un instantané (snapshot) de votre projet à un moment donné. C'est comme prendre une photo de tous vos fichiers.
+
+Chaque commit contient :
+- Les modifications apportées
+- Un message décrivant les changements
+- L'auteur et la date
+- Un identifiant unique (hash)
 
 ```
+Commit 1: "Création du projet"
+   ↓
+Commit 2: "Ajout du formulaire principal"
+   ↓
+Commit 3: "Connexion à la base de données"
+   ↓
+Commit 4: "Correction bug affichage"
+```
+
+#### Working Directory, Staging Area, Repository
+
+Git a trois zones importantes :
+
+```
+┌─────────────────────┐
+│  Working Directory  │  ← Vos fichiers de travail
+│   (Modifications)   │
+└──────────┬──────────┘
+           │ git add
+           ↓
+┌─────────────────────┐
+│   Staging Area      │  ← Zone de préparation
+│    (Index)          │
+└──────────┬──────────┘
+           │ git commit
+           ↓
+┌─────────────────────┐
+│    Repository       │  ← Historique permanent
+│   (.git folder)     │
+└─────────────────────┘
+```
+
+1. **Working Directory** : Vos fichiers actuels que vous modifiez
+2. **Staging Area** : Zone où vous préparez les modifications avant de les enregistrer
+3. **Repository** : L'historique complet de votre projet
+
+#### Branch (Branche)
+
+Une **branch** est une ligne de développement indépendante. C'est comme créer une copie parallèle de votre projet pour travailler sur une fonctionnalité sans affecter le code principal.
+
+```
+       main (branche principale)
+         │
+    ┌────┼────┬────┬────┐
+    │    │    │    │    │
+    C1   C2   C3   C4   C5
+              │
+              └─── feature/nouvelle-fonction
+                   │
+                   C6 ── C7
+```
+
+## Installation et configuration de Git
+
+### Installation
+
+**Windows :**
+1. Téléchargez Git depuis https://git-scm.com/download/win
+2. Exécutez l'installateur
+3. Acceptez les options par défaut (ou personnalisez selon vos préférences)
+
+**Vérification de l'installation :**
+
+Ouvrez un terminal (CMD ou PowerShell) et tapez :
+```bash
 git --version
 ```
 
-### Configuration initiale de Git
+Vous devriez voir quelque chose comme : `git version 2.43.0`
 
-Avant d'utiliser Git, vous devez configurer votre identité :
+### Configuration initiale
 
-```
+Avant d'utiliser Git, configurez votre identité :
+
+```bash
+# Votre nom (sera visible dans les commits)
 git config --global user.name "Votre Nom"
-git config --global user.email "votre.email@exemple.com"
+
+# Votre email
+git config --global user.email "votre.email@example.com"
+
+# Éditeur par défaut (optionnel)
+git config --global core.editor "notepad"
+
+# Fin de ligne (recommandé pour Windows)
+git config --global core.autocrlf true
 ```
 
-### Initialisation d'un dépôt Git pour un projet Delphi existant
-
-Si vous avez déjà un projet Delphi et souhaitez commencer à utiliser Git :
-
-1. Ouvrez une invite de commande dans le dossier de votre projet
-2. Initialisez un nouveau dépôt Git :
-
+**Vérifier votre configuration :**
+```bash
+git config --list
 ```
+
+### Interface graphique ou ligne de commande ?
+
+Vous avez deux options pour utiliser Git :
+
+#### 1. Ligne de commande (Terminal)
+
+**Avantages :**
+- ✅ Contrôle total
+- ✅ Fonctionne partout
+- ✅ Compréhension profonde
+
+**Inconvénients :**
+- ❌ Courbe d'apprentissage
+- ❌ Moins visuel
+
+#### 2. Interface graphique (GUI)
+
+**Outils populaires :**
+- **GitKraken** : Moderne et visuellement attrayant
+- **SourceTree** : Gratuit et complet
+- **GitHub Desktop** : Simple et intégré à GitHub
+- **TortoiseGit** : Intégré à l'explorateur Windows
+- **Git Extensions** : Intégration avec Visual Studio/Delphi
+
+**Avantages :**
+- ✅ Visuel et intuitif
+- ✅ Facile pour les débutants
+- ✅ Vue graphique des branches
+
+**Inconvénients :**
+- ❌ Moins de contrôle
+- ❌ Peut cacher des détails importants
+
+**Recommandation :** Commencez par une GUI pour comprendre les concepts, puis apprenez progressivement la ligne de commande pour plus de puissance.
+
+## Créer votre premier repository
+
+### Initialiser un nouveau projet
+
+Créons un repository pour un projet Delphi existant.
+
+**Via la ligne de commande :**
+
+```bash
+# 1. Naviguez vers votre dossier projet
+cd C:\MesProjets\MonAppliDelphi
+
+# 2. Initialisez Git
 git init
+
+# 3. Vérifiez le statut
+git status
 ```
 
-3. Ajoutez vos fichiers au suivi de Git :
+Le dossier `.git` est créé. C'est là que Git stocke tout l'historique.
 
-```
-git add .
-```
+**Via GitHub Desktop :**
+1. File → Add Local Repository
+2. Sélectionnez votre dossier
+3. Cliquez sur "Create Repository"
 
-4. Créez votre premier commit (sauvegarde de l'état actuel) :
+### Le fichier .gitignore
 
-```
-git commit -m "Version initiale du projet"
-```
+**IMPORTANT** : Avant votre premier commit, créez un fichier `.gitignore` pour exclure les fichiers générés.
 
-### Création d'un fichier .gitignore pour Delphi
+Créez un fichier nommé `.gitignore` à la racine de votre projet :
 
-Git permet d'ignorer certains fichiers que vous ne souhaitez pas versionner (fichiers temporaires, binaires compilés, etc.). Pour Delphi, voici un exemple de fichier `.gitignore` à placer à la racine de votre projet :
-
-```
-# Fichiers de compilation Delphi
+```gitignore
+# Fichiers compilés Delphi
 *.dcu
 *.exe
 *.dll
 *.bpl
-*.bpi
 *.dcp
 *.so
 *.apk
@@ -121,554 +276,1152 @@ __history/
 __recovery/
 Win32/
 Win64/
-Android/
-iOSDevice/
-iOSSimulator/
+Win64/
 OSX32/
+OSX64/
+iOSDevice/
+iOSDevice32/
+iOSDevice64/
+iOSSimulator/
+Android/
+Android64/
 Linux64/
 
-# Fichiers de sauvegarde locaux
-*.~*
+# Fichiers de sauvegarde
+*.~pas
+*.~dfm
+*.~dpr
+*.~dpk
+*.~dsk
+*.~ddp
+*.bak
+*.*~
+
+# Fichiers locaux
 *.local
 *.identcache
 *.projdata
 *.tvsconfig
-*.dsk
-
-# Fichiers de configuration locale de l'IDE
 *.stat
+*.dsk
+Desktop.ini
 
-# Dossiers de bibliothèques (à adapter selon votre organisation)
-/lib/
+# Fichiers de configuration locaux
+config.local.ini
+config.prod.ini
+*.local.json
 
-# Fichiers de base de données locaux
-*.sdb
-*.sqlite
+# Logs et données temporaires
+*.log
+*.tmp
+temp/
+logs/
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+
+# Fichiers système
+.DS_Store
+Thumbs.db
 ```
 
-Après avoir créé ce fichier, ajoutez-le à Git :
+**Pourquoi .gitignore ?**
 
+- ❌ Les `.exe` et `.dcu` sont générés à la compilation, inutile de les versionner
+- ❌ Les dossiers `Win32/`, `Win64/` contiennent des fichiers temporaires
+- ❌ Les fichiers de config locaux peuvent contenir des mots de passe
+- ✅ Seul le code source doit être versionné
+
+### Premier commit
+
+Maintenant que `.gitignore` est en place, faisons notre premier commit :
+
+```bash
+# 1. Ajouter tous les fichiers
+git add .
+
+# 2. Vérifier ce qui sera commité
+git status
+
+# 3. Créer le commit
+git commit -m "Initial commit - Création du projet"
 ```
-git add .gitignore
-git commit -m "Ajout du fichier .gitignore pour Delphi"
+
+**Explication :**
+- `git add .` : Ajoute tous les fichiers (sauf ceux dans .gitignore) à la staging area
+- `git commit -m "message"` : Crée un commit avec un message descriptif
+
+**Via GitHub Desktop :**
+1. Tous les fichiers modifiés apparaissent dans la liste
+2. Entrez un message de commit en bas à gauche
+3. Cliquez sur "Commit to main"
+
+### Voir l'historique
+
+```bash
+# Afficher l'historique des commits
+git log
+
+# Version plus compacte
+git log --oneline
+
+# Avec un graphique des branches
+git log --oneline --graph --all
 ```
 
-### Opérations Git de base
-
-#### Vérifier l'état actuel
-
-Pour voir quels fichiers ont été modifiés :
-
+**Résultat :**
 ```
+3f8a2b1 (HEAD -> main) Initial commit - Création du projet
+```
+
+## Workflow Git de base
+
+Voici le cycle de travail typique avec Git :
+
+### 1. Modifier des fichiers
+
+Vous travaillez normalement sur votre code dans Delphi.
+
+```pascal
+// Vous modifiez MainForm.pas
+procedure TFormMain.ButtonClickClick(Sender: TObject);
+begin
+  ShowMessage('Hello Git!');
+end;
+```
+
+### 2. Vérifier l'état
+
+```bash
 git status
 ```
 
-#### Voir les modifications
-
-Pour voir le détail des modifications :
-
+**Résultat :**
 ```
+On branch main
+Changes not staged for commit:
+  modified:   Source/MainForm.pas
+```
+
+### 3. Voir les modifications
+
+```bash
+# Voir les modifications en détail
 git diff
+
+# Voir les modifications d'un fichier spécifique
+git diff Source/MainForm.pas
 ```
 
-#### Ajouter des modifications
-
-Pour ajouter un fichier modifié au prochain commit :
-
+**Résultat :**
+```diff
+diff --git a/Source/MainForm.pas b/Source/MainForm.pas
+index 1234567..abcdefg 100644
+--- a/Source/MainForm.pas
++++ b/Source/MainForm.pas
+@@ -45,7 +45,7 @@ procedure TFormMain.ButtonClickClick(Sender: TObject);
+ begin
+-  ShowMessage('Hello');
++  ShowMessage('Hello Git!');
+ end;
 ```
-git add nom_du_fichier.pas
-```
 
-Pour ajouter tous les fichiers modifiés :
+### 4. Ajouter à la staging area
 
-```
+```bash
+# Ajouter un fichier spécifique
+git add Source/MainForm.pas
+
+# Ou ajouter tous les fichiers modifiés
 git add .
+
+# Ajouter seulement certains types de fichiers
+git add *.pas
 ```
 
-#### Créer un commit
+### 5. Créer un commit
 
-Pour sauvegarder les modifications ajoutées :
-
-```
-git commit -m "Description concise des modifications"
+```bash
+git commit -m "Ajout du message dans le bouton"
 ```
 
-#### Voir l'historique
+**Messages de commit :**
 
-Pour voir l'historique des commits :
+✅ **Bons messages :**
+- "Ajout de la fonctionnalité de connexion"
+- "Correction bug d'affichage dans la grille"
+- "Refactoring de la classe TClient"
+- "Mise à jour de la base de données MySQL"
 
-```
-git log
-```
+❌ **Mauvais messages :**
+- "update"
+- "fix"
+- "modifs"
+- "ça marche"
 
-Pour un historique plus compact :
+**Convention pour les messages :**
+```bash
+# Format recommandé
+git commit -m "Type: Description courte
 
-```
-git log --oneline
-```
-
-### Travailler avec les branches
-
-Les branches permettent de développer des fonctionnalités en parallèle sans affecter le code principal.
-
-#### Créer une nouvelle branche
-
-```
-git branch nouvelle-fonctionnalite
-```
-
-#### Basculer vers une branche
-
-```
-git checkout nouvelle-fonctionnalite
+Description détaillée si nécessaire
+- Point 1
+- Point 2"
 ```
 
-Ou en une seule commande :
+**Types courants :**
+- `feat:` Nouvelle fonctionnalité
+- `fix:` Correction de bug
+- `refactor:` Refactoring du code
+- `docs:` Documentation
+- `style:` Formatage, point-virgules, etc.
+- `test:` Ajout de tests
+- `chore:` Tâches diverses
 
-```
-git checkout -b nouvelle-fonctionnalite
-```
-
-#### Fusionner une branche dans la branche principale
-
-```
-git checkout main       # Retour à la branche principale
-git merge nouvelle-fonctionnalite
-```
-
-### Travailler avec un dépôt distant (GitHub, GitLab, etc.)
-
-#### Lier votre dépôt local à un dépôt distant
-
-```
-git remote add origin https://github.com/votre-nom/votre-projet.git
+**Exemples :**
+```bash
+git commit -m "feat: Ajout du formulaire de connexion"
+git commit -m "fix: Correction du bug d'affichage des dates"
+git commit -m "refactor: Séparation UI et logique métier"
 ```
 
-#### Envoyer vos modifications vers le dépôt distant
+### 6. Cycle continu
+
+Répétez ce cycle : modifier → vérifier → ajouter → commiter.
 
 ```
+┌─────────────────────────────────┐
+│  1. Modifier les fichiers       │
+└────────────┬────────────────────┘
+             ↓
+┌─────────────────────────────────┐
+│  2. git status / git diff       │
+└────────────┬────────────────────┘
+             ↓
+┌─────────────────────────────────┐
+│  3. git add                     │
+└────────────┬────────────────────┘
+             ↓
+┌─────────────────────────────────┐
+│  4. git commit -m "message"     │
+└────────────┬────────────────────┘
+             ↓
+         Recommencer
+```
+
+## Les branches
+
+Les branches sont l'une des fonctionnalités les plus puissantes de Git.
+
+### Qu'est-ce qu'une branche ?
+
+Une branche est une ligne de développement indépendante. Par défaut, vous êtes sur la branche `main` (anciennement `master`).
+
+**Cas d'usage :**
+- Développer une nouvelle fonctionnalité sans affecter le code principal
+- Corriger un bug urgent
+- Expérimenter une nouvelle approche
+
+### Créer une branche
+
+```bash
+# Créer une nouvelle branche
+git branch feature/ajout-client
+
+# Lister les branches
+git branch
+
+# Changer de branche
+git checkout feature/ajout-client
+
+# Créer ET changer de branche en une commande
+git checkout -b feature/ajout-client
+```
+
+**Résultat :**
+```
+* feature/ajout-client
+  main
+```
+
+L'étoile (*) indique votre branche actuelle.
+
+### Travailler sur une branche
+
+Une fois sur votre branche, travaillez normalement :
+
+```bash
+# Modifier des fichiers
+# ...
+
+# Commiter
+git add .
+git commit -m "feat: Ajout du formulaire client"
+
+git add .
+git commit -m "feat: Validation des champs client"
+```
+
+Ces commits sont **uniquement** sur la branche `feature/ajout-client`. La branche `main` n'est pas affectée.
+
+### Visualiser les branches
+
+```bash
+# Voir l'historique avec branches
+git log --oneline --graph --all
+```
+
+**Résultat :**
+```
+* 7b8c9d2 (feature/ajout-client) feat: Validation des champs client
+* 4e5f6a7 feat: Ajout du formulaire client
+| * 2c3d4e5 (main) fix: Correction bug grille
+|/
+* 1a2b3c4 Initial commit
+```
+
+### Fusionner une branche (Merge)
+
+Quand votre fonctionnalité est terminée, fusionnez-la dans `main` :
+
+```bash
+# 1. Retourner sur main
+git checkout main
+
+# 2. Fusionner la branche feature
+git merge feature/ajout-client
+
+# 3. Supprimer la branche (optionnel)
+git branch -d feature/ajout-client
+```
+
+**Résultat :**
+```
+Updating 1a2b3c4..7b8c9d2
+Fast-forward
+ Source/ClientForm.pas | 150 ++++++++++++++++++++++++++
+ Source/ClientForm.dfm | 85 +++++++++++++++
+ 2 files changed, 235 insertions(+)
+```
+
+### Stratégies de branching
+
+#### Git Flow (pour projets structurés)
+
+```
+main
+  │
+  ├─── develop (branche de développement)
+  │      │
+  │      ├─── feature/fonction-1
+  │      ├─── feature/fonction-2
+  │      └─── feature/fonction-3
+  │
+  ├─── release/v1.0 (préparation release)
+  │
+  └─── hotfix/bug-urgent (corrections urgentes)
+```
+
+#### GitHub Flow (plus simple)
+
+```
+main
+  │
+  ├─── feature/nouvelle-fonction
+  ├─── fix/correction-bug
+  └─── refactor/amelioration
+```
+
+**Pour débuter, utilisez GitHub Flow :**
+1. `main` est toujours stable et déployable
+2. Créez une branche pour chaque fonctionnalité/correction
+3. Fusionnez dans `main` quand terminé
+
+### Résolution de conflits
+
+Un **conflit** se produit quand deux personnes modifient la même ligne de code.
+
+**Exemple de conflit :**
+
+```pascal
+<<<<<<< HEAD
+ShowMessage('Version principale');
+=======
+ShowMessage('Version de la branche');
+>>>>>>> feature/modification
+```
+
+**Résoudre le conflit :**
+
+1. Ouvrez le fichier
+2. Choisissez quelle version garder (ou combinez-les)
+3. Supprimez les marqueurs `<<<<<<<`, `=======`, `>>>>>>>`
+4. Sauvegardez le fichier
+
+```pascal
+// Après résolution
+ShowMessage('Version finale combinée');
+```
+
+5. Marquez comme résolu et commitez :
+
+```bash
+git add Source/MainForm.pas
+git commit -m "Résolution du conflit dans MainForm"
+```
+
+**Dans une GUI :**
+- Les outils comme GitKraken ou SourceTree ont des interfaces visuelles pour résoudre les conflits
+- Plus facile pour les débutants
+
+## Travail avec un repository distant
+
+Jusqu'ici, nous avons travaillé en local. Pour collaborer et sauvegarder sur le cloud, utilisons un repository distant.
+
+### Plateformes populaires
+
+**GitHub** (https://github.com)
+- Le plus populaire
+- Gratuit pour les projets publics et privés
+- Excellente intégration avec les outils
+
+**GitLab** (https://gitlab.com)
+- Alternative complète à GitHub
+- CI/CD intégré
+- Peut être auto-hébergé
+
+**Bitbucket** (https://bitbucket.org)
+- De la société Atlassian
+- Intégré avec Jira
+
+### Créer un repository sur GitHub
+
+1. Connectez-vous à GitHub
+2. Cliquez sur "New repository"
+3. Nommez votre repository (ex: "MonAppliDelphi")
+4. Choisissez Public ou Private
+5. N'initialisez PAS avec README (vous avez déjà un projet local)
+6. Cliquez sur "Create repository"
+
+GitHub vous donne les commandes à exécuter :
+
+```bash
+# Ajouter le remote
+git remote add origin https://github.com/votre-nom/MonAppliDelphi.git
+
+# Pousser votre code
 git push -u origin main
 ```
 
-#### Récupérer les modifications depuis le dépôt distant
+### Commandes remote
 
-```
-git pull origin main
-```
+#### Clone (Cloner un repository)
 
-## Intégration de Git dans l'IDE Delphi
+Pour télécharger un projet existant :
 
-Delphi ne dispose pas d'une intégration Git native complète, mais vous pouvez utiliser des outils tiers :
-
-### TortoiseGit
-
-[TortoiseGit](https://tortoisegit.org/) est une extension Windows Explorer qui facilite l'utilisation de Git :
-- Interface graphique intuitive
-- Intégration dans le menu contextuel de l'explorateur Windows
-- Visualisation des différences, historique, branches, etc.
-
-### SourceTree
-
-[SourceTree](https://www.sourcetreeapp.com/) d'Atlassian est un client Git gratuit avec une interface conviviale :
-- Visualisation graphique de l'historique
-- Gestion des branches et des fusions
-- Support de GitHub, GitLab, BitBucket, etc.
-
-### GitHub Desktop
-
-[GitHub Desktop](https://desktop.github.com/) est un client Git simplifié développé par GitHub :
-- Interface très simple pour les opérations de base
-- Intégration directe avec GitHub
-- Idéal pour les débutants
-
-### Extensions Delphi
-
-Quelques extensions pour améliorer l'intégration de Git dans Delphi :
-- [DelphiGit](https://github.com/RRUZ/delphi-git) - Extension pour intégrer Git dans Delphi
-- [Delphi IDE Explorer](https://github.com/RRUZ/delphi-ide-explorer) - Améliore l'expérience de développement avec Git
-
-## Bonnes pratiques pour le versionnement de projets Delphi
-
-### 1. Organisez votre structure de projet
-
-Une bonne organisation facilite le versionnement :
-
-```
-MonProjet/
-  ├── src/                 # Code source
-  │   ├── forms/           # Fichiers de formulaires (.pas, .dfm)
-  │   ├── units/           # Unités de code (.pas)
-  │   ├── resources/       # Ressources (.rc, .res)
-  │   └── packages/        # Packages (.dpk)
-  ├── lib/                 # Bibliothèques externes
-  ├── docs/                # Documentation
-  ├── tests/               # Tests unitaires
-  ├── bin/                 # Exécutables compilés (généralement ignorés par Git)
-  ├── assets/              # Images, sons, etc.
-  ├── scripts/             # Scripts d'automatisation
-  ├── .gitignore           # Fichiers à ignorer par Git
-  ├── README.md            # Documentation principale
-  └── MonProjet.groupproj  # Projet Delphi principal
+```bash
+git clone https://github.com/utilisateur/projet.git
 ```
 
-### 2. Créez des commits significatifs
+Cela crée un dossier avec tout le code et l'historique.
 
-Un bon commit :
-- Est focalisé sur une modification ou une fonctionnalité spécifique
-- A un message clair et descriptif
-- Ne mélange pas différentes préoccupations
+#### Push (Pousser vos modifications)
 
-Format recommandé pour les messages de commit :
+Pour envoyer vos commits locaux vers GitHub :
 
-```
-Type: Brève description (50 caractères max)
+```bash
+# Pousser la branche actuelle
+git push
 
-Description détaillée des modifications si nécessaire.
-Expliquez pourquoi la modification a été faite, pas comment
-(le code montre le comment).
-```
+# Pousser une branche spécifique
+git push origin feature/ma-branche
 
-Types courants :
-- `Feature:` Nouvelle fonctionnalité
-- `Fix:` Correction de bug
-- `Refactor:` Amélioration du code sans changer son comportement
-- `Docs:` Modification de la documentation
-- `Test:` Ajout ou modification de tests
-- `Chore:` Mises à jour de routine, maintenance
-
-Exemple :
-```
-Fix: Correction de la fuite mémoire dans TClientDataSet
-
-Libération correcte des ressources dans le destructeur pour
-éviter les fuites mémoire lors de la fermeture de l'application.
-
-Issue: #123
+# Première fois (définir le upstream)
+git push -u origin main
 ```
 
-### 3. Utilisez les branches efficacement
+#### Pull (Récupérer les modifications)
 
-Stratégie de branches recommandée :
-- `main` ou `master` : Code stable et fonctionnel
-- `develop` : Développement en cours
-- `feature/nom-fonctionnalité` : Nouvelles fonctionnalités
-- `bugfix/nom-bug` : Corrections de bugs
-- `release/x.y.z` : Préparation d'une nouvelle version
+Pour télécharger les modifications des autres :
 
-### 4. Gérez correctement les fichiers binaires
+```bash
+# Récupérer et fusionner
+git pull
 
-Les fichiers binaires posent un défi particulier pour Git :
-- Ils ne peuvent pas être fusionnés comme du texte
-- Ils occupent beaucoup d'espace dans l'historique
-
-Solutions :
-- Utilisez [Git LFS](https://git-lfs.github.com/) (Large File Storage) pour les gros fichiers binaires
-- Ne versionnez que les fichiers binaires essentiels et stables
-
-### 5. Automatisez vos tests avant chaque commit
-
-Utilisez des outils comme DUnit ou DUnitX pour tester votre code avant de le commiter :
-
-```
-# Script batch simple pour exécuter les tests avant un commit
-@echo off
-echo Exécution des tests...
-TestRunner.exe
-if errorlevel 1 (
-  echo Les tests ont échoué, le commit est annulé
-  exit /b 1
-)
-echo Tests réussis, poursuite du commit
+# Équivalent à:
+git fetch  # Télécharger
+git merge  # Fusionner
 ```
 
-## Flux de travail Git pour un projet Delphi
+#### Fetch (Télécharger sans fusionner)
 
-Voici un exemple de flux de travail Git adapté aux projets Delphi :
+```bash
+# Télécharger les modifications sans les appliquer
+git fetch
 
-### 1. Démarrage d'une nouvelle fonctionnalité
+# Voir les différences
+git diff origin/main
 
-```
-# Assurez-vous d'être à jour
-git checkout develop
-git pull origin develop
-
-# Créez une branche pour la nouvelle fonctionnalité
-git checkout -b feature/nouvelle-fonctionnalite
-
-# Travaillez sur votre code...
+# Fusionner manuellement si désiré
+git merge origin/main
 ```
 
-### 2. Pendant le développement
+### Workflow de collaboration
 
-```
-# Vérifiez régulièrement l'état de vos modifications
-git status
+**Scénario typique :**
 
-# Ajoutez vos modifications par petits groupes logiques
-git add src/units/UneUnite.pas
-git commit -m "Feature: Implémentation de la validation des données"
-
-# Continuez à travailler...
-git add src/forms/FormPrincipale.pas src/forms/FormPrincipale.dfm
-git commit -m "Feature: Mise à jour de l'interface utilisateur pour la validation"
+1. **Cloner le projet**
+```bash
+git clone https://github.com/equipe/projet.git
+cd projet
 ```
 
-### 3. Finalisation de la fonctionnalité
-
-```
-# Assurez-vous que tout fonctionne
-# Exécutez vos tests unitaires
-
-# Récupérez les dernières modifications de develop
-git checkout develop
-git pull origin develop
-
-# Revenez à votre branche et intégrez les modifications de develop
-git checkout feature/nouvelle-fonctionnalite
-git merge develop
-
-# Résolvez les conflits s'il y en a
-# Testez à nouveau
-
-# Fusionnez votre fonctionnalité dans develop
-git checkout develop
-git merge feature/nouvelle-fonctionnalite
-
-# Envoyez les modifications au dépôt distant
-git push origin develop
+2. **Créer une branche pour votre fonctionnalité**
+```bash
+git checkout -b feature/ma-fonctionnalite
 ```
 
-### 4. Préparation d'une version
-
+3. **Travailler et commiter**
+```bash
+# Modifications...
+git add .
+git commit -m "feat: Ajout de ma fonctionnalité"
 ```
-# Créez une branche de release
-git checkout develop
-git checkout -b release/1.2.0
 
-# Effectuez les dernières corrections et ajustements
-git add src/Version.inc
-git commit -m "Chore: Mise à jour du numéro de version pour 1.2.0"
-
-# Fusionnez dans main et develop
+4. **Récupérer les dernières modifications**
+```bash
 git checkout main
-git merge release/1.2.0
-git tag -a v1.2.0 -m "Version 1.2.0"
-
-git checkout develop
-git merge release/1.2.0
-
-# Supprimez la branche de release
-git branch -d release/1.2.0
-
-# Poussez tout vers le dépôt distant
-git push origin main --tags
-git push origin develop
+git pull
+git checkout feature/ma-fonctionnalite
+git merge main  # Fusionner les dernières modifs dans votre branche
 ```
 
-## Gestion des versions dans le code Delphi
-
-En plus du versionnement du code source, il est important de gérer la version de votre application elle-même.
-
-### Création d'un fichier de version
-
-Créez un fichier `Version.inc` que vous pourrez inclure dans vos unités :
-
-```pascal
-// Version.inc
-// Format: Major.Minor.Patch.Build
-{$DEFINE APP_VERSION_MAJOR := 1}
-{$DEFINE APP_VERSION_MINOR := 2}
-{$DEFINE APP_VERSION_PATCH := 0}
-{$DEFINE APP_VERSION_BUILD := 123}
-
-// Chaîne de version complète
-{$DEFINE APP_VERSION := '1.2.0.123'}
-
-// Date de build
-{$DEFINE APP_BUILD_DATE := '30/04/2025'}
+5. **Pousser votre branche**
+```bash
+git push -u origin feature/ma-fonctionnalite
 ```
 
-### Utilisation dans votre code
+6. **Créer une Pull Request sur GitHub**
+   - Allez sur GitHub
+   - Cliquez sur "Compare & pull request"
+   - Décrivez vos modifications
+   - Demandez une revue de code
 
-```pascal
-unit MainForm;
+7. **Après approbation, fusionner**
+   - Cliquez sur "Merge pull request"
+   - Supprimez la branche (optionnel)
 
-interface
-
-{$I Version.inc}
-
-// Le reste du code...
-
-implementation
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  Caption := Format('Mon Application - v%s', [APP_VERSION]);
-  // ...
-end;
-
-end.
+8. **Nettoyer localement**
+```bash
+git checkout main
+git pull
+git branch -d feature/ma-fonctionnalite
 ```
 
-### Mise à jour automatique du numéro de build
+## Commandes Git essentielles
 
-Vous pouvez créer un script pré-build pour incrémenter automatiquement le numéro de build :
+Voici un récapitulatif des commandes les plus utilisées :
 
-```pascal
-// IncrementBuild.pas
-// Compilez ce programme et ajoutez-le comme action pré-build
+### Configuration
 
-program IncrementBuild;
-
-{$APPTYPE CONSOLE}
-
-uses
-  System.SysUtils;
-
-var
-  VersionFile: TStringList;
-  Line, BuildStr: string;
-  BuildNum: Integer;
-  i: Integer;
-begin
-  try
-    VersionFile := TStringList.Create;
-    try
-      VersionFile.LoadFromFile('Version.inc');
-
-      for i := 0 to VersionFile.Count - 1 do
-      begin
-        Line := VersionFile[i];
-        if Pos('APP_VERSION_BUILD', Line) > 0 then
-        begin
-          BuildStr := Copy(Line, Pos(':=', Line) + 2, Length(Line));
-          BuildStr := Trim(BuildStr);
-          BuildStr := StringReplace(BuildStr, '}', '', [rfReplaceAll]);
-          BuildNum := StrToIntDef(BuildStr, 0) + 1;
-          VersionFile[i] := Format('{$DEFINE APP_VERSION_BUILD := %d}', [BuildNum]);
-        end;
-
-        if Pos('APP_VERSION :=', Line) > 0 then
-        begin
-          VersionFile[i] := Format('{$DEFINE APP_VERSION := ''%d.%d.%d.%d''}',
-            [{$APP_VERSION_MAJOR}, {$APP_VERSION_MINOR},
-             {$APP_VERSION_PATCH}, BuildNum]);
-        end;
-
-        if Pos('APP_BUILD_DATE', Line) > 0 then
-        begin
-          VersionFile[i] := Format('{$DEFINE APP_BUILD_DATE := ''%s''}',
-            [FormatDateTime('dd/mm/yyyy', Now)]);
-        end;
-      end;
-
-      VersionFile.SaveToFile('Version.inc');
-      Writeln('Numéro de build incrémenté avec succès.');
-    finally
-      VersionFile.Free;
-    end;
-  except
-    on E: Exception do
-      Writeln('Erreur: ', E.Message);
-  end;
-end.
+```bash
+git config --global user.name "Nom"
+git config --global user.email "email@example.com"
+git config --list
 ```
 
-## Outils de versionnement avancés pour Delphi
+### Créer et cloner
 
-### 1. Gestion sémantique des versions
-
-La [versionnement sémantique](https://semver.org/lang/fr/) est une convention de numérotation qui donne du sens à chaque numéro :
-
-- **X.Y.Z** où :
-  - **X** = Version majeure (changements incompatibles)
-  - **Y** = Version mineure (nouvelles fonctionnalités compatibles)
-  - **Z** = Correctif (corrections de bugs compatibles)
-
-### 2. Conventionnal Commits
-
-La convention [Conventional Commits](https://www.conventionalcommits.org/fr/) standardise les messages de commit pour automatiser la génération de changelog et la gestion des versions.
-
-Format : `type(portée): description`
-
-Exemple :
-```
-feat(auth): ajout de l'authentification par Google
-fix(database): correction de la fuite mémoire dans TDataModule
+```bash
+git init                           # Créer un nouveau repo
+git clone <url>                    # Cloner un repo existant
 ```
 
-### 3. GitFlow et GitLab Flow
+### Changements locaux
 
-Ces flux de travail standardisés offrent des modèles clairs pour la gestion des branches :
+```bash
+git status                         # État des fichiers
+git diff                          # Voir les modifications
+git add <fichier>                 # Ajouter un fichier
+git add .                         # Ajouter tous les fichiers
+git commit -m "message"           # Créer un commit
+git commit -am "message"          # Ajouter et commiter en une commande
+```
 
-- [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/) : Adapté aux cycles de release réguliers
-- [GitLab Flow](https://docs.gitlab.com/ee/topics/gitlab_flow.html) : Plus simple, avec déploiement continu
+### Historique
 
-## Intégration continue pour les projets Delphi
+```bash
+git log                           # Historique complet
+git log --oneline                 # Historique compact
+git log --oneline --graph --all   # Avec graphique des branches
+git show <commit>                 # Détails d'un commit
+```
 
-L'intégration continue (CI) permet d'automatiser les tests et la compilation à chaque commit.
+### Branches
 
-### Solutions populaires :
+```bash
+git branch                        # Lister les branches
+git branch <nom>                  # Créer une branche
+git checkout <branche>            # Changer de branche
+git checkout -b <branche>         # Créer et changer de branche
+git merge <branche>               # Fusionner une branche
+git branch -d <branche>           # Supprimer une branche
+```
 
-- **Jenkins** : Serveur d'intégration continue open-source très flexible
-- **GitHub Actions** : Intégré à GitHub, facile à configurer
-- **GitLab CI** : Intégré à GitLab, puissant et flexible
-- **Azure DevOps** : Solution Microsoft complète (CI/CD, gestion de projet, etc.)
+### Remote (distant)
 
-### Exemple de GitHub Action pour un projet Delphi
+```bash
+git remote add origin <url>       # Ajouter un remote
+git remote -v                     # Voir les remotes
+git push                          # Pousser les commits
+git push -u origin <branche>      # Pousser et définir upstream
+git pull                          # Récupérer et fusionner
+git fetch                         # Récupérer sans fusionner
+```
 
-Créez un fichier `.github/workflows/build.yml` :
+### Annuler des changements
 
-```yaml
-name: Build Delphi Project
+```bash
+git checkout -- <fichier>         # Annuler les modifs d'un fichier
+git reset HEAD <fichier>          # Retirer de la staging area
+git reset --soft HEAD~1           # Annuler le dernier commit (garde les changements)
+git reset --hard HEAD~1           # Annuler le dernier commit (perd les changements)
+git revert <commit>               # Créer un commit qui annule un commit précédent
+```
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+### Autres
 
-jobs:
-  build:
-    runs-on: windows-latest
+```bash
+git stash                         # Mettre de côté les modifications
+git stash pop                     # Récupérer les modifications
+git tag v1.0.0                    # Créer un tag
+git tag -a v1.0.0 -m "Version 1.0" # Tag avec annotation
+```
 
-    steps:
-    - uses: actions/checkout@v2
+## Tags et Releases
 
-    - name: Setup Delphi
-      uses: gersonb/delphi-setup-action@v1
-      with:
-        version: '12.0'  # Pour Delphi 12 Athens
-        edition: 'community'
+Les **tags** marquent des points spécifiques dans l'historique, typiquement pour les versions.
 
-    - name: Build Project
-      run: |
-        msbuild MonProjet.dproj /t:Build /p:Configuration=Release /p:Platform=Win32
+### Créer un tag
 
-    - name: Run Tests
-      run: |
-        .\bin\Release\Win32\TestRunner.exe
+```bash
+# Tag simple
+git tag v1.0.0
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: MonApplication
-        path: bin\Release\Win32\MonApplication.exe
+# Tag avec message
+git tag -a v1.0.0 -m "Version 1.0 - Première release stable"
+
+# Voir les tags
+git tag
+
+# Voir les détails d'un tag
+git show v1.0.0
+```
+
+### Pousser les tags
+
+```bash
+# Pousser un tag spécifique
+git push origin v1.0.0
+
+# Pousser tous les tags
+git push --tags
+```
+
+### Convention de versioning
+
+Utilisez le **Semantic Versioning** (SemVer) : `MAJOR.MINOR.PATCH`
+
+- **MAJOR** : Changements incompatibles (breaking changes)
+- **MINOR** : Nouvelles fonctionnalités (compatibles)
+- **PATCH** : Corrections de bugs
+
+**Exemples :**
+- `1.0.0` : Première version stable
+- `1.1.0` : Ajout de fonctionnalités
+- `1.1.1` : Correction de bug
+- `2.0.0` : Changements majeurs incompatibles
+
+### Créer une Release sur GitHub
+
+1. Allez sur votre repository GitHub
+2. Cliquez sur "Releases"
+3. Cliquez sur "Create a new release"
+4. Choisissez un tag (ou créez-en un)
+5. Ajoutez des notes de release
+6. Attachez des binaires compilés (optionnel)
+7. Cliquez sur "Publish release"
+
+**Exemple de notes de release :**
+
+```markdown
+## Version 1.2.0 - 2025-03-15
+
+### Nouvelles fonctionnalités
+- Ajout du module de gestion des clients
+- Export Excel des rapports
+- Thème sombre
+
+### Améliorations
+- Performance de la grille améliorée de 40%
+- Interface utilisateur modernisée
+
+### Corrections
+- Correction du bug d'affichage des dates
+- Correction de la sauvegarde des préférences
+
+### Notes techniques
+- Nécessite Delphi 13 ou supérieur
+- Compatible Windows 10/11
+```
+
+## Intégration de Git avec Delphi
+
+### Version Control dans l'IDE Delphi
+
+Delphi supporte l'intégration avec Git :
+
+1. **Tools → Options → Version Control → Git**
+2. Configurez le chemin vers `git.exe`
+3. Activez l'intégration
+
+**Fonctionnalités disponibles :**
+- Voir l'état des fichiers dans le Project Manager
+- Commit depuis l'IDE
+- Diff intégré
+- Historique
+
+### Workflow recommandé
+
+Bien que Delphi ait une intégration Git, beaucoup de développeurs préfèrent :
+
+1. **Utiliser l'IDE pour coder**
+2. **Utiliser une GUI Git séparée** (GitKraken, SourceTree) pour le versionnement
+3. **Ou utiliser la ligne de commande** dans un terminal séparé
+
+**Avantages :**
+- Plus de contrôle
+- Meilleure visualisation
+- Moins de risque d'erreurs
+
+### Fichiers Delphi et Git
+
+**Fichiers à versionner :**
+- ✅ `.dpr`, `.dproj` (fichiers projet)
+- ✅ `.pas`, `.dfm` (unités et formulaires)
+- ✅ `.res` (ressources)
+- ✅ `.dpk` (packages)
+- ✅ `.groupproj` (groupe de projets)
+
+**Fichiers à ignorer :**
+- ❌ `.dcu` (unités compilées)
+- ❌ `.exe`, `.dll` (exécutables)
+- ❌ `__history/` (historique local Delphi)
+- ❌ `Win32/`, `Win64/` (dossiers de build)
+
+### Gestion des fichiers binaires
+
+Les `.dfm` peuvent être stockés en texte ou binaire. Pour Git, préférez le texte.
+
+**Dans Delphi :**
+1. Tools → Options → Environment Options → VCL Designer
+2. Cochez "Text DFM"
+
+**Ou via le Project Options :**
+1. Project → Options → Form
+2. Choisissez "Text" pour "Form file format"
+
+**Avantage :** Les `.dfm` en texte peuvent être diffés et mergés facilement.
+
+### Ignorer les fichiers locaux
+
+Certains fichiers sont spécifiques à votre machine :
+
+```gitignore
+# Configuration locale
+*.local
+*.identcache
+*.dsk
+
+# Chemins absolus dans les projets
+*.stat
+*.dsk
+```
+
+**Important :** Ne commitez jamais :
+- Chemins absolus
+- Mots de passe
+- Configurations locales
+
+## Bonnes pratiques
+
+### 1. Commitez souvent
+
+- ✅ Petits commits fréquents
+- ❌ Gros commits rares
+
+**Pourquoi ?**
+- Plus facile à revoir
+- Plus facile à annuler si problème
+- Historique plus clair
+
+### 2. Messages descriptifs
+
+```bash
+# Mauvais
+git commit -m "fix"
+
+# Bon
+git commit -m "fix: Correction du calcul de TVA dans la facture"
+```
+
+### 3. Une fonctionnalité = Une branche
+
+Ne mélangez pas plusieurs fonctionnalités dans une même branche.
+
+```bash
+# Mauvais
+git checkout -b tout-en-vrac
+# ... ajout client + correction bug + refactoring ...
+
+# Bon
+git checkout -b feature/ajout-client
+# ... seulement ajout client ...
+
+git checkout -b fix/bug-grille
+# ... seulement correction du bug ...
+```
+
+### 4. Synchronisez régulièrement
+
+```bash
+# Au moins une fois par jour
+git pull
+```
+
+Cela évite les gros conflits difficiles à résoudre.
+
+### 5. Ne commitez pas de fichiers générés
+
+Utilisez `.gitignore` dès le début. Ne commitez que le code source.
+
+### 6. Testez avant de pousser
+
+```bash
+# Compilez et testez avant de:
+git push
+```
+
+Ne poussez pas de code qui ne compile pas.
+
+### 7. Revue de code (Pull Requests)
+
+Avant de fusionner dans `main`, faites relire votre code par un collègue via une Pull Request.
+
+**Avantages :**
+- Détection d'erreurs
+- Partage de connaissances
+- Amélioration de la qualité
+
+### 8. Protégez la branche main
+
+Sur GitHub, configurez des protections :
+
+1. Settings → Branches → Branch protection rules
+2. Cochez :
+   - "Require pull request reviews before merging"
+   - "Require status checks to pass before merging"
+   - "Include administrators"
+
+Cela empêche les pushs directs sur `main`.
+
+### 9. Documentation
+
+Maintenez un fichier `README.md` à jour :
+
+```markdown
+# Mon Application Delphi
+
+Description de l'application
+
+## Installation
+
+1. Cloner le repository
+2. Ouvrir MonProjet.dpr dans Delphi
+3. Compiler et exécuter
+
+## Configuration
+
+Copiez `config.template.ini` en `config.ini` et configurez...
+
+## Contribution
+
+Voir [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Licence
+
+MIT
+```
+
+### 10. Utilisez des issues
+
+Pour tracker les bugs et fonctionnalités :
+
+1. GitHub → Issues → New Issue
+2. Décrivez le problème ou la fonctionnalité
+3. Assignez à quelqu'un
+4. Liez les commits/PR à l'issue
+
+```bash
+# Dans le message de commit
+git commit -m "fix: Correction bug grille #42"
+# Le #42 crée un lien vers l'issue #42
+```
+
+## Situations courantes
+
+### J'ai modifié des fichiers par erreur
+
+```bash
+# Annuler les modifications d'un fichier
+git checkout -- MonFichier.pas
+
+# Annuler toutes les modifications
+git checkout -- .
+```
+
+### J'ai commité sur la mauvaise branche
+
+```bash
+# 1. Annuler le commit (garde les changements)
+git reset --soft HEAD~1
+
+# 2. Créer/changer vers la bonne branche
+git checkout -b bonne-branche
+
+# 3. Recommiter
+git commit -m "Message"
+```
+
+### J'ai commité un fichier sensible
+
+```bash
+# 1. Retirer le fichier de Git (garde le fichier local)
+git rm --cached config.prod.ini
+
+# 2. Ajouter au .gitignore
+echo "config.prod.ini" >> .gitignore
+
+# 3. Commiter
+git add .gitignore
+git commit -m "Suppression fichier sensible de Git"
+
+# 4. Si déjà poussé, nettoyer l'historique (complexe)
+# Utilisez git filter-branch ou BFG Repo-Cleaner
+```
+
+### Je veux revenir à une version antérieure
+
+```bash
+# Voir l'historique
+git log --oneline
+
+# Revenir temporairement à un commit
+git checkout abc123
+
+# Créer une branche depuis ce point
+git checkout -b retour-version-anterieure
+
+# Ou annuler les commits récents
+git reset --hard abc123  # ATTENTION: Perte des changements
+```
+
+### Mon collègue a poussé, j'ai des conflits
+
+```bash
+# 1. Récupérer les changements
+git pull
+
+# 2. Si conflits, Git vous le dit
+# 3. Ouvrir les fichiers en conflit
+# 4. Résoudre manuellement
+# 5. Marquer comme résolu
+git add FichierResolu.pas
+
+# 6. Finir le merge
+git commit -m "Résolution conflits"
+```
+
+### Je veux mettre de côté mes modifications
+
+```bash
+# Mettre de côté (stash)
+git stash
+
+# Travailler sur autre chose...
+
+# Récupérer
+git stash pop
+
+# Voir la liste des stash
+git stash list
+
+# Appliquer un stash spécifique
+git stash apply stash@{0}
+```
+
+## Ressources et outils
+
+### Apprendre Git
+
+**Tutoriels interactifs :**
+- https://learngitbranching.js.org/ - Apprendre Git visuellement
+- https://try.github.io/ - Tutoriels GitHub
+
+**Documentation :**
+- https://git-scm.com/doc - Documentation officielle
+- https://www.atlassian.com/git/tutorials - Tutoriels Atlassian
+
+**Cheat sheets :**
+- https://education.github.com/git-cheat-sheet-education.pdf
+
+### Outils Git
+
+**Clients GUI :**
+- GitKraken (https://www.gitkraken.com/)
+- SourceTree (https://www.sourcetreeapp.com/)
+- GitHub Desktop (https://desktop.github.com/)
+- TortoiseGit (https://tortoisegit.org/)
+
+**Intégrations IDE :**
+- Git Extensions for Visual Studio/Delphi
+- Plugin Git pour RAD Studio
+
+**En ligne de commande :**
+- Git Bash (inclus avec Git pour Windows)
+- PowerShell avec posh-git
+
+### Services d'hébergement
+
+- **GitHub** (https://github.com) - Le plus populaire
+- **GitLab** (https://gitlab.com) - Alternative complète
+- **Bitbucket** (https://bitbucket.org) - Par Atlassian
+- **Azure DevOps** (https://dev.azure.com) - Par Microsoft
+- **Gitea** (https://gitea.io) - Auto-hébergeable
+
+## Exemple complet : Workflow d'une journée
+
+Voici un scénario réaliste d'une journée de travail :
+
+### Matin : Démarrage
+
+```bash
+# 1. Récupérer les dernières modifications
+cd C:\Projets\MonAppli
+git checkout main
+git pull
+
+# 2. Créer une branche pour la fonctionnalité du jour
+git checkout -b feature/ajout-export-excel
+
+# 3. Travailler dans Delphi
+# ... codage ...
+```
+
+### Milieu de journée : Premier commit
+
+```bash
+# 4. Vérifier ce qui a changé
+git status
+git diff
+
+# 5. Commiter les changements
+git add Source/ExportExcel.pas Source/ExportExcel.dfm
+git commit -m "feat: Création du module d'export Excel"
+```
+
+### Après-midi : Continuation
+
+```bash
+# 6. Continuer à travailler
+# ... plus de code ...
+
+# 7. Autre commit
+git add .
+git commit -m "feat: Ajout formatage des cellules Excel"
+```
+
+### Fin de journée : Synchronisation
+
+```bash
+# 8. Pousser votre travail
+git push -u origin feature/ajout-export-excel
+
+# 9. Créer une Pull Request sur GitHub
+# (Via l'interface web)
+
+# 10. Revenir sur main pour le lendemain
+git checkout main
+```
+
+### Lendemain : Fusion et suite
+
+```bash
+# 11. Pull Request approuvée et fusionnée (via GitHub)
+
+# 12. Mettre à jour votre repo local
+git checkout main
+git pull
+
+# 13. Supprimer la branche locale
+git branch -d feature/ajout-export-excel
+
+# 14. Nouvelle fonctionnalité
+git checkout -b feature/nouvelle-fonctionnalite
 ```
 
 ## Conclusion
 
-La gestion de versions est un aspect fondamental du développement professionnel avec Delphi. Git est aujourd'hui l'outil standard pour cette tâche, offrant puissance et flexibilité.
+Le versionnement avec Git est une compétence essentielle pour tout développeur moderne. Bien que la courbe d'apprentissage puisse sembler raide au début, les bénéfices sont immenses :
 
-En suivant les bonnes pratiques et en mettant en place des flux de travail adaptés, vous améliorerez considérablement la qualité de votre code et la productivité de votre équipe. N'oubliez pas que l'adoption d'un système de gestion de versions est un investissement qui porte ses fruits sur le long terme.
+**Avantages principaux :**
 
-Les compétences en gestion de versions sont aujourd'hui indispensables pour tout développeur professionnel, et maîtriser Git vous donnera un avantage certain dans votre carrière, que vous travailliez seul ou en équipe.
+1. **Historique complet** - Jamais de perte de code
+2. **Collaboration efficace** - Travaillez en équipe sans friction
+3. **Branches puissantes** - Expérimentez sans risque
+4. **Sauvegarde cloud** - Code sécurisé sur GitHub/GitLab
+5. **Professionnel** - Standard de l'industrie
 
-## Ressources complémentaires
+**Pour débuter :**
 
-- [Pro Git](https://git-scm.com/book/fr/v2) - Livre complet sur Git (gratuit)
-- [Learn Git Branching](https://learngitbranching.js.org/?locale=fr_FR) - Tutorial interactif pour apprendre Git
-- [Oh Shit, Git!?!](https://ohshitgit.com/fr) - Comment se sortir des situations difficiles avec Git
-- [Getting Started with Git and Delphi](https://www.embarcadero.com/starthere/xe5/mobdevsetup/ios/en/creating_a_git_repository.html) - Guide Embarcadero pour Git et Delphi
+1. Installez Git et créez un compte GitHub
+2. Créez un `.gitignore` adapté à Delphi
+3. Commencez avec les commandes de base : `add`, `commit`, `push`, `pull`
+4. Utilisez une GUI si la ligne de commande vous intimide
+5. Pratiquez sur vos projets personnels
+6. Progressez vers les branches et la collaboration
+
+**Commandes essentielles à retenir :**
+
+```bash
+git init                    # Créer un repo
+git clone <url>            # Cloner un repo
+git status                 # État des fichiers
+git add .                  # Ajouter tout
+git commit -m "message"    # Commiter
+git push                   # Pousser
+git pull                   # Récupérer
+git checkout -b <branche>  # Créer une branche
+git merge <branche>        # Fusionner
+```
+
+**N'ayez pas peur de faire des erreurs !** Git permet presque toujours de revenir en arrière. L'important est de commencer à l'utiliser et d'apprendre progressivement.
+
+Avec Git, vous ne perdrez plus jamais de code, et la collaboration avec d'autres développeurs deviendra un plaisir plutôt qu'un cauchemar. C'est un investissement en temps qui rapporte très rapidement.
+
+Dans la prochaine section, nous explorerons la documentation du code, un autre aspect crucial de la qualité logicielle.
 
 ⏭️ [Documentation du code](/18-architecture-et-bonnes-pratiques/06-documentation-du-code.md)

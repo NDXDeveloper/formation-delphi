@@ -1,1170 +1,1912 @@
-# 18.7 Revue de code et refactoring
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 18.7 Revue de code et refactoring
 
 ## Introduction
 
-Imaginez que vous venez de terminer d'écrire un magnifique morceau de code qui fonctionne parfaitement. Mission accomplie ? Pas tout à fait ! Même le code qui fonctionne correctement peut souvent être amélioré en termes de lisibilité, de performance ou de maintenabilité. C'est là qu'interviennent la revue de code et le refactoring.
+Imaginez que vous écrivez un livre. Vous avez terminé votre premier jet, vous êtes content. Mais avant de le publier, vous le faites relire par des amis, un éditeur, un correcteur. Ils trouvent des fautes de frappe, des phrases confuses, des passages à améliorer. Le livre final est bien meilleur grâce à ces relectures.
 
-Dans ce chapitre, nous allons explorer ces deux pratiques essentielles qui distinguent les développeurs professionnels des amateurs. Vous apprendrez comment évaluer votre code de manière critique et comment le transformer méthodiquement pour en faire un code plus propre et plus robuste, sans changer son comportement externe.
+Le code, c'est pareil. La **revue de code** (code review) et le **refactoring** sont les processus qui transforment du code "qui marche" en code de qualité professionnelle.
 
-## Qu'est-ce que la revue de code ?
+### Deux pratiques complémentaires
 
-La revue de code (code review) est un processus systématique d'examen du code source par d'autres développeurs ou par vous-même. L'objectif n'est pas simplement de trouver des bugs, mais aussi d'améliorer la qualité globale du code, d'assurer la cohérence avec les standards du projet, et de partager les connaissances entre les membres de l'équipe.
+**Revue de code :** Un autre développeur relit votre code avant qu'il soit fusionné dans le projet principal. C'est une deuxième paire d'yeux qui peut voir ce que vous avez manqué.
+
+**Refactoring :** Améliorer la structure interne du code sans changer son comportement externe. C'est comme réorganiser une maison : l'extérieur reste le même, mais l'intérieur devient plus fonctionnel.
+
+### L'importance de ces pratiques
+
+**Statistiques révélatrices :**
+- 60-80% des bugs sont détectés en revue de code
+- Le refactoring régulier réduit la dette technique de 40%
+- Les équipes qui font des revues de code produisent 15% moins de bugs
+
+**Citation célèbre :**
+> "N'importe quel idiot peut écrire du code qu'un ordinateur peut comprendre. Les bons programmeurs écrivent du code que les humains peuvent comprendre."
+> — Martin Fowler
+
+## Partie 1 : La revue de code
+
+### Qu'est-ce qu'une revue de code ?
+
+Une revue de code est un processus où un ou plusieurs développeurs examinent le code écrit par un autre développeur avant qu'il soit intégré au projet.
+
+**Le processus typique :**
+
+```
+1. Développeur A écrit du code
+   ↓
+2. Développeur A crée une Pull Request (PR)
+   ↓
+3. Développeur B relit le code
+   ↓
+4. Développeur B laisse des commentaires
+   ↓
+5. Développeur A apporte les corrections
+   ↓
+6. Développeur B approuve
+   ↓
+7. Le code est fusionné dans main
+```
 
 ### Pourquoi faire des revues de code ?
 
-1. **Détection précoce des bugs** : Identifiez les problèmes avant qu'ils n'atteignent la production
-2. **Amélioration de la qualité** : Assurez-vous que le code est lisible, maintenable et efficace
-3. **Partage des connaissances** : Apprenez de nouvelles techniques et partagez votre expertise
-4. **Cohérence du code** : Maintenez un style et une approche uniformes dans tout le projet
-5. **Formation continue** : Améliorez constamment vos compétences en recevant des retours constructifs
+#### 1. Détection des bugs
 
-## Qu'est-ce que le refactoring ?
+Un autre développeur voit souvent des problèmes que l'auteur n'a pas vus.
 
-Le refactoring est le processus de restructuration du code existant sans changer son comportement externe. En d'autres termes, le code fait toujours la même chose, mais il est organisé différemment, généralement pour être plus clair, plus simple, ou plus efficace.
+**Exemple réel :**
+```pascal
+// Code original
+function CalculerRemise(Prix: Currency; Pourcentage: Integer): Currency;
+begin
+  Result := Prix * Pourcentage / 100;
+end;
 
-### Pourquoi refactoriser le code ?
+// Reviewer : "Si Pourcentage = 10, tu retournes 10% du prix, pas la remise!"
+// Correction nécessaire :
+Result := Prix - (Prix * Pourcentage / 100);
+```
 
-1. **Améliorer la lisibilité** : Rendre le code plus facile à comprendre
-2. **Faciliter la maintenance** : Simplifier les modifications futures
-3. **Réduire la complexité** : Décomposer des blocs de code complexes en parties plus simples
-4. **Éliminer la duplication** : Appliquer le principe DRY (Don't Repeat Yourself)
-5. **Optimiser les performances** : Rendre le code plus rapide ou moins gourmand en ressources
-6. **Préparer l'évolution** : Faciliter l'ajout de nouvelles fonctionnalités
+#### 2. Amélioration de la qualité
 
-## Types de revues de code
+Les reviewers suggèrent des améliorations :
+- Meilleur nommage
+- Code plus clair
+- Performances optimisées
+- Sécurité renforcée
 
-### 1. Auto-revue
+#### 3. Partage de connaissances
 
-L'auto-revue consiste à relire et évaluer votre propre code. C'est une bonne pratique à adopter avant de soumettre votre code à d'autres personnes.
+Les juniors apprennent des seniors, et vice versa. Chacun découvre de nouvelles techniques.
 
-**Conseils pour l'auto-revue :**
-- Prenez du recul : attendez quelques heures après avoir écrit le code avant de le relire
-- Lisez le code ligne par ligne, comme si vous le voyiez pour la première fois
-- Utilisez une checklist de vérification (nous en verrons une plus loin)
-- Exécutez des tests unitaires pour vérifier la fonctionnalité
+**Exemple :**
+```pascal
+// Code junior
+function EstVide(Liste: TStringList): Boolean;
+begin
+  if Liste.Count = 0 then
+    Result := True
+  else
+    Result := False;
+end;
 
-### 2. Revue par un pair (Peer Review)
+// Reviewer senior : "Tu peux simplifier :"
+function EstVide(Liste: TStringList): Boolean;
+begin
+  Result := Liste.Count = 0;
+end;
+```
 
-La revue par un pair implique qu'un autre développeur examine votre code. C'est la forme la plus courante de revue de code dans les équipes.
+#### 4. Cohérence du code
 
-**Processus typique :**
-1. Le développeur termine une fonctionnalité et la soumet pour revue
-2. Un ou plusieurs autres développeurs examinent le code
-3. Les réviseurs laissent des commentaires et suggestions
-4. Le développeur initial apporte les modifications nécessaires
-5. Le cycle continue jusqu'à ce que le code soit approuvé
+Les reviewers s'assurent que le code suit les conventions du projet.
 
-### 3. Revue d'équipe (Team Review)
+#### 5. Responsabilité partagée
 
-Les revues d'équipe impliquent plusieurs développeurs examinant le code ensemble, souvent lors d'une réunion.
+Le code n'appartient plus à une seule personne. L'équipe entière en est responsable.
+
+### Types de revues de code
+
+#### Revue formelle (inspection)
+
+Processus structuré avec réunion :
+- Auteur présente le code
+- Reviewers posent des questions
+- Notes et actions décidées collectivement
 
 **Avantages :**
-- Discussions en temps réel
-- Partage de connaissances à grande échelle
-- Opportunité d'apprentissage pour toute l'équipe
+- Très approfondi
+- Bon pour le code critique
 
-### 4. Revue assistée par outils
+**Inconvénients :**
+- Chronophage
+- Peut être intimidant
 
-Les outils automatisés peuvent compléter les revues humaines en détectant automatiquement certains problèmes.
+#### Revue légère (Pull Request)
 
-**Outils pour Delphi :**
-- [Delphi Code Analyzer](https://sourceforge.net/projects/dca/)
-- [Pascal Analyzer](https://www.peganza.com/products_pal.html)
-- [CodeHealer](https://www.codehealer.com/)
-- [SonarQube](https://www.sonarqube.org/) (avec plugin Pascal)
-
-## Checklist pour la revue de code Delphi
-
-Voici une checklist utile pour vos revues de code Delphi :
-
-### Lisibilité et style
-- [ ] Le code suit-il les conventions de nommage du projet ?
-- [ ] Les noms sont-ils significatifs et descriptifs ?
-- [ ] L'indentation et le formatage sont-ils cohérents ?
-- [ ] Les commentaires sont-ils utiles et à jour ?
-- [ ] Le code est-il facile à comprendre au premier coup d'œil ?
-
-### Structure et conception
-- [ ] Les fonctions et méthodes ont-elles une seule responsabilité ?
-- [ ] La longueur des méthodes est-elle raisonnable (< 50 lignes) ?
-- [ ] Les interfaces sont-elles bien définies et cohérentes ?
-- [ ] Les principes SOLID sont-ils respectés ?
-- [ ] Y a-t-il des duplications de code qui pourraient être factorisées ?
-
-### Gestion des ressources
-- [ ] Toutes les ressources allouées sont-elles libérées correctement ?
-- [ ] Les objets sont-ils correctement créés et détruits ?
-- [ ] Les blocs try-finally sont-ils utilisés pour protéger les ressources ?
-
-### Gestion des erreurs
-- [ ] Les exceptions sont-elles traitées de manière appropriée ?
-- [ ] Les messages d'erreur sont-ils clairs et utiles ?
-- [ ] Les cas limites et conditions d'erreur sont-ils gérés ?
-
-### Performance
-- [ ] Y a-t-il des optimisations évidentes qui pourraient être appliquées ?
-- [ ] Les opérations coûteuses sont-elles effectuées efficacement ?
-- [ ] Les boucles et les structures de données sont-elles optimisées ?
-
-### Tests
-- [ ] Le code est-il couvert par des tests unitaires ?
-- [ ] Les tests couvrent-ils les cas normaux et exceptionnels ?
-- [ ] Les tests sont-ils faciles à comprendre et à maintenir ?
-
-## Comment mener efficacement une revue de code
-
-### 1. Définir un objectif clair
-
-Avant de commencer une revue, soyez clair sur ce que vous recherchez. Est-ce la sécurité, la performance, la lisibilité, ou tout à la fois ?
-
-### 2. Se concentrer sur le code, pas sur la personne
-
-Les commentaires devraient toujours porter sur le code, jamais sur le développeur. Utilisez "ce code pourrait être amélioré" plutôt que "tu as mal codé cette partie".
-
-### 3. Être constructif et proposer des solutions
-
-Ne vous contentez pas de pointer les problèmes, suggérez des améliorations :
-
-❌ "Cette boucle est inefficace."
-✅ "Cette boucle pourrait être plus efficace en utilisant un TDictionary au lieu de recherches linéaires répétées."
-
-### 4. Hiérarchiser les commentaires
-
-Tous les problèmes n'ont pas la même importance. Indiquez clairement ce qui est critique et ce qui est juste une suggestion d'amélioration.
-
-### 5. Vérifier la compréhension
-
-Assurez-vous que vos commentaires sont bien compris. Posez des questions plutôt que de faire des affirmations quand vous n'êtes pas sûr du contexte.
-
-### 6. Limiter l'étendue de la revue
-
-Une revue trop longue devient inefficace. Visez des sessions de 200-400 lignes de code maximum à la fois.
-
-## Techniques de refactoring communes
-
-Voyons maintenant quelques techniques de refactoring que vous pouvez appliquer à votre code Delphi.
-
-### 1. Extraction de méthode
-
-Cette technique consiste à prendre un fragment de code et à le transformer en méthode séparée.
-
-**Avant :**
-```pascal
-procedure TCustomerManager.ProcessCustomer(Customer: TCustomer);
-begin
-  // Validation du client
-  if Customer.Name = '' then
-    raise EValidationError.Create('Le nom du client est requis');
-  if not IsValidEmail(Customer.Email) then
-    raise EValidationError.Create('Email client invalide');
-
-  // Traitement du client
-  Customer.LastProcessed := Now;
-  if Customer.IsVIP then
-    ApplyVIPDiscount(Customer)
-  else
-    ApplyStandardRates(Customer);
-
-  // Enregistrement en base de données
-  Database.BeginTransaction;
-  try
-    Database.UpdateCustomer(Customer);
-    Database.UpdateLogs('Client traité: ' + Customer.Name);
-    Database.Commit;
-  except
-    Database.Rollback;
-    raise;
-  end;
-end;
-```
-
-**Après :**
-```pascal
-procedure TCustomerManager.ProcessCustomer(Customer: TCustomer);
-begin
-  ValidateCustomer(Customer);
-  ApplyBusinessRules(Customer);
-  SaveCustomerToDatabase(Customer);
-end;
-
-procedure TCustomerManager.ValidateCustomer(Customer: TCustomer);
-begin
-  if Customer.Name = '' then
-    raise EValidationError.Create('Le nom du client est requis');
-  if not IsValidEmail(Customer.Email) then
-    raise EValidationError.Create('Email client invalide');
-end;
-
-procedure TCustomerManager.ApplyBusinessRules(Customer: TCustomer);
-begin
-  Customer.LastProcessed := Now;
-  if Customer.IsVIP then
-    ApplyVIPDiscount(Customer)
-  else
-    ApplyStandardRates(Customer);
-end;
-
-procedure TCustomerManager.SaveCustomerToDatabase(Customer: TCustomer);
-begin
-  Database.BeginTransaction;
-  try
-    Database.UpdateCustomer(Customer);
-    Database.UpdateLogs('Client traité: ' + Customer.Name);
-    Database.Commit;
-  except
-    Database.Rollback;
-    raise;
-  end;
-end;
-```
+Revue asynchrone via GitHub/GitLab :
+- Pull Request créée
+- Reviewers commentent en ligne
+- Discussion asynchrone
+- Approbation finale
 
 **Avantages :**
-- Code plus lisible avec des blocs logiques clairement séparés
-- Méthodes plus faciles à tester individuellement
-- Réutilisation possible des méthodes extraites
+- Flexible
+- Pas de réunion
+- Historique conservé
 
-### 2. Remplacement de condition par polymorphisme
+**Inconvénients :**
+- Peut être superficiel
+- Communication écrite parfois ambiguë
 
-Cette technique utilise le polymorphisme pour remplacer des structures conditionnelles complexes.
+#### Pair Programming
 
-**Avant :**
-```pascal
-procedure ProcessPayment(Payment: TPayment);
-begin
-  case Payment.PaymentType of
-    ptCreditCard:
-      begin
-        // Logique spécifique aux cartes de crédit
-        ValidateCreditCardNumber(Payment.CardNumber);
-        ChargeCard(Payment.CardNumber, Payment.Amount);
-      end;
-    ptBankTransfer:
-      begin
-        // Logique spécifique aux virements bancaires
-        ValidateBankAccount(Payment.BankAccount);
-        InitiateTransfer(Payment.BankAccount, Payment.Amount);
-      end;
-    ptPayPal:
-      begin
-        // Logique spécifique à PayPal
-        ConnectToPayPal(Payment.PayPalEmail);
-        RequestPayment(Payment.PayPalEmail, Payment.Amount);
-      end;
-  end;
+Deux développeurs travaillent ensemble sur le même code :
+- Un écrit (driver)
+- L'autre relit en temps réel (navigator)
+- Changement de rôle régulier
 
-  // Logique commune
-  UpdateAccountBalance(Payment.CustomerID, Payment.Amount);
-  SendConfirmationEmail(Payment.CustomerID, Payment.Amount);
-end;
+**Avantages :**
+- Revue instantanée
+- Transfert de connaissances
+- Moins de bugs dès le départ
+
+**Inconvénients :**
+- Coûte deux développeurs
+- Fatiguant sur la durée
+
+### Comment faire une bonne revue de code
+
+#### Pour l'auteur (celui qui soumet le code)
+
+**1. Préparez le code**
+
+Avant de demander une revue :
+
+```bash
+# Vérifiez que tout compile
+# Exécutez les tests
+# Relisez votre propre code
+# Vérifiez le formatage
 ```
 
-**Après :**
+**2. Faites des PR de taille raisonnable**
+
+✅ **Bon :** 200-400 lignes de code
+- Facile à relire
+- Commentaires pertinents
+
+❌ **Mauvais :** 2000 lignes de code
+- Impossible à relire correctement
+- Reviewers fatigués = bugs manqués
+
+**Si votre PR est grosse :**
+- Découpez en plusieurs PR
+- Ou demandez une revue préliminaire
+
+**3. Décrivez clairement vos modifications**
+
+**Mauvaise description :**
+```
+Mise à jour
+```
+
+**Bonne description :**
+```markdown
+## Objectif
+Ajout de la fonctionnalité d'export Excel pour les rapports clients
+
+## Modifications
+- Création de la classe `TExcelExporter`
+- Ajout du bouton d'export dans le formulaire de rapport
+- Implémentation du formatage des cellules (couleurs, bordures)
+- Gestion des erreurs d'export
+
+## Tests effectués
+- Export de 100 lignes : OK
+- Export de 10 000 lignes : OK (5 secondes)
+- Gestion du fichier déjà ouvert : OK (message d'erreur approprié)
+
+## Points d'attention
+Vérifiez particulièrement la fonction `FormaterCellule()` ligne 245,
+j'ai un doute sur la gestion des dates.
+```
+
+**4. Répondez aux commentaires constructivement**
+
+```
+❌ "Non, mon code est bon"
+✅ "Bonne remarque ! Je vais changer ça"
+
+❌ "Tu comprends rien"
+✅ "Je ne suis pas sûr de comprendre ton point, peux-tu clarifier ?"
+
+❌ Ignorer les commentaires
+✅ Répondre à chaque commentaire, même pour dire "Fait !"
+```
+
+**5. Ne le prenez pas personnellement**
+
+La revue critique le CODE, pas VOUS. C'est une opportunité d'apprentissage.
+
+#### Pour le reviewer (celui qui relit)
+
+**1. Checklist de revue**
+
+Voici ce qu'il faut vérifier :
+
+**Fonctionnalité**
+- [ ] Le code fait-il ce qu'il est censé faire ?
+- [ ] Les cas limites sont-ils gérés ?
+- [ ] Les erreurs sont-elles bien gérées ?
+
+**Lisibilité**
+- [ ] Le code est-il facile à comprendre ?
+- [ ] Les noms de variables sont-ils clairs ?
+- [ ] Y a-t-il des commentaires où nécessaire ?
+
+**Architecture**
+- [ ] Le code respecte-t-il l'architecture du projet ?
+- [ ] La séparation des responsabilités est-elle respectée ?
+- [ ] Les dépendances sont-elles appropriées ?
+
+**Performance**
+- [ ] Y a-t-il des problèmes de performance évidents ?
+- [ ] Les boucles sont-elles optimisées ?
+- [ ] Les ressources sont-elles libérées correctement ?
+
+**Sécurité**
+- [ ] Les entrées utilisateur sont-elles validées ?
+- [ ] Y a-t-il des risques d'injection SQL ?
+- [ ] Les mots de passe sont-ils chiffrés ?
+
+**Tests**
+- [ ] Le code est-il testable ?
+- [ ] Des tests sont-ils présents ?
+- [ ] Les tests couvrent-ils les cas importants ?
+
+**Documentation**
+- [ ] Les fonctions publiques sont-elles documentées ?
+- [ ] Les algorithmes complexes sont-ils expliqués ?
+- [ ] Le README est-il à jour si nécessaire ?
+
+**2. Faites des commentaires constructifs**
+
+**❌ Commentaires destructifs :**
+```
+"Ce code est nul"
+"N'importe quoi"
+"Tu ne sais pas coder"
+"Refais tout"
+```
+
+**✅ Commentaires constructifs :**
+```
+"Cette fonction est complexe. Que penses-tu de la découper en 2 fonctions ?"
+"J'ai remarqué que cette boucle est appelée souvent. On pourrait optimiser ?"
+"Super implémentation ! Une petite suggestion : on pourrait ajouter un test unitaire ici"
+"Je ne suis pas sûr de comprendre cette logique, peux-tu clarifier ?"
+```
+
+**Structure d'un bon commentaire :**
+1. **Observation** : "J'ai remarqué que..."
+2. **Explication** : "Cela pourrait causer..."
+3. **Suggestion** : "Que penses-tu de..."
+
+**Exemple :**
 ```pascal
-// Dans l'unité d'interface
+// Code à revoir
+function Calculer(X: Integer): Integer;
+begin
+  Result := X * 2 + 5 - X div 2;
+end;
+
+// ❌ Mauvais commentaire
+"Cette fonction est incompréhensible"
+
+// ✅ Bon commentaire
+"J'ai du mal à comprendre ce calcul. Peux-tu ajouter un commentaire
+expliquant la formule métier ? Ou mieux, découper en plusieurs étapes
+avec des variables intermédiaires nommées explicitement ?"
+```
+
+**3. Différenciez les catégories de commentaires**
+
+Utilisez des préfixes pour clarifier l'importance :
+
+```
+[BLOQUANT] : Doit être corrigé avant merge
+[IMPORTANT] : Devrait être corrigé, mais pas bloquant
+[SUGGESTION] : Idée d'amélioration, optionnelle
+[QUESTION] : Demande de clarification
+[NIT] : Détail mineur (nit = nitpicking)
+[COMPLIMENT] : Bravo pour cette partie !
+```
+
+**Exemples :**
+```
+[BLOQUANT] Cette fonction ne libère pas la mémoire, risque de fuite
+
+[IMPORTANT] Cette requête SQL devrait utiliser des paramètres pour
+éviter les injections
+
+[SUGGESTION] Tu pourrais utiliser une TList<T> au lieu d'un TStringList
+pour plus de sécurité de type
+
+[QUESTION] Pourquoi utilises-tu un Sleep(100) ici ?
+
+[NIT] Petite typo dans le commentaire ligne 42
+
+[COMPLIMENT] Excellente gestion des cas limites !
+```
+
+**4. Soyez spécifique**
+
+```
+❌ "Le code n'est pas bon"
+✅ "La fonction `CalculerTotal` ligne 156 ne gère pas le cas où
+la liste est vide, ce qui causera une exception"
+
+❌ "Il manque des tests"
+✅ "Il faudrait ajouter un test pour vérifier le comportement
+quand le montant est négatif"
+
+❌ "C'est lent"
+✅ "Cette boucle parcourt la liste 3 fois (lignes 45, 67, 89).
+On pourrait tout faire en un seul passage ?"
+```
+
+**5. Reconnaissez le bon travail**
+
+```
+✅ "Super idée d'avoir extrait cette logique dans une fonction séparée !"
+✅ "J'aime beaucoup cette approche, c'est très élégant"
+✅ "Excellente gestion des erreurs"
+✅ "Code très clair et bien documenté, merci !"
+```
+
+**6. Proposez des solutions, pas seulement des problèmes**
+
+```
+❌ "Cette fonction est trop longue"
+
+✅ "Cette fonction est longue (150 lignes). Que penses-tu de la découper ainsi :
+- ExtractValidation() pour la validation
+- ExtractCalculation() pour les calculs
+- ExtractSave() pour la sauvegarde
+Cela rendrait le code plus testable et plus lisible."
+```
+
+**7. Limitez le nombre de commentaires**
+
+Trop de commentaires = reviewer épuisé = auteur découragé
+
+**Règle d'or :** Maximum 15-20 commentaires par PR. Si vous en avez plus, c'est que :
+- La PR est trop grosse (demandez de découper)
+- Il y a des problèmes structurels (discussion nécessaire)
+
+### Exemple de revue de code complète
+
+**Code soumis :**
+
+```pascal
+unit ClientManager;
+
+interface
+
+uses
+  System.SysUtils, Data.DB, FireDAC.Comp.Client;
+
 type
-  TPayment = class
-  protected
-    FAmount: Currency;
-    FCustomerID: Integer;
+  TClientManager = class
   public
-    procedure Process; virtual; abstract;
-    property Amount: Currency read FAmount write FAmount;
-    property CustomerID: Integer read FCustomerID write FCustomerID;
+    function GetClient(id: Integer): TDataSet;
+    procedure Save(name, email: string; premium: Boolean);
   end;
 
-  TCreditCardPayment = class(TPayment)
-  private
-    FCardNumber: string;
-  public
-    procedure Process; override;
-    property CardNumber: string read FCardNumber write FCardNumber;
-  end;
+var
+  ClientManager: TClientManager;
 
-  TBankTransferPayment = class(TPayment)
-  private
-    FBankAccount: string;
-  public
-    procedure Process; override;
-    property BankAccount: string read FBankAccount write FBankAccount;
-  end;
+implementation
 
-  TPayPalPayment = class(TPayment)
-  private
-    FPayPalEmail: string;
-  public
-    procedure Process; override;
-    property PayPalEmail: string read FPayPalEmail write FPayPalEmail;
-  end;
-
-// Dans l'unité d'implémentation
-procedure TCreditCardPayment.Process;
+function TClientManager.GetClient(id: Integer): TDataSet;
+var
+  Query: TFDQuery;
 begin
-  // Logique spécifique aux cartes de crédit
-  ValidateCreditCardNumber(CardNumber);
-  ChargeCard(CardNumber, Amount);
-
-  // Logique commune
-  UpdateAccountBalance(CustomerID, Amount);
-  SendConfirmationEmail(CustomerID, Amount);
+  Query := TFDQuery.Create(nil);
+  Query.SQL.Text := 'SELECT * FROM clients WHERE id = ' + IntToStr(id);
+  Query.Open;
+  Result := Query;
 end;
 
-procedure TBankTransferPayment.Process;
+procedure TClientManager.Save(name, email: string; premium: Boolean);
+var
+  Query: TFDQuery;
 begin
-  // Logique spécifique aux virements bancaires
-  ValidateBankAccount(BankAccount);
-  InitiateTransfer(BankAccount, Amount);
-
-  // Logique commune
-  UpdateAccountBalance(CustomerID, Amount);
-  SendConfirmationEmail(CustomerID, Amount);
+  Query := TFDQuery.Create(nil);
+  Query.SQL.Text := 'INSERT INTO clients (name, email, premium) VALUES (' +
+    QuotedStr(name) + ', ' + QuotedStr(email) + ', ' +
+    IntToStr(Ord(premium)) + ')';
+  Query.ExecSQL;
+  Query.Free;
 end;
 
-procedure TPayPalPayment.Process;
-begin
-  // Logique spécifique à PayPal
-  ConnectToPayPal(PayPalEmail);
-  RequestPayment(PayPalEmail, Amount);
+end.
+```
 
-  // Logique commune
-  UpdateAccountBalance(CustomerID, Amount);
-  SendConfirmationEmail(CustomerID, Amount);
+**Commentaires de revue :**
+
+```
+[BLOQUANT] Ligne 25-27 : Injection SQL possible
+La requête concatène directement l'ID dans le SQL. Utilise des paramètres :
+
+Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
+Query.ParamByName('id').AsInteger := id;
+
+---
+
+[BLOQUANT] Ligne 25, 33 : Fuites mémoire
+Les TFDQuery créés ne sont jamais libérés. Utilise try..finally :
+
+Query := TFDQuery.Create(nil);
+try
+  // ... utilisation
+finally
+  Query.Free;
+end;
+
+---
+
+[IMPORTANT] Ligne 33-36 : Injection SQL aussi ici
+Même problème que GetClient. Utilise des paramètres.
+
+---
+
+[IMPORTANT] Ligne 21 : Type de retour inapproprié
+Retourner un TDataSet force le code appelant à gérer la mémoire.
+Mieux : retourner un objet TClient avec les données copiées.
+
+---
+
+[SUGGESTION] Ligne 30 : Extraction de méthode
+La logique de sauvegarde pourrait être dans une méthode privée
+ExecuteInsert() pour la réutilisabilité.
+
+---
+
+[SUGGESTION] Ligne 18-19 : Convention de nommage
+Les paramètres devraient commencer par une majuscule en Delphi :
+- name → Name
+- email → Email
+- id → ID
+
+---
+
+[NIT] Ligne 38 : Variable globale
+ClientManager en variable globale n'est pas une bonne pratique.
+Privilégie un singleton ou dependency injection.
+
+---
+
+[QUESTION] Ligne 30
+Comment gères-tu le cas où le client existe déjà ?
+Faut-il un UPDATE au lieu d'INSERT ?
+
+---
+
+[COMPLIMENT]
+Bonne séparation GetClient et Save ! La structure de base est solide.
+```
+
+**Code révisé :**
+
+```pascal
+unit ClientManager;
+
+interface
+
+uses
+  System.SysUtils, Data.DB, FireDAC.Comp.Client;
+
+type
+  /// <summary>
+  ///   Gestionnaire de clients avec accès base de données sécurisé
+  /// </summary>
+  TClient = record
+    ID: Integer;
+    Name: string;
+    Email: string;
+    Premium: Boolean;
+  end;
+
+  TClientManager = class
+  private
+    FConnection: TFDConnection;
+    function CreateQuery: TFDQuery;
+  public
+    constructor Create(Connection: TFDConnection);
+
+    /// <summary>
+    ///   Récupère un client par son ID
+    /// </summary>
+    /// <returns>
+    ///   Structure TClient remplie, ou exception si non trouvé
+    /// </returns>
+    function GetClient(ID: Integer): TClient;
+
+    /// <summary>
+    ///   Sauvegarde un nouveau client ou met à jour s'il existe
+    /// </summary>
+    procedure SaveClient(const Client: TClient);
+  end;
+
+implementation
+
+constructor TClientManager.Create(Connection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := Connection;
+end;
+
+function TClientManager.CreateQuery: TFDQuery;
+begin
+  Result := TFDQuery.Create(nil);
+  Result.Connection := FConnection;
+end;
+
+function TClientManager.GetClient(ID: Integer): TClient;
+var
+  Query: TFDQuery;
+begin
+  Query := CreateQuery;
+  try
+    Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
+    Query.ParamByName('id').AsInteger := ID;
+    Query.Open;
+
+    if Query.IsEmpty then
+      raise Exception.CreateFmt('Client %d non trouvé', [ID]);
+
+    Result.ID := Query.FieldByName('id').AsInteger;
+    Result.Name := Query.FieldByName('name').AsString;
+    Result.Email := Query.FieldByName('email').AsString;
+    Result.Premium := Query.FieldByName('premium').AsBoolean;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TClientManager.SaveClient(const Client: TClient);
+var
+  Query: TFDQuery;
+begin
+  Query := CreateQuery;
+  try
+    // Vérifier si le client existe
+    Query.SQL.Text := 'SELECT COUNT(*) FROM clients WHERE id = :id';
+    Query.ParamByName('id').AsInteger := Client.ID;
+    Query.Open;
+
+    if Query.Fields[0].AsInteger > 0 then
+    begin
+      // Mise à jour
+      Query.Close;
+      Query.SQL.Text := 'UPDATE clients SET name = :name, email = :email, ' +
+        'premium = :premium WHERE id = :id';
+    end
+    else
+    begin
+      // Insertion
+      Query.Close;
+      Query.SQL.Text := 'INSERT INTO clients (name, email, premium) ' +
+        'VALUES (:name, :email, :premium)';
+    end;
+
+    Query.ParamByName('name').AsString := Client.Name;
+    Query.ParamByName('email').AsString := Client.Email;
+    Query.ParamByName('premium').AsBoolean := Client.Premium;
+    if Client.ID > 0 then
+      Query.ParamByName('id').AsInteger := Client.ID;
+
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+end.
+```
+
+**Réponse de l'auteur :**
+
+```
+Merci pour la revue détaillée !
+
+[BLOQUANT] SQL injection : Corrigé, j'utilise maintenant des paramètres partout
+[BLOQUANT] Fuites mémoire : Corrigé avec try..finally
+[IMPORTANT] Type retour : Excellente idée ! J'ai créé un record TClient
+[IMPORTANT] UPDATE vs INSERT : Bonne question ! J'ai ajouté la logique
+[SUGGESTION] Extraction : J'ai créé CreateQuery() comme méthode helper
+[SUGGESTION] Conventions : Corrigé
+[NIT] Variable globale : J'ai ajouté un constructeur avec dependency injection
+[QUESTION] : Répondu avec le code UPDATE/INSERT
+
+Tous les tests passent. Prêt pour un second regard ?
+```
+
+## Partie 2 : Le refactoring
+
+### Qu'est-ce que le refactoring ?
+
+**Définition formelle :** Modifier la structure interne du code pour le rendre plus propre, plus maintenable, sans changer son comportement externe.
+
+**Analogie :** Réorganiser une bibliothèque. Les livres (fonctionnalités) restent les mêmes, mais ils sont mieux rangés, plus faciles à trouver.
+
+**Ce que le refactoring N'EST PAS :**
+- ❌ Ajouter des fonctionnalités
+- ❌ Corriger des bugs
+- ❌ Changer le comportement visible
+
+**Ce que le refactoring EST :**
+- ✅ Renommer pour plus de clarté
+- ✅ Extraire des fonctions
+- ✅ Simplifier la logique
+- ✅ Éliminer la duplication
+- ✅ Améliorer la structure
+
+### Pourquoi refactoriser ?
+
+#### Le concept de dette technique
+
+Imaginez que vous construisez une maison rapidement avec des raccourcis. Au début, ça va. Mais avec le temps :
+- Les fondations bougent
+- Les murs se fissurent
+- Les réparations deviennent difficiles
+
+La **dette technique**, c'est pareil :
+- Au début, le code "qui marche" suffit
+- Avec le temps, il devient difficile à modifier
+- Chaque changement prend de plus en plus de temps
+
+**Le refactoring, c'est rembourser cette dette.**
+
+#### Les signes qu'il faut refactoriser
+
+- Vous avez peur de toucher au code
+- Corriger un bug en crée deux autres
+- Ajouter une fonctionnalité prend des jours
+- Vous ne comprenez plus votre propre code
+- Le code est copié-collé partout
+- Les fonctions font plus de 50 lignes
+- Les classes ont plus de 500 lignes
+- Les tests sont impossibles à écrire
+
+### Les "Code Smells" (mauvaises odeurs)
+
+Les "code smells" sont des signes que le code a besoin de refactoring.
+
+#### 1. Duplication de code
+
+**Le problème :**
+```pascal
+// Dans FormClient
+procedure TFormClient.ButtonSaveClick(Sender: TObject);
+begin
+  if EditNom.Text = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    Exit;
+  end;
+  if not EditEmail.Text.Contains('@') then
+  begin
+    ShowMessage('Email invalide');
+    Exit;
+  end;
+  // Sauvegarde...
+end;
+
+// Dans FormFournisseur (même code dupliqué !)
+procedure TFormFournisseur.ButtonSaveClick(Sender: TObject);
+begin
+  if EditNom.Text = '' then
+  begin
+    ShowMessage('Le nom est obligatoire');
+    Exit;
+  end;
+  if not EditEmail.Text.Contains('@') then
+  begin
+    ShowMessage('Email invalide');
+    Exit;
+  end;
+  // Sauvegarde...
+end;
+```
+
+**La solution (Extract Method) :**
+```pascal
+unit ValidationHelper;
+
+interface
+
+type
+  TValidationHelper = class
+  public
+    class function ValiderNom(const Nom: string; out Erreur: string): Boolean;
+    class function ValiderEmail(const Email: string; out Erreur: string): Boolean;
+  end;
+
+implementation
+
+class function TValidationHelper.ValiderNom(const Nom: string; out Erreur: string): Boolean;
+begin
+  if Trim(Nom) = '' then
+  begin
+    Erreur := 'Le nom est obligatoire';
+    Exit(False);
+  end;
+  Result := True;
+end;
+
+class function TValidationHelper.ValiderEmail(const Email: string; out Erreur: string): Boolean;
+begin
+  if not Email.Contains('@') then
+  begin
+    Erreur := 'Email invalide';
+    Exit(False);
+  end;
+  Result := True;
+end;
+
+end.
+
+// Utilisation
+procedure TFormClient.ButtonSaveClick(Sender: TObject);
+var
+  Erreur: string;
+begin
+  if not TValidationHelper.ValiderNom(EditNom.Text, Erreur) then
+  begin
+    ShowMessage(Erreur);
+    Exit;
+  end;
+
+  if not TValidationHelper.ValiderEmail(EditEmail.Text, Erreur) then
+  begin
+    ShowMessage(Erreur);
+    Exit;
+  end;
+
+  // Sauvegarde...
+end;
+```
+
+#### 2. Fonctions trop longues
+
+**Le problème :**
+```pascal
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+var
+  Total: Currency;
+  Client: TClient;
+  Erreur: string;
+begin
+  // 200 lignes de code faisant :
+  // - Validation des champs
+  // - Chargement du client
+  // - Calcul du total
+  // - Application des remises
+  // - Vérification du stock
+  // - Génération de facture
+  // - Envoi d'email
+  // - Mise à jour de l'affichage
+  // ...
+end;
+```
+
+**La solution (Extract Method) :**
+```pascal
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+begin
+  if not ValiderFormulaire then
+    Exit;
+
+  if not VerifierStock then
+  begin
+    ShowMessage('Stock insuffisant');
+    Exit;
+  end;
+
+  EnregistrerCommande;
+  GenererFacture;
+  EnvoyerEmailConfirmation;
+  MettreAJourAffichage;
+
+  ShowMessage('Commande validée avec succès !');
+end;
+
+function TFormCommande.ValiderFormulaire: Boolean;
+begin
+  // Logique de validation
+  Result := True;
+end;
+
+function TFormCommande.VerifierStock: Boolean;
+begin
+  // Vérification du stock
+  Result := True;
+end;
+
+procedure TFormCommande.EnregistrerCommande;
+begin
+  // Enregistrement
+end;
+
+// etc.
+```
+
+#### 3. Listes de paramètres trop longues
+
+**Le problème :**
+```pascal
+procedure CreerClient(Nom, Prenom, Email, Telephone, Adresse, Ville,
+  CodePostal, Pays: string; EstPremium: Boolean; DateNaissance: TDateTime;
+  Profession, Commentaire: string);
+```
+
+**La solution (Introduce Parameter Object) :**
+```pascal
+type
+  TClientData = record
+    Nom: string;
+    Prenom: string;
+    Email: string;
+    Telephone: string;
+    Adresse: string;
+    Ville: string;
+    CodePostal: string;
+    Pays: string;
+    EstPremium: Boolean;
+    DateNaissance: TDateTime;
+    Profession: string;
+    Commentaire: string;
+  end;
+
+procedure CreerClient(const Data: TClientData);
+```
+
+#### 4. Classe tentaculaire (God Object)
+
+**Le problème :**
+```pascal
+type
+  TApplicationManager = class
+  public
+    // 50 méthodes qui font tout
+    procedure GererClients;
+    procedure GererCommandes;
+    procedure GererFactures;
+    procedure GererStock;
+    procedure GererUtilisateurs;
+    procedure GererRapports;
+    procedure GererEmails;
+    procedure GererSauvegardes;
+    // ... 42 autres méthodes
+  end;
+```
+
+**La solution (Extract Class) :**
+```pascal
+type
+  TClientManager = class
+    // Gestion des clients uniquement
+  end;
+
+  TCommandeManager = class
+    // Gestion des commandes uniquement
+  end;
+
+  TFactureManager = class
+    // Gestion des factures uniquement
+  end;
+
+  // etc.
+```
+
+#### 5. Commentaires excessifs
+
+**Le problème :**
+```pascal
+// Déclarer une variable pour le total
+var Total: Currency;
+// Initialiser le total à zéro
+Total := 0;
+// Boucler sur chaque ligne
+for I := 0 to Liste.Count - 1 do
+begin
+  // Ajouter le prix au total
+  Total := Total + Liste[I].Prix;
+end;
+```
+
+**La solution (Rename pour plus de clarté) :**
+```pascal
+function CalculerTotal: Currency;
+var
+  MontantTotal: Currency;
+  Ligne: TLigneCommande;
+begin
+  MontantTotal := 0;
+
+  for Ligne in Lignes do
+    MontantTotal := MontantTotal + Ligne.Prix;
+
+  Result := MontantTotal;
+end;
+```
+
+#### 6. Variable temporaire inutile
+
+**Le problème :**
+```pascal
+function ObtenirNomComplet: string;
+var
+  Resultat: string;
+begin
+  Resultat := FPrenom + ' ' + FNom;
+  Result := Resultat;
+end;
+```
+
+**La solution (Inline Temp) :**
+```pascal
+function ObtenirNomComplet: string;
+begin
+  Result := FPrenom + ' ' + FNom;
+end;
+```
+
+#### 7. Conditions complexes
+
+**Le problème :**
+```pascal
+if (Client.Age >= 18) and (Client.Age <= 65) and
+   (Client.Solde > 1000) and (not Client.EstBloque) and
+   ((Client.Type = ctPremium) or (Client.AncienneteAnnees > 5)) then
+begin
+  // Autoriser l'opération
+end;
+```
+
+**La solution (Extract Method) :**
+```pascal
+function ClientPeutEffectuerOperation(Client: TClient): Boolean;
+begin
+  Result := EstDansTrancheAge(Client) and
+            ADuCredit(Client) and
+            EstAutorise(Client) and
+            EstClientFidele(Client);
+end;
+
+function EstDansTrancheAge(Client: TClient): Boolean;
+begin
+  Result := (Client.Age >= 18) and (Client.Age <= 65);
+end;
+
+function ADuCredit(Client: TClient): Boolean;
+begin
+  Result := Client.Solde > 1000;
+end;
+
+function EstAutorise(Client: TClient): Boolean;
+begin
+  Result := not Client.EstBloque;
+end;
+
+function EstClientFidele(Client: TClient): Boolean;
+begin
+  Result := (Client.Type = ctPremium) or (Client.AncienneteAnnees > 5);
 end;
 
 // Utilisation
-procedure ProcessPayment(Payment: TPayment);
+if ClientPeutEffectuerOperation(Client) then
 begin
-  Payment.Process;
+  // Autoriser l'opération
 end;
 ```
 
-**Avantages :**
-- Élimine les structures conditionnelles complexes
-- Facilite l'ajout de nouveaux types de paiement sans modifier le code existant
-- Rend le code plus conforme au principe ouvert/fermé (Open/Closed Principle)
+### Techniques de refactoring courantes
 
-### 3. Introduction d'un objet paramètre
+#### 1. Rename (Renommer)
 
-Cette technique consiste à regrouper plusieurs paramètres en un seul objet.
+Donner des noms plus explicites.
 
 **Avant :**
 ```pascal
-procedure CreateInvoice(CustomerID: Integer; ProductIDs: TArray<Integer>;
-  Quantities: TArray<Integer>; Prices: TArray<Currency>; DiscountPercent: Double;
-  InvoiceDate: TDateTime; DueDate: TDateTime; Notes: string);
+var
+  d: TDateTime;
+  amt: Currency;
+  calc: Boolean;
+```
+
+**Après :**
+```pascal
+var
+  DateCommande: TDateTime;
+  MontantTotal: Currency;
+  DoitRecalculer: Boolean;
+```
+
+#### 2. Extract Method (Extraire une méthode)
+
+Prendre un morceau de code et en faire une fonction.
+
+**Avant :**
+```pascal
+procedure Afficher;
 begin
-  // Création de facture avec de nombreux paramètres
+  // Calcul complexe sur 20 lignes
+  X := A * B + C / D - E;
+  Y := X * 2 + F;
+  Z := Y - G * H;
+  Result := Z / I;
+  // ...
+
+  ShowMessage(FloatToStr(Result));
 end;
+```
+
+**Après :**
+```pascal
+procedure Afficher;
+var
+  Resultat: Double;
+begin
+  Resultat := CalculerFormuleComplexe(A, B, C, D, E, F, G, H, I);
+  ShowMessage(FloatToStr(Resultat));
+end;
+
+function CalculerFormuleComplexe(A, B, C, D, E, F, G, H, I: Double): Double;
+var
+  X, Y, Z: Double;
+begin
+  X := A * B + C / D - E;
+  Y := X * 2 + F;
+  Z := Y - G * H;
+  Result := Z / I;
+end;
+```
+
+#### 3. Inline Method (Intégrer une méthode)
+
+L'inverse : si une méthode est trop simple, l'intégrer dans l'appelant.
+
+**Avant :**
+```pascal
+function EstMajeur(Age: Integer): Boolean;
+begin
+  Result := Age >= 18;
+end;
+
+procedure Verifier;
+begin
+  if EstMajeur(Client.Age) then
+    // ...
+end;
+```
+
+**Après :**
+```pascal
+procedure Verifier;
+begin
+  if Client.Age >= 18 then
+    // ...
+end;
+```
+
+#### 4. Extract Class (Extraire une classe)
+
+Quand une classe fait trop de choses, en extraire une partie.
+
+**Avant :**
+```pascal
+type
+  TClient = class
+  private
+    FNom: string;
+    FEmail: string;
+    FRue: string;
+    FVille: string;
+    FCodePostal: string;
+    FPays: string;
+  public
+    property Nom: string read FNom write FNom;
+    property Email: string read FEmail write FEmail;
+    property Rue: string read FRue write FRue;
+    property Ville: string read FVille write FVille;
+    property CodePostal: string read FCodePostal write FCodePostal;
+    property Pays: string read FPays write FPays;
+  end;
 ```
 
 **Après :**
 ```pascal
 type
-  TInvoiceData = class
-    CustomerID: Integer;
-    ProductIDs: TArray<Integer>;
-    Quantities: TArray<Integer>;
-    Prices: TArray<Currency>;
-    DiscountPercent: Double;
-    InvoiceDate: TDateTime;
-    DueDate: TDateTime;
-    Notes: string;
+  TAdresse = class
+  private
+    FRue: string;
+    FVille: string;
+    FCodePostal: string;
+    FPays: string;
+  public
+    property Rue: string read FRue write FRue;
+    property Ville: string read FVille write FVille;
+    property CodePostal: string read FCodePostal write FCodePostal;
+    property Pays: string read FPays write FPays;
+    function ToString: string;
   end;
 
-procedure CreateInvoice(InvoiceData: TInvoiceData);
-begin
-  // Création de facture avec un seul objet paramètre
-end;
+  TClient = class
+  private
+    FNom: string;
+    FEmail: string;
+    FAdresse: TAdresse;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property Nom: string read FNom write FNom;
+    property Email: string read FEmail write FEmail;
+    property Adresse: TAdresse read FAdresse;
+  end;
 ```
 
-**Avantages :**
-- Signatures de méthodes plus propres et plus lisibles
-- Facilite l'ajout de nouveaux paramètres sans casser l'interface
-- Améliore la maintenabilité du code
+#### 5. Introduce Variable (Introduire une variable)
 
-### 4. Remplacement de code temporaire par requête
-
-Cette technique consiste à remplacer des variables temporaires par des méthodes qui calculent la valeur.
+Donner un nom à une expression complexe.
 
 **Avant :**
 ```pascal
-function TOrder.CalculateTotal: Currency;
-var
-  Subtotal: Currency;
-  TaxAmount: Currency;
-  DiscountAmount: Currency;
+if (Client.Commandes.Count > 10) and
+   (Client.Commandes.Total > 5000) and
+   (YearsBetween(Now, Client.DateInscription) > 2) then
 begin
-  Subtotal := 0;
-  for var Item in Items do
-    Subtotal := Subtotal + (Item.Price * Item.Quantity);
-
-  TaxAmount := Subtotal * TAX_RATE;
-
-  if IsEligibleForDiscount then
-    DiscountAmount := Subtotal * DISCOUNT_RATE
-  else
-    DiscountAmount := 0;
-
-  Result := Subtotal + TaxAmount - DiscountAmount;
+  // Appliquer remise fidélité
 end;
 ```
 
 **Après :**
 ```pascal
-function TOrder.CalculateSubtotal: Currency;
+var
+  EstClientActif: Boolean;
+  ATotalEleve: Boolean;
+  EstAncien: Boolean;
+  MeriteRemiseFidelite: Boolean;
 begin
-  Result := 0;
-  for var Item in Items do
-    Result := Result + (Item.Price * Item.Quantity);
+  EstClientActif := Client.Commandes.Count > 10;
+  ATotalEleve := Client.Commandes.Total > 5000;
+  EstAncien := YearsBetween(Now, Client.DateInscription) > 2;
+
+  MeriteRemiseFidelite := EstClientActif and ATotalEleve and EstAncien;
+
+  if MeriteRemiseFidelite then
+  begin
+    // Appliquer remise fidélité
+  end;
+end;
+```
+
+#### 6. Replace Magic Number with Constant
+
+Remplacer les nombres "magiques" par des constantes nommées.
+
+**Avant :**
+```pascal
+procedure CalculerRemise;
+begin
+  if Montant > 1000 then
+    Remise := Montant * 0.1
+  else if Montant > 500 then
+    Remise := Montant * 0.05
+  else
+    Remise := 0;
+
+  if Client.AncienneteJours > 365 then
+    Remise := Remise * 1.5;
+end;
+```
+
+**Après :**
+```pascal
+const
+  SEUIL_REMISE_ELEVEE = 1000;
+  SEUIL_REMISE_STANDARD = 500;
+  TAUX_REMISE_ELEVEE = 0.10;  // 10%
+  TAUX_REMISE_STANDARD = 0.05; // 5%
+  BONUS_FIDELITE = 1.5;
+  JOURS_PAR_AN = 365;
+
+procedure CalculerRemise;
+begin
+  if Montant > SEUIL_REMISE_ELEVEE then
+    Remise := Montant * TAUX_REMISE_ELEVEE
+  else if Montant > SEUIL_REMISE_STANDARD then
+    Remise := Montant * TAUX_REMISE_STANDARD
+  else
+    Remise := 0;
+
+  if Client.AncienneteJours > JOURS_PAR_AN then
+    Remise := Remise * BONUS_FIDELITE;
+end;
+```
+
+#### 7. Simplify Conditional (Simplifier condition)
+
+**Avant :**
+```pascal
+if not (Client.EstBloque) then
+begin
+  if Client.Solde > 0 then
+    Autoriser
+  else
+    Refuser;
+end
+else
+  Refuser;
+```
+
+**Après :**
+```pascal
+if Client.EstBloque or (Client.Solde <= 0) then
+  Refuser
+else
+  Autoriser;
+```
+
+### Processus de refactoring
+
+#### 1. Identifiez le problème
+
+Utilisez la checklist des code smells.
+
+#### 2. Écrivez ou vérifiez les tests
+
+**IMPORTANT :** Avant de refactoriser, assurez-vous d'avoir des tests !
+
+```pascal
+// Test avant refactoring
+procedure TestCalculerRemise;
+begin
+  Assert(CalculerRemise(800) = 40, 'Remise 5% sur 800');
+  Assert(CalculerRemise(1500) = 150, 'Remise 10% sur 1500');
+  Assert(CalculerRemise(100) = 0, 'Pas de remise sous 500');
+end;
+```
+
+#### 3. Refactorisez par petites étapes
+
+**❌ Mauvaise approche :**
+```
+Tout refactoriser d'un coup pendant 3 jours
+```
+
+**✅ Bonne approche :**
+```
+Petit refactoring → Tests → Commit
+Petit refactoring → Tests → Commit
+Petit refactoring → Tests → Commit
+```
+
+#### 4. Testez après chaque étape
+
+Lancez les tests après CHAQUE modification.
+
+#### 5. Commitez fréquemment
+
+```bash
+git commit -m "refactor: Extract method CalculerRemise"
+git commit -m "refactor: Rename variable X en MontantTotal"
+git commit -m "refactor: Extract class TAdresse"
+```
+
+### Exemple complet de refactoring
+
+**Code initial (avec problèmes) :**
+
+```pascal
+unit GestionCommandes;
+
+interface
+
+type
+  TFormCommande = class(TForm)
+    ButtonValider: TButton;
+    EditClient: TEdit;
+    EditProduit: TEdit;
+    EditQuantite: TEdit;
+    EditPrix: TEdit;
+    procedure ButtonValiderClick(Sender: TObject);
+  end;
+
+implementation
+
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+var
+  c, p, q: Integer;
+  pr: Double;
+  t: Double;
+  r: Double;
+  Query: TFDQuery;
+begin
+  // Validation
+  c := StrToIntDef(EditClient.Text, 0);
+  if c = 0 then
+  begin
+    ShowMessage('Client invalide');
+    Exit;
+  end;
+
+  p := StrToIntDef(EditProduit.Text, 0);
+  if p = 0 then
+  begin
+    ShowMessage('Produit invalide');
+    Exit;
+  end;
+
+  q := StrToIntDef(EditQuantite.Text, 0);
+  if q <= 0 then
+  begin
+    ShowMessage('Quantité invalide');
+    Exit;
+  end;
+
+  pr := StrToFloatDef(EditPrix.Text, 0);
+  if pr <= 0 then
+  begin
+    ShowMessage('Prix invalide');
+    Exit;
+  end;
+
+  // Calculs
+  t := pr * q;
+
+  // Remise
+  if t > 1000 then
+    r := t * 0.1
+  else if t > 500 then
+    r := t * 0.05
+  else
+    r := 0;
+
+  t := t - r;
+
+  // TVA
+  t := t * 1.2;
+
+  // Sauvegarde
+  Query := TFDQuery.Create(nil);
+  Query.SQL.Text := 'INSERT INTO commandes (client_id, produit_id, quantite, ' +
+    'prix, total) VALUES (' + IntToStr(c) + ', ' + IntToStr(p) + ', ' +
+    IntToStr(q) + ', ' + FloatToStr(pr) + ', ' + FloatToStr(t) + ')';
+  Query.ExecSQL;
+  Query.Free;
+
+  ShowMessage('Commande enregistrée !');
 end;
 
-function TOrder.CalculateTaxAmount: Currency;
+end.
+```
+
+**Problèmes identifiés :**
+1. ❌ Noms de variables non explicites (c, p, q, pr, t, r)
+2. ❌ Tout dans un seul bouton (150 lignes)
+3. ❌ Validation mélangée avec logique métier
+4. ❌ Nombres magiques (1000, 500, 0.1, 0.05, 1.2)
+5. ❌ Injection SQL
+6. ❌ Fuite mémoire (Query pas en try..finally)
+7. ❌ Pas testable
+
+**Étape 1 : Rename (Renommer les variables)**
+
+```pascal
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+var
+  ClientID, ProduitID, Quantite: Integer;
+  PrixUnitaire: Double;
+  Total: Double;
+  Remise: Double;
+  Query: TFDQuery;
 begin
-  Result := CalculateSubtotal * TAX_RATE;
+  // Validation
+  ClientID := StrToIntDef(EditClient.Text, 0);
+  if ClientID = 0 then
+  begin
+    ShowMessage('Client invalide');
+    Exit;
+  end;
+
+  // ... suite identique avec nouveaux noms
+end;
+```
+
+**Étape 2 : Extract Method (Validation)**
+
+```pascal
+function ValiderFormulaire(out ClientID, ProduitID, Quantite: Integer;
+  out PrixUnitaire: Double; out MessageErreur: string): Boolean;
+begin
+  Result := False;
+
+  ClientID := StrToIntDef(EditClient.Text, 0);
+  if ClientID = 0 then
+  begin
+    MessageErreur := 'Client invalide';
+    Exit;
+  end;
+
+  ProduitID := StrToIntDef(EditProduit.Text, 0);
+  if ProduitID = 0 then
+  begin
+    MessageErreur := 'Produit invalide';
+    Exit;
+  end;
+
+  Quantite := StrToIntDef(EditQuantite.Text, 0);
+  if Quantite <= 0 then
+  begin
+    MessageErreur := 'Quantité invalide';
+    Exit;
+  end;
+
+  PrixUnitaire := StrToFloatDef(EditPrix.Text, 0);
+  if PrixUnitaire <= 0 then
+  begin
+    MessageErreur := 'Prix invalide';
+    Exit;
+  end;
+
+  Result := True;
 end;
 
-function TOrder.CalculateDiscountAmount: Currency;
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+var
+  ClientID, ProduitID, Quantite: Integer;
+  PrixUnitaire: Double;
+  MessageErreur: string;
 begin
-  if IsEligibleForDiscount then
-    Result := CalculateSubtotal * DISCOUNT_RATE
+  if not ValiderFormulaire(ClientID, ProduitID, Quantite, PrixUnitaire, MessageErreur) then
+  begin
+    ShowMessage(MessageErreur);
+    Exit;
+  end;
+
+  // Suite...
+end;
+```
+
+**Étape 3 : Extract Method (Calculs)**
+
+```pascal
+const
+  SEUIL_REMISE_ELEVEE = 1000;
+  SEUIL_REMISE_STANDARD = 500;
+  TAUX_REMISE_ELEVEE = 0.10;
+  TAUX_REMISE_STANDARD = 0.05;
+  TAUX_TVA = 0.20;
+
+function CalculerRemise(MontantHT: Currency): Currency;
+begin
+  if MontantHT > SEUIL_REMISE_ELEVEE then
+    Result := MontantHT * TAUX_REMISE_ELEVEE
+  else if MontantHT > SEUIL_REMISE_STANDARD then
+    Result := MontantHT * TAUX_REMISE_STANDARD
   else
     Result := 0;
 end;
 
-function TOrder.CalculateTotal: Currency;
+function CalculerTotalTTC(PrixUnitaire: Currency; Quantite: Integer): Currency;
+var
+  MontantHT, Remise, MontantAvecRemise: Currency;
 begin
-  Result := CalculateSubtotal + CalculateTaxAmount - CalculateDiscountAmount;
+  MontantHT := PrixUnitaire * Quantite;
+  Remise := CalculerRemise(MontantHT);
+  MontantAvecRemise := MontantHT - Remise;
+  Result := MontantAvecRemise * (1 + TAUX_TVA);
 end;
 ```
 
-**Avantages :**
-- Code plus expressif et auto-documenté
-- Chaque méthode a une responsabilité unique
-- Facilite les tests unitaires
-- Permet la réutilisation des calculs intermédiaires
-
-### 5. Déplacement de méthode
-
-Cette technique consiste à déplacer une méthode vers la classe où elle est le plus utilisée ou logiquement la plus appropriée.
-
-**Avant :**
-```pascal
-// Dans TOrderProcessor
-procedure TOrderProcessor.ValidateCustomer(Customer: TCustomer);
-begin
-  if Customer.Name = '' then
-    raise EValidationError.Create('Nom de client requis');
-  if not IsValidEmail(Customer.Email) then
-    raise EValidationError.Create('Email invalide');
-  if Customer.CreditLimit < 0 then
-    raise EValidationError.Create('Limite de crédit invalide');
-end;
-
-// Utilisation
-procedure TOrderProcessor.ProcessOrder(Order: TOrder);
-begin
-  ValidateCustomer(Order.Customer);
-  // Suite du traitement
-end;
-```
-
-**Après :**
-```pascal
-// Dans TCustomer
-procedure TCustomer.Validate;
-begin
-  if Name = '' then
-    raise EValidationError.Create('Nom de client requis');
-  if not IsValidEmail(Email) then
-    raise EValidationError.Create('Email invalide');
-  if CreditLimit < 0 then
-    raise EValidationError.Create('Limite de crédit invalide');
-end;
-
-// Utilisation dans TOrderProcessor
-procedure TOrderProcessor.ProcessOrder(Order: TOrder);
-begin
-  Order.Customer.Validate;
-  // Suite du traitement
-end;
-```
-
-**Avantages :**
-- Encapsulation améliorée : la validation est maintenant une responsabilité du client
-- Cohérence : les méthodes sont placées dans les classes les plus appropriées
-- Réutilisation : la validation peut être appelée de n'importe où
-
-## Le processus de refactoring
-
-Voici les étapes à suivre pour un refactoring réussi :
-
-### 1. Identifiez les "mauvaises odeurs" (code smells)
-
-Les "mauvaises odeurs" sont des signes que le code pourrait bénéficier d'un refactoring :
-
-- **Méthode trop longue** : Plus de 30-50 lignes
-- **Classe trop grande** : Trop de responsabilités
-- **Liste de paramètres longue** : Plus de 3-4 paramètres
-- **Duplication de code** : Même code à plusieurs endroits
-- **Instructions conditionnelles complexes** : Nombreux if/else ou case imbriqués
-- **Commentaires excessifs** : Souvent un signe que le code n'est pas assez clair
-- **Classes fortement couplées** : Trop de dépendances entre classes
-
-### 2. Assurez-vous d'avoir des tests
-
-Avant de refactoriser, assurez-vous d'avoir des tests unitaires qui vérifient le comportement actuel du code. Cela vous permettra de vérifier que le refactoring n'a pas introduit de régression.
-
-### 3. Procédez par petits pas
-
-Ne refactorisez pas tout d'un coup. Faites de petits changements, exécutez les tests, puis passez au changement suivant.
-
-### 4. Utilisez les outils de l'IDE Delphi
-
-Delphi offre plusieurs outils pour faciliter le refactoring :
-
-- **Renommage** : Renomme une variable, classe ou méthode partout où elle est utilisée (Ctrl+Shift+E)
-- **Extraction de méthode** : Crée une nouvelle méthode à partir du code sélectionné
-- **Introduction de variable** : Crée une variable pour une expression sélectionnée
-- **Déplacement dans l'unité** : Déplace du code vers une autre unité
-
-### 5. Vérifiez après chaque étape
-
-Après chaque modification, vérifiez que :
-- Le code compile sans erreurs
-- Tous les tests passent
-- Le comportement externe reste identique
-
-## Exemple concret : Refactoring d'une classe Form
-
-Voyons un exemple concret de refactoring d'une classe de formulaire Delphi.
-
-### Version initiale (avant refactoring)
+**Étape 4 : Extract Class (Séparer la logique)**
 
 ```pascal
-unit FormMain;
+unit CommandeManager;
 
 interface
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Data.DB, FireDAC.Comp.Client;
-
 type
-  TFormMain = class(TForm)
-    edtName: TEdit;
-    edtEmail: TEdit;
-    edtPhone: TEdit;
-    btnSave: TButton;
-    btnCancel: TButton;
-    lblStatus: TLabel;
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+  TCommandeData = record
+    ClientID: Integer;
+    ProduitID: Integer;
+    Quantite: Integer;
+    PrixUnitaire: Currency;
+  end;
+
+  TCommandeManager = class
   private
     FConnection: TFDConnection;
-    FQuery: TFDQuery;
+    function CalculerRemise(MontantHT: Currency): Currency;
+    function CalculerTotalTTC(const Data: TCommandeData): Currency;
   public
-    { Public declarations }
-  end;
-
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  FConnection := TFDConnection.Create(nil);
-  FConnection.Params.Database := 'C:\Data\customers.db';
-  FConnection.Params.DriverID := 'SQLite';
-  FConnection.Connected := True;
-
-  FQuery := TFDQuery.Create(nil);
-  FQuery.Connection := FConnection;
-end;
-
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
-  FQuery.Free;
-  FConnection.Free;
-end;
-
-procedure TFormMain.btnSaveClick(Sender: TObject);
-var
-  ErrorMsg: string;
-begin
-  // Validation
-  ErrorMsg := '';
-  if edtName.Text = '' then
-    ErrorMsg := 'Name is required';
-  if (ErrorMsg = '') and (edtEmail.Text = '') then
-    ErrorMsg := 'Email is required';
-  if (ErrorMsg = '') and (Pos('@', edtEmail.Text) = 0) then
-    ErrorMsg := 'Invalid email format';
-
-  if ErrorMsg <> '' then
-  begin
-    lblStatus.Caption := ErrorMsg;
-    Exit;
-  end;
-
-  // Sauvegarde en base de données
-  try
-    FQuery.Close;
-    FQuery.SQL.Text := 'INSERT INTO Customers (Name, Email, Phone) VALUES (:Name, :Email, :Phone)';
-    FQuery.ParamByName('Name').AsString := edtName.Text;
-    FQuery.ParamByName('Email').AsString := edtEmail.Text;
-    FQuery.ParamByName('Phone').AsString := edtPhone.Text;
-    FQuery.ExecSQL;
-
-    lblStatus.Caption := 'Customer saved successfully';
-    edtName.Text := '';
-    edtEmail.Text := '';
-    edtPhone.Text := '';
-  except
-    on E: Exception do
-      lblStatus.Caption := 'Error: ' + E.Message;
-  end;
-end;
-
-procedure TFormMain.btnCancelClick(Sender: TObject);
-begin
-  edtName.Text := '';
-  edtEmail.Text := '';
-  edtPhone.Text := '';
-  lblStatus.Caption := '';
-end;
-
-end.
-```
-
-### Version refactorisée
-
-```pascal
-unit FormMain;
-
-interface
-
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, CustomerData, CustomerModel;
-
-type
-  TFormMain = class(TForm)
-    edtName: TEdit;
-    edtEmail: TEdit;
-    edtPhone: TEdit;
-    btnSave: TButton;
-    btnCancel: TButton;
-    lblStatus: TLabel;
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FCustomerData: TCustomerData;
-    FCustomer: TCustomer;
-
-    procedure UpdateUIFromCustomer;
-    procedure UpdateCustomerFromUI;
-    procedure ClearFields;
-    procedure DisplayStatus(const Message: string);
-    function ValidateCustomer: Boolean;
-  public
-    { Public declarations }
-  end;
-
-var
-  FormMain: TFormMain;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  FCustomerData := TCustomerData.Create;
-  FCustomer := TCustomer.Create;
-
-  // Initialisation de l'interface
-  ClearFields;
-end;
-
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
-  FCustomer.Free;
-  FCustomerData.Free;
-end;
-
-procedure TFormMain.UpdateUIFromCustomer;
-begin
-  edtName.Text := FCustomer.Name;
-  edtEmail.Text := FCustomer.Email;
-  edtPhone.Text := FCustomer.Phone;
-end;
-
-procedure TFormMain.UpdateCustomerFromUI;
-begin
-  FCustomer.Name := edtName.Text;
-  FCustomer.Email := edtEmail.Text;
-  FCustomer.Phone := edtPhone.Text;
-end;
-
-procedure TFormMain.ClearFields;
-begin
-  edtName.Text := '';
-  edtEmail.Text := '';
-  edtPhone.Text := '';
-  lblStatus.Caption := '';
-
-  // Réinitialiser l'objet client
-  FCustomer.Clear;
-end;
-
-procedure TFormMain.DisplayStatus(const Message: string);
-begin
-  lblStatus.Caption := Message;
-end;
-
-function TFormMain.ValidateCustomer: Boolean;
-var
-  ValidationResult: TValidationResult;
-begin
-  UpdateCustomerFromUI;
-
-  ValidationResult := FCustomer.Validate;
-  if not ValidationResult.IsValid then
-  begin
-    DisplayStatus(ValidationResult.ErrorMessage);
-    Result := False;
-  end
-  else
-    Result := True;
-end;
-
-procedure TFormMain.btnSaveClick(Sender: TObject);
-begin
-  if not ValidateCustomer then
-    Exit;
-
-  try
-    if FCustomerData.SaveCustomer(FCustomer) then
-    begin
-      DisplayStatus('Customer saved successfully');
-      ClearFields;
-    end;
-  except
-    on E: Exception do
-      DisplayStatus('Error: ' + E.Message);
-  end;
-end;
-
-procedure TFormMain.btnCancelClick(Sender: TObject);
-begin
-  ClearFields;
-end;
-
-end.
-```
-
-### Unités supplémentaires créées pendant le refactoring
-
-```pascal
-// CustomerModel.pas
-unit CustomerModel;
-
-interface
-
-uses
-  System.SysUtils;
-
-type
-  TValidationResult = record
-    IsValid: Boolean;
-    ErrorMessage: string;
-
-    class function CreateValid: TValidationResult; static;
-    class function CreateInvalid(const ErrorMsg: string): TValidationResult; static;
-  end;
-
-  TCustomer = class
-  private
-    FID: Integer;
-    FName: string;
-    FEmail: string;
-    FPhone: string;
-  public
-    procedure Clear;
-    function Validate: TValidationResult;
-
-    property ID: Integer read FID write FID;
-    property Name: string read FName write FName;
-    property Email: string read FEmail write FEmail;
-    property Phone: string read FPhone write FPhone;
+    constructor Create(Connection: TFDConnection);
+    function EnregistrerCommande(const Data: TCommandeData): Boolean;
   end;
 
 implementation
 
-class function TValidationResult.CreateValid: TValidationResult;
-begin
-  Result.IsValid := True;
-  Result.ErrorMessage := '';
-end;
-
-class function TValidationResult.CreateInvalid(const ErrorMsg: string): TValidationResult;
-begin
-  Result.IsValid := False;
-  Result.ErrorMessage := ErrorMsg;
-end;
-
-procedure TCustomer.Clear;
-begin
-  FID := 0;
-  FName := '';
-  FEmail := '';
-  FPhone := '';
-end;
-
-function TCustomer.Validate: TValidationResult;
-begin
-  if FName = '' then
-    Exit(TValidationResult.CreateInvalid('Name is required'));
-
-  if FEmail = '' then
-    Exit(TValidationResult.CreateInvalid('Email is required'));
-
-  if Pos('@', FEmail) = 0 then
-    Exit(TValidationResult.CreateInvalid('Invalid email format'));
-
-  Result := TValidationResult.CreateValid;
-end;
-
-end.
-
-// CustomerData.pas
-unit CustomerData;
-
-interface
-
-uses
-  System.SysUtils, FireDAC.Comp.Client, CustomerModel;
-
-type
-  TCustomerData = class
-  private
-    FConnection: TFDConnection;
-    FQuery: TFDQuery;
-
-    procedure InitDatabase;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    function SaveCustomer(Customer: TCustomer): Boolean;
-    function LoadCustomer(ID: Integer; Customer: TCustomer): Boolean;
-  end;
-
-implementation
-
-constructor TCustomerData.Create;
+constructor TCommandeManager.Create(Connection: TFDConnection);
 begin
   inherited Create;
-
-  FConnection := TFDConnection.Create(nil);
-  FQuery := TFDQuery.Create(nil);
-
-  InitDatabase;
+  FConnection := Connection;
 end;
 
-destructor TCustomerData.Destroy;
+function TCommandeManager.CalculerRemise(MontantHT: Currency): Currency;
+const
+  SEUIL_REMISE_ELEVEE = 1000;
+  SEUIL_REMISE_STANDARD = 500;
+  TAUX_REMISE_ELEVEE = 0.10;
+  TAUX_REMISE_STANDARD = 0.05;
 begin
-  FQuery.Free;
-  FConnection.Free;
-
-  inherited;
-end;
-
-procedure TCustomerData.InitDatabase;
-begin
-  FConnection.Params.Database := 'C:\Data\customers.db';
-  FConnection.Params.DriverID := 'SQLite';
-  FConnection.Connected := True;
-
-  FQuery.Connection := FConnection;
-
-  // Vérifier si la table existe, sinon la créer
-  FQuery.SQL.Text := 'CREATE TABLE IF NOT EXISTS Customers (' +
-                     'ID INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-                     'Name TEXT NOT NULL, ' +
-                     'Email TEXT NOT NULL, ' +
-                     'Phone TEXT)';
-  FQuery.ExecSQL;
-end;
-
-function TCustomerData.SaveCustomer(Customer: TCustomer): Boolean;
-begin
-  FQuery.Close;
-
-  if Customer.ID > 0 then
-  begin
-    // Mise à jour d'un client existant
-    FQuery.SQL.Text := 'UPDATE Customers SET Name = :Name, Email = :Email, ' +
-                       'Phone = :Phone WHERE ID = :ID';
-    FQuery.ParamByName('ID').AsInteger := Customer.ID;
-  end
+  if MontantHT > SEUIL_REMISE_ELEVEE then
+    Result := MontantHT * TAUX_REMISE_ELEVEE
+  else if MontantHT > SEUIL_REMISE_STANDARD then
+    Result := MontantHT * TAUX_REMISE_STANDARD
   else
-  begin
-    // Insertion d'un nouveau client
-    FQuery.SQL.Text := 'INSERT INTO Customers (Name, Email, Phone) ' +
-                       'VALUES (:Name, :Email, :Phone)';
-  end;
-
-  FQuery.ParamByName('Name').AsString := Customer.Name;
-  FQuery.ParamByName('Email').AsString := Customer.Email;
-  FQuery.ParamByName('Phone').AsString := Customer.Phone;
-
-  FQuery.ExecSQL;
-
-  if Customer.ID = 0 then
-  begin
-    // Récupérer l'ID généré pour un nouveau client
-    FQuery.SQL.Text := 'SELECT last_insert_rowid()';
-    FQuery.Open;
-    Customer.ID := FQuery.Fields[0].AsInteger;
-  end;
-
-  Result := True;
+    Result := 0;
 end;
 
-function TCustomerData.LoadCustomer(ID: Integer; Customer: TCustomer): Boolean;
+function TCommandeManager.CalculerTotalTTC(const Data: TCommandeData): Currency;
+const
+  TAUX_TVA = 0.20;
+var
+  MontantHT, Remise, MontantAvecRemise: Currency;
 begin
-  FQuery.Close;
-  FQuery.SQL.Text := 'SELECT * FROM Customers WHERE ID = :ID';
-  FQuery.ParamByName('ID').AsInteger := ID;
-  FQuery.Open;
+  MontantHT := Data.PrixUnitaire * Data.Quantite;
+  Remise := CalculerRemise(MontantHT);
+  MontantAvecRemise := MontantHT - Remise;
+  Result := MontantAvecRemise * (1 + TAUX_TVA);
+end;
 
-  if FQuery.Eof then
-  begin
-    Result := False;
-    Exit;
+function TCommandeManager.EnregistrerCommande(const Data: TCommandeData): Boolean;
+var
+  Query: TFDQuery;
+  Total: Currency;
+begin
+  Result := False;
+  Total := CalculerTotalTTC(Data);
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'INSERT INTO commandes (client_id, produit_id, ' +
+      'quantite, prix, total) VALUES (:client, :produit, :quantite, :prix, :total)';
+    Query.ParamByName('client').AsInteger := Data.ClientID;
+    Query.ParamByName('produit').AsInteger := Data.ProduitID;
+    Query.ParamByName('quantite').AsInteger := Data.Quantite;
+    Query.ParamByName('prix').AsCurrency := Data.PrixUnitaire;
+    Query.ParamByName('total').AsCurrency := Total;
+    Query.ExecSQL;
+    Result := True;
+  finally
+    Query.Free;
   end;
-
-  Customer.ID := FQuery.FieldByName('ID').AsInteger;
-  Customer.Name := FQuery.FieldByName('Name').AsString;
-  Customer.Email := FQuery.FieldByName('Email').AsString;
-  Customer.Phone := FQuery.FieldByName('Phone').AsString;
-
-  Result := True;
 end;
 
 end.
 ```
 
-## Améliorations apportées par le refactoring
+**Code final du formulaire (propre et simple) :**
+
+```pascal
+unit GestionCommandes;
+
+interface
+
+type
+  TFormCommande = class(TForm)
+    ButtonValider: TButton;
+    EditClient: TEdit;
+    EditProduit: TEdit;
+    EditQuantite: TEdit;
+    EditPrix: TEdit;
+    procedure ButtonValiderClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+  private
+    FCommandeManager: TCommandeManager;
+    function ValiderFormulaire(out Data: TCommandeData;
+      out MessageErreur: string): Boolean;
+  end;
+
+implementation
+
+uses
+  CommandeManager;
+
+procedure TFormCommande.FormCreate(Sender: TObject);
+begin
+  FCommandeManager := TCommandeManager.Create(dmMain.Connection);
+end;
+
+procedure TFormCommande.FormDestroy(Sender: TObject);
+begin
+  FCommandeManager.Free;
+end;
+
+function TFormCommande.ValiderFormulaire(out Data: TCommandeData;
+  out MessageErreur: string): Boolean;
+begin
+  Result := False;
+
+  Data.ClientID := StrToIntDef(EditClient.Text, 0);
+  if Data.ClientID = 0 then
+  begin
+    MessageErreur := 'Client invalide';
+    Exit;
+  end;
+
+  Data.ProduitID := StrToIntDef(EditProduit.Text, 0);
+  if Data.ProduitID = 0 then
+  begin
+    MessageErreur := 'Produit invalide';
+    Exit;
+  end;
+
+  Data.Quantite := StrToIntDef(EditQuantite.Text, 0);
+  if Data.Quantite <= 0 then
+  begin
+    MessageErreur := 'Quantité invalide';
+    Exit;
+  end;
+
+  Data.PrixUnitaire := StrToFloatDef(EditPrix.Text, 0);
+  if Data.PrixUnitaire <= 0 then
+  begin
+    MessageErreur := 'Prix invalide';
+    Exit;
+  end;
+
+  Result := True;
+end;
+
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);
+var
+  Data: TCommandeData;
+  MessageErreur: string;
+begin
+  if not ValiderFormulaire(Data, MessageErreur) then
+  begin
+    ShowMessage(MessageErreur);
+    Exit;
+  end;
+
+  if FCommandeManager.EnregistrerCommande(Data) then
+    ShowMessage('Commande enregistrée avec succès !')
+  else
+    ShowMessage('Erreur lors de l''enregistrement');
+end;
+
+end.
+```
+
+**Bénéfices du refactoring :**
+- ✅ Code lisible et compréhensible
+- ✅ Facilement testable (TCommandeManager)
+- ✅ Pas d'injection SQL
+- ✅ Pas de fuite mémoire
+- ✅ Réutilisable
+- ✅ Maintenable
+- ✅ Séparation UI / logique
 
-Analysons les principales améliorations obtenues grâce à ce refactoring :
+## Outils et techniques
 
-### 1. Séparation des responsabilités
+### IDE Delphi
 
-- **Avant** : Le formulaire gérait à la fois l'interface utilisateur, la validation des données et l'accès à la base de données.
-- **Après** : Nous avons séparé le code en trois entités distinctes :
-  - `TFormMain` : Responsable uniquement de l'interface utilisateur
-  - `TCustomer` : Modèle de données avec validation intégrée
-  - `TCustomerData` : Gestion de l'accès aux données
+**Refactoring intégré :**
+- Rename (Ctrl+Shift+E)
+- Extract Method
+- Declare Variable
+- Find References
+- Safe Delete
 
-### 2. Code plus maintenable
+### Outils externes
 
-- Les méthodes sont plus courtes et ont une seule responsabilité
-- Le code est organisé de manière logique
-- L'ajout de nouvelles fonctionnalités (comme modifier un client existant) sera beaucoup plus simple
+**1. Formatter/Linter**
+- **DelphiLint** : Analyse statique du code
+- **Formatter** : Formatage automatique
 
-### 3. Réutilisabilité accrue
+**2. Analyseurs de code**
+- **Pascal Analyzer** : Détecte les problèmes de qualité
+- **FixInsight** : Suggestions d'amélioration
 
-- Les classes `TCustomer` et `TCustomerData` peuvent être réutilisées dans d'autres formulaires
-- La logique de validation est centralisée dans la classe modèle
+**3. Metrics**
+- **Project Metrics** : Mesure la complexité
 
-### 4. Testabilité améliorée
+### Tests automatisés
 
-- La logique métier peut être testée indépendamment de l'interface utilisateur
-- On peut facilement écrire des tests unitaires pour `TCustomer` et `TCustomerData`
+Les tests sont essentiels pour refactoriser en toute sécurité.
 
-### 5. Meilleure gestion des erreurs
+```pascal
+// Tests unitaires avec DUnitX
+procedure TestCalculerRemise;
+begin
+  Assert.AreEqual(0, CalculerRemise(100), 'Pas de remise sous 500');
+  Assert.AreEqual(25, CalculerRemise(500), 'Remise 5% sur 500');
+  Assert.AreEqual(150, CalculerRemise(1500), 'Remise 10% sur 1500');
+end;
+```
 
-- La validation est structurée avec un type dédié `TValidationResult`
-- Les messages d'erreur sont plus clairs et centralisés
+## Bonnes pratiques
 
-### 6. Flexibilité pour l'évolution
+### 1. La règle du Boy Scout
 
-- Si nous voulons changer la méthode de stockage (par exemple, passer de SQLite à MySQL), seule la classe `TCustomerData` devra être modifiée
+> "Laissez le code plus propre que vous l'avez trouvé"
 
-## Outils de refactoring dans Delphi
+À chaque fois que vous touchez du code, améliorez-le un peu.
 
-Delphi offre plusieurs outils intégrés pour faciliter le refactoring de votre code.
+### 2. Refactorisez en continu
 
-### Refactorings disponibles via le menu contextuel
+Ne attendez pas d'avoir 10 000 lignes de dette technique.
 
-Cliquez avec le bouton droit sur un identifiant, puis sélectionnez "Refactorings" pour accéder aux options suivantes :
+**Mauvaise approche :**
+```
+Coder pendant 6 mois → Grande phase de refactoring
+```
 
-1. **Rename** (Ctrl+Shift+E) : Renomme une variable, un champ, une méthode ou une classe partout où elle est utilisée.
+**Bonne approche :**
+```
+Coder → Mini refactoring → Coder → Mini refactoring
+```
 
-2. **Extract Method** : Crée une nouvelle méthode à partir du code sélectionné.
+### 3. Utilisez les tests
 
-3. **Extract Resource String** : Extrait une chaîne de caractères dans le fichier de ressources pour l'internationalisation.
+**Règle d'or :** Ne refactorisez jamais sans tests.
 
-4. **Introduce Variable** : Crée une variable locale pour une expression sélectionnée.
+```
+Tests existants → Refactoring → Tests passent
+```
 
-5. **Find Unit** (Ctrl+Shift+A) : Trouve et ajoute l'unité nécessaire pour un type ou une fonction non déclarée.
+### 4. Une modification à la fois
 
-6. **Declare Variable** : Crée automatiquement une déclaration de variable pour un identifiant non déclaré.
+```
+❌ Renommer + extraire méthode + changer logique
 
-7. **Sync Modified Files** : Met à jour les fichiers d'interface (.h) pour les modifications dans les fichiers d'implémentation (.cpp) - pour C++Builder.
+✅ Renommer → Tests → Commit
+✅ Extraire méthode → Tests → Commit
+✅ Changer logique → Tests → Commit
+```
 
-### Code Formatter (Ctrl+D)
+### 5. Documentez pourquoi
 
-L'outil de formatage automatique de Delphi permet d'appliquer un style cohérent à votre code. Vous pouvez personnaliser les règles de formatage dans les options de l'IDE.
+```pascal
+// REFACTORING: Extraction de la validation dans une fonction séparée
+// pour améliorer la testabilité et la réutilisabilité
+function ValiderDonnees(...): Boolean;
+```
 
-### Audits et Métriques
+### 6. Revue de code après refactoring
 
-Delphi intègre des outils d'analyse statique du code qui peuvent vous aider à identifier les zones à refactoriser :
+Faites relire vos refactorings, surtout les gros.
 
-1. **Code Audits** : Détecte les problèmes potentiels comme les variables non utilisées, les paramètres qui pourraient être const, etc.
+### 7. Mesurez l'impact
 
-2. **Code Metrics** : Mesure la complexité du code (nombre de lignes, profondeur d'imbrication, etc.)
+**Avant :**
+- Complexité cyclomatique : 15
+- Lignes de code : 250
+- Tests : 0
 
-## Approche pratique pour intégrer la revue de code et le refactoring
+**Après :**
+- Complexité cyclomatique : 5
+- Lignes de code : 180
+- Tests : 15
 
-Voici une approche par étapes pour intégrer efficacement la revue de code et le refactoring dans votre processus de développement :
+### 8. Ne sur-refactorisez pas
 
-### 1. Planifiez des sessions régulières
+Parfois, "assez bon" est suffisant. Ne cherchez pas la perfection absolue.
 
-- Programmez des revues de code hebdomadaires ou bihebdomadaires
-- Alternez entre revues individuelles et revues d'équipe
+## Quand NE PAS refactoriser
 
-### 2. Commencez petit
+### 1. Code qui fonctionne et ne change jamais
 
-- Ne tentez pas de refactoriser toute votre application d'un coup
-- Choisissez les zones les plus problématiques ou celles que vous modifiez souvent
+Si c'est du code stable que personne ne touche, laissez-le.
 
-### 3. Élaborez une checklist de revue
+### 2. Code qui sera supprimé bientôt
 
-- Créez une checklist adaptée à votre projet et à votre équipe
-- Mettez-la à jour régulièrement en fonction de votre expérience
+Pas la peine de refactoriser ce qui va disparaître.
 
-### 4. Établissez des standards de code
+### 3. Sous pression de deadline
 
-- Définissez des règles de nommage, de structuration et de formatage
-- Documentez ces standards et assurez-vous qu'ils sont accessibles à tous
+Refactorisez APRÈS la deadline, pas avant.
 
-### 5. Automatisez ce qui peut l'être
+### 4. Sans tests
 
-- Utilisez des outils d'analyse statique et de formatage automatique
-- Intégrez ces outils à votre processus de build ou de commit
+Si vous n'avez pas de tests, écrivez-en d'abord.
 
-### 6. Mesurez les résultats
+### 5. Code dont vous ne comprenez pas la logique
 
-- Suivez des métriques comme le nombre de bugs trouvés pendant les revues
-- Évaluez l'impact du refactoring sur la maintenance et l'évolution du code
+Comprenez d'abord, refactorisez ensuite.
 
-## Conseils pour un refactoring sans douleur
+## Checklist de revue et refactoring
 
-### 1. Assurez la rétrocompatibilité
+**Avant de merger du code :**
 
-Lorsque vous refactorisez du code qui est utilisé par d'autres composants ou applications, assurez-vous de maintenir les interfaces publiques inchangées.
+### Revue de code
+- [ ] Le code compile sans warning
+- [ ] Les tests passent
+- [ ] La PR est de taille raisonnable (< 400 lignes)
+- [ ] Les fonctions sont courtes (< 50 lignes)
+- [ ] Les noms sont explicites
+- [ ] Pas de duplication
+- [ ] Pas d'injection SQL
+- [ ] Les ressources sont libérées
+- [ ] La documentation est à jour
+- [ ] Les commentaires TODO sont justifiés
 
-### 2. Versionnez avant de refactoriser
-
-Faites toujours un commit de votre code avant de commencer un refactoring important, pour pouvoir revenir en arrière si nécessaire.
-
-### 3. Testez, testez, testez
-
-Exécutez vos tests unitaires après chaque étape de refactoring pour vous assurer que vous n'avez pas introduit de régression.
-
-### 4. Documentez vos décisions
-
-Pour les refactorings majeurs, documentez les raisons de vos choix et les alternatives que vous avez envisagées.
-
-### 5. Communiquez avec l'équipe
-
-Assurez-vous que toute l'équipe est au courant des refactorings importants, surtout ceux qui pourraient affecter leur travail.
-
-## Signes qu'un code a besoin de refactoring
-
-### 1. Rigidité
-
-Le code est difficile à modifier. Une simple modification entraîne une cascade de changements dans des modules non liés.
-
-### 2. Fragilité
-
-Le code a tendance à se casser à plusieurs endroits lorsque vous le modifiez.
-
-### 3. Immobilité
-
-Le code contient des parties qui pourraient être utiles ailleurs, mais l'effort pour les extraire et les rendre réutilisables est trop important.
-
-### 4. Viscosité
-
-Il est plus facile de faire les choses de manière incorrecte que de suivre le design prévu.
-
-### 5. Complexité inutile
-
-Le code contient des éléments qui n'apportent pas de valeur immédiate.
-
-### 6. Répétition
-
-Le même code ou une variation légèrement différente apparaît à plusieurs endroits.
-
-### 7. Opacité
-
-Le code est difficile à comprendre.
-
-## Application pratique : Refactoring d'un projet Delphi existant
-
-Voici une approche pratique pour refactoriser un projet Delphi existant :
-
-### Étape 1 : Évaluation initiale
-
-1. Identifiez les zones problématiques (à partir de rapports de bugs, de métriques de code, etc.)
-2. Établissez une liste prioritaire des modules à refactoriser
-3. Définissez des objectifs clairs pour chaque refactoring
-
-### Étape 2 : Préparation
-
-1. Assurez-vous d'avoir une suite de tests couvrant les fonctionnalités à refactoriser
-2. Si vous n'avez pas de tests, créez-en avant de commencer
-3. Créez une branche dédiée dans votre système de contrôle de version
-
-### Étape 3 : Refactoring par étapes
-
-1. Commencez par des refactorings simples (renommage, extraction de méthode, etc.)
-2. Testez après chaque modification
-3. Committez fréquemment avec des messages descriptifs
-
-### Étape 4 : Validation
-
-1. Exécutez tous les tests pour vérifier qu'il n'y a pas de régression
-2. Demandez une revue de code à vos collègues
-3. Vérifiez que les objectifs initiaux ont été atteints
-
-### Étape 5 : Finalisation
-
-1. Mettez à jour la documentation si nécessaire
-2. Fusionnez la branche de refactoring avec la branche principale
-3. Partagez les enseignements tirés avec l'équipe
+### Refactoring
+- [ ] Les nombres magiques sont remplacés par des constantes
+- [ ] Les fonctions longues sont découpées
+- [ ] Les conditions complexes sont simplifiées
+- [ ] La duplication est éliminée
+- [ ] Les classes trop grosses sont découpées
+- [ ] Les variables temporaires inutiles sont supprimées
+- [ ] Les tests couvrent le code refactorisé
 
 ## Conclusion
 
-La revue de code et le refactoring sont deux pratiques essentielles qui, lorsqu'elles sont correctement intégrées dans votre processus de développement, peuvent considérablement améliorer la qualité de votre code Delphi.
+La revue de code et le refactoring sont deux piliers de la qualité logicielle professionnelle.
 
-La revue de code vous permet de détecter les problèmes tôt, de partager les connaissances et de maintenir des standards élevés au sein de votre équipe. Le refactoring, quant à lui, vous aide à maintenir votre code propre, flexible et maintenable sur le long terme.
+**Revue de code :**
+- Détecte les bugs tôt
+- Améliore la qualité
+- Partage les connaissances
+- Crée une culture d'équipe
 
-N'oubliez pas que ces pratiques ne sont pas des activités ponctuelles, mais des habitudes à cultiver continuellement. Avec le temps, vous développerez un instinct pour détecter le code qui a besoin d'être amélioré et vous serez plus à l'aise pour appliquer les techniques de refactoring appropriées.
+**Refactoring :**
+- Maintient le code propre
+- Rembourse la dette technique
+- Facilite l'évolution
+- Rend le code testable
 
-Enfin, rappelez-vous que le but ultime n'est pas d'avoir un code parfait, mais un code suffisamment bon pour répondre aux besoins actuels tout en restant adaptable aux exigences futures. Comme l'a dit Kent Beck, un des pionniers du refactoring : "Faites-le marcher, faites-le bien, puis faites-le vite."
+**Points clés à retenir :**
+
+1. **Faites des revues systématiques** - Tout code doit être relu
+2. **Soyez constructif** - Critiquez le code, pas la personne
+3. **Refactorisez en continu** - Petits changements réguliers
+4. **Testez toujours** - Pas de refactoring sans tests
+5. **Commitez fréquemment** - Petites étapes sécurisées
+6. **Utilisez les outils** - IDE, analyseurs, formatters
+7. **Apprenez des autres** - Chaque revue est une opportunité
+8. **Ne sur-optimisez pas** - "Assez bon" est souvent suffisant
+
+**Citations inspirantes :**
+
+> "Le code est lu 10 fois plus souvent qu'il n'est écrit"
+> — Robert C. Martin
+
+> "Tout le monde peut écrire du code qu'un ordinateur comprend. Les bons développeurs écrivent du code que les humains comprennent"
+> — Martin Fowler
+
+> "Rendez-le d'abord fonctionnel, puis rendez-le beau, puis rendez-le rapide (si nécessaire)"
+> — Kent Beck
+
+La revue de code et le refactoring ne sont pas du temps perdu. C'est un investissement qui vous fera gagner énormément de temps à moyen et long terme. Un code de qualité est un plaisir à maintenir. Un code chaotique est un enfer quotidien.
+
+Commencez dès aujourd'hui :
+- Demandez une revue de code pour votre prochaine PR
+- Refactorisez une petite fonction qui vous dérange
+- Apprenez une nouvelle technique de refactoring
+
+Votre futur vous remerciera !
+
+---
+
+**Prochaine étape :** Dans la section suivante, nous explorerons l'intégration continue et le déploiement continu (CI/CD), pour automatiser la qualité et le déploiement de vos applications Delphi.
 
 ⏭️ [Intégration avec Git et CI/CD](/18-architecture-et-bonnes-pratiques/08-integration-avec-git-et-ci-cd.md)
