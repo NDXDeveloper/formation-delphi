@@ -1,116 +1,216 @@
-# 16. Sécurité des applications
-## 16.5 Protection contre les vulnérabilités courantes
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.5 Protection contre les vulnérabilités courantes
 
-Même avec une authentification solide, des autorisations strictes, un chiffrement robuste et des connexions sécurisées, votre application peut rester vulnérable à diverses attaques si vous ne prenez pas en compte les risques de sécurité courants. Dans ce chapitre, nous allons explorer les vulnérabilités les plus fréquentes et comment les éviter dans vos applications Delphi.
+## Introduction
 
-### Injection SQL
+Les vulnérabilités sont des failles de sécurité dans votre application que des attaquants peuvent exploiter pour voler des données, prendre le contrôle du système ou causer des dommages. Même les développeurs expérimentés peuvent introduire des vulnérabilités sans s'en rendre compte.
 
-L'injection SQL reste l'une des vulnérabilités les plus répandues. Elle permet à un attaquant d'insérer des commandes SQL malveillantes dans votre application.
+**Analogie du monde réel** : Une vulnérabilité, c'est comme laisser une fenêtre ouverte dans une maison bien fermée. Même si vous avez verrouillé toutes les portes (authentification, chiffrement), cette petite fenêtre ouverte suffit à un cambrioleur pour entrer.
 
-#### Le problème
+### Pourquoi ces vulnérabilités existent-elles ?
 
-Voici un exemple de code vulnérable :
+Les vulnérabilités apparaissent généralement pour ces raisons :
+- **Faire confiance aux données utilisateur** : Croire que l'utilisateur va toujours entrer des données valides
+- **Manque de validation** : Ne pas vérifier les entrées avant de les utiliser
+- **Mauvaise gestion des erreurs** : Révéler trop d'informations dans les messages d'erreur
+- **Code hérité** : Anciennes pratiques qui n'étaient pas sécurisées
+- **Pression temporelle** : Rush pour terminer sans penser à la sécurité
 
-```pas
-procedure TUserManager.AuthenticateUser(const Username, Password: string);
+## Le OWASP Top 10
+
+L'OWASP (Open Web Application Security Project) publie régulièrement une liste des 10 vulnérabilités les plus critiques. Voici celles que nous allons aborder :
+
+1. **Injection** (SQL, commandes, etc.)
+2. **Broken Authentication** (authentification cassée)
+3. **Sensitive Data Exposure** (exposition de données sensibles)
+4. **XML External Entities (XXE)**
+5. **Broken Access Control** (contrôle d'accès cassé)
+6. **Security Misconfiguration** (mauvaise configuration)
+7. **Cross-Site Scripting (XSS)**
+8. **Insecure Deserialization** (désérialisation non sécurisée)
+9. **Using Components with Known Vulnerabilities** (composants vulnérables)
+10. **Insufficient Logging & Monitoring** (journalisation insuffisante)
+
+## 1. Injection SQL
+
+### Qu'est-ce qu'une injection SQL ?
+
+C'est la vulnérabilité **N°1** la plus dangereuse. Un attaquant insère du code SQL malveillant dans vos requêtes pour accéder, modifier ou détruire vos données.
+
+**Exemple de scénario** :
+```
+Utilisateur entre : admin
+Mot de passe : ' OR '1'='1
+
+Requête générée :
+SELECT * FROM Users WHERE username = 'admin' AND password = '' OR '1'='1'
+
+Résultat : La condition '1'='1' est toujours vraie, donc l'attaquant est connecté !
+```
+
+### Code vulnérable (à NE JAMAIS FAIRE)
+
+```pascal
+// ❌ TRÈS DANGEREUX - Vulnérable aux injections SQL
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);
 var
   Query: TFDQuery;
+  SQL: string;
 begin
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
 
-    // DANGEREUX : Construction directe de requête SQL avec des entrées utilisateur
-    Query.SQL.Text := 'SELECT * FROM users WHERE username = ''' + Username +
-                      ''' AND password = ''' + Password + '''';
-    Query.Open;
+    // Construction directe de la requête avec les entrées utilisateur
+    SQL := 'SELECT * FROM Users WHERE Username = ''' + EditUsername.Text +
+           ''' AND Password = ''' + EditPassword.Text + '''';
 
-    if Query.RecordCount > 0 then
-      // Authentification réussie
-    else
-      // Échec de l'authentification
-  finally
-    Query.Free;
-  end;
-end;
-```
-
-Un attaquant pourrait entrer `admin' --` comme nom d'utilisateur, ce qui transformerait la requête en :
-
-```sql
-SELECT * FROM users WHERE username = 'admin' --' AND password = '...'
-```
-
-Le `--` est un commentaire en SQL, ce qui signifie que la vérification du mot de passe est ignorée.
-
-#### La solution : requêtes paramétrées
-
-Utilisez toujours des requêtes paramétrées :
-
-```pas
-procedure TUserManager.AuthenticateUser(const Username, Password: string);
-var
-  Query: TFDQuery;
-begin
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-
-    // SÉCURISÉ : Utilisation de paramètres nommés
-    Query.SQL.Text := 'SELECT * FROM users WHERE username = :username AND password_hash = :password';
-    Query.ParamByName('username').AsString := Username;
-    Query.ParamByName('password').AsString := Password;
-    Query.Open;
-
-    if Query.RecordCount > 0 then
-      // Authentification réussie
-    else
-      // Échec de l'authentification
-  finally
-    Query.Free;
-  end;
-end;
-```
-
-#### Bonnes pratiques pour prévenir l'injection SQL
-
-1. **Utilisez toujours des requêtes paramétrées** avec FireDAC, DBX ou tout autre accès aux données.
-
-2. **Validez les entrées utilisateur** avant de les utiliser dans des requêtes.
-
-3. **Utilisez des privilèges minimaux** pour le compte de base de données utilisé par votre application.
-
-4. **N'affichez jamais les erreurs de base de données** directement aux utilisateurs.
-
-```pas
-// Exemple de traitement sécurisé des erreurs de base de données
-procedure TDataModule1.ExecuteSafeQuery(const SQL: string; Params: array of Variant);
-var
-  Query: TFDQuery;
-begin
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
     Query.SQL.Text := SQL;
+    Query.Open;
 
-    // Assigner les paramètres
-    for var I := 0 to High(Params) div 2 do
-      Query.ParamByName(string(Params[I*2])).Value := Params[I*2+1];
+    if not Query.IsEmpty then
+      ShowMessage('Connexion réussie')
+    else
+      ShowMessage('Identifiants incorrects');
+  finally
+    Query.Free;
+  end;
+end;
+```
 
-    try
-      Query.ExecSQL;
-    except
-      on E: Exception do
-      begin
-        // Journaliser l'erreur réelle pour le débogage
-        LogError('Erreur SQL: ' + E.Message);
+**Pourquoi c'est dangereux ?**
 
-        // Afficher un message générique à l'utilisateur
-        raise Exception.Create('Une erreur est survenue lors de l''accès à la base de données. ' +
-                              'Veuillez contacter le support technique.');
-      end;
+Si l'utilisateur entre : `'; DROP TABLE Users; --`
+
+La requête devient :
+```sql
+SELECT * FROM Users WHERE Username = ''; DROP TABLE Users; --' AND Password = ''
+```
+
+Résultat : **Toute la table Users est supprimée !**
+
+### Solution : Requêtes paramétrées
+
+```pascal
+// ✅ SÉCURISÉ - Utilise des paramètres
+procedure TFormLogin.BtnConnexionClickSecurise(Sender: TObject);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+
+    // Utilisation de paramètres nommés
+    Query.SQL.Text := 'SELECT * FROM Users WHERE Username = :Username AND Password = :Password';
+
+    // Les paramètres sont automatiquement échappés
+    Query.ParamByName('Username').AsString := EditUsername.Text;
+    Query.ParamByName('Password').AsString := HashMotDePasse(EditPassword.Text);
+
+    Query.Open;
+
+    if not Query.IsEmpty then
+      ShowMessage('Connexion réussie')
+    else
+      ShowMessage('Identifiants incorrects');
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+**Pourquoi c'est sécurisé ?**
+
+Les paramètres sont traités comme des **données**, jamais comme du **code SQL**. Même si l'utilisateur entre du SQL malveillant, il sera simplement cherché comme une chaîne de caractères.
+
+### Autres exemples de requêtes paramétrées
+
+```pascal
+// INSERT sécurisé
+procedure AjouterUtilisateurSecurise(const ANom, AEmail: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'INSERT INTO Users (Nom, Email) VALUES (:Nom, :Email)';
+    Query.ParamByName('Nom').AsString := ANom;
+    Query.ParamByName('Email').AsString := AEmail;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+// UPDATE sécurisé
+procedure ModifierUtilisateurSecurise(AID: Integer; const ANom: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'UPDATE Users SET Nom = :Nom WHERE ID = :ID';
+    Query.ParamByName('Nom').AsString := ANom;
+    Query.ParamByName('ID').AsInteger := AID;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+// DELETE sécurisé
+procedure SupprimerUtilisateurSecurise(AID: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'DELETE FROM Users WHERE ID = :ID';
+    Query.ParamByName('ID').AsInteger := AID;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+// SELECT avec clause IN sécurisée
+procedure ChercherUtilisateursParIDs(const AIDs: array of Integer);
+var
+  Query: TFDQuery;
+  i: Integer;
+  Params: string;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+
+    // Construire les paramètres dynamiquement
+    Params := '';
+    for i := Low(AIDs) to High(AIDs) do
+    begin
+      if i > Low(AIDs) then
+        Params := Params + ', ';
+      Params := Params + ':ID' + IntToStr(i);
+    end;
+
+    Query.SQL.Text := 'SELECT * FROM Users WHERE ID IN (' + Params + ')';
+
+    // Assigner les valeurs
+    for i := Low(AIDs) to High(AIDs) do
+      Query.ParamByName('ID' + IntToStr(i)).AsInteger := AIDs[i];
+
+    Query.Open;
+
+    // Traiter les résultats
+    while not Query.Eof do
+    begin
+      // ...
+      Query.Next;
     end;
   finally
     Query.Free;
@@ -118,2050 +218,1111 @@ begin
 end;
 ```
 
-### Cross-Site Scripting (XSS)
+### Validation supplémentaire
 
-Si votre application Delphi génère du contenu HTML (comme une application web ou un composant WebView), elle peut être vulnérable aux attaques XSS.
+En plus des paramètres, validez toujours les entrées :
 
-#### Le problème
-
-Imaginons une application de chat où les messages sont affichés dans un composant TWebBrowser :
-
-```pas
-procedure TChatForm.AddMessage(const Username, Message: string);
-var
-  HTML: string;
+```pascal
+function ValiderNomUtilisateur(const AUsername: string): Boolean;
 begin
-  // DANGEREUX : Insertion directe du texte dans le HTML
-  HTML := WebBrowser1.OleObject.Document.body.innerHTML;
-  HTML := HTML + '<div><strong>' + Username + ': </strong>' + Message + '</div>';
-  WebBrowser1.OleObject.Document.body.innerHTML := HTML;
-end;
-```
+  Result := False;
 
-Un attaquant pourrait envoyer un message comme `<script>alert('Hacked!');</script>` qui serait exécuté dans le navigateur.
+  // Vérifier la longueur
+  if (Length(AUsername) < 3) or (Length(AUsername) > 50) then
+    Exit;
 
-#### La solution : échappement HTML
+  // Vérifier les caractères autorisés (lettres, chiffres, underscore)
+  if not TRegEx.IsMatch(AUsername, '^[a-zA-Z0-9_]+$') then
+    Exit;
 
-Échappez toujours le contenu généré par l'utilisateur avant de l'insérer dans du HTML :
-
-```pas
-function EscapeHTML(const S: string): string;
-begin
-  Result := StringReplace(S, '&', '&amp;', [rfReplaceAll]);
-  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
-  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
-  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
-  Result := StringReplace(Result, '''', '&#39;', [rfReplaceAll]);
+  Result := True;
 end;
 
-procedure TChatForm.AddMessage(const Username, Message: string);
-var
-  HTML: string;
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);
 begin
-  // SÉCURISÉ : Échapper le contenu généré par l'utilisateur
-  HTML := WebBrowser1.OleObject.Document.body.innerHTML;
-  HTML := HTML + '<div><strong>' + EscapeHTML(Username) + ': </strong>' +
-          EscapeHTML(Message) + '</div>';
-  WebBrowser1.OleObject.Document.body.innerHTML := HTML;
-end;
-```
-
-#### Bonnes pratiques pour prévenir le XSS
-
-1. **Échappez toujours les données utilisateur** affichées dans du HTML.
-
-2. **Utilisez des bibliothèques d'échappement HTML** éprouvées plutôt que d'écrire votre propre fonction.
-
-3. **Implémentez une politique de sécurité du contenu (CSP)** si vous développez une application web.
-
-4. **Validez les entrées utilisateur** avant de les afficher.
-
-### Injection de commandes
-
-L'injection de commandes se produit lorsque votre application exécute des commandes système avec des entrées utilisateur non validées.
-
-#### Le problème
-
-```pas
-procedure TUtilityForm.ExecuteCommand(const Command: string);
-var
-  Output: string;
-begin
-  // DANGEREUX : Exécution de commandes avec entrée utilisateur non validée
-  Output := RunDOSCommand(Command);
-  MemoResult.Text := Output;
-end;
-```
-
-Un attaquant pourrait entrer une commande comme `dir & del /F /S /Q C:\ImportantFiles`.
-
-#### La solution : validation et sanitization
-
-```pas
-procedure TUtilityForm.ExecuteCommand(const Command: string);
-var
-  Output: string;
-  SafeCommand: string;
-begin
-  // Vérifier si la commande est dans une liste d'autorisations
-  if not IsCommandAllowed(Command) then
+  if not ValiderNomUtilisateur(EditUsername.Text) then
   begin
-    ShowMessage('Commande non autorisée');
+    ShowMessage('Nom d''utilisateur invalide. ' +
+                'Utilisez uniquement des lettres, chiffres et underscores (3-50 caractères).');
     Exit;
   end;
 
-  // Supprimer les caractères dangereux
-  SafeCommand := SanitizeCommand(Command);
+  // Continuer l'inscription...
+end;
+```
 
-  // Exécuter la commande sécurisée
-  Output := RunDOSCommand(SafeCommand);
-  MemoResult.Text := Output;
+## 2. Cross-Site Scripting (XSS)
+
+### Qu'est-ce que le XSS ?
+
+Le XSS permet à un attaquant d'injecter du code JavaScript malveillant dans votre application web, qui sera exécuté dans le navigateur d'autres utilisateurs.
+
+**Scénario** : Un forum où les utilisateurs peuvent poster des messages.
+
+```pascal
+// ❌ VULNÉRABLE
+procedure AfficherMessage(const AMessage: string);
+begin
+  // Affiche directement le HTML
+  WebBrowser1.Navigate('about:blank');
+  (WebBrowser1.Document as IHTMLDocument2).write(
+    '<html><body>' + AMessage + '</body></html>'
+  );
 end;
 
-function IsCommandAllowed(const Command: string): Boolean;
-const
-  AllowedCommands: array[0..2] of string = ('dir', 'type', 'echo');
-var
-  CleanCommand: string;
-  SpacePos: Integer;
+// Si un utilisateur poste :
+// <script>alert('XSS!');</script>
+// Le JavaScript sera exécuté !
+```
+
+### Types de XSS
+
+**1. XSS Stocké (Stored)** : Le code malveillant est stocké en base de données
+```
+Attaquant poste : <script>volerCookies();</script>
+→ Stocké en base
+→ Tous les visiteurs exécutent ce code
+```
+
+**2. XSS Réfléchi (Reflected)** : Le code malveillant est dans l'URL
+```
+URL : http://site.com/search?q=<script>alert('XSS')</script>
+→ Le script est affiché et exécuté immédiatement
+```
+
+**3. XSS DOM** : Le code malveillant manipule le DOM directement
+
+### Protection contre le XSS
+
+**Solution 1 : Échapper le HTML**
+
+```pascal
+uses
+  System.NetEncoding;
+
+function EchapperHTML(const ATexte: string): string;
 begin
-  // Extraire la commande principale (avant le premier espace)
-  SpacePos := Pos(' ', Command);
-  if SpacePos > 0 then
-    CleanCommand := LowerCase(Trim(Copy(Command, 1, SpacePos - 1)))
-  else
-    CleanCommand := LowerCase(Trim(Command));
+  Result := ATexte;
+  Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
+  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  Result := StringReplace(Result, '''', '&#x27;', [rfReplaceAll]);
+end;
 
-  // Vérifier si la commande est dans la liste d'autorisations
-  for var I := 0 to High(AllowedCommands) do
-    if CleanCommand = AllowedCommands[I] then
-      Exit(True);
+// ✅ SÉCURISÉ
+procedure AfficherMessageSecurise(const AMessage: string);
+var
+  MessageEchappe: string;
+begin
+  MessageEchappe := EchapperHTML(AMessage);
 
+  WebBrowser1.Navigate('about:blank');
+  (WebBrowser1.Document as IHTMLDocument2).write(
+    '<html><body>' + MessageEchappe + '</body></html>'
+  );
+end;
+
+// Maintenant, <script>alert('XSS');</script>
+// devient : &lt;script&gt;alert('XSS');&lt;/script&gt;
+// et s'affiche comme texte au lieu d'être exécuté
+```
+
+**Solution 2 : Utiliser TNetEncoding**
+
+```pascal
+uses
+  System.NetEncoding;
+
+function EncoderPourHTML(const ATexte: string): string;
+begin
+  Result := TNetEncoding.HTML.Encode(ATexte);
+end;
+```
+
+**Solution 3 : Content Security Policy (CSP)**
+
+Pour les applications web servies par Delphi :
+
+```pascal
+procedure ConfigurerHeadersSecurite;
+begin
+  // Ajouter un header CSP qui interdit les scripts inline
+  Response.SetCustomHeader('Content-Security-Policy',
+    'default-src ''self''; script-src ''self'' https://cdnjs.cloudflare.com');
+end;
+```
+
+### Validation des entrées
+
+```pascal
+function FiltrerBalises(const ATexte: string): string;
+var
+  BaliseAutorisees: array of string;
+begin
+  // Liste blanche de balises autorisées
+  BaliseAutorisees := ['<b>', '</b>', '<i>', '</i>', '<br>'];
+
+  // Supprimer toutes les balises sauf celles autorisées
+  Result := ATexte;
+
+  // Supprimer d'abord tous les scripts
+  Result := TRegEx.Replace(Result, '<script[^>]*>.*?</script>', '', [roIgnoreCase]);
+  Result := TRegEx.Replace(Result, '<iframe[^>]*>.*?</iframe>', '', [roIgnoreCase]);
+
+  // Pour une protection maximale, utiliser une bibliothèque de sanitisation HTML
+end;
+```
+
+## 3. Cross-Site Request Forgery (CSRF)
+
+### Qu'est-ce que le CSRF ?
+
+Le CSRF force un utilisateur authentifié à exécuter des actions non désirées sur une application web.
+
+**Scénario** :
+```
+1. Vous êtes connecté à votre banque (cookie de session valide)
+2. Un attaquant vous envoie un email avec un lien
+3. Le lien pointe vers : http://votre-banque.com/transfert?montant=1000&vers=attaquant
+4. Si vous cliquez, le transfert est exécuté car vous êtes authentifié !
+```
+
+### Protection contre le CSRF
+
+**Solution : Tokens CSRF**
+
+```pascal
+type
+  TCSRFManager = class
+  private
+    class var FTokens: TDictionary<string, TDateTime>;
+  public
+    class constructor Create;
+    class destructor Destroy;
+    class function GenererToken(const ASessionID: string): string;
+    class function ValiderToken(const ASessionID, AToken: string): Boolean;
+  end;
+
+class constructor TCSRFManager.Create;
+begin
+  FTokens := TDictionary<string, TDateTime>.Create;
+end;
+
+class destructor TCSRFManager.Destroy;
+begin
+  FTokens.Free;
+end;
+
+class function TCSRFManager.GenererToken(const ASessionID: string): string;
+var
+  GUID: TGUID;
+begin
+  CreateGUID(GUID);
+  Result := GUIDToString(GUID);
+
+  // Stocker le token avec timestamp
+  FTokens.AddOrSetValue(ASessionID + '_' + Result, Now);
+end;
+
+class function TCSRFManager.ValiderToken(const ASessionID, AToken: string): Boolean;
+var
+  Cle: string;
+  DateCreation: TDateTime;
+begin
   Result := False;
+  Cle := ASessionID + '_' + AToken;
+
+  if FTokens.TryGetValue(Cle, DateCreation) then
+  begin
+    // Le token est valide pendant 1 heure
+    Result := MinutesBetween(Now, DateCreation) < 60;
+
+    // Utiliser une seule fois (supprimer après validation)
+    if Result then
+      FTokens.Remove(Cle);
+  end;
 end;
 
-function SanitizeCommand(const Command: string): string;
+// Utilisation dans un formulaire
+procedure TFormAction.FormCreate(Sender: TObject);
 begin
-  Result := Command;
+  // Générer un token CSRF pour ce formulaire
+  FCSRFToken := TCSRFManager.GenererToken(SessionID);
 
-  // Supprimer les caractères dangereux
-  Result := StringReplace(Result, '&', '', [rfReplaceAll]);
-  Result := StringReplace(Result, '|', '', [rfReplaceAll]);
-  Result := StringReplace(Result, ';', '', [rfReplaceAll]);
-  Result := StringReplace(Result, '>', '', [rfReplaceAll]);
-  Result := StringReplace(Result, '<', '', [rfReplaceAll]);
+  // L'inclure dans un champ caché
+  HiddenCSRFToken.Value := FCSRFToken;
+end;
+
+procedure TFormAction.BtnSoumettreClick(Sender: TObject);
+var
+  TokenRecu: string;
+begin
+  TokenRecu := HiddenCSRFToken.Value;
+
+  // Vérifier le token avant d'exécuter l'action
+  if not TCSRFManager.ValiderToken(SessionID, TokenRecu) then
+  begin
+    ShowMessage('Erreur : Token CSRF invalide. Action refusée.');
+    Exit;
+  end;
+
+  // Token valide, exécuter l'action
+  ExecuterActionSensible;
 end;
 ```
 
-#### Bonnes pratiques pour prévenir l'injection de commandes
+**Autres protections CSRF** :
 
-1. **Évitez d'exécuter des commandes système** si possible.
-
-2. **Utilisez une liste d'autorisations** pour limiter les commandes autorisées.
-
-3. **Sanitisez les entrées utilisateur** en supprimant les caractères dangereux.
-
-4. **Utilisez des API natives** plutôt que des commandes système.
-
-### Attaques par chemin traversant (Path Traversal)
-
-Les attaques par chemin traversant permettent à un attaquant d'accéder à des fichiers en dehors du répertoire prévu.
-
-#### Le problème
-
-```pas
-procedure TFileViewer.ShowFile(const Filename: string);
+1. **Vérifier le referer**
+```pascal
+function VerifierReferer(const ARefererAttendu: string): Boolean;
 var
-  Content: string;
+  Referer: string;
 begin
-  // DANGEREUX : Accès direct à un fichier avec entrée utilisateur
-  Content := TFile.ReadAllText(ExtractFilePath(Application.ExeName) + 'files\' + Filename);
-  MemoContent.Text := Content;
+  Referer := Request.GetFieldByName('Referer');
+  Result := Pos(ARefererAttendu, Referer) > 0;
 end;
 ```
 
-Un attaquant pourrait entrer `..\..\Windows\System32\drivers\etc\hosts` pour accéder à des fichiers système.
+2. **Double Submit Cookie**
+```pascal
+// Stocker le token dans un cookie ET dans le formulaire
+// Les comparer lors de la soumission
+```
 
-#### La solution : validation et canonicalisation
+3. **SameSite Cookie**
+```pascal
+// Configurer les cookies avec l'attribut SameSite
+Response.SetCookie('session_id', SessionID, 0, '/', '', True, True, 'Strict');
+```
 
-```pas
-procedure TFileViewer.ShowFile(const Filename: string);
-var
-  Content: string;
-  SafePath, FullPath, BasePath: string;
+## 4. Validation des entrées
+
+### Règle d'or : Ne JAMAIS faire confiance aux entrées utilisateur
+
+**Principe de la liste blanche** : N'accepter que ce qui est explicitement autorisé.
+
+```pascal
+// ❌ MAUVAIS - Liste noire (interdire certains caractères)
+function ValiderNomListeNoire(const ANom: string): Boolean;
 begin
-  // Vérifier les caractères interdits
-  if ContainsPathTraversalChars(Filename) then
+  // Trop facile à contourner
+  Result := (Pos('<', ANom) = 0) and (Pos('>', ANom) = 0);
+end;
+
+// ✅ BON - Liste blanche (autoriser seulement certains caractères)
+function ValiderNomListeBlanche(const ANom: string): Boolean;
+begin
+  // Seulement lettres, espaces, tirets et apostrophes
+  Result := TRegEx.IsMatch(ANom, '^[a-zA-ZÀ-ÿ \-'']+$');
+end;
+```
+
+### Types de validation
+
+**1. Validation de format**
+
+```pascal
+uses
+  System.RegularExpressions;
+
+function ValiderEmail(const AEmail: string): Boolean;
+const
+  REGEX_EMAIL = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+begin
+  Result := TRegEx.IsMatch(AEmail, REGEX_EMAIL);
+end;
+
+function ValiderTelephone(const ATel: string): Boolean;
+const
+  REGEX_TEL_FR = '^0[1-9](\d{2}){4}$'; // Format français
+begin
+  // Supprimer les espaces et tirets
+  ATel := StringReplace(ATel, ' ', '', [rfReplaceAll]);
+  ATel := StringReplace(ATel, '-', '', [rfReplaceAll]);
+  Result := TRegEx.IsMatch(ATel, REGEX_TEL_FR);
+end;
+
+function ValiderCodePostal(const ACodePostal: string): Boolean;
+const
+  REGEX_CP_FR = '^\d{5}$';
+begin
+  Result := TRegEx.IsMatch(ACodePostal, REGEX_CP_FR);
+end;
+
+function ValiderURL(const AURL: string): Boolean;
+const
+  REGEX_URL = '^https?://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(/.*)?$';
+begin
+  Result := TRegEx.IsMatch(AURL, REGEX_URL);
+end;
+```
+
+**2. Validation de plage**
+
+```pascal
+function ValiderAge(AAge: Integer): Boolean;
+begin
+  Result := (AAge >= 0) and (AAge <= 150);
+end;
+
+function ValiderMontant(AMontant: Currency): Boolean;
+begin
+  Result := (AMontant >= 0) and (AMontant <= 1000000);
+end;
+
+function ValiderDate(ADate: TDate): Boolean;
+begin
+  // Date entre 1900 et aujourd'hui
+  Result := (ADate >= EncodeDate(1900, 1, 1)) and (ADate <= Date);
+end;
+```
+
+**3. Validation de longueur**
+
+```pascal
+function ValiderLongueurTexte(const ATexte: string; AMin, AMax: Integer): Boolean;
+begin
+  Result := (Length(ATexte) >= AMin) and (Length(ATexte) <= AMax);
+end;
+
+function ValiderCommentaire(const ACommentaire: string): Boolean;
+begin
+  // Entre 10 et 1000 caractères
+  Result := ValiderLongueurTexte(ACommentaire, 10, 1000);
+end;
+```
+
+**4. Validation de type**
+
+```pascal
+function EstUnEntier(const ATexte: string): Boolean;
+var
+  Valeur: Integer;
+begin
+  Result := TryStrToInt(ATexte, Valeur);
+end;
+
+function EstUnDecimal(const ATexte: string): Boolean;
+var
+  Valeur: Double;
+begin
+  Result := TryStrToFloat(ATexte, Valeur);
+end;
+
+function EstUneDate(const ATexte: string): Boolean;
+var
+  Valeur: TDate;
+begin
+  Result := TryStrToDate(ATexte, Valeur);
+end;
+```
+
+### Classe de validation réutilisable
+
+```pascal
+type
+  TValidateur = class
+  public
+    class function Email(const AEmail: string): Boolean;
+    class function Telephone(const ATel: string): Boolean;
+    class function CodePostal(const ACP: string): Boolean;
+    class function NomUtilisateur(const AUsername: string): Boolean;
+    class function MotDePasse(const APassword: string): Boolean;
+    class function URL(const AURL: string): Boolean;
+    class function Plage(AValeur, AMin, AMax: Integer): Boolean;
+  end;
+
+class function TValidateur.Email(const AEmail: string): Boolean;
+begin
+  Result := TRegEx.IsMatch(AEmail, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+end;
+
+class function TValidateur.NomUtilisateur(const AUsername: string): Boolean;
+begin
+  // 3-20 caractères, lettres, chiffres et underscore uniquement
+  Result := TRegEx.IsMatch(AUsername, '^[a-zA-Z0-9_]{3,20}$');
+end;
+
+class function TValidateur.MotDePasse(const APassword: string): Boolean;
+var
+  AMajuscule, AMinuscule, AChiffre, ASpecial: Boolean;
+  i: Integer;
+begin
+  Result := False;
+
+  // Minimum 8 caractères
+  if Length(APassword) < 8 then
+    Exit;
+
+  AMajuscule := False;
+  AMinuscule := False;
+  AChiffre := False;
+  ASpecial := False;
+
+  for i := 1 to Length(APassword) do
+  begin
+    if CharInSet(APassword[i], ['A'..'Z']) then
+      AMajuscule := True
+    else if CharInSet(APassword[i], ['a'..'z']) then
+      AMinuscule := True
+    else if CharInSet(APassword[i], ['0'..'9']) then
+      AChiffre := True
+    else
+      ASpecial := True;
+  end;
+
+  // Doit contenir au moins 3 types de caractères sur 4
+  Result := (Ord(AMajuscule) + Ord(AMinuscule) + Ord(AChiffre) + Ord(ASpecial)) >= 3;
+end;
+
+class function TValidateur.Plage(AValeur, AMin, AMax: Integer): Boolean;
+begin
+  Result := (AValeur >= AMin) and (AValeur <= AMax);
+end;
+
+// Utilisation
+procedure TForm1.BtnValiderClick(Sender: TObject);
+begin
+  if not TValidateur.Email(EditEmail.Text) then
+  begin
+    ShowMessage('Email invalide');
+    Exit;
+  end;
+
+  if not TValidateur.NomUtilisateur(EditUsername.Text) then
+  begin
+    ShowMessage('Nom d''utilisateur invalide (3-20 caractères alphanumériques)');
+    Exit;
+  end;
+
+  if not TValidateur.MotDePasse(EditPassword.Text) then
+  begin
+    ShowMessage('Mot de passe trop faible (minimum 8 caractères avec majuscules, minuscules, chiffres)');
+    Exit;
+  end;
+
+  // Toutes les validations passées
+  InscrireUtilisateur;
+end;
+```
+
+## 5. Gestion sécurisée des erreurs
+
+### Le problème
+
+Les messages d'erreur trop détaillés peuvent révéler des informations sensibles aux attaquants.
+
+```pascal
+// ❌ DANGEREUX - Révèle trop d'informations
+try
+  Query.SQL.Text := 'SELECT * FROM Users WHERE ID = :ID';
+  Query.ParamByName('ID').AsInteger := StrToInt(EditID.Text);
+  Query.Open;
+except
+  on E: Exception do
+    ShowMessage('Erreur : ' + E.Message);
+    // Affiche : "Table 'mydb.Users' doesn't exist"
+    // L'attaquant sait maintenant le nom de la base et de la table !
+end;
+```
+
+### Solution : Messages génériques + Logs détaillés
+
+```pascal
+type
+  TLoggerSecurite = class
+  public
+    class procedure LoggerErreur(const AMessage, ADetails: string);
+  end;
+
+class procedure TLoggerSecurite.LoggerErreur(const AMessage, ADetails: string);
+var
+  Fichier: TextFile;
+  Ligne: string;
+begin
+  AssignFile(Fichier, 'logs\errors.log');
+  try
+    if FileExists('logs\errors.log') then
+      Append(Fichier)
+    else
+      Rewrite(Fichier);
+
+    Ligne := Format('[%s] %s - %s', [DateTimeToStr(Now), AMessage, ADetails]);
+    WriteLn(Fichier, Ligne);
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+
+// ✅ SÉCURISÉ - Message générique à l'utilisateur, log détaillé
+procedure ExecuterRequeteSecurisee;
+begin
+  try
+    Query.SQL.Text := 'SELECT * FROM Users WHERE ID = :ID';
+    Query.ParamByName('ID').AsInteger := StrToInt(EditID.Text);
+    Query.Open;
+  except
+    on E: Exception do
+    begin
+      // Message générique à l'utilisateur
+      ShowMessage('Une erreur est survenue. Veuillez réessayer ou contacter le support.');
+
+      // Log détaillé pour les développeurs (jamais montré à l'utilisateur)
+      TLoggerSecurite.LoggerErreur('Erreur base de données',
+        Format('Classe: %s, Message: %s, Query: %s',
+               [E.ClassName, E.Message, Query.SQL.Text]));
+    end;
+  end;
+end;
+```
+
+### Codes d'erreur vs messages détaillés
+
+```pascal
+const
+  ERR_DB_CONNECTION = 1001;
+  ERR_DB_QUERY = 1002;
+  ERR_VALIDATION = 2001;
+  ERR_AUTH = 3001;
+
+function ObtenirMessageErreur(ACode: Integer): string;
+begin
+  case ACode of
+    ERR_DB_CONNECTION: Result := 'Impossible de se connecter au serveur';
+    ERR_DB_QUERY: Result := 'Erreur lors de la récupération des données';
+    ERR_VALIDATION: Result := 'Les données saisies sont invalides';
+    ERR_AUTH: Result := 'Échec de l''authentification';
+  else
+    Result := 'Une erreur inconnue est survenue';
+  end;
+end;
+
+procedure TraiterErreur(ACode: Integer; const ADetailsInternes: string);
+begin
+  // Message utilisateur
+  ShowMessage(ObtenirMessageErreur(ACode));
+
+  // Log détaillé
+  TLoggerSecurite.LoggerErreur(
+    Format('Code erreur: %d', [ACode]),
+    ADetailsInternes
+  );
+end;
+```
+
+## 6. Upload de fichiers sécurisé
+
+### Vulnérabilités liées aux uploads
+
+- Upload de fichiers malveillants (virus, malware)
+- Upload de scripts exécutables (.php, .exe)
+- Déni de service (fichiers énormes)
+- Path traversal (../../system32)
+
+### Protection de l'upload
+
+```pascal
+type
+  TUploadSecurise = class
+  private
+    const
+      TAILLE_MAX_FICHIER = 10 * 1024 * 1024; // 10 Mo
+      EXTENSIONS_AUTORISEES: array[0..4] of string =
+        ('.jpg', '.jpeg', '.png', '.gif', '.pdf');
+  public
+    class function ValiderFichier(const ANomFichier: string; ATaille: Int64): Boolean;
+    class function GenererNomSecurise: string;
+    class function ScannerVirus(const ACheminFichier: string): Boolean;
+  end;
+
+class function TUploadSecurise.ValiderFichier(const ANomFichier: string; ATaille: Int64): Boolean;
+var
+  Extension: string;
+  i: Integer;
+  ExtensionAutorisee: Boolean;
+begin
+  Result := False;
+
+  // Vérifier la taille
+  if ATaille > TAILLE_MAX_FICHIER then
+  begin
+    ShowMessage('Fichier trop volumineux (maximum 10 Mo)');
+    Exit;
+  end;
+
+  if ATaille = 0 then
+  begin
+    ShowMessage('Fichier vide');
+    Exit;
+  end;
+
+  // Vérifier l'extension
+  Extension := LowerCase(ExtractFileExt(ANomFichier));
+  ExtensionAutorisee := False;
+
+  for i := Low(EXTENSIONS_AUTORISEES) to High(EXTENSIONS_AUTORISEES) do
+  begin
+    if Extension = EXTENSIONS_AUTORISEES[i] then
+    begin
+      ExtensionAutorisee := True;
+      Break;
+    end;
+  end;
+
+  if not ExtensionAutorisee then
+  begin
+    ShowMessage('Type de fichier non autorisé. Extensions acceptées : jpg, jpeg, png, gif, pdf');
+    Exit;
+  end;
+
+  // Vérifier qu'il n'y a pas de path traversal
+  if (Pos('..', ANomFichier) > 0) or (Pos('/', ANomFichier) > 0) or (Pos('\', ANomFichier) > 0) then
   begin
     ShowMessage('Nom de fichier invalide');
     Exit;
   end;
 
-  // Définir le chemin de base autorisé
-  BasePath := ExtractFilePath(Application.ExeName) + 'files\';
-
-  // Construire le chemin complet
-  FullPath := BasePath + Filename;
-
-  // Obtenir le chemin canonique (résout les ..\ et .\)
-  SafePath := ExpandFileName(FullPath);
-
-  // Vérifier que le chemin canonique est dans le dossier autorisé
-  if not StartsText(BasePath, SafePath) then
-  begin
-    ShowMessage('Accès non autorisé');
-    Exit;
-  end;
-
-  // Accéder au fichier en toute sécurité
-  if FileExists(SafePath) then
-  begin
-    Content := TFile.ReadAllText(SafePath);
-    MemoContent.Text := Content;
-  end
-  else
-    ShowMessage('Fichier introuvable');
-end;
-
-function ContainsPathTraversalChars(const Path: string): Boolean;
-begin
-  Result := (Pos('..', Path) > 0) or
-            (Pos('/', Path) > 0) or
-            (Pos('\', Path) > 0) or
-            (Pos(':', Path) > 0);
-end;
-```
-
-#### Bonnes pratiques pour prévenir les attaques par chemin traversant
-
-1. **Validez tous les noms de fichiers** fournis par l'utilisateur.
-
-2. **Utilisez des chemins canoniques** pour vérifier l'accès aux fichiers.
-
-3. **Limitez l'accès à un répertoire spécifique** en vérifiant que le chemin final est bien dans ce répertoire.
-
-4. **Utilisez des listes d'autorisations** pour limiter les fichiers accessibles.
-
-### Stockage non sécurisé des données sensibles
-
-Le stockage inapproprié des données sensibles est une vulnérabilité courante.
-
-#### Le problème
-
-```pas
-procedure TSettingsManager.SaveConnectionString(const ConnectionString: string);
-var
-  IniFile: TIniFile;
-begin
-  // DANGEREUX : Stockage en texte clair des données sensibles
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    IniFile.WriteString('Database', 'ConnectionString', ConnectionString);
-  finally
-    IniFile.Free;
-  end;
-end;
-```
-
-#### La solution : chiffrement et stockage sécurisé
-
-```pas
-// Nécessite Delphi 11 ou supérieur pour certaines fonctionnalités
-procedure TSettingsManager.SaveConnectionString(const ConnectionString: string);
-var
-  IniFile: TIniFile;
-  EncryptedString: string;
-begin
-  // Chiffrer la chaîne de connexion avant de la stocker
-  EncryptedString := TModernCrypto.EncryptString(ConnectionString, GetEncryptionKey);
-
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    IniFile.WriteString('Database', 'EncryptedConnectionString', EncryptedString);
-  finally
-    IniFile.Free;
-  end;
-end;
-
-function TSettingsManager.GetConnectionString: string;
-var
-  IniFile: TIniFile;
-  EncryptedString: string;
-begin
-  Result := '';
-
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    EncryptedString := IniFile.ReadString('Database', 'EncryptedConnectionString', '');
-
-    if EncryptedString <> '' then
-      Result := TModernCrypto.DecryptString(EncryptedString, GetEncryptionKey);
-  finally
-    IniFile.Free;
-  end;
-end;
-
-function TSettingsManager.GetEncryptionKey: string;
-begin
-  // En production, utilisez des méthodes plus sécurisées pour stocker/récupérer la clé
-  // comme le Windows Data Protection API (DPAPI)
-  Result := 'CleSup3rS3cr3teP0urLeCh1ffr3ment';  // Exemple simplifié
-end;
-```
-
-#### Bonnes pratiques pour le stockage sécurisé
-
-1. **Ne stockez jamais des données sensibles en texte clair**.
-
-2. **Utilisez le chiffrement** pour protéger les données sensibles.
-
-3. **Stockez les clés de chiffrement de manière sécurisée**, idéalement à l'aide d'API système comme DPAPI.
-
-4. **Minimisez le stockage des données sensibles** : ne stockez que ce qui est absolument nécessaire.
-
-### Exposition d'informations sensibles dans les journaux et messages d'erreur
-
-Les journaux et messages d'erreur peuvent révéler des informations sensibles.
-
-#### Le problème
-
-```pas
-procedure TDataModule1.ConnectToDatabase;
-begin
-  try
-    FDConnection1.Connected := True;
-  except
-    on E: Exception do
-    begin
-      // DANGEREUX : Afficher les détails d'erreur à l'utilisateur
-      ShowMessage('Erreur de connexion: ' + E.Message);
-
-      // DANGEREUX : Journaliser des informations sensibles
-      LogError('Échec de connexion à ' + FDConnection1.Params.Values['Server'] +
-              ' avec l''utilisateur ' + FDConnection1.Params.Values['User_Name']);
-    end;
-  end;
-end;
-```
-
-#### La solution : messages génériques et journalisation sécurisée
-
-```pas
-procedure TDataModule1.ConnectToDatabase;
-begin
-  try
-    FDConnection1.Connected := True;
-  except
-    on E: Exception do
-    begin
-      // SÉCURISÉ : Message d'erreur générique pour l'utilisateur
-      ShowMessage('Impossible de se connecter à la base de données. ' +
-                 'Veuillez contacter votre administrateur.');
-
-      // SÉCURISÉ : Journaliser sans informations sensibles ou masquer partiellement
-      LogError('Échec de connexion à la base de données. Code: ' +
-               GetErrorCode(E) + '. Utilisateur: ' +
-               MaskSensitiveData(FDConnection1.Params.Values['User_Name']));
-
-      // Journaliser les détails complets dans un journal sécurisé avec accès restreint
-      LogSecureError('Détails de connexion: ' + E.Message, True);
-    end;
-  end;
-end;
-
-function MaskSensitiveData(const Data: string): string;
-begin
-  if Length(Data) <= 2 then
-    Result := '***'
-  else
-    Result := Copy(Data, 1, 1) + StringOfChar('*', Length(Data) - 2) +
-              Copy(Data, Length(Data), 1);
-end;
-```
-
-#### Bonnes pratiques pour la journalisation et les messages d'erreur
-
-1. **Affichez des messages d'erreur génériques** aux utilisateurs.
-
-2. **Ne journalisez jamais des données sensibles** comme les mots de passe, jetons, etc.
-
-3. **Masquez partiellement les informations sensibles** si vous devez les journaliser.
-
-4. **Utilisez différents niveaux de journalisation** avec des contrôles d'accès appropriés.
-
-5. **Sécurisez l'accès aux fichiers journaux** et chiffrez-les si nécessaire.
-
-### Désérialisation non sécurisée
-
-La désérialisation de données non fiables peut conduire à des vulnérabilités.
-
-#### Le problème
-
-```pas
-procedure TDataProcessor.LoadSettings(const FileName: string);
-var
-  FileStream: TFileStream;
-  Settings: TSettings;
-begin
-  // DANGEREUX : Désérialisation sans validation
-  FileStream := TFileStream.Create(FileName, fmOpenRead);
-  try
-    Settings := TSettings.Create;
-    try
-      Settings.LoadFromStream(FileStream);
-      ApplySettings(Settings);
-    finally
-      Settings.Free;
-    end;
-  finally
-    FileStream.Free;
-  end;
-end;
-```
-
-#### La solution : validation et désérialisation sécurisée
-
-```pas
-procedure TDataProcessor.LoadSettings(const FileName: string);
-var
-  FileStream: TFileStream;
-  Settings: TSettings;
-  Validator: TSettingsValidator;
-begin
-  if not FileExists(FileName) then
-    Exit;
-
-  // Vérifier d'abord si le fichier a une taille raisonnable
-  if GetFileSize(FileName) > MAX_SETTINGS_SIZE then
-  begin
-    LogSecurityWarning('Tentative de chargement d''un fichier de paramètres trop grand: ' + FileName);
-    Exit;
-  end;
-
-  FileStream := TFileStream.Create(FileName, fmOpenRead);
-  try
-    Settings := TSettings.Create;
-    try
-      try
-        // Désérialiser les données
-        Settings.LoadFromStream(FileStream);
-
-        // Valider les paramètres
-        Validator := TSettingsValidator.Create;
-        try
-          if Validator.Validate(Settings) then
-            ApplySettings(Settings)
-          else
-            LogSecurityWarning('Fichier de paramètres invalide: ' + FileName);
-        finally
-          Validator.Free;
-        end;
-      except
-        on E: Exception do
-        begin
-          LogError('Erreur lors du chargement des paramètres: ' + E.Message);
-          // Ne pas propager l'exception, utiliser des valeurs par défaut
-          Settings.ResetToDefault;
-          ApplySettings(Settings);
-        end;
-      end;
-    finally
-      Settings.Free;
-    end;
-  finally
-    FileStream.Free;
-  end;
-end;
-
-// Classe de validation
-type
-  TSettingsValidator = class
-  public
-    function Validate(Settings: TSettings): Boolean;
-  private
-    function IsValidFontSize(Size: Integer): Boolean;
-    function IsValidColorValue(Value: Integer): Boolean;
-    function IsValidLanguage(const Lang: string): Boolean;
-    // Autres méthodes de validation...
-  end;
-
-function TSettingsValidator.Validate(Settings: TSettings): Boolean;
-begin
-  Result := IsValidFontSize(Settings.FontSize) and
-            IsValidColorValue(Settings.BackColor) and
-            IsValidColorValue(Settings.TextColor) and
-            IsValidLanguage(Settings.Language);
-  // Autres validations...
-end;
-```
-
-#### Bonnes pratiques pour la désérialisation sécurisée
-
-1. **Validez toutes les données désérialisées** avant de les utiliser.
-
-2. **Limitez la taille des données** à désérialiser.
-
-3. **Utilisez des formats de sérialisation sécurisés** et des bibliothèques à jour.
-
-4. **Ne désérialisez pas des données provenant de sources non fiables** sans validation approfondie.
-
-### Buffer Overflow et défauts de gestion de la mémoire
-
-Bien que Delphi offre une protection contre de nombreux problèmes de gestion de mémoire, des vulnérabilités peuvent toujours survenir.
-
-#### Le problème
-
-```pas
-procedure TBufferHandler.ProcessBuffer(const Buffer: PChar; Size: Integer);
-var
-  TempBuffer: array[0..255] of Char;
-begin
-  // DANGEREUX : Pas de vérification de la taille du buffer
-  StrCopy(TempBuffer, Buffer);
-  // Traitement...
-end;
-```
-
-Si `Buffer` contient plus de 256 caractères, cela causera un dépassement de tampon.
-
-#### La solution : vérification des limites
-
-```pas
-procedure TBufferHandler.ProcessBuffer(const Buffer: PChar; Size: Integer);
-var
-  TempBuffer: array[0..255] of Char;
-begin
-  // SÉCURISÉ : Vérifier la taille avant de copier
-  if Size > SizeOf(TempBuffer) - 1 then
-  begin
-    LogSecurityWarning('Tentative de dépassement de tampon détectée');
-    Exit;
-  end;
-
-  // Utiliser StrLCopy qui respecte la taille limite
-  StrLCopy(TempBuffer, Buffer, SizeOf(TempBuffer) - 1);
-
-  // Assurer la terminaison par zéro
-  TempBuffer[SizeOf(TempBuffer) - 1] := #0;
-
-  // Traitement...
-end;
-```
-
-#### Bonnes pratiques pour éviter les problèmes de mémoire
-
-1. **Utilisez les classes et types sécurisés** de Delphi (String, TStringList, etc.) au lieu de manipuler directement la mémoire.
-
-2. **Vérifiez toujours les limites** avant d'accéder aux tableaux ou d'effectuer des opérations sur des tampons.
-
-3. **Utilisez les fonctions sécurisées** comme `StrLCopy` au lieu de `StrCopy`.
-
-4. **Libérez correctement la mémoire allouée** avec les instructions try-finally.
-
-### Failles CORS (Cross-Origin Resource Sharing)
-
-Si votre application Delphi inclut un serveur web ou interagit avec des API web, elle peut être vulnérable aux problèmes CORS.
-
-#### Le problème
-
-```pas
-procedure TWebServerModule.WebModule1DefaultHandlerAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-begin
-  // DANGEREUX : Configuration CORS trop permissive
-  Response.CustomHeaders.Values['Access-Control-Allow-Origin'] := '*';
-  Response.CustomHeaders.Values['Access-Control-Allow-Methods'] := 'GET, POST, PUT, DELETE, OPTIONS';
-  Response.CustomHeaders.Values['Access-Control-Allow-Headers'] := '*';
-
-  // Traitement de la requête...
-end;
-```
-
-#### La solution : configuration CORS stricte
-
-```pas
-procedure TWebServerModule.WebModule1DefaultHandlerAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  Origin: string;
-begin
-  // Récupérer l'origine de la requête
-  Origin := Request.GetFieldByName('Origin');
-
-  // Vérifier si l'origine est autorisée
-  if IsAllowedOrigin(Origin) then
-  begin
-    // SÉCURISÉ : Spécifier exactement l'origine autorisée
-    Response.CustomHeaders.Values['Access-Control-Allow-Origin'] := Origin;
-
-    // Spécifier précisément les méthodes et en-têtes autorisés
-    Response.CustomHeaders.Values['Access-Control-Allow-Methods'] := 'GET, POST';
-    Response.CustomHeaders.Values['Access-Control-Allow-Headers'] := 'Content-Type, Authorization';
-
-    // Pas de cookies ou d'authentification en cross-origin
-    Response.CustomHeaders.Values['Access-Control-Allow-Credentials'] := 'false';
-  end;
-
-  // Traitement de la requête...
-end;
-
-function IsAllowedOrigin(const Origin: string): Boolean;
-const
-  AllowedOrigins: array[0..1] of string = (
-    'https://app.example.com',
-    'https://admin.example.com'
-  );
-begin
-  Result := False;
-
-  for var I := 0 to High(AllowedOrigins) do
-    if SameText(Origin, AllowedOrigins[I]) then
-      Exit(True);
-end;
-```
-
-#### Bonnes pratiques pour CORS
-
-1. **Ne pas utiliser `*` pour Access-Control-Allow-Origin** en production.
-
-2. **Spécifiez précisément les origines, méthodes et en-têtes autorisés**.
-
-3. **Limitez l'utilisation de Access-Control-Allow-Credentials** (cookies, authentification).
-
-4. **Implémentez une liste d'autorisations** pour les origines autorisées.
-
-### Protection contre la manipulation des paramètres côté client
-
-Les entrées côté client peuvent être facilement manipulées par les utilisateurs malveillants.
-
-#### Le problème
-
-```pas
-procedure TOrderProcessor.ProcessOrder(Request: TWebRequest);
-var
-  ProductID, Quantity, Price: Integer;
-begin
-  // DANGEREUX : Faire confiance aux paramètres côté client
-  ProductID := StrToIntDef(Request.QueryFields.Values['productId'], 0);
-  Quantity := StrToIntDef(Request.QueryFields.Values['quantity'], 0);
-  Price := StrToIntDef(Request.QueryFields.Values['price'], 0);
-
-  // Calculer le total
-  var Total := Price * Quantity;
-
-  // Créer la commande...
-end;
-```
-
-Un attaquant pourrait modifier le paramètre `price` pour réduire le coût total.
-
-#### La solution : validation côté serveur
-
-```pas
-procedure TOrderProcessor.ProcessOrder(Request: TWebRequest);
-var
-  ProductID, Quantity: Integer;
-  Price: Currency;
-begin
-  // SÉCURISÉ : Valider et récupérer les informations côté serveur
-  ProductID := StrToIntDef(Request.QueryFields.Values['productId'], 0);
-  Quantity := StrToIntDef(Request.QueryFields.Values['quantity'], 0);
-
-  // Valider les paramètres
-  if (ProductID <= 0) or (Quantity <= 0) then
-  begin
-    SendErrorResponse('Paramètres invalides');
-    Exit;
-  end;
-
-  // Récupérer le prix depuis la base de données, pas depuis la requête
-  Price := GetProductPrice(ProductID);
-
-  if Price <= 0 then
-  begin
-    SendErrorResponse('Produit non trouvé');
-    Exit;
-  end;
-
-  // Limiter la quantité
-  if Quantity > 10 then
-  begin
-    SendErrorResponse('Quantité maximum dépassée');
-    Exit;
-  end;
-
-  // Calculer le total
-  var Total := Price * Quantity;
-
-  // Créer la commande...
-end;
-
-function TOrderProcessor.GetProductPrice(ProductID: Integer): Currency;
-var
-  Query: TFDQuery;
-begin
-  Result := 0;
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text := 'SELECT price FROM products WHERE id = :id';
-    Query.ParamByName('id').AsInteger := ProductID;
-    Query.Open;
-
-    if not Query.IsEmpty then
-      Result := Query.FieldByName('price').AsCurrency;
-  finally
-    Query.Free;
-  end;
-end;
-```
-
-#### Bonnes pratiques pour la validation des paramètres
-
-1. **Ne faites jamais confiance aux données côté client**.
-
-2. **Validez toutes les entrées utilisateur** côté serveur.
-
-3. **Récupérez les données sensibles** (comme les prix) depuis la base de données.
-
-4. **Imposez des limites sur les quantités, montants, etc.**
-
-5. **Vérifiez toujours les autorisations** pour chaque action.
-
-### CSRF (Cross-Site Request Forgery)
-
-Les attaques CSRF permettent d'exécuter des actions non autorisées au nom d'un utilisateur authentifié.
-
-#### Le problème
-
-```pas
-procedure TUserSettingsController.UpdateEmailHandler(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  NewEmail: string;
-  UserID: Integer;
-begin
-  // DANGEREUX : Pas de protection contre CSRF
-  UserID := GetUserIDFromSession(Request);
-  NewEmail := Request.ContentFields.Values['email'];
-
-  if UserID > 0 then
-    UpdateUserEmail(UserID, NewEmail);
-
-  // Répondre à la requête...
-end;
-```
-
-#### La solution : jetons anti-CSRF
-
-```pas
-procedure TUserSettingsController.GetUpdateProfileFormHandler(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  CSRFToken: string;
-  UserID: Integer;
-  OutputHTML: string;
-begin
-  UserID := GetUserIDFromSession(Request);
-
-  if UserID <= 0 then
-  begin
-    Response.StatusCode := 401; // Non autorisé
-    Exit;
-  end;
-
-  // Générer un jeton CSRF unique pour cette session
-  CSRFToken := GenerateCSRFToken(UserID);
-
-  // Stocker le jeton CSRF dans la session
-  StoreCSRFToken(UserID, CSRFToken);
-
-  // Générer le formulaire HTML avec le jeton CSRF caché
-  OutputHTML := '<form method="post" action="/update_email">' +
-                '<input type="hidden" name="csrf_token" value="' + CSRFToken + '">' +
-                '<label for="email">Nouvel email :</label>' +
-                '<input type="email" id="email" name="email">' +
-                '<button type="submit">Mettre à jour</button>' +
-                '</form>';
-
-  Response.ContentType := 'text/html';
-  Response.Content := OutputHTML;
-end;
-
-procedure TUserSettingsController.UpdateEmailHandler(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  NewEmail, CSRFToken, StoredToken: string;
-  UserID: Integer;
-begin
-  // SÉCURISÉ : Vérifier le jeton anti-CSRF
-  UserID := GetUserIDFromSession(Request);
-
-  if UserID <= 0 then
-  begin
-    Response.StatusCode := 401; // Non autorisé
-    Exit;
-  end;
-
-  // Récupérer le jeton soumis et le jeton stocké
-  CSRFToken := Request.ContentFields.Values['csrf_token'];
-  StoredToken := GetStoredCSRFToken(UserID);
-
-  // Vérifier que le jeton est valide
-  if (CSRFToken = '') or (StoredToken = '') or (CSRFToken <> StoredToken) then
-  begin
-    Response.StatusCode := 403; // Interdit
-    Response.Content := 'Jeton CSRF invalide';
-    LogSecurityEvent(slWarning, 'Tentative CSRF potentielle détectée', 'UpdateEmail');
-    Exit;
-  end;
-
-  // Le jeton est valide, procéder à la mise à jour
-  NewEmail := Request.ContentFields.Values['email'];
-
-  // Valider l'email
-  if not IsValidEmail(NewEmail) then
-  begin
-    Response.StatusCode := 400; // Requête incorrecte
-    Response.Content := 'Format d''email invalide';
-    Exit;
-  end;
-
-  // Mettre à jour l'email
-  UpdateUserEmail(UserID, NewEmail);
-
-  // Générer un nouveau jeton pour la prochaine requête
-  RegenerateCSRFToken(UserID);
-
-  // Répondre à la requête...
-end;
-
-function GenerateCSRFToken(UserID: Integer): string;
-var
-  TokenData: TBytes;
-  HashBytes: TBytes;
-begin
-  // Créer des données uniques basées sur l'ID utilisateur et un timestamp
-  TokenData := TEncoding.UTF8.GetBytes(
-    Format('%d:%s:%s', [
-      UserID,
-      FormatDateTime('yyyymmddhhnnsszzz', Now),
-      GetSecretKey  // Une clé secrète stockée côté serveur
-    ])
-  );
-
-  // Hacher les données pour créer un jeton
-  HashBytes := THashSHA2.GetHashBytes(TokenData);
-
-  // Convertir en chaîne Base64 pour faciliter la transmission
-  Result := TNetEncoding.Base64.EncodeBytesToString(HashBytes);
-end;
-```
-
-#### Bonnes pratiques pour prévenir le CSRF
-
-1. **Utilisez des jetons anti-CSRF** dans tous les formulaires et requêtes AJAX.
-
-2. **Vérifiez l'en-tête Origin ou Referer** pour les requêtes sensibles.
-
-3. **Utilisez le header SameSite=Strict** pour les cookies d'authentification.
-
-4. **Implémentez la double soumission de cookies** pour une sécurité renforcée.
-
-5. **Limitez la durée de validité** des jetons CSRF.
-
-### Attaques par force brute et limitation de débit
-
-Les attaques par force brute tentent de deviner des identifiants ou des mots de passe par essais répétés.
-
-#### Le problème
-
-```pas
-procedure TAuthController.LoginHandler(Request: TWebRequest; Response: TWebResponse);
-var
-  Username, Password: string;
-  Authenticated: Boolean;
-begin
-  // DANGEREUX : Pas de protection contre les attaques par force brute
-  Username := Request.ContentFields.Values['username'];
-  Password := Request.ContentFields.Values['password'];
-
-  Authenticated := AuthenticateUser(Username, Password);
-
-  if Authenticated then
-  begin
-    // Créer la session, rediriger, etc.
-  end
-  else
-  begin
-    Response.StatusCode := 401;
-    Response.Content := 'Identifiants invalides';
-  end;
-end;
-```
-
-#### La solution : limitation de débit et verrouillage de compte
-
-```pas
-type
-  TLoginAttempt = record
-    Username: string;
-    IPAddress: string;
-    Timestamp: TDateTime;
-    Success: Boolean;
-  end;
-
-var
-  LoginAttempts: TThreadList<TLoginAttempt>;  // Liste thread-safe
-
-procedure TAuthController.LoginHandler(Request: TWebRequest; Response: TWebResponse);
-var
-  Username, Password, IPAddress: string;
-  Authenticated: Boolean;
-begin
-  Username := Request.ContentFields.Values['username'];
-  Password := Request.ContentFields.Values['password'];
-  IPAddress := GetClientIPAddress(Request);
-
-  // SÉCURISÉ : Vérifier si l'adresse IP ou le compte est verrouillé
-  if IsIPBlocked(IPAddress) then
-  begin
-    Response.StatusCode := 429; // Trop de requêtes
-    Response.Content := 'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
-    Exit;
-  end;
-
-  if IsAccountLocked(Username) then
-  begin
-    Response.StatusCode := 403; // Interdit
-    Response.Content := 'Ce compte est temporairement verrouillé suite à de multiples échecs de connexion.';
-    Exit;
-  end;
-
-  // Ajouter un léger délai aléatoire pour ralentir les attaques
-  Sleep(Random(500) + 100);
-
-  // Tenter l'authentification
-  Authenticated := AuthenticateUser(Username, Password);
-
-  // Enregistrer la tentative
-  RecordLoginAttempt(Username, IPAddress, Authenticated);
-
-  if Authenticated then
-  begin
-    // Réinitialiser le compteur d'échecs
-    ResetFailedLoginCounter(Username);
-
-    // Créer la session, rediriger, etc.
-  end
-  else
-  begin
-    Response.StatusCode := 401;
-    Response.Content := 'Identifiants invalides';
-
-    // Incrémenter le compteur d'échecs
-    IncrementFailedLoginCounter(Username, IPAddress);
-  end;
-end;
-
-procedure RecordLoginAttempt(const Username, IPAddress: string; Success: Boolean);
-var
-  Attempt: TLoginAttempt;
-  List: TList<TLoginAttempt>;
-begin
-  // Créer un enregistrement de tentative
-  Attempt.Username := Username;
-  Attempt.IPAddress := IPAddress;
-  Attempt.Timestamp := Now;
-  Attempt.Success := Success;
-
-  // Ajouter à la liste des tentatives
-  List := LoginAttempts.LockList;
-  try
-    List.Add(Attempt);
-
-    // Optionnel : nettoyer les anciennes tentatives
-    CleanupOldAttempts(List);
-  finally
-    LoginAttempts.UnlockList;
-  end;
-
-  // Journaliser la tentative
-  if not Success then
-    LogSecurityEvent(slWarning,
-                    Format('Échec de connexion pour %s depuis %s', [Username, IPAddress]),
-                    'Authentication');
-end;
-
-function IsIPBlocked(const IPAddress: string): Boolean;
-var
-  List: TList<TLoginAttempt>;
-  FailedAttempts, I: Integer;
-  OneHourAgo: TDateTime;
-begin
-  Result := False;
-  FailedAttempts := 0;
-  OneHourAgo := Now - (1 / 24); // 1 heure
-
-  List := LoginAttempts.LockList;
-  try
-    for I := 0 to List.Count - 1 do
-    begin
-      if (List[I].IPAddress = IPAddress) and
-         (List[I].Timestamp > OneHourAgo) and
-         (not List[I].Success) then
-        Inc(FailedAttempts);
-    end;
-
-    // Bloquer après 10 échecs en une heure depuis la même IP
-    Result := FailedAttempts >= 10;
-  finally
-    LoginAttempts.UnlockList;
-  end;
-end;
-
-function IsAccountLocked(const Username: string): Boolean;
-var
-  List: TList<TLoginAttempt>;
-  FailedAttempts, I: Integer;
-  ThirtyMinutesAgo: TDateTime;
-begin
-  Result := False;
-  FailedAttempts := 0;
-  ThirtyMinutesAgo := Now - (30 / 1440); // 30 minutes
-
-  List := LoginAttempts.LockList;
-  try
-    for I := 0 to List.Count - 1 do
-    begin
-      if (List[I].Username = Username) and
-         (List[I].Timestamp > ThirtyMinutesAgo) and
-         (not List[I].Success) then
-        Inc(FailedAttempts);
-    end;
-
-    // Verrouiller le compte après 5 échecs en 30 minutes
-    Result := FailedAttempts >= 5;
-  finally
-    LoginAttempts.UnlockList;
-  end;
-end;
-```
-
-#### Bonnes pratiques contre les attaques par force brute
-
-1. **Implémentez une limitation de débit** basée sur l'adresse IP et le nom d'utilisateur.
-
-2. **Verrouillez temporairement les comptes** après plusieurs échecs consécutifs.
-
-3. **Utilisez des CAPTCHA** après quelques tentatives infructueuses.
-
-4. **Introduisez un délai progressif** entre les tentatives.
-
-5. **Journalisez toutes les tentatives d'authentification** et alertez sur les comportements suspects.
-
-6. **Utilisez des mots de passe forts** et encouragez l'authentification à deux facteurs.
-
-### Exposition de données sensibles dans les URL
-
-Les données sensibles exposées dans les URL peuvent être interceptées ou stockées dans des historiques de navigation, journaux de serveur, etc.
-
-#### Le problème
-
-```pas
-procedure TReportController.GenerateReportHandler(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  ReportID, APIKey: string;
-begin
-  // DANGEREUX : Données sensibles exposées dans l'URL
-  ReportID := Request.QueryFields.Values['report_id'];
-  APIKey := Request.QueryFields.Values['api_key'];
-
-  if IsValidAPIKey(APIKey) then
-  begin
-    GenerateAndSendReport(ReportID, Response);
-  end
-  else
-  begin
-    Response.StatusCode := 403;
-    Response.Content := 'Clé API invalide';
-  end;
-end;
-```
-
-#### La solution : données sensibles dans le corps ou les en-têtes
-
-```pas
-procedure TReportController.GenerateReportHandler(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  ReportID: string;
-  APIKey: string;
-begin
-  // SÉCURISÉ : Récupérer la clé API depuis l'en-tête Authorization
-  APIKey := Request.GetFieldByName('Authorization');
-
-  // Supprimer le préfixe "Bearer " si présent
-  if StartsText('Bearer ', APIKey) then
-    APIKey := Copy(APIKey, 8, Length(APIKey));
-
-  // Récupérer l'ID du rapport depuis le chemin URL ou le corps
-  if Request.MethodType = mtPOST then
-    ReportID := Request.ContentFields.Values['report_id']
-  else
-    ReportID := Request.PathInfo.Substring(Request.PathInfo.LastIndexOf('/') + 1);
-
-  if IsValidAPIKey(APIKey) then
-  begin
-    GenerateAndSendReport(ReportID, Response);
-  end
-  else
-  begin
-    Response.StatusCode := 403;
-    Response.Content := 'Clé API invalide';
-  end;
-end;
-```
-
-#### Bonnes pratiques pour la manipulation des données sensibles
-
-1. **Ne placez jamais de données sensibles dans les URL**.
-
-2. **Utilisez des en-têtes HTTP** pour les jetons d'authentification.
-
-3. **Utilisez POST au lieu de GET** pour les opérations impliquant des données sensibles.
-
-4. **Implémentez HTTPS** pour chiffrer toutes les communications.
-
-5. **Utilisez des identifiants aléatoires** plutôt que des identifiants séquentiels prévisibles.
-
-### Absence de protection contre le détournement de clics (Clickjacking)
-
-Le clickjacking permet à un attaquant de tromper un utilisateur en lui faisant cliquer sur quelque chose de différent de ce qu'il croit.
-
-#### Le problème
-
-```pas
-procedure TWebServer.SendResponse(Response: TIdHTTPResponseInfo);
-begin
-  // DANGEREUX : Pas de protection contre le clickjacking
-  Response.ContentText := '<html><body><h1>Mon contenu sensible</h1>...</body></html>';
-  Response.ContentType := 'text/html';
-  Response.ResponseNo := 200;
-end;
-```
-
-#### La solution : en-têtes de sécurité
-
-```pas
-procedure TWebServer.SendResponse(Response: TIdHTTPResponseInfo);
-begin
-  // SÉCURISÉ : Ajouter des en-têtes de protection
-
-  // Empêcher le contenu d'être affiché dans un iframe
-  Response.CustomHeaders.Values['X-Frame-Options'] := 'DENY';
-
-  // Protection moderne contre le clickjacking et autres
-  Response.CustomHeaders.Values['Content-Security-Policy'] :=
-    'frame-ancestors ''none''; default-src ''self''; script-src ''self'' ''unsafe-inline''';
-
-  // Autres en-têtes de sécurité utiles
-  Response.CustomHeaders.Values['X-Content-Type-Options'] := 'nosniff';
-  Response.CustomHeaders.Values['X-XSS-Protection'] := '1; mode=block';
-
-  // Le contenu de la réponse
-  Response.ContentText := '<html><body><h1>Mon contenu sensible</h1>...</body></html>';
-  Response.ContentType := 'text/html';
-  Response.ResponseNo := 200;
-end;
-```
-
-#### Bonnes pratiques pour prévenir le clickjacking
-
-1. **Utilisez l'en-tête X-Frame-Options** pour contrôler si votre page peut être affichée dans un iframe.
-
-2. **Implémentez Content-Security-Policy** avec la directive frame-ancestors pour un contrôle plus précis.
-
-3. **Utilisez un middleware de sécurité** pour appliquer ces en-têtes à toutes les réponses.
-
-### Mauvaise gestion des sessions
-
-Une gestion de session incorrecte peut conduire à de nombreuses vulnérabilités, comme le vol de session.
-
-#### Le problème
-
-```pas
-procedure TSessionManager.CreateSession(const Username: string): string;
-begin
-  // DANGEREUX : Identifiant de session prévisible
-  Result := 'SESSION_' + Username + '_' + FormatDateTime('yyyymmdd', Date);
-
-  // Stocker la session...
-end;
-
-procedure TSessionManager.ValidateSession(const SessionID: string);
-begin
-  // DANGEREUX : Pas de vérification d'expiration
-  if SessionExists(SessionID) then
-    ExtendSession(SessionID)  // Prolonger indéfiniment
-  else
-    RaiseException('Session invalide');
-end;
-```
-
-#### La solution : gestion de session sécurisée
-
-```pas
-type
-  TSession = record
-    ID: string;
-    UserID: Integer;
-    Username: string;
-    IPAddress: string;
-    UserAgent: string;
-    CreatedAt: TDateTime;
-    LastActivity: TDateTime;
-    ExpiresAt: TDateTime;
-  end;
-
-procedure TSessionManager.CreateSession(const Username: string;
-  Request: TWebRequest): string;
-var
-  Session: TSession;
-  UserID: Integer;
-  SessionData: TBytes;
-begin
-  // Générer un ID de session aléatoire et cryptographiquement sûr
-  SessionData := TEncoding.UTF8.GetBytes(
-    Username + '|' +
-    Request.RemoteAddr + '|' +
-    Request.UserAgent + '|' +
-    FormatDateTime('yyyymmddhhnnsszzz', Now) + '|' +
-    IntToStr(Random(1000000))
-  );
-
-  Result := THashSHA2.GetHashString(SessionData);
-
-  // Récupérer l'ID de l'utilisateur
-  UserID := GetUserID(Username);
-
-  // Créer l'objet session
-  Session.ID := Result;
-  Session.UserID := UserID;
-  Session.Username := Username;
-  Session.IPAddress := Request.RemoteAddr;
-  Session.UserAgent := Request.UserAgent;
-  Session.CreatedAt := Now;
-  Session.LastActivity := Now;
-  Session.ExpiresAt := Now + (30 / 1440); // 30 minutes
-
-  // Stocker la session
-  StoreSession(Session);
-
-  // Supprimer les anciennes sessions de cet utilisateur (optionnel)
-  CleanupOldSessions(UserID);
-
-  // Journaliser la création de session
-  LogSecurityEvent(slInfo,
-                  Format('Session créée pour %s depuis %s', [Username, Session.IPAddress]),
-                  'SessionManagement');
-end;
-
-function TSessionManager.ValidateSession(const SessionID: string;
-  Request: TWebRequest): Boolean;
-var
-  Session: TSession;
-begin
-  Result := False;
-
-  if not GetSession(SessionID, Session) then
-    Exit;
-
-  // Vérifier si la session a expiré
-  if Now > Session.ExpiresAt then
-  begin
-    DestroySession(SessionID);
-    LogSecurityEvent(slInfo, 'Session expirée', 'SessionManagement');
-    Exit;
-  end;
-
-  // Vérification de liaison de session (optionnel mais recommandé)
-  // Vérifier que la session provient du même navigateur/appareil
-  if (Session.IPAddress <> Request.RemoteAddr) or
-     (Session.UserAgent <> Request.UserAgent) then
-  begin
-    LogSecurityEvent(slWarning,
-                    'Possible détournement de session détecté',
-                    'SessionManagement');
-    DestroySession(SessionID);
-    Exit;
-  end;
-
-  // Mettre à jour la dernière activité et prolonger la session
-  Session.LastActivity := Now;
-  Session.ExpiresAt := Now + (30 / 1440); // 30 minutes
-  UpdateSession(Session);
-
   Result := True;
 end;
 
-procedure TSessionManager.DestroySession(const SessionID: string);
+class function TUploadSecurise.GenererNomSecurise: string;
+var
+  GUID: TGUID;
 begin
-  // Supprimer la session de la base de données ou du stockage
-  if DeleteSession(SessionID) then
-    LogSecurityEvent(slInfo, 'Session détruite: ' + SessionID, 'SessionManagement');
+  // Générer un nom unique pour éviter les collisions et les attaques
+  CreateGUID(GUID);
+  Result := StringReplace(GUIDToString(GUID), '{', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '}', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '-', '', [rfReplaceAll]);
+end;
+
+class function TUploadSecurise.ScannerVirus(const ACheminFichier: string): Boolean;
+begin
+  // Intégrer avec un antivirus (ClamAV, Windows Defender, etc.)
+  // Pour l'exemple, on suppose que c'est propre
+  Result := True;
+
+  // Implémentation réelle nécessiterait une API antivirus
+end;
+
+// Utilisation
+procedure TForm1.UploadFichier;
+var
+  NomOriginal: string;
+  NomSecurise: string;
+  CheminDestination: string;
+  Extension: string;
+begin
+  if OpenDialog1.Execute then
+  begin
+    NomOriginal := ExtractFileName(OpenDialog1.FileName);
+
+    // Valider le fichier
+    if not TUploadSecurise.ValiderFichier(NomOriginal,
+                                           GetFileSize(OpenDialog1.FileName)) then
+      Exit;
+
+    // Générer un nom sécurisé
+    Extension := ExtractFileExt(NomOriginal);
+    NomSecurise := TUploadSecurise.GenererNomSecurise + Extension;
+
+    // Définir le chemin de destination (hors de la racine web si possible)
+    CheminDestination := TPath.Combine(CheminUploads, NomSecurise);
+
+    // Copier le fichier
+    TFile.Copy(OpenDialog1.FileName, CheminDestination);
+
+    // Scanner pour les virus
+    if not TUploadSecurise.ScannerVirus(CheminDestination) then
+    begin
+      TFile.Delete(CheminDestination);
+      ShowMessage('Fichier suspect détecté et supprimé');
+      Exit;
+    end;
+
+    // Enregistrer en base avec le nom original et le nom sécurisé
+    EnregistrerFichierEnBase(NomOriginal, NomSecurise);
+
+    ShowMessage('Fichier uploadé avec succès');
+  end;
+end;
+
+function GetFileSize(const AFileName: string): Int64;
+var
+  FileStream: TFileStream;
+begin
+  FileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+  try
+    Result := FileStream.Size;
+  finally
+    FileStream.Free;
+  end;
 end;
 ```
 
-#### Bonnes pratiques pour la gestion des sessions
+## 7. Protection contre les attaques par force brute
 
-1. **Utilisez des identifiants de session aléatoires** et cryptographiquement sûrs.
+### Le problème
 
-2. **Régénérez les identifiants de session** après l'authentification (rotation des sessions).
+Un attaquant essaie de nombreuses combinaisons de mots de passe pour trouver le bon.
 
-3. **Définissez une durée d'expiration** pour toutes les sessions.
+### Solution : Rate limiting et blocage temporaire
 
-4. **Utilisez des cookies sécurisés** avec les flags HttpOnly, Secure et SameSite.
-
-5. **Vérifiez l'adresse IP et l'agent utilisateur** pour détecter un possible vol de session.
-
-6. **Permettez aux utilisateurs de voir et terminer leurs sessions actives**.
-
-7. **Implémentez une fonctionnalité de déconnexion** qui détruit correctement la session.
-
-### Mise en œuvre d'une politique de sécurité centralisée
-
-Pour une approche cohérente de la sécurité, créez un module centralisé qui applique les meilleures pratiques à toute votre application :
-
-```pas
-unit SecurityPolicy;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Web.HTTPApp, System.NetEncoding,
-  IdHTTPServer, IdCustomHTTPServer;
-
+```pascal
 type
-  TSecurityHeaders = record
-    XFrameOptions: string;
-    ContentSecurityPolicy: string;
-    XContentTypeOptions: string;
-    XSSProtection: string;
-    ReferrerPolicy: string;
-    StrictTransportSecurity: string;
-  end;
-
-  TSecurityPolicy = class
+  TProtectionForceBrute = class
   private
-    FSecurityHeaders: TSecurityHeaders;
-
-    procedure InitDefaultHeaders;
+    class var FTentatives: TDictionary<string, TList<TDateTime>>;
   public
-    constructor Create;
-
-    // Appliquer des en-têtes de sécurité
-    procedure ApplySecurityHeaders(Response: TWebResponse); overload;
-    procedure ApplySecurityHeaders(Response: TIdHTTPResponseInfo); overload;
-
-    // Validation d'entrée
-    function SanitizeHTML(const Input: string): string;
-    function ValidateInput(const Input: string; InputType: string): Boolean;
-
-    // Journalisation de sécurité
-    procedure LogSecurityEvent(Level: string; const Message, Source: string);
-
-    // Propriétés pour configurer la politique
-    property SecurityHeaders: TSecurityHeaders read FSecurityHeaders write FSecurityHeaders;
+    class constructor Create;
+    class destructor Destroy;
+    class function PeutTenterConnexion(const AUsername: string): Boolean;
+    class procedure EnregistrerTentativeEchouee(const AUsername: string);
+    class procedure ReinitialiserTentatives(const AUsername: string);
   end;
 
+class constructor TProtectionForceBrute.Create;
+begin
+  FTentatives := TDictionary<string, TList<TDateTime>>.Create;
+end;
+
+class destructor TProtectionForceBrute.Destroy;
 var
-  SecurityPolicy: TSecurityPolicy;
-
-implementation
-
-constructor TSecurityPolicy.Create;
+  Liste: TList<TDateTime>;
 begin
-  inherited Create;
-  InitDefaultHeaders;
+  for Liste in FTentatives.Values do
+    Liste.Free;
+  FTentatives.Free;
 end;
 
-procedure TSecurityPolicy.InitDefaultHeaders;
-begin
-  // Définir les en-têtes de sécurité par défaut
-  FSecurityHeaders.XFrameOptions := 'DENY';
-  FSecurityHeaders.ContentSecurityPolicy :=
-    'default-src ''self''; script-src ''self'' ''unsafe-inline''; frame-ancestors ''none''';
-  FSecurityHeaders.XContentTypeOptions := 'nosniff';
-  FSecurityHeaders.XSSProtection := '1; mode=block';
-  FSecurityHeaders.ReferrerPolicy := 'strict-origin-when-cross-origin';
-  FSecurityHeaders.StrictTransportSecurity := 'max-age=31536000; includeSubDomains';
-end;
-
-procedure TSecurityPolicy.ApplySecurityHeaders(Response: TWebResponse);
-begin
-  Response.CustomHeaders.Values['X-Frame-Options'] := FSecurityHeaders.XFrameOptions;
-  Response.CustomHeaders.Values['Content-Security-Policy'] := FSecurityHeaders.ContentSecurityPolicy;
-  Response.CustomHeaders.Values['X-Content-Type-Options'] := FSecurityHeaders.XContentTypeOptions;
-  Response.CustomHeaders.Values['X-XSS-Protection'] := FSecurityHeaders.XSSProtection;
-  Response.CustomHeaders.Values['Referrer-Policy'] := FSecurityHeaders.ReferrerPolicy;
-  Response.CustomHeaders.Values['Strict-Transport-Security'] := FSecurityHeaders.StrictTransportSecurity;
-end;
-
-procedure TSecurityPolicy.ApplySecurityHeaders(Response: TIdHTTPResponseInfo);
-begin
-  Response.CustomHeaders.Values['X-Frame-Options'] := FSecurityHeaders.XFrameOptions;
-  Response.CustomHeaders.Values['Content-Security-Policy'] := FSecurityHeaders.ContentSecurityPolicy;
-  Response.CustomHeaders.Values['X-Content-Type-Options'] := FSecurityHeaders.XContentTypeOptions;
-  Response.CustomHeaders.Values['X-XSS-Protection'] := FSecurityHeaders.XSSProtection;
-  Response.CustomHeaders.Values['Referrer-Policy'] := FSecurityHeaders.ReferrerPolicy;
-  Response.CustomHeaders.Values['Strict-Transport-Security'] := FSecurityHeaders.StrictTransportSecurity;
-end;
-
-function TSecurityPolicy.SanitizeHTML(const Input: string): string;
-begin
-  // Implémenter un sanitizer HTML complet
-  // Ceci est une version simplifiée
-  Result := StringReplace(Input, '<', '&lt;', [rfReplaceAll]);
-  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
-end;
-
-function TSecurityPolicy.ValidateInput(const Input: string; InputType: string): Boolean;
-begin
-  Result := False;
-
-  if Input = '' then
-    Exit;
-
-  // Valider selon le type d'entrée
-  if InputType = 'email' then
-    Result := TRegEx.IsMatch(Input, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-  else if InputType = 'username' then
-    Result := TRegEx.IsMatch(Input, '^[a-zA-Z0-9_-]{3,20}$')
-  else if InputType = 'number' then
-    Result := TRegEx.IsMatch(Input, '^[0-9]+$')
-  else if InputType = 'date' then
-    Result := TRegEx.IsMatch(Input, '^\d{4}-\d{2}-\d{2}$')
-  else if InputType = 'phone' then
-    Result := TRegEx.IsMatch(Input, '^\+?[0-9]{10,15}$')
-  else
-    // Type inconnu, considérer valide mais loguer un avertissement
-    begin
-      LogSecurityEvent('WARNING', 'Type de validation inconnu: ' + InputType, 'InputValidation');
-      Result := True;
-    end;
-end;
-
-procedure TSecurityPolicy.LogSecurityEvent(Level: string; const Message, Source: string);
+class function TProtectionForceBrute.PeutTenterConnexion(const AUsername: string): Boolean;
+const
+  MAX_TENTATIVES = 5;
+  FENETRE_MINUTES = 15;
 var
-  LogFile: TextFile;
-  LogFileName, LogMessage: string;
-  TimeStamp: string;
+  Liste: TList<TDateTime>;
+  i: Integer;
+  TentativesRecentes: Integer;
 begin
-  // Générer un nom de fichier basé sur la date
-  LogFileName := FormatDateTime('yyyy-mm-dd', Date) + '_security.log';
+  Result := True;
 
-  // Préparer le message de journal
-  TimeStamp := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
+  if not FTentatives.TryGetValue(AUsername, Liste) then
+    Exit; // Première tentative
 
-  LogMessage := Format('[%s] [%s] [%s] %s',
-                       [TimeStamp, Level, Source, Message]);
-
-  // Écrire dans le fichier de journal
-  AssignFile(LogFile, LogFileName);
-  try
-    if FileExists(LogFileName) then
-      Append(LogFile)
+  // Compter les tentatives dans les dernières FENETRE_MINUTES minutes
+  TentativesRecentes := 0;
+  for i := Liste.Count - 1 downto 0 do
+  begin
+    if MinutesBetween(Now, Liste[i]) <= FENETRE_MINUTES then
+      Inc(TentativesRecentes)
     else
-      Rewrite(LogFile);
-
-    WriteLn(LogFile, LogMessage);
-  finally
-    CloseFile(LogFile);
+      Break; // Les tentatives plus anciennes ne comptent plus
   end;
+
+  Result := TentativesRecentes < MAX_TENTATIVES;
 end;
 
-initialization
-  SecurityPolicy := TSecurityPolicy.Create;
-
-finalization
-  SecurityPolicy.Free;
-
-end.
-```
-
-### Utilisation de la politique de sécurité
-
-```pas
-procedure TWebModule.WebModule1DefaultHandlerAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+class procedure TProtectionForceBrute.EnregistrerTentativeEchouee(const AUsername: string);
 var
-  Username, Email: string;
+  Liste: TList<TDateTime>;
 begin
-  // Appliquer les en-têtes de sécurité à toutes les réponses
-  SecurityPolicy.ApplySecurityHeaders(Response);
-
-  // Valider et sanitiser les entrées
-  Username := Request.ContentFields.Values['username'];
-  Email := Request.ContentFields.Values['email'];
-
-  if not SecurityPolicy.ValidateInput(Username, 'username') then
+  if not FTentatives.TryGetValue(AUsername, Liste) then
   begin
-    Response.StatusCode := 400;
-    Response.Content := 'Nom d''utilisateur invalide';
+    Liste := TList<TDateTime>.Create;
+    FTentatives.Add(AUsername, Liste);
+  end;
+
+  Liste.Add(Now);
+end;
+
+class procedure TProtectionForceBrute.ReinitialiserTentatives(const AUsername: string);
+var
+  Liste: TList<TDateTime>;
+begin
+  if FTentatives.TryGetValue(AUsername, Liste) then
+  begin
+    Liste.Free;
+    FTentatives.Remove(AUsername);
+  end;
+end;
+
+// Utilisation
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);
+var
+  Username: string;
+begin
+  Username := EditUsername.Text;
+
+  // Vérifier si l'utilisateur peut tenter une connexion
+  if not TProtectionForceBrute.PeutTenterConnexion(Username) then
+  begin
+    ShowMessage('Trop de tentatives échouées. Veuillez réessayer dans 15 minutes.');
     Exit;
   end;
 
-  if not SecurityPolicy.ValidateInput(Email, 'email') then
+  // Tenter la connexion
+  if VerifierIdentifiants(Username, EditPassword.Text) then
   begin
-    Response.StatusCode := 400;
-    Response.Content := 'Email invalide';
-    Exit;
+    // Connexion réussie
+    TProtectionForceBrute.ReinitialiserTentatives(Username);
+    ShowMessage('Connexion réussie');
+  end
+  else
+  begin
+    // Connexion échouée
+    TProtectionForceBrute.EnregistrerTentativeEchouee(Username);
+    ShowMessage('Identifiants incorrects');
   end;
-
-  // Journaliser l'événement
-  SecurityPolicy.LogSecurityEvent('INFO',
-                                 Format('Traitement de la requête pour %s', [Username]),
-                                 'WebModule');
-
-  // Traitement de la requête...
 end;
 ```
 
-### Conclusion
+### CAPTCHA
 
-La protection contre les vulnérabilités courantes est un aspect fondamental de la sécurité des applications. En suivant les bonnes pratiques présentées dans ce chapitre, vous pouvez considérablement réduire les risques de sécurité dans vos applications Delphi.
+Pour les tentatives répétées, ajouter un CAPTCHA :
 
-Récapitulons les points clés :
+```pascal
+procedure TFormLogin.AfficherCaptchaSiNecessaire;
+const
+  SEUIL_CAPTCHA = 3;
+var
+  NbTentatives: Integer;
+begin
+  NbTentatives := ObtenirNombreTentatives(EditUsername.Text);
 
-1. **Ne faites jamais confiance aux entrées utilisateur** : validez, sanitisez et échappez toutes les entrées.
+  if NbTentatives >= SEUIL_CAPTCHA then
+  begin
+    PanelCaptcha.Visible := True;
+    GenererNouveauCaptcha;
+  end;
+end;
 
-2. **Utilisez des requêtes paramétrées** pour prévenir les injections SQL.
+function ValiderCaptcha(const AReponse: string): Boolean;
+begin
+  // Vérifier la réponse du CAPTCHA
+  Result := AReponse = FReponseCaptchaAttendue;
+end;
+```
 
-3. **Protégez vos sessions** avec des identifiants sécurisés et des délais d'expiration.
+## 8. Protection contre le déni de service (DoS)
 
-4. **Implémentez des jetons anti-CSRF** pour les opérations sensibles.
+### Limitation du taux de requêtes
 
-5. **Appliquez des limites de débit** pour prévenir les attaques par force brute.
-
-6. **Utilisez des en-têtes de sécurité** pour protéger contre le clickjacking et autres attaques.
-
-7. **Chiffrez les données sensibles** en transit et au repos.
-
-8. **Centralisez votre politique de sécurité** pour une application cohérente.
-
-9. **Journalisez les événements de sécurité** pour détecter et analyser les incidents.
-
-10. **Testez régulièrement** la sécurité de votre application.
-
-Dans le prochain chapitre, nous aborderons l'audit de sécurité, qui vous permettra de vérifier systématiquement que vos applications sont correctement protégées contre les vulnérabilités que nous avons décrites.
-
-### Mise en place d'une liste de contrôle de sécurité
-
-Pour vous aider à vérifier que vous avez bien mis en œuvre toutes les protections nécessaires, voici une liste de contrôle que vous pouvez utiliser pour évaluer la sécurité de vos applications Delphi :
-
-#### Liste de contrôle de sécurité pour les applications Delphi
-
-**Protection contre l'injection SQL :**
-- [ ] Toutes les requêtes SQL utilisent des paramètres nommés
-- [ ] Les entrées utilisateur sont validées avant utilisation
-- [ ] Les erreurs de base de données sont gérées proprement sans divulguer d'informations sensibles
-- [ ] Les privilèges de base de données sont limités au minimum nécessaire
-
-**Protection contre le XSS :**
-- [ ] Toutes les données affichées dans du HTML sont échappées
-- [ ] Des en-têtes de sécurité appropriés sont utilisés (Content-Security-Policy)
-- [ ] Les entrées utilisateur sont validées et sanitisées
-
-**Protection contre l'injection de commandes :**
-- [ ] L'utilisation de commandes système est évitée si possible
-- [ ] Une liste d'autorisations stricte est utilisée pour les commandes permises
-- [ ] Les entrées utilisateur sont sanitisées avant utilisation dans des commandes
-
-**Protection contre les attaques par chemin traversant :**
-- [ ] Les noms de fichiers sont validés
-- [ ] Les chemins sont canonicalisés et vérifiés
-- [ ] L'accès aux fichiers est limité à des répertoires spécifiques
-
-**Stockage sécurisé des données sensibles :**
-- [ ] Les données sensibles sont chiffrées avant stockage
-- [ ] Les clés de chiffrement sont stockées de manière sécurisée
-- [ ] Les mots de passe sont hachés avec sel et non chiffrés
-
-**Journalisation et gestion des erreurs :**
-- [ ] Les messages d'erreur affichés aux utilisateurs ne révèlent pas d'informations sensibles
-- [ ] Les journaux ne contiennent pas de données sensibles
-- [ ] Les événements de sécurité importants sont journalisés
-
-**Désérialisation sécurisée :**
-- [ ] Les données désérialisées sont validées avant utilisation
-- [ ] La taille des données à désérialiser est limitée
-- [ ] Des formats de sérialisation sécurisés sont utilisés
-
-**Gestion de la mémoire :**
-- [ ] Les limites des tampons sont vérifiées
-- [ ] Les classes et types sécurisés de Delphi sont utilisés
-- [ ] Les fonctions sécurisées pour la manipulation de chaînes sont utilisées
-
-**Configuration CORS sécurisée :**
-- [ ] Une liste d'autorisations stricte est utilisée pour Access-Control-Allow-Origin
-- [ ] Les méthodes et en-têtes autorisés sont spécifiés précisément
-- [ ] L'utilisation de Access-Control-Allow-Credentials est limitée
-
-**Validation des paramètres côté serveur :**
-- [ ] Tous les paramètres sont validés côté serveur
-- [ ] Les données sensibles comme les prix sont récupérées depuis la base de données
-- [ ] Des limites sont imposées sur les quantités, montants, etc.
-
-**Protection contre CSRF :**
-- [ ] Des jetons anti-CSRF sont utilisés pour les opérations sensibles
-- [ ] Les jetons sont vérifiés avant l'exécution des actions
-- [ ] Les cookies d'authentification utilisent SameSite=Strict
-
-**Protection contre les attaques par force brute :**
-- [ ] Une limitation de débit est implémentée
-- [ ] Les comptes sont verrouillés temporairement après plusieurs échecs
-- [ ] Les tentatives d'authentification sont journalisées
-
-**Gestion des données sensibles dans les URL :**
-- [ ] Aucune donnée sensible n'est placée dans les URL
-- [ ] Les jetons d'authentification sont transmis via des en-têtes
-- [ ] POST est utilisé au lieu de GET pour les opérations sensibles
-
-**Protection contre le clickjacking :**
-- [ ] L'en-tête X-Frame-Options est utilisé
-- [ ] Content-Security-Policy avec frame-ancestors est configuré
-- [ ] D'autres en-têtes de sécurité sont implémentés
-
-**Gestion sécurisée des sessions :**
-- [ ] Les identifiants de session sont aléatoires et sécurisés
-- [ ] Les sessions ont une durée d'expiration
-- [ ] Les cookies de session utilisent HttpOnly, Secure et SameSite
-- [ ] Une fonctionnalité de déconnexion est implémentée
-
-### Exemple d'outil d'auto-évaluation de sécurité
-
-Voici un exemple simple d'outil d'auto-évaluation que vous pouvez intégrer à votre projet pour vérifier certaines bonnes pratiques de sécurité :
-
-```pas
-unit SecurityAssessment;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils, FireDAC.Comp.Client;
-
+```pascal
 type
-  TSecurityCheck = record
-    Category: string;
-    Name: string;
-    Description: string;
-    IsPassed: Boolean;
-    Recommendation: string;
-  end;
-
-  TSecurityAssessment = class
+  TRateLimiter = class
   private
-    FChecks: TArray<TSecurityCheck>;
-    FDatabase: TFDConnection;
-
-    procedure AddCheck(const Category, Name, Description, Recommendation: string; IsPassed: Boolean);
-    function CheckFDQueryParameters: Boolean;
-    function CheckPasswordStorage: Boolean;
-    function CheckSessionManagement: Boolean;
-    function CheckSecureFileHandling: Boolean;
-    function CheckInputValidation: Boolean;
-    function CheckErrorHandling: Boolean;
-    function CheckSensitiveDataExposure: Boolean;
+    class var FRequetes: TDictionary<string, TList<TDateTime>>;
   public
-    constructor Create(Database: TFDConnection);
-
-    procedure RunAssessment;
-    procedure SaveReport(const FileName: string);
-    procedure DisplayReport;
-
-    property Checks: TArray<TSecurityCheck> read FChecks;
+    class constructor Create;
+    class destructor Destroy;
+    class function PeutExecuterRequete(const AClientID: string): Boolean;
   end;
 
-implementation
-
-constructor TSecurityAssessment.Create(Database: TFDConnection);
+class constructor TRateLimiter.Create;
 begin
-  inherited Create;
-  FDatabase := Database;
-  SetLength(FChecks, 0);
+  FRequetes := TDictionary<string, TList<TDateTime>>.Create;
 end;
 
-procedure TSecurityAssessment.AddCheck(const Category, Name, Description,
-  Recommendation: string; IsPassed: Boolean);
+class destructor TRateLimiter.Destroy;
 var
-  Check: TSecurityCheck;
+  Liste: TList<TDateTime>;
 begin
-  Check.Category := Category;
-  Check.Name := Name;
-  Check.Description := Description;
-  Check.Recommendation := Recommendation;
-  Check.IsPassed := IsPassed;
-
-  SetLength(FChecks, Length(FChecks) + 1);
-  FChecks[High(FChecks)] := Check;
+  for Liste in FRequetes.Values do
+    Liste.Free;
+  FRequetes.Free;
 end;
 
-procedure TSecurityAssessment.RunAssessment;
-begin
-  // Réinitialiser les vérifications
-  SetLength(FChecks, 0);
-
-  // Exécuter les différentes vérifications
-  var HasParamQueries := CheckFDQueryParameters;
-  var HasSecurePasswords := CheckPasswordStorage;
-  var HasSecureSessions := CheckSessionManagement;
-  var HasSecureFiles := CheckSecureFileHandling;
-  var HasInputValidation := CheckInputValidation;
-  var HasSecureErrorHandling := CheckErrorHandling;
-  var HasProtectedSensitiveData := CheckSensitiveDataExposure;
-
-  // Ajouter les résultats
-  AddCheck('Injection SQL', 'Requêtes paramétrées',
-          'Vérification de l''utilisation de requêtes paramétrées',
-          'Utilisez des requêtes paramétrées pour toutes les requêtes SQL',
-          HasParamQueries);
-
-  AddCheck('Authentification', 'Stockage des mots de passe',
-          'Vérification du hachage des mots de passe',
-          'Utilisez des algorithmes de hachage sécurisés avec sel pour les mots de passe',
-          HasSecurePasswords);
-
-  AddCheck('Gestion de session', 'Sécurité des sessions',
-          'Vérification de la sécurité des sessions',
-          'Utilisez des ID de session aléatoires et une expiration de session',
-          HasSecureSessions);
-
-  AddCheck('Accès aux fichiers', 'Manipulation sécurisée des fichiers',
-          'Vérification de la sécurité des opérations sur les fichiers',
-          'Validez les chemins et noms de fichiers pour éviter les attaques par chemin traversant',
-          HasSecureFiles);
-
-  AddCheck('Validation d''entrée', 'Validation des entrées utilisateur',
-          'Vérification de la validation des entrées',
-          'Validez toutes les entrées utilisateur avant utilisation',
-          HasInputValidation);
-
-  AddCheck('Gestion des erreurs', 'Traitement sécurisé des erreurs',
-          'Vérification de la gestion des erreurs',
-          'Ne divulguez pas d''informations sensibles dans les messages d''erreur',
-          HasSecureErrorHandling);
-
-  AddCheck('Protection des données', 'Protection des données sensibles',
-          'Vérification de la protection des données sensibles',
-          'Chiffrez toutes les données sensibles au repos et en transit',
-          HasProtectedSensitiveData);
-
-  // D'autres vérifications peuvent être ajoutées...
-end;
-
-function TSecurityAssessment.CheckFDQueryParameters: Boolean;
+class function TRateLimiter.PeutExecuterRequete(const AClientID: string): Boolean;
+const
+  MAX_REQUETES_PAR_MINUTE = 60;
 var
-  Queries: TArray<TFDQuery>;
-  NonParamCount, ParamCount, I: Integer;
+  Liste: TList<TDateTime>;
+  i: Integer;
+  RequetesRecentes: Integer;
 begin
-  // Cette fonction est un exemple et devrait être adaptée à votre code réel
-  // Dans une implémentation réelle, vous pourriez scanner votre code source
-  // ou examiner les requêtes en cours d'exécution
-
-  NonParamCount := 0;
-  ParamCount := 0;
-
-  // Simuler la recherche de requêtes dans l'application
-  // Dans une application réelle, vous pourriez examiner les composants
-  // ou scanner le code source
-  SetLength(Queries, 0);
-  // Obtenez les queries de votre application...
-
-  for I := 0 to High(Queries) do
+  if not FRequetes.TryGetValue(AClientID, Liste) then
   begin
-    var SQL := Queries[I].SQL.Text;
-
-    // Rechercher des signes de concaténation de chaînes (dangereux)
-    if (Pos(''' +', SQL) > 0) or (Pos('+ ''', SQL) > 0) then
-      Inc(NonParamCount)
-    // Rechercher des signes de paramètres (sécurisé)
-    else if (Pos(':param', SQL) > 0) or (Pos('?', SQL) > 0) then
-      Inc(ParamCount);
+    Liste := TList<TDateTime>.Create;
+    FRequetes.Add(AClientID, Liste);
   end;
 
-  // Si nous avons trouvé des requêtes et que plus de 90% utilisent des paramètres,
-  // considérer que le test est réussi
-  Result := (ParamCount + NonParamCount > 0) and
-            (ParamCount / (ParamCount + NonParamCount) >= 0.9);
-end;
-
-function TSecurityAssessment.CheckPasswordStorage: Boolean;
-var
-  TableList: TStringList;
-  Query: TFDQuery;
-begin
-  Result := False;
-
-  if not Assigned(FDatabase) or not FDatabase.Connected then
-    Exit;
-
-  TableList := TStringList.Create;
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDatabase;
-
-    // Obtenir la liste des tables
-    FDatabase.GetTableNames('', '', '', TableList);
-
-    // Chercher une table d'utilisateurs
-    for var Table in TableList do
-    begin
-      if (LowerCase(Table) = 'users') or
-         (LowerCase(Table) = 'utilisateurs') or
-         (LowerCase(Table) = 'user') then
-      begin
-        // Vérifier la structure de la table
-        Query.SQL.Text := 'SELECT * FROM ' + Table + ' LIMIT 1';
-        try
-          Query.Open;
-
-          // Vérifier si nous avons un champ de mot de passe qui semble être haché
-          for var I := 0 to Query.FieldCount - 1 do
-          begin
-            var FieldName := LowerCase(Query.Fields[I].FieldName);
-
-            if (FieldName = 'password') or (FieldName = 'mot_de_passe') then
-            begin
-              Result := False; // Un champ 'password' simple est suspect
-              Exit;
-            end
-            else if (FieldName = 'password_hash') or
-                    (FieldName = 'hashed_password') or
-                    (FieldName = 'mot_de_passe_hash') then
-            begin
-              Result := True; // Un champ avec 'hash' semble plus sécurisé
-              Exit;
-            end;
-          end;
-        except
-          // Ignorer les erreurs
-        end;
-      end;
-    end;
-  finally
-    Query.Free;
-    TableList.Free;
-  end;
-end;
-
-// Implémentez les autres méthodes de vérification similaires...
-
-procedure TSecurityAssessment.SaveReport(const FileName: string);
-var
-  Report: TJSONArray;
-  Check: TJSONObject;
-  I: Integer;
-begin
-  Report := TJSONArray.Create;
-  try
-    for I := 0 to High(FChecks) do
-    begin
-      Check := TJSONObject.Create;
-      Check.AddPair('category', FChecks[I].Category);
-      Check.AddPair('name', FChecks[I].Name);
-      Check.AddPair('description', FChecks[I].Description);
-      Check.AddPair('passed', TJSONBool.Create(FChecks[I].IsPassed));
-      Check.AddPair('recommendation', FChecks[I].Recommendation);
-
-      Report.Add(Check);
-    end;
-
-    TFile.WriteAllText(FileName, Report.ToString);
-  finally
-    Report.Free;
-  end;
-end;
-
-procedure TSecurityAssessment.DisplayReport;
-var
-  TotalChecks, PassedChecks, I: Integer;
-begin
-  TotalChecks := Length(FChecks);
-  PassedChecks := 0;
-
-  WriteLn('=== RAPPORT D''ÉVALUATION DE SÉCURITÉ ===');
-  WriteLn('');
-
-  for I := 0 to High(FChecks) do
+  // Compter les requêtes dans la dernière minute
+  RequetesRecentes := 0;
+  for i := Liste.Count - 1 downto 0 do
   begin
-    if FChecks[I].IsPassed then
-    begin
-      WriteLn('[SUCCÈS] ', FChecks[I].Category, ' - ', FChecks[I].Name);
-      Inc(PassedChecks);
-    end
+    if SecondsBetween(Now, Liste[i]) <= 60 then
+      Inc(RequetesRecentes)
     else
     begin
-      WriteLn('[ÉCHEC] ', FChecks[I].Category, ' - ', FChecks[I].Name);
-      WriteLn('  Description: ', FChecks[I].Description);
-      WriteLn('  Recommandation: ', FChecks[I].Recommendation);
+      // Nettoyer les anciennes entrées
+      Liste.Delete(i);
     end;
-
-    WriteLn('');
   end;
 
-  WriteLn('Résumé: ', PassedChecks, ' succès sur ', TotalChecks, ' vérifications');
-  WriteLn('Score de sécurité: ', Round(PassedChecks / TotalChecks * 100), '%');
+  Result := RequetesRecentes < MAX_REQUETES_PAR_MINUTE;
 
-  if PassedChecks = TotalChecks then
-    WriteLn('Toutes les vérifications ont été passées avec succès !')
-  else
-    WriteLn('Des problèmes de sécurité ont été détectés. Veuillez consulter les recommandations.');
+  if Result then
+    Liste.Add(Now);
 end;
 
-end.
-```
-
-### Utilisation de l'outil d'auto-évaluation
-
-```pas
-procedure TMainForm.ButtonSecurityAssessmentClick(Sender: TObject);
-var
-  Assessment: TSecurityAssessment;
+// Utilisation
+procedure TraiterRequeteAPI(const AClientID: string);
 begin
-  Assessment := TSecurityAssessment.Create(DataModule1.FDConnection1);
+  if not TRateLimiter.PeutExecuterRequete(AClientID) then
+  begin
+    // 429 Too Many Requests
+    Response.StatusCode := 429;
+    Response.Content := 'Trop de requêtes. Veuillez réessayer plus tard.';
+    Exit;
+  end;
+
+  // Traiter la requête normalement
+  TraiterRequete;
+end;
+```
+
+## 9. Path Traversal
+
+### Le problème
+
+Un attaquant tente d'accéder à des fichiers en dehors du répertoire autorisé.
+
+```
+Demande : /download?file=../../etc/passwd
+```
+
+### Protection
+
+```pascal
+function CheminSecurise(const ACheminBase, AFichierDemande: string): string;
+var
+  CheminComplet: string;
+  CheminCanonique: string;
+begin
+  // Construire le chemin complet
+  CheminComplet := TPath.Combine(ACheminBase, AFichierDemande);
+
+  // Obtenir le chemin canonique (résolu, sans ..)
+  CheminCanonique := ExpandFileName(CheminComplet);
+
+  // Vérifier que le chemin final est bien dans le répertoire de base
+  if not CheminCanonique.StartsWith(ACheminBase) then
+    raise Exception.Create('Accès refusé : tentative de path traversal');
+
+  Result := CheminCanonique;
+end;
+
+// Utilisation
+procedure TelechargerFichier(const ANomFichier: string);
+var
+  CheminBase: string;
+  CheminFichier: string;
+begin
+  CheminBase := TPath.Combine(ExtractFilePath(ParamStr(0)), 'downloads');
+
   try
-    // Exécuter l'évaluation
-    Assessment.RunAssessment;
+    CheminFichier := CheminSecurise(CheminBase, ANomFichier);
 
-    // Afficher les résultats dans un mémo
-    MemoResult.Clear;
-
-    for var Check in Assessment.Checks do
+    if FileExists(CheminFichier) then
+      EnvoyerFichier(CheminFichier)
+    else
+      ShowMessage('Fichier introuvable');
+  except
+    on E: Exception do
     begin
-      if Check.IsPassed then
-        MemoResult.Lines.Add('[SUCCÈS] ' + Check.Category + ' - ' + Check.Name)
-      else
-      begin
-        MemoResult.Lines.Add('[ÉCHEC] ' + Check.Category + ' - ' + Check.Name);
-        MemoResult.Lines.Add('  Description: ' + Check.Description);
-        MemoResult.Lines.Add('  Recommandation: ' + Check.Recommendation);
-      end;
-
-      MemoResult.Lines.Add('');
+      ShowMessage('Erreur : ' + E.Message);
+      TLoggerSecurite.LoggerErreur('Tentative path traversal', ANomFichier);
     end;
-
-    // Sauvegarder le rapport
-    Assessment.SaveReport(ChangeFileExt(Application.ExeName, '_security_report.json'));
-
-    ShowMessage('Évaluation de sécurité terminée. Un rapport détaillé a été sauvegardé.');
-  finally
-    Assessment.Free;
   end;
 end;
 ```
 
-### Outils tiers pour la sécurité
+## Checklist de sécurité
 
-En plus des pratiques de programmation sécurisée, vous pouvez utiliser des outils tiers pour renforcer la sécurité de vos applications Delphi :
+Avant de déployer votre application :
 
-#### 1. Analyseurs statiques de code
+### Bases de données
+- [ ] Toutes les requêtes utilisent des paramètres
+- [ ] Aucune construction dynamique de SQL avec concat
+- [ ] Les erreurs SQL ne sont pas affichées aux utilisateurs
+- [ ] Privilèges minimaux pour l'utilisateur de la base
 
-Ces outils analysent votre code sans l'exécuter pour identifier les vulnérabilités potentielles :
+### Validation des entrées
+- [ ] Toutes les entrées utilisateur sont validées
+- [ ] Validation côté client ET serveur
+- [ ] Liste blanche plutôt que liste noire
+- [ ] Longueurs maximales définies
 
-- **Sonar** : Peut analyser le code Delphi pour identifier les problèmes de sécurité.
-- **RAD Auditor** : Spécifiquement conçu pour les applications Delphi.
-- **CodeSonar** : Un analyseur de code statique avancé qui prend en charge plusieurs langages, dont Delphi.
+### Gestion des erreurs
+- [ ] Messages d'erreur génériques pour les utilisateurs
+- [ ] Logging détaillé pour les développeurs
+- [ ] Pas d'informations techniques dans les erreurs
 
-#### 2. Outils de protection binaire
+### Upload de fichiers
+- [ ] Taille maximale définie
+- [ ] Extensions autorisées (liste blanche)
+- [ ] Noms de fichiers générés automatiquement
+- [ ] Stockage hors de la racine web
+- [ ] Scan antivirus si possible
 
-Ces outils protègent votre application une fois compilée :
+### Protection des accès
+- [ ] Rate limiting implémenté
+- [ ] Protection contre la force brute
+- [ ] CAPTCHA après plusieurs échecs
+- [ ] Tokens CSRF pour les actions sensibles
 
-- **VMProtect** : Protège le code par virtualisation pour empêcher le reverse engineering.
-- **Themida** : Offre une protection avancée contre la rétro-ingénierie.
-- **ASProtect** : Protège contre la décompilation et le débogage non autorisé.
+### Sessions et authentification
+- [ ] Sessions avec timeout
+- [ ] Tokens JWT avec expiration
+- [ ] Pas de données sensibles dans les tokens
+- [ ] Déconnexion propre (invalidation token)
 
-#### 3. Scanners de vulnérabilités
+## Résumé des points essentiels
 
-Pour tester votre application déployée :
+✅ **Règles d'or de la sécurité** :
+- Ne JAMAIS faire confiance aux entrées utilisateur
+- Toujours valider et filtrer les données
+- Utiliser des requêtes paramétrées SYSTÉMATIQUEMENT
+- Messages d'erreur génériques + logs détaillés
+- Principe de la liste blanche (autoriser explicitement)
+- Défense en profondeur (plusieurs couches de protection)
 
-- **OWASP ZAP** : Un scanner de vulnérabilités open source pour les applications web.
-- **Nessus** : Un scanner de vulnérabilités qui peut tester les applications desktop et serveur.
-- **Acunetix** : Particulièrement utile pour tester les applications web créées avec Delphi.
+❌ **Vulnérabilités critiques à éviter absolument** :
+- Injection SQL par concaténation
+- Affichage direct de HTML non échappé (XSS)
+- Actions sensibles sans token CSRF
+- Upload de fichiers sans validation
+- Pas de limite sur les tentatives de connexion
+- Révélation d'informations dans les erreurs
+- Path traversal non protégé
 
-#### 4. Bibliothèques de sécurité pour Delphi
+🛡️ **Protection minimale obligatoire** :
+- Requêtes SQL paramétrées partout
+- Échappement HTML pour tout affichage dynamique
+- Validation de toutes les entrées (format, type, longueur)
+- Rate limiting sur les endpoints sensibles
+- Gestion d'erreurs sécurisée
+- Logging des événements de sécurité
 
-Des composants spécialisés pour renforcer la sécurité :
+## Aller plus loin
 
-- **TurboPower LockBox** : Une bibliothèque de cryptographie pour Delphi.
-- **SecureBlackbox** : Fournit des composants pour SSL/TLS, SFTP, chiffrement, et plus.
-- **Spring4D Cryptography** : Partie de la bibliothèque Spring4D, offre des fonctionnalités cryptographiques modernes.
+**Sections complémentaires du chapitre 16** :
+- **16.6** : Audit de sécurité et journalisation
+- **16.7** : Stockage sécurisé des identifiants
+- **16.8** : GDPR et confidentialité
 
-### Exemple : Intégration d'un analyseur statique dans votre processus de développement
+**Outils recommandés** :
+- OWASP ZAP : Scanner de vulnérabilités
+- Burp Suite : Tests d'intrusion
+- SonarQube : Analyse de code statique
 
-Voici un exemple de script batch qui peut être exécuté comme une étape de pré-compilation pour analyser votre code Delphi :
+**Ressources** :
+- OWASP Top 10 : https://owasp.org/www-project-top-ten/
+- CWE : Liste des faiblesses communes
+- SANS Top 25 : Erreurs logicielles les plus dangereuses
 
-```batch
-@echo off
-echo Exécution de l'analyse de sécurité...
-
-set PROJ_DIR=%1
-set SOURCE_DIR=%PROJ_DIR%\src
-set REPORT_DIR=%PROJ_DIR%\security_reports
-
-if not exist "%REPORT_DIR%" mkdir "%REPORT_DIR%"
-
-echo Analysing du code dans %SOURCE_DIR%...
-
-rem Exemple avec un analyseur de code fictif
-SecurityAnalyzer.exe --src="%SOURCE_DIR%" --report="%REPORT_DIR%\security_report.html" --rules=injection,xss,path_traversal
-
-if %ERRORLEVEL% GEQ 1 (
-    echo Des problèmes de sécurité ont été détectés! Veuillez consulter le rapport.
-    start "" "%REPORT_DIR%\security_report.html"
-    exit /b 1
-) else (
-    echo Aucun problème de sécurité critique détecté.
-    exit /b 0
-)
-```
-
-### Recommandations finales pour la sécurité des applications Delphi
-
-1. **Adoptez une approche de "sécurité dès la conception"** : Intégrez la sécurité dès le début du cycle de développement, pas comme une réflexion après coup.
-
-2. **Formez votre équipe** : Assurez-vous que tous les développeurs comprennent les principes de base de la sécurité des applications.
-
-3. **Testez régulièrement** : Effectuez des tests de sécurité réguliers, y compris des tests de pénétration par des experts externes.
-
-4. **Restez informé** : Suivez les dernières tendances et menaces en matière de sécurité, comme les bulletins OWASP Top 10.
-
-5. **Adoptez le principe du moindre privilège** : Accordez le minimum de droits nécessaires à tous les niveaux de votre application.
-
-6. **Mettez en place un processus de gestion des vulnérabilités** : Disposez d'un système pour traiter les vulnérabilités découvertes dans votre application.
-
-7. **Documentation** : Documentez vos pratiques de sécurité et créez des guides pour les futurs développeurs.
-
-8. **Automatisez les tests de sécurité** : Intégrez les tests de sécurité automatisés dans votre pipeline de CI/CD.
-
-### Exercices pratiques
-
-1. Créez une fonction de validation qui vérifie si une entrée utilisateur contient des caractères dangereux pour SQL, HTML et les chemins de fichier.
-
-2. Modifiez une application existante pour implémenter des jetons anti-CSRF pour tous les formulaires sensibles.
-
-3. Créez une classe de session sécurisée qui génère des identifiants aléatoires et gère l'expiration des sessions.
-
-4. Ajoutez une limitation de débit à une fonction d'authentification pour prévenir les attaques par force brute.
-
-5. Écrivez un outil simple qui scanne votre code Delphi à la recherche de vulnérabilités potentielles, comme des requêtes SQL non paramétrées.
-
-6. Implémentez une gestion sécurisée des erreurs qui journalise les détails pour les développeurs mais affiche des messages génériques aux utilisateurs.
-
-7. Pour les plus avancés : Créez un middleware de sécurité qui applique automatiquement des en-têtes de sécurité à toutes les réponses HTTP de votre application.
-
-En mettant en œuvre ces recommandations et en utilisant les outils appropriés, vous pouvez considérablement renforcer la sécurité de vos applications Delphi contre les vulnérabilités courantes.
+La protection contre les vulnérabilités est un processus continu. Restez informé des nouvelles menaces, testez régulièrement votre application et adoptez toujours une approche défensive dans votre code.
 
 ⏭️ [Audit de sécurité](/16-securite-des-applications/06-audit-de-securite.md)

@@ -1,237 +1,251 @@
-# 16. Sécurité des applications
-## 16.4 Sécurisation des connexions
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.4 Sécurisation des connexions
 
-Dans ce chapitre, nous allons explorer comment sécuriser les différents types de connexions réseau dans vos applications Delphi. La sécurisation des communications est essentielle pour protéger les données sensibles lorsqu'elles transitent entre votre application et d'autres systèmes.
+## Introduction
+
+Dans un monde où les applications communiquent constamment via Internet ou des réseaux locaux, sécuriser ces connexions est devenu absolument critique. Chaque donnée transmise sans protection peut être interceptée, lue ou modifiée par un attaquant.
+
+**Analogie du monde réel** : Imaginez envoyer une carte postale (HTTP) versus envoyer une lettre dans une enveloppe scellée (HTTPS). Avec la carte postale, n'importe qui peut lire votre message pendant le transit. Avec l'enveloppe scellée, seul le destinataire peut ouvrir et lire le contenu.
 
 ### Pourquoi sécuriser les connexions ?
 
-Les données en transit sont particulièrement vulnérables car elles peuvent être interceptées par des attaquants utilisant diverses techniques comme :
+**Les dangers d'une connexion non sécurisée** :
+- **Interception** : Un attaquant peut lire toutes les données échangées
+- **Modification** : Les données peuvent être altérées en transit (attaque man-in-the-middle)
+- **Usurpation** : Quelqu'un peut se faire passer pour le serveur légitime
+- **Vol d'identifiants** : Mots de passe et tokens transmis en clair
 
-- **L'écoute passive (sniffing)** : Capture du trafic réseau pour extraire des informations sensibles
-- **L'attaque de l'homme du milieu (Man-in-the-Middle)** : Interception et potentielle modification des communications
-- **L'usurpation d'identité (spoofing)** : Prétendre être un système ou un utilisateur légitime
+**Données sensibles à protéger** :
+- Identifiants de connexion (login, mot de passe)
+- Informations personnelles (nom, adresse, email)
+- Données bancaires
+- Sessions utilisateur (cookies, tokens)
+- Documents confidentiels
 
-La sécurisation des connexions permet de :
-- Garantir la **confidentialité** des données (personne ne peut les lire)
-- Assurer l'**intégrité** des données (personne ne peut les modifier)
-- Vérifier l'**authenticité** des parties communicantes (vous parlez à la bonne personne/système)
+## Les protocoles de sécurité
 
-### Utilisation de HTTPS pour les connexions Web
+### HTTP vs HTTPS
 
-Le protocole HTTPS (HTTP Secure) est la méthode standard pour sécuriser les communications Web. Il utilise TLS (Transport Layer Security) pour chiffrer les données.
+**HTTP (HyperText Transfer Protocol)** : Le protocole de base du web, mais **NON sécurisé**.
 
-#### Configuration d'une requête REST sécurisée
+```
+Client ──[Données en clair]──> Serveur
+       ←─[Réponse en clair]──
 
-Voici comment configurer une requête REST pour utiliser HTTPS dans Delphi :
+⚠️ Problème : Tout le monde peut lire les données !
+```
 
-```pas
-procedure MakeSecureRESTRequest;
+**HTTPS (HTTP Secure)** : HTTP avec une couche de chiffrement SSL/TLS.
+
+```
+Client ──[Données chiffrées]──> Serveur
+       ←─[Réponse chiffrée]──
+
+✅ Sécurisé : Seuls le client et le serveur peuvent déchiffrer
+```
+
+**Différences visuelles** :
+```
+HTTP  : http://example.com  (pas de cadenas dans le navigateur)
+HTTPS : https://example.com (cadenas 🔒 dans le navigateur)
+```
+
+### SSL et TLS
+
+**SSL (Secure Sockets Layer)** : Ancien protocole de sécurité, maintenant obsolète.
+
+**TLS (Transport Layer Security)** : Remplaçant moderne de SSL, c'est ce qu'on utilise aujourd'hui.
+
+**Versions de TLS** :
+- TLS 1.0 : ❌ Déprécié, vulnérable
+- TLS 1.1 : ❌ Déprécié, ne plus utiliser
+- TLS 1.2 : ✅ Bon, encore largement utilisé
+- TLS 1.3 : ✅ Meilleur, plus rapide et plus sûr
+
+**Note importante** : Même si on dit souvent "SSL", on parle en réalité de TLS aujourd'hui. Les deux termes sont utilisés de manière interchangeable par habitude.
+
+## Comment fonctionne HTTPS/TLS
+
+### Le processus de connexion sécurisée (handshake)
+
+Quand vous vous connectez à un site en HTTPS, voici ce qui se passe en coulisses :
+
+**Étape 1 : Hello**
+```
+Client → Serveur : "Bonjour, je supporte TLS 1.2 et 1.3,
+                    voici les algorithmes de chiffrement que je connais"
+
+Serveur → Client : "Bonjour, utilisons TLS 1.3 et
+                    l'algorithme AES-256 pour chiffrer"
+```
+
+**Étape 2 : Échange de certificat**
+```
+Serveur → Client : "Voici mon certificat qui prouve mon identité"
+
+Client vérifie :
+- Le certificat est-il valide ?
+- Est-il bien pour ce domaine ?
+- Est-il signé par une autorité de confiance ?
+```
+
+**Étape 3 : Génération des clés**
+```
+Client et Serveur génèrent ensemble une clé de session unique
+Cette clé servira à chiffrer toutes les communications
+```
+
+**Étape 4 : Communication sécurisée**
+```
+Client ←→ Serveur : Toutes les données sont maintenant chiffrées
+                    avec la clé de session
+```
+
+### Schéma simplifié
+
+```
+┌────────┐                                    ┌────────┐
+│ Client │                                    │Serveur │
+└───┬────┘                                    └───┬────┘
+    │                                             │
+    │ 1. ClientHello (TLS 1.3, algorithmes)       │
+    ├─────────────────────────────────────────────>
+    │                                             │
+    │ 2. ServerHello + Certificat                 │
+    <─────────────────────────────────────────────┤
+    │                                             │
+    │ 3. Vérification certificat                  │
+    │    Génération clé session                   │
+    │                                             │
+    │ 4. Communication chiffrée                   │
+    ├────────────────────────────────────────────>
+    <─────────────────────────────────────────────┤
+    │                                             │
+```
+
+## Les certificats SSL/TLS
+
+### Qu'est-ce qu'un certificat ?
+
+Un certificat numérique est comme une carte d'identité pour un site web. Il prouve que :
+- Le site est bien celui qu'il prétend être
+- Les communications peuvent être chiffrées en toute sécurité
+
+**Contenu d'un certificat** :
+- Nom de domaine (ex: www.monsite.com)
+- Nom de l'organisation
+- Clé publique pour le chiffrement
+- Date de validité (début et fin)
+- Signature de l'autorité de certification
+
+### Autorités de certification (CA)
+
+Les **Certificate Authorities** sont des organisations de confiance qui vérifient l'identité des sites web et signent leurs certificats.
+
+**Principales CA** :
+- Let's Encrypt (gratuit, automatisé)
+- DigiCert
+- GlobalSign
+- Sectigo
+- GoDaddy
+
+**Hiérarchie de confiance** :
+```
+Certificat racine (CA racine)
+    └─ Certificat intermédiaire (CA intermédiaire)
+        └─ Certificat du site (votre site web)
+```
+
+### Types de certificats
+
+**1. DV (Domain Validation)** : Le plus simple et rapide
+- Vérifie uniquement que vous possédez le domaine
+- Gratuit avec Let's Encrypt
+- Suffisant pour la plupart des sites
+
+**2. OV (Organization Validation)** : Validation de l'organisation
+- Vérifie l'existence légale de l'entreprise
+- Affiche le nom de l'organisation
+- Pour sites d'entreprise
+
+**3. EV (Extended Validation)** : Validation étendue
+- Vérification approfondie de l'organisation
+- Barre d'adresse verte dans certains navigateurs
+- Pour sites de banques, e-commerce important
+
+**4. Wildcard** : Pour sous-domaines
+- Protège *.monsite.com
+- Ex: www.monsite.com, api.monsite.com, shop.monsite.com
+
+### Obtenir un certificat avec Let's Encrypt
+
+Let's Encrypt fournit des certificats gratuits, automatisés et reconnus par tous les navigateurs.
+
+**Avantages** :
+- ✅ Gratuit
+- ✅ Automatique (renouvellement auto)
+- ✅ Reconnu universellement
+- ✅ Simple à configurer
+
+**Installation avec Certbot** (sur le serveur) :
+```bash
+# Installation de Certbot
+sudo apt-get install certbot
+
+# Obtenir un certificat
+sudo certbot certonly --webroot -w /var/www/html -d monsite.com -d www.monsite.com
+
+# Renouvellement automatique (crontab)
+0 3 * * * certbot renew --quiet
+```
+
+## Implémentation HTTPS en Delphi
+
+### 1. Requêtes HTTPS avec TRESTClient
+
+La manière la plus simple et moderne pour les API REST :
+
+```pascal
+uses
+  REST.Client, REST.Types, System.JSON, System.SysUtils;
+
+procedure AppelerAPISecurisee;
 var
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
 begin
-  RESTClient := TRESTClient.Create(nil);
+  // Créer les composants
+  RESTClient := TRESTClient.Create('https://api.monsite.com');
   RESTRequest := TRESTRequest.Create(nil);
   RESTResponse := TRESTResponse.Create(nil);
-
   try
-    // Configurer le client REST pour utiliser HTTPS
-    RESTClient.BaseURL := 'https://api.exemple.com'; // Notez le "https://"
-    RESTClient.Accept := 'application/json';
-
-    // Spécifier la version TLS (TLS 1.2 ou supérieur est recommandé)
-    RESTClient.SecureProtocols := [TLSv1_2, TLSv1_3];
-
-    // Activer la vérification des certificats
-    RESTClient.ValidateServerCertificate := True;
+    RESTRequest.Client := RESTClient;
+    RESTRequest.Response := RESTResponse;
 
     // Configurer la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmGET;
-    RESTRequest.Resource := 'users';
+    RESTRequest.Resource := 'users/{id}';
+    RESTRequest.Method := TRESTRequestMethod.rmGET;
+    RESTRequest.AddParameter('id', '123', TRESTRequestParameterKind.pkURLSEGMENT);
 
-    // Exécuter la requête
-    RESTRequest.Execute;
+    // Ajouter un token d'authentification
+    RESTRequest.AddAuthParameter('Authorization', 'Bearer VotreTokenJWT',
+                                  TRESTRequestParameterKind.pkHTTPHEADER,
+                                  [TRESTRequestParameterOption.poDoNotEncode]);
 
-    // Traiter la réponse
-    if RESTResponse.StatusCode = 200 then
-      ShowMessage('Requête réussie : ' + RESTResponse.Content)
-    else
-      ShowMessage('Erreur: ' + IntToStr(RESTResponse.StatusCode) + ' - ' +
-                  RESTResponse.StatusText);
-
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-```
-
-> ⚠️ **Important** : Utilisez toujours `https://` au lieu de `http://` pour vos API et services Web contenant des données sensibles.
-
-#### Vérification des certificats SSL/TLS
-
-Par défaut, Delphi vérifie les certificats SSL/TLS. Cependant, il est parfois nécessaire de personnaliser ce comportement :
-
-```pas
-procedure ConfigureSSLHandling;
-var
-  RESTClient: TRESTClient;
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  RESTClient := TRESTClient.Create(nil);
-
-  // Configuration SSL avancée en utilisant Indy
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Configurer les options SSL
-    SSLIOHandler.SSLOptions.Method := sslvTLSv1_2; // Utiliser TLS 1.2
-    SSLIOHandler.SSLOptions.Mode := sslmClient;
-
-    // Vérification des certificats
-    SSLIOHandler.SSLOptions.VerifyMode := [sslvrfPeer]; // Vérifier le certificat
-    SSLIOHandler.SSLOptions.VerifyDepth := 9; // Profondeur max de la chaîne de certification
-
-    // Vous pouvez également spécifier un magasin de certificats personnalisé
-    // SSLIOHandler.SSLOptions.RootCertFile := 'path/to/ca-certificates.pem';
-
-    // Assigner le gestionnaire SSL au client REST
-    RESTClient.HTTPOptions.ProtocolVersion := pv1_1;
-    // Attacher l'IOHandler au client REST (nécessite un peu plus de code)
-
-    // Reste de la configuration...
-
-  finally
-    // Ne pas libérer SSLIOHandler tant que le RESTClient l'utilise
-    // La libération de mémoire dépend de votre logique d'application
-  end;
-end;
-```
-
-> 💡 **Note** : Pour des configurations SSL avancées, vous pourriez avoir besoin d'utiliser directement les composants Indy comme `TIdHTTP` et `TIdSSLIOHandlerSocketOpenSSL`.
-
-#### Gestion des certificats auto-signés
-
-Dans certains environnements de développement ou intranets, vous pourriez rencontrer des certificats auto-signés. Bien que ce ne soit pas recommandé pour la production, voici comment les gérer :
-
-```pas
-procedure ConfigureSelfSignedCertificate;
-var
-  RESTClient: TRESTClient;
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  RESTClient := TRESTClient.Create(nil);
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Configuration pour accepter les certificats auto-signés
-    SSLIOHandler.OnVerifyPeer := HandleVerifyPeer;
-
-    // Reste de la configuration...
-
-  finally
-    // Gestion de la libération mémoire...
-  end;
-end;
-
-// Fonction de rappel pour la vérification des certificats
-function HandleVerifyPeer(Certificate: TIdX509; AOk: Boolean;
-  ADepth, AError: Integer): Boolean;
-begin
-  // En développement uniquement : accepter tous les certificats
-  Result := True;
-
-  // En production, vous devriez implémenter une logique plus stricte
-  // Par exemple, vérifier l'empreinte du certificat auto-signé connu
-  // if (Certificate.Fingerprint = 'known_fingerprint') then
-  //   Result := True;
-end;
-```
-
-> ⚠️ **Attention** : L'acceptation de tous les certificats est dangereuse et ne devrait jamais être utilisée en production. Utilisez cette approche uniquement en développement.
-
-### Authentification sécurisée pour les API REST
-
-#### Authentification par jeton (Token)
-
-L'authentification par jeton est largement utilisée pour les API RESTful. Voici comment l'implémenter :
-
-```pas
-type
-  TAuthenticationService = class
-  private
-    FToken: string;
-    FTokenExpiry: TDateTime;
-    FBaseURL: string;
-  public
-    constructor Create(const BaseURL: string);
-
-    function Authenticate(const Username, Password: string): Boolean;
-    function MakeAuthenticatedRequest(const Resource: string; Method: TRESTRequestMethod): string;
-    function IsTokenValid: Boolean;
-  end;
-
-constructor TAuthenticationService.Create(const BaseURL: string);
-begin
-  inherited Create;
-  FBaseURL := BaseURL;
-  FToken := '';
-  FTokenExpiry := 0;
-end;
-
-function TAuthenticationService.Authenticate(const Username, Password: string): Boolean;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  JSONValue: TJSONValue;
-begin
-  Result := False;
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration pour l'authentification
-    RESTClient.BaseURL := FBaseURL;
-    RESTClient.Accept := 'application/json';
-
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
-    RESTRequest.Resource := 'auth/login';
-
-    // Ajouter les informations d'authentification
-    RESTRequest.AddBody('{"username":"' + Username +
-                         '","password":"' + Password + '"}',
-                         TRESTContentType.ctAPPLICATION_JSON);
-
-    // Exécuter la requête
+    // Exécuter (automatiquement en HTTPS)
     RESTRequest.Execute;
 
     // Traiter la réponse
     if RESTResponse.StatusCode = 200 then
     begin
-      // Extraire le jeton et sa date d'expiration
-      JSONValue := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        if JSONValue <> nil then
-        begin
-          FToken := JSONValue.GetValue<string>('token');
-
-          // Calculer l'expiration (exemple : convertir les secondes en TDateTime)
-          var ExpiresIn := JSONValue.GetValue<Integer>('expires_in');
-          FTokenExpiry := Now + (ExpiresIn / 86400); // Convertir secondes en jours
-
-          Result := FToken <> '';
-        end;
-      finally
-        JSONValue.Free;
-      end;
+      ShowMessage('Données reçues : ' + RESTResponse.Content);
+    end
+    else
+    begin
+      ShowMessage('Erreur ' + IntToStr(RESTResponse.StatusCode) +
+                  ' : ' + RESTResponse.StatusText);
     end;
   finally
     RESTResponse.Free;
@@ -240,1076 +254,468 @@ begin
   end;
 end;
 
-function TAuthenticationService.IsTokenValid: Boolean;
-begin
-  // Vérifier si le jeton existe et n'est pas expiré
-  Result := (FToken <> '') and (Now < FTokenExpiry);
-end;
-
-function TAuthenticationService.MakeAuthenticatedRequest(
-  const Resource: string; Method: TRESTRequestMethod): string;
+// Exemple avec POST de données JSON
+procedure EnvoyerDonneesJSON;
 var
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
+  JSONBody: TJSONObject;
+begin
+  RESTClient := TRESTClient.Create('https://api.monsite.com');
+  RESTRequest := TRESTRequest.Create(nil);
+  RESTResponse := TRESTResponse.Create(nil);
+  JSONBody := TJSONObject.Create;
+  try
+    RESTRequest.Client := RESTClient;
+    RESTRequest.Response := RESTResponse;
+    RESTRequest.Method := TRESTRequestMethod.rmPOST;
+    RESTRequest.Resource := 'users';
+
+    // Créer le corps JSON
+    JSONBody.AddPair('nom', 'Dupont');
+    JSONBody.AddPair('email', 'dupont@example.com');
+
+    // Ajouter le corps à la requête
+    RESTRequest.AddBody(JSONBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
+
+    // Exécuter
+    RESTRequest.Execute;
+
+    if RESTResponse.StatusCode = 201 then
+      ShowMessage('Utilisateur créé avec succès')
+    else
+      ShowMessage('Erreur : ' + RESTResponse.Content);
+  finally
+    JSONBody.Free;
+    RESTResponse.Free;
+    RESTRequest.Free;
+    RESTClient.Free;
+  end;
+end;
+```
+
+### 2. Connexions HTTPS avec Indy
+
+Pour des connexions HTTP plus personnalisées :
+
+```pascal
+uses
+  IdHTTP, IdSSLOpenSSL, System.SysUtils;
+
+function TelechargerPageHTTPS(const AURL: string): string;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  try
+    // Configurer SSL/TLS
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    SSLHandler.SSLOptions.Mode := sslmClient;
+
+    // Options de vérification du certificat
+    SSLHandler.SSLOptions.VerifyMode := [sslvrfPeer];
+    SSLHandler.SSLOptions.VerifyDepth := 2;
+
+    // Assigner le handler SSL au client HTTP
+    HTTP.IOHandler := SSLHandler;
+
+    // Effectuer la requête HTTPS
+    Result := HTTP.Get(AURL);
+  finally
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.BtnTelechargerClick(Sender: TObject);
+var
+  Contenu: string;
+begin
+  try
+    Contenu := TelechargerPageHTTPS('https://www.example.com/api/data');
+    Memo1.Lines.Text := Contenu;
+  except
+    on E: Exception do
+      ShowMessage('Erreur : ' + E.Message);
+  end;
+end;
+
+// POST avec HTTPS
+procedure EnvoyerDonneesHTTPS(const AURL, ADonnees: string);
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+  Stream: TStringStream;
+  Reponse: string;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  Stream := TStringStream.Create(ADonnees, TEncoding.UTF8);
+  try
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    SSLHandler.SSLOptions.Mode := sslmClient;
+    HTTP.IOHandler := SSLHandler;
+
+    // Configurer les headers
+    HTTP.Request.ContentType := 'application/json';
+    HTTP.Request.CustomHeaders.AddValue('Authorization', 'Bearer VotreToken');
+
+    // Envoyer les données
+    Reponse := HTTP.Post(AURL, Stream);
+    ShowMessage('Réponse : ' + Reponse);
+  finally
+    Stream.Free;
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+```
+
+### 3. Gestion des erreurs SSL/TLS
+
+```pascal
+procedure RequeteHTTPSAvecGestionErreurs;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  try
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    HTTP.IOHandler := SSLHandler;
+
+    try
+      HTTP.Get('https://api.example.com/data');
+    except
+      on E: EIdHTTPProtocolException do
+      begin
+        // Erreur HTTP (404, 500, etc.)
+        ShowMessage('Erreur HTTP ' + IntToStr(E.ErrorCode) + ': ' + E.Message);
+      end;
+      on E: EIdOSSLCouldNotLoadSSLLibrary do
+      begin
+        // Bibliothèques SSL manquantes
+        ShowMessage('Erreur SSL : Les bibliothèques OpenSSL sont manquantes.' + sLineBreak +
+                    'Veuillez installer libeay32.dll et ssleay32.dll');
+      end;
+      on E: EIdSSLProtocolException do
+      begin
+        // Problème de certificat ou protocole SSL
+        ShowMessage('Erreur SSL/TLS : ' + E.Message + sLineBreak +
+                    'Vérifiez le certificat du serveur.');
+      end;
+      on E: Exception do
+      begin
+        // Autre erreur
+        ShowMessage('Erreur : ' + E.Message);
+      end;
+    end;
+  finally
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+```
+
+### 4. Vérification des certificats
+
+```pascal
+uses
+  IdSSLOpenSSL, IdX509;
+
+procedure TForm1.VerifierCertificat;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  try
+    // Événement de vérification du certificat
+    SSLHandler.OnVerifyPeer := SSLVerifyPeerEvent;
+
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    SSLHandler.SSLOptions.VerifyMode := [sslvrfPeer, sslvrfFailIfNoPeerCert];
+    HTTP.IOHandler := SSLHandler;
+
+    HTTP.Get('https://www.example.com');
+  finally
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+
+function TForm1.SSLVerifyPeerEvent(Certificate: TIdX509; AOk: Boolean;
+  ADepth, AError: Integer): Boolean;
+begin
+  // Afficher les informations du certificat
+  Memo1.Lines.Add('Certificat reçu :');
+  Memo1.Lines.Add('  Sujet : ' + Certificate.Subject.OneLine);
+  Memo1.Lines.Add('  Émetteur : ' + Certificate.Issuer.OneLine);
+  Memo1.Lines.Add('  Valide du : ' + DateTimeToStr(Certificate.notBefore));
+  Memo1.Lines.Add('  Valide jusqu''au : ' + DateTimeToStr(Certificate.notAfter));
+
+  // Vérifier la validité
+  if not AOk then
+  begin
+    case AError of
+      10: Memo1.Lines.Add('  ⚠️ Certificat expiré');
+      18: Memo1.Lines.Add('  ⚠️ Certificat auto-signé');
+      19: Memo1.Lines.Add('  ⚠️ CA auto-signée dans la chaîne');
+      20: Memo1.Lines.Add('  ⚠️ Impossible de vérifier le certificat');
+    else
+      Memo1.Lines.Add('  ⚠️ Erreur de vérification : ' + IntToStr(AError));
+    end;
+  end;
+
+  // En production : rejeter si non valide
+  Result := AOk;
+
+  // En développement : vous pouvez accepter (avec avertissement)
+  // Result := True; // ATTENTION : Dangereux en production !
+end;
+```
+
+## Sécurisation des connexions aux bases de données
+
+### MySQL/MariaDB avec SSL
+
+```pascal
+procedure ConfigurerConnexionMySQLSSL;
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.Params.Add('DriverID=MySQL');
+  FDConnection1.Params.Add('Server=mysql.example.com');
+  FDConnection1.Params.Add('Port=3306');
+  FDConnection1.Params.Add('Database=mabase');
+  FDConnection1.Params.Add('User_Name=utilisateur');
+  FDConnection1.Params.Add('Password=motdepasse');
+
+  // Activer SSL/TLS
+  FDConnection1.Params.Add('UseSSL=True');
+
+  // Spécifier les certificats (optionnel mais recommandé)
+  FDConnection1.Params.Add('SSLCert=C:\certs\client-cert.pem');
+  FDConnection1.Params.Add('SSLKey=C:\certs\client-key.pem');
+  FDConnection1.Params.Add('SSLCA=C:\certs\ca-cert.pem');
+
+  // Vérifier le certificat du serveur
+  FDConnection1.Params.Add('SSLVerify=True');
+
+  try
+    FDConnection1.Connected := True;
+    ShowMessage('Connexion sécurisée établie');
+  except
+    on E: Exception do
+      ShowMessage('Erreur de connexion : ' + E.Message);
+  end;
+end;
+
+// Vérifier si la connexion est chiffrée
+procedure VerifierChiffrementConnexion;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'SHOW STATUS LIKE "Ssl_cipher"';
+    Query.Open;
+
+    if not Query.IsEmpty then
+    begin
+      if Query.FieldByName('Value').AsString <> '' then
+        ShowMessage('Connexion chiffrée avec : ' + Query.FieldByName('Value').AsString)
+      else
+        ShowMessage('⚠️ Connexion NON chiffrée !');
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### PostgreSQL avec SSL
+
+```pascal
+procedure ConfigurerConnexionPostgreSQLSSL;
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.Params.Add('DriverID=PG');
+  FDConnection1.Params.Add('Server=postgres.example.com');
+  FDConnection1.Params.Add('Database=mabase');
+  FDConnection1.Params.Add('User_Name=utilisateur');
+  FDConnection1.Params.Add('Password=motdepasse');
+
+  // Mode SSL
+  // require : exige SSL
+  // verify-ca : vérifie le certificat CA
+  // verify-full : vérifie CA + nom d'hôte
+  FDConnection1.Params.Add('SSLMode=require');
+
+  // Certificats
+  FDConnection1.Params.Add('SSLCert=client.crt');
+  FDConnection1.Params.Add('SSLKey=client.key');
+  FDConnection1.Params.Add('SSLRootCert=root.crt');
+
+  FDConnection1.Connected := True;
+end;
+```
+
+### SQL Server avec encryption
+
+```pascal
+procedure ConfigurerConnexionSQLServerChiffree;
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.Params.Add('DriverID=MSSQL');
+  FDConnection1.Params.Add('Server=sqlserver.example.com');
+  FDConnection1.Params.Add('Database=mabase');
+
+  // Authentification Windows ou SQL
+  FDConnection1.Params.Add('OSAuthent=No');
+  FDConnection1.Params.Add('User_Name=utilisateur');
+  FDConnection1.Params.Add('Password=motdepasse');
+
+  // Chiffrement activé
+  FDConnection1.Params.Add('Encrypt=yes');
+
+  // Faire confiance au certificat du serveur (développement uniquement)
+  // En production, utilisez un certificat valide
+  FDConnection1.Params.Add('TrustServerCertificate=no');
+
+  FDConnection1.Connected := True;
+end;
+```
+
+## Authentification par token (JWT)
+
+Les JSON Web Tokens (JWT) sont une méthode moderne et sécurisée d'authentification pour les API.
+
+### Structure d'un JWT
+
+Un JWT se compose de 3 parties séparées par des points :
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+│                                      │                                                    │                                        │
+└────────── Header ────────────────────┴────────────────── Payload ─────────────────────────┴──────────── Signature ─────────────────┘
+```
+
+**Header** : Type de token et algorithme de signature
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+**Payload** : Les données (claims)
+```json
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "iat": 1516239022,
+  "exp": 1516242622
+}
+```
+
+**Signature** : Garantit l'intégrité
+```
+HMACSHA256(
+  base64UrlEncode(header) + "." +
+  base64UrlEncode(payload),
+  secret
+)
+```
+
+### Utilisation de JWT dans Delphi
+
+```pascal
+uses
+  REST.Client, System.JSON;
+
+// Se connecter et obtenir un JWT
+function SeConnecterEtObtenirToken(const ALogin, APassword: string): string;
+var
+  RESTClient: TRESTClient;
+  RESTRequest: TRESTRequest;
+  RESTResponse: TRESTResponse;
+  JSONBody: TJSONObject;
+  JSONResponse: TJSONObject;
 begin
   Result := '';
 
-  // Vérifier si nous avons un jeton valide
-  if not IsTokenValid then
-    raise Exception.Create('Non authentifié ou jeton expiré');
-
-  RESTClient := TRESTClient.Create(nil);
+  RESTClient := TRESTClient.Create('https://api.example.com');
   RESTRequest := TRESTRequest.Create(nil);
   RESTResponse := TRESTResponse.Create(nil);
-
+  JSONBody := TJSONObject.Create;
   try
-    // Configuration pour la requête authentifiée
-    RESTClient.BaseURL := FBaseURL;
-    RESTClient.Accept := 'application/json';
-
     RESTRequest.Client := RESTClient;
     RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := Method;
-    RESTRequest.Resource := Resource;
-
-    // Ajouter le jeton d'authentification (généralement dans l'en-tête Authorization)
-    RESTRequest.Params.AddHeader('Authorization', 'Bearer ' + FToken);
-
-    // Exécuter la requête
-    RESTRequest.Execute;
-
-    // Traiter la réponse
-    if (RESTResponse.StatusCode >= 200) and (RESTResponse.StatusCode < 300) then
-      Result := RESTResponse.Content
-    else if RESTResponse.StatusCode = 401 then
-      raise Exception.Create('Authentification invalide. Veuillez vous reconnecter.')
-    else
-      raise Exception.Create('Erreur: ' + IntToStr(RESTResponse.StatusCode) +
-                             ' - ' + RESTResponse.StatusText);
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-```
-
-#### Utilisation du service d'authentification
-
-```pas
-procedure TMainForm.ButtonLoginClick(Sender: TObject);
-begin
-  // Créer le service d'authentification
-  if FAuthService = nil then
-    FAuthService := TAuthenticationService.Create('https://api.exemple.com');
-
-  // Tenter l'authentification
-  if FAuthService.Authenticate(EditUsername.Text, EditPassword.Text) then
-  begin
-    ShowMessage('Authentification réussie !');
-    UpdateUIForAuthenticatedUser;
-  end
-  else
-    ShowMessage('Authentification échouée. Vérifiez vos identifiants.');
-end;
-
-procedure TMainForm.ButtonGetDataClick(Sender: TObject);
-var
-  Response: string;
-begin
-  try
-    // Faire une requête authentifiée
-    Response := FAuthService.MakeAuthenticatedRequest('users/profile', rmGET);
-
-    // Afficher les données
-    MemoResult.Text := Response;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur: ' + E.Message);
-
-      // Si le jeton est expiré, rediriger vers la connexion
-      if not FAuthService.IsTokenValid then
-        UpdateUIForUnauthenticatedUser;
-    end;
-  end;
-end;
-```
-
-### Sécurisation des connexions à la base de données
-
-#### Configuration SSL pour MySQL/MariaDB
-
-Pour sécuriser vos connexions à MySQL ou MariaDB avec SSL :
-
-```pas
-procedure ConfigureMySQLSSLConnection;
-var
-  Connection: TFDConnection;
-begin
-  Connection := TFDConnection.Create(nil);
-  try
-    Connection.Params.Clear;
-    Connection.Params.Add('DriverID=MySQL');
-    Connection.Params.Add('Server=serveur.exemple.com');
-    Connection.Params.Add('Port=3306');
-    Connection.Params.Add('Database=ma_base');
-    Connection.Params.Add('User_Name=utilisateur');
-    Connection.Params.Add('Password=mot_de_passe');
-
-    // Activer SSL
-    Connection.Params.Add('UseSSL=True');
-
-    // Chemin vers les certificats SSL (si nécessaire)
-    Connection.Params.Add('SSLCa=chemin/vers/ca-cert.pem');
-    Connection.Params.Add('SSLCert=chemin/vers/client-cert.pem');
-    Connection.Params.Add('SSLKey=chemin/vers/client-key.pem');
-
-    // Vérifier le certificat du serveur
-    Connection.Params.Add('SSLVerify=True');
-
-    // Tester la connexion
-    Connection.Connected := True;
-    ShowMessage('Connexion MySQL sécurisée établie !');
-  finally
-    Connection.Free;
-  end;
-end;
-```
-
-#### Pour d'autres bases de données
-
-Les paramètres exacts peuvent varier selon la base de données :
-
-- **PostgreSQL** : Utilisez `SSLMode` avec des valeurs comme 'require', 'verify-ca' ou 'verify-full'
-- **Microsoft SQL Server** : Utilisez `Encrypt=Yes` et `TrustServerCertificate=No`
-- **SQLite** : SQLite n'est pas un système client-serveur et ne nécessite généralement pas de SSL, mais vous pouvez chiffrer la base de données elle-même
-
-### Sécurisation des communications par socket
-
-Pour les applications qui utilisent des communications socket directes, vous pouvez utiliser les sockets SSL/TLS d'Indy :
-
-```pas
-procedure ConfigureSecureSocketClient;
-var
-  TCPClient: TIdTCPClient;
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  TCPClient := TIdTCPClient.Create(nil);
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-
-  try
-    // Configurer le gestionnaire SSL
-    SSLIOHandler.SSLOptions.Method := sslvTLSv1_2;
-    SSLIOHandler.SSLOptions.Mode := sslmClient;
-    SSLIOHandler.SSLOptions.VerifyMode := [sslvrfPeer];
-    SSLIOHandler.SSLOptions.VerifyDepth := 9;
-
-    // Configurer le client TCP
-    TCPClient.IOHandler := SSLIOHandler;
-    TCPClient.Host := 'serveur.exemple.com';
-    TCPClient.Port := 8080;
-
-    // Se connecter au serveur
-    TCPClient.Connect;
-
-    // Envoyer des données
-    TCPClient.IOHandler.WriteLn('Hello, secure world!');
-
-    // Recevoir des données
-    var Response := TCPClient.IOHandler.ReadLn;
-    ShowMessage('Réponse du serveur : ' + Response);
-
-    // Déconnecter
-    TCPClient.Disconnect;
-  finally
-    // Libérer les ressources (dans cet ordre)
-    TCPClient.Free; // Ceci libère aussi le IOHandler
-    // Ne pas libérer SSLIOHandler ici, il est déjà libéré par TCPClient
-  end;
-end;
-```
-
-### Création d'un serveur sécurisé
-
-Si votre application agit comme un serveur, vous pouvez également configurer un serveur TCP sécurisé :
-
-```pas
-// Nécessite Delphi 11 ou supérieur pour certaines fonctionnalités
-procedure ConfigureSecureSocketServer;
-var
-  TCPServer: TIdTCPServer;
-  SSLIOHandler: TIdServerIOHandlerSSLOpenSSL;
-begin
-  TCPServer := TIdTCPServer.Create(nil);
-  SSLIOHandler := TIdServerIOHandlerSSLOpenSSL.Create(nil);
-
-  try
-    // Configurer le gestionnaire SSL
-    SSLIOHandler.SSLOptions.CertFile := 'chemin/vers/certificat.pem';
-    SSLIOHandler.SSLOptions.KeyFile := 'chemin/vers/cle_privee.pem';
-    SSLIOHandler.SSLOptions.Method := sslvTLSv1_2;
-    SSLIOHandler.SSLOptions.Mode := sslmServer;
-
-    // Configurer le serveur TCP
-    TCPServer.IOHandler := SSLIOHandler;
-    TCPServer.DefaultPort := 8080;
-
-    // Définir la méthode de gestion des connexions
-    TCPServer.OnExecute := HandleClientConnection;
-
-    // Démarrer le serveur
-    TCPServer.Active := True;
-
-    ShowMessage('Serveur sécurisé démarré sur le port 8080');
-
-    // À ce stade, le serveur attend les connexions dans un thread séparé
-    // Vous devriez attendre que l'utilisateur décide d'arrêter le serveur
-    // Par exemple: Application.MessageLoop ou une boucle similaire
-
-  finally
-    // Libérer les ressources quand l'application se termine
-    TCPServer.Active := False;
-    TCPServer.Free;
-  end;
-end;
-
-procedure HandleClientConnection(AContext: TIdContext);
-var
-  Line: string;
-begin
-  // Lire les données envoyées par le client
-  Line := AContext.Connection.IOHandler.ReadLn;
-
-  // Traiter les données (exemple simple)
-  Line := 'Vous avez envoyé : ' + Line;
-
-  // Répondre au client
-  AContext.Connection.IOHandler.WriteLn(Line);
-end;
-```
-
-### Sécurisation des WebSockets
-
-Les WebSockets sont souvent utilisés pour les communications en temps réel. Voici comment les sécuriser en utilisant la librairie Sgclib ou une librairie similaire :
-
-```pas
-procedure ConfigureSecureWebSocket;
-var
-  WebSocketClient: TsgcWebSocketClient;
-begin
-  WebSocketClient := TsgcWebSocketClient.Create(nil);
-  try
-    // Configurer le client WebSocket pour utiliser WSS (WebSocket Secure)
-    WebSocketClient.URL := 'wss://echo.websocket.org'; // Notez le 'wss://' au lieu de 'ws://'
-    WebSocketClient.TLS := True;
-
-    // Événements pour gérer les messages et connexions
-    WebSocketClient.OnMessage := HandleWebSocketMessage;
-    WebSocketClient.OnConnect := HandleWebSocketConnect;
-    WebSocketClient.OnDisconnect := HandleWebSocketDisconnect;
-
-    // TLS options
-    WebSocketClient.Options.TLS.Version := tls1_2;
-    WebSocketClient.Options.TLS.VerifyCertificate := True;
-
-    // Se connecter au serveur
-    WebSocketClient.Active := True;
-
-    // Attendre que la connexion soit établie
-    if not WebSocketClient.Connected then
-      // Gérer l'erreur de connexion
-    else
-    begin
-      // Envoyer un message
-      WebSocketClient.WriteData('Hello, secure WebSocket!');
-
-      // Le traitement des réponses se fait via l'événement OnMessage
-      // ...
-
-      // Déconnecter quand c'est terminé
-      WebSocketClient.Active := False;
-    end;
-  finally
-    WebSocketClient.Free;
-  end;
-end;
-
-procedure HandleWebSocketMessage(Connection: TsgcWSConnection; const Text: string);
-begin
-  ShowMessage('Message reçu : ' + Text);
-end;
-
-procedure HandleWebSocketConnect(Connection: TsgcWSConnection);
-begin
-  ShowMessage('Connecté au serveur WebSocket');
-end;
-
-procedure HandleWebSocketDisconnect(Connection: TsgcWSConnection);
-begin
-  ShowMessage('Déconnecté du serveur WebSocket');
-end;
-```
-
-> 💡 **Note** : Pour utiliser des WebSockets sécurisés, vous devrez peut-être installer une bibliothèque tierce comme sgcWebSockets via GetIt ou un autre gestionnaire de paquets.
-
-### Certificats et autorités de certification (CA)
-
-#### Comprendre les certificats SSL/TLS
-
-Un certificat numérique contient plusieurs informations importantes :
-- L'identité du titulaire (nom de domaine, organisation, etc.)
-- La clé publique du titulaire
-- La période de validité
-- L'identité de l'émetteur (Autorité de Certification)
-- Une signature numérique de l'émetteur
-
-#### Génération d'un certificat auto-signé pour les tests
-
-Bien que non recommandés pour la production, les certificats auto-signés sont utiles pour le développement :
-
-```pas
-procedure GenerateSelfSignedCertificate;
-var
-  CertGenerator: TIdX509Generator;
-  Certificate: TIdX509;
-  PrivateKey: TIdRSAKeyPrivate;
-begin
-  CertGenerator := TIdX509Generator.Create;
-  try
-    // Configurer les informations du certificat
-    CertGenerator.State := 'Votre État';
-    CertGenerator.Country := 'FR';
-    CertGenerator.Organization := 'Votre Organisation';
-    CertGenerator.OrganizationalUnit := 'Votre Département';
-    CertGenerator.CommonName := 'localhost'; // Ou le nom de domaine de votre serveur
-    CertGenerator.EmailAddress := 'email@exemple.com';
-
-    // Générer le certificat (valide 365 jours)
-    Certificate := CertGenerator.GenerateCertificate(365);
-    PrivateKey := CertGenerator.GeneratedKey;
-
-    // Sauvegarder le certificat et la clé privée
-    Certificate.SaveToFile('certificat.pem');
-    PrivateKey.SaveToFile('cle_privee.pem');
-
-    ShowMessage('Certificat et clé privée générés avec succès.');
-  finally
-    CertGenerator.Free;
-  end;
-end;
-```
-
-### Exemple complet : Application de messagerie sécurisée
-
-Voici un exemple qui combine plusieurs concepts de sécurité dans une application de messagerie sécurisée :
-
-```pas
-unit SecureChatForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, IdTCPClient, IdSSLOpenSSL, IdGlobal,
-  System.JSON, System.NetEncoding, ModernEncryption;
-
-type
-  TFormSecureChat = class(TForm)
-    PanelTop: TPanel;
-    EditServer: TEdit;
-    EditPort: TEdit;
-    EditUsername: TEdit;
-    ButtonConnect: TButton;
-    MemoMessages: TMemo;
-    PanelBottom: TPanel;
-    EditMessage: TEdit;
-    ButtonSend: TButton;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonSendClick(Sender: TObject);
-  private
-    FTCPClient: TIdTCPClient;
-    FSSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-    FConnected: Boolean;
-    FUsername: string;
-
-    procedure HandleIncomingMessages;
-    function EncryptMessage(const Text: string): string;
-    function DecryptMessage(const EncryptedText: string): string;
-  end;
-
-var
-  FormSecureChat: TFormSecureChat;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormSecureChat.FormCreate(Sender: TObject);
-begin
-  FTCPClient := TIdTCPClient.Create(nil);
-  FSSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-
-  FConnected := False;
-
-  EditServer.Text := 'chat.exemple.com';
-  EditPort.Text := '8443';
-  EditUsername.Text := 'Utilisateur' + IntToStr(Random(1000));
-end;
-
-procedure TFormSecureChat.FormDestroy(Sender: TObject);
-begin
-  if FConnected then
-  begin
-    FTCPClient.Disconnect;
-    FConnected := False;
-  end;
-
-  FTCPClient.Free;
-  // FSSLIOHandler est libéré par le client TCP
-end;
-
-procedure TFormSecureChat.ButtonConnectClick(Sender: TObject);
-begin
-  if FConnected then
-  begin
-    // Déconnecter
-    FTCPClient.Disconnect;
-    FConnected := False;
-    ButtonConnect.Caption := 'Connecter';
-    EditServer.Enabled := True;
-    EditPort.Enabled := True;
-    EditUsername.Enabled := True;
-    ButtonSend.Enabled := False;
-
-    MemoMessages.Lines.Add('*** Déconnecté du serveur ***');
-  end
-  else
-  begin
-    // Configurer le gestionnaire SSL
-    FSSLIOHandler.SSLOptions.Method := sslvTLSv1_2;
-    FSSLIOHandler.SSLOptions.Mode := sslmClient;
-    FSSLIOHandler.SSLOptions.VerifyMode := [sslvrfPeer];
-    FSSLIOHandler.SSLOptions.VerifyDepth := 9;
-
-    // Configurer le client TCP
-    FTCPClient.IOHandler := FSSLIOHandler;
-    FTCPClient.Host := EditServer.Text;
-    FTCPClient.Port := StrToIntDef(EditPort.Text, 8443);
-
-    // Se connecter au serveur
-    try
-      FTCPClient.Connect;
-      FConnected := True;
-
-      // Envoyer les informations d'authentification
-      FUsername := EditUsername.Text;
-
-      // Préparer le message d'authentification en JSON
-      var AuthMessage := TJSONObject.Create;
-      try
-        AuthMessage.AddPair('type', 'auth');
-        AuthMessage.AddPair('username', FUsername);
-
-        // Envoyer le message d'authentification
-        FTCPClient.IOHandler.WriteLn(AuthMessage.ToString);
-      finally
-        AuthMessage.Free;
-      end;
-
-      // Mettre à jour l'interface
-      ButtonConnect.Caption := 'Déconnecter';
-      EditServer.Enabled := False;
-      EditPort.Enabled := False;
-      EditUsername.Enabled := False;
-      ButtonSend.Enabled := True;
-
-      MemoMessages.Lines.Add('*** Connecté au serveur en tant que ' + FUsername + ' ***');
-
-      // Démarrer un thread pour recevoir les messages
-      TThread.CreateAnonymousThread(HandleIncomingMessages).Start;
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Erreur de connexion: ' + E.Message);
-        FConnected := False;
-      end;
-    end;
-  end;
-end;
-
-procedure TFormSecureChat.HandleIncomingMessages;
-var
-  Line: string;
-  JSONValue: TJSONValue;
-  MessageType, Username, Content: string;
-begin
-  while FConnected do
-  begin
-    try
-      // Lire un message du serveur
-      Line := FTCPClient.IOHandler.ReadLn;
-
-      // Parser le JSON
-      JSONValue := TJSONObject.ParseJSONValue(Line);
-      try
-        if JSONValue <> nil then
-        begin
-          // Extraire les informations du message
-          MessageType := JSONValue.GetValue<string>('type');
-
-          if MessageType = 'message' then
-          begin
-            Username := JSONValue.GetValue<string>('username');
-            Content := JSONValue.GetValue<string>('content');
-
-            // Déchiffrer le message si nécessaire
-            if JSONValue.GetValue<Boolean>('encrypted') then
-              Content := DecryptMessage(Content);
-
-            // Afficher le message
-            TThread.Synchronize(nil, procedure
-            begin
-              MemoMessages.Lines.Add(Username + ': ' + Content);
-            end);
-          end
-          else if MessageType = 'system' then
-          begin
-            Content := JSONValue.GetValue<string>('content');
-
-            // Afficher le message système
-            TThread.Synchronize(nil, procedure
-            begin
-              MemoMessages.Lines.Add('*** ' + Content + ' ***');
-            end);
-          end;
-        end;
-      finally
-        JSONValue.Free;
-      end;
-    except
-      on E: Exception do
-      begin
-        if FConnected then
-        begin
-          // Afficher l'erreur seulement si nous sommes toujours censés être connectés
-          TThread.Synchronize(nil, procedure
-          begin
-            MemoMessages.Lines.Add('*** Erreur: ' + E.Message + ' ***');
-          end);
-
-          // Si l'erreur est due à une déconnexion, on réinitialise l'état
-          if (E is EIdConnClosedGracefully) or
-             (E is EIdSocketError) then
-          begin
-            FConnected := False;
-
-            TThread.Synchronize(nil, procedure
-            begin
-              ButtonConnect.Caption := 'Connecter';
-              EditServer.Enabled := True;
-              EditPort.Enabled := True;
-              EditUsername.Enabled := True;
-              ButtonSend.Enabled := False;
-
-              MemoMessages.Lines.Add('*** Déconnecté du serveur ***');
-            end);
-
-            Break; // Sortir de la boucle
-          end;
-        end
-        else
-          Break; // Sortir de la boucle si nous sommes déconnectés
-      end;
-    end;
-  end;
-end;
-
-procedure TFormSecureChat.ButtonSendClick(Sender: TObject);
-var
-  Message: string;
-  JSONMessage: TJSONObject;
-  EncryptedContent: string;
-begin
-  Message := EditMessage.Text;
-
-  if (Message = '') or not FConnected then
-    Exit;
-
-  // Préparer le message en JSON
-  JSONMessage := TJSONObject.Create;
-  try
-    JSONMessage.AddPair('type', 'message');
-    JSONMessage.AddPair('username', FUsername);
-
-    // Chiffrer le contenu du message
-    EncryptedContent := EncryptMessage(Message);
-    JSONMessage.AddPair('content', EncryptedContent);
-    JSONMessage.AddPair('encrypted', TJSONBool.Create(True));
-
-    // Envoyer le message au serveur
-    FTCPClient.IOHandler.WriteLn(JSONMessage.ToString);
-
-    // Afficher notre propre message dans la zone de messages
-    MemoMessages.Lines.Add('Moi: ' + Message);
-
-    // Effacer le champ de saisie
-    EditMessage.Text := '';
-    EditMessage.SetFocus;
-  finally
-    JSONMessage.Free;
-  end;
-end;
-
-function TFormSecureChat.EncryptMessage(const Text: string): string;
-begin
-  // Utiliser l'algorithme AES pour chiffrer le message
-  // Dans une application réelle, vous utiliseriez un chiffrement
-  // de bout en bout avec des clés partagées entre les utilisateurs
-  Result := TModernCrypto.EncryptString(Text, 'cleSecreteDuChat');
-
-  // Encoder en Base64 pour s'assurer que le JSON reste valide
-  Result := TNetEncoding.Base64.Encode(Result);
-end;
-
-function TFormSecureChat.DecryptMessage(const EncryptedText: string): string;
-begin
-  try
-    // Décoder de Base64
-    var DecodedText := TNetEncoding.Base64.Decode(EncryptedText);
-
-    // Déchiffrer avec AES
-    Result := TModernCrypto.DecryptString(DecodedText, 'cleSecreteDuChat');
-  except
-    on E: Exception do
-    begin
-      Result := '[Message chiffré non déchiffrable]';
-    end;
-  end;
-end;
-```
-
-### Protection contre les attaques courantes
-
-#### Protection contre l'attaque de l'homme du milieu (MITM)
-
-L'attaque de l'homme du milieu survient lorsqu'un attaquant intercepte les communications entre deux parties, potentiellement en modifiant les messages transmis. Voici comment s'en protéger :
-
-1. **Toujours utiliser TLS/SSL** : Assurez-vous que toutes les communications sensibles utilisent HTTPS ou des sockets sécurisés.
-
-2. **Vérifier les certificats** : Validez toujours les certificats des serveurs auxquels vous vous connectez.
-
-3. **Certificate Pinning** : Associez explicitement un certificat spécifique à un serveur pour empêcher la substitution par un certificat frauduleux :
-
-```pas
-procedure ConfigureCertificatePinning;
-var
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-  ExpectedFingerprint: string;
-begin
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Définir l'empreinte attendue du certificat du serveur
-    ExpectedFingerprint := 'AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD';
-
-    // Configurer un gestionnaire de vérification personnalisé
-    SSLIOHandler.OnVerifyPeer := procedure(Certificate: TIdX509; AOk: Boolean;
-                                         ADepth, AError: Integer; var AResult: Boolean)
-    begin
-      // Vérifier si l'empreinte correspond à celle attendue
-      AResult := SameText(Certificate.Fingerprint, ExpectedFingerprint);
-
-      if not AResult then
-        LogSecurityWarning('Empreinte de certificat non valide : ' + Certificate.Fingerprint);
-    end;
-
-    // Reste de la configuration...
-  finally
-    // Gestion de la libération mémoire...
-  end;
-end;
-```
-
-#### Protection contre les attaques par injection
-
-Les attaques par injection peuvent survenir lorsque des données non filtrées sont utilisées dans des requêtes SQL ou des constructions similaires :
-
-1. **Requêtes préparées** : Utilisez toujours des requêtes paramétrées pour les requêtes SQL.
-
-2. **Validation des entrées** : Validez toutes les entrées utilisateur avant de les utiliser.
-
-```pas
-procedure SecureRESTRequest;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  SafeParameter: string;
-begin
-  // Valider et nettoyer le paramètre d'entrée
-  SafeParameter := ValidateAndSanitizeInput(EditUserInput.Text);
-
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration pour la requête REST sécurisée
-    RESTClient.BaseURL := 'https://api.exemple.com';
-
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmGET;
-
-    // Utiliser des paramètres pour éviter les injections
-    RESTRequest.AddParameter('userId', SafeParameter, pkGETorPOST);
-
-    // Exécuter la requête
-    RESTRequest.Execute;
-
-    // Traiter la réponse de manière sécurisée...
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-
-function ValidateAndSanitizeInput(const Input: string): string;
-begin
-  // Exemple simple : enlever les caractères potentiellement dangereux
-  Result := Input;
-
-  // Supprimer les caractères d'injection potentiels
-  Result := StringReplace(Result, '''', '', [rfReplaceAll]);
-  Result := StringReplace(Result, '"', '', [rfReplaceAll]);
-  Result := StringReplace(Result, ';', '', [rfReplaceAll]);
-  Result := StringReplace(Result, '--', '', [rfReplaceAll]);
-
-  // Vérifier que l'entrée respecte un format attendu (par exemple, numérique)
-  if not TRegEx.IsMatch(Result, '^[0-9]+$') then
-    raise Exception.Create('Format d''entrée invalide. Seuls les chiffres sont autorisés.');
-end;
-```
-
-#### Gérer les timeouts et les limites de connexion
-
-Il est important de gérer correctement les délais d'attente pour éviter les attaques par déni de service :
-
-```pas
-procedure ConfigureConnectionTimeouts;
-var
-  RESTClient: TRESTClient;
-begin
-  RESTClient := TRESTClient.Create(nil);
-  try
-    // Configurer les délais d'attente
-    RESTClient.ConnectTimeout := 5000;  // 5 secondes pour établir la connexion
-    RESTClient.ReadTimeout := 10000;    // 10 secondes pour lire les données
-
-    // Limiter la taille des réponses pour éviter les attaques par consommation de ressources
-    RESTClient.ResponseMaxSize := 10 * 1024 * 1024;  // 10 MB maximum
-
-    // Reste de la configuration...
-  finally
-    RESTClient.Free;
-  end;
-end;
-```
-
-### Journalisation et audit de sécurité
-
-Pour détecter les tentatives d'attaque et résoudre les problèmes, une journalisation adéquate est essentielle :
-
-```pas
-type
-  TSecurityLogLevel = (slInfo, slWarning, slError, slCritical);
-
-procedure LogSecurityEvent(Level: TSecurityLogLevel; const Message, Source: string);
-var
-  LogFile: TextFile;
-  LogFileName, LogMessage: string;
-  TimeStamp: string;
-begin
-  // Générer un nom de fichier basé sur la date
-  LogFileName := FormatDateTime('yyyy-mm-dd', Date) + '_security.log';
-
-  // Préparer le message de journal
-  TimeStamp := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
-
-  case Level of
-    slInfo: LogMessage := 'INFO';
-    slWarning: LogMessage := 'WARNING';
-    slError: LogMessage := 'ERROR';
-    slCritical: LogMessage := 'CRITICAL';
-  end;
-
-  LogMessage := Format('[%s] [%s] [%s] %s',
-                       [TimeStamp, LogMessage, Source, Message]);
-
-  // Écrire dans le fichier de journal
-  AssignFile(LogFile, LogFileName);
-  try
-    if FileExists(LogFileName) then
-      Append(LogFile)
-    else
-      Rewrite(LogFile);
-
-    WriteLn(LogFile, LogMessage);
-  finally
-    CloseFile(LogFile);
-  end;
-
-  // Pour les événements critiques, prendre des mesures supplémentaires
-  if Level = slCritical then
-  begin
-    // Par exemple, envoyer une notification à l'administrateur
-    SendSecurityAlert(LogMessage);
-  end;
-end;
-```
-
-### Bonnes pratiques pour la sécurisation des connexions
-
-#### 1. Utiliser des versions récentes des protocoles de sécurité
-
-```pas
-procedure ConfigureModernSecurity;
-var
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Utiliser TLS 1.2 ou supérieur uniquement
-    SSLIOHandler.SSLOptions.Method := sslvTLSv1_2;
-
-    // Désactiver les protocoles obsolètes
-    SSLIOHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
-
-    // Utiliser des suites de chiffrement fortes
-    SSLIOHandler.SSLOptions.CipherList := 'HIGH:!aNULL:!eNULL:!MD5:!RC4';
-
-    // Reste de la configuration...
-  finally
-    // Gestion de la libération mémoire...
-  end;
-end;
-```
-
-#### 2. Utiliser l'authentification mutuelle
-
-Dans certains scénarios, il est utile que les deux parties s'authentifient l'une envers l'autre :
-
-```pas
-procedure ConfigureMutualTLSAuthentication;
-var
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Configuration de base TLS
-    SSLIOHandler.SSLOptions.Method := sslvTLSv1_2;
-    SSLIOHandler.SSLOptions.Mode := sslmClient;
-
-    // Certificat client pour l'authentification mutuelle
-    SSLIOHandler.SSLOptions.CertFile := 'chemin/vers/client-cert.pem';
-    SSLIOHandler.SSLOptions.KeyFile := 'chemin/vers/client-key.pem';
-
-    // Vérification du certificat serveur
-    SSLIOHandler.SSLOptions.VerifyMode := [sslvrfPeer];
-    SSLIOHandler.SSLOptions.VerifyDepth := 9;
-
-    // Fichier CA pour vérifier le certificat du serveur
-    SSLIOHandler.SSLOptions.RootCertFile := 'chemin/vers/ca-cert.pem';
-
-    // Reste de la configuration...
-  finally
-    // Gestion de la libération mémoire...
-  end;
-end;
-```
-
-#### 3. Implémenter une révocation de certificat
-
-Vérifiez que les certificats n'ont pas été révoqués en utilisant des listes de révocation de certificats (CRL) ou OCSP :
-
-```pas
-procedure ConfigureCertificateRevocationCheck;
-var
-  SSLIOHandler: TIdSSLIOHandlerSocketOpenSSL;
-begin
-  SSLIOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  try
-    // Activer la vérification de révocation
-    SSLIOHandler.SSLOptions.VerifyMode := [sslvrfPeer];
-
-    // Chemin vers les fichiers CRL
-    SSLIOHandler.SSLOptions.CRLFile := 'chemin/vers/crl.pem';
-
-    // Utiliser OCSP (Online Certificate Status Protocol)
-    // Nécessite le support OpenSSL
-    SSLIOHandler.SSLOptions.EnableOCSP := True;
-
-    // Reste de la configuration...
-  finally
-    // Gestion de la libération mémoire...
-  end;
-end;
-```
-
-#### 4. Rotation régulière des clés et certificats
-
-Mettez en place un système pour renouveler régulièrement vos certificats et clés :
-
-```pas
-procedure CheckCertificateExpiration;
-var
-  Certificate: TIdX509;
-  DaysUntilExpiration: Integer;
-begin
-  Certificate := LoadCertificateFromFile('chemin/vers/certificat.pem');
-  try
-    // Calculer le nombre de jours avant expiration
-    DaysUntilExpiration := Trunc(Certificate.NotAfter - Now);
-
-    // Avertir si l'expiration approche
-    if DaysUntilExpiration <= 30 then
-    begin
-      LogSecurityEvent(slWarning,
-                      Format('Le certificat expire dans %d jours', [DaysUntilExpiration]),
-                      'CertManager');
-
-      // Notifier les administrateurs
-      if DaysUntilExpiration <= 7 then
-        SendCertExpirationAlert(Certificate.Subject, DaysUntilExpiration);
-    end;
-  finally
-    Certificate.Free;
-  end;
-end;
-```
-
-### Exemple concret : Client API sécurisé
-
-Voici un exemple de classe réutilisable pour effectuer des appels API sécurisés :
-
-```pas
-unit SecureAPIClient;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, REST.Client, REST.Types,
-  System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent;
-
-type
-  TSecureAPIClient = class
-  private
-    FBaseURL: string;
-    FAuthToken: string;
-    FIsAuthenticated: Boolean;
-
-    function GetAuthorizationHeader: string;
-  public
-    constructor Create(const ABaseURL: string);
-
-    // Authentification
-    function Authenticate(const Username, Password: string): Boolean;
-    procedure Logout;
-
-    // Requêtes HTTP sécurisées
-    function Get(const Resource: string): TJSONValue;
-    function Post(const Resource: string; const Data: TJSONValue): TJSONValue;
-    function Put(const Resource: string; const Data: TJSONValue): TJSONValue;
-    function Delete(const Resource: string): Boolean;
-
-    property IsAuthenticated: Boolean read FIsAuthenticated;
-  end;
-
-implementation
-
-constructor TSecureAPIClient.Create(const ABaseURL: string);
-begin
-  inherited Create;
-  FBaseURL := ABaseURL;
-  FAuthToken := '';
-  FIsAuthenticated := False;
-end;
-
-function TSecureAPIClient.Authenticate(const Username, Password: string): Boolean;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  JSONValue: TJSONValue;
-begin
-  Result := False;
-  FAuthToken := '';
-  FIsAuthenticated := False;
-
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration sécurisée
-    RESTClient.BaseURL := FBaseURL;
-    RESTClient.Accept := 'application/json';
-    RESTClient.SecureProtocols := [TLSv1_2, TLSv1_3];
-    RESTClient.ValidateServerCertificate := True;
-
-    // Configurer les délais d'attente
-    RESTClient.ConnectTimeout := 5000;
-    RESTClient.ReadTimeout := 10000;
-
-    // Configurer la requête d'authentification
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
+    RESTRequest.Method := TRESTRequestMethod.rmPOST;
     RESTRequest.Resource := 'auth/login';
 
-    // Ajouter les informations d'authentification
-    var AuthJSON := TJSONObject.Create;
-    try
-      AuthJSON.AddPair('username', Username);
-      AuthJSON.AddPair('password', Password);
+    // Créer le corps de la requête
+    JSONBody.AddPair('username', ALogin);
+    JSONBody.AddPair('password', APassword);
+    RESTRequest.AddBody(JSONBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
 
-      RESTRequest.AddBody(AuthJSON.ToString,
-                         TRESTContentType.ctAPPLICATION_JSON);
-    finally
-      AuthJSON.Free;
-    end;
-
-    // Exécuter la requête
+    // Exécuter
     RESTRequest.Execute;
 
-    // Traiter la réponse
+    // Extraire le token de la réponse
     if RESTResponse.StatusCode = 200 then
     begin
-      JSONValue := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      if JSONValue <> nil then
+      JSONResponse := TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject;
       try
-        // Extraire le jeton d'authentification
-        FAuthToken := JSONValue.GetValue<string>('token');
-        FIsAuthenticated := FAuthToken <> '';
-        Result := FIsAuthenticated;
+        Result := JSONResponse.GetValue<string>('token');
       finally
-        JSONValue.Free;
+        JSONResponse.Free;
       end;
-    end
-    else
-    begin
-      LogSecurityEvent(slWarning,
-                      Format('Échec d''authentification: %d - %s',
-                            [RESTResponse.StatusCode, RESTResponse.StatusText]),
-                      'SecureAPIClient');
     end;
+  finally
+    JSONBody.Free;
+    RESTResponse.Free;
+    RESTRequest.Free;
+    RESTClient.Free;
+  end;
+end;
+
+// Utiliser le token pour accéder à une API protégée
+procedure AccederAPIProtegee(const AToken: string);
+var
+  RESTClient: TRESTClient;
+  RESTRequest: TRESTRequest;
+  RESTResponse: TRESTResponse;
+begin
+  RESTClient := TRESTClient.Create('https://api.example.com');
+  RESTRequest := TRESTRequest.Create(nil);
+  RESTResponse := TRESTResponse.Create(nil);
+  try
+    RESTRequest.Client := RESTClient;
+    RESTRequest.Response := RESTResponse;
+    RESTRequest.Resource := 'api/protected-data';
+
+    // Ajouter le token JWT dans le header
+    RESTRequest.AddAuthParameter('Authorization', 'Bearer ' + AToken,
+                                  TRESTRequestParameterKind.pkHTTPHEADER,
+                                  [TRESTRequestParameterOption.poDoNotEncode]);
+
+    RESTRequest.Execute;
+
+    if RESTResponse.StatusCode = 200 then
+      ShowMessage('Données : ' + RESTResponse.Content)
+    else if RESTResponse.StatusCode = 401 then
+      ShowMessage('Token invalide ou expiré')
+    else
+      ShowMessage('Erreur : ' + RESTResponse.StatusText);
   finally
     RESTResponse.Free;
     RESTRequest.Free;
@@ -1317,225 +723,434 @@ begin
   end;
 end;
 
-procedure TSecureAPIClient.Logout;
+// Exemple d'utilisation complète
+procedure TForm1.BtnConnexionSecuriseClick(Sender: TObject);
+var
+  Token: string;
 begin
-  FAuthToken := '';
-  FIsAuthenticated := False;
+  // 1. Se connecter et obtenir le token
+  Token := SeConnecterEtObtenirToken(EditLogin.Text, EditPassword.Text);
 
-  // Dans une implémentation complète, vous pourriez envoyer une requête
-  // au serveur pour invalider le jeton
-end;
-
-function TSecureAPIClient.GetAuthorizationHeader: string;
-begin
-  if FAuthToken <> '' then
-    Result := 'Bearer ' + FAuthToken
+  if Token <> '' then
+  begin
+    ShowMessage('Connexion réussie !');
+    // 2. Stocker le token (en mémoire ou de manière sécurisée)
+    FTokenJWT := Token;
+    // 3. Utiliser le token pour les requêtes suivantes
+    AccederAPIProtegee(Token);
+  end
   else
-    Result := '';
+    ShowMessage('Échec de connexion');
 end;
-
-function TSecureAPIClient.Get(const Resource: string): TJSONValue;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-begin
-  Result := nil;
-
-  if not FIsAuthenticated then
-    raise Exception.Create('Non authentifié. Connectez-vous d''abord.');
-
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration sécurisée
-    RESTClient.BaseURL := FBaseURL;
-    RESTClient.Accept := 'application/json';
-    RESTClient.SecureProtocols := [TLSv1_2, TLSv1_3];
-
-    // Configurer la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmGET;
-    RESTRequest.Resource := Resource;
-
-    // Ajouter l'en-tête d'autorisation
-    RESTRequest.Params.AddHeader('Authorization', GetAuthorizationHeader);
-
-    // Exécuter la requête
-    RESTRequest.Execute;
-
-    // Traiter la réponse
-    if (RESTResponse.StatusCode >= 200) and (RESTResponse.StatusCode < 300) then
-    begin
-      Result := TJSONObject.ParseJSONValue(RESTResponse.Content);
-    end
-    else if RESTResponse.StatusCode = 401 then
-    begin
-      // Jeton invalide ou expiré
-      FIsAuthenticated := False;
-      FAuthToken := '';
-      raise Exception.Create('Session expirée. Veuillez vous reconnecter.');
-    end
-    else
-    begin
-      raise Exception.Create(Format('Erreur API: %d - %s',
-                                   [RESTResponse.StatusCode, RESTResponse.StatusText]));
-    end;
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-
-function TSecureAPIClient.Post(const Resource: string; const Data: TJSONValue): TJSONValue;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-begin
-  Result := nil;
-
-  if not FIsAuthenticated then
-    raise Exception.Create('Non authentifié. Connectez-vous d''abord.');
-
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-
-  try
-    // Configuration sécurisée
-    RESTClient.BaseURL := FBaseURL;
-    RESTClient.Accept := 'application/json';
-    RESTClient.SecureProtocols := [TLSv1_2, TLSv1_3];
-
-    // Configurer la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
-    RESTRequest.Resource := Resource;
-
-    // Ajouter l'en-tête d'autorisation
-    RESTRequest.Params.AddHeader('Authorization', GetAuthorizationHeader);
-
-    // Ajouter les données
-    if Data <> nil then
-      RESTRequest.AddBody(Data.ToString, TRESTContentType.ctAPPLICATION_JSON);
-
-    // Exécuter la requête
-    RESTRequest.Execute;
-
-    // Traiter la réponse
-    if (RESTResponse.StatusCode >= 200) and (RESTResponse.StatusCode < 300) then
-    begin
-      Result := TJSONObject.ParseJSONValue(RESTResponse.Content);
-    end
-    else if RESTResponse.StatusCode = 401 then
-    begin
-      // Jeton invalide ou expiré
-      FIsAuthenticated := False;
-      FAuthToken := '';
-      raise Exception.Create('Session expirée. Veuillez vous reconnecter.');
-    end
-    else
-    begin
-      raise Exception.Create(Format('Erreur API: %d - %s',
-                                   [RESTResponse.StatusCode, RESTResponse.StatusText]));
-    end;
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-
-// Les méthodes Put et Delete suivent le même modèle que Post et Get...
-
-end.
 ```
 
-### Utilisation du client API sécurisé
+## OAuth 2.0
 
-```pas
-procedure TMainForm.ButtonGetUserProfileClick(Sender: TObject);
-var
-  APIClient: TSecureAPIClient;
-  UserProfile: TJSONValue;
+OAuth 2.0 est le standard pour permettre aux utilisateurs de se connecter via des services tiers (Google, Facebook, Microsoft, etc.).
+
+### Flux OAuth 2.0 simplifié
+
+```
+1. Utilisateur clique "Se connecter avec Google"
+       ↓
+2. Redirection vers Google avec client_id
+       ↓
+3. Utilisateur s'authentifie sur Google
+       ↓
+4. Google renvoie un code d'autorisation
+       ↓
+5. Échange du code contre un access_token
+       ↓
+6. Utilisation du token pour accéder aux API
+```
+
+### Implémentation OAuth en Delphi
+
+```pascal
+uses
+  IdHTTP, IdSSLOpenSSL, System.JSON, System.NetEncoding;
+
+type
+  TOAuth2Manager = class
+  private
+    FClientID: string;
+    FClientSecret: string;
+    FRedirectURI: string;
+    FAccessToken: string;
+  public
+    constructor Create(const AClientID, AClientSecret, ARedirectURI: string);
+    function ObtenirURLAutorisation: string;
+    function EchangerCodeConteToken(const ACode: string): Boolean;
+    function AccederRessource(const AURL: string): string;
+    property AccessToken: string read FAccessToken;
+  end;
+
+constructor TOAuth2Manager.Create(const AClientID, AClientSecret, ARedirectURI: string);
 begin
-  APIClient := TSecureAPIClient.Create('https://api.exemple.com');
+  inherited Create;
+  FClientID := AClientID;
+  FClientSecret := AClientSecret;
+  FRedirectURI := ARedirectURI;
+end;
+
+function TOAuth2Manager.ObtenirURLAutorisation: string;
+begin
+  // Construire l'URL d'autorisation
+  Result := 'https://accounts.google.com/o/oauth2/v2/auth' +
+            '?client_id=' + TNetEncoding.URL.Encode(FClientID) +
+            '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
+            '&response_type=code' +
+            '&scope=openid%20email%20profile';
+end;
+
+function TOAuth2Manager.EchangerCodeConteToken(const ACode: string): Boolean;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+  Params: TStringStream;
+  Response: string;
+  JSON: TJSONObject;
+begin
+  Result := False;
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    HTTP.IOHandler := SSLHandler;
+    HTTP.Request.ContentType := 'application/x-www-form-urlencoded';
+
+    // Préparer les paramètres
+    Params := TStringStream.Create(
+      'code=' + TNetEncoding.URL.Encode(ACode) +
+      '&client_id=' + TNetEncoding.URL.Encode(FClientID) +
+      '&client_secret=' + TNetEncoding.URL.Encode(FClientSecret) +
+      '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
+      '&grant_type=authorization_code'
+    );
     try
-      // S'authentifier auprès de l'API
-      if not APIClient.Authenticate(Username, Password) then
-      begin
-        ShowMessage('Erreur d''authentification');
-        Exit;
-      end;
+      // Échanger le code contre un token
+      Response := HTTP.Post('https://oauth2.googleapis.com/token', Params);
 
-      // Récupérer le profil utilisateur
-      UserProfile := APIClient.Get('users/profile');
+      // Extraire le token de la réponse
+      JSON := TJSONObject.ParseJSONValue(Response) as TJSONObject;
       try
-        if UserProfile <> nil then
-        begin
-          // Afficher les informations de profil
-          DisplayUserProfile(UserProfile);
-        end;
+        if JSON.TryGetValue<string>('access_token', FAccessToken) then
+          Result := True;
       finally
-        UserProfile.Free;
+        JSON.Free;
       end;
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Erreur: ' + E.Message);
-
-        // Gérer automatiquement les problèmes d'authentification
-        if not APIClient.IsAuthenticated then
-          ShowLoginForm;
-      end;
+    finally
+      Params.Free;
     end;
   finally
-    APIClient.Free;
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+
+function TOAuth2Manager.AccederRessource(const AURL: string): string;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  try
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    HTTP.IOHandler := SSLHandler;
+
+    // Ajouter le token dans le header
+    HTTP.Request.CustomHeaders.AddValue('Authorization', 'Bearer ' + FAccessToken);
+
+    // Accéder à la ressource
+    Result := HTTP.Get(AURL);
+  finally
+    HTTP.Free;
+    SSLHandler.Free;
   end;
 end;
 ```
 
-### Conclusion
+## VPN et tunneling
 
-La sécurisation des connexions est un aspect fondamental de toute application moderne. En suivant les bonnes pratiques présentées dans ce chapitre, vous pouvez protéger efficacement les communications de vos applications Delphi.
+Pour des communications ultra-sécurisées, notamment en entreprise :
 
-Les points clés à retenir :
+### Concepts
 
-1. **Utilisez toujours HTTPS** ou des connexions chiffrées pour transmettre des données sensibles.
+**VPN (Virtual Private Network)** : Crée un tunnel chiffré entre votre application et le réseau distant.
 
-2. **Vérifiez les certificats** des serveurs auxquels vous vous connectez.
+```
+Application Delphi → VPN Client → Internet (chiffré) → VPN Server → Réseau d'entreprise
+```
 
-3. **Implémentez une authentification robuste** pour vos API et services.
+**Avantages** :
+- Tout le trafic est chiffré
+- Masque l'origine des connexions
+- Permet d'accéder aux ressources internes
 
-4. **Utilisez des versions récentes des protocoles de sécurité** comme TLS 1.2 ou supérieur.
+### SSH Tunneling
 
-5. **Journalisez les événements de sécurité** pour détecter et répondre aux problèmes potentiels.
+Pour sécuriser une connexion à une base de données distante :
 
-6. **Gérez correctement les délais d'attente** pour prévenir les attaques par déni de service.
+```
+Application → Tunnel SSH local:3307 → SSH Server → MySQL Server:3306
+```
 
-7. **Validez toutes les entrées utilisateur** avant de les inclure dans des requêtes réseau.
+**Configuration dans Delphi** :
+```pascal
+// Utiliser un client SSH comme composant (Indy SSH ou bibliothèque tierce)
+// Établir le tunnel SSH d'abord
+EtablirTunnelSSH('user@server.com', 'password', 3307, 'localhost', 3306);
 
-8. **Renouvelez régulièrement vos certificats et clés** pour maintenir un niveau de sécurité élevé.
+// Puis se connecter à MySQL via le tunnel local
+FDConnection1.Params.Add('Server=localhost');
+FDConnection1.Params.Add('Port=3307'); // Port local du tunnel
+FDConnection1.Connected := True;
+```
 
-Dans le prochain chapitre, nous aborderons la protection contre les vulnérabilités courantes, qui complète notre approche globale de la sécurité des applications.
+## Pinning de certificat
 
-### Exercices pratiques
+Pour renforcer la sécurité, vous pouvez "épingler" un certificat spécifique.
 
-1. Créez une application cliente qui se connecte à une API REST via HTTPS et authentifie l'utilisateur à l'aide d'un jeton.
+**Concept** : Au lieu de faire confiance à n'importe quel certificat valide, on ne fait confiance qu'à UN certificat spécifique.
 
-2. Modifiez une application existante pour utiliser le certificat pinning afin de renforcer la sécurité des connexions.
+```pascal
+procedure TForm1.VerifierCertificatEpingle(Certificate: TIdX509; var Accept: Boolean);
+const
+  EMPREINTE_ATTENDUE = 'A1:B2:C3:D4:E5:F6:...; // SHA-256 du certificat
+var
+  EmpreinteCertificat: string;
+begin
+  // Calculer l'empreinte du certificat reçu
+  EmpreinteCertificat := CalculerEmpreinteSHA256(Certificate);
 
-3. Implémentez un système de journalisation des événements de sécurité dans votre application.
+  // Vérifier qu'elle correspond
+  Accept := (EmpreinteCertificat = EMPREINTE_ATTENDUE);
 
-4. Créez une classe réutilisable pour gérer les connexions SSL/TLS sécurisées à un serveur.
+  if not Accept then
+    ShowMessage('⚠️ ALERTE : Certificat non reconnu ! Possible attaque MITM.');
+end;
+```
 
-5. Pour les plus avancés : Implémentez un système de messagerie chiffré de bout en bout utilisant le chiffrement asymétrique pour l'échange de clés et le chiffrement symétrique pour les messages.
+**Usage** : Principalement pour les applications mobiles communiquant avec votre propre API.
 
-⏭️  [Protection contre les vulnérabilités courantes](/16-securite-des-applications/05-protection-contre-les-vulnerabilites-courantes.md)
+## Bonnes pratiques
+
+### ✅ À faire
+
+**1. Toujours utiliser HTTPS en production**
+```pascal
+// ✅ BON
+RESTClient.BaseURL := 'https://api.monsite.com';
+
+// ❌ MAUVAIS en production
+RESTClient.BaseURL := 'http://api.monsite.com';
+```
+
+**2. Utiliser TLS 1.2 ou supérieur**
+```pascal
+// ✅ BON
+SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+
+// ❌ MAUVAIS
+SSLHandler.SSLOptions.Method := sslvSSLv3; // Vulnérable
+```
+
+**3. Vérifier les certificats**
+```pascal
+// ✅ BON - Vérifier le certificat
+SSLHandler.SSLOptions.VerifyMode := [sslvrfPeer];
+
+// ❌ MAUVAIS - Accepter n'importe quel certificat
+SSLHandler.SSLOptions.VerifyMode := [];
+```
+
+**4. Protéger les tokens**
+```pascal
+// ✅ BON - Token dans le header
+Request.AddAuthParameter('Authorization', 'Bearer ' + Token,
+                          TRESTRequestParameterKind.pkHTTPHEADER);
+
+// ❌ MAUVAIS - Token dans l'URL (visible dans les logs)
+Request.Resource := 'api/data?token=' + Token;
+```
+
+**5. Gérer l'expiration des tokens**
+```pascal
+// Vérifier avant chaque requête
+if TokenExpire then
+begin
+  Token := RafraichirToken(RefreshToken);
+  SauvegarderToken(Token);
+end;
+```
+
+### ❌ À éviter
+
+**1. Ne jamais désactiver la vérification SSL en production**
+```pascal
+// ❌ TRÈS DANGEREUX
+SSLHandler.OnVerifyPeer := function(Cert: TIdX509; AOk: Boolean;
+  ADepth, AError: Integer): Boolean
+begin
+  Result := True; // Accepte tout !
+end;
+```
+
+**2. Ne pas stocker les tokens en clair**
+```pascal
+// ❌ MAUVAIS
+IniFile.WriteString('Auth', 'Token', Token);
+
+// ✅ BON
+IniFile.WriteString('Auth', 'Token', ChiffrerToken(Token));
+```
+
+**3. Ne pas ignorer les erreurs SSL**
+```pascal
+// ❌ MAUVAIS
+try
+  HTTP.Get(URL);
+except
+  // Ignorer silencieusement
+end;
+
+// ✅ BON
+try
+  HTTP.Get(URL);
+except
+  on E: EIdSSLProtocolException do
+  begin
+    LoggerErreur('Erreur SSL : ' + E.Message);
+    raise; // Propager l'exception
+  end;
+end;
+```
+
+**4. Ne pas mélanger HTTP et HTTPS**
+```pascal
+// ❌ MAUVAIS - Mélange de protocoles
+PageHTTPS := 'https://monsite.com';
+ImageHTTP := 'http://monsite.com/logo.png'; // Non sécurisé !
+
+// ✅ BON - Tout en HTTPS
+PageHTTPS := 'https://monsite.com';
+ImageHTTPS := 'https://monsite.com/logo.png';
+```
+
+## Tester la sécurité de vos connexions
+
+### Outils de test
+
+**1. SSL Labs** (https://www.ssllabs.com/ssltest/)
+- Teste la configuration SSL/TLS de votre serveur
+- Note de A à F
+- Recommandations de sécurité
+
+**2. OWASP ZAP**
+- Scanner de sécurité web
+- Détecte les vulnérabilités
+- Teste les connexions HTTPS
+
+**3. Wireshark**
+- Capture le trafic réseau
+- Vérifie que les données sont bien chiffrées
+- Analyse les protocoles
+
+### Vérification dans Delphi
+
+```pascal
+procedure TesterConnexionSecurisee;
+var
+  HTTP: TIdHTTP;
+  SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
+  InfosConnexion: TStringList;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  InfosConnexion := TStringList.Create;
+  try
+    SSLHandler.OnStatusInfo := procedure(const Msg: string)
+    begin
+      InfosConnexion.Add(Msg);
+    end;
+
+    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    HTTP.IOHandler := SSLHandler;
+
+    HTTP.Get('https://www.google.com');
+
+    // Afficher les informations de connexion
+    Memo1.Lines.Add('=== Informations de connexion ===');
+    Memo1.Lines.AddStrings(InfosConnexion);
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('Version TLS : ' +
+      IntToStr(Ord(SSLHandler.SSLSocket.SSLVersion)));
+    Memo1.Lines.Add('Cipher : ' + SSLHandler.SSLSocket.Cipher.Name);
+  finally
+    InfosConnexion.Free;
+    HTTP.Free;
+    SSLHandler.Free;
+  end;
+end;
+```
+
+## Checklist de sécurité des connexions
+
+Avant de déployer votre application :
+
+- [ ] Toutes les connexions utilisent HTTPS
+- [ ] TLS 1.2 ou 1.3 est configuré
+- [ ] Les certificats sont valides et vérifiés
+- [ ] Les tokens sont transmis dans les headers, pas dans les URL
+- [ ] Les tokens sont stockés de manière sécurisée
+- [ ] L'expiration des tokens est gérée
+- [ ] Les erreurs SSL/TLS sont correctement loguées
+- [ ] Les connexions aux bases de données sont chiffrées
+- [ ] Pas de données sensibles dans les logs
+- [ ] Les certificats auto-signés sont refusés en production
+- [ ] Un système de rafraîchissement des tokens existe
+- [ ] Les bibliothèques SSL sont à jour
+
+## Résumé des points essentiels
+
+✅ **Impératifs de sécurité** :
+- Utilisez TOUJOURS HTTPS, jamais HTTP pour des données sensibles
+- TLS 1.2 minimum, TLS 1.3 idéalement
+- Vérifiez les certificats en production
+- Protégez les tokens JWT avec des headers sécurisés
+- Chiffrez les connexions aux bases de données
+- Gérez correctement l'expiration et le rafraîchissement des tokens
+
+❌ **Erreurs fatales** :
+- Accepter n'importe quel certificat en production
+- Transmettre des identifiants en clair
+- Ignorer les erreurs SSL/TLS
+- Stocker des tokens non chiffrés
+- Utiliser des versions obsolètes de SSL/TLS
+- Mélanger HTTP et HTTPS dans la même application
+
+🔒 **Protection maximale** :
+- HTTPS + Certificat valide
+- JWT avec expiration courte
+- Refresh tokens pour renouveler
+- Rate limiting côté serveur
+- Logging des tentatives suspectes
+- Monitoring actif des connexions
+
+## Aller plus loin
+
+Dans les sections suivantes et complémentaires :
+- **16.5** : Protection contre les vulnérabilités (injection, XSS, CSRF)
+- **16.6** : Audit de sécurité et journalisation
+- **16.9** : Signature numérique et validation
+
+**Ressources utiles** :
+- Documentation SSL/TLS : https://www.openssl.org/docs/
+- Let's Encrypt : https://letsencrypt.org/
+- JWT.io : Pour décoder et valider les JWT
+- SSL Labs : Pour tester vos serveurs
+
+La sécurisation des connexions est la base d'une application moderne et fiable. Ne la négligez jamais, car c'est souvent le maillon faible que les attaquants exploitent en premier.
+
+⏭️ [Protection contre les vulnérabilités courantes](/16-securite-des-applications/05-protection-contre-les-vulnerabilites-courantes.md)

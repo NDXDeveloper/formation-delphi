@@ -1,2311 +1,1232 @@
-# 16. Sécurité des applications
-## 16.7 Stockage sécurisé des identifiants
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.7 Stockage sécurisé des identifiants
 
-Le stockage sécurisé des identifiants (mots de passe, clés API, jetons d'accès, etc.) est un aspect crucial de la sécurité des applications. Des identifiants mal protégés peuvent entraîner des accès non autorisés, des fuites de données et des violations de confidentialité. Dans ce chapitre, nous allons explorer diverses techniques pour stocker les identifiants de manière sécurisée dans vos applications Delphi.
+## Introduction
 
-### Pourquoi éviter le stockage en texte clair ?
+Le stockage des identifiants (mots de passe, clés API, tokens, certificats) est l'un des défis les plus critiques en sécurité. Un seul identifiant compromis peut donner accès à l'ensemble de votre système.
 
-Le stockage des identifiants en texte clair dans votre code ou dans des fichiers de configuration présente de sérieux risques :
+**Analogie du monde réel** : Imaginez que vous cachez la clé de votre maison. La mettre sous le paillasson (stocker en clair dans le code) est très pratique mais extrêmement dangereux. La mettre dans un coffre-fort avec un code (chiffrement + protection système) est bien plus sûr.
 
-```pas
-// DANGEREUX : Ne faites jamais ceci
+### Le problème du stockage des identifiants
+
+**Les dangers** :
+- Code source accessible (GitHub, partage, etc.)
+- Fichiers de configuration lisibles
+- Décompilation des exécutables
+- Vol de l'ordinateur ou du serveur
+- Attaques par accès mémoire
+
+**Ce qu'il faut protéger** :
+- Mots de passe de bases de données
+- Clés API (Google, AWS, Azure, etc.)
+- Tokens d'authentification
+- Certificats et clés privées
+- Secrets de chiffrement
+- Identifiants SMTP, FTP, etc.
+
+## Les méthodes dangereuses (à NE JAMAIS FAIRE)
+
+### ❌ Dans le code source
+
+```pascal
+// ❌ EXTRÊMEMENT DANGEREUX - Ne JAMAIS faire ça !
 const
-  DATABASE_PASSWORD = 'MotDePasse123!';
-  API_KEY = 'sk_live_abcdefghijklmnopqrstuvwxyz';
+  DB_PASSWORD = 'MotDePasseSecret123';
+  API_KEY = 'sk_live_51Hxyz...';
+  ENCRYPTION_KEY = 'MaCleDeChiffrement';
+
+procedure ConnecterBD;
+begin
+  FDConnection1.Params.Add('Password=' + DB_PASSWORD);  // DANGER !
+end;
 ```
 
-Les problèmes avec cette approche sont nombreux :
-- Les identifiants peuvent être découverts par simple inspection du code
-- Ils peuvent être exposés dans les systèmes de contrôle de version
-- Ils sont visibles dans la mémoire de l'application
-- Ils sont difficiles à modifier sans recompiler l'application
+**Pourquoi c'est dangereux ?**
+- Visible dans le code source
+- Récupérable par décompilation
+- Exposé dans les systèmes de versionnement (Git)
+- Impossible à changer sans recompiler
 
-### 1. Utilisation du Windows Data Protection API (DPAPI)
+### ❌ Dans un fichier INI non chiffré
 
-L'API DPAPI de Windows est spécialement conçue pour le chiffrement/déchiffrement de données sensibles. Elle utilise des clés liées au compte utilisateur Windows ou à l'ordinateur, ce qui la rend idéale pour stocker des identifiants de manière sécurisée.
+```pascal
+// ❌ DANGEREUX - Fichier config.ini :
+[Database]
+Server=localhost
+Username=admin
+Password=MotDePasseSecret123    // Lisible par n'importe qui !
 
-#### Création d'une classe de gestion des identifiants avec DPAPI
+[API]
+GoogleAPIKey=AIzaSyD...
+AWSSecretKey=wJalrXUtnF...
+```
 
-```pas
-unit SecureCredentials;
+### ❌ Dans la base de données en clair
 
-interface
+```sql
+-- ❌ DANGEREUX
+CREATE TABLE Configuration (
+    Cle VARCHAR(50),
+    Valeur VARCHAR(255)
+);
 
+INSERT INTO Configuration VALUES ('SMTP_Password', 'motdepasse123');
+```
+
+### ❌ Dans les variables d'environnement Windows Registry
+
+```pascal
+// ❌ MOYENNEMENT DANGEREUX (mieux que rien mais pas sécurisé)
+procedure SauvegarderDansRegistry;
+var
+  Registry: TRegistry;
+begin
+  Registry := TRegistry.Create;
+  try
+    Registry.RootKey := HKEY_CURRENT_USER;
+    Registry.OpenKey('\Software\MonApp\Config', True);
+    Registry.WriteString('Password', 'MonMotDePasse');  // En clair !
+  finally
+    Registry.Free;
+  end;
+end;
+```
+
+## Solutions sécurisées
+
+### 1. Windows DPAPI (Data Protection API)
+
+Le DPAPI est une API Windows qui chiffre les données en utilisant les identifiants de l'utilisateur ou de la machine.
+
+**Avantages** :
+- Chiffrement automatique par Windows
+- Pas besoin de gérer les clés
+- Intégré au système d'exploitation
+- Gratuit et fiable
+
+**Principe** : Les données sont chiffrées avec une clé dérivée du compte Windows. Seul ce compte peut les déchiffrer.
+
+```pascal
 uses
-  System.SysUtils, System.Classes, Winapi.Windows, System.NetEncoding;
+  Winapi.Windows, System.SysUtils;
 
 type
-  TCredentialType = (ctPassword, ctAPIKey, ctConnectionString, ctToken);
+  DATA_BLOB = record
+    cbData: DWORD;
+    pbData: PBYTE;
+  end;
 
-  TSecureCredentialManager = class
-  private
-    FAppName: string;
-
-    function ProtectData(const Data: TBytes; Scope: Integer): TBytes;
-    function UnprotectData(const Data: TBytes; Scope: Integer): TBytes;
+  TDPAPIHelper = class
   public
-    constructor Create(const AppName: string);
-
-    // Stockage sécurisé des identifiants
-    procedure StoreCredential(const CredentialName: string;
-                             const Value: string;
-                             CredentialType: TCredentialType;
-                             MachineWide: Boolean = False);
-
-    // Récupération sécurisée des identifiants
-    function RetrieveCredential(const CredentialName: string;
-                               CredentialType: TCredentialType;
-                               MachineWide: Boolean = False): string;
-
-    // Suppression d'un identifiant
-    procedure DeleteCredential(const CredentialName: string;
-                              CredentialType: TCredentialType;
-                              MachineWide: Boolean = False);
-
-    // Vérification de l'existence d'un identifiant
-    function CredentialExists(const CredentialName: string;
-                             CredentialType: TCredentialType;
-                             MachineWide: Boolean = False): Boolean;
+    class function ChiffrerDonnees(const ADonnees: string): TBytes;
+    class function DechiffrerDonnees(const ADonneesChiffrees: TBytes): string;
   end;
 
-implementation
+// Importation des fonctions DPAPI
+function CryptProtectData(pDataIn: PDATA_BLOB; szDataDescr: PWideChar;
+  pOptionalEntropy: PDATA_BLOB; pvReserved: Pointer; pPromptStruct: Pointer;
+  dwFlags: DWORD; pDataOut: PDATA_BLOB): BOOL; stdcall;
+  external 'Crypt32.dll' name 'CryptProtectData';
 
-uses
-  System.Win.Registry, System.IOUtils;
+function CryptUnprotectData(pDataIn: PDATA_BLOB; ppszDataDescr: PPWideChar;
+  pOptionalEntropy: PDATA_BLOB; pvReserved: Pointer; pPromptStruct: Pointer;
+  dwFlags: DWORD; pDataOut: PDATA_BLOB): BOOL; stdcall;
+  external 'Crypt32.dll' name 'CryptUnprotectData';
 
-const
-  // Identifiants pour les options de protection DPAPI
-  CRYPTPROTECT_UI_FORBIDDEN = $1;
-  CRYPTPROTECT_LOCAL_MACHINE = $4;
-
-// Déclarations des fonctions de l'API Windows
-function CryptProtectData(
-  var DataIn: DATA_BLOB;
-  szDataDescr: PWideChar;
-  var OptionalEntropy: DATA_BLOB;
-  pvReserved: Pointer;
-  pPromptStruct: Pointer;
-  dwFlags: DWORD;
-  var DataOut: DATA_BLOB
-): BOOL; stdcall; external 'Crypt32.dll';
-
-function CryptUnprotectData(
-  var DataIn: DATA_BLOB;
-  ppszDataDescr: PPWideChar;
-  var OptionalEntropy: DATA_BLOB;
-  pvReserved: Pointer;
-  pPromptStruct: Pointer;
-  dwFlags: DWORD;
-  var DataOut: DATA_BLOB
-): BOOL; stdcall; external 'Crypt32.dll';
-
-{ TSecureCredentialManager }
-
-constructor TSecureCredentialManager.Create(const AppName: string);
-begin
-  inherited Create;
-  FAppName := AppName;
-end;
-
-function TSecureCredentialManager.ProtectData(const Data: TBytes; Scope: Integer): TBytes;
+class function TDPAPIHelper.ChiffrerDonnees(const ADonnees: string): TBytes;
 var
-  DataIn, DataOut, Entropy: DATA_BLOB;
-  Flags: DWORD;
+  DataIn: DATA_BLOB;
+  DataOut: DATA_BLOB;
+  DonneesBytes: TBytes;
 begin
-  // Initialisation des structures
-  DataIn.cbData := Length(Data);
-  DataIn.pbData := Pointer(Data);
-
-  Entropy.cbData := Length(FAppName) * SizeOf(Char);
-  Entropy.pbData := Pointer(StringToOleStr(FAppName));
-
-  DataOut.cbData := 0;
-  DataOut.pbData := nil;
-
-  // Définir les flags
-  Flags := CRYPTPROTECT_UI_FORBIDDEN;
-  if Scope = 1 then
-    Flags := Flags or CRYPTPROTECT_LOCAL_MACHINE;
-
-  // Chiffrer les données
-  if CryptProtectData(
-    DataIn,
-    'SecureCredential',  // Description
-    Entropy,            // Entropie supplémentaire
-    nil,                // Réservé
-    nil,                // Structure d'invite
-    Flags,              // Flags
-    DataOut             // Données chiffrées
-  ) then
-  begin
-    // Convertir le résultat en tableau de bytes
-    SetLength(Result, DataOut.cbData);
-    if DataOut.cbData > 0 then
-      Move(DataOut.pbData^, Result[0], DataOut.cbData);
-
-    // Libérer la mémoire allouée par CryptProtectData
-    if DataOut.pbData <> nil then
-      LocalFree(Cardinal(DataOut.pbData));
-  end
-  else
-    raise Exception.Create('Échec du chiffrement des données: ' + SysErrorMessage(GetLastError));
-end;
-
-function TSecureCredentialManager.UnprotectData(const Data: TBytes; Scope: Integer): TBytes;
-var
-  DataIn, DataOut, Entropy: DATA_BLOB;
-  Flags: DWORD;
-begin
-  // Initialisation des structures
-  DataIn.cbData := Length(Data);
-  DataIn.pbData := Pointer(Data);
-
-  Entropy.cbData := Length(FAppName) * SizeOf(Char);
-  Entropy.pbData := Pointer(StringToOleStr(FAppName));
-
-  DataOut.cbData := 0;
-  DataOut.pbData := nil;
-
-  // Définir les flags
-  Flags := CRYPTPROTECT_UI_FORBIDDEN;
-  if Scope = 1 then
-    Flags := Flags or CRYPTPROTECT_LOCAL_MACHINE;
-
-  // Déchiffrer les données
-  if CryptUnprotectData(
-    DataIn,
-    nil,                // Description (non utilisée)
-    Entropy,            // Entropie supplémentaire
-    nil,                // Réservé
-    nil,                // Structure d'invite
-    Flags,              // Flags
-    DataOut             // Données déchiffrées
-  ) then
-  begin
-    // Convertir le résultat en tableau de bytes
-    SetLength(Result, DataOut.cbData);
-    if DataOut.cbData > 0 then
-      Move(DataOut.pbData^, Result[0], DataOut.cbData);
-
-    // Libérer la mémoire allouée par CryptUnprotectData
-    if DataOut.pbData <> nil then
-      LocalFree(Cardinal(DataOut.pbData));
-  end
-  else
-    raise Exception.Create('Échec du déchiffrement des données: ' + SysErrorMessage(GetLastError));
-end;
-
-procedure TSecureCredentialManager.StoreCredential(const CredentialName: string;
-                                                 const Value: string;
-                                                 CredentialType: TCredentialType;
-                                                 MachineWide: Boolean);
-var
-  Registry: TRegistry;
-  RegKey: string;
-  TypePrefix: string;
-  ProtectedData: TBytes;
-  ProtectedBase64: string;
-  Scope: Integer;
-begin
-  // Déterminer le préfixe en fonction du type d'identifiant
-  case CredentialType of
-    ctPassword: TypePrefix := 'PWD';
-    ctAPIKey: TypePrefix := 'API';
-    ctConnectionString: TypePrefix := 'CON';
-    ctToken: TypePrefix := 'TOK';
-  end;
-
-  // Déterminer la portée (utilisateur ou machine)
-  if MachineWide then
-    Scope := 1
-  else
-    Scope := 0;
-
-  // Construire la clé de registre
-  RegKey := 'Software\' + FAppName + '\SecureCredentials';
-
-  // Chiffrer la valeur
-  ProtectedData := ProtectData(TEncoding.UTF8.GetBytes(Value), Scope);
-
-  // Convertir en Base64 pour le stockage
-  ProtectedBase64 := TNetEncoding.Base64.EncodeBytesToString(ProtectedData);
-
-  // Stocker dans le registre
-  Registry := TRegistry.Create;
-  try
-    if MachineWide then
-      Registry.RootKey := HKEY_LOCAL_MACHINE
-    else
-      Registry.RootKey := HKEY_CURRENT_USER;
-
-    if Registry.OpenKey(RegKey, True) then
-    begin
-      Registry.WriteString(TypePrefix + '_' + CredentialName, ProtectedBase64);
-      Registry.CloseKey;
-    end
-    else
-      raise Exception.Create('Impossible d''ouvrir la clé de registre');
-  finally
-    Registry.Free;
-  end;
-end;
-
-function TSecureCredentialManager.RetrieveCredential(const CredentialName: string;
-                                                   CredentialType: TCredentialType;
-                                                   MachineWide: Boolean): string;
-var
-  Registry: TRegistry;
-  RegKey: string;
-  TypePrefix: string;
-  ProtectedBase64: string;
-  ProtectedData: TBytes;
-  DecryptedData: TBytes;
-  Scope: Integer;
-begin
-  Result := '';
-
-  // Déterminer le préfixe en fonction du type d'identifiant
-  case CredentialType of
-    ctPassword: TypePrefix := 'PWD';
-    ctAPIKey: TypePrefix := 'API';
-    ctConnectionString: TypePrefix := 'CON';
-    ctToken: TypePrefix := 'TOK';
-  end;
-
-  // Déterminer la portée (utilisateur ou machine)
-  if MachineWide then
-    Scope := 1
-  else
-    Scope := 0;
-
-  // Construire la clé de registre
-  RegKey := 'Software\' + FAppName + '\SecureCredentials';
-
-  // Récupérer depuis le registre
-  Registry := TRegistry.Create;
-  try
-    if MachineWide then
-      Registry.RootKey := HKEY_LOCAL_MACHINE
-    else
-      Registry.RootKey := HKEY_CURRENT_USER;
-
-    if Registry.OpenKeyReadOnly(RegKey) then
-    begin
-      if Registry.ValueExists(TypePrefix + '_' + CredentialName) then
-      begin
-        ProtectedBase64 := Registry.ReadString(TypePrefix + '_' + CredentialName);
-        Registry.CloseKey;
-
-        // Convertir depuis Base64
-        ProtectedData := TNetEncoding.Base64.DecodeStringToBytes(ProtectedBase64);
-
-        // Déchiffrer la valeur
-        try
-          DecryptedData := UnprotectData(ProtectedData, Scope);
-          Result := TEncoding.UTF8.GetString(DecryptedData);
-        except
-          on E: Exception do
-            raise Exception.Create('Erreur lors du déchiffrement: ' + E.Message);
-        end;
-      end
-      else
-        Registry.CloseKey;
-    end;
-  finally
-    Registry.Free;
-  end;
-end;
-
-procedure TSecureCredentialManager.DeleteCredential(const CredentialName: string;
-                                                  CredentialType: TCredentialType;
-                                                  MachineWide: Boolean);
-var
-  Registry: TRegistry;
-  RegKey: string;
-  TypePrefix: string;
-begin
-  // Déterminer le préfixe en fonction du type d'identifiant
-  case CredentialType of
-    ctPassword: TypePrefix := 'PWD';
-    ctAPIKey: TypePrefix := 'API';
-    ctConnectionString: TypePrefix := 'CON';
-    ctToken: TypePrefix := 'TOK';
-  end;
-
-  // Construire la clé de registre
-  RegKey := 'Software\' + FAppName + '\SecureCredentials';
-
-  // Supprimer du registre
-  Registry := TRegistry.Create;
-  try
-    if MachineWide then
-      Registry.RootKey := HKEY_LOCAL_MACHINE
-    else
-      Registry.RootKey := HKEY_CURRENT_USER;
-
-    if Registry.OpenKey(RegKey, False) then
-    begin
-      if Registry.ValueExists(TypePrefix + '_' + CredentialName) then
-        Registry.DeleteValue(TypePrefix + '_' + CredentialName);
-
-      Registry.CloseKey;
-    end;
-  finally
-    Registry.Free;
-  end;
-end;
-
-function TSecureCredentialManager.CredentialExists(const CredentialName: string;
-                                                 CredentialType: TCredentialType;
-                                                 MachineWide: Boolean): Boolean;
-var
-  Registry: TRegistry;
-  RegKey: string;
-  TypePrefix: string;
-begin
-  Result := False;
-
-  // Déterminer le préfixe en fonction du type d'identifiant
-  case CredentialType of
-    ctPassword: TypePrefix := 'PWD';
-    ctAPIKey: TypePrefix := 'API';
-    ctConnectionString: TypePrefix := 'CON';
-    ctToken: TypePrefix := 'TOK';
-  end;
-
-  // Construire la clé de registre
-  RegKey := 'Software\' + FAppName + '\SecureCredentials';
-
-  // Vérifier dans le registre
-  Registry := TRegistry.Create;
-  try
-    if MachineWide then
-      Registry.RootKey := HKEY_LOCAL_MACHINE
-    else
-      Registry.RootKey := HKEY_CURRENT_USER;
-
-    if Registry.OpenKeyReadOnly(RegKey) then
-    begin
-      Result := Registry.ValueExists(TypePrefix + '_' + CredentialName);
-      Registry.CloseKey;
-    end;
-  finally
-    Registry.Free;
-  end;
-end;
-
-end.
-```
-
-#### Exemple d'utilisation de la classe de gestion des identifiants
-
-```pas
-procedure TMainForm.SaveDatabaseCredentials;
-var
-  CredManager: TSecureCredentialManager;
-begin
-  CredManager := TSecureCredentialManager.Create('MyDelphiApp');
-  try
-    // Stocker les identifiants
-    CredManager.StoreCredential('DatabaseServer',
-                               'server.example.com',
-                               ctConnectionString);
-
-    CredManager.StoreCredential('DatabaseUser',
-                               'admin',
-                               ctPassword);
-
-    CredManager.StoreCredential('DatabasePassword',
-                               EditPassword.Text,
-                               ctPassword);
-
-    ShowMessage('Identifiants stockés avec succès');
-  finally
-    CredManager.Free;
-  end;
-end;
-
-procedure TMainForm.ConnectToDatabase;
-var
-  CredManager: TSecureCredentialManager;
-  Server, Username, Password: string;
-begin
-  CredManager := TSecureCredentialManager.Create('MyDelphiApp');
-  try
-    // Récupérer les identifiants
-    Server := CredManager.RetrieveCredential('DatabaseServer', ctConnectionString);
-    Username := CredManager.RetrieveCredential('DatabaseUser', ctPassword);
-    Password := CredManager.RetrieveCredential('DatabasePassword', ctPassword);
-
-    if (Server <> '') and (Username <> '') and (Password <> '') then
-    begin
-      // Utiliser les identifiants pour la connexion
-      FDConnection1.Params.Values['Server'] := Server;
-      FDConnection1.Params.Values['User_Name'] := Username;
-      FDConnection1.Params.Values['Password'] := Password;
-
-      try
-        FDConnection1.Connected := True;
-        ShowMessage('Connexion réussie !');
-      except
-        on E: Exception do
-          ShowMessage('Erreur de connexion : ' + E.Message);
-      end;
-    end
-    else
-      ShowMessage('Identifiants manquants. Veuillez configurer la connexion.');
-  finally
-    CredManager.Free;
-  end;
-end;
-```
-
-### 2. Utilisation du Credential Manager de Windows
-
-Windows dispose d'un gestionnaire d'identifiants intégré (Credential Manager) que vous pouvez utiliser via l'API Windows. Cela offre l'avantage d'une interface utilisateur intégrée à Windows pour la gestion des identifiants.
-
-```pas
-unit WindowsCredentialManager;
-
-interface
-
-uses
-  System.SysUtils, Winapi.Windows;
-
-type
-  TWindowsCredentialManager = class
-  public
-    // Stockage d'identifiants
-    function StoreCredential(const TargetName, Username, Password: string): Boolean;
-
-    // Récupération d'identifiants
-    function RetrieveCredential(const TargetName: string;
-                               out Username, Password: string): Boolean;
-
-    // Suppression d'identifiants
-    function DeleteCredential(const TargetName: string): Boolean;
-  end;
-
-implementation
-
-const
-  CRED_TYPE_GENERIC = 1;
-  CRED_PERSIST_LOCAL_MACHINE = 2;
-
-type
-  CREDENTIAL_ATTRIBUTEW = record
-    Keyword: PWideChar;
-    Flags: DWORD;
-    ValueSize: DWORD;
-    Value: Pointer;
-  end;
-  PCREDENTIAL_ATTRIBUTEW = ^CREDENTIAL_ATTRIBUTEW;
-
-  CREDENTIALW = record
-    Flags: DWORD;
-    Type_: DWORD;
-    TargetName: PWideChar;
-    Comment: PWideChar;
-    LastWritten: TFileTime;
-    CredentialBlobSize: DWORD;
-    CredentialBlob: Pointer;
-    Persist: DWORD;
-    AttributeCount: DWORD;
-    Attributes: PCREDENTIAL_ATTRIBUTEW;
-    TargetAlias: PWideChar;
-    UserName: PWideChar;
-  end;
-  PCREDENTIALW = ^CREDENTIALW;
-  PPCREDENTIALW = ^PCREDENTIALW;
-
-function CredWriteW(Credential: PCREDENTIALW; Flags: DWORD): BOOL; stdcall;
-  external 'Advapi32.dll' name 'CredWriteW';
-function CredReadW(TargetName: PWideChar; Type_: DWORD; Flags: DWORD;
-  var Credential: PCREDENTIALW): BOOL; stdcall;
-  external 'Advapi32.dll' name 'CredReadW';
-function CredFree(Buffer: Pointer): BOOL; stdcall;
-  external 'Advapi32.dll' name 'CredFree';
-function CredDeleteW(TargetName: PWideChar; Type_: DWORD; Flags: DWORD): BOOL; stdcall;
-  external 'Advapi32.dll' name 'CredDeleteW';
-
-{ TWindowsCredentialManager }
-
-function TWindowsCredentialManager.StoreCredential(const TargetName, Username,
-  Password: string): Boolean;
-var
-  Credential: CREDENTIALW;
-  PasswordBytes: TBytes;
-begin
-  FillChar(Credential, SizeOf(Credential), 0);
-
-  // Convertir le mot de passe en bytes
-  PasswordBytes := TEncoding.Unicode.GetBytes(Password);
-
-  // Paramétrer la structure d'identifiants
-  Credential.Type_ := CRED_TYPE_GENERIC;
-  Credential.TargetName := PWideChar(TargetName);
-  Credential.UserName := PWideChar(Username);
-  Credential.CredentialBlobSize := Length(PasswordBytes);
-  Credential.CredentialBlob := Pointer(PasswordBytes);
-  Credential.Persist := CRED_PERSIST_LOCAL_MACHINE;
-
-  // Écrire l'identifiant
-  Result := CredWriteW(@Credential, 0);
-end;
-
-function TWindowsCredentialManager.RetrieveCredential(const TargetName: string;
-  out Username, Password: string): Boolean;
-var
-  CredentialPtr: PCREDENTIALW;
-begin
-  Result := False;
-  Username := '';
-  Password := '';
-
-  // Lire l'identifiant
-  if CredReadW(PWideChar(TargetName), CRED_TYPE_GENERIC, 0, CredentialPtr) then
+  // Convertir la chaîne en bytes
+  DonneesBytes := TEncoding.UTF8.GetBytes(ADonnees);
+
+  // Préparer la structure d'entrée
+  DataIn.cbData := Length(DonneesBytes);
+  DataIn.pbData := @DonneesBytes[0];
+
+  // Chiffrer avec DPAPI
+  if CryptProtectData(@DataIn, nil, nil, nil, nil, 0, @DataOut) then
   begin
     try
-      // Récupérer le nom d'utilisateur
-      Username := CredentialPtr^.UserName;
-
-      // Récupérer le mot de passe
-      if (CredentialPtr^.CredentialBlobSize > 0) and
-         (CredentialPtr^.CredentialBlob <> nil) then
-      begin
-        SetLength(Password, CredentialPtr^.CredentialBlobSize div SizeOf(Char));
-        Move(CredentialPtr^.CredentialBlob^, Password[1], CredentialPtr^.CredentialBlobSize);
-      end;
-
-      Result := True;
+      // Copier les données chiffrées
+      SetLength(Result, DataOut.cbData);
+      Move(DataOut.pbData^, Result[0], DataOut.cbData);
     finally
-      // Libérer la mémoire allouée par CredRead
-      CredFree(CredentialPtr);
+      // Libérer la mémoire allouée par Windows
+      LocalFree(HLOCAL(DataOut.pbData));
     end;
+  end
+  else
+    raise Exception.Create('Erreur de chiffrement DPAPI');
+end;
+
+class function TDPAPIHelper.DechiffrerDonnees(const ADonneesChiffrees: TBytes): string;
+var
+  DataIn: DATA_BLOB;
+  DataOut: DATA_BLOB;
+  ResultBytes: TBytes;
+begin
+  // Préparer la structure d'entrée
+  DataIn.cbData := Length(ADonneesChiffrees);
+  DataIn.pbData := @ADonneesChiffrees[0];
+
+  // Déchiffrer avec DPAPI
+  if CryptUnprotectData(@DataIn, nil, nil, nil, nil, 0, @DataOut) then
+  begin
+    try
+      // Copier les données déchiffrées
+      SetLength(ResultBytes, DataOut.cbData);
+      Move(DataOut.pbData^, ResultBytes[0], DataOut.cbData);
+      Result := TEncoding.UTF8.GetString(ResultBytes);
+    finally
+      // Libérer la mémoire
+      LocalFree(HLOCAL(DataOut.pbData));
+    end;
+  end
+  else
+    raise Exception.Create('Erreur de déchiffrement DPAPI');
+end;
+
+// Exemple d'utilisation
+procedure SauvegarderMotDePasseSecurise;
+var
+  MotDePasse: string;
+  DonneesChiffrees: TBytes;
+  Fichier: TFileStream;
+begin
+  MotDePasse := 'MonMotDePasseSecret123';
+
+  // Chiffrer avec DPAPI
+  DonneesChiffrees := TDPAPIHelper.ChiffrerDonnees(MotDePasse);
+
+  // Sauvegarder dans un fichier
+  Fichier := TFileStream.Create('password.dat', fmCreate);
+  try
+    Fichier.Write(DonneesChiffrees[0], Length(DonneesChiffrees));
+  finally
+    Fichier.Free;
   end;
 end;
 
-function TWindowsCredentialManager.DeleteCredential(const TargetName: string): Boolean;
+procedure ChargerMotDePasseSecurise;
+var
+  DonneesChiffrees: TBytes;
+  Fichier: TFileStream;
+  MotDePasse: string;
 begin
-  Result := CredDeleteW(PWideChar(TargetName), CRED_TYPE_GENERIC, 0);
-end;
+  // Lire le fichier
+  Fichier := TFileStream.Create('password.dat', fmOpenRead);
+  try
+    SetLength(DonneesChiffrees, Fichier.Size);
+    Fichier.Read(DonneesChiffrees[0], Fichier.Size);
+  finally
+    Fichier.Free;
+  end;
 
-end.
+  // Déchiffrer avec DPAPI
+  MotDePasse := TDPAPIHelper.DechiffrerDonnees(DonneesChiffrees);
+
+  // Utiliser le mot de passe
+  FDConnection1.Params.Add('Password=' + MotDePasse);
+end;
 ```
 
-#### Utilisation du Credential Manager Windows
+### 2. macOS Keychain
 
-```pas
-procedure TMainForm.SaveAPICredentials;
+Sur macOS, utilisez le Keychain pour stocker les identifiants de manière sécurisée.
+
+```pascal
+{$IFDEF MACOS}
+uses
+  Macapi.Security;
+
+function SauvegarderDansKeychain(const AService, ACompte, AMotDePasse: string): Boolean;
 var
-  CredManager: TWindowsCredentialManager;
+  Status: OSStatus;
+  ServicePtr: MarshaledAString;
+  ComptePtr: MarshaledAString;
+  MotDePassePtr: Pointer;
 begin
-  CredManager := TWindowsCredentialManager.Create;
-  try
-    if CredManager.StoreCredential('MyApp:API', 'apiuser', EditAPIKey.Text) then
-      ShowMessage('Clé API stockée avec succès')
-    else
-      ShowMessage('Erreur lors du stockage de la clé API : ' + SysErrorMessage(GetLastError));
-  finally
-    CredManager.Free;
+  ServicePtr := MarshaledAString(TMarshal.AsAnsi(AService));
+  ComptePtr := MarshaledAString(TMarshal.AsAnsi(ACompte));
+  MotDePassePtr := MarshaledAString(TMarshal.AsAnsi(AMotDePasse));
+
+  Status := SecKeychainAddGenericPassword(
+    nil,  // Keychain par défaut
+    Length(AService),
+    ServicePtr,
+    Length(ACompte),
+    ComptePtr,
+    Length(AMotDePasse),
+    MotDePassePtr,
+    nil
+  );
+
+  Result := Status = errSecSuccess;
+end;
+
+function ChargerDepuisKeychain(const AService, ACompte: string): string;
+var
+  Status: OSStatus;
+  ServicePtr: MarshaledAString;
+  ComptePtr: MarshaledAString;
+  MotDePasseLength: UInt32;
+  MotDePassePtr: Pointer;
+begin
+  Result := '';
+  ServicePtr := MarshaledAString(TMarshal.AsAnsi(AService));
+  ComptePtr := MarshaledAString(TMarshal.AsAnsi(ACompte));
+
+  Status := SecKeychainFindGenericPassword(
+    nil,  // Keychain par défaut
+    Length(AService),
+    ServicePtr,
+    Length(ACompte),
+    ComptePtr,
+    @MotDePasseLength,
+    @MotDePassePtr,
+    nil
+  );
+
+  if Status = errSecSuccess then
+  begin
+    SetString(Result, PAnsiChar(MotDePassePtr), MotDePasseLength);
+    SecKeychainItemFreeContent(nil, MotDePassePtr);
   end;
 end;
 
-procedure TMainForm.RetrieveAPICredentials;
+// Utilisation
+procedure ConfigurerBaseDonnees;
 var
-  CredManager: TWindowsCredentialManager;
-  Username, APIKey: string;
+  Password: string;
 begin
-  CredManager := TWindowsCredentialManager.Create;
-  try
-    if CredManager.RetrieveCredential('MyApp:API', Username, APIKey) then
-    begin
-      EditUsername.Text := Username;
-      EditAPIKey.Text := APIKey;
-    end
-    else
-      ShowMessage('Identifiants non trouvés ou erreur : ' + SysErrorMessage(GetLastError));
-  finally
-    CredManager.Free;
-  end;
+  Password := ChargerDepuisKeychain('MonApplication', 'DatabasePassword');
+  FDConnection1.Params.Add('Password=' + Password);
 end;
+{$ENDIF}
 ```
 
-### 3. Chiffrement avec une clé personnalisée
+### 3. Classe multi-plateforme de gestion des secrets
 
-Si vous avez besoin de plus de contrôle ou si vous développez pour des plateformes autres que Windows, vous pouvez implémenter votre propre système de chiffrement avec une clé personnalisée.
+Créons une classe qui utilise la meilleure méthode selon la plateforme :
 
-```pas
-unit CustomKeyEncryption;
+```pascal
+unit UnitGestionSecrets;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Hash, System.NetEncoding,
-  System.Generics.Collections;
+  System.SysUtils, System.Classes;
 
 type
-  TCustomKeyCredentialManager = class
+  TGestionSecrets = class
   private
-    FEncryptionKey: string;
-    FCredentials: TDictionary<string, string>;
-    FFilePath: string;
-
-    function DeriveKey(const MasterKey, Salt: string): TBytes;
-    function Encrypt(const PlainText, Salt: string): string;
-    function Decrypt(const CipherText, Salt: string): string;
-
-    procedure LoadCredentials;
-    procedure SaveCredentials;
+    class function ChiffrerWindowsDPAPI(const ADonnees: string): TBytes;
+    class function DechiffrerWindowsDPAPI(const ADonnees: TBytes): string;
+    {$IFDEF MACOS}
+    class function SauvegarderKeychainMac(const ACle, AValeur: string): Boolean;
+    class function ChargerKeychainMac(const ACle: string): string;
+    {$ENDIF}
+    class function ChiffrerGenerique(const ADonnees, ACleMaitre: string): string;
+    class function DechiffrerGenerique(const ADonnees, ACleMaitre: string): string;
   public
-    constructor Create(const FilePath, MasterKey: string);
-    destructor Destroy; override;
-
-    procedure StoreCredential(const Name, Value: string);
-    function RetrieveCredential(const Name: string): string;
-    procedure DeleteCredential(const Name: string);
-    function CredentialExists(const Name: string): Boolean;
+    class procedure Sauvegarder(const ACle, AValeur: string);
+    class function Charger(const ACle: string): string;
+    class procedure Supprimer(const ACle: string);
+    class function Existe(const ACle: string): Boolean;
   end;
 
 implementation
 
 uses
-  System.IOUtils, System.JSON;
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF}
+  {$IFDEF MACOS}
+  Macapi.Security,
+  {$ENDIF}
+  System.IOUtils, System.NetEncoding;
 
-constructor TCustomKeyCredentialManager.Create(const FilePath, MasterKey: string);
+class procedure TGestionSecrets.Sauvegarder(const ACle, AValeur: string);
+{$IFDEF MSWINDOWS}
+var
+  DonneesChiffrees: TBytes;
+  CheminFichier: string;
+  Fichier: TFileStream;
 begin
-  inherited Create;
-  FFilePath := FilePath;
-  FEncryptionKey := MasterKey;
-  FCredentials := TDictionary<string, string>.Create;
+  // Utiliser DPAPI sur Windows
+  DonneesChiffrees := ChiffrerWindowsDPAPI(AValeur);
 
-  // Charger les identifiants existants
-  if FileExists(FFilePath) then
-    LoadCredentials;
+  CheminFichier := TPath.Combine(
+    TPath.GetHomePath,
+    '.monapp_secrets',
+    ACle + '.dat'
+  );
+
+  ForceDirectories(ExtractFilePath(CheminFichier));
+
+  Fichier := TFileStream.Create(CheminFichier, fmCreate);
+  try
+    Fichier.Write(DonneesChiffrees[0], Length(DonneesChiffrees));
+  finally
+    Fichier.Free;
+  end;
+end;
+{$ELSE}
+{$IFDEF MACOS}
+begin
+  // Utiliser Keychain sur macOS
+  SauvegarderKeychainMac(ACle, AValeur);
+end;
+{$ELSE}
+var
+  CleMaitre: string;
+  DonneesChiffrees: string;
+  CheminFichier: string;
+begin
+  // Chiffrement générique pour Linux/Android/iOS
+  CleMaitre := ObtenirCleMaitre; // À implémenter selon vos besoins
+  DonneesChiffrees := ChiffrerGenerique(AValeur, CleMaitre);
+
+  CheminFichier := TPath.Combine(
+    TPath.GetHomePath,
+    '.monapp_secrets',
+    ACle + '.enc'
+  );
+
+  ForceDirectories(ExtractFilePath(CheminFichier));
+  TFile.WriteAllText(CheminFichier, DonneesChiffrees);
+end;
+{$ENDIF}
+{$ENDIF}
+
+class function TGestionSecrets.Charger(const ACle: string): string;
+{$IFDEF MSWINDOWS}
+var
+  DonneesChiffrees: TBytes;
+  CheminFichier: string;
+  Fichier: TFileStream;
+begin
+  CheminFichier := TPath.Combine(
+    TPath.GetHomePath,
+    '.monapp_secrets',
+    ACle + '.dat'
+  );
+
+  if not FileExists(CheminFichier) then
+    Exit('');
+
+  Fichier := TFileStream.Create(CheminFichier, fmOpenRead);
+  try
+    SetLength(DonneesChiffrees, Fichier.Size);
+    Fichier.Read(DonneesChiffrees[0], Fichier.Size);
+  finally
+    Fichier.Free;
+  end;
+
+  Result := DechiffrerWindowsDPAPI(DonneesChiffrees);
+end;
+{$ELSE}
+{$IFDEF MACOS}
+begin
+  Result := ChargerKeychainMac(ACle);
+end;
+{$ELSE}
+var
+  CleMaitre: string;
+  DonneesChiffrees: string;
+  CheminFichier: string;
+begin
+  CheminFichier := TPath.Combine(
+    TPath.GetHomePath,
+    '.monapp_secrets',
+    ACle + '.enc'
+  );
+
+  if not FileExists(CheminFichier) then
+    Exit('');
+
+  DonneesChiffrees := TFile.ReadAllText(CheminFichier);
+  CleMaitre := ObtenirCleMaitre;
+  Result := DechiffrerGenerique(DonneesChiffrees, CleMaitre);
+end;
+{$ENDIF}
+{$ENDIF}
+
+class procedure TGestionSecrets.Supprimer(const ACle: string);
+var
+  CheminFichier: string;
+begin
+  {$IFDEF MSWINDOWS}
+  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.dat');
+  {$ELSE}
+  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.enc');
+  {$ENDIF}
+
+  if FileExists(CheminFichier) then
+    DeleteFile(CheminFichier);
 end;
 
-destructor TCustomKeyCredentialManager.Destroy;
+class function TGestionSecrets.Existe(const ACle: string): Boolean;
+var
+  CheminFichier: string;
 begin
-  FCredentials.Free;
+  {$IFDEF MSWINDOWS}
+  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.dat');
+  {$ELSE}
+  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.enc');
+  {$ENDIF}
+
+  Result := FileExists(CheminFichier);
+end;
+
+// Implémentations des méthodes privées (ChiffrerWindowsDPAPI, etc.)
+// Voir exemples précédents
+
+end.
+
+// Utilisation simple et multi-plateforme
+procedure ConfigurerApplication;
+begin
+  // Sauvegarder un mot de passe (une seule fois, lors de la configuration)
+  TGestionSecrets.Sauvegarder('DBPassword', 'MotDePasseSecret123');
+  TGestionSecrets.Sauvegarder('APIKey', 'sk_live_51Hxyz...');
+
+  // Charger les identifiants au démarrage de l'application
+  FDConnection1.Params.Add('Password=' + TGestionSecrets.Charger('DBPassword'));
+
+  FAPIKey := TGestionSecrets.Charger('APIKey');
+end;
+```
+
+### 4. Variables d'environnement
+
+Les variables d'environnement sont une bonne solution pour les applications serveur.
+
+```pascal
+uses
+  System.SysUtils;
+
+function LireVariableEnvironnement(const ANom: string; const AParDefaut: string = ''): string;
+begin
+  Result := GetEnvironmentVariable(ANom);
+  if Result = '' then
+    Result := AParDefaut;
+end;
+
+procedure ConfigurerDepuisEnvironnement;
+begin
+  // Lire depuis les variables d'environnement
+  FDConnection1.Params.Add('Server=' + LireVariableEnvironnement('DB_SERVER', 'localhost'));
+  FDConnection1.Params.Add('Database=' + LireVariableEnvironnement('DB_NAME', 'mydb'));
+  FDConnection1.Params.Add('User_Name=' + LireVariableEnvironnement('DB_USER', 'root'));
+  FDConnection1.Params.Add('Password=' + LireVariableEnvironnement('DB_PASSWORD'));
+
+  // Clé API depuis variable d'environnement
+  FAPIKey := LireVariableEnvironnement('GOOGLE_API_KEY');
+
+  if FAPIKey = '' then
+    raise Exception.Create('Variable d''environnement GOOGLE_API_KEY non définie');
+end;
+```
+
+**Configuration des variables sous Windows** :
+```batch
+REM Définir temporairement (session actuelle)
+set DB_PASSWORD=MotDePasseSecret
+
+REM Définir de manière permanente (utilisateur)
+setx DB_PASSWORD "MotDePasseSecret"
+
+REM Définir de manière permanente (système - admin requis)
+setx DB_PASSWORD "MotDePasseSecret" /M
+```
+
+**Configuration sous Linux/macOS** :
+```bash
+# Temporaire (session actuelle)
+export DB_PASSWORD="MotDePasseSecret"
+
+# Permanent (ajouter dans ~/.bashrc ou ~/.zshrc)
+echo 'export DB_PASSWORD="MotDePasseSecret"' >> ~/.bashrc
+```
+
+### 5. Fichiers de configuration chiffrés
+
+Créez un fichier de configuration dont le contenu est chiffré :
+
+```pascal
+type
+  TConfigSecurisee = class
+  private
+    FCheminFichier: string;
+    FCleMaitre: string;
+    FValeurs: TDictionary<string, string>;
+    procedure ChargerFichier;
+    procedure SauvegarderFichier;
+    function ChiffrerContenu(const AContenu: string): string;
+    function DechiffrerContenu(const AContenu: string): string;
+  public
+    constructor Create(const ACheminFichier, ACleMaitre: string);
+    destructor Destroy; override;
+    procedure DefinirValeur(const ACle, AValeur: string);
+    function ObtenirValeur(const ACle: string; const AParDefaut: string = ''): string;
+    procedure Enregistrer;
+  end;
+
+constructor TConfigSecurisee.Create(const ACheminFichier, ACleMaitre: string);
+begin
+  inherited Create;
+  FCheminFichier := ACheminFichier;
+  FCleMaitre := ACleMaitre;
+  FValeurs := TDictionary<string, string>.Create;
+
+  if FileExists(FCheminFichier) then
+    ChargerFichier;
+end;
+
+destructor TConfigSecurisee.Destroy;
+begin
+  FValeurs.Free;
   inherited;
 end;
 
-function TCustomKeyCredentialManager.DeriveKey(const MasterKey, Salt: string): TBytes;
+procedure TConfigSecurisee.ChargerFichier;
 var
-  CombinedKey: string;
+  ContenuChiffre: string;
+  ContenuClair: string;
+  Lignes: TStringList;
+  Ligne: string;
+  Parties: TArray<string>;
 begin
-  // Dériver une clé à partir de la clé maître et du sel
-  // Dans une implémentation réelle, utilisez un algorithme comme PBKDF2
-  CombinedKey := MasterKey + Salt;
-  Result := THashSHA2.GetHashBytes(CombinedKey);
-end;
+  // Lire le fichier chiffré
+  ContenuChiffre := TFile.ReadAllText(FCheminFichier);
 
-function TCustomKeyCredentialManager.Encrypt(const PlainText, Salt: string): string;
-var
-  Key: TBytes;
-  PlainBytes, CipherBytes: TBytes;
-  I: Integer;
-begin
-  // Cet exemple utilise un chiffrement simple XOR
-  // Pour une application réelle, utilisez un algorithme standard comme AES
+  // Déchiffrer
+  ContenuClair := DechiffrerContenu(ContenuChiffre);
 
-  // Dériver la clé
-  Key := DeriveKey(FEncryptionKey, Salt);
-
-  // Convertir le texte en bytes
-  PlainBytes := TEncoding.UTF8.GetBytes(PlainText);
-
-  // Chiffrer (XOR simple)
-  SetLength(CipherBytes, Length(PlainBytes));
-  for I := 0 to High(PlainBytes) do
-    CipherBytes[I] := PlainBytes[I] xor Key[I mod Length(Key)];
-
-  // Encoder en Base64
-  Result := TNetEncoding.Base64.EncodeBytesToString(CipherBytes);
-end;
-
-function TCustomKeyCredentialManager.Decrypt(const CipherText, Salt: string): string;
-var
-  Key: TBytes;
-  CipherBytes, PlainBytes: TBytes;
-  I: Integer;
-begin
-  // Dériver la clé
-  Key := DeriveKey(FEncryptionKey, Salt);
-
-  // Décoder le Base64
-  CipherBytes := TNetEncoding.Base64.DecodeStringToBytes(CipherText);
-
-  // Déchiffrer (XOR simple)
-  SetLength(PlainBytes, Length(CipherBytes));
-  for I := 0 to High(CipherBytes) do
-    PlainBytes[I] := CipherBytes[I] xor Key[I mod Length(Key)];
-
-  // Convertir en chaîne
-  Result := TEncoding.UTF8.GetString(PlainBytes);
-end;
-
-procedure TCustomKeyCredentialManager.LoadCredentials;
-var
-  JSONText: string;
-  JSONObject: TJSONObject;
-  JSONPair: TJSONPair;
-begin
+  // Parser les lignes
+  Lignes := TStringList.Create;
   try
-    // Lire le fichier chiffré
-    JSONText := TFile.ReadAllText(FFilePath);
+    Lignes.Text := ContenuClair;
 
-    // Parser le JSON
-    JSONObject := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
-    if JSONObject <> nil then
-    try
-      FCredentials.Clear;
-
-      // Parcourir les paires nom/valeur
-      for JSONPair in JSONObject do
+    for Ligne in Lignes do
+    begin
+      if (Ligne.Trim <> '') and (not Ligne.StartsWith('#')) then
       begin
-        FCredentials.Add(JSONPair.JsonString.Value, JSONPair.JsonValue.Value);
-      end;
-    finally
-      JSONObject.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      // Gérer les erreurs de chargement
-      // Dans une application réelle, journalisez l'erreur
-    end;
-  end;
-end;
-
-procedure TCustomKeyCredentialManager.SaveCredentials;
-var
-  JSONObject: TJSONObject;
-  Pair: TPair<string, string>;
-begin
-  JSONObject := TJSONObject.Create;
-  try
-    // Ajouter chaque identifiant au JSON
-    for Pair in FCredentials do
-    begin
-      JSONObject.AddPair(Pair.Key, Pair.Value);
-    end;
-
-    // Sauvegarder dans le fichier
-    TFile.WriteAllText(FFilePath, JSONObject.ToString);
-  finally
-    JSONObject.Free;
-  end;
-end;
-
-procedure TCustomKeyCredentialManager.StoreCredential(const Name, Value: string);
-var
-  EncryptedValue: string;
-begin
-  // Chiffrer la valeur avec le nom comme sel
-  EncryptedValue := Encrypt(Value, Name);
-
-  // Stocker dans le dictionnaire
-  FCredentials.AddOrSetValue(Name, EncryptedValue);
-
-  // Sauvegarder les changements
-  SaveCredentials;
-end;
-
-function TCustomKeyCredentialManager.RetrieveCredential(const Name: string): string;
-var
-  EncryptedValue: string;
-begin
-  Result := '';
-
-  // Récupérer la valeur chiffrée
-  if FCredentials.TryGetValue(Name, EncryptedValue) then
-  begin
-    // Déchiffrer avec le nom comme sel
-    Result := Decrypt(EncryptedValue, Name);
-  end;
-end;
-
-procedure TCustomKeyCredentialManager.DeleteCredential(const Name: string);
-begin
-  // Supprimer l'identifiant
-  if FCredentials.ContainsKey(Name) then
-  begin
-    FCredentials.Remove(Name);
-
-    // Sauvegarder les changements
-    SaveCredentials;
-  end;
-end;
-
-function TCustomKeyCredentialManager.CredentialExists(const Name: string): Boolean;
-begin
-  Result := FCredentials.ContainsKey(Name);
-end;
-
-end.
-```
-
-#### Utilisation de l'encryptage avec clé personnalisée
-
-```pas
-procedure TMainForm.SaveSecretApiKey;
-var
-  CredManager: TCustomKeyCredentialManager;
-  MasterKey: string;
-begin
-  // La clé maître pourrait provenir d'une entrée utilisateur ou d'une autre source sécurisée
-  MasterKey := GetApplicationMasterKey;
-
-  CredManager := TCustomKeyCredentialManager.Create(
-    TPath.Combine(TPath.GetDocumentsPath, 'myapp_credentials.dat'),
-    MasterKey
-  );
-  try
-    CredManager.StoreCredential('ApiKey', EditApiKey.Text);
-    ShowMessage('Clé API enregistrée avec succès');
-  finally
-    CredManager.Free;
-  end;
-end;
-
-function TMainForm.GetApplicationMasterKey: string;
-var
-  DeviceID: string;
-begin
-  // Dans une implémentation réelle, utilisez une méthode plus sécurisée
-  // pour obtenir ou générer la clé maître
-  DeviceID := GetComputerIdentifier; // Une fonction qui génère un ID unique pour l'ordinateur
-  Result := THashSHA2.GetHashString('MySecretAppSalt' + DeviceID);
-end;
-```
-
-> ⚠️ **Important** : L'exemple de chiffrement ci-dessus est simplifié à des fins éducatives. Pour une application réelle, utilisez des algorithmes cryptographiques standards comme AES avec une implémentation éprouvée.
-
-### 4. Stockage dans des coffres-forts de mots de passe tiers
-
-Pour les applications professionnelles, vous pouvez intégrer votre application avec des gestionnaires de mots de passe tiers comme KeePass, LastPass ou 1Password via leurs API.
-
-```pas
-unit KeePassIntegration;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.Net.HttpClient, System.JSON;
-
-type
-  TKeePassHTTPClient = class
-  private
-    FPort: Integer;
-    FHost: string;
-    FClientID: string;
-    FClientKey: string;
-
-    function SendRequest(const Action, URL, Key, ID: string; Data: TJSONObject = nil): TJSONObject;
-  public
-    constructor Create(const Host: string = 'localhost'; Port: Integer = 19455);
-
-    function TestAssociation: Boolean;
-    function Associate: Boolean;
-    function GetCredentials(const URL: string): TJSONArray;
-    function GetLogins(const URL: string): TJSONArray;
-    function SetLogin(const URL, Username, Password: string): Boolean;
-  end;
-
-implementation
-
-// Note: Cette implémentation est simplifiée et partielle
-// Une intégration réelle avec KeePass nécessiterait plus de code
-
-constructor TKeePassHTTPClient.Create(const Host: string; Port: Integer);
-begin
-  inherited Create;
-  FHost := Host;
-  FPort := Port;
-  FClientID := 'MyDelphiApp';
-
-  // Dans une implémentation réelle, stockez et récupérez la clé client
-  // de manière sécurisée, par exemple avec DPAPI
-  FClientKey := ''; // À récupérer depuis un stockage sécurisé
-end;
-
-function TKeePassHTTPClient.SendRequest(const Action, URL, Key, ID: string;
-  Data: TJSONObject): TJSONObject;
-var
-  HTTPClient: THTTPClient;
-  Response: IHTTPResponse;
-  RequestJSON, ResponseJSON: TJSONObject;
-  RequestBody, ResponseBody: string;
-begin
-  Result := nil;
-
-  // Créer l'objet JSON pour la requête
-  RequestJSON := TJSONObject.Create;
-  try
-    RequestJSON.AddPair('action', Action);
-    RequestJSON.AddPair('url', URL);
-    RequestJSON.AddPair('key', Key);
-    RequestJSON.AddPair('id', ID);
-
-    if Data <> nil then
-    begin
-      // Ajouter les données supplémentaires
-      for var Pair in Data do
-      begin
-        RequestJSON.AddPair(Pair.JsonString.Clone as TJSONString,
-                           Pair.JsonValue.Clone as TJSONValue);
+        Parties := Ligne.Split(['='], 2);
+        if Length(Parties) = 2 then
+          FValeurs.AddOrSetValue(Parties[0].Trim, Parties[1].Trim);
       end;
     end;
-
-    RequestBody := RequestJSON.ToString;
   finally
-    RequestJSON.Free;
+    Lignes.Free;
   end;
+end;
 
-  // Envoyer la requête HTTP
-  HTTPClient := THTTPClient.Create;
+procedure TConfigSecurisee.SauvegarderFichier;
+var
+  Lignes: TStringList;
+  Cle: string;
+  ContenuClair: string;
+  ContenuChiffre: string;
+begin
+  Lignes := TStringList.Create;
   try
-    Response := HTTPClient.Post(
-      Format('http://%s:%d', [FHost, FPort]),
-      TStringStream.Create(RequestBody),
-      nil
-    );
+    Lignes.Add('# Configuration sécurisée - Chiffrée');
+    Lignes.Add('# Générée le : ' + DateTimeToStr(Now));
+    Lignes.Add('');
 
-    ResponseBody := Response.ContentAsString;
+    for Cle in FValeurs.Keys do
+      Lignes.Add(Cle + '=' + FValeurs[Cle]);
 
-    if Response.StatusCode = 200 then
-    begin
-      // Parser la réponse JSON
-      ResponseJSON := TJSONObject.ParseJSONValue(ResponseBody) as TJSONObject;
-      if ResponseJSON <> nil then
-        Result := ResponseJSON;
-    end;
+    ContenuClair := Lignes.Text;
   finally
-    HTTPClient.Free;
+    Lignes.Free;
   end;
+
+  // Chiffrer le contenu
+  ContenuChiffre := ChiffrerContenu(ContenuClair);
+
+  // Sauvegarder
+  TFile.WriteAllText(FCheminFichier, ContenuChiffre);
 end;
 
-function TKeePassHTTPClient.TestAssociation: Boolean;
-var
-  Response: TJSONObject;
+function TConfigSecurisee.ChiffrerContenu(const AContenu: string): string;
 begin
-  Result := False;
+  // Utiliser votre méthode de chiffrement préférée (AES, etc.)
+  // Exemple simplifié avec Base64 (à remplacer par un vrai chiffrement)
+  Result := TNetEncoding.Base64.Encode(AContenu);
+end;
 
-  if (FClientID = '') or (FClientKey = '') then
-    Exit;
+function TConfigSecurisee.DechiffrerContenu(const AContenu: string): string;
+begin
+  // Déchiffrer (correspondant à ChiffrerContenu)
+  Result := TNetEncoding.Base64.Decode(AContenu);
+end;
 
-  Response := SendRequest('test-associate', '', FClientKey, FClientID);
-  if Response <> nil then
+procedure TConfigSecurisee.DefinirValeur(const ACle, AValeur: string);
+begin
+  FValeurs.AddOrSetValue(ACle, AValeur);
+end;
+
+function TConfigSecurisee.ObtenirValeur(const ACle: string; const AParDefaut: string): string;
+begin
+  if not FValeurs.TryGetValue(ACle, Result) then
+    Result := AParDefaut;
+end;
+
+procedure TConfigSecurisee.Enregistrer;
+begin
+  SauvegarderFichier;
+end;
+
+// Utilisation
+procedure ConfigurerAvecFichierSecurise;
+var
+  Config: TConfigSecurisee;
+  CleMaitre: string;
+begin
+  // La clé maître pourrait venir de DPAPI, d'un prompt utilisateur, etc.
+  CleMaitre := TGestionSecrets.Charger('MasterKey');
+
+  Config := TConfigSecurisee.Create('config.secure', CleMaitre);
   try
-    Result := Response.GetValue<Boolean>('success', False);
-  finally
-    Response.Free;
-  end;
-end;
+    // Lire la configuration
+    FDConnection1.Params.Add('Server=' + Config.ObtenirValeur('DB_Server', 'localhost'));
+    FDConnection1.Params.Add('Password=' + Config.ObtenirValeur('DB_Password'));
 
-function TKeePassHTTPClient.Associate: Boolean;
-var
-  Response: TJSONObject;
-begin
-  Result := False;
-
-  // Générer une nouvelle clé
-  FClientKey := GenerateRandomKey; // À implémenter
-
-  Response := SendRequest('associate', '', FClientKey, FClientID);
-  if Response <> nil then
-  try
-    Result := Response.GetValue<Boolean>('success', False);
-
-    if Result then
-    begin
-      // Stocker la clé client de manière sécurisée
-      SaveClientKey(FClientKey); // À implémenter
-    end;
-  finally
-    Response.Free;
-  end;
-end;
-
-function TKeePassHTTPClient.GetCredentials(const URL: string): TJSONArray;
-var
-  Response: TJSONObject;
-begin
-  Result := nil;
-
-  if not TestAssociation then
-    if not Associate then
-      Exit;
-
-  Response := SendRequest('get-logins', URL, FClientKey, FClientID);
-  if Response <> nil then
-  try
-    if Response.GetValue<Boolean>('success', False) then
-    begin
-      if Response.TryGetValue<TJSONArray>('entries', Result) then
-        Result := Result.Clone as TJSONArray;
-    end;
-  finally
-    Response.Free;
-  end;
-end;
-
-// Autres méthodes à implémenter...
-
-end.
-```
-
-### 5. Demander les identifiants à l'utilisateur
-
-Pour des raisons de sécurité, parfois la meilleure approche est de demander les identifiants à l'utilisateur à chaque fois qu'ils sont nécessaires, sans les stocker du tout.
-
-```pas
-function TMainForm.GetDatabaseCredentials(out Username, Password: string): Boolean;
-var
-  CredentialForm: TCredentialForm;
-begin
-  CredentialForm := TCredentialForm.Create(nil);
-  try
-    // Préremplir le nom d'utilisateur si disponible
-    CredentialForm.EditUsername.Text := LastUsername;
-
-    // Afficher le dialogue
-    Result := CredentialForm.ShowModal = mrOk;
-
-    if Result then
-    begin
-      Username := CredentialForm.EditUsername.Text;
-      Password := CredentialForm.EditPassword.Text;
-
-      // Enregistrer le nom d'utilisateur pour la prochaine fois
-      LastUsername := Username;
-    end;
-  finally
-    CredentialForm.Free;
-  end;
-end;
-
-procedure TMainForm.ButtonConnectClick(Sender: TObject);
-var
-  Username, Password: string;
-begin
-  if GetDatabaseCredentials(Username, Password) then
-  begin
-    try
-      // Utiliser les identifiants pour la connexion
-      FDConnection1.Params.Values['User_Name'] := Username;
-      FDConnection1.Params.Values['Password'] := Password;
-      FDConnection1.Connected := True;
-
-      ShowMessage('Connexion réussie !');
-    except
-      on E: Exception do
-        ShowMessage('Erreur de connexion : ' + E.Message);
-    end;
-  end;
-end;
-```
-
-### 6. Utilisation de fichiers de configuration sécurisés
-
-Pour les déploiements où un fichier de configuration est nécessaire, vous pouvez utiliser un fichier chiffré plutôt qu'un fichier en texte clair.
-
-```pas
-unit SecureConfig;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils;
-
-type
-  TSecureConfig = class
-  private
-    FConfigPath: string;
-    FEncryptionKey: string;
-    FConfig: TJSONObject;
-
-    function Encrypt(const Data: string): string;
-    function Decrypt(const Data: string): string;
-  public
-    constructor Create(const ConfigPath, EncryptionKey: string);
-    destructor Destroy; override;
-
-    procedure Load;
-    procedure Save;
-
-    function GetValue(const Section, Key: string; DefaultValue: string = ''): string;
-    procedure SetValue(const Section, Key, Value: string);
-
-    function GetEncryptedValue(const Section, Key: string; DefaultValue: string = ''): string;
-    procedure SetEncryptedValue(const Section, Key, Value: string);
-  end;
-
-implementation
-
-constructor TSecureConfig.Create(const ConfigPath, EncryptionKey: string);
-begin
-  inherited Create;
-  FConfigPath := ConfigPath;
-  FEncryptionKey := EncryptionKey;
-  FConfig := TJSONObject.Create;
-
-  // Charger la configuration si le fichier existe
-  if FileExists(FConfigPath) then
-    Load;
-end;
-
-destructor TSecureConfig.Destroy;
-begin
-  FConfig.Free;
-  inherited;
-end;
-
-function TSecureConfig.Encrypt(const Data: string): string;
-begin
-  // Implémentez ici votre méthode de chiffrement préférée
-  // Pour l'exemple, nous utilisons une fonction fictive
-  Result := SimpleEncrypt(Data, FEncryptionKey);
-end;
-
-function TSecureConfig.Decrypt(const Data: string): string;
-begin
-  // Implémentez ici votre méthode de déchiffrement correspondante
-  Result := SimpleDecrypt(Data, FEncryptionKey);
-end;
-
-procedure TSecureConfig.Load;
-var
-  EncryptedText, JsonText: string;
-begin
-  try
-    // Lire le fichier chiffré
-    EncryptedText := TFile.ReadAllText(FConfigPath);
-
-    // Déchiffrer
-    JsonText := Decrypt(EncryptedText);
-
-    // Parser le JSON
-    FConfig.Free;
-    FConfig := TJSONObject.ParseJSONValue(JsonText) as TJSONObject;
-
-    if FConfig = nil then
-      FConfig := TJSONObject.Create;
-  except
-    on E: Exception do
-    begin
-      // En cas d'erreur, créer un objet vide
-      FConfig.Free;
-      FConfig := TJSONObject.Create;
-    end;
-  end;
-end;
-
-procedure TSecureConfig.Save;
-var
-  JsonText, EncryptedText: string;
-begin
-  // Convertir en JSON
-  JsonText := FConfig.ToString;
-
-  // Chiffrer
-  EncryptedText := Encrypt(JsonText);
-
-  // Sauvegarder dans le fichier
-  TFile.WriteAllText(FConfigPath, EncryptedText);
-end;
-
-function TSecureConfig.GetValue(const Section, Key: string; DefaultValue: string): string;
-var
-  SectionObj: TJSONObject;
-begin
-  Result := DefaultValue;
-
-  // Chercher la section
-  if FConfig.TryGetValue<TJSONObject>(Section, SectionObj) then
-  begin
-    // Chercher la clé dans la section
-    SectionObj.TryGetValue<string>(Key, Result);
-  end;
-end;
-
-procedure TSecureConfig.SetValue(const Section, Key, Value: string);
-var
-  SectionObj: TJSONObject;
-begin
-  // Vérifier si la section existe, sinon la créer
-  if not FConfig.TryGetValue<TJSONObject>(Section, SectionObj) then
-  begin
-    SectionObj := TJSONObject.Create;
-    FConfig.AddPair(Section, SectionObj);
-  end;
-
-  // Ajouter ou mettre à jour la valeur
-  if SectionObj.Get(Key) <> nil then
-    SectionObj.RemovePair(Key);
-
-  SectionObj.AddPair(Key, Value);
-end;
-
-function TSecureConfig.GetEncryptedValue(const Section, Key: string; DefaultValue: string): string;
-var
-  EncryptedValue: string;
-begin
-  Result := DefaultValue;
-
-  // Récupérer la valeur chiffrée
-  EncryptedValue := GetValue(Section, Key, '');
-
-  if EncryptedValue <> '' then
-  begin
-    try
-      // Déchiffrer la valeur
-      Result := Decrypt(EncryptedValue);
-    except
-      // En cas d'erreur, retourner la valeur par défaut
-      Result := DefaultValue;
-    end;
-  end;
-end;
-
-procedure TSecureConfig.SetEncryptedValue(const Section, Key, Value: string);
-var
-  EncryptedValue: string;
-begin
-  // Chiffrer la valeur
-  EncryptedValue := Encrypt(Value);
-
-  // Stocker la valeur chiffrée
-  SetValue(Section, Key, EncryptedValue);
-end;
-
-end.
-```
-
-#### Utilisation du fichier de configuration sécurisé
-
-```pas
-procedure TMainForm.SaveConnectionSettings;
-var
-  Config: TSecureConfig;
-begin
-  Config := TSecureConfig.Create(
-    TPath.Combine(TPath.GetDocumentsPath, 'myapp_config.dat'),
-    GetConfigEncryptionKey
-  );
-  try
-    // Stocker les paramètres de connexion
-    Config.SetValue('Database', 'Server', EditServer.Text);
-    Config.SetValue('Database', 'Database', EditDatabase.Text);
-    Config.SetValue('Database', 'Port', EditPort.Text);
-
-    // Stocker les identifiants de manière chiffrée
-    Config.SetEncryptedValue('Database', 'Username', EditUsername.Text);
-    Config.SetEncryptedValue('Database', 'Password', EditPassword.Text);
-
-    // Sauvegarder la configuration
-    Config.Save;
-
-    ShowMessage('Paramètres de connexion enregistrés');
+    FAPIKey := Config.ObtenirValeur('API_Key');
   finally
     Config.Free;
   end;
 end;
-
-procedure TMainForm.LoadConnectionSettings;
-var
-  Config: TSecureConfig;
-begin
-  Config := TSecureConfig.Create(
-    TPath.Combine(TPath.GetDocumentsPath, 'myapp_config.dat'),
-    GetConfigEncryptionKey
-  );
-  try
-    // Charger les paramètres de connexion
-    EditServer.Text := Config.GetValue('Database', 'Server');
-    EditDatabase.Text := Config.GetValue('Database', 'Database');
-    EditPort.Text := Config.GetValue('Database', 'Port', '3306');
-
-    // Charger les identifiants chiffrés
-    EditUsername.Text := Config.GetEncryptedValue('Database', 'Username');
-    EditPassword.Text := Config.GetEncryptedValue('Database', 'Password');
-  finally
-    Config.Free;
-  end;
-end;
-
-function TMainForm.GetConfigEncryptionKey: string;
-begin
-  // Dans une application réelle, utilisez une méthode sécurisée
-  // pour obtenir la clé de chiffrement
-  Result := 'VotreCleDEncryptionSecrete'; // Ne faites pas cela en production!
-end;
 ```
 
-> ⚠️ **Important** : Dans une application réelle, ne codez jamais en dur vos clés de chiffrement. Utilisez des méthodes comme DPAPI pour protéger votre clé principale.
+### 6. Gestionnaire de secrets cloud
 
-### 7. Rotation et expiration des identifiants
+Pour les applications cloud, utilisez des services dédiés :
 
-Pour une sécurité renforcée, il est recommandé de mettre en place une rotation régulière des identifiants et des clés.
-
-```pas
-unit CredentialRotation;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.DateUtils;
-
+```pascal
 type
-  TCredentialInfo = record
-    Value: string;
-    Created: TDateTime;
-    Expires: TDateTime;
-    IsExpired: Boolean;
-  end;
-
-  TCredentialRotationManager = class
+  TAWSSecretsManager = class
   private
-    FCredentialManager: TSecureCredentialManager; // Utilisez votre gestionnaire d'identifiants préféré
-
-    function GetCredentialInfo(const CredentialName: string): TCredentialInfo;
-    procedure StoreCredentialInfo(const CredentialName: string; const Info: TCredentialInfo);
+    FRegion: string;
+    FAccessKeyID: string;
+    FSecretAccessKey: string;
   public
-    constructor Create(CredentialManager: TSecureCredentialManager);
-
-    // Stockage avec date d'expiration
-    procedure StoreCredential(const Name, Value: string; ExpiresInDays: Integer = 90);
-
-    // Récupération avec vérification d'expiration
-    function RetrieveCredential(const Name: string; out Value: string): Boolean;
-
-    // Vérification de l'expiration
-    function IsCredentialExpired(const Name: string): Boolean;
-
-    // Rotation d'identifiants
-    function RotateCredential(const Name: string; const NewValue: string): Boolean;
-
-    // Notification pour les identifiants qui vont bientôt expirer
-    function GetSoonExpiringCredentials(DaysThreshold: Integer = 7): TArray<string>;
+    constructor Create(const ARegion, AAccessKeyID, ASecretAccessKey: string);
+    function ObtenirSecret(const ASecretName: string): string;
   end;
 
-implementation
-
-uses
-  System.JSON;
-
-constructor TCredentialRotationManager.Create(CredentialManager: TSecureCredentialManager);
+constructor TAWSSecretsManager.Create(const ARegion, AAccessKeyID, ASecretAccessKey: string);
 begin
   inherited Create;
-  FCredentialManager := CredentialManager;
+  FRegion := ARegion;
+  FAccessKeyID := AAccessKeyID;
+  FSecretAccessKey := ASecretAccessKey;
 end;
 
-function TCredentialRotationManager.GetCredentialInfo(const CredentialName: string): TCredentialInfo;
+function TAWSSecretsManager.ObtenirSecret(const ASecretName: string): string;
 var
-  InfoJson: string;
-  JsonObj: TJSONObject;
+  RESTClient: TRESTClient;
+  RESTRequest: TRESTRequest;
+  RESTResponse: TRESTResponse;
+  JSONResponse: TJSONObject;
+  URL: string;
 begin
-  // Initialiser avec des valeurs par défaut
-  Result.Value := '';
-  Result.Created := 0;
-  Result.Expires := 0;
-  Result.IsExpired := True;
+  // Construire l'URL de l'API AWS Secrets Manager
+  URL := Format('https://secretsmanager.%s.amazonaws.com/', [FRegion]);
 
-  // Récupérer les informations de l'identifiant
-  InfoJson := FCredentialManager.RetrieveCredential(CredentialName + '_INFO',
-                                                  ctConnectionString);
-
-  if InfoJson <> '' then
-  begin
-    JsonObj := TJSONObject.ParseJSONValue(InfoJson) as TJSONObject;
-    if JsonObj <> nil then
-    try
-      Result.Value := FCredentialManager.RetrieveCredential(CredentialName, ctPassword);
-      Result.Created := ISO8601ToDate(JsonObj.GetValue<string>('created', ''));
-      Result.Expires := ISO8601ToDate(JsonObj.GetValue<string>('expires', ''));
-      Result.IsExpired := Now > Result.Expires;
-    finally
-      JsonObj.Free;
-    end;
-  end;
-end;
-
-procedure TCredentialRotationManager.StoreCredentialInfo(const CredentialName: string;
-                                                       const Info: TCredentialInfo);
-var
-  JsonObj: TJSONObject;
-  InfoJson: string;
-begin
-  // Stocker la valeur de l'identifiant
-  FCredentialManager.StoreCredential(CredentialName, Info.Value, ctPassword);
-
-  // Stocker les métadonnées de l'identifiant
-  JsonObj := TJSONObject.Create;
+  RESTClient := TRESTClient.Create(URL);
+  RESTRequest := TRESTRequest.Create(nil);
+  RESTResponse := TRESTResponse.Create(nil);
   try
-    JsonObj.AddPair('created', DateToISO8601(Info.Created));
-    JsonObj.AddPair('expires', DateToISO8601(Info.Expires));
+    RESTRequest.Client := RESTClient;
+    RESTRequest.Response := RESTResponse;
+    RESTRequest.Method := TRESTRequestMethod.rmPOST;
 
-    InfoJson := JsonObj.ToString;
-  finally
-    JsonObj.Free;
-  end;
+    // Ajouter l'authentification AWS (simplifiée, nécessite signature réelle)
+    RESTRequest.AddAuthParameter('X-Amz-Target', 'secretsmanager.GetSecretValue',
+                                  TRESTRequestParameterKind.pkHTTPHEADER);
 
-  FCredentialManager.StoreCredential(CredentialName + '_INFO', InfoJson, ctConnectionString);
-end;
+    // Corps de la requête
+    RESTRequest.AddBody(Format('{"SecretId":"%s"}', [ASecretName]),
+                        TRESTContentType.ctAPPLICATION_JSON);
 
-procedure TCredentialRotationManager.StoreCredential(const Name, Value: string;
-                                                   ExpiresInDays: Integer);
-var
-  Info: TCredentialInfo;
-begin
-  // Créer les informations de l'identifiant
-  Info.Value := Value;
-  Info.Created := Now;
-  Info.Expires := IncDay(Now, ExpiresInDays);
-  Info.IsExpired := False;
+    RESTRequest.Execute;
 
-  // Stocker l'identifiant avec ses métadonnées
-  StoreCredentialInfo(Name, Info);
-end;
-
-function TCredentialRotationManager.RetrieveCredential(const Name: string;
-                                                     out Value: string): Boolean;
-var
-  Info: TCredentialInfo;
-begin
-  Info := GetCredentialInfo(Name);
-
-  // Vérifier si l'identifiant existe et n'est pas expiré
-  Result := (Info.Value <> '') and not Info.IsExpired;
-
-  if Result then
-    Value := Info.Value
-  else
-    Value := '';
-end;
-
-function TCredentialRotationManager.IsCredentialExpired(const Name: string): Boolean;
-var
-  Info: TCredentialInfo;
-begin
-  Info := GetCredentialInfo(Name);
-  Result := Info.IsExpired;
-end;
-
-function TCredentialRotationManager.RotateCredential(const Name: string;
-                                                   const NewValue: string): Boolean;
-var
-  Info: TCredentialInfo;
-begin
-  Info := GetCredentialInfo(Name);
-
-  // Vérifier si l'identifiant existe
-  Result := Info.Value <> '';
-
-  if Result then
-  begin
-    // Mettre à jour la valeur et réinitialiser les dates
-    Info.Value := NewValue;
-    Info.Created := Now;
-    Info.Expires := IncDay(Now, DaysBetween(Info.Created, Info.Expires));
-    Info.IsExpired := False;
-
-    // Stocker le nouvel identifiant
-    StoreCredentialInfo(Name, Info);
-  end;
-end;
-
-function TCredentialRotationManager.GetSoonExpiringCredentials(DaysThreshold: Integer): TArray<string>;
-var
-  ExpiringList: TList<string>;
-  ThresholdDate: TDateTime;
-  Credential: string;
-  Info: TCredentialInfo;
-begin
-  ExpiringList := TList<string>.Create;
-  try
-    ThresholdDate := IncDay(Now, DaysThreshold);
-
-    // Parcourir tous les identifiants (vous devrez adapter cette partie)
-    for Credential in GetAllCredentialNames do
+    if RESTResponse.StatusCode = 200 then
     begin
-      Info := GetCredentialInfo(Credential);
-
-      // Vérifier si l'identifiant expire bientôt
-      if (not Info.IsExpired) and (Info.Expires <= ThresholdDate) then
-        ExpiringList.Add(Credential);
-    end;
-
-    Result := ExpiringList.ToArray;
-  finally
-    ExpiringList.Free;
-  end;
-end;
-
-end.
-```
-
-#### Mise en place de notifications d'expiration
-
-```pas
-procedure TMainForm.CheckCredentialExpirations;
-var
-  RotationManager: TCredentialRotationManager;
-  ExpiringCredentials: TArray<string>;
-  CredentialName: string;
-begin
-  RotationManager := TCredentialRotationManager.Create(FCredentialManager);
-  try
-    // Vérifier les identifiants qui expirent dans les 7 prochains jours
-    ExpiringCredentials := RotationManager.GetSoonExpiringCredentials(7);
-
-    if Length(ExpiringCredentials) > 0 then
-    begin
-      // Créer un message d'alerte
-      var Message := 'Les identifiants suivants vont bientôt expirer :' + sLineBreak + sLineBreak;
-
-      for CredentialName in ExpiringCredentials do
-        Message := Message + '- ' + CredentialName + sLineBreak;
-
-      Message := Message + sLineBreak + 'Veuillez les mettre à jour dès que possible.';
-
-      // Afficher l'alerte
-      ShowNotification('Identifiants expirant bientôt', Message);
-    end;
-  finally
-    RotationManager.Free;
-  end;
-end;
-```
-
-### 8. Bibliothèques tierces pour la gestion des identifiants
-
-Plusieurs bibliothèques tierces peuvent vous aider à gérer les identifiants de manière sécurisée dans vos applications Delphi :
-
-1. **SecureBlackbox** : Une suite complète de composants de sécurité pour Delphi, comprenant des fonctionnalités de chiffrement et de stockage sécurisé.
-
-2. **TurboPower LockBox** : Une bibliothèque de cryptographie open source pour Delphi.
-
-3. **Spring4D Cryptography** : Partie de la bibliothèque Spring4D, elle offre des fonctionnalités cryptographiques modernes.
-
-4. **Delphi Encryption Compendium (DEC)** : Une collection d'algorithmes cryptographiques pour Delphi.
-
-### Meilleures pratiques pour le stockage des identifiants
-
-1. **Ne stockez jamais les identifiants en texte clair** dans votre code, dans des fichiers ou dans des bases de données.
-
-2. **Utilisez des APIs de système** comme DPAPI sous Windows lorsque c'est possible.
-
-3. **Chiffrez toujours les identifiants sensibles** avant de les stocker.
-
-4. **Ne réutilisez pas les clés de chiffrement** pour différents types de données.
-
-5. **Implémentez la rotation et l'expiration** des identifiants pour limiter les risques en cas de compromission.
-
-6. **Limitez l'accès aux identifiants stockés** en utilisant des contrôles d'accès appropriés.
-
-7. **Évitez de stocker les identifiants** si possible, en les demandant à l'utilisateur lorsqu'ils sont nécessaires.
-
-8. **Effacez les identifiants de la mémoire** dès qu'ils ne sont plus nécessaires.
-
-9. **Ne journalisez jamais les identifiants** dans les fichiers de log.
-
-10. **Utilisez des algorithmes de cryptographie standards** et évitez de créer vos propres algorithmes.
-
-### Gérer les clés de chiffrement
-
-La sécurité de vos identifiants chiffrés dépend de la sécurité de vos clés de chiffrement. Voici quelques approches pour gérer ces clés :
-
-#### 1. Dérivation de clé basée sur un mot de passe
-
-```pas
-function DeriveKeyFromPassword(const Password, Salt: string; Iterations: Integer = 10000): TBytes;
-var
-  // Utiliser PBKDF2 pour dériver une clé à partir du mot de passe
-  // Ceci est une pseudo-implémentation, utilisez une bibliothèque cryptographique réelle
-  KeyMaterial: TBytes;
-  I: Integer;
-begin
-  // Initialiser avec le mot de passe et le sel
-  KeyMaterial := TEncoding.UTF8.GetBytes(Password + Salt);
-
-  // Appliquer des itérations pour renforcer contre les attaques par force brute
-  for I := 1 to Iterations do
-    KeyMaterial := THashSHA2.GetHashBytes(KeyMaterial);
-
-  Result := KeyMaterial;
-end;
-```
-
-#### 2. Utiliser une phrase secrète demandée à l'utilisateur
-
-```pas
-function GetEncryptionKey: TBytes;
-var
-  Passphrase: string;
-  Salt: string;
-begin
-  // Demander la phrase secrète à l'utilisateur au démarrage
-  if not GetPassphrase(Passphrase) then
-    raise Exception.Create('Phrase secrète requise pour déverrouiller les identifiants');
-
-  // Utiliser un sel spécifique à l'application
-  Salt := 'MyAppSpecificSalt';
-
-  // Dériver la clé
-  Result := DeriveKeyFromPassword(Passphrase, Salt, 10000);
-end;
-
-function GetPassphrase(out Passphrase: string): Boolean;
-var
-  PassphraseForm: TPassphraseForm;
-begin
-  PassphraseForm := TPassphraseForm.Create(nil);
-  try
-    Result := PassphraseForm.ShowModal = mrOk;
-    if Result then
-      Passphrase := PassphraseForm.EditPassphrase.Text;
-  finally
-    PassphraseForm.Free;
-  end;
-end;
-```
-
-#### 3. Utiliser une clé matérielle (comme une clé USB)
-
-```pas
-function GetKeyFromHardwareToken: TBytes;
-var
-  USBDrives: TStringDynArray;
-  KeyFile: string;
-  I: Integer;
-begin
-  // Rechercher les lecteurs USB
-  USBDrives := GetUSBDrives; // À implémenter selon votre besoin
-
-  for I := 0 to High(USBDrives) do
-  begin
-    KeyFile := TPath.Combine(USBDrives[I], 'myapp_key.dat');
-
-    if FileExists(KeyFile) then
-    begin
+      JSONResponse := TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject;
       try
-        // Lire la clé depuis le fichier
-        Result := TFile.ReadAllBytes(KeyFile);
-        Exit;
-      except
-        // Continuer avec le prochain lecteur en cas d'erreur
+        Result := JSONResponse.GetValue<string>('SecretString');
+      finally
+        JSONResponse.Free;
       end;
-    end;
+    end
+    else
+      raise Exception.CreateFmt('Erreur AWS : %s', [RESTResponse.Content]);
+  finally
+    RESTResponse.Free;
+    RESTRequest.Free;
+    RESTClient.Free;
   end;
+end;
 
-  // Aucune clé trouvée
-  raise Exception.Create('Clé matérielle non trouvée. Veuillez insérer la clé USB appropriée.');
+// Utilisation
+procedure ConfigurerAvecAWS;
+var
+  SecretsManager: TAWSSecretsManager;
+  DBPassword: string;
+begin
+  SecretsManager := TAWSSecretsManager.Create(
+    'eu-west-1',
+    'AKIA...',  // Ces identifiants viendraient d'un endroit sécurisé
+    'wJalr...'
+  );
+  try
+    // Récupérer le secret depuis AWS
+    DBPassword := SecretsManager.ObtenirSecret('prod/database/password');
+
+    FDConnection1.Params.Add('Password=' + DBPassword);
+  finally
+    SecretsManager.Free;
+  end;
 end;
 ```
 
-### Conclusion
+**Services cloud alternatifs** :
+- **Azure Key Vault** : Microsoft Azure
+- **Google Cloud Secret Manager** : Google Cloud Platform
+- **HashiCorp Vault** : Solution open-source indépendante
 
-Le stockage sécurisé des identifiants est une composante critique de la sécurité des applications. En utilisant les techniques appropriées, vous pouvez protéger efficacement les informations sensibles contre les accès non autorisés.
+## Première configuration de l'application
 
-Dans ce chapitre, nous avons exploré différentes approches, des plus simples aux plus avancées, pour stocker et gérer les identifiants dans vos applications Delphi. Choisissez la méthode qui correspond le mieux à vos besoins de sécurité et aux exigences de votre application.
+### Invite utilisateur au premier lancement
 
-Rappelez-vous que la sécurité est un processus continu et qu'aucune solution n'est parfaite. Combinez ces techniques avec d'autres mesures de sécurité (comme celles présentées dans les chapitres précédents) pour une protection optimale.
-
-### Exercices pratiques
-
-1. **Créez une implémentation simple** de `TSecureCredentialManager` utilisant DPAPI pour stocker et récupérer une clé API.
-
-2. **Modifiez une application existante** qui stocke des identifiants en texte clair pour utiliser une des méthodes de stockage sécurisé présentées dans ce chapitre.
-
-3. **Créez un formulaire de gestion des identifiants** permettant à l'utilisateur de visualiser, modifier et supprimer ses identifiants stockés, avec les contrôles d'accès appropriés.
-
-4. **Implémentez la rotation automatique des identifiants** pour une application qui se connecte à une API externe, avec des notifications lorsque les identifiants sont sur le point d'expirer.
-
-5. **Comparez les performances** des différentes méthodes de stockage des identifiants en mesurant le temps nécessaire pour stocker et récupérer un grand nombre d'identifiants.
-
-6. **Pour les plus avancés** : Créez un système de gestion des identifiants multi-utilisateurs où chaque utilisateur ne peut accéder qu'à ses propres identifiants, même s'ils sont stockés dans le même fichier ou base de données.
-
-7. **Pour les plus avancés** : Développez une extension pour l'IDE Delphi qui permet de détecter et de sécuriser automatiquement les identifiants en texte clair dans le code.
-
-### Application pratique : Un gestionnaire de mots de passe simple
-
-Voici un exemple complet d'une application de gestion de mots de passe simple qui met en pratique les concepts présentés dans ce chapitre :
-
-```pas
-program SimplePasswordManager;
-
-{$APPTYPE GUI}
-
-uses
-  Vcl.Forms,
-  System.SysUtils,
-  System.Classes,
-  Vcl.Controls,
-  Vcl.StdCtrls,
-  Vcl.ExtCtrls,
-  Vcl.Dialogs,
-  Vcl.Grids,
-  System.Hash,
-  System.UITypes,
-  SecureCredentials in 'SecureCredentials.pas';
-
+```pascal
 type
-  TMainForm = class(TForm)
-    PanelTop: TPanel;
-    PanelBottom: TPanel;
-    StringGridCredentials: TStringGrid;
-    ButtonAdd: TButton;
-    ButtonEdit: TButton;
-    ButtonDelete: TButton;
-    ButtonExit: TButton;
-    LabelMasterPassword: TLabel;
-    EditMasterPassword: TEdit;
-    ButtonUnlock: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonAddClick(Sender: TObject);
-    procedure ButtonEditClick(Sender: TObject);
-    procedure ButtonDeleteClick(Sender: TObject);
-    procedure ButtonExitClick(Sender: TObject);
-    procedure ButtonUnlockClick(Sender: TObject);
-    procedure UpdateGrid;
-  private
-    FCredentialManager: TSecureCredentialManager;
-    FMasterPasswordHash: string;
-    FIsUnlocked: Boolean;
-    procedure SetupGrid;
-    procedure UnlockApp(const MasterPassword: string);
-    procedure LockApp;
-    procedure LoadCredentials;
-    procedure SaveCredentials;
-    function ShowCredentialDialog(const Title: string; var Name, Username, Password: string): Boolean;
+  TConfigurationInitiale = class
+  public
+    class procedure DemanderEtSauvegarderIdentifiants;
   end;
 
-var
-  MainForm: TMainForm;
-
-{$R *.dfm}
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser l'interface
-  Caption := 'Gestionnaire de Mots de Passe';
-  Position := poScreenCenter;
-  BorderStyle := bsDialog;
-  BorderIcons := [biSystemMenu];
-  Width := 600;
-  Height := 400;
-
-  // Configurer le panneau supérieur
-  PanelTop.Align := alTop;
-  PanelTop.Height := 50;
-  PanelTop.BevelOuter := bvNone;
-  PanelTop.ParentBackground := False;
-  PanelTop.ParentColor := False;
-  PanelTop.Color := clWhite;
-
-  // Configurer le panneau inférieur
-  PanelBottom.Align := alBottom;
-  PanelBottom.Height := 50;
-  PanelBottom.BevelOuter := bvNone;
-
-  // Configurer la grille
-  StringGridCredentials.Align := alClient;
-  StringGridCredentials.DefaultRowHeight := 22;
-  StringGridCredentials.RowCount := 1; // Juste l'en-tête au début
-  StringGridCredentials.Options := [goFixedVertLine, goFixedHorzLine,
-                                   goVertLine, goHorzLine,
-                                   goRowSelect, goThumbTracking];
-  StringGridCredentials.ColCount := 3;
-  StringGridCredentials.Cells[0, 0] := 'Site / Application';
-  StringGridCredentials.Cells[1, 0] := 'Nom d''utilisateur';
-  StringGridCredentials.Cells[2, 0] := 'Mot de passe';
-  StringGridCredentials.ColWidths[0] := 200;
-  StringGridCredentials.ColWidths[1] := 200;
-  StringGridCredentials.ColWidths[2] := 180;
-
-  // Configurer les boutons
-  ButtonAdd.Parent := PanelBottom;
-  ButtonAdd.Caption := 'Ajouter';
-  ButtonAdd.Left := 10;
-  ButtonAdd.Top := 10;
-  ButtonAdd.Width := 100;
-  ButtonAdd.Enabled := False;
-
-  ButtonEdit.Parent := PanelBottom;
-  ButtonEdit.Caption := 'Modifier';
-  ButtonEdit.Left := 120;
-  ButtonEdit.Top := 10;
-  ButtonEdit.Width := 100;
-  ButtonEdit.Enabled := False;
-
-  ButtonDelete.Parent := PanelBottom;
-  ButtonDelete.Caption := 'Supprimer';
-  ButtonDelete.Left := 230;
-  ButtonDelete.Top := 10;
-  ButtonDelete.Width := 100;
-  ButtonDelete.Enabled := False;
-
-  ButtonExit.Parent := PanelBottom;
-  ButtonExit.Caption := 'Quitter';
-  ButtonExit.Left := 490;
-  ButtonExit.Top := 10;
-  ButtonExit.Width := 100;
-
-  // Configurer le contrôle de mot de passe maître
-  LabelMasterPassword.Parent := PanelTop;
-  LabelMasterPassword.Caption := 'Mot de passe maître:';
-  LabelMasterPassword.Left := 10;
-  LabelMasterPassword.Top := 15;
-
-  EditMasterPassword.Parent := PanelTop;
-  EditMasterPassword.Left := 120;
-  EditMasterPassword.Top := 12;
-  EditMasterPassword.Width := 200;
-  EditMasterPassword.PasswordChar := '•';
-
-  ButtonUnlock.Parent := PanelTop;
-  ButtonUnlock.Caption := 'Déverrouiller';
-  ButtonUnlock.Left := 330;
-  ButtonUnlock.Top := 11;
-  ButtonUnlock.Width := 100;
-
-  // Charger le hash du mot de passe maître (dans une application réelle, cela serait stocké de manière sécurisée)
-  var AppDataPath := TPath.Combine(TPath.GetDocumentsPath, 'PasswordManager');
-
-  if not DirectoryExists(AppDataPath) then
-    ForceDirectories(AppDataPath);
-
-  var HashFile := TPath.Combine(AppDataPath, 'master.hash');
-
-  if FileExists(HashFile) then
-    FMasterPasswordHash := TFile.ReadAllText(HashFile)
-  else
-  begin
-    // Premier lancement, demander de créer un mot de passe maître
-    var NewPass := InputBox('Configuration', 'Créez un mot de passe maître:', '');
-
-    if NewPass = '' then
-    begin
-      ShowMessage('Un mot de passe maître est requis.');
-      Application.Terminate;
-      Exit;
-    end;
-
-    // Stocker le hash du mot de passe
-    FMasterPasswordHash := THashSHA2.GetHashString(NewPass);
-    TFile.WriteAllText(HashFile, FMasterPasswordHash);
-  end;
-
-  // Initialiser les autres variables
-  FIsUnlocked := False;
-
-  // Configurer l'accès à la grille
-  StringGridCredentials.Enabled := False;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FCredentialManager.Free;
-end;
-
-procedure TMainForm.ButtonUnlockClick(Sender: TObject);
-begin
-  UnlockApp(EditMasterPassword.Text);
-end;
-
-procedure TMainForm.UnlockApp(const MasterPassword: string);
-begin
-  // Vérifier le mot de passe maître
-  if THashSHA2.GetHashString(MasterPassword) = FMasterPasswordHash then
-  begin
-    FIsUnlocked := True;
-
-    // Initialiser le gestionnaire d'identifiants
-    FCredentialManager := TSecureCredentialManager.Create('PasswordManager');
-
-    // Activer les contrôles
-    ButtonAdd.Enabled := True;
-    ButtonEdit.Enabled := True;
-    ButtonDelete.Enabled := True;
-    StringGridCredentials.Enabled := True;
-
-    // Désactiver les contrôles de déverrouillage
-    LabelMasterPassword.Enabled := False;
-    EditMasterPassword.Enabled := False;
-    ButtonUnlock.Enabled := False;
-
-    // Changer le texte du bouton de déverrouillage
-    ButtonUnlock.Caption := 'Verrouiller';
-    ButtonUnlock.OnClick := procedure(Sender: TObject)
-    begin
-      LockApp;
-    end;
-
-    // Charger les identifiants
-    LoadCredentials;
-
-    ShowMessage('Application déverrouillée !');
-  end
-  else
-    ShowMessage('Mot de passe incorrect.');
-end;
-
-procedure TMainForm.LockApp;
-begin
-  FIsUnlocked := False;
-
-  // Libérer le gestionnaire d'identifiants
-  FreeAndNil(FCredentialManager);
-
-  // Désactiver les contrôles
-  ButtonAdd.Enabled := False;
-  ButtonEdit.Enabled := False;
-  ButtonDelete.Enabled := False;
-  StringGridCredentials.Enabled := False;
-
-  // Réactiver les contrôles de déverrouillage
-  LabelMasterPassword.Enabled := True;
-  EditMasterPassword.Enabled := True;
-  ButtonUnlock.Enabled := True;
-
-  // Changer le texte du bouton de déverrouillage
-  ButtonUnlock.Caption := 'Déverrouiller';
-  ButtonUnlock.OnClick := ButtonUnlockClick;
-
-  // Effacer le mot de passe
-  EditMasterPassword.Text := '';
-
-  // Effacer la grille
-  StringGridCredentials.RowCount := 1;
-
-  ShowMessage('Application verrouillée.');
-end;
-
-procedure TMainForm.LoadCredentials;
-var
-  CredentialList: TStringList;
-  I: Integer;
-  Name, Username, Password: string;
-begin
-  // Dans une application réelle, vous utiliseriez une méthode plus sophistiquée
-  // pour récupérer la liste des identifiants
-  CredentialList := TStringList.Create;
-  try
-    try
-      var ListPath := TPath.Combine(TPath.GetDocumentsPath, 'PasswordManager', 'credential_list.txt');
-
-      if FileExists(ListPath) then
-      begin
-        CredentialList.LoadFromFile(ListPath);
-
-        // Configurer la grille
-        StringGridCredentials.RowCount := CredentialList.Count + 1; // +1 pour l'en-tête
-
-        // Remplir la grille
-        for I := 0 to CredentialList.Count - 1 do
-        begin
-          Name := CredentialList[I];
-          Username := FCredentialManager.RetrieveCredential(Name + '_username', ctPassword);
-          Password := FCredentialManager.RetrieveCredential(Name + '_password', ctPassword);
-
-          StringGridCredentials.Cells[0, I + 1] := Name;
-          StringGridCredentials.Cells[1, I + 1] := Username;
-          StringGridCredentials.Cells[2, I + 1] := StringOfChar('*', Length(Password));
-        end;
-      end
-      else
-        StringGridCredentials.RowCount := 1; // Juste l'en-tête
-    except
-      on E: Exception do
-        ShowMessage('Erreur lors du chargement des identifiants : ' + E.Message);
-    end;
-  finally
-    CredentialList.Free;
-  end;
-end;
-
-procedure TMainForm.SaveCredentials;
-var
-  CredentialList: TStringList;
-  I: Integer;
-begin
-  // Sauvegarder la liste des noms d'identifiants
-  CredentialList := TStringList.Create;
-  try
-    for I := 1 to StringGridCredentials.RowCount - 1 do
-      CredentialList.Add(StringGridCredentials.Cells[0, I]);
-
-    var ListPath := TPath.Combine(TPath.GetDocumentsPath, 'PasswordManager', 'credential_list.txt');
-    CredentialList.SaveToFile(ListPath);
-  finally
-    CredentialList.Free;
-  end;
-end;
-
-function TMainForm.ShowCredentialDialog(const Title: string; var Name, Username, Password: string): Boolean;
+class procedure TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;
 var
   Form: TForm;
-  LabelName, LabelUsername, LabelPassword: TLabel;
-  EditName, EditUsername, EditPassword: TEdit;
-  ButtonOK, ButtonCancel: TButton;
+  EditServer: TEdit;
+  EditDatabase: TEdit;
+  EditUser: TEdit;
+  EditPassword: TEdit;
+  BtnOK: TButton;
+  ModalResult: Integer;
 begin
-  Result := False;
+  // Vérifier si c'est la première exécution
+  if TGestionSecrets.Existe('DB_Password') then
+    Exit; // Déjà configuré
 
-  // Créer le formulaire
   Form := TForm.Create(nil);
   try
-    Form.Caption := Title;
-    Form.Position := poScreenCenter;
-    Form.BorderStyle := bsDialog;
+    Form.Caption := 'Configuration initiale';
     Form.Width := 400;
-    Form.Height := 200;
+    Form.Height := 250;
+    Form.Position := poScreenCenter;
 
-    // Labels
-    LabelName := TLabel.Create(Form);
-    LabelName.Parent := Form;
-    LabelName.Caption := 'Site / Application:';
-    LabelName.Left := 20;
-    LabelName.Top := 20;
+    // Créer les contrôles
+    EditServer := TEdit.Create(Form);
+    EditServer.Parent := Form;
+    EditServer.Left := 20;
+    EditServer.Top := 30;
+    EditServer.Width := 350;
+    EditServer.TextHint := 'Serveur de base de données';
 
-    LabelUsername := TLabel.Create(Form);
-    LabelUsername.Parent := Form;
-    LabelUsername.Caption := 'Nom d''utilisateur:';
-    LabelUsername.Left := 20;
-    LabelUsername.Top := 50;
+    EditDatabase := TEdit.Create(Form);
+    EditDatabase.Parent := Form;
+    EditDatabase.Left := 20;
+    EditDatabase.Top := 60;
+    EditDatabase.Width := 350;
+    EditDatabase.TextHint := 'Nom de la base de données';
 
-    LabelPassword := TLabel.Create(Form);
-    LabelPassword.Parent := Form;
-    LabelPassword.Caption := 'Mot de passe:';
-    LabelPassword.Left := 20;
-    LabelPassword.Top := 80;
-
-    // Edits
-    EditName := TEdit.Create(Form);
-    EditName.Parent := Form;
-    EditName.Left := 150;
-    EditName.Top := 20;
-    EditName.Width := 220;
-    EditName.Text := Name;
-
-    EditUsername := TEdit.Create(Form);
-    EditUsername.Parent := Form;
-    EditUsername.Left := 150;
-    EditUsername.Top := 50;
-    EditUsername.Width := 220;
-    EditUsername.Text := Username;
+    EditUser := TEdit.Create(Form);
+    EditUser.Parent := Form;
+    EditUser.Left := 20;
+    EditUser.Top := 90;
+    EditUser.Width := 350;
+    EditUser.TextHint := 'Nom d''utilisateur';
 
     EditPassword := TEdit.Create(Form);
     EditPassword.Parent := Form;
-    EditPassword.Left := 150;
-    EditPassword.Top := 80;
-    EditPassword.Width := 220;
-    EditPassword.Text := Password;
-    EditPassword.PasswordChar := '•';
+    EditPassword.Left := 20;
+    EditPassword.Top := 120;
+    EditPassword.Width := 350;
+    EditPassword.TextHint := 'Mot de passe';
+    EditPassword.PasswordChar := '*';
 
-    // Buttons
-    ButtonOK := TButton.Create(Form);
-    ButtonOK.Parent := Form;
-    ButtonOK.Caption := 'OK';
-    ButtonOK.Left := 210;
-    ButtonOK.Top := 130;
-    ButtonOK.Width := 75;
-    ButtonOK.Default := True;
-    ButtonOK.ModalResult := mrOk;
+    BtnOK := TButton.Create(Form);
+    BtnOK.Parent := Form;
+    BtnOK.Caption := 'Enregistrer';
+    BtnOK.Left := 150;
+    BtnOK.Top := 160;
+    BtnOK.ModalResult := mrOk;
 
-    ButtonCancel := TButton.Create(Form);
-    ButtonCancel.Parent := Form;
-    ButtonCancel.Caption := 'Annuler';
-    ButtonCancel.Left := 295;
-    ButtonCancel.Top := 130;
-    ButtonCancel.Width := 75;
-    ButtonCancel.Cancel := True;
-    ButtonCancel.ModalResult := mrCancel;
+    ModalResult := Form.ShowModal;
 
-    // Afficher le dialogue
-    if Form.ShowModal = mrOk then
+    if ModalResult = mrOk then
     begin
-      // Validation
-      if (EditName.Text = '') or (EditUsername.Text = '') or (EditPassword.Text = '') then
-      begin
-        ShowMessage('Tous les champs sont obligatoires.');
-        Exit;
-      end;
+      // Sauvegarder de manière sécurisée
+      TGestionSecrets.Sauvegarder('DB_Server', EditServer.Text);
+      TGestionSecrets.Sauvegarder('DB_Database', EditDatabase.Text);
+      TGestionSecrets.Sauvegarder('DB_User', EditUser.Text);
+      TGestionSecrets.Sauvegarder('DB_Password', EditPassword.Text);
 
-      Name := EditName.Text;
-      Username := EditUsername.Text;
-      Password := EditPassword.Text;
-      Result := True;
+      ShowMessage('Configuration enregistrée de manière sécurisée');
     end;
   finally
     Form.Free;
   end;
 end;
 
-procedure TMainForm.ButtonAddClick(Sender: TObject);
-var
-  Name, Username, Password: string;
+// Appeler au démarrage de l'application
+procedure TFormPrincipal.FormCreate(Sender: TObject);
 begin
-  Name := '';
-  Username := '';
-  Password := '';
+  TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;
 
-  if ShowCredentialDialog('Ajouter un identifiant', Name, Username, Password) then
-  begin
-    // Vérifier si le nom existe déjà
-    for var I := 1 to StringGridCredentials.RowCount - 1 do
-    begin
-      if StringGridCredentials.Cells[0, I] = Name then
-      begin
-        ShowMessage('Un identifiant avec ce nom existe déjà.');
-        Exit;
-      end;
-    end;
-
-    // Stocker l'identifiant
-    FCredentialManager.StoreCredential(Name + '_username', Username, ctPassword);
-    FCredentialManager.StoreCredential(Name + '_password', Password, ctPassword);
-
-    // Ajouter à la grille
-    StringGridCredentials.RowCount := StringGridCredentials.RowCount + 1;
-    var NewRow := StringGridCredentials.RowCount - 1;
-
-    StringGridCredentials.Cells[0, NewRow] := Name;
-    StringGridCredentials.Cells[1, NewRow] := Username;
-    StringGridCredentials.Cells[2, NewRow] := StringOfChar('*', Length(Password));
-
-    // Sauvegarder la liste
-    SaveCredentials;
-
-    ShowMessage('Identifiant ajouté avec succès.');
-  end;
+  // Charger la configuration
+  ChargerConfiguration;
 end;
-
-procedure TMainForm.ButtonEditClick(Sender: TObject);
-var
-  SelectedRow: Integer;
-  Name, Username, Password: string;
-begin
-  SelectedRow := StringGridCredentials.Row;
-
-  // Vérifier qu'une ligne est sélectionnée
-  if (SelectedRow <= 0) or (SelectedRow >= StringGridCredentials.RowCount) then
-  begin
-    ShowMessage('Veuillez sélectionner un identifiant à modifier.');
-    Exit;
-  end;
-
-  // Récupérer les informations actuelles
-  Name := StringGridCredentials.Cells[0, SelectedRow];
-  Username := FCredentialManager.RetrieveCredential(Name + '_username', ctPassword);
-  Password := FCredentialManager.RetrieveCredential(Name + '_password', ctPassword);
-
-  // Afficher le dialogue d'édition
-  if ShowCredentialDialog('Modifier l''identifiant', Name, Username, Password) then
-  begin
-    // Vérifier si le nouveau nom n'existe pas déjà (sauf s'il s'agit du même)
-    for var I := 1 to StringGridCredentials.RowCount - 1 do
-    begin
-      if (I <> SelectedRow) and (StringGridCredentials.Cells[0, I] = Name) then
-      begin
-        ShowMessage('Un identifiant avec ce nom existe déjà.');
-        Exit;
-      end;
-    end;
-
-    // Supprimer l'ancien identifiant si le nom a changé
-    var OldName := StringGridCredentials.Cells[0, SelectedRow];
-    if OldName <> Name then
-    begin
-      FCredentialManager.DeleteCredential(OldName + '_username', ctPassword);
-      FCredentialManager.DeleteCredential(OldName + '_password', ctPassword);
-    end;
-
-    // Stocker le nouvel identifiant
-    FCredentialManager.StoreCredential(Name + '_username', Username, ctPassword);
-    FCredentialManager.StoreCredential(Name + '_password', Password, ctPassword);
-
-    // Mettre à jour la grille
-    StringGridCredentials.Cells[0, SelectedRow] := Name;
-    StringGridCredentials.Cells[1, SelectedRow] := Username;
-    StringGridCredentials.Cells[2, SelectedRow] := StringOfChar('*', Length(Password));
-
-    // Sauvegarder la liste
-    SaveCredentials;
-
-    ShowMessage('Identifiant modifié avec succès.');
-  end;
-end;
-
-procedure TMainForm.ButtonDeleteClick(Sender: TObject);
-var
-  SelectedRow: Integer;
-  Name: string;
-begin
-  SelectedRow := StringGridCredentials.Row;
-
-  // Vérifier qu'une ligne est sélectionnée
-  if (SelectedRow <= 0) or (SelectedRow >= StringGridCredentials.RowCount) then
-  begin
-    ShowMessage('Veuillez sélectionner un identifiant à supprimer.');
-    Exit;
-  end;
-
-  Name := StringGridCredentials.Cells[0, SelectedRow];
-
-  // Demander confirmation
-  if MessageDlg('Êtes-vous sûr de vouloir supprimer l''identifiant "' + Name + '" ?',
-                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-  begin
-    // Supprimer l'identifiant
-    FCredentialManager.DeleteCredential(Name + '_username', ctPassword);
-    FCredentialManager.DeleteCredential(Name + '_password', ctPassword);
-
-    // Supprimer de la grille
-    for var I := SelectedRow to StringGridCredentials.RowCount - 2 do
-    begin
-      StringGridCredentials.Cells[0, I] := StringGridCredentials.Cells[0, I + 1];
-      StringGridCredentials.Cells[1, I] := StringGridCredentials.Cells[1, I + 1];
-      StringGridCredentials.Cells[2, I] := StringGridCredentials.Cells[2, I + 1];
-    end;
-
-    StringGridCredentials.RowCount := StringGridCredentials.RowCount - 1;
-
-    // Sauvegarder la liste
-    SaveCredentials;
-
-    ShowMessage('Identifiant supprimé avec succès.');
-  end;
-end;
-
-procedure TMainForm.ButtonExitClick(Sender: TObject);
-begin
-  Close;
-end;
-
-procedure TMainForm.UpdateGrid;
-begin
-  // Mettre à jour les colonnes
-  StringGridCredentials.ColWidths[0] := 200;
-  StringGridCredentials.ColWidths[1] := 200;
-  StringGridCredentials.ColWidths[2] := 180;
-end;
-
-begin
-  Application.Initialize;
-  Application.CreateForm(TMainForm, MainForm);
-  Application.Run;
-end.
 ```
 
-Cette application illustre une façon simple de gérer des identifiants de manière sécurisée. Dans une application réelle, vous utiliseriez des techniques de chiffrement plus avancées et des contrôles de sécurité supplémentaires.
+## Rotation des secrets
 
-En mettant en pratique les concepts présentés dans ce chapitre, vous pourrez garantir que les informations sensibles de vos utilisateurs sont protégées de manière adéquate, contribuant ainsi à la sécurité globale de vos applications Delphi.
+Il est important de changer régulièrement les identifiants :
+
+```pascal
+type
+  TRotationSecrets = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure RoterMotDePasseBD;
+    procedure RoterCleAPI;
+    procedure VerifierDateExpiration;
+  end;
+
+constructor TRotationSecrets.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TRotationSecrets.RoterMotDePasseBD;
+var
+  NouveauPassword: string;
+  Query: TFDQuery;
+begin
+  // Générer un nouveau mot de passe fort
+  NouveauPassword := GenererMotDePasseFort(32);
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    // Changer le mot de passe dans MySQL
+    Query.SQL.Text := 'ALTER USER ''monuser''@''localhost'' IDENTIFIED BY :NewPassword';
+    Query.ParamByName('NewPassword').AsString := NouveauPassword;
+    Query.ExecSQL;
+
+    // Sauvegarder le nouveau mot de passe
+    TGestionSecrets.Sauvegarder('DB_Password', NouveauPassword);
+
+    // Logger l'événement
+    TLogger.Instance.Info('Rotation mot de passe BD', 'Succès');
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TRotationSecrets.VerifierDateExpiration;
+var
+  DateDerniereRotation: TDateTime;
+  JoursDepuisRotation: Integer;
+begin
+  // Lire la date de dernière rotation
+  DateDerniereRotation := StrToDateDef(
+    TGestionSecrets.Charger('LastPasswordRotation'),
+    Now - 365  // Par défaut : il y a 1 an
+  );
+
+  JoursDepuisRotation := DaysBetween(Now, DateDerniereRotation);
+
+  // Rotation tous les 90 jours
+  if JoursDepuisRotation > 90 then
+  begin
+    ShowMessage('Le mot de passe de la base de données doit être changé');
+    // Déclencher la rotation ou avertir l'administrateur
+  end;
+end;
+
+function GenererMotDePasseFort(ALongueur: Integer): string;
+const
+  CARACTERES = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+var
+  i: Integer;
+begin
+  Result := '';
+  Randomize;
+  for i := 1 to ALongueur do
+    Result := Result + CARACTERES[Random(Length(CARACTERES)) + 1];
+end;
+```
+
+## Audit des accès aux secrets
+
+```pascal
+type
+  TAuditSecrets = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure LoggerAccesSecret(const ANomSecret: string; AIDUtilisateur: Integer);
+    procedure GenererRapportAcces(const ANomFichier: string);
+  end;
+
+constructor TAuditSecrets.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TAuditSecrets.LoggerAccesSecret(const ANomSecret: string; AIDUtilisateur: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsAccesSecrets (NomSecret, IDUtilisateur, DateHeure) ' +
+      'VALUES (:Nom, :IDUser, NOW())';
+    Query.ParamByName('Nom').AsString := ANomSecret;
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TAuditSecrets.GenererRapportAcces(const ANomFichier: string);
+var
+  Query: TFDQuery;
+  Fichier: TextFile;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'SELECT las.DateHeure, u.Username, las.NomSecret ' +
+      'FROM LogsAccesSecrets las ' +
+      'JOIN Users u ON las.IDUtilisateur = u.ID ' +
+      'WHERE las.DateHeure >= DATE_SUB(NOW(), INTERVAL 30 DAY) ' +
+      'ORDER BY las.DateHeure DESC';
+    Query.Open;
+
+    AssignFile(Fichier, ANomFichier);
+    Rewrite(Fichier);
+    try
+      WriteLn(Fichier, 'RAPPORT D''ACCÈS AUX SECRETS - 30 derniers jours');
+      WriteLn(Fichier, StringOfChar('=', 70));
+      WriteLn(Fichier, '');
+
+      while not Query.Eof do
+      begin
+        WriteLn(Fichier, Format('%s | %s | %s',
+          [DateTimeToStr(Query.FieldByName('DateHeure').AsDateTime),
+           Query.FieldByName('Username').AsString,
+           Query.FieldByName('NomSecret').AsString]));
+        Query.Next;
+      end;
+    finally
+      CloseFile(Fichier);
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+## Bonnes pratiques
+
+### ✅ À faire
+
+**1. Utiliser les API système appropriées**
+```pascal
+// ✅ Windows → DPAPI
+// ✅ macOS → Keychain
+// ✅ Linux → Secret Service API
+// ✅ Mobile → Stockage sécurisé natif
+```
+
+**2. Ne jamais commiter les secrets dans Git**
+```
+# Ajouter dans .gitignore
+config.secure
+*.dat
+*.enc
+.env
+secrets/
+```
+
+**3. Chiffrer avant de stocker**
+```pascal
+// ✅ BON
+MotDePasseChiffre := TDPAPIHelper.ChiffrerDonnees(MotDePasse);
+SauvegarderDansFichier(MotDePasseChiffre);
+
+// ❌ MAUVAIS
+SauvegarderDansFichier(MotDePasse); // En clair !
+```
+
+**4. Limiter l'accès**
+```pascal
+// Permissions restrictives sur les fichiers de secrets
+// Windows : Uniquement l'utilisateur actuel
+// Linux : chmod 600 fichier_secrets.dat
+```
+
+**5. Auditer les accès**
+```pascal
+// Logger chaque fois qu'un secret est lu
+procedure ChargerSecret(const ANom: string): string;
+begin
+  Result := TGestionSecrets.Charger(ANom);
+  AuditSecrets.LoggerAcces(ANom, UtilisateurActuel);
+end;
+```
+
+**6. Rotation régulière**
+```pascal
+// Changer les mots de passe tous les 90 jours
+// Utiliser un système automatisé
+```
+
+### ❌ À éviter
+
+**1. Secrets dans le code**
+```pascal
+// ❌ JAMAIS ça
+const API_KEY = 'sk_live_...';
+```
+
+**2. Logs avec secrets**
+```pascal
+// ❌ DANGEREUX
+TLogger.Log('Connexion avec password: ' + Password);
+
+// ✅ BON
+TLogger.Log('Connexion réussie pour utilisateur: ' + Username);
+```
+
+**3. Transmission non chiffrée**
+```pascal
+// ❌ Envoyer par email
+// ❌ Envoyer par messagerie instantanée
+// ❌ Mettre dans un document partagé
+
+// ✅ Utiliser un gestionnaire de secrets
+```
+
+**4. Un seul secret pour tout**
+```pascal
+// ❌ MAUVAIS - même mot de passe partout
+const MASTER_PASSWORD = 'admin123';
+
+// ✅ BON - secrets différents pour chaque service
+DBPassword := TGestionSecrets.Charger('DB_Password');
+APIKey := TGestionSecrets.Charger('API_Key');
+```
+
+## Checklist de sécurité des identifiants
+
+Avant le déploiement :
+
+### Stockage
+- [ ] Aucun secret dans le code source
+- [ ] Secrets chiffrés au repos
+- [ ] Utilisation des API système (DPAPI, Keychain)
+- [ ] Fichiers de secrets avec permissions restrictives
+- [ ] Pas de secrets dans le contrôle de version (Git)
+
+### Accès
+- [ ] Principe du moindre privilège
+- [ ] Audit des accès aux secrets
+- [ ] Secrets différents par environnement (dev/prod)
+- [ ] Révocation possible en cas de compromission
+
+### Maintenance
+- [ ] Rotation régulière des secrets (90 jours)
+- [ ] Procédure de révocation documentée
+- [ ] Sauvegarde chiffrée des secrets
+- [ ] Plan de récupération en cas de perte
+
+### Transmission
+- [ ] Jamais par email ou chat
+- [ ] Utilisation de canaux sécurisés
+- [ ] Chiffrement bout-en-bout
+- [ ] Durée de vie limitée des tokens
+
+### Développement
+- [ ] Variables d'environnement en développement
+- [ ] Secrets factices dans les tests
+- [ ] Documentation sans secrets réels
+- [ ] Formation de l'équipe
+
+## Résumé des points essentiels
+
+✅ **Solutions recommandées par plateforme** :
+- **Windows** : DPAPI (Data Protection API)
+- **macOS** : Keychain
+- **Linux** : Secret Service API ou chiffrement avec clé dérivée
+- **Mobile** : Stockage sécurisé natif (iOS Keychain, Android Keystore)
+- **Cloud** : Services de gestion de secrets (AWS Secrets Manager, Azure Key Vault)
+
+❌ **Erreurs fatales à éviter** :
+- Secrets en clair dans le code source
+- Mots de passe dans les fichiers de configuration non chiffrés
+- Commit de secrets dans Git
+- Même mot de passe pour tous les services
+- Pas de rotation des identifiants
+- Transmission de secrets par canaux non sécurisés
+
+🔒 **Règles d'or** :
+1. Ne JAMAIS stocker de secrets en clair
+2. Utiliser les outils système appropriés
+3. Chiffrer avant de sauvegarder
+4. Auditer tous les accès
+5. Rotation régulière (90 jours max)
+6. Séparation dev/prod
+7. Formation de l'équipe
+
+## Aller plus loin
+
+**Outils recommandés** :
+- **HashiCorp Vault** : Gestion centralisée des secrets
+- **Azure Key Vault** : Solution Microsoft Cloud
+- **AWS Secrets Manager** : Solution Amazon Cloud
+- **1Password CLI** : Pour les équipes de développement
+- **Git-secrets** : Prévenir les commits de secrets
+
+**Ressources** :
+- OWASP Secrets Management Cheat Sheet
+- NIST Guidelines on Password Management
+- Documentation DPAPI Microsoft
+- Guide de sécurité des API cloud
+
+Le stockage sécurisé des identifiants n'est pas une option, c'est une nécessité absolue. Un seul secret compromis peut donner accès à l'ensemble de votre système. Prenez le temps de le faire correctement dès le début.
 
 ⏭️ [GDPR et confidentialité des données](/16-securite-des-applications/08-gdpr-et-confidentialite-des-donnees.md)
-
-

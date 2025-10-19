@@ -1,569 +1,528 @@
-# 16. Sécurité des applications
-## 16.1 Authentification des utilisateurs
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.1 Authentification des utilisateurs
 
-L'authentification des utilisateurs est une fonctionnalité essentielle pour de nombreuses applications modernes. Elle permet de vérifier l'identité d'un utilisateur et de lui accorder des droits spécifiques. Dans ce chapitre, nous allons explorer différentes méthodes d'authentification que vous pouvez implémenter dans vos applications Delphi.
+## Introduction
 
-### Qu'est-ce que l'authentification ?
+L'authentification des utilisateurs est un mécanisme fondamental de sécurité qui permet de vérifier l'identité d'une personne souhaitant accéder à votre application. C'est généralement la première ligne de défense pour protéger vos données et fonctionnalités sensibles.
 
-L'authentification est le processus de vérification de l'identité d'un utilisateur. En termes simples, c'est le mécanisme qui permet de confirmer qu'une personne est bien celle qu'elle prétend être. Ce processus est généralement basé sur un ou plusieurs des éléments suivants :
+**Qu'est-ce que l'authentification ?**
 
-- **Quelque chose que l'utilisateur connaît** : un mot de passe, un code PIN
-- **Quelque chose que l'utilisateur possède** : un téléphone, une carte à puce
-- **Quelque chose que l'utilisateur est** : empreinte digitale, reconnaissance faciale
+L'authentification répond à la question : "Qui êtes-vous ?" Elle permet de s'assurer que l'utilisateur est bien celui qu'il prétend être, généralement via un nom d'utilisateur et un mot de passe.
 
-### Méthodes d'authentification courantes dans Delphi
+> **À ne pas confondre avec l'autorisation** : L'authentification vérifie l'identité, tandis que l'autorisation détermine ce que l'utilisateur peut faire une fois authentifié.
 
-#### 1. Authentification par mot de passe
+## Les différents types d'authentification
 
-C'est la méthode la plus répandue. Voici comment implémenter une authentification basique par nom d'utilisateur et mot de passe avec une base de données MySQL/MariaDB :
+### 1. Authentification simple (nom d'utilisateur/mot de passe)
 
-```pas
-procedure TFormLogin.ButtonLoginClick(Sender: TObject);
-var
-  Query: TFDQuery;
-  HashedPassword: string;
-begin
-  // Ne jamais stocker les mots de passe en clair !
-  // Toujours utiliser une fonction de hachage
-  HashedPassword := THashSHA2.GetHashString(EditPassword.Text);
+C'est la méthode la plus courante et la plus simple à implémenter. L'utilisateur fournit :
+- Un identifiant unique (nom d'utilisateur, email, etc.)
+- Un mot de passe secret
 
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := DataModule1.FDConnection1;
-    Query.SQL.Text := 'SELECT id, username, role FROM users ' +
-                      'WHERE username = :username AND password_hash = :password';
-    Query.ParamByName('username').AsString := EditUsername.Text;
-    Query.ParamByName('password').AsString := HashedPassword;
-    Query.Open;
+### 2. Authentification à deux facteurs (2FA)
 
-    if Query.RecordCount > 0 then
-    begin
-      // Authentification réussie
-      Session.LoggedUser := Query.FieldByName('username').AsString;
-      Session.UserRole := Query.FieldByName('role').AsString;
-      Session.UserId := Query.FieldByName('id').AsInteger;
-      Session.IsAuthenticated := True;
+Cette méthode ajoute une couche de sécurité supplémentaire en demandant :
+- Quelque chose que vous savez (mot de passe)
+- Quelque chose que vous possédez (code SMS, application d'authentification)
 
-      ShowMessage('Connexion réussie !');
-      ModalResult := mrOk;
-    end
-    else
-    begin
-      // Échec de l'authentification
-      ShowMessage('Nom d'utilisateur ou mot de passe incorrect.');
-      EditPassword.Clear;
-      EditPassword.SetFocus;
-    end;
-  finally
-    Query.Free;
-  end;
-end;
+### 3. Authentification biométrique
+
+Utilise des caractéristiques physiques uniques :
+- Empreinte digitale
+- Reconnaissance faciale
+- Scan de l'iris
+
+### 4. Authentification par certificat
+
+Utilise des certificats numériques pour identifier l'utilisateur, courante dans les environnements d'entreprise.
+
+## Concepts fondamentaux
+
+### Hash de mot de passe
+
+**Règle d'or** : Ne jamais stocker les mots de passe en clair dans votre base de données !
+
+Un hash est une fonction mathématique qui transforme un mot de passe en une chaîne de caractères unique et irréversible.
+
+**Exemple de transformation** :
+```
+Mot de passe : "MonMotDePasse123"
+Hash (SHA-256) : "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
 ```
 
-> ⚠️ **Important** : Ne stockez jamais les mots de passe en texte clair dans votre base de données. Utilisez toujours des fonctions de hachage comme SHA-256 avec une valeur aléatoire (sel) unique pour chaque utilisateur.
+**Propriétés importantes du hash** :
+- Irréversible : impossible de retrouver le mot de passe original à partir du hash
+- Unique : deux mots de passe différents produisent des hash différents
+- Déterministe : le même mot de passe produit toujours le même hash
 
-#### 2. Authentification à deux facteurs (2FA)
+### Salt (sel cryptographique)
 
-Pour améliorer la sécurité, vous pouvez implémenter l'authentification à deux facteurs. Après la vérification du mot de passe, l'utilisateur doit fournir un code temporaire généralement envoyé par SMS ou généré par une application d'authentification.
+Un salt est une valeur aléatoire ajoutée au mot de passe avant le hashage pour renforcer la sécurité.
 
-```pas
-// Nécessite Delphi 12 ou supérieur pour certaines bibliothèques de cryptographie
-procedure TForm2FA.ButtonVerifyCodeClick(Sender: TObject);
-var
-  TOTPGenerator: TTOTPGenerator;
-  IsValid: Boolean;
-begin
-  TOTPGenerator := TTOTPGenerator.Create;
-  try
-    TOTPGenerator.SecretKey := Session.UserTOTPSecret;  // Clé secrète stockée pour l'utilisateur
-    IsValid := TOTPGenerator.VerifyCode(EditVerificationCode.Text);
+**Pourquoi utiliser un salt ?**
+- Empêche les attaques par rainbow tables (tables précalculées de hash)
+- Même si deux utilisateurs ont le même mot de passe, leurs hash seront différents
 
-    if IsValid then
-    begin
-      Session.Is2FAVerified := True;
-      ModalResult := mrOk;
-    end
-    else
-    begin
-      ShowMessage('Code de vérification incorrect.');
-      EditVerificationCode.Clear;
-      EditVerificationCode.SetFocus;
-    end;
-  finally
-    TOTPGenerator.Free;
-  end;
-end;
+**Exemple** :
+```
+Utilisateur 1 : "password" + salt "abc123" → hash différent
+Utilisateur 2 : "password" + salt "xyz789" → hash différent
 ```
 
-> 💡 **Astuce** : Vous pouvez utiliser des bibliothèques tierces comme [DelphiOTP](https://github.com/wendelb/DelphiOTP) pour implémenter facilement le TOTP (Time-based One-Time Password).
+### Session utilisateur
 
-#### 3. Authentification par jeton (Token)
+Une fois l'utilisateur authentifié, on crée une session qui permet de :
+- Garder l'utilisateur connecté pendant sa navigation
+- Stocker des informations temporaires (rôle, préférences)
+- Éviter de redemander le mot de passe à chaque action
 
-Cette méthode est particulièrement utile pour les applications qui communiquent avec des API ou des services web. Une fois l'utilisateur authentifié, un jeton lui est délivré et utilisé pour les requêtes suivantes.
+## Implémentation basique dans Delphi
 
-```pas
-function TAuthService.GetAuthToken(Username, Password: string): string;
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-begin
-  Result := '';
+### Structure de la base de données
 
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-  try
-    RESTClient.BaseURL := 'https://api.example.com/auth';
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
-
-    // Ajout des paramètres d'authentification
-    RESTRequest.AddParameter('username', Username);
-    RESTRequest.AddParameter('password', Password);
-
-    // Exécution de la requête
-    RESTRequest.Execute;
-
-    // Vérification de la réponse
-    if RESTResponse.StatusCode = 200 then
-    begin
-      // Extraction du jeton depuis la réponse JSON
-      Result := RESTResponse.JSONValue.GetValue<string>('token');
-
-      // Stockage du jeton pour une utilisation future
-      Session.AuthToken := Result;
-      Session.TokenExpiry := Now + (1/24); // Expire dans 1 heure
-    end;
-  finally
-    RESTResponse.Free;
-    RESTRequest.Free;
-    RESTClient.Free;
-  end;
-end;
-```
-
-### Stockage sécurisé des informations d'authentification
-
-#### Sessions utilisateur
-
-Pour gérer les informations d'authentification pendant l'exécution de l'application, créez une classe de session :
-
-```pas
-unit UserSession;
-
-interface
-
-type
-  TUserSession = class
-  private
-    FIsAuthenticated: Boolean;
-    FLoggedUser: string;
-    FUserRole: string;
-    FUserId: Integer;
-    FAuthToken: string;
-    FTokenExpiry: TDateTime;
-    FIs2FAVerified: Boolean;
-  public
-    constructor Create;
-    procedure Clear;
-    property IsAuthenticated: Boolean read FIsAuthenticated write FIsAuthenticated;
-    property LoggedUser: string read FLoggedUser write FLoggedUser;
-    property UserRole: string read FUserRole write FUserRole;
-    property UserId: Integer read FUserId write FUserId;
-    property AuthToken: string read FAuthToken write FAuthToken;
-    property TokenExpiry: TDateTime read FTokenExpiry write FTokenExpiry;
-    property Is2FAVerified: Boolean read FIs2FAVerified write FIs2FAVerified;
-  end;
-
-var
-  Session: TUserSession;
-
-implementation
-
-constructor TUserSession.Create;
-begin
-  inherited;
-  Clear;
-end;
-
-procedure TUserSession.Clear;
-begin
-  FIsAuthenticated := False;
-  FLoggedUser := '';
-  FUserRole := '';
-  FUserId := 0;
-  FAuthToken := '';
-  FTokenExpiry := 0;
-  FIs2FAVerified := False;
-end;
-
-initialization
-  Session := TUserSession.Create;
-
-finalization
-  Session.Free;
-
-end.
-```
-
-#### Stockage persistant des informations d'authentification
-
-Pour permettre à l'utilisateur de rester connecté entre les sessions, vous pouvez stocker les informations de manière sécurisée :
-
-```pas
-// Nécessite Delphi 12 ou supérieur pour les fonctions avancées de cryptographie
-procedure SaveRememberMeToken(UserId: Integer; Token: string);
-var
-  EncryptedToken: string;
-  IniFile: TIniFile;
-begin
-  // Chiffrer le jeton avant de le stocker
-  EncryptedToken := TNetEncoding.Base64.Encode(
-    TCipher.AES.Encrypt(Token, AppSecretKey)
-  );
-
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    IniFile.WriteString('Auth', 'UserID', IntToStr(UserId));
-    IniFile.WriteString('Auth', 'RememberToken', EncryptedToken);
-    IniFile.WriteDateTime('Auth', 'Expiry', Now + 30); // Expire dans 30 jours
-  finally
-    IniFile.Free;
-  end;
-end;
-
-function TryAutoLogin: Boolean;
-var
-  IniFile: TIniFile;
-  EncryptedToken, Token: string;
-  UserId: Integer;
-  Expiry: TDateTime;
-  Query: TFDQuery;
-begin
-  Result := False;
-
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    if not IniFile.SectionExists('Auth') then
-      Exit;
-
-    UserId := StrToIntDef(IniFile.ReadString('Auth', 'UserID', '0'), 0);
-    EncryptedToken := IniFile.ReadString('Auth', 'RememberToken', '');
-    Expiry := IniFile.ReadDateTime('Auth', 'Expiry', 0);
-
-    // Vérifier si le jeton n'est pas expiré
-    if (UserId = 0) or (EncryptedToken = '') or (Now > Expiry) then
-      Exit;
-
-    // Déchiffrer le jeton
-    try
-      Token := TCipher.AES.Decrypt(
-        TNetEncoding.Base64.Decode(EncryptedToken),
-        AppSecretKey
-      );
-    except
-      Exit;
-    end;
-
-    // Vérifier le jeton en base de données
-    Query := TFDQuery.Create(nil);
-    try
-      Query.Connection := DataModule1.FDConnection1;
-      Query.SQL.Text := 'SELECT username, role FROM users ' +
-                        'WHERE id = :id AND remember_token = :token';
-      Query.ParamByName('id').AsInteger := UserId;
-      Query.ParamByName('token').AsString := Token;
-      Query.Open;
-
-      if Query.RecordCount > 0 then
-      begin
-        // Authentification automatique réussie
-        Session.LoggedUser := Query.FieldByName('username').AsString;
-        Session.UserRole := Query.FieldByName('role').AsString;
-        Session.UserId := UserId;
-        Session.IsAuthenticated := True;
-
-        Result := True;
-      end;
-    finally
-      Query.Free;
-    end;
-  finally
-    IniFile.Free;
-  end;
-end;
-```
-
-> ⚠️ **Sécurité** : Pour les applications professionnelles ou traitant des données sensibles, envisagez d'utiliser un stockage encore plus sécurisé comme le Credential Manager de Windows ou le Keychain sur macOS.
-
-### Création d'un formulaire de connexion complet
-
-Voici un exemple de formulaire de connexion complet intégrant les bonnes pratiques :
-
-```pas
-unit LoginForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, System.Hash, UserSession, DataModule;
-
-type
-  TFormLogin = class(TForm)
-    EditUsername: TEdit;
-    EditPassword: TEdit;
-    ButtonLogin: TButton;
-    CheckBoxRememberMe: TCheckBox;
-    LabelForgotPassword: TLabel;
-    PanelBottom: TPanel;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonLoginClick(Sender: TObject);
-    procedure LabelForgotPasswordClick(Sender: TObject);
-  private
-    procedure GenerateRememberMeToken(UserId: Integer);
-  public
-    class function Execute: Boolean;
-  end;
-
-implementation
-
-{$R *.dfm}
-
-class function TFormLogin.Execute: Boolean;
-var
-  Form: TFormLogin;
-begin
-  // Essayer d'abord la connexion automatique
-  if TryAutoLogin then
-    Exit(True);
-
-  Form := TFormLogin.Create(nil);
-  try
-    Result := Form.ShowModal = mrOk;
-  finally
-    Form.Free;
-  end;
-end;
-
-procedure TFormLogin.FormCreate(Sender: TObject);
-begin
-  // Positionnement du formulaire au centre
-  Position := poScreenCenter;
-
-  // Focus sur le champ username
-  EditUsername.SetFocus;
-end;
-
-procedure TFormLogin.ButtonLoginClick(Sender: TObject);
-var
-  Query: TFDQuery;
-  HashedPassword: string;
-begin
-  // Validation des champs
-  if EditUsername.Text.Trim = '' then
-  begin
-    ShowMessage('Veuillez entrer un nom d''utilisateur.');
-    EditUsername.SetFocus;
-    Exit;
-  end;
-
-  if EditPassword.Text = '' then
-  begin
-    ShowMessage('Veuillez entrer un mot de passe.');
-    EditPassword.SetFocus;
-    Exit;
-  end;
-
-  // Authentification
-  HashedPassword := THashSHA2.GetHashString(EditPassword.Text);
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := DataModule1.FDConnection1;
-    Query.SQL.Text := 'SELECT id, username, role FROM users ' +
-                      'WHERE username = :username AND password_hash = :password';
-    Query.ParamByName('username').AsString := EditUsername.Text;
-    Query.ParamByName('password').AsString := HashedPassword;
-    Query.Open;
-
-    if Query.RecordCount > 0 then
-    begin
-      // Authentification réussie
-      Session.LoggedUser := Query.FieldByName('username').AsString;
-      Session.UserRole := Query.FieldByName('role').AsString;
-      Session.UserId := Query.FieldByName('id').AsInteger;
-      Session.IsAuthenticated := True;
-
-      // Gestion du "Se souvenir de moi"
-      if CheckBoxRememberMe.Checked then
-        GenerateRememberMeToken(Session.UserId);
-
-      ModalResult := mrOk;
-    end
-    else
-    begin
-      // Échec de l'authentification
-      ShowMessage('Nom d''utilisateur ou mot de passe incorrect.');
-      EditPassword.Clear;
-      EditPassword.SetFocus;
-    end;
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TFormLogin.GenerateRememberMeToken(UserId: Integer);
-var
-  Token: string;
-  Query: TFDQuery;
-begin
-  // Générer un jeton aléatoire
-  Token := THashSHA2.GetHashString(
-    IntToStr(UserId) +
-    FormatDateTime('yyyymmddhhnnsszzz', Now) +
-    IntToStr(Random(100000))
-  );
-
-  // Sauvegarder le jeton en base de données
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := DataModule1.FDConnection1;
-    Query.SQL.Text := 'UPDATE users SET remember_token = :token ' +
-                      'WHERE id = :id';
-    Query.ParamByName('token').AsString := Token;
-    Query.ParamByName('id').AsInteger := UserId;
-    Query.ExecSQL;
-
-    // Sauvegarder le jeton localement
-    SaveRememberMeToken(UserId, Token);
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TFormLogin.LabelForgotPasswordClick(Sender: TObject);
-begin
-  // Ouvrir un formulaire de récupération de mot de passe
-  if EditUsername.Text.Trim <> '' then
-    ShowMessage('Un e-mail de réinitialisation a été envoyé si ce compte existe.')
-  else
-    ShowMessage('Veuillez d''abord entrer votre nom d''utilisateur.');
-end;
-
-end.
-```
-
-### Schéma de base de données
-
-Voici un exemple de structure de table pour gérer les utilisateurs dans MySQL/MariaDB :
+Pour gérer l'authentification, vous aurez généralement besoin d'une table utilisateurs :
 
 ```sql
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,
-  password_hash VARCHAR(64) NOT NULL,
-  salt VARCHAR(32) NOT NULL,
-  email VARCHAR(100) NOT NULL UNIQUE,
-  role VARCHAR(20) NOT NULL DEFAULT 'user',
-  totp_secret VARCHAR(32) NULL,
-  remember_token VARCHAR(64) NULL,
-  reset_token VARCHAR(64) NULL,
-  reset_token_expiry DATETIME NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_login DATETIME NULL,
-  active BOOLEAN NOT NULL DEFAULT TRUE
+CREATE TABLE Utilisateurs (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    NomUtilisateur VARCHAR(50) UNIQUE NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    MotDePasseHash VARCHAR(255) NOT NULL,
+    Salt VARCHAR(50) NOT NULL,
+    DateCreation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    DerniereConnexion DATETIME,
+    Actif BOOLEAN DEFAULT TRUE
 );
 ```
 
-### Meilleures pratiques de sécurité
+### Utilisation de FireDAC pour l'authentification
 
-1. **Toujours hacher les mots de passe** avec un algorithme sécurisé comme SHA-256 ou mieux encore, utilisez des algorithmes spécialement conçus pour les mots de passe comme Argon2 ou bcrypt.
+Delphi dispose de FireDAC, un framework puissant pour accéder aux bases de données. Voici les composants nécessaires :
 
-2. **Utiliser un sel unique** pour chaque utilisateur afin de se protéger contre les attaques par table arc-en-ciel.
+**Composants à placer sur votre formulaire de connexion** :
+- `TFDConnection` : pour la connexion à la base de données
+- `TFDQuery` : pour exécuter les requêtes SQL
+- `TEdit` : pour saisir le nom d'utilisateur
+- `TEdit` : pour saisir le mot de passe (avec `PasswordChar` = '*')
+- `TButton` : pour déclencher la connexion
 
-3. **Implémenter une politique de mots de passe forts** :
-   - Longueur minimale (au moins 8 caractères)
-   - Mélange de lettres majuscules et minuscules, chiffres et caractères spéciaux
-   - Vérification contre les mots de passe courants
+### Code de base pour la vérification
 
-4. **Limiter les tentatives de connexion** pour se protéger contre les attaques par force brute.
+Voici un exemple simplifié de vérification d'authentification :
 
-5. **Utiliser HTTPS** pour toutes les communications réseau impliquant des données d'authentification.
-
-6. **Ne pas stocker d'informations sensibles** en texte clair dans les fichiers de configuration ou la base de données.
-
-7. **Mettre en place des délais d'expiration de session** pour réduire le risque d'accès non autorisé.
-
-### Exemple : Vérification de force du mot de passe
-
-```pas
-function IsStrongPassword(const Password: string): Boolean;
-begin
-  Result := (Length(Password) >= 8) and
-            ContainsUpperCase(Password) and
-            ContainsLowerCase(Password) and
-            ContainsDigit(Password) and
-            ContainsSpecialChar(Password);
-end;
-
-function ContainsUpperCase(const S: string): Boolean;
+```pascal
+procedure TFormConnexion.BtnConnexionClick(Sender: TObject);
 var
-  I: Integer;
+  MotDePasseHash: string;
+  Salt: string;
+  HashCalcule: string;
 begin
-  Result := False;
-  for I := 1 to Length(S) do
-    if S[I] in ['A'..'Z'] then
-      Exit(True);
-end;
+  // Récupérer le salt et le hash depuis la base de données
+  FDQuery1.SQL.Text := 'SELECT MotDePasseHash, Salt FROM Utilisateurs ' +
+                        'WHERE NomUtilisateur = :Username AND Actif = TRUE';
+  FDQuery1.ParamByName('Username').AsString := EditUtilisateur.Text;
+  FDQuery1.Open;
 
-function ContainsLowerCase(const S: string): Boolean;
-var
-  I: Integer;
-begin
-  Result := False;
-  for I := 1 to Length(S) do
-    if S[I] in ['a'..'z'] then
-      Exit(True);
-end;
+  if not FDQuery1.IsEmpty then
+  begin
+    Salt := FDQuery1.FieldByName('Salt').AsString;
+    MotDePasseHash := FDQuery1.FieldByName('MotDePasseHash').AsString;
 
-function ContainsDigit(const S: string): Boolean;
-var
-  I: Integer;
-begin
-  Result := False;
-  for I := 1 to Length(S) do
-    if S[I] in ['0'..'9'] then
-      Exit(True);
-end;
+    // Calculer le hash du mot de passe saisi
+    HashCalcule := CalculerHash(EditMotDePasse.Text + Salt);
 
-function ContainsSpecialChar(const S: string): Boolean;
-var
-  I: Integer;
-begin
-  Result := False;
-  for I := 1 to Length(S) do
-    if not (S[I] in ['A'..'Z', 'a'..'z', '0'..'9']) then
-      Exit(True);
+    // Comparer les hash
+    if HashCalcule = MotDePasseHash then
+    begin
+      ShowMessage('Connexion réussie !');
+      // Créer la session utilisateur
+      // Ouvrir le formulaire principal
+    end
+    else
+      ShowMessage('Mot de passe incorrect');
+  end
+  else
+    ShowMessage('Utilisateur non trouvé');
+
+  FDQuery1.Close;
 end;
 ```
 
-### Conclusion
+### Création d'un nouvel utilisateur
 
-L'authentification des utilisateurs est une composante critique de la sécurité de vos applications. En suivant les meilleures pratiques décrites dans ce chapitre, vous pouvez créer un système d'authentification robuste qui protège efficacement les données de vos utilisateurs.
+Lors de l'inscription d'un nouvel utilisateur :
 
-Dans le prochain chapitre, nous aborderons la gestion des autorisations qui détermine ce qu'un utilisateur authentifié peut ou ne peut pas faire dans votre application.
+```pascal
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);
+var
+  Salt: string;
+  HashMotDePasse: string;
+begin
+  // Générer un salt aléatoire
+  Salt := GenererSaltAleatoire();
 
-### Exercices pratiques
+  // Calculer le hash du mot de passe avec le salt
+  HashMotDePasse := CalculerHash(EditMotDePasse.Text + Salt);
 
-1. Créez un formulaire de connexion simple avec nom d'utilisateur et mot de passe.
-2. Ajoutez une validation de force du mot de passe lors de la création d'un compte.
-3. Implémentez un système "Se souvenir de moi" qui garde l'utilisateur connecté entre les sessions.
-4. Créez un système de récupération de mot de passe par e-mail.
-5. Pour les plus avancés : Implémentez l'authentification à deux facteurs avec une application comme Google Authenticator.
+  // Insérer dans la base de données
+  FDQuery1.SQL.Text := 'INSERT INTO Utilisateurs (NomUtilisateur, Email, MotDePasseHash, Salt) ' +
+                        'VALUES (:Username, :Email, :Hash, :Salt)';
+  FDQuery1.ParamByName('Username').AsString := EditUtilisateur.Text;
+  FDQuery1.ParamByName('Email').AsString := EditEmail.Text;
+  FDQuery1.ParamByName('Hash').AsString := HashMotDePasse;
+  FDQuery1.ParamByName('Salt').AsString := Salt;
+
+  try
+    FDQuery1.ExecSQL;
+    ShowMessage('Inscription réussie !');
+  except
+    on E: Exception do
+      ShowMessage('Erreur lors de l\'inscription : ' + E.Message);
+  end;
+end;
+```
+
+## Fonctions utilitaires pour le hashage
+
+Delphi propose plusieurs unités pour le hashage. Voici un exemple avec l'unité `System.Hash` :
+
+```pascal
+uses
+  System.Hash, System.SysUtils;
+
+function CalculerHash(const ATexte: string): string;
+begin
+  // Utilise SHA-256 pour créer un hash sécurisé
+  Result := THashSHA2.GetHashString(ATexte);
+end;
+
+function GenererSaltAleatoire(): string;
+var
+  GUID: TGUID;
+begin
+  // Génère un GUID unique comme salt
+  CreateGUID(GUID);
+  Result := GUIDToString(GUID);
+end;
+```
+
+## Gestion de la session utilisateur
+
+Une fois l'utilisateur authentifié, il faut gérer sa session :
+
+### Variables globales de session
+
+```pascal
+var
+  UtilisateurConnecte: Boolean = False;
+  IDUtilisateur: Integer = 0;
+  NomUtilisateur: string = '';
+  RoleUtilisateur: string = '';
+```
+
+### Initialisation de la session
+
+```pascal
+procedure InitialiserSession(AID: Integer; ANom: string; ARole: string);
+begin
+  UtilisateurConnecte := True;
+  IDUtilisateur := AID;
+  NomUtilisateur := ANom;
+  RoleUtilisateur := ARole;
+end;
+
+procedure TerminerSession;
+begin
+  UtilisateurConnecte := False;
+  IDUtilisateur := 0;
+  NomUtilisateur := '';
+  RoleUtilisateur := '';
+end;
+```
+
+## Bonnes pratiques de sécurité
+
+### 1. Politique de mot de passe fort
+
+Imposez des règles pour les mots de passe :
+- Longueur minimale (8-12 caractères)
+- Combinaison de majuscules, minuscules, chiffres et caractères spéciaux
+- Pas de mots du dictionnaire
+
+```pascal
+function MotDePasseValide(const AMotDePasse: string): Boolean;
+var
+  AMajuscule, AMinuscule, AChiffre, ASpecial: Boolean;
+  i: Integer;
+begin
+  Result := False;
+
+  // Vérifier la longueur minimale
+  if Length(AMotDePasse) < 8 then
+    Exit;
+
+  AMajuscule := False;
+  AMinuscule := False;
+  AChiffre := False;
+  ASpecial := False;
+
+  // Vérifier les différents types de caractères
+  for i := 1 to Length(AMotDePasse) do
+  begin
+    if CharInSet(AMotDePasse[i], ['A'..'Z']) then
+      AMajuscule := True
+    else if CharInSet(AMotDePasse[i], ['a'..'z']) then
+      AMinuscule := True
+    else if CharInSet(AMotDePasse[i], ['0'..'9']) then
+      AChiffre := True
+    else
+      ASpecial := True;
+  end;
+
+  Result := AMajuscule and AMinuscule and AChiffre and ASpecial;
+end;
+```
+
+### 2. Limitation des tentatives de connexion
+
+Pour éviter les attaques par force brute :
+
+```pascal
+var
+  TentativesEchouees: Integer = 0;
+  DerniereeTentative: TDateTime;
+
+const
+  MAX_TENTATIVES = 5;
+  DELAI_BLOCAGE_MINUTES = 15;
+
+procedure TFormConnexion.BtnConnexionClick(Sender: TObject);
+begin
+  // Vérifier si le compte est temporairement bloqué
+  if (TentativesEchouees >= MAX_TENTATIVES) and
+     (MinutesBetween(Now, DerniereTentative) < DELAI_BLOCAGE_MINUTES) then
+  begin
+    ShowMessage('Trop de tentatives échouées. Réessayez dans ' +
+                IntToStr(DELAI_BLOCAGE_MINUTES - MinutesBetween(Now, DerniereTentative)) +
+                ' minutes.');
+    Exit;
+  end;
+
+  // Réinitialiser si le délai est passé
+  if MinutesBetween(Now, DerniereTentative) >= DELAI_BLOCAGE_MINUTES then
+    TentativesEchouees := 0;
+
+  // Vérifier les identifiants
+  if VerifierAuthentification(EditUtilisateur.Text, EditMotDePasse.Text) then
+  begin
+    TentativesEchouees := 0;
+    // Connexion réussie
+  end
+  else
+  begin
+    Inc(TentativesEchouees);
+    DerniereTentative := Now;
+    ShowMessage('Identifiants incorrects. Tentative ' +
+                IntToStr(TentativesEchouees) + '/' + IntToStr(MAX_TENTATIVES));
+  end;
+end;
+```
+
+### 3. Utilisation de requêtes paramétrées
+
+**TOUJOURS** utiliser des requêtes paramétrées pour éviter les injections SQL :
+
+```pascal
+// ❌ MAUVAIS - vulnérable aux injections SQL
+FDQuery1.SQL.Text := 'SELECT * FROM Utilisateurs WHERE NomUtilisateur = "' +
+                      EditUtilisateur.Text + '"';
+
+// ✅ BON - sécurisé avec des paramètres
+FDQuery1.SQL.Text := 'SELECT * FROM Utilisateurs WHERE NomUtilisateur = :Username';
+FDQuery1.ParamByName('Username').AsString := EditUtilisateur.Text;
+```
+
+### 4. Masquer les informations sensibles
+
+Ne révélez pas d'informations qui pourraient aider un attaquant :
+
+```pascal
+// ❌ MAUVAIS - révèle si l'utilisateur existe
+if not UserExists then
+  ShowMessage('Utilisateur inconnu')
+else
+  ShowMessage('Mot de passe incorrect');
+
+// ✅ BON - message générique
+ShowMessage('Identifiants incorrects');
+```
+
+### 5. Journalisation des tentatives de connexion
+
+Conservez un historique des connexions pour détecter les activités suspectes :
+
+```sql
+CREATE TABLE HistoriqueConnexions (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    IDUtilisateur INT,
+    DateHeure DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Reussite BOOLEAN,
+    AdresseIP VARCHAR(45),
+    Navigateur VARCHAR(200)
+);
+```
+
+## Authentification avancée
+
+### Récupération de mot de passe
+
+Pour permettre aux utilisateurs de réinitialiser leur mot de passe :
+
+1. **Générer un token unique temporaire**
+```pascal
+function GenererTokenReset(): string;
+var
+  GUID: TGUID;
+begin
+  CreateGUID(GUID);
+  Result := GUIDToString(GUID);
+end;
+```
+
+2. **Enregistrer le token avec une date d'expiration**
+```sql
+ALTER TABLE Utilisateurs ADD COLUMN TokenReset VARCHAR(100);
+ALTER TABLE Utilisateurs ADD COLUMN TokenExpiration DATETIME;
+```
+
+3. **Envoyer un email avec le lien de réinitialisation**
+
+4. **Vérifier le token et permettre la création d'un nouveau mot de passe**
+
+### "Se souvenir de moi"
+
+Pour garder l'utilisateur connecté entre les sessions :
+
+```pascal
+procedure SauvegarderToken(const AToken: string);
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
+  try
+    IniFile.WriteString('Session', 'Token', AToken);
+  finally
+    IniFile.Free;
+  end;
+end;
+
+function ChargerToken(): string;
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
+  try
+    Result := IniFile.ReadString('Session', 'Token', '');
+  finally
+    IniFile.Free;
+  end;
+end;
+```
+
+## Considérations pour les applications multi-plateformes
+
+Lorsque vous développez avec FireMonkey pour plusieurs plateformes :
+
+### Stockage sécurisé des identifiants
+
+- **Windows** : Utilisez le système de credentials Windows
+- **macOS** : Utilisez le Keychain
+- **iOS/Android** : Utilisez le stockage sécurisé natif
+
+Delphi fournit des APIs pour accéder à ces systèmes de manière unifiée.
+
+### Authentification biométrique mobile
+
+Pour iOS et Android, vous pouvez intégrer Touch ID / Face ID / Empreinte digitale :
+
+```pascal
+uses
+  FMX.Platform, FMX.Biometrics;
+
+procedure AuthentifierParBiometrie;
+var
+  BiometricAuth: TBiometricAuth;
+begin
+  BiometricAuth := TBiometricAuth.Create(nil);
+  try
+    if BiometricAuth.BiometryType <> TBiometryType.None then
+    begin
+      BiometricAuth.Authenticate('Veuillez vous authentifier',
+        procedure(const ASuccess: Boolean)
+        begin
+          if ASuccess then
+            ShowMessage('Authentification réussie')
+          else
+            ShowMessage('Authentification échouée');
+        end);
+    end
+    else
+      ShowMessage('Authentification biométrique non disponible');
+  finally
+    BiometricAuth.Free;
+  end;
+end;
+```
+
+## Authentification moderne avec OAuth2 et SSO
+
+### Qu'est-ce que OAuth2 ?
+
+OAuth2 permet aux utilisateurs de se connecter avec leurs comptes existants (Google, Microsoft, Facebook, etc.) sans créer de nouveau compte.
+
+**Avantages** :
+- Expérience utilisateur simplifiée
+- Pas besoin de gérer les mots de passe
+- Sécurité renforcée par les grands fournisseurs
+
+### Single Sign-On (SSO)
+
+Le SSO permet à un utilisateur de se connecter une seule fois et d'accéder à plusieurs applications.
+
+**Implémentation basique** :
+1. Rediriger l'utilisateur vers le fournisseur d'identité
+2. Recevoir un token d'authentification
+3. Valider le token
+4. Créer la session locale
+
+## Résumé des points essentiels
+
+✅ **À faire** :
+- Toujours hasher les mots de passe avec un salt
+- Utiliser des requêtes paramétrées
+- Imposer des mots de passe forts
+- Limiter les tentatives de connexion
+- Journaliser les événements de sécurité
+- Utiliser HTTPS pour transmettre les identifiants
+
+❌ **À ne jamais faire** :
+- Stocker les mots de passe en clair
+- Afficher des messages d'erreur détaillés
+- Permettre des tentatives de connexion illimitées
+- Transmettre des identifiants via GET ou en URL
+- Négliger les mises à jour de sécurité
+
+## Aller plus loin
+
+L'authentification est un domaine vaste qui évolue constamment. Pour approfondir :
+
+- **JWT (JSON Web Tokens)** : pour les applications web et API
+- **OpenID Connect** : extension d'OAuth2 pour l'identité
+- **SAML** : pour les environnements d'entreprise
+- **Authentification multi-facteur** : pour une sécurité renforcée
+- **Biométrie** : empreinte digitale, reconnaissance faciale
+
+Dans les sections suivantes du chapitre 16, nous aborderons l'autorisation et le contrôle d'accès, le chiffrement des données, et d'autres aspects cruciaux de la sécurité des applications.
 
 ⏭️ [Autorisation et contrôle d'accès](/16-securite-des-applications/02-autorisation-et-controle-dacces.md)

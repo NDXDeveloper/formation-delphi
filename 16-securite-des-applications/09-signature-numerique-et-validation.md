@@ -1,611 +1,1089 @@
-# 16. Sécurité des applications
-## 16.9 Signature numérique et validation
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.9 Signature numérique et validation
 
-La signature numérique est une technique cryptographique qui permet de garantir l'authenticité et l'intégrité d'un document ou d'un message. Dans un monde où les données circulent en permanence, il est crucial de pouvoir vérifier que l'information n'a pas été altérée et qu'elle provient bien de l'émetteur attendu.
+## Introduction
 
-Dans ce chapitre, nous allons explorer comment mettre en œuvre les signatures numériques dans vos applications Delphi, avec des exemples concrets et accessibles aux débutants.
+La signature numérique est l'équivalent électronique d'une signature manuscrite, mais avec des garanties bien plus fortes. Elle permet de prouver l'authenticité d'un document ou d'un fichier et de garantir qu'il n'a pas été modifié.
 
-### Comprendre le concept de signature numérique
+**Analogie du monde réel** : Imaginez que vous envoyez une lettre scellée avec de la cire et votre cachet personnel. Le destinataire peut :
+1. Vérifier que c'est bien votre cachet (authentification)
+2. S'assurer que personne n'a ouvert la lettre (intégrité)
 
-Avant de plonger dans le code, prenons un moment pour comprendre le principe de la signature numérique avec une analogie simple :
+La signature numérique fait exactement cela, mais de manière cryptographique et infalsifiable.
 
-Imaginez que vous envoyez une lettre importante par courrier. Pour prouver que vous êtes bien l'auteur de cette lettre, vous la signez avec votre signature manuscrite. Le destinataire, qui connaît votre signature, peut alors vérifier qu'elle vient bien de vous. La signature numérique fonctionne sur un principe similaire, mais avec des garanties mathématiques bien plus fortes.
+### Pourquoi utiliser des signatures numériques ?
 
-La signature numérique s'appuie sur la **cryptographie asymétrique** (ou à clé publique) et implique généralement trois étapes principales :
+**Authentification** : Prouver qui a créé ou envoyé le document
+- "Ce fichier provient bien de Microsoft, pas d'un pirate"
 
-1. **Génération d'une empreinte (hash)** du document ou des données à signer
-2. **Chiffrement de cette empreinte** avec la clé privée du signataire
-3. **Vérification de la signature** par le destinataire en utilisant la clé publique du signataire
+**Intégrité** : Garantir que le contenu n'a pas été modifié
+- "Ce document n'a pas été altéré depuis sa signature"
 
-### Comment fonctionne une signature numérique ?
+**Non-répudiation** : Empêcher le déni
+- "Vous ne pouvez pas nier avoir signé ce contrat"
 
-Voici le processus simplifié :
+**Cas d'usage** :
+- Signature de logiciels et mises à jour
+- Signature de documents officiels
+- Validation de transactions
+- Vérification de l'intégrité de fichiers téléchargés
+- Contrats électroniques
 
-**Pour signer :**
-1. On calcule une empreinte unique (hash) du document
-2. On chiffre cette empreinte avec sa clé privée (que personne d'autre ne possède)
-3. Le résultat est la signature numérique
+## Signature numérique vs Chiffrement
 
-**Pour vérifier :**
-1. Le destinataire calcule l'empreinte du document reçu
-2. Il déchiffre la signature avec la clé publique du signataire
-3. Si les deux empreintes correspondent, la signature est valide
+C'est une confusion fréquente, clarifions :
 
-Ce mécanisme garantit à la fois que :
-- Le document n'a pas été modifié (intégrité)
-- L'expéditeur est bien celui qu'il prétend être (authenticité)
+| Signature numérique | Chiffrement |
+|---------------------|-------------|
+| **Objectif** : Authentifier et garantir l'intégrité | **Objectif** : Protéger la confidentialité |
+| **Clé utilisée** : Clé privée pour signer, clé publique pour vérifier | **Clé utilisée** : Clé publique pour chiffrer, clé privée pour déchiffrer |
+| **Le contenu** : Reste lisible | **Le contenu** : Devient illisible |
+| **Résultat** : Document + Signature | **Résultat** : Document chiffré |
 
-### Cas d'utilisation des signatures numériques
+```
+Signature numérique :
+Document original (lisible) + Signature (preuve d'authenticité)
+┌────────────────┐     ┌──────────┐
+│  "Bonjour"     │  +  │ Signature│
+│  (lisible)     │     │ (proof)  │
+└────────────────┘     └──────────┘
 
-Les signatures numériques sont utilisées dans de nombreux contextes :
-
-- Authentification de documents électroniques (contrats, factures...)
-- Vérification de l'intégrité des logiciels téléchargés
-- Sécurisation des communications
-- Protection contre la modification non autorisée des données
-- Certification de l'identité de l'émetteur d'un message
-
-### Mise en œuvre des signatures numériques avec Delphi
-
-Delphi offre plusieurs façons d'implémenter les signatures numériques. Nous allons explorer trois approches principales :
-
-1. Utilisation de l'API Windows CryptoAPI
-2. Utilisation des bibliothèques cryptographiques intégrées à Delphi
-3. Utilisation de bibliothèques tierces populaires
-
-#### 1. Signature numérique avec l'API Windows CryptoAPI
-
-L'API Windows CryptoAPI est disponible sur toutes les versions de Windows et permet d'implémenter des fonctions cryptographiques de base. Voici un exemple simplifié de classe pour gérer les signatures numériques :
-
-```pas
-unit DigitalSignature;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Winapi.Windows, Winapi.WinCrypt;
-
-type
-  TCryptoAPIException = class(Exception);
-
-  TDigitalSignature = class
-  private
-    FProviderHandle: HCRYPTPROV;
-    FKeyPairHandle: HCRYPTKEY;
-    FHashHandle: HCRYPTHASH;
-
-    procedure CheckCryptoAPIError(Success: Boolean; const Operation: string);
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    // Génération d'une paire de clés
-    procedure GenerateKeyPair;
-
-    // Signature et vérification
-    function SignData(const Data: TBytes): TBytes;
-    function VerifySignature(const Data, Signature: TBytes): Boolean;
-
-    // Signature et vérification de fichiers
-    function SignFile(const FileName: string): TBytes;
-    function VerifyFileSignature(const FileName: string; const Signature: TBytes): Boolean;
-  end;
-
-implementation
-
-constructor TDigitalSignature.Create;
-begin
-  inherited Create;
-
-  // Acquérir un contexte cryptographique
-  if not CryptAcquireContext(FProviderHandle, nil, nil,
-                            PROV_RSA_FULL, CRYPT_VERIFYCONTEXT) then
-    CheckCryptoAPIError(False, 'Create');
-end;
-
-destructor TDigitalSignature.Destroy;
-begin
-  // Libérer les ressources
-  if FHashHandle <> 0 then
-    CryptDestroyHash(FHashHandle);
-
-  if FKeyPairHandle <> 0 then
-    CryptDestroyKey(FKeyPairHandle);
-
-  if FProviderHandle <> 0 then
-    CryptReleaseContext(FProviderHandle, 0);
-
-  inherited Destroy;
-end;
-
-procedure TDigitalSignature.CheckCryptoAPIError(Success: Boolean; const Operation: string);
-var
-  ErrorCode: Integer;
-  ErrorMessage: string;
-begin
-  if not Success then
-  begin
-    ErrorCode := GetLastError;
-    ErrorMessage := SysErrorMessage(ErrorCode);
-    raise TCryptoAPIException.CreateFmt('CryptoAPI %s error: %s (Code: %d)',
-                                       [Operation, ErrorMessage, ErrorCode]);
-  end;
-end;
-
-procedure TDigitalSignature.GenerateKeyPair;
-begin
-  // Libérer la clé précédente si elle existe
-  if FKeyPairHandle <> 0 then
-  begin
-    CryptDestroyKey(FKeyPairHandle);
-    FKeyPairHandle := 0;
-  end;
-
-  // Générer une nouvelle paire de clés RSA (2048 bits)
-  CheckCryptoAPIError(
-    CryptGenKey(FProviderHandle, AT_SIGNATURE,
-               CRYPT_EXPORTABLE or 2048 shl 16, FKeyPairHandle),
-    'GenerateKeyPair'
-  );
-end;
-
-function TDigitalSignature.SignData(const Data: TBytes): TBytes;
-var
-  Signature: TBytes;
-  SignatureSize: DWORD;
-begin
-  if FKeyPairHandle = 0 then
-    raise TCryptoAPIException.Create('Key pair not generated');
-
-  // Créer un objet de hash
-  if FHashHandle <> 0 then
-  begin
-    CryptDestroyHash(FHashHandle);
-    FHashHandle := 0;
-  end;
-
-  // Utiliser l'algorithme SHA-256 pour le hash
-  CheckCryptoAPIError(
-    CryptCreateHash(FProviderHandle, CALG_SHA_256, 0, 0, FHashHandle),
-    'SignData (create hash)'
-  );
-
-  // Ajouter les données au hash
-  CheckCryptoAPIError(
-    CryptHashData(FHashHandle, @Data[0], Length(Data), 0),
-    'SignData (hash data)'
-  );
-
-  // Obtenir la taille de la signature
-  SignatureSize := 0;
-  CryptSignHash(FHashHandle, AT_SIGNATURE, nil, 0, nil, SignatureSize);
-
-  // Allouer la mémoire pour la signature
-  SetLength(Signature, SignatureSize);
-
-  // Signer le hash
-  CheckCryptoAPIError(
-    CryptSignHash(FHashHandle, AT_SIGNATURE, nil, 0, @Signature[0], SignatureSize),
-    'SignData (sign hash)'
-  );
-
-  // Détruire l'objet hash après utilisation
-  CryptDestroyHash(FHashHandle);
-  FHashHandle := 0;
-
-  Result := Signature;
-end;
-
-function TDigitalSignature.VerifySignature(const Data, Signature: TBytes): Boolean;
-begin
-  if FKeyPairHandle = 0 then
-    raise TCryptoAPIException.Create('Key pair not imported');
-
-  // Créer un objet de hash
-  if FHashHandle <> 0 then
-  begin
-    CryptDestroyHash(FHashHandle);
-    FHashHandle := 0;
-  end;
-
-  // Utiliser l'algorithme SHA-256 pour le hash
-  CheckCryptoAPIError(
-    CryptCreateHash(FProviderHandle, CALG_SHA_256, 0, 0, FHashHandle),
-    'VerifySignature (create hash)'
-  );
-
-  // Ajouter les données au hash
-  CheckCryptoAPIError(
-    CryptHashData(FHashHandle, @Data[0], Length(Data), 0),
-    'VerifySignature (hash data)'
-  );
-
-  // Vérifier la signature
-  Result := CryptVerifySignature(FHashHandle, @Signature[0], Length(Signature),
-                                FKeyPairHandle, nil, 0);
-
-  // Détruire l'objet hash après utilisation
-  CryptDestroyHash(FHashHandle);
-  FHashHandle := 0;
-end;
-
-function TDigitalSignature.SignFile(const FileName: string): TBytes;
-var
-  FileStream: TFileStream;
-  FileData: TBytes;
-begin
-  // Lire le fichier
-  FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-  try
-    SetLength(FileData, FileStream.Size);
-    FileStream.ReadBuffer(FileData[0], FileStream.Size);
-  finally
-    FileStream.Free;
-  end;
-
-  // Signer les données du fichier
-  Result := SignData(FileData);
-end;
-
-function TDigitalSignature.VerifyFileSignature(const FileName: string; const Signature: TBytes): Boolean;
-var
-  FileStream: TFileStream;
-  FileData: TBytes;
-begin
-  // Lire le fichier
-  FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-  try
-    SetLength(FileData, FileStream.Size);
-    FileStream.ReadBuffer(FileData[0], FileStream.Size);
-  finally
-    FileStream.Free;
-  end;
-
-  // Vérifier la signature
-  Result := VerifySignature(FileData, Signature);
-end;
-
-end.
+Chiffrement :
+Document chiffré (illisible)
+┌────────────────┐
+│  "8k2Lp9mQ"    │
+│  (illisible)   │
+└────────────────┘
 ```
 
-#### 2. Signature numérique avec les bibliothèques cryptographiques intégrées à Delphi
+## Comment fonctionne une signature numérique
 
-Depuis Delphi 11 Alexandria, l'IDE inclut la bibliothèque `System.Crypto` qui offre des API modernes pour la cryptographie, y compris les signatures numériques.
+### Le processus de signature
 
-```pas
-unit ModernDigitalSignature;
+**Étape 1 : Calculer l'empreinte (hash)**
+```
+Document original → Fonction de hash → Empreinte unique
+"Contrat de vente"  → SHA-256 →      "a4f5b2c8d..."
+```
 
-interface
+**Étape 2 : Chiffrer l'empreinte avec la clé privée**
+```
+Empreinte → Chiffrement clé privée → Signature
+"a4f5b2c8d..." → RSA clé privée →    Signature numérique
+```
 
+**Étape 3 : Attacher la signature au document**
+```
+Document original + Signature = Document signé
+```
+
+### Le processus de vérification
+
+**Étape 1 : Calculer l'empreinte du document reçu**
+```
+Document reçu → Fonction de hash → Empreinte calculée
+```
+
+**Étape 2 : Déchiffrer la signature avec la clé publique**
+```
+Signature → Déchiffrement clé publique → Empreinte originale
+```
+
+**Étape 3 : Comparer les deux empreintes**
+```
+Si Empreinte calculée = Empreinte originale
+  → Signature valide, document non modifié
+Sinon
+  → Signature invalide ou document altéré
+```
+
+### Schéma complet
+
+```
+SIGNATURE                           VÉRIFICATION
+──────────                         ─────────────
+
+┌─────────────┐                   ┌─────────────┐
+│  Document   │                   │  Document   │
+└──────┬──────┘                   └──────┬──────┘
+       │                                 │
+       v                                 v
+  [ Hash SHA-256 ]                 [ Hash SHA-256 ]
+       │                                 │
+       v                                 v
+  Empreinte "abc123"              Empreinte "abc123" (A)
+       │
+       v
+[ Chiffrement ]                         Signature
+[ Clé privée  ]                              │
+       │                                      v
+       v                              [ Déchiffrement ]
+   Signature ────────────────────────>[ Clé publique  ]
+                                               │
+                                               v
+                                        Empreinte "abc123" (B)
+                                               │
+                                               v
+                                        Comparaison A = B ?
+                                               │
+                                       ┌───────┴────────┐
+                                       v                v
+                                    ✓ Valide      ✗ Invalide
+```
+
+## Implémentation des fonctions de hash en Delphi
+
+### Hash SHA-256 d'une chaîne
+
+```pascal
 uses
-  System.SysUtils, System.Classes, System.NetEncoding;
+  System.Hash, System.SysUtils;
+
+function CalculerHashSHA256(const ATexte: string): string;
+begin
+  Result := THashSHA2.GetHashString(ATexte);
+end;
+
+// Exemple d'utilisation
+procedure TForm1.BtnHashClick(Sender: TObject);
+var
+  Texte: string;
+  Hash: string;
+begin
+  Texte := 'Ceci est un document important';
+  Hash := CalculerHashSHA256(Texte);
+
+  Memo1.Lines.Add('Texte : ' + Texte);
+  Memo1.Lines.Add('Hash SHA-256 : ' + Hash);
+
+  // Si on modifie ne serait-ce qu'un caractère, le hash change complètement
+  Texte := 'Ceci est un document Important'; // Majuscule à "Important"
+  Hash := CalculerHashSHA256(Texte);
+  Memo1.Lines.Add('Hash modifié : ' + Hash); // Complètement différent !
+end;
+```
+
+### Hash d'un fichier
+
+```pascal
+function CalculerHashFichier(const ANomFichier: string): string;
+var
+  FileStream: TFileStream;
+  HashSHA: THashSHA2;
+  Buffer: TBytes;
+  BytesLus: Integer;
+const
+  TAILLE_BUFFER = 8192;
+begin
+  FileStream := TFileStream.Create(ANomFichier, fmOpenRead or fmShareDenyWrite);
+  try
+    HashSHA := THashSHA2.Create;
+    SetLength(Buffer, TAILLE_BUFFER);
+
+    repeat
+      BytesLus := FileStream.Read(Buffer[0], TAILLE_BUFFER);
+      if BytesLus > 0 then
+        HashSHA.Update(Buffer, BytesLus);
+    until BytesLus = 0;
+
+    Result := HashSHA.HashAsString;
+  finally
+    FileStream.Free;
+  end;
+end;
+
+// Vérifier l'intégrité d'un fichier téléchargé
+procedure VerifierIntegriteFichier(const AFichier, AHashAttendu: string);
+var
+  HashCalcule: string;
+begin
+  HashCalcule := CalculerHashFichier(AFichier);
+
+  if HashCalcule = AHashAttendu then
+    ShowMessage('✓ Fichier intègre - Hash correct')
+  else
+    ShowMessage('✗ ATTENTION : Fichier corrompu ou modifié !');
+end;
+
+// Exemple
+procedure TForm1.BtnVerifierClick(Sender: TObject);
+begin
+  // Hash fourni par l'éditeur du logiciel
+  VerifierIntegriteFichier(
+    'C:\Downloads\application.exe',
+    'a3f5b2c8d4e6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6'
+  );
+end;
+```
+
+## Signature RSA basique
+
+### Génération de paires de clés
+
+```pascal
+uses
+  System.SysUtils, System.Classes;
 
 type
-  TSignatureMode = (smRSA, smECDsa);
-
-  TModernDigitalSignature = class
-  private
-    FPrivateKeyFile: string;
-    FPublicKeyFile: string;
-    FSignatureMode: TSignatureMode;
-  public
-    constructor Create(const PrivateKeyFile, PublicKeyFile: string;
-                      Mode: TSignatureMode = smRSA);
-
-    // Génération d'une paire de clés
-    procedure GenerateKeyPair;
-
-    // Signature et vérification
-    function SignData(const Data: TBytes): string;
-    function VerifySignature(const Data: TBytes; const Signature: string): Boolean;
-
-    // Signature et vérification de fichiers
-    function SignFile(const FileName: string): string;
-    function VerifyFileSignature(const FileName, Signature: string): Boolean;
+  TPaireClés = record
+    CléPrivée: string;
+    CléPublique: string;
   end;
 
-implementation
+// Note : Pour une vraie application, utilisez une bibliothèque crypto robuste
+// comme OpenSSL ou les composants Indy
+function GénérerPaireClésRSA: TPaireClés;
+begin
+  // Génération simplifiée pour l'exemple
+  // En production, utilisez une vraie bibliothèque RSA
 
-uses
-  {$IF CompilerVersion >= 35} // Delphi 11 ou supérieur
-  System.Crypto,
-  {$ENDIF}
-  System.IOUtils;
+  Result.CléPrivée := 'PRIVATE_KEY_PLACEHOLDER';
+  Result.CléPublique := 'PUBLIC_KEY_PLACEHOLDER';
 
-constructor TModernDigitalSignature.Create(const PrivateKeyFile, PublicKeyFile: string;
-  Mode: TSignatureMode);
+  // Avec une vraie bibliothèque :
+  // RSA.GenerateKeys(2048);
+  // Result.CléPrivée := RSA.PrivateKey;
+  // Result.CléPublique := RSA.PublicKey;
+end;
+```
+
+### Signature et vérification conceptuelle
+
+```pascal
+type
+  TSignatureNumérique = class
+  private
+    FCléPrivée: string;
+    FCléPublique: string;
+  public
+    constructor Create(const ACléPrivée, ACléPublique: string);
+    function SignerDocument(const ADocument: string): string;
+    function VérifierSignature(const ADocument, ASignature: string): Boolean;
+  end;
+
+constructor TSignatureNumérique.Create(const ACléPrivée, ACléPublique: string);
 begin
   inherited Create;
-  FPrivateKeyFile := PrivateKeyFile;
-  FPublicKeyFile := PublicKeyFile;
-  FSignatureMode := Mode;
+  FCléPrivée := ACléPrivée;
+  FCléPublique := ACléPublique;
 end;
 
-{$IF CompilerVersion >= 35} // Nécessite Delphi 11 ou supérieur
-procedure TModernDigitalSignature.GenerateKeyPair;
+function TSignatureNumérique.SignerDocument(const ADocument: string): string;
 var
-  KeyPair: TCryptoKeyPair;
-  PrivateKey, PublicKey: string;
+  Hash: string;
 begin
-  case FSignatureMode of
-    smRSA:
-      begin
-        // Créer une paire de clés RSA
-        KeyPair := TCryptoRSA.Create;
-        try
-          // Générer une nouvelle paire de clés (2048 bits)
-          TCryptoRSA(KeyPair).GenerateKey(2048);
+  // 1. Calculer le hash du document
+  Hash := THashSHA2.GetHashString(ADocument);
 
-          // Exporter les clés au format PEM
-          PrivateKey := TCryptoRSA(KeyPair).ExportPrivateKey(TPEMFormat.pfPKCS8);
-          PublicKey := TCryptoRSA(KeyPair).ExportPublicKey(TPEMFormat.pfPKCS8);
-        finally
-          KeyPair.Free;
-        end;
-      end;
-    smECDsa:
-      begin
-        // Créer une paire de clés ECDSA
-        KeyPair := TCryptoECDsa.Create;
-        try
-          // Générer une nouvelle paire de clés (courbe P-256)
-          TCryptoECDsa(KeyPair).GenerateKey(TECCurve.c256);
+  // 2. "Chiffrer" le hash avec la clé privée (= signer)
+  // En production, utilisez une vraie bibliothèque RSA
+  Result := 'SIGNATURE_' + Hash;
 
-          // Exporter les clés au format PEM
-          PrivateKey := TCryptoECDsa(KeyPair).ExportPrivateKey(TPEMFormat.pfPKCS8);
-          PublicKey := TCryptoECDsa(KeyPair).ExportPublicKey(TPEMFormat.pfPKCS8);
-        finally
-          KeyPair.Free;
-        end;
-      end;
+  // Avec une vraie bibliothèque :
+  // Result := RSA.Sign(Hash, FCléPrivée);
+end;
+
+function TSignatureNumérique.VérifierSignature(const ADocument, ASignature: string): Boolean;
+var
+  HashCalculé: string;
+  HashDéchiffré: string;
+begin
+  // 1. Calculer le hash du document reçu
+  HashCalculé := THashSHA2.GetHashString(ADocument);
+
+  // 2. "Déchiffrer" la signature avec la clé publique
+  // En production, utilisez une vraie bibliothèque RSA
+  HashDéchiffré := StringReplace(ASignature, 'SIGNATURE_', '', []);
+
+  // Avec une vraie bibliothèque :
+  // HashDéchiffré := RSA.Verify(ASignature, FCléPublique);
+
+  // 3. Comparer les hash
+  Result := (HashCalculé = HashDéchiffré);
+end;
+
+// Utilisation
+procedure TForm1.BtnSignerClick(Sender: TObject);
+var
+  Signature: TSignatureNumérique;
+  Document: string;
+  SignatureDoc: string;
+  EstValide: Boolean;
+begin
+  // Générer une paire de clés
+  Paire := GénérerPaireClésRSA;
+
+  Signature := TSignatureNumérique.Create(Paire.CléPrivée, Paire.CléPublique);
+  try
+    Document := MemoDocument.Lines.Text;
+
+    // Signer le document
+    SignatureDoc := Signature.SignerDocument(Document);
+    MemoSignature.Lines.Text := SignatureDoc;
+    ShowMessage('Document signé');
+
+    // Vérifier la signature
+    EstValide := Signature.VérifierSignature(Document, SignatureDoc);
+
+    if EstValide then
+      ShowMessage('✓ Signature valide')
+    else
+      ShowMessage('✗ Signature invalide');
+  finally
+    Signature.Free;
+  end;
+end;
+```
+
+## Signature de fichiers avec Indy
+
+Pour une implémentation robuste, utilisez Indy (inclus avec Delphi) :
+
+```pascal
+uses
+  IdHashSHA, IdGlobal, System.SysUtils;
+
+type
+  TSignatureFichier = class
+  public
+    class function CalculerEmpreinte(const AFichier: string): string;
+    class procedure SauvegarderEmpreinte(const AFichier, AFichierSignature: string);
+    class function VérifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;
   end;
 
-  // Sauvegarder les clés dans des fichiers
-  TFile.WriteAllText(FPrivateKeyFile, PrivateKey);
-  TFile.WriteAllText(FPublicKeyFile, PublicKey);
-end;
-
-function TModernDigitalSignature.SignData(const Data: TBytes): string;
+class function TSignatureFichier.CalculerEmpreinte(const AFichier: string): string;
 var
-  Signer: TCryptoSignature;
-  Signature: TBytes;
+  HashSHA: TIdHashSHA256;
 begin
-  case FSignatureMode of
-    smRSA:
-      begin
-        // Créer un objet de signature RSA
-        Signer := TCryptoRSASignature.Create;
-        try
-          // Importer la clé privée
-          TCryptoRSASignature(Signer).ImportPrivateKey(
-            TFile.ReadAllText(FPrivateKeyFile), TPEMFormat.pfPKCS8);
-
-          // Signer les données avec SHA-256
-          Signature := Signer.Sign(Data, TSignatureHashAlgorithm.SHA256);
-        finally
-          Signer.Free;
-        end;
-      end;
-    smECDsa:
-      begin
-        // Créer un objet de signature ECDSA
-        Signer := TCryptoECDsaSignature.Create;
-        try
-          // Importer la clé privée
-          TCryptoECDsaSignature(Signer).ImportPrivateKey(
-            TFile.ReadAllText(FPrivateKeyFile), TPEMFormat.pfPKCS8);
-
-          // Signer les données avec SHA-256
-          Signature := Signer.Sign(Data, TSignatureHashAlgorithm.SHA256);
-        finally
-          Signer.Free;
-        end;
-      end;
+  HashSHA := TIdHashSHA256.Create;
+  try
+    Result := HashSHA.HashFileAsHex(AFichier);
+  finally
+    HashSHA.Free;
   end;
-
-  // Encoder la signature en Base64 pour faciliter son stockage
-  Result := TNetEncoding.Base64.EncodeBytesToString(Signature);
 end;
 
-function TModernDigitalSignature.VerifySignature(const Data: TBytes; const Signature: string): Boolean;
+class procedure TSignatureFichier.SauvegarderEmpreinte(const AFichier, AFichierSignature: string);
 var
-  Verifier: TCryptoSignature;
-  SignatureBytes: TBytes;
+  Empreinte: string;
+  Signature: TStringList;
+begin
+  Empreinte := CalculerEmpreinte(AFichier);
+
+  Signature := TStringList.Create;
+  try
+    Signature.Add('Fichier: ' + ExtractFileName(AFichier));
+    Signature.Add('Date: ' + DateTimeToStr(Now));
+    Signature.Add('SHA-256: ' + Empreinte);
+    Signature.SaveToFile(AFichierSignature);
+  finally
+    Signature.Free;
+  end;
+end;
+
+class function TSignatureFichier.VérifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;
+var
+  EmpreinteCalculée: string;
+  EmpreinteStockée: string;
+  Signature: TStringList;
+  i: Integer;
 begin
   Result := False;
 
-  // Décoder la signature Base64
-  SignatureBytes := TNetEncoding.Base64.DecodeStringToBytes(Signature);
-
-  case FSignatureMode of
-    smRSA:
-      begin
-        // Créer un objet de vérification RSA
-        Verifier := TCryptoRSASignature.Create;
-        try
-          // Importer la clé publique
-          TCryptoRSASignature(Verifier).ImportPublicKey(
-            TFile.ReadAllText(FPublicKeyFile), TPEMFormat.pfPKCS8);
-
-          // Vérifier la signature avec SHA-256
-          Result := Verifier.Verify(Data, SignatureBytes, TSignatureHashAlgorithm.SHA256);
-        finally
-          Verifier.Free;
-        end;
-      end;
-    smECDsa:
-      begin
-        // Créer un objet de vérification ECDSA
-        Verifier := TCryptoECDsaSignature.Create;
-        try
-          // Importer la clé publique
-          TCryptoECDsaSignature(Verifier).ImportPublicKey(
-            TFile.ReadAllText(FPublicKeyFile), TPEMFormat.pfPKCS8);
-
-          // Vérifier la signature avec SHA-256
-          Result := Verifier.Verify(Data, SignatureBytes, TSignatureHashAlgorithm.SHA256);
-        finally
-          Verifier.Free;
-        end;
-      end;
-  end;
-end;
-{$ELSE}
-procedure TModernDigitalSignature.GenerateKeyPair;
-begin
-  raise Exception.Create('La génération de clés nécessite Delphi 11 ou supérieur. ' +
-                        'Veuillez utiliser un outil externe pour générer vos clés.');
-end;
-
-function TModernDigitalSignature.SignData(const Data: TBytes): string;
-begin
-  raise Exception.Create('La signature numérique avec cette méthode nécessite Delphi 11 ou supérieur.');
-end;
-
-function TModernDigitalSignature.VerifySignature(const Data: TBytes; const Signature: string): Boolean;
-begin
-  raise Exception.Create('La vérification de signatures nécessite Delphi 11 ou supérieur.');
-end;
-{$ENDIF}
-
-function TModernDigitalSignature.SignFile(const FileName: string): string;
-var
-  FileData: TBytes;
-begin
-  FileData := TFile.ReadAllBytes(FileName);
-  Result := SignData(FileData);
-end;
-
-function TModernDigitalSignature.VerifyFileSignature(const FileName, Signature: string): Boolean;
-var
-  FileData: TBytes;
-begin
-  FileData := TFile.ReadAllBytes(FileName);
-  Result := VerifySignature(FileData, Signature);
-end;
-
-end.
-```
-
-> [!NOTE]
-> **Nécessite Delphi 11 ou supérieur.**
-> Les fonctions de signature numérique modernes utilisant `System.Crypto` sont disponibles uniquement dans Delphi 11 Alexandria et versions ultérieures. Pour les versions antérieures, utilisez l'API CryptoAPI ou une bibliothèque tierce.
-
-### Exemple d'application : Vérification de l'intégrité de fichiers
-
-Voici un exemple concret d'application qui utilise la signature numérique pour vérifier l'intégrité des fichiers :
-
-```pas
-procedure TFormMain.btnSignClick(Sender: TObject);
-var
-  Signature: TModernDigitalSignature;
-  SignatureStr: string;
-  FileName: string;
-begin
-  if not OpenDialog.Execute then
+  if not FileExists(AFichier) or not FileExists(AFichierSignature) then
     Exit;
 
-  FileName := OpenDialog.FileName;
-  StatusBar.SimpleText := 'Signature du fichier en cours...';
+  // Calculer l'empreinte actuelle
+  EmpreinteCalculée := CalculerEmpreinte(AFichier);
 
-  Signature := TModernDigitalSignature.Create('private_key.pem', 'public_key.pem');
+  // Lire l'empreinte stockée
+  Signature := TStringList.Create;
   try
-    // Générer une paire de clés si nécessaire
-    if not FileExists('private_key.pem') or not FileExists('public_key.pem') then
+    Signature.LoadFromFile(AFichierSignature);
+
+    for i := 0 to Signature.Count - 1 do
     begin
-      StatusBar.SimpleText := 'Génération des clés...';
-      Signature.GenerateKeyPair;
+      if Signature[i].StartsWith('SHA-256: ') then
+      begin
+        EmpreinteStockée := Copy(Signature[i], 10, Length(Signature[i]));
+        Break;
+      end;
     end;
 
-    // Signer le fichier
-    SignatureStr := Signature.SignFile(FileName);
-
-    // Sauvegarder la signature
-    SaveDialog.FileName := ExtractFileName(FileName) + '.sig';
-    if SaveDialog.Execute then
-    begin
-      TFile.WriteAllText(SaveDialog.FileName, SignatureStr);
-      StatusBar.SimpleText := 'Fichier signé avec succès. Signature sauvegardée.';
-    end;
+    // Comparer
+    Result := (EmpreinteCalculée = EmpreinteStockée);
   finally
     Signature.Free;
   end;
 end;
 
-procedure TFormMain.btnVerifyClick(Sender: TObject);
-var
-  Signature: TModernDigitalSignature;
-  SignatureStr: string;
-  FileName, SigFileName: string;
-  IsValid: Boolean;
+// Utilisation
+procedure TForm1.BtnSignerFichierClick(Sender: TObject);
 begin
-  // Sélectionner le fichier à vérifier
-  if not OpenDialog.Execute then
-    Exit;
-  FileName := OpenDialog.FileName;
+  if OpenDialog1.Execute then
+  begin
+    TSignatureFichier.SauvegarderEmpreinte(
+      OpenDialog1.FileName,
+      OpenDialog1.FileName + '.sig'
+    );
+    ShowMessage('Signature créée : ' + OpenDialog1.FileName + '.sig');
+  end;
+end;
 
-  // Sélectionner le fichier de signature
-  OpenDialog.Title := 'Sélectionner le fichier de signature';
-  OpenDialog.Filter := 'Fichiers de signature (*.sig)|*.sig|Tous les fichiers (*.*)|*.*';
-  if not OpenDialog.Execute then
-    Exit;
-  SigFileName := OpenDialog.FileName;
+procedure TForm1.BtnVérifierFichierClick(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    if TSignatureFichier.VérifierEmpreinte(
+         OpenDialog1.FileName,
+         OpenDialog1.FileName + '.sig') then
+      ShowMessage('✓ Fichier authentique et non modifié')
+    else
+      ShowMessage('✗ ALERTE : Fichier modifié ou signature invalide !');
+  end;
+end;
+```
 
-  StatusBar.SimpleText := 'Vérification de la signature...';
+## Certificats numériques
 
-  Signature := TModernDigitalSignature.Create('private_key.pem', 'public_key.pem');
+Un certificat numérique lie une clé publique à une identité (personne, organisation, site web).
+
+### Structure d'un certificat
+
+```
+┌─────────────────────────────────────────┐
+│         CERTIFICAT NUMÉRIQUE            │
+├─────────────────────────────────────────┤
+│ Version: X.509 v3                       │
+│ Numéro de série: 1234567890             │
+│                                         │
+│ Émetteur (CA):                          │
+│   Nom: DigiCert                         │
+│   Pays: US                              │
+│                                         │
+│ Sujet (Propriétaire):                   │
+│   Nom: MonEntreprise SAS                │
+│   Pays: FR                              │
+│   Email: admin@monentreprise.com        │
+│                                         │
+│ Validité:                               │
+│   Du: 2024-01-01                        │
+│   Au: 2025-01-01                        │
+│                                         │
+│ Clé publique:                           │
+│   [Clé publique RSA 2048 bits]          │
+│                                         │
+│ Signature de la CA:                     │
+│   [Signature numérique de DigiCert]     │
+└─────────────────────────────────────────┘
+```
+
+### Hiérarchie de certification
+
+```
+Certificat Racine (Root CA)
+  ├─ Certificat Intermédiaire
+  │   ├─ Certificat de Site Web (www.example.com)
+  │   └─ Certificat de Code Signing
+  └─ Certificat Intermédiaire
+      └─ Certificat Personnel
+```
+
+### Lire un certificat en Delphi
+
+```pascal
+uses
+  IdSSLOpenSSL, IdX509;
+
+procedure LireInformationsCertificat(const AFichierCert: string);
+var
+  Certificate: TIdX509;
+begin
+  Certificate := TIdX509.Create(nil);
   try
-    // Lire la signature
-    SignatureStr := TFile.ReadAllText(SigFileName);
+    Certificate.LoadFromFile(AFichierCert);
+
+    Memo1.Lines.Add('=== INFORMATIONS DU CERTIFICAT ===');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('Sujet (Propriétaire):');
+    Memo1.Lines.Add('  ' + Certificate.Subject.OneLine);
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('Émetteur (CA):');
+    Memo1.Lines.Add('  ' + Certificate.Issuer.OneLine);
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('Période de validité:');
+    Memo1.Lines.Add('  Du: ' + DateTimeToStr(Certificate.notBefore));
+    Memo1.Lines.Add('  Au: ' + DateTimeToStr(Certificate.notAfter));
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('Numéro de série:');
+    Memo1.Lines.Add('  ' + IntToStr(Certificate.SerialNumber));
+    Memo1.Lines.Add('');
+
+    // Vérifier si le certificat est encore valide
+    if Certificate.notAfter > Now then
+      Memo1.Lines.Add('Statut: ✓ Valide')
+    else
+      Memo1.Lines.Add('Statut: ✗ EXPIRÉ');
+  finally
+    Certificate.Free;
+  end;
+end;
+```
+
+## Code Signing (Signature d'applications)
+
+Le code signing permet de signer vos exécutables pour prouver leur authenticité.
+
+### Pourquoi signer votre application ?
+
+**Confiance** : Les utilisateurs savent que l'application vient de vous
+
+**Sécurité** : Windows SmartScreen ne bloquera pas votre application
+
+**Intégrité** : Garantie que l'exécutable n'a pas été modifié par un malware
+
+### Obtenir un certificat de code signing
+
+**Options** :
+1. **Certificats commerciaux** (recommandé pour la production)
+   - DigiCert (Code Signing Certificate)
+   - Sectigo (Code Signing Certificate)
+   - GlobalSign
+   - Prix : 200-400€ par an
+
+2. **Certificats auto-signés** (développement uniquement)
+   - Gratuit
+   - Non reconnu par les navigateurs/Windows
+   - Utile pour les tests
+
+### Créer un certificat auto-signé (développement)
+
+```batch
+REM Créer un certificat de test avec makecert (Windows SDK)
+makecert -sv MonApp.pvk -n "CN=MonEntreprise" MonApp.cer -r
+pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123
+```
+
+### Signer un exécutable
+
+**Avec SignTool (Windows SDK)** :
+
+```batch
+REM Signer avec SignTool
+signtool sign /f MonApp.pfx /p MotDePasse123 /t http://timestamp.digicert.com MonApplication.exe
+
+REM Vérifier la signature
+signtool verify /pa MonApplication.exe
+```
+
+**Automatiser dans Delphi** :
+
+```pascal
+procedure SignerExécutable(const AFichierExe, ACertificat, AMotDePasse: string);
+var
+  Commande: string;
+  ExitCode: Cardinal;
+begin
+  // Construire la ligne de commande SignTool
+  Commande := Format(
+    'signtool.exe sign /f "%s" /p %s /t http://timestamp.digicert.com /v "%s"',
+    [ACertificat, AMotDePasse, AFichierExe]
+  );
+
+  // Exécuter SignTool
+  ExitCode := ExecuterCommande(Commande);
+
+  if ExitCode = 0 then
+    ShowMessage('✓ Application signée avec succès')
+  else
+    ShowMessage('✗ Erreur lors de la signature');
+end;
+
+function ExecuterCommande(const ACommande: string): Cardinal;
+var
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+begin
+  FillChar(StartupInfo, SizeOf(StartupInfo), 0);
+  StartupInfo.cb := SizeOf(StartupInfo);
+  StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
+  StartupInfo.wShowWindow := SW_HIDE;
+
+  if CreateProcess(nil, PChar(ACommande), nil, nil, False,
+                   CREATE_NO_WINDOW, nil, nil, StartupInfo, ProcessInfo) then
+  begin
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    GetExitCodeProcess(ProcessInfo.hProcess, Result);
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+  end
+  else
+    Result := GetLastError;
+end;
+
+// Intégration dans le build
+procedure TFormBuild.BtnCompilerEtSignerClick(Sender: TObject);
+begin
+  // 1. Compiler l'application
+  CompilerProjet;
+
+  // 2. Signer l'exécutable
+  SignerExécutable(
+    'C:\Projets\MonApp\MonApp.exe',
+    'C:\Certificats\MonApp.pfx',
+    'MotDePasseSecret'
+  );
+
+  ShowMessage('Build et signature terminés');
+end;
+```
+
+### Vérifier la signature d'un exécutable
+
+```pascal
+uses
+  Winapi.Windows, System.SysUtils;
+
+function VérifierSignatureExécutable(const AFichier: string): Boolean;
+var
+  VersionInfo: DWORD;
+  VersionInfoSize: DWORD;
+  VersionData: Pointer;
+begin
+  Result := False;
+
+  // Vérifier si le fichier a des informations de version signées
+  VersionInfoSize := GetFileVersionInfoSize(PChar(AFichier), VersionInfo);
+
+  if VersionInfoSize > 0 then
+  begin
+    GetMem(VersionData, VersionInfoSize);
+    try
+      if GetFileVersionInfo(PChar(AFichier), 0, VersionInfoSize, VersionData) then
+      begin
+        // En production, vérifier réellement la signature avec WinVerifyTrust
+        Result := True;
+      end;
+    finally
+      FreeMem(VersionData);
+    end;
+  end;
+end;
+
+procedure TForm1.BtnVérifierSignatureClick(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+  begin
+    if VérifierSignatureExécutable(OpenDialog1.FileName) then
+      ShowMessage('✓ L''exécutable est signé')
+    else
+      ShowMessage('✗ L''exécutable n''est PAS signé');
+  end;
+end;
+```
+
+## Signature de documents PDF
+
+Pour signer des documents PDF en Delphi :
+
+```pascal
+// Utiliser une bibliothèque comme Gnostice PDFtoolkit ou Winsoft PDF Library
+
+type
+  TSignaturePDF = class
+  public
+    procedure SignerPDF(const AFichierPDF, ACertificat, AMotDePasse: string);
+    function VérifierSignaturePDF(const AFichierPDF: string): Boolean;
+  end;
+
+procedure TSignaturePDF.SignerPDF(const AFichierPDF, ACertificat, AMotDePasse: string);
+begin
+  // Exemple conceptuel (nécessite une bibliothèque PDF)
+
+  // 1. Ouvrir le PDF
+  // PDF := TPDFDocument.Create;
+  // PDF.LoadFromFile(AFichierPDF);
+
+  // 2. Charger le certificat
+  // Cert := LoadCertificate(ACertificat, AMotDePasse);
+
+  // 3. Signer
+  // PDF.Sign(Cert, 'Signé par MonEntreprise le ' + DateToStr(Date));
+
+  // 4. Sauvegarder
+  // PDF.SaveToFile(AFichierPDF);
+
+  ShowMessage('PDF signé');
+end;
+```
+
+## Horodatage (Timestamping)
+
+L'horodatage prouve quand un document a été signé, même après expiration du certificat.
+
+### Pourquoi horodater ?
+
+**Problème** : Votre certificat expire dans 1 an, mais votre signature doit rester valide 10 ans.
+
+**Solution** : L'horodatage prouve que la signature a été créée AVANT l'expiration du certificat.
+
+```
+Sans horodatage:
+  Certificat expire → Signature invalide
+
+Avec horodatage:
+  Certificat expire → Mais la signature a été créée AVANT expiration
+                   → Signature reste valide ✓
+```
+
+### Serveurs d'horodatage
+
+```pascal
+const
+  // Serveurs d'horodatage publics gratuits
+  TIMESTAMP_DIGICERT = 'http://timestamp.digicert.com';
+  TIMESTAMP_SECTIGO = 'http://timestamp.sectigo.com';
+  TIMESTAMP_GLOBALSIGN = 'http://timestamp.globalsign.com';
+
+procedure SignerAvecHorodatage(const AFichier, ACertificat: string);
+var
+  Commande: string;
+begin
+  Commande := Format(
+    'signtool sign /f "%s" /t %s /v "%s"',
+    [ACertificat, TIMESTAMP_DIGICERT, AFichier]
+  );
+
+  ExecuterCommande(Commande);
+end;
+```
+
+## Checksum et vérification d'intégrité
+
+Pour les fichiers téléchargeables, fournissez toujours des checksums.
+
+### Générer des checksums multiples
+
+```pascal
+type
+  TChecksums = record
+    MD5: string;
+    SHA1: string;
+    SHA256: string;
+    SHA512: string;
+  end;
+
+function CalculerTousLesChecksums(const AFichier: string): TChecksums;
+var
+  FileStream: TFileStream;
+  HashMD5: THashMD5;
+  HashSHA1: THashSHA1;
+  HashSHA256: THashSHA2;
+begin
+  FileStream := TFileStream.Create(AFichier, fmOpenRead or fmShareDenyWrite);
+  try
+    // MD5 (déconseillé pour la sécurité, mais encore utilisé)
+    HashMD5 := THashMD5.Create;
+    Result.MD5 := HashMD5.GetHashString(FileStream);
+    FileStream.Position := 0;
+
+    // SHA-1 (déconseillé pour la sécurité critique)
+    HashSHA1 := THashSHA1.Create;
+    Result.SHA1 := HashSHA1.GetHashString(FileStream);
+    FileStream.Position := 0;
+
+    // SHA-256 (recommandé)
+    HashSHA256 := THashSHA2.Create;
+    Result.SHA256 := HashSHA256.GetHashString(FileStream);
+    FileStream.Position := 0;
+
+    // SHA-512 (très sûr, mais plus lent)
+    Result.SHA512 := THashSHA2.GetHashString(FileStream);
+  finally
+    FileStream.Free;
+  end;
+end;
+
+procedure GenererFichierChecksums(const AFichier: string);
+var
+  Checksums: TChecksums;
+  Fichier: TStringList;
+  NomFichier: string;
+begin
+  Checksums := CalculerTousLesChecksums(AFichier);
+  NomFichier := ExtractFileName(AFichier);
+
+  Fichier := TStringList.Create;
+  try
+    Fichier.Add('Checksums pour : ' + NomFichier);
+    Fichier.Add('Généré le : ' + DateTimeToStr(Now));
+    Fichier.Add('');
+    Fichier.Add('MD5    : ' + Checksums.MD5);
+    Fichier.Add('SHA-1  : ' + Checksums.SHA1);
+    Fichier.Add('SHA-256: ' + Checksums.SHA256);
+    Fichier.Add('SHA-512: ' + Checksums.SHA512);
+
+    Fichier.SaveToFile(AFichier + '.checksums.txt');
+    ShowMessage('Fichier de checksums créé');
+  finally
+    Fichier.Free;
+  end;
+end;
+
+// Utilisation
+procedure TForm1.BtnGenererChecksumsClick(Sender: TObject);
+begin
+  if OpenDialog1.Execute then
+    GenererFichierChecksums(OpenDialog1.FileName);
+end;
+```
+
+## Validation de mises à jour
+
+Pour sécuriser les mises à jour de votre application :
+
+```pascal
+type
+  TValidateurMiseAJour = class
+  private
+    FCléPublique: string;
+  public
+    constructor Create(const ACléPublique: string);
+    function VérifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;
+    procedure TéléchargerEtInstaller(const AURL: string);
+  end;
+
+constructor TValidateurMiseAJour.Create(const ACléPublique: string);
+begin
+  inherited Create;
+  FCléPublique := ACléPublique;
+end;
+
+function TValidateurMiseAJour.VérifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;
+var
+  HashCalculé: string;
+  SignatureDécodée: string;
+begin
+  Result := False;
+
+  // 1. Calculer le hash du fichier téléchargé
+  HashCalculé := CalculerHashFichier(AFichierMAJ);
+
+  // 2. Vérifier la signature avec la clé publique
+  // SignatureDécodée := RSA.Verify(ASignature, FCléPublique);
+
+  // 3. Comparer
+  // Result := (HashCalculé = SignatureDécodée);
+
+  // Version simplifiée pour l'exemple
+  Result := True; // Implémenter la vraie vérification
+end;
+
+procedure TValidateurMiseAJour.TéléchargerEtInstaller(const AURL: string);
+var
+  FichierMAJ: string;
+  FichierSignature: string;
+  HTTP: TIdHTTP;
+begin
+  HTTP := TIdHTTP.Create(nil);
+  try
+    // Télécharger la mise à jour
+    FichierMAJ := TPath.Combine(TPath.GetTempPath, 'update.exe');
+    HTTP.Get(AURL, FichierMAJ);
+
+    // Télécharger la signature
+    FichierSignature := TPath.Combine(TPath.GetTempPath, 'update.sig');
+    HTTP.Get(AURL + '.sig', FichierSignature);
 
     // Vérifier la signature
-    IsValid := Signature.VerifyFileSignature(FileName, SignatureStr);
-
-    if IsValid then
+    if VérifierMiseAJour(FichierMAJ, TFile.ReadAllText(FichierSignature)) then
     begin
-      StatusBar.SimpleText := 'Signature valide ! Le fichier est authentique.';
-      ShowMessage('Le fichier est authentique et n''a pas été modifié.');
+      ShowMessage('✓ Mise à jour authentique, installation...');
+      // Lancer l'installateur
+      ShellExecute(0, 'open', PChar(FichierMAJ), nil, nil, SW_SHOW);
     end
     else
     begin
-      StatusBar.SimpleText := 'Attention : signature invalide !';
-      ShowMessage('ATTENTION : La signature est invalide. Le fichier a peut-être été modifié !');
+      ShowMessage('✗ ALERTE : Signature invalide ! Mise à jour refusée.');
+      DeleteFile(FichierMAJ);
+      DeleteFile(FichierSignature);
     end;
   finally
-    Signature.Free;
+    HTTP.Free;
   end;
 end;
 ```
 
-### Bonnes pratiques pour l'utilisation des signatures numériques
+## Blockchain et signature distribuée
 
-1. **Protégez vos clés privées** : Ne stockez jamais les clés privées dans votre code source ou dans un endroit accessible au public.
+Concept moderne : enregistrer les signatures dans une blockchain.
 
-2. **Utilisez des algorithmes robustes** : Préférez RSA avec une clé d'au moins 2048 bits ou ECDSA avec des courbes comme P-256.
+```pascal
+type
+  TSignatureBlockchain = class
+  public
+    function EnregistrerSignature(const ADocument, ASignature: string): string; // Retourne hash transaction
+    function VérifierSurBlockchain(const AHashTransaction: string): Boolean;
+  end;
 
-3. **Validez les données avant de les signer** : Assurez-vous que vous ne signez que des données valides et sûres.
+function TSignatureBlockchain.EnregistrerSignature(const ADocument, ASignature: string): string;
+var
+  RESTClient: TRESTClient;
+  RESTRequest: TRESTRequest;
+  RESTResponse: TRESTResponse;
+  JSONBody: TJSONObject;
+begin
+  // Exemple avec une API blockchain (Ethereum, Polygon, etc.)
+  RESTClient := TRESTClient.Create('https://api.blockchain.com');
+  RESTRequest := TRESTRequest.Create(nil);
+  RESTResponse := TRESTResponse.Create(nil);
+  JSONBody := TJSONObject.Create;
+  try
+    RESTRequest.Client := RESTClient;
+    RESTRequest.Response := RESTResponse;
+    RESTRequest.Method := TRESTRequestMethod.rmPOST;
+    RESTRequest.Resource := 'register';
 
-4. **Utilisez des fonctions de hashage sécurisées** : Préférez SHA-256 ou supérieur à des algorithmes plus anciens comme MD5 ou SHA-1.
+    JSONBody.AddPair('document_hash', THashSHA2.GetHashString(ADocument));
+    JSONBody.AddPair('signature', ASignature);
+    JSONBody.AddPair('timestamp', IntToStr(DateTimeToUnix(Now)));
 
-5. **Mettez en place une gestion sécurisée des clés** : Prévoyez la rotation des clés et des mécanismes de révocation.
+    RESTRequest.AddBody(JSONBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
+    RESTRequest.Execute;
 
-6. **Informez les utilisateurs** : Affichez clairement les résultats de la vérification de signature pour que les utilisateurs comprennent les implications.
+    if RESTResponse.StatusCode = 200 then
+      Result := (TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject).GetValue<string>('transaction_hash')
+    else
+      raise Exception.Create('Erreur blockchain');
+  finally
+    JSONBody.Free;
+    RESTResponse.Free;
+    RESTRequest.Free;
+    RESTClient.Free;
+  end;
+end;
+```
 
-### Conclusion
+## Bonnes pratiques
 
-Les signatures numériques constituent un élément fondamental de la sécurité des applications modernes. Avec Delphi, vous disposez de plusieurs options pour les mettre en œuvre, des API Windows classiques aux bibliothèques modernes intégrées dans les dernières versions.
+### ✅ À faire
 
-En utilisant les signatures numériques, vous pouvez garantir l'authenticité et l'intégrité des données manipulées par vos applications, augmentant ainsi la confiance des utilisateurs et la sécurité globale de votre système.
+**1. Utiliser SHA-256 ou supérieur**
+```pascal
+// ✅ BON
+Hash := THashSHA2.GetHashString(Document);
 
----
+// ❌ ÉVITER - MD5 est cassé
+Hash := THashMD5.GetHashString(Document);
+```
 
-> [!TIP]
-> **Pour aller plus loin**
->
-> - Explorez la certification de code pour signer vos applications Delphi avant distribution
-> - Découvrez les infrastructures à clé publique (PKI) pour gérer les certificats à grande échelle
-> - Intégrez les signatures numériques à vos processus d'authentification et de validation de documents
+**2. Toujours horodater les signatures**
+```pascal
+// Horodatage pour validité à long terme
+signtool sign /t http://timestamp.digicert.com MonApp.exe
+```
+
+**3. Protéger la clé privée**
+```pascal
+// Stocker dans un endroit sécurisé (HSM, coffre-fort)
+// Jamais dans le code source ou Git
+```
+
+**4. Vérifier les certificats**
+```pascal
+// Vérifier l'émetteur et la date de validité
+if Certificate.notAfter < Now then
+  ShowMessage('Certificat expiré !');
+```
+
+**5. Fournir plusieurs checksums**
+```pascal
+// SHA-256 + SHA-512 pour compatibilité et sécurité
+```
+
+### ❌ À éviter
+
+**1. Utiliser des algorithmes obsolètes**
+```pascal
+// ❌ MD5 est cassé (collisions possibles)
+// ❌ SHA-1 est déconseillé
+```
+
+**2. Clé privée non protégée**
+```pascal
+// ❌ Stocker la clé privée en clair
+const PRIVATE_KEY = '...';
+```
+
+**3. Ignorer l'expiration des certificats**
+```pascal
+// ❌ Ne pas vérifier la date de validité
+```
+
+**4. Signature sans horodatage**
+```pascal
+// ❌ La signature devient invalide après expiration du certificat
+```
+
+## Checklist signature numérique
+
+### Pour les développeurs
+
+- [ ] Obtenir un certificat de code signing valide
+- [ ] Signer tous les exécutables et installateurs
+- [ ] Ajouter l'horodatage lors de la signature
+- [ ] Fournir des checksums (SHA-256 minimum)
+- [ ] Vérifier les signatures avant l'installation de mises à jour
+- [ ] Protéger la clé privée (ne jamais commiter)
+- [ ] Renouveler le certificat avant expiration
+
+### Pour les utilisateurs
+
+- [ ] Vérifier la signature avant d'exécuter un fichier téléchargé
+- [ ] Vérifier les checksums des fichiers importants
+- [ ] Ne pas ignorer les alertes Windows SmartScreen
+- [ ] Méfiance envers les fichiers non signés
+
+## Résumé des points essentiels
+
+✅ **Principes clés** :
+- La signature numérique garantit **authenticité** et **intégrité**
+- Différent du chiffrement (visible vs caché)
+- Basée sur la cryptographie asymétrique (RSA)
+- Hash + Clé privée = Signature
+- Vérification avec clé publique
+
+🔐 **Composants essentiels** :
+- **Hash** : Empreinte unique du document (SHA-256/SHA-512)
+- **Clé privée** : Pour signer (à protéger absolument)
+- **Clé publique** : Pour vérifier (peut être partagée)
+- **Certificat** : Lie identité et clé publique
+- **Horodatage** : Prouve la date de signature
+
+📋 **Applications pratiques** :
+- Code signing : Signer vos exécutables
+- Signature de documents : PDF, contrats
+- Validation de mises à jour
+- Checksums pour téléchargements
+- Preuve d'intégrité de fichiers
+
+## Outils utiles
+
+**Windows SDK** :
+- SignTool : Signature d'exécutables
+- MakeCert : Certificats de test
+
+**Bibliothèques Delphi** :
+- Indy (IdSSL) : Certificats, SSL/TLS
+- System.Hash : Fonctions de hash
+- OpenSSL : Crypto complète
+
+**Services en ligne** :
+- DigiCert, Sectigo : Certificats commerciaux
+- Let's Encrypt : Certificats SSL gratuits
+- Timestamp servers : Horodatage
+
+La signature numérique est essentielle pour établir la confiance dans vos applications. Investissez dans un bon certificat et signez systématiquement tout ce que vous distribuez.
 
 ⏭️ [Sécurité des applications mobiles](/16-securite-des-applications/10-securite-des-applications-mobiles.md)

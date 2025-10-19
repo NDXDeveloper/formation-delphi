@@ -1,1044 +1,725 @@
-# 16. Sécurité des applications
-## 16.3 Chiffrement des données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.3 Chiffrement des données
 
-Le chiffrement est une technique qui permet de protéger vos données en les rendant illisibles sans la clé appropriée. Dans ce chapitre, nous allons explorer comment chiffrer et déchiffrer des données sensibles dans vos applications Delphi.
+## Introduction
+
+Le chiffrement est l'une des techniques les plus importantes pour protéger les données sensibles. Il consiste à transformer des informations lisibles (texte clair) en un format illisible (texte chiffré) que seules les personnes autorisées peuvent déchiffrer.
+
+**Analogie simple** : Imaginez que vous envoyez une lettre secrète. Le chiffrement, c'est comme écrire cette lettre dans un code secret que seul votre destinataire peut déchiffrer avec la bonne clé.
 
 ### Pourquoi chiffrer les données ?
 
-Même avec une authentification et une autorisation solides, il reste important de protéger les données sensibles par chiffrement pour plusieurs raisons :
+**Protection contre le vol** : Si un attaquant accède à vos données chiffrées, il ne peut pas les lire sans la clé de déchiffrement.
 
-1. **Protection contre les accès non autorisés à la base de données** : Si quelqu'un obtient un accès direct à votre base de données (en contournant votre application), les données chiffrées resteront protégées.
+**Exemples de données à chiffrer** :
+- Mots de passe (avec hash plutôt que chiffrement)
+- Numéros de cartes bancaires
+- Données médicales
+- Documents confidentiels
+- Communications privées
+- Données personnelles sensibles
 
-2. **Protection des données au repos** : Les données stockées sur le disque dur, dans une base de données ou dans des fichiers de configuration sont vulnérables si elles ne sont pas chiffrées.
+**Règle importante** : Le chiffrement ne remplace pas la sécurité, il la complète. Même avec du chiffrement, vous devez toujours protéger l'accès à vos systèmes.
 
-3. **Protection des données en transit** : Les informations envoyées sur un réseau peuvent être interceptées si elles ne sont pas chiffrées.
+## Concepts fondamentaux
 
-4. **Conformité réglementaire** : De nombreuses réglementations comme le RGPD (GDPR) exigent que les données personnelles soient protégées par des mesures techniques appropriées, dont le chiffrement.
+### Terminologie de base
 
-### Types de chiffrement
+**Texte clair (Plaintext)** : Les données originales, lisibles
+```
+Exemple : "MonMotDePasseSecret"
+```
 
-Il existe deux principaux types de chiffrement :
+**Texte chiffré (Ciphertext)** : Les données après chiffrement, illisibles
+```
+Exemple : "8j2kL9pQ3mN5vB7wX1cZ4fR6tY0hG"
+```
 
-1. **Chiffrement symétrique** : Une seule clé est utilisée à la fois pour chiffrer et déchiffrer les données. C'est rapide mais nécessite de partager la clé secrète de manière sécurisée.
+**Clé de chiffrement** : L'information secrète utilisée pour chiffrer et déchiffrer
+```
+Exemple : "MaCleSecrete123!"
+```
 
-2. **Chiffrement asymétrique** : Utilise une paire de clés - une clé publique pour chiffrer et une clé privée pour déchiffrer. C'est plus sécurisé pour l'échange de clés mais plus lent que le chiffrement symétrique.
+**Algorithme de chiffrement** : La méthode mathématique utilisée pour transformer les données
+```
+Exemples : AES, RSA, 3DES
+```
 
-### Chiffrement dans Delphi
+### Chiffrement vs Hachage
 
-Delphi propose plusieurs options pour implémenter le chiffrement :
+C'est une confusion courante, clarifions la différence :
 
-1. **Bibliothèques intégrées** : Delphi inclut des unités comme `System.Hash` et `System.NetEncoding` qui fournissent des fonctions de base.
+| Chiffrement | Hachage |
+|-------------|---------|
+| **Réversible** : on peut déchiffrer | **Irréversible** : impossible de retrouver l'original |
+| Nécessite une clé | Pas de clé nécessaire |
+| Usage : protéger des données qu'on doit relire | Usage : vérifier l'intégrité, stocker des mots de passe |
+| Exemple : chiffrer un numéro de carte | Exemple : hasher un mot de passe |
 
-2. **API de chiffrement Windows** : Delphi peut accéder aux fonctions de chiffrement du système d'exploitation.
+```
+Chiffrement :
+"Hello" + clé → "8k2Lp" → déchiffrement → "Hello"
 
-3. **Bibliothèques tierces** : Il existe plusieurs bibliothèques de chiffrement disponibles pour Delphi, comme DCPcrypt, LockBox, CryptoLib4Pascal, etc.
+Hachage :
+"Hello" → "2cf24dba5fb0a30e..." (impossible de revenir en arrière)
+```
 
-Nous allons nous concentrer sur les solutions intégrées à Delphi et quelques approches simples à mettre en œuvre.
+## Types de chiffrement
 
-### Chiffrement symétrique simple
+### 1. Chiffrement symétrique
 
-#### 1. Utilisation de l'API TEACipher (Tiny Encryption Algorithm)
+**Principe** : La même clé est utilisée pour chiffrer et déchiffrer.
 
-Cette méthode est disponible dans Delphi via le module `DCPcrypt`. Voici un exemple simple :
+**Analogie** : C'est comme un cadenas avec une seule clé. La personne qui ferme le cadenas et celle qui l'ouvre utilisent la même clé.
 
-```pas
-unit SimpleEncryption;
+```
+Expéditeur                          Destinataire
+    |                                    |
+    | Texte clair                        |
+    | "Bonjour"                          |
+    |                                    |
+    v                                    v
+Chiffre avec clé K         Déchiffre avec clé K
+    |                                    |
+    v                                    v
+"e7Kp2m9Q"  ──────────────→  "Bonjour"
+```
 
-interface
+**Avantages** :
+- Très rapide
+- Efficace pour de grandes quantités de données
+- Moins gourmand en ressources
+
+**Inconvénients** :
+- Il faut partager la clé secrète de manière sécurisée
+- Une clé compromise = toutes les données compromises
+
+**Algorithmes courants** :
+- **AES (Advanced Encryption Standard)** : Le standard actuel, très sûr
+- **3DES (Triple DES)** : Ancien, moins recommandé aujourd'hui
+- **Blowfish** : Rapide, pour des données non critiques
+- **ChaCha20** : Moderne, très performant sur mobile
+
+### 2. Chiffrement asymétrique
+
+**Principe** : Deux clés différentes sont utilisées - une clé publique pour chiffrer, une clé privée pour déchiffrer.
+
+**Analogie** : C'est comme une boîte aux lettres. N'importe qui peut y déposer un courrier (clé publique), mais seul le propriétaire peut l'ouvrir (clé privée).
+
+```
+Alice                                   Bob
+  |                                      |
+  | Clé publique de Bob                 | Clé privée de Bob
+  v                                      v
+Chiffre "Secret"           Déchiffre avec clé privée
+  |                                      |
+  v                                      v
+"9Km2pL5Q" ──────────────→    "Secret"
+```
+
+**Avantages** :
+- Pas besoin de partager une clé secrète
+- Permet la signature numérique
+
+**Inconvénients** :
+- Plus lent que le chiffrement symétrique
+- Limité en taille de données
+
+**Algorithmes courants** :
+- **RSA** : Le plus utilisé, très fiable
+- **ECC (Elliptic Curve Cryptography)** : Plus rapide, clés plus courtes
+- **DSA** : Pour les signatures numériques
+
+### 3. Chiffrement hybride
+
+**Principe** : Combine les avantages des deux méthodes.
+
+**Fonctionnement** :
+1. Générer une clé symétrique aléatoire
+2. Chiffrer les données avec cette clé symétrique (rapide)
+3. Chiffrer la clé symétrique avec la clé publique du destinataire (asymétrique)
+4. Envoyer les données chiffrées + la clé chiffrée
+
+**Usage** : C'est ce que fait HTTPS ! Les données volumineuses sont chiffrées en symétrique, mais la clé est échangée de manière sécurisée en asymétrique.
+
+## Implémentation en Delphi
+
+### Utilisation de System.Hash pour le hachage
+
+Bien que le hachage ne soit pas du chiffrement, il est souvent utilisé en complément :
+
+```pascal
+uses
+  System.Hash, System.SysUtils;
+
+// Hacher une chaîne avec SHA-256
+function HasherTexte(const ATexte: string): string;
+begin
+  Result := THashSHA2.GetHashString(ATexte);
+end;
+
+// Exemple d'utilisation
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  TexteClair: string;
+  Hash: string;
+begin
+  TexteClair := 'MonMotDePasse123';
+  Hash := HasherTexte(TexteClair);
+
+  ShowMessage('Original : ' + TexteClair + sLineBreak +
+              'Hash SHA-256 : ' + Hash);
+  // Hash SHA-256 : 8d969eef6ecad3c29a3a629280e686cf...
+end;
+```
+
+### Chiffrement symétrique avec Indy
+
+La bibliothèque Indy (Internet Direct) incluse avec Delphi offre des composants de chiffrement.
+
+```pascal
+uses
+  IdGlobal, IdHashSHA, IdCoderMIME, System.SysUtils;
+
+// Chiffrement simple avec XOR (à des fins éducatives uniquement, PAS SÉCURISÉ)
+function ChiffrerXOR(const ATexte, ACle: string): string;
+var
+  i: Integer;
+  TexteBytes: TIdBytes;
+  CleBytes: TIdBytes;
+begin
+  TexteBytes := ToBytes(ATexte);
+  CleBytes := ToBytes(ACle);
+
+  for i := 0 to Length(TexteBytes) - 1 do
+    TexteBytes[i] := TexteBytes[i] xor CleBytes[i mod Length(CleBytes)];
+
+  Result := BytesToString(TexteBytes);
+end;
+
+// Note : XOR est utilisé ici pour illustration.
+// Pour une vraie application, utilisez AES !
+```
+
+### Chiffrement AES avec System.NetEncoding
+
+Delphi moderne inclut des fonctionnalités de chiffrement dans ses unités système.
+
+```pascal
+uses
+  System.SysUtils, System.NetEncoding;
+
+// Exemple de base avec encodage Base64 (pas du chiffrement, juste de l'encodage)
+function EncoderBase64(const ATexte: string): string;
+begin
+  Result := TNetEncoding.Base64.Encode(ATexte);
+end;
+
+function DecoderBase64(const ATexteEncode: string): string;
+begin
+  Result := TNetEncoding.Base64.Decode(ATexteEncode);
+end;
+
+// Utilisation
+procedure TForm1.BtnEncoderClick(Sender: TObject);
+begin
+  EditEncode.Text := EncoderBase64(EditClair.Text);
+  // "Bonjour" devient "Qm9uam91cg=="
+end;
+
+procedure TForm1.BtnDecoderClick(Sender: TObject);
+begin
+  EditDecode.Text := DecoderBase64(EditEncode.Text);
+  // "Qm9uam91cg==" redevient "Bonjour"
+end;
+```
+
+**Important** : Base64 n'est PAS du chiffrement ! C'est juste un encodage. N'importe qui peut le décoder. C'est utile pour transporter des données binaires, pas pour la sécurité.
+
+### Chiffrement AES robuste
+
+Pour un vrai chiffrement sécurisé, utilisez une bibliothèque comme DCPcrypt ou Lockbox :
+
+```pascal
+// Exemple conceptuel avec pseudo-code
+// (nécessite une bibliothèque tierce comme DCPcrypt)
 
 uses
-  System.SysUtils, System.Classes, System.NetEncoding,
-  DCPtea, DCPsha256, DCPcrypt2;
+  DCPcrypt2, DCPrijndael, DCPsha256;
 
 type
-  TCryptoHelper = class
-  public
-    class function EncryptString(const PlainText, Password: string): string;
-    class function DecryptString(const EncryptedText, Password: string): string;
-  end;
-
-implementation
-
-{ TCryptoHelper }
-
-class function TCryptoHelper.EncryptString(const PlainText, Password: string): string;
-var
-  Cipher: TDCP_tea;
-  SourceStream, DestStream: TMemoryStream;
-  Hash: TDCP_sha256;
-  Digest: array[0..31] of byte;
-begin
-  Result := '';
-
-  SourceStream := TMemoryStream.Create;
-  DestStream := TMemoryStream.Create;
-  Cipher := TDCP_tea.Create(nil);
-  Hash := TDCP_sha256.Create(nil);
-  try
-    // Convertir la chaîne en bytes et l'écrire dans le SourceStream
-    SourceStream.WriteBuffer(PChar(PlainText)^, Length(PlainText) * SizeOf(Char));
-    SourceStream.Position := 0;
-
-    // Créer un hash du mot de passe pour la clé de chiffrement
-    Hash.Init;
-    Hash.UpdateStr(Password);
-    Hash.Final(Digest);
-
-    // Initialiser le chiffrement avec la clé
-    Cipher.Init(Digest, Sizeof(Digest) * 8, nil);
-
-    // Chiffrer les données
-    Cipher.EncryptStream(SourceStream, DestStream, SourceStream.Size);
-    DestStream.Position := 0;
-
-    // Convertir le résultat en Base64 pour le stockage
-    SetLength(Result, DestStream.Size);
-    DestStream.ReadBuffer(Result[1], DestStream.Size);
-    Result := TNetEncoding.Base64.Encode(Result);
-  finally
-    Cipher.Free;
-    Hash.Free;
-    SourceStream.Free;
-    DestStream.Free;
-  end;
-end;
-
-class function TCryptoHelper.DecryptString(const EncryptedText, Password: string): string;
-var
-  Cipher: TDCP_tea;
-  SourceStream, DestStream: TMemoryStream;
-  Hash: TDCP_sha256;
-  Digest: array[0..31] of byte;
-  DecodedStr: string;
-  Size: Integer;
-begin
-  Result := '';
-
-  // Décoder le texte Base64
-  DecodedStr := TNetEncoding.Base64.Decode(EncryptedText);
-
-  SourceStream := TMemoryStream.Create;
-  DestStream := TMemoryStream.Create;
-  Cipher := TDCP_tea.Create(nil);
-  Hash := TDCP_sha256.Create(nil);
-  try
-    // Écrire les données décodées dans le SourceStream
-    SourceStream.WriteBuffer(DecodedStr[1], Length(DecodedStr));
-    SourceStream.Position := 0;
-
-    // Créer un hash du mot de passe pour la clé de déchiffrement
-    Hash.Init;
-    Hash.UpdateStr(Password);
-    Hash.Final(Digest);
-
-    // Initialiser le déchiffrement avec la clé
-    Cipher.Init(Digest, Sizeof(Digest) * 8, nil);
-
-    // Déchiffrer les données
-    Cipher.DecryptStream(SourceStream, DestStream, SourceStream.Size);
-    DestStream.Position := 0;
-
-    // Convertir le résultat en chaîne
-    Size := DestStream.Size div SizeOf(Char);
-    SetLength(Result, Size);
-    DestStream.ReadBuffer(Result[1], Size * SizeOf(Char));
-  finally
-    Cipher.Free;
-    Hash.Free;
-    SourceStream.Free;
-    DestStream.Free;
-  end;
-end;
-
-end.
-```
-
-> ⚠️ **Note** : Pour utiliser ce code, vous devez installer la bibliothèque DCPcrypt, qui peut être obtenue via GetIt Package Manager ou sur GitHub.
-
-#### 2. Utilisation de l'API intégrée (pour Delphi 12 ou supérieur)
-
-Dans les versions récentes de Delphi, vous pouvez utiliser les API intégrées :
-
-```pas
-// Nécessite Delphi 12 ou supérieur
-unit ModernEncryption;
-
-interface
-
-uses
-  System.SysUtils, System.NetEncoding, System.Generics.Collections, System.Hash,
-  System.Crypto, System.IOUtils;
-
-type
-  TModernCrypto = class
-  public
-    class function EncryptString(const PlainText, Password: string): string;
-    class function DecryptString(const EncryptedText, Password: string): string;
-
-    class function EncryptFile(const SourceFile, DestFile, Password: string): Boolean;
-    class function DecryptFile(const SourceFile, DestFile, Password: string): Boolean;
-  end;
-
-implementation
-
-{ TModernCrypto }
-
-class function TModernCrypto.EncryptString(const PlainText, Password: string): string;
-var
-  Key: TBytes;
-  IV: TBytes;
-  EncryptedBytes: TBytes;
-begin
-  // Créer une clé forte à partir du mot de passe
-  Key := THashSHA2.GetHashBytes(Password);
-
-  // Générer un vecteur d'initialisation aléatoire
-  SetLength(IV, 16);
-  TCrypto.RandomBytes(IV);
-
-  // Chiffrer les données
-  EncryptedBytes := TCipher.AES.Encrypt(
-    TEncoding.UTF8.GetBytes(PlainText),
-    Key,
-    IV
-  );
-
-  // Combiner IV et données chiffrées (IV doit être connu pour le déchiffrement)
-  // et encoder en Base64 pour un stockage facile
-  Result := TNetEncoding.Base64.EncodeBytesToString(IV) + '.' +
-            TNetEncoding.Base64.EncodeBytesToString(EncryptedBytes);
-end;
-
-class function TModernCrypto.DecryptString(const EncryptedText, Password: string): string;
-var
-  Key: TBytes;
-  IV, EncryptedBytes, DecryptedBytes: TBytes;
-  Parts: TArray<string>;
-begin
-  Result := '';
-
-  // Séparer IV et données chiffrées
-  Parts := EncryptedText.Split(['.']);
-  if Length(Parts) <> 2 then
-    raise Exception.Create('Format de texte chiffré invalide');
-
-  // Décoder de Base64
-  IV := TNetEncoding.Base64.DecodeStringToBytes(Parts[0]);
-  EncryptedBytes := TNetEncoding.Base64.DecodeStringToBytes(Parts[1]);
-
-  // Recréer la clé à partir du mot de passe
-  Key := THashSHA2.GetHashBytes(Password);
-
-  // Déchiffrer les données
-  try
-    DecryptedBytes := TCipher.AES.Decrypt(EncryptedBytes, Key, IV);
-    Result := TEncoding.UTF8.GetString(DecryptedBytes);
-  except
-    on E: Exception do
-      raise Exception.Create('Erreur de déchiffrement : ' + E.Message);
-  end;
-end;
-
-class function TModernCrypto.EncryptFile(const SourceFile, DestFile, Password: string): Boolean;
-var
-  Key: TBytes;
-  IV: TBytes;
-  SourceBytes, EncryptedBytes: TBytes;
-  HeaderBytes: TBytes;
-begin
-  Result := False;
-
-  try
-    // Lire le fichier source
-    SourceBytes := TFile.ReadAllBytes(SourceFile);
-
-    // Créer une clé forte à partir du mot de passe
-    Key := THashSHA2.GetHashBytes(Password);
-
-    // Générer un vecteur d'initialisation aléatoire
-    SetLength(IV, 16);
-    TCrypto.RandomBytes(IV);
-
-    // Chiffrer les données
-    EncryptedBytes := TCipher.AES.Encrypt(SourceBytes, Key, IV);
-
-    // Préparer l'en-tête : une signature + IV
-    // La signature permet de vérifier que c'est bien un fichier chiffré par notre application
-    HeaderBytes := TEncoding.UTF8.GetBytes('DELPHIENC');
-
-    // Écrire l'en-tête, l'IV et les données chiffrées dans le fichier de destination
-    TFile.WriteAllBytes(DestFile, HeaderBytes + IV + EncryptedBytes);
-
-    Result := True;
-  except
-    on E: Exception do
-      raise Exception.Create('Erreur lors du chiffrement du fichier : ' + E.Message);
-  end;
-end;
-
-class function TModernCrypto.DecryptFile(const SourceFile, DestFile, Password: string): Boolean;
-var
-  Key: TBytes;
-  IV: TBytes;
-  SourceBytes, DecryptedBytes: TBytes;
-  HeaderBytes: TBytes;
-  Signature: string;
-begin
-  Result := False;
-
-  try
-    // Lire le fichier source
-    SourceBytes := TFile.ReadAllBytes(SourceFile);
-
-    // Vérifier la signature (les 9 premiers octets)
-    if Length(SourceBytes) < 25 then // 9 (signature) + 16 (IV)
-      raise Exception.Create('Fichier trop petit pour être un fichier chiffré valide');
-
-    SetLength(HeaderBytes, 9);
-    Move(SourceBytes[0], HeaderBytes[0], 9);
-    Signature := TEncoding.UTF8.GetString(HeaderBytes);
-
-    if Signature <> 'DELPHIENC' then
-      raise Exception.Create('Ce fichier n''est pas un fichier chiffré valide');
-
-    // Extraire l'IV (les 16 octets suivants)
-    SetLength(IV, 16);
-    Move(SourceBytes[9], IV[0], 16);
-
-    // Créer une clé forte à partir du mot de passe
-    Key := THashSHA2.GetHashBytes(Password);
-
-    // Extraire les données chiffrées (le reste du fichier)
-    SetLength(EncryptedBytes, Length(SourceBytes) - 25);
-    Move(SourceBytes[25], EncryptedBytes[0], Length(SourceBytes) - 25);
-
-    // Déchiffrer les données
-    DecryptedBytes := TCipher.AES.Decrypt(EncryptedBytes, Key, IV);
-
-    // Écrire les données déchiffrées dans le fichier de destination
-    TFile.WriteAllBytes(DestFile, DecryptedBytes);
-
-    Result := True;
-  except
-    on E: Exception do
-      raise Exception.Create('Erreur lors du déchiffrement du fichier : ' + E.Message);
-  end;
-end;
-
-end.
-```
-
-### Exemple d'utilisation dans une application
-
-Voici comment utiliser ces classes de chiffrement dans votre application :
-
-```pas
-procedure TForm1.ButtonEncryptClick(Sender: TObject);
-var
-  PlainText, Password, EncryptedText: string;
-begin
-  PlainText := MemoPlainText.Text;
-  Password := EditPassword.Text;
-
-  if (PlainText = '') or (Password = '') then
-  begin
-    ShowMessage('Veuillez entrer du texte et un mot de passe');
-    Exit;
-  end;
-
-  try
-    // Pour Delphi 12 ou supérieur
-    EncryptedText := TModernCrypto.EncryptString(PlainText, Password);
-
-    // Pour les versions antérieures avec DCPcrypt
-    // EncryptedText := TCryptoHelper.EncryptString(PlainText, Password);
-
-    MemoEncrypted.Text := EncryptedText;
-    ShowMessage('Texte chiffré avec succès');
-  except
-    on E: Exception do
-      ShowMessage('Erreur de chiffrement : ' + E.Message);
-  end;
-end;
-
-procedure TForm1.ButtonDecryptClick(Sender: TObject);
-var
-  EncryptedText, Password, PlainText: string;
-begin
-  EncryptedText := MemoEncrypted.Text;
-  Password := EditPassword.Text;
-
-  if (EncryptedText = '') or (Password = '') then
-  begin
-    ShowMessage('Veuillez entrer du texte chiffré et un mot de passe');
-    Exit;
-  end;
-
-  try
-    // Pour Delphi 12 ou supérieur
-    PlainText := TModernCrypto.DecryptString(EncryptedText, Password);
-
-    // Pour les versions antérieures avec DCPcrypt
-    // PlainText := TCryptoHelper.DecryptString(EncryptedText, Password);
-
-    MemoPlainText.Text := PlainText;
-    ShowMessage('Texte déchiffré avec succès');
-  except
-    on E: Exception do
-      ShowMessage('Erreur de déchiffrement : ' + E.Message);
-  end;
-end;
-
-procedure TForm1.ButtonEncryptFileClick(Sender: TObject);
-var
-  SourceFile, DestFile, Password: string;
-begin
-  if OpenDialog1.Execute then
-  begin
-    SourceFile := OpenDialog1.FileName;
-
-    if SaveDialog1.Execute then
-    begin
-      DestFile := SaveDialog1.FileName;
-      Password := EditFilePassword.Text;
-
-      if Password = '' then
-      begin
-        ShowMessage('Veuillez entrer un mot de passe');
-        Exit;
-      end;
-
-      try
-        if TModernCrypto.EncryptFile(SourceFile, DestFile, Password) then
-          ShowMessage('Fichier chiffré avec succès');
-      except
-        on E: Exception do
-          ShowMessage('Erreur : ' + E.Message);
-      end;
-    end;
-  end;
-end;
-```
-
-### Chiffrement des données sensibles dans une base de données
-
-Il est souvent nécessaire de chiffrer certaines données sensibles dans une base de données, comme les numéros de carte de crédit, les informations médicales, etc.
-
-```pas
-procedure TClientDataModule.AddCustomer(const Name, Email, CreditCard: string);
-var
-  Query: TFDQuery;
-  EncryptedCreditCard: string;
-begin
-  // Chiffrer le numéro de carte de crédit avant de le stocker
-  EncryptedCreditCard := TModernCrypto.EncryptString(
-    CreditCard,
-    GetApplicationEncryptionKey()
-  );
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text :=
-      'INSERT INTO customers (name, email, credit_card_encrypted) ' +
-      'VALUES (:name, :email, :creditCard)';
-    Query.ParamByName('name').AsString := Name;
-    Query.ParamByName('email').AsString := Email;
-    Query.ParamByName('creditCard').AsString := EncryptedCreditCard;
-    Query.ExecSQL;
-  finally
-    Query.Free;
-  end;
-end;
-
-function TClientDataModule.GetCustomerCreditCard(const CustomerID: Integer): string;
-var
-  Query: TFDQuery;
-  EncryptedCreditCard: string;
-begin
-  Result := '';
-
-  // Vérifier si l'utilisateur a la permission de voir les données sensibles
-  if not AuthManager.HasPermission(Session.UserId, permViewSensitiveData) then
-    Exit;
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text :=
-      'SELECT credit_card_encrypted FROM customers WHERE id = :id';
-    Query.ParamByName('id').AsInteger := CustomerID;
-    Query.Open;
-
-    if not Query.IsEmpty then
-    begin
-      EncryptedCreditCard := Query.FieldByName('credit_card_encrypted').AsString;
-
-      // Déchiffrer le numéro de carte de crédit
-      Result := TModernCrypto.DecryptString(
-        EncryptedCreditCard,
-        GetApplicationEncryptionKey()
-      );
-
-      // Masquer partiellement le numéro pour l'affichage
-      if Length(Result) > 4 then
-        Result := StringOfChar('*', Length(Result) - 4) + Copy(Result, Length(Result) - 3, 4);
-    end;
-  finally
-    Query.Free;
-  end;
-end;
-
-// Fonction pour obtenir la clé de chiffrement de l'application
-function GetApplicationEncryptionKey: string;
-var
-  IniFile: TIniFile;
-  EncryptedKey: string;
-  Password: string;
-begin
-  // Cette méthode est très simplifiée
-  // Dans une application réelle, vous utiliseriez une méthode plus sécurisée
-  // pour stocker et récupérer votre clé de chiffrement
-
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    EncryptedKey := IniFile.ReadString('Security', 'EncryptedKey', '');
-
-    if EncryptedKey = '' then
-    begin
-      // Générer une nouvelle clé si elle n'existe pas
-      Password := GenerateRandomPassword(32);
-      EncryptedKey := ProtectString(Password);
-      IniFile.WriteString('Security', 'EncryptedKey', EncryptedKey);
-    end
-    else
-    begin
-      // Déchiffrer la clé existante
-      Password := UnprotectString(EncryptedKey);
-    end;
-
-    Result := Password;
-  finally
-    IniFile.Free;
-  end;
-end;
-```
-
-> ⚠️ **Important** : Dans une application réelle, vous ne stockeriez pas la clé de chiffrement dans un fichier INI. Vous utiliseriez plutôt un stockage sécurisé comme le Windows Data Protection API (DPAPI) ou un HSM (Hardware Security Module).
-
-### Protection des clés de chiffrement
-
-La sécurité de vos données chiffrées dépend fortement de la protection de vos clés de chiffrement. Voici comment utiliser le Windows Data Protection API (DPAPI) pour protéger vos clés :
-
-```pas
-// Nécessite Delphi 12 ou supérieur pour certaines fonctions
-unit KeyProtection;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Winapi.Windows, System.NetEncoding;
-
-// Protéger une chaîne avec DPAPI (Windows Data Protection API)
-function ProtectString(const PlainText: string): string;
-// Récupérer une chaîne protégée avec DPAPI
-function UnprotectString(const ProtectedText: string): string;
-
-implementation
-
-function ProtectString(const PlainText: string): string;
-var
-  DataIn: TBytes;
-  DataOut: TBytes;
-  DataOutSize: DWORD;
-  Success: Boolean;
-begin
-  DataIn := TEncoding.UTF8.GetBytes(PlainText);
-
-  // Première passe pour obtenir la taille nécessaire
-  DataOutSize := 0;
-  Success := CryptProtectData(
-    DataIn,             // Données à chiffrer
-    nil,                // Description (optionnel)
-    nil,                // Entropie supplémentaire (optionnel)
-    nil,                // Réservé
-    nil,                // Invite (optionnel)
-    CRYPTPROTECT_UI_FORBIDDEN, // Flags
-    DataOut,            // Données chiffrées
-    DataOutSize         // Taille des données chiffrées
-  );
-
-  if not Success then
-    raise Exception.Create('Erreur lors de la protection des données');
-
-  // Allouer la mémoire pour les données chiffrées
-  SetLength(DataOut, DataOutSize);
-
-  // Chiffrer les données
-  Success := CryptProtectData(
-    DataIn,
-    nil,
-    nil,
-    nil,
-    nil,
-    CRYPTPROTECT_UI_FORBIDDEN,
-    DataOut,
-    DataOutSize
-  );
-
-  if not Success then
-    raise Exception.Create('Erreur lors de la protection des données');
-
-  // Encoder en Base64 pour le stockage
-  Result := TNetEncoding.Base64.EncodeBytesToString(DataOut);
-end;
-
-function UnprotectString(const ProtectedText: string): string;
-var
-  DataIn: TBytes;
-  DataOut: TBytes;
-  DataOutSize: DWORD;
-  Success: Boolean;
-begin
-  // Décoder de Base64
-  DataIn := TNetEncoding.Base64.DecodeStringToBytes(ProtectedText);
-
-  // Première passe pour obtenir la taille nécessaire
-  DataOutSize := 0;
-  Success := CryptUnprotectData(
-    DataIn,             // Données chiffrées
-    nil,                // Description
-    nil,                // Entropie
-    nil,                // Réservé
-    nil,                // Invite
-    CRYPTPROTECT_UI_FORBIDDEN, // Flags
-    DataOut,            // Données déchiffrées
-    DataOutSize         // Taille des données déchiffrées
-  );
-
-  if not Success then
-    raise Exception.Create('Erreur lors de la récupération des données protégées');
-
-  // Allouer la mémoire pour les données déchiffrées
-  SetLength(DataOut, DataOutSize);
-
-  // Déchiffrer les données
-  Success := CryptUnprotectData(
-    DataIn,
-    nil,
-    nil,
-    nil,
-    nil,
-    CRYPTPROTECT_UI_FORBIDDEN,
-    DataOut,
-    DataOutSize
-  );
-
-  if not Success then
-    raise Exception.Create('Erreur lors de la récupération des données protégées');
-
-  // Convertir en chaîne
-  Result := TEncoding.UTF8.GetString(DataOut);
-end;
-
-end.
-```
-
-### Hachage pour stocker les mots de passe
-
-Pour stocker les mots de passe de manière sécurisée, vous ne devez jamais utiliser de chiffrement, mais plutôt des fonctions de hachage. Le hachage est un processus à sens unique : vous ne pouvez pas récupérer le mot de passe original à partir du hachage.
-
-```pas
-unit PasswordHashing;
-
-interface
-
-uses
-  System.SysUtils, System.Hash, System.NetEncoding;
-
-type
-  TPasswordHasher = class
-  public
-    // Créer un hachage sécurisé d'un mot de passe
-    class function HashPassword(const Password: string): string;
-
-    // Vérifier si un mot de passe correspond à un hachage stocké
-    class function VerifyPassword(const Password, StoredHash: string): Boolean;
-  end;
-
-implementation
-
-{ TPasswordHasher }
-
-class function TPasswordHasher.HashPassword(const Password: string): string;
-var
-  Salt: TBytes;
-  SaltedPassword: TBytes;
-  PasswordBytes: TBytes;
-  HashedBytes: TBytes;
-  SaltString: string;
-begin
-  // Générer un sel aléatoire
-  SetLength(Salt, 16);
-  TCrypto.RandomBytes(Salt);
-
-  // Convertir le mot de passe en bytes
-  PasswordBytes := TEncoding.UTF8.GetBytes(Password);
-
-  // Combiner le mot de passe et le sel
-  SetLength(SaltedPassword, Length(PasswordBytes) + Length(Salt));
-  Move(Salt[0], SaltedPassword[0], Length(Salt));
-  Move(PasswordBytes[0], SaltedPassword[Length(Salt)], Length(PasswordBytes));
-
-  // Hacher avec SHA-256
-  HashedBytes := THashSHA2.GetHashBytes(SaltedPassword);
-
-  // Encoder le sel et le hachage en Base64
-  SaltString := TNetEncoding.Base64.EncodeBytesToString(Salt);
-  Result := SaltString + '.' + TNetEncoding.Base64.EncodeBytesToString(HashedBytes);
-end;
-
-class function TPasswordHasher.VerifyPassword(const Password, StoredHash: string): Boolean;
-var
-  Parts: TArray<string>;
-  Salt: TBytes;
-  PasswordBytes: TBytes;
-  SaltedPassword: TBytes;
-  HashedBytes: TBytes;
-  StoredHashBytes: TBytes;
-begin
-  Result := False;
-
-  // Séparer le sel et le hachage
-  Parts := StoredHash.Split(['.']);
-  if Length(Parts) <> 2 then
-    Exit;
-
-  // Décoder le sel et le hachage stocké
-  Salt := TNetEncoding.Base64.DecodeStringToBytes(Parts[0]);
-  StoredHashBytes := TNetEncoding.Base64.DecodeStringToBytes(Parts[1]);
-
-  // Convertir le mot de passe en bytes
-  PasswordBytes := TEncoding.UTF8.GetBytes(Password);
-
-  // Combiner le mot de passe et le sel
-  SetLength(SaltedPassword, Length(PasswordBytes) + Length(Salt));
-  Move(Salt[0], SaltedPassword[0], Length(Salt));
-  Move(PasswordBytes[0], SaltedPassword[Length(Salt)], Length(PasswordBytes));
-
-  // Hacher avec SHA-256
-  HashedBytes := THashSHA2.GetHashBytes(SaltedPassword);
-
-  // Comparer les hachages
-  Result := (Length(HashedBytes) = Length(StoredHashBytes));
-
-  if Result then
-  begin
-    for var I := 0 to Length(HashedBytes) - 1 do
-    begin
-      if HashedBytes[I] <> StoredHashBytes[I] then
-      begin
-        Result := False;
-        Break;
-      end;
-    end;
-  end;
-end;
-
-end.
-```
-
-### Stockage sécurisé des mots de passe dans une base de données
-
-Voici comment utiliser la classe `TPasswordHasher` pour stocker et vérifier les mots de passe :
-
-```pas
-procedure TUserManager.CreateUser(const Username, Email, Password: string);
-var
-  HashedPassword: string;
-  Query: TFDQuery;
-begin
-  // Hacher le mot de passe avant de le stocker
-  HashedPassword := TPasswordHasher.HashPassword(Password);
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := DataModule1.FDConnection1;
-    Query.SQL.Text :=
-      'INSERT INTO users (username, email, password_hash) ' +
-      'VALUES (:username, :email, :passwordHash)';
-    Query.ParamByName('username').AsString := Username;
-    Query.ParamByName('email').AsString := Email;
-    Query.ParamByName('passwordHash').AsString := HashedPassword;
-    Query.ExecSQL;
-  finally
-    Query.Free;
-  end;
-end;
-
-function TUserManager.VerifyUserPassword(const Username, Password: string): Boolean;
-var
-  Query: TFDQuery;
-  StoredHash: string;
-begin
-  Result := False;
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := DataModule1.FDConnection1;
-    Query.SQL.Text :=
-      'SELECT password_hash FROM users WHERE username = :username';
-    Query.ParamByName('username').AsString := Username;
-    Query.Open;
-
-    if not Query.IsEmpty then
-    begin
-      StoredHash := Query.FieldByName('password_hash').AsString;
-      Result := TPasswordHasher.VerifyPassword(Password, StoredHash);
-    end;
-  finally
-    Query.Free;
-  end;
-end;
-```
-
-### Chiffrement des configurations et des fichiers sensibles
-
-Les fichiers de configuration contiennent souvent des informations sensibles comme des clés d'API, des identifiants de base de données, etc. Voici comment les protéger :
-
-```pas
-unit SecureConfig;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.IniFiles, System.JSON,
-  ModernEncryption;
-
-type
-  TSecureConfig = class
+  TChiffrementAES = class
   private
-    FConfigFileName: string;
-    FMasterPassword: string;
-    FConfigData: TJSONObject;
-
-    function LoadEncryptedConfig: Boolean;
-    procedure SaveEncryptedConfig;
+    FCipher: TDCP_rijndael;
   public
-    constructor Create(const ConfigFileName, MasterPassword: string);
+    constructor Create(const ACle: string);
     destructor Destroy; override;
-
-    function GetValue(const Section, Key: string; DefaultValue: string = ''): string;
-    procedure SetValue(const Section, Key, Value: string);
-    procedure Save;
+    function Chiffrer(const ATexte: string): string;
+    function Dechiffrer(const ATexteChiffre: string): string;
   end;
 
-implementation
-
-constructor TSecureConfig.Create(const ConfigFileName, MasterPassword: string);
+constructor TChiffrementAES.Create(const ACle: string);
+var
+  Hash: TDCP_sha256;
+  Key: array[0..31] of byte;
 begin
   inherited Create;
-  FConfigFileName := ConfigFileName;
-  FMasterPassword := MasterPassword;
-  FConfigData := TJSONObject.Create;
+  FCipher := TDCP_rijndael.Create(nil);
 
-  if FileExists(FConfigFileName) then
-  begin
-    if not LoadEncryptedConfig then
-    begin
-      // Si le chargement échoue, créer un nouveau fichier de configuration
-      FConfigData.Free;
-      FConfigData := TJSONObject.Create;
-    end;
+  // Créer une clé de 256 bits à partir du mot de passe
+  Hash := TDCP_sha256.Create(nil);
+  try
+    Hash.Init;
+    Hash.UpdateStr(ACle);
+    Hash.Final(Key);
+  finally
+    Hash.Free;
   end;
+
+  FCipher.Init(Key, SizeOf(Key) * 8, nil);
 end;
 
-destructor TSecureConfig.Destroy;
+destructor TChiffrementAES.Destroy;
 begin
-  FConfigData.Free;
+  FCipher.Free;
   inherited;
 end;
 
-function TSecureConfig.LoadEncryptedConfig: Boolean;
+function TChiffrementAES.Chiffrer(const ATexte: string): string;
 var
-  EncryptedContent, JsonContent: string;
+  Input: TBytes;
+  Output: TBytes;
 begin
-  Result := False;
+  Input := TEncoding.UTF8.GetBytes(ATexte);
+  SetLength(Output, Length(Input));
 
+  FCipher.EncryptCBC(Input[0], Output[0], Length(Input));
+
+  Result := TNetEncoding.Base64.EncodeBytesToString(Output);
+end;
+
+function TChiffrementAES.Dechiffrer(const ATexteChiffre: string): string;
+var
+  Input: TBytes;
+  Output: TBytes;
+begin
+  Input := TNetEncoding.Base64.DecodeStringToBytes(ATexteChiffre);
+  SetLength(Output, Length(Input));
+
+  FCipher.DecryptCBC(Input[0], Output[0], Length(Input));
+
+  Result := TEncoding.UTF8.GetString(Output);
+end;
+
+// Utilisation
+procedure TForm1.BtnChiffrerClick(Sender: TObject);
+var
+  Chiffrement: TChiffrementAES;
+begin
+  Chiffrement := TChiffrementAES.Create('MaCleSecrete123!');
   try
-    // Lire le contenu chiffré
-    EncryptedContent := TFile.ReadAllText(FConfigFileName);
+    EditChiffre.Text := Chiffrement.Chiffrer(EditClair.Text);
+  finally
+    Chiffrement.Free;
+  end;
+end;
+```
+
+## Gestion des clés de chiffrement
+
+La gestion des clés est **CRUCIALE**. Un bon algorithme avec une mauvaise gestion des clés = sécurité nulle.
+
+### Principes de base
+
+**1. Longueur des clés**
+
+Plus la clé est longue, plus le chiffrement est sûr :
+- AES-128 : 128 bits (16 octets) - Bon pour la plupart des usages
+- AES-192 : 192 bits (24 octets) - Très sûr
+- AES-256 : 256 bits (32 octets) - Extrêmement sûr
+
+**2. Génération de clés**
+
+```pascal
+uses
+  System.SysUtils;
+
+// Générer une clé aléatoire
+function GenererCleAleatoire(ATaille: Integer): TBytes;
+var
+  i: Integer;
+begin
+  SetLength(Result, ATaille);
+  Randomize;
+  for i := 0 to ATaille - 1 do
+    Result[i] := Random(256);
+end;
+
+// Dériver une clé depuis un mot de passe (PBKDF2)
+// Utilise plusieurs itérations pour ralentir les attaques par force brute
+function DeriverCleDepuisMotDePasse(const AMotDePasse, ASalt: string;
+  AIterations: Integer): TBytes;
+begin
+  // Implémentation PBKDF2
+  // Nécessite une bibliothèque cryptographique
+  // Exemple simplifié :
+  Result := GenererCleAleatoire(32); // À remplacer par vraie implémentation
+end;
+```
+
+**3. Ne jamais coder en dur les clés**
+
+```pascal
+// ❌ TRÈS MAUVAIS - clé en dur dans le code
+const
+  CLE_CHIFFREMENT = 'MaCleSecrete123!';
+
+// ✅ BON - clé depuis configuration sécurisée
+function ChargerCle: string;
+var
+  ConfigFile: TIniFile;
+begin
+  ConfigFile := TIniFile.Create(GetConfigPath);
+  try
+    // Lire depuis un fichier de config protégé
+    // ou mieux : depuis un coffre-fort de clés
+    Result := ConfigFile.ReadString('Security', 'Key', '');
+  finally
+    ConfigFile.Free;
+  end;
+end;
+```
+
+### Stockage sécurisé des clés
+
+**Options par ordre de sécurité** :
+
+1. **Coffre-fort système** (le plus sûr)
+   - Windows : Data Protection API (DPAPI)
+   - macOS : Keychain
+   - Linux : Secret Service API
+
+2. **Variables d'environnement** (acceptable)
+   - Pas dans le code source
+   - Configurées au déploiement
+
+3. **Fichier de configuration protégé** (minimum)
+   - Fichier avec permissions restreintes
+   - Lui-même chiffré si possible
+
+4. **Base de données chiffrée** (pour clés multiples)
+   - Table dédiée aux clés
+   - Chiffrées avec une clé maître
+
+```pascal
+// Exemple : Utiliser Windows DPAPI
+uses
+  Winapi.Windows, System.SysUtils;
+
+function ChiffrerAvecDPAPI(const ATexte: string): TBytes;
+var
+  DataIn: DATA_BLOB;
+  DataOut: DATA_BLOB;
+  TexteBytes: TBytes;
+begin
+  TexteBytes := TEncoding.UTF8.GetBytes(ATexte);
+  DataIn.cbData := Length(TexteBytes);
+  DataIn.pbData := @TexteBytes[0];
+
+  if CryptProtectData(@DataIn, nil, nil, nil, nil, 0, @DataOut) then
+  begin
+    SetLength(Result, DataOut.cbData);
+    Move(DataOut.pbData^, Result[0], DataOut.cbData);
+    LocalFree(HLOCAL(DataOut.pbData));
+  end
+  else
+    raise Exception.Create('Erreur de chiffrement DPAPI');
+end;
+
+function DechiffrerAvecDPAPI(const ATexteChiffre: TBytes): string;
+var
+  DataIn: DATA_BLOB;
+  DataOut: DATA_BLOB;
+  ResultBytes: TBytes;
+begin
+  DataIn.cbData := Length(ATexteChiffre);
+  DataIn.pbData := @ATexteChiffre[0];
+
+  if CryptUnprotectData(@DataIn, nil, nil, nil, nil, 0, @DataOut) then
+  begin
+    SetLength(ResultBytes, DataOut.cbData);
+    Move(DataOut.pbData^, ResultBytes[0], DataOut.cbData);
+    LocalFree(HLOCAL(DataOut.pbData));
+    Result := TEncoding.UTF8.GetString(ResultBytes);
+  end
+  else
+    raise Exception.Create('Erreur de déchiffrement DPAPI');
+end;
+```
+
+## Chiffrement de fichiers
+
+### Chiffrer un fichier complet
+
+```pascal
+uses
+  System.Classes, System.SysUtils, System.IOUtils;
+
+procedure ChiffrerFichier(const AFichierSource, AFichierDestination, ACle: string);
+var
+  StreamSource: TFileStream;
+  StreamDest: TFileStream;
+  Buffer: TBytes;
+  Chiffrement: TChiffrementAES; // Classe définie précédemment
+begin
+  StreamSource := TFileStream.Create(AFichierSource, fmOpenRead);
+  StreamDest := TFileStream.Create(AFichierDestination, fmCreate);
+  Chiffrement := TChiffrementAES.Create(ACle);
+  try
+    // Lire le fichier source
+    SetLength(Buffer, StreamSource.Size);
+    StreamSource.Read(Buffer[0], StreamSource.Size);
+
+    // Chiffrer
+    // (Simplification - en réalité, traiter par blocs pour gros fichiers)
+    Buffer := ChiffrerBuffer(Buffer, Chiffrement);
+
+    // Écrire le fichier chiffré
+    StreamDest.Write(Buffer[0], Length(Buffer));
+  finally
+    Chiffrement.Free;
+    StreamDest.Free;
+    StreamSource.Free;
+  end;
+end;
+
+procedure DechiffrerFichier(const AFichierChiffre, AFichierDestination, ACle: string);
+var
+  StreamSource: TFileStream;
+  StreamDest: TFileStream;
+  Buffer: TBytes;
+  Chiffrement: TChiffrementAES;
+begin
+  StreamSource := TFileStream.Create(AFichierChiffre, fmOpenRead);
+  StreamDest := TFileStream.Create(AFichierDestination, fmCreate);
+  Chiffrement := TChiffrementAES.Create(ACle);
+  try
+    // Lire le fichier chiffré
+    SetLength(Buffer, StreamSource.Size);
+    StreamSource.Read(Buffer[0], StreamSource.Size);
 
     // Déchiffrer
-    JsonContent := TModernCrypto.DecryptString(EncryptedContent, FMasterPassword);
+    Buffer := DechiffrerBuffer(Buffer, Chiffrement);
 
-    // Parser le JSON
-    FConfigData.Free;
-    FConfigData := TJSONObject.ParseJSONValue(JsonContent) as TJSONObject;
-
-    Result := FConfigData <> nil;
-  except
-    // En cas d'erreur, retourner False
-    Result := False;
+    // Écrire le fichier déchiffré
+    StreamDest.Write(Buffer[0], Length(Buffer));
+  finally
+    Chiffrement.Free;
+    StreamDest.Free;
+    StreamSource.Free;
   end;
 end;
 
-procedure TSecureConfig.SaveEncryptedConfig;
-var
-  JsonContent, EncryptedContent: string;
+// Utilisation
+procedure TForm1.BtnChiffrerFichierClick(Sender: TObject);
 begin
-  // Convertir en JSON
-  JsonContent := FConfigData.ToString;
-
-  // Chiffrer
-  EncryptedContent := TModernCrypto.EncryptString(JsonContent, FMasterPassword);
-
-  // Sauvegarder
-  TFile.WriteAllText(FConfigFileName, EncryptedContent);
-end;
-
-function TSecureConfig.GetValue(const Section, Key: string; DefaultValue: string): string;
-var
-  SectionObj: TJSONObject;
-begin
-  Result := DefaultValue;
-
-  // Vérifier si la section existe
-  if FConfigData.TryGetValue<TJSONObject>(Section, SectionObj) then
+  if OpenDialog1.Execute then
   begin
-    // Vérifier si la clé existe dans la section
-    SectionObj.TryGetValue<string>(Key, Result);
+    ChiffrerFichier(
+      OpenDialog1.FileName,
+      ChangeFileExt(OpenDialog1.FileName, '.encrypted'),
+      'MaCleSecrete123!'
+    );
+    ShowMessage('Fichier chiffré avec succès');
   end;
-end;
-
-procedure TSecureConfig.SetValue(const Section, Key, Value: string);
-var
-  SectionObj: TJSONObject;
-begin
-  // Vérifier si la section existe, sinon la créer
-  if not FConfigData.TryGetValue<TJSONObject>(Section, SectionObj) then
-  begin
-    SectionObj := TJSONObject.Create;
-    FConfigData.AddPair(Section, SectionObj);
-  end;
-
-  // Mettre à jour ou ajouter la valeur
-  if SectionObj.Values[Key] <> nil then
-    SectionObj.RemovePair(Key);
-
-  SectionObj.AddPair(Key, Value);
-end;
-
-procedure TSecureConfig.Save;
-begin
-  SaveEncryptedConfig;
-end;
-
-end.
-```
-
-### Exemple d'utilisation de la configuration sécurisée
-
-```pas
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  ConfigFile: string;
-  MasterPassword: string;
-begin
-  ConfigFile := ChangeFileExt(Application.ExeName, '.cfg');
-
-  // Dans une application réelle, demander le mot de passe à l'utilisateur
-  // ou le récupérer depuis un stockage sécurisé
-  MasterPassword := 'motDePasseTrèsComplexe123!';
-
-  SecureConfig := TSecureConfig.Create(ConfigFile, MasterPassword);
-
-  // Charger les données de configuration
-  EditAPIKey.Text := SecureConfig.GetValue('API', 'Key', '');
-  EditAPISecret.Text := SecureConfig.GetValue('API', 'Secret', '');
-
-  CheckBoxRememberLogin.Checked := SecureConfig.GetValue('Login', 'Remember', 'False') = 'True';
-
-  if CheckBoxRememberLogin.Checked then
-  begin
-    EditUsername.Text := SecureConfig.GetValue('Login', 'Username', '');
-    // Ne jamais stocker le mot de passe, même chiffré, si possible
-  end;
-end;
-
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  SecureConfig.Free;
-end;
-
-procedure TForm1.ButtonSaveConfigClick(Sender: TObject);
-begin
-  // Enregistrer les paramètres
-  SecureConfig.SetValue('API', 'Key', EditAPIKey.Text);
-  SecureConfig.SetValue('API', 'Secret', EditAPISecret.Text);
-
-  SecureConfig.SetValue('Login', 'Remember', BoolToStr(CheckBoxRememberLogin.Checked, True));
-
-  if CheckBoxRememberLogin.Checked then
-    SecureConfig.SetValue('Login', 'Username', EditUsername.Text)
-  else
-    SecureConfig.SetValue('Login', 'Username', '');
-
-  // Sauvegarder le fichier
-  SecureConfig.Save;
-
-  ShowMessage('Configuration enregistrée avec succès');
 end;
 ```
 
-### Chiffrement des communications réseau
+### Chiffrement par blocs pour gros fichiers
 
-Pour protéger les données envoyées sur le réseau, vous devez utiliser HTTPS (TLS/SSL) pour les communications. Voici comment configurer une requête REST sécurisée :
+Pour de gros fichiers, chiffrez par blocs pour éviter de saturer la mémoire :
 
-```pas
-procedure TRESTClient.ConfigureSecureConnection;
+```pascal
+procedure ChiffrerGrosFichier(const AFichierSource, AFichierDestination, ACle: string);
+const
+  TAILLE_BLOC = 1024 * 1024; // 1 Mo par bloc
+var
+  StreamSource: TFileStream;
+  StreamDest: TFileStream;
+  Buffer: TBytes;
+  BytesLus: Integer;
+  Chiffrement: TChiffrementAES;
+begin
+  StreamSource := TFileStream.Create(AFichierSource, fmOpenRead);
+  StreamDest := TFileStream.Create(AFichierDestination, fmCreate);
+  Chiffrement := TChiffrementAES.Create(ACle);
+  try
+    SetLength(Buffer, TAILLE_BLOC);
+
+    repeat
+      // Lire un bloc
+      BytesLus := StreamSource.Read(Buffer[0], TAILLE_BLOC);
+
+      if BytesLus > 0 then
+      begin
+        // Chiffrer ce bloc
+        SetLength(Buffer, BytesLus);
+        Buffer := ChiffrerBuffer(Buffer, Chiffrement);
+
+        // Écrire le bloc chiffré
+        StreamDest.Write(Buffer[0], Length(Buffer));
+        SetLength(Buffer, TAILLE_BLOC);
+      end;
+    until BytesLus = 0;
+  finally
+    Chiffrement.Free;
+    StreamDest.Free;
+    StreamSource.Free;
+  end;
+end;
+```
+
+## Chiffrement de bases de données
+
+### 1. Chiffrement au niveau des colonnes
+
+Chiffrez uniquement les colonnes sensibles :
+
+```sql
+CREATE TABLE Clients (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nom VARCHAR(100),
+    Email VARCHAR(100),
+    -- Colonnes chiffrées (stockées en Base64 après chiffrement)
+    NumeroCarteChiffre TEXT,
+    AdresseChiffree TEXT
+);
+```
+
+```pascal
+procedure InsererClientAvecDonneesChiffrees;
+var
+  Query: TFDQuery;
+  Chiffrement: TChiffrementAES;
+  NumeroCarte: string;
+  NumeroCarteChiffre: string;
+begin
+  NumeroCarte := '1234-5678-9012-3456';
+
+  Chiffrement := TChiffrementAES.Create('CleDeLaBase123!');
+  try
+    NumeroCarteChiffre := Chiffrement.Chiffrer(NumeroCarte);
+
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := 'INSERT INTO Clients (Nom, Email, NumeroCarteChiffre) ' +
+                        'VALUES (:Nom, :Email, :Carte)';
+      Query.ParamByName('Nom').AsString := 'Jean Dupont';
+      Query.ParamByName('Email').AsString := 'jean@example.com';
+      Query.ParamByName('Carte').AsString := NumeroCarteChiffre;
+      Query.ExecSQL;
+    finally
+      Query.Free;
+    end;
+  finally
+    Chiffrement.Free;
+  end;
+end;
+
+function LireNumeroCarteClient(AIDClient: Integer): string;
+var
+  Query: TFDQuery;
+  Chiffrement: TChiffrementAES;
+  NumeroCarteChiffre: string;
+begin
+  Query := TFDQuery.Create(nil);
+  Chiffrement := TChiffrementAES.Create('CleDeLaBase123!');
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'SELECT NumeroCarteChiffre FROM Clients WHERE ID = :ID';
+    Query.ParamByName('ID').AsInteger := AIDClient;
+    Query.Open;
+
+    if not Query.IsEmpty then
+    begin
+      NumeroCarteChiffre := Query.FieldByName('NumeroCarteChiffre').AsString;
+      Result := Chiffrement.Dechiffrer(NumeroCarteChiffre);
+    end
+    else
+      Result := '';
+  finally
+    Chiffrement.Free;
+    Query.Free;
+  end;
+end;
+```
+
+### 2. Chiffrement de la connexion à la base
+
+FireDAC supporte SSL/TLS pour les connexions MySQL :
+
+```pascal
+procedure ConfigurerConnexionSSL;
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.Params.Add('DriverID=MySQL');
+  FDConnection1.Params.Add('Server=localhost');
+  FDConnection1.Params.Add('Database=mabase');
+  FDConnection1.Params.Add('User_Name=utilisateur');
+  FDConnection1.Params.Add('Password=motdepasse');
+
+  // Activer SSL/TLS
+  FDConnection1.Params.Add('UseSSL=True');
+  FDConnection1.Params.Add('SSLCert=client-cert.pem');
+  FDConnection1.Params.Add('SSLKey=client-key.pem');
+  FDConnection1.Params.Add('SSLCA=ca-cert.pem');
+
+  FDConnection1.Connected := True;
+end;
+```
+
+### 3. Chiffrement transparent de la base (TDE)
+
+Certains SGBD comme SQL Server et Oracle proposent le TDE (Transparent Data Encryption) qui chiffre toute la base automatiquement. Configurez-le côté serveur, Delphi n'a rien de spécial à faire.
+
+## Chiffrement des communications réseau
+
+### HTTPS avec TRESTClient
+
+```pascal
+uses
+  REST.Client, REST.Types, System.JSON;
+
+procedure AppelerAPISecurisee;
 var
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
 begin
-  RESTClient := TRESTClient.Create(nil);
+  RESTClient := TRESTClient.Create('https://api.example.com');
   RESTRequest := TRESTRequest.Create(nil);
   RESTResponse := TRESTResponse.Create(nil);
-
   try
-    // Configuration du client REST
-    RESTClient.BaseURL := 'https://api.exemple.com';  // Notez le "https"
-    RESTClient.Accept := 'application/json';
-    RESTClient.AcceptCharset := 'UTF-8';
-
-    // Activation de la vérification SSL
-    RESTClient.SecureProtocols := [THTTPSecureProtocol.TLS12];
-
-    // Configuration de la requête
     RESTRequest.Client := RESTClient;
     RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := rmPOST;
 
-    // Ajout des données à envoyer
-    RESTRequest.AddParameter('username', 'user1');
-    RESTRequest.AddParameter('password', 'password123');
+    // Configurer l'authentification
+    RESTRequest.AddAuthParameter('Authorization', 'Bearer VotreTokenAPI',
+                                  TRESTRequestParameterKind.pkHTTPHEADER,
+                                  [TRESTRequestParameterOption.poDoNotEncode]);
 
-    // Exécution de la requête
+    RESTRequest.Resource := 'users';
+    RESTRequest.Method := TRESTRequestMethod.rmGET;
+
+    // Exécuter la requête (automatiquement en HTTPS)
     RESTRequest.Execute;
 
-    // Traitement de la réponse
     if RESTResponse.StatusCode = 200 then
-    begin
-      // Traitement de la réponse réussie
-    end
+      ShowMessage('Données reçues : ' + RESTResponse.Content)
     else
-    begin
-      // Traitement de l'erreur
       ShowMessage('Erreur : ' + RESTResponse.StatusText);
-    end;
   finally
     RESTResponse.Free;
     RESTRequest.Free;
@@ -1047,1197 +728,403 @@ begin
 end;
 ```
 
-> ⚠️ **Important** : Toujours utiliser HTTPS plutôt que HTTP pour les communications contenant des données sensibles. Vérifiez que le certificat SSL du serveur est valide et à jour.
+### Socket SSL avec Indy
 
-### Chiffrement de bout en bout
-
-Le chiffrement de bout en bout garantit que seuls l'expéditeur et le destinataire peuvent lire les messages échangés. Voici un exemple simple utilisant le chiffrement asymétrique RSA :
-
-```pas
-// Nécessite Delphi 12 ou supérieur pour certaines fonctions
-unit EndToEndEncryption;
-
-interface
-
+```pascal
 uses
-  System.SysUtils, System.Classes, System.NetEncoding,
-  System.Generics.Collections, System.IOUtils,
-  System.Security.Cryptography;
+  IdSSLOpenSSL, IdTCPClient;
 
-type
-  TEndToEndEncryption = class
-  private
-    class var FRSAProvider: TRSAProvider;
-  public
-    class constructor Create;
-    class destructor Destroy;
-
-    // Génération de clés
-    class procedure GenerateKeyPair(const PrivateKeyFile, PublicKeyFile: string);
-
-    // Chiffrement avec la clé publique du destinataire
-    class function EncryptMessage(const Message, RecipientPublicKeyFile: string): string;
-
-    // Déchiffrement avec sa propre clé privée
-    class function DecryptMessage(const EncryptedMessage, PrivateKeyFile: string): string;
-  end;
-
-implementation
-
-class constructor TEndToEndEncryption.Create;
-begin
-  FRSAProvider := TRSAProvider.Create;
-end;
-
-class destructor TEndToEndEncryption.Destroy;
-begin
-  FRSAProvider.Free;
-end;
-
-class procedure TEndToEndEncryption.GenerateKeyPair(
-  const PrivateKeyFile, PublicKeyFile: string);
+procedure ConnexionSecuriseeSSL;
 var
-  PrivateKey, PublicKey: string;
+  Client: TIdTCPClient;
+  SSL: TIdSSLIOHandlerSocketOpenSSL;
 begin
-  // Générer une paire de clés RSA
-  FRSAProvider.GenerateKeys(2048); // 2048 bits pour une bonne sécurité
-
-  // Exporter les clés au format PEM
-  PrivateKey := FRSAProvider.ExportPrivateKey(TPemRSAFormat.PKCS8);
-  PublicKey := FRSAProvider.ExportPublicKey(TPemRSAFormat.PKCS8);
-
-  // Sauvegarder les clés dans des fichiers
-  TFile.WriteAllText(PrivateKeyFile, PrivateKey);
-  TFile.WriteAllText(PublicKeyFile, PublicKey);
-end;
-
-class function TEndToEndEncryption.EncryptMessage(
-  const Message, RecipientPublicKeyFile: string): string;
-var
-  PublicKey: string;
-  EncryptedBytes: TBytes;
-begin
-  // Charger la clé publique du destinataire
-  PublicKey := TFile.ReadAllText(RecipientPublicKeyFile);
-
-  // Importer la clé
-  FRSAProvider.ImportPublicKey(PublicKey, TPemRSAFormat.PKCS8);
-
-  // Chiffrer le message
-  EncryptedBytes := FRSAProvider.Encrypt(TEncoding.UTF8.GetBytes(Message));
-
-  // Encoder en Base64 pour faciliter le stockage et la transmission
-  Result := TNetEncoding.Base64.EncodeBytesToString(EncryptedBytes);
-end;
-
-class function TEndToEndEncryption.DecryptMessage(
-  const EncryptedMessage, PrivateKeyFile: string): string;
-var
-  PrivateKey: string;
-  EncryptedBytes, DecryptedBytes: TBytes;
-begin
-  // Charger la clé privée
-  PrivateKey := TFile.ReadAllText(PrivateKeyFile);
-
-  // Importer la clé
-  FRSAProvider.ImportPrivateKey(PrivateKey, TPemRSAFormat.PKCS8);
-
-  // Décoder le message chiffré
-  EncryptedBytes := TNetEncoding.Base64.DecodeStringToBytes(EncryptedMessage);
-
-  // Déchiffrer le message
-  DecryptedBytes := FRSAProvider.Decrypt(EncryptedBytes);
-
-  // Convertir en chaîne
-  Result := TEncoding.UTF8.GetString(DecryptedBytes);
-end;
-
-end.
-```
-
-### Chiffrement hybride pour les grandes quantités de données
-
-Le chiffrement asymétrique (comme RSA) est lent pour les grandes quantités de données. Pour cette raison, on utilise généralement un chiffrement hybride :
-
-1. Générer une clé symétrique aléatoire (AES)
-2. Chiffrer les données avec cette clé symétrique
-3. Chiffrer la clé symétrique avec la clé publique du destinataire
-4. Envoyer les données chiffrées et la clé symétrique chiffrée
-
-```pas
-// Nécessite Delphi 12 ou supérieur
-function EncryptLargeFile(
-  const SourceFile, DestFile, RecipientPublicKeyFile: string): Boolean;
-var
-  PublicKey: string;
-  AESKey, IV: TBytes;
-  EncryptedKey: TBytes;
-  SourceBytes, EncryptedBytes: TBytes;
-  HeaderBytes: TBytes;
-  CombinedOutput: TMemoryStream;
-begin
-  Result := False;
-
+  Client := TIdTCPClient.Create(nil);
+  SSL := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
-    // 1. Générer une clé AES aléatoire et un IV
-    SetLength(AESKey, 32); // 256 bits
-    SetLength(IV, 16);     // 128 bits
-    TCrypto.RandomBytes(AESKey);
-    TCrypto.RandomBytes(IV);
+    // Configurer SSL
+    SSL.SSLOptions.Method := sslvTLSv1_2;
+    SSL.SSLOptions.Mode := sslmClient;
 
-    // 2. Charger la clé publique du destinataire
-    PublicKey := TFile.ReadAllText(RecipientPublicKeyFile);
-    FRSAProvider.ImportPublicKey(PublicKey, TPemRSAFormat.PKCS8);
+    Client.IOHandler := SSL;
+    Client.Host := 'secure.example.com';
+    Client.Port := 443;
 
-    // 3. Chiffrer la clé AES avec la clé publique RSA
-    EncryptedKey := FRSAProvider.Encrypt(AESKey);
+    // Se connecter
+    Client.Connect;
 
-    // 4. Lire le fichier source
-    SourceBytes := TFile.ReadAllBytes(SourceFile);
+    // Envoyer des données chiffrées
+    Client.IOHandler.WriteLn('GET / HTTP/1.1');
+    Client.IOHandler.WriteLn('Host: secure.example.com');
+    Client.IOHandler.WriteLn('');
 
-    // 5. Chiffrer les données avec AES
-    EncryptedBytes := TCipher.AES.Encrypt(SourceBytes, AESKey, IV);
-
-    // 6. Assembler le résultat final :
-    // [Signature (8 bytes)][EncryptedKeySize (4 bytes)][EncryptedKey][IV (16 bytes)][EncryptedData]
-    CombinedOutput := TMemoryStream.Create;
-    try
-      // Écrire la signature
-      HeaderBytes := TEncoding.UTF8.GetBytes('DELPHIE2E');
-      CombinedOutput.WriteBuffer(HeaderBytes[0], Length(HeaderBytes));
-
-      // Écrire la taille de la clé chiffrée
-      var KeySize: Integer := Length(EncryptedKey);
-      CombinedOutput.WriteBuffer(KeySize, SizeOf(Integer));
-
-      // Écrire la clé chiffrée
-      CombinedOutput.WriteBuffer(EncryptedKey[0], Length(EncryptedKey));
-
-      // Écrire l'IV
-      CombinedOutput.WriteBuffer(IV[0], Length(IV));
-
-      // Écrire les données chiffrées
-      CombinedOutput.WriteBuffer(EncryptedBytes[0], Length(EncryptedBytes));
-
-      // Sauvegarder le tout dans le fichier de destination
-      CombinedOutput.SaveToFile(DestFile);
-
-      Result := True;
-    finally
-      CombinedOutput.Free;
-    end;
-  except
-    on E: Exception do
-      raise Exception.Create('Erreur lors du chiffrement hybride : ' + E.Message);
-  end;
-end;
-
-function DecryptLargeFile(
-  const SourceFile, DestFile, PrivateKeyFile: string): Boolean;
-var
-  PrivateKey: string;
-  FileStream: TFileStream;
-  Signature: TBytes;
-  KeySize: Integer;
-  EncryptedKey, AESKey, IV: TBytes;
-  EncryptedBytes, DecryptedBytes: TBytes;
-begin
-  Result := False;
-
-  try
-    // 1. Charger la clé privée
-    PrivateKey := TFile.ReadAllText(PrivateKeyFile);
-    FRSAProvider.ImportPrivateKey(PrivateKey, TPemRSAFormat.PKCS8);
-
-    // 2. Ouvrir le fichier source
-    FileStream := TFileStream.Create(SourceFile, fmOpenRead);
-    try
-      // 3. Lire et vérifier la signature
-      SetLength(Signature, 9);
-      FileStream.ReadBuffer(Signature[0], 9);
-      if TEncoding.UTF8.GetString(Signature) <> 'DELPHIE2E' then
-        raise Exception.Create('Format de fichier invalide');
-
-      // 4. Lire la taille de la clé chiffrée
-      FileStream.ReadBuffer(KeySize, SizeOf(Integer));
-
-      // 5. Lire la clé chiffrée
-      SetLength(EncryptedKey, KeySize);
-      FileStream.ReadBuffer(EncryptedKey[0], KeySize);
-
-      // 6. Déchiffrer la clé AES avec la clé privée RSA
-      AESKey := FRSAProvider.Decrypt(EncryptedKey);
-
-      // 7. Lire l'IV
-      SetLength(IV, 16);
-      FileStream.ReadBuffer(IV[0], 16);
-
-      // 8. Lire les données chiffrées
-      SetLength(EncryptedBytes, FileStream.Size - FileStream.Position);
-      FileStream.ReadBuffer(EncryptedBytes[0], Length(EncryptedBytes));
-    finally
-      FileStream.Free;
-    end;
-
-    // 9. Déchiffrer les données avec AES
-    DecryptedBytes := TCipher.AES.Decrypt(EncryptedBytes, AESKey, IV);
-
-    // 10. Enregistrer les données déchiffrées
-    TFile.WriteAllBytes(DestFile, DecryptedBytes);
-
-    Result := True;
-  except
-    on E: Exception do
-      raise Exception.Create('Erreur lors du déchiffrement hybride : ' + E.Message);
+    // Lire la réponse chiffrée
+    ShowMessage(Client.IOHandler.ReadLn);
+  finally
+    Client.Free;
+    SSL.Free;
   end;
 end;
 ```
 
-### Meilleures pratiques de chiffrement
+## Vecteurs d'initialisation (IV)
 
-1. **Utilisez des algorithmes éprouvés** : N'inventez pas vos propres algorithmes de chiffrement. Utilisez des standards reconnus comme AES, RSA, etc.
+Un IV est une valeur aléatoire utilisée avec la clé de chiffrement pour garantir que le même texte ne produise pas toujours le même résultat chiffré.
 
-2. **Taille de clé adéquate** : Utilisez des tailles de clé suffisantes (AES-256, RSA-2048 ou plus).
+**Importance** : Sans IV, un attaquant peut détecter des motifs dans les données chiffrées.
 
-3. **Génération de clés sécurisée** : Utilisez des générateurs de nombres aléatoires cryptographiquement sûrs.
-
-4. **Protection des clés** : Vos données chiffrées ne sont pas plus sécurisées que vos clés. Protégez-les adéquatement.
-
-5. **Sel aléatoire** : Utilisez toujours un sel unique et aléatoire pour le hachage des mots de passe.
-
-6. **Mise à jour régulière** : Les algorithmes de chiffrement deviennent moins sûrs avec le temps. Prévoyez des mécanismes pour mettre à jour vos méthodes de chiffrement.
-
-7. **Minimisation des données sensibles** : La meilleure protection est de ne pas stocker de données sensibles si ce n'est pas nécessaire.
-
-8. **Chiffrement en transit** : Utilisez toujours HTTPS pour les communications réseau.
-
-9. **Validation des entrées** : Validez toujours les entrées avant de les traiter, surtout pour les opérations cryptographiques.
-
-10. **Auditabilité** : Enregistrez les événements liés à la sécurité pour détecter d'éventuelles tentatives d'intrusion.
-
-### Exemple pratique : Application de notes sécurisées
-
-Voici un exemple simple d'application de notes sécurisées qui utilise le chiffrement pour protéger les notes de l'utilisateur :
-
-```pas
-unit SecureNotesForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, System.IOUtils,
-  ModernEncryption;
-
-type
-  TFormSecureNotes = class(TForm)
-    ListView1: TListView;
-    Panel1: TPanel;
-    MemoNote: TMemo;
-    Panel2: TPanel;
-    ButtonNewNote: TButton;
-    ButtonSaveNote: TButton;
-    ButtonDeleteNote: TButton;
-    EditTitle: TEdit;
-    Label1: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonNewNoteClick(Sender: TObject);
-    procedure ButtonSaveNoteClick(Sender: TObject);
-    procedure ButtonDeleteNoteClick(Sender: TObject);
-    procedure ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-    procedure FormDestroy(Sender: TObject);
-  private
-    FNotesFolder: string;
-    FMasterPassword: string;
-    FCurrentNoteFile: string;
-
-    procedure LoadNotesList;
-    procedure ClearNoteEditor;
-    function GetNoteFileName(const Title: string): string;
-    function SaveEncryptedNote(const FileName, Title, Content: string): Boolean;
-    function LoadEncryptedNote(const FileName: string; out Title, Content: string): Boolean;
-  end;
-
+```pascal
+procedure ChiffrerAvecIV(const ATexte: string; const ACle: TBytes; out ATexteChiffre, AIV: TBytes);
 var
-  FormSecureNotes: TFormSecureNotes;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormSecureNotes.FormCreate(Sender: TObject);
+  i: Integer;
 begin
-  // Créer le dossier pour les notes s'il n'existe pas
-  FNotesFolder := TPath.Combine(TPath.GetDocumentsPath, 'SecureNotes');
-  if not TDirectory.Exists(FNotesFolder) then
-    TDirectory.CreateDirectory(FNotesFolder);
-
-  // En production, demandez le mot de passe à l'utilisateur
-  // et stockez-le de manière sécurisée
-  FMasterPassword := 'motDePasseComplexe123!';
-
-  LoadNotesList;
-  ClearNoteEditor;
-end;
-
-procedure TFormSecureNotes.FormDestroy(Sender: TObject);
-begin
-  // Sauvegarder la note actuelle si elle a été modifiée
-  if (FCurrentNoteFile <> '') and MemoNote.Modified then
-    ButtonSaveNoteClick(nil);
-end;
-
-procedure TFormSecureNotes.LoadNotesList;
-var
-  Files: TStringDynArray;
-  FileName: string;
-  ListItem: TListItem;
-  Title, Content: string;
-begin
-  ListView1.Items.Clear;
-
-  // Obtenir la liste des fichiers de notes (.enote)
-  Files := TDirectory.GetFiles(FNotesFolder, '*.enote');
-
-  // Ajouter chaque note à la liste
-  for FileName in Files do
-  begin
-    if LoadEncryptedNote(FileName, Title, Content) then
-    begin
-      ListItem := ListView1.Items.Add;
-      ListItem.Caption := Title;
-      ListItem.Data := Pointer(PChar(string(FileName))); // Stocker le nom de fichier
-    end;
-  end;
-end;
-
-function TFormSecureNotes.GetNoteFileName(const Title: string): string;
-var
-  SafeFileName: string;
-  I: Integer;
-begin
-  // Créer un nom de fichier sûr à partir du titre
-  SafeFileName := Title;
-
-  // Remplacer les caractères non autorisés
-  for I := 1 to Length(SafeFileName) do
-    if not CharInSet(SafeFileName[I], ['a'..'z', 'A'..'Z', '0'..'9', '-', '_', ' ']) then
-      SafeFileName[I] := '_';
-
-  // Ajouter un timestamp pour éviter les collisions
-  Result := TPath.Combine(FNotesFolder,
-    SafeFileName + '_' + FormatDateTime('yyyymmddhhnnss', Now) + '.enote');
-end;
-
-function TFormSecureNotes.SaveEncryptedNote(const FileName, Title, Content: string): Boolean;
-var
-  NoteData: string;
-  EncryptedData: string;
-begin
-  Result := False;
-
-  try
-    // Préparer les données (JSON serait mieux en pratique)
-    NoteData := 'TITLE:' + Title + #13#10 + 'CONTENT:' + Content;
-
-    // Chiffrer les données
-    EncryptedData := TModernCrypto.EncryptString(NoteData, FMasterPassword);
-
-    // Sauvegarder dans le fichier
-    TFile.WriteAllText(FileName, EncryptedData);
-
-    Result := True;
-  except
-    on E: Exception do
-      ShowMessage('Erreur lors de la sauvegarde : ' + E.Message);
-  end;
-end;
-
-function TFormSecureNotes.LoadEncryptedNote(const FileName: string; out Title, Content: string): Boolean;
-var
-  EncryptedData, NoteData: string;
-  Lines: TArray<string>;
-  I: Integer;
-begin
-  Result := False;
-  Title := '';
-  Content := '';
-
-  try
-    // Lire le fichier chiffré
-    EncryptedData := TFile.ReadAllText(FileName);
-
-    // Déchiffrer les données
-    NoteData := TModernCrypto.DecryptString(EncryptedData, FMasterPassword);
-
-    // Parser les données (JSON serait mieux en pratique)
-    Lines := NoteData.Split([#13#10]);
-
-    for I := 0 to Length(Lines) - 1 do
-    begin
-      if Lines[I].StartsWith('TITLE:') then
-        Title := Lines[I].Substring(6)
-      else if Lines[I].StartsWith('CONTENT:') then
-        Content := Lines[I].Substring(8);
-    end;
-
-    Result := (Title <> '');
-  except
-    on E: Exception do
-    begin
-      // Afficher un message si c'est un problème de déchiffrement
-      // (probablement mauvais mot de passe)
-      if E.Message.Contains('déchiffrement') then
-        ShowMessage('Impossible de déchiffrer cette note. ' + E.Message)
-      else
-        // Ne pas afficher les erreurs pour les fichiers corrompus,
-        // simplement les ignorer
-        Result := False;
-    end;
-  end;
-end;
-
-procedure TFormSecureNotes.ClearNoteEditor;
-begin
-  EditTitle.Text := '';
-  MemoNote.Text := '';
-  MemoNote.Modified := False;
-  FCurrentNoteFile := '';
-end;
-
-procedure TFormSecureNotes.ButtonNewNoteClick(Sender: TObject);
-begin
-  // Sauvegarder la note actuelle si elle a été modifiée
-  if (FCurrentNoteFile <> '') and MemoNote.Modified then
-  begin
-    if MessageDlg('Sauvegarder les modifications de la note actuelle ?',
-                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      ButtonSaveNoteClick(nil);
-  end;
-
-  ClearNoteEditor;
-  EditTitle.SetFocus;
-end;
-
-procedure TFormSecureNotes.ButtonSaveNoteClick(Sender: TObject);
-var
-  Title, FileName: string;
-  ListItem: TListItem;
-  I: Integer;
-begin
-  Title := Trim(EditTitle.Text);
-
-  if Title = '' then
-  begin
-    ShowMessage('Veuillez entrer un titre pour la note.');
-    EditTitle.SetFocus;
-    Exit;
-  end;
-
-  // Nouvelle note ou mise à jour ?
-  if FCurrentNoteFile = '' then
-  begin
-    // Nouvelle note
-    FileName := GetNoteFileName(Title);
-
-    if SaveEncryptedNote(FileName, Title, MemoNote.Text) then
-    begin
-      FCurrentNoteFile := FileName;
-      MemoNote.Modified := False;
-
-      // Ajouter à la liste
-      ListItem := ListView1.Items.Add;
-      ListItem.Caption := Title;
-      ListItem.Data := Pointer(PChar(string(FileName)));
-      ListItem.Selected := True;
-
-      ShowMessage('Note enregistrée avec succès.');
-    end;
-  end
-  else
-  begin
-    // Mise à jour de la note existante
-    if SaveEncryptedNote(FCurrentNoteFile, Title, MemoNote.Text) then
-    begin
-      MemoNote.Modified := False;
-
-      // Mettre à jour le titre dans la liste
-      for I := 0 to ListView1.Items.Count - 1 do
-      begin
-        if string(ListView1.Items[I].Data) = FCurrentNoteFile then
-        begin
-          ListView1.Items[I].Caption := Title;
-          Break;
-        end;
-      end;
-
-      ShowMessage('Note mise à jour avec succès.');
-    end;
-  end;
-end;
-
-procedure TFormSecureNotes.ButtonDeleteNoteClick(Sender: TObject);
-var
-  I: Integer;
-begin
-  if FCurrentNoteFile = '' then
-    Exit;
-
-  if MessageDlg('Êtes-vous sûr de vouloir supprimer cette note ?',
-               mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-  begin
-    // Supprimer le fichier
-    try
-      TFile.Delete(FCurrentNoteFile);
-
-      // Supprimer de la liste
-      for I := 0 to ListView1.Items.Count - 1 do
-      begin
-        if string(ListView1.Items[I].Data) = FCurrentNoteFile then
-        begin
-          ListView1.Items.Delete(I);
-          Break;
-        end;
-      end;
-
-      // Effacer l'éditeur
-      ClearNoteEditor;
-
-      ShowMessage('Note supprimée avec succès.');
-    except
-      on E: Exception do
-        ShowMessage('Erreur lors de la suppression : ' + E.Message);
-    end;
-  end;
-end;
-
-procedure TFormSecureNotes.ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-var
-  FileName: string;
-  Title, Content: string;
-begin
-  if not Selected then
-    Exit;
-
-  // Sauvegarder la note actuelle si elle a été modifiée
-  if (FCurrentNoteFile <> '') and MemoNote.Modified then
-  begin
-    if MessageDlg('Sauvegarder les modifications de la note actuelle ?',
-                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      ButtonSaveNoteClick(nil);
-  end;
-
-  // Charger la note sélectionnée
-  FileName := string(Item.Data);
-
-  if LoadEncryptedNote(FileName, Title, Content) then
-  begin
-    EditTitle.Text := Title;
-    MemoNote.Text := Content;
-    MemoNote.Modified := False;
-    FCurrentNoteFile := FileName;
-  end
-  else
-  begin
-    ShowMessage('Impossible de charger la note. Le fichier est peut-être corrompu.');
-    ClearNoteEditor;
-  end;
-end;
-```
-
-### Protection des données sensibles en mémoire
-
-Les données sensibles ne sont pas seulement vulnérables sur le disque ou lors des transferts réseau, mais aussi en mémoire. Voici quelques techniques pour protéger les données en mémoire :
-
-#### 1. Effacement sécurisé des variables sensibles
-
-```pas
-// Cette classe gère un mot de passe en mémoire et l'efface correctement
-unit SecureString;
-
-interface
-
-uses
-  System.SysUtils, System.Classes;
-
-type
-  TSecureString = class
-  private
-    FData: TBytes;
-    FLength: Integer;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure SetValue(const Value: string);
-    function GetValue: string;
-    procedure Clear;
-
-    property Length: Integer read FLength;
-  end;
-
-implementation
-
-constructor TSecureString.Create;
-begin
-  inherited;
-  FLength := 0;
-  SetLength(FData, 0);
-end;
-
-destructor TSecureString.Destroy;
-begin
-  Clear;
-  inherited;
-end;
-
-procedure TSecureString.SetValue(const Value: string);
-begin
-  // Effacer d'abord les données existantes
-  Clear;
-
-  // Allouer et copier les nouvelles données
-  FLength := System.Length(Value) * SizeOf(Char);
-  SetLength(FData, FLength);
-
-  if FLength > 0 then
-    Move(Value[1], FData[0], FLength);
-end;
-
-function TSecureString.GetValue: string;
-begin
-  SetLength(Result, FLength div SizeOf(Char));
-
-  if FLength > 0 then
-    Move(FData[0], Result[1], FLength);
-end;
-
-procedure TSecureString.Clear;
-var
-  I: Integer;
-begin
-  // Remplir la mémoire avec des zéros avant de libérer
-  for I := 0 to Length(FData) - 1 do
-    FData[I] := 0;
-
-  SetLength(FData, 0);
-  FLength := 0;
-end;
-
-end.
-```
-
-#### 2. Utilisation de SecureString dans un formulaire d'authentification
-
-```pas
-unit LoginForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, SecureString;
-
-type
-  TFormLogin = class(TForm)
-    EditUsername: TEdit;
-    EditPassword: TEdit;
-    ButtonLogin: TButton;
-    CheckBoxRememberUsername: TCheckBox;
-    Label1: TLabel;
-    Label2: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ButtonLoginClick(Sender: TObject);
-    procedure EditPasswordChange(Sender: TObject);
-  private
-    FPassword: TSecureString;
-  end;
-
-var
-  FormLogin: TFormLogin;
-
-implementation
-
-{$R *.dfm}
-
-procedure TFormLogin.FormCreate(Sender: TObject);
-begin
-  FPassword := TSecureString.Create;
-end;
-
-procedure TFormLogin.FormDestroy(Sender: TObject);
-begin
-  FPassword.Free;
-end;
-
-procedure TFormLogin.EditPasswordChange(Sender: TObject);
-begin
-  // Stocker le mot de passe dans la classe sécurisée
-  FPassword.SetValue(EditPassword.Text);
-end;
-
-procedure TFormLogin.ButtonLoginClick(Sender: TObject);
-var
-  Success: Boolean;
-begin
-  // Utiliser FPassword.GetValue() au lieu de EditPassword.Text
-  Success := AuthenticateUser(EditUsername.Text, FPassword.GetValue);
-
-  if Success then
-  begin
-    // Authentification réussie
-
-    // Effacer le mot de passe de la mémoire
-    FPassword.Clear;
-    EditPassword.Text := '';
-
-    // Stocker le nom d'utilisateur si demandé
-    if CheckBoxRememberUsername.Checked then
-      SaveUsername(EditUsername.Text)
-    else
-      ClearSavedUsername;
-
-    ModalResult := mrOk;
-  end
-  else
-  begin
-    ShowMessage('Nom d''utilisateur ou mot de passe incorrect.');
-    EditPassword.SetFocus;
-  end;
-end;
-```
-
-### Cryptographie et conformité légale
-
-L'utilisation de la cryptographie peut être soumise à des restrictions légales dans certains pays. Voici quelques points à considérer :
-
-1. **Restrictions à l'exportation** : Certains pays limitent l'exportation de logiciels utilisant des algorithmes cryptographiques forts.
-
-2. **Obligation de divulgation** : Dans certaines juridictions, les autorités peuvent exiger la divulgation des clés de chiffrement.
-
-3. **Conformité réglementaire** : Des réglementations comme le RGPD (GDPR) en Europe, le HIPAA aux États-Unis pour les données médicales, ou le PCI DSS pour les données de cartes de paiement, imposent des exigences spécifiques en matière de protection des données.
-
-Voici un exemple de dialogue pour informer l'utilisateur sur la conformité réglementaire :
-
-```pas
-procedure TMainForm.ShowPrivacyPolicy;
-begin
-  MessageDlg(
-    'Politique de confidentialité et de chiffrement' + #13#10#13#10 +
-    'Cette application utilise le chiffrement pour protéger vos données personnelles. ' +
-    'Nous utilisons l''algorithme AES-256 pour chiffrer toutes les notes que vous créez.' + #13#10#13#10 +
-    'Important : Si vous oubliez votre mot de passe principal, vos données ne pourront ' +
-    'pas être récupérées. Nous ne stockons pas votre mot de passe et ne pouvons pas ' +
-    'le réinitialiser.' + #13#10#13#10 +
-    'En utilisant cette application, vous acceptez ces conditions.',
-    mtInformation, [mbOk], 0);
-end;
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Afficher la politique de confidentialité lors de la première utilisation
-  if IsFirstRun then
-    ShowPrivacyPolicy;
-
-  // Reste du code d'initialisation
-end;
-```
-
-### Détection de manipulation de données chiffrées
-
-Pour détecter si des données chiffrées ont été manipulées, utilisez un code d'authentification de message (MAC) ou un chiffrement authentifié comme AES-GCM :
-
-```pas
-// Nécessite Delphi 12 ou supérieur
-function EncryptWithAuthentication(const PlainText, Password: string): string;
-var
-  Key, IV, EncryptedBytes, AuthTag: TBytes;
-  CombinedOutput: TBytes;
-begin
-  // Générer une clé à partir du mot de passe
-  Key := THashSHA2.GetHashBytes(Password);
-
   // Générer un IV aléatoire
-  SetLength(IV, 12); // 96 bits pour GCM
-  TCrypto.RandomBytes(IV);
+  SetLength(AIV, 16); // 16 octets pour AES
+  Randomize;
+  for i := 0 to 15 do
+    AIV[i] := Random(256);
 
-  // Chiffrer avec AES-GCM
-  TCipher.AES.EncryptGCM(
-    TEncoding.UTF8.GetBytes(PlainText),
-    Key,
-    IV,
-    nil, // Données associées (optionnel)
-    EncryptedBytes,
-    AuthTag
-  );
-
-  // Combiner IV + AuthTag + Données chiffrées
-  SetLength(CombinedOutput, Length(IV) + Length(AuthTag) + Length(EncryptedBytes));
-
-  // Copier l'IV
-  Move(IV[0], CombinedOutput[0], Length(IV));
-
-  // Copier le tag d'authentification
-  Move(AuthTag[0], CombinedOutput[Length(IV)], Length(AuthTag));
-
-  // Copier les données chiffrées
-  Move(EncryptedBytes[0], CombinedOutput[Length(IV) + Length(AuthTag)], Length(EncryptedBytes));
-
-  // Encoder en Base64
-  Result := TNetEncoding.Base64.EncodeBytesToString(CombinedOutput);
+  // Chiffrer avec la clé ET l'IV
+  // (Code simplifié - utilisez une vraie bibliothèque crypto)
+  ATexteChiffre := ChiffrerAESAvecIV(ATexte, ACle, AIV);
 end;
 
-function DecryptWithAuthentication(const EncryptedText, Password: string): string;
+// Lors du stockage, garder l'IV avec les données chiffrées
+procedure StockerDonneesChiffrees(const ATexte: string);
 var
-  Key, CombinedInput, IV, AuthTag, EncryptedBytes, DecryptedBytes: TBytes;
+  Cle: TBytes;
+  TexteChiffre: TBytes;
+  IV: TBytes;
+  Fichier: TFileStream;
 begin
-  // Décoder de Base64
-  CombinedInput := TNetEncoding.Base64.DecodeStringToBytes(EncryptedText);
+  Cle := ChargerCleSecurisee;
+  ChiffrerAvecIV(ATexte, Cle, TexteChiffre, IV);
 
-  // Vérifier la taille minimale
-  if Length(CombinedInput) < 28 then // 12 (IV) + 16 (AuthTag) minimum
-    raise Exception.Create('Données chiffrées invalides');
-
-  // Générer la clé à partir du mot de passe
-  Key := THashSHA2.GetHashBytes(Password);
-
-  // Extraire l'IV (12 premiers octets)
-  SetLength(IV, 12);
-  Move(CombinedInput[0], IV[0], 12);
-
-  // Extraire le tag d'authentification (16 octets suivants)
-  SetLength(AuthTag, 16);
-  Move(CombinedInput[12], AuthTag[0], 16);
-
-  // Extraire les données chiffrées (le reste)
-  SetLength(EncryptedBytes, Length(CombinedInput) - 28);
-  Move(CombinedInput[28], EncryptedBytes[0], Length(EncryptedBytes));
-
+  Fichier := TFileStream.Create('data.encrypted', fmCreate);
   try
-    // Déchiffrer avec AES-GCM (vérifie automatiquement l'authenticité)
-    DecryptedBytes := TCipher.AES.DecryptGCM(
-      EncryptedBytes,
-      Key,
-      IV,
-      nil, // Données associées (doit correspondre à l'encodage)
-      AuthTag
-    );
-
-    // Convertir en chaîne
-    Result := TEncoding.UTF8.GetString(DecryptedBytes);
-  except
-    on E: Exception do
-      raise Exception.Create('Échec du déchiffrement ou données manipulées : ' + E.Message);
+    // Écrire d'abord l'IV (pas secret, mais nécessaire pour déchiffrer)
+    Fichier.Write(IV[0], Length(IV));
+    // Puis les données chiffrées
+    Fichier.Write(TexteChiffre[0], Length(TexteChiffre));
+  finally
+    Fichier.Free;
   end;
 end;
 ```
 
-### Chiffrement des paramètres de connexion à la base de données
+## Modes de chiffrement par blocs
 
-Les paramètres de connexion à la base de données sont particulièrement sensibles. Voici comment les protéger :
+Les algorithmes comme AES chiffrent par blocs (128 bits). Les modes déterminent comment les blocs sont liés :
 
-```pas
-unit SecureConnectionParams;
+### CBC (Cipher Block Chaining)
 
-interface
+Le plus courant. Chaque bloc dépend du précédent.
 
-uses
-  System.SysUtils, System.Classes, System.IniFiles,
-  FireDAC.Comp.Client, KeyProtection;
+```
+Bloc 1 → Chiffré → XOR avec Bloc 2 → Chiffré → ...
+```
 
+**Avantage** : Motifs cachés
+**Inconvénient** : Erreur dans un bloc affecte les suivants
+
+### ECB (Electronic Codebook)
+
+**À ÉVITER** : Chiffre chaque bloc indépendamment. Les motifs restent visibles.
+
+### GCM (Galois/Counter Mode)
+
+**Recommandé** : Mode moderne qui offre à la fois chiffrement et authentification.
+
+```pascal
+// Exemple conceptuel avec GCM
+procedure ChiffrerModeGCM(const ATexte: string);
+begin
+  // Utilise AES-GCM pour chiffrer ET authentifier
+  // Garantit que les données n'ont pas été modifiées
+  // Nécessite une bibliothèque supportant GCM
+end;
+```
+
+## Bonnes pratiques
+
+### ✅ À faire
+
+**1. Utilisez des algorithmes éprouvés**
+```pascal
+// ✅ BON - AES est standard et sûr
+Chiffrement := TChiffrementAES.Create(Cle);
+
+// ❌ MAUVAIS - algorithme "maison" non testé
+Chiffrement := MonAlgoPerso.Create(Cle);
+```
+
+**2. Utilisez des clés suffisamment longues**
+```pascal
+// ✅ BON - 256 bits minimum pour AES
+Cle := GenererCle(32); // 32 octets = 256 bits
+
+// ❌ MAUVAIS - trop court
+Cle := GenererCle(8); // 64 bits, cassable en quelques secondes
+```
+
+**3. Changez régulièrement les clés**
+```pascal
+// Rotation des clés tous les 90 jours
+if DaysBetween(Now, DateDerniereRotation) > 90 then
+  RoterCleChiffrement;
+```
+
+**4. Utilisez un IV différent à chaque chiffrement**
+```pascal
+// ✅ BON - IV aléatoire à chaque fois
+IV := GenererIVAleatoire;
+
+// ❌ MAUVAIS - même IV réutilisé
+const IV_FIXE = '1234567890123456';
+```
+
+**5. Combinez chiffrement et authentification**
+```pascal
+// Utilisez HMAC pour vérifier l'intégrité
+HMAC := CalculerHMAC(TexteChiffre, CleHMAC);
+StockerAvecAuthentification(TexteChiffre, HMAC);
+```
+
+### ❌ À éviter
+
+**1. Ne jamais implémenter votre propre algorithme de chiffrement**
+
+Même les experts font des erreurs. Utilisez des bibliothèques éprouvées.
+
+**2. Ne pas chiffrer ce qui doit être hashé**
+
+```pascal
+// ❌ MAUVAIS - chiffrer un mot de passe
+MotDePasseChiffre := Chiffrer(MotDePasse);
+
+// ✅ BON - hasher un mot de passe
+MotDePasseHash := Hasher(MotDePasse + Salt);
+```
+
+**3. Ne pas exposer les données chiffrées telles quelles**
+
+Même chiffrées, les données ont une valeur. Contrôlez l'accès.
+
+**4. Ne pas oublier de nettoyer la mémoire**
+
+```pascal
+procedure UtiliserCle;
+var
+  Cle: string;
+begin
+  Cle := ChargerCleSecrete;
+  try
+    // Utiliser la clé
+    ChiffrerDonnees(Cle);
+  finally
+    // Effacer la clé de la mémoire
+    FillChar(Cle[1], Length(Cle) * SizeOf(Char), 0);
+    Cle := '';
+  end;
+end;
+```
+
+**5. Ne pas négliger la performance**
+
+Le chiffrement a un coût. Pour de gros volumes, optimisez :
+- Chiffrez par blocs
+- Utilisez le multi-threading
+- Cachez les données déchiffrées si utilisées souvent
+
+## Cas d'usage pratiques
+
+### Application de gestion : chiffrer les données sensibles
+
+```pascal
 type
-  TDBConnectionManager = class
+  TClientSecurise = class
   private
-    FConnectionParams: TStringList;
-
-    procedure LoadEncryptedParams;
-    procedure SaveEncryptedParams;
+    FID: Integer;
+    FNom: string;
+    FEmail: string;
+    FNumeroCarteChiffre: string;
+    function GetNumeroCarte: string;
+    procedure SetNumeroCarte(const Value: string);
   public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure ConfigureConnection(Connection: TFDConnection);
-
-    // Accesseurs pour les paramètres individuels
-    function GetServer: string;
-    procedure SetServer(const Value: string);
-
-    function GetDatabase: string;
-    procedure SetDatabase(const Value: string);
-
-    function GetUsername: string;
-    procedure SetUsername(const Value: string);
-
-    function GetPassword: string;
-    procedure SetPassword(const Value: string);
-
-    property Server: string read GetServer write SetServer;
-    property Database: string read GetDatabase write SetDatabase;
-    property Username: string read GetUsername write SetUsername;
-    property Password: string read GetPassword write SetPassword;
+    property ID: Integer read FID write FID;
+    property Nom: string read FNom write FNom;
+    property Email: string read FEmail write FEmail;
+    property NumeroCarte: string read GetNumeroCarte write SetNumeroCarte;
   end;
 
-implementation
-
-constructor TDBConnectionManager.Create;
-begin
-  inherited;
-
-  FConnectionParams := TStringList.Create;
-  LoadEncryptedParams;
-end;
-
-destructor TDBConnectionManager.Destroy;
-begin
-  SaveEncryptedParams;
-  FConnectionParams.Free;
-
-  inherited;
-end;
-
-procedure TDBConnectionManager.LoadEncryptedParams;
+function TClientSecurise.GetNumeroCarte: string;
 var
-  IniFile: TIniFile;
-  EncryptedContent: string;
-  DecryptedContent: string;
+  Chiffrement: TChiffrementAES;
 begin
-  FConnectionParams.Clear;
+  if FNumeroCarteChiffre = '' then
+    Exit('');
 
-  IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
+  Chiffrement := TChiffrementAES.Create(CleGlobale);
   try
-    EncryptedContent := IniFile.ReadString('Database', 'EncryptedParams', '');
-
-    // Si nous avons des paramètres chiffrés, les déchiffrer
-    if EncryptedContent <> '' then
-    begin
-      try
-        // Utiliser le DPAPI pour déchiffrer
-        DecryptedContent := UnprotectString(EncryptedContent);
-        FConnectionParams.Text := DecryptedContent;
-      except
-        // En cas d'erreur, utiliser des valeurs par défaut ou demander à l'utilisateur
-        FConnectionParams.Values['Server'] := 'localhost';
-        FConnectionParams.Values['Database'] := 'mydb';
-        FConnectionParams.Values['Username'] := 'root';
-        FConnectionParams.Values['Password'] := '';
-      end;
-    end
-    else
-    begin
-      // Aucune configuration existante, utiliser des valeurs par défaut
-      FConnectionParams.Values['Server'] := 'localhost';
-      FConnectionParams.Values['Database'] := 'mydb';
-      FConnectionParams.Values['Username'] := 'root';
-      FConnectionParams.Values['Password'] := '';
-    end;
+    Result := Chiffrement.Dechiffrer(FNumeroCarteChiffre);
   finally
-    IniFile.Free;
+    Chiffrement.Free;
   end;
 end;
 
-procedure TDBConnectionManager.SaveEncryptedParams;
+procedure TClientSecurise.SetNumeroCarte(const Value: string);
 var
-  IniFile: TIniFile;
-  EncryptedContent: string;
+  Chiffrement: TChiffrementAES;
 begin
-  // Protéger les paramètres avec le DPAPI
-  EncryptedContent := ProtectString(FConnectionParams.Text);
-
-  IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
+  Chiffrement := TChiffrementAES.Create(CleGlobale);
   try
-    IniFile.WriteString('Database', 'EncryptedParams', EncryptedContent);
+    FNumeroCarteChiffre := Chiffrement.Chiffrer(Value);
   finally
-    IniFile.Free;
+    Chiffrement.Free;
   end;
 end;
-
-procedure TDBConnectionManager.ConfigureConnection(Connection: TFDConnection);
-begin
-  Connection.Params.Clear;
-  Connection.Params.Add('Server=' + GetServer);
-  Connection.Params.Add('Database=' + GetDatabase);
-  Connection.Params.Add('User_Name=' + GetUsername);
-  Connection.Params.Add('Password=' + GetPassword);
-  Connection.Params.Add('DriverID=MySQL'); // Adapter selon votre SGBD
-end;
-
-function TDBConnectionManager.GetServer: string;
-begin
-  Result := FConnectionParams.Values['Server'];
-end;
-
-procedure TDBConnectionManager.SetServer(const Value: string);
-begin
-  FConnectionParams.Values['Server'] := Value;
-end;
-
-function TDBConnectionManager.GetDatabase: string;
-begin
-  Result := FConnectionParams.Values['Database'];
-end;
-
-procedure TDBConnectionManager.SetDatabase(const Value: string);
-begin
-  FConnectionParams.Values['Database'] := Value;
-end;
-
-function TDBConnectionManager.GetUsername: string;
-begin
-  Result := FConnectionParams.Values['Username'];
-end;
-
-procedure TDBConnectionManager.SetUsername(const Value: string);
-begin
-  FConnectionParams.Values['Username'] := Value;
-end;
-
-function TDBConnectionManager.GetPassword: string;
-begin
-  Result := FConnectionParams.Values['Password'];
-end;
-
-procedure TDBConnectionManager.SetPassword(const Value: string);
-begin
-  FConnectionParams.Values['Password'] := Value;
-end;
-
-end.
 ```
 
-### Création d'un formulaire de configuration de connexion sécurisée
+### Application mobile : sauvegarder des données localement
 
-```pas
-unit DBConfigForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, SecureConnectionParams;
-
-type
-  TFormDBConfig = class(TForm)
-    EditServer: TEdit;
-    EditDatabase: TEdit;
-    EditUsername: TEdit;
-    EditPassword: TEdit;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
-    ButtonTest: TButton;
-    ButtonSave: TButton;
-    ButtonCancel: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonTestClick(Sender: TObject);
-    procedure ButtonSaveClick(Sender: TObject);
-  private
-    FConnectionManager: TDBConnectionManager;
-  end;
-
+```pascal
+// Chiffrer avant de sauvegarder sur le mobile
+procedure SauvegarderDonneesLocales(const ADonnees: string);
 var
-  FormDBConfig: TFormDBConfig;
-
-implementation
-
-{$R *.dfm}
-
-uses
-  FireDAC.Comp.Client, FireDAC.Stan.Def, FireDAC.Stan.Async, FireDAC.UI.Intf;
-
-procedure TFormDBConfig.FormCreate(Sender: TObject);
+  Fichier: TFileStream;
+  Chiffrement: TChiffrementAES;
+  DonneesChiffrees: TBytes;
+  CheminFichier: string;
 begin
-  FConnectionManager := TDBConnectionManager.Create;
+  CheminFichier := TPath.Combine(TPath.GetDocumentsPath, 'data.enc');
 
-  // Remplir les champs du formulaire
-  EditServer.Text := FConnectionManager.Server;
-  EditDatabase.Text := FConnectionManager.Database;
-  EditUsername.Text := FConnectionManager.Username;
-  EditPassword.Text := FConnectionManager.Password;
-end;
-
-procedure TFormDBConfig.ButtonTestClick(Sender: TObject);
-var
-  Connection: TFDConnection;
-begin
-  // Mettre à jour les valeurs temporairement
-  FConnectionManager.Server := EditServer.Text;
-  FConnectionManager.Database := EditDatabase.Text;
-  FConnectionManager.Username := EditUsername.Text;
-  FConnectionManager.Password := EditPassword.Text;
-
-  Connection := TFDConnection.Create(nil);
+  Chiffrement := TChiffrementAES.Create(ObtenirCleAppareil);
   try
+    DonneesChiffrees := Chiffrement.ChiffrerEnBytes(ADonnees);
+
+    Fichier := TFileStream.Create(CheminFichier, fmCreate);
     try
-      Screen.Cursor := crHourGlass;
-
-      // Configurer la connexion avec nos paramètres
-      FConnectionManager.ConfigureConnection(Connection);
-
-      // Tester la connexion
-      Connection.Connected := True;
-
-      ShowMessage('Connexion réussie !');
-    except
-      on E: Exception do
-        ShowMessage('Erreur de connexion : ' + E.Message);
+      Fichier.Write(DonneesChiffrees[0], Length(DonneesChiffrees));
+    finally
+      Fichier.Free;
     end;
   finally
-    Connection.Free;
-    Screen.Cursor := crDefault;
+    Chiffrement.Free;
   end;
 end;
-
-procedure TFormDBConfig.ButtonSaveClick(Sender: TObject);
-begin
-  // Sauvegarder les nouveaux paramètres
-  FConnectionManager.Server := EditServer.Text;
-  FConnectionManager.Database := EditDatabase.Text;
-  FConnectionManager.Username := EditUsername.Text;
-  FConnectionManager.Password := EditPassword.Text;
-
-  // Les paramètres seront chiffrés et sauvegardés lors de la destruction de FConnectionManager
-  ModalResult := mrOk;
-end;
-
-end.
 ```
 
-### Conclusion
+### Application cloud : chiffrer avant l'envoi
 
-Le chiffrement des données est une composante essentielle de la sécurité des applications modernes. En utilisant les techniques présentées dans ce chapitre, vous pouvez protéger efficacement les données sensibles dans vos applications Delphi, que ce soit au repos, en transit ou en mémoire.
+```pascal
+procedure EnvoyerFichierChiffre(const AFichierLocal: string);
+var
+  RESTClient: TRESTClient;
+  RESTRequest: TRESTRequest;
+  FichierChiffre: TMemoryStream;
+  Chiffrement: TChiffrementAES;
+begin
+  // Chiffrer le fichier localement
+  FichierChiffre := TMemoryStream.Create;
+  Chiffrement := TChiffrementAES.Create(CleUtilisateur);
+  try
+    ChiffrerFichierVersStream(AFichierLocal, FichierChiffre, Chiffrement);
+    FichierChiffre.Position := 0;
 
-Récapitulons les points clés :
+    // Envoyer le fichier chiffré au cloud
+    RESTClient := TRESTClient.Create('https://api.cloud.com');
+    RESTRequest := TRESTRequest.Create(nil);
+    try
+      RESTRequest.Client := RESTClient;
+      RESTRequest.Method := TRESTRequestMethod.rmPOST;
+      RESTRequest.Resource := 'upload';
 
-1. **Utilisez toujours des algorithmes standards et éprouvés** comme AES pour le chiffrement symétrique et RSA pour le chiffrement asymétrique.
+      RESTRequest.AddBody(FichierChiffre, TRESTContentType.ctAPPLICATION_OCTET_STREAM);
+      RESTRequest.Execute;
 
-2. **Protégez vos clés de chiffrement** avec des mécanismes comme le DPAPI sous Windows.
+      if RESTRequest.Response.StatusCode = 200 then
+        ShowMessage('Fichier chiffré envoyé avec succès')
+      else
+        ShowMessage('Erreur d''envoi');
+    finally
+      RESTRequest.Free;
+      RESTClient.Free;
+    end;
+  finally
+    Chiffrement.Free;
+    FichierChiffre.Free;
+  end;
+end;
+```
 
-3. **N'utilisez jamais de chiffrement pour les mots de passe**, mais plutôt des fonctions de hachage avec sel aléatoire.
+## Chiffrement et conformité RGPD
 
-4. **Chiffrez les communications réseau** en utilisant HTTPS (TLS/SSL).
+Le RGPD recommande (et parfois impose) le chiffrement des données personnelles :
 
-5. **Effacez de manière sécurisée les données sensibles en mémoire** lorsqu'elles ne sont plus nécessaires.
+**Article 32** : "pseudonymisation et chiffrement des données à caractère personnel"
 
-6. **Respectez les réglementations** en matière de protection des données dans votre juridiction.
+**Ce qu'il faut chiffrer** :
+- Numéros de sécurité sociale
+- Données bancaires
+- Données médicales
+- Toute donnée sensible
 
-7. **Mettez en place une stratégie de gestion des clés** adaptée à votre application.
+**Avantage RGPD** : Si vos données chiffrées sont volées mais que la clé est en sécurité, vous n'avez pas à notifier la violation dans certains cas.
 
-8. **Utilisez le chiffrement authentifié** (comme AES-GCM) pour détecter toute manipulation des données chiffrées.
+```pascal
+// Implémenter une table d'audit du chiffrement
+procedure JournaliserChiffrement(ATableau, AColonne: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text :=
+      'INSERT INTO AuditChiffrement (TableName, ColumnName, DateChiffrement, Algorithme) ' +
+      'VALUES (:Table, :Column, NOW(), :Algo)';
+    Query.ParamByName('Table').AsString := ATableau;
+    Query.ParamByName('Column').AsString := AColonne;
+    Query.ParamByName('Algo').AsString := 'AES-256';
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+```
 
-Dans le prochain chapitre, nous aborderons la sécurisation des connexions réseau, qui complète les techniques de chiffrement présentées ici pour une protection complète des données.
+## Résumé des points essentiels
 
-### Exercices pratiques
+✅ **Points clés à retenir** :
+- Le chiffrement protège les données, pas les systèmes
+- Utilisez AES-256 pour le chiffrement symétrique
+- Utilisez RSA ou ECC pour le chiffrement asymétrique
+- Ne réinventez jamais la roue en cryptographie
+- La gestion des clés est aussi importante que l'algorithme
+- Utilisez toujours un IV différent pour chaque chiffrement
+- Combinez chiffrement et authentification (HMAC, GCM)
+- Chiffrez les données en transit (HTTPS) et au repos (base, fichiers)
 
-1. Créez une petite application qui permet de chiffrer et déchiffrer un fichier texte avec un mot de passe.
+❌ **Erreurs critiques à éviter** :
+- Stocker les clés dans le code source
+- Utiliser des algorithmes obsolètes (DES, MD5 pour sécurité)
+- Réutiliser les mêmes IV
+- Chiffrer ce qui doit être hashé (mots de passe)
+- Négliger la sécurisation des clés
+- Oublier de chiffrer les sauvegardes
 
-2. Modifiez une application existante pour stocker les mots de passe des utilisateurs de manière sécurisée avec hachage et sel.
+## Aller plus loin
 
-3. Implémentez un système de configuration qui stocke des informations sensibles de manière chiffrée (comme des clés d'API ou des identifiants de base de données).
+**Prochaines sections du chapitre 16** :
+- **16.4** : Sécurisation des connexions (HTTPS, SSL/TLS, certificats)
+- **16.5** : Protection contre les vulnérabilités (injections, XSS, CSRF)
+- **16.9** : Signature numérique et validation
 
-4. Créez une application de carnet d'adresses qui chiffre les coordonnées des contacts (numéros de téléphone, adresses, etc.).
+**Ressources recommandées** :
+- Documentation des bibliothèques cryptographiques (OpenSSL, Indy)
+- Standards NIST sur la cryptographie
+- Cours sur la cryptographie appliquée
 
-5. Pour les plus avancés : Implémentez un système de chiffrement de bout en bout pour l'échange de messages entre deux utilisateurs de votre application.
+Le chiffrement est une brique essentielle de la sécurité, mais il doit être combiné avec d'autres mesures (authentification, autorisation, sécurité réseau) pour une protection complète.
 
 ⏭️ [Sécurisation des connexions](/16-securite-des-applications/04-securisation-des-connexions.md)

@@ -1,1278 +1,1410 @@
-# 16. Sécurité des applications
-## 16.6 Audit de sécurité
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.6 Audit de sécurité
 
-Une fois que vous avez mis en place les différentes protections pour sécuriser votre application Delphi, il est essentiel de vérifier leur efficacité par le biais d'un audit de sécurité. Ce processus vous permet d'identifier les vulnérabilités potentielles avant qu'elles ne soient exploitées par des attaquants.
+## Introduction
 
-Dans ce chapitre, nous allons découvrir comment réaliser un audit de sécurité de base pour vos applications Delphi, même si vous n'êtes pas un expert en sécurité informatique.
+L'audit de sécurité est l'ensemble des processus qui permettent de surveiller, enregistrer et analyser les événements de sécurité dans votre application. C'est votre système de surveillance qui vous alerte en cas de problème et vous aide à comprendre ce qui s'est passé après un incident.
 
-### Qu'est-ce qu'un audit de sécurité ?
+**Analogie du monde réel** : Pensez à l'audit de sécurité comme aux caméras de surveillance et au registre des visiteurs dans un bâtiment. Ils ne empêchent pas directement les intrusions, mais ils permettent de :
+- Savoir qui est entré, quand et où
+- Détecter les comportements suspects
+- Reconstituer ce qui s'est passé après un incident
+- Dissuader les comportements malveillants
 
-Un audit de sécurité est un examen systématique de votre application pour identifier les faiblesses potentielles, vérifier l'efficacité des mesures de sécurité mises en place, et s'assurer que les bonnes pratiques sont suivies. Il peut être réalisé à différents niveaux :
+### Pourquoi l'audit est-il crucial ?
 
-1. **Revue de code** : Analyse manuelle ou automatisée du code source
-2. **Tests de sécurité dynamiques** : Tests de l'application en cours d'exécution
-3. **Analyse de la configuration** : Vérification des paramètres de déploiement et d'exécution
-4. **Test de pénétration** : Simulation d'attaques réelles sur l'application
+**Détection rapide** : Repérer une attaque en cours avant qu'elle ne cause trop de dégâts
 
-### Préparation à l'audit de sécurité
+**Investigation** : Comprendre comment une faille a été exploitée
 
-Avant de commencer l'audit, il est important de définir clairement son périmètre :
+**Conformité** : Respecter les réglementations (RGPD, ISO 27001, etc.)
 
-```pas
-procedure TPrepareSecurityAudit.PrepareAuditScope;
-begin
-  // Définir le périmètre de l'audit
-  AuditScope.AppName := 'GestionStock';
-  AuditScope.Version := '2.3.1';
-  AuditScope.ModulesToAudit := ['Authentication', 'UserManagement',
-                               'ProductDatabase', 'ReportGeneration'];
-  AuditScope.ExcludedModules := ['Help', 'About'];
-  AuditScope.SecurityRequirements := [
-    'Protection contre injection SQL',
-    'Stockage sécurisé des mots de passe',
-    'Contrôle d''accès basé sur les rôles',
-    'Protection des données sensibles',
-    'Journalisation de sécurité'
-  ];
+**Preuve légale** : Fournir des preuves en cas de procédure judiciaire
 
-  // Rassembler la documentation pertinente
-  CollectDocumentation('architecture_diagram.pdf');
-  CollectDocumentation('database_schema.pdf');
-  CollectDocumentation('previous_audit_report.pdf');
+**Amélioration continue** : Identifier les faiblesses pour les corriger
 
-  // Créer un environnement de test isolé
-  PrepareAuditEnvironment;
-end;
+## Les principes de base de la journalisation
+
+### Que faut-il journaliser ?
+
+**Événements de sécurité** :
+- Connexions et déconnexions (réussies et échouées)
+- Tentatives d'accès à des ressources protégées
+- Modifications de droits et permissions
+- Changements de mots de passe
+- Création/suppression d'utilisateurs
+
+**Événements métier critiques** :
+- Transactions financières
+- Modifications de données sensibles
+- Suppressions importantes
+- Exports de données
+- Changements de configuration
+
+**Événements suspects** :
+- Tentatives d'injection SQL
+- Tentatives d'accès non autorisé répétées
+- Erreurs inhabituelles
+- Pics d'activité anormaux
+
+### Que NE FAUT-IL PAS journaliser ?
+
+**❌ Données sensibles** :
+- Mots de passe (même hashés)
+- Numéros de cartes bancaires
+- Données personnelles non nécessaires
+- Clés de chiffrement
+- Tokens d'authentification complets
+
+```pascal
+// ❌ MAUVAIS - Journalise des données sensibles
+LogEvent('Connexion utilisateur : ' + Username + ' avec mot de passe : ' + Password);
+
+// ✅ BON - Journalise l'événement sans les données sensibles
+LogEvent('Connexion utilisateur : ' + Username + ' - Statut : succès');
 ```
 
-#### Liste de vérification préalable à l'audit
+## Implémentation d'un système de journalisation
 
-Avant de commencer l'audit, utilisez cette liste de vérification pour vous assurer que vous êtes bien préparé :
+### Structure d'un log
 
-1. ✅ Avez-vous une version complète et récente du code source ?
-2. ✅ Disposez-vous de la documentation de l'architecture de l'application ?
-3. ✅ Connaissez-vous les flux de données sensibles dans l'application ?
-4. ✅ Avez-vous un environnement de test représentatif de la production ?
-5. ✅ Avez-vous identifié les exigences réglementaires (RGPD, etc.) ?
-6. ✅ Disposez-vous des outils nécessaires pour l'audit ?
+Un bon log contient au minimum :
+1. **Timestamp** : Quand l'événement s'est produit
+2. **Niveau** : Gravité (Info, Warning, Error, Critical)
+3. **Source** : Qui ou quoi a généré l'événement
+4. **Message** : Description de l'événement
+5. **Contexte** : Informations additionnelles (IP, utilisateur, etc.)
 
-### Les étapes d'un audit de sécurité
+### Classe de logging simple
 
-#### 1. Revue de code manuelle
-
-La revue de code manuelle consiste à examiner votre code source à la recherche de vulnérabilités potentielles. C'est un processus qui demande du temps mais qui peut identifier des problèmes que les outils automatisés pourraient manquer.
-
-Voici quelques points clés à rechercher lors d'une revue de code manuelle :
-
-```pas
-procedure TSecurityAudit.PerformManualCodeReview(const SourcePath: string);
-var
-  Files: TStringList;
-  CurrentFile: string;
-begin
-  Files := FindDelphiSourceFiles(SourcePath);
-  try
-    for CurrentFile in Files do
-    begin
-      // Vérifier les problèmes d'injection SQL
-      CheckForSQLInjection(CurrentFile);
-
-      // Vérifier le stockage des mots de passe
-      CheckForInsecurePasswordStorage(CurrentFile);
-
-      // Vérifier la validation des entrées
-      CheckForInputValidation(CurrentFile);
-
-      // Vérifier la gestion des erreurs et exceptions
-      CheckForErrorHandling(CurrentFile);
-
-      // Vérifier l'exposition de données sensibles
-      CheckForSensitiveDataExposure(CurrentFile);
-
-      // Journaliser les problèmes trouvés
-      LogFindings(CurrentFile);
-    end;
-  finally
-    Files.Free;
-  end;
-end;
-```
-
-##### Exemple : Recherche d'injections SQL potentielles
-
-```pas
-procedure TSecurityAudit.CheckForSQLInjection(const SourceFile: string);
-var
-  FileContent: TStringList;
-  LineNumber: Integer;
-  CurrentLine: string;
-begin
-  FileContent := TStringList.Create;
-  try
-    FileContent.LoadFromFile(SourceFile);
-
-    for LineNumber := 0 to FileContent.Count - 1 do
-    begin
-      CurrentLine := FileContent[LineNumber];
-
-      // Rechercher les constructions de requêtes SQL par concaténation
-      if (Pos('SELECT', UpperCase(CurrentLine)) > 0) or
-         (Pos('INSERT', UpperCase(CurrentLine)) > 0) or
-         (Pos('UPDATE', UpperCase(CurrentLine)) > 0) or
-         (Pos('DELETE', UpperCase(CurrentLine)) > 0) then
-      begin
-        // Rechercher les signes de concaténation de chaînes
-        if (Pos(' + ', CurrentLine) > 0) or
-           (Pos(''' +', CurrentLine) > 0) or
-           (Pos('+ ''', CurrentLine) > 0) then
-        begin
-          // Potentielle injection SQL trouvée
-          RecordVulnerability(
-            'Injection SQL potentielle',
-            SourceFile,
-            LineNumber + 1,
-            CurrentLine,
-            'Utilisez des requêtes paramétrées au lieu de concaténer des chaînes.'
-          );
-        end;
-      end;
-    end;
-  finally
-    FileContent.Free;
-  end;
-end;
-```
-
-#### 2. Analyse de code automatisée
-
-L'analyse automatisée permet de scanner rapidement l'ensemble de votre base de code pour identifier les problèmes courants. Voici comment intégrer cela dans votre processus d'audit :
-
-```pas
-procedure TSecurityAudit.PerformAutomatedCodeAnalysis(const ProjectPath: string);
-var
-  OutputLog: TStringList;
-  Result: Integer;
-begin
-  OutputLog := TStringList.Create;
-  try
-    // Exemple d'utilisation d'un outil de ligne de commande fictif "DelphiSecScan"
-    Result := ExecuteCommand(
-      'DelphiSecScan.exe',
-      ['--project', ProjectPath, '--output', 'security_scan_results.json', '--format', 'json'],
-      OutputLog
-    );
-
-    if Result <> 0 then
-    begin
-      // L'outil a trouvé des problèmes
-      LogMessage('L''analyse de code a détecté des problèmes potentiels.');
-
-      // Analyser les résultats de l'outil
-      ParseSecurityScanResults('security_scan_results.json');
-    end
-    else
-      LogMessage('Aucun problème détecté par l''analyse automatisée.');
-  finally
-    OutputLog.Free;
-  end;
-end;
-```
-
-##### Outils d'analyse de code pour Delphi
-
-Voici quelques outils que vous pouvez utiliser pour l'analyse automatisée de code Delphi :
-
-1. **Sonar** avec un plugin pour Delphi
-2. **Pascal Analyzer**
-3. **Peganza Pascal Analyzer**
-4. **DelphiAST** (pour créer vos propres analyses)
-
-#### 3. Tests de sécurité dynamiques
-
-Les tests dynamiques consistent à exécuter votre application et à vérifier son comportement face à diverses attaques. Voici un exemple simple de test d'injection SQL :
-
-```pas
-procedure TSecurityAudit.PerformSQLInjectionTest(ALoginForm: TLoginForm);
-const
-  SqlInjectionPayloads: array[0..4] of string = (
-    ''' OR 1=1 --',
-    'admin'' --',
-    ''' UNION SELECT username, password FROM users --',
-    ''' DROP TABLE users --',
-    'admin''; EXEC sp_MSforeachtable @command1=''DROP TABLE ?''; --'
-  );
-var
-  I: Integer;
-  Result: Boolean;
-begin
-  for I := 0 to High(SqlInjectionPayloads) do
-  begin
-    // Tester chaque charge utile
-    LogMessage('Test d''injection SQL #' + IntToStr(I+1) + ': ' + SqlInjectionPayloads[I]);
-
-    // Essayer de se connecter avec la charge utile
-    ALoginForm.EditUsername.Text := 'admin';
-    ALoginForm.EditPassword.Text := SqlInjectionPayloads[I];
-    ALoginForm.ButtonLogin.Click;
-
-    // Vérifier si l'authentification a réussi (ce qui indiquerait une vulnérabilité)
-    Result := IsUserAuthenticated;
-
-    if Result then
-    begin
-      // Vulnérabilité détectée
-      RecordVulnerability(
-        'Vulnérabilité d''injection SQL confirmée',
-        'LoginForm',
-        0,
-        'La charge utile "' + SqlInjectionPayloads[I] + '" a permis de contourner l''authentification',
-        'Utilisez des requêtes paramétrées et validez toutes les entrées utilisateur.'
-      );
-    end;
-
-    // Réinitialiser l'application pour le prochain test
-    ResetApplicationState;
-  end;
-end;
-```
-
-#### 4. Vérification des configurations
-
-Les paramètres de configuration peuvent introduire des vulnérabilités. Vérifiez-les soigneusement :
-
-```pas
-procedure TSecurityAudit.AuditAppConfigurations;
-var
-  IniFile: TIniFile;
-  ConnectionString: string;
-  LogPath: string;
-  TempPath: string;
-  DebugMode: Boolean;
-begin
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-  try
-    // Vérifier si la chaîne de connexion est en clair
-    ConnectionString := IniFile.ReadString('Database', 'ConnectionString', '');
-    if (ConnectionString <> '') and (Pos('Encrypt=', ConnectionString) <= 0) then
-    begin
-      RecordVulnerability(
-        'Chaîne de connexion non chiffrée',
-        'Configuration',
-        0,
-        'La chaîne de connexion à la base de données est stockée en texte clair',
-        'Chiffrez les chaînes de connexion et autres informations sensibles.'
-      );
-    end;
-
-    // Vérifier les chemins de journalisation
-    LogPath := IniFile.ReadString('Logging', 'Path', '');
-    if (LogPath <> '') and not DirectoryIsWriteProtected(LogPath) then
-    begin
-      RecordVulnerability(
-        'Dossier de journaux non sécurisé',
-        'Configuration',
-        0,
-        'Le dossier des journaux n''est pas protégé contre les écritures non autorisées',
-        'Appliquez des restrictions d''accès appropriées aux dossiers de journalisation.'
-      );
-    end;
-
-    // Vérifier si le mode débogage est activé en production
-    DebugMode := IniFile.ReadBool('General', 'DebugMode', False);
-    if DebugMode then
-    begin
-      RecordVulnerability(
-        'Mode débogage activé',
-        'Configuration',
-        0,
-        'L''application est configurée en mode débogage',
-        'Désactivez le mode débogage en environnement de production.'
-      );
-    end;
-
-    // D'autres vérifications de configuration...
-  finally
-    IniFile.Free;
-  end;
-end;
-```
-
-#### 5. Test de pénétration simplifié
-
-Le test de pénétration consiste à simuler des attaques réelles. Voici un exemple simple de script pour tester la protection contre les tentatives de force brute :
-
-```pas
-procedure TSecurityAudit.TestBruteForceProtection(const URL: string);
-var
-  HTTP: TIdHTTP;
-  Params: TStringList;
-  Response: string;
-  I: Integer;
-  StartTime, EndTime: TDateTime;
-  BlockDetected: Boolean;
-begin
-  HTTP := TIdHTTP.Create(nil);
-  Params := TStringList.Create;
-  try
-    // Configurer les paramètres de la requête
-    Params.Add('username=admin');
-
-    BlockDetected := False;
-    StartTime := Now;
-
-    // Essayer de se connecter plusieurs fois avec un mot de passe incorrect
-    for I := 1 to 20 do
-    begin
-      Params.Values['password'] := 'wrong_password_' + IntToStr(I);
-
-      try
-        Response := HTTP.Post(URL + '/login', Params);
-        LogMessage('Tentative ' + IntToStr(I) + ': Réponse reçue, longueur = ' +
-                  IntToStr(Length(Response)));
-
-        // Vérifier si nous sommes bloqués (par ex. détection de CAPTCHA ou message d'erreur)
-        if (Pos('too many attempts', LowerCase(Response)) > 0) or
-           (Pos('captcha', LowerCase(Response)) > 0) or
-           (Pos('temporarily blocked', LowerCase(Response)) > 0) then
-        begin
-          BlockDetected := True;
-          LogMessage('Protection contre force brute détectée après ' + IntToStr(I) + ' tentatives');
-          Break;
-        end;
-      except
-        on E: EIdHTTPProtocolException do
-        begin
-          // HTTP 429 Too Many Requests ou autre code d'erreur indiquant une limitation
-          if E.ErrorCode = 429 then
-          begin
-            BlockDetected := True;
-            LogMessage('Protection contre force brute détectée (code 429) après ' +
-                      IntToStr(I) + ' tentatives');
-            Break;
-          end;
-
-          LogMessage('Erreur HTTP ' + IntToStr(E.ErrorCode) + ': ' + E.Message);
-        end;
-      end;
-
-      // Ajouter un délai pour éviter d'être bloqué par des règles de pare-feu
-      Sleep(500);
-    end;
-
-    EndTime := Now;
-
-    if not BlockDetected then
-    begin
-      RecordVulnerability(
-        'Absence de protection contre les attaques par force brute',
-        'Authentication',
-        0,
-        '20 tentatives de connexion échouées n''ont pas déclenché de mécanisme de protection',
-        'Implémentez une limitation de débit après plusieurs échecs d''authentification.'
-      );
-    end
-    else
-    begin
-      // Calculer après combien de temps la protection s'est déclenchée
-      LogMessage('La protection s''est déclenchée après ' +
-                FormatDateTime('n:ss', EndTime - StartTime));
-    end;
-  finally
-    Params.Free;
-    HTTP.Free;
-  end;
-end;
-```
-
-### Documentation des résultats d'audit
-
-Il est essentiel de bien documenter les résultats de votre audit. Voici un exemple de classe pour gérer les résultats :
-
-```pas
-unit SecurityAuditReport;
+```pascal
+unit UnitLogger;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils;
+  System.SysUtils, System.Classes, System.SyncObjs;
 
 type
-  TVulnerabilitySeverity = (vsLow, vsMedium, vsHigh, vsCritical);
+  TNiveauLog = (nlDebug, nlInfo, nlWarning, nlError, nlCritical);
 
-  TVulnerability = record
-    ID: string;
-    Title: string;
-    SourceFile: string;
-    LineNumber: Integer;
-    Description: string;
-    Recommendation: string;
-    Severity: TVulnerabilitySeverity;
-    DateFound: TDateTime;
-  end;
-
-  TSecurityAuditReport = class
+  TLogger = class
   private
-    FVulnerabilities: TArray<TVulnerability>;
-    FProjectName: string;
-    FAuditDate: TDateTime;
-    FAuditorName: string;
-
-    function GetVulnerabilitiesCount: Integer;
-    function GetCriticalVulnerabilitiesCount: Integer;
+    class var FInstance: TLogger;
+    class var FLock: TCriticalSection;
+    FFichierLog: string;
+    procedure EcrireDansFichier(const ALigne: string);
   public
-    constructor Create(const ProjectName, AuditorName: string);
+    class constructor Create;
+    class destructor Destroy;
+    class function Instance: TLogger;
 
-    procedure AddVulnerability(const Title, SourceFile: string;
-                              LineNumber: Integer;
-                              const Description, Recommendation: string;
-                              Severity: TVulnerabilitySeverity = vsMedium);
-
-    procedure SaveToJSON(const FileName: string);
-    procedure SaveToHTML(const FileName: string);
-    procedure SaveToText(const FileName: string);
-
-    property VulnerabilitiesCount: Integer read GetVulnerabilitiesCount;
-    property CriticalVulnerabilitiesCount: Integer read GetCriticalVulnerabilitiesCount;
-    property ProjectName: string read FProjectName;
-    property AuditDate: TDateTime read FAuditDate;
-    property AuditorName: string read FAuditorName;
+    procedure Log(ANiveau: TNiveauLog; const AMessage: string;
+                  const AContexte: string = '');
+    procedure Debug(const AMessage: string; const AContexte: string = '');
+    procedure Info(const AMessage: string; const AContexte: string = '');
+    procedure Warning(const AMessage: string; const AContexte: string = '');
+    procedure Error(const AMessage: string; const AContexte: string = '');
+    procedure Critical(const AMessage: string; const AContexte: string = '');
   end;
 
 implementation
 
-constructor TSecurityAuditReport.Create(const ProjectName, AuditorName: string);
+class constructor TLogger.Create;
 begin
-  inherited Create;
-  FProjectName := ProjectName;
-  FAuditorName := AuditorName;
-  FAuditDate := Now;
-  SetLength(FVulnerabilities, 0);
+  FLock := TCriticalSection.Create;
+  FInstance := TLogger.Create;
+  FInstance.FFichierLog := ChangeFileExt(ParamStr(0), '.log');
 end;
 
-function TSecurityAuditReport.GetVulnerabilitiesCount: Integer;
+class destructor TLogger.Destroy;
 begin
-  Result := Length(FVulnerabilities);
+  FInstance.Free;
+  FLock.Free;
 end;
 
-function TSecurityAuditReport.GetCriticalVulnerabilitiesCount: Integer;
+class function TLogger.Instance: TLogger;
+begin
+  Result := FInstance;
+end;
+
+procedure TLogger.EcrireDansFichier(const ALigne: string);
 var
-  Vulnerability: TVulnerability;
+  Fichier: TextFile;
 begin
-  Result := 0;
-
-  for Vulnerability in FVulnerabilities do
-    if Vulnerability.Severity = vsCritical then
-      Inc(Result);
-end;
-
-procedure TSecurityAuditReport.AddVulnerability(const Title, SourceFile: string;
-                                              LineNumber: Integer;
-                                              const Description, Recommendation: string;
-                                              Severity: TVulnerabilitySeverity);
-var
-  Vulnerability: TVulnerability;
-begin
-  Vulnerability.ID := 'VUL-' + FormatDateTime('yyyymmdd', FAuditDate) + '-' +
-                     IntToStr(Length(FVulnerabilities) + 1);
-  Vulnerability.Title := Title;
-  Vulnerability.SourceFile := SourceFile;
-  Vulnerability.LineNumber := LineNumber;
-  Vulnerability.Description := Description;
-  Vulnerability.Recommendation := Recommendation;
-  Vulnerability.Severity := Severity;
-  Vulnerability.DateFound := Now;
-
-  SetLength(FVulnerabilities, Length(FVulnerabilities) + 1);
-  FVulnerabilities[High(FVulnerabilities)] := Vulnerability;
-end;
-
-procedure TSecurityAuditReport.SaveToJSON(const FileName: string);
-var
-  JSONObject: TJSONObject;
-  VulnerabilitiesArray: TJSONArray;
-  I: Integer;
-  SeverityStr: string;
-begin
-  JSONObject := TJSONObject.Create;
+  FLock.Enter;
   try
-    JSONObject.AddPair('project_name', FProjectName);
-    JSONObject.AddPair('audit_date', FormatDateTime('yyyy-mm-dd', FAuditDate));
-    JSONObject.AddPair('auditor_name', FAuditorName);
+    AssignFile(Fichier, FFichierLog);
+    try
+      if FileExists(FFichierLog) then
+        Append(Fichier)
+      else
+        Rewrite(Fichier);
 
-    VulnerabilitiesArray := TJSONArray.Create;
-    JSONObject.AddPair('vulnerabilities', VulnerabilitiesArray);
-
-    for I := 0 to High(FVulnerabilities) do
-    begin
-      var VulnObj := TJSONObject.Create;
-
-      VulnObj.AddPair('id', FVulnerabilities[I].ID);
-      VulnObj.AddPair('title', FVulnerabilities[I].Title);
-      VulnObj.AddPair('source_file', FVulnerabilities[I].SourceFile);
-      VulnObj.AddPair('line_number', TJSONNumber.Create(FVulnerabilities[I].LineNumber));
-      VulnObj.AddPair('description', FVulnerabilities[I].Description);
-      VulnObj.AddPair('recommendation', FVulnerabilities[I].Recommendation);
-
-      case FVulnerabilities[I].Severity of
-        vsLow: SeverityStr := 'low';
-        vsMedium: SeverityStr := 'medium';
-        vsHigh: SeverityStr := 'high';
-        vsCritical: SeverityStr := 'critical';
-      end;
-
-      VulnObj.AddPair('severity', SeverityStr);
-      VulnObj.AddPair('date_found', FormatDateTime('yyyy-mm-dd hh:nn:ss', FVulnerabilities[I].DateFound));
-
-      VulnerabilitiesArray.Add(VulnObj);
+      WriteLn(Fichier, ALigne);
+    finally
+      CloseFile(Fichier);
     end;
-
-    TFile.WriteAllText(FileName, JSONObject.ToString);
   finally
-    JSONObject.Free;
+    FLock.Leave;
   end;
 end;
 
-procedure TSecurityAuditReport.SaveToHTML(const FileName: string);
+procedure TLogger.Log(ANiveau: TNiveauLog; const AMessage: string;
+                       const AContexte: string);
 var
-  HTML: TStringList;
-  I: Integer;
-  SeverityClass: string;
+  NiveauStr: string;
+  Ligne: string;
 begin
-  HTML := TStringList.Create;
-  try
-    HTML.Add('<!DOCTYPE html>');
-    HTML.Add('<html>');
-    HTML.Add('<head>');
-    HTML.Add('  <title>Rapport d''audit de sécurité - ' + FProjectName + '</title>');
-    HTML.Add('  <style>');
-    HTML.Add('    body { font-family: Arial, sans-serif; margin: 40px; }');
-    HTML.Add('    h1 { color: #2c3e50; }');
-    HTML.Add('    .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }');
-    HTML.Add('    table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
-    HTML.Add('    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }');
-    HTML.Add('    th { background-color: #f2f2f2; }');
-    HTML.Add('    .severity-low { background-color: #d4edda; }');
-    HTML.Add('    .severity-medium { background-color: #fff3cd; }');
-    HTML.Add('    .severity-high { background-color: #f8d7da; }');
-    HTML.Add('    .severity-critical { background-color: #dc3545; color: white; }');
-    HTML.Add('  </style>');
-    HTML.Add('</head>');
-    HTML.Add('<body>');
-    HTML.Add('  <h1>Rapport d''audit de sécurité</h1>');
-    HTML.Add('  <div class="summary">');
-    HTML.Add('    <p><strong>Projet :</strong> ' + FProjectName + '</p>');
-    HTML.Add('    <p><strong>Date de l''audit :</strong> ' + FormatDateTime('dd/mm/yyyy', FAuditDate) + '</p>');
-    HTML.Add('    <p><strong>Auditeur :</strong> ' + FAuditorName + '</p>');
-    HTML.Add('    <p><strong>Nombre total de vulnérabilités :</strong> ' + IntToStr(VulnerabilitiesCount) + '</p>');
-    HTML.Add('    <p><strong>Vulnérabilités critiques :</strong> ' + IntToStr(CriticalVulnerabilitiesCount) + '</p>');
-    HTML.Add('  </div>');
-
-    if VulnerabilitiesCount > 0 then
-    begin
-      HTML.Add('  <h2>Vulnérabilités identifiées</h2>');
-      HTML.Add('  <table>');
-      HTML.Add('    <tr>');
-      HTML.Add('      <th>ID</th>');
-      HTML.Add('      <th>Titre</th>');
-      HTML.Add('      <th>Sévérité</th>');
-      HTML.Add('      <th>Fichier source</th>');
-      HTML.Add('      <th>Ligne</th>');
-      HTML.Add('    </tr>');
-
-      for I := 0 to High(FVulnerabilities) do
-      begin
-        case FVulnerabilities[I].Severity of
-          vsLow: SeverityClass := 'severity-low';
-          vsMedium: SeverityClass := 'severity-medium';
-          vsHigh: SeverityClass := 'severity-high';
-          vsCritical: SeverityClass := 'severity-critical';
-        end;
-
-        HTML.Add('    <tr class="' + SeverityClass + '">');
-        HTML.Add('      <td>' + FVulnerabilities[I].ID + '</td>');
-        HTML.Add('      <td>' + FVulnerabilities[I].Title + '</td>');
-        HTML.Add('      <td>' + SeverityClass.Substring(9) + '</td>');
-        HTML.Add('      <td>' + FVulnerabilities[I].SourceFile + '</td>');
-        HTML.Add('      <td>' + IntToStr(FVulnerabilities[I].LineNumber) + '</td>');
-        HTML.Add('    </tr>');
-      end;
-
-      HTML.Add('  </table>');
-
-      // Détails des vulnérabilités
-      HTML.Add('  <h2>Détails des vulnérabilités</h2>');
-
-      for I := 0 to High(FVulnerabilities) do
-      begin
-        case FVulnerabilities[I].Severity of
-          vsLow: SeverityClass := 'severity-low';
-          vsMedium: SeverityClass := 'severity-medium';
-          vsHigh: SeverityClass := 'severity-high';
-          vsCritical: SeverityClass := 'severity-critical';
-        end;
-
-        HTML.Add('  <div class="' + SeverityClass + '" style="padding: 15px; margin-bottom: 15px; border-radius: 5px;">');
-        HTML.Add('    <h3>' + FVulnerabilities[I].ID + ': ' + FVulnerabilities[I].Title + '</h3>');
-        HTML.Add('    <p><strong>Emplacement :</strong> ' + FVulnerabilities[I].SourceFile +
-                ' (ligne ' + IntToStr(FVulnerabilities[I].LineNumber) + ')</p>');
-        HTML.Add('    <p><strong>Description :</strong> ' + FVulnerabilities[I].Description + '</p>');
-        HTML.Add('    <p><strong>Recommandation :</strong> ' + FVulnerabilities[I].Recommendation + '</p>');
-        HTML.Add('  </div>');
-      end;
-    end
-    else
-    begin
-      HTML.Add('  <h2>Aucune vulnérabilité détectée</h2>');
-      HTML.Add('  <p>L''audit n''a relevé aucune vulnérabilité de sécurité dans le code examiné.</p>');
-    end;
-
-    HTML.Add('</body>');
-    HTML.Add('</html>');
-
-    HTML.SaveToFile(FileName);
-  finally
-    HTML.Free;
+  case ANiveau of
+    nlDebug: NiveauStr := 'DEBUG';
+    nlInfo: NiveauStr := 'INFO';
+    nlWarning: NiveauStr := 'WARNING';
+    nlError: NiveauStr := 'ERROR';
+    nlCritical: NiveauStr := 'CRITICAL';
   end;
+
+  Ligne := Format('[%s] [%s] %s', [
+    FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+    NiveauStr,
+    AMessage
+  ]);
+
+  if AContexte <> '' then
+    Ligne := Ligne + ' | ' + AContexte;
+
+  EcrireDansFichier(Ligne);
 end;
 
-procedure TSecurityAuditReport.SaveToText(const FileName: string);
-var
-  Text: TStringList;
-  I: Integer;
-  SeverityStr: string;
+procedure TLogger.Debug(const AMessage: string; const AContexte: string);
 begin
-  Text := TStringList.Create;
-  try
-    Text.Add('RAPPORT D''AUDIT DE SÉCURITÉ');
-    Text.Add('==========================');
-    Text.Add('');
-    Text.Add('Projet: ' + FProjectName);
-    Text.Add('Date de l''audit: ' + FormatDateTime('dd/mm/yyyy', FAuditDate));
-    Text.Add('Auditeur: ' + FAuditorName);
-    Text.Add('');
-    Text.Add('RÉSUMÉ');
-    Text.Add('------');
-    Text.Add('Nombre total de vulnérabilités: ' + IntToStr(VulnerabilitiesCount));
-    Text.Add('Vulnérabilités critiques: ' + IntToStr(CriticalVulnerabilitiesCount));
-    Text.Add('');
+  Log(nlDebug, AMessage, AContexte);
+end;
 
-    if VulnerabilitiesCount > 0 then
-    begin
-      Text.Add('VULNÉRABILITÉS IDENTIFIÉES');
-      Text.Add('--------------------------');
-      Text.Add('');
+procedure TLogger.Info(const AMessage: string; const AContexte: string);
+begin
+  Log(nlInfo, AMessage, AContexte);
+end;
 
-      for I := 0 to High(FVulnerabilities) do
-      begin
-        case FVulnerabilities[I].Severity of
-          vsLow: SeverityStr := 'FAIBLE';
-          vsMedium: SeverityStr := 'MOYENNE';
-          vsHigh: SeverityStr := 'HAUTE';
-          vsCritical: SeverityStr := 'CRITIQUE';
-        end;
+procedure TLogger.Warning(const AMessage: string; const AContexte: string);
+begin
+  Log(nlWarning, AMessage, AContexte);
+end;
 
-        Text.Add(FVulnerabilities[I].ID + ': ' + FVulnerabilities[I].Title);
-        Text.Add('Sévérité: ' + SeverityStr);
-        Text.Add('Emplacement: ' + FVulnerabilities[I].SourceFile +
-                ' (ligne ' + IntToStr(FVulnerabilities[I].LineNumber) + ')');
-        Text.Add('Description: ' + FVulnerabilities[I].Description);
-        Text.Add('Recommandation: ' + FVulnerabilities[I].Recommendation);
-        Text.Add('Date de découverte: ' + FormatDateTime('dd/mm/yyyy hh:nn:ss', FVulnerabilities[I].DateFound));
-        Text.Add('');
-        Text.Add('--------------------------------------------------');
-        Text.Add('');
-      end;
-    end
-    else
-    begin
-      Text.Add('Aucune vulnérabilité détectée.');
-      Text.Add('');
-    end;
+procedure TLogger.Error(const AMessage: string; const AContexte: string);
+begin
+  Log(nlError, AMessage, AContexte);
+end;
 
-    Text.SaveToFile(FileName);
-  finally
-    Text.Free;
-  end;
+procedure TLogger.Critical(const AMessage: string; const AContexte: string);
+begin
+  Log(nlCritical, AMessage, AContexte);
 end;
 
 end.
 ```
 
-### Création d'un outil d'audit simple
+### Utilisation du logger
 
-Maintenant que nous avons créé une classe pour gérer les rapports d'audit, nous pouvons l'intégrer dans un outil d'audit simple. Voici un exemple d'application qui combine toutes les techniques présentées :
-
-```pas
-program SecurityAuditor;
-
-{$APPTYPE CONSOLE}
-
+```pascal
 uses
-  System.SysUtils,
-  System.Classes,
-  System.IOUtils,
-  System.JSON,
-  System.RegularExpressions,
-  SecurityAuditReport in 'SecurityAuditReport.pas';
+  UnitLogger;
 
-type
-  TSecurityAuditor = class
-  private
-    FProjectPath: string;
-    FReport: TSecurityAuditReport;
-
-    procedure ScanFiles;
-    procedure CheckForSQLInjection(const FileName: string);
-    procedure CheckForPasswordStorage(const FileName: string);
-    procedure CheckForPathTraversal(const FileName: string);
-    procedure CheckForHardcodedSecrets(const FileName: string);
-    procedure CheckForInsecureRandomness(const FileName: string);
-    procedure CheckForInsecureDirectObjectReference(const FileName: string);
-    procedure CheckConfigurationFiles;
-  public
-    constructor Create(const ProjectPath, ProjectName, AuditorName: string);
-    destructor Destroy; override;
-
-    procedure RunAudit;
-    procedure SaveReports(const OutputPath: string);
-  end;
-
-constructor TSecurityAuditor.Create(const ProjectPath, ProjectName, AuditorName: string);
+// Journaliser une connexion réussie
+procedure JournaliserConnexion(const AUsername: string);
 begin
-  inherited Create;
-  FProjectPath := ProjectPath;
-  FReport := TSecurityAuditReport.Create(ProjectName, AuditorName);
+  TLogger.Instance.Info('Connexion utilisateur',
+                        Format('Username: %s, IP: %s', [AUsername, ObtenirIPClient]));
 end;
 
-destructor TSecurityAuditor.Destroy;
+// Journaliser une tentative échouée
+procedure JournaliserEchecConnexion(const AUsername: string);
 begin
-  FReport.Free;
+  TLogger.Instance.Warning('Échec de connexion',
+                           Format('Username: %s, IP: %s', [AUsername, ObtenirIPClient]));
+end;
+
+// Journaliser une erreur
+procedure JournaliserErreurBD(const AMessage: string);
+begin
+  TLogger.Instance.Error('Erreur base de données', AMessage);
+end;
+
+// Journaliser un événement critique
+procedure JournaliserSecuriteCompromise;
+begin
+  TLogger.Instance.Critical('Tentative d''injection SQL détectée',
+                             'IP: ' + ObtenirIPClient);
+end;
+
+// Exemple dans une application
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);
+var
+  Username: string;
+begin
+  Username := EditUsername.Text;
+
+  if VerifierIdentifiants(Username, EditPassword.Text) then
+  begin
+    JournaliserConnexion(Username);
+    ShowMessage('Connexion réussie');
+  end
+  else
+  begin
+    JournaliserEchecConnexion(Username);
+    ShowMessage('Identifiants incorrects');
+  end;
+end;
+```
+
+## Journalisation en base de données
+
+Pour des analyses plus avancées, stockez les logs en base de données :
+
+### Structure de table de logs
+
+```sql
+CREATE TABLE LogsSecurite (
+    ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+    DateHeure DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Niveau ENUM('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL') NOT NULL,
+    Categorie VARCHAR(50),
+    Message TEXT NOT NULL,
+    IDUtilisateur INT,
+    AdresseIP VARCHAR(45),
+    UserAgent VARCHAR(255),
+    URL VARCHAR(500),
+    Duree INT,  -- Durée de l'opération en ms
+    Contexte JSON,
+    INDEX idx_date (DateHeure),
+    INDEX idx_niveau (Niveau),
+    INDEX idx_utilisateur (IDUtilisateur),
+    INDEX idx_ip (AdresseIP)
+);
+
+-- Table dédiée pour les événements de connexion
+CREATE TABLE LogsConnexions (
+    ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+    DateHeure DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Username VARCHAR(100) NOT NULL,
+    AdresseIP VARCHAR(45),
+    Reussi BOOLEAN NOT NULL,
+    RaisonEchec VARCHAR(255),
+    INDEX idx_username (Username),
+    INDEX idx_date (DateHeure),
+    INDEX idx_ip (AdresseIP)
+);
+
+-- Table pour les modifications de données sensibles
+CREATE TABLE LogsAudit (
+    ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+    DateHeure DATETIME DEFAULT CURRENT_TIMESTAMP,
+    IDUtilisateur INT NOT NULL,
+    Action ENUM('CREATE', 'UPDATE', 'DELETE', 'READ') NOT NULL,
+    TableCible VARCHAR(50) NOT NULL,
+    IDEnregistrement INT NOT NULL,
+    AnciennesValeurs JSON,
+    NouvellesValeurs JSON,
+    INDEX idx_utilisateur (IDUtilisateur),
+    INDEX idx_table (TableCible),
+    INDEX idx_date (DateHeure)
+);
+```
+
+### Implémentation du logger en base de données
+
+```pascal
+type
+  TLoggerBD = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure LogSecurite(ANiveau: string; const AMessage: string;
+                          AIDUtilisateur: Integer; const AIP: string);
+    procedure LogConnexion(const AUsername, AIP: string; AReussi: Boolean;
+                           const ARaison: string = '');
+    procedure LogAudit(AIDUtilisateur: Integer; const AAction, ATable: string;
+                       AIDEnregistrement: Integer; const AAncien, ANouveau: string);
+  end;
+
+constructor TLoggerBD.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TLoggerBD.LogSecurite(ANiveau: string; const AMessage: string;
+                                 AIDUtilisateur: Integer; const AIP: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsSecurite (Niveau, Message, IDUtilisateur, AdresseIP) ' +
+      'VALUES (:Niveau, :Message, :IDUser, :IP)';
+    Query.ParamByName('Niveau').AsString := ANiveau;
+    Query.ParamByName('Message').AsString := AMessage;
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ParamByName('IP').AsString := AIP;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TLoggerBD.LogConnexion(const AUsername, AIP: string; AReussi: Boolean;
+                                  const ARaison: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsConnexions (Username, AdresseIP, Reussi, RaisonEchec) ' +
+      'VALUES (:Username, :IP, :Reussi, :Raison)';
+    Query.ParamByName('Username').AsString := AUsername;
+    Query.ParamByName('IP').AsString := AIP;
+    Query.ParamByName('Reussi').AsBoolean := AReussi;
+    Query.ParamByName('Raison').AsString := ARaison;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TLoggerBD.LogAudit(AIDUtilisateur: Integer; const AAction, ATable: string;
+                              AIDEnregistrement: Integer; const AAncien, ANouveau: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsAudit (IDUtilisateur, Action, TableCible, IDEnregistrement, ' +
+      '                       AnciennesValeurs, NouvellesValeurs) ' +
+      'VALUES (:IDUser, :Action, :Table, :ID, :Ancien, :Nouveau)';
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ParamByName('Action').AsString := AAction;
+    Query.ParamByName('Table').AsString := ATable;
+    Query.ParamByName('ID').AsInteger := AIDEnregistrement;
+    Query.ParamByName('Ancien').AsString := AAncien;
+    Query.ParamByName('Nouveau').AsString := ANouveau;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+// Utilisation
+procedure ModifierUtilisateur(AID: Integer; const ANouveauNom: string);
+var
+  AncienNom: string;
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+
+    // Récupérer l'ancienne valeur
+    Query.SQL.Text := 'SELECT Nom FROM Users WHERE ID = :ID';
+    Query.ParamByName('ID').AsInteger := AID;
+    Query.Open;
+    AncienNom := Query.FieldByName('Nom').AsString;
+    Query.Close;
+
+    // Effectuer la modification
+    Query.SQL.Text := 'UPDATE Users SET Nom = :Nom WHERE ID = :ID';
+    Query.ParamByName('Nom').AsString := ANouveauNom;
+    Query.ParamByName('ID').AsInteger := AID;
+    Query.ExecSQL;
+
+    // Journaliser la modification
+    LoggerBD.LogAudit(UtilisateurConnecteID, 'UPDATE', 'Users', AID,
+                      Format('{"Nom":"%s"}', [AncienNom]),
+                      Format('{"Nom":"%s"}', [ANouveauNom]));
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+## Analyse des logs
+
+### Requêtes d'analyse utiles
+
+```sql
+-- Tentatives de connexion échouées dans les dernières 24h
+SELECT Username, AdresseIP, COUNT(*) as NbTentatives, MAX(DateHeure) as DerniereTentative
+FROM LogsConnexions
+WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+GROUP BY Username, AdresseIP
+HAVING NbTentatives > 5
+ORDER BY NbTentatives DESC;
+
+-- Activités suspectes (même IP, plusieurs comptes)
+SELECT AdresseIP, COUNT(DISTINCT Username) as NbComptes, COUNT(*) as NbConnexions
+FROM LogsConnexions
+WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+GROUP BY AdresseIP
+HAVING NbComptes > 3;
+
+-- Événements critiques récents
+SELECT DateHeure, Message, AdresseIP, IDUtilisateur
+FROM LogsSecurite
+WHERE Niveau = 'CRITICAL' AND DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+ORDER BY DateHeure DESC;
+
+-- Modifications de données sensibles
+SELECT u.Username, la.Action, la.TableCible, la.DateHeure,
+       la.AnciennesValeurs, la.NouvellesValeurs
+FROM LogsAudit la
+JOIN Users u ON la.IDUtilisateur = u.ID
+WHERE la.TableCible IN ('Users', 'Transactions', 'Configurations')
+ORDER BY la.DateHeure DESC
+LIMIT 100;
+
+-- Pic d'activité inhabituel
+SELECT DATE_FORMAT(DateHeure, '%Y-%m-%d %H:00:00') as Heure,
+       COUNT(*) as NbEvenements
+FROM LogsSecurite
+WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+GROUP BY Heure
+HAVING NbEvenements > 1000
+ORDER BY NbEvenements DESC;
+```
+
+### Tableau de bord de sécurité
+
+```pascal
+type
+  TDashboardSecurite = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    function ObtenirStatistiques24h: string;
+    function ObtenirTentativesEchouees: TDataSet;
+    function ObtenirEvenementsCritiques: TDataSet;
+    function ObtenirIPsSuspectes: TDataSet;
+  end;
+
+constructor TDashboardSecurite.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+function TDashboardSecurite.ObtenirStatistiques24h: string;
+var
+  Query: TFDQuery;
+  Stats: TStringList;
+begin
+  Query := TFDQuery.Create(nil);
+  Stats := TStringList.Create;
+  try
+    Query.Connection := FConnection;
+
+    // Nombre total de connexions
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as Total FROM LogsConnexions ' +
+      'WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+    Query.Open;
+    Stats.Add('Connexions totales : ' + Query.FieldByName('Total').AsString);
+    Query.Close;
+
+    // Connexions échouées
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as Total FROM LogsConnexions ' +
+      'WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+    Query.Open;
+    Stats.Add('Connexions échouées : ' + Query.FieldByName('Total').AsString);
+    Query.Close;
+
+    // Événements critiques
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as Total FROM LogsSecurite ' +
+      'WHERE Niveau = ''CRITICAL'' AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+    Query.Open;
+    Stats.Add('Événements critiques : ' + Query.FieldByName('Total').AsString);
+    Query.Close;
+
+    Result := Stats.Text;
+  finally
+    Stats.Free;
+    Query.Free;
+  end;
+end;
+
+function TDashboardSecurite.ObtenirTentativesEchouees: TDataSet;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  Query.Connection := FConnection;
+  Query.SQL.Text :=
+    'SELECT Username, AdresseIP, COUNT(*) as NbTentatives, ' +
+    '       MAX(DateHeure) as DerniereTentative ' +
+    'FROM LogsConnexions ' +
+    'WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR) ' +
+    'GROUP BY Username, AdresseIP ' +
+    'HAVING NbTentatives >= 3 ' +
+    'ORDER BY NbTentatives DESC';
+  Query.Open;
+  Result := Query;
+end;
+
+function TDashboardSecurite.ObtenirEvenementsCritiques: TDataSet;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  Query.Connection := FConnection;
+  Query.SQL.Text :=
+    'SELECT DateHeure, Message, AdresseIP, IDUtilisateur ' +
+    'FROM LogsSecurite ' +
+    'WHERE Niveau = ''CRITICAL'' AND DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY) ' +
+    'ORDER BY DateHeure DESC ' +
+    'LIMIT 50';
+  Query.Open;
+  Result := Query;
+end;
+
+function TDashboardSecurite.ObtenirIPsSuspectes: TDataSet;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  Query.Connection := FConnection;
+  Query.SQL.Text :=
+    'SELECT AdresseIP, COUNT(DISTINCT Username) as NbComptesDifferents, ' +
+    '       COUNT(*) as NbTentatives ' +
+    'FROM LogsConnexions ' +
+    'WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 1 HOUR) ' +
+    'GROUP BY AdresseIP ' +
+    'HAVING NbComptesDifferents > 3 OR NbTentatives > 20 ' +
+    'ORDER BY NbTentatives DESC';
+  Query.Open;
+  Result := Query;
+end;
+```
+
+## Alertes automatiques
+
+### Système d'alertes
+
+```pascal
+type
+  TNiveauAlerte = (naInfo, naAttention, naCritique);
+
+  TSystemeAlertes = class
+  private
+    FConnection: TFDConnection;
+    procedure EnvoyerEmail(const ADestinataire, ASujet, ACorps: string);
+    procedure EnvoyerSMS(const ANumero, AMessage: string);
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure VerifierAlertes;
+    procedure AlerterTentativesEchoueesExcessives;
+    procedure AlerterActiviteSuspecte;
+    procedure AlerterEvenementCritique(const AMessage: string);
+  end;
+
+constructor TSystemeAlertes.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TSystemeAlertes.EnvoyerEmail(const ADestinataire, ASujet, ACorps: string);
+begin
+  // Implémentation de l'envoi d'email
+  // Utiliser Indy (TIdSMTP) ou un service comme SendGrid
+end;
+
+procedure TSystemeAlertes.EnvoyerSMS(const ANumero, AMessage: string);
+begin
+  // Implémentation de l'envoi de SMS
+  // Utiliser un service comme Twilio, Nexmo, etc.
+end;
+
+procedure TSystemeAlertes.AlerterTentativesEchoueesExcessives;
+var
+  Query: TFDQuery;
+  Message: string;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'SELECT Username, AdresseIP, COUNT(*) as NbTentatives ' +
+      'FROM LogsConnexions ' +
+      'WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) ' +
+      'GROUP BY Username, AdresseIP ' +
+      'HAVING NbTentatives > 10';
+    Query.Open;
+
+    if not Query.IsEmpty then
+    begin
+      while not Query.Eof do
+      begin
+        Message := Format('ALERTE : %d tentatives de connexion échouées pour %s depuis %s',
+          [Query.FieldByName('NbTentatives').AsInteger,
+           Query.FieldByName('Username').AsString,
+           Query.FieldByName('AdresseIP').AsString]);
+
+        EnvoyerEmail('security@monentreprise.com',
+                     'Alerte Sécurité : Tentatives de connexion',
+                     Message);
+
+        TLogger.Instance.Critical('Alerte déclenchée', Message);
+        Query.Next;
+      end;
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TSystemeAlertes.AlerterActiviteSuspecte;
+var
+  Query: TFDQuery;
+  Message: string;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    // Détecter une IP qui essaie plusieurs comptes
+    Query.SQL.Text :=
+      'SELECT AdresseIP, COUNT(DISTINCT Username) as NbComptes ' +
+      'FROM LogsConnexions ' +
+      'WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 10 MINUTE) ' +
+      'GROUP BY AdresseIP ' +
+      'HAVING NbComptes > 5';
+    Query.Open;
+
+    if not Query.IsEmpty then
+    begin
+      while not Query.Eof do
+      begin
+        Message := Format('ALERTE : IP suspecte %s a tenté d''accéder à %d comptes différents',
+          [Query.FieldByName('AdresseIP').AsString,
+           Query.FieldByName('NbComptes').AsInteger]);
+
+        EnvoyerEmail('security@monentreprise.com',
+                     'Alerte Sécurité : Activité suspecte',
+                     Message);
+
+        // Pour les alertes critiques, envoyer aussi un SMS
+        EnvoyerSMS('+33612345678', Message);
+
+        TLogger.Instance.Critical('Activité suspecte détectée', Message);
+        Query.Next;
+      end;
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TSystemeAlertes.AlerterEvenementCritique(const AMessage: string);
+begin
+  EnvoyerEmail('security@monentreprise.com',
+               'ALERTE CRITIQUE',
+               'Événement critique détecté : ' + AMessage);
+  EnvoyerSMS('+33612345678', 'ALERTE: ' + AMessage);
+  TLogger.Instance.Critical('Alerte critique déclenchée', AMessage);
+end;
+
+procedure TSystemeAlertes.VerifierAlertes;
+begin
+  // Exécuter toutes les vérifications
+  AlerterTentativesEchoueesExcessives;
+  AlerterActiviteSuspecte;
+  // Ajouter d'autres vérifications selon les besoins
+end;
+
+// Utilisation avec un timer
+procedure TFormPrincipal.TimerAlerteTimer(Sender: TObject);
+begin
+  SystemeAlertes.VerifierAlertes;
+end;
+```
+
+## Rotation et archivage des logs
+
+### Pourquoi faire de la rotation ?
+
+Les logs peuvent devenir **très volumineux** rapidement. Il faut :
+- Archiver les anciens logs
+- Nettoyer régulièrement
+- Maintenir les performances
+
+### Implémentation de la rotation
+
+```pascal
+type
+  TGestionnaireLogsarchive = class
+  private
+    FConnection: TFDConnection;
+    FRepertoireArchive: string;
+  public
+    constructor Create(AConnection: TFDConnection; const ARepertoire: string);
+    procedure ArchiverLogsAnciens(AJoursConservation: Integer);
+    procedure NettoyerLogsArchives(AMoisConservation: Integer);
+    procedure ExporterLogsEnFichier(const ANomFichier: string; ADateDebut, ADateFin: TDateTime);
+  end;
+
+constructor TGestionnaireLogsArchive.Create(AConnection: TFDConnection;
+                                             const ARepertoire: string);
+begin
+  inherited Create;
+  FConnection := AConnection;
+  FRepertoireArchive := ARepertoire;
+
+  // Créer le répertoire s'il n'existe pas
+  if not DirectoryExists(FRepertoireArchive) then
+    ForceDirectories(FRepertoireArchive);
+end;
+
+procedure TGestionnaireLogsArchive.ArchiverLogsAnciens(AJoursConservation: Integer);
+var
+  Query: TFDQuery;
+  DateLimite: TDateTime;
+  NomFichierArchive: string;
+  Fichier: TextFile;
+begin
+  DateLimite := Now - AJoursConservation;
+  NomFichierArchive := TPath.Combine(FRepertoireArchive,
+    Format('logs_archive_%s.txt', [FormatDateTime('yyyymmdd', DateLimite)]));
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    // Exporter les logs à archiver
+    Query.SQL.Text :=
+      'SELECT * FROM LogsSecurite WHERE DateHeure < :DateLimite ORDER BY DateHeure';
+    Query.ParamByName('DateLimite').AsDateTime := DateLimite;
+    Query.Open;
+
+    if not Query.IsEmpty then
+    begin
+      AssignFile(Fichier, NomFichierArchive);
+      Rewrite(Fichier);
+      try
+        // Écrire l'en-tête
+        WriteLn(Fichier, 'ID;DateHeure;Niveau;Message;IDUtilisateur;AdresseIP');
+
+        // Écrire les données
+        while not Query.Eof do
+        begin
+          WriteLn(Fichier, Format('%d;%s;%s;%s;%d;%s',
+            [Query.FieldByName('ID').AsInteger,
+             DateTimeToStr(Query.FieldByName('DateHeure').AsDateTime),
+             Query.FieldByName('Niveau').AsString,
+             Query.FieldByName('Message').AsString,
+             Query.FieldByName('IDUtilisateur').AsInteger,
+             Query.FieldByName('AdresseIP').AsString]));
+          Query.Next;
+        end;
+      finally
+        CloseFile(Fichier);
+      end;
+
+      // Supprimer les logs archivés de la base
+      Query.Close;
+      Query.SQL.Text := 'DELETE FROM LogsSecurite WHERE DateHeure < :DateLimite';
+      Query.ParamByName('DateLimite').AsDateTime := DateLimite;
+      Query.ExecSQL;
+
+      TLogger.Instance.Info('Logs archivés',
+        Format('Fichier: %s, Date limite: %s', [NomFichierArchive, DateTimeToStr(DateLimite)]));
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TGestionnaireLogsArchive.NettoyerLogsArchives(AMoisConservation: Integer);
+var
+  SearchRec: TSearchRec;
+  DateLimite: TDateTime;
+  CheminFichier: string;
+begin
+  DateLimite := Now - (AMoisConservation * 30);
+
+  if FindFirst(TPath.Combine(FRepertoireArchive, '*.txt'), faAnyFile, SearchRec) = 0 then
+  begin
+    try
+      repeat
+        CheminFichier := TPath.Combine(FRepertoireArchive, SearchRec.Name);
+
+        // Supprimer les fichiers plus anciens que la limite
+        if FileDateToDateTime(SearchRec.Time) < DateLimite then
+        begin
+          DeleteFile(CheminFichier);
+          TLogger.Instance.Info('Archive supprimée', CheminFichier);
+        end;
+      until FindNext(SearchRec) <> 0;
+    finally
+      FindClose(SearchRec);
+    end;
+  end;
+end;
+
+procedure TGestionnaireLogsArchive.ExporterLogsEnFichier(const ANomFichier: string;
+                                                          ADateDebut, ADateFin: TDateTime);
+var
+  Query: TFDQuery;
+  Fichier: TextFile;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'SELECT * FROM LogsSecurite ' +
+      'WHERE DateHeure BETWEEN :DateDebut AND :DateFin ' +
+      'ORDER BY DateHeure';
+    Query.ParamByName('DateDebut').AsDateTime := ADateDebut;
+    Query.ParamByName('DateFin').AsDateTime := ADateFin;
+    Query.Open;
+
+    AssignFile(Fichier, ANomFichier);
+    Rewrite(Fichier);
+    try
+      WriteLn(Fichier, 'Rapport de logs - Période du ' +
+                       DateToStr(ADateDebut) + ' au ' + DateToStr(ADateFin));
+      WriteLn(Fichier, '');
+      WriteLn(Fichier, 'Date/Heure | Niveau | Message | Utilisateur | IP');
+      WriteLn(Fichier, StringOfChar('-', 80));
+
+      while not Query.Eof do
+      begin
+        WriteLn(Fichier, Format('%s | %s | %s | %d | %s',
+          [DateTimeToStr(Query.FieldByName('DateHeure').AsDateTime),
+           Query.FieldByName('Niveau').AsString,
+           Query.FieldByName('Message').AsString,
+           Query.FieldByName('IDUtilisateur').AsInteger,
+           Query.FieldByName('AdresseIP').AsString]));
+        Query.Next;
+      end;
+    finally
+      CloseFile(Fichier);
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+// Tâche planifiée quotidienne
+procedure TFormPrincipal.TimerArchivageTimer(Sender: TObject);
+begin
+  // Archiver les logs de plus de 90 jours
+  GestionnaireArchive.ArchiverLogsAnciens(90);
+
+  // Supprimer les archives de plus de 12 mois
+  GestionnaireArchive.NettoyerLogsArchives(12);
+end;
+```
+
+## Tests de sécurité
+
+### Types de tests
+
+**1. Tests de pénétration (Pentesting)**
+- Simulation d'attaques réelles
+- Identification des vulnérabilités
+- Test de la résistance du système
+
+**2. Scan de vulnérabilités**
+- Analyse automatisée
+- Détection de failles connues
+- Vérification des configurations
+
+**3. Revue de code**
+- Analyse manuelle du code
+- Recherche de patterns dangereux
+- Vérification des bonnes pratiques
+
+### Checklist d'audit de sécurité
+
+```pascal
+type
+  TResultatAudit = record
+    Description: string;
+    Statut: Boolean;
+    Gravite: string;
+    Recommandation: string;
+  end;
+
+  TAuditSecurite = class
+  private
+    FConnection: TFDConnection;
+    FResultats: TList<TResultatAudit>;
+  public
+    constructor Create(AConnection: TFDConnection);
+    destructor Destroy; override;
+    procedure ExecuterAudit;
+    procedure VerifierRequetesParametrees;
+    procedure VerifierGestionMotsDePasse;
+    procedure VerifierJournalisation;
+    procedure VerifierConfigurationBD;
+    procedure GenererRapport(const ANomFichier: string);
+  end;
+
+constructor TAuditSecurite.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+  FResultats := TList<TResultatAudit>.Create;
+end;
+
+destructor TAuditSecurite.Destroy;
+begin
+  FResultats.Free;
   inherited;
 end;
 
-procedure TSecurityAuditor.RunAudit;
+procedure TAuditSecurite.VerifierRequetesParametrees;
+var
+  Resultat: TResultatAudit;
 begin
-  WriteLn('Début de l''audit de sécurité...');
-  WriteLn('Examen du projet dans : ' + FProjectPath);
-  WriteLn;
+  Resultat.Description := 'Vérification des requêtes paramétrées';
 
-  // Scanner les fichiers source
-  ScanFiles;
+  // Cette vérification nécessite une analyse de code
+  // Pour l'exemple, on suppose qu'elle est faite
+  Resultat.Statut := True;
+  Resultat.Gravite := 'CRITIQUE';
+  Resultat.Recommandation := 'Toutes les requêtes doivent utiliser des paramètres';
 
-  // Vérifier les fichiers de configuration
-  CheckConfigurationFiles;
-
-  WriteLn;
-  WriteLn('Audit terminé !');
-  WriteLn('Nombre total de vulnérabilités trouvées : ' + IntToStr(FReport.VulnerabilitiesCount));
-  WriteLn('Vulnérabilités critiques : ' + IntToStr(FReport.CriticalVulnerabilitiesCount));
+  FResultats.Add(Resultat);
 end;
 
-procedure TSecurityAuditor.ScanFiles;
+procedure TAuditSecurite.VerifierGestionMotsDePasse;
 var
-  Files: TStringDynArray;
-  FileName: string;
-  FileExt: string;
-  ProcessedCount: Integer;
+  Query: TFDQuery;
+  Resultat: TResultatAudit;
 begin
-  WriteLn('Recherche des fichiers source...');
-
-  Files := TDirectory.GetFiles(FProjectPath, '*.pas', TSearchOption.soAllDirectories);
-  WriteLn('Nombre de fichiers à examiner : ' + IntToStr(Length(Files)));
-
-  ProcessedCount := 0;
-  for FileName in Files do
-  begin
-    Inc(ProcessedCount);
-    if ProcessedCount mod 10 = 0 then
-      Write('Progression : ' + IntToStr(Round(ProcessedCount / Length(Files) * 100)) + '%'#13);
-
-    FileExt := ExtractFileExt(FileName).ToLower;
-
-    if FileExt = '.pas' then
-    begin
-      // Effectuer les vérifications de sécurité
-      CheckForSQLInjection(FileName);
-      CheckForPasswordStorage(FileName);
-      CheckForPathTraversal(FileName);
-      CheckForHardcodedSecrets(FileName);
-      CheckForInsecureRandomness(FileName);
-      CheckForInsecureDirectObjectReference(FileName);
-    end;
-  end;
-
-  WriteLn('Progression : 100%   ');
-  WriteLn(IntToStr(Length(Files)) + ' fichiers analysés.');
-end;
-
-procedure TSecurityAuditor.CheckForSQLInjection(const FileName: string);
-var
-  Lines: TStringList;
-  I: Integer;
-  Line: string;
-  RelativePath: string;
-begin
-  Lines := TStringList.Create;
+  Query := TFDQuery.Create(nil);
   try
-    Lines.LoadFromFile(FileName);
+    Query.Connection := FConnection;
 
-    for I := 0 to Lines.Count - 1 do
+    Resultat.Description := 'Vérification du hashage des mots de passe';
+
+    // Vérifier qu'aucun mot de passe n'est stocké en clair
+    Query.SQL.Text := 'SELECT COUNT(*) as Total FROM Users WHERE LENGTH(Password) < 32';
+    Query.Open;
+
+    if Query.FieldByName('Total').AsInteger > 0 then
     begin
-      Line := Lines[I];
-
-      // Rechercher des signes d'injection SQL potentielle
-      if (Pos('SQL.Text', Line) > 0) or
-         (Pos('SQL.Add', Line) > 0) or
-         (Pos('CommandText', Line) > 0) then
-      begin
-        if (Pos(' + ', Line) > 0) or
-           (Pos(''' +', Line) > 0) or
-           (Pos('+ ''', Line) > 0) then
-        begin
-          // Obtenir le chemin relatif pour un affichage plus propre
-          RelativePath := StringReplace(FileName, FProjectPath, '', [rfIgnoreCase]);
-          if RelativePath.StartsWith('\') or RelativePath.StartsWith('/') then
-            RelativePath := RelativePath.Substring(1);
-
-          FReport.AddVulnerability(
-            'Injection SQL potentielle',
-            RelativePath,
-            I + 1,
-            'Concaténation de chaînes dans une requête SQL : ' + Trim(Line),
-            'Utilisez des requêtes paramétrées avec ParamByName() ou Parameters[] au lieu de concaténer des chaînes.',
-            vsHigh
-          );
-        end;
-      end;
+      Resultat.Statut := False;
+      Resultat.Gravite := 'CRITIQUE';
+      Resultat.Recommandation := 'Des mots de passe semblent stockés en clair ou mal hashés';
+    end
+    else
+    begin
+      Resultat.Statut := True;
+      Resultat.Gravite := 'OK';
+      Resultat.Recommandation := 'Les mots de passe sont correctement hashés';
     end;
+
+    FResultats.Add(Resultat);
   finally
-    Lines.Free;
+    Query.Free;
   end;
 end;
 
-procedure TSecurityAuditor.CheckForPasswordStorage(const FileName: string);
+procedure TAuditSecurite.VerifierJournalisation;
 var
-  Lines: TStringList;
-  I: Integer;
-  Line: string;
-  RelativePath: string;
+  Query: TFDQuery;
+  Resultat: TResultatAudit;
 begin
-  Lines := TStringList.Create;
+  Query := TFDQuery.Create(nil);
   try
-    Lines.LoadFromFile(FileName);
+    Query.Connection := FConnection;
 
-    for I := 0 to Lines.Count - 1 do
+    Resultat.Description := 'Vérification de la journalisation';
+
+    // Vérifier qu'il y a bien des logs récents
+    Query.SQL.Text :=
+      'SELECT COUNT(*) as Total FROM LogsSecurite ' +
+      'WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+    Query.Open;
+
+    if Query.FieldByName('Total').AsInteger > 0 then
     begin
-      Line := Lines[I];
-
-      // Rechercher des signes de stockage de mot de passe en clair
-      if (Pos('password', LowerCase(Line)) > 0) or
-         (Pos('mot de passe', LowerCase(Line)) > 0) or
-         (Pos('passwd', LowerCase(Line)) > 0) then
-      begin
-        // Vérifier s'il ne s'agit pas d'un mot de passe haché
-        if (Pos('hash', LowerCase(Line)) <= 0) and
-           (Pos('crypt', LowerCase(Line)) <= 0) and
-           (Pos('sha', LowerCase(Line)) <= 0) and
-           (Pos('pbkdf2', LowerCase(Line)) <= 0) and
-           (Pos('bcrypt', LowerCase(Line)) <= 0) then
-        begin
-          RelativePath := StringReplace(FileName, FProjectPath, '', [rfIgnoreCase]);
-          if RelativePath.StartsWith('\') or RelativePath.StartsWith('/') then
-            RelativePath := RelativePath.Substring(1);
-
-          FReport.AddVulnerability(
-            'Stockage de mot de passe potentiellement non sécurisé',
-            RelativePath,
-            I + 1,
-            'Possible stockage de mot de passe en clair ou avec un algorithme faible : ' + Trim(Line),
-            'Utilisez des algorithmes de hachage sécurisés (PBKDF2, bcrypt, scrypt) avec un sel aléatoire pour stocker les mots de passe.',
-            vsHigh
-          );
-        end;
-      end;
+      Resultat.Statut := True;
+      Resultat.Gravite := 'OK';
+      Resultat.Recommandation := 'La journalisation fonctionne correctement';
+    end
+    else
+    begin
+      Resultat.Statut := False;
+      Resultat.Gravite := 'ÉLEVÉ';
+      Resultat.Recommandation := 'Aucun log récent trouvé. Vérifier le système de journalisation';
     end;
+
+    FResultats.Add(Resultat);
   finally
-    Lines.Free;
+    Query.Free;
   end;
 end;
 
-// Implémentez les autres méthodes de vérification...
-
-procedure TSecurityAuditor.CheckConfigurationFiles;
+procedure TAuditSecurite.VerifierConfigurationBD;
 var
-  ConfigFiles: TStringDynArray;
-  FileName: string;
-  Lines: TStringList;
-  I: Integer;
-  Line: string;
-  RelativePath: string;
+  Query: TFDQuery;
+  Resultat: TResultatAudit;
 begin
-  WriteLn('Vérification des fichiers de configuration...');
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
 
-  // Rechercher différents types de fichiers de configuration
-  ConfigFiles := TDirectory.GetFiles(FProjectPath, '*.ini', TSearchOption.soAllDirectories);
+    // Vérifier la version de MySQL
+    Resultat.Description := 'Version de la base de données';
+    Query.SQL.Text := 'SELECT VERSION() as Version';
+    Query.Open;
 
-  for FileName in ConfigFiles do
-  begin
-    RelativePath := StringReplace(FileName, FProjectPath, '', [rfIgnoreCase]);
-    if RelativePath.StartsWith('\') or RelativePath.StartsWith('/') then
-      RelativePath := RelativePath.Substring(1);
+    Resultat.Statut := True;
+    Resultat.Gravite := 'INFO';
+    Resultat.Recommandation := 'Version: ' + Query.FieldByName('Version').AsString;
+    FResultats.Add(Resultat);
+    Query.Close;
 
-    Lines := TStringList.Create;
+    // Vérifier que SSL est activé
+    Resultat.Description := 'Connexion SSL à la base de données';
+    Query.SQL.Text := 'SHOW STATUS LIKE "Ssl_cipher"';
+    Query.Open;
+
+    if Query.FieldByName('Value').AsString <> '' then
+    begin
+      Resultat.Statut := True;
+      Resultat.Gravite := 'OK';
+      Resultat.Recommandation := 'SSL activé: ' + Query.FieldByName('Value').AsString;
+    end
+    else
+    begin
+      Resultat.Statut := False;
+      Resultat.Gravite := 'MOYEN';
+      Resultat.Recommandation := 'La connexion à la base n''utilise pas SSL';
+    end;
+
+    FResultats.Add(Resultat);
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TAuditSecurite.ExecuterAudit;
+begin
+  FResultats.Clear;
+
+  VerifierRequetesParametrees;
+  VerifierGestionMotsDePasse;
+  VerifierJournalisation;
+  VerifierConfigurationBD;
+end;
+
+procedure TAuditSecurite.GenererRapport(const ANomFichier: string);
+var
+  Fichier: TextFile;
+  Resultat: TResultatAudit;
+  i: Integer;
+begin
+  AssignFile(Fichier, ANomFichier);
+  Rewrite(Fichier);
+  try
+    WriteLn(Fichier, '=== RAPPORT D''AUDIT DE SÉCURITÉ ===');
+    WriteLn(Fichier, 'Date: ' + DateTimeToStr(Now));
+    WriteLn(Fichier, '');
+    WriteLn(Fichier, StringOfChar('=', 80));
+    WriteLn(Fichier, '');
+
+    for i := 0 to FResultats.Count - 1 do
+    begin
+      Resultat := FResultats[i];
+      WriteLn(Fichier, Format('%d. %s', [i + 1, Resultat.Description]));
+      WriteLn(Fichier, '   Statut: ' + IfThen(Resultat.Statut, 'OK', 'ÉCHEC'));
+      WriteLn(Fichier, '   Gravité: ' + Resultat.Gravite);
+      WriteLn(Fichier, '   Recommandation: ' + Resultat.Recommandation);
+      WriteLn(Fichier, '');
+    end;
+
+    WriteLn(Fichier, StringOfChar('=', 80));
+    WriteLn(Fichier, 'Fin du rapport');
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+## Conformité RGPD et traçabilité
+
+### Exigences RGPD pour l'audit
+
+Le RGPD impose de pouvoir :
+- Prouver le consentement
+- Tracer les accès aux données personnelles
+- Répondre aux demandes d'accès
+- Prouver la suppression des données
+
+### Implémentation de la traçabilité RGPD
+
+```pascal
+type
+  TTraçabilitéRGPD = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure LogAccesDonneesPersonnelles(AIDUtilisateur, AIDPersonneConcernee: Integer;
+                                           const ATypeAcces: string);
+    procedure LogConsentement(AIDPersonne: Integer; const ATypeTraitement: string;
+                               AConsenti: Boolean);
+    procedure GenererRapportAcces(AIDPersonne: Integer; const ANomFichier: string);
+    procedure GenererRapportSuppressions(ADateDebut, ADateFin: TDateTime;
+                                          const ANomFichier: string);
+  end;
+
+constructor TTraçabilitéRGPD.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TTraçabilitéRGPD.LogAccesDonneesPersonnelles(AIDUtilisateur,
+                                                         AIDPersonneConcernee: Integer;
+                                                         const ATypeAcces: string);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsRGPD (IDUtilisateur, IDPersonneConcernee, TypeAcces, DateHeure) ' +
+      'VALUES (:IDUser, :IDPersonne, :Type, NOW())';
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ParamByName('IDPersonne').AsInteger := AIDPersonneConcernee;
+    Query.ParamByName('Type').AsString := ATypeAcces;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TTraçabilitéRGPD.LogConsentement(AIDPersonne: Integer;
+                                            const ATypeTraitement: string;
+                                            AConsenti: Boolean);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO Consentements (IDPersonne, TypeTraitement, Consenti, DateHeure) ' +
+      'VALUES (:IDPersonne, :Type, :Consenti, NOW())';
+    Query.ParamByName('IDPersonne').AsInteger := AIDPersonne;
+    Query.ParamByName('Type').AsString := ATypeTraitement;
+    Query.ParamByName('Consenti').AsBoolean := AConsenti;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TTraçabilitéRGPD.GenererRapportAcces(AIDPersonne: Integer;
+                                                const ANomFichier: string);
+var
+  Query: TFDQuery;
+  Fichier: TextFile;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'SELECT lr.DateHeure, u.Username, lr.TypeAcces ' +
+      'FROM LogsRGPD lr ' +
+      'JOIN Users u ON lr.IDUtilisateur = u.ID ' +
+      'WHERE lr.IDPersonneConcernee = :IDPersonne ' +
+      'ORDER BY lr.DateHeure DESC';
+    Query.ParamByName('IDPersonne').AsInteger := AIDPersonne;
+    Query.Open;
+
+    AssignFile(Fichier, ANomFichier);
+    Rewrite(Fichier);
     try
-      Lines.LoadFromFile(FileName);
+      WriteLn(Fichier, '=== RAPPORT D''ACCÈS AUX DONNÉES PERSONNELLES ===');
+      WriteLn(Fichier, 'ID Personne: ' + IntToStr(AIDPersonne));
+      WriteLn(Fichier, 'Date du rapport: ' + DateTimeToStr(Now));
+      WriteLn(Fichier, '');
+      WriteLn(Fichier, 'Date/Heure | Utilisateur | Type d''accès');
+      WriteLn(Fichier, StringOfChar('-', 60));
 
-      for I := 0 to Lines.Count - 1 do
+      while not Query.Eof do
       begin
-        Line := Lines[I];
-
-        // Rechercher des informations sensibles dans les fichiers de configuration
-        if (Pos('password=', LowerCase(Line)) > 0) or
-           (Pos('pwd=', LowerCase(Line)) > 0) or
-           (Pos('connectionstring=', LowerCase(Line)) > 0) or
-           (Pos('apikey=', LowerCase(Line)) > 0) or
-           (Pos('secret=', LowerCase(Line)) > 0) then
-        begin
-          FReport.AddVulnerability(
-            'Information sensible dans un fichier de configuration',
-            RelativePath,
-            I + 1,
-            'Donnée sensible potentiellement stockée en clair : ' + Trim(Line),
-            'Chiffrez les informations sensibles dans les fichiers de configuration ou utilisez un stockage sécurisé comme le Credential Manager de Windows.',
-            vsCritical
-          );
-        end;
+        WriteLn(Fichier, Format('%s | %s | %s',
+          [DateTimeToStr(Query.FieldByName('DateHeure').AsDateTime),
+           Query.FieldByName('Username').AsString,
+           Query.FieldByName('TypeAcces').AsString]));
+        Query.Next;
       end;
     finally
-      Lines.Free;
+      CloseFile(Fichier);
     end;
-  end;
-end;
-
-procedure TSecurityAuditor.SaveReports(const OutputPath: string);
-var
-  BaseName: string;
-begin
-  if not DirectoryExists(OutputPath) then
-    ForceDirectories(OutputPath);
-
-  BaseName := OutputPath + PathDelim + 'security_audit_' + FormatDateTime('yyyymmdd_hhnnss', Now);
-
-  // Sauvegarder dans différents formats
-  FReport.SaveToJSON(BaseName + '.json');
-  FReport.SaveToHTML(BaseName + '.html');
-  FReport.SaveToText(BaseName + '.txt');
-
-  WriteLn('Rapports sauvegardés dans : ' + OutputPath);
-end;
-
-// Programme principal
-var
-  Auditor: TSecurityAuditor;
-  ProjectPath, ProjectName, AuditorName, OutputPath: string;
-begin
-  try
-    WriteLn('===== AUDITEUR DE SÉCURITÉ DELPHI =====');
-    WriteLn;
-
-    // En production, vous pourriez utiliser des arguments de ligne de commande
-    // ou une interface graphique pour ces entrées
-    Write('Chemin du projet à auditer : ');
-    ReadLn(ProjectPath);
-
-    if not DirectoryExists(ProjectPath) then
-    begin
-      WriteLn('Erreur : Le répertoire spécifié n''existe pas.');
-      Exit;
-    end;
-
-    Write('Nom du projet : ');
-    ReadLn(ProjectName);
-
-    Write('Nom de l''auditeur : ');
-    ReadLn(AuditorName);
-
-    Write('Chemin de sortie pour les rapports : ');
-    ReadLn(OutputPath);
-
-    WriteLn;
-
-    Auditor := TSecurityAuditor.Create(ProjectPath, ProjectName, AuditorName);
-    try
-      Auditor.RunAudit;
-      Auditor.SaveReports(OutputPath);
-    finally
-      Auditor.Free;
-    end;
-
-    WriteLn;
-    WriteLn('Audit terminé. Appuyez sur Entrée pour quitter...');
-    ReadLn;
-  except
-    on E: Exception do
-    begin
-      WriteLn('Erreur : ' + E.Message);
-      ReadLn;
-    end;
-  end;
-end.
-```
-
-### Interprétation des résultats d'audit
-
-Une fois votre audit terminé, il est important de savoir comment interpréter les résultats et définir les priorités pour les corrections. Voici quelques conseils :
-
-#### 1. Comprendre les niveaux de sévérité
-
-- **Critique** : Vulnérabilités qui permettent une compromission complète du système ou un accès non autorisé à des données sensibles. Elles doivent être corrigées immédiatement.
-
-- **Haute** : Vulnérabilités qui peuvent conduire à une compromission partielle du système ou à une fuite d'informations sensibles. Elles doivent être corrigées rapidement.
-
-- **Moyenne** : Vulnérabilités qui pourraient être exploitées dans certaines circonstances, mais qui nécessitent généralement des conditions spécifiques. Elles doivent être planifiées pour correction.
-
-- **Faible** : Vulnérabilités mineures qui présentent un risque limité ou qui sont difficiles à exploiter. Elles peuvent être abordées lors des cycles de maintenance réguliers.
-
-#### 2. Prioriser les corrections
-
-Voici un exemple de matrice d'évaluation des risques pour prioriser les corrections :
-
-```
-Sévérité / Probabilité | Faible    | Moyenne   | Élevée
------------------------|-----------|-----------|-----------
-Critique               | Priorité 2| Priorité 1| Priorité 1
-Haute                  | Priorité 3| Priorité 2| Priorité 1
-Moyenne                | Priorité 4| Priorité 3| Priorité 2
-Faible                 | Priorité 5| Priorité 4| Priorité 3
-```
-
-Où :
-- **Priorité 1** : Correction immédiate requise
-- **Priorité 2** : Correction requise dans les 15 jours
-- **Priorité 3** : Correction requise dans les 30 jours
-- **Priorité 4** : Correction à planifier dans le prochain cycle
-- **Priorité 5** : Correction à considérer lors de la prochaine refonte
-
-#### 3. Plan de correction
-
-Pour chaque vulnérabilité identifiée, établissez un plan de correction qui inclut :
-
-1. **Description du problème** : Comprendre précisément le problème
-2. **Impact potentiel** : Évaluer les conséquences possibles
-3. **Actions correctives** : Définir les changements nécessaires
-4. **Responsable** : Attribuer la tâche à un développeur
-5. **Échéance** : Fixer une date limite en fonction de la priorité
-6. **Tests de validation** : Définir comment vérifier que la correction est efficace
-
-### Intégration de l'audit de sécurité dans votre processus de développement
-
-Pour maximiser l'efficacité des audits de sécurité, intégrez-les dans votre cycle de développement :
-
-#### 1. Audit lors du cycle de développement
-
-```pas
-procedure TDevelopmentProcess.OnPreCommitHook;
-var
-  SecurityScan: TSecurityAuditor;
-  CurrentBranch, DeveloperName: string;
-begin
-  // Obtenir les informations du contexte actuel
-  CurrentBranch := GetCurrentGitBranch;
-  DeveloperName := GetCurrentDeveloper;
-
-  // Exécuter un scan de sécurité rapide avant le commit
-  SecurityScan := TSecurityAuditor.Create(GetProjectPath, ProjectName, DeveloperName);
-  try
-    SecurityScan.SetScanMode(smQuick); // Mode rapide pour les commits
-    SecurityScan.RunAudit;
-
-    // Si des problèmes critiques sont trouvés, empêcher le commit
-    if SecurityScan.Report.CriticalVulnerabilitiesCount > 0 then
-    begin
-      ShowMessage('Le commit a été bloqué car des vulnérabilités critiques ont été détectées.' +
-                  'Veuillez corriger ces problèmes avant de réessayer.');
-      Abort;
-    end;
-
-    // Sauvegarder le rapport pour référence
-    SecurityScan.SaveReports(GetReportsDirectory + CurrentBranch);
   finally
-    SecurityScan.Free;
+    Query.Free;
   end;
 end;
 ```
 
-#### 2. Intégration continue
+## Bonnes pratiques d'audit
 
-Ajoutez des vérifications de sécurité automatisées à votre pipeline CI/CD :
+### ✅ À faire
 
-```yaml
-# Exemple de configuration pour un pipeline CI/CD fictif
-stages:
-  - build
-  - test
-  - security_audit
-  - deploy
-
-security_audit:
-  stage: security_audit
-  script:
-    - echo "Exécution de l'audit de sécurité..."
-    - SecurityAuditor.exe --project $CI_PROJECT_DIR --output $CI_PROJECT_DIR/security_reports --mode full
-  artifacts:
-    paths:
-      - security_reports/
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "develop"
+**1. Journaliser de manière cohérente**
+```pascal
+// Structure standardisée pour tous les logs
+TLogger.Instance.Info('ACTION',
+  Format('User:%s, IP:%s, Resource:%s', [Username, IP, Resource]));
 ```
 
-#### 3. Audits de sécurité périodiques
-
-Planifiez des audits de sécurité complets à intervalles réguliers :
-
-```pas
-procedure TProjectScheduler.ScheduleSecurityAudits;
-var
-  Task: TScheduledTask;
-begin
-  // Créer une tâche hebdomadaire pour les audits de sécurité
-  Task := TScheduledTask.Create;
-  Task.Name := 'AuditSécuritéHebdomadaire';
-  Task.Description := 'Exécute un audit de sécurité complet du projet';
-  Task.Frequency := tfWeekly;
-  Task.DayOfWeek := 1; // Lundi
-  Task.StartTime := EncodeTime(2, 0, 0, 0); // 2h00 du matin
-
-  Task.Command := 'SecurityAuditor.exe';
-  Task.Parameters := '--project "' + GetProjectPath + '" ' +
-                    '--output "' + GetReportsDirectory + '\weekly" ' +
-                    '--mode full ' +
-                    '--notify security_team@entreprise.com';
-
-  ScheduleManager.AddTask(Task);
-
-  // Créer une tâche mensuelle pour un audit plus approfondi
-  Task := TScheduledTask.Create;
-  Task.Name := 'AuditSécuritéMensuel';
-  Task.Description := 'Exécute un audit de sécurité approfondi avec tests dynamiques';
-  Task.Frequency := tfMonthly;
-  Task.DayOfMonth := 1; // 1er du mois
-  Task.StartTime := EncodeTime(1, 0, 0, 0); // 1h00 du matin
-
-  Task.Command := 'SecurityAuditor.exe';
-  Task.Parameters := '--project "' + GetProjectPath + '" ' +
-                    '--output "' + GetReportsDirectory + '\monthly" ' +
-                    '--mode deep ' +
-                    '--dynamic_tests ' +
-                    '--notify security_team@entreprise.com,management@entreprise.com';
-
-  ScheduleManager.AddTask(Task);
-end;
+**2. Inclure le contexte**
+```pascal
+// Toujours inclure qui, quoi, quand, où
+LogEvent('User:' + Username + ', IP:' + IP + ', Action:Login, Result:Success');
 ```
 
-### Outils d'audit de sécurité pour Delphi
+**3. Protéger les logs**
+```pascal
+// Logs en lecture seule pour les utilisateurs normaux
+// Accès restreint aux administrateurs
+```
 
-En plus de l'outil simple que nous avons créé, voici quelques solutions plus complètes pour l'audit de sécurité de vos applications Delphi :
+**4. Surveiller activement**
+```pascal
+// Ne pas juste collecter, mais analyser
+TimerSurveillance.Enabled := True;
+TimerSurveillance.Interval := 300000; // Toutes les 5 minutes
+```
 
-#### 1. CodeGuard
+**5. Archiver régulièrement**
+```pascal
+// Rotation automatique pour éviter la saturation
+ArchiverLogsAnciens(90); // Tous les 90 jours
+```
 
-Un outil fictif qui illustre ce à quoi pourrait ressembler un outil commercial :
+### ❌ À éviter
 
-- Analyse statique du code Delphi
-- Détection des vulnérabilités courantes
-- Intégration avec l'IDE Delphi
-- Génération de rapports détaillés
-- Suggestions de correction automatisées
+**1. Ne pas logger les données sensibles**
+```pascal
+// ❌ DANGEREUX
+Log('Password: ' + Password);
 
-#### 2. DelphiScan
+// ✅ BON
+Log('Password changed successfully');
+```
 
-Un autre outil fictif pour scanner les applications Delphi compilées :
+**2. Ne pas ignorer les logs**
+```pascal
+// Les logs ne servent à rien si personne ne les lit
+AnalyserLogsQuotidiennement;
+```
 
-- Analyse des binaires Delphi
-- Détection des bibliothèques tierces vulnérables
-- Audit des configurations de déploiement
-- Vérification des droits d'accès
-- Analyse des communications réseau
+**3. Ne pas tout journaliser**
+```pascal
+// Trop de logs = bruit, difficile de trouver l'important
+// Logger seulement ce qui est pertinent
+```
 
-#### 3. Outils génériques adaptables
+## Checklist d'audit de sécurité
 
-Des outils réels qui, bien que non spécifiques à Delphi, peuvent être adaptés :
+Avant le déploiement :
 
-- **SonarQube** : Un outil d'analyse de code statique qui peut être configuré pour analyser le code Delphi
-- **OWASP ZAP** : Pour tester les applications web créées avec Delphi
-- **Dependency-Check** : Pour vérifier les vulnérabilités dans les bibliothèques tierces
-- **BurpSuite** : Pour tester la sécurité des communications réseau
+### Journalisation
+- [ ] Tous les événements de sécurité sont journalisés
+- [ ] Les connexions (succès et échecs) sont tracées
+- [ ] Les modifications de données sensibles sont auditées
+- [ ] Les logs incluent timestamp, utilisateur, IP
+- [ ] Aucune donnée sensible n'est dans les logs
 
-### Bonnes pratiques pour l'audit de sécurité
+### Surveillance
+- [ ] Système d'alertes configuré
+- [ ] Détection des tentatives d'intrusion
+- [ ] Monitoring des anomalies
+- [ ] Dashboard de sécurité fonctionnel
+- [ ] Notifications automatiques activées
 
-1. **Combinez analyses automatiques et manuelles** : Les outils automatisés ne détectent pas toutes les vulnérabilités. Une revue manuelle est souvent nécessaire pour les problèmes complexes.
+### Archivage
+- [ ] Rotation des logs configurée
+- [ ] Archives sécurisées et backupées
+- [ ] Politique de rétention définie
+- [ ] Suppression automatique des logs obsolètes
 
-2. **Documentez tout** : Chaque vulnérabilité, test et correction doit être documenté pour référence future.
+### Conformité
+- [ ] Traçabilité RGPD en place
+- [ ] Rapports d'audit générables
+- [ ] Consentements tracés
+- [ ] Procédure de réponse aux demandes d'accès
 
-3. **Testez dans un environnement représentatif** : Assurez-vous que votre environnement de test reflète fidèlement l'environnement de production.
+### Tests
+- [ ] Audit de sécurité réalisé
+- [ ] Vulnérabilités identifiées et corrigées
+- [ ] Tests de pénétration effectués
+- [ ] Revue de code de sécurité complétée
 
-4. **Revérifiez après les corrections** : Testez à nouveau après avoir corrigé une vulnérabilité pour s'assurer que la correction est efficace.
+## Résumé des points essentiels
 
-5. **Impliquez l'équipe de développement** : Les audits ne doivent pas être perçus comme punitifs, mais comme éducatifs. Impliquez les développeurs dans le processus.
+✅ **Impératifs d'audit** :
+- Journaliser TOUS les événements de sécurité
+- Inclure contexte complet (qui, quoi, quand, où)
+- Ne JAMAIS logger de données sensibles
+- Surveiller activement, pas seulement collecter
+- Alertes automatiques pour événements critiques
+- Rotation et archivage réguliers
+- Tests et audits périodiques
 
-6. **Restez à jour** : Les vulnérabilités évoluent constamment. Mettez régulièrement à jour vos connaissances et outils.
+❌ **Erreurs d'audit fatales** :
+- Ne pas journaliser les accès
+- Logger des mots de passe ou tokens
+- Ignorer les logs collectés
+- Pas de système d'alertes
+- Logs non protégés
+- Pas d'archivage (saturation)
+- Négliger les tests de sécurité
 
-7. **Adoptez une approche d'amélioration continue** : Utilisez les résultats d'audit pour améliorer continuellement vos pratiques de développement.
+🎯 **Objectifs d'un bon audit** :
+- **Détection** : Repérer les incidents rapidement
+- **Investigation** : Comprendre ce qui s'est passé
+- **Prévention** : Identifier les faiblesses avant exploitation
+- **Conformité** : Respecter les obligations légales
+- **Amélioration** : Apprendre et renforcer continuellement
 
-### Exemple de rapport d'audit
+## Aller plus loin
 
-Voici un exemple de structure pour un rapport d'audit de sécurité complet :
+**Sections complémentaires** :
+- **16.7** : Stockage sécurisé des identifiants
+- **16.8** : GDPR et confidentialité des données
+- **16.10** : Sécurité des applications mobiles
 
-1. **Résumé exécutif**
-   - Aperçu des résultats
-   - Évaluation globale du risque
-   - Recommandations principales
+**Outils recommandés** :
+- ELK Stack (Elasticsearch, Logstash, Kibana) : Analyse de logs avancée
+- Splunk : Plateforme de monitoring et analyse
+- Graylog : Gestion centralisée des logs
+- OSSEC : Système de détection d'intrusions
 
-2. **Méthodologie**
-   - Outils utilisés
-   - Techniques appliquées
-   - Périmètre de l'audit
+**Normes et frameworks** :
+- ISO 27001 : Management de la sécurité
+- NIST Cybersecurity Framework
+- CIS Controls : Contrôles de sécurité critiques
 
-3. **Résultats détaillés**
-   - Vulnérabilités par catégorie
-   - Description technique
-   - Impact potentiel
-   - Étapes de reproduction
-   - Recommandations de correction
-
-4. **Plan de remédiation**
-   - Priorisation des corrections
-   - Assignation des responsabilités
-   - Échéancier
-
-5. **Annexes**
-   - Captures d'écran et preuves
-   - Détails techniques supplémentaires
-   - Références aux bonnes pratiques et standards
-
-### Conclusion
-
-L'audit de sécurité est une composante essentielle du cycle de développement d'applications sécurisées. En intégrant des audits réguliers dans votre processus de développement Delphi, vous pouvez identifier et corriger les vulnérabilités avant qu'elles ne soient exploitées.
-
-L'outil simple présenté dans ce chapitre vous offre un point de départ pour mettre en place vos propres audits. Pour les applications critiques ou sensibles, envisagez de compléter cette approche par des audits professionnels externes.
-
-Rappelez-vous que la sécurité est un processus continu, pas un état final. Les menaces évoluent constamment, et votre approche de la sécurité doit évoluer en conséquence.
-
-### Exercices pratiques
-
-1. Créez une version simplifiée de l'outil d'audit présenté dans ce chapitre et exécutez-le sur l'un de vos projets Delphi.
-
-2. Développez un module de détection spécifique pour une vulnérabilité qui vous préoccupe particulièrement dans vos applications.
-
-3. Configurez un hook de pré-commit Git qui vérifie les problèmes de sécurité courants avant chaque commit.
-
-4. Modifiez l'outil pour générer des rapports dans un format spécifique requis par votre organisation.
-
-5. Pour les plus avancés : Intégrez l'outil d'audit dans votre IDE Delphi en créant un expert ou un plugin.
+L'audit de sécurité n'est pas une option, c'est une obligation. Sans logs et surveillance, vous êtes aveugle face aux attaques. Investissez du temps dans un bon système d'audit, c'est votre meilleure assurance en cas d'incident.
 
 ⏭️ [Stockage sécurisé des identifiants](/16-securite-des-applications/07-stockage-securise-des-identifiants.md)

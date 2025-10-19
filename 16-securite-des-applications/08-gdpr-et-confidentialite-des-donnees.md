@@ -1,3779 +1,1348 @@
-# 16. Sécurité des applications
-## 16.8 GDPR et confidentialité des données
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 16.8 GDPR et confidentialité des données
 
-Le Règlement Général sur la Protection des Données (RGPD, ou GDPR en anglais) est une réglementation européenne qui définit comment les organisations doivent protéger les données personnelles des utilisateurs. Même si votre application n'est pas destinée au marché européen, les principes du GDPR constituent une bonne base pour concevoir des applications respectueuses de la vie privée des utilisateurs.
+## Introduction
 
-Dans ce chapitre, nous allons explorer comment mettre en œuvre les principes du GDPR dans vos applications Delphi, avec des exemples concrets et des bonnes pratiques accessibles.
+Le RGPD (Règlement Général sur la Protection des Données), ou GDPR en anglais (General Data Protection Regulation), est une réglementation européenne entrée en vigueur le 25 mai 2018. Elle définit comment les données personnelles doivent être collectées, traitées, stockées et protégées.
 
-### Les principes clés du GDPR
+**Analogie du monde réel** : Le RGPD, c'est comme un contrat de respect entre vous et vos utilisateurs. Vous vous engagez à traiter leurs données avec le plus grand soin, comme vous aimeriez que vos propres données soient traitées.
 
-Le GDPR repose sur plusieurs principes fondamentaux que vous devez prendre en compte lors du développement de vos applications :
+### Pourquoi le RGPD est important ?
 
-1. **Consentement explicite** : L'utilisateur doit donner son consentement explicite pour la collecte et le traitement de ses données.
-2. **Minimisation des données** : Ne collecter que les données strictement nécessaires.
-3. **Transparence** : Informer clairement les utilisateurs sur l'utilisation de leurs données.
-4. **Droit à l'accès** : Les utilisateurs doivent pouvoir accéder à leurs données.
-5. **Droit à l'effacement** : Les utilisateurs doivent pouvoir supprimer leurs données (droit à l'oubli).
-6. **Droit à la portabilité** : Les utilisateurs doivent pouvoir exporter leurs données dans un format standard.
-7. **Sécurité** : Protection adéquate des données contre les accès non autorisés.
+**Pour les utilisateurs** :
+- Protection de leur vie privée
+- Contrôle sur leurs données
+- Transparence sur l'utilisation
+- Droit de rectifier ou supprimer
 
-### 1. Mise en œuvre du consentement explicite
+**Pour votre application** :
+- Conformité légale obligatoire
+- Confiance des utilisateurs renforcée
+- Amendes évitées (jusqu'à 20 millions € ou 4% du CA mondial)
+- Bonne réputation
 
-La première étape consiste à obtenir et à gérer le consentement des utilisateurs pour le traitement de leurs données.
+### À qui s'applique le RGPD ?
 
-#### Exemple : Formulaire de consentement
+Le RGPD s'applique si :
+- Votre entreprise est située dans l'UE
+- Vous traitez des données de citoyens européens
+- Vous offrez des services à des résidents de l'UE
 
-```pas
-unit ConsentForm;
+**Même si votre serveur est aux USA**, si vous avez des clients européens, vous devez respecter le RGPD.
 
-interface
+## Qu'est-ce qu'une donnée personnelle ?
 
-uses
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls,
-  Vcl.ExtCtrls;
+Une donnée personnelle est toute information se rapportant à une personne physique identifiée ou identifiable.
 
+### Données directement identifiantes
+
+```
+Nom, Prénom
+Adresse email
+Numéro de téléphone
+Adresse postale
+Numéro de sécurité sociale
+Plaque d'immatriculation
+Photo ou vidéo du visage
+```
+
+### Données indirectement identifiantes
+
+```
+Adresse IP
+Cookie identifiant
+Numéro de client
+Données de géolocalisation
+Données biométriques
+```
+
+### Données sensibles (protection renforcée)
+
+```
+Origine ethnique ou raciale
+Opinions politiques
+Convictions religieuses
+Appartenance syndicale
+Données génétiques ou biométriques
+Données de santé
+Orientation sexuelle
+Casier judiciaire
+```
+
+## Les 7 principes du RGPD
+
+### 1. Licéité, loyauté et transparence
+
+**Principe** : Traiter les données de manière légale, équitable et transparente.
+
+```pascal
+// ✅ BON - Informer clairement l'utilisateur
+procedure AfficherPolitiqueConfidentialite;
+begin
+  ShowMessage('Vos données (nom, email, adresse) seront utilisées uniquement pour :' + sLineBreak +
+              '- Créer votre compte' + sLineBreak +
+              '- Vous envoyer des notifications importantes' + sLineBreak +
+              '- Améliorer nos services' + sLineBreak + sLineBreak +
+              'Vous pouvez à tout moment demander leur suppression.');
+end;
+
+// ❌ MAUVAIS - Collecte cachée
+procedure CollecterDonneesCachees;
+begin
+  // Collecte silencieuse sans informer l'utilisateur
+  EnvoyerVersServeur(ListeContacts, HistoriqueNavigation, Localisation);
+end;
+```
+
+### 2. Limitation des finalités
+
+**Principe** : Collecter les données pour des objectifs précis et ne pas les utiliser à d'autres fins.
+
+```pascal
 type
-  TConsentPurpose = (cpFunctionality, cpAnalytics, cpMarketing, cpThirdParty);
-  TConsentPurposes = set of TConsentPurpose;
+  TFinaliteTraitement = (
+    ftCreationCompte,
+    ftGestionCommandes,
+    ftEnvoiNewsletter,
+    ftAnalyseStatistique,
+    ftSupport
+  );
 
-  TConsentManager = class
-  private
-    FUserConsent: TConsentPurposes;
-    FLastConsentDate: TDateTime;
-    FStoragePath: string;
+procedure CollecterDonneesAvecFinalite(AFinalite: TFinaliteTraitement; const AEmail: string);
+begin
+  case AFinalite of
+    ftCreationCompte:
+    begin
+      // OK : Utiliser l'email pour créer le compte
+      CreerCompte(AEmail);
+    end;
 
-    procedure LoadConsentFromStorage;
-    procedure SaveConsentToStorage;
+    ftEnvoiNewsletter:
+    begin
+      // ❌ INTERDIT sans consentement explicite
+      if not ConsentementNewsletter(AEmail) then
+      begin
+        ShowMessage('Vous devez consentir à recevoir la newsletter');
+        Exit;
+      end;
+      InscrireNewsletter(AEmail);
+    end;
+  end;
+end;
+
+// ❌ MAUVAIS - Utilisation détournée
+procedure UtilisationDetournee;
+var
+  EmailsClients: TStringList;
+begin
+  EmailsClients := ChargerEmailsClients;
+
+  // Email collecté pour les commandes
+  // mais utilisé pour du marketing non consenti
+  EnvoyerPublicite(EmailsClients); // INTERDIT !
+end;
+```
+
+### 3. Minimisation des données
+
+**Principe** : Ne collecter que les données strictement nécessaires.
+
+```pascal
+// ❌ MAUVAIS - Trop de données collectées
+type
+  TInscriptionComplete = record
+    Nom: string;
+    Prenom: string;
+    Email: string;
+    Telephone: string;
+    Adresse: string;
+    CodePostal: string;
+    Ville: string;
+    DateNaissance: TDate;
+    Profession: string;
+    Salaire: Currency;           // Nécessaire ?
+    SituationMatrimoniale: string; // Nécessaire ?
+    NombreEnfants: Integer;       // Nécessaire ?
+  end;
+
+// ✅ BON - Uniquement le nécessaire
+type
+  TInscriptionMinimale = record
+    Email: string;        // Nécessaire pour la connexion
+    MotDePasse: string;   // Nécessaire pour la sécurité
+  end;
+
+// Si vous avez besoin de plus, demandez au moment voulu
+type
+  TAdresseLivraison = record
+    Nom: string;
+    Adresse: string;
+    CodePostal: string;
+    Ville: string;
+  end;
+
+procedure DemanderAdresseAuMomentCommande;
+begin
+  // Demander l'adresse uniquement quand l'utilisateur commande
+  if UtilisateurCommandeQuelqueChose then
+    AdresseLivraison := SaisirAdresseLivraison;
+end;
+```
+
+### 4. Exactitude
+
+**Principe** : Les données doivent être exactes et mises à jour.
+
+```pascal
+type
+  TGestionDonneesUtilisateur = class
   public
-    constructor Create(const StoragePath: string);
-
-    function HasUserConsented(Purpose: TConsentPurpose): Boolean;
-    procedure SetUserConsent(Purposes: TConsentPurposes; ConsentDate: TDateTime);
-    procedure ClearAllConsent;
-
-    function ShowConsentDialog(ParentForm: TForm): Boolean;
-    function IsConsentRecent(DaysThreshold: Integer = 180): Boolean;
-
-    property UserConsent: TConsentPurposes read FUserConsent;
-    property LastConsentDate: TDateTime read FLastConsentDate;
+    procedure PermettreModification(AIDUtilisateur: Integer);
+    procedure VerifierEtNettoyer;
+    procedure SupprimerDonneesObsoletes;
   end;
 
-implementation
-
-uses
-  System.JSON, System.IOUtils, Vcl.Dialogs, System.DateUtils;
-
-constructor TConsentManager.Create(const StoragePath: string);
+procedure TGestionDonneesUtilisateur.PermettreModification(AIDUtilisateur: Integer);
 begin
-  inherited Create;
-  FStoragePath := StoragePath;
-  FUserConsent := [];
-  FLastConsentDate := 0;
-
-  // Créer le dossier si nécessaire
-  if not DirectoryExists(FStoragePath) then
-    ForceDirectories(FStoragePath);
-
-  // Charger le consentement existant
-  LoadConsentFromStorage;
-end;
-
-procedure TConsentManager.LoadConsentFromStorage;
-var
-  ConsentFilePath: string;
-  JsonObj: TJSONObject;
-  ConsentValue: Integer;
-begin
-  ConsentFilePath := TPath.Combine(FStoragePath, 'user_consent.json');
-
-  if FileExists(ConsentFilePath) then
-  begin
-    try
-      var JsonText := TFile.ReadAllText(ConsentFilePath);
-      JsonObj := TJSONObject.ParseJSONValue(JsonText) as TJSONObject;
-
-      if JsonObj <> nil then
-      try
-        // Charger les informations de consentement
-        ConsentValue := JsonObj.GetValue<Integer>('consent_value', 0);
-        FUserConsent := TConsentPurposes(Byte(ConsentValue));
-
-        // Charger la date de consentement
-        FLastConsentDate := ISO8601ToDate(
-          JsonObj.GetValue<string>('consent_date', DateToISO8601(0))
-        );
-      finally
-        JsonObj.Free;
-      end;
-    except
-      // En cas d'erreur, réinitialiser le consentement
-      FUserConsent := [];
-      FLastConsentDate := 0;
-    end;
-  end;
-end;
-
-procedure TConsentManager.SaveConsentToStorage;
-var
-  ConsentFilePath: string;
-  JsonObj: TJSONObject;
-begin
-  ConsentFilePath := TPath.Combine(FStoragePath, 'user_consent.json');
-
-  JsonObj := TJSONObject.Create;
+  // Permettre à l'utilisateur de modifier ses données
+  FormModificationProfil := TFormModificationProfil.Create(nil);
   try
-    // Stocker les informations de consentement
-    JsonObj.AddPair('consent_value', TJSONNumber.Create(Byte(FUserConsent)));
-    JsonObj.AddPair('consent_date', DateToISO8601(FLastConsentDate));
-
-    // Écrire dans le fichier
-    TFile.WriteAllText(ConsentFilePath, JsonObj.ToString);
+    FormModificationProfil.ChargerDonnees(AIDUtilisateur);
+    if FormModificationProfil.ShowModal = mrOk then
+      FormModificationProfil.Enregistrer;
   finally
-    JsonObj.Free;
+    FormModificationProfil.Free;
   end;
 end;
 
-function TConsentManager.HasUserConsented(Purpose: TConsentPurpose): Boolean;
-begin
-  Result := Purpose in FUserConsent;
-end;
-
-procedure TConsentManager.SetUserConsent(Purposes: TConsentPurposes; ConsentDate: TDateTime);
-begin
-  FUserConsent := Purposes;
-  FLastConsentDate := ConsentDate;
-
-  // Sauvegarder le consentement
-  SaveConsentToStorage;
-end;
-
-procedure TConsentManager.ClearAllConsent;
-begin
-  FUserConsent := [];
-  FLastConsentDate := 0;
-
-  // Sauvegarder l'état
-  SaveConsentToStorage;
-end;
-
-function TConsentManager.IsConsentRecent(DaysThreshold: Integer): Boolean;
-begin
-  // Vérifier si le consentement a été donné au cours des X derniers jours
-  Result := (FLastConsentDate > 0) and
-            (DaysBetween(Now, FLastConsentDate) <= DaysThreshold);
-end;
-
-function TConsentManager.ShowConsentDialog(ParentForm: TForm): Boolean;
-var
-  ConsentForm: TForm;
-  PanelTop, PanelBottom: TPanel;
-  LabelTitle, LabelInfo: TLabel;
-  CheckBoxFunctionality, CheckBoxAnalytics,
-  CheckBoxMarketing, CheckBoxThirdParty: TCheckBox;
-  ButtonAccept, ButtonReject, ButtonMoreInfo: TButton;
-  Purposes: TConsentPurposes;
-begin
-  Result := False;
-
-  // Créer le formulaire de consentement
-  ConsentForm := TForm.Create(nil);
-  try
-    ConsentForm.Caption := 'Politique de confidentialité';
-    ConsentForm.Position := poScreenCenter;
-    ConsentForm.BorderStyle := bsDialog;
-    ConsentForm.Width := 500;
-    ConsentForm.Height := 400;
-
-    // Panneau supérieur pour le titre et l'explication
-    PanelTop := TPanel.Create(ConsentForm);
-    PanelTop.Parent := ConsentForm;
-    PanelTop.Align := alTop;
-    PanelTop.Height := 120;
-    PanelTop.BevelOuter := bvNone;
-    PanelTop.ParentBackground := False;
-    PanelTop.ParentColor := False;
-    PanelTop.Color := clWhite;
-
-    LabelTitle := TLabel.Create(ConsentForm);
-    LabelTitle.Parent := PanelTop;
-    LabelTitle.Caption := 'Nous respectons votre vie privée';
-    LabelTitle.Font.Size := 14;
-    LabelTitle.Font.Style := [fsBold];
-    LabelTitle.Top := 15;
-    LabelTitle.Left := 20;
-
-    LabelInfo := TLabel.Create(ConsentForm);
-    LabelInfo.Parent := PanelTop;
-    LabelInfo.Caption :=
-      'Cette application collecte des données personnelles pour les finalités suivantes. ' +
-      'Veuillez indiquer votre consentement pour chaque finalité.';
-    LabelInfo.Top := 50;
-    LabelInfo.Left := 20;
-    LabelInfo.Width := 460;
-    LabelInfo.WordWrap := True;
-
-    // Options de consentement
-    CheckBoxFunctionality := TCheckBox.Create(ConsentForm);
-    CheckBoxFunctionality.Parent := ConsentForm;
-    CheckBoxFunctionality.Caption := 'Fonctionnalités essentielles (obligatoire)';
-    CheckBoxFunctionality.Top := 130;
-    CheckBoxFunctionality.Left := 20;
-    CheckBoxFunctionality.Width := 460;
-    CheckBoxFunctionality.Checked := True;
-    CheckBoxFunctionality.Enabled := False; // Obligatoire
-
-    CheckBoxAnalytics := TCheckBox.Create(ConsentForm);
-    CheckBoxAnalytics.Parent := ConsentForm;
-    CheckBoxAnalytics.Caption := 'Analyse d''utilisation pour améliorer l''application';
-    CheckBoxAnalytics.Top := 160;
-    CheckBoxAnalytics.Left := 20;
-    CheckBoxAnalytics.Width := 460;
-    CheckBoxAnalytics.Checked := cpAnalytics in FUserConsent;
-
-    CheckBoxMarketing := TCheckBox.Create(ConsentForm);
-    CheckBoxMarketing.Parent := ConsentForm;
-    CheckBoxMarketing.Caption := 'Communications marketing';
-    CheckBoxMarketing.Top := 190;
-    CheckBoxMarketing.Left := 20;
-    CheckBoxMarketing.Width := 460;
-    CheckBoxMarketing.Checked := cpMarketing in FUserConsent;
-
-    CheckBoxThirdParty := TCheckBox.Create(ConsentForm);
-    CheckBoxThirdParty.Parent := ConsentForm;
-    CheckBoxThirdParty.Caption := 'Partage avec des tiers';
-    CheckBoxThirdParty.Top := 220;
-    CheckBoxThirdParty.Left := 20;
-    CheckBoxThirdParty.Width := 460;
-    CheckBoxThirdParty.Checked := cpThirdParty in FUserConsent;
-
-    // Panneau inférieur pour les boutons
-    PanelBottom := TPanel.Create(ConsentForm);
-    PanelBottom.Parent := ConsentForm;
-    PanelBottom.Align := alBottom;
-    PanelBottom.Height := 60;
-    PanelBottom.BevelOuter := bvNone;
-
-    // Boutons
-    ButtonAccept := TButton.Create(ConsentForm);
-    ButtonAccept.Parent := PanelBottom;
-    ButtonAccept.Caption := 'Accepter la sélection';
-    ButtonAccept.Left := 200;
-    ButtonAccept.Top := 15;
-    ButtonAccept.Width := 150;
-    ButtonAccept.Default := True;
-    ButtonAccept.ModalResult := mrOk;
-
-    ButtonReject := TButton.Create(ConsentForm);
-    ButtonReject.Parent := PanelBottom;
-    ButtonReject.Caption := 'Tout refuser';
-    ButtonReject.Left := 360;
-    ButtonReject.Top := 15;
-    ButtonReject.Width := 120;
-    ButtonReject.Cancel := True;
-    ButtonReject.OnClick := procedure(Sender: TObject)
-    begin
-      CheckBoxAnalytics.Checked := False;
-      CheckBoxMarketing.Checked := False;
-      CheckBoxThirdParty.Checked := False;
-      ConsentForm.ModalResult := mrOk;
-    end;
-
-    ButtonMoreInfo := TButton.Create(ConsentForm);
-    ButtonMoreInfo.Parent := PanelBottom;
-    ButtonMoreInfo.Caption := 'Plus d''informations';
-    ButtonMoreInfo.Left := 20;
-    ButtonMoreInfo.Top := 15;
-    ButtonMoreInfo.Width := 150;
-    ButtonMoreInfo.OnClick := procedure(Sender: TObject)
-    begin
-      ShowMessage(
-        'Politique de confidentialité complète' + sLineBreak + sLineBreak +
-        '1. Fonctionnalités essentielles: Nous collectons les données nécessaires ' +
-        'au fonctionnement de l''application.' + sLineBreak + sLineBreak +
-        '2. Analyse d''utilisation: Nous analysons comment vous utilisez l''application ' +
-        'pour améliorer l''expérience utilisateur.' + sLineBreak + sLineBreak +
-        '3. Communications marketing: Nous pouvons vous envoyer des informations ' +
-        'sur nos produits et services.' + sLineBreak + sLineBreak +
-        '4. Partage avec des tiers: Nous pouvons partager certaines données ' +
-        'avec nos partenaires de confiance.'
-      );
-    end;
-
-    // Afficher le formulaire
-    if ConsentForm.ShowModal = mrOk then
-    begin
-      // Recueillir les choix de l'utilisateur
-      Purposes := [cpFunctionality]; // Toujours inclure les fonctionnalités essentielles
-
-      if CheckBoxAnalytics.Checked then
-        Include(Purposes, cpAnalytics);
-
-      if CheckBoxMarketing.Checked then
-        Include(Purposes, cpMarketing);
-
-      if CheckBoxThirdParty.Checked then
-        Include(Purposes, cpThirdParty);
-
-      // Sauvegarder le consentement
-      SetUserConsent(Purposes, Now);
-
-      Result := True;
-    end;
-  finally
-    ConsentForm.Free;
-  end;
-end;
-
-end.
-```
-
-#### Utilisation du gestionnaire de consentement
-
-```pas
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  // Initialiser le gestionnaire de consentement
-  ConsentManager := TConsentManager.Create(
-    TPath.Combine(TPath.GetDocumentsPath, 'MyApp')
-  );
-
-  // Vérifier si le consentement est déjà enregistré et récent
-  if not ConsentManager.IsConsentRecent(180) then // 180 jours (6 mois)
-  begin
-    // Afficher le dialogue de consentement
-    ConsentManager.ShowConsentDialog(Self);
-  end;
-
-  // Activer ou désactiver les fonctionnalités selon le consentement
-  UpdateFeaturesByConsent;
-end;
-
-procedure TMainForm.UpdateFeaturesByConsent;
-begin
-  // Exemple : Activer/désactiver l'analyse d'utilisation
-  if ConsentManager.HasUserConsented(cpAnalytics) then
-    InitializeAnalytics
-  else
-    DisableAnalytics;
-
-  // Exemple : Activer/désactiver les communications marketing
-  MenuItemMarketing.Visible := ConsentManager.HasUserConsented(cpMarketing);
-
-  // Exemple : Activer/désactiver le partage avec des tiers
-  if ConsentManager.HasUserConsented(cpThirdParty) then
-    EnableThirdPartySharing
-  else
-    DisableThirdPartySharing;
-end;
-```
-
-### 2. Mise en œuvre de la minimisation des données
-
-Le principe de minimisation des données implique de ne collecter que les informations strictement nécessaires au fonctionnement de votre application.
-
-#### Exemple : Classe utilisateur avec paramètres optionnels
-
-```pas
-type
-  TUserData = class
-  private
-    FID: Integer;
-    FUsername: string;
-    FEmail: string;
-    FFullName: string;
-    FAddress: string;
-    FPhoneNumber: string;
-    FBirthDate: TDate;
-    FAnalyticsEnabled: Boolean;
-    FMarketingEnabled: Boolean;
-  public
-    constructor Create(const Username, Email: string);
-
-    // Méthodes pour ajouter des informations optionnelles
-    procedure SetContactInfo(const FullName, PhoneNumber: string);
-    procedure SetAddressInfo(const Address: string);
-    procedure SetBirthDate(BirthDate: TDate);
-    procedure SetPrivacySettings(AnalyticsEnabled, MarketingEnabled: Boolean);
-
-    // Ces informations sont toujours requises
-    property ID: Integer read FID write FID;
-    property Username: string read FUsername;
-    property Email: string read FEmail;
-
-    // Ces informations sont optionnelles
-    property FullName: string read FFullName write FFullName;
-    property Address: string read FAddress write FAddress;
-    property PhoneNumber: string read FPhoneNumber write FPhoneNumber;
-    property BirthDate: TDate read FBirthDate write FBirthDate;
-
-    // Paramètres de confidentialité
-    property AnalyticsEnabled: Boolean read FAnalyticsEnabled write FAnalyticsEnabled;
-    property MarketingEnabled: Boolean read FMarketingEnabled write FMarketingEnabled;
-  end;
-```
-
-#### Exemple : Enregistrement d'un utilisateur avec minimisation des données
-
-```pas
-procedure TRegistrationForm.ButtonRegisterClick(Sender: TObject);
-var
-  NewUser: TUserData;
-begin
-  // Valider les champs obligatoires
-  if (EditUsername.Text = '') or (EditEmail.Text = '') then
-  begin
-    ShowMessage('Le nom d''utilisateur et l''email sont obligatoires.');
-    Exit;
-  end;
-
-  // Créer un nouvel utilisateur avec seulement les informations essentielles
-  NewUser := TUserData.Create(EditUsername.Text, EditEmail.Text);
-  try
-    // Ajouter des informations optionnelles uniquement si fournies
-    if EditFullName.Text <> '' then
-      NewUser.FullName := EditFullName.Text;
-
-    if EditPhone.Text <> '' then
-      NewUser.PhoneNumber := EditPhone.Text;
-
-    if EditAddress.Text <> '' then
-      NewUser.Address := EditAddress.Text;
-
-    if DatePickerBirth.Date > 0 then
-      NewUser.BirthDate := DatePickerBirth.Date;
-
-    // Définir les paramètres de confidentialité selon le consentement
-    NewUser.SetPrivacySettings(
-      CheckBoxAnalytics.Checked,
-      CheckBoxMarketing.Checked
-    );
-
-    // Enregistrer l'utilisateur dans la base de données
-    if UserManager.RegisterUser(NewUser) then
-    begin
-      ShowMessage('Inscription réussie !');
-      ModalResult := mrOk;
-    end
-    else
-      ShowMessage('Erreur lors de l''inscription. Veuillez réessayer.');
-  finally
-    NewUser.Free;
-  end;
-end;
-```
-
-### 3. Mise en œuvre de la transparence
-
-La transparence consiste à informer clairement les utilisateurs sur la façon dont leurs données seront utilisées.
-
-#### Exemple : Affichage d'une politique de confidentialité
-
-```pas
-unit PrivacyPolicyViewer;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls,
-  Vcl.ExtCtrls, System.IOUtils;
-
-type
-  TPrivacyPolicyViewer = class
-  private
-    FPrivacyPolicyFile: string;
-    FPrivacyPolicyVersion: string;
-    FLastViewedVersion: string;
-  public
-    constructor Create(const PrivacyPolicyFile: string);
-
-    // Charger la politique de confidentialité
-    function LoadPrivacyPolicy: string;
-
-    // Vérifier si l'utilisateur a vu la dernière version
-    function HasUserViewedLatestPolicy: Boolean;
-
-    // Marquer la version actuelle comme vue
-    procedure MarkCurrentVersionAsViewed;
-
-    // Afficher la politique dans un dialogue
-    procedure ShowPrivacyPolicyDialog(ParentForm: TForm);
-
-    property PrivacyPolicyVersion: string read FPrivacyPolicyVersion;
-  end;
-
-implementation
-
-constructor TPrivacyPolicyViewer.Create(const PrivacyPolicyFile: string);
-begin
-  inherited Create;
-  FPrivacyPolicyFile := PrivacyPolicyFile;
-
-  // Charger la dernière version vue depuis les paramètres utilisateur
-  FLastViewedVersion := GetUserSetting('PrivacyPolicy', 'LastViewedVersion', '');
-
-  // Déterminer la version actuelle
-  FPrivacyPolicyVersion := GetPrivacyPolicyVersion;
-end;
-
-function TPrivacyPolicyViewer.GetPrivacyPolicyVersion: string;
-var
-  VersionFile: string;
-begin
-  // La version pourrait être stockée dans un fichier séparé ou extraite du fichier de politique
-  VersionFile := ChangeFileExt(FPrivacyPolicyFile, '.version');
-
-  if FileExists(VersionFile) then
-    Result := TFile.ReadAllText(VersionFile).Trim
-  else
-    Result := '1.0'; // Version par défaut
-end;
-
-function TPrivacyPolicyViewer.LoadPrivacyPolicy: string;
-begin
-  if FileExists(FPrivacyPolicyFile) then
-    Result := TFile.ReadAllText(FPrivacyPolicyFile)
-  else
-    Result := 'Politique de confidentialité non disponible.';
-end;
-
-function TPrivacyPolicyViewer.HasUserViewedLatestPolicy: Boolean;
-begin
-  Result := FLastViewedVersion = FPrivacyPolicyVersion;
-end;
-
-procedure TPrivacyPolicyViewer.MarkCurrentVersionAsViewed;
-begin
-  FLastViewedVersion := FPrivacyPolicyVersion;
-
-  // Sauvegarder cette information
-  SaveUserSetting('PrivacyPolicy', 'LastViewedVersion', FLastViewedVersion);
-end;
-
-procedure TPrivacyPolicyViewer.ShowPrivacyPolicyDialog(ParentForm: TForm);
-var
-  PolicyForm: TForm;
-  Memo: TMemo;
-  ButtonAccept: TButton;
-  PolicyText: string;
-begin
-  // Créer le formulaire
-  PolicyForm := TForm.Create(nil);
-  try
-    PolicyForm.Caption := 'Politique de confidentialité - v' + FPrivacyPolicyVersion;
-    PolicyForm.Position := poScreenCenter;
-    PolicyForm.Width := 700;
-    PolicyForm.Height := 500;
-
-    // Créer le mémo pour afficher le texte
-    Memo := TMemo.Create(PolicyForm);
-    Memo.Parent := PolicyForm;
-    Memo.Align := alClient;
-    Memo.ScrollBars := ssBoth;
-    Memo.ReadOnly := True;
-
-    // Charger le texte de la politique
-    PolicyText := LoadPrivacyPolicy;
-    Memo.Lines.Text := PolicyText;
-
-    // Bouton d'acceptation
-    ButtonAccept := TButton.Create(PolicyForm);
-    ButtonAccept.Parent := PolicyForm;
-    ButtonAccept.Caption := 'J''ai lu et j''accepte';
-    ButtonAccept.Width := 150;
-    ButtonAccept.Height := 30;
-    ButtonAccept.Anchors := [akBottom, akRight];
-    ButtonAccept.Left := PolicyForm.ClientWidth - ButtonAccept.Width - 20;
-    ButtonAccept.Top := PolicyForm.ClientHeight - ButtonAccept.Height - 20;
-    ButtonAccept.ModalResult := mrOk;
-
-    // Afficher le formulaire
-    if PolicyForm.ShowModal = mrOk then
-      MarkCurrentVersionAsViewed;
-  finally
-    PolicyForm.Free;
-  end;
-end;
-
-end.
-```
-
-#### Utilisation de l'afficheur de politique de confidentialité
-
-```pas
-procedure TMainForm.CheckPrivacyPolicy;
-var
-  PrivacyViewer: TPrivacyPolicyViewer;
-begin
-  PrivacyViewer := TPrivacyPolicyViewer.Create(
-    TPath.Combine(ExtractFilePath(Application.ExeName), 'privacy_policy.txt')
-  );
-  try
-    // Vérifier si l'utilisateur a vu la dernière version
-    if not PrivacyViewer.HasUserViewedLatestPolicy then
-    begin
-      ShowMessage(
-        'Notre politique de confidentialité a été mise à jour. ' +
-        'Veuillez la consulter avant de continuer.'
-      );
-
-      PrivacyViewer.ShowPrivacyPolicyDialog(Self);
-    end;
-  finally
-    PrivacyViewer.Free;
-  end;
-end;
-```
-
-### 4. Mise en œuvre du droit d'accès et de suppression
-
-Les utilisateurs doivent pouvoir accéder à leurs données et les supprimer s'ils le souhaitent.
-
-#### Exemple : Interface pour l'exportation et la suppression des données
-
-```pas
-unit UserDataManagement;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils;
-
-type
-  TUserDataManager = class
-  private
-    FUserID: Integer;
-    FDataFolderPath: string;
-  public
-    constructor Create(UserID: Integer; const DataFolderPath: string);
-
-    // Exporter toutes les données d'un utilisateur au format JSON
-    function ExportUserData: TJSONObject;
-
-    // Sauvegarder les données exportées dans un fichier
-    procedure SaveExportedDataToFile(const FileName: string);
-
-    // Supprimer définitivement toutes les données d'un utilisateur
-    function DeleteUserData: Boolean;
-
-    // Anonymiser les données d'un utilisateur (alternative à la suppression)
-    function AnonymizeUserData: Boolean;
-  end;
-
-implementation
-
-constructor TUserDataManager.Create(UserID: Integer; const DataFolderPath: string);
-begin
-  inherited Create;
-  FUserID := UserID;
-  FDataFolderPath := DataFolderPath;
-end;
-
-function TUserDataManager.ExportUserData: TJSONObject;
-var
-  UserProfile, UserPreferences, UserActivities: TJSONObject;
-  Activities: TJSONArray;
-begin
-  Result := TJSONObject.Create;
-
-  // Récupérer les données du profil utilisateur
-  UserProfile := GetUserProfile(FUserID);
-  Result.AddPair('profile', UserProfile);
-
-  // Récupérer les préférences utilisateur
-  UserPreferences := GetUserPreferences(FUserID);
-  Result.AddPair('preferences', UserPreferences);
-
-  // Récupérer l'historique des activités
-  Activities := GetUserActivitiesHistory(FUserID);
-  Result.AddPair('activities', Activities);
-
-  // Ajouter des métadonnées d'exportation
-  Result.AddPair('export_date', DateToISO8601(Now));
-  Result.AddPair('export_version', '1.0');
-end;
-
-procedure TUserDataManager.SaveExportedDataToFile(const FileName: string);
-var
-  UserData: TJSONObject;
-  JsonString: string;
-begin
-  UserData := ExportUserData;
-  try
-    JsonString := UserData.ToString;
-
-    // Créer le dossier de destination si nécessaire
-    ForceDirectories(ExtractFilePath(FileName));
-
-    // Écrire les données dans le fichier
-    TFile.WriteAllText(FileName, JsonString);
-  finally
-    UserData.Free;
-  end;
-end;
-
-function TUserDataManager.DeleteUserData: Boolean;
-begin
-  Result := False;
-
-  try
-    // Supprimer les données du profil
-    if not DeleteUserProfile(FUserID) then
-      Exit;
-
-    // Supprimer les préférences
-    if not DeleteUserPreferences(FUserID) then
-      Exit;
-
-    // Supprimer l'historique des activités
-    if not DeleteUserActivities(FUserID) then
-      Exit;
-
-    // Supprimer le compte utilisateur lui-même
-    if not DeleteUserAccount(FUserID) then
-      Exit;
-
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      LogError('Erreur lors de la suppression des données : ' + E.Message);
-      Result := False;
-    end;
-  end;
-end;
-
-function TUserDataManager.AnonymizeUserData: Boolean;
-var
-  AnonymousID: string;
-begin
-  Result := False;
-
-  try
-    // Générer un identifiant anonyme
-    AnonymousID := 'ANON-' + FormatDateTime('yyyymmddhhnnss', Now) +
-                   '-' + IntToStr(Random(1000));
-
-    // Anonymiser les données du profil
-    if not AnonymizeUserProfile(FUserID, AnonymousID) then
-      Exit;
-
-    // Anonymiser ou supprimer les données sensibles
-    if not AnonymizeSensitiveData(FUserID) then
-      Exit;
-
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      LogError('Erreur lors de l''anonymisation des données : ' + E.Message);
-      Result := False;
-    end;
-  end;
-end;
-
-end.
-```
-
-#### Exemple : Interface utilisateur pour la gestion des données personnelles
-
-```pas
-procedure TPrivacySettingsForm.ButtonExportDataClick(Sender: TObject);
-var
-  DataManager: TUserDataManager;
-  SaveDialog: TSaveDialog;
-begin
-  DataManager := TUserDataManager.Create(
-    CurrentUser.ID,
-    TPath.Combine(TPath.GetDocumentsPath, 'MyApp')
-  );
-  SaveDialog := TSaveDialog.Create(nil);
-
-  try
-    SaveDialog.Title := 'Exporter mes données';
-    SaveDialog.DefaultExt := 'json';
-    SaveDialog.Filter := 'Fichiers JSON (*.json)|*.json';
-    SaveDialog.FileName := 'mes_donnees_' + FormatDateTime('yyyymmdd', Now) + '.json';
-
-    if SaveDialog.Execute then
-    begin
-      Screen.Cursor := crHourGlass;
-      try
-        DataManager.SaveExportedDataToFile(SaveDialog.FileName);
-        ShowMessage('Vos données ont été exportées avec succès.');
-      finally
-        Screen.Cursor := crDefault;
-      end;
-    end;
-  finally
-    SaveDialog.Free;
-    DataManager.Free;
-  end;
-end;
-
-```pas
-procedure TPrivacySettingsForm.ButtonDeleteAccountClick(Sender: TObject);
-var
-  DataManager: TUserDataManager;
-  ConfirmForm: TForm;
-  MemoWarning: TMemo;
-  EditConfirm: TEdit;
-  ButtonConfirm, ButtonCancel: TButton;
-  ConfirmText: string;
-begin
-  // Créer un formulaire de confirmation
-  ConfirmForm := TForm.Create(nil);
-  try
-    ConfirmForm.Caption := 'Confirmation de suppression';
-    ConfirmForm.Position := poScreenCenter;
-    ConfirmForm.BorderStyle := bsDialog;
-    ConfirmForm.Width := 450;
-    ConfirmForm.Height := 250;
-
-    // Avertissement
-    MemoWarning := TMemo.Create(ConfirmForm);
-    MemoWarning.Parent := ConfirmForm;
-    MemoWarning.Top := 20;
-    MemoWarning.Left := 20;
-    MemoWarning.Width := 410;
-    MemoWarning.Height := 100;
-    MemoWarning.ReadOnly := True;
-    MemoWarning.Lines.Text :=
-      'ATTENTION : Vous êtes sur le point de supprimer définitivement votre compte ' +
-      'et toutes vos données personnelles. Cette action ne peut pas être annulée.' + sLineBreak + sLineBreak +
-      'Pour confirmer, veuillez saisir "SUPPRIMER" dans le champ ci-dessous.';
-
-    // Champ de confirmation
-    EditConfirm := TEdit.Create(ConfirmForm);
-    EditConfirm.Parent := ConfirmForm;
-    EditConfirm.Top := 140;
-    EditConfirm.Left := 20;
-    EditConfirm.Width := 410;
-
-    // Boutons
-    ButtonConfirm := TButton.Create(ConfirmForm);
-    ButtonConfirm.Parent := ConfirmForm;
-    ButtonConfirm.Caption := 'Supprimer définitivement';
-    ButtonConfirm.Top := 180;
-    ButtonConfirm.Left := 230;
-    ButtonConfirm.Width := 200;
-    ButtonConfirm.ModalResult := mrNone;
-    ButtonConfirm.OnClick := procedure(Sender: TObject)
-    begin
-      if EditConfirm.Text = 'SUPPRIMER' then
-        ConfirmForm.ModalResult := mrOk
-      else
-        ShowMessage('Veuillez saisir "SUPPRIMER" pour confirmer.');
-    end;
-
-    ButtonCancel := TButton.Create(ConfirmForm);
-    ButtonCancel.Parent := ConfirmForm;
-    ButtonCancel.Caption := 'Annuler';
-    ButtonCancel.Top := 180;
-    ButtonCancel.Left := 20;
-    ButtonCancel.Width := 120;
-    ButtonCancel.ModalResult := mrCancel;
-
-    // Afficher le formulaire de confirmation
-    if ConfirmForm.ShowModal = mrOk then
-    begin
-      // Procéder à la suppression du compte
-      DataManager := TUserDataManager.Create(
-        CurrentUser.ID,
-        TPath.Combine(TPath.GetDocumentsPath, 'MyApp')
-      );
-      try
-        Screen.Cursor := crHourGlass;
-
-        if DataManager.DeleteUserData then
-        begin
-          ShowMessage('Votre compte et toutes vos données ont été supprimés.');
-
-          // Déconnecter l'utilisateur
-          UserSession.Logout;
-
-          // Fermer le formulaire des paramètres
-          ModalResult := mrOk;
-        end
-        else
-          ShowMessage('Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer.');
-      finally
-        Screen.Cursor := crDefault;
-        DataManager.Free;
-      end;
-    end;
-  finally
-    ConfirmForm.Free;
-  end;
-end;
-
-procedure TPrivacySettingsForm.ButtonAnonymizeClick(Sender: TObject);
-var
-  DataManager: TUserDataManager;
-begin
-  if MessageDlg(
-    'Cette action va anonymiser vos données personnelles tout en conservant votre compte. ' +
-    'Vos nom, adresse, email et autres informations personnelles seront remplacés par des valeurs anonymes. ' +
-    'Voulez-vous continuer ?',
-    mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-  begin
-    DataManager := TUserDataManager.Create(
-      CurrentUser.ID,
-      TPath.Combine(TPath.GetDocumentsPath, 'MyApp')
-    );
-    try
-      Screen.Cursor := crHourGlass;
-
-      if DataManager.AnonymizeUserData then
-      begin
-        ShowMessage('Vos données personnelles ont été anonymisées avec succès.');
-
-        // Recharger les informations utilisateur
-        RefreshUserProfile;
-      end
-      else
-        ShowMessage('Une erreur est survenue lors de l''anonymisation de vos données. Veuillez réessayer.');
-    finally
-      Screen.Cursor := crDefault;
-      DataManager.Free;
-    end;
-  end;
-end;
-```
-
-### 5. Mise en œuvre du droit à la portabilité des données
-
-Le droit à la portabilité permet aux utilisateurs d'obtenir leurs données dans un format standard qu'ils peuvent réutiliser avec d'autres services.
-
-#### Exemple : Exportation de données dans différents formats
-
-```pas
-unit DataExporter;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils,
-  System.Generics.Collections;
-
-type
-  TExportFormat = (efJSON, efCSV, efXML);
-
-  TDataExporter = class
-  private
-    FUserID: Integer;
-
-    function ExportToJSON: TStream;
-    function ExportToCSV: TStream;
-    function ExportToXML: TStream;
-
-    function GetUserData: TJSONObject;
-  public
-    constructor Create(UserID: Integer);
-
-    // Exporter les données dans le format spécifié
-    function ExportData(Format: TExportFormat): TStream;
-
-    // Sauvegarder les données dans un fichier
-    procedure SaveToFile(const FileName: string; Format: TExportFormat);
-  end;
-
-implementation
-
-constructor TDataExporter.Create(UserID: Integer);
-begin
-  inherited Create;
-  FUserID := UserID;
-end;
-
-function TDataExporter.GetUserData: TJSONObject;
-var
-  UserManager: TUserManager;
-  UserProfile: TUserProfile;
-begin
-  Result := TJSONObject.Create;
-
-  // Obtenir les données de l'utilisateur
-  UserManager := TUserManager.Create;
-  try
-    UserProfile := UserManager.GetUserProfile(FUserID);
-
-    // Créer l'objet JSON avec les données de l'utilisateur
-    Result.AddPair('id', TJSONNumber.Create(FUserID));
-    Result.AddPair('username', UserProfile.Username);
-    Result.AddPair('email', UserProfile.Email);
-
-    if UserProfile.FullName <> '' then
-      Result.AddPair('full_name', UserProfile.FullName);
-
-    if UserProfile.PhoneNumber <> '' then
-      Result.AddPair('phone', UserProfile.PhoneNumber);
-
-    if UserProfile.Address <> '' then
-      Result.AddPair('address', UserProfile.Address);
-
-    // Ajouter d'autres données...
-  finally
-    UserManager.Free;
-  end;
-end;
-
-function TDataExporter.ExportToJSON: TStream;
-var
-  UserData: TJSONObject;
-  JsonString: string;
-begin
-  Result := TMemoryStream.Create;
-
-  UserData := GetUserData;
-  try
-    JsonString := UserData.Format(True); // Format avec indentation
-
-    // Écrire dans le stream
-    var Writer := TStreamWriter.Create(Result, TEncoding.UTF8);
-    try
-      Writer.Write(JsonString);
-      Writer.Flush;
-      Result.Position := 0; // Réinitialiser la position pour la lecture
-    finally
-      Writer.Free;
-    end;
-  finally
-    UserData.Free;
-  end;
-end;
-
-function TDataExporter.ExportToCSV: TStream;
-var
-  UserData: TJSONObject;
-  CSV: TStringList;
-  Headers: TStringList;
-  Values: TStringList;
-  Pair: TJSONPair;
-begin
-  Result := TMemoryStream.Create;
-
-  UserData := GetUserData;
-  try
-    CSV := TStringList.Create;
-    Headers := TStringList.Create;
-    Values := TStringList.Create;
-
-    try
-      // Créer les en-têtes et les valeurs
-      for Pair in UserData do
-      begin
-        Headers.Add(Pair.JsonString.Value);
-
-        if Pair.JsonValue is TJSONNumber then
-          Values.Add(TJSONNumber(Pair.JsonValue).ToString)
-        else if Pair.JsonValue is TJSONString then
-          Values.Add('"' + StringReplace(Pair.JsonValue.Value, '"', '""', [rfReplaceAll]) + '"')
-        else if Pair.JsonValue is TJSONBool then
-          Values.Add(LowerCase(BoolToStr(TJSONBool(Pair.JsonValue).AsBoolean, True)))
-        else
-          Values.Add('');
-      end;
-
-      // Ajouter les en-têtes et les valeurs au CSV
-      CSV.Add(String.Join(',', Headers.ToStringArray));
-      CSV.Add(String.Join(',', Values.ToStringArray));
-
-      // Écrire dans le stream
-      CSV.SaveToStream(Result);
-      Result.Position := 0; // Réinitialiser la position pour la lecture
-    finally
-      CSV.Free;
-      Headers.Free;
-      Values.Free;
-    end;
-  finally
-    UserData.Free;
-  end;
-end;
-
-function TDataExporter.ExportToXML: TStream;
-var
-  UserData: TJSONObject;
-  XML: TStringList;
-  Pair: TJSONPair;
-
-  function EscapeXML(const S: string): string;
-  begin
-    Result := StringReplace(S, '&', '&amp;', [rfReplaceAll]);
-    Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
-    Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
-    Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
-    Result := StringReplace(Result, '''', '&apos;', [rfReplaceAll]);
-  end;
-
-begin
-  Result := TMemoryStream.Create;
-
-  UserData := GetUserData;
-  try
-    XML := TStringList.Create;
-    try
-      // Ajouter l'en-tête XML
-      XML.Add('<?xml version="1.0" encoding="UTF-8"?>');
-      XML.Add('<user>');
-
-      // Ajouter les données utilisateur
-      for Pair in UserData do
-      begin
-        var TagName := Pair.JsonString.Value;
-
-        if Pair.JsonValue is TJSONNumber then
-          XML.Add('  <' + TagName + '>' + TJSONNumber(Pair.JsonValue).ToString + '</' + TagName + '>')
-        else if Pair.JsonValue is TJSONString then
-          XML.Add('  <' + TagName + '>' + EscapeXML(Pair.JsonValue.Value) + '</' + TagName + '>')
-        else if Pair.JsonValue is TJSONBool then
-          XML.Add('  <' + TagName + '>' + LowerCase(BoolToStr(TJSONBool(Pair.JsonValue).AsBoolean, True)) + '</' + TagName + '>')
-        else
-          XML.Add('  <' + TagName + '></' + TagName + '>');
-      end;
-
-      // Fermer la balise racine
-      XML.Add('</user>');
-
-      // Écrire dans le stream
-      XML.SaveToStream(Result);
-      Result.Position := 0; // Réinitialiser la position pour la lecture
-    finally
-      XML.Free;
-    end;
-  finally
-    UserData.Free;
-  end;
-end;
-
-function TDataExporter.ExportData(Format: TExportFormat): TStream;
-begin
-  case Format of
-    efJSON: Result := ExportToJSON;
-    efCSV: Result := ExportToCSV;
-    efXML: Result := ExportToXML;
-  else
-    Result := ExportToJSON; // Par défaut, utiliser JSON
-  end;
-end;
-
-procedure TDataExporter.SaveToFile(const FileName: string; Format: TExportFormat);
-var
-  Stream: TStream;
-begin
-  Stream := ExportData(Format);
-  try
-    // Créer le dossier si nécessaire
-    ForceDirectories(ExtractFilePath(FileName));
-
-    // Sauvegarder le stream dans un fichier
-    with TFileStream.Create(FileName, fmCreate) do
-    try
-      CopyFrom(Stream, 0);
-    finally
-      Free;
-    end;
-  finally
-    Stream.Free;
-  end;
-end;
-
-end.
-```
-
-#### Interface utilisateur pour l'exportation des données
-
-```pas
-procedure TDataExportForm.ButtonExportClick(Sender: TObject);
-var
-  Exporter: TDataExporter;
-  SaveDialog: TSaveDialog;
-  Format: TExportFormat;
-  FileExt, FileFilter: string;
-begin
-  // Déterminer le format d'exportation sélectionné
-  if RadioButtonJSON.Checked then
-  begin
-    Format := efJSON;
-    FileExt := '.json';
-    FileFilter := 'Fichiers JSON (*.json)|*.json';
-  end
-  else if RadioButtonCSV.Checked then
-  begin
-    Format := efCSV;
-    FileExt := '.csv';
-    FileFilter := 'Fichiers CSV (*.csv)|*.csv';
-  end
-  else if RadioButtonXML.Checked then
-  begin
-    Format := efXML;
-    FileExt := '.xml';
-    FileFilter := 'Fichiers XML (*.xml)|*.xml';
-  end
-  else
-  begin
-    ShowMessage('Veuillez sélectionner un format d''exportation.');
-    Exit;
-  end;
-
-  // Créer le dialogue de sauvegarde
-  SaveDialog := TSaveDialog.Create(nil);
-  try
-    SaveDialog.Title := 'Exporter mes données';
-    SaveDialog.DefaultExt := FileExt;
-    SaveDialog.Filter := FileFilter;
-    SaveDialog.FileName := 'mes_donnees_' + FormatDateTime('yyyymmdd', Now) + FileExt;
-
-    if SaveDialog.Execute then
-    begin
-      // Créer l'exportateur
-      Exporter := TDataExporter.Create(CurrentUser.ID);
-      try
-        Screen.Cursor := crHourGlass;
-
-        // Exporter les données
-        Exporter.SaveToFile(SaveDialog.FileName, Format);
-
-        ShowMessage('Vos données ont été exportées avec succès vers ' + SaveDialog.FileName);
-      finally
-        Screen.Cursor := crDefault;
-        Exporter.Free;
-      end;
-    end;
-  finally
-    SaveDialog.Free;
-  end;
-end;
-```
-
-### 6. Sécurité des données
-
-La sécurité est un aspect fondamental du GDPR. Vous devez mettre en place des mesures techniques appropriées pour protéger les données personnelles.
-
-#### Exemple : Journalisation des accès aux données personnelles
-
-```pas
-unit DataAccessLogger;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.DateUtils, System.IOUtils,
-  System.Generics.Collections;
-
-type
-  TAccessType = (atView, atCreate, atUpdate, atDelete, atExport);
-
-  TDataAccessEntry = record
-    Timestamp: TDateTime;
-    UserID: Integer;
-    TargetUserID: Integer;
-    AccessType: TAccessType;
-    DataCategory: string;
-    IPAddress: string;
-    AdditionalInfo: string;
-  end;
-
-  TDataAccessLogger = class
-  private
-    FLogPath: string;
-    FRetentionDays: Integer;
-
-    function AccessTypeToString(AccessType: TAccessType): string;
-    function FormatLogEntry(const Entry: TDataAccessEntry): string;
-  public
-    constructor Create(const LogPath: string; RetentionDays: Integer = 365);
-
-    // Consigner un accès aux données
-    procedure LogAccess(
-      UserID, TargetUserID: Integer;
-      AccessType: TAccessType;
-      const DataCategory, IPAddress, AdditionalInfo: string = ''
-    );
-
-    // Récupérer l'historique des accès pour un utilisateur
-    function GetAccessHistory(TargetUserID: Integer): TArray<TDataAccessEntry>;
-
-    // Nettoyer les journaux anciens (selon la politique de rétention)
-    procedure CleanupOldLogs;
-  end;
-
-implementation
-
-constructor TDataAccessLogger.Create(const LogPath: string; RetentionDays: Integer);
-begin
-  inherited Create;
-  FLogPath := LogPath;
-  FRetentionDays := RetentionDays;
-
-  // Créer le dossier de journalisation si nécessaire
-  if not DirectoryExists(FLogPath) then
-    ForceDirectories(FLogPath);
-end;
-
-function TDataAccessLogger.AccessTypeToString(AccessType: TAccessType): string;
-begin
-  case AccessType of
-    atView: Result := 'VIEW';
-    atCreate: Result := 'CREATE';
-    atUpdate: Result := 'UPDATE';
-    atDelete: Result := 'DELETE';
-    atExport: Result := 'EXPORT';
-  else
-    Result := 'UNKNOWN';
-  end;
-end;
-
-function TDataAccessLogger.FormatLogEntry(const Entry: TDataAccessEntry): string;
-begin
-  // Format: timestamp|user_id|target_user_id|access_type|data_category|ip_address|additional_info
-  Result := Format('%s|%d|%d|%s|%s|%s|%s',
-    [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Entry.Timestamp),
-     Entry.UserID,
-     Entry.TargetUserID,
-     AccessTypeToString(Entry.AccessType),
-     Entry.DataCategory,
-     Entry.IPAddress,
-     Entry.AdditionalInfo]);
-end;
-
-procedure TDataAccessLogger.LogAccess(
-  UserID, TargetUserID: Integer;
-  AccessType: TAccessType;
-  const DataCategory, IPAddress, AdditionalInfo: string);
-var
-  Entry: TDataAccessEntry;
-  LogFile: TextFile;
-  LogFileName: string;
-begin
-  // Préparer l'entrée de journal
-  Entry.Timestamp := Now;
-  Entry.UserID := UserID;
-  Entry.TargetUserID := TargetUserID;
-  Entry.AccessType := AccessType;
-  Entry.DataCategory := DataCategory;
-  Entry.IPAddress := IPAddress;
-  Entry.AdditionalInfo := AdditionalInfo;
-
-  // Déterminer le nom du fichier journal (un fichier par jour)
-  LogFileName := TPath.Combine(FLogPath,
-                              'data_access_' + FormatDateTime('yyyymmdd', Now) + '.log');
-
-  // Écrire dans le fichier journal
-  AssignFile(LogFile, LogFileName);
-  try
-    if FileExists(LogFileName) then
-      Append(LogFile)
-    else
-      Rewrite(LogFile);
-
-    WriteLn(LogFile, FormatLogEntry(Entry));
-  finally
-    CloseFile(LogFile);
-  end;
-end;
-
-function TDataAccessLogger.GetAccessHistory(TargetUserID: Integer): TArray<TDataAccessEntry>;
-var
-  LogFiles: TStringDynArray;
-  LogFile: string;
-  Lines: TStringList;
-  I: Integer;
-  Line, Parts: TArray<string>;
-  Entry: TDataAccessEntry;
-  Result: TList<TDataAccessEntry>;
-begin
-  Result := TList<TDataAccessEntry>.Create;
-  try
-    // Trouver tous les fichiers journaux
-    LogFiles := TDirectory.GetFiles(FLogPath, 'data_access_*.log');
-
-    // Parcourir chaque fichier journal
-    for LogFile in LogFiles do
-    begin
-      Lines := TStringList.Create;
-      try
-        Lines.LoadFromFile(LogFile);
-
-        // Parcourir chaque ligne
-        for I := 0 to Lines.Count - 1 do
-        begin
-          // Découper la ligne en parties
-          Parts := Lines[I].Split(['|']);
-
-          // Vérifier si cette entrée concerne l'utilisateur cible
-          if (Length(Parts) >= 3) and (StrToIntDef(Parts[2], -1) = TargetUserID) then
-          begin
-            // Analyser l'entrée
-            Entry.Timestamp := StrToDateTimeDef(Parts[0], 0);
-            Entry.UserID := StrToIntDef(Parts[1], 0);
-            Entry.TargetUserID := TargetUserID;
-
-            // Déterminer le type d'accès
-            if Parts[3] = 'VIEW' then Entry.AccessType := atView
-            else if Parts[3] = 'CREATE' then Entry.AccessType := atCreate
-            else if Parts[3] = 'UPDATE' then Entry.AccessType := atUpdate
-            else if Parts[3] = 'DELETE' then Entry.AccessType := atDelete
-            else if Parts[3] = 'EXPORT' then Entry.AccessType := atExport
-            else Entry.AccessType := atView; // Par défaut
-
-            // Compléter les autres champs
-            if Length(Parts) > 4 then Entry.DataCategory := Parts[4] else Entry.DataCategory := '';
-            if Length(Parts) > 5 then Entry.IPAddress := Parts[5] else Entry.IPAddress := '';
-            if Length(Parts) > 6 then Entry.AdditionalInfo := Parts[6] else Entry.AdditionalInfo := '';
-
-            // Ajouter à la liste des résultats
-            Result.Add(Entry);
-          end;
-        end;
-      finally
-        Lines.Free;
-      end;
-    end;
-
-    // Trier par date (du plus récent au plus ancien)
-    Result.Sort(TComparer<TDataAccessEntry>.Construct(
-      function(const Left, Right: TDataAccessEntry): Integer
-      begin
-        Result := CompareDateTime(Right.Timestamp, Left.Timestamp);
-      end));
-
-    SetLength(Result, Result.Count);
-
-    // Transférer les données dans le résultat final
-    for I := 0 to Result.Count - 1 do
-      Result[I] := Result.List[I];
-  finally
-    Result.Free;
-  end;
-end;
-
-procedure TDataAccessLogger.CleanupOldLogs;
-var
-  LogFiles: TStringDynArray;
-  LogFile: string;
-  FileDate: TDateTime;
-  Threshold: TDateTime;
-begin
-  // Calculer la date seuil
-  Threshold := IncDay(Now, -FRetentionDays);
-
-  // Trouver tous les fichiers journaux
-  LogFiles := TDirectory.GetFiles(FLogPath, 'data_access_*.log');
-
-  // Vérifier chaque fichier
-  for LogFile in LogFiles do
-  begin
-    // Extraire la date du nom de fichier
-    if TryStrToDate(Copy(ExtractFileName(LogFile), 12, 8), FileDate,
-                   TFormatSettings.Create('en-US')) then
-    begin
-      // Supprimer si plus ancien que le seuil
-      if FileDate < Threshold then
-        DeleteFile(LogFile);
-    end;
-  end;
-end;
-
-end.
-```
-
-#### Utilisation du journal d'accès aux données
-
-```pas
-procedure TUserProfileManager.ViewUserProfile(UserID, ViewerID: Integer);
-var
-  AccessLogger: TDataAccessLogger;
-  IPAddress: string;
-begin
-  // Vérifier les autorisations
-  if not CanUserViewProfile(ViewerID, UserID) then
-    raise Exception.Create('Accès non autorisé');
-
-  // Obtenir l'adresse IP (dans une application web)
-  IPAddress := GetClientIP;
-
-  // Journaliser l'accès
-  AccessLogger := TDataAccessLogger.Create(
-    TPath.Combine(ApplicationDataPath, 'logs')
-  );
-  try
-    AccessLogger.LogAccess(
-      ViewerID,
-      UserID,
-      atView,
-      'user_profile',
-      IPAddress
-    );
-  finally
-    AccessLogger.Free;
-  end;
-
-  // Continuer avec l'affichage du profil...
-end;
-```
-
-### 7. Mise en œuvre d'une politique de conservation des données
-
-Le GDPR exige que les données personnelles ne soient pas conservées plus longtemps que nécessaire.
-
-#### Exemple : Gestionnaire de rétention des données
-
-```pas
-unit DataRetentionManager;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.DateUtils, System.Generics.Collections;
-
-type
-  TDataCategory = (dcUserProfile, dcActivityLogs, dcMessages, dcPaymentInfo);
-
-  TRetentionPolicy = record
-    Category: TDataCategory;
-    RetentionDays: Integer;
-    AnonymizeAfterRetention: Boolean;
-  end;
-
-  TDataRetentionManager = class
-  private
-    FPolicies: TDictionary<TDataCategory, TRetentionPolicy>;
-    FDatabaseConnection: TObject; // Remplacer par votre connexion de base de données
-
-    function CategoryToString(Category: TDataCategory): string;
-  public
-    constructor Create(DatabaseConnection: TObject);
-    destructor Destroy; override;
-
-    // Définir une politique de rétention
-    procedure SetRetentionPolicy(
-      Category: TDataCategory;
-      RetentionDays: Integer;
-      AnonymizeAfterRetention: Boolean = False
-    );
-
-    // Appliquer les politiques de rétention
-    procedure ApplyRetentionPolicies;
-
-    // Vérifier si des données spécifiques devraient être conservées
-    function ShouldRetainData(
-      Category: TDataCategory;
-      CreationDate: TDateTime
-    ): Boolean;
-  end;
-
-implementation
-
-constructor TDataRetentionManager.Create(DatabaseConnection: TObject);
-begin
-  inherited Create;
-  FDatabaseConnection := DatabaseConnection;
-  FPolicies := TDictionary<TDataCategory, TRetentionPolicy>.Create;
-
-  // Définir des politiques par défaut
-  SetRetentionPolicy(dcUserProfile, 365 * 5); // 5 ans
-  SetRetentionPolicy(dcActivityLogs, 365); // 1 an
-  SetRetentionPolicy(dcMessages, 365 * 2); // 2 ans
-  SetRetentionPolicy(dcPaymentInfo, 365 * 7, True); // 7 ans, puis anonymiser
-end;
-
-destructor TDataRetentionManager.Destroy;
-begin
-  FPolicies.Free;
-  inherited;
-end;
-
-function TDataRetentionManager.CategoryToString(Category: TDataCategory): string;
-begin
-  case Category of
-    dcUserProfile: Result := 'user_profiles';
-    dcActivityLogs: Result := 'activity_logs';
-    dcMessages: Result := 'messages';
-    dcPaymentInfo: Result := 'payment_info';
-  else
-    Result := '';
-  end;
-end;
-
-procedure TDataRetentionManager.SetRetentionPolicy(
-  Category: TDataCategory;
-  RetentionDays: Integer;
-  AnonymizeAfterRetention: Boolean);
-var
-  Policy: TRetentionPolicy;
-begin
-  Policy.Category := Category;
-  Policy.RetentionDays := RetentionDays;
-  Policy.AnonymizeAfterRetention := AnonymizeAfterRetention;
-
-  FPolicies.AddOrSetValue(Category, Policy);
-end;
-
-function TDataRetentionManager.ShouldRetainData(
-  Category: TDataCategory;
-  CreationDate: TDateTime): Boolean;
-var
-  Policy: TRetentionPolicy;
-  Threshold: TDateTime;
-begin
-  // Par défaut, conserver les données
-  Result := True;
-
-  // Vérifier si une politique existe pour cette catégorie
-  if FPolicies.TryGetValue(Category, Policy) then
-  begin
-    // Calculer la date seuil
-    Threshold := IncDay(Now, -Policy.RetentionDays);
-
-    // Comparer avec la date de création
-    Result := CreationDate >= Threshold;
-  end;
-end;
-
-procedure TDataRetentionManager.ApplyRetentionPolicies;
-var
-  Pair: TPair<TDataCategory, TRetentionPolicy>;
-  TableName: string;
-  Query: TSQLQuery; // Remplacer par votre type de requête
-  Threshold: TDateTime;
-begin
-  LogMessage('Début de l''application des politiques de rétention...');
-
-  // Parcourir toutes les politiques
-  for Pair in FPolicies do
-  begin
-    TableName := CategoryToString(Pair.Key);
-    if TableName = '' then
-      Continue;
-
-    // Calculer la date seuil
-    Threshold := IncDay(Now, -Pair.Value.RetentionDays);
-
-    // Créer une requête
-    Query := TSQLQuery.Create(nil); // Remplacer par votre création de requête
-    try
-      // Configurer la connexion à la base de données
-      // Configuration spécifique à votre système...
-
-      if Pair.Value.AnonymizeAfterRetention then
-      begin
-        // Anonymiser les données anciennes
-        Query.SQL.Text := Format(
-          'UPDATE %s SET anonymized = TRUE, ' +
-          'personal_data = NULL, ' +
-          'identifier = CONCAT(''ANON-'', id) ' +
-          'WHERE created_at < :threshold AND anonymized = FALSE',
-          [TableName]
-        );
-      end
-      else
-      begin
-        // Supprimer les données anciennes
-        Query.SQL.Text := Format(
-          'DELETE FROM %s WHERE created_at < :threshold',
-          [TableName]
-        );
-      end;
-
-      // Définir le paramètre de seuil
-      Query.ParamByName('threshold').AsDateTime := Threshold;
-
-      // Exécuter la requête
-      Query.ExecSQL;
-
-      LogMessage(Format(
-        'Politique de rétention appliquée pour %s: %d enregistrements traités',
-        [TableName, Query.RowsAffected]
-      ));
-    finally
-      Query.Free;
-    end;
-  end;
-
-  LogMessage('Application des politiques de rétention terminée.');
-end;
-
-end.
-```
-
-#### Planification de l'application des politiques de rétention
-
-```pas
-procedure ScheduleRetentionPolicyTask;
-var
-  Task: TTask;
-begin
-  // Créer une tâche planifiée pour appliquer les politiques de rétention
-  Task := TTask.Create(
-    'RetentionPolicy',
-    'Applique les politiques de rétention des données',
-    ttDaily,
-    3, 0, 0  // 3h00 du matin
-  );
-
-  // Configurer la commande à exécuter
-  Task.Command := Application.ExeName;
-  Task.Parameters := '--apply-retention-policies';
-
-  // Planifier la tâche
-  ScheduleManager.AddTask(Task);
-end;
-
-procedure TMyApplication.ApplyRetentionPolicies;
-var
-  RetentionManager: TDataRetentionManager;
-begin
-  // Créer le gestionnaire de rétention
-  RetentionManager := TDataRetentionManager.Create(DBConnection);
-  try
-    // Appliquer les politiques
-    RetentionManager.ApplyRetentionPolicies;
-
-    // Journaliser l'exécution
-    LogMessage(
-      'Les politiques de rétention ont été appliquées avec succès le ' +
-      FormatDateTime('yyyy-mm-dd hh:nn:ss', Now)
-    );
-  finally
-    RetentionManager.Free;
-  end;
-end;
-```
-
-### 8. Interfaces pour les droits des utilisateurs liés au GDPR
-
-Voici un formulaire complet qui intègre les différentes fonctionnalités liées aux droits des utilisateurs sous le GDPR :
-
-```pas
-unit GDPRRightsForm;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.ComCtrls, System.UITypes, System.IOUtils;
-
-type
-  TFormGDPRRights = class(TForm)
-    PageControl1: TPageControl;
-    TabSheetOverview: TTabSheet;
-    TabSheetAccess: TTabSheet;
-    TabSheetExport: TTabSheet;
-    TabSheetDelete: TTabSheet;
-    PanelBottom: TPanel;
-    ButtonClose: TButton;
-    MemoOverview: TMemo;
-    GroupBoxAccess: TGroupBox;
-    ListViewUserData: TListView;
-    ButtonRefreshData: TButton;
-    GroupBoxExport: TGroupBox;
-    RadioButtonJSON: TRadioButton;
-    RadioButtonCSV: TRadioButton;
-    RadioButtonXML: TRadioButton;
-    ButtonExportData: TButton;
-    GroupBoxDelete: TGroupBox;
-    RadioButtonAnonymize: TRadioButton;
-    RadioButtonFullDelete: TRadioButton;
-    MemoDeleteWarning: TMemo;
-    ButtonProcessDeletion: TButton;
-    LabelLastAccess: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonRefreshDataClick(Sender: TObject);
-    procedure ButtonExportDataClick(Sender: TObject);
-    procedure ButtonProcessDeletionClick(Sender: TObject);
-    procedure ButtonCloseClick(Sender: TObject);
-  private
-    procedure LoadUserData;
-    procedure ShowDataAccessLog;
-    function ConfirmDeletion: Boolean;
-  end;
-
-var
-  FormGDPRRights: TFormGDPRRights;
-
-implementation
-
-{$R *.dfm}
-
-uses
-  DataExporter, DataAccessLogger, UserDataManagement;
-
-procedure TFormGDPRRights.FormCreate(Sender: TObject);
-begin
-  // Configurer le formulaire
-  Caption := 'Vos droits RGPD';
-  Position := poScreenCenter;
-  Width := 700;
-  Height := 500;
-
-  // Configurer les composants
-  PageControl1.ActivePage := TabSheetOverview;
-
-  // Texte explicatif
-  MemoOverview.Lines.Text :=
-    'Le Règlement Général sur la Protection des Données (RGPD / GDPR) vous donne ' +
-    'plusieurs droits concernant vos données personnelles :' + sLineBreak + sLineBreak +
-    '1. Droit d''accès : Vous pouvez consulter toutes les données que nous avons sur vous.' + sLineBreak +
-    '2. Droit à la portabilité : Vous pouvez exporter vos données dans un format standard.' + sLineBreak +
-    '3. Droit à l''effacement (droit à l''oubli) : Vous pouvez demander la suppression de vos données.' + sLineBreak + sLineBreak +
-    'Utilisez les onglets ci-dessus pour exercer ces droits.';
-
-  // Avertissement de suppression
-  MemoDeleteWarning.Lines.Text :=
-    'ATTENTION : ' + sLineBreak + sLineBreak +
-    'L''anonymisation rendra vos données non identifiables tout en préservant votre compte.' + sLineBreak + sLineBreak +
-    'La suppression complète effacera définitivement toutes vos données et votre compte. ' +
-    'Cette action est irréversible.';
-
-  // Charger les données utilisateur
-  LoadUserData;
-
-  // Afficher l'historique des accès
-  ShowDataAccessLog;
-end;
-
-procedure TFormGDPRRights.LoadUserData;
-var
-  ListView: TListView;
-  UserManager: TUserManager;
-  UserProfile: TUserProfile;
-  Activities: TArray<TUserActivity>;
-  Item: TListItem;
-  I: Integer;
-begin
-  ListView := ListViewUserData;
-  ListView.Clear;
-
-  // Configurer les colonnes
-  ListView.Columns.Clear;
-  with ListView.Columns.Add do
-  begin
-    Caption := 'Catégorie';
-    Width := 150;
-  end;
-  with ListView.Columns.Add do
-  begin
-    Caption := 'Information';
-    Width := 400;
-  end;
-
-  // Obtenir les données utilisateur
-  UserManager := TUserManager.Create;
-  try
-    UserProfile := UserManager.GetUserProfile(CurrentUser.ID);
-
-    // Ajouter les informations du profil
-    Item := ListView.Items.Add;
-    Item.Caption := 'Nom d''utilisateur';
-    Item.SubItems.Add(UserProfile.Username);
-
-    Item := ListView.Items.Add;
-    Item.Caption := 'Email';
-    Item.SubItems.Add(UserProfile.Email);
-
-    if UserProfile.FullName <> '' then
-    begin
-      Item := ListView.Items.Add;
-      Item.Caption := 'Nom complet';
-      Item.SubItems.Add(UserProfile.FullName);
-    end;
-
-    if UserProfile.PhoneNumber <> '' then
-    begin
-      Item := ListView.Items.Add;
-      Item.Caption := 'Téléphone';
-      Item.SubItems.Add(UserProfile.PhoneNumber);
-    end;
-
-    if UserProfile.Address <> '' then
-    begin
-      Item := ListView.Items.Add;
-      Item.Caption := 'Adresse';
-      Item.SubItems.Add(UserProfile.Address);
-    end;
-
-    // Ajouter les consentements donnés
-    Item := ListView.Items.Add;
-    Item.Caption := 'Consentements';
-    Item.SubItems.Add(GetUserConsentsDescription(CurrentUser.ID));
-
-    // Ajouter les activités récentes
-    Activities := UserManager.GetRecentActivities(CurrentUser.ID, 5);
-    if Length(Activities) > 0 then
-    begin
-      Item := ListView.Items.Add;
-      Item.Caption := 'Activités récentes';
-      Item.SubItems.Add(Format('%d activités récentes', [Length(Activities)]));
-
-      for I := 0 to High(Activities) do
-      begin
-        Item := ListView.Items.Add;
-        Item.Caption := '  - ' + FormatDateTime('dd/mm/yyyy hh:nn', Activities[I].Timestamp);
-        Item.SubItems.Add(Activities[I].Description);
-      end;
-    end;
-  finally
-    UserManager.Free;
-  end;
-end;
-
-procedure TFormGDPRRights.ShowDataAccessLog;
-var
-  AccessLogger: TDataAccessLogger;
-  AccessHistory: TArray<TDataAccessEntry>;
-  LastAccess: TDataAccessEntry;
-  AccessCount: Integer;
-begin
-  // Initialiser le logger
-  AccessLogger := TDataAccessLogger.Create(
-    TPath.Combine(ApplicationDataPath, 'logs')
-  );
-  try
-    // Obtenir l'historique des accès
-    AccessHistory := AccessLogger.GetAccessHistory(CurrentUser.ID);
-
-    // Afficher les informations
-    if Length(AccessHistory) > 0 then
-    begin
-      LastAccess := AccessHistory[0]; // Le plus récent en premier
-
-      // Compter les différents types d'accès
-      AccessCount := 0;
-      for var Access in AccessHistory do
-        if Access.AccessType = atView then
-          Inc(AccessCount);
-
-      LabelLastAccess.Caption := Format(
-        'Vos données ont été consultées %d fois au cours des 30 derniers jours. ' +
-        'Dernier accès le %s par %s.',
-        [AccessCount, FormatDateTime('dd/mm/yyyy à hh:nn', LastAccess.Timestamp),
-         GetUserNameFromID(LastAccess.UserID)]
-      );
-    end
-    else
-      LabelLastAccess.Caption := 'Aucun accès à vos données n''a été enregistré.';
-  finally
-    AccessLogger.Free;
-  end;
-end;
-
-procedure TFormGDPRRights.ButtonRefreshDataClick(Sender: TObject);
-begin
-  // Rafraîchir les données
-  Screen.Cursor := crHourGlass;
-  try
-    LoadUserData;
-    ShowDataAccessLog;
-    ShowMessage('Données actualisées avec succès.');
-  finally
-    Screen.Cursor := crDefault;
-  end;
-end;
-
-procedure TFormGDPRRights.ButtonExportDataClick(Sender: TObject);
-var
-  Exporter: TDataExporter;
-  SaveDialog: TSaveDialog;
-  Format: TExportFormat;
-  FileExt, FileFilter: string;
-begin
-  // Déterminer le format d'exportation sélectionné
-  if RadioButtonJSON.Checked then
-  begin
-    Format := efJSON;
-    FileExt := '.json';
-    FileFilter := 'Fichiers JSON (*.json)|*.json';
-  end
-  else if RadioButtonCSV.Checked then
-  begin
-    Format := efCSV;
-    FileExt := '.csv';
-    FileFilter := 'Fichiers CSV (*.csv)|*.csv';
-  end
-  else if RadioButtonXML.Checked then
-  begin
-    Format := efXML;
-    FileExt := '.xml';
-    FileFilter := 'Fichiers XML (*.xml)|*.xml';
-  end
-  else
-  begin
-    ShowMessage('Veuillez sélectionner un format d''exportation.');
-    Exit;
-  end;
-
-  // Créer le dialogue de sauvegarde
-  SaveDialog := TSaveDialog.Create(nil);
-  try
-    SaveDialog.Title := 'Exporter mes données';
-    SaveDialog.DefaultExt := FileExt;
-    SaveDialog.Filter := FileFilter;
-    SaveDialog.FileName := 'mes_donnees_' + FormatDateTime('yyyymmdd', Now) + FileExt;
-
-    if SaveDialog.Execute then
-    begin
-      // Créer l'exportateur
-      Exporter := TDataExporter.Create(CurrentUser.ID);
-      try
-        Screen.Cursor := crHourGlass;
-
-        // Journaliser l'exportation
-        var Logger := TDataAccessLogger.Create(TPath.Combine(ApplicationDataPath, 'logs'));
-        try
-          Logger.LogAccess(
-            CurrentUser.ID,
-            CurrentUser.ID,
-            atExport,
-            'all_data',
-            GetClientIP
-          );
-        finally
-          Logger.Free;
-        end;
-
-        // Exporter les données
-        Exporter.SaveToFile(SaveDialog.FileName, Format);
-
-        ShowMessage('Vos données ont été exportées avec succès vers ' + SaveDialog.FileName);
-      finally
-        Screen.Cursor := crDefault;
-        Exporter.Free;
-      end;
-    end;
-  finally
-    SaveDialog.Free;
-  end;
-end;
-
-function TFormGDPRRights.ConfirmDeletion: Boolean;
-var
-  ConfirmForm: TForm;
-  MemoWarning: TMemo;
-  EditConfirm: TEdit;
-  ButtonConfirm, ButtonCancel: TButton;
-begin
-  Result := False;
-
-  // Créer un formulaire de confirmation
-  ConfirmForm := TForm.Create(nil);
-  try
-    ConfirmForm.Caption := 'Confirmation de suppression';
-    ConfirmForm.Position := poScreenCenter;
-    ConfirmForm.BorderStyle := bsDialog;
-    ConfirmForm.Width := 450;
-    ConfirmForm.Height := 250;
-
-    // Avertissement
-    MemoWarning := TMemo.Create(ConfirmForm);
-    MemoWarning.Parent := ConfirmForm;
-    MemoWarning.Top := 20;
-    MemoWarning.Left := 20;
-    MemoWarning.Width := 410;
-    MemoWarning.Height := 100;
-    MemoWarning.ReadOnly := True;
-    MemoWarning.Lines.Text :=
-      'ATTENTION : Cette action ne peut pas être annulée.' + sLineBreak + sLineBreak +
-      'Pour confirmer, veuillez saisir "JE CONFIRME" dans le champ ci-dessous.';
-
-    // Champ de confirmation
-    EditConfirm := TEdit.Create(ConfirmForm);
-    EditConfirm.Parent := ConfirmForm;
-    EditConfirm.Top := 140;
-    EditConfirm.Left := 20;
-    EditConfirm.Width := 410;
-
-    // Boutons
-    ButtonConfirm := TButton.Create(ConfirmForm);
-    ButtonConfirm.Parent := ConfirmForm;
-    ButtonConfirm.Caption := 'Confirmer';
-    ButtonConfirm.Top := 180;
-    ButtonConfirm.Left := 230;
-    ButtonConfirm.Width := 200;
-    ButtonConfirm.ModalResult := mrNone;
-    ButtonConfirm.OnClick := procedure(Sender: TObject)
-    begin
-      if EditConfirm.Text = 'JE CONFIRME' then
-        ConfirmForm.ModalResult := mrOk
-      else
-        ShowMessage('Veuillez saisir "JE CONFIRME" pour confirmer.');
-    end;
-
-    ButtonCancel := TButton.Create(ConfirmForm);
-    ButtonCancel.Parent := ConfirmForm;
-    ButtonCancel.Caption := 'Annuler';
-    ButtonCancel.Top := 180;
-    ButtonCancel.Left := 20;
-    ButtonCancel.Width := 120;
-    ButtonCancel.ModalResult := mrCancel;
-
-    // Afficher le formulaire de confirmation
-    Result := ConfirmForm.ShowModal = mrOk;
-  finally
-    ConfirmForm.Free;
-  end;
-end;
-
-procedure TFormGDPRRights.ButtonProcessDeletionClick(Sender: TObject);
-var
-  DataManager: TUserDataManager;
-begin
-  if not ConfirmDeletion then
-    Exit;
-
-  // Créer le gestionnaire de données
-  DataManager := TUserDataManager.Create(
-    CurrentUser.ID,
-    TPath.Combine(TPath.GetDocumentsPath, 'MyApp')
-  );
-  try
-    Screen.Cursor := crHourGlass;
-
-    if RadioButtonAnonymize.Checked then
-    begin
-      // Anonymiser les données
-      if DataManager.AnonymizeUserData then
-      begin
-        ShowMessage('Vos données personnelles ont été anonymisées avec succès.');
-
-        // Recharger les données
-        LoadUserData;
-      end
-      else
-        ShowMessage('Une erreur est survenue lors de l''anonymisation de vos données. Veuillez réessayer.');
-    end
-    else if RadioButtonFullDelete.Checked then
-    begin
-      // Supprimer complètement les données
-      if DataManager.DeleteUserData then
-      begin
-        ShowMessage('Votre compte et toutes vos données ont été supprimés.');
-
-        // Déconnecter l'utilisateur
-        UserSession.Logout;
-
-        // Fermer le formulaire
-        Close;
-      end
-      else
-        ShowMessage('Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer.');
-    end
-    else
-      ShowMessage('Veuillez sélectionner une option (anonymisation ou suppression complète).');
-  finally
-    Screen.Cursor := crDefault;
-    DataManager.Free;
-  end;
-end;
-
-procedure TFormGDPRRights.ButtonCloseClick(Sender: TObject);
-begin
-  Close;
-end;
-
-end.
-```
-
-### 9. Implémentation du consentement spécifique pour les cookies
-
-Si votre application Delphi a une composante web, vous devez gérer le consentement pour les cookies :
-
-```pas
-unit CookieConsentManager;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.NetEncoding,
-  Web.HTTPApp;
-
-type
-  TCookieCategory = (ccEssential, ccPreferences, ccStatistics, ccMarketing);
-  TCookieCategories = set of TCookieCategory;
-
-  TCookieConsentManager = class
-  private
-    FCookieConsentName: string;
-
-    function GetConsentCookie(Request: TWebRequest): string;
-    procedure SetConsentCookie(Response: TWebResponse;
-                              const Value: string;
-                              ExpirationDays: Integer = 180);
-
-    function CategoriesToString(Categories: TCookieCategories): string;
-    function StringToCategories(const CategoriesStr: string): TCookieCategories;
-  public
-    constructor Create(const CookieConsentName: string = 'cookie_consent');
-
-    // Vérifier si le consentement existe
-    function HasConsent(Request: TWebRequest): Boolean;
-
-    // Récupérer les catégories acceptées
-    function GetConsentCategories(Request: TWebRequest): TCookieCategories;
-
-    // Vérifier si une catégorie spécifique est acceptée
-    function IsCategoryAccepted(Request: TWebRequest;
-                               Category: TCookieCategory): Boolean;
-
-    // Définir le consentement
-    procedure SetConsent(Response: TWebResponse;
-                        Categories: TCookieCategories;
-                        ExpirationDays: Integer = 180);
-
-    // Effacer le consentement
-    procedure ClearConsent(Response: TWebResponse);
-
-    // Générer le HTML pour la bannière de consentement
-    function GenerateConsentBannerHTML: string;
-  end;
-
-implementation
-
-constructor TCookieConsentManager.Create(const CookieConsentName: string);
-begin
-  inherited Create;
-  FCookieConsentName := CookieConsentName;
-end;
-
-function TCookieConsentManager.GetConsentCookie(Request: TWebRequest): string;
-var
-  I: Integer;
-begin
-  Result := '';
-
-  // Rechercher le cookie de consentement
-  for I := 0 to Request.CookieFields.Count - 1 do
-  begin
-    if Request.CookieFields.Names[I] = FCookieConsentName then
-    begin
-      Result := Request.CookieFields.Values[FCookieConsentName];
-      Break;
-    end;
-  end;
-end;
-
-procedure TCookieConsentManager.SetConsentCookie(Response: TWebResponse;
-                                               const Value: string;
-                                               ExpirationDays: Integer);
-begin
-  // Définir le cookie avec les attributs de sécurité appropriés
-  Response.Cookies.Add(
-    Format('%s=%s; Path=/; Max-Age=%d; SameSite=Lax; Secure; HttpOnly',
-          [FCookieConsentName, Value, ExpirationDays * 24 * 60 * 60])
-  );
-end;
-
-function TCookieConsentManager.CategoriesToString(Categories: TCookieCategories): string;
-var
-  CategoryList: TStringList;
-begin
-  CategoryList := TStringList.Create;
-  try
-    // Convertir les catégories en chaînes
-    if ccEssential in Categories then
-      CategoryList.Add('essential');
-
-    if ccPreferences in Categories then
-      CategoryList.Add('preferences');
-
-    if ccStatistics in Categories then
-      CategoryList.Add('statistics');
-
-    if ccMarketing in Categories then
-      CategoryList.Add('marketing');
-
-    // Joindre avec des virgules et encoder pour le cookie
-    Result := TNetEncoding.URL.Encode(String.Join(',', CategoryList.ToStringArray));
-  finally
-    CategoryList.Free;
-  end;
-end;
-
-function TCookieConsentManager.StringToCategories(const CategoriesStr: string): TCookieCategories;
-var
-  DecodedStr: string;
-  Categories: TArray<string>;
-  Category: string;
-begin
-  Result := [];
-
-  // Décoder la chaîne
-  DecodedStr := TNetEncoding.URL.Decode(CategoriesStr);
-
-  // Découper en catégories individuelles
-  Categories := DecodedStr.Split([',']);
-
-  // Convertir en ensemble
-  for Category in Categories do
-  begin
-    if Category = 'essential' then
-      Include(Result, ccEssential)
-    else if Category = 'preferences' then
-      Include(Result, ccPreferences)
-    else if Category = 'statistics' then
-      Include(Result, ccStatistics)
-    else if Category = 'marketing' then
-      Include(Result, ccMarketing);
-  end;
-end;
-
-function TCookieConsentManager.HasConsent(Request: TWebRequest): Boolean;
-begin
-  Result := GetConsentCookie(Request) <> '';
-end;
-
-function TCookieConsentManager.GetConsentCategories(Request: TWebRequest): TCookieCategories;
-var
-  ConsentValue: string;
-begin
-  ConsentValue := GetConsentCookie(Request);
-
-  if ConsentValue <> '' then
-    Result := StringToCategories(ConsentValue)
-  else
-    Result := []; // Aucun consentement
-end;
-
-function TCookieConsentManager.IsCategoryAccepted(Request: TWebRequest;
-                                                Category: TCookieCategory): Boolean;
-var
-  Categories: TCookieCategories;
-begin
-  Categories := GetConsentCategories(Request);
-  Result := Category in Categories;
-end;
-
-procedure TCookieConsentManager.SetConsent(Response: TWebResponse;
-                                         Categories: TCookieCategories;
-                                         ExpirationDays: Integer);
-var
-  ConsentValue: string;
-begin
-  // Toujours inclure les cookies essentiels
-  Include(Categories, ccEssential);
-
-  // Convertir en chaîne
-  ConsentValue := CategoriesToString(Categories);
-
-  // Définir le cookie
-  SetConsentCookie(Response, ConsentValue, ExpirationDays);
-end;
-
-procedure TCookieConsentManager.ClearConsent(Response: TWebResponse);
-begin
-  // Définir une date d'expiration dans le passé pour supprimer le cookie
-  Response.Cookies.Add(
-    Format('%s=; Path=/; Max-Age=0; SameSite=Lax; Secure; HttpOnly',
-          [FCookieConsentName])
-  );
-end;
-
-function TCookieConsentManager.GenerateConsentBannerHTML: string;
-begin
-  Result :=
-    '<div id="cookie-consent-banner" class="cookie-banner">' +
-    '  <div class="cookie-content">' +
-    '    <h3>Utilisation des cookies</h3>' +
-    '    <p>Ce site utilise des cookies pour améliorer votre expérience. ' +
-    'Veuillez indiquer quels types de cookies vous acceptez.</p>' +
-    '    <div class="cookie-options">' +
-    '      <label>' +
-    '        <input type="checkbox" name="cookie-essential" checked disabled>' +
-    '        Essentiels (nécessaires au fonctionnement du site)' +
-    '      </label>' +
-    '      <label>' +
-    '        <input type="checkbox" name="cookie-preferences">' +
-    '        Préférences (pour sauvegarder vos paramètres)' +
-    '      </label>' +
-    '      <label>' +
-    '        <input type="checkbox" name="cookie-statistics">' +
-    '        Statistiques (pour analyser l''utilisation du site)' +
-    '      </label>' +
-    '      <label>' +
-    '        <input type="checkbox" name="cookie-marketing">' +
-    '        Marketing (pour vous montrer des publicités pertinentes)' +
-    '      </label>' +
-    '    </div>' +
-    '    <div class="cookie-buttons">' +
-    '      <button id="cookie-accept-all">Accepter tout</button>' +
-    '      <button id="cookie-accept-selection">Accepter la sélection</button>' +
-    '      <button id="cookie-reject-all">Refuser tout</button>' +
-    '    </div>' +
-    '    <a href="/privacy-policy" class="cookie-more-info">Plus d''informations</a>' +
-    '  </div>' +
-    '</div>';
-end;
-
-end.
-```
-
-#### Utilisation du gestionnaire de consentement pour les cookies
-
-```pas
-procedure TWebModuleMain.WebModuleBeforeDispatch(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  CookieConsent: TCookieConsentManager;
-  Action: string;
-begin
-  CookieConsent := TCookieConsentManager.Create;
-  try
-    // Vérifier s'il s'agit d'une requête de gestion des cookies
-    if Request.PathInfo = '/cookie-consent' then
-    begin
-      Handled := True;
-
-      // Déterminer l'action demandée
-      Action := Request.QueryFields.Values['action'];
-
-      if Action = 'accept-all' then
-      begin
-        // Accepter toutes les catégories
-        CookieConsent.SetConsent(Response,
-                               [ccEssential, ccPreferences, ccStatistics, ccMarketing]);
-      end
-      else if Action = 'accept-selection' then
-      begin
-        // Accepter les catégories sélectionnées
-        var Categories: TCookieCategories := [ccEssential]; // Toujours inclure les essentiels
-
-        if Request.QueryFields.Values['preferences'] = 'on' then
-          Include(Categories, ccPreferences);
-
-        if Request.QueryFields.Values['statistics'] = 'on' then
-          Include(Categories, ccStatistics);
-
-        if Request.QueryFields.Values['marketing'] = 'on' then
-          Include(Categories, ccMarketing);
-
-        CookieConsent.SetConsent(Response, Categories);
-      end
-      else if Action = 'reject-all' then
-      begin
-        // N'accepter que les cookies essentiels
-        CookieConsent.SetConsent(Response, [ccEssential]);
-      end;
-
-      // Rediriger vers la page précédente
-      var ReturnURL := Request.QueryFields.Values['returnUrl'];
-      if ReturnURL = '' then
-        ReturnURL := '/';
-
-      Response.SendRedirect(ReturnURL);
-      Exit;
-    end;
-
-    // Pour toutes les autres requêtes, vérifier si la bannière doit être affichée
-    if not CookieConsent.HasConsent(Request) then
-    begin
-      // Injecter la bannière de consentement dans la réponse HTML
-      // (cet exemple suppose que vous avez un moyen d'injecter du contenu dans le HTML)
-      Response.CustomHeaders.Values['X-Show-Cookie-Banner'] := 'true';
-    end;
-  finally
-    CookieConsent.Free;
-  end;
-end;
-
-procedure TWebModuleMain.DispatchGoogleAnalytics(Request: TWebRequest;
-  Response: TWebResponse);
-var
-  CookieConsent: TCookieConsentManager;
-begin
-  CookieConsent := TCookieConsentManager.Create;
-  try
-    // Vérifier si l'utilisateur a accepté les cookies de statistiques
-    if CookieConsent.IsCategoryAccepted(Request, ccStatistics) then
-    begin
-      // Insérer le code de Google Analytics
-      Response.Content := StringReplace(
-        Response.Content,
-        '<!-- GOOGLE_ANALYTICS_PLACEHOLDER -->',
-        GetGoogleAnalyticsScript,
-        [rfReplaceAll]
-      );
-    end;
-  finally
-    CookieConsent.Free;
-  end;
-end;
-```
-
-### 10. Documentation pour la conformité au GDPR
-
-La documentation est une partie essentielle de la conformité au GDPR. Voici un exemple de classe pour gérer la documentation de conformité :
-
-```pas
-unit GDPRDocumentation;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON, System.IOUtils;
-
-type
-  TDataProcessingActivity = record
-    ActivityName: string;
-    Purpose: string;
-    DataCategories: string;
-    RetentionPeriod: string;
-    LegalBasis: string;
-    ThirdPartyRecipients: string;
-    SecurityMeasures: string;
-  end;
-
-  TGDPRDocumentation = class
-  private
-    FDocumentationPath: string;
-    FActivities: TArray<TDataProcessingActivity>;
-
-    procedure LoadActivities;
-    procedure SaveActivities;
-  public
-    constructor Create(const DocumentationPath: string);
-    destructor Destroy; override;
-
-    // Ajouter une activité de traitement des données
-    procedure AddProcessingActivity(const Activity: TDataProcessingActivity);
-
-    // Mettre à jour une activité de traitement
-    procedure UpdateProcessingActivity(Index: Integer;
-                                      const Activity: TDataProcessingActivity);
-
-    // Supprimer une activité de traitement
-    procedure DeleteProcessingActivity(Index: Integer);
-
-    // Générer un registre des activités de traitement
-    function GenerateProcessingRegistry: string;
-
-    // Générer une politique de confidentialité basée sur les activités
-    function GeneratePrivacyPolicy: string;
-
-    // Nombre d'activités de traitement
-    function ActivityCount: Integer;
-
-    // Accès à une activité spécifique
-    function GetActivity(Index: Integer): TDataProcessingActivity;
-  end;
-
-implementation
-
-constructor TGDPRDocumentation.Create(const DocumentationPath: string);
-begin
-  inherited Create;
-  FDocumentationPath := DocumentationPath;
-
-  if not DirectoryExists(FDocumentationPath) then
-    ForceDirectories(FDocumentationPath);
-
-  LoadActivities;
-end;
-
-destructor TGDPRDocumentation.Destroy;
-begin
-  SaveActivities;
-  inherited;
-end;
-
-procedure TGDPRDocumentation.LoadActivities;
-var
-  FileName: string;
-  JsonArray: TJSONArray;
-  I: Integer;
-  Activity: TDataProcessingActivity;
-begin
-  SetLength(FActivities, 0);
-
-  FileName := TPath.Combine(FDocumentationPath, 'processing_activities.json');
-
-  if FileExists(FileName) then
-  begin
-    try
-      var JsonText := TFile.ReadAllText(FileName);
-      JsonArray := TJSONObject.ParseJSONValue(JsonText) as TJSONArray;
-
-      if JsonArray <> nil then
-      try
-        SetLength(FActivities, JsonArray.Count);
-
-        for I := 0 to JsonArray.Count - 1 do
-        begin
-          var JsonObj := JsonArray.Items[I] as TJSONObject;
-
-          Activity.ActivityName := JsonObj.GetValue<string>('activity_name', '');
-          Activity.Purpose := JsonObj.GetValue<string>('purpose', '');
-          Activity.DataCategories := JsonObj.GetValue<string>('data_categories', '');
-          Activity.RetentionPeriod := JsonObj.GetValue<string>('retention_period', '');
-          Activity.LegalBasis := JsonObj.GetValue<string>('legal_basis', '');
-          Activity.ThirdPartyRecipients := JsonObj.GetValue<string>('third_party_recipients', '');
-          Activity.SecurityMeasures := JsonObj.GetValue<string>('security_measures', '');
-
-          FActivities[I] := Activity;
-        end;
-      finally
-        JsonArray.Free;
-      end;
-    except
-      // En cas d'erreur, initier avec un tableau vide
-      SetLength(FActivities, 0);
-    end;
-  end;
-end;
-
-procedure TGDPRDocumentation.SaveActivities;
-var
-  FileName: string;
-  JsonArray: TJSONArray;
-  I: Integer;
-  JsonObj: TJSONObject;
-begin
-  FileName := TPath.Combine(FDocumentationPath, 'processing_activities.json');
-
-  JsonArray := TJSONArray.Create;
-  try
-    for I := 0 to Length(FActivities) - 1 do
-    begin
-      JsonObj := TJSONObject.Create;
-
-      JsonObj.AddPair('activity_name', FActivities[I].ActivityName);
-      JsonObj.AddPair('purpose', FActivities[I].Purpose);
-      JsonObj.AddPair('data_categories', FActivities[I].DataCategories);
-      JsonObj.AddPair('retention_period', FActivities[I].RetentionPeriod);
-      JsonObj.AddPair('legal_basis', FActivities[I].LegalBasis);
-      JsonObj.AddPair('third_party_recipients', FActivities[I].ThirdPartyRecipients);
-      JsonObj.AddPair('security_measures', FActivities[I].SecurityMeasures);
-
-      JsonArray.Add(JsonObj);
-    end;
-
-    TFile.WriteAllText(FileName, JsonArray.ToString);
-  finally
-    JsonArray.Free;
-  end;
-end;
-
-procedure TGDPRDocumentation.AddProcessingActivity(const Activity: TDataProcessingActivity);
-begin
-  SetLength(FActivities, Length(FActivities) + 1);
-  FActivities[High(FActivities)] := Activity;
-
-  SaveActivities;
-end;
-
-procedure TGDPRDocumentation.UpdateProcessingActivity(Index: Integer;
-  const Activity: TDataProcessingActivity);
-begin
-  if (Index >= 0) and (Index < Length(FActivities)) then
-  begin
-    FActivities[Index] := Activity;
-    SaveActivities;
-  end;
-end;
-
-procedure TGDPRDocumentation.DeleteProcessingActivity(Index: Integer);
-var
-  I: Integer;
-begin
-  if (Index >= 0) and (Index < Length(FActivities)) then
-  begin
-    for I := Index to Length(FActivities) - 2 do
-      FActivities[I] := FActivities[I + 1];
-
-    SetLength(FActivities, Length(FActivities) - 1);
-    SaveActivities;
-  end;
-end;
-
-function TGDPRDocumentation.ActivityCount: Integer;
-begin
-  Result := Length(FActivities);
-end;
-
-function TGDPRDocumentation.GetActivity(Index: Integer): TDataProcessingActivity;
-begin
-  if (Index >= 0) and (Index < Length(FActivities)) then
-    Result := FActivities[Index]
-  else
-    raise Exception.Create('Index hors limites');
-end;
-
-function TGDPRDocumentation.GenerateProcessingRegistry: string;
-var
-  Registry: TStringList;
-  I: Integer;
-begin
-  Registry := TStringList.Create;
-  try
-    Registry.Add('REGISTRE DES ACTIVITÉS DE TRAITEMENT DES DONNÉES');
-    Registry.Add('================================================');
-    Registry.Add('');
-    Registry.Add('Ce document a été généré automatiquement le ' +
-                FormatDateTime('dd/mm/yyyy', Now));
-    Registry.Add('');
-
-    for I := 0 to Length(FActivities) - 1 do
-    begin
-      Registry.Add('Activité de traitement: ' + FActivities[I].ActivityName);
-      Registry.Add('------------------------------------------');
-      Registry.Add('Finalité: ' + FActivities[I].Purpose);
-      Registry.Add('Catégories de données: ' + FActivities[I].DataCategories);
-      Registry.Add('Durée de conservation: ' + FActivities[I].RetentionPeriod);
-      Registry.Add('Base légale: ' + FActivities[I].LegalBasis);
-
-      if FActivities[I].ThirdPartyRecipients <> '' then
-        Registry.Add('Destinataires tiers: ' + FActivities[I].ThirdPartyRecipients);
-
-      Registry.Add('Mesures de sécurité: ' + FActivities[I].SecurityMeasures);
-      Registry.Add('');
-    end;
-
-    Result := Registry.Text;
-  finally
-    Registry.Free;
-  end;
-end;
-
-function TGDPRDocumentation.GeneratePrivacyPolicy: string;
-var
-  Policy: TStringList;
-  I: Integer;
-  DataTypes, Purposes, LegalBases: TStringList;
-begin
-  Policy := TStringList.Create;
-  DataTypes := TStringList.Create;
-  Purposes := TStringList.Create;
-  LegalBases := TStringList.Create;
-
-  try
-    // Collecter les types de données uniques, finalités et bases légales
-    for I := 0 to Length(FActivities) - 1 do
-    begin
-      if DataTypes.IndexOf(FActivities[I].DataCategories) < 0 then
-        DataTypes.Add(FActivities[I].DataCategories);
-
-      if Purposes.IndexOf(FActivities[I].Purpose) < 0 then
-        Purposes.Add(FActivities[I].Purpose);
-
-      if LegalBases.IndexOf(FActivities[I].LegalBasis) < 0 then
-        LegalBases.Add(FActivities[I].LegalBasis);
-    end;
-
-    // Générer le contenu de la politique
-    Policy.Add('POLITIQUE DE CONFIDENTIALITÉ');
-    Policy.Add('============================');
-    Policy.Add('');
-    Policy.Add('Dernière mise à jour: ' + FormatDateTime('dd/mm/yyyy', Now));
-    Policy.Add('');
-
-    Policy.Add('1. INTRODUCTION');
-    Policy.Add('---------------');
-    Policy.Add('');
-    Policy.Add('Cette politique de confidentialité explique comment nous collectons, ' +
-               'utilisons et protégeons vos données personnelles lorsque vous ' +
-               'utilisez notre application.');
-    Policy.Add('');
-
-    Policy.Add('2. DONNÉES COLLECTÉES');
-    Policy.Add('--------------------');
-    Policy.Add('');
-    Policy.Add('Nous collectons les types de données suivants :');
-    Policy.Add('');
-
-    for I := 0 to DataTypes.Count - 1 do
-      Policy.Add('- ' + DataTypes[I]);
-
-    Policy.Add('');
-    Policy.Add('3. FINALITÉS DU TRAITEMENT');
-    Policy.Add('--------------------------');
-    Policy.Add('');
-    Policy.Add('Nous utilisons vos données pour les finalités suivantes :');
-    Policy.Add('');
-
-    for I := 0 to Purposes.Count - 1 do
-      Policy.Add('- ' + Purposes[I]);
-
-    Policy.Add('');
-    Policy.Add('4. BASE LÉGALE');
-    Policy.Add('--------------');
-    Policy.Add('');
-    Policy.Add('Le traitement de vos données est basé sur :');
-    Policy.Add('');
-
-    for I := 0 to LegalBases.Count - 1 do
-      Policy.Add('- ' + LegalBases[I]);
-
-    Policy.Add('');
-    Policy.Add('5. DURÉE DE CONSERVATION');
-    Policy.Add('------------------------');
-    Policy.Add('');
-    Policy.Add('Nous conservons vos données pendant les périodes suivantes :');
-    Policy.Add('');
-
-    for I := 0 to Length(FActivities) - 1 do
-      Policy.Add('- ' + FActivities[I].DataCategories + ' : ' +
-                 FActivities[I].RetentionPeriod);
-
-    Policy.Add('');
-    Policy.Add('6. VOS DROITS');
-    Policy.Add('-------------');
-    Policy.Add('');
-    Policy.Add('Conformément au Règlement Général sur la Protection des Données (RGPD), ' +
-               'vous disposez des droits suivants :');
-    Policy.Add('');
-    Policy.Add('- Droit d''accès à vos données personnelles');
-    Policy.Add('- Droit de rectification de vos données personnelles');
-    Policy.Add('- Droit à l''effacement de vos données personnelles (droit à l''oubli)');
-    Policy.Add('- Droit à la limitation du traitement');
-    Policy.Add('- Droit à la portabilité des données');
-    Policy.Add('- Droit d''opposition au traitement');
-    Policy.Add('- Droit de ne pas faire l''objet d''une décision automatisée');
-    Policy.Add('');
-    Policy.Add('Pour exercer ces droits, veuillez nous contacter à l''adresse indiquée ' +
-               'dans la section "Contact" ci-dessous.');
-    Policy.Add('');
-
-    Policy.Add('7. PARTAGE DES DONNÉES');
-    Policy.Add('---------------------');
-    Policy.Add('');
-    Policy.Add('Nous pouvons partager vos données avec les tiers suivants :');
-    Policy.Add('');
-
-    for I := 0 to Length(FActivities) - 1 do
-      if FActivities[I].ThirdPartyRecipients <> '' then
-        Policy.Add('- ' + FActivities[I].ThirdPartyRecipients +
-                   ' (pour ' + FActivities[I].Purpose + ')');
-
-    Policy.Add('');
-    Policy.Add('8. SÉCURITÉ');
-    Policy.Add('-----------');
-    Policy.Add('');
-    Policy.Add('Nous mettons en œuvre les mesures de sécurité suivantes pour ' +
-               'protéger vos données :');
-    Policy.Add('');
-
-    for I := 0 to Length(FActivities) - 1 do
-      if FActivities[I].SecurityMeasures <> '' then
-        Policy.Add('- ' + FActivities[I].SecurityMeasures);
-
-    Policy.Add('');
-    Policy.Add('9. CONTACT');
-    Policy.Add('----------');
-    Policy.Add('');
-    Policy.Add('Pour toute question concernant cette politique de confidentialité ' +
-               'ou vos données personnelles, veuillez nous contacter à :');
-    Policy.Add('');
-    Policy.Add('Email: privacy@exemple.com');
-    Policy.Add('Adresse: 123 Rue de la Protection des Données, 75000 Paris');
-
-    Result := Policy.Text;
-  finally
-    Policy.Free;
-    DataTypes.Free;
-    Purposes.Free;
-    LegalBases.Free;
-  end;
-end;
-
-end.
-```
-
-### 11. Audit de conformité au GDPR
-
-Pour vérifier régulièrement que votre application est conforme au GDPR, vous pouvez créer un outil d'auto-évaluation :
-
-```pas
-unit GDPRComplianceCheck;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.Generics.Collections;
-
-type
-  TComplianceStatus = (csCompliant, csPartiallyCompliant, csNonCompliant, csNotApplicable);
-
-  TComplianceCheckItem = record
-    Category: string;
-    Requirement: string;
-    Status: TComplianceStatus;
-    Comment: string;
-  end;
-
-  TGDPRComplianceCheck = class
-  private
-    FCheckItems: TList<TComplianceCheckItem>;
-
-    function StatusToString(Status: TComplianceStatus): string;
-    function CalculateCompliancePercentage: Double;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    // Ajouter un élément de vérification
-    procedure AddCheckItem(const Category, Requirement: string;
-                          Status: TComplianceStatus = csNotApplicable;
-                          const Comment: string = '');
-
-    // Mettre à jour un élément de vérification
-    procedure UpdateCheckItem(Index: Integer; Status: TComplianceStatus;
-                            const Comment: string);
-
-    // Générer un rapport de conformité
-    function GenerateComplianceReport: string;
-
-    // Exporter le rapport au format HTML
-    procedure ExportReportToHTML(const FileName: string);
-
-    // Statistiques de conformité
-    function GetCompliantCount: Integer;
-    function GetPartiallyCompliantCount: Integer;
-    function GetNonCompliantCount: Integer;
-    function GetNotApplicableCount: Integer;
-    function GetTotalApplicableCount: Integer;
-
-    // Pourcentage de conformité (entre 0 et 100)
-    property CompliancePercentage: Double read CalculateCompliancePercentage;
-  end;
-
-implementation
-
-constructor TGDPRComplianceCheck.Create;
-begin
-  inherited;
-  FCheckItems := TList<TComplianceCheckItem>.Create;
-
-  // Ajouter les éléments de vérification standard
-  // Consentement
-  AddCheckItem('Consentement', 'Le consentement est demandé de manière claire et explicite');
-  AddCheckItem('Consentement', 'Le consentement peut être retiré facilement');
-  AddCheckItem('Consentement', 'Le consentement est enregistré et horodaté');
-
-  // Minimisation des données
-  AddCheckItem('Minimisation', 'Seules les données nécessaires sont collectées');
-  AddCheckItem('Minimisation', 'Les champs optionnels sont clairement identifiés');
-
-  // Transparence
-  AddCheckItem('Transparence', 'Une politique de confidentialité complète est disponible');
-  AddCheckItem('Transparence', 'Les utilisateurs sont informés de l''utilisation de leurs données');
-
-  // Droits des utilisateurs
-  AddCheckItem('Droits', 'Les utilisateurs peuvent accéder à leurs données');
-  AddCheckItem('Droits', 'Les utilisateurs peuvent exporter leurs données');
-  AddCheckItem('Droits', 'Les utilisateurs peuvent supprimer leurs données');
-  AddCheckItem('Droits', 'Les utilisateurs peuvent rectifier leurs données');
-
-  // Sécurité
-  AddCheckItem('Sécurité', 'Les données sont chiffrées au repos');
-  AddCheckItem('Sécurité', 'Les données sont chiffrées en transit');
-  AddCheckItem('Sécurité', 'Des contrôles d''accès sont en place');
-  AddCheckItem('Sécurité', 'Les accès aux données sont journalisés');
-
-  // Conservation des données
-  AddCheckItem('Conservation', 'Des politiques de rétention des données sont en place');
-  AddCheckItem('Conservation', 'Les données sont supprimées après la période de rétention');
-
-  // Transferts internationaux
-  AddCheckItem('Transferts', 'Les transferts de données hors UE sont conformes au GDPR');
-
-  // Documentation
-  AddCheckItem('Documentation', 'Un registre des activités de traitement est maintenu');
-  AddCheckItem('Documentation', 'Les violations de données peuvent être détectées et signalées');
-end;
-
-destructor TGDPRComplianceCheck.Destroy;
-begin
-  FCheckItems.Free;
-  inherited;
-end;
-
-procedure TGDPRComplianceCheck.AddCheckItem(const Category, Requirement: string;
-  Status: TComplianceStatus; const Comment: string);
-var
-  Item: TComplianceCheckItem;
-begin
-  Item.Category := Category;
-  Item.Requirement := Requirement;
-  Item.Status := Status;
-  Item.Comment := Comment;
-
-  FCheckItems.Add(Item);
-end;
-
-procedure TGDPRComplianceCheck.UpdateCheckItem(Index: Integer;
-  Status: TComplianceStatus; const Comment: string);
-var
-  Item: TComplianceCheckItem;
-begin
-  if (Index >= 0) and (Index < FCheckItems.Count) then
-  begin
-    Item := FCheckItems[Index];
-    Item.Status := Status;
-    Item.Comment := Comment;
-    FCheckItems[Index] := Item;
-  end;
-end;
-
-function TGDPRComplianceCheck.StatusToString(Status: TComplianceStatus): string;
-begin
-  case Status of
-    csCompliant: Result := 'Conforme';
-    csPartiallyCompliant: Result := 'Partiellement conforme';
-    csNonCompliant: Result := 'Non conforme';
-    csNotApplicable: Result := 'Non applicable';
-  end;
-end;
-
-function TGDPRComplianceCheck.GetCompliantCount: Integer;
-var
-  Item: TComplianceCheckItem;
-begin
-  Result := 0;
-
-  for Item in FCheckItems do
-    if Item.Status = csCompliant then
-      Inc(Result);
-end;
-
-function TGDPRComplianceCheck.GetPartiallyCompliantCount: Integer;
-var
-  Item: TComplianceCheckItem;
-begin
-  Result := 0;
-
-  for Item in FCheckItems do
-    if Item.Status = csPartiallyCompliant then
-      Inc(Result);
-end;
-
-function TGDPRComplianceCheck.GetNonCompliantCount: Integer;
-var
-  Item: TComplianceCheckItem;
-begin
-  Result := 0;
-
-  for Item in FCheckItems do
-    if Item.Status = csNonCompliant then
-      Inc(Result);
-end;
-
-function TGDPRComplianceCheck.GetNotApplicableCount: Integer;
-var
-  Item: TComplianceCheckItem;
-begin
-  Result := 0;
-
-  for Item in FCheckItems do
-    if Item.Status = csNotApplicable then
-      Inc(Result);
-end;
-
-function TGDPRComplianceCheck.GetTotalApplicableCount: Integer;
-begin
-  Result := FCheckItems.Count - GetNotApplicableCount;
-end;
-
-function TGDPRComplianceCheck.CalculateCompliancePercentage: Double;
-var
-  Applicable, Score: Double;
-begin
-  Applicable := GetTotalApplicableCount;
-
-  if Applicable = 0 then
-    Result := 0
-  else
-  begin
-    // Calcul du score pondéré
-    Score := GetCompliantCount + (GetPartiallyCompliantCount * 0.5);
-    Result := (Score / Applicable) * 100;
-  end;
-end;
-
-function TGDPRComplianceCheck.GenerateComplianceReport: string;
-var
-  Report: TStringList;
-  LastCategory: string;
-  Item: TComplianceCheckItem;
-begin
-  Report := TStringList.Create;
-  try
-    Report.Add('RAPPORT DE CONFORMITÉ AU RGPD (GDPR)');
-    Report.Add('===================================');
-    Report.Add('');
-    Report.Add('Date du rapport: ' + FormatDateTime('dd/mm/yyyy', Now));
-    Report.Add('');
-    Report.Add('Résumé:');
-    Report.Add('------');
-    Report.Add(Format('Total des exigences: %d', [FCheckItems.Count]));
-    Report.Add(Format('Exigences applicables: %d', [GetTotalApplicableCount]));
-    Report.Add(Format('Conformes: %d', [GetCompliantCount]));
-    Report.Add(Format('Partiellement conformes: %d', [GetPartiallyCompliantCount]));
-    Report.Add(Format('Non conformes: %d', [GetNonCompliantCount]));
-    Report.Add(Format('Non applicables: %d', [GetNotApplicableCount]));
-    Report.Add('');
-    Report.Add(Format('Pourcentage de conformité: %.1f%%', [CompliancePercentage]));
-    Report.Add('');
-    Report.Add('Détails:');
-    Report.Add('-------');
-    Report.Add('');
-
-    LastCategory := '';
-
-    for Item in FCheckItems do
-    begin
-      // Ajouter l'en-tête de catégorie si elle change
-      if Item.Category <> LastCategory then
-      begin
-        if LastCategory <> '' then
-          Report.Add('');
-
-        Report.Add('Catégorie: ' + Item.Category);
-        Report.Add(StringOfChar('-', Length('Catégorie: ' + Item.Category)));
-        LastCategory := Item.Category;
-      end;
-
-      // Ajouter les détails de l'élément
-      Report.Add('');
-      Report.Add('Exigence: ' + Item.Requirement);
-      Report.Add('Statut: ' + StatusToString(Item.Status));
-
-      if Item.Comment <> '' then
-        Report.Add('Commentaire: ' + Item.Comment);
-    end;
-
-    Result := Report.Text;
-  finally
-    Report.Free;
-  end;
-end;
-
-procedure TGDPRComplianceCheck.ExportReportToHTML(const FileName: string);
-var
-  HTML: TStringList;
-  LastCategory: string;
-  Item: TComplianceCheckItem;
-  StatusClass: string;
-begin
-  HTML := TStringList.Create;
-  try
-    HTML.Add('<!DOCTYPE html>');
-    HTML.Add('<html>');
-    HTML.Add('<head>');
-    HTML.Add('  <title>Rapport de conformité au RGPD (GDPR)</title>');
-    HTML.Add('  <style>');
-    HTML.Add('    body { font-family: Arial, sans-serif; margin: 40px; }');
-    HTML.Add('    h1 { color: #2c3e50; }');
-    HTML.Add('    .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }');
-    HTML.Add('    .progress-bar { width: 100%; background-color: #e0e0e0; border-radius: 5px; }');
-    HTML.Add('    .progress { height: 30px; background-color: #4CAF50; border-radius: 5px; text-align: center; line-height: 30px; color: white; }');
-    HTML.Add('    .category { margin-top: 30px; border-bottom: 1px solid #ddd; color: #2c3e50; }');
-    HTML.Add('    .item { margin: 15px 0; padding: 10px; border-radius: 5px; }');
-    HTML.Add('    .status-compliant { background-color: #d4edda; border-left: 5px solid #28a745; }');
-    HTML.Add('    .status-partial { background-color: #fff3cd; border-left: 5px solid #ffc107; }');
-    HTML.Add('    .status-noncompliant { background-color: #f8d7da; border-left: 5px solid #dc3545; }');
-    HTML.Add('    .status-na { background-color: #e2e3e5; border-left: 5px solid #6c757d; }');
-    HTML.Add('  </style>');
-    HTML.Add('</head>');
-    HTML.Add('<body>');
-    HTML.Add('  <h1>Rapport de conformité au RGPD (GDPR)</h1>');
-    HTML.Add('  <div class="summary">');
-    HTML.Add('    <p><strong>Date du rapport:</strong> ' + FormatDateTime('dd/mm/yyyy', Now) + '</p>');
-    HTML.Add('    <p><strong>Total des exigences:</strong> ' + IntToStr(FCheckItems.Count) + '</p>');
-    HTML.Add('    <p><strong>Exigences applicables:</strong> ' + IntToStr(GetTotalApplicableCount) + '</p>');
-    HTML.Add('    <p><strong>Conformes:</strong> ' + IntToStr(GetCompliantCount) + '</p>');
-    HTML.Add('    <p><strong>Partiellement conformes:</strong> ' + IntToStr(GetPartiallyCompliantCount) + '</p>');
-    HTML.Add('    <p><strong>Non conformes:</strong> ' + IntToStr(GetNonCompliantCount) + '</p>');
-    HTML.Add('    <p><strong>Non applicables:</strong> ' + IntToStr(GetNotApplicableCount) + '</p>');
-    HTML.Add('    <p><strong>Pourcentage de conformité:</strong></p>');
-    HTML.Add('    <div class="progress-bar">');
-    HTML.Add(Format('      <div class="progress" style="width: %.1f%%">%.1f%%</div>', [CompliancePercentage, CompliancePercentage]));
-    HTML.Add('    </div>');
-    HTML.Add('  </div>');
-
-    LastCategory := '';
-
-    for Item in FCheckItems do
-    begin
-      // Ajouter l'en-tête de catégorie si elle change
-      if Item.Category <> LastCategory then
-      begin
-        if LastCategory <> '' then
-          HTML.Add('  </div>');
-
-        HTML.Add('  <h2 class="category">' + Item.Category + '</h2>');
-        HTML.Add('  <div class="category-items">');
-        LastCategory := Item.Category;
-      end;
-
-      // Déterminer la classe CSS pour le statut
-      case Item.Status of
-        csCompliant: StatusClass := 'status-compliant';
-        csPartiallyCompliant: StatusClass := 'status-partial';
-        csNonCompliant: StatusClass := 'status-noncompliant';
-        csNotApplicable: StatusClass := 'status-na';
-      end;
-
-      // Ajouter les détails de l'élément
-      HTML.Add('    <div class="item ' + StatusClass + '">');
-      HTML.Add('      <p><strong>Exigence:</strong> ' + Item.Requirement + '</p>');
-      HTML.Add('      <p><strong>Statut:</strong> ' + StatusToString(Item.Status) + '</p>');
-
-      if Item.Comment <> '' then
-        HTML.Add('      <p><strong>Commentaire:</strong> ' + Item.Comment + '</p>');
-
-      HTML.Add('    </div>');
-    end;
-
-    if LastCategory <> '' then
-      HTML.Add('  </div>');
-
-    HTML.Add('</body>');
-    HTML.Add('</html>');
-
-    // Sauvegarder le fichier HTML
-    HTML.SaveToFile(FileName);
-  finally
-    HTML.Free;
-  end;
-end;
-
-end.
-```
-
-### Exemple d'utilisation de l'audit de conformité
-
-```pas
-procedure TMainForm.ButtonRunComplianceCheckClick(Sender: TObject);
-var
-  ComplianceCheck: TGDPRComplianceCheck;
-  SaveDialog: TSaveDialog;
-begin
-  // Créer le vérificateur de conformité
-  ComplianceCheck := TGDPRComplianceCheck.Create;
-  try
-    // Mettre à jour les éléments de vérification en fonction de l'état actuel de l'application
-    UpdateComplianceStatus(ComplianceCheck);
-
-    // Afficher le rapport dans un mémo
-    MemoReport.Text := ComplianceCheck.GenerateComplianceReport;
-
-    // Afficher un résumé
-    ShowMessage(Format(
-      'Conformité au GDPR: %.1f%% ' + sLineBreak +
-      '%d exigences conformes, %d partiellement conformes, %d non conformes',
-      [ComplianceCheck.CompliancePercentage,
-       ComplianceCheck.GetCompliantCount,
-       ComplianceCheck.GetPartiallyCompliantCount,
-       ComplianceCheck.GetNonCompliantCount]
-    ));
-
-    // Proposer d'exporter le rapport en HTML
-    if MessageDlg('Souhaitez-vous exporter ce rapport au format HTML ?',
-                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      SaveDialog := TSaveDialog.Create(nil);
-      try
-        SaveDialog.Title := 'Exporter le rapport de conformité GDPR';
-        SaveDialog.DefaultExt := 'html';
-        SaveDialog.Filter := 'Fichiers HTML (*.html)|*.html';
-        SaveDialog.FileName := 'rapport_conformite_gdpr_' +
-                              FormatDateTime('yyyymmdd', Now) + '.html';
-
-        if SaveDialog.Execute then
-          ComplianceCheck.ExportReportToHTML(SaveDialog.FileName);
-      finally
-        SaveDialog.Free;
-      end;
-    end;
-  finally
-    ComplianceCheck.Free;
-  end;
-end;
-
-procedure TMainForm.UpdateComplianceStatus(ComplianceCheck: TGDPRComplianceCheck);
-var
-  AppConfig: TAppConfiguration;
-begin
-  // Charger la configuration de l'application
-  AppConfig := TAppConfiguration.Create;
-  try
-    // Vérifier le consentement
-    ComplianceCheck.UpdateCheckItem(0,
-      IfThen(AppConfig.ConsentExplicit, csCompliant, csPartiallyCompliant),
-      'Le consentement est demandé via une boîte de dialogue spécifique.');
-
-    ComplianceCheck.UpdateCheckItem(1,
-      IfThen(AppConfig.ConsentWithdrawalEnabled, csCompliant, csNonCompliant),
-      'Les utilisateurs peuvent retirer leur consentement dans les paramètres.');
-
-    ComplianceCheck.UpdateCheckItem(2,
-      IfThen(AppConfig.ConsentLogged, csCompliant, csNonCompliant),
-      'Le consentement est enregistré avec horodatage dans la base de données.');
-
-    // Vérifier la minimisation des données
-    ComplianceCheck.UpdateCheckItem(3,
-      IfThen(AppConfig.DataMinimizationApplied, csCompliant, csPartiallyCompliant),
-      'Seules les données essentielles sont obligatoires, les autres sont optionnelles.');
-
-    ComplianceCheck.UpdateCheckItem(4,
-      IfThen(AppConfig.OptionalFieldsMarked, csCompliant, csNonCompliant),
-      'Les champs optionnels sont clairement marqués dans les formulaires.');
-
-    // Vérifier la transparence
-    ComplianceCheck.UpdateCheckItem(5,
-      IfThen(FileExists(AppConfig.PrivacyPolicyPath), csCompliant, csNonCompliant),
-      'Une politique de confidentialité est disponible et à jour.');
-
-    ComplianceCheck.UpdateCheckItem(6,
-      IfThen(AppConfig.DataUsageExplained, csCompliant, csPartiallyCompliant),
-      'Les utilisateurs sont informés de l''utilisation de leurs données.');
-
-    // Vérifier les droits des utilisateurs
-    ComplianceCheck.UpdateCheckItem(7,
-      IfThen(ClassExists('TUserDataManager'), csCompliant, csNonCompliant),
-      'Les utilisateurs peuvent accéder à leurs données via "Mon compte" > "Mes données".');
-
-    ComplianceCheck.UpdateCheckItem(8,
-      IfThen(MethodExists('TUserDataManager', 'ExportUserData'), csCompliant, csNonCompliant),
-      'Les utilisateurs peuvent exporter leurs données au format JSON, CSV ou XML.');
-
-    ComplianceCheck.UpdateCheckItem(9,
-      IfThen(MethodExists('TUserDataManager', 'DeleteUserData'), csCompliant, csNonCompliant),
-      'Les utilisateurs peuvent supprimer leur compte et leurs données.');
-
-    ComplianceCheck.UpdateCheckItem(10,
-      IfThen(AppConfig.DataRectificationEnabled, csCompliant, csNonCompliant),
-      'Les utilisateurs peuvent modifier leurs données personnelles.');
-
-    // Vérifier la sécurité
-    ComplianceCheck.UpdateCheckItem(11,
-      IfThen(AppConfig.DataEncryptedAtRest, csCompliant, csPartiallyCompliant),
-      'Les données sensibles sont chiffrées dans la base de données.');
-
-    ComplianceCheck.UpdateCheckItem(12,
-      IfThen(AppConfig.DataEncryptedInTransit, csCompliant, csNonCompliant),
-      'Toutes les communications réseau utilisent TLS 1.2 ou supérieur.');
-
-    ComplianceCheck.UpdateCheckItem(13,
-      IfThen(AppConfig.AccessControlsImplemented, csCompliant, csPartiallyCompliant),
-      'Des contrôles d''accès basés sur les rôles sont en place.');
-
-    ComplianceCheck.UpdateCheckItem(14,
-      IfThen(ClassExists('TDataAccessLogger'), csCompliant, csNonCompliant),
-      'Les accès aux données sont journalisés avec identification de l''utilisateur.');
-
-    // Vérifier la conservation des données
-    ComplianceCheck.UpdateCheckItem(15,
-      IfThen(ClassExists('TDataRetentionManager'), csCompliant, csNonCompliant),
-      'Des politiques de rétention sont définies pour chaque type de données.');
-
-    ComplianceCheck.UpdateCheckItem(16,
-      IfThen(AppConfig.DataRetentionEnforced, csCompliant, csPartiallyCompliant),
-      'Les données sont automatiquement supprimées/anonymisées après la période de rétention.');
-
-    // Vérifier les transferts internationaux
-    ComplianceCheck.UpdateCheckItem(17,
-      IfThen(not AppConfig.HasInternationalTransfers, csNotApplicable,
-             IfThen(AppConfig.InternationalTransfersCompliant, csCompliant, csNonCompliant)),
-      'Pas de transfert de données hors UE.');
-
-    // Vérifier la documentation
-    ComplianceCheck.UpdateCheckItem(18,
-      IfThen(ClassExists('TGDPRDocumentation'), csCompliant, csNonCompliant),
-      'Un registre des activités de traitement est maintenu et à jour.');
-
-    ComplianceCheck.UpdateCheckItem(19,
-      IfThen(AppConfig.DataBreachDetectionEnabled, csCompliant, csNonCompliant),
-      'Un système de détection et de signalement des violations de données est en place.');
-  finally
-    AppConfig.Free;
-  end;
-end;
-```
-
-### Intégration du GDPR dans le cycle de développement
-
-Pour assurer une conformité continue au GDPR, il est important d'intégrer les préoccupations de protection des données dès la conception de vos applications (Privacy by Design). Voici quelques conseils pratiques :
-
-#### Liste de contrôle pour la "confidentialité dès la conception"
-
-1. **Phase de conception** :
-   - Identifiez toutes les données personnelles qui seront traitées
-   - Déterminez la base légale pour chaque traitement
-   - Concevez les formulaires avec le principe de minimisation des données
-   - Planifiez les fonctionnalités permettant l'exercice des droits des utilisateurs
-
-2. **Phase de développement** :
-   - Implémentez le chiffrement des données sensibles
-   - Créez des mécanismes de consentement explicite
-   - Mettez en place des contrôles d'accès stricts
-   - Développez des fonctionnalités d'exportation et de suppression des données
-
-3. **Phase de test** :
-   - Testez tous les mécanismes de confidentialité
-   - Vérifiez que les données sont correctement anonymisées dans les environnements de test
-   - Effectuez des tests de pénétration pour identifier les vulnérabilités
-
-4. **Phase de déploiement** :
-   - Validez que toutes les communications sont chiffrées
-   - Vérifiez que les sauvegardes sont également sécurisées
-   - Confirmez que la politique de confidentialité est accessible
-
-5. **Phase de maintenance** :
-   - Effectuez des audits réguliers de conformité
-   - Mettez à jour la documentation en fonction des changements
-   - Surveillez les accès aux données personnelles
-
-### Anonymisation des données de test
-
-Pour le développement et les tests, il est important d'utiliser des données anonymisées plutôt que des données réelles :
-
-```pas
-unit DataAnonymizer;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, Data.DB, FireDAC.Comp.Client,
-  System.Generics.Collections;
-
-type
-  TAnonymizationRule = record
-    TableName: string;
-    ColumnName: string;
-    AnonymizationMethod: string; // 'random', 'fake', 'mask', 'fixed'
-    FixedValue: string;
-  end;
-
-  TDataAnonymizer = class
-  private
-    FConnection: TFDConnection;
-    FRules: TList<TAnonymizationRule>;
-
-    function GenerateRandomString(Length: Integer): string;
-    function GenerateFakeName: string;
-    function GenerateFakeEmail(const Name: string = ''): string;
-    function GenerateFakeAddress: string;
-    function GenerateFakePhoneNumber: string;
-    function MaskString(const Value: string): string;
-  public
-    constructor Create(Connection: TFDConnection);
-    destructor Destroy; override;
-
-    // Ajouter une règle d'anonymisation
-    procedure AddRule(const TableName, ColumnName, Method: string;
-                     const FixedValue: string = '');
-
-    // Anonymiser une table
-    procedure AnonymizeTable(const TableName: string);
-
-    // Anonymiser toutes les tables selon les règles définies
-    procedure AnonymizeDatabase;
-
-    // Exporter une base de données anonymisée
-    procedure ExportAnonymizedDatabase(const FileName: string);
-  end;
-
-implementation
-
-constructor TDataAnonymizer.Create(Connection: TFDConnection);
-begin
-  inherited Create;
-  FConnection := Connection;
-  FRules := TList<TAnonymizationRule>.Create;
-end;
-
-destructor TDataAnonymizer.Destroy;
-begin
-  FRules.Free;
-  inherited;
-end;
-
-function TDataAnonymizer.GenerateRandomString(Length: Integer): string;
-const
-  Charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-var
-  I: Integer;
-begin
-  SetLength(Result, Length);
-
-  for I := 1 to Length do
-    Result[I] := Charset[Random(System.Length(Charset)) + 1];
-end;
-
-function TDataAnonymizer.GenerateFakeName: string;
-const
-  FirstNames: array[0..9] of string = (
-    'Jean', 'Marie', 'Pierre', 'Sophie', 'Paul',
-    'Julie', 'Thomas', 'Emma', 'Nicolas', 'Camille'
-  );
-  LastNames: array[0..9] of string = (
-    'Dupont', 'Martin', 'Bernard', 'Petit', 'Durand',
-    'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel'
-  );
-begin
-  Result := FirstNames[Random(10)] + ' ' + LastNames[Random(10)];
-end;
-
-function TDataAnonymizer.GenerateFakeEmail(const Name: string): string;
-const
-  Domains: array[0..4] of string = (
-    'exemple.com', 'test.org', 'dummy.net', 'sample.fr', 'anon.io'
-  );
-var
-  Username: string;
-begin
-  if Name <> '' then
-  begin
-    Username := StringReplace(Name, ' ', '.', [rfReplaceAll]);
-    Username := LowerCase(Username);
-  end
-  else
-    Username := 'user' + IntToStr(Random(10000));
-
-  Result := Username + '@' + Domains[Random(5)];
-end;
-
-function TDataAnonymizer.GenerateFakeAddress: string;
-const
-  Streets: array[0..4] of string = (
-    'Rue des Lilas', 'Avenue du Parc', 'Boulevard Central',
-    'Rue de la Paix', 'Avenue des Champs'
-  );
-  Cities: array[0..4] of string = (
-    'Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Lille'
-  );
-  ZipCodes: array[0..4] of string = (
-    '75000', '69000', '13000', '33000', '59000'
-  );
-begin
-  Result := IntToStr(Random(100) + 1) + ' ' + Streets[Random(5)] + ', ' +
-            ZipCodes[Random(5)] + ' ' + Cities[Random(5)];
-end;
-
-function TDataAnonymizer.GenerateFakePhoneNumber: string;
-begin
-  Result := '0' + IntToStr(Random(9) + 1);
-
-  for var I := 1 to 8 do
-    Result := Result + IntToStr(Random(10));
-
-  // Formater comme 01.23.45.67.89
-  Result := Copy(Result, 1, 2) + '.' + Copy(Result, 3, 2) + '.' +
-            Copy(Result, 5, 2) + '.' + Copy(Result, 7, 2) + '.' +
-            Copy(Result, 9, 2);
-end;
-
-function TDataAnonymizer.MaskString(const Value: string): string;
-begin
-  if Length(Value) <= 2 then
-    Result := StringOfChar('*', Length(Value))
-  else
-    Result := Copy(Value, 1, 1) + StringOfChar('*', Length(Value) - 2) +
-              Copy(Value, Length(Value), 1);
-end;
-
-procedure TDataAnonymizer.AddRule(const TableName, ColumnName, Method: string;
-  const FixedValue: string);
-var
-  Rule: TAnonymizationRule;
-begin
-  Rule.TableName := TableName;
-  Rule.ColumnName := ColumnName;
-  Rule.AnonymizationMethod := Method;
-  Rule.FixedValue := FixedValue;
-
-  FRules.Add(Rule);
-end;
-
-procedure TDataAnonymizer.AnonymizeTable(const TableName: string);
+procedure TGestionDonneesUtilisateur.VerifierEtNettoyer;
 var
   Query: TFDQuery;
-  Rule: TAnonymizationRule;
-  RulesForTable: TList<TAnonymizationRule>;
-  I: Integer;
-  NewValue: string;
 begin
-  // Collecter toutes les règles pour cette table
-  RulesForTable := TList<TAnonymizationRule>.Create;
+  Query := TFDQuery.Create(nil);
   try
-    for Rule in FRules do
-      if SameText(Rule.TableName, TableName) then
-        RulesForTable.Add(Rule);
+    Query.Connection := FDConnection1;
 
-    if RulesForTable.Count = 0 then
-      Exit; // Pas de règles pour cette table
+    // Supprimer les doublons
+    Query.SQL.Text :=
+      'DELETE u1 FROM Utilisateurs u1 ' +
+      'INNER JOIN Utilisateurs u2 ' +
+      'WHERE u1.ID > u2.ID AND u1.Email = u2.Email';
+    Query.ExecSQL;
 
-    // Créer la requête
+    // Normaliser les formats
+    Query.SQL.Text :=
+      'UPDATE Utilisateurs SET Email = LOWER(TRIM(Email))';
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
+```
+
+### 5. Limitation de la conservation
+
+**Principe** : Conserver les données uniquement le temps nécessaire.
+
+```pascal
+type
+  TDureeConservation = record
+    const
+      COMPTES_INACTIFS = 36; // 3 ans en mois
+      COMMANDES = 60;        // 5 ans (obligation légale)
+      LOGS = 12;             // 1 an
+      NEWSLETTER = 36;       // 3 ans
+  end;
+
+procedure SupprimerDonneesExpirees;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+
+    // Supprimer les comptes inactifs depuis 3 ans
+    Query.SQL.Text :=
+      'DELETE FROM Utilisateurs ' +
+      'WHERE DerniereConnexion < DATE_SUB(NOW(), INTERVAL :Mois MONTH)';
+    Query.ParamByName('Mois').AsInteger := TDureeConservation.COMPTES_INACTIFS;
+    Query.ExecSQL;
+
+    TLogger.Instance.Info('Comptes inactifs supprimés',
+                          IntToStr(Query.RowsAffected) + ' comptes');
+
+    // Anonymiser les anciennes commandes (après 5 ans)
+    Query.SQL.Text :=
+      'UPDATE Commandes SET ' +
+      '  NomClient = ''Anonymisé'', ' +
+      '  EmailClient = ''anonyme@example.com'', ' +
+      '  AdresseLivraison = ''Anonymisée'' ' +
+      'WHERE DateCommande < DATE_SUB(NOW(), INTERVAL :Mois MONTH)';
+    Query.ParamByName('Mois').AsInteger := TDureeConservation.COMMANDES;
+    Query.ExecSQL;
+
+  finally
+    Query.Free;
+  end;
+end;
+
+// Tâche planifiée (à exécuter quotidiennement ou hebdomadairement)
+procedure TFormPrincipal.TimerNettoyageTimer(Sender: TObject);
+begin
+  SupprimerDonneesExpirees;
+end;
+```
+
+### 6. Intégrité et confidentialité
+
+**Principe** : Protéger les données contre la perte, la destruction ou les dommages.
+
+```pascal
+// Voir sections précédentes :
+// - 16.3 Chiffrement des données
+// - 16.4 Sécurisation des connexions
+// - 16.5 Protection contre les vulnérabilités
+
+procedure ProtegerDonneesPersonnelles;
+begin
+  // 1. Chiffrement
+  ChiffrerDonneesAuRepos;
+  UtiliserHTTPS;
+
+  // 2. Contrôle d'accès
+  VerifierPermissions;
+
+  // 3. Sauvegardes
+  SauvegarderRegulierement;
+
+  // 4. Journalisation
+  LoggerAccesDonnees;
+end;
+```
+
+### 7. Responsabilité (Accountability)
+
+**Principe** : Être capable de démontrer la conformité.
+
+```pascal
+type
+  TRegistreConformite = class
+  public
+    procedure DocumenterTraitement;
+    procedure GenererRapportConformite;
+    procedure ConserverPreuves;
+  end;
+```
+
+## Les droits des utilisateurs (et comment les implémenter)
+
+### 1. Droit d'accès
+
+L'utilisateur peut demander une copie de toutes ses données.
+
+```pascal
+type
+  TExportDonneesPersonnelles = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    function ExporterDonneesUtilisateur(AIDUtilisateur: Integer): string; // JSON
+    procedure GenererRapportPDF(AIDUtilisateur: Integer; const ANomFichier: string);
+  end;
+
+constructor TExportDonneesPersonnelles.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+function TExportDonneesPersonnelles.ExporterDonneesUtilisateur(AIDUtilisateur: Integer): string;
+var
+  Query: TFDQuery;
+  JSONRoot: TJSONObject;
+  JSONUtilisateur: TJSONObject;
+  JSONCommandes: TJSONArray;
+begin
+  JSONRoot := TJSONObject.Create;
+  try
+    // Informations utilisateur
     Query := TFDQuery.Create(nil);
     try
       Query.Connection := FConnection;
-      Query.SQL.Text := 'SELECT * FROM ' + TableName;
+      Query.SQL.Text := 'SELECT * FROM Utilisateurs WHERE ID = :ID';
+      Query.ParamByName('ID').AsInteger := AIDUtilisateur;
       Query.Open;
 
-      // Parcourir toutes les lignes
+      if not Query.IsEmpty then
+      begin
+        JSONUtilisateur := TJSONObject.Create;
+        JSONUtilisateur.AddPair('nom', Query.FieldByName('Nom').AsString);
+        JSONUtilisateur.AddPair('email', Query.FieldByName('Email').AsString);
+        JSONUtilisateur.AddPair('telephone', Query.FieldByName('Telephone').AsString);
+        JSONUtilisateur.AddPair('date_creation',
+          DateToStr(Query.FieldByName('DateCreation').AsDateTime));
+        JSONRoot.AddPair('utilisateur', JSONUtilisateur);
+      end;
+      Query.Close;
+
+      // Commandes
+      Query.SQL.Text := 'SELECT * FROM Commandes WHERE IDUtilisateur = :ID';
+      Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+      Query.Open;
+
+      JSONCommandes := TJSONArray.Create;
       while not Query.Eof do
       begin
-        Query.Edit;
-
-        // Appliquer toutes les règles
-        for Rule in RulesForTable do
-        begin
-          if Query.FieldByName(Rule.ColumnName).IsNull then
-          begin
-            Query.Next;
-            Continue;
-          end;
-
-          // Choisir la méthode d'anonymisation
-          if Rule.AnonymizationMethod = 'random' then
-            NewValue := GenerateRandomString(10)
-          else if Rule.AnonymizationMethod = 'fake' then
-          begin
-            if ContainsText(Rule.ColumnName, 'name') then
-              NewValue := GenerateFakeName
-            else if ContainsText(Rule.ColumnName, 'email') then
-              NewValue := GenerateFakeEmail
-            else if ContainsText(Rule.ColumnName, 'address') then
-              NewValue := GenerateFakeAddress
-            else if ContainsText(Rule.ColumnName, 'phone') then
-              NewValue := GenerateFakePhoneNumber
-            else
-              NewValue := GenerateRandomString(10);
-          end
-          else if Rule.AnonymizationMethod = 'mask' then
-            NewValue := MaskString(Query.FieldByName(Rule.ColumnName).AsString)
-          else if Rule.AnonymizationMethod = 'fixed' then
-            NewValue := Rule.FixedValue
-          else
-            Continue; // Méthode inconnue
-
-          // Appliquer la nouvelle valeur
-          Query.FieldByName(Rule.ColumnName).AsString := NewValue;
-        end;
-
-        Query.Post;
+        JSONCommandes.Add(TJSONObject.Create
+          .AddPair('numero', Query.FieldByName('Numero').AsString)
+          .AddPair('date', DateToStr(Query.FieldByName('DateCommande').AsDateTime))
+          .AddPair('montant', FloatToStr(Query.FieldByName('Montant').AsFloat))
+        );
         Query.Next;
       end;
+      JSONRoot.AddPair('commandes', JSONCommandes);
+
+      // Ajouter d'autres données (préférences, historique, etc.)
+
     finally
       Query.Free;
     end;
+
+    Result := JSONRoot.ToString;
   finally
-    RulesForTable.Free;
+    JSONRoot.Free;
   end;
 end;
 
-procedure TDataAnonymizer.AnonymizeDatabase;
+procedure TExportDonneesPersonnelles.GenererRapportPDF(AIDUtilisateur: Integer;
+                                                        const ANomFichier: string);
 var
-  Tables: TStringList;
-  TableName: string;
+  JSON: string;
+  Lignes: TStringList;
 begin
-  Tables := TStringList.Create;
-  try
-    // Obtenir la liste des tables
-    FConnection.GetTableNames('', '', '', Tables);
+  JSON := ExporterDonneesUtilisateur(AIDUtilisateur);
 
-    // Anonymiser chaque table
-    for TableName in Tables do
-      AnonymizeTable(TableName);
+  // Convertir en format lisible
+  Lignes := TStringList.Create;
+  try
+    Lignes.Add('RAPPORT DE VOS DONNÉES PERSONNELLES');
+    Lignes.Add('===================================');
+    Lignes.Add('');
+    Lignes.Add('Généré le : ' + DateTimeToStr(Now));
+    Lignes.Add('');
+    Lignes.Add(JSON); // En production, formatter joliment
+
+    Lignes.SaveToFile(ANomFichier);
+
+    // En production : convertir en PDF avec un outil comme FastReport
   finally
-    Tables.Free;
+    Lignes.Free;
   end;
 end;
 
-procedure TDataAnonymizer.ExportAnonymizedDatabase(const FileName: string);
+// Interface utilisateur
+procedure TFormProfil.BtnExporterDonneesClick(Sender: TObject);
 var
-  Backup: TFDScript;
+  Export: TExportDonneesPersonnelles;
+  CheminFichier: string;
 begin
-  Backup := TFDScript.Create(nil);
+  Export := TExportDonneesPersonnelles.Create(FDConnection1);
   try
-    Backup.Connection := FConnection;
+    CheminFichier := TPath.Combine(TPath.GetDocumentsPath,
+                                    'mes_donnees_' + FormatDateTime('yyyymmdd', Now) + '.json');
 
-    // Anonymiser d'abord
-    AnonymizeDatabase;
+    TFile.WriteAllText(CheminFichier,
+                       Export.ExporterDonneesUtilisateur(UtilisateurConnecteID));
 
-    // Puis exporter
-    Backup.ScriptOptions.CommandSeparator := ';';
-    Backup.ScriptOptions.DriverID := 'MySQL'; // Adapter selon votre SGBD
-
-    // Exporter la structure et les données
-    Backup.SQLScripts.Add.SQL.Text := 'SELECT 1';  // Placeholder
-    Backup.SQLScripts.Items[0].SQL.Clear;
-
-    // Pour MySQL
-    Backup.ExecuteCommand('SET foreign_key_checks = 0');
-
-    // Exporter la structure et les données (les détails dépendent du SGBD)
-    // Cet exemple est simplifié et devra être adapté
-    var Tables := TStringList.Create;
-    try
-      FConnection.GetTableNames('', '', '', Tables);
-
-      for var TableName in Tables do
-      begin
-        // Exporter la structure
-        var CreateSQL := GetTableCreateSQL(TableName);
-        Backup.SQLScripts.Items[0].SQL.Add(CreateSQL);
-
-        // Exporter les données
-        var DataSQL := GetTableDataSQL(TableName);
-        Backup.SQLScripts.Items[0].SQL.Add(DataSQL);
-      end;
-    finally
-      Tables.Free;
-    end;
-
-    Backup.ExecuteCommand('SET foreign_key_checks = 1');
-
-    // Sauvegarder dans un fichier
-    Backup.SQLScripts.Items[0].SQL.SaveToFile(FileName);
+    ShowMessage('Vos données ont été exportées vers :' + sLineBreak + CheminFichier);
   finally
-    Backup.Free;
+    Export.Free;
   end;
 end;
-
-end.
 ```
 
-### Conclusion
+### 2. Droit de rectification
 
-La mise en conformité avec le GDPR est un processus continu qui doit être intégré à toutes les étapes du développement de vos applications Delphi. En suivant les principes et en mettant en œuvre les techniques présentées dans ce chapitre, vous serez en mesure de créer des applications qui respectent la vie privée des utilisateurs tout en leur offrant les fonctionnalités dont ils ont besoin.
+L'utilisateur peut corriger ses données inexactes.
 
-Voici un résumé des points clés à retenir :
+```pascal
+procedure TFormMonProfil.BtnModifierClick(Sender: TObject);
+var
+  Query: TFDQuery;
+begin
+  // Validation
+  if not ValiderEmail(EditEmail.Text) then
+  begin
+    ShowMessage('Email invalide');
+    Exit;
+  end;
 
-1. **Consentement explicite** : Demandez et enregistrez le consentement explicite des utilisateurs pour chaque type de traitement de données.
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text :=
+      'UPDATE Utilisateurs SET ' +
+      '  Nom = :Nom, ' +
+      '  Email = :Email, ' +
+      '  Telephone = :Tel, ' +
+      '  Adresse = :Adresse ' +
+      'WHERE ID = :ID';
+    Query.ParamByName('Nom').AsString := EditNom.Text;
+    Query.ParamByName('Email').AsString := EditEmail.Text;
+    Query.ParamByName('Tel').AsString := EditTelephone.Text;
+    Query.ParamByName('Adresse').AsString := EditAdresse.Text;
+    Query.ParamByName('ID').AsInteger := UtilisateurConnecteID;
+    Query.ExecSQL;
 
-2. **Minimisation des données** : Ne collectez que les données strictement nécessaires et rendez optionnels tous les champs qui ne sont pas essentiels.
+    // Logger la modification
+    TLogger.Instance.Info('Profil modifié',
+                          Format('User ID: %d', [UtilisateurConnecteID]));
 
-3. **Transparence** : Informez clairement les utilisateurs sur l'utilisation de leurs données à travers une politique de confidentialité complète et accessible.
+    ShowMessage('Profil mis à jour');
+  finally
+    Query.Free;
+  end;
+end;
+```
 
-4. **Droits des utilisateurs** : Mettez en place des fonctionnalités permettant aux utilisateurs d'accéder, d'exporter, de rectifier et de supprimer leurs données.
+### 3. Droit à l'effacement (droit à l'oubli)
 
-5. **Sécurité** : Protégez les données personnelles à l'aide de mécanismes de chiffrement, de contrôles d'accès et de journalisation.
+L'utilisateur peut demander la suppression de ses données.
 
-6. **Rétention limitée** : Définissez et appliquez des politiques de conservation des données pour ne pas garder les informations plus longtemps que nécessaire.
+```pascal
+type
+  TSuppressionCompte = class
+  private
+    FConnection: TFDConnection;
+    procedure SupprimerDonneesUtilisateur(AIDUtilisateur: Integer);
+    procedure AnonymiserDonneesConservees(AIDUtilisateur: Integer);
+    procedure JournaliserSuppression(AIDUtilisateur: Integer);
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);
+  end;
 
-7. **Documentation** : Maintenez un registre des activités de traitement et documentez toutes vos mesures de conformité.
+constructor TSuppressionCompte.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
 
-8. **Audit régulier** : Vérifiez régulièrement que votre application reste conforme aux exigences du GDPR.
+procedure TSuppressionCompte.SupprimerDonneesUtilisateur(AIDUtilisateur: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
 
-En intégrant ces principes dans vos applications Delphi, vous ne vous conformerez pas seulement à la réglementation, mais vous gagnerez également la confiance de vos utilisateurs en montrant que vous respectez leur vie privée.
+    // Supprimer les données non nécessaires légalement
+    Query.SQL.Text := 'DELETE FROM Preferences WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
 
-### Exercices pratiques
+    Query.SQL.Text := 'DELETE FROM HistoriqueNavigation WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
 
-1. **Implémentez un formulaire de consentement** qui demande clairement l'autorisation pour différentes utilisations des données personnelles.
+    Query.SQL.Text := 'DELETE FROM Newsletter WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
 
-2. **Créez une interface pour l'exportation des données utilisateur** dans au moins deux formats différents (JSON, CSV, XML).
+    // Supprimer le compte utilisateur
+    Query.SQL.Text := 'DELETE FROM Utilisateurs WHERE ID = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
 
-3. **Développez un mécanisme de suppression de compte** qui anonymise ou supprime toutes les données personnelles d'un utilisateur.
+procedure TSuppressionCompte.AnonymiserDonneesConservees(AIDUtilisateur: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
 
-4. **Mettez en place un gestionnaire de cookies** pour votre application web qui respecte les exigences du GDPR.
+    // Anonymiser les commandes (obligation légale de garder 5 ans)
+    Query.SQL.Text :=
+      'UPDATE Commandes SET ' +
+      '  NomClient = ''Utilisateur supprimé'', ' +
+      '  EmailClient = ''anonyme@deleted.com'', ' +
+      '  TelephoneClient = NULL, ' +
+      '  AdresseLivraison = ''Anonymisée'' ' +
+      'WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
 
-5. **Créez un tableau de bord de confidentialité** permettant aux utilisateurs de voir quelles données sont stockées et comment elles sont utilisées.
+    // Anonymiser les avis/commentaires (option : supprimer ou anonymiser)
+    Query.SQL.Text :=
+      'UPDATE Avis SET ' +
+      '  NomAuteur = ''Utilisateur'', ' +
+      '  IDUtilisateur = NULL ' +
+      'WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
 
-6. **Développez un système de journalisation des accès** aux données personnelles qui enregistre qui a accédé à quelles données et quand.
+procedure TSuppressionCompte.JournaliserSuppression(AIDUtilisateur: Integer);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'INSERT INTO LogsSuppressionComptes (IDUtilisateur, DateSuppression) ' +
+      'VALUES (:ID, NOW())';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+end;
 
-7. **Pour les plus avancés** : Implémentez un système complet de gestion de la conformité au GDPR, incluant le registre des activités de traitement, les politiques de rétention automatisées et des rapports d'audit réguliers.
+procedure TSuppressionCompte.SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);
+begin
+  // 1. Journaliser la demande
+  JournaliserSuppression(AIDUtilisateur);
+
+  // 2. Anonymiser les données à conserver
+  AnonymiserDonneesConservees(AIDUtilisateur);
+
+  // 3. Supprimer toutes les autres données
+  SupprimerDonneesUtilisateur(AIDUtilisateur);
+
+  TLogger.Instance.Info('Compte supprimé',
+                        Format('User ID: %d, Raison: %s', [AIDUtilisateur, ARaison]));
+end;
+
+// Interface utilisateur
+procedure TFormParametres.BtnSupprimerCompteClick(Sender: TObject);
+var
+  Suppression: TSuppressionCompte;
+  Confirmation: string;
+begin
+  // Double confirmation
+  if MessageDlg('Êtes-vous sûr de vouloir supprimer votre compte ?' + sLineBreak +
+                'Cette action est IRRÉVERSIBLE.',
+                mtWarning, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  Confirmation := '';
+  if not InputQuery('Confirmation', 'Tapez SUPPRIMER pour confirmer', Confirmation) then
+    Exit;
+
+  if Confirmation <> 'SUPPRIMER' then
+  begin
+    ShowMessage('Confirmation incorrecte');
+    Exit;
+  end;
+
+  Suppression := TSuppressionCompte.Create(FDConnection1);
+  try
+    Suppression.SupprimerCompte(UtilisateurConnecteID, 'Demande utilisateur');
+    ShowMessage('Votre compte a été supprimé. Au revoir.');
+    Application.Terminate;
+  finally
+    Suppression.Free;
+  end;
+end;
+```
+
+### 4. Droit à la portabilité
+
+L'utilisateur peut récupérer ses données dans un format structuré.
+
+```pascal
+procedure TFormProfil.BtnExporterDonneesPortablesClick(Sender: TObject);
+var
+  Export: TExportDonneesPersonnelles;
+  JSON: string;
+  CheminJSON, CheminCSV: string;
+begin
+  Export := TExportDonneesPersonnelles.Create(FDConnection1);
+  try
+    // Export JSON
+    JSON := Export.ExporterDonneesUtilisateur(UtilisateurConnecteID);
+    CheminJSON := TPath.Combine(TPath.GetDocumentsPath, 'mes_donnees.json');
+    TFile.WriteAllText(CheminJSON, JSON, TEncoding.UTF8);
+
+    // Export CSV (pour Excel)
+    CheminCSV := TPath.Combine(TPath.GetDocumentsPath, 'mes_donnees.csv');
+    ExporterVersCSV(UtilisateurConnecteID, CheminCSV);
+
+    ShowMessage('Vos données ont été exportées :' + sLineBreak +
+                '- JSON : ' + CheminJSON + sLineBreak +
+                '- CSV : ' + CheminCSV);
+  finally
+    Export.Free;
+  end;
+end;
+
+procedure ExporterVersCSV(AIDUtilisateur: Integer; const ANomFichier: string);
+var
+  Query: TFDQuery;
+  CSV: TStringList;
+begin
+  Query := TFDQuery.Create(nil);
+  CSV := TStringList.Create;
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text := 'SELECT * FROM Commandes WHERE IDUtilisateur = :ID';
+    Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+    Query.Open;
+
+    // En-tête
+    CSV.Add('Numéro;Date;Montant;Statut');
+
+    // Données
+    while not Query.Eof do
+    begin
+      CSV.Add(Format('%s;%s;%s;%s',
+        [Query.FieldByName('Numero').AsString,
+         DateToStr(Query.FieldByName('DateCommande').AsDateTime),
+         FloatToStr(Query.FieldByName('Montant').AsFloat),
+         Query.FieldByName('Statut').AsString]));
+      Query.Next;
+    end;
+
+    CSV.SaveToFile(ANomFichier, TEncoding.UTF8);
+  finally
+    CSV.Free;
+    Query.Free;
+  end;
+end;
+```
+
+### 5. Droit d'opposition
+
+L'utilisateur peut s'opposer à certains traitements.
+
+```pascal
+type
+  TGestionConsentements = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure DefinirConsentement(AIDUtilisateur: Integer;
+                                   const ATypeTraitement: string;
+                                   AConsenti: Boolean);
+    function AConsenti(AIDUtilisateur: Integer; const ATypeTraitement: string): Boolean;
+  end;
+
+constructor TGestionConsentements.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TGestionConsentements.DefinirConsentement(AIDUtilisateur: Integer;
+                                                     const ATypeTraitement: string;
+                                                     AConsenti: Boolean);
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    // Enregistrer ou mettre à jour le consentement
+    Query.SQL.Text :=
+      'INSERT INTO Consentements (IDUtilisateur, TypeTraitement, Consenti, DateModification) ' +
+      'VALUES (:IDUser, :Type, :Consenti, NOW()) ' +
+      'ON DUPLICATE KEY UPDATE Consenti = :Consenti, DateModification = NOW()';
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ParamByName('Type').AsString := ATypeTraitement;
+    Query.ParamByName('Consenti').AsBoolean := AConsenti;
+    Query.ExecSQL;
+
+    // Logger le changement
+    TLogger.Instance.Info('Consentement modifié',
+      Format('User: %d, Type: %s, Consenti: %s',
+             [AIDUtilisateur, ATypeTraitement, BoolToStr(AConsenti, True)]));
+  finally
+    Query.Free;
+  end;
+end;
+
+function TGestionConsentements.AConsenti(AIDUtilisateur: Integer;
+                                          const ATypeTraitement: string): Boolean;
+var
+  Query: TFDQuery;
+begin
+  Result := False;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text :=
+      'SELECT Consenti FROM Consentements ' +
+      'WHERE IDUtilisateur = :IDUser AND TypeTraitement = :Type';
+    Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
+    Query.ParamByName('Type').AsString := ATypeTraitement;
+    Query.Open;
+
+    if not Query.IsEmpty then
+      Result := Query.FieldByName('Consenti').AsBoolean;
+  finally
+    Query.Free;
+  end;
+end;
+
+// Interface de gestion des consentements
+procedure TFormParametresViePrivee.ChargerConsentements;
+begin
+  CheckBoxNewsletter.Checked :=
+    GestionConsentements.AConsenti(UtilisateurConnecteID, 'newsletter');
+
+  CheckBoxAnalyse.Checked :=
+    GestionConsentements.AConsenti(UtilisateurConnecteID, 'analyse_statistique');
+
+  CheckBoxPartage.Checked :=
+    GestionConsentements.AConsenti(UtilisateurConnecteID, 'partage_partenaires');
+end;
+
+procedure TFormParametresViePrivee.BtnEnregistrerClick(Sender: TObject);
+begin
+  GestionConsentements.DefinirConsentement(
+    UtilisateurConnecteID, 'newsletter', CheckBoxNewsletter.Checked);
+
+  GestionConsentements.DefinirConsentement(
+    UtilisateurConnecteID, 'analyse_statistique', CheckBoxAnalyse.Checked);
+
+  GestionConsentements.DefinirConsentement(
+    UtilisateurConnecteID, 'partage_partenaires', CheckBoxPartage.Checked);
+
+  ShowMessage('Vos préférences ont été enregistrées');
+end;
+```
+
+## Gestion du consentement
+
+### Structure de base de données
+
+```sql
+CREATE TABLE Consentements (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    IDUtilisateur INT NOT NULL,
+    TypeTraitement VARCHAR(50) NOT NULL,
+    Consenti BOOLEAN NOT NULL,
+    DateModification DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    AdresseIP VARCHAR(45),
+    UserAgent VARCHAR(255),
+    UNIQUE KEY (IDUtilisateur, TypeTraitement),
+    FOREIGN KEY (IDUtilisateur) REFERENCES Utilisateurs(ID) ON DELETE CASCADE
+);
+
+-- Index pour recherche rapide
+CREATE INDEX idx_utilisateur_type ON Consentements(IDUtilisateur, TypeTraitement);
+```
+
+### Demande de consentement explicite
+
+```pascal
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);
+begin
+  // Validation des champs...
+
+  // Consentement EXPLICITE obligatoire
+  if not CheckBoxCGU.Checked then
+  begin
+    ShowMessage('Vous devez accepter les conditions générales d''utilisation');
+    Exit;
+  end;
+
+  // Créer le compte
+  CreerCompte(EditEmail.Text, HashMotDePasse(EditPassword.Text));
+
+  // Enregistrer les consentements
+  GestionConsentements.DefinirConsentement(NouvelIDUtilisateur, 'cgu', True);
+
+  // Consentement OPTIONNEL pour newsletter (case décochée par défaut)
+  if CheckBoxNewsletter.Checked then
+    GestionConsentements.DefinirConsentement(NouvelIDUtilisateur, 'newsletter', True);
+
+  ShowMessage('Compte créé avec succès');
+end;
+```
+
+### Interface de consentement granulaire
+
+```pascal
+procedure TFormConsentements.AfficherOptionsConsentement;
+begin
+  // Consentement obligatoire (non modifiable)
+  CheckBoxCGU.Checked := True;
+  CheckBoxCGU.Enabled := False;
+  LabelCGU.Caption := 'Conditions générales d''utilisation (Obligatoire)';
+
+  // Consentements optionnels (modifiables)
+  CheckBoxNewsletter.Caption := 'Je souhaite recevoir la newsletter hebdomadaire';
+  CheckBoxNewsletter.Checked := False; // Décochée par défaut (opt-in)
+
+  CheckBoxAnalyse.Caption := 'J''accepte l''analyse de mon utilisation pour améliorer le service';
+  CheckBoxAnalyse.Checked := False;
+
+  CheckBoxPartage.Caption := 'J''accepte le partage de mes données avec des partenaires';
+  CheckBoxPartage.Checked := False;
+
+  // Ajouter des liens vers les détails
+  LinkPolitique.Caption := 'Voir la politique de confidentialité';
+end;
+```
+
+## Notification des violations de données
+
+### Obligation légale
+
+En cas de violation de données (piratage, fuite, etc.), vous devez :
+1. **Notifier la CNIL dans les 72h**
+2. **Informer les utilisateurs concernés** si risque élevé
+
+```pascal
+type
+  TViolationDonnees = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    procedure EnregistrerViolation(const ADescription, AGravite: string;
+                                     AUtilisateursConcernes: TArray<Integer>);
+    procedure NotifierCNIL(const ADetails: string);
+    procedure NotifierUtilisateurs(AUtilisateursConcernes: TArray<Integer>);
+  end;
+
+constructor TViolationDonnees.Create(AConnection: TFDConnection);
+begin
+  inherited Create;
+  FConnection := AConnection;
+end;
+
+procedure TViolationDonnees.EnregistrerViolation(const ADescription, AGravite: string;
+                                                   AUtilisateursConcernes: TArray<Integer>);
+var
+  Query: TFDQuery;
+  IDViolation: Integer;
+  IDUser: Integer;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    // Enregistrer la violation
+    Query.SQL.Text :=
+      'INSERT INTO ViolationsDonnees (DateDetection, Description, Gravite, NbUtilisateurs) ' +
+      'VALUES (NOW(), :Description, :Gravite, :NbUsers)';
+    Query.ParamByName('Description').AsString := ADescription;
+    Query.ParamByName('Gravite').AsString := AGravite;
+    Query.ParamByName('NbUsers').AsInteger := Length(AUtilisateursConcernes);
+    Query.ExecSQL;
+
+    // Récupérer l'ID de la violation
+    IDViolation := Query.Connection.GetLastAutoGenValue;
+
+    // Enregistrer les utilisateurs concernés
+    for IDUser in AUtilisateursConcernes do
+    begin
+      Query.SQL.Text :=
+        'INSERT INTO UtilisateursViolation (IDViolation, IDUtilisateur) ' +
+        'VALUES (:IDViolation, :IDUser)';
+      Query.ParamByName('IDViolation').AsInteger := IDViolation;
+      Query.ParamByName('IDUser').AsInteger := IDUser;
+      Query.ExecSQL;
+    end;
+
+    // Logger
+    TLogger.Instance.Critical('Violation de données détectée',
+      Format('Description: %s, Utilisateurs: %d',
+             [ADescription, Length(AUtilisateursConcernes)]));
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure TViolationDonnees.NotifierCNIL(const ADetails: string);
+begin
+  // En production : envoyer via le portail de notification de la CNIL
+  // https://www.cnil.fr/fr/notifier-une-violation-de-donnees-personnelles
+
+  TLogger.Instance.Critical('Notification CNIL requise', ADetails);
+
+  // Envoyer un email à l'équipe de conformité
+  EnvoyerEmail('dpo@monentreprise.com',
+               'URGENT : Violation de données - Notification CNIL requise',
+               ADetails);
+end;
+
+procedure TViolationDonnees.NotifierUtilisateurs(AUtilisateursConcernes: TArray<Integer>);
+var
+  Query: TFDQuery;
+  IDUser: Integer;
+  Email: string;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+
+    for IDUser in AUtilisateursConcernes do
+    begin
+      Query.SQL.Text := 'SELECT Email FROM Utilisateurs WHERE ID = :ID';
+      Query.ParamByName('ID').AsInteger := IDUser;
+      Query.Open;
+
+      if not Query.IsEmpty then
+      begin
+        Email := Query.FieldByName('Email').AsString;
+
+        EnvoyerEmail(Email,
+          'IMPORTANT : Information sur la sécurité de vos données',
+          'Nous vous informons qu''une violation de données a été détectée. ' +
+          'Vos données ont pu être exposées. ' +
+          'Par précaution, nous vous recommandons de changer immédiatement votre mot de passe. ' +
+          'Détails complets : [lien vers page d''information]');
+      end;
+
+      Query.Close;
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+// En cas de violation détectée
+procedure GererViolationDonnees;
+var
+  Violation: TViolationDonnees;
+  UtilisateursConcernes: TArray<Integer>;
+begin
+  Violation := TViolationDonnees.Create(FDConnection1);
+  try
+    // Identifier les utilisateurs concernés
+    UtilisateursConcernes := IdentifierUtilisateursConcernes;
+
+    // Enregistrer la violation
+    Violation.EnregistrerViolation(
+      'Accès non autorisé à la base de données clients',
+      'ÉLEVÉE',
+      UtilisateursConcernes
+    );
+
+    // Notifier la CNIL dans les 72h
+    Violation.NotifierCNIL('Détails de la violation...');
+
+    // Notifier les utilisateurs concernés
+    Violation.NotifierUtilisateurs(UtilisateursConcernes);
+  finally
+    Violation.Free;
+  end;
+end;
+```
+
+## Registre des traitements
+
+Le RGPD impose de tenir un registre de tous les traitements de données.
+
+```pascal
+type
+  TRegistreTraitements = class
+  private
+    FTraitements: TList<TTraitement>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure AjouterTraitement(const ATraitement: TTraitement);
+    procedure GenererRapport(const ANomFichier: string);
+  end;
+
+type
+  TTraitement = record
+    Nom: string;
+    Finalite: string;
+    BaseJuridique: string;  // Consentement, Contrat, Obligation légale, etc.
+    DonneesCollectees: TStringList;
+    Destinataires: TStringList;
+    DureeConservation: string;
+    MesuresSecurite: TStringList;
+    TransfertHorsUE: Boolean;
+    PaysDestination: string;
+  end;
+
+constructor TRegistreTraitements.Create;
+begin
+  inherited Create;
+  FTraitements := TList<TTraitement>.Create;
+
+  // Définir tous les traitements
+  DefinirTraitements;
+end;
+
+procedure DefinirTraitements;
+var
+  Traitement: TTraitement;
+begin
+  // Traitement 1 : Gestion des comptes clients
+  Traitement.Nom := 'Gestion des comptes clients';
+  Traitement.Finalite := 'Permettre aux utilisateurs de créer un compte et utiliser nos services';
+  Traitement.BaseJuridique := 'Exécution du contrat';
+  Traitement.DonneesCollectees := TStringList.Create;
+  Traitement.DonneesCollectees.Add('Nom');
+  Traitement.DonneesCollectees.Add('Prénom');
+  Traitement.DonneesCollectees.Add('Email');
+  Traitement.DonneesCollectees.Add('Mot de passe (hashé)');
+  Traitement.Destinataires := TStringList.Create;
+  Traitement.Destinataires.Add('Service informatique');
+  Traitement.Destinataires.Add('Service client');
+  Traitement.DureeConservation := '3 ans après dernière connexion';
+  Traitement.MesuresSecurite := TStringList.Create;
+  Traitement.MesuresSecurite.Add('Chiffrement des données sensibles');
+  Traitement.MesuresSecurite.Add('Connexions HTTPS');
+  Traitement.MesuresSecurite.Add('Contrôle d''accès');
+  Traitement.TransfertHorsUE := False;
+
+  FTraitements.Add(Traitement);
+
+  // Traitement 2 : Newsletter
+  Traitement.Nom := 'Envoi de newsletter';
+  Traitement.Finalite := 'Informer les abonnés des nouveautés';
+  Traitement.BaseJuridique := 'Consentement';  // IMPORTANT : consentement explicite
+  Traitement.DonneesCollectees := TStringList.Create;
+  Traitement.DonneesCollectees.Add('Email');
+  Traitement.DonneesCollectees.Add('Prénom');
+  Traitement.Destinataires := TStringList.Create;
+  Traitement.Destinataires.Add('Service marketing');
+  Traitement.Destinataires.Add('Prestataire emailing (Mailchimp)');
+  Traitement.DureeConservation := '3 ans ou jusqu''à désinscription';
+  Traitement.MesuresSecurite := TStringList.Create;
+  Traitement.MesuresSecurite.Add('API sécurisée avec le prestataire');
+  Traitement.TransfertHorsUE := True;
+  Traitement.PaysDestination := 'États-Unis (garanties appropriées)';
+
+  FTraitements.Add(Traitement);
+
+  // Ajouter tous les autres traitements...
+end;
+
+procedure TRegistreTraitements.GenererRapport(const ANomFichier: string);
+var
+  Fichier: TextFile;
+  Traitement: TTraitement;
+  Donnee: string;
+begin
+  AssignFile(Fichier, ANomFichier);
+  Rewrite(Fichier);
+  try
+    WriteLn(Fichier, 'REGISTRE DES TRAITEMENTS');
+    WriteLn(Fichier, 'Conformité RGPD - Article 30');
+    WriteLn(Fichier, 'Date : ' + DateToStr(Date));
+    WriteLn(Fichier, StringOfChar('=', 80));
+    WriteLn(Fichier, '');
+
+    for Traitement in FTraitements do
+    begin
+      WriteLn(Fichier, 'TRAITEMENT : ' + Traitement.Nom);
+      WriteLn(Fichier, '  Finalité : ' + Traitement.Finalite);
+      WriteLn(Fichier, '  Base juridique : ' + Traitement.BaseJuridique);
+      WriteLn(Fichier, '  Données collectées :');
+      for Donnee in Traitement.DonneesCollectees do
+        WriteLn(Fichier, '    - ' + Donnee);
+      WriteLn(Fichier, '  Durée de conservation : ' + Traitement.DureeConservation);
+      WriteLn(Fichier, '  Transfert hors UE : ' + BoolToStr(Traitement.TransfertHorsUE, True));
+      if Traitement.TransfertHorsUE then
+        WriteLn(Fichier, '  Pays : ' + Traitement.PaysDestination);
+      WriteLn(Fichier, '');
+    end;
+  finally
+    CloseFile(Fichier);
+  end;
+end;
+```
+
+## Politique de confidentialité
+
+Vous devez fournir une politique de confidentialité claire et accessible.
+
+```pascal
+procedure AfficherPolitiqueConfidentialite;
+var
+  Politique: TStringList;
+begin
+  Politique := TStringList.Create;
+  try
+    Politique.Add('POLITIQUE DE CONFIDENTIALITÉ');
+    Politique.Add('');
+    Politique.Add('Dernière mise à jour : ' + DateToStr(Date));
+    Politique.Add('');
+    Politique.Add('1. QUI COLLECTE VOS DONNÉES ?');
+    Politique.Add('   [Nom de votre société], [adresse]');
+    Politique.Add('');
+    Politique.Add('2. QUELLES DONNÉES COLLECTONS-NOUS ?');
+    Politique.Add('   - Données d''identification : nom, prénom, email');
+    Politique.Add('   - Données de connexion : adresse IP, cookies');
+    Politique.Add('   - Données de commande : adresse de livraison, historique');
+    Politique.Add('');
+    Politique.Add('3. POURQUOI COLLECTONS-NOUS CES DONNÉES ?');
+    Politique.Add('   - Créer et gérer votre compte');
+    Politique.Add('   - Traiter vos commandes');
+    Politique.Add('   - Vous envoyer des communications (avec votre consentement)');
+    Politique.Add('');
+    Politique.Add('4. COMBIEN DE TEMPS CONSERVONS-NOUS VOS DONNÉES ?');
+    Politique.Add('   - Comptes inactifs : 3 ans');
+    Politique.Add('   - Commandes : 5 ans (obligation légale)');
+    Politique.Add('');
+    Politique.Add('5. VOS DROITS');
+    Politique.Add('   - Droit d''accès à vos données');
+    Politique.Add('   - Droit de rectification');
+    Politique.Add('   - Droit à l''effacement (droit à l''oubli)');
+    Politique.Add('   - Droit à la portabilité');
+    Politique.Add('   - Droit d''opposition');
+    Politique.Add('');
+    Politique.Add('   Pour exercer vos droits : dpo@monentreprise.com');
+    Politique.Add('');
+    Politique.Add('6. SÉCURITÉ');
+    Politique.Add('   Nous mettons en œuvre des mesures techniques et organisationnelles');
+    Politique.Add('   pour protéger vos données : chiffrement, HTTPS, contrôles d''accès.');
+
+    // Afficher dans une fenêtre ou un navigateur web
+    ShowMessage(Politique.Text);
+  finally
+    Politique.Free;
+  end;
+end;
+```
+
+## Checklist de conformité RGPD
+
+### Avant le lancement
+
+- [ ] Politique de confidentialité rédigée et accessible
+- [ ] Consentement explicite pour toute collecte de données
+- [ ] Processus de gestion des droits des utilisateurs
+  - [ ] Droit d'accès (export de données)
+  - [ ] Droit de rectification (modification)
+  - [ ] Droit à l'effacement (suppression)
+  - [ ] Droit à la portabilité (export structuré)
+  - [ ] Droit d'opposition (gestion consentements)
+- [ ] Registre des traitements complété
+- [ ] Mesures de sécurité implémentées
+- [ ] Durées de conservation définies et appliquées
+- [ ] Procédure de notification des violations
+- [ ] DPO (Délégué à la Protection des Données) désigné si nécessaire
+
+### Pendant l'exploitation
+
+- [ ] Nettoyage régulier des données obsolètes
+- [ ] Mise à jour de la politique de confidentialité si changements
+- [ ] Traitement des demandes d'exercice de droits dans les délais
+- [ ] Surveillance des violations de données
+- [ ] Formation continue de l'équipe
+- [ ] Audits de conformité réguliers
+
+## Bonnes pratiques
+
+### ✅ À faire
+
+**1. Privacy by Design**
+```pascal
+// Concevoir l'application avec la vie privée au cœur
+// Chiffrer dès la conception, minimiser les données
+```
+
+**2. Transparence**
+```pascal
+// Expliquer clairement ce que vous faites des données
+// Avant de collecter, informer l'utilisateur
+```
+
+**3. Minimisation**
+```pascal
+// Ne demander que le strict nécessaire
+// Pseudonymiser quand c'est possible
+```
+
+**4. Documentation**
+```pascal
+// Tenir un registre des traitements
+// Documenter les mesures de sécurité
+```
+
+**5. Formation**
+```pascal
+// Former l'équipe au RGPD
+// Sensibiliser aux risques
+```
+
+### ❌ À éviter
+
+**1. Collecte excessive**
+```pascal
+// ❌ Demander la date de naissance pour une newsletter
+```
+
+**2. Consentement pré-coché**
+```pascal
+// ❌ Case newsletter cochée par défaut
+// ✅ Case décochée, l'utilisateur doit cocher activement
+```
+
+**3. Durée illimitée**
+```pascal
+// ❌ Garder les données indéfiniment
+// ✅ Définir et respecter des durées de conservation
+```
+
+**4. Pas de procédure d'exercice des droits**
+```pascal
+// ❌ Ignorer les demandes de suppression
+// ✅ Traiter dans les 30 jours maximum
+```
+
+## Résumé des points essentiels
+
+✅ **Obligations RGPD essentielles** :
+- Recueillir le consentement explicite
+- Informer clairement les utilisateurs
+- Permettre l'exercice des droits (accès, rectification, effacement, portabilité, opposition)
+- Sécuriser les données
+- Limiter la conservation
+- Notifier les violations (CNIL + utilisateurs)
+- Tenir un registre des traitements
+
+❌ **Erreurs à éviter absolument** :
+- Collecter sans consentement
+- Conserver indéfiniment
+- Ignorer les demandes d'exercice de droits
+- Ne pas sécuriser les données
+- Utiliser les données pour d'autres finalités
+- Ne pas notifier une violation
+- Transférer hors UE sans garanties
+
+🎯 **Impact du non-respect** :
+- Amendes jusqu'à 20 millions € ou 4% du CA mondial
+- Perte de confiance des utilisateurs
+- Dommages réputationnels
+- Actions en justice possibles
+
+## Ressources utiles
+
+**Officielles** :
+- CNIL : https://www.cnil.fr
+- Texte du RGPD : https://www.cnil.fr/fr/reglement-europeen-protection-donnees
+- Guide du développeur CNIL : https://www.cnil.fr/fr/guide-rgpd-du-developpeur
+
+**Outils** :
+- Modèles de politique de confidentialité
+- Registre des traitements (template)
+- Guide de notification de violation
+
+Le RGPD n'est pas qu'une contrainte légale, c'est aussi une opportunité de construire une relation de confiance avec vos utilisateurs en respectant leur vie privée. Intégrez ces principes dès la conception de votre application.
 
 ⏭️ [Signature numérique et validation](/16-securite-des-applications/09-signature-numerique-et-validation.md)
