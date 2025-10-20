@@ -1,4 +1,4 @@
-## Table des Matières
+# Table des Matières - Formation Delphi Complète - Delphi 13 Florence
 
 ### 1. [Introduction à Delphi](01-introduction-a-delphi/README.md)
 - 1.1 [Qu'est-ce que Delphi ?](01-introduction-a-delphi/01-quest-ce-que-delphi.md)
@@ -8,6 +8,7 @@
 - 1.5 [Installation et configuration](01-introduction-a-delphi/05-installation-et-configuration.md)
 - 1.6 [Premier aperçu de l'environnement](01-introduction-a-delphi/06-premier-apercu-de-lenvironnement.md)
 - 1.7 [Comparaison avec d'autres environnements de développement](01-introduction-a-delphi/07-comparaison-avec-dautres-environnements.md)
+- **1.8 [Nouveautés de Delphi 13 Florence](01-introduction-a-delphi/08-nouveautes-de-delphi-13-florence.md)** 🆕
 
 ### 2. [Découverte de l'IDE Delphi](02-decouverte-de-lide-delphi/README.md)
 - 2.1 [Présentation de l'interface](02-decouverte-de-lide-delphi/01-presentation-de-linterface.md)
@@ -19,11 +20,15 @@
 - 2.7 [Structure d'un projet Delphi](02-decouverte-de-lide-delphi/07-structure-dun-projet-delphi.md)
 - 2.8 [Introduction au cycle de développement avec Delphi](02-decouverte-de-lide-delphi/08-introduction-au-cycle-de-developpement.md)
 - 2.9 [Utilisation du Gestionnaire de Packages (GetIt Package Manager)](02-decouverte-de-lide-delphi/09-utilisation-du-gestionnaire-de-packages.md)
+- **2.10 [Gestion des versions de packages avec GetIt](02-decouverte-de-lide-delphi/10-gestion-des-versions-de-packages-avec-getit.md)** 🆕
+- **2.11 [Site web companion IA et assistance au développement](02-decouverte-de-lide-delphi/11-site-web-companion-ia-et-assistance.md)** 🆕
+- **2.12 [Support LLDB v12 et débogage avancé](02-decouverte-de-lide-delphi/12-support-lldb-v12-et-debogage-avance.md)** 🆕
 
 ### 3. [Langage Object Pascal](03-langage-object-pascal/README.md)
 - 3.1 [Syntaxe fondamentale](03-langage-object-pascal/01-syntaxe-fondamentale.md)
 - 3.2 [Types de données et conversions](03-langage-object-pascal/02-types-de-donnees-et-conversions.md)
 - 3.3 [Variables, constantes et opérateurs](03-langage-object-pascal/03-variables-constantes-et-operateurs.md)
+- **3.3.1 [L'opérateur ternaire en Delphi 13](03-langage-object-pascal/03.1-operateur-ternaire.md)** 🆕
 - 3.4 [Structures de contrôle (conditions, boucles)](03-langage-object-pascal/04-structures-de-controle.md)
 - 3.5 [Procédures et fonctions](03-langage-object-pascal/05-procedures-et-fonctions.md)
 - 3.6 [Gestion des exceptions](03-langage-object-pascal/06-gestion-des-exceptions.md)
@@ -43,10 +48,10 @@
 - 4.1 [Qu'est-ce que la VCL (Visual Component Library) ?](04-conception-dinterfaces-utilisateur-avec-la-vcl/01-quest-ce-que-la-vcl.md)
 - 4.2 [Formulaires et fiches](04-conception-dinterfaces-utilisateur-avec-la-vcl/02-formulaires-et-fiches.md)
 - 4.3 [Composants standard et leur utilisation](04-conception-dinterfaces-utilisateur-avec-la-vcl/03-composants-standard-et-leur-utilisation.md)
-    - 4.3.1 Contrôles d'affichage (Labels, Images)
-    - 4.3.2 Contrôles de saisie (Edit, Memo, ComboBox)
-    - 4.3.3 Boutons et actions
-    - 4.3.4 Listes et grilles
+    - 4.3.1 [Contrôles d'affichage (Labels, Images)](04-conception-dinterfaces-utilisateur-avec-la-vcl/03.1-controles-daffichage.md)
+    - 4.3.2 [Contrôles de saisie (Edit, Memo, ComboBox)](04-conception-dinterfaces-utilisateur-avec-la-vcl/03.2-controles-de-saisie.md)
+    - 4.3.3 [Boutons et actions](04-conception-dinterfaces-utilisateur-avec-la-vcl/03.3-boutons-et-actions.md)
+    - 4.3.4 [Listes et grilles](04-conception-dinterfaces-utilisateur-avec-la-vcl/03.4-listes-et-grilles.md)
 - 4.4 [Contrôles avancés (PageControl, TreeView, ListView)](04-conception-dinterfaces-utilisateur-avec-la-vcl/04-controles-avances.md)
 - 4.5 [Menus et barres d'outils](04-conception-dinterfaces-utilisateur-avec-la-vcl/05-menus-et-barres-doutils.md)
 - 4.6 [Gestion des événements](04-conception-dinterfaces-utilisateur-avec-la-vcl/06-gestion-des-evenements.md)
@@ -54,8 +59,11 @@
 - 4.8 [Développement de composants personnalisés](04-conception-dinterfaces-utilisateur-avec-la-vcl/08-developpement-de-composants-personnalises.md)
 - 4.9 [Migration depuis des versions précédentes de Delphi](04-conception-dinterfaces-utilisateur-avec-la-vcl/09-migration-depuis-versions-precedentes.md)
 - 4.10 [Styles visuels et thèmes VCL](04-conception-dinterfaces-utilisateur-avec-la-vcl/10-styles-visuels-et-themes-vcl.md)
+- **4.10.1 [Styles VCL en mode conception - Prototypage rapide](04-conception-dinterfaces-utilisateur-avec-la-vcl/10.1-styles-vcl-en-mode-conception.md)** 🆕
 - 4.11 [Accessibilité des interfaces utilisateur](04-conception-dinterfaces-utilisateur-avec-la-vcl/11-accessibilite-des-interfaces-utilisateur.md)
 - 4.12 [Interfaces haute résolution et prise en charge du DPI](04-conception-dinterfaces-utilisateur-avec-la-vcl/12-interfaces-haute-resolution-et-dpi.md)
+- **4.13 [Modernisation des applications VCL pour Windows 11](04-conception-dinterfaces-utilisateur-avec-la-vcl/13-modernisation-vcl-pour-windows-11.md)** 🆕
+- **4.14 [Améliorations VCL de Delphi 13](04-conception-dinterfaces-utilisateur-avec-la-vcl/14-ameliorations-vcl-delphi-13.md)** 🆕
 
 ### 5. [Développement multi-plateforme avec FireMonkey (FMX)](05-developpement-multi-plateforme-avec-firemonkey/README.md)
 - 5.1 [Introduction à FireMonkey](05-developpement-multi-plateforme-avec-firemonkey/01-introduction-a-firemonkey.md)
@@ -68,6 +76,8 @@
 - 5.8 [Performances et optimisation mobile](05-developpement-multi-plateforme-avec-firemonkey/08-performances-et-optimisation-mobile.md)
 - 5.9 [Animations et effets visuels](05-developpement-multi-plateforme-avec-firemonkey/09-animations-et-effets-visuels.md)
 - 5.10 [FMXLinux : développement pour Linux](05-developpement-multi-plateforme-avec-firemonkey/10-fmxlinux-developpement-pour-linux.md)
+- **5.10.1 [Applications graphiques Linux avec FireMonkey](05-developpement-multi-plateforme-avec-firemonkey/10.1-applications-graphiques-linux-avec-firemonkey.md)** 🆕
+- **5.11 [Améliorations FireMonkey de Delphi 13](05-developpement-multi-plateforme-avec-firemonkey/11-ameliorations-firemonkey-delphi-13.md)** 🆕
 
 ### 6. [Applications multi-fenêtres et navigation](06-applications-multi-fenetres-et-navigation/README.md)
 - 6.1 [Gestion des formulaires multiples](06-applications-multi-fenetres-et-navigation/01-gestion-des-formulaires-multiples.md)
@@ -105,6 +115,7 @@
 - 8.11 [Sécurisation des accès et prévention des injections SQL](08-acces-aux-bases-de-donnees-mysql-mariadb/11-securisation-des-acces-et-prevention-des-injections-sql.md)
 - 8.12 [Autres moteurs de bases de données (SQLite, PostgreSQL, SQL Server)](08-acces-aux-bases-de-donnees-mysql-mariadb/12-autres-moteurs-de-bases-de-donnees.md)
 - 8.13 [NoSQL et bases de données documentaires](08-acces-aux-bases-de-donnees-mysql-mariadb/13-nosql-et-bases-de-donnees-documentaires.md)
+- **8.14 [Améliorations FireDAC de Delphi 13](08-acces-aux-bases-de-donnees-mysql-mariadb/14-ameliorations-firedac-delphi-13.md)** 🆕
 
 ### 9. [Rapports et impressions](09-rapports-et-impressions/README.md)
 - 9.1 [Composants d'impression natifs](09-rapports-et-impressions/01-composants-dimpression-natifs.md)
@@ -147,6 +158,7 @@
 - 12.4 [Profilage et optimisation des performances](12-debogage-et-tests/04-profilage-et-optimisation-des-performances.md)
 - 12.5 [Gestion des exceptions et journalisation](12-debogage-et-tests/05-gestion-des-exceptions-et-journalisation.md)
 - 12.6 [Débogage à distance](12-debogage-et-tests/06-debogage-a-distance.md)
+- **12.6.1 [Débogage avancé avec LLDB v12](12-debogage-et-tests/06.1-debogage-avance-avec-lldb-v12.md)** 🆕
 - 12.7 [Tests d'intégration](12-debogage-et-tests/07-tests-dintegration.md)
 - 12.8 [Mocking et tests avec dépendances](12-debogage-et-tests/08-mocking-et-tests-avec-dependances.md)
 - 12.9 [Déboggage de code multi-thread](12-debogage-et-tests/09-deboggage-de-code-multi-thread.md)
@@ -172,6 +184,7 @@
 - 14.7 [Liaison avec des API REST tierces](14-utilisation-dapi-et-bibliotheques-externes/07-liaison-avec-des-api-rest-tierces.md)
 - 14.8 [Encapsulation d'API natives pour multi-plateformes](14-utilisation-dapi-et-bibliotheques-externes/08-encapsulation-dapi-natives-pour-multi-plateformes.md)
 - 14.9 [Intégration de bibliothèques JavaScript via WebView](14-utilisation-dapi-et-bibliotheques-externes/09-integration-de-bibliotheques-javascript-via-webview.md)
+- 14.10 [Créer ses propres DLL et bibliothèques partagées](14-utilisation-dapi-et-bibliotheques-externes/10-creer-dll-bibliotheques-partagees.md)
 
 ### 15. [Applications mobiles avec Delphi](15-applications-mobiles-avec-delphi/README.md)
 - 15.1 [Spécificités du développement mobile](15-applications-mobiles-avec-delphi/01-specificites-du-developpement-mobile.md)
@@ -267,6 +280,8 @@
 - 22.5 [Développement de modèles prédictifs](22-intelligence-artificielle-et-machine-learning-avec-delphi/05-developpement-de-modeles-predictifs.md)
 - 22.6 [Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)](22-intelligence-artificielle-et-machine-learning-avec-delphi/06-integration-avec-des-services-dia-cloud.md)
 - 22.7 [Utilisation des grands modèles de langage (LLM) via API](22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)
+- **22.8 [Composants IA intégrés de Delphi 13](22-intelligence-artificielle-et-machine-learning-avec-delphi/08-composants-ia-integres-delphi-13.md)** 🆕
+- **22.9 [Site web companion IA pour le développement assisté](22-intelligence-artificielle-et-machine-learning-avec-delphi/09-site-web-companion-ia-pour-developpement-assiste.md)** 🆕
 
 ### 23. [Conception d'applications Web avec Delphi](23-conception-dapplications-web-avec-delphi/README.md)
 - 23.1 [Introduction à Intraweb et TMS Web Core](23-conception-dapplications-web-avec-delphi/01-introduction-a-intraweb-et-tms-web-core.md)
@@ -277,6 +292,7 @@
 - 23.6 [Intégration avec des frameworks JavaScript](23-conception-dapplications-web-avec-delphi/06-integration-avec-des-frameworks-javascript.md)
 - 23.7 [Progressive Web Apps (PWA)](23-conception-dapplications-web-avec-delphi/07-progressive-web-apps.md)
 - 23.8 [WebAssembly et Delphi](23-conception-dapplications-web-avec-delphi/08-webassembly-et-delphi.md)
+- **23.9 [WebStencils : intégration côté serveur améliorée](23-conception-dapplications-web-avec-delphi/09-webstencils-integration-cote-serveur-amelioree.md)** 🆕
 
 ### 24. [Tendances et futur de Delphi](24-tendances-et-futur-de-delphi/README.md)
 - 24.1 [Évolution récente de l'écosystème Delphi](24-tendances-et-futur-de-delphi/01-evolution-recente-de-lecosysteme-delphi.md)
@@ -285,3 +301,4 @@
 - 24.4 [Compétitivité dans le paysage technologique actuel](24-tendances-et-futur-de-delphi/04-competitivite-dans-le-paysage-technologique-actuel.md)
 - 24.5 [Migration et modernisation d'applications Delphi](24-tendances-et-futur-de-delphi/05-migration-et-modernisation-dapplications-delphi.md)
 - 24.6 [Intégration avec les nouvelles technologies émergentes](24-tendances-et-futur-de-delphi/06-integration-avec-les-nouvelles-technologies-emergentes.md)
+- **24.7 [Delphi 13 Florence et l'avenir du RAD](24-tendances-et-futur-de-delphi/07-delphi-13-florence-et-avenir-du-rad.md)** 🆕
