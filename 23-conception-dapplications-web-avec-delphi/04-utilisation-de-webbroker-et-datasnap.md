@@ -1,73 +1,121 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.4 Utilisation de WebBroker et DataSnap
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Introduction à WebBroker et DataSnap
+WebBroker et DataSnap sont deux technologies historiques mais toujours pertinentes de Delphi pour créer des applications web et des systèmes distribués. Bien qu'elles soient apparues dans les années 1990 et 2000, elles continuent d'alimenter de nombreuses applications en production aujourd'hui.
 
-Dans les sections précédentes, nous avons exploré les fondamentaux des applications web avec Delphi. Maintenant, nous allons plonger dans deux technologies importantes pour le développement d'applications web côté serveur : WebBroker et DataSnap. Ces outils puissants vous permettent de créer des services web robustes et des solutions complètes de partage de données.
+Dans cette section, nous allons explorer ces technologies, comprendre quand et pourquoi les utiliser, et voir comment elles se comparent aux approches plus modernes présentées dans les sections précédentes.
 
-## Qu'est-ce que WebBroker ?
+## WebBroker : Les fondations du web avec Delphi
 
-WebBroker est l'une des plus anciennes technologies de Delphi pour le développement d'applications web. Malgré son âge, elle reste pertinente et puissante pour plusieurs raisons :
+### Qu'est-ce que WebBroker ?
 
-- Elle est légère et performante
-- Elle offre un contrôle détaillé sur les requêtes HTTP
-- Elle peut être déployée de plusieurs façons
-- Elle est disponible dans toutes les éditions de Delphi
+**WebBroker** est le framework de base intégré à Delphi pour créer des applications web côté serveur. C'est la "fondation" sur laquelle d'autres technologies comme IntraWeb ont été construites.
 
-En termes simples, WebBroker est un framework qui vous permet de traiter les requêtes HTTP et de générer des réponses dynamiques. C'est la fondation sur laquelle d'autres technologies web de Delphi (comme DataSnap REST) sont construites.
+**Analogie :** Si vous comparez le développement web à la construction d'une maison :
+- WebBroker = Les fondations et la structure de base
+- IntraWeb = Une maison préfabriquée clé en main
+- Frameworks modernes (Horse) = Construction modulaire moderne
 
-## Qu'est-ce que DataSnap ?
+**Historique :**
+- Introduit dans Delphi 3 (1997)
+- Conçu pour CGI et ISAPI
+- Toujours inclus dans toutes les versions de Delphi
+- Base pour de nombreuses autres technologies Delphi
 
-DataSnap est une technologie plus récente qui se concentre sur la création de serveurs d'applications multi-niveaux. Elle permet de :
+### Pourquoi WebBroker existe-t-il ?
 
-- Exposer des méthodes distantes qui peuvent être appelées par des clients
-- Partager des ensembles de données (datasets) entre le client et le serveur
-- Créer des services web, y compris des services REST
-- Gérer les connexions clients, l'authentification et les sessions
+À l'époque de sa création, les applications web se développaient principalement avec :
+- **CGI (Common Gateway Interface)** : Scripts exécutables appelés par le serveur web
+- **ISAPI (Internet Server API)** : Extensions pour IIS (Internet Information Services)
+- **Apache modules** : Modules pour le serveur Apache
 
-Dans la version moderne de Delphi, DataSnap s'appuie sur WebBroker pour ses fonctionnalités web, ce qui explique pourquoi nous les abordons ensemble.
+WebBroker a permis aux développeurs Delphi de créer ces types d'applications sans quitter leur environnement familier.
 
-## Quand utiliser WebBroker ?
+### Architecture WebBroker
 
-WebBroker est idéal pour :
+```
+┌─────────────────────────────────────────────┐
+│         Serveur Web (IIS / Apache)          │
+└────────────────┬────────────────────────────┘
+                 │
+                 │ Requête HTTP
+                 │
+┌────────────────┴────────────────────────────┐
+│      Application WebBroker (Delphi)         │
+│  ┌──────────────────────────────────────┐   │
+│  │      TWebModule                      │   │
+│  │  ┌────────────────────────────────┐  │   │
+│  │  │   TWebActionItem (Actions)     │  │   │
+│  │  │   - /home                      │  │   │
+│  │  │   - /clients                   │  │   │
+│  │  │   - /api/data                  │  │   │
+│  │  └────────────────────────────────┘  │   │
+│  └──────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+                 │
+                 │ Réponse HTML/JSON
+                 ↓
+         Navigateur client
+```
 
-- Créer des pages web dynamiques simples
-- Développer des API web personnalisées et de bas niveau
-- Générer des réponses HTTP spécifiques (JSON, XML, images, etc.)
-- Des scénarios où vous avez besoin d'un contrôle total sur le traitement HTTP
+### Types d'applications WebBroker
 
-## Quand utiliser DataSnap ?
+**1. Application CGI**
+```
+Application exécutable (.exe)
+- Lancée pour chaque requête
+- Simple mais peu performante
+- Idéale pour tests et développement
+```
 
-DataSnap est préférable pour :
+**2. Application ISAPI (Windows/IIS)**
+```
+DLL chargée en mémoire par IIS
+- Reste en mémoire
+- Très performante
+- Windows uniquement
+```
 
-- Créer des applications multi-niveaux avec une logique métier partagée
-- Exposer des ensembles de données à des clients distants
-- Développer des services REST structurés
-- Scénarios où l'authentification et la gestion des sessions sont importantes
+**3. Module Apache**
+```
+DLL/SO chargée par Apache
+- Multi-plateforme (Windows/Linux)
+- Bonne performance
+- Plus complexe à déployer
+```
 
-## Création d'une application WebBroker simple
+**4. Application Standalone**
+```
+Serveur HTTP intégré
+- Auto-hébergée
+- Parfaite pour développement
+- Déploiement simple
+```
 
-Commençons par créer une application WebBroker basique pour comprendre les concepts fondamentaux.
+### Création d'une application WebBroker
 
-### Étape 1 : Créer un nouveau projet WebBroker
+#### Étape 1 : Créer le projet
 
-1. Ouvrez Delphi et sélectionnez **Fichier** > **Nouveau** > **Autres**
-2. Naviguez vers **Delphi Projects** > **Web Server Application**
-3. Cliquez sur **OK**
-4. Dans la boîte de dialogue suivante, sélectionnez **WebBroker Application**
-5. Pour le type de serveur, choisissez **Stand Alone Application** (le plus simple pour le développement)
-6. Cliquez sur **OK**
+Dans Delphi :
+1. File → New → Other
+2. Delphi Projects → WebBroker
+3. Choisir le type (Standalone pour débuter)
 
-Delphi va générer un projet avec deux fichiers principaux :
-- `WebModuleUnit1.pas` : Le module web qui traitera les requêtes
-- Le fichier de projet principal (`.dpr`)
+#### Étape 2 : Le WebModule
 
-### Étape 2 : Comprendre la structure du projet
+Le **TWebModule** est le cœur de votre application. C'est un conteneur pour vos actions web.
 
-Ouvrez `WebModuleUnit1.pas`. Vous verrez un module qui ressemble à ceci :
+```pascal
+unit WebModuleUnit1;
 
-```delphi
+interface
+
+uses
+  System.SysUtils, System.Classes, Web.HTTPApp;
+
 type
   TWebModule1 = class(TWebModule)
     procedure WebModule1DefaultHandlerAction(Sender: TObject;
@@ -83,7 +131,7 @@ var
 
 implementation
 
-{%CLASSGROUP 'Vcl.Controls.TControl'}
+{%CLASSGROUP 'System.Classes.TPersistent'}
 
 {$R *.dfm}
 
@@ -92,1084 +140,937 @@ procedure TWebModule1.WebModule1DefaultHandlerAction(Sender: TObject;
 begin
   Response.Content :=
     '<html>' +
-    '<head><title>Web Server Application</title></head>' +
-    '<body>Web Server Application</body>' +
-    '</html>';
-end;
-```
-
-Ce code définit un module web avec un gestionnaire d'action par défaut qui renvoie une page HTML simple.
-
-### Étape 3 : Ajouter des actions et des gestionnaires
-
-Les actions dans WebBroker correspondent à différentes URL ou chemins que votre application peut traiter. Ajoutons quelques actions :
-
-1. Double-cliquez sur le fichier `WebModuleUnit1.dfm` pour ouvrir le concepteur visuel
-2. Faites un clic droit sur le module et sélectionnez **Nouveau WebAction**
-3. Dans l'Inspecteur d'objets, définissez les propriétés :
-   - **Name** : `HelloAction`
-   - **PathInfo** : `/hello`
-   - **MethodType** : `mtGet` (pour les requêtes GET)
-4. Répétez pour créer une autre action :
-   - **Name** : `TimeAction`
-   - **PathInfo** : `/time`
-   - **MethodType** : `mtGet`
-
-Maintenant, implémentons ces actions :
-
-1. Double-cliquez sur `HelloAction` pour créer un gestionnaire d'événement
-2. Ajoutez le code suivant :
-
-```delphi
-procedure TWebModule1.HelloActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  Name: string;
-begin
-  // Vérifie si un paramètre 'name' existe dans la requête
-  Name := Request.QueryFields.Values['name'];
-  if Name = '' then
-    Name := 'Monde';
-
-  Response.ContentType := 'text/html';
-  Response.Content :=
-    '<html>' +
-    '<head><title>Bonjour</title></head>' +
+    '<head><title>Ma première application WebBroker</title></head>' +
     '<body>' +
-    '<h1>Bonjour, ' + Name + '!</h1>' +
-    '<p>Bienvenue dans notre application WebBroker.</p>' +
+    '<h1>Bonjour depuis WebBroker !</h1>' +
+    '<p>Vous avez accédé à : ' + Request.PathInfo + '</p>' +
     '</body>' +
     '</html>';
   Handled := True;
 end;
+
+end.
 ```
 
-3. Double-cliquez sur `TimeAction` et ajoutez :
+#### Étape 3 : Gérer les actions
 
-```delphi
-procedure TWebModule1.TimeActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-begin
-  Response.ContentType := 'text/html';
-  Response.Content :=
-    '<html>' +
-    '<head><title>Heure actuelle</title></head>' +
-    '<body>' +
-    '<h1>Heure actuelle</h1>' +
-    '<p>' + FormatDateTime('dd/mm/yyyy hh:nn:ss', Now) + '</p>' +
-    '</body>' +
-    '</html>';
-  Handled := True;
-end;
-```
+Les **Actions** permettent de router les requêtes vers différents gestionnaires :
 
-### Étape 4 : Compiler et exécuter l'application
-
-1. Appuyez sur F9 pour compiler et exécuter
-2. Une fenêtre d'application console apparaîtra, indiquant que le serveur est en cours d'exécution (généralement sur le port 8080)
-3. Ouvrez votre navigateur et testez les URLs :
-   - `http://localhost:8080/hello` - Affiche "Bonjour, Monde!"
-   - `http://localhost:8080/hello?name=Alice` - Affiche "Bonjour, Alice!"
-   - `http://localhost:8080/time` - Affiche l'heure actuelle
-
-### Étape 5 : Créer un API JSON avec WebBroker
-
-Modifions notre application pour retourner des données JSON, ce qui est courant dans les applications web modernes :
-
-1. Ajoutez une nouvelle action :
-   - **Name** : `UsersAction`
-   - **PathInfo** : `/users`
-   - **MethodType** : `mtGet`
-
-2. Implémentez le gestionnaire :
-
-```delphi
-procedure TWebModule1.UsersActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  JSONArray: TJSONArray;
-  JSONObject: TJSONObject;
-begin
-  // Créer un tableau JSON
-  JSONArray := TJSONArray.Create;
-  try
-    // Ajouter quelques utilisateurs
-    JSONObject := TJSONObject.Create;
-    JSONObject.AddPair('id', TJSONNumber.Create(1));
-    JSONObject.AddPair('name', 'Alice Dupont');
-    JSONObject.AddPair('email', 'alice@exemple.fr');
-    JSONArray.AddElement(JSONObject);
-
-    JSONObject := TJSONObject.Create;
-    JSONObject.AddPair('id', TJSONNumber.Create(2));
-    JSONObject.AddPair('name', 'Bob Martin');
-    JSONObject.AddPair('email', 'bob@exemple.fr');
-    JSONArray.AddElement(JSONObject);
-
-    // Configurer la réponse
-    Response.ContentType := 'application/json';
-    Response.Content := JSONArray.ToString;
-  finally
-    JSONArray.Free; // Le Free va également libérer les objets enfants
-  end;
-
-  Handled := True;
-end;
-```
-
-3. Exécutez l'application et visitez `http://localhost:8080/users` pour voir les données JSON
-
-## Introduction à DataSnap avec WebBroker
-
-Maintenant que nous comprenons les bases de WebBroker, voyons comment DataSnap s'intègre dans ce framework.
-
-### Qu'est-ce qu'un serveur DataSnap ?
-
-Un serveur DataSnap est une application qui expose des méthodes et des données à des clients distants. Il utilise WebBroker comme base pour son fonctionnement HTTP, mais ajoute plusieurs fonctionnalités :
-
-- **Méthodes distantes** : Exposer des méthodes que les clients peuvent appeler
-- **Partage de données** : Envoyer des ensembles de données aux clients
-- **Sessions** : Suivre l'état des clients connectés
-- **Authentification** : Sécuriser les accès au serveur
-- **Callbacks** : Permettre au serveur d'appeler des méthodes sur le client
-
-### Création d'un serveur DataSnap simple
-
-Créons un serveur DataSnap qui expose quelques méthodes et données :
-
-### Étape 1 : Créer un nouveau projet DataSnap
-
-1. Sélectionnez **Fichier** > **Nouveau** > **Autres**
-2. Naviguez vers **Delphi Projects** > **DataSnap Server**
-3. Choisissez **DataSnap Server**
-4. Sélectionnez **WebBroker Application**
-5. Pour le type de serveur, choisissez **Stand Alone Application**
-6. Laissez les options avancées par défaut et cliquez sur **Suivant** puis **Terminer**
-
-Delphi va générer un projet avec plusieurs fichiers :
-- `ServerMethodsUnit1.pas` : C'est ici que vous définirez vos méthodes serveur
-- `WebModuleUnit1.pas` : Le module web qui intègre DataSnap à WebBroker
-- `ServerContainerUnit1.pas` : Le conteneur qui configure le serveur DataSnap
-
-### Étape 2 : Comprendre les méthodes du serveur
-
-Ouvrez `ServerMethodsUnit1.pas`. Vous verrez une classe vide :
-
-```delphi
+```pascal
 type
-  TServerMethods1 = class(TDSServerModule)
-  private
-    { Déclarations privées }
-  public
-    { Déclarations publiques }
-  end;
-```
+  TWebModule1 = class(TWebModule)
+    ActionHome: TWebActionItem;
+    ActionClients: TWebActionItem;
+    ActionAPI: TWebActionItem;
 
-Ajoutons quelques méthodes utiles :
-
-```delphi
-type
-  TServerMethods1 = class(TDSServerModule)
-  private
-    { Déclarations privées }
-  public
-    function EchoString(Value: string): string;
-    function ReverseString(Value: string): string;
-    function AddNumbers(A, B: Integer): Integer;
-    function GetCurrentTime: TDateTime;
+    procedure ActionHomeAction(Sender: TObject; Request: TWebRequest;
+      Response: TWebResponse; var Handled: Boolean);
+    procedure ActionClientsAction(Sender: TObject; Request: TWebRequest;
+      Response: TWebResponse; var Handled: Boolean);
+    procedure ActionAPIAction(Sender: TObject; Request: TWebRequest;
+      Response: TWebResponse; var Handled: Boolean);
   end;
 
 implementation
 
-function TServerMethods1.EchoString(Value: string): string;
+// Action pour la page d'accueil : /home
+procedure TWebModule1.ActionHomeAction(Sender: TObject; Request: TWebRequest;
+  Response: TWebResponse; var Handled: Boolean);
 begin
-  Result := Value;
+  Response.Content :=
+    '<html>' +
+    '<body>' +
+    '<h1>Page d''accueil</h1>' +
+    '<ul>' +
+    '<li><a href="/clients">Liste des clients</a></li>' +
+    '<li><a href="/api/data">API JSON</a></li>' +
+    '</ul>' +
+    '</body>' +
+    '</html>';
+  Handled := True;
 end;
 
-function TServerMethods1.ReverseString(Value: string): string;
+// Action pour la liste des clients : /clients
+procedure TWebModule1.ActionClientsAction(Sender: TObject; Request: TWebRequest;
+  Response: TWebResponse; var Handled: Boolean);
 var
-  I: Integer;
+  HTML: string;
 begin
-  Result := '';
-  for I := Length(Value) downto 1 do
-    Result := Result + Value[I];
+  HTML := '<html><body><h1>Liste des clients</h1><ul>';
+
+  // Ici, vous ajouteriez le code pour récupérer les clients depuis la base
+  HTML := HTML + '<li>Client 1</li>';
+  HTML := HTML + '<li>Client 2</li>';
+  HTML := HTML + '<li>Client 3</li>';
+
+  HTML := HTML + '</ul></body></html>';
+
+  Response.Content := HTML;
+  Handled := True;
 end;
 
-function TServerMethods1.AddNumbers(A, B: Integer): Integer;
+// Action pour une API REST : /api/data
+procedure TWebModule1.ActionAPIAction(Sender: TObject; Request: TWebRequest;
+  Response: TWebResponse; var Handled: Boolean);
 begin
-  Result := A + B;
-end;
-
-function TServerMethods1.GetCurrentTime: TDateTime;
-begin
-  Result := Now;
-end;
-```
-
-Ces méthodes sont maintenant disponibles pour les clients distants.
-
-### Étape 3 : Exposer un ensemble de données
-
-Ajoutons une méthode qui renvoie un ensemble de données :
-
-```delphi
-private
-  FEmployees: TFDMemTable;
-  procedure CreateEmployeesTable;
-public
-  constructor Create(AOwner: TComponent); override;
-  destructor Destroy; override;
-  function GetEmployees: TDataSet;
-```
-
-Puis implémentons ces méthodes :
-
-```delphi
-constructor TServerMethods1.Create(AOwner: TComponent);
-begin
-  inherited;
-  FEmployees := TFDMemTable.Create(Self);
-  CreateEmployeesTable;
-end;
-
-destructor TServerMethods1.Destroy;
-begin
-  FEmployees.Free;
-  inherited;
-end;
-
-procedure TServerMethods1.CreateEmployeesTable;
-begin
-  // Définir la structure
-  FEmployees.FieldDefs.Clear;
-  FEmployees.FieldDefs.Add('ID', ftInteger);
-  FEmployees.FieldDefs.Add('Nom', ftString, 50);
-  FEmployees.FieldDefs.Add('Prenom', ftString, 50);
-  FEmployees.FieldDefs.Add('Email', ftString, 100);
-  FEmployees.FieldDefs.Add('Salaire', ftCurrency);
-  FEmployees.CreateDataSet;
-
-  // Ajouter des données d'exemple
-  FEmployees.AppendRecord([1, 'Dupont', 'Jean', 'jean.dupont@exemple.fr', 45000]);
-  FEmployees.AppendRecord([2, 'Martin', 'Sophie', 'sophie.martin@exemple.fr', 52000]);
-  FEmployees.AppendRecord([3, 'Dubois', 'Michel', 'michel.dubois@exemple.fr', 38000]);
-  FEmployees.AppendRecord([4, 'Leroy', 'Emma', 'emma.leroy@exemple.fr', 61000]);
-  FEmployees.AppendRecord([5, 'Petit', 'Thomas', 'thomas.petit@exemple.fr', 47500]);
-end;
-
-function TServerMethods1.GetEmployees: TDataSet;
-begin
-  Result := FEmployees;
+  Response.ContentType := 'application/json';
+  Response.Content :=
+    '{' +
+    '  "success": true,' +
+    '  "data": [' +
+    '    {"id": 1, "nom": "Dupont"},' +
+    '    {"id": 2, "nom": "Martin"}' +
+    '  ]' +
+    '}';
+  Handled := True;
 end;
 ```
 
-N'oubliez pas d'ajouter les unités nécessaires :
+### Fonctionnalités avancées de WebBroker
 
-```delphi
-uses
-  System.SysUtils, System.Classes, System.Json,
-  DataSnap.DSProviderDataModuleAdapter,
-  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
-  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
-  Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
-```
+#### 1. Gestion des méthodes HTTP
 
-### Étape 4 : Tester le serveur DataSnap
-
-1. Compilez et exécutez le projet
-2. Ouvrez votre navigateur et accédez à :
-   - `http://localhost:8080/datasnap/rest/TServerMethods1/EchoString/Bonjour`
-   - `http://localhost:8080/datasnap/rest/TServerMethods1/ReverseString/Delphi`
-   - `http://localhost:8080/datasnap/rest/TServerMethods1/AddNumbers/10/20`
-   - `http://localhost:8080/datasnap/rest/TServerMethods1/GetCurrentTime`
-
-Pour tester la méthode `GetEmployees`, vous aurez besoin d'un client DataSnap, car elle renvoie un ensemble de données qui n'est pas directement accessible via REST.
-
-## Création d'un client DataSnap
-
-Maintenant, créons un client simple pour notre serveur DataSnap.
-
-### Étape 1 : Créer un nouveau projet VCL
-
-1. Sélectionnez **Fichier** > **Nouveau** > **VCL Forms Application - Delphi**
-2. Enregistrez le projet
-
-### Étape 2 : Ajouter des composants clients DataSnap
-
-1. Placez un `TSQLConnection` sur le formulaire et configurez-le :
-   - **Driver** : `DataSnap`
-   - **HostName** : `localhost`
-   - **Port** : `8080`
-   - **CommunicationProtocol** : `http`
-
-2. Placez un `TDSProviderConnection` et configurez-le :
-   - **SQLConnection** : `SQLConnection1`
-   - **ServerClassName** : `TServerMethods1`
-
-3. Ajoutez un `TClientDataSet` et configurez-le :
-   - **ProviderName** : `DataSnapProvider`
-   - **RemoteServer** : `DSProviderConnection1`
-
-4. Ajoutez un `TDataSource` :
-   - **DataSet** : `ClientDataSet1`
-
-5. Placez un `TDBGrid` et définissez :
-   - **DataSource** : `DataSource1`
-
-6. Ajoutez quelques boutons sur le formulaire :
-   - Un bouton "Connecter"
-   - Un bouton "Charger Employés"
-   - Un bouton "Écho"
-   - Un bouton "Inverser"
-
-### Étape 3 : Implémenter les gestionnaires d'événements
-
-```delphi
-procedure TForm1.btnConnecterClick(Sender: TObject);
+```pascal
+procedure TWebModule1.ActionClientsAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 begin
-  try
-    SQLConnection1.Connected := True;
-    DSProviderConnection1.Connected := True;
-    ShowMessage('Connexion réussie!');
-  except
-    on E: Exception do
-      ShowMessage('Erreur de connexion: ' + E.Message);
-  end;
-end;
-
-procedure TForm1.btnChargerEmployesClick(Sender: TObject);
-begin
-  if not SQLConnection1.Connected then
-  begin
-    ShowMessage('Veuillez vous connecter d''abord.');
-    Exit;
-  end;
-
-  ClientDataSet1.Close;
-  ClientDataSet1.CommandText := 'GetEmployees';
-  ClientDataSet1.Open;
-end;
-
-procedure TForm1.btnEchoClick(Sender: TObject);
-var
-  InputText: string;
-  Result: OleVariant;
-begin
-  if not SQLConnection1.Connected then
-  begin
-    ShowMessage('Veuillez vous connecter d''abord.');
-    Exit;
-  end;
-
-  InputText := InputBox('Écho', 'Entrez un texte:', '');
-  if InputText <> '' then
-  begin
-    Result := SQLConnection1.AppServer.EchoString(InputText);
-    ShowMessage('Résultat: ' + Result);
-  end;
-end;
-
-procedure TForm1.btnInverserClick(Sender: TObject);
-var
-  InputText: string;
-  Result: OleVariant;
-begin
-  if not SQLConnection1.Connected then
-  begin
-    ShowMessage('Veuillez vous connecter d''abord.');
-    Exit;
-  end;
-
-  InputText := InputBox('Inverser', 'Entrez un texte:', '');
-  if InputText <> '' then
-  begin
-    Result := SQLConnection1.AppServer.ReverseString(InputText);
-    ShowMessage('Résultat inversé: ' + Result);
-  end;
-end;
-```
-
-### Étape 4 : Tester l'application client
-
-1. Assurez-vous que votre serveur DataSnap est en cours d'exécution
-2. Exécutez l'application client
-3. Cliquez sur "Connecter"
-4. Testez les différentes fonctionnalités
-
-## Fonctionnalités avancées de DataSnap
-
-### Authentification des clients
-
-Pour sécuriser votre serveur DataSnap, vous pouvez ajouter une authentification :
-
-1. Ouvrez `ServerContainerUnit1.pas`
-2. Dans le gestionnaire d'événement `ServerContainer1Create`, ajoutez :
-
-```delphi
-DSServer1.AuthenticationManager := TDSAuthenticationManager.Create(DSServer1);
-DSServer1.AuthenticationManager.OnUserAuthenticate := OnUserAuthenticate;
-DSServer1.AuthenticationManager.OnUserAuthorize := OnUserAuthorize;
-```
-
-3. Implémentez ces gestionnaires :
-
-```delphi
-function TServerContainer1.OnUserAuthenticate(UserName, Password: string): Boolean;
-begin
-  // Exemple simple - dans un cas réel, vérifiez dans une base de données
-  Result := (UserName = 'admin') and (Password = 'password123');
-end;
-
-function TServerContainer1.OnUserAuthorize(UserName: string;
-  AuthorizeRoles: TStrings): Boolean;
-begin
-  // Exemple simple - dans un cas réel, vérifiez les rôles dans une base de données
-  Result := True; // Autoriser tous les utilisateurs authentifiés
-end;
-```
-
-### Filtres DataSnap
-
-Les filtres vous permettent d'intercepter et de modifier les communications client-serveur. Par exemple, vous pourriez ajouter un filtre de compression :
-
-```delphi
-procedure TServerContainer1.DSServerClass1GetClass(
-  DSServerClass: TDSServerClass; var PersistentClass: TPersistentClass);
-var
-  FilterName: string;
-begin
-  PersistentClass := TServerMethods1;
-
-  // Ajouter un filtre de compression
-  FilterName := DSServer1.FilterManager.RegisterFilter('Compression',
-    TDSCompressionFilter, nil);
-  DSServer1.FilterManager.SetFilter(FilterName, True);
-end;
-```
-
-### Callbacks client
-
-DataSnap permet au serveur d'appeler des méthodes sur le client, ce qui est utile pour les notifications en temps réel :
-
-1. Côté client, créez une classe de callback :
-
-```delphi
-type
-  TMyCallback = class(TDBXCallback)
-  public
-    function Execute(const Arg: TJSONValue): TJSONValue; override;
-  end;
-```
-
-2. Implémentez la méthode d'exécution :
-
-```delphi
-function TMyCallback.Execute(const Arg: TJSONValue): TJSONValue;
-begin
-  // Traiter la notification
-  TThread.Synchronize(nil, procedure
-  begin
-    ShowMessage('Notification du serveur: ' + Arg.ToString);
-  end);
-
-  Result := TJSONTrue.Create;
-end;
-```
-
-3. Côté serveur, ajoutez une méthode pour enregistrer le callback :
-
-```delphi
-procedure TServerMethods1.RegisterCallback(CallbackId: Integer;
-  Callback: TDBXCallback);
-begin
-  if ServerContainer.CallbackManager <> nil then
-    ServerContainer.CallbackManager.RegisterCallback(CallbackId, Callback);
-end;
-```
-
-4. Et une méthode pour notifier les clients :
-
-```delphi
-procedure TServerMethods1.NotifyClients(Message: string);
-var
-  Callbacks: TDBXCallbackList;
-  I: Integer;
-  JSONValue: TJSONValue;
-begin
-  Callbacks := ServerContainer.CallbackManager.LockCallbackList;
-  try
-    for I := 0 to Callbacks.Count - 1 do
-    begin
-      JSONValue := TJSONString.Create(Message);
-      try
-        Callbacks[I].Execute(JSONValue);
-      finally
-        JSONValue.Free;
+  case Request.MethodType of
+    mtGet:
+      begin
+        // Récupérer les clients
+        Response.Content := GetClientsList;
       end;
-    end;
-  finally
-    ServerContainer.CallbackManager.UnlockCallbackList;
+    mtPost:
+      begin
+        // Créer un nouveau client
+        CreateClient(Request.Content);
+        Response.StatusCode := 201;
+      end;
+    mtPut:
+      begin
+        // Modifier un client
+        UpdateClient(Request.Content);
+      end;
+    mtDelete:
+      begin
+        // Supprimer un client
+        DeleteClient(Request.PathInfo);
+        Response.StatusCode := 204;
+      end;
   end;
+  Handled := True;
 end;
 ```
 
-## Déploiement des applications WebBroker et DataSnap
+#### 2. Récupération des paramètres
 
-Vous pouvez déployer vos applications WebBroker et DataSnap de plusieurs façons :
-
-### Application autonome
-
-L'option la plus simple est de déployer comme une application autonome :
-
-1. Compilez votre application en mode Release
-2. Copiez l'exécutable sur le serveur
-3. Exécutez-le (manuellement ou comme un service Windows)
-
-Pour configurer comme un service Windows, vous pouvez utiliser des outils comme NSSM (Non-Sucking Service Manager) ou modifier le code pour utiliser `TServiceApplication`.
-
-### Module ISAPI pour IIS
-
-Pour les déploiements sur IIS :
-
-1. Dans l'assistant de création du projet, choisissez **ISAPI/NSAPI Dynamic Link Library**
-2. Compilez votre application en mode Release
-3. Copiez le fichier DLL dans le dossier approprié d'IIS
-4. Configurez IIS pour gérer cette DLL
-
-### Module Apache
-
-Pour les déploiements sur Apache :
-
-1. Dans l'assistant de création du projet, choisissez **Apache Shared Module**
-2. Compilez votre application en mode Release
-3. Copiez le fichier DLL dans le dossier modules d'Apache
-4. Configurez Apache pour charger ce module
-
-## Bonnes pratiques pour WebBroker et DataSnap
-
-### Gestion des erreurs
-
-Toujours implémenter une gestion d'erreurs robuste :
-
-```delphi
-try
-  // Votre code
-except
-  on E: Exception do
-  begin
-    Response.StatusCode := 500;
-    Response.Content := '{"error": "' + E.Message + '"}';
-    Response.ContentType := 'application/json';
-    Handled := True;
-  end;
-end;
-```
-
-### Sécurité
-
-- Utilisez HTTPS pour les communications
-- Implémentez une authentification appropriée
-- Validez toutes les entrées utilisateur
-- Utilisez des paramètres préparés pour les requêtes SQL
-
-### Performance
-
-- Mettez en cache les réponses lorsque c'est possible
-- Utilisez des pools de connexions pour les bases de données
-- Considérez utiliser des filtres de compression
-- Limitez la taille des ensembles de données renvoyés
-
-### Versionnement
-
-Pour les API publiques, implémentez un versionnement :
-
-```delphi
-procedure TWebModule1.WebModule1WebActionItem1Action(Sender: TObject;
+```pascal
+procedure TWebModule1.ActionSearchAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 var
-  Version: string;
+  SearchTerm: string;
+  Page: Integer;
 begin
-  Version := Request.QueryFields.Values['version'];
+  // Paramètres GET : /search?q=dupont&page=2
+  SearchTerm := Request.QueryFields.Values['q'];
+  Page := StrToIntDef(Request.QueryFields.Values['page'], 1);
 
-  if Version = '1' then
+  // Paramètres POST (formulaire)
+  if Request.MethodType = mtPost then
   begin
-    // Logique pour la version 1
-  end
-  else if Version = '2' then
-  begin
-    // Logique pour la version 2
-  end
-  else
-  begin
-    // Version par défaut ou erreur
+    SearchTerm := Request.ContentFields.Values['search'];
   end;
+
+  Response.Content := Format('<p>Recherche : %s (page %d)</p>',
+    [SearchTerm, Page]);
+  Handled := True;
 end;
 ```
 
-## Exemple complet : Application de gestion de contacts
+#### 3. Sessions utilisateur
 
-Pour illustrer l'utilisation de WebBroker et DataSnap ensemble, créons une application simple de gestion de contacts.
-
-### Côté serveur (DataSnap/WebBroker)
-
-```delphi
-// Dans ServerMethodsUnit1.pas
-type
-  TContact = class
-  private
-    FId: Integer;
-    FNom: string;
-    FPrenom: string;
-    FEmail: string;
-    FTelephone: string;
-  published
-    property Id: Integer read FId write FId;
-    property Nom: string read FNom write FNom;
-    property Prenom: string read FPrenom write FPrenom;
-    property Email: string read FEmail write FEmail;
-    property Telephone: string read FTelephone write FTelephone;
-  end;
-
-  TServerMethods1 = class(TDSServerModule)
-  private
-    FContacts: TFDMemTable;
-    procedure InitializeContacts;
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-
-    function GetContacts: TDataSet;
-    function GetContactById(Id: Integer): TContact;
-    function AddContact(Contact: TContact): Integer;
-    function UpdateContact(Contact: TContact): Boolean;
-    function DeleteContact(Id: Integer): Boolean;
-  end;
-```
-
-### Côté client (Application VCL)
-
-```delphi
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  SQLConnection1.Connected := True;
-  ClientDataSet1.CommandText := 'GetContacts';
-  ClientDataSet1.Open;
-end;
-
-procedure TMainForm.btnAddClick(Sender: TObject);
+```pascal
+procedure TWebModule1.ActionLoginAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 var
-  Contact: TContact;
-  Result: OleVariant;
+  Username: string;
+  SessionID: string;
 begin
-  Contact := TContact.Create;
-  try
-    Contact.Nom := edtNom.Text;
-    Contact.Prenom := edtPrenom.Text;
-    Contact.Email := edtEmail.Text;
-    Contact.Telephone := edtTelephone.Text;
+  Username := Request.ContentFields.Values['username'];
 
-    Result := SQLConnection1.AppServer.AddContact(Contact);
-    ShowMessage('Contact ajouté avec ID: ' + IntToStr(Result));
-
-    // Rafraîchir la liste
-    ClientDataSet1.Refresh;
-  finally
-    Contact.Free;
+  // Créer ou récupérer la session
+  SessionID := Request.Cookie;
+  if SessionID = '' then
+  begin
+    SessionID := CreateGUID; // Générer un ID unique
+    Response.SetCookieField('SessionID', SessionID, 0, '/', '', False, False);
   end;
+
+  // Stocker les données de session
+  // (nécessite un système de cache côté serveur)
+  StoreSessionData(SessionID, 'username', Username);
+
+  Response.Content := '<p>Connexion réussie !</p>';
+  Handled := True;
 end;
 ```
 
-## Conclusion
+#### 4. Intégration avec base de données
 
-Dans cette section, nous avons exploré WebBroker et DataSnap, deux technologies complémentaires pour le développement d'applications web avec Delphi. WebBroker offre un contrôle de bas niveau sur les requêtes HTTP, tandis que DataSnap ajoute des fonctionnalités avancées pour le partage de données et les applications multi-niveaux.
+```pascal
+uses
+  FireDAC.Comp.Client, System.JSON;
 
-Ces technologies vous permettent de créer des solutions web puissantes tout en tirant parti de vos compétences Delphi existantes. Que vous développiez une API REST simple, une application web complète ou un système d'entreprise multi-niveaux, WebBroker et DataSnap offrent les outils nécessaires.
-
-## Exercices pratiques
-
-1. Créez une application WebBroker qui affiche la température actuelle (simulée) en formats JSON et HTML selon le paramètre de requête `format=json` ou `format=html`.
-
-2. Développez un serveur DataSnap qui expose une méthode pour convertir des devises et un ensemble de données de taux de change.
-
-3. Créez un client DataSnap pour votre serveur de l'exercice 2, avec une interface utilisateur permettant de convertir des montants entre différentes devises.
-
-4. Améliorez le serveur de l'exercice 2 en ajoutant une authentification et des autorisations basées sur les rôles d'utilisateurs.
-
-5. Étendez l'application de gestion de contacts avec une fonctionnalité de recherche côté serveur qui renvoie uniquement les contacts correspondant à un critère donné.
-
-## Intégration de WebBroker avec les bases de données
-
-Un cas d'utilisation courant pour WebBroker et DataSnap est l'accès aux bases de données. Voyons comment intégrer une base de données MySQL/MariaDB à notre application WebBroker.
-
-### Connexion à MySQL/MariaDB
-
-```delphi
-procedure TWebModule1.WebModuleCreate(Sender: TObject);
-begin
-  // Créer et configurer la connexion
-  FDConnection1 := TFDConnection.Create(Self);
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Values['Server'] := 'localhost';
-  FDConnection1.Params.Values['Database'] := 'mabasededonnees';
-  FDConnection1.Params.Values['User_Name'] := 'utilisateur';
-  FDConnection1.Params.Values['Password'] := 'motdepasse';
-  FDConnection1.LoginPrompt := False;
-
-  try
-    FDConnection1.Connected := True;
-  except
-    on E: Exception do
-      LogMessage('Erreur de connexion à la base de données: ' + E.Message);
-  end;
-end;
-```
-
-### Création d'un endpoint qui renvoie des données de la base de données
-
-```delphi
-procedure TWebModule1.ProduitActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
+procedure TWebModule1.ActionAPIClientsAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 var
   Query: TFDQuery;
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
 begin
-  if not FDConnection1.Connected then
-  begin
-    Response.StatusCode := 500;
-    Response.Content := '{"error": "Base de données non disponible"}';
-    Response.ContentType := 'application/json';
-    Handled := True;
-    Exit;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1; // Connexion FireDAC
+    Query.SQL.Text := 'SELECT id, nom, prenom FROM clients';
+    Query.Open;
+
+    JSONArray := TJSONArray.Create;
+    try
+      while not Query.Eof do
+      begin
+        JSONObject := TJSONObject.Create;
+        JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+        JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
+        JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
+        JSONArray.Add(JSONObject);
+        Query.Next;
+      end;
+
+      Response.ContentType := 'application/json';
+      Response.Content := JSONArray.ToString;
+    finally
+      JSONArray.Free;
+    end;
+  finally
+    Query.Free;
   end;
+
+  Handled := True;
+end;
+```
+
+### Avantages de WebBroker
+
+✅ **Inclus dans Delphi** - Aucune dépendance externe
+✅ **Léger et simple** - Peu de concepts à apprendre
+✅ **Contrôle total** - Vous gérez tout le flux HTTP
+✅ **Multi-plateforme** - Fonctionne sur Windows et Linux
+✅ **Stable et éprouvé** - Plus de 25 ans d'existence
+✅ **Base pour d'autres frameworks** - IntraWeb, DataSnap REST
+
+### Limitations de WebBroker
+
+❌ **Bas niveau** - Génération HTML manuelle
+❌ **Pas de composants visuels** - Tout en code
+❌ **Gestion manuelle** - Sessions, sécurité, validation
+❌ **Interface datée** - Approche années 1990
+❌ **Verbeux** - Beaucoup de code pour des tâches simples
+
+## DataSnap : Architecture client-serveur multi-tiers
+
+### Qu'est-ce que DataSnap ?
+
+**DataSnap** est une technologie Delphi pour créer des applications distribuées multi-tiers. Elle permet de séparer la logique métier du client et de la base de données.
+
+**Concept clé :** DataSnap crée un "serveur applicatif" qui expose des méthodes que les clients peuvent appeler à distance.
+
+### Architecture DataSnap
+
+```
+┌─────────────────┐
+│  Client Delphi  │
+│   (Windows/     │
+│   Mobile/Web)   │
+└────────┬────────┘
+         │
+         │ Appel de méthodes distantes
+         │ (REST, TCP/IP, HTTP)
+         │
+┌────────┴────────────────────────┐
+│    Serveur DataSnap             │
+│  ┌──────────────────────────┐   │
+│  │  Server Methods          │   │
+│  │  (Logique métier)        │   │
+│  └──────────┬───────────────┘   │
+└─────────────┼───────────────────┘
+              │
+              │ Requêtes SQL
+              │
+┌─────────────┴───────────────┐
+│    Base de données          │
+│    (MySQL, SQL Server...)   │
+└─────────────────────────────┘
+```
+
+### Concepts fondamentaux
+
+**1. Server Methods (Méthodes serveur)**
+- Classes exposant des méthodes appelables à distance
+- Contiennent la logique métier
+- Sécurisent l'accès aux données
+
+**2. Protocoles de communication**
+- **REST/JSON** : Pour clients web et mobiles
+- **TCP/IP** : Pour clients Delphi (très rapide)
+- **HTTP/HTTPS** : Communication standard web
+
+**3. Sérialisation automatique**
+- Conversion automatique des types Delphi en JSON
+- Marshaling/Unmarshaling des objets
+- Support des types complexes
+
+### Création d'un serveur DataSnap
+
+#### Étape 1 : Créer le projet serveur
+
+Dans Delphi :
+1. File → New → Other
+2. DataSnap Server → Wizard
+3. Choisir le type de serveur (Standalone pour débuter)
+4. Sélectionner les protocoles (REST, TCP/IP)
+
+#### Étape 2 : Créer les Server Methods
+
+```pascal
+unit ServerMethodsUnit1;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Datasnap.DSServer,
+  Datasnap.DSAuth, FireDAC.Comp.Client;
+
+type
+  {$METHODINFO ON}
+  TServerMethods1 = class(TDSServerModule)
+  private
+    { Déclarations privées }
+  public
+    { Déclarations publiques }
+    function EchoString(Value: string): string;
+    function GetServerTime: TDateTime;
+    function GetClients: TJSONArray;
+    function CreateClient(const Nom, Prenom, Email: string): Integer;
+  end;
+  {$METHODINFO OFF}
+
+implementation
+
+uses
+  System.JSON, Data.DBXPlatform;
+
+{$R *.dfm}
+
+function TServerMethods1.EchoString(Value: string): string;
+begin
+  Result := 'Écho : ' + Value;
+end;
+
+function TServerMethods1.GetServerTime: TDateTime;
+begin
+  Result := Now;
+end;
+
+function TServerMethods1.GetClients: TJSONArray;
+var
+  Query: TFDQuery;
+  JSONObject: TJSONObject;
+begin
+  Result := TJSONArray.Create;
 
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
-    Query.SQL.Text := 'SELECT id, nom, description, prix FROM produits';
-
-    // Filtrer par catégorie si spécifié
-    if Request.QueryFields.Values['categorie'] <> '' then
-    begin
-      Query.SQL.Add('WHERE categorie = :categorie');
-      Query.ParamByName('categorie').AsString := Request.QueryFields.Values['categorie'];
-    end;
-
+    Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients';
     Query.Open;
 
-    JSONArray := TJSONArray.Create;
     while not Query.Eof do
     begin
       JSONObject := TJSONObject.Create;
       JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
       JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
-      JSONObject.AddPair('description', Query.FieldByName('description').AsString);
-      JSONObject.AddPair('prix', TJSONNumber.Create(Query.FieldByName('prix').AsFloat));
-      JSONArray.AddElement(JSONObject);
+      JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
+      JSONObject.AddPair('email', Query.FieldByName('email').AsString);
+      Result.Add(JSONObject);
 
       Query.Next;
     end;
-
-    Response.ContentType := 'application/json';
-    Response.Content := JSONArray.ToString;
   finally
     Query.Free;
-    JSONArray.Free; // N'est pas libéré si une exception se produit avant l'assignation à Response.Content
+  end;
+end;
+
+function TServerMethods1.CreateClient(const Nom, Prenom, Email: string): Integer;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    Query.SQL.Text :=
+      'INSERT INTO clients (nom, prenom, email) ' +
+      'VALUES (:nom, :prenom, :email)';
+    Query.ParamByName('nom').AsString := Nom;
+    Query.ParamByName('prenom').AsString := Prenom;
+    Query.ParamByName('email').AsString := Email;
+    Query.ExecSQL;
+
+    // Récupérer l'ID généré
+    Query.SQL.Text := 'SELECT LAST_INSERT_ID() as id';
+    Query.Open;
+    Result := Query.FieldByName('id').AsInteger;
+  finally
+    Query.Free;
+  end;
+end;
+
+end.
+```
+
+**Note importante :** Les directives `{$METHODINFO ON}` et `{$METHODINFO OFF}` sont essentielles pour que DataSnap puisse exposer les méthodes publiques.
+
+#### Étape 3 : Démarrer le serveur
+
+```pascal
+// Le serveur standalone démarre automatiquement
+// ou via un bouton dans l'interface
+
+procedure TForm1.ButtonStartClick(Sender: TObject);
+begin
+  DSServer1.Start;
+  ShowMessage('Serveur DataSnap démarré sur le port ' +
+    IntToStr(DSHTTPService1.HttpPort));
+end;
+
+procedure TForm1.ButtonStopClick(Sender: TObject);
+begin
+  DSServer1.Stop;
+  ShowMessage('Serveur DataSnap arrêté');
+end;
+```
+
+### Création d'un client DataSnap
+
+#### Client Delphi (VCL/FMX)
+
+```pascal
+unit ClientUnit1;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
+  Data.DB, Datasnap.DSConnect, IPPeerClient, System.JSON;
+
+type
+  TForm1 = class(TForm)
+    SQLConnection1: TSQLConnection;
+    DSProviderConnection1: TDSProviderConnection;
+    ButtonTestEcho: TButton;
+    ButtonGetClients: TButton;
+    Memo1: TMemo;
+
+    procedure ButtonTestEchoClick(Sender: TObject);
+    procedure ButtonGetClientsClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    FServerMethods: TServerMethods1Client;
+  public
+    { Public declarations }
   end;
 
-  Handled := True;
-end;
-```
+implementation
 
-## Création d'applications web hybrides
+uses
+  ClientModuleUnit1; // Proxy généré automatiquement
 
-Vous pouvez également créer des applications hybrides qui combinent des pages web traditionnelles avec des services REST :
+{$R *.dfm}
 
-### Page HTML avec JavaScript qui appelle un service REST
-
-```delphi
-procedure TWebModule1.AccueilActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  Response.ContentType := 'text/html';
-  Response.Content :=
-    '<!DOCTYPE html>' +
-    '<html>' +
-    '<head>' +
-    '  <title>Application WebBroker Hybride</title>' +
-    '  <style>' +
-    '    body { font-family: Arial, sans-serif; margin: 20px; }' +
-    '    .product { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }' +
-    '  </style>' +
-    '</head>' +
-    '<body>' +
-    '  <h1>Liste des Produits</h1>' +
-    '  <div id="products"></div>' +
-    '' +
-    '  <script>' +
-    '    fetch("/produits")' +
-    '      .then(response => response.json())' +
-    '      .then(data => {' +
-    '        const container = document.getElementById("products");' +
-    '        data.forEach(product => {' +
-    '          const div = document.createElement("div");' +
-    '          div.className = "product";' +
-    '          div.innerHTML = `' +
-    '            <h3>${product.nom}</h3>' +
-    '            <p>${product.description}</p>' +
-    '            <p><strong>Prix: ${product.prix} €</strong></p>' +
-    '          `;' +
-    '          container.appendChild(div);' +
-    '        });' +
-    '      })' +
-    '      .catch(error => {' +
-    '        console.error("Erreur:", error);' +
-    '        document.getElementById("products").innerHTML = "Erreur lors du chargement des produits.";' +
-    '      });' +
-    '  </script>' +
-    '</body>' +
-    '</html>';
+  // Connexion au serveur
+  SQLConnection1.Connected := True;
 
-  Handled := True;
+  // Créer l'instance du proxy
+  FServerMethods := TServerMethods1Client.Create(SQLConnection1.DBXConnection);
+end;
+
+procedure TForm1.ButtonTestEchoClick(Sender: TObject);
+var
+  Response: string;
+begin
+  // Appel de la méthode distante
+  Response := FServerMethods.EchoString('Bonjour depuis le client');
+  ShowMessage(Response);
+end;
+
+procedure TForm1.ButtonGetClientsClick(Sender: TObject);
+var
+  JSONArray: TJSONArray;
+  JSONObject: TJSONObject;
+  i: Integer;
+begin
+  Memo1.Clear;
+
+  // Appel de la méthode distante qui retourne JSON
+  JSONArray := FServerMethods.GetClients;
+  try
+    for i := 0 to JSONArray.Count - 1 do
+    begin
+      JSONObject := JSONArray.Items[i] as TJSONObject;
+      Memo1.Lines.Add(Format('ID: %s, Nom: %s %s',
+        [JSONObject.GetValue('id').Value,
+         JSONObject.GetValue('prenom').Value,
+         JSONObject.GetValue('nom').Value]));
+    end;
+  finally
+    JSONArray.Free;
+  end;
+end;
+
+end.
+```
+
+#### Client REST (JavaScript, autre langage)
+
+DataSnap expose automatiquement une API REST :
+
+```javascript
+// JavaScript - Appel REST vers DataSnap
+fetch('http://localhost:8080/datasnap/rest/TServerMethods1/GetClients')
+  .then(response => response.json())
+  .then(data => {
+    console.log('Clients:', data.result);
+  });
+
+// Avec paramètres
+fetch('http://localhost:8080/datasnap/rest/TServerMethods1/EchoString/["Hello"]')
+  .then(response => response.json())
+  .then(data => {
+    console.log('Réponse:', data.result);
+  });
+```
+
+### Fonctionnalités avancées de DataSnap
+
+#### 1. Authentification
+
+```pascal
+unit AuthenticationUnit;
+
+interface
+
+uses
+  Datasnap.DSAuth;
+
+type
+  TMyAuthentication = class(TDSAuthenticationManager)
+  public
+    function Authenticate(const AuthUserName, AuthPassword: string;
+      const AdditionalData: string): Boolean; override;
+  end;
+
+implementation
+
+function TMyAuthentication.Authenticate(const AuthUserName, AuthPassword: string;
+  const AdditionalData: string): Boolean;
+begin
+  // Vérifier les identifiants
+  // (en production, vérifier contre une base de données)
+  Result := (AuthUserName = 'admin') and (AuthPassword = 'secret123');
+end;
+
+end.
+```
+
+Configuration dans le serveur :
+
+```pascal
+procedure TServerContainer1.DSServer1Connect(DSConnectEventObject: TDSConnectEventObject);
+begin
+  // Activer l'authentification
+  DSConnectEventObject.ChannelInfo.LoginRequired := True;
 end;
 ```
 
-## Utilisation avancée de DataSnap
+#### 2. Callbacks (notifications serveur → client)
 
-### Mise en cache des données côté serveur
-
-Pour améliorer les performances, vous pouvez mettre en cache les données fréquemment demandées :
-
-```delphi
+```pascal
+// Côté serveur - Envoyer une notification
 type
   TServerMethods1 = class(TDSServerModule)
-  private
-    FCache: TDictionary<string, TJSONValue>;
-    FCacheLock: TCriticalSection;
-    function GetFromCache(const Key: string): TJSONValue;
-    procedure AddToCache(const Key: string; Value: TJSONValue; TimeoutMinutes: Integer = 5);
   public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-
-    function GetProductsWithCache(Category: string): TJSONValue;
+    function RegisterCallback(const ClientId: string): Boolean;
+    procedure BroadcastMessage(const Message: string);
   end;
 
-constructor TServerMethods1.Create(AOwner: TComponent);
-begin
-  inherited;
-  FCache := TDictionary<string, TJSONValue>.Create;
-  FCacheLock := TCriticalSection.Create;
-end;
-
-destructor TServerMethods1.Destroy;
-begin
-  FCacheLock.Free;
-
-  // Libérer tous les objets JSON dans le cache
-  for var Item in FCache do
-    Item.Value.Free;
-
-  FCache.Free;
-  inherited;
-end;
-
-function TServerMethods1.GetFromCache(const Key: string): TJSONValue;
-begin
-  Result := nil;
-  FCacheLock.Enter;
-  try
-    if FCache.ContainsKey(Key) then
-      Result := FCache[Key].Clone as TJSONValue;
-  finally
-    FCacheLock.Leave;
-  end;
-end;
-
-procedure TServerMethods1.AddToCache(const Key: string; Value: TJSONValue; TimeoutMinutes: Integer);
 var
-  ExistingValue: TJSONValue;
-begin
-  FCacheLock.Enter;
-  try
-    if FCache.TryGetValue(Key, ExistingValue) then
-    begin
-      ExistingValue.Free;
-      FCache.Remove(Key);
-    end;
+  Callbacks: TList<TDSServerCallbackChannelManager>;
 
-    FCache.Add(Key, Value.Clone as TJSONValue);
-
-    // Optionnellement, configurer un timer pour supprimer l'élément du cache après expiration
-  finally
-    FCacheLock.Leave;
-  end;
-end;
-
-function TServerMethods1.GetProductsWithCache(Category: string): TJSONValue;
+procedure TServerMethods1.BroadcastMessage(const Message: string);
 var
-  CacheKey: string;
-  Result: TJSONValue;
+  i: Integer;
 begin
-  CacheKey := 'Products_' + Category;
-
-  // Tenter de récupérer du cache
-  Result := GetFromCache(CacheKey);
-  if Result <> nil then
-    Exit;
-
-  // Si pas en cache, récupérer de la base de données
-  // ... Code pour récupérer les produits ...
-
-  // Ajouter au cache pour les requêtes futures
-  AddToCache(CacheKey, Result, 10); // Cache pour 10 minutes
-end;
-```
-
-### Gestion des sessions DataSnap
-
-DataSnap permet de gérer les sessions utilisateur :
-
-```delphi
-procedure TServerMethods1.StartSession(UserName: string);
-var
-  SessionID: string;
-begin
-  // Générer un identifiant de session unique
-  SessionID := CreateGUID;
-
-  // Stocker dans le gestionnaire de sessions DataSnap
-  if DSServer.LifeCycle <> nil then
+  for i := 0 to Callbacks.Count - 1 do
   begin
-    DSServer.LifeCycle.CreateSession(SessionID);
-    DSServer.LifeCycle.SetSessionData(SessionID, 'UserName', UserName);
-    // Ajouter d'autres données de session si nécessaire
+    // Envoyer le message à tous les clients connectés
+    Callbacks[i].Broadcast(TJSONString.Create(Message));
   end;
 end;
 
-function TServerMethods1.GetCurrentUser(SessionID: string): string;
+// Côté client - Recevoir les notifications
+procedure TForm1.OnServerCallback(Sender: TObject; const Arg: TJSONValue);
 begin
-  Result := '';
-  if (DSServer.LifeCycle <> nil) and DSServer.LifeCycle.HasSession(SessionID) then
-    Result := DSServer.LifeCycle.GetSessionData(SessionID, 'UserName');
+  ShowMessage('Notification serveur : ' + Arg.Value);
 end;
 ```
 
-## Débogage des applications WebBroker et DataSnap
+#### 3. Pooling de connexions
 
-Le débogage des applications web peut être délicat. Voici quelques techniques utiles :
-
-### Journalisation
-
-Ajoutez une journalisation détaillée pour suivre les demandes et les réponses :
-
-```delphi
-procedure LogToFile(const Message: string);
-var
-  LogFile: TextFile;
-  LogFileName: string;
+```pascal
+procedure TServerContainer1.DSServer1Prepare(Sender: TObject);
 begin
-  LogFileName := ExtractFilePath(ParamStr(0)) + 'server_log.txt';
-  AssignFile(LogFile, LogFileName);
-  try
-    if FileExists(LogFileName) then
-      Append(LogFile)
-    else
-      Rewrite(LogFile);
+  // Configuration du pool de connexions
+  DSServer1.AutoStart := True;
 
-    WriteLn(LogFile, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' - ' + Message);
-  finally
-    CloseFile(LogFile);
+  // Nombre maximum de connexions simultanées
+  DSHTTPService1.HttpServer.MaxConnections := 100;
+
+  // Timeout des connexions inactives
+  DSHTTPService1.HttpServer.KeepAlive := True;
+  DSHTTPService1.HttpServer.Timeout := 30000; // 30 secondes
+end;
+```
+
+#### 4. Filtres et intercepteurs
+
+```pascal
+type
+  TMyServerFilter = class(TTransportFilter)
+  public
+    function ProcessInput(const Data: TBytes): Boolean; override;
+    function ProcessOutput(const Data: TBytes): Boolean; override;
   end;
+
+function TMyServerFilter.ProcessInput(const Data: TBytes): Boolean;
+begin
+  // Traiter les données entrantes
+  // (logging, validation, décompression...)
+  Result := True;
 end;
 
-procedure TWebModule1.WebModule1BeforeDispatch(Sender: TObject;
+function TMyServerFilter.ProcessOutput(const Data: TBytes): Boolean;
+begin
+  // Traiter les données sortantes
+  // (compression, chiffrement...)
+  Result := True;
+end;
+```
+
+### Avantages de DataSnap
+
+✅ **Architecture multi-tiers** - Séparation claire des responsabilités
+✅ **Protocoles multiples** - REST, TCP/IP, HTTP
+✅ **Clients multiples** - Delphi, JavaScript, autres langages
+✅ **Sérialisation automatique** - Conversion types Delphi ↔ JSON
+✅ **Callbacks bidirectionnels** - Communication serveur → client
+✅ **Authentification intégrée** - Sécurité native
+✅ **Pooling de connexions** - Gestion efficace des ressources
+
+### Limitations de DataSnap
+
+❌ **Complexité** - Configuration plus lourde que frameworks modernes
+❌ **Verbosité** - Beaucoup de code pour des tâches simples
+❌ **Performance REST** - Moins rapide que Horse ou frameworks dédiés
+❌ **Documentation limitée** - Moins de ressources que technologies modernes
+❌ **Courbe d'apprentissage** - Nombreux concepts à maîtriser
+❌ **Orienté Delphi** - Optimisé pour communication Delphi-to-Delphi
+
+## Comparaison WebBroker, DataSnap et technologies modernes
+
+### Tableau comparatif
+
+| Critère | WebBroker | DataSnap | Horse/MARS | RAD Server |
+|---------|-----------|----------|------------|------------|
+| **Année d'introduction** | 1997 | 2001 | 2018+ | 2016 |
+| **Courbe d'apprentissage** | Moyenne | Élevée | Faible | Moyenne |
+| **Performance** | Bonne | Bonne | Excellente | Très bonne |
+| **Simplicité** | Bas niveau | Complexe | Très simple | Simple |
+| **REST natif** | Manuel | Oui | Oui | Oui |
+| **Client Delphi natif** | Non | Oui | Non | Oui |
+| **Callbacks** | Non | Oui | Avec WebSockets | Oui |
+| **Documentation** | Moyenne | Moyenne | Excellente | Bonne |
+| **Communauté** | Stable | Stable | Croissante | Active |
+| **Coût** | Gratuit | Gratuit | Gratuit | Payant (Enterprise) |
+
+### Matrice de décision
+
+**Utiliser WebBroker quand :**
+- Vous avez besoin d'un contrôle bas niveau sur HTTP
+- Vous créez un composant ou framework web
+- Vous avez des contraintes de compatibilité anciennes
+- Vous voulez éviter les dépendances externes
+- Votre application est très simple
+
+**Utiliser DataSnap quand :**
+- Vous créez une architecture multi-tiers classique
+- Vous avez besoin de callbacks bidirectionnels
+- Vos clients sont principalement Delphi
+- Vous migrez une application DataSnap existante
+- Vous voulez la communication TCP/IP rapide
+
+**Utiliser frameworks modernes (Horse, MARS) quand :**
+- Vous créez une nouvelle API REST
+- Vous privilégiez la simplicité et la rapidité de développement
+- Vous voulez une syntaxe moderne et élégante
+- Vos clients sont web/mobile/multi-technologie
+- Vous voulez rejoindre une communauté active
+
+**Utiliser RAD Server quand :**
+- Vous êtes une entreprise avec budget
+- Vous avez besoin d'analytics et monitoring intégrés
+- Vous voulez une console d'administration
+- Vous développez pour mobile (EMS)
+- Vous avez besoin de support commercial
+
+## Migration et modernisation
+
+### Migrer de WebBroker vers Horse
+
+**Avant (WebBroker) :**
+```pascal
+procedure TWebModule1.ActionClientsAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 begin
-  LogToFile('Requête reçue: ' + Request.PathInfo + ' [' + Request.Method + ']');
-  LogToFile('Paramètres: ' + Request.QueryFields.Text);
+  Response.ContentType := 'application/json';
+  Response.Content := '{"clients": [...]}';
+  Handled := True;
 end;
 ```
 
-### Utilisation des outils de développement du navigateur
+**Après (Horse) :**
+```pascal
+THorse.Get('/clients',
+  procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+  begin
+    Res.Send('{"clients": [...]}');
+  end);
+```
 
-Les outils de développement du navigateur (F12) sont essentiels pour déboguer le côté client :
+### Moderniser DataSnap
 
-1. Onglet "Réseau" pour voir les requêtes HTTP
-2. Onglet "Console" pour les erreurs JavaScript
-3. Onglet "Application" pour examiner les cookies et le stockage local
+**Option 1 : Garder DataSnap, améliorer l'API REST**
+```pascal
+// Ajouter un WebModule pour exposer une API REST moderne
+// en utilisant les Server Methods existants
+```
 
-### Tester avec Postman ou des outils similaires
+**Option 2 : Migrer vers Horse + conserver la logique**
+```pascal
+// Extraire la logique métier des Server Methods
+// Créer des contrôleurs Horse qui appellent cette logique
+```
 
-Pour tester les API REST, utilisez Postman ou des outils similaires qui vous permettent de :
+**Option 3 : Architecture hybride**
+```
+┌─────────────────┐
+│  Clients Delphi │──→ DataSnap (TCP/IP rapide)
+└─────────────────┘
 
-1. Envoyer des requêtes avec différentes méthodes HTTP
-2. Configurer des paramètres et des corps de requête
-3. Visualiser les réponses formatées
-4. Enregistrer les requêtes pour les tests futurs
+┌─────────────────┐
+│ Clients Web/    │──→ Horse API REST
+│ Mobile          │
+└─────────────────┘
+         ↓
+    ┌─────────────────┐
+    │ Logique métier  │
+    │    partagée     │
+    └─────────────────┘
+```
 
-## Meilleures pratiques pour les applications en production
+## Cas d'usage réels
 
-### Sécurité
+### Scénario 1 : Application legacy
 
-1. **HTTPS** : Configurez votre serveur web pour utiliser HTTPS avec un certificat valide
-2. **Protection contre les injections** : Utilisez des paramètres préparés pour toutes les requêtes SQL
-3. **Validation des entrées** : Validez toutes les entrées utilisateur côté serveur
-4. **Protection CSRF** : Implémentez des jetons anti-CSRF pour les formulaires
-5. **Authentification robuste** : Utilisez des méthodes d'authentification sécurisées comme JWT
+**Situation :** Application WebBroker en production depuis 15 ans
 
-### Performance
+**Recommandation :**
+- ✅ Continuer WebBroker si stable et fonctionnel
+- ✅ Moderniser progressivement l'UI avec CSS/JavaScript
+- ✅ Ajouter une API REST Horse pour nouveaux clients
+- ❌ Ne pas tout réécrire si ce n'est pas nécessaire
 
-1. **Mise en cache** : Utilisez la mise en cache pour les données fréquemment accédées
-2. **Compression** : Activez la compression HTTP (gzip) pour réduire la taille des réponses
-3. **Pagination** : Limitez la quantité de données renvoyées pour les grandes collections
-4. **Optimisation des requêtes SQL** : Assurez-vous que vos requêtes sont optimisées et indexées
-5. **Réduisez le nombre de requêtes** : Combinez plusieurs opérations en une seule requête lorsque c'est possible
+### Scénario 2 : Système multi-tiers existant
 
-### Maintenance et surveillance
+**Situation :** Architecture DataSnap avec clients Delphi lourds
 
-1. **Journalisation** : Implémentez une journalisation complète pour le débogage
-2. **Surveillance** : Utilisez des outils pour surveiller les performances et la disponibilité
-3. **Sauvegardes** : Sauvegardez régulièrement vos données et votre configuration
-4. **Mises à jour** : Maintenez votre serveur et vos bibliothèques à jour
+**Recommandation :**
+- ✅ Garder DataSnap pour clients Delphi existants
+- ✅ Ajouter des clients web légers (TMS Web Core)
+- ✅ Exposer API REST pour mobilité
+- ✅ Moderniser progressivement
 
-## Tendances et évolutions
+### Scénario 3 : Nouveau projet
 
-### WebBroker et DataSnap dans Delphi moderne
+**Situation :** Création d'un nouveau système web
 
-Bien que WebBroker et DataSnap soient des technologies plus anciennes, elles continuent d'évoluer :
+**Recommandation :**
+- ✅ Privilégier Horse ou MARS pour l'API
+- ✅ Frontend moderne (TMS Web Core, React, Vue.js)
+- ❌ Éviter WebBroker/DataSnap sauf besoin spécifique
+- ✅ Architecture REST découplée
 
-1. **Support REST amélioré** : Les versions récentes de Delphi ont considérablement amélioré le support REST
-2. **Intégration avec les technologies web modernes** : Support pour JSON, JWT, etc.
-3. **Performances améliorées** : Optimisations pour une meilleure scalabilité
+## Bonnes pratiques
 
-### Alternatives et compléments
+### Pour WebBroker
 
-Si vous développez beaucoup d'applications web avec Delphi, vous pourriez également envisager :
+**1. Utiliser des templates HTML**
+```pascal
+function LoadHTMLTemplate(const FileName: string): string;
+var
+  FileStream: TFileStream;
+  StringStream: TStringStream;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  try
+    StringStream := TStringStream.Create;
+    try
+      StringStream.CopyFrom(FileStream, FileStream.Size);
+      Result := StringStream.DataString;
+    finally
+      StringStream.Free;
+    end;
+  finally
+    FileStream.Free;
+  end;
+end;
 
-1. **Horse** : Un framework web minimaliste et performant pour Delphi
-2. **MARS-Curiosity** : Un framework REST inspiré de JAX-RS
-3. **mORMot** : Une solution complète pour les services REST et SOA
-4. **XData** : Une solution moderne pour créer des API REST
-5. **TMS Sparkle** : Un framework HTTP pour créer des services web
+procedure TWebModule1.ActionHomeAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  HTML: string;
+begin
+  HTML := LoadHTMLTemplate('templates/home.html');
+  HTML := StringReplace(HTML, '{{TITLE}}', 'Accueil', [rfReplaceAll]);
+  Response.Content := HTML;
+  Handled := True;
+end;
+```
+
+**2. Séparer la logique métier**
+```pascal
+// BusinessLogic.pas
+unit BusinessLogic;
+
+interface
+
+function GetClientsList: string; // Retourne JSON
+
+implementation
+
+function GetClientsList: string;
+begin
+  // Logique de récupération des clients
+  Result := '{"clients": [...]}';
+end;
+
+end.
+
+// Dans WebModule
+procedure TWebModule1.ActionAPIAction(...);
+begin
+  Response.Content := BusinessLogic.GetClientsList;
+end;
+```
+
+### Pour DataSnap
+
+**1. Limiter la complexité des méthodes**
+```pascal
+// ❌ Mauvais - Trop complexe
+function GetEverything: TJSONObject;
+
+// ✅ Bon - Méthodes spécialisées
+function GetClients: TJSONArray;
+function GetOrders: TJSONArray;
+function GetClientOrders(ClientID: Integer): TJSONArray;
+```
+
+**2. Gérer les erreurs proprement**
+```pascal
+function TServerMethods1.GetClient(ID: Integer): TJSONObject;
+begin
+  try
+    Result := FetchClientFromDB(ID);
+    if Result = nil then
+      raise Exception.Create('Client non trouvé');
+  except
+    on E: Exception do
+    begin
+      // Logger l'erreur
+      LogError(E.Message);
+      raise; // Re-lever pour que le client soit informé
+    end;
+  end;
+end;
+```
+
+**3. Implémenter un timeout**
+```pascal
+procedure TServerMethods1.LongRunningOperation;
+var
+  StartTime: TDateTime;
+  Timeout: Integer;
+begin
+  StartTime := Now;
+  Timeout := 30; // 30 secondes
+
+  while ProcessingNotComplete do
+  begin
+    // Vérifier le timeout
+    if SecondsBetween(Now, StartTime) > Timeout then
+      raise Exception.Create('Timeout dépassé');
+
+    // Continuer le traitement
+    DoSomeWork;
+  end;
+end;
+```
 
 ## Conclusion
 
-WebBroker et DataSnap sont des technologies puissantes qui permettent aux développeurs Delphi de créer des applications web et des services sans avoir à apprendre un tout nouveau langage ou framework. Que vous développiez une simple API REST, une application web complète ou un système d'entreprise multi-niveaux, ces outils offrent la familiarité et la productivité de Delphi associées à la puissance du développement web.
+WebBroker et DataSnap représentent les **fondations historiques** du développement web et distribué avec Delphi. Bien que des solutions plus modernes existent aujourd'hui, ces technologies conservent leur pertinence dans certains contextes :
 
-Dans cette section, nous avons exploré les fondamentaux de WebBroker et DataSnap, appris à créer des serveurs et des clients, et découvert des techniques avancées pour améliorer vos applications. Avec ces connaissances, vous êtes maintenant prêt à développer des solutions web puissantes avec Delphi.
+**WebBroker** reste utile pour :
+- ✅ Comprendre les fondamentaux du web avec Delphi
+- ✅ Créer des composants de bas niveau
+- ✅ Maintenir des applications legacy
+- ✅ Projets nécessitant un contrôle total
 
-## Ressources supplémentaires
+**DataSnap** reste pertinent pour :
+- ✅ Applications multi-tiers existantes
+- ✅ Communication rapide entre clients Delphi
+- ✅ Systèmes nécessitant callbacks bidirectionnels
+- ✅ Architectures nécessitant plusieurs protocoles
 
-- Documentation Embarcadero sur WebBroker : [Lien DocWiki](https://docwiki.embarcadero.com/RADStudio/en/Web_Broker)
-- Documentation Embarcadero sur DataSnap : [Lien DocWiki](https://docwiki.embarcadero.com/RADStudio/en/DataSnap)
-- Tutoriels vidéo Embarcadero : [Chaîne YouTube](https://www.youtube.com/user/EmbarcaderoTechNet)
-- Blogs et forums communautaires :
-  - [DelphiPraxis](https://en.delphipraxis.net/)
-  - [DelphiFeeds](https://www.delphifeeds.com/)
-  - [Stack Overflow - Tag Delphi](https://stackoverflow.com/questions/tagged/delphi)
-- Livres recommandés :
-  - "Delphi Cookbook" par Daniele Spinetti et Daniele Teti
-  - "Delphi Event-Based and Asynchronous Programming" par Andrea Magni
+Pour de **nouveaux projets**, il est généralement recommandé d'utiliser des frameworks plus modernes comme **Horse, MARS ou RAD Server**, qui offrent une meilleure productivité, une syntaxe plus élégante et une communauté plus active.
+
+Cependant, comprendre WebBroker et DataSnap reste précieux car :
+- De nombreuses applications en production les utilisent
+- Ils constituent la base de nombreuses autres technologies Delphi
+- Leur maîtrise vous donne une compréhension approfondie du web avec Delphi
+- Vous serez capable de maintenir et moderniser des systèmes existants
+
+Dans la section suivante, nous explorerons le développement de sites web dynamiques avec des techniques modernes de templating et de génération de contenu.
 
 ⏭️ [Développement de sites Web dynamiques](/23-conception-dapplications-web-avec-delphi/05-developpement-de-sites-web-dynamiques.md)

@@ -1,692 +1,1161 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.7 Progressive Web Apps (PWA)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Introduction aux Progressive Web Apps
+Les **Progressive Web Apps (PWA)** représentent l'évolution moderne des applications web. Elles combinent le meilleur des applications web (accessibilité via URL, pas d'installation via store) et des applications natives (fonctionnement hors ligne, installation sur l'écran d'accueil, notifications push).
 
-Les Progressive Web Apps (PWA) représentent une évolution majeure dans le développement web. Ce sont des applications web qui offrent une expérience utilisateur similaire à celle des applications natives, tout en conservant les avantages des sites web traditionnels. En intégrant les capacités des PWA à vos applications Delphi, vous pouvez créer des expériences utilisateur modernes et engageantes.
+**Analogie :** Une PWA est comme un caméléon qui se comporte comme une application native tout en restant une application web.
 
-![Note] Cette section ne nécessite pas de connaissances approfondies en JavaScript, mais une compréhension de base des concepts web sera utile. Les explications sont conçues pour être accessibles aux débutants.
+Imaginez que vous créez une application web et que, sans effort supplémentaire majeur, vos utilisateurs peuvent :
+- L'installer sur leur téléphone ou ordinateur comme une vraie application
+- L'utiliser même sans connexion Internet
+- Recevoir des notifications
+- Avoir une expérience fluide et rapide
 
-## Pourquoi adopter les PWA ?
+C'est exactement ce que permettent les PWA !
 
-Les PWA offrent plusieurs avantages qui les rendent attractives tant pour les développeurs que pour les utilisateurs :
+## Qu'est-ce qu'une Progressive Web App ?
 
-1. **Installation facile** - Les utilisateurs peuvent "installer" votre application sur leur appareil sans passer par un app store
-2. **Fonctionnement hors ligne** - Les PWA peuvent fonctionner sans connexion internet
-3. **Chargement rapide** - Grâce à la mise en cache des ressources
-4. **Notifications push** - Possibilité d'envoyer des notifications même lorsque l'application n'est pas ouverte
-5. **Mise à jour automatique** - Les utilisateurs ont toujours la dernière version
-6. **Responsive** - Fonctionnent sur tous les appareils (desktop, mobile, tablette)
-7. **Sécurisées** - Nécessitent HTTPS, garantissant une connexion sécurisée
+### Définition
 
-## Composants clés d'une PWA
+Une PWA est une **application web** qui utilise des technologies modernes pour offrir une **expérience similaire à une application native**.
 
-Pour transformer une application web en PWA, vous avez besoin de trois éléments essentiels :
+### Les caractéristiques d'une PWA
 
-1. **Service Worker** - Un script JavaScript qui agit comme un proxy réseau, permettant le fonctionnement hors ligne et la mise en cache
-2. **Manifest Web** - Un fichier JSON qui décrit votre application (nom, icônes, couleurs, etc.)
-3. **HTTPS** - Une connexion sécurisée est obligatoire pour les PWA
+**1. Progressive (Progressive)**
+- Fonctionne pour tous les utilisateurs
+- S'améliore progressivement selon les capacités du navigateur
+- Expérience de base même sur navigateurs anciens
 
-## Créer une PWA avec Delphi
+**2. Responsive (Adaptative)**
+- S'adapte à toutes les tailles d'écran
+- Fonctionne sur desktop, mobile, tablette
+- Interface fluide et cohérente
 
-Voyons comment transformer une application web Delphi existante en PWA. Nous utiliserons comme exemple le site web dynamique créé dans la section 23.5.
+**3. Connectivity Independent (Indépendante de la connexion)**
+- Fonctionne hors ligne ou avec connexion lente
+- Mise en cache intelligente des ressources
+- Synchronisation en arrière-plan
 
-### Étape 1 : Créer le fichier manifest
+**4. App-like (Semblable à une app native)**
+- Navigation fluide sans rechargement de page
+- Interactions rapides et réactives
+- Plein écran possible
 
-Le manifest web est un fichier JSON qui fournit des informations sur votre application. Créez un fichier nommé `manifest.json` dans un dossier `www` de votre projet Delphi :
+**5. Fresh (Toujours à jour)**
+- Mise à jour automatique grâce aux Service Workers
+- Contenu toujours frais
+- Pas de version obsolète
 
+**6. Safe (Sécurisée)**
+- HTTPS obligatoire
+- Communications chiffrées
+- Pas d'intermédiaire malveillant
+
+**7. Discoverable (Découvrable)**
+- Indexable par les moteurs de recherche
+- Référencement SEO normal
+- Pas besoin d'App Store
+
+**8. Re-engageable (Engagement utilisateur)**
+- Notifications push
+- Icône sur l'écran d'accueil
+- Retour utilisateur facilité
+
+**9. Installable (Installable)**
+- Ajout à l'écran d'accueil
+- Lancement en plein écran
+- Apparence d'application native
+
+**10. Linkable (Partageable)**
+- Simple URL à partager
+- Pas d'installation complexe
+- Accès instantané
+
+### Comparaison avec les autres types d'applications
+
+| Caractéristique | Site Web classique | PWA | Application Native |
+|----------------|-------------------|-----|-------------------|
+| **Installation** | Aucune | Optionnelle | Obligatoire (Store) |
+| **Hors ligne** | ❌ Non | ✅ Oui | ✅ Oui |
+| **Notifications** | ❌ Non | ✅ Oui | ✅ Oui |
+| **Performance** | Variable | Bonne | Excellente |
+| **Mise à jour** | Instantanée | Automatique | Manuelle (Store) |
+| **Découvrabilité** | ✅ SEO | ✅ SEO | ❌ Store uniquement |
+| **Développement** | Web standard | Web standard | Natif par plateforme |
+| **Coût** | Faible | Faible/Moyen | Élevé |
+
+## Les technologies clés d'une PWA
+
+### 1. Le Manifest (manifeste.json)
+
+Le fichier manifeste est un fichier JSON qui décrit votre application.
+
+**manifest.json :**
 ```json
 {
   "name": "Mon Application Delphi",
-  "short_name": "DelphiApp",
-  "description": "Une Progressive Web App créée avec Delphi",
+  "short_name": "MonApp",
+  "description": "Une PWA créée avec Delphi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4a6da7",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/images/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/images/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
 ```
 
-Assurez-vous de créer les fichiers d'icônes correspondants et de les placer dans le dossier `www/images`.
+**Explication des propriétés :**
 
-### Étape 2 : Créer le Service Worker
+- **name** : Nom complet de l'application (affiché lors de l'installation)
+- **short_name** : Nom court (affiché sous l'icône)
+- **description** : Description de l'application
+- **start_url** : URL de démarrage de l'application
+- **display** : Mode d'affichage
+  - `standalone` : comme une app native (recommandé)
+  - `fullscreen` : plein écran complet
+  - `minimal-ui` : interface minimale
+  - `browser` : dans le navigateur normal
+- **background_color** : Couleur de fond au démarrage
+- **theme_color** : Couleur du thème (barre d'état, etc.)
+- **orientation** : Orientation préférée
+- **icons** : Icônes de l'application (différentes tailles)
 
-Le Service Worker est un script JavaScript qui permet le fonctionnement hors ligne et d'autres fonctionnalités des PWA. Créez un fichier nommé `service-worker.js` dans le dossier `www` :
+**Inclure le manifeste dans votre HTML :**
+```html
+<link rel="manifest" href="/manifest.json">
+```
 
+### 2. Les Service Workers
+
+Un **Service Worker** est un script JavaScript qui fonctionne en arrière-plan, séparé de votre page web. Il intercepte les requêtes réseau et gère le cache.
+
+**Schéma de fonctionnement :**
+```
+┌─────────────────┐
+│  Application    │
+│  Web            │
+└────────┬────────┘
+         │
+         │ Requêtes
+         ↓
+┌────────────────────┐
+│  Service Worker    │ → Cache Storage
+│  (Intercepteur)    │
+└────────┬───────────┘
+         │
+         │ Si pas en cache
+         ↓
+┌────────────────────┐
+│  Réseau / Serveur  │
+└────────────────────┘
+```
+
+**service-worker.js (exemple basique) :**
 ```javascript
-// Nom du cache et ressources à mettre en cache immédiatement
-const CACHE_NAME = 'delphi-pwa-v1';
-const RESOURCES_TO_PRECACHE = [
+// Nom du cache
+const CACHE_NAME = 'mon-app-v1';
+
+// Fichiers à mettre en cache
+const urlsToCache = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/scripts/main.js',
-  '/manifest.json',
-  '/images/logo.png',
-  '/images/icon-192x192.png',
-  '/images/icon-512x512.png'
+  '/css/style.css',
+  '/js/app.js',
+  '/images/logo.png'
 ];
 
 // Installation du Service Worker
-self.addEventListener('install', event => {
-  console.log('Service Worker: Installation en cours...');
+self.addEventListener('install', function(event) {
+  console.log('Service Worker: Installation');
 
-  // Préchargement des ressources
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: Mise en cache des fichiers essentiels');
-        return cache.addAll(RESOURCES_TO_PRECACHE);
+      .then(function(cache) {
+        console.log('Service Worker: Mise en cache des fichiers');
+        return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting()) // Forcer l'activation immédiate
   );
 });
 
 // Activation du Service Worker
-self.addEventListener('activate', event => {
-  console.log('Service Worker: Activé');
+self.addEventListener('activate', function(event) {
+  console.log('Service Worker: Activation');
 
-  // Nettoyage des anciens caches
+  // Nettoyer les anciens caches
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(function(cacheNames) {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Suppression de l\'ancien cache', cacheName);
+            console.log('Service Worker: Suppression ancien cache', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-
-  return self.clients.claim(); // Prendre le contrôle immédiat
 });
 
-// Stratégie de mise en cache : Cache First, puis réseau
-self.addEventListener('fetch', event => {
-  console.log('Service Worker: Récupération de ressource', event.request.url);
-
+// Interception des requêtes
+self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
-      .then(cachedResponse => {
-        // Renvoyer la réponse mise en cache si elle existe
-        if (cachedResponse) {
-          return cachedResponse;
+      .then(function(response) {
+        // Retourner depuis le cache si disponible
+        if (response) {
+          console.log('Service Worker: Réponse depuis le cache', event.request.url);
+          return response;
         }
 
-        // Sinon, récupérer depuis le réseau
-        return fetch(event.request)
-          .then(response => {
-            // Ne pas mettre en cache les réponses d'API (facultatif)
-            if (!event.request.url.includes('/api/')) {
-              // Cloner la réponse car elle ne peut être utilisée qu'une fois
-              const responseToCache = response.clone();
-
-              caches.open(CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
-            }
-
-            return response;
-          })
-          .catch(error => {
-            console.error('Erreur de récupération:', error);
-
-            // Si la requête concerne une image, vous pourriez renvoyer une image de remplacement
-            if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
-              return caches.match('/images/offline-image.png');
-            }
-
-            // Pour les pages HTML, renvoyez une page hors ligne
-            if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('/offline.html');
-            }
-
-            // Sinon, laissez l'erreur se propager
-            throw error;
-          });
+        // Sinon, aller chercher sur le réseau
+        console.log('Service Worker: Requête réseau', event.request.url);
+        return fetch(event.request).then(function(response) {
+          // Mettre en cache la nouvelle ressource
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        });
       })
   );
 });
 ```
 
-### Étape 3 : Créer une page hors ligne
+**Enregistrer le Service Worker (dans votre page HTML) :**
+```html
+<script>
+  // Vérifier que les Service Workers sont supportés
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(function(registration) {
+          console.log('Service Worker enregistré avec succès:', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('Échec enregistrement Service Worker:', error);
+        });
+    });
+  }
+</script>
+```
 
-Pour améliorer l'expérience utilisateur lorsque l'application est hors ligne, créez un fichier `offline.html` dans le dossier `www` :
+### 3. HTTPS obligatoire
 
+Les PWA nécessitent **HTTPS** pour des raisons de sécurité.
+
+**Exceptions :**
+- `localhost` (pour le développement)
+- `127.0.0.1` (pour le développement)
+
+**Pour obtenir HTTPS :**
+- Certificat Let's Encrypt (gratuit)
+- Certificats payants
+- Services cloud avec HTTPS inclus
+
+## Créer une PWA avec TMS Web Core
+
+TMS Web Core est la solution Delphi la plus adaptée pour créer des PWA car le code est transcompilé en JavaScript et s'exécute dans le navigateur.
+
+### Structure du projet
+
+```
+MonProjetPWA/
+├── Project1.dpr              (Projet principal Delphi)
+├── Unit1.pas                 (Unité principale)
+├── Unit1.dfm                 (Formulaire)
+└── PWA/                      (Dossier pour fichiers PWA)
+    ├── manifest.json
+    ├── service-worker.js
+    └── icons/
+        ├── icon-192x192.png
+        └── icon-512x512.png
+```
+
+### Code Delphi pour PWA
+
+```pascal
+unit Unit1;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, JS, Web, WEBLib.Graphics, WEBLib.Controls,
+  WEBLib.Forms, WEBLib.Dialogs, Vcl.Controls, Vcl.StdCtrls, WEBLib.StdCtrls,
+  WEBLib.ExtCtrls;
+
+type
+  TForm1 = class(TWebForm)
+    WebPanel1: TWebPanel;
+    WebLabel1: TWebLabel;
+    WebButton1: TWebButton;
+    WebButton2: TWebButton;
+    WebMemo1: TWebMemo;
+
+    procedure WebFormCreate(Sender: TObject);
+    procedure WebButton1Click(Sender: TObject);
+    procedure WebButton2Click(Sender: TObject);
+  private
+    FIsOnline: Boolean;
+    procedure CheckOnlineStatus;
+    procedure RegisterServiceWorker;
+    procedure CheckInstallPrompt;
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.WebFormCreate(Sender: TObject);
+begin
+  WebLabel1.Caption := 'Ma PWA Delphi';
+  WebButton1.Caption := 'Vérifier connexion';
+  WebButton2.Caption := 'Installer l''application';
+
+  // Enregistrer le Service Worker
+  RegisterServiceWorker;
+
+  // Vérifier le statut en ligne
+  CheckOnlineStatus;
+
+  // Gérer le bouton d'installation
+  CheckInstallPrompt;
+
+  // Écouter les changements de connexion
+  asm
+    window.addEventListener('online', function() {
+      Form1.FIsOnline = true;
+      Form1.CheckOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+      Form1.FIsOnline = false;
+      Form1.CheckOnlineStatus();
+    });
+  end;
+end;
+
+procedure TForm1.RegisterServiceWorker;
+begin
+  asm
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(function(registration) {
+          console.log('Service Worker enregistré:', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('Erreur Service Worker:', error);
+        });
+    }
+  end;
+end;
+
+procedure TForm1.CheckOnlineStatus;
+var
+  IsOnline: Boolean;
+begin
+  asm
+    IsOnline = navigator.onLine;
+  end;
+
+  FIsOnline := IsOnline;
+
+  if FIsOnline then
+  begin
+    WebMemo1.Lines.Add('✅ Vous êtes en ligne');
+    WebPanel1.Color := clLime;
+  end
+  else
+  begin
+    WebMemo1.Lines.Add('❌ Vous êtes hors ligne');
+    WebPanel1.Color := clRed;
+  end;
+end;
+
+procedure TForm1.WebButton1Click(Sender: TObject);
+begin
+  CheckOnlineStatus;
+end;
+
+procedure TForm1.CheckInstallPrompt;
+begin
+  asm
+    var deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+      // Empêcher l'affichage automatique
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Afficher notre bouton d'installation
+      Form1.WebButton2.Visible = true;
+    });
+
+    // Gérer le clic sur le bouton d'installation
+    Form1.WebButton2.onclick = function() {
+      if (deferredPrompt) {
+        // Afficher le prompt d'installation
+        deferredPrompt.prompt();
+
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('PWA installée');
+            Form1.WebMemo1.Lines.Add('✅ Application installée !');
+          } else {
+            console.log('Installation refusée');
+            Form1.WebMemo1.Lines.Add('❌ Installation annulée');
+          }
+          deferredPrompt = null;
+        });
+      }
+    };
+
+    // Détecter si déjà installée
+    window.addEventListener('appinstalled', function() {
+      console.log('PWA installée');
+      Form1.WebButton2.Visible = false;
+      Form1.WebMemo1.Lines.Add('✅ Application installée avec succès !');
+    });
+  end;
+end;
+
+procedure TForm1.WebButton2Click(Sender: TObject);
+begin
+  // Le clic est géré dans le code JavaScript ci-dessus
+end;
+
+end.
+```
+
+### Configuration du manifeste pour TMS Web Core
+
+**Dans le projet TMS Web Core :**
+
+1. Créer le fichier `manifest.json` dans le dossier du projet
+2. L'inclure dans le HTML généré
+
+**Project HTML Template :**
 ```html
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mon Application Delphi - Hors ligne</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      background-color: #f5f5f5;
-    }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ma PWA Delphi">
+  <meta name="theme-color" content="#2196F3">
 
-    .offline-container {
-      text-align: center;
-      padding: 2rem;
-      border-radius: 8px;
-      background-color: white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      max-width: 90%;
-      width: 500px;
-    }
+  <title>Ma PWA Delphi</title>
 
-    h1 {
-      color: #4a6da7;
-    }
+  <!-- Manifeste PWA -->
+  <link rel="manifest" href="manifest.json">
 
-    .icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-  </style>
+  <!-- Icônes pour iOS -->
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="MonApp">
+
+  <!-- Splash screen pour iOS -->
+  <link rel="apple-touch-startup-image" href="icons/icon-512x512.png">
 </head>
 <body>
-  <div class="offline-container">
-    <div class="icon">📶</div>
-    <h1>Vous êtes hors ligne</h1>
-    <p>Impossible de se connecter à Internet. Vérifiez votre connexion et réessayez.</p>
-    <p>Certaines fonctionnalités de l'application restent disponibles en mode hors ligne.</p>
-    <button onclick="window.location.reload()">Réessayer</button>
-  </div>
+  <!-- Votre application TMS Web Core sera injectée ici -->
 </body>
 </html>
 ```
 
-### Étape 4 : Modifier votre modèle HTML principal
+## Stratégies de mise en cache
 
-Ajoutez les liens vers le manifest et enregistrez le Service Worker dans votre modèle HTML principal. Dans votre fichier `WebModuleUnit1.pas`, modifiez la méthode `GeneratePageHTML` :
+### Stratégie 1 : Cache First (Cache d'abord)
 
-```delphi
-function TWebModule1.GeneratePageHTML(const Title, Content: string): string;
-begin
-  Result :=
-    '<!DOCTYPE html>' + #13#10 +
-    '<html lang="fr">' + #13#10 +
-    '<head>' + #13#10 +
-    '  <meta charset="UTF-8">' + #13#10 +
-    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' + #13#10 +
-    '  <meta name="theme-color" content="#4a6da7">' + #13#10 +
-    '  <link rel="manifest" href="/manifest.json">' + #13#10 +
-    '  <link rel="apple-touch-icon" href="/images/icon-192x192.png">' + #13#10 +
-    '  <title>' + Title + '</title>' + #13#10 +
-    '  <style>' + #13#10 +
-    '    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }' + #13#10 +
-    '    header { background-color: #4a6da7; color: white; padding: 10px 20px; margin-bottom: 20px; }' + #13#10 +
-    '    nav { margin-bottom: 20px; }' + #13#10 +
-    '    nav a { margin-right: 15px; color: #4a6da7; text-decoration: none; }' + #13#10 +
-    '    nav a:hover { text-decoration: underline; }' + #13#10 +
-    '    .content { padding: 20px; background-color: #f5f5f5; border-radius: 5px; }' + #13#10 +
-    '    footer { margin-top: 20px; text-align: center; color: #666; font-size: 0.8em; }' + #13#10 +
-    '  </style>' + #13#10 +
-    '</head>' + #13#10 +
-    '<body>' + #13#10 +
-    '  <header>' + #13#10 +
-    '    <h1>' + Title + '</h1>' + #13#10 +
-    '  </header>' + #13#10 +
-    '  <nav>' + #13#10 +
-    '    <a href="/">Accueil</a>' + #13#10 +
-    '    <a href="/produits">Produits</a>' + #13#10 +
-    '    <a href="/contact">Contact</a>' + #13#10 +
-    '    <a href="/apropos">À propos</a>' + #13#10 +
-    '  </nav>' + #13#10 +
-    '  <div class="content">' + #13#10 +
-    Content + #13#10 +
-    '  </div>' + #13#10 +
-    '  <footer>' + #13#10 +
-    '    <p>&copy; ' + FormatDateTime('yyyy', Now) + ' - Mon Site Web Dynamique avec Delphi</p>' + #13#10 +
-    '  </footer>' + #13#10 +
-    '  <script>' + #13#10 +
-    '    // Enregistrement du Service Worker' + #13#10 +
-    '    if ("serviceWorker" in navigator) {' + #13#10 +
-    '      window.addEventListener("load", function() {' + #13#10 +
-    '        navigator.serviceWorker.register("/service-worker.js")' + #13#10 +
-    '          .then(function(registration) {' + #13#10 +
-    '            console.log("Service Worker enregistré avec succès:", registration.scope);' + #13#10 +
-    '          })' + #13#10 +
-    '          .catch(function(error) {' + #13#10 +
-    '            console.log("Échec de l''enregistrement du Service Worker:", error);' + #13#10 +
-    '          });' + #13#10 +
-    '      });' + #13#10 +
-    '    }' + #13#10 +
-    '  </script>' + #13#10 +
-    '</body>' + #13#10 +
-    '</html>';
-end;
-```
-
-### Étape 5 : Servir les fichiers nécessaires
-
-Assurez-vous que votre application Delphi peut servir tous les fichiers nécessaires à la PWA. Ajoutez des actions pour servir le manifest, le Service Worker et la page hors ligne :
-
-```delphi
-procedure TWebModule1.WebModuleCreate(Sender: TObject);
-var
-  Action: TWebActionItem;
-begin
-  // ... actions existantes ...
-
-  // Ajouter une action pour servir le manifest
-  Action := Actions.Add;
-  Action.Name := 'ActionServeManifest';
-  Action.PathInfo := '/manifest.json';
-  Action.MethodType := mtGet;
-  Action.OnAction := ActionServeManifestAction;
-
-  // Ajouter une action pour servir le Service Worker
-  Action := Actions.Add;
-  Action.Name := 'ActionServeServiceWorker';
-  Action.PathInfo := '/service-worker.js';
-  Action.MethodType := mtGet;
-  Action.OnAction := ActionServeServiceWorkerAction;
-
-  // Ajouter une action pour servir la page hors ligne
-  Action := Actions.Add;
-  Action.Name := 'ActionServeOfflinePage';
-  Action.PathInfo := '/offline.html';
-  Action.MethodType := mtGet;
-  Action.OnAction := ActionServeOfflinePageAction;
-end;
-
-procedure TWebModule1.ActionServeManifestAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  FilePath: string;
-  FileContent: TStringList;
-begin
-  FilePath := ExtractFilePath(ParamStr(0)) + 'www\manifest.json';
-
-  if FileExists(FilePath) then
-  begin
-    FileContent := TStringList.Create;
-    try
-      FileContent.LoadFromFile(FilePath);
-      Response.ContentType := 'application/json';
-      Response.Content := FileContent.Text;
-    finally
-      FileContent.Free;
-    end;
-  end
-  else
-  begin
-    Response.StatusCode := 404;
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Manifest non trouvé';
-  end;
-
-  Handled := True;
-end;
-
-procedure TWebModule1.ActionServeServiceWorkerAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  FilePath: string;
-  FileContent: TStringList;
-begin
-  FilePath := ExtractFilePath(ParamStr(0)) + 'www\service-worker.js';
-
-  if FileExists(FilePath) then
-  begin
-    FileContent := TStringList.Create;
-    try
-      FileContent.LoadFromFile(FilePath);
-      Response.ContentType := 'application/javascript';
-      Response.Content := FileContent.Text;
-    finally
-      FileContent.Free;
-    end;
-  end
-  else
-  begin
-    Response.StatusCode := 404;
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Service Worker non trouvé';
-  end;
-
-  Handled := True;
-end;
-
-procedure TWebModule1.ActionServeOfflinePageAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  FilePath: string;
-  FileContent: TStringList;
-begin
-  FilePath := ExtractFilePath(ParamStr(0)) + 'www\offline.html';
-
-  if FileExists(FilePath) then
-  begin
-    FileContent := TStringList.Create;
-    try
-      FileContent.LoadFromFile(FilePath);
-      Response.ContentType := 'text/html';
-      Response.Content := FileContent.Text;
-    finally
-      FileContent.Free;
-    end;
-  end
-  else
-  begin
-    Response.StatusCode := 404;
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Page hors ligne non trouvée';
-  end;
-
-  Handled := True;
-end;
-```
-
-### Étape 6 : Configurer HTTPS
-
-Les PWA nécessitent une connexion HTTPS. Pour les environnements de développement, vous pouvez utiliser des certificats auto-signés, mais pour la production, vous aurez besoin d'un certificat SSL valide.
-
-Pour le développement local, voici comment configurer un certificat auto-signé avec Delphi :
-
-```delphi
-procedure TWebModule1.WebModuleCreate(Sender: TObject);
-begin
-  // ... code existant ...
-
-  // Configurer HTTPS pour le développement
-  if Server is TIdHTTPWebBrokerBridge then
-  begin
-    with TIdHTTPWebBrokerBridge(Server) do
-    begin
-      // Créer le contexte SSL
-      IOHandler := TIdServerIOHandlerSSLOpenSSL.Create(Server);
-      with IOHandler as TIdServerIOHandlerSSLOpenSSL do
-      begin
-        SSLOptions.CertFile := ExtractFilePath(ParamStr(0)) + 'cert\server.crt';
-        SSLOptions.KeyFile := ExtractFilePath(ParamStr(0)) + 'cert\server.key';
-        SSLOptions.RootCertFile := ExtractFilePath(ParamStr(0)) + 'cert\root.pem';
-        SSLOptions.Method := sslvTLSv1_2;
-        SSLOptions.SSLVersions := [sslvTLSv1_2];
-      end;
-    end;
-  end;
-end;
-```
-
-Pour générer les certificats auto-signés, vous pouvez utiliser OpenSSL :
-
-```bash
-openssl genrsa -out server.key 2048
-openssl req -new -key server.key -out server.csr
-openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
-```
-
-## Fonctionnalités avancées des PWA
-
-### 1. Notifications Push
-
-Les notifications push permettent d'informer les utilisateurs même lorsque l'application n'est pas ouverte. Voici comment les mettre en place :
-
-1. **Demander la permission** - Ajoutez ce code JavaScript dans votre page principale :
+Parfait pour : Assets statiques (CSS, JS, images)
 
 ```javascript
-// Demander la permission d'envoyer des notifications push
-function requestNotificationPermission() {
-  if ('Notification' in window) {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        console.log('Permission des notifications accordée');
-        // Vous pouvez maintenant enregistrer l'abonnement push
-        subscribeToPushNotifications();
-      } else {
-        console.log('Permission des notifications refusée');
-      }
-    });
-  }
-}
-
-// Ajouter un bouton dans l'interface pour demander la permission
-const notificationButton = document.createElement('button');
-notificationButton.textContent = 'Activer les notifications';
-notificationButton.onclick = requestNotificationPermission;
-document.querySelector('header').appendChild(notificationButton);
-```
-
-2. **Gérer les notifications dans le Service Worker** - Ajoutez ce code à votre `service-worker.js` :
-
-```javascript
-// Écouter les événements push
-self.addEventListener('push', event => {
-  console.log('Notification push reçue', event);
-
-  // Récupérer les données de la notification
-  const data = event.data.json();
-
-  // Afficher la notification
-  const options = {
-    body: data.body,
-    icon: '/images/icon-192x192.png',
-    badge: '/images/badge-72x72.png',
-    data: {
-      url: data.url || '/'
-    }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-});
-
-// Gérer le clic sur une notification
-self.addEventListener('notificationclick', event => {
-  console.log('Notification cliquée', event);
-
-  event.notification.close();
-
-  // Ouvrir l'URL spécifiée dans les données de la notification
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url)
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Retourner depuis le cache, sinon réseau
+        return response || fetch(event.request);
+      })
   );
 });
 ```
 
-3. **Envoyer des notifications depuis Delphi** - Créez un endpoint pour envoyer des notifications :
+### Stratégie 2 : Network First (Réseau d'abord)
 
-```delphi
-procedure TWebModule1.ActionEnvoyerNotificationAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  Titre, Corps, URL, JSONPayload: string;
-  HTTPClient: THTTPClient;
-  RequestContent, ResponseContent: TStringStream;
-begin
-  // Récupérer les paramètres de la requête
-  Titre := Request.ContentFields.Values['titre'];
-  Corps := Request.ContentFields.Values['corps'];
-  URL := Request.ContentFields.Values['url'];
-
-  if (Titre = '') or (Corps = '') then
-  begin
-    Response.StatusCode := 400;
-    Response.Content := '{"error": "Titre et corps sont requis"}';
-    Response.ContentType := 'application/json';
-    Handled := True;
-    Exit;
-  end;
-
-  // Créer la charge utile JSON pour Web Push
-  JSONPayload := Format('{"title":"%s","body":"%s","url":"%s"}',
-                        [Titre, Corps, URL]);
-
-  // Envoyer la notification via un service Web Push (exemple avec FCM)
-  HTTPClient := THTTPClient.Create;
-  RequestContent := TStringStream.Create(
-    Format('{"message":{"topic":"all","notification":{"title":"%s","body":"%s"},"webpush":{"fcm_options":{"link":"%s"}}}}',
-           [Titre, Corps, URL]),
-    TEncoding.UTF8
-  );
-  ResponseContent := TStringStream.Create('', TEncoding.UTF8);
-
-  try
-    HTTPClient.AddHeader('Authorization', 'key=VOTRE_CLE_FCM');
-    HTTPClient.AddHeader('Content-Type', 'application/json');
-
-    if HTTPClient.Post('https://fcm.googleapis.com/fcm/send', RequestContent, ResponseContent) then
-    begin
-      Response.StatusCode := 200;
-      Response.Content := '{"success": true, "message": "Notification envoyée"}';
-    end
-    else
-    begin
-      Response.StatusCode := 500;
-      Response.Content := '{"error": "Échec de l''envoi de la notification"}';
-    end;
-  finally
-    HTTPClient.Free;
-    RequestContent.Free;
-    ResponseContent.Free;
-  end;
-
-  Response.ContentType := 'application/json';
-  Handled := True;
-end;
-```
-
-### 2. Synchronisation en arrière-plan
-
-La synchronisation en arrière-plan permet à votre application de synchroniser des données même lorsqu'elle n'est pas active :
+Parfait pour : API, données dynamiques
 
 ```javascript
-// Dans votre script principal
-function enregistrerSynchronisation() {
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready
-      .then(registration => {
-        // Enregistrer une tâche de synchronisation
-        return registration.sync.register('sync-donnees');
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    fetch(event.request)
+      .then(function(response) {
+        // Mettre en cache pour utilisation hors ligne
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
       })
-      .then(() => {
-        console.log('Synchronisation en arrière-plan enregistrée');
+      .catch(function() {
+        // Si le réseau échoue, utiliser le cache
+        return caches.match(event.request);
       })
-      .catch(error => {
-        console.error('Erreur lors de l\'enregistrement de la synchronisation:', error);
+  );
+});
+```
+
+### Stratégie 3 : Stale While Revalidate
+
+Parfait pour : Équilibre entre fraîcheur et rapidité
+
+```javascript
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.open(CACHE_NAME).then(function(cache) {
+      return cache.match(event.request).then(function(cachedResponse) {
+        // Lancer la requête réseau en parallèle
+        const fetchPromise = fetch(event.request).then(function(networkResponse) {
+          // Mettre à jour le cache
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+
+        // Retourner le cache immédiatement, ou attendre le réseau
+        return cachedResponse || fetchPromise;
       });
-  }
-}
+    })
+  );
+});
+```
 
-// Dans service-worker.js
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-donnees') {
+### Stratégie 4 : Cache avec délai réseau
+
+Parfait pour : Expérience utilisateur optimale
+
+```javascript
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    new Promise(function(resolve, reject) {
+      const timeoutId = setTimeout(function() {
+        // Après 500ms, utiliser le cache
+        caches.match(event.request).then(resolve);
+      }, 500);
+
+      fetch(event.request).then(function(response) {
+        clearTimeout(timeoutId);
+        resolve(response);
+      }, reject);
+    })
+  );
+});
+```
+
+## Synchronisation en arrière-plan
+
+### Background Sync API
+
+Permet de différer des actions jusqu'à ce que l'utilisateur ait une connexion stable.
+
+**Exemple : Envoyer des données en différé**
+
+```javascript
+// Dans votre application
+navigator.serviceWorker.ready.then(function(registration) {
+  return registration.sync.register('envoi-donnees');
+});
+
+// Dans le Service Worker
+self.addEventListener('sync', function(event) {
+  if (event.tag === 'envoi-donnees') {
     event.waitUntil(
-      // Votre logique de synchronisation ici
-      syncData()
+      // Récupérer les données en attente depuis IndexedDB
+      getDonneesEnAttente().then(function(donnees) {
+        // Envoyer au serveur
+        return fetch('/api/sync', {
+          method: 'POST',
+          body: JSON.stringify(donnees)
+        });
+      })
     );
   }
 });
+```
 
-async function syncData() {
-  // Récupérer les données en attente de IndexedDB
-  const db = await openDatabase();
-  const pendingData = await getDataFromIndexedDB(db);
+## Stockage local pour PWA
 
-  // Envoyer les données au serveur
-  for (const item of pendingData) {
-    try {
-      await fetch('/api/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(item)
-      });
+### LocalStorage (simple mais limité)
 
-      // Supprimer l'élément synchronisé
-      await removeDataFromIndexedDB(db, item.id);
-    } catch (error) {
-      console.error('Erreur de synchronisation:', error);
-      // Laisser l'élément pour une tentative future
-    }
-  }
+```pascal
+// TMS Web Core - Sauvegarder des données
+procedure TForm1.SaveData;
+begin
+  asm
+    localStorage.setItem('userName', 'Jean Dupont');
+    localStorage.setItem('lastVisit', new Date().toISOString());
+  end;
+end;
+
+// Récupérer des données
+procedure TForm1.LoadData;
+var
+  UserName: string;
+begin
+  asm
+    UserName = localStorage.getItem('userName') || 'Invité';
+  end;
+
+  WebLabel1.Caption := 'Bonjour ' + UserName;
+end;
+```
+
+### IndexedDB (base de données locale)
+
+Plus puissant que localStorage, permet de stocker des objets complexes.
+
+```javascript
+// Ouvrir la base de données
+const request = indexedDB.open('MaBaseDonnees', 1);
+
+request.onupgradeneeded = function(event) {
+  const db = event.target.result;
+
+  // Créer un object store
+  const objectStore = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+  objectStore.createIndex('nom', 'nom', { unique: false });
+};
+
+// Ajouter des données
+request.onsuccess = function(event) {
+  const db = event.target.result;
+  const transaction = db.transaction(['clients'], 'readwrite');
+  const objectStore = transaction.objectStore('clients');
+
+  objectStore.add({
+    nom: 'Dupont',
+    prenom: 'Jean',
+    email: 'jean@example.com'
+  });
+};
+
+// Lire des données
+function lireClients() {
+  const transaction = db.transaction(['clients'], 'readonly');
+  const objectStore = transaction.objectStore('clients');
+  const request = objectStore.getAll();
+
+  request.onsuccess = function() {
+    console.log('Clients:', request.result);
+  };
 }
 ```
 
-## Tester votre PWA
+## Notifications Push
 
-Pour tester si votre application répond aux critères d'une PWA, vous pouvez utiliser l'outil Lighthouse intégré à Google Chrome :
+Les notifications push permettent de ré-engager les utilisateurs.
 
-1. Ouvrez Chrome DevTools (F12)
-2. Allez dans l'onglet "Lighthouse"
-3. Cochez la catégorie "Progressive Web App"
-4. Cliquez sur "Generate report"
+### Configuration des notifications
 
-Lighthouse vous donnera un score et des recommandations pour améliorer votre PWA.
+```javascript
+// Demander la permission
+Notification.requestPermission().then(function(permission) {
+  if (permission === 'granted') {
+    console.log('Permission accordée');
+    afficherNotification();
+  }
+});
 
-## Déploiement de votre PWA
+// Afficher une notification
+function afficherNotification() {
+  const options = {
+    body: 'Vous avez un nouveau message',
+    icon: '/images/icon-192x192.png',
+    badge: '/images/badge-72x72.png',
+    vibrate: [200, 100, 200],
+    data: { url: '/messages' },
+    actions: [
+      { action: 'ouvrir', title: 'Ouvrir' },
+      { action: 'fermer', title: 'Fermer' }
+    ]
+  };
 
-Pour déployer votre PWA Delphi en production, vous devrez :
+  navigator.serviceWorker.ready.then(function(registration) {
+    registration.showNotification('Nouvelle notification', options);
+  });
+}
 
-1. **Acquérir un certificat SSL valide** - Utilisez Let's Encrypt ou un fournisseur commercial
-2. **Configurer votre serveur Delphi avec HTTPS**
-3. **Optimiser les ressources** - Minifier le JavaScript et le CSS
-4. **Mettre en place un CDN** (facultatif) pour servir plus rapidement les ressources statiques
+// Gérer les clics sur les notifications (dans le Service Worker)
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
 
-## Cas d'usage pratiques
+  if (event.action === 'ouvrir') {
+    clients.openWindow(event.notification.data.url);
+  }
+});
+```
 
-### 1. Application de gestion d'inventaire
+### Dans TMS Web Core
 
-Une PWA de gestion d'inventaire peut être particulièrement utile pour :
-- Permettre aux employés de scanner des produits même sans connexion
-- Synchroniser les données une fois la connexion rétablie
-- Recevoir des notifications pour les stocks faibles
+```pascal
+procedure TForm1.DemanderPermissionNotifications;
+begin
+  asm
+    if ('Notification' in window) {
+      Notification.requestPermission().then(function(permission) {
+        if (permission === 'granted') {
+          console.log('Permission notifications accordée');
+          Form1.WebMemo1.Lines.Add('✅ Notifications activées');
+        }
+      });
+    }
+  end;
+end;
 
-### 2. Outil de suivi de projet
+procedure TForm1.EnvoyerNotification;
+begin
+  asm
+    if (Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(function(registration) {
+        registration.showNotification('Ma PWA Delphi', {
+          body: 'Ceci est une notification de test',
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png'
+        });
+      });
+    }
+  end;
+end;
+```
 
-Une PWA de suivi de projet peut offrir :
-- Un accès aux tâches et échéances même hors ligne
-- Des notifications pour les échéances imminentes
-- Une interface réactive fonctionnant sur tous les appareils
+## Détection de l'installation
 
-## Avantages et limites des PWA avec Delphi
+### Savoir si l'application est installée
 
-### Avantages
+```pascal
+procedure TForm1.CheckIfInstalled;
+var
+  IsInstalled: Boolean;
+begin
+  asm
+    // Vérifier le mode d'affichage
+    IsInstalled = (window.matchMedia('(display-mode: standalone)').matches) ||
+                  (window.navigator.standalone) ||
+                  document.referrer.includes('android-app://');
+  end;
 
-- Utilise vos connaissances Delphi existantes
-- Déploiement simplifié (pas d'app store)
-- Une seule base de code pour plusieurs plateformes
-- Maintenance plus facile
+  if IsInstalled then
+  begin
+    WebLabel1.Caption := '✅ Application installée';
+    WebButton2.Visible := False; // Cacher le bouton d'installation
+  end
+  else
+  begin
+    WebLabel1.Caption := 'Application web';
+  end;
+end;
+```
 
-### Limites
+## Tests et débogage
 
-- Accès limité à certaines fonctionnalités natives des appareils
-- Performances potentiellement inférieures aux applications natives
-- Support variable selon les navigateurs (particulièrement Safari sur iOS)
+### Chrome DevTools
+
+**1. Application Tab**
+- Voir le manifeste
+- Inspecter le Service Worker
+- Vérifier le cache
+- Tester les notifications
+
+**2. Lighthouse**
+- Auditer votre PWA
+- Score PWA (0-100)
+- Recommandations d'amélioration
+
+**Commande :**
+```
+F12 → Lighthouse → Progressive Web App → Generate report
+```
+
+### Simuler le mode hors ligne
+
+**Chrome DevTools :**
+1. F12
+2. Network tab
+3. Cocher "Offline"
+4. Recharger la page
+
+### Tester l'installation
+
+**Desktop (Chrome) :**
+- Icône + dans la barre d'adresse
+- Menu → Installer...
+
+**Mobile :**
+- Menu → Ajouter à l'écran d'accueil
+
+## Déploiement d'une PWA
+
+### Checklist de déploiement
+
+✅ **HTTPS activé** (obligatoire)
+✅ **manifest.json** présent et valide
+✅ **Service Worker** enregistré
+✅ **Icônes** de toutes tailles (192x192 et 512x512 minimum)
+✅ **start_url** correct
+✅ **Responsive design** fonctionnel
+✅ **Mode hors ligne** opérationnel
+
+### Configuration serveur
+
+**Pour servir correctement le manifeste :**
+
+**Apache (.htaccess) :**
+```apache
+# Manifeste
+<Files "manifest.json">
+  Header set Content-Type "application/manifest+json"
+</Files>
+
+# Service Worker
+<Files "service-worker.js">
+  Header set Service-Worker-Allowed "/"
+  Header set Content-Type "application/javascript"
+</Files>
+```
+
+**Nginx :**
+```nginx
+location /manifest.json {
+    types { } default_type "application/manifest+json";
+}
+
+location /service-worker.js {
+    types { } default_type "application/javascript";
+    add_header Service-Worker-Allowed "/";
+}
+```
+
+### Hébergement recommandé
+
+**Options gratuites :**
+- **Netlify** : Déploiement simple, HTTPS auto, CDN global
+- **Vercel** : Optimisé pour applications web modernes
+- **GitHub Pages** : Simple mais nécessite configuration HTTPS
+- **Firebase Hosting** : Excellent pour PWA
+
+**Options payantes :**
+- **AWS CloudFront + S3** : Scalable et performant
+- **Google Cloud Storage + Load Balancer**
+- **Azure Static Web Apps**
+
+## Bonnes pratiques
+
+### 1. Icônes de qualité
+
+Créer des icônes pour toutes les tailles nécessaires :
+
+```
+icon-72x72.png
+icon-96x96.png
+icon-128x128.png
+icon-144x144.png
+icon-152x152.png
+icon-192x192.png
+icon-384x384.png
+icon-512x512.png
+```
+
+**Conseils :**
+- Format PNG avec transparence
+- Design simple et reconnaissable
+- Contraste élevé
+- Test sur fond clair et foncé
+
+### 2. Gestion des versions du cache
+
+```javascript
+// Incrémenter la version à chaque mise à jour
+const CACHE_NAME = 'mon-app-v2'; // v1 → v2
+
+// Supprimer les anciens caches
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+```
+
+### 3. Informer l'utilisateur des mises à jour
+
+```javascript
+self.addEventListener('controllerchange', function() {
+  window.location.reload();
+});
+
+// Détecter une nouvelle version
+navigator.serviceWorker.addEventListener('controllerchange', function() {
+  if (confirm('Nouvelle version disponible ! Recharger maintenant ?')) {
+    window.location.reload();
+  }
+});
+```
+
+### 4. Analytics pour PWA
+
+Suivre l'utilisation de votre PWA :
+
+```javascript
+// Dans le Service Worker
+self.addEventListener('install', function(event) {
+  // Envoyer un événement d'installation
+  fetch('/analytics/install');
+});
+
+// Suivre l'utilisation hors ligne
+self.addEventListener('fetch', function(event) {
+  if (!navigator.onLine) {
+    fetch('/analytics/offline-usage');
+  }
+});
+```
+
+### 5. Feedback utilisateur
+
+```pascal
+procedure TForm1.AfficherStatutPWA;
+begin
+  if FIsOnline then
+    ShowMessage('✅ Connecté - Données synchronisées')
+  else
+    ShowMessage('⚠️ Hors ligne - Vos modifications seront synchronisées à la prochaine connexion');
+end;
+```
+
+## Limitations et considérations
+
+### Limitations techniques
+
+❌ **iOS Safari** : Support PWA limité (pas de notifications push, limites de stockage)
+❌ **Stockage** : Peut être effacé par le système si espace faible
+❌ **API natives** : Accès limité au matériel (vs app native)
+❌ **App Stores** : Pas de présence naturelle dans les stores (mais possible via wrapper)
+
+### Considérations de sécurité
+
+✅ **HTTPS obligatoire** : Coût et configuration
+✅ **CORS** : À configurer correctement
+✅ **Content Security Policy** : Restrictions à prévoir
+✅ **Données sensibles** : Ne jamais stocker en clair localement
+
+### Quand choisir une PWA ?
+
+**✅ Parfait pour :**
+- Applications web qui bénéficieraient du mode hors ligne
+- Éviter les frais et contraintes des App Stores
+- Déploiement et mises à jour rapides
+- Budget limité (un seul code pour toutes plateformes)
+
+**❌ Moins adapté pour :**
+- Applications nécessitant accès matériel avancé
+- Jeux 3D performants
+- Applications nécessitant iOS notifications push
+- Applications nécessitant intégration profonde avec l'OS
+
+## Exemple complet : Application de notes PWA
+
+### Structure de l'application
+
+**Fonctionnalités :**
+- Créer, modifier, supprimer des notes
+- Fonctionne hors ligne
+- Synchronisation automatique
+- Installation possible
+
+**Architecture :**
+```
+NotesApp/
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── css/
+│   └── style.css
+├── js/
+│   └── app.js (généré par TMS Web Core)
+├── icons/
+│   └── ... (toutes les tailles)
+└── api/
+    └── (Backend Delphi)
+```
+
+### Code TMS Web Core (simplifié)
+
+```pascal
+unit NotesApp;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, JS, Web, WEBLib.Graphics, WEBLib.Controls,
+  WEBLib.Forms, WEBLib.Dialogs, WEBLib.Storage;
+
+type
+  TNoteItem = record
+    ID: string;
+    Title: string;
+    Content: string;
+    CreatedAt: TDateTime;
+    IsSynced: Boolean;
+  end;
+
+  TFormNotes = class(TWebForm)
+    procedure WebFormCreate(Sender: TObject);
+  private
+    FNotes: array of TNoteItem;
+    procedure LoadNotes;
+    procedure SaveNotes;
+    procedure SyncWithServer;
+  public
+    { Public declarations }
+  end;
+
+implementation
+
+procedure TFormNotes.WebFormCreate(Sender: TObject);
+begin
+  RegisterServiceWorker;
+  LoadNotes;
+
+  // Synchroniser quand on revient en ligne
+  asm
+    window.addEventListener('online', function() {
+      Form1.SyncWithServer();
+    });
+  end;
+end;
+
+procedure TFormNotes.LoadNotes;
+var
+  StoredData: string;
+begin
+  // Charger depuis localStorage
+  asm
+    StoredData = localStorage.getItem('notes') || '[]';
+  end;
+
+  // Parser le JSON et remplir FNotes
+  // ...
+end;
+
+procedure TFormNotes.SaveNotes;
+var
+  JSONData: string;
+begin
+  // Convertir FNotes en JSON
+  // JSONData := ...
+
+  // Sauvegarder localement
+  asm
+    localStorage.setItem('notes', JSONData);
+  end;
+end;
+
+procedure TFormNotes.SyncWithServer;
+begin
+  // Envoyer les notes non synchronisées au serveur
+  // via API REST Delphi
+end;
+
+end.
+```
 
 ## Conclusion
 
-Les Progressive Web Apps offrent un excellent compromis entre les applications web traditionnelles et les applications natives. En combinant la puissance et la robustesse de Delphi côté serveur avec les technologies web modernes côté client, vous pouvez créer des applications qui fonctionnent sur tous les appareils, même hors ligne.
+Les Progressive Web Apps représentent **l'avenir des applications web**. Avec Delphi, et particulièrement TMS Web Core, vous pouvez créer des PWA professionnelles qui offrent :
 
-Cette approche est particulièrement intéressante pour les développeurs Delphi qui souhaitent élargir leur portée sans avoir à apprendre totalement de nouvelles technologies. En suivant les étapes de ce tutoriel, vous pouvez transformer vos applications web Delphi existantes en PWA modernes et engageantes.
+✅ **Expérience native** sans les contraintes des app stores
+✅ **Fonctionnement hors ligne** pour une disponibilité maximale
+✅ **Installation facile** sur tous les appareils
+✅ **Mises à jour automatiques** sans intervention utilisateur
+✅ **Un seul code** pour toutes les plateformes
 
-N'oubliez pas que le monde des PWA évolue rapidement, alors restez à jour sur les dernières fonctionnalités et meilleures pratiques pour tirer le meilleur parti de cette technologie.
+**Points clés à retenir :**
+
+1. **Manifeste + Service Worker = PWA** : Les deux éléments essentiels
+2. **HTTPS obligatoire** : Pas de compromis sur la sécurité
+3. **Cache intelligent** : Choisir la bonne stratégie selon le contenu
+4. **Expérience progressive** : L'app doit fonctionner même sans toutes les fonctionnalités PWA
+5. **Tests approfondis** : Lighthouse et tests manuels sur différents appareils
+
+Les PWA avec Delphi vous permettent de moderniser vos applications existantes ou de créer de nouvelles applications web compétitives, tout en conservant la puissance et la productivité de l'écosystème Delphi.
+
+Dans les sections suivantes, nous explorerons d'autres aspects avancés du développement web avec Delphi, notamment WebAssembly et les techniques de templating serveur avancées.
 
 ⏭️ [WebAssembly et Delphi](/23-conception-dapplications-web-avec-delphi/08-webassembly-et-delphi.md)

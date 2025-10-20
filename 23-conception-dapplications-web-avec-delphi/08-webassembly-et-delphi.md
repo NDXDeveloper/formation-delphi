@@ -1,511 +1,910 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.8 WebAssembly et Delphi
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Introduction à WebAssembly
+**WebAssembly** (souvent abrégé **WASM**) est une technologie révolutionnaire qui change la donne pour les applications web. Imaginez pouvoir exécuter du code compilé, presque aussi rapide que du code natif, directement dans un navigateur web. C'est exactement ce que permet WebAssembly !
 
-WebAssembly (souvent abrégé Wasm) représente une avancée majeure dans le développement web. Il s'agit d'un format de code binaire conçu pour être exécuté dans les navigateurs web, offrant des performances proches du code natif. Pour les développeurs Delphi, WebAssembly ouvre de nouvelles possibilités pour porter des applications desktop sur le web tout en conservant des performances élevées.
+Dans cette section, nous allons explorer ce qu'est WebAssembly, pourquoi c'est important, et comment cela s'intègre (ou pourrait s'intégrer) avec l'écosystème Delphi.
 
-![Note] Cette section présente les concepts de base de WebAssembly et son intégration avec Delphi. Les explications sont conçues pour être accessibles aux débutants, mais une compréhension de base du développement Delphi est recommandée.
+**Note importante :** À ce jour (2025), Delphi ne compile pas nativement en WebAssembly. Cependant, comprendre cette technologie est essentiel car elle représente l'avenir du développement web haute performance, et Embarcadero pourrait l'intégrer dans les futures versions.
 
-## Qu'est-ce que WebAssembly?
+## Qu'est-ce que WebAssembly ?
 
-WebAssembly est un format de code binaire compact et efficace, conçu pour être:
+### Définition simple
 
-- **Rapide**: Le code WebAssembly s'exécute presque aussi rapidement que le code natif
-- **Sécurisé**: Il s'exécute dans un environnement sandbox avec une mémoire isolée
-- **Portable**: Le même code peut fonctionner sur différents systèmes d'exploitation et architectures
-- **Déboguable**: Supporte les outils de débogage standard
-- **Ouvert**: C'est un standard web ouvert, supporté par tous les navigateurs majeurs
+**WebAssembly** est un format de code binaire conçu pour être exécuté dans les navigateurs web. C'est un langage de bas niveau (proche du langage machine) qui peut être exécuté à vitesse quasi-native.
 
-WebAssembly n'est pas destiné à remplacer JavaScript, mais plutôt à le compléter en prenant en charge les tâches nécessitant de hautes performances comme:
-- Traitement d'image et vidéo
+**Analogie :**
+- **JavaScript** = Une langue que tout le monde peut lire et comprendre, mais qui prend du temps à traduire
+- **WebAssembly** = Du code déjà "pré-traduit" en instructions machine, prêt à être exécuté immédiatement
+
+### Avant WebAssembly
+
+```
+┌─────────────────────────┐
+│  Code JavaScript        │
+│  (texte source)         │
+└────────────┬────────────┘
+             │
+             │ Interprétation + Compilation JIT
+             │ (lent au démarrage)
+             ↓
+┌─────────────────────────┐
+│  Exécution navigateur   │
+└─────────────────────────┘
+```
+
+### Avec WebAssembly
+
+```
+┌─────────────────────────┐
+│  Code source            │
+│  (C++, Rust, etc.)      │
+└────────────┬────────────┘
+             │
+             │ Compilation native
+             ↓
+┌─────────────────────────┐
+│  WebAssembly (.wasm)    │
+│  (code binaire)         │
+└────────────┬────────────┘
+             │
+             │ Exécution directe
+             │ (très rapide)
+             ↓
+┌─────────────────────────┐
+│  Navigateur             │
+└─────────────────────────┘
+```
+
+### Les caractéristiques de WebAssembly
+
+**1. Performance**
+- Exécution à vitesse quasi-native (80-90% de la vitesse native)
+- Pas de phase d'interprétation
+- Optimisé pour les opérations intensives
+
+**2. Portabilité**
+- Fonctionne sur tous les navigateurs modernes
+- Indépendant de la plateforme
+- Standard W3C
+
+**3. Sécurité**
+- Exécution dans un environnement sandboxé
+- Pas d'accès direct au système
+- Mêmes garanties de sécurité que JavaScript
+
+**4. Compacité**
+- Format binaire compact
+- Téléchargement rapide
+- Parsing efficace
+
+**5. Interopérabilité**
+- Peut appeler JavaScript et vice-versa
+- Partage de mémoire possible
+- Intégration transparente avec le web
+
+## Pourquoi WebAssembly est important ?
+
+### 1. Performance web accrue
+
+WebAssembly permet d'exécuter des applications complexes dans le navigateur :
 - Jeux 3D
-- Simulations et visualisations complexes
-- Applications de bureau portées vers le web
+- Logiciels de traitement d'image/vidéo
+- Simulations scientifiques
+- CAO/DAO en ligne
+- Applications de productivité avancées
 
-## Comment WebAssembly fonctionne avec Delphi
+**Exemple :** AutoCAD Web, Adobe Photoshop Web, Google Earth utilisent WebAssembly.
 
-À ce jour, Delphi ne propose pas de support natif intégré pour compiler directement vers WebAssembly. Cependant, il existe plusieurs approches pour utiliser WebAssembly dans vos projets Delphi:
+### 2. Réutilisation de code existant
 
-1. **Utilisation d'outils tiers** comme pas.js ou Smart Pascal
-2. **Intégration de modules WebAssembly** créés avec d'autres langages
-3. **Solutions hybrides** combinant Delphi avec des technologies web
+Vous avez une bibliothèque C++ performante ? Compilez-la en WebAssembly et utilisez-la dans le navigateur !
 
-Dans ce chapitre, nous explorerons ces approches et vous montrerons comment tirer parti de WebAssembly dans vos applications Delphi.
+**Cas d'usage réels :**
+- Bibliothèques de cryptographie
+- Moteurs de jeu (Unity, Unreal Engine)
+- Codecs audio/vidéo
+- Algorithmes de compression
+- Moteurs de physique
 
-## Comprendre les bases de WebAssembly
+### 3. Langage agnostique
 
-Avant de plonger dans l'intégration avec Delphi, il est important de comprendre quelques concepts de base:
+Contrairement à JavaScript, WebAssembly n'est lié à aucun langage source :
 
-### Format de fichier WebAssembly
-
-WebAssembly utilise deux formats principaux:
-- **Format binaire (.wasm)**: Format compact utilisé en production
-- **Format texte (.wat)**: Format lisible par l'humain, utilisé principalement pour le développement et le débogage
-
-### Cycle de vie d'une application WebAssembly
-
-1. **Compilation**: Le code source (C, C++, Rust, etc.) est compilé en module WebAssembly (.wasm)
-2. **Chargement**: Le navigateur télécharge le module WebAssembly
-3. **Instantiation**: Le module est instancié et préparé pour l'exécution
-4. **Exécution**: Les fonctions WebAssembly sont appelées, généralement depuis JavaScript
-5. **Interaction**: WebAssembly interagit avec le DOM et les API web via JavaScript
-
-### Limites de WebAssembly
-
-WebAssembly a certaines limitations qu'il faut connaître:
-- Pas d'accès direct au DOM (doit passer par JavaScript)
-- Pas d'accès direct aux API Web comme fetch, WebGL, etc.
-- Gestion manuelle de la mémoire (pas de garbage collector intégré)
-
-## Approches pour utiliser WebAssembly avec Delphi
-
-### 1. Conversion de code Delphi avec pas.js
-
-[pas.js](https://github.com/smartmobilestudio/pas2js) est un compilateur qui permet de convertir du code Pascal en JavaScript. Bien que ce ne soit pas directement du WebAssembly, c'est une passerelle pour porter des applications Delphi vers le web:
-
-1. **Installation de pas.js**:
-   ```
-   npm install -g pas.js
-   ```
-
-2. **Exemple de conversion d'une unité Delphi simple**:
-   ```pascal
-   // MathUnit.pas
-   unit MathUnit;
-
-   interface
-
-   function AddNumbers(A, B: Integer): Integer;
-
-   implementation
-
-   function AddNumbers(A, B: Integer): Integer;
-   begin
-     Result := A + B;
-   end;
-
-   end.
-   ```
-
-3. **Conversion avec pas.js**:
-   ```
-   pas.js MathUnit.pas
-   ```
-
-4. **Utilisation dans une page web**:
-   ```html
-   <!DOCTYPE html>
-   <html>
-   <head>
-     <title>Test pas.js</title>
-     <script src="MathUnit.js"></script>
-     <script>
-       document.addEventListener('DOMContentLoaded', function() {
-         // Utiliser la fonction convertie
-         const result = MathUnit.AddNumbers(5, 3);
-         document.getElementById('result').textContent = result;
-       });
-     </script>
-   </head>
-   <body>
-     <h1>Résultat: <span id="result"></span></h1>
-   </body>
-   </html>
-   ```
-
-### 2. Intégration de modules WebAssembly externes
-
-Vous pouvez intégrer des modules WebAssembly créés avec d'autres langages dans votre application web Delphi. Voici comment:
-
-1. **Créez un module WebAssembly** (par exemple avec C/C++ et Emscripten)
-
-2. **Ajoutez une action dans votre WebModule Delphi pour servir le fichier .wasm**:
-
-```delphi
-procedure TWebModule1.ServeWasmFileAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-var
-  FilePath: string;
-  FileStream: TFileStream;
-begin
-  FilePath := ExtractFilePath(ParamStr(0)) + 'www\module.wasm';
-
-  if FileExists(FilePath) then
-  begin
-    Response.ContentType := 'application/wasm';
-    FileStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyWrite);
-    try
-      Response.ContentStream := FileStream;
-      Response.FreeContentStream := True;
-    except
-      FileStream.Free;
-      raise;
-    end;
-  end
-  else
-  begin
-    Response.StatusCode := 404;
-    Response.Content := 'WebAssembly module not found';
-  end;
-
-  Handled := True;
-end;
+```
+┌─────────────┐
+│     C++     │──┐
+└─────────────┘  │
+┌─────────────┐  │
+│    Rust     │──┤
+└─────────────┘  │
+┌─────────────┐  │    ┌──────────────┐    ┌──────────────┐
+│      Go     │──┼───→│ WebAssembly  │───→│  Navigateur  │
+└─────────────┘  │    └──────────────┘    └──────────────┘
+┌─────────────┐  │
+│  C# (Blazor)│──┤
+└─────────────┘  │
+┌─────────────┐  │
+│  (Delphi?)  │──┘
+└─────────────┘
 ```
 
-3. **Chargez et utilisez le module WebAssembly dans votre page web**:
+### 4. Nouvelle ère pour le web
 
-```html
-<script>
-  async function loadWasmModule() {
-    try {
-      // Charger le module WebAssembly
-      const response = await fetch('/module.wasm');
-      const bytes = await response.arrayBuffer();
-      const wasmModule = await WebAssembly.instantiate(bytes, {
-        env: {
-          // Fonctions importées que le module peut appeler
-          consoleLog: function(arg) {
-            console.log(arg);
-          }
-        }
-      });
+WebAssembly ouvre la porte à des applications qui n'étaient pas envisageables auparavant :
+- Applications desktop migrées vers le web
+- Logiciels professionnels en ligne
+- Performance comparable aux applications natives
 
-      // Accéder aux fonctions exportées
-      const instance = wasmModule.instance;
-      const result = instance.exports.calculateSomething(10, 20);
+## Comment fonctionne WebAssembly ?
 
-      document.getElementById('wasm-result').textContent = result;
-    } catch (error) {
-      console.error('Erreur lors du chargement du module WebAssembly:', error);
-    }
+### Structure d'un fichier WASM
+
+Un fichier `.wasm` contient :
+- **Code** : Instructions en bytecode
+- **Mémoire** : Description de la mémoire nécessaire
+- **Tables** : Références aux fonctions
+- **Imports/Exports** : Interface avec JavaScript
+
+**Format texte (WAT - WebAssembly Text) :**
+```wat
+(module
+  (func $add (param $a i32) (param $b i32) (result i32)
+    local.get $a
+    local.get $b
+    i32.add
+  )
+  (export "add" (func $add))
+)
+```
+
+**Équivalent en code machine binaire (.wasm) :**
+```
+00 61 73 6D 01 00 00 00 01 07 01 60 02 7F 7F 01 7F...
+```
+
+### Intégration avec JavaScript
+
+**Charger et utiliser un module WebAssembly en JavaScript :**
+
+```javascript
+// Charger le fichier WASM
+fetch('module.wasm')
+  .then(response => response.arrayBuffer())
+  .then(bytes => WebAssembly.instantiate(bytes))
+  .then(results => {
+    const instance = results.instance;
+
+    // Appeler une fonction exportée
+    const result = instance.exports.add(5, 10);
+    console.log('Résultat:', result); // 15
+  });
+```
+
+### Communication bidirectionnelle
+
+```
+┌─────────────────────────┐
+│     JavaScript          │
+│  (logique UI, DOM)      │
+└───────────┬─────────────┘
+            │
+            │ Appels de fonctions
+            │ Partage de mémoire
+            ↕
+┌───────────┴─────────────┐
+│    WebAssembly          │
+│  (calculs intensifs)    │
+└─────────────────────────┘
+```
+
+**Exemple :**
+```javascript
+// JavaScript appelle WASM pour calcul intensif
+const result = wasmModule.exports.calculateMandelbrot(width, height);
+
+// WASM peut appeler JavaScript (via imports)
+const wasmImports = {
+  env: {
+    log: (value) => console.log('Depuis WASM:', value),
+    updateProgress: (percent) => updateProgressBar(percent)
   }
-
-  // Charger le module au chargement de la page
-  document.addEventListener('DOMContentLoaded', loadWasmModule);
-</script>
+};
 ```
 
-## Exemple pratique: Traitement d'image avec WebAssembly et Delphi
+## WebAssembly vs JavaScript
 
-Imaginons que nous voulions intégrer un traitement d'image haute performance dans notre application web Delphi. Voici comment nous pourrions procéder:
+### Comparaison de performance
 
-### Étape 1: Créer un module WebAssembly pour le traitement d'image
+| Opération | JavaScript | WebAssembly | Gain |
+|-----------|-----------|-------------|------|
+| Calculs mathématiques | 100ms | 10ms | 10x |
+| Traitement d'image | 1000ms | 100ms | 10x |
+| Compression de données | 500ms | 50ms | 10x |
+| Rendu 3D | 60fps difficile | 60fps stable | Fluide |
 
-Pour cet exemple, nous utiliserons Emscripten pour compiler du code C++ en WebAssembly. Voici un exemple de code C++ pour appliquer un filtre de niveaux de gris:
+**Note :** Les gains varient selon les cas d'usage. JavaScript moderne (avec JIT) est déjà très rapide pour beaucoup d'opérations.
 
+### Quand utiliser WebAssembly ?
+
+**✅ Utiliser WebAssembly pour :**
+- Calculs intensifs (cryptographie, compression, physique)
+- Traitement média (image, audio, vidéo)
+- Jeux et graphiques 3D
+- Simulations scientifiques
+- Port d'applications C/C++ existantes
+- Performance critique
+
+**✅ Utiliser JavaScript pour :**
+- Manipulation du DOM
+- Gestion des événements
+- Logique UI
+- Appels API REST
+- Code métier simple
+- Intégration avec bibliothèques web
+
+**✅ Utiliser les deux ensemble :**
+- JavaScript pour l'interface
+- WebAssembly pour les calculs
+- Communication via API
+
+## État actuel : Delphi et WebAssembly
+
+### Situation en 2025
+
+**Compilation native Delphi → WebAssembly :** ❌ **Pas disponible officiellement**
+
+Embarcadero n'a pas encore publié de compilateur Delphi vers WebAssembly. Cependant, plusieurs solutions existent ou sont en développement :
+
+### 1. TMS Web Core (JavaScript, pas WASM)
+
+**TMS Web Core** compile Delphi vers **JavaScript**, pas WebAssembly :
+
+```
+Code Delphi (Pascal)
+        ↓
+   TMS Web Core
+        ↓
+   JavaScript
+        ↓
+   Navigateur
+```
+
+**Avantages :**
+- Disponible maintenant
+- Productif et mature
+- Syntaxe Delphi familière
+
+**Limitations :**
+- Performance JavaScript (pas WASM)
+- Pas d'accès au code natif Delphi
+
+### 2. Projets communautaires
+
+Quelques projets tentent de créer des ponts :
+
+**A. Pas2JS → WASM**
+- Compilateur Pascal open-source
+- Génère JavaScript actuellement
+- WebAssembly envisagé pour le futur
+
+**B. LLVM et Delphi**
+- Utiliser LLVM comme backend
+- LLVM peut générer WebAssembly
+- Pas encore mature pour Delphi
+
+### 3. Solutions hybrides
+
+**Approche actuelle recommandée :**
+
+```
+┌──────────────────────────┐
+│  Frontend                │
+│  TMS Web Core            │
+│  (JavaScript)            │
+└────────────┬─────────────┘
+             │
+             │ API REST
+             │
+┌────────────┴─────────────┐
+│  Backend                 │
+│  Delphi natif            │
+│  (Performance maximale)  │
+└──────────────────────────┘
+```
+
+Cette architecture vous donne :
+- Interface web moderne (TMS Web Core)
+- Performance native pour la logique (Delphi serveur)
+- Meilleur des deux mondes
+
+## Comment d'autres langages utilisent WebAssembly
+
+### C/C++ avec Emscripten
+
+**Emscripten** est la chaîne de compilation la plus mature pour WebAssembly.
+
+```bash
+# Compiler du C++ vers WebAssembly
+emcc hello.cpp -o hello.html
+```
+
+**Code C++ :**
 ```cpp
-// grayscale.cpp
 #include <emscripten.h>
-#include <stdint.h>
+#include <stdio.h>
 
-// Fonction exportée vers JavaScript
-extern "C" {
-  EMSCRIPTEN_KEEPALIVE
-  void applyGrayscale(uint8_t* data, int size) {
-    for (int i = 0; i < size; i += 4) {
-      // Formule standard pour convertir RGB en niveaux de gris
-      uint8_t gray = (uint8_t)(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-      data[i] = gray;     // R
-      data[i + 1] = gray; // G
-      data[i + 2] = gray; // B
-      // Conserver le canal alpha (i + 3)
-    }
-  }
+EMSCRIPTEN_KEEPALIVE
+int fibonacci(int n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
 }
 ```
 
-Compilation avec Emscripten:
-```
-emcc grayscale.cpp -o grayscale.js -s WASM=1 -s EXPORTED_FUNCTIONS='["_applyGrayscale"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -O3
-```
-
-### Étape 2: Créer une page web Delphi qui utilise le module WebAssembly
-
-```delphi
-function TWebModule1.GenerateImageEditorHTML: string;
-begin
-  Result :=
-    '<!DOCTYPE html>' + #13#10 +
-    '<html>' + #13#10 +
-    '<head>' + #13#10 +
-    '  <title>Éditeur d''image WebAssembly + Delphi</title>' + #13#10 +
-    '  <style>' + #13#10 +
-    '    body { font-family: Arial, sans-serif; margin: 20px; }' + #13#10 +
-    '    .container { display: flex; flex-wrap: wrap; gap: 20px; }' + #13#10 +
-    '    canvas { border: 1px solid #ccc; }' + #13#10 +
-    '    .controls { display: flex; gap: 10px; margin-bottom: 20px; }' + #13#10 +
-    '    button { padding: 8px 16px; background-color: #4a6da7; color: white; border: none; cursor: pointer; }' + #13#10 +
-    '    button:hover { background-color: #3a5d97; }' + #13#10 +
-    '  </style>' + #13#10 +
-    '</head>' + #13#10 +
-    '<body>' + #13#10 +
-    '  <h1>Éditeur d''image avec WebAssembly et Delphi</h1>' + #13#10 +
-    '  <div class="controls">' + #13#10 +
-    '    <button id="load-image">Charger une image</button>' + #13#10 +
-    '    <button id="apply-grayscale" disabled>Appliquer niveaux de gris</button>' + #13#10 +
-    '    <button id="save-image" disabled>Enregistrer l''image</button>' + #13#10 +
-    '  </div>' + #13#10 +
-    '  <input type="file" id="file-input" style="display: none;" accept="image/*">' + #13#10 +
-    '  <div class="container">' + #13#10 +
-    '    <div>' + #13#10 +
-    '      <h3>Image originale</h3>' + #13#10 +
-    '      <canvas id="source-canvas"></canvas>' + #13#10 +
-    '    </div>' + #13#10 +
-    '    <div>' + #13#10 +
-    '      <h3>Image traitée</h3>' + #13#10 +
-    '      <canvas id="target-canvas"></canvas>' + #13#10 +
-    '    </div>' + #13#10 +
-    '  </div>' + #13#10 +
-    '  <script src="grayscale.js"></script>' + #13#10 +
-    '  <script>' + #13#10 +
-    '    let sourceCanvas = document.getElementById("source-canvas");' + #13#10 +
-    '    let targetCanvas = document.getElementById("target-canvas");' + #13#10 +
-    '    let sourceCtx = sourceCanvas.getContext("2d");' + #13#10 +
-    '    let targetCtx = targetCanvas.getContext("2d");' + #13#10 +
-    '    let loadedImage = null;' + #13#10 +
-    '' + #13#10 +
-    '    // Attendre que le module WebAssembly soit chargé' + #13#10 +
-    '    Module.onRuntimeInitialized = function() {' + #13#10 +
-    '      console.log("Module WebAssembly chargé");' + #13#10 +
-    '    };' + #13#10 +
-    '' + #13#10 +
-    '    document.getElementById("load-image").addEventListener("click", function() {' + #13#10 +
-    '      document.getElementById("file-input").click();' + #13#10 +
-    '    });' + #13#10 +
-    '' + #13#10 +
-    '    document.getElementById("file-input").addEventListener("change", function(e) {' + #13#10 +
-    '      const file = e.target.files[0];' + #13#10 +
-    '      if (file) {' + #13#10 +
-    '        const reader = new FileReader();' + #13#10 +
-    '        reader.onload = function(event) {' + #13#10 +
-    '          loadedImage = new Image();' + #13#10 +
-    '          loadedImage.onload = function() {' + #13#10 +
-    '            // Redimensionner les canvas pour correspondre à l''image' + #13#10 +
-    '            sourceCanvas.width = loadedImage.width;' + #13#10 +
-    '            sourceCanvas.height = loadedImage.height;' + #13#10 +
-    '            targetCanvas.width = loadedImage.width;' + #13#10 +
-    '            targetCanvas.height = loadedImage.height;' + #13#10 +
-    '' + #13#10 +
-    '            // Dessiner l''image originale' + #13#10 +
-    '            sourceCtx.drawImage(loadedImage, 0, 0);' + #13#10 +
-    '            targetCtx.drawImage(loadedImage, 0, 0);' + #13#10 +
-    '' + #13#10 +
-    '            // Activer les boutons' + #13#10 +
-    '            document.getElementById("apply-grayscale").disabled = false;' + #13#10 +
-    '            document.getElementById("save-image").disabled = false;' + #13#10 +
-    '          };' + #13#10 +
-    '          loadedImage.src = event.target.result;' + #13#10 +
-    '        };' + #13#10 +
-    '        reader.readAsDataURL(file);' + #13#10 +
-    '      }' + #13#10 +
-    '    });' + #13#10 +
-    '' + #13#10 +
-    '    document.getElementById("apply-grayscale").addEventListener("click", function() {' + #13#10 +
-    '      if (!loadedImage) return;' + #13#10 +
-    '' + #13#10 +
-    '      // Copier l''image originale sur le canvas cible' + #13#10 +
-    '      targetCtx.drawImage(loadedImage, 0, 0);' + #13#10 +
-    '' + #13#10 +
-    '      // Obtenir les données d''image' + #13#10 +
-    '      let imageData = targetCtx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);' + #13#10 +
-    '      let data = imageData.data;' + #13#10 +
-    '' + #13#10 +
-    '      // Créer un tampon de mémoire pour WebAssembly' + #13#10 +
-    '      let buffer = Module._malloc(data.length);' + #13#10 +
-    '      Module.HEAPU8.set(data, buffer);' + #13#10 +
-    '' + #13#10 +
-    '      // Appeler la fonction WebAssembly' + #13#10 +
-    '      Module.ccall(' + #13#10 +
-    '        "applyGrayscale",    // nom de la fonction' + #13#10 +
-    '        null,                // type de retour' + #13#10 +
-    '        ["number", "number"], // types des arguments' + #13#10 +
-    '        [buffer, data.length] // valeurs des arguments' + #13#10 +
-    '      );' + #13#10 +
-    '' + #13#10 +
-    '      // Copier le résultat dans les données d''image' + #13#10 +
-    '      let result = Module.HEAPU8.subarray(buffer, buffer + data.length);' + #13#10 +
-    '      for (let i = 0; i < data.length; i++) {' + #13#10 +
-    '        data[i] = result[i];' + #13#10 +
-    '      }' + #13#10 +
-    '' + #13#10 +
-    '      // Libérer la mémoire' + #13#10 +
-    '      Module._free(buffer);' + #13#10 +
-    '' + #13#10 +
-    '      // Mettre à jour le canvas' + #13#10 +
-    '      targetCtx.putImageData(imageData, 0, 0);' + #13#10 +
-    '    });' + #13#10 +
-    '' + #13#10 +
-    '    document.getElementById("save-image").addEventListener("click", function() {' + #13#10 +
-    '      // Créer un lien de téléchargement' + #13#10 +
-    '      const link = document.createElement("a");' + #13#10 +
-    '      link.download = "image-traitée.png";' + #13#10 +
-    '      link.href = targetCanvas.toDataURL("image/png");' + #13#10 +
-    '      link.click();' + #13#10 +
-    '    });' + #13#10 +
-    '  </script>' + #13#10 +
-    '</body>' + #13#10 +
-    '</html>';
-end;
-
-procedure TWebModule1.ImageEditorActionAction(Sender: TObject;
-  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-begin
-  Response.ContentType := 'text/html';
-  Response.Content := GenerateImageEditorHTML;
-  Handled := True;
-end;
+**Utilisation en JavaScript :**
+```javascript
+const result = Module._fibonacci(10);
+console.log('Fibonacci(10):', result);
 ```
 
-### Étape 3: Ajouter les actions nécessaires pour servir les fichiers
+### Rust avec wasm-pack
 
-```delphi
-procedure TWebModule1.WebModuleCreate(Sender: TObject);
-var
-  Action: TWebActionItem;
-begin
-  // ... actions existantes ...
+**Rust** a un excellent support WebAssembly.
 
-  // Ajouter l'action pour l'éditeur d'image
-  Action := Actions.Add;
-  Action.Name := 'ImageEditorAction';
-  Action.PathInfo := '/image-editor';
-  Action.MethodType := mtGet;
-  Action.OnAction := ImageEditorActionAction;
+```rust
+use wasm_bindgen::prelude::*;
 
-  // Ajouter l'action pour servir les fichiers WebAssembly
-  Action := Actions.Add;
-  Action.Name := 'ServeWasmAction';
-  Action.PathInfo := '/grayscale.wasm';
-  Action.MethodType := mtGet;
-  Action.OnAction := ServeWasmFileAction;
-
-  // Ajouter l'action pour servir le fichier JavaScript généré par Emscripten
-  Action := Actions.Add;
-  Action.Name := 'ServeJSAction';
-  Action.PathInfo := '/grayscale.js';
-  Action.MethodType := mtGet;
-  Action.OnAction := ServeJSFileAction;
-end;
+#[wasm_bindgen]
+pub fn greet(name: &str) -> String {
+    format!("Bonjour, {} depuis Rust!", name)
+}
 ```
 
-## WebAssembly avec TMS WEB Core
+**Compilation :**
+```bash
+wasm-pack build --target web
+```
 
-TMS WEB Core est une extension pour Delphi qui permet de développer des applications web en utilisant le langage Pascal. Bien que TMS WEB Core ne compile pas directement vers WebAssembly, il peut être utilisé en conjonction avec des modules WebAssembly.
+### Go avec TinyGo
 
-Voici comment intégrer un module WebAssembly dans une application TMS WEB Core:
+**TinyGo** permet de compiler Go vers WebAssembly.
 
-```delphi
-unit Unit1;
+```go
+package main
+
+import "syscall/js"
+
+func add(this js.Value, args []js.Value) interface{} {
+    return args[0].Int() + args[1].Int()
+}
+
+func main() {
+    js.Global().Set("add", js.FuncOf(add))
+    select {}
+}
+```
+
+### C# avec Blazor WebAssembly
+
+**Microsoft Blazor** compile C# vers WebAssembly.
+
+```csharp
+@page "/counter"
+
+<h1>Counter</h1>
+<p>Current count: @currentCount</p>
+<button @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}
+```
+
+## Scénarios d'intégration conceptuels
+
+### Scénario 1 : Bibliothèque de calcul
+
+**Hypothèse :** Si Delphi supportait WebAssembly
+
+```pascal
+// Unit de calcul Delphi (hypothétique)
+unit MathLib;
 
 interface
 
-uses
-  System.SysUtils, System.Classes, JS, Web, WEBLib.Graphics, WEBLib.Controls,
-  WEBLib.Forms, WEBLib.Dialogs, Vcl.StdCtrls, WEBLib.StdCtrls, WEBLib.WebCtrls;
-
-type
-  TForm1 = class(TWebForm)
-    WebButton1: TWebButton;
-    WebMemo1: TWebMemo;
-    procedure WebButton1Click(Sender: TObject);
-    procedure WebFormCreate(Sender: TObject);
-  private
-    procedure LoadWasmModule;
-  public
-  end;
-
-var
-  Form1: TForm1;
+function CalculateComplexFormula(A, B, C: Double): Double; export;
 
 implementation
 
-{$R *.dfm}
-
-procedure TForm1.WebFormCreate(Sender: TObject);
+function CalculateComplexFormula(A, B, C: Double): Double;
+var
+  i: Integer;
+  Result: Double;
 begin
-  LoadWasmModule;
-end;
-
-procedure TForm1.LoadWasmModule;
-begin
-  asm
-    // Charger le module WebAssembly
-    fetch('grayscale.wasm')
-      .then(response => response.arrayBuffer())
-      .then(bytes => WebAssembly.instantiate(bytes, {
-        env: {
-          consoleLog: function(arg) {
-            console.log(arg);
-          }
-        }
-      }))
-      .then(results => {
-        // Stocker l'instance du module dans une variable globale
-        window.wasmModule = results.instance;
-        this.WebMemo1.Lines.Add('Module WebAssembly chargé avec succès!');
-      })
-      .catch(error => {
-        console.error('Erreur lors du chargement du module WebAssembly:', error);
-        this.WebMemo1.Lines.Add('Erreur: ' + error.toString());
-      });
-  end;
-end;
-
-procedure TForm1.WebButton1Click(Sender: TObject);
-begin
-  asm
-    // Vérifier si le module est chargé
-    if (window.wasmModule) {
-      // Appeler une fonction exportée du module WebAssembly
-      const result = window.wasmModule.exports.calculateSomething(10, 20);
-      this.WebMemo1.Lines.Add('Résultat: ' + result);
-    } else {
-      this.WebMemo1.Lines.Add('Module WebAssembly non chargé');
-    }
-  end;
+  Result := 0;
+  for i := 1 to 1000000 do
+    Result := Result + (A * B + C) / i;
+  Exit(Result);
 end;
 
 end.
 ```
 
-## L'avenir: Delphi et WebAssembly
+**Compilation (hypothétique) :**
+```bash
+# Commande hypothétique
+dcc32 -target:wasm MathLib.dpr -o:mathlib.wasm
+```
 
-Le support officiel de WebAssembly dans Delphi pourrait évoluer dans le futur. Voici quelques possibilités:
+**Utilisation en JavaScript :**
+```javascript
+// Charger le module Delphi compilé
+const delphiModule = await WebAssembly.instantiateStreaming(
+  fetch('mathlib.wasm')
+);
 
-### Compilation directe de Delphi vers WebAssembly
+// Utiliser la fonction Delphi
+const result = delphiModule.exports.CalculateComplexFormula(10.5, 20.3, 5.7);
+console.log('Résultat du calcul Delphi:', result);
+```
 
-À l'avenir, Embarcadero pourrait ajouter le support natif pour compiler directement du code Delphi en WebAssembly, ce qui permettrait:
-- De porter facilement des applications Delphi existantes vers le web
-- D'utiliser les composants VCL ou FMX dans des applications web
-- De réutiliser le code business existant dans des applications web
+### Scénario 2 : Moteur de jeu
 
-### Intégration plus profonde avec TMS WEB Core
+**Application hybride :**
 
-TMS WEB Core pourrait évoluer pour offrir une meilleure intégration avec WebAssembly, permettant:
-- Un mélange transparent de code Pascal compilé en JavaScript et de modules WebAssembly
-- Des performances améliorées pour les parties critiques des applications
-- Une transition en douceur des applications desktop vers le web
+```
+┌─────────────────────────────────────┐
+│  Interface utilisateur              │
+│  (HTML/CSS/JavaScript ou TMS Web)   │
+│  - Menus                            │
+│  - HUD                              │
+│  - Paramètres                       │
+└──────────────┬──────────────────────┘
+               │
+               │ Appels WebAssembly
+               │
+┌──────────────┴──────────────────────┐
+│  Moteur de jeu Delphi (WASM)        │
+│  - Physique                         │
+│  - Rendu 3D                         │
+│  - IA                               │
+│  - Logique de jeu                   │
+└─────────────────────────────────────┘
+```
 
-## Bonnes pratiques pour l'utilisation de WebAssembly avec Delphi
+### Scénario 3 : Traitement d'images
 
-1. **Identifier les parties critiques en termes de performance**: Ne pas tout migrer vers WebAssembly, mais se concentrer sur les fonctionnalités nécessitant des performances élevées.
+```pascal
+// Hypothétique : Filtre d'image en Delphi/WASM
+unit ImageFilter;
 
-2. **Gérer correctement la mémoire**: WebAssembly requiert une gestion manuelle de la mémoire, soyez attentif aux allocations et libérations.
+interface
 
-3. **Déboguer efficacement**: Utilisez les outils de débogage intégrés aux navigateurs pour identifier les problèmes.
+type
+  TPixelArray = array of Byte;
 
-4. **Considérer la taille des modules**: Les gros modules prennent plus de temps à télécharger et à instancier. Divisez-les si nécessaire.
+procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer); export;
 
-5. **Tester sur différents navigateurs**: Bien que WebAssembly soit supporté par tous les navigateurs modernes, il peut y avoir des différences subtiles.
+implementation
+
+procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer);
+var
+  x, y, i: Integer;
+  Sum: Integer;
+begin
+  // Algorithme de flou
+  for y := 1 to Height - 2 do
+    for x := 1 to Width - 2 do
+    begin
+      Sum := 0;
+      for i := -1 to 1 do
+        Sum := Sum + Pixels[(y + i) * Width + (x + i)];
+      Pixels[y * Width + x] := Sum div 3;
+    end;
+end;
+
+end.
+```
+
+**Utilisation côté web :**
+```javascript
+// Obtenir les pixels d'une image Canvas
+const ctx = canvas.getContext('2d');
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+// Passer à WebAssembly Delphi pour traitement
+const memory = new Uint8Array(wasmModule.memory.buffer);
+memory.set(imageData.data);
+
+wasmModule.exports.ApplyBlur(
+  0, // Pointeur vers les données en mémoire WASM
+  canvas.width,
+  canvas.height
+);
+
+// Récupérer les pixels traités
+imageData.data.set(memory.slice(0, imageData.data.length));
+ctx.putImageData(imageData, 0, 0);
+```
+
+## Outils et écosystème WebAssembly
+
+### 1. WABT (WebAssembly Binary Toolkit)
+
+Outils pour travailler avec WebAssembly :
+
+```bash
+# Convertir WASM en texte lisible (WAT)
+wasm2wat module.wasm -o module.wat
+
+# Convertir WAT en WASM
+wat2wasm module.wat -o module.wasm
+
+# Valider un module WASM
+wasm-validate module.wasm
+
+# Désassembler un module
+wasm-objdump -d module.wasm
+```
+
+### 2. Wasmer et Wasmtime
+
+Runtimes WebAssembly standalone (hors navigateur) :
+
+```bash
+# Exécuter WASM en ligne de commande
+wasmer run module.wasm
+
+# Avec Wasmtime
+wasmtime module.wasm
+```
+
+**Cas d'usage :** Plugins, extensions, sandbox sécurisé
+
+### 3. AssemblyScript
+
+Langage proche de TypeScript qui compile vers WebAssembly :
+
+```typescript
+export function add(a: i32, b: i32): i32 {
+  return a + b;
+}
+```
+
+```bash
+asc assembly/index.ts -b build/optimized.wasm
+```
+
+### 4. WasmEdge
+
+Runtime WebAssembly pour cloud et edge computing :
+- Exécution hors navigateur
+- Support pour serveurs
+- IoT et edge computing
+
+## Limitations actuelles de WebAssembly
+
+### Limitations techniques
+
+**1. Pas d'accès direct au DOM**
+- WebAssembly ne peut pas manipuler le DOM directement
+- Doit passer par JavaScript pour toute interaction UI
+
+**2. Garbage Collection limitée**
+- Pas de GC standard encore (en développement)
+- Gestion mémoire manuelle nécessaire
+- Complexe pour langages avec GC (comme Delphi)
+
+**3. Exceptions**
+- Support des exceptions en cours d'implémentation
+- Pas de gestion d'exceptions complète
+
+**4. Threading**
+- Support multi-threading limité
+- SharedArrayBuffer avec restrictions de sécurité
+
+**5. Taille de téléchargement**
+- Fichiers WASM peuvent être volumineux
+- Important d'optimiser et compresser
+
+### Limitations pour Delphi spécifiquement
+
+**1. Runtime Delphi**
+- Le runtime Delphi (RTL) devrait être adapté pour WASM
+- Classes, RTTI, gestion mémoire à porter
+
+**2. VCL/FMX**
+- Frameworks UI impossibles en WASM
+- Nécessiterait réécriture complète
+
+**3. Composants tiers**
+- Écosystème de composants à réinventer
+- Dépendances Windows à éliminer
+
+**4. Debugging**
+- Outils de débogage WASM limités
+- Expérience de développement à améliorer
+
+## Perspectives futures
+
+### Ce qui arrive dans WebAssembly
+
+**WASI (WebAssembly System Interface)**
+- Interface standard pour accès système
+- Exécution hors navigateur standardisée
+- Portabilité universelle
+
+**Component Model**
+- Composants réutilisables
+- Interopérabilité entre langages
+- Écosystème de modules
+
+**Garbage Collection**
+- GC natif en cours de développement
+- Facilitera les langages managés
+
+**SIMD (Single Instruction Multiple Data)**
+- Instructions vectorielles
+- Performance accrue pour calculs parallèles
+
+### Et Delphi ?
+
+**Scénarios possibles :**
+
+**1. Support officiel Embarcadero** (espéré)
+- Compilateur Delphi → WebAssembly
+- RTL adapté pour le web
+- Framework UI web natif
+
+**2. Projets communautaires**
+- Compilateurs alternatifs
+- Transpileurs Delphi → Rust/C++ → WASM
+- Outils de pont
+
+**3. Approche hybride** (actuelle)
+- TMS Web Core pour frontend (JavaScript)
+- Delphi natif pour backend
+- Communication via API REST
+
+## Stratégies actuelles pour développeurs Delphi
+
+### Stratégie 1 : Architecture moderne
+
+```
+┌────────────────────────────┐
+│  Frontend Web              │
+│  TMS Web Core / JavaScript │
+│  (Interface utilisateur)   │
+└──────────┬─────────────────┘
+           │
+           │ REST API
+           │ JSON
+           │
+┌──────────┴─────────────────┐
+│  Backend Delphi            │
+│  (Horse, RAD Server)       │
+│  (Logique + Performance)   │
+└──────────┬─────────────────┘
+           │
+┌──────────┴─────────────────┐
+│  Base de données           │
+└────────────────────────────┘
+```
+
+**Avantages :**
+- Utilise les forces de Delphi (backend)
+- Interface web moderne possible
+- Performance serveur excellente
+
+### Stratégie 2 : Attendre et préparer
+
+- **Surveiller** les annonces Embarcadero
+- **Apprendre** WebAssembly et ses concepts
+- **Expérimenter** avec d'autres langages (Rust, C++)
+- **Préparer** le code pour portabilité future
+
+### Stratégie 3 : Solutions alternatives
+
+**Option A : TMS Web Core (maintenant)**
+- Développement immédiat
+- Syntaxe Delphi
+- JavaScript sous le capot
+
+**Option B : Blazor WebAssembly + Delphi Backend**
+- Frontend C#/Blazor (Microsoft)
+- Backend Delphi
+- Deux langages mais complémentaires
+
+**Option C : React/Vue + Delphi Backend**
+- Frontend JavaScript pur
+- Backend Delphi
+- Séparation claire
+
+## Exemple de migration conceptuelle
+
+### Application Delphi VCL actuelle
+
+```pascal
+unit MainForm;
+
+interface
+
+uses
+  Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics;
+
+type
+  TForm1 = class(TForm)
+    Edit1: TEdit;
+    Button1: TButton;
+    Label1: TLabel;
+    procedure Button1Click(Sender: TObject);
+  end;
+
+implementation
+
+uses
+  MathLib; // Bibliothèque de calculs
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Input: Double;
+  Result: Double;
+begin
+  Input := StrToFloat(Edit1.Text);
+  Result := MathLib.ComplexCalculation(Input);
+  Label1.Caption := FloatToStr(Result);
+end;
+
+end.
+```
+
+### Version Web future (hypothétique avec WASM)
+
+**Backend (Delphi → WASM) :**
+```pascal
+// MathLib.pas - Compilé en WASM
+unit MathLib;
+
+interface
+
+function ComplexCalculation(Input: Double): Double; export;
+
+implementation
+
+function ComplexCalculation(Input: Double): Double;
+var
+  i: Integer;
+  Temp: Double;
+begin
+  Temp := Input;
+  for i := 1 to 10000 do
+    Temp := Sqrt(Temp * Temp + 1);
+  Result := Temp;
+end;
+
+end.
+```
+
+**Frontend (HTML + JavaScript) :**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Application Web Delphi</title>
+</head>
+<body>
+  <input type="number" id="input" />
+  <button onclick="calculate()">Calculer</button>
+  <div id="result"></div>
+
+  <script>
+    let wasmModule;
+
+    // Charger le module WASM Delphi
+    WebAssembly.instantiateStreaming(fetch('mathlib.wasm'))
+      .then(obj => {
+        wasmModule = obj.instance;
+        console.log('Module Delphi WASM chargé');
+      });
+
+    function calculate() {
+      const input = parseFloat(document.getElementById('input').value);
+
+      // Appeler la fonction Delphi compilée en WASM
+      const result = wasmModule.exports.ComplexCalculation(input);
+
+      document.getElementById('result').textContent =
+        'Résultat: ' + result.toFixed(2);
+    }
+  </script>
+</body>
+</html>
+```
+
+## Apprentissage et ressources
+
+### Pour se préparer à WebAssembly
+
+**1. Apprendre les concepts**
+- Comprendre le format binaire
+- Étudier la mémoire linéaire
+- Maîtriser l'interface JavaScript/WASM
+
+**2. Expérimenter avec d'autres langages**
+```bash
+# Essayer avec C
+emcc hello.c -o hello.wasm
+
+# Essayer avec Rust
+cargo build --target wasm32-unknown-unknown
+```
+
+**3. Ressources en ligne**
+- WebAssembly.org (site officiel)
+- MDN Web Docs
+- Tutoriels Rust/WASM
+- Cours sur Blazor WebAssembly
+
+**4. Outils de développement**
+- Chrome DevTools (onglet WebAssembly)
+- VS Code avec extensions WASM
+- Explorateurs de fichiers WASM
+
+### Communauté Delphi et WASM
+
+**Suivre les développements :**
+- Forums Embarcadero
+- Groupes Delphi sur Reddit
+- Conférences (DelphiCon)
+- Blogs de développeurs Delphi
+
+**Contribuer :**
+- Projets open-source
+- Feedback à Embarcadero
+- Partage d'expériences
 
 ## Conclusion
 
-WebAssembly ouvre de nouvelles portes pour les développeurs Delphi souhaitant créer des applications web hautes performances. Bien que le support natif soit encore limité, les outils et approches existants permettent déjà d'intégrer WebAssembly dans les projets Delphi.
+WebAssembly représente **l'avenir de la performance web**, mais le support natif dans Delphi n'est pas encore disponible. Cependant, cela ne doit pas vous empêcher de créer d'excellentes applications web avec Delphi !
 
-Que ce soit pour porter des applications existantes vers le web ou pour améliorer les performances des nouvelles applications web, WebAssembly représente une technologie prometteuse qui s'intègre bien dans l'écosystème Delphi.
+**Résumé des points clés :**
 
-À mesure que la technologie évolue, nous pouvons nous attendre à une intégration encore plus profonde entre Delphi et WebAssembly, offrant aux développeurs le meilleur des deux mondes: la productivité et la facilité d'utilisation de Delphi, combinées avec les performances et la portabilité de WebAssembly.
+✅ **WebAssembly = Performance web native** mais nécessite compilation spécifique
+✅ **Delphi aujourd'hui** : Pas de compilation WASM native officielle
+✅ **Solutions actuelles** : TMS Web Core (JavaScript) ou architecture backend Delphi
+✅ **Future potentiel** : Support possible dans futures versions de Delphi
+✅ **Meilleure stratégie** : Architecture moderne (frontend web + backend Delphi)
 
-⏭️ [Tendances et futur de Delphi](/24-tendances-et-futur-de-delphi/README.md)
+**Recommandations pratiques :**
+
+1. **Court terme** : Utiliser TMS Web Core ou architecture API REST
+2. **Moyen terme** : Suivre les annonces Embarcadero
+3. **Long terme** : Se préparer en apprenant les concepts WASM
+4. **Toujours** : Créer du code modulaire et portable
+
+**L'important à retenir :**
+
+Même sans WebAssembly, Delphi reste **excellent pour le backend** :
+- Performance native côté serveur
+- Accès bases de données rapide
+- Logique métier sécurisée
+- API REST performantes
+
+Et vous pouvez créer des **frontends web modernes** avec :
+- TMS Web Core (Delphi → JavaScript)
+- Frameworks JavaScript (React, Vue, Angular)
+- Combinaison des deux
+
+WebAssembly viendra peut-être un jour enrichir encore plus les possibilités de Delphi pour le web. En attendant, les outils actuels permettent déjà de créer d'excellentes applications web professionnelles !
+
+Dans la section suivante, nous explorerons WebStencils et les techniques d'intégration côté serveur améliorée, qui offrent des alternatives intéressantes pour le développement web avec Delphi.
+
+⏭️ [WebStencils : intégration côté serveur améliorée](/23-conception-dapplications-web-avec-delphi/09-webstencils-integration-cote-serveur-amelioree.md)

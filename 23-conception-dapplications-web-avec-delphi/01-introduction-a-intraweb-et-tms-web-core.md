@@ -1,202 +1,271 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.1 Introduction à Intraweb et TMS Web Core
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Développement web avec Delphi : les fondamentaux
-
-Vous connaissez déjà Delphi pour le développement d'applications desktop avec VCL ou multi-plateformes avec FireMonkey (FMX), mais saviez-vous que Delphi permet également de créer des applications web complètes ? Dans cette section, nous allons découvrir deux solutions majeures pour le développement web avec Delphi : IntraWeb et TMS Web Core.
+Le développement d'applications web avec Delphi offre plusieurs possibilités pour créer des sites web dynamiques et des applications web complètes. Deux solutions principales se démarquent dans l'écosystème Delphi : **IntraWeb** et **TMS Web Core**. Ces frameworks permettent aux développeurs Delphi de créer des applications web en utilisant leurs compétences existantes en Object Pascal.
 
 ## Qu'est-ce qu'IntraWeb ?
 
-IntraWeb est une technologie intégrée à Delphi qui permet de développer des applications web en utilisant une approche similaire à celle du développement d'applications desktop. C'est une solution côté serveur où le code s'exécute sur un serveur web.
+### Présentation générale
 
-### Caractéristiques principales d'IntraWeb :
+IntraWeb (souvent abrégé IW) est un framework RAD (Rapid Application Development) pour le développement d'applications web avec Delphi. Il permet de créer des applications web de la même manière que vous créeriez des applications desktop avec la VCL.
 
-- **Développement visuel** : Vous créez votre interface utilisateur en plaçant des composants sur une fiche, comme pour une application VCL
-- **État de session** : IntraWeb gère automatiquement l'état de la session utilisateur
-- **Composants web** : Utilise des contrôles spécifiques adaptés au web
-- **Événements côté serveur** : Le code des événements s'exécute sur le serveur
+### Philosophie d'IntraWeb
 
-### Avantages d'IntraWeb :
+IntraWeb adopte une approche **côté serveur** du développement web. Voici ce que cela signifie :
 
-- Courbe d'apprentissage réduite pour les développeurs Delphi
-- Pas besoin d'apprendre HTML, CSS et JavaScript en profondeur
-- Développement rapide d'applications web d'entreprise
-- Intégration facile avec les données
+- Votre code Delphi s'exécute sur le serveur
+- Les formulaires et composants sont convertis en HTML/JavaScript automatiquement
+- La logique métier reste entièrement sur le serveur
+- L'interface utilisateur est générée dynamiquement pour chaque client
 
-### Exemple simple d'application IntraWeb :
+### Avantages d'IntraWeb
 
-```delphi
-// Création d'un bouton avec gestion d'événement
-procedure TForm1.IWButton1Click(Sender: TObject);
-begin
-  IWLabel1.Caption := 'Bonjour depuis IntraWeb !';
-end;
+**Pour les développeurs Delphi :**
+- Utilisation de composants visuels familiers (comme dans la VCL)
+- Conception drag-and-drop dans l'IDE Delphi
+- Pas besoin d'apprendre HTML, CSS ou JavaScript en profondeur
+- Réutilisation des connaissances VCL existantes
+
+**Pour l'architecture :**
+- Code métier sécurisé (reste sur le serveur)
+- Gestion automatique des sessions utilisateur
+- Support des applications multi-utilisateurs
+- Déploiement centralisé
+
+### Architecture d'IntraWeb
+
 ```
+┌─────────────────┐
+│   Navigateur    │ ← Client (HTML/CSS/JS généré)
+└────────┬────────┘
+         │ HTTP/HTTPS
+         ↓
+┌─────────────────┐
+│  Serveur IW     │ ← Votre application Delphi
+│  (Delphi/Pascal)│    s'exécute ici
+└─────────────────┘
+```
+
+### Types d'applications IntraWeb
+
+**Applications Standalone**
+- Application serveur autonome
+- Écoute sur un port (ex: 8080)
+- Idéale pour intranet ou petites applications
+
+**Applications ISAPI/Apache**
+- S'intègre avec IIS ou Apache
+- Pour déploiement production à grande échelle
+- Meilleure performance et scalabilité
+
+### Composants IntraWeb typiques
+
+IntraWeb fournit des composants similaires à la VCL :
+
+- **IWEdit** : champ de saisie texte (équivalent de TEdit)
+- **IWButton** : bouton cliquable
+- **IWLabel** : étiquette de texte
+- **IWGrid** : grille pour afficher des données tabulaires
+- **IWRegion** : conteneur pour organiser d'autres composants
+- **IWForm** : formulaire (page web)
 
 ## Qu'est-ce que TMS Web Core ?
 
-TMS Web Core est une approche différente du développement web avec Delphi. Contrairement à IntraWeb qui s'exécute côté serveur, TMS Web Core compile votre code Pascal en JavaScript qui s'exécute directement dans le navigateur web du client.
+### Présentation générale
 
-### Caractéristiques principales de TMS Web Core :
+TMS Web Core est une solution plus moderne développée par TMS Software. Elle permet de créer des **applications web client** qui s'exécutent directement dans le navigateur.
 
-- **Code Pascal côté client** : Votre code Object Pascal est transpilé en JavaScript
-- **Applications SPA** : Crée des Single Page Applications modernes
-- **Compatibilité VCL** : Utilise des composants visuels similaires à la VCL
-- **Frameworks web** : S'intègre avec Bootstrap, Material UI et autres frameworks web modernes
+### Philosophie de TMS Web Core
 
-### Avantages de TMS Web Core :
+TMS Web Core adopte une approche **côté client** radicalement différente :
 
-- Applications web réactives sans rechargement de page
-- Utilisation des compétences Delphi existantes pour le web
-- Réduction du trafic serveur (exécution côté client)
-- Possibilité de créer des PWA (Progressive Web Apps)
+- Votre code Pascal est **transcompilé en JavaScript**
+- L'application s'exécute entièrement dans le navigateur
+- Pas besoin de serveur Delphi en production
+- Architecture similaire aux applications JavaScript modernes (Angular, React, Vue)
 
-### Exemple simple d'application TMS Web Core :
+### Avantages de TMS Web Core
 
-```delphi
-// Création d'un bouton avec gestion d'événement
-procedure TForm1.WebButton1Click(Sender: TObject);
+**Pour les développeurs :**
+- Écriture en Object Pascal (langage familier)
+- Composants visuels compatibles avec l'IDE
+- Accès direct aux API web modernes (HTML5, CSS3)
+- Debugging dans l'IDE Delphi
+
+**Pour l'architecture :**
+- Pas de serveur d'application nécessaire
+- Hébergement simple (serveur web statique suffit)
+- Application web moderne et réactive
+- Possibilité de créer des Progressive Web Apps (PWA)
+
+### Architecture de TMS Web Core
+
+```
+┌─────────────────────────────────┐
+│        Navigateur               │
+│  ┌───────────────────────────┐  │
+│  │  Votre application        │  │
+│  │  (JavaScript généré       │  │
+│  │   depuis Pascal)          │  │
+│  └───────────────────────────┘  │
+└─────────────────────────────────┘
+         │
+         │ API REST (optionnel)
+         ↓
+┌─────────────────┐
+│  Backend        │ ← Peut être n'importe quoi
+│  (optionnel)    │    (Delphi, Node.js, PHP...)
+└─────────────────┘
+```
+
+### Le processus de transcompilation
+
+Lorsque vous compilez avec TMS Web Core :
+
+1. Vous écrivez du code en Object Pascal
+2. Le compilateur TMS Web Core le transforme en JavaScript
+3. Le JavaScript généré s'exécute dans le navigateur
+4. L'application fonctionne comme une application web moderne
+
+**Exemple conceptuel :**
+```pascal
+// Votre code Pascal
+procedure TForm1.Button1Click(Sender: TObject);
 begin
-  WebLabel1.Caption := 'Bonjour depuis TMS Web Core !';
+  ShowMessage('Bonjour !');
 end;
 ```
 
-## Comparaison entre IntraWeb et TMS Web Core
-
-| Caractéristique | IntraWeb | TMS Web Core |
-|----------------|----------|--------------|
-| Exécution | Côté serveur | Côté client (navigateur) |
-| Type d'application | Applications web traditionnelles | SPA (Single Page Applications) |
-| Connaissance web requise | Minimale | Moyenne (utile de comprendre HTML/CSS) |
-| Composants | Composants IntraWeb spécifiques | Composants TMS FNC et Web |
-| Gestion d'état | Automatique par le serveur | Manuelle ou avec frameworks |
-| Déploiement | Serveur web requis | Fichiers statiques possibles |
-| Performance | Dépend du serveur | Dépend du navigateur client |
-| Licence | Commerciale | Commerciale |
-
-## Démarrer avec IntraWeb
-
-### Création d'un projet IntraWeb :
-
-1. Dans Delphi, sélectionnez **Fichier** > **Nouveau** > **Autres** > **IntraWeb** > **Application**
-2. Choisissez le type d'application IntraWeb (standalone ou ISAPI)
-3. Une fiche web vide apparaît, similaire à une fiche VCL
-4. Placez des composants depuis la palette (section **IntraWeb**)
-5. Double-cliquez sur les composants pour créer des gestionnaires d'événements
-
-### Exemple de formulaire simple avec IntraWeb :
-
-```delphi
-procedure TIWForm1.IWButton1Click(Sender: TObject);
-var
-  Nom: string;
-begin
-  Nom := IWEdit1.Text;
-  if Nom <> '' then
-    IWLabel1.Caption := 'Bonjour, ' + Nom + ' !';
-  else
-    IWLabel1.Caption := 'Veuillez entrer votre nom.';
-end;
+Devient approximativement :
+```javascript
+// JavaScript généré
+function TForm1_Button1Click(Sender) {
+  alert('Bonjour !');
+}
 ```
 
-## Démarrer avec TMS Web Core
+### Composants TMS Web Core
 
-### Installation de TMS Web Core :
+TMS Web Core offre des composants web natifs :
 
-1. Téléchargez et installez TMS Web Core depuis le site TMS Software
-2. Redémarrez Delphi pour finaliser l'installation
+- **TWebEdit** : champ de saisie
+- **TWebButton** : bouton
+- **TWebLabel** : étiquette
+- **TWebPanel** : panneau conteneur
+- **TWebHttpRequest** : pour appels API REST
+- **TWebDBGrid** : grille liée aux données
 
-### Création d'un projet TMS Web Core :
+## Comparaison IntraWeb vs TMS Web Core
 
-1. Dans Delphi, sélectionnez **Fichier** > **Nouveau** > **TMS Web** > **TMS Web Application**
-2. Choisissez un modèle de projet (Standard, Bootstrap, etc.)
-3. Une fiche web vide apparaît dans l'IDE
-4. Placez des composants depuis la palette (section **TMS Web Core**)
-5. Double-cliquez sur les composants pour créer des gestionnaires d'événements
+### Tableau comparatif
 
-### Exemple de formulaire simple avec TMS Web Core :
+| Critère | IntraWeb | TMS Web Core |
+|---------|----------|--------------|
+| **Exécution** | Côté serveur | Côté client (navigateur) |
+| **Langage final** | Reste en Pascal | Transcompilé en JavaScript |
+| **Hébergement** | Nécessite serveur Delphi | Simple serveur web (Apache, nginx) |
+| **Performance réseau** | Plus d'échanges serveur | Application locale dans navigateur |
+| **Sécurité code** | Code protégé sur serveur | JavaScript visible |
+| **Hors ligne** | Non possible | Possible (avec PWA) |
+| **Coût hébergement** | Plus élevé (serveur applicatif) | Minimal (fichiers statiques) |
+| **Scalabilité** | Limitée par ressources serveur | Excellente (charge sur clients) |
 
-```delphi
-procedure TForm1.WebButton1Click(Sender: TObject);
-var
-  Nom: string;
-begin
-  Nom := WebEdit1.Text;
-  if Nom <> '' then
-    WebLabel1.Caption := 'Bonjour, ' + Nom + ' !';
-  else
-    WebLabel1.Caption := 'Veuillez entrer votre nom.';
-end;
-```
+### Quand utiliser IntraWeb ?
 
-## Considérations pour choisir entre IntraWeb et TMS Web Core
+IntraWeb est idéal quand :
 
-### Choisissez IntraWeb si :
+- Vous devez protéger votre code métier
+- Vous avez une application intranet d'entreprise
+- Vous voulez un contrôle total côté serveur
+- Vous migrez une application VCL existante
+- Les utilisateurs ont une bonne connexion réseau
+- Vous préférez l'approche traditionnelle serveur
 
-- Vous préférez le modèle de développement côté serveur traditionnel
-- Vous avez besoin d'une gestion d'état de session automatique
-- Votre application nécessite un traitement intensif côté serveur
-- Vous souhaitez une transition plus simple depuis le développement VCL
+### Quand utiliser TMS Web Core ?
 
-### Choisissez TMS Web Core si :
+TMS Web Core est préférable quand :
 
-- Vous voulez créer des applications web modernes et réactives
-- Vous préférez l'exécution côté client pour réduire la charge serveur
-- Vous souhaitez développer des PWA (Progressive Web Apps)
-- Vous voulez intégrer des frameworks web modernes
+- Vous voulez créer une application web moderne
+- Vous souhaitez minimiser les coûts d'hébergement
+- Vous visez une excellente réactivité utilisateur
+- Vous voulez créer une PWA
+- Vous devez supporter le mode hors ligne
+- Vous voulez une architecture découplée (frontend/backend)
+- La scalabilité est importante
 
-## Mini-projet : Créer une calculatrice web simple
+## Approches hybrides
 
-Pour illustrer les concepts, nous allons créer une calculatrice simple dans les deux technologies.
+Il est possible de combiner les deux approches :
 
-### Avec IntraWeb :
+- **Frontend TMS Web Core** : interface utilisateur moderne
+- **Backend Delphi** : services REST créés avec Delphi (RAD Server, Horse, etc.)
 
-```delphi
-procedure TIWForm1.IWButton1Click(Sender: TObject); // Bouton "+"
-var
-  Num1, Num2, Resultat: Double;
-begin
-  Num1 := StrToFloatDef(IWEdit1.Text, 0);
-  Num2 := StrToFloatDef(IWEdit2.Text, 0);
-  Resultat := Num1 + Num2;
-  IWLabel1.Caption := 'Résultat : ' + FloatToStr(Resultat);
-end;
-```
+Cette architecture moderne sépare clairement :
+- La présentation (navigateur)
+- La logique métier (serveur REST)
+- Les données (base de données)
 
-### Avec TMS Web Core :
+## Installation et prérequis
 
-```delphi
-procedure TForm1.WebButton1Click(Sender: TObject); // Bouton "+"
-var
-  Num1, Num2, Resultat: Double;
-begin
-  Num1 := StrToFloatDef(WebEdit1.Text, 0);
-  Num2 := StrToFloatDef(WebEdit2.Text, 0);
-  Resultat := Num1 + Num2;
-  WebLabel1.Caption := 'Résultat : ' + FloatToStr(Resultat);
-end;
-```
+### IntraWeb
+
+- Inclus dans certaines éditions de Delphi (Professional et supérieures)
+- Installation via GetIt Package Manager
+- Disponible aussi en version standalone payante
+
+### TMS Web Core
+
+- Produit commercial de TMS Software
+- Version d'essai disponible
+- Installation via installer dédié
+- Nécessite une licence pour production
+
+## Écosystème et support
+
+### IntraWeb
+
+- Existe depuis plus de 20 ans
+- Large base de code existant
+- Documentation étendue
+- Communauté active
+- Nombreux composants tiers disponibles
+
+### TMS Web Core
+
+- Solution plus récente (depuis 2018)
+- En évolution rapide
+- Documentation moderne
+- Support actif de TMS Software
+- Intégration avec écosystème web moderne
+
+## Concepts clés à retenir
+
+### Pour IntraWeb
+
+1. **Programmation événementielle serveur** : Les événements (clics, changements) génèrent des requêtes au serveur
+2. **Sessions** : Chaque utilisateur a une session maintenue par le serveur
+3. **Génération HTML automatique** : Vous concevez visuellement, IntraWeb génère le HTML
+4. **Déploiement serveur** : Votre application Delphi doit tourner sur un serveur
+
+### Pour TMS Web Core
+
+1. **Application monopage (SPA)** : L'application entière se charge une fois
+2. **Transcompilation** : Votre code Pascal devient du JavaScript
+3. **API REST** : Communication avec backend via services web
+4. **Déploiement statique** : Fichiers HTML/JS/CSS à déployer
 
 ## Conclusion
 
-IntraWeb et TMS Web Core sont deux solutions puissantes qui permettent aux développeurs Delphi de créer des applications web en utilisant leurs compétences Object Pascal existantes. Chacune a ses forces et ses cas d'utilisation :
+IntraWeb et TMS Web Core représentent deux philosophies différentes du développement web avec Delphi :
 
-- **IntraWeb** offre une approche traditionnelle côté serveur, idéale pour les applications d'entreprise avec traitement intensif.
-- **TMS Web Core** propose une approche moderne avec exécution côté client, parfaite pour les applications web réactives et les PWA.
+- **IntraWeb** suit le modèle traditionnel serveur, idéal pour applications d'entreprise et intranet
+- **TMS Web Core** embrasse l'approche moderne client-side, parfait pour applications web contemporaines
 
-Dans les prochaines sections, nous approfondirons chacune de ces technologies et explorerons leurs fonctionnalités avancées.
+Le choix entre les deux dépend de vos besoins spécifiques, de votre infrastructure et de vos objectifs. Les deux permettent aux développeurs Delphi de créer des applications web sans abandonner l'écosystème et les compétences qu'ils maîtrisent.
 
-## Ressources complémentaires
-
-- Documentation officielle d'IntraWeb : [https://www.atozed.com/intraweb/docs/](https://www.atozed.com/intraweb/docs/)
-- Documentation TMS Web Core : [https://www.tmssoftware.com/site/tmswebcore.asp](https://www.tmssoftware.com/site/tmswebcore.asp)
-- Forums communautaires Delphi sur le développement web
-
-## Exercices pratiques
-
-1. Créez une page de connexion simple avec IntraWeb ou TMS Web Core
-2. Ajoutez une validation des champs (nom d'utilisateur non vide, mot de passe d'au moins 6 caractères)
-3. Affichez un message de bienvenue personnalisé après la connexion
+Dans les sections suivantes de cette formation, nous explorerons en détail comment créer des applications concrètes avec chacune de ces technologies.
 
 ⏭️ [Applications Web basées sur VCL](/23-conception-dapplications-web-avec-delphi/02-applications-web-basees-sur-vcl.md)

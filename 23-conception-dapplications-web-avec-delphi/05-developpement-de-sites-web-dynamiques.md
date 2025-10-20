@@ -1,1074 +1,1274 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.5 Développement de sites Web dynamiques
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Introduction aux sites Web dynamiques avec Delphi
+Un site web **dynamique** est un site dont le contenu change en fonction des interactions de l'utilisateur, des données en base, de l'heure, ou de tout autre paramètre. Contrairement à un site **statique** où chaque page est un fichier HTML fixe, un site dynamique génère ses pages "à la volée".
 
-Jusqu'à présent, nous avons exploré comment créer des services REST et des applications Web basées sur VCL avec Delphi. Dans cette section, nous allons voir comment développer des sites Web véritablement dynamiques - des sites qui génèrent du contenu HTML à la volée en fonction des actions de l'utilisateur, des données de base de données, et d'autres facteurs.
+**Analogie :**
+- **Site statique** = Un livre imprimé : le contenu est figé
+- **Site dynamique** = Un journal personnalisé qui s'adapte à chaque lecteur
 
-Les sites Web dynamiques se distinguent des sites statiques par leur capacité à produire un contenu personnalisé pour chaque visiteur et à interagir avec des bases de données. Avec Delphi, vous pouvez créer ces sites en utilisant différentes approches que nous allons explorer.
+Dans cette section, nous allons explorer comment créer des sites web dynamiques avec Delphi, en générant du contenu HTML personnalisé pour chaque utilisateur et chaque requête.
 
-## Les différentes approches pour créer des sites Web dynamiques avec Delphi
+## Sites statiques vs sites dynamiques
 
-Delphi offre plusieurs façons de développer des sites Web dynamiques :
+### Site statique
 
-1. **WebBroker** : L'approche traditionnelle, idéale pour générer du HTML dynamique
-2. **IntraWeb** : Une approche plus visuelle, similaire au développement VCL
-3. **TMS Web Core** : Développement côté client avec du code Pascal transpilé en JavaScript
-4. **Uniserver/UniGUI** : Une solution tierce populaire avec une approche similaire à VCL
-5. **Approche hybride** : Combinaison d'un backend Delphi avec un frontend utilisant des frameworks web modernes
-
-Pour ce tutoriel, nous allons principalement nous concentrer sur WebBroker pour comprendre les fondamentaux, puis explorer brièvement les autres options.
-
-## Création d'un site Web dynamique avec WebBroker
-
-### Étape 1 : Créer un nouveau projet WebBroker
-
-1. Lancez Delphi et sélectionnez **Fichier** > **Nouveau** > **Autres**
-2. Naviguez vers **Delphi Projects** > **Web Server Application**
-3. Choisissez **WebBroker Application** et **Stand Alone Application** comme type de serveur
-4. Cliquez sur **OK** pour créer le projet
-
-### Étape 2 : Comprendre la structure du projet
-
-Ouvrez le fichier `WebModuleUnit1.pas`. Vous y trouverez un module Web qui contient déjà un gestionnaire d'action par défaut. C'est ici que nous allons ajouter notre logique pour générer des pages Web dynamiques.
-
-```delphi
-type
-  TWebModule1 = class(TWebModule)
-    procedure WebModule1DefaultHandlerAction(Sender: TObject;
-      Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
-  private
-    { Déclarations privées }
-  public
-    { Déclarations publiques }
-  end;
+```
+Requête → Serveur Web → Fichier HTML → Navigateur
+              ↓
+         page1.html
+         page2.html
+         page3.html
 ```
 
-### Étape 3 : Créer un modèle de page
+**Caractéristiques :**
+- Fichiers HTML pré-créés
+- Contenu identique pour tous
+- Pas de base de données nécessaire
+- Rapide mais limité
 
-Pour commencer, créons un modèle de page simple que nous pourrons réutiliser. Ajoutez cette méthode à la classe `TWebModule1` :
+### Site dynamique
 
-```delphi
-function TWebModule1.GeneratePageHTML(const Title, Content: string): string;
-begin
-  Result :=
-    '<!DOCTYPE html>' + #13#10 +
-    '<html>' + #13#10 +
-    '<head>' + #13#10 +
-    '  <meta charset="UTF-8">' + #13#10 +
-    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' + #13#10 +
-    '  <title>' + Title + '</title>' + #13#10 +
-    '  <style>' + #13#10 +
-    '    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }' + #13#10 +
-    '    header { background-color: #4a6da7; color: white; padding: 10px 20px; margin-bottom: 20px; }' + #13#10 +
-    '    nav { margin-bottom: 20px; }' + #13#10 +
-    '    nav a { margin-right: 15px; color: #4a6da7; text-decoration: none; }' + #13#10 +
-    '    nav a:hover { text-decoration: underline; }' + #13#10 +
-    '    .content { padding: 20px; background-color: #f5f5f5; border-radius: 5px; }' + #13#10 +
-    '    footer { margin-top: 20px; text-align: center; color: #666; font-size: 0.8em; }' + #13#10 +
-    '  </style>' + #13#10 +
-    '</head>' + #13#10 +
-    '<body>' + #13#10 +
-    '  <header>' + #13#10 +
-    '    <h1>' + Title + '</h1>' + #13#10 +
-    '  </header>' + #13#10 +
-    '  <nav>' + #13#10 +
-    '    <a href="/">Accueil</a>' + #13#10 +
-    '    <a href="/produits">Produits</a>' + #13#10 +
-    '    <a href="/contact">Contact</a>' + #13#10 +
-    '    <a href="/apropos">À propos</a>' + #13#10 +
-    '  </nav>' + #13#10 +
-    '  <div class="content">' + #13#10 +
-    Content + #13#10 +
-    '  </div>' + #13#10 +
-    '  <footer>' + #13#10 +
-    '    <p>&copy; ' + FormatDateTime('yyyy', Now) + ' - Mon Site Web Dynamique avec Delphi</p>' + #13#10 +
-    '  </footer>' + #13#10 +
-    '</body>' + #13#10 +
-    '</html>';
-end;
+```
+Requête → Application Delphi → Génération HTML → Navigateur
+              ↓
+          Base de données
+          Logique métier
+          Templates
+          Sessions utilisateur
 ```
 
-Cette fonction nous permettra de générer facilement des pages HTML avec un en-tête, un pied de page et une navigation cohérents.
+**Caractéristiques :**
+- Pages générées à la demande
+- Contenu personnalisé
+- Interaction avec base de données
+- Évolutif et interactif
 
-### Étape 4 : Créer les différentes pages du site
+## Techniques de génération de contenu dynamique
 
-Maintenant, créons les différentes pages de notre site. D'abord, ajoutons les actions correspondantes :
+### 1. Concaténation de chaînes (méthode basique)
 
-1. Double-cliquez sur le fichier `WebModuleUnit1.dfm` pour ouvrir le concepteur
-2. Faites un clic droit sur le module et sélectionnez **Nouveau WebAction**
-3. Configurez les actions suivantes :
-   - **Action Accueil** : PathInfo = `/` ou `/accueil`, MethodType = `mtGet`
-   - **Action Produits** : PathInfo = `/produits`, MethodType = `mtGet`
-   - **Action Contact** : PathInfo = `/contact`, MethodType = `mtGet`
-   - **Action À propos** : PathInfo = `/apropos`, MethodType = `mtGet`
+La méthode la plus simple : construire le HTML avec des chaînes de caractères.
 
-Ensuite, implémentons les gestionnaires pour ces actions :
-
-```delphi
-procedure TWebModule1.AccueilActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-begin
-  Response.ContentType := 'text/html';
-  Response.Content := GeneratePageHTML('Accueil',
-    '<h2>Bienvenue sur notre site !</h2>' +
-    '<p>Ceci est un exemple de site Web dynamique créé avec Delphi.</p>' +
-    '<p>Explorez les différentes sections en utilisant la navigation ci-dessus.</p>');
-  Handled := True;
-end;
-
-procedure TWebModule1.ProduitsActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  ProductList: string;
-begin
-  // Nous simulons ici une liste de produits qui pourrait venir d'une base de données
-  ProductList :=
-    '<div class="product">' +
-    '  <h3>Produit 1</h3>' +
-    '  <p>Description du produit 1. Un produit vraiment fantastique.</p>' +
-    '  <p><strong>Prix : 99,99 €</strong></p>' +
-    '</div>' +
-    '<div class="product">' +
-    '  <h3>Produit 2</h3>' +
-    '  <p>Description du produit 2. Encore mieux que le premier.</p>' +
-    '  <p><strong>Prix : 149,99 €</strong></p>' +
-    '</div>' +
-    '<div class="product">' +
-    '  <h3>Produit 3</h3>' +
-    '  <p>Description du produit 3. Le nec plus ultra.</p>' +
-    '  <p><strong>Prix : 199,99 €</strong></p>' +
-    '</div>';
-
-  Response.ContentType := 'text/html';
-  Response.Content := GeneratePageHTML('Nos Produits',
-    '<h2>Catalogue de produits</h2>' +
-    '<p>Voici nos produits vedettes :</p>' +
-    ProductList);
-  Handled := True;
-end;
-
-procedure TWebModule1.ContactActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-begin
-  Response.ContentType := 'text/html';
-  Response.Content := GeneratePageHTML('Contact',
-    '<h2>Contactez-nous</h2>' +
-    '<form method="post" action="/envoi-contact">' +
-    '  <div style="margin-bottom: 15px;">' +
-    '    <label for="nom">Nom :</label><br>' +
-    '    <input type="text" id="nom" name="nom" style="width: 300px; padding: 5px;">' +
-    '  </div>' +
-    '  <div style="margin-bottom: 15px;">' +
-    '    <label for="email">Email :</label><br>' +
-    '    <input type="email" id="email" name="email" style="width: 300px; padding: 5px;">' +
-    '  </div>' +
-    '  <div style="margin-bottom: 15px;">' +
-    '    <label for="message">Message :</label><br>' +
-    '    <textarea id="message" name="message" rows="5" style="width: 300px; padding: 5px;"></textarea>' +
-    '  </div>' +
-    '  <div>' +
-    '    <button type="submit" style="padding: 8px 15px; background-color: #4a6da7; color: white; border: none; cursor: pointer;">Envoyer</button>' +
-    '  </div>' +
-    '</form>');
-  Handled := True;
-end;
-
-procedure TWebModule1.AProposActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-begin
-  Response.ContentType := 'text/html';
-  Response.Content := GeneratePageHTML('À propos',
-    '<h2>À propos de nous</h2>' +
-    '<p>Notre entreprise a été fondée en 2023 avec une mission simple : créer des sites web dynamiques avec Delphi.</p>' +
-    '<p>Nous sommes une équipe passionnée qui aime explorer les possibilités offertes par ce langage puissant.</p>' +
-    '<h3>Notre équipe</h3>' +
-    '<ul>' +
-    '  <li><strong>Jean Dupont</strong> - Fondateur &amp; Développeur principal</li>' +
-    '  <li><strong>Marie Martin</strong> - Designer UI/UX</li>' +
-    '  <li><strong>Pierre Dubois</strong> - Expert Base de données</li>' +
-    '</ul>');
-  Handled := True;
-end;
-```
-
-### Étape 5 : Traiter les formulaires
-
-Maintenant, ajoutons une action pour traiter le formulaire de contact :
-
-```delphi
-procedure TWebModule1.EnvoiContactActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  Nom, Email, Message: string;
-begin
-  // Récupérer les données du formulaire
-  if Request.MethodType = mtPost then
-  begin
-    Nom := Request.ContentFields.Values['nom'];
-    Email := Request.ContentFields.Values['email'];
-    Message := Request.ContentFields.Values['message'];
-
-    // Ici, vous pourriez enregistrer ces informations dans une base de données
-    // ou envoyer un email, etc.
-
-    // Pour cet exemple, nous affichons simplement une confirmation
-    Response.ContentType := 'text/html';
-    Response.Content := GeneratePageHTML('Message envoyé',
-      '<h2>Merci pour votre message!</h2>' +
-      '<p>Nous avons bien reçu vos informations :</p>' +
-      '<ul>' +
-      '  <li><strong>Nom :</strong> ' + Nom + '</li>' +
-      '  <li><strong>Email :</strong> ' + Email + '</li>' +
-      '  <li><strong>Message :</strong> ' + Message + '</li>' +
-      '</ul>' +
-      '<p>Nous vous répondrons dans les plus brefs délais.</p>' +
-      '<p><a href="/">Retour à l''accueil</a></p>');
-  end
-  else
-  begin
-    // Rediriger vers le formulaire si quelqu'un accède directement à cette URL
-    Response.StatusCode := 302; // Found / Redirection
-    Response.Location := '/contact';
-  end;
-
-  Handled := True;
-end;
-```
-
-N'oubliez pas d'ajouter cette action dans le concepteur WebModule avec PathInfo = `/envoi-contact` et MethodType = `mtPost`.
-
-### Étape 6 : Configurer le gestionnaire par défaut
-
-Modifions le gestionnaire par défaut pour rediriger vers la page d'accueil si une URL inconnue est demandée :
-
-```delphi
-procedure TWebModule1.WebModule1DefaultHandlerAction(Sender: TObject;
+```pascal
+procedure TWebModule1.ActionHomeAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  HTML: string;
+  UserName: string;
 begin
-  Response.ContentType := 'text/html';
-  Response.Content := GeneratePageHTML('Page non trouvée',
-    '<h2>Erreur 404 - Page non trouvée</h2>' +
-    '<p>Désolé, la page que vous recherchez n''existe pas.</p>' +
-    '<p><a href="/">Retour à l''accueil</a></p>');
-  Response.StatusCode := 404;
+  // Récupérer le nom de l'utilisateur depuis la session
+  UserName := GetSessionValue('username');
+  if UserName = '' then
+    UserName := 'Invité';
+
+  // Construire la page HTML
+  HTML := '<!DOCTYPE html>' + #13#10 +
+          '<html>' + #13#10 +
+          '<head>' + #13#10 +
+          '  <title>Accueil</title>' + #13#10 +
+          '  <meta charset="utf-8">' + #13#10 +
+          '</head>' + #13#10 +
+          '<body>' + #13#10 +
+          '  <h1>Bienvenue, ' + UserName + ' !</h1>' + #13#10 +
+          '  <p>Il est actuellement ' + TimeToStr(Now) + '</p>' + #13#10 +
+          '</body>' + #13#10 +
+          '</html>';
+
+  Response.Content := HTML;
   Handled := True;
 end;
 ```
 
-### Étape 7 : Compiler et tester
+**Avantages :**
+- Simple et direct
+- Aucune dépendance
+- Total contrôle
 
-1. Appuyez sur F9 pour compiler et exécuter votre application
-2. Ouvrez votre navigateur et accédez à `http://localhost:8080/`
-3. Explorez les différentes sections de votre site
-4. Testez le formulaire de contact en soumettant des données
+**Inconvénients :**
+- Difficile à maintenir
+- Mélange code et présentation
+- Erreurs de syntaxe HTML fréquentes
+- Peu lisible
 
-Félicitations ! Vous venez de créer un site Web dynamique avec Delphi en utilisant WebBroker.
+### 2. Utilisation de TStringBuilder (méthode améliorée)
 
-## Ajouter une base de données à votre site
+Pour de meilleures performances avec beaucoup de contenu :
 
-Un site Web dynamique n'est pas vraiment complet sans une base de données. Ajoutons une connexion à MySQL/MariaDB pour afficher des produits réels.
+```pascal
+procedure TWebModule1.GenerateClientList(Response: TWebResponse);
+var
+  Builder: TStringBuilder;
+  Query: TFDQuery;
+begin
+  Builder := TStringBuilder.Create;
+  try
+    // En-tête HTML
+    Builder.AppendLine('<!DOCTYPE html>');
+    Builder.AppendLine('<html>');
+    Builder.AppendLine('<head>');
+    Builder.AppendLine('  <title>Liste des clients</title>');
+    Builder.AppendLine('  <meta charset="utf-8">');
+    Builder.AppendLine('  <style>');
+    Builder.AppendLine('    table { border-collapse: collapse; width: 100%; }');
+    Builder.AppendLine('    th, td { border: 1px solid #ddd; padding: 8px; }');
+    Builder.AppendLine('    th { background-color: #4CAF50; color: white; }');
+    Builder.AppendLine('  </style>');
+    Builder.AppendLine('</head>');
+    Builder.AppendLine('<body>');
+    Builder.AppendLine('  <h1>Liste des clients</h1>');
 
-### Étape 1 : Configurer la connexion à la base de données
+    // Table des clients
+    Builder.AppendLine('  <table>');
+    Builder.AppendLine('    <tr>');
+    Builder.AppendLine('      <th>ID</th>');
+    Builder.AppendLine('      <th>Nom</th>');
+    Builder.AppendLine('      <th>Prénom</th>');
+    Builder.AppendLine('      <th>Email</th>');
+    Builder.AppendLine('    </tr>');
 
-Ajoutez les unités nécessaires au début de votre fichier :
+    // Récupération des données
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients ORDER BY nom';
+      Query.Open;
 
-```delphi
+      while not Query.Eof do
+      begin
+        Builder.AppendLine('    <tr>');
+        Builder.AppendFormat('      <td>%d</td>', [Query.FieldByName('id').AsInteger]);
+        Builder.AppendLine;
+        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('nom').AsString]);
+        Builder.AppendLine;
+        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('prenom').AsString]);
+        Builder.AppendLine;
+        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('email').AsString]);
+        Builder.AppendLine;
+        Builder.AppendLine('    </tr>');
+        Query.Next;
+      end;
+    finally
+      Query.Free;
+    end;
+
+    Builder.AppendLine('  </table>');
+    Builder.AppendLine('</body>');
+    Builder.AppendLine('</html>');
+
+    Response.Content := Builder.ToString;
+  finally
+    Builder.Free;
+  end;
+end;
+```
+
+**Avantages sur la concaténation simple :**
+- Meilleures performances
+- Code plus lisible
+- Gestion efficace de la mémoire
+
+### 3. Fichiers templates (méthode recommandée)
+
+Séparer le HTML (template) du code Delphi (logique).
+
+**Structure du projet :**
+```
+MonProjet/
+├── Source/
+│   ├── WebModuleUnit.pas
+│   └── ...
+└── Templates/
+    ├── header.html
+    ├── footer.html
+    ├── home.html
+    └── clients.html
+```
+
+**Template HTML (clients.html) :**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{TITLE}}</title>
+  <meta charset="utf-8">
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #4CAF50; color: white; }
+  </style>
+</head>
+<body>
+  <h1>{{PAGE_TITLE}}</h1>
+  <p>{{MESSAGE}}</p>
+
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Email</th>
+    </tr>
+    {{CLIENTS_ROWS}}
+  </table>
+
+  <p>Total : {{TOTAL_CLIENTS}} clients</p>
+</body>
+</html>
+```
+
+**Code Delphi :**
+```pascal
+unit TemplateEngine;
+
+interface
+
 uses
-  // ... autres unités existantes ...
-  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
-  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
-  FireDAC.Phys.MySQL, FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait,
-  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS,
-  FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet;
-```
+  System.SysUtils, System.Classes, System.Generics.Collections;
 
-Ajoutez un champ à la classe `TWebModule1` :
-
-```delphi
-private
-  FDConnection: TFDConnection;
-```
-
-Initialisez la connexion dans la méthode `WebModuleCreate` :
-
-```delphi
-procedure TWebModule1.WebModuleCreate(Sender: TObject);
-begin
-  FDConnection := TFDConnection.Create(Self);
-  FDConnection.DriverName := 'MySQL';
-  FDConnection.Params.Values['Server'] := 'localhost';
-  FDConnection.Params.Values['Database'] := 'monsite';
-  FDConnection.Params.Values['User_Name'] := 'root';
-  FDConnection.Params.Values['Password'] := 'motdepasse';
-  FDConnection.LoginPrompt := False;
-
-  try
-    FDConnection.Connected := True;
-  except
-    on E: Exception do
-      // Gérer l'erreur de connexion (log, etc.)
+type
+  TTemplateEngine = class
+  private
+    FTemplatePath: string;
+  public
+    constructor Create(const ATemplatePath: string);
+    function LoadTemplate(const FileName: string): string;
+    function ReplaceVariables(const Template: string;
+      Variables: TDictionary<string, string>): string;
   end;
+
+implementation
+
+constructor TTemplateEngine.Create(const ATemplatePath: string);
+begin
+  FTemplatePath := ATemplatePath;
 end;
-```
 
-### Étape 2 : Créer la table et ajouter des données
-
-Vous devrez exécuter ce script SQL dans votre base de données MySQL/MariaDB :
-
-```sql
-CREATE DATABASE IF NOT EXISTS monsite;
-USE monsite;
-
-CREATE TABLE IF NOT EXISTS produits (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  nom VARCHAR(100) NOT NULL,
-  description TEXT,
-  prix DECIMAL(10, 2) NOT NULL,
-  image VARCHAR(255),
-  categorie VARCHAR(50)
-);
-
-INSERT INTO produits (nom, description, prix, image, categorie)
-VALUES
-('Écran 24 pouces', 'Écran HD avec une excellente qualité d''image.', 199.99, 'ecran.jpg', 'Informatique'),
-('Clavier mécanique', 'Clavier gaming avec rétroéclairage RGB.', 89.99, 'clavier.jpg', 'Informatique'),
-('Souris sans fil', 'Souris ergonomique avec une excellente précision.', 49.99, 'souris.jpg', 'Informatique'),
-('Casque audio', 'Casque avec réduction de bruit active.', 149.99, 'casque.jpg', 'Audio'),
-('Enceinte Bluetooth', 'Enceinte portable avec une autonomie de 12 heures.', 79.99, 'enceinte.jpg', 'Audio');
-```
-
-### Étape 3 : Modifier la page des produits pour utiliser la base de données
-
-```delphi
-procedure TWebModule1.ProduitsActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
+function TTemplateEngine.LoadTemplate(const FileName: string): string;
 var
-  Query: TFDQuery;
-  ProductList: string;
-  Categorie: string;
+  FileStream: TFileStream;
+  StringStream: TStringStream;
+  FullPath: string;
 begin
-  if not FDConnection.Connected then
-  begin
-    Response.ContentType := 'text/html';
-    Response.Content := GeneratePageHTML('Erreur',
-      '<h2>Erreur de connexion à la base de données</h2>' +
-      '<p>Impossible de se connecter à la base de données. Veuillez réessayer ultérieurement.</p>');
-    Handled := True;
-    Exit;
-  end;
+  FullPath := TPath.Combine(FTemplatePath, FileName);
 
-  // Récupérer le paramètre de catégorie s'il existe
-  Categorie := Request.QueryFields.Values['categorie'];
+  if not FileExists(FullPath) then
+    raise Exception.CreateFmt('Template non trouvé : %s', [FullPath]);
 
-  Query := TFDQuery.Create(nil);
+  FileStream := TFileStream.Create(FullPath, fmOpenRead or fmShareDenyWrite);
   try
-    Query.Connection := FDConnection;
-
-    // Construire la requête SQL
-    if Categorie <> '' then
-    begin
-      Query.SQL.Text := 'SELECT * FROM produits WHERE categorie = :categorie ORDER BY nom';
-      Query.ParamByName('categorie').AsString := Categorie;
-    end
-    else
-      Query.SQL.Text := 'SELECT * FROM produits ORDER BY nom';
-
-    Query.Open;
-
-    // Générer le HTML pour les filtres de catégorie
-    var CategorieFilter :=
-      '<div style="margin-bottom: 20px;">' +
-      '  <strong>Filtrer par catégorie : </strong>' +
-      '  <a href="/produits">Tous</a> | ' +
-      '  <a href="/produits?categorie=Informatique">Informatique</a> | ' +
-      '  <a href="/produits?categorie=Audio">Audio</a>' +
-      '</div>';
-
-    // Générer le HTML pour les produits
-    ProductList := '';
-    while not Query.Eof do
-    begin
-      ProductList := ProductList +
-        '<div class="product" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px;">' +
-        '  <h3>' + Query.FieldByName('nom').AsString + '</h3>' +
-        '  <p>' + Query.FieldByName('description').AsString + '</p>' +
-        '  <p><strong>Prix : ' + FormatFloat('#,##0.00 €', Query.FieldByName('prix').AsFloat) + '</strong></p>' +
-        '  <p><em>Catégorie : ' + Query.FieldByName('categorie').AsString + '</em></p>' +
-        '  <a href="/produit-details?id=' + Query.FieldByName('id').AsString + '" ' +
-        '     style="display: inline-block; padding: 5px 10px; background-color: #4a6da7; color: white; ' +
-        '            text-decoration: none; border-radius: 3px;">Voir détails</a>' +
-        '</div>';
-      Query.Next;
-    end;
-
-    if ProductList = '' then
-      ProductList := '<p>Aucun produit trouvé.</p>';
-
-    // Titre de la page en fonction du filtre
-    var PageTitle := 'Nos Produits';
-    if Categorie <> '' then
-      PageTitle := 'Produits - ' + Categorie;
-
-    Response.ContentType := 'text/html';
-    Response.Content := GeneratePageHTML(PageTitle,
-      '<h2>' + PageTitle + '</h2>' +
-      CategorieFilter +
-      ProductList);
-  finally
-    Query.Free;
-  end;
-
-  Handled := True;
-end;
-```
-
-### Étape 4 : Ajouter une page de détails de produit
-
-Ajoutez une nouvelle action pour afficher les détails d'un produit :
-
-```delphi
-procedure TWebModule1.ProduitDetailsActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  Query: TFDQuery;
-  ProductId: string;
-  Content: string;
-begin
-  ProductId := Request.QueryFields.Values['id'];
-
-  if ProductId = '' then
-  begin
-    Response.StatusCode := 302; // Found / Redirection
-    Response.Location := '/produits';
-    Handled := True;
-    Exit;
-  end;
-
-  if not FDConnection.Connected then
-  begin
-    Response.ContentType := 'text/html';
-    Response.Content := GeneratePageHTML('Erreur',
-      '<h2>Erreur de connexion à la base de données</h2>' +
-      '<p>Impossible de se connecter à la base de données. Veuillez réessayer ultérieurement.</p>');
-    Handled := True;
-    Exit;
-  end;
-
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection;
-    Query.SQL.Text := 'SELECT * FROM produits WHERE id = :id';
-    Query.ParamByName('id').AsString := ProductId;
-    Query.Open;
-
-    if Query.IsEmpty then
-    begin
-      Response.ContentType := 'text/html';
-      Response.Content := GeneratePageHTML('Produit non trouvé',
-        '<h2>Erreur - Produit non trouvé</h2>' +
-        '<p>Le produit demandé n''existe pas.</p>' +
-        '<p><a href="/produits">Retour aux produits</a></p>');
-    end
-    else
-    begin
-      Content :=
-        '<h2>' + Query.FieldByName('nom').AsString + '</h2>' +
-        '<div style="display: flex; flex-wrap: wrap;">' +
-        '  <div style="flex: 1; min-width: 300px; margin-right: 20px;">' +
-        '    <img src="/images/' + Query.FieldByName('image').AsString + '" ' +
-        '         alt="' + Query.FieldByName('nom').AsString + '" ' +
-        '         style="max-width: 100%; height: auto; border: 1px solid #ddd;">' +
-        '  </div>' +
-        '  <div style="flex: 2; min-width: 300px;">' +
-        '    <p style="font-size: 1.2em;">' + Query.FieldByName('description').AsString + '</p>' +
-        '    <p style="font-size: 1.5em; color: #4a6da7;"><strong>Prix : ' +
-               FormatFloat('#,##0.00 €', Query.FieldByName('prix').AsFloat) + '</strong></p>' +
-        '    <p><em>Catégorie : ' + Query.FieldByName('categorie').AsString + '</em></p>' +
-        '    <button style="padding: 10px 20px; background-color: #4a6da7; color: white; ' +
-        '               border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">' +
-        '      Ajouter au panier' +
-        '    </button>' +
-        '  </div>' +
-        '</div>' +
-        '<div style="margin-top: 30px;">' +
-        '  <a href="/produits" style="color: #4a6da7;">← Retour aux produits</a>' +
-        '</div>';
-
-      Response.ContentType := 'text/html';
-      Response.Content := GeneratePageHTML(Query.FieldByName('nom').AsString, Content);
+    StringStream := TStringStream.Create('', TEncoding.UTF8);
+    try
+      StringStream.CopyFrom(FileStream, FileStream.Size);
+      Result := StringStream.DataString;
+    finally
+      StringStream.Free;
     end;
   finally
-    Query.Free;
-  end;
-
-  Handled := True;
-end;
-```
-
-N'oubliez pas d'ajouter cette action dans le concepteur avec PathInfo = `/produit-details` et MethodType = `mtGet`.
-
-### Étape 5 : Servir des images statiques
-
-Pour que les images fonctionnent, nous devons ajouter un gestionnaire pour servir des fichiers statiques :
-
-```delphi
-procedure TWebModule1.ImagesActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  FileName, FilePath, FileExt: string;
-begin
-  // Extraire le nom du fichier de l'URL
-  FileName := StringReplace(Request.PathInfo, '/images/', '', [rfIgnoreCase]);
-
-  // Vérifier que le nom de fichier est valide (éviter les attaques par traversée de répertoire)
-  if (Pos('..', FileName) > 0) or (Pos('/', FileName) > 0) or (Pos('\', FileName) > 0) then
-  begin
-    Response.StatusCode := 403; // Forbidden
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Accès refusé';
-    Handled := True;
-    Exit;
-  end;
-
-  // Chemin complet vers le fichier
-  FilePath := ExtractFilePath(ParamStr(0)) + 'images\' + FileName;
-
-  if not FileExists(FilePath) then
-  begin
-    Response.StatusCode := 404; // Not Found
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Fichier non trouvé';
-    Handled := True;
-    Exit;
-  end;
-
-  // Déterminer le type MIME en fonction de l'extension
-  FileExt := LowerCase(ExtractFileExt(FileName));
-  if FileExt = '.jpg' or FileExt = '.jpeg' then
-    Response.ContentType := 'image/jpeg'
-  else if FileExt = '.png' then
-    Response.ContentType := 'image/png'
-  else if FileExt = '.gif' then
-    Response.ContentType := 'image/gif'
-  else if FileExt = '.css' then
-    Response.ContentType := 'text/css'
-  else if FileExt = '.js' then
-    Response.ContentType := 'application/javascript'
-  else
-    Response.ContentType := 'application/octet-stream';
-
-  // Lire le fichier et l'envoyer comme réponse
-  try
-    Response.ContentStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyNone);
-    Response.FreeContentStream := True; // WebBroker libérera le stream
-  except
-    on E: Exception do
-    begin
-      Response.StatusCode := 500; // Internal Server Error
-      Response.ContentType := 'text/plain';
-      Response.Content := 'Erreur lors de la lecture du fichier';
-    end;
-  end;
-
-  Handled := True;
-end;
-```
-
-Ajoutez cette action dans le concepteur avec PathInfo = `/images/*` et MethodType = `mtGet`.
-
-Créez un dossier `images` dans le même répertoire que votre exécutable et placez-y quelques images de produits.
-
-## Autres techniques pour des sites Web dynamiques
-
-### Utilisation des templates
-
-L'approche que nous avons utilisée jusqu'à présent (concaténation de chaînes) peut devenir difficile à maintenir pour des pages complexes. Une meilleure approche consiste à utiliser un système de templates. Voici un exemple simple :
-
-```delphi
-function TWebModule1.LoadTemplate(const TemplateName: string): string;
-var
-  TemplateFile: TextFile;
-  FilePath: string;
-  Line: string;
-begin
-  Result := '';
-  FilePath := ExtractFilePath(ParamStr(0)) + 'templates\' + TemplateName + '.html';
-
-  if not FileExists(FilePath) then
-    Exit;
-
-  AssignFile(TemplateFile, FilePath);
-  try
-    Reset(TemplateFile);
-    while not Eof(TemplateFile) do
-    begin
-      ReadLn(TemplateFile, Line);
-      Result := Result + Line + #13#10;
-    end;
-  finally
-    CloseFile(TemplateFile);
+    FileStream.Free;
   end;
 end;
 
-function TWebModule1.ProcessTemplate(const Template: string; const Params: array of string): string;
+function TTemplateEngine.ReplaceVariables(const Template: string;
+  Variables: TDictionary<string, string>): string;
 var
-  Result: string;
-  I: Integer;
+  Pair: TPair<string, string>;
 begin
   Result := Template;
 
-  // Remplacer les paramètres (format : {PARAM1}, {PARAM2}, etc.)
-  for I := 0 to High(Params) div 2 do
+  for Pair in Variables do
   begin
     Result := StringReplace(Result,
-                           '{' + Params[I*2] + '}',
-                           Params[I*2+1],
-                           [rfReplaceAll, rfIgnoreCase]);
+      '{{' + Pair.Key + '}}',
+      Pair.Value,
+      [rfReplaceAll, rfIgnoreCase]);
   end;
 end;
+
+end.
 ```
 
-Vous pourriez alors créer un fichier template comme `templates\produit_detail.html` :
+**Utilisation dans WebModule :**
+```pascal
+uses
+  TemplateEngine, System.Generics.Collections;
 
-```html
-<h2>{TITRE}</h2>
-<div style="display: flex; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 300px; margin-right: 20px;">
-    <img src="/images/{IMAGE}" alt="{TITRE}" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
-  </div>
-  <div style="flex: 2; min-width: 300px;">
-    <p style="font-size: 1.2em;">{DESCRIPTION}</p>
-    <p style="font-size: 1.5em; color: #4a6da7;"><strong>Prix : {PRIX}</strong></p>
-    <p><em>Catégorie : {CATEGORIE}</em></p>
-    <button style="padding: 10px 20px; background-color: #4a6da7; color: white;
-                 border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">
-      Ajouter au panier
-    </button>
-  </div>
-</div>
-<div style="margin-top: 30px;">
-  <a href="/produits" style="color: #4a6da7;">← Retour aux produits</a>
-</div>
-```
-
-Et l'utiliser ainsi :
-
-```delphi
-procedure TWebModule1.ProduitDetailsActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
+procedure TWebModule1.ActionClientsAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 var
+  Template: TTemplateEngine;
+  HTML: string;
+  Variables: TDictionary<string, string>;
+  ClientRows: string;
   Query: TFDQuery;
-  ProductId: string;
-  Template, Content: string;
 begin
-  // ... code initial identique ...
-
-  if Query.IsEmpty then
-  begin
-    // ... gestion d'erreur identique ...
-  end
-  else
-  begin
+  Template := TTemplateEngine.Create('Templates');
+  Variables := TDictionary<string, string>.Create;
+  try
     // Charger le template
-    Template := LoadTemplate('produit_detail');
+    HTML := Template.LoadTemplate('clients.html');
 
-    // Traiter le template avec les données du produit
-    Content := ProcessTemplate(Template, [
-      'TITRE', Query.FieldByName('nom').AsString,
-      'IMAGE', Query.FieldByName('image').AsString,
-      'DESCRIPTION', Query.FieldByName('description').AsString,
-      'PRIX', FormatFloat('#,##0.00 €', Query.FieldByName('prix').AsFloat),
-      'CATEGORIE', Query.FieldByName('categorie').AsString
-    ]);
+    // Générer les lignes de la table
+    ClientRows := '';
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients';
+      Query.Open;
 
-    Response.ContentType := 'text/html';
-    Response.Content := GeneratePageHTML(Query.FieldByName('nom').AsString, Content);
-  end;
-  // ... suite du code identique ...
-end;
-```
+      while not Query.Eof do
+      begin
+        ClientRows := ClientRows + '<tr>' +
+          Format('<td>%d</td>', [Query.FieldByName('id').AsInteger]) +
+          Format('<td>%s</td>', [Query.FieldByName('nom').AsString]) +
+          Format('<td>%s</td>', [Query.FieldByName('prenom').AsString]) +
+          Format('<td>%s</td>', [Query.FieldByName('email').AsString]) +
+          '</tr>' + #13#10;
+        Query.Next;
+      end;
 
-Cette approche rend le code beaucoup plus maintenable et permet à un designer de travailler sur les templates HTML sans avoir à modifier le code Delphi.
+      // Préparer les variables
+      Variables.Add('TITLE', 'Gestion des clients');
+      Variables.Add('PAGE_TITLE', 'Liste des clients');
+      Variables.Add('MESSAGE', 'Voici la liste complète de vos clients.');
+      Variables.Add('CLIENTS_ROWS', ClientRows);
+      Variables.Add('TOTAL_CLIENTS', IntToStr(Query.RecordCount));
+    finally
+      Query.Free;
+    end;
 
-### Utilisation de technologies côté client
+    // Remplacer les variables
+    HTML := Template.ReplaceVariables(HTML, Variables);
 
-Pour rendre votre site web plus interactif, vous pouvez intégrer JavaScript. Ajoutons par exemple un panier d'achat simple fonctionnant côté client :
-
-1. Créez un fichier `cart.js` dans un dossier `scripts` :
-
-```javascript
-// cart.js
-let cart = [];
-
-function addToCart(productId, productName, price) {
-    // Vérifier si le produit est déjà dans le panier
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({
-            id: productId,
-            name: productName,
-            price: price,
-            quantity: 1
-        });
-    }
-
-    updateCartDisplay();
-    saveCart();
-
-    // Montrer une notification
-    const notification = document.getElementById('notification');
-    notification.textContent = `${productName} ajouté au panier`;
-    notification.style.display = 'block';
-
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 2000);
-}
-
-function updateCartDisplay() {
-    const cartElement = document.getElementById('cart-items');
-    const cartCountElement = document.getElementById('cart-count');
-    const cartTotalElement = document.getElementById('cart-total');
-
-    if (!cartElement) return;
-
-    // Mettre à jour le compteur
-    const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
-    cartCountElement.textContent = itemCount;
-
-    // Calculer le total
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cartTotalElement.textContent = total.toFixed(2) + ' €';
-
-    // Mettre à jour le contenu du panier
-    cartElement.innerHTML = '';
-
-    cart.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'cart-item';
-        itemElement.innerHTML = `
-            <span>${item.name} x ${item.quantity}</span>
-            <span>${(item.price * item.quantity).toFixed(2)} €</span>
-            <button onclick="removeFromCart('${item.id}')">×</button>
-        `;
-        cartElement.appendChild(itemElement);
-    });
-}
-
-function removeFromCart(productId) {
-    const index = cart.findIndex(item => item.id === productId);
-
-    if (index !== -1) {
-        if (cart[index].quantity > 1) {
-            cart[index].quantity -= 1;
-        } else {
-            cart.splice(index, 1);
-        }
-
-        updateCartDisplay();
-        saveCart();
-    }
-}
-
-function saveCart() {
-    localStorage.setItem('shopping-cart', JSON.stringify(cart));
-}
-
-function loadCart() {
-    const savedCart = localStorage.getItem('shopping-cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        updateCartDisplay();
-    }
-}
-
-// Charger le panier au chargement de la page
-document.addEventListener('DOMContentLoaded', loadCart);
-```
-
-2. Modifiez votre fonction `GeneratePageHTML` pour inclure les éléments du panier et le script :
-
-```delphi
-function TWebModule1.GeneratePageHTML(const Title, Content: string): string;
-begin
-  Result :=
-    '<!DOCTYPE html>' + #13#10 +
-    '<html>' + #13#10 +
-    '<head>' + #13#10 +
-    '  <meta charset="UTF-8">' + #13#10 +
-    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' + #13#10 +
-    '  <title>' + Title + '</title>' + #13#10 +
-    '  <style>' + #13#10 +
-    '    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }' + #13#10 +
-    '    header { background-color: #4a6da7; color: white; padding: 10px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }' + #13#10 +
-    '    nav { margin-bottom: 20px; }' + #13#10 +
-    '    nav a { margin-right: 15px; color: #4a6da7; text-decoration: none; }' + #13#10 +
-    '    nav a:hover { text-decoration: underline; }' + #13#10 +
-    '    .content { padding: 20px; background-color: #f5f5f5; border-radius: 5px; }' + #13#10 +
-    '    footer { margin-top: 20px; text-align: center; color: #666; font-size: 0.8em; }' + #13#10 +
-    '    #cart-icon { position: relative; cursor: pointer; }' + #13#10 +
-    '    #cart-count { position: absolute; top: -10px; right: -10px; background-color: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 12px; }' + #13#10 +
-    '    #cart-panel { display: none; position: absolute; top: 40px; right: 0; background-color: white; border: 1px solid #ddd; border-radius: 5px; padding: 15px; width: 300px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }' + #13#10 +
-    '    .cart-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }' + #13#10 +
-    '    #notification { display: none; position: fixed; top: 20px; right: 20px; background-color: #4a6da7; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; }' + #13#10 +
-    '  </style>' + #13#10 +
-    '</head>' + #13#10 +
-    '<body>' + #13#10 +
-    '  <div id="notification"></div>' + #13#10 +
-    '  <header>' + #13#10 +
-    '    <h1>' + Title + '</h1>' + #13#10 +
-    '    <div id="cart-icon" onclick="document.getElementById(''cart-panel'').style.display = document.getElementById(''cart-panel'').style.display === ''none'' ? ''block'' : ''none'';">' + #13#10 +
-    '      🛒 <span id="cart-count">0</span>' + #13#10 +
-    '      <div id="cart-panel">' + #13#10 +
-    '        <h3>Votre panier</h3>' + #13#10 +
-    '        <div id="cart-items"></div>' + #13#10 +
-    '        <div style="margin-top: 10px; font-weight: bold; text-align: right;">' + #13#10 +
-    '          Total: <span id="cart-total">0.00 €</span>' + #13#10 +
-    '        </div>' + #13#10 +
-    '        <button style="width: 100%; margin-top: 10px; padding: 8px; background-color: #4a6da7; color: white; border: none; border-radius: 3px; cursor: pointer;">Commander</button>' + #13#10 +
-    '      </div>' + #13#10 +
-    '    </div>' + #13#10 +
-    '  </header>' + #13#10 +
-    '  <nav>' + #13#10 +
-    '    <a href="/">Accueil</a>' + #13#10 +
-    '    <a href="/produits">Produits</a>' + #13#10 +
-    '    <a href="/contact">Contact</a>' + #13#10 +
-    '    <a href="/apropos">À propos</a>' + #13#10 +
-    '  </nav>' + #13#10 +
-    '  <div class="content">' + #13#10 +
-    Content + #13#10 +
-    '  </div>' + #13#10 +
-    '  <footer>' + #13#10 +
-    '    <p>&copy; ' + FormatDateTime('yyyy', Now) + ' - Mon Site Web Dynamique avec Delphi</p>' + #13#10 +
-    '  </footer>' + #13#10 +
-    '  <script src="/scripts/cart.js"></script>' + #13#10 +
-    '</body>' + #13#10 +
-    '</html>';
-end;
-```
-
-3. Créez une action pour servir les scripts JavaScript :
-
-```delphi
-procedure TWebModule1.ScriptsActionAction(Sender: TObject; Request: TWebRequest;
-  Response: TWebResponse; var Handled: Boolean);
-var
-  FileName, FilePath: string;
-begin
-  // Extraire le nom du fichier de l'URL
-  FileName := StringReplace(Request.PathInfo, '/scripts/', '', [rfIgnoreCase]);
-
-  // Vérifier que le nom de fichier est valide
-  if (Pos('..', FileName) > 0) or (Pos('/', FileName) > 0) or (Pos('\', FileName) > 0) then
-  begin
-    Response.StatusCode := 403; // Forbidden
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Accès refusé';
-    Handled := True;
-    Exit;
+    Response.Content := HTML;
+  finally
+    Variables.Free;
+    Template.Free;
   end;
 
-  // Chemin complet vers le fichier
-  FilePath := ExtractFilePath(ParamStr(0)) + 'scripts\' + FileName;
-
-  if not FileExists(FilePath) then
-  begin
-    Response.StatusCode := 404; // Not Found
-    Response.ContentType := 'text/plain';
-    Response.Content := 'Fichier non trouvé';
-    Handled := True;
-    Exit;
-  end;
-
-  // Servir le fichier JavaScript
-  Response.ContentType := 'application/javascript';
-  Response.ContentStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyNone);
-  Response.FreeContentStream := True;
   Handled := True;
 end;
 ```
 
-4. Modifiez la page détail du produit pour ajouter la fonctionnalité d'ajout au panier :
+**Avantages de cette approche :**
+- ✅ Séparation code/présentation
+- ✅ HTML facilement modifiable par designers
+- ✅ Réutilisation des templates
+- ✅ Maintenance simplifiée
+- ✅ Code Delphi plus propre
 
-```delphi
-// Dans la méthode ProduitDetailsActionAction, remplacez le bouton par :
-'    <button onclick="addToCart(''' + Query.FieldByName('id').AsString + ''', ''' +
-               HTMLEscape(Query.FieldByName('nom').AsString) + ''', ' +
-               FormatFloat('0.00', Query.FieldByName('prix').AsFloat) + ')" ' +
-'            style="padding: 10px 20px; background-color: #4a6da7; color: white; ' +
-'               border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">' +
-'      Ajouter au panier' +
-'    </button>' +
+## Moteurs de templates avancés
+
+### Mustache Templates
+
+**Mustache** est un système de templates simple et "sans logique" très populaire.
+
+**Installation :**
+Via GetIt Package Manager : "Delphi MVC Framework" (inclut support Mustache)
+
+**Template Mustache (clients.mustache) :**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <h1>{{pageTitle}}</h1>
+
+  <table>
+    <tr>
+      <th>Nom</th>
+      <th>Email</th>
+    </tr>
+    {{#clients}}
+    <tr>
+      <td>{{nom}}</td>
+      <td>{{email}}</td>
+    </tr>
+    {{/clients}}
+  </table>
+
+  {{^clients}}
+    <p>Aucun client trouvé.</p>
+  {{/clients}}
+</body>
+</html>
 ```
 
-N'oubliez pas de créer la fonction `HTMLEscape` pour échapper les caractères spéciaux :
+**Code Delphi avec Mustache :**
+```pascal
+uses
+  SynMustache, SynCommons;
 
-```delphi
-function TWebModule1.HTMLEscape(const S: string): string;
+procedure TWebModule1.RenderMustacheTemplate;
+var
+  Template: string;
+  Data: variant;
+  HTML: RawUTF8;
 begin
-  Result := StringReplace(S, '''', '\''\''', [rfReplaceAll]);
-  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  // Charger le template
+  Template := StringFromFile('templates/clients.mustache');
+
+  // Préparer les données au format variant/JSON
+  Data := _ObjFast([
+    'title', 'Liste des clients',
+    'pageTitle', 'Nos clients',
+    'clients', _Arr([
+      _ObjFast(['nom', 'Dupont', 'email', 'dupont@email.com']),
+      _ObjFast(['nom', 'Martin', 'email', 'martin@email.com']),
+      _ObjFast(['nom', 'Durand', 'email', 'durand@email.com'])
+    ])
+  ]);
+
+  // Rendre le template
+  HTML := TSynMustache.Parse(Template).Render(Data);
+
+  Response.Content := UTF8ToString(HTML);
+end;
+```
+
+### Template avec boucles et conditions
+
+**Template avancé (dashboard.html) :**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{SITE_NAME}} - Tableau de bord</title>
+  <style>
+    .alert { padding: 10px; margin: 10px 0; border-radius: 4px; }
+    .alert-info { background-color: #d1ecf1; color: #0c5460; }
+    .alert-warning { background-color: #fff3cd; color: #856404; }
+    .alert-danger { background-color: #f8d7da; color: #721c24; }
+    .stats { display: flex; gap: 20px; }
+    .stat-card {
+      flex: 1;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+  </style>
+</head>
+<body>
+  <h1>Tableau de bord - {{USER_NAME}}</h1>
+  <p>Dernière connexion : {{LAST_LOGIN}}</p>
+
+  <!-- Alertes conditionnelles -->
+  {{ALERTS}}
+
+  <!-- Statistiques -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number">{{TOTAL_CLIENTS}}</div>
+      <div>Clients actifs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{TOTAL_ORDERS}}</div>
+      <div>Commandes du mois</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{REVENUE}}</div>
+      <div>Chiffre d'affaires</div>
+    </div>
+  </div>
+
+  <!-- Liste des actions récentes -->
+  <h2>Actions récentes</h2>
+  {{RECENT_ACTIONS}}
+</body>
+</html>
+```
+
+**Code de génération :**
+```pascal
+procedure TWebModule1.GenerateDashboard(Response: TWebResponse);
+var
+  Template: TTemplateEngine;
+  HTML: string;
+  Variables: TDictionary<string, string>;
+  Alerts, RecentActions: string;
+begin
+  Template := TTemplateEngine.Create('Templates');
+  Variables := TDictionary<string, string>.Create;
+  try
+    HTML := Template.LoadTemplate('dashboard.html');
+
+    // Générer les alertes conditionnelles
+    Alerts := '';
+    if HasPendingOrders then
+      Alerts := Alerts + '<div class="alert alert-warning">' +
+                '⚠️ Vous avez 5 commandes en attente de validation' +
+                '</div>';
+
+    if LowStock then
+      Alerts := Alerts + '<div class="alert alert-danger">' +
+                '❌ Alerte : Stock faible pour 3 produits' +
+                '</div>';
+
+    if Alerts = '' then
+      Alerts := '<div class="alert alert-info">✅ Tout va bien !</div>';
+
+    // Générer la liste des actions récentes
+    RecentActions := GenerateRecentActionsList;
+
+    // Remplir les variables
+    Variables.Add('SITE_NAME', 'MonApp');
+    Variables.Add('USER_NAME', GetCurrentUserName);
+    Variables.Add('LAST_LOGIN', DateTimeToStr(GetLastLoginTime));
+    Variables.Add('TOTAL_CLIENTS', IntToStr(GetClientCount));
+    Variables.Add('TOTAL_ORDERS', IntToStr(GetOrderCount));
+    Variables.Add('REVENUE', FormatCurr('#,##0.00 €', GetRevenue));
+    Variables.Add('ALERTS', Alerts);
+    Variables.Add('RECENT_ACTIONS', RecentActions);
+
+    HTML := Template.ReplaceVariables(HTML, Variables);
+    Response.Content := HTML;
+  finally
+    Variables.Free;
+    Template.Free;
+  end;
+end;
+
+function TWebModule1.GenerateRecentActionsList: string;
+var
+  Query: TFDQuery;
+  Builder: TStringBuilder;
+begin
+  Builder := TStringBuilder.Create;
+  try
+    Builder.AppendLine('<ul>');
+
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text :=
+        'SELECT action, date_action FROM actions_log ' +
+        'ORDER BY date_action DESC LIMIT 10';
+      Query.Open;
+
+      while not Query.Eof do
+      begin
+        Builder.AppendFormat('<li>%s - %s</li>',
+          [Query.FieldByName('action').AsString,
+           DateTimeToStr(Query.FieldByName('date_action').AsDateTime)]);
+        Builder.AppendLine;
+        Query.Next;
+      end;
+    finally
+      Query.Free;
+    end;
+
+    Builder.AppendLine('</ul>');
+    Result := Builder.ToString;
+  finally
+    Builder.Free;
+  end;
+end;
+```
+
+## Inclusion de templates (header/footer)
+
+**Principe :** Réutiliser des parties communes sur toutes les pages.
+
+**header.html :**
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{PAGE_TITLE}} - MonApp</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">Accueil</a>
+      <a href="/clients">Clients</a>
+      <a href="/produits">Produits</a>
+      <a href="/commandes">Commandes</a>
+    </nav>
+    <div class="user-info">
+      Connecté en tant que : <strong>{{USER_NAME}}</strong>
+      <a href="/logout">Déconnexion</a>
+    </div>
+  </header>
+  <main>
+```
+
+**footer.html :**
+```html
+  </main>
+  <footer>
+    <p>&copy; 2025 MonApp - Tous droits réservés</p>
+    <p>Version {{APP_VERSION}}</p>
+  </footer>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+```
+
+**page-clients.html :**
+```html
+{{HEADER}}
+
+<h1>Liste des clients</h1>
+<p>{{MESSAGE}}</p>
+
+<table>
+  {{CLIENTS_TABLE}}
+</table>
+
+{{FOOTER}}
+```
+
+**Code d'assemblage :**
+```pascal
+procedure TWebModule1.RenderPageWithLayout(
+  const PageTemplate: string;
+  Variables: TDictionary<string, string>);
+var
+  Template: TTemplateEngine;
+  Header, Footer, Content, HTML: string;
+begin
+  Template := TTemplateEngine.Create('Templates');
+  try
+    // Charger les composants
+    Header := Template.LoadTemplate('header.html');
+    Footer := Template.LoadTemplate('footer.html');
+    Content := Template.LoadTemplate(PageTemplate);
+
+    // Ajouter les variables de header/footer
+    if not Variables.ContainsKey('APP_VERSION') then
+      Variables.Add('APP_VERSION', '1.0.0');
+
+    // Remplacer les variables dans les composants
+    Header := Template.ReplaceVariables(Header, Variables);
+    Footer := Template.ReplaceVariables(Footer, Variables);
+
+    // Ajouter header et footer au contenu
+    Variables.AddOrSetValue('HEADER', Header);
+    Variables.AddOrSetValue('FOOTER', Footer);
+
+    // Assembler la page complète
+    HTML := Template.ReplaceVariables(Content, Variables);
+
+    Response.Content := HTML;
+  finally
+    Template.Free;
+  end;
+end;
+
+// Utilisation
+procedure TWebModule1.ActionClientsAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  Variables: TDictionary<string, string>;
+begin
+  Variables := TDictionary<string, string>.Create;
+  try
+    Variables.Add('PAGE_TITLE', 'Clients');
+    Variables.Add('USER_NAME', GetCurrentUser);
+    Variables.Add('MESSAGE', 'Voici vos clients');
+    Variables.Add('CLIENTS_TABLE', GenerateClientsTable);
+
+    RenderPageWithLayout('page-clients.html', Variables);
+  finally
+    Variables.Free;
+  end;
+
+  Handled := True;
+end;
+```
+
+## Gestion des formulaires dynamiques
+
+### Affichage d'un formulaire
+
+**form-client.html :**
+```html
+<h2>{{FORM_TITLE}}</h2>
+
+{{ERROR_MESSAGE}}
+
+<form action="/clients/save" method="POST">
+  <input type="hidden" name="id" value="{{CLIENT_ID}}">
+
+  <div class="form-group">
+    <label for="nom">Nom :</label>
+    <input type="text" id="nom" name="nom" value="{{NOM}}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="prenom">Prénom :</label>
+    <input type="text" id="prenom" name="prenom" value="{{PRENOM}}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email :</label>
+    <input type="email" id="email" name="email" value="{{EMAIL}}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="telephone">Téléphone :</label>
+    <input type="tel" id="telephone" name="telephone" value="{{TELEPHONE}}">
+  </div>
+
+  <button type="submit">{{BUTTON_TEXT}}</button>
+  <a href="/clients">Annuler</a>
+</form>
+```
+
+### Traitement du formulaire
+
+```pascal
+procedure TWebModule1.ActionClientEditAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  Variables: TDictionary<string, string>;
+  ClientID: Integer;
+  Query: TFDQuery;
+begin
+  Variables := TDictionary<string, string>.Create;
+  try
+    // Déterminer si c'est un nouveau client ou une modification
+    ClientID := StrToIntDef(Request.QueryFields.Values['id'], 0);
+
+    if ClientID > 0 then
+    begin
+      // Modification : charger les données existantes
+      Query := TFDQuery.Create(nil);
+      try
+        Query.Connection := FDConnection1;
+        Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
+        Query.ParamByName('id').AsInteger := ClientID;
+        Query.Open;
+
+        if not Query.IsEmpty then
+        begin
+          Variables.Add('FORM_TITLE', 'Modifier un client');
+          Variables.Add('CLIENT_ID', IntToStr(ClientID));
+          Variables.Add('NOM', Query.FieldByName('nom').AsString);
+          Variables.Add('PRENOM', Query.FieldByName('prenom').AsString);
+          Variables.Add('EMAIL', Query.FieldByName('email').AsString);
+          Variables.Add('TELEPHONE', Query.FieldByName('telephone').AsString);
+          Variables.Add('BUTTON_TEXT', 'Modifier');
+        end;
+      finally
+        Query.Free;
+      end;
+    end
+    else
+    begin
+      // Nouveau client : formulaire vide
+      Variables.Add('FORM_TITLE', 'Nouveau client');
+      Variables.Add('CLIENT_ID', '0');
+      Variables.Add('NOM', '');
+      Variables.Add('PRENOM', '');
+      Variables.Add('EMAIL', '');
+      Variables.Add('TELEPHONE', '');
+      Variables.Add('BUTTON_TEXT', 'Créer');
+    end;
+
+    Variables.Add('ERROR_MESSAGE', '');
+    Variables.Add('PAGE_TITLE', 'Gestion client');
+    Variables.Add('USER_NAME', GetCurrentUser);
+
+    RenderPageWithLayout('form-client.html', Variables);
+  finally
+    Variables.Free;
+  end;
+
+  Handled := True;
+end;
+
+procedure TWebModule1.ActionClientSaveAction(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  ClientID: Integer;
+  Nom, Prenom, Email, Telephone: string;
+  Query: TFDQuery;
+  Variables: TDictionary<string, string>;
+begin
+  // Récupérer les données du formulaire
+  ClientID := StrToIntDef(Request.ContentFields.Values['id'], 0);
+  Nom := Trim(Request.ContentFields.Values['nom']);
+  Prenom := Trim(Request.ContentFields.Values['prenom']);
+  Email := Trim(Request.ContentFields.Values['email']);
+  Telephone := Trim(Request.ContentFields.Values['telephone']);
+
+  // Validation
+  if (Nom = '') or (Prenom = '') or (Email = '') then
+  begin
+    // Erreur : ré-afficher le formulaire avec message
+    Variables := TDictionary<string, string>.Create;
+    try
+      Variables.Add('ERROR_MESSAGE',
+        '<div class="alert alert-danger">Veuillez remplir tous les champs obligatoires.</div>');
+      Variables.Add('FORM_TITLE', 'Modifier un client');
+      Variables.Add('CLIENT_ID', IntToStr(ClientID));
+      Variables.Add('NOM', Nom);
+      Variables.Add('PRENOM', Prenom);
+      Variables.Add('EMAIL', Email);
+      Variables.Add('TELEPHONE', Telephone);
+      Variables.Add('BUTTON_TEXT', 'Modifier');
+      Variables.Add('PAGE_TITLE', 'Gestion client');
+      Variables.Add('USER_NAME', GetCurrentUser);
+
+      RenderPageWithLayout('form-client.html', Variables);
+    finally
+      Variables.Free;
+    end;
+
+    Handled := True;
+    Exit;
+  end;
+
+  // Enregistrement
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+
+    if ClientID > 0 then
+    begin
+      // Modification
+      Query.SQL.Text :=
+        'UPDATE clients SET nom = :nom, prenom = :prenom, ' +
+        'email = :email, telephone = :telephone WHERE id = :id';
+      Query.ParamByName('id').AsInteger := ClientID;
+    end
+    else
+    begin
+      // Création
+      Query.SQL.Text :=
+        'INSERT INTO clients (nom, prenom, email, telephone) ' +
+        'VALUES (:nom, :prenom, :email, :telephone)';
+    end;
+
+    Query.ParamByName('nom').AsString := Nom;
+    Query.ParamByName('prenom').AsString := Prenom;
+    Query.ParamByName('email').AsString := Email;
+    Query.ParamByName('telephone').AsString := Telephone;
+    Query.ExecSQL;
+  finally
+    Query.Free;
+  end;
+
+  // Redirection vers la liste
+  Response.StatusCode := 302; // Redirect
+  Response.Location := '/clients';
+  Response.Content := '<html><body>Redirection...</body></html>';
+
+  Handled := True;
+end;
+```
+
+## Pagination des résultats
+
+```pascal
+procedure TWebModule1.ActionClientsWithPagination(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  Query: TFDQuery;
+  Variables: TDictionary<string, string>;
+  Page, PageSize, TotalRecords, TotalPages: Integer;
+  Offset: Integer;
+  PaginationHTML: string;
+  i: Integer;
+begin
+  // Paramètres de pagination
+  Page := StrToIntDef(Request.QueryFields.Values['page'], 1);
+  PageSize := 20; // 20 clients par page
+  Offset := (Page - 1) * PageSize;
+
+  Variables := TDictionary<string, string>.Create;
+  try
+    // Compter le nombre total d'enregistrements
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := 'SELECT COUNT(*) as total FROM clients';
+      Query.Open;
+      TotalRecords := Query.FieldByName('total').AsInteger;
+      TotalPages := Ceil(TotalRecords / PageSize);
+
+      // Récupérer la page demandée
+      Query.Close;
+      Query.SQL.Text :=
+        'SELECT * FROM clients ' +
+        'ORDER BY nom ' +
+        'LIMIT :pagesize OFFSET :offset';
+      Query.ParamByName('pagesize').AsInteger := PageSize;
+      Query.ParamByName('offset').AsInteger := Offset;
+      Query.Open;
+
+      // Générer la table
+      Variables.Add('CLIENTS_TABLE', GenerateClientsTableFromQuery(Query));
+
+      // Générer la pagination
+      PaginationHTML := '<div class="pagination">';
+
+      // Bouton "Précédent"
+      if Page > 1 then
+        PaginationHTML := PaginationHTML +
+          Format('<a href="/clients?page=%d">« Précédent</a> ', [Page - 1])
+      else
+        PaginationHTML := PaginationHTML + '<span class="disabled">« Précédent</span> ';
+
+      // Numéros de pages
+      for i := 1 to TotalPages do
+      begin
+        if i = Page then
+          PaginationHTML := PaginationHTML +
+            Format('<span class="current">%d</span> ', [i])
+        else
+          PaginationHTML := PaginationHTML +
+            Format('<a href="/clients?page=%d">%d</a> ', [i, i]);
+      end;
+
+      // Bouton "Suivant"
+      if Page < TotalPages then
+        PaginationHTML := PaginationHTML +
+          Format('<a href="/clients?page=%d">Suivant »</a>', [Page + 1])
+      else
+        PaginationHTML := PaginationHTML + '<span class="disabled">Suivant »</span>';
+
+      PaginationHTML := PaginationHTML + '</div>';
+
+      Variables.Add('PAGINATION', PaginationHTML);
+      Variables.Add('TOTAL_RECORDS', IntToStr(TotalRecords));
+      Variables.Add('CURRENT_PAGE', IntToStr(Page));
+      Variables.Add('TOTAL_PAGES', IntToStr(TotalPages));
+    finally
+      Query.Free;
+    end;
+
+    Variables.Add('PAGE_TITLE', 'Clients');
+    Variables.Add('USER_NAME', GetCurrentUser);
+
+    RenderPageWithLayout('page-clients-paginated.html', Variables);
+  finally
+    Variables.Free;
+  end;
+
+  Handled := True;
+end;
+```
+
+## Filtrage et recherche dynamique
+
+**Formulaire de recherche :**
+```html
+<form action="/clients/search" method="GET">
+  <div class="search-bar">
+    <input type="text" name="q" placeholder="Rechercher un client..."
+           value="{{SEARCH_QUERY}}">
+
+    <select name="filter">
+      <option value="all" {{FILTER_ALL}}>Tous</option>
+      <option value="active" {{FILTER_ACTIVE}}>Actifs</option>
+      <option value="inactive" {{FILTER_INACTIVE}}>Inactifs</option>
+    </select>
+
+    <button type="submit">🔍 Rechercher</button>
+    <a href="/clients">Effacer</a>
+  </div>
+</form>
+
+<p>{{RESULTS_COUNT}} résultat(s) trouvé(s)</p>
+
+{{CLIENTS_TABLE}}
+```
+
+**Code de recherche :**
+```pascal
+procedure TWebModule1.ActionClientSearch(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+var
+  Query: TFDQuery;
+  Variables: TDictionary<string, string>;
+  SearchQuery, FilterType: string;
+  SQL: string;
+begin
+  SearchQuery := Trim(Request.QueryFields.Values['q']);
+  FilterType := Request.QueryFields.Values['filter'];
+  if FilterType = '' then
+    FilterType := 'all';
+
+  Variables := TDictionary<string, string>.Create;
+  try
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+
+      // Construction de la requête SQL dynamique
+      SQL := 'SELECT * FROM clients WHERE 1=1';
+
+      // Filtre de recherche textuelle
+      if SearchQuery <> '' then
+      begin
+        SQL := SQL + ' AND (nom LIKE :search OR prenom LIKE :search OR email LIKE :search)';
+      end;
+
+      // Filtre de statut
+      case IndexStr(FilterType, ['all', 'active', 'inactive']) of
+        1: SQL := SQL + ' AND actif = 1';
+        2: SQL := SQL + ' AND actif = 0';
+      end;
+
+      SQL := SQL + ' ORDER BY nom';
+
+      Query.SQL.Text := SQL;
+
+      if SearchQuery <> '' then
+        Query.ParamByName('search').AsString := '%' + SearchQuery + '%';
+
+      Query.Open;
+
+      // Générer le tableau des résultats
+      Variables.Add('CLIENTS_TABLE', GenerateClientsTableFromQuery(Query));
+      Variables.Add('RESULTS_COUNT', IntToStr(Query.RecordCount));
+      Variables.Add('SEARCH_QUERY', SearchQuery);
+
+      // Marquer le filtre sélectionné
+      Variables.Add('FILTER_ALL', IfThen(FilterType = 'all', 'selected', ''));
+      Variables.Add('FILTER_ACTIVE', IfThen(FilterType = 'active', 'selected', ''));
+      Variables.Add('FILTER_INACTIVE', IfThen(FilterType = 'inactive', 'selected', ''));
+    finally
+      Query.Free;
+    end;
+
+    Variables.Add('PAGE_TITLE', 'Recherche clients');
+    Variables.Add('USER_NAME', GetCurrentUser);
+
+    RenderPageWithLayout('page-clients-search.html', Variables);
+  finally
+    Variables.Free;
+  end;
+
+  Handled := True;
+end;
+```
+
+## Mise en cache des templates
+
+Pour améliorer les performances, mettre en cache les templates chargés :
+
+```pascal
+type
+  TTemplateCache = class
+  private
+    FCache: TDictionary<string, string>;
+    FCacheEnabled: Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetTemplate(const FileName: string): string;
+    procedure Clear;
+    property CacheEnabled: Boolean read FCacheEnabled write FCacheEnabled;
+  end;
+
+implementation
+
+constructor TTemplateCache.Create;
+begin
+  FCache := TDictionary<string, string>.Create;
+  FCacheEnabled := True;
+end;
+
+destructor TTemplateCache.Destroy;
+begin
+  FCache.Free;
+  inherited;
+end;
+
+function TTemplateCache.GetTemplate(const FileName: string): string;
+var
+  FullPath: string;
+begin
+  FullPath := TPath.Combine('Templates', FileName);
+
+  // Vérifier le cache
+  if FCacheEnabled and FCache.ContainsKey(FullPath) then
+  begin
+    Result := FCache[FullPath];
+    Exit;
+  end;
+
+  // Charger depuis le disque
+  Result := TFile.ReadAllText(FullPath, TEncoding.UTF8);
+
+  // Ajouter au cache
+  if FCacheEnabled then
+    FCache.AddOrSetValue(FullPath, Result);
+end;
+
+procedure TTemplateCache.Clear;
+begin
+  FCache.Clear;
+end;
+
+// Variable globale
+var
+  TemplateCache: TTemplateCache;
+
+initialization
+  TemplateCache := TTemplateCache.Create;
+  {$IFDEF DEBUG}
+  TemplateCache.CacheEnabled := False; // Désactiver en développement
+  {$ENDIF}
+
+finalization
+  TemplateCache.Free;
+```
+
+## Bonnes pratiques
+
+### 1. Échapper les caractères HTML
+
+**Toujours échapper les données utilisateur pour éviter XSS :**
+
+```pascal
+function HTMLEncode(const Text: string): string;
+begin
+  Result := Text;
   Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
   Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
   Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  Result := StringReplace(Result, '''', '&#39;', [rfReplaceAll]);
 end;
+
+// Utilisation
+Variables.Add('USER_INPUT', HTMLEncode(Request.ContentFields.Values['comment']));
 ```
 
-## Comparaison des approches alternatives
+### 2. Séparer les responsabilités
 
-Vous connaissez maintenant l'approche WebBroker, mais il existe d'autres façons de développer des sites Web dynamiques avec Delphi. Voici une comparaison des principales approches :
+```
+Controllers/     → Gestion des routes et requêtes
+Models/          → Accès aux données
+Views/Templates/ → Présentation HTML
+Services/        → Logique métier
+```
 
-### IntraWeb
+### 3. Utiliser des helpers
 
-**Avantages :**
-- Approche visuelle similaire au développement VCL
-- Gestion automatique des états de session
-- Abstractions qui simplifient la programmation Web
-- Génération automatique du HTML, CSS et JavaScript
-
-**Inconvénients :**
-- Moins de contrôle sur le HTML généré
-- Peut être moins performant pour les sites à fort trafic
-- Dépendance à une bibliothèque tierce
-
-**Exemple minimal :**
-
-```delphi
-unit Unit1;
-
-interface
-
-uses
-  SysUtils, Classes, IWAppForm, IWCompButton, IWCompEdit, IWCompLabel;
-
+```pascal
 type
-  TForm1 = class(TIWAppForm)
-    IWLabel1: TIWLabel;
-    IWEdit1: TIWEdit;
-    IWButton1: TIWButton;
-    procedure IWButton1Click(Sender: TObject);
-  private
+  THTMLHelper = class
   public
+    class function FormatDate(const ADate: TDateTime): string;
+    class function FormatCurrency(const Amount: Currency): string;
+    class function FormatBoolean(const Value: Boolean): string;
   end;
 
-implementation
-
-{$R *.dfm}
-
-procedure TForm1.IWButton1Click(Sender: TObject);
+class function THTMLHelper.FormatDate(const ADate: TDateTime): string;
 begin
-  IWLabel1.Caption := 'Bonjour ' + IWEdit1.Text + '!';
+  Result := FormatDateTime('dd/mm/yyyy', ADate);
 end;
 
-end.
+class function THTMLHelper.FormatCurrency(const Amount: Currency): string;
+begin
+  Result := FormatCurr('#,##0.00 €', Amount);
+end;
+
+class function THTMLHelper.FormatBoolean(const Value: Boolean): string;
+begin
+  if Value then
+    Result := '<span class="badge badge-success">✓ Oui</span>'
+  else
+    Result := '<span class="badge badge-secondary">✗ Non</span>';
+end;
 ```
 
-### TMS Web Core
+### 4. Gérer les erreurs élégamment
 
-**Avantages :**
-- Code Pascal transpilé en JavaScript exécuté côté client
-- Utilise des composants visuels similaires à VCL/FMX
-- Compatible avec les frameworks web modernes
-- Réutilisation possible du code avec les applications bureau
+**error.html :**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Erreur - {{ERROR_CODE}}</title>
+  <style>
+    .error-container {
+      max-width: 600px;
+      margin: 100px auto;
+      text-align: center;
+    }
+    .error-code {
+      font-size: 4em;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-code">{{ERROR_CODE}}</div>
+    <h1>{{ERROR_TITLE}}</h1>
+    <p>{{ERROR_MESSAGE}}</p>
+    <a href="/">Retour à l'accueil</a>
+  </div>
+</body>
+</html>
+```
 
-**Inconvénients :**
-- Requiert une compréhension du fonctionnement des applications Web côté client
-- Nécessite un backend séparé pour les opérations côté serveur
+```pascal
+procedure TWebModule1.ShowError(Response: TWebResponse;
+  ErrorCode: Integer; const Title, Message: string);
+var
+  Variables: TDictionary<string, string>;
+  Template: TTemplateEngine;
+  HTML: string;
+begin
+  Variables := TDictionary<string, string>.Create;
+  Template := TTemplateEngine.Create('Templates');
+  try
+    Variables.Add('ERROR_CODE', IntToStr(ErrorCode));
+    Variables.Add('ERROR_TITLE', Title);
+    Variables.Add('ERROR_MESSAGE', Message);
 
-**Exemple minimal :**
+    HTML := Template.LoadTemplate('error.html');
+    HTML := Template.ReplaceVariables(HTML, Variables);
 
-```delphi
-unit Unit1;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, JS, Web, WEBLib.Graphics, WEBLib.Controls,
-  WEBLib.Forms, WEBLib.Dialogs, WEBLib.StdCtrls;
-
-type
-  TForm1 = class(TWebForm)
-    WebLabel1: TWebLabel;
-    WebEdit1: TWebEdit;
-    WebButton1: TWebButton;
-    procedure WebButton1Click(Sender: TObject);
-  private
-  public
+    Response.StatusCode := ErrorCode;
+    Response.Content := HTML;
+  finally
+    Template.Free;
+    Variables.Free;
   end;
-
-implementation
-
-{$R *.dfm}
-
-procedure TForm1.WebButton1Click(Sender: TObject);
-begin
-  WebLabel1.Caption := 'Bonjour ' + WebEdit1.Text + '!';
 end;
 
-end.
+// Utilisation
+try
+  // Code qui peut échouer
+  ProcessRequest;
+except
+  on E: Exception do
+    ShowError(Response, 500, 'Erreur serveur', E.Message);
+end;
 ```
-
-### Approche hybride : Backend Delphi + Frontend moderne
-
-Une approche populaire consiste à utiliser Delphi pour créer un backend RESTful, puis à développer le frontend avec des frameworks web modernes comme React, Angular ou Vue.js.
-
-**Avantages :**
-- Utilise les forces de Delphi pour le backend
-- Interface utilisateur moderne et réactive
-- Séparation claire entre frontend et backend
-- Possibilité d'avoir des équipes spécialisées pour chaque partie
-
-**Inconvénients :**
-- Nécessite de maîtriser plusieurs technologies
-- Peut être plus complexe à mettre en place initialement
-
-## Bonnes pratiques pour le développement Web avec Delphi
-
-1. **Séparez la logique métier de la présentation**
-   - Utilisez des classes séparées pour gérer les données et la logique métier
-   - Évitez de mélanger SQL et génération HTML
-
-2. **Sécurisez vos applications Web**
-   - Protégez-vous contre les injections SQL avec des requêtes paramétrées
-   - Échappez toujours les données utilisateur affichées dans le HTML
-   - Validez les entrées utilisateur côté serveur
-   - Utilisez HTTPS pour les données sensibles
-
-3. **Optimisez les performances**
-   - Minimisez le nombre de requêtes à la base de données
-   - Utilisez le cache lorsque c'est possible
-   - Compressez les réponses (gzip)
-   - Optimisez les images et autres ressources statiques
-
-4. **Pensez à la maintenabilité**
-   - Utilisez des templates pour séparer HTML et code
-   - Structurez votre projet de manière logique
-   - Documentez votre code et votre API
-   - Implémentez des tests unitaires
-
-5. **Créez des interfaces responsives**
-   - Utilisez des techniques CSS modernes (flexbox, grid)
-   - Testez sur différentes tailles d'écran
-   - Assurez-vous que votre site fonctionne sur mobile
 
 ## Conclusion
 
-Le développement de sites Web dynamiques avec Delphi offre plusieurs options, chacune avec ses avantages et ses inconvénients. WebBroker offre un contrôle total sur le HTML généré, tandis qu'IntraWeb et TMS Web Core offrent une approche plus visuelle et plus proche du développement d'applications bureau.
+Le développement de sites web dynamiques avec Delphi offre une grande flexibilité et de nombreuses possibilités. Les points clés à retenir :
 
-Quelle que soit l'approche choisie, Delphi vous permet de créer des sites Web dynamiques performants et bien structurés, tout en bénéficiant de la puissance du langage Object Pascal et de l'écosystème Delphi.
+✅ **Séparation code/présentation** - Utiliser des templates
+✅ **Réutilisation** - Headers, footers, composants partagés
+✅ **Performance** - Mise en cache des templates
+✅ **Sécurité** - Échapper les données utilisateur
+✅ **Maintenabilité** - Organisation claire du code
+✅ **Expérience utilisateur** - Pages adaptées et réactives
 
-Pour aller plus loin, explorez les frameworks et bibliothèques complémentaires comme :
-- **mORMot** : Un framework complet pour créer des services REST avec Delphi
-- **Sparkle** : Une alternative légère pour les services REST
-- **DWS (Delphi Web Script)** : Pour exécuter des scripts côté serveur
-- **HTMLComponents** : Pour un parsing HTML plus avancé
+Les techniques présentées dans cette section vous permettent de créer des sites web professionnels et dynamiques avec Delphi, en capitalisant sur la puissance du langage Object Pascal et l'accès natif aux bases de données via FireDAC.
 
-N'hésitez pas à combiner Delphi avec des technologies web modernes pour tirer le meilleur des deux mondes !
+Que vous utilisiez WebBroker, IntraWeb, Horse ou tout autre framework Delphi, les principes de génération de contenu dynamique et de templating restent les mêmes et constituent la base de toute application web moderne.
+
+Dans la section suivante, nous explorerons l'intégration avec des frameworks JavaScript modernes, permettant de créer des interfaces utilisateur encore plus riches et interactives.
 
 ⏭️ [Intégration avec des frameworks JavaScript](/23-conception-dapplications-web-avec-delphi/06-integration-avec-des-frameworks-javascript.md)

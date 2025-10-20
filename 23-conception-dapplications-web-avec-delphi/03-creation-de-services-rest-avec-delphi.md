@@ -1,613 +1,1198 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 23.3 Création de services REST avec Delphi
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction
 
-## Introduction aux services REST
+Les services REST (Representational State Transfer) sont devenus le standard incontournable pour la communication entre applications modernes. Que ce soit pour connecter une application mobile à un serveur, permettre à un site web d'accéder à des données, ou faire dialoguer différents systèmes, les API REST sont partout.
 
-Les services REST (Representational State Transfer) sont devenus le standard pour la création d'API web modernes. Ils permettent à différentes applications de communiquer entre elles via Internet en utilisant des requêtes HTTP standard.
+La bonne nouvelle ? Delphi est parfaitement équipé pour créer des services REST professionnels, performants et sécurisés. Dans cette section, nous allons explorer comment transformer votre expertise Delphi en services web modernes.
 
-Dans cette section, nous allons découvrir comment créer des services REST avec Delphi, ce qui vous permettra de développer la partie serveur d'applications web ou mobiles, ou d'exposer des fonctionnalités de vos applications existantes à d'autres systèmes.
+## Qu'est-ce que REST ?
 
-## Pourquoi utiliser des services REST ?
+### Définition simple
 
-Avant de plonger dans le code, comprenons pourquoi les services REST sont si populaires :
+REST est un **style d'architecture** pour créer des services web. Imaginez REST comme un ensemble de règles qui permettent à différentes applications de communiquer via Internet de manière simple et standardisée.
 
-- **Simplicité** : Utilise les méthodes HTTP standard (GET, POST, PUT, DELETE)
-- **Sans état** : Chaque requête contient toutes les informations nécessaires
-- **Uniformité** : Interface cohérente qui sépare le client du serveur
-- **Compatibilité** : Fonctionne avec pratiquement tous les langages et plateformes
-- **Performance** : Plus léger que SOAP ou d'autres protocoles complexes
-- **Format flexible** : Généralement JSON ou XML, faciles à manipuler
+**Analogie :** Pensez à REST comme le menu d'un restaurant :
+- Le menu (API) liste ce qui est disponible
+- Vous passez commande (requête) en indiquant ce que vous voulez
+- La cuisine (serveur) prépare votre plat
+- On vous sert le résultat (réponse)
 
-## Principes fondamentaux des API REST
+### Les principes fondamentaux de REST
 
-Une API REST bien conçue repose sur quelques principes clés :
-
-1. **Ressources** : Tout est considéré comme une ressource (ex: utilisateurs, produits)
-2. **URIs** : Chaque ressource est identifiée par une URI unique (ex: `/api/utilisateurs/123`)
-3. **Méthodes HTTP** :
-   - `GET` : Récupérer des données
-   - `POST` : Créer des données
-   - `PUT` : Mettre à jour des données existantes
-   - `DELETE` : Supprimer des données
-4. **Représentations** : Les ressources sont représentées en formats comme JSON ou XML
-5. **Stateless** : Le serveur ne conserve pas l'état du client entre les requêtes
-
-## Technologies Delphi pour les services REST
-
-Delphi offre plusieurs approches pour créer des services REST :
-
-1. **DataSnap REST** : Extension du framework DataSnap pour exposer des services REST
-2. **RAD Server** : Solution complète pour créer et déployer des services REST (éditions professionnelles et supérieures)
-3. **WebBroker** : Technologie plus ancienne mais puissante pour créer des applications web
-4. **MARS-Curiosity** : Framework REST open-source pour Delphi
-5. **Bibliothèques tierces** : Comme mORMot, XData, etc.
-
-Pour ce tutoriel, nous allons nous concentrer sur DataSnap REST, qui est disponible dans toutes les éditions de Delphi et est relativement simple à utiliser.
-
-## Création d'un service REST avec DataSnap
-
-### Étape 1 : Créer un nouveau projet DataSnap REST
-
-1. Ouvrez Delphi et sélectionnez **Fichier** > **Nouveau** > **Autres**
-2. Naviguez vers **Delphi Projects** > **DataSnap** > **DataSnap REST Application**
-3. Cliquez sur **Suivant**
-4. Choisissez **Standalone Application** comme type de serveur
-5. Laissez les autres options par défaut et cliquez sur **Suivant** et **Terminer**
-
-Delphi va créer un projet avec plusieurs fichiers :
-- Un fichier de formulaire pour le serveur (`ServerContainerUnit1.pas`)
-- Une unité de méthodes serveur (`ServerMethodsUnit1.pas`)
-- Un fichier de projet principal
-
-### Étape 2 : Comprendre la structure du projet
-
-Ouvrez `ServerMethodsUnit1.pas`. Vous y trouverez une classe `TServerMethods1` qui contiendra les méthodes de votre API REST.
-
-```delphi
-TServerMethods1 = class(TDSServerModule)
-private
-  { Private declarations }
-public
-  { Public declarations }
-end;
+**1. Architecture client-serveur**
+```
+┌─────────────┐         ┌─────────────┐
+│   Client    │ ──────→ │   Serveur   │
+│  (demande)  │         │  (répond)   │
+└─────────────┘ ←────── └─────────────┘
 ```
 
-Cette classe vide sera l'endroit où vous ajouterez vos méthodes d'API.
+**2. Sans état (Stateless)**
+- Chaque requête est indépendante
+- Le serveur ne conserve pas d'information entre les requêtes
+- Toutes les informations nécessaires sont dans la requête
 
-### Étape 3 : Ajouter une méthode REST simple
-
-Ajoutons une méthode simple pour tester notre service :
-
-```delphi
-function TServerMethods1.Echo(Value: string): string;
-begin
-  Result := 'Echo: ' + Value;
-end;
+**3. Ressources identifiées par URL**
+```
+https://api.monapp.com/clients          → Liste des clients
+https://api.monapp.com/clients/123      → Client n°123
+https://api.monapp.com/clients/123/commandes → Commandes du client 123
 ```
 
-Ce code crée une méthode `Echo` qui retourne simplement la chaîne reçue précédée du texte 'Echo: '.
+**4. Utilisation des verbes HTTP**
+- **GET** : Récupérer des données (lecture)
+- **POST** : Créer une nouvelle ressource
+- **PUT** : Modifier une ressource existante
+- **DELETE** : Supprimer une ressource
 
-Pour l'exposer comme un point de terminaison REST, nous devons l'annoter avec des attributs :
-
-```delphi
-[TROServiceDescription]
-function TServerMethods1.Echo(Value: string): string;
-begin
-  Result := 'Echo: ' + Value;
-end;
+**5. Représentation des données (généralement JSON)**
+```json
+{
+  "id": 123,
+  "nom": "Dupont",
+  "prenom": "Jean",
+  "email": "jean.dupont@email.com"
+}
 ```
 
-L'attribut `[TROServiceDescription]` indique que cette méthode doit être exposée via REST.
+### Exemple concret d'API REST
 
-### Étape 4 : Compiler et exécuter le service
+Imaginons une API de gestion de livres :
 
-1. Appuyez sur F9 pour compiler et exécuter le projet
-2. Une fenêtre d'application serveur devrait apparaître
-3. Votre service REST est maintenant en cours d'exécution, généralement sur `http://localhost:8080`
-
-### Étape 5 : Tester le service
-
-Vous pouvez tester votre service de plusieurs façons :
-
-1. **Via un navigateur web** : Accédez à `http://localhost:8080/datasnap/rest/TServerMethods1/Echo/Bonjour`
-2. **Via un outil comme Postman** : Créez une requête GET vers l'URL ci-dessus
-3. **Via le client de test intégré** : DataSnap fournit une page de test accessible via `http://localhost:8080/datasnap/rest`
-
-Vous devriez voir la réponse : `"Echo: Bonjour"`
-
-## Création d'une API REST plus complète
-
-Maintenant que nous comprenons les bases, créons une API plus complète pour gérer une liste de tâches (todo list).
-
-### Étape 1 : Définir notre modèle de données
-
-Ajoutez au début de l'unité `ServerMethodsUnit1.pas` :
-
-```delphi
-type
-  TTodo = class
-  private
-    FId: Integer;
-    FTitle: string;
-    FCompleted: Boolean;
-  published
-    property Id: Integer read FId write FId;
-    property Title: string read FTitle write FTitle;
-    property Completed: Boolean read FCompleted write FCompleted;
-  end;
+```
+GET    /api/livres              → Obtenir tous les livres
+GET    /api/livres/5            → Obtenir le livre n°5
+POST   /api/livres              → Créer un nouveau livre
+PUT    /api/livres/5            → Modifier le livre n°5
+DELETE /api/livres/5            → Supprimer le livre n°5
 ```
 
-Cette classe représente une tâche avec un identifiant, un titre et un statut (terminée ou non).
+## Pourquoi créer des services REST avec Delphi ?
 
-### Étape 2 : Créer une liste pour stocker les tâches
+### 1. Architecture moderne
 
-Ajoutez ces champs et méthodes à la classe `TServerMethods1` :
+Les services REST permettent de créer une **architecture découplée** :
 
-```delphi
-private
-  FTodos: TObjectList<TTodo>;
-  FNextId: Integer;
-public
-  constructor Create(AOwner: TComponent); override;
-  destructor Destroy; override;
+```
+┌──────────────┐
+│ Application  │
+│    Web       │──┐
+└──────────────┘  │
+                  │    ┌──────────────┐
+┌──────────────┐  │    │   Service    │    ┌──────────────┐
+│ Application  │  ├───→│     REST     │───→│  Base de     │
+│   Mobile     │──┘    │   (Delphi)   │    │   Données    │
+└──────────────┘       └──────────────┘    └──────────────┘
+                             ↑
+┌──────────────┐             │
+│ Application  │─────────────┘
+│   Desktop    │
+└──────────────┘
 ```
 
-Et implémentez le constructeur et le destructeur :
+**Avantages :**
+- Un seul backend pour tous vos clients
+- Évolution indépendante du frontend et backend
+- Réutilisation de la logique métier
+- Scalabilité horizontale
 
-```delphi
-constructor TServerMethods1.Create(AOwner: TComponent);
+### 2. Interopérabilité
+
+Un service REST Delphi peut être consommé par :
+- Applications web (JavaScript, React, Angular, Vue.js)
+- Applications mobiles (iOS, Android, Flutter)
+- Applications desktop (Delphi, C#, Java, Python...)
+- Autres services et systèmes
+
+### 3. Performance et fiabilité
+
+Delphi offre :
+- Excellentes performances natives
+- Faible consommation mémoire
+- Stabilité éprouvée
+- Support multi-thread efficace
+
+### 4. Rapidité de développement
+
+Avec Delphi :
+- Développement rapide (RAD)
+- Composants prêts à l'emploi (FireDAC pour bases de données)
+- Sérialisation JSON automatique
+- Déploiement simple
+
+## Technologies Delphi pour REST
+
+### RAD Server (EMS - Enterprise Mobility Services)
+
+**RAD Server** est la solution officielle d'Embarcadero pour créer des services REST d'entreprise.
+
+**Caractéristiques :**
+- Framework complet pour services REST
+- Gestion automatique des routes
+- Authentification intégrée
+- Support multi-utilisateurs
+- Console d'administration
+- Analytics et monitoring
+
+**Éditions Delphi :**
+- Disponible dans Enterprise et Architect
+- Non inclus dans Community et Professional
+
+**Idéal pour :**
+- Applications d'entreprise
+- Besoins d'authentification complexe
+- Projets nécessitant monitoring
+- Grandes organisations
+
+### DataSnap
+
+**DataSnap** est la technologie historique de Delphi pour les applications multi-tiers.
+
+**Caractéristiques :**
+- Communication client-serveur
+- Support REST, TCP/IP, HTTP
+- Callbacks et notifications
+- Compatible anciennes versions Delphi
+
+**Limitations :**
+- Moins moderne que RAD Server
+- Configuration plus complexe
+- Orienté communication Delphi-to-Delphi
+
+**Idéal pour :**
+- Migration d'applications existantes
+- Communication entre applications Delphi
+- Projets legacy
+
+### Frameworks tiers modernes
+
+Plusieurs frameworks tiers excellents existent :
+
+**Horse** (Open Source)
+```pascal
+uses Horse;
+
 begin
-  inherited;
-  FTodos := TObjectList<TTodo>.Create(True); // True pour posséder les objets
-  FNextId := 1;
-
-  // Ajouter quelques tâches de test
-  var Todo := TTodo.Create;
-  Todo.Id := FNextId;
-  Inc(FNextId);
-  Todo.Title := 'Apprendre Delphi REST';
-  Todo.Completed := False;
-  FTodos.Add(Todo);
-
-  Todo := TTodo.Create;
-  Todo.Id := FNextId;
-  Inc(FNextId);
-  Todo.Title := 'Créer une API REST';
-  Todo.Completed := False;
-  FTodos.Add(Todo);
-end;
-
-destructor TServerMethods1.Destroy;
-begin
-  FTodos.Free;
-  inherited;
-end;
-```
-
-### Étape 3 : Ajouter les méthodes CRUD (Create, Read, Update, Delete)
-
-Maintenant, implémentons les méthodes pour manipuler notre liste de tâches :
-
-```delphi
-[TROGet]
-function TServerMethods1.GetAllTodos: TJSONArray;
-var
-  I: Integer;
-  TodoObj: TJSONObject;
-begin
-  Result := TJSONArray.Create;
-
-  for I := 0 to FTodos.Count - 1 do
-  begin
-    TodoObj := TJSONObject.Create;
-    TodoObj.AddPair('id', TJSONNumber.Create(FTodos[I].Id));
-    TodoObj.AddPair('title', FTodos[I].Title);
-    TodoObj.AddPair('completed', TJSONBool.Create(FTodos[I].Completed));
-    Result.AddElement(TodoObj);
-  end;
-end;
-
-[TROGet]
-function TServerMethods1.GetTodo(Id: Integer): TJSONObject;
-var
-  I: Integer;
-  Todo: TTodo;
-begin
-  Result := nil;
-
-  for I := 0 to FTodos.Count - 1 do
-  begin
-    if FTodos[I].Id = Id then
+  THorse.Get('/ping',
+    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
     begin
-      Todo := FTodos[I];
-      Result := TJSONObject.Create;
-      Result.AddPair('id', TJSONNumber.Create(Todo.Id));
-      Result.AddPair('title', Todo.Title);
-      Result.AddPair('completed', TJSONBool.Create(Todo.Completed));
-      Break;
-    end;
-  end;
+      Res.Send('pong');
+    end);
 
-  if Result = nil then
-    raise ERESTException.Create(404, 'Tâche non trouvée');
-end;
+  THorse.Listen(9000);
+end.
+```
 
-[TROPost]
-function TServerMethods1.AddTodo(TodoData: TJSONObject): TJSONObject;
-var
-  Todo: TTodo;
-begin
-  Todo := TTodo.Create;
-  try
-    Todo.Id := FNextId;
-    Inc(FNextId);
-    Todo.Title := TodoData.GetValue<string>('title');
-    Todo.Completed := TodoData.GetValue<Boolean>('completed', False);
-    FTodos.Add(Todo);
+**Avantages :**
+- Simple et léger
+- Syntaxe moderne et élégante
+- Nombreux middlewares disponibles
+- Communauté active
+- Gratuit et open source
 
-    Result := TJSONObject.Create;
-    Result.AddPair('id', TJSONNumber.Create(Todo.Id));
-    Result.AddPair('title', Todo.Title);
-    Result.AddPair('completed', TJSONBool.Create(Todo.Completed));
-  except
-    Todo.Free;
-    raise;
-  end;
-end;
-
-[TROPut]
-function TServerMethods1.UpdateTodo(Id: Integer; TodoData: TJSONObject): TJSONObject;
-var
-  I: Integer;
-  Todo: TTodo;
-begin
-  for I := 0 to FTodos.Count - 1 do
-  begin
-    if FTodos[I].Id = Id then
-    begin
-      Todo := FTodos[I];
-
-      if TodoData.TryGetValue<string>('title', Todo.Title) then
-        Todo.Title := TodoData.GetValue<string>('title');
-
-      if TodoData.TryGetValue<Boolean>('completed', Todo.Completed) then
-        Todo.Completed := TodoData.GetValue<Boolean>('completed');
-
-      Result := TJSONObject.Create;
-      Result.AddPair('id', TJSONNumber.Create(Todo.Id));
-      Result.AddPair('title', Todo.Title);
-      Result.AddPair('completed', TJSONBool.Create(Todo.Completed));
-      Exit;
-    end;
-  end;
-
-  raise ERESTException.Create(404, 'Tâche non trouvée');
-end;
-
-[TRODelete]
-procedure TServerMethods1.DeleteTodo(Id: Integer);
-var
-  I: Integer;
-begin
-  for I := 0 to FTodos.Count - 1 do
-  begin
-    if FTodos[I].Id = Id then
-    begin
-      FTodos.Delete(I);
-      Exit;
-    end;
-  end;
-
-  raise ERESTException.Create(404, 'Tâche non trouvée');
+**MARS Curiosity** (Open Source)
+```pascal
+[Path('/hello')]
+TMyResource = class
+  [GET, Produces(TMediaType.TEXT_PLAIN)]
+  function SayHello: string;
 end;
 ```
 
-Ces méthodes utilisent les attributs `[TROGet]`, `[TROPost]`, `[TROPut]` et `[TRODelete]` pour spécifier les verbes HTTP correspondants.
+**Avantages :**
+- Architecture inspirée de JAX-RS (Java)
+- Support des annotations
+- Injection de dépendances
+- Très structuré
 
-### Étape 4 : Compiler et tester notre API complète
+**mORMot** (Open Source)
+- Framework complet (ORM + REST)
+- Très performant
+- Nombreuses fonctionnalités
+- Courbe d'apprentissage plus importante
 
-1. Appuyez sur F9 pour compiler et exécuter le service
-2. Testez les différentes méthodes :
-   - `GET http://localhost:8080/datasnap/rest/TServerMethods1/GetAllTodos` - Liste toutes les tâches
-   - `GET http://localhost:8080/datasnap/rest/TServerMethods1/GetTodo/1` - Obtient la tâche avec Id=1
-   - `POST http://localhost:8080/datasnap/rest/TServerMethods1/AddTodo` avec un corps JSON `{"title":"Nouvelle tâche","completed":false}` - Ajoute une tâche
-   - `PUT http://localhost:8080/datasnap/rest/TServerMethods1/UpdateTodo/1` avec un corps JSON `{"completed":true}` - Marque la tâche 1 comme terminée
-   - `DELETE http://localhost:8080/datasnap/rest/TServerMethods1/DeleteTodo/1` - Supprime la tâche avec Id=1
+## Création d'un service REST simple
 
-## Amélioration du service REST
+### Exemple avec Horse Framework
 
-### Configuration des chemins d'URL personnalisés
+#### 1. Installation
 
-Les URL par défaut de DataSnap peuvent être assez verbeux. Vous pouvez personnaliser les chemins d'accès en utilisant l'attribut `[TROPath]` :
+Via GetIt Package Manager ou installation manuelle depuis GitHub.
 
-```delphi
-[TROPath('/todos')]
-[TROGet]
-function TServerMethods1.GetAllTodos: TJSONArray;
-// ... reste du code inchangé
+#### 2. Création du projet
 
-[TROPath('/todos/{id}')]
-[TROGet]
-function TServerMethods1.GetTodo(Id: Integer): TJSONObject;
-// ... reste du code inchangé
-```
+```pascal
+program SimpleRESTServer;
 
-Avec cette configuration, vos endpoints seront plus propres :
-- `GET /todos` - Liste toutes les tâches
-- `GET /todos/1` - Obtient la tâche avec Id=1
+{$APPTYPE CONSOLE}
 
-### Gestion des erreurs et exceptions
-
-Une bonne API REST doit gérer correctement les erreurs. DataSnap convertit automatiquement les exceptions en réponses HTTP appropriées, mais vous pouvez personnaliser davantage :
-
-```delphi
-try
-  // Votre code
-except
-  on E: EDatabaseError do
-    raise ERESTException.Create(500, 'Erreur de base de données: ' + E.Message);
-  on E: Exception do
-    raise ERESTException.Create(400, 'Erreur: ' + E.Message);
-end;
-```
-
-### Validation des entrées
-
-Ajoutez une validation pour éviter les données incorrectes :
-
-```delphi
-[TROPost]
-function TServerMethods1.AddTodo(TodoData: TJSONObject): TJSONObject;
-var
-  Todo: TTodo;
-  Title: string;
-begin
-  if not TodoData.TryGetValue<string>('title', Title) then
-    raise ERESTException.Create(400, 'Le titre est obligatoire');
-
-  if Title = '' then
-    raise ERESTException.Create(400, 'Le titre ne peut pas être vide');
-
-  // Suite du code...
-end;
-```
-
-### Authentification et sécurité
-
-Pour une API en production, vous voudriez ajouter une authentification. DataSnap prend en charge plusieurs options, dont l'authentification par jeton :
-
-```delphi
-// Dans ServerContainerUnit1.pas, pendant la création
-DSServer1.AuthenticationManager := TDSAuthenticationManager.Create;
-DSServer1.AuthenticationManager.OnUserAuthenticate := OnUserAuthenticate;
-DSServer1.AuthenticationManager.OnUserAuthorize := OnUserAuthorize;
-
-// Implémentation des gestionnaires d'authentification
-function TServerContainer1.OnUserAuthenticate(UserName, Password: string): Boolean;
-begin
-  // Vérifiez les identifiants ici
-  Result := (UserName = 'admin') and (Password = 'secret');
-end;
-
-function TServerContainer1.OnUserAuthorize(UserName: string; AuthorizeRoles: TStrings): Boolean;
-begin
-  // Vérifiez les autorisations ici
-  Result := True;
-end;
-```
-
-## Connexion à une base de données MySQL/MariaDB
-
-Jusqu'à présent, nous avons stocké nos données en mémoire. Dans une application réelle, vous voudriez utiliser une base de données. Voici comment connecter notre service REST à MySQL/MariaDB :
-
-### Étape 1 : Ajouter une connexion à la base de données
-
-1. Ajoutez les unités nécessaires au début de `ServerMethodsUnit1.pas` :
-
-```delphi
 uses
-  // ... autres unités
-  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
-  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
-  FireDAC.Phys.MySQL, FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait,
-  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS,
-  FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet;
-```
+  System.SysUtils,
+  Horse;
 
-2. Ajoutez les composants FireDAC à la classe `TServerMethods1` :
-
-```delphi
-private
-  FDConnection1: TFDConnection;
-  qryTodos: TFDQuery;
-  // ... autres champs
-public
-  constructor Create(AOwner: TComponent); override;
-  destructor Destroy; override;
-  // ... autres méthodes
-```
-
-3. Modifiez le constructeur et le destructeur pour initialiser la connexion :
-
-```delphi
-constructor TServerMethods1.Create(AOwner: TComponent);
 begin
-  inherited;
+  // Route simple : GET /hello
+  THorse.Get('/hello',
+    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+    begin
+      Res.Send('Hello World!');
+    end);
 
-  FDConnection1 := TFDConnection.Create(Self);
-  FDConnection1.DriverName := 'MySQL';
-  FDConnection1.Params.Values['Server'] := 'localhost';
-  FDConnection1.Params.Values['Database'] := 'tododb';
-  FDConnection1.Params.Values['User_Name'] := 'root';
-  FDConnection1.Params.Values['Password'] := 'votremotdepasse';
-  FDConnection1.LoginPrompt := False;
+  // Route avec paramètre : GET /hello/Jean
+  THorse.Get('/hello/:name',
+    procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+    var
+      Name: string;
+    begin
+      Name := Req.Params['name'];
+      Res.Send('Hello ' + Name + '!');
+    end);
 
+  // Démarrage du serveur sur le port 9000
+  THorse.Listen(9000,
+    procedure(Horse: THorse)
+    begin
+      Writeln('Serveur démarré sur http://localhost:9000');
+      Writeln('Appuyez sur Entrée pour arrêter');
+    end);
+
+  // Attendre une touche pour arrêter
+  Readln;
+end.
+```
+
+#### 3. Test du service
+
+Ouvrir un navigateur et accéder à :
+- `http://localhost:9000/hello` → "Hello World!"
+- `http://localhost:9000/hello/Jean` → "Hello Jean!"
+
+### Structure d'une API REST complète
+
+```pascal
+program APIComplet;
+
+uses
+  Horse,
+  Horse.Jhonson, // Middleware JSON
+  System.JSON;
+
+var
+  App: THorse;
+
+// Route GET - Liste
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  JSONArray: TJSONArray;
+  JSONObject: TJSONObject;
+begin
+  JSONArray := TJSONArray.Create;
   try
-    FDConnection1.Connected := True;
+    // Simulation de données
+    JSONObject := TJSONObject.Create;
+    JSONObject.AddPair('id', TJSONNumber.Create(1));
+    JSONObject.AddPair('nom', 'Dupont');
+    JSONObject.AddPair('prenom', 'Jean');
+    JSONArray.Add(JSONObject);
+
+    JSONObject := TJSONObject.Create;
+    JSONObject.AddPair('id', TJSONNumber.Create(2));
+    JSONObject.AddPair('nom', 'Martin');
+    JSONObject.AddPair('prenom', 'Marie');
+    JSONArray.Add(JSONObject);
+
+    Res.Send<TJSONArray>(JSONArray);
+  finally
+    // JSONArray sera libéré automatiquement
+  end;
+end;
+
+// Route GET avec ID - Détail
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  ID: string;
+  JSONObject: TJSONObject;
+begin
+  ID := Req.Params['id'];
+
+  // Simulation de récupération depuis base de données
+  JSONObject := TJSONObject.Create;
+  try
+    JSONObject.AddPair('id', TJSONNumber.Create(StrToInt(ID)));
+    JSONObject.AddPair('nom', 'Dupont');
+    JSONObject.AddPair('prenom', 'Jean');
+    JSONObject.AddPair('email', 'jean.dupont@email.com');
+
+    Res.Send<TJSONObject>(JSONObject);
+  finally
+    // JSONObject sera libéré automatiquement
+  end;
+end;
+
+// Route POST - Création
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Body: TJSONObject;
+  Response: TJSONObject;
+begin
+  Body := Req.Body<TJSONObject>;
+
+  // Traitement de la création
+  // ... insertion en base de données ...
+
+  Response := TJSONObject.Create;
+  try
+    Response.AddPair('success', TJSONBool.Create(True));
+    Response.AddPair('message', 'Client créé avec succès');
+    Response.AddPair('id', TJSONNumber.Create(123)); // ID généré
+
+    Res.Status(201).Send<TJSONObject>(Response); // 201 Created
+  finally
+    // Response sera libéré automatiquement
+  end;
+end;
+
+// Route PUT - Modification
+procedure UpdateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  ID: string;
+  Body: TJSONObject;
+  Response: TJSONObject;
+begin
+  ID := Req.Params['id'];
+  Body := Req.Body<TJSONObject>;
+
+  // Traitement de la modification
+  // ... mise à jour en base de données ...
+
+  Response := TJSONObject.Create;
+  try
+    Response.AddPair('success', TJSONBool.Create(True));
+    Response.AddPair('message', 'Client modifié avec succès');
+
+    Res.Send<TJSONObject>(Response);
+  finally
+    // Response sera libéré automatiquement
+  end;
+end;
+
+// Route DELETE - Suppression
+procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  ID: string;
+  Response: TJSONObject;
+begin
+  ID := Req.Params['id'];
+
+  // Traitement de la suppression
+  // ... suppression en base de données ...
+
+  Response := TJSONObject.Create;
+  try
+    Response.AddPair('success', TJSONBool.Create(True));
+    Response.AddPair('message', 'Client supprimé avec succès');
+
+    Res.Status(204).Send<TJSONObject>(Response); // 204 No Content
+  finally
+    // Response sera libéré automatiquement
+  end;
+end;
+
+begin
+  App := THorse.Create;
+
+  // Middleware pour JSON
+  App.Use(Jhonson);
+
+  // Routes CRUD
+  App.Get('/api/clients', GetClients);
+  App.Get('/api/clients/:id', GetClient);
+  App.Post('/api/clients', CreateClient);
+  App.Put('/api/clients/:id', UpdateClient);
+  App.Delete('/api/clients/:id', DeleteClient);
+
+  App.Listen(9000);
+
+  Writeln('API REST démarrée sur http://localhost:9000');
+  Readln;
+end.
+```
+
+## Intégration avec une base de données
+
+### Utilisation de FireDAC
+
+```pascal
+unit ClientController;
+
+interface
+
+uses
+  Horse,
+  System.JSON,
+  FireDAC.Comp.Client,
+  System.SysUtils;
+
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+
+implementation
+
+uses
+  DataModuleDB; // DataModule contenant la connexion
+
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query: TFDQuery;
+  JSONArray: TJSONArray;
+  JSONObject: TJSONObject;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := DMDatabase.Connection;
+    Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients';
+    Query.Open;
+
+    JSONArray := TJSONArray.Create;
+    try
+      while not Query.Eof do
+      begin
+        JSONObject := TJSONObject.Create;
+        JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+        JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
+        JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
+        JSONObject.AddPair('email', Query.FieldByName('email').AsString);
+        JSONArray.Add(JSONObject);
+
+        Query.Next;
+      end;
+
+      Res.Send<TJSONArray>(JSONArray);
+    finally
+      // JSONArray sera libéré automatiquement
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query: TFDQuery;
+  JSONObject: TJSONObject;
+  ID: Integer;
+begin
+  ID := StrToInt(Req.Params['id']);
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := DMDatabase.Connection;
+    Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients WHERE id = :id';
+    Query.ParamByName('id').AsInteger := ID;
+    Query.Open;
+
+    if Query.IsEmpty then
+    begin
+      Res.Status(404).Send('Client non trouvé');
+      Exit;
+    end;
+
+    JSONObject := TJSONObject.Create;
+    try
+      JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+      JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
+      JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
+      JSONObject.AddPair('email', Query.FieldByName('email').AsString);
+
+      Res.Send<TJSONObject>(JSONObject);
+    finally
+      // JSONObject sera libéré automatiquement
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query: TFDQuery;
+  Body: TJSONObject;
+  Response: TJSONObject;
+  Nom, Prenom, Email: string;
+  NewID: Integer;
+begin
+  Body := Req.Body<TJSONObject>;
+
+  // Extraction des données
+  Nom := Body.GetValue<string>('nom');
+  Prenom := Body.GetValue<string>('prenom');
+  Email := Body.GetValue<string>('email');
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := DMDatabase.Connection;
+    Query.SQL.Text :=
+      'INSERT INTO clients (nom, prenom, email) ' +
+      'VALUES (:nom, :prenom, :email)';
+    Query.ParamByName('nom').AsString := Nom;
+    Query.ParamByName('prenom').AsString := Prenom;
+    Query.ParamByName('email').AsString := Email;
+    Query.ExecSQL;
+
+    // Récupérer l'ID généré (dépend du SGBD)
+    Query.SQL.Text := 'SELECT LAST_INSERT_ID() as id';
+    Query.Open;
+    NewID := Query.FieldByName('id').AsInteger;
+
+    Response := TJSONObject.Create;
+    try
+      Response.AddPair('success', TJSONBool.Create(True));
+      Response.AddPair('message', 'Client créé avec succès');
+      Response.AddPair('id', TJSONNumber.Create(NewID));
+
+      Res.Status(201).Send<TJSONObject>(Response);
+    finally
+      // Response sera libéré automatiquement
+    end;
+  finally
+    Query.Free;
+  end;
+end;
+
+end.
+```
+
+## Gestion des erreurs et codes HTTP
+
+### Codes de statut HTTP standards
+
+| Code | Signification | Utilisation |
+|------|---------------|-------------|
+| 200 | OK | Requête réussie (GET, PUT, PATCH) |
+| 201 | Created | Ressource créée (POST) |
+| 204 | No Content | Succès sans contenu (DELETE) |
+| 400 | Bad Request | Requête invalide |
+| 401 | Unauthorized | Non authentifié |
+| 403 | Forbidden | Non autorisé |
+| 404 | Not Found | Ressource non trouvée |
+| 500 | Internal Server Error | Erreur serveur |
+
+### Gestion des erreurs
+
+```pascal
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query: TFDQuery;
+  JSONObject: TJSONObject;
+  ID: Integer;
+  ErrorResponse: TJSONObject;
+begin
+  try
+    // Validation du paramètre
+    if not TryStrToInt(Req.Params['id'], ID) then
+    begin
+      ErrorResponse := TJSONObject.Create;
+      ErrorResponse.AddPair('error', 'ID invalide');
+      Res.Status(400).Send<TJSONObject>(ErrorResponse);
+      Exit;
+    end;
+
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := DMDatabase.Connection;
+      Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
+      Query.ParamByName('id').AsInteger := ID;
+      Query.Open;
+
+      if Query.IsEmpty then
+      begin
+        ErrorResponse := TJSONObject.Create;
+        ErrorResponse.AddPair('error', 'Client non trouvé');
+        Res.Status(404).Send<TJSONObject>(ErrorResponse);
+        Exit;
+      end;
+
+      // ... traitement normal ...
+
+    finally
+      Query.Free;
+    end;
+
   except
     on E: Exception do
-      raise Exception.Create('Erreur de connexion à la base de données: ' + E.Message);
+    begin
+      ErrorResponse := TJSONObject.Create;
+      ErrorResponse.AddPair('error', 'Erreur serveur');
+      ErrorResponse.AddPair('message', E.Message);
+      Res.Status(500).Send<TJSONObject>(ErrorResponse);
+    end;
   end;
-
-  qryTodos := TFDQuery.Create(Self);
-  qryTodos.Connection := FDConnection1;
-end;
-
-destructor TServerMethods1.Destroy;
-begin
-  FDConnection1.Connected := False;
-  inherited;
 end;
 ```
 
-### Étape 2 : Modifier les méthodes CRUD pour utiliser la base de données
+## Authentification et sécurité
 
-```delphi
-[TROGet]
-function TServerMethods1.GetAllTodos: TJSONArray;
-begin
-  Result := TJSONArray.Create;
+### Authentification par token JWT
 
-  qryTodos.SQL.Text := 'SELECT id, title, completed FROM todos';
-  qryTodos.Open;
+**JWT (JSON Web Token)** est le standard pour sécuriser les API REST.
 
-  while not qryTodos.Eof do
-  begin
-    var TodoObj := TJSONObject.Create;
-    TodoObj.AddPair('id', TJSONNumber.Create(qryTodos.FieldByName('id').AsInteger));
-    TodoObj.AddPair('title', qryTodos.FieldByName('title').AsString);
-    TodoObj.AddPair('completed', TJSONBool.Create(qryTodos.FieldByName('completed').AsBoolean));
-    Result.AddElement(TodoObj);
+```pascal
+uses
+  Horse,
+  Horse.JWT,
+  JOSE.Core.JWT,
+  JOSE.Core.Builder,
+  System.DateUtils;
 
-    qryTodos.Next;
-  end;
-
-  qryTodos.Close;
-end;
-
-// Implémentez les autres méthodes de manière similaire...
-```
-
-## Déploiement du service REST
-
-Une fois votre service REST prêt, vous pouvez le déployer de différentes manières :
-
-1. **Application Standalone** : Exécutée comme un service Windows ou une application
-2. **ISAPI DLL** : Déployée sur IIS
-3. **Apache Module** : Déployée sur un serveur Apache
-
-Pour un déploiement en tant que service Windows :
-
-1. Modifiez le projet pour qu'il s'exécute comme un service Windows
-2. Utilisez un outil comme NSSM (Non-Sucking Service Manager) pour installer l'application en tant que service
-
-## Documentation de l'API REST
-
-Une bonne API REST doit être bien documentée. DataSnap génère automatiquement une documentation basique accessible via `/datasnap/rest`, mais vous pouvez l'améliorer :
-
-1. Utilisez des commentaires détaillés dans votre code
-2. Générez une documentation Swagger/OpenAPI
-3. Créez une page HTML personnalisée décrivant votre API
-
-## Consommation de l'API REST depuis une application client
-
-Une fois votre API REST créée, vous pouvez la consommer depuis différents clients :
-
-### Depuis une application Delphi :
-
-```delphi
-procedure TForm1.ButtonGetTodosClick(Sender: TObject);
+// Middleware d'authentification
+procedure AuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  JSONArray: TJSONArray;
-  I: Integer;
+  Token: string;
+  JWT: TJWT;
 begin
-  RESTClient := TRESTClient.Create('http://localhost:8080');
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
+  Token := Req.Headers['Authorization'];
+
+  if Token.IsEmpty then
+  begin
+    Res.Status(401).Send('Token manquant');
+    Exit;
+  end;
+
+  // Retirer "Bearer " du token
+  Token := Token.Replace('Bearer ', '');
 
   try
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Resource := 'datasnap/rest/TServerMethods1/GetAllTodos';
-    RESTRequest.Method := TRESTRequestMethod.rmGET;
+    // Vérifier et décoder le token
+    JWT := TJOSE.Verify('SECRET_KEY', Token);
+    try
+      // Token valide, continuer
+      Next;
+    finally
+      JWT.Free;
+    end;
+  except
+    Res.Status(401).Send('Token invalide');
+  end;
+end;
 
-    RESTRequest.Execute;
+// Route de login
+procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Body: TJSONObject;
+  Username, Password: string;
+  JWT: TJWT;
+  Token: string;
+  Response: TJSONObject;
+begin
+  Body := Req.Body<TJSONObject>;
+  Username := Body.GetValue<string>('username');
+  Password := Body.GetValue<string>('password');
 
-    if RESTResponse.StatusCode = 200 then
-    begin
-      JSONArray := TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONArray;
-      try
-        Memo1.Clear;
-        for I := 0 to JSONArray.Count - 1 do
-        begin
-          var TodoObj := JSONArray.Items[I] as TJSONObject;
-          var Title := TodoObj.GetValue<string>('title');
-          var Completed := TodoObj.GetValue<Boolean>('completed');
+  // Vérifier les identifiants (à implémenter)
+  if VerifyCredentials(Username, Password) then
+  begin
+    // Créer le token JWT
+    JWT := TJWT.Create;
+    try
+      JWT.Claims.Subject := Username;
+      JWT.Claims.Expiration := IncHour(Now, 24); // Expire dans 24h
 
-          Memo1.Lines.Add(Format('%s - %s', [
-            Title,
-            IfThen(Completed, 'Terminé', 'En cours')
-          ]));
-        end;
-      finally
-        JSONArray.Free;
-      end;
-    end
-    else
-      ShowMessage('Erreur: ' + RESTResponse.StatusText);
+      Token := TJOSE.SHA256CompactToken('SECRET_KEY', JWT);
+
+      Response := TJSONObject.Create;
+      Response.AddPair('token', Token);
+      Response.AddPair('expires_in', '86400'); // 24h en secondes
+
+      Res.Send<TJSONObject>(Response);
+    finally
+      JWT.Free;
+    end;
+  end
+  else
+  begin
+    Response := TJSONObject.Create;
+    Response.AddPair('error', 'Identifiants invalides');
+    Res.Status(401).Send<TJSONObject>(Response);
+  end;
+end;
+
+begin
+  // Route publique
+  THorse.Post('/api/login', Login);
+
+  // Routes protégées
+  THorse.AddCallback(AuthMiddleware)
+    .Get('/api/clients', GetClients)
+    .Get('/api/clients/:id', GetClient)
+    .Post('/api/clients', CreateClient);
+
+  THorse.Listen(9000);
+end.
+```
+
+### CORS (Cross-Origin Resource Sharing)
+
+Pour permettre à des applications web d'autres domaines d'accéder à votre API :
+
+```pascal
+uses
+  Horse,
+  Horse.CORS;
+
+begin
+  THorse
+    .Use(CORS) // Active CORS pour toutes les routes
+    .Get('/api/clients', GetClients);
+
+  THorse.Listen(9000);
+end.
+```
+
+Configuration CORS personnalisée :
+
+```pascal
+procedure ConfigureCORS(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+begin
+  Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Origin', '*');
+  Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if Req.Method = 'OPTIONS' then
+    Res.Status(200).Send('')
+  else
+    Next;
+end;
+
+begin
+  THorse.Use(ConfigureCORS);
+  // ... autres routes ...
+end.
+```
+
+## Documentation de l'API
+
+### Documentation avec Swagger/OpenAPI
+
+La documentation est essentielle pour une API REST :
+
+```pascal
+uses
+  Horse,
+  Horse.Swagger;
+
+begin
+  // Configuration Swagger
+  THorseSwagger
+    .Register('/api/docs')
+    .Title('Mon API REST')
+    .Version('1.0.0')
+    .Description('Documentation de l''API de gestion de clients');
+
+  // Routes
+  THorse.Get('/api/clients', GetClients);
+
+  THorse.Listen(9000);
+
+  Writeln('API disponible sur http://localhost:9000');
+  Writeln('Documentation Swagger sur http://localhost:9000/api/docs');
+end.
+```
+
+### Format standard de documentation
+
+```yaml
+openapi: 3.0.0
+info:
+  title: API Gestion Clients
+  version: 1.0.0
+paths:
+  /api/clients:
+    get:
+      summary: Liste tous les clients
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    post:
+      summary: Créer un nouveau client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '201':
+          description: Client créé
+components:
+  schemas:
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        nom:
+          type: string
+        prenom:
+          type: string
+        email:
+          type: string
+```
+
+## Tests et validation
+
+### Test avec des outils externes
+
+**Postman** : Outil graphique pour tester les API
+- Créer des collections de requêtes
+- Tester différents scénarios
+- Automatiser les tests
+
+**cURL** : Ligne de commande
+
+```bash
+# GET
+curl http://localhost:9000/api/clients
+
+# POST
+curl -X POST http://localhost:9000/api/clients \
+  -H "Content-Type: application/json" \
+  -d '{"nom":"Dupont","prenom":"Jean","email":"jean@email.com"}'
+
+# PUT
+curl -X PUT http://localhost:9000/api/clients/1 \
+  -H "Content-Type: application/json" \
+  -d '{"nom":"Durand","prenom":"Paul","email":"paul@email.com"}'
+
+# DELETE
+curl -X DELETE http://localhost:9000/api/clients/1
+```
+
+### Tests unitaires avec DUnitX
+
+```pascal
+unit ClientControllerTests;
+
+interface
+
+uses
+  DUnitX.TestFramework,
+  Horse,
+  System.JSON;
+
+type
+  [TestFixture]
+  TClientControllerTests = class
+  private
+    FApp: THorse;
+  public
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure TestGetClients;
+    [Test]
+    procedure TestCreateClient;
+    [Test]
+    procedure TestClientNotFound;
+  end;
+
+implementation
+
+procedure TClientControllerTests.Setup;
+begin
+  // Initialiser l'application de test
+  FApp := THorse.Create;
+  // ... configuration ...
+end;
+
+procedure TClientControllerTests.TearDown;
+begin
+  FApp.Free;
+end;
+
+procedure TClientControllerTests.TestGetClients;
+var
+  Response: string;
+  JSON: TJSONArray;
+begin
+  // Simuler une requête GET /api/clients
+  Response := SimulateRequest('GET', '/api/clients');
+
+  JSON := TJSONObject.ParseJSONValue(Response) as TJSONArray;
+  try
+    Assert.IsNotNull(JSON, 'La réponse doit être un tableau JSON');
+    Assert.IsTrue(JSON.Count > 0, 'Le tableau ne doit pas être vide');
   finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
+    JSON.Free;
+  end;
+end;
+
+end.
+```
+
+## Déploiement et production
+
+### Options de déploiement
+
+**1. Serveur Windows dédié**
+- Application console ou service Windows
+- IIS comme reverse proxy
+- Certificat SSL/TLS
+
+**2. Linux (via FMXLinux ou console)**
+- Serveur Linux économique
+- Nginx comme reverse proxy
+- Certificat Let's Encrypt gratuit
+
+**3. Docker**
+```dockerfile
+FROM ubuntu:20.04
+COPY ./MonAPIREST /app/MonAPIREST
+WORKDIR /app
+EXPOSE 9000
+CMD ["./MonAPIREST"]
+```
+
+**4. Cloud (AWS, Azure, Google Cloud)**
+- EC2, Azure VM, Google Compute Engine
+- Scaling automatique
+- Load balancing
+
+### Configuration HTTPS
+
+Avec Nginx comme reverse proxy :
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.monapp.com;
+
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+
+    location /api/ {
+        proxy_pass http://localhost:9000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+### Service Windows
+
+Convertir votre application console en service Windows :
+
+```pascal
+program APIService;
+
+uses
+  Vcl.SvcMgr,
+  System.SysUtils,
+  APIServiceUnit in 'APIServiceUnit.pas';
+
+{$R *.RES}
+
+begin
+  if not Application.DelayInitialize or Application.Installing then
+    Application.Initialize;
+  Application.CreateForm(TAPIService, APIService);
+  Application.Run;
+end.
+```
+
+## Bonnes pratiques
+
+### 1. Versioning de l'API
+
+```pascal
+// Version dans l'URL
+THorse.Get('/api/v1/clients', GetClientsV1);
+THorse.Get('/api/v2/clients', GetClientsV2);
+
+// Version dans le header
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Version: string;
+begin
+  Version := Req.Headers['API-Version'];
+
+  if Version = '2.0' then
+    GetClientsV2(Req, Res, Next)
+  else
+    GetClientsV1(Req, Res, Next);
+end;
+```
+
+### 2. Pagination
+
+```pascal
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Page, PageSize, Offset: Integer;
+  Query: TFDQuery;
+begin
+  // Paramètres de pagination (avec valeurs par défaut)
+  Page := StrToIntDef(Req.Query['page'], 1);
+  PageSize := StrToIntDef(Req.Query['pageSize'], 20);
+  Offset := (Page - 1) * PageSize;
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := DMDatabase.Connection;
+    Query.SQL.Text :=
+      'SELECT * FROM clients ' +
+      'ORDER BY nom ' +
+      'LIMIT :pageSize OFFSET :offset';
+    Query.ParamByName('pageSize').AsInteger := PageSize;
+    Query.ParamByName('offset').AsInteger := Offset;
+    Query.Open;
+
+    // ... conversion en JSON ...
+  finally
+    Query.Free;
+  end;
+end;
+
+// Utilisation : GET /api/clients?page=2&pageSize=50
+```
+
+### 3. Filtrage et tri
+
+```pascal
+// Exemple : GET /api/clients?nom=Dupont&sort=prenom&order=asc
+
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query: TFDQuery;
+  SQL: string;
+  NomFiltre, SortField, SortOrder: string;
+begin
+  // Récupérer les paramètres
+  NomFiltre := Req.Query['nom'];
+  SortField := Req.Query['sort'];
+  SortOrder := Req.Query['order'];
+
+  // Construction de la requête
+  SQL := 'SELECT * FROM clients WHERE 1=1';
+
+  if not NomFiltre.IsEmpty then
+    SQL := SQL + ' AND nom LIKE :nom';
+
+  if not SortField.IsEmpty then
+  begin
+    SQL := SQL + ' ORDER BY ' + SortField;
+    if SortOrder.ToLower = 'desc' then
+      SQL := SQL + ' DESC'
+    else
+      SQL := SQL + ' ASC';
+  end;
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := DMDatabase.Connection;
+    Query.SQL.Text := SQL;
+
+    if not NomFiltre.IsEmpty then
+      Query.ParamByName('nom').AsString := '%' + NomFiltre + '%';
+
+    Query.Open;
+    // ... conversion en JSON ...
+  finally
+    Query.Free;
   end;
 end;
 ```
 
-### Depuis JavaScript (Web ou mobile) :
+### 4. Rate Limiting
 
-```javascript
-fetch('http://localhost:8080/datasnap/rest/TServerMethods1/GetAllTodos')
-  .then(response => response.json())
-  .then(data => {
-    console.log('Tâches:', data);
-    // Traiter les données...
-  })
-  .catch(error => {
-    console.error('Erreur:', error);
-  });
+Limiter le nombre de requêtes par utilisateur :
+
+```pascal
+uses
+  System.Generics.Collections;
+
+var
+  RequestCounter: TDictionary<string, Integer>;
+
+procedure RateLimitMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  ClientIP: string;
+  RequestCount: Integer;
+begin
+  ClientIP := Req.RawWebRequest.RemoteIP;
+
+  if not RequestCounter.TryGetValue(ClientIP, RequestCount) then
+    RequestCount := 0;
+
+  Inc(RequestCount);
+  RequestCounter.AddOrSetValue(ClientIP, RequestCount);
+
+  if RequestCount > 100 then // Max 100 requêtes
+  begin
+    Res.Status(429).Send('Trop de requêtes');
+    Exit;
+  end;
+
+  Next;
+end;
+```
+
+### 5. Logging
+
+```pascal
+procedure LogMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  StartTime: TDateTime;
+  Duration: Integer;
+begin
+  StartTime := Now;
+
+  try
+    Next; // Exécuter la route
+  finally
+    Duration := MilliSecondsBetween(Now, StartTime);
+
+    Writeln(Format('[%s] %s %s - %d (%dms)',
+      [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+       Req.Method,
+       Req.Path,
+       Res.Status,
+       Duration]));
+  end;
+end;
+
+begin
+  THorse.Use(LogMiddleware);
+  // ... routes ...
+end.
 ```
 
 ## Conclusion
 
-Dans cette section, nous avons appris à créer des services REST avec Delphi en utilisant DataSnap. Nous avons vu comment :
+La création de services REST avec Delphi ouvre des possibilités infinies pour vos applications. Vous pouvez :
 
-- Créer un projet DataSnap REST de base
-- Définir des endpoints REST avec différentes méthodes HTTP
-- Manipuler des données JSON
-- Connecter l'API à une base de données MySQL/MariaDB
-- Sécuriser l'API avec une authentification
-- Déployer et documenter l'API
-- Consommer l'API depuis différents clients
+✅ **Créer des architectures modernes** découplées et scalables
+✅ **Servir plusieurs types de clients** (web, mobile, desktop)
+✅ **Utiliser votre expertise Delphi** pour le backend
+✅ **Bénéficier de performances excellentes** grâce au code natif
+✅ **Déployer facilement** sur différentes plateformes
 
-Les services REST sont une partie essentielle du développement d'applications modernes, et Delphi offre des outils puissants pour les créer facilement.
+Les frameworks comme Horse rendent le développement REST avec Delphi aussi simple et élégant que les frameworks modernes d'autres langages, tout en conservant les avantages de Delphi : performance, stabilité et productivité.
 
-## Exercices pratiques
+Que vous créiez une nouvelle application ou que vous modernisiez un système existant, les services REST Delphi sont une excellente solution pour entrer dans l'ère des architectures distribuées et du cloud.
 
-1. Étendez l'API Todo pour ajouter une date d'échéance aux tâches
-2. Ajoutez une fonctionnalité de filtrage pour obtenir uniquement les tâches terminées ou non terminées
-3. Implémentez un système de pagination pour limiter le nombre de tâches retournées
-4. Créez une application client Delphi simple qui consomme cette API
-5. Ajoutez une authentification à l'API pour que seuls les utilisateurs autorisés puissent modifier les tâches
-
-## Ressources supplémentaires
-
-- Documentation officielle de DataSnap REST : [Embarcadero DocWiki](https://docwiki.embarcadero.com/RADStudio/en/DataSnap_REST)
-- Tutoriels vidéo sur DataSnap REST : [Embarcadero YouTube](https://www.youtube.com/user/EmbarcaderoTechNet)
-- Forums communautaires Delphi : [Embarcadero Forums](https://forums.embarcadero.com/)
+Dans la section suivante, nous explorerons d'autres aspects du développement web avec Delphi, notamment WebBroker et DataSnap, des technologies qui peuvent compléter ou remplacer les approches présentées ici selon vos besoins spécifiques.
 
 ⏭️ [Utilisation de WebBroker et DataSnap](/23-conception-dapplications-web-avec-delphi/04-utilisation-de-webbroker-et-datasnap.md)
