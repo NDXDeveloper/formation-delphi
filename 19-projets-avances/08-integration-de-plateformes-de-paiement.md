@@ -1,1448 +1,2176 @@
-# 19.8 Intégration de plateformes de paiement
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 19.8 Intégration de plateformes de paiement
 
 ## Introduction
 
-L'intégration des paiements en ligne dans vos applications Delphi est devenue une fonctionnalité essentielle pour les développeurs qui créent des logiciels de commerce, de gestion ou de services. Ce chapitre vous guidera à travers les étapes nécessaires pour connecter votre application Delphi à différentes plateformes de paiement.
+Bienvenue dans le monde passionnant des paiements en ligne ! Dans ce chapitre, vous allez apprendre à intégrer des solutions de paiement dans vos applications Delphi pour permettre à vos utilisateurs de payer en toute sécurité.
 
-## Sommaire
-- [Présentation des plateformes de paiement](#présentation-des-plateformes-de-paiement)
-- [Prérequis pour l'intégration](#prérequis-pour-lintégration)
-- [Intégration avec Stripe](#intégration-avec-stripe)
-- [Intégration avec PayPal](#intégration-avec-paypal)
-- [Sécurisation des transactions](#sécurisation-des-transactions)
-- [Gestion des webhooks](#gestion-des-webhooks)
-- [Tests et environnement sandbox](#tests-et-environnement-sandbox)
-- [Bonnes pratiques](#bonnes-pratiques)
-- [Exemple de projet complet](#exemple-de-projet-complet)
+### Qu'est-ce qu'une plateforme de paiement ?
 
-## Présentation des plateformes de paiement
+Une **plateforme de paiement** est un service qui permet de traiter les transactions financières en ligne de manière sécurisée. Elle fait le lien entre votre application, la banque de votre client et votre compte bancaire.
 
-Les plateformes de paiement sont des services tiers qui facilitent les transactions financières en ligne. Elles permettent à votre application d'accepter des paiements par carte de crédit, virement bancaire et autres méthodes, sans avoir à gérer directement les informations sensibles des cartes bancaires.
+**Analogie simple** : Imaginez un caissier dans un magasin. Il prend l'argent, vérifie qu'il est valide, fait la transaction, et vous donne un reçu. Une plateforme de paiement fait exactement ça, mais en ligne et de manière automatique !
 
-Les plateformes les plus populaires incluent:
-- Stripe
-- PayPal
-- Adyen
-- Square
-- Braintree
-- Worldpay
+#### Le parcours d'un paiement
 
-Dans ce tutoriel, nous nous concentrerons principalement sur Stripe et PayPal qui offrent des API REST complètes et bien documentées, idéales pour l'intégration avec Delphi.
+```
+[Client] → [Votre App] → [Plateforme de paiement] → [Banque Client]
+                                    ↓
+                           [Vérification]
+                                    ↓
+                            [Votre Banque] ← [Confirmation]
+                                    ↓
+[Client] ← [Confirmation] ← [Votre App]
+```
 
-## Prérequis pour l'intégration
+### Pourquoi utiliser une plateforme de paiement ?
 
-Avant de commencer l'intégration, vous aurez besoin de:
+**Avantages** :
+✅ **Sécurité** : Conformité PCI DSS automatique
+✅ **Simplicité** : Pas besoin d'être expert en finance
+✅ **Rapidité** : Intégration en quelques heures
+✅ **Confiance** : Logos reconnus (Stripe, PayPal, etc.)
+✅ **Support** : Cartes bancaires, virements, wallets
+✅ **International** : Paiements dans le monde entier
 
-1. Un compte développeur sur la plateforme de paiement choisie
-2. Les clés d'API (publique et privée) fournies par la plateforme
-3. Les composants Delphi pour les requêtes REST (TRESTClient, TRESTRequest, TRESTResponse)
-4. Une bibliothèque pour manipuler le JSON (intégrée dans Delphi)
-5. Une compréhension basique du protocole HTTPS
+**Sans plateforme de paiement** :
+❌ Conformité complexe (PCI DSS niveau 1)
+❌ Infrastructure coûteuse
+❌ Gestion du risque de fraude
+❌ Support technique bancaire
+❌ Certificats de sécurité
 
-Pour installer les composants nécessaires:
-1. Dans l'IDE Delphi, ouvrez la palette de composants
-2. Assurez-vous que l'onglet "REST Client" est disponible
-3. Si ce n'est pas le cas, cliquez-droit sur la palette et sélectionnez "Installer les composants"
-4. Recherchez et installez les composants REST Client
+### Principales plateformes de paiement
 
-## Intégration avec Stripe
+| Plateforme | Popularité | Frais | Facilité |
+|------------|-----------|-------|----------|
+| **Stripe** | ⭐⭐⭐⭐⭐ | 1.4% + 0.25€ | Très facile |
+| **PayPal** | ⭐⭐⭐⭐⭐ | 2.9% + 0.30€ | Facile |
+| **Square** | ⭐⭐⭐⭐ | 1.75% | Facile |
+| **Mollie** | ⭐⭐⭐⭐ | 1.8% + 0.25€ | Très facile |
+| **Braintree** | ⭐⭐⭐ | 1.9% + 0.30€ | Moyen |
 
-### 1. Configuration initiale
+**Notre focus** : Stripe et PayPal (les plus populaires)
 
-Commençons par créer une unité dédiée à l'intégration de Stripe:
+### Objectifs de ce chapitre
+
+À la fin de ce tutoriel, vous serez capable de :
+
+✅ Comprendre les concepts de paiement en ligne
+✅ Intégrer Stripe dans vos applications
+✅ Intégrer PayPal
+✅ Gérer les paiements uniques et récurrents
+✅ Implémenter les webhooks
+✅ Sécuriser les transactions
+✅ Gérer les remboursements
+✅ Tester en environnement sandbox
+✅ Déployer en production
+
+### Prérequis
+
+**Connaissances** :
+- ✅ Bases de Delphi et Object Pascal
+- ✅ Compréhension des API REST
+- ✅ Notions de JSON
+- ✅ Bases de sécurité web (HTTPS)
+
+**Comptes nécessaires** :
+- ✅ Compte Stripe (gratuit)
+- ✅ Compte PayPal Business (gratuit)
+- ✅ Compte bancaire ou carte de crédit pour tests
+
+**Outils** :
+- ✅ Delphi 13 Florence
+- ✅ Postman (pour tester les APIs)
+- ✅ Navigateur moderne
+
+### Durée estimée
+
+**10 à 15 heures** de travail, réparties ainsi :
+- Compréhension des concepts : 2-3 heures
+- Configuration des comptes : 1-2 heures
+- Intégration Stripe : 3-4 heures
+- Intégration PayPal : 2-3 heures
+- Tests et sécurisation : 2-3 heures
+
+---
+
+## Partie 1 : Concepts fondamentaux
+
+### 1.1 Sécurité et conformité PCI DSS
+
+**PCI DSS** (Payment Card Industry Data Security Standard) est un ensemble de règles pour protéger les données de cartes bancaires.
+
+#### Les 3 niveaux de conformité
+
+**Niveau 1** : Vous gérez TOUT (très complexe)
+- Stockage des numéros de carte
+- Chiffrement
+- Audits réguliers
+- **À ÉVITER !**
+
+**Niveau 2** : Plateforme tierce (recommandé)
+- La plateforme stocke les données
+- Vous n'avez jamais les numéros de carte
+- Conformité automatique
+- **C'EST CE QUE NOUS ALLONS FAIRE**
+
+**Niveau 3** : Iframe/Redirect
+- L'utilisateur saisit ailleurs
+- Encore plus simple
+- Moins de contrôle sur l'UX
+
+#### Règle d'or : JAMAIS stocker les numéros de carte
 
 ```pascal
-unit StripePaymentService;
+// ❌ JAMAIS FAIRE ÇA !
+var
+  CardNumber: string;
+begin
+  CardNumber := EditCardNumber.Text;
+  SaveToDatabase(CardNumber); // INTERDIT !
+end;
+
+// ✅ À LA PLACE :
+var
+  Token: string;
+begin
+  // La plateforme crée un token sécurisé
+  Token := StripeAPI.CreateCardToken(EditCardNumber.Text);
+  SaveToDatabase(Token); // OK - c'est un token, pas le vrai numéro
+end;
+```
+
+### 1.2 Types de paiements
+
+#### Paiement unique (One-time)
+
+Le client paie une fois.
+
+**Exemples** :
+- Achat d'un produit
+- Réservation
+- Don ponctuel
+
+**Flux** :
+```
+[Client remplit formulaire] → [Validation] → [Paiement] → [Confirmation]
+```
+
+#### Paiement récurrent (Subscription)
+
+Le client est débité automatiquement chaque mois/an.
+
+**Exemples** :
+- Abonnement SaaS
+- Adhésion
+- Service mensuel
+
+**Flux** :
+```
+[Inscription] → [Premier paiement] → [Débits automatiques mensuels]
+```
+
+#### Paiement à la demande (On-demand)
+
+Vous débitez quand vous voulez (avec autorisation du client).
+
+**Exemples** :
+- Uber (à la fin du trajet)
+- Usage variable
+- Consommation
+
+### 1.3 Vocabulaire essentiel
+
+**Token** : Représentation sécurisée d'une carte
+- Exemple : `tok_1234abcd`
+- Valide une seule fois ou pour un client
+
+**Customer** : Client enregistré dans la plateforme
+- Peut avoir plusieurs moyens de paiement
+- Permet les paiements récurrents
+
+**Charge** : Transaction de paiement
+- Montant, devise, description
+- Peut être capturée ou remboursée
+
+**Webhook** : Notification automatique
+- La plateforme vous prévient d'un événement
+- Exemple : paiement réussi, échec, remboursement
+
+**Sandbox** : Environnement de test
+- Faux paiements pour tester
+- Cartes de test : `4242 4242 4242 4242`
+
+---
+
+## Partie 2 : Intégration Stripe
+
+### 2.1 Configuration du compte Stripe
+
+**Étape 1 : Créer un compte**
+
+1. Allez sur [stripe.com](https://stripe.com)
+2. Cliquez "Start now" / "Commencer"
+3. Créez votre compte
+4. Validez votre email
+
+**Étape 2 : Obtenir les clés API**
+
+1. Tableau de bord → **Développeurs → Clés API**
+2. Vous avez 4 clés :
+   - **Clé publique test** : `pk_test_...` (pour le frontend)
+   - **Clé secrète test** : `sk_test_...` (pour le backend)
+   - **Clé publique live** : `pk_live_...` (production)
+   - **Clé secrète live** : `sk_live_...` (production)
+
+**⚠️ IMPORTANT** : La clé secrète doit rester SECRÈTE !
+
+**Étape 3 : Mode test**
+
+Par défaut, vous êtes en mode test. Parfait pour débuter !
+
+**Cartes de test Stripe** :
+- Succès : `4242 4242 4242 4242`
+- Refusée : `4000 0000 0000 0002`
+- 3D Secure : `4000 0027 6000 3184`
+
+### 2.2 Classe Stripe pour Delphi
+
+Créons une unité pour gérer Stripe :
+
+```pascal
+unit uStripe;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON,
-  REST.Client, REST.Types, REST.Response.Adapter;
+  System.SysUtils, System.Classes, System.JSON, System.Net.HttpClient,
+  System.Net.URLClient, System.NetEncoding;
 
 type
-  TStripePaymentService = class
+  TStripePaymentStatus = (psSucceeded, psPending, psFailed, psCanceled);
+
+  TStripePaymentIntent = record
+    ID: string;
+    Amount: Integer;          // En centimes (1000 = 10.00€)
+    Currency: string;
+    Status: TStripePaymentStatus;
+    ClientSecret: string;
+    Description: string;
+  end;
+
+  TStripeCustomer = record
+    ID: string;
+    Email: string;
+    Name: string;
+    Description: string;
+  end;
+
+  TStripe = class
   private
-    FRESTClient: TRESTClient;
-    FRESTRequest: TRESTRequest;
-    FRESTResponse: TRESTResponse;
     FSecretKey: string;
-    FPublicKey: string;
-  public
-    constructor Create(const ASecretKey, APublicKey: string);
-    destructor Destroy; override;
+    FPublishableKey: string;
 
-    function CreatePaymentIntent(Amount: Integer; Currency: string;
-                                Description: string): TJSONObject;
-    function RetrievePayment(PaymentIntentId: string): TJSONObject;
-    // Autres méthodes...
+    function BuildAuthHeader: string;
+    function ParsePaymentIntent(const AJSON: TJSONObject): TStripePaymentIntent;
+    function ParseCustomer(const AJSON: TJSONObject): TStripeCustomer;
+  public
+    constructor Create(const ASecretKey, APublishableKey: string);
+
+    // Paiements
+    function CreatePaymentIntent(AAmount: Integer; const ACurrency: string;
+      const ADescription: string = ''): TStripePaymentIntent;
+    function ConfirmPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
+    function CancelPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
+    function GetPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
+
+    // Clients
+    function CreateCustomer(const AEmail, AName: string;
+      const ADescription: string = ''): TStripeCustomer;
+    function GetCustomer(const ACustomerID: string): TStripeCustomer;
+
+    // Remboursements
+    function RefundPayment(const APaymentIntentID: string;
+      AAmount: Integer = 0): Boolean;
+
+    property SecretKey: string read FSecretKey write FSecretKey;
+    property PublishableKey: string read FPublishableKey write FPublishableKey;
   end;
 
 implementation
 
-// Implémentation à suivre...
+const
+  STRIPE_API_URL = 'https://api.stripe.com/v1';
 
-end.
-```
+{ TStripe }
 
-### 2. Implémentation de la classe Stripe
-
-```pascal
-constructor TStripePaymentService.Create(const ASecretKey, APublicKey: string);
+constructor TStripe.Create(const ASecretKey, APublishableKey: string);
 begin
   inherited Create;
-
   FSecretKey := ASecretKey;
-  FPublicKey := APublicKey;
-
-  // Initialisation des composants REST
-  FRESTClient := TRESTClient.Create(nil);
-  FRESTClient.BaseURL := 'https://api.stripe.com/v1';
-
-  FRESTResponse := TRESTResponse.Create(nil);
-
-  FRESTRequest := TRESTRequest.Create(nil);
-  FRESTRequest.Client := FRESTClient;
-  FRESTRequest.Response := FRESTResponse;
-
-  // Configuration de l'authentification
-  FRESTClient.Authenticator := THTTPBasicAuthenticator.Create(FSecretKey, '');
+  FPublishableKey := APublishableKey;
 end;
 
-destructor TStripePaymentService.Destroy;
-begin
-  FRESTRequest.Free;
-  FRESTResponse.Free;
-  FRESTClient.Free;
-
-  inherited;
-end;
-
-function TStripePaymentService.CreatePaymentIntent(Amount: Integer;
-                        Currency: string; Description: string): TJSONObject;
+function TStripe.BuildAuthHeader: string;
 var
-  RequestBody: TStringList;
+  Credentials: string;
 begin
-  RequestBody := TStringList.Create;
+  Credentials := FSecretKey + ':';
+  Result := 'Basic ' + TNetEncoding.Base64.Encode(Credentials);
+end;
+
+function TStripe.CreatePaymentIntent(AAmount: Integer; const ACurrency: string;
+  const ADescription: string): TStripePaymentIntent;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
   try
-    // Préparer les paramètres pour Stripe
-    RequestBody.Add('amount=' + IntToStr(Amount));
-    RequestBody.Add('currency=' + Currency);
-    RequestBody.Add('description=' + Description);
+    // Configuration
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
 
-    // Configurer la requête
-    FRESTRequest.Method := rmPOST;
-    FRESTRequest.Resource := 'payment_intents';
-    FRESTRequest.Body.Add(RequestBody.Text, TRESTContentType.ctURLENCODED);
+    // Données du paiement
+    FormData := TStringList.Create;
+    try
+      FormData.Add('amount=' + IntToStr(AAmount));
+      FormData.Add('currency=' + ACurrency.ToLower);
 
-    // Exécuter la requête
-    FRESTRequest.Execute;
+      if not ADescription.IsEmpty then
+        FormData.Add('description=' + TNetEncoding.URL.Encode(ADescription));
 
-    // Analyser la réponse
-    if FRESTResponse.StatusCode = 200 then
-      Result := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject
-    else
-      raise Exception.CreateFmt('Erreur Stripe: %s', [FRESTResponse.Content]);
+      FormData.Add('automatic_payment_methods[enabled]=true');
 
+      // Appel API
+      Response := HTTP.Post(
+        STRIPE_API_URL + '/payment_intents',
+        FormData
+      );
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result := ParsePaymentIntent(JSONResponse);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur Stripe: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      FormData.Free;
+    end;
   finally
-    RequestBody.Free;
+    HTTP.Free;
   end;
 end;
-```
 
-### 3. Utilisation dans votre application
-
-Voici comment utiliser cette classe dans un formulaire:
-
-```pascal
-procedure TMainForm.btnPayWithStripeClick(Sender: TObject);
+function TStripe.ParsePaymentIntent(const AJSON: TJSONObject): TStripePaymentIntent;
 var
-  StripeService: TStripePaymentService;
-  Response: TJSONObject;
-  ClientSecret: string;
+  StatusStr: string;
 begin
-  StripeService := TStripePaymentService.Create('sk_test_YourSecretKey',
-                                             'pk_test_YourPublicKey');
+  Result.ID := AJSON.GetValue<string>('id');
+  Result.Amount := AJSON.GetValue<Integer>('amount');
+  Result.Currency := AJSON.GetValue<string>('currency');
+  Result.ClientSecret := AJSON.GetValue<string>('client_secret');
+
+  if AJSON.TryGetValue<string>('description', Result.Description) then;
+
+  StatusStr := AJSON.GetValue<string>('status');
+  if StatusStr = 'succeeded' then
+    Result.Status := psSucceeded
+  else if StatusStr = 'processing' then
+    Result.Status := psPending
+  else if StatusStr = 'canceled' then
+    Result.Status := psCanceled
+  else
+    Result.Status := psFailed;
+end;
+
+function TStripe.ConfirmPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
   try
-    // Créer une intention de paiement (en centimes)
-    Response := StripeService.CreatePaymentIntent(2000, 'eur',
-                                               'Achat de produit XYZ');
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
 
-    // Récupérer le client_secret pour l'autorisation côté client
-    ClientSecret := Response.GetValue<string>('client_secret');
+    FormData := TStringList.Create;
+    try
+      FormData.Add('payment_method=pm_card_visa'); // Carte de test
 
-    // À ce stade, vous pouvez:
-    // 1. Rediriger vers une page web de paiement Stripe
-    // 2. Utiliser le SDK Stripe.js dans un WebView
-    // 3. Utiliser d'autres méthodes de finalisation du paiement
+      Response := HTTP.Post(
+        Format('%s/payment_intents/%s/confirm', [STRIPE_API_URL, APaymentIntentID]),
+        FormData
+      );
 
-    // Exemple de redirection vers Stripe Checkout
-    ShellExecute(0, 'open', PChar('https://yourwebsite.com/checkout.html?client_secret='
-                + ClientSecret), nil, nil, SW_SHOWNORMAL);
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result := ParsePaymentIntent(JSONResponse);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur confirmation: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
 
+    finally
+      FormData.Free;
+    end;
   finally
-    Response.Free;
-    StripeService.Free;
+    HTTP.Free;
   end;
 end;
-```
 
-## Intégration avec PayPal
-
-### 1. Configuration initiale
-
-Créons une classe similaire pour PayPal:
-
-```pascal
-unit PayPalPaymentService;
-
-interface
-
-uses
-  System.SysUtils, System.Classes, System.JSON,
-  REST.Client, REST.Types, REST.Response.Adapter;
-
-type
-  TPayPalPaymentService = class
-  private
-    FRESTClient: TRESTClient;
-    FRESTRequest: TRESTRequest;
-    FRESTResponse: TRESTResponse;
-    FClientID: string;
-    FClientSecret: string;
-    FAccessToken: string;
-    FTokenExpiry: TDateTime;
-
-    function GetAccessToken: string;
-  public
-    constructor Create(const AClientID, AClientSecret: string);
-    destructor Destroy; override;
-
-    function CreateOrder(Amount: Double; Currency: string): TJSONObject;
-    function CapturePayment(OrderID: string): TJSONObject;
-  end;
-
-implementation
-
-// Implémentation à suivre...
-
-end.
-```
-
-### 2. Implémentation de la classe PayPal
-
-```pascal
-constructor TPayPalPaymentService.Create(const AClientID, AClientSecret: string);
-begin
-  inherited Create;
-
-  FClientID := AClientID;
-  FClientSecret := AClientSecret;
-
-  // Initialisation des composants REST
-  FRESTClient := TRESTClient.Create(nil);
-  // Utiliser l'environnement sandbox pour les tests
-  FRESTClient.BaseURL := 'https://api-m.sandbox.paypal.com';
-
-  FRESTResponse := TRESTResponse.Create(nil);
-
-  FRESTRequest := TRESTRequest.Create(nil);
-  FRESTRequest.Client := FRESTClient;
-  FRESTRequest.Response := FRESTResponse;
-end;
-
-function TPayPalPaymentService.GetAccessToken: string;
+function TStripe.GetPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
 var
-  Auth, Params: TStringList;
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse: TJSONObject;
 begin
-  // Vérifier si le token est toujours valide
-  if (FAccessToken <> '') and (Now < FTokenExpiry) then
-    Exit(FAccessToken);
-
-  // Créer les informations d'authentification
-  Auth := TStringList.Create;
-  Params := TStringList.Create;
-
+  HTTP := THTTPClient.Create;
   try
-    // Configuration de la requête d'authentification
-    FRESTRequest.Method := rmPOST;
-    FRESTRequest.Resource := 'v1/oauth2/token';
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
 
-    // Ajouter les paramètres
-    Params.Add('grant_type=client_credentials');
-    FRESTRequest.Body.Add(Params.Text, TRESTContentType.ctURLENCODED);
+    Response := HTTP.Get(
+      Format('%s/payment_intents/%s', [STRIPE_API_URL, APaymentIntentID])
+    );
 
-    // Configurer l'authentification Basic
-    FRESTRequest.Client.Authenticator := THTTPBasicAuthenticator.Create(FClientID, FClientSecret);
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    // Analyser la réponse
-    if FRESTResponse.StatusCode = 200 then
+    if Response.StatusCode = 200 then
     begin
-      var JSONResponse := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject;
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
       try
-        FAccessToken := JSONResponse.GetValue<string>('access_token');
-        // Définir l'expiration (habituellement 3600 secondes)
-        FTokenExpiry := Now + (JSONResponse.GetValue<Integer>('expires_in') / 86400);
-        Result := FAccessToken;
+        Result := ParsePaymentIntent(JSONResponse);
       finally
         JSONResponse.Free;
       end;
     end
     else
-      raise Exception.CreateFmt('Erreur PayPal Auth: %s', [FRESTResponse.Content]);
-
+      raise Exception.CreateFmt('Erreur récupération: %d - %s',
+        [Response.StatusCode, Response.ContentAsString]);
   finally
-    Auth.Free;
-    Params.Free;
-    // Réinitialiser l'authentificateur pour les prochaines requêtes
-    FRESTRequest.Client.Authenticator := nil;
+    HTTP.Free;
   end;
 end;
 
-function TPayPalPaymentService.CreateOrder(Amount: Double; Currency: string): TJSONObject;
+function TStripe.CancelPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
 var
-  RequestBody: TJSONObject;
-  PurchaseUnits: TJSONArray;
-  UnitObject, AmountObject: TJSONObject;
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
 begin
-  // Obtenir le token d'accès
-  var Token := GetAccessToken;
-
-  // Créer le corps de la requête en JSON
-  RequestBody := TJSONObject.Create;
-  PurchaseUnits := TJSONArray.Create;
-  UnitObject := TJSONObject.Create;
-  AmountObject := TJSONObject.Create;
-
+  HTTP := THTTPClient.Create;
   try
-    // Configuration de la requête
-    FRESTRequest.Method := rmPOST;
-    FRESTRequest.Resource := 'v2/checkout/orders';
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
 
-    // Ajouter l'en-tête d'autorisation
-    FRESTRequest.Params.Clear;
-    FRESTRequest.Params.AddHeader('Authorization', 'Bearer ' + Token);
-    FRESTRequest.Params.AddHeader('Content-Type', 'application/json');
+    FormData := TStringList.Create;
+    try
+      Response := HTTP.Post(
+        Format('%s/payment_intents/%s/cancel', [STRIPE_API_URL, APaymentIntentID]),
+        FormData
+      );
 
-    // Construire le JSON de la requête
-    AmountObject.AddPair('currency_code', Currency);
-    AmountObject.AddPair('value', TJSONString.Create(FormatFloat('0.00', Amount)));
-
-    UnitObject.AddPair('amount', AmountObject);
-    PurchaseUnits.Add(UnitObject);
-
-    RequestBody.AddPair('intent', 'CAPTURE');
-    RequestBody.AddPair('purchase_units', PurchaseUnits);
-
-    // Définir le corps de la requête
-    FRESTRequest.Body.Add(RequestBody.ToJSON, TRESTContentType.ctAPPLICATION_JSON);
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    // Analyser la réponse
-    if (FRESTResponse.StatusCode = 200) or (FRESTResponse.StatusCode = 201) then
-      Result := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject
-    else
-      raise Exception.CreateFmt('Erreur PayPal: %s', [FRESTResponse.Content]);
-
-  except
-    RequestBody.Free;
-    raise;
-  end;
-end;
-```
-
-### 3. Utilisation dans votre application
-
-```pascal
-procedure TMainForm.btnPayWithPayPalClick(Sender: TObject);
-var
-  PayPalService: TPayPalPaymentService;
-  Response: TJSONObject;
-  OrderID, ApprovalURL: string;
-  Links: TJSONArray;
-  i: Integer;
-begin
-  PayPalService := TPayPalPaymentService.Create('YOUR_CLIENT_ID', 'YOUR_CLIENT_SECRET');
-  try
-    // Créer une commande
-    Response := PayPalService.CreateOrder(19.99, 'EUR');
-
-    // Récupérer l'ID de commande
-    OrderID := Response.GetValue<string>('id');
-
-    // Trouver l'URL d'approbation
-    Links := Response.GetValue<TJSONArray>('links');
-    ApprovalURL := '';
-
-    for i := 0 to Links.Count - 1 do
-    begin
-      var Link := Links.Items[i] as TJSONObject;
-      if Link.GetValue<string>('rel') = 'approve' then
+      if Response.StatusCode = 200 then
       begin
-        ApprovalURL := Link.GetValue<string>('href');
-        Break;
-      end;
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result := ParsePaymentIntent(JSONResponse);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur annulation: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      FormData.Free;
     end;
-
-    // Rediriger l'utilisateur vers PayPal pour approbation
-    if ApprovalURL <> '' then
-      ShellExecute(0, 'open', PChar(ApprovalURL), nil, nil, SW_SHOWNORMAL);
-
-    // Stockez OrderID dans votre base de données pour référence future
-
   finally
-    Response.Free;
-    PayPalService.Free;
+    HTTP.Free;
   end;
 end;
-```
 
-## Sécurisation des transactions
-
-La sécurité est primordiale lors de l'intégration des paiements. Voici quelques mesures essentielles:
-
-### 1. Stockage sécurisé des clés API
-
-Ne jamais inclure directement vos clés API dans votre code source. Utilisez plutôt:
-
-```pascal
-// Créer une fonction pour charger les clés depuis un fichier chiffré
-function LoadAPIKeys: TAPIKeys;
+function TStripe.CreateCustomer(const AEmail, AName: string;
+  const ADescription: string): TStripeCustomer;
 var
-  Cipher: TCipher;
-  EncryptedFile: TFileStream;
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
 begin
-  Cipher := TCipher.Create;
-  EncryptedFile := TFileStream.Create('api_keys.dat', fmOpenRead);
+  HTTP := THTTPClient.Create;
   try
-    // Déchiffrer le contenu
-    Result.StripeSecretKey := Cipher.Decrypt(ReadStringFromStream(EncryptedFile));
-    Result.StripePublicKey := Cipher.Decrypt(ReadStringFromStream(EncryptedFile));
-    // etc.
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+
+    FormData := TStringList.Create;
+    try
+      FormData.Add('email=' + TNetEncoding.URL.Encode(AEmail));
+      FormData.Add('name=' + TNetEncoding.URL.Encode(AName));
+
+      if not ADescription.IsEmpty then
+        FormData.Add('description=' + TNetEncoding.URL.Encode(ADescription));
+
+      Response := HTTP.Post(
+        STRIPE_API_URL + '/customers',
+        FormData
+      );
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result := ParseCustomer(JSONResponse);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur création client: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      FormData.Free;
+    end;
   finally
-    EncryptedFile.Free;
-    Cipher.Free;
+    HTTP.Free;
   end;
 end;
-```
 
-### 2. Validation côté serveur
-
-Toujours vérifier les paiements sur votre serveur:
-
-```pascal
-function TPaymentProcessor.VerifyPaymentStatus(OrderID: string): Boolean;
-var
-  PaymentService: TStripePaymentService;
-  Response: TJSONObject;
-  Status: string;
+function TStripe.ParseCustomer(const AJSON: TJSONObject): TStripeCustomer;
 begin
-  PaymentService := TStripePaymentService.Create(LoadAPIKeys.StripeSecretKey, '');
+  Result.ID := AJSON.GetValue<string>('id');
+  Result.Email := AJSON.GetValue<string>('email');
+  Result.Name := AJSON.GetValue<string>('name');
+
+  if AJSON.TryGetValue<string>('description', Result.Description) then;
+end;
+
+function TStripe.GetCustomer(const ACustomerID: string): TStripeCustomer;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
   try
-    Response := PaymentService.RetrievePayment(OrderID);
-    Status := Response.GetValue<string>('status');
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
 
-    // Vérifier que le statut est bien 'succeeded'
-    Result := (Status = 'succeeded');
+    Response := HTTP.Get(
+      Format('%s/customers/%s', [STRIPE_API_URL, ACustomerID])
+    );
 
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result := ParseCustomer(JSONResponse);
+      finally
+        JSONResponse.Free;
+      end;
+    end
+    else
+      raise Exception.CreateFmt('Erreur récupération client: %d - %s',
+        [Response.StatusCode, Response.ContentAsString]);
   finally
-    Response.Free;
-    PaymentService.Free;
+    HTTP.Free;
   end;
 end;
-```
 
-### 3. Utilisation de HTTPS
-
-Assurez-vous que toutes les communications avec les API de paiement se font via HTTPS:
-
-```pascal
-// S'assurer que l'URL utilise HTTPS
-procedure CheckSecureURL(const URL: string);
-begin
-  if not URL.StartsWith('https://') then
-    raise Exception.Create('Erreur: Communication non sécurisée détectée. ' +
-                          'Toutes les API de paiement doivent utiliser HTTPS.');
-end;
-```
-
-## Gestion des webhooks
-
-Les webhooks permettent aux plateformes de paiement de notifier votre application des événements importants (paiement réussi, échec, remboursement, etc.).
-
-### 1. Création d'un endpoint webhook
-
-Si votre application est connectée à un serveur web, vous devez créer un endpoint pour recevoir les notifications:
-
-```pascal
-procedure TWebModule1.WebModule1WebActionItem1Action(Sender: TObject;
-                                                 Request: TWebRequest;
-                                                 Response: TWebResponse;
-                                                 var Handled: Boolean);
+function TStripe.RefundPayment(const APaymentIntentID: string;
+  AAmount: Integer): Boolean;
 var
-  WebhookData: TJSONObject;
-  EventType: string;
-  PaymentIntentID: string;
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
 begin
-  // Vérifier la signature webhook (important pour la sécurité)
-  if not VerifyStripeSignature(Request.Content, Request.GetFieldByName('Stripe-Signature')) then
+  Result := False;
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+
+    FormData := TStringList.Create;
+    try
+      FormData.Add('payment_intent=' + APaymentIntentID);
+
+      if AAmount > 0 then
+        FormData.Add('amount=' + IntToStr(AAmount));
+
+      Response := HTTP.Post(
+        STRIPE_API_URL + '/refunds',
+        FormData
+      );
+
+      Result := Response.StatusCode = 200;
+
+    finally
+      FormData.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+
+end.
+```
+
+### 2.3 Interface de paiement Stripe
+
+```pascal
+unit uStripePaymentForm;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.ComCtrls, uStripe;
+
+type
+  TStripePaymentForm = class(TForm)
+    PanelTop: TPanel;
+    LabelTitle: TLabel;
+    LabelSubtitle: TLabel;
+
+    PanelAmount: TPanel;
+    LabelAmount: TLabel;
+    EditAmount: TEdit;
+    ComboBoxCurrency: TComboBox;
+
+    PanelDescription: TPanel;
+    LabelDescription: TLabel;
+    MemoDescription: TMemo;
+
+    PanelActions: TPanel;
+    ButtonPay: TButton;
+    ButtonCancel: TButton;
+
+    ProgressBar1: TProgressBar;
+    LabelStatus: TLabel;
+
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ButtonPayClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+  private
+    FStripe: TStripe;
+    FPaymentIntentID: string;
+
+    procedure ProcessPaymentAsync;
+    procedure UpdateStatus(const AMessage: string; AColor: TColor);
+  public
+    property PaymentIntentID: string read FPaymentIntentID;
+  end;
+
+var
+  StripePaymentForm: TStripePaymentForm;
+
+implementation
+
+{$R *.dfm}
+
+uses
+  System.Threading;
+
+procedure TStripePaymentForm.FormCreate(Sender: TObject);
+begin
+  // Initialiser Stripe avec vos clés
+  FStripe := TStripe.Create(
+    'sk_test_votre_cle_secrete',  // Clé secrète test
+    'pk_test_votre_cle_publique'  // Clé publique test
+  );
+
+  // Configurer l'interface
+  ComboBoxCurrency.Items.Add('EUR - Euro');
+  ComboBoxCurrency.Items.Add('USD - Dollar');
+  ComboBoxCurrency.Items.Add('GBP - Livre');
+  ComboBoxCurrency.ItemIndex := 0;
+
+  EditAmount.Text := '10.00';
+  MemoDescription.Text := 'Paiement test';
+
+  ProgressBar1.Style := pbstNormal;
+  ProgressBar1.Visible := False;
+end;
+
+procedure TStripePaymentForm.FormDestroy(Sender: TObject);
+begin
+  FStripe.Free;
+end;
+
+procedure TStripePaymentForm.UpdateStatus(const AMessage: string; AColor: TColor);
+begin
+  LabelStatus.Caption := AMessage;
+  LabelStatus.Font.Color := AColor;
+end;
+
+procedure TStripePaymentForm.ProcessPaymentAsync;
+begin
+  // Désactiver l'interface
+  ButtonPay.Enabled := False;
+  ButtonCancel.Enabled := False;
+  ProgressBar1.Visible := True;
+  ProgressBar1.Style := pbstMarquee;
+
+  UpdateStatus('Traitement en cours...', clBlue);
+
+  TTask.Run(
+    procedure
+    var
+      PaymentIntent: TStripePaymentIntent;
+      Amount: Double;
+      AmountCents: Integer;
+      Currency: string;
+      Description: string;
+    begin
+      try
+        // Récupérer les données
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Amount := StrToFloatDef(EditAmount.Text, 0);
+            AmountCents := Round(Amount * 100); // Convertir en centimes
+
+            case ComboBoxCurrency.ItemIndex of
+              0: Currency := 'eur';
+              1: Currency := 'usd';
+              2: Currency := 'gbp';
+            else
+              Currency := 'eur';
+            end;
+
+            Description := MemoDescription.Text;
+          end);
+
+        // Créer le PaymentIntent
+        PaymentIntent := FStripe.CreatePaymentIntent(
+          AmountCents,
+          Currency,
+          Description
+        );
+
+        FPaymentIntentID := PaymentIntent.ID;
+
+        // Simuler la confirmation (en production, se fait côté client avec Stripe.js)
+        Sleep(1000);
+        PaymentIntent := FStripe.ConfirmPaymentIntent(PaymentIntent.ID);
+
+        // Vérifier le statut
+        if PaymentIntent.Status = psSucceeded then
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              UpdateStatus('✓ Paiement réussi !', clGreen);
+              ShowMessage(Format(
+                'Paiement effectué avec succès !%s' +
+                'ID: %s%s' +
+                'Montant: %.2f %s',
+                [#13#10, PaymentIntent.ID, #13#10, Amount, Currency.ToUpper]
+              ));
+
+              ModalResult := mrOk;
+            end);
+        end
+        else
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              UpdateStatus('✗ Paiement échoué', clRed);
+              ShowMessage('Le paiement a échoué. Veuillez réessayer.');
+            end);
+        end;
+
+      except
+        on E: Exception do
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              UpdateStatus('✗ Erreur: ' + E.Message, clRed);
+              ShowMessage('Erreur de paiement: ' + E.Message);
+            end);
+        end;
+      end;
+
+      // Réactiver l'interface
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ButtonPay.Enabled := True;
+          ButtonCancel.Enabled := True;
+          ProgressBar1.Visible := False;
+        end);
+    end);
+end;
+
+procedure TStripePaymentForm.ButtonPayClick(Sender: TObject);
+var
+  Amount: Double;
+begin
+  // Valider les données
+  Amount := StrToFloatDef(EditAmount.Text, 0);
+
+  if Amount <= 0 then
   begin
-    Response.StatusCode := 401;
-    Response.Content := 'Signature invalide';
+    ShowMessage('Veuillez entrer un montant valide');
+    EditAmount.SetFocus;
     Exit;
   end;
 
-  // Analyser le JSON reçu
-  WebhookData := TJSONObject.ParseJSONValue(Request.Content) as TJSONObject;
-  try
-    EventType := WebhookData.GetValue<string>('type');
+  if MemoDescription.Text.Trim.IsEmpty then
+  begin
+    ShowMessage('Veuillez entrer une description');
+    MemoDescription.SetFocus;
+    Exit;
+  end;
 
-    // Traiter différents types d'événements
+  // Confirmer
+  if MessageDlg(
+    Format('Confirmer le paiement de %.2f %s ?',
+      [Amount, ComboBoxCurrency.Text.Substring(0, 3)]),
+    mtConfirmation,
+    [mbYes, mbNo],
+    0
+  ) = mrYes then
+  begin
+    ProcessPaymentAsync;
+  end;
+end;
+
+procedure TStripePaymentForm.ButtonCancelClick(Sender: TObject);
+begin
+  if MessageDlg('Annuler le paiement ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    ModalResult := mrCancel;
+end;
+
+end.
+```
+
+### 2.4 Gestion des abonnements
+
+```pascal
+// Extension de la classe TStripe pour les abonnements
+
+type
+  TStripeSubscription = record
+    ID: string;
+    CustomerID: string;
+    Status: string;
+    CurrentPeriodStart: TDateTime;
+    CurrentPeriodEnd: TDateTime;
+    CancelAtPeriodEnd: Boolean;
+  end;
+
+  TStripePrice = record
+    ID: string;
+    ProductID: string;
+    Amount: Integer;
+    Currency: string;
+    Interval: string; // 'month', 'year'
+  end;
+
+// Ajouter à TStripe :
+function TStripe.CreateSubscription(const ACustomerID, APriceID: string): TStripeSubscription;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+
+    FormData := TStringList.Create;
+    try
+      FormData.Add('customer=' + ACustomerID);
+      FormData.Add('items[0][price]=' + APriceID);
+
+      Response := HTTP.Post(
+        STRIPE_API_URL + '/subscriptions',
+        FormData
+      );
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result.ID := JSONResponse.GetValue<string>('id');
+          Result.CustomerID := JSONResponse.GetValue<string>('customer');
+          Result.Status := JSONResponse.GetValue<string>('status');
+          Result.CancelAtPeriodEnd := JSONResponse.GetValue<Boolean>('cancel_at_period_end');
+
+          // Dates (Unix timestamp à convertir)
+          var StartTimestamp := JSONResponse.GetValue<Int64>('current_period_start');
+          var EndTimestamp := JSONResponse.GetValue<Int64>('current_period_end');
+
+          Result.CurrentPeriodStart := UnixToDateTime(StartTimestamp);
+          Result.CurrentPeriodEnd := UnixToDateTime(EndTimestamp);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur création abonnement: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      FormData.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+
+function TStripe.CancelSubscription(const ASubscriptionID: string;
+  ACancelImmediately: Boolean = False): Boolean;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+begin
+  Result := False;
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+
+    FormData := TStringList.Create;
+    try
+      if not ACancelImmediately then
+        FormData.Add('cancel_at_period_end=true');
+
+      if ACancelImmediately then
+        Response := HTTP.Delete(
+          Format('%s/subscriptions/%s', [STRIPE_API_URL, ASubscriptionID])
+        )
+      else
+        Response := HTTP.Post(
+          Format('%s/subscriptions/%s', [STRIPE_API_URL, ASubscriptionID]),
+          FormData
+        );
+
+      Result := Response.StatusCode = 200;
+
+    finally
+      FormData.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+```
+
+---
+
+## Partie 3 : Intégration PayPal
+
+### 3.1 Configuration PayPal
+
+**Étape 1 : Créer un compte Business**
+
+1. Allez sur [developer.paypal.com](https://developer.paypal.com)
+2. Créez un compte développeur
+3. Créez une application Sandbox
+
+**Étape 2 : Obtenir les credentials**
+
+1. **Dashboard → My Apps & Credentials**
+2. Créez une app
+3. Notez vos credentials :
+   - **Client ID** : Pour identifier votre app
+   - **Secret** : Pour authentifier les requêtes
+
+**Étape 3 : Comptes Sandbox**
+
+PayPal fournit des comptes de test :
+- **Vendeur** : business@example.com
+- **Acheteur** : buyer@example.com
+- Mot de passe : généré automatiquement
+
+### 3.2 Classe PayPal pour Delphi
+
+```pascal
+unit uPayPal;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON, System.Net.HttpClient,
+  System.Net.URLClient, System.NetEncoding;
+
+type
+  TPayPalEnvironment = (ppeSandbox, ppeProduction);
+
+  TPayPalOrder = record
+    ID: string;
+    Status: string; // CREATED, APPROVED, COMPLETED
+    Amount: string;
+    Currency: string;
+    ApproveLink: string;
+  end;
+
+  TPayPal = class
+  private
+    FClientID: string;
+    FSecret: string;
+    FEnvironment: TPayPalEnvironment;
+    FAccessToken: string;
+    FTokenExpiry: TDateTime;
+
+    function GetAPIURL: string;
+    function GetAccessToken: string;
+    function BuildAuthHeader: string;
+    function ParseOrder(const AJSON: TJSONObject): TPayPalOrder;
+  public
+    constructor Create(const AClientID, ASecret: string;
+      AEnvironment: TPayPalEnvironment = ppeSandbox);
+
+    function CreateOrder(AAmount: Double; const ACurrency: string;
+      const ADescription: string = ''): TPayPalOrder;
+    function CaptureOrder(const AOrderID: string): TPayPalOrder;
+    function GetOrder(const AOrderID: string): TPayPalOrder;
+
+    property Environment: TPayPalEnvironment read FEnvironment write FEnvironment;
+  end;
+
+implementation
+
+const
+  PAYPAL_API_SANDBOX = 'https://api-m.sandbox.paypal.com';
+  PAYPAL_API_PRODUCTION = 'https://api-m.paypal.com';
+
+{ TPayPal }
+
+constructor TPayPal.Create(const AClientID, ASecret: string;
+  AEnvironment: TPayPalEnvironment);
+begin
+  inherited Create;
+  FClientID := AClientID;
+  FSecret := ASecret;
+  FEnvironment := AEnvironment;
+end;
+
+function TPayPal.GetAPIURL: string;
+begin
+  if FEnvironment = ppeSandbox then
+    Result := PAYPAL_API_SANDBOX
+  else
+    Result := PAYPAL_API_PRODUCTION;
+end;
+
+function TPayPal.GetAccessToken: string;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  FormData: TStringList;
+  JSONResponse: TJSONObject;
+  Credentials: string;
+  ExpiresIn: Integer;
+begin
+  // Vérifier si le token est encore valide
+  if (FAccessToken <> '') and (Now < FTokenExpiry) then
+  begin
+    Result := FAccessToken;
+    Exit;
+  end;
+
+  HTTP := THTTPClient.Create;
+  try
+    // Basic Auth
+    Credentials := TNetEncoding.Base64.Encode(FClientID + ':' + FSecret);
+    HTTP.CustomHeaders['Authorization'] := 'Basic ' + Credentials;
+    HTTP.CustomHeaders['Content-Type'] := 'application/x-www-form-urlencoded';
+
+    FormData := TStringList.Create;
+    try
+      FormData.Add('grant_type=client_credentials');
+
+      Response := HTTP.Post(
+        GetAPIURL + '/v1/oauth2/token',
+        FormData
+      );
+
+      if Response.StatusCode = 200 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          FAccessToken := JSONResponse.GetValue<string>('access_token');
+          ExpiresIn := JSONResponse.GetValue<Integer>('expires_in');
+          FTokenExpiry := IncSecond(Now, ExpiresIn - 60); // Marge de sécurité
+
+          Result := FAccessToken;
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur authentification PayPal: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      FormData.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+
+function TPayPal.BuildAuthHeader: string;
+begin
+  Result := 'Bearer ' + GetAccessToken;
+end;
+
+function TPayPal.CreateOrder(AAmount: Double; const ACurrency: string;
+  const ADescription: string): TPayPalOrder;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  RequestJSON: TJSONObject;
+  PurchaseUnits: TJSONArray;
+  PurchaseUnit: TJSONObject;
+  AmountObj: TJSONObject;
+  RequestBody: TStringStream;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+    HTTP.CustomHeaders['Content-Type'] := 'application/json';
+
+    // Construire le JSON de la commande
+    RequestJSON := TJSONObject.Create;
+    try
+      RequestJSON.AddPair('intent', 'CAPTURE');
+
+      PurchaseUnits := TJSONArray.Create;
+      PurchaseUnit := TJSONObject.Create;
+
+      AmountObj := TJSONObject.Create;
+      AmountObj.AddPair('currency_code', ACurrency.ToUpper);
+      AmountObj.AddPair('value', FormatFloat('0.00', AAmount));
+
+      PurchaseUnit.AddPair('amount', AmountObj);
+
+      if not ADescription.IsEmpty then
+        PurchaseUnit.AddPair('description', ADescription);
+
+      PurchaseUnits.AddElement(PurchaseUnit);
+      RequestJSON.AddPair('purchase_units', PurchaseUnits);
+
+      RequestBody := TStringStream.Create(RequestJSON.ToString, TEncoding.UTF8);
+      try
+        Response := HTTP.Post(
+          GetAPIURL + '/v2/checkout/orders',
+          RequestBody
+        );
+
+        if Response.StatusCode = 201 then
+        begin
+          JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+          try
+            Result := ParseOrder(JSONResponse);
+          finally
+            JSONResponse.Free;
+          end;
+        end
+        else
+          raise Exception.CreateFmt('Erreur création commande PayPal: %d - %s',
+            [Response.StatusCode, Response.ContentAsString]);
+
+      finally
+        RequestBody.Free;
+      end;
+    finally
+      RequestJSON.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+
+function TPayPal.ParseOrder(const AJSON: TJSONObject): TPayPalOrder;
+var
+  Links: TJSONArray;
+  Link: TJSONObject;
+  I: Integer;
+  PurchaseUnits: TJSONArray;
+  FirstUnit: TJSONObject;
+  Amount: TJSONObject;
+begin
+  Result.ID := AJSON.GetValue<string>('id');
+  Result.Status := AJSON.GetValue<string>('status');
+
+  // Récupérer le lien d'approbation
+  Links := AJSON.GetValue<TJSONArray>('links');
+  for I := 0 to Links.Count - 1 do
+  begin
+    Link := Links.Items[I] as TJSONObject;
+    if Link.GetValue<string>('rel') = 'approve' then
+    begin
+      Result.ApproveLink := Link.GetValue<string>('href');
+      Break;
+    end;
+  end;
+
+  // Récupérer le montant
+  if AJSON.TryGetValue<TJSONArray>('purchase_units', PurchaseUnits) then
+  begin
+    if PurchaseUnits.Count > 0 then
+    begin
+      FirstUnit := PurchaseUnits.Items[0] as TJSONObject;
+      Amount := FirstUnit.GetValue<TJSONObject>('amount');
+      Result.Amount := Amount.GetValue<string>('value');
+      Result.Currency := Amount.GetValue<string>('currency_code');
+    end;
+  end;
+end;
+
+function TPayPal.CaptureOrder(const AOrderID: string): TPayPalOrder;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  EmptyBody: TStringStream;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+    HTTP.CustomHeaders['Content-Type'] := 'application/json';
+
+    EmptyBody := TStringStream.Create('', TEncoding.UTF8);
+    try
+      Response := HTTP.Post(
+        Format('%s/v2/checkout/orders/%s/capture', [GetAPIURL, AOrderID]),
+        EmptyBody
+      );
+
+      if Response.StatusCode = 201 then
+      begin
+        JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+        try
+          Result := ParseOrder(JSONResponse);
+        finally
+          JSONResponse.Free;
+        end;
+      end
+      else
+        raise Exception.CreateFmt('Erreur capture commande PayPal: %d - %s',
+          [Response.StatusCode, Response.ContentAsString]);
+
+    finally
+      EmptyBody.Free;
+    end;
+  finally
+    HTTP.Free;
+  end;
+end;
+
+function TPayPal.GetOrder(const AOrderID: string): TPayPalOrder;
+var
+  HTTP: THTTPClient;
+  Response: IHTTPResponse;
+  JSONResponse: TJSONObject;
+begin
+  HTTP := THTTPClient.Create;
+  try
+    HTTP.CustomHeaders['Authorization'] := BuildAuthHeader;
+
+    Response := HTTP.Get(
+      Format('%s/v2/checkout/orders/%s', [GetAPIURL, AOrderID])
+    );
+
+    if Response.StatusCode = 200 then
+    begin
+      JSONResponse := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
+      try
+        Result := ParseOrder(JSONResponse);
+      finally
+        JSONResponse.Free;
+      end;
+    end
+    else
+      raise Exception.CreateFmt('Erreur récupération commande PayPal: %d - %s',
+        [Response.StatusCode, Response.ContentAsString]);
+  finally
+    HTTP.Free;
+  end;
+end;
+
+end.
+```
+
+### 3.3 Interface PayPal avec WebBrowser
+
+```pascal
+unit uPayPalForm;
+
+interface
+
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.OleCtrls, SHDocVw, uPayPal;
+
+type
+  TPayPalForm = class(TForm)
+    PanelTop: TPanel;
+    LabelInfo: TLabel;
+    WebBrowser1: TWebBrowser;
+    PanelBottom: TPanel;
+    ButtonCancel: TButton;
+
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure WebBrowser1NavigateComplete2(ASender: TObject;
+      const pDisp: IDispatch; const URL: OleVariant);
+    procedure ButtonCancelClick(Sender: TObject);
+  private
+    FPayPal: TPayPal;
+    FOrderID: string;
+    FCompleted: Boolean;
+
+    procedure StartPayment(AAmount: Double; const ACurrency: string);
+    procedure CheckOrderCompletion;
+  public
+    class function ExecutePayment(AAmount: Double; const ACurrency: string;
+      const ADescription: string): Boolean;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+uses
+  System.Threading;
+
+procedure TPayPalForm.FormCreate(Sender: TObject);
+begin
+  FPayPal := TPayPal.Create(
+    'votre_client_id',
+    'votre_secret',
+    ppeSandbox
+  );
+
+  FCompleted := False;
+end;
+
+procedure TPayPalForm.FormDestroy(Sender: TObject);
+begin
+  FPayPal.Free;
+end;
+
+procedure TPayPalForm.StartPayment(AAmount: Double; const ACurrency: string);
+var
+  Order: TPayPalOrder;
+begin
+  try
+    // Créer la commande
+    Order := FPayPal.CreateOrder(AAmount, ACurrency, 'Paiement application');
+    FOrderID := Order.ID;
+
+    // Charger la page d'approbation PayPal
+    WebBrowser1.Navigate(Order.ApproveLink);
+
+    LabelInfo.Caption := Format('Commande créée: %s - Montant: %.2f %s',
+      [Order.ID, AAmount, ACurrency]);
+
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Erreur création commande: ' + E.Message);
+      ModalResult := mrCancel;
+    end;
+  end;
+end;
+
+procedure TPayPalForm.WebBrowser1NavigateComplete2(ASender: TObject;
+  const pDisp: IDispatch; const URL: OleVariant);
+var
+  URLStr: string;
+begin
+  URLStr := VarToStr(URL);
+
+  // Vérifier si l'utilisateur a approuvé
+  if URLStr.Contains('success') or URLStr.Contains('approved') then
+  begin
+    LabelInfo.Caption := 'Paiement approuvé, finalisation...';
+    CheckOrderCompletion;
+  end
+  else if URLStr.Contains('cancel') then
+  begin
+    ShowMessage('Paiement annulé par l''utilisateur');
+    ModalResult := mrCancel;
+  end;
+end;
+
+procedure TPayPalForm.CheckOrderCompletion;
+begin
+  TTask.Run(
+    procedure
+    var
+      Order: TPayPalOrder;
+    begin
+      try
+        Sleep(1000); // Petit délai
+
+        // Capturer le paiement
+        Order := FPayPal.CaptureOrder(FOrderID);
+
+        if Order.Status = 'COMPLETED' then
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              FCompleted := True;
+              ShowMessage('Paiement réussi !');
+              ModalResult := mrOk;
+            end);
+        end
+        else
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ShowMessage('Le paiement n''a pas pu être complété');
+              ModalResult := mrCancel;
+            end);
+        end;
+
+      except
+        on E: Exception do
+        begin
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ShowMessage('Erreur finalisation: ' + E.Message);
+              ModalResult := mrCancel;
+            end);
+        end;
+      end;
+    end);
+end;
+
+procedure TPayPalForm.ButtonCancelClick(Sender: TObject);
+begin
+  if MessageDlg('Annuler le paiement ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    ModalResult := mrCancel;
+end;
+
+class function TPayPalForm.ExecutePayment(AAmount: Double; const ACurrency,
+  ADescription: string): Boolean;
+var
+  Form: TPayPalForm;
+begin
+  Form := TPayPalForm.Create(nil);
+  try
+    Form.StartPayment(AAmount, ACurrency);
+    Result := Form.ShowModal = mrOk;
+  finally
+    Form.Free;
+  end;
+end;
+
+end.
+```
+
+---
+
+## Partie 4 : Webhooks et événements
+
+### 4.1 Qu'est-ce qu'un Webhook ?
+
+Un **webhook** est une notification HTTP que la plateforme de paiement envoie à votre serveur quand un événement se produit.
+
+**Événements courants** :
+- `payment_intent.succeeded` : Paiement réussi
+- `payment_intent.payment_failed` : Paiement échoué
+- `customer.subscription.created` : Abonnement créé
+- `customer.subscription.deleted` : Abonnement annulé
+- `charge.refunded` : Remboursement effectué
+
+### 4.2 Serveur Webhook avec Delphi
+
+```pascal
+unit uWebhookServer;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.JSON,
+  IdHTTPServer, IdContext, IdCustomHTTPServer;
+
+type
+  TWebhookServer = class
+  private
+    FHTTPServer: TIdHTTPServer;
+    FPort: Integer;
+    FStripeSigningSecret: string;
+
+    procedure HandleRequest(AContext: TIdContext;
+      ARequestInfo: TIdHTTPRequestInfo;
+      AResponseInfo: TIdHTTPResponseInfo);
+    function VerifyStripeSignature(const APayload, ASignature: string): Boolean;
+    procedure ProcessStripeWebhook(const APayload: string);
+  public
+    constructor Create(APort: Integer; const AStripeSigningSecret: string);
+    destructor Destroy; override;
+
+    procedure Start;
+    procedure Stop;
+
+    property Port: Integer read FPort;
+  end;
+
+implementation
+
+uses
+  System.Hash, IdGlobal;
+
+{ TWebhookServer }
+
+constructor TWebhookServer.Create(APort: Integer; const AStripeSigningSecret: string);
+begin
+  inherited Create;
+  FPort := APort;
+  FStripeSigningSecret := AStripeSigningSecret;
+
+  FHTTPServer := TIdHTTPServer.Create(nil);
+  FHTTPServer.DefaultPort := FPort;
+  FHTTPServer.OnCommandGet := HandleRequest;
+end;
+
+destructor TWebhookServer.Destroy;
+begin
+  Stop;
+  FHTTPServer.Free;
+  inherited;
+end;
+
+procedure TWebhookServer.Start;
+begin
+  FHTTPServer.Active := True;
+end;
+
+procedure TWebhookServer.Stop;
+begin
+  FHTTPServer.Active := False;
+end;
+
+procedure TWebhookServer.HandleRequest(AContext: TIdContext;
+  ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var
+  Payload: string;
+  Signature: string;
+begin
+  // Webhook Stripe sur /webhook
+  if ARequestInfo.URI = '/webhook' then
+  begin
+    if ARequestInfo.CommandType = hcPOST then
+    begin
+      Payload := ARequestInfo.PostStream.DataString;
+      Signature := ARequestInfo.RawHeaders.Values['Stripe-Signature'];
+
+      // Vérifier la signature
+      if VerifyStripeSignature(Payload, Signature) then
+      begin
+        ProcessStripeWebhook(Payload);
+
+        AResponseInfo.ResponseNo := 200;
+        AResponseInfo.ContentText := '{"received": true}';
+      end
+      else
+      begin
+        AResponseInfo.ResponseNo := 400;
+        AResponseInfo.ContentText := '{"error": "Invalid signature"}';
+      end;
+    end
+    else
+    begin
+      AResponseInfo.ResponseNo := 405;
+      AResponseInfo.ContentText := '{"error": "Method not allowed"}';
+    end;
+  end
+  else
+  begin
+    AResponseInfo.ResponseNo := 404;
+    AResponseInfo.ContentText := '{"error": "Not found"}';
+  end;
+end;
+
+function TWebhookServer.VerifyStripeSignature(const APayload, ASignature: string): Boolean;
+var
+  Parts: TArray<string>;
+  Timestamp: string;
+  Signatures: TArray<string>;
+  ExpectedSignature: string;
+  SignedPayload: string;
+  I: Integer;
+begin
+  Result := False;
+
+  // Format: t=timestamp,v1=signature1,v1=signature2
+  Parts := ASignature.Split([',']);
+
+  for I := 0 to High(Parts) do
+  begin
+    if Parts[I].StartsWith('t=') then
+      Timestamp := Parts[I].Substring(2)
+    else if Parts[I].StartsWith('v1=') then
+    begin
+      SetLength(Signatures, Length(Signatures) + 1);
+      Signatures[High(Signatures)] := Parts[I].Substring(3);
+    end;
+  end;
+
+  // Construire le payload signé
+  SignedPayload := Timestamp + '.' + APayload;
+
+  // Calculer la signature attendue (HMAC SHA256)
+  ExpectedSignature := THashSHA2.GetHMACAsString(
+    SignedPayload,
+    FStripeSigningSecret,
+    SHA256
+  );
+
+  // Vérifier
+  for I := 0 to High(Signatures) do
+  begin
+    if Signatures[I] = ExpectedSignature then
+    begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
+
+procedure TWebhookServer.ProcessStripeWebhook(const APayload: string);
+var
+  JSON: TJSONObject;
+  EventType: string;
+  DataObj: TJSONObject;
+  ObjectObj: TJSONObject;
+begin
+  JSON := TJSONObject.ParseJSONValue(APayload) as TJSONObject;
+  try
+    EventType := JSON.GetValue<string>('type');
+    DataObj := JSON.GetValue<TJSONObject>('data');
+    ObjectObj := DataObj.GetValue<TJSONObject>('object');
+
+    // Traiter selon le type d'événement
     if EventType = 'payment_intent.succeeded' then
     begin
-      // Récupérer l'ID du paiement
-      PaymentIntentID := WebhookData.GetValue<TJSONObject>('data')
-                        .GetValue<TJSONObject>('object')
-                        .GetValue<string>('id');
+      var PaymentIntentID := ObjectObj.GetValue<string>('id');
+      var Amount := ObjectObj.GetValue<Integer>('amount');
 
-      // Mettre à jour la base de données, envoyer un e-mail de confirmation, etc.
-      UpdateOrderStatus(PaymentIntentID, 'paid');
-      SendConfirmationEmail(PaymentIntentID);
+      // Logique métier : marquer la commande comme payée
+      // SavePaymentSuccess(PaymentIntentID, Amount);
+
     end
     else if EventType = 'payment_intent.payment_failed' then
     begin
-      // Gérer l'échec de paiement
-      // ...
+      var PaymentIntentID := ObjectObj.GetValue<string>('id');
+
+      // Logique métier : notifier l'échec
+      // NotifyPaymentFailure(PaymentIntentID);
+
+    end
+    else if EventType = 'customer.subscription.deleted' then
+    begin
+      var SubscriptionID := ObjectObj.GetValue<string>('id');
+      var CustomerID := ObjectObj.GetValue<string>('customer');
+
+      // Logique métier : désactiver l'abonnement
+      // DeactivateSubscription(CustomerID, SubscriptionID);
     end;
 
-    // Répondre avec succès
-    Response.StatusCode := 200;
-    Response.Content := 'Webhook reçu';
-
   finally
-    WebhookData.Free;
+    JSON.Free;
+  end;
+end;
+
+end.
+```
+
+### 4.3 Configuration des Webhooks
+
+**Stripe** :
+1. Dashboard → **Développeurs → Webhooks**
+2. **Ajouter un endpoint**
+3. URL : `https://votre-domaine.com/webhook`
+4. Événements à écouter : Sélectionnez ceux qui vous intéressent
+5. Notez le **Signing Secret** : `whsec_...`
+
+**PayPal** :
+1. Dashboard → **Webhooks**
+2. **Créer un webhook**
+3. URL : `https://votre-domaine.com/paypal-webhook`
+4. Événements : `PAYMENT.CAPTURE.COMPLETED`, etc.
+
+---
+
+## Partie 5 : Sécurité et bonnes pratiques
+
+### 5.1 Règles de sécurité
+
+**❌ À NE JAMAIS FAIRE** :
+
+```pascal
+// NE JAMAIS stocker les numéros de carte
+var CardNumber := '4242424242424242'; // INTERDIT !
+
+// NE JAMAIS exposer la clé secrète
+// var SecretKey := 'sk_live_...'; // dans le code frontend
+
+// NE JAMAIS faire confiance aux montants côté client
+// Si le client envoie le montant, il peut le modifier !
+```
+
+**✅ TOUJOURS FAIRE** :
+
+```pascal
+// Utiliser HTTPS
+if not Request.IsSecure then
+  raise Exception.Create('HTTPS requis');
+
+// Valider côté serveur
+function ValidateAmount(AAmount: Integer; AOrderID: string): Boolean;
+begin
+  // Récupérer le vrai montant depuis votre base
+  var ExpectedAmount := GetOrderAmount(AOrderID);
+  Result := AAmount = ExpectedAmount;
+end;
+
+// Logger tous les paiements
+procedure LogPayment(const APaymentID: string; AAmount: Integer);
+begin
+  // Enregistrer dans la base
+  // + Logger dans un fichier
+  // + Alerter si montant suspect
+end;
+```
+
+### 5.2 Gestion des erreurs
+
+```pascal
+function ProcessPaymentWithRetry(APaymentFunc: TFunc<Boolean>): Boolean;
+var
+  Attempt: Integer;
+  MaxAttempts: Integer;
+  WaitTime: Integer;
+begin
+  Result := False;
+  MaxAttempts := 3;
+
+  for Attempt := 1 to MaxAttempts do
+  begin
+    try
+      Result := APaymentFunc();
+
+      if Result then
+        Exit; // Succès
+
+    except
+      on E: Exception do
+      begin
+        // Logger l'erreur
+        LogError(Format('Tentative %d/%d échouée: %s',
+          [Attempt, MaxAttempts, E.Message]));
+
+        if Attempt < MaxAttempts then
+        begin
+          // Backoff exponentiel
+          WaitTime := 1000 * (2 * Attempt);
+          Sleep(WaitTime);
+        end;
+      end;
+    end;
   end;
 
-  Handled := True;
+  // Échec après toutes les tentatives
+  if not Result then
+    raise Exception.Create('Paiement échoué après plusieurs tentatives');
 end;
 ```
 
-### 2. Vérification de la signature (exemple pour Stripe)
+### 5.3 Tests de sécurité
 
 ```pascal
-function VerifyStripeSignature(const Payload, Signature: string): Boolean;
-var
-  TimestampStr, ExpectedSignature, ActualSignature: string;
-  Timestamp, ToleranceSeconds: Int64;
-  Parts: TArray<string>;
-  SecretKey: string;
+procedure TestPaymentSecurity;
 begin
-  // Clé secrète du webhook (configurée dans Stripe)
-  SecretKey := LoadAPIKeys.StripeWebhookSecret;
+  // Test 1 : Montants négatifs
+  try
+    CreatePayment(-100, 'EUR');
+    raise Exception.Create('ERREUR: Montant négatif accepté !');
+  except
+    on E: EArgumentException do
+      WriteLn('✓ Montant négatif refusé');
+  end;
 
-  // Tolérance de 5 minutes
-  ToleranceSeconds := 5 * 60;
+  // Test 2 : Devises invalides
+  try
+    CreatePayment(1000, 'XXX');
+    raise Exception.Create('ERREUR: Devise invalide acceptée !');
+  except
+    on E: Exception do
+      WriteLn('✓ Devise invalide refusée');
+  end;
 
-  // Analyser la signature
-  Parts := Signature.Split([',']);
-  if Length(Parts) < 2 then
-    Exit(False);
-
-  // Extraire le timestamp
-  TimestampStr := Parts[0].Replace('t=', '');
-  if not TryStrToInt64(TimestampStr, Timestamp) then
-    Exit(False);
-
-  // Vérifier que le webhook n'est pas trop ancien
-  if (DateTimeToUnix(Now) - Timestamp) > ToleranceSeconds then
-    Exit(False);
-
-  // Calculer la signature attendue
-  ExpectedSignature := TimestampStr + '.' + Payload;
-  ExpectedSignature := THashSHA256.GetHashString(ExpectedSignature, TEncoding.UTF8);
-
-  // Comparer avec la signature reçue
-  ActualSignature := Parts[1].Replace('v1=', '');
-
-  Result := (ExpectedSignature = ActualSignature);
+  // Test 3 : Montants extrêmes
+  try
+    CreatePayment(999999999, 'EUR'); // 9,999,999.99 EUR
+    raise Exception.Create('ERREUR: Montant extrême accepté !');
+  except
+    on E: Exception do
+      WriteLn('✓ Montant extrême refusé');
+  end;
 end;
 ```
 
-## Tests et environnement sandbox
+---
 
-Avant de passer en production, testez toujours vos intégrations dans l'environnement sandbox:
+## Partie 6 : Tests et mise en production
 
-### 1. Configuration des environnements
+### 6.1 Tests en Sandbox
+
+**Cartes de test Stripe** :
+
+| Carte | Usage |
+|-------|-------|
+| `4242 4242 4242 4242` | Succès |
+| `4000 0000 0000 9995` | Fonds insuffisants |
+| `4000 0000 0000 9987` | Carte perdue |
+| `4000 0000 0000 0002` | Déclinée (raison générique) |
+| `4000 0027 6000 3184` | 3D Secure requis |
+
+**Codes de test** :
+- CVV : N'importe quel 3 chiffres
+- Date : N'importe quelle date future
+- Code postal : N'importe lequel
+
+### 6.2 Checklist avant production
+
+**Configuration** :
+- [ ] Clés de production obtenues
+- [ ] Webhooks configurés avec URL HTTPS
+- [ ] Certificat SSL valide
+- [ ] Variables d'environnement sécurisées
+
+**Sécurité** :
+- [ ] Clés secrètes JAMAIS dans le code
+- [ ] HTTPS sur toute l'application
+- [ ] Validation côté serveur
+- [ ] Logs de sécurité activés
+
+**Tests** :
+- [ ] Paiement réussi
+- [ ] Paiement refusé
+- [ ] Remboursement
+- [ ] Webhooks reçus
+- [ ] Abonnement créé/annulé
+
+**Légal** :
+- [ ] CGV/CGU à jour
+- [ ] Politique de remboursement
+- [ ] Mentions légales
+- [ ] Conformité RGPD
+
+### 6.3 Passage en production
 
 ```pascal
+// Configuration environnement
 type
   TPaymentEnvironment = (peTest, peProduction);
 
-  TPaymentConfig = record
-    Environment: TPaymentEnvironment;
-    StripeSecretKey: string;
-    StripePublicKey: string;
-    PayPalClientID: string;
-    PayPalClientSecret: string;
-    procedure Initialize(AEnvironment: TPaymentEnvironment);
-  end;
+var
+  Environment: TPaymentEnvironment;
 
-procedure TPaymentConfig.Initialize(AEnvironment: TPaymentEnvironment);
+procedure InitializePayment;
 begin
-  Environment := AEnvironment;
+  {$IFDEF DEBUG}
+  Environment := peTest;
+  {$ELSE}
+  Environment := peProduction;
+  {$ENDIF}
 
   case Environment of
     peTest:
       begin
-        StripeSecretKey := 'sk_test_YourTestKey';
-        StripePublicKey := 'pk_test_YourTestKey';
-        PayPalClientID := 'test_client_id';
-        PayPalClientSecret := 'test_client_secret';
+        FStripe := TStripe.Create(
+          GetEnvironmentVariable('STRIPE_TEST_SECRET'),
+          GetEnvironmentVariable('STRIPE_TEST_PUBLIC')
+        );
       end;
     peProduction:
       begin
-        StripeSecretKey := 'sk_live_YourLiveKey';
-        StripePublicKey := 'pk_live_YourLiveKey';
-        PayPalClientID := 'live_client_id';
-        PayPalClientSecret := 'live_client_secret';
+        FStripe := TStripe.Create(
+          GetEnvironmentVariable('STRIPE_LIVE_SECRET'),
+          GetEnvironmentVariable('STRIPE_LIVE_PUBLIC')
+        );
+
+        // Activer les alertes
+        EnablePaymentAlerts;
       end;
   end;
 end;
 ```
 
-### 2. Cartes de test
-
-Pour Stripe, utilisez ces cartes de test:
+### 6.4 Monitoring et alertes
 
 ```pascal
-procedure TfrmPayment.ShowTestCardInfo;
-begin
-  mmTestCards.Lines.Clear;
-  mmTestCards.Lines.Add('Cartes de test Stripe:');
-  mmTestCards.Lines.Add('- Paiement réussi: 4242 4242 4242 4242');
-  mmTestCards.Lines.Add('- Échec paiement: 4000 0000 0000 0002');
-  mmTestCards.Lines.Add('- Paiement nécessitant 3D Secure: 4000 0000 0000 3220');
-  mmTestCards.Lines.Add('Utiliser une date future et n''importe quel CVC');
-end;
-```
-
-## Bonnes pratiques
-
-### 1. Journalisation des erreurs
-
-```pascal
-procedure LogPaymentError(const Source, ErrorMsg: string);
-var
-  LogFile: TextFile;
-  LogPath: string;
-begin
-  LogPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'payment_errors.log';
-
-  AssignFile(LogFile, LogPath);
-  try
-    if FileExists(LogPath) then
-      Append(LogFile)
-    else
-      Rewrite(LogFile);
-
-    WriteLn(LogFile, Format('[%s] %s: %s',
-                            [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
-                             Source, ErrorMsg]));
-  finally
-    CloseFile(LogFile);
-  end;
-end;
-```
-
-### 2. Structure de base de données pour les paiements
-
-Voici un exemple de structure de table pour suivre les paiements:
-
-```sql
-CREATE TABLE payments (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id VARCHAR(50) NOT NULL,
-  provider VARCHAR(20) NOT NULL,
-  provider_payment_id VARCHAR(100) NOT NULL,
-  amount DECIMAL(10,2) NOT NULL,
-  currency CHAR(3) NOT NULL,
-  status VARCHAR(20) NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-### 3. Interface unifiée pour plusieurs fournisseurs
-
-Créez une interface commune pour toutes vos plateformes de paiement:
-
-```pascal
-type
-  IPaymentProvider = interface
-    ['{A1B2C3D4-E5F6-G7H8-I9J0-K1L2M3N4O5P6}']
-    function CreatePayment(Amount: Double; Currency: string;
-                         Description: string): string; // Retourne ID
-    function GetPaymentStatus(PaymentID: string): string;
-    function RefundPayment(PaymentID: string; Amount: Double): Boolean;
-  end;
-
-  TStripeProvider = class(TInterfacedObject, IPaymentProvider)
-  private
-    FService: TStripePaymentService;
-  public
-    constructor Create(const SecretKey, PublicKey: string);
-    destructor Destroy; override;
-
-    // Implémentation de IPaymentProvider
-    function CreatePayment(Amount: Double; Currency: string;
-                         Description: string): string;
-    function GetPaymentStatus(PaymentID: string): string;
-    function RefundPayment(PaymentID: string; Amount: Double): Boolean;
-  end;
-```
-
-## Exemple de projet complet
-
-Voici un exemple simplifié d'un système de caisse avec intégration de paiement:
-
-### 1. Interface utilisateur
-
-```pascal
-object frmCheckout: TfrmCheckout
-  Left = 0
-  Top = 0
-  Caption = 'Finalisation de commande'
-  ClientHeight = 450
-  ClientWidth = 600
-  Position = poScreenCenter
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  object pnlOrder: TPanel
-    // Configuration du panneau...
-    object lblTotal: TLabel
-      Caption = 'Total :'
-    end
-    object lblAmount: TLabel
-      Caption = '0.00 €'
-    end
-  end
-  object rgPaymentMethod: TRadioGroup
-    Caption = 'Méthode de paiement'
-    Items.Strings = (
-      'Carte bancaire (Stripe)'
-      'PayPal'
-    )
-  end
-  object btnPay: TButton
-    Caption = 'Payer maintenant'
-    OnClick = btnPayClick
-  end
-end
-```
-
-### 2. Code du formulaire
-
-```pascal
-unit CheckoutForm;
+unit uPaymentMonitoring;
 
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, System.JSON,
-  StripePaymentService, PayPalPaymentService;
+  System.SysUtils, System.Classes;
 
 type
-  TPaymentResult = (prSuccess, prFailed, prCancelled);
-
-  TfrmCheckout = class(TForm)
-    pnlOrder: TPanel;
-    lblTotal: TLabel;
-    lblAmount: TLabel;
-    rgPaymentMethod: TRadioGroup;
-    btnPay: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnPayClick(Sender: TObject);
+  TPaymentMonitor = class
   private
-    FStripeService: TStripePaymentService;
-    FPayPalService: TPayPalPaymentService;
-    FOrderID: string;
-    FAmount: Double;
+    FTotalPayments: Integer;
+    FFailedPayments: Integer;
+    FTotalAmount: Double;
 
-    function ProcessStripePayment: TPaymentResult;
-    function ProcessPayPalPayment: TPaymentResult;
-    procedure SavePaymentDetails(const ProviderName, PaymentID: string;
-                              Result: TPaymentResult);
+    procedure CheckAnomalies;
+    procedure SendAlert(const AMessage: string);
   public
-    procedure SetOrderDetails(const OrderID: string; Amount: Double);
+    procedure RecordPayment(ASuccess: Boolean; AAmount: Double);
+    procedure GenerateDailyReport;
+
+    property TotalPayments: Integer read FTotalPayments;
+    property FailedPayments: Integer read FFailedPayments;
+    property SuccessRate: Double read GetSuccessRate;
   end;
 
 implementation
-
-{$R *.dfm}
-
-// Implémentation à suivre...
-
-end.
-```
-
-### 3. Implémentation des paiements
-
-```pascal
-procedure TfrmCheckout.FormCreate(Sender: TObject);
-var
-  PaymentConfig: TPaymentConfig;
-begin
-  // Initialiser la configuration (en mode test par défaut)
-  PaymentConfig.Initialize(peTest);
-
-  // Créer les services de paiement
-  FStripeService := TStripePaymentService.Create(PaymentConfig.StripeSecretKey,
-                                              PaymentConfig.StripePublicKey);
-  FPayPalService := TPayPalPaymentService.Create(PaymentConfig.PayPalClientID,
-                                              PaymentConfig.PayPalClientSecret);
-end;
-
-procedure TfrmCheckout.FormDestroy(Sender: TObject);
-begin
-  FStripeService.Free;
-  FPayPalService.Free;
-end;
-
-procedure TfrmCheckout.SetOrderDetails(const OrderID: string; Amount: Double);
-begin
-  FOrderID := OrderID;
-  FAmount := Amount;
-
-  lblAmount.Caption := FormatFloat('#,##0.00 €', FAmount);
-end;
-
-procedure TfrmCheckout.btnPayClick(Sender: TObject);
-var
-  PaymentResult: TPaymentResult;
-  ProviderName, PaymentID: string;
-begin
-  if FAmount <= 0 then
-  begin
-    ShowMessage('Montant invalide');
-    Exit;
-  end;
-
-  btnPay.Enabled := False;
-  try
-    case rgPaymentMethod.ItemIndex of
-      0: // Stripe
-      begin
-        ProviderName := 'Stripe';
-        PaymentResult := ProcessStripePayment;
-      end;
-      1: // PayPal
-      begin
-        ProviderName := 'PayPal';
-        PaymentResult := ProcessPayPalPayment;
-      end;
-    else
-      ShowMessage('Veuillez sélectionner une méthode de paiement');
-      Exit;
-    end;
-
-    // Enregistrer le résultat du paiement
-    SavePaymentDetails(ProviderName, FOrderID, PaymentResult);
-
-    // Afficher le résultat
-    case PaymentResult of
-      prSuccess:
-        begin
-          ShowMessage('Paiement réussi !');
-          ModalResult := mrOk; // Fermer la fenêtre avec succès
-        end;
-      prFailed:
-        ShowMessage('Le paiement a échoué. Veuillez réessayer.');
-      prCancelled:
-        ShowMessage('Paiement annulé par l''utilisateur.');
-    end;
-
-  finally
-    btnPay.Enabled := True;
-  end;
-end;
-
-function TfrmCheckout.ProcessStripePayment: TPaymentResult;
-var
-  PaymentIntent: TJSONObject;
-  ClientSecret, RedirectURL: string;
-  PaymentForm: TfrmStripePayment;
-begin
-  Result := prCancelled; // Par défaut
-
-  try
-    // Créer une intention de paiement
-    PaymentIntent := FStripeService.CreatePaymentIntent(
-      Round(FAmount * 100), // Conversion en centimes
-      'eur',
-      Format('Commande #%s', [FOrderID])
-    );
-
-    // Récupérer le client_secret
-    ClientSecret := PaymentIntent.GetValue<string>('client_secret');
-
-    // Afficher le formulaire de paiement Stripe
-    PaymentForm := TfrmStripePayment.Create(Self);
-    try
-      PaymentForm.SetPaymentDetails(ClientSecret, FAmount);
-
-      if PaymentForm.ShowModal = mrOk then
-        Result := prSuccess
-      else
-        Result := prFailed;
-    finally
-      PaymentForm.Free;
-    end;
-
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur lors du traitement du paiement Stripe: ' + E.Message);
-      LogPaymentError('Stripe', E.Message);
-      Result := prFailed;
-    end;
-  end;
-end;
-
-function TfrmCheckout.ProcessPayPalPayment: TPaymentResult;
-var
-  OrderResponse: TJSONObject;
-  OrderID, ApprovalURL: string;
-  Links: TJSONArray;
-  i: Integer;
-  ResultCode: Integer;
-begin
-  Result := prCancelled; // Par défaut
-
-  try
-    // Créer une commande PayPal
-    OrderResponse := FPayPalService.CreateOrder(FAmount, 'EUR');
-
-    // Récupérer l'ID de commande
-    OrderID := OrderResponse.GetValue<string>('id');
-
-    // Trouver l'URL d'approbation
-    Links := OrderResponse.GetValue<TJSONArray>('links');
-    ApprovalURL := '';
-
-    for i := 0 to Links.Count - 1 do
-    begin
-      var Link := Links.Items[i] as TJSONObject;
-      if Link.GetValue<string>('rel') = 'approve' then
-      begin
-        ApprovalURL := Link.GetValue<string>('href');
-        Break;
-      end;
-    end;
-
-    if ApprovalURL = '' then
-      raise Exception.Create('URL d''approbation PayPal non trouvée');
-
-    // Ouvrir le navigateur pour l'approbation PayPal
-    ResultCode := ShellExecute(0, 'open', PChar(ApprovalURL), nil, nil, SW_SHOWNORMAL);
-
-    if ResultCode <= 32 then // Erreur d'exécution
-      raise Exception.CreateFmt('Impossible d''ouvrir le navigateur. Code: %d', [ResultCode]);
-
-    // Attendre la confirmation de l'utilisateur
-    if MessageDlg('Avez-vous complété le paiement sur PayPal?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      // Vérifier le statut du paiement
-      var CaptureResponse := FPayPalService.CapturePayment(OrderID);
-      var Status := CaptureResponse.GetValue<string>('status');
-
-      if Status = 'COMPLETED' then
-        Result := prSuccess
-      else
-        Result := prFailed;
-    end;
-
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur lors du traitement du paiement PayPal: ' + E.Message);
-      LogPaymentError('PayPal', E.Message);
-      Result := prFailed;
-    end;
-  end;
-end;
-
-procedure TfrmCheckout.SavePaymentDetails(const ProviderName, PaymentID: string;
-                                        Result: TPaymentResult);
-var
-  Status: string;
-begin
-  // Définir le statut en fonction du résultat
-  case Result of
-    prSuccess: Status := 'completed';
-    prFailed: Status := 'failed';
-    prCancelled: Status := 'cancelled';
-  end;
-
-  // Exemple d'enregistrement dans une base de données
-  with DataModule1.qryPayments do
-  begin
-    Close;
-    SQL.Clear;
-    SQL.Add('INSERT INTO payments (order_id, provider, amount, currency, status)');
-    SQL.Add('VALUES (:order_id, :provider, :amount, :currency, :status)');
-
-    ParamByName('order_id').AsString := FOrderID;
-    ParamByName('provider').AsString := ProviderName;
-    ParamByName('amount').AsFloat := FAmount;
-    ParamByName('currency').AsString := 'EUR';
-    ParamByName('status').AsString := Status;
-
-    try
-      ExecSQL;
-    except
-      on E: Exception do
-        LogPaymentError('Database', E.Message);
-    end;
-  end;
-end;
-```
-
-## Formulaire de paiement Stripe
-
-Pour créer une expérience utilisateur optimale, nous allons implémenter un formulaire dédié au paiement par Stripe. Celui-ci utilisera un composant TWebBrowser pour charger une page HTML qui intègre Stripe.js.
-
-### 1. Interface du formulaire
-
-```pascal
-unit StripePaymentForm;
-
-interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.OleCtrls, SHDocVw;
+  System.Net.HttpClient;
 
-type
-  TfrmStripePayment = class(TForm)
-    Panel1: TPanel;
-    WebBrowser1: TWebBrowser;
-    btnCancel: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure WebBrowser1DocumentComplete(ASender: TObject; const pDisp: IDispatch;
-                                         const URL: OleVariant);
-  private
-    FClientSecret: string;
-    FAmount: Double;
-    FPaymentSuccessful: Boolean;
-    procedure HandlePaymentResult(const Status: string);
-  public
-    procedure SetPaymentDetails(const AClientSecret: string; AAmount: Double);
-  end;
+{ TPaymentMonitor }
 
-implementation
-
-{$R *.dfm}
-
-// Implémentation à suivre...
-
-end.
-```
-
-### 2. Implémentation du formulaire Stripe
-
-```pascal
-procedure TfrmStripePayment.FormCreate(Sender: TObject);
+procedure TPaymentMonitor.RecordPayment(ASuccess: Boolean; AAmount: Double);
 begin
-  FPaymentSuccessful := False;
-end;
+  Inc(FTotalPayments);
 
-procedure TfrmStripePayment.SetPaymentDetails(const AClientSecret: string; AAmount: Double);
-begin
-  FClientSecret := AClientSecret;
-  FAmount := AAmount;
-end;
-
-procedure TfrmStripePayment.btnCancelClick(Sender: TObject);
-begin
-  ModalResult := mrCancel;
-end;
-
-procedure TfrmStripePayment.WebBrowser1DocumentComplete(ASender: TObject;
-                                                     const pDisp: IDispatch;
-                                                     const URL: OleVariant);
-var
-  Document: IHTMLDocument2;
-  HTMLWindow: IHTMLWindow2;
-  StripeHTML: string;
-begin
-  if WebBrowser1.ReadyState <> READYSTATE_COMPLETE then
-    Exit;
-
-  Document := WebBrowser1.Document as IHTMLDocument2;
-  if not Assigned(Document) then
-    Exit;
-
-  // Construire la page HTML avec l'intégration Stripe
-  StripeHTML :=
-    '<!DOCTYPE html>' +
-    '<html>' +
-    '<head>' +
-    '  <meta charset="utf-8">' +
-    '  <title>Paiement Stripe</title>' +
-    '  <script src="https://js.stripe.com/v3/"></script>' +
-    '  <style>' +
-    '    body { font-family: Arial, sans-serif; margin: 20px; }' +
-    '    #payment-form { width: 100%; max-width: 500px; margin: 0 auto; }' +
-    '    #card-element { margin: 20px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }' +
-    '    #card-errors { color: #fa755a; margin-top: 10px; }' +
-    '    .button { background: #5469d4; color: #ffffff; border-radius: 4px; border: 0;' +
-    '              padding: 12px 16px; font-size: 16px; font-weight: 600; cursor: pointer; }' +
-    '    .result-message { margin-top: 20px; }' +
-    '  </style>' +
-    '</head>' +
-    '<body>' +
-    '  <div id="payment-form">' +
-    '    <h2>Paiement par carte bancaire</h2>' +
-    '    <p>Montant: ' + FormatFloat('#,##0.00 €', FAmount) + '</p>' +
-    '    <div id="card-element"></div>' +
-    '    <div id="card-errors" role="alert"></div>' +
-    '    <button id="submit-button" class="button">Payer</button>' +
-    '    <div class="result-message" id="result-message"></div>' +
-    '  </div>' +
-    '  <script>' +
-    '    var stripe = Stripe("' + GetStripePublicKey + '");' +
-    '    var elements = stripe.elements();' +
-    '    var cardElement = elements.create("card", {' +
-    '      style: { base: { fontSize: "16px" } }' +
-    '    });' +
-    '    cardElement.mount("#card-element");' +
-    '    ' +
-    '    var form = document.getElementById("payment-form");' +
-    '    var submitButton = document.getElementById("submit-button");' +
-    '    var resultMessage = document.getElementById("result-message");' +
-    '    ' +
-    '    submitButton.addEventListener("click", function() {' +
-    '      submitButton.disabled = true;' +
-    '      stripe.confirmCardPayment("' + FClientSecret + '", {' +
-    '        payment_method: { card: cardElement }' +
-    '      })' +
-    '      .then(function(result) {' +
-    '        if (result.error) {' +
-    '          document.getElementById("card-errors").textContent = result.error.message;' +
-    '          submitButton.disabled = false;' +
-    '          window.external.HandlePaymentResult("error");' +
-    '        } else {' +
-    '          if (result.paymentIntent.status === "succeeded") {' +
-    '            resultMessage.textContent = "Paiement réussi !";' +
-    '            window.external.HandlePaymentResult("succeeded");' +
-    '          }' +
-    '        }' +
-    '      });' +
-    '    });' +
-    '  </script>' +
-    '</body>' +
-    '</html>';
-
-  // Effacer le document actuel
-  Document.clear;
-
-  // Écrire notre HTML
-  Document.write(StripeHTML);
-  Document.close;
-
-  // Exposer la méthode HandlePaymentResult au JavaScript
-  HTMLWindow := (Document as IHTMLDocument2).parentWindow;
-  HTMLWindow.execScript('function getWindowExternal() { return window.external; }', 'JavaScript');
-end;
-
-procedure TfrmStripePayment.HandlePaymentResult(const Status: string);
-begin
-  if Status = 'succeeded' then
-  begin
-    FPaymentSuccessful := True;
-    ModalResult := mrOk;
-  end
-  else if Status = 'error' then
-  begin
-    FPaymentSuccessful := False;
-    // Ne pas fermer la fenêtre, laisser l'utilisateur réessayer
-  end;
-end;
-
-function GetStripePublicKey: string;
-var
-  PaymentConfig: TPaymentConfig;
-begin
-  PaymentConfig.Initialize(peTest); // ou peProduction selon le contexte
-  Result := PaymentConfig.StripePublicKey;
-end;
-```
-
-## Gestion des remboursements
-
-Pour compléter votre intégration, il est important de pouvoir gérer les remboursements :
-
-```pascal
-function TStripePaymentService.RefundPayment(const PaymentIntentID: string;
-                                          Amount: Integer = 0): TJSONObject;
-var
-  RequestBody: TStringList;
-begin
-  RequestBody := TStringList.Create;
-  try
-    // Configurer la requête
-    FRESTRequest.Method := rmPOST;
-    FRESTRequest.Resource := 'refunds';
-
-    // Ajouter les paramètres
-    RequestBody.Add('payment_intent=' + PaymentIntentID);
-    if Amount > 0 then
-      RequestBody.Add('amount=' + IntToStr(Amount));
-
-    FRESTRequest.Body.Add(RequestBody.Text, TRESTContentType.ctURLENCODED);
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    // Analyser la réponse
-    if FRESTResponse.StatusCode = 200 then
-      Result := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject
-    else
-      raise Exception.CreateFmt('Erreur de remboursement Stripe: %s',
-                              [FRESTResponse.Content]);
-  finally
-    RequestBody.Free;
-  end;
-end;
-```
-
-## Gestion des erreurs et messages à l'utilisateur
-
-Il est crucial d'afficher des messages clairs en cas d'erreur lors du paiement :
-
-```pascal
-function GetReadablePaymentError(const ErrorCode: string): string;
-begin
-  // Codes d'erreur Stripe communs
-  if ErrorCode = 'card_declined' then
-    Result := 'Carte refusée. Veuillez essayer avec une autre carte.'
-  else if ErrorCode = 'expired_card' then
-    Result := 'Cette carte est expirée. Veuillez utiliser une autre carte.'
-  else if ErrorCode = 'incorrect_cvc' then
-    Result := 'Le code de sécurité (CVC) est incorrect.'
-  else if ErrorCode = 'processing_error' then
-    Result := 'Une erreur est survenue lors du traitement de la carte. Veuillez réessayer.'
-  else if ErrorCode = 'insufficient_funds' then
-    Result := 'Fonds insuffisants sur cette carte.'
+  if ASuccess then
+    FTotalAmount := FTotalAmount + AAmount
   else
-    Result := 'Erreur de paiement: ' + ErrorCode;
+    Inc(FFailedPayments);
+
+  // Vérifier les anomalies
+  CheckAnomalies;
 end;
-```
 
-## Intégrer d'autres fournisseurs de paiement
-
-Pour intégrer d'autres fournisseurs comme Adyen ou WorldPay, suivez la même structure mais adaptez les API spécifiques :
-
-```pascal
-type
-  TAdyenPaymentService = class
-  private
-    FRESTClient: TRESTClient;
-    FRESTRequest: TRESTRequest;
-    FRESTResponse: TRESTResponse;
-    FApiKey: string;
-    FMerchantAccount: string;
-  public
-    constructor Create(const AApiKey, AMerchantAccount: string);
-    destructor Destroy; override;
-
-    function CreatePayment(Amount: Integer; Currency, Reference: string): TJSONObject;
-    // Autres méthodes...
-  end;
-```
-
-## Exemple pratique complet : E-commerce avec panier
-
-Voici un exemple plus complet d'intégration dans une application e-commerce :
-
-```pascal
-procedure TfrmCart.btnCheckoutClick(Sender: TObject);
+procedure TPaymentMonitor.CheckAnomalies;
 var
-  OrderID: string;
-  TotalAmount: Double;
-  CheckoutForm: TfrmCheckout;
+  FailureRate: Double;
 begin
-  // Créer un nouvel ID de commande
-  OrderID := GenerateOrderID;
+  if FTotalPayments < 10 then
+    Exit; // Pas assez de données
 
-  // Calculer le montant total
-  TotalAmount := CalculateCartTotal;
+  FailureRate := FFailedPayments / FTotalPayments;
 
-  // Enregistrer la commande dans la BD
-  if not SaveOrderToDatabase(OrderID, TotalAmount) then
+  // Alerter si > 10% d'échecs
+  if FailureRate > 0.1 then
   begin
-    ShowMessage('Erreur lors de l''enregistrement de la commande');
-    Exit;
+    SendAlert(Format(
+      'Taux d''échec élevé: %.1f%% (%d/%d)',
+      [FailureRate * 100, FFailedPayments, FTotalPayments]
+    ));
   end;
 
-  // Afficher le formulaire de paiement
-  CheckoutForm := TfrmCheckout.Create(Self);
-  try
-    CheckoutForm.SetOrderDetails(OrderID, TotalAmount);
+  // Alerter si montant inhabituel
+  if (FTotalAmount > 10000) and (FTotalPayments < 5) then
+  begin
+    SendAlert(Format(
+      'Montant inhabituel: %.2f€ en %d paiements',
+      [FTotalAmount, FTotalPayments]
+    ));
+  end;
+end;
 
-    if CheckoutForm.ShowModal = mrOk then
+procedure TPaymentMonitor.SendAlert(const AMessage: string);
+begin
+  // Email
+  // SendEmail('admin@votreapp.com', 'Alerte paiement', AMessage);
+
+  // SMS
+  // SendSMS('+33612345678', AMessage);
+
+  // Slack
+  // SendSlackMessage('#alerts', AMessage);
+
+  // Log
+  WriteLn('[ALERT] ' + AMessage);
+end;
+
+procedure TPaymentMonitor.GenerateDailyReport;
+var
+  Report: TStringList;
+  SuccessRate: Double;
+begin
+  Report := TStringList.Create;
+  try
+    Report.Add('=== Rapport quotidien des paiements ===');
+    Report.Add(Format('Total: %d paiements', [FTotalPayments]));
+    Report.Add(Format('Réussis: %d', [FTotalPayments - FFailedPayments]));
+    Report.Add(Format('Échoués: %d', [FFailedPayments]));
+
+    if FTotalPayments > 0 then
     begin
-      // Paiement réussi - finaliser la commande
-      FinalizeOrder(OrderID);
-      EmptyCart;
-      ShowMessage('Merci pour votre commande! Un email de confirmation vous a été envoyé.');
-    end
-    else
-    begin
-      // Paiement échoué ou annulé
-      UpdateOrderStatus(OrderID, 'payment_failed');
-      ShowMessage('La commande n''a pas pu être finalisée.');
+      SuccessRate := (FTotalPayments - FFailedPayments) / FTotalPayments * 100;
+      Report.Add(Format('Taux de succès: %.1f%%', [SuccessRate]));
     end;
 
-  finally
-    CheckoutForm.Free;
-  end;
-end;
-```
+    Report.Add(Format('Montant total: %.2f€', [FTotalAmount]));
 
-## Compléments avancés
-
-### 1. Mise en œuvre d'un système de paiement récurrent (abonnements)
-
-Pour gérer les abonnements avec Stripe :
-
-```pascal
-function TStripePaymentService.CreateSubscription(CustomerID, PriceID: string): TJSONObject;
-var
-  RequestBody: TStringList;
-begin
-  RequestBody := TStringList.Create;
-  try
-    // Configurer la requête
-    FRESTRequest.Method := rmPOST;
-    FRESTRequest.Resource := 'subscriptions';
-
-    // Ajouter les paramètres
-    RequestBody.Add('customer=' + CustomerID);
-    RequestBody.Add('items[0][price]=' + PriceID);
-
-    FRESTRequest.Body.Add(RequestBody.Text, TRESTContentType.ctURLENCODED);
-
-    // Exécuter la requête
-    FRESTRequest.Execute;
-
-    // Analyser la réponse
-    if (FRESTResponse.StatusCode = 200) or (FRESTResponse.StatusCode = 201) then
-      Result := TJSONObject.ParseJSONValue(FRESTResponse.Content) as TJSONObject
-    else
-      raise Exception.CreateFmt('Erreur création abonnement: %s',
-                              [FRESTResponse.Content]);
-  finally
-    RequestBody.Free;
-  end;
-end;
-```
-
-### 2. Implémentation de facturation automatique
-
-```pascal
-procedure GenerateInvoiceAfterPayment(const OrderID: string);
-var
-  Invoice: TInvoice;
-  OrderDetails: TOrderDetails;
-  PDFGenerator: TPDFInvoiceGenerator;
-  EmailSender: TEmailSender;
-begin
-  // Récupérer les détails de la commande
-  OrderDetails := GetOrderDetails(OrderID);
-
-  // Créer une facture
-  Invoice := TInvoice.Create;
-  try
-    Invoice.InvoiceNumber := GenerateInvoiceNumber;
-    Invoice.OrderID := OrderID;
-    Invoice.CustomerInfo := OrderDetails.CustomerInfo;
-    Invoice.Items := OrderDetails.Items;
-    Invoice.TotalAmount := OrderDetails.TotalAmount;
-    Invoice.PaymentDate := Now;
-
-    // Enregistrer la facture dans la base de données
-    SaveInvoiceToDatabase(Invoice);
-
-    // Générer un PDF
-    PDFGenerator := TPDFInvoiceGenerator.Create;
-    try
-      PDFGenerator.GenerateInvoice(Invoice, GetInvoicePath(Invoice.InvoiceNumber));
-
-      // Envoyer par email
-      EmailSender := TEmailSender.Create;
-      try
-        EmailSender.SendInvoice(OrderDetails.CustomerEmail,
-                              GetInvoicePath(Invoice.InvoiceNumber));
-      finally
-        EmailSender.Free;
-      end;
-
-    finally
-      PDFGenerator.Free;
-    end;
+    // Envoyer par email
+    // SendEmail('admin@votreapp.com', 'Rapport quotidien', Report.Text);
 
   finally
-    Invoice.Free;
+    Report.Free;
   end;
 end;
+
+end.
 ```
-
-## Ressources et documentation supplémentaire
-
-Pour approfondir vos connaissances sur l'intégration des plateformes de paiement avec Delphi, consultez ces ressources :
-
-1. Documentation officielle de Stripe : [https://stripe.com/docs](https://stripe.com/docs)
-2. Documentation API de PayPal : [https://developer.paypal.com/docs/api/overview/](https://developer.paypal.com/docs/api/overview/)
-3. Forums Delphi pour des exemples spécifiques
-4. Blogs techniques sur les intégrations de paiement
-
-## Conclusion
-
-L'intégration des plateformes de paiement dans vos applications Delphi ouvre de nouvelles opportunités commerciales. Bien que cette intégration puisse sembler complexe au premier abord, l'utilisation des composants REST de Delphi et une bonne structure de code vous permettront de créer des solutions de paiement robustes et sécurisées.
-
-Points clés à retenir :
-1. Toujours utiliser les environnements sandbox pour les tests
-2. Sécuriser toutes les communications et les données sensibles
-3. Gérer correctement les erreurs et fournir des messages clairs aux utilisateurs
-4. Implémenter des mécanismes de vérification et de réconciliation
-5. Se tenir informé des mises à jour des API des plateformes de paiement
-
-En suivant ce guide, vous disposez maintenant des bases nécessaires pour intégrer différentes solutions de paiement dans vos applications Delphi et proposer une expérience utilisateur fluide et professionnelle.
-
-## Pratiques recommandées
-
-- **Sécurité** : Ne stockez jamais les données de carte directement, utilisez les tokens fournis par les plateformes de paiement
-- **Journalisation** : Enregistrez tous les événements de paiement pour le suivi et la résolution des problèmes
-- **Conformité** : Assurez-vous que votre application respecte les normes PCI DSS si vous manipulez des données de paiement
-- **Tests** : Testez rigoureusement tous les scénarios, y compris les échecs et les erreurs
-- **Notifications** : Informez l'utilisateur de l'état de son paiement à chaque étape
 
 ---
 
-**Note technique** : La plupart des exemples de ce tutoriel sont compatibles avec Delphi 11 Alexandria et supérieur. L'utilisation des expressions lambda dans certains exemples de code pourrait nécessiter Delphi 12 Athens ou supérieur.
+## Conclusion
+
+### Ce que vous avez appris
+
+Félicitations ! Vous savez maintenant intégrer des paiements en ligne dans vos applications Delphi. Vous maîtrisez :
+
+✅ **Concepts de paiement** : Tokens, charges, webhooks
+✅ **Stripe** : Paiements uniques et abonnements
+✅ **PayPal** : Intégration complète
+✅ **Sécurité** : PCI DSS, HTTPS, validation
+✅ **Webhooks** : Événements en temps réel
+✅ **Tests** : Sandbox et cartes de test
+✅ **Production** : Déploiement sécurisé
+✅ **Monitoring** : Alertes et rapports
+
+### Compétences acquises
+
+Vous êtes maintenant capable de :
+
+🎯 Accepter des paiements par carte bancaire
+🎯 Gérer des abonnements récurrents
+🎯 Traiter les remboursements
+🎯 Sécuriser les transactions
+🎯 Tester en environnement sandbox
+🎯 Déployer en production
+🎯 Monitorer les paiements
+
+### Coûts typiques
+
+**Stripe** :
+- 1.4% + 0.25€ par transaction (Europe)
+- Pas de frais mensuels
+- Remboursements : frais conservés
+
+**PayPal** :
+- 2.9% + 0.30€ par transaction
+- Pas de frais mensuels
+- Remboursements : frais remboursés
+
+**Budget exemple** (100 ventes/mois à 50€) :
+- Stripe : ~95€/mois
+- PayPal : ~170€/mois
+
+### Applications pratiques
+
+**E-commerce** :
+- Boutique en ligne
+- Marketplace
+- Services en ligne
+
+**SaaS** :
+- Abonnements mensuels
+- Essais gratuits
+- Facturation usage
+
+**Services** :
+- Réservations
+- Formations
+- Consultations
+
+### Bonnes pratiques rappel
+
+**Sécurité** :
+- ✅ TOUJOURS utiliser HTTPS
+- ✅ JAMAIS stocker les cartes
+- ✅ Valider côté serveur
+- ✅ Logger tout
+
+**UX** :
+- ✅ Messages clairs
+- ✅ Loading states
+- ✅ Gestion d'erreurs
+- ✅ Confirmations
+
+**Business** :
+- ✅ Tester avant de lancer
+- ✅ Monitorer les paiements
+- ✅ CGV claires
+- ✅ Support client
+
+### Ressources complémentaires
+
+**Documentation** :
+- [Stripe Documentation](https://stripe.com/docs)
+- [PayPal Developer](https://developer.paypal.com)
+- [PCI Security Standards](https://www.pcisecuritystandards.org)
+
+**Outils** :
+- Stripe Dashboard pour monitoring
+- PayPal Sandbox pour tests
+- Postman pour tester les APIs
+
+**Communautés** :
+- Stripe Dev Discord
+- PayPal Developer Forum
+- Stack Overflow [stripe], [paypal]
+
+### Évolutions possibles
+
+**Fonctionnalités avancées** :
+- Paiements fractionnés
+- Marketplace (prendre une commission)
+- Cryptomonnaies
+- Wallets (Apple Pay, Google Pay)
+- Paiements internationaux
+- Facturation automatique
+
+### Message final
+
+Les paiements en ligne sont le cœur de nombreuses applications modernes. Avec Delphi, Stripe et PayPal, vous avez tous les outils pour créer des solutions de paiement professionnelles et sécurisées.
+
+La sécurité est primordiale. Ne prenez jamais de raccourcis avec les données de paiement. Testez abondamment. Surveillez continuellement.
+
+Vos utilisateurs vous font confiance avec leur argent. Honorez cette confiance en créant des systèmes fiables, transparents et sécurisés.
+
+**Bon développement et bonnes ventes !** 💳💰🚀
+
+---
 
 ⏭️ [Ressources et communauté](/20-ressources-et-communaute/README.md)

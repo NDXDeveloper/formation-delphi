@@ -1,1407 +1,1927 @@
-# 19.2 Application multi-plateformes avec FireMonkey (FMX)
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+# 19.2 Application multi-plateformes avec FMX
 
 ## Introduction
 
-FireMonkey (FMX) est le framework multi-plateformes de Delphi qui vous permet de développer une application unique pouvant s'exécuter sur Windows, macOS, iOS, Android et Linux. Dans ce tutoriel, nous allons créer une application simple de gestion de tâches qui fonctionnera sur toutes ces plateformes avec un minimum d'adaptations.
+Bienvenue dans ce projet qui vous permettra de créer une véritable application fonctionnant sur Windows, macOS et Linux avec un seul code source ! Grâce à FireMonkey (FMX), la bibliothèque multi-plateforme de Delphi, vous allez découvrir comment développer efficacement pour plusieurs systèmes d'exploitation.
 
-## Prérequis
+### Qu'est-ce qu'une application multi-plateforme ?
 
-- Delphi 11 Alexandria ou Delphi 12 Athens
-- Connaissance de base de l'interface Delphi et du langage Object Pascal
-- Les SDK installés pour les plateformes cibles (pour Android/iOS si vous souhaitez déployer sur mobile)
+Une application multi-plateforme est un logiciel qui peut s'exécuter sur différents systèmes d'exploitation sans nécessiter une réécriture complète du code. Au lieu de créer trois applications distinctes (une pour Windows, une pour macOS, une pour Linux), vous allez créer **une seule application** qui s'adapte automatiquement à chaque plateforme.
 
-## Objectifs du projet
+**Avantages** :
+- ✅ Un seul code source à maintenir
+- ✅ Gain de temps considérable
+- ✅ Cohérence entre les plateformes
+- ✅ Réduction des coûts de développement
+- ✅ Déploiement plus rapide
 
-Notre application "TaskMaster" offrira les fonctionnalités suivantes :
-- Liste des tâches à faire
-- Ajout/modification/suppression de tâches
-- Marquage des tâches comme terminées
-- Sauvegarde locale des données
-- Interface adaptative selon la taille d'écran
+### Pourquoi FireMonkey (FMX) ?
 
-## 1. Création du projet
+FireMonkey est la bibliothèque graphique moderne de Delphi, spécialement conçue pour le développement multi-plateforme. Contrairement à la VCL (limitée à Windows), FMX vous permet de cibler :
 
-Commençons par créer un nouveau projet FireMonkey multi-plateformes :
+- **Windows** (32 et 64 bits)
+- **macOS** (Intel et Apple Silicon)
+- **Linux** (64 bits)
+- **iOS** (iPhone et iPad)
+- **Android** (smartphones et tablettes)
 
-1. Lancez Delphi et sélectionnez **Fichier > Nouveau > Application Multi-périphériques**.
-2. Dans la boîte de dialogue qui s'affiche, sélectionnez **Formulaire vide**.
-3. Cliquez sur **OK** pour créer le projet.
+Dans ce tutoriel, nous nous concentrerons sur les trois plateformes desktop : Windows, macOS et Linux.
 
-## 2. Configuration du projet
+### Objectifs de ce projet
 
-Avant de commencer à concevoir l'interface, configurons notre projet :
+À la fin de ce chapitre, vous serez capable de :
 
-1. Dans le **Project Manager** (généralement à droite), cliquez-droit sur le nom du projet et sélectionnez **Options du projet**.
-2. Allez dans **Application > Apparence** et définissez :
-   - Titre de l'application : "TaskMaster"
-   - Icône : ajoutez une icône si vous en avez une
-3. Dans l'onglet **Version Info**, ajoutez les informations de version.
-4. Dans **Build Configurations**, vérifiez les plateformes cibles (Windows 32-bit, Windows 64-bit, Android, iOS, macOS, Linux).
+✅ Créer une application FireMonkey multi-plateforme
+✅ Comprendre les différences entre VCL et FMX
+✅ Adapter l'interface aux spécificités de chaque OS
+✅ Gérer les chemins de fichiers multiplateformes
+✅ Appliquer des styles visuels adaptés
+✅ Compiler et déployer sur Windows, macOS et Linux
+✅ Gérer les particularités de chaque système d'exploitation
 
-## 3. Conception de l'interface utilisateur
+### Prérequis
 
-### Structure de base
+Avant de commencer, assurez-vous de :
 
-1. Sélectionnez la fiche principale (Form1) dans l'éditeur.
-2. Dans l'**Inspecteur d'objets** (généralement à droite), modifiez les propriétés :
-   - **Name** : `MainForm`
-   - **Caption** : `TaskMaster`
-   - **Fill** : définissez une couleur de fond claire
+- ✅ Avoir Delphi 13 Florence installé
+- ✅ Connaître les bases de l'Object Pascal
+- ✅ Avoir une compréhension basique des interfaces utilisateur
+- ✅ Avoir accès à au moins deux des trois plateformes cibles (idéalement Windows + une autre)
 
-3. Ajoutez un `TLayout` depuis la palette et configurez-le :
-   - **Name** : `HeaderLayout`
-   - **Align** : `Top`
-   - **Height** : `60`
-   - **Padding** : `10,5,10,5` (gauche, haut, droite, bas)
-   - **Fill** : définissez une couleur plus foncée pour l'en-tête
+**Note** : Si vous n'avez accès qu'à Windows, vous pourrez tout de même suivre le tutoriel et comprendre les concepts. Le déploiement sur macOS et Linux nécessitera l'accès à ces systèmes.
 
-4. Ajoutez un `TLabel` dans le HeaderLayout :
-   - **Name** : `TitleLabel`
-   - **Text** : `TaskMaster`
-   - **Align** : `Client`
-   - **TextSettings.Font.Size** : `18`
-   - **TextSettings.Font.Style** : `[fsBold]`
-   - **StyledSettings** : désactivez `[Family, Size, Style]`
+### Durée estimée
 
-5. Ajoutez un `TButton` dans le HeaderLayout :
-   - **Name** : `AddButton`
-   - **Text** : `+`
-   - **Align** : `Right`
-   - **Width** : `40`
-   - **TextSettings.Font.Size** : `20`
+**15 à 20 heures** de travail, réparties en :
+- Conception et compréhension : 3-4 heures
+- Développement : 8-10 heures
+- Tests multiplateformes : 2-3 heures
+- Optimisation et ajustements : 2-3 heures
 
-### Liste des tâches
+---
 
-1. Ajoutez un `TListView` sous le HeaderLayout :
-   - **Name** : `TaskListView`
-   - **Align** : `Client`
-   - **SearchVisible** : `True` (pour permettre la recherche)
-   - **ShowSelection** : `True`
-   - **ItemAppearance.ItemAppearance** : `ImageListText` (pour avoir du texte et une case à cocher)
+## Partie 1 : Comprendre FireMonkey
 
-2. Ajoutez un `TRectangle` pour afficher quand la liste est vide :
-   - **Name** : `EmptyNotification`
-   - **Align** : `Client`
-   - **Fill.Color** : `claWhite`
-   - **Opacity** : `0.8`
-   - **Visible** : `False`
+### 1.1 FMX vs VCL : Les différences fondamentales
 
-3. Ajoutez un `TLabel` dans le EmptyNotification :
-   - **Name** : `EmptyLabel`
-   - **Align** : `Center`
-   - **Text** : `Aucune tâche. Appuyez sur + pour ajouter.`
-   - **TextSettings.Font.Size** : `14`
-   - **TextSettings.FontColor** : `#707070`
+Avant de plonger dans le code, il est crucial de comprendre ce qui distingue FireMonkey de la VCL que vous connaissez peut-être déjà.
 
-## 4. Création du formulaire d'ajout de tâche
+#### VCL (Visual Component Library)
 
-1. Ajoutez un nouveau formulaire : **Fichier > Nouveau > Multi-périphériques > Formulaire vide**.
-2. Configurez ses propriétés :
-   - **Name** : `TaskFormUnit` (dans le fichier source)
-   - Pour la Form : **Name** : `TaskForm`
-   - **Caption** : `Nouvelle tâche`
+**Caractéristiques** :
+- Spécifique à Windows uniquement
+- Utilise les contrôles natifs Windows (API Win32)
+- Excellent rendu sur Windows
+- Performance optimale sur Windows
+- Large base de composants disponibles
 
-3. Créez l'interface d'ajout :
-   - Ajoutez un `TLayout` pour l'en-tête avec un label et un bouton retour
-   - Ajoutez un `TEdit` pour le titre de la tâche
-   - Ajoutez un `TMemo` pour la description
-   - Ajoutez un `TDateEdit` pour la date limite
-   - Ajoutez un `TButton` pour sauvegarder
+**Quand utiliser VCL** :
+- Applications Windows uniquement
+- Interface native Windows obligatoire
+- Intégration poussée avec Windows
+- Nombreux composants VCL existants
 
-## 5. Définition de la structure de données
+#### FMX (FireMonkey)
 
-Créons une unité pour définir notre structure de tâche :
+**Caractéristiques** :
+- Multi-plateforme par conception
+- Rendu graphique propre (ne dépend pas des contrôles natifs de l'OS)
+- Style personnalisable
+- Support GPU et effets visuels avancés
+- Une seule base de code
 
-1. **Fichier > Nouveau > Unité - Delphi**.
-2. Enregistrez-la sous le nom `TaskDataUnit.pas`.
-3. Ajoutez le code suivant :
+**Quand utiliser FMX** :
+- Applications multi-plateformes
+- Design moderne et personnalisé
+- Effets visuels et animations
+- Applications mobiles
+- Partage de code maximal
+
+#### Tableau comparatif
+
+| Critère | VCL | FMX |
+|---------|-----|-----|
+| Plateformes | Windows uniquement | Windows, macOS, Linux, iOS, Android |
+| Rendu | Natif Windows | Graphique propre (GPU) |
+| Look & Feel | Windows natif | Personnalisable |
+| Animations | Limitées | Avancées |
+| Courbe d'apprentissage | Plus simple | Moyenne |
+| Performance | Excellente sur Windows | Bonne partout |
+| Composants | Très nombreux | En croissance |
+
+### 1.2 Architecture de FireMonkey
+
+FireMonkey utilise une architecture en couches qui lui permet de fonctionner sur différentes plateformes :
+
+```
+┌─────────────────────────────────────┐
+│   Votre Application FMX             │
+│   (Code Object Pascal)              │
+└─────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────┐
+│   Couche FireMonkey                 │
+│   (Composants, Styles, Layout)      │
+└─────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────┐
+│   Moteur de Rendu                   │
+│   (DirectX, OpenGL, Metal)          │
+└─────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────┐
+│   Système d'Exploitation            │
+│   (Windows, macOS, Linux)           │
+└─────────────────────────────────────┘
+```
+
+**Ce que cela signifie pour vous** :
+- Vous écrivez votre code une seule fois
+- FMX s'occupe de l'adaptation à chaque OS
+- Le rendu est cohérent sur toutes les plateformes
+- Vous pouvez personnaliser l'apparence indépendamment de l'OS
+
+### 1.3 Concepts clés de FMX
+
+#### Les Contrôles FMX
+
+FMX propose ses propres contrôles, similaires mais différents de la VCL :
+
+**VCL** → **FMX**
+- `TButton` → `TButton` (mais FMX)
+- `TEdit` → `TEdit` (mais FMX)
+- `TLabel` → `TLabel` (mais FMX)
+- `TPanel` → `TRectangle` ou `TPanel`
+- `TMemo` → `TMemo` (mais FMX)
+- `TListBox` → `TListBox` (mais FMX)
+
+**Attention** : Même si les noms sont identiques, les propriétés et le comportement peuvent différer !
+
+#### Les Styles
+
+Les styles FMX permettent de changer complètement l'apparence de votre application :
+
+- **Styles intégrés** : Windows 10, macOS, iOS, Android, etc.
+- **Styles personnalisés** : Créez vos propres designs
+- **Application à chaud** : Changez le style à l'exécution
+
+#### Les Layouts
+
+FMX utilise un système de layouts pour adapter l'interface :
+
+- **TLayout** : Conteneur invisible pour grouper des contrôles
+- **TFlowLayout** : Disposition en flux
+- **TGridLayout** : Disposition en grille
+- **TScaledLayout** : Mise à l'échelle automatique
+- **Anchors et Align** : Positionnement relatif
+
+---
+
+## Partie 2 : Conception du projet
+
+### 2.1 Quel type d'application créer ?
+
+Pour ce tutoriel, nous allons créer une **application de gestion de notes** multi-plateforme. C'est un projet idéal car :
+
+✅ Assez simple pour être compréhensible
+✅ Assez complet pour être utile
+✅ Couvre tous les aspects du multi-plateforme
+✅ Utilisable au quotidien
+
+**Fonctionnalités** :
+- Créer, éditer et supprimer des notes
+- Catégoriser les notes
+- Rechercher dans les notes
+- Sauvegarder localement
+- Interface adaptée à chaque OS
+- Thèmes clairs et sombres
+
+### 2.2 Architecture de l'application
+
+Nous allons structurer notre application en couches logiques :
+
+```
+┌──────────────────────────────────────────┐
+│         Interface Utilisateur            │
+│  (Formulaires FMX, Contrôles visuels)    │
+└──────────────────────────────────────────┘
+            ↓
+┌──────────────────────────────────────────┐
+│         Logique Métier                   │
+│  (Gestion des notes, Recherche)          │
+└──────────────────────────────────────────┘
+            ↓
+┌──────────────────────────────────────────┐
+│         Couche de Données                │
+│  (Sauvegarde/Chargement fichiers)        │
+└──────────────────────────────────────────┘
+```
+
+Cette séparation nous permettra de :
+- Réutiliser le code facilement
+- Tester chaque partie indépendamment
+- Adapter l'interface sans toucher à la logique
+- Maintenir le code facilement
+
+### 2.3 Structure des fichiers du projet
+
+Voici comment nous allons organiser notre projet :
+
+```
+NotesApp/
+├── Source/
+│   ├── UI/
+│   │   ├── uMainForm.pas        (Formulaire principal)
+│   │   ├── uMainForm.fmx        (Design du formulaire)
+│   │   ├── uNoteEditor.pas      (Éditeur de note)
+│   │   └── uNoteEditor.fmx      (Design de l'éditeur)
+│   ├── Business/
+│   │   ├── uNote.pas            (Classe Note)
+│   │   └── uNotesManager.pas    (Gestion des notes)
+│   ├── Data/
+│   │   └── uDataStorage.pas     (Sauvegarde/Chargement)
+│   └── Utils/
+│       └── uPathHelper.pas      (Chemins multiplateformes)
+├── Resources/
+│   ├── Images/
+│   └── Styles/
+└── NotesApp.dpr                 (Fichier projet)
+```
+
+### 2.4 Spécifications techniques
+
+#### Plateforme cible
+
+| Plateforme | Version minimale | Architecture |
+|------------|------------------|--------------|
+| Windows | Windows 10 | 32 et 64 bits |
+| macOS | macOS 11 Big Sur | Intel et ARM64 |
+| Linux | Ubuntu 20.04+ | 64 bits |
+
+#### Technologies utilisées
+
+- **Framework** : FireMonkey (FMX)
+- **Stockage** : Fichiers JSON
+- **Chemins** : System.IOUtils pour la portabilité
+- **Styles** : Styles natifs + personnalisés
+
+#### Librairies et composants
+
+- **System.JSON** : Manipulation de JSON
+- **System.IOUtils** : Gestion des fichiers multiplateformes
+- **System.Generics.Collections** : Listes génériques
+- **FMX.Styles** : Gestion des styles visuels
+
+---
+
+## Partie 3 : Création du projet
+
+### 3.1 Démarrer un nouveau projet FMX
+
+**Étape 1 : Créer le projet**
+
+1. Ouvrez Delphi 13 Florence
+2. Menu **Fichier → Nouveau → Application multi-plateforme - Application Delphi**
+3. Choisissez le type : **Application**
+4. Sélectionnez **Multi-Device Application**
+
+**Étape 2 : Configuration initiale**
+
+1. Sauvegardez immédiatement le projet :
+   - Nom du projet : `NotesApp`
+   - Emplacement : Créez un dossier dédié
+
+2. Dans le **Gestionnaire de projets**, configurez les plateformes :
+   - Clic droit sur le projet → **Add Platform**
+   - Ajoutez **macOS 64-bit** (si disponible)
+   - Ajoutez **Linux 64-bit** (si disponible)
+
+**Étape 3 : Structure des dossiers**
+
+Créez la structure de dossiers que nous avons définie précédemment.
+
+### 3.2 Paramétrage du projet
+
+#### Options de projet
+
+Accédez aux options : **Projet → Options**
+
+**Onglet Application** :
+- Titre : `Notes App`
+- Version : `1.0.0.0`
+- Icône : Ajoutez une icône personnalisée
+
+**Onglet Chemins de sortie** :
+- Définissez des chemins de sortie clairs pour chaque plateforme
+- Exemple : `.\Win64\Debug`, `.\macOS\Debug`, etc.
+
+**Onglet Version Info** :
+- Nom de la société
+- Copyright
+- Description
+
+### 3.3 Conception de l'interface principale
+
+Commençons par créer le formulaire principal de notre application.
+
+#### Conception du formulaire principal (MainForm)
+
+**Structure visuelle** :
+
+```
+┌─────────────────────────────────────────┐
+│  [Titre de l'application]        [≡]    │  ← Barre de titre
+├─────────────────────────────────────────┤
+│  [🔍 Rechercher...]  [+ Nouvelle note]  │  ← Barre d'outils
+├──────────────┬──────────────────────────┤
+│              │                          │
+│  Liste des   │    Zone d'affichage      │
+│  notes       │    de la note            │
+│              │    sélectionnée          │
+│              │                          │
+│              │                          │
+└──────────────┴──────────────────────────┘
+```
+
+#### Composants à utiliser
+
+1. **TLayout** (Top) : Pour la barre de titre et la recherche
+2. **TEdit** : Pour la recherche
+3. **TButton** : Pour le bouton "Nouvelle note"
+4. **TListBox** : Pour la liste des notes (à gauche)
+5. **TMemo** : Pour afficher le contenu de la note (à droite)
+6. **TSplitter** : Pour redimensionner les panneaux
+
+#### Propriétés importantes
+
+**Pour le formulaire (TForm)** :
+```pascal
+Name = FormMain
+Caption = 'Notes App'
+ClientHeight = 600
+ClientWidth = 900
+Position = ScreenCenter
+```
+
+**Pour le TEdit de recherche** :
+```pascal
+Name = EditSearch
+TextPrompt = 'Rechercher une note...'
+Align = Client
+StyleLookup = 'searchtextstyle'
+```
+
+**Pour la TListBox** :
+```pascal
+Name = ListBoxNotes
+Align = Client
+ItemHeight = 60
+```
+
+**Pour le TMemo de contenu** :
+```pascal
+Name = MemoContent
+Align = Client
+ReadOnly = False
+WordWrap = True
+```
+
+### 3.4 Code du formulaire principal
+
+Créons maintenant le code du formulaire principal.
+
+#### Déclaration de la classe (uMainForm.pas)
 
 ```pascal
-unit TaskDataUnit;
+unit uMainForm;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections;
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.Layouts, FMX.StdCtrls, FMX.Edit, FMX.ListBox, FMX.Memo,
+  FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo.Types;
 
 type
-  TTaskPriority = (tpLow, tpNormal, tpHigh);
+  TFormMain = class(TForm)
+    LayoutTop: TLayout;
+    EditSearch: TEdit;
+    ButtonNewNote: TButton;
+    LayoutMain: TLayout;
+    ListBoxNotes: TListBox;
+    Splitter1: TSplitter;
+    MemoContent: TMemo;
+    ToolBar1: TToolBar;
+    LabelTitle: TLabel;
 
-  TTaskItem = class
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ButtonNewNoteClick(Sender: TObject);
+    procedure ListBoxNotesChange(Sender: TObject);
+    procedure EditSearchChange(Sender: TObject);
+    procedure MemoContentChange(Sender: TObject);
   private
-    FID: TGUID;
-    FTitle: string;
-    FDescription: string;
-    FDueDate: TDateTime;
-    FCompleted: Boolean;
-    FPriority: TTaskPriority;
-    FCreationDate: TDateTime;
+    { Déclarations privées }
+    FCurrentNoteIndex: Integer;
+    procedure LoadNotes;
+    procedure SaveCurrentNote;
+    procedure UpdateNotesList;
+    procedure DisplayNote(Index: Integer);
   public
-    constructor Create;
-    function Clone: TTaskItem;
-
-    property ID: TGUID read FID write FID;
-    property Title: string read FTitle write FTitle;
-    property Description: string read FDescription write FDescription;
-    property DueDate: TDateTime read FDueDate write FDueDate;
-    property Completed: Boolean read FCompleted write FCompleted;
-    property Priority: TTaskPriority read FPriority write FPriority;
-    property CreationDate: TDateTime read FCreationDate;
+    { Déclarations publiques }
   end;
 
-  TTaskList = class(TObjectList<TTaskItem>)
+var
+  FormMain: TFormMain;
+
+implementation
+
+{$R *.fmx}
+
+uses
+  uNotesManager, uNote;
+
+{ TFormMain }
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FCurrentNoteIndex := -1;
+  LoadNotes;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  SaveCurrentNote;
+end;
+
+procedure TFormMain.LoadNotes;
+begin
+  // Nous implémenterons cette méthode plus tard
+  UpdateNotesList;
+end;
+
+procedure TFormMain.UpdateNotesList;
+var
+  I: Integer;
+begin
+  ListBoxNotes.Clear;
+
+  // Exemple : Ajouter quelques notes de test
+  for I := 0 to 4 do
+  begin
+    with ListBoxNotes.Items.Add do
+    begin
+      Text := Format('Note %d', [I + 1]);
+      Height := 60;
+    end;
+  end;
+end;
+
+procedure TFormMain.ButtonNewNoteClick(Sender: TObject);
+begin
+  // Créer une nouvelle note
+  SaveCurrentNote;
+
+  // Ajouter à la liste
+  with ListBoxNotes.Items.Add do
+  begin
+    Text := 'Nouvelle note';
+    Height := 60;
+  end;
+
+  // Sélectionner la nouvelle note
+  ListBoxNotes.ItemIndex := ListBoxNotes.Items.Count - 1;
+  DisplayNote(ListBoxNotes.ItemIndex);
+
+  // Focus sur le mémo
+  MemoContent.SetFocus;
+end;
+
+procedure TFormMain.ListBoxNotesChange(Sender: TObject);
+begin
+  SaveCurrentNote;
+  DisplayNote(ListBoxNotes.ItemIndex);
+end;
+
+procedure TFormMain.DisplayNote(Index: Integer);
+begin
+  if (Index >= 0) and (Index < ListBoxNotes.Items.Count) then
+  begin
+    FCurrentNoteIndex := Index;
+    // Charger le contenu de la note
+    // Pour l'instant, contenu vide
+    MemoContent.Text := '';
+    MemoContent.Enabled := True;
+  end
+  else
+  begin
+    MemoContent.Text := '';
+    MemoContent.Enabled := False;
+  end;
+end;
+
+procedure TFormMain.SaveCurrentNote;
+begin
+  if FCurrentNoteIndex >= 0 then
+  begin
+    // Sauvegarder la note actuelle
+    // Nous implémenterons cela plus tard
+  end;
+end;
+
+procedure TFormMain.EditSearchChange(Sender: TObject);
+var
+  SearchText: string;
+begin
+  SearchText := EditSearch.Text.ToLower;
+
+  // Filtrer les notes
+  // Pour l'instant, simple démonstration
+  UpdateNotesList;
+end;
+
+procedure TFormMain.MemoContentChange(Sender: TObject);
+begin
+  // Marquer la note comme modifiée
+  // Auto-sauvegarde après un délai (optionnel)
+end;
+
+end.
+```
+
+**Explications** :
+
+1. **FormCreate** : Initialise l'application au démarrage
+2. **LoadNotes** : Charge les notes depuis le stockage
+3. **UpdateNotesList** : Rafraîchit la liste affichée
+4. **ButtonNewNoteClick** : Crée une nouvelle note
+5. **ListBoxNotesChange** : Détecte le changement de sélection
+6. **DisplayNote** : Affiche le contenu d'une note
+7. **SaveCurrentNote** : Sauvegarde la note en cours d'édition
+8. **EditSearchChange** : Gère la recherche
+
+---
+
+## Partie 4 : Gestion des données
+
+### 4.1 Création de la classe Note
+
+Créons une classe pour représenter une note.
+
+#### Fichier uNote.pas
+
+```pascal
+unit uNote;
+
+interface
+
+uses
+  System.SysUtils, System.JSON;
+
+type
+  TNote = class
   private
-    FSaveFileName: string;
+    FID: string;
+    FTitle: string;
+    FContent: string;
+    FCreatedDate: TDateTime;
+    FModifiedDate: TDateTime;
+    FCategory: string;
+  public
+    constructor Create;
+
+    property ID: string read FID write FID;
+    property Title: string read FTitle write FTitle;
+    property Content: string read FContent write FContent;
+    property CreatedDate: TDateTime read FCreatedDate write FCreatedDate;
+    property ModifiedDate: TDateTime read FModifiedDate write FModifiedDate;
+    property Category: string read FCategory write FCategory;
+
+    function ToJSON: TJSONObject;
+    procedure FromJSON(AJSON: TJSONObject);
+  end;
+
+implementation
+
+{ TNote }
+
+constructor TNote.Create;
+begin
+  inherited;
+  FID := TGUID.NewGuid.ToString;
+  FCreatedDate := Now;
+  FModifiedDate := Now;
+  FTitle := 'Nouvelle note';
+  FContent := '';
+  FCategory := 'Général';
+end;
+
+function TNote.ToJSON: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('id', FID);
+  Result.AddPair('title', FTitle);
+  Result.AddPair('content', FContent);
+  Result.AddPair('created', DateTimeToStr(FCreatedDate));
+  Result.AddPair('modified', DateTimeToStr(FModifiedDate));
+  Result.AddPair('category', FCategory);
+end;
+
+procedure TNote.FromJSON(AJSON: TJSONObject);
+begin
+  FID := AJSON.GetValue<string>('id');
+  FTitle := AJSON.GetValue<string>('title');
+  FContent := AJSON.GetValue<string>('content');
+  FCreatedDate := StrToDateTime(AJSON.GetValue<string>('created'));
+  FModifiedDate := StrToDateTime(AJSON.GetValue<string>('modified'));
+  FCategory := AJSON.GetValue<string>('category');
+end;
+
+end.
+```
+
+**Explications** :
+
+- **TNote** : Classe simple représentant une note
+- **ToJSON** : Convertit la note en JSON pour la sauvegarde
+- **FromJSON** : Charge une note depuis JSON
+- **ID** : Identifiant unique (GUID)
+- **Dates** : Suivi de création et modification
+
+### 4.2 Gestionnaire de notes
+
+Créons maintenant un gestionnaire pour toutes nos notes.
+
+#### Fichier uNotesManager.pas
+
+```pascal
+unit uNotesManager;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  System.JSON, uNote;
+
+type
+  TNotesManager = class
+  private
+    FNotes: TObjectList<TNote>;
+    FDataFile: string;
+    procedure InitializeDataFile;
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure AddNote(ANote: TNote);
+    procedure DeleteNote(AIndex: Integer);
+    function GetNote(AIndex: Integer): TNote;
+    function GetNoteCount: Integer;
 
     procedure LoadFromFile;
     procedure SaveToFile;
-    function AddTask(const Title, Description: string; DueDate: TDateTime;
-      Priority: TTaskPriority): TTaskItem;
-    function FindTaskByID(const ID: TGUID): TTaskItem;
-  end;
 
-implementation
+    function Search(const ASearchText: string): TList<TNote>;
 
-uses
-  System.IOUtils, System.JSON;
-
-{ TTaskItem }
-
-constructor TTaskItem.Create;
-begin
-  inherited;
-  CreateGUID(FID);
-  FCreationDate := Now;
-  FCompleted := False;
-  FPriority := tpNormal;
-end;
-
-function TTaskItem.Clone: TTaskItem;
-begin
-  Result := TTaskItem.Create;
-  Result.FID := FID;
-  Result.FTitle := FTitle;
-  Result.FDescription := FDescription;
-  Result.FDueDate := FDueDate;
-  Result.FCompleted := FCompleted;
-  Result.FPriority := FPriority;
-  Result.FCreationDate := FCreationDate;
-end;
-
-{ TTaskList }
-
-constructor TTaskList.Create;
-begin
-  inherited Create(True); // Own objects
-
-  // Détermine le chemin de sauvegarde selon la plateforme
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  FSaveFileName := TPath.Combine(TPath.GetDocumentsPath, 'tasks.json');
-  {$ELSE}
-  FSaveFileName := TPath.Combine(TPath.GetHomePath, 'TaskMaster', 'tasks.json');
-  // S'assurer que le répertoire existe
-  if not TDirectory.Exists(TPath.GetDirectoryName(FSaveFileName)) then
-    TDirectory.CreateDirectory(TPath.GetDirectoryName(FSaveFileName));
-  {$ENDIF}
-
-  LoadFromFile;
-end;
-
-destructor TTaskList.Destroy;
-begin
-  SaveToFile;
-  inherited;
-end;
-
-function TTaskList.AddTask(const Title, Description: string; DueDate: TDateTime;
-  Priority: TTaskPriority): TTaskItem;
-begin
-  Result := TTaskItem.Create;
-  Result.Title := Title;
-  Result.Description := Description;
-  Result.DueDate := DueDate;
-  Result.Priority := Priority;
-  Add(Result);
-  SaveToFile;
-end;
-
-function TTaskList.FindTaskByID(const ID: TGUID): TTaskItem;
-var
-  Task: TTaskItem;
-begin
-  Result := nil;
-  for Task in Self do
-    if IsEqualGUID(Task.ID, ID) then
-      Exit(Task);
-end;
-
-procedure TTaskList.LoadFromFile;
-var
-  JsonArray: TJSONArray;
-  JsonValue: TJSONValue;
-  JsonObject: TJSONObject;
-  Task: TTaskItem;
-  JSONString: string;
-begin
-  Clear;
-
-  if not TFile.Exists(FSaveFileName) then
-    Exit;
-
-  try
-    JSONString := TFile.ReadAllText(FSaveFileName);
-    JsonArray := TJSONObject.ParseJSONValue(JSONString) as TJSONArray;
-
-    if Assigned(JsonArray) then
-    begin
-      try
-        for JsonValue in JsonArray do
-        begin
-          JsonObject := JsonValue as TJSONObject;
-          Task := TTaskItem.Create;
-
-          Task.FID := StringToGUID(JsonObject.GetValue<string>('ID'));
-          Task.FTitle := JsonObject.GetValue<string>('Title');
-          Task.FDescription := JsonObject.GetValue<string>('Description');
-          Task.FDueDate := JsonObject.GetValue<TDateTime>('DueDate');
-          Task.FCompleted := JsonObject.GetValue<Boolean>('Completed');
-          Task.FPriority := TTaskPriority(JsonObject.GetValue<Integer>('Priority'));
-          Task.FCreationDate := JsonObject.GetValue<TDateTime>('CreationDate');
-
-          Add(Task);
-        end;
-      finally
-        JsonArray.Free;
-      end;
-    end;
-  except
-    // Gérer les erreurs silencieusement pour les premiers lancements
-  end;
-end;
-
-procedure TTaskList.SaveToFile;
-var
-  JsonArray: TJSONArray;
-  JsonObject: TJSONObject;
-  Task: TTaskItem;
-begin
-  JsonArray := TJSONArray.Create;
-  try
-    for Task in Self do
-    begin
-      JsonObject := TJSONObject.Create;
-      JsonObject.AddPair('ID', GUIDToString(Task.ID));
-      JsonObject.AddPair('Title', Task.Title);
-      JsonObject.AddPair('Description', Task.Description);
-      JsonObject.AddPair('DueDate', TJSONNumber.Create(Task.DueDate));
-      JsonObject.AddPair('Completed', TJSONBool.Create(Task.Completed));
-      JsonObject.AddPair('Priority', TJSONNumber.Create(Ord(Task.Priority)));
-      JsonObject.AddPair('CreationDate', TJSONNumber.Create(Task.CreationDate));
-
-      JsonArray.AddElement(JsonObject);
-    end;
-
-    TFile.WriteAllText(FSaveFileName, JsonArray.ToJSON);
-  finally
-    JsonArray.Free;
-  end;
-end;
-
-end.
-```
-
-## 6. Implémentation du gestionnaire de tâches
-
-Maintenant, implémentons la logique principale de notre application :
-
-### 6.1 Liaison entre l'interface et les données
-
-Modifier le fichier de l'unité principale (`MainFormUnit.pas`) :
-
-```pascal
-unit MainFormUnit;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
-  FMX.ListView, FMX.Layouts, FMX.Objects, FMX.Controls.Presentation,
-  TaskDataUnit, FMX.Effects;
-
-type
-  TMainForm = class(TForm)
-    HeaderLayout: TLayout;
-    TitleLabel: TLabel;
-    AddButton: TButton;
-    TaskListView: TListView;
-    EmptyNotification: TRectangle;
-    EmptyLabel: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure AddButtonClick(Sender: TObject);
-    procedure TaskListViewItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
-    procedure TaskListViewDeleteItem(Sender: TObject; AIndex: Integer);
-  private
-    FTaskList: TTaskList;
-    procedure RefreshTaskList;
-    procedure UpdateEmptyState;
-  public
-    { Public declarations }
+    property Notes: TObjectList<TNote> read FNotes;
   end;
 
 var
-  MainForm: TMainForm;
-
-implementation
-
-{$R *.fmx}
-
-uses
-  TaskFormUnit, System.DateUtils;
-
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  FTaskList := TTaskList.Create;
-  RefreshTaskList;
-  UpdateEmptyState;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FTaskList.Free;
-end;
-
-procedure TMainForm.RefreshTaskList;
-var
-  Task: TTaskItem;
-  Item: TListViewItem;
-  DueText: string;
-begin
-  TaskListView.BeginUpdate;
-  try
-    TaskListView.Items.Clear;
-
-    for Task in FTaskList do
-    begin
-      Item := TaskListView.Items.Add;
-      Item.TagObject := Task;
-      Item.Text := Task.Title;
-
-      // Formatage de la date d'échéance
-      if Task.DueDate = 0 then
-        DueText := 'Sans date limite'
-      else if DaysBetween(Date, Task.DueDate) = 0 then
-        DueText := 'Aujourd''hui'
-      else if DaysBetween(Date, Task.DueDate) = 1 then
-        DueText := 'Demain'
-      else if Task.DueDate < Date then
-        DueText := 'En retard - ' + FormatDateTime('dd/mm/yyyy', Task.DueDate)
-      else
-        DueText := FormatDateTime('dd/mm/yyyy', Task.DueDate);
-
-      Item.Detail := DueText;
-
-      // Status de la tâche (terminée ou non)
-      if Task.Completed then
-      begin
-        Item.Objects.AccessoryObject.Visible := True;
-        Item.Objects.TextObject.TextColor := TAlphaColorRec.Gray;
-        Item.Objects.DetailObject.TextColor := TAlphaColorRec.Gray;
-      end
-      else
-      begin
-        Item.Objects.AccessoryObject.Visible := False;
-
-        // Priorité par couleur
-        case Task.Priority of
-          tpLow: Item.Objects.TextObject.TextColor := TAlphaColorRec.Navy;
-          tpNormal: Item.Objects.TextObject.TextColor := TAlphaColorRec.Black;
-          tpHigh: Item.Objects.TextObject.TextColor := TAlphaColorRec.Crimson;
-        end;
-      end;
-    end;
-  finally
-    TaskListView.EndUpdate;
-  end;
-
-  UpdateEmptyState;
-end;
-
-procedure TMainForm.UpdateEmptyState;
-begin
-  EmptyNotification.Visible := TaskListView.Items.Count = 0;
-end;
-
-procedure TMainForm.AddButtonClick(Sender: TObject);
-var
-  Task: TTaskItem;
-begin
-  Task := nil; // Nouvelle tâche
-  TaskForm.ShowTaskDialog(Task);
-
-  if TaskForm.ModalResult = mrOK then
-  begin
-    FTaskList.AddTask(
-      TaskForm.TitleEdit.Text,
-      TaskForm.DescriptionMemo.Text,
-      TaskForm.DueDateEdit.Date,
-      TTaskPriority(TaskForm.PriorityComboBox.ItemIndex)
-    );
-    RefreshTaskList;
-  end;
-end;
-
-procedure TMainForm.TaskListViewItemClick(const Sender: TObject;
-  const AItem: TListViewItem);
-var
-  Task, EditTask: TTaskItem;
-begin
-  if AItem = nil then
-    Exit;
-
-  Task := AItem.TagObject as TTaskItem;
-
-  // Double-tap pour terminer/réactiver une tâche
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  if TaskListView.Selected = AItem then
-  {$ENDIF}
-  begin
-    Task.Completed := not Task.Completed;
-    FTaskList.SaveToFile;
-    RefreshTaskList;
-    Exit;
-  end;
-
-  // Édition de la tâche
-  EditTask := Task.Clone;
-  TaskForm.ShowTaskDialog(EditTask);
-
-  if TaskForm.ModalResult = mrOK then
-  begin
-    Task.Title := EditTask.Title;
-    Task.Description := EditTask.Description;
-    Task.DueDate := EditTask.DueDate;
-    Task.Priority := EditTask.Priority;
-
-    FTaskList.SaveToFile;
-    RefreshTaskList;
-  end;
-
-  EditTask.Free;
-end;
-
-procedure TMainForm.TaskListViewDeleteItem(Sender: TObject; AIndex: Integer);
-var
-  Task: TTaskItem;
-begin
-  if (AIndex >= 0) and (AIndex < TaskListView.Items.Count) then
-  begin
-    Task := TaskListView.Items[AIndex].TagObject as TTaskItem;
-    FTaskList.Remove(Task);
-    FTaskList.SaveToFile;
-    UpdateEmptyState;
-  end;
-end;
-
-end.
-```
-
-### 6.2 Implémentation du formulaire d'ajout/édition
-
-Maintenant, complétons le formulaire d'ajout/édition de tâche (`TaskFormUnit.pas`) :
-
-```pascal
-unit TaskFormUnit;
-
-interface
-
-uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  FMX.Layouts, FMX.Edit, FMX.Memo, FMX.DateTimeCtrls, FMX.ListBox,
-  FMX.Controls.Presentation, FMX.Objects, TaskDataUnit;
-
-type
-  TTaskForm = class(TForm)
-    HeaderLayout: TLayout;
-    TitleLabel: TLabel;
-    CancelButton: TButton;
-    SaveButton: TButton;
-    ContentLayout: TLayout;
-    TitleEdit: TEdit;
-    TitleLabel2: TLabel;
-    DescriptionLabel: TLabel;
-    DescriptionMemo: TMemo;
-    DueDateLabel: TLabel;
-    DueDateEdit: TDateEdit;
-    PriorityLabel: TLabel;
-    PriorityComboBox: TComboBox;
-    procedure FormCreate(Sender: TObject);
-    procedure SaveButtonClick(Sender: TObject);
-    procedure CancelButtonClick(Sender: TObject);
-  private
-    FTask: TTaskItem;
-    FIsNew: Boolean;
-  public
-    function ShowTaskDialog(ATask: TTaskItem): TModalResult;
-  end;
-
-var
-  TaskForm: TTaskForm;
-
-implementation
-
-{$R *.fmx}
-
-procedure TTaskForm.FormCreate(Sender: TObject);
-begin
-  // Initialisation des contrôles
-  PriorityComboBox.Items.Clear;
-  PriorityComboBox.Items.Add('Basse');
-  PriorityComboBox.Items.Add('Normale');
-  PriorityComboBox.Items.Add('Haute');
-end;
-
-function TTaskForm.ShowTaskDialog(ATask: TTaskItem): TModalResult;
-begin
-  // Nouvelle tâche ou édition
-  FIsNew := ATask = nil;
-
-  if FIsNew then
-  begin
-    TitleLabel.Text := 'Nouvelle tâche';
-    TitleEdit.Text := '';
-    DescriptionMemo.Text := '';
-    DueDateEdit.Date := Date + 1; // Demain par défaut
-    PriorityComboBox.ItemIndex := 1; // Normale par défaut
-  end
-  else
-  begin
-    FTask := ATask;
-    TitleLabel.Text := 'Modifier la tâche';
-    TitleEdit.Text := FTask.Title;
-    DescriptionMemo.Text := FTask.Description;
-    DueDateEdit.Date := FTask.DueDate;
-    PriorityComboBox.ItemIndex := Ord(FTask.Priority);
-  end;
-
-  // Affichage modal
-  Result := ShowModal;
-end;
-
-procedure TTaskForm.SaveButtonClick(Sender: TObject);
-begin
-  if Trim(TitleEdit.Text) = '' then
-  begin
-    ShowMessage('Veuillez entrer un titre pour cette tâche');
-    TitleEdit.SetFocus;
-    Exit;
-  end;
-
-  if not FIsNew then
-  begin
-    FTask.Title := TitleEdit.Text;
-    FTask.Description := DescriptionMemo.Text;
-    FTask.DueDate := DueDateEdit.Date;
-    FTask.Priority := TTaskPriority(PriorityComboBox.ItemIndex);
-  end;
-
-  ModalResult := mrOK;
-end;
-
-procedure TTaskForm.CancelButtonClick(Sender: TObject);
-begin
-  ModalResult := mrCancel;
-end;
-
-end.
-```
-
-## 7. Adaptations spécifiques aux plateformes
-
-Pour que notre application fonctionne au mieux sur différentes plateformes, ajoutons quelques adaptations :
-
-### 7.1 Gestion des retours arrière sur Android
-
-Ajoutez à l'unité principale (`MainFormUnit.pas`) :
-
-```pascal
-procedure TMainForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
-  Shift: TShiftState);
-begin
-  {$IFDEF ANDROID}
-  if Key = vkHardwareBack then
-  begin
-    Key := 0;
-    // Si une boîte de dialogue est ouverte, ne rien faire
-    // Sinon, demander confirmation pour quitter
-    if not (TDialog.Current <> nil) then
-    begin
-      TDialogService.MessageDialog('Voulez-vous quitter l''application ?',
-        TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
-        TMsgDlgBtn.mbNo, 0,
-        procedure(const AResult: TModalResult)
-        begin
-          if AResult = mrYes then
-            Application.Terminate;
-        end);
-    end;
-  end;
-  {$ENDIF}
-end;
-```
-
-### 7.2 Adaptation à l'orientation et aux différentes tailles d'écran
-
-Modifiez la méthode `FormResize` de l'unité principale pour gérer différentes tailles d'écran :
-
-```pascal
-procedure TMainForm.FormResize(Sender: TObject);
-begin
-  // Ajustement selon la largeur d'écran
-  if Width > 600 then
-  begin
-    // Mode tablette/bureau
-    TaskListView.ItemAppearance.ItemHeight := 60;
-    TaskListView.ItemAppearance.ItemEditHeight := 60;
-    TitleLabel.TextSettings.Font.Size := 22;
-    AddButton.Width := 50;
-    HeaderLayout.Height := 70;
-  end
-  else
-  begin
-    // Mode téléphone
-    TaskListView.ItemAppearance.ItemHeight := 50;
-    TaskListView.ItemAppearance.ItemEditHeight := 50;
-    TitleLabel.TextSettings.Font.Size := 18;
-    AddButton.Width := 40;
-    HeaderLayout.Height := 60;
-  end;
-end;
-```
-
-### 7.3 Localisation et internationalisation
-
-Pour une application vraiment multi-plateformes, la localisation est importante :
-
-1. Créez un répertoire `Localization` dans votre projet.
-2. Ajoutez un nouveau fichier `LocalizationUnit.pas` :
-
-```pascal
-unit LocalizationUnit;
-
-interface
-
-uses
-  System.Classes, System.SysUtils, System.IniFiles;
-
-type
-  TLocalization = class
-  private
-    FLanguageFile: TIniFile;
-    FCurrentLanguage: string;
-    class var FInstance: TLocalization;
-    constructor Create;
-  public
-    destructor Destroy; override;
-    function GetString(const Section, Ident, Default: string): string;
-    procedure SetLanguage(const LanguageCode: string);
-    class function GetInstance: TLocalization;
-    class procedure FreeInstance;
-  end;
-
-function L(const Section, Ident, Default: string): string;
+  NotesManager: TNotesManager;
 
 implementation
 
 uses
   System.IOUtils;
 
-{ TLocalization }
+{ TNotesManager }
 
-constructor TLocalization.Create;
+constructor TNotesManager.Create;
 begin
   inherited;
-  FCurrentLanguage := 'fr'; // Langue par défaut
-  SetLanguage(FCurrentLanguage);
+  FNotes := TObjectList<TNote>.Create(True); // True = possède les objets
+  InitializeDataFile;
+  LoadFromFile;
 end;
 
-destructor TLocalization.Destroy;
+destructor TNotesManager.Destroy;
 begin
-  FLanguageFile.Free;
+  SaveToFile;
+  FNotes.Free;
   inherited;
 end;
 
-class function TLocalization.GetInstance: TLocalization;
-begin
-  if FInstance = nil then
-    FInstance := TLocalization.Create;
-  Result := FInstance;
-end;
-
-class procedure TLocalization.FreeInstance;
-begin
-  FreeAndNil(FInstance);
-end;
-
-function TLocalization.GetString(const Section, Ident, Default: string): string;
-begin
-  if FLanguageFile <> nil then
-    Result := FLanguageFile.ReadString(Section, Ident, Default)
-  else
-    Result := Default;
-end;
-
-procedure TLocalization.SetLanguage(const LanguageCode: string);
+procedure TNotesManager.InitializeDataFile;
 var
-  LangFilePath: string;
+  AppPath: string;
 begin
-  FreeAndNil(FLanguageFile);
-  FCurrentLanguage := LanguageCode;
-
-  {$IF DEFINED(ANDROID) or DEFINED(IOS)}
-  LangFilePath := TPath.Combine(TPath.GetDocumentsPath, 'Languages');
-  {$ELSE}
-  LangFilePath := TPath.Combine(ExtractFilePath(ParamStr(0)), 'Languages');
+  // Obtenir le chemin approprié selon l'OS
+  {$IFDEF MSWINDOWS}
+  AppPath := TPath.GetDocumentsPath;
+  {$ENDIF}
+  {$IFDEF MACOS}
+  AppPath := TPath.GetHomePath + '/Documents';
+  {$ENDIF}
+  {$IFDEF LINUX}
+  AppPath := TPath.GetHomePath + '/.notesapp';
   {$ENDIF}
 
-  if not TDirectory.Exists(LangFilePath) then
-    TDirectory.CreateDirectory(LangFilePath);
+  // Créer le dossier s'il n'existe pas
+  if not TDirectory.Exists(AppPath) then
+    TDirectory.CreateDirectory(AppPath);
 
-  LangFilePath := TPath.Combine(LangFilePath, LanguageCode + '.lng');
-
-  if not TFile.Exists(LangFilePath) then
-    // Créer un fichier de langue par défaut si inexistant
-    CreateDefaultLanguageFile(LangFilePath);
-
-  FLanguageFile := TIniFile.Create(LangFilePath);
+  FDataFile := TPath.Combine(AppPath, 'notes.json');
 end;
 
-procedure TLocalization.CreateDefaultLanguageFile(const FileName: string);
-var
-  Ini: TIniFile;
+procedure TNotesManager.AddNote(ANote: TNote);
 begin
-  Ini := TIniFile.Create(FileName);
+  FNotes.Add(ANote);
+end;
+
+procedure TNotesManager.DeleteNote(AIndex: Integer);
+begin
+  if (AIndex >= 0) and (AIndex < FNotes.Count) then
+    FNotes.Delete(AIndex);
+end;
+
+function TNotesManager.GetNote(AIndex: Integer): TNote;
+begin
+  if (AIndex >= 0) and (AIndex < FNotes.Count) then
+    Result := FNotes[AIndex]
+  else
+    Result := nil;
+end;
+
+function TNotesManager.GetNoteCount: Integer;
+begin
+  Result := FNotes.Count;
+end;
+
+procedure TNotesManager.LoadFromFile;
+var
+  JSONText: string;
+  JSONArray: TJSONArray;
+  JSONObj: TJSONObject;
+  Note: TNote;
+  I: Integer;
+begin
+  if not TFile.Exists(FDataFile) then
+    Exit;
+
   try
-    // Section principale
-    Ini.WriteString('Main', 'AppTitle', 'TaskMaster');
-    Ini.WriteString('Main', 'EmptyList', 'Aucune tâche. Appuyez sur + pour ajouter.');
+    // Charger le fichier JSON
+    JSONText := TFile.ReadAllText(FDataFile);
+    JSONArray := TJSONObject.ParseJSONValue(JSONText) as TJSONArray;
 
-    // Formulaire de tâche
-    Ini.WriteString('TaskForm', 'NewTask', 'Nouvelle tâche');
-    Ini.WriteString('TaskForm', 'EditTask', 'Modifier la tâche');
-    Ini.WriteString('TaskForm', 'Title', 'Titre');
-    Ini.WriteString('TaskForm', 'Description', 'Description');
-    Ini.WriteString('TaskForm', 'DueDate', 'Date limite');
-    Ini.WriteString('TaskForm', 'Priority', 'Priorité');
-    Ini.WriteString('TaskForm', 'Save', 'Enregistrer');
-    Ini.WriteString('TaskForm', 'Cancel', 'Annuler');
-
-    // Priorités
-    Ini.WriteString('Priority', 'Low', 'Basse');
-    Ini.WriteString('Priority', 'Normal', 'Normale');
-    Ini.WriteString('Priority', 'High', 'Haute');
-
-    // Dates
-    Ini.WriteString('Dates', 'Today', 'Aujourd''hui');
-    Ini.WriteString('Dates', 'Tomorrow', 'Demain');
-    Ini.WriteString('Dates', 'Overdue', 'En retard - ');
-    Ini.WriteString('Dates', 'NoDate', 'Sans date limite');
-  finally
-    Ini.Free;
+    if Assigned(JSONArray) then
+    try
+      // Parcourir toutes les notes
+      for I := 0 to JSONArray.Count - 1 do
+      begin
+        JSONObj := JSONArray.Items[I] as TJSONObject;
+        Note := TNote.Create;
+        Note.FromJSON(JSONObj);
+        FNotes.Add(Note);
+      end;
+    finally
+      JSONArray.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      // Gérer l'erreur de chargement
+      // En production, afficher un message à l'utilisateur
+    end;
   end;
 end;
 
-// Fonction helper pour accéder rapidement aux chaînes localisées
-function L(const Section, Ident, Default: string): string;
+procedure TNotesManager.SaveToFile;
+var
+  JSONArray: TJSONArray;
+  Note: TNote;
+  JSONText: string;
 begin
-  Result := TLocalization.GetInstance.GetString(Section, Ident, Default);
+  JSONArray := TJSONArray.Create;
+  try
+    // Convertir chaque note en JSON
+    for Note in FNotes do
+      JSONArray.AddElement(Note.ToJSON);
+
+    // Sauvegarder dans le fichier
+    JSONText := JSONArray.ToString;
+    TFile.WriteAllText(FDataFile, JSONText);
+  finally
+    JSONArray.Free;
+  end;
+end;
+
+function TNotesManager.Search(const ASearchText: string): TList<TNote>;
+var
+  Note: TNote;
+  SearchLower: string;
+begin
+  Result := TList<TNote>.Create;
+  SearchLower := ASearchText.ToLower;
+
+  for Note in FNotes do
+  begin
+    if (Note.Title.ToLower.Contains(SearchLower)) or
+       (Note.Content.ToLower.Contains(SearchLower)) then
+      Result.Add(Note);
+  end;
 end;
 
 initialization
-  TLocalization.FInstance := nil;
+  NotesManager := TNotesManager.Create;
 
 finalization
-  TLocalization.FreeInstance;
+  NotesManager.Free;
 
 end.
 ```
 
-## 8. Compilation et tests
+**Explications** :
 
-### 8.1 Test sur Windows
+1. **InitializeDataFile** : Détermine le bon emplacement selon l'OS
+2. **LoadFromFile** : Charge les notes depuis le JSON
+3. **SaveToFile** : Sauvegarde toutes les notes en JSON
+4. **Search** : Recherche dans les titres et contenus
+5. **Singleton** : Instance globale créée automatiquement
 
-1. Assurez-vous que la plateforme cible est définie sur **Windows 32-bit** ou **Windows 64-bit** dans le Project Manager.
-2. Appuyez sur **F9** ou cliquez sur **Exécuter** pour compiler et lancer l'application.
-3. Testez toutes les fonctionnalités : ajout, modification, suppression et marquage des tâches.
+---
 
-### 8.2 Test sur Android
+## Partie 5 : Gestion multi-plateforme
 
-1. Connectez un appareil Android ou lancez un émulateur.
-2. Dans le Project Manager, changez la plateforme cible pour **Android**.
-3. Si c'est la première fois que vous déployez sur Android :
-   - Assurez-vous que le SDK Android est correctement configuré dans **Outils > Options > Déploiement > Android**
-   - Vérifiez que votre appareil est en mode Développeur et que le débogage USB est activé
-4. Appuyez sur **F9** ou cliquez sur **Exécuter** pour compiler et déployer l'application sur l'appareil Android.
-5. Testez particulièrement les fonctionnalités tactiles et l'adaptation de l'interface.
+### 5.1 Chemins de fichiers multiplateformes
 
-### 8.3 Test sur iOS
+Chaque système d'exploitation a ses propres conventions pour les chemins de fichiers. Créons une unité utilitaire pour gérer cela.
 
-1. **Remarque importante** : Pour déployer sur iOS, vous avez besoin d'un Mac avec Xcode installé et configuré.
-2. Connectez votre Mac au réseau local et configurez le PAServer.
-3. Dans Delphi, configurez la connexion au PAServer dans **Outils > Options > SDK Manager**.
-4. Changez la plateforme cible pour **iOS Device** ou **iOS Simulator**.
-5. Appuyez sur **F9** pour déployer l'application.
-6. Testez les spécificités iOS comme les gestes et les transitions.
-
-### 8.4 Test sur macOS
-
-1. Similaire au déploiement iOS, vous avez besoin d'un Mac connecté avec PAServer.
-2. Changez la plateforme cible pour **macOS 64-bit**.
-3. Déployez l'application et testez les fonctionnalités spécifiques à macOS.
-
-### 8.5 Test sur Linux
-
-1. Pour Linux (disponible depuis Delphi 11), configurez l'environnement Linux.
-2. Changez la plateforme cible pour **Linux 64-bit**.
-3. Déployez et testez l'application.
-
-> **Note** : Les déploiements sur macOS, iOS et Linux nécessitent Delphi 11 Alexandria ou supérieur. Linux est particulièrement bien supporté à partir de Delphi 12 Athens.
-
-## 9. Ajout de fonctionnalités spécifiques aux plateformes
-
-Pour rendre notre application plus native sur chaque plateforme, nous allons ajouter des fonctionnalités spécifiques.
-
-### 9.1 Notifications sur mobile
-
-Ajoutons des notifications pour les tâches à échéance proche :
+#### Fichier uPathHelper.pas
 
 ```pascal
-// Ajoutez cette unité aux uses de votre unité principale
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-, FMX.PushNotification
-{$ENDIF}
-
-// Dans la déclaration de TMainForm, ajoutez :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-private
-  FPushService: TPushService;
-  FServiceConnection: TPushServiceConnection;
-  procedure SetupPushNotification;
-  procedure ScheduleTaskReminders;
-{$ENDIF}
-
-// Implémentez les méthodes :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-procedure TMainForm.SetupPushNotification;
-begin
-  FPushService := TPushServiceManager.Instance.GetServiceByName(TPushService.TServiceNames.GCM);
-  if FPushService <> nil then
-  begin
-    FServiceConnection := TPushServiceConnection.Create(FPushService);
-    FServiceConnection.Active := True;
-  end;
-end;
-
-procedure TMainForm.ScheduleTaskReminders;
-var
-  Task: TTaskItem;
-  Notification: TPushNotification;
-  NotificationTime: TDateTime;
-begin
-  if (FPushService = nil) or (not FServiceConnection.Active) then
-    Exit;
-
-  // Annuler les notifications existantes
-  FServiceConnection.Service.CancelAllLocalNotifications;
-
-  for Task in FTaskList do
-  begin
-    // Ne pas notifier pour les tâches déjà terminées
-    if Task.Completed then
-      Continue;
-
-    // Ne pas notifier pour les tâches sans date d'échéance
-    if Task.DueDate = 0 then
-      Continue;
-
-    // Programmer une notification 1 heure avant l'échéance
-    NotificationTime := Task.DueDate - (1/24);
-
-    // Ne pas notifier pour les tâches déjà en retard
-    if NotificationTime < Now then
-      Continue;
-
-    Notification := FServiceConnection.Service.CreateLocalNotification;
-    try
-      Notification.Title := 'Rappel : ' + Task.Title;
-      Notification.AlertBody := 'Échéance dans 1 heure';
-      Notification.FireDate := NotificationTime;
-      Notification.Number := 1;
-
-      FServiceConnection.Service.ScheduleLocalNotification(Notification);
-    finally
-      Notification.Free;
-    end;
-  end;
-end;
-{$ENDIF}
-
-// Dans la méthode FormCreate, ajoutez :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-SetupPushNotification;
-ScheduleTaskReminders;
-{$ENDIF}
-
-// Dans RefreshTaskList, appelez ScheduleTaskReminders après avoir mis à jour la liste :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-ScheduleTaskReminders;
-{$ENDIF}
-```
-
-### 9.2 Intégration avec les services natifs
-
-#### Partage sur mobile
-
-```pascal
-// Dans uses :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-, FMX.ShareSheet
-{$ENDIF}
-
-// Ajoutez une méthode pour partager une tâche :
-procedure TMainForm.ShareTask(const Task: TTaskItem);
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-var
-  ShareService: IFMXShareSheetService;
-  Text: string;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(IFMXShareSheetService, ShareService) then
-  begin
-    Text := 'Tâche: ' + Task.Title + #13#10;
-    if Task.Description <> '' then
-      Text := Text + 'Description: ' + Task.Description + #13#10;
-    if Task.DueDate > 0 then
-      Text := Text + 'Échéance: ' + FormatDateTime('dd/mm/yyyy', Task.DueDate) + #13#10;
-
-    ShareService.Share(Text, nil);
-  end;
-{$ELSE}
-begin
-  // Pour les plateformes qui ne supportent pas le partage natif
-  // vous pourriez implémenter un export vers un fichier
-{$ENDIF}
-end;
-
-// Ajoutez un bouton de partage dans la ListView et appelez cette méthode
-```
-
-#### Intégration du calendrier
-
-Sur les plateformes mobiles, vous pouvez permettre à l'utilisateur d'ajouter une tâche au calendrier de l'appareil :
-
-```pascal
-// Dans uses :
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-, FMX.Platform
-{$ENDIF}
-
-procedure TMainForm.AddTaskToCalendar(const Task: TTaskItem);
-{$IF DEFINED(ANDROID) or DEFINED(IOS)}
-var
-  CalendarService: IFMXCalendarService;
-  EventID: string;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(IFMXCalendarService, CalendarService) then
-  begin
-    EventID := CalendarService.AddEvent(
-      Task.Title,                // Titre
-      Task.Description,          // Description
-      '',                        // Lieu
-      Task.DueDate - (1/24),     // Début (1 heure avant l'échéance)
-      Task.DueDate,              // Fin
-      True                       // Alerte
-    );
-
-    if EventID <> '' then
-      ShowMessage('Événement ajouté au calendrier');
-  end;
-{$ELSE}
-begin
-  // Non disponible sur desktop
-  ShowMessage('Fonctionnalité disponible uniquement sur mobile');
-{$ENDIF}
-end;
-```
-
-## 10. Optimisation des performances
-
-### 10.1 Liste virtuelle pour grands ensembles de données
-
-Pour améliorer les performances avec de grandes listes de tâches, utilisons l'approche de chargement virtuel :
-
-```pascal
-// Dans TMainForm, modifiez TaskListView pour utiliser un adaptateur personnalisé
-private
-  FTaskListAdapter: TTaskListAdapter; // Classe que nous allons créer
-
-// Créez une nouvelle unité TaskListAdapterUnit.pas :
-unit TaskListAdapterUnit;
+unit uPathHelper;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
-  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
-  TaskDataUnit;
+  System.SysUtils, System.IOUtils;
 
 type
-  TTaskListAdapter = class(TListViewAdapter)
-  private
-    FTaskList: TTaskList;
-    FOwnsTaskList: Boolean;
-  protected
-    function GetCount: Integer; override;
-    function GetItem(const Index: Integer): TListViewItem; override;
-    function GetItemText(const Index: Integer): string; override;
-    function GetItemDetail(const Index: Integer): string; override;
+  TPathHelper = class
   public
-    constructor Create(AOwner: TComponent; ATaskList: TTaskList;
-      AOwnsTaskList: Boolean = False); reintroduce;
-    destructor Destroy; override;
-    procedure SetTaskList(ATaskList: TTaskList; AOwnsTaskList: Boolean = False);
-    function TaskAtIndex(Index: Integer): TTaskItem;
+    class function GetAppDataPath: string;
+    class function GetDocumentsPath: string;
+    class function GetTempPath: string;
+    class function GetDesktopPath: string;
+
+    class function CombinePath(const APath1, APath2: string): string;
+    class function FileExists(const AFileName: string): Boolean;
+    class function DirectoryExists(const ADirectory: string): Boolean;
+    class procedure CreateDirectory(const ADirectory: string);
   end;
 
 implementation
 
-constructor TTaskListAdapter.Create(AOwner: TComponent; ATaskList: TTaskList;
-  AOwnsTaskList: Boolean);
+{ TPathHelper }
+
+class function TPathHelper.GetAppDataPath: string;
 begin
-  inherited Create(AOwner);
-  SetTaskList(ATaskList, AOwnsTaskList);
+  {$IFDEF MSWINDOWS}
+  Result := TPath.GetHomePath + '\AppData\Local\NotesApp';
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  Result := TPath.GetHomePath + '/Library/Application Support/NotesApp';
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  Result := TPath.GetHomePath + '/.config/notesapp';
+  {$ENDIF}
+
+  // Créer le répertoire s'il n'existe pas
+  if not TDirectory.Exists(Result) then
+    TDirectory.CreateDirectory(Result);
 end;
 
-destructor TTaskListAdapter.Destroy;
+class function TPathHelper.GetDocumentsPath: string;
 begin
-  if FOwnsTaskList then
-    FTaskList.Free;
-  inherited;
+  Result := TPath.GetDocumentsPath;
 end;
 
-function TTaskListAdapter.GetCount: Integer;
+class function TPathHelper.GetTempPath: string;
 begin
-  if FTaskList <> nil then
-    Result := FTaskList.Count
-  else
-    Result := 0;
+  Result := TPath.GetTempPath;
 end;
 
-function TTaskListAdapter.GetItem(const Index: Integer): TListViewItem;
-var
-  Task: TTaskItem;
-  LItem: TListViewItem;
-  DueText: string;
+class function TPathHelper.GetDesktopPath: string;
 begin
-  // Créer un item "virtuel" basé sur les données du TTaskList
-  if (Index >= 0) and (Index < FTaskList.Count) then
-  begin
-    LItem := TListViewItem.Create(nil);
-    Task := FTaskList[Index];
+  {$IFDEF MSWINDOWS}
+  Result := TPath.GetHomePath + '\Desktop';
+  {$ENDIF}
 
-    LItem.Text := Task.Title;
+  {$IFDEF MACOS}
+  Result := TPath.GetHomePath + '/Desktop';
+  {$ENDIF}
 
-    // Même logique que précédemment pour DueText...
-    if Task.DueDate = 0 then
-      DueText := 'Sans date limite'
-    else if DaysBetween(Date, Task.DueDate) = 0 then
-      DueText := 'Aujourd''hui'
-    else if DaysBetween(Date, Task.DueDate) = 1 then
-      DueText := 'Demain'
-    else if Task.DueDate < Date then
-      DueText := 'En retard - ' + FormatDateTime('dd/mm/yyyy', Task.DueDate)
-    else
-      DueText := FormatDateTime('dd/mm/yyyy', Task.DueDate);
-
-    LItem.Detail := DueText;
-
-    // Configurer l'apparence selon l'état et la priorité...
-    if Task.Completed then
-    begin
-      LItem.Objects.AccessoryObject.Visible := True;
-      LItem.Objects.TextObject.TextColor := TAlphaColorRec.Gray;
-      LItem.Objects.DetailObject.TextColor := TAlphaColorRec.Gray;
-    end
-    else
-    begin
-      LItem.Objects.AccessoryObject.Visible := False;
-
-      case Task.Priority of
-        tpLow: LItem.Objects.TextObject.TextColor := TAlphaColorRec.Navy;
-        tpNormal: LItem.Objects.TextObject.TextColor := TAlphaColorRec.Black;
-        tpHigh: LItem.Objects.TextObject.TextColor := TAlphaColorRec.Crimson;
-      end;
-    end;
-
-    Result := LItem;
-  end
-  else
-    Result := nil;
+  {$IFDEF LINUX}
+  Result := TPath.GetHomePath + '/Desktop';
+  {$ENDIF}
 end;
 
-function TTaskListAdapter.GetItemText(const Index: Integer): string;
+class function TPathHelper.CombinePath(const APath1, APath2: string): string;
 begin
-  if (Index >= 0) and (Index < FTaskList.Count) then
-    Result := FTaskList[Index].Title
-  else
-    Result := '';
+  Result := TPath.Combine(APath1, APath2);
 end;
 
-function TTaskListAdapter.GetItemDetail(const Index: Integer): string;
-var
-  Task: TTaskItem;
+class function TPathHelper.FileExists(const AFileName: string): Boolean;
 begin
-  if (Index >= 0) and (Index < FTaskList.Count) then
-  begin
-    Task := FTaskList[Index];
-
-    // Même logique de formatage que précédemment
-    if Task.DueDate = 0 then
-      Result := 'Sans date limite'
-    else if DaysBetween(Date, Task.DueDate) = 0 then
-      Result := 'Aujourd''hui'
-    else if DaysBetween(Date, Task.DueDate) = 1 then
-      Result := 'Demain'
-    else if Task.DueDate < Date then
-      Result := 'En retard - ' + FormatDateTime('dd/mm/yyyy', Task.DueDate)
-    else
-      Result := FormatDateTime('dd/mm/yyyy', Task.DueDate);
-  end
-  else
-    Result := '';
+  Result := TFile.Exists(AFileName);
 end;
 
-procedure TTaskListAdapter.SetTaskList(ATaskList: TTaskList; AOwnsTaskList: Boolean);
+class function TPathHelper.DirectoryExists(const ADirectory: string): Boolean;
 begin
-  if FOwnsTaskList then
-    FTaskList.Free;
-
-  FTaskList := ATaskList;
-  FOwnsTaskList := AOwnsTaskList;
-
-  ResetView(True);
+  Result := TDirectory.Exists(ADirectory);
 end;
 
-function TTaskListAdapter.TaskAtIndex(Index: Integer): TTaskItem;
+class procedure TPathHelper.CreateDirectory(const ADirectory: string);
 begin
-  if (Index >= 0) and (Index < FTaskList.Count) then
-    Result := FTaskList[Index]
-  else
-    Result := nil;
+  if not TDirectory.Exists(ADirectory) then
+    TDirectory.CreateDirectory(ADirectory);
 end;
 
 end.
 ```
 
-### 10.2 Chargement asynchrone des données
-
-Pour une application plus réactive, chargeons les données en arrière-plan :
+**Utilisation** :
 
 ```pascal
-// Dans TaskDataUnit.pas, ajoutez :
-TTaskLoadCallback = reference to procedure(const Success: Boolean);
-
-class procedure TTaskList.LoadFromFileAsync(const Callback: TTaskLoadCallback);
+var
+  DataPath: string;
 begin
-  TTask.Run(
-    procedure
-    var
-      TaskList: TTaskList;
-    begin
-      TaskList := TTaskList.Create;
-      try
-        TaskList.LoadFromFile;
-
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            // Copier les tâches dans la liste principale (this)
-            Self.Clear;
-            for var Task in TaskList do
-              Self.Add(Task.Clone);
-
-            if Assigned(Callback) then
-              Callback(True);
-          end);
-      except
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            if Assigned(Callback) then
-              Callback(False);
-          end);
-      end;
-      TaskList.Free;
-    end);
+  DataPath := TPathHelper.GetAppDataPath;
+  // Utilisez DataPath pour vos fichiers
 end;
 ```
 
-## 11. Ajouts spécifiques à chaque plateforme
+### 5.2 Détection de la plateforme
 
-FireMonkey permet d'ajouter des comportements spécifiques à chaque plateforme tout en maintenant une base de code commune.
-
-### 11.1 Styles visuels spécifiques aux plateformes
+Parfois, vous aurez besoin de savoir sur quelle plateforme votre application s'exécute.
 
 ```pascal
-procedure TMainForm.ApplyPlatformStyle;
+function GetCurrentPlatform: string;
 begin
   {$IFDEF MSWINDOWS}
-  // Style Windows
-  TStyleManager.TrySetStyleFromFile('Windows11.vsf');
+  Result := 'Windows';
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  Result := 'macOS';
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  Result := 'Linux';
+  {$ENDIF}
+end;
+
+function IsWindows: Boolean;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := True;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
+function IsMacOS: Boolean;
+begin
+  {$IFDEF MACOS}
+  Result := True;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
+function IsLinux: Boolean;
+begin
+  {$IFDEF LINUX}
+  Result := True;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+```
+
+### 5.3 Adaptations spécifiques à chaque OS
+
+#### Raccourcis clavier
+
+Les conventions diffèrent selon les systèmes :
+
+```pascal
+procedure TFormMain.SetupShortcuts;
+begin
+  {$IFDEF MSWINDOWS}
+  // Windows : Ctrl+N pour nouvelle note
+  ButtonNewNote.ShortCut := TextToShortCut('Ctrl+N');
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  // macOS : Cmd+N pour nouvelle note
+  ButtonNewNote.ShortCut := TextToShortCut('Cmd+N');
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  // Linux : Ctrl+N
+  ButtonNewNote.ShortCut := TextToShortCut('Ctrl+N');
+  {$ENDIF}
+end;
+```
+
+#### Apparence selon l'OS
+
+```pascal
+procedure TFormMain.ApplyPlatformStyle;
+begin
+  {$IFDEF MSWINDOWS}
+  // Style Windows 10/11
+  StyleBook1.Style := 'Windows10';
   {$ENDIF}
 
   {$IFDEF MACOS}
   // Style macOS
-  TStyleManager.TrySetStyleFromFile('macOS.vsf');
+  StyleBook1.Style := 'macOS';
   {$ENDIF}
 
-  {$IFDEF IOS}
-  // Style iOS
-  TStyleManager.TrySetStyleFromFile('iOS.vsf');
-  {$ENDIF}
-
-  {$IFDEF ANDROID}
-  // Style Material Design
-  TStyleManager.TrySetStyleFromFile('Material.vsf');
-  {$ENDIF}
-
-  // Ajustements supplémentaires selon la plateforme
-  {$IFDEF MSWINDOWS}
-  HeaderLayout.Padding.Top := 5;
-  HeaderLayout.Padding.Bottom := 5;
-  {$ENDIF}
-
-  {$IFDEF ANDROID}
-  HeaderLayout.Padding.Top := 10;
-  HeaderLayout.Padding.Bottom := 10;
-  {$ENDIF}
-
-  {$IFDEF IOS}
-  // Tenir compte de la "notch" et de la barre d'état
-  HeaderLayout.Padding.Top := 20;
+  {$IFDEF LINUX}
+  // Style adapté à Linux
+  StyleBook1.Style := 'Light';
   {$ENDIF}
 end;
 ```
 
-### 11.2 Comportements spécifiques
+---
+
+## Partie 6 : Styles et apparence
+
+### 6.1 Application de styles FMX
+
+FireMonkey permet de changer complètement l'apparence de votre application avec des styles.
+
+#### Appliquer un style intégré
+
+1. Ajoutez un **TStyleBook** sur votre formulaire
+2. Dans l'Inspecteur d'objets, propriété **StyleName**, choisissez un style :
+   - `Windows10.style`
+   - `macOS.style`
+   - `Aqua.style`
+   - `Dark.style`
+   - etc.
+
+#### Code pour changer de style
 
 ```pascal
-// Dans FormCreate, ajoutez des comportements spécifiques à la plateforme
-procedure TMainForm.FormCreate(Sender: TObject);
+procedure TFormMain.ApplyStyle(const AStyleName: string);
 begin
-  // Code commun
-  FTaskList := TTaskList.Create;
-  ApplyPlatformStyle;
+  StyleBook1.StyleName := AStyleName;
+  // Rafraîchir l'interface
+  Invalidate;
+end;
 
-  // Comportements spécifiques
-  {$IFDEF ANDROID}
-  // Sur Android, activons le glissement pour supprimer
-  TaskListView.DeleteButtonText := 'Supprimer';
-  TaskListView.ShowDeleteButton := True;
-  {$ENDIF}
+// Appliquer un thème sombre
+procedure TFormMain.ApplyDarkTheme;
+begin
+  ApplyStyle('Dark.style');
+end;
 
-  {$IFDEF IOS}
-  // Sur iOS, utilisons un style différent pour les suppressions
-  TaskListView.EditMode := True;
-  TaskListView.CanSwipeDelete := True;
-  {$ENDIF}
-
-  RefreshTaskList;
-  UpdateEmptyState;
+// Appliquer un thème clair
+procedure TFormMain.ApplyLightTheme;
+begin
+  ApplyStyle('Light.style');
 end;
 ```
 
-## 12. Analyse des performances et débogage multi-plateformes
+### 6.2 Mode sombre et mode clair
 
-### 12.1 Profilage de l'application
+Permettons à l'utilisateur de choisir entre thème clair et sombre.
 
-Delphi offre des outils intégrés pour analyser les performances :
-
-1. Cliquez sur **Exécuter > Profileur** pour activer le profilage.
-2. Exécutez votre application normalement.
-3. Analysez les résultats pour identifier les goulots d'étranglement.
-
-### 12.2 Débogage à distance
-
-Pour déboguer sur des appareils physiques :
-
-1. Pour Android/iOS/macOS :
-   - Utilisez **Exécuter > Attachement au processus** pour vous connecter à l'application en cours d'exécution.
-   - Utilisez les points d'arrêt comme d'habitude.
-
-2. Pour Linux :
-   - Configurez le PAServer sur la machine Linux.
-   - Connectez-vous au PAServer depuis Delphi.
-   - Déployez et déboguez comme d'habitude.
-
-## 13. Préparation au déploiement
-
-### 13.1 Configuration des options de déploiement
-
-Pour chaque plateforme, configurez les options de déploiement :
-
-1. Dans le Project Manager, cliquez-droit sur le nom du projet et sélectionnez **Options du projet**.
-2. Allez dans **Déploiement** et configurez pour chaque plateforme cible :
-   - Mode de déploiement (déboguer/release)
-   - Fichiers à inclure
-   - Paramètres de l'application (icônes, versions, etc.)
-
-### 13.2 Préparation des icônes et écrans de démarrage
-
-Pour une application professionnelle, préparez des ressources graphiques adaptées à chaque plateforme :
+#### Ajout d'un menu de basculement
 
 ```pascal
-// Ajoutez au projet
-// - Un fichier .icns pour macOS
-// - Des fichiers .ico pour Windows
-// - Un ensemble d'icônes PNG pour Android/iOS
-// - Un splash screen pour chaque plateforme
+type
+  TFormMain = class(TForm)
+    // ... autres composants
+    SwitchTheme: TSwitch;
+    LabelTheme: TLabel;
 
-// Dans le projet (.dproj), assurez-vous que ces ressources sont correctement liées
+    procedure SwitchThemeSwitch(Sender: TObject);
+  end;
+
+procedure TFormMain.SwitchThemeSwitch(Sender: TObject);
+begin
+  if SwitchTheme.IsChecked then
+    ApplyDarkTheme
+  else
+    ApplyLightTheme;
+end;
 ```
 
-## 14. Améliorations possibles
+### 6.3 Personnalisation des couleurs
 
-Pour aller plus loin avec ce projet, vous pourriez explorer :
+Vous pouvez personnaliser les couleurs individuellement :
 
-1. **Synchronisation cloud** : Ajoutez une synchronisation avec Firebase ou un autre service cloud.
-2. **Widgets** : Créez des widgets pour Android/iOS affichant les tâches à venir.
-3. **Thèmes sombres/clairs** : Ajoutez une option pour changer les thèmes selon les préférences utilisateur ou le thème système.
-4. **Catégorisation** : Permettez aux utilisateurs de classer les tâches par catégories.
-5. **Rappels multiples** : Ajoutez la possibilité de définir plusieurs rappels pour une même tâche.
+```pascal
+procedure TFormMain.CustomizeColors;
+begin
+  // Couleur de fond
+  Self.Fill.Color := TAlphaColors.White;
+
+  // Couleur du texte
+  LabelTitle.TextSettings.FontColor := TAlphaColors.Black;
+
+  // Couleur des boutons
+  ButtonNewNote.Fill.Color := TAlphaColors.Dodgerblue;
+end;
+```
+
+---
+
+## Partie 7 : Compilation et déploiement
+
+### 7.1 Compilation pour Windows
+
+#### Configuration Windows 32 bits
+
+1. Dans le Gestionnaire de projets, sélectionnez **Win32**
+2. Menu **Projet → Compiler**
+3. L'exécutable est créé dans le dossier de sortie
+
+#### Configuration Windows 64 bits
+
+1. Sélectionnez **Win64**
+2. Compilez de la même manière
+
+**Astuce** : Pour tester, appuyez sur **F9** pour compiler et exécuter.
+
+### 7.2 Compilation pour macOS
+
+#### Prérequis
+
+- Un Mac avec macOS
+- Xcode installé
+- Connexion PAServer configurée
+
+#### Configuration
+
+1. Dans Delphi, sélectionnez la plateforme **macOS 64-bit**
+2. Menu **Outils → Options → Serveur de plate-forme**
+3. Ajoutez la connexion à votre Mac
+4. Testez la connexion
+
+#### Compilation
+
+1. Sélectionnez **macOS 64-bit** dans le Gestionnaire
+2. Compilez (Ctrl+F9)
+3. L'application est transférée sur le Mac
+
+#### Déploiement
+
+- L'application est créée comme un bundle `.app`
+- Vous pouvez la distribuer directement ou créer un DMG
+
+### 7.3 Compilation pour Linux
+
+#### Prérequis
+
+- Machine Linux avec les bibliothèques FMX
+- PAServer Linux configuré
+
+#### Configuration
+
+1. Sélectionnez **Linux 64-bit**
+2. Configurez la connexion PAServer Linux
+3. Assurez-vous que les bibliothèques sont installées :
+
+```bash
+sudo apt-get install libgtk-3-dev
+sudo apt-get install libgl1-mesa-dev
+```
+
+#### Compilation
+
+1. Compilez comme pour les autres plateformes
+2. L'exécutable est créé sur la machine Linux
+
+#### Distribution
+
+- Créez un package DEB ou RPM
+- Ou distribuez l'exécutable avec les dépendances
+
+### 7.4 Gestion des ressources
+
+#### Intégration d'images et icônes
+
+1. **Windows** : Ajoutez une icône dans les options du projet
+2. **macOS** : Créez un fichier icns et ajoutez-le au bundle
+3. **Linux** : Fournissez une icône PNG
+
+#### Déploiement automatique
+
+Configurez le déploiement dans **Projet → Déploiement** :
+- Sélectionnez les fichiers à inclure
+- Définissez les chemins de destination
+- Delphi copiera automatiquement les fichiers nécessaires
+
+---
+
+## Partie 8 : Optimisation et bonnes pratiques
+
+### 8.1 Performance multiplateforme
+
+#### Éviter les opérations coûteuses
+
+```pascal
+// ❌ Mauvais : Recherche dans une boucle à chaque caractère
+procedure TFormMain.EditSearchChange(Sender: TObject);
+var
+  I: Integer;
+begin
+  ListBoxNotes.Clear;
+  for I := 0 to NotesManager.GetNoteCount - 1 do
+  begin
+    // Recherche lente
+    if ContainsText(NotesManager.GetNote(I).Content, EditSearch.Text) then
+      ListBoxNotes.Items.Add(NotesManager.GetNote(I).Title);
+  end;
+end;
+
+// ✅ Bon : Utiliser un délai et optimiser
+procedure TFormMain.EditSearchChange(Sender: TObject);
+begin
+  // Déclencher la recherche après 300ms d'inactivité
+  TimerSearch.Enabled := False;
+  TimerSearch.Enabled := True;
+end;
+
+procedure TFormMain.TimerSearchTimer(Sender: TObject);
+begin
+  TimerSearch.Enabled := False;
+  PerformSearch(EditSearch.Text);
+end;
+```
+
+#### Virtualisation des listes
+
+Pour de grandes listes, utilisez la virtualisation :
+
+```pascal
+// Au lieu de charger toutes les notes
+ListBoxNotes.BeginUpdate;
+try
+  for Note in AllNotes do
+    ListBoxNotes.Items.Add(Note.Title);
+finally
+  ListBoxNotes.EndUpdate;
+end;
+```
+
+### 8.2 Gestion de la mémoire
+
+#### Libération des objets
+
+```pascal
+// ✅ Toujours libérer les objets créés
+procedure TFormMain.ProcessNote;
+var
+  Note: TNote;
+begin
+  Note := TNote.Create;
+  try
+    // Traiter la note
+    Note.Title := 'Test';
+    Note.Content := 'Contenu';
+  finally
+    Note.Free; // Libération garantie
+  end;
+end;
+```
+
+#### Utiliser TObjectList
+
+```pascal
+// ✅ TObjectList libère automatiquement
+FNotes := TObjectList<TNote>.Create(True); // True = possède les objets
+
+// Pas besoin de libérer manuellement les notes individuelles
+FNotes.Free; // Libère la liste ET toutes les notes
+```
+
+### 8.3 Threading et interface réactive
+
+#### Éviter de bloquer l'interface
+
+```pascal
+// ❌ Mauvais : Opération longue dans le thread principal
+procedure TFormMain.LoadLargeFile;
+begin
+  // Lecture d'un gros fichier
+  LargeData := TFile.ReadAllText('bigfile.json'); // Bloque l'UI
+  ProcessData(LargeData);
+end;
+
+// ✅ Bon : Utiliser TTask
+procedure TFormMain.LoadLargeFileAsync;
+begin
+  TTask.Run(
+    procedure
+    var
+      Data: string;
+    begin
+      // Opération dans un thread séparé
+      Data := TFile.ReadAllText('bigfile.json');
+
+      // Retour au thread principal pour l'UI
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ProcessData(Data);
+        end);
+    end);
+end;
+```
+
+### 8.4 Sauvegarde intelligente
+
+#### Auto-sauvegarde avec délai
+
+```pascal
+type
+  TFormMain = class(TForm)
+    TimerAutoSave: TTimer;
+    procedure TimerAutoSaveTimer(Sender: TObject);
+    procedure MemoContentChange(Sender: TObject);
+  private
+    FModified: Boolean;
+  end;
+
+procedure TFormMain.MemoContentChange(Sender: TObject);
+begin
+  FModified := True;
+  // Réinitialiser le timer
+  TimerAutoSave.Enabled := False;
+  TimerAutoSave.Interval := 2000; // 2 secondes
+  TimerAutoSave.Enabled := True;
+end;
+
+procedure TFormMain.TimerAutoSaveTimer(Sender: TObject);
+begin
+  if FModified then
+  begin
+    SaveCurrentNote;
+    FModified := False;
+  end;
+  TimerAutoSave.Enabled := False;
+end;
+```
+
+### 8.5 Gestion des erreurs multiplateforme
+
+```pascal
+procedure TNotesManager.SaveToFile;
+begin
+  try
+    // Tentative de sauvegarde
+    TFile.WriteAllText(FDataFile, GetJSONData);
+  except
+    on E: Exception do
+    begin
+      {$IFDEF MSWINDOWS}
+      MessageDlg('Erreur de sauvegarde: ' + E.Message,
+        TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+      {$ENDIF}
+
+      {$IFDEF MACOS}
+      ShowMessage('Erreur de sauvegarde: ' + E.Message);
+      {$ENDIF}
+
+      {$IFDEF LINUX}
+      ShowMessage('Erreur de sauvegarde: ' + E.Message);
+      {$ENDIF}
+
+      // Logger l'erreur
+      LogError(E.Message);
+    end;
+  end;
+end;
+```
+
+---
+
+## Partie 9 : Tests multiplateformes
+
+### 9.1 Stratégie de test
+
+#### Tests sur chaque plateforme
+
+Pour garantir le bon fonctionnement, testez sur toutes les plateformes cibles :
+
+**Windows** :
+- ✅ Interface s'affiche correctement
+- ✅ Sauvegarde fonctionne
+- ✅ Raccourcis clavier Ctrl+...
+- ✅ Installation et désinstallation
+
+**macOS** :
+- ✅ Interface respecte les conventions Mac
+- ✅ Raccourcis Cmd+...
+- ✅ Bundle .app valide
+- ✅ Icône affichée
+
+**Linux** :
+- ✅ Dépendances satisfaites
+- ✅ Interface adaptée
+- ✅ Chemins de fichiers corrects
+- ✅ Permissions
+
+### 9.2 Scénarios de test
+
+#### Test 1 : Création de note
+
+1. Lancer l'application
+2. Cliquer sur "Nouvelle note"
+3. Saisir un titre et du contenu
+4. Vérifier la sauvegarde automatique
+5. Fermer et rouvrir l'application
+6. Vérifier que la note est conservée
+
+#### Test 2 : Recherche
+
+1. Créer plusieurs notes avec des contenus différents
+2. Utiliser la recherche
+3. Vérifier que les résultats sont corrects
+4. Tester avec des caractères spéciaux
+
+#### Test 3 : Performance
+
+1. Créer 100+ notes
+2. Vérifier la fluidité de l'interface
+3. Tester le temps de démarrage
+4. Vérifier la consommation mémoire
+
+### 9.3 Journalisation des erreurs
+
+Créez un système de logging multiplateforme :
+
+```pascal
+unit uLogger;
+
+interface
+
+uses
+  System.SysUtils, System.IOUtils, uPathHelper;
+
+type
+  TLogger = class
+  private
+    class var FLogFile: string;
+    class procedure InitializeLog;
+  public
+    class procedure Log(const AMessage: string);
+    class procedure LogError(const AError: string);
+    class procedure LogWarning(const AWarning: string);
+  end;
+
+implementation
+
+{ TLogger }
+
+class procedure TLogger.InitializeLog;
+begin
+  FLogFile := TPath.Combine(
+    TPathHelper.GetAppDataPath,
+    'notesapp.log'
+  );
+end;
+
+class procedure TLogger.Log(const AMessage: string);
+var
+  LogEntry: string;
+begin
+  if FLogFile = '' then
+    InitializeLog;
+
+  LogEntry := Format('[%s] %s',
+    [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), AMessage]);
+
+  TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+end;
+
+class procedure TLogger.LogError(const AError: string);
+begin
+  Log('ERROR: ' + AError);
+end;
+
+class procedure TLogger.LogWarning(const AWarning: string);
+begin
+  Log('WARNING: ' + AWarning);
+end;
+
+end.
+```
+
+**Utilisation** :
+
+```pascal
+try
+  // Opération risquée
+  RiskyOperation;
+except
+  on E: Exception do
+  begin
+    TLogger.LogError('Erreur dans RiskyOperation: ' + E.Message);
+    raise; // Re-lever l'exception si nécessaire
+  end;
+end;
+```
+
+---
+
+## Partie 10 : Améliorations et extensions
+
+### 10.1 Fonctionnalités supplémentaires
+
+Maintenant que vous avez une application fonctionnelle, voici des idées d'amélioration :
+
+#### Catégories de notes
+
+```pascal
+type
+  TNoteCategory = (ncPersonal, ncWork, ncIdeas, ncTodo);
+
+  TNote = class
+  private
+    FCategory: TNoteCategory;
+  public
+    property Category: TNoteCategory read FCategory write FCategory;
+  end;
+
+// Filtrer par catégorie
+procedure TFormMain.FilterByCategory(ACategory: TNoteCategory);
+var
+  Note: TNote;
+begin
+  ListBoxNotes.Clear;
+  for Note in NotesManager.Notes do
+  begin
+    if Note.Category = ACategory then
+      ListBoxNotes.Items.Add(Note.Title);
+  end;
+end;
+```
+
+#### Tags pour les notes
+
+```pascal
+type
+  TNote = class
+  private
+    FTags: TList<string>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AddTag(const ATag: string);
+    procedure RemoveTag(const ATag: string);
+    function HasTag(const ATag: string): Boolean;
+
+    property Tags: TList<string> read FTags;
+  end;
+```
+
+#### Export vers différents formats
+
+```pascal
+procedure ExportToPDF(ANote: TNote; const AFileName: string);
+begin
+  // Utiliser un composant de génération PDF
+  // Exemple avec FastReport ou autre
+end;
+
+procedure ExportToMarkdown(ANote: TNote; const AFileName: string);
+var
+  Content: string;
+begin
+  Content := '# ' + ANote.Title + sLineBreak +
+             sLineBreak +
+             ANote.Content;
+  TFile.WriteAllText(AFileName, Content);
+end;
+```
+
+#### Synchronisation cloud
+
+```pascal
+type
+  TCloudSync = class
+  public
+    procedure SyncToCloud;
+    procedure SyncFromCloud;
+  end;
+
+procedure TCloudSync.SyncToCloud;
+begin
+  // Utiliser TRESTClient pour uploader vers un service cloud
+  // Exemple: Google Drive, Dropbox, ou votre propre serveur
+end;
+```
+
+### 10.2 Interface utilisateur avancée
+
+#### Animations
+
+```pascal
+procedure TFormMain.ShowNoteWithAnimation(ANote: TNote);
+begin
+  // Animer l'apparition
+  MemoContent.Opacity := 0;
+  MemoContent.Text := ANote.Content;
+
+  TAnimator.AnimateFloat(MemoContent, 'Opacity', 1, 0.3);
+end;
+```
+
+#### Effets visuels
+
+```pascal
+uses
+  FMX.Effects;
+
+procedure AddShadowEffect(AControl: TControl);
+var
+  Shadow: TShadowEffect;
+begin
+  Shadow := TShadowEffect.Create(AControl);
+  Shadow.Parent := AControl;
+  Shadow.Distance := 3;
+  Shadow.Softness := 0.3;
+  Shadow.Opacity := 0.5;
+end;
+```
+
+### 10.3 Accessibilité
+
+#### Support des lecteurs d'écran
+
+```pascal
+procedure SetupAccessibility;
+begin
+  // Définir des HintString descriptifs
+  ButtonNewNote.Hint := 'Créer une nouvelle note';
+  EditSearch.Hint := 'Rechercher dans vos notes';
+  ListBoxNotes.Hint := 'Liste de vos notes';
+end;
+```
+
+#### Raccourcis clavier étendus
+
+```pascal
+procedure TFormMain.SetupAdvancedShortcuts;
+begin
+  // Ctrl/Cmd + S pour sauvegarder
+  ActionSave.ShortCut := TextToShortCut('Ctrl+S');
+
+  // Ctrl/Cmd + F pour rechercher
+  ActionFind.ShortCut := TextToShortCut('Ctrl+F');
+
+  // Ctrl/Cmd + W pour fermer
+  ActionClose.ShortCut := TextToShortCut('Ctrl+W');
+
+  // Échap pour annuler
+  ActionCancel.ShortCut := TextToShortCut('Esc');
+end;
+```
+
+---
+
+## Partie 11 : Distribution de l'application
+
+### 11.1 Préparation pour la distribution
+
+#### Version de release
+
+1. Passez en mode **Release** dans la configuration
+2. Menu **Projet → Options → Compilation**
+3. Désactivez les informations de débogage
+4. Activez l'optimisation
+
+```pascal
+// Vérifier la version dans le code
+{$IFDEF DEBUG}
+  Caption := Caption + ' [DEBUG]';
+{$ENDIF}
+```
+
+#### Fichier de version
+
+Créez un fichier `version.txt` :
+
+```
+NotesApp
+Version 1.0.0
+Build 2024-01-15
+```
+
+### 11.2 Création d'installateurs
+
+#### Windows - Inno Setup
+
+Créez un script Inno Setup (`setup.iss`) :
+
+```ini
+[Setup]
+AppName=Notes App
+AppVersion=1.0
+DefaultDirName={pf}\NotesApp
+DefaultGroupName=Notes App
+OutputDir=.\Output
+OutputBaseFilename=NotesAppSetup
+
+[Files]
+Source: "Win64\Release\NotesApp.exe"; DestDir: "{app}"
+
+[Icons]
+Name: "{group}\Notes App"; Filename: "{app}\NotesApp.exe"
+Name: "{commondesktop}\Notes App"; Filename: "{app}\NotesApp.exe"
+```
+
+#### macOS - DMG
+
+Utilisez `create-dmg` ou manuellement :
+
+```bash
+hdiutil create -volname "NotesApp" -srcfolder NotesApp.app -ov -format UDZO NotesApp.dmg
+```
+
+#### Linux - Package DEB
+
+Créez une structure Debian :
+
+```
+notesapp_1.0-1/
+├── DEBIAN/
+│   └── control
+└── usr/
+    └── bin/
+        └── notesapp
+```
+
+Fichier `control` :
+
+```
+Package: notesapp
+Version: 1.0
+Architecture: amd64
+Maintainer: Votre Nom
+Description: Application de gestion de notes
+```
+
+Créez le package :
+
+```bash
+dpkg-deb --build notesapp_1.0-1
+```
+
+### 11.3 Signature de code
+
+#### Windows
+
+Utilisez `signtool.exe` :
+
+```bash
+signtool sign /f certificate.pfx /p password /t http://timestamp.server NotesApp.exe
+```
+
+#### macOS
+
+```bash
+codesign --force --deep --sign "Developer ID" NotesApp.app
+```
+
+### 11.4 Documentation utilisateur
+
+Créez un fichier `README.md` :
+
+```markdown
+# Notes App
+
+Application de gestion de notes multi-plateforme.
+
+## Installation
+
+### Windows
+Double-cliquez sur NotesAppSetup.exe et suivez les instructions.
+
+### macOS
+Ouvrez NotesApp.dmg et glissez l'application dans Applications.
+
+### Linux
+```bash
+sudo dpkg -i notesapp_1.0-1_amd64.deb
+```
+
+## Utilisation
+
+1. Créer une note : Cliquez sur "Nouvelle note"
+2. Rechercher : Utilisez la barre de recherche en haut
+3. Supprimer : Clic droit sur une note → Supprimer
+
+## Support
+
+Email: support@votresite.com
+Web: https://votresite.com/support
+```
+
+---
 
 ## Conclusion
 
-Dans ce tutoriel, nous avons créé une application de gestion de tâches complète qui fonctionne sur plusieurs plateformes. FireMonkey nous a permis de maintenir une base de code commune tout en adaptant l'expérience utilisateur aux spécificités de chaque plateforme.
+### Ce que vous avez appris
 
-Les principes clés à retenir :
+Félicitations ! Vous avez créé une application complète multi-plateforme avec Delphi et FireMonkey. Vous maîtrisez maintenant :
 
-1. **Une base commune** : La majorité du code est partagée entre toutes les plateformes.
-2. **Adaptations ciblées** : Utilisez des directives de compilation (`{$IFDEF}`) pour ajouter des comportements spécifiques.
-3. **Services natifs** : Tirez parti des services propres à chaque plateforme quand c'est pertinent.
-4. **UI adaptative** : Concevez des interfaces qui s'adaptent à différentes tailles d'écran et orientations.
-5. **Persistance des données** : Utilisez des mécanismes de stockage qui fonctionnent sur toutes les plateformes.
+✅ **FireMonkey** : Création d'interfaces multiplateformes
+✅ **Architecture** : Séparation en couches (UI, Business, Data)
+✅ **Gestion des données** : JSON, sauvegarde, chargement
+✅ **Multi-plateforme** : Adaptation Windows, macOS, Linux
+✅ **Styles** : Personnalisation de l'apparence
+✅ **Compilation** : Déploiement sur différents OS
+✅ **Optimisation** : Performance et bonnes pratiques
+✅ **Distribution** : Création d'installateurs
 
-FireMonkey et Delphi vous permettent de créer rapidement des applications multi-plateformes de qualité professionnelle, tout en minimisant la duplication de code et d'effort.
+### Compétences acquises
 
-> **Note** : Ce tutoriel utilise Delphi 12 Athens. La plupart des exemples sont compatibles avec Delphi 11 Alexandria. Les fonctionnalités spécifiques à Delphi 12 sont marquées comme telles.
+Vous êtes maintenant capable de :
+
+🎯 Créer des applications qui fonctionnent sur plusieurs systèmes d'exploitation
+🎯 Gérer les spécificités de chaque plateforme
+🎯 Structurer un projet de manière professionnelle
+🎯 Implémenter la persistance des données
+🎯 Optimiser les performances
+🎯 Distribuer vos applications
+
+### Pour aller plus loin
+
+#### Améliorations suggérées
+
+1. **Synchronisation cloud** : Intégrer Firebase ou votre propre API
+2. **Collaboration** : Partage de notes entre utilisateurs
+3. **Markdown** : Support de la syntaxe Markdown
+4. **Attachements** : Joindre des images et fichiers
+5. **Chiffrement** : Sécuriser les notes sensibles
+6. **Versions iOS/Android** : Étendre aux mobiles
+
+#### Ressources complémentaires
+
+**Documentation** :
+- [FireMonkey Documentation](https://docwiki.embarcadero.com/RADStudio/en/FireMonkey)
+- [Multi-Device Applications Guide](https://docwiki.embarcadero.com/RADStudio/en/Multi-Device_Applications)
+
+**Communauté** :
+- Forums Embarcadero
+- Stack Overflow [tag: delphi-fmx]
+- Reddit r/delphi
+
+**Projets exemples** :
+- Delphi Samples sur GitHub
+- GetIt Package Manager (exemples intégrés)
+
+### Projet suivant
+
+Maintenant que vous maîtrisez le développement multi-plateforme desktop, vous êtes prêt pour :
+
+- **19.3 Applications mobiles** : Étendre vos compétences à iOS et Android
+- **19.5 Applications cloud et SaaS** : Créer des services web avec Delphi
+- **19.7 Projets IA et Machine Learning** : Intégrer l'intelligence artificielle
+
+### Message final
+
+Le développement multi-plateforme est un atout majeur dans le paysage technologique actuel. Avec Delphi et FireMonkey, vous avez les outils pour créer des applications professionnelles qui touchent un large public sans multiplier vos efforts.
+
+N'oubliez pas :
+- **Testez sur toutes les plateformes** régulièrement
+- **Respectez les conventions** de chaque OS
+- **Optimisez l'expérience utilisateur** pour chaque plateforme
+- **Partagez vos connaissances** avec la communauté
+
+**Bon développement multi-plateforme avec Delphi !** 🚀
+
+---
+
+**Navigation** :
+- [← 19.1 Application de gestion MySQL/MariaDB]()
+- [19.3 Applications mobiles avancées →]()
+- [Retour au sommaire des projets avancés]()
 
 ⏭️ [Applications mobiles avec fonctionnalités avancées](/19-projets-avances/03-applications-mobiles-avec-fonctionnalites-avancees.md)
