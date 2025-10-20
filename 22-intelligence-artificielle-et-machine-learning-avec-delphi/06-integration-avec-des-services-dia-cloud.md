@@ -1,532 +1,1199 @@
+🔝 Retour au [Sommaire](/SOMMAIRE.md)
+
 # 22.6 Intégration avec des services d'IA cloud (Azure AI, Google AI, etc.)
 
-🔝 Retour à la [Table des matières](/SOMMAIRE.md)
+## Introduction aux services d'IA cloud
 
-L'intelligence artificielle est aujourd'hui facilement accessible via des services cloud qui proposent des API REST. Dans cette section, nous allons découvrir comment intégrer ces services dans vos applications Delphi, en nous concentrant sur les plateformes les plus populaires : Azure AI, Google AI et OpenAI.
+### Qu'est-ce qu'un service d'IA cloud ?
 
-## Prérequis
+Un service d'IA cloud est une API accessible via internet qui vous permet d'utiliser des modèles d'intelligence artificielle sophistiqués sans avoir à les développer, entraîner ou héberger vous-même. C'est comme louer une intelligence artificielle "prête à l'emploi".
 
-Avant de commencer, assurez-vous de disposer des éléments suivants :
-- Delphi 11 Alexandria ou supérieur
-- Une connexion Internet active
-- Un compte sur la plateforme cloud que vous souhaitez utiliser (Azure, Google Cloud ou OpenAI)
-- Des connaissances de base sur les appels REST avec Delphi
+**Analogie simple** : Imaginez que vous voulez utiliser de l'électricité. Vous avez deux options :
+- Construire votre propre centrale électrique (développer vos propres modèles IA)
+- Brancher votre équipement sur le réseau électrique existant (utiliser des services cloud)
 
-## Principes communs d'intégration
+Les services d'IA cloud sont comme le réseau électrique : vous payez ce que vous consommez, l'infrastructure est gérée par le fournisseur, et vous bénéficiez instantanément des dernières technologies.
 
-Quelle que soit la plateforme cloud choisie, l'intégration suit généralement ces étapes :
+### Pourquoi choisir les services cloud ?
 
-1. Création d'un compte sur la plateforme et obtention d'une clé API
-2. Configuration des composants REST dans votre application Delphi
-3. Envoi des requêtes au service d'IA
-4. Traitement des réponses obtenues
+**Rapidité de mise en œuvre** :
+Vous pouvez intégrer des fonctionnalités IA en quelques heures au lieu de plusieurs mois de développement.
 
-## Intégration avec Azure AI Services
+**Pas d'expertise ML requise** :
+Les modèles sont déjà entraînés et optimisés par des experts. Vous n'avez qu'à les utiliser.
 
-Microsoft Azure propose une gamme complète de services d'IA accessibles via des API REST.
+**Mise à jour automatique** :
+Les fournisseurs améliorent constamment leurs modèles. Vous en bénéficiez automatiquement sans rien changer.
 
-### Étape 1 : Configuration du compte Azure
+**Scalabilité** :
+Gérez 10 ou 10 millions de requêtes sans vous soucier de l'infrastructure.
 
-1. Créez un compte sur le [portail Azure](https://portal.azure.com/)
-2. Créez une ressource Azure AI Services
-3. Récupérez votre clé API et l'URL de point de terminaison
+**Coût prévisible** :
+Modèle de paiement à l'usage (pay-as-you-go). Pas d'investissement initial lourd.
 
-### Étape 2 : Intégration avec Delphi
+**Fiabilité** :
+SLA (Service Level Agreement) garantis, haute disponibilité, support technique.
 
-Voici un exemple d'intégration avec Azure Computer Vision pour analyser une image :
+### Les inconvénients à considérer
 
-```pascal
-procedure TFormAzureAI.AnalyzeImage(const ImageFilePath: string);
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  ImageStream: TMemoryStream;
-  JSONValue: TJSONValue;
-  JSONArray: TJSONArray;
-  I: Integer;
-begin
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-  ImageStream := TMemoryStream.Create;
+**Dépendance internet** :
+Nécessite une connexion pour fonctionner (sauf certains services hybrides).
 
-  try
-    // Configuration du client REST
-    RESTClient.BaseURL := 'https://votre-ressource.cognitiveservices.azure.com/vision/v3.2/analyze';
-    RESTClient.ContentType := 'application/octet-stream';
+**Coûts récurrents** :
+Si vous avez de gros volumes, les coûts peuvent augmenter significativement.
 
-    // Configuration de la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := TRESTRequestMethod.rmPOST;
+**Confidentialité des données** :
+Vos données transitent par des serveurs tiers (problématique pour données sensibles).
 
-    // Paramètres de la requête
-    RESTRequest.AddParameter('visualFeatures', 'Categories,Description,Objects');
+**Latence** :
+Temps de réponse légèrement supérieur aux solutions locales (réseau).
 
-    // Ajout de la clé API dans les en-têtes
-    RESTRequest.AddParameter('Ocp-Apim-Subscription-Key', 'votre-clé-api', TRESTRequestParameterKind.pkHTTPHEADER);
+**Dépendance au fournisseur** :
+Changement de fournisseur peut nécessiter du travail de migration.
 
-    // Chargement de l'image
-    ImageStream.LoadFromFile(ImageFilePath);
-    RESTRequest.AddBody(ImageStream, TRESTContentType.ctAPPLICATION_OCTET_STREAM);
+## Les grands acteurs du cloud IA
 
-    // Exécution de la requête
-    RESTRequest.Execute;
+### Vue d'ensemble comparative
 
-    // Traitement de la réponse
-    if RESTResponse.StatusCode = 200 then
-    begin
-      // Parsing JSON
-      JSONValue := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        // Extraction de la description
-        Memo1.Lines.Add('Description : ' +
-          JSONValue.GetValue<string>('description.captions[0].text'));
+| Fournisseur | Points forts | Idéal pour | Pricing |
+|------------|--------------|------------|---------|
+| **Google Cloud AI** | Vision, NLP, qualité modèles | Applications grand public | Compétitif, généreux en gratuit |
+| **Azure AI** | Intégration écosystème MS | Entreprises Microsoft | Moyen, crédits gratuits |
+| **AWS AI** | Scalabilité, infrastructure | Gros volumes, scaling | Variable selon service |
+| **OpenAI** | GPT-4, modèles génératifs | Chatbots, génération contenu | Premium mais puissant |
+| **IBM Watson** | Secteur entreprise, compliance | Grandes entreprises | Premium |
+| **Hugging Face** | Open source, communauté | Développeurs, recherche | Freemium |
 
-        // Extraction des catégories
-        JSONArray := JSONValue.GetValue<TJSONArray>('categories');
-        Memo1.Lines.Add('Catégories :');
-        for I := 0 to JSONArray.Count - 1 do
-        begin
-          Memo1.Lines.Add('- ' + JSONArray.Items[I].GetValue<string>('name') +
-            ' (' + FormatFloat('0.00', JSONArray.Items[I].GetValue<double>('score') * 100) + '%)');
-        end;
-      finally
-        JSONValue.Free;
-      end;
-    end
-    else
-    begin
-      ShowMessage('Erreur : ' + RESTResponse.StatusText);
-    end;
-  finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
-    ImageStream.Free;
-  end;
-end;
-```
+## Google Cloud AI Platform
 
-## Intégration avec Google AI
+### Présentation
 
-Google Cloud Platform propose également de nombreux services d'IA accessibles via API.
+Google Cloud AI est la plateforme d'intelligence artificielle de Google, bénéficiant de l'expertise du géant du web en matière d'IA. Elle offre des services de reconnaissance d'images, traitement du langage, traduction, et bien plus.
 
-### Étape 1 : Configuration du compte Google Cloud
+### Services principaux
 
-1. Créez un compte sur la [console Google Cloud](https://console.cloud.google.com/)
-2. Activez les API souhaitées (Vision AI, Speech-to-Text, etc.)
-3. Créez une clé API ou configurez l'authentification OAuth2
+**Cloud Vision API** :
+- Analyse d'images et détection d'objets
+- OCR (extraction de texte)
+- Détection de visages et émotions
+- Reconnaissance de logos et monuments
+- Détection de contenu inapproprié
 
-### Étape 2 : Intégration avec Delphi
+**Cloud Natural Language API** :
+- Analyse de sentiments
+- Extraction d'entités nommées
+- Analyse syntaxique
+- Classification de contenu
 
-Voici un exemple d'utilisation de l'API Google Cloud Translation :
+**Cloud Translation API** :
+- Traduction automatique
+- Plus de 100 langues supportées
+- Détection de langue
 
-```pascal
-procedure TFormGoogleAI.TranslateText(const TextToTranslate, SourceLang, TargetLang: string);
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  RequestBody: TJSONObject;
-  ResponseJSON: TJSONValue;
-  TranslatedText: string;
-begin
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-  RequestBody := TJSONObject.Create;
+**Cloud Speech-to-Text / Text-to-Speech** :
+- Reconnaissance vocale
+- Synthèse vocale
 
-  try
-    // Configuration du client REST
-    RESTClient.BaseURL := 'https://translation.googleapis.com/language/translate/v2';
+**Dialogflow** :
+- Création de chatbots et assistants vocaux
+- Gestion du dialogue conversationnel
 
-    // Configuration de la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := TRESTRequestMethod.rmPOST;
+**AutoML** :
+- Entraînement de modèles personnalisés sans expertise ML
 
-    // Ajout de la clé API comme paramètre de requête
-    RESTRequest.AddParameter('key', 'votre-clé-api');
+### Configuration initiale
 
-    // Préparation du corps de la requête en JSON
-    RequestBody.AddPair('q', TextToTranslate);
-    RequestBody.AddPair('source', SourceLang);
-    RequestBody.AddPair('target', TargetLang);
-    RequestBody.AddPair('format', 'text');
+**1. Créer un compte Google Cloud** :
+- Rendez-vous sur https://cloud.google.com
+- Inscrivez-vous (300$ de crédits gratuits pour débuter)
+- Créez un projet
 
-    RESTRequest.AddBody(RequestBody.ToJSON);
+**2. Activer les API** :
+- Dans la console, accédez à "API & Services"
+- Activez les API dont vous avez besoin (Vision, Natural Language, etc.)
 
-    // Exécution de la requête
-    RESTRequest.Execute;
+**3. Créer des identifiants** :
+- Générez une clé API (pour tests)
+- Ou créez un compte de service (pour production)
 
-    // Traitement de la réponse
-    if RESTResponse.StatusCode = 200 then
-    begin
-      ResponseJSON := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        // Extraction du texte traduit
-        TranslatedText := ResponseJSON.GetValue<string>('data.translations[0].translatedText');
-        Memo1.Lines.Add('Texte original: ' + TextToTranslate);
-        Memo1.Lines.Add('Traduction: ' + TranslatedText);
-      finally
-        ResponseJSON.Free;
-      end;
-    end
-    else
-    begin
-      ShowMessage('Erreur: ' + RESTResponse.StatusText);
-    end;
-  finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
-    RequestBody.Free;
-  end;
-end;
-```
+**4. Sécuriser la clé** :
+- Ne jamais commiter la clé dans le code source
+- Utiliser des variables d'environnement ou configuration sécurisée
 
-## Intégration avec OpenAI (ChatGPT, DALL-E)
+### Intégration avec Delphi
 
-OpenAI propose des modèles d'IA très puissants pour la génération de texte et d'images.
-
-### Étape 1 : Configuration du compte OpenAI
-
-1. Créez un compte sur [OpenAI](https://platform.openai.com/)
-2. Générez une clé API dans la section API keys
-
-### Étape 2 : Intégration avec Delphi
-
-Voici un exemple d'utilisation de l'API ChatGPT :
+**Configuration des composants REST** :
 
 ```pascal
-procedure TFormOpenAI.GenerateText(const Prompt: string);
-var
-  RESTClient: TRESTClient;
-  RESTRequest: TRESTRequest;
-  RESTResponse: TRESTResponse;
-  RequestBody: TJSONObject;
-  MessagesArray: TJSONArray;
-  MessageObject: TJSONObject;
-  ResponseJSON: TJSONValue;
-  GeneratedText: string;
-begin
-  RESTClient := TRESTClient.Create(nil);
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
-  RequestBody := TJSONObject.Create;
-  MessagesArray := TJSONArray.Create;
-  MessageObject := TJSONObject.Create;
-
-  try
-    // Configuration du client REST
-    RESTClient.BaseURL := 'https://api.openai.com/v1/chat/completions';
-
-    // Configuration de la requête
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := TRESTRequestMethod.rmPOST;
-
-    // Ajout de la clé API dans les en-têtes
-    RESTRequest.AddParameter('Authorization', 'Bearer votre-clé-api', TRESTRequestParameterKind.pkHTTPHEADER);
-
-    // Préparation du message
-    MessageObject.AddPair('role', 'user');
-    MessageObject.AddPair('content', Prompt);
-    MessagesArray.Add(MessageObject);
-
-    // Préparation du corps de la requête en JSON
-    RequestBody.AddPair('model', 'gpt-4');
-    RequestBody.AddPair('messages', MessagesArray);
-    RequestBody.AddPair('max_tokens', TJSONNumber.Create(500));
-    RequestBody.AddPair('temperature', TJSONNumber.Create(0.7));
-
-    RESTRequest.AddBody(RequestBody.ToJSON);
-
-    // Exécution de la requête
-    RESTRequest.Execute;
-
-    // Traitement de la réponse
-    if RESTResponse.StatusCode = 200 then
-    begin
-      ResponseJSON := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        // Extraction du texte généré
-        GeneratedText := ResponseJSON.GetValue<string>('choices[0].message.content');
-        Memo1.Lines.Add('Prompt: ' + Prompt);
-        Memo1.Lines.Add('Réponse:');
-        Memo1.Lines.Add(GeneratedText);
-      finally
-        ResponseJSON.Free;
-      end;
-    end
-    else
-    begin
-      ShowMessage('Erreur: ' + RESTResponse.StatusText + #13#10 + RESTResponse.Content);
-    end;
-  finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
-    // Attention : MessagesArray va libérer MessageObject
-    RequestBody.Free;
-    MessagesArray.Free;
-  end;
-end;
-```
-
-## Exemple complet : Application de traduction intelligente
-
-Voici un exemple d'application complète qui utilise l'API Google Translate pour traduire du texte :
-
-![Application de traduction](images/traduction_app.png)
-
-```pascal
-unit UnitTranslator;
+unit GoogleCloudAI;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, FMX.Types, FMX.Controls, FMX.Forms,
-  FMX.Graphics, FMX.Dialogs, FMX.StdCtrls, FMX.Layouts, FMX.Memo, FMX.Edit,
-  FMX.ComboEdit, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo.Types,
-  System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent,
-  REST.Types, REST.Client, REST.Response.Adapter, System.JSON;
+  System.SysUtils, System.Classes, REST.Client, REST.Types,
+  System.JSON, System.NetEncoding;
 
 type
-  TFormTranslator = class(TForm)
-    LayoutTop: TLayout;
-    LayoutBottom: TLayout;
-    MemoSource: TMemo;
-    MemoTarget: TMemo;
-    ComboBoxSourceLang: TComboEdit;
-    ComboBoxTargetLang: TComboEdit;
-    ButtonTranslate: TButton;
-    LabelSource: TLabel;
-    LabelTarget: TLabel;
-    LabelSourceLang: TLabel;
-    LabelTargetLang: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure ButtonTranslateClick(Sender: TObject);
+  TGoogleCloudVision = class
   private
-    procedure PopulateLanguages;
-    function GetLanguageCode(const LanguageName: string): string;
-    function TranslateText(const Text, SourceLang, TargetLang: string): string;
+    FRESTClient: TRESTClient;
+    FRESTRequest: TRESTRequest;
+    FRESTResponse: TRESTResponse;
+    FAPIKey: string;
   public
-    { Déclarations publiques }
-  end;
+    constructor Create(const APIKey: string);
+    destructor Destroy; override;
 
-var
-  FormTranslator: TFormTranslator;
+    function AnalyserImage(const CheminImage: string): TJSONObject;
+    function ExtraireTexte(const CheminImage: string): string;
+    function DetecterVisages(const CheminImage: string): TJSONArray;
+  end;
 
 implementation
 
-{$R *.fmx}
-
-procedure TFormTranslator.FormCreate(Sender: TObject);
+constructor TGoogleCloudVision.Create(const APIKey: string);
 begin
-  PopulateLanguages;
+  inherited Create;
+  FAPIKey := APIKey;
+
+  FRESTClient := TRESTClient.Create('https://vision.googleapis.com');
+  FRESTResponse := TRESTResponse.Create(nil);
+  FRESTRequest := TRESTRequest.Create(nil);
+
+  FRESTRequest.Client := FRESTClient;
+  FRESTRequest.Response := FRESTResponse;
 end;
 
-procedure TFormTranslator.PopulateLanguages;
+destructor TGoogleCloudVision.Destroy;
 begin
-  // Ajout des langues supportées
-  ComboBoxSourceLang.Items.AddStrings(['Français', 'Anglais', 'Espagnol', 'Allemand', 'Italien', 'Portugais', 'Russe', 'Chinois', 'Japonais', 'Arabe']);
-  ComboBoxTargetLang.Items.AddStrings(['Français', 'Anglais', 'Espagnol', 'Allemand', 'Italien', 'Portugais', 'Russe', 'Chinois', 'Japonais', 'Arabe']);
-
-  // Sélection par défaut
-  ComboBoxSourceLang.ItemIndex := 0; // Français
-  ComboBoxTargetLang.ItemIndex := 1; // Anglais
+  FRESTRequest.Free;
+  FRESTResponse.Free;
+  FRESTClient.Free;
+  inherited;
 end;
 
-function TFormTranslator.GetLanguageCode(const LanguageName: string): string;
-begin
-  // Conversion des noms de langues en codes ISO
-  if LanguageName = 'Français' then Result := 'fr'
-  else if LanguageName = 'Anglais' then Result := 'en'
-  else if LanguageName = 'Espagnol' then Result := 'es'
-  else if LanguageName = 'Allemand' then Result := 'de'
-  else if LanguageName = 'Italien' then Result := 'it'
-  else if LanguageName = 'Portugais' then Result := 'pt'
-  else if LanguageName = 'Russe' then Result := 'ru'
-  else if LanguageName = 'Chinois' then Result := 'zh'
-  else if LanguageName = 'Japonais' then Result := 'ja'
-  else if LanguageName = 'Arabe' then Result := 'ar'
-  else Result := 'en'; // Par défaut
-end;
-
-procedure TFormTranslator.ButtonTranslateClick(Sender: TObject);
+function TGoogleCloudVision.AnalyserImage(const CheminImage: string): TJSONObject;
 var
-  SourceText: string;
-  SourceLangCode, TargetLangCode: string;
-  TranslatedText: string;
+  FileStream: TFileStream;
+  MemStream: TMemoryStream;
+  Base64Image: string;
+  RequestBody: TJSONObject;
+  RequestArray: TJSONArray;
+  ImageObj: TJSONObject;
+  FeaturesArray: TJSONArray;
+  FeatureObj: TJSONObject;
 begin
-  // Récupération des paramètres
-  SourceText := MemoSource.Text;
-  if SourceText.Trim.IsEmpty then
-  begin
-    ShowMessage('Veuillez entrer un texte à traduire.');
-    Exit;
+  // 1. Charger et encoder l'image en Base64
+  MemStream := TMemoryStream.Create;
+  FileStream := TFileStream.Create(CheminImage, fmOpenRead);
+  try
+    MemStream.CopyFrom(FileStream, FileStream.Size);
+    MemStream.Position := 0;
+    Base64Image := TNetEncoding.Base64.EncodeBytesToString(
+      MemStream.Memory, MemStream.Size);
+  finally
+    FileStream.Free;
+    MemStream.Free;
   end;
 
-  SourceLangCode := GetLanguageCode(ComboBoxSourceLang.Text);
-  TargetLangCode := GetLanguageCode(ComboBoxTargetLang.Text);
-
-  // Indication visuelle que la traduction est en cours
-  ButtonTranslate.Enabled := False;
-  ButtonTranslate.Text := 'Traduction en cours...';
-  Application.ProcessMessages;
+  // 2. Construire la requête JSON
+  RequestArray := TJSONArray.Create;
+  RequestBody := TJSONObject.Create;
+  ImageObj := TJSONObject.Create;
+  FeaturesArray := TJSONArray.Create;
 
   try
-    // Appel à la fonction de traduction
-    TranslatedText := TranslateText(SourceText, SourceLangCode, TargetLangCode);
-    MemoTarget.Text := TranslatedText;
-  except
-    on E: Exception do
-    begin
-      ShowMessage('Erreur lors de la traduction: ' + E.Message);
-    end;
-  end;
+    // Image
+    ImageObj.AddPair('content', Base64Image);
 
-  // Rétablissement du bouton
-  ButtonTranslate.Text := 'Traduire';
-  ButtonTranslate.Enabled := True;
+    // Features demandées
+    FeatureObj := TJSONObject.Create;
+    FeatureObj.AddPair('type', 'LABEL_DETECTION');
+    FeatureObj.AddPair('maxResults', TJSONNumber.Create(10));
+    FeaturesArray.AddElement(FeatureObj);
+
+    // Assemblage
+    RequestBody.AddPair('image', ImageObj);
+    RequestBody.AddPair('features', FeaturesArray);
+    RequestArray.AddElement(RequestBody);
+
+    // 3. Configurer la requête
+    FRESTRequest.Resource := 'v1/images:annotate';
+    FRESTRequest.AddParameter('key', FAPIKey, pkGETorPOST);
+    FRESTRequest.Method := rmPOST;
+    FRESTRequest.ClearBody;
+
+    FRESTRequest.Body.Add(
+      '{"requests":' + RequestArray.ToString + '}',
+      TRESTContentType.ctAPPLICATION_JSON
+    );
+
+    // 4. Exécuter
+    FRESTRequest.Execute;
+
+    // 5. Retourner le résultat
+    if FRESTResponse.StatusCode = 200 then
+      Result := FRESTResponse.JSONValue as TJSONObject
+    else
+      raise Exception.CreateFmt('Erreur API: %d - %s',
+        [FRESTResponse.StatusCode, FRESTResponse.Content]);
+  finally
+    RequestArray.Free;
+  end;
 end;
 
-function TFormTranslator.TranslateText(const Text, SourceLang, TargetLang: string): string;
+function TGoogleCloudVision.ExtraireTexte(const CheminImage: string): string;
+var
+  Response: TJSONObject;
+  Responses: TJSONArray;
+  TextAnnotations: TJSONArray;
+begin
+  Result := '';
+
+  // Modifier pour demander TEXT_DETECTION
+  Response := AnalyserImage(CheminImage);
+  try
+    Responses := Response.GetValue<TJSONArray>('responses');
+    if Responses.Count > 0 then
+    begin
+      TextAnnotations := Responses.Items[0].GetValue<TJSONArray>('textAnnotations');
+      if (TextAnnotations <> nil) and (TextAnnotations.Count > 0) then
+        Result := TextAnnotations.Items[0].GetValue<string>('description');
+    end;
+  finally
+    Response.Free;
+  end;
+end;
+```
+
+**Utilisation dans votre application** :
+
+```pascal
+procedure TFormPrincipal.BtnAnalyserImageClick(Sender: TObject);
+var
+  Vision: TGoogleCloudVision;
+  Resultat: TJSONObject;
+  Labels: TJSONArray;
+  i: Integer;
+  Label_: TJSONObject;
+begin
+  Vision := TGoogleCloudVision.Create('VOTRE_CLE_API');
+  try
+    // Analyser l'image
+    Resultat := Vision.AnalyserImage(EditCheminImage.Text);
+    try
+      // Extraire les labels
+      Labels := Resultat.GetValue<TJSONArray>('responses[0].labelAnnotations');
+
+      MemoResultats.Lines.Clear;
+      MemoResultats.Lines.Add('Objets détectés :');
+
+      for i := 0 to Labels.Count - 1 do
+      begin
+        Label_ := Labels.Items[i] as TJSONObject;
+        MemoResultats.Lines.Add(Format('- %s (%.0f%%)', [
+          Label_.GetValue<string>('description'),
+          Label_.GetValue<Double>('score') * 100
+        ]));
+      end;
+    finally
+      Resultat.Free;
+    end;
+  finally
+    Vision.Free;
+  end;
+end;
+```
+
+### Tarification Google Cloud AI
+
+**Niveau gratuit** :
+- Cloud Vision : 1000 requêtes/mois
+- Natural Language : 5000 requêtes/mois
+- Translation : 500 000 caractères/mois
+
+**Au-delà** :
+- Vision : ~1,50€ / 1000 images
+- NLP : ~1€ / 1000 requêtes
+- Translation : ~20€ / million de caractères
+
+## Microsoft Azure AI Services
+
+### Présentation
+
+Azure AI Services (anciennement Cognitive Services) est la suite d'IA de Microsoft, parfaitement intégrée à l'écosystème Azure. Excellente pour les entreprises déjà dans l'environnement Microsoft.
+
+### Services principaux
+
+**Computer Vision** :
+- Analyse d'images avancée
+- OCR multilingue
+- Reconnaissance de formes manuscrites
+- Analyse spatiale
+
+**Face API** :
+- Détection et reconnaissance faciale
+- Détection d'émotions
+- Vérification et identification
+
+**Text Analytics** :
+- Analyse de sentiments
+- Extraction de phrases clés
+- Reconnaissance d'entités nommées
+- Détection de langue
+
+**Translator** :
+- Traduction de texte
+- Translittération
+- Détection de langue
+
+**Speech Services** :
+- Speech-to-Text
+- Text-to-Speech
+- Traduction vocale
+
+**Language Understanding (LUIS)** :
+- Compréhension du langage naturel
+- Détection d'intentions
+
+**Azure OpenAI Service** :
+- Accès aux modèles GPT-4, GPT-3.5
+- DALL-E pour génération d'images
+- Whisper pour transcription audio
+
+### Configuration initiale
+
+**1. Créer un compte Azure** :
+- Rendez-vous sur https://azure.microsoft.com
+- Inscription avec 200$ de crédits gratuits
+- Créez un groupe de ressources
+
+**2. Créer une ressource Cognitive Services** :
+- Dans le portail Azure
+- "Créer une ressource" → "AI + Machine Learning" → "Cognitive Services"
+- Sélectionnez la région (choisir Europe West pour la France)
+
+**3. Récupérer les clés** :
+- Dans la ressource créée, section "Keys and Endpoint"
+- Notez Key1 et l'endpoint
+
+### Intégration avec Delphi
+
+**Classe wrapper pour Azure Computer Vision** :
+
+```pascal
+unit AzureAI;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, REST.Client, REST.Types, System.JSON;
+
+type
+  TAzureComputerVision = class
+  private
+    FRESTClient: TRESTClient;
+    FRESTRequest: TRESTRequest;
+    FRESTResponse: TRESTResponse;
+    FSubscriptionKey: string;
+    FEndpoint: string;
+  public
+    constructor Create(const SubscriptionKey, Endpoint: string);
+    destructor Destroy; override;
+
+    function AnalyserImage(const URLImage: string): TJSONObject; overload;
+    function AnalyserImage(const CheminImage: string): TJSONObject; overload;
+    function ExtraireTexteOCR(const CheminImage: string): string;
+  end;
+
+implementation
+
+constructor TAzureComputerVision.Create(const SubscriptionKey, Endpoint: string);
+begin
+  inherited Create;
+  FSubscriptionKey := SubscriptionKey;
+  FEndpoint := Endpoint;
+
+  FRESTClient := TRESTClient.Create(FEndpoint);
+  FRESTResponse := TRESTResponse.Create(nil);
+  FRESTRequest := TRESTRequest.Create(nil);
+
+  FRESTRequest.Client := FRESTClient;
+  FRESTRequest.Response := FRESTResponse;
+end;
+
+destructor TAzureComputerVision.Destroy;
+begin
+  FRESTRequest.Free;
+  FRESTResponse.Free;
+  FRESTClient.Free;
+  inherited;
+end;
+
+function TAzureComputerVision.AnalyserImage(const URLImage: string): TJSONObject;
+var
+  RequestBody: TJSONObject;
+begin
+  // Analyse via URL d'image
+  FRESTRequest.Resource := 'vision/v3.2/analyze';
+  FRESTRequest.AddParameter('visualFeatures',
+    'Categories,Description,Color,Tags,Objects', pkGETorPOST);
+  FRESTRequest.AddParameter('Ocp-Apim-Subscription-Key',
+    FSubscriptionKey, pkHTTPHEADER, [poDoNotEncode]);
+
+  FRESTRequest.Method := rmPOST;
+  FRESTRequest.ClearBody;
+
+  RequestBody := TJSONObject.Create;
+  try
+    RequestBody.AddPair('url', URLImage);
+    FRESTRequest.AddBody(RequestBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
+  finally
+    RequestBody.Free;
+  end;
+
+  FRESTRequest.Execute;
+
+  if FRESTResponse.StatusCode = 200 then
+    Result := FRESTResponse.JSONValue.Clone as TJSONObject
+  else
+    raise Exception.CreateFmt('Erreur Azure: %d - %s',
+      [FRESTResponse.StatusCode, FRESTResponse.Content]);
+end;
+
+function TAzureComputerVision.AnalyserImage(const CheminImage: string): TJSONObject;
+var
+  FileStream: TFileStream;
+begin
+  // Analyse via upload d'image
+  FRESTRequest.Resource := 'vision/v3.2/analyze';
+  FRESTRequest.AddParameter('visualFeatures',
+    'Categories,Description,Color,Tags,Objects', pkGETorPOST);
+  FRESTRequest.AddParameter('Ocp-Apim-Subscription-Key',
+    FSubscriptionKey, pkHTTPHEADER, [poDoNotEncode]);
+  FRESTRequest.AddParameter('Content-Type',
+    'application/octet-stream', pkHTTPHEADER, [poDoNotEncode]);
+
+  FRESTRequest.Method := rmPOST;
+  FRESTRequest.ClearBody;
+
+  FileStream := TFileStream.Create(CheminImage, fmOpenRead);
+  try
+    FRESTRequest.AddBody(FileStream, TRESTContentType.ctAPPLICATION_OCTET_STREAM);
+    FRESTRequest.Execute;
+  finally
+    FileStream.Free;
+  end;
+
+  if FRESTResponse.StatusCode = 200 then
+    Result := FRESTResponse.JSONValue.Clone as TJSONObject
+  else
+    raise Exception.CreateFmt('Erreur Azure: %d - %s',
+      [FRESTResponse.StatusCode, FRESTResponse.Content]);
+end;
+
+function TAzureComputerVision.ExtraireTexteOCR(const CheminImage: string): string;
+var
+  FileStream: TFileStream;
+  Response: TJSONObject;
+  ReadResults: TJSONArray;
+  Lines: TJSONArray;
+  i, j: Integer;
+begin
+  Result := '';
+
+  // Utiliser Read API pour OCR avancé
+  FRESTRequest.Resource := 'vision/v3.2/read/analyze';
+  FRESTRequest.AddParameter('Ocp-Apim-Subscription-Key',
+    FSubscriptionKey, pkHTTPHEADER, [poDoNotEncode]);
+  FRESTRequest.AddParameter('Content-Type',
+    'application/octet-stream', pkHTTPHEADER, [poDoNotEncode]);
+
+  FRESTRequest.Method := rmPOST;
+  FRESTRequest.ClearBody;
+
+  FileStream := TFileStream.Create(CheminImage, fmOpenRead);
+  try
+    FRESTRequest.AddBody(FileStream, TRESTContentType.ctAPPLICATION_OCTET_STREAM);
+    FRESTRequest.Execute;
+  finally
+    FileStream.Free;
+  end;
+
+  // L'API Read est asynchrone, nécessite un second appel pour récupérer le résultat
+  // Pour simplifier, on pourrait implémenter un polling
+  // (code simplifié pour l'exemple)
+end;
+```
+
+**Utilisation** :
+
+```pascal
+procedure TFormMain.BtnAnalyserAzureClick(Sender: TObject);
+var
+  Azure: TAzureComputerVision;
+  Resultat: TJSONObject;
+  Description: string;
+  Tags: TJSONArray;
+  i: Integer;
+begin
+  Azure := TAzureComputerVision.Create(
+    'VOTRE_SUBSCRIPTION_KEY',
+    'https://VOTRE_REGION.api.cognitive.microsoft.com/'
+  );
+  try
+    Resultat := Azure.AnalyserImage(EditImagePath.Text);
+    try
+      // Description
+      Description := Resultat.GetValue<string>('description.captions[0].text');
+      LabelDescription.Caption := Description;
+
+      // Tags
+      Tags := Resultat.GetValue<TJSONArray>('tags');
+      ListBoxTags.Items.Clear;
+      for i := 0 to Tags.Count - 1 do
+      begin
+        ListBoxTags.Items.Add(Format('%s (%.0f%%)', [
+          Tags.Items[i].GetValue<string>('name'),
+          Tags.Items[i].GetValue<Double>('confidence') * 100
+        ]));
+      end;
+    finally
+      Resultat.Free;
+    end;
+  finally
+    Azure.Free;
+  end;
+end;
+```
+
+### Tarification Azure AI
+
+**Niveau gratuit (F0)** :
+- Computer Vision : 5000 transactions/mois
+- Text Analytics : 5000 transactions/mois
+- Translator : 2M caractères/mois
+
+**Niveaux payants (S0, S1, etc.)** :
+- Vision : à partir de 0,85€ / 1000 transactions
+- Text Analytics : 1,70€ / 1000 requêtes
+- Face API : 0,85€ / 1000 transactions
+
+## Amazon Web Services (AWS) AI
+
+### Présentation
+
+AWS propose une suite complète de services d'IA, réputée pour sa scalabilité et son infrastructure robuste. Idéal pour applications nécessitant haute disponibilité et gros volumes.
+
+### Services principaux
+
+**Amazon Rekognition** :
+- Analyse d'images et vidéos
+- Reconnaissance faciale
+- Détection de célébrités
+- Modération de contenu
+
+**Amazon Comprehend** :
+- Analyse de sentiments
+- Extraction d'entités
+- Détection de langue
+- Classification personnalisée
+
+**Amazon Translate** :
+- Traduction automatique
+- 75+ langues
+
+**Amazon Transcribe** :
+- Speech-to-Text
+- Reconnaissance de locuteurs
+
+**Amazon Polly** :
+- Text-to-Speech
+- Voix naturelles
+
+**Amazon Lex** :
+- Chatbots conversationnels
+- Même technologie qu'Alexa
+
+**Amazon SageMaker** :
+- Plateforme complète ML
+- Entraînement et déploiement de modèles personnalisés
+
+### Configuration et intégration
+
+AWS utilise un système d'authentification plus complexe (AWS Signature Version 4), mais il existe des SDK et bibliothèques pour simplifier.
+
+**Approche recommandée pour Delphi** :
+1. Utiliser AWS SDK pour .NET via COM Interop
+2. Ou créer un micro-service Node.js/Python qui sert d'intermédiaire
+3. Ou utiliser des wrappers communautaires Delphi
+
+```pascal
+// Exemple conceptuel d'appel à Rekognition via wrapper
+function DetecterVisagesAWS(const CheminImage: string): TJSONArray;
 var
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
-  RequestBody: TJSONObject;
-  ResponseJSON: TJSONValue;
-  TranslatedText: string;
+  ImageBase64: string;
 begin
-  Result := '';
-  RESTClient := TRESTClient.Create(nil);
+  RESTClient := TRESTClient.Create('https://rekognition.us-east-1.amazonaws.com');
   RESTRequest := TRESTRequest.Create(nil);
   RESTResponse := TRESTResponse.Create(nil);
-  RequestBody := TJSONObject.Create;
-
   try
-    // Configuration du client REST
-    RESTClient.BaseURL := 'https://translation.googleapis.com/language/translate/v2';
-
-    // Configuration de la requête
     RESTRequest.Client := RESTClient;
     RESTRequest.Response := RESTResponse;
-    RESTRequest.Method := TRESTRequestMethod.rmPOST;
 
-    // Ajout de la clé API comme paramètre de requête
-    RESTRequest.AddParameter('key', 'VOTRE_CLE_API_GOOGLE');
+    // AWS nécessite une signature complexe
+    // Il est recommandé d'utiliser un wrapper ou SDK
 
-    // Préparation du corps de la requête en JSON
-    RequestBody.AddPair('q', Text);
-    RequestBody.AddPair('source', SourceLang);
-    RequestBody.AddPair('target', TargetLang);
-    RequestBody.AddPair('format', 'text');
+    // Corps de la requête
+    ImageBase64 := EncodeImageToBase64(CheminImage);
+    // ... Configuration AWS Signature ...
 
-    RESTRequest.AddBody(RequestBody.ToJSON);
-
-    // Exécution de la requête
     RESTRequest.Execute;
+    Result := RESTResponse.JSONValue.GetValue<TJSONArray>('FaceDetails');
+  finally
+    RESTResponse.Free;
+    RESTRequest.Free;
+    RESTClient.Free;
+  end;
+end;
+```
 
-    // Traitement de la réponse
-    if RESTResponse.StatusCode = 200 then
+### Tarification AWS AI
+
+**Niveau gratuit (12 mois)** :
+- Rekognition : 5000 images/mois
+- Comprehend : 50K unités/mois
+- Translate : 2M caractères/mois
+
+**Tarifs standard** :
+- Rekognition : 1€ / 1000 images
+- Comprehend : 0,0001€ par unité
+- Translate : 15€ / million de caractères
+
+## OpenAI API
+
+### Présentation
+
+OpenAI propose les modèles de langage les plus avancés au monde, notamment GPT-4, DALL-E pour la génération d'images, et Whisper pour la transcription audio.
+
+### Services disponibles
+
+**GPT-4 / GPT-3.5** :
+- Génération de texte
+- Compréhension du langage
+- Traduction, résumés
+- Code generation
+- GPT-4 Vision (analyse d'images)
+
+**DALL-E 3** :
+- Génération d'images à partir de descriptions
+- Édition d'images
+
+**Whisper** :
+- Transcription audio
+- Traduction audio
+
+**Text-to-Speech** :
+- Voix naturelles de haute qualité
+
+**Embeddings** :
+- Création de vecteurs sémantiques pour recherche
+
+### Intégration avec Delphi
+
+```pascal
+unit OpenAIAPI;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, REST.Client, REST.Types, System.JSON;
+
+type
+  TOpenAI = class
+  private
+    FRESTClient: TRESTClient;
+    FRESTRequest: TRESTRequest;
+    FRESTResponse: TRESTResponse;
+    FAPIKey: string;
+  public
+    constructor Create(const APIKey: string);
+    destructor Destroy; override;
+
+    function Chat(const Prompt: string; const Model: string = 'gpt-3.5-turbo'): string;
+    function AnalyserImage(const URLImage: string; const Question: string): string;
+    function GenererImage(const Description: string): string; // Retourne URL
+  end;
+
+implementation
+
+constructor TOpenAI.Create(const APIKey: string);
+begin
+  inherited Create;
+  FAPIKey := APIKey;
+
+  FRESTClient := TRESTClient.Create('https://api.openai.com');
+  FRESTResponse := TRESTResponse.Create(nil);
+  FRESTRequest := TRESTRequest.Create(nil);
+
+  FRESTRequest.Client := FRESTClient;
+  FRESTRequest.Response := FRESTResponse;
+end;
+
+destructor TOpenAI.Destroy;
+begin
+  FRESTRequest.Free;
+  FRESTResponse.Free;
+  FRESTClient.Free;
+  inherited;
+end;
+
+function TOpenAI.Chat(const Prompt: string; const Model: string): string;
+var
+  RequestBody: TJSONObject;
+  Messages: TJSONArray;
+  Message: TJSONObject;
+  Choices: TJSONArray;
+begin
+  FRESTRequest.Resource := 'v1/chat/completions';
+  FRESTRequest.Method := rmPOST;
+  FRESTRequest.ClearBody;
+
+  // Header d'authentification
+  FRESTRequest.Params.Clear;
+  FRESTRequest.AddParameter('Authorization', 'Bearer ' + FAPIKey,
+    pkHTTPHEADER, [poDoNotEncode]);
+  FRESTRequest.AddParameter('Content-Type', 'application/json',
+    pkHTTPHEADER, [poDoNotEncode]);
+
+  // Corps de la requête
+  RequestBody := TJSONObject.Create;
+  Messages := TJSONArray.Create;
+  Message := TJSONObject.Create;
+  try
+    Message.AddPair('role', 'user');
+    Message.AddPair('content', Prompt);
+    Messages.AddElement(Message);
+
+    RequestBody.AddPair('model', Model);
+    RequestBody.AddPair('messages', Messages);
+    RequestBody.AddPair('temperature', TJSONNumber.Create(0.7));
+
+    FRESTRequest.AddBody(RequestBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
+  finally
+    RequestBody.Free;
+  end;
+
+  FRESTRequest.Execute;
+
+  if FRESTResponse.StatusCode = 200 then
+  begin
+    Choices := FRESTResponse.JSONValue.GetValue<TJSONArray>('choices');
+    Result := Choices.Items[0].GetValue<string>('message.content');
+  end
+  else
+    raise Exception.CreateFmt('Erreur OpenAI: %d - %s',
+      [FRESTResponse.StatusCode, FRESTResponse.Content]);
+end;
+
+function TOpenAI.AnalyserImage(const URLImage: string; const Question: string): string;
+var
+  RequestBody: TJSONObject;
+  Messages: TJSONArray;
+  Message: TJSONObject;
+  Content: TJSONArray;
+  TextPart, ImagePart: TJSONObject;
+  ImageURL: TJSONObject;
+begin
+  // GPT-4 Vision
+  FRESTRequest.Resource := 'v1/chat/completions';
+  FRESTRequest.Method := rmPOST;
+  FRESTRequest.ClearBody;
+
+  FRESTRequest.Params.Clear;
+  FRESTRequest.AddParameter('Authorization', 'Bearer ' + FAPIKey,
+    pkHTTPHEADER, [poDoNotEncode]);
+
+  // Construire le message avec image
+  RequestBody := TJSONObject.Create;
+  Messages := TJSONArray.Create;
+  Message := TJSONObject.Create;
+  Content := TJSONArray.Create;
+  try
+    // Partie texte
+    TextPart := TJSONObject.Create;
+    TextPart.AddPair('type', 'text');
+    TextPart.AddPair('text', Question);
+    Content.AddElement(TextPart);
+
+    // Partie image
+    ImagePart := TJSONObject.Create;
+    ImageURL := TJSONObject.Create;
+    ImageURL.AddPair('url', URLImage);
+    ImagePart.AddPair('type', 'image_url');
+    ImagePart.AddPair('image_url', ImageURL);
+    Content.AddElement(ImagePart);
+
+    Message.AddPair('role', 'user');
+    Message.AddPair('content', Content);
+    Messages.AddElement(Message);
+
+    RequestBody.AddPair('model', 'gpt-4-vision-preview');
+    RequestBody.AddPair('messages', Messages);
+    RequestBody.AddPair('max_tokens', TJSONNumber.Create(300));
+
+    FRESTRequest.AddBody(RequestBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
+  finally
+    RequestBody.Free;
+  end;
+
+  FRESTRequest.Execute;
+
+  if FRESTResponse.StatusCode = 200 then
+    Result := FRESTResponse.JSONValue.GetValue<string>('choices[0].message.content')
+  else
+    raise Exception.CreateFmt('Erreur: %s', [FRESTResponse.Content]);
+end;
+```
+
+**Utilisation - Chatbot avec GPT** :
+
+```pascal
+procedure TFormChat.BtnEnvoyerClick(Sender: TObject);
+var
+  OpenAI: TOpenAI;
+  Reponse: string;
+  UserMessage: string;
+begin
+  UserMessage := EditMessage.Text;
+  if UserMessage.Trim.IsEmpty then Exit;
+
+  // Afficher le message de l'utilisateur
+  MemoChat.Lines.Add('Vous: ' + UserMessage);
+  EditMessage.Clear;
+
+  // Désactiver pendant le traitement
+  BtnEnvoyer.Enabled := False;
+  ProgressBar.Visible := True;
+
+  // Traitement asynchrone
+  TTask.Run(procedure
+  var
+    AI: TOpenAI;
+    Response: string;
+  begin
+    AI := TOpenAI.Create('VOTRE_CLE_API');
+    try
+      Response := AI.Chat(UserMessage, 'gpt-3.5-turbo');
+
+      TThread.Synchronize(nil, procedure
+      begin
+        MemoChat.Lines.Add('Assistant: ' + Response);
+        MemoChat.Lines.Add('');
+        BtnEnvoyer.Enabled := True;
+        ProgressBar.Visible := False;
+      end);
+    finally
+      AI.Free;
+    end;
+  end);
+end;
+```
+
+### Tarification OpenAI
+
+**GPT-3.5-Turbo** :
+- Input : 0,50$ / million de tokens
+- Output : 1,50$ / million de tokens
+
+**GPT-4** :
+- Input : 30$ / million de tokens
+- Output : 60$ / million de tokens
+
+**GPT-4 Vision** :
+- 10$ / million de tokens (variable selon résolution image)
+
+**DALL-E 3** :
+- Standard (1024×1024) : 0,040$ par image
+- HD (1024×1024) : 0,080$ par image
+
+## Autres services cloud d'IA
+
+### Hugging Face Inference API
+
+**Avantages** :
+- Accès à des milliers de modèles open source
+- Gratuit avec limitations, payant pour volumes importants
+- Communauté active
+
+**Cas d'usage** :
+- Expérimentation avec différents modèles
+- Modèles spécialisés (langues rares, domaines spécifiques)
+
+### IBM Watson
+
+**Points forts** :
+- Focus entreprise et conformité
+- Excellente documentation
+- Support professionnel
+
+**Services** :
+- Watson Natural Language Understanding
+- Watson Speech to Text
+- Watson Discovery
+
+### Anthropic Claude
+
+**Caractéristiques** :
+- Concurrent de GPT-4
+- Excellente compréhension contextuelle
+- Fenêtre de contexte très large (200K tokens)
+
+**Utilisation** : API similaire à OpenAI
+
+## Gestion des coûts
+
+### Stratégies d'optimisation
+
+**1. Mise en cache agressive**
+
+```pascal
+type
+  TCacheAPI = class
+  private
+    FCache: TDictionary<string, string>;
+    FDureeValidite: TDateTime;
+  public
+    function ObtenirOuAppeler(const Cle: string;
+      const FonctionAPI: TFunc<string>): string;
+  end;
+
+function TCacheAPI.ObtenirOuAppeler(const Cle: string;
+  const FonctionAPI: TFunc<string>): string;
+begin
+  if FCache.ContainsKey(Cle) then
+    Result := FCache[Cle]
+  else
+  begin
+    Result := FonctionAPI();
+    FCache.Add(Cle, Result);
+  end;
+end;
+```
+
+**2. Traitement par lots**
+
+Groupez les requêtes quand c'est possible pour réduire les appels API.
+
+**3. Compression des données**
+
+Réduisez la taille des images avant envoi.
+
+```pascal
+procedure OptimiserImagePourAPI(var Bitmap: TBitmap);
+const
+  MAX_DIMENSION = 800; // pixels
+var
+  Ratio: Double;
+begin
+  if (Bitmap.Width > MAX_DIMENSION) or (Bitmap.Height > MAX_DIMENSION) then
+  begin
+    Ratio := Min(MAX_DIMENSION / Bitmap.Width, MAX_DIMENSION / Bitmap.Height);
+    Bitmap.SetSize(Round(Bitmap.Width * Ratio), Round(Bitmap.Height * Ratio));
+  end;
+end;
+```
+
+**4. Choisir le bon niveau de service**
+
+- Utilisez les modèles "lite" ou "standard" quand possible
+- GPT-3.5 au lieu de GPT-4 pour tâches simples
+- Prétraitez localement quand possible
+
+**5. Monitoring et alertes**
+
+```pascal
+type
+  TAPIUsageMonitor = class
+  private
+    FUsageAujourdhui: Integer;
+    FLimiteQuotidienne: Integer;
+    procedure VerifierLimite;
+  public
+    procedure IncrémenterUsage(const Cout: Double);
+    function PeutEffectuerAppel: Boolean;
+  end;
+
+procedure TAPIUsageMonitor.IncrémenterUsage(const Cout: Double);
+begin
+  FUsageAujourdhui := FUsageAujourdhui + Round(Cout * 100);
+  VerifierLimite;
+
+  if FUsageAujourdhui >= FLimiteQuotidienne * 0.8 then
+    // Alerte : 80% de la limite atteinte
+    EnvoyerAlerteAdministrateur('Limite API proche');
+end;
+```
+
+### Estimation des coûts
+
+**Exemple pour une application de chatbot** :
+
+```
+Utilisateurs : 1000
+Messages moyens par jour : 5
+Tokens moyens par message : 150 (input + output)
+
+Total tokens/jour = 1000 × 5 × 150 = 750 000 tokens
+Total tokens/mois = 750 000 × 30 = 22,5 millions
+
+Coût GPT-3.5 :
+- 22,5M tokens ≈ 11,25$ input + 33,75$ output = 45$/mois
+
+Coût GPT-4 :
+- 22,5M tokens ≈ 675$ input + 1350$ output = 2025$/mois
+
+→ GPT-3.5 est 45× moins cher !
+```
+
+## Sécurité et confidentialité
+
+### Protection des clés API
+
+**JAMAIS dans le code source** :
+
+```pascal
+// ❌ MAUVAIS
+const
+  API_KEY = 'sk-1234567890abcdef';
+
+// ✅ BON
+function ObtenirCleAPI: string;
+begin
+  // Lire depuis configuration chiffrée
+  Result := ConfigurationManager.GetEncryptedValue('OpenAI_Key');
+end;
+```
+
+**Utiliser des variables d'environnement** :
+
+```pascal
+function ObtenirCleAPIDepuisEnvironnement: string;
+begin
+  Result := GetEnvironmentVariable('OPENAI_API_KEY');
+  if Result.IsEmpty then
+    raise Exception.Create('Clé API non configurée');
+end;
+```
+
+### Gestion des données sensibles
+
+**Anonymisation** :
+
+```pascal
+function AnonymiserTexte(const Texte: string): string;
+begin
+  Result := Texte;
+
+  // Remplacer emails
+  Result := TRegEx.Replace(Result, '\b[\w\.-]+@[\w\.-]+\.\w+\b', '[EMAIL]');
+
+  // Remplacer numéros de téléphone
+  Result := TRegEx.Replace(Result, '\b\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}\b', '[TÉLÉPHONE]');
+
+  // Remplacer IBAN
+  Result := TRegEx.Replace(Result, '\b[A-Z]{2}\d{2}[\s]?[\d\s]{20,}\b', '[IBAN]');
+end;
+
+procedure EnvoyerAuServiceIA(const Texte: string);
+var
+  TexteAnonyme: string;
+begin
+  TexteAnonyme := AnonymiserTexte(Texte);
+  // Maintenant envoyer à l'API
+end;
+```
+
+### Conformité RGPD
+
+**Informer les utilisateurs** :
+
+```pascal
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  if not ConfigManager.GetValue('ConsentementIA', False) then
+  begin
+    if MessageDlg(
+      'Cette application utilise des services d''IA cloud. ' +
+      'Vos données seront traitées par des serveurs tiers. ' +
+      'Acceptez-vous ?',
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      ResponseJSON := TJSONObject.ParseJSONValue(RESTResponse.Content);
-      try
-        // Extraction du texte traduit
-        TranslatedText := ResponseJSON.GetValue<string>('data.translations[0].translatedText');
-        Result := TranslatedText;
-      finally
-        ResponseJSON.Free;
-      end;
+      ConfigManager.SetValue('ConsentementIA', True);
     end
     else
     begin
-      raise Exception.Create(RESTResponse.StatusText + #13#10 + RESTResponse.Content);
+      // Désactiver les fonctionnalités IA
+      BtnAnalyserIA.Enabled := False;
     end;
-  finally
-    RESTClient.Free;
-    RESTRequest.Free;
-    RESTResponse.Free;
-    RequestBody.Free;
   end;
 end;
-
-end.
 ```
 
-## Bonnes pratiques pour l'intégration d'IA
+**Droit à l'effacement** :
 
-1. **Gestion des clés API** : Ne codez jamais en dur vos clés API dans le code source. Utilisez plutôt un fichier de configuration sécurisé ou un gestionnaire de secrets.
+Documentez comment supprimer les données déjà envoyées (la plupart des API ne stockent pas indéfiniment).
 
-2. **Gestion des erreurs** : Les services d'IA cloud peuvent parfois être indisponibles ou renvoyer des erreurs. Prévoyez toujours une gestion robuste des erreurs.
+## Comparaison et choix du service
 
-3. **Contrôle des coûts** : La plupart des services d'IA cloud sont facturés à l'usage. Implémentez des mécanismes pour suivre et contrôler l'utilisation.
+### Matrice de décision
 
-4. **Compatibilité multi-versions** : Les API d'IA évoluent rapidement. Utilisez des techniques de versionnement et prévoyez la compatibilité avec les futures versions.
+**Utilisez Google Cloud AI si** :
+- Vous voulez le meilleur rapport qualité/prix
+- Vous travaillez beaucoup avec images et texte
+- Vous appréciez la simplicité d'intégration
 
-5. **Interface utilisateur réactive** : Les appels d'API peuvent prendre du temps. Utilisez des threads séparés ou des appels asynchrones pour maintenir votre interface réactive :
+**Utilisez Azure AI si** :
+- Vous êtes dans l'écosystème Microsoft
+- Vous avez besoin d'intégration avec Azure
+- Vous voulez accès à Azure OpenAI Service
 
-```pascal
-// Exemple d'appel asynchrone avec TTask
-uses
-  System.Threading;
+**Utilisez AWS AI si** :
+- Vous avez déjà de l'infrastructure AWS
+- Vous avez besoin de haute scalabilité
+- Vous voulez SageMaker pour ML personnalisé
 
-procedure TFormAI.ButtonProcessClick(Sender: TObject);
-begin
-  ButtonProcess.Enabled := False;
-  ProgressBar1.Visible := True;
+**Utilisez OpenAI directement si** :
+- Vous voulez les meilleurs modèles de langage (GPT-4)
+- Vous développez un chatbot avancé
+- Le coût n'est pas la première priorité
 
-  TTask.Run(
-    procedure
-    begin
-      // Code d'appel à l'API ici
-
-      // Mise à jour de l'interface utilisateur
-      TThread.Synchronize(TThread.CurrentThread,
-        procedure
-        begin
-          // Code pour mettre à jour l'UI
-          ButtonProcess.Enabled := True;
-          ProgressBar1.Visible := False;
-        end);
-    end);
-end;
-```
-
-## Exploration avancée : création d'un assistant IA
-
-Une application plus avancée serait un assistant IA qui combine plusieurs services :
-
-1. Reconnaissance vocale pour convertir la parole en texte
-2. Analyse du texte pour comprendre l'intention de l'utilisateur
-3. Génération de réponses adaptées
-4. Synthèse vocale pour convertir le texte en parole
-
-Cette approche multi-services montre comment combiner plusieurs API d'IA pour créer une expérience utilisateur riche et interactive.
+**Approche hybride recommandée** :
+- Google Vision pour analyse d'images (rapport qualité/prix)
+- OpenAI pour chatbot et NLP avancé (qualité)
+- Azure pour intégration entreprise Microsoft
 
 ## Conclusion
 
-L'intégration des services d'IA cloud dans vos applications Delphi ouvre de nombreuses possibilités : traduction automatique, analyse d'images, reconnaissance vocale, génération de contenu, et bien plus encore. En suivant les exemples et les bonnes pratiques présentés dans ce chapitre, vous pouvez facilement ajouter des capacités d'IA à vos applications existantes ou en créer de nouvelles centrées sur l'intelligence artificielle.
+Les services d'IA cloud transforment radicalement ce qui est possible avec Delphi. En quelques heures, vous pouvez intégrer des capacités qui auraient nécessité des mois de développement il y a encore quelques années.
 
-N'oubliez pas que le domaine de l'IA évolue rapidement. Consultez régulièrement la documentation des fournisseurs de services d'IA pour rester à jour avec les dernières fonctionnalités et les meilleures pratiques.
+**Points essentiels** :
+- Les services cloud offrent des capacités IA de pointe sans expertise ML
+- Delphi s'intègre parfaitement via TRESTClient
+- Le coût est maîtrisable avec cache et optimisation
+- Choisissez le service selon vos besoins spécifiques
+- Sécurité et confidentialité sont critiques
 
-## Exercices pratiques
+**Recommandations pour démarrer** :
+1. Commencez avec les niveaux gratuits pour expérimenter
+2. Créez des wrappers réutilisables pour vos API favorites
+3. Implémentez cache et monitoring dès le début
+4. Testez plusieurs services pour comparer
+5. Documentez vos choix et coûts
 
-1. Créez une application simple qui utilise l'API Vision d'Azure ou de Google pour analyser des images et détecter des objets.
-2. Développez un assistant virtuel simple qui utilise l'API ChatGPT pour répondre à des questions.
-3. Implémentez un système de traduction multilingue pour une application existante.
-4. Utilisez une API de reconnaissance vocale pour créer une interface contrôlée par la voix.
-
-## Ressources supplémentaires
-
-- [Documentation Azure AI Services](https://docs.microsoft.com/fr-fr/azure/cognitive-services/)
-- [Documentation Google Cloud AI](https://cloud.google.com/products/ai)
-- [Documentation OpenAI](https://platform.openai.com/docs/introduction)
-- [Composants REST pour Delphi](https://docwiki.embarcadero.com/RADStudio/Alexandria/fr/REST_Client_Library)
+Dans la section suivante, nous explorerons spécifiquement l'intégration des grands modèles de langage (LLM) comme GPT-4, qui révolutionnent les interfaces conversationnelles et la génération de contenu !
 
 ⏭️ [Utilisation des grands modèles de langage (LLM) via API](/22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)
