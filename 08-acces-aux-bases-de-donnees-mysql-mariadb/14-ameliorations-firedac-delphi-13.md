@@ -46,8 +46,8 @@ Delphi 13 améliore la gestion du pool de connexions pour de meilleures performa
 
 ```pascal
 // Configuration améliorée du pool
-procedure ConfigurerPoolOptimise;
-begin
+procedure ConfigurerPoolOptimise;  
+begin  
   FDConnection1.Params.Add('Pooled=True');
   FDConnection1.Params.Add('POOL_MaximumItems=50');  // Nouveau : limite max
   FDConnection1.Params.Add('POOL_CleanupTimeout=60000');  // Nettoyage optimisé
@@ -65,8 +65,8 @@ end;
 
 ```pascal
 // Nouvelle propriété : statistiques du pool
-procedure AfficherStatistiquesPool;
-begin
+procedure AfficherStatistiquesPool;  
+begin  
   ShowMessage(Format(
     'Connexions actives: %d' + sLineBreak +
     'Connexions disponibles: %d' + sLineBreak +
@@ -82,8 +82,8 @@ end;
 
 ```pascal
 // Cache étendu des requêtes préparées
-procedure TdmDatabase.ConfigurerCacheRequetes;
-begin
+procedure TdmDatabase.ConfigurerCacheRequetes;  
+begin  
   // Nouveau dans Delphi 13 : cache de requêtes plus intelligent
   FDConnection1.Params.Add('MetaCacheSize=1000');  // Cache augmenté
   FDConnection1.Params.Add('MetaCacheTime=300');   // Durée de cache
@@ -102,8 +102,8 @@ end;
 
 ```pascal
 // Nouvelle option : gestion mémoire large dataset
-procedure ConfigurerGestionMemoire;
-begin
+procedure ConfigurerGestionMemoire;  
+begin  
   FDQuery1.FetchOptions.Mode := fmOnDemand;  // Chargement à la demande
   FDQuery1.FetchOptions.RowsetSize := 100;   // Taille du lot optimisée
   FDQuery1.FetchOptions.RecordCountMode := cmTotal;  // Comptage efficace
@@ -125,8 +125,8 @@ uses
   System.JSON, FireDAC.Comp.DataSet;
 
 // Exporter un dataset en JSON (amélioré)
-function DataSetVersJSON(Query: TFDQuery): string;
-var
+function DataSetVersJSON(Query: TFDQuery): string;  
+var  
   JSONArray: TJSONArray;
 begin
   JSONArray := TJSONArray.Create;
@@ -140,8 +140,8 @@ begin
 end;
 
 // Charger JSON dans un dataset (amélioré)
-procedure JSONVersDataSet(const JSON: string; Query: TFDQuery);
-var
+procedure JSONVersDataSet(const JSON: string; Query: TFDQuery);  
+var  
   JSONArray: TJSONArray;
 begin
   JSONArray := TJSONObject.ParseJSONValue(JSON) as TJSONArray;
@@ -158,8 +158,8 @@ end;
 
 ```pascal
 // Nouveau : filtrage sur colonnes JSON (PostgreSQL, MySQL 8+)
-procedure FiltrerSurJSON;
-begin
+procedure FiltrerSurJSON;  
+begin  
   FDQuery1.SQL.Text :=
     'SELECT * FROM produits ' +
     'WHERE JSON_EXTRACT(attributs, ''$.couleur'') = :couleur';
@@ -169,8 +169,8 @@ begin
 end;
 
 // Support amélioré des types JSON natifs
-procedure ManipulerJSONNatif;
-var
+procedure ManipulerJSONNatif;  
+var  
   JSONData: TJSONObject;
 begin
   FDQuery1.Open;
@@ -191,8 +191,8 @@ end;
 
 ```pascal
 // Nouveau : support amélioré des savepoints
-procedure TransactionAvecSavepoint;
-begin
+procedure TransactionAvecSavepoint;  
+begin  
   FDConnection1.StartTransaction;
   try
     // Opération 1
@@ -225,16 +225,16 @@ end;
 
 ```pascal
 // Nouveau : retry automatique sur deadlock
-procedure ConfigurerRetryDeadlock;
-begin
+procedure ConfigurerRetryDeadlock;  
+begin  
   FDConnection1.Params.Add('AutoReconnect=True');
   FDConnection1.Params.Add('RetryOnDeadlock=3');  // Réessayer 3 fois
   FDConnection1.Params.Add('RetryDelay=1000');    // Attendre 1 seconde entre tentatives
 end;
 
 // Les deadlocks sont maintenant gérés automatiquement
-procedure ExecuterAvecRetry;
-begin
+procedure ExecuterAvecRetry;  
+begin  
   FDConnection1.StartTransaction;
   try
     Query1.ExecSQL;  // FireDAC réessaiera automatiquement si deadlock
@@ -263,8 +263,8 @@ end;
 
 ```pascal
 // Nouveau : support transactions MongoDB
-procedure TransactionMongoDB;
-var
+procedure TransactionMongoDB;  
+var  
   MongoQuery: TFDMongoQuery;
 begin
   MongoQuery := TFDMongoQuery.Create(nil);
@@ -300,8 +300,8 @@ end;
 
 ```pascal
 // Nouveau : support des fonctionnalités PostgreSQL avancées
-procedure UtiliserFonctionnalitesPostgreSQL;
-begin
+procedure UtiliserFonctionnalitesPostgreSQL;  
+begin  
   // Support des types personnalisés
   Query.SQL.Text :=
     'CREATE TYPE adresse AS (' +
@@ -332,8 +332,8 @@ end;
 
 ```pascal
 // Support de nouveaux types de données
-procedure NouveauxTypesParametres;
-begin
+procedure NouveauxTypesParametres;  
+begin  
   FDQuery1.SQL.Text :=
     'INSERT INTO clients (nom, donnees_json, tags, geo_point) ' +
     'VALUES (:nom, :json, :tags, :geo)';
@@ -359,8 +359,8 @@ end;
 
 ```pascal
 // Nouveau : paramètres avec valeurs par défaut
-procedure ParametresAvecDefaut;
-begin
+procedure ParametresAvecDefaut;  
+begin  
   FDQuery1.SQL.Text :=
     'SELECT * FROM clients ' +
     'WHERE (actif = :actif OR :actif IS NULL) ' +
@@ -402,8 +402,8 @@ L'éditeur SQL dans l'IDE a été amélioré :
 
 ```pascal
 // Nouveau : breakpoints conditionnels sur les données
-procedure DeboguerRequetes;
-begin
+procedure DeboguerRequetes;  
+begin  
   FDQuery1.SQL.Text := 'SELECT * FROM clients';
   FDQuery1.Open;
 
@@ -429,8 +429,8 @@ end;
 
 ```pascal
 // Nouveau : profiling automatique des requêtes
-procedure ProfilerRequetes;
-begin
+procedure ProfilerRequetes;  
+begin  
   // Activer le profiling
   FDConnection1.Params.Add('MonitorBy=Flat');  // Nouveau
   FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE ville = :ville';
@@ -483,8 +483,8 @@ Delphi 13 intègre une **assistance IA** pour FireDAC via le site companion.
 
 ```pascal
 // L'IA détecte maintenant les problèmes potentiels
-procedure CodeAvecProblemes;
-begin
+procedure CodeAvecProblemes;  
+begin  
   // ⚠️ L'IDE avertit : "Risque d'injection SQL détecté"
   FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE nom = ''' + editNom.Text + '''';
 
@@ -500,8 +500,8 @@ end;
 
 ```pascal
 // Nouveau : batch updates plus performants
-procedure MajMassive;
-var
+procedure MajMassive;  
+var  
   i: Integer;
 begin
   FDQuery1.SQL.Text :=
@@ -536,12 +536,12 @@ end;
 // et consomment moins de mémoire
 
 // Configuration optimisée
-BindSourceDB1.DataSet := FDQuery1;
-BindSourceDB1.AutoBufferCount := 50;  // Nouveau : buffer optimisé
+BindSourceDB1.DataSet := FDQuery1;  
+BindSourceDB1.AutoBufferCount := 50;  // Nouveau : buffer optimisé  
 
 // Liaison optimisée pour grandes listes
-LinkListControlToField1.BufferCount := 100;  // Plus efficace
-LinkListControlToField1.Active := True;
+LinkListControlToField1.BufferCount := 100;  // Plus efficace  
+LinkListControlToField1.Active := True;  
 ```
 
 ### 2. Expressions étendues
@@ -570,12 +570,12 @@ Expression := 'IIF(actif, ''Actif'', ''Inactif'')';
 
 ```pascal
 // Code Delphi 12 → fonctionne tel quel dans Delphi 13
-FDConnection1.Params.Add('DriverID=MySQL');
-FDConnection1.Params.Add('Server=localhost');
-FDConnection1.Connected := True;
+FDConnection1.Params.Add('DriverID=MySQL');  
+FDConnection1.Params.Add('Server=localhost');  
+FDConnection1.Connected := True;  
 
-FDQuery1.SQL.Text := 'SELECT * FROM clients';
-FDQuery1.Open;
+FDQuery1.SQL.Text := 'SELECT * FROM clients';  
+FDQuery1.Open;  
 ```
 
 ### Nouvelles propriétés optionnelles
@@ -587,9 +587,9 @@ FDQuery1.Open;
 FDQuery1.Open;
 
 // Nouveau code (optionnel, pour profiter des optimisations)
-FDQuery1.FetchOptions.Mode := fmOnDemand;
-FDQuery1.FetchOptions.Cache := [fiBlobs, fiDetails];
-FDQuery1.Open;
+FDQuery1.FetchOptions.Mode := fmOnDemand;  
+FDQuery1.FetchOptions.Cache := [fiBlobs, fiDetails];  
+FDQuery1.Open;  
 ```
 
 ### Checklist de migration
@@ -625,8 +625,8 @@ type
 
 implementation
 
-procedure TDatabaseDelphi13.ConfigurerAvecOptimisations;
-begin
+procedure TDatabaseDelphi13.ConfigurerAvecOptimisations;  
+begin  
   // Utiliser les optimisations Delphi 13
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
@@ -648,8 +648,8 @@ begin
   FDConnection1.Connected := True;
 end;
 
-procedure TDatabaseDelphi13.ExempleRequeteOptimisee;
-begin
+procedure TDatabaseDelphi13.ExempleRequeteOptimisee;  
+begin  
   FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE ville = :ville';
 
   // Options de fetch optimisées
@@ -666,8 +666,8 @@ begin
     [FDQuery1.ExecTime, FDQuery1.RecordCount]));
 end;
 
-procedure TDatabaseDelphi13.ExempleBatchUpdate;
-var
+procedure TDatabaseDelphi13.ExempleBatchUpdate;  
+var  
   i: Integer;
 begin
   FDQuery1.SQL.Text :=
@@ -685,8 +685,8 @@ begin
   FDQuery1.Execute(100, 0);
 end;
 
-function TDatabaseDelphi13.ExporterJSON: string;
-var
+function TDatabaseDelphi13.ExporterJSON: string;  
+var  
   JSONArray: TJSONArray;
 begin
   FDQuery1.SQL.Text := 'SELECT * FROM clients';
@@ -723,12 +723,12 @@ end.
 
 ### Points clés de Delphi 13
 
-✅ **Performance** : Pool optimisé, cache étendu, batch updates
-✅ **JSON** : Support natif amélioré, export/import facilité
-✅ **Transactions** : Savepoints, retry automatique sur deadlock
-✅ **Bases de données** : Drivers mis à jour, support versions récentes
-✅ **Outils** : Éditeur SQL enrichi, profiler intégré
-✅ **IA** : Assistance au développement, détection de problèmes
+✅ **Performance** : Pool optimisé, cache étendu, batch updates  
+✅ **JSON** : Support natif amélioré, export/import facilité  
+✅ **Transactions** : Savepoints, retry automatique sur deadlock  
+✅ **Bases de données** : Drivers mis à jour, support versions récentes  
+✅ **Outils** : Éditeur SQL enrichi, profiler intégré  
+✅ **IA** : Assistance au développement, détection de problèmes  
 ✅ **Compatibilité** : Code existant fonctionne sans modification
 
 ### Améliorations majeures

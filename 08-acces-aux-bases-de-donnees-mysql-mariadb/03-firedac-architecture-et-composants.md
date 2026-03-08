@@ -389,9 +389,9 @@ Tous les composants de données (Query, Table, StoredProc) partagent des propri�
 
 ```pascal
 // Plusieurs façons d'accéder aux données
-Value := FDQuery1.FieldByName('nom').AsString;
-Value := FDQuery1['nom'];  // Syntaxe courte
-Value := FDQuery1.Fields[0].AsString;  // Par index
+Value := FDQuery1.FieldByName('nom').AsString;  
+Value := FDQuery1['nom'];  // Syntaxe courte  
+Value := FDQuery1.Fields[0].AsString;  // Par index  
 ```
 
 ## Gestion de la mémoire et des ressources
@@ -402,8 +402,8 @@ Value := FDQuery1.Fields[0].AsString;  // Par index
 
 ```pascal
 // Bonne pratique
-FDQuery1.Open;
-try
+FDQuery1.Open;  
+try  
   // Traiter les données
 finally
   FDQuery1.Close;  // Toujours fermer
@@ -427,8 +427,8 @@ FDConnection1.Connected := True;
 **2. Connexion à la demande**
 ```pascal
 // Ouverte uniquement quand nécessaire
-FDConnection1.Open;
-try
+FDConnection1.Open;  
+try  
   FDQuery1.Open;
   // Traiter...
 finally

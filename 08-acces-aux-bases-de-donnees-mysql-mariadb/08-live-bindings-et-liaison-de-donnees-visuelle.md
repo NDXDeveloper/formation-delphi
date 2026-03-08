@@ -88,8 +88,8 @@ Dans l'IDE, vous trouverez ces composants dans l'onglet **LiveBindings** :
 BindSourceDB1.DataSet := FDQueryClients;
 
 // Ou par code
-BindSourceDB1.DataSet := FDQueryClients;
-BindSourceDB1.AutoEdit := True;  // Passer automatiquement en mode Edit
+BindSourceDB1.DataSet := FDQueryClients;  
+BindSourceDB1.AutoEdit := True;  // Passer automatiquement en mode Edit  
 ```
 
 ### TBindingsList : Le gestionnaire
@@ -158,8 +158,8 @@ Dans l'éditeur visuel :
 uses
   Data.Bind.Components, Data.Bind.Controls, Data.Bind.EngExt;
 
-procedure TForm1.CreerLiaisonParCode;
-var
+procedure TForm1.CreerLiaisonParCode;  
+var  
   Binding: TLinkControlToField;
 begin
   Binding := TLinkControlToField.Create(Self);
@@ -241,8 +241,8 @@ Une des forces des Live Bindings : la **synchronisation bidirectionnelle** autom
 └───────────────┘                 └───────────────┘
 ```
 
-**Changement dans Edit1** → Automatiquement mis à jour dans le DataSet
-**Changement dans le DataSet** → Automatiquement mis à jour dans Edit1
+**Changement dans Edit1** → Automatiquement mis à jour dans le DataSet  
+**Changement dans le DataSet** → Automatiquement mis à jour dans Edit1  
 
 ### Configuration
 
@@ -276,8 +276,8 @@ Les Live Bindings permettent d'utiliser des **expressions** pour transformer les
 
 ```pascal
 // Expression de sortie (Output)
-Expression: Format('%s %s', [nom, prenom])
-Direction: Unidirectional (Source → Control)
+Expression: Format('%s %s', [nom, prenom])  
+Direction: Unidirectional (Source → Control)  
 
 // Edit1 affiche : "Dupont Jean"
 ```
@@ -338,8 +338,8 @@ end;
 BindNavigator1.DataSource := BindSourceDB1;
 
 // Personnaliser les boutons
-BindNavigator1.Orientation := orHorizontal;  // ou orVertical
-BindNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast,
+BindNavigator1.Orientation := orHorizontal;  // ou orVertical  
+BindNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast,  
                                    nbInsert, nbDelete, nbEdit,
                                    nbPost, nbCancel, nbRefresh];
 ```
@@ -458,9 +458,9 @@ end;
 PrototypeBindSource1.Active := True;
 
 // Ajouter des champs
-PrototypeBindSource1.AddField('nom', ftString);
-PrototypeBindSource1.AddField('prenom', ftString);
-PrototypeBindSource1.AddField('email', ftString);
+PrototypeBindSource1.AddField('nom', ftString);  
+PrototypeBindSource1.AddField('prenom', ftString);  
+PrototypeBindSource1.AddField('email', ftString);  
 
 // Générer des données automatiquement
 PrototypeBindSource1.RecordCount := 10;  // 10 enregistrements de test
@@ -483,8 +483,8 @@ BindSourceDB_Commandes.DataSet := FDQueryCommandes;
 
 // Configurer la relation
 // Dans FDQueryCommandes :
-FDQueryCommandes.MasterSource := DataSourceClients;  // DataSource traditionnel
-FDQueryCommandes.MasterFields := 'id=client_id';
+FDQueryCommandes.MasterSource := DataSourceClients;  // DataSource traditionnel  
+FDQueryCommandes.MasterFields := 'id=client_id';  
 
 // Ou créer un lien dans l'éditeur LiveBindings
 // Lier BindSourceDB_Clients.id → BindSourceDB_Commandes.client_id
@@ -503,12 +503,12 @@ Valider les données avec des expressions.
 // Onglet "Validation"
 
 // Valider que l'email contient @
-Expression: Pos('@', email) > 0
-Message d'erreur: "Email invalide"
+Expression: Pos('@', email) > 0  
+Message d'erreur: "Email invalide"  
 
 // Valider que le nom n'est pas vide
-Expression: Length(Trim(nom)) > 0
-Message d'erreur: "Le nom est obligatoire"
+Expression: Length(Trim(nom)) > 0  
+Message d'erreur: "Le nom est obligatoire"  
 ```
 
 ### Par code
@@ -544,12 +544,12 @@ Expression: if(tva_reduite, prix_ht * 1.055, prix_ht * 1.20)
 
 ```pascal
 // Dans un TBindExpression
-BindExpression1.SourceComponent := BindSourceDB1;
-BindExpression1.SourceExpression := 'prix_ht * 1.20';
-BindExpression1.ControlComponent := LabelPrixTTC;
-BindExpression1.ControlExpression := 'Text';
-BindExpression1.Direction := dirSourceToControl;
-BindExpression1.Active := True;
+BindExpression1.SourceComponent := BindSourceDB1;  
+BindExpression1.SourceExpression := 'prix_ht * 1.20';  
+BindExpression1.ControlComponent := LabelPrixTTC;  
+BindExpression1.ControlExpression := 'Text';  
+BindExpression1.Direction := dirSourceToControl;  
+BindExpression1.Active := True;  
 ```
 
 ## Styles visuels avec Live Bindings
@@ -560,8 +560,8 @@ Changer l'apparence selon les données.
 
 ```pascal
 // Événement OnLocationChanged du BindSourceDB
-procedure TForm1.BindSourceDB1LocationChanged(Sender: TObject);
-begin
+procedure TForm1.BindSourceDB1LocationChanged(Sender: TObject);  
+begin  
   // Changer la couleur selon l'état
   if FDQueryClients.FieldByName('actif').AsBoolean then
   begin
@@ -580,8 +580,8 @@ end;
 
 ```pascal
 // TBindExpression pour changer la couleur
-BindExpression1.SourceExpression := 'if(actif, $00FF00, $C0C0C0)';
-BindExpression1.ControlExpression := 'Color';
+BindExpression1.SourceExpression := 'if(actif, $00FF00, $C0C0C0)';  
+BindExpression1.ControlExpression := 'Color';  
 ```
 
 ## Live Bindings avec FireMonkey (FMX)
@@ -606,8 +606,8 @@ BindSourceDB1.DataSet := FDQueryClients;
 
 ```pascal
 // Lister toutes les liaisons
-procedure AfficherLiaisons;
-var
+procedure AfficherLiaisons;  
+var  
   i: Integer;
   Binding: TContainedBindComponent;
 begin
@@ -639,8 +639,8 @@ LinkControlToField1.Active := True;
 
 ```pascal
 // Pendant un traitement massif
-BindingsList1.Notify(Self, 'BeginUpdate');
-try
+BindingsList1.Notify(Self, 'BeginUpdate');  
+try  
   // Modifications multiples
   FDQueryClients.First;
   while not FDQueryClients.Eof do
@@ -722,8 +722,8 @@ type
   end;
 
 // View (Formulaire)
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
+procedure TFormClient.FormCreate(Sender: TObject);  
+begin  
   FViewModel := TClientViewModel.Create(Self);
   AdapterBindSource1 := FViewModel.Adapter;
   // Les liaisons dans l'éditeur visuel font le reste !
@@ -827,8 +827,8 @@ type
 
 implementation
 
-procedure TFormClientLiveBindings.FormCreate(Sender: TObject);
-begin
+procedure TFormClientLiveBindings.FormCreate(Sender: TObject);  
+begin  
   // Connexion et chargement
   FDConnection1.Connected := True;
   FDQueryClients.SQL.Text := 'SELECT * FROM clients';
@@ -853,8 +853,8 @@ end.
 ### Exemple 2 : ListView avec objets
 
 ```pascal
-procedure TForm1.ChargerClientsEnObjets;
-var
+procedure TForm1.ChargerClientsEnObjets;  
+var  
   Client: TClient;
   Liste: TObjectList<TClient>;
 begin
@@ -885,12 +885,12 @@ end;
 
 ### Points clés
 
-✅ Les **Live Bindings** offrent une alternative moderne aux contrôles DB
-✅ Ils fonctionnent avec **n'importe quel** contrôle visuel
-✅ Liaison possible avec **DataSets** ET **objets** directement
-✅ **Éditeur visuel** puissant pour créer les liaisons
-✅ **Expressions** pour formatage et calculs avancés
-✅ Idéal pour **FireMonkey** (multi-plateformes)
+✅ Les **Live Bindings** offrent une alternative moderne aux contrôles DB  
+✅ Ils fonctionnent avec **n'importe quel** contrôle visuel  
+✅ Liaison possible avec **DataSets** ET **objets** directement  
+✅ **Éditeur visuel** puissant pour créer les liaisons  
+✅ **Expressions** pour formatage et calculs avancés  
+✅ Idéal pour **FireMonkey** (multi-plateformes)  
 ✅ Facilite l'architecture **MVVM**
 
 ### Quand choisir quoi ?

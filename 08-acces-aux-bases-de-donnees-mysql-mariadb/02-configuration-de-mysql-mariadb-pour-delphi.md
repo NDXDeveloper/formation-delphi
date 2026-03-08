@@ -84,8 +84,8 @@ sudo apt update
 sudo apt install mariadb-server mariadb-client
 
 # Démarrage du service
-sudo systemctl start mariadb
-sudo systemctl enable mariadb
+sudo systemctl start mariadb  
+sudo systemctl enable mariadb  
 
 # Configuration sécurisée
 sudo mysql_secure_installation
@@ -136,9 +136,9 @@ Une fois MySQL/MariaDB installé, vous devez vous connecter pour créer votre ba
 
 **Méthode SQL :**
 ```sql
-CREATE DATABASE ma_gestion
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_general_ci;
+CREATE DATABASE ma_gestion  
+CHARACTER SET utf8mb4  
+COLLATE utf8mb4_general_ci;  
 ```
 
 ### Création d'un utilisateur dédié (recommandé)
@@ -152,12 +152,12 @@ COLLATE utf8mb4_general_ci;
 
 ```sql
 -- Créer l'utilisateur
-CREATE USER 'delphi_user'@'localhost'
-IDENTIFIED BY 'MotDePasseSecurise123!';
+CREATE USER 'delphi_user'@'localhost'  
+IDENTIFIED BY 'MotDePasseSecurise123!';  
 
 -- Donner tous les droits sur la base de données spécifique
-GRANT ALL PRIVILEGES ON ma_gestion.*
-TO 'delphi_user'@'localhost';
+GRANT ALL PRIVILEGES ON ma_gestion.*  
+TO 'delphi_user'@'localhost';  
 
 -- Appliquer les changements
 FLUSH PRIVILEGES;
@@ -272,8 +272,8 @@ Si vous prévoyez d'accéder à MySQL depuis une autre machine :
 sudo ufw allow 3306/tcp
 
 # FirewallD (CentOS/RHEL)
-sudo firewall-cmd --permanent --add-port=3306/tcp
-sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --add-port=3306/tcp  
+sudo firewall-cmd --reload  
 ```
 
 **Note de sécurité :** N'ouvrez le port 3306 vers Internet que si absolument nécessaire et avec des mesures de sécurité appropriées (VPN, SSH tunnel, etc.).
@@ -355,10 +355,10 @@ Nous verrons tout cela dans les sections suivantes !
 
 **Ce que vous devez avoir à ce stade :**
 
-✓ MySQL ou MariaDB installé et fonctionnel
-✓ Une base de données créée avec encodage utf8mb4
-✓ Un utilisateur dédié avec permissions appropriées
-✓ La bibliothèque client MySQL/MariaDB accessible
+✓ MySQL ou MariaDB installé et fonctionnel  
+✓ Une base de données créée avec encodage utf8mb4  
+✓ Un utilisateur dédié avec permissions appropriées  
+✓ La bibliothèque client MySQL/MariaDB accessible  
 ✓ Les paramètres de connexion notés et testés
 
 **Configuration minimale pour Delphi :**

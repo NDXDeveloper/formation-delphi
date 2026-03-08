@@ -126,12 +126,12 @@ Le **curseur** est un pointeur qui indique quel enregistrement est actuellement 
 
 ```pascal
 // ─── Positionnement absolu ───
-FDQuery1.First;    // Aller au premier enregistrement
-FDQuery1.Last;     // Aller au dernier enregistrement
+FDQuery1.First;    // Aller au premier enregistrement  
+FDQuery1.Last;     // Aller au dernier enregistrement  
 
 // ─── Déplacement relatif ───
-FDQuery1.Next;     // Enregistrement suivant
-FDQuery1.Prior;    // Enregistrement précédent
+FDQuery1.Next;     // Enregistrement suivant  
+FDQuery1.Prior;    // Enregistrement précédent  
 
 // ─── Déplacement par index ───
 FDQuery1.RecNo := 5;  // Aller au 5ème enregistrement (si disponible)
@@ -166,8 +166,8 @@ else
 ### Parcourir tous les enregistrements
 
 ```pascal
-procedure ParcourrirTous;
-begin
+procedure ParcourrirTous;  
+begin  
   FDQuery1.First;
   while not FDQuery1.Eof do
   begin
@@ -192,15 +192,15 @@ Il existe plusieurs façons d'accéder aux valeurs des champs :
 
 ```pascal
 // Lecture
-Nom := FDQuery1.FieldByName('nom').AsString;
-Age := FDQuery1.FieldByName('age').AsInteger;
-Salaire := FDQuery1.FieldByName('salaire').AsCurrency;
-DateNaissance := FDQuery1.FieldByName('date_naissance').AsDateTime;
+Nom := FDQuery1.FieldByName('nom').AsString;  
+Age := FDQuery1.FieldByName('age').AsInteger;  
+Salaire := FDQuery1.FieldByName('salaire').AsCurrency;  
+DateNaissance := FDQuery1.FieldByName('date_naissance').AsDateTime;  
 
 // Écriture (en mode Edit ou Insert)
-FDQuery1.Edit;
-FDQuery1.FieldByName('nom').AsString := 'Nouveau nom';
-FDQuery1.Post;
+FDQuery1.Edit;  
+FDQuery1.FieldByName('nom').AsString := 'Nouveau nom';  
+FDQuery1.Post;  
 ```
 
 **Avantages :**
@@ -212,13 +212,13 @@ FDQuery1.Post;
 
 ```pascal
 // Lecture
-Nom := FDQuery1['nom'];
-Email := FDQuery1['email'];
+Nom := FDQuery1['nom'];  
+Email := FDQuery1['email'];  
 
 // Écriture
-FDQuery1.Edit;
-FDQuery1['nom'] := 'Nouveau nom';
-FDQuery1.Post;
+FDQuery1.Edit;  
+FDQuery1['nom'] := 'Nouveau nom';  
+FDQuery1.Post;  
 ```
 
 **Avantages :**
@@ -229,8 +229,8 @@ FDQuery1.Post;
 
 ```pascal
 // Accès par position (0, 1, 2...)
-Nom := FDQuery1.Fields[0].AsString;
-Prenom := FDQuery1.Fields[1].AsString;
+Nom := FDQuery1.Fields[0].AsString;  
+Prenom := FDQuery1.Fields[1].AsString;  
 ```
 
 **Inconvénients :**
@@ -244,8 +244,8 @@ Dans l'éditeur de champs du dataset, vous pouvez créer des propriétés persis
 
 ```pascal
 // Après avoir créé les champs persistants dans l'IDE
-Nom := FDQuery1nom.AsString;  // Plus rapide, type-safe
-Age := FDQuery1age.AsInteger;
+Nom := FDQuery1nom.AsString;  // Plus rapide, type-safe  
+Age := FDQuery1age.AsInteger;  
 ```
 
 ### Conversions de types
@@ -274,13 +274,13 @@ else
   Telephone := FDQuery1.FieldByName('telephone').AsString;
 
 // Assigner NULL à un champ
-FDQuery1.Edit;
-FDQuery1.FieldByName('telephone').Clear;  // Définit à NULL
-FDQuery1.Post;
+FDQuery1.Edit;  
+FDQuery1.FieldByName('telephone').Clear;  // Définit à NULL  
+FDQuery1.Post;  
 
 // Valeur par défaut si NULL
-Telephone := FDQuery1.FieldByName('telephone').AsString;
-if Telephone = '' then
+Telephone := FDQuery1.FieldByName('telephone').AsString;  
+if Telephone = '' then  
   Telephone := 'Non renseigné';
 ```
 
@@ -292,21 +292,21 @@ if Telephone = '' then
 
 ```pascal
 // Append : Ajouter à la fin
-FDQuery1.Append;  // Passe en mode dsInsert
-FDQuery1.FieldByName('nom').AsString := 'Dupont';
-FDQuery1.FieldByName('prenom').AsString := 'Jean';
-FDQuery1.FieldByName('email').AsString := 'jean.dupont@email.fr';
-FDQuery1.Post;  // Valider et enregistrer dans la base
+FDQuery1.Append;  // Passe en mode dsInsert  
+FDQuery1.FieldByName('nom').AsString := 'Dupont';  
+FDQuery1.FieldByName('prenom').AsString := 'Jean';  
+FDQuery1.FieldByName('email').AsString := 'jean.dupont@email.fr';  
+FDQuery1.Post;  // Valider et enregistrer dans la base  
 ```
 
 #### Méthode Insert
 
 ```pascal
 // Insert : Insérer à la position courante
-FDQuery1.Insert;  // Passe en mode dsInsert
-FDQuery1.FieldByName('nom').AsString := 'Martin';
-FDQuery1.FieldByName('prenom').AsString := 'Sophie';
-FDQuery1.Post;
+FDQuery1.Insert;  // Passe en mode dsInsert  
+FDQuery1.FieldByName('nom').AsString := 'Martin';  
+FDQuery1.FieldByName('prenom').AsString := 'Sophie';  
+FDQuery1.Post;  
 ```
 
 **Note :** Pour la plupart des bases de données, `Insert` et `Append` ont le même effet. `Append` est plus couramment utilisé.
@@ -318,8 +318,8 @@ FDQuery1.Post;
 FDQuery1.Edit;  // Passe en mode dsEdit
 
 // Modifier les champs
-FDQuery1.FieldByName('email').AsString := 'nouveau@email.fr';
-FDQuery1.FieldByName('telephone').AsString := '0612345678';
+FDQuery1.FieldByName('email').AsString := 'nouveau@email.fr';  
+FDQuery1.FieldByName('telephone').AsString := '0612345678';  
 
 // Valider les modifications
 FDQuery1.Post;  // Enregistre dans la base
@@ -336,8 +336,8 @@ FDQuery1.Cancel;  // Retourne en mode dsBrowse sans enregistrer
 
 ```pascal
 // Supprimer l'enregistrement courant
-if MessageDlg('Confirmer la suppression ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-begin
+if MessageDlg('Confirmer la suppression ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then  
+begin  
   FDQuery1.Delete;  // Supprime immédiatement de la base
 end;
 ```
@@ -394,12 +394,12 @@ Les composants visuels qui peuvent être liés à un DataSource sont appelés **
 
 ```pascal
 // DBEdit pour afficher le nom
-DBEdit1.DataSource := DataSource1;
-DBEdit1.DataField := 'nom';
+DBEdit1.DataSource := DataSource1;  
+DBEdit1.DataField := 'nom';  
 
 // DBEdit pour afficher le prénom
-DBEdit2.DataSource := DataSource1;
-DBEdit2.DataField := 'prenom';
+DBEdit2.DataSource := DataSource1;  
+DBEdit2.DataField := 'prenom';  
 
 // DBGrid pour afficher tout
 DBGrid1.DataSource := DataSource1;
@@ -476,8 +476,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClients.FormCreate(Sender: TObject);
-begin
+procedure TFormClients.FormCreate(Sender: TObject);  
+begin  
   // Connecter à la base
   FDConnection1.Connected := True;
 
@@ -545,9 +545,9 @@ DBNavigator1.VisibleButtons := [nbFirst, nbPrior, nbNext, nbLast, nbRefresh];
 DBNavigator1.ConfirmDelete := True;
 
 // Changer les hints (bulles d'aide)
-DBNavigator1.Hints.Clear;
-DBNavigator1.Hints.Add('Premier');
-DBNavigator1.Hints.Add('Précédent');
+DBNavigator1.Hints.Clear;  
+DBNavigator1.Hints.Add('Premier');  
+DBNavigator1.Hints.Add('Précédent');  
 // etc.
 DBNavigator1.ShowHint := True;
 ```
@@ -560,8 +560,8 @@ Les DataSets génèrent des événements que vous pouvez intercepter pour ajoute
 
 ```pascal
 // Avant de changer d'enregistrement
-procedure TForm1.FDQuery1BeforeScroll(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1BeforeScroll(DataSet: TDataSet);  
+begin  
   // Vérifier si des modifications sont en cours
   if DataSet.State in [dsEdit, dsInsert] then
   begin
@@ -574,8 +574,8 @@ begin
 end;
 
 // Après avoir changé d'enregistrement
-procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);  
+begin  
   // Mettre à jour l'interface
   StatusBar1.SimpleText := 'Enregistrement ' +
     IntToStr(DataSet.RecNo) + ' sur ' + IntToStr(DataSet.RecordCount);
@@ -586,8 +586,8 @@ end;
 
 ```pascal
 // Avant d'insérer un enregistrement
-procedure TForm1.FDQuery1BeforeInsert(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1BeforeInsert(DataSet: TDataSet);  
+begin  
   // Vérifier les permissions
   if not UtilisateurPeutAjouter then
   begin
@@ -597,8 +597,8 @@ begin
 end;
 
 // Avant de valider les modifications
-procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);  
+begin  
   // Validation personnalisée
   if Trim(DataSet.FieldByName('nom').AsString) = '' then
   begin
@@ -615,14 +615,14 @@ begin
 end;
 
 // Après avoir validé les modifications
-procedure TForm1.FDQuery1AfterPost(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1AfterPost(DataSet: TDataSet);  
+begin  
   ShowMessage('Enregistrement sauvegardé');
 end;
 
 // Avant de supprimer
-procedure TForm1.FDQuery1BeforeDelete(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1BeforeDelete(DataSet: TDataSet);  
+begin  
   if MessageDlg('Confirmer la suppression ?',
      mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Abort;  // Annule la suppression
@@ -633,15 +633,15 @@ end;
 
 ```pascal
 // Quand un champ change
-procedure TForm1.FDQuery1nomChange(Sender: TField);
-begin
+procedure TForm1.FDQuery1nomChange(Sender: TField);  
+begin  
   // Le champ "nom" a été modifié
   lblNomModifie.Visible := True;
 end;
 
 // Validation d'un champ
-procedure TForm1.FDQuery1emailValidate(Sender: TField);
-begin
+procedure TForm1.FDQuery1emailValidate(Sender: TField);  
+begin  
   if Pos('@', Sender.AsString) = 0 then
     raise Exception.Create('Email invalide');
 end;
@@ -655,24 +655,24 @@ end;
 
 ```pascal
 // Filtrer avec WHERE dans la requête SQL
-FDQuery1.Close;
-FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE actif = TRUE';
-FDQuery1.Open;
+FDQuery1.Close;  
+FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE actif = TRUE';  
+FDQuery1.Open;  
 ```
 
 #### Filtre côté client
 
 ```pascal
 // Filtrer après avoir chargé les données
-FDQuery1.Filter := 'nom LIKE ''D%''';  // Noms commençant par D
-FDQuery1.Filtered := True;
+FDQuery1.Filter := 'nom LIKE ''D%''';  // Noms commençant par D  
+FDQuery1.Filtered := True;  
 
 // Désactiver le filtre
 FDQuery1.Filtered := False;
 
 // Filtres multiples
-FDQuery1.Filter := 'actif = TRUE AND nom LIKE ''D%''';
-FDQuery1.Filtered := True;
+FDQuery1.Filter := 'actif = TRUE AND nom LIKE ''D%''';  
+FDQuery1.Filtered := True;  
 ```
 
 **Important :** Le filtrage côté client charge toutes les données puis filtre en mémoire. Pour de grandes tables, préférez le filtrage côté serveur (WHERE dans SQL).
@@ -683,9 +683,9 @@ FDQuery1.Filtered := True;
 
 ```pascal
 // Trier avec ORDER BY dans la requête
-FDQuery1.Close;
-FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';
-FDQuery1.Open;
+FDQuery1.Close;  
+FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY nom, prenom';  
+FDQuery1.Open;  
 ```
 
 #### Tri côté client
@@ -744,16 +744,16 @@ end;
 FDQuery1.Refresh;
 
 // Ou fermer et rouvrir
-FDQuery1.Close;
-FDQuery1.Open;
+FDQuery1.Close;  
+FDQuery1.Open;  
 ```
 
 ### Rafraîchissement automatique
 
 ```pascal
 // Événement de formulaire avec un Timer
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   FDQuery1.Refresh;  // Recharge toutes les 30 secondes
 end;
 ```
@@ -799,8 +799,8 @@ end;
 Quand vous parcourez de nombreux enregistrements, désactivez les contrôles visuels pour améliorer les performances :
 
 ```pascal
-procedure TraiterTous;
-begin
+procedure TraiterTous;  
+begin  
   FDQuery1.DisableControls;  // Désactive les mises à jour visuelles
   try
     FDQuery1.First;
@@ -885,17 +885,17 @@ end;
 
 ### DataSet : Les points clés
 
-✅ Un DataSet est un conteneur de données en mémoire
-✅ Il a un état (Inactive, Browse, Edit, Insert)
-✅ On navigue avec First, Next, Prior, Last
-✅ On modifie avec Edit, Post, Cancel
+✅ Un DataSet est un conteneur de données en mémoire  
+✅ Il a un état (Inactive, Browse, Edit, Insert)  
+✅ On navigue avec First, Next, Prior, Last  
+✅ On modifie avec Edit, Post, Cancel  
 ✅ On accède aux champs avec FieldByName
 
 ### DataSource : Les points clés
 
-✅ Le DataSource fait le lien entre DataSet et contrôles visuels
-✅ Tous les contrôles liés sont synchronisés automatiquement
-✅ Un seul DataSource peut servir plusieurs contrôles
+✅ Le DataSource fait le lien entre DataSet et contrôles visuels  
+✅ Tous les contrôles liés sont synchronisés automatiquement  
+✅ Un seul DataSource peut servir plusieurs contrôles  
 ✅ Les contrôles DB (DBEdit, DBGrid, etc.) utilisent un DataSource
 
 ### Schéma récapitulatif

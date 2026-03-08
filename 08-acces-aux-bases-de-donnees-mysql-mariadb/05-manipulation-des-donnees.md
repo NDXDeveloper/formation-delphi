@@ -167,8 +167,8 @@ Pour bien comprendre, voici un exemple simple montrant toutes les étapes :
 
 ```pascal
 // Étape 1 : L'utilisateur clique sur "Afficher les clients"
-procedure TForm1.btnAfficherClick(Sender: TObject);
-begin
+procedure TForm1.btnAfficherClick(Sender: TObject);  
+begin  
   // Étape 2 : Construire la requête SQL
   FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
 
@@ -192,14 +192,14 @@ Vous écrivez explicitement les requêtes SQL :
 
 ```pascal
 // Lecture
-FDQuery.SQL.Text := 'SELECT * FROM clients WHERE actif = TRUE';
-FDQuery.Open;
+FDQuery.SQL.Text := 'SELECT * FROM clients WHERE actif = TRUE';  
+FDQuery.Open;  
 
 // Insertion
-FDQuery.SQL.Text := 'INSERT INTO clients (nom, prenom) VALUES (:Nom, :Prenom)';
-FDQuery.ParamByName('Nom').AsString := 'Dupont';
-FDQuery.ParamByName('Prenom').AsString := 'Jean';
-FDQuery.ExecSQL;
+FDQuery.SQL.Text := 'INSERT INTO clients (nom, prenom) VALUES (:Nom, :Prenom)';  
+FDQuery.ParamByName('Nom').AsString := 'Dupont';  
+FDQuery.ParamByName('Prenom').AsString := 'Jean';  
+FDQuery.ExecSQL;  
 ```
 
 **Avantages :**
@@ -213,15 +213,15 @@ Vous modifiez directement les enregistrements comme des objets :
 
 ```pascal
 // Ajouter un enregistrement
-FDQuery.Append;
-FDQuery.FieldByName('nom').AsString := 'Dupont';
-FDQuery.FieldByName('prenom').AsString := 'Jean';
-FDQuery.Post;  // Enregistre dans la base
+FDQuery.Append;  
+FDQuery.FieldByName('nom').AsString := 'Dupont';  
+FDQuery.FieldByName('prenom').AsString := 'Jean';  
+FDQuery.Post;  // Enregistre dans la base  
 
 // Modifier un enregistrement
-FDQuery.Edit;
-FDQuery.FieldByName('email').AsString := 'nouveau@email.fr';
-FDQuery.Post;  // Enregistre les modifications
+FDQuery.Edit;  
+FDQuery.FieldByName('email').AsString := 'nouveau@email.fr';  
+FDQuery.Post;  // Enregistre les modifications  
 ```
 
 **Avantages :**
@@ -260,9 +260,9 @@ Un dataset peut être dans différents états :
 Le **curseur** pointe vers un enregistrement spécifique dans le dataset :
 
 ```pascal
-FDQuery.First;  // Curseur sur le premier enregistrement
-FDQuery.Next;   // Déplacer le curseur
-FDQuery.Last;   // Curseur sur le dernier enregistrement
+FDQuery.First;  // Curseur sur le premier enregistrement  
+FDQuery.Next;   // Déplacer le curseur  
+FDQuery.Last;   // Curseur sur le dernier enregistrement  
 ```
 
 ### 4. Paramètres SQL
@@ -271,8 +271,8 @@ Les **paramètres** sont des espaces réservés dans vos requêtes SQL, remplac�
 
 ```pascal
 // :Nom est un paramètre
-SQL.Text := 'SELECT * FROM clients WHERE nom = :Nom';
-ParamByName('Nom').AsString := 'Dupont';  // Remplace :Nom par 'Dupont'
+SQL.Text := 'SELECT * FROM clients WHERE nom = :Nom';  
+ParamByName('Nom').AsString := 'Dupont';  // Remplace :Nom par 'Dupont'  
 ```
 
 **Crucial pour la sécurité !** Nous y reviendrons en détail dans la section 8.5.1.
@@ -288,8 +288,8 @@ ParamByName('Nom').AsString := 'Dupont';  // Remplace :Nom par 'Dupont'
 SQL.Text := 'SELECT * FROM clients WHERE nom = ''' + editNom.Text + '''';
 
 // ✅ SÉCURISÉ - Toujours utiliser des paramètres
-SQL.Text := 'SELECT * FROM clients WHERE nom = :Nom';
-ParamByName('Nom').AsString := editNom.Text;
+SQL.Text := 'SELECT * FROM clients WHERE nom = :Nom';  
+ParamByName('Nom').AsString := editNom.Text;  
 ```
 
 La première méthode est **vulnérable aux injections SQL**, une des failles de sécurité les plus dangereuses. Nous expliquerons pourquoi et comment l'éviter dans la section 8.5.1.
@@ -320,22 +320,22 @@ Une fois que vous aurez maîtrisé ce chapitre, vous pourrez explorer :
 
 À la fin de ce chapitre, vous serez capable de créer une application complète de gestion de clients incluant :
 
-✅ Une liste de tous les clients avec recherche et filtres
-✅ Un formulaire pour ajouter de nouveaux clients
-✅ La possibilité de modifier les informations existantes
-✅ La suppression sécurisée avec confirmation
-✅ La validation des données (email, champs obligatoires)
-✅ La gestion des erreurs (doublons, contraintes)
-✅ Des transactions pour garantir la cohérence
+✅ Une liste de tous les clients avec recherche et filtres  
+✅ Un formulaire pour ajouter de nouveaux clients  
+✅ La possibilité de modifier les informations existantes  
+✅ La suppression sécurisée avec confirmation  
+✅ La validation des données (email, champs obligatoires)  
+✅ La gestion des erreurs (doublons, contraintes)  
+✅ Des transactions pour garantir la cohérence  
 ✅ Une interface utilisateur intuitive et réactive
 
 ## Prérequis
 
 Avant de commencer ce chapitre, assurez-vous de :
 
-✓ Avoir installé et configuré MySQL/MariaDB (section 8.2)
-✓ Comprendre l'architecture de FireDAC (section 8.3)
-✓ Savoir établir une connexion à la base (section 8.4)
+✓ Avoir installé et configuré MySQL/MariaDB (section 8.2)  
+✓ Comprendre l'architecture de FireDAC (section 8.3)  
+✓ Savoir établir une connexion à la base (section 8.4)  
 ✓ Avoir créé au moins une table de test dans votre base
 
 ## Prêt à commencer ?

@@ -20,8 +20,8 @@ Une **injection SQL** se produit quand un attaquant insère du code SQL malveill
 
 ```pascal
 // ❌ CODE VULNÉRABLE - NE JAMAIS FAIRE ÇA !
-procedure TFormLogin.btnConnecterClick(Sender: TObject);
-var
+procedure TFormLogin.btnConnecterClick(Sender: TObject);  
+var  
   SQL: string;
 begin
   SQL := 'SELECT * FROM utilisateurs ' +
@@ -43,16 +43,16 @@ end;
 Un utilisateur malveillant entre ces valeurs :
 
 ```
-Login : admin
-Password : ' OR '1'='1
+Login : admin  
+Password : ' OR '1'='1  
 ```
 
 **La requête SQL devient :**
 
 ```sql
-SELECT * FROM utilisateurs
-WHERE login = 'admin'
-AND password = '' OR '1'='1'
+SELECT * FROM utilisateurs  
+WHERE login = 'admin'  
+AND password = '' OR '1'='1'  
 ```
 
 **Résultat :** `'1'='1'` est toujours vrai, donc la condition est validée **même avec un mauvais mot de passe** ! 😱
@@ -62,17 +62,17 @@ L'attaquant peut se connecter **sans connaître le mot de passe**.
 ### Pire encore : Destruction de données
 
 ```
-Login : admin
-Password : '; DROP TABLE utilisateurs; --
+Login : admin  
+Password : '; DROP TABLE utilisateurs; --  
 ```
 
 **La requête devient :**
 
 ```sql
-SELECT * FROM utilisateurs
-WHERE login = 'admin'
-AND password = '';
-DROP TABLE utilisateurs;
+SELECT * FROM utilisateurs  
+WHERE login = 'admin'  
+AND password = '';  
+DROP TABLE utilisateurs;  
 --'
 ```
 
@@ -110,8 +110,8 @@ Au lieu de **concaténer** les valeurs dans le SQL, on utilise des **paramètres
 
 ```pascal
 // ✅ CODE SÉCURISÉ - TOUJOURS FAIRE COMME ÇA
-procedure TFormLogin.btnConnecterClick(Sender: TObject);
-begin
+procedure TFormLogin.btnConnecterClick(Sender: TObject);  
+begin  
   FDQuery1.SQL.Text :=
     'SELECT * FROM utilisateurs ' +
     'WHERE login = :login ' +
@@ -135,16 +135,16 @@ end;
 Avec la même tentative d'injection :
 
 ```
-Login : admin
-Password : ' OR '1'='1
+Login : admin  
+Password : ' OR '1'='1  
 ```
 
 **FireDAC traite le tout comme une chaîne littérale :**
 
 ```sql
-SELECT * FROM utilisateurs
-WHERE login = 'admin'
-AND password = '\' OR \'1\'=\'1'
+SELECT * FROM utilisateurs  
+WHERE login = 'admin'  
+AND password = '\' OR \'1\'=\'1'  
 -- Les apostrophes sont échappées automatiquement
 ```
 
@@ -161,8 +161,8 @@ AND password = '\' OR \'1\'=\'1'
 SQL := 'SELECT * FROM clients WHERE nom = ''' + editNom.Text + '''';
 
 // ✅ SÉCURISÉ
-SQL := 'SELECT * FROM clients WHERE nom = :nom';
-ParamByName('nom').AsString := editNom.Text;
+SQL := 'SELECT * FROM clients WHERE nom = :nom';  
+ParamByName('nom').AsString := editNom.Text;  
 ```
 
 ## Sécurisation des mots de passe
@@ -200,8 +200,8 @@ uses
   BCrypt;  // Ajoutez la bibliothèque BCrypt pour Delphi
 
 // Lors de la création d'un utilisateur
-function TUserManager.CreerUtilisateur(const Login, Password: string): Boolean;
-var
+function TUserManager.CreerUtilisateur(const Login, Password: string): Boolean;  
+var  
   Hash: string;
 begin
   // Générer le hash du mot de passe
@@ -219,8 +219,8 @@ begin
 end;
 
 // Lors de la vérification
-function TUserManager.VerifierConnexion(const Login, Password: string): Boolean;
-var
+function TUserManager.VerifierConnexion(const Login, Password: string): Boolean;  
+var  
   HashStocke: string;
 begin
   Result := False;
@@ -253,22 +253,22 @@ Si BCrypt n'est pas disponible, utilisez au minimum SHA-256 avec un salt :
 uses
   System.Hash;
 
-function GenererSalt: string;
-var
+function GenererSalt: string;  
+var  
   GUID: TGUID;
 begin
   CreateGUID(GUID);
   Result := GUIDToString(GUID);
 end;
 
-function HashPasswordAvecSalt(const Password, Salt: string): string;
-begin
+function HashPasswordAvecSalt(const Password, Salt: string): string;  
+begin  
   Result := THashSHA2.GetHashString(Password + Salt);
 end;
 
 // Utilisation
-procedure CreerUtilisateur(const Login, Password: string);
-var
+procedure CreerUtilisateur(const Login, Password: string);  
+var  
   Salt, Hash: string;
 begin
   Salt := GenererSalt;
@@ -291,8 +291,8 @@ end;
 
 ```pascal
 // ❌ DANGEREUX - Identifiants en dur dans le code
-FDConnection1.Params.Add('User_Name=root');
-FDConnection1.Params.Add('Password=motdepasse123');
+FDConnection1.Params.Add('User_Name=root');  
+FDConnection1.Params.Add('Password=motdepasse123');  
 ```
 
 **Problèmes :**
@@ -329,20 +329,20 @@ implementation
 uses
   System.Hash;
 
-constructor TConfigManager.Create(const CheminFichier: string);
-begin
+constructor TConfigManager.Create(const CheminFichier: string);  
+begin  
   inherited Create;
   FIniFile := TIniFile.Create(CheminFichier);
 end;
 
-destructor TConfigManager.Destroy;
-begin
+destructor TConfigManager.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-function TConfigManager.Chiffrer(const TexteClair: string): string;
-var
+function TConfigManager.Chiffrer(const TexteClair: string): string;  
+var  
   Bytes: TBytes;
   i: Integer;
   Cle: Byte;
@@ -358,8 +358,8 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
 end;
 
-function TConfigManager.Dechiffrer(const TexteChiffre: string): string;
-var
+function TConfigManager.Dechiffrer(const TexteChiffre: string): string;  
+var  
   Bytes: TBytes;
   i: Integer;
   Cle: Byte;
@@ -373,8 +373,8 @@ begin
   Result := TEncoding.UTF8.GetString(Bytes);
 end;
 
-function TConfigManager.LireMotDePasse: string;
-var
+function TConfigManager.LireMotDePasse: string;  
+var  
   TexteChiffre: string;
 begin
   TexteChiffre := FIniFile.ReadString('Database', 'Password', '');
@@ -384,8 +384,8 @@ begin
     Result := '';
 end;
 
-procedure TConfigManager.EcrireMotDePasse(const MotDePasse: string);
-var
+procedure TConfigManager.EcrireMotDePasse(const MotDePasse: string);  
+var  
   TexteChiffre: string;
 begin
   TexteChiffre := Chiffrer(MotDePasse);
@@ -398,8 +398,8 @@ end.
 **Utilisation :**
 
 ```pascal
-procedure TDataModule.ConfigurerConnexion;
-var
+procedure TDataModule.ConfigurerConnexion;  
+var  
   Config: TConfigManager;
   MotDePasse: string;
 begin
@@ -422,8 +422,8 @@ end;
 ### Solution 2 : Variables d'environnement
 
 ```pascal
-function ObtenirMotDePasseEnvironnement: string;
-begin
+function ObtenirMotDePasseEnvironnement: string;  
+begin  
   Result := GetEnvironmentVariable('DB_PASSWORD');
   if Result = '' then
     raise Exception.Create('Variable DB_PASSWORD non définie');
@@ -445,8 +445,8 @@ setx DB_PASSWORD "MonMotDePasseSecurise"
 ### Solution 3 : Demander à l'utilisateur
 
 ```pascal
-procedure TDataModule.DataModuleCreate(Sender: TObject);
-var
+procedure TDataModule.DataModuleCreate(Sender: TObject);  
+var  
   Password: string;
 begin
   if InputQuery('Connexion', 'Mot de passe base de données:', Password, True) then
@@ -464,8 +464,8 @@ end;
 ### Activer SSL pour MySQL
 
 ```pascal
-procedure ConfigurerSSL;
-begin
+procedure ConfigurerSSL;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
   FDConnection1.Params.Add('Server=serveur-distant.com');
@@ -498,24 +498,24 @@ GRANT ALL PRIVILEGES ON *.* TO 'delphi_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON ma_base.* TO 'delphi_app'@'localhost';
 
 -- ✅ ENCORE MIEUX - Droits spécifiques par table
-GRANT SELECT ON ma_base.clients TO 'delphi_readonly'@'localhost';
-GRANT INSERT, UPDATE ON ma_base.commandes TO 'delphi_orders'@'localhost';
+GRANT SELECT ON ma_base.clients TO 'delphi_readonly'@'localhost';  
+GRANT INSERT, UPDATE ON ma_base.commandes TO 'delphi_orders'@'localhost';  
 ```
 
 ### Utilisateurs séparés par fonction
 
 ```sql
 -- Utilisateur lecture seule (rapports)
-CREATE USER 'app_readonly'@'localhost' IDENTIFIED BY 'password1';
-GRANT SELECT ON ma_base.* TO 'app_readonly'@'localhost';
+CREATE USER 'app_readonly'@'localhost' IDENTIFIED BY 'password1';  
+GRANT SELECT ON ma_base.* TO 'app_readonly'@'localhost';  
 
 -- Utilisateur application standard
-CREATE USER 'app_standard'@'localhost' IDENTIFIED BY 'password2';
-GRANT SELECT, INSERT, UPDATE ON ma_base.* TO 'app_standard'@'localhost';
+CREATE USER 'app_standard'@'localhost' IDENTIFIED BY 'password2';  
+GRANT SELECT, INSERT, UPDATE ON ma_base.* TO 'app_standard'@'localhost';  
 
 -- Utilisateur admin (migrations)
-CREATE USER 'app_admin'@'localhost' IDENTIFIED BY 'password3';
-GRANT ALL PRIVILEGES ON ma_base.* TO 'app_admin'@'localhost';
+CREATE USER 'app_admin'@'localhost' IDENTIFIED BY 'password3';  
+GRANT ALL PRIVILEGES ON ma_base.* TO 'app_admin'@'localhost';  
 ```
 
 ### Dans Delphi : Connexions multiples
@@ -528,8 +528,8 @@ type
     FDConnectionAdmin: TFDConnection;
   end;
 
-procedure TDataModule.ConfigurerConnexions;
-begin
+procedure TDataModule.ConfigurerConnexions;  
+begin  
   // Connexion lecture seule pour les rapports
   FDConnectionReadOnly.Params.Add('User_Name=app_readonly');
   FDConnectionReadOnly.Params.Add('Password=password1');
@@ -543,8 +543,8 @@ begin
   FDConnectionAdmin.Params.Add('Password=password3');
 end;
 
-procedure GenererRapport;
-begin
+procedure GenererRapport;  
+begin  
   // Utiliser la connexion read-only
   FDQuery1.Connection := FDConnectionReadOnly;
   FDQuery1.SQL.Text := 'SELECT * FROM statistiques';
@@ -557,22 +557,22 @@ end;
 ### Valider côté client
 
 ```pascal
-function ValiderEmail(const Email: string): Boolean;
-begin
+function ValiderEmail(const Email: string): Boolean;  
+begin  
   Result := (Trim(Email) <> '') and
             (Pos('@', Email) > 0) and
             (Pos('.', Email) > Pos('@', Email));
 end;
 
-function ValiderNumerique(const Texte: string): Boolean;
-var
+function ValiderNumerique(const Texte: string): Boolean;  
+var  
   Valeur: Integer;
 begin
   Result := TryStrToInt(Texte, Valeur);
 end;
 
-procedure TForm1.btnSaveClick(Sender: TObject);
-begin
+procedure TForm1.btnSaveClick(Sender: TObject);  
+begin  
   // Valider avant d'envoyer à la base
   if not ValiderEmail(editEmail.Text) then
   begin
@@ -597,16 +597,16 @@ end;
 
 ```pascal
 // Dans le formulaire
-editNom.MaxLength := 100;
-editEmail.MaxLength := 150;
-editTelephone.MaxLength := 20;
+editNom.MaxLength := 100;  
+editEmail.MaxLength := 150;  
+editTelephone.MaxLength := 20;  
 ```
 
 ### Échapper les caractères spéciaux
 
 ```pascal
-function EchapperHTML(const Texte: string): string;
-begin
+function EchapperHTML(const Texte: string): string;  
+begin  
   Result := Texte;
   Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
   Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
@@ -631,8 +631,8 @@ type
 var
   Tentatives: TDictionary<string, TTentativeConnexion>;
 
-function TentativeAutorisee(const Login: string): Boolean;
-var
+function TentativeAutorisee(const Login: string): Boolean;  
+var  
   Tentative: TTentativeConnexion;
   MinutesEcoulees: Double;
 begin
@@ -658,8 +658,8 @@ begin
   end;
 end;
 
-procedure EnregistrerTentativeEchouee(const Login: string);
-var
+procedure EnregistrerTentativeEchouee(const Login: string);  
+var  
   Tentative: TTentativeConnexion;
 begin
   if Tentatives.TryGetValue(Login, Tentative) then
@@ -678,8 +678,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormLogin.btnConnecterClick(Sender: TObject);
-begin
+procedure TFormLogin.btnConnecterClick(Sender: TObject);  
+begin  
   if not TentativeAutorisee(editLogin.Text) then
     Exit;
 
@@ -724,14 +724,14 @@ type
 
 implementation
 
-constructor TAuditLogger.Create(const CheminLog: string);
-begin
+constructor TAuditLogger.Create(const CheminLog: string);  
+begin  
   inherited Create;
   FLogFile := CheminLog;
 end;
 
-procedure TAuditLogger.EcrireLigne(const Ligne: string);
-var
+procedure TAuditLogger.EcrireLigne(const Ligne: string);  
+var  
   F: TextFile;
 begin
   AssignFile(F, FLogFile);
@@ -746,21 +746,21 @@ begin
   end;
 end;
 
-procedure TAuditLogger.LogConnexion(const Utilisateur: string; Succes: Boolean);
-begin
+procedure TAuditLogger.LogConnexion(const Utilisateur: string; Succes: Boolean);  
+begin  
   if Succes then
     EcrireLigne('CONNEXION RÉUSSIE | ' + Utilisateur)
   else
     EcrireLigne('CONNEXION ÉCHOUÉE | ' + Utilisateur);
 end;
 
-procedure TAuditLogger.LogAction(const Utilisateur, Action, Details: string);
-begin
+procedure TAuditLogger.LogAction(const Utilisateur, Action, Details: string);  
+begin  
   EcrireLigne('ACTION | ' + Utilisateur + ' | ' + Action + ' | ' + Details);
 end;
 
-procedure TAuditLogger.LogErreur(const Utilisateur, Erreur: string);
-begin
+procedure TAuditLogger.LogErreur(const Utilisateur, Erreur: string);  
+begin  
   EcrireLigne('ERREUR | ' + Utilisateur + ' | ' + Erreur);
 end;
 
@@ -773,13 +773,13 @@ end.
 var
   AuditLogger: TAuditLogger;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   AuditLogger := TAuditLogger.Create('audit.log');
 end;
 
-procedure TFormMain.SupprimerClient(ClientID: Integer);
-begin
+procedure TFormMain.SupprimerClient(ClientID: Integer);  
+begin  
   AuditLogger.LogAction(
     UtilisateurConnecte,
     'SUPPRESSION CLIENT',
@@ -804,8 +804,8 @@ CREATE TABLE audit_log (
     ip_address VARCHAR(45)
 );
 
-CREATE INDEX idx_date ON audit_log(date_action);
-CREATE INDEX idx_user ON audit_log(utilisateur);
+CREATE INDEX idx_date ON audit_log(date_action);  
+CREATE INDEX idx_user ON audit_log(utilisateur);  
 ```
 
 ```pascal
@@ -846,8 +846,8 @@ CREATE TABLE clients (
 uses
   System.NetEncoding;
 
-function ChiffrerDonnees(const Donnees: string; const Cle: string): string;
-var
+function ChiffrerDonnees(const Donnees: string; const Cle: string): string;  
+var  
   // Utiliser une vraie bibliothèque de chiffrement (AES-256)
   // Ceci est un exemple simplifié
   Bytes: TBytes;
@@ -862,15 +862,23 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
 end;
 
-function DechiffrerDonnees(const DonneesChiffrees: string; const Cle: string): string;
+function DechiffrerDonnees(const DonneesChiffrees: string; const Cle: string): string;  
+var  
+  Bytes: TBytes;
+  i: Integer;
 begin
-  // Inverse du chiffrement
-  Result := ChiffrerDonnees(DonneesChiffrees, Cle);  // XOR est réversible
+  // Opération inverse : Base64 decode → XOR → UTF8 decode
+  Bytes := TNetEncoding.Base64.DecodeStringToBytes(DonneesChiffrees);
+
+  for i := 0 to Length(Bytes) - 1 do
+    Bytes[i] := Bytes[i] xor Ord(Cle[1 + (i mod Length(Cle))]);
+
+  Result := TEncoding.UTF8.GetString(Bytes);
 end;
 
 // Utilisation
-procedure SauvegarderClientAvecDonneesSensibles;
-var
+procedure SauvegarderClientAvecDonneesSensibles;  
+var  
   NSS_Chiffre: string;
   Cle: string;
 begin
@@ -933,8 +941,8 @@ end;
 ### Tester les injections SQL
 
 ```pascal
-procedure TesterInjectionSQL;
-var
+procedure TesterInjectionSQL;  
+var  
   CasTests: array[0..4] of string;
   i: Integer;
 begin
@@ -989,8 +997,8 @@ Utilisez des outils professionnels :
 
 ```pascal
 // ✅ Par défaut : refuser
-function UtilisateurADroit(Utilisateur: string; Droit: string): Boolean;
-begin
+function UtilisateurADroit(Utilisateur: string; Droit: string): Boolean;  
+begin  
   Result := False;  // Par défaut : pas de droit
 
   try
@@ -1007,8 +1015,8 @@ end;
 
 ```pascal
 // ✅ Comportement prévisible
-if not UtilisateurADroit(User, 'SUPPRIMER') then
-begin
+if not UtilisateurADroit(User, 'SUPPRIMER') then  
+begin  
   ShowMessage('Vous n''avez pas les droits pour supprimer');
   Exit;
 end;

@@ -65,20 +65,20 @@ Application Delphi
 
 ### Avantages de SQLite
 
-✅ **Aucune installation requise** : pas de serveur à configurer
-✅ **Ultra-portable** : copiez le fichier, c'est tout
-✅ **Léger** : empreinte mémoire minimale
-✅ **Rapide** : très performant pour lecture
-✅ **Fiable** : transactions ACID complètes
-✅ **Multiplateforme** : fonctionne partout
+✅ **Aucune installation requise** : pas de serveur à configurer  
+✅ **Ultra-portable** : copiez le fichier, c'est tout  
+✅ **Léger** : empreinte mémoire minimale  
+✅ **Rapide** : très performant pour lecture  
+✅ **Fiable** : transactions ACID complètes  
+✅ **Multiplateforme** : fonctionne partout  
 ✅ **Gratuit** : domaine public, pas de licence
 
 ### Limitations de SQLite
 
-⚠️ **Pas de concurrence en écriture** : un seul écrivain à la fois
-⚠️ **Pas de gestion d'utilisateurs** : pas d'authentification intégrée
-⚠️ **Pas de serveur distant** : accès fichier local uniquement
-⚠️ **Fonctionnalités limitées** : moins riche que PostgreSQL/MySQL
+⚠️ **Pas de concurrence en écriture** : un seul écrivain à la fois  
+⚠️ **Pas de gestion d'utilisateurs** : pas d'authentification intégrée  
+⚠️ **Pas de serveur distant** : accès fichier local uniquement  
+⚠️ **Fonctionnalités limitées** : moins riche que PostgreSQL/MySQL  
 ⚠️ **Pas de procédures stockées**
 
 ### Quand utiliser SQLite ?
@@ -104,16 +104,16 @@ Application Delphi
 
 ```pascal
 // Composants nécessaires sur le DataModule
-TFDConnection: FDConnection1
-TFDPhysSQLiteDriverLink: FDPhysSQLiteDriverLink1
-TFDQuery: FDQueryClients
+TFDConnection: FDConnection1  
+TFDPhysSQLiteDriverLink: FDPhysSQLiteDriverLink1  
+TFDQuery: FDQueryClients  
 ```
 
 #### Étape 2 : Configurer la connexion
 
 ```pascal
-procedure TdmDatabase.ConfigurerSQLite;
-var
+procedure TdmDatabase.ConfigurerSQLite;  
+var  
   CheminBase: string;
 begin
   // Chemin du fichier de base de données
@@ -142,8 +142,8 @@ end;
 #### Étape 3 : Créer les tables
 
 ```pascal
-procedure CreerStructureSQLite;
-begin
+procedure CreerStructureSQLite;  
+begin  
   FDConnection1.ExecSQL(
     'CREATE TABLE IF NOT EXISTS clients ( ' +
     '  id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
@@ -181,15 +181,15 @@ CREATE TABLE clients (
 );
 
 -- Date et heure
-INSERT INTO clients (nom, date_creation)
-VALUES ('Dupont', datetime('now'));  -- datetime() au lieu de NOW()
+INSERT INTO clients (nom, date_creation)  
+VALUES ('Dupont', datetime('now'));  -- datetime() au lieu de NOW()  
 
 -- Obtenir l'ID inséré
 SELECT last_insert_rowid();  -- Au lieu de LAST_INSERT_ID()
 
 -- Limite et offset
-SELECT * FROM clients
-LIMIT 10 OFFSET 20;  -- Syntaxe standard
+SELECT * FROM clients  
+LIMIT 10 OFFSET 20;  -- Syntaxe standard  
 
 -- Pas de BOOLEAN natif
 CREATE TABLE clients (
@@ -224,8 +224,8 @@ type
 
 implementation
 
-constructor TDatabaseSQLite.Create;
-var
+constructor TDatabaseSQLite.Create;  
+var  
   CheminBase: string;
 begin
   inherited Create;
@@ -244,15 +244,15 @@ begin
   FConnection.Connected := True;
 end;
 
-destructor TDatabaseSQLite.Destroy;
-begin
+destructor TDatabaseSQLite.Destroy;  
+begin  
   FConnection.Free;
   FDriverLink.Free;
   inherited;
 end;
 
-procedure TDatabaseSQLite.InitialiserBase;
-begin
+procedure TDatabaseSQLite.InitialiserBase;  
+begin  
   FConnection.ExecSQL(
     'CREATE TABLE IF NOT EXISTS clients ( ' +
     '  id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
@@ -264,8 +264,8 @@ begin
   );
 end;
 
-procedure TDatabaseSQLite.AjouterClient(const Nom, Prenom, Email: string);
-var
+procedure TDatabaseSQLite.AjouterClient(const Nom, Prenom, Email: string);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -285,8 +285,8 @@ begin
   end;
 end;
 
-function TDatabaseSQLite.ListerClients: TFDQuery;
-begin
+function TDatabaseSQLite.ListerClients: TFDQuery;  
+begin  
   Result := TFDQuery.Create(nil);
   Result.Connection := FConnection;
   Result.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
@@ -315,13 +315,13 @@ end.
 
 ### Avantages de PostgreSQL
 
-✅ **Gratuit et open-source** : pas de coût de licence
-✅ **Très performant** : excellentes performances en lecture
-✅ **Fonctionnalités avancées** : JSON, XML, tableaux, types personnalisés
-✅ **Robuste et fiable** : ACID complet, très stable
-✅ **Extensible** : nombreuses extensions disponibles
-✅ **Conformité SQL** : respecte strictement les standards
-✅ **Support des données géospatiales** : PostGIS pour SIG
+✅ **Gratuit et open-source** : pas de coût de licence  
+✅ **Très performant** : excellentes performances en lecture  
+✅ **Fonctionnalités avancées** : JSON, XML, tableaux, types personnalisés  
+✅ **Robuste et fiable** : ACID complet, très stable  
+✅ **Extensible** : nombreuses extensions disponibles  
+✅ **Conformité SQL** : respecte strictement les standards  
+✅ **Support des données géospatiales** : PostGIS pour SIG  
 ✅ **Multiplateforme** : fonctionne partout
 
 ### Comparaison PostgreSQL vs MySQL
@@ -362,17 +362,17 @@ end.
 
 #### Linux (Ubuntu/Debian)
 ```bash
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
+sudo apt update  
+sudo apt install postgresql postgresql-contrib  
+sudo systemctl start postgresql  
+sudo systemctl enable postgresql  
 ```
 
 ### Configuration de PostgreSQL dans Delphi
 
 ```pascal
-procedure TdmDatabase.ConfigurerPostgreSQL;
-begin
+procedure TdmDatabase.ConfigurerPostgreSQL;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=PG');  // PG pour PostgreSQL
   FDConnection1.Params.Add('Server=localhost');
@@ -391,9 +391,9 @@ end;
 
 ```pascal
 // Sur le DataModule
-TFDConnection: FDConnection1
-TFDPhysPgDriverLink: FDPhysPgDriverLink1  // Pilote PostgreSQL
-TFDQuery: FDQueryClients
+TFDConnection: FDConnection1  
+TFDPhysPgDriverLink: FDPhysPgDriverLink1  // Pilote PostgreSQL  
+TFDQuery: FDQueryClients  
 ```
 
 ### Particularités SQL de PostgreSQL
@@ -414,8 +414,8 @@ CREATE TABLE clients (
 );
 
 -- Typage strict
-SELECT * FROM clients WHERE id = 1;  -- OK
-SELECT * FROM clients WHERE id = '1';  -- Erreur ! Pas de conversion auto
+SELECT * FROM clients WHERE id = 1;  -- OK  
+SELECT * FROM clients WHERE id = '1';  -- Erreur ! Pas de conversion auto  
 
 -- Types avancés
 CREATE TABLE produits (
@@ -426,27 +426,27 @@ CREATE TABLE produits (
 );
 
 -- Insertion avec JSON
-INSERT INTO produits (nom, tags, attributs)
-VALUES ('Ordinateur', ARRAY['laptop', 'gaming'],
+INSERT INTO produits (nom, tags, attributs)  
+VALUES ('Ordinateur', ARRAY['laptop', 'gaming'],  
         '{"processeur": "i7", "ram": "16GB"}');
 
 -- RETURNING pour récupérer l'ID
-INSERT INTO clients (nom, prenom)
-VALUES ('Dupont', 'Jean')
-RETURNING id;  -- Retourne directement l'ID
+INSERT INTO clients (nom, prenom)  
+VALUES ('Dupont', 'Jean')  
+RETURNING id;  -- Retourne directement l'ID  
 
 -- Full-text search natif
 CREATE INDEX idx_nom_fulltext ON clients USING GIN(to_tsvector('french', nom));
 
-SELECT * FROM clients
-WHERE to_tsvector('french', nom) @@ to_tsquery('french', 'dupont');
+SELECT * FROM clients  
+WHERE to_tsvector('french', nom) @@ to_tsquery('french', 'dupont');  
 ```
 
 ### Exemple avec PostgreSQL
 
 ```pascal
-procedure TFormMain.UtiliserPostgreSQL;
-var
+procedure TFormMain.UtiliserPostgreSQL;  
+var  
   Query: TFDQuery;
   NouvelID: Integer;
 begin
@@ -478,8 +478,8 @@ end;
 ### Utiliser JSON dans PostgreSQL
 
 ```pascal
-procedure StockerDonneesJSON;
-var
+procedure StockerDonneesJSON;  
+var  
   Query: TFDQuery;
   JSONData: string;
 begin
@@ -551,19 +551,19 @@ end;
 
 ### Avantages de SQL Server
 
-✅ **Intégration Microsoft** : parfait avec Windows, .NET, Azure
-✅ **Outils graphiques** : SSMS très puissant
-✅ **Performance** : très performant, optimisé pour Windows
-✅ **Support commercial** : support Microsoft disponible
-✅ **Sécurité avancée** : chiffrement, audit, masquage dynamique
-✅ **Business Intelligence** : SSRS, SSIS, SSAS intégrés
+✅ **Intégration Microsoft** : parfait avec Windows, .NET, Azure  
+✅ **Outils graphiques** : SSMS très puissant  
+✅ **Performance** : très performant, optimisé pour Windows  
+✅ **Support commercial** : support Microsoft disponible  
+✅ **Sécurité avancée** : chiffrement, audit, masquage dynamique  
+✅ **Business Intelligence** : SSRS, SSIS, SSAS intégrés  
 ✅ **Haute disponibilité** : clustering, mirroring, Always On
 
 ### Inconvénients
 
-⚠️ **Coût** : licences coûteuses (sauf Express)
-⚠️ **Windows** : principalement orienté Windows
-⚠️ **Dépendance Microsoft** : lock-in écosystème
+⚠️ **Coût** : licences coûteuses (sauf Express)  
+⚠️ **Windows** : principalement orienté Windows  
+⚠️ **Dépendance Microsoft** : lock-in écosystème  
 ⚠️ **Complexité** : peut être complexe à administrer
 
 ### Quand utiliser SQL Server ?
@@ -586,8 +586,8 @@ end;
 ### Configuration de SQL Server dans Delphi
 
 ```pascal
-procedure TdmDatabase.ConfigurerSQLServer;
-begin
+procedure TdmDatabase.ConfigurerSQLServer;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MSSQL');  // MSSQL pour SQL Server
   FDConnection1.Params.Add('Server=localhost\SQLEXPRESS');  // Instance SQL Server
@@ -609,9 +609,9 @@ end;
 
 ```pascal
 // Sur le DataModule
-TFDConnection: FDConnection1
-TFDPhysMSSQLDriverLink: FDPhysMSSQLDriverLink1  // Pilote SQL Server
-TFDQuery: FDQueryClients
+TFDConnection: FDConnection1  
+TFDPhysMSSQLDriverLink: FDPhysMSSQLDriverLink1  // Pilote SQL Server  
+TFDQuery: FDQueryClients  
 ```
 
 ### Particularités SQL de SQL Server
@@ -624,8 +624,8 @@ CREATE TABLE clients (
 );
 
 -- Récupérer l'ID inséré
-INSERT INTO clients (nom, prenom) VALUES ('Dupont', 'Jean');
-SELECT SCOPE_IDENTITY() AS nouvel_id;  -- Au lieu de LAST_INSERT_ID()
+INSERT INTO clients (nom, prenom) VALUES ('Dupont', 'Jean');  
+SELECT SCOPE_IDENTITY() AS nouvel_id;  -- Au lieu de LAST_INSERT_ID()  
 
 -- TOP au lieu de LIMIT
 SELECT TOP 10 * FROM clients;  -- Au lieu de LIMIT 10
@@ -634,8 +634,8 @@ SELECT TOP 10 * FROM clients;  -- Au lieu de LIMIT 10
 SELECT [nom], [prenom] FROM [clients];  -- Au lieu de backticks
 
 -- Variables avec @
-DECLARE @total INT;
-SET @total = (SELECT COUNT(*) FROM clients);
+DECLARE @total INT;  
+SET @total = (SELECT COUNT(*) FROM clients);  
 
 -- Types de données spécifiques
 CREATE TABLE donnees (
@@ -651,8 +651,8 @@ CREATE PROCEDURE sp_AjouterClient
     @nom VARCHAR(100),
     @prenom VARCHAR(100),
     @email VARCHAR(150)
-AS
-BEGIN
+AS  
+BEGIN  
     INSERT INTO clients (nom, prenom, email)
     VALUES (@nom, @prenom, @email);
 
@@ -663,8 +663,8 @@ END;
 ### Exemple avec SQL Server
 
 ```pascal
-procedure TFormMain.UtiliserSQLServer;
-var
+procedure TFormMain.UtiliserSQLServer;  
+var  
   Query: TFDQuery;
   StoredProc: TFDStoredProc;
   NouvelID: Integer;
@@ -811,24 +811,28 @@ nom || ' ' || prenom
 ### Code portable entre moteurs
 
 ```pascal
-function ObtenirRequeteClients: string;
+function ObtenirRequeteClients: string;  
+var  
+  DriverID: string;
 begin
-  case GetDriverID of
-    'MySQL', 'MariaDB':
-      Result := 'SELECT * FROM clients LIMIT 10';
-    'PG':
-      Result := 'SELECT * FROM clients LIMIT 10';
-    'MSSQL':
-      Result := 'SELECT TOP 10 * FROM clients';
-    'SQLite':
-      Result := 'SELECT * FROM clients LIMIT 10';
+  // Note : case ne fonctionne pas sur des string en Delphi,
+  // il faut utiliser if..else if
+  DriverID := GetDriverID;
+
+  if (DriverID = 'MySQL') or (DriverID = 'MariaDB') then
+    Result := 'SELECT * FROM clients LIMIT 10'
+  else if DriverID = 'PG' then
+    Result := 'SELECT * FROM clients LIMIT 10'
+  else if DriverID = 'MSSQL' then
+    Result := 'SELECT TOP 10 * FROM clients'
+  else if DriverID = 'SQLite' then
+    Result := 'SELECT * FROM clients LIMIT 10'
   else
     Result := 'SELECT * FROM clients';
-  end;
 end;
 
-function GetDriverID: string;
-begin
+function GetDriverID: string;  
+begin  
   Result := FDConnection1.Params.Values['DriverID'];
 end;
 ```
@@ -853,8 +857,8 @@ Query.SQL.Text :=
 ### 1. Tester avec plusieurs moteurs
 
 ```pascal
-procedure TesterAvecDifferentsMoteurs;
-begin
+procedure TesterAvecDifferentsMoteurs;  
+begin  
   // Test avec SQLite
   ConfigurerSQLite;
   ExecuterTests;
@@ -882,14 +886,19 @@ type
     MotDePasse: string;
   end;
 
-procedure ConfigurerDepuisConfig(const Config: TDatabaseConfig);
-begin
-  case Config.MoteurBDD of
-    'SQLite': ConfigurerSQLite(Config.NomBase);
-    'PostgreSQL': ConfigurerPostgreSQL(Config);
-    'SQLServer': ConfigurerSQLServer(Config);
-    'MySQL': ConfigurerMySQL(Config);
-  end;
+procedure ConfigurerDepuisConfig(const Config: TDatabaseConfig);  
+begin  
+  // Note : case ne fonctionne pas sur des string en Delphi
+  if Config.MoteurBDD = 'SQLite' then
+    ConfigurerSQLite(Config.NomBase)
+  else if Config.MoteurBDD = 'PostgreSQL' then
+    ConfigurerPostgreSQL(Config)
+  else if Config.MoteurBDD = 'SQLServer' then
+    ConfigurerSQLServer(Config)
+  else if Config.MoteurBDD = 'MySQL' then
+    ConfigurerMySQL(Config)
+  else
+    raise Exception.Create('Moteur de base de données non supporté : ' + Config.MoteurBDD);
 end;
 ```
 
@@ -936,10 +945,10 @@ FireDAC inclut les drivers pour tous ces moteurs. Mais vous pourriez avoir besoi
 
 ### Points clés
 
-✅ **SQLite** : parfait pour applications desktop et mobiles
-✅ **PostgreSQL** : excellent pour applications d'entreprise complexes
-✅ **SQL Server** : idéal pour environnements Microsoft
-✅ **FireDAC** : supporte tous ces moteurs avec la même API
+✅ **SQLite** : parfait pour applications desktop et mobiles  
+✅ **PostgreSQL** : excellent pour applications d'entreprise complexes  
+✅ **SQL Server** : idéal pour environnements Microsoft  
+✅ **FireDAC** : supporte tous ces moteurs avec la même API  
 ✅ **Portabilité** : possible avec quelques adaptations
 
 ### Critères de choix

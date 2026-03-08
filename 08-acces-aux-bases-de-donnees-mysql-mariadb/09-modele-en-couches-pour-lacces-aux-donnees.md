@@ -16,8 +16,8 @@ Imaginez un formulaire qui fait tout :
 
 ```pascal
 // ❌ TOUT dans le formulaire - Architecture monolithique
-procedure TFormClients.btnSauvegarderClick(Sender: TObject);
-begin
+procedure TFormClients.btnSauvegarderClick(Sender: TObject);  
+begin  
   // Connexion à la base
   FDConnection1.Params.Values['Server'] := 'localhost';
   FDConnection1.Params.Values['Database'] := 'ma_base';
@@ -233,19 +233,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TdmDatabase.DataModuleCreate(Sender: TObject);
-begin
+procedure TdmDatabase.DataModuleCreate(Sender: TObject);  
+begin  
   ConfigurerConnexion;
   ConnecterBase;
 end;
 
-procedure TdmDatabase.DataModuleDestroy(Sender: TObject);
-begin
+procedure TdmDatabase.DataModuleDestroy(Sender: TObject);  
+begin  
   DeconnecterBase;
 end;
 
-procedure TdmDatabase.ConfigurerConnexion;
-begin
+procedure TdmDatabase.ConfigurerConnexion;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
   FDConnection1.Params.Add('Server=localhost');
@@ -257,22 +257,22 @@ begin
   FDConnection1.LoginPrompt := False;
 end;
 
-procedure TdmDatabase.ConnecterBase;
-begin
+procedure TdmDatabase.ConnecterBase;  
+begin  
   if not FDConnection1.Connected then
     FDConnection1.Connected := True;
 end;
 
-procedure TdmDatabase.DeconnecterBase;
-begin
+procedure TdmDatabase.DeconnecterBase;  
+begin  
   if FDConnection1.Connected then
     FDConnection1.Connected := False;
 end;
 
 // ─── CLIENTS ───
 
-procedure TdmDatabase.ChargerClients;
-begin
+procedure TdmDatabase.ChargerClients;  
+begin  
   FDQueryClients.Close;
   FDQueryClients.SQL.Text :=
     'SELECT id, nom, prenom, email, telephone, actif ' +
@@ -282,8 +282,8 @@ begin
   FDQueryClients.Open;
 end;
 
-function TdmDatabase.AjouterClient(const Nom, Prenom, Email: string): Integer;
-begin
+function TdmDatabase.AjouterClient(const Nom, Prenom, Email: string): Integer;  
+begin  
   FDQueryClients.SQL.Text :=
     'INSERT INTO clients (nom, prenom, email, date_creation) ' +
     'VALUES (:nom, :prenom, :email, NOW())';
@@ -298,8 +298,8 @@ begin
   Result := FDConnection1.GetLastAutoGenValue('clients');
 end;
 
-procedure TdmDatabase.ModifierClient(ID: Integer; const Nom, Prenom, Email: string);
-begin
+procedure TdmDatabase.ModifierClient(ID: Integer; const Nom, Prenom, Email: string);  
+begin  
   FDQueryClients.SQL.Text :=
     'UPDATE clients SET ' +
     '  nom = :nom, ' +
@@ -315,8 +315,8 @@ begin
   FDQueryClients.ExecSQL;
 end;
 
-procedure TdmDatabase.SupprimerClient(ID: Integer);
-begin
+procedure TdmDatabase.SupprimerClient(ID: Integer);  
+begin  
   // Suppression logique
   FDQueryClients.SQL.Text := 'UPDATE clients SET actif = FALSE WHERE id = :id';
   FDQueryClients.ParamByName('id').AsInteger := ID;
@@ -325,8 +325,8 @@ end;
 
 // ─── COMMANDES ───
 
-procedure TdmDatabase.ChargerCommandes(ClientID: Integer);
-begin
+procedure TdmDatabase.ChargerCommandes(ClientID: Integer);  
+begin  
   FDQueryCommandes.Close;
   FDQueryCommandes.SQL.Text :=
     'SELECT id, date_commande, total, statut ' +
@@ -402,8 +402,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClients.FormCreate(Sender: TObject);
-begin
+procedure TFormClients.FormCreate(Sender: TObject);  
+begin  
   // Lier au DataModule
   DBGrid1.DataSource := dmDatabase.DataSourceClients;
 
@@ -411,8 +411,8 @@ begin
   dmDatabase.ChargerClients;
 end;
 
-procedure TFormClients.btnNouveauClick(Sender: TObject);
-var
+procedure TFormClients.btnNouveauClick(Sender: TObject);  
+var  
   NouveauID: Integer;
 begin
   // Appeler le DataModule pour ajouter
@@ -497,8 +497,8 @@ implementation
 
 { TClientManager }
 
-constructor TClientManager.Create(ADataModule: TdmDatabase);
-begin
+constructor TClientManager.Create(ADataModule: TdmDatabase);  
+begin  
   inherited Create;
   FDataModule := ADataModule;
 end;
@@ -561,8 +561,8 @@ begin
   FDataModule.ModifierClient(ID, Nom, Prenom, Email);
 end;
 
-function TClientManager.SupprimerClient(ID: Integer): Boolean;
-begin
+function TClientManager.SupprimerClient(ID: Integer): Boolean;  
+begin  
   Result := False;
 
   // Règle métier : on ne peut pas supprimer un client avec des commandes
@@ -577,8 +577,8 @@ begin
   Result := True;
 end;
 
-function TClientManager.RechercherClients(const Critere: string): Boolean;
-begin
+function TClientManager.RechercherClients(const Critere: string): Boolean;  
+begin  
   FDataModule.FDQueryClients.Close;
   FDataModule.FDQueryClients.SQL.Text :=
     'SELECT * FROM clients ' +
@@ -592,15 +592,15 @@ begin
   Result := not FDataModule.FDQueryClients.IsEmpty;
 end;
 
-function TClientManager.ValiderEmail(const Email: string): Boolean;
-begin
+function TClientManager.ValiderEmail(const Email: string): Boolean;  
+begin  
   Result := (Trim(Email) <> '') and
             (Pos('@', Email) > 0) and
             (Pos('.', Email) > Pos('@', Email));
 end;
 
-function TClientManager.ValiderTelephone(const Telephone: string): Boolean;
-var
+function TClientManager.ValiderTelephone(const Telephone: string): Boolean;  
+var  
   TelNettoyé: string;
   i: Integer;
 begin
@@ -614,16 +614,16 @@ begin
   Result := Length(TelNettoyé) = 10;
 end;
 
-function TClientManager.ClientPeutEtreSupprimer(ClientID: Integer): Boolean;
-var
+function TClientManager.ClientPeutEtreSupprimer(ClientID: Integer): Boolean;  
+var  
   NbCommandes: Integer;
 begin
   NbCommandes := CalculerNombreCommandes(ClientID);
   Result := NbCommandes = 0;
 end;
 
-function TClientManager.CalculerNombreCommandes(ClientID: Integer): Integer;
-begin
+function TClientManager.CalculerNombreCommandes(ClientID: Integer): Integer;  
+begin  
   FDataModule.FDQueryCommandes.Close;
   FDataModule.FDQueryCommandes.SQL.Text :=
     'SELECT COUNT(*) AS nb FROM commandes WHERE client_id = :id';
@@ -661,20 +661,20 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClients.FormCreate(Sender: TObject);
-begin
+procedure TFormClients.FormCreate(Sender: TObject);  
+begin  
   // Créer le manager
   FClientManager := TClientManager.Create(dmDatabase);
 end;
 
-procedure TFormClients.FormDestroy(Sender: TObject);
-begin
+procedure TFormClients.FormDestroy(Sender: TObject);  
+begin  
   // Libérer le manager
   FClientManager.Free;
 end;
 
-procedure TFormClients.btnNouveauClick(Sender: TObject);
-var
+procedure TFormClients.btnNouveauClick(Sender: TObject);  
+var  
   NouveauID: Integer;
 begin
   try
@@ -747,15 +747,15 @@ implementation
 
 { TClient }
 
-constructor TClient.Create;
-begin
+constructor TClient.Create;  
+begin  
   inherited Create;
   FActif := True;
   FDateCreation := Now;
 end;
 
-constructor TClient.Create(AID: Integer; const ANom, APrenom, AEmail: string);
-begin
+constructor TClient.Create(AID: Integer; const ANom, APrenom, AEmail: string);  
+begin  
   Create;
   FID := AID;
   FNom := ANom;
@@ -763,20 +763,20 @@ begin
   FEmail := AEmail;
 end;
 
-function TClient.NomComplet: string;
-begin
+function TClient.NomComplet: string;  
+begin  
   Result := FPrenom + ' ' + FNom;
 end;
 
-function TClient.EstValide: Boolean;
-begin
+function TClient.EstValide: Boolean;  
+begin  
   Result := (Trim(FNom) <> '') and
             (Trim(FPrenom) <> '') and
             (Pos('@', FEmail) > 0);
 end;
 
-function TClient.ToString: string;
-begin
+function TClient.ToString: string;  
+begin  
   Result := Format('%s (ID: %d)', [NomComplet, FID]);
 end;
 
@@ -820,14 +820,14 @@ implementation
 
 { TClientDAO }
 
-constructor TClientDAO.Create(ADataModule: TdmDatabase);
-begin
+constructor TClientDAO.Create(ADataModule: TdmDatabase);  
+begin  
   inherited Create;
   FDataModule := ADataModule;
 end;
 
-function TClientDAO.DataSetToClient(DataSet: TFDQuery): TClient;
-begin
+function TClientDAO.DataSetToClient(DataSet: TFDQuery): TClient;  
+begin  
   Result := TClient.Create;
   Result.ID := DataSet.FieldByName('id').AsInteger;
   Result.Nom := DataSet.FieldByName('nom').AsString;
@@ -838,8 +838,8 @@ begin
   Result.DateCreation := DataSet.FieldByName('date_creation').AsDateTime;
 end;
 
-function TClientDAO.Lire(ID: Integer): TClient;
-begin
+function TClientDAO.Lire(ID: Integer): TClient;  
+begin  
   Result := nil;
 
   FDataModule.FDQueryClients.Close;
@@ -852,8 +852,8 @@ begin
     Result := DataSetToClient(FDataModule.FDQueryClients);
 end;
 
-function TClientDAO.LireTous: TObjectList<TClient>;
-var
+function TClientDAO.LireTous: TObjectList<TClient>;  
+var  
   Client: TClient;
 begin
   Result := TObjectList<TClient>.Create(True);  // True = possède les objets
@@ -872,8 +872,8 @@ begin
   end;
 end;
 
-function TClientDAO.Creer(Client: TClient): Integer;
-begin
+function TClientDAO.Creer(Client: TClient): Integer;  
+begin  
   FDataModule.FDQueryClients.SQL.Text :=
     'INSERT INTO clients (nom, prenom, email, telephone, date_creation) ' +
     'VALUES (:nom, :prenom, :email, :tel, :date)';
@@ -890,8 +890,8 @@ begin
   Client.ID := Result;
 end;
 
-procedure TClientDAO.Modifier(Client: TClient);
-begin
+procedure TClientDAO.Modifier(Client: TClient);  
+begin  
   FDataModule.FDQueryClients.SQL.Text :=
     'UPDATE clients SET ' +
     '  nom = :nom, ' +
@@ -909,16 +909,16 @@ begin
   FDataModule.FDQueryClients.ExecSQL;
 end;
 
-procedure TClientDAO.Supprimer(ID: Integer);
-begin
+procedure TClientDAO.Supprimer(ID: Integer);  
+begin  
   FDataModule.FDQueryClients.SQL.Text :=
     'UPDATE clients SET actif = FALSE WHERE id = :id';
   FDataModule.FDQueryClients.ParamByName('id').AsInteger := ID;
   FDataModule.FDQueryClients.ExecSQL;
 end;
 
-function TClientDAO.RechercherParEmail(const Email: string): TClient;
-begin
+function TClientDAO.RechercherParEmail(const Email: string): TClient;  
+begin  
   Result := nil;
 
   FDataModule.FDQueryClients.Close;
@@ -931,8 +931,8 @@ begin
     Result := DataSetToClient(FDataModule.FDQueryClients);
 end;
 
-function TClientDAO.RechercherParNom(const Nom: string): TObjectList<TClient>;
-var
+function TClientDAO.RechercherParNom(const Nom: string): TObjectList<TClient>;  
+var  
   Client: TClient;
 begin
   Result := TObjectList<TClient>.Create(True);
@@ -958,8 +958,8 @@ end.
 ### Utiliser les objets métier
 
 ```pascal
-procedure TFormClients.AfficherClients;
-var
+procedure TFormClients.AfficherClients;  
+var  
   DAO: TClientDAO;
   Clients: TObjectList<TClient>;
   Client: TClient;
@@ -981,8 +981,8 @@ begin
   end;
 end;
 
-procedure TFormClients.CreerClient;
-var
+procedure TFormClients.CreerClient;  
+var  
   DAO: TClientDAO;
   Client: TClient;
   NouveauID: Integer;
@@ -1166,19 +1166,19 @@ type
 
 implementation
 
-procedure TClientManagerTests.Setup;
-begin
+procedure TClientManagerTests.Setup;  
+begin  
   // Créer le manager avec une base de test
   FClientManager := TClientManager.Create(dmDatabase);
 end;
 
-procedure TClientManagerTests.TearDown;
-begin
+procedure TClientManagerTests.TearDown;  
+begin  
   FClientManager.Free;
 end;
 
-procedure TClientManagerTests.TestCreerClient_Valide;
-var
+procedure TClientManagerTests.TestCreerClient_Valide;  
+var  
   ID: Integer;
 begin
   // Arrange
@@ -1189,8 +1189,8 @@ begin
   Assert.IsTrue(ID > 0, 'L''ID doit être supérieur à 0');
 end;
 
-procedure TClientManagerTests.TestCreerClient_EmailInvalide;
-begin
+procedure TClientManagerTests.TestCreerClient_EmailInvalide;  
+begin  
   // Assert.WillRaise : on attend une exception
   Assert.WillRaise(
     procedure
@@ -1202,8 +1202,8 @@ begin
   );
 end;
 
-procedure TClientManagerTests.TestValiderEmail;
-begin
+procedure TClientManagerTests.TestValiderEmail;  
+begin  
   Assert.IsTrue(FClientManager.ValiderEmail('test@example.com'));
   Assert.IsFalse(FClientManager.ValiderEmail('invalide'));
   Assert.IsFalse(FClientManager.ValiderEmail(''));
@@ -1345,11 +1345,11 @@ end.
 
 ### Points clés
 
-✅ **Séparer en 3 couches** : Présentation, Métier, Données
-✅ **DataModule** pour centraliser l'accès aux données
-✅ **Managers** pour la logique métier
-✅ **DAO** pour convertir objets ↔ base
-✅ **Objets métier** pour représenter les entités
+✅ **Séparer en 3 couches** : Présentation, Métier, Données  
+✅ **DataModule** pour centraliser l'accès aux données  
+✅ **Managers** pour la logique métier  
+✅ **DAO** pour convertir objets ↔ base  
+✅ **Objets métier** pour représenter les entités  
 ✅ **Injection de dépendances** pour la flexibilité
 
 ### Avantages de l'architecture en couches

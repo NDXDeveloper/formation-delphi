@@ -158,11 +158,11 @@ Dans ce chapitre, nous allons découvrir le monde NoSQL et comprendre quand et c
 **Exemples :** Redis, Memcached, DynamoDB
 
 ```
-clé: "session:user123"
-valeur: {nom: "Dupont", connecté: true}
+clé: "session:user123"  
+valeur: {nom: "Dupont", connecté: true}  
 
-clé: "cache:page_accueil"
-valeur: "<html>...</html>"
+clé: "cache:page_accueil"  
+valeur: "<html>...</html>"  
 ```
 
 **Cas d'usage :**
@@ -309,9 +309,9 @@ mongosh
 
 # Dans le shell
 > show dbs
-admin   0.000GB
-config  0.000GB
-local   0.000GB
+admin   0.000GB  
+config  0.000GB  
+local   0.000GB  
 ```
 
 ### Connexion à MongoDB depuis Delphi
@@ -322,8 +322,8 @@ FireDAC supporte MongoDB natif. Voici comment configurer la connexion :
 uses
   FireDAC.Comp.Client, FireDAC.Phys.MongoDB, FireDAC.Phys.MongoDBDef;
 
-procedure TdmDatabase.ConfigurerMongoDB;
-begin
+procedure TdmDatabase.ConfigurerMongoDB;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=Mongo');
   FDConnection1.Params.Add('Server=localhost');
@@ -343,9 +343,9 @@ end;
 
 ```pascal
 // Sur le DataModule
-TFDConnection: FDConnection1
-TFDPhysMongoDriverLink: FDPhysMongoDriverLink1  // Pilote MongoDB
-TFDMongoQuery: FDMongoQuery1  // Requête MongoDB (spécifique)
+TFDConnection: FDConnection1  
+TFDPhysMongoDriverLink: FDPhysMongoDriverLink1  // Pilote MongoDB  
+TFDMongoQuery: FDMongoQuery1  // Requête MongoDB (spécifique)  
 ```
 
 ### Opérations CRUD avec MongoDB
@@ -353,8 +353,8 @@ TFDMongoQuery: FDMongoQuery1  // Requête MongoDB (spécifique)
 #### 1. Créer (Insert)
 
 ```pascal
-procedure TdmDatabase.AjouterDocument;
-var
+procedure TdmDatabase.AjouterDocument;  
+var  
   MongoQuery: TFDMongoQuery;
   JSONDoc: string;
 begin
@@ -393,8 +393,8 @@ end;
 #### 2. Lire (Find)
 
 ```pascal
-procedure TdmDatabase.LireTousLesDocuments;
-var
+procedure TdmDatabase.LireTousLesDocuments;  
+var  
   MongoQuery: TFDMongoQuery;
 begin
   MongoQuery := TFDMongoQuery.Create(nil);
@@ -423,22 +423,22 @@ begin
 end;
 
 // Recherche avec filtre
-procedure TdmDatabase.RechercherParNom(const Nom: string);
-begin
+procedure TdmDatabase.RechercherParNom(const Nom: string);  
+begin  
   MongoQuery.QFind := Format('{"nom": "%s"}', [Nom]);
   MongoQuery.Open;
 end;
 
 // Recherche avec condition
-procedure TdmDatabase.RechercherActifs;
-begin
+procedure TdmDatabase.RechercherActifs;  
+begin  
   MongoQuery.QFind := '{"actif": true}';
   MongoQuery.Open;
 end;
 
 // Recherche avec opérateur
-procedure TdmDatabase.RechercherParAge;
-begin
+procedure TdmDatabase.RechercherParAge;  
+begin  
   // Âge >= 18
   MongoQuery.QFind := '{"age": {"$gte": 18}}';
   MongoQuery.Open;
@@ -448,8 +448,8 @@ end;
 #### 3. Mettre à jour (Update)
 
 ```pascal
-procedure TdmDatabase.ModifierDocument;
-var
+procedure TdmDatabase.ModifierDocument;  
+var  
   MongoQuery: TFDMongoQuery;
 begin
   MongoQuery := TFDMongoQuery.Create(nil);
@@ -474,8 +474,8 @@ begin
 end;
 
 // Ajouter un élément à un tableau
-procedure TdmDatabase.AjouterAdresse;
-begin
+procedure TdmDatabase.AjouterAdresse;  
+begin  
   MongoQuery.QFind := '{"nom": "Dupont"}';
   MongoQuery.QUpdate :=
     '{"$push": {' +
@@ -491,8 +491,8 @@ end;
 #### 4. Supprimer (Delete)
 
 ```pascal
-procedure TdmDatabase.SupprimerDocument;
-var
+procedure TdmDatabase.SupprimerDocument;  
+var  
   MongoQuery: TFDMongoQuery;
 begin
   MongoQuery := TFDMongoQuery.Create(nil);
@@ -562,8 +562,8 @@ Query.SQL.Text :=
   'INSERT INTO clients (nom, donnees_json) ' +
   'VALUES (:nom, :json)';
 
-Query.ParamByName('nom').AsString := 'Dupont';
-Query.ParamByName('json').AsString :=
+Query.ParamByName('nom').AsString := 'Dupont';  
+Query.ParamByName('json').AsString :=  
   '{"age": 35, "ville": "Paris", "hobbies": ["sport", "lecture"]}';
 Query.ExecSQL;
 
@@ -592,8 +592,8 @@ Query.SQL.Text :=
   'INSERT INTO clients (nom, donnees) ' +
   'VALUES (:nom, :json)';
 
-Query.ParamByName('nom').AsString := 'Martin';
-Query.ParamByName('json').AsString :=
+Query.ParamByName('nom').AsString := 'Martin';  
+Query.ParamByName('json').AsString :=  
   '{"age": 28, "ville": "Lyon"}';
 Query.ExecSQL;
 
@@ -632,9 +632,9 @@ Redis.Set('cache:page_accueil', '<html>...</html>', 300);  // 5 minutes
 Redis.Incr('visiteurs:aujourd''hui');
 
 // File d'attente
-Redis.LPush('queue:emails', 'email1@example.com');
-Redis.LPush('queue:emails', 'email2@example.com');
-Email := Redis.RPop('queue:emails');  // Traiter le plus ancien
+Redis.LPush('queue:emails', 'email1@example.com');  
+Redis.LPush('queue:emails', 'email2@example.com');  
+Email := Redis.RPop('queue:emails');  // Traiter le plus ancien  
 ```
 
 **Note :** FireDAC ne supporte pas Redis directement. Utilisez des bibliothèques tierces comme **Delphi Redis Client**.
@@ -841,8 +841,8 @@ clients ──┬── commandes ──┬── articles
 
 ```javascript
 // MongoDB : créer des index
-db.clients.createIndex({"email": 1})  // Index sur email
-db.commandes.createIndex({"client.id": 1, "date": -1})  // Index composé
+db.clients.createIndex({"email": 1})  // Index sur email  
+db.commandes.createIndex({"client.id": 1, "date": -1})  // Index composé  
 ```
 
 ### 4. Limiter la profondeur d'imbrication
@@ -871,11 +871,11 @@ db.commandes.createIndex({"client.id": 1, "date": -1})  // Index composé
 
 ### Points clés
 
-✅ **NoSQL ≠ pas de SQL**, mais "Not Only SQL"
-✅ **4 types** : documentaire, clé-valeur, colonnes, graphes
-✅ **MongoDB** : leader des bases documentaires
-✅ **FireDAC** : supporte MongoDB nativement
-✅ **JSON** : disponible aussi dans PostgreSQL/MySQL
+✅ **NoSQL ≠ pas de SQL**, mais "Not Only SQL"  
+✅ **4 types** : documentaire, clé-valeur, colonnes, graphes  
+✅ **MongoDB** : leader des bases documentaires  
+✅ **FireDAC** : supporte MongoDB nativement  
+✅ **JSON** : disponible aussi dans PostgreSQL/MySQL  
 ✅ **Hybride** : souvent SQL + NoSQL dans une même application
 
 ### Quand choisir quoi ?

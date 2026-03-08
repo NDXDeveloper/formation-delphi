@@ -31,13 +31,13 @@ Avec des fichiers texte, vous seriez rapidement confronté à :
 
 Avec une base de données comme MySQL/MariaDB, vous obtenez :
 
-✓ **Performance** : Recherche ultra-rapide sur des millions d'enregistrements
-✓ **Intégrité** : Les données restent cohérentes et valides
-✓ **Concurrence** : Des milliers d'utilisateurs simultanés
-✓ **Relations** : Lier les données entre elles (clients ↔ commandes ↔ produits)
-✓ **Sécurité** : Contrôle d'accès, authentification, chiffrement
-✓ **Transactions** : Garantie que les opérations sont complètes ou annulées
-✓ **Sauvegarde** : Outils professionnels de backup et restauration
+✓ **Performance** : Recherche ultra-rapide sur des millions d'enregistrements  
+✓ **Intégrité** : Les données restent cohérentes et valides  
+✓ **Concurrence** : Des milliers d'utilisateurs simultanés  
+✓ **Relations** : Lier les données entre elles (clients ↔ commandes ↔ produits)  
+✓ **Sécurité** : Contrôle d'accès, authentification, chiffrement  
+✓ **Transactions** : Garantie que les opérations sont complètes ou annulées  
+✓ **Sauvegarde** : Outils professionnels de backup et restauration  
 ✓ **Évolutivité** : Passer de 100 à 100 millions d'enregistrements
 
 ## Pourquoi MySQL et MariaDB ?
@@ -269,8 +269,8 @@ Les tables sont **reliées** entre elles par des **clés** (ici, ClientID).
 SELECT * FROM Clients WHERE Ville = 'Paris';
 
 -- Ajouter des données
-INSERT INTO Clients (Nom, Email, Ville)
-VALUES ('Leroy', 'leroy@mail.com', 'Toulouse');
+INSERT INTO Clients (Nom, Email, Ville)  
+VALUES ('Leroy', 'leroy@mail.com', 'Toulouse');  
 
 -- Modifier des données
 UPDATE Clients SET Ville = 'Nice' WHERE ID = 2;
@@ -315,22 +315,22 @@ MySQL/MariaDB Server
 
 ### Prérequis techniques
 
-✓ **Delphi installé** : Version Community ou supérieure
-✓ **Bases de SQL** : Utile mais pas obligatoire (on apprendra ensemble)
-✓ **Notions de programmation Delphi** : Variables, classes, événements
+✓ **Delphi installé** : Version Community ou supérieure  
+✓ **Bases de SQL** : Utile mais pas obligatoire (on apprendra ensemble)  
+✓ **Notions de programmation Delphi** : Variables, classes, événements  
 ✓ **Compréhension des formulaires** : Savoir placer des composants
 
 ### Prérequis conceptuels
 
-✓ **Comprendre les fichiers** : Vous savez ce qu'est un fichier sur disque
-✓ **Notion de tableau** : Vous comprenez une liste d'éléments
+✓ **Comprendre les fichiers** : Vous savez ce qu'est un fichier sur disque  
+✓ **Notion de tableau** : Vous comprenez une liste d'éléments  
 ✓ **Logique de base** : IF/THEN, boucles
 
 ### Ce que vous n'avez PAS besoin de savoir
 
-✗ Administration de bases de données avancée
-✗ Optimisation de requêtes complexes
-✗ Architecture de serveurs en production
+✗ Administration de bases de données avancée  
+✗ Optimisation de requêtes complexes  
+✗ Architecture de serveurs en production  
 ✗ Théorie mathématique des bases de données
 
 ## Installation nécessaire
@@ -401,8 +401,8 @@ Pour visualiser et manipuler vos bases de données :
 
 **Si vous connaissez** BDE, dbExpress, ou ADO :
 
-**Bonne nouvelle** : Les concepts sont similaires
-**Attention** : FireDAC est plus moderne et plus puissant
+**Bonne nouvelle** : Les concepts sont similaires  
+**Attention** : FireDAC est plus moderne et plus puissant  
 
 **Focalisez-vous sur** :
 - Les différences architecturales
@@ -486,16 +486,16 @@ Tout au long de ce chapitre, nous construirons progressivement une **application
 
 À la fin de ce chapitre, vous serez capable de :
 
-✓ Installer et configurer MySQL/MariaDB
-✓ Connecter une application Delphi à MySQL
-✓ Créer des tables et définir leur structure
-✓ Exécuter toutes les opérations CRUD
-✓ Afficher des données dans des grilles et formulaires
-✓ Gérer les relations entre tables (1-N, N-N)
-✓ Utiliser les transactions pour garantir l'intégrité
-✓ Sécuriser votre application contre les injections SQL
-✓ Structurer votre code en couches professionnelles
-✓ Créer des applications de gestion complètes
+✓ Installer et configurer MySQL/MariaDB  
+✓ Connecter une application Delphi à MySQL  
+✓ Créer des tables et définir leur structure  
+✓ Exécuter toutes les opérations CRUD  
+✓ Afficher des données dans des grilles et formulaires  
+✓ Gérer les relations entre tables (1-N, N-N)  
+✓ Utiliser les transactions pour garantir l'intégrité  
+✓ Sécuriser votre application contre les injections SQL  
+✓ Structurer votre code en couches professionnelles  
+✓ Créer des applications de gestion complètes  
 ✓ Adapter votre code à d'autres bases de données
 
 ## Points importants à retenir
@@ -509,8 +509,8 @@ Tout au long de ce chapitre, nous construirons progressivement une **application
 Query.SQL.Text := 'SELECT * FROM Users WHERE Username = ''' + Edit1.Text + '''';
 
 // ✓ CORRECT - Toujours paramétrer
-Query.SQL.Text := 'SELECT * FROM Users WHERE Username = :Username';
-Query.ParamByName('Username').AsString := Edit1.Text;
+Query.SQL.Text := 'SELECT * FROM Users WHERE Username = :Username';  
+Query.ParamByName('Username').AsString := Edit1.Text;  
 ```
 
 ### 2. Toujours gérer les erreurs

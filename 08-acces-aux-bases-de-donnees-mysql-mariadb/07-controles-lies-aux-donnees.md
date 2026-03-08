@@ -131,10 +131,10 @@ end;
 
 ```pascal
 // Définir la largeur en pixels
-DBGrid1.Columns[0].Width := 50;   // ID : 50 pixels
-DBGrid1.Columns[1].Width := 150;  // Nom : 150 pixels
-DBGrid1.Columns[2].Width := 150;  // Prénom : 150 pixels
-DBGrid1.Columns[3].Width := 200;  // Email : 200 pixels
+DBGrid1.Columns[0].Width := 50;   // ID : 50 pixels  
+DBGrid1.Columns[1].Width := 150;  // Nom : 150 pixels  
+DBGrid1.Columns[2].Width := 150;  // Prénom : 150 pixels  
+DBGrid1.Columns[3].Width := 200;  // Email : 200 pixels  
 
 // Largeur automatique
 DBGrid1.Columns[0].Width := -1;  // Auto-ajustement
@@ -144,24 +144,24 @@ DBGrid1.Columns[0].Width := -1;  // Auto-ajustement
 
 ```pascal
 // Changer le titre d'une colonne
-DBGrid1.Columns[0].Title.Caption := 'Identifiant';
-DBGrid1.Columns[1].Title.Caption := 'Nom complet';
-DBGrid1.Columns[2].Title.Caption := 'Adresse e-mail';
+DBGrid1.Columns[0].Title.Caption := 'Identifiant';  
+DBGrid1.Columns[1].Title.Caption := 'Nom complet';  
+DBGrid1.Columns[2].Title.Caption := 'Adresse e-mail';  
 
 // Alignement du titre
 DBGrid1.Columns[0].Title.Alignment := taCenter;
 
 // Police du titre
-DBGrid1.Columns[0].Title.Font.Style := [fsBold];
-DBGrid1.Columns[0].Title.Font.Color := clNavy;
+DBGrid1.Columns[0].Title.Font.Style := [fsBold];  
+DBGrid1.Columns[0].Title.Font.Color := clNavy;  
 ```
 
 #### Alignement et format des cellules
 
 ```pascal
 // Aligner le contenu
-DBGrid1.Columns[0].Alignment := taCenter;      // ID centré
-DBGrid1.Columns[3].Alignment := taRightJustify; // Prix aligné à droite
+DBGrid1.Columns[0].Alignment := taCenter;      // ID centré  
+DBGrid1.Columns[3].Alignment := taRightJustify; // Prix aligné à droite  
 
 // Format d'affichage pour les nombres
 DBGrid1.Columns[3].DisplayFormat := '#,##0.00 €';  // Pour les prix
@@ -217,15 +217,15 @@ end;
 
 ```pascal
 // Double-clic sur une cellule
-procedure TForm1.DBGrid1DblClick(Sender: TObject);
-begin
+procedure TForm1.DBGrid1DblClick(Sender: TObject);  
+begin  
   // Ouvrir un formulaire de détail, par exemple
   ShowMessage('ID : ' + FDQuery1.FieldByName('id').AsString);
 end;
 
 // Clic sur un titre de colonne (pour trier)
-procedure TForm1.DBGrid1TitleClick(Column: TColumn);
-begin
+procedure TForm1.DBGrid1TitleClick(Column: TColumn);  
+begin  
   // Trier par cette colonne
   FDQuery1.Close;
   FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY ' + Column.FieldName;
@@ -233,8 +233,8 @@ begin
 end;
 
 // Changement de cellule
-procedure TForm1.DBGrid1CellClick(Column: TColumn);
-begin
+procedure TForm1.DBGrid1CellClick(Column: TColumn);  
+begin  
   // Réagir au clic sur une cellule
   StatusBar1.SimpleText := 'Colonne : ' + Column.Title.Caption;
 end;
@@ -243,8 +243,8 @@ end;
 ### Exporter le contenu du DBGrid
 
 ```pascal
-procedure ExporterVersCsv(Grid: TDBGrid; const NomFichier: string);
-var
+procedure ExporterVersCsv(Grid: TDBGrid; const NomFichier: string);  
+var  
   F: TextFile;
   i: Integer;
   Ligne: string;
@@ -301,22 +301,22 @@ end;
 
 ```pascal
 // Configuration
-DBEdit1.DataSource := DataSource1;
-DBEdit1.DataField := 'nom';
+DBEdit1.DataSource := DataSource1;  
+DBEdit1.DataField := 'nom';  
 
 // Propriétés utiles
-DBEdit1.ReadOnly := False;     // Autoriser la modification
-DBEdit1.MaxLength := 50;       // Limiter à 50 caractères
-DBEdit1.CharCase := ecUpperCase; // Tout en majuscules
-DBEdit1.Color := clWindow;     // Couleur de fond
+DBEdit1.ReadOnly := False;     // Autoriser la modification  
+DBEdit1.MaxLength := 50;       // Limiter à 50 caractères  
+DBEdit1.CharCase := ecUpperCase; // Tout en majuscules  
+DBEdit1.Color := clWindow;     // Couleur de fond  
 ```
 
 **Validation :**
 
 ```pascal
 // Événement OnExit : validation à la sortie du champ
-procedure TForm1.DBEdit1Exit(Sender: TObject);
-begin
+procedure TForm1.DBEdit1Exit(Sender: TObject);  
+begin  
   if Trim(DBEdit1.Text) = '' then
   begin
     ShowMessage('Le nom est obligatoire');
@@ -331,13 +331,13 @@ end;
 
 ```pascal
 // Configuration
-DBMemo1.DataSource := DataSource1;
-DBMemo1.DataField := 'commentaires';
+DBMemo1.DataSource := DataSource1;  
+DBMemo1.DataField := 'commentaires';  
 
 // Propriétés
-DBMemo1.ScrollBars := ssVertical;  // Barre de défilement
-DBMemo1.WordWrap := True;          // Retour à la ligne automatique
-DBMemo1.MaxLength := 1000;         // Limite de caractères
+DBMemo1.ScrollBars := ssVertical;  // Barre de défilement  
+DBMemo1.WordWrap := True;          // Retour à la ligne automatique  
+DBMemo1.MaxLength := 1000;         // Limite de caractères  
 ```
 
 ### TDBRichEdit : Texte enrichi
@@ -345,8 +345,8 @@ DBMemo1.MaxLength := 1000;         // Limite de caractères
 **Usage :** Texte avec mise en forme (gras, italique, couleurs).
 
 ```pascal
-DBRichEdit1.DataSource := DataSource1;
-DBRichEdit1.DataField := 'description_riche';
+DBRichEdit1.DataSource := DataSource1;  
+DBRichEdit1.DataField := 'description_riche';  
 ```
 
 ## Contrôles de sélection
@@ -357,13 +357,13 @@ DBRichEdit1.DataField := 'description_riche';
 
 ```pascal
 // Configuration
-DBCheckBox1.DataSource := DataSource1;
-DBCheckBox1.DataField := 'actif';
+DBCheckBox1.DataSource := DataSource1;  
+DBCheckBox1.DataField := 'actif';  
 
 // Personnalisation
-DBCheckBox1.Caption := 'Client actif';
-DBCheckBox1.ValueChecked := '1';     // Valeur si coché
-DBCheckBox1.ValueUnchecked := '0';   // Valeur si décoché
+DBCheckBox1.Caption := 'Client actif';  
+DBCheckBox1.ValueChecked := '1';     // Valeur si coché  
+DBCheckBox1.ValueUnchecked := '0';   // Valeur si décoché  
 ```
 
 ### TDBComboBox : Liste déroulante
@@ -372,14 +372,14 @@ DBCheckBox1.ValueUnchecked := '0';   // Valeur si décoché
 
 ```pascal
 // Configuration
-DBComboBox1.DataSource := DataSource1;
-DBComboBox1.DataField := 'civilite';
+DBComboBox1.DataSource := DataSource1;  
+DBComboBox1.DataField := 'civilite';  
 
 // Ajouter les valeurs possibles
-DBComboBox1.Items.Clear;
-DBComboBox1.Items.Add('M.');
-DBComboBox1.Items.Add('Mme');
-DBComboBox1.Items.Add('Mlle');
+DBComboBox1.Items.Clear;  
+DBComboBox1.Items.Add('M.');  
+DBComboBox1.Items.Add('Mme');  
+DBComboBox1.Items.Add('Mlle');  
 
 // Style
 DBComboBox1.Style := csDropDownList;  // Pas d'édition libre
@@ -391,24 +391,24 @@ DBComboBox1.Style := csDropDownList;  // Pas d'édition libre
 
 ```pascal
 // Configuration
-DBRadioGroup1.DataSource := DataSource1;
-DBRadioGroup1.DataField := 'statut';
+DBRadioGroup1.DataSource := DataSource1;  
+DBRadioGroup1.DataField := 'statut';  
 
 // Définir les valeurs
-DBRadioGroup1.Items.Clear;
-DBRadioGroup1.Items.Add('Actif');
-DBRadioGroup1.Items.Add('Inactif');
-DBRadioGroup1.Items.Add('Suspendu');
+DBRadioGroup1.Items.Clear;  
+DBRadioGroup1.Items.Add('Actif');  
+DBRadioGroup1.Items.Add('Inactif');  
+DBRadioGroup1.Items.Add('Suspendu');  
 
 // Valeurs correspondantes dans la base
-DBRadioGroup1.Values.Clear;
-DBRadioGroup1.Values.Add('A');
-DBRadioGroup1.Values.Add('I');
-DBRadioGroup1.Values.Add('S');
+DBRadioGroup1.Values.Clear;  
+DBRadioGroup1.Values.Add('A');  
+DBRadioGroup1.Values.Add('I');  
+DBRadioGroup1.Values.Add('S');  
 
 // Affichage
-DBRadioGroup1.Caption := 'Statut du client';
-DBRadioGroup1.Columns := 3;  // 3 colonnes
+DBRadioGroup1.Caption := 'Statut du client';  
+DBRadioGroup1.Columns := 3;  // 3 colonnes  
 ```
 
 ## Contrôles de Lookup (listes de choix)
@@ -432,16 +432,16 @@ DataSourceCommandes.DataSet := FDQueryCommandes;
 DataSourceClients.DataSet := FDQueryClients;
 
 // Configuration du DBLookupComboBox
-DBLookupComboBox1.DataSource := DataSourceCommandes;  // Source principale
-DBLookupComboBox1.DataField := 'client_id';           // Champ à stocker
+DBLookupComboBox1.DataSource := DataSourceCommandes;  // Source principale  
+DBLookupComboBox1.DataField := 'client_id';           // Champ à stocker  
 
-DBLookupComboBox1.ListSource := DataSourceClients;    // Source de la liste
-DBLookupComboBox1.KeyField := 'id';                   // Champ clé dans clients
-DBLookupComboBox1.ListField := 'nom';                 // Champ à afficher
+DBLookupComboBox1.ListSource := DataSourceClients;    // Source de la liste  
+DBLookupComboBox1.KeyField := 'id';                   // Champ clé dans clients  
+DBLookupComboBox1.ListField := 'nom';                 // Champ à afficher  
 
 // Charger les clients
-FDQueryClients.SQL.Text := 'SELECT id, nom FROM clients ORDER BY nom';
-FDQueryClients.Open;
+FDQueryClients.SQL.Text := 'SELECT id, nom FROM clients ORDER BY nom';  
+FDQueryClients.Open;  
 ```
 
 **Fonctionnement :**
@@ -466,12 +466,12 @@ DBLookupComboBox1.ListField := 'nom_complet';
 Similaire à DBLookupComboBox mais affiche une liste permanente au lieu d'une liste déroulante.
 
 ```pascal
-DBLookupListBox1.DataSource := DataSourceCommandes;
-DBLookupListBox1.DataField := 'client_id';
-DBLookupListBox1.ListSource := DataSourceClients;
-DBLookupListBox1.KeyField := 'id';
-DBLookupListBox1.ListField := 'nom';
-DBLookupListBox1.Height := 150;  // Afficher plusieurs lignes
+DBLookupListBox1.DataSource := DataSourceCommandes;  
+DBLookupListBox1.DataField := 'client_id';  
+DBLookupListBox1.ListSource := DataSourceClients;  
+DBLookupListBox1.KeyField := 'id';  
+DBLookupListBox1.ListField := 'nom';  
+DBLookupListBox1.Height := 150;  // Afficher plusieurs lignes  
 ```
 
 ## Contrôles d'affichage (lecture seule)
@@ -481,13 +481,13 @@ DBLookupListBox1.Height := 150;  // Afficher plusieurs lignes
 **Usage :** Afficher une valeur sans possibilité de modification.
 
 ```pascal
-DBText1.DataSource := DataSource1;
-DBText1.DataField := 'total';
+DBText1.DataSource := DataSource1;  
+DBText1.DataField := 'total';  
 
 // Mise en forme
-DBText1.Font.Size := 14;
-DBText1.Font.Style := [fsBold];
-DBText1.Font.Color := clRed;
+DBText1.Font.Size := 14;  
+DBText1.Font.Style := [fsBold];  
+DBText1.Font.Color := clRed;  
 ```
 
 **Avantage sur TDBEdit :** Plus léger, optimisé pour l'affichage uniquement.
@@ -497,20 +497,20 @@ DBText1.Font.Color := clRed;
 **Usage :** Afficher des images stockées dans la base (champs BLOB).
 
 ```pascal
-DBImage1.DataSource := DataSource1;
-DBImage1.DataField := 'photo';
+DBImage1.DataSource := DataSource1;  
+DBImage1.DataField := 'photo';  
 
 // Options d'affichage
-DBImage1.Stretch := True;       // Étirer l'image
-DBImage1.Proportional := True;  // Garder les proportions
-DBImage1.Center := True;        // Centrer l'image
+DBImage1.Stretch := True;       // Étirer l'image  
+DBImage1.Proportional := True;  // Garder les proportions  
+DBImage1.Center := True;        // Centrer l'image  
 ```
 
 **Charger une image :**
 
 ```pascal
-procedure ChargerImage(const CheminFichier: string);
-begin
+procedure ChargerImage(const CheminFichier: string);  
+begin  
   if FDQuery1.State <> dsEdit then
     FDQuery1.Edit;
 
@@ -546,18 +546,18 @@ DBNavigator1.VisibleButtons := [
 DBNavigator1.ConfirmDelete := True;
 
 // Afficher les hints (bulles d'aide)
-DBNavigator1.ShowHint := True;
-DBNavigator1.Hints.Clear;
-DBNavigator1.Hints.Add('Premier enregistrement');
-DBNavigator1.Hints.Add('Enregistrement précédent');
-DBNavigator1.Hints.Add('Enregistrement suivant');
-DBNavigator1.Hints.Add('Dernier enregistrement');
-DBNavigator1.Hints.Add('Insérer un enregistrement');
-DBNavigator1.Hints.Add('Supprimer cet enregistrement');
-DBNavigator1.Hints.Add('Modifier cet enregistrement');
-DBNavigator1.Hints.Add('Valider les modifications');
-DBNavigator1.Hints.Add('Annuler les modifications');
-DBNavigator1.Hints.Add('Rafraîchir les données');
+DBNavigator1.ShowHint := True;  
+DBNavigator1.Hints.Clear;  
+DBNavigator1.Hints.Add('Premier enregistrement');  
+DBNavigator1.Hints.Add('Enregistrement précédent');  
+DBNavigator1.Hints.Add('Enregistrement suivant');  
+DBNavigator1.Hints.Add('Dernier enregistrement');  
+DBNavigator1.Hints.Add('Insérer un enregistrement');  
+DBNavigator1.Hints.Add('Supprimer cet enregistrement');  
+DBNavigator1.Hints.Add('Modifier cet enregistrement');  
+DBNavigator1.Hints.Add('Valider les modifications');  
+DBNavigator1.Hints.Add('Annuler les modifications');  
+DBNavigator1.Hints.Add('Rafraîchir les données');  
 ```
 
 ### Événements du DBNavigator
@@ -595,8 +595,8 @@ Affiche plusieurs enregistrements avec des contrôles personnalisés pour chacun
 
 ```pascal
 // Configuration
-DBCtrlGrid1.DataSource := DataSource1;
-DBCtrlGrid1.RowCount := 5;  // 5 enregistrements visibles
+DBCtrlGrid1.DataSource := DataSource1;  
+DBCtrlGrid1.RowCount := 5;  // 5 enregistrements visibles  
 
 // Placer des contrôles à l'intérieur
 // (DBEdit, DBImage, etc. positionnés sur le DBCtrlGrid)
@@ -607,8 +607,8 @@ DBCtrlGrid1.RowCount := 5;  // 5 enregistrements visibles
 ### TDBListBox : Liste avec données
 
 ```pascal
-DBListBox1.DataSource := DataSource1;
-DBListBox1.DataField := 'categorie';
+DBListBox1.DataSource := DataSource1;  
+DBListBox1.DataField := 'categorie';  
 ```
 
 ## Mise en page et organisation
@@ -643,9 +643,9 @@ DBListBox1.DataField := 'categorie';
 
 ```pascal
 // Panel pour les informations de base
-PanelInfos.Align := alTop;
-PanelInfos.Height := 200;
-PanelInfos.Caption := 'Informations générales';
+PanelInfos.Align := alTop;  
+PanelInfos.Height := 200;  
+PanelInfos.Caption := 'Informations générales';  
 
 // Panel pour les commentaires
 PanelCommentaires.Align := alClient;
@@ -657,8 +657,8 @@ PanelCommentaires.Align := alClient;
 
 ```pascal
 // Dans l'événement OnExit du DBEdit
-procedure TForm1.DBEditEmailExit(Sender: TObject);
-begin
+procedure TForm1.DBEditEmailExit(Sender: TObject);  
+begin  
   // Valider l'email
   if (Trim(DBEditEmail.Text) <> '') and
      (Pos('@', DBEditEmail.Text) = 0) then
@@ -673,8 +673,8 @@ end;
 
 ```pascal
 // Dans l'événement BeforePost du DataSet
-procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1BeforePost(DataSet: TDataSet);  
+begin  
   // Nom obligatoire
   if Trim(DataSet.FieldByName('nom').AsString) = '' then
   begin
@@ -748,8 +748,8 @@ TIntegerField(FDQuery1population).DisplayFormat := '#,###';
 ### Coloration selon l'état
 
 ```pascal
-procedure TForm1.DataSource1StateChange(Sender: TObject);
-begin
+procedure TForm1.DataSource1StateChange(Sender: TObject);  
+begin  
   case TDataSource(Sender).State of
     dsEdit, dsInsert:
       begin
@@ -772,8 +772,8 @@ end;
 ### Coloration selon les valeurs
 
 ```pascal
-procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);
-begin
+procedure TForm1.FDQuery1AfterScroll(DataSet: TDataSet);  
+begin  
   // Client inactif : grisé
   if not DataSet.FieldByName('actif').AsBoolean then
   begin
@@ -794,19 +794,19 @@ end;
 
 ```pascal
 // Désactiver l'édition
-DBEditID.ReadOnly := True;
-DBEditDateCreation.ReadOnly := True;
+DBEditID.ReadOnly := True;  
+DBEditDateCreation.ReadOnly := True;  
 
 // Visuellement différent
-DBEditID.Color := clBtnFace;
-DBEditID.Font.Color := clGrayText;
+DBEditID.Color := clBtnFace;  
+DBEditID.Font.Color := clGrayText;  
 ```
 
 ### Désactiver selon les droits
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Si l'utilisateur n'est pas administrateur
   if not EstAdministrateur then
   begin
@@ -823,14 +823,14 @@ end;
 
 ```pascal
 // Ordre de tabulation
-DBEditNom.TabOrder := 0;
-DBEditPrenom.TabOrder := 1;
-DBEditEmail.TabOrder := 2;
-DBEditTel.TabOrder := 3;
+DBEditNom.TabOrder := 0;  
+DBEditPrenom.TabOrder := 1;  
+DBEditEmail.TabOrder := 2;  
+DBEditTel.TabOrder := 3;  
 
 // Passer directement au suivant avec Enter
-procedure TForm1.DBEditNomKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TForm1.DBEditNomKeyPress(Sender: TObject; var Key: Char);  
+begin  
   if Key = #13 then  // Touche Enter
   begin
     Key := #0;  // Annuler le beep
@@ -953,11 +953,11 @@ end;
 
 ### Points clés
 
-✅ Les contrôles DB se lient automatiquement aux données via **DataSource** et **DataField**
-✅ **TDBGrid** est le composant le plus polyvalent pour afficher des données
-✅ **TDBLookupComboBox** est essentiel pour les relations entre tables
-✅ La **validation** se fait idéalement dans l'événement **BeforePost**
-✅ Les contrôles DB se mettent à jour **automatiquement** lors de la navigation
+✅ Les contrôles DB se lient automatiquement aux données via **DataSource** et **DataField**  
+✅ **TDBGrid** est le composant le plus polyvalent pour afficher des données  
+✅ **TDBLookupComboBox** est essentiel pour les relations entre tables  
+✅ La **validation** se fait idéalement dans l'événement **BeforePost**  
+✅ Les contrôles DB se mettent à jour **automatiquement** lors de la navigation  
 ✅ Utilisez **DBNavigator** pour fournir une interface de navigation standard
 
 ### Workflow typique

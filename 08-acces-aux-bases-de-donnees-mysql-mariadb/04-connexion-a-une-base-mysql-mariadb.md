@@ -190,13 +190,13 @@ Vous pouvez aussi configurer les paramètres directement dans l'inspecteur d'obj
 4. Ajoutez les lignes suivantes (une par ligne) :
 
 ```
-DriverID=MySQL
-Server=localhost
-Port=3306
-Database=ma_gestion
-User_Name=delphi_user
-Password=votre_mot_de_passe
-CharacterSet=utf8mb4
+DriverID=MySQL  
+Server=localhost  
+Port=3306  
+Database=ma_gestion  
+User_Name=delphi_user  
+Password=votre_mot_de_passe  
+CharacterSet=utf8mb4  
 ```
 
 **Attention :** Mettre le mot de passe dans les propriétés n'est pas sécurisé ! C'est acceptable pour le développement, mais pas pour la production.
@@ -244,8 +244,8 @@ Maintenant, programmons la connexion avec du code !
 Double-cliquez sur le bouton `btnConnecter` pour créer son événement `OnClick` :
 
 ```pascal
-procedure TFormMain.btnConnecterClick(Sender: TObject);
-begin
+procedure TFormMain.btnConnecterClick(Sender: TObject);  
+begin  
   // Effacer le log
   memoLog.Clear;
 
@@ -289,8 +289,8 @@ end;
 Double-cliquez sur le bouton `btnDeconnecter` :
 
 ```pascal
-procedure TFormMain.btnDeconnecterClick(Sender: TObject);
-begin
+procedure TFormMain.btnDeconnecterClick(Sender: TObject);  
+begin  
   try
     // Fermer la connexion
     FDConnection1.Connected := False;
@@ -322,8 +322,8 @@ Il est important de fermer la connexion quand l'application se termine.
 4. Ajoutez ce code :
 
 ```pascal
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Fermer la connexion si elle est ouverte
   if FDConnection1.Connected then
     FDConnection1.Connected := False;
@@ -335,8 +335,8 @@ end;
 Pour un contrôle total, vous pouvez configurer tous les paramètres par code :
 
 ```pascal
-procedure TFormMain.ConnecterAvecCode;
-begin
+procedure TFormMain.ConnecterAvecCode;  
+begin  
   // Configurer les paramètres de connexion
   FDConnection1.Params.Clear;  // Effacer les paramètres existants
 
@@ -381,12 +381,12 @@ Créez un fichier texte `config.ini` dans le dossier de votre application :
 
 ```ini
 [Database]
-Server=localhost
-Port=3306
-Database=ma_gestion
-Username=delphi_user
-Password=VotreMotDePasse
-CharacterSet=utf8mb4
+Server=localhost  
+Port=3306  
+Database=ma_gestion  
+Username=delphi_user  
+Password=VotreMotDePasse  
+CharacterSet=utf8mb4  
 ```
 
 ### Code pour lire le fichier INI
@@ -401,8 +401,8 @@ uses
 Créez une méthode pour charger la configuration :
 
 ```pascal
-procedure TFormMain.ChargerConfiguration;
-var
+procedure TFormMain.ChargerConfiguration;  
+var  
   IniFile: TIniFile;
   CheminConfig: string;
 begin
@@ -440,8 +440,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Charger la configuration au démarrage
   ChargerConfiguration;
 end;
@@ -452,8 +452,8 @@ end;
 Voici un exemple de gestion d'erreurs plus détaillée :
 
 ```pascal
-procedure TFormMain.btnConnecterClick(Sender: TObject);
-begin
+procedure TFormMain.btnConnecterClick(Sender: TObject);  
+begin  
   memoLog.Clear;
 
   try
@@ -515,10 +515,10 @@ end;
 
 ### Vérifications
 
-✅ Le message "Connexion réussie" apparaît
-✅ Les informations de connexion sont affichées
-✅ Le bouton "Se connecter" est désactivé
-✅ Le bouton "Se déconnecter" est activé
+✅ Le message "Connexion réussie" apparaît  
+✅ Les informations de connexion sont affichées  
+✅ Le bouton "Se connecter" est désactivé  
+✅ Le bouton "Se déconnecter" est activé  
 ✅ En cliquant sur "Se déconnecter", la connexion se ferme
 
 ## Résolution de problèmes courants
@@ -616,13 +616,13 @@ end;
 Vous pouvez vérifier l'état de la connexion à tout moment :
 
 ```pascal
-if FDConnection1.Connected then
-begin
+if FDConnection1.Connected then  
+begin  
   ShowMessage('Connexion active');
   // Informations sur la connexion
   ShowMessage('Serveur: ' + FDConnection1.Params.Values['Server']);
-end
-else
+end  
+else  
   ShowMessage('Pas de connexion');
 ```
 
@@ -635,8 +635,8 @@ Vous pouvez réagir aux événements de connexion :
 Se produit juste avant la tentative de connexion :
 
 ```pascal
-procedure TFormMain.FDConnection1BeforeConnect(Sender: TObject);
-begin
+procedure TFormMain.FDConnection1BeforeConnect(Sender: TObject);  
+begin  
   memoLog.Lines.Add('Tentative de connexion...');
 end;
 ```
@@ -646,8 +646,8 @@ end;
 Se produit après une connexion réussie :
 
 ```pascal
-procedure TFormMain.FDConnection1AfterConnect(Sender: TObject);
-begin
+procedure TFormMain.FDConnection1AfterConnect(Sender: TObject);  
+begin  
   memoLog.Lines.Add('Connecté avec succès !');
 end;
 ```
@@ -657,8 +657,8 @@ end;
 Se produit avant la déconnexion :
 
 ```pascal
-procedure TFormMain.FDConnection1BeforeDisconnect(Sender: TObject);
-begin
+procedure TFormMain.FDConnection1BeforeDisconnect(Sender: TObject);  
+begin  
   memoLog.Lines.Add('Fermeture de la connexion...');
 end;
 ```
@@ -667,12 +667,12 @@ end;
 
 Vous savez maintenant comment :
 
-✅ Placer les composants FireDAC sur un formulaire
-✅ Configurer une connexion MySQL/MariaDB au design time
-✅ Établir une connexion par code
-✅ Gérer les erreurs de connexion
-✅ Charger les paramètres depuis un fichier INI
-✅ Fermer proprement une connexion
+✅ Placer les composants FireDAC sur un formulaire  
+✅ Configurer une connexion MySQL/MariaDB au design time  
+✅ Établir une connexion par code  
+✅ Gérer les erreurs de connexion  
+✅ Charger les paramètres depuis un fichier INI  
+✅ Fermer proprement une connexion  
 ✅ Diagnostiquer les problèmes courants
 
 ## Prochaines étapes

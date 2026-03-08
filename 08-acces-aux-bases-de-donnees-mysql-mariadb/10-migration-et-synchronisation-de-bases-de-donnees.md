@@ -43,9 +43,9 @@ Version 1.0                    Version 1.1
 Imaginez cette situation :
 
 ```
-Développeur A : "J'ai ajouté la colonne 'telephone' dans ma base"
-Développeur B : "Ça ne marche pas chez moi, je n'ai pas cette colonne"
-Production : "L'application plante, il manque des colonnes !"
+Développeur A : "J'ai ajouté la colonne 'telephone' dans ma base"  
+Développeur B : "Ça ne marche pas chez moi, je n'ai pas cette colonne"  
+Production : "L'application plante, il manque des colonnes !"  
 ```
 
 **Problèmes :**
@@ -136,12 +136,12 @@ migrations/
 -- (Cette vérification sera gérée par le code Delphi)
 
 -- Migration UP (appliquer)
-ALTER TABLE clients
-ADD COLUMN telephone VARCHAR(20) AFTER email;
+ALTER TABLE clients  
+ADD COLUMN telephone VARCHAR(20) AFTER email;  
 
 -- Mettre à jour la version
-INSERT INTO schema_version (version, nom_migration, description, date_application, applique_par)
-VALUES (2, '002_ajout_telephone_clients', 'Ajout du champ telephone', NOW(), 'migration_auto');
+INSERT INTO schema_version (version, nom_migration, description, date_application, applique_par)  
+VALUES (2, '002_ajout_telephone_clients', 'Ajout du champ telephone', NOW(), 'migration_auto');  
 
 -- ============================================
 -- Migration DOWN (annuler - optionnel)
@@ -156,16 +156,16 @@ VALUES (2, '002_ajout_telephone_clients', 'Ajout du champ telephone', NOW(), 'mi
 
 ```sql
 -- Migration 002 : Ajouter telephone
-ALTER TABLE clients
-ADD COLUMN telephone VARCHAR(20);
+ALTER TABLE clients  
+ADD COLUMN telephone VARCHAR(20);  
 ```
 
 #### 2. Modifier une colonne
 
 ```sql
 -- Migration 003 : Agrandir le champ email
-ALTER TABLE clients
-MODIFY COLUMN email VARCHAR(200);
+ALTER TABLE clients  
+MODIFY COLUMN email VARCHAR(200);  
 ```
 
 #### 3. Créer une table
@@ -195,9 +195,9 @@ CREATE INDEX idx_email ON clients(email);
 
 ```sql
 -- Migration 006 : Normaliser les emails en minuscules
-UPDATE clients
-SET email = LOWER(email)
-WHERE email IS NOT NULL;
+UPDATE clients  
+SET email = LOWER(email)  
+WHERE email IS NOT NULL;  
 ```
 
 ## Implémenter les migrations dans Delphi
@@ -251,8 +251,8 @@ begin
   FCheminMigrations := ACheminMigrations;
 end;
 
-procedure TMigrationManager.VerifierEtCreerTableVersion;
-var
+procedure TMigrationManager.VerifierEtCreerTableVersion;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -276,8 +276,8 @@ begin
   end;
 end;
 
-function TMigrationManager.ObtenirVersionActuelle: Integer;
-var
+function TMigrationManager.ObtenirVersionActuelle: Integer;  
+var  
   Query: TFDQuery;
 begin
   Result := 0;
@@ -296,32 +296,32 @@ begin
   end;
 end;
 
-function TMigrationManager.ListerMigrations: TArray<TMigration>;
-var
+function TMigrationManager.ListerMigrations: TArray<TMigration>;  
+var  
   Fichiers: TStringDynArray;
-  Fichier, Numero, Description: string;
+  Chemin, NomFichier, Numero, Description: string;
   Migration: TMigration;
   Liste: TList<TMigration>;
-  i: Integer;
 begin
   Liste := TList<TMigration>.Create;
   try
     // Lister tous les fichiers .sql dans le dossier migrations
     Fichiers := TDirectory.GetFiles(FCheminMigrations, '*.sql');
 
-    for Fichier in Fichiers do
+    for Chemin in Fichiers do
     begin
       // Extraire le numéro et la description du nom de fichier
       // Format attendu : 001_description.sql
-      Fichier := ExtractFileName(Fichier);
+      // Note : la variable de boucle for..in est en lecture seule en Delphi
+      NomFichier := ExtractFileName(Chemin);
 
-      if Length(Fichier) > 4 then
+      if Length(NomFichier) > 4 then
       begin
-        Numero := Copy(Fichier, 1, 3);
-        Description := Copy(Fichier, 5, Length(Fichier) - 8); // Enlever .sql
+        Numero := Copy(NomFichier, 1, 3);
+        Description := Copy(NomFichier, 5, Length(NomFichier) - 8); // Enlever .sql
 
         Migration.Version := StrToIntDef(Numero, 0);
-        Migration.NomFichier := Fichier;
+        Migration.NomFichier := NomFichier;
         Migration.Description := StringReplace(Description, '_', ' ', [rfReplaceAll]);
 
         if Migration.Version > 0 then
@@ -344,16 +344,16 @@ begin
   end;
 end;
 
-function TMigrationManager.ChargerScriptMigration(const NomFichier: string): string;
-var
+function TMigrationManager.ChargerScriptMigration(const NomFichier: string): string;  
+var  
   CheminComplet: string;
 begin
   CheminComplet := TPath.Combine(FCheminMigrations, NomFichier);
   Result := TFile.ReadAllText(CheminComplet, TEncoding.UTF8);
 end;
 
-procedure TMigrationManager.AppliquerMigration(const Migration: TMigration);
-var
+procedure TMigrationManager.AppliquerMigration(const Migration: TMigration);  
+var  
   Script: string;
   Query: TFDQuery;
   Debut: TDateTime;
@@ -412,8 +412,8 @@ begin
   end;
 end;
 
-function TMigrationManager.NecessiteMigrations: Boolean;
-var
+function TMigrationManager.NecessiteMigrations: Boolean;  
+var  
   VersionActuelle: Integer;
   Migrations: TArray<TMigration>;
 begin
@@ -424,8 +424,8 @@ begin
             (Migrations[High(Migrations)].Version > VersionActuelle);
 end;
 
-procedure TMigrationManager.MigrerVersVersion(VersionCible: Integer);
-var
+procedure TMigrationManager.MigrerVersVersion(VersionCible: Integer);  
+var  
   VersionActuelle: Integer;
   Migrations: TArray<TMigration>;
   Migration: TMigration;
@@ -456,8 +456,8 @@ begin
   end;
 end;
 
-procedure TMigrationManager.MigrerVersDerniere;
-var
+procedure TMigrationManager.MigrerVersDerniere;  
+var  
   Migrations: TArray<TMigration>;
 begin
   Migrations := ListerMigrations;
@@ -493,8 +493,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-var
+procedure TFormMain.FormCreate(Sender: TObject);  
+var  
   CheminMigrations: string;
 begin
   // Chemin vers le dossier migrations
@@ -527,8 +527,8 @@ begin
   end;
 end;
 
-procedure TFormMain.btnVerifierMigrationsClick(Sender: TObject);
-var
+procedure TFormMain.btnVerifierMigrationsClick(Sender: TObject);  
+var  
   Query: TFDQuery;
 begin
   Memo1.Clear;
@@ -667,8 +667,8 @@ SELECT MAX(version) AS version_actuelle FROM schema_version;
 -- 3. Appliquer les migrations manquantes
 -- (Exécuter chaque migration dans l'ordre)
 
-SOURCE migrations/011_nouvelle_migration.sql;
-SOURCE migrations/012_autre_migration.sql;
+SOURCE migrations/011_nouvelle_migration.sql;  
+SOURCE migrations/012_autre_migration.sql;  
 -- etc.
 
 -- 4. Vérifier la nouvelle version
@@ -704,14 +704,14 @@ INSERT INTO statuts_commande (id, code, libelle, ordre_affichage) VALUES
 
 ```sql
 -- Migration 011 : Normaliser les emails
-UPDATE clients
-SET email = LOWER(TRIM(email))
-WHERE email IS NOT NULL;
+UPDATE clients  
+SET email = LOWER(TRIM(email))  
+WHERE email IS NOT NULL;  
 
 -- Vérification
-SELECT COUNT(*) AS emails_invalides
-FROM clients
-WHERE email NOT LIKE '%@%.%';
+SELECT COUNT(*) AS emails_invalides  
+FROM clients  
+WHERE email NOT LIKE '%@%.%';  
 ```
 
 ## Rollback (retour en arrière)
@@ -730,24 +730,24 @@ Un **rollback** annule une migration et revient à la version précédente.
 -- UP : Appliquer la migration
 ALTER TABLE clients ADD COLUMN notes TEXT;
 
-INSERT INTO schema_version (version, nom_migration, description, date_application)
-VALUES (12, '012_ajout_colonne_notes', 'Ajout colonne notes', NOW());
+INSERT INTO schema_version (version, nom_migration, description, date_application)  
+VALUES (12, '012_ajout_colonne_notes', 'Ajout colonne notes', NOW());  
 
 -- ============================================
 -- DOWN : Annuler la migration (rollback)
 -- À exécuter manuellement si nécessaire
 -- ============================================
 /*
-ALTER TABLE clients DROP COLUMN notes;
-DELETE FROM schema_version WHERE version = 12;
+ALTER TABLE clients DROP COLUMN notes;  
+DELETE FROM schema_version WHERE version = 12;  
 */
 ```
 
 ### Implémentation du rollback
 
 ```pascal
-procedure TMigrationManager.RollbackVersVersion(VersionCible: Integer);
-var
+procedure TMigrationManager.RollbackVersVersion(VersionCible: Integer);  
+var  
   VersionActuelle: Integer;
   Query: TFDQuery;
   Migrations: TArray<TMigration>;
@@ -879,9 +879,9 @@ Outil Java open-source très puissant.
 Outil similaire, plus simple.
 
 ```
-V1__Create_clients_table.sql
-V2__Add_telephone_column.sql
-V3__Create_commandes_table.sql
+V1__Create_clients_table.sql  
+V2__Add_telephone_column.sql  
+V3__Create_commandes_table.sql  
 ```
 
 ### 3. DBDelta (pour Delphi)
@@ -900,8 +900,8 @@ Pour des tables avec beaucoup de données :
 
 ```sql
 -- Migration progressive par lots
-SET @batch_size = 1000;
-SET @offset = 0;
+SET @batch_size = 1000;  
+SET @offset = 0;  
 
 REPEAT
   UPDATE clients
@@ -913,8 +913,8 @@ REPEAT
   -- Pause pour ne pas saturer
   SELECT SLEEP(0.1);
 
-UNTIL @offset > (SELECT MAX(id) FROM clients)
-END REPEAT;
+UNTIL @offset > (SELECT MAX(id) FROM clients)  
+END REPEAT;  
 ```
 
 ### Migration avec downtime minimal
@@ -928,8 +928,8 @@ UPDATE clients SET email_v2 = email WHERE id BETWEEN 1 AND 10000;
 -- Continuer par lots...
 
 -- 3. Une fois terminé, renommer
-ALTER TABLE clients DROP COLUMN email;
-ALTER TABLE clients CHANGE COLUMN email_v2 email VARCHAR(200);
+ALTER TABLE clients DROP COLUMN email;  
+ALTER TABLE clients CHANGE COLUMN email_v2 email VARCHAR(200);  
 ```
 
 ### Migrations multi-bases
@@ -937,8 +937,8 @@ ALTER TABLE clients CHANGE COLUMN email_v2 email VARCHAR(200);
 Si votre application utilise plusieurs bases :
 
 ```pascal
-procedure TFormMain.MigrerToutesLesBases;
-var
+procedure TFormMain.MigrerToutesLesBases;  
+var  
   MigrationPrincipale: TMigrationManager;
   MigrationStats: TMigrationManager;
 begin
@@ -999,8 +999,8 @@ end;
 
 ```bash
 # Créer une nouvelle migration
-cd migrations
-touch 015_ajout_table_categories.sql
+cd migrations  
+touch 015_ajout_table_categories.sql  
 
 # Éditer le fichier
 nano 015_ajout_table_categories.sql
@@ -1015,8 +1015,8 @@ CREATE TABLE categories (
     actif BOOLEAN DEFAULT TRUE
 );
 
-INSERT INTO schema_version (version, nom_migration, description, date_application)
-VALUES (15, '015_ajout_table_categories', 'Création table categories', NOW());
+INSERT INTO schema_version (version, nom_migration, description, date_application)  
+VALUES (15, '015_ajout_table_categories', 'Création table categories', NOW());  
 ```
 
 ### 2. Test local
@@ -1030,9 +1030,9 @@ FMigrationManager.MigrerVersDerniere;
 ### 3. Commit dans Git
 
 ```bash
-git add migrations/015_ajout_table_categories.sql
-git commit -m "Migration 015: Ajout table categories"
-git push
+git add migrations/015_ajout_table_categories.sql  
+git commit -m "Migration 015: Ajout table categories"  
+git push  
 ```
 
 ### 4. Déploiement en test
@@ -1061,12 +1061,12 @@ mysql -u prod -p prod_db -e "SELECT MAX(version) FROM schema_version;"
 
 ### Points clés
 
-✅ **Versionner** toujours les modifications de base de données
-✅ **Table schema_version** pour tracker les migrations
-✅ **Scripts SQL** numérotés et documentés
-✅ **Tester** en dev avant de déployer
-✅ **Sauvegarder** avant chaque migration en production
-✅ **Automatiser** le processus avec du code Delphi
+✅ **Versionner** toujours les modifications de base de données  
+✅ **Table schema_version** pour tracker les migrations  
+✅ **Scripts SQL** numérotés et documentés  
+✅ **Tester** en dev avant de déployer  
+✅ **Sauvegarder** avant chaque migration en production  
+✅ **Automatiser** le processus avec du code Delphi  
 ✅ **Documenter** chaque migration
 
 ### Workflow recommandé
