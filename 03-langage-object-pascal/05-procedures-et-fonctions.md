@@ -32,22 +32,22 @@ Les procédures et fonctions sont des blocs de code réutilisables qui permetten
 
 **Syntaxe :**
 ```pascal
-procedure NomProcedure;
-begin
+procedure NomProcedure;  
+begin  
   // Instructions
 end;
 ```
 
 **Exemple :**
 ```pascal
-procedure DireBonjour;
-begin
+procedure DireBonjour;  
+begin  
   ShowMessage('Bonjour !');
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   DireBonjour;  // Appel de la procédure
 end;
 ```
@@ -58,16 +58,16 @@ Les paramètres permettent de passer des informations à la procédure.
 
 **Syntaxe :**
 ```pascal
-procedure NomProcedure(parametre1: Type1; parametre2: Type2);
-begin
+procedure NomProcedure(parametre1: Type1; parametre2: Type2);  
+begin  
   // Instructions utilisant les paramètres
 end;
 ```
 
 **Exemple : Un paramètre**
 ```pascal
-procedure DireBonjourA(const Nom: string);
-begin
+procedure DireBonjourA(const Nom: string);  
+begin  
   ShowMessage('Bonjour ' + Nom + ' !');
 end;
 
@@ -80,8 +80,8 @@ end;
 
 **Exemple : Plusieurs paramètres**
 ```pascal
-procedure AfficherInfos(const Nom, Prenom: string; Age: Integer);
-begin
+procedure AfficherInfos(const Nom, Prenom: string; Age: Integer);  
+begin  
   ShowMessage(
     'Nom : ' + Nom + #13#10 +
     'Prénom : ' + Prenom + #13#10 +
@@ -102,8 +102,8 @@ end;
 Le paramètre reçoit une **copie** de la valeur. Les modifications n'affectent pas la variable d'origine.
 
 ```pascal
-procedure AugmenterValeur(Nombre: Integer);
-begin
+procedure AugmenterValeur(Nombre: Integer);  
+begin  
   Nombre := Nombre + 10;
   ShowMessage('Dans la procédure : ' + IntToStr(Nombre));
 end;
@@ -123,8 +123,8 @@ end;
 Le paramètre reçoit une **référence** à la variable. Les modifications affectent la variable d'origine.
 
 ```pascal
-procedure AugmenterValeur(var Nombre: Integer);
-begin
+procedure AugmenterValeur(var Nombre: Integer);  
+begin  
   Nombre := Nombre + 10;
   ShowMessage('Dans la procédure : ' + IntToStr(Nombre));
 end;
@@ -141,8 +141,8 @@ end;
 
 **Exemple pratique : Échanger deux valeurs**
 ```pascal
-procedure Echanger(var A, B: Integer);
-var
+procedure Echanger(var A, B: Integer);  
+var  
   Temp: Integer;
 begin
   Temp := A;
@@ -169,8 +169,8 @@ end;
 Utiliser `const` indique que le paramètre ne sera pas modifié. C'est une optimisation pour les types complexes (chaînes, enregistrements, objets).
 
 ```pascal
-procedure AfficherMessage(const Message: string);
-begin
+procedure AfficherMessage(const Message: string);  
+begin  
   ShowMessage(Message);
   // Message := 'Autre chose';  // ← ERREUR : impossible de modifier un const
 end;
@@ -186,8 +186,8 @@ end;
 Similaire à `var` mais indique que le paramètre est uniquement utilisé pour **sortir** une valeur.
 
 ```pascal
-procedure ObtenirDimensions(out Largeur, Hauteur: Integer);
-begin
+procedure ObtenirDimensions(out Largeur, Hauteur: Integer);  
+begin  
   Largeur := 1920;
   Hauteur := 1080;
 end;
@@ -215,8 +215,8 @@ end;
 Depuis Delphi 4, vous pouvez définir des valeurs par défaut pour les paramètres.
 
 ```pascal
-procedure Saluer(const Nom: string = 'Invité'; const Titre: string = '');
-begin
+procedure Saluer(const Nom: string = 'Invité'; const Titre: string = '');  
+begin  
   if Titre <> '' then
     ShowMessage('Bonjour ' + Titre + ' ' + Nom)
   else
@@ -248,8 +248,8 @@ procedure Test2(A: Integer; B: Integer = 10; C: string);
 Permet de passer un tableau de taille variable.
 
 ```pascal
-procedure AfficherNombres(const Nombres: array of Integer);
-var
+procedure AfficherNombres(const Nombres: array of Integer);  
+var  
   i: Integer;
 begin
   for i := Low(Nombres) to High(Nombres) do
@@ -274,8 +274,8 @@ end;
 
 **Syntaxe :**
 ```pascal
-function NomFonction: TypeRetour;
-begin
+function NomFonction: TypeRetour;  
+begin  
   // Instructions
   Result := valeur;  // ou : NomFonction := valeur;
 end;
@@ -283,8 +283,8 @@ end;
 
 **Exemple :**
 ```pascal
-function ObtenirMessage: string;
-begin
+function ObtenirMessage: string;  
+begin  
   Result := 'Bienvenue dans Delphi !';
 end;
 
@@ -300,8 +300,8 @@ end;
 ### Fonction avec paramètres
 
 ```pascal
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
@@ -320,14 +320,14 @@ Deux syntaxes possibles pour retourner une valeur :
 
 ```pascal
 // Syntaxe moderne (recommandée)
-function Carre(N: Integer): Integer;
-begin
+function Carre(N: Integer): Integer;  
+begin  
   Result := N * N;
 end;
 
 // Syntaxe ancienne (déconseillée mais valide)
-function Carre(N: Integer): Integer;
-begin
+function Carre(N: Integer): Integer;  
+begin  
   Carre := N * N;
 end;
 ```
@@ -339,8 +339,8 @@ end;
 #### Fonction de validation
 
 ```pascal
-function EstEmailValide(const Email: string): Boolean;
-begin
+function EstEmailValide(const Email: string): Boolean;  
+begin  
   Result := (Pos('@', Email) > 0) and (Pos('.', Email) > 0);
 end;
 
@@ -356,8 +356,8 @@ end;
 #### Fonction de calcul
 
 ```pascal
-function CalculerTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;
-begin
+function CalculerTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;  
+begin  
   Result := PrixHT * (1 + TauxTVA);
 end;
 
@@ -376,8 +376,8 @@ end;
 #### Fonction de transformation
 
 ```pascal
-function CapitaliserMots(const Texte: string): string;
-var
+function CapitaliserMots(const Texte: string): string;  
+var  
   i: Integer;
   NouveauMot: Boolean;
 begin
@@ -430,18 +430,18 @@ end;
 Les fonctions qui retournent `Boolean` sont très utiles pour les tests.
 
 ```pascal
-function EstPair(Nombre: Integer): Boolean;
-begin
+function EstPair(Nombre: Integer): Boolean;  
+begin  
   Result := (Nombre mod 2) = 0;
 end;
 
-function EstDansIntervalle(Valeur, Min, Max: Integer): Boolean;
-begin
+function EstDansIntervalle(Valeur, Min, Max: Integer): Boolean;  
+begin  
   Result := (Valeur >= Min) and (Valeur <= Max);
 end;
 
-function EstAnneeBissextile(Annee: Integer): Boolean;
-begin
+function EstAnneeBissextile(Annee: Integer): Boolean;  
+begin  
   Result := ((Annee mod 4) = 0) and
             (((Annee mod 100) <> 0) or ((Annee mod 400) = 0));
 end;
@@ -470,16 +470,16 @@ end;
 Déclarées dans une procédure/fonction, elles n'existent que pendant son exécution.
 
 ```pascal
-procedure Calculer;
-var
+procedure Calculer;  
+var  
   Total: Integer;  // Variable locale
 begin
   Total := 100;
   ShowMessage(IntToStr(Total));
 end;
 
-procedure AutreProcedure;
-begin
+procedure AutreProcedure;  
+begin  
   ShowMessage(IntToStr(Total));  // ❌ ERREUR : Total n'existe pas ici
 end;
 ```
@@ -500,13 +500,13 @@ procedure Incrementer;
 
 implementation
 
-procedure Incrementer;
-begin
+procedure Incrementer;  
+begin  
   Inc(CompteurGlobal);  // Accès à la variable globale
 end;
 
-procedure Afficher;
-begin
+procedure Afficher;  
+begin  
   ShowMessage(IntToStr(CompteurGlobal));  // Accès à la variable globale
 end;
 
@@ -526,8 +526,8 @@ Une variable locale peut avoir le même nom qu'une variable globale. La variable
 var
   Compteur: Integer;  // Variable globale
 
-procedure Test;
-var
+procedure Test;  
+var  
   Compteur: Integer;  // Variable locale (cache la globale)
 begin
   Compteur := 10;  // Modifie la variable locale
@@ -562,8 +562,8 @@ end;
 
 **Exemple pratique :**
 ```pascal
-procedure TraiterDonnees;
-var
+procedure TraiterDonnees;  
+var  
   Total: Integer;
 
   function CalculerSomme(A, B: Integer): Integer;
@@ -591,8 +591,8 @@ Une fonction récursive est une fonction qui s'appelle elle-même.
 ### Exemple : Factorielle
 
 ```pascal
-function Factorielle(N: Integer): Int64;
-begin
+function Factorielle(N: Integer): Int64;  
+begin  
   if N <= 1 then
     Result := 1
   else
@@ -615,8 +615,8 @@ end;
 ### Exemple : Suite de Fibonacci
 
 ```pascal
-function Fibonacci(N: Integer): Integer;
-begin
+function Fibonacci(N: Integer): Integer;  
+begin  
   if N <= 1 then
     Result := N
   else
@@ -635,8 +635,8 @@ end;
 ### Exemple : Puissance
 
 ```pascal
-function Puissance(Base, Exposant: Integer): Int64;
-begin
+function Puissance(Base, Exposant: Integer): Int64;  
+begin  
   if Exposant = 0 then
     Result := 1
   else
@@ -663,20 +663,20 @@ La surcharge permet d'avoir plusieurs procédures/fonctions avec le même nom ma
 
 ```pascal
 // Additionner deux entiers
-function Additionner(A, B: Integer): Integer; overload;
-begin
+function Additionner(A, B: Integer): Integer; overload;  
+begin  
   Result := A + B;
 end;
 
 // Additionner trois entiers
-function Additionner(A, B, C: Integer): Integer; overload;
-begin
+function Additionner(A, B, C: Integer): Integer; overload;  
+begin  
   Result := A + B + C;
 end;
 
 // Additionner deux réels
-function Additionner(A, B: Double): Double; overload;
-begin
+function Additionner(A, B: Double): Double; overload;  
+begin  
   Result := A + B;
 end;
 
@@ -693,18 +693,18 @@ end;
 
 **Exemple pratique : Affichage flexible**
 ```pascal
-procedure Afficher(const Message: string); overload;
-begin
+procedure Afficher(const Message: string); overload;  
+begin  
   ShowMessage(Message);
 end;
 
-procedure Afficher(Nombre: Integer); overload;
-begin
+procedure Afficher(Nombre: Integer); overload;  
+begin  
   ShowMessage(IntToStr(Nombre));
 end;
 
-procedure Afficher(Nombre: Double; Decimales: Integer); overload;
-begin
+procedure Afficher(Nombre: Double; Decimales: Integer); overload;  
+begin  
   ShowMessage(FormatFloat('0.' + StringOfChar('0', Decimales), Nombre));
 end;
 
@@ -758,8 +758,8 @@ Parfois, vous devez déclarer qu'une fonction existe avant de la définir.
 // Déclaration forward
 function FonctionA(N: Integer): Integer; forward;
 
-function FonctionB(N: Integer): Integer;
-begin
+function FonctionB(N: Integer): Integer;  
+begin  
   if N > 0 then
     Result := FonctionA(N - 1)  // FonctionA n'est pas encore définie
   else
@@ -767,8 +767,8 @@ begin
 end;
 
 // Définition de FonctionA
-function FonctionA(N: Integer): Integer;
-begin
+function FonctionA(N: Integer): Integer;  
+begin  
   if N > 0 then
     Result := N + FonctionB(N - 1)
   else
@@ -782,26 +782,26 @@ end;
 
 ```pascal
 // ✅ BON : noms descriptifs
-function CalculerPrixTTC(PrixHT: Double): Double;
-procedure EnvoyerEmail(const Destinataire, Sujet, Corps: string);
+function CalculerPrixTTC(PrixHT: Double): Double;  
+procedure EnvoyerEmail(const Destinataire, Sujet, Corps: string);  
 
 // ❌ MAUVAIS : noms vagues
-function Calc(P: Double): Double;
-procedure Send(const D, S, C: string);
+function Calc(P: Double): Double;  
+procedure Send(const D, S, C: string);  
 ```
 
 ### 2. Une fonction = une responsabilité
 
 ```pascal
 // ✅ BON : fonction focalisée
-function CalculerSomme(A, B: Integer): Integer;
-begin
+function CalculerSomme(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
 // ❌ MAUVAIS : fait trop de choses
-function ToutFaire(A, B: Integer): Integer;
-begin
+function ToutFaire(A, B: Integer): Integer;  
+begin  
   Result := A + B;
   ShowMessage('Calcul effectué');
   Log('Addition de ' + IntToStr(A) + ' et ' + IntToStr(B));
@@ -840,16 +840,16 @@ procedure AfficherMessage(Message: string);
 ### 5. Valider les paramètres
 
 ```pascal
-function Diviser(A, B: Double): Double;
-begin
+function Diviser(A, B: Double): Double;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro impossible');
 
   Result := A / B;
 end;
 
-function ObtenirElement(const Liste: TStringList; Index: Integer): string;
-begin
+function ObtenirElement(const Liste: TStringList; Index: Integer): string;  
+begin  
   if (Index < 0) or (Index >= Liste.Count) then
     raise Exception.Create('Index hors limites');
 
@@ -866,8 +866,8 @@ end;
 /// <param name="PrixHT">Prix hors taxes</param>
 /// <param name="TauxTVA">Taux de TVA (0.20 pour 20%)</param>
 /// <returns>Prix TTC calculé</returns>
-function CalculerPrixTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;
-begin
+function CalculerPrixTTC(PrixHT: Double; TauxTVA: Double = 0.20): Double;  
+begin  
   Result := PrixHT * (1 + TauxTVA);
 end;
 ```
@@ -876,8 +876,8 @@ end;
 
 ```pascal
 // ✅ BON : Result initialisé
-function Chercher(const Valeur: string): Integer;
-begin
+function Chercher(const Valeur: string): Integer;  
+begin  
   Result := -1;  // Valeur par défaut si non trouvé
 
   // ... code de recherche ...
@@ -887,8 +887,8 @@ begin
 end;
 
 // ❌ Risqué : Result peut rester indéfini
-function Chercher(const Valeur: string): Integer;
-begin
+function Chercher(const Valeur: string): Integer;  
+begin  
   // ... code de recherche ...
 
   if Trouve then
@@ -901,14 +901,14 @@ end;
 
 ```pascal
 // ✅ BON : fonction pure
-function Carre(N: Integer): Integer;
-begin
+function Carre(N: Integer): Integer;  
+begin  
   Result := N * N;
 end;
 
 // ❌ Moins clair
-procedure Carre(N: Integer; var Resultat: Integer);
-begin
+procedure Carre(N: Integer; var Resultat: Integer);  
+begin  
   Resultat := N * N;
 end;
 ```
@@ -919,15 +919,15 @@ end;
 
 ```pascal
 // ❌ ERREUR : Result non assigné
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   ShowMessage('Addition en cours...');
   // Oubli d'assigner Result !
 end;
 
 // ✅ CORRECT
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 ```
@@ -936,14 +936,14 @@ end;
 
 ```pascal
 // ❌ ERREUR : tentative de modification d'un const
-procedure Traiter(const Texte: string);
-begin
+procedure Traiter(const Texte: string);  
+begin  
   Texte := UpperCase(Texte);  // ← Erreur de compilation
 end;
 
 // ✅ CORRECT : utiliser une variable locale
-procedure Traiter(const Texte: string);
-var
+procedure Traiter(const Texte: string);  
+var  
   TexteMajuscules: string;
 begin
   TexteMajuscules := UpperCase(Texte);
@@ -955,14 +955,14 @@ end;
 
 ```pascal
 // ❌ ERREUR : boucle infinie
-function Compte(N: Integer): Integer;
-begin
+function Compte(N: Integer): Integer;  
+begin  
   Result := N + Compte(N - 1);  // Pas de condition d'arrêt !
 end;
 
 // ✅ CORRECT : avec condition d'arrêt
-function Compte(N: Integer): Integer;
-begin
+function Compte(N: Integer): Integer;  
+begin  
   if N <= 0 then
     Result := 0
   else
@@ -973,8 +973,8 @@ end;
 ### Erreur 4 : Paramètres dans le mauvais ordre
 
 ```pascal
-function Diviser(Dividende, Diviseur: Double): Double;
-begin
+function Diviser(Dividende, Diviseur: Double): Double;  
+begin  
   Result := Dividende / Diviseur;
 end;
 
@@ -994,8 +994,8 @@ end;
 procedure Additionner(A, B: Integer): Integer;  // ← Erreur de syntaxe
 
 // ✅ CORRECT : c'est une fonction
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 ```
@@ -1027,25 +1027,25 @@ var
   CompteurGlobal: Integer;
 
 // 4. Déclarations de procédures/fonctions publiques
-procedure ProcedurePublique;
-function FonctionPublique(N: Integer): string;
+procedure ProcedurePublique;  
+function FonctionPublique(N: Integer): string;  
 
 implementation
 
 // 5. Procédures/fonctions privées
-procedure ProcedurePrivee;
-begin
+procedure ProcedurePrivee;  
+begin  
   // ...
 end;
 
 // 6. Implémentation des procédures/fonctions publiques
-procedure ProcedurePublique;
-begin
+procedure ProcedurePublique;  
+begin  
   // ...
 end;
 
-function FonctionPublique(N: Integer): string;
-begin
+function FonctionPublique(N: Integer): string;  
+begin  
   Result := IntToStr(N);
 end;
 

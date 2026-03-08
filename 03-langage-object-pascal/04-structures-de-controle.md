@@ -514,9 +514,9 @@ begin
 end;
 ```
 
-### Boucle for avec variable inline (Delphi 11+)
+### Boucle for avec variable inline (Delphi 10.3+)
 
-Depuis Delphi 11, vous pouvez déclarer la variable directement dans la boucle.
+Depuis Delphi 10.3 Rio, vous pouvez déclarer la variable directement dans la boucle.
 
 ```pascal
 begin
@@ -874,8 +874,8 @@ end;
 `Exit` permet de quitter immédiatement une procédure ou fonction.
 
 ```pascal
-procedure Verifier(const Nom: string);
-begin
+procedure Verifier(const Nom: string);  
+begin  
   if Nom = '' then
   begin
     ShowMessage('Le nom est obligatoire');
@@ -894,8 +894,8 @@ end;
 
 **Avec une fonction :**
 ```pascal
-function EstNombreValide(Nombre: Integer): Boolean;
-begin
+function EstNombreValide(Nombre: Integer): Boolean;  
+begin  
   Result := False;  // Valeur par défaut
 
   if Nombre < 1 then
@@ -1069,11 +1069,11 @@ if Condition1 and Condition2 and Condition3 and Condition4 then
   DoSomething;
 
 // ✅ Ou sortir tôt
-if not Condition1 then Exit;
-if not Condition2 then Exit;
-if not Condition3 then Exit;
-if not Condition4 then Exit;
-DoSomething;
+if not Condition1 then Exit;  
+if not Condition2 then Exit;  
+if not Condition3 then Exit;  
+if not Condition4 then Exit;  
+DoSomething;  
 ```
 
 ### 6. Utiliser begin...end pour la clarté
@@ -1085,8 +1085,8 @@ if Condition then
   Instruction2;  // S'exécute toujours, pas dans le if !
 
 // ✅ Clair avec begin...end
-if Condition then
-begin
+if Condition then  
+begin  
   Instruction1;
   Instruction2;
 end;
@@ -1114,16 +1114,16 @@ else
 
 ```pascal
 // ❌ À ÉVITER : Modifier i dans une boucle for
-for i := 1 to 10 do
-begin
+for i := 1 to 10 do  
+begin  
   ShowMessage(IntToStr(i));
   i := i + 1;  // ← Ne faites pas cela !
 end;
 
 // ✅ Utilisez while si vous devez contrôler manuellement
-i := 1;
-while i <= 10 do
-begin
+i := 1;  
+while i <= 10 do  
+begin  
   ShowMessage(IntToStr(i));
   i := i + 2;  // OK dans une boucle while
 end;

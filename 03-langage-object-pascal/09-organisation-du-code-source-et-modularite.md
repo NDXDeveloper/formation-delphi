@@ -72,13 +72,13 @@ function CalculerTotal(A, B: Integer): Integer;
 // Section IMPLEMENTATION : le code interne
 implementation
 
-procedure TMaClasse.FaireQuelqueChose;
-begin
+procedure TMaClasse.FaireQuelqueChose;  
+begin  
   // Implémentation
 end;
 
-function CalculerTotal(A, B: Integer): Integer;
-begin
+function CalculerTotal(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
@@ -128,18 +128,18 @@ uses
   System.Math;  // Unité nécessaire uniquement pour l'implémentation
 
 // Fonction privée, invisible de l'extérieur
-function FonctionInterne: Integer;
-begin
+function FonctionInterne: Integer;  
+begin  
   Result := 42;
 end;
 
-function TCalculatrice.Additionner(A, B: Integer): Integer;
-begin
+function TCalculatrice.Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
-function CalculerMoyenne(Valeurs: array of Double): Double;
-var
+function CalculerMoyenne(Valeurs: array of Double): Double;  
+var  
   I: Integer;
   Somme: Double;
 begin
@@ -215,30 +215,30 @@ uses
 
 ```pascal
 // Unit1.pas
-unit Unit1;
-interface
-uses Unit2;  // Unit1 utilise Unit2
+unit Unit1;  
+interface  
+uses Unit2;  // Unit1 utilise Unit2  
 
 // Unit2.pas
-unit Unit2;
-interface
-uses Unit1;  // Unit2 utilise Unit1 - ERREUR !
+unit Unit2;  
+interface  
+uses Unit1;  // Unit2 utilise Unit1 - ERREUR !  
 ```
 
 **Solution** : Déplacer l'une des références dans la section `implementation`.
 
 ```pascal
 // Unit1.pas
-unit Unit1;
-interface
-uses Unit2;
+unit Unit1;  
+interface  
+uses Unit2;  
 
 // Unit2.pas
-unit Unit2;
-interface
+unit Unit2;  
+interface  
 // Pas de uses Unit1 ici
-implementation
-uses Unit1;  // Référence déplacée ici
+implementation  
+uses Unit1;  // Référence déplacée ici  
 ```
 
 ## Organisation par fonctionnalité
@@ -258,10 +258,10 @@ unit ToutMonCode;
 end.
 
 // ✅ Bon - unités séparées par responsabilité
-unit App.Modeles;      // Classes de données
-unit App.Database;     // Accès aux données
-unit App.Interface;    // Composants d'interface
-unit App.Utilitaires;  // Fonctions utilitaires
+unit App.Modeles;      // Classes de données  
+unit App.Database;     // Accès aux données  
+unit App.Interface;    // Composants d'interface  
+unit App.Utilitaires;  // Fonctions utilitaires  
 ```
 
 ### Exemple d'organisation par couches
@@ -347,16 +347,16 @@ Un **namespace** (espace de noms) est un préfixe qui permet d'organiser et de d
 
 ```pascal
 // Namespaces standards de Delphi
-System.SysUtils      // Namespace System
-System.Classes
-System.Generics.Collections
+System.SysUtils      // Namespace System  
+System.Classes  
+System.Generics.Collections  
 
-Vcl.Forms            // Namespace Vcl (Visual Component Library)
-Vcl.Dialogs
-Vcl.Controls
+Vcl.Forms            // Namespace Vcl (Visual Component Library)  
+Vcl.Dialogs  
+Vcl.Controls  
 
-FMX.Forms            // Namespace FMX (FireMonkey)
-FMX.Types
+FMX.Forms            // Namespace FMX (FireMonkey)  
+FMX.Types  
 ```
 
 ### Créer vos propres namespaces
@@ -390,14 +390,14 @@ end.
 CompanyName.ProjectName.Category.Feature
 
 // Exemples concrets
-MonEntreprise.GestionStock.Modeles.Produit
-MonEntreprise.GestionStock.Data.ProduitDAO
-MonEntreprise.GestionStock.UI.ProduitForm
+MonEntreprise.GestionStock.Modeles.Produit  
+MonEntreprise.GestionStock.Data.ProduitDAO  
+MonEntreprise.GestionStock.UI.ProduitForm  
 
 // ✅ Bon - simplifié
-App.Models.Customer
-App.Data.CustomerDAO
-App.UI.CustomerForm
+App.Models.Customer  
+App.Data.CustomerDAO  
+App.UI.CustomerForm  
 ```
 
 ## Modularité et réutilisabilité
@@ -433,15 +433,15 @@ implementation
 uses
   System.SysUtils, System.IOUtils;
 
-class function TLogger.Instance: TLogger;
-begin
+class function TLogger.Instance: TLogger;  
+begin  
   if FInstance = nil then
     FInstance := TLogger.Create;
   Result := FInstance;
 end;
 
-procedure TLogger.Log(const Message: string; Level: TLogLevel);
-var
+procedure TLogger.Log(const Message: string; Level: TLogLevel);  
+var  
   LogMessage: string;
 begin
   LogMessage := Format('[%s] [%s] %s',
@@ -449,13 +449,13 @@ begin
   // Écrire dans le fichier...
 end;
 
-procedure TLogger.Debug(const Message: string);
-begin
+procedure TLogger.Debug(const Message: string);  
+begin  
   Log(Message, llDebug);
 end;
 
-procedure TLogger.Error(const Message: string);
-begin
+procedure TLogger.Error(const Message: string);  
+begin  
   Log(Message, llError);
 end;
 
@@ -485,26 +485,26 @@ type
 
 implementation
 
-class function TStringHelper.EstEmail(const Email: string): Boolean;
-begin
+class function TStringHelper.EstEmail(const Email: string): Boolean;  
+begin  
   // Validation d'email
   Result := Pos('@', Email) > 0;
 end;
 
-class function TStringHelper.EstTelephone(const Tel: string): Boolean;
-begin
+class function TStringHelper.EstTelephone(const Tel: string): Boolean;  
+begin  
   // Validation de téléphone
   Result := Length(Tel) >= 10;
 end;
 
-class function TStringHelper.CapitaliserMots(const Texte: string): string;
-begin
+class function TStringHelper.CapitaliserMots(const Texte: string): string;  
+begin  
   // Mettre une majuscule au début de chaque mot
   Result := Texte;  // Implémentation simplifiée
 end;
 
-class function TStringHelper.RemplacerAccents(const Texte: string): string;
-begin
+class function TStringHelper.RemplacerAccents(const Texte: string): string;  
+begin  
   // Remplacer les accents
   Result := StringReplace(Texte, 'é', 'e', [rfReplaceAll]);
   // etc.
@@ -552,8 +552,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-implementation
-end.
+implementation  
+end.  
 
 // ===== COUCHE DONNÉES =====
 // App.Data.ClientDAO.pas
@@ -578,25 +578,25 @@ implementation
 uses
   FireDAC.Comp.Client;  // Accès aux données
 
-function TClientDAO.ObtenirTous: TList<TClient>;
-begin
+function TClientDAO.ObtenirTous: TList<TClient>;  
+begin  
   Result := TList<TClient>.Create;
   // Code pour charger depuis la base de données
 end;
 
-function TClientDAO.ObtenirParID(ID: Integer): TClient;
-begin
+function TClientDAO.ObtenirParID(ID: Integer): TClient;  
+begin  
   Result := TClient.Create;
   // Code pour charger un client spécifique
 end;
 
-procedure TClientDAO.Enregistrer(Client: TClient);
-begin
+procedure TClientDAO.Enregistrer(Client: TClient);  
+begin  
   // Code pour sauvegarder dans la base de données
 end;
 
-procedure TClientDAO.Supprimer(ID: Integer);
-begin
+procedure TClientDAO.Supprimer(ID: Integer);  
+begin  
   // Code pour supprimer de la base de données
 end;
 
@@ -628,26 +628,26 @@ implementation
 uses
   System.SysUtils, System.RegularExpressions;
 
-constructor TClientService.Create;
-begin
+constructor TClientService.Create;  
+begin  
   inherited Create;
   FDAO := TClientDAO.Create;
 end;
 
-destructor TClientService.Destroy;
-begin
+destructor TClientService.Destroy;  
+begin  
   FDAO.Free;
   inherited Destroy;
 end;
 
-function TClientService.ValiderEmail(const Email: string): Boolean;
-begin
+function TClientService.ValiderEmail(const Email: string): Boolean;  
+begin  
   // Règle métier : validation d'email
   Result := TRegEx.IsMatch(Email, '^[\w\.-]+@[\w\.-]+\.\w+$');
 end;
 
-function TClientService.CreerNouveauClient(const Nom, Email: string): TClient;
-begin
+function TClientService.CreerNouveauClient(const Nom, Email: string): TClient;  
+begin  
   if not ValiderEmail(Email) then
     raise Exception.Create('Email invalide');
 
@@ -656,8 +656,8 @@ begin
   Result.Email := Email;
 end;
 
-procedure TClientService.EnregistrerClient(Client: TClient);
-begin
+procedure TClientService.EnregistrerClient(Client: TClient);  
+begin  
   // Règles métier avant sauvegarde
   if Trim(Client.Nom) = '' then
     raise Exception.Create('Le nom est obligatoire');
@@ -697,20 +697,20 @@ implementation
 uses
   Vcl.Dialogs, System.SysUtils;
 
-constructor TFormClient.Create(AOwner: TComponent);
-begin
+constructor TFormClient.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   FService := TClientService.Create;
 end;
 
-destructor TFormClient.Destroy;
-begin
+destructor TFormClient.Destroy;  
+begin  
   FService.Free;
   inherited Destroy;
 end;
 
-procedure TFormClient.ButtonEnregistrerClick(Sender: TObject);
-var
+procedure TFormClient.ButtonEnregistrerClick(Sender: TObject);  
+var  
   Client: TClient;
 begin
   try
@@ -744,14 +744,14 @@ end.
 
 ```pascal
 // ✅ Bon - descriptif et clair
-App.Models.Customer.pas
-App.Data.CustomerRepository.pas
-App.Utils.StringHelper.pas
+App.Models.Customer.pas  
+App.Data.CustomerRepository.pas  
+App.Utils.StringHelper.pas  
 
 // ❌ Mauvais - trop vague
-Unit1.pas
-Utils.pas
-Stuff.pas
+Unit1.pas  
+Utils.pas  
+Stuff.pas  
 ```
 
 ### Structure de nommage recommandée
@@ -759,12 +759,12 @@ Stuff.pas
 ```
 [Namespace].[Catégorie].[Fonctionnalité].pas
 
-Exemples :
-MonApp.Models.Product.pas
-MonApp.Data.ProductDAO.pas
-MonApp.Business.SalesService.pas
-MonApp.UI.MainForm.pas
-MonApp.Utils.Logger.pas
+Exemples :  
+MonApp.Models.Product.pas  
+MonApp.Data.ProductDAO.pas  
+MonApp.Business.SalesService.pas  
+MonApp.UI.MainForm.pas  
+MonApp.Utils.Logger.pas  
 ```
 
 ### Préfixes pour les types
@@ -826,21 +826,21 @@ FDConnection.Timeout := 30000;
 
 ```pascal
 // ❌ Mauvais - trop de dépendances
-unit MonUnite;
-interface
-uses
+unit MonUnite;  
+interface  
+uses  
   System.SysUtils, System.Classes, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Grids, Data.DB, FireDAC.Comp.Client, FireDAC.Stan.Param,
   System.Generics.Collections, System.JSON, System.RegularExpressions;
 
 // ✅ Bon - dépendances minimales
-unit MonUnite;
-interface
-uses
+unit MonUnite;  
+interface  
+uses  
   System.SysUtils, System.Classes;  // Seulement ce qui est nécessaire
 
-implementation
-uses
+implementation  
+uses  
   Vcl.Dialogs;  // Utilisé uniquement dans l'implémentation
 ```
 
@@ -912,8 +912,8 @@ type
     function GetById(ID: Integer): T;
   end;
 
-implementation
-end.
+implementation  
+end.  
 
 // ClientRepository.pas - implémentation
 unit App.Data.ClientRepository;
@@ -950,8 +950,8 @@ interface
 
 {$I Config.inc}  // Inclure le fichier
 
-implementation
-end.
+implementation  
+end.  
 ```
 
 **Attention** : Ne pas abuser des includes, préférez les unités normales.

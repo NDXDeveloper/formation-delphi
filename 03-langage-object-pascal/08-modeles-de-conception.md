@@ -94,27 +94,27 @@ type
     property Langue: string read FLangue write FLangue;
   end;
 
-constructor TConfiguration.Create;
-begin
+constructor TConfiguration.Create;  
+begin  
   inherited Create;
   FCheminFichiers := 'C:\MesDocuments';
   FLangue := 'FR';
 end;
 
-destructor TConfiguration.Destroy;
-begin
+destructor TConfiguration.Destroy;  
+begin  
   inherited Destroy;
 end;
 
-class function TConfiguration.Instance: TConfiguration;
-begin
+class function TConfiguration.Instance: TConfiguration;  
+begin  
   if FInstance = nil then
     FInstance := TConfiguration.Create;
   Result := FInstance;
 end;
 
-class procedure TConfiguration.LibererInstance;
-begin
+class procedure TConfiguration.LibererInstance;  
+begin  
   FreeAndNil(FInstance);
 end;
 ```
@@ -197,39 +197,39 @@ type
   end;
 
 // Implémentations
-procedure TDocumentPDF.Ouvrir;
-begin
+procedure TDocumentPDF.Ouvrir;  
+begin  
   ShowMessage('Ouverture du PDF');
 end;
 
-procedure TDocumentPDF.Sauvegarder;
-begin
+procedure TDocumentPDF.Sauvegarder;  
+begin  
   ShowMessage('Sauvegarde du PDF');
 end;
 
-procedure TDocumentWord.Ouvrir;
-begin
+procedure TDocumentWord.Ouvrir;  
+begin  
   ShowMessage('Ouverture du document Word');
 end;
 
-procedure TDocumentWord.Sauvegarder;
-begin
+procedure TDocumentWord.Sauvegarder;  
+begin  
   ShowMessage('Sauvegarde du document Word');
 end;
 
-procedure TDocumentExcel.Ouvrir;
-begin
+procedure TDocumentExcel.Ouvrir;  
+begin  
   ShowMessage('Ouverture du classeur Excel');
 end;
 
-procedure TDocumentExcel.Sauvegarder;
-begin
+procedure TDocumentExcel.Sauvegarder;  
+begin  
   ShowMessage('Sauvegarde du classeur Excel');
 end;
 
 // La fabrique décide quelle classe créer
-class function TDocumentFactory.CreerDocument(TypeDoc: TTypeDocument): TDocument;
-begin
+class function TDocumentFactory.CreerDocument(TypeDoc: TTypeDocument): TDocument;  
+begin  
   case TypeDoc of
     tdPDF:   Result := TDocumentPDF.Create;
     tdWord:  Result := TDocumentWord.Create;
@@ -324,58 +324,58 @@ type
   end;
 
 // Implémentation TDonneesStock
-constructor TDonneesStock.Create;
-begin
+constructor TDonneesStock.Create;  
+begin  
   inherited Create;
   FObservateurs := TList<IObservateur>.Create;
   FQuantite := 100;
 end;
 
-destructor TDonneesStock.Destroy;
-begin
+destructor TDonneesStock.Destroy;  
+begin  
   FObservateurs.Free;
   inherited Destroy;
 end;
 
-procedure TDonneesStock.AjouterObservateur(Observateur: IObservateur);
-begin
+procedure TDonneesStock.AjouterObservateur(Observateur: IObservateur);  
+begin  
   FObservateurs.Add(Observateur);
 end;
 
-procedure TDonneesStock.RetirerObservateur(Observateur: IObservateur);
-begin
+procedure TDonneesStock.RetirerObservateur(Observateur: IObservateur);  
+begin  
   FObservateurs.Remove(Observateur);
 end;
 
-procedure TDonneesStock.NotifierObservateurs(const Message: string);
-var
+procedure TDonneesStock.NotifierObservateurs(const Message: string);  
+var  
   Observateur: IObservateur;
 begin
   for Observateur in FObservateurs do
     Observateur.MettreAJour(Message);
 end;
 
-procedure TDonneesStock.ModifierQuantite(NouvelleQuantite: Integer);
-begin
+procedure TDonneesStock.ModifierQuantite(NouvelleQuantite: Integer);  
+begin  
   FQuantite := NouvelleQuantite;
   NotifierObservateurs(Format('Stock modifié : %d unités', [FQuantite]));
 end;
 
 // Implémentation TAffichageStock
-constructor TAffichageStock.Create(const ANom: string);
-begin
+constructor TAffichageStock.Create(const ANom: string);  
+begin  
   inherited Create;
   FNom := ANom;
 end;
 
-procedure TAffichageStock.MettreAJour(const Message: string);
-begin
+procedure TAffichageStock.MettreAJour(const Message: string);  
+begin  
   ShowMessage(Format('[%s] %s', [FNom, Message]));
 end;
 
 // Implémentation TAlerteStock
-procedure TAlerteStock.MettreAJour(const Message: string);
-begin
+procedure TAlerteStock.MettreAJour(const Message: string);  
+begin  
   ShowMessage('[ALERTE] ' + Message);
 end;
 ```
@@ -469,41 +469,41 @@ type
   end;
 
 // Implémentations
-function TStrategiePrixNormal.CalculerPrix(PrixBase: Double): Double;
-begin
+function TStrategiePrixNormal.CalculerPrix(PrixBase: Double): Double;  
+begin  
   Result := PrixBase;
 end;
 
-constructor TStrategiePrixReduit.Create(APourcentageReduction: Double);
-begin
+constructor TStrategiePrixReduit.Create(APourcentageReduction: Double);  
+begin  
   inherited Create;
   FPourcentageReduction := APourcentageReduction;
 end;
 
-function TStrategiePrixReduit.CalculerPrix(PrixBase: Double): Double;
-begin
+function TStrategiePrixReduit.CalculerPrix(PrixBase: Double): Double;  
+begin  
   Result := PrixBase * (1 - FPourcentageReduction / 100);
 end;
 
-function TStrategiePrixVIP.CalculerPrix(PrixBase: Double): Double;
-begin
+function TStrategiePrixVIP.CalculerPrix(PrixBase: Double): Double;  
+begin  
   // VIP : 25% de réduction + livraison gratuite
   Result := PrixBase * 0.75;
 end;
 
-constructor TCalculateurPrix.Create(AStrategie: IStrategieCalculPrix);
-begin
+constructor TCalculateurPrix.Create(AStrategie: IStrategieCalculPrix);  
+begin  
   inherited Create;
   FStrategie := AStrategie;
 end;
 
-procedure TCalculateurPrix.DefinirStrategie(AStrategie: IStrategieCalculPrix);
-begin
+procedure TCalculateurPrix.DefinirStrategie(AStrategie: IStrategieCalculPrix);  
+begin  
   FStrategie := AStrategie;
 end;
 
-function TCalculateurPrix.Calculer(PrixBase: Double): Double;
-begin
+function TCalculateurPrix.Calculer(PrixBase: Double): Double;  
+begin  
   Result := FStrategie.CalculerPrix(PrixBase);
 end;
 ```
@@ -601,63 +601,63 @@ type
   end;
 
 // Implémentation TCafe
-function TCafe.ObtenirDescription: string;
-begin
+function TCafe.ObtenirDescription: string;  
+begin  
   Result := 'Café';
 end;
 
-function TCafe.ObtenirPrix: Double;
-begin
+function TCafe.ObtenirPrix: Double;  
+begin  
   Result := 2.50;
 end;
 
 // Implémentation TDecorateurBoisson
-constructor TDecorateurBoisson.Create(ABoisson: IBoisson);
-begin
+constructor TDecorateurBoisson.Create(ABoisson: IBoisson);  
+begin  
   inherited Create;
   FBoisson := ABoisson;
 end;
 
-function TDecorateurBoisson.ObtenirDescription: string;
-begin
+function TDecorateurBoisson.ObtenirDescription: string;  
+begin  
   Result := FBoisson.ObtenirDescription;
 end;
 
-function TDecorateurBoisson.ObtenirPrix: Double;
-begin
+function TDecorateurBoisson.ObtenirPrix: Double;  
+begin  
   Result := FBoisson.ObtenirPrix;
 end;
 
 // Implémentation TAvecLait
-function TAvecLait.ObtenirDescription: string;
-begin
+function TAvecLait.ObtenirDescription: string;  
+begin  
   Result := FBoisson.ObtenirDescription + ' + Lait';
 end;
 
-function TAvecLait.ObtenirPrix: Double;
-begin
+function TAvecLait.ObtenirPrix: Double;  
+begin  
   Result := FBoisson.ObtenirPrix + 0.50;
 end;
 
 // Implémentation TAvecChocolat
-function TAvecChocolat.ObtenirDescription: string;
-begin
+function TAvecChocolat.ObtenirDescription: string;  
+begin  
   Result := FBoisson.ObtenirDescription + ' + Chocolat';
 end;
 
-function TAvecChocolat.ObtenirPrix: Double;
-begin
+function TAvecChocolat.ObtenirPrix: Double;  
+begin  
   Result := FBoisson.ObtenirPrix + 0.70;
 end;
 
 // Implémentation TAvecCreme
-function TAvecCreme.ObtenirDescription: string;
-begin
+function TAvecCreme.ObtenirDescription: string;  
+begin  
   Result := FBoisson.ObtenirDescription + ' + Crème';
 end;
 
-function TAvecCreme.ObtenirPrix: Double;
-begin
+function TAvecCreme.ObtenirPrix: Double;  
+begin  
   Result := FBoisson.ObtenirPrix + 0.60;
 end;
 ```
@@ -743,33 +743,33 @@ type
   end;
 
 // Implémentation TLecteurMP3Ancien
-procedure TLecteurMP3Ancien.LireMP3(Chemin: string);
-begin
+procedure TLecteurMP3Ancien.LireMP3(Chemin: string);  
+begin  
   ShowMessage('Lecture du fichier MP3 : ' + Chemin);
 end;
 
 // Implémentation TAdaptateurMP3
-constructor TAdaptateurMP3.Create;
-begin
+constructor TAdaptateurMP3.Create;  
+begin  
   inherited Create;
   FLecteurAncien := TLecteurMP3Ancien.Create;
 end;
 
-destructor TAdaptateurMP3.Destroy;
-begin
+destructor TAdaptateurMP3.Destroy;  
+begin  
   FLecteurAncien.Free;
   inherited Destroy;
 end;
 
-procedure TAdaptateurMP3.Lire(NomFichier: string);
-begin
+procedure TAdaptateurMP3.Lire(NomFichier: string);  
+begin  
   // Adapter l'appel vers l'ancienne interface
   FLecteurAncien.LireMP3(NomFichier);
 end;
 
 // Implémentation TLecteurMP4
-procedure TLecteurMP4.Lire(NomFichier: string);
-begin
+procedure TLecteurMP4.Lire(NomFichier: string);  
+begin  
   ShowMessage('Lecture du fichier MP4 : ' + NomFichier);
 end;
 ```
@@ -777,8 +777,8 @@ end;
 ### Utilisation
 
 ```pascal
-procedure UtiliserLecteur(Lecteur: ILecteurAudio; Fichier: string);
-begin
+procedure UtiliserLecteur(Lecteur: ILecteurAudio; Fichier: string);  
+begin  
   Lecteur.Lire(Fichier);
 end;
 
@@ -856,62 +856,62 @@ type
   end;
 
 // Implémentation TModelProduit
-constructor TModelProduit.Create(ANom: string; APrix: Double; AStock: Integer);
-begin
+constructor TModelProduit.Create(ANom: string; APrix: Double; AStock: Integer);  
+begin  
   inherited Create;
   FNom := ANom;
   FPrix := APrix;
   FStock := AStock;
 end;
 
-procedure TModelProduit.ModifierStock(NouveauStock: Integer);
-begin
+procedure TModelProduit.ModifierStock(NouveauStock: Integer);  
+begin  
   if NouveauStock >= 0 then
     FStock := NouveauStock;
 end;
 
 // Implémentation TVueProduit
-procedure TVueProduit.Afficher(Produit: TModelProduit);
-begin
+procedure TVueProduit.Afficher(Produit: TModelProduit);  
+begin  
   ShowMessage(Format('Produit : %s'#13#10 +
                      'Prix : %.2f €'#13#10 +
                      'Stock : %d unités',
                      [Produit.Nom, Produit.Prix, Produit.Stock]));
 end;
 
-procedure TVueProduit.AfficherMessage(const Message: string);
-begin
+procedure TVueProduit.AfficherMessage(const Message: string);  
+begin  
   ShowMessage(Message);
 end;
 
 // Implémentation TControleurProduit
-constructor TControleurProduit.Create(AModel: TModelProduit; AVue: TVueProduit);
-begin
+constructor TControleurProduit.Create(AModel: TModelProduit; AVue: TVueProduit);  
+begin  
   inherited Create;
   FModel := AModel;
   FVue := AVue;
 end;
 
-destructor TControleurProduit.Destroy;
-begin
+destructor TControleurProduit.Destroy;  
+begin  
   FModel.Free;
   FVue.Free;
   inherited Destroy;
 end;
 
-procedure TControleurProduit.AfficherProduit;
-begin
+procedure TControleurProduit.AfficherProduit;  
+begin  
   FVue.Afficher(FModel);
 end;
 
-procedure TControleurProduit.AjouterStock(Quantite: Integer);
-begin
+procedure TControleurProduit.AjouterStock(Quantite: Integer);  
+begin  
   FModel.ModifierStock(FModel.Stock + Quantite);
   FVue.AfficherMessage(Format('%d unités ajoutées', [Quantite]));
 end;
 
-procedure TControleurProduit.RetirerStock(Quantite: Integer);
-begin
+procedure TControleurProduit.RetirerStock(Quantite: Integer);  
+begin  
   if FModel.Stock >= Quantite then
   begin
     FModel.ModifierStock(FModel.Stock - Quantite);
@@ -979,8 +979,8 @@ type
     procedure FermerDocument; virtual; abstract;
   end;
 
-procedure TTraitementDocument.Traiter;
-begin
+procedure TTraitementDocument.Traiter;  
+begin  
   OuvrirDocument;
   AnalyserContenu;
   GenererRapport;
@@ -1045,14 +1045,14 @@ N'hésitez pas à adapter un pattern à vos besoins spécifiques.
 
 ```pascal
 // ✅ Bon - le pattern est évident dans le nom
-TDocumentFactory
-TConfigurationSingleton
-TObserverDonnees
+TDocumentFactory  
+TConfigurationSingleton  
+TObserverDonnees  
 
 // ⚠️ Moins clair
-TDoc
-TConf
-TData
+TDoc  
+TConf  
+TData  
 ```
 
 ### 5. Documenter l'utilisation du pattern

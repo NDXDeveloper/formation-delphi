@@ -102,9 +102,9 @@ end;
 
 ### Avantages
 
-**✅ Code plus concis** : moins de lignes
-**✅ Plus lisible** : pour les conditions simples
-**✅ Expressif** : l'intention est claire
+**✅ Code plus concis** : moins de lignes  
+**✅ Plus lisible** : pour les conditions simples  
+**✅ Expressif** : l'intention est claire  
 
 ### Quand l'utiliser ?
 
@@ -129,8 +129,8 @@ Les **variables inline** permettent de déclarer une variable directement à l'e
 ### Avant Delphi 10.3
 
 ```pascal
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   I: Integer;        // Déclaration au début
   Somme: Integer;
   Nom: string;
@@ -148,8 +148,8 @@ end;
 ### Avec Delphi 10.3 et supérieur
 
 ```pascal
-procedure Exemple;
-begin
+procedure Exemple;  
+begin  
   var Somme := 0;  // Déclaration inline
 
   for var I := 1 to 10 do  // Variable de boucle inline
@@ -172,27 +172,28 @@ for var Client in ListeClients do
   ShowMessage(Client.Nom);
 
 // Avec type explicite
-var Total: Double := 0.0;
-var Compteur: Integer := 0;
+var Total: Double := 0.0;  
+var Compteur: Integer := 0;  
 
 // Avec type inféré (le compilateur devine le type)
-var Message := 'Bonjour';  // Type string déduit
-var Prix := 19.99;         // Type Double déduit
-var Actif := True;         // Type Boolean déduit
+var Message := 'Bonjour';  // Type string déduit  
+var Prix := 19.99;         // Type Double déduit  
+var Actif := True;         // Type Boolean déduit  
 
 // Multiple variables sur une ligne
 var X := 10; var Y := 20; var Z := 30;
 
-// Dans un if
-if var Trouve := Rechercher(Valeur); Trouve then
+// Déclaration proche de l'utilisation
+var Trouve := Rechercher(Valeur);  
+if Trouve then  
   ShowMessage('Trouvé !');
 ```
 
 ### Avantages
 
-**✅ Portée limitée** : la variable n'existe que dans son contexte
-**✅ Code plus lisible** : déclaration proche de l'utilisation
-**✅ Moins d'erreurs** : moins de risque de réutiliser une variable par erreur
+**✅ Portée limitée** : la variable n'existe que dans son contexte  
+**✅ Code plus lisible** : déclaration proche de l'utilisation  
+**✅ Moins d'erreurs** : moins de risque de réutiliser une variable par erreur  
 
 ### Bonnes pratiques
 
@@ -207,8 +208,8 @@ for var I := 0 to 10 do
 // I n'est plus accessible ici !
 
 // Dans ce cas, déclarez I normalement
-var I: Integer;
-for I := 0 to 10 do
+var I: Integer;  
+for I := 0 to 10 do  
   if I = 5 then Break;
 ShowMessage(IntToStr(I));  // I est accessible
 ```
@@ -223,14 +224,14 @@ Une **méthode anonyme** (ou fonction anonyme) est une fonction sans nom que vou
 
 ```pascal
 // Procédure anonyme
-procedure
-begin
+procedure  
+begin  
   // Code
 end;
 
 // Fonction anonyme
-function(Param: Type): TypeRetour
-begin
+function(Param: Type): TypeRetour  
+begin  
   // Code
   Result := valeur;
 end;
@@ -303,8 +304,8 @@ end;
 Les méthodes anonymes peuvent "capturer" les variables de leur contexte :
 
 ```pascal
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   Compteur: Integer;
   IncrémenterEtAfficher: TProc;
 begin
@@ -342,9 +343,9 @@ TTask.Run(procedure
 
 ### Avantages
 
-**✅ Code plus concis** : pas besoin de créer une méthode séparée
-**✅ Flexibilité** : créer des comportements à la volée
-**✅ Callbacks** : parfait pour les événements et les callbacks
+**✅ Code plus concis** : pas besoin de créer une méthode séparée  
+**✅ Flexibilité** : créer des comportements à la volée  
+**✅ Callbacks** : parfait pour les événements et les callbacks  
 
 ## Attributs personnalisés (Delphi 2010+)
 
@@ -373,14 +374,14 @@ type
     property NomColonne: string read FNomColonne;
   end;
 
-constructor TableAttribute.Create(const ANomTable: string);
-begin
+constructor TableAttribute.Create(const ANomTable: string);  
+begin  
   inherited Create;
   FNomTable := ANomTable;
 end;
 
-constructor ColumnAttribute.Create(const ANomColonne: string);
-begin
+constructor ColumnAttribute.Create(const ANomColonne: string);  
+begin  
   inherited Create;
   FNomColonne := ANomColonne;
 end;
@@ -414,8 +415,8 @@ type
 uses
   System.Rtti;
 
-procedure AfficherInfosClasse(AClass: TClass);
-var
+procedure AfficherInfosClasse(AClass: TClass);  
+var  
   Context: TRttiContext;
   RttiType: TRttiType;
   Attr: TCustomAttribute;
@@ -457,20 +458,20 @@ Un **Helper** permet d'ajouter des méthodes à des types existants sans les mod
 
 ```pascal
 type
-  TStringHelper = record helper for string
+  TMonStringHelper = record helper for string
   public
     function EstVide: Boolean;
     function Inverser: string;
     function ContientChiffres: Boolean;
   end;
 
-function TStringHelper.EstVide: Boolean;
-begin
+function TMonStringHelper.EstVide: Boolean;  
+begin  
   Result := Trim(Self) = '';
 end;
 
-function TStringHelper.Inverser: string;
-var
+function TMonStringHelper.Inverser: string;  
+var  
   I: Integer;
 begin
   Result := '';
@@ -478,8 +479,8 @@ begin
     Result := Result + Self[I];
 end;
 
-function TStringHelper.ContientChiffres: Boolean;
-var
+function TMonStringHelper.ContientChiffres: Boolean;  
+var  
   C: Char;
 begin
   Result := False;
@@ -519,8 +520,8 @@ type
     function Moyenne: Double;
   end;
 
-function TListHelper.Somme: Integer;
-var
+function TListHelper.Somme: Integer;  
+var  
   Valeur: Integer;
 begin
   Result := 0;
@@ -528,8 +529,8 @@ begin
     Result := Result + Valeur;
 end;
 
-function TListHelper.Moyenne: Double;
-begin
+function TListHelper.Moyenne: Double;  
+begin  
   if Self.Count = 0 then
     Result := 0
   else
@@ -560,9 +561,9 @@ end;
 
 ### Avantages
 
-**✅ Extension** : ajouter des méthodes sans modifier la classe originale
-**✅ Lisibilité** : syntaxe naturelle
-**✅ Réutilisabilité** : helpers utilisables partout
+**✅ Extension** : ajouter des méthodes sans modifier la classe originale  
+**✅ Lisibilité** : syntaxe naturelle  
+**✅ Réutilisabilité** : helpers utilisables partout  
 
 ## Littéraux binaires (Delphi 10.4 Sydney)
 
@@ -621,9 +622,9 @@ end;
 
 ### Avantages
 
-**✅ Clarté** : manipulation de bits plus évidente
-**✅ Lisibilité** : on voit directement les bits
-**✅ Moins d'erreurs** : pas besoin de convertir mentalement
+**✅ Clarté** : manipulation de bits plus évidente  
+**✅ Lisibilité** : on voit directement les bits  
+**✅ Moins d'erreurs** : pas besoin de convertir mentalement  
 
 ## Expressions régulières intégrées (Delphi XE+)
 
@@ -736,25 +737,25 @@ type
     function ToString: string;
   end;
 
-constructor TPoint.Create(AX, AY: Integer);
-begin
+constructor TPoint.Create(AX, AY: Integer);  
+begin  
   X := AX;
   Y := AY;
 end;
 
-function TPoint.Distance(Autre: TPoint): Double;
-begin
+function TPoint.Distance(Autre: TPoint): Double;  
+begin  
   Result := Sqrt(Sqr(Autre.X - X) + Sqr(Autre.Y - Y));
 end;
 
-procedure TPoint.Deplacer(DeltaX, DeltaY: Integer);
-begin
+procedure TPoint.Deplacer(DeltaX, DeltaY: Integer);  
+begin  
   X := X + DeltaX;
   Y := Y + DeltaY;
 end;
 
-function TPoint.ToString: string;
-begin
+function TPoint.ToString: string;  
+begin  
   Result := Format('(%d, %d)', [X, Y]);
 end;
 ```
@@ -791,26 +792,26 @@ type
     function ToString: string;
   end;
 
-constructor TComplexe.Create(AReel, AImaginaire: Double);
-begin
+constructor TComplexe.Create(AReel, AImaginaire: Double);  
+begin  
   Reel := AReel;
   Imaginaire := AImaginaire;
 end;
 
-class operator TComplexe.Add(const A, B: TComplexe): TComplexe;
-begin
+class operator TComplexe.Add(const A, B: TComplexe): TComplexe;  
+begin  
   Result.Reel := A.Reel + B.Reel;
   Result.Imaginaire := A.Imaginaire + B.Imaginaire;
 end;
 
-class operator TComplexe.Subtract(const A, B: TComplexe): TComplexe;
-begin
+class operator TComplexe.Subtract(const A, B: TComplexe): TComplexe;  
+begin  
   Result.Reel := A.Reel - B.Reel;
   Result.Imaginaire := A.Imaginaire - B.Imaginaire;
 end;
 
-function TComplexe.ToString: string;
-begin
+function TComplexe.ToString: string;  
+begin  
   if Imaginaire >= 0 then
     Result := Format('%.2f + %.2fi', [Reel, Imaginaire])
   else
@@ -841,7 +842,7 @@ end;
 
 ```pascal
 // Tableaux
-var
+const
   Nombres: array[1..5] of Integer = (10, 20, 30, 40, 50);
 begin
   for var N in Nombres do
@@ -915,11 +916,11 @@ begin
 end;
 ```
 
-## Gestion des ressources avec managed records (Delphi 11+)
+## Gestion des ressources avec managed records (Delphi 10.4+)
 
 ### Records gérés automatiquement
 
-Delphi 11 a introduit les **managed records** qui peuvent implémenter une gestion automatique de la mémoire :
+Delphi 10.4 Sydney a introduit les **managed records** qui peuvent implémenter une gestion automatique de la mémoire :
 
 ```pascal
 type
@@ -957,12 +958,12 @@ end;
 - Nouvelles fonctionnalités IDE
 
 ### Delphi 11 Alexandria (2021)
-- **Managed records** : gestion automatique
 - Amélioration des helpers
 - Nouvelles API de threading
 
 ### Delphi 10.4 Sydney (2020)
 - ✨ **Littéraux binaires** : notation %
+- ✨ **Managed records** : gestion automatique (Initialize/Finalize)
 - Améliorations des génériques
 - Support macOS 64-bit
 
@@ -1001,16 +1002,16 @@ TTask.Run(procedure
 var X := if A > B then if C < D then E else F else if G > H then I else J;
 
 // ✅ Plus clair
-var X: Integer;
-if A > B then
-begin
+var X: Integer;  
+if A > B then  
+begin  
   if C < D then
     X := E
   else
     X := F;
-end
-else
-begin
+end  
+else  
+begin  
   if G > H then
     X := I
   else
@@ -1035,7 +1036,7 @@ Les principales nouveautés modernes d'Object Pascal :
 - **Expressions régulières** : manipulation avancée de texte
 - **Records améliorés** : méthodes et opérateurs
 - **For-in** : parcours de collections simplifié
-- **Managed records** (11+) : gestion automatique
+- **Managed records** (10.4+) : gestion automatique
 
 Ces fonctionnalités rendent Object Pascal plus moderne, plus expressif et plus puissant tout en conservant sa clarté et sa lisibilité. N'hésitez pas à les utiliser dans vos projets pour un code plus élégant et maintenable !
 

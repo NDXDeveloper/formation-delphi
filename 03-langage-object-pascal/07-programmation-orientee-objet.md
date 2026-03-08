@@ -16,7 +16,7 @@ Imaginez que vous devez modéliser une bibliothèque dans un programme :
 
 **Approche procédurale (ancienne méthode)** :
 - Des variables séparées : `TitreLivre1`, `AuteurLivre1`, `AnnéeLivre1`, `TitreLivre2`, `AuteurLivre2`...
-- Des fonctions séparées : `AfficherTitreLivre()`, `EmprunterrLivre()`, `RendreLivre()`...
+- Des fonctions séparées : `AfficherTitreLivre()`, `EmprunterLivre()`, `RendreLivre()`...
 - Difficile à maintenir et à organiser
 
 **Approche orientée objet (moderne)** :
@@ -116,15 +116,15 @@ var
   AgeUtilisateur2: Integer;
   EmailUtilisateur2: string;
 
-procedure AfficherUtilisateur(Nom: string; Age: Integer; Email: string);
-begin
+procedure AfficherUtilisateur(Nom: string; Age: Integer; Email: string);  
+begin  
   WriteLn('Nom: ' + Nom);
   WriteLn('Âge: ' + IntToStr(Age));
   WriteLn('Email: ' + Email);
 end;
 
-procedure EnvoyerEmail(Email: string; Message: string);
-begin
+procedure EnvoyerEmail(Email: string; Message: string);  
+begin  
   // Code pour envoyer l'email
 end;
 ```

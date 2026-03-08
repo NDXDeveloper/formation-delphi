@@ -57,8 +57,8 @@ Contrairement à certaines idées reçues, Object Pascal n'est **pas un langage 
 
 ```pascal
 // Object Pascal - très lisible
-procedure CalculerTotal;
-var
+procedure CalculerTotal;  
+var  
   PrixUnitaire: Double;
   Quantite: Integer;
   Total: Double;
@@ -213,13 +213,13 @@ function Additionner(A, B: Integer): Integer;
 // IMPLEMENTATION : le code interne
 implementation
 
-procedure TMaClasse.FaireQuelqueChose;
-begin
+procedure TMaClasse.FaireQuelqueChose;  
+begin  
   ShowMessage('Ceci est ma méthode');
 end;
 
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
@@ -254,8 +254,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bonjour ' + Edit1.Text + ' !');
 end;
 

@@ -30,8 +30,8 @@ Une exception est un objet qui représente une erreur ou une condition anormale.
 Voyons ce qui se passe sans gestion d'exceptions :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nombre: Integer;
 begin
   Nombre := StrToInt(Edit1.Text);  // Si l'utilisateur entre "abc", le programme plante !
@@ -56,8 +56,8 @@ end;
 
 **Exemple simple :**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nombre: Integer;
 begin
   try
@@ -76,8 +76,8 @@ end;
 Vous pouvez récupérer l'exception pour afficher son message :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nombre: Integer;
 begin
   try
@@ -99,8 +99,8 @@ end;
 Vous pouvez traiter différemment selon le type d'exception :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nombre: Integer;
 begin
   try
@@ -123,8 +123,8 @@ end;
 ### Exemple : Ouverture de fichier
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Fichier: TextFile;
   Ligne: string;
 begin
@@ -165,8 +165,8 @@ end;
 ### Exemple : Libération d'objet
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -185,8 +185,8 @@ Sans `finally`, si une exception se produit pendant `LoadFromFile`, l'objet `Lis
 ### Exemple : Fermeture de fichier
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Fichier: TextFile;
   Ligne: string;
 begin
@@ -207,8 +207,8 @@ end;
 ### Exemple : Curseur de souris
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Screen.Cursor := crHourGlass;  // Curseur sablier
   try
     // Traitement long
@@ -223,8 +223,8 @@ end;
 ### Exemple : Activation/désactivation de contrôles
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Button1.Enabled := False;
   try
     // Traitement
@@ -245,8 +245,8 @@ try
   // Code susceptible de générer une exception
 except
   // Gestion des exceptions
-end;
-finally
+end;  
+finally  
   // Nettoyage (toujours exécuté)
 end;
 ```
@@ -254,8 +254,8 @@ end;
 **Attention :** Cette syntaxe n'est pas directement supportée. Il faut imbriquer deux blocs try :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -276,8 +276,8 @@ end;
 
 **Autre approche (plus lisible) :**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -298,8 +298,8 @@ end;
 
 **Meilleure pratique :**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -329,8 +329,8 @@ raise Exception.Create('Message d''erreur');
 ### Exemple : Validation de données
 
 ```pascal
-procedure ValiderAge(Age: Integer);
-begin
+procedure ValiderAge(Age: Integer);  
+begin  
   if Age < 0 then
     raise Exception.Create('L''âge ne peut pas être négatif');
 
@@ -338,8 +338,8 @@ begin
     raise Exception.Create('L''âge semble invalide');
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Age: Integer;
 begin
   try
@@ -356,16 +356,16 @@ end;
 ### Exemple : Division sécurisée
 
 ```pascal
-function DiviserSecurise(A, B: Double): Double;
-begin
+function DiviserSecurise(A, B: Double): Double;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro impossible');
 
   Result := A / B;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Resultat: Double;
 begin
   try
@@ -383,8 +383,8 @@ end;
 Vous pouvez intercepter une exception, effectuer une action, puis la re-lever :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   try
     // Code risqué
     TraiterDonnees;
@@ -478,14 +478,14 @@ type
 type
   EAgeInvalide = class(Exception);
 
-procedure ValiderAge(Age: Integer);
-begin
+procedure ValiderAge(Age: Integer);  
+begin  
   if (Age < 0) or (Age > 150) then
     raise EAgeInvalide.Create('Âge invalide : ' + IntToStr(Age));
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Age: Integer;
 begin
   try
@@ -508,8 +508,8 @@ type
   ESoldeInsuffisant = class(Exception);
   EMontantNegatif = class(Exception);
 
-procedure Retirer(Compte: TCompte; Montant: Double);
-begin
+procedure Retirer(Compte: TCompte; Montant: Double);  
+begin  
   if Compte = nil then
     raise ECompteInvalide.Create('Compte non initialisé');
 
@@ -550,16 +550,16 @@ type
     property Valeur: string read FValeur;
   end;
 
-constructor EValidationErreur.Create(const Champ, Valeur, Message: string);
-begin
+constructor EValidationErreur.Create(const Champ, Valeur, Message: string);  
+begin  
   inherited Create(Message);
   FChamp := Champ;
   FValeur := Valeur;
 end;
 
 // Utilisation
-procedure ValiderEmail(const Email: string);
-begin
+procedure ValiderEmail(const Email: string);  
+begin  
   if Pos('@', Email) = 0 then
     raise EValidationErreur.Create('Email', Email, 'Format d''email invalide');
 end;
@@ -579,8 +579,8 @@ end;
 `EAbort` est une exception spéciale qui ne génère pas de message d'erreur. Elle est utilisée pour interrompre proprement une opération.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   if MessageDlg('Continuer ?', mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     Abort;  // Lève EAbort
 
@@ -664,8 +664,8 @@ end;
 
 ```pascal
 // ✅ BON : libération garantie
-Liste := TStringList.Create;
-try
+Liste := TStringList.Create;  
+try  
   // Utilisation
 finally
   Liste.Free;
@@ -713,8 +713,8 @@ raise Exception.Create('Impossible d''ouvrir le fichier : ' + NomFichier);
 
 ```pascal
 // ✅ BON : validation au début
-function Diviser(A, B: Double): Double;
-begin
+function Diviser(A, B: Double): Double;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro');
 
@@ -722,8 +722,8 @@ begin
 end;
 
 // ❌ Moins bon : vérification tardive
-function Diviser(A, B: Double): Double;
-begin
+function Diviser(A, B: Double): Double;  
+begin  
   // Beaucoup de code...
 
   if B = 0 then
@@ -760,8 +760,8 @@ end;
 /// Divise deux nombres
 /// </summary>
 /// <exception cref="Exception">Levée si le diviseur est zéro</exception>
-function Diviser(A, B: Double): Double;
-begin
+function Diviser(A, B: Double): Double;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro impossible');
 
@@ -769,11 +769,11 @@ begin
 end;
 ```
 
-### 8. Nettoyer avant de lever une exception
+### 8. Laisser finally s'occuper du nettoyage
 
 ```pascal
-procedure TraiterFichier(const NomFichier: string);
-var
+procedure TraiterFichier(const NomFichier: string);  
+var  
   Fichier: TextFile;
 begin
   AssignFile(Fichier, NomFichier);
@@ -781,28 +781,29 @@ begin
   try
     // Traitement
     if not ConditionValide then
-    begin
-      CloseFile(Fichier);  // Nettoyage avant de lever
       raise Exception.Create('Condition non valide');
-    end;
+
+    // Suite du traitement...
   finally
-    CloseFile(Fichier);
+    CloseFile(Fichier);  // Nettoyage garanti, même si exception levée
   end;
 end;
 ```
+
+**Point important :** Ne fermez pas la ressource manuellement avant de lever l'exception : le bloc `finally` s'en chargera automatiquement. Sinon, vous risquez une double fermeture.
 
 ## Gestion centralisée des exceptions
 
 Vous pouvez gérer globalement les exceptions non capturées :
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Application.OnException := GererExceptionGlobale;
 end;
 
-procedure TForm1.GererExceptionGlobale(Sender: TObject; E: Exception);
-begin
+procedure TForm1.GererExceptionGlobale(Sender: TObject; E: Exception);  
+begin  
   // Journaliser
   Log('Exception non gérée : ' + E.Message);
 
@@ -817,8 +818,8 @@ end;
 Il est important de garder une trace des exceptions pour le débogage :
 
 ```pascal
-procedure LogErreur(const Message: string);
-var
+procedure LogErreur(const Message: string);  
+var  
   Fichier: TextFile;
 begin
   AssignFile(Fichier, 'C:\Logs\erreurs.log');
@@ -863,13 +864,13 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : fuite mémoire si exception
-Liste := TStringList.Create;
-Liste.LoadFromFile('fichier.txt');
-Liste.Free;
+Liste := TStringList.Create;  
+Liste.LoadFromFile('fichier.txt');  
+Liste.Free;  
 
 // ✅ BON
-Liste := TStringList.Create;
-try
+Liste := TStringList.Create;  
+try  
   Liste.LoadFromFile('fichier.txt');
 finally
   Liste.Free;
@@ -927,16 +928,16 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : exception pour la logique normale
-function TrouverUtilisateur(ID: Integer): TUtilisateur;
-begin
+function TrouverUtilisateur(ID: Integer): TUtilisateur;  
+begin  
   if not UtilisateurExiste(ID) then
     raise Exception.Create('Utilisateur non trouvé');
   // ...
 end;
 
 // ✅ BON : utiliser un booléen ou nil
-function TrouverUtilisateur(ID: Integer): TUtilisateur;
-begin
+function TrouverUtilisateur(ID: Integer): TUtilisateur;  
+begin  
   if not UtilisateurExiste(ID) then
     Result := nil  // Ou retourner False avec un paramètre out
   else

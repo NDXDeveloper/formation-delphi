@@ -66,9 +66,9 @@ end;
 Object Pascal n'est **pas sensible à la casse** pour les identifiants. Cela signifie que :
 
 ```pascal
-MaVariable
-mavariable
-MAVARIABLE
+MaVariable  
+mavariable  
+MAVARIABLE  
 ```
 
 Ces trois écritures font référence à la même variable. Cependant, par convention et pour la lisibilité, on utilise généralement :
@@ -90,8 +90,8 @@ end;
 Un bloc peut contenir une ou plusieurs instructions. Ils sont particulièrement utiles avec les structures de contrôle :
 
 ```pascal
-if Condition then
-begin
+if Condition then  
+begin  
   // Plusieurs instructions si la condition est vraie
   Instruction1;
   Instruction2;
@@ -107,20 +107,20 @@ Bien que l'indentation ne soit pas obligatoire en Object Pascal (contrairement �
 
 **Mauvaise pratique :**
 ```pascal
-procedure Test;
-begin
-if X > 0 then
-begin
-Y := X * 2;
-ShowMessage('Résultat');
-end;
-end;
+procedure Test;  
+begin  
+if X > 0 then  
+begin  
+Y := X * 2;  
+ShowMessage('Résultat');  
+end;  
+end;  
 ```
 
 **Bonne pratique :**
 ```pascal
-procedure Test;
-begin
+procedure Test;  
+begin  
   if X > 0 then
   begin
     Y := X * 2;
@@ -145,8 +145,8 @@ Object Pascal possède des mots-clés réservés qui ne peuvent pas être utilis
 Les espaces, tabulations et sauts de ligne sont généralement ignorés par le compilateur (sauf dans les chaînes de caractères). Vous pouvez les utiliser librement pour améliorer la lisibilité :
 
 ```pascal
-X:=Y+Z;        // Valide mais peu lisible
-X := Y + Z;    // Préférable
+X:=Y+Z;        // Valide mais peu lisible  
+X := Y + Z;    // Préférable  
 ```
 
 ## Exemple complet : Structure d'une procédure simple
@@ -154,8 +154,8 @@ X := Y + Z;    // Préférable
 Voici un exemple qui rassemble plusieurs éléments de syntaxe :
 
 ```pascal
-procedure AfficherMessage;
-var
+procedure AfficherMessage;  
+var  
   Message: string;  // Déclaration d'une variable locale
 begin
   // Initialisation de la variable
@@ -199,9 +199,9 @@ Pour nommer vos variables, procédures et autres identifiants, suivez ces règle
 
 **Exemples valides :**
 ```pascal
-MaVariable
-ma_variable
-Variable123
+MaVariable  
+ma_variable  
+Variable123  
 _temp
 CalculTotal
 ```
@@ -209,9 +209,9 @@ CalculTotal
 **Exemples invalides :**
 ```pascal
 123Variable    // Commence par un chiffre
-Ma-Variable    // Contient un tiret
-Ma Variable    // Contient un espace
-begin          // Mot-clé réservé
+Ma-Variable    // Contient un tiret  
+Ma Variable    // Contient un espace  
+begin          // Mot-clé réservé  
 ```
 
 ## Points clés à retenir

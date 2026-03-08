@@ -70,8 +70,8 @@ type
     constructor Create(AX, AY: Integer);
   end;
 
-constructor TPoint.Create(AX, AY: Integer);
-begin
+constructor TPoint.Create(AX, AY: Integer);  
+begin  
   X := AX;
   Y := AY;
 end;
@@ -107,24 +107,24 @@ type
     constructor CreateCentre(ACentreX, ACentreY, ALargeur, AHauteur: Integer);
   end;
 
-constructor TRectangle.Create(AGauche, AHaut, ADroite, ABas: Integer);
-begin
+constructor TRectangle.Create(AGauche, AHaut, ADroite, ABas: Integer);  
+begin  
   Gauche := AGauche;
   Haut := AHaut;
   Droite := ADroite;
   Bas := ABas;
 end;
 
-constructor TRectangle.Create(ALargeur, AHauteur: Integer);
-begin
+constructor TRectangle.Create(ALargeur, AHauteur: Integer);  
+begin  
   Gauche := 0;
   Haut := 0;
   Droite := ALargeur;
   Bas := AHauteur;
 end;
 
-constructor TRectangle.CreateCentre(ACentreX, ACentreY, ALargeur, AHauteur: Integer);
-begin
+constructor TRectangle.CreateCentre(ACentreX, ACentreY, ALargeur, AHauteur: Integer);  
+begin  
   Gauche := ACentreX - (ALargeur div 2);
   Haut := ACentreY - (AHauteur div 2);
   Droite := ACentreX + (ALargeur div 2);
@@ -166,41 +166,41 @@ type
     procedure Afficher;
   end;
 
-constructor TPoint.Create(AX, AY: Integer);
-begin
+constructor TPoint.Create(AX, AY: Integer);  
+begin  
   X := AX;
   Y := AY;
 end;
 
-function TPoint.Distance(Autre: TPoint): Double;
-begin
+function TPoint.Distance(Autre: TPoint): Double;  
+begin  
   Result := Sqrt(Sqr(Autre.X - X) + Sqr(Autre.Y - Y));
 end;
 
-function TPoint.EstOrigine: Boolean;
-begin
+function TPoint.EstOrigine: Boolean;  
+begin  
   Result := (X = 0) and (Y = 0);
 end;
 
-procedure TPoint.Deplacer(DeltaX, DeltaY: Integer);
-begin
+procedure TPoint.Deplacer(DeltaX, DeltaY: Integer);  
+begin  
   X := X + DeltaX;
   Y := Y + DeltaY;
 end;
 
-procedure TPoint.DeplacerVers(Nouveau: TPoint);
-begin
+procedure TPoint.DeplacerVers(Nouveau: TPoint);  
+begin  
   X := Nouveau.X;
   Y := Nouveau.Y;
 end;
 
-function TPoint.ToString: string;
-begin
+function TPoint.ToString: string;  
+begin  
   Result := Format('(%d, %d)', [X, Y]);
 end;
 
-procedure TPoint.Afficher;
-begin
+procedure TPoint.Afficher;  
+begin  
   ShowMessage(ToString);
 end;
 ```
@@ -247,19 +247,19 @@ type
     class function Milieu(P1, P2: TPoint): TPoint; static;
   end;
 
-class function TPoint.Origine: TPoint;
-begin
+class function TPoint.Origine: TPoint;  
+begin  
   Result.X := 0;
   Result.Y := 0;
 end;
 
-class function TPoint.Distance(P1, P2: TPoint): Double;
-begin
+class function TPoint.Distance(P1, P2: TPoint): Double;  
+begin  
   Result := Sqrt(Sqr(P2.X - P1.X) + Sqr(P2.Y - P1.Y));
 end;
 
-class function TPoint.Milieu(P1, P2: TPoint): TPoint;
-begin
+class function TPoint.Milieu(P1, P2: TPoint): TPoint;  
+begin  
   Result.X := (P1.X + P2.X) div 2;
   Result.Y := (P1.Y + P2.Y) div 2;
 end;
@@ -319,8 +319,8 @@ type
     class operator Add(const A, B: TPoint): TPoint;
   end;
 
-class operator TPoint.Add(const A, B: TPoint): TPoint;
-begin
+class operator TPoint.Add(const A, B: TPoint): TPoint;  
+begin  
   Result.X := A.X + B.X;
   Result.Y := A.Y + B.Y;
 end;
@@ -352,8 +352,8 @@ type
     class operator Subtract(const A, B: TPoint): TPoint;
   end;
 
-class operator TPoint.Subtract(const A, B: TPoint): TPoint;
-begin
+class operator TPoint.Subtract(const A, B: TPoint): TPoint;  
+begin  
   Result.X := A.X - B.X;
   Result.Y := A.Y - B.Y;
 end;
@@ -374,19 +374,19 @@ type
     class operator Divide(const Point: TPoint; Diviseur: Integer): TPoint;
   end;
 
-class operator TPoint.Multiply(const Point: TPoint; Scalaire: Integer): TPoint;
-begin
+class operator TPoint.Multiply(const Point: TPoint; Scalaire: Integer): TPoint;  
+begin  
   Result.X := Point.X * Scalaire;
   Result.Y := Point.Y * Scalaire;
 end;
 
-class operator TPoint.Multiply(Scalaire: Integer; const Point: TPoint): TPoint;
-begin
+class operator TPoint.Multiply(Scalaire: Integer; const Point: TPoint): TPoint;  
+begin  
   Result := Multiply(Point, Scalaire);
 end;
 
-class operator TPoint.Divide(const Point: TPoint; Diviseur: Integer): TPoint;
-begin
+class operator TPoint.Divide(const Point: TPoint; Diviseur: Integer): TPoint;  
+begin  
   if Diviseur = 0 then
     raise Exception.Create('Division par zéro');
   Result.X := Point.X div Diviseur;
@@ -420,8 +420,8 @@ type
     class operator Negative(const Point: TPoint): TPoint;
   end;
 
-class operator TPoint.Negative(const Point: TPoint): TPoint;
-begin
+class operator TPoint.Negative(const Point: TPoint): TPoint;  
+begin  
   Result.X := -Point.X;
   Result.Y := -Point.Y;
 end;
@@ -451,13 +451,13 @@ type
     class operator NotEqual(const A, B: TPoint): Boolean;
   end;
 
-class operator TPoint.Equal(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.Equal(const A, B: TPoint): Boolean;  
+begin  
   Result := (A.X = B.X) and (A.Y = B.Y);
 end;
 
-class operator TPoint.NotEqual(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.NotEqual(const A, B: TPoint): Boolean;  
+begin  
   Result := not (A = B);
 end;
 ```
@@ -478,28 +478,28 @@ type
     function DistanceOrigine: Double;
   end;
 
-function TPoint.DistanceOrigine: Double;
-begin
+function TPoint.DistanceOrigine: Double;  
+begin  
   Result := Sqrt(Sqr(X) + Sqr(Y));
 end;
 
-class operator TPoint.LessThan(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.LessThan(const A, B: TPoint): Boolean;  
+begin  
   Result := A.DistanceOrigine < B.DistanceOrigine;
 end;
 
-class operator TPoint.GreaterThan(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.GreaterThan(const A, B: TPoint): Boolean;  
+begin  
   Result := A.DistanceOrigine > B.DistanceOrigine;
 end;
 
-class operator TPoint.LessThanOrEqual(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.LessThanOrEqual(const A, B: TPoint): Boolean;  
+begin  
   Result := A.DistanceOrigine <= B.DistanceOrigine;
 end;
 
-class operator TPoint.GreaterThanOrEqual(const A, B: TPoint): Boolean;
-begin
+class operator TPoint.GreaterThanOrEqual(const A, B: TPoint): Boolean;  
+begin  
   Result := A.DistanceOrigine >= B.DistanceOrigine;
 end;
 ```
@@ -539,14 +539,14 @@ type
     class operator Implicit(const Point: TPoint): string;
   end;
 
-class operator TPoint.Implicit(Valeur: Integer): TPoint;
-begin
+class operator TPoint.Implicit(Valeur: Integer): TPoint;  
+begin  
   Result.X := Valeur;
   Result.Y := 0;
 end;
 
-class operator TPoint.Implicit(const Point: TPoint): string;
-begin
+class operator TPoint.Implicit(const Point: TPoint): string;  
+begin  
   Result := Format('(%d, %d)', [Point.X, Point.Y]);
 end;
 ```
@@ -578,8 +578,8 @@ type
     class operator Explicit(const Point: TPoint): Double;
   end;
 
-class operator TPoint.Explicit(const Point: TPoint): Double;
-begin
+class operator TPoint.Explicit(const Point: TPoint): Double;  
+begin  
   Result := Sqrt(Sqr(Point.X) + Sqr(Point.Y));
 end;
 ```
@@ -611,7 +611,7 @@ type
     Imaginaire: Double;
 
     // Constructeurs
-    constructor Create(AReel, AImagianire: Double); overload;
+    constructor Create(AReel, AImaginaire: Double); overload;
     constructor Create(AReel: Double); overload;
 
     // Méthodes
@@ -644,31 +644,31 @@ type
   end;
 
 // Constructeurs
-constructor TComplexe.Create(AReel, AImagianire: Double);
-begin
+constructor TComplexe.Create(AReel, AImaginaire: Double);  
+begin  
   Reel := AReel;
-  Imaginaire := AImagianire;
+  Imaginaire := AImaginaire;
 end;
 
-constructor TComplexe.Create(AReel: Double);
-begin
+constructor TComplexe.Create(AReel: Double);  
+begin  
   Create(AReel, 0);
 end;
 
 // Méthodes
-function TComplexe.Module: Double;
-begin
+function TComplexe.Module: Double;  
+begin  
   Result := Sqrt(Sqr(Reel) + Sqr(Imaginaire));
 end;
 
-function TComplexe.Conjugue: TComplexe;
-begin
+function TComplexe.Conjugue: TComplexe;  
+begin  
   Result.Reel := Reel;
   Result.Imaginaire := -Imaginaire;
 end;
 
-function TComplexe.ToString: string;
-begin
+function TComplexe.ToString: string;  
+begin  
   if Imaginaire >= 0 then
     Result := Format('%.2f + %.2fi', [Reel, Imaginaire])
   else
@@ -676,43 +676,43 @@ begin
 end;
 
 // Méthodes de classe
-class function TComplexe.Zero: TComplexe;
-begin
+class function TComplexe.Zero: TComplexe;  
+begin  
   Result := TComplexe.Create(0, 0);
 end;
 
-class function TComplexe.Un: TComplexe;
-begin
+class function TComplexe.Un: TComplexe;  
+begin  
   Result := TComplexe.Create(1, 0);
 end;
 
-class function TComplexe.I: TComplexe;
-begin
+class function TComplexe.I: TComplexe;  
+begin  
   Result := TComplexe.Create(0, 1);
 end;
 
 // Opérateurs arithmétiques
-class operator TComplexe.Add(const A, B: TComplexe): TComplexe;
-begin
+class operator TComplexe.Add(const A, B: TComplexe): TComplexe;  
+begin  
   Result.Reel := A.Reel + B.Reel;
   Result.Imaginaire := A.Imaginaire + B.Imaginaire;
 end;
 
-class operator TComplexe.Subtract(const A, B: TComplexe): TComplexe;
-begin
+class operator TComplexe.Subtract(const A, B: TComplexe): TComplexe;  
+begin  
   Result.Reel := A.Reel - B.Reel;
   Result.Imaginaire := A.Imaginaire - B.Imaginaire;
 end;
 
-class operator TComplexe.Multiply(const A, B: TComplexe): TComplexe;
-begin
+class operator TComplexe.Multiply(const A, B: TComplexe): TComplexe;  
+begin  
   // (a+bi)(c+di) = (ac-bd) + (ad+bc)i
   Result.Reel := A.Reel * B.Reel - A.Imaginaire * B.Imaginaire;
   Result.Imaginaire := A.Reel * B.Imaginaire + A.Imaginaire * B.Reel;
 end;
 
-class operator TComplexe.Divide(const A, B: TComplexe): TComplexe;
-var
+class operator TComplexe.Divide(const A, B: TComplexe): TComplexe;  
+var  
   Denominateur: Double;
 begin
   Denominateur := Sqr(B.Reel) + Sqr(B.Imaginaire);
@@ -723,37 +723,37 @@ begin
   Result.Imaginaire := (A.Imaginaire * B.Reel - A.Reel * B.Imaginaire) / Denominateur;
 end;
 
-class operator TComplexe.Negative(const C: TComplexe): TComplexe;
-begin
+class operator TComplexe.Negative(const C: TComplexe): TComplexe;  
+begin  
   Result.Reel := -C.Reel;
   Result.Imaginaire := -C.Imaginaire;
 end;
 
 // Opérateurs de comparaison
-class operator TComplexe.Equal(const A, B: TComplexe): Boolean;
-begin
+class operator TComplexe.Equal(const A, B: TComplexe): Boolean;  
+begin  
   Result := (Abs(A.Reel - B.Reel) < 0.0001) and
             (Abs(A.Imaginaire - B.Imaginaire) < 0.0001);
 end;
 
-class operator TComplexe.NotEqual(const A, B: TComplexe): Boolean;
-begin
+class operator TComplexe.NotEqual(const A, B: TComplexe): Boolean;  
+begin  
   Result := not (A = B);
 end;
 
 // Opérateurs de conversion
-class operator TComplexe.Implicit(Valeur: Double): TComplexe;
-begin
+class operator TComplexe.Implicit(Valeur: Double): TComplexe;  
+begin  
   Result := TComplexe.Create(Valeur, 0);
 end;
 
-class operator TComplexe.Implicit(const C: TComplexe): string;
-begin
+class operator TComplexe.Implicit(const C: TComplexe): string;  
+begin  
   Result := C.ToString;
 end;
 
-class operator TComplexe.Explicit(const C: TComplexe): Double;
-begin
+class operator TComplexe.Explicit(const C: TComplexe): Double;  
+begin  
   Result := C.Module;
 end;
 ```
@@ -849,19 +849,19 @@ type
     class operator NotEqual(const A, B: TVecteur2D): Boolean;
   end;
 
-constructor TVecteur2D.Create(AX, AY: Double);
-begin
+constructor TVecteur2D.Create(AX, AY: Double);  
+begin  
   X := AX;
   Y := AY;
 end;
 
-function TVecteur2D.Longueur: Double;
-begin
+function TVecteur2D.Longueur: Double;  
+begin  
   Result := Sqrt(Sqr(X) + Sqr(Y));
 end;
 
-function TVecteur2D.Normaliser: TVecteur2D;
-var
+function TVecteur2D.Normaliser: TVecteur2D;  
+var  
   Len: Double;
 begin
   Len := Longueur;
@@ -874,76 +874,76 @@ begin
   end;
 end;
 
-function TVecteur2D.ProduitScalaire(Autre: TVecteur2D): Double;
-begin
+function TVecteur2D.ProduitScalaire(Autre: TVecteur2D): Double;  
+begin  
   Result := X * Autre.X + Y * Autre.Y;
 end;
 
-function TVecteur2D.Angle: Double;
-begin
+function TVecteur2D.Angle: Double;  
+begin  
   Result := ArcTan2(Y, X);
 end;
 
-function TVecteur2D.ToString: string;
-begin
+function TVecteur2D.ToString: string;  
+begin  
   Result := Format('(%.2f, %.2f)', [X, Y]);
 end;
 
-class function TVecteur2D.Zero: TVecteur2D;
-begin
+class function TVecteur2D.Zero: TVecteur2D;  
+begin  
   Result := TVecteur2D.Create(0, 0);
 end;
 
-class function TVecteur2D.Unitaire(Angle: Double): TVecteur2D;
-begin
+class function TVecteur2D.Unitaire(Angle: Double): TVecteur2D;  
+begin  
   Result.X := Cos(Angle);
   Result.Y := Sin(Angle);
 end;
 
-class operator TVecteur2D.Add(const A, B: TVecteur2D): TVecteur2D;
-begin
+class operator TVecteur2D.Add(const A, B: TVecteur2D): TVecteur2D;  
+begin  
   Result.X := A.X + B.X;
   Result.Y := A.Y + B.Y;
 end;
 
-class operator TVecteur2D.Subtract(const A, B: TVecteur2D): TVecteur2D;
-begin
+class operator TVecteur2D.Subtract(const A, B: TVecteur2D): TVecteur2D;  
+begin  
   Result.X := A.X - B.X;
   Result.Y := A.Y - B.Y;
 end;
 
-class operator TVecteur2D.Multiply(const V: TVecteur2D; Scalaire: Double): TVecteur2D;
-begin
+class operator TVecteur2D.Multiply(const V: TVecteur2D; Scalaire: Double): TVecteur2D;  
+begin  
   Result.X := V.X * Scalaire;
   Result.Y := V.Y * Scalaire;
 end;
 
-class operator TVecteur2D.Multiply(Scalaire: Double; const V: TVecteur2D): TVecteur2D;
-begin
+class operator TVecteur2D.Multiply(Scalaire: Double; const V: TVecteur2D): TVecteur2D;  
+begin  
   Result := V * Scalaire;
 end;
 
-class operator TVecteur2D.Divide(const V: TVecteur2D; Diviseur: Double): TVecteur2D;
-begin
+class operator TVecteur2D.Divide(const V: TVecteur2D; Diviseur: Double): TVecteur2D;  
+begin  
   if Diviseur = 0 then
     raise Exception.Create('Division par zéro');
   Result.X := V.X / Diviseur;
   Result.Y := V.Y / Diviseur;
 end;
 
-class operator TVecteur2D.Negative(const V: TVecteur2D): TVecteur2D;
-begin
+class operator TVecteur2D.Negative(const V: TVecteur2D): TVecteur2D;  
+begin  
   Result.X := -V.X;
   Result.Y := -V.Y;
 end;
 
-class operator TVecteur2D.Equal(const A, B: TVecteur2D): Boolean;
-begin
+class operator TVecteur2D.Equal(const A, B: TVecteur2D): Boolean;  
+begin  
   Result := (Abs(A.X - B.X) < 0.0001) and (Abs(A.Y - B.Y) < 0.0001);
 end;
 
-class operator TVecteur2D.NotEqual(const A, B: TVecteur2D): Boolean;
-begin
+class operator TVecteur2D.NotEqual(const A, B: TVecteur2D): Boolean;  
+begin  
   Result := not (A = B);
 end;
 ```
@@ -1017,8 +1017,8 @@ class operator Add(A, B: TPoint): TPoint;
 class operator Add(const A, B: TPoint): TPoint;
 
 // ❌ Confusant - + qui soustrait !
-class operator Add(const A, B: TPoint): TPoint;
-begin
+class operator Add(const A, B: TPoint): TPoint;  
+begin  
   Result.X := A.X - B.X;  // Non !
 end;
 ```
@@ -1026,8 +1026,8 @@ end;
 ### 3. Validez les entrées
 
 ```pascal
-class operator Divide(const A: TPoint; Diviseur: Integer): TPoint;
-begin
+class operator Divide(const A: TPoint; Diviseur: Integer): TPoint;  
+begin  
   if Diviseur = 0 then
     raise Exception.Create('Division par zéro');
   Result.X := A.X div Diviseur;
@@ -1037,8 +1037,8 @@ end;
 
 ### 4. Implémentez les opérateurs par paires
 
-Si vous implémentez `=`, implémentez aussi `<>`.
-Si vous implémentez `<`, implémentez aussi `>`, `<=`, `>=`.
+Si vous implémentez `=`, implémentez aussi `<>`.  
+Si vous implémentez `<`, implémentez aussi `>`, `<=`, `>=`.  
 
 ### 5. Utilisez les records pour les types valeur
 

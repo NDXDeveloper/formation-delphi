@@ -73,8 +73,8 @@ end;
 Déclarées dans une procédure ou fonction, elles n'existent que pendant l'exécution de celle-ci :
 
 ```pascal
-procedure CalculerTotal;
-var
+procedure CalculerTotal;  
+var  
   Total: Double;  // Variable locale
 begin
   Total := 100.0;
@@ -115,24 +115,24 @@ La portée détermine où une variable est accessible dans votre code.
 var
   X: Integer;  // Portée : toute l'unité
 
-procedure Test1;
-var
+procedure Test1;  
+var  
   Y: Integer;  // Portée : uniquement dans Test1
 begin
   X := 10;  // OK : X est accessible
   Y := 20;  // OK : Y est accessible ici
 end;
 
-procedure Test2;
-begin
+procedure Test2;  
+begin  
   X := 30;  // OK : X est accessible
   Y := 40;  // ERREUR : Y n'existe pas dans Test2
 end;
 ```
 
-### Variables inline (Delphi 11+)
+### Variables inline (Delphi 10.3+)
 
-Depuis Delphi 11, vous pouvez déclarer des variables directement dans le code :
+Depuis Delphi 10.3 Rio, vous pouvez déclarer des variables directement dans le code :
 
 ```pascal
 begin
@@ -195,8 +195,8 @@ const
   TauxTVA = 0.20;
   TauxRemise = 0.10;
 
-procedure CalculerPrix;
-var
+procedure CalculerPrix;  
+var  
   PrixHT, PrixTTC: Double;
 begin
   PrixHT := 100.0;
@@ -221,8 +221,8 @@ const
   MSG_SUCCES_SAUVEGARDE = 'Les données ont été sauvegardées avec succès';
   MSG_CONFIRMATION = 'Êtes-vous sûr de vouloir continuer ?';
 
-procedure Sauvegarder;
-begin
+procedure Sauvegarder;  
+begin  
   if EnregistrerDonnees then
     ShowMessage(MSG_SUCCES_SAUVEGARDE)
   else
@@ -382,33 +382,17 @@ begin
 end;
 ```
 
-### Opérateurs d'affectation
+### Opérateur d'affectation
 
-| Opérateur | Description | Équivalent |
-|-----------|-------------|------------|
-| `:=` | Affectation simple | `X := 5` |
-| `+=` | Addition et affectation | `X := X + 5` |
-| `-=` | Soustraction et affectation | `X := X - 5` |
-| `*=` | Multiplication et affectation | `X := X * 5` |
-| `/=` | Division et affectation | `X := X / 5` |
+En Object Pascal, l'unique opérateur d'affectation est `:=` :
 
-**Note :** Les opérateurs composés (`+=`, `-=`, etc.) sont disponibles depuis Delphi 2010.
-
-**Exemples :**
 ```pascal
-var
-  Compteur: Integer;
-  Total: Double;
-begin
-  Compteur := 10;
-  Compteur += 5;   // Équivalent à : Compteur := Compteur + 5;  // 15
-  Compteur -= 3;   // Équivalent à : Compteur := Compteur - 3;  // 12
-  Compteur *= 2;   // Équivalent à : Compteur := Compteur * 2;  // 24
-
-  Total := 100.0;
-  Total /= 4;      // Équivalent à : Total := Total / 4;  // 25.0
-end;
+X := 5;           // Affectation simple  
+X := X + 5;       // Incrémentation manuelle  
+X := X * 2;       // Multiplication  
 ```
+
+**Note :** Contrairement à d'autres langages (C, Java, Python), Object Pascal ne dispose pas d'opérateurs composés comme `+=` ou `-=`. On utilise `:=` pour toutes les affectations, et les procédures `Inc`/`Dec` pour les incrémentations et décrémentations (voir ci-dessous).
 
 ### Opérateurs d'incrémentation et décrémentation
 
@@ -426,7 +410,7 @@ begin
 end;
 ```
 
-**Avantage :** `Inc` et `Dec` sont légèrement plus rapides que `+=` et `-=`.
+**Avantage :** `Inc` et `Dec` sont optimisés par le compilateur et constituent la manière idiomatique d'incrémenter ou décrémenter des entiers en Object Pascal.
 
 ### Opérateurs sur les bits
 
@@ -556,8 +540,7 @@ end;
 ```pascal
 var
   Quantite: Integer;
-  PrixUnitaire: Double;
-  Remise: Double;
+  PrixUnitaire, Remise, Total: Double;
 begin
   Quantite := 15;
   PrixUnitaire := 10.0;
@@ -651,14 +634,14 @@ Resultat := CalculerTotal(if AppliquerTVA then TauxTVA else 0);
 Couleur := if Actif then clGreen else clGray;
 
 // Cas complexe : if traditionnel préférable
-if (Utilisateur.EstConnecte) and (Utilisateur.ALesDroits) and (not Utilisateur.EstBloque) then
-begin
+if (Utilisateur.EstConnecte) and (Utilisateur.ALesDroits) and (not Utilisateur.EstBloque) then  
+begin  
   AfficherTableauDeBord;
   ChargerDonnees;
   InitialiserSession;
-end
-else
-begin
+end  
+else  
+begin  
   AfficherPageConnexion;
   LoggerTentative;
 end;
@@ -808,8 +791,7 @@ end;
 4. Choisissez des noms de variables explicites
 5. Utilisez les parenthèses pour clarifier les expressions complexes
 6. L'opérateur ternaire (Delphi 13) simplifie les affectations conditionnelles
-7. Utilisez `Inc` et `Dec` pour les incrémentations simples
-8. Les opérateurs composés (`+=`, `-=`) rendent le code plus concis
+7. Utilisez `Inc` et `Dec` pour les incrémentations et décrémentations d'entiers
 
 ---
 
