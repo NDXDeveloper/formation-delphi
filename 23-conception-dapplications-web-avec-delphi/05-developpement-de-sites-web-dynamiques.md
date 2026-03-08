@@ -99,8 +99,8 @@ end;
 Pour de meilleures performances avec beaucoup de contenu :
 
 ```pascal
-procedure TWebModule1.GenerateClientList(Response: TWebResponse);
-var
+procedure TWebModule1.GenerateClientList(Response: TWebResponse);  
+var  
   Builder: TStringBuilder;
   Query: TFDQuery;
 begin
@@ -242,13 +242,13 @@ type
 
 implementation
 
-constructor TTemplateEngine.Create(const ATemplatePath: string);
-begin
+constructor TTemplateEngine.Create(const ATemplatePath: string);  
+begin  
   FTemplatePath := ATemplatePath;
 end;
 
-function TTemplateEngine.LoadTemplate(const FileName: string): string;
-var
+function TTemplateEngine.LoadTemplate(const FileName: string): string;  
+var  
   FileStream: TFileStream;
   StringStream: TStringStream;
   FullPath: string;
@@ -404,8 +404,8 @@ Via GetIt Package Manager : "Delphi MVC Framework" (inclut support Mustache)
 uses
   SynMustache, SynCommons;
 
-procedure TWebModule1.RenderMustacheTemplate;
-var
+procedure TWebModule1.RenderMustacheTemplate;  
+var  
   Template: string;
   Data: variant;
   HTML: RawUTF8;
@@ -486,8 +486,8 @@ end;
 
 **Code de génération :**
 ```pascal
-procedure TWebModule1.GenerateDashboard(Response: TWebResponse);
-var
+procedure TWebModule1.GenerateDashboard(Response: TWebResponse);  
+var  
   Template: TTemplateEngine;
   HTML: string;
   Variables: TDictionary<string, string>;
@@ -534,8 +534,8 @@ begin
   end;
 end;
 
-function TWebModule1.GenerateRecentActionsList: string;
-var
+function TWebModule1.GenerateRecentActionsList: string;  
+var  
   Query: TFDQuery;
   Builder: TStringBuilder;
 begin
@@ -1075,20 +1075,20 @@ type
 
 implementation
 
-constructor TTemplateCache.Create;
-begin
+constructor TTemplateCache.Create;  
+begin  
   FCache := TDictionary<string, string>.Create;
   FCacheEnabled := True;
 end;
 
-destructor TTemplateCache.Destroy;
-begin
+destructor TTemplateCache.Destroy;  
+begin  
   FCache.Free;
   inherited;
 end;
 
-function TTemplateCache.GetTemplate(const FileName: string): string;
-var
+function TTemplateCache.GetTemplate(const FileName: string): string;  
+var  
   FullPath: string;
 begin
   FullPath := TPath.Combine('Templates', FileName);
@@ -1108,8 +1108,8 @@ begin
     FCache.AddOrSetValue(FullPath, Result);
 end;
 
-procedure TTemplateCache.Clear;
-begin
+procedure TTemplateCache.Clear;  
+begin  
   FCache.Clear;
 end;
 
@@ -1134,8 +1134,8 @@ finalization
 **Toujours échapper les données utilisateur pour éviter XSS :**
 
 ```pascal
-function HTMLEncode(const Text: string): string;
-begin
+function HTMLEncode(const Text: string): string;  
+begin  
   Result := Text;
   Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
   Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
@@ -1151,10 +1151,10 @@ Variables.Add('USER_INPUT', HTMLEncode(Request.ContentFields.Values['comment']))
 ### 2. Séparer les responsabilités
 
 ```
-Controllers/     → Gestion des routes et requêtes
-Models/          → Accès aux données
-Views/Templates/ → Présentation HTML
-Services/        → Logique métier
+Controllers/     → Gestion des routes et requêtes  
+Models/          → Accès aux données  
+Views/Templates/ → Présentation HTML  
+Services/        → Logique métier  
 ```
 
 ### 3. Utiliser des helpers
@@ -1168,18 +1168,18 @@ type
     class function FormatBoolean(const Value: Boolean): string;
   end;
 
-class function THTMLHelper.FormatDate(const ADate: TDateTime): string;
-begin
+class function THTMLHelper.FormatDate(const ADate: TDateTime): string;  
+begin  
   Result := FormatDateTime('dd/mm/yyyy', ADate);
 end;
 
-class function THTMLHelper.FormatCurrency(const Amount: Currency): string;
-begin
+class function THTMLHelper.FormatCurrency(const Amount: Currency): string;  
+begin  
   Result := FormatCurr('#,##0.00 €', Amount);
 end;
 
-class function THTMLHelper.FormatBoolean(const Value: Boolean): string;
-begin
+class function THTMLHelper.FormatBoolean(const Value: Boolean): string;  
+begin  
   if Value then
     Result := '<span class="badge badge-success">✓ Oui</span>'
   else
@@ -1258,11 +1258,11 @@ end;
 
 Le développement de sites web dynamiques avec Delphi offre une grande flexibilité et de nombreuses possibilités. Les points clés à retenir :
 
-✅ **Séparation code/présentation** - Utiliser des templates
-✅ **Réutilisation** - Headers, footers, composants partagés
-✅ **Performance** - Mise en cache des templates
-✅ **Sécurité** - Échapper les données utilisateur
-✅ **Maintenabilité** - Organisation claire du code
+✅ **Séparation code/présentation** - Utiliser des templates  
+✅ **Réutilisation** - Headers, footers, composants partagés  
+✅ **Performance** - Mise en cache des templates  
+✅ **Sécurité** - Échapper les données utilisateur  
+✅ **Maintenabilité** - Organisation claire du code  
 ✅ **Expérience utilisateur** - Pages adaptées et réactives
 
 Les techniques présentées dans cette section vous permettent de créer des sites web professionnels et dynamiques avec Delphi, en capitalisant sur la puissance du langage Object Pascal et l'accès natif aux bases de données via FireDAC.

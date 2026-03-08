@@ -171,8 +171,8 @@ Ce qui peut être réutilisé **tel quel** :
 
 ```pascal
 // Logique métier pure - OK
-function CalculerMontantTTC(MontantHT, TauxTVA: Currency): Currency;
-begin
+function CalculerMontantTTC(MontantHT, TauxTVA: Currency): Currency;  
+begin  
   Result := MontantHT * (1 + TauxTVA / 100);
 end;
 
@@ -189,8 +189,8 @@ type
   end;
 
 // Accès base de données - OK (avec FireDAC)
-procedure ChargerClients(Query: TFDQuery);
-begin
+procedure ChargerClients(Query: TFDQuery);  
+begin  
   Query.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
   Query.Open;
 end;
@@ -200,16 +200,16 @@ Ce qui doit être **adapté** :
 
 ```pascal
 // VCL Desktop - NE FONCTIONNE PAS en web
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bonjour !');  // Pas de ShowMessage
   Edit1.SetFocus;            // Pas de SetFocus direct
   Label1.Font.Color := clRed; // Gestion différente des couleurs
 end;
 
 // Équivalent IntraWeb - VERSION WEB
-procedure TIWForm1.IWButton1Click(Sender: TObject);
-begin
+procedure TIWForm1.IWButton1Click(Sender: TObject);  
+begin  
   WebApplication.ShowMessage('Bonjour !'); // IntraWeb
   // Le focus est géré automatiquement
   IWLabel1.Font.Color := clWebRed; // Couleurs web
@@ -267,14 +267,14 @@ type
 
 implementation
 
-function TIWForm1.GetUtilisateurConnecte: string;
-begin
+function TIWForm1.GetUtilisateurConnecte: string;  
+begin  
   // Récupération depuis la session
   Result := WebApplication.Data.Values['UtilisateurConnecte'];
 end;
 
-procedure TIWForm1.SetUtilisateurConnecte(const Value: string);
-begin
+procedure TIWForm1.SetUtilisateurConnecte(const Value: string);  
+begin  
   // Stockage dans la session
   WebApplication.Data.Values['UtilisateurConnecte'] := Value;
 end;
@@ -307,8 +307,8 @@ begin
   Result := (MontantHT - Remise) * (1 + TVA / 100);
 end;
 
-class function TFactureManager.ValiderFacture(NumFacture: string): Boolean;
-begin
+class function TFactureManager.ValiderFacture(NumFacture: string): Boolean;  
+begin  
   // Logique de validation
   Result := Length(NumFacture) > 0;
 end;
@@ -339,16 +339,16 @@ type
 
 implementation
 
-function TDMData.GetClients: TDataSet;
-begin
+function TDMData.GetClients: TDataSet;  
+begin  
   FDQuery1.Close;
   FDQuery1.SQL.Text := 'SELECT * FROM clients';
   FDQuery1.Open;
   Result := FDQuery1;
 end;
 
-procedure TDMData.SaveClient(const Nom, Prenom, Email: string);
-begin
+procedure TDMData.SaveClient(const Nom, Prenom, Email: string);  
+begin  
   FDQuery1.Close;
   FDQuery1.SQL.Text :=
     'INSERT INTO clients (nom, prenom, email) VALUES (:nom, :prenom, :email)';
@@ -402,9 +402,9 @@ end;
 
 ```pascal
 // VCL Desktop
-Button1.Caption := 'Cliquez-moi';
-Edit1.Text := 'Nouvelle valeur';
-Label1.Caption := 'Mis à jour !';
+Button1.Caption := 'Cliquez-moi';  
+Edit1.Text := 'Nouvelle valeur';  
+Label1.Caption := 'Mis à jour !';  
 // Tout se passe instantanément
 ```
 
@@ -412,9 +412,9 @@ Label1.Caption := 'Mis à jour !';
 
 ```pascal
 // IntraWeb
-IWButton1.Caption := 'Cliquez-moi';    // Marqué comme modifié
-IWEdit1.Text := 'Nouvelle valeur';    // Marqué comme modifié
-IWLabel1.Caption := 'Mis à jour !';   // Marqué comme modifié
+IWButton1.Caption := 'Cliquez-moi';    // Marqué comme modifié  
+IWEdit1.Text := 'Nouvelle valeur';    // Marqué comme modifié  
+IWLabel1.Caption := 'Mis à jour !';   // Marqué comme modifié  
 // Les changements sont envoyés au navigateur
 // à la fin du traitement de l'événement
 ```
@@ -427,8 +427,8 @@ IWLabel1.Caption := 'Mis à jour !';   // Marqué comme modifié
 
 ```pascal
 // VCL Desktop - Accès fichier local
-OpenDialog1.Execute;
-Image1.Picture.LoadFromFile(OpenDialog1.FileName);
+OpenDialog1.Execute;  
+Image1.Picture.LoadFromFile(OpenDialog1.FileName);  
 ```
 
 **En Web :** Upload nécessaire
@@ -449,17 +449,17 @@ end;
 
 ```pascal
 // VCL Desktop
-Printer.BeginDoc;
-Printer.Canvas.TextOut(100, 100, 'Mon texte');
-Printer.EndDoc;
+Printer.BeginDoc;  
+Printer.Canvas.TextOut(100, 100, 'Mon texte');  
+Printer.EndDoc;  
 ```
 
 **En Web :** Génération PDF ou impression navigateur
 
 ```pascal
 // IntraWeb - Générer un PDF
-procedure TIWForm1.GenererPDF;
-var
+procedure TIWForm1.GenererPDF;  
+var  
   PDF: TPDFDocument;
 begin
   PDF := TPDFDocument.Create;
@@ -483,8 +483,8 @@ end;
 **Mauvais :**
 ```pascal
 // Chaque modification provoque un aller-retour
-for i := 0 to 99 do
-begin
+for i := 0 to 99 do  
+begin  
   IWListBox1.Items.Add('Item ' + IntToStr(i)); // 100 allers-retours !
 end;
 ```
@@ -511,8 +511,8 @@ end;
 
 ```pascal
 // Stocker en session les données fréquemment utilisées
-procedure TIWForm1.ChargerListeClients;
-var
+procedure TIWForm1.ChargerListeClients;  
+var  
   Liste: TStringList;
 begin
   // Vérifier si déjà en cache
@@ -632,8 +632,8 @@ Application VCL Web
 
 ```pascal
 // Toujours vérifier la validité de la session
-if not Assigned(WebApplication) then Exit;
-if WebApplication.Terminated then Exit;
+if not Assigned(WebApplication) then Exit;  
+if WebApplication.Terminated then Exit;  
 
 // Stocker les données critiques
 WebApplication.Data.Values['UserID'] := UserID;
@@ -643,8 +643,8 @@ WebApplication.Data.Values['UserID'] := UserID;
 
 ```pascal
 // Valider côté serveur (jamais faire confiance au client)
-procedure TIWForm1.IWButton1Click(Sender: TObject);
-begin
+procedure TIWForm1.IWButton1Click(Sender: TObject);  
+begin  
   // Validation
   if Trim(IWEdit1.Text) = '' then
   begin
@@ -673,17 +673,17 @@ Query.SQL.Text :=
 Query.SQL.Text :=
   'SELECT * FROM clients ' +
   'LIMIT :limit OFFSET :offset';
-Query.ParamByName('limit').AsInteger := 50;
-Query.ParamByName('offset').AsInteger := PageNumber * 50;
+Query.ParamByName('limit').AsInteger := 50;  
+Query.ParamByName('offset').AsInteger := PageNumber * 50;  
 ```
 
 ## Conclusion
 
 Les applications web basées sur VCL avec Delphi offrent un excellent **pont entre le monde desktop et le monde web**. Elles permettent :
 
-✅ De capitaliser sur vos compétences VCL existantes
-✅ De migrer rapidement des applications desktop vers le web
-✅ De développer efficacement des applications intranet
+✅ De capitaliser sur vos compétences VCL existantes  
+✅ De migrer rapidement des applications desktop vers le web  
+✅ De développer efficacement des applications intranet  
 ✅ De réutiliser une grande partie de votre code existant
 
 Cette approche est particulièrement adaptée pour :

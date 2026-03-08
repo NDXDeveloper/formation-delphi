@@ -133,8 +133,8 @@ Lorsque vous compilez avec TMS Web Core :
 **Exemple conceptuel :**
 ```pascal
 // Votre code Pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bonjour !');
 end;
 ```

@@ -78,8 +78,8 @@ end;
 
 **Code Delphi :**
 ```pascal
-procedure TServerMethods1.GetHomePage;
-var
+procedure TServerMethods1.GetHomePage;  
+var  
   Stencil: TWebStencil;
 begin
   Stencil := TWebStencil.Create;
@@ -121,9 +121,9 @@ end;
 
 **Code Delphi :**
 ```pascal
-Stencil.Values['titre'] := 'Produit XYZ';
-Stencil.Values['description'] := 'Un excellent produit';
-Stencil.Values['prix'] := '99.99';
+Stencil.Values['titre'] := 'Produit XYZ';  
+Stencil.Values['description'] := 'Un excellent produit';  
+Stencil.Values['prix'] := '99.99';  
 ```
 
 **Résultat :**
@@ -224,10 +224,10 @@ end;
 
 **Code Delphi :**
 ```pascal
-Stencil.Values['isLoggedIn'] := TJSONBool.Create(UserIsConnected);
-Stencil.Values['userName'] := CurrentUserName;
-Stencil.Values['hasMessages'] := TJSONBool.Create(MessageCount > 0);
-Stencil.Values['messageCount'] := IntToStr(MessageCount);
+Stencil.Values['isLoggedIn'] := TJSONBool.Create(UserIsConnected);  
+Stencil.Values['userName'] := CurrentUserName;  
+Stencil.Values['hasMessages'] := TJSONBool.Create(MessageCount > 0);  
+Stencil.Values['messageCount'] := IntToStr(MessageCount);  
 ```
 
 ### Sections imbriquées
@@ -384,8 +384,8 @@ end;
 **Code Delphi :**
 ```pascal
 // Enregistrer des helpers personnalisés
-procedure RegisterCustomHelpers(Stencil: TWebStencil);
-begin
+procedure RegisterCustomHelpers(Stencil: TWebStencil);  
+begin  
   // Helper pour formater une date
   Stencil.RegisterHelper('formatDate',
     function(Args: TArray<TValue>): string
@@ -537,20 +537,20 @@ type
     constructor Create(AConnection: TFDConnection);
     function GetAll: TJSONArray;
     function GetById(ID: Integer): TJSONObject;
-    function Create(const Name, Email: string): Integer;
+    function AddClient(const Name, Email: string): Integer;
     procedure Update(ID: Integer; const Name, Email: string);
     procedure Delete(ID: Integer);
   end;
 
 implementation
 
-constructor TClientModel.Create(AConnection: TFDConnection);
-begin
+constructor TClientModel.Create(AConnection: TFDConnection);  
+begin  
   FConnection := AConnection;
 end;
 
-function TClientModel.GetAll: TJSONArray;
-var
+function TClientModel.GetAll: TJSONArray;  
+var  
   Query: TFDQuery;
   ClientObj: TJSONObject;
 begin
@@ -578,8 +578,8 @@ begin
   end;
 end;
 
-function TClientModel.GetById(ID: Integer): TJSONObject;
-var
+function TClientModel.GetById(ID: Integer): TJSONObject;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -635,13 +635,13 @@ type
 
 implementation
 
-constructor TClientsController.Create(AModel: TClientModel);
-begin
+constructor TClientsController.Create(AModel: TClientModel);  
+begin  
   FModel := AModel;
 end;
 
-destructor TClientsController.Destroy;
-begin
+destructor TClientsController.Destroy;  
+begin  
   inherited;
 end;
 
@@ -811,8 +811,8 @@ var
 
 implementation
 
-constructor TTemplateCache.Create;
-begin
+constructor TTemplateCache.Create;  
+begin  
   FCache := TDictionary<string, string>.Create;
   {$IFDEF DEBUG}
   FEnabled := False; // Désactivé en développement
@@ -821,14 +821,14 @@ begin
   {$ENDIF}
 end;
 
-destructor TTemplateCache.Destroy;
-begin
+destructor TTemplateCache.Destroy;  
+begin  
   FCache.Free;
   inherited;
 end;
 
-function TTemplateCache.GetTemplate(const FileName: string): string;
-begin
+function TTemplateCache.GetTemplate(const FileName: string): string;  
+begin  
   // Vérifier le cache
   if FEnabled and FCache.ContainsKey(FileName) then
   begin
@@ -849,8 +849,8 @@ begin
     raise Exception.CreateFmt('Template non trouvé: %s', [FileName]);
 end;
 
-procedure TTemplateCache.Clear;
-begin
+procedure TTemplateCache.Clear;  
+begin  
   FCache.Clear;
 end;
 
@@ -931,8 +931,8 @@ WebStencils est parfait pour générer des emails HTML personnalisés :
 uses
   IdSMTP, IdMessage, IdSSLOpenSSL;
 
-procedure SendWelcomeEmail(const UserName, UserEmail: string);
-var
+procedure SendWelcomeEmail(const UserName, UserEmail: string);  
+var  
   Stencil: TWebStencil;
   HTMLContent: string;
   SMTP: TIdSMTP;
@@ -1051,14 +1051,14 @@ implementation
 uses
   System.SysUtils, System.IOUtils;
 
-constructor TI18n.Create;
-begin
+constructor TI18n.Create;  
+begin  
   FTranslations := TDictionary<string, TJSONObject>.Create;
   FCurrentLanguage := 'fr'; // Langue par défaut
 end;
 
-destructor TI18n.Destroy;
-var
+destructor TI18n.Destroy;  
+var  
   Trans: TJSONObject;
 begin
   for Trans in FTranslations.Values do
@@ -1067,8 +1067,8 @@ begin
   inherited;
 end;
 
-procedure TI18n.LoadLanguage(const LanguageCode: string);
-var
+procedure TI18n.LoadLanguage(const LanguageCode: string);  
+var  
   FileName: string;
   JSONText: string;
   JSONObj: TJSONObject;
@@ -1090,8 +1090,8 @@ begin
   FCurrentLanguage := LanguageCode;
 end;
 
-function TI18n.Translate(const Key: string; Params: TJSONObject): string;
-var
+function TI18n.Translate(const Key: string; Params: TJSONObject): string;  
+var  
   TransObj: TJSONObject;
   Value: TJSONValue;
   Pair: TJSONPair;
@@ -1129,6 +1129,7 @@ var
   Stencil: TWebStencil;
   i18n: TI18n;
   UserLang: string;
+  Params: TJSONObject;
 begin
   // Détecter la langue de l'utilisateur
   UserLang := Request.GetFieldByName('Accept-Language'); // ou depuis session
@@ -1228,20 +1229,20 @@ templates/
 
 ```pascal
 // ❌ Mauvais
-Stencil.Values['v1'] := 'valeur';
-Stencil.Values['x'] := ClientName;
+Stencil.Values['v1'] := 'valeur';  
+Stencil.Values['x'] := ClientName;  
 
 // ✅ Bon
-Stencil.Values['pageTitle'] := 'Accueil';
-Stencil.Values['clientName'] := ClientName;
-Stencil.Values['isAuthenticated'] := TJSONBool.Create(True);
+Stencil.Values['pageTitle'] := 'Accueil';  
+Stencil.Values['clientName'] := ClientName;  
+Stencil.Values['isAuthenticated'] := TJSONBool.Create(True);  
 ```
 
 ### 3. Validation des données
 
 ```pascal
-procedure RenderClientPage(ClientID: Integer);
-var
+procedure RenderClientPage(ClientID: Integer);  
+var  
   Client: TJSONObject;
 begin
   Client := ClientModel.GetById(ClientID);
@@ -1281,8 +1282,8 @@ GlobalTemplateCache.Enabled := True;
 {$ENDIF}
 
 // ✅ Précharger les templates fréquemment utilisés
-procedure PreloadTemplates;
-begin
+procedure PreloadTemplates;  
+begin  
   GlobalTemplateCache.GetTemplate('templates/layouts/main.html');
   GlobalTemplateCache.GetTemplate('templates/partials/header.html');
   GlobalTemplateCache.GetTemplate('templates/partials/footer.html');
@@ -1314,11 +1315,11 @@ end;
 **Pour la logique complexe :**
 ```pascal
 // Faire les calculs en Delphi avant
-TotalHT := CalculateTotalHT(Items);
-TotalTTC := TotalHT * 1.20;
+TotalHT := CalculateTotalHT(Items);  
+TotalTTC := TotalHT * 1.20;  
 
-Stencil.Values['totalHT'] := FormatCurr('#,##0.00', TotalHT);
-Stencil.Values['totalTTC'] := FormatCurr('#,##0.00', TotalTTC);
+Stencil.Values['totalHT'] := FormatCurr('#,##0.00', TotalHT);  
+Stencil.Values['totalTTC'] := FormatCurr('#,##0.00', TotalTTC);  
 ```
 
 **Pour le debugging :**
@@ -1333,11 +1334,11 @@ WriteLn('Template data: ', DataJSON.ToString);
 
 WebStencils apporte une **amélioration significative** au développement web côté serveur avec Delphi en offrant :
 
-✅ **Séparation claire** entre présentation et logique
-✅ **Templates réutilisables** et maintenables
-✅ **Syntaxe simple** et intuitive
-✅ **Performance excellente** avec cache
-✅ **Collaboration facilitée** designers/développeurs
+✅ **Séparation claire** entre présentation et logique  
+✅ **Templates réutilisables** et maintenables  
+✅ **Syntaxe simple** et intuitive  
+✅ **Performance excellente** avec cache  
+✅ **Collaboration facilitée** designers/développeurs  
 ✅ **Sécurité intégrée** (échappement HTML automatique)
 
 **Points clés à retenir :**

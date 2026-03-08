@@ -361,19 +361,19 @@ end;
 
 ### Avantages de WebBroker
 
-✅ **Inclus dans Delphi** - Aucune dépendance externe
-✅ **Léger et simple** - Peu de concepts à apprendre
-✅ **Contrôle total** - Vous gérez tout le flux HTTP
-✅ **Multi-plateforme** - Fonctionne sur Windows et Linux
-✅ **Stable et éprouvé** - Plus de 25 ans d'existence
+✅ **Inclus dans Delphi** - Aucune dépendance externe  
+✅ **Léger et simple** - Peu de concepts à apprendre  
+✅ **Contrôle total** - Vous gérez tout le flux HTTP  
+✅ **Multi-plateforme** - Fonctionne sur Windows et Linux  
+✅ **Stable et éprouvé** - Plus de 25 ans d'existence  
 ✅ **Base pour d'autres frameworks** - IntraWeb, DataSnap REST
 
 ### Limitations de WebBroker
 
-❌ **Bas niveau** - Génération HTML manuelle
-❌ **Pas de composants visuels** - Tout en code
-❌ **Gestion manuelle** - Sessions, sécurité, validation
-❌ **Interface datée** - Approche années 1990
+❌ **Bas niveau** - Génération HTML manuelle  
+❌ **Pas de composants visuels** - Tout en code  
+❌ **Gestion manuelle** - Sessions, sécurité, validation  
+❌ **Interface datée** - Approche années 1990  
 ❌ **Verbeux** - Beaucoup de code pour des tâches simples
 
 ## DataSnap : Architecture client-serveur multi-tiers
@@ -471,18 +471,18 @@ uses
 
 {$R *.dfm}
 
-function TServerMethods1.EchoString(Value: string): string;
-begin
+function TServerMethods1.EchoString(Value: string): string;  
+begin  
   Result := 'Écho : ' + Value;
 end;
 
-function TServerMethods1.GetServerTime: TDateTime;
-begin
+function TServerMethods1.GetServerTime: TDateTime;  
+begin  
   Result := Now;
 end;
 
-function TServerMethods1.GetClients: TJSONArray;
-var
+function TServerMethods1.GetClients: TJSONArray;  
+var  
   Query: TFDQuery;
   JSONObject: TJSONObject;
 begin
@@ -510,8 +510,8 @@ begin
   end;
 end;
 
-function TServerMethods1.CreateClient(const Nom, Prenom, Email: string): Integer;
-var
+function TServerMethods1.CreateClient(const Nom, Prenom, Email: string): Integer;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -545,15 +545,15 @@ end.
 // Le serveur standalone démarre automatiquement
 // ou via un bouton dans l'interface
 
-procedure TForm1.ButtonStartClick(Sender: TObject);
-begin
+procedure TForm1.ButtonStartClick(Sender: TObject);  
+begin  
   DSServer1.Start;
   ShowMessage('Serveur DataSnap démarré sur le port ' +
     IntToStr(DSHTTPService1.HttpPort));
 end;
 
-procedure TForm1.ButtonStopClick(Sender: TObject);
-begin
+procedure TForm1.ButtonStopClick(Sender: TObject);  
+begin  
   DSServer1.Stop;
   ShowMessage('Serveur DataSnap arrêté');
 end;
@@ -596,8 +596,8 @@ uses
 
 {$R *.dfm}
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Connexion au serveur
   SQLConnection1.Connected := True;
 
@@ -605,8 +605,8 @@ begin
   FServerMethods := TServerMethods1Client.Create(SQLConnection1.DBXConnection);
 end;
 
-procedure TForm1.ButtonTestEchoClick(Sender: TObject);
-var
+procedure TForm1.ButtonTestEchoClick(Sender: TObject);  
+var  
   Response: string;
 begin
   // Appel de la méthode distante
@@ -614,8 +614,8 @@ begin
   ShowMessage(Response);
 end;
 
-procedure TForm1.ButtonGetClientsClick(Sender: TObject);
-var
+procedure TForm1.ButtonGetClientsClick(Sender: TObject);  
+var  
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
   i: Integer;
@@ -696,8 +696,8 @@ end.
 Configuration dans le serveur :
 
 ```pascal
-procedure TServerContainer1.DSServer1Connect(DSConnectEventObject: TDSConnectEventObject);
-begin
+procedure TServerContainer1.DSServer1Connect(DSConnectEventObject: TDSConnectEventObject);  
+begin  
   // Activer l'authentification
   DSConnectEventObject.ChannelInfo.LoginRequired := True;
 end;
@@ -717,8 +717,8 @@ type
 var
   Callbacks: TList<TDSServerCallbackChannelManager>;
 
-procedure TServerMethods1.BroadcastMessage(const Message: string);
-var
+procedure TServerMethods1.BroadcastMessage(const Message: string);  
+var  
   i: Integer;
 begin
   for i := 0 to Callbacks.Count - 1 do
@@ -729,8 +729,8 @@ begin
 end;
 
 // Côté client - Recevoir les notifications
-procedure TForm1.OnServerCallback(Sender: TObject; const Arg: TJSONValue);
-begin
+procedure TForm1.OnServerCallback(Sender: TObject; const Arg: TJSONValue);  
+begin  
   ShowMessage('Notification serveur : ' + Arg.Value);
 end;
 ```
@@ -738,8 +738,8 @@ end;
 #### 3. Pooling de connexions
 
 ```pascal
-procedure TServerContainer1.DSServer1Prepare(Sender: TObject);
-begin
+procedure TServerContainer1.DSServer1Prepare(Sender: TObject);  
+begin  
   // Configuration du pool de connexions
   DSServer1.AutoStart := True;
 
@@ -762,15 +762,15 @@ type
     function ProcessOutput(const Data: TBytes): Boolean; override;
   end;
 
-function TMyServerFilter.ProcessInput(const Data: TBytes): Boolean;
-begin
+function TMyServerFilter.ProcessInput(const Data: TBytes): Boolean;  
+begin  
   // Traiter les données entrantes
   // (logging, validation, décompression...)
   Result := True;
 end;
 
-function TMyServerFilter.ProcessOutput(const Data: TBytes): Boolean;
-begin
+function TMyServerFilter.ProcessOutput(const Data: TBytes): Boolean;  
+begin  
   // Traiter les données sortantes
   // (compression, chiffrement...)
   Result := True;
@@ -779,21 +779,21 @@ end;
 
 ### Avantages de DataSnap
 
-✅ **Architecture multi-tiers** - Séparation claire des responsabilités
-✅ **Protocoles multiples** - REST, TCP/IP, HTTP
-✅ **Clients multiples** - Delphi, JavaScript, autres langages
-✅ **Sérialisation automatique** - Conversion types Delphi ↔ JSON
-✅ **Callbacks bidirectionnels** - Communication serveur → client
-✅ **Authentification intégrée** - Sécurité native
+✅ **Architecture multi-tiers** - Séparation claire des responsabilités  
+✅ **Protocoles multiples** - REST, TCP/IP, HTTP  
+✅ **Clients multiples** - Delphi, JavaScript, autres langages  
+✅ **Sérialisation automatique** - Conversion types Delphi ↔ JSON  
+✅ **Callbacks bidirectionnels** - Communication serveur → client  
+✅ **Authentification intégrée** - Sécurité native  
 ✅ **Pooling de connexions** - Gestion efficace des ressources
 
 ### Limitations de DataSnap
 
-❌ **Complexité** - Configuration plus lourde que frameworks modernes
-❌ **Verbosité** - Beaucoup de code pour des tâches simples
-❌ **Performance REST** - Moins rapide que Horse ou frameworks dédiés
-❌ **Documentation limitée** - Moins de ressources que technologies modernes
-❌ **Courbe d'apprentissage** - Nombreux concepts à maîtriser
+❌ **Complexité** - Configuration plus lourde que frameworks modernes  
+❌ **Verbosité** - Beaucoup de code pour des tâches simples  
+❌ **Performance REST** - Moins rapide que Horse ou frameworks dédiés  
+❌ **Documentation limitée** - Moins de ressources que technologies modernes  
+❌ **Courbe d'apprentissage** - Nombreux concepts à maîtriser  
 ❌ **Orienté Delphi** - Optimisé pour communication Delphi-to-Delphi
 
 ## Comparaison WebBroker, DataSnap et technologies modernes
@@ -936,8 +936,8 @@ THorse.Get('/clients',
 
 **1. Utiliser des templates HTML**
 ```pascal
-function LoadHTMLTemplate(const FileName: string): string;
-var
+function LoadHTMLTemplate(const FileName: string): string;  
+var  
   FileStream: TFileStream;
   StringStream: TStringStream;
 begin
@@ -978,8 +978,8 @@ function GetClientsList: string; // Retourne JSON
 
 implementation
 
-function GetClientsList: string;
-begin
+function GetClientsList: string;  
+begin  
   // Logique de récupération des clients
   Result := '{"clients": [...]}';
 end;
@@ -987,8 +987,8 @@ end;
 end.
 
 // Dans WebModule
-procedure TWebModule1.ActionAPIAction(...);
-begin
+procedure TWebModule1.ActionAPIAction(...);  
+begin  
   Response.Content := BusinessLogic.GetClientsList;
 end;
 ```
@@ -1001,15 +1001,15 @@ end;
 function GetEverything: TJSONObject;
 
 // ✅ Bon - Méthodes spécialisées
-function GetClients: TJSONArray;
-function GetOrders: TJSONArray;
-function GetClientOrders(ClientID: Integer): TJSONArray;
+function GetClients: TJSONArray;  
+function GetOrders: TJSONArray;  
+function GetClientOrders(ClientID: Integer): TJSONArray;  
 ```
 
 **2. Gérer les erreurs proprement**
 ```pascal
-function TServerMethods1.GetClient(ID: Integer): TJSONObject;
-begin
+function TServerMethods1.GetClient(ID: Integer): TJSONObject;  
+begin  
   try
     Result := FetchClientFromDB(ID);
     if Result = nil then
@@ -1027,8 +1027,8 @@ end;
 
 **3. Implémenter un timeout**
 ```pascal
-procedure TServerMethods1.LongRunningOperation;
-var
+procedure TServerMethods1.LongRunningOperation;  
+var  
   StartTime: TDateTime;
   Timeout: Integer;
 begin

@@ -366,8 +366,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.WebFormCreate(Sender: TObject);
-begin
+procedure TForm1.WebFormCreate(Sender: TObject);  
+begin  
   WebLabel1.Caption := 'Ma PWA Delphi';
   WebButton1.Caption := 'Vérifier connexion';
   WebButton2.Caption := 'Installer l''application';
@@ -395,8 +395,8 @@ begin
   end;
 end;
 
-procedure TForm1.RegisterServiceWorker;
-begin
+procedure TForm1.RegisterServiceWorker;  
+begin  
   asm
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
@@ -410,8 +410,8 @@ begin
   end;
 end;
 
-procedure TForm1.CheckOnlineStatus;
-var
+procedure TForm1.CheckOnlineStatus;  
+var  
   IsOnline: Boolean;
 begin
   asm
@@ -432,13 +432,13 @@ begin
   end;
 end;
 
-procedure TForm1.WebButton1Click(Sender: TObject);
-begin
+procedure TForm1.WebButton1Click(Sender: TObject);  
+begin  
   CheckOnlineStatus;
 end;
 
-procedure TForm1.CheckInstallPrompt;
-begin
+procedure TForm1.CheckInstallPrompt;  
+begin  
   asm
     var deferredPrompt;
 
@@ -479,8 +479,8 @@ begin
   end;
 end;
 
-procedure TForm1.WebButton2Click(Sender: TObject);
-begin
+procedure TForm1.WebButton2Click(Sender: TObject);  
+begin  
   // Le clic est géré dans le code JavaScript ci-dessus
 end;
 
@@ -649,8 +649,8 @@ self.addEventListener('sync', function(event) {
 
 ```pascal
 // TMS Web Core - Sauvegarder des données
-procedure TForm1.SaveData;
-begin
+procedure TForm1.SaveData;  
+begin  
   asm
     localStorage.setItem('userName', 'Jean Dupont');
     localStorage.setItem('lastVisit', new Date().toISOString());
@@ -658,8 +658,8 @@ begin
 end;
 
 // Récupérer des données
-procedure TForm1.LoadData;
-var
+procedure TForm1.LoadData;  
+var  
   UserName: string;
 begin
   asm
@@ -758,8 +758,8 @@ self.addEventListener('notificationclick', function(event) {
 ### Dans TMS Web Core
 
 ```pascal
-procedure TForm1.DemanderPermissionNotifications;
-begin
+procedure TForm1.DemanderPermissionNotifications;  
+begin  
   asm
     if ('Notification' in window) {
       Notification.requestPermission().then(function(permission) {
@@ -772,8 +772,8 @@ begin
   end;
 end;
 
-procedure TForm1.EnvoyerNotification;
-begin
+procedure TForm1.EnvoyerNotification;  
+begin  
   asm
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(function(registration) {
@@ -793,8 +793,8 @@ end;
 ### Savoir si l'application est installée
 
 ```pascal
-procedure TForm1.CheckIfInstalled;
-var
+procedure TForm1.CheckIfInstalled;  
+var  
   IsInstalled: Boolean;
 begin
   asm
@@ -857,12 +857,12 @@ F12 → Lighthouse → Progressive Web App → Generate report
 
 ### Checklist de déploiement
 
-✅ **HTTPS activé** (obligatoire)
-✅ **manifest.json** présent et valide
-✅ **Service Worker** enregistré
-✅ **Icônes** de toutes tailles (192x192 et 512x512 minimum)
-✅ **start_url** correct
-✅ **Responsive design** fonctionnel
+✅ **HTTPS activé** (obligatoire)  
+✅ **manifest.json** présent et valide  
+✅ **Service Worker** enregistré  
+✅ **Icônes** de toutes tailles (192x192 et 512x512 minimum)  
+✅ **start_url** correct  
+✅ **Responsive design** fonctionnel  
 ✅ **Mode hors ligne** opérationnel
 
 ### Configuration serveur
@@ -915,14 +915,14 @@ location /service-worker.js {
 Créer des icônes pour toutes les tailles nécessaires :
 
 ```
-icon-72x72.png
-icon-96x96.png
-icon-128x128.png
-icon-144x144.png
-icon-152x152.png
-icon-192x192.png
-icon-384x384.png
-icon-512x512.png
+icon-72x72.png  
+icon-96x96.png  
+icon-128x128.png  
+icon-144x144.png  
+icon-152x152.png  
+icon-192x192.png  
+icon-384x384.png  
+icon-512x512.png  
 ```
 
 **Conseils :**
@@ -990,8 +990,8 @@ self.addEventListener('fetch', function(event) {
 ### 5. Feedback utilisateur
 
 ```pascal
-procedure TForm1.AfficherStatutPWA;
-begin
+procedure TForm1.AfficherStatutPWA;  
+begin  
   if FIsOnline then
     ShowMessage('✅ Connecté - Données synchronisées')
   else
@@ -1003,16 +1003,16 @@ end;
 
 ### Limitations techniques
 
-❌ **iOS Safari** : Support PWA limité (pas de notifications push, limites de stockage)
-❌ **Stockage** : Peut être effacé par le système si espace faible
-❌ **API natives** : Accès limité au matériel (vs app native)
+❌ **iOS Safari** : Support PWA limité (pas de notifications push, limites de stockage)  
+❌ **Stockage** : Peut être effacé par le système si espace faible  
+❌ **API natives** : Accès limité au matériel (vs app native)  
 ❌ **App Stores** : Pas de présence naturelle dans les stores (mais possible via wrapper)
 
 ### Considérations de sécurité
 
-✅ **HTTPS obligatoire** : Coût et configuration
-✅ **CORS** : À configurer correctement
-✅ **Content Security Policy** : Restrictions à prévoir
+✅ **HTTPS obligatoire** : Coût et configuration  
+✅ **CORS** : À configurer correctement  
+✅ **Content Security Policy** : Restrictions à prévoir  
 ✅ **Données sensibles** : Ne jamais stocker en clair localement
 
 ### Quand choisir une PWA ?
@@ -1088,8 +1088,8 @@ type
 
 implementation
 
-procedure TFormNotes.WebFormCreate(Sender: TObject);
-begin
+procedure TFormNotes.WebFormCreate(Sender: TObject);  
+begin  
   RegisterServiceWorker;
   LoadNotes;
 
@@ -1101,8 +1101,8 @@ begin
   end;
 end;
 
-procedure TFormNotes.LoadNotes;
-var
+procedure TFormNotes.LoadNotes;  
+var  
   StoredData: string;
 begin
   // Charger depuis localStorage
@@ -1114,8 +1114,8 @@ begin
   // ...
 end;
 
-procedure TFormNotes.SaveNotes;
-var
+procedure TFormNotes.SaveNotes;  
+var  
   JSONData: string;
 begin
   // Convertir FNotes en JSON
@@ -1127,8 +1127,8 @@ begin
   end;
 end;
 
-procedure TFormNotes.SyncWithServer;
-begin
+procedure TFormNotes.SyncWithServer;  
+begin  
   // Envoyer les notes non synchronisées au serveur
   // via API REST Delphi
 end;
@@ -1140,10 +1140,10 @@ end.
 
 Les Progressive Web Apps représentent **l'avenir des applications web**. Avec Delphi, et particulièrement TMS Web Core, vous pouvez créer des PWA professionnelles qui offrent :
 
-✅ **Expérience native** sans les contraintes des app stores
-✅ **Fonctionnement hors ligne** pour une disponibilité maximale
-✅ **Installation facile** sur tous les appareils
-✅ **Mises à jour automatiques** sans intervention utilisateur
+✅ **Expérience native** sans les contraintes des app stores  
+✅ **Fonctionnement hors ligne** pour une disponibilité maximale  
+✅ **Installation facile** sur tous les appareils  
+✅ **Mises à jour automatiques** sans intervention utilisateur  
 ✅ **Un seul code** pour toutes les plateformes
 
 **Points clés à retenir :**

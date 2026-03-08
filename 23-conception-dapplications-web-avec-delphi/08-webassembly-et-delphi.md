@@ -337,8 +337,8 @@ emcc hello.cpp -o hello.html
 #include <emscripten.h>
 #include <stdio.h>
 
-EMSCRIPTEN_KEEPALIVE
-int fibonacci(int n) {
+EMSCRIPTEN_KEEPALIVE  
+int fibonacci(int n) {  
     if (n <= 1) return n;
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
@@ -346,8 +346,8 @@ int fibonacci(int n) {
 
 **Utilisation en JavaScript :**
 ```javascript
-const result = Module._fibonacci(10);
-console.log('Fibonacci(10):', result);
+const result = Module._fibonacci(10);  
+console.log('Fibonacci(10):', result);  
 ```
 
 ### Rust avec wasm-pack
@@ -424,15 +424,13 @@ function CalculateComplexFormula(A, B, C: Double): Double; export;
 
 implementation
 
-function CalculateComplexFormula(A, B, C: Double): Double;
-var
+function CalculateComplexFormula(A, B, C: Double): Double;  
+var  
   i: Integer;
-  Result: Double;
 begin
   Result := 0;
   for i := 1 to 1000000 do
     Result := Result + (A * B + C) / i;
-  Exit(Result);
 end;
 
 end.
@@ -452,8 +450,8 @@ const delphiModule = await WebAssembly.instantiateStreaming(
 );
 
 // Utiliser la fonction Delphi
-const result = delphiModule.exports.CalculateComplexFormula(10.5, 20.3, 5.7);
-console.log('Résultat du calcul Delphi:', result);
+const result = delphiModule.exports.CalculateComplexFormula(10.5, 20.3, 5.7);  
+console.log('Résultat du calcul Delphi:', result);  
 ```
 
 ### Scénario 2 : Moteur de jeu
@@ -495,8 +493,8 @@ procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer); export;
 
 implementation
 
-procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer);
-var
+procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer);  
+var  
   x, y, i: Integer;
   Sum: Integer;
 begin
@@ -517,12 +515,12 @@ end.
 **Utilisation côté web :**
 ```javascript
 // Obtenir les pixels d'une image Canvas
-const ctx = canvas.getContext('2d');
-const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const ctx = canvas.getContext('2d');  
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);  
 
 // Passer à WebAssembly Delphi pour traitement
-const memory = new Uint8Array(wasmModule.memory.buffer);
-memory.set(imageData.data);
+const memory = new Uint8Array(wasmModule.memory.buffer);  
+memory.set(imageData.data);  
 
 wasmModule.exports.ApplyBlur(
   0, // Pointeur vers les données en mémoire WASM
@@ -531,8 +529,8 @@ wasmModule.exports.ApplyBlur(
 );
 
 // Récupérer les pixels traités
-imageData.data.set(memory.slice(0, imageData.data.length));
-ctx.putImageData(imageData, 0, 0);
+imageData.data.set(memory.slice(0, imageData.data.length));  
+ctx.putImageData(imageData, 0, 0);  
 ```
 
 ## Outils et écosystème WebAssembly
@@ -753,14 +751,14 @@ implementation
 uses
   MathLib; // Bibliothèque de calculs
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Input: Double;
-  Result: Double;
+  Resultat: Double;
 begin
   Input := StrToFloat(Edit1.Text);
-  Result := MathLib.ComplexCalculation(Input);
-  Label1.Caption := FloatToStr(Result);
+  Resultat := MathLib.ComplexCalculation(Input);
+  Label1.Caption := FloatToStr(Resultat);
 end;
 
 end.
@@ -779,8 +777,8 @@ function ComplexCalculation(Input: Double): Double; export;
 
 implementation
 
-function ComplexCalculation(Input: Double): Double;
-var
+function ComplexCalculation(Input: Double): Double;  
+var  
   i: Integer;
   Temp: Double;
 begin
@@ -877,10 +875,10 @@ WebAssembly représente **l'avenir de la performance web**, mais le support nati
 
 **Résumé des points clés :**
 
-✅ **WebAssembly = Performance web native** mais nécessite compilation spécifique
-✅ **Delphi aujourd'hui** : Pas de compilation WASM native officielle
-✅ **Solutions actuelles** : TMS Web Core (JavaScript) ou architecture backend Delphi
-✅ **Future potentiel** : Support possible dans futures versions de Delphi
+✅ **WebAssembly = Performance web native** mais nécessite compilation spécifique  
+✅ **Delphi aujourd'hui** : Pas de compilation WASM native officielle  
+✅ **Solutions actuelles** : TMS Web Core (JavaScript) ou architecture backend Delphi  
+✅ **Future potentiel** : Support possible dans futures versions de Delphi  
 ✅ **Meilleure stratégie** : Architecture moderne (frontend web + backend Delphi)
 
 **Recommandations pratiques :**

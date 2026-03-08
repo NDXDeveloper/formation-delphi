@@ -33,18 +33,18 @@ Les frameworks JavaScript modernes comme **React**, **Vue.js** et **Angular** on
 
 ### Avantages de Delphi côté backend
 
-✅ **Performance native** - Code compilé rapide et efficace
-✅ **Accès base de données** - FireDAC puissant et mature
-✅ **Logique métier sécurisée** - Code protégé côté serveur
-✅ **Expertise existante** - Capitaliser sur vos compétences
+✅ **Performance native** - Code compilé rapide et efficace  
+✅ **Accès base de données** - FireDAC puissant et mature  
+✅ **Logique métier sécurisée** - Code protégé côté serveur  
+✅ **Expertise existante** - Capitaliser sur vos compétences  
 ✅ **Stabilité éprouvée** - Plateforme fiable pour applications critiques
 
 ### Avantages des frameworks JavaScript côté frontend
 
-✅ **Interface moderne** - UX/UI à la pointe
-✅ **Réactivité** - Mises à jour instantanées sans rechargement
-✅ **Écosystème riche** - Milliers de composants prêts à l'emploi
-✅ **Communauté massive** - Support et ressources abondantes
+✅ **Interface moderne** - UX/UI à la pointe  
+✅ **Réactivité** - Mises à jour instantanées sans rechargement  
+✅ **Écosystème riche** - Milliers de composants prêts à l'emploi  
+✅ **Communauté massive** - Support et ressources abondantes  
 ✅ **Standards web** - Technologies répandues et bien documentées
 
 ### Le meilleur des deux mondes
@@ -107,9 +107,9 @@ Cette architecture vous permet de :
 
 ### React
 
-**Créé par :** Facebook/Meta
-**Type :** Bibliothèque UI (pas un framework complet)
-**Philosophie :** Composants réutilisables
+**Créé par :** Facebook/Meta  
+**Type :** Bibliothèque UI (pas un framework complet)  
+**Philosophie :** Composants réutilisables  
 
 **Exemple simple React :**
 ```javascript
@@ -172,9 +172,9 @@ export default ClientsList;
 
 ### Vue.js
 
-**Créé par :** Evan You
-**Type :** Framework progressif
-**Philosophie :** Simple et intuitif
+**Créé par :** Evan You  
+**Type :** Framework progressif  
+**Philosophie :** Simple et intuitif  
 
 **Exemple simple Vue.js :**
 ```vue
@@ -235,15 +235,15 @@ export default {
 
 ### Angular
 
-**Créé par :** Google
-**Type :** Framework complet
-**Philosophie :** Structure et conventions strictes
+**Créé par :** Google  
+**Type :** Framework complet  
+**Philosophie :** Structure et conventions strictes  
 
 **Exemple simple Angular :**
 ```typescript
 // clients.component.ts
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';  
+import { HttpClient } from '@angular/common/http';  
 
 interface Client {
   id: number;
@@ -334,8 +334,8 @@ var
   App: THorse;
 
 // Route GET /api/clients
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
@@ -369,8 +369,8 @@ begin
 end;
 
 // Route GET /api/clients/:id
-procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   JSONObject: TJSONObject;
   ClientID: Integer;
@@ -408,8 +408,8 @@ begin
 end;
 
 // Route POST /api/clients
-procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   Body: TJSONObject;
   Response: TJSONObject;
@@ -463,8 +463,8 @@ begin
 end;
 
 // Route PUT /api/clients/:id
-procedure UpdateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure UpdateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   Body: TJSONObject;
   Response: TJSONObject;
@@ -501,8 +501,8 @@ begin
 end;
 
 // Route DELETE /api/clients/:id
-procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   Response: TJSONObject;
   ClientID: Integer;
@@ -680,8 +680,8 @@ export async function deleteClient(id) {
 
 ```javascript
 // src/components/ClientsList.js
-import React, { useState, useEffect } from 'react';
-import { getClients, deleteClient } from '../services/api';
+import React, { useState, useEffect } from 'react';  
+import { getClients, deleteClient } from '../services/api';  
 
 function ClientsList({ onEdit }) {
   const [clients, setClients] = useState([]);
@@ -774,8 +774,8 @@ export default ClientsList;
 
 ```javascript
 // src/components/ClientForm.js
-import React, { useState, useEffect } from 'react';
-import { createClient, updateClient } from '../services/api';
+import React, { useState, useEffect } from 'react';  
+import { createClient, updateClient } from '../services/api';  
 
 function ClientForm({ client, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -935,10 +935,10 @@ export default ClientForm;
 
 ```javascript
 // src/App.js
-import React, { useState } from 'react';
-import ClientsList from './components/ClientsList';
-import ClientForm from './components/ClientForm';
-import './App.css';
+import React, { useState } from 'react';  
+import ClientsList from './components/ClientsList';  
+import ClientForm from './components/ClientForm';  
+import './App.css';  
 
 function App() {
   const [view, setView] = useState('list'); // 'list' ou 'form'
@@ -1005,8 +1005,8 @@ export default App;
 uses
   Horse, Horse.JWT, JOSE.Core.JWT, JOSE.Core.Builder, System.DateUtils;
 
-procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Body: TJSONObject;
   Username, Password: string;
   JWT: TJWT;
@@ -1053,8 +1053,8 @@ begin
 end;
 
 // Middleware d'authentification
-procedure AuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure AuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Token: string;
   JWT: TJWT;
 begin
@@ -1167,9 +1167,9 @@ export async function getClients() {
 
 // Composant Login
 // src/components/Login.js
-import React, { useState } from 'react';
-import { login } from '../services/api';
-import { saveToken } from '../services/auth';
+import React, { useState } from 'react';  
+import { login } from '../services/api';  
+import { saveToken } from '../services/auth';  
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -1357,8 +1357,8 @@ function ClientsList() {
 
 ```pascal
 // Servir les fichiers statiques React
-procedure ServeStaticFiles(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure ServeStaticFiles(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   FileName: string;
   FilePath: string;
 begin
@@ -1486,10 +1486,10 @@ async function handleDelete(id) {
 
 L'intégration de Delphi avec des frameworks JavaScript modernes offre le meilleur des deux mondes :
 
-✅ **Backend solide** avec Delphi - Performance, fiabilité, accès données
-✅ **Frontend moderne** avec React/Vue/Angular - UX exceptionnelle
-✅ **Architecture découplée** - Évolution indépendante
-✅ **Scalabilité** - Chaque partie peut être optimisée séparément
+✅ **Backend solide** avec Delphi - Performance, fiabilité, accès données  
+✅ **Frontend moderne** avec React/Vue/Angular - UX exceptionnelle  
+✅ **Architecture découplée** - Évolution indépendante  
+✅ **Scalabilité** - Chaque partie peut être optimisée séparément  
 ✅ **Écosystème riche** - Profiter des deux communautés
 
 Cette approche est idéale pour :

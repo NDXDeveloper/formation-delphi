@@ -37,9 +37,9 @@ REST est un **style d'architecture** pour créer des services web. Imaginez REST
 
 **3. Ressources identifiées par URL**
 ```
-https://api.monapp.com/clients          → Liste des clients
-https://api.monapp.com/clients/123      → Client n°123
-https://api.monapp.com/clients/123/commandes → Commandes du client 123
+https://api.monapp.com/clients          → Liste des clients  
+https://api.monapp.com/clients/123      → Client n°123  
+https://api.monapp.com/clients/123/commandes → Commandes du client 123  
 ```
 
 **4. Utilisation des verbes HTTP**
@@ -63,11 +63,11 @@ https://api.monapp.com/clients/123/commandes → Commandes du client 123
 Imaginons une API de gestion de livres :
 
 ```
-GET    /api/livres              → Obtenir tous les livres
-GET    /api/livres/5            → Obtenir le livre n°5
-POST   /api/livres              → Créer un nouveau livre
-PUT    /api/livres/5            → Modifier le livre n°5
-DELETE /api/livres/5            → Supprimer le livre n°5
+GET    /api/livres              → Obtenir tous les livres  
+GET    /api/livres/5            → Obtenir le livre n°5  
+POST   /api/livres              → Créer un nouveau livre  
+PUT    /api/livres/5            → Modifier le livre n°5  
+DELETE /api/livres/5            → Supprimer le livre n°5  
 ```
 
 ## Pourquoi créer des services REST avec Delphi ?
@@ -284,8 +284,8 @@ var
   App: THorse;
 
 // Route GET - Liste
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
 begin
@@ -311,8 +311,8 @@ begin
 end;
 
 // Route GET avec ID - Détail
-procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   ID: string;
   JSONObject: TJSONObject;
 begin
@@ -333,8 +333,8 @@ begin
 end;
 
 // Route POST - Création
-procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Body: TJSONObject;
   Response: TJSONObject;
 begin
@@ -356,8 +356,8 @@ begin
 end;
 
 // Route PUT - Modification
-procedure UpdateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure UpdateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   ID: string;
   Body: TJSONObject;
   Response: TJSONObject;
@@ -380,8 +380,8 @@ begin
 end;
 
 // Route DELETE - Suppression
-procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   ID: string;
   Response: TJSONObject;
 begin
@@ -436,17 +436,17 @@ uses
   FireDAC.Comp.Client,
   System.SysUtils;
 
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
 
 implementation
 
 uses
   DataModuleDB; // DataModule contenant la connexion
 
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
@@ -480,8 +480,8 @@ begin
   end;
 end;
 
-procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   JSONObject: TJSONObject;
   ID: Integer;
@@ -517,8 +517,8 @@ begin
   end;
 end;
 
-procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure CreateClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   Body: TJSONObject;
   Response: TJSONObject;
@@ -584,8 +584,8 @@ end.
 ### Gestion des erreurs
 
 ```pascal
-procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   JSONObject: TJSONObject;
   ID: Integer;
@@ -649,8 +649,8 @@ uses
   System.DateUtils;
 
 // Middleware d'authentification
-procedure AuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure AuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Token: string;
   JWT: TJWT;
 begin
@@ -680,8 +680,8 @@ begin
 end;
 
 // Route de login
-procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure Login(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Body: TJSONObject;
   Username, Password: string;
   JWT: TJWT;
@@ -755,8 +755,8 @@ end.
 Configuration CORS personnalisée :
 
 ```pascal
-procedure ConfigureCORS(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-begin
+procedure ConfigureCORS(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+begin  
   Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Origin', '*');
   Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   Res.RawWebResponse.SetCustomHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -805,8 +805,8 @@ end.
 ### Format standard de documentation
 
 ```yaml
-openapi: 3.0.0
-info:
+openapi: 3.0.0  
+info:  
   title: API Gestion Clients
   version: 1.0.0
 paths:
@@ -910,20 +910,20 @@ type
 
 implementation
 
-procedure TClientControllerTests.Setup;
-begin
+procedure TClientControllerTests.Setup;  
+begin  
   // Initialiser l'application de test
   FApp := THorse.Create;
   // ... configuration ...
 end;
 
-procedure TClientControllerTests.TearDown;
-begin
+procedure TClientControllerTests.TearDown;  
+begin  
   FApp.Free;
 end;
 
-procedure TClientControllerTests.TestGetClients;
-var
+procedure TClientControllerTests.TestGetClients;  
+var  
   Response: string;
   JSON: TJSONArray;
 begin
@@ -958,11 +958,11 @@ end.
 
 **3. Docker**
 ```dockerfile
-FROM ubuntu:20.04
-COPY ./MonAPIREST /app/MonAPIREST
-WORKDIR /app
-EXPOSE 9000
-CMD ["./MonAPIREST"]
+FROM ubuntu:20.04  
+COPY ./MonAPIREST /app/MonAPIREST  
+WORKDIR /app  
+EXPOSE 9000  
+CMD ["./MonAPIREST"]  
 ```
 
 **4. Cloud (AWS, Azure, Google Cloud)**
@@ -1018,12 +1018,12 @@ end.
 
 ```pascal
 // Version dans l'URL
-THorse.Get('/api/v1/clients', GetClientsV1);
-THorse.Get('/api/v2/clients', GetClientsV2);
+THorse.Get('/api/v1/clients', GetClientsV1);  
+THorse.Get('/api/v2/clients', GetClientsV2);  
 
 // Version dans le header
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Version: string;
 begin
   Version := Req.Headers['API-Version'];
@@ -1038,8 +1038,8 @@ end;
 ### 2. Pagination
 
 ```pascal
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Page, PageSize, Offset: Integer;
   Query: TFDQuery;
 begin
@@ -1073,8 +1073,8 @@ end;
 ```pascal
 // Exemple : GET /api/clients?nom=Dupont&sort=prenom&order=asc
 
-procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure GetClients(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   Query: TFDQuery;
   SQL: string;
   NomFiltre, SortField, SortOrder: string;
@@ -1126,8 +1126,8 @@ uses
 var
   RequestCounter: TDictionary<string, Integer>;
 
-procedure RateLimitMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure RateLimitMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   ClientIP: string;
   RequestCount: Integer;
 begin
@@ -1152,8 +1152,8 @@ end;
 ### 5. Logging
 
 ```pascal
-procedure LogMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
-var
+procedure LogMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
+var  
   StartTime: TDateTime;
   Duration: Integer;
 begin
@@ -1183,10 +1183,10 @@ end.
 
 La création de services REST avec Delphi ouvre des possibilités infinies pour vos applications. Vous pouvez :
 
-✅ **Créer des architectures modernes** découplées et scalables
-✅ **Servir plusieurs types de clients** (web, mobile, desktop)
-✅ **Utiliser votre expertise Delphi** pour le backend
-✅ **Bénéficier de performances excellentes** grâce au code natif
+✅ **Créer des architectures modernes** découplées et scalables  
+✅ **Servir plusieurs types de clients** (web, mobile, desktop)  
+✅ **Utiliser votre expertise Delphi** pour le backend  
+✅ **Bénéficier de performances excellentes** grâce au code natif  
 ✅ **Déployer facilement** sur différentes plateformes
 
 Les frameworks comme Horse rendent le développement REST avec Delphi aussi simple et élégant que les frameworks modernes d'autres langages, tout en conservant les avantages de Delphi : performance, stabilité et productivité.
