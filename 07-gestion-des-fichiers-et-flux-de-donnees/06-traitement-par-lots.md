@@ -42,8 +42,8 @@ uses
   System.IOUtils, System.SysUtils, System.Classes;
 
 // Lister tous les fichiers d'un dossier
-procedure ListerFichiers(const Dossier: string; Liste: TStrings);
-var
+procedure ListerFichiers(const Dossier: string; Liste: TStrings);  
+var  
   Fichiers: TStringDynArray;
   Fichier: string;
 begin
@@ -90,8 +90,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Lister tous les fichiers .txt
   ListerFichiersAvecFiltre('C:\Documents', '*.txt', Memo1.Lines);
 
@@ -142,8 +142,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FiltrerFichiersImages;
-var
+procedure TForm1.FiltrerFichiersImages;  
+var  
   TousFichiers, FichiersFiltres: TStringList;
 begin
   TousFichiers := TStringList.Create;
@@ -180,8 +180,8 @@ type
     MessageErreur: string;
   end;
 
-function TraiterFichiersParLots(const Fichiers: TStringList): TArray<TResultatTraitement>;
-var
+function TraiterFichiersParLots(const Fichiers: TStringList): TArray<TResultatTraitement>;  
+var  
   i: Integer;
   Fichier: string;
 begin
@@ -251,8 +251,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.RenommerPhotos;
-var
+procedure TForm1.RenommerPhotos;  
+var  
   Fichiers: TStringList;
   NombreRenommes: Integer;
 begin
@@ -306,8 +306,8 @@ end;
 ### Exemple 3 : Déplacer des fichiers par type
 
 ```pascal
-procedure OrganiserFichiersParType(const DossierSource: string);
-var
+procedure OrganiserFichiersParType(const DossierSource: string);  
+var  
   Fichiers: TStringDynArray;
   Fichier, Extension, DossierDest: string;
 begin
@@ -339,8 +339,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button2Click(Sender: TObject);
-begin
+procedure TForm1.Button2Click(Sender: TObject);  
+begin  
   OrganiserFichiersParType('C:\Telechargements');
   ShowMessage('Fichiers organisés par type');
 end;
@@ -449,8 +449,8 @@ begin
 end;
 
 // Fonction de traitement (exemple)
-procedure TraiterFichier(const NomFichier: string);
-begin
+procedure TraiterFichier(const NomFichier: string);  
+begin  
   // Votre logique de traitement ici
   Sleep(50); // Simulation
 end;
@@ -481,8 +481,8 @@ type
     procedure Clear;
   end;
 
-constructor TBatchLogger.Create(const LogFileName: string);
-begin
+constructor TBatchLogger.Create(const LogFileName: string);  
+begin  
   inherited Create;
   FLogFile := LogFileName;
   FLogLines := TStringList.Create;
@@ -493,52 +493,52 @@ begin
   FLogLines.Add('');
 end;
 
-destructor TBatchLogger.Destroy;
-begin
+destructor TBatchLogger.Destroy;  
+begin  
   SaveToFile;
   FLogLines.Free;
   inherited;
 end;
 
-procedure TBatchLogger.LogInfo(const Message: string);
-begin
+procedure TBatchLogger.LogInfo(const Message: string);  
+begin  
   FLogLines.Add(Format('[INFO] %s - %s',
     [FormatDateTime('hh:nn:ss', Now), Message]));
 end;
 
-procedure TBatchLogger.LogWarning(const Message: string);
-begin
+procedure TBatchLogger.LogWarning(const Message: string);  
+begin  
   FLogLines.Add(Format('[ATTENTION] %s - %s',
     [FormatDateTime('hh:nn:ss', Now), Message]));
 end;
 
-procedure TBatchLogger.LogError(const Message: string);
-begin
+procedure TBatchLogger.LogError(const Message: string);  
+begin  
   FLogLines.Add(Format('[ERREUR] %s - %s',
     [FormatDateTime('hh:nn:ss', Now), Message]));
 end;
 
-procedure TBatchLogger.LogSuccess(const Message: string);
-begin
+procedure TBatchLogger.LogSuccess(const Message: string);  
+begin  
   FLogLines.Add(Format('[SUCCÈS] %s - %s',
     [FormatDateTime('hh:nn:ss', Now), Message]));
 end;
 
-procedure TBatchLogger.SaveToFile;
-begin
+procedure TBatchLogger.SaveToFile;  
+begin  
   FLogLines.Add('');
   FLogLines.Add('Fin : ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
   FLogLines.SaveToFile(FLogFile);
 end;
 
-procedure TBatchLogger.Clear;
-begin
+procedure TBatchLogger.Clear;  
+begin  
   FLogLines.Clear;
 end;
 
 // Utilisation
-procedure TraiterAvecLog(const Fichiers: TStringList);
-var
+procedure TraiterAvecLog(const Fichiers: TStringList);  
+var  
   Logger: TBatchLogger;
   i: Integer;
   Fichier: string;
@@ -613,8 +613,8 @@ type
     property MaxRetries: Integer read FMaxRetries write FMaxRetries;
   end;
 
-constructor TBatchProcessor.Create(Logger: TBatchLogger);
-begin
+constructor TBatchProcessor.Create(Logger: TBatchLogger);  
+begin  
   inherited Create;
   FLogger := Logger;
   FErrorStrategy := ehContinueOnError;
@@ -655,8 +655,8 @@ begin
   until Retry >= FMaxRetries;
 end;
 
-procedure TBatchProcessor.ProcessFiles(const Files: TStringList);
-var
+procedure TBatchProcessor.ProcessFiles(const Files: TStringList);  
+var  
   i: Integer;
   FileName, ErrorMsg: string;
   Success: Boolean;
@@ -699,8 +699,8 @@ end;
 uses
   System.Threading;
 
-procedure TraiterEnArrierePlan(const Fichiers: TStringList);
-begin
+procedure TraiterEnArrierePlan(const Fichiers: TStringList);  
+begin  
   TTask.Run(
     procedure
     var
@@ -732,8 +732,8 @@ end;
 ### Traitement parallèle avec TParallel.For
 
 ```pascal
-procedure TraiterEnParallele(const Fichiers: TStringList);
-begin
+procedure TraiterEnParallele(const Fichiers: TStringList);  
+begin  
   TParallel.For(0, Fichiers.Count - 1,
     procedure(Index: Integer)
     var
@@ -783,14 +783,14 @@ begin
   FFichiers := TStringList.Create;
 end;
 
-destructor TAsyncBatchProcessor.Destroy;
-begin
+destructor TAsyncBatchProcessor.Destroy;  
+begin  
   FFichiers.Free;
   inherited;
 end;
 
-procedure TAsyncBatchProcessor.UpdateProgress(Current, Total: Integer);
-begin
+procedure TAsyncBatchProcessor.UpdateProgress(Current, Total: Integer);  
+begin  
   TThread.Synchronize(nil,
     procedure
     begin
@@ -800,8 +800,8 @@ begin
     end);
 end;
 
-procedure TAsyncBatchProcessor.ProcessComplete;
-begin
+procedure TAsyncBatchProcessor.ProcessComplete;  
+begin  
   TThread.Synchronize(nil,
     procedure
     begin
@@ -810,8 +810,8 @@ begin
     end);
 end;
 
-procedure TAsyncBatchProcessor.StartProcessing(const Files: TStringList);
-begin
+procedure TAsyncBatchProcessor.StartProcessing(const Files: TStringList);  
+begin  
   FFichiers.Assign(Files);
 
   FTask := TTask.Run(
@@ -838,14 +838,14 @@ begin
     end);
 end;
 
-procedure TAsyncBatchProcessor.CancelProcessing;
-begin
+procedure TAsyncBatchProcessor.CancelProcessing;  
+begin  
   if Assigned(FTask) then
     FTask.Cancel;
 end;
 
-function TAsyncBatchProcessor.IsProcessing: Boolean;
-begin
+function TAsyncBatchProcessor.IsProcessing: Boolean;  
+begin  
   Result := Assigned(FTask) and (FTask.Status = TTaskStatus.Running);
 end;
 ```
@@ -892,14 +892,14 @@ begin
   FLogger := TBatchLogger.Create(FDestFolder + 'conversion.log');
 end;
 
-destructor TImageBatchConverter.Destroy;
-begin
+destructor TImageBatchConverter.Destroy;  
+begin  
   FLogger.Free;
   inherited;
 end;
 
-procedure TImageBatchConverter.ConvertToJPEG(Quality: Integer);
-var
+procedure TImageBatchConverter.ConvertToJPEG(Quality: Integer);  
+var  
   Fichiers: TStringDynArray;
   Fichier, FichierDest: string;
   Image: TBitmap;
@@ -943,8 +943,8 @@ begin
   FLogger.LogInfo('Conversion terminée');
 end;
 
-procedure TImageBatchConverter.ResizeImages(NewWidth, NewHeight: Integer);
-var
+procedure TImageBatchConverter.ResizeImages(NewWidth, NewHeight: Integer);  
+var  
   Fichiers: TStringDynArray;
   Fichier, FichierDest: string;
   Image, Resized: TBitmap;
@@ -984,8 +984,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ConvertirImages;
-var
+procedure TForm1.ConvertirImages;  
+var  
   Converter: TImageBatchConverter;
 begin
   Converter := TImageBatchConverter.Create('C:\Photos\Original',
@@ -1028,8 +1028,8 @@ type
     property DryRun: Boolean read FDryRun write FDryRun;
   end;
 
-constructor TFileCleaner.Create(DryRun: Boolean);
-begin
+constructor TFileCleaner.Create(DryRun: Boolean);  
+begin  
   inherited Create;
   FDryRun := DryRun;
   FLogger := TBatchLogger.Create('nettoyage_' +
@@ -1039,8 +1039,8 @@ begin
     FLogger.LogInfo('MODE TEST : Aucun fichier ne sera supprimé');
 end;
 
-destructor TFileCleaner.Destroy;
-begin
+destructor TFileCleaner.Destroy;  
+begin  
   FLogger.Free;
   inherited;
 end;
@@ -1067,8 +1067,8 @@ begin
   Result := (Now - FileAge) > Days;
 end;
 
-procedure TFileCleaner.CleanFolder(const FolderPath: string);
-var
+procedure TFileCleaner.CleanFolder(const FolderPath: string);  
+var  
   Rule: TFileCleanerRule;
   Fichiers: TStringDynArray;
   Fichier: string;
@@ -1127,14 +1127,14 @@ begin
       [NombreSupprimes, TailleTotale div (1024 * 1024)]));
 end;
 
-procedure TFileCleaner.ShowReport;
-begin
+procedure TFileCleaner.ShowReport;  
+begin  
   // Afficher le contenu du log
 end;
 
 // Utilisation
-procedure TForm1.NettoyerFichiersTemporaires;
-var
+procedure TForm1.NettoyerFichiersTemporaires;  
+var  
   Cleaner: TFileCleaner;
 begin
   // Mode test d'abord
@@ -1194,14 +1194,14 @@ begin
   FLogger := TBatchLogger.Create(FBackupFolder + 'backup.log');
 end;
 
-destructor TIncrementalBackup.Destroy;
-begin
+destructor TIncrementalBackup.Destroy;  
+begin  
   FLogger.Free;
   inherited;
 end;
 
-function TIncrementalBackup.GetBackupFileName: string;
-begin
+function TIncrementalBackup.GetBackupFileName: string;  
+begin  
   Result := FBackupFolder + 'backup_' +
             FormatDateTime('yyyymmdd_hhnnss', Now);
 end;
@@ -1225,12 +1225,13 @@ begin
   Result := SourceDate > BackupDate;
 end;
 
-procedure TIncrementalBackup.PerformBackup;
-var
+procedure TIncrementalBackup.PerformBackup;  
+var  
   FichiersSource: TStringDynArray;
   Fichier, CheminRelatif, FichierBackup, DossierBackup: string;
   BackupFolder: string;
   Nouveaux, Modifies, Ignores: Integer;
+  EstNouveau: Boolean;
 begin
   FLogger.LogInfo('Début de la sauvegarde incrémentielle');
   FLogger.LogInfo('Source : ' + FSourceFolder);
@@ -1262,10 +1263,13 @@ begin
     // Vérifier si le fichier doit être sauvegardé
     if FileNeedsBackup(Fichier, FichierBackup) then
     begin
+      // Déterminer si c'est un nouveau fichier avant la copie
+      EstNouveau := not FileExists(FichierBackup);
+
       try
         TFile.Copy(Fichier, FichierBackup, True);
 
-        if not FileExists(FichierBackup) then
+        if EstNouveau then
         begin
           FLogger.LogSuccess('Nouveau : ' + CheminRelatif);
           Inc(Nouveaux);
@@ -1290,8 +1294,8 @@ begin
     [Nouveaux, Modifies, Ignores]));
 end;
 
-procedure TIncrementalBackup.RestoreLatestBackup(const DestFolder: string);
-var
+procedure TIncrementalBackup.RestoreLatestBackup(const DestFolder: string);  
+var  
   Backups: TStringDynArray;
   LatestBackup: string;
   FichiersBackup: TStringDynArray;
@@ -1338,8 +1342,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.EffectuerSauvegarde;
-var
+procedure TForm1.EffectuerSauvegarde;  
+var  
   Backup: TIncrementalBackup;
 begin
   Backup := TIncrementalBackup.Create('C:\MesDonnees', 'D:\Sauvegardes');
@@ -1359,8 +1363,8 @@ end;
 ### 1. Toujours valider les entrées
 
 ```pascal
-function ValidateInputs(const SourceFolder, DestFolder: string): Boolean;
-begin
+function ValidateInputs(const SourceFolder, DestFolder: string): Boolean;  
+begin  
   Result := False;
 
   if not DirectoryExists(SourceFolder) then
@@ -1391,8 +1395,8 @@ end;
 var
   FCancelled: Boolean;
 
-procedure ProcessWithCancellation(const Files: TStringList);
-var
+procedure ProcessWithCancellation(const Files: TStringList);  
+var  
   i: Integer;
 begin
   FCancelled := False;
@@ -1410,8 +1414,8 @@ begin
   end;
 end;
 
-procedure TForm1.ButtonCancelClick(Sender: TObject);
-begin
+procedure TForm1.ButtonCancelClick(Sender: TObject);  
+begin  
   FCancelled := True;
 end;
 ```
@@ -1419,8 +1423,8 @@ end;
 ### 3. Sauvegarder avant les opérations destructives
 
 ```pascal
-procedure SafeDelete(const Files: TStringList);
-var
+procedure SafeDelete(const Files: TStringList);  
+var  
   BackupFolder: string;
   i: Integer;
 begin
@@ -1441,8 +1445,8 @@ end;
 ### 4. Estimer le temps avant de commencer
 
 ```pascal
-procedure EstimateTime(const Files: TStringList);
-var
+procedure EstimateTime(const Files: TStringList);  
+var  
   SampleSize, i: Integer;
   StartTime: TDateTime;
   AvgTime, EstimatedTotal: Double;
@@ -1475,8 +1479,8 @@ type
     Duration: TDateTime;
   end;
 
-function GenerateSummary(const Summary: TBatchSummary): string;
-begin
+function GenerateSummary(const Summary: TBatchSummary): string;  
+begin  
   Result := Format(
     'RÉSUMÉ DU TRAITEMENT PAR LOTS' + #13#10 +
     '=============================' + #13#10 +

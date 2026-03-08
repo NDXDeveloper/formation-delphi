@@ -63,8 +63,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-constructor TPerson.Create(const ANom, APrenom: string; AAge: Integer; const AEmail: string);
-begin
+constructor TPerson.Create(const ANom, APrenom: string; AAge: Integer; const AEmail: string);  
+begin  
   inherited Create;
   FNom := ANom;
   FPrenom := APrenom;
@@ -129,8 +129,8 @@ begin
   FEmail := ReadString;
 end;
 
-procedure TPerson.SaveToFile(const FileName: string);
-var
+procedure TPerson.SaveToFile(const FileName: string);  
+var  
   FileStream: TFileStream;
 begin
   FileStream := TFileStream.Create(FileName, fmCreate);
@@ -141,8 +141,8 @@ begin
   end;
 end;
 
-procedure TPerson.LoadFromFile(const FileName: string);
-var
+procedure TPerson.LoadFromFile(const FileName: string);  
+var  
   FileStream: TFileStream;
 begin
   FileStream := TFileStream.Create(FileName, fmOpenRead);
@@ -154,8 +154,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Person: TPerson;
 begin
   // Créer et sauvegarder
@@ -228,8 +228,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-function TPerson.ToJSON: TJSONObject;
-begin
+function TPerson.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('nom', FNom);
   Result.AddPair('prenom', FPrenom);
@@ -237,8 +237,8 @@ begin
   Result.AddPair('email', FEmail);
 end;
 
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-var
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+var  
   Pair: TJSONPair;
 begin
   Pair := JSONObj.Get('nom');
@@ -258,8 +258,8 @@ begin
     FEmail := Pair.JsonValue.Value;
 end;
 
-function TPerson.ToJSONString: string;
-var
+function TPerson.ToJSONString: string;  
+var  
   JSONObj: TJSONObject;
 begin
   JSONObj := ToJSON;
@@ -270,8 +270,8 @@ begin
   end;
 end;
 
-procedure TPerson.FromJSONString(const JSONStr: string);
-var
+procedure TPerson.FromJSONString(const JSONStr: string);  
+var  
   JSONObj: TJSONObject;
 begin
   JSONObj := TJSONObject.ParseJSONValue(JSONStr) as TJSONObject;
@@ -283,16 +283,16 @@ begin
   end;
 end;
 
-procedure TPerson.SaveToFile(const FileName: string);
-var
+procedure TPerson.SaveToFile(const FileName: string);  
+var  
   JSONStr: string;
 begin
   JSONStr := ToJSONString;
   TFile.WriteAllText(FileName, JSONStr, TEncoding.UTF8);
 end;
 
-procedure TPerson.LoadFromFile(const FileName: string);
-var
+procedure TPerson.LoadFromFile(const FileName: string);  
+var  
   JSONStr: string;
 begin
   JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
@@ -300,8 +300,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   Person: TPerson;
   JSONStr: string;
 begin
@@ -375,8 +375,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-function TPerson.ToXML: IXMLDocument;
-var
+function TPerson.ToXML: IXMLDocument;  
+var  
   RootNode, PersonNode: IXMLNode;
 begin
   Result := TXMLDocument.Create(nil);
@@ -391,8 +391,8 @@ begin
   RootNode.AddChild('email').Text := FEmail;
 end;
 
-procedure TPerson.FromXML(XMLDoc: IXMLDocument);
-var
+procedure TPerson.FromXML(XMLDoc: IXMLDocument);  
+var  
   RootNode: IXMLNode;
 begin
   RootNode := XMLDoc.DocumentElement;
@@ -406,16 +406,16 @@ begin
   end;
 end;
 
-procedure TPerson.SaveToFile(const FileName: string);
-var
+procedure TPerson.SaveToFile(const FileName: string);  
+var  
   XMLDoc: IXMLDocument;
 begin
   XMLDoc := ToXML;
   XMLDoc.SaveToFile(FileName);
 end;
 
-procedure TPerson.LoadFromFile(const FileName: string);
-var
+procedure TPerson.LoadFromFile(const FileName: string);  
+var  
   XMLDoc: IXMLDocument;
 begin
   XMLDoc := TXMLDocument.Create(nil);
@@ -425,8 +425,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button3Click(Sender: TObject);
-var
+procedure TForm1.Button3Click(Sender: TObject);  
+var  
   Person: TPerson;
 begin
   Person := TPerson.Create;
@@ -501,35 +501,35 @@ type
     property Adresse: TAdresse read FAdresse;
   end;
 
-constructor TPerson.Create;
-begin
+constructor TPerson.Create;  
+begin  
   inherited;
   FAdresse := TAdresse.Create;
 end;
 
-destructor TPerson.Destroy;
-begin
+destructor TPerson.Destroy;  
+begin  
   FAdresse.Free;
   inherited;
 end;
 
-function TAdresse.ToJSON: TJSONObject;
-begin
+function TAdresse.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('rue', FRue);
   Result.AddPair('ville', FVille);
   Result.AddPair('codePostal', FCodePostal);
 end;
 
-procedure TAdresse.FromJSON(JSONObj: TJSONObject);
-begin
+procedure TAdresse.FromJSON(JSONObj: TJSONObject);  
+begin  
   FRue := JSONObj.GetValue<string>('rue');
   FVille := JSONObj.GetValue<string>('ville');
   FCodePostal := JSONObj.GetValue<string>('codePostal');
 end;
 
-function TPerson.ToJSON: TJSONObject;
-begin
+function TPerson.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('nom', FNom);
   Result.AddPair('prenom', FPrenom);
@@ -537,8 +537,8 @@ begin
   Result.AddPair('adresse', FAdresse.ToJSON);
 end;
 
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-var
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+var  
   AdresseObj: TJSONObject;
 begin
   FNom := JSONObj.GetValue<string>('nom');
@@ -564,8 +564,13 @@ begin
     Person.Adresse.Ville := 'Paris';
     Person.Adresse.CodePostal := '75001';
 
-    JSONStr := Person.ToJSON.ToString;
-    Memo1.Text := JSONStr;
+    var JSONObj := Person.ToJSON;
+    try
+      JSONStr := JSONObj.ToString;
+      Memo1.Text := JSONStr;
+    finally
+      JSONObj.Free;
+    end;
   finally
     Person.Free;
   end;
@@ -608,35 +613,35 @@ type
     procedure LoadFromFile(const FileName: string);
   end;
 
-constructor TPersonList.Create;
-begin
+constructor TPersonList.Create;  
+begin  
   inherited;
   FPersons := TObjectList<TPerson>.Create(True); // True = possède les objets
 end;
 
-destructor TPersonList.Destroy;
-begin
+destructor TPersonList.Destroy;  
+begin  
   FPersons.Free;
   inherited;
 end;
 
-procedure TPersonList.Add(Person: TPerson);
-begin
+procedure TPersonList.Add(Person: TPerson);  
+begin  
   FPersons.Add(Person);
 end;
 
-function TPersonList.Count: Integer;
-begin
+function TPersonList.Count: Integer;  
+begin  
   Result := FPersons.Count;
 end;
 
-function TPersonList.GetPerson(Index: Integer): TPerson;
-begin
+function TPersonList.GetPerson(Index: Integer): TPerson;  
+begin  
   Result := FPersons[Index];
 end;
 
-function TPersonList.ToJSON: TJSONArray;
-var
+function TPersonList.ToJSON: TJSONArray;  
+var  
   Person: TPerson;
 begin
   Result := TJSONArray.Create;
@@ -644,8 +649,8 @@ begin
     Result.AddElement(Person.ToJSON);
 end;
 
-procedure TPersonList.FromJSON(JSONArray: TJSONArray);
-var
+procedure TPersonList.FromJSON(JSONArray: TJSONArray);  
+var  
   i: Integer;
   JSONObj: TJSONObject;
   Person: TPerson;
@@ -661,8 +666,8 @@ begin
   end;
 end;
 
-procedure TPersonList.SaveToFile(const FileName: string);
-var
+procedure TPersonList.SaveToFile(const FileName: string);  
+var  
   JSONArray: TJSONArray;
   JSONStr: string;
 begin
@@ -675,8 +680,8 @@ begin
   end;
 end;
 
-procedure TPersonList.LoadFromFile(const FileName: string);
-var
+procedure TPersonList.LoadFromFile(const FileName: string);  
+var  
   JSONStr: string;
   JSONArray: TJSONArray;
 begin
@@ -757,8 +762,8 @@ type
 const
   PERSON_VERSION = 2;
 
-function TPerson.ToJSON: TJSONObject;
-begin
+function TPerson.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('version', TJSONNumber.Create(PERSON_VERSION));
   Result.AddPair('nom', FNom);
@@ -768,8 +773,8 @@ begin
   Result.AddPair('telephone', FTelephone); // Nouveau champ
 end;
 
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-var
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+var  
   Version: Integer;
   Pair: TJSONPair;
 begin
@@ -826,8 +831,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-function ObjectToJSON(Obj: TObject): TJSONObject;
-var
+function ObjectToJSON(Obj: TObject): TJSONObject;  
+var  
   Context: TRttiContext;
   RttiType: TRttiType;
   Prop: TRttiProperty;
@@ -857,7 +862,7 @@ begin
               if Prop.PropertyType.Handle = TypeInfo(Boolean) then
                 Result.AddPair(Prop.Name, TJSONBool.Create(Value.AsBoolean))
               else
-                Result.AddPair(Prop.Name, Value.AsOrdinal);
+                Result.AddPair(Prop.Name, TJSONNumber.Create(Value.AsOrdinal));
             end;
         end;
       end;
@@ -867,8 +872,8 @@ begin
   end;
 end;
 
-procedure JSONToObject(JSONObj: TJSONObject; Obj: TObject);
-var
+procedure JSONToObject(JSONObj: TJSONObject; Obj: TObject);  
+var  
   Context: TRttiContext;
   RttiType: TRttiType;
   Prop: TRttiProperty;
@@ -957,8 +962,8 @@ Delphi dispose d'un mécanisme intégré pour sauvegarder et charger des composa
 
 ```pascal
 // Sauvegarder un composant dans un stream
-procedure SaveComponentToFile(Component: TComponent; const FileName: string);
-var
+procedure SaveComponentToFile(Component: TComponent; const FileName: string);  
+var  
   FileStream: TFileStream;
   MemStream: TMemoryStream;
 begin
@@ -981,8 +986,8 @@ begin
 end;
 
 // Charger un composant depuis un fichier
-procedure LoadComponentFromFile(Component: TComponent; const FileName: string);
-var
+procedure LoadComponentFromFile(Component: TComponent; const FileName: string);  
+var  
   FileStream: TFileStream;
   MemStream: TMemoryStream;
 begin
@@ -1002,13 +1007,13 @@ begin
 end;
 
 // Exemple : sauvegarder les paramètres d'un formulaire
-procedure TForm1.SaveFormSettings;
-begin
+procedure TForm1.SaveFormSettings;  
+begin  
   SaveComponentToFile(Self, 'form_settings.txt');
 end;
 
-procedure TForm1.LoadFormSettings;
-begin
+procedure TForm1.LoadFormSettings;  
+begin  
   if FileExists('form_settings.txt') then
     LoadComponentFromFile(Self, 'form_settings.txt');
 end;
@@ -1017,8 +1022,8 @@ end;
 ### Sauvegarder uniquement certaines propriétés
 
 ```pascal
-procedure SaveFormPosition(Form: TForm; const FileName: string);
-var
+procedure SaveFormPosition(Form: TForm; const FileName: string);  
+var  
   Settings: TStringList;
 begin
   Settings := TStringList.Create;
@@ -1035,8 +1040,8 @@ begin
   end;
 end;
 
-procedure LoadFormPosition(Form: TForm; const FileName: string);
-var
+procedure LoadFormPosition(Form: TForm; const FileName: string);  
+var  
   Settings: TStringList;
 begin
   if not FileExists(FileName) then
@@ -1057,13 +1062,13 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   LoadFormPosition(Self, 'window_position.ini');
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   SaveFormPosition(Self, 'window_position.ini');
 end;
 ```
@@ -1094,22 +1099,22 @@ type
     property Age: Integer read FAge write FAge;
   end;
 
-function TPerson.ToJSON: TJSONObject;
-begin
+function TPerson.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('nom', FNom);
   Result.AddPair('age', TJSONNumber.Create(FAge));
 end;
 
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-begin
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+begin  
   FNom := JSONObj.GetValue<string>('nom');
   FAge := JSONObj.GetValue<Integer>('age');
 end;
 
 // Fonction générique
-procedure SaveSerializable(Obj: ISerializable; const FileName: string);
-var
+procedure SaveSerializable(Obj: ISerializable; const FileName: string);  
+var  
   JSONObj: TJSONObject;
 begin
   JSONObj := Obj.ToJSON;
@@ -1130,8 +1135,8 @@ type
     class function CreateFromFile(const FileName: string): TPerson;
   end;
 
-class function TPersonFactory.CreateFromJSON(const JSONStr: string): TPerson;
-var
+class function TPersonFactory.CreateFromJSON(const JSONStr: string): TPerson;  
+var  
   JSONObj: TJSONObject;
 begin
   Result := TPerson.Create;
@@ -1149,8 +1154,8 @@ begin
   end;
 end;
 
-class function TPersonFactory.CreateFromFile(const FileName: string): TPerson;
-var
+class function TPersonFactory.CreateFromFile(const FileName: string): TPerson;  
+var  
   JSONStr: string;
 begin
   JSONStr := TFile.ReadAllText(FileName, TEncoding.UTF8);
@@ -1188,8 +1193,8 @@ type
     procedure LoadFromFile(const FileName: string);
   end;
 
-procedure TSerializableObject.WriteString(Stream: TStream; const S: string);
-var
+procedure TSerializableObject.WriteString(Stream: TStream; const S: string);  
+var  
   Bytes: TBytes;
   Len: Integer;
 begin
@@ -1200,8 +1205,8 @@ begin
     Stream.WriteBuffer(Bytes[0], Len);
 end;
 
-function TSerializableObject.ReadString(Stream: TStream): string;
-var
+function TSerializableObject.ReadString(Stream: TStream): string;  
+var  
   Bytes: TBytes;
   Len: Integer;
 begin
@@ -1216,18 +1221,18 @@ begin
     Result := '';
 end;
 
-procedure TSerializableObject.WriteInteger(Stream: TStream; Value: Integer);
-begin
+procedure TSerializableObject.WriteInteger(Stream: TStream; Value: Integer);  
+begin  
   Stream.WriteBuffer(Value, SizeOf(Integer));
 end;
 
-function TSerializableObject.ReadInteger(Stream: TStream): Integer;
-begin
+function TSerializableObject.ReadInteger(Stream: TStream): Integer;  
+begin  
   Stream.ReadBuffer(Result, SizeOf(Integer));
 end;
 
-procedure TSerializableObject.SaveToFile(const FileName: string);
-var
+procedure TSerializableObject.SaveToFile(const FileName: string);  
+var  
   FileStream: TFileStream;
 begin
   FileStream := TFileStream.Create(FileName, fmCreate);
@@ -1238,8 +1243,8 @@ begin
   end;
 end;
 
-procedure TSerializableObject.LoadFromFile(const FileName: string);
-var
+procedure TSerializableObject.LoadFromFile(const FileName: string);  
+var  
   FileStream: TFileStream;
 begin
   FileStream := TFileStream.Create(FileName, fmOpenRead);
@@ -1264,14 +1269,14 @@ type
     property Age: Integer read FAge write FAge;
   end;
 
-procedure TPerson.SaveToStream(Stream: TStream);
-begin
+procedure TPerson.SaveToStream(Stream: TStream);  
+begin  
   WriteString(Stream, FNom);
   WriteInteger(Stream, FAge);
 end;
 
-procedure TPerson.LoadFromStream(Stream: TStream);
-begin
+procedure TPerson.LoadFromStream(Stream: TStream);  
+begin  
   FNom := ReadString(Stream);
   FAge := ReadInteger(Stream);
 end;
@@ -1284,8 +1289,8 @@ end;
 ### Validation lors de la désérialisation
 
 ```pascal
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-begin
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+begin  
   // Vérifier que l'objet JSON est valide
   if not Assigned(JSONObj) then
     raise Exception.Create('Objet JSON invalide');
@@ -1316,8 +1321,8 @@ end;
 ### Try/Catch lors du chargement
 
 ```pascal
-procedure TForm1.ChargerPersonne(const FileName: string);
-var
+procedure TForm1.ChargerPersonne(const FileName: string);  
+var  
   Person: TPerson;
 begin
   Person := TPerson.Create;
@@ -1366,8 +1371,8 @@ end;
 const
   FORMAT_VERSION = 1;
 
-procedure TPerson.SaveToStream(Stream: TStream);
-begin
+procedure TPerson.SaveToStream(Stream: TStream);  
+begin  
   Stream.WriteBuffer(FORMAT_VERSION, SizeOf(Integer));
   // ... reste des données
 end;
@@ -1376,8 +1381,8 @@ end;
 ### 2. Valider les données lors du chargement
 
 ```pascal
-procedure TPerson.LoadFromStream(Stream: TStream);
-var
+procedure TPerson.LoadFromStream(Stream: TStream);  
+var  
   Version: Integer;
 begin
   Stream.ReadBuffer(Version, SizeOf(Integer));
@@ -1395,8 +1400,8 @@ end;
 ### 3. Utiliser des valeurs par défaut
 
 ```pascal
-procedure TPerson.FromJSON(JSONObj: TJSONObject);
-begin
+procedure TPerson.FromJSON(JSONObj: TJSONObject);  
+begin  
   FNom := JSONObj.GetValue<string>('nom', ''); // Valeur par défaut : chaîne vide
   FAge := JSONObj.GetValue<Integer>('age', 0); // Valeur par défaut : 0
 end;
@@ -1407,8 +1412,8 @@ end;
 ```pascal
 // Ne pas mettre la logique métier dans les méthodes de sérialisation
 // BON
-procedure TPerson.SaveToFile(const FileName: string);
-var
+procedure TPerson.SaveToFile(const FileName: string);  
+var  
   Stream: TFileStream;
 begin
   Stream := TFileStream.Create(FileName, fmCreate);
@@ -1420,8 +1425,8 @@ begin
 end;
 
 // MAUVAIS
-procedure TPerson.SaveToFile(const FileName: string);
-begin
+procedure TPerson.SaveToFile(const FileName: string);  
+begin  
   // Validation métier
   if FAge < 18 then
     raise Exception.Create('La personne doit être majeure');
@@ -1450,8 +1455,8 @@ end;
 
 ```pascal
 // Tester que v2 peut lire des fichiers v1
-procedure TestBackwardCompatibility;
-var
+procedure TestBackwardCompatibility;  
+var  
   Person: TPerson;
 begin
   Person := TPerson.Create;
@@ -1503,21 +1508,21 @@ type
     property RecentFiles: TStringList read FRecentFiles;
   end;
 
-constructor TApplicationSettings.Create;
-begin
+constructor TApplicationSettings.Create;  
+begin  
   inherited;
   FRecentFiles := TStringList.Create;
   LoadDefaults;
 end;
 
-destructor TApplicationSettings.Destroy;
-begin
+destructor TApplicationSettings.Destroy;  
+begin  
   FRecentFiles.Free;
   inherited;
 end;
 
-procedure TApplicationSettings.LoadDefaults;
-begin
+procedure TApplicationSettings.LoadDefaults;  
+begin  
   FWindowWidth := 800;
   FWindowHeight := 600;
   FWindowLeft := 100;
@@ -1528,8 +1533,8 @@ begin
   FRecentFiles.Clear;
 end;
 
-function TApplicationSettings.ToJSON: TJSONObject;
-var
+function TApplicationSettings.ToJSON: TJSONObject;  
+var  
   RecentArray: TJSONArray;
   i: Integer;
 begin
@@ -1550,8 +1555,8 @@ begin
   Result.AddPair('recentFiles', RecentArray);
 end;
 
-procedure TApplicationSettings.FromJSON(JSONObj: TJSONObject);
-var
+procedure TApplicationSettings.FromJSON(JSONObj: TJSONObject);  
+var  
   RecentArray: TJSONArray;
   i: Integer;
 begin
@@ -1571,8 +1576,8 @@ begin
   end;
 end;
 
-procedure TApplicationSettings.SaveToFile(const FileName: string);
-var
+procedure TApplicationSettings.SaveToFile(const FileName: string);  
+var  
   JSONObj: TJSONObject;
   JSONStr: string;
 begin
@@ -1585,8 +1590,8 @@ begin
   end;
 end;
 
-procedure TApplicationSettings.LoadFromFile(const FileName: string);
-var
+procedure TApplicationSettings.LoadFromFile(const FileName: string);  
+var  
   JSONStr: string;
   JSONObj: TJSONObject;
 begin

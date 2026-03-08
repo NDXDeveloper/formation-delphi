@@ -36,8 +36,8 @@ Nous allons explorer ces trois méthodes en commençant par les plus simples.
 ### Lecture d'un fichier texte avec TStringList
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Lignes: TStringList;
   i: Integer;
 begin
@@ -73,8 +73,8 @@ end;
 ### Écriture d'un fichier texte avec TStringList
 
 ```pascal
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   Lignes: TStringList;
 begin
   Lignes := TStringList.Create;
@@ -100,8 +100,8 @@ end;
 ### Ajout de contenu à un fichier existant
 
 ```pascal
-procedure AjouterLigneAuFichier(const NomFichier, NouvelleLigne: string);
-var
+procedure AjouterLigneAuFichier(const NomFichier, NouvelleLigne: string);  
+var  
   Lignes: TStringList;
 begin
   Lignes := TStringList.Create;
@@ -126,8 +126,8 @@ end;
 Par défaut, TStringList utilise l'encodage ANSI. Pour gérer différents encodages (notamment UTF-8 pour les caractères accentués) :
 
 ```pascal
-procedure LireFichierUTF8;
-var
+procedure LireFichierUTF8;  
+var  
   Lignes: TStringList;
 begin
   Lignes := TStringList.Create;
@@ -141,8 +141,8 @@ begin
   end;
 end;
 
-procedure EcrireFichierUTF8;
-var
+procedure EcrireFichierUTF8;  
+var  
   Lignes: TStringList;
 begin
   Lignes := TStringList.Create;
@@ -175,8 +175,8 @@ La classe `TFile` (dans l'unité `System.IOUtils`) offre des méthodes statiques
 uses
   System.IOUtils;
 
-procedure LireFichierSimple;
-var
+procedure LireFichierSimple;  
+var  
   Contenu: string;
   Lignes: TArray<string>;
   Ligne: string;
@@ -197,8 +197,8 @@ end;
 ### Écriture dans un fichier
 
 ```pascal
-procedure EcrireFichierSimple;
-var
+procedure EcrireFichierSimple;  
+var  
   Lignes: TArray<string>;
 begin
   // Écrire une chaîne complète (écrase le fichier existant)
@@ -248,8 +248,8 @@ Cette méthode, héritée du Pascal traditionnel, offre un contrôle total sur l
 ### Lecture ligne par ligne
 
 ```pascal
-procedure LireFichierClassique;
-var
+procedure LireFichierClassique;  
+var  
   Fichier: TextFile;
   Ligne: string;
 begin
@@ -289,8 +289,8 @@ end;
 ### Écriture ligne par ligne
 
 ```pascal
-procedure EcrireFichierClassique;
-var
+procedure EcrireFichierClassique;  
+var  
   Fichier: TextFile;
 begin
   AssignFile(Fichier, 'C:\Sortie.txt');
@@ -317,8 +317,8 @@ end;
 ### Ajout à la fin d'un fichier existant
 
 ```pascal
-procedure AjouterAuFichierClassique;
-var
+procedure AjouterAuFichierClassique;  
+var  
   Fichier: TextFile;
 begin
   AssignFile(Fichier, 'C:\Journal.txt');
@@ -357,8 +357,8 @@ Avant de manipuler un fichier, il est recommandé de vérifier son existence et 
 uses
   System.SysUtils;
 
-procedure VerifierFichier;
-begin
+procedure VerifierFichier;  
+begin  
   if FileExists('C:\MonFichier.txt') then
     ShowMessage('Le fichier existe')
   else
@@ -369,8 +369,8 @@ end;
 ### Gestion complète des erreurs
 
 ```pascal
-procedure LectureSurisee(const NomFichier: string);
-var
+procedure LectureSurisee(const NomFichier: string);  
+var  
   Lignes: TStringList;
 begin
   // Vérifier l'existence
@@ -404,8 +404,8 @@ end;
 uses
   System.IOUtils;
 
-procedure InfosFichier(const NomFichier: string);
-var
+procedure InfosFichier(const NomFichier: string);  
+var  
   Taille: Int64;
   DateModif: TDateTime;
 begin
@@ -491,8 +491,8 @@ Liste.SaveToFile(NomFichier, TEncoding.UTF8);
 Pour les fichiers volumineux, évitez de charger tout le contenu en mémoire. Préférez l'approche TextFile :
 
 ```pascal
-procedure TraiterGrosFichier(const NomFichier: string);
-var
+procedure TraiterGrosFichier(const NomFichier: string);  
+var  
   F: TextFile;
   Ligne: string;
   Compteur: Integer;
@@ -528,8 +528,8 @@ end;
 ### Exemple 1 : Créer un fichier de log
 
 ```pascal
-procedure AjouterLog(const Message: string);
-var
+procedure AjouterLog(const Message: string);  
+var  
   Lignes: TStringList;
   NomFichierLog: string;
   EntreeLog: string;
@@ -556,8 +556,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   AjouterLog('Application démarrée');
   AjouterLog('Utilisateur a cliqué sur le bouton');
 end;
@@ -566,8 +566,8 @@ end;
 ### Exemple 2 : Lire un fichier de configuration simple
 
 ```pascal
-function LireConfiguration(const Cle: string): string;
-var
+function LireConfiguration(const Cle: string): string;  
+var  
   Lignes: TStringList;
   i: Integer;
   Ligne: string;
@@ -613,8 +613,8 @@ end;
 ### Exemple 3 : Compter les occurrences d'un mot dans un fichier
 
 ```pascal
-function CompterMot(const NomFichier, Mot: string): Integer;
-var
+function CompterMot(const NomFichier, Mot: string): Integer;  
+var  
   Lignes: TStringList;
   i, Position: Integer;
   Ligne, LigneMaj, MotMaj: string;

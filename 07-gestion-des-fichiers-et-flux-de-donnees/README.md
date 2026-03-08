@@ -392,8 +392,8 @@ Voici un aperçu du style de code que vous allez apprendre :
 ### Avant ce chapitre (débutant)
 ```pascal
 // Code basique et peu robuste
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Memo1.Lines.LoadFromFile('fichier.txt');
 end;
 ```
@@ -401,8 +401,8 @@ end;
 ### Après ce chapitre (professionnel)
 ```pascal
 // Code robuste, réutilisable et bien structuré
-procedure TForm1.ChargerFichierSecurise(const NomFichier: string);
-begin
+procedure TForm1.ChargerFichierSecurise(const NomFichier: string);  
+begin  
   if not FileExists(NomFichier) then
   begin
     ShowMessage('Fichier introuvable : ' + NomFichier);
@@ -447,15 +447,15 @@ Gardez ces références sous la main :
 
 À la fin de ce chapitre, vous serez capable de :
 
-✅ Lire et écrire tous types de fichiers (texte, binaire, structuré)
-✅ Choisir le format approprié selon vos besoins
-✅ Manipuler des streams de données efficacement
-✅ Sérialiser et persister des objets complexes
-✅ Compresser des données pour économiser de l'espace
-✅ Automatiser le traitement de fichiers par lots
-✅ Échanger des données avec d'autres applications (JSON, XML)
-✅ Importer et exporter des données CSV/Excel
-✅ Gérer les erreurs de manière professionnelle
+✅ Lire et écrire tous types de fichiers (texte, binaire, structuré)  
+✅ Choisir le format approprié selon vos besoins  
+✅ Manipuler des streams de données efficacement  
+✅ Sérialiser et persister des objets complexes  
+✅ Compresser des données pour économiser de l'espace  
+✅ Automatiser le traitement de fichiers par lots  
+✅ Échanger des données avec d'autres applications (JSON, XML)  
+✅ Importer et exporter des données CSV/Excel  
+✅ Gérer les erreurs de manière professionnelle  
 ✅ Créer des applications robustes et fiables
 
 ---

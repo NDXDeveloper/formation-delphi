@@ -104,8 +104,8 @@ end;
 ### Écriture de données simples
 
 ```pascal
-procedure EcrireDonneesSimples;
-var
+procedure EcrireDonneesSimples;  
+var  
   Stream: TFileStream;
   Nombre: Integer;
   Reel: Double;
@@ -145,8 +145,8 @@ end;
 ### Lecture de données simples
 
 ```pascal
-procedure LireDonneesSimples;
-var
+procedure LireDonneesSimples;  
+var  
   Stream: TFileStream;
   Nombre: Integer;
   Reel: Double;
@@ -191,8 +191,8 @@ Les chaînes nécessitent une attention particulière car leur longueur est vari
 
 ```pascal
 // Écrire une chaîne
-procedure EcrireChaine(Stream: TFileStream; const S: string);
-var
+procedure EcrireChaine(Stream: TFileStream; const S: string);  
+var  
   Longueur: Integer;
   Bytes: TBytes;
 begin
@@ -209,8 +209,8 @@ begin
 end;
 
 // Lire une chaîne
-function LireChaine(Stream: TFileStream): string;
-var
+function LireChaine(Stream: TFileStream): string;  
+var  
   Longueur: Integer;
   Bytes: TBytes;
 begin
@@ -229,8 +229,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure ExempleChaines;
-var
+procedure ExempleChaines;  
+var  
   Stream: TFileStream;
   Texte, TexteLu: string;
 begin
@@ -260,8 +260,8 @@ end;
 ### Navigation dans le stream
 
 ```pascal
-procedure NavigationStream;
-var
+procedure NavigationStream;  
+var  
   Stream: TFileStream;
   Position, Taille: Int64;
 begin
@@ -318,8 +318,8 @@ type
     // Note : éviter les string dans les records pour les fichiers binaires
   end;
 
-procedure EcrirePersonne;
-var
+procedure EcrirePersonne;  
+var  
   Stream: TFileStream;
   Personne: TPerson;
 begin
@@ -349,8 +349,8 @@ end;
 ### Lecture de records
 
 ```pascal
-procedure LirePersonnes;
-var
+procedure LirePersonnes;  
+var  
   Stream: TFileStream;
   Personne: TPerson;
   Texte: string;
@@ -389,8 +389,8 @@ type
     Salaire: Double;
   end;
 
-procedure EcrirePersonneAvecNom;
-var
+procedure EcrirePersonneAvecNom;  
+var  
   Stream: TFileStream;
   Personne: TPersonneAvecNom;
 begin
@@ -410,8 +410,8 @@ begin
   end;
 end;
 
-function LirePersonneAvecNom: string;
-var
+function LirePersonneAvecNom: string;  
+var  
   Stream: TFileStream;
   Personne: TPersonneAvecNom;
 begin
@@ -448,8 +448,8 @@ Cette approche héritée du Pascal traditionnel permet de travailler avec des fi
 ### Fichier d'entiers
 
 ```pascal
-procedure FichierEntiers;
-var
+procedure FichierEntiers;  
+var  
   Fichier: File of Integer;
   Nombre: Integer;
   i: Integer;
@@ -490,8 +490,8 @@ type
     Stock: Integer;
   end;
 
-procedure GererArticles;
-var
+procedure GererArticles;  
+var  
   Fichier: File of TArticle;
   Article: TArticle;
 begin
@@ -536,8 +536,8 @@ end;
 ### Accès direct (lecture d'un enregistrement spécifique)
 
 ```pascal
-function LireArticleParPosition(Position: Integer): TArticle;
-var
+function LireArticleParPosition(Position: Integer): TArticle;  
+var  
   Fichier: File of TArticle;
   Article: TArticle;
 begin
@@ -570,8 +570,8 @@ end;
 ### Modification d'un enregistrement
 
 ```pascal
-procedure ModifierArticle(Position: Integer; NouveauPrix: Double);
-var
+procedure ModifierArticle(Position: Integer; NouveauPrix: Double);  
+var  
   Fichier: File of TArticle;
   Article: TArticle;
 begin
@@ -603,8 +603,8 @@ end;
 ### Utilisation basique
 
 ```pascal
-procedure ExempleMemoryStream;
-var
+procedure ExempleMemoryStream;  
+var  
   MemStream: TMemoryStream;
   FileStream: TFileStream;
   Nombre: Integer;
@@ -640,8 +640,8 @@ end;
 ### Charger un fichier en mémoire
 
 ```pascal
-procedure TraiterFichierEnMemoire;
-var
+procedure TraiterFichierEnMemoire;  
+var  
   MemStream: TMemoryStream;
   Nombre: Integer;
   Total: Integer;
@@ -694,8 +694,8 @@ type
   end;
 
 // Écrire un fichier de configuration
-procedure CreerFichierConfig;
-var
+procedure CreerFichierConfig;  
+var  
   Stream: TFileStream;
   Header: TConfigHeader;
   Entry: TConfigEntry;
@@ -731,8 +731,8 @@ begin
 end;
 
 // Lire le fichier de configuration
-procedure LireFichierConfig;
-var
+procedure LireFichierConfig;  
+var  
   Stream: TFileStream;
   Header: TConfigHeader;
   Entry: TConfigEntry;
@@ -790,8 +790,8 @@ end;
 ### Copier un fichier binaire
 
 ```pascal
-procedure CopierFichier(const Source, Destination: string);
-var
+procedure CopierFichier(const Source, Destination: string);  
+var  
   SourceStream, DestStream: TFileStream;
 begin
   SourceStream := TFileStream.Create(Source, fmOpenRead);
@@ -813,8 +813,8 @@ end;
 ### Comparer deux fichiers binaires
 
 ```pascal
-function FichiersIdentiques(const Fichier1, Fichier2: string): Boolean;
-var
+function FichiersIdentiques(const Fichier1, Fichier2: string): Boolean;  
+var  
   Stream1, Stream2: TFileStream;
   Buffer1, Buffer2: array[0..4095] of Byte;
   BytesLus1, BytesLus2: Integer;
@@ -860,8 +860,8 @@ end;
 ### Vérifications avant manipulation
 
 ```pascal
-procedure ManipulationSecurisee(const NomFichier: string);
-var
+procedure ManipulationSecurisee(const NomFichier: string);  
+var  
   Stream: TFileStream;
 begin
   // Vérifier l'existence
@@ -896,8 +896,8 @@ end;
 ### Gestion complète des exceptions
 
 ```pascal
-procedure LectureSecurisee(const NomFichier: string);
-var
+procedure LectureSecurisee(const NomFichier: string);  
+var  
   Stream: TFileStream;
   Donnee: Integer;
 begin
@@ -1044,8 +1044,8 @@ type
   end;
 
 // Créer la base de données
-procedure CreerBaseDonnees;
-var
+procedure CreerBaseDonnees;  
+var  
   Stream: TFileStream;
   Header: TDatabaseHeader;
 begin
@@ -1063,8 +1063,8 @@ begin
 end;
 
 // Ajouter un client
-procedure AjouterClient(const Nom, Email, Telephone: string; Solde: Double);
-var
+procedure AjouterClient(const Nom, Email, Telephone: string; Solde: Double);  
+var  
   Stream: TFileStream;
   Header: TDatabaseHeader;
   Client: TClient;
@@ -1101,8 +1101,8 @@ begin
 end;
 
 // Lire tous les clients
-function LireTousLesClients: string;
-var
+function LireTousLesClients: string;  
+var  
   Stream: TFileStream;
   Header: TDatabaseHeader;
   Client: TClient;
@@ -1144,8 +1144,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   CreerBaseDonnees;
   AjouterClient('Jean Dupont', 'jean@email.com', '0612345678', 1500.00);
   AjouterClient('Marie Martin', 'marie@email.com', '0698765432', 2300.50);

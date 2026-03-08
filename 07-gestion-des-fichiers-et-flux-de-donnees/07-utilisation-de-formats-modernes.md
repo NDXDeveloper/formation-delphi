@@ -67,8 +67,8 @@ JSON est le format le plus populaire aujourd'hui. Simple, léger et très largem
 uses
   System.JSON, System.SysUtils;
 
-procedure LireJSONSimple;
-var
+procedure LireJSONSimple;  
+var  
   JSONString: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -101,8 +101,8 @@ end;
 ### Lire JSON depuis un fichier
 
 ```pascal
-procedure LireJSONDepuisFichier(const NomFichier: string);
-var
+procedure LireJSONDepuisFichier(const NomFichier: string);  
+var  
   JSONString: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -130,8 +130,8 @@ end;
 ### Créer JSON en Delphi
 
 ```pascal
-procedure CreerJSON;
-var
+procedure CreerJSON;  
+var  
   JSONObject: TJSONObject;
   JSONString: string;
 begin
@@ -160,8 +160,8 @@ end;
 ### Travailler avec des objets imbriqués
 
 ```pascal
-procedure CreerJSONImbrique;
-var
+procedure CreerJSONImbrique;  
+var  
   JSONObject, AdresseObject: TJSONObject;
   JSONString: string;
 begin
@@ -204,8 +204,8 @@ Résultat :
 ### Travailler avec des tableaux JSON
 
 ```pascal
-procedure CreerJSONAvecTableau;
-var
+procedure CreerJSONAvecTableau;  
+var  
   JSONObject: TJSONObject;
   LanguesArray: TJSONArray;
   JSONString: string;
@@ -230,8 +230,8 @@ begin
 end;
 
 // Lire un tableau JSON
-procedure LireTableauJSON;
-var
+procedure LireTableauJSON;  
+var  
   JSONString: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -263,8 +263,8 @@ end;
 ### Tableau d'objets JSON
 
 ```pascal
-procedure CreerTableauObjets;
-var
+procedure CreerTableauObjets;  
+var  
   JSONArray: TJSONArray;
   Personne1, Personne2: TJSONObject;
   JSONString: string;
@@ -308,10 +308,11 @@ Résultat :
 ### Gestion des erreurs et validation
 
 ```pascal
-function LireJSONSecurise(const JSONString: string): Boolean;
-var
+function LireJSONSecurise(const JSONString: string): Boolean;  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
+  FieldValue: TJSONValue;
 begin
   Result := False;
 
@@ -339,7 +340,8 @@ begin
       JSONObject := JSONValue as TJSONObject;
 
       // Vérifier la présence des champs requis
-      if not JSONObject.TryGetValue('nom', JSONValue) then
+      // Ne pas réutiliser JSONValue ici, sinon on perd la référence vers la racine
+      if not JSONObject.TryGetValue('nom', FieldValue) then
       begin
         ShowMessage('Champ "nom" manquant');
         Exit;
@@ -417,8 +419,8 @@ begin
   end;
 end;
 
-class function TJSONHelper.BeautifyJSON(const JSONString: string): string;
-var
+class function TJSONHelper.BeautifyJSON(const JSONString: string): string;  
+var  
   JSONValue: TJSONValue;
 begin
   JSONValue := TJSONObject.ParseJSONValue(JSONString);
@@ -432,8 +434,8 @@ begin
   end;
 end;
 
-class function TJSONHelper.MinifyJSON(const JSONString: string): string;
-var
+class function TJSONHelper.MinifyJSON(const JSONString: string): string;  
+var  
   JSONValue: TJSONValue;
 begin
   JSONValue := TJSONObject.ParseJSONValue(JSONString);
@@ -448,8 +450,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   JSONString: string;
 begin
   // Créer
@@ -499,8 +501,8 @@ XML est un format plus ancien mais toujours très utilisé, notamment dans les e
 uses
   Xml.XMLIntf, Xml.XMLDoc, System.SysUtils;
 
-procedure LireXMLSimple;
-var
+procedure LireXMLSimple;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, NameNode: IXMLNode;
   Nom, Prenom: string;
@@ -533,8 +535,8 @@ end;
 ### Créer XML en Delphi
 
 ```pascal
-procedure CreerXML;
-var
+procedure CreerXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, AdresseNode: IXMLNode;
 begin
@@ -571,8 +573,8 @@ end;
 ### Travailler avec des attributs
 
 ```pascal
-procedure CreerXMLAvecAttributs;
-var
+procedure CreerXMLAvecAttributs;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, PersonneNode: IXMLNode;
 begin
@@ -621,8 +623,8 @@ Résultat :
 ### Parcourir tous les nœuds
 
 ```pascal
-procedure ParcoururXML(const NomFichier: string);
-var
+procedure ParcoururXML(const NomFichier: string);  
+var  
   XMLDoc: IXMLDocument;
   RootNode, PersonneNode: IXMLNode;
   i: Integer;
@@ -692,8 +694,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   Nom: string;
 begin
   Nom := TrouverPersonneParID('personnes.xml', '1');
@@ -707,8 +709,8 @@ end;
 ### Modifier un XML existant
 
 ```pascal
-procedure ModifierXML(const NomFichier: string);
-var
+procedure ModifierXML(const NomFichier: string);  
+var  
   XMLDoc: IXMLDocument;
   RootNode, PersonneNode: IXMLNode;
   i: Integer;
@@ -800,8 +802,8 @@ begin
   end;
 end;
 
-class function TXMLHelper.ValidateXML(const FileName: string): Boolean;
-var
+class function TXMLHelper.ValidateXML(const FileName: string): Boolean;  
+var  
   XMLDoc: IXMLDocument;
 begin
   Result := False;
@@ -826,11 +828,11 @@ YAML est un format très lisible, populaire pour les fichiers de configuration. 
 ### Structure de base
 
 ```yaml
-nom: Dupont
-prenom: Jean
-age: 30
-actif: true
-adresse:
+nom: Dupont  
+prenom: Jean  
+age: 30  
+actif: true  
+adresse:  
   rue: 123 Rue de la Paix
   ville: Paris
   codePostal: 75001
@@ -856,8 +858,8 @@ Exemple de conversion (conceptuel) :
 
 ```pascal
 // Note: Ceci nécessiterait une bibliothèque tierce
-function YAMLToJSON(const YAMLString: string): string;
-begin
+function YAMLToJSON(const YAMLString: string): string;  
+begin  
   // Utiliser une bibliothèque comme yaml-delphi
   // ou convertir via un service web
   Result := ''; // Implémentation dépend de la bibliothèque
@@ -869,8 +871,8 @@ end;
 Pour des fichiers YAML simples, vous pouvez les parser manuellement :
 
 ```pascal
-function ParseSimpleYAML(const YAMLContent: string): TDictionary<string, string>;
-var
+function ParseSimpleYAML(const YAMLContent: string): TDictionary<string, string>;  
+var  
   Lines: TStringList;
   i: Integer;
   Line, Key, Value: string;
@@ -904,8 +906,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.LireYAMLSimple;
-var
+procedure TForm1.LireYAMLSimple;  
+var  
   YAMLContent: string;
   Config: TDictionary<string, string>;
 begin
@@ -996,8 +998,8 @@ type
     property RecentFiles: TStringList read FRecentFiles;
   end;
 
-constructor TAppConfig.Create(const ConfigFileName: string);
-begin
+constructor TAppConfig.Create(const ConfigFileName: string);  
+begin  
   inherited Create;
   FConfigFile := ConfigFileName;
   FRecentFiles := TStringList.Create;
@@ -1008,14 +1010,14 @@ begin
     SetDefaults;
 end;
 
-destructor TAppConfig.Destroy;
-begin
+destructor TAppConfig.Destroy;  
+begin  
   FRecentFiles.Free;
   inherited;
 end;
 
-procedure TAppConfig.SetDefaults;
-begin
+procedure TAppConfig.SetDefaults;  
+begin  
   FServerURL := 'http://localhost';
   FPort := 8080;
   FUsername := '';
@@ -1024,8 +1026,8 @@ begin
   FRecentFiles.Clear;
 end;
 
-procedure TAppConfig.LoadFromFile;
-var
+procedure TAppConfig.LoadFromFile;  
+var  
   JSONString: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -1066,8 +1068,8 @@ begin
   end;
 end;
 
-procedure TAppConfig.SaveToFile;
-var
+procedure TAppConfig.SaveToFile;  
+var  
   JSONObject: TJSONObject;
   FilesArray: TJSONArray;
   i: Integer;
@@ -1095,8 +1097,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Config := TAppConfig.Create('config.json');
 
   // Appliquer la configuration
@@ -1105,8 +1107,8 @@ begin
   CheckBox1.Checked := Config.AutoSave;
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Sauvegarder avant de quitter
   Config.ServerURL := Edit1.Text;
   Config.Port := SpinEdit1.Value;
@@ -1210,8 +1212,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ExporterDonnees;
-var
+procedure TForm1.ExporterDonnees;  
+var  
   Donnees: TStringList;
 begin
   Donnees := TStringList.Create;
@@ -1254,21 +1256,21 @@ type
     function DeleteUser(UserID: Integer): Boolean;
   end;
 
-constructor TAPIClient.Create(const BaseURL: string);
-begin
+constructor TAPIClient.Create(const BaseURL: string);  
+begin  
   inherited Create;
   FBaseURL := BaseURL;
   FHttpClient := THTTPClient.Create;
 end;
 
-destructor TAPIClient.Destroy;
-begin
+destructor TAPIClient.Destroy;  
+begin  
   FHttpClient.Free;
   inherited;
 end;
 
-function TAPIClient.GetUser(UserID: Integer): TJSONObject;
-var
+function TAPIClient.GetUser(UserID: Integer): TJSONObject;  
+var  
   Response: IHTTPResponse;
   JSONValue: TJSONValue;
   URL: string;
@@ -1294,8 +1296,8 @@ begin
   end;
 end;
 
-function TAPIClient.CreateUser(const Name, Email: string): Boolean;
-var
+function TAPIClient.CreateUser(const Name, Email: string): Boolean;  
+var  
   JSONObject: TJSONObject;
   RequestBody: TStringStream;
   Response: IHTTPResponse;
@@ -1355,8 +1357,8 @@ begin
   end;
 end;
 
-function TAPIClient.DeleteUser(UserID: Integer): Boolean;
-var
+function TAPIClient.DeleteUser(UserID: Integer): Boolean;  
+var  
   Response: IHTTPResponse;
   URL: string;
 begin
@@ -1371,8 +1373,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.TestAPI;
-var
+procedure TForm1.TestAPI;  
+var  
   API: TAPIClient;
   User: TJSONObject;
 begin
@@ -1412,8 +1414,8 @@ end;
 ### 1. Toujours valider les données
 
 ```pascal
-function ValidateJSON(const JSONString: string): Boolean;
-var
+function ValidateJSON(const JSONString: string): Boolean;  
+var  
   JSONValue: TJSONValue;
 begin
   Result := False;
@@ -1470,8 +1472,8 @@ end;
 ### 5. Logger les erreurs de parsing
 
 ```pascal
-procedure ParseJSONWithLogging(const JSONString: string);
-var
+procedure ParseJSONWithLogging(const JSONString: string);  
+var  
   JSONValue: TJSONValue;
 begin
   try
@@ -1497,8 +1499,8 @@ end;
 const
   CONFIG_VERSION = 2;
 
-procedure SaveConfigWithVersion;
-var
+procedure SaveConfigWithVersion;  
+var  
   JSONObject: TJSONObject;
 begin
   JSONObject := TJSONObject.Create;
@@ -1511,8 +1513,8 @@ begin
   end;
 end;
 
-procedure LoadConfigWithVersion;
-var
+procedure LoadConfigWithVersion;  
+var  
   JSONObject: TJSONObject;
   Version: Integer;
 begin

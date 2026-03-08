@@ -235,8 +235,8 @@ Stream := TFileStream.Create('fichier.dat',
 ### Exemple pratique : Log avec TFileStream
 
 ```pascal
-procedure AjouterAuLog(const Message: string);
-var
+procedure AjouterAuLog(const Message: string);  
+var  
   Stream: TFileStream;
   Texte: UTF8String;
   NomFichier: string;
@@ -265,8 +265,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   AjouterAuLog('Application démarrée');
   AjouterAuLog('Utilisateur a cliqué sur le bouton');
 end;
@@ -403,30 +403,30 @@ type
     function ObtenirTaille: Int64;
   end;
 
-constructor TDataBuffer.Create;
-begin
+constructor TDataBuffer.Create;  
+begin  
   inherited;
   FStream := TMemoryStream.Create;
 end;
 
-destructor TDataBuffer.Destroy;
-begin
+destructor TDataBuffer.Destroy;  
+begin  
   FStream.Free;
   inherited;
 end;
 
-procedure TDataBuffer.AjouterEntier(Valeur: Integer);
-begin
+procedure TDataBuffer.AjouterEntier(Valeur: Integer);  
+begin  
   FStream.Write(Valeur, SizeOf(Integer));
 end;
 
-procedure TDataBuffer.AjouterReel(Valeur: Double);
-begin
+procedure TDataBuffer.AjouterReel(Valeur: Double);  
+begin  
   FStream.Write(Valeur, SizeOf(Double));
 end;
 
-procedure TDataBuffer.AjouterTexte(const Texte: string);
-var
+procedure TDataBuffer.AjouterTexte(const Texte: string);  
+var  
   Bytes: TBytes;
   Longueur: Integer;
 begin
@@ -439,19 +439,19 @@ begin
     FStream.Write(Bytes[0], Longueur);
 end;
 
-procedure TDataBuffer.Effacer;
-begin
+procedure TDataBuffer.Effacer;  
+begin  
   FStream.Clear;
   FStream.Position := 0;
 end;
 
-procedure TDataBuffer.SauvegarderDans(const NomFichier: string);
-begin
+procedure TDataBuffer.SauvegarderDans(const NomFichier: string);  
+begin  
   FStream.SaveToFile(NomFichier);
 end;
 
-function TDataBuffer.ObtenirTaille: Int64;
-begin
+function TDataBuffer.ObtenirTaille: Int64;  
+begin  
   Result := FStream.Size;
 end;
 
@@ -531,8 +531,8 @@ end;
 ### Exemple : Génération de CSV
 
 ```pascal
-function GenererCSV(const Donnees: array of array of string): string;
-var
+function GenererCSV(const Donnees: array of array of string): string;  
+var  
   StringStream: TStringStream;
   i, j: Integer;
 begin
@@ -632,8 +632,8 @@ end;
 ### Exemple : Manipulation d'images
 
 ```pascal
-procedure ChargerEtModifierImage;
-var
+procedure ChargerEtModifierImage;  
+var  
   BytesStream: TBytesStream;
   Bytes: TBytes;
   Image: TJPEGImage;
@@ -662,8 +662,8 @@ end;
 ### Convertir entre différents streams
 
 ```pascal
-procedure ConvertirFileStreamEnBytes;
-var
+procedure ConvertirFileStreamEnBytes;  
+var  
   FileStream: TFileStream;
   BytesStream: TBytesStream;
   Bytes: TBytes;
@@ -702,9 +702,9 @@ D'abord, créez un fichier de ressources (`.rc`) :
 
 ```
 // fichier resources.rc
-MYDATA RCDATA "donnees.bin"
-MYTEXT RCDATA "texte.txt"
-MYICON ICON "icone.ico"
+MYDATA RCDATA "donnees.bin"  
+MYTEXT RCDATA "texte.txt"  
+MYICON ICON "icone.ico"  
 ```
 
 Compilez-le avec :
@@ -720,8 +720,8 @@ Puis incluez-le dans votre projet :
 ### Lire une ressource
 
 ```pascal
-procedure LireRessource;
-var
+procedure LireRessource;  
+var  
   ResStream: TResourceStream;
   Texte: TStringList;
 begin
@@ -744,8 +744,8 @@ end;
 ### Charger une image depuis les ressources
 
 ```pascal
-procedure ChargerImageRessource;
-var
+procedure ChargerImageRessource;  
+var  
   ResStream: TResourceStream;
   Image: TJPEGImage;
 begin
@@ -767,8 +767,8 @@ end;
 ### Vérifier l'existence d'une ressource
 
 ```pascal
-function RessourceExiste(const NomRessource: string): Boolean;
-var
+function RessourceExiste(const NomRessource: string): Boolean;  
+var  
   ResStream: TResourceStream;
 begin
   Result := False;
@@ -792,8 +792,8 @@ end;
 ### 1. Copie partielle entre streams
 
 ```pascal
-procedure CopierPartie(Source, Dest: TStream; Debut, Taille: Int64);
-begin
+procedure CopierPartie(Source, Dest: TStream; Debut, Taille: Int64);  
+begin  
   // Se positionner au début de la partie à copier
   Source.Position := Debut;
 
@@ -822,8 +822,8 @@ end;
 ### 2. Lecture ligne par ligne d'un stream texte
 
 ```pascal
-function LireLigne(Stream: TStream): string;
-var
+function LireLigne(Stream: TStream): string;  
+var  
   C: AnsiChar;
   Ligne: AnsiString;
 begin
@@ -877,8 +877,8 @@ end;
 uses
   System.ZLib;
 
-procedure CompresserStream(Source, Dest: TStream);
-var
+procedure CompresserStream(Source, Dest: TStream);  
+var  
   Compressor: TZCompressionStream;
 begin
   Source.Position := 0;
@@ -892,16 +892,25 @@ begin
   end;
 end;
 
-procedure DecompresserStream(Source, Dest: TStream);
-var
+procedure DecompresserStream(Source, Dest: TStream);  
+var  
   Decompressor: TZDecompressionStream;
+  Buffer: array[0..4095] of Byte;
+  BytesLus: Integer;
 begin
   Source.Position := 0;
   Dest.Size := 0;
 
   Decompressor := TZDecompressionStream.Create(Source);
   try
-    Dest.CopyFrom(Decompressor, 0);
+    // CopyFrom(Decompressor, 0) ne fonctionne pas car
+    // TZDecompressionStream ne connaît pas sa taille décompressée.
+    // Il faut lire par blocs jusqu'à la fin du flux.
+    repeat
+      BytesLus := Decompressor.Read(Buffer, SizeOf(Buffer));
+      if BytesLus > 0 then
+        Dest.WriteBuffer(Buffer, BytesLus);
+    until BytesLus = 0;
   finally
     Decompressor.Free;
   end;
@@ -947,8 +956,8 @@ end;
 ```pascal
 // ATTENTION : Ceci est un exemple pédagogique simple
 // Pour du chiffrement réel, utilisez des bibliothèques cryptographiques
-procedure ChiffrerStreamSimple(Stream: TStream; const Cle: Byte);
-var
+procedure ChiffrerStreamSimple(Stream: TStream; const Cle: Byte);  
+var  
   Buffer: array[0..4095] of Byte;
   BytesLus, i: Integer;
   Position: Int64;
@@ -1035,8 +1044,8 @@ type
     property NombreEcritures: Integer read FNombreEcritures;
   end;
 
-constructor TCountingStream.Create(AStream: TStream);
-begin
+constructor TCountingStream.Create(AStream: TStream);  
+begin  
   inherited Create;
   FStream := AStream;
   FBytesLus := 0;
@@ -1045,38 +1054,38 @@ begin
   FNombreEcritures := 0;
 end;
 
-destructor TCountingStream.Destroy;
-begin
+destructor TCountingStream.Destroy;  
+begin  
   // Ne pas libérer FStream, on ne le possède pas
   inherited;
 end;
 
-function TCountingStream.Read(var Buffer; Count: Longint): Longint;
-begin
+function TCountingStream.Read(var Buffer; Count: Longint): Longint;  
+begin  
   Result := FStream.Read(Buffer, Count);
   Inc(FBytesLus, Result);
   Inc(FNombreLectures);
 end;
 
-function TCountingStream.Write(const Buffer; Count: Longint): Longint;
-begin
+function TCountingStream.Write(const Buffer; Count: Longint): Longint;  
+begin  
   Result := FStream.Write(Buffer, Count);
   Inc(FBytesEcrits, Result);
   Inc(FNombreEcritures);
 end;
 
-function TCountingStream.Seek(Offset: Longint; Origin: Word): Longint;
-begin
+function TCountingStream.Seek(Offset: Longint; Origin: Word): Longint;  
+begin  
   Result := FStream.Seek(Offset, Origin);
 end;
 
-function TCountingStream.GetSize: Int64;
-begin
+function TCountingStream.GetSize: Int64;  
+begin  
   Result := FStream.Size;
 end;
 
-procedure TCountingStream.SetSize(NewSize: Longint);
-begin
+procedure TCountingStream.SetSize(NewSize: Longint);  
+begin  
   FStream.Size := NewSize;
 end;
 
@@ -1127,8 +1136,8 @@ end;
 ### 1. Pattern de création sécurisée
 
 ```pascal
-function CreerEtInitialiserStream: TMemoryStream;
-begin
+function CreerEtInitialiserStream: TMemoryStream;  
+begin  
   Result := TMemoryStream.Create;
   try
     // Initialisation
@@ -1152,18 +1161,18 @@ type
     function ReadString: string;
   end;
 
-procedure TStreamHelper.WriteInteger(Value: Integer);
-begin
+procedure TStreamHelper.WriteInteger(Value: Integer);  
+begin  
   Self.WriteBuffer(Value, SizeOf(Integer));
 end;
 
-function TStreamHelper.ReadInteger: Integer;
-begin
+function TStreamHelper.ReadInteger: Integer;  
+begin  
   Self.ReadBuffer(Result, SizeOf(Integer));
 end;
 
-procedure TStreamHelper.WriteString(const Value: string);
-var
+procedure TStreamHelper.WriteString(const Value: string);  
+var  
   Bytes: TBytes;
   Longueur: Integer;
 begin
@@ -1174,8 +1183,8 @@ begin
     Self.WriteBuffer(Bytes[0], Longueur);
 end;
 
-function TStreamHelper.ReadString: string;
-var
+function TStreamHelper.ReadString: string;  
+var  
   Bytes: TBytes;
   Longueur: Integer;
 begin
@@ -1233,26 +1242,26 @@ type
     property Stream: TStream read GetStream;
   end;
 
-constructor TStreamWrapper.Create(AStream: TStream);
-begin
+constructor TStreamWrapper.Create(AStream: TStream);  
+begin  
   inherited Create;
   FStream := AStream;
 end;
 
-destructor TStreamWrapper.Destroy;
-begin
+destructor TStreamWrapper.Destroy;  
+begin  
   FStream.Free;
   inherited;
 end;
 
-function TStreamWrapper.GetStream: TStream;
-begin
+function TStreamWrapper.GetStream: TStream;  
+begin  
   Result := FStream;
 end;
 
 // Utilisation (pas besoin de try/finally)
-procedure UtiliserStreamWrapper;
-var
+procedure UtiliserStreamWrapper;  
+var  
   StreamWrapper: IStreamWrapper;
   Stream: TStream;
 begin
@@ -1260,7 +1269,7 @@ begin
   Stream := StreamWrapper.Stream;
 
   // Utiliser le stream
-  Stream.Write(...);
+  // Stream.Write(...) — écrire vos données ici
 
   // Pas besoin de Free, l'interface s'en charge automatiquement
 end;
@@ -1288,8 +1297,8 @@ type
     property Salaire: Double read FSalaire write FSalaire;
   end;
 
-procedure TPerson.SaveToStream(Stream: TStream);
-var
+procedure TPerson.SaveToStream(Stream: TStream);  
+var  
   Bytes: TBytes;
   Longueur: Integer;
 begin
@@ -1307,8 +1316,8 @@ begin
   Stream.Write(FSalaire, SizeOf(Double));
 end;
 
-procedure TPerson.LoadFromStream(Stream: TStream);
-var
+procedure TPerson.LoadFromStream(Stream: TStream);  
+var  
   Bytes: TBytes;
   Longueur: Integer;
 begin
@@ -1371,8 +1380,8 @@ end;
 
 ```pascal
 // Préparer des données à envoyer
-function PreparerMessage(const Commande: string; const Donnees: TBytes): TBytes;
-var
+function PreparerMessage(const Commande: string; const Donnees: TBytes): TBytes;  
+var  
   Stream: TMemoryStream;
   Longueur: Integer;
 begin
@@ -1419,21 +1428,21 @@ type
     procedure EffacerTout;
   end;
 
-constructor TDataCache.Create;
-begin
+constructor TDataCache.Create;  
+begin  
   inherited;
   FCache := TDictionary<string, TMemoryStream>.Create;
 end;
 
-destructor TDataCache.Destroy;
-begin
+destructor TDataCache.Destroy;  
+begin  
   EffacerTout;
   FCache.Free;
   inherited;
 end;
 
-procedure TDataCache.Ajouter(const Cle: string; const Donnees: TBytes);
-var
+procedure TDataCache.Ajouter(const Cle: string; const Donnees: TBytes);  
+var  
   Stream: TMemoryStream;
 begin
   // Supprimer l'ancienne entrée si elle existe
@@ -1447,8 +1456,8 @@ begin
   FCache.Add(Cle, Stream);
 end;
 
-function TDataCache.Obtenir(const Cle: string; out Donnees: TBytes): Boolean;
-var
+function TDataCache.Obtenir(const Cle: string; out Donnees: TBytes): Boolean;  
+var  
   Stream: TMemoryStream;
 begin
   Result := FCache.TryGetValue(Cle, Stream);
@@ -1460,8 +1469,8 @@ begin
   end;
 end;
 
-procedure TDataCache.Effacer(const Cle: string);
-var
+procedure TDataCache.Effacer(const Cle: string);  
+var  
   Stream: TMemoryStream;
 begin
   if FCache.TryGetValue(Cle, Stream) then
@@ -1471,8 +1480,8 @@ begin
   end;
 end;
 
-procedure TDataCache.EffacerTout;
-var
+procedure TDataCache.EffacerTout;  
+var  
   Pair: TPair<string, TMemoryStream>;
 begin
   for Pair in FCache do

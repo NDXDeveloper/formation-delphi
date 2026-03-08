@@ -51,10 +51,10 @@ Le **taux de compression** indique à quel point les données ont été réduite
 ```
 Taux de compression = (Taille originale - Taille compressée) / Taille originale × 100%
 
-Exemple :
-Fichier original : 1000 Ko
-Fichier compressé : 300 Ko
-Taux : (1000 - 300) / 1000 × 100% = 70%
+Exemple :  
+Fichier original : 1000 Ko  
+Fichier compressé : 300 Ko  
+Taux : (1000 - 300) / 1000 × 100% = 70%  
 ```
 
 **Note :** Tous les fichiers ne se compressent pas aussi bien. Les fichiers texte ou répétitifs se compressent bien, tandis que les fichiers déjà compressés (JPEG, MP3, ZIP) ne se compressent pratiquement pas.
@@ -79,8 +79,8 @@ uses
 ### Compression basique avec TZCompressionStream
 
 ```pascal
-procedure CompresserStream(Source, Destination: TStream);
-var
+procedure CompresserStream(Source, Destination: TStream);  
+var  
   Compresseur: TZCompressionStream;
 begin
   Source.Position := 0;
@@ -97,8 +97,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Original, Compresse: TMemoryStream;
   i: Integer;
   TauxCompression: Double;
@@ -130,9 +130,11 @@ end;
 ### Décompression avec TZDecompressionStream
 
 ```pascal
-procedure DecompresserStream(Source, Destination: TStream);
-var
+procedure DecompresserStream(Source, Destination: TStream);  
+var  
   Decompresseur: TZDecompressionStream;
+  Buffer: array[0..4095] of Byte;
+  BytesLus: Integer;
 begin
   Source.Position := 0;
   Destination.Size := 0;
@@ -140,16 +142,20 @@ begin
   // Créer le décompresseur
   Decompresseur := TZDecompressionStream.Create(Source);
   try
-    // Copier les données décompressées
-    Destination.CopyFrom(Decompresseur, 0);
+    // Lire par blocs car TZDecompressionStream ne connaît pas sa taille
+    repeat
+      BytesLus := Decompresseur.Read(Buffer, SizeOf(Buffer));
+      if BytesLus > 0 then
+        Destination.WriteBuffer(Buffer, BytesLus);
+    until BytesLus = 0;
   finally
     Decompresseur.Free;
   end;
 end;
 
 // Exemple complet : compression et décompression
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   Original, Compresse, Decompresse: TMemoryStream;
   Texte, TexteDecompresse: AnsiString;
 begin
@@ -230,8 +236,8 @@ begin
 end;
 
 // Comparaison des niveaux
-procedure TForm1.CompareNiveaux;
-var
+procedure TForm1.CompareNiveaux;  
+var  
   Original, Compresse1, Compresse2, Compresse3: TMemoryStream;
   i: Integer;
   Debut, Fin: Cardinal;
@@ -287,8 +293,8 @@ end;
 ### Comprimer un fichier
 
 ```pascal
-procedure CompresserFichier(const FichierSource, FichierDestination: string);
-var
+procedure CompresserFichier(const FichierSource, FichierDestination: string);  
+var  
   SourceStream, DestStream: TFileStream;
   Compresseur: TZCompressionStream;
 begin
@@ -315,8 +321,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button3Click(Sender: TObject);
-begin
+procedure TForm1.Button3Click(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     CompresserFichier(OpenDialog1.FileName,
@@ -329,8 +335,8 @@ end;
 ### Décompresser un fichier
 
 ```pascal
-procedure DecompresserFichier(const FichierSource, FichierDestination: string);
-var
+procedure DecompresserFichier(const FichierSource, FichierDestination: string);  
+var  
   SourceStream, DestStream: TFileStream;
   Decompresseur: TZDecompressionStream;
 begin
@@ -340,11 +346,16 @@ begin
     // Créer le fichier destination
     DestStream := TFileStream.Create(FichierDestination, fmCreate);
     try
-      // Créer le décompresseur
+      // Créer le décompresseur et lire par blocs
       Decompresseur := TZDecompressionStream.Create(SourceStream);
       try
-        // Décompresser
-        DestStream.CopyFrom(Decompresseur, 0);
+        var Buffer: array[0..4095] of Byte;
+        var BytesLus: Integer;
+        repeat
+          BytesLus := Decompresseur.Read(Buffer, SizeOf(Buffer));
+          if BytesLus > 0 then
+            DestStream.WriteBuffer(Buffer, BytesLus);
+        until BytesLus = 0;
       finally
         Decompresseur.Free;
       end;
@@ -357,8 +368,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button4Click(Sender: TObject);
-var
+procedure TForm1.Button4Click(Sender: TObject);  
+var  
   FichierCompresse, FichierDecompresse: string;
 begin
   if OpenDialog1.Execute then
@@ -375,8 +386,8 @@ end;
 ### Fonction complète avec gestion d'erreurs
 
 ```pascal
-function CompresserFichierSecurise(const Source, Destination: string): Boolean;
-begin
+function CompresserFichierSecurise(const Source, Destination: string): Boolean;  
+begin  
   Result := False;
 
   // Vérifier que le fichier source existe
@@ -407,8 +418,8 @@ end;
 ### Fonctions utilitaires
 
 ```pascal
-function CompresserString(const S: string): TBytes;
-var
+function CompresserString(const S: string): TBytes;  
+var  
   SourceStream, DestStream: TMemoryStream;
   Compresseur: TZCompressionStream;
   Bytes: TBytes;
@@ -443,8 +454,8 @@ begin
   end;
 end;
 
-function DecompresserString(const CompressedData: TBytes): string;
-var
+function DecompresserString(const CompressedData: TBytes): string;  
+var  
   SourceStream, DestStream: TMemoryStream;
   Decompresseur: TZDecompressionStream;
   Bytes: TBytes;
@@ -458,10 +469,16 @@ begin
 
     SourceStream.Position := 0;
 
-    // Décompresser
+    // Décompresser par blocs
     Decompresseur := TZDecompressionStream.Create(SourceStream);
     try
-      DestStream.CopyFrom(Decompresseur, 0);
+      var Buffer: array[0..4095] of Byte;
+      var BytesLus: Integer;
+      repeat
+        BytesLus := Decompresseur.Read(Buffer, SizeOf(Buffer));
+        if BytesLus > 0 then
+          DestStream.WriteBuffer(Buffer, BytesLus);
+      until BytesLus = 0;
     finally
       Decompresseur.Free;
     end;
@@ -483,8 +500,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button5Click(Sender: TObject);
-var
+procedure TForm1.Button5Click(Sender: TObject);  
+var  
   TexteOriginal, TexteDecompresse: string;
   DonneesCompressees: TBytes;
   TauxCompression: Double;
@@ -553,8 +570,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button6Click(Sender: TObject);
-var
+procedure TForm1.Button6Click(Sender: TObject);  
+var  
   Fichiers: TStringList;
 begin
   Fichiers := TStringList.Create;
@@ -575,8 +592,8 @@ end;
 ### Extraire une archive ZIP
 
 ```pascal
-procedure ExtraireArchiveZip(const NomArchive, DossierDestination: string);
-var
+procedure ExtraireArchiveZip(const NomArchive, DossierDestination: string);  
+var  
   ZipFile: TZipFile;
 begin
   ZipFile := TZipFile.Create;
@@ -595,8 +612,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button7Click(Sender: TObject);
-begin
+procedure TForm1.Button7Click(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     ExtraireArchiveZip(OpenDialog1.FileName, 'C:\Extraction\');
@@ -608,10 +625,10 @@ end;
 ### Lister le contenu d'une archive
 
 ```pascal
-procedure ListerContenuZip(const NomArchive: string; Liste: TStrings);
-var
+procedure ListerContenuZip(const NomArchive: string; Liste: TStrings);  
+var  
   ZipFile: TZipFile;
-  Fichier: TZipHeader;
+  NomFichier: string;
 begin
   Liste.Clear;
 
@@ -620,10 +637,8 @@ begin
     ZipFile.Open(NomArchive, zmRead);
 
     // Parcourir tous les fichiers
-    for Fichier in ZipFile.FileNames do
-    begin
-      Liste.Add(Fichier.FileName);
-    end;
+    for NomFichier in ZipFile.FileNames do
+      Liste.Add(NomFichier);
 
     ZipFile.Close;
   finally
@@ -632,8 +647,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button8Click(Sender: TObject);
-begin
+procedure TForm1.Button8Click(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     ListerContenuZip(OpenDialog1.FileName, Memo1.Lines);
@@ -665,8 +680,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ExtraireUnFichier;
-var
+procedure TForm1.ExtraireUnFichier;  
+var  
   Archive, Fichier, Destination: string;
 begin
   Archive := 'C:\monarchive.zip';
@@ -680,8 +695,8 @@ end;
 ### Ajouter un fichier à une archive existante
 
 ```pascal
-procedure AjouterFichierAArchive(const NomArchive, FichierAAjouter: string);
-var
+procedure AjouterFichierAArchive(const NomArchive, FichierAAjouter: string);  
+var  
   ZipFile: TZipFile;
 begin
   ZipFile := TZipFile.Create;
@@ -702,10 +717,11 @@ end;
 ### Informations détaillées sur une archive
 
 ```pascal
-procedure AfficherInfosArchive(const NomArchive: string);
-var
+procedure AfficherInfosArchive(const NomArchive: string);  
+var  
   ZipFile: TZipFile;
-  Fichier: TZipHeader;
+  Header: TZipHeader;
+  i: Integer;
   TailleCompresse, TailleOriginale: Int64;
   TauxCompression: Double;
   Infos: string;
@@ -722,16 +738,17 @@ begin
                     [ExtractFileName(NomArchive),
                      ZipFile.FileCount]);
 
-    // Parcourir les fichiers
-    for Fichier in ZipFile.FileNames do
+    // Parcourir les fichiers via FileInfo (TZipHeader)
+    for i := 0 to ZipFile.FileCount - 1 do
     begin
-      TailleOriginale := TailleOriginale + Fichier.UncompressedSize;
-      TailleCompresse := TailleCompresse + Fichier.CompressedSize;
+      Header := ZipFile.FileInfo[i];
+      TailleOriginale := TailleOriginale + Header.UncompressedSize;
+      TailleCompresse := TailleCompresse + Header.CompressedSize;
 
       Infos := Infos + Format('%s : %d -> %d octets' + #13#10,
-        [Fichier.FileName,
-         Fichier.UncompressedSize,
-         Fichier.CompressedSize]);
+        [ZipFile.FileNames[i],
+         Header.UncompressedSize,
+         Header.CompressedSize]);
     end;
 
     TauxCompression := (1 - TailleCompresse / TailleOriginale) * 100;
@@ -774,8 +791,8 @@ type
       write FDossierDestination;
   end;
 
-constructor TBackupManager.Create(const Source, Destination: string);
-begin
+constructor TBackupManager.Create(const Source, Destination: string);  
+begin  
   inherited Create;
   FDossierSource := IncludeTrailingPathDelimiter(Source);
   FDossierDestination := IncludeTrailingPathDelimiter(Destination);
@@ -785,8 +802,8 @@ begin
     ForceDirectories(FDossierDestination);
 end;
 
-function TBackupManager.CreerSauvegarde: Boolean;
-var
+function TBackupManager.CreerSauvegarde: Boolean;  
+var  
   ZipFile: TZipFile;
   NomArchive: string;
   Fichiers: TStringDynArray;
@@ -839,8 +856,8 @@ begin
   end;
 end;
 
-procedure TBackupManager.RestaurerSauvegarde(const NomArchive: string);
-var
+procedure TBackupManager.RestaurerSauvegarde(const NomArchive: string);  
+var  
   ZipFile: TZipFile;
   DossierRestauration: string;
 begin
@@ -872,8 +889,8 @@ begin
   end;
 end;
 
-function TBackupManager.ListerSauvegardes: TStringList;
-var
+function TBackupManager.ListerSauvegardes: TStringList;  
+var  
   Fichiers: TStringDynArray;
   Fichier: string;
 begin
@@ -889,8 +906,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button9Click(Sender: TObject);
-var
+procedure TForm1.Button9Click(Sender: TObject);  
+var  
   BackupManager: TBackupManager;
 begin
   BackupManager := TBackupManager.Create('C:\MesDonnees\', 'C:\Sauvegardes\');
@@ -902,8 +919,8 @@ begin
   end;
 end;
 
-procedure TForm1.Button10Click(Sender: TObject);
-var
+procedure TForm1.Button10Click(Sender: TObject);  
+var  
   BackupManager: TBackupManager;
   Sauvegardes: TStringList;
 begin
@@ -923,85 +940,11 @@ end;
 
 ---
 
-## Compression avec mot de passe (ZIP)
+## Note sur la protection par mot de passe (ZIP)
 
-Delphi permet également de créer des archives ZIP protégées par mot de passe.
-
-```pascal
-procedure CreerZipAvecMotDePasse(const Fichiers: TStringList;
-                                 const NomArchive, MotDePasse: string);
-var
-  ZipFile: TZipFile;
-  Fichier: string;
-begin
-  ZipFile := TZipFile.Create;
-  try
-    ZipFile.Open(NomArchive, zmWrite);
-
-    // Définir le mot de passe
-    ZipFile.Password := MotDePasse;
-
-    // Ajouter les fichiers
-    for Fichier in Fichiers do
-    begin
-      if FileExists(Fichier) then
-        ZipFile.Add(Fichier);
-    end;
-
-    ZipFile.Close;
-  finally
-    ZipFile.Free;
-  end;
-end;
-
-procedure ExtraireZipAvecMotDePasse(const NomArchive, Destination,
-                                    MotDePasse: string);
-var
-  ZipFile: TZipFile;
-begin
-  ZipFile := TZipFile.Create;
-  try
-    ZipFile.Open(NomArchive, zmRead);
-
-    // Définir le mot de passe
-    ZipFile.Password := MotDePasse;
-
-    // Extraire
-    ZipFile.ExtractAll(Destination);
-
-    ZipFile.Close;
-  finally
-    ZipFile.Free;
-  end;
-end;
-
-// Utilisation
-procedure TForm1.CreerArchiveSecurisee;
-var
-  Fichiers: TStringList;
-  MotDePasse: string;
-begin
-  MotDePasse := InputBox('Mot de passe',
-                         'Entrez un mot de passe pour l''archive :', '');
-
-  if MotDePasse = '' then
-  begin
-    ShowMessage('Mot de passe requis');
-    Exit;
-  end;
-
-  Fichiers := TStringList.Create;
-  try
-    Fichiers.Add('C:\Documents\secret.txt');
-    Fichiers.Add('C:\Documents\confidentiel.pdf');
-
-    CreerZipAvecMotDePasse(Fichiers, 'C:\archive_securisee.zip', MotDePasse);
-    ShowMessage('Archive sécurisée créée');
-  finally
-    Fichiers.Free;
-  end;
-end;
-```
+> **Important :** La classe `TZipFile` de Delphi (`System.Zip`) **ne supporte pas nativement** la création d'archives ZIP protégées par mot de passe. Pour cette fonctionnalité, vous devrez utiliser une bibliothèque tierce comme **Abbrevia**, **TurboPower Abbrevia** ou **7-Zip SDK**.
+>
+> Si vous avez besoin de protéger des données, vous pouvez combiner la compression ZLib avec un chiffrement séparé (par exemple via les API de chiffrement de Delphi dans `System.NetEncoding` ou des bibliothèques cryptographiques).
 
 ---
 
@@ -1010,8 +953,8 @@ end;
 ### 1. Choisir le bon niveau de compression
 
 ```pascal
-function ChoisirNiveauCompression(TailleFichier: Int64): TZCompressionLevel;
-begin
+function ChoisirNiveauCompression(TailleFichier: Int64): TZCompressionLevel;  
+begin  
   if TailleFichier < 1024 * 1024 then // < 1 Mo
     Result := zcMax  // Petits fichiers : compression max
   else if TailleFichier < 100 * 1024 * 1024 then // < 100 Mo
@@ -1024,8 +967,8 @@ end;
 ### 2. Compresser par blocs pour les gros fichiers
 
 ```pascal
-procedure CompresserParBlocs(const Source, Destination: string);
-const
+procedure CompresserParBlocs(const Source, Destination: string);  
+const  
   TAILLE_BLOC = 1024 * 1024; // 1 Mo
 var
   SourceStream, DestStream: TFileStream;
@@ -1059,8 +1002,8 @@ end;
 ### 3. Vérifier si la compression est utile
 
 ```pascal
-function CompressionEstUtile(const Extension: string): Boolean;
-var
+function CompressionEstUtile(const Extension: string): Boolean;  
+var  
   ExtensionsNonCompressibles: TStringList;
 begin
   ExtensionsNonCompressibles := TStringList.Create;
@@ -1084,8 +1027,8 @@ begin
   end;
 end;
 
-procedure CompresserIntelligent(const Source, Destination: string);
-var
+procedure CompresserIntelligent(const Source, Destination: string);  
+var  
   Extension: string;
   TailleSource, TailleCompresse: Int64;
 begin
@@ -1169,8 +1112,8 @@ end;
 ### 5. Gestion des erreurs robuste
 
 ```pascal
-function CompresserSecurise(const Source, Destination: string): Boolean;
-begin
+function CompresserSecurise(const Source, Destination: string): Boolean;  
+begin  
   Result := False;
 
   // Vérifications préalables

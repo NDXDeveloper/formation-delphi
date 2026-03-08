@@ -31,10 +31,10 @@ Un fichier CSV est un fichier texte où chaque ligne représente une ligne de ta
 
 **Exemple de fichier CSV :**
 ```csv
-Nom,Prénom,Âge,Ville
-Dupont,Jean,30,Paris
-Martin,Marie,28,Lyon
-Dubois,Pierre,35,Marseille
+Nom,Prénom,Âge,Ville  
+Dupont,Jean,30,Paris  
+Martin,Marie,28,Lyon  
+Dubois,Pierre,35,Marseille  
 ```
 
 ### Variantes de CSV
@@ -54,8 +54,8 @@ Les fichiers CSV peuvent utiliser différents délimiteurs :
 uses
   System.Classes, System.SysUtils, System.StrUtils;
 
-procedure LireCSVSimple(const NomFichier: string; Grille: TStringGrid);
-var
+procedure LireCSVSimple(const NomFichier: string; Grille: TStringGrid);  
+var  
   Lignes: TStringList;
   i, j: Integer;
   Ligne: string;
@@ -94,8 +94,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   LireCSVSimple('donnees.csv', StringGrid1);
 end;
 ```
@@ -111,8 +111,8 @@ type
     Encoding: TEncoding;      // Encodage du fichier
   end;
 
-function ParseCSVLine(const Line: string; Delimiter, QuoteChar: Char): TArray<string>;
-var
+function ParseCSVLine(const Line: string; Delimiter, QuoteChar: Char): TArray<string>;  
+var  
   i, Start: Integer;
   InQuotes: Boolean;
   CurrentField: string;
@@ -203,8 +203,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   Options: TCSVOptions;
 begin
   Options.Delimiter := ';';        // Point-virgule
@@ -219,8 +219,8 @@ end;
 ### Détection automatique du délimiteur
 
 ```pascal
-function DetecterDelimiteurCSV(const NomFichier: string): Char;
-var
+function DetecterDelimiteurCSV(const NomFichier: string): Char;  
+var  
   Lignes: TStringList;
   PremiereLigne: string;
   NbVirgules, NbPointsVirgules, NbTabulations: Integer;
@@ -257,8 +257,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.OuvrirCSVAuto;
-var
+procedure TForm1.OuvrirCSVAuto;  
+var  
   Delimiter: Char;
   Options: TCSVOptions;
 begin
@@ -285,8 +285,8 @@ end;
 ### Écriture simple
 
 ```pascal
-procedure EcrireCSVSimple(const NomFichier: string; Grille: TStringGrid);
-var
+procedure EcrireCSVSimple(const NomFichier: string; Grille: TStringGrid);  
+var  
   Lignes: TStringList;
   i, j: Integer;
   Ligne: string;
@@ -321,8 +321,8 @@ end;
 ### Écriture avec protection des données
 
 ```pascal
-function EchapperChampCSV(const Champ: string; QuoteChar: Char): string;
-begin
+function EchapperChampCSV(const Champ: string; QuoteChar: Char): string;  
+begin  
   Result := Champ;
 
   // Si le champ contient des caractères spéciaux, l'encadrer de guillemets
@@ -372,8 +372,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.SauvegarderCSV;
-begin
+procedure TForm1.SauvegarderCSV;  
+begin  
   if SaveDialog1.Execute then
     EcrireCSVAvance(SaveDialog1.FileName, StringGrid1, ';', '"');
 end;
@@ -417,8 +417,8 @@ type
     property Headers: TArray<string> read FHeaders;
   end;
 
-constructor TCSVReader.Create(const FileName: string);
-begin
+constructor TCSVReader.Create(const FileName: string);  
+begin  
   inherited Create;
   FFileName := FileName;
   FDelimiter := ',';
@@ -427,14 +427,14 @@ begin
   FData := TList<TArray<string>>.Create;
 end;
 
-destructor TCSVReader.Destroy;
-begin
+destructor TCSVReader.Destroy;  
+begin  
   FData.Free;
   inherited;
 end;
 
-function TCSVReader.ParseLine(const Line: string): TArray<string>;
-var
+function TCSVReader.ParseLine(const Line: string): TArray<string>;  
+var  
   i: Integer;
   InQuotes: Boolean;
   CurrentField: string;
@@ -444,8 +444,11 @@ begin
   try
     InQuotes := False;
     CurrentField := '';
+    i := 1;
 
-    for i := 1 to Length(Line) do
+    // Utiliser while car on doit parfois avancer de 2 positions (guillemets doublés)
+    // Note : for ne permet pas de modifier la variable de boucle en Delphi
+    while i <= Length(Line) do
     begin
       if Line[i] = FQuoteChar then
       begin
@@ -453,7 +456,7 @@ begin
         if (i < Length(Line)) and (Line[i + 1] = FQuoteChar) then
         begin
           CurrentField := CurrentField + FQuoteChar;
-          Inc(i);
+          Inc(i); // Sauter le deuxième guillemet
         end
         else
           InQuotes := not InQuotes;
@@ -465,6 +468,8 @@ begin
       end
       else
         CurrentField := CurrentField + Line[i];
+
+      Inc(i);
     end;
 
     Fields.Add(CurrentField);
@@ -474,8 +479,8 @@ begin
   end;
 end;
 
-procedure TCSVReader.Load;
-var
+procedure TCSVReader.Load;  
+var  
   Lignes: TStringList;
   i, StartRow: Integer;
 begin
@@ -503,8 +508,8 @@ begin
   end;
 end;
 
-procedure TCSVReader.Save(const FileName: string);
-var
+procedure TCSVReader.Save(const FileName: string);  
+var  
   Lignes: TStringList;
   i, j: Integer;
   Ligne: string;
@@ -553,8 +558,8 @@ begin
   end;
 end;
 
-function TCSVReader.GetValue(Row, Col: Integer): string;
-begin
+function TCSVReader.GetValue(Row, Col: Integer): string;  
+begin  
   if (Row >= 0) and (Row < FData.Count) and
      (Col >= 0) and (Col < Length(FData[Row])) then
     Result := FData[Row][Col]
@@ -562,8 +567,8 @@ begin
     Result := '';
 end;
 
-procedure TCSVReader.SetValue(Row, Col: Integer; const Value: string);
-begin
+procedure TCSVReader.SetValue(Row, Col: Integer; const Value: string);  
+begin  
   if (Row >= 0) and (Row < FData.Count) and
      (Col >= 0) and (Col < Length(FData[Row])) then
     FData[Row][Col] := Value;
@@ -591,18 +596,18 @@ begin
     Result := GetValue(Row, Col);
 end;
 
-procedure TCSVReader.AddRow(const Values: TArray<string>);
-begin
+procedure TCSVReader.AddRow(const Values: TArray<string>);  
+begin  
   FData.Add(Values);
 end;
 
-function TCSVReader.RowCount: Integer;
-begin
+function TCSVReader.RowCount: Integer;  
+begin  
   Result := FData.Count;
 end;
 
-function TCSVReader.ColCount: Integer;
-begin
+function TCSVReader.ColCount: Integer;  
+begin  
   if FHasHeader then
     Result := Length(FHeaders)
   else if FData.Count > 0 then
@@ -612,8 +617,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.UtiliserClasseCSV;
-var
+procedure TForm1.UtiliserClasseCSV;  
+var  
   CSV: TCSVReader;
   i: Integer;
   Nom, Age: string;
@@ -680,8 +685,8 @@ Nous allons voir les deux premières méthodes.
 uses
   ComObj, Variants;
 
-procedure LireExcelViaOLE(const NomFichier: string; Grille: TStringGrid);
-var
+procedure LireExcelViaOLE(const NomFichier: string; Grille: TStringGrid);  
+var  
   Excel, Workbook, Worksheet: Variant;
   LastRow, LastCol: Integer;
   i, j: Integer;
@@ -725,8 +730,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button3Click(Sender: TObject);
-begin
+procedure TForm1.Button3Click(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     try
@@ -744,8 +749,8 @@ end;
 ### Écriture de fichier Excel via OLE
 
 ```pascal
-procedure EcrireExcelViaOLE(const NomFichier: string; Grille: TStringGrid);
-var
+procedure EcrireExcelViaOLE(const NomFichier: string; Grille: TStringGrid);  
+var  
   Excel, Workbook, Worksheet: Variant;
   i, j: Integer;
 begin
@@ -786,8 +791,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.SauvegarderExcel;
-begin
+procedure TForm1.SauvegarderExcel;  
+begin  
   if SaveDialog1.Execute then
   begin
     try
@@ -804,8 +809,8 @@ end;
 ### Mise en forme avancée avec OLE
 
 ```pascal
-procedure CreerExcelAvecMiseEnForme(const NomFichier: string);
-var
+procedure CreerExcelAvecMiseEnForme(const NomFichier: string);  
+var  
   Excel, Workbook, Worksheet, Range: Variant;
 begin
   Excel := CreateOleObject('Excel.Application');
@@ -882,11 +887,11 @@ Les fichiers .xlsx sont en fait des archives ZIP contenant des fichiers XML. On 
 uses
   System.Zip;
 
-procedure ExtraireXLSXEnCSV(const FichierXLSX, FichierCSV: string);
-var
+procedure ExtraireXLSXEnCSV(const FichierXLSX, FichierCSV: string);  
+var  
   ZipFile: TZipFile;
   XMLContent: string;
-  Stream: TStringStream;
+  Bytes: TBytes;
 begin
   // Note: Ceci est une approche simplifiée
   // En réalité, le format XLSX est très complexe
@@ -896,16 +901,12 @@ begin
     ZipFile.Open(FichierXLSX, zmRead);
 
     // Extraire le fichier sheet1.xml (première feuille)
-    Stream := TStringStream.Create('', TEncoding.UTF8);
-    try
-      ZipFile.Read('xl/worksheets/sheet1.xml', Stream);
-      XMLContent := Stream.DataString;
+    // TZipFile.Read retourne les données dans un TBytes
+    ZipFile.Read('xl/worksheets/sheet1.xml', Bytes);
+    XMLContent := TEncoding.UTF8.GetString(Bytes);
 
-      // Parser le XML et convertir en CSV
-      // (code complexe, nécessite un parser XML complet)
-    finally
-      Stream.Free;
-    end;
+    // Parser le XML et convertir en CSV
+    // (code complexe, nécessite un parser XML complet)
 
     ZipFile.Close;
   finally
@@ -946,20 +947,20 @@ type
     property Contacts: TList<TContact> read FContacts;
   end;
 
-constructor TContactImporter.Create;
-begin
+constructor TContactImporter.Create;  
+begin  
   inherited;
   FContacts := TList<TContact>.Create;
 end;
 
-destructor TContactImporter.Destroy;
-begin
+destructor TContactImporter.Destroy;  
+begin  
   FContacts.Free;
   inherited;
 end;
 
-procedure TContactImporter.ImportFromCSV(const FileName: string);
-var
+procedure TContactImporter.ImportFromCSV(const FileName: string);  
+var  
   CSV: TCSVReader;
   i: Integer;
   Contact: TContact;
@@ -986,8 +987,8 @@ begin
   end;
 end;
 
-procedure TContactImporter.ExportToCSV(const FileName: string);
-var
+procedure TContactImporter.ExportToCSV(const FileName: string);  
+var  
   Lignes: TStringList;
   i: Integer;
   Contact: TContact;
@@ -1011,22 +1012,22 @@ begin
   end;
 end;
 
-function TContactImporter.GetContact(Index: Integer): TContact;
-begin
+function TContactImporter.GetContact(Index: Integer): TContact;  
+begin  
   if (Index >= 0) and (Index < FContacts.Count) then
     Result := FContacts[Index]
   else
-    FillChar(Result, SizeOf(TContact), 0);
+    Result := Default(TContact);
 end;
 
-function TContactImporter.Count: Integer;
-begin
+function TContactImporter.Count: Integer;  
+begin  
   Result := FContacts.Count;
 end;
 
 // Utilisation
-procedure TForm1.ImporterContacts;
-var
+procedure TForm1.ImporterContacts;  
+var  
   Importer: TContactImporter;
   i: Integer;
   Contact: TContact;
@@ -1077,21 +1078,21 @@ type
     procedure SaveReport(const FileName: string);
   end;
 
-constructor TExcelReportGenerator.Create;
-begin
+constructor TExcelReportGenerator.Create;  
+begin  
   inherited;
   FCurrentRow := 1;
   InitializeExcel;
 end;
 
-destructor TExcelReportGenerator.Destroy;
-begin
+destructor TExcelReportGenerator.Destroy;  
+begin  
   FinalizeExcel;
   inherited;
 end;
 
-procedure TExcelReportGenerator.InitializeExcel;
-begin
+procedure TExcelReportGenerator.InitializeExcel;  
+begin  
   FExcel := CreateOleObject('Excel.Application');
   FExcel.Visible := False;
   FExcel.DisplayAlerts := False;
@@ -1099,8 +1100,8 @@ begin
   FWorksheet := FWorkbook.Worksheets[1];
 end;
 
-procedure TExcelReportGenerator.FinalizeExcel;
-begin
+procedure TExcelReportGenerator.FinalizeExcel;  
+begin  
   if not VarIsEmpty(FWorkbook) then
     FWorkbook.Close(False);
 
@@ -1111,8 +1112,8 @@ begin
   end;
 end;
 
-procedure TExcelReportGenerator.StartReport(const Title: string);
-var
+procedure TExcelReportGenerator.StartReport(const Title: string);  
+var  
   Range: Variant;
 begin
   // Titre du rapport
@@ -1129,8 +1130,8 @@ begin
   Inc(FCurrentRow, 2);
 end;
 
-procedure TExcelReportGenerator.AddHeader(const Headers: TArray<string>);
-var
+procedure TExcelReportGenerator.AddHeader(const Headers: TArray<string>);  
+var  
   i: Integer;
   Range: Variant;
 begin
@@ -1149,8 +1150,8 @@ begin
   Inc(FCurrentRow);
 end;
 
-procedure TExcelReportGenerator.AddRow(const Values: TArray<Variant>);
-var
+procedure TExcelReportGenerator.AddRow(const Values: TArray<Variant>);  
+var  
   i: Integer;
 begin
   for i := 0 to High(Values) do
@@ -1178,8 +1179,8 @@ begin
   Range.Interior.Color := $0000FFFF; // Jaune
 end;
 
-procedure TExcelReportGenerator.SaveReport(const FileName: string);
-begin
+procedure TExcelReportGenerator.SaveReport(const FileName: string);  
+begin  
   // Ajuster les colonnes
   FWorksheet.Columns.AutoFit;
 
@@ -1188,8 +1189,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.GenererRapportVentes;
-var
+procedure TForm1.GenererRapportVentes;  
+var  
   Report: TExcelReportGenerator;
 begin
   Report := TExcelReportGenerator.Create;
@@ -1223,8 +1224,8 @@ type
     class procedure ExcelToCSV(const ExcelFile, CSVFile: string);
   end;
 
-class procedure TFileConverter.CSVToExcel(const CSVFile, ExcelFile: string);
-var
+class procedure TFileConverter.CSVToExcel(const CSVFile, ExcelFile: string);  
+var  
   CSV: TCSVReader;
   Excel, Workbook, Worksheet: Variant;
   i, j: Integer;
@@ -1271,8 +1272,8 @@ begin
   end;
 end;
 
-class procedure TFileConverter.ExcelToCSV(const ExcelFile, CSVFile: string);
-var
+class procedure TFileConverter.ExcelToCSV(const ExcelFile, CSVFile: string);  
+var  
   Excel, Workbook, Worksheet: Variant;
   LastRow, LastCol: Integer;
   i, j: Integer;
@@ -1317,8 +1318,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ConvertirFichiers;
-begin
+procedure TForm1.ConvertirFichiers;  
+begin  
   // CSV vers Excel
   TFileConverter.CSVToExcel('donnees.csv', 'donnees.xlsx');
   ShowMessage('CSV converti en Excel');
@@ -1386,8 +1387,8 @@ end;
 ### Vérifier Excel installé
 
 ```pascal
-function IsExcelInstalled: Boolean;
-var
+function IsExcelInstalled: Boolean;  
+var  
   Excel: Variant;
 begin
   Result := False;
@@ -1402,8 +1403,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button4Click(Sender: TObject);
-begin
+procedure TForm1.Button4Click(Sender: TObject);  
+begin  
   if IsExcelInstalled then
     ShowMessage('Excel est installé')
   else
@@ -1456,8 +1457,8 @@ end;
 const
   MAX_CSV_ROWS = 100000; // Limite pour éviter les problèmes mémoire
 
-if Lignes.Count > MAX_CSV_ROWS then
-begin
+if Lignes.Count > MAX_CSV_ROWS then  
+begin  
   ShowMessage('Fichier trop volumineux. Maximum : ' +
              IntToStr(MAX_CSV_ROWS) + ' lignes');
   Exit;
@@ -1467,8 +1468,8 @@ end;
 ### 5. Informer l'utilisateur
 
 ```pascal
-procedure ImporterAvecProgression(const FileName: string);
-var
+procedure ImporterAvecProgression(const FileName: string);  
+var  
   CSV: TCSVReader;
   i: Integer;
 begin
