@@ -33,12 +33,12 @@ Dans ce tutoriel, nous nous concentrerons sur les trois plateformes desktop : Wi
 
 À la fin de ce chapitre, vous serez capable de :
 
-✅ Créer une application FireMonkey multi-plateforme
-✅ Comprendre les différences entre VCL et FMX
-✅ Adapter l'interface aux spécificités de chaque OS
-✅ Gérer les chemins de fichiers multiplateformes
-✅ Appliquer des styles visuels adaptés
-✅ Compiler et déployer sur Windows, macOS et Linux
+✅ Créer une application FireMonkey multi-plateforme  
+✅ Comprendre les différences entre VCL et FMX  
+✅ Adapter l'interface aux spécificités de chaque OS  
+✅ Gérer les chemins de fichiers multiplateformes  
+✅ Appliquer des styles visuels adaptés  
+✅ Compiler et déployer sur Windows, macOS et Linux  
 ✅ Gérer les particularités de chaque système d'exploitation
 
 ### Prérequis
@@ -185,9 +185,9 @@ FMX utilise un système de layouts pour adapter l'interface :
 
 Pour ce tutoriel, nous allons créer une **application de gestion de notes** multi-plateforme. C'est un projet idéal car :
 
-✅ Assez simple pour être compréhensible
-✅ Assez complet pour être utile
-✅ Couvre tous les aspects du multi-plateforme
+✅ Assez simple pour être compréhensible  
+✅ Assez complet pour être utile  
+✅ Couvre tous les aspects du multi-plateforme  
 ✅ Utilisable au quotidien
 
 **Fonctionnalités** :
@@ -358,34 +358,34 @@ Commençons par créer le formulaire principal de notre application.
 
 **Pour le formulaire (TForm)** :
 ```pascal
-Name = FormMain
-Caption = 'Notes App'
-ClientHeight = 600
-ClientWidth = 900
-Position = ScreenCenter
+Name = FormMain  
+Caption = 'Notes App'  
+ClientHeight = 600  
+ClientWidth = 900  
+Position = ScreenCenter  
 ```
 
 **Pour le TEdit de recherche** :
 ```pascal
-Name = EditSearch
-TextPrompt = 'Rechercher une note...'
-Align = Client
-StyleLookup = 'searchtextstyle'
+Name = EditSearch  
+TextPrompt = 'Rechercher une note...'  
+Align = Client  
+StyleLookup = 'searchtextstyle'  
 ```
 
 **Pour la TListBox** :
 ```pascal
-Name = ListBoxNotes
-Align = Client
-ItemHeight = 60
+Name = ListBoxNotes  
+Align = Client  
+ItemHeight = 60  
 ```
 
 **Pour le TMemo de contenu** :
 ```pascal
-Name = MemoContent
-Align = Client
-ReadOnly = False
-WordWrap = True
+Name = MemoContent  
+Align = Client  
+ReadOnly = False  
+WordWrap = True  
 ```
 
 ### 3.4 Code du formulaire principal
@@ -446,25 +446,25 @@ uses
 
 { TFormMain }
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FCurrentNoteIndex := -1;
   LoadNotes;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   SaveCurrentNote;
 end;
 
-procedure TFormMain.LoadNotes;
-begin
+procedure TFormMain.LoadNotes;  
+begin  
   // Nous implémenterons cette méthode plus tard
   UpdateNotesList;
 end;
 
-procedure TFormMain.UpdateNotesList;
-var
+procedure TFormMain.UpdateNotesList;  
+var  
   I: Integer;
 begin
   ListBoxNotes.Clear;
@@ -480,8 +480,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ButtonNewNoteClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonNewNoteClick(Sender: TObject);  
+begin  
   // Créer une nouvelle note
   SaveCurrentNote;
 
@@ -500,14 +500,14 @@ begin
   MemoContent.SetFocus;
 end;
 
-procedure TFormMain.ListBoxNotesChange(Sender: TObject);
-begin
+procedure TFormMain.ListBoxNotesChange(Sender: TObject);  
+begin  
   SaveCurrentNote;
   DisplayNote(ListBoxNotes.ItemIndex);
 end;
 
-procedure TFormMain.DisplayNote(Index: Integer);
-begin
+procedure TFormMain.DisplayNote(Index: Integer);  
+begin  
   if (Index >= 0) and (Index < ListBoxNotes.Items.Count) then
   begin
     FCurrentNoteIndex := Index;
@@ -523,8 +523,8 @@ begin
   end;
 end;
 
-procedure TFormMain.SaveCurrentNote;
-begin
+procedure TFormMain.SaveCurrentNote;  
+begin  
   if FCurrentNoteIndex >= 0 then
   begin
     // Sauvegarder la note actuelle
@@ -532,8 +532,8 @@ begin
   end;
 end;
 
-procedure TFormMain.EditSearchChange(Sender: TObject);
-var
+procedure TFormMain.EditSearchChange(Sender: TObject);  
+var  
   SearchText: string;
 begin
   SearchText := EditSearch.Text.ToLower;
@@ -543,8 +543,8 @@ begin
   UpdateNotesList;
 end;
 
-procedure TFormMain.MemoContentChange(Sender: TObject);
-begin
+procedure TFormMain.MemoContentChange(Sender: TObject);  
+begin  
   // Marquer la note comme modifiée
   // Auto-sauvegarde après un délai (optionnel)
 end;
@@ -608,8 +608,8 @@ implementation
 
 { TNote }
 
-constructor TNote.Create;
-begin
+constructor TNote.Create;  
+begin  
   inherited;
   FID := TGUID.NewGuid.ToString;
   FCreatedDate := Now;
@@ -619,8 +619,8 @@ begin
   FCategory := 'Général';
 end;
 
-function TNote.ToJSON: TJSONObject;
-begin
+function TNote.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('id', FID);
   Result.AddPair('title', FTitle);
@@ -630,8 +630,8 @@ begin
   Result.AddPair('category', FCategory);
 end;
 
-procedure TNote.FromJSON(AJSON: TJSONObject);
-begin
+procedure TNote.FromJSON(AJSON: TJSONObject);  
+begin  
   FID := AJSON.GetValue<string>('id');
   FTitle := AJSON.GetValue<string>('title');
   FContent := AJSON.GetValue<string>('content');
@@ -699,23 +699,23 @@ uses
 
 { TNotesManager }
 
-constructor TNotesManager.Create;
-begin
+constructor TNotesManager.Create;  
+begin  
   inherited;
   FNotes := TObjectList<TNote>.Create(True); // True = possède les objets
   InitializeDataFile;
   LoadFromFile;
 end;
 
-destructor TNotesManager.Destroy;
-begin
+destructor TNotesManager.Destroy;  
+begin  
   SaveToFile;
   FNotes.Free;
   inherited;
 end;
 
-procedure TNotesManager.InitializeDataFile;
-var
+procedure TNotesManager.InitializeDataFile;  
+var  
   AppPath: string;
 begin
   // Obtenir le chemin approprié selon l'OS
@@ -736,32 +736,32 @@ begin
   FDataFile := TPath.Combine(AppPath, 'notes.json');
 end;
 
-procedure TNotesManager.AddNote(ANote: TNote);
-begin
+procedure TNotesManager.AddNote(ANote: TNote);  
+begin  
   FNotes.Add(ANote);
 end;
 
-procedure TNotesManager.DeleteNote(AIndex: Integer);
-begin
+procedure TNotesManager.DeleteNote(AIndex: Integer);  
+begin  
   if (AIndex >= 0) and (AIndex < FNotes.Count) then
     FNotes.Delete(AIndex);
 end;
 
-function TNotesManager.GetNote(AIndex: Integer): TNote;
-begin
+function TNotesManager.GetNote(AIndex: Integer): TNote;  
+begin  
   if (AIndex >= 0) and (AIndex < FNotes.Count) then
     Result := FNotes[AIndex]
   else
     Result := nil;
 end;
 
-function TNotesManager.GetNoteCount: Integer;
-begin
+function TNotesManager.GetNoteCount: Integer;  
+begin  
   Result := FNotes.Count;
 end;
 
-procedure TNotesManager.LoadFromFile;
-var
+procedure TNotesManager.LoadFromFile;  
+var  
   JSONText: string;
   JSONArray: TJSONArray;
   JSONObj: TJSONObject;
@@ -798,8 +798,8 @@ begin
   end;
 end;
 
-procedure TNotesManager.SaveToFile;
-var
+procedure TNotesManager.SaveToFile;  
+var  
   JSONArray: TJSONArray;
   Note: TNote;
   JSONText: string;
@@ -818,8 +818,8 @@ begin
   end;
 end;
 
-function TNotesManager.Search(const ASearchText: string): TList<TNote>;
-var
+function TNotesManager.Search(const ASearchText: string): TList<TNote>;  
+var  
   Note: TNote;
   SearchLower: string;
 begin
@@ -887,8 +887,8 @@ implementation
 
 { TPathHelper }
 
-class function TPathHelper.GetAppDataPath: string;
-begin
+class function TPathHelper.GetAppDataPath: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := TPath.GetHomePath + '\AppData\Local\NotesApp';
   {$ENDIF}
@@ -906,18 +906,18 @@ begin
     TDirectory.CreateDirectory(Result);
 end;
 
-class function TPathHelper.GetDocumentsPath: string;
-begin
+class function TPathHelper.GetDocumentsPath: string;  
+begin  
   Result := TPath.GetDocumentsPath;
 end;
 
-class function TPathHelper.GetTempPath: string;
-begin
+class function TPathHelper.GetTempPath: string;  
+begin  
   Result := TPath.GetTempPath;
 end;
 
-class function TPathHelper.GetDesktopPath: string;
-begin
+class function TPathHelper.GetDesktopPath: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := TPath.GetHomePath + '\Desktop';
   {$ENDIF}
@@ -931,23 +931,23 @@ begin
   {$ENDIF}
 end;
 
-class function TPathHelper.CombinePath(const APath1, APath2: string): string;
-begin
+class function TPathHelper.CombinePath(const APath1, APath2: string): string;  
+begin  
   Result := TPath.Combine(APath1, APath2);
 end;
 
-class function TPathHelper.FileExists(const AFileName: string): Boolean;
-begin
+class function TPathHelper.FileExists(const AFileName: string): Boolean;  
+begin  
   Result := TFile.Exists(AFileName);
 end;
 
-class function TPathHelper.DirectoryExists(const ADirectory: string): Boolean;
-begin
+class function TPathHelper.DirectoryExists(const ADirectory: string): Boolean;  
+begin  
   Result := TDirectory.Exists(ADirectory);
 end;
 
-class procedure TPathHelper.CreateDirectory(const ADirectory: string);
-begin
+class procedure TPathHelper.CreateDirectory(const ADirectory: string);  
+begin  
   if not TDirectory.Exists(ADirectory) then
     TDirectory.CreateDirectory(ADirectory);
 end;
@@ -971,8 +971,8 @@ end;
 Parfois, vous aurez besoin de savoir sur quelle plateforme votre application s'exécute.
 
 ```pascal
-function GetCurrentPlatform: string;
-begin
+function GetCurrentPlatform: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := 'Windows';
   {$ENDIF}
@@ -986,8 +986,8 @@ begin
   {$ENDIF}
 end;
 
-function IsWindows: Boolean;
-begin
+function IsWindows: Boolean;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := True;
   {$ELSE}
@@ -995,8 +995,8 @@ begin
   {$ENDIF}
 end;
 
-function IsMacOS: Boolean;
-begin
+function IsMacOS: Boolean;  
+begin  
   {$IFDEF MACOS}
   Result := True;
   {$ELSE}
@@ -1004,8 +1004,8 @@ begin
   {$ENDIF}
 end;
 
-function IsLinux: Boolean;
-begin
+function IsLinux: Boolean;  
+begin  
   {$IFDEF LINUX}
   Result := True;
   {$ELSE}
@@ -1021,8 +1021,8 @@ end;
 Les conventions diffèrent selon les systèmes :
 
 ```pascal
-procedure TFormMain.SetupShortcuts;
-begin
+procedure TFormMain.SetupShortcuts;  
+begin  
   {$IFDEF MSWINDOWS}
   // Windows : Ctrl+N pour nouvelle note
   ButtonNewNote.ShortCut := TextToShortCut('Ctrl+N');
@@ -1043,8 +1043,8 @@ end;
 #### Apparence selon l'OS
 
 ```pascal
-procedure TFormMain.ApplyPlatformStyle;
-begin
+procedure TFormMain.ApplyPlatformStyle;  
+begin  
   {$IFDEF MSWINDOWS}
   // Style Windows 10/11
   StyleBook1.Style := 'Windows10';
@@ -1083,22 +1083,22 @@ FireMonkey permet de changer complètement l'apparence de votre application avec
 #### Code pour changer de style
 
 ```pascal
-procedure TFormMain.ApplyStyle(const AStyleName: string);
-begin
+procedure TFormMain.ApplyStyle(const AStyleName: string);  
+begin  
   StyleBook1.StyleName := AStyleName;
   // Rafraîchir l'interface
   Invalidate;
 end;
 
 // Appliquer un thème sombre
-procedure TFormMain.ApplyDarkTheme;
-begin
+procedure TFormMain.ApplyDarkTheme;  
+begin  
   ApplyStyle('Dark.style');
 end;
 
 // Appliquer un thème clair
-procedure TFormMain.ApplyLightTheme;
-begin
+procedure TFormMain.ApplyLightTheme;  
+begin  
   ApplyStyle('Light.style');
 end;
 ```
@@ -1119,8 +1119,8 @@ type
     procedure SwitchThemeSwitch(Sender: TObject);
   end;
 
-procedure TFormMain.SwitchThemeSwitch(Sender: TObject);
-begin
+procedure TFormMain.SwitchThemeSwitch(Sender: TObject);  
+begin  
   if SwitchTheme.IsChecked then
     ApplyDarkTheme
   else
@@ -1133,8 +1133,8 @@ end;
 Vous pouvez personnaliser les couleurs individuellement :
 
 ```pascal
-procedure TFormMain.CustomizeColors;
-begin
+procedure TFormMain.CustomizeColors;  
+begin  
   // Couleur de fond
   Self.Fill.Color := TAlphaColors.White;
 
@@ -1205,8 +1205,8 @@ end;
 3. Assurez-vous que les bibliothèques sont installées :
 
 ```bash
-sudo apt-get install libgtk-3-dev
-sudo apt-get install libgl1-mesa-dev
+sudo apt-get install libgtk-3-dev  
+sudo apt-get install libgl1-mesa-dev  
 ```
 
 #### Compilation
@@ -1244,8 +1244,8 @@ Configurez le déploiement dans **Projet → Déploiement** :
 
 ```pascal
 // ❌ Mauvais : Recherche dans une boucle à chaque caractère
-procedure TFormMain.EditSearchChange(Sender: TObject);
-var
+procedure TFormMain.EditSearchChange(Sender: TObject);  
+var  
   I: Integer;
 begin
   ListBoxNotes.Clear;
@@ -1258,15 +1258,15 @@ begin
 end;
 
 // ✅ Bon : Utiliser un délai et optimiser
-procedure TFormMain.EditSearchChange(Sender: TObject);
-begin
+procedure TFormMain.EditSearchChange(Sender: TObject);  
+begin  
   // Déclencher la recherche après 300ms d'inactivité
   TimerSearch.Enabled := False;
   TimerSearch.Enabled := True;
 end;
 
-procedure TFormMain.TimerSearchTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerSearchTimer(Sender: TObject);  
+begin  
   TimerSearch.Enabled := False;
   PerformSearch(EditSearch.Text);
 end;
@@ -1278,8 +1278,8 @@ Pour de grandes listes, utilisez la virtualisation :
 
 ```pascal
 // Au lieu de charger toutes les notes
-ListBoxNotes.BeginUpdate;
-try
+ListBoxNotes.BeginUpdate;  
+try  
   for Note in AllNotes do
     ListBoxNotes.Items.Add(Note.Title);
 finally
@@ -1293,8 +1293,8 @@ end;
 
 ```pascal
 // ✅ Toujours libérer les objets créés
-procedure TFormMain.ProcessNote;
-var
+procedure TFormMain.ProcessNote;  
+var  
   Note: TNote;
 begin
   Note := TNote.Create;
@@ -1324,16 +1324,16 @@ FNotes.Free; // Libère la liste ET toutes les notes
 
 ```pascal
 // ❌ Mauvais : Opération longue dans le thread principal
-procedure TFormMain.LoadLargeFile;
-begin
+procedure TFormMain.LoadLargeFile;  
+begin  
   // Lecture d'un gros fichier
   LargeData := TFile.ReadAllText('bigfile.json'); // Bloque l'UI
   ProcessData(LargeData);
 end;
 
 // ✅ Bon : Utiliser TTask
-procedure TFormMain.LoadLargeFileAsync;
-begin
+procedure TFormMain.LoadLargeFileAsync;  
+begin  
   TTask.Run(
     procedure
     var
@@ -1366,8 +1366,8 @@ type
     FModified: Boolean;
   end;
 
-procedure TFormMain.MemoContentChange(Sender: TObject);
-begin
+procedure TFormMain.MemoContentChange(Sender: TObject);  
+begin  
   FModified := True;
   // Réinitialiser le timer
   TimerAutoSave.Enabled := False;
@@ -1375,8 +1375,8 @@ begin
   TimerAutoSave.Enabled := True;
 end;
 
-procedure TFormMain.TimerAutoSaveTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerAutoSaveTimer(Sender: TObject);  
+begin  
   if FModified then
   begin
     SaveCurrentNote;
@@ -1389,8 +1389,8 @@ end;
 ### 8.5 Gestion des erreurs multiplateforme
 
 ```pascal
-procedure TNotesManager.SaveToFile;
-begin
+procedure TNotesManager.SaveToFile;  
+begin  
   try
     // Tentative de sauvegarde
     TFile.WriteAllText(FDataFile, GetJSONData);
@@ -1497,16 +1497,16 @@ implementation
 
 { TLogger }
 
-class procedure TLogger.InitializeLog;
-begin
+class procedure TLogger.InitializeLog;  
+begin  
   FLogFile := TPath.Combine(
     TPathHelper.GetAppDataPath,
     'notesapp.log'
   );
 end;
 
-class procedure TLogger.Log(const AMessage: string);
-var
+class procedure TLogger.Log(const AMessage: string);  
+var  
   LogEntry: string;
 begin
   if FLogFile = '' then
@@ -1518,13 +1518,13 @@ begin
   TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
 end;
 
-class procedure TLogger.LogError(const AError: string);
-begin
+class procedure TLogger.LogError(const AError: string);  
+begin  
   Log('ERROR: ' + AError);
 end;
 
-class procedure TLogger.LogWarning(const AWarning: string);
-begin
+class procedure TLogger.LogWarning(const AWarning: string);  
+begin  
   Log('WARNING: ' + AWarning);
 end;
 
@@ -1568,8 +1568,8 @@ type
   end;
 
 // Filtrer par catégorie
-procedure TFormMain.FilterByCategory(ACategory: TNoteCategory);
-var
+procedure TFormMain.FilterByCategory(ACategory: TNoteCategory);  
+var  
   Note: TNote;
 begin
   ListBoxNotes.Clear;
@@ -1603,14 +1603,14 @@ type
 #### Export vers différents formats
 
 ```pascal
-procedure ExportToPDF(ANote: TNote; const AFileName: string);
-begin
+procedure ExportToPDF(ANote: TNote; const AFileName: string);  
+begin  
   // Utiliser un composant de génération PDF
   // Exemple avec FastReport ou autre
 end;
 
-procedure ExportToMarkdown(ANote: TNote; const AFileName: string);
-var
+procedure ExportToMarkdown(ANote: TNote; const AFileName: string);  
+var  
   Content: string;
 begin
   Content := '# ' + ANote.Title + sLineBreak +
@@ -1630,8 +1630,8 @@ type
     procedure SyncFromCloud;
   end;
 
-procedure TCloudSync.SyncToCloud;
-begin
+procedure TCloudSync.SyncToCloud;  
+begin  
   // Utiliser TRESTClient pour uploader vers un service cloud
   // Exemple: Google Drive, Dropbox, ou votre propre serveur
 end;
@@ -1642,8 +1642,8 @@ end;
 #### Animations
 
 ```pascal
-procedure TFormMain.ShowNoteWithAnimation(ANote: TNote);
-begin
+procedure TFormMain.ShowNoteWithAnimation(ANote: TNote);  
+begin  
   // Animer l'apparition
   MemoContent.Opacity := 0;
   MemoContent.Text := ANote.Content;
@@ -1658,8 +1658,8 @@ end;
 uses
   FMX.Effects;
 
-procedure AddShadowEffect(AControl: TControl);
-var
+procedure AddShadowEffect(AControl: TControl);  
+var  
   Shadow: TShadowEffect;
 begin
   Shadow := TShadowEffect.Create(AControl);
@@ -1675,8 +1675,8 @@ end;
 #### Support des lecteurs d'écran
 
 ```pascal
-procedure SetupAccessibility;
-begin
+procedure SetupAccessibility;  
+begin  
   // Définir des HintString descriptifs
   ButtonNewNote.Hint := 'Créer une nouvelle note';
   EditSearch.Hint := 'Rechercher dans vos notes';
@@ -1687,8 +1687,8 @@ end;
 #### Raccourcis clavier étendus
 
 ```pascal
-procedure TFormMain.SetupAdvancedShortcuts;
-begin
+procedure TFormMain.SetupAdvancedShortcuts;  
+begin  
   // Ctrl/Cmd + S pour sauvegarder
   ActionSave.ShortCut := TextToShortCut('Ctrl+S');
 
@@ -1728,9 +1728,9 @@ end;
 Créez un fichier `version.txt` :
 
 ```
-NotesApp
-Version 1.0.0
-Build 2024-01-15
+NotesApp  
+Version 1.0.0  
+Build 2024-01-15  
 ```
 
 ### 11.2 Création d'installateurs
@@ -1741,19 +1741,19 @@ Créez un script Inno Setup (`setup.iss`) :
 
 ```ini
 [Setup]
-AppName=Notes App
-AppVersion=1.0
-DefaultDirName={pf}\NotesApp
-DefaultGroupName=Notes App
-OutputDir=.\Output
-OutputBaseFilename=NotesAppSetup
+AppName=Notes App  
+AppVersion=1.0  
+DefaultDirName={pf}\NotesApp  
+DefaultGroupName=Notes App  
+OutputDir=.\Output  
+OutputBaseFilename=NotesAppSetup  
 
 [Files]
 Source: "Win64\Release\NotesApp.exe"; DestDir: "{app}"
 
 [Icons]
-Name: "{group}\Notes App"; Filename: "{app}\NotesApp.exe"
-Name: "{commondesktop}\Notes App"; Filename: "{app}\NotesApp.exe"
+Name: "{group}\Notes App"; Filename: "{app}\NotesApp.exe"  
+Name: "{commondesktop}\Notes App"; Filename: "{app}\NotesApp.exe"  
 ```
 
 #### macOS - DMG
@@ -1780,11 +1780,11 @@ notesapp_1.0-1/
 Fichier `control` :
 
 ```
-Package: notesapp
-Version: 1.0
-Architecture: amd64
-Maintainer: Votre Nom
-Description: Application de gestion de notes
+Package: notesapp  
+Version: 1.0  
+Architecture: amd64  
+Maintainer: Votre Nom  
+Description: Application de gestion de notes  
 ```
 
 Créez le package :
@@ -1813,7 +1813,7 @@ codesign --force --deep --sign "Developer ID" NotesApp.app
 
 Créez un fichier `README.md` :
 
-```markdown
+````markdown
 # Notes App
 
 Application de gestion de notes multi-plateforme.
@@ -1839,9 +1839,9 @@ sudo dpkg -i notesapp_1.0-1_amd64.deb
 
 ## Support
 
-Email: support@votresite.com
-Web: https://votresite.com/support
-```
+Email: support@votresite.com  
+Web: https://votresite.com/support  
+````
 
 ---
 
@@ -1851,24 +1851,24 @@ Web: https://votresite.com/support
 
 Félicitations ! Vous avez créé une application complète multi-plateforme avec Delphi et FireMonkey. Vous maîtrisez maintenant :
 
-✅ **FireMonkey** : Création d'interfaces multiplateformes
-✅ **Architecture** : Séparation en couches (UI, Business, Data)
-✅ **Gestion des données** : JSON, sauvegarde, chargement
-✅ **Multi-plateforme** : Adaptation Windows, macOS, Linux
-✅ **Styles** : Personnalisation de l'apparence
-✅ **Compilation** : Déploiement sur différents OS
-✅ **Optimisation** : Performance et bonnes pratiques
+✅ **FireMonkey** : Création d'interfaces multiplateformes  
+✅ **Architecture** : Séparation en couches (UI, Business, Data)  
+✅ **Gestion des données** : JSON, sauvegarde, chargement  
+✅ **Multi-plateforme** : Adaptation Windows, macOS, Linux  
+✅ **Styles** : Personnalisation de l'apparence  
+✅ **Compilation** : Déploiement sur différents OS  
+✅ **Optimisation** : Performance et bonnes pratiques  
 ✅ **Distribution** : Création d'installateurs
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des applications qui fonctionnent sur plusieurs systèmes d'exploitation
-🎯 Gérer les spécificités de chaque plateforme
-🎯 Structurer un projet de manière professionnelle
-🎯 Implémenter la persistance des données
-🎯 Optimiser les performances
+🎯 Créer des applications qui fonctionnent sur plusieurs systèmes d'exploitation  
+🎯 Gérer les spécificités de chaque plateforme  
+🎯 Structurer un projet de manière professionnelle  
+🎯 Implémenter la persistance des données  
+🎯 Optimiser les performances  
 🎯 Distribuer vos applications
 
 ### Pour aller plus loin

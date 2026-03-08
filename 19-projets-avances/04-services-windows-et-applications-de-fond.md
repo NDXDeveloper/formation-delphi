@@ -10,10 +10,10 @@ Bienvenue dans le monde des applications qui fonctionnent en coulisses ! Dans ce
 
 Un service Windows est un type particulier d'application qui :
 
-🔧 **S'exécute en arrière-plan** sans interface utilisateur visible
-🔧 **Démarre automatiquement** avec Windows (si configuré)
-🔧 **Fonctionne indépendamment** de toute connexion utilisateur
-🔧 **Peut s'exécuter avec des privilèges élevés** (compte système)
+🔧 **S'exécute en arrière-plan** sans interface utilisateur visible  
+🔧 **Démarre automatiquement** avec Windows (si configuré)  
+🔧 **Fonctionne indépendamment** de toute connexion utilisateur  
+🔧 **Peut s'exécuter avec des privilèges élevés** (compte système)  
 🔧 **Continue à fonctionner** même si personne n'est connecté
 
 **Exemples de services Windows** :
@@ -28,24 +28,24 @@ Un service Windows est un type particulier d'application qui :
 
 Les services Windows sont idéaux pour :
 
-✅ **Tâches automatiques** : Sauvegardes, synchronisations, traitements planifiés
-✅ **Surveillance continue** : Monitoring de fichiers, réseau, système
-✅ **Serveurs** : Web, FTP, bases de données, API
-✅ **Traitement en arrière-plan** : File d'attente de tâches
+✅ **Tâches automatiques** : Sauvegardes, synchronisations, traitements planifiés  
+✅ **Surveillance continue** : Monitoring de fichiers, réseau, système  
+✅ **Serveurs** : Web, FTP, bases de données, API  
+✅ **Traitement en arrière-plan** : File d'attente de tâches  
 ✅ **Intégration système** : Interaction avec d'autres services Windows
 
 ### Objectifs de ce chapitre
 
 À la fin de ce tutoriel, vous serez capable de :
 
-✅ Comprendre l'architecture des services Windows
-✅ Créer un service Windows avec Delphi
-✅ Gérer le cycle de vie d'un service
-✅ Installer et désinstaller des services
-✅ Déboguer des services
-✅ Implémenter la journalisation
-✅ Gérer la communication inter-processus
-✅ Créer des applications de fond
+✅ Comprendre l'architecture des services Windows  
+✅ Créer un service Windows avec Delphi  
+✅ Gérer le cycle de vie d'un service  
+✅ Installer et désinstaller des services  
+✅ Déboguer des services  
+✅ Implémenter la journalisation  
+✅ Gérer la communication inter-processus  
+✅ Créer des applications de fond  
 ✅ Gérer les tâches planifiées
 
 ### Prérequis
@@ -228,13 +228,13 @@ implementation
 
 {$R *.dfm}
 
-procedure ServiceController(CtrlCode: DWord); stdcall;
-begin
+procedure ServiceController(CtrlCode: DWord); stdcall;  
+begin  
   MonitoringService.Controller(CtrlCode);
 end;
 
-function TMonitoringService.GetServiceController: TServiceController;
-begin
+function TMonitoringService.GetServiceController: TServiceController;  
+begin  
   Result := ServiceController;
 end;
 
@@ -284,16 +284,16 @@ Dans l'inspecteur d'objets, configurez :
 **Propriétés importantes** :
 
 ```pascal
-Name = MonitoringService
-DisplayName = 'Service de Monitoring'
-Description = 'Service qui surveille les fichiers système'
+Name = MonitoringService  
+DisplayName = 'Service de Monitoring'  
+Description = 'Service qui surveille les fichiers système'  
 
 // Type de démarrage
 StartType = stAuto  // stManual, stAuto, stDisabled
 
 // Contrôles acceptés
-AllowPause = True
-AllowStop = True
+AllowPause = True  
+AllowStop = True  
 
 // Compte d'exécution
 ServiceStartName = ''  // Vide = LocalSystem
@@ -352,16 +352,16 @@ implementation
 
 { TMonitorThread }
 
-constructor TMonitorThread.Create(const AMonitorPath, ALogFile: string);
-begin
+constructor TMonitorThread.Create(const AMonitorPath, ALogFile: string);  
+begin  
   inherited Create(True); // Créer suspendu
   FreeOnTerminate := False;
   FMonitorPath := AMonitorPath;
   FLogFile := ALogFile;
 end;
 
-procedure TMonitorThread.WriteLog(const AMessage: string);
-var
+procedure TMonitorThread.WriteLog(const AMessage: string);  
+var  
   LogEntry: string;
 begin
   LogEntry := Format('[%s] %s',
@@ -375,8 +375,8 @@ begin
     end);
 end;
 
-procedure TMonitorThread.Execute;
-var
+procedure TMonitorThread.Execute;  
+var  
   FileCount: Integer;
 begin
   WriteLog('Thread de monitoring démarré');
@@ -413,18 +413,18 @@ end;
 
 { TMonitoringService }
 
-procedure ServiceController(CtrlCode: DWord); stdcall;
-begin
+procedure ServiceController(CtrlCode: DWord); stdcall;  
+begin  
   MonitoringService.Controller(CtrlCode);
 end;
 
-function TMonitoringService.GetServiceController: TServiceController;
-begin
+function TMonitoringService.GetServiceController: TServiceController;  
+begin  
   Result := ServiceController;
 end;
 
-procedure TMonitoringService.InitializeService;
-var
+procedure TMonitoringService.InitializeService;  
+var  
   BasePath: string;
 begin
   // Chemin de base dans ProgramData
@@ -441,8 +441,8 @@ begin
   FLogFile := TPath.Combine(BasePath, 'service.log');
 end;
 
-procedure TMonitoringService.WriteLog(const AMessage: string);
-var
+procedure TMonitoringService.WriteLog(const AMessage: string);  
+var  
   LogEntry: string;
 begin
   if FLogFile = '' then
@@ -532,20 +532,20 @@ Pour installer un service, vous avez plusieurs options :
 #### Option 1 : Via ligne de commande (sc.exe)
 
 ```batch
-REM Installer le service
-sc create MonitoringService binPath= "C:\MonServices\MonitoringService.exe" DisplayName= "Service de Monitoring"
+REM Installer le service  
+sc create MonitoringService binPath= "C:\MonServices\MonitoringService.exe" DisplayName= "Service de Monitoring"  
 
-REM Configurer le démarrage automatique
-sc config MonitoringService start= auto
+REM Configurer le démarrage automatique  
+sc config MonitoringService start= auto  
 
-REM Démarrer le service
-sc start MonitoringService
+REM Démarrer le service  
+sc start MonitoringService  
 
-REM Arrêter le service
-sc stop MonitoringService
+REM Arrêter le service  
+sc stop MonitoringService  
 
-REM Désinstaller le service
-sc delete MonitoringService
+REM Désinstaller le service  
+sc delete MonitoringService  
 ```
 
 **Attention** : Notez l'espace après le `=` dans les commandes `sc`.
@@ -564,8 +564,8 @@ uses
   Winapi.Windows,
   Winapi.WinSvc;
 
-procedure InstallService(const AServiceName, ADisplayName, AFilePath: string);
-var
+procedure InstallService(const AServiceName, ADisplayName, AFilePath: string);  
+var  
   SCManager, ServiceHandle: SC_HANDLE;
 begin
   // Ouvrir le gestionnaire de services
@@ -598,8 +598,8 @@ begin
   end;
 end;
 
-procedure UninstallService(const AServiceName: string);
-var
+procedure UninstallService(const AServiceName: string);  
+var  
   SCManager, ServiceHandle: SC_HANDLE;
 begin
   SCManager := OpenSCManager(nil, nil, SC_MANAGER_ALL_ACCESS);
@@ -627,8 +627,8 @@ begin
   end;
 end;
 
-procedure StartServiceProc(const AServiceName: string);
-var
+procedure StartServiceProc(const AServiceName: string);  
+var  
   SCManager, ServiceHandle: SC_HANDLE;
   ServiceStatus: TServiceStatus;
 begin
@@ -653,8 +653,8 @@ begin
   end;
 end;
 
-procedure StopServiceProc(const AServiceName: string);
-var
+procedure StopServiceProc(const AServiceName: string);  
+var  
   SCManager, ServiceHandle: SC_HANDLE;
   ServiceStatus: TServiceStatus;
 begin
@@ -723,10 +723,10 @@ end.
 **Utilisation** :
 
 ```batch
-ServiceInstaller.exe install
-ServiceInstaller.exe start
-ServiceInstaller.exe stop
-ServiceInstaller.exe uninstall
+ServiceInstaller.exe install  
+ServiceInstaller.exe start  
+ServiceInstaller.exe stop  
+ServiceInstaller.exe uninstall  
 ```
 
 ### 3.2 Gestion via PowerShell
@@ -774,9 +774,9 @@ Get-Service | Where-Object {$_.Name -like "*Monitoring*"}
 
 Les services sont difficiles à déboguer car :
 
-❌ Pas d'interface utilisateur pour afficher des messages
-❌ Ne peuvent pas être lancés directement depuis l'IDE
-❌ S'exécutent dans une session différente
+❌ Pas d'interface utilisateur pour afficher des messages  
+❌ Ne peuvent pas être lancés directement depuis l'IDE  
+❌ S'exécutent dans une session différente  
 ❌ Nécessitent des privilèges spéciaux
 
 ### 4.2 Techniques de débogage
@@ -800,8 +800,8 @@ type
     class procedure Error(const AMessage: string);
   end;
 
-class constructor TLogger.Create;
-begin
+class constructor TLogger.Create;  
+begin  
   FLock := TObject.Create;
   FLogFile := TPath.Combine(
     TPath.GetPublicPath,
@@ -809,13 +809,13 @@ begin
   );
 end;
 
-class destructor TLogger.Destroy;
-begin
+class destructor TLogger.Destroy;  
+begin  
   FLock.Free;
 end;
 
-class procedure TLogger.Log(const ALevel, AMessage: string);
-var
+class procedure TLogger.Log(const ALevel, AMessage: string);  
+var  
   LogEntry: string;
 begin
   TMonitor.Enter(FLock);
@@ -831,23 +831,23 @@ begin
   end;
 end;
 
-class procedure TLogger.Debug(const AMessage: string);
-begin
+class procedure TLogger.Debug(const AMessage: string);  
+begin  
   Log('DEBUG', AMessage);
 end;
 
-class procedure TLogger.Info(const AMessage: string);
-begin
+class procedure TLogger.Info(const AMessage: string);  
+begin  
   Log('INFO', AMessage);
 end;
 
-class procedure TLogger.Warning(const AMessage: string);
-begin
+class procedure TLogger.Warning(const AMessage: string);  
+begin  
   Log('WARNING', AMessage);
 end;
 
-class procedure TLogger.Error(const AMessage: string);
-begin
+class procedure TLogger.Error(const AMessage: string);  
+begin  
   Log('ERROR', AMessage);
 end;
 
@@ -928,11 +928,11 @@ end.
 **Utilisation** :
 
 ```batch
-REM En développement
-MonitoringService.exe -console
+REM En développement  
+MonitoringService.exe -console  
 
-REM En production (via SCM)
-sc start MonitoringService
+REM En production (via SCM)  
+sc start MonitoringService  
 ```
 
 #### Technique 3 : Attachement du débogueur
@@ -953,8 +953,8 @@ sc start MonitoringService
 uses
   Winapi.Windows;
 
-procedure WriteToEventLog(const AMessage: string; AEventType: Word);
-var
+procedure WriteToEventLog(const AMessage: string; AEventType: Word);  
+var  
   EventLog: THandle;
   Strings: array[0..0] of PChar;
 begin
@@ -981,18 +981,18 @@ begin
 end;
 
 // Utilisation
-procedure LogInfo(const AMessage: string);
-begin
+procedure LogInfo(const AMessage: string);  
+begin  
   WriteToEventLog(AMessage, EVENTLOG_INFORMATION_TYPE);
 end;
 
-procedure LogWarning(const AMessage: string);
-begin
+procedure LogWarning(const AMessage: string);  
+begin  
   WriteToEventLog(AMessage, EVENTLOG_WARNING_TYPE);
 end;
 
-procedure LogError(const AMessage: string);
-begin
+procedure LogError(const AMessage: string);  
+begin  
   WriteToEventLog(AMessage, EVENTLOG_ERROR_TYPE);
 end;
 
@@ -1032,8 +1032,8 @@ type
     procedure CheckCommands;
   end;
 
-constructor TCommandProcessor.Create(const ACommandPath: string);
-begin
+constructor TCommandProcessor.Create(const ACommandPath: string);  
+begin  
   inherited Create;
   FCommandPath := ACommandPath;
 
@@ -1042,8 +1042,8 @@ begin
     TDirectory.CreateDirectory(FCommandPath);
 end;
 
-procedure TCommandProcessor.CheckCommands;
-var
+procedure TCommandProcessor.CheckCommands;  
+var  
   Files: TArray<string>;
   CommandFile: string;
   Command: string;
@@ -1069,8 +1069,8 @@ begin
   end;
 end;
 
-procedure TCommandProcessor.ProcessCommand(const ACommand: string);
-begin
+procedure TCommandProcessor.ProcessCommand(const ACommand: string);  
+begin  
   TLogger.Info('Commande reçue: ' + ACommand);
 
   if ACommand.StartsWith('SCAN:') then
@@ -1089,8 +1089,8 @@ begin
 end;
 
 // Dans le thread du service
-procedure TMonitorThread.Execute;
-var
+procedure TMonitorThread.Execute;  
+var  
   CommandProcessor: TCommandProcessor;
 begin
   CommandProcessor := TCommandProcessor.Create(
@@ -1116,8 +1116,8 @@ end;
 **Application cliente** :
 
 ```pascal
-procedure SendCommandToService(const ACommand: string);
-var
+procedure SendCommandToService(const ACommand: string);  
+var  
   CommandFile: string;
 begin
   CommandFile := Format('C:\ProgramData\MonitoringService\Commands\%s.cmd',
@@ -1127,8 +1127,8 @@ begin
 end;
 
 // Utilisation
-SendCommandToService('SCAN:C:\Temp');
-SendCommandToService('STATUS');
+SendCommandToService('SCAN:C:\Temp');  
+SendCommandToService('STATUS');  
 ```
 
 #### Via Named Pipes
@@ -1157,8 +1157,8 @@ begin
   FOnCommand := AOnCommand;
 end;
 
-procedure TNamedPipeServer.Execute;
-var
+procedure TNamedPipeServer.Execute;  
+var  
   PipeHandle: THandle;
   Buffer: array[0..1023] of AnsiChar;
   BytesRead: DWORD;
@@ -1232,8 +1232,8 @@ end;
 **Client pour Named Pipe** :
 
 ```pascal
-function SendCommandViaPipe(const ACommand: string): Boolean;
-var
+function SendCommandViaPipe(const ACommand: string): Boolean;  
+var  
   PipeHandle: THandle;
   BytesWritten: DWORD;
   Buffer: AnsiString;
@@ -1288,15 +1288,15 @@ type
     property MaxFileSize: Int64 read FMaxFileSize;
   end;
 
-constructor TServiceConfig.Create(const AConfigFile: string);
-begin
+constructor TServiceConfig.Create(const AConfigFile: string);  
+begin  
   inherited Create;
   FConfigFile := AConfigFile;
   LoadConfig;
 end;
 
-procedure TServiceConfig.LoadConfig;
-var
+procedure TServiceConfig.LoadConfig;  
+var  
   JSON: TJSONObject;
   JSONText: string;
 begin
@@ -1323,20 +1323,20 @@ begin
   end;
 end;
 
-function TServiceConfig.HasChanged: Boolean;
-begin
+function TServiceConfig.HasChanged: Boolean;  
+begin  
   Result := TFile.GetLastWriteTime(FConfigFile) <> FLastModified;
 end;
 
-procedure TServiceConfig.Reload;
-begin
+procedure TServiceConfig.Reload;  
+begin  
   LoadConfig;
   TLogger.Info('Configuration rechargée');
 end;
 
 // Dans le thread du service
-procedure TMonitorThread.Execute;
-begin
+procedure TMonitorThread.Execute;  
+begin  
   while not Terminated do
   begin
     // Vérifier si la config a changé
@@ -1407,8 +1407,8 @@ begin
   FLastRun := 0;
 end;
 
-function TScheduledTask.ShouldRun: Boolean;
-var
+function TScheduledTask.ShouldRun: Boolean;  
+var  
   CurrentTime: TTime;
   LastRunDate: TDate;
 begin
@@ -1422,8 +1422,8 @@ begin
             ((CurrentTime >= FSchedule) and (LastRunDate < Date));
 end;
 
-procedure TScheduledTask.Execute;
-begin
+procedure TScheduledTask.Execute;  
+begin  
   TLogger.Info(Format('Exécution tâche planifiée: %s', [FName]));
 
   try
@@ -1440,8 +1440,8 @@ begin
 end;
 
 // Configuration des tâches
-procedure TMonitoringService.SetupScheduledTasks;
-begin
+procedure TMonitoringService.SetupScheduledTasks;  
+begin  
   FScheduler := TTaskScheduler.Create;
 
   // Sauvegarde quotidienne à 2h du matin
@@ -1483,8 +1483,8 @@ begin
 end;
 
 // Dans le thread
-procedure TMonitorThread.Execute;
-begin
+procedure TMonitorThread.Execute;  
+begin  
   while not Terminated do
   begin
     // Vérifier les tâches planifiées
@@ -1533,16 +1533,16 @@ type
     constructor Create(const APath: string);
   end;
 
-constructor TFileWatcherThread.Create(const APath: string);
-begin
+constructor TFileWatcherThread.Create(const APath: string);  
+begin  
   inherited Create(True);
   FreeOnTerminate := False;
   FPath := APath;
   FLastFiles := TDirectory.GetFiles(FPath);
 end;
 
-procedure TFileWatcherThread.CheckForChanges;
-var
+procedure TFileWatcherThread.CheckForChanges;  
+var  
   CurrentFiles: TArray<string>;
   FileName: string;
   Found: Boolean;
@@ -1586,8 +1586,8 @@ begin
   FLastFiles := CurrentFiles;
 end;
 
-procedure TFileWatcherThread.OnFileAdded(const AFileName: string);
-begin
+procedure TFileWatcherThread.OnFileAdded(const AFileName: string);  
+begin  
   TLogger.Info('Nouveau fichier détecté: ' + AFileName);
 
   // Actions possibles:
@@ -1597,13 +1597,13 @@ begin
   // - Envoyer une notification
 end;
 
-procedure TFileWatcherThread.OnFileRemoved(const AFileName: string);
-begin
+procedure TFileWatcherThread.OnFileRemoved(const AFileName: string);  
+begin  
   TLogger.Info('Fichier supprimé: ' + AFileName);
 end;
 
-procedure TFileWatcherThread.Execute;
-begin
+procedure TFileWatcherThread.Execute;  
+begin  
   TLogger.Info('Surveillance démarrée: ' + FPath);
 
   while not Terminated do
@@ -1643,8 +1643,8 @@ type
     constructor Create(const ASource, ATarget: string);
   end;
 
-procedure TSyncThread.SyncFolders;
-var
+procedure TSyncThread.SyncFolders;  
+var  
   SourceFiles: TArray<string>;
   SourceFile, TargetFile: string;
   SourceTime, TargetTime: TDateTime;
@@ -1683,8 +1683,8 @@ begin
   TLogger.Info('Synchronisation terminée');
 end;
 
-procedure TSyncThread.CopyFile(const ASource, ATarget: string);
-begin
+procedure TSyncThread.CopyFile(const ASource, ATarget: string);  
+begin  
   try
     TFile.Copy(ASource, ATarget, True);
     TLogger.Debug('Copié: ' + ExtractFileName(ASource));
@@ -1694,8 +1694,8 @@ begin
   end;
 end;
 
-procedure TSyncThread.Execute;
-begin
+procedure TSyncThread.Execute;  
+begin  
   while not Terminated do
   begin
     SyncFolders;
@@ -1760,20 +1760,20 @@ begin
     [APath, DeletedCount]));
 end;
 
-procedure TCleanupThread.CleanTempFiles;
-begin
+procedure TCleanupThread.CleanTempFiles;  
+begin  
   TLogger.Info('Nettoyage fichiers temporaires');
   CleanOldFiles(TPath.GetTempPath, 7); // Supprimer > 7 jours
 end;
 
-procedure TCleanupThread.CleanLogFiles;
-begin
+procedure TCleanupThread.CleanLogFiles;  
+begin  
   TLogger.Info('Nettoyage anciens logs');
   CleanOldFiles('C:\Logs', 30); // Supprimer > 30 jours
 end;
 
-procedure TCleanupThread.Execute;
-begin
+procedure TCleanupThread.Execute;  
+begin  
   while not Terminated do
   begin
     try
@@ -1800,17 +1800,17 @@ Créez un installateur avec Inno Setup :
 
 ```ini
 [Setup]
-AppName=Monitoring Service
-AppVersion=1.0
-DefaultDirName={pf}\MonitoringService
-PrivilegesRequired=admin
-OutputDir=Output
-OutputBaseFilename=MonitoringService_Setup
+AppName=Monitoring Service  
+AppVersion=1.0  
+DefaultDirName={pf}\MonitoringService  
+PrivilegesRequired=admin  
+OutputDir=Output  
+OutputBaseFilename=MonitoringService_Setup  
 
 [Files]
-Source: "MonitoringService.exe"; DestDir: "{app}"
-Source: "ServiceInstaller.exe"; DestDir: "{app}"
-Source: "config.json"; DestDir: "{commonappdata}\MonitoringService"
+Source: "MonitoringService.exe"; DestDir: "{app}"  
+Source: "ServiceInstaller.exe"; DestDir: "{app}"  
+Source: "config.json"; DestDir: "{commonappdata}\MonitoringService"  
 
 [Run]
 Filename: "{app}\ServiceInstaller.exe"; Parameters: "install"; \
@@ -1829,12 +1829,12 @@ Filename: "{app}\ServiceInstaller.exe"; Parameters: "uninstall"; \
 
 ```batch
 @echo off
-echo Verification du service...
-sc query MonitoringService
+echo Verification du service...  
+sc query MonitoringService  
 
-echo.
-echo Logs recents:
-type "C:\ProgramData\MonitoringService\service.log" | more
+echo.  
+echo Logs recents:  
+type "C:\ProgramData\MonitoringService\service.log" | more  
 
 pause
 ```
@@ -1843,16 +1843,16 @@ pause
 
 ```batch
 @echo off
-echo Arret du service...
-sc stop MonitoringService
-timeout /t 5
+echo Arret du service...  
+sc stop MonitoringService  
+timeout /t 5  
 
-echo Demarrage du service...
-sc start MonitoringService
+echo Demarrage du service...  
+sc start MonitoringService  
 
-echo.
-echo Etat du service:
-sc query MonitoringService
+echo.  
+echo Etat du service:  
+sc query MonitoringService  
 
 pause
 ```
@@ -1927,8 +1927,8 @@ Register-ScheduledTask -TaskName "MonitorServiceHealth" `
 
 ```pascal
 // Dans le service, vérifier les mises à jour
-procedure CheckForUpdates;
-var
+procedure CheckForUpdates;  
+var  
   CurrentVersion: string;
   LatestVersion: string;
 begin
@@ -1947,8 +1947,8 @@ begin
   end;
 end;
 
-procedure ScheduleUpdate;
-begin
+procedure ScheduleUpdate;  
+begin  
   // Créer un fichier marqueur
   TFile.WriteAllText(
     'C:\ProgramData\MonitoringService\update.pending',
@@ -1972,8 +1972,8 @@ end;
 // plutôt que LocalSystem
 
 // Dans ServiceInstaller
-procedure InstallServiceWithAccount(const AUsername, APassword: string);
-begin
+procedure InstallServiceWithAccount(const AUsername, APassword: string);  
+begin  
   ServiceHandle := CreateService(
     SCManager,
     PChar('MonitoringService'),
@@ -1993,8 +1993,8 @@ end;
 #### Validation des entrées
 
 ```pascal
-procedure ProcessCommand(const ACommand: string);
-begin
+procedure ProcessCommand(const ACommand: string);  
+begin  
   // Valider la commande
   if ACommand.IsEmpty or (Length(ACommand) > 1000) then
   begin
@@ -2018,14 +2018,14 @@ end;
 uses
   System.NetEncoding;
 
-function EncryptData(const AData: string): string;
-begin
+function EncryptData(const AData: string): string;  
+begin  
   // Utiliser un vrai algorithme de chiffrement en production
   Result := TNetEncoding.Base64.Encode(AData);
 end;
 
-function DecryptData(const AData: string): string;
-begin
+function DecryptData(const AData: string): string;  
+begin  
   Result := TNetEncoding.Base64.Decode(AData);
 end;
 ```
@@ -2034,8 +2034,8 @@ end;
 
 ```pascal
 // Limiter l'utilisation mémoire
-procedure CheckMemoryUsage;
-var
+procedure CheckMemoryUsage;  
+var  
   MemStatus: TMemoryStatus;
 begin
   MemStatus.dwLength := SizeOf(TMemoryStatus);
@@ -2055,8 +2055,8 @@ begin
 end;
 
 // Rotation des logs
-procedure RotateLogFiles;
-var
+procedure RotateLogFiles;  
+var  
   LogFile: string;
   LogSize: Int64;
   MaxSize: Int64;
@@ -2084,8 +2084,8 @@ end;
 ### 8.3 Gestion d'erreurs robuste
 
 ```pascal
-procedure TMonitorThread.Execute;
-var
+procedure TMonitorThread.Execute;  
+var  
   ErrorCount: Integer;
   MaxErrors: Integer;
 begin
@@ -2127,25 +2127,25 @@ end;
 
 Félicitations ! Vous maîtrisez maintenant la création et la gestion de services Windows avec Delphi. Vous avez acquis des compétences dans :
 
-✅ **Architecture des services** : Comprendre le cycle de vie et les composants
-✅ **Création de services** : Développer des services fonctionnels
-✅ **Installation/Désinstallation** : Gérer le déploiement
-✅ **Débogage** : Techniques de journalisation et debug
-✅ **Communication IPC** : Fichiers, pipes, et autres méthodes
-✅ **Configuration** : Paramétrage dynamique
-✅ **Tâches planifiées** : Automatisation temporelle
-✅ **Sécurité** : Bonnes pratiques et protection
+✅ **Architecture des services** : Comprendre le cycle de vie et les composants  
+✅ **Création de services** : Développer des services fonctionnels  
+✅ **Installation/Désinstallation** : Gérer le déploiement  
+✅ **Débogage** : Techniques de journalisation et debug  
+✅ **Communication IPC** : Fichiers, pipes, et autres méthodes  
+✅ **Configuration** : Paramétrage dynamique  
+✅ **Tâches planifiées** : Automatisation temporelle  
+✅ **Sécurité** : Bonnes pratiques et protection  
 ✅ **Maintenance** : Monitoring et mises à jour
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des services Windows professionnels
-🎯 Implémenter des tâches automatisées en arrière-plan
-🎯 Gérer le cycle de vie complet d'un service
-🎯 Déboguer efficacement les services
-🎯 Sécuriser et maintenir vos services
+🎯 Créer des services Windows professionnels  
+🎯 Implémenter des tâches automatisées en arrière-plan  
+🎯 Gérer le cycle de vie complet d'un service  
+🎯 Déboguer efficacement les services  
+🎯 Sécuriser et maintenir vos services  
 🎯 Intégrer des services dans l'écosystème Windows
 
 ### Applications pratiques

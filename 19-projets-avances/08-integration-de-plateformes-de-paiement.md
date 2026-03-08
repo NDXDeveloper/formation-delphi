@@ -27,18 +27,18 @@ Une **plateforme de paiement** est un service qui permet de traiter les transact
 ### Pourquoi utiliser une plateforme de paiement ?
 
 **Avantages** :
-✅ **Sécurité** : Conformité PCI DSS automatique
-✅ **Simplicité** : Pas besoin d'être expert en finance
-✅ **Rapidité** : Intégration en quelques heures
-✅ **Confiance** : Logos reconnus (Stripe, PayPal, etc.)
-✅ **Support** : Cartes bancaires, virements, wallets
+✅ **Sécurité** : Conformité PCI DSS automatique  
+✅ **Simplicité** : Pas besoin d'être expert en finance  
+✅ **Rapidité** : Intégration en quelques heures  
+✅ **Confiance** : Logos reconnus (Stripe, PayPal, etc.)  
+✅ **Support** : Cartes bancaires, virements, wallets  
 ✅ **International** : Paiements dans le monde entier
 
 **Sans plateforme de paiement** :
-❌ Conformité complexe (PCI DSS niveau 1)
-❌ Infrastructure coûteuse
-❌ Gestion du risque de fraude
-❌ Support technique bancaire
+❌ Conformité complexe (PCI DSS niveau 1)  
+❌ Infrastructure coûteuse  
+❌ Gestion du risque de fraude  
+❌ Support technique bancaire  
 ❌ Certificats de sécurité
 
 ### Principales plateformes de paiement
@@ -57,14 +57,14 @@ Une **plateforme de paiement** est un service qui permet de traiter les transact
 
 À la fin de ce tutoriel, vous serez capable de :
 
-✅ Comprendre les concepts de paiement en ligne
-✅ Intégrer Stripe dans vos applications
-✅ Intégrer PayPal
-✅ Gérer les paiements uniques et récurrents
-✅ Implémenter les webhooks
-✅ Sécuriser les transactions
-✅ Gérer les remboursements
-✅ Tester en environnement sandbox
+✅ Comprendre les concepts de paiement en ligne  
+✅ Intégrer Stripe dans vos applications  
+✅ Intégrer PayPal  
+✅ Gérer les paiements uniques et récurrents  
+✅ Implémenter les webhooks  
+✅ Sécuriser les transactions  
+✅ Gérer les remboursements  
+✅ Tester en environnement sandbox  
 ✅ Déployer en production
 
 ### Prérequis
@@ -306,15 +306,15 @@ const
 
 { TStripe }
 
-constructor TStripe.Create(const ASecretKey, APublishableKey: string);
-begin
+constructor TStripe.Create(const ASecretKey, APublishableKey: string);  
+begin  
   inherited Create;
   FSecretKey := ASecretKey;
   FPublishableKey := APublishableKey;
 end;
 
-function TStripe.BuildAuthHeader: string;
-var
+function TStripe.BuildAuthHeader: string;  
+var  
   Credentials: string;
 begin
   Credentials := FSecretKey + ':';
@@ -372,8 +372,8 @@ begin
   end;
 end;
 
-function TStripe.ParsePaymentIntent(const AJSON: TJSONObject): TStripePaymentIntent;
-var
+function TStripe.ParsePaymentIntent(const AJSON: TJSONObject): TStripePaymentIntent;  
+var  
   StatusStr: string;
 begin
   Result.ID := AJSON.GetValue<string>('id');
@@ -394,8 +394,8 @@ begin
     Result.Status := psFailed;
 end;
 
-function TStripe.ConfirmPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
-var
+function TStripe.ConfirmPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   FormData: TStringList;
@@ -435,8 +435,8 @@ begin
   end;
 end;
 
-function TStripe.GetPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
-var
+function TStripe.GetPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse: TJSONObject;
@@ -466,8 +466,8 @@ begin
   end;
 end;
 
-function TStripe.CancelPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;
-var
+function TStripe.CancelPaymentIntent(const APaymentIntentID: string): TStripePaymentIntent;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   FormData: TStringList;
@@ -551,8 +551,8 @@ begin
   end;
 end;
 
-function TStripe.ParseCustomer(const AJSON: TJSONObject): TStripeCustomer;
-begin
+function TStripe.ParseCustomer(const AJSON: TJSONObject): TStripeCustomer;  
+begin  
   Result.ID := AJSON.GetValue<string>('id');
   Result.Email := AJSON.GetValue<string>('email');
   Result.Name := AJSON.GetValue<string>('name');
@@ -560,8 +560,8 @@ begin
   if AJSON.TryGetValue<string>('description', Result.Description) then;
 end;
 
-function TStripe.GetCustomer(const ACustomerID: string): TStripeCustomer;
-var
+function TStripe.GetCustomer(const ACustomerID: string): TStripeCustomer;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse: TJSONObject;
@@ -686,8 +686,8 @@ implementation
 uses
   System.Threading;
 
-procedure TStripePaymentForm.FormCreate(Sender: TObject);
-begin
+procedure TStripePaymentForm.FormCreate(Sender: TObject);  
+begin  
   // Initialiser Stripe avec vos clés
   FStripe := TStripe.Create(
     'sk_test_votre_cle_secrete',  // Clé secrète test
@@ -707,19 +707,19 @@ begin
   ProgressBar1.Visible := False;
 end;
 
-procedure TStripePaymentForm.FormDestroy(Sender: TObject);
-begin
+procedure TStripePaymentForm.FormDestroy(Sender: TObject);  
+begin  
   FStripe.Free;
 end;
 
-procedure TStripePaymentForm.UpdateStatus(const AMessage: string; AColor: TColor);
-begin
+procedure TStripePaymentForm.UpdateStatus(const AMessage: string; AColor: TColor);  
+begin  
   LabelStatus.Caption := AMessage;
   LabelStatus.Font.Color := AColor;
 end;
 
-procedure TStripePaymentForm.ProcessPaymentAsync;
-begin
+procedure TStripePaymentForm.ProcessPaymentAsync;  
+begin  
   // Désactiver l'interface
   ButtonPay.Enabled := False;
   ButtonCancel.Enabled := False;
@@ -819,8 +819,8 @@ begin
     end);
 end;
 
-procedure TStripePaymentForm.ButtonPayClick(Sender: TObject);
-var
+procedure TStripePaymentForm.ButtonPayClick(Sender: TObject);  
+var  
   Amount: Double;
 begin
   // Valider les données
@@ -853,8 +853,8 @@ begin
   end;
 end;
 
-procedure TStripePaymentForm.ButtonCancelClick(Sender: TObject);
-begin
+procedure TStripePaymentForm.ButtonCancelClick(Sender: TObject);  
+begin  
   if MessageDlg('Annuler le paiement ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     ModalResult := mrCancel;
 end;
@@ -886,8 +886,8 @@ type
   end;
 
 // Ajouter à TStripe :
-function TStripe.CreateSubscription(const ACustomerID, APriceID: string): TStripeSubscription;
-var
+function TStripe.CreateSubscription(const ACustomerID, APriceID: string): TStripeSubscription;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   FormData: TStringList;
@@ -1066,16 +1066,16 @@ begin
   FEnvironment := AEnvironment;
 end;
 
-function TPayPal.GetAPIURL: string;
-begin
+function TPayPal.GetAPIURL: string;  
+begin  
   if FEnvironment = ppeSandbox then
     Result := PAYPAL_API_SANDBOX
   else
     Result := PAYPAL_API_PRODUCTION;
 end;
 
-function TPayPal.GetAccessToken: string;
-var
+function TPayPal.GetAccessToken: string;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   FormData: TStringList;
@@ -1131,8 +1131,8 @@ begin
   end;
 end;
 
-function TPayPal.BuildAuthHeader: string;
-begin
+function TPayPal.BuildAuthHeader: string;  
+begin  
   Result := 'Bearer ' + GetAccessToken;
 end;
 
@@ -1204,8 +1204,8 @@ begin
   end;
 end;
 
-function TPayPal.ParseOrder(const AJSON: TJSONObject): TPayPalOrder;
-var
+function TPayPal.ParseOrder(const AJSON: TJSONObject): TPayPalOrder;  
+var  
   Links: TJSONArray;
   Link: TJSONObject;
   I: Integer;
@@ -1241,8 +1241,8 @@ begin
   end;
 end;
 
-function TPayPal.CaptureOrder(const AOrderID: string): TPayPalOrder;
-var
+function TPayPal.CaptureOrder(const AOrderID: string): TPayPalOrder;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   EmptyBody: TStringStream;
@@ -1281,8 +1281,8 @@ begin
   end;
 end;
 
-function TPayPal.GetOrder(const AOrderID: string): TPayPalOrder;
-var
+function TPayPal.GetOrder(const AOrderID: string): TPayPalOrder;  
+var  
   HTTP: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse: TJSONObject;
@@ -1359,8 +1359,8 @@ implementation
 uses
   System.Threading;
 
-procedure TPayPalForm.FormCreate(Sender: TObject);
-begin
+procedure TPayPalForm.FormCreate(Sender: TObject);  
+begin  
   FPayPal := TPayPal.Create(
     'votre_client_id',
     'votre_secret',
@@ -1370,13 +1370,13 @@ begin
   FCompleted := False;
 end;
 
-procedure TPayPalForm.FormDestroy(Sender: TObject);
-begin
+procedure TPayPalForm.FormDestroy(Sender: TObject);  
+begin  
   FPayPal.Free;
 end;
 
-procedure TPayPalForm.StartPayment(AAmount: Double; const ACurrency: string);
-var
+procedure TPayPalForm.StartPayment(AAmount: Double; const ACurrency: string);  
+var  
   Order: TPayPalOrder;
 begin
   try
@@ -1419,8 +1419,8 @@ begin
   end;
 end;
 
-procedure TPayPalForm.CheckOrderCompletion;
-begin
+procedure TPayPalForm.CheckOrderCompletion;  
+begin  
   TTask.Run(
     procedure
     var
@@ -1466,8 +1466,8 @@ begin
     end);
 end;
 
-procedure TPayPalForm.ButtonCancelClick(Sender: TObject);
-begin
+procedure TPayPalForm.ButtonCancelClick(Sender: TObject);  
+begin  
   if MessageDlg('Annuler le paiement ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     ModalResult := mrCancel;
 end;
@@ -1544,8 +1544,8 @@ uses
 
 { TWebhookServer }
 
-constructor TWebhookServer.Create(APort: Integer; const AStripeSigningSecret: string);
-begin
+constructor TWebhookServer.Create(APort: Integer; const AStripeSigningSecret: string);  
+begin  
   inherited Create;
   FPort := APort;
   FStripeSigningSecret := AStripeSigningSecret;
@@ -1555,20 +1555,20 @@ begin
   FHTTPServer.OnCommandGet := HandleRequest;
 end;
 
-destructor TWebhookServer.Destroy;
-begin
+destructor TWebhookServer.Destroy;  
+begin  
   Stop;
   FHTTPServer.Free;
   inherited;
 end;
 
-procedure TWebhookServer.Start;
-begin
+procedure TWebhookServer.Start;  
+begin  
   FHTTPServer.Active := True;
 end;
 
-procedure TWebhookServer.Stop;
-begin
+procedure TWebhookServer.Stop;  
+begin  
   FHTTPServer.Active := False;
 end;
 
@@ -1613,8 +1613,8 @@ begin
   end;
 end;
 
-function TWebhookServer.VerifyStripeSignature(const APayload, ASignature: string): Boolean;
-var
+function TWebhookServer.VerifyStripeSignature(const APayload, ASignature: string): Boolean;  
+var  
   Parts: TArray<string>;
   Timestamp: string;
   Signatures: TArray<string>;
@@ -1659,8 +1659,8 @@ begin
   end;
 end;
 
-procedure TWebhookServer.ProcessStripeWebhook(const APayload: string);
-var
+procedure TWebhookServer.ProcessStripeWebhook(const APayload: string);  
+var  
   JSON: TJSONObject;
   EventType: string;
   DataObj: TJSONObject;
@@ -1749,16 +1749,16 @@ if not Request.IsSecure then
   raise Exception.Create('HTTPS requis');
 
 // Valider côté serveur
-function ValidateAmount(AAmount: Integer; AOrderID: string): Boolean;
-begin
+function ValidateAmount(AAmount: Integer; AOrderID: string): Boolean;  
+begin  
   // Récupérer le vrai montant depuis votre base
   var ExpectedAmount := GetOrderAmount(AOrderID);
   Result := AAmount = ExpectedAmount;
 end;
 
 // Logger tous les paiements
-procedure LogPayment(const APaymentID: string; AAmount: Integer);
-begin
+procedure LogPayment(const APaymentID: string; AAmount: Integer);  
+begin  
   // Enregistrer dans la base
   // + Logger dans un fichier
   // + Alerter si montant suspect
@@ -1768,8 +1768,8 @@ end;
 ### 5.2 Gestion des erreurs
 
 ```pascal
-function ProcessPaymentWithRetry(APaymentFunc: TFunc<Boolean>): Boolean;
-var
+function ProcessPaymentWithRetry(APaymentFunc: TFunc<Boolean>): Boolean;  
+var  
   Attempt: Integer;
   MaxAttempts: Integer;
   WaitTime: Integer;
@@ -1811,8 +1811,8 @@ end;
 ### 5.3 Tests de sécurité
 
 ```pascal
-procedure TestPaymentSecurity;
-begin
+procedure TestPaymentSecurity;  
+begin  
   // Test 1 : Montants négatifs
   try
     CreatePayment(-100, 'EUR');
@@ -1900,8 +1900,8 @@ type
 var
   Environment: TPaymentEnvironment;
 
-procedure InitializePayment;
-begin
+procedure InitializePayment;  
+begin  
   {$IFDEF DEBUG}
   Environment := peTest;
   {$ELSE}
@@ -1947,6 +1947,7 @@ type
     FFailedPayments: Integer;
     FTotalAmount: Double;
 
+    function GetSuccessRate: Double;
     procedure CheckAnomalies;
     procedure SendAlert(const AMessage: string);
   public
@@ -1965,8 +1966,16 @@ uses
 
 { TPaymentMonitor }
 
-procedure TPaymentMonitor.RecordPayment(ASuccess: Boolean; AAmount: Double);
-begin
+function TPaymentMonitor.GetSuccessRate: Double;  
+begin  
+  if FTotalPayments = 0 then
+    Result := 0
+  else
+    Result := (FTotalPayments - FFailedPayments) / FTotalPayments * 100;
+end;
+
+procedure TPaymentMonitor.RecordPayment(ASuccess: Boolean; AAmount: Double);  
+begin  
   Inc(FTotalPayments);
 
   if ASuccess then
@@ -1978,8 +1987,8 @@ begin
   CheckAnomalies;
 end;
 
-procedure TPaymentMonitor.CheckAnomalies;
-var
+procedure TPaymentMonitor.CheckAnomalies;  
+var  
   FailureRate: Double;
 begin
   if FTotalPayments < 10 then
@@ -2006,8 +2015,8 @@ begin
   end;
 end;
 
-procedure TPaymentMonitor.SendAlert(const AMessage: string);
-begin
+procedure TPaymentMonitor.SendAlert(const AMessage: string);  
+begin  
   // Email
   // SendEmail('admin@votreapp.com', 'Alerte paiement', AMessage);
 
@@ -2021,8 +2030,8 @@ begin
   WriteLn('[ALERT] ' + AMessage);
 end;
 
-procedure TPaymentMonitor.GenerateDailyReport;
-var
+procedure TPaymentMonitor.GenerateDailyReport;  
+var  
   Report: TStringList;
   SuccessRate: Double;
 begin
@@ -2060,25 +2069,25 @@ end.
 
 Félicitations ! Vous savez maintenant intégrer des paiements en ligne dans vos applications Delphi. Vous maîtrisez :
 
-✅ **Concepts de paiement** : Tokens, charges, webhooks
-✅ **Stripe** : Paiements uniques et abonnements
-✅ **PayPal** : Intégration complète
-✅ **Sécurité** : PCI DSS, HTTPS, validation
-✅ **Webhooks** : Événements en temps réel
-✅ **Tests** : Sandbox et cartes de test
-✅ **Production** : Déploiement sécurisé
+✅ **Concepts de paiement** : Tokens, charges, webhooks  
+✅ **Stripe** : Paiements uniques et abonnements  
+✅ **PayPal** : Intégration complète  
+✅ **Sécurité** : PCI DSS, HTTPS, validation  
+✅ **Webhooks** : Événements en temps réel  
+✅ **Tests** : Sandbox et cartes de test  
+✅ **Production** : Déploiement sécurisé  
 ✅ **Monitoring** : Alertes et rapports
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Accepter des paiements par carte bancaire
-🎯 Gérer des abonnements récurrents
-🎯 Traiter les remboursements
-🎯 Sécuriser les transactions
-🎯 Tester en environnement sandbox
-🎯 Déployer en production
+🎯 Accepter des paiements par carte bancaire  
+🎯 Gérer des abonnements récurrents  
+🎯 Traiter les remboursements  
+🎯 Sécuriser les transactions  
+🎯 Tester en environnement sandbox  
+🎯 Déployer en production  
 🎯 Monitorer les paiements
 
 ### Coûts typiques

@@ -25,44 +25,44 @@ Vous utilisez peut-être déjà des PWA sans le savoir :
 
 **Une PWA doit être** :
 
-✅ **Progressive** : Fonctionne pour tous les utilisateurs, quel que soit le navigateur
-✅ **Responsive** : S'adapte à toutes les tailles d'écran (mobile, tablette, desktop)
-✅ **Offline** : Fonctionne sans connexion internet
-✅ **App-like** : Look & feel d'une application native
-✅ **Fresh** : Toujours à jour grâce aux service workers
-✅ **Safe** : Fonctionne uniquement en HTTPS
-✅ **Discoverable** : Identifiable comme "application" par les moteurs de recherche
-✅ **Installable** : Peut être ajoutée à l'écran d'accueil
+✅ **Progressive** : Fonctionne pour tous les utilisateurs, quel que soit le navigateur  
+✅ **Responsive** : S'adapte à toutes les tailles d'écran (mobile, tablette, desktop)  
+✅ **Offline** : Fonctionne sans connexion internet  
+✅ **App-like** : Look & feel d'une application native  
+✅ **Fresh** : Toujours à jour grâce aux service workers  
+✅ **Safe** : Fonctionne uniquement en HTTPS  
+✅ **Discoverable** : Identifiable comme "application" par les moteurs de recherche  
+✅ **Installable** : Peut être ajoutée à l'écran d'accueil  
 ✅ **Linkable** : Partageable via une simple URL
 
 ### Pourquoi créer une PWA ?
 
 **Avantages pour les développeurs** :
-✅ **Un seul code** : Fonctionne sur mobile, tablette, desktop
-✅ **Pas de store** : Pas besoin de passer par l'App Store ou Play Store
-✅ **Mises à jour instantanées** : Pas d'approbation nécessaire
-✅ **Plus facile à maintenir** : Qu'une application native
+✅ **Un seul code** : Fonctionne sur mobile, tablette, desktop  
+✅ **Pas de store** : Pas besoin de passer par l'App Store ou Play Store  
+✅ **Mises à jour instantanées** : Pas d'approbation nécessaire  
+✅ **Plus facile à maintenir** : Qu'une application native  
 ✅ **SEO friendly** : Indexable par Google
 
 **Avantages pour les utilisateurs** :
-✅ **Installation rapide** : Pas de téléchargement lourd
-✅ **Moins d'espace** : Plus léger qu'une app native
-✅ **Fonctionne offline** : Accessible sans internet
-✅ **Toujours à jour** : Pas besoin de mettre à jour manuellement
+✅ **Installation rapide** : Pas de téléchargement lourd  
+✅ **Moins d'espace** : Plus léger qu'une app native  
+✅ **Fonctionne offline** : Accessible sans internet  
+✅ **Toujours à jour** : Pas besoin de mettre à jour manuellement  
 ✅ **Accessible partout** : Via une simple URL
 
 ### Objectifs de ce chapitre
 
 À la fin de ce tutoriel, vous serez capable de :
 
-✅ Comprendre l'architecture des PWA
-✅ Créer une PWA avec TMS Web Core et Delphi
-✅ Implémenter le mode offline
-✅ Créer un manifest d'application
-✅ Gérer les service workers
-✅ Permettre l'installation de l'app
-✅ Ajouter des notifications push
-✅ Déployer votre PWA
+✅ Comprendre l'architecture des PWA  
+✅ Créer une PWA avec TMS Web Core et Delphi  
+✅ Implémenter le mode offline  
+✅ Créer un manifest d'application  
+✅ Gérer les service workers  
+✅ Permettre l'installation de l'app  
+✅ Ajouter des notifications push  
+✅ Déployer votre PWA  
 ✅ Optimiser les performances
 
 ### Prérequis
@@ -225,8 +225,8 @@ ShoppingList/
 
 **Code Pascal** :
 ```pascal
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   ShowMessage('Hello World!');
 end;
 ```
@@ -324,8 +324,8 @@ uses
 
 {$R *.dfm}
 
-procedure TMainForm.WebFormCreate(Sender: TObject);
-begin
+procedure TMainForm.WebFormCreate(Sender: TObject);  
+begin  
   FItems := TObjectList<TShoppingItem>.Create(True);
 
   // Charger les données
@@ -340,13 +340,13 @@ begin
   CheckOnlineStatus;
 end;
 
-procedure TMainForm.WebFormShow(Sender: TObject);
-begin
+procedure TMainForm.WebFormShow(Sender: TObject);  
+begin  
   EditItem.SetFocus;
 end;
 
-procedure TMainForm.LoadItems;
-var
+procedure TMainForm.LoadItems;  
+var  
   Storage: TLocalStorage;
   JSONData: string;
   JSONArray: TJSONArray;
@@ -384,8 +384,8 @@ begin
   end;
 end;
 
-procedure TMainForm.SaveItems;
-var
+procedure TMainForm.SaveItems;  
+var  
   Storage: TLocalStorage;
   JSONArray: TJSONArray;
   Item: TShoppingItem;
@@ -416,8 +416,8 @@ begin
   end;
 end;
 
-procedure TMainForm.AddItem(const AName: string; AQuantity: Integer);
-var
+procedure TMainForm.AddItem(const AName: string; AQuantity: Integer);  
+var  
   Item: TShoppingItem;
 begin
   if AName.Trim.IsEmpty then
@@ -441,8 +441,8 @@ begin
   EditItem.SetFocus;
 end;
 
-procedure TMainForm.ButtonAddClick(Sender: TObject);
-var
+procedure TMainForm.ButtonAddClick(Sender: TObject);  
+var  
   Quantity: Integer;
 begin
   if not TryStrToInt(EditQuantity.Text, Quantity) then
@@ -451,8 +451,8 @@ begin
   AddItem(EditItem.Text, Quantity);
 end;
 
-procedure TMainForm.UpdateList;
-var
+procedure TMainForm.UpdateList;  
+var  
   Item: TShoppingItem;
   DisplayText: string;
 begin
@@ -479,8 +479,8 @@ begin
   LabelStatus.Caption := Format('%d articles', [FItems.Count]);
 end;
 
-procedure TMainForm.ListBoxItemsClick(Sender: TObject);
-var
+procedure TMainForm.ListBoxItemsClick(Sender: TObject);  
+var  
   Item: TShoppingItem;
 begin
   if ListBoxItems.ItemIndex < 0 then
@@ -500,8 +500,8 @@ begin
   end;
 end;
 
-procedure TMainForm.DeleteItem(const AID: string);
-var
+procedure TMainForm.DeleteItem(const AID: string);  
+var  
   I: Integer;
 begin
   for I := FItems.Count - 1 downto 0 do
@@ -517,8 +517,8 @@ begin
   UpdateList;
 end;
 
-procedure TMainForm.ToggleItem(const AID: string);
-var
+procedure TMainForm.ToggleItem(const AID: string);  
+var  
   Item: TShoppingItem;
 begin
   for Item in FItems do
@@ -534,8 +534,8 @@ begin
   UpdateList;
 end;
 
-procedure TMainForm.CheckOnlineStatus;
-begin
+procedure TMainForm.CheckOnlineStatus;  
+begin  
   asm
     if (navigator.onLine) {
       this.LabelStatus.SetCaption(this.LabelStatus.GetCaption() + ' - En ligne');
@@ -554,8 +554,8 @@ begin
   end;
 end;
 
-procedure TMainForm.RegisterServiceWorker;
-begin
+procedure TMainForm.RegisterServiceWorker;  
+begin  
   asm
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
@@ -569,8 +569,8 @@ begin
   end;
 end;
 
-procedure TMainForm.SetupInstallPrompt;
-begin
+procedure TMainForm.SetupInstallPrompt;  
+begin  
   asm
     var self = this;
 
@@ -591,8 +591,8 @@ begin
   end;
 end;
 
-procedure TMainForm.ButtonInstallClick(Sender: TObject);
-begin
+procedure TMainForm.ButtonInstallClick(Sender: TObject);  
+begin  
   asm
     var self = this;
 
@@ -669,8 +669,8 @@ body {
   margin-bottom: 10px;
 }
 
-input[type="text"],
-input[type="number"] {
+input[type="text"],  
+input[type="number"] {  
   flex: 1;
   padding: 12px;
   border: 1px solid var(--border-color);
@@ -961,8 +961,8 @@ Un **Service Worker** est un script JavaScript qui :
 ```javascript
 // sw.js - Service Worker pour Shopping List PWA
 
-const CACHE_NAME = 'shopping-list-v1';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'shopping-list-v1';  
+const OFFLINE_URL = '/offline.html';  
 
 // Fichiers à mettre en cache
 const CACHE_FILES = [
@@ -1261,8 +1261,8 @@ Créez une page pour le mode offline :
 Ajoutez dans votre application :
 
 ```pascal
-procedure TMainForm.MonitorConnectionStatus;
-begin
+procedure TMainForm.MonitorConnectionStatus;  
+begin  
   asm
     var self = this;
 
@@ -1292,8 +1292,8 @@ end;
 ### 6.2 Synchronisation en arrière-plan
 
 ```pascal
-procedure TMainForm.EnableBackgroundSync;
-begin
+procedure TMainForm.EnableBackgroundSync;  
+begin  
   asm
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
       navigator.serviceWorker.ready.then(function(registration) {
@@ -1313,8 +1313,8 @@ end;
 **Demander la permission** :
 
 ```pascal
-procedure TMainForm.RequestNotificationPermission;
-begin
+procedure TMainForm.RequestNotificationPermission;  
+begin  
   asm
     if ('Notification' in window) {
       Notification.requestPermission().then(function(permission) {
@@ -1338,8 +1338,8 @@ end;
 **Envoyer une notification locale** :
 
 ```pascal
-procedure TMainForm.ShowNotification(const ATitle, ABody: string);
-begin
+procedure TMainForm.ShowNotification(const ATitle, ABody: string);  
+begin  
   asm
     if ('Notification' in window && Notification.permission === 'granted') {
       if ('serviceWorker' in navigator) {
@@ -1370,8 +1370,8 @@ begin
 end;
 
 // Utilisation
-procedure TMainForm.ButtonAddClick(Sender: TObject);
-begin
+procedure TMainForm.ButtonAddClick(Sender: TObject);  
+begin  
   AddItem(EditItem.Text, StrToIntDef(EditQuantity.Text, 1));
 
   // Notifier l'ajout
@@ -1383,8 +1383,8 @@ end;
 ### 6.4 Partage natif
 
 ```pascal
-procedure TMainForm.ShareList;
-var
+procedure TMainForm.ShareList;  
+var  
   ListText: string;
   Item: TShoppingItem;
 begin
@@ -1420,8 +1420,8 @@ end;
 ### 6.5 Mode d'installation
 
 ```pascal
-procedure TMainForm.SetupInstallPrompt;
-begin
+procedure TMainForm.SetupInstallPrompt;  
+begin  
   asm
     var self = this;
     var deferredPrompt;
@@ -1599,8 +1599,8 @@ Dans Delphi :
 npm i -g vercel
 
 # Déployer
-cd Output/Release
-vercel
+cd Output/Release  
+vercel  
 ```
 
 #### GitHub Pages
@@ -1652,9 +1652,9 @@ jobs:
 </IfModule>
 
 # HTTPS redirect
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+RewriteEngine On  
+RewriteCond %{HTTPS} off  
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]  
 
 # Service Worker
 <Files "sw.js">
@@ -1715,9 +1715,9 @@ server {
 1. **Acheter un domaine** : Namecheap, OVH, etc.
 2. **Configurer DNS** :
 ```
-A     @     185.199.108.153
-A     @     185.199.109.153
-CNAME www   votre-site.netlify.app
+A     @     185.199.108.153  
+A     @     185.199.109.153  
+CNAME www   votre-site.netlify.app  
 ```
 3. **Activer HTTPS** : Let's Encrypt (gratuit)
 
@@ -1766,8 +1766,8 @@ npx csso styles.css -o styles.min.css
 
 ```pascal
 // Gérer les raccourcis clavier
-procedure TMainForm.SetupKeyboardShortcuts;
-begin
+procedure TMainForm.SetupKeyboardShortcuts;  
+begin  
   asm
     document.addEventListener('keydown', function(e) {
       // Ctrl+N : Nouveau
@@ -1825,8 +1825,8 @@ end;
 
 ```pascal
 // Intégrer Google Analytics
-procedure TMainForm.InitAnalytics;
-begin
+procedure TMainForm.InitAnalytics;  
+begin  
   asm
     // Google Analytics 4
     window.dataLayer = window.dataLayer || [];
@@ -1858,8 +1858,8 @@ end;
 
 ```javascript
 // sw.js
-const VERSION = '1.2.0';
-const CACHE_NAME = `shopping-list-v${VERSION}`;
+const VERSION = '1.2.0';  
+const CACHE_NAME = `shopping-list-v${VERSION}`;  
 
 // Notifier l'utilisateur des mises à jour
 self.addEventListener('activate', (event) => {
@@ -1880,8 +1880,8 @@ self.addEventListener('activate', (event) => {
 **Dans l'application** :
 
 ```pascal
-procedure TMainForm.ListenForUpdates;
-begin
+procedure TMainForm.ListenForUpdates;  
+begin  
   asm
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', function(event) {
@@ -1901,8 +1901,8 @@ end;
 
 ```pascal
 // Envoyer les erreurs à un service
-procedure TMainForm.SetupErrorTracking;
-begin
+procedure TMainForm.SetupErrorTracking;  
+begin  
   asm
     window.addEventListener('error', function(event) {
       // Envoyer à Sentry, Rollbar, etc.
@@ -1928,8 +1928,8 @@ end;
 ### 10.3 A/B Testing
 
 ```pascal
-procedure TMainForm.SetupABTesting;
-var
+procedure TMainForm.SetupABTesting;  
+var  
   Variant: string;
 begin
   // Déterminer la variante (A ou B)
@@ -1954,24 +1954,24 @@ end;
 
 Félicitations ! Vous avez créé une PWA complète avec Delphi. Vous maîtrisez maintenant :
 
-✅ **Concepts PWA** : Architecture et fonctionnement
-✅ **TMS Web Core** : Développement web avec Delphi
-✅ **Manifest** : Configuration de l'application
-✅ **Service Workers** : Cache et mode offline
-✅ **Installation** : App installable sur tous les appareils
-✅ **Notifications** : Push notifications
-✅ **Déploiement** : Mise en production HTTPS
+✅ **Concepts PWA** : Architecture et fonctionnement  
+✅ **TMS Web Core** : Développement web avec Delphi  
+✅ **Manifest** : Configuration de l'application  
+✅ **Service Workers** : Cache et mode offline  
+✅ **Installation** : App installable sur tous les appareils  
+✅ **Notifications** : Push notifications  
+✅ **Déploiement** : Mise en production HTTPS  
 ✅ **Optimisation** : Performance et SEO
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des PWA professionnelles
-🎯 Implémenter le mode offline
-🎯 Gérer le cache intelligemment
-🎯 Déployer sur le web
-🎯 Optimiser les performances
+🎯 Créer des PWA professionnelles  
+🎯 Implémenter le mode offline  
+🎯 Gérer le cache intelligemment  
+🎯 Déployer sur le web  
+🎯 Optimiser les performances  
 🎯 Maintenir et faire évoluer votre PWA
 
 ### Avantages des PWA avec Delphi

@@ -10,9 +10,9 @@ Bienvenue dans le monde passionnant du développement mobile avec Delphi ! Dans 
 
 Le marché mobile est gigantesque et en constante croissance :
 
-📱 **Plus de 6 milliards** d'utilisateurs de smartphones dans le monde
-📱 **Des millions d'applications** téléchargées chaque jour
-📱 **Opportunités professionnelles** nombreuses et variées
+📱 **Plus de 6 milliards** d'utilisateurs de smartphones dans le monde  
+📱 **Des millions d'applications** téléchargées chaque jour  
+📱 **Opportunités professionnelles** nombreuses et variées  
 📱 **Accès à un marché global** via les stores
 
 Avec Delphi, vous pouvez créer des applications natives pour iOS et Android **avec un seul code source**, ce qui représente un avantage énorme en termes de temps et de coûts de développement.
@@ -21,15 +21,15 @@ Avec Delphi, vous pouvez créer des applications natives pour iOS et Android **a
 
 À la fin de ce chapitre, vous serez capable de :
 
-✅ Créer des applications mobiles natives iOS et Android
-✅ Concevoir des interfaces tactiles optimisées
-✅ Accéder aux capteurs (GPS, caméra, accéléromètre)
-✅ Gérer les permissions de manière appropriée
-✅ Implémenter des notifications push
-✅ Stocker des données localement
-✅ Optimiser les performances mobiles
-✅ Publier sur l'App Store et le Play Store
-✅ Gérer les différentes tailles d'écran
+✅ Créer des applications mobiles natives iOS et Android  
+✅ Concevoir des interfaces tactiles optimisées  
+✅ Accéder aux capteurs (GPS, caméra, accéléromètre)  
+✅ Gérer les permissions de manière appropriée  
+✅ Implémenter des notifications push  
+✅ Stocker des données localement  
+✅ Optimiser les performances mobiles  
+✅ Publier sur l'App Store et le Play Store  
+✅ Gérer les différentes tailles d'écran  
 ✅ Intégrer des services natifs (partage, contacts, etc.)
 
 ### Prérequis
@@ -187,14 +187,14 @@ Contrairement aux applications desktop, les applications mobiles ont un cycle de
 **Événements importants** :
 
 ```pascal
-procedure TFormMain.FormActivate(Sender: TObject);
-begin
+procedure TFormMain.FormActivate(Sender: TObject);  
+begin  
   // L'application devient active
   // Reprendre les tâches, rafraîchir les données
 end;
 
-procedure TFormMain.FormDeactivate(Sender: TObject);
-begin
+procedure TFormMain.FormDeactivate(Sender: TObject);  
+begin  
   // L'application passe en arrière-plan
   // Sauvegarder l'état, arrêter les tâches gourmandes
 end;
@@ -451,8 +451,8 @@ implementation
 uses
   FMX.Platform;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FIsTracking := False;
 
   // Adapter l'interface à l'écran
@@ -462,8 +462,8 @@ begin
   UpdateStepCount(0);
 end;
 
-procedure TFormMain.AdaptToOrientation;
-begin
+procedure TFormMain.AdaptToOrientation;  
+begin  
   // Adapter selon l'orientation
   if Width > Height then
   begin
@@ -479,13 +479,13 @@ begin
   end;
 end;
 
-procedure TFormMain.FormResize(Sender: TObject);
-begin
+procedure TFormMain.FormResize(Sender: TObject);  
+begin  
   AdaptToOrientation;
 end;
 
-procedure TFormMain.ButtonStartClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonStartClick(Sender: TObject);  
+begin  
   FIsTracking := not FIsTracking;
 
   if FIsTracking then
@@ -500,8 +500,8 @@ begin
   end;
 end;
 
-procedure TFormMain.UpdateStepCount(ASteps: Integer);
-var
+procedure TFormMain.UpdateStepCount(ASteps: Integer);  
+var  
   Distance: Double;
 begin
   LabelSteps.Text := Format('%s pas', [FormatFloat('#,##0', ASteps)]);
@@ -519,8 +519,8 @@ end.
 La navigation par onglets est idéale pour mobile :
 
 ```pascal
-procedure TFormMain.TabControl1Change(Sender: TObject);
-begin
+procedure TFormMain.TabControl1Change(Sender: TObject);  
+begin  
   case TabControl1.ActiveTab.Index of
     0: // Onglet Activité
       begin
@@ -543,8 +543,8 @@ end;
 ### 3.5 Adaptation aux différentes tailles d'écran
 
 ```pascal
-procedure TFormMain.AdaptToScreenSize;
-var
+procedure TFormMain.AdaptToScreenSize;  
+var  
   ScreenSize: TSize;
   Scale: Single;
 begin
@@ -617,8 +617,8 @@ type
       const AGrantResults: TArray<TPermissionStatus>);
   end;
 
-procedure TFormMain.RequestLocationPermission;
-begin
+procedure TFormMain.RequestLocationPermission;  
+begin  
   PermissionsService.RequestPermissions(
     ['android.permission.ACCESS_FINE_LOCATION',
      'android.permission.ACCESS_COARSE_LOCATION'],
@@ -660,8 +660,8 @@ end;
 #### Optimisation de la batterie
 
 ```pascal
-procedure TFormMain.ConfigureLocationSensor;
-begin
+procedure TFormMain.ConfigureLocationSensor;  
+begin  
   // Précision vs batterie
   LocationSensor1.Accuracy := 10; // 10 mètres
 
@@ -705,8 +705,8 @@ type
     procedure OnPhotoTaken(Image: TBitmap);
   end;
 
-procedure TFormMain.ButtonTakePhotoClick(Sender: TObject);
-var
+procedure TFormMain.ButtonTakePhotoClick(Sender: TObject);  
+var  
   MediaLibrary: IFMXCameraService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -723,8 +723,8 @@ begin
     ShowMessage('Caméra non disponible');
 end;
 
-procedure TFormMain.OnPhotoTaken(Image: TBitmap);
-begin
+procedure TFormMain.OnPhotoTaken(Image: TBitmap);  
+begin  
   if Assigned(Image) then
   begin
     ImagePhoto.Bitmap.Assign(Image);
@@ -734,8 +734,8 @@ begin
   end;
 end;
 
-procedure SavePhotoToFile(ABitmap: TBitmap);
-var
+procedure SavePhotoToFile(ABitmap: TBitmap);  
+var  
   FileName: string;
 begin
   FileName := TPath.Combine(
@@ -763,8 +763,8 @@ type
     procedure DetectStep(const AAccel: TAcceleration);
   end;
 
-procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);
-var
+procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);  
+var  
   Accel: TAcceleration;
 begin
   Accel := MotionSensor1.Sensor.AccelerationX;
@@ -772,8 +772,8 @@ begin
   FLastAcceleration := Accel;
 end;
 
-procedure TFormMain.DetectStep(const AAccel: TAcceleration);
-var
+procedure TFormMain.DetectStep(const AAccel: TAcceleration);  
+var  
   Magnitude: Double;
   Threshold: Double;
 begin
@@ -809,8 +809,8 @@ type
     procedure SendNotificationNow;
   end;
 
-procedure TFormMain.ScheduleNotification;
-var
+procedure TFormMain.ScheduleNotification;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter1.CreateNotification;
@@ -828,8 +828,8 @@ begin
   end;
 end;
 
-procedure TFormMain.SendNotificationNow;
-var
+procedure TFormMain.SendNotificationNow;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter1.CreateNotification;
@@ -861,8 +861,8 @@ end;
 uses
   FMX.Platform;
 
-procedure ShareText(const AText: string);
-var
+procedure ShareText(const AText: string);  
+var  
   ShareService: IFMXShareService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -872,8 +872,8 @@ begin
   end;
 end;
 
-procedure ShareImage(AImage: TBitmap; const AMessage: string);
-var
+procedure ShareImage(AImage: TBitmap; const AMessage: string);  
+var  
   ShareService: IFMXShareService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -884,8 +884,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.ButtonShareClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonShareClick(Sender: TObject);  
+begin  
   ShareText('J''ai parcouru 10,000 pas aujourd''hui avec FitnessTracker !');
 end;
 ```
@@ -915,8 +915,8 @@ type
     function GetDatabasePath: string;
   end;
 
-procedure TDataModule1.InitializeDatabase;
-var
+procedure TDataModule1.InitializeDatabase;  
+var  
   DBPath: string;
 begin
   DBPath := GetDatabasePath;
@@ -937,8 +937,8 @@ begin
     FDConnection1.Connected := True;
 end;
 
-function TDataModule1.GetDatabasePath: string;
-begin
+function TDataModule1.GetDatabasePath: string;  
+begin  
   {$IF DEFINED(IOS)}
   Result := TPath.Combine(TPath.GetDocumentsPath, 'fitness.db');
   {$ELSEIF DEFINED(ANDROID)}
@@ -948,8 +948,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TDataModule1.CreateTables;
-begin
+procedure TDataModule1.CreateTables;  
+begin  
   // Créer la table des activités
   FDConnection1.ExecSQL(
     'CREATE TABLE IF NOT EXISTS activities (' +
@@ -995,8 +995,8 @@ end;
 #### Lecture de données
 
 ```pascal
-procedure LoadActivities(AListBox: TListBox);
-var
+procedure LoadActivities(AListBox: TListBox);  
+var  
   Query: TFDQuery;
   Item: TListBoxItem;
 begin
@@ -1055,13 +1055,13 @@ type
     property UnitSystem: string read FUnitSystem write FUnitSystem;
   end;
 
-function TUserPreferences.GetPreferencesFile: string;
-begin
+function TUserPreferences.GetPreferencesFile: string;  
+begin  
   Result := TPath.Combine(TPath.GetDocumentsPath, 'preferences.json');
 end;
 
-procedure TUserPreferences.Save;
-var
+procedure TUserPreferences.Save;  
+var  
   JSON: TJSONObject;
 begin
   JSON := TJSONObject.Create;
@@ -1076,8 +1076,8 @@ begin
   end;
 end;
 
-procedure TUserPreferences.Load;
-var
+procedure TUserPreferences.Load;  
+var  
   JSON: TJSONObject;
   JSONText: string;
 begin
@@ -1122,13 +1122,13 @@ type
     FImageList: TObjectList<TBitmap>;
   end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FImageList := TObjectList<TBitmap>.Create(True);
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   // Libérer les ressources
   FImageList.Free;
 
@@ -1141,8 +1141,8 @@ end;
 #### Chargement d'images optimisé
 
 ```pascal
-procedure LoadImageOptimized(const AFileName: string; AImage: TImage);
-var
+procedure LoadImageOptimized(const AFileName: string; AImage: TImage);  
+var  
   Bitmap: TBitmap;
   MaxSize: Integer;
 begin
@@ -1170,8 +1170,8 @@ end;
 ### 6.2 Threading pour les opérations longues
 
 ```pascal
-procedure TFormMain.LoadDataAsync;
-begin
+procedure TFormMain.LoadDataAsync;  
+begin  
   // Afficher un indicateur de chargement
   ShowLoadingIndicator;
 
@@ -1199,8 +1199,8 @@ end;
 #### Désactiver les capteurs inutiles
 
 ```pascal
-procedure TFormMain.FormDeactivate(Sender: TObject);
-begin
+procedure TFormMain.FormDeactivate(Sender: TObject);  
+begin  
   // L'app passe en arrière-plan
   // Désactiver les capteurs pour économiser la batterie
   if not FIsTracking then
@@ -1213,8 +1213,8 @@ begin
   SaveCurrentState;
 end;
 
-procedure TFormMain.FormActivate(Sender: TObject);
-begin
+procedure TFormMain.FormActivate(Sender: TObject);  
+begin  
   // L'app redevient active
   // Réactiver si nécessaire
   if FIsTracking then
@@ -1229,8 +1229,8 @@ end;
 
 ```pascal
 // ❌ Mauvais : Mise à jour à chaque changement
-procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);
-begin
+procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);  
+begin  
   UpdateUI; // Trop fréquent !
 end;
 
@@ -1242,14 +1242,14 @@ type
     FPendingUpdate: Boolean;
   end;
 
-procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);
-begin
+procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);  
+begin  
   FPendingUpdate := True;
   // Le timer mettra à jour l'UI toutes les 500ms
 end;
 
-procedure TFormMain.TimerUpdateTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerUpdateTimer(Sender: TObject);  
+begin  
   if FPendingUpdate then
   begin
     UpdateUI;
@@ -1263,8 +1263,8 @@ end;
 Pour de grandes listes, utilisez la virtualisation :
 
 ```pascal
-procedure TFormMain.SetupListView;
-begin
+procedure TFormMain.SetupListView;  
+begin  
   // ListView gère automatiquement la virtualisation
   ListView1.ItemAppearance.ItemHeight := 60;
 
@@ -1272,8 +1272,8 @@ begin
   LoadItemsInBatches;
 end;
 
-procedure LoadItemsInBatches;
-const
+procedure LoadItemsInBatches;  
+const  
   BATCH_SIZE = 50;
 var
   I: Integer;
@@ -1322,8 +1322,8 @@ type
       const AGrantResults: TArray<TPermissionStatus>);
   end;
 
-procedure TFormMain.RequestPermissions;
-var
+procedure TFormMain.RequestPermissions;  
+var  
   Permissions: TArray<string>;
 begin
   {$IF DEFINED(ANDROID)}
@@ -1405,8 +1405,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.ButtonLocationClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonLocationClick(Sender: TObject);  
+begin  
   CheckAndRequestPermission(
     'android.permission.ACCESS_FINE_LOCATION',
     procedure
@@ -1432,8 +1432,8 @@ end;
 #### Debug sur iPhone
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF DEBUG}
   // Afficher des informations de debug
   LabelDebug.Visible := True;
@@ -1441,8 +1441,8 @@ begin
   {$ENDIF}
 end;
 
-procedure LogDebug(const AMessage: string);
-begin
+procedure LogDebug(const AMessage: string);  
+begin  
   {$IFDEF DEBUG}
   // Écrire dans les logs
   FMX.Types.Log.d(AMessage);
@@ -1485,8 +1485,8 @@ uses
   {$ENDIF}
   FMX.Types;
 
-procedure LogMessage(const AMessage: string);
-begin
+procedure LogMessage(const AMessage: string);  
+begin  
   {$IFDEF ANDROID}
   LOGI(AMessage);
   {$ENDIF}
@@ -1666,8 +1666,8 @@ const
   APP_VERSION = '1.0.0';
   BUILD_NUMBER = 1;
 
-procedure CheckForUpdates;
-var
+procedure CheckForUpdates;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -1697,8 +1697,8 @@ begin
   end;
 end;
 
-procedure PromptUpdate;
-begin
+procedure PromptUpdate;  
+begin  
   MessageDlg('Une nouvelle version est disponible. Voulez-vous mettre à jour ?',
     TMsgDlgType.mtInformation,
     [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
@@ -1710,8 +1710,8 @@ begin
     end);
 end;
 
-procedure OpenAppStore;
-var
+procedure OpenAppStore;  
+var  
   URL: string;
 begin
   {$IFDEF IOS}
@@ -1746,19 +1746,19 @@ Firebase offre de nombreux services pour les apps mobiles.
 uses
   FMX.Analytics, FMX.Analytics.AppAnalytics;
 
-procedure LogScreenView(const AScreenName: string);
-begin
+procedure LogScreenView(const AScreenName: string);  
+begin  
   TAppAnalytics.ScreenView(AScreenName);
 end;
 
-procedure LogEvent(const AEventName: string; const AParams: TArray<string>);
-begin
+procedure LogEvent(const AEventName: string; const AParams: TArray<string>);  
+begin  
   TAppAnalytics.LogEvent(AEventName, AParams);
 end;
 
 // Utilisation
-procedure TFormMain.ButtonStartClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonStartClick(Sender: TObject);  
+begin  
   LogEvent('activity_started', ['type', 'running']);
   StartActivity;
 end;
@@ -1779,8 +1779,8 @@ type
       const ANotification: TPushServiceNotification);
   end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Initialiser le service
   FPushService := TPushServiceManager.Instance.GetServiceByName(
     TPushService.TServiceNames.FCM);
@@ -1814,8 +1814,8 @@ type
       ACallback: TProc<Boolean>);
   end;
 
-procedure AuthenticateWithBiometric;
-var
+procedure AuthenticateWithBiometric;  
+var  
   BiometricService: TBiometricAuthService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -1854,8 +1854,8 @@ type
     procedure PurchaseProduct(const AProductID: string);
   end;
 
-procedure TFormMain.QueryProducts;
-begin
+procedure TFormMain.QueryProducts;  
+begin  
   InAppPurchase1.QueryProducts(['premium_version', 'remove_ads']);
 end;
 
@@ -1871,8 +1871,8 @@ begin
   end;
 end;
 
-procedure TFormMain.PurchaseProduct(const AProductID: string);
-begin
+procedure TFormMain.PurchaseProduct(const AProductID: string);  
+begin  
   InAppPurchase1.PurchaseProduct(AProductID);
 end;
 
@@ -1917,8 +1917,8 @@ type
     procedure HandleURL(const AURL: string);
   end;
 
-procedure TFormMain.HandleURL(const AURL: string);
-begin
+procedure TFormMain.HandleURL(const AURL: string);  
+begin  
   // Exemple: votreapp://activity/123
   if AURL.StartsWith('votreapp://activity/') then
   begin
@@ -1946,8 +1946,8 @@ type
     class procedure SendCrashReport;
   end;
 
-class procedure TCrashReporter.Initialize;
-begin
+class procedure TCrashReporter.Initialize;  
+begin  
   Application.OnException :=
     procedure(Sender: TObject; E: Exception)
     begin
@@ -1955,8 +1955,8 @@ begin
     end;
 end;
 
-class procedure TCrashReporter.LogCrash(const AException: Exception);
-var
+class procedure TCrashReporter.LogCrash(const AException: Exception);  
+var  
   LogFile: string;
   LogContent: string;
 begin
@@ -1982,21 +1982,21 @@ end;
 ### 11.2 Analytics et métriques
 
 ```pascal
-procedure TrackUserAction(const AAction: string);
-begin
+procedure TrackUserAction(const AAction: string);  
+begin  
   TAppAnalytics.LogEvent('user_action', ['action', AAction]);
 end;
 
-procedure TrackScreenTime(const AScreen: string; ADuration: Integer);
-begin
+procedure TrackScreenTime(const AScreen: string; ADuration: Integer);  
+begin  
   TAppAnalytics.LogEvent('screen_time', [
     'screen', AScreen,
     'duration', ADuration.ToString
   ]);
 end;
 
-procedure TrackError(const AError: string);
-begin
+procedure TrackError(const AError: string);  
+begin  
   TAppAnalytics.LogEvent('error', ['message', AError]);
 end;
 ```
@@ -2018,8 +2018,8 @@ type
     class function IsEnabled(const AFeature: string): Boolean;
   end;
 
-class function TFeatureFlags.IsEnabled(const AFeature: string): Boolean;
-begin
+class function TFeatureFlags.IsEnabled(const AFeature: string): Boolean;  
+begin  
   if FFlags.ContainsKey(AFeature) then
     Result := FFlags[AFeature]
   else
@@ -2027,8 +2027,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.ShowNewFeature;
-begin
+procedure TFormMain.ShowNewFeature;  
+begin  
   if TFeatureFlags.IsEnabled('new_dashboard') then
     ShowNewDashboard
   else
@@ -2044,25 +2044,25 @@ end;
 
 Félicitations ! Vous avez parcouru un chemin complet dans le développement d'applications mobiles avec Delphi. Vous maîtrisez maintenant :
 
-✅ **Développement mobile natif** pour iOS et Android
-✅ **Interfaces tactiles** optimisées et adaptatives
-✅ **Accès aux capteurs** : GPS, caméra, accéléromètre
-✅ **Permissions** : Gestion appropriée et élégante
-✅ **Notifications** : Locales et push
-✅ **Stockage de données** : SQLite et préférences
-✅ **Optimisation** : Performance et batterie
-✅ **Publication** : App Store et Play Store
+✅ **Développement mobile natif** pour iOS et Android  
+✅ **Interfaces tactiles** optimisées et adaptatives  
+✅ **Accès aux capteurs** : GPS, caméra, accéléromètre  
+✅ **Permissions** : Gestion appropriée et élégante  
+✅ **Notifications** : Locales et push  
+✅ **Stockage de données** : SQLite et préférences  
+✅ **Optimisation** : Performance et batterie  
+✅ **Publication** : App Store et Play Store  
 ✅ **Fonctionnalités avancées** : Firebase, paiements, biométrie
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des applications mobiles professionnelles
-🎯 Exploiter les fonctionnalités natives des smartphones
-🎯 Gérer le cycle de vie des applications mobiles
-🎯 Optimiser pour la performance et la batterie
-🎯 Publier sur les stores officiels
+🎯 Créer des applications mobiles professionnelles  
+🎯 Exploiter les fonctionnalités natives des smartphones  
+🎯 Gérer le cycle de vie des applications mobiles  
+🎯 Optimiser pour la performance et la batterie  
+🎯 Publier sur les stores officiels  
 🎯 Maintenir et mettre à jour vos applications
 
 ### Ressources complémentaires

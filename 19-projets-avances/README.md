@@ -39,9 +39,9 @@ Maintenant, vous allez apprendre à **combiner tous ces éléments** dans des ap
 Cette section contient plusieurs projets complets, chacun mettant l'accent sur des aspects différents du développement avec Delphi :
 
 ### 19.1 Application de gestion complète avec MySQL/MariaDB
-**Type** : Application desktop Windows (VCL)
-**Niveau** : Intermédiaire à avancé
-**Durée estimée** : 18-26 heures
+**Type** : Application desktop Windows (VCL)  
+**Niveau** : Intermédiaire à avancé  
+**Durée estimée** : 18-26 heures  
 
 Une application de gestion commerciale complète qui couvre :
 - Gestion des clients, produits, commandes et factures
@@ -60,9 +60,9 @@ Une application de gestion commerciale complète qui couvre :
 - Validation et sécurité
 
 ### 19.2 Application multi-plateformes avec FMX
-**Type** : Application cross-platform (Windows, macOS, Linux)
-**Niveau** : Avancé
-**Durée estimée** : 15-20 heures
+**Type** : Application cross-platform (Windows, macOS, Linux)  
+**Niveau** : Avancé  
+**Durée estimée** : 15-20 heures  
 
 Une application complète utilisant FireMonkey pour fonctionner sur plusieurs systèmes d'exploitation :
 - Interface unique pour Windows, macOS et Linux
@@ -78,9 +78,9 @@ Une application complète utilisant FireMonkey pour fonctionner sur plusieurs sy
 - Packaging et déploiement multi-plateforme
 
 ### 19.3 Applications mobiles avec fonctionnalités avancées
-**Type** : Applications iOS et Android
-**Niveau** : Avancé
-**Durée estimée** : 20-25 heures
+**Type** : Applications iOS et Android  
+**Niveau** : Avancé  
+**Durée estimée** : 20-25 heures  
 
 Des applications mobiles exploitant les fonctionnalités natives des smartphones :
 - Interface tactile optimisée
@@ -98,9 +98,9 @@ Des applications mobiles exploitant les fonctionnalités natives des smartphones
 - Optimisation des performances mobiles
 
 ### 19.4 Services Windows et applications de fond
-**Type** : Services et applications système
-**Niveau** : Avancé
-**Durée estimée** : 10-15 heures
+**Type** : Services et applications système  
+**Niveau** : Avancé  
+**Durée estimée** : 10-15 heures  
 
 Création de services Windows et d'applications fonctionnant en arrière-plan :
 - Services Windows démarrés automatiquement
@@ -118,9 +118,9 @@ Création de services Windows et d'applications fonctionnant en arrière-plan :
 - Débogage de services
 
 ### 19.5 Applications cloud et SaaS
-**Type** : Application web et services cloud
-**Niveau** : Avancé
-**Durée estimée** : 20-30 heures
+**Type** : Application web et services cloud  
+**Niveau** : Avancé  
+**Durée estimée** : 20-30 heures  
 
 Applications modernes basées sur le cloud :
 - Architecture client-serveur web
@@ -138,9 +138,9 @@ Applications modernes basées sur le cloud :
 - Sécurité des API
 
 ### 19.6 Applications PWA (Progressive Web Apps) avec Delphi
-**Type** : Application web progressive
-**Niveau** : Intermédiaire à avancé
-**Durée estimée** : 12-18 heures
+**Type** : Application web progressive  
+**Niveau** : Intermédiaire à avancé  
+**Durée estimée** : 12-18 heures  
 
 Applications web modernes installables et fonctionnant offline :
 - Interface web responsive
@@ -157,9 +157,9 @@ Applications web modernes installables et fonctionnant offline :
 - Déploiement web
 
 ### 19.7 Projets d'intelligence artificielle et machine learning
-**Type** : Applications avec IA intégrée
-**Niveau** : Avancé
-**Durée estimée** : 15-25 heures
+**Type** : Applications avec IA intégrée  
+**Niveau** : Avancé  
+**Durée estimée** : 15-25 heures  
 
 Intégration de l'intelligence artificielle dans vos applications Delphi :
 - Reconnaissance d'images
@@ -176,9 +176,9 @@ Intégration de l'intelligence artificielle dans vos applications Delphi :
 - Visualisation des résultats
 
 ### 19.8 Intégration de plateformes de paiement
-**Type** : Applications e-commerce
-**Niveau** : Intermédiaire à avancé
-**Durée estimée** : 10-15 heures
+**Type** : Applications e-commerce  
+**Niveau** : Intermédiaire à avancé  
+**Durée estimée** : 10-15 heures  
 
 Intégration de solutions de paiement en ligne :
 - Stripe, PayPal, etc.

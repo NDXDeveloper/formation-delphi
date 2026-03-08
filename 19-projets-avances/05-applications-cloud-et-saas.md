@@ -33,29 +33,29 @@ Le **SaaS** est un modèle de distribution où l'application est hébergée dans
 ### Pourquoi créer des applications cloud/SaaS ?
 
 **Avantages pour les développeurs** :
-✅ **Accessibilité** : Accessible de partout, sur tout appareil
-✅ **Évolutivité** : S'adapte à la charge (scaling)
-✅ **Maintenance facilitée** : Une seule version à maintenir
-✅ **Revenus récurrents** : Modèle d'abonnement
+✅ **Accessibilité** : Accessible de partout, sur tout appareil  
+✅ **Évolutivité** : S'adapte à la charge (scaling)  
+✅ **Maintenance facilitée** : Une seule version à maintenir  
+✅ **Revenus récurrents** : Modèle d'abonnement  
 ✅ **Mises à jour instantanées** : Tous les utilisateurs bénéficient immédiatement des nouveautés
 
 **Avantages pour les utilisateurs** :
-✅ **Pas d'installation** : Fonctionne dans le navigateur ou via API
-✅ **Données synchronisées** : Accessible depuis plusieurs appareils
-✅ **Toujours à jour** : Mises à jour automatiques
+✅ **Pas d'installation** : Fonctionne dans le navigateur ou via API  
+✅ **Données synchronisées** : Accessible depuis plusieurs appareils  
+✅ **Toujours à jour** : Mises à jour automatiques  
 ✅ **Coût prévisible** : Abonnement mensuel/annuel
 
 ### Objectifs de ce chapitre
 
 À la fin de ce tutoriel, vous serez capable de :
 
-✅ Comprendre l'architecture des applications cloud
-✅ Créer des API REST avec Delphi
-✅ Implémenter l'authentification JWT
-✅ Gérer une base de données cloud
-✅ Créer un système d'abonnement
-✅ Déployer votre application dans le cloud
-✅ Gérer la scalabilité
+✅ Comprendre l'architecture des applications cloud  
+✅ Créer des API REST avec Delphi  
+✅ Implémenter l'authentification JWT  
+✅ Gérer une base de données cloud  
+✅ Créer un système d'abonnement  
+✅ Déployer votre application dans le cloud  
+✅ Gérer la scalabilité  
 ✅ Monitorer et maintenir votre SaaS
 
 ### Prérequis
@@ -135,9 +135,9 @@ Voici l'architecture typique d'une application SaaS :
 **1. Ressources** : Tout est une ressource (utilisateur, produit, commande)
 
 ```
-Utilisateurs : /api/users
-Produit #42 : /api/products/42
-Commandes : /api/orders
+Utilisateurs : /api/users  
+Produit #42 : /api/products/42  
+Commandes : /api/orders  
 ```
 
 **2. Méthodes HTTP** : Actions sur les ressources
@@ -252,8 +252,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TServerContainer.DataModuleCreate(Sender: TObject);
-begin
+procedure TServerContainer.DataModuleCreate(Sender: TObject);  
+begin  
   // Configuration du serveur HTTP
   DSHTTPService1.HttpPort := 8080;
 
@@ -310,16 +310,16 @@ implementation
 
 { TUser }
 
-constructor TUser.Create;
-begin
+constructor TUser.Create;  
+begin  
   inherited;
   FID := 0;
   FRole := urFree;
   FCreatedAt := Now;
 end;
 
-function TUser.ToJSON: TJSONObject;
-begin
+function TUser.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('id', TJSONNumber.Create(FID));
   Result.AddPair('email', FEmail);
@@ -330,8 +330,8 @@ begin
   // Ne pas inclure le hash du mot de passe !
 end;
 
-procedure TUser.FromJSON(AJSON: TJSONObject);
-begin
+procedure TUser.FromJSON(AJSON: TJSONObject);  
+begin  
   if AJSON.TryGetValue<Integer>('id', FID) then;
   if AJSON.TryGetValue<string>('email', FEmail) then;
   if AJSON.TryGetValue<string>('name', FName) then;
@@ -392,8 +392,8 @@ implementation
 
 { TTask }
 
-constructor TTask.Create;
-begin
+constructor TTask.Create;  
+begin  
   inherited;
   FID := 0;
   FStatus := tsNew;
@@ -401,8 +401,8 @@ begin
   FCreatedAt := Now;
 end;
 
-function TTask.ToJSON: TJSONObject;
-begin
+function TTask.ToJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('id', TJSONNumber.Create(FID));
   Result.AddPair('title', FTitle);
@@ -418,8 +418,8 @@ begin
     Result.AddPair('completedAt', DateTimeToStr(FCompletedAt));
 end;
 
-procedure TTask.FromJSON(AJSON: TJSONObject);
-begin
+procedure TTask.FromJSON(AJSON: TJSONObject);  
+begin  
   AJSON.TryGetValue<Integer>('id', FID);
   AJSON.TryGetValue<string>('title', FTitle);
   AJSON.TryGetValue<string>('description', FDescription);
@@ -465,8 +465,8 @@ uses
 
 { TAuthAPI }
 
-function TAuthAPI.Login(const AEmail, APassword: string): string;
-var
+function TAuthAPI.Login(const AEmail, APassword: string): string;  
+var  
   User: TUser;
   Response: TJSONObject;
   PasswordHash: string;
@@ -523,8 +523,8 @@ begin
   end;
 end;
 
-function TAuthAPI.Register(const AEmail, APassword, AName: string): string;
-var
+function TAuthAPI.Register(const AEmail, APassword, AName: string): string;  
+var  
   User: TUser;
   Response: TJSONObject;
   PasswordHash: string;
@@ -579,8 +579,8 @@ begin
   end;
 end;
 
-function TAuthAPI.RefreshToken(const ARefreshToken: string): string;
-var
+function TAuthAPI.RefreshToken(const ARefreshToken: string): string;  
+var  
   UserID: Integer;
   Response: TJSONObject;
 begin
@@ -617,8 +617,8 @@ begin
   end;
 end;
 
-function TAuthAPI.ValidateToken(const AToken: string): Boolean;
-var
+function TAuthAPI.ValidateToken(const AToken: string): Boolean;  
+var  
   UserID: Integer;
   Email: string;
 begin
@@ -663,8 +663,8 @@ uses
 
 { TTaskAPI }
 
-function TTaskAPI.GetTasks(const AToken: string): string;
-var
+function TTaskAPI.GetTasks(const AToken: string): string;  
+var  
   UserID: Integer;
   Email: string;
   Tasks: TObjectList<TTask>;
@@ -715,8 +715,8 @@ begin
   end;
 end;
 
-function TTaskAPI.GetTask(const AToken: string; ATaskID: Integer): string;
-var
+function TTaskAPI.GetTask(const AToken: string; ATaskID: Integer): string;  
+var  
   UserID: Integer;
   Email: string;
   Task: TTask;
@@ -753,8 +753,8 @@ begin
   end;
 end;
 
-function TTaskAPI.CreateTask(const AToken, ATaskJSON: string): string;
-var
+function TTaskAPI.CreateTask(const AToken, ATaskJSON: string): string;  
+var  
   UserID: Integer;
   Email: string;
   Task: TTask;
@@ -853,8 +853,8 @@ begin
   end;
 end;
 
-function TTaskAPI.DeleteTask(const AToken: string; ATaskID: Integer): string;
-var
+function TTaskAPI.DeleteTask(const AToken: string; ATaskID: Integer): string;  
+var  
   UserID: Integer;
   Email: string;
   Task: TTask;
@@ -900,8 +900,8 @@ begin
   end;
 end;
 
-function TTaskAPI.CompleteTask(const AToken: string; ATaskID: Integer): string;
-var
+function TTaskAPI.CompleteTask(const AToken: string; ATaskID: Integer): string;  
+var  
   UserID: Integer;
   Email: string;
   Task: TTask;
@@ -1044,21 +1044,21 @@ uses
 
 { TJWT }
 
-class constructor TJWT.Create;
-begin
+class constructor TJWT.Create;  
+begin  
   // En production, stocker dans un fichier de config sécurisé
   FSecretKey := 'VotreCléSecrèteTrèsLongueEtComplexe123!@#';
 end;
 
-class function TJWT.Base64UrlEncode(const AInput: string): string;
-begin
+class function TJWT.Base64UrlEncode(const AInput: string): string;  
+begin  
   Result := TNetEncoding.Base64.Encode(AInput);
   // Adapter pour Base64Url
   Result := Result.Replace('+', '-').Replace('/', '_').Replace('=', '');
 end;
 
-class function TJWT.Base64UrlDecode(const AInput: string): string;
-var
+class function TJWT.Base64UrlDecode(const AInput: string): string;  
+var  
   Input: string;
 begin
   Input := AInput.Replace('-', '+').Replace('_', '/');
@@ -1072,8 +1072,8 @@ begin
   Result := TNetEncoding.Base64.Decode(Input);
 end;
 
-class function TJWT.CreateSignature(const AHeader, APayload: string): string;
-var
+class function TJWT.CreateSignature(const AHeader, APayload: string): string;  
+var  
   Data: string;
 begin
   Data := AHeader + '.' + APayload + '.' + FSecretKey;
@@ -1119,8 +1119,8 @@ begin
   Result := HeaderStr + '.' + PayloadStr + '.' + Signature;
 end;
 
-class function TJWT.GenerateRefreshToken(AUserID: Integer): string;
-var
+class function TJWT.GenerateRefreshToken(AUserID: Integer): string;  
+var  
   Payload: TJSONObject;
   PayloadStr: string;
   ExpirationTime: TDateTime;
@@ -1248,8 +1248,8 @@ end.
 ```pascal
 // Dans chaque endpoint API, valider le token
 
-function RequireAuth(const AToken: string; out AUserID: Integer): Boolean;
-var
+function RequireAuth(const AToken: string; out AUserID: Integer): Boolean;  
+var  
   Email: string;
 begin
   Result := TJWT.ValidateToken(AToken, AUserID, Email);
@@ -1259,8 +1259,8 @@ begin
 end;
 
 // Utilisation
-function TTaskAPI.GetTasks(const AToken: string): string;
-var
+function TTaskAPI.GetTasks(const AToken: string): string;  
+var  
   UserID: Integer;
 begin
   // Vérifier l'authentification
@@ -1330,22 +1330,22 @@ implementation
 
 { TDatabaseManager }
 
-constructor TDatabaseManager.Create;
-begin
+constructor TDatabaseManager.Create;  
+begin  
   inherited;
   FConnection := TFDConnection.Create(nil);
   InitializeConnection;
   CreateTables;
 end;
 
-destructor TDatabaseManager.Destroy;
-begin
+destructor TDatabaseManager.Destroy;  
+begin  
   FConnection.Free;
   inherited;
 end;
 
-procedure TDatabaseManager.InitializeConnection;
-var
+procedure TDatabaseManager.InitializeConnection;  
+var  
   IniFile: TIniFile;
   Host, Database, Username, Password: string;
   Port: Integer;
@@ -1376,8 +1376,8 @@ begin
   FConnection.Connected := True;
 end;
 
-procedure TDatabaseManager.CreateTables;
-begin
+procedure TDatabaseManager.CreateTables;  
+begin  
   // Créer la table users si elle n'existe pas
   FConnection.ExecSQL(
     'CREATE TABLE IF NOT EXISTS users (' +
@@ -1416,8 +1416,8 @@ begin
   );
 end;
 
-function TDatabaseManager.GetUserByEmail(const AEmail: string): TUser;
-var
+function TDatabaseManager.GetUserByEmail(const AEmail: string): TUser;  
+var  
   Query: TFDQuery;
 begin
   Result := nil;
@@ -1447,8 +1447,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.GetUserByID(AID: Integer): TUser;
-var
+function TDatabaseManager.GetUserByID(AID: Integer): TUser;  
+var  
   Query: TFDQuery;
 begin
   Result := nil;
@@ -1476,8 +1476,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.CreateUser(AUser: TUser): Integer;
-var
+function TDatabaseManager.CreateUser(AUser: TUser): Integer;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1501,8 +1501,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.UpdateUser(AUser: TUser): Boolean;
-var
+function TDatabaseManager.UpdateUser(AUser: TUser): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1529,8 +1529,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.EmailExists(const AEmail: string): Boolean;
-var
+function TDatabaseManager.EmailExists(const AEmail: string): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1546,8 +1546,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.GetUserTasks(AUserID: Integer): TObjectList<TTask>;
-var
+function TDatabaseManager.GetUserTasks(AUserID: Integer): TObjectList<TTask>;  
+var  
   Query: TFDQuery;
   Task: TTask;
 begin
@@ -1586,8 +1586,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.GetTask(ATaskID: Integer): TTask;
-var
+function TDatabaseManager.GetTask(ATaskID: Integer): TTask;  
+var  
   Query: TFDQuery;
 begin
   Result := nil;
@@ -1621,8 +1621,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.CreateTask(ATask: TTask): Integer;
-var
+function TDatabaseManager.CreateTask(ATask: TTask): Integer;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1651,8 +1651,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.UpdateTask(ATask: TTask): Boolean;
-var
+function TDatabaseManager.UpdateTask(ATask: TTask): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1691,8 +1691,8 @@ begin
   end;
 end;
 
-function TDatabaseManager.DeleteTask(ATaskID: Integer): Boolean;
-var
+function TDatabaseManager.DeleteTask(ATaskID: Integer): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1721,11 +1721,11 @@ end.
 
 ```ini
 [Database]
-Host=your-postgres-server.postgres.database.azure.com
-Port=5432
-Database=taskmaster
-Username=admin@your-server
-Password=YourSecurePassword123!
+Host=your-postgres-server.postgres.database.azure.com  
+Port=5432  
+Database=taskmaster  
+Username=admin@your-server  
+Password=YourSecurePassword123!  
 ```
 
 ---
@@ -1738,8 +1738,8 @@ Password=YourSecurePassword123!
 
 **Requête** :
 ```
-POST http://localhost:8080/datasnap/rest/TAuthAPI/Register
-Content-Type: application/json
+POST http://localhost:8080/datasnap/rest/TAuthAPI/Register  
+Content-Type: application/json  
 
 {
   "email": "john@example.com",
@@ -1767,8 +1767,8 @@ Content-Type: application/json
 
 **Requête** :
 ```
-POST http://localhost:8080/datasnap/rest/TAuthAPI/Login
-Content-Type: application/json
+POST http://localhost:8080/datasnap/rest/TAuthAPI/Login  
+Content-Type: application/json  
 
 {
   "email": "john@example.com",
@@ -1780,8 +1780,8 @@ Content-Type: application/json
 
 **Requête** :
 ```
-POST http://localhost:8080/datasnap/rest/TTaskAPI/CreateTask
-Content-Type: application/json
+POST http://localhost:8080/datasnap/rest/TTaskAPI/CreateTask  
+Content-Type: application/json  
 
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -1846,14 +1846,14 @@ uses
 
 { TAPITests }
 
-procedure TAPITests.Setup;
-begin
+procedure TAPITests.Setup;  
+begin  
   FAuthAPI := TAuthAPI.Create;
   FTaskAPI := TTaskAPI.Create;
 end;
 
-procedure TAPITests.TearDown;
-begin
+procedure TAPITests.TearDown;  
+begin  
   FAuthAPI.Free;
   FTaskAPI.Free;
 
@@ -1862,8 +1862,8 @@ begin
     DatabaseManager.DeleteUser(FTestUserID);
 end;
 
-procedure TAPITests.TestUserRegistration;
-var
+procedure TAPITests.TestUserRegistration;  
+var  
   Response: string;
   JSON: TJSONObject;
   Email: string;
@@ -1891,8 +1891,8 @@ begin
   end;
 end;
 
-procedure TAPITests.TestUserLogin;
-var
+procedure TAPITests.TestUserLogin;  
+var  
   RegisterResponse, LoginResponse: string;
   JSON: TJSONObject;
   Email, Token: string;
@@ -1916,8 +1916,8 @@ begin
   end;
 end;
 
-procedure TAPITests.TestInvalidLogin;
-var
+procedure TAPITests.TestInvalidLogin;  
+var  
   Response: string;
   JSON: TJSONObject;
   ErrorMsg: string;
@@ -1933,8 +1933,8 @@ begin
   end;
 end;
 
-procedure TAPITests.TestCreateTask;
-var
+procedure TAPITests.TestCreateTask;  
+var  
   RegisterResponse, CreateResponse: string;
   JSON, UserJSON, TaskJSON: TJSONObject;
   Token: string;
@@ -1979,8 +1979,8 @@ begin
   end;
 end;
 
-procedure TAPITests.TestGetTasks;
-var
+procedure TAPITests.TestGetTasks;  
+var  
   RegisterResponse, TasksResponse: string;
   JSON, UserJSON, TaskJSON: TJSONObject;
   TasksArray: TJSONArray;
@@ -2030,8 +2030,8 @@ begin
   end;
 end;
 
-procedure TAPITests.TestCompleteTask;
-var
+procedure TAPITests.TestCompleteTask;  
+var  
   RegisterResponse, CreateResponse, CompleteResponse: string;
   JSON: TJSONObject;
   Token: string;
@@ -2106,8 +2106,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copier l'exécutable
-COPY TaskMasterAPI /app/
-COPY database.ini /app/
+COPY TaskMasterAPI /app/  
+COPY database.ini /app/  
 
 # Exposer le port
 EXPOSE 8080
@@ -2183,8 +2183,8 @@ aws elasticbeanstalk create-environment \
   --solution-stack-name "64bit Amazon Linux 2 v3.x.x running Docker"
 
 # Déployer
-zip taskmaster.zip Dockerfile TaskMasterAPI database.ini
-aws elasticbeanstalk create-application-version \
+zip taskmaster.zip Dockerfile TaskMasterAPI database.ini  
+aws elasticbeanstalk create-application-version \  
   --application-name taskmaster-api \
   --version-label v1.0 \
   --source-bundle S3Bucket=my-bucket,S3Key=taskmaster.zip
@@ -2349,7 +2349,7 @@ type
     procedure ConnectToRedis;
   public
     function Get(const AKey: string): string;
-    procedure Set(const AKey, AValue: string; AExpireSeconds: Integer = 300);
+    procedure Put(const AKey, AValue: string; AExpireSeconds: Integer = 300);
     procedure Delete(const AKey: string);
     function Exists(const AKey: string): Boolean;
   end;
@@ -2357,8 +2357,8 @@ type
 implementation
 
 // Dans vos API, utiliser le cache
-function TTaskAPI.GetTasks(const AToken: string): string;
-var
+function TTaskAPI.GetTasks(const AToken: string): string;  
+var  
   CacheKey: string;
   CachedData: string;
 begin
@@ -2376,7 +2376,7 @@ begin
   Result := SerializeTasks(Tasks);
 
   // Mettre en cache pour 5 minutes
-  CacheManager.Set(CacheKey, Result, 300);
+  CacheManager.Put(CacheKey, Result, 300);
 end;
 ```
 
@@ -2422,23 +2422,23 @@ end;
 
 Félicitations ! Vous avez créé une application cloud SaaS complète avec Delphi. Vous maîtrisez maintenant :
 
-✅ **Architecture cloud** : Compréhension des systèmes distribués
-✅ **API REST** : Création d'endpoints professionnels
-✅ **Authentification JWT** : Sécurisation des API
-✅ **Base de données cloud** : PostgreSQL en production
-✅ **Déploiement** : Docker, AWS, Azure
-✅ **Scalabilité** : Load balancing, cache
+✅ **Architecture cloud** : Compréhension des systèmes distribués  
+✅ **API REST** : Création d'endpoints professionnels  
+✅ **Authentification JWT** : Sécurisation des API  
+✅ **Base de données cloud** : PostgreSQL en production  
+✅ **Déploiement** : Docker, AWS, Azure  
+✅ **Scalabilité** : Load balancing, cache  
 ✅ **Tests** : Unitaires et d'intégration
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des API REST robustes et scalables
-🎯 Implémenter l'authentification sécurisée
-🎯 Gérer des bases de données cloud
-🎯 Déployer sur AWS/Azure
-🎯 Optimiser les performances
+🎯 Créer des API REST robustes et scalables  
+🎯 Implémenter l'authentification sécurisée  
+🎯 Gérer des bases de données cloud  
+🎯 Déployer sur AWS/Azure  
+🎯 Optimiser les performances  
 🎯 Maintenir un système en production
 
 ### Prochaines étapes

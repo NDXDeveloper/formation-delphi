@@ -35,10 +35,10 @@ L'**Intelligence Artificielle** est la capacité d'une machine à imiter l'intel
 ### Pourquoi intégrer l'IA dans vos applications ?
 
 **Avantages** :
-✅ **Automatisation** : Tâches complexes effectuées automatiquement
-✅ **Personnalisation** : Expériences adaptées à chaque utilisateur
-✅ **Insights** : Découvrir des patterns cachés dans les données
-✅ **Efficacité** : Traiter des volumes énormes rapidement
+✅ **Automatisation** : Tâches complexes effectuées automatiquement  
+✅ **Personnalisation** : Expériences adaptées à chaque utilisateur  
+✅ **Insights** : Découvrir des patterns cachés dans les données  
+✅ **Efficacité** : Traiter des volumes énormes rapidement  
 ✅ **Innovation** : Créer des fonctionnalités impossibles avant
 
 **Exemples concrets** :
@@ -52,13 +52,13 @@ L'**Intelligence Artificielle** est la capacité d'une machine à imiter l'intel
 
 À la fin de ce tutoriel, vous serez capable de :
 
-✅ Comprendre les concepts de base de l'IA/ML
-✅ Intégrer des APIs d'IA (OpenAI, Google AI, etc.)
-✅ Créer un chatbot intelligent
-✅ Analyser des images avec Computer Vision
-✅ Implémenter des prédictions ML
-✅ Traiter du texte (NLP)
-✅ Utiliser des modèles pré-entraînés
+✅ Comprendre les concepts de base de l'IA/ML  
+✅ Intégrer des APIs d'IA (OpenAI, Google AI, etc.)  
+✅ Créer un chatbot intelligent  
+✅ Analyser des images avec Computer Vision  
+✅ Implémenter des prédictions ML  
+✅ Traiter du texte (NLP)  
+✅ Utiliser des modèles pré-entraînés  
 ✅ Déployer vos applications IA
 
 ### Prérequis
@@ -108,9 +108,9 @@ L'**Intelligence Artificielle** est la capacité d'une machine à imiter l'intel
 └───────────────────────────────────────┘
 ```
 
-**IA** : Le concept général (machines intelligentes)
-**ML** : Sous-ensemble de l'IA (apprentissage automatique)
-**DL** : Sous-ensemble du ML (réseaux de neurones profonds)
+**IA** : Le concept général (machines intelligentes)  
+**ML** : Sous-ensemble de l'IA (apprentissage automatique)  
+**DL** : Sous-ensemble du ML (réseaux de neurones profonds)  
 
 ### 1.2 Comment fonctionne le Machine Learning ?
 
@@ -316,22 +316,22 @@ implementation
 
 { TOpenAI }
 
-constructor TOpenAI.Create(const AAPIKey: string);
-begin
+constructor TOpenAI.Create(const AAPIKey: string);  
+begin  
   inherited Create;
   FAPIKey := AAPIKey;
   FModel := 'gpt-3.5-turbo';  // ou 'gpt-4' pour plus de puissance
   FConversationHistory := TList<TOpenAIMessage>.Create;
 end;
 
-destructor TOpenAI.Destroy;
-begin
+destructor TOpenAI.Destroy;  
+begin  
   FConversationHistory.Free;
   inherited;
 end;
 
-procedure TOpenAI.SetSystemPrompt(const APrompt: string);
-var
+procedure TOpenAI.SetSystemPrompt(const APrompt: string);  
+var  
   Msg: TOpenAIMessage;
 begin
   // Le prompt système définit le comportement de l'IA
@@ -340,13 +340,13 @@ begin
   FConversationHistory.Insert(0, Msg);
 end;
 
-procedure TOpenAI.ClearHistory;
-begin
+procedure TOpenAI.ClearHistory;  
+begin  
   FConversationHistory.Clear;
 end;
 
-function TOpenAI.BuildRequest(const AMessages: TArray<TOpenAIMessage>): TJSONObject;
-var
+function TOpenAI.BuildRequest(const AMessages: TArray<TOpenAIMessage>): TJSONObject;  
+var  
   MessagesArray: TJSONArray;
   Msg: TOpenAIMessage;
   MsgObj: TJSONObject;
@@ -370,8 +370,8 @@ begin
   Result.AddPair('messages', MessagesArray);
 end;
 
-function TOpenAI.ParseResponse(const AResponse: string): string;
-var
+function TOpenAI.ParseResponse(const AResponse: string): string;  
+var  
   JSONResponse: TJSONObject;
   Choices: TJSONArray;
   FirstChoice: TJSONObject;
@@ -396,8 +396,8 @@ begin
   end;
 end;
 
-function TOpenAI.SendMessage(const AMessage: string): string;
-var
+function TOpenAI.SendMessage(const AMessage: string): string;  
+var  
   HTTP: THTTPClient;
   Request: TJSONObject;
   RequestBody: TStringStream;
@@ -444,8 +444,8 @@ begin
   end;
 end;
 
-function TOpenAI.SendMessageWithContext(const AMessage: string): string;
-var
+function TOpenAI.SendMessageWithContext(const AMessage: string): string;  
+var  
   HTTP: THTTPClient;
   Request: TJSONObject;
   RequestBody: TStringStream;
@@ -558,8 +558,8 @@ implementation
 uses
   System.Threading;
 
-procedure TChatbotForm.FormCreate(Sender: TObject);
-begin
+procedure TChatbotForm.FormCreate(Sender: TObject);  
+begin  
   // Initialiser OpenAI avec votre clé API
   FOpenAI := TOpenAI.Create('sk-votre-cle-api-ici');
 
@@ -582,21 +582,21 @@ begin
   AddMessage('Assistant', 'Bonjour ! Je suis votre assistant IA. Comment puis-je vous aider ?');
 end;
 
-procedure TChatbotForm.FormDestroy(Sender: TObject);
-begin
+procedure TChatbotForm.FormDestroy(Sender: TObject);  
+begin  
   FOpenAI.Free;
 end;
 
-procedure TChatbotForm.ComboBoxModelChange(Sender: TObject);
-begin
+procedure TChatbotForm.ComboBoxModelChange(Sender: TObject);  
+begin  
   case ComboBoxModel.ItemIndex of
     0: FOpenAI.Model := 'gpt-3.5-turbo';
     1: FOpenAI.Model := 'gpt-4';
   end;
 end;
 
-procedure TChatbotForm.AddMessage(const ARole, AMessage: string);
-var
+procedure TChatbotForm.AddMessage(const ARole, AMessage: string);  
+var  
   TimeStamp: string;
 begin
   TimeStamp := FormatDateTime('hh:nn', Now);
@@ -626,8 +626,8 @@ begin
   RichEditChat.Perform(EM_SCROLLCARET, 0, 0);
 end;
 
-procedure TChatbotForm.SendMessageAsync(const AMessage: string);
-begin
+procedure TChatbotForm.SendMessageAsync(const AMessage: string);  
+begin  
   // Désactiver l'interface pendant le traitement
   ButtonSend.Enabled := False;
   MemoInput.Enabled := False;
@@ -672,8 +672,8 @@ begin
     end);
 end;
 
-procedure TChatbotForm.ButtonSendClick(Sender: TObject);
-var
+procedure TChatbotForm.ButtonSendClick(Sender: TObject);  
+var  
   UserMessage: string;
 begin
   UserMessage := MemoInput.Text.Trim;
@@ -691,8 +691,8 @@ begin
   SendMessageAsync(UserMessage);
 end;
 
-procedure TChatbotForm.MemoInputKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TChatbotForm.MemoInputKeyPress(Sender: TObject; var Key: Char);  
+begin  
   // Envoyer avec Ctrl+Enter
   if (Key = #13) and (GetKeyState(VK_CONTROL) < 0) then
   begin
@@ -701,8 +701,8 @@ begin
   end;
 end;
 
-procedure TChatbotForm.ButtonClearClick(Sender: TObject);
-begin
+procedure TChatbotForm.ButtonClearClick(Sender: TObject);  
+begin  
   if MessageDlg('Effacer la conversation ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     RichEditChat.Clear;
@@ -726,8 +726,8 @@ end.
 #### Analyse de sentiment
 
 ```pascal
-function TOpenAI.AnalyzeSentiment(const AText: string): string;
-var
+function TOpenAI.AnalyzeSentiment(const AText: string): string;  
+var  
   Prompt: string;
 begin
   Prompt := Format(
@@ -751,8 +751,8 @@ end;
 #### Résumé de texte
 
 ```pascal
-function TOpenAI.SummarizeText(const AText: string; AMaxLength: Integer = 100): string;
-var
+function TOpenAI.SummarizeText(const AText: string; AMaxLength: Integer = 100): string;  
+var  
   Prompt: string;
 begin
   Prompt := Format(
@@ -767,8 +767,8 @@ end;
 #### Traduction
 
 ```pascal
-function TOpenAI.Translate(const AText, ATargetLanguage: string): string;
-var
+function TOpenAI.Translate(const AText, ATargetLanguage: string): string;  
+var  
   Prompt: string;
 begin
   Prompt := Format(
@@ -830,14 +830,14 @@ uses
 
 { TGoogleVision }
 
-constructor TGoogleVision.Create(const AAPIKey: string);
-begin
+constructor TGoogleVision.Create(const AAPIKey: string);  
+begin  
   inherited Create;
   FAPIKey := AAPIKey;
 end;
 
-function TGoogleVision.EncodeImageToBase64(ABitmap: TBitmap): string;
-var
+function TGoogleVision.EncodeImageToBase64(ABitmap: TBitmap): string;  
+var  
   Stream: TMemoryStream;
   JPEGImage: TJPEGImage;
 begin
@@ -896,8 +896,8 @@ begin
   Result.AddPair('requests', RequestsArray);
 end;
 
-function TGoogleVision.DetectLabels(ABitmap: TBitmap): TArray<TDetectedObject>;
-var
+function TGoogleVision.DetectLabels(ABitmap: TBitmap): TArray<TDetectedObject>;  
+var  
   HTTP: THTTPClient;
   Request: TJSONObject;
   RequestBody: TStringStream;
@@ -965,8 +965,8 @@ begin
   end;
 end;
 
-function TGoogleVision.DetectText(ABitmap: TBitmap): TArray<TDetectedText>;
-var
+function TGoogleVision.DetectText(ABitmap: TBitmap): TArray<TDetectedText>;  
+var  
   HTTP: THTTPClient;
   Request: TJSONObject;
   RequestBody: TStringStream;
@@ -1038,8 +1038,8 @@ begin
   end;
 end;
 
-function TGoogleVision.DetectFaces(ABitmap: TBitmap): Integer;
-var
+function TGoogleVision.DetectFaces(ABitmap: TBitmap): Integer;  
+var  
   HTTP: THTTPClient;
   Request: TJSONObject;
   RequestBody: TStringStream;
@@ -1093,8 +1093,8 @@ begin
   end;
 end;
 
-function TGoogleVision.DescribeImage(ABitmap: TBitmap): string;
-var
+function TGoogleVision.DescribeImage(ABitmap: TBitmap): string;  
+var  
   Objects: TArray<TDetectedObject>;
   Obj: TDetectedObject;
   Description: TStringList;
@@ -1169,19 +1169,19 @@ implementation
 uses
   System.Threading;
 
-procedure TVisionForm.FormCreate(Sender: TObject);
-begin
+procedure TVisionForm.FormCreate(Sender: TObject);  
+begin  
   FVision := TGoogleVision.Create('votre-cle-api-google');
   MemoResults.Clear;
 end;
 
-procedure TVisionForm.FormDestroy(Sender: TObject);
-begin
+procedure TVisionForm.FormDestroy(Sender: TObject);  
+begin  
   FVision.Free;
 end;
 
-procedure TVisionForm.ButtonLoadClick(Sender: TObject);
-begin
+procedure TVisionForm.ButtonLoadClick(Sender: TObject);  
+begin  
   if OpenPictureDialog1.Execute then
   begin
     ImagePreview.Picture.LoadFromFile(OpenPictureDialog1.FileName);
@@ -1190,8 +1190,8 @@ begin
   end;
 end;
 
-procedure TVisionForm.AnalyzeImageAsync(AAnalysisType: string);
-begin
+procedure TVisionForm.AnalyzeImageAsync(AAnalysisType: string);  
+begin  
   if not Assigned(ImagePreview.Picture.Graphic) then
   begin
     ShowMessage('Veuillez charger une image d''abord');
@@ -1297,18 +1297,18 @@ begin
     end);
 end;
 
-procedure TVisionForm.ButtonAnalyzeClick(Sender: TObject);
-begin
+procedure TVisionForm.ButtonAnalyzeClick(Sender: TObject);  
+begin  
   AnalyzeImageAsync('labels');
 end;
 
-procedure TVisionForm.ButtonOCRClick(Sender: TObject);
-begin
+procedure TVisionForm.ButtonOCRClick(Sender: TObject);  
+begin  
   AnalyzeImageAsync('text');
 end;
 
-procedure TVisionForm.ButtonFacesClick(Sender: TObject);
-begin
+procedure TVisionForm.ButtonFacesClick(Sender: TObject);  
+begin  
   AnalyzeImageAsync('faces');
 end;
 
@@ -1360,8 +1360,8 @@ implementation
 
 { TLinearRegression }
 
-function TLinearRegression.Mean(const AValues: TArray<Double>): Double;
-var
+function TLinearRegression.Mean(const AValues: TArray<Double>): Double;  
+var  
   Sum: Double;
   Value: Double;
 begin
@@ -1371,8 +1371,8 @@ begin
   Result := Sum / Length(AValues);
 end;
 
-function TLinearRegression.Variance(const AValues: TArray<Double>): Double;
-var
+function TLinearRegression.Variance(const AValues: TArray<Double>): Double;  
+var  
   Avg: Double;
   Sum: Double;
   Value: Double;
@@ -1386,8 +1386,8 @@ begin
   Result := Sum / Length(AValues);
 end;
 
-function TLinearRegression.Covariance(const AX, AY: TArray<Double>): Double;
-var
+function TLinearRegression.Covariance(const AX, AY: TArray<Double>): Double;  
+var  
   MeanX, MeanY: Double;
   Sum: Double;
   I: Integer;
@@ -1402,8 +1402,8 @@ begin
   Result := Sum / Length(AX);
 end;
 
-procedure TLinearRegression.Train(const AData: TArray<TDataPoint>);
-var
+procedure TLinearRegression.Train(const AData: TArray<TDataPoint>);  
+var  
   XValues, YValues: TArray<Double>;
   I: Integer;
   VarX, Cov: Double;
@@ -1431,16 +1431,16 @@ begin
   FTrained := True;
 end;
 
-function TLinearRegression.Predict(AX: Double): Double;
-begin
+function TLinearRegression.Predict(AX: Double): Double;  
+begin  
   if not FTrained then
     raise Exception.Create('Le modèle n''est pas entraîné');
 
   Result := FSlope * AX + FIntercept;
 end;
 
-function TLinearRegression.Score(const ATestData: TArray<TDataPoint>): Double;
-var
+function TLinearRegression.Score(const ATestData: TArray<TDataPoint>): Double;  
+var  
   YTrue, YPred: TArray<Double>;
   I: Integer;
   SSRes, SSTot: Double;
@@ -1528,20 +1528,20 @@ implementation
 
 {$R *.dfm}
 
-procedure TPredictionForm.FormCreate(Sender: TObject);
-begin
+procedure TPredictionForm.FormCreate(Sender: TObject);  
+begin  
   FModel := TLinearRegression.Create;
   InitializeGrid;
   LoadSampleData;
 end;
 
-procedure TPredictionForm.FormDestroy(Sender: TObject);
-begin
+procedure TPredictionForm.FormDestroy(Sender: TObject);  
+begin  
   FModel.Free;
 end;
 
-procedure TPredictionForm.InitializeGrid;
-begin
+procedure TPredictionForm.InitializeGrid;  
+begin  
   StringGridData.ColCount := 2;
   StringGridData.RowCount := 11;
   StringGridData.FixedRows := 1;
@@ -1553,8 +1553,8 @@ begin
   StringGridData.ColWidths[1] := 100;
 end;
 
-procedure TPredictionForm.LoadSampleData;
-var
+procedure TPredictionForm.LoadSampleData;  
+var  
   I: Integer;
 begin
   // Données d'exemple : ventes sur 10 mois
@@ -1571,14 +1571,14 @@ begin
   MemoInfo.Lines.Add('Vous pouvez modifier les valeurs manuellement');
 end;
 
-procedure TPredictionForm.ButtonLoadDataClick(Sender: TObject);
-begin
+procedure TPredictionForm.ButtonLoadDataClick(Sender: TObject);  
+begin  
   LoadSampleData;
   UpdateChart;
 end;
 
-procedure TPredictionForm.ButtonTrainClick(Sender: TObject);
-var
+procedure TPredictionForm.ButtonTrainClick(Sender: TObject);  
+var  
   Data: TArray<TDataPoint>;
   I: Integer;
   X, Y: Double;
@@ -1629,8 +1629,8 @@ begin
   end;
 end;
 
-procedure TPredictionForm.ButtonPredictClick(Sender: TObject);
-var
+procedure TPredictionForm.ButtonPredictClick(Sender: TObject);  
+var  
   X, Prediction: Double;
 begin
   if not FModel.Trained then
@@ -1659,8 +1659,8 @@ begin
   end;
 end;
 
-procedure TPredictionForm.UpdateChart;
-var
+procedure TPredictionForm.UpdateChart;  
+var  
   I: Integer;
   X, Y: Double;
   MinX, MaxX: Double;
@@ -1713,7 +1713,7 @@ uses
 type
   TDataPoint = record
     Features: TArray<Double>;
-    Label: string;
+    Category: string;
   end;
 
   TKNN = class
@@ -1736,14 +1736,14 @@ implementation
 
 { TKNN }
 
-constructor TKNN.Create(AK: Integer);
-begin
+constructor TKNN.Create(AK: Integer);  
+begin  
   inherited Create;
   FK := AK;
 end;
 
-function TKNN.EuclideanDistance(const A, B: TArray<Double>): Double;
-var
+function TKNN.EuclideanDistance(const A, B: TArray<Double>): Double;  
+var  
   Sum: Double;
   I: Integer;
 begin
@@ -1753,16 +1753,16 @@ begin
   Result := Sqrt(Sum);
 end;
 
-procedure TKNN.Train(const AData: TArray<TDataPoint>);
-begin
+procedure TKNN.Train(const AData: TArray<TDataPoint>);  
+begin  
   FTrainingData := Copy(AData);
 end;
 
-function TKNN.Predict(const AFeatures: TArray<Double>): string;
-type
+function TKNN.Predict(const AFeatures: TArray<Double>): string;  
+type  
   TNeighbor = record
     Distance: Double;
-    Label: string;
+    Category: string;
   end;
 var
   Neighbors: TArray<TNeighbor>;
@@ -1783,7 +1783,7 @@ begin
   begin
     Neighbors[I].Distance := EuclideanDistance(AFeatures,
       FTrainingData[I].Features);
-    Neighbors[I].Label := FTrainingData[I].Label;
+    Neighbors[I].Category := FTrainingData[I].Category;
   end;
 
   // Trier par distance
@@ -1800,10 +1800,10 @@ begin
   try
     for I := 0 to Min(FK - 1, High(Neighbors)) do
     begin
-      if Votes.ContainsKey(Neighbors[I].Label) then
-        Votes[Neighbors[I].Label] := Votes[Neighbors[I].Label] + 1
+      if Votes.ContainsKey(Neighbors[I].Category) then
+        Votes[Neighbors[I].Category] := Votes[Neighbors[I].Category] + 1
       else
-        Votes.Add(Neighbors[I].Label, 1);
+        Votes.Add(Neighbors[I].Category, 1);
     end;
 
     // Trouver la classe avec le plus de votes
@@ -1825,8 +1825,8 @@ begin
   end;
 end;
 
-function TKNN.Accuracy(const ATestData: TArray<TDataPoint>): Double;
-var
+function TKNN.Accuracy(const ATestData: TArray<TDataPoint>): Double;  
+var  
   Correct: Integer;
   I: Integer;
   Predicted: string;
@@ -1836,7 +1836,7 @@ begin
   for I := 0 to High(ATestData) do
   begin
     Predicted := Predict(ATestData[I].Features);
-    if Predicted = ATestData[I].Label then
+    if Predicted = ATestData[I].Category then
       Inc(Correct);
   end;
 
@@ -1902,8 +1902,8 @@ implementation
 uses
   System.IniFiles;
 
-procedure TSmartAssistantMain.FormCreate(Sender: TObject);
-begin
+procedure TSmartAssistantMain.FormCreate(Sender: TObject);  
+begin  
   LoadSettings;
 
   // Initialiser les services IA
@@ -1912,8 +1912,8 @@ begin
   FMLModel := TLinearRegression.Create;
 end;
 
-procedure TSmartAssistantMain.FormDestroy(Sender: TObject);
-begin
+procedure TSmartAssistantMain.FormDestroy(Sender: TObject);  
+begin  
   SaveSettings;
 
   FOpenAI.Free;
@@ -1921,8 +1921,8 @@ begin
   FMLModel.Free;
 end;
 
-procedure TSmartAssistantMain.LoadSettings;
-var
+procedure TSmartAssistantMain.LoadSettings;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -1934,8 +1934,8 @@ begin
   end;
 end;
 
-procedure TSmartAssistantMain.SaveSettings;
-var
+procedure TSmartAssistantMain.SaveSettings;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -1982,8 +1982,8 @@ implementation
 
 { TAICache }
 
-constructor TAICache.Create(const ACacheFile: string);
-begin
+constructor TAICache.Create(const ACacheFile: string);  
+begin  
   inherited Create;
   FCache := TDictionary<string, string>.Create;
   FCacheFile := ACacheFile;
@@ -1992,41 +1992,41 @@ begin
     LoadFromFile;
 end;
 
-destructor TAICache.Destroy;
-begin
+destructor TAICache.Destroy;  
+begin  
   SaveToFile;
   FCache.Free;
   inherited;
 end;
 
-function TAICache.GenerateKey(const AInput: string): string;
-begin
+function TAICache.GenerateKey(const AInput: string): string;  
+begin  
   Result := THashMD5.GetHashString(AInput.ToLower.Trim);
 end;
 
-function TAICache.Get(const AInput: string; out AOutput: string): Boolean;
-var
+function TAICache.Get(const AInput: string; out AOutput: string): Boolean;  
+var  
   Key: string;
 begin
   Key := GenerateKey(AInput);
   Result := FCache.TryGetValue(Key, AOutput);
 end;
 
-procedure TAICache.Put(const AInput, AOutput: string);
-var
+procedure TAICache.Put(const AInput, AOutput: string);  
+var  
   Key: string;
 begin
   Key := GenerateKey(AInput);
   FCache.AddOrSetValue(Key, AOutput);
 end;
 
-procedure TAICache.Clear;
-begin
+procedure TAICache.Clear;  
+begin  
   FCache.Clear;
 end;
 
-procedure TAICache.SaveToFile;
-var
+procedure TAICache.SaveToFile;  
+var  
   JSON: TJSONObject;
   Pair: TPair<string, string>;
 begin
@@ -2041,8 +2041,8 @@ begin
   end;
 end;
 
-procedure TAICache.LoadFromFile;
-var
+procedure TAICache.LoadFromFile;  
+var  
   JSONText: string;
   JSON: TJSONObject;
   Pair: TJSONPair;
@@ -2063,8 +2063,8 @@ end.
 ### 6.3 Gestion des erreurs et retry
 
 ```pascal
-function CallAPIWithRetry(ACallFunc: TFunc<string>; AMaxRetries: Integer = 3): string;
-var
+function CallAPIWithRetry(ACallFunc: TFunc<string>; AMaxRetries: Integer = 3): string;  
+var  
   Attempt: Integer;
   LastError: string;
 begin
@@ -2145,20 +2145,20 @@ implementation
 
 { TAPIStats }
 
-constructor TAPIStats.Create;
-begin
+constructor TAPIStats.Create;  
+begin  
   inherited;
   FCallHistory := TList<TDateTime>.Create;
 end;
 
-destructor TAPIStats.Destroy;
-begin
+destructor TAPIStats.Destroy;  
+begin  
   FCallHistory.Free;
   inherited;
 end;
 
-procedure TAPIStats.RecordCall(ASuccess: Boolean; ATokens: Integer; ACost: Double);
-begin
+procedure TAPIStats.RecordCall(ASuccess: Boolean; ATokens: Integer; ACost: Double);  
+begin  
   Inc(FTotalCalls);
 
   if ASuccess then
@@ -2172,8 +2172,8 @@ begin
   FCallHistory.Add(Now);
 end;
 
-function TAPIStats.GetCallsPerMinute: Double;
-var
+function TAPIStats.GetCallsPerMinute: Double;  
+var  
   RecentCalls: Integer;
   StartTime: TDateTime;
 begin
@@ -2189,8 +2189,8 @@ begin
   Result := RecentCalls;
 end;
 
-function TAPIStats.GetAverageDuration: Double;
-begin
+function TAPIStats.GetAverageDuration: Double;  
+begin  
   // À implémenter selon vos besoins
   Result := 0;
 end;
@@ -2206,23 +2206,23 @@ end.
 
 Félicitations ! Vous avez découvert comment intégrer l'intelligence artificielle dans vos applications Delphi. Vous maîtrisez maintenant :
 
-✅ **Concepts IA/ML** : Compréhension des bases
-✅ **APIs cloud** : OpenAI (GPT), Google Vision
-✅ **Chatbots** : Conversations intelligentes avec contexte
-✅ **Computer Vision** : Analyse d'images, OCR, détection
-✅ **Machine Learning** : Prédictions et classifications
-✅ **Intégration** : APIs REST, JSON, async
+✅ **Concepts IA/ML** : Compréhension des bases  
+✅ **APIs cloud** : OpenAI (GPT), Google Vision  
+✅ **Chatbots** : Conversations intelligentes avec contexte  
+✅ **Computer Vision** : Analyse d'images, OCR, détection  
+✅ **Machine Learning** : Prédictions et classifications  
+✅ **Intégration** : APIs REST, JSON, async  
 ✅ **Optimisation** : Cache, retry, monitoring
 
 ### Compétences acquises
 
 Vous êtes maintenant capable de :
 
-🎯 Créer des chatbots intelligents
-🎯 Analyser des images automatiquement
-🎯 Faire des prédictions basées sur des données
-🎯 Intégrer des services IA dans vos apps
-🎯 Gérer les appels API efficacement
+🎯 Créer des chatbots intelligents  
+🎯 Analyser des images automatiquement  
+🎯 Faire des prédictions basées sur des données  
+🎯 Intégrer des services IA dans vos apps  
+🎯 Gérer les appels API efficacement  
 🎯 Optimiser les coûts et performances
 
 ### Applications pratiques
