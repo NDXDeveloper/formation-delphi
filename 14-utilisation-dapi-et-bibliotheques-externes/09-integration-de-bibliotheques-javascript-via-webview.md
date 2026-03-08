@@ -47,8 +47,8 @@ type
     procedure FormCreate(Sender: TObject);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   EdgeBrowser1.Navigate('https://example.com');
 end;
 ```
@@ -74,8 +74,8 @@ type
 ### Charger depuis une URL
 
 ```pascal
-procedure TForm1.ButtonChargerURLClick(Sender: TObject);
-begin
+procedure TForm1.ButtonChargerURLClick(Sender: TObject);  
+begin  
   EdgeBrowser1.Navigate('https://www.google.com');
 end;
 ```
@@ -83,8 +83,8 @@ end;
 ### Charger du HTML en chaîne
 
 ```pascal
-procedure TForm1.ButtonChargerHTMLClick(Sender: TObject);
-var
+procedure TForm1.ButtonChargerHTMLClick(Sender: TObject);  
+var  
   HTML: string;
 begin
   HTML :=
@@ -107,8 +107,8 @@ end;
 ### Charger depuis un fichier local
 
 ```pascal
-procedure TForm1.ButtonChargerFichierClick(Sender: TObject);
-var
+procedure TForm1.ButtonChargerFichierClick(Sender: TObject);  
+var  
   CheminFichier: string;
 begin
   CheminFichier := TPath.Combine(ExtractFilePath(ParamStr(0)), 'page.html');
@@ -123,8 +123,8 @@ end;
 ### Générer du HTML complexe
 
 ```pascal
-function GenererPageHTML(const Titre, Contenu: string): string;
-begin
+function GenererPageHTML(const Titre, Contenu: string): string;  
+begin  
   Result := Format(
     '<!DOCTYPE html>' +
     '<html>' +
@@ -147,8 +147,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   HTML: string;
 begin
   HTML := GenererPageHTML('Mon Rapport',
@@ -162,8 +162,8 @@ end;
 ### Exécuter du code JavaScript depuis Delphi
 
 ```pascal
-procedure TForm1.ButtonExecuterJSClick(Sender: TObject);
-var
+procedure TForm1.ButtonExecuterJSClick(Sender: TObject);  
+var  
   Script: string;
 begin
   Script := 'alert("Hello depuis Delphi !");';
@@ -182,16 +182,16 @@ end;
 ### Modifier le contenu HTML
 
 ```pascal
-procedure ChangerTitreHTML(const NouveauTitre: string);
-var
+procedure ChangerTitreHTML(const NouveauTitre: string);  
+var  
   Script: string;
 begin
   Script := Format('document.title = "%s";', [NouveauTitre]);
   EdgeBrowser1.ExecuteScript(Script, nil);
 end;
 
-procedure ChangerContenuElement(const ElementID, NouveauContenu: string);
-var
+procedure ChangerContenuElement(const ElementID, NouveauContenu: string);  
+var  
   Script: string;
 begin
   // Échapper les guillemets et caractères spéciaux
@@ -204,8 +204,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ChangerContenuElement('contenu', '<h2>Nouveau contenu !</h2>');
 end;
 ```
@@ -233,13 +233,13 @@ const
     '</body>' +
     '</html>';
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   EdgeBrowser1.NavigateToString(HTML_AVEC_FONCTION);
 end;
 
-procedure TForm1.ButtonCalculerClick(Sender: TObject);
-var
+procedure TForm1.ButtonCalculerClick(Sender: TObject);  
+var  
   Script: string;
 begin
   Script := 'calculer(10, 20)';
@@ -252,8 +252,8 @@ begin
     end);
 end;
 
-procedure TForm1.ButtonAfficherClick(Sender: TObject);
-var
+procedure TForm1.ButtonAfficherClick(Sender: TObject);  
+var  
   Script: string;
   Message: string;
 begin
@@ -267,8 +267,8 @@ end;
 ### Récupérer des valeurs depuis JavaScript
 
 ```pascal
-procedure ObtenirValeurChamp;
-var
+procedure ObtenirValeurChamp;  
+var  
   Script: string;
 begin
   Script := 'document.getElementById("nom").value';
@@ -328,8 +328,8 @@ const
     '</body>' +
     '</html>';
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   EdgeBrowser1.NavigateToString(HTML_AVEC_MESSAGES);
 end;
 
@@ -417,23 +417,19 @@ begin
     Commande := JSONMessage.GetValue<string>('commande');
     JSONParams := JSONMessage.GetValue<TJSONObject>('parametres');
 
-    case Commande of
-      'sauvegarder':
-        TraiterSauvegarde(JSONParams);
-
-      'charger':
-        TraiterChargement(JSONParams);
-
-      'supprimer':
-        TraiterSuppression(JSONParams);
-    end;
+    if Commande = 'sauvegarder' then
+      TraiterSauvegarde(JSONParams)
+    else if Commande = 'charger' then
+      TraiterChargement(JSONParams)
+    else if Commande = 'supprimer' then
+      TraiterSuppression(JSONParams);
   finally
     JSONMessage.Free;
   end;
 end;
 
-procedure TForm1.TraiterSauvegarde(Params: TJSONObject);
-var
+procedure TForm1.TraiterSauvegarde(Params: TJSONObject);  
+var  
   Nom, Email: string;
 begin
   Nom := Params.GetValue<string>('nom');
@@ -449,8 +445,8 @@ end;
 ### Configuration de base
 
 ```pascal
-function GenererPageChartJS: string;
-begin
+function GenererPageChartJS: string;  
+begin  
   Result :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -494,8 +490,8 @@ begin
     '</html>';
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   EdgeBrowser1.NavigateToString(GenererPageChartJS);
 end;
 ```
@@ -536,8 +532,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonAfficherVentesClick(Sender: TObject);
-var
+procedure TForm1.ButtonAfficherVentesClick(Sender: TObject);  
+var  
   Ventes: TArray<Integer>;
   Mois: TArray<string>;
 begin
@@ -601,7 +597,7 @@ procedure TForm1.EdgeBrowser1WebMessageReceived(Sender: TCustomEdgeBrowser;
   Args: TWebMessageReceivedEventArgs);
 var
   JSONMessage: TJSONObject;
-  TypeMessage, Label: string;
+  TypeMessage, Libelle: string;
   Value: Integer;
 begin
   JSONMessage := TJSONObject.ParseJSONValue(Args.WebMessageAsString) as TJSONObject;
@@ -610,10 +606,10 @@ begin
 
     if TypeMessage = 'click' then
     begin
-      Label := JSONMessage.GetValue<string>('label');
+      Libelle := JSONMessage.GetValue<string>('label');
       Value := JSONMessage.GetValue<Integer>('value');
 
-      ShowMessage(Format('Cliqué sur: %s (Valeur: %d)', [Label, Value]));
+      ShowMessage(Format('Cliqué sur: %s (Valeur: %d)', [Libelle, Value]));
     end;
   finally
     JSONMessage.Free;
@@ -626,8 +622,8 @@ end;
 ### Configuration et affichage de carte
 
 ```pascal
-function GenererPageLeaflet: string;
-begin
+function GenererPageLeaflet: string;  
+begin  
   Result :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -686,8 +682,8 @@ begin
   EdgeBrowser1.ExecuteScript(Script, nil);
 end;
 
-procedure TForm1.CentrerCarte(Latitude, Longitude: Double; Zoom: Integer);
-var
+procedure TForm1.CentrerCarte(Latitude, Longitude: Double; Zoom: Integer);  
+var  
   Script: string;
 begin
   Script := Format('centrerSur(%f, %f, %d);', [Latitude, Longitude, Zoom]);
@@ -695,8 +691,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonAfficherParisClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAfficherParisClick(Sender: TObject);  
+begin  
   EdgeBrowser1.NavigateToString(GenererPageLeaflet);
 
   // Attendre que la page soit chargée
@@ -714,8 +710,8 @@ end;
 ### Graphique circulaire animé
 
 ```pascal
-function GenererPageD3: string;
-begin
+function GenererPageD3: string;  
+begin  
   Result :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -785,8 +781,8 @@ begin
     '</html>';
 end;
 
-procedure TForm1.AfficherGraphiqueD3(Donnees: TArray<TPair<string, Integer>>);
-var
+procedure TForm1.AfficherGraphiqueD3(Donnees: TArray<TPair<string, Integer>>);  
+var  
   Script, JSONData: string;
   I: Integer;
 begin
@@ -808,8 +804,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Donnees: TArray<TPair<string, Integer>>;
 begin
   EdgeBrowser1.NavigateToString(GenererPageD3);
@@ -831,8 +827,8 @@ end;
 ### Configuration de l'éditeur
 
 ```pascal
-function GenererPageMonaco: string;
-begin
+function GenererPageMonaco: string;  
+begin  
   Result :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -901,8 +897,8 @@ type
       Args: TWebMessageReceivedEventArgs);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   EdgeBrowser1.NavigateToString(GenererPageMonaco);
 
   ComboLangage.Items.Add('javascript');
@@ -913,8 +909,8 @@ begin
   ComboLangage.ItemIndex := 0;
 end;
 
-procedure TForm1.ButtonChargerClick(Sender: TObject);
-var
+procedure TForm1.ButtonChargerClick(Sender: TObject);  
+var  
   Code, Langage, Script: string;
 begin
   Code := MemoCode.Lines.Text;
@@ -930,8 +926,8 @@ begin
   EdgeBrowser1.ExecuteScript(Script, nil);
 end;
 
-procedure TForm1.ButtonSauvegarderClick(Sender: TObject);
-begin
+procedure TForm1.ButtonSauvegarderClick(Sender: TObject);  
+begin  
   EdgeBrowser1.ExecuteScript('obtenirCode()',
     procedure(ErrorCode: HRESULT; const ResultObjectAsJson: string)
     var
@@ -951,8 +947,8 @@ begin
     end);
 end;
 
-procedure TForm1.ComboLangageChange(Sender: TObject);
-var
+procedure TForm1.ComboLangageChange(Sender: TObject);  
+var  
   Script: string;
 begin
   Script := Format('if(editor) { ' +
@@ -987,8 +983,8 @@ end;
 ### Intégrer des fichiers JavaScript locaux
 
 ```pascal
-function GenererHTMLAvecJSLocal: string;
-var
+function GenererHTMLAvecJSLocal: string;  
+var  
   CheminJS: string;
 begin
   CheminJS := TPath.Combine(ExtractFilePath(ParamStr(0)), 'js\mon-script.js');
@@ -1029,15 +1025,15 @@ type
     procedure Arreter;
   end;
 
-constructor TServeurLocal.Create(Port: Integer);
-begin
+constructor TServeurLocal.Create(Port: Integer);  
+begin  
   FServer := TIdHTTPServer.Create(nil);
   FServer.DefaultPort := Port;
   FServer.OnCommandGet := TraiterRequete;
 end;
 
-destructor TServeurLocal.Destroy;
-begin
+destructor TServeurLocal.Destroy;  
+begin  
   FServer.Free;
   inherited;
 end;
@@ -1074,13 +1070,13 @@ begin
   end;
 end;
 
-procedure TServeurLocal.Demarrer;
-begin
+procedure TServeurLocal.Demarrer;  
+begin  
   FServer.Active := True;
 end;
 
-procedure TServeurLocal.Arreter;
-begin
+procedure TServeurLocal.Arreter;  
+begin  
   FServer.Active := False;
 end;
 
@@ -1088,16 +1084,16 @@ end;
 var
   Serveur: TServeurLocal;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Serveur := TServeurLocal.Create(8080);
   Serveur.Demarrer;
 
   EdgeBrowser1.Navigate('http://localhost:8080/index.html');
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   Serveur.Free;
 end;
 ```
@@ -1107,8 +1103,8 @@ end;
 ### Valider et nettoyer les données
 
 ```pascal
-function NettoyerPourJavaScript(const Texte: string): string;
-begin
+function NettoyerPourJavaScript(const Texte: string): string;  
+begin  
   Result := Texte;
 
   // Échapper les caractères spéciaux
@@ -1123,8 +1119,8 @@ begin
   Result := StringReplace(Result, '</script', '&lt;/script', [rfReplaceAll, rfIgnoreCase]);
 end;
 
-procedure EnvoyerTexteSecurise(const Texte: string);
-var
+procedure EnvoyerTexteSecurise(const Texte: string);  
+var  
   TexteNettoye, Script: string;
 begin
   TexteNettoye := NettoyerPourJavaScript(Texte);
@@ -1138,8 +1134,8 @@ end;
 ### Valider les messages reçus
 
 ```pascal
-function ValiderMessageJSON(const Message: string): Boolean;
-var
+function ValiderMessageJSON(const Message: string): Boolean;  
+var  
   JSONValue: TJSONValue;
 begin
   Result := False;
@@ -1177,8 +1173,8 @@ end;
 ### Content Security Policy (CSP)
 
 ```pascal
-function GenererHTMLAvecCSP: string;
-begin
+function GenererHTMLAvecCSP: string;  
+begin  
   Result :=
     '<!DOCTYPE html>' +
     '<html>' +
@@ -1268,8 +1264,8 @@ end;
 ### DevTools embarqué
 
 ```pascal
-procedure TForm1.ButtonDevToolsClick(Sender: TObject);
-begin
+procedure TForm1.ButtonDevToolsClick(Sender: TObject);  
+begin  
   // Ouvrir les DevTools de Edge
   EdgeBrowser1.ExecuteScript('window.chrome.webview.openDevToolsWindow();', nil);
 end;
@@ -1299,15 +1295,15 @@ type
       const Donnees: TJSONObject);
   end;
 
-constructor TWebViewBridge.Create(WebBrowser: TEdgeBrowser);
-begin
+constructor TWebViewBridge.Create(WebBrowser: TEdgeBrowser);  
+begin  
   FWebBrowser := WebBrowser;
   FWebBrowser.OnWebMessageReceived := OnWebMessageReceived;
   FMessageHandlers := TDictionary<string, TProc<TJSONObject>>.Create;
 end;
 
-destructor TWebViewBridge.Destroy;
-begin
+destructor TWebViewBridge.Destroy;  
+begin  
   FMessageHandlers.Free;
   inherited;
 end;
@@ -1366,8 +1362,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   FBridge := TWebViewBridge.Create(EdgeBrowser1);
 
   // Enregistrer des handlers
@@ -1384,8 +1380,8 @@ begin
     end);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Appeler une fonction JavaScript
   FBridge.AppelerFonctionJS('afficherMessage', ['Hello', 123, True]);
 end;

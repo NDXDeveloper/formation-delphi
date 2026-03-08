@@ -100,8 +100,8 @@ end; // Release appelé automatiquement, objet détruit si compteur = 0
 uses
   ComObj;  // Unité essentielle pour COM
 
-procedure CreerDocumentWord;
-var
+procedure CreerDocumentWord;  
+var  
   Word: OleVariant;
 begin
   // Créer une instance de Word
@@ -132,16 +132,16 @@ end;
 uses
   ComObj;
 
-function ApplicationCOMDisponible(const ProgID: string): Boolean;
-var
+function ApplicationCOMDisponible(const ProgID: string): Boolean;  
+var  
   ClassID: TGUID;
 begin
   Result := Succeeded(CLSIDFromProgID(PWideChar(ProgID), ClassID));
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   if ApplicationCOMDisponible('Excel.Application') then
     ShowMessage('Excel est installé')
   else
@@ -155,8 +155,8 @@ end;
 uses
   ComObj;
 
-procedure UtiliserWordExistant;
-var
+procedure UtiliserWordExistant;  
+var  
   Word: OleVariant;
 begin
   try
@@ -183,8 +183,8 @@ end;
 uses
   ComObj;
 
-procedure CreerFeuilleSuiviVentes;
-var
+procedure CreerFeuilleSuiviVentes;  
+var  
   Excel, Workbook, Sheet: OleVariant;
   Row: Integer;
 begin
@@ -232,8 +232,8 @@ end;
 #### Lire des données depuis Excel
 
 ```pascal
-procedure LireDonneesExcel(const Fichier: string);
-var
+procedure LireDonneesExcel(const Fichier: string);  
+var  
   Excel, Workbook, Sheet: OleVariant;
   Row, Col: Integer;
   Valeur: Variant;
@@ -271,8 +271,8 @@ end;
 #### Créer un graphique Excel
 
 ```pascal
-procedure CreerGraphiqueExcel;
-var
+procedure CreerGraphiqueExcel;  
+var  
   Excel, Workbook, Sheet, Chart: OleVariant;
 begin
   Excel := CreateOleObject('Excel.Application');
@@ -310,8 +310,8 @@ end;
 #### Créer un document formaté
 
 ```pascal
-procedure CreerRapportWord;
-var
+procedure CreerRapportWord;  
+var  
   Word, Document, Selection: OleVariant;
 begin
   Word := CreateOleObject('Word.Application');
@@ -356,8 +356,8 @@ end;
 #### Insérer un tableau Word
 
 ```pascal
-procedure InsererTableauWord;
-var
+procedure InsererTableauWord;  
+var  
   Word, Document, Table: OleVariant;
 begin
   Word := CreateOleObject('Word.Application');
@@ -396,8 +396,8 @@ end;
 #### Envoyer un email
 
 ```pascal
-procedure EnvoyerEmail(const Destinataire, Sujet, Corps: string);
-var
+procedure EnvoyerEmail(const Destinataire, Sujet, Corps: string);  
+var  
   Outlook, Mail: OleVariant;
 begin
   Outlook := CreateOleObject('Outlook.Application');
@@ -422,8 +422,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonEnvoyerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonEnvoyerClick(Sender: TObject);  
+begin  
   EnvoyerEmail(
     'utilisateur@example.com',
     'Test depuis Delphi',
@@ -435,8 +435,8 @@ end;
 #### Créer un rendez-vous
 
 ```pascal
-procedure CreerRendezVous;
-var
+procedure CreerRendezVous;  
+var  
   Outlook, Appointment: OleVariant;
 begin
   Outlook := CreateOleObject('Outlook.Application');
@@ -492,18 +492,18 @@ type
     procedure ButtonAvantClick(Sender: TObject);
   end;
 
-procedure TForm1.ButtonNaviguerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonNaviguerClick(Sender: TObject);  
+begin  
   WebBrowser1.Navigate(EditURL.Text);
 end;
 
-procedure TForm1.ButtonRetourClick(Sender: TObject);
-begin
+procedure TForm1.ButtonRetourClick(Sender: TObject);  
+begin  
   WebBrowser1.GoBack;
 end;
 
-procedure TForm1.ButtonAvantClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAvantClick(Sender: TObject);  
+begin  
   WebBrowser1.GoForward;
 end;
 ```
@@ -520,8 +520,8 @@ type
     procedure FormCreate(Sender: TObject);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configurer le lecteur
   WindowsMediaPlayer1.settings.autoStart := True;
   WindowsMediaPlayer1.settings.volume := 50;
@@ -534,8 +534,8 @@ end;
 ### Manipuler le contenu HTML du WebBrowser
 
 ```pascal
-procedure RemplirPageHTML;
-var
+procedure RemplirPageHTML;  
+var  
   Document: IHTMLDocument2;
   Body: IHTMLElement;
 begin
@@ -591,13 +591,13 @@ implementation
 uses
   ComServ;
 
-function TCalculatrice.Additionner(a, b: Integer): Integer;
-begin
+function TCalculatrice.Additionner(a, b: Integer): Integer;  
+begin  
   Result := a + b;
 end;
 
-function TCalculatrice.Multiplier(a, b: Double): Double;
-begin
+function TCalculatrice.Multiplier(a, b: Double): Double;  
+begin  
   Result := a * b;
 end;
 
@@ -610,8 +610,8 @@ end.
 ### Utiliser le serveur COM
 
 ```pascal
-procedure UtiliserServeurCOM;
-var
+procedure UtiliserServeurCOM;  
+var  
   Calc: OleVariant;
   Resultat: Integer;
 begin
@@ -637,8 +637,8 @@ end;
 uses
   ComObj;
 
-procedure GestionErreursCOM;
-var
+procedure GestionErreursCOM;  
+var  
   Excel: OleVariant;
 begin
   try
@@ -662,8 +662,8 @@ end;
 ### Vérifier le résultat d'une opération
 
 ```pascal
-function OuvrirDocumentExcel(const Fichier: string): Boolean;
-var
+function OuvrirDocumentExcel(const Fichier: string): Boolean;  
+var  
   Excel, Workbook: OleVariant;
 begin
   Result := False;
@@ -697,8 +697,8 @@ end;
 ### Libération correcte des objets
 
 ```pascal
-procedure BonnesGestionRessources;
-var
+procedure BonnesGestionRessources;  
+var  
   Excel, Workbook, Sheet: OleVariant;
 begin
   Excel := CreateOleObject('Excel.Application');
@@ -726,8 +726,8 @@ end;
 
 ```pascal
 // MAUVAIS : Ne fait pas le ménage correctement
-procedure MauvaiseGestion;
-var
+procedure MauvaiseGestion;  
+var  
   Excel: OleVariant;
 begin
   Excel := CreateOleObject('Excel.Application');
@@ -736,8 +736,8 @@ begin
 end;
 
 // BON : Libération correcte
-procedure BonneGestion;
-var
+procedure BonneGestion;  
+var  
   Excel: OleVariant;
 begin
   Excel := CreateOleObject('Excel.Application');
@@ -756,8 +756,8 @@ end;
 ### Génération de rapports Excel automatisée
 
 ```pascal
-procedure GenererRapportVentes(Donnees: TDataSet);
-var
+procedure GenererRapportVentes(Donnees: TDataSet);  
+var  
   Excel, Workbook, Sheet: OleVariant;
   Row: Integer;
 begin
@@ -810,8 +810,8 @@ end;
 ### Fusion de documents Word
 
 ```pascal
-procedure FusionnerDocumentsWord(Fichiers: TStringList; Sortie: string);
-var
+procedure FusionnerDocumentsWord(Fichiers: TStringList; Sortie: string);  
+var  
   Word, DocPrincipal, DocSource: OleVariant;
   I: Integer;
 begin
@@ -855,8 +855,8 @@ end;
 Si Adobe Acrobat est installé avec le SDK :
 
 ```pascal
-procedure LireTextePDF(const Fichier: string);
-var
+procedure LireTextePDF(const Fichier: string);  
+var  
   AcroApp, AcroDoc, Page: OleVariant;
   I, NumPages: Integer;
   Texte: string;
@@ -908,20 +908,20 @@ type
     property Connected: Boolean read FConnected;
   end;
 
-constructor TExcelWrapper.Create;
-begin
+constructor TExcelWrapper.Create;  
+begin  
   inherited;
   FConnected := False;
 end;
 
-destructor TExcelWrapper.Destroy;
-begin
+destructor TExcelWrapper.Destroy;  
+begin  
   Disconnect;
   inherited;
 end;
 
-function TExcelWrapper.Connect: Boolean;
-begin
+function TExcelWrapper.Connect: Boolean;  
+begin  
   try
     FExcel := CreateOleObject('Excel.Application');
     FConnected := True;
@@ -931,8 +931,8 @@ begin
   end;
 end;
 
-procedure TExcelWrapper.Disconnect;
-begin
+procedure TExcelWrapper.Disconnect;  
+begin  
   if FConnected then
   begin
     try
@@ -951,8 +951,8 @@ end;
 ### Tests de disponibilité
 
 ```pascal
-function TesterDisponibilite: Boolean;
-begin
+function TesterDisponibilite: Boolean;  
+begin  
   Result := ApplicationCOMDisponible('Excel.Application') and
             ApplicationCOMDisponible('Word.Application') and
             ApplicationCOMDisponible('Outlook.Application');
@@ -965,8 +965,8 @@ end;
 ### Gestion des versions Office
 
 ```pascal
-function ObtenirVersionExcel: string;
-var
+function ObtenirVersionExcel: string;  
+var  
   Excel: OleVariant;
 begin
   try
@@ -1009,8 +1009,8 @@ end;
 ### Journalisation des erreurs
 
 ```pascal
-procedure LogErreurCOM(const Operation: string; E: Exception);
-begin
+procedure LogErreurCOM(const Operation: string; E: Exception);  
+begin  
   with TStringList.Create do
   try
     Add(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));

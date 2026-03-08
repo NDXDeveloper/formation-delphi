@@ -51,13 +51,13 @@ uses
   System.Classes;
 
 // Fonctions exportées
-function Additionner(a, b: Integer): Integer; stdcall;
-begin
+function Additionner(a, b: Integer): Integer; stdcall;  
+begin  
   Result := a + b;
 end;
 
-function Multiplier(a, b: Double): Double; stdcall;
-begin
+function Multiplier(a, b: Double): Double; stdcall;  
+begin  
   Result := a * b;
 end;
 
@@ -135,8 +135,8 @@ function Additionner(a, b: Integer): Integer; stdcall;
   external 'MaBibliotheque.dll';
 
 // Utilisation directe
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   resultat: Integer;
 begin
   resultat := Additionner(10, 20); // Appel direct comme une fonction normale
@@ -162,8 +162,8 @@ La DLL est **chargée à l'exécution** avec les fonctions Windows `LoadLibrary`
 type
   TAdditionner = function(a, b: Integer): Integer; stdcall;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   DLLHandle: THandle;
   Additionner: TAdditionner;
   resultat: Integer;
@@ -214,13 +214,13 @@ library MaBibliotheque;
 uses
   System.SysUtils;
 
-function Additionner(a, b: Integer): Integer; stdcall;
-begin
+function Additionner(a, b: Integer): Integer; stdcall;  
+begin  
   Result := a + b;
 end;
 
-function Soustraire(a, b: Integer): Integer; stdcall;
-begin
+function Soustraire(a, b: Integer): Integer; stdcall;  
+begin  
   Result := a - b;
 end;
 
@@ -270,21 +270,21 @@ type
 
 implementation
 
-constructor TMaBibliothequeLoader.Create;
-begin
+constructor TMaBibliothequeLoader.Create;  
+begin  
   inherited;
   FHandle := 0;
   FChargee := False;
 end;
 
-destructor TMaBibliothequeLoader.Destroy;
-begin
+destructor TMaBibliothequeLoader.Destroy;  
+begin  
   Decharger;
   inherited;
 end;
 
-function TMaBibliothequeLoader.Charger(const CheminDLL: string): Boolean;
-begin
+function TMaBibliothequeLoader.Charger(const CheminDLL: string): Boolean;  
+begin  
   if FChargee then
     Exit(True);
 
@@ -315,8 +315,8 @@ begin
   end;
 end;
 
-procedure TMaBibliothequeLoader.Decharger;
-begin
+procedure TMaBibliothequeLoader.Decharger;  
+begin  
   if FHandle <> 0 then
   begin
     FreeLibrary(FHandle);
@@ -325,15 +325,15 @@ begin
   end;
 end;
 
-function TMaBibliothequeLoader.Additionner(a, b: Integer): Integer;
-begin
+function TMaBibliothequeLoader.Additionner(a, b: Integer): Integer;  
+begin  
   if not FChargee then
     raise Exception.Create('DLL non chargée');
   Result := FAdditionner(a, b);
 end;
 
-function TMaBibliothequeLoader.Soustraire(a, b: Integer): Integer;
-begin
+function TMaBibliothequeLoader.Soustraire(a, b: Integer): Integer;  
+begin  
   if not FChargee then
     raise Exception.Create('DLL non chargée');
   Result := FSoustraire(a, b);
@@ -388,8 +388,8 @@ Les conventions d'appel définissent comment les paramètres sont passés aux fo
 **Usage :** Standard Windows, recommandé pour les DLL Windows.
 
 ```pascal
-function MaFonction(param: Integer): Integer; stdcall;
-begin
+function MaFonction(param: Integer): Integer; stdcall;  
+begin  
   Result := param * 2;
 end;
 
@@ -407,8 +407,8 @@ exports
 **Usage :** Bibliothèques C/C++, fonctions avec nombre variable de paramètres.
 
 ```pascal
-function MaFonctionC(param: Integer): Integer; cdecl;
-begin
+function MaFonctionC(param: Integer): Integer; cdecl;  
+begin  
   Result := param * 2;
 end;
 
@@ -426,8 +426,8 @@ exports
 **Usage :** Appels entre unités Delphi uniquement.
 
 ```pascal
-function MaFonctionDelphi(param: Integer): Integer; register;
-begin
+function MaFonctionDelphi(param: Integer): Integer; register;  
+begin  
   Result := param * 2;
 end;
 ```
@@ -437,8 +437,8 @@ end;
 ### Exporter avec des noms personnalisés
 
 ```pascal
-function Addition(a, b: Integer): Integer; stdcall;
-begin
+function Addition(a, b: Integer): Integer; stdcall;  
+begin  
   Result := a + b;
 end;
 
@@ -459,18 +459,20 @@ library StringDLL;
 uses
   System.SysUtils;
 
-// Fonction qui reçoit et retourne une PChar
-function Concatener(s1, s2: PChar): PChar; stdcall;
-var
+// Fonction qui écrit le résultat dans un buffer fourni par l'appelant
+function Concatener(s1, s2: PChar; buffer: PChar; bufferSize: Integer): Integer; stdcall;  
+var  
   Resultat: string;
 begin
   Resultat := string(s1) + string(s2);
-  Result := PChar(Resultat);
+  Result := Length(Resultat);
+  if (buffer <> nil) and (bufferSize > Length(Resultat)) then
+    StrPCopy(buffer, Resultat);
 end;
 
 // Fonction qui modifie une chaîne en place
-procedure MettreEnMajuscules(s: PChar); stdcall;
-var
+procedure MettreEnMajuscules(s: PChar); stdcall;  
+var  
   i: Integer;
 begin
   for i := 0 to StrLen(s) - 1 do
@@ -509,20 +511,20 @@ type
   PPersonne = ^TPersonne;
 
 // Fonction qui calcule la distance
-function CalculerDistance(const p1, p2: TPoint): Double; stdcall;
-begin
+function CalculerDistance(const p1, p2: TPoint): Double; stdcall;  
+begin  
   Result := Sqrt(Sqr(p2.X - p1.X) + Sqr(p2.Y - p1.Y));
 end;
 
 // Fonction qui modifie une structure
-procedure AugmenterSalaire(p: PPersonne; pourcentage: Double); stdcall;
-begin
+procedure AugmenterSalaire(p: PPersonne; pourcentage: Double); stdcall;  
+begin  
   p^.Salaire := p^.Salaire * (1 + pourcentage / 100);
 end;
 
 // Fonction qui crée une structure
-function CreerPersonne(nom: PChar; age: Integer; salaire: Double): PPersonne; stdcall;
-begin
+function CreerPersonne(nom: PChar; age: Integer; salaire: Double): PPersonne; stdcall;  
+begin  
   GetMem(Result, SizeOf(TPersonne));
   StrPCopy(Result^.Nom, nom);
   Result^.Age := age;
@@ -530,8 +532,8 @@ begin
 end;
 
 // Fonction qui libère une structure
-procedure LibererPersonne(p: PPersonne); stdcall;
-begin
+procedure LibererPersonne(p: PPersonne); stdcall;  
+begin  
   FreeMem(p);
 end;
 
@@ -557,8 +559,8 @@ type
   TIntegerArray = array[0..99] of Integer;
 
 // Retourner un tableau
-function GenererNombres(count: Integer): PIntegerArray; stdcall;
-var
+function GenererNombres(count: Integer): PIntegerArray; stdcall;  
+var  
   i: Integer;
 begin
   GetMem(Result, count * SizeOf(Integer));
@@ -567,14 +569,14 @@ begin
 end;
 
 // Libérer le tableau
-procedure LibererTableau(arr: PIntegerArray); stdcall;
-begin
+procedure LibererTableau(arr: PIntegerArray); stdcall;  
+begin  
   FreeMem(arr);
 end;
 
 // Récupérer un élément
-function ObtenirElement(arr: PIntegerArray; index: Integer): Integer; stdcall;
-begin
+function ObtenirElement(arr: PIntegerArray; index: Integer): Integer; stdcall;  
+begin  
   Result := arr^[index];
 end;
 
@@ -596,8 +598,8 @@ end.
 
 ```pascal
 // MAUVAIS : L'appelant ne peut pas libérer correctement
-function CreerTableau(size: Integer): PInteger; stdcall;
-begin
+function CreerTableau(size: Integer): PInteger; stdcall;  
+begin  
   GetMem(Result, size * SizeOf(Integer));
   // L'appelant ne peut pas libérer avec sa propre fonction Free!
 end;
@@ -607,13 +609,13 @@ end;
 
 ```pascal
 // BON : Fournir les deux fonctions
-function CreerTableau(size: Integer): PInteger; stdcall;
-begin
+function CreerTableau(size: Integer): PInteger; stdcall;  
+begin  
   GetMem(Result, size * SizeOf(Integer));
 end;
 
-procedure LibererTableau(arr: PInteger); stdcall;
-begin
+procedure LibererTableau(arr: PInteger); stdcall;  
+begin  
   FreeMem(arr);
 end;
 
@@ -635,8 +637,8 @@ uses
   System.SysUtils;
 
 // Maintenant on peut passer des String directement
-function Concatener(const s1, s2: string): string; stdcall;
-begin
+function Concatener(const s1, s2: string): string; stdcall;  
+begin  
   Result := s1 + s2;
 end;
 
@@ -678,40 +680,40 @@ type
     function ObtenirResultat: Double;
   end;
 
-constructor TCalculatrice.Create;
-begin
+constructor TCalculatrice.Create;  
+begin  
   inherited;
   FMemoire := 0;
 end;
 
-procedure TCalculatrice.Additionner(valeur: Double);
-begin
+procedure TCalculatrice.Additionner(valeur: Double);  
+begin  
   FMemoire := FMemoire + valeur;
 end;
 
-procedure TCalculatrice.Soustraire(valeur: Double);
-begin
+procedure TCalculatrice.Soustraire(valeur: Double);  
+begin  
   FMemoire := FMemoire - valeur;
 end;
 
-procedure TCalculatrice.Multiplier(valeur: Double);
-begin
+procedure TCalculatrice.Multiplier(valeur: Double);  
+begin  
   FMemoire := FMemoire * valeur;
 end;
 
-procedure TCalculatrice.Diviser(valeur: Double);
-begin
+procedure TCalculatrice.Diviser(valeur: Double);  
+begin  
   if valeur <> 0 then
     FMemoire := FMemoire / valeur;
 end;
 
-procedure TCalculatrice.Effacer;
-begin
+procedure TCalculatrice.Effacer;  
+begin  
   FMemoire := 0;
 end;
 
-function TCalculatrice.ObtenirResultat: Double;
-begin
+function TCalculatrice.ObtenirResultat: Double;  
+begin  
   Result := FMemoire;
 end;
 
@@ -719,43 +721,43 @@ end;
 type
   TCalculatriceHandle = Pointer;
 
-function Calculatrice_Creer: TCalculatriceHandle; stdcall;
-begin
+function Calculatrice_Creer: TCalculatriceHandle; stdcall;  
+begin  
   Result := TCalculatrice.Create;
 end;
 
-procedure Calculatrice_Detruire(handle: TCalculatriceHandle); stdcall;
-begin
+procedure Calculatrice_Detruire(handle: TCalculatriceHandle); stdcall;  
+begin  
   TCalculatrice(handle).Free;
 end;
 
-procedure Calculatrice_Additionner(handle: TCalculatriceHandle; valeur: Double); stdcall;
-begin
+procedure Calculatrice_Additionner(handle: TCalculatriceHandle; valeur: Double); stdcall;  
+begin  
   TCalculatrice(handle).Additionner(valeur);
 end;
 
-procedure Calculatrice_Soustraire(handle: TCalculatriceHandle; valeur: Double); stdcall;
-begin
+procedure Calculatrice_Soustraire(handle: TCalculatriceHandle; valeur: Double); stdcall;  
+begin  
   TCalculatrice(handle).Soustraire(valeur);
 end;
 
-procedure Calculatrice_Multiplier(handle: TCalculatriceHandle; valeur: Double); stdcall;
-begin
+procedure Calculatrice_Multiplier(handle: TCalculatriceHandle; valeur: Double); stdcall;  
+begin  
   TCalculatrice(handle).Multiplier(valeur);
 end;
 
-procedure Calculatrice_Diviser(handle: TCalculatriceHandle; valeur: Double); stdcall;
-begin
+procedure Calculatrice_Diviser(handle: TCalculatriceHandle; valeur: Double); stdcall;  
+begin  
   TCalculatrice(handle).Diviser(valeur);
 end;
 
-procedure Calculatrice_Effacer(handle: TCalculatriceHandle); stdcall;
-begin
+procedure Calculatrice_Effacer(handle: TCalculatriceHandle); stdcall;  
+begin  
   TCalculatrice(handle).Effacer;
 end;
 
-function Calculatrice_ObtenirResultat(handle: TCalculatriceHandle): Double; stdcall;
-begin
+function Calculatrice_ObtenirResultat(handle: TCalculatriceHandle): Double; stdcall;  
+begin  
   Result := TCalculatrice(handle).ObtenirResultat;
 end;
 
@@ -787,8 +789,8 @@ procedure Calculatrice_Additionner(handle: TCalculatriceHandle; valeur: Double);
 function Calculatrice_ObtenirResultat(handle: TCalculatriceHandle): Double; stdcall;
   external 'ClasseDLL.dll';
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Calc: TCalculatriceHandle;
   Resultat: Double;
 begin
@@ -819,8 +821,8 @@ type
   TMessageCallback = procedure(message: PChar); stdcall;
 
 // Fonction qui utilise un callback
-procedure TraiterDonnees(count: Integer; callback: TProgressCallback); stdcall;
-var
+procedure TraiterDonnees(count: Integer; callback: TProgressCallback); stdcall;  
+var  
   i: Integer;
 begin
   for i := 1 to count do
@@ -832,8 +834,8 @@ begin
 end;
 
 // Fonction qui envoie des messages
-procedure ExecuterTache(callback: TMessageCallback); stdcall;
-begin
+procedure ExecuterTache(callback: TMessageCallback); stdcall;  
+begin  
   if Assigned(callback) then
   begin
     callback('Début de la tâche');
@@ -864,28 +866,28 @@ procedure ExecuterTache(callback: TMessageCallback); stdcall;
   external 'CallbackDLL.dll';
 
 // Implémentation du callback
-procedure MonCallbackProgress(position, total: Integer); stdcall;
-begin
+procedure MonCallbackProgress(position, total: Integer); stdcall;  
+begin  
   Form1.ProgressBar1.Max := total;
   Form1.ProgressBar1.Position := position;
   Form1.Label1.Caption := Format('%d / %d', [position, total]);
   Application.ProcessMessages;
 end;
 
-procedure MonCallbackMessage(message: PChar); stdcall;
-begin
+procedure MonCallbackMessage(message: PChar); stdcall;  
+begin  
   Form1.Memo1.Lines.Add(string(message));
   Application.ProcessMessages;
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   TraiterDonnees(10, @MonCallbackProgress);
 end;
 
-procedure TForm1.Button2Click(Sender: TObject);
-begin
+procedure TForm1.Button2Click(Sender: TObject);  
+begin  
   ExecuterTache(@MonCallbackMessage);
 end;
 ```
@@ -991,8 +993,8 @@ var
   CompteurAppels: Integer;
   FichierLog: TextFile;
 
-function IncrémenterCompteur: Integer; stdcall;
-begin
+function IncrémenterCompteur: Integer; stdcall;  
+begin  
   Inc(CompteurAppels);
   Result := CompteurAppels;
 
@@ -1018,45 +1020,39 @@ finalization
 end.
 ```
 
-### DllMain (gestion avancée)
+### DllProc (gestion avancée)
+
+En Delphi, on utilise la variable `DllProc` pour intercepter les événements du cycle de vie de la DLL :
 
 ```pascal
-library DllMainExample;
+library DllProcExample;
 
 uses
   Winapi.Windows,
   System.SysUtils;
 
-function DllMain(Reason: DWORD): BOOL; stdcall;
-begin
-  Result := True;
-
+procedure DllEntryPoint(Reason: DWORD);  
+begin  
   case Reason of
     DLL_PROCESS_ATTACH:
-      begin
-        OutputDebugString('DLL_PROCESS_ATTACH');
-      end;
+      OutputDebugString('DLL_PROCESS_ATTACH');
 
     DLL_PROCESS_DETACH:
-      begin
-        OutputDebugString('DLL_PROCESS_DETACH');
-      end;
+      OutputDebugString('DLL_PROCESS_DETACH');
 
     DLL_THREAD_ATTACH:
-      begin
-        OutputDebugString('DLL_THREAD_ATTACH');
-      end;
+      OutputDebugString('DLL_THREAD_ATTACH');
 
     DLL_THREAD_DETACH:
-      begin
-        OutputDebugString('DLL_THREAD_DETACH');
-      end;
+      OutputDebugString('DLL_THREAD_DETACH');
   end;
 end;
 
-exports
-  DllMain;
-
+begin
+  // Assigner notre procédure comme gestionnaire d'événements DLL
+  DllProc := @DllEntryPoint;
+  // Appeler manuellement pour le premier attachement
+  DllEntryPoint(DLL_PROCESS_ATTACH);
 end.
 ```
 
@@ -1067,8 +1063,8 @@ end.
 Pour contrôler finement les exports, créez un fichier `MaDLL.def` :
 
 ```
-LIBRARY MaBibliotheque
-EXPORTS
+LIBRARY MaBibliotheque  
+EXPORTS  
   Additionner       @1
   Soustraire        @2
   Multiplier        @3
@@ -1100,23 +1096,23 @@ const
   VERSION_MINOR = 2;
   VERSION_BUILD = 345;
 
-function ObtenirVersionMajor: Integer; stdcall;
-begin
+function ObtenirVersionMajor: Integer; stdcall;  
+begin  
   Result := VERSION_MAJOR;
 end;
 
-function ObtenirVersionMinor: Integer; stdcall;
-begin
+function ObtenirVersionMinor: Integer; stdcall;  
+begin  
   Result := VERSION_MINOR;
 end;
 
-function ObtenirVersionBuild: Integer; stdcall;
-begin
+function ObtenirVersionBuild: Integer; stdcall;  
+begin  
   Result := VERSION_BUILD;
 end;
 
-function ObtenirVersionComplete(buffer: PChar; bufferSize: Integer): Integer; stdcall;
-var
+function ObtenirVersionComplete(buffer: PChar; bufferSize: Integer): Integer; stdcall;  
+var  
   versionStr: string;
 begin
   versionStr := Format('%d.%d.%d', [VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD]);
@@ -1139,8 +1135,8 @@ end.
 
 ```pascal
 // Dans l'application appelante
-function VerifierVersionDLL: Boolean;
-var
+function VerifierVersionDLL: Boolean;  
+var  
   Major, Minor: Integer;
 begin
   Major := ObtenirVersionMajor;
@@ -1170,8 +1166,8 @@ library DebugDLL;
 uses
   System.SysUtils;
 
-function FonctionADebuguer(param: Integer): Integer; stdcall;
-var
+function FonctionADebuguer(param: Integer): Integer; stdcall;  
+var  
   temp: Integer;
 begin
   temp := param * 2;  // ← Placer un point d'arrêt ici
@@ -1194,8 +1190,8 @@ library LogDLL;
 uses
   System.SysUtils;
 
-procedure LogMessage(const msg: string);
-var
+procedure LogMessage(const msg: string);  
+var  
   F: TextFile;
 begin
   AssignFile(F, 'dll_debug.log');
@@ -1211,8 +1207,8 @@ begin
   end;
 end;
 
-function TraiterDonnees(data: Integer): Integer; stdcall;
-begin
+function TraiterDonnees(data: Integer): Integer; stdcall;  
+begin  
   LogMessage('TraiterDonnees appelée avec: ' + IntToStr(data));
 
   try
@@ -1260,16 +1256,16 @@ type
 var
   Tests: array of TTestResult;
 
-procedure AjouterTest(const Nom: string; Reussi: Boolean; const Message: string = '');
-begin
+procedure AjouterTest(const Nom: string; Reussi: Boolean; const Message: string = '');  
+begin  
   SetLength(Tests, Length(Tests) + 1);
   Tests[High(Tests)].Nom := Nom;
   Tests[High(Tests)].Reussi := Reussi;
   Tests[High(Tests)].Message := Message;
 end;
 
-procedure TestAddition;
-begin
+procedure TestAddition;  
+begin  
   try
     AjouterTest('Addition simple', Additionner(2, 3) = 5);
     AjouterTest('Addition zéro', Additionner(0, 0) = 0);
@@ -1280,8 +1276,8 @@ begin
   end;
 end;
 
-procedure TestMultiplication;
-begin
+procedure TestMultiplication;  
+begin  
   try
     AjouterTest('Multiplication simple',
       Abs(Multiplier(2.5, 4.0) - 10.0) < 0.001);
@@ -1293,8 +1289,8 @@ begin
   end;
 end;
 
-procedure AfficherResultats;
-var
+procedure AfficherResultats;  
+var  
   i, reussis, total: Integer;
 begin
   total := Length(Tests);
@@ -1360,8 +1356,8 @@ exports
 ### 2. Fournir des fonctions de version
 
 ```pascal
-function MonProjet_ObtenirVersion: PChar; stdcall;
-begin
+function MonProjet_ObtenirVersion: PChar; stdcall;  
+begin  
   Result := '1.0.0';
 end;
 
@@ -1372,8 +1368,8 @@ exports
 ### 3. Gérer les exceptions
 
 ```pascal
-function DiviserSecurise(a, b: Double; var resultat: Double): Integer; stdcall;
-begin
+function DiviserSecurise(a, b: Double; var resultat: Double): Integer; stdcall;  
+begin  
   try
     if b = 0 then
     begin
@@ -1426,8 +1422,8 @@ library PetiteDLL;
 uses
   System.SysUtils;  // Seulement si vraiment nécessaire
 
-function Additionner(a, b: Integer): Integer; stdcall;
-begin
+function Additionner(a, b: Integer): Integer; stdcall;  
+begin  
   Result := a + b;  // Pas besoin de SysUtils pour ça!
 end;
 
@@ -1452,8 +1448,8 @@ var
   VerrouGlobal: TCriticalSection;
   CompteurPartage: Integer;
 
-function IncrémenterThreadSafe: Integer; stdcall;
-begin
+function IncrémenterThreadSafe: Integer; stdcall;  
+begin  
   VerrouGlobal.Enter;
   try
     Inc(CompteurPartage);
@@ -1517,7 +1513,7 @@ MonProjet/
 
 ### Documentation minimale
 
-```markdown
+````markdown
 # MaBibliotheque v1.0
 
 ## Installation
@@ -1579,7 +1575,7 @@ end;
 ## Licence
 
 MIT License
-```
+````
 
 ## Résumé
 

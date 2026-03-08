@@ -53,8 +53,8 @@ La méthode la plus simple : une chaîne unique qui identifie votre application.
 uses
   System.Net.HttpClient;
 
-procedure AppelerAPIAvecCle;
-var
+procedure AppelerAPIAvecCle;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -81,8 +81,8 @@ end;
 Un token qui est envoyé dans l'en-tête HTTP :
 
 ```pascal
-procedure AppelerAPIAvecToken;
-var
+procedure AppelerAPIAvecToken;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -111,16 +111,16 @@ Authentification avec nom d'utilisateur et mot de passe :
 uses
   System.NetEncoding;
 
-function CreerHeaderBasicAuth(const Username, Password: string): string;
-var
+function CreerHeaderBasicAuth(const Username, Password: string): string;  
+var  
   Credentials: string;
 begin
   Credentials := Username + ':' + Password;
   Result := 'Basic ' + TNetEncoding.Base64.Encode(Credentials);
 end;
 
-procedure AppelerAPIAvecBasicAuth;
-var
+procedure AppelerAPIAvecBasicAuth;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -151,8 +151,8 @@ const
 uses
   System.IniFiles;
 
-function ChargerCleAPI: string;
-var
+function ChargerCleAPI: string;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'config.ini');
@@ -180,8 +180,8 @@ end;
 uses
   System.Net.HttpClient, System.JSON;
 
-function GeocoderAdresse(const Adresse: string; out Latitude, Longitude: Double): Boolean;
-var
+function GeocoderAdresse(const Adresse: string; out Latitude, Longitude: Double): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse, JSONLocation: TJSONObject;
@@ -227,8 +227,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonGeocoderClick(Sender: TObject);
-var
+procedure TForm1.ButtonGeocoderClick(Sender: TObject);  
+var  
   Lat, Lng: Double;
 begin
   if GeocoderAdresse('Tour Eiffel, Paris', Lat, Lng) then
@@ -241,8 +241,8 @@ end;
 #### Calculer la distance entre deux points
 
 ```pascal
-function CalculerDistanceGoogleMaps(const Origine, Destination: string): string;
-var
+function CalculerDistanceGoogleMaps(const Origine, Destination: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse: TJSONObject;
@@ -340,8 +340,8 @@ type
     VitesseVent: Double;
   end;
 
-function ObtenirMeteo(const Ville: string): TMeteoInfo;
-var
+function ObtenirMeteo(const Ville: string): TMeteoInfo;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse, JSONMain, JSONWeather, JSONWind: TJSONObject;
@@ -383,8 +383,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonMeteoClick(Sender: TObject);
-var
+procedure TForm1.ButtonMeteoClick(Sender: TObject);  
+var  
   Meteo: TMeteoInfo;
 begin
   Meteo := ObtenirMeteo('Paris');
@@ -399,8 +399,8 @@ end;
 ### Prévisions sur plusieurs jours
 
 ```pascal
-function ObtenirPrevisions(const Ville: string; NbJours: Integer): TArray<TMeteoInfo>;
-var
+function ObtenirPrevisions(const Ville: string; NbJours: Integer): TArray<TMeteoInfo>;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse, JSONItem, JSONMain, JSONWeather: TJSONObject;
@@ -460,8 +460,8 @@ end;
 uses
   System.Net.HttpClient, System.JSON;
 
-function CreerPaiementStripe(Montant: Integer; const Devise, Token: string): Boolean;
-var
+function CreerPaiementStripe(Montant: Integer; const Devise, Token: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -500,8 +500,8 @@ begin
 end;
 
 // Utilisation (montant en centimes)
-procedure TForm1.ButtonPayerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonPayerClick(Sender: TObject);  
+begin  
   // 2500 centimes = 25.00 EUR
   if CreerPaiementStripe(2500, 'eur', 'tok_visa') then
     ShowMessage('Paiement de 25€ effectué');
@@ -511,8 +511,8 @@ end;
 #### Vérifier le statut d'un paiement
 
 ```pascal
-function VerifierStatutPaiement(const ChargeID: string): string;
-var
+function VerifierStatutPaiement(const ChargeID: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -548,8 +548,8 @@ end;
 ### PayPal (Alternative)
 
 ```pascal
-function ObtenirTokenPayPal: string;
-var
+function ObtenirTokenPayPal: string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -592,8 +592,8 @@ end;
 ### Twilio (Envoi de SMS)
 
 ```pascal
-function EnvoyerSMS(const NumeroDestinataire, Message: string): Boolean;
-var
+function EnvoyerSMS(const NumeroDestinataire, Message: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -635,8 +635,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonEnvoyerSMSClick(Sender: TObject);
-begin
+procedure TForm1.ButtonEnvoyerSMSClick(Sender: TObject);  
+begin  
   EnvoyerSMS('+33612345678', 'Bonjour depuis Delphi !');
 end;
 ```
@@ -644,8 +644,8 @@ end;
 ### SendGrid (Envoi d'emails en masse)
 
 ```pascal
-function EnvoyerEmailSendGrid(const Destinataire, Sujet, Contenu: string): Boolean;
-var
+function EnvoyerEmailSendGrid(const Destinataire, Sujet, Contenu: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -710,8 +710,8 @@ end;
 ### OpenAI (ChatGPT)
 
 ```pascal
-function InterrogerChatGPT(const Question: string): string;
-var
+function InterrogerChatGPT(const Question: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -769,8 +769,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonChatGPTClick(Sender: TObject);
-var
+procedure TForm1.ButtonChatGPTClick(Sender: TObject);  
+var  
   Question, Reponse: string;
 begin
   Question := EditQuestion.Text;
@@ -784,8 +784,8 @@ end;
 ### Génération d'images avec DALL-E
 
 ```pascal
-function GenererImageDALLE(const Description: string): string;
-var
+function GenererImageDALLE(const Description: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -839,8 +839,8 @@ end;
 ### Dropbox
 
 ```pascal
-function TelechargerVersDrop box(const CheminLocal: string; const CheminDropbox: string): Boolean;
-var
+function TelechargerVersDropbox(const CheminLocal: string; const CheminDropbox: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -945,15 +945,15 @@ type
     function ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;
   end;
 
-constructor TOAuthHelper.Create(const ClientID, ClientSecret, RedirectURI: string);
-begin
+constructor TOAuthHelper.Create(const ClientID, ClientSecret, RedirectURI: string);  
+begin  
   FClientID := ClientID;
   FClientSecret := ClientSecret;
   FRedirectURI := RedirectURI;
 end;
 
-function TOAuthHelper.GenererURLAutorisation: string;
-begin
+function TOAuthHelper.GenererURLAutorisation: string;  
+begin  
   Result := 'https://accounts.google.com/o/oauth2/v2/auth?' +
     'client_id=' + FClientID +
     '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
@@ -961,8 +961,8 @@ begin
     '&scope=email%20profile';
 end;
 
-function TOAuthHelper.EchangerCodeContreToken(const Code: string): string;
-var
+function TOAuthHelper.EchangerCodeContreToken(const Code: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   PostData: TStringStream;
@@ -994,8 +994,8 @@ begin
   end;
 end;
 
-function TOAuthHelper.ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;
-var
+function TOAuthHelper.ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -1023,8 +1023,8 @@ end;
 ### Gérer les codes d'erreur HTTP
 
 ```pascal
-procedure TraiterReponseHTTP(Response: IHTTPResponse);
-begin
+procedure TraiterReponseHTTP(Response: IHTTPResponse);  
+begin  
   case Response.StatusCode of
     200..299:
       ShowMessage('Succès');
@@ -1065,14 +1065,14 @@ type
     procedure Attendre;
   end;
 
-constructor TRateLimiter.Create(DelaiMinimumMS: Integer);
-begin
+constructor TRateLimiter.Create(DelaiMinimumMS: Integer);  
+begin  
   FDelaiMinimum := DelaiMinimumMS;
   FDerniereRequete := 0;
 end;
 
-procedure TRateLimiter.Attendre;
-var
+procedure TRateLimiter.Attendre;  
+var  
   Ecoule, AAttendre: Integer;
 begin
   if FDerniereRequete > 0 then
@@ -1107,8 +1107,8 @@ end;
 ### Retry avec backoff exponentiel
 
 ```pascal
-function RequeteAvecRetry(const URL: string; MaxTentatives: Integer): string;
-var
+function RequeteAvecRetry(const URL: string; MaxTentatives: Integer): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Tentative: Integer;
@@ -1174,27 +1174,27 @@ type
     destructor Destroy; override;
   end;
 
-constructor TServiceAPIBase.Create(const BaseURL, APIKey: string);
-begin
+constructor TServiceAPIBase.Create(const BaseURL, APIKey: string);  
+begin  
   FBaseURL := BaseURL;
   FAPIKey := APIKey;
   FHttpClient := THTTPClient.Create;
 end;
 
-destructor TServiceAPIBase.Destroy;
-begin
+destructor TServiceAPIBase.Destroy;  
+begin  
   FHttpClient.Free;
   inherited;
 end;
 
-function TServiceAPIBase.CreerHeaders: TNetHeaders;
-begin
+function TServiceAPIBase.CreerHeaders: TNetHeaders;  
+begin  
   SetLength(Result, 1);
   Result[0] := TNetHeader.Create('Authorization', 'Bearer ' + FAPIKey);
 end;
 
-function TServiceAPIBase.Get(const Endpoint: string): string;
-var
+function TServiceAPIBase.Get(const Endpoint: string): string;  
+var  
   Response: IHTTPResponse;
 begin
   Response := FHttpClient.Get(FBaseURL + Endpoint, nil, CreerHeaders);
@@ -1208,8 +1208,8 @@ type
     function ObtenirDonnees: string;
   end;
 
-function TMonServiceAPI.ObtenirDonnees: string;
-begin
+function TMonServiceAPI.ObtenirDonnees: string;  
+begin  
   Result := Get('/data');
 end;
 ```
@@ -1217,8 +1217,8 @@ end;
 ### Logging des requêtes
 
 ```pascal
-procedure LogRequete(const Methode, URL: string; StatusCode: Integer);
-var
+procedure LogRequete(const Methode, URL: string; StatusCode: Integer);  
+var  
   Log: TStringList;
 begin
   Log := TStringList.Create;
@@ -1253,8 +1253,8 @@ type
   end;
 
 // Utilisation pour éviter trop de requêtes
-function ObtenirAvecCache(const URL: string): string;
-begin
+function ObtenirAvecCache(const URL: string): string;  
+begin  
   Result := Cache.Obtenir(URL);
   if Result = '' then
   begin

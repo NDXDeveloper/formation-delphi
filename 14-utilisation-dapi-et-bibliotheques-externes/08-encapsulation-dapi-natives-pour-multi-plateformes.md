@@ -96,8 +96,8 @@ Les directives de compilation permettent d'inclure ou d'exclure du code selon la
 ### Exemple pratique de directives
 
 ```pascal
-function ObtenirNomPlateforme: string;
-begin
+function ObtenirNomPlateforme: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := 'Windows';
   {$ENDIF}
@@ -120,8 +120,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Plateforme actuelle: ' + ObtenirNomPlateforme);
 end;
 ```
@@ -181,14 +181,14 @@ begin
   MessageBox(0, PChar(Message), PChar(Titre), MB_OK or MB_ICONINFORMATION);
 end;
 
-function TNotificationServiceWindows.NotificationsAutorisees: Boolean;
-begin
+function TNotificationServiceWindows.NotificationsAutorisees: Boolean;  
+begin  
   // Sur Windows, les notifications sont toujours autorisées
   Result := True;
 end;
 
-procedure TNotificationServiceWindows.DemanderAutorisation;
-begin
+procedure TNotificationServiceWindows.DemanderAutorisation;  
+begin  
   // Pas nécessaire sur Windows
 end;
 
@@ -241,16 +241,16 @@ begin
   NotificationManager.notify(1, NotificationBuilder.build);
 end;
 
-function TNotificationServiceAndroid.NotificationsAutorisees: Boolean;
-begin
+function TNotificationServiceAndroid.NotificationsAutorisees: Boolean;  
+begin  
   // Vérifier les permissions Android
   Result := TAndroidHelper.Context.checkSelfPermission(
     StringToJString('android.permission.POST_NOTIFICATIONS')) =
     TJPackageManager.JavaClass.PERMISSION_GRANTED;
 end;
 
-procedure TNotificationServiceAndroid.DemanderAutorisation;
-begin
+procedure TNotificationServiceAndroid.DemanderAutorisation;  
+begin  
   // Demander la permission à l'utilisateur
   TAndroidHelper.Activity.requestPermissions(
     TJavaObjectArray<JString>.Create(
@@ -303,8 +303,8 @@ begin
   Center.addNotificationRequest(Request, nil);
 end;
 
-function TNotificationServiceiOS.NotificationsAutorisees: Boolean;
-var
+function TNotificationServiceiOS.NotificationsAutorisees: Boolean;  
+var  
   Center: UNUserNotificationCenter;
   Settings: UNNotificationSettings;
 begin
@@ -315,8 +315,8 @@ begin
   Result := True; // Dans la vraie vie, utiliser un callback
 end;
 
-procedure TNotificationServiceiOS.DemanderAutorisation;
-var
+procedure TNotificationServiceiOS.DemanderAutorisation;  
+var  
   Center: UNUserNotificationCenter;
 begin
   Center := TUNUserNotificationCenter.Wrap(
@@ -364,8 +364,8 @@ uses
   Notification.Linux;
   {$ENDIF}
 
-class function TNotificationFactory.Create: INotificationService;
-begin
+class function TNotificationFactory.Create: INotificationService;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := TNotificationServiceWindows.Create;
   {$ENDIF}
@@ -413,15 +413,15 @@ type
 
 implementation
 
-constructor TForm1.Create(AOwner: TComponent);
-begin
+constructor TForm1.Create(AOwner: TComponent);  
+begin  
   inherited;
   // Créer le service approprié pour la plateforme
   FNotificationService := TNotificationFactory.Create;
 end;
 
-procedure TForm1.ButtonNotifierClick(Sender: TObject);
-begin
+procedure TForm1.ButtonNotifierClick(Sender: TObject);  
+begin  
   // Demander l'autorisation si nécessaire
   if not FNotificationService.NotificationsAutorisees then
     FNotificationService.DemanderAutorisation;
@@ -529,18 +529,18 @@ begin
   // Implémentation du suivi continu
 end;
 
-procedure TLocationServiceWindows.ArreterSuiviPosition;
-begin
+procedure TLocationServiceWindows.ArreterSuiviPosition;  
+begin  
   // Arrêter le suivi
 end;
 
-function TLocationServiceWindows.AutorisationObtenue: Boolean;
-begin
+function TLocationServiceWindows.AutorisationObtenue: Boolean;  
+begin  
   Result := True; // Windows ne nécessite pas d'autorisation spéciale
 end;
 
-procedure TLocationServiceWindows.DemanderAutorisation;
-begin
+procedure TLocationServiceWindows.DemanderAutorisation;  
+begin  
   // Pas nécessaire sur Windows
 end;
 
@@ -578,8 +578,8 @@ type
 
 implementation
 
-constructor TLocationServiceAndroid.Create;
-begin
+constructor TLocationServiceAndroid.Create;  
+begin  
   inherited;
   FLocationManager := TJLocationManager.Wrap(
     TAndroidHelper.Context.getSystemService(
@@ -628,21 +628,21 @@ begin
     FLocationListener);
 end;
 
-procedure TLocationServiceAndroid.ArreterSuiviPosition;
-begin
+procedure TLocationServiceAndroid.ArreterSuiviPosition;  
+begin  
   if FLocationListener <> nil then
     FLocationManager.removeUpdates(FLocationListener);
 end;
 
-function TLocationServiceAndroid.AutorisationObtenue: Boolean;
-begin
+function TLocationServiceAndroid.AutorisationObtenue: Boolean;  
+begin  
   Result := TAndroidHelper.Context.checkSelfPermission(
     StringToJString('android.permission.ACCESS_FINE_LOCATION')) =
     TJPackageManager.JavaClass.PERMISSION_GRANTED;
 end;
 
-procedure TLocationServiceAndroid.DemanderAutorisation;
-begin
+procedure TLocationServiceAndroid.DemanderAutorisation;  
+begin  
   TAndroidHelper.Activity.requestPermissions(
     TJavaObjectArray<JString>.Create(
       StringToJString('android.permission.ACCESS_FINE_LOCATION')), 100);
@@ -671,8 +671,8 @@ type
 
 implementation
 
-class function TFeatureChecker.BluetoothDisponible: Boolean;
-begin
+class function TFeatureChecker.BluetoothDisponible: Boolean;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := True; // À implémenter correctement
   {$ENDIF}
@@ -688,8 +688,8 @@ begin
   {$ENDIF}
 end;
 
-class function TFeatureChecker.CameraDisponible: Boolean;
-begin
+class function TFeatureChecker.CameraDisponible: Boolean;  
+begin  
   {$IFDEF ANDROID}
   Result := TAndroidHelper.Context.getPackageManager.hasSystemFeature(
     StringToJString('android.hardware.camera'));
@@ -749,8 +749,8 @@ type
 
 implementation
 
-function TCameraServiceWindows.Disponible: Boolean;
-begin
+function TCameraServiceWindows.Disponible: Boolean;  
+begin  
   // Sur Windows, la caméra n'est pas toujours disponible
   Result := False; // Vérification simplifiée
 end;
@@ -767,13 +767,13 @@ begin
   // Implémentation pour Windows
 end;
 
-function TCameraServiceWindows.FlashDisponible: Boolean;
-begin
+function TCameraServiceWindows.FlashDisponible: Boolean;  
+begin  
   Result := False; // Rarement disponible sur PC
 end;
 
-procedure TCameraServiceWindows.ActiverFlash(Activer: Boolean);
-begin
+procedure TCameraServiceWindows.ActiverFlash(Activer: Boolean);  
+begin  
   // Ne fait rien sur Windows
 end;
 
@@ -826,8 +826,8 @@ type
 
 implementation
 
-procedure TStorageServiceWindows.Sauvegarder(const Cle, Valeur: string);
-var
+procedure TStorageServiceWindows.Sauvegarder(const Cle, Valeur: string);  
+var  
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
@@ -843,8 +843,8 @@ begin
   end;
 end;
 
-function TStorageServiceWindows.Charger(const Cle: string): string;
-var
+function TStorageServiceWindows.Charger(const Cle: string): string;  
+var  
   Reg: TRegistry;
 begin
   Result := '';
@@ -862,8 +862,8 @@ begin
   end;
 end;
 
-procedure TStorageServiceWindows.Supprimer(const Cle: string);
-var
+procedure TStorageServiceWindows.Supprimer(const Cle: string);  
+var  
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
@@ -879,8 +879,8 @@ begin
   end;
 end;
 
-function TStorageServiceWindows.Existe(const Cle: string): Boolean;
-var
+function TStorageServiceWindows.Existe(const Cle: string): Boolean;  
+var  
   Reg: TRegistry;
 begin
   Result := False;
@@ -923,13 +923,13 @@ type
 
 implementation
 
-function TStorageServiceMobile.ObtenirCheminFichier: string;
-begin
+function TStorageServiceMobile.ObtenirCheminFichier: string;  
+begin  
   Result := TPath.Combine(TPath.GetDocumentsPath, 'app_settings.ini');
 end;
 
-procedure TStorageServiceMobile.Sauvegarder(const Cle, Valeur: string);
-var
+procedure TStorageServiceMobile.Sauvegarder(const Cle, Valeur: string);  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ObtenirCheminFichier);
@@ -940,8 +940,8 @@ begin
   end;
 end;
 
-function TStorageServiceMobile.Charger(const Cle: string): string;
-var
+function TStorageServiceMobile.Charger(const Cle: string): string;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ObtenirCheminFichier);
@@ -952,8 +952,8 @@ begin
   end;
 end;
 
-procedure TStorageServiceMobile.Supprimer(const Cle: string);
-var
+procedure TStorageServiceMobile.Supprimer(const Cle: string);  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ObtenirCheminFichier);
@@ -964,8 +964,8 @@ begin
   end;
 end;
 
-function TStorageServiceMobile.Existe(const Cle: string): Boolean;
-var
+function TStorageServiceMobile.Existe(const Cle: string): Boolean;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ObtenirCheminFichier);
@@ -1031,23 +1031,23 @@ type
 
 implementation
 
-constructor TBiometricServiceAndroid.Create;
-begin
+constructor TBiometricServiceAndroid.Create;  
+begin  
   inherited;
   FFingerprintManager := TJFingerprintManager.Wrap(
     TAndroidHelper.Context.getSystemService(
       TJContext.JavaClass.FINGERPRINT_SERVICE));
 end;
 
-function TBiometricServiceAndroid.Disponible: Boolean;
-begin
+function TBiometricServiceAndroid.Disponible: Boolean;  
+begin  
   Result := (FFingerprintManager <> nil) and
             FFingerprintManager.isHardwareDetected and
             FFingerprintManager.hasEnrolledFingerprints;
 end;
 
-function TBiometricServiceAndroid.TypeBiometrique: TBiometricType;
-begin
+function TBiometricServiceAndroid.TypeBiometrique: TBiometricType;  
+begin  
   if Disponible then
     Result := btFingerprint
   else
@@ -1096,28 +1096,28 @@ type
 
 implementation
 
-constructor TBiometricServiceiOS.Create;
-begin
+constructor TBiometricServiceiOS.Create;  
+begin  
   inherited;
   FContext := TLAContext.Create;
 end;
 
-destructor TBiometricServiceiOS.Destroy;
-begin
+destructor TBiometricServiceiOS.Destroy;  
+begin  
   FContext.Free;
   inherited;
 end;
 
-function TBiometricServiceiOS.Disponible: Boolean;
-var
+function TBiometricServiceiOS.Disponible: Boolean;  
+var  
   Error: NSError;
 begin
   Result := FContext.canEvaluatePolicy(
     LAPolicyDeviceOwnerAuthenticationWithBiometrics, @Error);
 end;
 
-function TBiometricServiceiOS.TypeBiometrique: TBiometricType;
-begin
+function TBiometricServiceiOS.TypeBiometrique: TBiometricType;  
+begin  
   if not Disponible then
     Exit(btNone);
 
@@ -1177,8 +1177,8 @@ implementation
 uses
   Notification.Factory, Location.Factory, Storage.Factory, Biometric.Factory;
 
-class procedure TPlatformTests.TesterNotifications;
-var
+class procedure TPlatformTests.TesterNotifications;  
+var  
   Service: INotificationService;
 begin
   Service := TNotificationFactory.Create;
@@ -1192,8 +1192,8 @@ begin
   end;
 end;
 
-class procedure TPlatformTests.TesterLocalisation;
-var
+class procedure TPlatformTests.TesterLocalisation;  
+var  
   Service: ILocationService;
 begin
   Service := TLocationFactory.Create;
@@ -1215,8 +1215,8 @@ begin
     Service.DemanderAutorisation;
 end;
 
-class procedure TPlatformTests.TesterStockage;
-var
+class procedure TPlatformTests.TesterStockage;  
+var  
   Service: IStorageService;
   Valeur: string;
 begin
@@ -1231,8 +1231,8 @@ begin
     ShowMessage('Problème avec le stockage');
 end;
 
-class procedure TPlatformTests.TesterBiometrie;
-var
+class procedure TPlatformTests.TesterBiometrie;  
+var  
   Service: IBiometricService;
 begin
   Service := TBiometricFactory.Create;
@@ -1255,8 +1255,8 @@ begin
     ShowMessage('Biométrie non disponible');
 end;
 
-class procedure TPlatformTests.TesterToutesLesFonctionnalites;
-begin
+class procedure TPlatformTests.TesterToutesLesFonctionnalites;  
+begin  
   TesterNotifications;
   TesterLocalisation;
   TesterStockage;
@@ -1363,14 +1363,14 @@ uses
   iOSapi.Foundation;
   {$ENDIF}
 
-function TPlatformVersion.EstCompatible(MajorMin, MinorMin: Integer): Boolean;
-begin
+function TPlatformVersion.EstCompatible(MajorMin, MinorMin: Integer): Boolean;  
+begin  
   Result := (Major > MajorMin) or
             ((Major = MajorMin) and (Minor >= MinorMin));
 end;
 
-function ObtenirVersionPlateforme: TPlatformVersion;
-begin
+function ObtenirVersionPlateforme: TPlatformVersion;  
+begin  
   {$IFDEF ANDROID}
   Result.Major := TAndroidHelper.Context.getApplicationInfo.targetSdkVersion;
   Result.Minor := 0;

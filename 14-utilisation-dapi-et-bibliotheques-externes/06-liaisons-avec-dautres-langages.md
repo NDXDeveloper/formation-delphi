@@ -71,16 +71,16 @@ type
     procedure Button1Click(Sender: TObject);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configurer le moteur Python
   PythonEngine1.DllPath := 'C:\Python39';
   PythonEngine1.DllName := 'python39.dll';
   PythonEngine1.LoadDll;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Exécuter du code Python simple
   PythonEngine1.ExecString('print("Hello from Python!")');
   PythonEngine1.ExecString('result = 2 + 2');
@@ -91,8 +91,8 @@ end;
 #### Passer des variables entre Delphi et Python
 
 ```pascal
-procedure ExecuterCalculPython(a, b: Integer);
-var
+procedure ExecuterCalculPython(a, b: Integer);  
+var  
   Script: TStringList;
   Result: Variant;
 begin
@@ -124,8 +124,8 @@ end;
 #### Utiliser des bibliothèques Python
 
 ```pascal
-procedure UtiliserNumPy;
-var
+procedure UtiliserNumPy;  
+var  
   Script: TStringList;
   Moyenne: Variant;
 begin
@@ -155,8 +155,8 @@ end;
 #### Exemple avancé : Machine Learning avec scikit-learn
 
 ```pascal
-procedure EntrainerModeleML;
-var
+procedure EntrainerModeleML;  
+var  
   Script: TStringList;
   Precision: Variant;
 begin
@@ -204,7 +204,6 @@ uses
 function ExecuterScriptPython(const ScriptPath: string;
   const Parametres: string = ''): string;
 var
-  Process: TProcess;
   OutputList: TStringList;
   CommandLine: string;
 begin
@@ -287,8 +286,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Resultat: string;
 begin
   Resultat := ExecuterScriptPython('C:\Scripts\analyse.py', '100 200');
@@ -319,8 +318,8 @@ end;
 uses
   System.JSON;
 
-function AnalyserDonneesAvecPython(Donnees: TArray<Integer>): TJSONObject;
-var
+function AnalyserDonneesAvecPython(Donnees: TArray<Integer>): TJSONObject;  
+var  
   JSONArray: TJSONArray;
   JSONInput, JSONOutput: string;
   Resultat: string;
@@ -345,8 +344,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonAnalyserClick(Sender: TObject);
-var
+procedure TForm1.ButtonAnalyserClick(Sender: TObject);  
+var  
   Donnees: TArray<Integer>;
   Resultat: TJSONObject;
   Moyenne: Double;
@@ -385,14 +384,14 @@ type
       Args: TWebMessageReceivedEventArgs);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Charger une page HTML avec JavaScript
   EdgeBrowser1.Navigate('about:blank');
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   HTML: string;
 begin
   // HTML avec JavaScript intégré
@@ -430,8 +429,8 @@ end;
 #### Appeler des fonctions JavaScript depuis Delphi
 
 ```pascal
-procedure AppelerFonctionJavaScript;
-var
+procedure AppelerFonctionJavaScript;  
+var  
   Script: string;
 begin
   Script := 'calculer(15, 25)';
@@ -447,8 +446,8 @@ end;
 #### Exemple complet : Visualisation de données avec Chart.js
 
 ```pascal
-procedure AfficherGraphiqueAvecChartJS(Donnees: TArray<Integer>);
-var
+procedure AfficherGraphiqueAvecChartJS(Donnees: TArray<Integer>);  
+var  
   HTML, DonneesJSON: string;
   I: Integer;
 begin
@@ -498,8 +497,8 @@ end;
 Exécuter des scripts Node.js :
 
 ```pascal
-function ExecuterScriptNodeJS(const ScriptPath: string): string;
-var
+function ExecuterScriptNodeJS(const ScriptPath: string): string;  
+var  
   CommandLine: string;
   Output: TStringList;
 begin
@@ -521,8 +520,8 @@ end;
 // const resultat = JSON.parse(donnees).map(x => x * 2);
 // console.log(JSON.stringify(resultat));
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Donnees: string;
   Resultat: string;
 begin
@@ -542,8 +541,8 @@ Avec .NET Framework, vous pouvez créer des DLL COM visibles depuis Delphi.
 
 ```csharp
 // Fichier: CalculatriceNET.cs
-using System;
-using System.Runtime.InteropServices;
+using System;  
+using System.Runtime.InteropServices;  
 
 namespace CalculatriceNET
 {
@@ -579,8 +578,8 @@ namespace CalculatriceNET
 uses
   ComObj;
 
-procedure UtiliserDLLNET;
-var
+procedure UtiliserDLLNET;  
+var  
   Calc: OleVariant;
   Resultat: Integer;
 begin
@@ -634,8 +633,8 @@ public class CalculController : ControllerBase
 uses
   System.Net.HttpClient, System.JSON;
 
-function AppelerServiceNET(a, b: Integer): Integer;
-var
+function AppelerServiceNET(a, b: Integer): Integer;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -703,8 +702,8 @@ type
       const Args: array of Variant): Variant;
   end;
 
-function TJavaWrapper.InitJVM(const ClassPath: string): Boolean;
-var
+function TJavaWrapper.InitJVM(const ClassPath: string): Boolean;  
+var  
   Args: JavaVMInitArgs;
   Options: array[0..1] of JavaVMOption;
 begin
@@ -726,8 +725,8 @@ begin
 end;
 
 // Utilisation simplifiée
-procedure ExempleJava;
-var
+procedure ExempleJava;  
+var  
   Java: TJavaWrapper;
   Resultat: Integer;
 begin
@@ -771,8 +770,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Resultat: string;
 begin
   Resultat := ExecuterJAR(
@@ -807,16 +806,16 @@ type
     constructor Create(const PipeName: string; OnMessage: TProc<string>);
   end;
 
-constructor TPipeServer.Create(const PipeName: string; OnMessage: TProc<string>);
-begin
+constructor TPipeServer.Create(const PipeName: string; OnMessage: TProc<string>);  
+begin  
   inherited Create(False);
   FPipeName := PipeName;
   FOnMessage := OnMessage;
   FreeOnTerminate := True;
 end;
 
-procedure TPipeServer.Execute;
-var
+procedure TPipeServer.Execute;  
+var  
   hPipe: THandle;
   Buffer: array[0..1023] of Char;
   BytesRead: DWORD;
@@ -858,8 +857,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   TPipeServer.Create('MonPipe',
     procedure(Msg: string)
     begin
@@ -871,8 +870,8 @@ end;
 #### Client de pipe (peut être dans n'importe quel langage)
 
 ```pascal
-function EnvoyerViaPipe(const PipeName, Message: string): Boolean;
-var
+function EnvoyerViaPipe(const PipeName, Message: string): Boolean;  
+var  
   hPipe: THandle;
   BytesWritten: DWORD;
 begin
@@ -904,8 +903,8 @@ end;
 
 ```python
 # client_pipe.py
-import win32pipe
-import win32file
+import win32pipe  
+import win32file  
 
 def envoyer_message(pipe_name, message):
     handle = win32file.CreateFile(
@@ -942,14 +941,14 @@ type
     procedure IdTCPServer1Execute(AContext: TIdContext);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   IdTCPServer1.DefaultPort := 8080;
   IdTCPServer1.Active := True;
 end;
 
-procedure TForm1.IdTCPServer1Execute(AContext: TIdContext);
-var
+procedure TForm1.IdTCPServer1Execute(AContext: TIdContext);  
+var  
   Message: string;
   Response: string;
 begin
@@ -1007,8 +1006,8 @@ type
     property Data: Pointer read FData;
   end;
 
-constructor TSharedMemory.Create(const Name: string; Size: Integer);
-begin
+constructor TSharedMemory.Create(const Name: string; Size: Integer);  
+begin  
   FName := Name;
   FSize := Size;
 
@@ -1033,8 +1032,8 @@ begin
   end;
 end;
 
-destructor TSharedMemory.Destroy;
-begin
+destructor TSharedMemory.Destroy;  
+begin  
   if FData <> nil then
     UnmapViewOfFile(FData);
   if FHandle <> 0 then
@@ -1042,20 +1041,20 @@ begin
   inherited;
 end;
 
-procedure TSharedMemory.Write(const Data: string);
-begin
+procedure TSharedMemory.Write(const Data: string);  
+begin  
   if Length(Data) < FSize then
     Move(PChar(Data)^, FData^, Length(Data) * SizeOf(Char));
 end;
 
-function TSharedMemory.Read: string;
-begin
+function TSharedMemory.Read: string;  
+begin  
   SetString(Result, PChar(FData), StrLen(PChar(FData)));
 end;
 
 // Utilisation
-procedure ExempleMemoire Partagee;
-var
+procedure ExempleMemoirePartagee;  
+var  
   Mem: TSharedMemory;
 begin
   Mem := TSharedMemory.Create('MonMemoire', 1024);
@@ -1100,8 +1099,8 @@ type
     property Email: string read FEmail write FEmail;
   end;
 
-procedure SerialiserProtobuf;
-var
+procedure SerialiserProtobuf;  
+var  
   Personne: TPersonne;
   Bytes: TBytes;
 begin
@@ -1131,8 +1130,8 @@ uses
   System.JSON;
 
 // Alternative simple : utiliser JSON comme format d'échange
-function SerialiserJSON: string;
-var
+function SerialiserJSON: string;  
+var  
   JSON: TJSONObject;
 begin
   JSON := TJSONObject.Create;
@@ -1163,15 +1162,15 @@ type
     property OriginalError: string read FOriginalError;
   end;
 
-constructor TInterlangageException.Create(const Language, OriginalError: string);
-begin
+constructor TInterlangageException.Create(const Language, OriginalError: string);  
+begin  
   inherited CreateFmt('Erreur depuis %s: %s', [Language, OriginalError]);
   FLanguage := Language;
   FOriginalError := OriginalError;
 end;
 
-procedure ExecuterAvecGestionErreur;
-begin
+procedure ExecuterAvecGestionErreur;  
+begin  
   try
     ExecuterScriptPython('script.py');
   except
@@ -1184,8 +1183,8 @@ end;
 ### Logging inter-langages
 
 ```pascal
-procedure LogInterlangueMessage(const Source, Message: string);
-var
+procedure LogInterlangueMessage(const Source, Message: string);  
+var  
   LogFile: TextFile;
   Timestamp: string;
 begin
@@ -1208,8 +1207,8 @@ end;
 ### Validation des données
 
 ```pascal
-function ValiderDonneesJSON(const JSONText: string): Boolean;
-var
+function ValiderDonneesJSON(const JSONText: string): Boolean;  
+var  
   JSON: TJSONValue;
 begin
   Result := False;
@@ -1229,8 +1228,8 @@ end;
 ### Tests d'intégration
 
 ```pascal
-procedure TesterIntegrationPython;
-begin
+procedure TesterIntegrationPython;  
+begin  
   // Test 1 : Vérifier que Python est disponible
   if not ExecuterScriptPython('--version') then
     raise Exception.Create('Python non disponible');

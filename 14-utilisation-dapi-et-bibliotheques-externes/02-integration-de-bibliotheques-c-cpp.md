@@ -111,8 +111,8 @@ Les chaînes C sont des tableaux de caractères terminés par un zéro :
 function StrLen(s: PAnsiChar): size_t; cdecl; external 'msvcrt.dll';
 
 // Utilisation
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   texte: AnsiString;
   longueur: NativeUInt;
 begin
@@ -264,8 +264,8 @@ end.
 uses
   ZLibWrapper;
 
-function CompresserDonnees(const Donnees: AnsiString): AnsiString;
-var
+function CompresserDonnees(const Donnees: AnsiString): AnsiString;  
+var  
   strm: z_stream;
   ret: Integer;
   sortie: AnsiString;
@@ -330,8 +330,8 @@ function CreerObjet: Pointer; cdecl; external 'ma.dll';
 procedure DetruireObjet(obj: Pointer); cdecl; external 'ma.dll';
 
 // Utilisation
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   obj: Pointer;
 begin
   obj := CreerObjet;
@@ -351,8 +351,8 @@ Quand vous passez de la mémoire allouée par Delphi à une fonction C :
 function RemplirBuffer(buffer: PAnsiChar; taille: Integer): Integer;
   cdecl; external 'ma.dll';
 
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   buffer: PAnsiChar;
   taille: Integer;
 begin
@@ -387,15 +387,15 @@ procedure TraiterAvecCallback(callback: TMonCallback; userData: Pointer);
 
 ```pascal
 // Le callback DOIT utiliser la convention cdecl
-function MonCallbackImpl(valeur: Integer; userData: Pointer): Integer; cdecl;
-begin
+function MonCallbackImpl(valeur: Integer; userData: Pointer): Integer; cdecl;  
+begin  
   ShowMessage('Valeur reçue: ' + IntToStr(valeur));
   Result := 0;
 end;
 
 // Utilisation
-procedure Exemple;
-begin
+procedure Exemple;  
+begin  
   TraiterAvecCallback(@MonCallbackImpl, nil);
 end;
 ```
@@ -418,22 +418,22 @@ type
     procedure Executer;
   end;
 
-class procedure TMonObjet.CallbackStatique(valeur: Integer; userData: Pointer); cdecl;
-var
+class procedure TMonObjet.CallbackStatique(valeur: Integer; userData: Pointer); cdecl;  
+var  
   Instance: TMonObjet;
 begin
   Instance := TMonObjet(userData);
   Instance.TraiterCallback(valeur);
 end;
 
-procedure TMonObjet.TraiterCallback(valeur: Integer);
-begin
+procedure TMonObjet.TraiterCallback(valeur: Integer);  
+begin  
   FValeur := valeur;
   ShowMessage('Traitement: ' + IntToStr(FValeur));
 end;
 
-procedure TMonObjet.Executer;
-begin
+procedure TMonObjet.Executer;  
+begin  
   // Passer Self comme userData
   TraiterAvecCallback(@TMonObjet.CallbackStatique, Self);
 end;
@@ -500,6 +500,7 @@ const
 type
   TSQLite3 = Pointer;
   TSQLite3Stmt = Pointer;
+  PPAnsiChar = ^PAnsiChar;
 
 // Codes de retour
 const
@@ -516,7 +517,7 @@ function sqlite3_close(db: TSQLite3): Integer;
   cdecl; external SQLITE_DLL;
 
 function sqlite3_prepare_v2(db: TSQLite3; sql: PAnsiChar; nByte: Integer;
-  var stmt: TSQLite3Stmt; var pzTail: PAnsiChar): Integer;
+  var stmt: TSQLite3Stmt; pzTail: PPAnsiChar): Integer;
   cdecl; external SQLITE_DLL;
 
 function sqlite3_step(stmt: TSQLite3Stmt): Integer;
@@ -542,8 +543,8 @@ end.
 uses
   SQLite3;
 
-procedure ExempleUtilisation;
-var
+procedure ExempleUtilisation;  
+var  
   db: TSQLite3;
   stmt: TSQLite3Stmt;
   ret: Integer;
@@ -615,8 +616,8 @@ end;
 **Vérification pas à pas :**
 
 ```pascal
-procedure DebugAppelC;
-var
+procedure DebugAppelC;  
+var  
   handle: THandle;
   proc: Pointer;
 begin
@@ -682,8 +683,8 @@ type
 type
   ESQLiteError = class(Exception);
 
-procedure CheckSQLiteResult(db: TSQLite3; ret: Integer);
-begin
+procedure CheckSQLiteResult(db: TSQLite3; ret: Integer);  
+begin  
   if ret <> SQLITE_OK then
     raise ESQLiteError.Create(
       'Erreur SQLite: ' + string(sqlite3_errmsg(db))
@@ -712,8 +713,8 @@ unit SQLite3Wrapper;
 Testez vos wrappers de bibliothèques :
 
 ```pascal
-procedure TTestSQLite.TestConnection;
-var
+procedure TTestSQLite.TestConnection;  
+var  
   db: TSQLiteDatabase;
 begin
   db := TSQLiteDatabase.Create;

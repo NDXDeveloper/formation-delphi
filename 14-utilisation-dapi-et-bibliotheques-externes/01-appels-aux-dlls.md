@@ -47,7 +47,7 @@ Voici comment appeler la fonction MessageBox de Windows, qui affiche une boîte 
 
 ```pascal
 function MessageBox(hWnd: HWND; lpText, lpCaption: PChar; uType: UINT): Integer;
-  stdcall; external 'user32.dll' name 'MessageBoxA';
+  stdcall; external 'user32.dll' name 'MessageBoxW';
 ```
 
 **Explication des éléments :**
@@ -57,15 +57,15 @@ function MessageBox(hWnd: HWND; lpText, lpCaption: PChar; uType: UINT): Integer;
 - `Integer` : type de retour
 - `stdcall` : convention d'appel (comment les paramètres sont passés)
 - `external 'user32.dll'` : indique que la fonction se trouve dans user32.dll
-- `name 'MessageBoxA'` : nom réel de la fonction dans la DLL (si différent)
+- `name 'MessageBoxW'` : nom réel de la fonction Unicode dans la DLL (suffixe W pour Wide/Unicode, A pour ANSI)
 
 ### Utilisation de la fonction
 
 Une fois déclarée, vous pouvez utiliser la fonction comme n'importe quelle autre fonction Delphi :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   MessageBox(0, 'Ceci est un message', 'Titre', MB_OK);
 end;
 ```
@@ -109,8 +109,8 @@ type
   TMessageBoxFunc = function(hWnd: HWND; lpText, lpCaption: PChar;
     uType: UINT): Integer; stdcall;
 
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   DLLHandle: THandle;
   MessageBoxFunc: TMessageBoxFunc;
 begin
@@ -125,7 +125,7 @@ begin
 
   try
     // 2. Obtenir l'adresse de la fonction
-    @MessageBoxFunc := GetProcAddress(DLLHandle, 'MessageBoxA');
+    @MessageBoxFunc := GetProcAddress(DLLHandle, 'MessageBoxW');
 
     if @MessageBoxFunc = nil then
     begin
@@ -182,8 +182,8 @@ Les chaînes nécessitent une attention particulière :
 function MaFonction(texte: PAnsiChar): Integer;
   stdcall; external 'madll.dll';
 
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   chaine: AnsiString;
 begin
   chaine := 'Mon texte';
@@ -205,8 +205,8 @@ type
 function CalculerDistance(const point1, point2: TPoint): Double;
   stdcall; external 'geometrie.dll';
 
-procedure Utilisation;
-var
+procedure Utilisation;  
+var  
   p1, p2: TPoint;
   distance: Double;
 begin
@@ -242,7 +242,7 @@ Contient les fonctions système de base :
 ```pascal
 // Obtenir le nom de l'ordinateur
 function GetComputerName(lpBuffer: PChar; var nSize: DWORD): BOOL;
-  stdcall; external 'kernel32.dll' name 'GetComputerNameA';
+  stdcall; external 'kernel32.dll' name 'GetComputerNameW';
 
 // Mettre en pause l'exécution
 procedure Sleep(dwMilliseconds: DWORD);
@@ -257,7 +257,7 @@ Contient les fonctions du shell Windows :
 // Ouvrir un fichier avec l'application associée
 function ShellExecute(hWnd: HWND; Operation, FileName, Parameters,
   Directory: PChar; ShowCmd: Integer): HINST;
-  stdcall; external 'shell32.dll' name 'ShellExecuteA';
+  stdcall; external 'shell32.dll' name 'ShellExecuteW';
 ```
 
 ## Gestion des erreurs
@@ -291,8 +291,8 @@ end;
 Protégez vos appels de DLL avec des blocs try-except :
 
 ```pascal
-procedure AppelerDLL;
-begin
+procedure AppelerDLL;  
+begin  
   try
     // Appel de fonction DLL
     Resultat := MaFonctionDLL(param1, param2);
@@ -329,29 +329,29 @@ type
 
 implementation
 
-constructor TMaDLLWrapper.Create;
-begin
+constructor TMaDLLWrapper.Create;  
+begin  
   inherited;
   FDLLHandle := 0;
   FChargee := False;
 end;
 
-destructor TMaDLLWrapper.Destroy;
-begin
+destructor TMaDLLWrapper.Destroy;  
+begin  
   if FChargee then
     DechargerDLL;
   inherited;
 end;
 
-function TMaDLLWrapper.ChargerDLL: Boolean;
-begin
+function TMaDLLWrapper.ChargerDLL: Boolean;  
+begin  
   FDLLHandle := LoadLibrary('madll.dll');
   FChargee := FDLLHandle <> 0;
   Result := FChargee;
 end;
 
-procedure TMaDLLWrapper.DechargerDLL;
-begin
+procedure TMaDLLWrapper.DechargerDLL;  
+begin  
   if FDLLHandle <> 0 then
   begin
     FreeLibrary(FDLLHandle);
@@ -371,13 +371,13 @@ Avant de charger une DLL, vérifiez qu'elle existe :
 uses
   System.SysUtils;
 
-function DLLExiste(const NomDLL: string): Boolean;
-begin
+function DLLExiste(const NomDLL: string): Boolean;  
+begin  
   Result := FileExists(NomDLL);
 end;
 
-procedure ChargerMaDLL;
-const
+procedure ChargerMaDLL;  
+const  
   NOM_DLL = 'madll.dll';
 begin
   if not DLLExiste(NOM_DLL) then
@@ -404,7 +404,7 @@ Documentez toujours vos déclarations de DLL :
 /// <param name="uType">Type de boîte (MB_OK, MB_YESNO, etc.)</param>
 /// <returns>ID du bouton cliqué</returns>
 function MessageBox(hWnd: HWND; lpText, lpCaption: PChar;
-  uType: UINT): Integer; stdcall; external 'user32.dll' name 'MessageBoxA';
+  uType: UINT): Integer; stdcall; external 'user32.dll' name 'MessageBoxW';
 ```
 
 ## Compatibilité 32-bit et 64-bit
@@ -421,8 +421,8 @@ Les DLLs 32-bit ne peuvent pas être chargées par des applications 64-bit et vi
 Pour gérer les deux architectures :
 
 ```pascal
-function ChargerDLLCompatible: THandle;
-begin
+function ChargerDLLCompatible: THandle;  
+begin  
   {$IFDEF WIN64}
   Result := LoadLibrary('madll64.dll');
   {$ELSE}

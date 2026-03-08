@@ -58,8 +58,8 @@ uses
 uses
   Winapi.Windows;
 
-procedure ObtenirInfoFenetre(Handle: HWND);
-var
+procedure ObtenirInfoFenetre(Handle: HWND);  
+var  
   texte: array[0..255] of Char;
   rect: TRect;
 begin
@@ -83,8 +83,8 @@ end;
 ### Énumérer toutes les fenêtres
 
 ```pascal
-function EnumWindowsProc(Wnd: HWND; LParam: LPARAM): BOOL; stdcall;
-var
+function EnumWindowsProc(Wnd: HWND; LParam: LPARAM): BOOL; stdcall;  
+var  
   titre: array[0..255] of Char;
   liste: TStrings;
 begin
@@ -100,15 +100,15 @@ begin
   Result := True; // Continuer l'énumération
 end;
 
-procedure ListerFenetres(Liste: TStrings);
-begin
+procedure ListerFenetres(Liste: TStrings);  
+begin  
   Liste.Clear;
   EnumWindows(@EnumWindowsProc, LPARAM(Liste));
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ListerFenetres(Memo1.Lines);
 end;
 ```
@@ -120,22 +120,22 @@ uses
   Winapi.Windows;
 
 // Déplacer une fenêtre
-procedure DeplacerFenetre(Handle: HWND; X, Y: Integer);
-begin
+procedure DeplacerFenetre(Handle: HWND; X, Y: Integer);  
+begin  
   SetWindowPos(Handle, 0, X, Y, 0, 0,
     SWP_NOSIZE or SWP_NOZORDER);
 end;
 
 // Redimensionner une fenêtre
-procedure RedimensionnerFenetre(Handle: HWND; Largeur, Hauteur: Integer);
-begin
+procedure RedimensionnerFenetre(Handle: HWND; Largeur, Hauteur: Integer);  
+begin  
   SetWindowPos(Handle, 0, 0, 0, Largeur, Hauteur,
     SWP_NOMOVE or SWP_NOZORDER);
 end;
 
 // Rendre une fenêtre toujours au premier plan
-procedure AlwaysOnTop(Handle: HWND; OnTop: Boolean);
-const
+procedure AlwaysOnTop(Handle: HWND; OnTop: Boolean);  
+const  
   Flags: array[Boolean] of HWND = (HWND_NOTOPMOST, HWND_TOPMOST);
 begin
   SetWindowPos(Handle, Flags[OnTop], 0, 0, 0, 0,
@@ -143,8 +143,8 @@ begin
 end;
 
 // Minimiser/Maximiser/Restaurer
-procedure ChangerEtatFenetre(Handle: HWND; Etat: Integer);
-begin
+procedure ChangerEtatFenetre(Handle: HWND; Etat: Integer);  
+begin  
   ShowWindow(Handle, Etat);
   // Etat peut être: SW_MINIMIZE, SW_MAXIMIZE, SW_RESTORE
 end;
@@ -154,22 +154,22 @@ end;
 
 ```pascal
 // Trouver une fenêtre par son titre
-function TrouverFenetreParTitre(const Titre: string): HWND;
-begin
+function TrouverFenetreParTitre(const Titre: string): HWND;  
+begin  
   Result := FindWindow(nil, PChar(Titre));
   if Result = 0 then
     ShowMessage('Fenêtre non trouvée');
 end;
 
 // Trouver une fenêtre par son nom de classe
-function TrouverFenetreParClasse(const Classe: string): HWND;
-begin
+function TrouverFenetreParClasse(const Classe: string): HWND;  
+begin  
   Result := FindWindow(PChar(Classe), nil);
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button2Click(Sender: TObject);
-var
+procedure TForm1.Button2Click(Sender: TObject);  
+var  
   hWnd: HWND;
 begin
   // Trouver le Bloc-notes
@@ -195,14 +195,14 @@ uses
   Winapi.Windows, Winapi.Messages;
 
 // Fermer une application
-procedure FermerApplication(Handle: HWND);
-begin
+procedure FermerApplication(Handle: HWND);  
+begin  
   SendMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 // Envoyer du texte à une fenêtre
-procedure EnvoyerTexte(Handle: HWND; const Texte: string);
-var
+procedure EnvoyerTexte(Handle: HWND; const Texte: string);  
+var  
   I: Integer;
 begin
   for I := 1 to Length(Texte) do
@@ -212,8 +212,8 @@ begin
 end;
 
 // Simuler un clic sur un bouton
-procedure CliquerBouton(HandleBouton: HWND);
-begin
+procedure CliquerBouton(HandleBouton: HWND);  
+begin  
   SendMessage(HandleBouton, BM_CLICK, 0, 0);
 end;
 ```
@@ -231,8 +231,8 @@ type
   end;
 
 // Intercepter un raccourci clavier global
-procedure TForm1.WMHotKey(var Msg: TWMHotKey);
-begin
+procedure TForm1.WMHotKey(var Msg: TWMHotKey);  
+begin  
   case Msg.HotKey of
     1: ShowMessage('Ctrl+Alt+A pressé');
     2: ShowMessage('Ctrl+Alt+B pressé');
@@ -240,8 +240,8 @@ begin
 end;
 
 // Intercepter les changements de périphériques
-procedure TForm1.WMDeviceChange(var Msg: TMessage);
-begin
+procedure TForm1.WMDeviceChange(var Msg: TMessage);  
+begin  
   if Msg.WParam = DBT_DEVICEARRIVAL then
     ShowMessage('Un périphérique a été connecté')
   else if Msg.WParam = DBT_DEVICEREMOVECOMPLETE then
@@ -252,8 +252,8 @@ end;
 ### Enregistrer un raccourci clavier global
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Enregistrer Ctrl+Alt+A (ID 1)
   RegisterHotKey(Handle, 1, MOD_CONTROL or MOD_ALT, Ord('A'));
 
@@ -261,8 +261,8 @@ begin
   RegisterHotKey(Handle, 2, MOD_CONTROL or MOD_ALT, Ord('B'));
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Désenregistrer les raccourcis
   UnregisterHotKey(Handle, 1);
   UnregisterHotKey(Handle, 2);
@@ -278,8 +278,8 @@ uses
   Winapi.Windows;
 
 // Obtenir le nom de l'ordinateur
-function ObtenirNomOrdinateur: string;
-var
+function ObtenirNomOrdinateur: string;  
+var  
   buffer: array[0..MAX_COMPUTERNAME_LENGTH] of Char;
   taille: DWORD;
 begin
@@ -291,8 +291,8 @@ begin
 end;
 
 // Obtenir le nom d'utilisateur
-function ObtenirNomUtilisateur: string;
-var
+function ObtenirNomUtilisateur: string;  
+var  
   buffer: array[0..255] of Char;
   taille: DWORD;
 begin
@@ -304,8 +304,8 @@ begin
 end;
 
 // Obtenir le répertoire Windows
-function ObtenirRepWindows: string;
-var
+function ObtenirRepWindows: string;  
+var  
   buffer: array[0..MAX_PATH] of Char;
 begin
   GetWindowsDirectory(buffer, Length(buffer));
@@ -313,8 +313,8 @@ begin
 end;
 
 // Obtenir le répertoire System32
-function ObtenirRepSystem: string;
-var
+function ObtenirRepSystem: string;  
+var  
   buffer: array[0..MAX_PATH] of Char;
 begin
   GetSystemDirectory(buffer, Length(buffer));
@@ -326,8 +326,8 @@ end;
 
 ```pascal
 // Obtenir la version de Windows
-function ObtenirVersionWindows: string;
-var
+function ObtenirVersionWindows: string;  
+var  
   Version: TOSVersionInfo;
 begin
   Version.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
@@ -341,8 +341,8 @@ begin
 end;
 
 // Obtenir la quantité de mémoire
-function ObtenirMemoireDisponible: string;
-var
+function ObtenirMemoireDisponible: string;  
+var  
   MemStatus: TMemoryStatusEx;
 begin
   MemStatus.dwLength := SizeOf(TMemoryStatusEx);
@@ -361,14 +361,14 @@ end;
 
 ```pascal
 // Méthode simple avec ShellExecute
-procedure LancerApplication(const Fichier: string);
-begin
+procedure LancerApplication(const Fichier: string);  
+begin  
   ShellExecute(0, 'open', PChar(Fichier), nil, nil, SW_SHOWNORMAL);
 end;
 
 // Méthode avancée avec CreateProcess
-function LancerProcessus(const Application, Parametres: string): Boolean;
-var
+function LancerProcessus(const Application, Parametres: string): Boolean;  
+var  
   SI: TStartupInfo;
   PI: TProcessInformation;
   CommandLine: string;
@@ -403,8 +403,8 @@ begin
 end;
 
 // Lancer et attendre la fin du processus
-function LancerEtAttendre(const Application: string): DWORD;
-var
+function LancerEtAttendre(const Application: string): DWORD;  
+var  
   SI: TStartupInfo;
   PI: TProcessInformation;
   ExitCode: DWORD;
@@ -434,14 +434,14 @@ end;
 
 ```pascal
 // Terminer un processus par son handle
-procedure TerminerProcessus(ProcessHandle: THandle);
-begin
+procedure TerminerProcessus(ProcessHandle: THandle);  
+begin  
   TerminateProcess(ProcessHandle, 0);
 end;
 
 // Terminer un processus par son ID
-procedure TerminerProcessusParID(ProcessID: DWORD);
-var
+procedure TerminerProcessusParID(ProcessID: DWORD);  
+var  
   hProcess: THandle;
 begin
   hProcess := OpenProcess(PROCESS_TERMINATE, False, ProcessID);
@@ -465,8 +465,8 @@ uses
   Winapi.Windows;
 
 // Vérifier si un fichier est en lecture seule
-function EstLectureSeule(const Fichier: string): Boolean;
-var
+function EstLectureSeule(const Fichier: string): Boolean;  
+var  
   Attr: DWORD;
 begin
   Attr := GetFileAttributes(PChar(Fichier));
@@ -475,8 +475,8 @@ begin
 end;
 
 // Mettre/Enlever l'attribut lecture seule
-procedure DefinirLectureSeule(const Fichier: string; LectureSeule: Boolean);
-var
+procedure DefinirLectureSeule(const Fichier: string; LectureSeule: Boolean);  
+var  
   Attr: DWORD;
 begin
   Attr := GetFileAttributes(PChar(Fichier));
@@ -491,8 +491,8 @@ begin
 end;
 
 // Vérifier si un fichier est caché
-function EstCache(const Fichier: string): Boolean;
-var
+function EstCache(const Fichier: string): Boolean;  
+var  
   Attr: DWORD;
 begin
   Attr := GetFileAttributes(PChar(Fichier));
@@ -501,8 +501,8 @@ begin
 end;
 
 // Cacher/Montrer un fichier
-procedure DefinirCache(const Fichier: string; Cache: Boolean);
-var
+procedure DefinirCache(const Fichier: string; Cache: Boolean);  
+var  
   Attr: DWORD;
 begin
   Attr := GetFileAttributes(PChar(Fichier));
@@ -521,8 +521,8 @@ end;
 
 ```pascal
 // Obtenir le type de lecteur
-function ObtenirTypeLecteur(Lecteur: Char): string;
-var
+function ObtenirTypeLecteur(Lecteur: Char): string;  
+var  
   TypeLecteur: UINT;
 begin
   TypeLecteur := GetDriveType(PChar(Lecteur + ':\'));
@@ -538,8 +538,8 @@ begin
 end;
 
 // Obtenir l'espace disque disponible
-function ObtenirEspaceDisque(const Lecteur: string): string;
-var
+function ObtenirEspaceDisque(const Lecteur: string): string;  
+var  
   Disponible, Total, Libre: Int64;
 begin
   if GetDiskFreeSpaceEx(PChar(Lecteur), Disponible, Total, @Libre) then
@@ -552,8 +552,8 @@ begin
 end;
 
 // Lister tous les lecteurs
-function ListerLecteurs: TStringList;
-var
+function ListerLecteurs: TStringList;  
+var  
   Lecteurs: DWORD;
   I: Integer;
   Lettre: Char;
@@ -615,8 +615,8 @@ uses
   Winapi.Windows, System.Win.Registry;
 
 // Lire une valeur chaîne du registre
-function LireRegistreChaîne(Cle: HKEY; const SousCle, Nom: string): string;
-var
+function LireRegistreChaîne(Cle: HKEY; const SousCle, Nom: string): string;  
+var  
   Reg: TRegistry;
 begin
   Result := '';
@@ -638,8 +638,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Version: string;
 begin
   // Lire la version de Windows dans le registre
@@ -656,8 +656,8 @@ end;
 
 ```pascal
 // Écrire une valeur dans le registre
-function EcrireRegistre(Cle: HKEY; const SousCle, Nom, Valeur: string): Boolean;
-var
+function EcrireRegistre(Cle: HKEY; const SousCle, Nom, Valeur: string): Boolean;  
+var  
   Reg: TRegistry;
 begin
   Result := False;
@@ -679,8 +679,8 @@ begin
 end;
 
 // Exemple : Sauvegarder des paramètres
-procedure SauvegarderParametres;
-begin
+procedure SauvegarderParametres;  
+begin  
   EcrireRegistre(
     HKEY_CURRENT_USER,
     'SOFTWARE\MonApplication',
@@ -693,8 +693,8 @@ end;
 ### Lancer une application au démarrage
 
 ```pascal
-procedure AjouterDemarrage(const NomApp, CheminExe: string);
-var
+procedure AjouterDemarrage(const NomApp, CheminExe: string);  
+var  
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
@@ -713,8 +713,8 @@ begin
   end;
 end;
 
-procedure RetirerDemarrage(const NomApp: string);
-var
+procedure RetirerDemarrage(const NomApp: string);  
+var  
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
@@ -744,14 +744,14 @@ uses
   Winapi.Windows, Vcl.Clipbrd;
 
 // Copier du texte dans le presse-papiers
-procedure CopierTextePressePapiers(const Texte: string);
-begin
+procedure CopierTextePressePapiers(const Texte: string);  
+begin  
   Clipboard.AsText := Texte;
 end;
 
 // Lire le texte du presse-papiers
-function LireTextePressePapiers: string;
-begin
+function LireTextePressePapiers: string;  
+begin  
   if Clipboard.HasFormat(CF_TEXT) then
     Result := Clipboard.AsText
   else
@@ -759,14 +759,14 @@ begin
 end;
 
 // Vider le presse-papiers
-procedure ViderPressePapiers;
-begin
+procedure ViderPressePapiers;  
+begin  
   Clipboard.Clear;
 end;
 
 // Vérifier si le presse-papiers contient du texte
-function PressePapiersContientTexte: Boolean;
-begin
+function PressePapiersContientTexte: Boolean;  
+begin  
   Result := Clipboard.HasFormat(CF_TEXT);
 end;
 ```
@@ -788,20 +788,20 @@ type
     procedure FormDestroy(Sender: TObject);
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // S'enregistrer comme observateur du presse-papiers
   FNextClipboardViewer := SetClipboardViewer(Handle);
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Se désenregistrer
   ChangeClipboardChain(Handle, FNextClipboardViewer);
 end;
 
-procedure TForm1.WMChangeCBChain(var Msg: TWMChangeCBChain);
-begin
+procedure TForm1.WMChangeCBChain(var Msg: TWMChangeCBChain);  
+begin  
   if Msg.Remove = FNextClipboardViewer then
     FNextClipboardViewer := Msg.Next
   else if FNextClipboardViewer <> 0 then
@@ -809,8 +809,8 @@ begin
       Msg.Remove, Msg.Next);
 end;
 
-procedure TForm1.WMDrawClipboard(var Msg: TMessage);
-begin
+procedure TForm1.WMDrawClipboard(var Msg: TMessage);  
+begin  
   // Le presse-papiers a changé
   Memo1.Lines.Add('Presse-papiers modifié: ' + Clipboard.AsText);
 
@@ -828,8 +828,8 @@ end;
 uses
   Winapi.Windows, Vcl.Graphics;
 
-procedure DessinerSurCanvas(Canvas: TCanvas);
-var
+procedure DessinerSurCanvas(Canvas: TCanvas);  
+var  
   OldPen: HPEN;
   DC: HDC;
 begin
@@ -858,8 +858,8 @@ end;
 ### Capture d'écran
 
 ```pascal
-function CapturerEcran: TBitmap;
-var
+function CapturerEcran: TBitmap;  
+var  
   DC: HDC;
   Bitmap: TBitmap;
   Width, Height: Integer;
@@ -891,8 +891,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Screenshot: TBitmap;
 begin
   Screenshot := CapturerEcran;
@@ -908,8 +908,8 @@ end;
 ### Capture d'une fenêtre spécifique
 
 ```pascal
-function CapturerFenetre(WindowHandle: HWND): TBitmap;
-var
+function CapturerFenetre(WindowHandle: HWND): TBitmap;  
+var  
   DC: HDC;
   Bitmap: TBitmap;
   Rect: TRect;
@@ -946,27 +946,27 @@ uses
   Winapi.Windows, Winapi.MMSystem;
 
 // Jouer un son système
-procedure JouerSonSysteme(Son: Integer);
-begin
+procedure JouerSonSysteme(Son: Integer);  
+begin  
   MessageBeep(Son);
   // Son peut être: MB_OK, MB_ICONERROR, MB_ICONWARNING, MB_ICONINFORMATION
 end;
 
 // Jouer un fichier WAV
-procedure JouerFichierWAV(const Fichier: string);
-begin
+procedure JouerFichierWAV(const Fichier: string);  
+begin  
   PlaySound(PChar(Fichier), 0, SND_FILENAME or SND_ASYNC);
 end;
 
 // Jouer un son en boucle
-procedure JouerEnBoucle(const Fichier: string);
-begin
+procedure JouerEnBoucle(const Fichier: string);  
+begin  
   PlaySound(PChar(Fichier), 0, SND_FILENAME or SND_ASYNC or SND_LOOP);
 end;
 
 // Arrêter tous les sons
-procedure ArreterSons;
-begin
+procedure ArreterSons;  
+begin  
   PlaySound(nil, 0, 0);
 end;
 ```
@@ -979,8 +979,8 @@ end;
 uses
   Winapi.Windows;
 
-function ObtenirEtatBatterie: string;
-var
+function ObtenirEtatBatterie: string;  
+var  
   Status: TSystemPowerStatus;
 begin
   if GetSystemPowerStatus(Status) then
@@ -1001,8 +1001,8 @@ end;
 ### Empêcher la mise en veille
 
 ```pascal
-procedure EmpecherMiseEnVeille(Empecher: Boolean);
-begin
+procedure EmpecherMiseEnVeille(Empecher: Boolean);  
+begin  
   if Empecher then
     SetThreadExecutionState(ES_CONTINUOUS or ES_SYSTEM_REQUIRED or ES_DISPLAY_REQUIRED)
   else
@@ -1017,8 +1017,8 @@ end;
 Toujours vérifier les valeurs de retour des fonctions API :
 
 ```pascal
-function ExempleBonnesPratiques: Boolean;
-var
+function ExempleBonnesPratiques: Boolean;  
+var  
   Handle: THandle;
 begin
   Result := False;
@@ -1053,8 +1053,8 @@ end;
 Toujours libérer les ressources allouées :
 
 ```pascal
-procedure GestionRessources;
-var
+procedure GestionRessources;  
+var  
   DC: HDC;
   Bitmap: HBITMAP;
   OldBitmap: HBITMAP;

@@ -44,8 +44,8 @@ La méthode GET est utilisée pour **lire** des données sans les modifier.
 uses
   System.Net.HttpClient;
 
-function RecupererUtilisateur(UserID: Integer): string;
-var
+function RecupererUtilisateur(UserID: Integer): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -67,8 +67,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   JSON: string;
 begin
   JSON := RecupererUtilisateur(123);
@@ -81,8 +81,8 @@ end;
 Les paramètres sont ajoutés à l'URL après un `?` :
 
 ```pascal
-function RechercherUtilisateurs(const Nom: string; Age: Integer): string;
-var
+function RechercherUtilisateurs(const Nom: string; Age: Integer): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -101,8 +101,8 @@ begin
 end;
 
 // Alternative avec TURLBuilder (plus propre)
-function RechercherUtilisateursV2(const Nom: string; Age: Integer): string;
-var
+function RechercherUtilisateursV2(const Nom: string; Age: Integer): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: TURI;
@@ -131,8 +131,8 @@ POST envoie des données au serveur pour créer une nouvelle ressource.
 uses
   System.JSON;
 
-function CreerUtilisateur(const Nom, Email: string; Age: Integer): Boolean;
-var
+function CreerUtilisateur(const Nom, Email: string; Age: Integer): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest: TJSONObject;
@@ -180,8 +180,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonCreerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonCreerClick(Sender: TObject);  
+begin  
   CreerUtilisateur('Jean Dupont', 'jean@example.com', 30);
 end;
 ```
@@ -191,8 +191,8 @@ end;
 PUT remplace complètement une ressource existante.
 
 ```pascal
-function MettreAJourUtilisateur(UserID: Integer; const Nom, Email: string): Boolean;
-var
+function MettreAJourUtilisateur(UserID: Integer; const Nom, Email: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest: TJSONObject;
@@ -236,8 +236,8 @@ end;
 PATCH modifie seulement certains champs (pas toute la ressource).
 
 ```pascal
-function ModifierEmail(UserID: Integer; const NouvelEmail: string): Boolean;
-var
+function ModifierEmail(UserID: Integer; const NouvelEmail: string): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest: TJSONObject;
@@ -279,8 +279,8 @@ end;
 DELETE supprime une ressource.
 
 ```pascal
-function SupprimerUtilisateur(UserID: Integer): Boolean;
-var
+function SupprimerUtilisateur(UserID: Integer): Boolean;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -311,8 +311,8 @@ end;
 Les en-têtes HTTP contiennent des métadonnées sur la requête ou la réponse.
 
 ```pascal
-function RequeteAvecHeaders: string;
-var
+function RequeteAvecHeaders: string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -347,8 +347,8 @@ end;
 ### Lire les en-têtes de réponse
 
 ```pascal
-procedure AfficherHeadersReponse;
-var
+procedure AfficherHeadersReponse;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Header: TNetHeader;
@@ -403,8 +403,8 @@ Les codes HTTP indiquent le résultat de la requête :
 ### Gérer les codes de statut
 
 ```pascal
-procedure TraiterReponseHTTP(Response: IHTTPResponse);
-begin
+procedure TraiterReponseHTTP(Response: IHTTPResponse);  
+begin  
   case Response.StatusCode of
     200:
       ShowMessage('Succès: ' + Response.ContentAsString);
@@ -443,8 +443,8 @@ end;
 ### API Key dans l'URL
 
 ```pascal
-function RequeteAvecAPIKey(const APIKey: string): string;
-var
+function RequeteAvecAPIKey(const APIKey: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -464,8 +464,8 @@ end;
 ### API Key dans l'en-tête
 
 ```pascal
-function RequeteAvecAPIKeyHeader(const APIKey: string): string;
-var
+function RequeteAvecAPIKeyHeader(const APIKey: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -486,8 +486,8 @@ end;
 ### Bearer Token (OAuth 2.0)
 
 ```pascal
-function RequeteAvecBearerToken(const Token: string): string;
-var
+function RequeteAvecBearerToken(const Token: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -511,8 +511,8 @@ end;
 uses
   System.NetEncoding;
 
-function RequeteAvecBasicAuth(const Username, Password: string): string;
-var
+function RequeteAvecBasicAuth(const Username, Password: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Headers: TNetHeaders;
@@ -542,8 +542,8 @@ end;
 uses
   System.JSON;
 
-procedure ParserUtilisateur(const JSON: string);
-var
+procedure ParserUtilisateur(const JSON: string);  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
   Nom, Email: string;
@@ -571,8 +571,8 @@ end;
 ### Parser un tableau JSON
 
 ```pascal
-procedure ParserListeUtilisateurs(const JSON: string);
-var
+procedure ParserListeUtilisateurs(const JSON: string);  
+var  
   JSONValue: TJSONValue;
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
@@ -605,8 +605,8 @@ end;
 
 ```pascal
 // JSON: {"user": {"name": "Jean", "address": {"city": "Paris"}}}
-procedure ParserJSONImbrique(const JSON: string);
-var
+procedure ParserJSONImbrique(const JSON: string);  
+var  
   JSONRoot, JSONUser, JSONAddress: TJSONObject;
   Nom, Ville: string;
 begin
@@ -642,8 +642,8 @@ begin
 end;
 
 // Utilisation
-procedure ParserAvecDefauts(const JSON: string);
-var
+procedure ParserAvecDefauts(const JSON: string);  
+var  
   JSONObject: TJSONObject;
   Nom, Email: string;
 begin
@@ -664,8 +664,8 @@ end;
 ### Pagination par offset/limit
 
 ```pascal
-function RecupererUtilisateursAvecPagination(Page, ParPage: Integer): string;
-var
+function RecupererUtilisateursAvecPagination(Page, ParPage: Integer): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -685,8 +685,8 @@ begin
 end;
 
 // Utilisation : récupérer la page 2 avec 10 éléments par page
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   JSON: string;
 begin
   JSON := RecupererUtilisateursAvecPagination(2, 10);
@@ -697,8 +697,8 @@ end;
 ### Pagination par numéro de page
 
 ```pascal
-function RecupererPage(NumeroPage, TaillePage: Integer): string;
-var
+function RecupererPage(NumeroPage, TaillePage: Integer): string;  
+var  
   URL: string;
 begin
   URL := Format('https://api.example.com/users?page=%d&per_page=%d',
@@ -718,8 +718,8 @@ type
     APlusDePages: Boolean;
   end;
 
-function RecupererAvecCurseur(const Curseur: string = ''): TResultatPagine;
-var
+function RecupererAvecCurseur(const Curseur: string = ''): TResultatPagine;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONResponse: TJSONObject;
@@ -747,8 +747,8 @@ begin
 end;
 
 // Récupérer toutes les pages
-procedure RecupererToutesLesPages;
-var
+procedure RecupererToutesLesPages;  
+var  
   Resultat: TResultatPagine;
   Curseur: string;
 begin
@@ -771,8 +771,8 @@ end;
 ### Filtres simples
 
 ```pascal
-function RechercherUtilisateurs(const Criteres: string): string;
-var
+function RechercherUtilisateurs(const Criteres: string): string;  
+var  
   URL: string;
 begin
   // Filtrer par critère
@@ -783,8 +783,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonRechercherClick(Sender: TObject);
-var
+procedure TForm1.ButtonRechercherClick(Sender: TObject);  
+var  
   Resultat: string;
 begin
   Resultat := RechercherUtilisateurs('active');
@@ -803,8 +803,8 @@ type
     Ville: string;
   end;
 
-function RechercherAvecFiltres(const Filtres: TFiltresUtilisateur): string;
-var
+function RechercherAvecFiltres(const Filtres: TFiltresUtilisateur): string;  
+var  
   URL: TURI;
 begin
   URL := TURI.Create('https://api.example.com/users');
@@ -828,8 +828,8 @@ end;
 ### Tri des résultats
 
 ```pascal
-function RecupererTriePar(const Champ: string; Ordre: string = 'asc'): string;
-var
+function RecupererTriePar(const Champ: string; Ordre: string = 'asc'): string;  
+var  
   URL: string;
 begin
   URL := Format('https://api.example.com/users?sort=%s&order=%s',
@@ -839,14 +839,14 @@ begin
 end;
 
 // Utilisation
-procedure TrierParNom;
-begin
+procedure TrierParNom;  
+begin  
   // Tri croissant par nom
   Memo1.Lines.Text := RecupererTriePar('name', 'asc');
 end;
 
-procedure TrierParAge;
-begin
+procedure TrierParAge;  
+begin  
   // Tri décroissant par âge
   Memo1.Lines.Text := RecupererTriePar('age', 'desc');
 end;
@@ -883,8 +883,8 @@ end;
 ### Parser les erreurs JSON
 
 ```pascal
-procedure TraiterErreurAPI(Response: IHTTPResponse);
-var
+procedure TraiterErreurAPI(Response: IHTTPResponse);  
+var  
   JSONError: TJSONObject;
   ErrorCode, Message, Details: string;
 begin
@@ -913,8 +913,8 @@ end;
 ### Wrapper avec gestion d'erreurs
 
 ```pascal
-function AppelerAPISafe(const URL: string): string;
-var
+function AppelerAPISafe(const URL: string): string;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   Tentatives: Integer;
@@ -987,8 +987,8 @@ type
     Reset: TDateTime;
   end;
 
-function ExtraireRateLimitInfo(Response: IHTTPResponse): TRateLimitInfo;
-var
+function ExtraireRateLimitInfo(Response: IHTTPResponse): TRateLimitInfo;  
+var  
   LimiteStr, RestantStr, ResetStr: string;
   ResetTimestamp: Int64;
 begin
@@ -1010,8 +1010,8 @@ begin
   end;
 end;
 
-procedure AfficherRateLimitInfo(const Info: TRateLimitInfo);
-begin
+procedure AfficherRateLimitInfo(const Info: TRateLimitInfo);  
+begin  
   ShowMessage(Format(
     'Limite: %d requêtes' + sLineBreak +
     'Restantes: %d' + sLineBreak +
@@ -1038,15 +1038,15 @@ type
     function PeutFaireRequete: Boolean;
   end;
 
-constructor TRateLimitManager.Create(DelaiMinimumMS: Integer);
-begin
+constructor TRateLimitManager.Create(DelaiMinimumMS: Integer);  
+begin  
   FDelaiMinimum := DelaiMinimumMS;
   FDerniereRequete := 0;
   FRestant := -1;
 end;
 
-procedure TRateLimitManager.AttendreAvantRequete;
-var
+procedure TRateLimitManager.AttendreAvantRequete;  
+var  
   Ecoule, AAttendre: Integer;
 begin
   // Attendre si nécessaire entre les requêtes
@@ -1075,13 +1075,13 @@ begin
   FDerniereRequete := Now;
 end;
 
-function TRateLimitManager.PeutFaireRequete: Boolean;
-begin
+function TRateLimitManager.PeutFaireRequete: Boolean;  
+begin  
   Result := (FRestant < 0) or (FRestant > 0) or (Now >= FReset);
 end;
 
-procedure TRateLimitManager.MettreAJourLimites(const Info: TRateLimitInfo);
-begin
+procedure TRateLimitManager.MettreAJourLimites(const Info: TRateLimitInfo);  
+begin  
   FRestant := Info.Restant;
   FReset := Info.Reset;
 end;
@@ -1111,15 +1111,15 @@ type
     procedure Arreter;
   end;
 
-constructor TWebHookServer.Create(Port: Integer);
-begin
+constructor TWebHookServer.Create(Port: Integer);  
+begin  
   FServer := TIdHTTPServer.Create(nil);
   FServer.DefaultPort := Port;
   FServer.OnCommandGet := TraiterWebHook;
 end;
 
-destructor TWebHookServer.Destroy;
-begin
+destructor TWebHookServer.Destroy;  
+begin  
   FServer.Free;
   inherited;
 end;
@@ -1138,14 +1138,12 @@ begin
     Data := JSONData.GetValue<string>('data');
 
     // Traiter selon le type d'événement
-    case EventType of
-      'user.created':
-        TraiterNouvelUtilisateur(Data);
-      'payment.success':
-        TraiterPaiementReussi(Data);
-      'order.shipped':
-        TraiterCommandeExpediee(Data);
-    end;
+    if EventType = 'user.created' then
+      TraiterNouvelUtilisateur(Data)
+    else if EventType = 'payment.success' then
+      TraiterPaiementReussi(Data)
+    else if EventType = 'order.shipped' then
+      TraiterCommandeExpediee(Data);
 
     // Répondre avec succès
     AResponseInfo.ResponseNo := 200;
@@ -1164,8 +1162,8 @@ Les WebHooks signés garantissent l'authenticité :
 uses
   System.Hash, System.NetEncoding;
 
-function VerifierSignatureWebHook(const Payload, Signature, Secret: string): Boolean;
-var
+function VerifierSignatureWebHook(const Payload, Signature, Secret: string): Boolean;  
+var  
   HashCalcule: string;
 begin
   // Calculer HMAC-SHA256
@@ -1181,7 +1179,14 @@ var
   Signature, Payload, Secret: string;
 begin
   Signature := ARequestInfo.RawHeaders.Values['X-Signature'];
-  Payload := ARequestInfo.PostStream.DataString;
+  // Lire le contenu du flux POST
+  ARequestInfo.PostStream.Position := 0;
+  with TStreamReader.Create(ARequestInfo.PostStream, TEncoding.UTF8) do
+  try
+    Payload := ReadToEnd;
+  finally
+    Free;
+  end;
   Secret := 'votre_secret_webhook';
 
   if not VerifierSignatureWebHook(Payload, Signature, Secret) then
@@ -1220,30 +1225,30 @@ type
     destructor Destroy; override;
   end;
 
-constructor TAPIClient.Create(const BaseURL, APIKey: string);
-begin
+constructor TAPIClient.Create(const BaseURL, APIKey: string);  
+begin  
   FBaseURL := BaseURL;
   FAPIKey := APIKey;
   FHttpClient := THTTPClient.Create;
   FRateLimitManager := TRateLimitManager.Create(1000);
 end;
 
-destructor TAPIClient.Destroy;
-begin
+destructor TAPIClient.Destroy;  
+begin  
   FRateLimitManager.Free;
   FHttpClient.Free;
   inherited;
 end;
 
-function TAPIClient.CreerHeaders: TNetHeaders;
-begin
+function TAPIClient.CreerHeaders: TNetHeaders;  
+begin  
   SetLength(Result, 2);
   Result[0] := TNetHeader.Create('Authorization', 'Bearer ' + FAPIKey);
   Result[1] := TNetHeader.Create('Content-Type', 'application/json');
 end;
 
-function TAPIClient.Get(const Endpoint: string): string;
-var
+function TAPIClient.Get(const Endpoint: string): string;  
+var  
   Response: IHTTPResponse;
   URL: string;
 begin
@@ -1256,8 +1261,8 @@ begin
   Result := Response.ContentAsString;
 end;
 
-function TAPIClient.Post(const Endpoint: string; const Data: TJSONObject): string;
-var
+function TAPIClient.Post(const Endpoint: string; const Data: TJSONObject): string;  
+var  
   Response: IHTTPResponse;
   PostData: TStringStream;
   URL: string;
@@ -1275,8 +1280,8 @@ begin
   end;
 end;
 
-procedure TAPIClient.TraiterReponse(Response: IHTTPResponse);
-var
+procedure TAPIClient.TraiterReponse(Response: IHTTPResponse);  
+var  
   RateLimitInfo: TRateLimitInfo;
 begin
   // Mettre à jour le rate limiting
@@ -1297,21 +1302,21 @@ type
     function CreerUtilisateur(const Nom, Email: string): TJSONObject;
   end;
 
-constructor TMonAPIClient.Create(const APIKey: string);
-begin
+constructor TMonAPIClient.Create(const APIKey: string);  
+begin  
   inherited Create('https://api.example.com/v1', APIKey);
 end;
 
-function TMonAPIClient.ObtenirUtilisateurs: TJSONArray;
-var
+function TMonAPIClient.ObtenirUtilisateurs: TJSONArray;  
+var  
   JSON: string;
 begin
   JSON := Get('/users');
   Result := TJSONObject.ParseJSONValue(JSON) as TJSONArray;
 end;
 
-function TMonAPIClient.CreerUtilisateur(const Nom, Email: string): TJSONObject;
-var
+function TMonAPIClient.CreerUtilisateur(const Nom, Email: string): TJSONObject;  
+var  
   Data: TJSONObject;
   JSON: string;
 begin
