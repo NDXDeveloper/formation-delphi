@@ -300,10 +300,10 @@ Le timestamp est **crucial** ! Voici pourquoi :
 
 **Serveurs de timestamp recommandés** :
 ```
-http://timestamp.digicert.com
-http://timestamp.sectigo.com
-http://timestamp.globalsign.com
-http://timestamp.comodoca.com
+http://timestamp.digicert.com  
+http://timestamp.sectigo.com  
+http://timestamp.globalsign.com  
+http://timestamp.comodoca.com  
 ```
 
 Utilisez toujours un serveur de timestamp !
@@ -340,21 +340,21 @@ Créez un fichier `sign.bat` :
 
 ```batch
 @echo off
-set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
-set CERT_FILE="C:\Certificats\MonCertificat.pfx"
-set TIMESTAMP=http://timestamp.digicert.com
+set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"  
+set CERT_FILE="C:\Certificats\MonCertificat.pfx"  
+set TIMESTAMP=http://timestamp.digicert.com  
 
-REM Demander le mot de passe
-set /p CERT_PASS="Entrez le mot de passe du certificat : "
+REM Demander le mot de passe  
+set /p CERT_PASS="Entrez le mot de passe du certificat : "  
 
 REM Signer le fichier
 %SIGNTOOL% sign /f %CERT_FILE% /p %CERT_PASS% /t %TIMESTAMP% /fd SHA256 %1
 
-REM Effacer le mot de passe de la mémoire
-set CERT_PASS=
+REM Effacer le mot de passe de la mémoire  
+set CERT_PASS=  
 
-echo Signature terminée !
-pause
+echo Signature terminée !  
+pause  
 ```
 
 Utilisez-le ainsi :
@@ -456,15 +456,15 @@ Si votre application comprend plusieurs exécutables ou DLL, signez-les tous :
 
 ```batch
 @echo off
-set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
-set CERT=/f "MonCert.pfx" /p "MotDePasse" /t http://timestamp.digicert.com /fd SHA256
+set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"  
+set CERT=/f "MonCert.pfx" /p "MotDePasse" /t http://timestamp.digicert.com /fd SHA256  
 
 %SIGNTOOL% sign %CERT% "MonApp.exe"
 %SIGNTOOL% sign %CERT% "MonPlugin.dll"
 %SIGNTOOL% sign %CERT% "Assistant.exe"
 
-echo Tous les fichiers signés !
-pause
+echo Tous les fichiers signés !  
+pause  
 ```
 
 **Important** : Signez AVANT de créer l'installateur, puis signez aussi l'installateur.

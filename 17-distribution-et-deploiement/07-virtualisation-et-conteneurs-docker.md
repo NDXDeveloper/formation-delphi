@@ -245,9 +245,9 @@ Un **Dockerfile** est un fichier texte contenant les instructions pour construir
 
 **Exemple simple** :
 ```dockerfile
-FROM ubuntu:22.04
-COPY MonApplication /app/
-CMD ["/app/MonApplication"]
+FROM ubuntu:22.04  
+COPY MonApplication /app/  
+CMD ["/app/MonApplication"]  
 ```
 
 #### Docker Hub
@@ -276,9 +276,9 @@ CMD ["/app/MonApplication"]
 
 ```bash
 # Ubuntu/Debian
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
+curl -fsSL https://get.docker.com -o get-docker.sh  
+sudo sh get-docker.sh  
+sudo usermod -aG docker $USER  
 ```
 
 Redémarrez votre session pour que les changements prennent effet.
@@ -345,8 +345,8 @@ uses
   Web.HTTPApp,
   IdHTTPWebBrokerBridge;
 
-procedure StartServer;
-var
+procedure StartServer;  
+var  
   Server: TIdHTTPWebBrokerBridge;
 begin
   Server := TIdHTTPWebBrokerBridge.Create(nil);
@@ -633,8 +633,8 @@ FROM ubuntu:22.04
 # Dépendances
 RUN apt-get update && apt-get install -y libgtk-3-0 && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-COPY BatchProcessor /app/
+WORKDIR /app  
+COPY BatchProcessor /app/  
 
 # Volume pour les fichiers à traiter
 VOLUME ["/data"]
@@ -674,15 +674,15 @@ Réduisez la taille de l'image finale :
 
 ```dockerfile
 # Stage 1 : Build (avec toutes les dépendances)
-FROM ubuntu:22.04 AS builder
-RUN apt-get update && apt-get install -y build-tools
-COPY source/ /build/
-RUN compile-app
+FROM ubuntu:22.04 AS builder  
+RUN apt-get update && apt-get install -y build-tools  
+COPY source/ /build/  
+RUN compile-app  
 
 # Stage 2 : Runtime (seulement ce qui est nécessaire)
-FROM ubuntu:22.04
-COPY --from=builder /build/app /app/
-CMD ["/app/app"]
+FROM ubuntu:22.04  
+COPY --from=builder /build/app /app/  
+CMD ["/app/app"]  
 ```
 
 L'image finale ne contient que l'exécutable, pas les outils de build.
@@ -697,9 +697,9 @@ FROM ubuntu:22.04
 # Créer un utilisateur non-root
 RUN useradd -m -u 1000 appuser
 
-WORKDIR /app
-COPY MonApp /app/
-RUN chown -R appuser:appuser /app
+WORKDIR /app  
+COPY MonApp /app/  
+RUN chown -R appuser:appuser /app  
 
 # Passer à cet utilisateur
 USER appuser
@@ -713,8 +713,8 @@ Les conteneurs doivent écrire sur stdout/stderr :
 
 ```pascal
 // Dans votre application Delphi
-procedure LogMessage(const Msg: string);
-begin
+procedure LogMessage(const Msg: string);  
+begin  
   // Écrire sur la sortie standard pour Docker
   WriteLn(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' - ' + Msg);
 end;
@@ -751,8 +751,8 @@ Ajoutez des vérifications de santé :
 ```dockerfile
 FROM ubuntu:22.04
 
-COPY MonApp /app/
-EXPOSE 8080
+COPY MonApp /app/  
+EXPOSE 8080  
 
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost:8080/health || exit 1
@@ -1012,12 +1012,12 @@ docker run -p 8081:8080 mon-app
 
 # Ou arrêter le processus qui utilise le port
 # Windows :
-netstat -ano | findstr :8080
-taskkill /PID <PID> /F
+netstat -ano | findstr :8080  
+taskkill /PID <PID> /F  
 
 # Linux :
-sudo lsof -i :8080
-kill <PID>
+sudo lsof -i :8080  
+kill <PID>  
 ```
 
 ### Image trop volumineuse

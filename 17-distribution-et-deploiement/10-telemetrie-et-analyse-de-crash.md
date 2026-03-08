@@ -73,17 +73,17 @@ Les deux sont complémentaires !
 
 **Sans télémétrie** :
 ```
-Utilisateur 1 : Crash → Frustré, abandonne
-Utilisateur 2 : Crash → Frustré, abandonne
-Utilisateur 3 : Crash → Envoie un email vague
-Vous : Découvrez le problème 2 semaines plus tard
+Utilisateur 1 : Crash → Frustré, abandonne  
+Utilisateur 2 : Crash → Frustré, abandonne  
+Utilisateur 3 : Crash → Envoie un email vague  
+Vous : Découvrez le problème 2 semaines plus tard  
 ```
 
 **Avec télémétrie** :
 ```
-Utilisateurs 1, 2, 3 : Crash → Rapport automatique
-Vous : Alerte instantanée, stack trace détaillée
-Vous : Correction en 2 heures, patch envoyé
+Utilisateurs 1, 2, 3 : Crash → Rapport automatique  
+Vous : Alerte instantanée, stack trace détaillée  
+Vous : Correction en 2 heures, patch envoyé  
 ```
 
 ### 2. Comprendre l'utilisation réelle
@@ -100,9 +100,9 @@ Quel bug corriger en premier ?
 
 **Avec télémétrie** :
 ```
-Bug A : 5 utilisateurs affectés (0,05%)
-Bug B : 500 utilisateurs affectés (5%)
-Bug C : 5000 utilisateurs affectés (50%)
+Bug A : 5 utilisateurs affectés (0,05%)  
+Bug B : 500 utilisateurs affectés (5%)  
+Bug C : 5000 utilisateurs affectés (50%)  
 ```
 
 Clairement, Bug C en priorité !
@@ -113,8 +113,8 @@ Vous pensez que la nouvelle fonctionnalité va plaire ?
 
 **Télémétrie avant/après** :
 ```
-Avant : Engagement 10 min/jour
-Après : Engagement 15 min/jour (+50%)
+Avant : Engagement 10 min/jour  
+Après : Engagement 15 min/jour (+50%)  
 ```
 
 Succès confirmé par les données !
@@ -146,11 +146,11 @@ Quand votre application plante, un **rapport de crash** est généré contenant 
 
 ```
 === Crash Report ===
-Date: 2025-01-20 14:32:15
-Application: MonApp v1.2.0
-OS: Windows 11 22H2 (Build 22621)
-Exception: EAccessViolation
-Message: Access violation at address 00405C7A. Read of address 00000000.
+Date: 2025-01-20 14:32:15  
+Application: MonApp v1.2.0  
+OS: Windows 11 22H2 (Build 22621)  
+Exception: EAccessViolation  
+Message: Access violation at address 00405C7A. Read of address 00000000.  
 
 Stack Trace:
   MonApp.exe  TMainForm.Button1Click  (MainForm.pas:145)
@@ -213,8 +213,8 @@ implementation
 uses
   Winapi.Windows, System.SysInfo;
 
-constructor TTelemetry.Create(const ServerURL, AppVersion: string);
-begin
+constructor TTelemetry.Create(const ServerURL, AppVersion: string);  
+begin  
   inherited Create;
   FServerURL := ServerURL;
   FAppVersion := AppVersion;
@@ -225,14 +225,14 @@ begin
   FUserID := THashMD5.GetHashString(TOSVersion.Name + '-' + TOSVersion.Architecture.ToString);
 end;
 
-destructor TTelemetry.Destroy;
-begin
+destructor TTelemetry.Destroy;  
+begin  
   FHttpClient.Free;
   inherited;
 end;
 
-function TTelemetry.GetSystemInfo: TJSONObject;
-begin
+function TTelemetry.GetSystemInfo: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('os', TOSVersion.ToString);
   Result.AddPair('os_version', TOSVersion.Major.ToString + '.' + TOSVersion.Minor.ToString);
@@ -242,8 +242,8 @@ begin
   Result.AddPair('timestamp', FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 end;
 
-procedure TTelemetry.SendData(const EventData: TJSONObject);
-var
+procedure TTelemetry.SendData(const EventData: TJSONObject);  
+var  
   Response: IHTTPResponse;
   JsonString: string;
 begin
@@ -294,8 +294,8 @@ begin
   SendData(EventData);
 end;
 
-procedure TTelemetry.TrackError(const ErrorMessage, StackTrace: string);
-var
+procedure TTelemetry.TrackError(const ErrorMessage, StackTrace: string);  
+var  
   ErrorData: TJSONObject;
 begin
   ErrorData := TJSONObject.Create;
@@ -305,8 +305,8 @@ begin
   TrackEvent(teError, 'error_occurred', ErrorData);
 end;
 
-procedure TTelemetry.TrackCrash(E: Exception);
-var
+procedure TTelemetry.TrackCrash(E: Exception);  
+var  
   CrashData: TJSONObject;
 begin
   CrashData := TJSONObject.Create;
@@ -368,8 +368,8 @@ end.
 Dans vos formulaires :
 
 ```pascal
-procedure TMainForm.ButtonExportClick(Sender: TObject);
-begin
+procedure TMainForm.ButtonExportClick(Sender: TObject);  
+begin  
   // Tracker l'utilisation de la fonctionnalité
   Telemetry.TrackEvent(teFeatureUsed, 'export_pdf');
 
@@ -384,8 +384,8 @@ begin
   end;
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
-var
+procedure TMainForm.FormCreate(Sender: TObject);  
+var  
   SessionData: TJSONObject;
 begin
   // Tracker l'ouverture du formulaire principal
@@ -402,13 +402,13 @@ end;
 Pour capturer toutes les exceptions non gérées :
 
 ```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
+procedure TMainForm.FormCreate(Sender: TObject);  
+begin  
   Application.OnException := ApplicationException;
 end;
 
-procedure TMainForm.ApplicationException(Sender: TObject; E: Exception);
-begin
+procedure TMainForm.ApplicationException(Sender: TObject; E: Exception);  
+begin  
   // Logger l'exception
   Telemetry.TrackError(E.Message, E.StackTrace);
 
@@ -438,18 +438,16 @@ Au lieu de construire votre propre système, utilisez des solutions existantes :
 uses
   SentryClient; // Via bibliothèque tierce
 
-procedure InitializeSentry;
-begin
+procedure InitializeSentry;  
+begin  
   SentryInit('https://your-key@sentry.io/project-id');
   SentrySetEnvironment('production');
   SentrySetRelease('1.0.0');
 end;
 
-procedure TrackException(E: Exception);
-begin
-  SentryCapture
-
-Exception(E);
+procedure TrackException(E: Exception);  
+begin  
+  SentryCaptureException(E);
 end;
 ```
 
@@ -468,8 +466,8 @@ end;
 **Intégration** :
 
 ```pascal
-procedure SendToRaygun(E: Exception);
-var
+procedure SendToRaygun(E: Exception);  
+var  
   HttpClient: THTTPClient;
   JsonPayload: TJSONObject;
 begin
@@ -509,8 +507,8 @@ end;
 uses
   System.Net.HttpClient, System.JSON;
 
-procedure SendToAppInsights(const EventName: string; Data: TJSONObject);
-var
+procedure SendToAppInsights(const EventName: string; Data: TJSONObject);  
+var  
   HttpClient: THTTPClient;
   Payload: TJSONObject;
 begin
@@ -551,8 +549,8 @@ Bien que conçu pour le web, GA peut tracker les applications desktop.
 **Intégration** :
 
 ```pascal
-procedure TrackGAEvent(const Category, Action, Label: string; Value: Integer = 0);
-var
+procedure TrackGAEvent(const Category, Action, Label: string; Value: Integer = 0);  
+var  
   HttpClient: THTTPClient;
   Params: string;
 begin
@@ -598,8 +596,8 @@ Si vous collectez des données sur des utilisateurs européens, vous devez respe
 ### Implémentation du consentement
 
 ```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-var
+procedure TMainForm.FormCreate(Sender: TObject);  
+var  
   IniFile: TIniFile;
   TelemetryConsent: Boolean;
 begin
@@ -631,8 +629,8 @@ begin
   end;
 end;
 
-function TMainForm.ShowConsentDialog: Boolean;
-begin
+function TMainForm.ShowConsentDialog: Boolean;  
+begin  
   Result := MessageDlg(
     'Pour améliorer notre application, nous aimerions collecter des données ' +
     'd''utilisation anonymes (fonctionnalités utilisées, erreurs rencontrées). ' +
@@ -667,8 +665,8 @@ end;
 Permettez toujours aux utilisateurs de désactiver la télémétrie :
 
 ```pascal
-procedure TFormOptions.CheckBoxTelemetryClick(Sender: TObject);
-var
+procedure TFormOptions.CheckBoxTelemetryClick(Sender: TObject);  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -745,19 +743,19 @@ Créez un tableau de bord pour visualiser les données :
 **Exemple de décisions guidées par la télémétrie** :
 
 1. **Crash fréquent détecté**
-   → Priorité haute pour correction
+   → Priorité haute pour correction  
    → Patch d'urgence si critique
 
 2. **Fonctionnalité jamais utilisée**
-   → Améliorer visibilité
+   → Améliorer visibilité  
    → Ou supprimer pour simplifier
 
 3. **Performance dégradée sur certaines configs**
-   → Optimisation ciblée
+   → Optimisation ciblée  
    → Avertissement pour configs non supportées
 
 4. **Adoption lente d'une nouvelle version**
-   → Communication renforcée
+   → Communication renforcée  
    → Vérifier problèmes de mise à jour
 
 ## Bonnes pratiques de télémétrie
@@ -780,8 +778,8 @@ Ajoutez progressivement selon les besoins.
 La télémétrie ne doit **jamais** ralentir l'application :
 
 ```pascal
-procedure TTelemetry.SendData(const EventData: TJSONObject);
-begin
+procedure TTelemetry.SendData(const EventData: TJSONObject);  
+begin  
   // ✓ Bon : Envoi dans un thread séparé
   TThread.CreateAnonymousThread(
     procedure
@@ -818,8 +816,8 @@ Envoyez uniquement ce qui est nécessaire :
 EventData.AddPair('full_document_content', Memo1.Text); // Peut être énorme !
 
 // ✓ Bon : Métriques utiles
-EventData.AddPair('document_length', IntToStr(Length(Memo1.Text)));
-EventData.AddPair('document_type', DetectDocumentType(Memo1.Text));
+EventData.AddPair('document_length', IntToStr(Length(Memo1.Text)));  
+EventData.AddPair('document_type', DetectDocumentType(Memo1.Text));  
 ```
 
 ### 5. Sampling pour les événements fréquents
@@ -827,12 +825,12 @@ EventData.AddPair('document_type', DetectDocumentType(Memo1.Text));
 Pour les événements très fréquents, utilisez le sampling :
 
 ```pascal
-procedure TMainForm.TimerPerformanceTimer(Sender: TObject);
-begin
+procedure TMainForm.TimerPerformanceTimer(Sender: TObject);  
+begin  
   // Envoyer les métriques de performance seulement 1 fois sur 100
   if Random(100) = 0 then
   begin
-    Telemetry.TrackEvent(tePerformance, 'memory_usage',
+    Telemetry.TrackEvent(teFeatureUsed, 'memory_usage',
       TJSONObject.Create.AddPair('memory_mb', IntToStr(GetMemoryUsed)));
   end;
 end;
@@ -843,8 +841,8 @@ end;
 Quand une erreur survient, capturez le contexte :
 
 ```pascal
-procedure TTelemetry.TrackError(const ErrorMessage: string);
-var
+procedure TTelemetry.TrackError(const ErrorMessage: string);  
+var  
   ErrorData: TJSONObject;
 begin
   ErrorData := TJSONObject.Create;
@@ -884,8 +882,8 @@ type
     procedure SendData(const EventData: TJSONObject);
   end;
 
-procedure TTelemetry.SendData(const EventData: TJSONObject);
-begin
+procedure TTelemetry.SendData(const EventData: TJSONObject);  
+begin  
   TThread.CreateAnonymousThread(
     procedure
     begin
@@ -972,8 +970,8 @@ Pour obtenir des stack traces utiles, utilisez des outils comme :
 uses
   JclDebug;
 
-procedure ShowExceptionDialog(E: Exception);
-var
+procedure ShowExceptionDialog(E: Exception);  
+var  
   StackInfo: TJclStackInfoList;
   i: Integer;
   Msg: string;
@@ -1009,9 +1007,9 @@ Si vous voulez héberger votre propre serveur, voici un exemple minimal avec Nod
 
 ```javascript
 // server.js - Serveur de télémétrie simple
-const express = require('express');
-const fs = require('fs');
-const app = express();
+const express = require('express');  
+const fs = require('fs');  
+const app = express();  
 
 app.use(express.json());
 
@@ -1056,8 +1054,8 @@ app.listen(5000, () => {
 
 **Démarrage** :
 ```bash
-npm install express
-node server.js
+npm install express  
+node server.js  
 ```
 
 Votre application Delphi peut maintenant envoyer des événements à `http://localhost:5000/api/events`.

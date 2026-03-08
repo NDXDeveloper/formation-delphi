@@ -153,8 +153,8 @@ Vous fournissez directement l'application à vos utilisateurs :
 - **Livraison sur médias physiques** : CD, DVD, clés USB (de moins en moins courant)
 - **Réseau d'entreprise** : Déploiement via des outils d'administration système
 
-**Avantages** : Contrôle total, pas de commission
-**Inconvénients** : Vous gérez tout (hébergement, support, mises à jour)
+**Avantages** : Contrôle total, pas de commission  
+**Inconvénients** : Vous gérez tout (hébergement, support, mises à jour)  
 
 ### Magasins d'applications
 
@@ -163,8 +163,8 @@ Publication sur des plateformes établies :
 - **Steam** : Pour les jeux et certaines applications
 - **Setapp** (macOS) : Abonnement à un ensemble d'applications
 
-**Avantages** : Visibilité, confiance des utilisateurs, gestion automatique des mises à jour
-**Inconvénients** : Commission (généralement 15-30%), processus de validation, règles strictes
+**Avantages** : Visibilité, confiance des utilisateurs, gestion automatique des mises à jour  
+**Inconvénients** : Commission (généralement 15-30%), processus de validation, règles strictes  
 
 ### Distribution d'entreprise
 
@@ -173,8 +173,8 @@ Pour les applications en entreprise :
 - **Portails d'entreprise** : Catalogues d'applications internes
 - **Conteneurs** : Docker pour certaines applications serveur
 
-**Avantages** : Contrôle centralisé, déploiement à grande échelle
-**Inconvénients** : Complexité technique, infrastructure requise
+**Avantages** : Contrôle centralisé, déploiement à grande échelle  
+**Inconvénients** : Complexité technique, infrastructure requise  
 
 ## Vue d'ensemble de ce chapitre
 

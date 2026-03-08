@@ -213,24 +213,24 @@ WiX utilise des fichiers XML pour définir l'installation.
 **Étape 2 : Compiler le MSI**
 
 ```cmd
-REM 1. Compiler le fichier WXS en WIXOBJ
-candle Product.wxs
+REM 1. Compiler le fichier WXS en WIXOBJ  
+candle Product.wxs  
 
-REM 2. Lier pour créer le MSI
-light Product.wixobj -out MonApplication.msi
+REM 2. Lier pour créer le MSI  
+light Product.wixobj -out MonApplication.msi  
 ```
 
 **Étape 3 : Tester l'installation**
 
 ```cmd
-REM Installation normale
-msiexec /i MonApplication.msi
+REM Installation normale  
+msiexec /i MonApplication.msi  
 
-REM Installation silencieuse
-msiexec /i MonApplication.msi /quiet /norestart
+REM Installation silencieuse  
+msiexec /i MonApplication.msi /quiet /norestart  
 
-REM Désinstallation
-msiexec /x MonApplication.msi
+REM Désinstallation  
+msiexec /x MonApplication.msi  
 ```
 
 #### Fonctionnalités avancées de WiX
@@ -360,17 +360,17 @@ C'est beaucoup plus visuel et intuitif que WiX !
 Les administrateurs système utilisent souvent l'installation silencieuse :
 
 ```cmd
-REM Installation silencieuse de base
-msiexec /i MonApp.msi /quiet
+REM Installation silencieuse de base  
+msiexec /i MonApp.msi /quiet  
 
-REM Avec log détaillé
-msiexec /i MonApp.msi /quiet /l*v install.log
+REM Avec log détaillé  
+msiexec /i MonApp.msi /quiet /l*v install.log  
 
-REM Avec paramètres personnalisés
-msiexec /i MonApp.msi /quiet INSTALLFOLDER="C:\MonDossier" ADDLOCAL=ALL
+REM Avec paramètres personnalisés  
+msiexec /i MonApp.msi /quiet INSTALLFOLDER="C:\MonDossier" ADDLOCAL=ALL  
 
-REM Désinstallation silencieuse
-msiexec /x MonApp.msi /quiet
+REM Désinstallation silencieuse  
+msiexec /x MonApp.msi /quiet  
 ```
 
 #### Déploiement via Group Policy (Active Directory)
@@ -391,11 +391,11 @@ Le MSI s'installe automatiquement sur tous les postes du domaine.
 Les fichiers **MST** (Microsoft Transform) permettent de personnaliser un MSI sans le modifier :
 
 ```cmd
-REM Créer une transformation
-msitran.exe -g MonApp.msi MonApp.mst
+REM Créer une transformation  
+msitran.exe -g MonApp.msi MonApp.mst  
 
-REM Appliquer une transformation
-msiexec /i MonApp.msi TRANSFORMS=MonApp.mst
+REM Appliquer une transformation  
+msiexec /i MonApp.msi TRANSFORMS=MonApp.mst  
 ```
 
 **Utilité** : Personnaliser l'installation pour différents services/sites.
@@ -424,9 +424,9 @@ Lors de l'installation du nouveau MSI, l'ancien est automatiquement désinstall�
 Pour des corrections mineures sans réinstallation complète :
 
 ```cmd
-REM Créer un patch MSP avec WiX
-torch.exe v1.0.wixpdb v1.1.wixpdb -out diff.wixmst
-pyro.exe diff.wixmst -out patch.msp
+REM Créer un patch MSP avec WiX  
+torch.exe v1.0.wixpdb v1.1.wixpdb -out diff.wixmst  
+pyro.exe diff.wixmst -out patch.msp  
 ```
 
 L'utilisateur applique le patch qui met à jour uniquement les fichiers modifiés.
@@ -667,11 +667,11 @@ MonAppPackage/
 **Étape 4 : Créer le package**
 
 ```cmd
-REM Créer le package MSIX
-makeappx pack /d MonAppPackage /p MonApp.msix
+REM Créer le package MSIX  
+makeappx pack /d MonAppPackage /p MonApp.msix  
 
-REM Signer le package
-signtool sign /fd SHA256 /a /f CertificatCodeSigning.pfx /p MotDePasse MonApp.msix
+REM Signer le package  
+signtool sign /fd SHA256 /a /f CertificatCodeSigning.pfx /p MotDePasse MonApp.msix  
 ```
 
 **Étape 5 : Tester le package**
@@ -808,10 +808,10 @@ Les utilisateurs reçoivent automatiquement la mise à jour via Windows Update.
 Le Store permet des **déploiements progressifs** :
 
 ```
-Jour 1 : 10% des utilisateurs
-Jour 2 : 25% des utilisateurs
-Jour 3 : 50% des utilisateurs
-Jour 4 : 100% des utilisateurs
+Jour 1 : 10% des utilisateurs  
+Jour 2 : 25% des utilisateurs  
+Jour 3 : 50% des utilisateurs  
+Jour 4 : 100% des utilisateurs  
 ```
 
 **Avantage** : Détecter les bugs sur un petit groupe avant diffusion massive.
@@ -1008,8 +1008,8 @@ Le Partner Center fournit :
 
 **Solution** :
 ```cmd
-REM Lancer l'installation en admin
-msiexec /i MonApp.msi /a
+REM Lancer l'installation en admin  
+msiexec /i MonApp.msi /a  
 ```
 
 ### MSI : Installation échoue silencieusement
@@ -1018,8 +1018,8 @@ msiexec /i MonApp.msi /a
 
 **Solution** : Créer un log détaillé
 ```cmd
-msiexec /i MonApp.msi /l*v install.log
-REM Examiner install.log pour trouver l'erreur
+msiexec /i MonApp.msi /l*v install.log  
+REM Examiner install.log pour trouver l'erreur  
 ```
 
 ### Store : "Package validation failed"
@@ -1040,8 +1040,8 @@ makeappx.exe validate /p MonApp.msix
 
 **Solution** :
 ```cmd
-REM Voir le sujet du certificat
-certutil -dump CertificatCodeSigning.pfx
+REM Voir le sujet du certificat  
+certutil -dump CertificatCodeSigning.pfx  
 
 REM Copier exactement le CN= dans le manifeste
 ```

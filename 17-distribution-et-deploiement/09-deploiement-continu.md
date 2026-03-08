@@ -137,8 +137,8 @@ Types de tests :
 
 ```pascal
 [Test]
-procedure TCalculatorTests.TestAddition;
-begin
+procedure TCalculatorTests.TestAddition;  
+begin  
   Assert.AreEqual(5, Calculator.Add(2, 3), 'Addition incorrecte');
 end;
 ```
@@ -299,9 +299,9 @@ Pour automatiser la compilation Delphi, vous avez besoin de :
 Delphi peut se compiler sans l'IDE :
 
 ```batch
-REM Méthode 1 : Via rsvars.bat et msbuild
-call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
-msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32
+REM Méthode 1 : Via rsvars.bat et msbuild  
+call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"  
+msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32  
 
 REM Méthode 2 : Via MSBuild directement
 "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\msbuild.exe" ^
@@ -1107,7 +1107,7 @@ Objectif : Déploiement production avec surveillance
 
 | Service | Coût gratuit | Coût payant |
 |---------|--------------|-------------|
-| **GitLab CI** | Illimité (self-hosted) | 400 min/mois (cloud) | 10$/utilisateur/mois |
+| **GitLab CI** | Illimité (self-hosted) / 400 min/mois (cloud) | 10$/utilisateur/mois |
 | **GitHub Actions** | 2000 min/mois | 0.008$/min au-delà |
 | **Azure DevOps** | 1800 min/mois | 40$/agent parallèle/mois |
 | **Jenkins** | Gratuit (self-hosted) | Coût serveur uniquement |

@@ -69,8 +69,8 @@ Au-delà des paramètres Release de base, vous pouvez affiner les optimisations 
 
 **Alignement**
 ```
-Options possibles : 1, 2, 4, 8, 16 octets
-Recommandé : 8 octets (bon compromis performance/taille)
+Options possibles : 1, 2, 4, 8, 16 octets  
+Recommandé : 8 octets (bon compromis performance/taille)  
 ```
 L'alignement affecte la façon dont les données sont organisées en mémoire. Un bon alignement améliore les performances d'accès à la mémoire.
 
@@ -132,17 +132,17 @@ Pour 1000 éléments, la version avec dictionnaire peut être 1000 fois plus rap
 
 ❌ **Mauvais** : Calcul dans la boucle
 ```pascal
-for i := 0 to GetCount - 1 do  // GetCount appelé à chaque itération
-begin
+for i := 0 to GetCount - 1 do  // GetCount appelé à chaque itération  
+begin  
   ProcessItem(i);
 end;
 ```
 
 ✅ **Meilleur** : Calcul une seule fois
 ```pascal
-Count := GetCount;  // Appelé une seule fois
-for i := 0 to Count - 1 do
-begin
+Count := GetCount;  // Appelé une seule fois  
+for i := 0 to Count - 1 do  
+begin  
   ProcessItem(i);
 end;
 ```
@@ -152,8 +152,8 @@ end;
 #### Libérer les ressources rapidement
 
 ```pascal
-procedure TraiterDonnees;
-var
+procedure TraiterDonnees;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -190,8 +190,8 @@ Les chaînes en Delphi utilisent le "copy-on-write", mais certaines opérations 
 
 ❌ **Mauvais** : Concaténations multiples
 ```pascal
-Result := '';
-for i := 0 to 1000 do
+Result := '';  
+for i := 0 to 1000 do  
   Result := Result + IntToStr(i) + ',';  // Copie à chaque itération
 ```
 
@@ -219,8 +219,8 @@ Les boucles sont souvent des zones critiques pour les performances.
 
 ❌ **Mauvais**
 ```pascal
-for i := 0 to List.Count - 1 do
-begin
+for i := 0 to List.Count - 1 do  
+begin  
   if Assigned(List[i]) then
   begin
     ProcessItem(List[i]);
@@ -231,12 +231,12 @@ end;
 
 ✅ **Meilleur**
 ```pascal
-for i := 0 to List.Count - 1 do
-begin
+for i := 0 to List.Count - 1 do  
+begin  
   if Assigned(List[i]) then
     ProcessItem(List[i]);
-end;
-UpdateUI;  // Une seule mise à jour à la fin
+end;  
+UpdateUI;  // Une seule mise à jour à la fin  
 ```
 
 #### Dérouler les boucles pour les petites itérations
@@ -261,8 +261,8 @@ Cela élimine la gestion de la boucle, mais rendez le code moins lisible. À uti
 Pour les petites fonctions appelées fréquemment, utilisez la directive `inline` :
 
 ```pascal
-function Carre(X: Integer): Integer; inline;
-begin
+function Carre(X: Integer): Integer; inline;  
+begin  
   Result := X * X;
 end;
 ```
@@ -301,15 +301,15 @@ Pour les opérations sur bases de données :
 
 ```pascal
 // Au lieu de valider chaque insertion :
-for i := 0 to 1000 do
-begin
+for i := 0 to 1000 do  
+begin  
   Query.SQL.Text := 'INSERT INTO ...';
   Query.ExecSQL;  // Commit automatique à chaque fois
 end;
 
 // Utilisez une transaction :
-Connection.StartTransaction;
-try
+Connection.StartTransaction;  
+try  
   for i := 0 to 1000 do
   begin
     Query.SQL.Text := 'INSERT INTO ...';
@@ -337,17 +337,17 @@ Query.SQL.Text := 'SELECT ID, Nom, Email FROM Clients';
 #### Utiliser des requêtes préparées
 
 ```pascal
-Query.SQL.Text := 'SELECT * FROM Clients WHERE Ville = :ville';
-Query.Prepare;  // Préparation une seule fois
+Query.SQL.Text := 'SELECT * FROM Clients WHERE Ville = :ville';  
+Query.Prepare;  // Préparation une seule fois  
 
 // Puis réutilisez :
-Query.ParamByName('ville').AsString := 'Paris';
-Query.Open;
+Query.ParamByName('ville').AsString := 'Paris';  
+Query.Open;  
 // ...
 Query.Close;
 
-Query.ParamByName('ville').AsString := 'Lyon';
-Query.Open;
+Query.ParamByName('ville').AsString := 'Lyon';  
+Query.Open;  
 ```
 
 ### 6. Optimisation de l'interface utilisateur
@@ -357,8 +357,8 @@ Query.Open;
 Lors de modifications multiples de l'interface :
 
 ```pascal
-ListView.Items.BeginUpdate;
-try
+ListView.Items.BeginUpdate;  
+try  
   for i := 0 to 1000 do
     ListView.Items.Add.Caption := 'Item ' + IntToStr(i);
 finally
@@ -371,8 +371,8 @@ end;
 Ne bloquez jamais l'interface utilisateur :
 
 ```pascal
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   TTask.Run(
     procedure
     begin
@@ -399,8 +399,8 @@ Pour afficher de grandes quantités de données :
 // Utilisez TListView ou TStringGrid en mode virtuel
 ListView.OwnerData := True;  // Mode virtuel
 
-procedure TForm1.ListViewData(Sender: TObject; Item: TListItem);
-begin
+procedure TForm1.ListViewData(Sender: TObject; Item: TListItem);  
+begin  
   // Fournissez les données à la demande
   Item.Caption := GetItemCaption(Item.Index);
 end;

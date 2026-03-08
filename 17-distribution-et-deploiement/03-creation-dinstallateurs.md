@@ -131,30 +131,30 @@ Inno Setup utilise des scripts texte avec l'extension `.iss`. Voici un exemple d
 
 ```ini
 [Setup]
-AppName=Mon Application Delphi
-AppVersion=1.0
-DefaultDirName={autopf}\Mon Application Delphi
-DefaultGroupName=Mon Application Delphi
-OutputDir=Output
-OutputBaseFilename=setup
-Compression=lzma2
-SolidCompression=yes
+AppName=Mon Application Delphi  
+AppVersion=1.0  
+DefaultDirName={autopf}\Mon Application Delphi  
+DefaultGroupName=Mon Application Delphi  
+OutputDir=Output  
+OutputBaseFilename=setup  
+Compression=lzma2  
+SolidCompression=yes  
 
 [Languages]
-Name: "french"; MessagesFile: "compiler:Languages\French.isl"
-Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"  
+Name: "english"; MessagesFile: "compiler:Default.isl"  
 
 [Tasks]
 Name: "desktopicon"; Description: "Créer un raccourci sur le bureau"; GroupDescription: "Raccourcis supplémentaires:"
 
 [Files]
-Source: "C:\MonProjet\Win32\Release\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\MonProjet\Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\MonProjet\Win32\Release\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion  
+Source: "C:\MonProjet\Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
 
 [Icons]
-Name: "{group}\Mon Application"; Filename: "{app}\MonApp.exe"
-Name: "{group}\Désinstaller Mon Application"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Mon Application"; Filename: "{app}\MonApp.exe"; Tasks: desktopicon
+Name: "{group}\Mon Application"; Filename: "{app}\MonApp.exe"  
+Name: "{group}\Désinstaller Mon Application"; Filename: "{uninstallexe}"  
+Name: "{autodesktop}\Mon Application"; Filename: "{app}\MonApp.exe"; Tasks: desktopicon  
 
 [Run]
 Filename: "{app}\MonApp.exe"; Description: "Lancer Mon Application"; Flags: nowait postinstall skipifsilent
@@ -181,8 +181,8 @@ Vous pouvez modifier le script pour ajouter des fonctionnalités :
 MinVersion=10.0
 
 [Code]
-function InitializeSetup(): Boolean;
-begin
+function InitializeSetup(): Boolean;  
+begin  
   Result := True;
   if not IsDotNetInstalled(net462, 0) then
   begin
@@ -196,24 +196,24 @@ end;
 
 ```ini
 [Registry]
-Root: HKCR; Subkey: ".monext"; ValueType: string; ValueData: "MonAppFile"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "MonAppFile"; ValueType: string; ValueData: "Fichier Mon Application"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "MonAppFile\DefaultIcon"; ValueType: string; ValueData: "{app}\MonApp.exe,0"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "MonAppFile\shell\open\command"; ValueType: string; ValueData: """{app}\MonApp.exe"" ""%1"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: ".monext"; ValueType: string; ValueData: "MonAppFile"; Flags: uninsdeletekey  
+Root: HKCR; Subkey: "MonAppFile"; ValueType: string; ValueData: "Fichier Mon Application"; Flags: uninsdeletekey  
+Root: HKCR; Subkey: "MonAppFile\DefaultIcon"; ValueType: string; ValueData: "{app}\MonApp.exe,0"; Flags: uninsdeletekey  
+Root: HKCR; Subkey: "MonAppFile\shell\open\command"; ValueType: string; ValueData: """{app}\MonApp.exe"" ""%1"""; Flags: uninsdeletekey  
 ```
 
 **Ajouter des composants optionnels**
 
 ```ini
 [Components]
-Name: "main"; Description: "Fichiers principaux"; Types: full compact custom; Flags: fixed
-Name: "help"; Description: "Fichiers d'aide"; Types: full
-Name: "samples"; Description: "Exemples"; Types: full
+Name: "main"; Description: "Fichiers principaux"; Types: full compact custom; Flags: fixed  
+Name: "help"; Description: "Fichiers d'aide"; Types: full  
+Name: "samples"; Description: "Exemples"; Types: full  
 
 [Files]
-Source: "MonApp.exe"; DestDir: "{app}"; Components: main
-Source: "Aide\*"; DestDir: "{app}\Aide"; Components: help
-Source: "Exemples\*"; DestDir: "{app}\Exemples"; Components: samples; Flags: recursesubdirs
+Source: "MonApp.exe"; DestDir: "{app}"; Components: main  
+Source: "Aide\*"; DestDir: "{app}\Aide"; Components: help  
+Source: "Exemples\*"; DestDir: "{app}\Exemples"; Components: samples; Flags: recursesubdirs  
 ```
 
 #### Étape 4 : Compiler l'installateur
@@ -247,8 +247,8 @@ Inno Setup supporte un langage de script basé sur Pascal pour des logiques comp
 var
   DataDirPage: TInputDirWizardPage;
 
-procedure InitializeWizard;
-begin
+procedure InitializeWizard;  
+begin  
   // Créer une page personnalisée pour choisir le dossier de données
   DataDirPage := CreateInputDirPage(wpSelectDir,
     'Sélectionner le dossier des données',
@@ -259,8 +259,8 @@ begin
   DataDirPage.Values[0] := ExpandConstant('{userdocs}\MonApp');
 end;
 
-function GetDataDir(Param: String): String;
-begin
+function GetDataDir(Param: String): String;  
+begin  
   Result := DataDirPage.Values[0];
 end;
 ```
@@ -269,8 +269,8 @@ end;
 
 ```pascal
 [Code]
-function InitializeSetup(): Boolean;
-var
+function InitializeSetup(): Boolean;  
+var  
   OldVersion: String;
   UninstallString: String;
 begin
@@ -545,8 +545,8 @@ Si votre application peut fonctionner sans droits admin, privilégiez une instal
 ```pascal
 ; Inno Setup - Code Pascal
 [Code]
-function InitializeSetup(): Boolean;
-var
+function InitializeSetup(): Boolean;  
+var  
   Version: String;
 begin
   if RegQueryStringValue(HKLM, 'Software\MonApp', 'Version', Version) then
@@ -590,8 +590,8 @@ Signez votre installateur avec un certificat de signature de code :
 **Pour signer avec Inno Setup** :
 ```ini
 [Setup]
-SignTool=signtool sign /f "MonCertificat.pfx" /p "MotDePasse" /t http://timestamp.digicert.com $f
-SignedUninstaller=yes
+SignTool=signtool sign /f "MonCertificat.pfx" /p "MotDePasse" /t http://timestamp.digicert.com $f  
+SignedUninstaller=yes  
 ```
 
 **InstallAware** :
@@ -627,9 +627,9 @@ Permettez l'installation silencieuse pour les déploiements automatisés :
 
 **Inno Setup** :
 ```
-setup.exe /SILENT      ; Installation sans interface
-setup.exe /VERYSILENT  ; Installation complètement invisible
-setup.exe /DIR="C:\MonApp"  ; Spécifier le dossier
+setup.exe /SILENT      ; Installation sans interface  
+setup.exe /VERYSILENT  ; Installation complètement invisible  
+setup.exe /DIR="C:\MonApp"  ; Spécifier le dossier  
 ```
 
 **InstallAware** :
@@ -691,8 +691,8 @@ Avant de distribuer votre installateur, vérifiez :
 ```ini
 ; Inno Setup
 [UninstallDelete]
-Type: files; Name: "{app}\config.ini"
-Type: filesandordirs; Name: "{app}\logs"
+Type: files; Name: "{app}\config.ini"  
+Type: filesandordirs; Name: "{app}\logs"  
 ```
 
 ## Conclusion

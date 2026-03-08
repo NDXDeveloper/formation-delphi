@@ -129,8 +129,8 @@ Utilisez **Dependency Walker** (depends.exe) :
 
 **Emplacements d'installation** :
 ```
-C:\Program Files\VotreApp\              (64-bit)
-C:\Program Files (x86)\VotreApp\        (32-bit)
+C:\Program Files\VotreApp\              (64-bit)  
+C:\Program Files (x86)\VotreApp\        (32-bit)  
 ```
 
 **Données utilisateur** :
@@ -142,8 +142,8 @@ C:\Program Files (x86)\VotreApp\        (32-bit)
 
 **Clés de registre** :
 ```
-HKEY_LOCAL_MACHINE\Software\VotreApp\   (configuration système)
-HKEY_CURRENT_USER\Software\VotreApp\    (configuration utilisateur)
+HKEY_LOCAL_MACHINE\Software\VotreApp\   (configuration système)  
+HKEY_CURRENT_USER\Software\VotreApp\    (configuration utilisateur)  
 ```
 
 ### Déploiement via Microsoft Store
@@ -304,8 +304,8 @@ Créez une image disque avec votre application :
 
 ```bash
 # Créer un dossier temporaire
-mkdir MonApp_Package
-cp -R MonApp.app MonApp_Package/
+mkdir MonApp_Package  
+cp -R MonApp.app MonApp_Package/  
 
 # Créer le DMG
 hdiutil create -volname "Mon Application" \
@@ -363,8 +363,8 @@ Sur macOS, utilisez `NSUserDefaults` :
 uses
   Macapi.Foundation, Macapi.Helpers;
 
-procedure SavePreference(const Key, Value: string);
-var
+procedure SavePreference(const Key, Value: string);  
+var  
   Defaults: NSUserDefaults;
 begin
   Defaults := TNSUserDefaults.Wrap(TNSUserDefaults.OCClass.standardUserDefaults);
@@ -502,14 +502,14 @@ Pour distribuer à un groupe restreint de testeurs :
 iOS a une **gestion stricte de la mémoire** :
 
 ```pascal
-procedure TForm1.FormActivate(Sender: TObject);
-begin
+procedure TForm1.FormActivate(Sender: TObject);  
+begin  
   // iOS peut fermer l'app en arrière-plan
   // Sauvegardez les données importantes
 end;
 
-procedure TForm1.FormDeactivate(Sender: TObject);
-begin
+procedure TForm1.FormDeactivate(Sender: TObject);  
+begin  
   // L'app passe en arrière-plan
   SaveData; // Sauvegarde automatique
 end;
@@ -707,8 +707,8 @@ Depuis Android 6.0, certaines permissions doivent être demandées à l'exécuti
 uses
   FMX.Types, Androidapi.Helpers, Androidapi.JNI.Os;
 
-procedure TForm1.RequestCameraPermission;
-begin
+procedure TForm1.RequestCameraPermission;  
+begin  
   {$IFDEF ANDROID}
   PermissionsService.RequestPermissions(
     ['android.permission.CAMERA'],
@@ -733,8 +733,8 @@ end;
 Sur Android, le bouton **Retour** doit être géré :
 
 ```pascal
-procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-begin
+procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);  
+begin  
   {$IFDEF ANDROID}
   if Key = vkHardwareBack then
   begin
@@ -898,13 +898,13 @@ Créez un fichier `.desktop` pour intégrer votre application au menu :
 
 ```ini
 [Desktop Entry]
-Type=Application
-Name=Mon Application
-Comment=Description de mon application
-Exec=/usr/bin/MonApp
-Icon=/usr/share/icons/MonApp.png
-Categories=Utility;
-Terminal=false
+Type=Application  
+Name=Mon Application  
+Comment=Description de mon application  
+Exec=/usr/bin/MonApp  
+Icon=/usr/share/icons/MonApp.png  
+Categories=Utility;  
+Terminal=false  
 ```
 
 ## Gestion multi-plateforme du code
@@ -932,8 +932,8 @@ uses
   {$ENDIF}
   System.SysUtils;
 
-procedure ShowPlatformInfo;
-begin
+procedure ShowPlatformInfo;  
+begin  
   {$IFDEF MSWINDOWS}
   ShowMessage('Vous êtes sur Windows');
   {$ENDIF}
@@ -1030,8 +1030,8 @@ Sur mobile, remplacez les menus par :
 
 Si vous savez que vous ciblerez plusieurs plateformes :
 
-✅ **Utilisez FMX dès le départ**
-✅ **Testez régulièrement sur toutes les plateformes**
+✅ **Utilisez FMX dès le départ**  
+✅ **Testez régulièrement sur toutes les plateformes**  
 ✅ **Évitez les API spécifiques à une plateforme dans le code commun**
 
 ### 2. Séparer la logique métier de l'interface
@@ -1041,8 +1041,8 @@ Si vous savez que vous ciblerez plusieurs plateformes :
 unit BusinessLogic;
 
 // Unité spécifique (interface)
-unit MainForm; // Windows
-unit MainForm.iOS; // iOS
+unit MainForm; // Windows  
+unit MainForm.iOS; // iOS  
 ```
 
 ### 3. Adapter l'interface aux conventions
@@ -1058,8 +1058,8 @@ Utilisez des layouts adaptatifs :
 
 ```pascal
 // Utiliser TLayout et anchors
-Layout.Align := TAlignLayout.Client;
-Button.Anchors := [TAnchorKind.akLeft, TAnchorKind.akBottom];
+Layout.Align := TAlignLayout.Client;  
+Button.Anchors := [TAnchorKind.akLeft, TAnchorKind.akBottom];  
 
 // Layouts différents selon orientation
 if Form.Width > Form.Height then

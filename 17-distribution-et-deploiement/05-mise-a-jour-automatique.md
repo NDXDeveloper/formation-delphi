@@ -201,13 +201,13 @@ const
 
 implementation
 
-function TVersionInfo.ToString: string;
-begin
+function TVersionInfo.ToString: string;  
+begin  
   Result := Format('%d.%d.%d', [Major, Minor, Release]);
 end;
 
-function TVersionInfo.CompareWith(Other: TVersionInfo): Integer;
-begin
+function TVersionInfo.CompareWith(Other: TVersionInfo): Integer;  
+begin  
   // Retourne : -1 si inférieur, 0 si égal, 1 si supérieur
   if Major <> Other.Major then
     Result := Major - Other.Major
@@ -219,8 +219,8 @@ begin
     Result := Build - Other.Build;
 end;
 
-class function TVersionInfo.FromString(const VersionStr: string): TVersionInfo;
-var
+class function TVersionInfo.FromString(const VersionStr: string): TVersionInfo;  
+var  
   Parts: TArray<string>;
 begin
   Parts := VersionStr.Split(['.']);
@@ -271,21 +271,21 @@ type
 
 implementation
 
-constructor TUpdateChecker.Create(const UpdateURL: string);
-begin
+constructor TUpdateChecker.Create(const UpdateURL: string);  
+begin  
   inherited Create;
   FUpdateURL := UpdateURL;
   FHttpClient := THTTPClient.Create;
 end;
 
-destructor TUpdateChecker.Destroy;
-begin
+destructor TUpdateChecker.Destroy;  
+begin  
   FHttpClient.Free;
   inherited;
 end;
 
-function TUpdateChecker.CheckForUpdates: TUpdateInfo;
-var
+function TUpdateChecker.CheckForUpdates: TUpdateInfo;  
+var  
   Response: IHTTPResponse;
   JsonStr: string;
   JsonObj: TJSONObject;
@@ -386,13 +386,13 @@ uses
 
 {$R *.dfm}
 
-procedure TFormUpdate.FormCreate(Sender: TObject);
-begin
+procedure TFormUpdate.FormCreate(Sender: TObject);  
+begin  
   PanelProgress.Visible := False;
 end;
 
-class function TFormUpdate.ShowUpdateDialog(const UpdateInfo: TUpdateInfo): Boolean;
-var
+class function TFormUpdate.ShowUpdateDialog(const UpdateInfo: TUpdateInfo): Boolean;  
+var  
   Form: TFormUpdate;
 begin
   Form := TFormUpdate.Create(nil);
@@ -405,8 +405,8 @@ begin
   end;
 end;
 
-procedure TFormUpdate.ShowUpdateInfo;
-var
+procedure TFormUpdate.ShowUpdateInfo;  
+var  
   i: Integer;
   ChangelogText: string;
 begin
@@ -433,21 +433,21 @@ begin
   end;
 end;
 
-procedure TFormUpdate.ButtonDownloadClick(Sender: TObject);
-begin
+procedure TFormUpdate.ButtonDownloadClick(Sender: TObject);  
+begin  
   ButtonDownload.Enabled := False;
   ButtonLater.Enabled := False;
   PanelProgress.Visible := True;
   DownloadUpdate;
 end;
 
-procedure TFormUpdate.ButtonLaterClick(Sender: TObject);
-begin
+procedure TFormUpdate.ButtonLaterClick(Sender: TObject);  
+begin  
   ModalResult := mrCancel;
 end;
 
-procedure TFormUpdate.DownloadUpdate;
-var
+procedure TFormUpdate.DownloadUpdate;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   FileStream: TFileStream;
@@ -502,8 +502,8 @@ begin
   FDownloadThread.Start;
 end;
 
-procedure TFormUpdate.OnDownloadProgress(Sender: TObject; ContentLength, ReadCount: Int64; var Abort: Boolean);
-var
+procedure TFormUpdate.OnDownloadProgress(Sender: TObject; ContentLength, ReadCount: Int64; var Abort: Boolean);  
+var  
   Percentage: Integer;
 begin
   if ContentLength > 0 then
@@ -520,8 +520,8 @@ begin
   end;
 end;
 
-procedure TFormUpdate.OnDownloadComplete(Sender: TObject);
-begin
+procedure TFormUpdate.OnDownloadComplete(Sender: TObject);  
+begin  
   LabelProgress.Caption := 'Téléchargement terminé !';
   ProgressBar.Position := 100;
 end;
@@ -534,14 +534,14 @@ end.
 Dans votre formulaire principal :
 
 ```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
+procedure TMainForm.FormCreate(Sender: TObject);  
+begin  
   // Vérifier les mises à jour au démarrage
   CheckForUpdatesAsync;
 end;
 
-procedure TMainForm.CheckForUpdatesAsync;
-begin
+procedure TMainForm.CheckForUpdatesAsync;  
+begin  
   TTask.Run(
     procedure
     var
@@ -655,8 +655,8 @@ Pour débuter, créez votre propre système simple :
 
 ✅ **Bon** : Vérifier tous les X jours
 ```pascal
-procedure TMainForm.CheckForUpdatesIfNeeded;
-var
+procedure TMainForm.CheckForUpdatesIfNeeded;  
+var  
   LastCheck: TDateTime;
   DaysSinceLastCheck: Integer;
 begin
@@ -689,8 +689,8 @@ Faites toujours la vérification et le téléchargement en arrière-plan (avec T
 ### 4. Gérer les erreurs réseau
 
 ```pascal
-function TUpdateChecker.CheckForUpdates: TUpdateInfo;
-begin
+function TUpdateChecker.CheckForUpdates: TUpdateInfo;  
+begin  
   Result.Available := False;
 
   try
@@ -721,8 +721,8 @@ Utilisez un hash (SHA256) pour vérifier que le fichier téléchargé n'est pas 
 uses
   System.Hash;
 
-function VerifyFileHash(const FileName, ExpectedHash: string): Boolean;
-var
+function VerifyFileHash(const FileName, ExpectedHash: string): Boolean;  
+var  
   FileStream: TFileStream;
   Hash: string;
 begin
@@ -763,8 +763,8 @@ Version 1.2.0 (20 janvier 2025)
 Sauf si c'est une mise à jour critique, laissez l'utilisateur reporter :
 
 ```pascal
-if not UpdateInfo.IsRequired then
-begin
+if not UpdateInfo.IsRequired then  
+begin  
   if MessageDlg('Une mise à jour est disponible. Installer maintenant ?',
                 mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     Exit;
@@ -784,8 +784,8 @@ Si une version est trop ancienne, forcez la mise à jour :
 }
 
 // Dans le code
-if APP_VERSION.CompareWith(MinVersion) < 0 then
-begin
+if APP_VERSION.CompareWith(MinVersion) < 0 then  
+begin  
   ShowMessage('Votre version est trop ancienne. La mise à jour est obligatoire.');
   // Forcer la mise à jour
 end;
@@ -822,8 +822,8 @@ const UPDATE_URL = 'http://monsite.com/updates/version.json';  // Non sécurisé
 Le fichier de mise à jour doit être signé numériquement :
 
 ```pascal
-function VerifySignature(const FileName: string): Boolean;
-var
+function VerifySignature(const FileName: string): Boolean;  
+var  
   WinTrustData: TWinTrustData;
   FileInfo: TWinTrustFileInfo;
 begin
@@ -897,8 +897,8 @@ Pour les applications professionnelles, proposez différents canaux :
 type
   TUpdateChannel = (ucStable, ucBeta, ucDev);
 
-function GetUpdateURL(Channel: TUpdateChannel): string;
-begin
+function GetUpdateURL(Channel: TUpdateChannel): string;  
+begin  
   case Channel of
     ucStable: Result := 'https://monsite.com/updates/version-stable.json';
     ucBeta:   Result := 'https://monsite.com/updates/version-beta.json';
@@ -948,15 +948,15 @@ Pour les environnements d'entreprise, permettez les installations silencieuses :
 
 ```pascal
 // Paramètres ligne de commande
-if ParamStr(1) = '/update' then
-begin
+if ParamStr(1) = '/update' then  
+begin  
   // Mode mise à jour silencieuse
   SilentUpdate;
   Exit;
 end;
 
-procedure SilentUpdate;
-begin
+procedure SilentUpdate;  
+begin  
   // Pas d'interface
   // Télécharger et installer automatiquement
   // Logger les résultats dans un fichier
@@ -1029,8 +1029,8 @@ end;
 
 **Solution** : Détectez et fermez toutes les instances
 ```pascal
-function CloseAllInstances: Boolean;
-var
+function CloseAllInstances: Boolean;  
+var  
   hWindow: HWND;
 begin
   repeat
@@ -1120,14 +1120,14 @@ uses
 
 {$R *.dfm}
 
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
+procedure TMainForm.FormCreate(Sender: TObject);  
+begin  
   // Vérifier les mises à jour au démarrage (si nécessaire)
   CheckForUpdatesIfNeeded;
 end;
 
-procedure TMainForm.CheckForUpdatesIfNeeded;
-var
+procedure TMainForm.CheckForUpdatesIfNeeded;  
+var  
   IniFile: TIniFile;
   LastCheck: TDateTime;
   DaysSinceLastCheck: Integer;
@@ -1149,8 +1149,8 @@ begin
   end;
 end;
 
-procedure TMainForm.CheckForUpdatesAsync(ShowNoUpdateMessage: Boolean);
-begin
+procedure TMainForm.CheckForUpdatesAsync(ShowNoUpdateMessage: Boolean);  
+begin  
   TTask.Run(
     procedure
     var
@@ -1183,8 +1183,8 @@ begin
   );
 end;
 
-procedure TMainForm.MenuCheckUpdatesClick(Sender: TObject);
-begin
+procedure TMainForm.MenuCheckUpdatesClick(Sender: TObject);  
+begin  
   // Vérification manuelle
   CheckForUpdatesAsync(True);
 end;
