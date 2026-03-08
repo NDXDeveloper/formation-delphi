@@ -237,8 +237,8 @@ Application de vente qui suggère automatiquement des produits complémentaires 
 **Nettoyage** :
 ```pascal
 // Pseudo-code : Nettoyer des données
-procedure NettoyerDonnees(var Dataset: TDataSet);
-begin
+procedure NettoyerDonnees(var Dataset: TDataSet);  
+begin  
   // Supprimer les doublons
   SupprimerDoublons(Dataset);
 
@@ -273,8 +273,8 @@ Couleur : "Rouge" → [1, 0, 0]
 **Feature engineering** :
 Créer de nouvelles features à partir des existantes.
 ```
-Age + Genre + Historique achats → "Segment client"
-Date → "Jour de la semaine", "Mois", "Est weekend", "Est férié"
+Age + Genre + Historique achats → "Segment client"  
+Date → "Jour de la semaine", "Mois", "Est weekend", "Est férié"  
 ```
 
 ### 4. Choisir l'algorithme
@@ -312,8 +312,8 @@ Toutes les données (100%)
 **Avec Python (via Python4Delphi)** :
 ```python
 # Entraînement d'un modèle simple
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression  
+from sklearn.model_selection import train_test_split  
 
 # Séparer données
 X_train, X_test, y_train, y_test = train_test_split(
@@ -321,12 +321,12 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Créer et entraîner le modèle
-model = LinearRegression()
-model.fit(X_train, y_train)
+model = LinearRegression()  
+model.fit(X_train, y_train)  
 
 # Sauvegarder pour utilisation dans Delphi
-import pickle
-pickle.dump(model, open('model.pkl', 'wb'))
+import pickle  
+pickle.dump(model, open('model.pkl', 'wb'))  
 ```
 
 ### 6. Évaluer les performances
@@ -369,10 +369,10 @@ Moyenne harmonique de Precision et Recall.
 Réalité  Pos     TP       FN
          Neg     FP       TN
 
-TP = Vrais Positifs
-TN = Vrais Négatifs
-FP = Faux Positifs (Erreur type I)
-FN = Faux Négatifs (Erreur type II)
+TP = Vrais Positifs  
+TN = Vrais Négatifs  
+FP = Faux Positifs (Erreur type I)  
+FN = Faux Négatifs (Erreur type II)  
 ```
 
 ### 7. Optimiser le modèle
@@ -390,8 +390,8 @@ Réglages du modèle qu'on définit AVANT l'entraînement.
 **Grid Search** :
 Tester toutes les combinaisons possibles.
 ```
-Taux d'apprentissage: [0.01, 0.1, 0.5]
-Nombre de couches: [2, 3, 4]
+Taux d'apprentissage: [0.01, 0.1, 0.5]  
+Nombre de couches: [2, 3, 4]  
 → 3 × 3 = 9 combinaisons à tester
 ```
 
@@ -408,12 +408,12 @@ Validation croisée pour éviter le surapprentissage.
 **Option 1 : Exporter vers ONNX**
 ```python
 # Python : Convertir en ONNX
-import sklearn
-from skl2onnx import convert_sklearn
-from skl2onnx.common.data_types import FloatTensorType
+import sklearn  
+from skl2onnx import convert_sklearn  
+from skl2onnx.common.data_types import FloatTensorType  
 
-initial_type = [('float_input', FloatTensorType([None, 4]))]
-onx = convert_sklearn(model, initial_types=initial_type)
+initial_type = [('float_input', FloatTensorType([None, 4]))]  
+onx = convert_sklearn(model, initial_types=initial_type)  
 
 with open("model.onnx", "wb") as f:
     f.write(onx.SerializeToString())
@@ -424,11 +424,11 @@ Puis utiliser ONNX Runtime depuis Delphi.
 **Option 2 : Service REST Python**
 ```python
 # Python : Flask API
-from flask import Flask, request, jsonify
-import pickle
+from flask import Flask, request, jsonify  
+import pickle  
 
-app = Flask(__name__)
-model = pickle.load(open('model.pkl', 'rb'))
+app = Flask(__name__)  
+model = pickle.load(open('model.pkl', 'rb'))  
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -442,8 +442,8 @@ if __name__ == '__main__':
 
 ```pascal
 // Delphi : Appeler l'API
-function FairePrediction(const Features: TArray<Double>): Double;
-var
+function FairePrediction(const Features: TArray<Double>): Double;  
+var  
   JSONObj: TJSONObject;
   JSONArray: TJSONArray;
   Feature: Double;
@@ -541,8 +541,8 @@ type
     ActionsRecommandees: TArray<string>;
   end;
 
-function PredireChurn(const ClientID: Integer): TPredictionChurn;
-var
+function PredireChurn(const ClientID: Integer): TPredictionChurn;  
+var  
   Features: TClientFeatures;
   Proba: Double;
 begin
@@ -583,8 +583,8 @@ begin
 end;
 
 // Utilisation dans l'interface
-procedure TFormClient.BtnAnalyserClick(Sender: TObject);
-var
+procedure TFormClient.BtnAnalyserClick(Sender: TObject);  
+var  
   Prediction: TPredictionChurn;
 begin
   Prediction := PredireChurn(ClientActuelID);
@@ -596,11 +596,12 @@ begin
   MemoActions.Lines.AddStrings(Prediction.ActionsRecommandees);
 
   // Changer la couleur selon le risque
-  case Prediction.Risque of
-    'ÉLEVÉ': PanelRisque.Color := clRed;
-    'MOYEN': PanelRisque.Color := clYellow;
-    'FAIBLE': PanelRisque.Color := clGreen;
-  end;
+  if Prediction.Risque = 'ÉLEVÉ' then
+    PanelRisque.Color := clRed
+  else if Prediction.Risque = 'MOYEN' then
+    PanelRisque.Color := clYellow
+  else if Prediction.Risque = 'FAIBLE' then
+    PanelRisque.Color := clGreen;
 end;
 ```
 
@@ -609,8 +610,8 @@ end;
 Pour des prédictions sur de nombreux enregistrements :
 
 ```pascal
-procedure AnalyserTousClients;
-var
+procedure AnalyserTousClients;  
+var  
   Query: TFDQuery;
   Prediction: TPredictionChurn;
   ClientID: Integer;
@@ -664,8 +665,8 @@ type
     procedure ViderCache;
   end;
 
-function TCachePredictions.ObtenirPrediction(ClientID: Integer): TPredictionChurn;
-var
+function TCachePredictions.ObtenirPrediction(ClientID: Integer): TPredictionChurn;  
+var  
   DateExpiration: TDateTime;
 begin
   // Vérifier si en cache et encore valide
@@ -706,8 +707,8 @@ end;
 
 **Intégration** :
 ```pascal
-function PrevoirVentesProchainMois: TArray<Double>;
-var
+function PrevoirVentesProchainMois: TArray<Double>;  
+var  
   HistoriqueVentes: TArray<Double>;
   Previsions: TJSONArray;
   i: Integer;
@@ -753,8 +754,8 @@ end;
 
 **Interface Delphi** :
 ```pascal
-procedure TFormLead.CalculerScore;
-var
+procedure TFormLead.CalculerScore;  
+var  
   Score: string;
   Probabilite: Double;
 begin
@@ -793,8 +794,8 @@ end;
 
 **Alerte proactive** :
 ```pascal
-procedure VerifierEtatEquipements;
-var
+procedure VerifierEtatEquipements;  
+var  
   Query: TFDQuery;
   EquipementID: Integer;
   JoursAvantPanne: Double;
@@ -849,8 +850,8 @@ end;
 
 **Traitement temps réel** :
 ```pascal
-function VerifierTransaction(const Transaction: TTransaction): TResultatVerification;
-var
+function VerifierTransaction(const Transaction: TTransaction): TResultatVerification;  
+var  
   ScoreFraude: Double;
 begin
   // Calculer score de fraude
@@ -896,8 +897,8 @@ end;
 
 **Application** :
 ```pascal
-function SuggererPrixOptimal(const ProduitID: Integer): TPrixOptimal;
-var
+function SuggererPrixOptimal(const ProduitID: Integer): TPrixOptimal;  
+var  
   PrixMin, PrixMax, PrixSuggere: Double;
   VentesEstimees: Integer;
 begin

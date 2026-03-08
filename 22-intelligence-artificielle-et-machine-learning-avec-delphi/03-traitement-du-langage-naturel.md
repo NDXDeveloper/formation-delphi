@@ -58,8 +58,8 @@ Le langage humain est bien plus complexe qu'il n'y paraît :
 
 **Exemple** :
 ```
-Texte : "Bonjour, comment allez-vous ?"
-Tokens : ["Bonjour", ",", "comment", "allez-vous", "?"]
+Texte : "Bonjour, comment allez-vous ?"  
+Tokens : ["Bonjour", ",", "comment", "allez-vous", "?"]  
 ```
 
 **Utilité** : C'est la première étape de presque tous les traitements NLP. Impossible d'analyser un texte sans d'abord le découper.
@@ -139,9 +139,9 @@ Entités extraites :
 
 **Exemple** :
 ```
-Texte : "Delphi 13 Florence a été publié en novembre 2024."
-Question : "Quand Delphi 13 est-il sorti ?"
-Réponse : "En novembre 2024"
+Texte : "Delphi 13 Florence a été publié en novembre 2024."  
+Question : "Quand Delphi 13 est-il sorti ?"  
+Réponse : "En novembre 2024"  
 ```
 
 **Applications** :
@@ -269,8 +269,8 @@ end;
 
 ```pascal
 // Exemple conceptuel avec spaCy
-procedure AnalyserTexteLocal(const Texte: string);
-var
+procedure AnalyserTexteLocal(const Texte: string);  
+var  
   PythonEngine: TPythonEngine;
   Script: string;
 begin
@@ -320,9 +320,9 @@ Exactement comme les API REST classiques, mais avec des prompts (instructions) b
 
 **Exemple de prompt pour analyse de sentiment** :
 ```
-Analyse le sentiment du texte suivant et réponds uniquement
-par "positif", "négatif" ou "neutre", suivi d'un score de
-confiance entre 0 et 1.
+Analyse le sentiment du texte suivant et réponds uniquement  
+par "positif", "négatif" ou "neutre", suivi d'un score de  
+confiance entre 0 et 1.  
 
 Texte : "Ce produit a dépassé mes attentes !"
 ```
@@ -358,13 +358,14 @@ var
 begin
   Langue := DetecterLangue(TexteUtilisateur);
 
-  case Langue of
-    'fr': TraiterTexteFrancais(TexteUtilisateur);
-    'en': TraiterTexteAnglais(TexteUtilisateur);
-    'es': TraiterTexteEspagnol(TexteUtilisateur);
+  if Langue = 'fr' then
+    TraiterTexteFrancais(TexteUtilisateur)
+  else if Langue = 'en' then
+    TraiterTexteAnglais(TexteUtilisateur)
+  else if Langue = 'es' then
+    TraiterTexteEspagnol(TexteUtilisateur)
   else
     ShowMessage('Langue non supportée');
-  end;
 end;
 ```
 
@@ -462,8 +463,8 @@ Ne retraitez pas le même texte plusieurs fois. Stockez les résultats.
 var
   CacheSentiments: TDictionary<string, Double>;
 
-function ObtenirSentiment(const Texte: string): Double;
-begin
+function ObtenirSentiment(const Texte: string): Double;  
+begin  
   if not CacheSentiments.TryGetValue(Texte, Result) then
   begin
     // Appel API seulement si non en cache

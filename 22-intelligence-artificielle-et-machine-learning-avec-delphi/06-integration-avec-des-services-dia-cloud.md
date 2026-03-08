@@ -151,8 +151,8 @@ type
 
 implementation
 
-constructor TGoogleCloudVision.Create(const APIKey: string);
-begin
+constructor TGoogleCloudVision.Create(const APIKey: string);  
+begin  
   inherited Create;
   FAPIKey := APIKey;
 
@@ -164,16 +164,16 @@ begin
   FRESTRequest.Response := FRESTResponse;
 end;
 
-destructor TGoogleCloudVision.Destroy;
-begin
+destructor TGoogleCloudVision.Destroy;  
+begin  
   FRESTRequest.Free;
   FRESTResponse.Free;
   FRESTClient.Free;
   inherited;
 end;
 
-function TGoogleCloudVision.AnalyserImage(const CheminImage: string): TJSONObject;
-var
+function TGoogleCloudVision.AnalyserImage(const CheminImage: string): TJSONObject;  
+var  
   FileStream: TFileStream;
   MemStream: TMemoryStream;
   Base64Image: string;
@@ -242,8 +242,8 @@ begin
   end;
 end;
 
-function TGoogleCloudVision.ExtraireTexte(const CheminImage: string): string;
-var
+function TGoogleCloudVision.ExtraireTexte(const CheminImage: string): string;  
+var  
   Response: TJSONObject;
   Responses: TJSONArray;
   TextAnnotations: TJSONArray;
@@ -269,8 +269,8 @@ end;
 **Utilisation dans votre application** :
 
 ```pascal
-procedure TFormPrincipal.BtnAnalyserImageClick(Sender: TObject);
-var
+procedure TFormPrincipal.BtnAnalyserImageClick(Sender: TObject);  
+var  
   Vision: TGoogleCloudVision;
   Resultat: TJSONObject;
   Labels: TJSONArray;
@@ -408,8 +408,8 @@ type
 
 implementation
 
-constructor TAzureComputerVision.Create(const SubscriptionKey, Endpoint: string);
-begin
+constructor TAzureComputerVision.Create(const SubscriptionKey, Endpoint: string);  
+begin  
   inherited Create;
   FSubscriptionKey := SubscriptionKey;
   FEndpoint := Endpoint;
@@ -422,16 +422,16 @@ begin
   FRESTRequest.Response := FRESTResponse;
 end;
 
-destructor TAzureComputerVision.Destroy;
-begin
+destructor TAzureComputerVision.Destroy;  
+begin  
   FRESTRequest.Free;
   FRESTResponse.Free;
   FRESTClient.Free;
   inherited;
 end;
 
-function TAzureComputerVision.AnalyserImage(const URLImage: string): TJSONObject;
-var
+function TAzureComputerVision.AnalyserImage(const URLImage: string): TJSONObject;  
+var  
   RequestBody: TJSONObject;
 begin
   // Analyse via URL d'image
@@ -461,8 +461,8 @@ begin
       [FRESTResponse.StatusCode, FRESTResponse.Content]);
 end;
 
-function TAzureComputerVision.AnalyserImage(const CheminImage: string): TJSONObject;
-var
+function TAzureComputerVision.AnalyserImage(const CheminImage: string): TJSONObject;  
+var  
   FileStream: TFileStream;
 begin
   // Analyse via upload d'image
@@ -492,8 +492,8 @@ begin
       [FRESTResponse.StatusCode, FRESTResponse.Content]);
 end;
 
-function TAzureComputerVision.ExtraireTexteOCR(const CheminImage: string): string;
-var
+function TAzureComputerVision.ExtraireTexteOCR(const CheminImage: string): string;  
+var  
   FileStream: TFileStream;
   Response: TJSONObject;
   ReadResults: TJSONArray;
@@ -529,8 +529,8 @@ end;
 **Utilisation** :
 
 ```pascal
-procedure TFormMain.BtnAnalyserAzureClick(Sender: TObject);
-var
+procedure TFormMain.BtnAnalyserAzureClick(Sender: TObject);  
+var  
   Azure: TAzureComputerVision;
   Resultat: TJSONObject;
   Description: string;
@@ -630,8 +630,8 @@ AWS utilise un système d'authentification plus complexe (AWS Signature Version 
 
 ```pascal
 // Exemple conceptuel d'appel à Rekognition via wrapper
-function DetecterVisagesAWS(const CheminImage: string): TJSONArray;
-var
+function DetecterVisagesAWS(const CheminImage: string): TJSONArray;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -730,8 +730,8 @@ type
 
 implementation
 
-constructor TOpenAI.Create(const APIKey: string);
-begin
+constructor TOpenAI.Create(const APIKey: string);  
+begin  
   inherited Create;
   FAPIKey := APIKey;
 
@@ -743,16 +743,16 @@ begin
   FRESTRequest.Response := FRESTResponse;
 end;
 
-destructor TOpenAI.Destroy;
-begin
+destructor TOpenAI.Destroy;  
+begin  
   FRESTRequest.Free;
   FRESTResponse.Free;
   FRESTClient.Free;
   inherited;
 end;
 
-function TOpenAI.Chat(const Prompt: string; const Model: string): string;
-var
+function TOpenAI.Chat(const Prompt: string; const Model: string): string;  
+var  
   RequestBody: TJSONObject;
   Messages: TJSONArray;
   Message: TJSONObject;
@@ -799,8 +799,8 @@ begin
       [FRESTResponse.StatusCode, FRESTResponse.Content]);
 end;
 
-function TOpenAI.AnalyserImage(const URLImage: string; const Question: string): string;
-var
+function TOpenAI.AnalyserImage(const URLImage: string; const Question: string): string;  
+var  
   RequestBody: TJSONObject;
   Messages: TJSONArray;
   Message: TJSONObject;
@@ -862,8 +862,8 @@ end;
 **Utilisation - Chatbot avec GPT** :
 
 ```pascal
-procedure TFormChat.BtnEnvoyerClick(Sender: TObject);
-var
+procedure TFormChat.BtnEnvoyerClick(Sender: TObject);  
+var  
   OpenAI: TOpenAI;
   Reponse: string;
   UserMessage: string;
@@ -993,8 +993,8 @@ Groupez les requêtes quand c'est possible pour réduire les appels API.
 Réduisez la taille des images avant envoi.
 
 ```pascal
-procedure OptimiserImagePourAPI(var Bitmap: TBitmap);
-const
+procedure OptimiserImagePourAPI(var Bitmap: TBitmap);  
+const  
   MAX_DIMENSION = 800; // pixels
 var
   Ratio: Double;
@@ -1023,12 +1023,12 @@ type
     FLimiteQuotidienne: Integer;
     procedure VerifierLimite;
   public
-    procedure IncrémenterUsage(const Cout: Double);
+    procedure IncrementerUsage(const Cout: Double);
     function PeutEffectuerAppel: Boolean;
   end;
 
-procedure TAPIUsageMonitor.IncrémenterUsage(const Cout: Double);
-begin
+procedure TAPIUsageMonitor.IncrementerUsage(const Cout: Double);  
+begin  
   FUsageAujourdhui := FUsageAujourdhui + Round(Cout * 100);
   VerifierLimite;
 
@@ -1043,12 +1043,12 @@ end;
 **Exemple pour une application de chatbot** :
 
 ```
-Utilisateurs : 1000
-Messages moyens par jour : 5
-Tokens moyens par message : 150 (input + output)
+Utilisateurs : 1000  
+Messages moyens par jour : 5  
+Tokens moyens par message : 150 (input + output)  
 
-Total tokens/jour = 1000 × 5 × 150 = 750 000 tokens
-Total tokens/mois = 750 000 × 30 = 22,5 millions
+Total tokens/jour = 1000 × 5 × 150 = 750 000 tokens  
+Total tokens/mois = 750 000 × 30 = 22,5 millions  
 
 Coût GPT-3.5 :
 - 22,5M tokens ≈ 11,25$ input + 33,75$ output = 45$/mois
@@ -1071,8 +1071,8 @@ const
   API_KEY = 'sk-1234567890abcdef';
 
 // ✅ BON
-function ObtenirCleAPI: string;
-begin
+function ObtenirCleAPI: string;  
+begin  
   // Lire depuis configuration chiffrée
   Result := ConfigurationManager.GetEncryptedValue('OpenAI_Key');
 end;
@@ -1081,8 +1081,8 @@ end;
 **Utiliser des variables d'environnement** :
 
 ```pascal
-function ObtenirCleAPIDepuisEnvironnement: string;
-begin
+function ObtenirCleAPIDepuisEnvironnement: string;  
+begin  
   Result := GetEnvironmentVariable('OPENAI_API_KEY');
   if Result.IsEmpty then
     raise Exception.Create('Clé API non configurée');
@@ -1094,8 +1094,8 @@ end;
 **Anonymisation** :
 
 ```pascal
-function AnonymiserTexte(const Texte: string): string;
-begin
+function AnonymiserTexte(const Texte: string): string;  
+begin  
   Result := Texte;
 
   // Remplacer emails
@@ -1108,8 +1108,8 @@ begin
   Result := TRegEx.Replace(Result, '\b[A-Z]{2}\d{2}[\s]?[\d\s]{20,}\b', '[IBAN]');
 end;
 
-procedure EnvoyerAuServiceIA(const Texte: string);
-var
+procedure EnvoyerAuServiceIA(const Texte: string);  
+var  
   TexteAnonyme: string;
 begin
   TexteAnonyme := AnonymiserTexte(Texte);
@@ -1122,8 +1122,8 @@ end;
 **Informer les utilisateurs** :
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   if not ConfigManager.GetValue('ConsentementIA', False) then
   begin
     if MessageDlg(

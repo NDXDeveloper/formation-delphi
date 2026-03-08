@@ -285,8 +285,8 @@ REST API simple avec TRESTClient
 
 ```pascal
 // Exemple conceptuel
-procedure AnalyserImageGoogle(const CheminImage: string);
-var
+procedure AnalyserImageGoogle(const CheminImage: string);  
+var  
   ImageBase64: string;
 begin
   // 1. Charger et encoder l'image en Base64
@@ -348,8 +348,8 @@ GPT-4 Vision peut non seulement identifier des objets, mais aussi comprendre et 
 ```
 Image de diagramme technique →
 "Ce diagramme représente une architecture client-serveur
-avec trois couches : présentation, logique métier et
-base de données..."
+avec trois couches : présentation, logique métier et  
+base de données..."  
 ```
 
 **Cas d'usage** :
@@ -401,8 +401,8 @@ base de données..."
 
 ```pascal
 // Redimensionner une image
-procedure RedimensionnerImage(Bitmap: TBitmap; MaxWidth, MaxHeight: Integer);
-var
+procedure RedimensionnerImage(Bitmap: TBitmap; MaxWidth, MaxHeight: Integer);  
+var  
   Ratio: Double;
   NewWidth, NewHeight: Integer;
 begin
@@ -419,8 +419,8 @@ end;
 **Conversion de format** :
 ```pascal
 // Convertir TBitmap en JPEG pour envoi API
-procedure ConvertirEnJPEG(Bitmap: TBitmap; Stream: TMemoryStream);
-var
+procedure ConvertirEnJPEG(Bitmap: TBitmap; Stream: TMemoryStream);  
+var  
   JPEG: TJPEGImage;
 begin
   JPEG := TJPEGImage.Create;
@@ -439,8 +439,8 @@ end;
 La plupart des API REST acceptent les images encodées en Base64.
 
 ```pascal
-function EncoderImageBase64(const CheminFichier: string): string;
-var
+function EncoderImageBase64(const CheminFichier: string): string;  
+var  
   FileStream: TFileStream;
   MemStream: TMemoryStream;
 begin
@@ -463,8 +463,8 @@ end;
 **Règle d'or** : Ne bloquez JAMAIS l'interface utilisateur pendant l'analyse d'image.
 
 ```pascal
-procedure AnalyserImageAsync(const CheminImage: string);
-begin
+procedure AnalyserImageAsync(const CheminImage: string);  
+begin  
   // Afficher un indicateur de chargement
   ProgressBar.Visible := True;
   BtnAnalyser.Enabled := False;
@@ -506,8 +506,8 @@ Pour la détection d'objets, vous devez dessiner des rectangles sur l'image.
 
 ```pascal
 // Dessiner les boîtes englobantes
-procedure DessinerDetections(Image: TImage; Detections: TArray<TDetection>);
-var
+procedure DessinerDetections(Image: TImage; Detections: TArray<TDetection>);  
+var  
   Detection: TDetection;
   Bitmap: TBitmap;
 begin
@@ -536,7 +536,7 @@ begin
       Bitmap.Canvas.TextOut(
         Detection.X,
         Detection.Y - 20,
-        Format('%s (%.0f%%)', [Detection.Label, Detection.Confidence * 100])
+        Format('%s (%.0f%%)', [Detection.CategoryName, Detection.Confidence * 100])
       );
     end;
 
@@ -674,8 +674,8 @@ end;
 var
   CacheReconnaissances: TDictionary<string, TResultatReconnaissance>;
 
-function ReconnaireAvecCache(const CheminImage: string): TResultatReconnaissance;
-var
+function ReconnaireAvecCache(const CheminImage: string): TResultatReconnaissance;  
+var  
   HashImage: string;
 begin
   HashImage := CalculerHashMD5(CheminImage);
@@ -696,8 +696,8 @@ Si vous avez plusieurs images à analyser, groupez-les pour réduire les coûts 
 
 ```pascal
 // API qui supporte le batch
-procedure AnalyserImagesBatch(const CheminsImages: TArray<string>);
-var
+procedure AnalyserImagesBatch(const CheminsImages: TArray<string>);  
+var  
   JSONArray: TJSONArray;
   Chemin: string;
 begin
@@ -776,16 +776,16 @@ end;
 
 ### Datasets pour entraînement
 
-**ImageNet** : 14 millions d'images, 1000 catégories
-**COCO** : Détection d'objets, 330K images
-**Open Images** : 9 millions d'images de Google
-**Pascal VOC** : Détection et segmentation
+**ImageNet** : 14 millions d'images, 1000 catégories  
+**COCO** : Détection d'objets, 330K images  
+**Open Images** : 9 millions d'images de Google  
+**Pascal VOC** : Détection et segmentation  
 
 ### Outils de visualisation et test
 
-**Netron** : Visualiser l'architecture des modèles ONNX/TensorFlow
-**Roboflow** : Annoter et préparer des datasets
-**Labelbox** : Annotation d'images collaborative
+**Netron** : Visualiser l'architecture des modèles ONNX/TensorFlow  
+**Roboflow** : Annoter et préparer des datasets  
+**Labelbox** : Annotation d'images collaborative  
 
 ## Tendances futures
 

@@ -257,8 +257,8 @@ Les modèles ML peuvent être très gourmands :
 
 ```pascal
 // Exemple conceptuel
-TTask.Run(procedure
-var
+TTask.Run(procedure  
+var  
   Prediction: string;
 begin
   // Appel au modèle ML (lent)

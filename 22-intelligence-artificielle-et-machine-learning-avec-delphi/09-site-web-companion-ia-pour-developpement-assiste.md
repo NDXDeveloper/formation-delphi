@@ -75,9 +75,9 @@ Le site web companion IA de Delphi 13 Florence est un assistant de développemen
 ☑ Historique des conversations (local)
 ☐ Partager les métriques d'utilisation (anonyme)
 
-Modèle IA : [GPT-4 ▼]
-Langue des réponses : [Français ▼]
-Niveau de détail : [Équilibré ▼] (Concis/Équilibré/Détaillé)
+Modèle IA : [GPT-4 ▼]  
+Langue des réponses : [Français ▼]  
+Niveau de détail : [Équilibré ▼] (Concis/Équilibré/Détaillé)  
 
 Raccourcis personnalisables :
 - Ouvrir companion : Ctrl+Shift+A
@@ -122,16 +122,16 @@ Vous : Crée une fonction qui valide un email
 
 Companion : Voici une fonction de validation d'email :
 
-function ValiderEmail(const Email: string): Boolean;
-var
+function ValiderEmail(const Email: string): Boolean;  
+var  
   RegEx: TRegEx;
 begin
   RegEx := TRegEx.Create('^[\w\.-]+@[\w\.-]+\.\w{2,}$');
   Result := RegEx.IsMatch(Email);
 end;
 
-Cette fonction utilise une expression régulière pour vérifier le format.
-Voulez-vous des validations supplémentaires ?
+Cette fonction utilise une expression régulière pour vérifier le format.  
+Voulez-vous des validations supplémentaires ?  
 ```
 
 **Option B : Directement dans l'éditeur**
@@ -141,13 +141,13 @@ Voulez-vous des validations supplémentaires ?
 
 ```pascal
 // Fonction pour calculer la TVA
-function CalculerTVA(MontantHT: Double; TauxTVA: Double = 20.0): Double;
-begin
+function CalculerTVA(MontantHT: Double; TauxTVA: Double = 20.0): Double;  
+begin  
   Result := MontantHT * (TauxTVA / 100);
 end;
 
-function CalculerMontantTTC(MontantHT: Double; TauxTVA: Double = 20.0): Double;
-begin
+function CalculerMontantTTC(MontantHT: Double; TauxTVA: Double = 20.0): Double;  
+begin  
   Result := MontantHT + CalculerTVA(MontantHT, TauxTVA);
 end;
 ```
@@ -170,8 +170,8 @@ Vous : Ajoute une méthode pour rechercher un client par email
 
 Companion : J'ai vu votre classe TClient. Voici la méthode à ajouter :
 
-function TClient.RechercherParEmail(const Email: string): Boolean;
-begin
+function TClient.RechercherParEmail(const Email: string): Boolean;  
+begin  
   // Implémentation basée sur votre structure existante
   FDQuery1.Close;
   FDQuery1.SQL.Text := 'SELECT * FROM Clients WHERE Email = :Email';
@@ -196,8 +196,8 @@ end;
 
 **Code sélectionné** :
 ```pascal
-TTask.Run(procedure
-begin
+TTask.Run(procedure  
+begin  
   TThread.Synchronize(nil, procedure
   begin
     Label1.Caption := 'Traitement terminé';
@@ -207,8 +207,8 @@ end);
 
 **Explication du companion** :
 ```
-Ce code utilise le multithreading avec TTask pour exécuter du code
-en arrière-plan :
+Ce code utilise le multithreading avec TTask pour exécuter du code  
+en arrière-plan :  
 
 1. TTask.Run crée une tâche asynchrone qui s'exécute dans un thread
    secondaire
@@ -291,8 +291,8 @@ Cette erreur se produit lors d'une conversion de string vers entier.
 Dans votre code ligne 45 :
   Valeur := StrToInt(EditNombre.Text);
 
-Problème : EditNombre.Text contient 'abc' qui ne peut pas être
-converti en entier.
+Problème : EditNombre.Text contient 'abc' qui ne peut pas être  
+converti en entier.  
 
 Solutions possibles :
 
@@ -330,8 +330,8 @@ Quelle approche préférez-vous ?
 
 **Code initial** :
 ```pascal
-procedure TForm1.BtnValiderClick(Sender: TObject);
-begin
+procedure TForm1.BtnValiderClick(Sender: TObject);  
+begin  
   if EditNom.Text.Trim.IsEmpty then
   begin
     ShowMessage('Le nom est requis');
@@ -361,8 +361,8 @@ end;
 
 **Companion suggère** :
 ```pascal
-function TForm1.ValiderFormulaire: Boolean;
-begin
+function TForm1.ValiderFormulaire: Boolean;  
+begin  
   Result := False;
 
   if EditNom.Text.Trim.IsEmpty then
@@ -389,8 +389,8 @@ begin
   Result := True;
 end;
 
-procedure TForm1.BtnValiderClick(Sender: TObject);
-begin
+procedure TForm1.BtnValiderClick(Sender: TObject);  
+begin  
   if not ValiderFormulaire then
     Exit;
 
@@ -445,8 +445,8 @@ if TList<string>.Create(ListBox1.Items.ToStringArray).Contains('Test') then
 
 **Code à optimiser** :
 ```pascal
-for i := 0 to 10000 do
-begin
+for i := 0 to 10000 do  
+begin  
   Query.Close;
   Query.SQL.Text := 'SELECT * FROM Clients WHERE ID = ' + IntToStr(i);
   Query.Open;
@@ -459,19 +459,19 @@ end;
 // ❌ Problème : 10 000 requêtes SQL = très lent
 
 // ✅ Solution 1 : Une seule requête
-Query.Close;
-Query.SQL.Text := 'SELECT * FROM Clients WHERE ID BETWEEN 0 AND 10000';
-Query.Open;
-while not Query.Eof do
-begin
+Query.Close;  
+Query.SQL.Text := 'SELECT * FROM Clients WHERE ID BETWEEN 0 AND 10000';  
+Query.Open;  
+while not Query.Eof do  
+begin  
   // Traiter...
   Query.Next;
 end;
 
 // ✅ Solution 2 : Requête paramétrée (si vraiment nécessaire de boucler)
-Query.SQL.Text := 'SELECT * FROM Clients WHERE ID = :ID';
-for i := 0 to 10000 do
-begin
+Query.SQL.Text := 'SELECT * FROM Clients WHERE ID = :ID';  
+for i := 0 to 10000 do  
+begin  
   Query.Close;
   Query.ParamByName('ID').AsInteger := i;
   Query.Open;
@@ -487,8 +487,8 @@ end;
 
 **Recherche traditionnelle** :
 ```
-Recherche : "TButton"
-Résultats : Documentation standard de TButton
+Recherche : "TButton"  
+Résultats : Documentation standard de TButton  
 ```
 
 **Recherche avec companion** :
@@ -498,15 +498,15 @@ Vous : Comment changer la couleur d'un bouton au survol de la souris ?
 Companion : Pour changer la couleur d'un bouton au survol, utilisez les
 événements OnMouseEnter et OnMouseLeave :
 
-procedure TForm1.Button1MouseEnter(Sender: TObject);
-begin
+procedure TForm1.Button1MouseEnter(Sender: TObject);  
+begin  
   Button1.Color := clLime;  // VCL
   // ou
   Button1.Fill.Color := TAlphaColors.Lime;  // FMX
 end;
 
-procedure TForm1.Button1MouseLeave(Sender: TObject);
-begin
+procedure TForm1.Button1MouseLeave(Sender: TObject);  
+begin  
   Button1.Color := clBtnFace;  // Couleur par défaut VCL
   // ou
   Button1.Fill.Color := TAlphaColors.Silver;  // FMX
@@ -538,9 +538,9 @@ Companion : Dans le contexte FireDAC, voici les optimisations principales :
 
 Code exemple basé sur votre TFDQuery existant :
 
-FDQuery1.FetchOptions.Mode := fmAll;
-FDQuery1.FetchOptions.RowsetSize := 100;
-FDQuery1.CachedUpdates := True;
+FDQuery1.FetchOptions.Mode := fmAll;  
+FDQuery1.FetchOptions.RowsetSize := 100;  
+FDQuery1.CachedUpdates := True;  
 // Modifications...
 FDQuery1.ApplyUpdates; // Envoyer toutes les modifications en une fois
 
@@ -560,8 +560,8 @@ procedure ConnecterMySQL
 
 **Companion suggère automatiquement** (en grisé) :
 ```pascal
-procedure ConnecterMySQL(const Host, Database, Username, Password: string): Boolean;
-var
+procedure ConnecterMySQL(const Host, Database, Username, Password: string): Boolean;  
+var  
   Connection: TFDConnection;
 begin
   Connection := TFDConnection.Create(nil);
@@ -619,9 +619,9 @@ Si vous avez un `TFDQuery` nommé `QueryClients` :
 
 **Companion suggère** :
 ```
-QueryClients.Close;
-QueryClients.SQL.Text := '';
-QueryClients.Open;
+QueryClients.Close;  
+QueryClients.SQL.Text := '';  
+QueryClients.Open;  
 ```
 
 Plutôt qu'une suggestion générique.
@@ -690,8 +690,8 @@ begin
   MonBouton.OnClick := BoutonDynamiqueClick;
 end;
 
-procedure TForm1.BoutonDynamiqueClick(Sender: TObject);
-begin
+procedure TForm1.BoutonDynamiqueClick(Sender: TObject);  
+begin  
   ShowMessage('Bouton dynamique cliqué !');
 end;
 
@@ -705,22 +705,19 @@ automatiquement libéré quand le formulaire sera fermé.
 ```
 Vous : Comment créer un bouton dynamiquement ?
 
-Companion :
-var
+Companion :  
+var  
   Btn: TButton;
 begin
   Btn := TButton.Create(Self);
   Btn.Parent := Self;
   Btn.SetBounds(100, 100, 100, 30);
   Btn.Caption := 'Dynamic';
-  Btn.OnClick := procedure(Sender: TObject)
-    begin
-      ShowMessage((Sender as TButton).Caption);
-    end;
+  Btn.OnClick := BoutonDynamiqueClick;  // Voir méthode ci-dessus
 end;
 
-Alternative avec TButtonedEdit pour validation inline, ou TButtonStyleLink
-pour FMX custom styling ?
+Alternative avec TButtonedEdit pour validation inline, ou TButtonStyleLink  
+pour FMX custom styling ?  
 ```
 
 ### 8. Génération de tests unitaires
@@ -729,20 +726,19 @@ pour FMX custom styling ?
 
 **Votre code** :
 ```pascal
-function CalculerRemise(MontantTotal: Double; CodePromo: string): Double;
-begin
+function CalculerRemise(MontantTotal: Double; CodePromo: string): Double;  
+begin  
   Result := 0;
 
   if MontantTotal <= 0 then
     Exit;
 
-  case CodePromo of
-    'PROMO10': Result := MontantTotal * 0.10;
-    'PROMO20': Result := MontantTotal * 0.20;
-    'NOEL': Result := MontantTotal * 0.25;
-  else
-    Result := 0;
-  end;
+  if CodePromo = 'PROMO10' then
+    Result := MontantTotal * 0.10
+  else if CodePromo = 'PROMO20' then
+    Result := MontantTotal * 0.20
+  else if CodePromo = 'NOEL' then
+    Result := MontantTotal * 0.25;
 end;
 ```
 
@@ -780,48 +776,48 @@ implementation
 uses
   UnitCalculs;
 
-procedure TTestsRemises.Test_CalculerRemise_Promo10;
-var
+procedure TTestsRemises.Test_CalculerRemise_Promo10;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(100.0, 'PROMO10');
   Assert.AreEqual(10.0, Resultat, 0.01);
 end;
 
-procedure TTestsRemises.Test_CalculerRemise_Promo20;
-var
+procedure TTestsRemises.Test_CalculerRemise_Promo20;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(100.0, 'PROMO20');
   Assert.AreEqual(20.0, Resultat, 0.01);
 end;
 
-procedure TTestsRemises.Test_CalculerRemise_Noel;
-var
+procedure TTestsRemises.Test_CalculerRemise_Noel;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(100.0, 'NOEL');
   Assert.AreEqual(25.0, Resultat, 0.01);
 end;
 
-procedure TTestsRemises.Test_CalculerRemise_CodeInvalide;
-var
+procedure TTestsRemises.Test_CalculerRemise_CodeInvalide;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(100.0, 'INVALID');
   Assert.AreEqual(0.0, Resultat, 0.01);
 end;
 
-procedure TTestsRemises.Test_CalculerRemise_MontantNegatif;
-var
+procedure TTestsRemises.Test_CalculerRemise_MontantNegatif;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(-50.0, 'PROMO10');
   Assert.AreEqual(0.0, Resultat, 0.01);
 end;
 
-procedure TTestsRemises.Test_CalculerRemise_MontantZero;
-var
+procedure TTestsRemises.Test_CalculerRemise_MontantZero;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerRemise(0.0, 'PROMO10');
@@ -891,8 +887,8 @@ type
 
 implementation
 
-function TClient.EstValide: Boolean;
-begin
+function TClient.EstValide: Boolean;  
+begin  
   Result := not Nom.Trim.IsEmpty and not Email.Trim.IsEmpty;
 end;
 ```
@@ -931,14 +927,14 @@ type
 
 implementation
 
-constructor TClientRepository.Create(Connection: TFDConnection);
-begin
+constructor TClientRepository.Create(Connection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := Connection;
 end;
 
-function TClientRepository.GetAll: TObjectList<TClient>;
-var
+function TClientRepository.GetAll: TObjectList<TClient>;  
+var  
   Query: TFDQuery;
   Client: TClient;
 begin
@@ -994,8 +990,8 @@ end;
 
 **Code Delphi 7** :
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   i: Integer;
   s: string;
 begin
@@ -1012,8 +1008,8 @@ end;
 
 **Companion modernise** :
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Item: string;
 begin
   // Version moderne avec for-in et ContainsText
@@ -1028,8 +1024,8 @@ end;
 uses
   System.Generics.Collections, System.StrUtils;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FilteredItems: TArray<string>;
 begin
   FilteredItems := TArray<string>(ListBox1.Items.ToStringArray);
@@ -1063,8 +1059,8 @@ Autres modernisations possibles :
 SELECT c.*,
        (SELECT COUNT(*) FROM Commandes WHERE ClientId = c.Id) as NbCommandes,
        (SELECT SUM(Montant) FROM Commandes WHERE ClientId = c.Id) as TotalAchats
-FROM Clients c
-WHERE c.Ville = 'Paris'
+FROM Clients c  
+WHERE c.Ville = 'Paris'  
 ```
 
 **Companion analyse** :
@@ -1079,8 +1075,8 @@ Version optimisée :
 SELECT c.*,
        COALESCE(stats.NbCommandes, 0) as NbCommandes,
        COALESCE(stats.TotalAchats, 0) as TotalAchats
-FROM Clients c
-LEFT JOIN (
+FROM Clients c  
+LEFT JOIN (  
     SELECT ClientId,
            COUNT(*) as NbCommandes,
            SUM(Montant) as TotalAchats
@@ -1111,13 +1107,13 @@ Gain de performance estimé : 10x à 100x selon volume de données
 **À mémoriser** :
 
 ```
-Ctrl+Shift+A  → Ouvrir le companion
-Ctrl+Shift+G  → Générer code depuis commentaire
-Ctrl+Shift+E  → Expliquer sélection
-Ctrl+Shift+F  → Corriger erreur
-Ctrl+Shift+R  → Refactorer
-Ctrl+Shift+T  → Générer tests
-Ctrl+Shift+D  → Documentation interactive
+Ctrl+Shift+A  → Ouvrir le companion  
+Ctrl+Shift+G  → Générer code depuis commentaire  
+Ctrl+Shift+E  → Expliquer sélection  
+Ctrl+Shift+F  → Corriger erreur  
+Ctrl+Shift+R  → Refactorer  
+Ctrl+Shift+T  → Générer tests  
+Ctrl+Shift+D  → Documentation interactive  
 ```
 
 ### Workflow de développement optimal

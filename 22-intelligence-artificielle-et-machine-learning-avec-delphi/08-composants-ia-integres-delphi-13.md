@@ -84,8 +84,8 @@ type
 **Utilisation simple** :
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Configuration ultra-simple
   AIRestClient1.AIProvider := apOpenAI;
   AIRestClient1.APIKey := 'votre-clé-api'; // Mieux: depuis config sécurisée
@@ -149,16 +149,16 @@ procedure SendMessage(const UserMessage: string);
 function SendMessageSync(const UserMessage: string): string;
 
 // Gestion de l'historique
-procedure ClearHistory;
-function GetConversationAsJSON: TJSONArray;
-procedure LoadConversationFromJSON(const JSON: TJSONArray);
+procedure ClearHistory;  
+function GetConversationAsJSON: TJSONArray;  
+procedure LoadConversationFromJSON(const JSON: TJSONArray);  
 ```
 
 **Exemple d'utilisation** :
 
 ```pascal
-procedure TFormChat.FormCreate(Sender: TObject);
-begin
+procedure TFormChat.FormCreate(Sender: TObject);  
+begin  
   // Configuration du client IA
   AIRestClient1.AIProvider := apOpenAI;
   AIRestClient1.APIKey := Config.GetAPIKey('openai');
@@ -174,8 +174,8 @@ begin
   AIChat1.AutoManageContext := True; // Gestion auto de la limite de tokens
 end;
 
-procedure TFormChat.BtnEnvoyerClick(Sender: TObject);
-begin
+procedure TFormChat.BtnEnvoyerClick(Sender: TObject);  
+begin  
   if EditMessage.Text.Trim.IsEmpty then Exit;
 
   // Afficher le message de l'utilisateur
@@ -232,8 +232,8 @@ type
 **Utilisation** :
 
 ```pascal
-procedure TFormImageAnalysis.BtnAnalyzerClick(Sender: TObject);
-begin
+procedure TFormImageAnalysis.BtnAnalyzerClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     Image1.Picture.LoadFromFile(OpenDialog1.FileName);
@@ -289,8 +289,8 @@ end;
 **Exemple** :
 
 ```pascal
-procedure TFormTextAnalysis.BtnAnalyzerSentimentClick(Sender: TObject);
-begin
+procedure TFormTextAnalysis.BtnAnalyzerSentimentClick(Sender: TObject);  
+begin  
   AITextAnalyzer1.AnalysisType := atSentiment;
   AITextAnalyzer1.AnalyzeText(MemoTexte.Text);
 end;
@@ -327,8 +327,8 @@ end;
 **Utilisation ultra-simple** :
 
 ```pascal
-procedure TFormTraduction.BtnTraduireClick(Sender: TObject);
-begin
+procedure TFormTraduction.BtnTraduireClick(Sender: TObject);  
+begin  
   AITranslator1.SourceLanguage := 'fr'; // Auto-détection si vide
   AITranslator1.TargetLanguage := ComboBoxLangueCible.Text; // 'en', 'es', etc.
   AITranslator1.Translate(MemoSource.Text);
@@ -348,14 +348,14 @@ end;
 **TAISpeechToText** :
 
 ```pascal
-procedure TFormVocal.BtnDemarrerEnregistrementClick(Sender: TObject);
-begin
+procedure TFormVocal.BtnDemarrerEnregistrementClick(Sender: TObject);  
+begin  
   AISpeechToText1.Language := 'fr-FR';
   AISpeechToText1.StartRecording; // Utilise le micro par défaut
 end;
 
-procedure TFormVocal.BtnArreterEnregistrementClick(Sender: TObject);
-begin
+procedure TFormVocal.BtnArreterEnregistrementClick(Sender: TObject);  
+begin  
   AISpeechToText1.StopRecording;
 end;
 
@@ -370,14 +370,14 @@ end;
 **TAITextToSpeech** :
 
 ```pascal
-procedure TFormSyntheseVocale.BtnLireClick(Sender: TObject);
-begin
+procedure TFormSyntheseVocale.BtnLireClick(Sender: TObject);  
+begin  
   AITextToSpeech1.Voice := 'fr-FR-DeniseNeural'; // Voix française
   AITextToSpeech1.SpeakText(MemoTexte.Text);
 end;
 
-procedure TFormSyntheseVocale.AITextToSpeech1SpeechComplete(Sender: TObject);
-begin
+procedure TFormSyntheseVocale.AITextToSpeech1SpeechComplete(Sender: TObject);  
+begin  
   ShowMessage('Lecture terminée');
 end;
 ```
@@ -424,8 +424,8 @@ const
 uses
   AI.Credentials;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-var
+procedure TFormMain.FormCreate(Sender: TObject);  
+var  
   CredManager: TAICredentialsManager;
   OpenAIKey: string;
 begin
@@ -449,8 +449,8 @@ end;
 
 ```pascal
 // Afficher le dialogue de configuration des clés
-procedure TFormSettings.BtnConfigurerClesClick(Sender: TObject);
-begin
+procedure TFormSettings.BtnConfigurerClesClick(Sender: TObject);  
+begin  
   TAICredentialsManager.ShowConfigurationDialog;
 end;
 ```
@@ -487,15 +487,15 @@ L'Inspecteur de réponses IA est un outil de débogage visuel intégré à l'IDE
 
 ```pascal
 // Activer l'inspecteur pour un composant
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   AIRestClient1.EnableInspector := True; // Active l'inspecteur
   AIRestClient1.InspectorAutoShow := False; // Ne pas afficher automatiquement
 end;
 
 // Afficher manuellement l'inspecteur
-procedure TFormMain.BtnDebugClick(Sender: TObject);
-begin
+procedure TFormMain.BtnDebugClick(Sender: TObject);  
+begin  
   AIRestClient1.ShowInspector;
 end;
 ```
@@ -507,8 +507,8 @@ end;
 **Mode Release** : Désactivé par défaut pour éviter les fuites d'informations.
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF DEBUG}
   AIRestClient1.EnableInspector := True;
   AIRestClient1.InspectorAutoShow := True;
@@ -601,8 +601,8 @@ Les API IA retournent souvent des structures JSON très imbriquées :
 uses
   AI.JSON.Helper;
 
-procedure TraiterReponseAPI;
-var
+procedure TraiterReponseAPI;  
+var  
   Response: TJSONObject;
   Content: string;
   TotalTokens: Integer;
@@ -649,8 +649,8 @@ procedure ForEachInPath(const Path: string; const Proc: TProc<TJSONValue>);
 **Exemple d'utilisation avancée** :
 
 ```pascal
-procedure AfficherResultatsAnalyse;
-var
+procedure AfficherResultatsAnalyse;  
+var  
   Response: TJSONObject;
 begin
   Response := GetAPIResponse;
@@ -721,11 +721,11 @@ L'Assistant de prompts est un outil visuel pour construire, tester et optimiser 
 **Exemple de prompt avec variables** :
 
 ```
-Tu es un {role}.
-Réponds à la question suivante de manière {style}.
+Tu es un {role}.  
+Réponds à la question suivante de manière {style}.  
 
-Contexte : {contexte}
-Question : {question}
+Contexte : {contexte}  
+Question : {question}  
 
 Réponds en {langue} avec {format}.
 ```
@@ -808,8 +808,8 @@ uses
 
 {$R *.dfm}
 
-procedure TFormChatBot.FormCreate(Sender: TObject);
-var
+procedure TFormChatBot.FormCreate(Sender: TObject);  
+var  
   CredManager: TAICredentialsManager;
   APIKey: string;
 begin
@@ -847,8 +847,8 @@ begin
     'Bonjour ! Je suis votre assistant Delphi. Comment puis-je vous aider ?');
 end;
 
-procedure TFormChatBot.BtnEnvoyerClick(Sender: TObject);
-var
+procedure TFormChatBot.BtnEnvoyerClick(Sender: TObject);  
+var  
   UserMessage: string;
 begin
   UserMessage := EditMessage.Text.Trim;
@@ -888,8 +888,8 @@ begin
   );
 end;
 
-procedure TFormChatBot.ComboBoxModelChange(Sender: TObject);
-begin
+procedure TFormChatBot.ComboBoxModelChange(Sender: TObject);  
+begin  
   AIChat1.Model := ComboBoxModel.Text;
 
   // Réinitialiser la conversation lors du changement de modèle
@@ -906,8 +906,8 @@ begin
     ComboBoxModel.ItemIndex := ComboBoxModel.Items.IndexOf(AIChat1.Model);
 end;
 
-procedure TFormChatBot.AjouterMessage(const Role, Content: string);
-begin
+procedure TFormChatBot.AjouterMessage(const Role, Content: string);  
+begin  
   MemoChat.Lines.Add(Format('[%s] %s', [Role, FormatDateTime('hh:nn:ss', Now)]));
   MemoChat.Lines.Add(Content);
   MemoChat.Lines.Add('');
@@ -922,8 +922,8 @@ end.
 ### Exemple 2 : Analyse d'images par lots
 
 ```pascal
-procedure TFormBatchImageAnalysis.BtnAnalyserDossierClick(Sender: TObject);
-var
+procedure TFormBatchImageAnalysis.BtnAnalyserDossierClick(Sender: TObject);  
+var  
   Files: TStringList;
   FilePath: string;
   i: Integer;
@@ -988,8 +988,8 @@ end;
 
 ```pascal
 // ~50 lignes de code pour un simple appel
-procedure AppelerOpenAI;
-var
+procedure AppelerOpenAI;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -1007,8 +1007,8 @@ end;
 
 ```pascal
 // 3-4 lignes pour le même résultat
-procedure AppelerOpenAI;
-begin
+procedure AppelerOpenAI;  
+begin  
   AIChat1.SendMessage('Ma question');
   // C'est tout !
 end;
@@ -1062,15 +1062,15 @@ type
 
 implementation
 
-class function TAIConfig.GetInstance: TAIConfig;
-begin
+class function TAIConfig.GetInstance: TAIConfig;  
+begin  
   if FInstance = nil then
     FInstance := TAIConfig.Create;
   Result := FInstance;
 end;
 
-procedure TAIConfig.ConfigureAIClient(AIClient: TAIRestClient);
-begin
+procedure TAIConfig.ConfigureAIClient(AIClient: TAIRestClient);  
+begin  
   AIClient.AIProvider := apOpenAI;
   AIClient.APIKey := TAICredentialsManager.GetInstance.GetCredential('OpenAI');
   AIClient.AutoRetry := True;
@@ -1079,8 +1079,8 @@ begin
   AIClient.EnableInspector := {$IFDEF DEBUG}True{$ELSE}False{$ENDIF};
 end;
 
-procedure TAIConfig.ConfigureAIChat(AIChat: TAIChat);
-begin
+procedure TAIConfig.ConfigureAIChat(AIChat: TAIChat);  
+begin  
   AIChat.Model := 'gpt-3.5-turbo';
   AIChat.Temperature := 0.7;
   AIChat.MaxTokens := 1000;
@@ -1091,8 +1091,8 @@ end;
 ### 2. Gestion centralisée des erreurs
 
 ```pascal
-procedure TFormBase.ConfigurerGestionErreurs;
-begin
+procedure TFormBase.ConfigurerGestionErreurs;  
+begin  
   AIRestClient1.OnError := GestionnaireErreurGlobal;
 end;
 
@@ -1127,8 +1127,8 @@ end;
 ### 3. Monitoring et alertes
 
 ```pascal
-procedure TFormMain.SurveillerUtilisation;
-begin
+procedure TFormMain.SurveillerUtilisation;  
+begin  
   AIRestClient1.OnUsageUpdate := procedure(Sender: TObject;
     const Usage: TAIUsageInfo)
   begin

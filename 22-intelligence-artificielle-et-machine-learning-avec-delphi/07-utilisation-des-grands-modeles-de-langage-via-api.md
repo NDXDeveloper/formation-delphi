@@ -44,14 +44,14 @@ Un LLM (Large Language Model ou Grand Modèle de Langage) est un modèle d'intel
 
 **Exemples concrets** :
 ```
-Utilisateur : "Trouve-moi tous les clients qui n'ont pas commandé depuis 3 mois et qui habitent à Paris"
-Application : Comprend, génère la requête SQL, l'exécute, présente les résultats
+Utilisateur : "Trouve-moi tous les clients qui n'ont pas commandé depuis 3 mois et qui habitent à Paris"  
+Application : Comprend, génère la requête SQL, l'exécute, présente les résultats  
 
-Utilisateur : "Rédige un email professionnel pour relancer ce client"
-Application : Génère un email personnalisé basé sur l'historique du client
+Utilisateur : "Rédige un email professionnel pour relancer ce client"  
+Application : Génère un email personnalisé basé sur l'historique du client  
 
-Utilisateur : "Explique-moi pourquoi les ventes ont baissé ce trimestre"
-Application : Analyse les données et fournit une explication détaillée
+Utilisateur : "Explique-moi pourquoi les ventes ont baissé ce trimestre"  
+Application : Analyse les données et fournit une explication détaillée  
 ```
 
 ## Les principaux LLM disponibles
@@ -188,8 +188,8 @@ Un token est une unité de texte que le modèle traite. Ce n'est pas exactement 
 
 ```pascal
 // Estimation approximative (pas exacte)
-function EstimerNombreTokens(const Texte: string): Integer;
-begin
+function EstimerNombreTokens(const Texte: string): Integer;  
+begin  
   // Règle empirique : 1 token ≈ 4 caractères
   Result := Round(Length(Texte) / 4);
 end;
@@ -216,8 +216,8 @@ Le prompt est l'instruction ou la question que vous donnez au LLM. C'est l'art d
 
 **Exemple avancé** :
 ```
-Tu es un assistant commercial expert.
-Analyse l'email client ci-dessous et détermine :
+Tu es un assistant commercial expert.  
+Analyse l'email client ci-dessous et détermine :  
 1. Le sentiment (positif/neutre/négatif)
 2. L'urgence (faible/moyenne/haute)
 3. La catégorie de demande (SAV/Vente/Technique/Autre)
@@ -280,8 +280,8 @@ const
   MAX_CONTEXT_TOKENS = 16000; // GPT-3.5 Turbo
   MAX_OUTPUT_TOKENS = 4000;
 
-function VerifierLimiteContexte(const Prompt: string): Boolean;
-var
+function VerifierLimiteContexte(const Prompt: string): Boolean;  
+var  
   EstimationTokens: Integer;
 begin
   EstimationTokens := EstimerNombreTokens(Prompt);
@@ -374,8 +374,8 @@ type
 
 implementation
 
-constructor TLLMClient.Create(const Config: TLLMConfig);
-begin
+constructor TLLMClient.Create(const Config: TLLMConfig);  
+begin  
   inherited Create;
   FConfig := Config;
   FMessages := TList<TLLMMessage>.Create;
@@ -389,8 +389,8 @@ begin
   FRESTRequest.Method := rmPOST;
 end;
 
-destructor TLLMClient.Destroy;
-begin
+destructor TLLMClient.Destroy;  
+begin  
   FMessages.Free;
   FRESTRequest.Free;
   FRESTResponse.Free;
@@ -398,8 +398,8 @@ begin
   inherited;
 end;
 
-function TLLMClient.GetEndpoint: string;
-begin
+function TLLMClient.GetEndpoint: string;  
+begin  
   case FConfig.Provider of
     lpOpenAI: Result := 'https://api.openai.com';
     lpAnthropic: Result := 'https://api.anthropic.com';
@@ -410,8 +410,8 @@ begin
   end;
 end;
 
-procedure TLLMClient.AddMessage(const Role, Content: string);
-var
+procedure TLLMClient.AddMessage(const Role, Content: string);  
+var  
   Msg: TLLMMessage;
 begin
   Msg.Role := Role;
@@ -419,13 +419,13 @@ begin
   FMessages.Add(Msg);
 end;
 
-procedure TLLMClient.ClearMessages;
-begin
+procedure TLLMClient.ClearMessages;  
+begin  
   FMessages.Clear;
 end;
 
-function TLLMClient.BuildRequestBody: TJSONObject;
-var
+function TLLMClient.BuildRequestBody: TJSONObject;  
+var  
   Messages: TJSONArray;
   Msg: TLLMMessage;
   MsgObj: TJSONObject;
@@ -474,8 +474,8 @@ begin
   end;
 end;
 
-function TLLMClient.ExtractResponse(const JSON: TJSONObject): string;
-begin
+function TLLMClient.ExtractResponse(const JSON: TJSONObject): string;  
+begin  
   case FConfig.Provider of
     lpOpenAI, lpMistral:
       Result := JSON.GetValue<string>('choices[0].message.content');
@@ -488,8 +488,8 @@ begin
   end;
 end;
 
-function TLLMClient.SendRequest: string;
-var
+function TLLMClient.SendRequest: string;  
+var  
   RequestBody: TJSONObject;
 begin
   FRESTRequest.Params.Clear;
@@ -534,8 +534,8 @@ begin
   end;
 end;
 
-function TLLMClient.Chat(const UserMessage: string): string;
-begin
+function TLLMClient.Chat(const UserMessage: string): string;  
+begin  
   AddMessage('user', UserMessage);
   Result := SendRequest;
   AddMessage('assistant', Result);
@@ -545,8 +545,8 @@ end;
 ### Utilisation simple
 
 ```pascal
-procedure TFormChat.InitialiserLLM;
-var
+procedure TFormChat.InitialiserLLM;  
+var  
   Config: TLLMConfig;
 begin
   Config.Provider := lpOpenAI;
@@ -563,8 +563,8 @@ begin
     'Réponds de manière concise et professionnelle.');
 end;
 
-procedure TFormChat.BtnEnvoyerClick(Sender: TObject);
-var
+procedure TFormChat.BtnEnvoyerClick(Sender: TObject);  
+var  
   Reponse: string;
 begin
   if EditMessage.Text.Trim.IsEmpty then Exit;
@@ -607,8 +607,8 @@ const
   PROMPT_ZERO_SHOT =
     'Classe le sentiment de ce texte comme positif, négatif ou neutre : %s';
 
-function ClasserSentiment(const Texte: string): string;
-begin
+function ClasserSentiment(const Texte: string): string;  
+begin  
   Result := LLM.Chat(Format(PROMPT_ZERO_SHOT, [Texte]));
 end;
 ```
@@ -634,8 +634,8 @@ const
     'Texte: "%s"'#13#10 +
     'Sentiment:';
 
-function ClasserSentimentAvecExemples(const Texte: string): string;
-begin
+function ClasserSentimentAvecExemples(const Texte: string): string;  
+begin  
   Result := LLM.Chat(Format(PROMPT_FEW_SHOT, [Texte]));
 end;
 ```
@@ -652,8 +652,8 @@ const
     #13#10 +
     'Raisonnement:';
 
-function ResoudreProbleme(const Probleme: string): string;
-begin
+function ResoudreProbleme(const Probleme: string): string;  
+begin  
   Result := LLM.Chat(Format(PROMPT_COT, [Probleme]));
 end;
 ```
@@ -675,8 +675,8 @@ const
     #13#10 +
     'JSON:';
 
-function AnalyserTexteStructure(const Texte: string): TJSONObject;
-var
+function AnalyserTexteStructure(const Texte: string): TJSONObject;  
+var  
   Reponse: string;
 begin
   Reponse := LLM.Chat(Format(PROMPT_JSON, [Texte]));
@@ -702,26 +702,26 @@ type
     function Build: string;
   end;
 
-constructor TPromptTemplate.Create(const Template: string);
-begin
+constructor TPromptTemplate.Create(const Template: string);  
+begin  
   inherited Create;
   FTemplate := Template;
   FVariables := TDictionary<string, string>.Create;
 end;
 
-destructor TPromptTemplate.Destroy;
-begin
+destructor TPromptTemplate.Destroy;  
+begin  
   FVariables.Free;
   inherited;
 end;
 
-procedure TPromptTemplate.SetVariable(const Name, Value: string);
-begin
+procedure TPromptTemplate.SetVariable(const Name, Value: string);  
+begin  
   FVariables.AddOrSetValue(Name, Value);
 end;
 
-function TPromptTemplate.Build: string;
-var
+function TPromptTemplate.Build: string;  
+var  
   Pair: TPair<string, string>;
 begin
   Result := FTemplate;
@@ -731,8 +731,8 @@ begin
 end;
 
 // Utilisation
-procedure ExempleTemplate;
-var
+procedure ExempleTemplate;  
+var  
   Template: TPromptTemplate;
   Prompt: string;
 begin
@@ -772,8 +772,8 @@ type
     function CorrigerEmail(const Email: string): string;
   end;
 
-function TEmailAssistant.RedacterEmail(const Destinataire, Contexte, Ton: string): string;
-var
+function TEmailAssistant.RedacterEmail(const Destinataire, Contexte, Ton: string): string;  
+var  
   Prompt: string;
 begin
   Prompt := Format(
@@ -789,8 +789,8 @@ begin
   Result := FLLM.Chat(Prompt);
 end;
 
-function TEmailAssistant.CorrigerEmail(const Email: string): string;
-var
+function TEmailAssistant.CorrigerEmail(const Email: string): string;  
+var  
   Prompt: string;
 begin
   Prompt :=
@@ -806,8 +806,8 @@ end;
 ### 2. Extracteur intelligent de données
 
 ```pascal
-function ExtraireInformationsFacture(const TexteFacture: string): TJSONObject;
-var
+function ExtraireInformationsFacture(const TexteFacture: string): TJSONObject;  
+var  
   Prompt: string;
   Reponse: string;
 begin
@@ -834,8 +834,8 @@ begin
   Result := TJSONObject.ParseJSONValue(Reponse) as TJSONObject;
 end;
 
-function ExtraireJSON(const Texte: string): string;
-var
+function ExtraireJSON(const Texte: string): string;  
+var  
   StartPos, EndPos: Integer;
 begin
   StartPos := Pos('{', Texte);
@@ -877,8 +877,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.BtnGenererSQLClick(Sender: TObject);
-var
+procedure TFormMain.BtnGenererSQLClick(Sender: TObject);  
+var  
   Schema, DemandeNaturelle, SQL: string;
 begin
   Schema :=
@@ -914,8 +914,8 @@ type
     function Repondre(const Question: string): string;
   end;
 
-procedure TApplicationChatbot.InitialiserContexte;
-begin
+procedure TApplicationChatbot.InitialiserContexte;  
+begin  
   FContexteApplication :=
     'Tu es l''assistant de l''application de gestion ACME Corp.'#13#10 +
     'Base de connaissances:'#13#10 +
@@ -929,8 +929,8 @@ begin
   FLLM.AddMessage('system', FContexteApplication);
 end;
 
-function TApplicationChatbot.ObtenirContexteDynamique: string;
-begin
+function TApplicationChatbot.ObtenirContexteDynamique: string;  
+begin  
   // Ajouter des infos sur l'état actuel de l'application
   Result := Format(
     'Contexte actuel:'#13#10 +
@@ -943,8 +943,8 @@ begin
   );
 end;
 
-function TApplicationChatbot.Repondre(const Question: string): string;
-var
+function TApplicationChatbot.Repondre(const Question: string): string;  
+var  
   Contexte: string;
   QuestionComplete: string;
 begin
@@ -958,8 +958,8 @@ end;
 ### 5. Analyseur de logs et diagnostiqueur
 
 ```pascal
-function DiagnostiquerErreur(const MessageErreur, StackTrace: string): string;
-var
+function DiagnostiquerErreur(const MessageErreur, StackTrace: string): string;  
+var  
   Prompt: string;
 begin
   Prompt := Format(
@@ -982,8 +982,8 @@ begin
 end;
 
 // Utilisation dans un exception handler
-procedure TFormMain.ApplicationExceptionHandler(Sender: TObject; E: Exception);
-var
+procedure TFormMain.ApplicationExceptionHandler(Sender: TObject; E: Exception);  
+var  
   Diagnostic: string;
 begin
   // Logger l'erreur normalement
@@ -1033,8 +1033,8 @@ type
     procedure ChargerConversation(const Fichier: string);
   end;
 
-function TConversationManager.EstimerTokensConversation: Integer;
-var
+function TConversationManager.EstimerTokensConversation: Integer;  
+var  
   Msg: TLLMMessage;
   Total: string;
 begin
@@ -1045,8 +1045,8 @@ begin
   Result := EstimerNombreTokens(Total);
 end;
 
-procedure TConversationManager.TronquerConversation;
-var
+procedure TConversationManager.TronquerConversation;  
+var  
   TokensActuels: Integer;
 begin
   TokensActuels := EstimerTokensConversation;
@@ -1062,8 +1062,8 @@ begin
   end;
 end;
 
-function TConversationManager.Chat(const UserMessage: string): string;
-begin
+function TConversationManager.Chat(const UserMessage: string): string;  
+begin  
   // Vérifier la limite de messages
   if FLLM.Messages.Count >= FMaxMessages then
     TronquerConversation;
@@ -1071,8 +1071,8 @@ begin
   Result := FLLM.Chat(UserMessage);
 end;
 
-procedure TConversationManager.SauvegarderConversation(const Fichier: string);
-var
+procedure TConversationManager.SauvegarderConversation(const Fichier: string);  
+var  
   JSON: TJSONArray;
   Msg: TLLMMessage;
   MsgObj: TJSONObject;
@@ -1106,8 +1106,8 @@ end;
 ### Résumé automatique de conversation
 
 ```pascal
-function ResumerConversation(const Messages: TList<TLLMMessage>): string;
-var
+function ResumerConversation(const Messages: TList<TLLMMessage>): string;  
+var  
   Historique: string;
   Msg: TLLMMessage;
   Prompt: string;
@@ -1130,8 +1130,8 @@ begin
 end;
 
 // Utilisation pour compresser l'historique
-procedure CompresserConversation;
-var
+procedure CompresserConversation;  
+var  
   Resume: string;
 begin
   if ConversationManager.FLLM.Messages.Count > 10 then
@@ -1158,8 +1158,8 @@ Pour une meilleure expérience utilisateur, affichez les réponses progressiveme
 RequestBody.AddPair('stream', TJSONBool.Create(True));
 
 // Gérer les réponses partielles
-procedure TraiterStreamingResponse;
-var
+procedure TraiterStreamingResponse;  
+var  
   Lines: TStringList;
   Line: string;
   JSONObj: TJSONObject;
@@ -1173,10 +1173,10 @@ begin
     begin
       if Line.StartsWith('data: ') then
       begin
-        Line := Copy(Line, 7, Length(Line));
-        if Line = '[DONE]' then Break;
+        Delta := Copy(Line, 7, Length(Line));
+        if Delta = '[DONE]' then Break;
 
-        JSONObj := TJSONObject.ParseJSONValue(Line) as TJSONObject;
+        JSONObj := TJSONObject.ParseJSONValue(Delta) as TJSONObject;
         try
           Delta := JSONObj.GetValue<string>('choices[0].delta.content');
 
@@ -1249,8 +1249,8 @@ type
     property HitRate: Double read GetHitRate;
   end;
 
-function TLLMCache.CalculerHash(const Prompt: string): string;
-var
+function TLLMCache.CalculerHash(const Prompt: string): string;  
+var  
   HashBytes: TBytes;
 begin
   // Utiliser MD5 ou SHA pour le hash
@@ -1258,8 +1258,8 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(HashBytes);
 end;
 
-function TLLMCache.Get(const Prompt: string; out Response: string): Boolean;
-var
+function TLLMCache.Get(const Prompt: string; out Response: string): Boolean;  
+var  
   Hash: string;
 begin
   Hash := CalculerHash(Prompt);
@@ -1272,8 +1272,8 @@ begin
 end;
 
 // Utilisation avec cache
-function ChatAvecCache(const Prompt: string): string;
-begin
+function ChatAvecCache(const Prompt: string): string;  
+begin  
   if not Cache.Get(Prompt, Result) then
   begin
     Result := LLM.Chat(Prompt);
@@ -1295,11 +1295,11 @@ type
     constructor Create(MaxRequetesParMinute: Integer);
 
     procedure AttendreDisponibilite;
-    procedure IncrémenterCompteur;
+    procedure IncrementerCompteur;
   end;
 
-procedure TRateLimiter.AttendreDisponibilite;
-var
+procedure TRateLimiter.AttendreDisponibilite;  
+var  
   MinutesEcoulees: Integer;
 begin
   MinutesEcoulees := MinutesBetween(Now, FDerniereReset);
@@ -1320,11 +1320,11 @@ begin
 end;
 
 // Utilisation
-procedure AppelerLLMAvecLimite(const Prompt: string);
-begin
+function AppelerLLMAvecLimite(const Prompt: string): string;  
+begin  
   RateLimiter.AttendreDisponibilite;
   Result := LLM.Chat(Prompt);
-  RateLimiter.IncrémenterCompteur;
+  RateLimiter.IncrementerCompteur;
 end;
 ```
 
@@ -1339,8 +1339,8 @@ Les LLM peuvent inventer des informations fausses avec confiance.
 **Mitigation** :
 ```pascal
 // Toujours vérifier les faits critiques
-function VerifierFactsAvecLLM(const Info: string): Boolean;
-var
+function VerifierFactsAvecLLM(const Info: string): Boolean;  
+var  
   Prompt: string;
   Reponse: string;
 begin
@@ -1379,8 +1379,8 @@ Les modèles peuvent avoir des biais culturels ou sociaux.
 Informez toujours l'utilisateur qu'il interagit avec une IA.
 
 ```pascal
-procedure TFormChat.FormCreate(Sender: TObject);
-begin
+procedure TFormChat.FormCreate(Sender: TObject);  
+begin  
   LabelInfo.Caption :=
     '💡 Vous discutez avec un assistant IA. ' +
     'Les réponses sont générées automatiquement.';
@@ -1392,8 +1392,8 @@ end;
 Ne jamais envoyer de données confidentielles sans consentement.
 
 ```pascal
-function TexteContientDonneesSensibles(const Texte: string): Boolean;
-begin
+function TexteContientDonneesSensibles(const Texte: string): Boolean;  
+begin  
   Result :=
     TRegEx.IsMatch(Texte, '\b[\w\.-]+@[\w\.-]+\.\w+\b') or // Email
     TRegEx.IsMatch(Texte, '\b\d{16}\b') or // Numéro carte
@@ -1409,8 +1409,8 @@ end;
 Pour les décisions importantes, toujours avoir validation humaine.
 
 ```pascal
-function PrendreDecisionCritique(const Contexte: string): string;
-var
+function PrendreDecisionCritique(const Contexte: string): string;  
+var  
   SuggestionIA: string;
 begin
   SuggestionIA := LLM.Chat('Suggère une décision pour: ' + Contexte);
