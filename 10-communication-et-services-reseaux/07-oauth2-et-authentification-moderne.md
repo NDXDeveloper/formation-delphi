@@ -15,8 +15,8 @@ Imaginez l'entrée d'un immeuble sécurisé. Vous montrez votre carte d'identit�
 
 **1. Authentification basique (Basic Auth)**
 ```
-Username: jean.dupont
-Password: MotDePasse123
+Username: jean.dupont  
+Password: MotDePasse123  
 ```
 - Simple mais peu sécurisée
 - Mot de passe transmis à chaque requête
@@ -204,8 +204,8 @@ Payload (données):
   "scopes": ["read:profile", "write:posts"]
 }
 
-Signature (vérification d'intégrité):
-HMACSHA256(
+Signature (vérification d'intégrité):  
+HMACSHA256(  
   base64UrlEncode(header) + "." +
   base64UrlEncode(payload),
   secret
@@ -258,13 +258,13 @@ implementation
 uses
   System.SysUtils, System.DateUtils;
 
-function TOAuth2Config.IsTokenExpired: Boolean;
-begin
+function TOAuth2Config.IsTokenExpired: Boolean;  
+begin  
   Result := (AccessToken.IsEmpty) or (Now >= ExpiresAt);
 end;
 
-procedure TOAuth2Config.SaveTokens(const Access, Refresh: string; ExpiresIn: Integer);
-begin
+procedure TOAuth2Config.SaveTokens(const Access, Refresh: string; ExpiresIn: Integer);  
+begin  
   AccessToken := Access;
   RefreshToken := Refresh;
   Self.ExpiresIn := ExpiresIn;
@@ -305,14 +305,14 @@ implementation
 uses
   System.NetEncoding, System.Net.HttpClient, System.JSON;
 
-constructor TOAuth2Flow.Create(Config: TOAuth2Config);
-begin
+constructor TOAuth2Flow.Create(Config: TOAuth2Config);  
+begin  
   inherited Create;
   FConfig := Config;
 end;
 
-function TOAuth2Flow.GenerateState: string;
-var
+function TOAuth2Flow.GenerateState: string;  
+var  
   GUID: TGUID;
 begin
   CreateGUID(GUID);
@@ -322,8 +322,8 @@ begin
   Result := StringReplace(Result, '-', '', [rfReplaceAll]);
 end;
 
-procedure TOAuth2Flow.StartAuthorizationFlow;
-var
+procedure TOAuth2Flow.StartAuthorizationFlow;  
+var  
   AuthURL: string;
 begin
   // Générer un state pour CSRF protection
@@ -344,8 +344,8 @@ begin
   // Le serveur OAuth redirigera vers RedirectURI avec le code
 end;
 
-function TOAuth2Flow.HandleCallback(const AuthorizationCode: string): Boolean;
-var
+function TOAuth2Flow.HandleCallback(const AuthorizationCode: string): Boolean;  
+var  
   HTTPClient: THTTPClient;
   Response: IHTTPResponse;
   RequestBody: TStringList;
@@ -395,8 +395,8 @@ begin
   end;
 end;
 
-function TOAuth2Flow.RefreshAccessToken: Boolean;
-var
+function TOAuth2Flow.RefreshAccessToken: Boolean;  
+var  
   HTTPClient: THTTPClient;
   Response: IHTTPResponse;
   RequestBody: TStringList;
@@ -495,8 +495,8 @@ implementation
 uses
   System.NetEncoding, IdGlobal;
 
-constructor TLocalCallbackServer.Create(Port: Integer);
-begin
+constructor TLocalCallbackServer.Create(Port: Integer);  
+begin  
   inherited Create;
   FPort := Port;
   FEvent := TEvent.Create(nil, True, False, '');
@@ -506,24 +506,24 @@ begin
   FHTTPServer.OnCommandGet := HTTPServerCommandGet;
 end;
 
-destructor TLocalCallbackServer.Destroy;
-begin
+destructor TLocalCallbackServer.Destroy;  
+begin  
   Stop;
   FHTTPServer.Free;
   FEvent.Free;
   inherited;
 end;
 
-procedure TLocalCallbackServer.Start;
-begin
+procedure TLocalCallbackServer.Start;  
+begin  
   FEvent.ResetEvent;
   FAuthorizationCode := '';
   FState := '';
   FHTTPServer.Active := True;
 end;
 
-procedure TLocalCallbackServer.Stop;
-begin
+procedure TLocalCallbackServer.Stop;  
+begin  
   FHTTPServer.Active := False;
 end;
 
@@ -582,8 +582,8 @@ begin
   end;
 end;
 
-function TLocalCallbackServer.WaitForCallback(TimeoutMs: Integer): Boolean;
-begin
+function TLocalCallbackServer.WaitForCallback(TimeoutMs: Integer): Boolean;  
+begin  
   Result := FEvent.WaitFor(TimeoutMs) = wrSignaled;
 end;
 
@@ -623,22 +623,22 @@ type
 
 implementation
 
-constructor TOAuth2APIClient.Create(Config: TOAuth2Config; Flow: TOAuth2Flow);
-begin
+constructor TOAuth2APIClient.Create(Config: TOAuth2Config; Flow: TOAuth2Flow);  
+begin  
   inherited Create;
   FConfig := Config;
   FFlow := Flow;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TOAuth2APIClient.Destroy;
-begin
+destructor TOAuth2APIClient.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-procedure TOAuth2APIClient.EnsureValidToken;
-begin
+procedure TOAuth2APIClient.EnsureValidToken;  
+begin  
   // Vérifier si le token est expiré
   if FConfig.IsTokenExpired then
   begin
@@ -648,8 +648,8 @@ begin
   end;
 end;
 
-function TOAuth2APIClient.Get(const URL: string): string;
-var
+function TOAuth2APIClient.Get(const URL: string): string;  
+var  
   Response: IHTTPResponse;
 begin
   EnsureValidToken;
@@ -666,8 +666,8 @@ begin
       [Response.StatusCode, Response.StatusText]);
 end;
 
-function TOAuth2APIClient.Post(const URL, Body: string): string;
-var
+function TOAuth2APIClient.Post(const URL, Body: string): string;  
+var  
   Response: IHTTPResponse;
   Stream: TStringStream;
 begin
@@ -690,8 +690,8 @@ begin
   end;
 end;
 
-function TOAuth2APIClient.Put(const URL, Body: string): string;
-var
+function TOAuth2APIClient.Put(const URL, Body: string): string;  
+var  
   Response: IHTTPResponse;
   Stream: TStringStream;
 begin
@@ -714,8 +714,8 @@ begin
   end;
 end;
 
-function TOAuth2APIClient.Delete(const URL: string): string;
-var
+function TOAuth2APIClient.Delete(const URL: string): string;  
+var  
   Response: IHTTPResponse;
 begin
   EnsureValidToken;
@@ -741,8 +741,8 @@ end.
 **Configuration :**
 
 ```pascal
-procedure ConfigurerGoogleOAuth(Config: TOAuth2Config);
-begin
+procedure ConfigurerGoogleOAuth(Config: TOAuth2Config);  
+begin  
   // Obtenir ces valeurs depuis Google Cloud Console
   Config.ClientID := 'VOTRE_CLIENT_ID.apps.googleusercontent.com';
   Config.ClientSecret := 'VOTRE_CLIENT_SECRET';
@@ -816,8 +816,8 @@ end;
 **Configuration :**
 
 ```pascal
-procedure ConfigurerMicrosoftOAuth(Config: TOAuth2Config);
-var
+procedure ConfigurerMicrosoftOAuth(Config: TOAuth2Config);  
+var  
   TenantID: string;
 begin
   TenantID := 'common'; // ou votre Tenant ID spécifique
@@ -842,8 +842,8 @@ end;
 **Configuration :**
 
 ```pascal
-procedure ConfigurerFacebookOAuth(Config: TOAuth2Config);
-begin
+procedure ConfigurerFacebookOAuth(Config: TOAuth2Config);  
+begin  
   Config.ClientID := 'VOTRE_APP_ID';
   Config.ClientSecret := 'VOTRE_APP_SECRET';
   Config.RedirectURI := 'http://localhost:8080/callback';
@@ -862,8 +862,8 @@ end;
 **Configuration :**
 
 ```pascal
-procedure ConfigurerGitHubOAuth(Config: TOAuth2Config);
-begin
+procedure ConfigurerGitHubOAuth(Config: TOAuth2Config);  
+begin  
   Config.ClientID := 'VOTRE_CLIENT_ID';
   Config.ClientSecret := 'VOTRE_CLIENT_SECRET';
   Config.RedirectURI := 'http://localhost:8080/callback';
@@ -911,8 +911,8 @@ implementation
 uses
   System.DateUtils;
 
-class function TJWTHelper.DecodeJWT(const Token: string): TJWTPayload;
-var
+class function TJWTHelper.DecodeJWT(const Token: string): TJWTPayload;  
+var  
   Parts: TArray<string>;
   PayloadEncoded, PayloadJSON: string;
   JSONObject: TJSONObject;
@@ -964,16 +964,16 @@ begin
   end;
 end;
 
-class function TJWTHelper.IsJWTExpired(const Token: string): Boolean;
-var
+class function TJWTHelper.IsJWTExpired(const Token: string): Boolean;  
+var  
   ExpiresAt: TDateTime;
 begin
   ExpiresAt := GetJWTExpiration(Token);
   Result := Now >= ExpiresAt;
 end;
 
-class function TJWTHelper.GetJWTExpiration(const Token: string): TDateTime;
-var
+class function TJWTHelper.GetJWTExpiration(const Token: string): TDateTime;  
+var  
   Payload: TJWTPayload;
 begin
   Payload := DecodeJWT(Token);
@@ -1010,8 +1010,8 @@ implementation
 uses
   System.DateUtils;
 
-class function TJWTGenerator.Base64URLEncode(const Input: string): string;
-begin
+class function TJWTGenerator.Base64URLEncode(const Input: string): string;  
+begin  
   Result := TNetEncoding.Base64.Encode(Input);
   // Convertir Base64 standard en Base64URL
   Result := StringReplace(Result, '+', '-', [rfReplaceAll]);
@@ -1019,8 +1019,8 @@ begin
   Result := StringReplace(Result, '=', '', [rfReplaceAll]);
 end;
 
-class function TJWTGenerator.CreateSignature(const Header, Payload, Secret: string): string;
-var
+class function TJWTGenerator.CreateSignature(const Header, Payload, Secret: string): string;  
+var  
   Data: string;
   Hash: string;
 begin
@@ -1108,8 +1108,8 @@ implementation
 uses
   System.NetEncoding;
 
-class procedure TSecureTokenStorage.SaveToken(const ServiceName, Token: string);
-var
+class procedure TSecureTokenStorage.SaveToken(const ServiceName, Token: string);  
+var  
   Credential: CREDENTIAL;
   TokenBytes: TBytes;
 begin
@@ -1126,8 +1126,8 @@ begin
     RaiseLastOSError;
 end;
 
-class function TSecureTokenStorage.LoadToken(const ServiceName: string): string;
-var
+class function TSecureTokenStorage.LoadToken(const ServiceName: string): string;  
+var  
   Credential: PCREDENTIAL;
   TokenBytes: TBytes;
 begin
@@ -1145,8 +1145,8 @@ begin
   end;
 end;
 
-class procedure TSecureTokenStorage.DeleteToken(const ServiceName: string);
-begin
+class procedure TSecureTokenStorage.DeleteToken(const ServiceName: string);  
+begin  
   CredDelete(PChar('DelphiOAuth2:' + ServiceName), CRED_TYPE_GENERIC, 0);
 end;
 
@@ -1177,8 +1177,8 @@ implementation
 uses
   System.Hash;
 
-class function TTokenEncryption.XOREncrypt(const Data, Key: string): string;
-var
+class function TTokenEncryption.XOREncrypt(const Data, Key: string): string;  
+var  
   i: Integer;
   DataBytes, KeyBytes, ResultBytes: TBytes;
 begin
@@ -1192,8 +1192,8 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(ResultBytes);
 end;
 
-class function TTokenEncryption.EncryptToken(const Token, Password: string): string;
-var
+class function TTokenEncryption.EncryptToken(const Token, Password: string): string;  
+var  
   Key: string;
 begin
   // Créer une clé à partir du mot de passe
@@ -1204,8 +1204,8 @@ begin
   Result := XOREncrypt(Token, Key);
 end;
 
-class function TTokenEncryption.DecryptToken(const EncryptedToken, Password: string): string;
-var
+class function TTokenEncryption.DecryptToken(const EncryptedToken, Password: string): string;  
+var  
   Key: string;
 begin
   Key := THashSHA2.GetHashString(Password);
@@ -1230,8 +1230,8 @@ Config.AuthorizationEndpoint := 'http://accounts.google.com/oauth2/auth';
 ### 2. Valider le state (protection CSRF)
 
 ```pascal
-procedure TOAuth2Flow.StartAuthorizationFlow;
-begin
+procedure TOAuth2Flow.StartAuthorizationFlow;  
+begin  
   FState := GenerateRandomState;
   // Stocker le state
   SaveState(FState);
@@ -1240,8 +1240,8 @@ begin
   AuthURL := AuthURL + '&state=' + FState;
 end;
 
-function ValidateCallback(const ReceivedState: string): Boolean;
-var
+function ValidateCallback(const ReceivedState: string): Boolean;  
+var  
   ExpectedState: string;
 begin
   ExpectedState := LoadState;
@@ -1262,8 +1262,8 @@ type
     class function GenerateCodeChallenge(const Verifier: string): string;
   end;
 
-class function TPKCEHelper.GenerateCodeVerifier: string;
-var
+class function TPKCEHelper.GenerateCodeVerifier: string;  
+var  
   i: Integer;
 const
   Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
@@ -1273,8 +1273,8 @@ begin
     Result[i] := Chars[Random(Length(Chars)) + 1];
 end;
 
-class function TPKCEHelper.GenerateCodeChallenge(const Verifier: string): string;
-var
+class function TPKCEHelper.GenerateCodeChallenge(const Verifier: string): string;  
+var  
   Hash: string;
 begin
   // SHA256 du verifier
@@ -1292,14 +1292,14 @@ end;
 
 ```pascal
 // ❌ Mauvais - Ne jamais logger les tokens
-procedure LogAPICall(const URL, Token: string);
-begin
+procedure LogAPICall(const URL, Token: string);  
+begin  
   WriteLn('Calling: ' + URL + ' with token: ' + Token); // DANGEREUX!
 end;
 
 // ✅ Bon - Logger sans le token
-procedure LogAPICall(const URL: string);
-begin
+procedure LogAPICall(const URL: string);  
+begin  
   WriteLn('Calling: ' + URL + ' [token hidden]');
 end;
 ```
@@ -1307,8 +1307,8 @@ end;
 ### 5. Révoquer les tokens
 
 ```pascal
-function RevokeToken(const Token: string; const RevokeEndpoint: string): Boolean;
-var
+function RevokeToken(const Token: string; const RevokeEndpoint: string): Boolean;  
+var  
   HTTPClient: THTTPClient;
   Response: IHTTPResponse;
   RequestBody: TStringList;
@@ -1342,8 +1342,8 @@ Config.Scopes := 'email profile';
 ### 7. Gérer l'expiration gracieusement
 
 ```pascal
-function ExecuteAPICall(const URL: string): string;
-var
+function ExecuteAPICall(const URL: string): string;  
+var  
   Retries: Integer;
 begin
   Retries := 0;
@@ -1378,8 +1378,8 @@ end;
 ### 8. Configurer les timeouts
 
 ```pascal
-HTTPClient.ConnectionTimeout := 10000; // 10 secondes
-HTTPClient.ResponseTimeout := 30000;   // 30 secondes
+HTTPClient.ConnectionTimeout := 10000; // 10 secondes  
+HTTPClient.ResponseTimeout := 30000;   // 30 secondes  
 ```
 
 ## Exemple complet d'application
@@ -1428,8 +1428,8 @@ uses
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FConfig := TOAuth2Config.Create;
   FFlow := TOAuth2Flow.Create(FConfig);
   FCallbackServer := TLocalCallbackServer.Create(8080);
@@ -1443,16 +1443,16 @@ begin
   UpdateUI;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   FAPIClient.Free;
   FCallbackServer.Free;
   FFlow.Free;
   FConfig.Free;
 end;
 
-procedure TFormMain.ConfigureGoogleOAuth;
-begin
+procedure TFormMain.ConfigureGoogleOAuth;  
+begin  
   FConfig.ClientID := 'VOTRE_CLIENT_ID.apps.googleusercontent.com';
   FConfig.ClientSecret := 'VOTRE_CLIENT_SECRET';
   FConfig.RedirectURI := 'http://localhost:8080/callback';
@@ -1461,8 +1461,8 @@ begin
   FConfig.Scopes := 'openid email profile';
 end;
 
-procedure TFormMain.ButtonLoginClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonLoginClick(Sender: TObject);  
+begin  
   MemoInfo.Lines.Add('Démarrage de l''authentification...');
 
   FCallbackServer.Start;
@@ -1504,8 +1504,8 @@ begin
     end).Start;
 end;
 
-procedure TFormMain.ButtonLogoutClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonLogoutClick(Sender: TObject);  
+begin  
   FConfig.AccessToken := '';
   FConfig.RefreshToken := '';
 
@@ -1516,8 +1516,8 @@ begin
   UpdateUI;
 end;
 
-procedure TFormMain.ButtonGetProfileClick(Sender: TObject);
-var
+procedure TFormMain.ButtonGetProfileClick(Sender: TObject);  
+var  
   UserInfo: string;
   JSONObject: TJSONObject;
   Name, Email: string;
@@ -1547,8 +1547,8 @@ begin
   end;
 end;
 
-procedure TFormMain.UpdateUI;
-var
+procedure TFormMain.UpdateUI;  
+var  
   IsAuthenticated: Boolean;
 begin
   IsAuthenticated := not FConfig.AccessToken.IsEmpty;

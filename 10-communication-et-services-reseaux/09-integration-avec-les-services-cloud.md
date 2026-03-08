@@ -74,23 +74,23 @@ Vous payez seulement ce que vous utilisez
 
 **IaaS (Infrastructure as a Service)**
 ```
-Vous gérez :    Application, Données, Runtime, Middleware, OS
-Provider gère :  Virtualisation, Serveurs, Storage, Network
-Exemple :       EC2 (AWS), VM (Azure), Compute Engine (GCP)
+Vous gérez :    Application, Données, Runtime, Middleware, OS  
+Provider gère :  Virtualisation, Serveurs, Storage, Network  
+Exemple :       EC2 (AWS), VM (Azure), Compute Engine (GCP)  
 ```
 
 **PaaS (Platform as a Service)**
 ```
-Vous gérez :    Application, Données
-Provider gère :  Runtime, Middleware, OS, Infrastructure
-Exemple :       Elastic Beanstalk (AWS), App Service (Azure), App Engine (GCP)
+Vous gérez :    Application, Données  
+Provider gère :  Runtime, Middleware, OS, Infrastructure  
+Exemple :       Elastic Beanstalk (AWS), App Service (Azure), App Engine (GCP)  
 ```
 
 **SaaS (Software as a Service)**
 ```
-Vous gérez :    Rien (juste utilisation)
-Provider gère :  Tout
-Exemple :       Office 365, Gmail, Salesforce
+Vous gérez :    Rien (juste utilisation)  
+Provider gère :  Tout  
+Exemple :       Office 365, Gmail, Salesforce  
 ```
 
 ## Les principaux providers Cloud
@@ -387,8 +387,8 @@ implementation
 uses
   System.NetConsts;
 
-constructor TGoogleCloudAuth.Create(const ServiceAccountJSON: string);
-var
+constructor TGoogleCloudAuth.Create(const ServiceAccountJSON: string);  
+var  
   JSON: TJSONObject;
 begin
   inherited Create;
@@ -402,13 +402,13 @@ begin
   end;
 end;
 
-function TGoogleCloudAuth.IsTokenValid: Boolean;
-begin
+function TGoogleCloudAuth.IsTokenValid: Boolean;  
+begin  
   Result := (not FAccessToken.IsEmpty) and (Now < FTokenExpiry);
 end;
 
-function TGoogleCloudAuth.GetAccessToken: string;
-var
+function TGoogleCloudAuth.GetAccessToken: string;  
+var  
   JWT: string;
   HTTPClient: THTTPClient;
   RequestBody: TStringList;
@@ -458,8 +458,8 @@ begin
   end;
 end;
 
-function CreateJWT: string;
-var
+function CreateJWT: string;  
+var  
   Header, Payload: TJSONObject;
   HeaderEncoded, PayloadEncoded: string;
   IssuedAt, Expiry: Int64;
@@ -544,14 +544,14 @@ begin
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TAWSS3Client.Destroy;
-begin
+destructor TAWSS3Client.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-procedure TAWSS3Client.UploadFile(const LocalFilePath, S3Key: string);
-var
+procedure TAWSS3Client.UploadFile(const LocalFilePath, S3Key: string);  
+var  
   FileStream: TFileStream;
   URL, DateISO, AuthHeader: string;
   Response: IHTTPResponse;
@@ -587,8 +587,8 @@ begin
   end;
 end;
 
-procedure TAWSS3Client.DownloadFile(const S3Key, LocalFilePath: string);
-var
+procedure TAWSS3Client.DownloadFile(const S3Key, LocalFilePath: string);  
+var  
   FileStream: TFileStream;
   URL, DateISO, AuthHeader: string;
   Response: IHTTPResponse;
@@ -616,8 +616,8 @@ begin
   end;
 end;
 
-procedure TAWSS3Client.DeleteFile(const S3Key: string);
-var
+procedure TAWSS3Client.DeleteFile(const S3Key: string);  
+var  
   URL, DateISO, AuthHeader: string;
   Response: IHTTPResponse;
 begin
@@ -726,16 +726,16 @@ type
 
 implementation
 
-constructor TAzureBlobClient.Create(const AccountName, AccountKey: string);
-begin
+constructor TAzureBlobClient.Create(const AccountName, AccountKey: string);  
+begin  
   inherited Create;
   FAccountName := AccountName;
   FAccountKey := AccountKey;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TAzureBlobClient.Destroy;
-begin
+destructor TAzureBlobClient.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
@@ -801,8 +801,8 @@ begin
   end;
 end;
 
-function TAzureBlobClient.GetBlobURL(const ContainerName, BlobName: string): string;
-var
+function TAzureBlobClient.GetBlobURL(const ContainerName, BlobName: string): string;  
+var  
   SAS: string;
 begin
   SAS := TAzureSASHelper.GenerateSAS(FAccountName, FAccountKey,
@@ -852,8 +852,8 @@ begin
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TGoogleCloudStorageClient.Destroy;
-begin
+destructor TGoogleCloudStorageClient.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
@@ -905,8 +905,8 @@ begin
   end;
 end;
 
-procedure TGoogleCloudStorageClient.DeleteFile(const ObjectName: string);
-var
+procedure TGoogleCloudStorageClient.DeleteFile(const ObjectName: string);  
+var  
   URL: string;
   Response: IHTTPResponse;
 begin
@@ -934,8 +934,8 @@ end.
 uses
   FireDAC.Comp.Client, FireDAC.Stan.Def, FireDAC.Phys.MySQL;
 
-procedure ConnecterRDS;
-var
+procedure ConnecterRDS;  
+var  
   Connection: TFDConnection;
 begin
   Connection := TFDConnection.Create(nil);
@@ -966,8 +966,8 @@ end;
 ### Azure SQL Database
 
 ```pascal
-procedure ConnecterAzureSQL;
-var
+procedure ConnecterAzureSQL;  
+var  
   Connection: TFDConnection;
 begin
   Connection := TFDConnection.Create(nil);
@@ -995,8 +995,8 @@ end;
 ### Google Cloud SQL
 
 ```pascal
-procedure ConnecterGoogleCloudSQL;
-var
+procedure ConnecterGoogleCloudSQL;  
+var  
   Connection: TFDConnection;
 begin
   Connection := TFDConnection.Create(nil);
@@ -1051,21 +1051,21 @@ implementation
 uses
   System.NetEncoding;
 
-constructor TAWSRekognition.Create(const Credentials: TAWSCredentials);
-begin
+constructor TAWSRekognition.Create(const Credentials: TAWSCredentials);  
+begin  
   inherited Create;
   FCredentials := Credentials;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TAWSRekognition.Destroy;
-begin
+destructor TAWSRekognition.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-function TAWSRekognition.DetectLabels(const ImageFilePath: string): TJSONArray;
-var
+function TAWSRekognition.DetectLabels(const ImageFilePath: string): TJSONArray;  
+var  
   ImageBytes: TBytes;
   ImageBase64: string;
   RequestBody: TJSONObject;
@@ -1188,22 +1188,22 @@ type
 
 implementation
 
-constructor TAzureComputerVision.Create(const Endpoint, SubscriptionKey: string);
-begin
+constructor TAzureComputerVision.Create(const Endpoint, SubscriptionKey: string);  
+begin  
   inherited Create;
   FEndpoint := Endpoint;
   FSubscriptionKey := SubscriptionKey;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TAzureComputerVision.Destroy;
-begin
+destructor TAzureComputerVision.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-function TAzureComputerVision.AnalyzeImage(const ImageURL: string): TJSONObject;
-var
+function TAzureComputerVision.AnalyzeImage(const ImageURL: string): TJSONObject;  
+var  
   URL: string;
   RequestBody: TJSONObject;
   RequestStream: TStringStream;
@@ -1235,8 +1235,8 @@ begin
   end;
 end;
 
-function TAzureComputerVision.OCR(const ImageFilePath: string): string;
-var
+function TAzureComputerVision.OCR(const ImageFilePath: string): string;  
+var  
   URL: string;
   FileStream: TFileStream;
   Response: IHTTPResponse;
@@ -1326,21 +1326,21 @@ type
 
 implementation
 
-constructor TGoogleCloudVision.Create(Auth: TGoogleCloudAuth);
-begin
+constructor TGoogleCloudVision.Create(Auth: TGoogleCloudAuth);  
+begin  
   inherited Create;
   FAuth := Auth;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TGoogleCloudVision.Destroy;
-begin
+destructor TGoogleCloudVision.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-function TGoogleCloudVision.DetectLabels(const ImageFilePath: string): TJSONArray;
-var
+function TGoogleCloudVision.DetectLabels(const ImageFilePath: string): TJSONArray;  
+var  
   ImageBytes: TBytes;
   ImageBase64: string;
   RequestBody, ImageObj, Feature: TJSONObject;
@@ -1421,8 +1421,8 @@ end.
 
 ```pascal
 // ✅ Bon - Arrêter les ressources inutilisées
-procedure OptimiserCouts;
-begin
+procedure OptimiserCouts;  
+begin  
   // Utiliser des instances "Spot" ou "Preemptible" pour tâches non critiques
   // Arrêter les VM en dehors des heures de travail
   // Utiliser l'auto-scaling
@@ -1440,8 +1440,8 @@ const
   AWS_SECRET = 'wJalr...';
 
 // ✅ Bon - Variables d'environnement ou gestionnaire de secrets
-function GetAWSKey: string;
-begin
+function GetAWSKey: string;  
+begin  
   Result := GetEnvironmentVariable('AWS_ACCESS_KEY_ID');
 end;
 ```
@@ -1449,8 +1449,8 @@ end;
 ### 3. Gérer les erreurs réseau
 
 ```pascal
-function AppelCloudAvecRetry(Operation: TProc): Boolean;
-var
+function AppelCloudAvecRetry(Operation: TProc): Boolean;  
+var  
   Tentatives: Integer;
   Delai: Integer;
 begin

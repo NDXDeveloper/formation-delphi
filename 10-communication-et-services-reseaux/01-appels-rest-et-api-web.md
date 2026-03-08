@@ -74,8 +74,8 @@ Imaginons que vous voulez récupérer des informations depuis une API publique. 
 **Configuration du TRESTClient :**
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Définir l'URL de base de l'API
   RESTClient1.BaseURL := 'https://jsonplaceholder.typicode.com';
 end;
@@ -84,8 +84,8 @@ end;
 **Effectuer une requête GET :**
 
 ```pascal
-procedure TForm1.ButtonGetDataClick(Sender: TObject);
-begin
+procedure TForm1.ButtonGetDataClick(Sender: TObject);  
+begin  
   // Configurer la requête
   RESTRequest1.Method := rmGET;
   RESTRequest1.Resource := 'users/1';
@@ -116,8 +116,8 @@ Delphi propose la classe `TJSONObject` pour manipuler facilement les données JS
 uses
   System.JSON;
 
-procedure TForm1.ButtonParseJSONClick(Sender: TObject);
-var
+procedure TForm1.ButtonParseJSONClick(Sender: TObject);  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
   Nom, Email: string;
@@ -158,8 +158,8 @@ end;
 Pour envoyer des données à une API, vous utilisez la méthode POST :
 
 ```pascal
-procedure TForm1.ButtonCreateUserClick(Sender: TObject);
-var
+procedure TForm1.ButtonCreateUserClick(Sender: TObject);  
+var  
   JSONObject: TJSONObject;
 begin
   // Créer un objet JSON avec les données
@@ -206,8 +206,8 @@ end;
 Les paramètres de requête s'ajoutent à l'URL après un `?` :
 
 ```pascal
-procedure TForm1.ButtonSearchClick(Sender: TObject);
-begin
+procedure TForm1.ButtonSearchClick(Sender: TObject);  
+begin  
   RESTRequest1.Method := rmGET;
   RESTRequest1.Resource := 'posts';
 
@@ -231,8 +231,8 @@ Cela générera l'URL : `posts?userId=1&_limit=5`
 Vous pouvez aussi inclure des paramètres directement dans le chemin :
 
 ```pascal
-procedure TForm1.ButtonGetUserClick(Sender: TObject);
-var
+procedure TForm1.ButtonGetUserClick(Sender: TObject);  
+var  
   UserID: string;
 begin
   UserID := Edit1.Text;
@@ -255,8 +255,8 @@ end;
 Certaines API nécessitent des en-têtes spécifiques, comme une clé d'authentification :
 
 ```pascal
-procedure TForm1.ConfigurerEnTetes;
-begin
+procedure TForm1.ConfigurerEnTetes;  
+begin  
   // Ajouter un en-tête d'authentification
   RESTRequest1.Params.AddHeader('Authorization', 'Bearer votre-token-ici');
 
@@ -282,8 +282,8 @@ end;
 Il est essentiel de vérifier si la requête s'est bien déroulée :
 
 ```pascal
-procedure TForm1.ButtonAppelSecuriseClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAppelSecuriseClick(Sender: TObject);  
+begin  
   try
     RESTRequest1.Execute;
 
@@ -320,8 +320,8 @@ end;
 Certaines API utilisent l'authentification HTTP basique :
 
 ```pascal
-procedure TForm1.ConfigurerAuthBasique;
-begin
+procedure TForm1.ConfigurerAuthBasique;  
+begin  
   RESTClient1.Authenticator := THTTPBasicAuthenticator.Create(
     'nom_utilisateur',
     'mot_de_passe'
@@ -334,8 +334,8 @@ end;
 Plus courant dans les API modernes :
 
 ```pascal
-procedure TForm1.ConfigurerAuthToken;
-var
+procedure TForm1.ConfigurerAuthToken;  
+var  
   OAuth2: TOAuth2Authenticator;
 begin
   OAuth2 := TOAuth2Authenticator.Create(nil);
@@ -351,8 +351,8 @@ end;
 Pour éviter que votre application ne se bloque indéfiniment :
 
 ```pascal
-procedure TForm1.ConfigurerTimeout;
-begin
+procedure TForm1.ConfigurerTimeout;  
+begin  
   // Timeout de connexion en millisecondes (5 secondes)
   RESTClient1.ConnectTimeout := 5000;
 
@@ -397,8 +397,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.ButtonGetWeatherClick(Sender: TObject);
-var
+procedure TForm1.ButtonGetWeatherClick(Sender: TObject);  
+var  
   Ville: string;
 begin
   Ville := EditCity.Text;
@@ -437,8 +437,8 @@ begin
   end;
 end;
 
-procedure TForm1.AfficherMeteo(const JSONResponse: string);
-var
+procedure TForm1.AfficherMeteo(const JSONResponse: string);  
+var  
   JSONValue: TJSONValue;
   JSONObject, MainObject: TJSONObject;
   Temperature, Ressenti: Double;
@@ -479,8 +479,8 @@ end.
 Toujours libérer les objets JSON créés :
 
 ```pascal
-JSONObject := TJSONObject.Create;
-try
+JSONObject := TJSONObject.Create;  
+try  
   // Utilisation
 finally
   JSONObject.Free;
@@ -500,8 +500,8 @@ Ne mettez jamais vos clés API directement dans le code. Utilisez plutôt :
 Toujours configurer des timeouts pour éviter les blocages :
 
 ```pascal
-RESTClient1.ConnectTimeout := 5000;
-RESTClient1.ReadTimeout := 10000;
+RESTClient1.ConnectTimeout := 5000;  
+RESTClient1.ReadTimeout := 10000;  
 ```
 
 ### 4. Logger les erreurs
@@ -536,8 +536,8 @@ RESTClient1.BaseURL := 'https://api.example.com';  // HTTPS, pas HTTP
 Pour comprendre ce qui se passe, affichez les détails :
 
 ```pascal
-procedure TForm1.DeboguerRequete;
-begin
+procedure TForm1.DeboguerRequete;  
+begin  
   RESTRequest1.Execute;
 
   Memo1.Lines.Add('=== REQUÊTE ===');

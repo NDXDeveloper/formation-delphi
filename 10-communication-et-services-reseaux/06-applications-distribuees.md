@@ -15,9 +15,9 @@ Imaginez une chaîne de restaurants franchisés. Chaque restaurant (nœud) fonct
 
 **Client-Serveur traditionnel :**
 ```
-Client 1 ──┐
-Client 2 ──┼──→ Serveur Central ──→ Base de données
-Client 3 ──┘
+Client 1 ──┐  
+Client 2 ──┼──→ Serveur Central ──→ Base de données  
+Client 3 ──┘  
 ```
 - Un serveur central
 - Les clients dépendent du serveur
@@ -239,29 +239,29 @@ type
 
 implementation
 
-constructor TMasterSlaveManager.Create;
-begin
+constructor TMasterSlaveManager.Create;  
+begin  
   inherited;
   FSlaveServers := TList<TServerInfo>.Create;
   FCurrentSlaveIndex := -1;
 end;
 
-destructor TMasterSlaveManager.Destroy;
-begin
+destructor TMasterSlaveManager.Destroy;  
+begin  
   FSlaveServers.Free;
   inherited;
 end;
 
-procedure TMasterSlaveManager.AddMaster(const Host: string; Port: Integer);
-begin
+procedure TMasterSlaveManager.AddMaster(const Host: string; Port: Integer);  
+begin  
   FMasterServer.Host := Host;
   FMasterServer.Port := Port;
   FMasterServer.Role := srMaster;
   FMasterServer.Active := True;
 end;
 
-procedure TMasterSlaveManager.AddSlave(const Host: string; Port: Integer);
-var
+procedure TMasterSlaveManager.AddSlave(const Host: string; Port: Integer);  
+var  
   Slave: TServerInfo;
 begin
   Slave.Host := Host;
@@ -272,8 +272,8 @@ begin
   FSlaveServers.Add(Slave);
 end;
 
-function TMasterSlaveManager.GetNextSlave: TServerInfo;
-begin
+function TMasterSlaveManager.GetNextSlave: TServerInfo;  
+begin  
   // Round-robin : répartition circulaire des lectures
   Inc(FCurrentSlaveIndex);
   if FCurrentSlaveIndex >= FSlaveServers.Count then
@@ -282,8 +282,8 @@ begin
   Result := FSlaveServers[FCurrentSlaveIndex];
 end;
 
-function TMasterSlaveManager.GetConnectionForWrite: TFDConnection;
-begin
+function TMasterSlaveManager.GetConnectionForWrite: TFDConnection;  
+begin  
   // Les écritures vont toujours vers le maître
   Result := TFDConnection.Create(nil);
   Result.Params.Values['Server'] := FMasterServer.Host;
@@ -292,8 +292,8 @@ begin
   Result.Connected := True;
 end;
 
-function TMasterSlaveManager.GetConnectionForRead: TFDConnection;
-var
+function TMasterSlaveManager.GetConnectionForRead: TFDConnection;  
+var  
   Slave: TServerInfo;
 begin
   // Les lectures sont réparties sur les esclaves
@@ -309,8 +309,8 @@ begin
   Result.Connected := True;
 end;
 
-procedure TMasterSlaveManager.SyncToSlaves;
-var
+procedure TMasterSlaveManager.SyncToSlaves;  
+var  
   Slave: TServerInfo;
 begin
   // Déclencher la synchronisation vers les esclaves
@@ -419,21 +419,21 @@ type
     procedure ReceiveMessage(const FromNodeID, Message: string);
   end;
 
-constructor TPeerNode.Create(const NodeID: string);
-begin
+constructor TPeerNode.Create(const NodeID: string);  
+begin  
   inherited Create;
   FNodeID := NodeID;
   FConnectedPeers := TList<TPeerNode>.Create;
 end;
 
-destructor TPeerNode.Destroy;
-begin
+destructor TPeerNode.Destroy;  
+begin  
   FConnectedPeers.Free;
   inherited;
 end;
 
-procedure TPeerNode.ConnectToPeer(Peer: TPeerNode);
-begin
+procedure TPeerNode.ConnectToPeer(Peer: TPeerNode);  
+begin  
   if not FConnectedPeers.Contains(Peer) then
   begin
     FConnectedPeers.Add(Peer);
@@ -441,8 +441,8 @@ begin
   end;
 end;
 
-procedure TPeerNode.BroadcastMessage(const Message: string);
-var
+procedure TPeerNode.BroadcastMessage(const Message: string);  
+var  
   Peer: TPeerNode;
 begin
   // Envoyer à tous les pairs connectés
@@ -450,8 +450,8 @@ begin
     Peer.ReceiveMessage(FNodeID, Message);
 end;
 
-procedure TPeerNode.ReceiveMessage(const FromNodeID, Message: string);
-begin
+procedure TPeerNode.ReceiveMessage(const FromNodeID, Message: string);  
+begin  
   // Traiter le message reçu
   WriteLn(Format('[%s] Message de %s: %s', [FNodeID, FromNodeID, Message]));
 end;
@@ -574,14 +574,14 @@ type
 
 implementation
 
-constructor TEventBus.Create;
-begin
+constructor TEventBus.Create;  
+begin  
   inherited;
   FSubscribers := TDictionary<string, TList<TEventHandler>>.Create;
 end;
 
-destructor TEventBus.Destroy;
-var
+destructor TEventBus.Destroy;  
+var  
   List: TList<TEventHandler>;
 begin
   for List in FSubscribers.Values do
@@ -590,8 +590,8 @@ begin
   inherited;
 end;
 
-procedure TEventBus.Subscribe(const EventType: string; Handler: TEventHandler);
-var
+procedure TEventBus.Subscribe(const EventType: string; Handler: TEventHandler);  
+var  
   Handlers: TList<TEventHandler>;
 begin
   if not FSubscribers.TryGetValue(EventType, Handlers) then
@@ -603,16 +603,16 @@ begin
   Handlers.Add(Handler);
 end;
 
-procedure TEventBus.Unsubscribe(const EventType: string; Handler: TEventHandler);
-var
+procedure TEventBus.Unsubscribe(const EventType: string; Handler: TEventHandler);  
+var  
   Handlers: TList<TEventHandler>;
 begin
   if FSubscribers.TryGetValue(EventType, Handlers) then
     Handlers.Remove(Handler);
 end;
 
-procedure TEventBus.Publish(const EventType, EventData: string);
-var
+procedure TEventBus.Publish(const EventType, EventData: string);  
+var  
   Handlers: TList<TEventHandler>;
   Handler: TEventHandler;
 begin
@@ -697,8 +697,8 @@ type
     function GetSyncStatus(const TableName: string): TList<TSyncRecord>;
   end;
 
-procedure TDataSynchronizer.SynchronizeTable(const TableName: string);
-var
+procedure TDataSynchronizer.SynchronizeTable(const TableName: string);  
+var  
   Query: TFDQuery;
   RecordID, LocalVer, RemoteVer: Integer;
 begin
@@ -734,8 +734,8 @@ begin
   end;
 end;
 
-procedure TDataSynchronizer.PushToRemote(const TableName: string; RecordID: Integer);
-var
+procedure TDataSynchronizer.PushToRemote(const TableName: string; RecordID: Integer);  
+var  
   LocalQuery, RemoteQuery: TFDQuery;
   FieldName: string;
 begin
@@ -817,8 +817,8 @@ begin
   end;
 end;
 
-procedure TIncrementalSync.SyncChanges(RemoteConnection: TFDConnection);
-var
+procedure TIncrementalSync.SyncChanges(RemoteConnection: TFDConnection);  
+var  
   Changes: TList<TChangeLog>;
   Change: TChangeLog;
   Query: TFDQuery;
@@ -831,27 +831,23 @@ begin
       try
         Query.Connection := RemoteConnection;
 
-        case Change.Operation of
-          'INSERT':
-            begin
-              // Copier l'enregistrement vers le serveur distant
-              // ...
-            end;
-
-          'UPDATE':
-            begin
-              // Mettre à jour sur le serveur distant
-              // ...
-            end;
-
-          'DELETE':
-            begin
-              // Supprimer sur le serveur distant
-              Query.SQL.Text := Format(
-                'DELETE FROM %s WHERE id = :id', [Change.TableName]);
-              Query.ParamByName('id').AsInteger := Change.RecordID;
-              Query.ExecSQL;
-            end;
+        if Change.Operation = 'INSERT' then
+        begin
+          // Copier l'enregistrement vers le serveur distant
+          // ...
+        end
+        else if Change.Operation = 'UPDATE' then
+        begin
+          // Mettre à jour sur le serveur distant
+          // ...
+        end
+        else if Change.Operation = 'DELETE' then
+        begin
+          // Supprimer sur le serveur distant
+          Query.SQL.Text := Format(
+            'DELETE FROM %s WHERE id = :id', [Change.TableName]);
+          Query.ParamByName('id').AsInteger := Change.RecordID;
+          Query.ExecSQL;
         end;
 
         // Marquer comme synchronisé
@@ -889,23 +885,23 @@ type
     procedure RemoveServer(const ServerURL: string);
   end;
 
-constructor TLoadBalancer.Create;
-begin
+constructor TLoadBalancer.Create;  
+begin  
   inherited;
   FServers := TList<string>.Create;
   FCurrentIndex := -1;
   FLock := TCriticalSection.Create;
 end;
 
-destructor TLoadBalancer.Destroy;
-begin
+destructor TLoadBalancer.Destroy;  
+begin  
   FServers.Free;
   FLock.Free;
   inherited;
 end;
 
-procedure TLoadBalancer.AddServer(const ServerURL: string);
-begin
+procedure TLoadBalancer.AddServer(const ServerURL: string);  
+begin  
   FLock.Enter;
   try
     if not FServers.Contains(ServerURL) then
@@ -915,8 +911,8 @@ begin
   end;
 end;
 
-function TLoadBalancer.GetNextServer: string;
-begin
+function TLoadBalancer.GetNextServer: string;  
+begin  
   FLock.Enter;
   try
     if FServers.Count = 0 then
@@ -958,8 +954,8 @@ type
     function GetNextServer: string;
   end;
 
-function TWeightedLoadBalancer.GetWeightedServer: string;
-var
+function TWeightedLoadBalancer.GetWeightedServer: string;  
+var  
   i, TotalWeight, RandomWeight: Integer;
   Server: TServerConfig;
 begin
@@ -1013,8 +1009,8 @@ type
     property ResponseTime: Integer read FResponseTime;
   end;
 
-function THealthCheck.CheckHealth: TServerHealth;
-var
+function THealthCheck.CheckHealth: TServerHealth;  
+var  
   HTTPClient: THTTPClient;
   StartTime: TDateTime;
   Response: IHTTPResponse;
@@ -1084,23 +1080,23 @@ type
     procedure CleanupExpired;
   end;
 
-constructor TDistributedCache.Create(DefaultTTL: Integer);
-begin
+constructor TDistributedCache.Create(DefaultTTL: Integer);  
+begin  
   inherited Create;
   FCache := TDictionary<string, TCacheEntry>.Create;
   FLock := TCriticalSection.Create;
   FDefaultTTL := DefaultTTL;
 end;
 
-destructor TDistributedCache.Destroy;
-begin
+destructor TDistributedCache.Destroy;  
+begin  
   FCache.Free;
   FLock.Free;
   inherited;
 end;
 
-procedure TDistributedCache.Put(const Key, Value: string; TTL: Integer);
-var
+procedure TDistributedCache.Put(const Key, Value: string; TTL: Integer);  
+var  
   Entry: TCacheEntry;
   ActualTTL: Integer;
 begin
@@ -1121,8 +1117,8 @@ begin
   end;
 end;
 
-function TDistributedCache.Get(const Key: string; out Value: string): Boolean;
-var
+function TDistributedCache.Get(const Key: string; out Value: string): Boolean;  
+var  
   Entry: TCacheEntry;
 begin
   FLock.Enter;
@@ -1145,8 +1141,8 @@ begin
   end;
 end;
 
-procedure TDistributedCache.CleanupExpired;
-var
+procedure TDistributedCache.CleanupExpired;  
+var  
   Key: string;
   Entry: TCacheEntry;
   ExpiredKeys: TList<string>;
@@ -1191,8 +1187,8 @@ type
     procedure InvalidatePattern(const Pattern: string);
   end;
 
-procedure TCacheWithInvalidation.InvalidateKey(const Key: string);
-var
+procedure TCacheWithInvalidation.InvalidateKey(const Key: string);  
+var  
   Subscriber: TProc<string>;
 begin
   Delete(Key);
@@ -1208,8 +1204,8 @@ begin
   end;
 end;
 
-procedure TCacheWithInvalidation.InvalidatePattern(const Pattern: string);
-var
+procedure TCacheWithInvalidation.InvalidatePattern(const Pattern: string);  
+var  
   Key: string;
   KeysToInvalidate: TList<string>;
 begin
@@ -1263,26 +1259,26 @@ type
     function Execute(Operations: TProc): Boolean;
   end;
 
-constructor TDistributedTransaction.Create;
-begin
+constructor TDistributedTransaction.Create;  
+begin  
   inherited;
   FParticipants := TList<TFDConnection>.Create;
   FTransactionID := TGUID.NewGuid.ToString;
 end;
 
-destructor TDistributedTransaction.Destroy;
-begin
+destructor TDistributedTransaction.Destroy;  
+begin  
   FParticipants.Free;
   inherited;
 end;
 
-procedure TDistributedTransaction.AddParticipant(Connection: TFDConnection);
-begin
+procedure TDistributedTransaction.AddParticipant(Connection: TFDConnection);  
+begin  
   FParticipants.Add(Connection);
 end;
 
-function TDistributedTransaction.PrepareAll: Boolean;
-var
+function TDistributedTransaction.PrepareAll: Boolean;  
+var  
   Conn: TFDConnection;
 begin
   Result := True;
@@ -1301,8 +1297,8 @@ begin
   end;
 end;
 
-procedure TDistributedTransaction.CommitAll;
-var
+procedure TDistributedTransaction.CommitAll;  
+var  
   Conn: TFDConnection;
 begin
   // Phase 2 : Valider tous les participants
@@ -1317,8 +1313,8 @@ begin
   end;
 end;
 
-procedure TDistributedTransaction.AbortAll;
-var
+procedure TDistributedTransaction.AbortAll;  
+var  
   Conn: TFDConnection;
 begin
   // Annuler tous les participants
@@ -1332,8 +1328,8 @@ begin
   end;
 end;
 
-function TDistributedTransaction.Execute(Operations: TProc): Boolean;
-begin
+function TDistributedTransaction.Execute(Operations: TProc): Boolean;  
+begin  
   Result := False;
 
   try
@@ -1423,8 +1419,8 @@ end;
 
 ```pascal
 // ✅ Bon - Opération idempotente
-procedure UpdateUserEmail(UserID: Integer; const NewEmail: string);
-begin
+procedure UpdateUserEmail(UserID: Integer; const NewEmail: string);  
+begin  
   // Peut être exécuté plusieurs fois avec le même résultat
   Query.SQL.Text := 'UPDATE users SET email = :email WHERE id = :id';
   Query.ParamByName('id').AsInteger := UserID;
@@ -1433,8 +1429,8 @@ begin
 end;
 
 // ❌ Éviter - Non idempotent
-procedure IncrementCounter(UserID: Integer);
-begin
+procedure IncrementCounter(UserID: Integer);  
+begin  
   // Exécuté 2 fois = résultat différent
   Query.SQL.Text := 'UPDATE users SET counter = counter + 1 WHERE id = :id';
   Query.ParamByName('id').AsInteger := UserID;
@@ -1448,8 +1444,8 @@ end;
 
 ```pascal
 // Pour des données non critiques
-procedure UpdateViewCount(ArticleID: Integer);
-begin
+procedure UpdateViewCount(ArticleID: Integer);  
+begin  
   // Mise à jour asynchrone, cohérence éventuelle acceptable
   TTask.Run(
     procedure
@@ -1481,8 +1477,8 @@ type
     function Execute(Operation: TFunc<Boolean>): Boolean;
   end;
 
-function TCircuitBreaker.Execute(Operation: TFunc<Boolean>): Boolean;
-begin
+function TCircuitBreaker.Execute(Operation: TFunc<Boolean>): Boolean;  
+begin  
   case FState of
     csOpen:
       begin
@@ -1553,13 +1549,13 @@ type
     function GetDeadNodes: TArray<string>;
   end;
 
-procedure THeartbeatMonitor.RegisterHeartbeat(const NodeID: string);
-begin
+procedure THeartbeatMonitor.RegisterHeartbeat(const NodeID: string);  
+begin  
   FNodes.AddOrSetValue(NodeID, Now);
 end;
 
-function THeartbeatMonitor.IsNodeAlive(const NodeID: string): Boolean;
-var
+function THeartbeatMonitor.IsNodeAlive(const NodeID: string): Boolean;  
+var  
   LastHeartbeat: TDateTime;
 begin
   if FNodes.TryGetValue(NodeID, LastHeartbeat) then
@@ -1587,8 +1583,8 @@ type
     property Data: TJSONObject read FData;
   end;
 
-function ParseMessage(const JSONStr: string): TMessage;
-var
+function ParseMessage(const JSONStr: string): TMessage;  
+var  
   JSON: TJSONObject;
   Version: Integer;
 begin

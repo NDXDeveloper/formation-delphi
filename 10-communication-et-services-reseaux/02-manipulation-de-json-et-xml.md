@@ -72,8 +72,8 @@ Voici comment créer un objet JSON de toutes pièces :
 uses
   System.JSON;
 
-procedure TForm1.CreerJSON;
-var
+procedure TForm1.CreerJSON;  
+var  
   JSONObject: TJSONObject;
   Adresse: TJSONObject;
   Competences: TJSONArray;
@@ -124,8 +124,8 @@ end;
 Pour lire du JSON existant, vous utilisez `ParseJSONValue` :
 
 ```pascal
-procedure TForm1.LireJSON;
-var
+procedure TForm1.LireJSON;  
+var  
   JSONTexte: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -164,8 +164,8 @@ end;
 Pour naviguer dans des structures JSON complexes :
 
 ```pascal
-procedure TForm1.LireJSONImbrique;
-var
+procedure TForm1.LireJSONImbrique;  
+var  
   JSONTexte: string;
   JSONValue: TJSONValue;
   JSONObject, AdresseObject: TJSONObject;
@@ -201,8 +201,8 @@ end;
 Pour travailler avec des tableaux :
 
 ```pascal
-procedure TForm1.LireTableauJSON;
-var
+procedure TForm1.LireTableauJSON;  
+var  
   JSONTexte: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
@@ -244,8 +244,8 @@ end;
 Avant d'accéder à une propriété, vérifiez qu'elle existe :
 
 ```pascal
-procedure TForm1.VerifierPropriete;
-var
+procedure TForm1.VerifierPropriete;  
+var  
   JSONObject: TJSONObject;
   JSONValue: TJSONValue;
   Email: string;
@@ -276,8 +276,8 @@ end;
 Pour modifier des valeurs existantes :
 
 ```pascal
-procedure TForm1.ModifierJSON;
-var
+procedure TForm1.ModifierJSON;  
+var  
   JSONObject: TJSONObject;
   PaireAge: TJSONPair;
 begin
@@ -307,8 +307,8 @@ end;
 Pour rendre le JSON plus lisible :
 
 ```pascal
-procedure TForm1.FormaterJSON;
-var
+procedure TForm1.FormaterJSON;  
+var  
   JSONObject: TJSONObject;
   JSONFormate: string;
 begin
@@ -338,8 +338,8 @@ end;
 Pour persister du JSON :
 
 ```pascal
-procedure TForm1.SauvegarderJSON;
-var
+procedure TForm1.SauvegarderJSON;  
+var  
   JSONObject: TJSONObject;
   Fichier: TStringList;
 begin
@@ -360,8 +360,8 @@ begin
   end;
 end;
 
-procedure TForm1.ChargerJSON;
-var
+procedure TForm1.ChargerJSON;  
+var  
   Fichier: TStringList;
   JSONObject: TJSONObject;
   Nom: string;
@@ -442,8 +442,8 @@ Voici comment créer un document XML :
 uses
   Xml.XMLDoc, Xml.XMLIntf;
 
-procedure TForm1.CreerXML;
-var
+procedure TForm1.CreerXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, PersonneNode, AdresseNode, CompetencesNode: IXMLNode;
 begin
@@ -499,8 +499,8 @@ end;
 Pour lire un XML existant :
 
 ```pascal
-procedure TForm1.LireXML;
-var
+procedure TForm1.LireXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode: IXMLNode;
   Nom, Prenom, Age: string;
@@ -536,8 +536,8 @@ end;
 Pour naviguer dans la structure :
 
 ```pascal
-procedure TForm1.ParcoururXML;
-var
+procedure TForm1.ParcoururXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, AdresseNode, CompetencesNode, Node: IXMLNode;
   i: Integer;
@@ -586,11 +586,11 @@ end;
 Les attributs XML sont des métadonnées attachées aux éléments :
 
 ```pascal
-procedure TForm1.ManipulerAttributs;
-var
+procedure TForm1.ManipulerAttributs;  
+var  
   XMLDoc: IXMLDocument;
   PersonneNode: IXMLNode;
-  ID, Type: string;
+  ID, TypePersonne: string;
 begin
   XMLDoc := TXMLDocument.Create(nil);
   try
@@ -604,9 +604,9 @@ begin
 
     // Lire les attributs
     ID := PersonneNode.Attributes['id'];
-    Type := PersonneNode.Attributes['type'];
+    TypePersonne := PersonneNode.Attributes['type'];
 
-    ShowMessage(Format('ID: %s, Type: %s', [ID, Type]));
+    ShowMessage(Format('ID: %s, Type: %s', [ID, TypePersonne]));
 
     // Vérifier si un attribut existe
     if PersonneNode.HasAttribute('id') then
@@ -623,8 +623,8 @@ end;
 XPath permet de rechercher des éléments dans un document XML :
 
 ```pascal
-procedure TForm1.RechercherAvecXPath;
-var
+procedure TForm1.RechercherAvecXPath;  
+var  
   XMLDoc: IXMLDocument;
   NodeList: IXMLNodeList;
   Node: IXMLNode;
@@ -657,8 +657,8 @@ end;
 Pour mettre à jour des valeurs :
 
 ```pascal
-procedure TForm1.ModifierXML;
-var
+procedure TForm1.ModifierXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode, AgeNode: IXMLNode;
 begin
@@ -696,8 +696,8 @@ end;
 Gestion des fichiers XML :
 
 ```pascal
-procedure TForm1.SauvegarderXML;
-var
+procedure TForm1.SauvegarderXML;  
+var  
   XMLDoc: IXMLDocument;
 begin
   XMLDoc := TXMLDocument.Create(nil);
@@ -724,8 +724,8 @@ begin
   end;
 end;
 
-procedure TForm1.ChargerXML;
-var
+procedure TForm1.ChargerXML;  
+var  
   XMLDoc: IXMLDocument;
   RootNode: IXMLNode;
   Serveur, Port, Base: string;
@@ -754,8 +754,8 @@ end;
 Pour un XML plus lisible :
 
 ```pascal
-procedure TForm1.FormaterXML;
-var
+procedure TForm1.FormaterXML;  
+var  
   XMLDoc: IXMLDocument;
 begin
   XMLDoc := TXMLDocument.Create(nil);
@@ -833,8 +833,8 @@ end;
 ### Convertir JSON vers XML
 
 ```pascal
-procedure TForm1.JSONVersXML;
-var
+procedure TForm1.JSONVersXML;  
+var  
   JSONObject: TJSONObject;
   XMLDoc: IXMLDocument;
   RootNode: IXMLNode;
@@ -875,8 +875,8 @@ end;
 ### Convertir XML vers JSON
 
 ```pascal
-procedure TForm1.XMLVersJSON;
-var
+procedure TForm1.XMLVersJSON;  
+var  
   XMLDoc: IXMLDocument;
   RootNode: IXMLNode;
   JSONObject: TJSONObject;
@@ -916,8 +916,8 @@ end;
 ### Erreurs JSON courantes
 
 ```pascal
-procedure TForm1.GererErreursJSON;
-var
+procedure TForm1.GererErreursJSON;  
+var  
   JSONTexte: string;
   JSONValue: TJSONValue;
 begin
@@ -947,8 +947,8 @@ end;
 ### Erreurs XML courantes
 
 ```pascal
-procedure TForm1.GererErreursXML;
-var
+procedure TForm1.GererErreursXML;  
+var  
   XMLDoc: IXMLDocument;
 begin
   XMLDoc := TXMLDocument.Create(nil);
@@ -985,8 +985,8 @@ end;
 
 **1. Toujours libérer la mémoire :**
 ```pascal
-JSONObject := TJSONObject.Create;
-try
+JSONObject := TJSONObject.Create;  
+try  
   // Utilisation
 finally
   JSONObject.Free;
@@ -1044,8 +1044,8 @@ XMLDoc.Encoding := 'UTF-8';
 ### Fichier de configuration JSON
 
 ```pascal
-procedure TForm1.SauvegarderConfiguration;
-var
+procedure TForm1.SauvegarderConfiguration;  
+var  
   Config: TJSONObject;
   Serveur: TJSONObject;
 begin
@@ -1078,8 +1078,8 @@ end;
 ### Fichier de configuration XML
 
 ```pascal
-procedure TForm1.SauvegarderConfigurationXML;
-var
+procedure TForm1.SauvegarderConfigurationXML;  
+var  
   XMLDoc: IXMLDocument;
   ConfigNode, ServeurNode: IXMLNode;
 begin

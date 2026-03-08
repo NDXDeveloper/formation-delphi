@@ -94,14 +94,14 @@ Imaginez un restaurant : le **client** (vous) consulte le menu et passe commande
 **Exemple typique :**
 ```pascal
 // Client se connecte directement à MySQL
-FDConnection1.Params.Database := 'mabase';
-FDConnection1.Params.UserName := 'utilisateur';
-FDConnection1.Params.Password := 'motdepasse';
-FDConnection1.Connected := True;
+FDConnection1.Params.Database := 'mabase';  
+FDConnection1.Params.UserName := 'utilisateur';  
+FDConnection1.Params.Password := 'motdepasse';  
+FDConnection1.Connected := True;  
 
 // Le client fait les requêtes directement
-FDQuery1.SQL.Text := 'SELECT * FROM clients';
-FDQuery1.Open;
+FDQuery1.SQL.Text := 'SELECT * FROM clients';  
+FDQuery1.Open;  
 ```
 
 **Avantages :**
@@ -270,23 +270,23 @@ implementation
 
 {$R *.dfm}
 
-function TServerMethods.Echo(const Message: string): string;
-begin
+function TServerMethods.Echo(const Message: string): string;  
+begin  
   Result := 'Serveur répond: ' + Message;
 end;
 
-function TServerMethods.Addition(A, B: Integer): Integer;
-begin
+function TServerMethods.Addition(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
-function TServerMethods.GetServerTime: TDateTime;
-begin
+function TServerMethods.GetServerTime: TDateTime;  
+begin  
   Result := Now;
 end;
 
-function TServerMethods.GetUserInfo(UserID: Integer): TJSONObject;
-begin
+function TServerMethods.GetUserInfo(UserID: Integer): TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   try
     Result.AddPair('id', TJSONNumber.Create(UserID));
@@ -341,8 +341,8 @@ uses
 
 {$R *.dfm}
 
-procedure TServerContainer.DataModuleCreate(Sender: TObject);
-begin
+procedure TServerContainer.DataModuleCreate(Sender: TObject);  
+begin  
   // Configuration du port
   DSTCPServerTransport1.Port := 211;
 
@@ -397,14 +397,14 @@ uses
 
 {$R *.dfm}
 
-procedure TFormServer.FormCreate(Sender: TObject);
-begin
+procedure TFormServer.FormCreate(Sender: TObject);  
+begin  
   ButtonStop.Enabled := False;
   LabelStatus.Caption := 'Serveur arrêté';
 end;
 
-procedure TFormServer.ButtonStartClick(Sender: TObject);
-begin
+procedure TFormServer.ButtonStartClick(Sender: TObject);  
+begin  
   try
     ServerContainer.DSServer1.Start;
 
@@ -424,8 +424,8 @@ begin
   end;
 end;
 
-procedure TFormServer.ButtonStopClick(Sender: TObject);
-begin
+procedure TFormServer.ButtonStopClick(Sender: TObject);  
+begin  
   try
     ServerContainer.DSServer1.Stop;
 
@@ -441,8 +441,8 @@ begin
   end;
 end;
 
-procedure TFormServer.AjouterLog(const Message: string);
-begin
+procedure TFormServer.AjouterLog(const Message: string);  
+begin  
   MemoLog.Lines.Add('[' + TimeToStr(Now) + '] ' + Message);
 end;
 
@@ -492,8 +492,8 @@ implementation
 
 { TServerMethodsClient }
 
-constructor TServerMethodsClient.Create(ADBXConnection: TDBXConnection);
-begin
+constructor TServerMethodsClient.Create(ADBXConnection: TDBXConnection);  
+begin  
   inherited Create(ADBXConnection);
 end;
 
@@ -503,8 +503,8 @@ begin
   inherited Create(ADBXConnection, AInstanceOwner);
 end;
 
-destructor TServerMethodsClient.Destroy;
-begin
+destructor TServerMethodsClient.Destroy;  
+begin  
   FEchoCommand.Free;
   FAdditionCommand.Free;
   FGetServerTimeCommand.Free;
@@ -512,8 +512,8 @@ begin
   inherited;
 end;
 
-function TServerMethodsClient.Echo(Message: string): string;
-begin
+function TServerMethodsClient.Echo(Message: string): string;  
+begin  
   if FEchoCommand = nil then
   begin
     FEchoCommand := FDBXConnection.CreateCommand;
@@ -527,8 +527,8 @@ begin
   Result := FEchoCommand.Parameters[1].Value.GetWideString;
 end;
 
-function TServerMethodsClient.Addition(A, B: Integer): Integer;
-begin
+function TServerMethodsClient.Addition(A, B: Integer): Integer;  
+begin  
   if FAdditionCommand = nil then
   begin
     FAdditionCommand := FDBXConnection.CreateCommand;
@@ -543,8 +543,8 @@ begin
   Result := FAdditionCommand.Parameters[2].Value.GetInt32;
 end;
 
-function TServerMethodsClient.GetServerTime: TDateTime;
-begin
+function TServerMethodsClient.GetServerTime: TDateTime;  
+begin  
   if FGetServerTimeCommand = nil then
   begin
     FGetServerTimeCommand := FDBXConnection.CreateCommand;
@@ -557,8 +557,8 @@ begin
   Result := FGetServerTimeCommand.Parameters[0].Value.AsDateTime;
 end;
 
-function TServerMethodsClient.GetUserInfo(UserID: Integer): TJSONObject;
-begin
+function TServerMethodsClient.GetUserInfo(UserID: Integer): TJSONObject;  
+begin  
   if FGetUserInfoCommand = nil then
   begin
     FGetUserInfoCommand := FDBXConnection.CreateCommand;
@@ -620,8 +620,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
+procedure TFormClient.FormCreate(Sender: TObject);  
+begin  
   // Configuration de la connexion
   SQLConnection1.DriverName := 'DataSnap';
   SQLConnection1.Params.Values['HostName'] := 'localhost';
@@ -634,8 +634,8 @@ begin
   ButtonHeureServeur.Enabled := False;
 end;
 
-procedure TFormClient.ButtonConnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonConnecterClick(Sender: TObject);  
+begin  
   try
     SQLConnection1.Connected := True;
 
@@ -659,8 +659,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);  
+begin  
   try
     FServerMethods.Free;
     FServerMethods := nil;
@@ -681,8 +681,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonEchoClick(Sender: TObject);
-var
+procedure TFormClient.ButtonEchoClick(Sender: TObject);  
+var  
   Reponse: string;
 begin
   try
@@ -694,8 +694,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonAdditionClick(Sender: TObject);
-var
+procedure TFormClient.ButtonAdditionClick(Sender: TObject);  
+var  
   A, B, Resultat: Integer;
 begin
   try
@@ -712,8 +712,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonHeureServeurClick(Sender: TObject);
-var
+procedure TFormClient.ButtonHeureServeurClick(Sender: TObject);  
+var  
   HeureServeur: TDateTime;
 begin
   try
@@ -725,8 +725,8 @@ begin
   end;
 end;
 
-procedure TFormClient.AjouterLog(const Message: string);
-begin
+procedure TFormClient.AjouterLog(const Message: string);  
+begin  
   MemoResultat.Lines.Add('[' + TimeToStr(Now) + '] ' + Message);
 end;
 
@@ -755,23 +755,23 @@ type
 
 implementation
 
-function TServerMethods.GetClients: TDataSet;
-begin
+function TServerMethods.GetClients: TDataSet;  
+begin  
   FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
   FDQuery1.Open;
   Result := FDQuery1;
 end;
 
-function TServerMethods.GetClientByID(ClientID: Integer): TDataSet;
-begin
+function TServerMethods.GetClientByID(ClientID: Integer): TDataSet;  
+begin  
   FDQuery1.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
   FDQuery1.ParamByName('id').AsInteger := ClientID;
   FDQuery1.Open;
   Result := FDQuery1;
 end;
 
-procedure TServerMethods.UpdateClient(ClientData: TDataSet);
-begin
+procedure TServerMethods.UpdateClient(ClientData: TDataSet);  
+begin  
   // Appliquer les modifications à la base de données
   // Logique de mise à jour ici
 end;
@@ -780,8 +780,8 @@ end;
 **Côté Client :**
 
 ```pascal
-procedure TFormClient.ChargerClients;
-var
+procedure TFormClient.ChargerClients;  
+var  
   DataSet: TDataSet;
 begin
   try
@@ -820,8 +820,8 @@ type
     procedure NotifierChangements(const TableName: string);
   end;
 
-procedure TServerMethods.NotifierChangements(const TableName: string);
-var
+procedure TServerMethods.NotifierChangements(const TableName: string);  
+var  
   Callback: IServerEvents;
 begin
   for Callback in FCallbacks do
@@ -849,8 +849,8 @@ type
     function GetUserRole(const Username: string): string;
   end;
 
-function TServerMethods.AuthenticateUser(const Username, Password: string): Boolean;
-var
+function TServerMethods.AuthenticateUser(const Username, Password: string): Boolean;  
+var  
   Query: TFDQuery;
   PasswordHash: string;
 begin
@@ -879,8 +879,8 @@ end;
 **Côté Client :**
 
 ```pascal
-procedure TFormClient.SeConnecter;
-var
+procedure TFormClient.SeConnecter;  
+var  
   Username, Password: string;
   Authentifie: Boolean;
 begin
@@ -921,8 +921,8 @@ type
     function DeleteClient(ClientID: Integer): Boolean;
   end;
 
-function TServerMethods.DeleteClient(ClientID: Integer): Boolean;
-begin
+function TServerMethods.DeleteClient(ClientID: Integer): Boolean;  
+begin  
   Result := False;
 
   // Vérifier les permissions
@@ -944,8 +944,8 @@ end;
 
 ```pascal
 // Côté Serveur
-procedure ConfigurerSSL;
-begin
+procedure ConfigurerSSL;  
+begin  
   DSHTTPService1.HTTPPort := 443;
   DSHTTPService1.CertFile := 'certificat.pem';
   DSHTTPService1.KeyFile := 'cle.pem';
@@ -953,9 +953,9 @@ begin
 end;
 
 // Côté Client
-SQLConnection1.Params.Values['HostName'] := 'https://serveur.com';
-SQLConnection1.Params.Values['Port'] := '443';
-SQLConnection1.Params.Values['UseSSL'] := 'True';
+SQLConnection1.Params.Values['HostName'] := 'https://serveur.com';  
+SQLConnection1.Params.Values['Port'] := '443';  
+SQLConnection1.Params.Values['UseSSL'] := 'True';  
 ```
 
 ## Gestion des sessions et état
@@ -988,13 +988,13 @@ type
 
 implementation
 
-class constructor TServerMethods.Create;
-begin
+class constructor TServerMethods.Create;  
+begin  
   FSessions := TObjectDictionary<string, TSessionInfo>.Create([doOwnsValues]);
 end;
 
-function TServerMethods.Login(const Username, Password: string): string;
-var
+function TServerMethods.Login(const Username, Password: string): string;  
+var  
   Session: TSessionInfo;
 begin
   // Vérifier les identifiants
@@ -1013,8 +1013,8 @@ begin
   FSessions.Add(Result, Session);
 end;
 
-function TServerMethods.GetSession: TSessionInfo;
-var
+function TServerMethods.GetSession: TSessionInfo;  
+var  
   SessionID: string;
 begin
   SessionID := GetSessionID;
@@ -1035,8 +1035,8 @@ type
     FSessionID: string;
   end;
 
-procedure TFormClient.Login;
-begin
+procedure TFormClient.Login;  
+begin  
   try
     FSessionID := FServerMethods.Login(EditUsername.Text, EditPassword.Text);
 
@@ -1066,8 +1066,8 @@ type
     function GetClients(ForceRefresh: Boolean = False): TClientDataSet;
   end;
 
-function TFormClient.GetClients(ForceRefresh: Boolean): TClientDataSet;
-const
+function TFormClient.GetClients(ForceRefresh: Boolean): TClientDataSet;  
+const  
   CACHE_DURATION = 5 / (24 * 60); // 5 minutes
 begin
   // Vérifier si le cache est valide
@@ -1092,8 +1092,8 @@ end;
 **Serveur :**
 
 ```pascal
-function TServerMethods.GetClientsPaginated(Page, PageSize: Integer): TDataSet;
-var
+function TServerMethods.GetClientsPaginated(Page, PageSize: Integer): TDataSet;  
+var  
   Offset: Integer;
 begin
   Offset := (Page - 1) * PageSize;
@@ -1110,8 +1110,8 @@ begin
   Result := FDQuery1;
 end;
 
-function TServerMethods.GetTotalClients: Integer;
-begin
+function TServerMethods.GetTotalClients: Integer;  
+begin  
   FDQuery1.SQL.Text := 'SELECT COUNT(*) as total FROM clients';
   FDQuery1.Open;
   Result := FDQuery1.FieldByName('total').AsInteger;
@@ -1121,8 +1121,8 @@ end;
 **Client :**
 
 ```pascal
-procedure TFormClient.ChargerPage(NumeroPage: Integer);
-const
+procedure TFormClient.ChargerPage(NumeroPage: Integer);  
+const  
   PAGE_SIZE = 50;
 var
   DataSet: TDataSet;
@@ -1145,8 +1145,8 @@ end;
 uses
   System.ZLib;
 
-function CompresserDonnees(const Data: TBytes): TBytes;
-var
+function CompresserDonnees(const Data: TBytes): TBytes;  
+var  
   InputStream, OutputStream: TMemoryStream;
   Compressor: TZCompressionStream;
 begin
@@ -1185,8 +1185,8 @@ type
     procedure LogActivity(const Activity: string);
   end;
 
-procedure TServerMethods.LogActivity(const Activity: string);
-var
+procedure TServerMethods.LogActivity(const Activity: string);  
+var  
   LogFile: TextFile;
   LogFileName: string;
 begin
@@ -1234,8 +1234,8 @@ type
 
 ```pascal
 // ✅ Bon - Logique métier sur le serveur
-function TServerMethods.CalculerPrixTotal(CommandeID: Integer): Currency;
-begin
+function TServerMethods.CalculerPrixTotal(CommandeID: Integer): Currency;  
+begin  
   // Calculs complexes côté serveur
   Result := CalculerSousTotal(CommandeID) +
             CalculerTaxes(CommandeID) +
@@ -1250,8 +1250,8 @@ end;
 
 ```pascal
 // Toujours valider côté serveur
-function TServerMethods.CreateUser(const Username, Email: string): Integer;
-begin
+function TServerMethods.CreateUser(const Username, Email: string): Integer;  
+begin  
   // Validation serveur (obligatoire)
   if Username.IsEmpty or (Length(Username) < 3) then
     raise Exception.Create('Nom d''utilisateur invalide');
@@ -1294,8 +1294,8 @@ end;
 
 ```pascal
 // ✅ Bon - Retourner seulement ce qui est nécessaire
-function TServerMethods.GetClientSummary(ClientID: Integer): TJSONObject;
-begin
+function TServerMethods.GetClientSummary(ClientID: Integer): TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('id', TJSONNumber.Create(ClientID));
   Result.AddPair('nom', GetClientName(ClientID));
@@ -1310,8 +1310,8 @@ function GetClientComplete(ClientID: Integer): TDataSet; // Trop lourd
 
 ```pascal
 // Client
-SQLConnection1.Params.Values['ConnectionTimeout'] := '5000';
-SQLConnection1.Params.Values['CommandTimeout'] := '30000';
+SQLConnection1.Params.Values['ConnectionTimeout'] := '5000';  
+SQLConnection1.Params.Values['CommandTimeout'] := '30000';  
 ```
 
 ### 6. Versionner l'API

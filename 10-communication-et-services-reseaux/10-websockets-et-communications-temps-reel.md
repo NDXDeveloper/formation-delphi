@@ -13,26 +13,26 @@ Imaginez la différence entre envoyer des lettres (HTTP) et avoir une conversati
 
 **HTTP traditionnel (Lettres) :**
 ```
-Client → "Bonjour, as-tu des nouveaux messages ?"
-Serveur → "Non, aucun nouveau message"
+Client → "Bonjour, as-tu des nouveaux messages ?"  
+Serveur → "Non, aucun nouveau message"  
 
-Client → "Et maintenant ?"
-Serveur → "Non, toujours rien"
+Client → "Et maintenant ?"  
+Serveur → "Non, toujours rien"  
 
-Client → "Et là ?"
-Serveur → "Oui ! Nouveau message : 'Salut'"
+Client → "Et là ?"  
+Serveur → "Oui ! Nouveau message : 'Salut'"  
 ```
 Vous devez demander constamment (polling).
 
 **WebSocket (Téléphone) :**
 ```
-Client → "Bonjour" (connexion établie)
-Serveur → "Salut, je suis là"
+Client → "Bonjour" (connexion établie)  
+Serveur → "Salut, je suis là"  
 
 [Connexion reste ouverte]
 
-Serveur → "Nouveau message : 'Salut'" (push instantané)
-Client → "Message reçu, merci !"
+Serveur → "Nouveau message : 'Salut'" (push instantané)  
+Client → "Message reçu, merci !"  
 ```
 La connexion reste ouverte, communication instantanée dans les deux sens.
 
@@ -89,21 +89,21 @@ WebSocket commence comme une requête HTTP normale, puis "upgrade" vers WebSocke
 
 **Étape 1 : Requête du client**
 ```http
-GET /chat HTTP/1.1
-Host: server.example.com
-Upgrade: websocket
-Connection: Upgrade
-Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-Sec-WebSocket-Version: 13
-Origin: http://example.com
+GET /chat HTTP/1.1  
+Host: server.example.com  
+Upgrade: websocket  
+Connection: Upgrade  
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==  
+Sec-WebSocket-Version: 13  
+Origin: http://example.com  
 ```
 
 **Étape 2 : Réponse du serveur**
 ```http
-HTTP/1.1 101 Switching Protocols
-Upgrade: websocket
-Connection: Upgrade
-Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+HTTP/1.1 101 Switching Protocols  
+Upgrade: websocket  
+Connection: Upgrade  
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=  
 ```
 
 **Code 101** = "Switching Protocols" : La connexion passe d'HTTP à WebSocket.
@@ -220,8 +220,8 @@ implementation
 uses
   System.StrUtils;
 
-constructor TWebSocketClient.Create;
-begin
+constructor TWebSocketClient.Create;  
+begin  
   inherited;
   FTCPClient := TIdTCPClient.Create(nil);
   FSSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
@@ -230,8 +230,8 @@ begin
   FLock := TCriticalSection.Create;
 end;
 
-destructor TWebSocketClient.Destroy;
-begin
+destructor TWebSocketClient.Destroy;  
+begin  
   Close;
   FLock.Free;
   FTCPClient.Free;
@@ -239,8 +239,8 @@ begin
   inherited;
 end;
 
-procedure TWebSocketClient.Connect(const URL: string);
-var
+procedure TWebSocketClient.Connect(const URL: string);  
+var  
   Protocol, Host, Path: string;
   Port: Integer;
   UseSSL: Boolean;
@@ -313,8 +313,8 @@ begin
   end;
 end;
 
-procedure TWebSocketClient.PerformHandshake(const Host, Path: string);
-var
+procedure TWebSocketClient.PerformHandshake(const Host, Path: string);  
+var  
   Key, Accept, ExpectedAccept: string;
   Request, Response: string;
   Lines: TArray<string>;
@@ -370,8 +370,8 @@ begin
     raise Exception.Create('Handshake échoué');
 end;
 
-procedure TWebSocketClient.StartReceiveThread;
-begin
+procedure TWebSocketClient.StartReceiveThread;  
+begin  
   FReceiveThread := TThread.CreateAnonymousThread(
     procedure
     begin
@@ -398,8 +398,8 @@ begin
   FReceiveThread.Start;
 end;
 
-procedure TWebSocketClient.ProcessFrame;
-var
+procedure TWebSocketClient.ProcessFrame;  
+var  
   Byte1, Byte2: Byte;
   Fin, Masked: Boolean;
   OpCode: Byte;
@@ -465,13 +465,13 @@ begin
   end;
 end;
 
-function TWebSocketClient.BuildFrame(const Data: string; OpCode: Byte): TBytes;
-begin
+function TWebSocketClient.BuildFrame(const Data: string; OpCode: Byte): TBytes;  
+begin  
   Result := BuildFrame(TEncoding.UTF8.GetBytes(Data), OpCode);
 end;
 
-function TWebSocketClient.BuildFrame(const Data: TBytes; OpCode: Byte): TBytes;
-var
+function TWebSocketClient.BuildFrame(const Data: TBytes; OpCode: Byte): TBytes;  
+var  
   Frame: TBytes;
   PayloadLength: Int64;
   MaskingKey: array[0..3] of Byte;
@@ -529,8 +529,8 @@ begin
   Result := Frame;
 end;
 
-procedure TWebSocketClient.Send(const Message: string);
-var
+procedure TWebSocketClient.Send(const Message: string);  
+var  
   Frame: TBytes;
 begin
   if FState <> wsOpen then
@@ -545,8 +545,8 @@ begin
   end;
 end;
 
-procedure TWebSocketClient.Send(const Data: TBytes);
-var
+procedure TWebSocketClient.Send(const Data: TBytes);  
+var  
   Frame: TBytes;
 begin
   if FState <> wsOpen then
@@ -561,8 +561,8 @@ begin
   end;
 end;
 
-procedure TWebSocketClient.Close;
-var
+procedure TWebSocketClient.Close;  
+var  
   CloseFrame: TBytes;
 begin
   if FState = wsClosed then
@@ -639,8 +639,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FWebSocket := TWebSocketClient.Create;
 
   // Configurer les callbacks
@@ -655,13 +655,13 @@ begin
   UpdateUI;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   FWebSocket.Free;
 end;
 
-procedure TFormMain.ButtonConnectClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonConnectClick(Sender: TObject);  
+begin  
   try
     MemoMessages.Lines.Add('Connexion en cours...');
     FWebSocket.Connect(EditURL.Text);
@@ -674,13 +674,13 @@ begin
   end;
 end;
 
-procedure TFormMain.ButtonDisconnectClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonDisconnectClick(Sender: TObject);  
+begin  
   FWebSocket.Close;
 end;
 
-procedure TFormMain.ButtonSendClick(Sender: TObject);
-var
+procedure TFormMain.ButtonSendClick(Sender: TObject);  
+var  
   Message: string;
 begin
   Message := EditMessage.Text;
@@ -698,8 +698,8 @@ begin
   end;
 end;
 
-procedure TFormMain.EditMessageKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TFormMain.EditMessageKeyPress(Sender: TObject; var Key: Char);  
+begin  
   if Key = #13 then
   begin
     ButtonSendClick(nil);
@@ -707,32 +707,32 @@ begin
   end;
 end;
 
-procedure TFormMain.OnWebSocketConnect;
-begin
+procedure TFormMain.OnWebSocketConnect;  
+begin  
   MemoMessages.Lines.Add('✓ Connecté !');
   LabelStatus.Caption := 'Connecté';
   UpdateUI;
 end;
 
-procedure TFormMain.OnWebSocketMessage(const Message: string);
-begin
+procedure TFormMain.OnWebSocketMessage(const Message: string);  
+begin  
   MemoMessages.Lines.Add('← ' + Message);
 end;
 
-procedure TFormMain.OnWebSocketDisconnect;
-begin
+procedure TFormMain.OnWebSocketDisconnect;  
+begin  
   MemoMessages.Lines.Add('✗ Déconnecté');
   LabelStatus.Caption := 'Déconnecté';
   UpdateUI;
 end;
 
-procedure TFormMain.OnWebSocketError(const Error: string);
-begin
+procedure TFormMain.OnWebSocketError(const Error: string);  
+begin  
   MemoMessages.Lines.Add('⚠ Erreur: ' + Error);
 end;
 
-procedure TFormMain.UpdateUI;
-var
+procedure TFormMain.UpdateUI;  
+var  
   Connected: Boolean;
 begin
   Connected := FWebSocket.State = wsOpen;
@@ -804,15 +804,15 @@ implementation
 
 { TWebSocketConnection }
 
-constructor TWebSocketConnection.Create(AContext: TIdContext);
-begin
+constructor TWebSocketConnection.Create(AContext: TIdContext);  
+begin  
   inherited Create;
   FContext := AContext;
   FID := TGUID.NewGuid.ToString;
 end;
 
-procedure TWebSocketConnection.Send(const Message: string);
-var
+procedure TWebSocketConnection.Send(const Message: string);  
+var  
   Frame: TBytes;
   MessageBytes: TBytes;
   PayloadLength: Int64;
@@ -848,8 +848,8 @@ begin
   FContext.Connection.IOHandler.Write(TIdBytes(Frame));
 end;
 
-procedure TWebSocketConnection.Close;
-var
+procedure TWebSocketConnection.Close;  
+var  
   CloseFrame: TBytes;
 begin
   SetLength(CloseFrame, 2);
@@ -862,8 +862,8 @@ end;
 
 { TWebSocketServer }
 
-constructor TWebSocketServer.Create(Port: Integer);
-begin
+constructor TWebSocketServer.Create(Port: Integer);  
+begin  
   inherited Create;
 
   FHTTPServer := TIdHTTPServer.Create(nil);
@@ -874,8 +874,8 @@ begin
   FLock := TCriticalSection.Create;
 end;
 
-destructor TWebSocketServer.Destroy;
-begin
+destructor TWebSocketServer.Destroy;  
+begin  
   Stop;
   FConnections.Free;
   FLock.Free;
@@ -883,13 +883,13 @@ begin
   inherited;
 end;
 
-procedure TWebSocketServer.Start;
-begin
+procedure TWebSocketServer.Start;  
+begin  
   FHTTPServer.Active := True;
 end;
 
-procedure TWebSocketServer.Stop;
-begin
+procedure TWebSocketServer.Stop;  
+begin  
   FHTTPServer.Active := False;
 
   FLock.Enter;
@@ -962,8 +962,8 @@ begin
   end;
 end;
 
-procedure TWebSocketServer.HandleWebSocketFrame(Connection: TWebSocketConnection);
-var
+procedure TWebSocketServer.HandleWebSocketFrame(Connection: TWebSocketConnection);  
+var  
   Byte1, Byte2: Byte;
   OpCode: Byte;
   Masked: Boolean;
@@ -1019,8 +1019,8 @@ begin
   end;
 end;
 
-procedure TWebSocketServer.Broadcast(const Message: string);
-var
+procedure TWebSocketServer.Broadcast(const Message: string);  
+var  
   Connection: TWebSocketConnection;
 begin
   FLock.Enter;
@@ -1038,8 +1038,8 @@ begin
   end;
 end;
 
-procedure TWebSocketServer.SendTo(const ClientID, Message: string);
-var
+procedure TWebSocketServer.SendTo(const ClientID, Message: string);  
+var  
   Connection: TWebSocketConnection;
 begin
   FLock.Enter;
@@ -1137,8 +1137,8 @@ type
 
 implementation
 
-constructor TChatClient.Create(const ServerURL, Username: string);
-var
+constructor TChatClient.Create(const ServerURL, Username: string);  
+var  
   JoinMessage: TJSONObject;
 begin
   inherited Create;
@@ -1161,14 +1161,14 @@ begin
   end;
 end;
 
-destructor TChatClient.Destroy;
-begin
+destructor TChatClient.Destroy;  
+begin  
   FWebSocket.Free;
   inherited;
 end;
 
-procedure TChatClient.HandleMessage(const JSONMessage: string);
-var
+procedure TChatClient.HandleMessage(const JSONMessage: string);  
+var  
   JSON: TJSONObject;
   MessageType: string;
   ChatMsg: TChatMessage;
@@ -1205,8 +1205,8 @@ begin
   end;
 end;
 
-procedure TChatClient.SendMessage(const Message: string);
-var
+procedure TChatClient.SendMessage(const Message: string);  
+var  
   JSON: TJSONObject;
 begin
   JSON := TJSONObject.Create;
@@ -1221,8 +1221,8 @@ begin
   end;
 end;
 
-procedure TChatClient.Disconnect;
-var
+procedure TChatClient.Disconnect;  
+var  
   JSON: TJSONObject;
 begin
   JSON := TJSONObject.Create;
@@ -1268,8 +1268,8 @@ type
 
 implementation
 
-constructor TAutoReconnectWebSocket.Create;
-begin
+constructor TAutoReconnectWebSocket.Create;  
+begin  
   inherited;
   FAutoReconnect := True;
   FReconnectDelay := 3000; // 3 secondes
@@ -1281,14 +1281,14 @@ begin
   FReconnectTimer.OnTimer := OnTimerReconnect;
 end;
 
-destructor TAutoReconnectWebSocket.Destroy;
-begin
+destructor TAutoReconnectWebSocket.Destroy;  
+begin  
   FReconnectTimer.Free;
   inherited;
 end;
 
-procedure TAutoReconnectWebSocket.ConnectWithRetry(const URL: string);
-begin
+procedure TAutoReconnectWebSocket.ConnectWithRetry(const URL: string);  
+begin  
   FURL := URL;
   FRetryCount := 0;
 
@@ -1309,8 +1309,8 @@ begin
   end;
 end;
 
-procedure TAutoReconnectWebSocket.OnTimerReconnect(Sender: TObject);
-begin
+procedure TAutoReconnectWebSocket.OnTimerReconnect(Sender: TObject);  
+begin  
   FReconnectTimer.Enabled := False;
 
   try
@@ -1352,8 +1352,8 @@ type
 
 implementation
 
-constructor THeartbeatWebSocket.Create;
-begin
+constructor THeartbeatWebSocket.Create;  
+begin  
   inherited;
   FPingInterval := 30000; // 30 secondes
   FPingTimeout := 5000;   // 5 secondes
@@ -1363,26 +1363,26 @@ begin
   FHeartbeatTimer.OnTimer := OnHeartbeatTimer;
 end;
 
-destructor THeartbeatWebSocket.Destroy;
-begin
+destructor THeartbeatWebSocket.Destroy;  
+begin  
   FHeartbeatTimer.Free;
   inherited;
 end;
 
-procedure THeartbeatWebSocket.StartHeartbeat;
-begin
+procedure THeartbeatWebSocket.StartHeartbeat;  
+begin  
   FLastPong := Now;
   FHeartbeatTimer.Interval := FPingInterval;
   FHeartbeatTimer.Enabled := True;
 end;
 
-procedure THeartbeatWebSocket.StopHeartbeat;
-begin
+procedure THeartbeatWebSocket.StopHeartbeat;  
+begin  
   FHeartbeatTimer.Enabled := False;
 end;
 
-procedure THeartbeatWebSocket.OnHeartbeatTimer(Sender: TObject);
-begin
+procedure THeartbeatWebSocket.OnHeartbeatTimer(Sender: TObject);  
+begin  
   // Vérifier si le dernier pong est trop ancien
   if MilliSecondsBetween(Now, FLastPong) > (FPingInterval + FPingTimeout) then
   begin
@@ -1398,8 +1398,8 @@ begin
   end;
 end;
 
-procedure THeartbeatWebSocket.SendPing;
-var
+procedure THeartbeatWebSocket.SendPing;  
+var  
   PingFrame: TBytes;
 begin
   SetLength(PingFrame, 2);
@@ -1426,8 +1426,8 @@ WebSocket.Connect('ws://insecure.example.com/chat');
 
 ```pascal
 // Détecter les connexions mortes
-procedure ConfigurerHeartbeat;
-begin
+procedure ConfigurerHeartbeat;  
+begin  
   HeartbeatWS.PingInterval := 30000; // 30s
   HeartbeatWS.PingTimeout := 5000;   // 5s
   HeartbeatWS.StartHeartbeat;
@@ -1461,8 +1461,8 @@ end;
 const
   MAX_MESSAGE_SIZE = 1024 * 1024; // 1 MB
 
-procedure SendSafe(const Message: string);
-begin
+procedure SendSafe(const Message: string);  
+begin  
   if Length(Message) > MAX_MESSAGE_SIZE then
     raise Exception.Create('Message trop grand');
 
@@ -1473,8 +1473,8 @@ end;
 ### 5. Valider les messages JSON
 
 ```pascal
-procedure HandleMessage(const Message: string);
-var
+procedure HandleMessage(const Message: string);  
+var  
   JSON: TJSONObject;
 begin
   try
@@ -1499,8 +1499,8 @@ end;
 ### 6. Gérer les ressources
 
 ```pascal
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Fermer proprement
   if Assigned(FWebSocket) then
   begin
@@ -1513,20 +1513,20 @@ end;
 ### 7. Logger les événements
 
 ```pascal
-procedure LogWebSocketEvent(const Event, Details: string);
-begin
+procedure LogWebSocketEvent(const Event, Details: string);  
+begin  
   WriteLn(Format('[%s] WebSocket %s: %s',
     [DateTimeToStr(Now), Event, Details]));
 end;
 
 // Utilisation
-WebSocket.OnConnect := procedure
-begin
+WebSocket.OnConnect := procedure  
+begin  
   LogWebSocketEvent('CONNECT', 'Connexion établie');
 end;
 
-WebSocket.OnMessage := procedure(const Msg: string)
-begin
+WebSocket.OnMessage := procedure(const Msg: string)  
+begin  
   LogWebSocketEvent('MESSAGE', Msg);
 end;
 ```

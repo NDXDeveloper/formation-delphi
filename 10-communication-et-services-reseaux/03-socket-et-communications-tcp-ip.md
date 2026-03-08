@@ -139,8 +139,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormServeur.FormCreate(Sender: TObject);
-begin
+procedure TFormServeur.FormCreate(Sender: TObject);  
+begin  
   // Configuration du serveur
   IdTCPServer1.DefaultPort := 8080;  // Port d'écoute
   IdTCPServer1.Active := False;
@@ -150,8 +150,8 @@ begin
   AjouterLog('Serveur prêt. Port: ' + IntToStr(IdTCPServer1.DefaultPort));
 end;
 
-procedure TFormServeur.ButtonDemarrerClick(Sender: TObject);
-begin
+procedure TFormServeur.ButtonDemarrerClick(Sender: TObject);  
+begin  
   try
     IdTCPServer1.Active := True;
 
@@ -168,8 +168,8 @@ begin
   end;
 end;
 
-procedure TFormServeur.ButtonArreterClick(Sender: TObject);
-begin
+procedure TFormServeur.ButtonArreterClick(Sender: TObject);  
+begin  
   IdTCPServer1.Active := False;
 
   ButtonDemarrer.Enabled := True;
@@ -178,8 +178,8 @@ begin
   AjouterLog('Serveur arrêté');
 end;
 
-procedure TFormServeur.AjouterLog(const Message: string);
-begin
+procedure TFormServeur.AjouterLog(const Message: string);  
+begin  
   // Cette méthode peut être appelée depuis n'importe quel thread
   TThread.Synchronize(nil, procedure
   begin
@@ -187,20 +187,20 @@ begin
   end);
 end;
 
-procedure TFormServeur.IdTCPServer1Connect(AContext: TIdContext);
-begin
+procedure TFormServeur.IdTCPServer1Connect(AContext: TIdContext);  
+begin  
   // Un client vient de se connecter
   AjouterLog('Client connecté: ' + AContext.Binding.PeerIP);
 end;
 
-procedure TFormServeur.IdTCPServer1Disconnect(AContext: TIdContext);
-begin
+procedure TFormServeur.IdTCPServer1Disconnect(AContext: TIdContext);  
+begin  
   // Un client vient de se déconnecter
   AjouterLog('Client déconnecté: ' + AContext.Binding.PeerIP);
 end;
 
-procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);
-var
+procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);  
+var  
   MessageRecu: string;
 begin
   // Cette méthode s'exécute en boucle pour chaque client connecté
@@ -287,8 +287,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
+procedure TFormClient.FormCreate(Sender: TObject);  
+begin  
   // Configuration par défaut
   EditServeur.Text := 'localhost';  // ou '127.0.0.1'
   EditPort.Text := '8080';
@@ -299,8 +299,8 @@ begin
   AjouterLog('Client prêt');
 end;
 
-procedure TFormClient.ButtonConnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonConnecterClick(Sender: TObject);  
+begin  
   try
     // Configuration de la connexion
     IdTCPClient1.Host := EditServeur.Text;
@@ -333,8 +333,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);  
+begin  
   try
     if IdTCPClient1.Connected then
       IdTCPClient1.Disconnect;
@@ -353,8 +353,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonEnvoyerClick(Sender: TObject);
-var
+procedure TFormClient.ButtonEnvoyerClick(Sender: TObject);  
+var  
   Message, Reponse: string;
 begin
   if not IdTCPClient1.Connected then
@@ -393,8 +393,8 @@ begin
   end;
 end;
 
-procedure TFormClient.AjouterLog(const Message: string);
-begin
+procedure TFormClient.AjouterLog(const Message: string);  
+begin  
   MemoReponses.Lines.Add('[' + TimeToStr(Now) + '] ' + Message);
 end;
 
@@ -420,8 +420,8 @@ end.
 Pour permettre au serveur d'envoyer des messages à tous les clients connectés :
 
 ```pascal
-procedure TFormServeur.ButtonDiffuserClick(Sender: TObject);
-var
+procedure TFormServeur.ButtonDiffuserClick(Sender: TObject);  
+var  
   Liste: TList;
   i: Integer;
   Context: TIdContext;
@@ -478,16 +478,16 @@ type
     constructor Create(AClient: TIdTCPClient; AForm: TFormClient);
   end;
 
-constructor TThreadReception.Create(AClient: TIdTCPClient; AForm: TFormClient);
-begin
+constructor TThreadReception.Create(AClient: TIdTCPClient; AForm: TFormClient);  
+begin  
   inherited Create(False); // Démarrer immédiatement
   FreeOnTerminate := True;
   FClient := AClient;
   FForm := AForm;
 end;
 
-procedure TThreadReception.Execute;
-var
+procedure TThreadReception.Execute;  
+var  
   Message: string;
 begin
   while not Terminated and FClient.Connected do
@@ -532,8 +532,8 @@ type
     FThreadReception: TThreadReception;
   end;
 
-procedure TFormClient.ButtonConnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonConnecterClick(Sender: TObject);  
+begin  
   // ... code de connexion ...
 
   if IdTCPClient1.Connected then
@@ -543,8 +543,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);  
+begin  
   // Arrêter le thread
   if Assigned(FThreadReception) then
   begin
@@ -563,8 +563,8 @@ end;
 Pour transférer des fichiers entre client et serveur :
 
 ```pascal
-procedure TFormClient.EnvoyerFichier(const NomFichier: string);
-var
+procedure TFormClient.EnvoyerFichier(const NomFichier: string);  
+var  
   Stream: TFileStream;
   Taille: Int64;
 begin
@@ -596,8 +596,8 @@ end;
 **Réception côté serveur :**
 
 ```pascal
-procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);
-var
+procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);  
+var  
   NomFichier: string;
   Taille: Int64;
   Stream: TFileStream;
@@ -629,8 +629,8 @@ end;
 Pour envoyer des données structurées, utilisez JSON ou un format personnalisé :
 
 ```pascal
-procedure TFormClient.EnvoyerDonnees;
-var
+procedure TFormClient.EnvoyerDonnees;  
+var  
   JSONObject: TJSONObject;
   Donnees: string;
 begin
@@ -655,8 +655,8 @@ end;
 ### Détecter une déconnexion
 
 ```pascal
-procedure TFormClient.VerifierConnexion;
-begin
+procedure TFormClient.VerifierConnexion;  
+begin  
   if IdTCPClient1.Connected then
   begin
     try
@@ -686,8 +686,8 @@ end;
 ### Gérer les timeouts
 
 ```pascal
-procedure TFormClient.ConfigurerTimeouts;
-begin
+procedure TFormClient.ConfigurerTimeouts;  
+begin  
   // Timeout de connexion (5 secondes)
   IdTCPClient1.ConnectTimeout := 5000;
 
@@ -710,8 +710,8 @@ type
     FNombreEssais: Integer;
   end;
 
-procedure TFormClient.TimerReconnexionTimer(Sender: TObject);
-begin
+procedure TFormClient.TimerReconnexionTimer(Sender: TObject);  
+begin  
   if not IdTCPClient1.Connected then
   begin
     Inc(FNombreEssais);
@@ -744,8 +744,8 @@ begin
   end;
 end;
 
-procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonDeconnecterClick(Sender: TObject);  
+begin  
   // ... déconnexion ...
 
   // Activer la reconnexion automatique
@@ -762,8 +762,8 @@ end;
 Toujours valider les données reçues :
 
 ```pascal
-procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);
-var
+procedure TFormServeur.IdTCPServer1Execute(AContext: TIdContext);  
+var  
   Commande: string;
 begin
   Commande := AContext.Connection.IOHandler.ReadLn;
@@ -788,8 +788,8 @@ begin
   TraiterCommande(AContext, Commande);
 end;
 
-function TFormServeur.CommadeValide(const Commande: string): Boolean;
-begin
+function TFormServeur.CommadeValide(const Commande: string): Boolean;  
+begin  
   // Implémenter votre logique de validation
   Result := not Commande.IsEmpty;
 end;
@@ -798,8 +798,8 @@ end;
 ### Limiter le nombre de connexions
 
 ```pascal
-procedure TFormServeur.IdTCPServer1Connect(AContext: TIdContext);
-var
+procedure TFormServeur.IdTCPServer1Connect(AContext: TIdContext);  
+var  
   NombreClients: Integer;
 const
   MAX_CLIENTS = 10;
@@ -822,24 +822,28 @@ end;
 ### Encoder correctement les chaînes
 
 ```pascal
-procedure TFormServeur.FormCreate(Sender: TObject);
-begin
-  // Utiliser UTF-8 pour l'encodage
-  IdTCPServer1.IOHandler.DefStringEncoding := TEncoding.UTF8;
+// Côté serveur : configurer l'encodage dans l'événement OnConnect
+procedure TFormServeur.IdTCPServer1Connect(AContext: TIdContext);  
+begin  
+  // Utiliser UTF-8 pour l'encodage de ce client
+  AContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_UTF8;
 end;
 
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
-  // Idem pour le client
-  IdTCPClient1.IOHandler.DefStringEncoding := TEncoding.UTF8;
+// Côté client : configurer l'encodage après la connexion
+procedure TFormClient.ButtonConnecterClick(Sender: TObject);  
+begin  
+  IdTCPClient1.Connect;
+
+  // Le IOHandler est disponible uniquement après Connect
+  IdTCPClient1.IOHandler.DefStringEncoding := IndyTextEncoding_UTF8;
 end;
 ```
 
 ### Nettoyer les ressources
 
 ```pascal
-procedure TFormServeur.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormServeur.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Arrêter le serveur proprement
   if IdTCPServer1.Active then
   begin
@@ -850,8 +854,8 @@ begin
   end;
 end;
 
-procedure TFormClient.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormClient.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Arrêter le thread de réception
   if Assigned(FThreadReception) then
   begin
@@ -908,20 +912,20 @@ implementation
 
 {$R *.dfm}
 
-constructor TFormChatServeur.Create(AOwner: TComponent);
-begin
+constructor TFormChatServeur.Create(AOwner: TComponent);  
+begin  
   inherited;
   FUtilisateurs := TDictionary<string, string>.Create;
 end;
 
-destructor TFormChatServeur.Destroy;
-begin
+destructor TFormChatServeur.Destroy;  
+begin  
   FUtilisateurs.Free;
   inherited;
 end;
 
-procedure TFormChatServeur.FormCreate(Sender: TObject);
-begin
+procedure TFormChatServeur.FormCreate(Sender: TObject);  
+begin  
   IdTCPServer1.DefaultPort := 8080;
   IdTCPServer1.Active := False;
   ButtonArreter.Enabled := False;
@@ -929,8 +933,8 @@ begin
   AjouterLog('Serveur de chat prêt');
 end;
 
-procedure TFormChatServeur.ButtonDemarrerClick(Sender: TObject);
-begin
+procedure TFormChatServeur.ButtonDemarrerClick(Sender: TObject);  
+begin  
   try
     IdTCPServer1.Active := True;
     ButtonDemarrer.Enabled := False;
@@ -942,16 +946,16 @@ begin
   end;
 end;
 
-procedure TFormChatServeur.ButtonArreterClick(Sender: TObject);
-begin
+procedure TFormChatServeur.ButtonArreterClick(Sender: TObject);  
+begin  
   IdTCPServer1.Active := False;
   ButtonDemarrer.Enabled := True;
   ButtonArreter.Enabled := False;
   AjouterLog('Serveur arrêté');
 end;
 
-procedure TFormChatServeur.IdTCPServer1Connect(AContext: TIdContext);
-var
+procedure TFormChatServeur.IdTCPServer1Connect(AContext: TIdContext);  
+var  
   Pseudo: string;
 begin
   // Recevoir le pseudo du nouvel utilisateur
@@ -974,8 +978,8 @@ begin
   AContext.Connection.IOHandler.WriteLn('Bienvenue ' + Pseudo + ' !');
 end;
 
-procedure TFormChatServeur.IdTCPServer1Disconnect(AContext: TIdContext);
-var
+procedure TFormChatServeur.IdTCPServer1Disconnect(AContext: TIdContext);  
+var  
   Pseudo: string;
 begin
   TMonitor.Enter(FUtilisateurs);
@@ -991,8 +995,8 @@ begin
   end;
 end;
 
-procedure TFormChatServeur.IdTCPServer1Execute(AContext: TIdContext);
-var
+procedure TFormChatServeur.IdTCPServer1Execute(AContext: TIdContext);  
+var  
   Message, Pseudo: string;
 begin
   Message := AContext.Connection.IOHandler.ReadLn;
@@ -1012,8 +1016,8 @@ begin
   end;
 end;
 
-procedure TFormChatServeur.DiffuserMessage(const Message: string; ExclureContext: TIdContext);
-var
+procedure TFormChatServeur.DiffuserMessage(const Message: string; ExclureContext: TIdContext);  
+var  
   Liste: TList;
   i: Integer;
   Context: TIdContext;
@@ -1039,16 +1043,16 @@ begin
   end;
 end;
 
-procedure TFormChatServeur.AjouterLog(const Message: string);
-begin
+procedure TFormChatServeur.AjouterLog(const Message: string);  
+begin  
   TThread.Synchronize(nil, procedure
   begin
     MemoLog.Lines.Add('[' + TimeToStr(Now) + '] ' + Message);
   end);
 end;
 
-procedure TFormChatServeur.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormChatServeur.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if IdTCPServer1.Active then
     IdTCPServer1.Active := False;
 end;
@@ -1108,16 +1112,16 @@ implementation
 
 { TThreadReceptionChat }
 
-constructor TThreadReceptionChat.Create(AClient: TIdTCPClient; AForm: TFormChatClient);
-begin
+constructor TThreadReceptionChat.Create(AClient: TIdTCPClient; AForm: TFormChatClient);  
+begin  
   inherited Create(False);
   FreeOnTerminate := True;
   FClient := AClient;
   FForm := AForm;
 end;
 
-procedure TThreadReceptionChat.Execute;
-var
+procedure TThreadReceptionChat.Execute;  
+var  
   Message: string;
 begin
   while not Terminated and FClient.Connected do
@@ -1145,8 +1149,8 @@ end;
 
 { TFormChatClient }
 
-procedure TFormChatClient.FormCreate(Sender: TObject);
-begin
+procedure TFormChatClient.FormCreate(Sender: TObject);  
+begin  
   EditServeur.Text := 'localhost';
   EditPseudo.Text := 'Utilisateur' + IntToStr(Random(1000));
 
@@ -1155,8 +1159,8 @@ begin
   EditMessage.Enabled := False;
 end;
 
-procedure TFormChatClient.ButtonConnecterClick(Sender: TObject);
-begin
+procedure TFormChatClient.ButtonConnecterClick(Sender: TObject);  
+begin  
   if EditPseudo.Text.IsEmpty then
   begin
     ShowMessage('Veuillez saisir un pseudo');
@@ -1196,8 +1200,8 @@ begin
   end;
 end;
 
-procedure TFormChatClient.ButtonDeconnecterClick(Sender: TObject);
-begin
+procedure TFormChatClient.ButtonDeconnecterClick(Sender: TObject);  
+begin  
   if Assigned(FThreadReception) then
   begin
     FThreadReception.Terminate;
@@ -1217,8 +1221,8 @@ begin
   EditServeur.Enabled := True;
 end;
 
-procedure TFormChatClient.ButtonEnvoyerClick(Sender: TObject);
-var
+procedure TFormChatClient.ButtonEnvoyerClick(Sender: TObject);  
+var  
   Message: string;
 begin
   Message := EditMessage.Text;
@@ -1240,8 +1244,8 @@ begin
   end;
 end;
 
-procedure TFormChatClient.EditMessageKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TFormChatClient.EditMessageKeyPress(Sender: TObject; var Key: Char);  
+begin  
   if Key = #13 then // Touche Entrée
   begin
     ButtonEnvoyerClick(nil);
@@ -1249,13 +1253,13 @@ begin
   end;
 end;
 
-procedure TFormChatClient.AfficherMessage(const Message: string);
-begin
+procedure TFormChatClient.AfficherMessage(const Message: string);  
+begin  
   MemoChat.Lines.Add(Message);
 end;
 
-procedure TFormChatClient.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormChatClient.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if Assigned(FThreadReception) then
     FThreadReception.Terminate;
 

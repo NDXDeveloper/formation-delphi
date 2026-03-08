@@ -365,8 +365,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.ButtonAdditionClick(Sender: TObject);
-var
+procedure TForm1.ButtonAdditionClick(Sender: TObject);  
+var  
   Calculator: ICalculatorSoap;
   Nombre1, Nombre2, Resultat: Integer;
 begin
@@ -408,8 +408,8 @@ Pour plus de contrôle, vous pouvez utiliser directement `THTTPRIO` :
 uses
   Soap.Rio, Soap.SOAPHTTPClient;
 
-procedure TForm1.AppelSOAPManuel;
-var
+procedure TForm1.AppelSOAPManuel;  
+var  
   HTTPRIO: THTTPRIO;
   Service: ICalculatorSoap;
   Resultat: Integer;
@@ -442,8 +442,8 @@ Pour un contrôle total, vous pouvez construire le XML manuellement :
 uses
   System.Net.HttpClient, System.Net.URLClient;
 
-procedure TForm1.EnvoyerSOAPBrut;
-var
+procedure TForm1.EnvoyerSOAPBrut;  
+var  
   HTTPClient: THTTPClient;
   RequestSOAP, ResponseSOAP: string;
   Response: IHTTPResponse;
@@ -488,8 +488,8 @@ end;
 ### Authentification de base (Basic Auth)
 
 ```pascal
-procedure TForm1.SOAPAvecAuthentification;
-var
+procedure TForm1.SOAPAvecAuthentification;  
+var  
   HTTPRIO: THTTPRIO;
   Service: IMonService;
 begin
@@ -520,8 +520,8 @@ Pour une authentification WS-Security plus robuste :
 uses
   Soap.SOAPHTTPClient, Soap.WSDLBind;
 
-procedure TForm1.SOAPAvecWSSecurity;
-var
+procedure TForm1.SOAPAvecWSSecurity;  
+var  
   HTTPRIO: THTTPRIO;
   Service: IMonService;
 begin
@@ -548,8 +548,8 @@ end;
 ### Authentification par certificat SSL
 
 ```pascal
-procedure TForm1.SOAPAvecCertificat;
-var
+procedure TForm1.SOAPAvecCertificat;  
+var  
   HTTPRIO: THTTPRIO;
   HTTPReqResp: THTTPReqResp;
   Service: IMonService;
@@ -584,8 +584,8 @@ end;
 uses
   Soap.InvokeRegistry, Soap.SOAPHTTPClient;
 
-procedure TForm1.GererErreurSOAP;
-var
+procedure TForm1.GererErreurSOAP;  
+var  
   Calculator: ICalculatorSoap;
   Resultat: Integer;
 begin
@@ -633,14 +633,14 @@ type
     procedure AfterExecute(const MethodName: string; SOAPResponse: TStream);
   end;
 
-constructor TSOAPLogger.Create(AMemo: TMemo);
-begin
+constructor TSOAPLogger.Create(AMemo: TMemo);  
+begin  
   inherited Create;
   FMemo := AMemo;
 end;
 
-procedure TSOAPLogger.BeforeExecute(const MethodName: string; SOAPRequest: TStream);
-var
+procedure TSOAPLogger.BeforeExecute(const MethodName: string; SOAPRequest: TStream);  
+var  
   Request: TStringStream;
 begin
   Request := TStringStream.Create('', TEncoding.UTF8);
@@ -656,8 +656,8 @@ begin
   end;
 end;
 
-procedure TSOAPLogger.AfterExecute(const MethodName: string; SOAPResponse: TStream);
-var
+procedure TSOAPLogger.AfterExecute(const MethodName: string; SOAPResponse: TStream);  
+var  
   Response: TStringStream;
 begin
   Response := TStringStream.Create('', TEncoding.UTF8);
@@ -677,8 +677,8 @@ end;
 ### Configurer les timeouts
 
 ```pascal
-procedure TForm1.ConfigurerTimeouts;
-var
+procedure TForm1.ConfigurerTimeouts;  
+var  
   HTTPRIO: THTTPRIO;
   HTTPReqResp: THTTPReqResp;
 begin
@@ -735,14 +735,14 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMeteo.FormCreate(Sender: TObject);
-begin
+procedure TFormMeteo.FormCreate(Sender: TObject);  
+begin  
   MemoResultat.Clear;
   MemoResultat.Lines.Add('Entrez un nom de ville et cliquez sur Rechercher');
 end;
 
-procedure TFormMeteo.ButtonRechercherClick(Sender: TObject);
-var
+procedure TFormMeteo.ButtonRechercherClick(Sender: TObject);  
+var  
   Ville: string;
   HTTPRIO: THTTPRIO;
   HTTPReqResp: THTTPReqResp;
@@ -799,8 +799,8 @@ begin
   end;
 end;
 
-procedure TFormMeteo.AfficherMeteo(const Ville, Temperature, Description: string);
-begin
+procedure TFormMeteo.AfficherMeteo(const Ville, Temperature, Description: string);  
+begin  
   MemoResultat.Lines.Clear;
   MemoResultat.Lines.Add('Météo pour : ' + Ville);
   MemoResultat.Lines.Add('');
@@ -886,30 +886,30 @@ uses
 
 { TCalculateur }
 
-function TCalculateur.Addition(A, B: Double): Double;
-begin
+function TCalculateur.Addition(A, B: Double): Double;  
+begin  
   Result := A + B;
 end;
 
-function TCalculateur.Soustraction(A, B: Double): Double;
-begin
+function TCalculateur.Soustraction(A, B: Double): Double;  
+begin  
   Result := A - B;
 end;
 
-function TCalculateur.Multiplication(A, B: Double): Double;
-begin
+function TCalculateur.Multiplication(A, B: Double): Double;  
+begin  
   Result := A * B;
 end;
 
-function TCalculateur.Division(A, B: Double): Double;
-begin
+function TCalculateur.Division(A, B: Double): Double;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro impossible');
   Result := A / B;
 end;
 
-function TCalculateur.Puissance(Base, Exposant: Double): Double;
-begin
+function TCalculateur.Puissance(Base, Exposant: Double): Double;  
+begin  
   Result := Power(Base, Exposant);
 end;
 
@@ -1006,8 +1006,8 @@ Une fois le serveur démarré, vous pouvez :
 Toujours utiliser l'assistant WSDL Importer plutôt que coder manuellement :
 ```pascal
 // ✅ Bon - Généré automatiquement
-Calculator := GetICalculatorSoap(False);
-Result := Calculator.Add(10, 20);
+Calculator := GetICalculatorSoap(False);  
+Result := Calculator.Add(10, 20);  
 
 // ❌ Éviter - Construction XML manuelle
 // Trop verbeux et sujet aux erreurs
@@ -1017,9 +1017,9 @@ Result := Calculator.Add(10, 20);
 
 Toujours configurer des timeouts appropriés :
 ```pascal
-HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
-HTTPReqResp.ConnectTimeout := 5000;
-HTTPReqResp.ReceiveTimeout := 30000;
+HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;  
+HTTPReqResp.ConnectTimeout := 5000;  
+HTTPReqResp.ReceiveTimeout := 30000;  
 ```
 
 ### 3. Gérer les erreurs proprement
@@ -1038,8 +1038,8 @@ end;
 ### 4. Libérer les ressources
 
 ```pascal
-HTTPRIO := THTTPRIO.Create(nil);
-try
+HTTPRIO := THTTPRIO.Create(nil);  
+try  
   // Utilisation
 finally
   HTTPRIO.Free;
@@ -1083,8 +1083,8 @@ type
     function GetServiceCalculateur: ICalculateur;
   end;
 
-function TFormPrincipale.GetServiceCalculateur: ICalculateur;
-begin
+function TFormPrincipale.GetServiceCalculateur: ICalculateur;  
+begin  
   if not Assigned(FServiceCalculateur) then
     FServiceCalculateur := GetICalculateurSoap(False);
   Result := FServiceCalculateur;

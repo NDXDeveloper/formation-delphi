@@ -77,8 +77,8 @@ Le standard le plus populaire pour les services web modernes.
 **Exemple concret :**
 Votre application de météo interroge un serveur pour obtenir les prévisions :
 ```
-Application → GET http://api.meteo.com/previsions/paris
-Serveur → { "ville": "Paris", "temperature": 18, "meteo": "Ensoleillé" }
+Application → GET http://api.meteo.com/previsions/paris  
+Serveur → { "ville": "Paris", "temperature": 18, "meteo": "Ensoleillé" }  
 ```
 
 **Caractéristiques :**
@@ -172,11 +172,11 @@ Sécuriser l'accès à vos services et données.
 
 **Exemple :**
 ```
-Utilisateur → "Je veux me connecter avec Google"
-Application → Redirige vers Google
-Google → Authentifie l'utilisateur
-Google → Renvoie un token à l'application
-Application → Utilise le token pour accéder aux données
+Utilisateur → "Je veux me connecter avec Google"  
+Application → Redirige vers Google  
+Google → Authentifie l'utilisateur  
+Google → Renvoie un token à l'application  
+Application → Utilise le token pour accéder aux données  
 ```
 
 **Pourquoi c'est important :**
@@ -191,14 +191,14 @@ Alternative moderne à REST, plus flexible.
 
 **Différence avec REST :**
 ```
-REST:
-GET /user/123 → Tout le profil utilisateur
-GET /user/123/posts → Tous les posts
-GET /user/123/friends → Tous les amis
+REST:  
+GET /user/123 → Tout le profil utilisateur  
+GET /user/123/posts → Tous les posts  
+GET /user/123/friends → Tous les amis  
 = 3 requêtes, beaucoup de données inutiles
 
-GraphQL:
-query {
+GraphQL:  
+query {  
   user(id: 123) {
     name
     posts { title }
@@ -236,19 +236,19 @@ Communication bidirectionnelle en temps réel.
 
 **Différence avec HTTP :**
 ```
-HTTP (Polling):
-Client → "Nouveaux messages ?"
-Serveur → "Non"
+HTTP (Polling):  
+Client → "Nouveaux messages ?"  
+Serveur → "Non"  
 [pause]
-Client → "Nouveaux messages ?"
-Serveur → "Non"
+Client → "Nouveaux messages ?"  
+Serveur → "Non"  
 [pause]
-Client → "Nouveaux messages ?"
-Serveur → "Oui : 'Bonjour'"
+Client → "Nouveaux messages ?"  
+Serveur → "Oui : 'Bonjour'"  
 
-WebSocket:
-Client ↔ Serveur [connexion permanente]
-Serveur → "Nouveau message : 'Bonjour'" (instantané)
+WebSocket:  
+Client ↔ Serveur [connexion permanente]  
+Serveur → "Nouveau message : 'Bonjour'" (instantané)  
 ```
 
 **Cas d'usage :**

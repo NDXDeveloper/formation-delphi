@@ -34,10 +34,10 @@ Mais vous voulez juste le nom !
 
 **2. Under-fetching (Pas assez de données)**
 ```
-REST:
-GET /users/123 → Données utilisateur
-GET /users/123/posts → Posts de l'utilisateur
-GET /users/123/friends → Amis de l'utilisateur
+REST:  
+GET /users/123 → Données utilisateur  
+GET /users/123/posts → Posts de l'utilisateur  
+GET /users/123/friends → Amis de l'utilisateur  
 = 3 requêtes !
 ```
 
@@ -323,8 +323,8 @@ query {
   }
 }
 
-Total: 1 requête HTTP
-Seulement les données demandées
+Total: 1 requête HTTP  
+Seulement les données demandées  
 ```
 
 ### Tableau comparatif
@@ -398,15 +398,15 @@ implementation
 uses
   System.NetEncoding;
 
-constructor TGraphQLClient.Create(const Endpoint: string);
-begin
+constructor TGraphQLClient.Create(const Endpoint: string);  
+begin  
   inherited Create;
   FEndpoint := Endpoint;
   FHTTPClient := THTTPClient.Create;
 end;
 
-destructor TGraphQLClient.Destroy;
-begin
+destructor TGraphQLClient.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
@@ -641,20 +641,20 @@ type
 
 implementation
 
-constructor TGraphQLHelper.Create(const Endpoint: string);
-begin
+constructor TGraphQLHelper.Create(const Endpoint: string);  
+begin  
   inherited Create;
   FClient := TGraphQLClient.Create(Endpoint);
 end;
 
-destructor TGraphQLHelper.Destroy;
-begin
+destructor TGraphQLHelper.Destroy;  
+begin  
   FClient.Free;
   inherited;
 end;
 
-function TGraphQLHelper.GetUser(const UserID: string): TJSONObject;
-var
+function TGraphQLHelper.GetUser(const UserID: string): TJSONObject;  
+var  
   QueryText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
@@ -684,8 +684,8 @@ begin
   end;
 end;
 
-function TGraphQLHelper.GetUsers(Limit: Integer): TJSONArray;
-var
+function TGraphQLHelper.GetUsers(Limit: Integer): TJSONArray;  
+var  
   QueryText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
@@ -714,8 +714,8 @@ begin
   end;
 end;
 
-function TGraphQLHelper.CreateUser(const Name, Email: string): string;
-var
+function TGraphQLHelper.CreateUser(const Name, Email: string): string;  
+var  
   MutationText: string;
   Variables, Input: TJSONObject;
   Response: TJSONObject;
@@ -747,8 +747,8 @@ begin
   end;
 end;
 
-function TGraphQLHelper.UpdateUser(const UserID, Name: string): Boolean;
-var
+function TGraphQLHelper.UpdateUser(const UserID, Name: string): Boolean;  
+var  
   MutationText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
@@ -777,8 +777,8 @@ begin
   end;
 end;
 
-function TGraphQLHelper.DeleteUser(const UserID: string): Boolean;
-var
+function TGraphQLHelper.DeleteUser(const UserID: string): Boolean;  
+var  
   MutationText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
@@ -816,8 +816,8 @@ end.
 **Configuration :**
 
 ```pascal
-procedure ConfigurerGitHubGraphQL(Client: TGraphQLClient; const Token: string);
-begin
+procedure ConfigurerGitHubGraphQL(Client: TGraphQLClient; const Token: string);  
+begin  
   Client.AuthToken := Token; // Personal Access Token de GitHub
   // Endpoint: https://api.github.com/graphql
 end;
@@ -900,8 +900,8 @@ begin
   end;
 end;
 
-procedure DisplayLaunches(Launches: TJSONArray);
-var
+procedure DisplayLaunches(Launches: TJSONArray);  
+var  
   i: Integer;
   Launch: TJSONObject;
 begin
@@ -1022,22 +1022,22 @@ implementation
 uses
   System.Hash, IdSSLOpenSSL;
 
-constructor TWebSocketClient.Create;
-begin
+constructor TWebSocketClient.Create;  
+begin  
   inherited;
   FTCPClient := TIdTCPClient.Create(nil);
   FConnected := False;
 end;
 
-destructor TWebSocketClient.Destroy;
-begin
+destructor TWebSocketClient.Destroy;  
+begin  
   Disconnect;
   FTCPClient.Free;
   inherited;
 end;
 
-procedure TWebSocketClient.Connect(const URL: string);
-begin
+procedure TWebSocketClient.Connect(const URL: string);  
+begin  
   // Parser l'URL
   // ws://example.com:8080/path ou wss://example.com/path
 
@@ -1049,8 +1049,8 @@ begin
   FConnected := True;
 end;
 
-procedure TWebSocketClient.PerformHandshake(const URL: string);
-var
+procedure TWebSocketClient.PerformHandshake(const URL: string);  
+var  
   Key, Accept: string;
   Request, Response: string;
 begin
@@ -1079,8 +1079,8 @@ begin
     raise Exception.Create('Handshake WebSocket échoué');
 end;
 
-procedure TWebSocketClient.Send(const Message: string);
-var
+procedure TWebSocketClient.Send(const Message: string);  
+var  
   Frame: TBytes;
   MessageBytes: TBytes;
   i: Integer;
@@ -1111,8 +1111,8 @@ begin
   FTCPClient.IOHandler.Write(Frame);
 end;
 
-procedure TWebSocketClient.Disconnect;
-begin
+procedure TWebSocketClient.Disconnect;  
+begin  
   if FConnected then
   begin
     // Envoyer frame de fermeture
@@ -1194,22 +1194,22 @@ type
 
 implementation
 
-constructor TSSEClient.Create;
-begin
+constructor TSSEClient.Create;  
+begin  
   inherited;
   FHTTPClient := THTTPClient.Create;
   FActive := False;
 end;
 
-destructor TSSEClient.Destroy;
-begin
+destructor TSSEClient.Destroy;  
+begin  
   Disconnect;
   FHTTPClient.Free;
   inherited;
 end;
 
-procedure TSSEClient.Connect(const URL: string);
-var
+procedure TSSEClient.Connect(const URL: string);  
+var  
   Response: IHTTPResponse;
 begin
   FActive := True;
@@ -1227,8 +1227,8 @@ begin
     end).Start;
 end;
 
-procedure TSSEClient.ProcessStream;
-var
+procedure TSSEClient.ProcessStream;  
+var  
   Reader: TStreamReader;
   Line: string;
   EventData: string;
@@ -1260,8 +1260,8 @@ begin
   end;
 end;
 
-procedure TSSEClient.Disconnect;
-begin
+procedure TSSEClient.Disconnect;  
+begin  
   FActive := False;
 end;
 
@@ -1331,8 +1331,8 @@ end;
 ### 3. Paginer les résultats
 
 ```pascal
-function GetUsersPaginated(Page: Integer; PageSize: Integer): TJSONArray;
-var
+function GetUsersPaginated(Page: Integer; PageSize: Integer): TJSONArray;  
+var  
   QueryText: string;
   Variables: TJSONObject;
   Response: TJSONObject;
@@ -1380,8 +1380,8 @@ type
     procedure Clear;
   end;
 
-function ExecuteWithCache(const QueryText: string): TJSONObject;
-var
+function ExecuteWithCache(const QueryText: string): TJSONObject;  
+var  
   QueryHash: string;
 begin
   QueryHash := THashSHA2.GetHashString(QueryText);
@@ -1411,16 +1411,16 @@ type
     CreatedAt: TDateTime;
   end;
 
-function JSONToUser(JSON: TJSONObject): TUser;
-begin
+function JSONToUser(JSON: TJSONObject): TUser;  
+begin  
   Result.ID := JSON.GetValue<string>('id');
   Result.Name := JSON.GetValue<string>('name');
   Result.Email := JSON.GetValue<string>('email');
   Result.CreatedAt := ISO8601ToDate(JSON.GetValue<string>('createdAt'));
 end;
 
-function GetUser(const UserID: string): TUser;
-var
+function GetUser(const UserID: string): TUser;  
+var  
   Response: TJSONObject;
 begin
   Response := GraphQLHelper.GetUser(UserID);
