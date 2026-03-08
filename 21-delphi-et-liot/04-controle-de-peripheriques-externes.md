@@ -171,24 +171,24 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormLEDControl.SendCommand(const Command: string);
-begin
+procedure TFormLEDControl.SendCommand(const Command: string);  
+begin  
   if ComPort1.Connected then
     ComPort1.WriteStr(Command + #13#10);
 end;
 
-procedure TFormLEDControl.ButtonOnClick(Sender: TObject);
-begin
+procedure TFormLEDControl.ButtonOnClick(Sender: TObject);  
+begin  
   SendCommand('LED:ON');
 end;
 
-procedure TFormLEDControl.ButtonOffClick(Sender: TObject);
-begin
+procedure TFormLEDControl.ButtonOffClick(Sender: TObject);  
+begin  
   SendCommand('LED:OFF');
 end;
 
-procedure TFormLEDControl.TrackBarBrightnessChange(Sender: TObject);
-var
+procedure TFormLEDControl.TrackBarBrightnessChange(Sender: TObject);  
+var  
   Brightness: Integer;
 begin
   Brightness := TrackBarBrightness.Position;
@@ -290,8 +290,8 @@ type
     function GetRelayState(RelayNumber: Integer): Boolean;
   end;
 
-constructor TRelayController.Create(AComPort: TComPort);
-var
+constructor TRelayController.Create(AComPort: TComPort);  
+var  
   I: Integer;
 begin
   FComPort := AComPort;
@@ -299,8 +299,8 @@ begin
     FRelayStates[I] := False;
 end;
 
-procedure TRelayController.SetRelayState(RelayNumber: Integer; State: Boolean);
-var
+procedure TRelayController.SetRelayState(RelayNumber: Integer; State: Boolean);  
+var  
   Command: string;
   StateStr: string;
 begin
@@ -321,14 +321,14 @@ begin
   end;
 end;
 
-function TRelayController.GetRelayState(RelayNumber: Integer): Boolean;
-begin
+function TRelayController.GetRelayState(RelayNumber: Integer): Boolean;  
+begin  
   Result := FRelayStates[RelayNumber];
 end;
 
 // Utilisation dans le formulaire
-procedure TFormMain.ButtonRelay1Click(Sender: TObject);
-var
+procedure TFormMain.ButtonRelay1Click(Sender: TObject);  
+var  
   NewState: Boolean;
 begin
   NewState := not RelayController.GetRelayState(1);
@@ -366,9 +366,9 @@ Un pont en H permet de :
 
 ```cpp
 // Connexions L298N
-const int MOTOR_IN1 = 8;   // Direction
-const int MOTOR_IN2 = 9;   // Direction
-const int MOTOR_ENA = 10;  // PWM vitesse (broche ~)
+const int MOTOR_IN1 = 8;   // Direction  
+const int MOTOR_IN2 = 9;   // Direction  
+const int MOTOR_ENA = 10;  // PWM vitesse (broche ~)  
 
 void setup() {
   Serial.begin(9600);
@@ -460,8 +460,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMotorControl.SetMotor(Direction: TMotorDirection; Speed: Integer);
-var
+procedure TFormMotorControl.SetMotor(Direction: TMotorDirection; Speed: Integer);  
+var  
   Command: string;
 begin
   if not ComPort1.Connected then Exit;
@@ -481,24 +481,24 @@ begin
   ComPort1.WriteStr(Command + #13#10);
 end;
 
-procedure TFormMotorControl.ButtonForwardClick(Sender: TObject);
-begin
+procedure TFormMotorControl.ButtonForwardClick(Sender: TObject);  
+begin  
   SetMotor(mdForward, TrackBarSpeed.Position);
 end;
 
-procedure TFormMotorControl.ButtonReverseClick(Sender: TObject);
-begin
+procedure TFormMotorControl.ButtonReverseClick(Sender: TObject);  
+begin  
   SetMotor(mdReverse, TrackBarSpeed.Position);
 end;
 
-procedure TFormMotorControl.ButtonStopClick(Sender: TObject);
-begin
+procedure TFormMotorControl.ButtonStopClick(Sender: TObject);  
+begin  
   SetMotor(mdStop, 0);
   TrackBarSpeed.Position := 0;
 end;
 
-procedure TFormMotorControl.TrackBarSpeedChange(Sender: TObject);
-begin
+procedure TFormMotorControl.TrackBarSpeedChange(Sender: TObject);  
+begin  
   LabelSpeed.Caption := Format('Vitesse : %d%%',
     [(TrackBarSpeed.Position * 100) div 255]);
 
@@ -537,8 +537,8 @@ Les servomoteurs sont des moteurs avec contrôle de position précis. Ils sont t
 ```cpp
 #include <Servo.h>
 
-Servo myServo;
-const int SERVO_PIN = 9;
+Servo myServo;  
+const int SERVO_PIN = 9;  
 
 void setup() {
   Serial.begin(9600);
@@ -571,8 +571,8 @@ void loop() {
 #### Code Delphi : Interface servomoteur
 
 ```pascal
-procedure TFormServoControl.TrackBarAngleChange(Sender: TObject);
-var
+procedure TFormServoControl.TrackBarAngleChange(Sender: TObject);  
+var  
   Angle: Integer;
 begin
   Angle := TrackBarAngle.Position;
@@ -583,18 +583,18 @@ begin
 end;
 
 // Boutons de position prédéfinie
-procedure TFormServoControl.ButtonCenterClick(Sender: TObject);
-begin
+procedure TFormServoControl.ButtonCenterClick(Sender: TObject);  
+begin  
   TrackBarAngle.Position := 90;
 end;
 
-procedure TFormServoControl.ButtonLeftClick(Sender: TObject);
-begin
+procedure TFormServoControl.ButtonLeftClick(Sender: TObject);  
+begin  
   TrackBarAngle.Position := 0;
 end;
 
-procedure TFormServoControl.ButtonRightClick(Sender: TObject);
-begin
+procedure TFormServoControl.ButtonRightClick(Sender: TObject);  
+begin  
   TrackBarAngle.Position := 180;
 end;
 ```
@@ -692,13 +692,13 @@ type
     procedure ClearScreen;
   end;
 
-constructor TLCDController.Create(AComPort: TComPort);
-begin
+constructor TLCDController.Create(AComPort: TComPort);  
+begin  
   FComPort := AComPort;
 end;
 
-procedure TLCDController.DisplayText(Line, Column: Integer; const Text: string);
-var
+procedure TLCDController.DisplayText(Line, Column: Integer; const Text: string);  
+var  
   Command: string;
 begin
   if not FComPort.Connected then Exit;
@@ -708,15 +708,15 @@ begin
   FComPort.WriteStr(Command + #13#10);
 end;
 
-procedure TLCDController.ClearScreen;
-begin
+procedure TLCDController.ClearScreen;  
+begin  
   if FComPort.Connected then
     FComPort.WriteStr('LCD_CLEAR:' + #13#10);
 end;
 
 // Utilisation
-procedure TFormMain.UpdateLCDDisplay;
-var
+procedure TFormMain.UpdateLCDDisplay;  
+var  
   TempText, HumText: string;
 begin
   TempText := Format('Temp: %.1fC', [CurrentTemperature]);
@@ -823,21 +823,21 @@ void loop() {
 #### Code Delphi : Contrôle audio
 
 ```pascal
-procedure TFormMain.PlaySound(const SoundType: string);
-begin
+procedure TFormMain.PlaySound(const SoundType: string);  
+begin  
   if ComPort1.Connected then
     ComPort1.WriteStr('BUZZER:' + SoundType + #13#10);
 end;
 
 // Utilisation
-procedure TFormMain.ShowAlert(const Message: string);
-begin
+procedure TFormMain.ShowAlert(const Message: string);  
+begin  
   PlaySound('ERROR');
   ShowMessage(Message);
 end;
 
-procedure TFormMain.OperationSuccess;
-begin
+procedure TFormMain.OperationSuccess;  
+begin  
   PlaySound('SUCCESS');
   StatusBar1.Panels[0].Text := 'Opération réussie';
 end;
@@ -853,13 +853,13 @@ Lorsque vous contrôlez plusieurs périphériques, organisez votre code de mani�
 
 ```cpp
 // Configuration des broches
-const int LED_PIN = 13;
-const int RELAY1_PIN = 7;
-const int RELAY2_PIN = 8;
-const int MOTOR_IN1 = 9;
-const int MOTOR_IN2 = 10;
-const int MOTOR_ENA = 11;
-const int BUZZER_PIN = 6;
+const int LED_PIN = 13;  
+const int RELAY1_PIN = 7;  
+const int RELAY2_PIN = 8;  
+const int MOTOR_IN1 = 9;  
+const int MOTOR_IN2 = 10;  
+const int MOTOR_ENA = 11;  
+const int BUZZER_PIN = 6;  
 
 void setup() {
   Serial.begin(9600);
@@ -1033,13 +1033,13 @@ type
 
 implementation
 
-constructor TDeviceController.Create(AComPort: TComPort);
-begin
+constructor TDeviceController.Create(AComPort: TComPort);  
+begin  
   FComPort := AComPort;
 end;
 
-function TDeviceController.SendCommand(const Device, Action, Param: string): Boolean;
-var
+function TDeviceController.SendCommand(const Device, Action, Param: string): Boolean;  
+var  
   Command: string;
 begin
   Result := False;
@@ -1054,50 +1054,50 @@ begin
   Result := True;
 end;
 
-procedure TDeviceController.LEDOn;
-begin
+procedure TDeviceController.LEDOn;  
+begin  
   SendCommand('LED', 'ON');
 end;
 
-procedure TDeviceController.LEDOff;
-begin
+procedure TDeviceController.LEDOff;  
+begin  
   SendCommand('LED', 'OFF');
 end;
 
-procedure TDeviceController.RelayOn(RelayNumber: Integer);
-begin
+procedure TDeviceController.RelayOn(RelayNumber: Integer);  
+begin  
   SendCommand('RELAY' + IntToStr(RelayNumber), 'ON');
 end;
 
-procedure TDeviceController.RelayOff(RelayNumber: Integer);
-begin
+procedure TDeviceController.RelayOff(RelayNumber: Integer);  
+begin  
   SendCommand('RELAY' + IntToStr(RelayNumber), 'OFF');
 end;
 
-procedure TDeviceController.MotorForward(Speed: Integer);
-begin
+procedure TDeviceController.MotorForward(Speed: Integer);  
+begin  
   Speed := EnsureRange(Speed, 0, 255);
   SendCommand('MOTOR', 'FWD', IntToStr(Speed));
 end;
 
-procedure TDeviceController.MotorReverse(Speed: Integer);
-begin
+procedure TDeviceController.MotorReverse(Speed: Integer);  
+begin  
   Speed := EnsureRange(Speed, 0, 255);
   SendCommand('MOTOR', 'REV', IntToStr(Speed));
 end;
 
-procedure TDeviceController.MotorStop;
-begin
+procedure TDeviceController.MotorStop;  
+begin  
   SendCommand('MOTOR', 'STOP');
 end;
 
-procedure TDeviceController.PlayBeep;
-begin
+procedure TDeviceController.PlayBeep;  
+begin  
   SendCommand('BUZZER', 'BEEP');
 end;
 
-procedure TDeviceController.EmergencyStop;
-begin
+procedure TDeviceController.EmergencyStop;  
+begin  
   SendCommand('ALL', 'OFF');
 end;
 
@@ -1142,8 +1142,8 @@ void setup() {
 Implémenter un système de surveillance :
 
 ```cpp
-unsigned long lastCommandTime = 0;
-const unsigned long TIMEOUT = 5000; // 5 secondes
+unsigned long lastCommandTime = 0;  
+const unsigned long TIMEOUT = 5000; // 5 secondes  
 
 void loop() {
   // Vérifier le timeout
@@ -1187,8 +1187,8 @@ void handleMotor(String action, String param) {
 #### Gestion des erreurs complète
 
 ```pascal
-procedure TFormMain.SafeControlDevice(const Command: string);
-var
+procedure TFormMain.SafeControlDevice(const Command: string);  
+var  
   RetryCount: Integer;
   MaxRetries: Integer;
 begin
@@ -1232,8 +1232,8 @@ end;
 #### Bouton d'arrêt d'urgence
 
 ```pascal
-procedure TFormMain.ButtonEmergencyStopClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonEmergencyStopClick(Sender: TObject);  
+begin  
   try
     DeviceController.EmergencyStop;
 

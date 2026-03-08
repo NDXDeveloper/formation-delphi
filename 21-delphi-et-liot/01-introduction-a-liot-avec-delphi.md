@@ -190,9 +190,9 @@ Permettent la communication avec des dispositifs via port série (RS232, USB).
 ### Communication réseau
 
 ```
-TIdTCPClient / TIdTCPServer (Indy)
-TRESTClient
-TNetHTTPClient
+TIdTCPClient / TIdTCPServer (Indy)  
+TRESTClient  
+TNetHTTPClient  
 ```
 
 Pour les communications via Internet ou réseau local.
@@ -200,18 +200,18 @@ Pour les communications via Internet ou réseau local.
 ### Gestion de données
 
 ```
-FireDAC : pour stocker les données IoT dans des bases de données
-TFDMemTable : tables en mémoire pour le traitement rapide
-JSON et REST : pour l'échange de données
+FireDAC : pour stocker les données IoT dans des bases de données  
+TFDMemTable : tables en mémoire pour le traitement rapide  
+JSON et REST : pour l'échange de données  
 ```
 
 ### Interface utilisateur
 
 ```
-TChart (TeeChart) : pour les graphiques en temps réel
-TGauge : pour afficher des jauges et indicateurs
-TProgressBar : pour visualiser des niveaux
-Composants FireMonkey : pour le multi-plateforme
+TChart (TeeChart) : pour les graphiques en temps réel  
+TGauge : pour afficher des jauges et indicateurs  
+TProgressBar : pour visualiser des niveaux  
+Composants FireMonkey : pour le multi-plateforme  
 ```
 
 ## Avantages de Delphi pour les débutants en IoT

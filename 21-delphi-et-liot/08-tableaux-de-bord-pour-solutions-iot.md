@@ -120,8 +120,8 @@ type
 
 implementation
 
-constructor TKPIWidget.Create(AOwner: TComponent);
-begin
+constructor TKPIWidget.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
 
   Width := 200;
@@ -174,8 +174,8 @@ begin
   UpdateDisplay;
 end;
 
-procedure TKPIWidget.UpdateDisplay;
-var
+procedure TKPIWidget.UpdateDisplay;  
+var  
   StatusColor: TColor;
   StatusText, TrendArrow: string;
 begin
@@ -233,26 +233,26 @@ begin
     FTrendLabel.Font.Color := clGray;
 end;
 
-procedure TKPIWidget.SetTitle(const Value: string);
-begin
+procedure TKPIWidget.SetTitle(const Value: string);  
+begin  
   FTitle := Value;
   UpdateDisplay;
 end;
 
-procedure TKPIWidget.SetValue(const Value: Double);
-begin
+procedure TKPIWidget.SetValue(const Value: Double);  
+begin  
   FValue := Value;
   UpdateDisplay;
 end;
 
-procedure TKPIWidget.SetStatus(const Value: TKPIStatus);
-begin
+procedure TKPIWidget.SetStatus(const Value: TKPIStatus);  
+begin  
   FStatus := Value;
   UpdateDisplay;
 end;
 
-procedure TKPIWidget.SetTrend(const Value: Double);
-begin
+procedure TKPIWidget.SetTrend(const Value: Double);  
+begin  
   FTrend := Value;
   UpdateDisplay;
 end;
@@ -263,8 +263,8 @@ end.
 ### Utilisation du widget KPI
 
 ```pascal
-procedure TFormDashboard.CreateKPIs;
-var
+procedure TFormDashboard.CreateKPIs;  
+var  
   KPI: TKPIWidget;
 begin
   // KPI Température
@@ -299,8 +299,8 @@ unit GaugeWidget;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Graphics,
-  Vcl.ExtCtrls, System.Math;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls,
+  Vcl.Graphics, Vcl.ExtCtrls, System.Math;
 
 type
   TGaugeWidget = class(TCustomControl)
@@ -328,8 +328,8 @@ type
 
 implementation
 
-constructor TGaugeWidget.Create(AOwner: TComponent);
-begin
+constructor TGaugeWidget.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   Width := 200;
   Height := 200;
@@ -340,22 +340,22 @@ begin
   FCriticalThreshold := 90;
 end;
 
-procedure TGaugeWidget.SetValue(const Value: Double);
-begin
+procedure TGaugeWidget.SetValue(const Value: Double);  
+begin  
   FValue := EnsureRange(Value, FMinValue, FMaxValue);
   Invalidate;
 end;
 
-function TGaugeWidget.GetPercentage: Double;
-begin
+function TGaugeWidget.GetPercentage: Double;  
+begin  
   if FMaxValue > FMinValue then
     Result := (FValue - FMinValue) / (FMaxValue - FMinValue) * 100
   else
     Result := 0;
 end;
 
-procedure TGaugeWidget.Paint;
-var
+procedure TGaugeWidget.Paint;  
+var  
   CenterX, CenterY, Radius: Integer;
   StartAngle, SweepAngle: Integer;
   Rect: TRect;
@@ -396,7 +396,7 @@ begin
   StartAngle := 180;
   SweepAngle := Round(180 * Percentage / 100);
 
-  Canvas.AngleArc(CenterX, CenterY, Radius, StartAngle, -SweepAngle);
+  Winapi.Windows.AngleArc(Canvas.Handle, CenterX, CenterY, Radius, StartAngle, -SweepAngle);
 
   // Texte central - Titre
   Canvas.Brush.Style := bsClear;
@@ -455,8 +455,8 @@ type
 
 implementation
 
-constructor TRealtimeChartManager.Create(Chart: TChart; MaxPoints: Integer);
-begin
+constructor TRealtimeChartManager.Create(Chart: TChart; MaxPoints: Integer);  
+begin  
   inherited Create;
   FChart := Chart;
   FMaxPoints := MaxPoints;
@@ -468,8 +468,8 @@ begin
   ConfigureChart;
 end;
 
-procedure TRealtimeChartManager.ConfigureChart;
-begin
+procedure TRealtimeChartManager.ConfigureChart;  
+begin  
   // Configuration du graphique
   FChart.Title.Visible := False;
   FChart.Legend.Visible := False;
@@ -495,8 +495,8 @@ begin
   FSeries.XValues.DateTime := True;
 end;
 
-procedure TRealtimeChartManager.AddDataPoint(Timestamp: TDateTime; Value: Double);
-begin
+procedure TRealtimeChartManager.AddDataPoint(Timestamp: TDateTime; Value: Double);  
+begin  
   FSeries.AddXY(Timestamp, Value);
 
   // Limiter le nombre de points
@@ -513,8 +513,8 @@ begin
   end;
 end;
 
-procedure TRealtimeChartManager.Clear;
-begin
+procedure TRealtimeChartManager.Clear;  
+begin  
   FSeries.Clear;
 end;
 
@@ -552,8 +552,8 @@ type
 
 implementation
 
-constructor TDeviceStatusGrid.Create(AOwner: TComponent);
-begin
+constructor TDeviceStatusGrid.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
 
   FDevices := TList<TIoTDevice>.Create;
@@ -579,14 +579,14 @@ begin
   ColWidths[4] := 80;
 end;
 
-destructor TDeviceStatusGrid.Destroy;
-begin
+destructor TDeviceStatusGrid.Destroy;  
+begin  
   FDevices.Free;
   inherited;
 end;
 
-procedure TDeviceStatusGrid.SetDevices(Devices: TArray<TIoTDevice>);
-var
+procedure TDeviceStatusGrid.SetDevices(Devices: TArray<TIoTDevice>);  
+var  
   Device: TIoTDevice;
 begin
   FDevices.Clear;
@@ -596,8 +596,8 @@ begin
   UpdateGrid;
 end;
 
-procedure TDeviceStatusGrid.UpdateGrid;
-var
+procedure TDeviceStatusGrid.UpdateGrid;  
+var  
   I: Integer;
   Device: TIoTDevice;
   TypeStr: string;
@@ -635,8 +635,8 @@ begin
   end;
 end;
 
-function TDeviceStatusGrid.GetStatusColor(Status: TDeviceStatus): TColor;
-begin
+function TDeviceStatusGrid.GetStatusColor(Status: TDeviceStatus): TColor;  
+begin  
   case Status of
     dsOnline: Result := $0000C000;     // Vert
     dsOffline: Result := $00808080;    // Gris
@@ -736,19 +736,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMainDashboard.FormCreate(Sender: TObject);
-begin
+procedure TFormMainDashboard.FormCreate(Sender: TObject);  
+begin  
   CreateWidgets;
   TimerUpdate.Enabled := True;
 end;
 
-procedure TFormMainDashboard.FormDestroy(Sender: TObject);
-begin
+procedure TFormMainDashboard.FormDestroy(Sender: TObject);  
+begin  
   FChartManager.Free;
 end;
 
-procedure TFormMainDashboard.CreateWidgets;
-begin
+procedure TFormMainDashboard.CreateWidgets;  
+begin  
   // === Zone KPIs (en haut) ===
   PanelKPIs.Height := 140;
   PanelKPIs.Align := alTop;
@@ -840,8 +840,8 @@ begin
   FMemoAlerts.Color := $00FFF5EE; // Beige clair
 end;
 
-procedure TFormMainDashboard.UpdateDashboard;
-var
+procedure TFormMainDashboard.UpdateDashboard;  
+var  
   Devices: TArray<TIoTDevice>;
   Device: TIoTDevice;
   TempSum, HumSum: Double;
@@ -924,8 +924,8 @@ begin
   FDeviceGrid.SetDevices(Devices);
 end;
 
-procedure TFormMainDashboard.TimerUpdateTimer(Sender: TObject);
-begin
+procedure TFormMainDashboard.TimerUpdateTimer(Sender: TObject);  
+begin  
   UpdateDashboard;
 end;
 
@@ -959,13 +959,13 @@ implementation
 
 {$R *.fmx}
 
-procedure TFormFMXDashboard.FormCreate(Sender: TObject);
-begin
+procedure TFormFMXDashboard.FormCreate(Sender: TObject);  
+begin  
   CreateResponsiveLayout;
 end;
 
-procedure TFormFMXDashboard.CreateResponsiveLayout;
-var
+procedure TFormFMXDashboard.CreateResponsiveLayout;  
+var  
   ScrollBox: TVertScrollBox;
   Layout: TLayout;
 begin
@@ -1038,8 +1038,8 @@ unit MapVisualization;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls,
-  Vcl.Graphics, System.Generics.Collections, IoTDevice;
+  System.SysUtils, System.Classes, System.Math, Vcl.Controls,
+  Vcl.ExtCtrls, Vcl.Graphics, System.Generics.Collections, IoTDevice;
 
 type
   TMapPoint = record
@@ -1071,8 +1071,8 @@ type
 
 implementation
 
-constructor TMapWidget.Create(AOwner: TComponent);
-begin
+constructor TMapWidget.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   FPoints := TList<TMapPoint>.Create;
   FCenterLat := 48.8566; // Paris par défaut
@@ -1082,26 +1082,26 @@ begin
   Height := 600;
 end;
 
-destructor TMapWidget.Destroy;
-begin
+destructor TMapWidget.Destroy;  
+begin  
   FPoints.Free;
   inherited;
 end;
 
-procedure TMapWidget.AddPoint(const Point: TMapPoint);
-begin
+procedure TMapWidget.AddPoint(const Point: TMapPoint);  
+begin  
   FPoints.Add(Point);
   Invalidate;
 end;
 
-procedure TMapWidget.Clear;
-begin
+procedure TMapWidget.Clear;  
+begin  
   FPoints.Clear;
   Invalidate;
 end;
 
-function TMapWidget.LatLonToPixel(Lat, Lon: Double): TPoint;
-var
+function TMapWidget.LatLonToPixel(Lat, Lon: Double): TPoint;  
+var  
   Scale: Double;
 begin
   // Projection simplifiée (pour une vraie carte, utiliser une projection Mercator)
@@ -1111,8 +1111,8 @@ begin
   Result.Y := Round((FCenterLat - Lat) * Scale) + Height div 2;
 end;
 
-procedure TMapWidget.Paint;
-var
+procedure TMapWidget.Paint;  
+var  
   Point: TMapPoint;
   PixelPos: TPoint;
   MarkerRect: TRect;
@@ -1219,6 +1219,7 @@ type
 
     procedure CreateAlertWidget(Alert: TAlertItem);
     procedure RebuildDisplay;
+    procedure HandleAcknowledgeClick(Sender: TObject);
     function GetSeverityColor(Severity: TAlertSeverity): TColor;
     function GetSeverityText(Severity: TAlertSeverity): string;
   public
@@ -1234,16 +1235,16 @@ type
 
 implementation
 
-constructor TAlertPanel.Create(AOwner: TComponent);
-begin
+constructor TAlertPanel.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   FAlerts := TObjectList<TAlertItem>.Create(True);
   FMaxAlerts := 50;
   Color := clWhite;
 end;
 
-destructor TAlertPanel.Destroy;
-begin
+destructor TAlertPanel.Destroy;  
+begin  
   FAlerts.Free;
   inherited;
 end;
@@ -1270,8 +1271,8 @@ begin
   RebuildDisplay;
 end;
 
-procedure TAlertPanel.RebuildDisplay;
-var
+procedure TAlertPanel.RebuildDisplay;  
+var  
   Alert: TAlertItem;
 begin
   // Supprimer tous les contrôles existants
@@ -1283,8 +1284,8 @@ begin
     CreateAlertWidget(Alert);
 end;
 
-function TAlertPanel.GetSeverityColor(Severity: TAlertSeverity): TColor;
-begin
+function TAlertPanel.GetSeverityColor(Severity: TAlertSeverity): TColor;  
+begin  
   case Severity of
     asInfo: Result := $00E8F5E9;      // Vert très clair
     asWarning: Result := $00E1F5FE;   // Bleu clair
@@ -1294,8 +1295,8 @@ begin
   end;
 end;
 
-function TAlertPanel.GetSeverityText(Severity: TAlertSeverity): string;
-begin
+function TAlertPanel.GetSeverityText(Severity: TAlertSeverity): string;  
+begin  
   case Severity of
     asInfo: Result := 'ℹ️ Info';
     asWarning: Result := '⚠️ Attention';
@@ -1305,8 +1306,8 @@ begin
   end;
 end;
 
-procedure TAlertPanel.CreateAlertWidget(Alert: TAlertItem);
-var
+procedure TAlertPanel.CreateAlertWidget(Alert: TAlertItem);  
+var  
   Panel: TPanel;
   LabelSeverity, LabelDevice, LabelMessage, LabelTime: TLabel;
   ButtonAck: TButton;
@@ -1364,22 +1365,24 @@ begin
     ButtonAck.Top := 25;
     ButtonAck.Width := 100;
     ButtonAck.Caption := 'Acquitter';
-    ButtonAck.Tag := Integer(Pointer(Alert));
-    ButtonAck.OnClick := procedure(Sender: TObject)
-    begin
-      AcknowledgeAlert(TAlertItem(Pointer((Sender as TButton).Tag)));
-    end;
+    ButtonAck.Tag := NativeInt(Alert);
+    ButtonAck.OnClick := HandleAcknowledgeClick;
   end;
 end;
 
-procedure TAlertPanel.AcknowledgeAlert(Alert: TAlertItem);
-begin
+procedure TAlertPanel.HandleAcknowledgeClick(Sender: TObject);  
+begin  
+  AcknowledgeAlert(TAlertItem(Pointer((Sender as TButton).Tag)));
+end;
+
+procedure TAlertPanel.AcknowledgeAlert(Alert: TAlertItem);  
+begin  
   Alert.Acknowledged := True;
   RebuildDisplay;
 end;
 
-procedure TAlertPanel.Clear;
-begin
+procedure TAlertPanel.Clear;  
+begin  
   FAlerts.Clear;
   RebuildDisplay;
 end;
@@ -1392,8 +1395,8 @@ end.
 ### Génération de rapports PDF
 
 ```pascal
-procedure TFormDashboard.GenerateReport;
-var
+procedure TFormDashboard.GenerateReport;  
+var  
   Report: TStringList;
   FileName: string;
 begin
@@ -1431,8 +1434,8 @@ end;
 ### Export des données en CSV
 
 ```pascal
-procedure TFormDashboard.ExportToCSV;
-var
+procedure TFormDashboard.ExportToCSV;  
+var  
   CSV: TStringList;
   Devices: TArray<TIoTDevice>;
   Device: TIoTDevice;
@@ -1472,8 +1475,8 @@ end;
 ### Adaptation à différentes tailles d'écran
 
 ```pascal
-procedure TFormDashboard.AdaptLayout;
-var
+procedure TFormDashboard.AdaptLayout;  
+var  
   IsSmallScreen: Boolean;
 begin
   IsSmallScreen := Width < 1024;
@@ -1497,8 +1500,8 @@ begin
   end;
 end;
 
-procedure TFormDashboard.FormResize(Sender: TObject);
-begin
+procedure TFormDashboard.FormResize(Sender: TObject);  
+begin  
   AdaptLayout;
 end;
 ```
@@ -1511,8 +1514,8 @@ end;
 type
   TDashboardTheme = (dtLight, dtDark);
 
-procedure TFormDashboard.ApplyTheme(Theme: TDashboardTheme);
-begin
+procedure TFormDashboard.ApplyTheme(Theme: TDashboardTheme);  
+begin  
   case Theme of
     dtLight:
       begin
@@ -1545,8 +1548,8 @@ end;
 ### Mise à jour sélective
 
 ```pascal
-procedure TFormDashboard.UpdateDashboardOptimized;
-var
+procedure TFormDashboard.UpdateDashboardOptimized;  
+var  
   UpdateInterval: Integer;
 begin
   Inc(FUpdateCounter);
@@ -1571,8 +1574,8 @@ end;
 ### Double buffering pour éviter le scintillement
 
 ```pascal
-constructor TCustomWidget.Create(AOwner: TComponent);
-begin
+constructor TCustomWidget.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   DoubleBuffered := True; // Évite le scintillement
 end;

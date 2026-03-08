@@ -112,8 +112,8 @@ uses
 
 { TDataValidator }
 
-class function TDataValidator.Validate(const Reading: TSensorReading): Boolean;
-begin
+class function TDataValidator.Validate(const Reading: TSensorReading): Boolean;  
+begin  
   Result := True;
 
   // Vérifier que le timestamp est valide
@@ -153,8 +153,8 @@ end;
 
 { TDataFilter }
 
-class function TDataFilter.ApplyMedianFilter(const Values: TArray<Double>): Double;
-var
+class function TDataFilter.ApplyMedianFilter(const Values: TArray<Double>): Double;  
+var  
   SortedValues: TArray<Double>;
   Count: Integer;
 begin
@@ -177,8 +177,8 @@ begin
     Result := SortedValues[Count div 2];
 end;
 
-class function TDataFilter.ApplyMovingAverage(const Values: TArray<Double>; WindowSize: Integer): Double;
-var
+class function TDataFilter.ApplyMovingAverage(const Values: TArray<Double>; WindowSize: Integer): Double;  
+var  
   I, Count, StartIdx: Integer;
   Sum: Double;
 begin
@@ -205,21 +205,21 @@ end;
 
 { TDataProcessor }
 
-constructor TDataProcessor.Create(BufferSize: Integer);
-begin
+constructor TDataProcessor.Create(BufferSize: Integer);  
+begin  
   inherited Create;
   FBufferSize := BufferSize;
   FReadingBuffer := TList<TSensorReading>.Create;
 end;
 
-destructor TDataProcessor.Destroy;
-begin
+destructor TDataProcessor.Destroy;  
+begin  
   FReadingBuffer.Free;
   inherited;
 end;
 
-function TDataProcessor.Process(const Reading: TSensorReading): TProcessedData;
-var
+function TDataProcessor.Process(const Reading: TSensorReading): TProcessedData;  
+var  
   Values: TArray<Double>;
   I: Integer;
 begin
@@ -289,22 +289,22 @@ type
 
 implementation
 
-constructor TMovingAverageFilter.Create(WindowSize: Integer);
-begin
+constructor TMovingAverageFilter.Create(WindowSize: Integer);  
+begin  
   inherited Create;
   FWindowSize := WindowSize;
   FValues := TQueue<Double>.Create;
   FSum := 0;
 end;
 
-destructor TMovingAverageFilter.Destroy;
-begin
+destructor TMovingAverageFilter.Destroy;  
+begin  
   FValues.Free;
   inherited;
 end;
 
-function TMovingAverageFilter.AddValue(Value: Double): Double;
-var
+function TMovingAverageFilter.AddValue(Value: Double): Double;  
+var  
   OldValue: Double;
 begin
   // Ajouter la nouvelle valeur
@@ -321,16 +321,16 @@ begin
   Result := GetAverage;
 end;
 
-function TMovingAverageFilter.GetAverage: Double;
-begin
+function TMovingAverageFilter.GetAverage: Double;  
+begin  
   if FValues.Count > 0 then
     Result := FSum / FValues.Count
   else
     Result := 0;
 end;
 
-procedure TMovingAverageFilter.Reset;
-begin
+procedure TMovingAverageFilter.Reset;  
+begin  
   FValues.Clear;
   FSum := 0;
 end;
@@ -366,8 +366,8 @@ type
 
 implementation
 
-constructor TKalmanFilter.Create(MeasurementNoise, ProcessNoise: Double);
-begin
+constructor TKalmanFilter.Create(MeasurementNoise, ProcessNoise: Double);  
+begin  
   inherited Create;
   FMeasurementNoise := MeasurementNoise;
   FProcessNoise := ProcessNoise;
@@ -375,8 +375,8 @@ begin
   FInitialized := False;
 end;
 
-function TKalmanFilter.Update(Measurement: Double): Double;
-var
+function TKalmanFilter.Update(Measurement: Double): Double;  
+var  
   KalmanGain: Double;
 begin
   // Initialiser avec la première mesure
@@ -401,8 +401,8 @@ begin
   Result := FEstimate;
 end;
 
-procedure TKalmanFilter.Reset;
-begin
+procedure TKalmanFilter.Reset;  
+begin  
   FInitialized := False;
   FEstimateError := 1;
 end;
@@ -473,14 +473,14 @@ implementation
 uses
   System.Math;
 
-constructor TStreamingStatistics.Create;
-begin
+constructor TStreamingStatistics.Create;  
+begin  
   inherited Create;
   Reset;
 end;
 
-procedure TStreamingStatistics.AddValue(Value: Double);
-begin
+procedure TStreamingStatistics.AddValue(Value: Double);  
+begin  
   if FCount = 0 then
   begin
     FMin := Value;
@@ -497,8 +497,8 @@ begin
   FSumSquares := FSumSquares + (Value * Value);
 end;
 
-procedure TStreamingStatistics.Reset;
-begin
+procedure TStreamingStatistics.Reset;  
+begin  
   FCount := 0;
   FSum := 0;
   FSumSquares := 0;
@@ -506,16 +506,16 @@ begin
   FMax := 0;
 end;
 
-function TStreamingStatistics.GetMean: Double;
-begin
+function TStreamingStatistics.GetMean: Double;  
+begin  
   if FCount > 0 then
     Result := FSum / FCount
   else
     Result := 0;
 end;
 
-function TStreamingStatistics.GetVariance: Double;
-var
+function TStreamingStatistics.GetVariance: Double;  
+var  
   Mean: Double;
 begin
   if FCount > 1 then
@@ -527,23 +527,23 @@ begin
     Result := 0;
 end;
 
-function TStreamingStatistics.GetStdDev: Double;
-begin
+function TStreamingStatistics.GetStdDev: Double;  
+begin  
   Result := Sqrt(GetVariance);
 end;
 
-function TStreamingStatistics.GetMin: Double;
-begin
+function TStreamingStatistics.GetMin: Double;  
+begin  
   Result := FMin;
 end;
 
-function TStreamingStatistics.GetMax: Double;
-begin
+function TStreamingStatistics.GetMax: Double;  
+begin  
   Result := FMax;
 end;
 
-function TStreamingStatistics.GetCount: Int64;
-begin
+function TStreamingStatistics.GetCount: Int64;  
+begin  
   Result := FCount;
 end;
 
@@ -593,8 +593,8 @@ type
 
 implementation
 
-constructor TWindowAggregator.Create(WindowDurationSeconds, MaxHistory: Integer);
-begin
+constructor TWindowAggregator.Create(WindowDurationSeconds, MaxHistory: Integer);  
+begin  
   inherited Create;
   FWindowDuration := WindowDurationSeconds;
   FMaxHistorySize := MaxHistory;
@@ -602,14 +602,14 @@ begin
   InitializeWindow(Now);
 end;
 
-destructor TWindowAggregator.Destroy;
-begin
+destructor TWindowAggregator.Destroy;  
+begin  
   FWindowHistory.Free;
   inherited;
 end;
 
-procedure TWindowAggregator.InitializeWindow(StartTime: TDateTime);
-begin
+procedure TWindowAggregator.InitializeWindow(StartTime: TDateTime);  
+begin  
   FCurrentWindow.StartTime := StartTime;
   FCurrentWindow.EndTime := IncSecond(StartTime, FWindowDuration);
   FCurrentWindow.Count := 0;
@@ -618,8 +618,8 @@ begin
   FCurrentWindow.Max := -MaxDouble;
 end;
 
-procedure TWindowAggregator.FinalizeWindow;
-begin
+procedure TWindowAggregator.FinalizeWindow;  
+begin  
   if FCurrentWindow.Count > 0 then
   begin
     FCurrentWindow.Mean := FCurrentWindow.Sum / FCurrentWindow.Count;
@@ -633,8 +633,8 @@ begin
   end;
 end;
 
-procedure TWindowAggregator.AddValue(Timestamp: TDateTime; Value: Double);
-begin
+procedure TWindowAggregator.AddValue(Timestamp: TDateTime; Value: Double);  
+begin  
   // Si la valeur est en dehors de la fenêtre actuelle, finaliser et créer une nouvelle
   if Timestamp >= FCurrentWindow.EndTime then
   begin
@@ -653,18 +653,18 @@ begin
     FCurrentWindow.Max := Value;
 end;
 
-function TWindowAggregator.GetCurrentWindow: TTimeWindow;
-begin
+function TWindowAggregator.GetCurrentWindow: TTimeWindow;  
+begin  
   Result := FCurrentWindow;
 end;
 
-function TWindowAggregator.GetWindowHistory: TArray<TTimeWindow>;
-begin
+function TWindowAggregator.GetWindowHistory: TArray<TTimeWindow>;  
+begin  
   Result := FWindowHistory.ToArray;
 end;
 
-function TWindowAggregator.GetWindowAt(Timestamp: TDateTime): TTimeWindow;
-var
+function TWindowAggregator.GetWindowAt(Timestamp: TDateTime): TTimeWindow;  
+var  
   Window: TTimeWindow;
 begin
   // Chercher la fenêtre contenant ce timestamp
@@ -722,15 +722,15 @@ implementation
 uses
   System.Math;
 
-constructor TThresholdDetector.Create(MinThreshold, MaxThreshold: Double);
-begin
+constructor TThresholdDetector.Create(MinThreshold, MaxThreshold: Double);  
+begin  
   inherited Create;
   FMinThreshold := MinThreshold;
   FMaxThreshold := MaxThreshold;
 end;
 
-function TThresholdDetector.Detect(Value: Double): TAnomalyResult;
-begin
+function TThresholdDetector.Detect(Value: Double): TAnomalyResult;  
+begin  
   Result.Value := Value;
   Result.IsAnomaly := False;
   Result.AnomalyType := atNone;
@@ -776,21 +776,21 @@ type
 
 implementation
 
-constructor TStatisticalDetector.Create(ZScoreThreshold: Double);
-begin
+constructor TStatisticalDetector.Create(ZScoreThreshold: Double);  
+begin  
   inherited Create;
   FStats := TStreamingStatistics.Create;
   FZScoreThreshold := ZScoreThreshold;
 end;
 
-destructor TStatisticalDetector.Destroy;
-begin
+destructor TStatisticalDetector.Destroy;  
+begin  
   FStats.Free;
   inherited;
 end;
 
-function TStatisticalDetector.Detect(Value: Double): TAnomalyResult;
-var
+function TStatisticalDetector.Detect(Value: Double): TAnomalyResult;  
+var  
   Mean, StdDev, ZScore: Double;
 begin
   Result.Value := Value;
@@ -837,8 +837,8 @@ begin
   FLastValue := Value;
 end;
 
-procedure TStatisticalDetector.Reset;
-begin
+procedure TStatisticalDetector.Reset;  
+begin  
   FStats.Reset;
 end;
 
@@ -864,15 +864,15 @@ type
     procedure Reset;
   end;
 
-constructor TRateOfChangeDetector.Create(MaxChangeRate: Double);
-begin
+constructor TRateOfChangeDetector.Create(MaxChangeRate: Double);  
+begin  
   inherited Create;
   FMaxChangeRate := MaxChangeRate;
   FInitialized := False;
 end;
 
-function TRateOfChangeDetector.Detect(Timestamp: TDateTime; Value: Double): TAnomalyResult;
-var
+function TRateOfChangeDetector.Detect(Timestamp: TDateTime; Value: Double): TAnomalyResult;  
+var  
   TimeDelta, ValueDelta, ChangeRate: Double;
 begin
   Result.Value := Value;
@@ -912,8 +912,8 @@ begin
   FLastTimestamp := Timestamp;
 end;
 
-procedure TRateOfChangeDetector.Reset;
-begin
+procedure TRateOfChangeDetector.Reset;  
+begin  
   FInitialized := False;
 end;
 
@@ -956,8 +956,8 @@ type
 
 implementation
 
-constructor TDataProcessingThread.Create;
-begin
+constructor TDataProcessingThread.Create;  
+begin  
   inherited Create(False);
   FreeOnTerminate := False;
 
@@ -965,8 +965,8 @@ begin
   FProcessor := TDataProcessor.Create(20);
 end;
 
-destructor TDataProcessingThread.Destroy;
-begin
+destructor TDataProcessingThread.Destroy;  
+begin  
   Terminate;
   WaitFor;
 
@@ -975,13 +975,13 @@ begin
   inherited;
 end;
 
-procedure TDataProcessingThread.AddReading(const Reading: TSensorReading);
-begin
+procedure TDataProcessingThread.AddReading(const Reading: TSensorReading);  
+begin  
   FInputQueue.PushItem(Reading);
 end;
 
-procedure TDataProcessingThread.ProcessData;
-var
+procedure TDataProcessingThread.ProcessData;  
+var  
   Reading: TSensorReading;
   Processed: TProcessedData;
 begin
@@ -1001,8 +1001,8 @@ begin
   end;
 end;
 
-procedure TDataProcessingThread.Execute;
-begin
+procedure TDataProcessingThread.Execute;  
+begin  
   while not Terminated do
   begin
     ProcessData;
@@ -1040,8 +1040,8 @@ type
 
 implementation
 
-constructor TProcessingPool.Create(ThreadCount: Integer);
-var
+constructor TProcessingPool.Create(ThreadCount: Integer);  
+var  
   I: Integer;
   Thread: TDataProcessingThread;
 begin
@@ -1056,22 +1056,22 @@ begin
   end;
 end;
 
-destructor TProcessingPool.Destroy;
-begin
+destructor TProcessingPool.Destroy;  
+begin  
   FThreads.Free;
   inherited;
 end;
 
-procedure TProcessingPool.AddReading(const Reading: TSensorReading);
-begin
+procedure TProcessingPool.AddReading(const Reading: TSensorReading);  
+begin  
   // Distribution round-robin
   FThreads[FCurrentThread].AddReading(Reading);
 
   FCurrentThread := (FCurrentThread + 1) mod FThreads.Count;
 end;
 
-procedure TProcessingPool.SetOnDataProcessed(Event: TDataProcessedEvent);
-var
+procedure TProcessingPool.SetOnDataProcessed(Event: TDataProcessedEvent);  
+var  
   Thread: TDataProcessingThread;
 begin
   for Thread in FThreads do
@@ -1135,8 +1135,8 @@ implementation
 
 { TRule }
 
-function TRule.Evaluate(const Data: TProcessedData): Boolean;
-begin
+function TRule.Evaluate(const Data: TProcessedData): Boolean;  
+begin  
   if not FEnabled then
   begin
     Result := False;
@@ -1165,8 +1165,8 @@ begin
   end;
 end;
 
-procedure TRule.Execute(const Data: TProcessedData);
-begin
+procedure TRule.Execute(const Data: TProcessedData);  
+begin  
   case FAction of
     raLog:
       begin
@@ -1197,25 +1197,25 @@ end;
 
 { TRulesEngine }
 
-constructor TRulesEngine.Create;
-begin
+constructor TRulesEngine.Create;  
+begin  
   inherited Create;
   FRules := TObjectList<TRule>.Create(True);
 end;
 
-destructor TRulesEngine.Destroy;
-begin
+destructor TRulesEngine.Destroy;  
+begin  
   FRules.Free;
   inherited;
 end;
 
-procedure TRulesEngine.AddRule(Rule: TRule);
-begin
+procedure TRulesEngine.AddRule(Rule: TRule);  
+begin  
   FRules.Add(Rule);
 end;
 
-procedure TRulesEngine.ProcessData(const Data: TProcessedData);
-var
+procedure TRulesEngine.ProcessData(const Data: TProcessedData);  
+var  
   Rule: TRule;
 begin
   for Rule in FRules do
@@ -1231,8 +1231,8 @@ end.
 ### Exemple d'utilisation du moteur de règles
 
 ```pascal
-procedure TFormMain.SetupRules;
-var
+procedure TFormMain.SetupRules;  
+var  
   Rule: TRule;
 begin
   RulesEngine := TRulesEngine.Create;
@@ -1268,8 +1268,8 @@ begin
   RulesEngine.AddRule(Rule);
 end;
 
-procedure TFormMain.OnDataProcessed(const Data: TProcessedData);
-begin
+procedure TFormMain.OnDataProcessed(const Data: TProcessedData);  
+begin  
   // Appliquer les règles
   RulesEngine.ProcessData(Data);
 
@@ -1311,29 +1311,29 @@ type
 
 implementation
 
-constructor TLRUCache<TKey, TValue>.Create(Capacity: Integer);
-begin
+constructor TLRUCache<TKey, TValue>.Create(Capacity: Integer);  
+begin  
   inherited Create;
   FCapacity := Capacity;
   FCache := TDictionary<TKey, TValue>.Create;
   FAccessOrder := TList<TKey>.Create;
 end;
 
-destructor TLRUCache<TKey, TValue>.Destroy;
-begin
+destructor TLRUCache<TKey, TValue>.Destroy;  
+begin  
   FCache.Free;
   FAccessOrder.Free;
   inherited;
 end;
 
-procedure TLRUCache<TKey, TValue>.UpdateAccess(const Key: TKey);
-begin
+procedure TLRUCache<TKey, TValue>.UpdateAccess(const Key: TKey);  
+begin  
   FAccessOrder.Remove(Key);
   FAccessOrder.Add(Key);
 end;
 
-procedure TLRUCache<TKey, TValue>.Put(const Key: TKey; const Value: TValue);
-var
+procedure TLRUCache<TKey, TValue>.Put(const Key: TKey; const Value: TValue);  
+var  
   OldestKey: TKey;
 begin
   // Si la clé existe, la mettre à jour
@@ -1357,15 +1357,15 @@ begin
   FAccessOrder.Add(Key);
 end;
 
-function TLRUCache<TKey, TValue>.TryGet(const Key: TKey; out Value: TValue): Boolean;
-begin
+function TLRUCache<TKey, TValue>.TryGet(const Key: TKey; out Value: TValue): Boolean;  
+begin  
   Result := FCache.TryGetValue(Key, Value);
   if Result then
     UpdateAccess(Key);
 end;
 
-procedure TLRUCache<TKey, TValue>.Clear;
-begin
+procedure TLRUCache<TKey, TValue>.Clear;  
+begin  
   FCache.Clear;
   FAccessOrder.Clear;
 end;
@@ -1421,8 +1421,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMonitoring.FormCreate(Sender: TObject);
-begin
+procedure TFormMonitoring.FormCreate(Sender: TObject);  
+begin  
   // Initialiser les composants
   FProcessingThread := TDataProcessingThread.Create;
   FProcessingThread.OnDataProcessed := OnDataProcessed;
@@ -1442,8 +1442,8 @@ begin
   Timer1.Enabled := True;
 end;
 
-procedure TFormMonitoring.FormDestroy(Sender: TObject);
-begin
+procedure TFormMonitoring.FormDestroy(Sender: TObject);  
+begin  
   Timer1.Enabled := False;
 
   FProcessingThread.Free;
@@ -1452,8 +1452,8 @@ begin
   FRulesEngine.Free;
 end;
 
-procedure TFormMonitoring.OnDataProcessed(const Data: TProcessedData);
-var
+procedure TFormMonitoring.OnDataProcessed(const Data: TProcessedData);  
+var  
   AnomalyResult: TAnomalyResult;
 begin
   // Ajouter aux statistiques
@@ -1483,16 +1483,16 @@ begin
   FRulesEngine.ProcessData(Data);
 end;
 
-procedure TFormMonitoring.UpdateStatistics;
-begin
+procedure TFormMonitoring.UpdateStatistics;  
+begin  
   LabelMean.Caption := Format('Moyenne: %.2f', [FStats.GetMean]);
   LabelStdDev.Caption := Format('Écart-type: %.2f', [FStats.GetStdDev]);
   LabelMin.Caption := Format('Min: %.2f', [FStats.GetMin]);
   LabelMax.Caption := Format('Max: %.2f', [FStats.GetMax]);
 end;
 
-procedure TFormMonitoring.SimulateDataInput;
-var
+procedure TFormMonitoring.SimulateDataInput;  
+var  
   Reading: TSensorReading;
   BaseValue, Noise: Double;
 begin
@@ -1514,8 +1514,8 @@ begin
   FProcessingThread.AddReading(Reading);
 end;
 
-procedure TFormMonitoring.Timer1Timer(Sender: TObject);
-begin
+procedure TFormMonitoring.Timer1Timer(Sender: TObject);  
+begin  
   SimulateDataInput;
   UpdateStatistics;
 end;
@@ -1532,8 +1532,8 @@ end.
 Traiter les données par lots plutôt qu'une par une :
 
 ```pascal
-procedure ProcessBatch(const Readings: TArray<TSensorReading>);
-var
+procedure ProcessBatch(const Readings: TArray<TSensorReading>);  
+var  
   Reading: TSensorReading;
 begin
   TParallel.For(0, Length(Readings) - 1, procedure(Index: Integer)
@@ -1548,8 +1548,8 @@ end;
 Réduire la fréquence d'échantillonnage quand les valeurs sont stables :
 
 ```pascal
-function ShouldSample(CurrentValue, LastValue: Double): Boolean;
-var
+function ShouldSample(CurrentValue, LastValue: Double): Boolean;  
+var  
   Change: Double;
 begin
   Change := Abs(CurrentValue - LastValue);

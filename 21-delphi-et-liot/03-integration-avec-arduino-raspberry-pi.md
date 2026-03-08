@@ -88,10 +88,10 @@ COMMANDE:VALEUR\n
 
 **Exemples :**
 ```
-TEMP:23.5\n       // Température
-HUM:65\n          // Humidité
-LED:ON\n          // Allumer LED
-MOTOR:150\n       // Vitesse moteur (0-255)
+TEMP:23.5\n       // Température  
+HUM:65\n          // Humidité  
+LED:ON\n          // Allumer LED  
+MOTOR:150\n       // Vitesse moteur (0-255)  
 ```
 
 **Avantages de ce format :**
@@ -158,8 +158,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FReceivedData := '';
 
   // Configurer le port série
@@ -169,8 +169,8 @@ begin
   ComPort1.StopBits := sbOneStopBit;
 end;
 
-procedure TFormMain.ButtonConnectClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonConnectClick(Sender: TObject);  
+begin  
   if not ComPort1.Connected then
   begin
     try
@@ -190,8 +190,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ComPort1RxChar(Sender: TObject; Count: Integer);
-var
+procedure TFormMain.ComPort1RxChar(Sender: TObject; Count: Integer);  
+var  
   Str: string;
   P: Integer;
 begin
@@ -221,8 +221,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ProcessArduinoMessage(const Message: string);
-var
+procedure TFormMain.ProcessArduinoMessage(const Message: string);  
+var  
   Command, Value: string;
   P: Integer;
   TempValue: Double;
@@ -301,8 +301,8 @@ void loop() {
 ### Code Delphi : Envoi de commandes
 
 ```pascal
-procedure TFormMain.ButtonLedOnClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonLedOnClick(Sender: TObject);  
+begin  
   if ComPort1.Connected then
   begin
     ComPort1.WriteStr('LED:ON' + #13#10);
@@ -311,8 +311,8 @@ begin
     ShowMessage('Port série non connecté');
 end;
 
-procedure TFormMain.ButtonLedOffClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonLedOffClick(Sender: TObject);  
+begin  
   if ComPort1.Connected then
   begin
     ComPort1.WriteStr('LED:OFF' + #13#10);
@@ -379,8 +379,8 @@ type
 var
   CurrentWeather: TWeatherData;
 
-procedure TFormMain.ProcessArduinoMessage(const Message: string);
-var
+procedure TFormMain.ProcessArduinoMessage(const Message: string);  
+var  
   Command, Value: string;
   P: Integer;
 begin
@@ -414,8 +414,8 @@ begin
   end;
 end;
 
-procedure TFormMain.SaveToDatabase(const Data: TWeatherData);
-begin
+procedure TFormMain.SaveToDatabase(const Data: TWeatherData);  
+begin  
   // Utiliser FireDAC pour enregistrer
   FDQuery1.SQL.Text :=
     'INSERT INTO weather_data (timestamp, temperature, humidity, light) ' +
@@ -524,16 +524,16 @@ Le Raspberry Pi collecte les données de plusieurs Arduino et les transmet à l'
 #### Code Python sur Raspberry Pi (serveur Flask)
 
 ```python
-from flask import Flask, jsonify, request
-import RPi.GPIO as GPIO
-import time
+from flask import Flask, jsonify, request  
+import RPi.GPIO as GPIO  
+import time  
 
 app = Flask(__name__)
 
 # Configuration GPIO
-LED_PIN = 18
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(LED_PIN, GPIO.OUT)
+LED_PIN = 18  
+GPIO.setmode(GPIO.BCM)  
+GPIO.setup(LED_PIN, GPIO.OUT)  
 
 # Simulation de capteur
 def read_sensor():
@@ -599,8 +599,8 @@ type
 
 implementation
 
-constructor TRaspberryPiClient.Create(const BaseURL: string);
-begin
+constructor TRaspberryPiClient.Create(const BaseURL: string);  
+begin  
   inherited Create;
   FBaseURL := BaseURL;
 
@@ -613,16 +613,16 @@ begin
   FRESTRequest.Response := FRESTResponse;
 end;
 
-destructor TRaspberryPiClient.Destroy;
-begin
+destructor TRaspberryPiClient.Destroy;  
+begin  
   FRESTResponse.Free;
   FRESTRequest.Free;
   FRESTClient.Free;
   inherited;
 end;
 
-function TRaspberryPiClient.GetSensorData: TSensorData;
-var
+function TRaspberryPiClient.GetSensorData: TSensorData;  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
 begin
@@ -654,8 +654,8 @@ begin
   end;
 end;
 
-function TRaspberryPiClient.SetLEDState(State: Boolean): Boolean;
-var
+function TRaspberryPiClient.SetLEDState(State: Boolean): Boolean;  
+var  
   JSONObject: TJSONObject;
   StateStr: string;
 begin
@@ -688,8 +688,8 @@ end.
 #### Utilisation dans le formulaire
 
 ```pascal
-procedure TFormMain.ButtonReadSensorClick(Sender: TObject);
-var
+procedure TFormMain.ButtonReadSensorClick(Sender: TObject);  
+var  
   RpiClient: TRaspberryPiClient;
   SensorData: TSensorData;
 begin
@@ -704,8 +704,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ButtonLedOnClick(Sender: TObject);
-var
+procedure TFormMain.ButtonLedOnClick(Sender: TObject);  
+var  
   RpiClient: TRaspberryPiClient;
 begin
   RpiClient := TRaspberryPiClient.Create('http://192.168.1.100:5000');
@@ -727,14 +727,14 @@ MQTT est idéal pour l'IoT car il est léger et supporte le publish/subscribe.
 #### Code Python sur Raspberry Pi (MQTT Publisher)
 
 ```python
-import paho.mqtt.client as mqtt
-import time
-import json
+import paho.mqtt.client as mqtt  
+import time  
+import json  
 
 # Configuration MQTT
-MQTT_BROKER = "broker.hivemq.com"  # Ou votre broker local
-MQTT_PORT = 1883
-MQTT_TOPIC = "home/raspberry/sensors"
+MQTT_BROKER = "broker.hivemq.com"  # Ou votre broker local  
+MQTT_PORT = 1883  
+MQTT_TOPIC = "home/raspberry/sensors"  
 
 client = mqtt.Client("RaspberryPi")
 
@@ -752,8 +752,8 @@ def publish_sensor_data():
     print(f"Données publiées : {data}")
 
 # Connexion au broker
-client.connect(MQTT_BROKER, MQTT_PORT)
-client.loop_start()
+client.connect(MQTT_BROKER, MQTT_PORT)  
+client.loop_start()  
 
 # Boucle principale
 try:
@@ -772,8 +772,8 @@ Vous pouvez utiliser une bibliothèque MQTT pour Delphi comme TMQTTClient ou d'a
 
 ```pascal
 // Pseudo-code avec une bibliothèque MQTT
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   MQTTClient := TMQTTClient.Create;
   MQTTClient.OnMessageReceived := MQTTMessageReceived;
 
@@ -785,8 +785,8 @@ begin
   MQTTClient.Subscribe('home/raspberry/sensors');
 end;
 
-procedure TFormMain.MQTTMessageReceived(const Topic: string; const Payload: string);
-var
+procedure TFormMain.MQTTMessageReceived(const Topic: string; const Payload: string);  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
   Temp, Hum: Double;
@@ -870,8 +870,8 @@ type
     property Connected: Boolean read FConnected;
   end;
 
-procedure TConnectionManager.TryReconnect(Sender: TObject);
-begin
+procedure TConnectionManager.TryReconnect(Sender: TObject);  
+begin  
   if not FConnected and (SecondsBetween(Now, FLastConnectionAttempt) > 10) then
   begin
     FLastConnectionAttempt := Now;
@@ -888,8 +888,8 @@ end;
 ### Gestion des erreurs réseau
 
 ```pascal
-function TRaspberryPiClient.GetSensorDataSafe: TSensorData;
-var
+function TRaspberryPiClient.GetSensorDataSafe: TSensorData;  
+var  
   RetryCount: Integer;
   MaxRetries: Integer;
 begin
@@ -935,13 +935,13 @@ type
     property LastHumidity: Double read FLastHumidity;
   end;
 
-function TSensorCache.IsValid: Boolean;
-begin
+function TSensorCache.IsValid: Boolean;  
+begin  
   Result := SecondsBetween(Now, FLastUpdate) < FMaxAge;
 end;
 
-procedure TFormMain.UpdateDisplay;
-begin
+procedure TFormMain.UpdateDisplay;  
+begin  
   if SensorCache.IsValid then
   begin
     LabelTemp.Caption := Format('%.1f °C', [SensorCache.LastTemperature]);
@@ -961,8 +961,8 @@ end;
 Toujours logger les communications pour faciliter le débogage :
 
 ```pascal
-procedure TFormMain.LogMessage(const Source, MessageType, Content: string);
-var
+procedure TFormMain.LogMessage(const Source, MessageType, Content: string);  
+var  
   LogEntry: string;
 begin
   LogEntry := Format('[%s] %s - %s: %s',
@@ -1002,15 +1002,15 @@ Documentez votre protocole de communication :
 # Protocole de communication Station Météo
 
 ## Messages Arduino -> Delphi
-TEMP:xx.x       // Température en °C
-HUM:xx.x        // Humidité en %
-LIGHT:xxx       // Luminosité 0-100%
-ERROR:message   // Message d'erreur
+TEMP:xx.x       // Température en °C  
+HUM:xx.x        // Humidité en %  
+LIGHT:xxx       // Luminosité 0-100%  
+ERROR:message   // Message d'erreur  
 
 ## Messages Delphi -> Arduino
-LED:ON/OFF      // Contrôle LED
-RESET           // Redémarrer les capteurs
-CONFIG:param:value  // Configuration
+LED:ON/OFF      // Contrôle LED  
+RESET           // Redémarrer les capteurs  
+CONFIG:param:value  // Configuration  
 ```
 
 ### Tests

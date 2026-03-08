@@ -102,11 +102,11 @@ Les topics sont comme des "canaux" ou des "adresses" pour les messages. Ils util
 
 **Exemples de topics :**
 ```
-maison/salon/temperature
-maison/salon/humidite
-maison/chambre/temperature
-jardin/capteur1/temperature
-usine/zone-a/machine-01/etat
+maison/salon/temperature  
+maison/salon/humidite  
+maison/chambre/temperature  
+jardin/capteur1/temperature  
+usine/zone-a/machine-01/etat  
 ```
 
 **Structure recommandée :**
@@ -209,8 +209,8 @@ Plusieurs services offrent des brokers publics gratuits :
 **Configuration de base :**
 ```
 # mosquitto.conf
-listener 1883
-allow_anonymous true
+listener 1883  
+allow_anonymous true  
 ```
 
 Pour la production, configurez l'authentification et le chiffrement (TLS/SSL).
@@ -245,8 +245,8 @@ type
 
 implementation
 
-constructor TMQTTPublisher.Create(const BrokerAddress: string; BrokerPort: Integer);
-begin
+constructor TMQTTPublisher.Create(const BrokerAddress: string; BrokerPort: Integer);  
+begin  
   inherited Create;
   FBrokerAddress := BrokerAddress;
   FBrokerPort := BrokerPort;
@@ -257,16 +257,16 @@ begin
   FMQTTClient.Port := FBrokerPort;
 end;
 
-destructor TMQTTPublisher.Destroy;
-begin
+destructor TMQTTPublisher.Destroy;  
+begin  
   if FConnected then
     Disconnect;
   FMQTTClient.Free;
   inherited;
 end;
 
-procedure TMQTTPublisher.Connect(const ClientID: string);
-begin
+procedure TMQTTPublisher.Connect(const ClientID: string);  
+begin  
   try
     FMQTTClient.ClientID := ClientID;
     FMQTTClient.Connect;
@@ -277,8 +277,8 @@ begin
   end;
 end;
 
-procedure TMQTTPublisher.Disconnect;
-begin
+procedure TMQTTPublisher.Disconnect;  
+begin  
   if FConnected then
   begin
     FMQTTClient.Disconnect;
@@ -286,8 +286,8 @@ begin
   end;
 end;
 
-procedure TMQTTPublisher.Publish(const Topic, Payload: string; QoS: Integer);
-begin
+procedure TMQTTPublisher.Publish(const Topic, Payload: string; QoS: Integer);  
+begin  
   if not FConnected then
     raise Exception.Create('Client MQTT non connecté');
 
@@ -333,13 +333,13 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.Log(const Message: string);
-begin
+procedure TFormMain.Log(const Message: string);  
+begin  
   MemoLog.Lines.Add(FormatDateTime('[hh:nn:ss] ', Now) + Message);
 end;
 
-procedure TFormMain.ButtonConnectClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonConnectClick(Sender: TObject);  
+begin  
   if not Assigned(FPublisher) then
   begin
     try
@@ -370,8 +370,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ButtonPublishClick(Sender: TObject);
-var
+procedure TFormMain.ButtonPublishClick(Sender: TObject);  
+var  
   Topic, Message: string;
 begin
   if not Assigned(FPublisher) or not FPublisher.Connected then
@@ -392,8 +392,8 @@ begin
   end;
 end;
 
-procedure TFormMain.Timer1Timer(Sender: TObject);
-var
+procedure TFormMain.Timer1Timer(Sender: TObject);  
+var  
   Temperature: Double;
   Humidity: Double;
   JSONPayload: string;
@@ -412,8 +412,8 @@ begin
   Log(Format('Données publiées: T=%.1f°C, H=%.1f%%', [Temperature, Humidity]));
 end;
 
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if Assigned(FPublisher) then
     FreeAndNil(FPublisher);
 end;
@@ -457,8 +457,8 @@ type
 
 implementation
 
-constructor TMQTTSubscriber.Create(const BrokerAddress: string; BrokerPort: Integer);
-begin
+constructor TMQTTSubscriber.Create(const BrokerAddress: string; BrokerPort: Integer);  
+begin  
   inherited Create;
   FBrokerAddress := BrokerAddress;
   FBrokerPort := BrokerPort;
@@ -470,16 +470,16 @@ begin
   FMQTTClient.OnMessage := HandleMessage;  // Callback pour les messages
 end;
 
-destructor TMQTTSubscriber.Destroy;
-begin
+destructor TMQTTSubscriber.Destroy;  
+begin  
   if FConnected then
     Disconnect;
   FMQTTClient.Free;
   inherited;
 end;
 
-procedure TMQTTSubscriber.Connect(const ClientID: string);
-begin
+procedure TMQTTSubscriber.Connect(const ClientID: string);  
+begin  
   try
     FMQTTClient.ClientID := ClientID;
     FMQTTClient.Connect;
@@ -490,8 +490,8 @@ begin
   end;
 end;
 
-procedure TMQTTSubscriber.Disconnect;
-begin
+procedure TMQTTSubscriber.Disconnect;  
+begin  
   if FConnected then
   begin
     FMQTTClient.Disconnect;
@@ -499,22 +499,22 @@ begin
   end;
 end;
 
-procedure TMQTTSubscriber.Subscribe(const Topic: string; QoS: Integer);
-begin
+procedure TMQTTSubscriber.Subscribe(const Topic: string; QoS: Integer);  
+begin  
   if not FConnected then
     raise Exception.Create('Client MQTT non connecté');
 
   FMQTTClient.Subscribe(Topic, QoS);
 end;
 
-procedure TMQTTSubscriber.Unsubscribe(const Topic: string);
-begin
+procedure TMQTTSubscriber.Unsubscribe(const Topic: string);  
+begin  
   if FConnected then
     FMQTTClient.Unsubscribe(Topic);
 end;
 
-procedure TMQTTSubscriber.HandleMessage(const Topic: string; const Payload: string);
-begin
+procedure TMQTTSubscriber.HandleMessage(const Topic: string; const Payload: string);  
+begin  
   // Appeler le callback défini par l'utilisateur
   if Assigned(FOnMessage) then
     FOnMessage(Topic, Payload);
@@ -561,13 +561,13 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormDashboard.Log(const Message: string);
-begin
+procedure TFormDashboard.Log(const Message: string);  
+begin  
   MemoLog.Lines.Add(FormatDateTime('[hh:nn:ss] ', Now) + Message);
 end;
 
-procedure TFormDashboard.ButtonConnectClick(Sender: TObject);
-begin
+procedure TFormDashboard.ButtonConnectClick(Sender: TObject);  
+begin  
   if not Assigned(FSubscriber) then
   begin
     try
@@ -597,8 +597,8 @@ begin
   end;
 end;
 
-procedure TFormDashboard.ButtonSubscribeClick(Sender: TObject);
-var
+procedure TFormDashboard.ButtonSubscribeClick(Sender: TObject);  
+var  
   Topic: string;
 begin
   if not Assigned(FSubscriber) then Exit;
@@ -615,8 +615,8 @@ begin
   end;
 end;
 
-procedure TFormDashboard.HandleMQTTMessage(const Topic: string; const Payload: string);
-begin
+procedure TFormDashboard.HandleMQTTMessage(const Topic: string; const Payload: string);  
+begin  
   // Appeler depuis le thread principal
   TThread.Synchronize(nil, procedure
   begin
@@ -628,8 +628,8 @@ begin
   end);
 end;
 
-procedure TFormDashboard.ProcessSensorData(const JSONPayload: string);
-var
+procedure TFormDashboard.ProcessSensorData(const JSONPayload: string);  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
   Temp, Hum: Double;
@@ -657,8 +657,8 @@ begin
   end;
 end;
 
-procedure TFormDashboard.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormDashboard.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if Assigned(FSubscriber) then
     FreeAndNil(FSubscriber);
 end;
@@ -669,8 +669,8 @@ end.
 ### Configuration Last Will and Testament
 
 ```pascal
-procedure TMQTTPublisher.ConnectWithLWT(const ClientID: string);
-var
+procedure TMQTTPublisher.ConnectWithLWT(const ClientID: string);  
+var  
   LWTTopic: string;
   LWTMessage: string;
 begin
@@ -741,9 +741,9 @@ CoAP suit le modèle client-serveur REST :
 
 Les ressources sont identifiées par des URIs :
 ```
-coap://serveur.local/temperature
-coap://192.168.1.50/sensors/room1/humidity
-coap://[2001:db8::1]/actuators/led
+coap://serveur.local/temperature  
+coap://192.168.1.50/sensors/room1/humidity  
+coap://[2001:db8::1]/actuators/led  
 ```
 
 ### Méthodes CoAP
@@ -828,8 +828,8 @@ type
 
 implementation
 
-constructor TSimpleCoapClient.Create(const Host: string; Port: Integer);
-begin
+constructor TSimpleCoapClient.Create(const Host: string; Port: Integer);  
+begin  
   inherited Create;
   FHost := Host;
   FPort := Port;
@@ -839,14 +839,14 @@ begin
   FUDPClient.Port := FPort;
 end;
 
-destructor TSimpleCoapClient.Destroy;
-begin
+destructor TSimpleCoapClient.Destroy;  
+begin  
   FUDPClient.Free;
   inherited;
 end;
 
-function TSimpleCoapClient.Get(const Resource: string): string;
-var
+function TSimpleCoapClient.Get(const Resource: string): string;  
+var  
   Request: TBytes;
   Response: TBytes;
 begin
@@ -873,8 +873,8 @@ begin
   Result := 'Response data';
 end;
 
-procedure TSimpleCoapClient.Put(const Resource, Value: string);
-var
+procedure TSimpleCoapClient.Put(const Resource, Value: string);  
+var  
   Request: TBytes;
 begin
   // Construire et envoyer un message PUT
@@ -937,8 +937,8 @@ end.
 #### Authentification par username/password
 
 ```pascal
-procedure TMQTTPublisher.ConnectSecure(const ClientID, Username, Password: string);
-begin
+procedure TMQTTPublisher.ConnectSecure(const ClientID, Username, Password: string);  
+begin  
   FMQTTClient.ClientID := ClientID;
   FMQTTClient.Username := Username;
   FMQTTClient.Password := Password;
@@ -953,9 +953,9 @@ Pour chiffrer les communications :
 - Configure le client pour utiliser SSL
 
 ```pascal
-FMQTTClient.Port := 8883;
-FMQTTClient.UseSSL := True;
-FMQTTClient.SSLVerifyMode := sslvmPeer;
+FMQTTClient.Port := 8883;  
+FMQTTClient.UseSSL := True;  
+FMQTTClient.SSLVerifyMode := sslvmPeer;  
 ```
 
 #### Topics et contrôle d'accès
@@ -963,11 +963,11 @@ FMQTTClient.SSLVerifyMode := sslvmPeer;
 Configurez votre broker pour limiter l'accès aux topics :
 ```
 # Mosquitto ACL
-user sensor1
-topic write sensors/room1/#
+user sensor1  
+topic write sensors/room1/#  
 
-user dashboard
-topic read sensors/#
+user dashboard  
+topic read sensors/#  
 ```
 
 ### Sécurité CoAP
@@ -985,9 +985,9 @@ CoAP peut utiliser DTLS (Datagram Transport Layer Security) :
 ```
 [organisation]/[site]/[zone]/[device]/[metric]
 
-exemple:
-acme/paris/entrepot-a/temp-sensor-01/temperature
-acme/paris/entrepot-a/temp-sensor-01/battery
+exemple:  
+acme/paris/entrepot-a/temp-sensor-01/temperature  
+acme/paris/entrepot-a/temp-sensor-01/battery  
 ```
 
 **Évitez :**
@@ -1001,8 +1001,8 @@ acme/paris/entrepot-a/temp-sensor-01/battery
 #### Reconnexion automatique
 
 ```pascal
-procedure TMQTTPublisher.EnsureConnected;
-var
+procedure TMQTTPublisher.EnsureConnected;  
+var  
   Attempts: Integer;
 begin
   Attempts := 0;
@@ -1036,8 +1036,8 @@ FMQTTClient.KeepAlive := 60;  // Secondes
 
 Groupez plusieurs messages pour réduire la latence :
 ```pascal
-procedure PublishSensorBatch(const Sensors: array of TSensorData);
-var
+procedure PublishSensorBatch(const Sensors: array of TSensorData);  
+var  
   Sensor: TSensorData;
 begin
   for Sensor in Sensors do
@@ -1055,8 +1055,8 @@ end;
 
 Pour des données volumineuses, compressez :
 ```pascal
-function CompressJSON(const JSONString: string): TBytes;
-var
+function CompressJSON(const JSONString: string): TBytes;  
+var  
   Input, Output: TMemoryStream;
   Compressor: TZCompressionStream;
 begin
@@ -1090,8 +1090,8 @@ end;
 
 Toujours logger les événements importants :
 ```pascal
-procedure TMQTTPublisher.Publish(const Topic, Payload: string; QoS: Integer);
-begin
+procedure TMQTTPublisher.Publish(const Topic, Payload: string; QoS: Integer);  
+begin  
   try
     FMQTTClient.Publish(Topic, Payload, QoS);
     LogEvent('Published', Format('Topic: %s, Size: %d bytes', [Topic, Length(Payload)]));

@@ -97,8 +97,8 @@ type
 
 implementation
 
-constructor TIoTDevice.Create;
-begin
+constructor TIoTDevice.Create;  
+begin  
   inherited Create;
   FID := '';
   FName := '';
@@ -112,21 +112,21 @@ begin
   FSignalStrength := -1;
 end;
 
-destructor TIoTDevice.Destroy;
-begin
+destructor TIoTDevice.Destroy;  
+begin  
   FProperties.Free;
   inherited;
 end;
 
-procedure TIoTDevice.UpdateHeartbeat;
-begin
+procedure TIoTDevice.UpdateHeartbeat;  
+begin  
   FLastHeartbeat := Now;
   FLastSeen := Now;
   FStatus := dsOnline;
 end;
 
-function TIoTDevice.IsOnline(TimeoutSeconds: Integer): Boolean;
-begin
+function TIoTDevice.IsOnline(TimeoutSeconds: Integer): Boolean;  
+begin  
   Result := SecondsBetween(Now, FLastHeartbeat) <= TimeoutSeconds;
 
   if Result then
@@ -135,13 +135,13 @@ begin
     FStatus := dsOffline;
 end;
 
-function TIoTDevice.GetProperty(const Name: string): string;
-begin
+function TIoTDevice.GetProperty(const Name: string): string;  
+begin  
   Result := FProperties.Values[Name];
 end;
 
-procedure TIoTDevice.SetProperty(const Name, Value: string);
-begin
+procedure TIoTDevice.SetProperty(const Name, Value: string);  
+begin  
   FProperties.Values[Name] := Value;
 end;
 
@@ -207,22 +207,22 @@ type
 
 implementation
 
-constructor TDeviceManager.Create;
-begin
+constructor TDeviceManager.Create;  
+begin  
   inherited Create;
   FDevices := TObjectList<TIoTDevice>.Create(True);  // Owns objects
   StartMonitoring;
 end;
 
-destructor TDeviceManager.Destroy;
-begin
+destructor TDeviceManager.Destroy;  
+begin  
   StopMonitoring;
   FDevices.Free;
   inherited;
 end;
 
-function TDeviceManager.FindDeviceByID(const ID: string): TIoTDevice;
-var
+function TDeviceManager.FindDeviceByID(const ID: string): TIoTDevice;  
+var  
   Device: TIoTDevice;
 begin
   Result := nil;
@@ -236,8 +236,8 @@ begin
   end;
 end;
 
-function TDeviceManager.AddDevice(Device: TIoTDevice): Boolean;
-begin
+function TDeviceManager.AddDevice(Device: TIoTDevice): Boolean;  
+begin  
   Result := False;
 
   // Vérifier si le dispositif existe déjà
@@ -252,8 +252,8 @@ begin
     FOnDeviceAdded(Device);
 end;
 
-function TDeviceManager.RemoveDevice(const ID: string): Boolean;
-var
+function TDeviceManager.RemoveDevice(const ID: string): Boolean;  
+var  
   Device: TIoTDevice;
 begin
   Device := FindDeviceByID(ID);
@@ -269,23 +269,23 @@ begin
   end;
 end;
 
-function TDeviceManager.GetDevice(const ID: string): TIoTDevice;
-begin
+function TDeviceManager.GetDevice(const ID: string): TIoTDevice;  
+begin  
   Result := FindDeviceByID(ID);
 end;
 
-function TDeviceManager.GetDeviceCount: Integer;
-begin
+function TDeviceManager.GetDeviceCount: Integer;  
+begin  
   Result := FDevices.Count;
 end;
 
-function TDeviceManager.GetAllDevices: TArray<TIoTDevice>;
-begin
+function TDeviceManager.GetAllDevices: TArray<TIoTDevice>;  
+begin  
   Result := FDevices.ToArray;
 end;
 
-function TDeviceManager.GetDevicesByType(DeviceType: TDeviceType): TArray<TIoTDevice>;
-var
+function TDeviceManager.GetDevicesByType(DeviceType: TDeviceType): TArray<TIoTDevice>;  
+var  
   Device: TIoTDevice;
   List: TList<TIoTDevice>;
 begin
@@ -302,8 +302,8 @@ begin
   end;
 end;
 
-function TDeviceManager.GetDevicesByStatus(Status: TDeviceStatus): TArray<TIoTDevice>;
-var
+function TDeviceManager.GetDevicesByStatus(Status: TDeviceStatus): TArray<TIoTDevice>;  
+var  
   Device: TIoTDevice;
   List: TList<TIoTDevice>;
 begin
@@ -320,8 +320,8 @@ begin
   end;
 end;
 
-function TDeviceManager.GetOnlineDevices: TArray<TIoTDevice>;
-var
+function TDeviceManager.GetOnlineDevices: TArray<TIoTDevice>;  
+var  
   Device: TIoTDevice;
   List: TList<TIoTDevice>;
 begin
@@ -338,8 +338,8 @@ begin
   end;
 end;
 
-procedure TDeviceManager.UpdateAllDeviceStatus;
-var
+procedure TDeviceManager.UpdateAllDeviceStatus;  
+var  
   Device: TIoTDevice;
   OldStatus: TDeviceStatus;
 begin
@@ -356,8 +356,8 @@ begin
   end;
 end;
 
-procedure TDeviceManager.SendCommandToAll(const Command: string);
-var
+procedure TDeviceManager.SendCommandToAll(const Command: string);  
+var  
   Device: TIoTDevice;
 begin
   for Device in FDevices do
@@ -378,8 +378,8 @@ begin
   end;
 end;
 
-procedure TDeviceManager.SendCommandToType(DeviceType: TDeviceType; const Command: string);
-var
+procedure TDeviceManager.SendCommandToType(DeviceType: TDeviceType; const Command: string);  
+var  
   Device: TIoTDevice;
 begin
   for Device in FDevices do
@@ -399,8 +399,8 @@ begin
   end;
 end;
 
-procedure TDeviceManager.StartMonitoring;
-begin
+procedure TDeviceManager.StartMonitoring;  
+begin  
   FMonitorThread := TThread.CreateAnonymousThread(procedure
   begin
     while not TThread.CurrentThread.CheckTerminated do
@@ -418,8 +418,8 @@ begin
   FMonitorThread.Start;
 end;
 
-procedure TDeviceManager.StopMonitoring;
-begin
+procedure TDeviceManager.StopMonitoring;  
+begin  
   if Assigned(FMonitorThread) then
   begin
     FMonitorThread.Terminate;
@@ -473,8 +473,8 @@ type
 
 implementation
 
-constructor TNetworkScanner.Create(const BaseIP: string; StartRange, EndRange: Integer; Port: Integer);
-begin
+constructor TNetworkScanner.Create(const BaseIP: string; StartRange, EndRange: Integer; Port: Integer);  
+begin  
   inherited Create;
   FBaseIP := BaseIP;
   FStartRange := StartRange;
@@ -483,8 +483,8 @@ begin
   FScanning := False;
 end;
 
-procedure TNetworkScanner.ScanIP(const IPAddress: string);
-var
+procedure TNetworkScanner.ScanIP(const IPAddress: string);  
+var  
   TCPClient: TIdTCPClient;
   DeviceInfo: string;
 begin
@@ -517,8 +517,8 @@ begin
   end;
 end;
 
-procedure TNetworkScanner.StartScan;
-var
+procedure TNetworkScanner.StartScan;  
+var  
   I: Integer;
   IPAddress: string;
 begin
@@ -546,8 +546,8 @@ begin
   end).Start;
 end;
 
-procedure TNetworkScanner.StopScan;
-begin
+procedure TNetworkScanner.StopScan;  
+begin  
   FScanning := False;
 end;
 
@@ -589,26 +589,26 @@ implementation
 // Note: Une implémentation complète de mDNS nécessiterait
 // une bibliothèque spécialisée ou l'utilisation de l'API système
 
-constructor TMDNSDiscovery.Create(const ServiceType: string);
-begin
+constructor TMDNSDiscovery.Create(const ServiceType: string);  
+begin  
   inherited Create;
   FServiceType := ServiceType;  // Ex: "_http._tcp.local."
 end;
 
-procedure TMDNSDiscovery.StartDiscovery;
-begin
+procedure TMDNSDiscovery.StartDiscovery;  
+begin  
   // Envoyer une requête mDNS multicast
   // Écouter les réponses
   // Parser les réponses et déclencher OnServiceFound
 end;
 
-procedure TMDNSDiscovery.StopDiscovery;
-begin
+procedure TMDNSDiscovery.StopDiscovery;  
+begin  
   // Arrêter l'écoute
 end;
 
-procedure TMDNSDiscovery.ProcessMDNSResponse(const Response: TBytes);
-begin
+procedure TMDNSDiscovery.ProcessMDNSResponse(const Response: TBytes);  
+begin  
   // Parser la réponse mDNS
   // Extraire le nom du service, l'IP, le port
   // Déclencher l'événement OnServiceFound
@@ -622,8 +622,8 @@ end.
 Les dispositifs peuvent s'annoncer via MQTT :
 
 ```pascal
-procedure TDeviceManager.DiscoverViaMQTT(MQTTClient: TMQTTClient);
-begin
+procedure TDeviceManager.DiscoverViaMQTT(MQTTClient: TMQTTClient);  
+begin  
   // S'abonner au topic de découverte
   MQTTClient.Subscribe('devices/announce');
 
@@ -638,8 +638,8 @@ end;
 ### Interface de découverte
 
 ```pascal
-procedure TFormMain.ButtonScanClick(Sender: TObject);
-var
+procedure TFormMain.ButtonScanClick(Sender: TObject);  
+var  
   Scanner: TNetworkScanner;
 begin
   ListBoxDevices.Clear;
@@ -720,8 +720,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormDashboard.FormCreate(Sender: TObject);
-begin
+procedure TFormDashboard.FormCreate(Sender: TObject);  
+begin  
   // Configurer la grille
   StringGridDevices.ColCount := 7;
   StringGridDevices.RowCount := 1;
@@ -745,8 +745,8 @@ begin
   Timer1.Enabled := True;
 end;
 
-procedure TFormDashboard.UpdateDeviceGrid;
-var
+procedure TFormDashboard.UpdateDeviceGrid;  
+var  
   Devices: TArray<TIoTDevice>;
   Device: TIoTDevice;
   Row: Integer;
@@ -797,8 +797,8 @@ begin
   UpdateStatistics;
 end;
 
-procedure TFormDashboard.UpdateStatistics;
-var
+procedure TFormDashboard.UpdateStatistics;  
+var  
   Total, Online, Offline: Integer;
 begin
   if not Assigned(FDeviceManager) then Exit;
@@ -818,19 +818,19 @@ begin
     LabelOffline.Font.Color := clGreen;
 end;
 
-procedure TFormDashboard.ButtonRefreshClick(Sender: TObject);
-begin
+procedure TFormDashboard.ButtonRefreshClick(Sender: TObject);  
+begin  
   UpdateDeviceGrid;
 end;
 
-procedure TFormDashboard.Timer1Timer(Sender: TObject);
-begin
+procedure TFormDashboard.Timer1Timer(Sender: TObject);  
+begin  
   // Mise à jour automatique toutes les 5 secondes
   UpdateDeviceGrid;
 end;
 
-procedure TFormDashboard.StringGridDevicesDblClick(Sender: TObject);
-var
+procedure TFormDashboard.StringGridDevicesDblClick(Sender: TObject);  
+var  
   Row: Integer;
   DeviceID: string;
   Device: TIoTDevice;
@@ -845,8 +845,8 @@ begin
     ShowDeviceDetails(Device);
 end;
 
-procedure TFormDashboard.ShowDeviceDetails(Device: TIoTDevice);
-var
+procedure TFormDashboard.ShowDeviceDetails(Device: TIoTDevice);  
+var  
   Details: string;
 begin
   Details := Format(
@@ -910,8 +910,8 @@ type
 
 implementation
 
-function TDeviceConfig.ToJSON: string;
-var
+function TDeviceConfig.ToJSON: string;  
+var  
   JSONObject: TJSONObject;
 begin
   JSONObject := TJSONObject.Create;
@@ -929,8 +929,8 @@ begin
   end;
 end;
 
-procedure TDeviceConfig.FromJSON(const JSONString: string);
-var
+procedure TDeviceConfig.FromJSON(const JSONString: string);  
+var  
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
 begin
@@ -952,8 +952,8 @@ begin
   end;
 end;
 
-class function TDeviceConfigurator.GetConfiguration(Device: TIoTDevice): TDeviceConfig;
-begin
+class function TDeviceConfigurator.GetConfiguration(Device: TIoTDevice): TDeviceConfig;  
+begin  
   Result := TDeviceConfig.Create;
 
   // Envoyer une requête de configuration au dispositif
@@ -967,8 +967,8 @@ begin
   // Parser la réponse et remplir Result
 end;
 
-class function TDeviceConfigurator.SetConfiguration(Device: TIoTDevice; Config: TDeviceConfig): Boolean;
-var
+class function TDeviceConfigurator.SetConfiguration(Device: TIoTDevice; Config: TDeviceConfig): Boolean;  
+var  
   ConfigJSON: string;
 begin
   Result := False;
@@ -994,8 +994,8 @@ end.
 ### Interface de configuration
 
 ```pascal
-procedure TFormConfig.ButtonApplyClick(Sender: TObject);
-var
+procedure TFormConfig.ButtonApplyClick(Sender: TObject);  
+var  
   Device: TIoTDevice;
   Config: TDeviceConfig;
 begin
@@ -1073,60 +1073,60 @@ type
 
 implementation
 
-constructor TDeviceGroup.Create(const Name: string);
-begin
+constructor TDeviceGroup.Create(const Name: string);  
+begin  
   inherited Create;
   FName := Name;
   FDevices := TList<TIoTDevice>.Create;
 end;
 
-destructor TDeviceGroup.Destroy;
-begin
+destructor TDeviceGroup.Destroy;  
+begin  
   FDevices.Free;
   inherited;
 end;
 
-procedure TDeviceGroup.AddDevice(Device: TIoTDevice);
-begin
+procedure TDeviceGroup.AddDevice(Device: TIoTDevice);  
+begin  
   if not ContainsDevice(Device) then
     FDevices.Add(Device);
 end;
 
-procedure TDeviceGroup.RemoveDevice(Device: TIoTDevice);
-begin
+procedure TDeviceGroup.RemoveDevice(Device: TIoTDevice);  
+begin  
   FDevices.Remove(Device);
 end;
 
-function TDeviceGroup.ContainsDevice(Device: TIoTDevice): Boolean;
-begin
+function TDeviceGroup.ContainsDevice(Device: TIoTDevice): Boolean;  
+begin  
   Result := FDevices.Contains(Device);
 end;
 
-function TDeviceGroup.GetDeviceCount: Integer;
-begin
+function TDeviceGroup.GetDeviceCount: Integer;  
+begin  
   Result := FDevices.Count;
 end;
 
-constructor TGroupManager.Create;
-begin
+constructor TGroupManager.Create;  
+begin  
   inherited Create;
   FGroups := TObjectList<TDeviceGroup>.Create(True);
 end;
 
-destructor TGroupManager.Destroy;
-begin
+destructor TGroupManager.Destroy;  
+begin  
   FGroups.Free;
   inherited;
 end;
 
-function TGroupManager.CreateGroup(const Name: string): TDeviceGroup;
-begin
+function TGroupManager.CreateGroup(const Name: string): TDeviceGroup;  
+begin  
   Result := TDeviceGroup.Create(Name);
   FGroups.Add(Result);
 end;
 
-function TGroupManager.DeleteGroup(const Name: string): Boolean;
-var
+function TGroupManager.DeleteGroup(const Name: string): Boolean;  
+var  
   Group: TDeviceGroup;
 begin
   Result := False;
@@ -1138,8 +1138,8 @@ begin
   end;
 end;
 
-function TGroupManager.GetGroup(const Name: string): TDeviceGroup;
-var
+function TGroupManager.GetGroup(const Name: string): TDeviceGroup;  
+var  
   Group: TDeviceGroup;
 begin
   Result := nil;
@@ -1153,8 +1153,8 @@ begin
   end;
 end;
 
-function TGroupManager.GetAllGroups: TArray<TDeviceGroup>;
-begin
+function TGroupManager.GetAllGroups: TArray<TDeviceGroup>;  
+begin  
   Result := FGroups.ToArray;
 end;
 
@@ -1238,20 +1238,20 @@ type
 
 implementation
 
-constructor TAlertManager.Create;
-begin
+constructor TAlertManager.Create;  
+begin  
   inherited Create;
   FAlerts := TObjectList<TAlert>.Create(True);
 end;
 
-destructor TAlertManager.Destroy;
-begin
+destructor TAlertManager.Destroy;  
+begin  
   FAlerts.Free;
   inherited;
 end;
 
-procedure TAlertManager.RaiseAlert(Device: TIoTDevice; Level: TAlertLevel; const Message: string);
-var
+procedure TAlertManager.RaiseAlert(Device: TIoTDevice; Level: TAlertLevel; const Message: string);  
+var  
   Alert: TAlert;
 begin
   Alert := TAlert.Create;
@@ -1267,13 +1267,13 @@ begin
     FOnAlert(Alert);
 end;
 
-procedure TAlertManager.AcknowledgeAlert(Alert: TAlert);
-begin
+procedure TAlertManager.AcknowledgeAlert(Alert: TAlert);  
+begin  
   Alert.Acknowledged := True;
 end;
 
-function TAlertManager.GetUnacknowledgedAlerts: TArray<TAlert>;
-var
+function TAlertManager.GetUnacknowledgedAlerts: TArray<TAlert>;  
+var  
   Alert: TAlert;
   List: TList<TAlert>;
 begin
@@ -1290,8 +1290,8 @@ begin
   end;
 end;
 
-function TAlertManager.GetAlertsByLevel(Level: TAlertLevel): TArray<TAlert>;
-var
+function TAlertManager.GetAlertsByLevel(Level: TAlertLevel): TArray<TAlert>;  
+var  
   Alert: TAlert;
   List: TList<TAlert>;
 begin
@@ -1314,8 +1314,8 @@ end.
 ### Règles d'alerte automatiques
 
 ```pascal
-procedure TDeviceManager.CheckAlertRules;
-var
+procedure TDeviceManager.CheckAlertRules;  
+var  
   Device: TIoTDevice;
   Temp: Double;
 begin
@@ -1372,8 +1372,8 @@ type
 
 implementation
 
-function TFirmwareUpdater.UpdateDevice(Device: TIoTDevice; const FirmwareURL: string): Boolean;
-var
+function TFirmwareUpdater.UpdateDevice(Device: TIoTDevice; const FirmwareURL: string): Boolean;  
+var  
   Progress: Integer;
 begin
   Result := False;
@@ -1411,8 +1411,8 @@ begin
   end;
 end;
 
-function TFirmwareUpdater.GetUpdateStatus(Device: TIoTDevice): TUpdateStatus;
-begin
+function TFirmwareUpdater.GetUpdateStatus(Device: TIoTDevice): TUpdateStatus;  
+begin  
   // Interroger le dispositif pour son statut de mise à jour
   Result := FCurrentStatus;
 end;
@@ -1441,8 +1441,8 @@ type
 
 implementation
 
-class procedure TDevicePersistence.SaveDevices(Manager: TDeviceManager; const FileName: string);
-var
+class procedure TDevicePersistence.SaveDevices(Manager: TDeviceManager; const FileName: string);  
+var  
   JSONArray: TJSONArray;
   Devices: TArray<TIoTDevice>;
   Device: TIoTDevice;
@@ -1472,8 +1472,8 @@ begin
   end;
 end;
 
-class procedure TDevicePersistence.LoadDevices(Manager: TDeviceManager; const FileName: string);
-var
+class procedure TDevicePersistence.LoadDevices(Manager: TDeviceManager; const FileName: string);  
+var  
   JSONContent: string;
   JSONArray: TJSONArray;
   JSONValue: TJSONValue;

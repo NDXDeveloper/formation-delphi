@@ -146,8 +146,8 @@ implementation
 {$R *.dfm}
 
 // Ouvrir le port série
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   try
     // Configuration du port
     ComPort1.Port := 'COM3';           // Port à utiliser
@@ -171,8 +171,8 @@ begin
 end;
 
 // Fermer le port série
-procedure TForm1.Button2Click(Sender: TObject);
-begin
+procedure TForm1.Button2Click(Sender: TObject);  
+begin  
   if ComPort1.Connected then
   begin
     ComPort1.Close;
@@ -181,8 +181,8 @@ begin
 end;
 
 // Réception de données
-procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);
-var
+procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);  
+var  
   Str: string;
 begin
   // Lire les données reçues
@@ -200,8 +200,8 @@ end.
 Pour envoyer des données au dispositif :
 
 ```pascal
-procedure TForm1.ButtonSendClick(Sender: TObject);
-var
+procedure TForm1.ButtonSendClick(Sender: TObject);  
+var  
   DataToSend: string;
 begin
   if ComPort1.Connected then
@@ -218,8 +218,8 @@ end;
 ### Détection automatique des ports disponibles
 
 ```pascal
-procedure TForm1.DetectPortsClick(Sender: TObject);
-var
+procedure TForm1.DetectPortsClick(Sender: TObject);  
+var  
   I: Integer;
 begin
   ComboBoxPorts.Clear;
@@ -266,8 +266,8 @@ void loop() {
 Code Delphi pour recevoir ces données :
 
 ```pascal
-procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);
-var
+procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);  
+var  
   ReceivedData: string;
   TempValue: Double;
 begin
@@ -372,8 +372,8 @@ implementation
 {$R *.dfm}
 
 // Démarrer le scan
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ListBox1.Clear;
   ListBox1.Items.Add('Scan en cours...');
 
@@ -408,8 +408,8 @@ end.
 ### Connexion à un dispositif BLE
 
 ```pascal
-procedure TForm1.ConnectToDevice(Device: TBluetoothLEDevice);
-var
+procedure TForm1.ConnectToDevice(Device: TBluetoothLEDevice);  
+var  
   Service: TBluetoothGattService;
   Characteristic: TBluetoothGattCharacteristic;
 begin
@@ -472,8 +472,8 @@ end;
 ### Écriture de données BLE
 
 ```pascal
-procedure TForm1.SendCommandClick(Sender: TObject);
-var
+procedure TForm1.SendCommandClick(Sender: TObject);  
+var  
   Device: TBluetoothLEDevice;
   Characteristic: TBluetoothGattCharacteristic;
   Data: TBytes;
@@ -498,10 +498,10 @@ Pour utiliser des modules Bluetooth classiques comme le HC-05 ou HC-06 :
 Les modules HC-05/HC-06 se configurent via des commandes AT :
 
 ```
-AT                  // Test de communication
-AT+NAME=MonDevice   // Changer le nom
-AT+BAUD4            // Définir la vitesse à 9600 bauds
-AT+PIN1234          // Définir le code PIN
+AT                  // Test de communication  
+AT+NAME=MonDevice   // Changer le nom  
+AT+BAUD4            // Définir la vitesse à 9600 bauds  
+AT+PIN1234          // Définir le code PIN  
 ```
 
 ### Connexion depuis Delphi
@@ -513,8 +513,8 @@ Une fois le module appairé avec votre ordinateur :
 3. La communication fonctionne exactement comme un port série classique
 
 ```pascal
-procedure TForm1.ConnectBluetoothSPP;
-begin
+procedure TForm1.ConnectBluetoothSPP;  
+begin  
   // Le module HC-05 apparaît comme un port COM (ex: COM7)
   ComPort1.Port := 'COM7';
   ComPort1.BaudRate := br9600;
@@ -573,8 +573,8 @@ end;
 Toujours gérer les erreurs possibles :
 
 ```pascal
-procedure TForm1.SafeSerialCommunication;
-var
+procedure TForm1.SafeSerialCommunication;  
+var  
   MaxRetries: Integer;
   RetryCount: Integer;
 begin
@@ -623,8 +623,8 @@ type
     property OnDataReceived: TNotifyEvent read FOnDataReceived write FOnDataReceived;
   end;
 
-procedure TSerialReadThread.Execute;
-var
+procedure TSerialReadThread.Execute;  
+var  
   Buffer: string;
 begin
   while not Terminated do
@@ -654,8 +654,8 @@ end;
 Toujours fermer les ports avant de quitter :
 
 ```pascal
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if Assigned(ComPort1) and ComPort1.Connected then
   begin
     try
@@ -672,9 +672,9 @@ end;
 Définir un timeout pour éviter de bloquer indéfiniment :
 
 ```pascal
-ComPort1.Timeouts.ReadTotalMultiplier := 0;
-ComPort1.Timeouts.ReadTotalConstant := 1000; // 1 seconde
-ComPort1.Timeouts.ReadInterval := 100;
+ComPort1.Timeouts.ReadTotalMultiplier := 0;  
+ComPort1.Timeouts.ReadTotalConstant := 1000; // 1 seconde  
+ComPort1.Timeouts.ReadInterval := 100;  
 ```
 
 ### Buffer de réception
@@ -682,8 +682,8 @@ ComPort1.Timeouts.ReadInterval := 100;
 Pour des données volumineuses, ajustez la taille du buffer :
 
 ```pascal
-ComPort1.Buffer.InputSize := 8192;  // 8 Ko
-ComPort1.Buffer.OutputSize := 8192;
+ComPort1.Buffer.InputSize := 8192;  // 8 Ko  
+ComPort1.Buffer.OutputSize := 8192;  
 ```
 
 ## Protocoles de communication personnalisés
@@ -700,8 +700,8 @@ Utiliser des caractères spéciaux pour délimiter les messages :
 Code de parsing :
 
 ```pascal
-procedure ParseMessage(const Data: string);
-var
+procedure ParseMessage(const Data: string);  
+var  
   StartPos, EndPos: Integer;
   Message: string;
 begin
@@ -723,8 +723,8 @@ Pour optimiser la bande passante :
 
 ```pascal
 // Structure du message : [Header][Type][Longueur][Données][Checksum]
-procedure SendBinaryMessage(MessageType: Byte; const Data: TBytes);
-var
+procedure SendBinaryMessage(MessageType: Byte; const Data: TBytes);  
+var  
   Packet: TBytes;
   Checksum: Byte;
   I: Integer;
@@ -758,8 +758,8 @@ end;
 Pour déboguer, affichez toutes les données échangées :
 
 ```pascal
-procedure TForm1.LogCommunication(const Direction: string; const Data: string);
-var
+procedure TForm1.LogCommunication(const Direction: string; const Data: string);  
+var  
   Timestamp: string;
 begin
   Timestamp := FormatDateTime('hh:nn:ss.zzz', Now);
@@ -767,8 +767,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);
-var
+procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);  
+var  
   Data: string;
 begin
   ComPort1.ReadStr(Data, Count);
@@ -776,8 +776,8 @@ begin
   // Traiter les données...
 end;
 
-procedure TForm1.SendData(const Data: string);
-begin
+procedure TForm1.SendData(const Data: string);  
+begin  
   ComPort1.WriteStr(Data);
   LogCommunication('TX', Data); // TX = Transmission
 end;
@@ -788,8 +788,8 @@ end;
 Pour les protocoles binaires :
 
 ```pascal
-function BytesToHex(const Data: TBytes): string;
-var
+function BytesToHex(const Data: TBytes): string;  
+var  
   I: Integer;
 begin
   Result := '';
