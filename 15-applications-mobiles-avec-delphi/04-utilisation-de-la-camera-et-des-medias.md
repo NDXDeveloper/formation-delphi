@@ -44,8 +44,8 @@ uses
   FMX.Media;
 
 // Configurer la caméra dans le FormCreate
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Créer et configurer le composant caméra
   Camera1 := TCameraComponent.Create(Self);
   Camera1.Kind := TCameraKind.FrontCamera; // ou BackCamera
@@ -61,8 +61,8 @@ uses
   FMX.MediaLibrary, FMX.Graphics;
 
 // Démarrer l'aperçu de la caméra
-procedure TFormMain.BtnDemarrerCameraClick(Sender: TObject);
-begin
+procedure TFormMain.BtnDemarrerCameraClick(Sender: TObject);  
+begin  
   // Vérifier si la caméra est disponible
   if not Camera1.HasCamera then
   begin
@@ -75,8 +75,8 @@ begin
 end;
 
 // Capturer une photo
-procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);  
+begin  
   if Camera1.Active then
   begin
     // La capture est asynchrone, l'événement OnSampleBufferReady sera déclenché
@@ -106,8 +106,8 @@ uses
   FMX.MediaLibrary, FMX.Platform;
 
 // Prendre une photo avec l'interface native
-procedure TFormMain.BtnPhotoNativeClick(Sender: TObject);
-var
+procedure TFormMain.BtnPhotoNativeClick(Sender: TObject);  
+var  
   MediaLibrary: IFMXCameraService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXCameraService, MediaLibrary) then
@@ -140,8 +140,8 @@ end;
 
 ```pascal
 // Basculer entre les caméras
-procedure TFormMain.BtnBasculerCameraClick(Sender: TObject);
-begin
+procedure TFormMain.BtnBasculerCameraClick(Sender: TObject);  
+begin  
   Camera1.Active := False;
 
   if Camera1.Kind = TCameraKind.BackCamera then
@@ -160,8 +160,8 @@ uses
   System.IOUtils, FMX.Graphics;
 
 // Sauvegarder une photo dans la galerie de l'appareil
-procedure TFormMain.SauvegarderPhoto(Photo: TBitmap);
-var
+procedure TFormMain.SauvegarderPhoto(Photo: TBitmap);  
+var  
   MediaLibrary: IFMXPhotoLibrary;
   CheminPhoto: string;
 begin
@@ -196,8 +196,8 @@ uses
   FMX.MediaLibrary;
 
 // Choisir une photo depuis la galerie
-procedure TFormMain.BtnChoisirPhotoClick(Sender: TObject);
-var
+procedure TFormMain.BtnChoisirPhotoClick(Sender: TObject);  
+var  
   MediaLibrary: IFMXPhotoLibrary;
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXPhotoLibrary, MediaLibrary) then
@@ -231,8 +231,8 @@ end;
 
 ```pascal
 // Donner le choix à l'utilisateur
-procedure TFormMain.BtnAjouterPhotoClick(Sender: TObject);
-begin
+procedure TFormMain.BtnAjouterPhotoClick(Sender: TObject);  
+begin  
   // Afficher un dialogue de choix
   TDialogService.MessageDialog('Choisir une source',
     TMsgDlgType.mtConfirmation,
@@ -295,8 +295,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.OptimiserPhoto;
-begin
+procedure TFormMain.OptimiserPhoto;  
+begin  
   // Redimensionner à maximum 1024x1024 pour économiser la mémoire
   RedimensionnerImage(Image1.Bitmap, 1024, 1024);
 end;
@@ -306,8 +306,8 @@ end;
 
 ```pascal
 // Pivoter une image de 90 degrés
-procedure TFormMain.PivoterImage90(Image: TBitmap);
-var
+procedure TFormMain.PivoterImage90(Image: TBitmap);  
+var  
   ImagePivotee: TBitmap;
 begin
   ImagePivotee := TBitmap.Create;
@@ -335,8 +335,8 @@ begin
 end;
 
 // Boutons de rotation
-procedure TFormMain.BtnPivoterDroiteClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPivoterDroiteClick(Sender: TObject);  
+begin  
   PivoterImage90(Image1.Bitmap);
 end;
 ```
@@ -348,8 +348,8 @@ uses
   FMX.Filter.Effects;
 
 // Appliquer un filtre noir et blanc
-procedure TFormMain.AppliquerNoirEtBlanc;
-var
+procedure TFormMain.AppliquerNoirEtBlanc;  
+var  
   Filtre: TMonochromeEffect;
 begin
   Filtre := TMonochromeEffect.Create(Image1);
@@ -363,8 +363,8 @@ begin
 end;
 
 // Appliquer un filtre sépia
-procedure TFormMain.AppliquerSepia;
-var
+procedure TFormMain.AppliquerSepia;  
+var  
   Filtre: TSepiaEffect;
 begin
   Filtre := TSepiaEffect.Create(Image1);
@@ -373,8 +373,8 @@ begin
 end;
 
 // Flouter une image
-procedure TFormMain.AppliquerFlou;
-var
+procedure TFormMain.AppliquerFlou;  
+var  
   Filtre: TGaussianBlurEffect;
 begin
   Filtre := TGaussianBlurEffect.Create(Image1);
@@ -387,8 +387,8 @@ end;
 
 ```pascal
 // Recadrer une zone de l'image
-procedure TFormMain.RecadrerImage(Image: TBitmap; X, Y, Width, Height: Integer);
-var
+procedure TFormMain.RecadrerImage(Image: TBitmap; X, Y, Width, Height: Integer);  
+var  
   ImageRecadree: TBitmap;
 begin
   ImageRecadree := TBitmap.Create;
@@ -422,8 +422,8 @@ uses
   FMX.Media;
 
 // Enregistrer une vidéo avec l'interface native
-procedure TFormMain.BtnEnregistrerVideoClick(Sender: TObject);
-var
+procedure TFormMain.BtnEnregistrerVideoClick(Sender: TObject);  
+var  
   MediaService: IFMXCameraService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXCameraService, MediaService) then
@@ -451,8 +451,8 @@ uses
   FMX.Media;
 
 // Configurer et lire une vidéo
-procedure TFormMain.LireVideo(CheminVideo: string);
-begin
+procedure TFormMain.LireVideo(CheminVideo: string);  
+begin  
   // Créer le lecteur média si nécessaire
   if not Assigned(MediaPlayer1) then
   begin
@@ -469,20 +469,20 @@ begin
 end;
 
 // Contrôles de lecture
-procedure TFormMain.BtnPlayClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPlayClick(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) then
     MediaPlayer1.Play;
 end;
 
-procedure TFormMain.BtnPauseClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPauseClick(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) then
     MediaPlayer1.Stop;
 end;
 
-procedure TFormMain.BtnStopClick(Sender: TObject);
-begin
+procedure TFormMain.BtnStopClick(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) then
   begin
     MediaPlayer1.Stop;
@@ -495,8 +495,8 @@ end;
 
 ```pascal
 // Barre de progression de la vidéo
-procedure TFormMain.TimerVideoTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerVideoTimer(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
   begin
     TrackBar1.Value := (MediaPlayer1.CurrentTime / MediaPlayer1.Duration) * 100;
@@ -506,8 +506,8 @@ begin
 end;
 
 // Permettre à l'utilisateur de naviguer dans la vidéo
-procedure TFormMain.TrackBar1Change(Sender: TObject);
-begin
+procedure TFormMain.TrackBar1Change(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
   begin
     MediaPlayer1.CurrentTime := Round((TrackBar1.Value / 100) * MediaPlayer1.Duration);
@@ -515,8 +515,8 @@ begin
 end;
 
 // Contrôle du volume
-procedure TFormMain.TrackBarVolumeChange(Sender: TObject);
-begin
+procedure TFormMain.TrackBarVolumeChange(Sender: TObject);  
+begin  
   if Assigned(MediaPlayer1) then
     MediaPlayer1.Volume := TrackBarVolume.Value / 100;
 end;
@@ -533,13 +533,13 @@ uses
   FMX.Media;
 
 // Configurer l'enregistreur audio
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   MicrophoneAudioCaptureDevice1 := TMicrophone.Create;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   MicrophoneAudioCaptureDevice1.Free;
 end;
 ```
@@ -548,8 +548,8 @@ end;
 
 ```pascal
 // Démarrer l'enregistrement
-procedure TFormMain.BtnDemarrerEnregistrementClick(Sender: TObject);
-var
+procedure TFormMain.BtnDemarrerEnregistrementClick(Sender: TObject);  
+var  
   CheminFichier: string;
 begin
   CheminFichier := TPath.Combine(TPath.GetDocumentsPath,
@@ -567,8 +567,8 @@ begin
 end;
 
 // Arrêter l'enregistrement
-procedure TFormMain.BtnArreterEnregistrementClick(Sender: TObject);
-begin
+procedure TFormMain.BtnArreterEnregistrementClick(Sender: TObject);  
+begin  
   if Assigned(MicrophoneAudioCaptureDevice1) then
   begin
     MicrophoneAudioCaptureDevice1.StopCapture;
@@ -586,8 +586,8 @@ end;
 
 ```pascal
 // Afficher le niveau audio pendant l'enregistrement
-procedure TFormMain.TimerNiveauAudioTimer(Sender: TObject);
-var
+procedure TFormMain.TimerNiveauAudioTimer(Sender: TObject);  
+var  
   Niveau: Single;
 begin
   if Assigned(MicrophoneAudioCaptureDevice1) and
@@ -619,8 +619,8 @@ uses
   FMX.Media;
 
 // Lire un fichier audio
-procedure TFormMain.LireAudio(CheminFichier: string);
-begin
+procedure TFormMain.LireAudio(CheminFichier: string);  
+begin  
   if not Assigned(MediaPlayer1) then
     MediaPlayer1 := TMediaPlayer.Create(Self);
 
@@ -633,8 +633,8 @@ var
   ListeLecture: TStringList;
   IndexActuel: Integer = 0;
 
-procedure TFormMain.LirePlaylist;
-begin
+procedure TFormMain.LirePlaylist;  
+begin  
   if (IndexActuel >= 0) and (IndexActuel < ListeLecture.Count) then
   begin
     LireAudio(ListeLecture[IndexActuel]);
@@ -643,14 +643,14 @@ begin
   end;
 end;
 
-procedure TFormMain.BtnSuivantClick(Sender: TObject);
-begin
+procedure TFormMain.BtnSuivantClick(Sender: TObject);  
+begin  
   IndexActuel := (IndexActuel + 1) mod ListeLecture.Count;
   LirePlaylist;
 end;
 
-procedure TFormMain.BtnPrecedentClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPrecedentClick(Sender: TObject);  
+begin  
   IndexActuel := (IndexActuel - 1 + ListeLecture.Count) mod ListeLecture.Count;
   LirePlaylist;
 end;
@@ -667,8 +667,8 @@ uses
   System.Permissions, FMX.DialogService;
 
 // Demander la permission pour la caméra
-procedure TFormMain.DemanderPermissionCamera;
-begin
+procedure TFormMain.DemanderPermissionCamera;  
+begin  
   PermissionsService.RequestPermissions(
     [TPermissions.CAMERA],
     procedure(const APermissions: TArray<string>;
@@ -690,8 +690,8 @@ begin
 end;
 
 // Demander la permission pour le microphone
-procedure TFormMain.DemanderPermissionMicrophone;
-begin
+procedure TFormMain.DemanderPermissionMicrophone;  
+begin  
   PermissionsService.RequestPermissions(
     [TPermissions.RECORD_AUDIO],
     procedure(const APermissions: TArray<string>;
@@ -707,8 +707,8 @@ begin
 end;
 
 // Demander la permission pour accéder aux photos
-procedure TFormMain.DemanderPermissionPhotos;
-begin
+procedure TFormMain.DemanderPermissionPhotos;  
+begin  
   PermissionsService.RequestPermissions(
     [TPermissions.READ_EXTERNAL_STORAGE, TPermissions.WRITE_EXTERNAL_STORAGE],
     procedure(const APermissions: TArray<string>;
@@ -728,13 +728,13 @@ end;
 
 ```pascal
 // Vérifier si on a déjà les permissions
-function TFormMain.APermissionCamera: Boolean;
-begin
+function TFormMain.APermissionCamera: Boolean;  
+begin  
   Result := PermissionsService.IsPermissionGranted(TPermissions.CAMERA);
 end;
 
-procedure TFormMain.BtnPhotoClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPhotoClick(Sender: TObject);  
+begin  
   if APermissionCamera then
     PrendrePhoto
   else
@@ -753,8 +753,8 @@ uses
   FMX.MediaLibrary, System.IOUtils;
 
 // Partager une image vers d'autres applications
-procedure TFormMain.PartagerImage(Image: TBitmap);
-var
+procedure TFormMain.PartagerImage(Image: TBitmap);  
+var  
   CheminTemp: string;
   SharingService: IFMXShareSheetActionsService;
 begin
@@ -772,8 +772,8 @@ begin
   end;
 end;
 
-procedure TFormMain.BtnPartagerClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPartagerClick(Sender: TObject);  
+begin  
   PartagerImage(Image1.Bitmap);
 end;
 ```
@@ -784,8 +784,8 @@ end;
 
 ```pascal
 // Libérer les ressources quand on ne les utilise plus
-procedure TFormMain.FormDeactivate(Sender: TObject);
-begin
+procedure TFormMain.FormDeactivate(Sender: TObject);  
+begin  
   // Arrêter la caméra
   if Assigned(Camera1) and Camera1.Active then
     Camera1.Active := False;
@@ -803,8 +803,8 @@ end;
 
 ```pascal
 // Compresser une image avant l'envoi
-procedure TFormMain.CompresserImage(Image: TBitmap; Qualite: Integer);
-var
+procedure TFormMain.CompresserImage(Image: TBitmap; Qualite: Integer);  
+var  
   Stream: TMemoryStream;
   Surface: TBitmapSurface;
 begin
@@ -830,8 +830,8 @@ end;
 
 ```pascal
 // Traiter les images en arrière-plan pour ne pas bloquer l'UI
-procedure TFormMain.TraiterImageAsync(CheminImage: string);
-begin
+procedure TFormMain.TraiterImageAsync(CheminImage: string);  
+begin  
   TTask.Run(
     procedure
     var
@@ -863,8 +863,8 @@ end;
 
 ```pascal
 // Gérer les erreurs d'accès aux médias
-procedure TFormMain.PrendrePhotoSecurisee;
-begin
+procedure TFormMain.PrendrePhotoSecurisee;  
+begin  
   try
     if not APermissionCamera then
     begin
@@ -905,8 +905,8 @@ type
   end;
 
 // Créer une nouvelle note avec photo
-procedure TFormMain.CreerNoteAvecPhoto;
-var
+procedure TFormMain.CreerNoteAvecPhoto;  
+var  
   Note: TNote;
 begin
   Note := TNote.Create;
@@ -928,8 +928,8 @@ end;
 
 ```pascal
 // Prendre une photo d'un document et extraire le texte
-procedure TFormMain.ScannerDocument;
-begin
+procedure TFormMain.ScannerDocument;  
+begin  
   PrendrePhotoAvecCamera(
     procedure(Image: TBitmap)
     begin
@@ -944,8 +944,8 @@ end;
 
 ```pascal
 // Appliquer différents filtres photo
-procedure TFormMain.CreerAppliFiltre;
-begin
+procedure TFormMain.CreerAppliFiltre;  
+begin  
   // Liste de filtres disponibles
   ComboBoxFiltres.Items.Clear;
   ComboBoxFiltres.Items.Add('Aucun');
@@ -956,8 +956,8 @@ begin
   ComboBoxFiltres.ItemIndex := 0;
 end;
 
-procedure TFormMain.ComboBoxFiltresChange(Sender: TObject);
-begin
+procedure TFormMain.ComboBoxFiltresChange(Sender: TObject);  
+begin  
   // Supprimer les effets précédents
   SupprimerTousLesEffets(Image1);
 

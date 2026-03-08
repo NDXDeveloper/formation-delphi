@@ -119,8 +119,8 @@ FCM permet d'envoyer des notifications push à vos utilisateurs sur Android et i
 **Permissions Android** :
 
 ```
-Project > Options > Uses Permissions
-Cocher :
+Project > Options > Uses Permissions  
+Cocher :  
 ☑ Receive Boot Completed
 ☑ Internet
 ☑ Access Network State
@@ -137,8 +137,8 @@ uses
 var
   PushService: TPushService;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Créer le service push
   PushService := TPushServiceManager.Instance.GetServiceByName(
     TPushService.TServiceNames.GCM); // GCM pour Android (Google Cloud Messaging)
@@ -181,8 +181,8 @@ begin
 end;
 
 // Envoyer le token à votre serveur
-procedure TFormMain.EnvoyerTokenAuServeur(const Token: string);
-var
+procedure TFormMain.EnvoyerTokenAuServeur(const Token: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONData: TJSONObject;
@@ -263,8 +263,8 @@ Vous pouvez envoyer des notifications depuis votre serveur ou depuis la console 
 
 ```pascal
 // Exemple de requête HTTP pour envoyer une notification via FCM
-procedure EnvoyerNotificationFCM(const DeviceToken, Titre, Message: string);
-var
+procedure EnvoyerNotificationFCM(const DeviceToken, Titre, Message: string);  
+var  
   HttpClient: THTTPClient;
   Headers: TNetHeaders;
   JSONData: TJSONObject;
@@ -329,8 +329,8 @@ uses
   FMX.Analytics, System.Analytics;
 
 // Logger un événement simple
-procedure TFormMain.LoggerEvenement(const NomEvenement: string);
-var
+procedure TFormMain.LoggerEvenement(const NomEvenement: string);  
+var  
   AnalyticsService: IFMXAnalyticsService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -354,8 +354,8 @@ begin
 end;
 
 // Exemples d'utilisation
-procedure TFormMain.BtnAcheterClick(Sender: TObject);
-begin
+procedure TFormMain.BtnAcheterClick(Sender: TObject);  
+begin  
   // Logger l'achat
   LoggerEvenementAvecParams('purchase',
     ['item_id', '12345', 'price', '9.99', 'currency', 'EUR']);
@@ -364,8 +364,8 @@ begin
   TraiterAchat;
 end;
 
-procedure TFormMain.BtnPartagerClick(Sender: TObject);
-begin
+procedure TFormMain.BtnPartagerClick(Sender: TObject);  
+begin  
   // Logger le partage
   LoggerEvenementAvecParams('share',
     ['content_type', 'article', 'item_id', 'article_123']);
@@ -380,35 +380,35 @@ Firebase propose des événements standards pour les cas d'usage courants :
 
 ```pascal
 // Ouverture de l'application
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   LoggerEvenement('app_open');
 end;
 
 // Connexion utilisateur
-procedure TFormMain.UtilisateurConnecte;
-begin
+procedure TFormMain.UtilisateurConnecte;  
+begin  
   LoggerEvenementAvecParams('login',
     ['method', 'email']);
 end;
 
 // Inscription
-procedure TFormMain.UtilisateurInscrit;
-begin
+procedure TFormMain.UtilisateurInscrit;  
+begin  
   LoggerEvenementAvecParams('sign_up',
     ['method', 'email']);
 end;
 
 // Vue d'écran
-procedure TFormMain.EcranAffiche(const NomEcran: string);
-begin
+procedure TFormMain.EcranAffiche(const NomEcran: string);  
+begin  
   LoggerEvenementAvecParams('screen_view',
     ['screen_name', NomEcran]);
 end;
 
 // Recherche
-procedure TFormMain.RechercheEffectuee(const Termes: string);
-begin
+procedure TFormMain.RechercheEffectuee(const Termes: string);  
+begin  
   LoggerEvenementAvecParams('search',
     ['search_term', Termes]);
 end;
@@ -419,8 +419,8 @@ end;
 Vous pouvez définir des propriétés pour segmenter vos utilisateurs :
 
 ```pascal
-procedure TFormMain.DefinirProprietesUtilisateur;
-var
+procedure TFormMain.DefinirProprietesUtilisateur;  
+var  
   AnalyticsService: IFMXAnalyticsService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(
@@ -506,8 +506,8 @@ uses
   System.Net.HttpClient, System.JSON;
 
 // Lire des données
-procedure TFormMain.LireDonnees;
-var
+procedure TFormMain.LireDonnees;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONData: TJSONValue;
@@ -540,8 +540,8 @@ begin
 end;
 
 // Écrire des données
-procedure TFormMain.EcrireDonnees;
-var
+procedure TFormMain.EcrireDonnees;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONData: TJSONObject;
@@ -573,8 +573,8 @@ begin
 end;
 
 // Mettre à jour des données
-procedure TFormMain.MettreAJourDonnees;
-var
+procedure TFormMain.MettreAJourDonnees;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONData: TJSONObject;
@@ -603,8 +603,8 @@ begin
 end;
 
 // Supprimer des données
-procedure TFormMain.SupprimerDonnees;
-var
+procedure TFormMain.SupprimerDonnees;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -629,8 +629,8 @@ Pour sécuriser l'accès, utilisez un token d'authentification :
 
 ```pascal
 // Lire avec authentification
-procedure TFormMain.LireAvecAuth;
-var
+procedure TFormMain.LireAvecAuth;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -678,8 +678,8 @@ Firebase fournit une API REST pour l'authentification :
 
 ```pascal
 // Inscription avec email/mot de passe
-procedure TFormMain.InscrireUtilisateur(const Email, MotDePasse: string);
-var
+procedure TFormMain.InscrireUtilisateur(const Email, MotDePasse: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest, JSONResponse: TJSONObject;
@@ -732,8 +732,8 @@ begin
 end;
 
 // Connexion avec email/mot de passe
-procedure TFormMain.ConnecterUtilisateur(const Email, MotDePasse: string);
-var
+procedure TFormMain.ConnecterUtilisateur(const Email, MotDePasse: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest, JSONResponse: TJSONObject;
@@ -764,7 +764,7 @@ begin
         try
           var IDToken := JSONResponse.GetValue<string>('idToken');
           var UserID := JSONResponse.GetValue<string>('localId');
-          var Email := JSONResponse.GetValue<string>('email');
+          var UserEmail := JSONResponse.GetValue<string>('email');
 
           SauvegarderToken(IDToken);
           SauvegarderUserID(UserID);
@@ -788,8 +788,8 @@ begin
 end;
 
 // Réinitialisation du mot de passe
-procedure TFormMain.ReinitialiserMotDePasse(const Email: string);
-var
+procedure TFormMain.ReinitialiserMotDePasse(const Email: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONRequest: TJSONObject;
@@ -832,8 +832,8 @@ Firebase Storage permet de stocker des fichiers (images, vidéos, documents).
 ### Configuration des règles
 
 ```javascript
-rules_version = '2';
-service firebase.storage {
+rules_version = '2';  
+service firebase.storage {  
   match /b/{bucket}/o {
     match /users/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -853,8 +853,8 @@ uses
   System.Net.HttpClient, System.IOUtils;
 
 // Uploader une image vers Firebase Storage
-procedure TFormMain.UploaderImage(const CheminLocal: string);
-var
+procedure TFormMain.UploaderImage(const CheminLocal: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   FileStream: TFileStream;
@@ -909,8 +909,8 @@ begin
 end;
 
 // Télécharger une image depuis Firebase Storage
-procedure TFormMain.TelevergerImage(const NomFichier, CheminDestination: string);
-var
+procedure TFormMain.TelevergerImage(const NomFichier, CheminDestination: string);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   FileStream: TFileStream;
@@ -954,8 +954,8 @@ Crashlytics rapporte automatiquement les crashs de votre application.
 
 ```pascal
 // Logger des événements personnalisés avant un crash
-procedure TFormMain.LoggerEvenementCrashlytics(const Message: string);
-begin
+procedure TFormMain.LoggerEvenementCrashlytics(const Message: string);  
+begin  
   // Note : Nécessite l'intégration native du SDK Crashlytics
   // Exemple conceptuel
 
@@ -963,15 +963,15 @@ begin
 end;
 
 // Définir des clés personnalisées
-procedure TFormMain.DefinirClesPersonnalisees;
-begin
+procedure TFormMain.DefinirClesPersonnalisees;  
+begin  
   // Crashlytics.setCustomKey('user_id', GetUserID);
   // Crashlytics.setCustomKey('screen', 'MainScreen');
 end;
 
 // Logger une exception non fatale
-procedure TFormMain.LoggerException(E: Exception);
-begin
+procedure TFormMain.LoggerException(E: Exception);  
+begin  
   // Crashlytics.recordError(E);
 end;
 ```
@@ -990,8 +990,8 @@ const
   QUOTA_FCM_MESSAGES = 10000;                           // illimité en fait
 
 // Optimiser les requêtes
-procedure TFormMain.OptimiserRequetes;
-begin
+procedure TFormMain.OptimiserRequetes;  
+begin  
   // ✅ BON : Charger seulement ce qui est nécessaire
   ChargerDonnees('users/user1');
 
@@ -1028,8 +1028,8 @@ end;
 ### 3. Gestion des erreurs
 
 ```pascal
-procedure TFormMain.RequeteFirebaseSafe;
-begin
+procedure TFormMain.RequeteFirebaseSafe;  
+begin  
   try
     // Requête Firebase
     LireDonnees;
@@ -1066,8 +1066,8 @@ type
   end;
 
 // Utilisation
-procedure TFormMain.ChargerAvecCache(const Path: string);
-begin
+procedure TFormMain.ChargerAvecCache(const Path: string);  
+begin  
   if Cache.EstEnCache(Path) then
   begin
     // Utiliser le cache
@@ -1091,15 +1091,15 @@ end;
 
 ```pascal
 // Logger toutes les interactions Firebase importantes
-procedure TFormMain.LoggerInteractionFirebase(const Action, Resource: string);
-begin
+procedure TFormMain.LoggerInteractionFirebase(const Action, Resource: string);  
+begin  
   LoggerEvenementAvecParams('firebase_interaction',
     ['action', Action, 'resource', Resource]);
 end;
 
 // Utilisation
-procedure TFormMain.SauvegarderDonnees;
-begin
+procedure TFormMain.SauvegarderDonnees;  
+begin  
   LoggerInteractionFirebase('write', 'users/user1');
   EcrireDonneesFirebase;
 end;
@@ -1111,8 +1111,8 @@ end;
 
 ```pascal
 // Vérifier la configuration
-procedure TFormMain.VerifierConfigurationFCM;
-begin
+procedure TFormMain.VerifierConfigurationFCM;  
+begin  
   if not Assigned(PushService) then
   begin
     ShowMessage('PushService non disponible');
@@ -1140,8 +1140,8 @@ end;
 
 ```pascal
 // Vérifier le fichier de configuration
-procedure TFormMain.VerifierConfiguration;
-begin
+procedure TFormMain.VerifierConfiguration;  
+begin  
   {$IFDEF ANDROID}
   var CheminConfig := TPath.Combine(
     TPath.GetDocumentsPath, 'google-services.json');

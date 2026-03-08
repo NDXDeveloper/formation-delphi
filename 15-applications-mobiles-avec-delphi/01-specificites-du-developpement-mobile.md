@@ -56,16 +56,16 @@ Dans Delphi, vous devez intercepter les événements de cycle de vie pour sauveg
 
 ```pascal
 // L'application passe en arrière-plan
-procedure TForm1.FormDeactivate(Sender: TObject);
-begin
+procedure TForm1.FormDeactivate(Sender: TObject);  
+begin  
   // Sauvegarder l'état actuel
   // Arrêter les animations
   // Fermer les connexions réseau non essentielles
 end;
 
 // L'application revient au premier plan
-procedure TForm1.FormActivate(Sender: TObject);
-begin
+procedure TForm1.FormActivate(Sender: TObject);  
+begin  
   // Restaurer l'état
   // Relancer les animations
   // Reconnecter si nécessaire
@@ -99,8 +99,8 @@ Vous devez configurer les permissions dans les paramètres du projet et les dema
 uses
   FMX.MediaLibrary;
 
-procedure TForm1.BtnPhotoClick(Sender: TObject);
-begin
+procedure TForm1.BtnPhotoClick(Sender: TObject);  
+begin  
   // Vérifier et demander la permission
   PermissionsService.RequestPermissions(
     [JStringToString(TJManifest_permission.JavaClass.CAMERA)],
@@ -163,8 +163,8 @@ Les performances sont critiques sur mobile où les ressources sont limitées.
 
 ```pascal
 // Libérer les ressources non utilisées
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Libérer explicitement les objets
   MonObjet.Free;
   // Vider les caches
@@ -195,8 +195,8 @@ Les applications mobiles doivent gérer intelligemment les différents types de 
 uses
   System.Net.HttpClient;
 
-function EstConnecteEnWiFi: Boolean;
-begin
+function EstConnecteEnWiFi: Boolean;  
+begin  
   // Logique pour détecter le type de connexion
   // Adapter le comportement de l'application en conséquence
 end;
@@ -216,8 +216,8 @@ Déclenchées directement par l'application sans passer par un serveur :
 uses
   FMX.Notification;
 
-procedure TForm1.EnvoyerNotification;
-var
+procedure TForm1.EnvoyerNotification;  
+var  
   NotifCenter: TNotificationCenter;
   Notification: TNotification;
 begin
@@ -256,8 +256,8 @@ Les applications mobiles doivent souvent stocker des données localement.
 uses
   System.IOUtils;
 
-procedure SauvegarderParametres;
-var
+procedure SauvegarderParametres;  
+var  
   CheminFichier: string;
 begin
   // Obtenir le chemin du dossier Documents de l'application

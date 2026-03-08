@@ -44,8 +44,8 @@ uses
   System.Sensors, System.Sensors.Components;
 
 // Créer et configurer le capteur de localisation
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   LocationSensor1 := TLocationSensor.Create(Self);
   LocationSensor1.Active := True;
   LocationSensor1.OnLocationChanged := LocationChange;
@@ -74,8 +74,8 @@ La précision du GPS a un impact direct sur la consommation de batterie. Vous po
 
 ```pascal
 // Configurer la précision de la localisation
-procedure TFormMain.ConfigurerPrecisionGPS;
-begin
+procedure TFormMain.ConfigurerPrecisionGPS;  
+begin  
   // Haute précision (GPS) - consomme plus d'énergie
   LocationSensor1.Accuracy := TLocationAccuracy.High;
   LocationSensor1.Distance := 10; // Mise à jour tous les 10 mètres
@@ -93,8 +93,8 @@ uses
   System.Math;
 
 // Calculer la distance entre deux coordonnées GPS (en kilomètres)
-function TFormMain.CalculerDistance(Lat1, Lon1, Lat2, Lon2: Double): Double;
-const
+function TFormMain.CalculerDistance(Lat1, Lon1, Lat2, Lon2: Double): Double;  
+const  
   RayonTerre = 6371; // Rayon de la Terre en kilomètres
 var
   dLat, dLon, a, c: Double;
@@ -112,8 +112,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.BtnCalculerDistanceClick(Sender: TObject);
-var
+procedure TFormMain.BtnCalculerDistanceClick(Sender: TObject);  
+var  
   Distance: Double;
 begin
   // Distance entre Paris et Lyon par exemple
@@ -129,8 +129,8 @@ uses
   System.Net.HttpClient, System.JSON;
 
 // Convertir des coordonnées GPS en adresse lisible (géocodage inversé)
-procedure TFormMain.AfficherAdresse(Latitude, Longitude: Double);
-var
+procedure TFormMain.AfficherAdresse(Latitude, Longitude: Double);  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JsonValue: TJSONValue;
@@ -172,8 +172,8 @@ var
   ListeParcours: TList<TLocationCoord2D>;
   DistanceTotale: Double;
 
-procedure TFormMain.DemarrerEnregistrement;
-begin
+procedure TFormMain.DemarrerEnregistrement;  
+begin  
   ListeParcours := TList<TLocationCoord2D>.Create;
   DistanceTotale := 0;
   LocationSensor1.Active := True;
@@ -200,11 +200,12 @@ end;
 **Recherche de lieux à proximité** :
 ```pascal
 // Trouver les restaurants dans un rayon de 1 km
-procedure TFormMain.ChercherRestaurantsProches;
-var
+procedure TFormMain.ChercherRestaurantsProches;  
+var  
   Position: TLocationCoord2D;
 begin
-  Position := LocationSensor1.Sensor.Latitude;
+  Position.Latitude := LocationSensor1.Sensor.Latitude;
+  Position.Longitude := LocationSensor1.Sensor.Longitude;
 
   // Rechercher dans la base de données ou via une API
   for var Restaurant in ListeRestaurants do
@@ -231,8 +232,8 @@ uses
   System.Sensors, System.Sensors.Components;
 
 // Créer et configurer le capteur de mouvement
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   MotionSensor1 := TMotionSensor.Create(Self);
   MotionSensor1.Active := True;
   MotionSensor1.OnDataChanged := MotionSensorChange;
@@ -243,8 +244,8 @@ end;
 
 ```pascal
 // Gérer les changements de données du capteur de mouvement
-procedure TFormMain.MotionSensorChange(Sender: TObject);
-var
+procedure TFormMain.MotionSensorChange(Sender: TObject);  
+var  
   AccelX, AccelY, AccelZ: Double;
 begin
   // Lire l'accélération sur chaque axe
@@ -263,8 +264,8 @@ end;
 
 ```pascal
 // Détecter l'inclinaison de l'appareil
-procedure TFormMain.DetecterInclinaison;
-var
+procedure TFormMain.DetecterInclinaison;  
+var  
   AccelX, AccelY: Double;
   Angle: Double;
 begin
@@ -286,8 +287,8 @@ end;
 var
   DerniereSecousse: TDateTime;
 
-procedure TFormMain.DetecterSecousse;
-var
+procedure TFormMain.DetecterSecousse;  
+var  
   AccelX, AccelY, AccelZ: Double;
   Force: Double;
 const
@@ -310,8 +311,8 @@ begin
   end;
 end;
 
-procedure TFormMain.OnSecousseDetectee;
-begin
+procedure TFormMain.OnSecousseDetectee;  
+begin  
   ShowMessage('Appareil secoué !');
   // Déclencher une action (réinitialiser un compteur, rafraîchir des données, etc.)
 end;
@@ -322,8 +323,8 @@ end;
 **Jeu utilisant l'inclinaison** :
 ```pascal
 // Déplacer un personnage en inclinant l'appareil
-procedure TFormMain.DeplacerPersonnage;
-var
+procedure TFormMain.DeplacerPersonnage;  
+var  
   AccelX, AccelY: Double;
 begin
   AccelX := MotionSensor1.Sensor.AccelerationX;
@@ -343,8 +344,8 @@ end;
 **Niveau à bulle (spirit level)** :
 ```pascal
 // Créer un niveau à bulle numérique
-procedure TFormMain.AfficherNiveau;
-var
+procedure TFormMain.AfficherNiveau;  
+var  
   AccelX, AccelY: Double;
   AngleX, AngleY: Double;
 begin
@@ -381,8 +382,8 @@ Le gyroscope mesure la vitesse de rotation de l'appareil autour de ses trois axe
 
 ```pascal
 // Lire les données de rotation
-procedure TFormMain.MotionSensorChange(Sender: TObject);
-var
+procedure TFormMain.MotionSensorChange(Sender: TObject);  
+var  
   RotationX, RotationY, RotationZ: Double;
 begin
   // Vitesse de rotation autour de chaque axe (en radians par seconde)
@@ -403,8 +404,8 @@ end;
 var
   AngleTotal: Double = 0;
 
-procedure TFormMain.MotionSensorChange(Sender: TObject);
-var
+procedure TFormMain.MotionSensorChange(Sender: TObject);  
+var  
   DeltaTemps: Double;
   RotationY: Double;
 begin
@@ -434,8 +435,8 @@ uses
   System.Sensors;
 
 // Lire le cap de la boussole
-procedure TFormMain.OrientationSensorChange(Sender: TObject);
-var
+procedure TFormMain.OrientationSensorChange(Sender: TObject);  
+var  
   OrientationSensor: TOrientationSensor;
   Cap: Double;
 begin
@@ -455,8 +456,8 @@ begin
   end;
 end;
 
-procedure TFormMain.AfficherDirectionCardinale(Cap: Double);
-var
+procedure TFormMain.AfficherDirectionCardinale(Cap: Double);  
+var  
   Direction: string;
 begin
   // Déterminer la direction cardinale
@@ -485,8 +486,8 @@ end;
 
 ```pascal
 // Afficher des points d'intérêt superposés sur la caméra selon l'orientation
-procedure TFormMain.AfficherPOIEnRA;
-var
+procedure TFormMain.AfficherPOIEnRA;  
+var  
   Cap: Double;
   POI: TPointInteret;
   AngleVersPOI: Double;
@@ -530,8 +531,8 @@ uses
   System.Sensors;
 
 // Accéder au compteur de pas
-procedure TFormMain.InitialiserPodometre;
-var
+procedure TFormMain.InitialiserPodometre;  
+var  
   StepCounter: TPedometerSensor;
 begin
   StepCounter := TPedometerSensor.Create(Self);
@@ -539,8 +540,8 @@ begin
   StepCounter.Active := True;
 end;
 
-procedure TFormMain.PasComptabilises(Sender: TObject; NumberOfSteps: Integer);
-begin
+procedure TFormMain.PasComptabilises(Sender: TObject; NumberOfSteps: Integer);  
+begin  
   LabelPas.Text := NumberOfSteps.ToString + ' pas';
 
   // Calculer la distance approximative (moyenne de 0.75m par pas)
@@ -564,8 +565,8 @@ uses
   System.Sensors;
 
 // Réagir aux changements de luminosité
-procedure TFormMain.InitialiserCapteurLuminosite;
-var
+procedure TFormMain.InitialiserCapteurLuminosite;  
+var  
   LightSensor: TLightSensor;
 begin
   LightSensor := TLightSensor.Create(Self);
@@ -573,8 +574,8 @@ begin
   LightSensor.Active := True;
 end;
 
-procedure TFormMain.ChangementLuminosite(Sender: TObject; Illuminance: Double);
-begin
+procedure TFormMain.ChangementLuminosite(Sender: TObject; Illuminance: Double);  
+begin  
   LabelLux.Text := FormatFloat('0', Illuminance) + ' lux';
 
   // Adapter l'interface selon la luminosité
@@ -595,8 +596,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ActiverModeNuit;
-begin
+procedure TFormMain.ActiverModeNuit;  
+begin  
   // Basculer vers un thème sombre
   StyleBook1.Style := 'Dark';
   Rectangle1.Fill.Color := TAlphaColors.Black;
@@ -616,8 +617,8 @@ uses
   System.Permissions;
 
 // Vérifier et demander la permission de localisation
-procedure TFormMain.DemanderPermissionLocalisation;
-begin
+procedure TFormMain.DemanderPermissionLocalisation;  
+begin  
   PermissionsService.RequestPermissions(
     [FMX.Permissions.TPermissions.ACCESS_FINE_LOCATION,
      FMX.Permissions.TPermissions.ACCESS_COARSE_LOCATION],
@@ -646,14 +647,14 @@ end;
 
 ```pascal
 // Vérifier l'état d'une permission avant de l'utiliser
-function TFormMain.PermissionLocalisationAccordee: Boolean;
-begin
+function TFormMain.PermissionLocalisationAccordee: Boolean;  
+begin  
   Result := PermissionsService.IsPermissionGranted(
     FMX.Permissions.TPermissions.ACCESS_FINE_LOCATION);
 end;
 
-procedure TFormMain.FormShow(Sender: TObject);
-begin
+procedure TFormMain.FormShow(Sender: TObject);  
+begin  
   if not PermissionLocalisationAccordee then
     DemanderPermissionLocalisation
   else
@@ -669,23 +670,23 @@ Les capteurs consomment de l'énergie. Voici quelques conseils pour optimiser la
 
 ```pascal
 // Désactiver les capteurs quand ils ne sont pas nécessaires
-procedure TFormMain.FormDeactivate(Sender: TObject);
-begin
+procedure TFormMain.FormDeactivate(Sender: TObject);  
+begin  
   // L'application passe en arrière-plan
   LocationSensor1.Active := False;
   MotionSensor1.Active := False;
 end;
 
-procedure TFormMain.FormActivate(Sender: TObject);
-begin
+procedure TFormMain.FormActivate(Sender: TObject);  
+begin  
   // L'application revient au premier plan
   LocationSensor1.Active := True;
   MotionSensor1.Active := True;
 end;
 
 // Ajuster la fréquence de mise à jour
-procedure TFormMain.OptimiserPrecision;
-begin
+procedure TFormMain.OptimiserPrecision;  
+begin  
   // Pour le tracking : haute précision nécessaire
   LocationSensor1.Accuracy := TLocationAccuracy.High;
   LocationSensor1.Distance := 10; // Tous les 10m
@@ -700,8 +701,8 @@ end;
 
 ```pascal
 // Vérifier si le capteur est disponible
-procedure TFormMain.VerifierDisponibiliteCapteur;
-begin
+procedure TFormMain.VerifierDisponibiliteCapteur;  
+begin  
   if not Assigned(LocationSensor1.Sensor) then
   begin
     ShowMessage('Le GPS n''est pas disponible sur cet appareil');
@@ -716,8 +717,8 @@ begin
 end;
 
 // Gérer le timeout de localisation
-procedure TFormMain.GererTimeoutGPS;
-var
+procedure TFormMain.GererTimeoutGPS;  
+var  
   TempsDebut: TDateTime;
 const
   TimeoutSeconds = 30;
@@ -740,8 +741,8 @@ end;
 
 ```pascal
 // Afficher un indicateur pendant l'acquisition GPS
-procedure TFormMain.DemarrerLocalisationAvecIndicateur;
-begin
+procedure TFormMain.DemarrerLocalisationAvecIndicateur;  
+begin  
   AniIndicator1.Enabled := True;
   AniIndicator1.Visible := True;
   LabelStatus.Text := 'Localisation en cours...';
@@ -779,8 +780,8 @@ type
 var
   DonneesActuelles: TDonneesRandonnee;
 
-procedure TFormMain.MettreAJourDonnees;
-begin
+procedure TFormMain.MettreAJourDonnees;  
+begin  
   // Position GPS
   DonneesActuelles.Position.Latitude := LocationSensor1.Sensor.Latitude;
   DonneesActuelles.Position.Longitude := LocationSensor1.Sensor.Longitude;

@@ -20,8 +20,8 @@ Assurez-vous que votre application est stable et sans bugs critiques :
 
 ```pascal
 // Désactiver les fonctionnalités de débogage en production
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF DEBUG}
   // Code de débogage actif uniquement en mode développement
   LabelDebug.Visible := True;
@@ -34,13 +34,13 @@ begin
 end;
 
 // Gérer toutes les exceptions non capturées
-procedure TFormMain.ConfigurerGestionErreurs;
-begin
+procedure TFormMain.ConfigurerGestionErreurs;  
+begin  
   Application.OnException := GererExceptionGlobale;
 end;
 
-procedure TFormMain.GererExceptionGlobale(Sender: TObject; E: Exception);
-begin
+procedure TFormMain.GererExceptionGlobale(Sender: TObject; E: Exception);  
+begin  
   // En production, logger l'erreur au lieu de crasher
   {$IFNDEF DEBUG}
   LoggerErreur(E.Message);
@@ -677,8 +677,8 @@ uses
   FMX.Platform;
 
 // Demander un avis avec l'API native
-procedure TFormMain.DemanderAvis;
-var
+procedure TFormMain.DemanderAvis;  
+var  
   RatingService: IFMXRatingService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXRatingService, RatingService) then
@@ -688,8 +688,8 @@ begin
 end;
 
 // Appeler au bon moment
-procedure TFormMain.TacheTermineeAvecSucces;
-begin
+procedure TFormMain.TacheTermineeAvecSucces;  
+begin  
   // Incrémenter un compteur
   Inc(FNombreSucces);
 
@@ -753,15 +753,15 @@ end;
 uses
   FMX.Advertising;
 
-procedure TFormMain.AfficherBanniere;
-begin
+procedure TFormMain.AfficherBanniere;  
+begin  
   BannerAd1.AdUnitID := 'ca-app-pub-XXXXXXXXX/YYYYYYYYY';
   BannerAd1.LoadAd;
   BannerAd1.Visible := True;
 end;
 
-procedure TFormMain.AfficherInterstitiel;
-begin
+procedure TFormMain.AfficherInterstitiel;  
+begin  
   if InterstitialAd1.IsLoaded then
   begin
     InterstitialAd1.Show;

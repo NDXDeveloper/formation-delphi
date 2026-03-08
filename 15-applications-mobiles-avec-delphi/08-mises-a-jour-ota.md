@@ -110,8 +110,8 @@ type
     function NouvelleVersionDisponible: Boolean;
   end;
 
-function TVersionInfo.DepuisJSON(JSON: TJSONObject): TVersionInfo;
-begin
+function TVersionInfo.DepuisJSON(JSON: TJSONObject): TVersionInfo;  
+begin  
   Result.VersionDisponible := JSON.GetValue<string>('version');
   Result.URLTelechargement := JSON.GetValue<string>('download_url');
   Result.TailleFichier := JSON.GetValue<Int64>('file_size');
@@ -121,8 +121,8 @@ begin
   Result.DatePublication := ISO8601ToDate(JSON.GetValue<string>('published_at'));
 end;
 
-function TVersionInfo.VersJSON: TJSONObject;
-begin
+function TVersionInfo.VersJSON: TJSONObject;  
+begin  
   Result := TJSONObject.Create;
   Result.AddPair('version', VersionDisponible);
   Result.AddPair('download_url', URLTelechargement);
@@ -133,15 +133,15 @@ begin
   Result.AddPair('published_at', DateToISO8601(DatePublication));
 end;
 
-function TVersionInfo.NouvelleVersionDisponible: Boolean;
-begin
+function TVersionInfo.NouvelleVersionDisponible: Boolean;  
+begin  
   // Comparer les versions (simple comparaison de chaînes)
   Result := CompareVersion(VersionDisponible, VersionActuelle) > 0;
 end;
 
 // Fonction utilitaire pour comparer les versions
-function CompareVersion(Version1, Version2: string): Integer;
-var
+function CompareVersion(Version1, Version2: string): Integer;  
+var  
   V1Parts, V2Parts: TArray<string>;
   i, Num1, Num2: Integer;
 begin
@@ -177,8 +177,8 @@ uses
   System.Net.HttpClient, System.IOUtils;
 
 // Vérifier si une mise à jour est disponible
-procedure TFormMain.VerifierMiseAJour;
-var
+procedure TFormMain.VerifierMiseAJour;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   VersionInfo: TVersionInfo;
@@ -251,8 +251,8 @@ end;
 
 ```pascal
 // Proposer à l'utilisateur d'installer la mise à jour
-procedure TFormMain.AfficherDialogueMiseAJour(VersionInfo: TVersionInfo);
-var
+procedure TFormMain.AfficherDialogueMiseAJour(VersionInfo: TVersionInfo);  
+var  
   Message: string;
 begin
   Message := Format('Une nouvelle version (%s) est disponible !' + sLineBreak + sLineBreak +
@@ -294,8 +294,8 @@ begin
 end;
 
 // Formater la taille du fichier de manière lisible
-function TFormMain.FormatTaille(Octets: Int64): string;
-begin
+function TFormMain.FormatTaille(Octets: Int64): string;  
+begin  
   if Octets < 1024 then
     Result := Format('%d octets', [Octets])
   else if Octets < 1024 * 1024 then
@@ -314,8 +314,8 @@ uses
   System.Threading;
 
 // Télécharger et installer la mise à jour
-procedure TFormMain.TelevergerEtInstallerMiseAJour(VersionInfo: TVersionInfo);
-begin
+procedure TFormMain.TelevergerEtInstallerMiseAJour(VersionInfo: TVersionInfo);  
+begin  
   // Afficher un indicateur de progression
   LayoutProgression.Visible := True;
   ProgressBar1.Value := 0;
@@ -407,8 +407,8 @@ begin
 end;
 
 // Vérifier l'intégrité du fichier avec un checksum MD5
-function TFormMain.VerifierChecksum(CheminFichier, ChecksumAttendu: string): Boolean;
-var
+function TFormMain.VerifierChecksum(CheminFichier, ChecksumAttendu: string): Boolean;  
+var  
   Checksum: string;
 begin
   Checksum := CalculerMD5(CheminFichier);
@@ -416,8 +416,8 @@ begin
 end;
 
 // Calculer le MD5 d'un fichier
-function TFormMain.CalculerMD5(CheminFichier: string): string;
-var
+function TFormMain.CalculerMD5(CheminFichier: string): string;  
+var  
   MD5: THashMD5;
   FileStream: TFileStream;
 begin
@@ -497,8 +497,8 @@ begin
 end;
 
 // Appliquer les fichiers de mise à jour
-procedure TFormMain.AppliquerFichiersMAJ(DossierSource: string);
-var
+procedure TFormMain.AppliquerFichiersMAJ(DossierSource: string);  
+var  
   Fichier: string;
   CheminDestination: string;
 begin
@@ -517,8 +517,8 @@ begin
 end;
 
 // Sauvegarder la version actuelle avant la mise à jour
-procedure TFormMain.SauvegarderVersionActuelle(DossierBackup: string);
-var
+procedure TFormMain.SauvegarderVersionActuelle(DossierBackup: string);  
+var  
   DossierApp: string;
   Fichier: string;
   CheminDestination: string;
@@ -540,8 +540,8 @@ begin
 end;
 
 // Restaurer le backup en cas d'échec
-procedure TFormMain.RestaurerBackup(DossierBackup: string);
-var
+procedure TFormMain.RestaurerBackup(DossierBackup: string);  
+var  
   Fichier: string;
   CheminDestination: string;
 begin
@@ -564,8 +564,8 @@ end;
 
 ```pascal
 // Redémarrer l'application pour appliquer les changements
-procedure TFormMain.RedemarrerApplication;
-begin
+procedure TFormMain.RedemarrerApplication;  
+begin  
   {$IFDEF ANDROID}
   // Sur Android, relancer l'activité principale
   var Intent := TJIntent.Create;
@@ -593,8 +593,8 @@ end;
 
 ```pascal
 // Vérifier les mises à jour au démarrage
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Vérifier seulement si connecté à Internet
   if EstConnecteInternet then
   begin
@@ -618,16 +618,16 @@ end;
 
 ```pascal
 // Timer pour vérifier périodiquement les mises à jour
-procedure TFormMain.ConfigurerVerificationPeriodique;
-begin
+procedure TFormMain.ConfigurerVerificationPeriodique;  
+begin  
   TimerMiseAJour := TTimer.Create(Self);
   TimerMiseAJour.Interval := 3600000; // 1 heure
   TimerMiseAJour.OnTimer := TimerMiseAJourTimer;
   TimerMiseAJour.Enabled := True;
 end;
 
-procedure TFormMain.TimerMiseAJourTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerMiseAJourTimer(Sender: TObject);  
+begin  
   if EstConnecteInternet then
     VerifierMiseAJour;
 end;
@@ -637,8 +637,8 @@ end;
 
 ```pascal
 // Vérifier seulement après un certain délai
-procedure TFormMain.VerifierSiNecessaire;
-var
+procedure TFormMain.VerifierSiNecessaire;  
+var  
   DerniereVerif: TDateTime;
   DelaiHeures: Integer;
 begin
@@ -677,13 +677,13 @@ type
     function BackupExiste: Boolean;
   end;
 
-constructor TRollbackManager.Create;
-begin
+constructor TRollbackManager.Create;  
+begin  
   FDossierBackup := TPath.Combine(TPath.GetDocumentsPath, 'app_backup');
 end;
 
-procedure TRollbackManager.CreerBackup;
-begin
+procedure TRollbackManager.CreerBackup;  
+begin  
   // Créer un backup avant la mise à jour
   if TDirectory.Exists(FDossierBackup) then
     TDirectory.Delete(FDossierBackup, True);
@@ -695,8 +695,8 @@ begin
   // ... (code de sauvegarde)
 end;
 
-procedure TRollbackManager.Rollback;
-begin
+procedure TRollbackManager.Rollback;  
+begin  
   if not BackupExiste then
     raise Exception.Create('Aucun backup disponible');
 
@@ -706,8 +706,8 @@ begin
   ShowMessage('Application restaurée à la version ' + FVersionBackup);
 end;
 
-function TRollbackManager.BackupExiste: Boolean;
-begin
+function TRollbackManager.BackupExiste: Boolean;  
+begin  
   Result := TDirectory.Exists(FDossierBackup);
 end;
 ```
@@ -716,8 +716,8 @@ end;
 
 ```pascal
 // Vérifier si l'application fonctionne correctement après la mise à jour
-procedure TFormMain.VerifierSantéApplication;
-var
+procedure TFormMain.VerifierSanteApplication;  
+var  
   NombreCrashs: Integer;
   DerniereMiseAJour: TDateTime;
 begin
@@ -752,8 +752,8 @@ begin
 end;
 
 // Enregistrer un crash
-procedure TFormMain.EnregistrerCrash;
-var
+procedure TFormMain.EnregistrerCrash;  
+var  
   Compteur: Integer;
 begin
   Compteur := LirePreference('NombreCrashsDepuisMAJ', 0);
@@ -775,8 +775,8 @@ type
   end;
 
 // Appliquer une mise à jour delta
-procedure TFormMain.AppliquerMiseAJourDelta(CheminManifeste: string);
-var
+procedure TFormMain.AppliquerMiseAJourDelta(CheminManifeste: string);  
+var  
   Manifeste: TJSONObject;
   DeltaInfo: TDeltaUpdate;
   i: Integer;
@@ -842,8 +842,8 @@ begin
 end;
 
 // Calculer le SHA256 d'un fichier
-function TFormMain.CalculerSHA256(CheminFichier: string): string;
-var
+function TFormMain.CalculerSHA256(CheminFichier: string): string;  
+var  
   SHA256: THashSHA2;
   FileStream: TFileStream;
 begin
@@ -860,15 +860,15 @@ end;
 
 ```pascal
 // Toujours utiliser HTTPS pour les mises à jour
-procedure TFormMain.VerifierURLSecurisee(URL: string);
-begin
+procedure TFormMain.VerifierURLSecurisee(URL: string);  
+begin  
   if not URL.StartsWith('https://', True) then
     raise Exception.Create('Les mises à jour doivent utiliser HTTPS');
 end;
 
 // Configurer le client HTTP pour la sécurité
-procedure TFormMain.ConfigurerHTTPSecurise(HttpClient: THTTPClient);
-begin
+procedure TFormMain.ConfigurerHTTPSecurise(HttpClient: THTTPClient);  
+begin  
   // Valider les certificats SSL
   HttpClient.SecureProtocols := [THTTPSecureProtocol.SSL3,
                                    THTTPSecureProtocol.TLS12];
@@ -917,8 +917,8 @@ Android est plus permissif mais nécessite des précautions :
 
 ```pascal
 // Adapter la stratégie OTA selon la plateforme
-procedure TFormMain.ConfigurerStratégieOTA;
-begin
+procedure TFormMain.ConfigurerStrategieOTA;  
+begin  
   {$IFDEF IOS}
   // Sur iOS : Mises à jour de contenu uniquement
   FTypeMAJAutorisees := [tmajContenu, tmajRessources, tmajDonnees];
@@ -937,8 +937,8 @@ end;
 
 ```pascal
 // Déployer d'abord en test sur un groupe restreint
-procedure TFormMain.DeployerEnBeta(VersionInfo: TVersionInfo);
-begin
+procedure TFormMain.DeployerEnBeta(VersionInfo: TVersionInfo);  
+begin  
   // Marquer comme version beta
   VersionInfo.IsBeta := True;
   VersionInfo.GroupeCible := 'beta_testers';
@@ -954,8 +954,8 @@ end;
 
 ```pascal
 // Déployer progressivement à un pourcentage croissant d'utilisateurs
-procedure TFormMain.DeployerProgressivement(VersionInfo: TVersionInfo);
-begin
+procedure TFormMain.DeployerProgressivement(VersionInfo: TVersionInfo);  
+begin  
   // Jour 1 : 10% des utilisateurs
   VersionInfo.PourcentageDeploiement := 10;
   PublierMiseAJour(VersionInfo);
@@ -970,8 +970,8 @@ end;
 
 ```pascal
 // Logger tous les événements importants
-procedure TFormMain.LoggerEvenementMAJ(Evenement, Details: string);
-var
+procedure TFormMain.LoggerEvenementMAJ(Evenement, Details: string);  
+var  
   LogEntry: TJSONObject;
 begin
   LogEntry := TJSONObject.Create;
@@ -990,8 +990,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.TelevergerEtInstallerMiseAJour(VersionInfo: TVersionInfo);
-begin
+procedure TFormMain.TelevergerEtInstallerMiseAJour(VersionInfo: TVersionInfo);  
+begin  
   LoggerEvenementMAJ('update_started',
     'Version: ' + VersionInfo.VersionDisponible);
 
@@ -1019,8 +1019,8 @@ type
     function PeutReprendre: Boolean;
   end;
 
-procedure TResumableDownload.TelevergerAvecReprise;
-var
+procedure TResumableDownload.TelevergerAvecReprise;  
+var  
   HttpClient: THTTPClient;
   Headers: TNetHeaders;
 begin
@@ -1051,8 +1051,8 @@ end;
 
 ```pascal
 // Afficher clairement l'état de la mise à jour
-procedure TFormMain.AfficherEtatMAJ(Etat: string; Progression: Integer);
-begin
+procedure TFormMain.AfficherEtatMAJ(Etat: string; Progression: Integer);  
+begin  
   LabelEtat.Text := Etat;
   ProgressBar1.Value := Progression;
 

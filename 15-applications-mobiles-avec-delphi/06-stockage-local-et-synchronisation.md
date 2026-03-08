@@ -49,8 +49,8 @@ uses
   System.IniFiles, System.IOUtils;
 
 // Sauvegarder des préférences
-procedure TFormMain.SauvegarderPreferences;
-var
+procedure TFormMain.SauvegarderPreferences;  
+var  
   IniFile: TIniFile;
   CheminIni: string;
 begin
@@ -73,8 +73,8 @@ begin
 end;
 
 // Charger des préférences
-procedure TFormMain.ChargerPreferences;
-var
+procedure TFormMain.ChargerPreferences;  
+var  
   IniFile: TIniFile;
   CheminIni: string;
 begin
@@ -125,42 +125,42 @@ type
     procedure Effacer;
   end;
 
-constructor TPreferences.Create;
-var
+constructor TPreferences.Create;  
+var  
   CheminIni: string;
 begin
   CheminIni := TPath.Combine(TPath.GetDocumentsPath, 'app_preferences.ini');
   FIniFile := TIniFile.Create(CheminIni);
 end;
 
-destructor TPreferences.Destroy;
-begin
+destructor TPreferences.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-procedure TPreferences.SauvegarderString(Section, Cle, Valeur: string);
-begin
+procedure TPreferences.SauvegarderString(Section, Cle, Valeur: string);  
+begin  
   FIniFile.WriteString(Section, Cle, Valeur);
 end;
 
-function TPreferences.ChargerString(Section, Cle, ValeurDefaut: string): string;
-begin
+function TPreferences.ChargerString(Section, Cle, ValeurDefaut: string): string;  
+begin  
   Result := FIniFile.ReadString(Section, Cle, ValeurDefaut);
 end;
 
-procedure TPreferences.SauvegarderBool(Section, Cle: string; Valeur: Boolean);
-begin
+procedure TPreferences.SauvegarderBool(Section, Cle: string; Valeur: Boolean);  
+begin  
   FIniFile.WriteBool(Section, Cle, Valeur);
 end;
 
-function TPreferences.ChargerBool(Section, Cle: string; ValeurDefaut: Boolean): Boolean;
-begin
+function TPreferences.ChargerBool(Section, Cle: string; ValeurDefaut: Boolean): Boolean;  
+begin  
   Result := FIniFile.ReadBool(Section, Cle, ValeurDefaut);
 end;
 
-procedure TPreferences.Effacer;
-begin
+procedure TPreferences.Effacer;  
+begin  
   TFile.Delete(FIniFile.FileName);
 end;
 
@@ -168,8 +168,8 @@ end;
 var
   Prefs: TPreferences;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   Prefs := TPreferences.Create;
 
   // Charger les préférences
@@ -177,8 +177,8 @@ begin
   SwitchMode.IsChecked := Prefs.ChargerBool('Settings', 'DarkMode', False);
 end;
 
-procedure TFormMain.BtnSauvegarderClick(Sender: TObject);
-begin
+procedure TFormMain.BtnSauvegarderClick(Sender: TObject);  
+begin  
   Prefs.SauvegarderString('User', 'Name', EditNom.Text);
   Prefs.SauvegarderBool('Settings', 'DarkMode', SwitchMode.IsChecked);
 end;
@@ -209,20 +209,20 @@ type
     procedure DepuisJSON(JSON: TJSONObject);
   end;
 
-constructor TUtilisateur.Create;
-begin
+constructor TUtilisateur.Create;  
+begin  
   Preferences := TStringList.Create;
 end;
 
-destructor TUtilisateur.Destroy;
-begin
+destructor TUtilisateur.Destroy;  
+begin  
   Preferences.Free;
   inherited;
 end;
 
 // Convertir l'utilisateur en JSON
-function TUtilisateur.VersJSON: TJSONObject;
-var
+function TUtilisateur.VersJSON: TJSONObject;  
+var  
   PrefArray: TJSONArray;
   i: Integer;
 begin
@@ -241,8 +241,8 @@ begin
 end;
 
 // Charger depuis JSON
-procedure TUtilisateur.DepuisJSON(JSON: TJSONObject);
-var
+procedure TUtilisateur.DepuisJSON(JSON: TJSONObject);  
+var  
   PrefArray: TJSONArray;
   i: Integer;
 begin
@@ -260,8 +260,8 @@ begin
 end;
 
 // Sauvegarder dans un fichier
-procedure TFormMain.SauvegarderUtilisateurJSON;
-var
+procedure TFormMain.SauvegarderUtilisateurJSON;  
+var  
   Utilisateur: TUtilisateur;
   JSON: TJSONObject;
   CheminFichier: string;
@@ -290,8 +290,8 @@ begin
 end;
 
 // Charger depuis un fichier
-procedure TFormMain.ChargerUtilisateurJSON;
-var
+procedure TFormMain.ChargerUtilisateurJSON;  
+var  
   Utilisateur: TUtilisateur;
   JSON: TJSONObject;
   CheminFichier: string;
@@ -341,8 +341,8 @@ type
     DateCreation: TDateTime;
   end;
 
-procedure TFormMain.SauvegarderListeTaches(Taches: TList<TTache>);
-var
+procedure TFormMain.SauvegarderListeTaches(Taches: TList<TTache>);  
+var  
   JSONArray: TJSONArray;
   JSONTache: TJSONObject;
   Tache: TTache;
@@ -373,8 +373,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ChargerListeTaches(Taches: TList<TTache>);
-var
+procedure TFormMain.ChargerListeTaches(Taches: TList<TTache>);  
+var  
   JSONArray: TJSONArray;
   JSONTache: TJSONObject;
   Tache: TTache;
@@ -427,8 +427,8 @@ var
   Connexion: TFDConnection;
 
 // Configurer la connexion SQLite
-procedure TFormMain.ConfigurerBDD;
-var
+procedure TFormMain.ConfigurerBDD;  
+var  
   CheminBDD: string;
 begin
   // Créer le chemin de la base de données
@@ -455,8 +455,8 @@ end;
 
 ```pascal
 // Créer la structure de la base de données
-procedure TFormMain.CreerTables;
-var
+procedure TFormMain.CreerTables;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -530,8 +530,8 @@ begin
 end;
 
 // Lire (Récupérer) les tâches
-procedure TFormMain.ChargerTachesUtilisateur(UtilisateurID: Integer);
-var
+procedure TFormMain.ChargerTachesUtilisateur(UtilisateurID: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -564,8 +564,8 @@ begin
 end;
 
 // Mettre à jour une tâche
-procedure TFormMain.MarquerTacheTerminee(TacheID: Integer);
-var
+procedure TFormMain.MarquerTacheTerminee(TacheID: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -586,8 +586,8 @@ begin
 end;
 
 // Supprimer une tâche
-procedure TFormMain.SupprimerTache(TacheID: Integer);
-var
+procedure TFormMain.SupprimerTache(TacheID: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -609,8 +609,8 @@ end;
 
 ```pascal
 // Obtenir des statistiques
-procedure TFormMain.AfficherStatistiques(UtilisateurID: Integer);
-var
+procedure TFormMain.AfficherStatistiques(UtilisateurID: Integer);  
+var  
   Query: TFDQuery;
   TotalTaches, TachesTerminees, TachesEnCours: Integer;
 begin
@@ -646,8 +646,8 @@ begin
 end;
 
 // Recherche de tâches
-procedure TFormMain.RechercherTaches(TexteRecherche: string);
-var
+procedure TFormMain.RechercherTaches(TexteRecherche: string);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -685,16 +685,16 @@ La synchronisation permet de garder les données cohérentes entre l'appareil lo
 
 Il existe plusieurs stratégies de synchronisation :
 
-**Synchronisation complète** : Remplacer toutes les données locales par celles du serveur
-**Synchronisation incrémentielle** : Ne synchroniser que les changements depuis la dernière sync
-**Synchronisation bidirectionnelle** : Envoyer les modifications locales et recevoir celles du serveur
+**Synchronisation complète** : Remplacer toutes les données locales par celles du serveur  
+**Synchronisation incrémentielle** : Ne synchroniser que les changements depuis la dernière sync  
+**Synchronisation bidirectionnelle** : Envoyer les modifications locales et recevoir celles du serveur  
 
 ### Marquage des données pour la synchronisation
 
 ```pascal
 // Ajouter des champs de synchronisation aux tables
-procedure TFormMain.AjouterChampsSynchronisation;
-var
+procedure TFormMain.AjouterChampsSynchronisation;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -738,8 +738,8 @@ uses
   System.Net.HttpClient, System.JSON;
 
 // Synchroniser les tâches non synchronisées vers le serveur
-procedure TFormMain.EnvoyerModificationsLocales;
-var
+procedure TFormMain.EnvoyerModificationsLocales;  
+var  
   Query: TFDQuery;
   HttpClient: THTTPClient;
   JSONArray: TJSONArray;
@@ -802,8 +802,8 @@ begin
 end;
 
 // Marquer les tâches comme synchronisées
-procedure TFormMain.MarquerCommeSynchronise(TachesJSON: TJSONArray);
-var
+procedure TFormMain.MarquerCommeSynchronise(TachesJSON: TJSONArray);  
+var  
   Query: TFDQuery;
   i: Integer;
   LocalID: Integer;
@@ -840,8 +840,8 @@ end;
 
 ```pascal
 // Télécharger les nouvelles données du serveur
-procedure TFormMain.RecevoirModificationsServeur;
-var
+procedure TFormMain.RecevoirModificationsServeur;  
+var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONArray: TJSONArray;
@@ -1008,8 +1008,8 @@ end;
 
 ```pascal
 // Synchroniser automatiquement en arrière-plan
-procedure TFormMain.ConfigurerSyncAuto;
-begin
+procedure TFormMain.ConfigurerSyncAuto;  
+begin  
   // Timer pour synchroniser périodiquement
   TimerSync := TTimer.Create(Self);
   TimerSync.Interval := 300000; // 5 minutes
@@ -1017,8 +1017,8 @@ begin
   TimerSync.Enabled := True;
 end;
 
-procedure TFormMain.TimerSyncTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerSyncTimer(Sender: TObject);  
+begin  
   // Ne synchroniser que si connecté
   if EstConnecteInternet then
   begin
@@ -1027,8 +1027,8 @@ begin
 end;
 
 // Vérifier la connexion Internet
-function TFormMain.EstConnecteInternet: Boolean;
-var
+function TFormMain.EstConnecteInternet: Boolean;  
+var  
   HttpClient: THTTPClient;
 begin
   HttpClient := THTTPClient.Create;
@@ -1045,8 +1045,8 @@ begin
 end;
 
 // Processus complet de synchronisation
-procedure TFormMain.SynchroniserDonnees;
-begin
+procedure TFormMain.SynchroniserDonnees;  
+begin  
   if FSyncEnCours then
   begin
     ShowMessage('Synchronisation déjà en cours');
@@ -1101,8 +1101,8 @@ uses
   System.ZLib;
 
 // Compresser les données avant envoi
-function CompresserJSON(JSON: string): TBytes;
-var
+function CompresserJSON(JSON: string): TBytes;  
+var  
   Input, Output: TBytes;
 begin
   Input := TEncoding.UTF8.GetBytes(JSON);
@@ -1114,8 +1114,8 @@ begin
 end;
 
 // Décompresser les données reçues
-function DecompresserJSON(Data: TBytes): string;
-var
+function DecompresserJSON(Data: TBytes): string;  
+var  
   Output: TBytes;
 begin
   ZDecompress(Data, Output);
@@ -1142,29 +1142,29 @@ type
     procedure Vider;
   end;
 
-constructor TCacheManager.Create(DureeCacheSecondes: Integer);
-begin
+constructor TCacheManager.Create(DureeCacheSecondes: Integer);  
+begin  
   FCache := TDictionary<string, TJSONObject>.Create;
   FDureeCacheSecondes := DureeCacheSecondes;
 end;
 
-destructor TCacheManager.Destroy;
-begin
+destructor TCacheManager.Destroy;  
+begin  
   Vider;
   FCache.Free;
   inherited;
 end;
 
-procedure TCacheManager.Ajouter(Cle: string; Valeur: TJSONObject);
-begin
+procedure TCacheManager.Ajouter(Cle: string; Valeur: TJSONObject);  
+begin  
   if FCache.ContainsKey(Cle) then
     FCache[Cle].Free;
 
   FCache.AddOrSetValue(Cle, Valeur.Clone as TJSONObject);
 end;
 
-function TCacheManager.Obtenir(Cle: string): TJSONObject;
-begin
+function TCacheManager.Obtenir(Cle: string): TJSONObject;  
+begin  
   if FCache.ContainsKey(Cle) then
     Result := FCache[Cle]
   else
@@ -1176,8 +1176,8 @@ end;
 
 ```pascal
 // Supprimer les anciennes données synchronisées
-procedure TFormMain.NettoyerAnciennesDonnees;
-var
+procedure TFormMain.NettoyerAnciennesDonnees;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);

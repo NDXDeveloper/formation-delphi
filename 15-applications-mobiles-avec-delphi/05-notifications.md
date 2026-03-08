@@ -49,13 +49,13 @@ var
   NotificationCenter: TNotificationCenter;
 
 // Initialiser le centre de notifications
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   NotificationCenter := TNotificationCenter.Create(nil);
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   NotificationCenter.Free;
 end;
 ```
@@ -64,8 +64,8 @@ end;
 
 ```pascal
 // Créer et afficher une notification immédiate
-procedure TFormMain.AfficherNotificationSimple;
-var
+procedure TFormMain.AfficherNotificationSimple;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -92,8 +92,8 @@ end;
 
 ```pascal
 // Créer une notification avec son et badge
-procedure TFormMain.NotificationAvecOptions;
-var
+procedure TFormMain.NotificationAvecOptions;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -122,8 +122,8 @@ end;
 
 ```pascal
 // Créer une notification qui se répète
-procedure TFormMain.NotificationQuotidienne;
-var
+procedure TFormMain.NotificationQuotidienne;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -148,8 +148,8 @@ begin
 end;
 
 // Autres intervalles de répétition disponibles
-procedure TFormMain.ExemplesRepetition;
-var
+procedure TFormMain.ExemplesRepetition;  
+var  
   Notification: TNotification;
 begin
   // Toutes les minutes (utile pour les tests)
@@ -181,8 +181,8 @@ Sur certaines plateformes, vous pouvez ajouter des boutons d'action aux notifica
 
 ```pascal
 // Créer une notification avec boutons d'action
-procedure TFormMain.NotificationAvecActions;
-var
+procedure TFormMain.NotificationAvecActions;  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -208,8 +208,8 @@ Lorsque l'utilisateur clique sur une notification, votre application doit réagi
 
 ```pascal
 // Gérer l'événement quand l'utilisateur clique sur une notification
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   NotificationCenter := TNotificationCenter.Create(nil);
   NotificationCenter.OnReceiveLocalNotification := GererNotificationRecue;
 end;
@@ -227,8 +227,8 @@ begin
     OuvrirCalendrier;
 end;
 
-procedure TFormMain.OuvrirBoiteMessages;
-begin
+procedure TFormMain.OuvrirBoiteMessages;  
+begin  
   // Naviguer vers l'écran des messages
   TabControl1.ActiveTab := TabMessages;
 end;
@@ -238,22 +238,22 @@ end;
 
 ```pascal
 // Annuler une notification spécifique
-procedure TFormMain.AnnulerNotification(NomNotification: string);
-begin
+procedure TFormMain.AnnulerNotification(NomNotification: string);  
+begin  
   NotificationCenter.CancelNotification(NomNotification);
   ShowMessage('Notification "' + NomNotification + '" annulée');
 end;
 
 // Annuler toutes les notifications en attente
-procedure TFormMain.AnnulerToutesNotifications;
-begin
+procedure TFormMain.AnnulerToutesNotifications;  
+begin  
   NotificationCenter.CancelAll;
   ShowMessage('Toutes les notifications ont été annulées');
 end;
 
 // Vérifier les notifications programmées
-procedure TFormMain.ListerNotificationsProgrammees;
-var
+procedure TFormMain.ListerNotificationsProgrammees;  
+var  
   NotifsList: TNotificationsList;
   Notif: TNotification;
 begin
@@ -281,8 +281,8 @@ end;
 
 ```pascal
 // Créer un minuteur
-procedure TFormMain.DemarrerMinuteur(Minutes: Integer);
-var
+procedure TFormMain.DemarrerMinuteur(Minutes: Integer);  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -305,8 +305,8 @@ begin
 end;
 
 // Créer une alarme quotidienne
-procedure TFormMain.CreerAlarme(Heure, Minute: Integer);
-var
+procedure TFormMain.CreerAlarme(Heure, Minute: Integer);  
+var  
   Notification: TNotification;
   DateAlarme: TDateTime;
 begin
@@ -345,8 +345,8 @@ type
     DateEcheance: TDateTime;
   end;
 
-procedure TFormMain.CreerRappelTache(Tache: TTache);
-var
+procedure TFormMain.CreerRappelTache(Tache: TTache);  
+var  
   Notification: TNotification;
 begin
   Notification := NotificationCenter.CreateNotification;
@@ -384,8 +384,8 @@ end;
 
 ```pascal
 // Créer un rappel géolocalisé (conceptuel)
-procedure TFormMain.RappelGeolocalise;
-var
+procedure TFormMain.RappelGeolocalise;  
+var  
   Notification: TNotification;
 begin
   // Note : Les notifications géolocalisées nécessitent un service en arrière-plan
@@ -463,8 +463,8 @@ var
   PushService: TPushService;
 
 // Initialiser le service de notifications push
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   PushService := TPushServiceManager.Instance.GetServiceByName(
     TPushService.TServiceNames.GCM); // GCM pour Android
     // ou TPushService.TServiceNames.APS pour iOS
@@ -477,8 +477,8 @@ begin
 end;
 
 // Demander l'activation des notifications push
-procedure TFormMain.ActiverNotificationsPush;
-begin
+procedure TFormMain.ActiverNotificationsPush;  
+begin  
   if Assigned(PushService) then
   begin
     PushService.Active := True;
@@ -501,8 +501,8 @@ begin
 end;
 
 // Envoyer le token à votre serveur
-procedure TFormMain.EnvoyerTokenAuServeur(Token: string);
-var
+procedure TFormMain.EnvoyerTokenAuServeur(Token: string);  
+var  
   HttpClient: THTTPClient;
   RequestBody: TStringStream;
 begin
@@ -539,12 +539,12 @@ begin
       // Extraire les données
       var Titre := ANotification.DataKey['title'];
       var Message := ANotification.DataKey['message'];
-      var Type := ANotification.DataKey['type'];
+      var TypeNotif := ANotification.DataKey['type'];
 
       // Agir selon le type de notification
-      if Type = 'message' then
+      if TypeNotif = 'message' then
         OuvrirMessages
-      else if Type = 'alerte' then
+      else if TypeNotif = 'alerte' then
         AfficherAlerte(Message);
     end);
 end;
@@ -558,8 +558,8 @@ Voici un exemple de code serveur (en pseudo-code) pour envoyer une notification 
 // Exemple conceptuel d'envoi de notification via FCM (Firebase)
 // Ce code s'exécuterait sur votre serveur, pas dans l'application mobile
 
-procedure EnvoyerNotificationPush(DeviceToken, Titre, Message: string);
-var
+procedure EnvoyerNotificationPush(DeviceToken, Titre, Message: string);  
+var  
   HttpClient: THTTPClient;
   RequestBody: TJSONObject;
   Headers: TNetHeaders;
@@ -613,8 +613,8 @@ uses
   System.Permissions, FMX.DialogService;
 
 // Vérifier et demander la permission pour les notifications
-procedure TFormMain.DemanderPermissionNotifications;
-begin
+procedure TFormMain.DemanderPermissionNotifications;  
+begin  
   // Sur Android 13+ (API 33+), il faut demander la permission
   {$IFDEF ANDROID}
   PermissionsService.RequestPermissions(
@@ -643,8 +643,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormMain.ActiverNotifications;
-begin
+procedure TFormMain.ActiverNotifications;  
+begin  
   // Activer les notifications locales et/ou push
   if Assigned(PushService) then
     PushService.Active := True;
@@ -667,8 +667,8 @@ type
     procedure EnregistrerNotificationEnvoyee;
   end;
 
-function TGestionnaireNotifications.PeutEnvoyerNotification: Boolean;
-const
+function TGestionnaireNotifications.PeutEnvoyerNotification: Boolean;  
+const  
   DelaiMinimum = 1 / 24; // 1 heure minimum entre deux notifications
   MaxNotificationsParJour = 5;
 begin
@@ -689,8 +689,8 @@ begin
   Result := True;
 end;
 
-procedure TGestionnaireNotifications.EnregistrerNotificationEnvoyee;
-begin
+procedure TGestionnaireNotifications.EnregistrerNotificationEnvoyee;  
+begin  
   FDerniereNotification := Now;
   Inc(FNombreNotificationsJour);
 
@@ -711,27 +711,23 @@ var
 begin
   Notification := NotificationCenter.CreateNotification;
   try
-    case TypeEvenement of
-      'anniversaire':
-      begin
-        Notification.Title := 'Joyeux anniversaire !';
-        Notification.AlertBody := NomUtilisateur +
-          ', nous vous souhaitons un excellent anniversaire ! 🎉';
-      end;
-
-      'objectif_atteint':
-      begin
-        Notification.Title := 'Objectif atteint ! 🎯';
-        Notification.AlertBody := 'Félicitations ' + NomUtilisateur +
-          ', vous avez atteint votre objectif !';
-      end;
-
-      'rappel_activite':
-      begin
-        Notification.Title := 'On y va ?';
-        Notification.AlertBody := NomUtilisateur +
-          ', cela fait 3 jours que vous n''avez pas ouvert l''application.';
-      end;
+    if TypeEvenement = 'anniversaire' then
+    begin
+      Notification.Title := 'Joyeux anniversaire !';
+      Notification.AlertBody := NomUtilisateur +
+        ', nous vous souhaitons un excellent anniversaire ! 🎉';
+    end
+    else if TypeEvenement = 'objectif_atteint' then
+    begin
+      Notification.Title := 'Objectif atteint ! 🎯';
+      Notification.AlertBody := 'Félicitations ' + NomUtilisateur +
+        ', vous avez atteint votre objectif !';
+    end
+    else if TypeEvenement = 'rappel_activite' then
+    begin
+      Notification.Title := 'On y va ?';
+      Notification.AlertBody := NomUtilisateur +
+        ', cela fait 3 jours que vous n''avez pas ouvert l''application.';
     end;
 
     Notification.FireDate := Now;
@@ -747,8 +743,8 @@ end;
 
 ```pascal
 // Ne pas envoyer de notifications la nuit
-function TFormMain.EstHeureAppropriee: Boolean;
-var
+function TFormMain.EstHeureAppropriee: Boolean;  
+var  
   Heure: Word;
 begin
   Heure := HourOf(Now);
@@ -757,8 +753,8 @@ begin
   Result := (Heure >= 8) and (Heure < 22);
 end;
 
-procedure TFormMain.ProgrammerNotificationIntelligente;
-var
+procedure TFormMain.ProgrammerNotificationIntelligente;  
+var  
   Notification: TNotification;
   DateNotification: TDateTime;
 begin
@@ -789,8 +785,8 @@ end;
 
 ```pascal
 // Interface de paramètres des notifications
-procedure TFormMain.ConfigurerPreferencesNotifications;
-begin
+procedure TFormMain.ConfigurerPreferencesNotifications;  
+begin  
   // Créer une page de paramètres
   SwitchNotificationsActives.IsChecked := LirePreference('NotificationsActives', True);
   SwitchNotificationsSonores.IsChecked := LirePreference('NotificationsSonores', True);
@@ -800,8 +796,8 @@ begin
   // 0 = Immédiat, 1 = Normal, 2 = Rare
 end;
 
-procedure TFormMain.SwitchNotificationsActivesSwitch(Sender: TObject);
-begin
+procedure TFormMain.SwitchNotificationsActivesSwitch(Sender: TObject);  
+begin  
   SauvegarderPreference('NotificationsActives',
     SwitchNotificationsActives.IsChecked);
 
@@ -827,8 +823,8 @@ end;
 
 ```pascal
 // Interface de test des notifications
-procedure TFormMain.BtnTestNotificationClick(Sender: TObject);
-begin
+procedure TFormMain.BtnTestNotificationClick(Sender: TObject);  
+begin  
   // Créer une notification de test qui s'affiche rapidement
   var Notification := NotificationCenter.CreateNotification;
   try
@@ -850,8 +846,8 @@ begin
 end;
 
 // Afficher toutes les notifications programmées
-procedure TFormMain.BtnVoirNotificationsProgrammeesClick(Sender: TObject);
-var
+procedure TFormMain.BtnVoirNotificationsProgrammeesClick(Sender: TObject);  
+var  
   NotifsList: TNotificationsList;
   Notif: TNotification;
 begin

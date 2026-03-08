@@ -130,43 +130,43 @@ implementation
 uses
   System.SysUtils, System.DateUtils;
 
-constructor TTache.Create;
-begin
+constructor TTache.Create;  
+begin  
   inherited;
   FDateCreation := Now;
   FStatut := stAFaire;
   FPriorite := prMoyenne;
 end;
 
-function TTache.EstEnRetard: Boolean;
-begin
+function TTache.EstEnRetard: Boolean;  
+begin  
   Result := (FStatut <> stTerminee) and
             (FStatut <> stAnnulee) and
             (FDateEcheance < Now);
 end;
 
-function TTache.EstUrgente: Boolean;
-begin
+function TTache.EstUrgente: Boolean;  
+begin  
   // Une tâche est urgente si échéance dans moins de 2 jours
   Result := (FStatut = stAFaire) and
             (JoursRestants <= 2) and
             (JoursRestants >= 0);
 end;
 
-function TTache.JoursRestants: Integer;
-begin
+function TTache.JoursRestants: Integer;  
+begin  
   Result := DaysBetween(Now, FDateEcheance);
   if FDateEcheance < Now then
     Result := -Result;
 end;
 
-procedure TTache.Terminer;
-begin
+procedure TTache.Terminer;  
+begin  
   FStatut := stTerminee;
 end;
 
-function TTache.Valider: string;
-begin
+function TTache.Valider: string;  
+begin  
   Result := '';
 
   if Trim(FTitre).IsEmpty then
@@ -233,14 +233,14 @@ implementation
 uses
   System.SysUtils;
 
-constructor TTacheManager.Create;
-begin
+constructor TTacheManager.Create;  
+begin  
   inherited;
   FTaches := TObjectList<TTache>.Create(True); // True = possède les objets
 end;
 
-destructor TTacheManager.Destroy;
-begin
+destructor TTacheManager.Destroy;  
+begin  
   FTaches.Free;
   inherited;
 end;
@@ -271,8 +271,8 @@ begin
     FOnTacheModifiee(Self);
 end;
 
-procedure TTacheManager.SupprimerTache(TacheID: Integer);
-var
+procedure TTacheManager.SupprimerTache(TacheID: Integer);  
+var  
   Tache: TTache;
 begin
   Tache := ObtenirTache(TacheID);
@@ -285,8 +285,8 @@ begin
   end;
 end;
 
-function TTacheManager.ObtenirTache(TacheID: Integer): TTache;
-var
+function TTacheManager.ObtenirTache(TacheID: Integer): TTache;  
+var  
   Tache: TTache;
 begin
   Result := nil;
@@ -297,8 +297,8 @@ begin
   end;
 end;
 
-function TTacheManager.ObtenirTachesEnRetard: TArray<TTache>;
-var
+function TTacheManager.ObtenirTachesEnRetard: TArray<TTache>;  
+var  
   Liste: TList<TTache>;
   Tache: TTache;
 begin
@@ -316,8 +316,8 @@ begin
   end;
 end;
 
-function TTacheManager.CompterTachesTerminees: Integer;
-var
+function TTacheManager.CompterTachesTerminees: Integer;  
+var  
   Tache: TTache;
 begin
   Result := 0;
@@ -328,22 +328,22 @@ begin
   end;
 end;
 
-function TTacheManager.TauxCompletionPourcentage: Double;
-begin
+function TTacheManager.TauxCompletionPourcentage: Double;  
+begin  
   if FTaches.Count = 0 then
     Result := 0
   else
     Result := (CompterTachesTerminees / FTaches.Count) * 100;
 end;
 
-procedure TTacheManager.Sauvegarder;
-begin
+procedure TTacheManager.Sauvegarder;  
+begin  
   // Implémentation spécifique à chaque plateforme
   // Sera surchargée dans les classes dérivées
 end;
 
-procedure TTacheManager.Charger;
-begin
+procedure TTacheManager.Charger;  
+begin  
   // Implémentation spécifique à chaque plateforme
   // Sera surchargée dans les classes dérivées
 end;
@@ -396,8 +396,8 @@ MonProjet/
 Dans chaque projet (Desktop et Mobile), configurez les chemins pour accéder au code partagé :
 
 ```
-Project > Options > Delphi Compiler > Search Path
-Ajouter : ..\Shared\Models;..\Shared\Business;..\Shared\Data;..\Shared\Utils
+Project > Options > Delphi Compiler > Search Path  
+Ajouter : ..\Shared\Models;..\Shared\Business;..\Shared\Data;..\Shared\Utils  
 ```
 
 ## Directives de compilation conditionnelle
@@ -426,8 +426,8 @@ implementation
 uses
   System.IOUtils, System.SysUtils;
 
-class function TPlatformHelper.NomPlateforme: string;
-begin
+class function TPlatformHelper.NomPlateforme: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := 'Windows';
   {$ENDIF}
@@ -449,8 +449,8 @@ begin
   {$ENDIF}
 end;
 
-class function TPlatformHelper.EstMobile: Boolean;
-begin
+class function TPlatformHelper.EstMobile: Boolean;  
+begin  
   {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
   Result := True;
   {$ELSE}
@@ -458,13 +458,13 @@ begin
   {$ENDIF}
 end;
 
-class function TPlatformHelper.EstDesktop: Boolean;
-begin
+class function TPlatformHelper.EstDesktop: Boolean;  
+begin  
   Result := not EstMobile;
 end;
 
-class function TPlatformHelper.CheminDocuments: string;
-begin
+class function TPlatformHelper.CheminDocuments: string;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := TPath.GetDocumentsPath; // C:\Users\[User]\Documents
   {$ENDIF}
@@ -482,8 +482,8 @@ begin
   {$ENDIF}
 end;
 
-class function TPlatformHelper.SeparateurChemin: Char;
-begin
+class function TPlatformHelper.SeparateurChemin: Char;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := '\';
   {$ELSE}
@@ -498,8 +498,8 @@ end.
 
 ```pascal
 // Exemple : Ouvrir un URL dans le navigateur
-procedure TOuvreursURL;
-var
+procedure TOuvreursURL;  
+var  
   URL: string;
 begin
   URL := 'https://www.example.com';
@@ -529,8 +529,8 @@ end;
 
 ```pascal
 // Afficher une notification
-procedure TAfficherNotification(const Titre, Message: string);
-begin
+procedure TAfficherNotification(const Titre, Message: string);  
+begin  
   {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
   // Sur mobile : notification système
   var NotificationCenter := TNotificationCenter.Create(nil);
@@ -611,21 +611,21 @@ implementation
 uses
   System.SysUtils;
 
-constructor TTacheListViewModel.Create(View: ITacheListView);
-begin
+constructor TTacheListViewModel.Create(View: ITacheListView);  
+begin  
   inherited Create;
   FView := View;
   FManager := TTacheManager.Create;
 end;
 
-destructor TTacheListViewModel.Destroy;
-begin
+destructor TTacheListViewModel.Destroy;  
+begin  
   FManager.Free;
   inherited;
 end;
 
-procedure TTacheListViewModel.Charger;
-begin
+procedure TTacheListViewModel.Charger;  
+begin  
   FView.AfficherChargement(True);
   try
     // Charger les tâches depuis la source de données
@@ -654,8 +654,8 @@ begin
   end;
 end;
 
-procedure TTacheListViewModel.FiltrerTaches(const Texte: string);
-begin
+procedure TTacheListViewModel.FiltrerTaches(const Texte: string);  
+begin  
   FFiltreActuel := Texte;
 
   if Texte.IsEmpty then
@@ -664,8 +664,8 @@ begin
     FView.AfficherTaches(FManager.RechercherTaches(Texte));
 end;
 
-procedure TTacheListViewModel.AfficherTachesUrgentes;
-begin
+procedure TTacheListViewModel.AfficherTachesUrgentes;  
+begin  
   FView.AfficherTaches(FManager.ObtenirTachesUrgentes);
 end;
 
@@ -717,19 +717,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FViewModel := TTacheListViewModel.Create(Self);
   FViewModel.Charger;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   FViewModel.Free;
 end;
 
-procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);
-var
+procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);  
+var  
   Tache: TTache;
   Item: TListItem;
 begin
@@ -754,20 +754,20 @@ begin
   end;
 end;
 
-procedure TFormMain.AfficherMessage(const Message: string);
-begin
+procedure TFormMain.AfficherMessage(const Message: string);  
+begin  
   StatusBar1.SimpleText := Message;
   ShowMessage(Message);
 end;
 
-procedure TFormMain.AfficherChargement(Visible: Boolean);
-begin
+procedure TFormMain.AfficherChargement(Visible: Boolean);  
+begin  
   // Sur desktop, on pourrait afficher une barre de progression
   Screen.Cursor := IfThen(Visible, crHourGlass, crDefault);
 end;
 
-procedure TFormMain.BtnAjouterClick(Sender: TObject);
-var
+procedure TFormMain.BtnAjouterClick(Sender: TObject);  
+var  
   Titre, Description: string;
 begin
   // Dialogue d'ajout de tâche (simplifié)
@@ -779,13 +779,13 @@ begin
   end;
 end;
 
-procedure TFormMain.EditRechercheChange(Sender: TObject);
-begin
+procedure TFormMain.EditRechercheChange(Sender: TObject);  
+begin  
   FViewModel.FiltrerTaches(EditRecherche.Text);
 end;
 
-procedure TFormMain.BtnUrgentesClick(Sender: TObject);
-begin
+procedure TFormMain.BtnUrgentesClick(Sender: TObject);  
+begin  
   FViewModel.AfficherTachesUrgentes;
 end;
 
@@ -837,19 +837,19 @@ implementation
 
 {$R *.fmx}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FViewModel := TTacheListViewModel.Create(Self);
   FViewModel.Charger;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   FViewModel.Free;
 end;
 
-procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);
-var
+procedure TFormMain.AfficherTaches(Taches: TArray<TTache>);  
+var  
   Tache: TTache;
   Item: TListViewItem;
 begin
@@ -873,19 +873,19 @@ begin
   end;
 end;
 
-procedure TFormMain.AfficherMessage(const Message: string);
-begin
+procedure TFormMain.AfficherMessage(const Message: string);  
+begin  
   ShowMessage(Message);
 end;
 
-procedure TFormMain.AfficherChargement(Visible: Boolean);
-begin
+procedure TFormMain.AfficherChargement(Visible: Boolean);  
+begin  
   AniIndicator1.Enabled := Visible;
   AniIndicator1.Visible := Visible;
 end;
 
-procedure TFormMain.BtnAjouterClick(Sender: TObject);
-var
+procedure TFormMain.BtnAjouterClick(Sender: TObject);  
+var  
   Titre, Description: string;
 begin
   // Sur mobile, on utiliserait un dialogue ou un formulaire dédié
@@ -898,13 +898,13 @@ begin
   end;
 end;
 
-procedure TFormMain.EditRechercheChange(Sender: TObject);
-begin
+procedure TFormMain.EditRechercheChange(Sender: TObject);  
+begin  
   FViewModel.FiltrerTaches(EditRecherche.Text);
 end;
 
-procedure TFormMain.BtnUrgentesClick(Sender: TObject);
-begin
+procedure TFormMain.BtnUrgentesClick(Sender: TObject);  
+begin  
   FViewModel.AfficherTachesUrgentes;
 end;
 
@@ -976,22 +976,22 @@ implementation
 uses
   System.IOUtils, System.SysUtils, Utils.PlatformHelper;
 
-constructor TSQLiteStorage.Create;
-begin
+constructor TSQLiteStorage.Create;  
+begin  
   inherited;
   FConnection := TFDConnection.Create(nil);
   ConfigurerConnexion;
   CreerTables;
 end;
 
-destructor TSQLiteStorage.Destroy;
-begin
+destructor TSQLiteStorage.Destroy;  
+begin  
   FConnection.Free;
   inherited;
 end;
 
-procedure TSQLiteStorage.ConfigurerConnexion;
-var
+procedure TSQLiteStorage.ConfigurerConnexion;  
+var  
   CheminBD: string;
 begin
   // Utiliser le bon chemin selon la plateforme
@@ -1003,8 +1003,8 @@ begin
   FConnection.Connected := True;
 end;
 
-procedure TSQLiteStorage.CreerTables;
-var
+procedure TSQLiteStorage.CreerTables;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1026,8 +1026,8 @@ begin
   end;
 end;
 
-procedure TSQLiteStorage.SauvegarderTaches(Taches: TObjectList<TTache>);
-var
+procedure TSQLiteStorage.SauvegarderTaches(Taches: TObjectList<TTache>);  
+var  
   Query: TFDQuery;
   Tache: TTache;
 begin
@@ -1061,8 +1061,8 @@ begin
   end;
 end;
 
-function TSQLiteStorage.ChargerTaches: TObjectList<TTache>;
-var
+function TSQLiteStorage.ChargerTaches: TObjectList<TTache>;  
+var  
   Query: TFDQuery;
   Tache: TTache;
 begin
@@ -1094,8 +1094,8 @@ begin
   end;
 end;
 
-procedure TSQLiteStorage.Vider;
-var
+procedure TSQLiteStorage.Vider;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1140,8 +1140,8 @@ uses
   {$ENDIF}
   System.UITypes;
 
-class procedure TDialogueHelper.AfficherMessage(const Titre, Message: string);
-begin
+class procedure TDialogueHelper.AfficherMessage(const Titre, Message: string);  
+begin  
   {$IFDEF MSWINDOWS}
   MessageDlg(Message, TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
   {$ELSE}
@@ -1149,8 +1149,8 @@ begin
   {$ENDIF}
 end;
 
-class function TDialogueHelper.Confirmer(const Message: string): Boolean;
-begin
+class function TDialogueHelper.Confirmer(const Message: string): Boolean;  
+begin  
   {$IFDEF MSWINDOWS}
   Result := MessageDlg(Message, TMsgDlgType.mtConfirmation,
     [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes;
@@ -1221,25 +1221,25 @@ implementation
 uses
   System.SysUtils, System.DateUtils;
 
-procedure TTestTache.Setup;
-begin
+procedure TTestTache.Setup;  
+begin  
   FTache := TTache.Create;
 end;
 
-procedure TTestTache.TearDown;
-begin
+procedure TTestTache.TearDown;  
+begin  
   FTache.Free;
 end;
 
-procedure TTestTache.TestCreation;
-begin
+procedure TTestTache.TestCreation;  
+begin  
   Assert.IsNotNull(FTache);
   Assert.AreEqual(stAFaire, FTache.Statut);
   Assert.AreEqual(prMoyenne, FTache.Priorite);
 end;
 
-procedure TTestTache.TestEstEnRetard;
-begin
+procedure TTestTache.TestEstEnRetard;  
+begin  
   // Tâche avec échéance hier
   FTache.DateEcheance := Yesterday;
   FTache.Statut := stAFaire;
@@ -1255,8 +1255,8 @@ begin
   Assert.IsFalse(FTache.EstEnRetard, 'Tâche terminée ne peut être en retard');
 end;
 
-procedure TTestTache.TestEstUrgente;
-begin
+procedure TTestTache.TestEstUrgente;  
+begin  
   // Tâche dans 1 jour
   FTache.DateEcheance := Now + 1;
   FTache.Statut := stAFaire;
@@ -1267,8 +1267,8 @@ begin
   Assert.IsFalse(FTache.EstUrgente, 'Ne devrait pas être urgente');
 end;
 
-procedure TTestTache.TestValidation;
-var
+procedure TTestTache.TestValidation;  
+var  
   MessageErreur: string;
 begin
   // Tâche invalide (pas de titre)
@@ -1302,8 +1302,8 @@ end.
 - Views/ : Interface utilisateur spécifique
 
 // ❌ MAUVAIS : Tout mélangé
-procedure TFormMain.BtnSaveClick(Sender: TObject);
-begin
+procedure TFormMain.BtnSaveClick(Sender: TObject);  
+begin  
   // Validation + Logique métier + Accès BD + UI - tout dans un bouton !
 end;
 ```
@@ -1323,16 +1323,16 @@ type
   end;
 
 // On peut facilement changer l'implémentation
-FManager.Logger := TFileLogger.Create;  // Desktop
-FManager.Logger := TCloudLogger.Create; // Mobile
+FManager.Logger := TFileLogger.Create;  // Desktop  
+FManager.Logger := TCloudLogger.Create; // Mobile  
 ```
 
 ### 3. Minimiser les dépendances de plateforme
 
 ```pascal
 // ✅ BON : Code qui fonctionne partout
-function CalculerMontantTotal(Prix: Double; Quantite: Integer): Double;
-begin
+function CalculerMontantTotal(Prix: Double; Quantite: Integer): Double;  
+begin  
   Result := Prix * Quantite * 1.20; // TVA 20%
 end;
 
@@ -1354,8 +1354,8 @@ procedure EnvoyerNotificationWindows;
 /// <remarks>
 /// Cette méthode est utilisée à la fois sur desktop et mobile.
 /// </remarks>
-function TTache.JoursRestants: Integer;
-begin
+function TTache.JoursRestants: Integer;  
+begin  
   Result := DaysBetween(Now, FDateEcheance);
   if FDateEcheance < Now then
     Result := -Result;
@@ -1366,8 +1366,8 @@ end;
 
 ```pascal
 // Créer une routine de test multi-plateforme
-procedure TesterSurToutesLesPlateformes;
-begin
+procedure TesterSurToutesLesPlateformes;  
+begin  
   // 1. Compiler pour Windows (VCL)
   // 2. Compiler pour Android
   // 3. Compiler pour iOS

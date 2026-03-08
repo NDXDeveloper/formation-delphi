@@ -20,8 +20,8 @@ Dans cette section, nous allons explorer comment créer des interfaces utilisate
 
 ```pascal
 // Dans Delphi, définir une taille minimale pour un bouton
-procedure TFormMain.ConfigurerBouton(Bouton: TButton);
-begin
+procedure TFormMain.ConfigurerBouton(Bouton: TButton);  
+begin  
   Bouton.Width := 48;  // En points (pixels indépendants)
   Bouton.Height := 48;
   Bouton.Text := 'OK';
@@ -34,8 +34,8 @@ Sur mobile, il est crucial de laisser suffisamment d'espace entre les éléments
 
 ```pascal
 // Positionner des boutons avec un espacement approprié
-procedure TFormMain.CreerBoutonsEspaces;
-begin
+procedure TFormMain.CreerBoutonsEspaces;  
+begin  
   Bouton1.Position.Y := 100;
   Bouton2.Position.Y := Bouton1.Position.Y + Bouton1.Height + 12; // Espacement de 12 points
   Bouton3.Position.Y := Bouton2.Position.Y + Bouton2.Height + 12;
@@ -71,8 +71,8 @@ C'est l'équivalent du clic de souris. L'utilisateur touche brièvement un élé
 
 ```pascal
 // Gérer un simple toucher
-procedure TFormMain.ImageTap(Sender: TObject; const Point: TPointF);
-begin
+procedure TFormMain.ImageTap(Sender: TObject; const Point: TPointF);  
+begin  
   ShowMessage('Image touchée à la position: ' +
     Point.X.ToString + ', ' + Point.Y.ToString);
 end;
@@ -87,8 +87,8 @@ uses
   FMX.Gestures;
 
 // Configurer la détection d'appui long
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   Image1.Touch.GestureManager := GestureManager1;
   Image1.Touch.InteractiveGestures := [TInteractiveGesture.LongTap];
 end;
@@ -111,8 +111,8 @@ L'utilisateur glisse rapidement son doigt dans une direction (gauche, droite, ha
 
 ```pascal
 // Activer la détection de swipe
-procedure TFormMain.ConfigurerSwipe;
-begin
+procedure TFormMain.ConfigurerSwipe;  
+begin  
   Panel1.Touch.GestureManager := GestureManager1;
   Panel1.Touch.InteractiveGestures := [TInteractiveGesture.Left,
                                         TInteractiveGesture.Right];
@@ -145,8 +145,8 @@ L'utilisateur utilise deux doigts pour zoomer (écarter) ou dézoomer (pincer). 
 
 ```pascal
 // Configurer le zoom par pincement
-procedure TFormMain.ConfigurerZoom;
-begin
+procedure TFormMain.ConfigurerZoom;  
+begin  
   Image1.Touch.GestureManager := GestureManager1;
   Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom];
 end;
@@ -171,8 +171,8 @@ L'utilisateur fait défiler le contenu en glissant son doigt verticalement ou ho
 
 ```pascal
 // Créer une zone de défilement vertical
-procedure TFormMain.CreerZoneDefilement;
-var
+procedure TFormMain.CreerZoneDefilement;  
+var  
   ScrollBox: TVertScrollBox;
   i: Integer;
 begin
@@ -203,8 +203,8 @@ Les **Anchors** (ancres) permettent à vos contrôles de s'adapter automatiqueme
 
 ```pascal
 // Ancrer un bouton en bas à droite
-procedure TFormMain.ConfigurerAnchors;
-begin
+procedure TFormMain.ConfigurerAnchors;  
+begin  
   BoutonValider.Anchors := [TAnchorKind.akRight, TAnchorKind.akBottom];
   // Le bouton restera toujours en bas à droite, quelle que soit la taille de l'écran
 end;
@@ -216,8 +216,8 @@ La propriété `Align` est votre meilleure amie pour créer des layouts qui s'ad
 
 ```pascal
 // Créer une interface avec en-tête, contenu et pied de page
-procedure TFormMain.CreerLayoutAdaptatif;
-begin
+procedure TFormMain.CreerLayoutAdaptatif;  
+begin  
   // En-tête fixe en haut
   PanelEntete.Align := TAlignLayout.Top;
   PanelEntete.Height := 60;
@@ -240,8 +240,8 @@ uses
   FMX.Types;
 
 // Détecter le changement d'orientation
-procedure TFormMain.FormResize(Sender: TObject);
-begin
+procedure TFormMain.FormResize(Sender: TObject);  
+begin  
   if Width > Height then
   begin
     // Mode paysage
@@ -254,16 +254,16 @@ begin
   end;
 end;
 
-procedure TFormMain.AdapterInterfacePortrait;
-begin
+procedure TFormMain.AdapterInterfacePortrait;  
+begin  
   // Affichage vertical : empiler les éléments
   Layout1.Orientation := TOrientation.Vertical;
   Image1.Width := ClientWidth - 20;
   Image1.Height := 200;
 end;
 
-procedure TFormMain.AdapterInterfacePaysage;
-begin
+procedure TFormMain.AdapterInterfacePaysage;  
+begin  
   // Affichage horizontal : placer côte à côte
   Layout1.Orientation := TOrientation.Horizontal;
   Image1.Width := ClientWidth / 2;
@@ -277,8 +277,8 @@ Le composant `TLayout` est un conteneur invisible qui aide à organiser vos cont
 
 ```pascal
 // Créer une grille responsive de cartes
-procedure TFormMain.CreerGrilleResponsive;
-var
+procedure TFormMain.CreerGrilleResponsive;  
+var  
   Layout: TLayout;
   i, ColCount: Integer;
 begin
@@ -312,8 +312,8 @@ Le bouton est l'élément interactif le plus courant. Assurez-vous qu'il soit su
 
 ```pascal
 // Créer un bouton tactile optimal
-procedure TFormMain.CreerBoutonTactile;
-begin
+procedure TFormMain.CreerBoutonTactile;  
+begin  
   var Btn := TButton.Create(Self);
   Btn.Parent := Self;
   Btn.Width := 150;
@@ -331,8 +331,8 @@ Idéal pour les barres d'outils tactiles.
 
 ```pascal
 // Créer une barre d'outils tactile
-procedure TFormMain.CreerBarreOutils;
-var
+procedure TFormMain.CreerBarreOutils;  
+var  
   BtnNouveau, BtnEditer, BtnSupprimer: TSpeedButton;
 begin
   // Bouton Nouveau
@@ -357,8 +357,8 @@ Parfait pour les options on/off, plus tactile qu'une case à cocher.
 
 ```pascal
 // Utiliser un switch pour une option
-procedure TFormMain.CreerSwitch;
-begin
+procedure TFormMain.CreerSwitch;  
+begin  
   var Switch := TSwitch.Create(Self);
   Switch.Parent := Self;
   Switch.Position.X := 100;
@@ -366,8 +366,8 @@ begin
   Switch.OnSwitch := SwitchChange;
 end;
 
-procedure TFormMain.SwitchChange(Sender: TObject);
-begin
+procedure TFormMain.SwitchChange(Sender: TObject);  
+begin  
   if TSwitch(Sender).IsChecked then
     ShowMessage('Option activée')
   else
@@ -381,8 +381,8 @@ Pour afficher des listes d'éléments avec des interactions tactiles (swipe pour
 
 ```pascal
 // Créer une liste avec actions de swipe
-procedure TFormMain.CreerListeTactile;
-var
+procedure TFormMain.CreerListeTactile;  
+var  
   Item: TListViewItem;
   DeleteButton: TListItemButton;
 begin
@@ -407,8 +407,8 @@ Excellent pour organiser différentes sections de votre application.
 
 ```pascal
 // Créer une navigation par onglets
-procedure TFormMain.CreerOnglets;
-var
+procedure TFormMain.CreerOnglets;  
+var  
   TabItem1, TabItem2: TTabItem;
 begin
   TabControl1.Align := TAlignLayout.Client;
@@ -444,8 +444,8 @@ Placez les actions principales dans les zones faciles d'accès.
 
 ```pascal
 // Placer un bouton d'action principal en bas
-procedure TFormMain.PlacerBoutonPrincipal;
-begin
+procedure TFormMain.PlacerBoutonPrincipal;  
+begin  
   BoutonPrincipal.Align := TAlignLayout.Bottom;
   BoutonPrincipal.Height := 60;
   BoutonPrincipal.Margins.Rect := RectF(10, 10, 10, 10);
@@ -461,8 +461,8 @@ Les écrans mobiles sont souvent utilisés en extérieur avec beaucoup de lumiè
 
 ```pascal
 // Configurer un style avec bon contraste
-procedure TFormMain.ConfigurerStyle;
-begin
+procedure TFormMain.ConfigurerStyle;  
+begin  
   Label1.TextSettings.Font.Size := 16;
   Label1.TextSettings.FontColor := TAlphaColors.Black;
   Label1.Fill.Color := TAlphaColors.White;
@@ -487,8 +487,8 @@ uses
   FMX.Ani;
 
 // Faire glisser un nouvel écran depuis la droite
-procedure TFormMain.AnimerTransition;
-begin
+procedure TFormMain.AnimerTransition;  
+begin  
   // Positionner le nouvel écran hors de vue à droite
   NouvelEcran.Position.X := ClientWidth;
   NouvelEcran.Visible := True;
@@ -503,8 +503,8 @@ end;
 
 ```pascal
 // Créer un effet "rebond" lors du clic
-procedure TFormMain.AnimerBoutonClic(Sender: TObject);
-begin
+procedure TFormMain.AnimerBoutonClic(Sender: TObject);  
+begin  
   // Réduire légèrement
   TAnimator.AnimateFloat(Sender, 'Scale.X', 0.95, 0.1);
   TAnimator.AnimateFloat(Sender, 'Scale.Y', 0.95, 0.1);
@@ -519,8 +519,8 @@ end;
 
 ```pascal
 // Animer un changement de couleur pour indiquer une action
-procedure TFormMain.AnimerFeedback;
-begin
+procedure TFormMain.AnimerFeedback;  
+begin  
   Rectangle1.Fill.Color := TAlphaColors.Green;
 
   // Revenir à la couleur normale après 0.5 secondes
@@ -559,8 +559,8 @@ Utilisez le bon type de clavier selon le contenu attendu :
 
 ```pascal
 // Configurer le type de clavier pour chaque champ
-procedure TFormMain.ConfigurerClaviers;
-begin
+procedure TFormMain.ConfigurerClaviers;  
+begin  
   // Clavier numérique pour les nombres
   EditAge.KeyboardType := TVirtualKeyboardType.NumberPad;
 
@@ -579,8 +579,8 @@ end;
 
 ```pascal
 // Configurer les actions de retour du clavier
-procedure TFormMain.ConfigurerRetourClavier;
-begin
+procedure TFormMain.ConfigurerRetourClavier;  
+begin  
   // "Suivant" pour passer au champ suivant
   EditNom.ReturnKeyType := TReturnKeyType.Next;
   EditNom.OnKeyDown := PasserChampSuivant;
