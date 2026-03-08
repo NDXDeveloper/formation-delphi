@@ -343,11 +343,11 @@ begin
   // %d : entier décimal
   Texte := Format('Entier : %d', [Entier]); // 'Entier : 42'
 
-  // %f : nombre à virgule flottante
-  Texte := Format('Pi : %f', [Reel]); // 'Pi : 3.14159000000000'
+  // %f : nombre à virgule flottante (2 décimales par défaut)
+  Texte := Format('Pi : %f', [Reel]); // 'Pi : 3.14'
 
-  // %.2f : deux décimales
-  Texte := Format('Pi : %.2f', [Reel]); // 'Pi : 3.14'
+  // %.4f : quatre décimales
+  Texte := Format('Pi : %.4f', [Reel]); // 'Pi : 3.1416'
 
   // %s : chaîne de caractères
   Texte := Format('Texte : %s', ['Hello']); // 'Texte : Hello'

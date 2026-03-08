@@ -340,7 +340,7 @@ begin
   Montant := 1234.56;
 
   // Format monétaire selon la culture système
-  MontantStr := CurrToStr(Montant);
+  MontantStr := CurrToStrF(Montant, ffCurrency, 2);
   // France : "1 234,56 €"
   // USA    : "$1,234.56"
 
@@ -435,8 +435,8 @@ end;
 uses
   System.SysUtils;
 
-function CreerFormatFrancais: TFormatSettings;
-begin
+function CreerFormatFrancais: TFormatSettings;  
+begin  
   Result := TFormatSettings.Create;
 
   // Séparateurs
@@ -457,13 +457,13 @@ begin
   Result.CurrencyDecimals := 2;
 
   // Noms des jours
-  Result.LongDayNames[1] := 'lundi';
-  Result.LongDayNames[2] := 'mardi';
-  Result.LongDayNames[3] := 'mercredi';
-  Result.LongDayNames[4] := 'jeudi';
-  Result.LongDayNames[5] := 'vendredi';
-  Result.LongDayNames[6] := 'samedi';
-  Result.LongDayNames[7] := 'dimanche';
+  Result.LongDayNames[1] := 'dimanche';  // Index 1 = Sunday
+  Result.LongDayNames[2] := 'lundi';
+  Result.LongDayNames[3] := 'mardi';
+  Result.LongDayNames[4] := 'mercredi';
+  Result.LongDayNames[5] := 'jeudi';
+  Result.LongDayNames[6] := 'vendredi';
+  Result.LongDayNames[7] := 'samedi';
 
   // Noms des mois
   Result.LongMonthNames[1] := 'janvier';
@@ -676,8 +676,8 @@ implementation
 uses
   System.DateUtils;
 
-constructor TGestionnaireFormats.Create;
-begin
+constructor TGestionnaireFormats.Create;  
+begin  
   inherited;
   // Format selon la culture système
   FFormatActuel := TFormatSettings.Create;
@@ -688,64 +688,64 @@ begin
   FFormatInvariant.ThousandSeparator := #0;
 end;
 
-function TGestionnaireFormats.FormaterNombre(Valeur: Double; Decimales: Integer): string;
-var
+function TGestionnaireFormats.FormaterNombre(Valeur: Double; Decimales: Integer): string;  
+var  
   Format: string;
 begin
   Format := '#,##0.' + StringOfChar('0', Decimales);
   Result := FormatFloat(Format, Valeur, FFormatActuel);
 end;
 
-function TGestionnaireFormats.FormaterMonnaie(Valeur: Currency): string;
-begin
+function TGestionnaireFormats.FormaterMonnaie(Valeur: Currency): string;  
+begin  
   Result := CurrToStrF(Valeur, ffCurrency, 2, FFormatActuel);
 end;
 
-function TGestionnaireFormats.FormaterDate(LaDate: TDateTime; FormatLong: Boolean): string;
-begin
+function TGestionnaireFormats.FormaterDate(LaDate: TDateTime; FormatLong: Boolean): string;  
+begin  
   if FormatLong then
     Result := FormatDateTime(FFormatActuel.LongDateFormat, LaDate, FFormatActuel)
   else
     Result := FormatDateTime(FFormatActuel.ShortDateFormat, LaDate, FFormatActuel);
 end;
 
-function TGestionnaireFormats.FormaterHeure(LHeure: TDateTime; FormatLong: Boolean): string;
-begin
+function TGestionnaireFormats.FormaterHeure(LHeure: TDateTime; FormatLong: Boolean): string;  
+begin  
   if FormatLong then
     Result := FormatDateTime(FFormatActuel.LongTimeFormat, LHeure, FFormatActuel)
   else
     Result := FormatDateTime(FFormatActuel.ShortTimeFormat, LHeure, FFormatActuel);
 end;
 
-function TGestionnaireFormats.ConvertirEnNombre(const Texte: string): Double;
-begin
+function TGestionnaireFormats.ConvertirEnNombre(const Texte: string): Double;  
+begin  
   if not TryStrToFloat(Texte, Result, FFormatActuel) then
     raise Exception.CreateFmt('"%s" n''est pas un nombre valide', [Texte]);
 end;
 
-function TGestionnaireFormats.ConvertirEnDate(const Texte: string): TDateTime;
-begin
+function TGestionnaireFormats.ConvertirEnDate(const Texte: string): TDateTime;  
+begin  
   if not TryStrToDate(Texte, Result, FFormatActuel) then
     raise Exception.CreateFmt('"%s" n''est pas une date valide', [Texte]);
 end;
 
-function TGestionnaireFormats.NombreVersInvariant(Valeur: Double): string;
-begin
+function TGestionnaireFormats.NombreVersInvariant(Valeur: Double): string;  
+begin  
   Result := FloatToStr(Valeur, FFormatInvariant);
 end;
 
-function TGestionnaireFormats.InvariantVersNombre(const Texte: string): Double;
-begin
+function TGestionnaireFormats.InvariantVersNombre(const Texte: string): Double;  
+begin  
   Result := StrToFloat(Texte, FFormatInvariant);
 end;
 
-function TGestionnaireFormats.DateVersISO(LaDate: TDateTime): string;
-begin
+function TGestionnaireFormats.DateVersISO(LaDate: TDateTime): string;  
+begin  
   Result := DateToISO8601(LaDate);
 end;
 
-function TGestionnaireFormats.ISOVersDate(const TexteISO: string): TDateTime;
-begin
+function TGestionnaireFormats.ISOVersDate(const TexteISO: string): TDateTime;  
+begin  
   Result := ISO8601ToDate(TexteISO);
 end;
 
@@ -761,18 +761,18 @@ uses
 var
   Formats: TGestionnaireFormats;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Formats := TGestionnaireFormats.Create;
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   Formats.Free;
 end;
 
-procedure TForm1.AfficherDonnees;
-var
+procedure TForm1.AfficherDonnees;  
+var  
   Prix: Currency;
   DateCommande: TDateTime;
   Quantite: Double;
@@ -787,8 +787,8 @@ begin
   LblQuantite.Caption := Formats.FormaterNombre(Quantite, 2);
 end;
 
-procedure TForm1.EnregistrerDonnees;
-var
+procedure TForm1.EnregistrerDonnees;  
+var  
   PrixSaisi: Currency;
   DateSaisie: TDateTime;
 begin
@@ -817,15 +817,15 @@ end;
 uses
   Vcl.Mask;
 
-procedure TForm1.ConfigurerMasqueDateFrancais;
-begin
+procedure TForm1.ConfigurerMasqueDateFrancais;  
+begin  
   // Format français : JJ/MM/AAAA
   MaskEditDate.EditMask := '!99/99/0000;1;_';
   MaskEditDate.Text := FormatDateTime('dd/mm/yyyy', Date);
 end;
 
-procedure TForm1.ConfigurerMasqueDateAmericain;
-begin
+procedure TForm1.ConfigurerMasqueDateAmericain;  
+begin  
   // Format américain : MM/JJ/AAAA
   MaskEditDate.EditMask := '!99/99/0000;1;_';
   MaskEditDate.Text := FormatDateTime('mm/dd/yyyy', Date);
@@ -835,8 +835,8 @@ end;
 ### Validation à la saisie
 
 ```pascal
-procedure TForm1.EditNombreKeyPress(Sender: TObject; var Key: Char);
-var
+procedure TForm1.EditNombreKeyPress(Sender: TObject; var Key: Char);  
+var  
   SeparateurDecimal: Char;
 begin
   SeparateurDecimal := FormatSettings.DecimalSeparator;
@@ -883,8 +883,8 @@ Avant de déployer votre application internationale :
 
 ```pascal
 // ❌ MAUVAIS : Format en dur
-TexteNombre := '1234.56'; // Échouera en France
-Nombre := StrToFloat(TexteNombre);
+TexteNombre := '1234.56'; // Échouera en France  
+Nombre := StrToFloat(TexteNombre);  
 
 // ✅ BON : Utiliser le format approprié
 Nombre := StrToFloat(TexteNombre, FormatSettings);
@@ -908,8 +908,8 @@ SQL := 'INSERT INTO Table (Prix) VALUES (' + FloatToStr(Prix) + ')';
 // Échouera si le serveur utilise un format différent
 
 // ✅ BON : Format invariant avec paramètres
-SQL := 'INSERT INTO Table (Prix) VALUES (:Prix)';
-Query.ParamByName('Prix').AsFloat := Prix; // Delphi gère automatiquement
+SQL := 'INSERT INTO Table (Prix) VALUES (:Prix)';  
+Query.ParamByName('Prix').AsFloat := Prix; // Delphi gère automatiquement  
 ```
 
 ## Exemple complet d'application
@@ -944,24 +944,24 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormPrincipal.FormCreate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormCreate(Sender: TObject);  
+begin  
   FFormats := TGestionnaireFormats.Create;
   AfficherInformations;
 end;
 
-procedure TFormPrincipal.FormDestroy(Sender: TObject);
-begin
+procedure TFormPrincipal.FormDestroy(Sender: TObject);  
+begin  
   FFormats.Free;
 end;
 
-procedure TFormPrincipal.BtnAfficherClick(Sender: TObject);
-begin
+procedure TFormPrincipal.BtnAfficherClick(Sender: TObject);  
+begin  
   AfficherInformations;
 end;
 
-procedure TFormPrincipal.AfficherInformations;
-var
+procedure TFormPrincipal.AfficherInformations;  
+var  
   Maintenant: TDateTime;
   Prix: Currency;
   Quantite: Double;

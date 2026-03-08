@@ -11,9 +11,9 @@ Les ressources linguistiques permettent de gérer les textes et éléments textu
 Imaginez que vous ayez développé une application avec tous les textes écrits directement dans le code :
 
 ```pascal
-Button1.Caption := 'Valider';
-ShowMessage('Fichier sauvegardé avec succès');
-Label1.Caption := 'Nom de l\'utilisateur :';
+Button1.Caption := 'Valider';  
+ShowMessage('Fichier sauvegardé avec succès');  
+Label1.Caption := 'Nom de l''utilisateur :';  
 ```
 
 Si vous souhaitez traduire votre application en anglais, espagnol ou toute autre langue, vous devriez modifier chaque ligne de code contenant du texte. C'est fastidieux, source d'erreurs, et difficile à maintenir.
@@ -44,7 +44,7 @@ interface
 
 resourcestring
   // Messages de l'application
-  MSG_BIENVENUE = 'Bienvenue dans l\'application';
+  MSG_BIENVENUE = 'Bienvenue dans l''application';
   MSG_CONFIRMATION = 'Êtes-vous sûr de vouloir continuer ?';
   MSG_ENREGISTREMENT_OK = 'Données enregistrées avec succès';
   MSG_ERREUR_CHARGEMENT = 'Erreur lors du chargement du fichier';
@@ -72,8 +72,8 @@ Une fois déclarées, vous utilisez ces ressources comme des constantes normales
 uses
   MesMessages;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage(MSG_BIENVENUE);
   Button1.Caption := BTN_VALIDER;
   Label1.Caption := LBL_NOM;
@@ -125,7 +125,7 @@ resourcestring
   MSG_DOC_ENREGISTRER = 'Enregistrer';
   MSG_DOC_ENREGISTRER_SOUS = 'Enregistrer sous...';
   MSG_DOC_FERMER = 'Fermer le document';
-  MSG_DOC_MODIFIE = 'Le document a été modifié. Voulez-vous l\'enregistrer ?';
+  MSG_DOC_MODIFIE = 'Le document a été modifié. Voulez-vous l''enregistrer ?';
 
 implementation
 
@@ -193,11 +193,11 @@ Delphi créera automatiquement un fichier `.dfm` séparé pour chaque langue.
 **Exemple de structure de fichiers :**
 
 ```
-MonFormulaire.pas          // Code source
-MonFormulaire.dfm          // Version française (par défaut)
-MonFormulaire.en.dfm       // Version anglaise
-MonFormulaire.es.dfm       // Version espagnole
-MonFormulaire.de.dfm       // Version allemande
+MonFormulaire.pas          // Code source  
+MonFormulaire.dfm          // Version française (par défaut)  
+MonFormulaire.en.dfm       // Version anglaise  
+MonFormulaire.es.dfm       // Version espagnole  
+MonFormulaire.de.dfm       // Version allemande  
 ```
 
 ### Changement de langue à l'exécution
@@ -208,8 +208,8 @@ Pour changer la langue de votre application à l'exécution, utilisez l'unit `Sy
 uses
   System.SysUtils;
 
-procedure TForm1.ChangerLangue(const Langue: string);
-begin
+procedure TForm1.ChangerLangue(const Langue: string);  
+begin  
   // 'fr' pour français, 'en' pour anglais, 'es' pour espagnol, etc.
   SetCurrentLanguage(Langue);
 
@@ -230,8 +230,8 @@ Créez un fichier texte avec l'extension `.rc` :
 ```
 // Fichier : MesRessources.rc
 
-STRINGTABLE
-BEGIN
+STRINGTABLE  
+BEGIN  
   1, "Bienvenue"
   2, "Au revoir"
   3, "Erreur"
@@ -249,16 +249,16 @@ Delphi compile automatiquement les fichiers `.rc` en fichiers `.res` lors de la 
 uses
   Winapi.Windows;
 
-function ChargerChaineRessource(ID: Integer): string;
-var
+function ChargerChaineRessource(ID: Integer): string;  
+var  
   Buffer: array[0..255] of Char;
 begin
-  LoadString(HInstance, ID, Buffer, SizeOf(Buffer));
+  LoadString(HInstance, ID, Buffer, Length(Buffer));
   Result := Buffer;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Message: string;
 begin
   Message := ChargerChaineRessource(1); // Charge "Bienvenue"
@@ -276,19 +276,19 @@ Pour plus de flexibilité, vous pouvez stocker vos traductions dans des fichiers
 ; Fichier : Traduction_FR.ini
 
 [Messages]
-Bienvenue=Bienvenue dans l'application
-AuRevoir=Au revoir et à bientôt
-ErreurFichier=Impossible de charger le fichier
+Bienvenue=Bienvenue dans l'application  
+AuRevoir=Au revoir et à bientôt  
+ErreurFichier=Impossible de charger le fichier  
 
 [Boutons]
-Valider=Valider
-Annuler=Annuler
-Fermer=Fermer
+Valider=Valider  
+Annuler=Annuler  
+Fermer=Fermer  
 
 [Libelles]
-Nom=Nom :
-Prenom=Prénom :
-Email=E-mail :
+Nom=Nom :  
+Prenom=Prénom :  
+Email=E-mail :  
 ```
 
 ### Chargement d'un fichier INI
@@ -307,26 +307,26 @@ type
     function Traduire(const Section, Cle: string): string;
   end;
 
-constructor TTraducteur.Create(const CheminFichier: string);
-begin
+constructor TTraducteur.Create(const CheminFichier: string);  
+begin  
   inherited Create;
   FIniFile := TIniFile.Create(CheminFichier);
 end;
 
-destructor TTraducteur.Destroy;
-begin
+destructor TTraducteur.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-function TTraducteur.Traduire(const Section, Cle: string): string;
-begin
+function TTraducteur.Traduire(const Section, Cle: string): string;  
+begin  
   Result := FIniFile.ReadString(Section, Cle, Cle); // Retourne la clé si non trouvée
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Traducteur: TTraducteur;
 begin
   Traducteur := TTraducteur.Create('Traduction_FR.ini');
@@ -370,16 +370,16 @@ Les fichiers JSON sont de plus en plus populaires pour stocker les traductions.
 uses
   System.JSON, System.IOUtils;
 
-function ChargerTraductionJSON(const CheminFichier: string): TJSONObject;
-var
+function ChargerTraductionJSON(const CheminFichier: string): TJSONObject;  
+var  
   ContenuJSON: string;
 begin
   ContenuJSON := TFile.ReadAllText(CheminFichier, TEncoding.UTF8);
   Result := TJSONObject.ParseJSONValue(ContenuJSON) as TJSONObject;
 end;
 
-function ObtenirTraduction(JSON: TJSONObject; const Categorie, Cle: string): string;
-var
+function ObtenirTraduction(JSON: TJSONObject; const Categorie, Cle: string): string;  
+var  
   Section: TJSONObject;
 begin
   Result := Cle; // Valeur par défaut
@@ -390,8 +390,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Traductions: TJSONObject;
 begin
   Traductions := ChargerTraductionJSON('Traduction_FR.json');
@@ -439,22 +439,22 @@ var
 
 implementation
 
-constructor TGestionnaireTraduction.Create;
-begin
+constructor TGestionnaireTraduction.Create;  
+begin  
   inherited;
   FTraductions := TDictionary<string, string>.Create;
   FLangueActive := 'fr'; // Langue par défaut
   ChargerLangue(FLangueActive);
 end;
 
-destructor TGestionnaireTraduction.Destroy;
-begin
+destructor TGestionnaireTraduction.Destroy;  
+begin  
   FTraductions.Free;
   inherited;
 end;
 
-procedure TGestionnaireTraduction.ChargerLangue(const CodeLangue: string);
-var
+procedure TGestionnaireTraduction.ChargerLangue(const CodeLangue: string);  
+var  
   IniFile: TIniFile;
   Sections, Cles: TStringList;
   i, j: Integer;
@@ -490,20 +490,20 @@ begin
   end;
 end;
 
-function TGestionnaireTraduction.T(const Cle: string): string;
-begin
+function TGestionnaireTraduction.T(const Cle: string): string;  
+begin  
   if not FTraductions.TryGetValue(Cle, Result) then
     Result := Cle; // Retourne la clé si la traduction n'existe pas
 end;
 
-procedure TGestionnaireTraduction.DefinirLangue(const CodeLangue: string);
-begin
+procedure TGestionnaireTraduction.DefinirLangue(const CodeLangue: string);  
+begin  
   FLangueActive := CodeLangue;
   ChargerLangue(CodeLangue);
 end;
 
-function TGestionnaireTraduction.LangueActive: string;
-begin
+function TGestionnaireTraduction.LangueActive: string;  
+begin  
   Result := FLangueActive;
 end;
 
@@ -522,8 +522,8 @@ end.
 uses
   GestionnaireTraduction;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Utilisation simple avec la fonction T()
   Button1.Caption := Traduction.T('Boutons.Valider');
   Button2.Caption := Traduction.T('Boutons.Annuler');
@@ -531,8 +531,8 @@ begin
   ShowMessage(Traduction.T('Messages.Bienvenue'));
 end;
 
-procedure TForm1.ChangerLangueEnAnglais;
-begin
+procedure TForm1.ChangerLangueEnAnglais;  
+begin  
   Traduction.DefinirLangue('en');
 
   // Mettre à jour l'interface
@@ -633,10 +633,10 @@ Message := Format(MSG_ACCUEIL, [Nom, Age]);
 Certaines langues (comme l'allemand) produisent des textes plus longs. Prévoyez de l'espace supplémentaire dans votre interface.
 
 ```
-Français : "Enregistrer"    → 11 caractères
-Anglais  : "Save"           →  4 caractères
-Allemand : "Speichern"      → 10 caractères
-Italien  : "Salva"          →  5 caractères
+Français : "Enregistrer"    → 11 caractères  
+Anglais  : "Save"           →  4 caractères  
+Allemand : "Speichern"      → 10 caractères  
+Italien  : "Salva"          →  5 caractères  
 ```
 
 ### 4. Documenter le contexte
@@ -675,8 +675,8 @@ resourcestring
   MSG_FICHIER_SINGULIER = '%d fichier sélectionné';
   MSG_FICHIER_PLURIEL = '%d fichiers sélectionnés';
 
-function MessageFichiers(Nombre: Integer): string;
-begin
+function MessageFichiers(Nombre: Integer): string;  
+begin  
   if Nombre <= 1 then
     Result := Format(MSG_FICHIER_SINGULIER, [Nombre])
   else
@@ -691,8 +691,8 @@ end;
 Il est important de gérer les cas où une traduction est manquante :
 
 ```pascal
-function TGestionnaireTraduction.T(const Cle: string): string;
-begin
+function TGestionnaireTraduction.T(const Cle: string): string;  
+begin  
   // Essayer dans la langue active
   if not FTraductions.TryGetValue(Cle, Result) then
   begin

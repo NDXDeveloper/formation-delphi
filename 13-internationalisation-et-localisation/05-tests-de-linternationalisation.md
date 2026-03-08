@@ -42,21 +42,21 @@ type
     function GenererRapport: string;
   end;
 
-constructor TTestVisuel.Create(const Langue: string);
-begin
+constructor TTestVisuel.Create(const Langue: string);  
+begin  
   inherited Create;
   FLangueTeste := Langue;
   FProblemesTrouves := TStringList.Create;
 end;
 
-destructor TTestVisuel.Destroy;
-begin
+destructor TTestVisuel.Destroy;  
+begin  
   FProblemesTrouves.Free;
   inherited;
 end;
 
-procedure TTestVisuel.VerifierFormulaire(Form: TForm);
-var
+procedure TTestVisuel.VerifierFormulaire(Form: TForm);  
+var  
   i: Integer;
   Composant: TComponent;
 begin
@@ -79,13 +79,13 @@ begin
   end;
 end;
 
-procedure TTestVisuel.AjouterProbleme(const Description: string);
-begin
+procedure TTestVisuel.AjouterProbleme(const Description: string);  
+begin  
   FProblemesTrouves.Add(Format('[%s] %s', [FLangueTeste, Description]));
 end;
 
-function TTestVisuel.GenererRapport: string;
-begin
+function TTestVisuel.GenererRapport: string;  
+begin  
   if FProblemesTrouves.Count = 0 then
     Result := Format('Aucun problème trouvé pour la langue %s', [FLangueTeste])
   else
@@ -146,18 +146,18 @@ type
 
 implementation
 
-procedure TTestsI18N.Setup;
-begin
+procedure TTestsI18N.Setup;  
+begin  
   // Initialisation avant chaque test
 end;
 
-procedure TTestsI18N.TearDown;
-begin
+procedure TTestsI18N.TearDown;  
+begin  
   // Nettoyage après chaque test
 end;
 
-procedure TTestsI18N.TestToutesLesLanguesDisponibles;
-var
+procedure TTestsI18N.TestToutesLesLanguesDisponibles;  
+var  
   Langues: TArray<string>;
 begin
   Langues := ['fr', 'en', 'es', 'de', 'it'];
@@ -168,8 +168,8 @@ begin
       'Fichier de langue manquant : ' + Langue);
 end;
 
-procedure TTestsI18N.TestToutesLesClesTraduitesEnFrancais;
-var
+procedure TTestsI18N.TestToutesLesClesTraduitesEnFrancais;  
+var  
   ClesRequises: TArray<string>;
   Valeur: string;
 begin
@@ -187,8 +187,8 @@ begin
   end;
 end;
 
-procedure TTestsI18N.TestFormatDateFrancais;
-var
+procedure TTestsI18N.TestFormatDateFrancais;  
+var  
   FormatFR: TFormatSettings;
   MaDate: TDateTime;
   DateStr: string;
@@ -200,8 +200,8 @@ begin
   Assert.AreEqual('25/12/2024', DateStr);
 end;
 
-procedure TTestsI18N.TestFormatNombreFrancais;
-var
+procedure TTestsI18N.TestFormatNombreFrancais;  
+var  
   FormatFR: TFormatSettings;
   Nombre: Double;
   NombreStr: string;
@@ -284,28 +284,28 @@ uses
 
 {$R *.dfm}
 
-procedure TFormTestLangue.FormCreate(Sender: TObject);
-begin
+procedure TFormTestLangue.FormCreate(Sender: TObject);  
+begin  
   ChargerLangues;
   FIndexLangue := 0;
 end;
 
-procedure TFormTestLangue.ChargerLangues;
-begin
+procedure TFormTestLangue.ChargerLangues;  
+begin  
   FLangues := ['fr', 'en', 'es', 'de', 'it'];
   ComboLangue.Items.Clear;
   ComboLangue.Items.AddStrings(['Français', 'English', 'Español', 'Deutsch', 'Italiano']);
   ComboLangue.ItemIndex := 0;
 end;
 
-procedure TFormTestLangue.BtnAppliquerClick(Sender: TObject);
-begin
+procedure TFormTestLangue.BtnAppliquerClick(Sender: TObject);  
+begin  
   if ComboLangue.ItemIndex >= 0 then
     AppliquerLangue(FLangues[ComboLangue.ItemIndex]);
 end;
 
-procedure TFormTestLangue.AppliquerLangue(const CodeLangue: string);
-begin
+procedure TFormTestLangue.AppliquerLangue(const CodeLangue: string);  
+begin  
   GestionnaireTraduction.DefinirLangue(CodeLangue);
 
   // Recharger tous les formulaires ouverts
@@ -318,8 +318,8 @@ begin
   MemoRapport.Lines.Add(Format('Langue changée vers : %s', [CodeLangue]));
 end;
 
-procedure TFormTestLangue.BtnCaptureEcranClick(Sender: TObject);
-var
+procedure TFormTestLangue.BtnCaptureEcranClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   // Capturer tous les formulaires
@@ -332,8 +332,8 @@ begin
   MemoRapport.Lines.Add('Captures d''écran enregistrées');
 end;
 
-procedure TFormTestLangue.CaptureEcranFormulaire(Form: TForm);
-var
+procedure TFormTestLangue.CaptureEcranFormulaire(Form: TForm);  
+var  
   Bitmap: TBitmap;
   PNG: TPngImage;
   NomFichier: string;
@@ -357,13 +357,13 @@ begin
   end;
 end;
 
-procedure TFormTestLangue.BtnSuivantClick(Sender: TObject);
-begin
+procedure TFormTestLangue.BtnSuivantClick(Sender: TObject);  
+begin  
   TestLangueSuivante;
 end;
 
-procedure TFormTestLangue.TestLangueSuivante;
-begin
+procedure TFormTestLangue.TestLangueSuivante;  
+begin  
   Inc(FIndexLangue);
   if FIndexLangue >= Length(FLangues) then
   begin
@@ -414,21 +414,21 @@ type
 
 implementation
 
-constructor TValidateurTraductions.Create(const LangueReference: string);
-begin
+constructor TValidateurTraductions.Create(const LangueReference: string);  
+begin  
   inherited Create;
   FLangueReference := LangueReference;
   FProblemes := TList<TProblemeTraduction>.Create;
 end;
 
-destructor TValidateurTraductions.Destroy;
-begin
+destructor TValidateurTraductions.Destroy;  
+begin  
   FProblemes.Free;
   inherited;
 end;
 
-function TValidateurTraductions.ChargerCles(const Langue: string): TStringList;
-var
+function TValidateurTraductions.ChargerCles(const Langue: string): TStringList;  
+var  
   IniFile: TIniFile;
   Sections, Cles: TStringList;
   i, j: Integer;
@@ -460,8 +460,8 @@ begin
   end;
 end;
 
-procedure TValidateurTraductions.ValiderLangue(const CodeLangue: string);
-var
+procedure TValidateurTraductions.ValiderLangue(const CodeLangue: string);  
+var  
   ClesReference, ClesLangue: TStringList;
   i: Integer;
   Probleme: TProblemeTraduction;
@@ -503,8 +503,8 @@ begin
   end;
 end;
 
-procedure TValidateurTraductions.ValiderToutesLesLangues;
-var
+procedure TValidateurTraductions.ValiderToutesLesLangues;  
+var  
   Langues: TArray<string>;
   Langue: string;
 begin
@@ -518,8 +518,8 @@ begin
   end;
 end;
 
-function TValidateurTraductions.GenererRapport: string;
-var
+function TValidateurTraductions.GenererRapport: string;  
+var  
   Rapport: TStringBuilder;
   Probleme: TProblemeTraduction;
   DernierLangue: string;
@@ -593,20 +593,20 @@ type
 
 implementation
 
-constructor TAnalyseurMiseEnPage.Create;
-begin
+constructor TAnalyseurMiseEnPage.Create;  
+begin  
   inherited;
   FProblemes := TList<TProblemeMiseEnPage>.Create;
 end;
 
-destructor TAnalyseurMiseEnPage.Destroy;
-begin
+destructor TAnalyseurMiseEnPage.Destroy;  
+begin  
   FProblemes.Free;
   inherited;
 end;
 
-procedure TAnalyseurMiseEnPage.AnalyserFormulaire(Form: TForm);
-var
+procedure TAnalyseurMiseEnPage.AnalyserFormulaire(Form: TForm);  
+var  
   i: Integer;
   Composant: TComponent;
 begin
@@ -623,8 +623,8 @@ begin
   end;
 end;
 
-procedure TAnalyseurMiseEnPage.VerifierDebordementBouton(Bouton: TButton);
-var
+procedure TAnalyseurMiseEnPage.VerifierDebordementBouton(Bouton: TButton);  
+var  
   LargeurTexte: Integer;
   Probleme: TProblemeMiseEnPage;
 begin
@@ -642,8 +642,8 @@ begin
   end;
 end;
 
-procedure TAnalyseurMiseEnPage.VerifierDebordementLabel(Lbl: TLabel);
-var
+procedure TAnalyseurMiseEnPage.VerifierDebordementLabel(Lbl: TLabel);  
+var  
   LargeurTexte: Integer;
   Probleme: TProblemeMiseEnPage;
 begin
@@ -663,8 +663,8 @@ begin
   end;
 end;
 
-function TAnalyseurMiseEnPage.GenererRapport: string;
-var
+function TAnalyseurMiseEnPage.GenererRapport: string;  
+var  
   Rapport: TStringBuilder;
   Probleme: TProblemeMiseEnPage;
 begin
@@ -749,8 +749,8 @@ end.
 ### Scénario 1 : Changement de langue dynamique
 
 ```pascal
-procedure TesterChangementLangue;
-var
+procedure TesterChangementLangue;  
+var  
   Form: TForm;
   LanguesATest: TArray<string>;
   Langue: string;
@@ -784,8 +784,8 @@ end;
 ### Scénario 2 : Saisie et validation
 
 ```pascal
-procedure TesterSaisieValidation(const Langue: string);
-var
+procedure TesterSaisieValidation(const Langue: string);  
+var  
   Form: TFormSaisie;
   DonneesTest: array of record
     DateStr: string;
@@ -842,8 +842,8 @@ end;
 ### Scénario 3 : Import/Export de données
 
 ```pascal
-procedure TesterImportExport(const Langue: string);
-var
+procedure TesterImportExport(const Langue: string);  
+var  
   DonneesOriginales: TDataSet;
   CheminFichier: string;
 begin
@@ -880,8 +880,8 @@ end;
 Créer un outil pour détecter les chaînes en dur dans le code :
 
 ```pascal
-procedure RechercherTextesEnDur(const CheminSource: string);
-var
+procedure RechercherTextesEnDur(const CheminSource: string);  
+var  
   Fichiers: TStringDynArray;
   Fichier, Ligne: string;
   NumLigne: Integer;
@@ -913,8 +913,8 @@ begin
   end;
 end;
 
-function ContientTexteEnDur(const Ligne: string): Boolean;
-var
+function ContientTexteEnDur(const Ligne: string): Boolean;  
+var  
   Motifs: TArray<string>;
   Motif: string;
 begin
@@ -939,8 +939,8 @@ end;
 ### 2. Traductions manquantes
 
 ```pascal
-procedure DetecterTraductionsManquantes;
-var
+procedure DetecterTraductionsManquantes;  
+var  
   ValidateurTrad: TValidateurTraductions;
   Rapport: string;
 begin
@@ -962,8 +962,8 @@ end;
 ### 3. Problèmes d'encodage
 
 ```pascal
-procedure VerifierEncodageFichiers;
-var
+procedure VerifierEncodageFichiers;  
+var  
   FichiersLangue: TStringDynArray;
   Fichier: string;
   Contenu: TBytes;
@@ -1010,8 +1010,8 @@ type
     procedure SauvegarderRapport(const CheminFichier: string);
   end;
 
-function TRapportTest.GenererRapportHTML: string;
-var
+function TRapportTest.GenererRapportHTML: string;  
+var  
   HTML: TStringBuilder;
 begin
   HTML := TStringBuilder.Create;
@@ -1074,8 +1074,8 @@ uses
 var
   CodeSortie: Integer;
 
-procedure ExecuterTests;
-var
+procedure ExecuterTests;  
+var  
   Validateur: TValidateurTraductions;
   NbProblemes: Integer;
 begin
@@ -1127,9 +1127,9 @@ end.
 ### 1. Tester tôt et souvent
 
 ```
-Ne pas attendre : Tester dès qu'une langue est ajoutée
-Tester régulièrement : À chaque modification importante
-Automatiser : Intégrer dans le processus de build
+Ne pas attendre : Tester dès qu'une langue est ajoutée  
+Tester régulièrement : À chaque modification importante  
+Automatiser : Intégrer dans le processus de build  
 ```
 
 ### 2. Impliquer des locuteurs natifs
@@ -1151,8 +1151,8 @@ Pour chaque problème trouvé :
 ### 4. Créer un environnement de test dédié
 
 ```pascal
-procedure ConfigurerEnvironnementTest;
-begin
+procedure ConfigurerEnvironnementTest;  
+begin  
   // Utiliser des données de test dans toutes les langues
   ChargerDonneesTest;
 

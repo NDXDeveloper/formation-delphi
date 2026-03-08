@@ -27,12 +27,12 @@ Au début de l'informatique, chaque caractère était représenté par un nombre
 Unicode est un **standard universel** qui attribue un numéro unique (appelé "code point") à **chaque caractère** de **toutes les langues** du monde.
 
 ```
-Exemples de code points Unicode :
-U+0041 = 'A' (lettre latine majuscule A)
-U+00E9 = 'é' (e accent aigu)
-U+4E2D = '中' (caractère chinois)
-U+0623 = 'أ' (lettre arabe)
-U+1F600 = '😀' (emoji visage souriant)
+Exemples de code points Unicode :  
+U+0041 = 'A' (lettre latine majuscule A)  
+U+00E9 = 'é' (e accent aigu)  
+U+4E2D = '中' (caractère chinois)  
+U+0623 = 'أ' (lettre arabe)  
+U+1F600 = '😀' (emoji visage souriant)  
 ```
 
 > 💡 **Unicode** résout le problème : un seul système pour tous les caractères du monde !
@@ -229,8 +229,8 @@ Le BOM est une séquence d'octets au début d'un fichier qui indique son encodag
 uses
   System.IOUtils, System.SysUtils, System.Classes;
 
-procedure EcrireFichierUTF8(const NomFichier, Contenu: string);
-var
+procedure EcrireFichierUTF8(const NomFichier, Contenu: string);  
+var  
   Fichier: TStreamWriter;
 begin
   // Créer un fichier en UTF-8 avec BOM
@@ -242,8 +242,8 @@ begin
   end;
 end;
 
-procedure EcrireFichierSansEncodage;
-begin
+procedure EcrireFichierSansEncodage;  
+begin  
   // Méthode simple : UTF-8 par défaut avec BOM
   TFile.WriteAllText('fichier.txt', 'Contenu avec accents: é à ç', TEncoding.UTF8);
 end;
@@ -255,8 +255,8 @@ end;
 uses
   System.IOUtils, System.SysUtils, System.Classes;
 
-function LireFichierAvecDetection(const NomFichier: string): string;
-var
+function LireFichierAvecDetection(const NomFichier: string): string;  
+var  
   Fichier: TStreamReader;
 begin
   // TStreamReader détecte automatiquement l'encodage via le BOM
@@ -268,14 +268,14 @@ begin
   end;
 end;
 
-function LireFichierUTF8(const NomFichier: string): string;
-begin
+function LireFichierUTF8(const NomFichier: string): string;  
+begin  
   // Forcer la lecture en UTF-8
   Result := TFile.ReadAllText(NomFichier, TEncoding.UTF8);
 end;
 
-function LireFichierAnsi(const NomFichier: string): string;
-begin
+function LireFichierAnsi(const NomFichier: string): string;  
+begin  
   // Lire un ancien fichier ANSI
   Result := TFile.ReadAllText(NomFichier, TEncoding.ANSI);
 end;
@@ -287,8 +287,8 @@ end;
 uses
   System.SysUtils, System.Classes;
 
-function DetecterEncodage(const NomFichier: string): TEncoding;
-var
+function DetecterEncodage(const NomFichier: string): TEncoding;  
+var  
   Stream: TFileStream;
   Buffer: TBytes;
 begin
@@ -346,8 +346,8 @@ Pour compter les vrais caractères (graphèmes), utilisez des fonctions spécial
 uses
   System.Character;
 
-function CompterCaracteres(const Texte: string): Integer;
-var
+function CompterCaracteres(const Texte: string): Integer;  
+var  
   i: Integer;
   Surrogate: Boolean;
 begin
@@ -447,12 +447,12 @@ var Texte := TFile.ReadAllText('fichier.txt', TEncoding.UTF8);
 
 ```pascal
 // ❌ MAUVAIS : Conversion vers ANSI
-var TexteAnsi: AnsiString;
-TexteAnsi := AnsiString('Café 中国'); // '中国' sera perdu !
+var TexteAnsi: AnsiString;  
+TexteAnsi := AnsiString('Café 中国'); // '中国' sera perdu !  
 
 // ✅ BON : Rester en Unicode
-var TexteUnicode: string;
-TexteUnicode := 'Café 中国'; // Tout est préservé
+var TexteUnicode: string;  
+TexteUnicode := 'Café 中国'; // Tout est préservé  
 ```
 
 ### Problème 3 : Fichiers sans BOM
@@ -465,8 +465,8 @@ TexteUnicode := 'Café 中国'; // Tout est préservé
 
 ```pascal
 // Toujours écrire avec BOM pour faciliter la détection
-procedure EcrireFichierAvecBOM(const NomFichier, Contenu: string);
-var
+procedure EcrireFichierAvecBOM(const NomFichier, Contenu: string);  
+var  
   Writer: TStreamWriter;
 begin
   Writer := TStreamWriter.Create(NomFichier, False, TEncoding.UTF8);
@@ -512,8 +512,8 @@ end;
 uses
   System.Net.HttpClient, System.SysUtils, System.Classes;
 
-procedure EnvoyerDonneesUTF8;
-var
+procedure EnvoyerDonneesUTF8;  
+var  
   Client: THTTPClient;
   Reponse: IHTTPResponse;
   Contenu: TStringStream;
@@ -547,8 +547,8 @@ end;
 uses
   FireDAC.Comp.Client, FireDAC.Stan.Param;
 
-procedure EnregistrerDonneesUnicode;
-var
+procedure EnregistrerDonneesUnicode;  
+var  
   Connection: TFDConnection;
   Query: TFDQuery;
 begin
@@ -605,8 +605,8 @@ type
 
 implementation
 
-class function THelperEncodage.DetecterEncodageFichier(const NomFichier: string): TEncoding;
-var
+class function THelperEncodage.DetecterEncodageFichier(const NomFichier: string): TEncoding;  
+var  
   Stream: TFileStream;
   Buffer: TBytes;
 begin
@@ -637,26 +637,26 @@ begin
   end;
 end;
 
-class function THelperEncodage.ContientBOM(const NomFichier: string): Boolean;
-var
+class function THelperEncodage.ContientBOM(const NomFichier: string): Boolean;  
+var  
   Encodage: TEncoding;
 begin
   Encodage := DetecterEncodageFichier(NomFichier);
   Result := Encodage <> TEncoding.ANSI;
 end;
 
-class function THelperEncodage.ConvertirVersUTF8(const Texte: string): UTF8String;
-begin
+class function THelperEncodage.ConvertirVersUTF8(const Texte: string): UTF8String;  
+begin  
   Result := UTF8String(Texte);
 end;
 
-class function THelperEncodage.ConvertirDepuisUTF8(const TexteUTF8: UTF8String): string;
-begin
+class function THelperEncodage.ConvertirDepuisUTF8(const TexteUTF8: UTF8String): string;  
+begin  
   Result := string(TexteUTF8);
 end;
 
-class function THelperEncodage.EstUTF8Valide(const Octets: TBytes): Boolean;
-var
+class function THelperEncodage.EstUTF8Valide(const Octets: TBytes): Boolean;  
+var  
   i: Integer;
 begin
   Result := True;
@@ -680,8 +680,8 @@ begin
   end;
 end;
 
-class function THelperEncodage.ContientCaracteresNonASCII(const Texte: string): Boolean;
-var
+class function THelperEncodage.ContientCaracteresNonASCII(const Texte: string): Boolean;  
+var  
   c: Char;
 begin
   Result := False;
@@ -695,8 +695,8 @@ begin
   end;
 end;
 
-class function THelperEncodage.ObtenirNomEncodage(Encodage: TEncoding): string;
-begin
+class function THelperEncodage.ObtenirNomEncodage(Encodage: TEncoding): string;  
+begin  
   if Encodage = TEncoding.UTF8 then
     Result := 'UTF-8'
   else if Encodage = TEncoding.Unicode then
@@ -713,8 +713,8 @@ begin
     Result := 'Inconnu';
 end;
 
-class function THelperEncodage.TailleEnOctets(const Texte: string; Encodage: TEncoding): Integer;
-var
+class function THelperEncodage.TailleEnOctets(const Texte: string; Encodage: TEncoding): Integer;  
+var  
   Octets: TBytes;
 begin
   Octets := Encodage.GetBytes(Texte);
@@ -730,8 +730,8 @@ end.
 uses
   HelperEncodage;
 
-procedure ExempleUtilisation;
-var
+procedure ExempleUtilisation;  
+var  
   Texte: string;
   Encodage: TEncoding;
   TailleUTF8, TailleUTF16: Integer;
@@ -818,8 +818,8 @@ const
 ### Inspecteur d'octets
 
 ```pascal
-procedure AfficherOctets(const Texte: string);
-var
+procedure AfficherOctets(const Texte: string);  
+var  
   Octets: TBytes;
   i: Integer;
   Resultat: string;
@@ -842,8 +842,8 @@ AfficherOctets('Café');
 ### Comparaison d'encodages
 
 ```pascal
-procedure ComparerEncodages(const Texte: string);
-var
+procedure ComparerEncodages(const Texte: string);  
+var  
   UTF8, UTF16, ANSI: TBytes;
 begin
   UTF8 := TEncoding.UTF8.GetBytes(Texte);
@@ -860,10 +860,10 @@ begin
 end;
 
 // Test
-ComparerEncodages('Hello');    // ASCII simple
-ComparerEncodages('Café');     // Avec accent
-ComparerEncodages('中国');     // Caractères chinois
-ComparerEncodages('😀');       // Emoji
+ComparerEncodages('Hello');    // ASCII simple  
+ComparerEncodages('Café');     // Avec accent  
+ComparerEncodages('中国');     // Caractères chinois  
+ComparerEncodages('😀');       // Emoji  
 ```
 
 ## Conclusion

@@ -69,8 +69,8 @@ Quand vous activez `BiDiMode = bdRightToLeft` sur un formulaire :
 ### Exemple simple
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Activer le mode RTL pour tout le formulaire
   Self.BiDiMode := bdRightToLeft;
 
@@ -86,16 +86,16 @@ end;
 uses
   System.SysUtils;
 
-function EstLangueRTL(const CodeLangue: string): Boolean;
-begin
+function EstLangueRTL(const CodeLangue: string): Boolean;  
+begin  
   Result := (CodeLangue = 'ar') or  // Arabe
             (CodeLangue = 'he') or  // Hébreu
             (CodeLangue = 'fa') or  // Persan
             (CodeLangue = 'ur');    // Ourdou
 end;
 
-procedure TFormPrincipal.DefinirDirectionTexte(const CodeLangue: string);
-begin
+procedure TFormPrincipal.DefinirDirectionTexte(const CodeLangue: string);  
+begin  
   if EstLangueRTL(CodeLangue) then
     Self.BiDiMode := bdRightToLeft
   else
@@ -137,8 +137,8 @@ end.
 ### Labels et textes
 
 ```pascal
-procedure ConfigurerLabelsRTL;
-begin
+procedure ConfigurerLabelsRTL;  
+begin  
   // En mode RTL, les labels s'alignent automatiquement à droite
   Label1.Caption := 'الاسم:'; // "Nom:" en arabe
 
@@ -153,8 +153,8 @@ end;
 En mode RTL, l'ordre des boutons doit être inversé :
 
 ```pascal
-procedure TFormDialogue.ConfigurerBoutonsRTL;
-begin
+procedure TFormDialogue.ConfigurerBoutonsRTL;  
+begin  
   if Self.BiDiMode = bdRightToLeft then
   begin
     // RTL : Annuler à gauche, OK à droite
@@ -173,8 +173,8 @@ end;
 ### Champs de saisie
 
 ```pascal
-procedure ConfigurerEditsRTL;
-begin
+procedure ConfigurerEditsRTL;  
+begin  
   // Les Edit héritent automatiquement de BiDiMode
   EditNom.BiDiMode := bdRightToLeft;
 
@@ -189,8 +189,8 @@ end;
 Les menus s'adaptent automatiquement en mode RTL :
 
 ```pascal
-procedure TFormPrincipal.CreerMenuRTL;
-begin
+procedure TFormPrincipal.CreerMenuRTL;  
+begin  
   // Le menu principal s'inverse automatiquement
   Self.BiDiMode := bdRightToLeft;
 
@@ -205,8 +205,8 @@ end;
 ### Barres d'outils
 
 ```pascal
-procedure ConfigurerToolBarRTL(ToolBar: TToolBar);
-var
+procedure ConfigurerToolBarRTL(ToolBar: TToolBar);  
+var  
   i: Integer;
   Bouton: TToolButton;
 begin
@@ -225,8 +225,8 @@ end;
 ### Onglets (PageControl)
 
 ```pascal
-procedure ConfigurerOngletsRTL(PageControl: TPageControl);
-begin
+procedure ConfigurerOngletsRTL(PageControl: TPageControl);  
+begin  
   PageControl.BiDiMode := bdRightToLeft;
 
   // Les onglets s'affichent de droite à gauche
@@ -255,8 +255,8 @@ type
     function ObtenirImageFleche(Gauche: Boolean; RTL: Boolean): TBitmap;
   end;
 
-procedure TGestionnaireImagesRTL.ChargerImagesRTL;
-begin
+procedure TGestionnaireImagesRTL.ChargerImagesRTL;  
+begin  
   // Charger les images dans les deux sens
   FImagesFlecheGauche := TImageList.Create(nil);
   FImagesFlecheDroite := TImageList.Create(nil);
@@ -264,8 +264,8 @@ begin
   // En RTL, échanger les flèches
 end;
 
-function TGestionnaireImagesRTL.ObtenirImageFleche(Gauche: Boolean; RTL: Boolean): TBitmap;
-begin
+function TGestionnaireImagesRTL.ObtenirImageFleche(Gauche: Boolean; RTL: Boolean): TBitmap;  
+begin  
   // Si RTL, inverser la direction
   if RTL then
     Gauche := not Gauche;
@@ -293,8 +293,8 @@ end;
 uses
   Vcl.Graphics;
 
-function InverserImageHorizontalement(const ImageOriginale: TBitmap): TBitmap;
-var
+function InverserImageHorizontalement(const ImageOriginale: TBitmap): TBitmap;  
+var  
   x, y: Integer;
 begin
   Result := TBitmap.Create;
@@ -308,8 +308,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ChargerImageRTL;
-var
+procedure TForm1.ChargerImageRTL;  
+var  
   ImageLTR, ImageRTL: TBitmap;
 begin
   ImageLTR := TBitmap.Create;
@@ -340,8 +340,8 @@ end;
 Les Anchors fonctionnent bien avec RTL :
 
 ```pascal
-procedure ConfigurerAnchorsRTL;
-begin
+procedure ConfigurerAnchorsRTL;  
+begin  
   // Ces anchors s'adaptent automatiquement
   BtnOK.Anchors := [akRight, akBottom];     // Reste à droite en LTR, à gauche en RTL
   BtnAnnuler.Anchors := [akRight, akBottom];
@@ -353,8 +353,8 @@ end;
 ### Panels et conteneurs
 
 ```pascal
-procedure ConfigurerPanelsRTL(Form: TForm);
-begin
+procedure ConfigurerPanelsRTL(Form: TForm);  
+begin  
   // Panel gauche en LTR devient panel droit en RTL
   PanelMenu.BiDiMode := Form.BiDiMode;
   PanelMenu.Align := alRight; // Devient automatiquement alLeft en RTL
@@ -368,8 +368,8 @@ end;
 ### Grilles et listes
 
 ```pascal
-procedure ConfigurerGridRTL(Grid: TStringGrid);
-begin
+procedure ConfigurerGridRTL(Grid: TStringGrid);  
+begin  
   Grid.BiDiMode := bdRightToLeft;
 
   // Les colonnes s'affichent de droite à gauche
@@ -424,8 +424,8 @@ const
   LRM = #$200E; // Left-to-Right Mark
   RLM = #$200F; // Right-to-Left Mark
 
-procedure ExempleMarquesDirectionnelles;
-var
+procedure ExempleMarquesDirectionnelles;  
+var  
   Texte: string;
 begin
   // Forcer un nombre à rester LTR dans un texte RTL
@@ -441,8 +441,8 @@ end;
 Les raccourcis clavier ne changent pas en RTL, mais leur position peut être confuse.
 
 ```pascal
-procedure ConfigurerRaccourcisRTL;
-begin
+procedure ConfigurerRaccourcisRTL;  
+begin  
   // Les raccourcis restent les mêmes
   ActionFichierNouveau.ShortCut := ShortCut(Ord('N'), [ssCtrl]);
 
@@ -463,8 +463,8 @@ end;
 **Solution :**
 
 ```pascal
-procedure CorrigerBarresDefilement(Memo: TMemo);
-begin
+procedure CorrigerBarresDefilement(Memo: TMemo);  
+begin  
   Memo.BiDiMode := bdRightToLeft;
 
   // Forcer la mise à jour
@@ -480,8 +480,8 @@ end;
 **Solution :**
 
 ```pascal
-procedure RealignerComposantsRTL(Form: TForm);
-var
+procedure RealignerComposantsRTL(Form: TForm);  
+var  
   i: Integer;
   Composant: TComponent;
   Control: TControl;
@@ -530,8 +530,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.AfficherMessageRTL;
-begin
+procedure TForm1.AfficherMessageRTL;  
+begin  
   MessageDlgRTL('هل أنت متأكد؟', mtConfirmation, [mbYes, mbNo]);
 end;
 ```
@@ -543,8 +543,8 @@ end;
 **Solution :**
 
 ```pascal
-procedure InverserOrdreTabulation(Form: TForm);
-var
+procedure InverserOrdreTabulation(Form: TForm);  
+var  
   i: Integer;
   Controls: TList;
 begin
@@ -611,49 +611,49 @@ var
 
 implementation
 
-constructor TGestionnaireRTL.Create;
-begin
+constructor TGestionnaireRTL.Create;  
+begin  
   inherited;
   FModeRTL := False;
 end;
 
-procedure TGestionnaireRTL.ActiverRTL(Form: TForm);
-begin
+procedure TGestionnaireRTL.ActiverRTL(Form: TForm);  
+begin  
   FModeRTL := True;
   Form.BiDiMode := bdRightToLeft;
   AppliquerAuxComposants(Form);
 end;
 
-procedure TGestionnaireRTL.DesactiverRTL(Form: TForm);
-begin
+procedure TGestionnaireRTL.DesactiverRTL(Form: TForm);  
+begin  
   FModeRTL := False;
   Form.BiDiMode := bdLeftToRight;
   AppliquerAuxComposants(Form);
 end;
 
-procedure TGestionnaireRTL.BasculerRTL(Form: TForm);
-begin
+procedure TGestionnaireRTL.BasculerRTL(Form: TForm);  
+begin  
   if FModeRTL then
     DesactiverRTL(Form)
   else
     ActiverRTL(Form);
 end;
 
-function TGestionnaireRTL.EstRTLActif: Boolean;
-begin
+function TGestionnaireRTL.EstRTLActif: Boolean;  
+begin  
   Result := FModeRTL;
 end;
 
-function TGestionnaireRTL.EstLangueRTL(const CodeLangue: string): Boolean;
-begin
+function TGestionnaireRTL.EstLangueRTL(const CodeLangue: string): Boolean;  
+begin  
   Result := (CodeLangue = 'ar') or  // Arabe
             (CodeLangue = 'he') or  // Hébreu
             (CodeLangue = 'fa') or  // Persan
             (CodeLangue = 'ur');    // Ourdou
 end;
 
-procedure TGestionnaireRTL.AppliquerATousLesFormulaires;
-var
+procedure TGestionnaireRTL.AppliquerATousLesFormulaires;  
+var  
   i: Integer;
 begin
   for i := 0 to Screen.FormCount - 1 do
@@ -667,8 +667,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireRTL.AppliquerAuxComposants(Container: TWinControl);
-var
+procedure TGestionnaireRTL.AppliquerAuxComposants(Container: TWinControl);  
+var  
   i: Integer;
   Control: TControl;
 begin
@@ -687,8 +687,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireRTL.InverserBoutons(BtnGauche, BtnDroit: TControl);
-var
+procedure TGestionnaireRTL.InverserBoutons(BtnGauche, BtnDroit: TControl);  
+var  
   TempLeft: Integer;
 begin
   if FModeRTL then
@@ -699,8 +699,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireRTL.RealignerPanels(Form: TForm);
-var
+procedure TGestionnaireRTL.RealignerPanels(Form: TForm);  
+var  
   i: Integer;
   Control: TControl;
 begin
@@ -714,8 +714,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireRTL.AjusterAnchors(Control: TControl);
-begin
+procedure TGestionnaireRTL.AjusterAnchors(Control: TControl);  
+begin  
   // Les anchors s'inversent automatiquement avec BiDiMode
   // Cette méthode force la mise à jour
   Control.Anchors := Control.Anchors;
@@ -736,8 +736,8 @@ end.
 uses
   GestionnaireRTL;
 
-procedure TFormPrincipal.ChangerLangue(const CodeLangue: string);
-begin
+procedure TFormPrincipal.ChangerLangue(const CodeLangue: string);  
+begin  
   // Charger les traductions
   GestionnaireTraduction.DefinirLangue(CodeLangue);
 
@@ -751,8 +751,8 @@ begin
   AppliquerTraductions;
 end;
 
-procedure TFormPrincipal.BtnTestRTLClick(Sender: TObject);
-begin
+procedure TFormPrincipal.BtnTestRTLClick(Sender: TObject);  
+begin  
   // Basculer entre RTL et LTR pour tester
   GestRTL.BasculerRTL(Self);
 end;
@@ -797,8 +797,8 @@ Texte mixte:
 ### Tests avec données réelles
 
 ```pascal
-procedure TesterAffichageRTL;
-const
+procedure TesterAffichageRTL;  
+const  
   // Textes de test en arabe
   TEXTE_COURT = 'مرحبا';
   TEXTE_LONG = 'هذا نص طويل لاختبار التفاف النص في وضع RTL';
@@ -847,12 +847,12 @@ Label1.Alignment := taLeftJustify;
 
 
 // ❌ MAUVAIS : Hardcoder l'ordre
-Panel1.Left := 0;
-Panel2.Left := 200;
+Panel1.Left := 0;  
+Panel2.Left := 200;  
 
 // ✅ BON : Utiliser Align
-Panel1.Align := alLeft;
-Panel2.Align := alClient;
+Panel1.Align := alLeft;  
+Panel2.Align := alClient;  
 ```
 
 ## Ressources et outils
@@ -870,42 +870,44 @@ Panel2.Align := alClient;
 ### Outils de test
 
 ```pascal
-// Outil simple pour tester RTL/LTR
-procedure CreerOutilTestRTL;
-var
-  Form: TForm;
-  BtnBasculer: TButton;
-  MemoTest: TMemo;
-begin
-  Form := TForm.Create(nil);
-  Form.Caption := 'Test RTL/LTR';
-  Form.Width := 600;
-  Form.Height := 400;
+type
+  // Formulaire simple pour tester RTL/LTR
+  TFormTestRTL = class(TForm)
+    BtnBasculer: TButton;
+    MemoTest: TMemo;
+    procedure BtnBasculerClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  end;
 
-  BtnBasculer := TButton.Create(Form);
-  BtnBasculer.Parent := Form;
+procedure TFormTestRTL.FormCreate(Sender: TObject);  
+begin  
+  Caption := 'Test RTL/LTR';
+  Width := 600;
+  Height := 400;
+
+  BtnBasculer := TButton.Create(Self);
+  BtnBasculer.Parent := Self;
   BtnBasculer.Caption := 'Basculer RTL/LTR';
   BtnBasculer.Top := 10;
   BtnBasculer.Left := 10;
-  BtnBasculer.OnClick := procedure(Sender: TObject)
-    begin
-      if Form.BiDiMode = bdLeftToRight then
-        Form.BiDiMode := bdRightToLeft
-      else
-        Form.BiDiMode := bdLeftToRight;
-    end;
+  BtnBasculer.OnClick := BtnBasculerClick;
 
-  MemoTest := TMemo.Create(Form);
-  MemoTest.Parent := Form;
+  MemoTest := TMemo.Create(Self);
+  MemoTest.Parent := Self;
   MemoTest.Top := 50;
   MemoTest.Left := 10;
-  MemoTest.Width := Form.ClientWidth - 20;
-  MemoTest.Height := Form.ClientHeight - 60;
+  MemoTest.Width := ClientWidth - 20;
+  MemoTest.Height := ClientHeight - 60;
   MemoTest.Anchors := [akLeft, akTop, akRight, akBottom];
   MemoTest.Text := 'مرحبا بالعالم' + #13#10 + 'Hello World' + #13#10 + '你好世界';
+end;
 
-  Form.ShowModal;
-  Form.Free;
+procedure TFormTestRTL.BtnBasculerClick(Sender: TObject);  
+begin  
+  if Self.BiDiMode = bdLeftToRight then
+    Self.BiDiMode := bdRightToLeft
+  else
+    Self.BiDiMode := bdLeftToRight;
 end;
 ```
 

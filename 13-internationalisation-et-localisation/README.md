@@ -105,16 +105,16 @@ L'internationalisation ne se limite pas à la traduction des textes. Voici tous 
 ### 3. Direction d'écriture
 
 ```
-LTR (Left-to-Right) : Français, Anglais, Espagnol →
-RTL (Right-to-Left) : Arabe, Hébreu, Persan ←
+LTR (Left-to-Right) : Français, Anglais, Espagnol →  
+RTL (Right-to-Left) : Arabe, Hébreu, Persan ←  
 ```
 
 ### 4. Encodage des caractères
 
 ```
-ASCII     : A-Z seulement (limité)
-ANSI      : Caractères latins étendus
-Unicode   : Tous les alphabets du monde ✓
+ASCII     : A-Z seulement (limité)  
+ANSI      : Caractères latins étendus  
+Unicode   : Tous les alphabets du monde ✓  
   UTF-8   : Standard Web
   UTF-16  : Standard Windows et Delphi
 ```
@@ -146,8 +146,8 @@ Unicode   : Tous les alphabets du monde ✓
 **Code problématique :**
 ```pascal
 // ❌ MAUVAIS : Texte en dur, format fixe, non internationalisable
-procedure TForm1.AfficherFacture;
-begin
+procedure TForm1.AfficherFacture;  
+begin  
   Label1.Caption := 'Invoice Date: ' + DateToStr(Now);
   Label2.Caption := 'Total: ' + FloatToStr(Montant) + ' EUR';
 end;
@@ -162,8 +162,8 @@ end;
 **Code internationalisé :**
 ```pascal
 // ✅ BON : Internationalisé
-procedure TForm1.AfficherFacture;
-begin
+procedure TForm1.AfficherFacture;  
+begin  
   Label1.Caption := T('Invoice.Date') + ': ' +
     FormatDateTime(FormatSettings.ShortDateFormat, Now);
   Label2.Caption := T('Invoice.Total') + ': ' +
@@ -286,15 +286,15 @@ Les exemples de code incluent des commentaires explicatifs :
 
 ```pascal
 // Code à éviter
-procedure MauvaiseMethode;
-begin
+procedure MauvaiseMethode;  
+begin  
   // Texte en dur - non traduisible
   ShowMessage('Hello World');
 end;
 
 // Code recommandé
-procedure BonneMethode;
-begin
+procedure BonneMethode;  
+begin  
   // Utilise les ressources linguistiques
   ShowMessage(T('Messages.Welcome'));
 end;

@@ -65,8 +65,8 @@ Menu : Tools → Translation Manager
 
 ```pascal
 // Dans le formulaire, définir la propriété
-procedure TForm1.ConfigurerLocalisation;
-begin
+procedure TForm1.ConfigurerLocalisation;  
+begin  
   Self.Localizable := True; // Active la localisation
 end;
 ```
@@ -81,11 +81,11 @@ end;
 **Structure de fichiers créée :**
 
 ```
-MonFormulaire.pas           // Code source
-MonFormulaire.dfm          // Version française (défaut)
-MonFormulaire.en.dfm       // Version anglaise
-MonFormulaire.es.dfm       // Version espagnole
-MonFormulaire.de.dfm       // Version allemande
+MonFormulaire.pas           // Code source  
+MonFormulaire.dfm          // Version française (défaut)  
+MonFormulaire.en.dfm       // Version anglaise  
+MonFormulaire.es.dfm       // Version espagnole  
+MonFormulaire.de.dfm       // Version allemande  
 ```
 
 **Étape 3 : Utiliser Translation Manager**
@@ -203,8 +203,8 @@ Plusieurs bibliothèques disponibles :
 uses
   gnugettext;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Initialiser gettext
   TranslateComponent(Self);
 
@@ -238,24 +238,24 @@ msginit --input=messages.pot --locale=fr_FR -o fr_FR.po
 
 ```po
 # Fichier de traduction française
-msgid ""
-msgstr ""
+msgid ""  
+msgstr ""  
 "Project-Id-Version: MonApp 1.0\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 #: MainForm.pas:45
-msgid "Hello World"
-msgstr "Bonjour le monde"
+msgid "Hello World"  
+msgstr "Bonjour le monde"  
 
 #: MainForm.pas:46
-msgid "Click me"
-msgstr "Cliquez-moi"
+msgid "Click me"  
+msgstr "Cliquez-moi"  
 
 #: MainForm.pas:50
-msgid "Welcome to the application"
-msgstr "Bienvenue dans l'application"
+msgid "Welcome to the application"  
+msgstr "Bienvenue dans l'application"  
 ```
 
 ## Formats de fichiers de traduction
@@ -320,11 +320,11 @@ Format moderne et lisible, facile à gérer :
 Format simple pour les traducteurs non techniques :
 
 ```csv
-ID,Contexte,Français,Anglais,Espagnol,Allemand
-BTN_OK,Bouton,OK,OK,Aceptar,OK
-BTN_CANCEL,Bouton,Annuler,Cancel,Cancelar,Abbrechen
-MSG_WELCOME,Message,Bienvenue,Welcome,Bienvenido,Willkommen
-LBL_NAME,Libellé,Nom,Name,Nombre,Name
+ID,Contexte,Français,Anglais,Espagnol,Allemand  
+BTN_OK,Bouton,OK,OK,Aceptar,OK  
+BTN_CANCEL,Bouton,Annuler,Cancel,Cancelar,Abbrechen  
+MSG_WELCOME,Message,Bienvenue,Welcome,Bienvenido,Willkommen  
+LBL_NAME,Libellé,Nom,Name,Nombre,Name  
 ```
 
 ## Création d'un système d'exportation/importation
@@ -365,14 +365,14 @@ implementation
 uses
   System.JSON, System.IOUtils;
 
-constructor TExportateurTraduction.Create(const LangueSource: string);
-begin
+constructor TExportateurTraduction.Create(const LangueSource: string);  
+begin  
   inherited Create;
   FLangueSource := LangueSource;
 end;
 
-procedure TExportateurTraduction.ExporterJSON(const CheminFichier: string);
-var
+procedure TExportateurTraduction.ExporterJSON(const CheminFichier: string);  
+var  
   JSONRoot, JSONSection: TJSONObject;
   IniFile: TIniFile;
   Sections, Cles: TStringList;
@@ -416,8 +416,8 @@ begin
   end;
 end;
 
-procedure TExportateurTraduction.ExporterCSV(const CheminFichier: string);
-var
+procedure TExportateurTraduction.ExporterCSV(const CheminFichier: string);  
+var  
   CSV: TStringList;
   IniFile: TIniFile;
   Sections, Cles: TStringList;
@@ -485,8 +485,8 @@ begin
   end;
 end;
 
-procedure TExportateurTraduction.ExporterXLIFF(const CheminFichier: string);
-var
+procedure TExportateurTraduction.ExporterXLIFF(const CheminFichier: string);  
+var  
   XML: TStringList;
   IniFile: TIniFile;
   Sections, Cles: TStringList;
@@ -645,9 +645,9 @@ end.
 
 ```yaml
 # crowdin.yml
-project_id: "123456"
-api_token: "votre_token_api"
-base_path: "."
+project_id: "123456"  
+api_token: "votre_token_api"  
+base_path: "."  
 
 files:
   - source: /Lang/fr.ini
@@ -658,8 +658,8 @@ files:
 
 ```pascal
 // Appeler l'API Crowdin
-procedure UploadVersCrowdin(const CheminFichier: string);
-var
+procedure UploadVersCrowdin(const CheminFichier: string);  
+var  
   Client: THTTPClient;
   Response: IHTTPResponse;
   FormData: TMultipartFormData;
@@ -761,14 +761,14 @@ implementation
 uses
   System.Math;
 
-constructor TMemoireTraduction.Create;
-begin
+constructor TMemoireTraduction.Create;  
+begin  
   inherited;
   FSegments := TDictionary<string, TList<TSegmentTraduction>>.Create;
 end;
 
-destructor TMemoireTraduction.Destroy;
-var
+destructor TMemoireTraduction.Destroy;  
+var  
   Liste: TList<TSegmentTraduction>;
 begin
   for Liste in FSegments.Values do
@@ -777,8 +777,8 @@ begin
   inherited;
 end;
 
-procedure TMemoireTraduction.Ajouter(const TexteSource, TexteCible, Langue: string);
-var
+procedure TMemoireTraduction.Ajouter(const TexteSource, TexteCible, Langue: string);  
+var  
   Segment: TSegmentTraduction;
   Liste: TList<TSegmentTraduction>;
 begin
@@ -795,8 +795,8 @@ begin
   Liste.Add(Segment);
 end;
 
-function TMemoireTraduction.Rechercher(const TexteSource, Langue: string): string;
-var
+function TMemoireTraduction.Rechercher(const TexteSource, Langue: string): string;  
+var  
   Liste: TList<TSegmentTraduction>;
   Segment: TSegmentTraduction;
 begin
@@ -812,8 +812,8 @@ begin
   end;
 end;
 
-function CalculerSimilarite(const S1, S2: string): Integer;
-var
+function CalculerSimilarite(const S1, S2: string): Integer;  
+var  
   Distance: Integer;
   MaxLen: Integer;
 begin
@@ -860,8 +860,8 @@ begin
   end;
 end;
 
-function TMemoireTraduction.NombreSegments: Integer;
-var
+function TMemoireTraduction.NombreSegments: Integer;  
+var  
   Liste: TList<TSegmentTraduction>;
 begin
   Result := 0;
@@ -869,13 +869,13 @@ begin
     Inc(Result, Liste.Count);
 end;
 
-procedure TMemoireTraduction.ChargerDepuisTMX(const CheminFichier: string);
-begin
+procedure TMemoireTraduction.ChargerDepuisTMX(const CheminFichier: string);  
+begin  
   // À implémenter : parser le fichier TMX
 end;
 
-procedure TMemoireTraduction.SauvegarderVersTMX(const CheminFichier: string);
-begin
+procedure TMemoireTraduction.SauvegarderVersTMX(const CheminFichier: string);  
+begin  
   // À implémenter : générer le fichier TMX
 end;
 
@@ -900,8 +900,8 @@ end.
 uses
   System.Net.HttpClient, System.JSON;
 
-function TraduireAvecDeepL(const Texte: string; LangueSource, LangueCible: string): string;
-var
+function TraduireAvecDeepL(const Texte: string; LangueSource, LangueCible: string): string;  
+var  
   Client: THTTPClient;
   Response: IHTTPResponse;
   URL: string;
@@ -935,8 +935,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.BtnTraduireClick(Sender: TObject);
-var
+procedure TForm1.BtnTraduireClick(Sender: TObject);  
+var  
   TexteTraduit: string;
 begin
   try
@@ -968,8 +968,8 @@ uses
   System.Classes,
   ExportateurTraduction in 'ExportateurTraduction.pas';
 
-procedure GenererFichiersTraduction;
-var
+procedure GenererFichiersTraduction;  
+var  
   Exportateur: TExportateurTraduction;
   Langues: TArray<string>;
 begin

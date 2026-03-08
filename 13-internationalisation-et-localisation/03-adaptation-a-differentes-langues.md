@@ -63,17 +63,17 @@ Delphi peut automatiquement détecter la langue utilisée par le système d'expl
 uses
   System.SysUtils, Winapi.Windows;
 
-function ObtenirLangueSysteme: string;
-var
+function ObtenirLangueSysteme: string;  
+var  
   Buffer: array[0..255] of Char;
 begin
   // Récupère le code de langue du système (ex: "fr-FR")
-  GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SNAME, Buffer, SizeOf(Buffer));
+  GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SNAME, Buffer, Length(Buffer));
   Result := Buffer;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   LangueSysteme: string;
 begin
   LangueSysteme := ObtenirLangueSysteme;
@@ -85,18 +85,21 @@ begin
 end;
 ```
 
-### Utiliser SysLocale
+### Utiliser TFormatSettings
 
-Une méthode plus simple utilise la variable globale `SysLocale` :
+Une méthode alternative utilise `TFormatSettings` pour détecter les paramètres régionaux :
 
 ```pascal
 uses
-  System.SysUtils;
+  System.SysUtils, Winapi.Windows;
 
-function CodeLangueSysteme: string;
+function CodeLangueSysteme: string;  
+var  
+  Buffer: array[0..9] of Char;
 begin
-  // Récupère les 2 premiers caractères du code de langue
-  Result := Copy(SysLocale.PriLangID.ToString, 1, 2);
+  // Récupère le code ISO 639-1 de la langue (ex: "fr", "en", "de")
+  GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, Buffer, Length(Buffer));
+  Result := Buffer;
 end;
 ```
 
@@ -136,15 +139,15 @@ type
 
 implementation
 
-constructor TSelecteurLangue.Create;
-begin
+constructor TSelecteurLangue.Create;  
+begin  
   inherited;
   InitialiserLangues;
   FLangueActive := 'fr'; // Langue par défaut
 end;
 
-procedure TSelecteurLangue.InitialiserLangues;
-begin
+procedure TSelecteurLangue.InitialiserLangues;  
+begin  
   SetLength(FLanguesDisponibles, 5);
 
   FLanguesDisponibles[0].Code := 'fr';
@@ -168,23 +171,23 @@ begin
   FLanguesDisponibles[4].IconeCode := '🇮🇹';
 end;
 
-function TSelecteurLangue.ObtenirLanguesDisponibles: TArray<TLangueDisponible>;
-begin
+function TSelecteurLangue.ObtenirLanguesDisponibles: TArray<TLangueDisponible>;  
+begin  
   Result := FLanguesDisponibles;
 end;
 
-procedure TSelecteurLangue.DefinirLangue(const CodeLangue: string);
-begin
+procedure TSelecteurLangue.DefinirLangue(const CodeLangue: string);  
+begin  
   FLangueActive := CodeLangue;
 end;
 
-function TSelecteurLangue.LangueActive: string;
-begin
+function TSelecteurLangue.LangueActive: string;  
+begin  
   Result := FLangueActive;
 end;
 
-function TSelecteurLangue.NomLangueActive: string;
-var
+function TSelecteurLangue.NomLangueActive: string;  
+var  
   i: Integer;
 begin
   Result := FLangueActive;
@@ -204,8 +207,8 @@ end.
 ### Intégration dans un formulaire
 
 ```pascal
-procedure TFormPrincipale.CreerMenuLangues;
-var
+procedure TFormPrincipale.CreerMenuLangues;  
+var  
   MenuItem: TMenuItem;
   Langues: TArray<TLangueDisponible>;
   Langue: TLangueDisponible;
@@ -222,8 +225,8 @@ begin
   end;
 end;
 
-procedure TFormPrincipale.MenuLangueClick(Sender: TObject);
-var
+procedure TFormPrincipale.MenuLangueClick(Sender: TObject);  
+var  
   CodeLangue: string;
 begin
   // Récupérer le code de langue depuis le tag
@@ -243,8 +246,8 @@ Voici comment permettre à l'utilisateur de changer de langue sans redémarrer l
 ### Méthode 1 : Rechargement manuel des textes
 
 ```pascal
-procedure TFormPrincipale.ChangerLangue(const CodeLangue: string);
-begin
+procedure TFormPrincipale.ChangerLangue(const CodeLangue: string);  
+begin  
   // Définir la nouvelle langue
   GestionnaireTraduction.DefinirLangue(CodeLangue);
 
@@ -255,8 +258,8 @@ begin
   SauvegarderPreferenceLangue(CodeLangue);
 end;
 
-procedure TFormPrincipale.AppliquerTraductions;
-begin
+procedure TFormPrincipale.AppliquerTraductions;  
+begin  
   // Titre de la fenêtre
   Self.Caption := T('Titre.Principale');
 
@@ -290,8 +293,8 @@ end;
 Pour les applications utilisant les fichiers `.dfm` localisés :
 
 ```pascal
-procedure TFormPrincipale.ChangerLangueAvecDFM(const CodeLangue: string);
-var
+procedure TFormPrincipale.ChangerLangueAvecDFM(const CodeLangue: string);  
+var  
   FichiersOuverts: TList<TForm>;
   i: Integer;
 begin
@@ -355,8 +358,8 @@ type
     destructor Destroy; override;
   end;
 
-procedure TFormPrincipale.LangueChangee(const NouveauCode: string);
-begin
+procedure TFormPrincipale.LangueChangee(const NouveauCode: string);  
+begin  
   // Mettre à jour automatiquement l'interface
   AppliquerTraductions;
 end;
@@ -375,8 +378,8 @@ uses
 const
   FICHIER_CONFIG = 'config.ini';
 
-procedure SauvegarderPreferenceLangue(const CodeLangue: string);
-var
+procedure SauvegarderPreferenceLangue(const CodeLangue: string);  
+var  
   IniFile: TIniFile;
   CheminConfig: string;
 begin
@@ -389,8 +392,8 @@ begin
   end;
 end;
 
-function ChargerPreferenceLangue: string;
-var
+function ChargerPreferenceLangue: string;  
+var  
   IniFile: TIniFile;
   CheminConfig: string;
 begin
@@ -410,8 +413,8 @@ begin
 end;
 
 // Utilisation au démarrage de l'application
-procedure TFormPrincipale.FormCreate(Sender: TObject);
-var
+procedure TFormPrincipale.FormCreate(Sender: TObject);  
+var  
   LanguePreferee: string;
 begin
   LanguePreferee := ChargerPreferenceLangue;
@@ -425,8 +428,8 @@ end;
 uses
   System.Win.Registry;
 
-procedure SauvegarderLangueDansRegistre(const CodeLangue: string);
-var
+procedure SauvegarderLangueDansRegistre(const CodeLangue: string);  
+var  
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
@@ -442,8 +445,8 @@ begin
   end;
 end;
 
-function ChargerLangueDepuisRegistre: string;
-var
+function ChargerLangueDepuisRegistre: string;  
+var  
   Reg: TRegistry;
 begin
   Result := 'fr'; // Valeur par défaut
@@ -477,8 +480,8 @@ Certaines langues comme l'arabe et l'hébreu s'écrivent de droite à gauche (RT
 ### Activation du mode RTL
 
 ```pascal
-procedure TFormPrincipale.DefinirDirectionTexte(const CodeLangue: string);
-begin
+procedure TFormPrincipale.DefinirDirectionTexte(const CodeLangue: string);  
+begin  
   // Langues RTL
   if (CodeLangue = 'ar') or (CodeLangue = 'he') or (CodeLangue = 'fa') then
   begin
@@ -494,8 +497,8 @@ begin
   end;
 end;
 
-procedure TFormPrincipale.AlignementRTL;
-begin
+procedure TFormPrincipale.AlignementRTL;  
+begin  
   // Ajuster l'alignement des labels
   LblNom.Alignment := taRightJustify;
   LblPrenom.Alignment := taRightJustify;
@@ -505,8 +508,8 @@ begin
   BtnAnnuler.Left := BtnValider.Left + BtnValider.Width + 10;
 end;
 
-procedure TFormPrincipale.AlignementLTR;
-begin
+procedure TFormPrincipale.AlignementLTR;  
+begin  
   // Rétablir l'alignement normal
   LblNom.Alignment := taLeftJustify;
   LblPrenom.Alignment := taLeftJustify;
@@ -524,10 +527,10 @@ Différentes langues nécessitent différentes tailles de composants.
 ### Textes de longueurs variables
 
 ```
-Français : "Enregistrer sous..."   (20 caractères)
-Anglais  : "Save as..."            (11 caractères)
-Allemand : "Speichern unter..."    (19 caractères)
-Russe    : "Сохранить как..."      (16 caractères)
+Français : "Enregistrer sous..."   (20 caractères)  
+Anglais  : "Save as..."            (11 caractères)  
+Allemand : "Speichern unter..."    (19 caractères)  
+Russe    : "Сохранить как..."      (16 caractères)  
 ```
 
 ### Stratégies d'adaptation
@@ -535,8 +538,8 @@ Russe    : "Сохранить как..."      (16 caractères)
 #### 1. Composants auto-dimensionnés
 
 ```pascal
-procedure TFormPrincipale.ConfigurerBoutonAutoSize;
-begin
+procedure TFormPrincipale.ConfigurerBoutonAutoSize;  
+begin  
   BtnEnregistrer.AutoSize := True;
   BtnEnregistrer.Caption := T('Boutons.Enregistrer');
 
@@ -549,8 +552,8 @@ end;
 #### 2. Anchors (ancrages)
 
 ```pascal
-procedure TFormPrincipale.ConfigurerAncrages;
-begin
+procedure TFormPrincipale.ConfigurerAncrages;  
+begin  
   // Le bouton reste collé à droite même si sa taille change
   BtnValider.Anchors := [akRight, akBottom];
   BtnAnnuler.Anchors := [akRight, akBottom];
@@ -563,8 +566,8 @@ end;
 #### 3. Taille dynamique des formulaires
 
 ```pascal
-procedure TFormPrincipale.AjusterTailleFormulaire;
-var
+procedure TFormPrincipale.AjusterTailleFormulaire;  
+var  
   LargeurMinimale: Integer;
 begin
   // Calculer la largeur nécessaire en fonction des composants
@@ -620,8 +623,8 @@ resourcestring
 ### Vérification des conflits
 
 ```pascal
-procedure TFormPrincipale.VerifierRaccourcisClavier;
-var
+procedure TFormPrincipale.VerifierRaccourcisClavier;  
+var  
   Raccourcis: TDictionary<Char, string>;
   i: Integer;
   Touche: Char;
@@ -645,8 +648,8 @@ begin
   end;
 end;
 
-function ExtraireRaccourci(const Caption: string): Char;
-var
+function ExtraireRaccourci(const Caption: string): Char;  
+var  
   Pos: Integer;
 begin
   Result := #0;
@@ -681,8 +684,8 @@ type
   end;
 
 // Utilisation
-procedure TesterLangue(const CodeLangue: string);
-var
+procedure TesterLangue(const CodeLangue: string);  
+var  
   Tests: TTestsLangue;
 begin
   Tests := TTestsLangue.Create;
@@ -707,8 +710,8 @@ end;
 ### Mode de test automatique
 
 ```pascal
-procedure TFormPrincipale.ModeTestLangues;
-var
+procedure TFormPrincipale.ModeTestLangues;  
+var  
   Langues: TArray<string>;
   Langue: string;
 begin
@@ -734,16 +737,16 @@ end;
 
 **❌ Mauvais :**
 ```pascal
-procedure TFormPrincipale.BtnSaveClick(Sender: TObject);
-begin
+procedure TFormPrincipale.BtnSaveClick(Sender: TObject);  
+begin  
   ShowMessage('Fichier sauvegardé');
 end;
 ```
 
 **✅ Bon :**
 ```pascal
-procedure TFormPrincipale.BtnSaveClick(Sender: TObject);
-begin
+procedure TFormPrincipale.BtnSaveClick(Sender: TObject);  
+begin  
   ShowMessage(T('Messages.FichierSauvegarde'));
 end;
 ```
@@ -819,8 +822,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-var
+procedure TFormMain.FormCreate(Sender: TObject);  
+var  
   LangueSauvegardee: string;
 begin
   // Créer le menu de sélection des langues
@@ -837,8 +840,8 @@ begin
   ChangerLangue(LangueSauvegardee);
 end;
 
-procedure TFormMain.CreerMenuLangues;
-var
+procedure TFormMain.CreerMenuLangues;  
+var  
   MenuItem: TMenuItem;
   Langues: array[0..4] of record
     Code: string;
@@ -864,8 +867,8 @@ begin
   end;
 end;
 
-procedure TFormMain.MenuLangueClick(Sender: TObject);
-const
+procedure TFormMain.MenuLangueClick(Sender: TObject);  
+const  
   CodesLangues: array[0..4] of string = ('fr', 'en', 'es', 'de', 'it');
 var
   Index: Integer;
@@ -875,8 +878,8 @@ begin
     ChangerLangue(CodesLangues[Index]);
 end;
 
-procedure TFormMain.ChangerLangue(const CodeLangue: string);
-begin
+procedure TFormMain.ChangerLangue(const CodeLangue: string);  
+begin  
   // Définir la nouvelle langue dans le gestionnaire
   GestionnaireTraduction.DefinirLangue(CodeLangue);
 
@@ -887,8 +890,8 @@ begin
   SauvegarderPreferenceLangue(CodeLangue);
 end;
 
-procedure TFormMain.AppliquerTraductions;
-begin
+procedure TFormMain.AppliquerTraductions;  
+begin  
   // Titre du formulaire
   Self.Caption := T('App.Titre');
 
