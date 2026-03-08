@@ -97,8 +97,8 @@ La formation complète couvre **24 modules progressifs** organisés en grandes t
 ### Cloner cette formation
 
 ```bash
-git clone https://github.com/NDXDeveloper/formation-delphi.git
-cd formation-delphi
+git clone https://github.com/NDXDeveloper/formation-delphi.git  
+cd formation-delphi  
 ```
 
 ---
@@ -108,25 +108,21 @@ cd formation-delphi
 ```
 formation-delphi/
 ├── README.md
-├── modules/
-│   ├── 01-introduction-delphi/
-│   │   ├── README.md
-│   │   ├── exemples/
-│   │   └── exercices/
-│   ├── 02-ide-delphi/
-│   ├── 03-object-pascal/
-│   ├── ...
-│   └── 24-tendances-futur/
-├── projets/
-│   ├── gestion-complete-mysql/
-│   ├── app-multiplateforme-fmx/
-│   └── app-mobile-avancee/
-├── ressources/
-│   ├── base-donnees/
-│   ├── composants-tiers/
-│   └── documentation/
-└── assets/
-    └── images/
+├── SOMMAIRE.md
+├── LICENSE
+├── 01-introduction-a-delphi/
+│   ├── README.md
+│   ├── 01-histoire-et-evolution.md
+│   ├── 02-...
+│   └── ...
+├── 02-decouverte-de-lide-delphi/
+├── 03-langage-object-pascal/
+├── 04-conception-dinterfaces-utilisateur-avec-la-vcl/
+├── 05-developpement-multi-plateforme-avec-firemonkey/
+├── ...
+├── 22-intelligence-artificielle-et-machine-learning-avec-delphi/
+├── 23-conception-dapplications-web-avec-delphi/
+└── 24-tendances-et-futur-de-delphi/
 ```
 
 ---
@@ -134,22 +130,22 @@ formation-delphi/
 ## 🎯 Comment utiliser cette formation
 
 ### Débutant complet en Delphi
-👉 Commencez par le [Module 1 : Introduction](modules/01-introduction-delphi/) et suivez l'ordre
+👉 Commencez par le [Module 1 : Introduction](01-introduction-a-delphi/) et suivez l'ordre
 
 ### Développeur expérimenté (migration)
-👉 Consultez le [Module 3 : Object Pascal](modules/03-object-pascal/) pour les nouveautés, puis explorez VCL/FMX
+👉 Consultez le [Module 3 : Object Pascal](03-langage-object-pascal/) pour les nouveautés, puis explorez VCL/FMX
 
 ### Développement bases de données
-👉 Allez directement au [Module 8 : MySQL/MariaDB](modules/08-mysql-mariadb/)
+👉 Allez directement au [Module 8 : MySQL/MariaDB](08-acces-aux-bases-de-donnees-mysql-mariadb/)
 
 ### Applications mobiles
-👉 Commencez par [Module 5 : FireMonkey](modules/05-firemonkey/) puis [Module 15 : Mobile](modules/15-applications-mobiles/)
+👉 Commencez par [Module 5 : FireMonkey](05-developpement-multi-plateforme-avec-firemonkey/) puis [Module 15 : Mobile](15-applications-mobiles-avec-delphi/)
 
 ### Intelligence Artificielle
-👉 Explorez le [Module 22 : IA et ML](modules/22-intelligence-artificielle/)
+👉 Explorez le [Module 22 : IA et ML](22-intelligence-artificielle-et-machine-learning-avec-delphi/)
 
 ### Référence rapide
-👉 Consultez les exemples de code dans chaque dossier `exemples/`
+👉 Consultez le [SOMMAIRE.md](SOMMAIRE.md) pour naviguer dans tous les chapitres
 
 **💡 Conseil :** Créez un projet de test pour pratiquer : `Fichier > Nouveau > Application VCL`
 
@@ -189,7 +185,7 @@ R : Oui, la plupart des exemples fonctionnent avec la Community Edition (gratuit
 R : 60-80 heures sur 8-12 semaines (1-2h/jour pour un apprentissage optimal).
 
 **Q : Y a-t-il des exercices pratiques ?**
-R : Oui, chaque module contient des exercices et le Module 19 propose des projets complets.
+R : Oui, chaque module contient des exemples de code intégrés et le [Module 19](19-projets-avances/) propose des projets complets.
 
 **Q : Puis-je l'utiliser pour enseigner ?**
 R : Oui (licence CC BY 4.0, attribution requise).
@@ -210,9 +206,9 @@ Ce projet est sous licence **CC BY 4.0** (Creative Commons Attribution 4.0 Inter
 
 **Attribution :**
 ```
-Formation Delphi 13 Florence par Nicolas DEOUX
-https://github.com/NDXDeveloper/formation-delphi
-Licence CC BY 4.0
+Formation Delphi 13 Florence par Nicolas DEOUX  
+https://github.com/NDXDeveloper/formation-delphi  
+Licence CC BY 4.0  
 ```
 
 ---
@@ -264,6 +260,6 @@ Cette formation met en avant les fonctionnalités exclusives de Delphi 13 :
 
 **[⬆ Retour en haut](#-formation-complète-delphi-13-florence)**
 
-*Dernière mise à jour : Janvier 2025 • Delphi 13 Florence*
+*Dernière mise à jour : Mars 2026 • Delphi 13 Florence*
 
 </div>
