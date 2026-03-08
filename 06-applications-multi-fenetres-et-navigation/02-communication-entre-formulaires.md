@@ -44,8 +44,8 @@ type
 
 **Form1.pas (formulaire principal)**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -107,31 +107,31 @@ type
 
 implementation
 
-function TForm2.GetNom: string;
-begin
+function TForm2.GetNom: string;  
+begin  
   Result := EditNom.Text;
 end;
 
-procedure TForm2.SetNom(const Value: string);
-begin
+procedure TForm2.SetNom(const Value: string);  
+begin  
   EditNom.Text := Value;
 end;
 
-function TForm2.GetPrenom: string;
-begin
+function TForm2.GetPrenom: string;  
+begin  
   Result := EditPrenom.Text;
 end;
 
-procedure TForm2.SetPrenom(const Value: string);
-begin
+procedure TForm2.SetPrenom(const Value: string);  
+begin  
   EditPrenom.Text := Value;
 end;
 ```
 
 **Form1.pas (formulaire principal)**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -190,23 +190,23 @@ type
 
 implementation
 
-procedure TForm2.ConfigurerOptions(const Serveur: string; Opt1, Opt2: Boolean);
-begin
+procedure TForm2.ConfigurerOptions(const Serveur: string; Opt1, Opt2: Boolean);  
+begin  
   EditServeur.Text := Serveur;
   CheckBoxOption1.Checked := Opt1;
   CheckBoxOption2.Checked := Opt2;
 end;
 
-function TForm2.ObtenirConfiguration: string;
-begin
+function TForm2.ObtenirConfiguration: string;  
+begin  
   Result := Format('Serveur: %s, Option1: %s, Option2: %s',
     [EditServeur.Text,
      BoolToStr(CheckBoxOption1.Checked, True),
      BoolToStr(CheckBoxOption2.Checked, True)]);
 end;
 
-function TForm2.OptionsValides: Boolean;
-begin
+function TForm2.OptionsValides: Boolean;  
+begin  
   // Validation des options
   Result := Trim(EditServeur.Text) <> '';
   if not Result then
@@ -216,8 +216,8 @@ end;
 
 **Form1.pas (formulaire principal)**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormConfig: TForm2;
 begin
   FormConfig := TForm2.Create(Self);
@@ -279,8 +279,8 @@ type
 
 implementation
 
-procedure TForm2.ButtonValiderClick(Sender: TObject);
-begin
+procedure TForm2.ButtonValiderClick(Sender: TObject);  
+begin  
   // Valider les données
   if (Trim(EditNom.Text) = '') or (Trim(EditPrenom.Text) = '') then
   begin
@@ -309,8 +309,8 @@ type
 
 implementation
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -323,8 +323,8 @@ begin
   end;
 end;
 
-procedure TForm1.GererDonneesValidees(Sender: TObject; const Nom, Prenom: string);
-begin
+procedure TForm1.GererDonneesValidees(Sender: TObject; const Nom, Prenom: string);  
+begin  
   // Traiter les données reçues
   ListBox1.Items.Add(Format('%s %s', [Prenom, Nom]));
   ShowMessage('Données ajoutées avec succès !');
@@ -371,8 +371,8 @@ type
 
 implementation
 
-procedure TForm2.ButtonOKClick(Sender: TObject);
-begin
+procedure TForm2.ButtonOKClick(Sender: TObject);  
+begin  
   if Assigned(FCallback) then
     FCallback(Edit1.Text);
   ModalResult := mrOk;
@@ -381,8 +381,8 @@ end;
 
 **Form1.pas (formulaire parent)**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -411,13 +411,13 @@ type
     procedure TraiterValeur(const Valeur: string);
   end;
 
-procedure TForm1.TraiterValeur(const Valeur: string);
-begin
+procedure TForm1.TraiterValeur(const Valeur: string);  
+begin  
   Memo1.Lines.Add('Valeur reçue : ' + Valeur);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -452,14 +452,14 @@ type
 
 implementation
 
-constructor TForm2.Create(AOwner: TComponent; Parent: TForm1);
-begin
+constructor TForm2.Create(AOwner: TComponent; Parent: TForm1);  
+begin  
   inherited Create(AOwner);
   FFormParent := Parent;
 end;
 
-procedure TForm2.Button1Click(Sender: TObject);
-begin
+procedure TForm2.Button1Click(Sender: TObject);  
+begin  
   if Assigned(FFormParent) then
   begin
     // Appeler une méthode du parent
@@ -477,13 +477,13 @@ type
     procedure AjouterDansListe(const Texte: string);
   end;
 
-procedure TForm1.AjouterDansListe(const Texte: string);
-begin
+procedure TForm1.AjouterDansListe(const Texte: string);  
+begin  
   ListBox1.Items.Add(Texte);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormEnfant: TForm2;
 begin
   FormEnfant := TForm2.Create(Self, Self);
@@ -542,8 +542,8 @@ end.
 ```pascal
 uses UnitDonneesPartagees;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   DonneesUtilisateur.Nom := EditNom.Text;
   DonneesUtilisateur.Prenom := EditPrenom.Text;
   DonneesUtilisateur.Email := EditEmail.Text;
@@ -556,8 +556,8 @@ end;
 ```pascal
 uses UnitDonneesPartagees;
 
-procedure TForm2.FormShow(Sender: TObject);
-begin
+procedure TForm2.FormShow(Sender: TObject);  
+begin  
   LabelNom.Caption := DonneesUtilisateur.Nom;
   LabelPrenom.Caption := DonneesUtilisateur.Prenom;
   LabelEmail.Caption := DonneesUtilisateur.Email;
@@ -587,15 +587,15 @@ type
 
 implementation
 
-class function TGestionnaireDonnees.Instance: TGestionnaireDonnees;
-begin
+class function TGestionnaireDonnees.Instance: TGestionnaireDonnees;  
+begin  
   if not Assigned(FInstance) then
     FInstance := TGestionnaireDonnees.Create;
   Result := FInstance;
 end;
 
-class destructor TGestionnaireDonnees.Destroy;
-begin
+class destructor TGestionnaireDonnees.Destroy;  
+begin  
   if Assigned(FInstance) then
     FInstance.Free;
 end;
@@ -646,13 +646,13 @@ type
     procedure AjouterElement(const Element: string);
   end;
 
-procedure TForm1.AjouterElement(const Element: string);
-begin
+procedure TForm1.AjouterElement(const Element: string);  
+begin  
   ListBox1.Items.Add(Element);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self, Self);
@@ -677,14 +677,14 @@ type
     constructor Create(AOwner: TComponent; FormPrincipal: TForm1); reintroduce;
   end;
 
-constructor TForm2.Create(AOwner: TComponent; FormPrincipal: TForm1);
-begin
+constructor TForm2.Create(AOwner: TComponent; FormPrincipal: TForm1);  
+begin  
   inherited Create(AOwner);
   FFormPrincipal := FormPrincipal;
 end;
 
-procedure TForm2.ButtonAjouterClick(Sender: TObject);
-begin
+procedure TForm2.ButtonAjouterClick(Sender: TObject);  
+begin  
   if Trim(Edit1.Text) <> '' then
   begin
     FFormPrincipal.AjouterElement(Edit1.Text);
@@ -712,8 +712,8 @@ type
       read FOnElementAjoute write FOnElementAjoute;
   end;
 
-procedure TForm2.ButtonAjouterClick(Sender: TObject);
-begin
+procedure TForm2.ButtonAjouterClick(Sender: TObject);  
+begin  
   if Trim(Edit1.Text) <> '' then
   begin
     if Assigned(FOnElementAjoute) then
@@ -726,8 +726,8 @@ end;
 
 **Form1.pas (principal)**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
@@ -759,8 +759,8 @@ Chaque formulaire doit avoir une responsabilité claire et ne pas gérer la logi
 Le formulaire de saisie doit valider ses propres données avant de les transmettre.
 
 ```pascal
-procedure TForm2.ButtonOKClick(Sender: TObject);
-begin
+procedure TForm2.ButtonOKClick(Sender: TObject);  
+begin  
   // Validation locale
   if not DonneesValides then
   begin

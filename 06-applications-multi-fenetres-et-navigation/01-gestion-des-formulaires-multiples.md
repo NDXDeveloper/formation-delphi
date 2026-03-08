@@ -85,8 +85,8 @@ end.
 Un formulaire non-modal permet à l'utilisateur d'interagir avec d'autres fenêtres de l'application pendant qu'il est affiché.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.Show;
 end;
 ```
@@ -101,8 +101,8 @@ end;
 Un formulaire modal bloque l'interaction avec les autres fenêtres jusqu'à ce qu'il soit fermé.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.ShowModal;
   // Le code ici ne s'exécute qu'après la fermeture de Form2
 end;
@@ -117,8 +117,8 @@ end;
 ### Récupérer le résultat d'un formulaire modal
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   if Form2.ShowModal = mrOk then
   begin
     ShowMessage('L''utilisateur a cliqué sur OK');
@@ -155,8 +155,8 @@ Par défaut, Delphi crée automatiquement tous les formulaires au démarrage de 
 Pour une meilleure gestion de la mémoire, vous pouvez créer les formulaires à la demande :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   MonFormulaire: TForm2;
 begin
   MonFormulaire := TForm2.Create(Self);
@@ -179,8 +179,8 @@ end;
 Avant d'utiliser un formulaire, il est prudent de vérifier s'il existe :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   if not Assigned(Form2) then
     Form2 := TForm2.Create(Application);
 
@@ -217,8 +217,8 @@ Form2.Visible := True;
 ### Depuis le formulaire lui-même
 
 ```pascal
-procedure TForm2.Button1Click(Sender: TObject);
-begin
+procedure TForm2.Button1Click(Sender: TObject);  
+begin  
   Close;  // Ferme le formulaire
 end;
 ```
@@ -226,13 +226,13 @@ end;
 ### Pour un formulaire modal, définir le ModalResult
 
 ```pascal
-procedure TForm2.ButtonOKClick(Sender: TObject);
-begin
+procedure TForm2.ButtonOKClick(Sender: TObject);  
+begin  
   ModalResult := mrOk;  // Ferme automatiquement le formulaire
 end;
 
-procedure TForm2.ButtonCancelClick(Sender: TObject);
-begin
+procedure TForm2.ButtonCancelClick(Sender: TObject);  
+begin  
   ModalResult := mrCancel;
 end;
 ```
@@ -259,8 +259,8 @@ type
 Depuis Form1, accédez à cette propriété :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.NomUtilisateur := 'Jean Dupont';
   Form2.ShowModal;
 end;
@@ -269,8 +269,8 @@ end;
 ### Méthode 2 : Accéder directement aux composants
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.Edit1.Text := 'Valeur initiale';
   if Form2.ShowModal = mrOk then
   begin
@@ -296,8 +296,8 @@ type
 
 implementation
 
-constructor TForm2.Create(AOwner: TComponent; const ANom: string);
-begin
+constructor TForm2.Create(AOwner: TComponent; const ANom: string);  
+begin  
   inherited Create(AOwner);
   FNomUtilisateur := ANom;
 end;
@@ -306,8 +306,8 @@ end;
 Utilisation :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   MonForm: TForm2;
 begin
   MonForm := TForm2.Create(Self, 'Jean Dupont');
@@ -327,16 +327,16 @@ Toujours libérer les formulaires créés manuellement :
 
 ```pascal
 // BON
-MonForm := TForm2.Create(Self);
-try
+MonForm := TForm2.Create(Self);  
+try  
   MonForm.ShowModal;
 finally
   MonForm.Free;
 end;
 
 // MAUVAIS - Fuite mémoire
-MonForm := TForm2.Create(Self);
-MonForm.ShowModal;
+MonForm := TForm2.Create(Self);  
+MonForm.ShowModal;  
 // Le formulaire n'est jamais libéré !
 ```
 
@@ -344,8 +344,8 @@ MonForm.ShowModal;
 
 ```pascal
 // BON - Variable locale
-procedure TForm1.AfficherOptions;
-var
+procedure TForm1.AfficherOptions;  
+var  
   FormOptions: TFormOptions;
 begin
   FormOptions := TFormOptions.Create(Self);
@@ -365,14 +365,14 @@ Si Form1 fait référence à Form2 et que Form2 fait référence à Form1, cela 
 
 ```pascal
 // MAUVAIS
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.Edit1.Text := 'test';  // Couplage fort
 end;
 
 // BON
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   F: TForm2;
 begin
   F := TForm2.Create(Self);
@@ -388,8 +388,8 @@ end;
 ### 5. Gérer l'événement OnClose correctement
 
 ```pascal
-procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Pour un formulaire modal, ne rien faire de spécial
   Action := caHide;
 
@@ -410,9 +410,9 @@ Form2.Position := poScreenCenter;
 Form2.Position := poMainFormCenter;
 
 // Position personnalisée
-Form2.Position := poDesigned;  // Utilise les coordonnées définies
-Form2.Left := 100;
-Form2.Top := 100;
+Form2.Position := poDesigned;  // Utilise les coordonnées définies  
+Form2.Left := 100;  
+Form2.Top := 100;  
 ```
 
 ### Adapter la taille
@@ -425,8 +425,8 @@ Form2.BorderStyle := bsDialog;  // L'utilisateur ne peut pas redimensionner
 Form2.BorderStyle := bsSizeable;
 
 // Définir les contraintes
-Form2.Constraints.MinWidth := 400;
-Form2.Constraints.MinHeight := 300;
+Form2.Constraints.MinWidth := 400;  
+Form2.Constraints.MinHeight := 300;  
 ```
 
 ## Ordre d'affichage (Z-Order)

@@ -101,18 +101,18 @@ implementation
 uses
   System.IniFiles, System.IOUtils;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   RestaurerPositionFenetre;
 end;
 
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   SauvegarderPositionFenetre;
 end;
 
-procedure TFormMain.SauvegarderPositionFenetre;
-var
+procedure TFormMain.SauvegarderPositionFenetre;  
+var  
   IniFile: TIniFile;
   ConfigPath: string;
 begin
@@ -129,8 +129,8 @@ begin
   end;
 end;
 
-procedure TFormMain.RestaurerPositionFenetre;
-var
+procedure TFormMain.RestaurerPositionFenetre;  
+var  
   IniFile: TIniFile;
   ConfigPath: string;
 begin
@@ -155,8 +155,8 @@ end;
 ### Mémoriser l'onglet actif
 
 ```pascal
-procedure TFormMain.SauvegarderEtatUI;
-var
+procedure TFormMain.SauvegarderEtatUI;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(GetConfigPath);
@@ -174,8 +174,8 @@ begin
   end;
 end;
 
-procedure TFormMain.RestaurerEtatUI;
-var
+procedure TFormMain.RestaurerEtatUI;  
+var  
   IniFile: TIniFile;
   TabIndex: Integer;
 begin
@@ -201,8 +201,8 @@ end;
 ### Gérer l'état des colonnes de grille
 
 ```pascal
-procedure TFormMain.SauvegarderEtatGrille;
-var
+procedure TFormMain.SauvegarderEtatGrille;  
+var  
   IniFile: TIniFile;
   i: Integer;
 begin
@@ -224,8 +224,8 @@ begin
   end;
 end;
 
-procedure TFormMain.RestaurerEtatGrille;
-var
+procedure TFormMain.RestaurerEtatGrille;  
+var  
   IniFile: TIniFile;
   i: Integer;
 begin
@@ -277,8 +277,8 @@ type
 
 implementation
 
-constructor TUserPreferences.Create;
-begin
+constructor TUserPreferences.Create;  
+begin  
   inherited;
   FConfigPath := TPath.Combine(TPath.GetHomePath, 'preferences.ini');
 
@@ -290,8 +290,8 @@ begin
   FShowNotifications := True;
 end;
 
-procedure TUserPreferences.Load;
-var
+procedure TUserPreferences.Load;  
+var  
   IniFile: TIniFile;
 begin
   if not TFile.Exists(FConfigPath) then
@@ -309,8 +309,8 @@ begin
   end;
 end;
 
-procedure TUserPreferences.Save;
-var
+procedure TUserPreferences.Save;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(FConfigPath);
@@ -338,8 +338,8 @@ type
     destructor Destroy; override;
   end;
 
-constructor TFormMain.Create(AOwner: TComponent);
-begin
+constructor TFormMain.Create(AOwner: TComponent);  
+begin  
   inherited;
   FPreferences := TUserPreferences.Create;
   FPreferences.Load;
@@ -352,8 +352,8 @@ begin
     DemarrerAutoSauvegarde(FPreferences.AutoSaveInterval);
 end;
 
-destructor TFormMain.Destroy;
-begin
+destructor TFormMain.Destroy;  
+begin  
   FPreferences.Save;
   FPreferences.Free;
   inherited;
@@ -383,32 +383,32 @@ type
 
 implementation
 
-procedure TFormEdit.FormCreate(Sender: TObject);
-begin
+procedure TFormEdit.FormCreate(Sender: TObject);  
+begin  
   FModifie := False;
   FDonneesOriginales := TStringList.Create;
   SauvegarderDonneesOriginales;
 end;
 
-procedure TFormEdit.SauvegarderDonneesOriginales;
-begin
+procedure TFormEdit.SauvegarderDonneesOriginales;  
+begin  
   FDonneesOriginales.Clear;
   FDonneesOriginales.Add(EditNom.Text);
   FDonneesOriginales.Add(MemoDescription.Text);
 end;
 
-procedure TFormEdit.EditNomChange(Sender: TObject);
-begin
+procedure TFormEdit.EditNomChange(Sender: TObject);  
+begin  
   MarquerCommeModifie;
 end;
 
-procedure TFormEdit.MemoDescriptionChange(Sender: TObject);
-begin
+procedure TFormEdit.MemoDescriptionChange(Sender: TObject);  
+begin  
   MarquerCommeModifie;
 end;
 
-procedure TFormEdit.MarquerCommeModifie;
-begin
+procedure TFormEdit.MarquerCommeModifie;  
+begin  
   if not FModifie then
   begin
     FModifie := True;
@@ -417,14 +417,14 @@ begin
   end;
 end;
 
-function TFormEdit.DonneesModifiees: Boolean;
-begin
+function TFormEdit.DonneesModifiees: Boolean;  
+begin  
   Result := (EditNom.Text <> FDonneesOriginales[0]) or
             (MemoDescription.Text <> FDonneesOriginales[1]);
 end;
 
-procedure TFormEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
+procedure TFormEdit.FormCloseQuery(Sender: TObject; var CanClose: Boolean);  
+begin  
   if DonneesModifiees then
   begin
     case MessageDlg('Voulez-vous enregistrer les modifications ?',
@@ -458,22 +458,22 @@ type
 
 implementation
 
-procedure TFormEdit.FormCreate(Sender: TObject);
-begin
+procedure TFormEdit.FormCreate(Sender: TObject);  
+begin  
   // Sauvegarde automatique toutes les 5 minutes
   Timer1.Interval := 5 * 60 * 1000;  // 5 minutes en millisecondes
   Timer1.Enabled := True;
   FDerniereSauvegarde := Now;
 end;
 
-procedure TFormEdit.Timer1Timer(Sender: TObject);
-begin
+procedure TFormEdit.Timer1Timer(Sender: TObject);  
+begin  
   if FModifie then
     SauvegardeAutomatique;
 end;
 
-procedure TFormEdit.SauvegardeAutomatique;
-var
+procedure TFormEdit.SauvegardeAutomatique;  
+var  
   CheminTemp: string;
 begin
   try
@@ -525,21 +525,21 @@ type
 
 implementation
 
-class function TSessionManager.Instance: TSessionManager;
-begin
+class function TSessionManager.Instance: TSessionManager;  
+begin  
   if not Assigned(FInstance) then
     FInstance := TSessionManager.Create;
   Result := FInstance;
 end;
 
-class destructor TSessionManager.Destroy;
-begin
+class destructor TSessionManager.Destroy;  
+begin  
   if Assigned(FInstance) then
     FInstance.Free;
 end;
 
-function TSessionManager.Login(const Username, Password: string): Boolean;
-begin
+function TSessionManager.Login(const Username, Password: string): Boolean;  
+begin  
   Result := False;
 
   // Vérifier les identifiants (exemple simplifié)
@@ -556,20 +556,20 @@ begin
   end;
 end;
 
-procedure TSessionManager.Logout;
-begin
+procedure TSessionManager.Logout;  
+begin  
   FIsAuthenticated := False;
   FSessionToken := '';
   FCurrentUser := nil;
 end;
 
-procedure TSessionManager.UpdateActivity;
-begin
+procedure TSessionManager.UpdateActivity;  
+begin  
   FLastActivity := Now;
 end;
 
-function TSessionManager.IsSessionExpired: Boolean;
-var
+function TSessionManager.IsSessionExpired: Boolean;  
+var  
   MinutesInactives: Integer;
 begin
   MinutesInactives := MinutesBetween(Now, FLastActivity);
@@ -580,8 +580,8 @@ end;
 ### Utilisation du gestionnaire de session
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Vérifier si une session existe
   if not TSessionManager.Instance.IsAuthenticated then
   begin
@@ -598,8 +598,8 @@ begin
   TimerSession.Enabled := True;
 end;
 
-procedure TFormMain.TimerSessionTimer(Sender: TObject);
-begin
+procedure TFormMain.TimerSessionTimer(Sender: TObject);  
+begin  
   if TSessionManager.Instance.IsSessionExpired then
   begin
     ShowMessage('Votre session a expiré. Veuillez vous reconnecter.');
@@ -608,8 +608,8 @@ begin
   end;
 end;
 
-procedure TFormMain.UneActionUtilisateur;
-begin
+procedure TFormMain.UneActionUtilisateur;  
+begin  
   // Mettre à jour l'activité utilisateur
   TSessionManager.Instance.UpdateActivity;
 
@@ -638,8 +638,8 @@ type
 
 implementation
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // S'abonner aux événements d'application
   if TPlatformServices.Current.SupportsPlatformService(
     IFMXApplicationEventService, IInterface(FAppEventService)) then
@@ -683,8 +683,8 @@ begin
   end;
 end;
 
-procedure TFormMain.SauvegarderEtatMobile;
-var
+procedure TFormMain.SauvegarderEtatMobile;  
+var  
   ConfigPath: string;
   IniFile: TIniFile;
 begin
@@ -707,8 +707,8 @@ begin
   end;
 end;
 
-procedure TFormMain.RestaurerEtatMobile;
-var
+procedure TFormMain.RestaurerEtatMobile;  
+var  
   ConfigPath: string;
   IniFile: TIniFile;
   LastSave: TDateTime;
@@ -781,15 +781,15 @@ type
 
 implementation
 
-class function TApplicationState.Instance: TApplicationState;
-begin
+class function TApplicationState.Instance: TApplicationState;  
+begin  
   if not Assigned(FInstance) then
     FInstance := TApplicationState.Create;
   Result := FInstance;
 end;
 
-class destructor TApplicationState.Destroy;
-begin
+class destructor TApplicationState.Destroy;  
+begin  
   if Assigned(FInstance) then
   begin
     FInstance.SaveState;
@@ -797,27 +797,27 @@ begin
   end;
 end;
 
-constructor TApplicationState.Create;
-begin
+constructor TApplicationState.Create;  
+begin  
   inherited;
   FSelectedItems := TList<Integer>.Create;
   LoadState;
 end;
 
-destructor TApplicationState.Destroy;
-begin
+destructor TApplicationState.Destroy;  
+begin  
   FSelectedItems.Free;
   inherited;
 end;
 
-procedure TApplicationState.DoStateChanged;
-begin
+procedure TApplicationState.DoStateChanged;  
+begin  
   if Assigned(FOnStateChanged) then
     FOnStateChanged(Self);
 end;
 
-procedure TApplicationState.SetCurrentPage(const Page: string);
-begin
+procedure TApplicationState.SetCurrentPage(const Page: string);  
+begin  
   if FCurrentPage <> Page then
   begin
     FCurrentPage := Page;
@@ -825,8 +825,8 @@ begin
   end;
 end;
 
-procedure TApplicationState.SetLoading(IsLoading: Boolean);
-begin
+procedure TApplicationState.SetLoading(IsLoading: Boolean);  
+begin  
   if FIsLoading <> IsLoading then
   begin
     FIsLoading := IsLoading;
@@ -834,8 +834,8 @@ begin
   end;
 end;
 
-procedure TApplicationState.SetFilter(const FilterText: string);
-begin
+procedure TApplicationState.SetFilter(const FilterText: string);  
+begin  
   if FFilterText <> FilterText then
   begin
     FFilterText := FilterText;
@@ -843,8 +843,8 @@ begin
   end;
 end;
 
-procedure TApplicationState.SaveState;
-var
+procedure TApplicationState.SaveState;  
+var  
   IniFile: TIniFile;
   i: Integer;
 begin
@@ -863,8 +863,8 @@ begin
   end;
 end;
 
-procedure TApplicationState.LoadState;
-var
+procedure TApplicationState.LoadState;  
+var  
   IniFile: TIniFile;
   i, Count: Integer;
 begin
@@ -884,8 +884,8 @@ begin
   end;
 end;
 
-procedure TApplicationState.ResetState;
-begin
+procedure TApplicationState.ResetState;  
+begin  
   FCurrentPage := 'Home';
   FIsLoading := False;
   FFilterText := '';
@@ -905,8 +905,8 @@ type
     procedure OnStateChanged(Sender: TObject);
   end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // S'abonner aux changements d'état
   TApplicationState.Instance.OnStateChanged := OnStateChanged;
 
@@ -914,24 +914,25 @@ begin
   ApplierEtat;
 end;
 
-procedure TFormMain.OnStateChanged(Sender: TObject);
-begin
+procedure TFormMain.OnStateChanged(Sender: TObject);  
+begin  
   // Mettre à jour l'interface selon le nouvel état
   ApplierEtat;
 end;
 
-procedure TFormMain.ApplierEtat;
-var
+procedure TFormMain.ApplierEtat;  
+var  
   State: TApplicationState;
 begin
   State := TApplicationState.Instance;
 
   // Appliquer la page courante
-  case State.CurrentPage of
-    'Home': TabControl1.ActiveTab := TabHome;
-    'Search': TabControl1.ActiveTab := TabSearch;
-    'Profile': TabControl1.ActiveTab := TabProfile;
-  end;
+  if State.CurrentPage = 'Home' then
+    TabControl1.ActiveTab := TabHome
+  else if State.CurrentPage = 'Search' then
+    TabControl1.ActiveTab := TabSearch
+  else if State.CurrentPage = 'Profile' then
+    TabControl1.ActiveTab := TabProfile;
 
   // Appliquer le filtre
   EditFiltre.Text := State.FilterText;
@@ -941,8 +942,8 @@ begin
   ActivityIndicator1.Visible := State.IsLoading;
 end;
 
-procedure TFormMain.ButtonRechercherClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonRechercherClick(Sender: TObject);  
+begin  
   // Modifier l'état
   TApplicationState.Instance.SetFilter(EditRecherche.Text);
   TApplicationState.Instance.SetLoading(True);
@@ -979,8 +980,8 @@ type
     LogLevel: string;
   end;
 
-procedure SauvegarderConfigJSON(const Config: TAppConfig);
-var
+procedure SauvegarderConfigJSON(const Config: TAppConfig);  
+var  
   Serializer: TJsonSerializer;
   JsonString: string;
   ConfigPath: string;
@@ -996,8 +997,8 @@ begin
   end;
 end;
 
-function ChargerConfigJSON: TAppConfig;
-var
+function ChargerConfigJSON: TAppConfig;  
+var  
   Serializer: TJsonSerializer;
   JsonString: string;
   ConfigPath: string;
@@ -1030,8 +1031,8 @@ end;
 ### Fichiers INI structurés
 
 ```pascal
-procedure SauvegarderConfigurationComplete;
-var
+procedure SauvegarderConfigurationComplete;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(GetConfigPath);
@@ -1089,8 +1090,8 @@ type
 
 implementation
 
-constructor TProfileManager.Create;
-begin
+constructor TProfileManager.Create;  
+begin  
   inherited;
   FProfilesPath := TPath.Combine(TPath.GetHomePath, 'Profiles');
 
@@ -1098,13 +1099,13 @@ begin
     TDirectory.CreateDirectory(FProfilesPath);
 end;
 
-function TProfileManager.GetProfilePath(const ProfileName: string): string;
-begin
+function TProfileManager.GetProfilePath(const ProfileName: string): string;  
+begin  
   Result := TPath.Combine(FProfilesPath, ProfileName + '.ini');
 end;
 
-function TProfileManager.LoadProfile(const ProfileName: string): Boolean;
-var
+function TProfileManager.LoadProfile(const ProfileName: string): Boolean;  
+var  
   ProfilePath: string;
   IniFile: TIniFile;
 begin
@@ -1126,8 +1127,8 @@ begin
   end;
 end;
 
-procedure TProfileManager.CreateProfile(const ProfileName: string);
-var
+procedure TProfileManager.CreateProfile(const ProfileName: string);  
+var  
   ProfilePath: string;
   IniFile: TIniFile;
 begin
@@ -1142,8 +1143,8 @@ begin
   end;
 end;
 
-function TProfileManager.GetProfileList: TStringList;
-var
+function TProfileManager.GetProfileList: TStringList;  
+var  
   Files: TArray<string>;
   FileName: string;
 begin
@@ -1154,8 +1155,8 @@ begin
     Result.Add(TPath.GetFileNameWithoutExtension(FileName));
 end;
 
-procedure TProfileManager.SwitchProfile(const ProfileName: string);
-begin
+procedure TProfileManager.SwitchProfile(const ProfileName: string);  
+begin  
   // Sauvegarder le profil actuel
   if FCurrentProfile <> '' then
     SaveProfile;
@@ -1196,8 +1197,9 @@ var
 ### 3. Valider les données chargées
 
 ```pascal
-function ChargerEtat: Boolean;
-var
+function ChargerEtat: Boolean;  
+var  
+  IniFile: TIniFile;
   Version: string;
 begin
   Result := False;
@@ -1227,8 +1229,8 @@ end;
 ### 4. Gérer les erreurs de lecture/écriture
 
 ```pascal
-procedure SauvegarderEtatSecurise;
-var
+procedure SauvegarderEtatSecurise;  
+var  
   TempPath, FinalPath: string;
 begin
   FinalPath := GetConfigPath;
@@ -1259,8 +1261,8 @@ end;
 ### 5. Nettoyer les anciennes données
 
 ```pascal
-procedure NettoyerAnciensEtats;
-var
+procedure NettoyerAnciensEtats;  
+var  
   Files: TArray<string>;
   FileName: string;
   FileDate: TDateTime;
@@ -1281,8 +1283,8 @@ end;
 ### 6. Utiliser des valeurs par défaut sensées
 
 ```pascal
-procedure InitialiserValeursParDefaut;
-begin
+procedure InitialiserValeursParDefaut;  
+begin  
   // Toujours avoir des valeurs par défaut raisonnables
   FTheme := 'Light';
   FLanguage := 'fr';

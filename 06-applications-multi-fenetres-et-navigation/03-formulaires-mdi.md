@@ -110,8 +110,8 @@ end
 Pour ouvrir un formulaire enfant depuis le formulaire parent :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   FormEnfant: TForm2;
 begin
   FormEnfant := TForm2.Create(Self);
@@ -129,16 +129,14 @@ end;
 ### Créer plusieurs fenêtres enfants du même type
 
 ```pascal
-procedure TForm1.NouveauDocumentClick(Sender: TObject);
-var
+procedure TForm1.NouveauDocumentClick(Sender: TObject);  
+var  
   FormEnfant: TForm2;
-  Compteur: Integer;
-  static NumeroDocument: Integer = 0;
 begin
-  Inc(NumeroDocument);
+  Inc(FNumeroDocument);  // FNumeroDocument est un champ privé de TForm1
 
   FormEnfant := TForm2.Create(Self);
-  FormEnfant.Caption := 'Document ' + IntToStr(NumeroDocument);
+  FormEnfant.Caption := 'Document ' + IntToStr(FNumeroDocument);
   FormEnfant.Show;
 end;
 ```
@@ -146,8 +144,8 @@ end;
 ### Parcourir les formulaires enfants ouverts
 
 ```pascal
-procedure TForm1.ListerDocumentsClick(Sender: TObject);
-var
+procedure TForm1.ListerDocumentsClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   Memo1.Clear;
@@ -172,8 +170,8 @@ end;
 Le menu principal est généralement placé dans le formulaire parent :
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Créer le menu principal
   with MainMenu1 do
   begin
@@ -244,8 +242,8 @@ Les formulaires enfants peuvent avoir leur propre menu qui se fusionne avec celu
 **Form2 (enfant) :**
 ```pascal
 // Créer un menu spécifique au formulaire enfant
-procedure TForm2.FormCreate(Sender: TObject);
-begin
+procedure TForm2.FormCreate(Sender: TObject);  
+begin  
   with MainMenu1 do
   begin
     with Items.Add do
@@ -275,8 +273,8 @@ Le menu "Édition" apparaîtra dans la barre de menu principale quand ce formula
 ### Disposition en cascade
 
 ```pascal
-procedure TForm1.CascadeClick(Sender: TObject);
-begin
+procedure TForm1.CascadeClick(Sender: TObject);  
+begin  
   Cascade;
 end;
 ```
@@ -286,8 +284,8 @@ Les fenêtres se chevauchent légèrement, comme des cartes disposées en évent
 ### Disposition en mosaïque horizontale
 
 ```pascal
-procedure TForm1.TileHorizontalClick(Sender: TObject);
-begin
+procedure TForm1.TileHorizontalClick(Sender: TObject);  
+begin  
   TileMode := tbHorizontal;
   Tile;
 end;
@@ -298,8 +296,8 @@ Les fenêtres sont disposées horizontalement sans se chevaucher.
 ### Disposition en mosaïque verticale
 
 ```pascal
-procedure TForm1.TileVerticalClick(Sender: TObject);
-begin
+procedure TForm1.TileVerticalClick(Sender: TObject);  
+begin  
   TileMode := tbVertical;
   Tile;
 end;
@@ -310,8 +308,8 @@ Les fenêtres sont disposées verticalement sans se chevaucher.
 ### Réorganiser toutes les icônes
 
 ```pascal
-procedure TForm1.RéorganiserIconesClick(Sender: TObject);
-begin
+procedure TForm1.RéorganiserIconesClick(Sender: TObject);  
+begin  
   ArrangeIcons;
 end;
 ```
@@ -323,8 +321,8 @@ Réorganise proprement les fenêtres minimisées au bas de la fenêtre parent.
 ### Détecter le formulaire actif
 
 ```pascal
-procedure TForm1.AfficherFormActifClick(Sender: TObject);
-begin
+procedure TForm1.AfficherFormActifClick(Sender: TObject);  
+begin  
   if Assigned(ActiveMDIChild) then
     ShowMessage('Formulaire actif : ' + ActiveMDIChild.Caption)
   else
@@ -335,14 +333,14 @@ end;
 ### Passer d'un formulaire à l'autre
 
 ```pascal
-procedure TForm1.FormulaireSuivantClick(Sender: TObject);
-begin
+procedure TForm1.FormulaireSuivantClick(Sender: TObject);  
+begin  
   if MDIChildCount > 0 then
     Next;
 end;
 
-procedure TForm1.FormulairePrécédentClick(Sender: TObject);
-begin
+procedure TForm1.FormulairePrécédentClick(Sender: TObject);  
+begin  
   if MDIChildCount > 0 then
     Previous;
 end;
@@ -351,8 +349,8 @@ end;
 ### Fermer le formulaire actif
 
 ```pascal
-procedure TForm1.FermerDocumentClick(Sender: TObject);
-begin
+procedure TForm1.FermerDocumentClick(Sender: TObject);  
+begin  
   if Assigned(ActiveMDIChild) then
     ActiveMDIChild.Close;
 end;
@@ -361,8 +359,8 @@ end;
 ### Fermer tous les formulaires
 
 ```pascal
-procedure TForm1.FermerToutClick(Sender: TObject);
-var
+procedure TForm1.FermerToutClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   // Parcourir à l'envers pour éviter les problèmes d'index
@@ -379,8 +377,8 @@ Delphi peut automatiquement ajouter une liste des fenêtres ouvertes dans un men
 
 ```pascal
 // Dans le formulaire parent
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   MenuFenetre: TMenuItem;
 begin
   // Créer le menu Fenêtre
@@ -446,8 +444,8 @@ uses UnitDocument;
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FCompteurDocuments := 0;
   Caption := 'Application MDI - Exemple';
   WindowMenu := MenuFenetre;  // Active la liste automatique des fenêtres
@@ -455,8 +453,8 @@ begin
   WindowState := wsMaximized;
 end;
 
-procedure TFormMain.MenuNouveauDocClick(Sender: TObject);
-var
+procedure TFormMain.MenuNouveauDocClick(Sender: TObject);  
+var  
   FormDoc: TFormDocument;
 begin
   Inc(FCompteurDocuments);
@@ -466,30 +464,30 @@ begin
   FormDoc.Show;
 end;
 
-procedure TFormMain.MenuFermerClick(Sender: TObject);
-begin
+procedure TFormMain.MenuFermerClick(Sender: TObject);  
+begin  
   if Assigned(ActiveMDIChild) then
     ActiveMDIChild.Close;
 end;
 
-procedure TFormMain.MenuQuitterClick(Sender: TObject);
-begin
+procedure TFormMain.MenuQuitterClick(Sender: TObject);  
+begin  
   Close;
 end;
 
-procedure TFormMain.MenuCascadeClick(Sender: TObject);
-begin
+procedure TFormMain.MenuCascadeClick(Sender: TObject);  
+begin  
   Cascade;
 end;
 
-procedure TFormMain.MenuTileHClick(Sender: TObject);
-begin
+procedure TFormMain.MenuTileHClick(Sender: TObject);  
+begin  
   TileMode := tbHorizontal;
   Tile;
 end;
 
-procedure TFormMain.MenuTileVClick(Sender: TObject);
-begin
+procedure TFormMain.MenuTileVClick(Sender: TObject);  
+begin  
   TileMode := tbVertical;
   Tile;
 end;
@@ -527,23 +525,23 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormDocument.FormCreate(Sender: TObject);
-begin
+procedure TFormDocument.FormCreate(Sender: TObject);  
+begin  
   FModifie := False;
   Memo1.OnChange := MemoChange;
   Memo1.ScrollBars := ssBoth;
   Memo1.Align := alClient;
 end;
 
-procedure TFormDocument.MemoChange(Sender: TObject);
-begin
+procedure TFormDocument.MemoChange(Sender: TObject);  
+begin  
   FModifie := True;
   if Pos('*', Caption) = 0 then
     Caption := Caption + ' *';
 end;
 
-procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if FModifie then
   begin
     case MessageDlg('Voulez-vous enregistrer les modifications ?',
@@ -593,13 +591,13 @@ end.
 ### Dans le formulaire parent
 
 ```pascal
-procedure TFormMain.FormActivate(Sender: TObject);
-begin
+procedure TFormMain.FormActivate(Sender: TObject);  
+begin  
   // Appelé quand le formulaire parent devient actif
 end;
 
-procedure TFormMain.FormDeactivate(Sender: TObject);
-begin
+procedure TFormMain.FormDeactivate(Sender: TObject);  
+begin  
   // Appelé quand le formulaire parent perd le focus
 end;
 ```
@@ -607,19 +605,19 @@ end;
 ### Dans les formulaires enfants
 
 ```pascal
-procedure TFormDocument.FormActivate(Sender: TObject);
-begin
+procedure TFormDocument.FormActivate(Sender: TObject);  
+begin  
   // Appelé quand ce document devient actif
   StatusBar1.SimpleText := 'Document actif : ' + Caption;
 end;
 
-procedure TFormDocument.FormDeactivate(Sender: TObject);
-begin
+procedure TFormDocument.FormDeactivate(Sender: TObject);  
+begin  
   // Appelé quand ce document perd le focus
 end;
 
-procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormDocument.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Définir Action pour contrôler la fermeture
   // caHide : Cache le formulaire
   // caFree : Libère le formulaire (recommandé pour MDI)
@@ -673,8 +671,8 @@ Plus moderne et généralement préférée :
 
 ```pascal
 // Utilisation d'un TPageControl
-procedure TForm1.NouveauDocumentClick(Sender: TObject);
-var
+procedure TForm1.NouveauDocumentClick(Sender: TObject);  
+var  
   TabSheet: TTabSheet;
   Memo: TMemo;
 begin
@@ -695,8 +693,8 @@ end;
 Chaque document dans sa propre fenêtre :
 
 ```pascal
-procedure TForm1.NouveauDocumentClick(Sender: TObject);
-var
+procedure TForm1.NouveauDocumentClick(Sender: TObject);  
+var  
   FormDoc: TFormDocument;
 begin
   FormDoc := TFormDocument.Create(Application);
@@ -741,8 +739,8 @@ end;
 ### 2. Indiquer le document actif
 
 ```pascal
-procedure TFormMain.UpdateStatusBar;
-begin
+procedure TFormMain.UpdateStatusBar;  
+begin  
   if Assigned(ActiveMDIChild) then
     StatusBar1.SimpleText := 'Document : ' + ActiveMDIChild.Caption
   else
@@ -753,8 +751,8 @@ end;
 ### 3. Limiter le nombre de fenêtres
 
 ```pascal
-procedure TFormMain.MenuNouveauDocClick(Sender: TObject);
-begin
+procedure TFormMain.MenuNouveauDocClick(Sender: TObject);  
+begin  
   if MDIChildCount >= 10 then
   begin
     ShowMessage('Vous avez atteint le nombre maximum de documents ouverts (10)');
@@ -768,8 +766,8 @@ end;
 ### 4. Sauvegarder l'état de l'application
 
 ```pascal
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-var
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+var  
   i: Integer;
   DocsModifies: Boolean;
 begin

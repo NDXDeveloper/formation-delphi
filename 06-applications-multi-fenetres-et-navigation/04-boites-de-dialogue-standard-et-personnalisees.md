@@ -20,8 +20,8 @@ Delphi offre un ensemble complet de boîtes de dialogue prêtes à l'emploi, ain
 La fonction `ShowMessage` affiche un message d'information avec un seul bouton OK.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Opération terminée avec succès !');
 end;
 ```
@@ -44,8 +44,8 @@ function MessageDlg(const Msg: string; DlgType: TMsgDlgType;
 
 **Exemple simple :**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   MessageDlg('Fichier enregistré avec succès', mtInformation, [mbOK], 0);
 end;
 ```
@@ -98,8 +98,8 @@ MessageDlg('Message personnalisé', mtCustom, [mbOK], 0);
 ### Valeurs de retour (ModalResult)
 
 ```pascal
-procedure TForm1.SupprimerClick(Sender: TObject);
-var
+procedure TForm1.SupprimerClick(Sender: TObject);  
+var  
   Reponse: Integer;
 begin
   Reponse := MessageDlg('Voulez-vous vraiment supprimer cet élément ?',
@@ -146,8 +146,8 @@ MessageDlgPos('Message positionné', mtInformation, [mbOK], 0, 100, 100);
 Demande à l'utilisateur de saisir une chaîne de caractères.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nom: string;
 begin
   Nom := InputBox('Saisie', 'Entrez votre nom :', '');
@@ -183,8 +183,8 @@ end;
 Permet de vérifier si l'utilisateur a cliqué sur OK ou Annuler.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nom: string;
 begin
   Nom := '';
@@ -236,8 +236,8 @@ Permet à l'utilisateur de sélectionner un ou plusieurs fichiers.
 
 **Utilisation simple :**
 ```pascal
-procedure TForm1.ButtonOuvrirClick(Sender: TObject);
-begin
+procedure TForm1.ButtonOuvrirClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     // L'utilisateur a sélectionné un fichier
@@ -254,8 +254,8 @@ end;
 **Configuration des propriétés :**
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   with OpenDialog1 do
   begin
     // Titre de la boîte de dialogue
@@ -294,8 +294,8 @@ Options := [
 
 **Sélection multiple :**
 ```pascal
-procedure TForm1.ButtonOuvrirPlusieursFichiersClick(Sender: TObject);
-var
+procedure TForm1.ButtonOuvrirPlusieursFichiersClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   OpenDialog1.Options := OpenDialog1.Options + [ofAllowMultiSelect];
@@ -332,8 +332,8 @@ Filter := 'Fichiers Word (*.doc;*.docx)|*.DOC;*.DOCX|' +
 Permet à l'utilisateur de spécifier un nom de fichier pour l'enregistrement.
 
 ```pascal
-procedure TForm1.ButtonEnregistrerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonEnregistrerClick(Sender: TObject);  
+begin  
   SaveDialog1.FileName := 'MonDocument.txt';
   SaveDialog1.Filter := 'Fichiers texte (*.txt)|*.TXT';
   SaveDialog1.DefaultExt := 'txt';  // Extension par défaut
@@ -355,8 +355,8 @@ end;
 Boîtes de dialogue spécialisées pour les images avec aperçu.
 
 ```pascal
-procedure TForm1.ButtonOuvrirImageClick(Sender: TObject);
-begin
+procedure TForm1.ButtonOuvrirImageClick(Sender: TObject);  
+begin  
   if OpenPictureDialog1.Execute then
   begin
     Image1.Picture.LoadFromFile(OpenPictureDialog1.FileName);
@@ -372,8 +372,8 @@ Les filtres pour les formats d'image sont automatiquement configurés (BMP, JPG,
 ### TColorDialog - Sélection de couleur
 
 ```pascal
-procedure TForm1.ButtonCouleurClick(Sender: TObject);
-begin
+procedure TForm1.ButtonCouleurClick(Sender: TObject);  
+begin  
   ColorDialog1.Color := Panel1.Color;  // Couleur initiale
 
   if ColorDialog1.Execute then
@@ -399,8 +399,8 @@ ColorDialog1.Options := [
 ### TFontDialog - Sélection de police
 
 ```pascal
-procedure TForm1.ButtonPoliceClick(Sender: TObject);
-begin
+procedure TForm1.ButtonPoliceClick(Sender: TObject);  
+begin  
   FontDialog1.Font := Memo1.Font;  // Police actuelle
 
   if FontDialog1.Execute then
@@ -423,15 +423,15 @@ FontDialog1.Options := [
   fdShowHelp          // Affiche le bouton Aide
 ];
 
-FontDialog1.MinFontSize := 8;
-FontDialog1.MaxFontSize := 72;
+FontDialog1.MinFontSize := 8;  
+FontDialog1.MaxFontSize := 72;  
 ```
 
 ### TPrinterSetupDialog - Configuration de l'imprimante
 
 ```pascal
-procedure TForm1.ButtonImprimanteClick(Sender: TObject);
-begin
+procedure TForm1.ButtonImprimanteClick(Sender: TObject);  
+begin  
   if PrinterSetupDialog1.Execute then
   begin
     ShowMessage('Imprimante configurée');
@@ -442,8 +442,8 @@ end;
 ### TPrintDialog - Boîte d'impression
 
 ```pascal
-procedure TForm1.ButtonImprimerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonImprimerClick(Sender: TObject);  
+begin  
   PrintDialog1.MinPage := 1;
   PrintDialog1.MaxPage := 10;
   PrintDialog1.FromPage := 1;
@@ -462,13 +462,13 @@ end;
 
 ```pascal
 // Rechercher
-procedure TForm1.ButtonRechercherClick(Sender: TObject);
-begin
+procedure TForm1.ButtonRechercherClick(Sender: TObject);  
+begin  
   FindDialog1.Execute;
 end;
 
-procedure TForm1.FindDialog1Find(Sender: TObject);
-var
+procedure TForm1.FindDialog1Find(Sender: TObject);  
+var  
   Position: Integer;
   Texte: string;
 begin
@@ -486,13 +486,13 @@ begin
 end;
 
 // Remplacer
-procedure TForm1.ButtonRemplacerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonRemplacerClick(Sender: TObject);  
+begin  
   ReplaceDialog1.Execute;
 end;
 
-procedure TForm1.ReplaceDialog1Replace(Sender: TObject);
-var
+procedure TForm1.ReplaceDialog1Replace(Sender: TObject);  
+var  
   Texte: string;
 begin
   Texte := Memo1.Text;
@@ -551,8 +551,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormDialog.FormCreate(Sender: TObject);
-begin
+procedure TFormDialog.FormCreate(Sender: TObject);  
+begin  
   // Configuration du formulaire
   Position := poScreenCenter;
   BorderStyle := bsDialog;  // Pas redimensionnable
@@ -564,8 +564,8 @@ begin
   ButtonAnnuler.ModalResult := mrCancel;
 end;
 
-procedure TFormDialog.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormDialog.ButtonOKClick(Sender: TObject);  
+begin  
   if Trim(EditReponse.Text) = '' then
   begin
     ShowMessage('Veuillez saisir une réponse');
@@ -574,13 +574,13 @@ begin
   end;
 end;
 
-function TFormDialog.GetReponse: string;
-begin
+function TFormDialog.GetReponse: string;  
+begin  
   Result := EditReponse.Text;
 end;
 
-procedure TFormDialog.SetReponse(const Value: string);
-begin
+procedure TFormDialog.SetReponse(const Value: string);  
+begin  
   EditReponse.Text := Value;
 end;
 
@@ -590,8 +590,8 @@ end.
 **Étape 2 : Utiliser le dialogue personnalisé**
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Dialog: TFormDialog;
 begin
   Dialog := TFormDialog.Create(Self);
@@ -619,8 +619,8 @@ end;
 Créer une fonction qui encapsule la création et l'utilisation du dialogue :
 
 ```pascal
-function DemanderNomUtilisateur(var Nom: string): Boolean;
-var
+function DemanderNomUtilisateur(var Nom: string): Boolean;  
+var  
   Dialog: TFormDialog;
 begin
   Result := False;
@@ -639,8 +639,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Nom: string;
 begin
   Nom := '';
@@ -675,8 +675,8 @@ type
 
 implementation
 
-procedure TFormConnexion.FormCreate(Sender: TObject);
-begin
+procedure TFormConnexion.FormCreate(Sender: TObject);  
+begin  
   Position := poScreenCenter;
   BorderStyle := bsDialog;
 
@@ -688,8 +688,8 @@ begin
   ButtonAnnuler.ModalResult := mrCancel;
 end;
 
-procedure TFormConnexion.ButtonConnexionClick(Sender: TObject);
-begin
+procedure TFormConnexion.ButtonConnexionClick(Sender: TObject);  
+begin  
   if (Trim(EditUtilisateur.Text) = '') or (Trim(EditMotDePasse.Text) = '') then
   begin
     ShowMessage('Veuillez remplir tous les champs');
@@ -698,24 +698,24 @@ begin
   end;
 end;
 
-function TFormConnexion.GetUtilisateur: string;
-begin
+function TFormConnexion.GetUtilisateur: string;  
+begin  
   Result := EditUtilisateur.Text;
 end;
 
-function TFormConnexion.GetMotDePasse: string;
-begin
+function TFormConnexion.GetMotDePasse: string;  
+begin  
   Result := EditMotDePasse.Text;
 end;
 
-function TFormConnexion.GetMemoriser: Boolean;
-begin
+function TFormConnexion.GetMemoriser: Boolean;  
+begin  
   Result := CheckBoxMemoriser.Checked;
 end;
 
 // Utilisation
-procedure TForm1.ConnexionClick(Sender: TObject);
-var
+procedure TForm1.ConnexionClick(Sender: TObject);  
+var  
   FormConn: TFormConnexion;
 begin
   FormConn := TFormConnexion.Create(Self);
@@ -764,8 +764,8 @@ implementation
 uses
   System.RegularExpressions;
 
-procedure TFormInscription.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormInscription.ButtonOKClick(Sender: TObject);  
+begin  
   // Validation du nom
   if Trim(EditNom.Text) = '' then
   begin
@@ -797,13 +797,13 @@ begin
   ModalResult := mrOk;
 end;
 
-function TFormInscription.ValiderEmail(const Email: string): Boolean;
-begin
+function TFormInscription.ValiderEmail(const Email: string): Boolean;  
+begin  
   Result := TRegEx.IsMatch(Email, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 end;
 
-function TFormInscription.ValiderAge(const Age: string): Boolean;
-var
+function TFormInscription.ValiderAge(const Age: string): Boolean;  
+var  
   AgeNum: Integer;
 begin
   Result := TryStrToInt(Age, AgeNum) and (AgeNum >= 18) and (AgeNum <= 120);
@@ -815,8 +815,8 @@ end;
 ### Changer les couleurs et le style
 
 ```pascal
-procedure TFormDialog.FormCreate(Sender: TObject);
-begin
+procedure TFormDialog.FormCreate(Sender: TObject);  
+begin  
   // Couleur de fond
   Color := clWhite;
 
@@ -833,8 +833,8 @@ end;
 ### Ajouter une icône personnalisée
 
 ```pascal
-procedure TFormDialog.FormCreate(Sender: TObject);
-var
+procedure TFormDialog.FormCreate(Sender: TObject);  
+var  
   Image: TImage;
 begin
   // Ajouter une image
@@ -863,16 +863,16 @@ type
 
 implementation
 
-procedure TFormProgression.MettreAJour(const Message: string; Position: Integer);
-begin
+procedure TFormProgression.MettreAJour(const Message: string; Position: Integer);  
+begin  
   LabelMessage.Caption := Message;
   ProgressBar1.Position := Position;
   Application.ProcessMessages;  // Rafraîchir l'interface
 end;
 
 // Utilisation
-procedure TForm1.TraitementLongClick(Sender: TObject);
-var
+procedure TForm1.TraitementLongClick(Sender: TObject);  
+var  
   FormProg: TFormProgression;
   i: Integer;
 begin
@@ -924,8 +924,8 @@ end;
 ### 2. Définir les propriétés Default et Cancel
 
 ```pascal
-ButtonOK.Default := True;      // Associe à la touche Entrée
-ButtonAnnuler.Cancel := True;  // Associe à la touche Échap
+ButtonOK.Default := True;      // Associe à la touche Entrée  
+ButtonAnnuler.Cancel := True;  // Associe à la touche Échap  
 ```
 
 ### 3. Utiliser BorderStyle approprié
@@ -941,8 +941,8 @@ BorderIcons := [biSystemMenu];
 ### 4. Valider avant de fermer
 
 ```pascal
-procedure TFormDialog.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormDialog.ButtonOKClick(Sender: TObject);  
+begin  
   if not DonneesValides then
   begin
     ShowMessage('Données invalides');
@@ -964,8 +964,8 @@ Position := poMainFormCenter;   // Centre du formulaire principal
 ### 6. Gérer la touche Échap
 
 ```pascal
-procedure TFormDialog.FormKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TFormDialog.FormKeyPress(Sender: TObject; var Key: Char);  
+begin  
   if Key = #27 then  // Touche Échap
   begin
     ModalResult := mrCancel;
@@ -976,8 +976,8 @@ end;
 ### 7. Donner le focus au bon contrôle
 
 ```pascal
-procedure TFormDialog.FormShow(Sender: TObject);
-begin
+procedure TFormDialog.FormShow(Sender: TObject);  
+begin  
   EditNom.SetFocus;  // Focus sur le premier champ de saisie
 end;
 ```
@@ -1006,7 +1006,7 @@ Les boîtes de dialogue sont essentielles pour l'interaction avec l'utilisateur.
 - **Messages simples** : `ShowMessage()` pour l'information, `MessageDlg()` pour les choix
 - **Saisie** : `InputBox()` ou `InputQuery()` pour des saisies rapides
 - **Dialogues standard** : Utilisez les composants Delphi (TOpenDialog, TColorDialog, etc.)
-- **Dialogues personnalisés** : Créez des formulaires modaux avec `FormStyle = fsMDIChild` et `ShowModal`
+- **Dialogues personnalisés** : Créez des formulaires modaux avec `BorderStyle := bsDialog` et `ShowModal`
 - **Validation** : Validez toujours les données avant de fermer un dialogue
 - **ModalResult** : Utilisez les valeurs appropriées (mrOk, mrCancel, etc.)
 - **Libération** : Toujours libérer les dialogues personnalisés avec `Free`

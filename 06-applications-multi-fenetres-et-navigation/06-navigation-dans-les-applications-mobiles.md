@@ -70,13 +70,13 @@ implementation
 
 {$R *.fmx}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   ConfigurerNavigation;
 end;
 
-procedure TFormMain.ConfigurerNavigation;
-begin
+procedure TFormMain.ConfigurerNavigation;  
+begin  
   // Masquer les onglets visuels (on créera des boutons personnalisés)
   TabControl1.TabPosition := TTabPosition.None;
 
@@ -92,8 +92,8 @@ begin
   TabControl1.ActiveTab := TabItemAccueil;
 end;
 
-procedure TFormMain.TabControl1Change(Sender: TObject);
-begin
+procedure TFormMain.TabControl1Change(Sender: TObject);  
+begin  
   // Mettre à jour le titre selon l'onglet actif
   case TabControl1.TabIndex of
     0: LabelTitre.Text := 'Accueil';
@@ -125,8 +125,8 @@ type
 
 implementation
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Masquer les onglets par défaut
   TabControl1.TabPosition := TTabPosition.None;
 
@@ -142,32 +142,32 @@ begin
   MettreAJourBoutons;
 end;
 
-procedure TFormMain.NaviguerVers(Index: Integer);
-begin
+procedure TFormMain.NaviguerVers(Index: Integer);  
+begin  
   TabControl1.TabIndex := Index;
   MettreAJourBoutons;
 end;
 
-procedure TFormMain.MettreAJourBoutons;
-begin
+procedure TFormMain.MettreAJourBoutons;  
+begin  
   // Mettre en évidence le bouton actif
   ButtonAccueil.IsPressed := TabControl1.TabIndex = 0;
   ButtonRecherche.IsPressed := TabControl1.TabIndex = 1;
   ButtonProfil.IsPressed := TabControl1.TabIndex = 2;
 end;
 
-procedure TFormMain.ButtonAccueilClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonAccueilClick(Sender: TObject);  
+begin  
   NaviguerVers(0);
 end;
 
-procedure TFormMain.ButtonRechercheClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonRechercheClick(Sender: TObject);  
+begin  
   NaviguerVers(1);
 end;
 
-procedure TFormMain.ButtonProfilClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonProfilClick(Sender: TObject);  
+begin  
   NaviguerVers(2);
 end;
 ```
@@ -175,8 +175,8 @@ end;
 ### Navigation avec icônes
 
 ```pascal
-procedure TFormMain.ConfigurerIcones;
-begin
+procedure TFormMain.ConfigurerIcones;  
+begin  
   // Utiliser des caractères Unicode ou des images
   ButtonAccueil.Text := #$F015;  // Icône maison (Font Awesome)
   ButtonRecherche.Text := #$F002; // Icône recherche
@@ -210,21 +210,21 @@ type
 
 implementation
 
-constructor TNavigationManager.Create(ATabControl: TTabControl);
-begin
+constructor TNavigationManager.Create(ATabControl: TTabControl);  
+begin  
   inherited Create;
   FTabControl := ATabControl;
   FStack := TList<TTabItem>.Create;
 end;
 
-destructor TNavigationManager.Destroy;
-begin
+destructor TNavigationManager.Destroy;  
+begin  
   FStack.Free;
   inherited;
 end;
 
-procedure TNavigationManager.Push(TabItem: TTabItem);
-begin
+procedure TNavigationManager.Push(TabItem: TTabItem);  
+begin  
   // Sauvegarder l'onglet actuel dans la pile
   if Assigned(FTabControl.ActiveTab) then
     FStack.Add(FTabControl.ActiveTab);
@@ -233,8 +233,8 @@ begin
   FTabControl.ActiveTab := TabItem;
 end;
 
-procedure TNavigationManager.Pop;
-var
+procedure TNavigationManager.Pop;  
+var  
   PreviousTab: TTabItem;
 begin
   if FStack.Count > 0 then
@@ -245,8 +245,8 @@ begin
   end;
 end;
 
-function TNavigationManager.CanGoBack: Boolean;
-begin
+function TNavigationManager.CanGoBack: Boolean;  
+begin  
   Result := FStack.Count > 0;
 end;
 ```
@@ -274,21 +274,21 @@ type
 
 implementation
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FNavManager := TNavigationManager.Create(TabControl1);
   TabControl1.TabPosition := TTabPosition.None;
   ButtonRetour.Visible := False;
 end;
 
-destructor TFormMain.Destroy;
-begin
+destructor TFormMain.Destroy;  
+begin  
   FNavManager.Free;
   inherited;
 end;
 
-procedure TFormMain.ListBox1ItemClick(Sender: TObject; const Point: TPointF);
-begin
+procedure TFormMain.ListBox1ItemClick(Sender: TObject; const Point: TPointF);  
+begin  
   // Naviguer vers le détail
   FNavManager.Push(TabItemDetail);
   ButtonRetour.Visible := True;
@@ -297,8 +297,8 @@ begin
   LabelDetail.Text := 'Détail de : ' + ListBox1.Selected.Text;
 end;
 
-procedure TFormMain.ButtonRetourClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonRetourClick(Sender: TObject);  
+begin  
   FNavManager.Pop;
   ButtonRetour.Visible := FNavManager.CanGoBack;
 end;
@@ -331,41 +331,25 @@ FireMonkey permet d'ajouter des animations lors des changements de page.
 uses
   FMX.Ani;
 
-procedure TFormMain.NaviguerAvecAnimation(VersDroite: Boolean);
-var
-  Animation: TFloatAnimation;
-begin
-  Animation := TFloatAnimation.Create(nil);
-  try
-    Animation.Parent := TabControl1;
-    Animation.PropertyName := 'Position.X';
-    Animation.Duration := 0.3;
-    Animation.AnimationType := TAnimationType.InOut;
-    Animation.Interpolation := TInterpolationType.Quadratic;
-
-    if VersDroite then
-    begin
-      Animation.StartValue := -TabControl1.Width;
-      Animation.StopValue := 0;
-    end
-    else
-    begin
-      Animation.StartValue := TabControl1.Width;
-      Animation.StopValue := 0;
-    end;
-
-    Animation.Start;
-  finally
-    Animation.Free;
-  end;
+procedure TFormMain.NaviguerAvecAnimation(VersDroite: Boolean);  
+begin  
+  // Utiliser TAnimator pour une animation simple et sûre
+  if VersDroite then
+    TAnimator.AnimateFloat(TabControl1, 'Position.X',
+      0, 0.3, TAnimationType.InOut, TInterpolationType.Quadratic)
+  else
+    TAnimator.AnimateFloat(TabControl1, 'Position.X',
+      0, 0.3, TAnimationType.InOut, TInterpolationType.Quadratic);
 end;
 ```
+
+> **Note :** Pour des animations plus complexes, créez un `TFloatAnimation` en tant qu'enfant du composant cible. L'animation sera automatiquement libérée par son parent. Ne la libérez pas manuellement tant qu'elle est en cours d'exécution.
 
 ### Transition slide (glissement)
 
 ```pascal
-procedure TFormMain.ChangerTabAvecSlide(NouvelIndex: Integer);
-var
+procedure TFormMain.ChangerTabAvecSlide(NouvelIndex: Integer);  
+var  
   Direction: Integer;
 begin
   Direction := NouvelIndex - TabControl1.TabIndex;
@@ -385,8 +369,8 @@ end;
 type
   TTransitionType = (ttSlide, ttFade, ttNone);
 
-procedure TFormMain.AppliquerTransition(TransType: TTransitionType);
-begin
+procedure TFormMain.AppliquerTransition(TransType: TTransitionType);  
+begin  
   case TransType of
     ttSlide:
     begin
@@ -432,13 +416,13 @@ type
 
 implementation
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   ConfigurerMultiView;
 end;
 
-procedure TFormMain.ConfigurerMultiView;
-begin
+procedure TFormMain.ConfigurerMultiView;  
+begin  
   // Mode du MultiView
   MultiView1.Mode := TMultiViewMode.Drawer;  // Menu coulissant
 
@@ -456,8 +440,8 @@ begin
   ButtonMenu.Text := #$2630;  // Icône hamburger (≡)
 end;
 
-procedure TFormMain.ButtonMenuClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonMenuClick(Sender: TObject);  
+begin  
   // Basculer l'état du menu
   if MultiView1.IsShowed then
     MultiView1.HideMaster
@@ -465,8 +449,8 @@ begin
     MultiView1.ShowMaster;
 end;
 
-procedure TFormMain.ButtonMenuItem1Click(Sender: TObject);
-begin
+procedure TFormMain.ButtonMenuItem1Click(Sender: TObject);  
+begin  
   // Action du menu
   ShowMessage('Menu Item 1 cliqué');
 
@@ -482,8 +466,8 @@ end;
 
 ```pascal
 // Mode Drawer : Menu coulissant par-dessus le contenu
-MultiView1.Mode := TMultiViewMode.Drawer;
-MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;
+MultiView1.Mode := TMultiViewMode.Drawer;  
+MultiView1.DrawerOptions.Mode := TDrawerMode.OverlapDetailView;  
 
 // Mode Panel : Menu pousse le contenu
 MultiView1.Mode := TMultiViewMode.Panel;
@@ -498,8 +482,8 @@ MultiView1.Mode := TMultiViewMode.PlatformBehaviour;
 ### Menu avec profil utilisateur
 
 ```pascal
-procedure TFormMain.ConfigurerMenuAvecProfil;
-var
+procedure TFormMain.ConfigurerMenuAvecProfil;  
+var  
   LayoutProfil: TLayout;
   CircleProfil: TCircle;
   LabelNom: TLabel;
@@ -547,8 +531,8 @@ type
 
 implementation
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Activer les gestes
   Touch.GestureManager := GestureManager1;
   Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
@@ -613,8 +597,8 @@ begin
   end;
 end;
 
-procedure TFormMain.DemarrerRefresh;
-begin
+procedure TFormMain.DemarrerRefresh;  
+begin  
   FRefreshing := True;
 
   // Animation de l'indicateur
@@ -634,8 +618,8 @@ begin
   end);
 end;
 
-procedure TFormMain.TerminerRefresh;
-begin
+procedure TFormMain.TerminerRefresh;  
+begin  
   FRefreshing := False;
   VertScrollBox1.ViewportPosition := PointF(0, 0);
 end;
@@ -673,8 +657,8 @@ begin
   {$ENDIF}
 end;
 
-function TFormMain.GererBoutonRetour: Boolean;
-begin
+function TFormMain.GererBoutonRetour: Boolean;  
+begin  
   Result := False;
 
   // Si un menu est ouvert, le fermer
@@ -725,15 +709,15 @@ type
 
 implementation
 
-procedure TTabItemDetail.ChargerDetails;
-begin
+procedure TTabItemDetail.ChargerDetails;  
+begin  
   LabelNom.Text := FItemNom;
   // Charger les détails depuis la base de données avec FItemID
 end;
 
 // Utilisation
-procedure TFormMain.ListBox1ItemClick(Sender: TObject);
-begin
+procedure TFormMain.ListBox1ItemClick(Sender: TObject);  
+begin  
   TabItemDetail.ItemID := ListBox1.ItemIndex;
   TabItemDetail.ItemNom := ListBox1.Selected.Text;
   TabItemDetail.ChargerDetails;
@@ -762,15 +746,15 @@ type
     property OnNavigate: TNavigationEvent read FOnNavigate write FOnNavigate;
   end;
 
-procedure TFormMain.DoNavigation(const Data: TNavigationData);
-begin
+procedure TFormMain.DoNavigation(const Data: TNavigationData);  
+begin  
   if Assigned(FOnNavigate) then
     FOnNavigate(Self, Data);
 end;
 
 // Utilisation
-procedure TFormMain.NaviguerVersDetail(ItemID: Integer);
-var
+procedure TFormMain.NaviguerVersDetail(ItemID: Integer);  
+var  
   NavData: TNavigationData;
 begin
   NavData.ID := ItemID;
@@ -798,8 +782,8 @@ type
     procedure ConfigurerToolBar;
   end;
 
-procedure TFormMain.ConfigurerToolBar;
-begin
+procedure TFormMain.ConfigurerToolBar;  
+begin  
   // Position de la toolbar
   ToolBar1.Align := TAlignLayout.Top;
   ToolBar1.Height := 56;
@@ -824,48 +808,37 @@ end;
 ### Menu contextuel (ActionSheet iOS / BottomSheet Android)
 
 ```pascal
-procedure TFormMain.AfficherMenuActions;
-var
-  ActionSheet: TCustomActionSheet;
+uses
+  FMX.DialogService;
+
+procedure TFormMain.AfficherMenuActions;  
+var  
+  Actions: array of string;
 begin
-  ActionSheet := TCustomActionSheet.Create(Self);
-  try
-    ActionSheet.Title := 'Actions';
+  Actions := ['Partager', 'Copier', 'Supprimer', 'Annuler'];
 
-    ActionSheet.AddAction('Partager', procedure
+  TDialogService.ActionSheet('Actions', Actions,
+    procedure(const AResult: TModalResult)
     begin
-      ShowMessage('Partager');
+      case AResult of
+        0: ShowMessage('Partager');
+        1: ShowMessage('Copier');
+        2: ShowMessage('Supprimer');
+        // 3 = Annuler, ne rien faire
+      end;
     end);
-
-    ActionSheet.AddAction('Copier', procedure
-    begin
-      ShowMessage('Copier');
-    end);
-
-    ActionSheet.AddAction('Supprimer', procedure
-    begin
-      ShowMessage('Supprimer');
-    end, TCustomActionSheetType.Destructive);
-
-    ActionSheet.AddAction('Annuler', procedure
-    begin
-      // Ne rien faire
-    end, TCustomActionSheetType.Cancel);
-
-    ActionSheet.Execute;
-  finally
-    ActionSheet.Free;
-  end;
 end;
 ```
+
+> **Note :** `TDialogService` fournit des méthodes multiplateformes pour afficher des dialogues natifs. Sur iOS, `ActionSheet` affiche un menu depuis le bas de l'écran. Sur Android, il affiche un dialogue standard.
 
 ## Indicateurs de chargement
 
 ### ActivityIndicator
 
 ```pascal
-procedure TFormMain.ChargerDonnees;
-begin
+procedure TFormMain.ChargerDonnees;  
+begin  
   ActivityIndicator1.Visible := True;
   ActivityIndicator1.Enabled := True;
 
@@ -889,8 +862,8 @@ end;
 ### Skeleton screens (écrans squelettes)
 
 ```pascal
-procedure TFormMain.AfficherSkeleton;
-var
+procedure TFormMain.AfficherSkeleton;  
+var  
   i: Integer;
   Item: TListBoxItem;
   Rect: TRectangle;
@@ -929,8 +902,8 @@ end;
 uses
   System.IOUtils;
 
-procedure TFormMain.SauvegarderEtat;
-var
+procedure TFormMain.SauvegarderEtat;  
+var  
   IniFile: TIniFile;
   ConfigPath: string;
 begin
@@ -951,8 +924,8 @@ begin
   end;
 end;
 
-procedure TFormMain.RestaurerEtat;
-var
+procedure TFormMain.RestaurerEtat;  
+var  
   IniFile: TIniFile;
   ConfigPath: string;
   TabIndex: Integer;
@@ -987,8 +960,8 @@ end;
 ### 2. Feedback visuel
 
 ```pascal
-procedure TFormMain.ButtonItemClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonItemClick(Sender: TObject);  
+begin  
   // Indiquer visuellement le clic
   TAnimator.AnimateFloat(Sender as TControl, 'Opacity', 0.5, 0.2);
 
@@ -1017,8 +990,8 @@ TabControl1.TransitionDuration := 0.25;
 type
   TPageState = (psLoading, psLoaded, psError, psEmpty);
 
-procedure TFormMain.AfficherEtat(Etat: TPageState);
-begin
+procedure TFormMain.AfficherEtat(Etat: TPageState);  
+begin  
   case Etat of
     psLoading: ActivityIndicator1.Visible := True;
     psLoaded:
@@ -1086,13 +1059,13 @@ type
     procedure AfficherDetail(ItemIndex: Integer);
   end;
 
-procedure TFormMain.ListBox1ItemClick(Sender: TObject);
-begin
+procedure TFormMain.ListBox1ItemClick(Sender: TObject);  
+begin  
   AfficherDetail(ListBox1.ItemIndex);
 end;
 
-procedure TFormMain.AfficherDetail(ItemIndex: Integer);
-begin
+procedure TFormMain.AfficherDetail(ItemIndex: Integer);  
+begin  
   // Charger les détails
   LabelDetailTitre.Text := ListBox1.Items[ItemIndex];
 
@@ -1105,8 +1078,8 @@ end;
 ### Navigation conditionnelle
 
 ```pascal
-procedure TFormMain.NaviguerSelon Authentification;
-begin
+procedure TFormMain.NaviguerSelonAuthentification;  
+begin  
   if UtilisateurConnecte then
     TabControl1.ActiveTab := TabAccueil
   else
@@ -1117,8 +1090,8 @@ end;
 ### Deep linking
 
 ```pascal
-procedure TFormMain.GererLienProfond(const URL: string);
-begin
+procedure TFormMain.GererLienProfond(const URL: string);  
+begin  
   // Exemple : myapp://profile/123
   if URL.StartsWith('myapp://profile/') then
   begin

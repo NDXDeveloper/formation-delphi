@@ -127,8 +127,8 @@ FormEnfant := TFormEnfant.Create(Self); // Self est le propriétaire
 
 **Parent** : Responsable de l'affichage visuel (pour les composants)
 ```pascal
-Button := TButton.Create(Self);
-Button.Parent := Panel1; // S'affiche dans le panel
+Button := TButton.Create(Self);  
+Button.Parent := Panel1; // S'affiche dans le panel  
 ```
 
 ### Cycle de vie d'un formulaire
@@ -225,10 +225,10 @@ MonProjet/
 
 Avant de commencer, assurez-vous de maîtriser :
 
-✓ Création d'un formulaire simple avec des composants
-✓ Gestion des événements (OnClick, OnChange, etc.)
-✓ Syntaxe Object Pascal de base
-✓ Création et manipulation d'objets
+✓ Création d'un formulaire simple avec des composants  
+✓ Gestion des événements (OnClick, OnChange, etc.)  
+✓ Syntaxe Object Pascal de base  
+✓ Création et manipulation d'objets  
 ✓ Utilisation de l'IDE Delphi
 
 Si ces concepts ne sont pas clairs, n'hésitez pas à revenir aux chapitres précédents.
@@ -265,13 +265,13 @@ Vous pouvez :
 
 À la fin de ce chapitre, vous serez capable de :
 
-✓ Créer des applications multi-fenêtres complexes et organisées
-✓ Faire communiquer efficacement vos formulaires
-✓ Choisir le pattern de navigation adapté à vos besoins
-✓ Créer des boîtes de dialogue professionnelles
-✓ Guider l'utilisateur avec des assistants intuitifs
-✓ Développer des applications mobiles avec une navigation fluide
-✓ Gérer correctement l'état et les préférences de votre application
+✓ Créer des applications multi-fenêtres complexes et organisées  
+✓ Faire communiquer efficacement vos formulaires  
+✓ Choisir le pattern de navigation adapté à vos besoins  
+✓ Créer des boîtes de dialogue professionnelles  
+✓ Guider l'utilisateur avec des assistants intuitifs  
+✓ Développer des applications mobiles avec une navigation fluide  
+✓ Gérer correctement l'état et les préférences de votre application  
 ✓ Structurer vos projets de manière professionnelle
 
 ## Un dernier conseil avant de commencer

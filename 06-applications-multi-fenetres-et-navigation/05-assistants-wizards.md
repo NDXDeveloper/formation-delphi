@@ -128,8 +128,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormAssistant.FormCreate(Sender: TObject);
-begin
+procedure TFormAssistant.FormCreate(Sender: TObject);  
+begin  
   // Masquer les onglets
   PageControl1.Style := tsButtons;
   PageControl1.TabHeight := 1;
@@ -148,8 +148,8 @@ begin
   BorderIcons := [biSystemMenu];
 end;
 
-procedure TFormAssistant.MettreAJourBoutons;
-var
+procedure TFormAssistant.MettreAJourBoutons;  
+var  
   PageIndex: Integer;
 begin
   PageIndex := PageControl1.ActivePageIndex;
@@ -164,14 +164,11 @@ begin
   ButtonTerminer.Visible := PageIndex = PageControl1.PageCount - 1;
 
   // Texte du bouton Suivant
-  if PageIndex = PageControl1.PageCount - 2 then
-    ButtonSuivant.Caption := '&Suivant >'
-  else
-    ButtonSuivant.Caption := '&Suivant >';
+  ButtonSuivant.Caption := '&Suivant >';
 end;
 
-procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);  
+begin  
   // Valider la page courante
   if not ValiderPageCourante then
     Exit;
@@ -184,8 +181,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.ButtonPrecedentClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonPrecedentClick(Sender: TObject);  
+begin  
   // Revenir à la page précédente
   if PageControl1.ActivePageIndex > 0 then
   begin
@@ -194,8 +191,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.ButtonTerminerClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonTerminerClick(Sender: TObject);  
+begin  
   // Valider la dernière page
   if not ValiderPageCourante then
     Exit;
@@ -204,20 +201,20 @@ begin
   ModalResult := mrOk;
 end;
 
-procedure TFormAssistant.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonAnnulerClick(Sender: TObject);  
+begin  
   if MessageDlg('Voulez-vous vraiment annuler l''assistant ?',
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     ModalResult := mrCancel;
 end;
 
-procedure TFormAssistant.PageControl1Change(Sender: TObject);
-begin
+procedure TFormAssistant.PageControl1Change(Sender: TObject);  
+begin  
   MettreAJourBoutons;
 end;
 
-function TFormAssistant.ValiderPageCourante: Boolean;
-begin
+function TFormAssistant.ValiderPageCourante: Boolean;  
+begin  
   Result := True;
 
   case PageControl1.ActivePageIndex of
@@ -240,8 +237,8 @@ end.
 // - Un TLabel pour la description
 // - Optionnellement une TImage pour une icône
 
-procedure TFormAssistant.ConfigurerPageBienvenue;
-begin
+procedure TFormAssistant.ConfigurerPageBienvenue;  
+begin  
   with TabBienvenue do
   begin
     // Ajouté dans le concepteur visuel
@@ -268,8 +265,8 @@ end;
 
 **Page de fin (TabFin) :**
 ```pascal
-procedure TFormAssistant.ConfigurerPageFin;
-begin
+procedure TFormAssistant.ConfigurerPageFin;  
+begin  
   with TabFin do
   begin
     LabelTitre.Caption := 'Configuration terminée';
@@ -309,22 +306,22 @@ type
 
 implementation
 
-constructor TFormAssistantPanel.Create(AOwner: TComponent);
-begin
+constructor TFormAssistantPanel.Create(AOwner: TComponent);  
+begin  
   inherited;
   FPages := TList<TPanel>.Create;
   CreerPages;
   AfficherPage(0);
 end;
 
-destructor TFormAssistantPanel.Destroy;
-begin
+destructor TFormAssistantPanel.Destroy;  
+begin  
   FPages.Free;
   inherited;
 end;
 
-procedure TFormAssistantPanel.CreerPages;
-var
+procedure TFormAssistantPanel.CreerPages;  
+var  
   Page: TPanel;
 begin
   // Page 1 : Bienvenue
@@ -348,8 +345,8 @@ begin
   // ... autres pages
 end;
 
-procedure TFormAssistantPanel.AfficherPage(Index: Integer);
-var
+procedure TFormAssistantPanel.AfficherPage(Index: Integer);  
+var  
   i: Integer;
 begin
   if (Index < 0) or (Index >= FPages.Count) then
@@ -366,8 +363,8 @@ begin
   MettreAJourBoutons;
 end;
 
-procedure TFormAssistantPanel.MettreAJourBoutons;
-begin
+procedure TFormAssistantPanel.MettreAJourBoutons;  
+begin  
   ButtonPrecedent.Enabled := FPageIndex > 0;
   ButtonSuivant.Visible := FPageIndex < FPages.Count - 1;
   ButtonTerminer.Visible := FPageIndex = FPages.Count - 1;
@@ -379,8 +376,8 @@ end;
 ### Validation par page
 
 ```pascal
-function TFormAssistant.ValiderPageCourante: Boolean;
-begin
+function TFormAssistant.ValiderPageCourante: Boolean;  
+begin  
   Result := True;
 
   case PageControl1.ActivePageIndex of
@@ -424,8 +421,8 @@ begin
   end;
 end;
 
-function TFormAssistant.ValiderEmail(const Email: string): Boolean;
-begin
+function TFormAssistant.ValiderEmail(const Email: string): Boolean;  
+begin  
   Result := Pos('@', Email) > 0;
   // Pour une validation plus robuste, utilisez TRegEx
 end;
@@ -434,8 +431,8 @@ end;
 ### Validation avec feedback visuel
 
 ```pascal
-procedure TFormAssistant.EditNomExit(Sender: TObject);
-begin
+procedure TFormAssistant.EditNomExit(Sender: TObject);  
+begin  
   if Trim(EditNom.Text) = '' then
   begin
     EditNom.Color := clYellow;
@@ -455,8 +452,8 @@ end;
 ### Avec une ProgressBar
 
 ```pascal
-procedure TFormAssistant.MettreAJourProgression;
-var
+procedure TFormAssistant.MettreAJourProgression;  
+var  
   Pourcentage: Integer;
 begin
   Pourcentage := Round((PageControl1.ActivePageIndex /
@@ -470,14 +467,14 @@ end;
 ### Avec des labels numérotés
 
 ```pascal
-procedure TFormAssistant.FormCreate(Sender: TObject);
-begin
+procedure TFormAssistant.FormCreate(Sender: TObject);  
+begin  
   // Créer des labels pour chaque étape
   CreerIndicateursEtapes;
 end;
 
-procedure TFormAssistant.CreerIndicateursEtapes;
-var
+procedure TFormAssistant.CreerIndicateursEtapes;  
+var  
   i: Integer;
   Lbl: TLabel;
 begin
@@ -495,8 +492,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.MettreAJourIndicateurs;
-var
+procedure TFormAssistant.MettreAJourIndicateurs;  
+var  
   i: Integer;
   Lbl: TLabel;
 begin
@@ -530,6 +527,14 @@ uses
   Vcl.ExtCtrls, Vcl.FileCtrl;
 
 type
+  TInstallationParams = record
+    Repertoire: string;
+    RaccourciBureau: Boolean;
+    MenuDemarrer: Boolean;
+    AssocierFichiers: Boolean;
+    LancerApresInstallation: Boolean;
+  end;
+
   TFormInstallation = class(TForm)
     PageControl1: TPageControl;
     TabBienvenue: TTabSheet;
@@ -590,15 +595,6 @@ type
     class function Executer(var Parametres: TInstallationParams): Boolean;
   end;
 
-type
-  TInstallationParams = record
-    Repertoire: string;
-    RaccourciBureau: Boolean;
-    MenuDemarrer: Boolean;
-    AssocierFichiers: Boolean;
-    LancerApresInstallation: Boolean;
-  end;
-
 implementation
 
 {$R *.dfm}
@@ -614,7 +610,7 @@ begin
     if Result then
     begin
       Parametres.Repertoire := Form.EditRepertoire.Text;
-      Parametres.RaccourciB := Form.CheckBoxRaccourcieBureau.Checked;
+      Parametres.RaccourciBureau := Form.CheckBoxRaccourciBureau.Checked;
       Parametres.MenuDemarrer := Form.CheckBoxMenuDemarrer.Checked;
       Parametres.AssocierFichiers := Form.CheckBoxAssocierFichiers.Checked;
       Parametres.LancerApresInstallation := Form.CheckBoxLancerApplication.Checked;
@@ -624,8 +620,8 @@ begin
   end;
 end;
 
-procedure TFormInstallation.FormCreate(Sender: TObject);
-begin
+procedure TFormInstallation.FormCreate(Sender: TObject);  
+begin  
   // Masquer les onglets
   PageControl1.Style := tsButtons;
   PageControl1.TabHeight := 1;
@@ -649,14 +645,14 @@ begin
   EditRepertoire.Text := 'C:\Program Files\MonApplication';
 
   // Options par défaut
-  CheckBoxRaccourcieBureau.Checked := True;
+  CheckBoxRaccourciBureau.Checked := True;
   CheckBoxMenuDemarrer.Checked := True;
 
   MettreAJourBoutons;
 end;
 
-procedure TFormInstallation.MettreAJourBoutons;
-var
+procedure TFormInstallation.MettreAJourBoutons;  
+var  
   PageIndex: Integer;
 begin
   PageIndex := PageControl1.ActivePageIndex;
@@ -675,8 +671,8 @@ begin
   end;
 end;
 
-function TFormInstallation.ValiderPageCourante: Boolean;
-begin
+function TFormInstallation.ValiderPageCourante: Boolean;  
+begin  
   Result := True;
 
   case PageControl1.ActivePageIndex of
@@ -714,8 +710,8 @@ begin
   end;
 end;
 
-procedure TFormInstallation.ButtonSuivantClick(Sender: TObject);
-begin
+procedure TFormInstallation.ButtonSuivantClick(Sender: TObject);  
+begin  
   if not ValiderPageCourante then
     Exit;
 
@@ -726,8 +722,8 @@ begin
   end;
 end;
 
-procedure TFormInstallation.ButtonPrecedentClick(Sender: TObject);
-begin
+procedure TFormInstallation.ButtonPrecedentClick(Sender: TObject);  
+begin  
   if PageControl1.ActivePageIndex > 0 then
   begin
     PageControl1.ActivePageIndex := PageControl1.ActivePageIndex - 1;
@@ -735,8 +731,8 @@ begin
   end;
 end;
 
-procedure TFormInstallation.ButtonParcourirClick(Sender: TObject);
-var
+procedure TFormInstallation.ButtonParcourirClick(Sender: TObject);  
+var  
   Dossier: string;
 begin
   Dossier := EditRepertoire.Text;
@@ -744,13 +740,13 @@ begin
     EditRepertoire.Text := Dossier;
 end;
 
-procedure TFormInstallation.CheckBoxAccepterLicenceClick(Sender: TObject);
-begin
+procedure TFormInstallation.CheckBoxAccepterLicenceClick(Sender: TObject);  
+begin  
   ButtonSuivant.Enabled := CheckBoxAccepterLicence.Checked;
 end;
 
-procedure TFormInstallation.LancerInstallation;
-var
+procedure TFormInstallation.LancerInstallation;  
+var  
   i: Integer;
 begin
   ProgressBarInstallation.Position := 0;
@@ -778,23 +774,23 @@ begin
   MettreAJourBoutons;
 end;
 
-procedure TFormInstallation.AjouterJournal(const Message: string);
-begin
+procedure TFormInstallation.AjouterJournal(const Message: string);  
+begin  
   MemoJournal.Lines.Add(FormatDateTime('hh:nn:ss', Now) + ' - ' + Message);
 end;
 
-procedure TFormInstallation.ButtonTerminerClick(Sender: TObject);
-begin
+procedure TFormInstallation.ButtonTerminerClick(Sender: TObject);  
+begin  
   ModalResult := mrOk;
 end;
 
-procedure TFormInstallation.PageControl1Change(Sender: TObject);
-begin
+procedure TFormInstallation.PageControl1Change(Sender: TObject);  
+begin  
   MettreAJourBoutons;
 end;
 
-function TFormInstallation.GetRepertoireInstallation: string;
-begin
+function TFormInstallation.GetRepertoireInstallation: string;  
+begin  
   Result := EditRepertoire.Text;
 end;
 
@@ -804,8 +800,8 @@ end.
 ### Utilisation de l'assistant
 
 ```pascal
-procedure TFormMain.InstallationClick(Sender: TObject);
-var
+procedure TFormMain.InstallationClick(Sender: TObject);  
+var  
   Params: TInstallationParams;
 begin
   if TFormInstallation.Executer(Params) then
@@ -829,8 +825,8 @@ end;
 Sauter certaines pages selon les choix de l'utilisateur :
 
 ```pascal
-procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);
-var
+procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);  
+var  
   ProchainePage: Integer;
 begin
   if not ValiderPageCourante then
@@ -857,8 +853,8 @@ end;
 Permettre à l'utilisateur de sauvegarder sa progression :
 
 ```pascal
-procedure TFormAssistant.SauvegarderProgression;
-var
+procedure TFormAssistant.SauvegarderProgression;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -872,8 +868,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.ChargerProgression;
-var
+procedure TFormAssistant.ChargerProgression;  
+var  
   IniFile: TIniFile;
   PageIndex: Integer;
 begin
@@ -896,8 +892,8 @@ end;
 Afficher une aide différente pour chaque page :
 
 ```pascal
-procedure TFormAssistant.ButtonAideClick(Sender: TObject);
-var
+procedure TFormAssistant.ButtonAideClick(Sender: TObject);  
+var  
   TexteAide: string;
 begin
   case PageControl1.ActivePageIndex of
@@ -915,8 +911,8 @@ end;
 ### Récapitulatif avant la fin
 
 ```pascal
-procedure TFormAssistant.AfficherRecapitulatif;
-var
+procedure TFormAssistant.AfficherRecapitulatif;  
+var  
   Recap: TStringList;
 begin
   Recap := TStringList.Create;
@@ -962,8 +958,8 @@ end;
 ### Exemple de mise en page
 
 ```pascal
-procedure TFormAssistant.ConfigurerMiseEnPage;
-begin
+procedure TFormAssistant.ConfigurerMiseEnPage;  
+begin  
   // En-tête avec titre et description
   PanelEntete.Height := 60;
   PanelEntete.Color := clWhite;
@@ -1016,8 +1012,8 @@ else
 
 ```pascal
 // Valider pendant la saisie, pas seulement au clic sur Suivant
-procedure TFormAssistant.EditEmailChange(Sender: TObject);
-begin
+procedure TFormAssistant.EditEmailChange(Sender: TObject);  
+begin  
   if ValiderEmail(EditEmail.Text) then
   begin
     ImageValidation.Picture.LoadFromFile('check.png');
@@ -1035,8 +1031,8 @@ end;
 
 ```pascal
 // Se souvenir des choix de l'utilisateur
-procedure TFormAssistant.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormAssistant.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if ModalResult = mrOk then
     SauvegarderPreferences;
 end;
@@ -1056,8 +1052,8 @@ end;
 
 ```pascal
 // Bouton d'aide ou lien vers la documentation
-ButtonAide.Visible := True;
-ButtonAide.OnClick := AfficherAideContextuelle;
+ButtonAide.Visible := True;  
+ButtonAide.OnClick := AfficherAideContextuelle;  
 ```
 
 ## Alternatives modernes
