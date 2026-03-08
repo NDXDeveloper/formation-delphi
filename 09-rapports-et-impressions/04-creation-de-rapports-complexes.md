@@ -27,10 +27,10 @@ Un rapport complexe se caractérise par une ou plusieurs de ces caractéristique
 
 Un rapport multiniveau affiche des données hiérarchiques sur plusieurs niveaux. Par exemple :
 
-**Niveau 1** : Région
-**Niveau 2** : Ville
-**Niveau 3** : Magasin
-**Niveau 4** : Ventes du magasin
+**Niveau 1** : Région  
+**Niveau 2** : Ville  
+**Niveau 3** : Magasin  
+**Niveau 4** : Ventes du magasin  
 
 ### Structure de données
 
@@ -43,19 +43,19 @@ Pour créer ce type de rapport, vous aurez besoin de plusieurs datasets ou d'une
 FDQueryRegions.SQL.Text := 'SELECT id_region, nom_region FROM regions ORDER BY nom_region';
 
 // Dataset des villes (lié aux régions)
-FDQueryVilles.SQL.Text := 'SELECT id_ville, nom_ville, id_region FROM villes ORDER BY nom_ville';
-FDQueryVilles.MasterSource := DataSourceRegions;
-FDQueryVilles.MasterFields := 'id_region';
+FDQueryVilles.SQL.Text := 'SELECT id_ville, nom_ville, id_region FROM villes ORDER BY nom_ville';  
+FDQueryVilles.MasterSource := DataSourceRegions;  
+FDQueryVilles.MasterFields := 'id_region';  
 
 // Dataset des magasins (lié aux villes)
-FDQueryMagasins.SQL.Text := 'SELECT id_magasin, nom_magasin, id_ville FROM magasins ORDER BY nom_magasin';
-FDQueryMagasins.MasterSource := DataSourceVilles;
-FDQueryMagasins.MasterFields := 'id_ville';
+FDQueryMagasins.SQL.Text := 'SELECT id_magasin, nom_magasin, id_ville FROM magasins ORDER BY nom_magasin';  
+FDQueryMagasins.MasterSource := DataSourceVilles;  
+FDQueryMagasins.MasterFields := 'id_ville';  
 
 // Dataset des ventes (lié aux magasins)
-FDQueryVentes.SQL.Text := 'SELECT date_vente, montant, id_magasin FROM ventes ORDER BY date_vente';
-FDQueryVentes.MasterSource := DataSourceMagasins;
-FDQueryVentes.MasterFields := 'id_magasin';
+FDQueryVentes.SQL.Text := 'SELECT date_vente, montant, id_magasin FROM ventes ORDER BY date_vente';  
+FDQueryVentes.MasterSource := DataSourceMagasins;  
+FDQueryVentes.MasterFields := 'id_magasin';  
 ```
 
 #### Approche 2 : Requête unique avec jointures
@@ -67,11 +67,11 @@ SELECT
     m.nom_magasin,
     vt.date_vente,
     vt.montant
-FROM regions r
-INNER JOIN villes v ON r.id_region = v.id_region
-INNER JOIN magasins m ON v.id_ville = m.id_ville
-INNER JOIN ventes vt ON m.id_magasin = vt.id_magasin
-ORDER BY r.nom_region, v.nom_ville, m.nom_magasin, vt.date_vente
+FROM regions r  
+INNER JOIN villes v ON r.id_region = v.id_region  
+INNER JOIN magasins m ON v.id_ville = m.id_ville  
+INNER JOIN ventes vt ON m.id_magasin = vt.id_magasin  
+ORDER BY r.nom_region, v.nom_ville, m.nom_magasin, vt.date_vente  
 ```
 
 ### Configuration du rapport
@@ -193,18 +193,18 @@ Parfois, vous devez combiner des données provenant de sources complètement dif
 
 ```pascal
 // Connexion MySQL pour les ventes
-FDConnection1.DriverName := 'MySQL';
-FDQueryVentes.Connection := FDConnection1;
-frxDBDatasetVentes.DataSet := FDQueryVentes;
+FDConnection1.DriverName := 'MySQL';  
+FDQueryVentes.Connection := FDConnection1;  
+frxDBDatasetVentes.DataSet := FDQueryVentes;  
 
 // Connexion SQL Server pour la comptabilité
-FDConnection2.DriverName := 'MSSQL';
-FDQueryCompta.Connection := FDConnection2;
-frxDBDatasetCompta.DataSet := FDQueryCompta;
+FDConnection2.DriverName := 'MSSQL';  
+FDQueryCompta.Connection := FDConnection2;  
+frxDBDatasetCompta.DataSet := FDQueryCompta;  
 
 // Dataset pour fichier Excel
-FDQueryExcel.Connection := FDConnectionExcel;
-frxDBDatasetAnalytics.DataSet := FDQueryExcel;
+FDQueryExcel.Connection := FDConnectionExcel;  
+frxDBDatasetAnalytics.DataSet := FDQueryExcel;  
 ```
 
 **Étape 2 : Organisation du rapport**
@@ -220,25 +220,25 @@ Créez des sections distinctes dans le rapport :
 Si les données doivent être synchronisées (même période, etc.), passez des paramètres :
 
 ```pascal
-frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateDebut));
-frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateFin));
+frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateDebut));  
+frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateFin));  
 ```
 
 Puis dans les requêtes :
 
 ```sql
-SELECT * FROM ventes
-WHERE date_vente BETWEEN :DateDebut AND :DateFin
+SELECT * FROM ventes  
+WHERE date_vente BETWEEN :DateDebut AND :DateFin  
 ```
 
 ### Utilisation de sous-rapports
 
 Pour combiner élégamment plusieurs sources, utilisez des sous-rapports :
 
-**Rapport principal** : vue d'ensemble et totaux généraux
-**Sous-rapport 1** : détails des ventes
-**Sous-rapport 2** : détails comptables
-**Sous-rapport 3** : analyses graphiques
+**Rapport principal** : vue d'ensemble et totaux généraux  
+**Sous-rapport 1** : détails des ventes  
+**Sous-rapport 2** : détails comptables  
+**Sous-rapport 3** : analyses graphiques  
 
 ## Calculs avancés et agrégations
 
@@ -740,9 +740,9 @@ Adaptez les images à un cadre prédéfini :
 
 ```pascal
 // Propriétés du Picture
-Picture1.Stretch := True;
-Picture1.KeepAspectRatio := True;
-Picture1.Center := True;
+Picture1.Stretch := True;  
+Picture1.KeepAspectRatio := True;  
+Picture1.Center := True;  
 ```
 
 ### Images conditionnelles
@@ -826,8 +826,8 @@ Créez des crosstabs complexes avec sous-totaux :
 Pour des rapports qui doivent refléter les données les plus récentes.
 
 ```pascal
-procedure TForm1.ActualiserEtAfficherRapport;
-begin
+procedure TForm1.ActualiserEtAfficherRapport;  
+begin  
   // Rafraîchir les données
   FDQueryVentes.Close;
   FDQueryVentes.Open;
@@ -837,8 +837,8 @@ begin
 end;
 
 // Timer pour actualisation périodique
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   ActualiserEtAfficherRapport;
 end;
 ```
@@ -849,16 +849,16 @@ Ajoutez des informations de génération :
 
 ```pascal
 // Passer les informations au rapport
-frxReport1.Variables['HeureGeneration'] := QuotedStr(TimeToStr(Time));
-frxReport1.Variables['UtilisateurGeneration'] := QuotedStr(GetCurrentUser);
-frxReport1.Variables['VersionRapport'] := QuotedStr('1.2.5');
+frxReport1.Variables['HeureGeneration'] := QuotedStr(TimeToStr(Time));  
+frxReport1.Variables['UtilisateurGeneration'] := QuotedStr(GetCurrentUser);  
+frxReport1.Variables['VersionRapport'] := QuotedStr('1.2.5');  
 ```
 
 Dans le rapport (pied de page) :
 
 ```
-Généré le [Date] à [HeureGeneration] par [UtilisateurGeneration]
-Version du rapport : [VersionRapport]
+Généré le [Date] à [HeureGeneration] par [UtilisateurGeneration]  
+Version du rapport : [VersionRapport]  
 ```
 
 ## Optimisation des rapports complexes
@@ -870,8 +870,8 @@ Pour les rapports volumineux (milliers de lignes) :
 #### Utiliser le cache fichier
 
 ```pascal
-frxReport1.EngineOptions.UseFileCache := True;
-frxReport1.EngineOptions.TempDir := GetTempDirectory;
+frxReport1.EngineOptions.UseFileCache := True;  
+frxReport1.EngineOptions.TempDir := GetTempDirectory;  
 ```
 
 #### Limiter les sous-rapports
@@ -885,8 +885,8 @@ frxReport1.EngineOptions.TempDir := GetTempDirectory;
 SELECT * FROM ventes
 
 -- Bon : filtrer au niveau de la base
-SELECT * FROM ventes
-WHERE date_vente >= '2024-01-01'
+SELECT * FROM ventes  
+WHERE date_vente >= '2024-01-01'  
   AND date_vente <= '2024-12-31'
 ORDER BY date_vente
 ```
@@ -894,8 +894,8 @@ ORDER BY date_vente
 #### Désactiver les fonctionnalités inutiles
 
 ```pascal
-frxReport1.EngineOptions.SilentMode := True;  // Pas de dialogues
-frxReport1.PreviewOptions.AllowEdit := False;  // Pas d'édition
+frxReport1.EngineOptions.SilentMode := True;  // Pas de dialogues  
+frxReport1.PreviewOptions.AllowEdit := False;  // Pas d'édition  
 ```
 
 ### Gestion de la mémoire
@@ -904,13 +904,13 @@ Pour les très gros rapports :
 
 ```pascal
 // Libérer la mémoire après génération
-frxReport1.PrepareReport(True);  // True = libérer les datasets après
-frxReport1.ShowPreparedReport;
+frxReport1.PrepareReport(True);  // True = libérer les datasets après  
+frxReport1.ShowPreparedReport;  
 
 // Ou exporter directement
-frxReport1.PrepareReport;
-frxReport1.Export(PDFExport);
-frxReport1.Clear;  // Libérer la mémoire
+frxReport1.PrepareReport;  
+frxReport1.Export(PDFExport);  
+frxReport1.Clear;  // Libérer la mémoire  
 ```
 
 ### Génération asynchrone
@@ -918,8 +918,8 @@ frxReport1.Clear;  // Libérer la mémoire
 Pour ne pas bloquer l'interface :
 
 ```pascal
-procedure TForm1.GenererRapportAsync;
-begin
+procedure TForm1.GenererRapportAsync;  
+begin  
   ProgressBar1.Visible := True;
   btnGenerer.Enabled := False;
 
@@ -956,8 +956,8 @@ Un modèle de rapport contient la structure sans les données spécifiques.
 ### Utilisation du modèle
 
 ```pascal
-procedure TForm1.GenererFacture(NumeroFacture: Integer);
-begin
+procedure TForm1.GenererFacture(NumeroFacture: Integer);  
+begin  
   // Charger le modèle
   frxReport1.LoadFromFile('Modele_Facture.fr3');
 
@@ -1010,8 +1010,8 @@ type
     btnGenerer: TButton;
   end;
 
-procedure TFormParametresRapport.btnGenererClick(Sender: TObject);
-begin
+procedure TFormParametresRapport.btnGenererClick(Sender: TObject);  
+begin  
   // Passer les paramètres au rapport
   frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
   frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
@@ -1061,8 +1061,8 @@ end;
 #### PDF avec options
 
 ```pascal
-procedure TForm1.ExporterPDFAvecOptions;
-begin
+procedure TForm1.ExporterPDFAvecOptions;  
+begin  
   PDFExport := TfrxPDFExport.Create(nil);
   try
     // Options de qualité
@@ -1096,8 +1096,8 @@ end;
 #### Excel avec formatage
 
 ```pascal
-procedure TForm1.ExporterExcelAvecFormat;
-begin
+procedure TForm1.ExporterExcelAvecFormat;  
+begin  
   ExcelExport := TfrxXLSXExport.Create(nil);
   try
     // Options
@@ -1120,8 +1120,8 @@ end;
 ### Export vers plusieurs formats simultanément
 
 ```pascal
-procedure TForm1.ExporterMultiFormat(const CheminBase: string);
-begin
+procedure TForm1.ExporterMultiFormat(const CheminBase: string);  
+begin  
   frxReport1.PrepareReport;
 
   // PDF
@@ -1202,8 +1202,8 @@ type
 
 implementation
 
-procedure TFormRapportGestion.GenererRapport(Mois, Annee: Integer);
-var
+procedure TFormRapportGestion.GenererRapport(Mois, Annee: Integer);  
+var  
   DateDebut, DateFin: TDate;
   CheminRapport: string;
 begin

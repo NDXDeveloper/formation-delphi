@@ -51,8 +51,8 @@ C'est la méthode la plus simple et professionnelle.
 uses
   frxClass, frxExportPDF;
 
-procedure TForm1.ExporterEnPDF_FastReport(const NomFichier: string);
-var
+procedure TForm1.ExporterEnPDF_FastReport(const NomFichier: string);  
+var  
   PDFExport: TfrxPDFExport;
 begin
   PDFExport := TfrxPDFExport.Create(nil);
@@ -96,8 +96,8 @@ Bibliothèque PDF open source très performante.
 uses
   SynPdf, SynGdiPlus;
 
-procedure TForm1.ExporterEnPDF_Synopse(const NomFichier: string);
-var
+procedure TForm1.ExporterEnPDF_Synopse(const NomFichier: string);  
+var  
   PDF: TPdfDocumentGDI;
   Page: TPdfPage;
   Y: Integer;
@@ -160,8 +160,8 @@ end;
 Protégez vos PDF avec des mots de passe.
 
 ```pascal
-procedure TForm1.ExporterPDFProtege(const NomFichier: string);
-var
+procedure TForm1.ExporterPDFProtege(const NomFichier: string);  
+var  
   PDFExport: TfrxPDFExport;
 begin
   PDFExport := TfrxPDFExport.Create(nil);
@@ -196,8 +196,8 @@ end;
 Créez des PDF interactifs avec navigation.
 
 ```pascal
-procedure TForm1.CreerPDFInteractif;
-var
+procedure TForm1.CreerPDFInteractif;  
+var  
   PDFExport: TfrxPDFExport;
 begin
   PDFExport := TfrxPDFExport.Create(nil);
@@ -234,8 +234,8 @@ Excel est le format de prédilection pour l'analyse de données et les calculs.
 uses
   frxClass, frxExportXLSX;
 
-procedure TForm1.ExporterEnExcel_FastReport(const NomFichier: string);
-var
+procedure TForm1.ExporterEnExcel_FastReport(const NomFichier: string);  
+var  
   ExcelExport: TfrxXLSXExport;
 begin
   ExcelExport := TfrxXLSXExport.Create(nil);
@@ -270,8 +270,8 @@ Contrôle direct d'Excel via COM.
 uses
   ComObj, Variants;
 
-procedure TForm1.ExporterEnExcel_OLE(const NomFichier: string);
-var
+procedure TForm1.ExporterEnExcel_OLE(const NomFichier: string);  
+var  
   ExcelApp, Workbook, Worksheet: Variant;
   Ligne: Integer;
 begin
@@ -352,8 +352,8 @@ uses
   FireDAC.Comp.BatchMove.Dataset,
   FireDAC.Comp.BatchMove.XLSX;
 
-procedure TForm1.ExporterEnXLSX_FireDAC(const NomFichier: string);
-var
+procedure TForm1.ExporterEnXLSX_FireDAC(const NomFichier: string);  
+var  
   BatchMove: TFDBatchMove;
   Reader: TFDBatchMoveDataSetReader;
   Writer: TFDBatchMoveXLSXWriter;
@@ -395,8 +395,8 @@ end;
 ### Excel avec plusieurs feuilles
 
 ```pascal
-procedure TForm1.ExporterExcelMultiFeuilles(const NomFichier: string);
-var
+procedure TForm1.ExporterExcelMultiFeuilles(const NomFichier: string);  
+var  
   ExcelApp, Workbook: Variant;
 begin
   ExcelApp := CreateOleObject('Excel.Application');
@@ -424,8 +424,8 @@ begin
   end;
 end;
 
-procedure TForm1.RemplirFeuilleVentes(Worksheet: Variant);
-var
+procedure TForm1.RemplirFeuilleVentes(Worksheet: Variant);  
+var  
   Ligne: Integer;
 begin
   // En-têtes
@@ -448,8 +448,8 @@ end;
 ### Excel avec mise en forme conditionnelle
 
 ```pascal
-procedure TForm1.AjouterMiseEnFormeConditionnelle(Worksheet: Variant; Plage: string);
-var
+procedure TForm1.AjouterMiseEnFormeConditionnelle(Worksheet: Variant; Plage: string);  
+var  
   FormatCondition: Variant;
 begin
   // Ajouter une règle de mise en forme conditionnelle
@@ -473,8 +473,8 @@ Le CSV est le format le plus simple pour l'échange de données.
 ### Export CSV basique
 
 ```pascal
-procedure TForm1.ExporterEnCSV(const NomFichier: string);
-var
+procedure TForm1.ExporterEnCSV(const NomFichier: string);  
+var  
   Fichier: TextFile;
   i: Integer;
   Ligne: string;
@@ -530,8 +530,8 @@ end;
 uses
   System.IOUtils;
 
-procedure TForm1.ExporterEnCSV_UTF8(const NomFichier: string);
-var
+procedure TForm1.ExporterEnCSV_UTF8(const NomFichier: string);  
+var  
   Lignes: TStringList;
   i: Integer;
   Ligne: string;
@@ -582,8 +582,8 @@ type
     Encodage: TEncoding;
   end;
 
-procedure TForm1.ExporterCSVAvecOptions(const NomFichier: string; Options: TCSVExportOptions);
-var
+procedure TForm1.ExporterCSVAvecOptions(const NomFichier: string; Options: TCSVExportOptions);  
+var  
   Lignes: TStringList;
   i: Integer;
   Ligne: string;
@@ -639,8 +639,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.btnExporterCSVClick(Sender: TObject);
-var
+procedure TForm1.btnExporterCSVClick(Sender: TObject);  
+var  
   Options: TCSVExportOptions;
 begin
   Options.Separateur := ';';
@@ -659,8 +659,8 @@ HTML est parfait pour la publication web et les emails.
 ### Export HTML simple
 
 ```pascal
-procedure TForm1.ExporterEnHTML(const NomFichier: string);
-var
+procedure TForm1.ExporterEnHTML(const NomFichier: string);  
+var  
   HTML: TStringList;
   i: Integer;
 begin
@@ -725,8 +725,8 @@ end;
 ### Export HTML avec graphique
 
 ```pascal
-procedure TForm1.ExporterHTMLAvecGraphique(const NomFichier: string);
-var
+procedure TForm1.ExporterHTMLAvecGraphique(const NomFichier: string);  
+var  
   HTML: TStringList;
 begin
   HTML := TStringList.Create;
@@ -781,8 +781,8 @@ end;
 ### Export HTML responsive
 
 ```pascal
-procedure TForm1.ExporterHTMLResponsive(const NomFichier: string);
-var
+procedure TForm1.ExporterHTMLResponsive(const NomFichier: string);  
+var  
   HTML: TStringList;
 begin
   HTML := TStringList.Create;
@@ -831,8 +831,8 @@ XML est un format structuré idéal pour l'échange de données.
 uses
   Xml.XMLDoc, Xml.XMLIntf;
 
-procedure TForm1.ExporterEnXML(const NomFichier: string);
-var
+procedure TForm1.ExporterEnXML(const NomFichier: string);  
+var  
   XMLDoc: IXMLDocument;
   RootNode, RecordNode, FieldNode: IXMLNode;
   i: Integer;
@@ -875,8 +875,8 @@ end;
 ### Export XML avec attributs
 
 ```pascal
-procedure TForm1.ExporterXMLAvecAttributs(const NomFichier: string);
-var
+procedure TForm1.ExporterXMLAvecAttributs(const NomFichier: string);  
+var  
   XMLDoc: IXMLDocument;
   RootNode, RecordNode: IXMLNode;
 begin
@@ -917,8 +917,8 @@ JSON est le format moderne pour les APIs et applications web.
 uses
   System.JSON;
 
-procedure TForm1.ExporterEnJSON(const NomFichier: string);
-var
+procedure TForm1.ExporterEnJSON(const NomFichier: string);  
+var  
   JSONArray: TJSONArray;
   JSONObject: TJSONObject;
   i: Integer;
@@ -974,8 +974,8 @@ end;
 ### Export JSON structuré
 
 ```pascal
-procedure TForm1.ExporterJSONStructure(const NomFichier: string);
-var
+procedure TForm1.ExporterJSONStructure(const NomFichier: string);  
+var  
   RootObject: TJSONObject;
   MetaData: TJSONObject;
   DataArray: TJSONArray;
@@ -1023,8 +1023,8 @@ Pour créer des documents Word éditables.
 uses
   ComObj;
 
-procedure TForm1.ExporterEnWord(const NomFichier: string);
-var
+procedure TForm1.ExporterEnWord(const NomFichier: string);  
+var  
   WordApp, Document, Range: Variant;
 begin
   WordApp := CreateOleObject('Word.Application');
@@ -1093,8 +1093,8 @@ end;
 RTF est un format texte enrichi compatible avec Word et autres traitements de texte.
 
 ```pascal
-procedure TForm1.ExporterEnRTF(const NomFichier: string);
-var
+procedure TForm1.ExporterEnRTF(const NomFichier: string);  
+var  
   RTF: TStringList;
 begin
   RTF := TStringList.Create;
@@ -1141,50 +1141,46 @@ Exportez vos graphiques et visualisations en images.
 uses
   VCLTee.TeeProcs, VCLTee.TeePNG, VCLTee.TeeJPEG;
 
-procedure TForm1.ExporterGraphiqueEnImage(const NomFichier: string);
-var
+procedure TForm1.ExporterGraphiqueEnImage(const NomFichier: string);  
+var  
   Extension: string;
 begin
   Extension := LowerCase(ExtractFileExt(NomFichier));
 
-  case Extension of
-    '.png':
-      begin
-        var PNG := TTeePNGExport.Create;
-        try
-          PNG.Panel := Chart1;
-          PNG.Width := Chart1.Width;
-          PNG.Height := Chart1.Height;
-          PNG.SaveToFile(NomFichier);
-        finally
-          PNG.Free;
-        end;
-      end;
-
-    '.jpg', '.jpeg':
-      begin
-        var JPEG := TTeeJPEGExport.Create;
-        try
-          JPEG.Panel := Chart1;
-          JPEG.Width := Chart1.Width;
-          JPEG.Height := Chart1.Height;
-          JPEG.SaveToFile(NomFichier);
-        finally
-          JPEG.Free;
-        end;
-      end;
-
-    '.bmp':
-      Chart1.SaveToBitmapFile(NomFichier);
-  end;
+  if Extension = '.png' then
+  begin
+    var PNG := TTeePNGExport.Create;
+    try
+      PNG.Panel := Chart1;
+      PNG.Width := Chart1.Width;
+      PNG.Height := Chart1.Height;
+      PNG.SaveToFile(NomFichier);
+    finally
+      PNG.Free;
+    end;
+  end
+  else if (Extension = '.jpg') or (Extension = '.jpeg') then
+  begin
+    var JPEG := TTeeJPEGExport.Create;
+    try
+      JPEG.Panel := Chart1;
+      JPEG.Width := Chart1.Width;
+      JPEG.Height := Chart1.Height;
+      JPEG.SaveToFile(NomFichier);
+    finally
+      JPEG.Free;
+    end;
+  end
+  else if Extension = '.bmp' then
+    Chart1.SaveToBitmapFile(NomFichier);
 end;
 ```
 
 ### Capture d'écran d'un formulaire
 
 ```pascal
-procedure TForm1.CapturerFormulaire(const NomFichier: string);
-var
+procedure TForm1.CapturerFormulaire(const NomFichier: string);  
+var  
   Bitmap: TBitmap;
 begin
   Bitmap := TBitmap.Create;
@@ -1213,8 +1209,8 @@ end;
 ### Dialogue de sélection de format
 
 ```pascal
-procedure TForm1.btnExporterClick(Sender: TObject);
-var
+procedure TForm1.btnExporterClick(Sender: TObject);  
+var  
   SaveDialog: TSaveDialog;
 begin
   SaveDialog := TSaveDialog.Create(Self);
@@ -1236,16 +1232,20 @@ begin
 
       Screen.Cursor := crHourGlass;
       try
-        case Extension of
-          '.pdf': ExporterEnPDF_FastReport(SaveDialog.FileName);
-          '.xlsx': ExporterEnExcel_FastReport(SaveDialog.FileName);
-          '.csv': ExporterEnCSV(SaveDialog.FileName);
-          '.html': ExporterEnHTML(SaveDialog.FileName);
-          '.xml': ExporterEnXML(SaveDialog.FileName);
-          '.json': ExporterEnJSON(SaveDialog.FileName);
+        if Extension = '.pdf' then
+          ExporterEnPDF_FastReport(SaveDialog.FileName)
+        else if Extension = '.xlsx' then
+          ExporterEnExcel_FastReport(SaveDialog.FileName)
+        else if Extension = '.csv' then
+          ExporterEnCSV(SaveDialog.FileName)
+        else if Extension = '.html' then
+          ExporterEnHTML(SaveDialog.FileName)
+        else if Extension = '.xml' then
+          ExporterEnXML(SaveDialog.FileName)
+        else if Extension = '.json' then
+          ExporterEnJSON(SaveDialog.FileName)
         else
           ShowMessage('Format non supporté');
-        end;
       finally
         Screen.Cursor := crDefault;
       end;
@@ -1269,8 +1269,8 @@ type
     btnAnnuler: TButton;
   end;
 
-procedure TFormOptionsExport.btnExporterClick(Sender: TObject);
-begin
+procedure TFormOptionsExport.btnExporterClick(Sender: TObject);  
+begin  
   var Format := '';
   case RadioGroupFormat.ItemIndex of
     0: Format := 'PDF';
@@ -1287,8 +1287,8 @@ end;
 ### Barre de progression pour export
 
 ```pascal
-procedure TForm1.ExporterAvecProgression(const NomFichier: string);
-var
+procedure TForm1.ExporterAvecProgression(const NomFichier: string);  
+var  
   TotalLignes, LigneActuelle: Integer;
 begin
   TotalLignes := FDQueryVentes.RecordCount;
@@ -1323,8 +1323,8 @@ end;
 ### Gestion robuste des erreurs
 
 ```pascal
-procedure TForm1.ExporterAvecGestionErreurs(const NomFichier: string);
-begin
+procedure TForm1.ExporterAvecGestionErreurs(const NomFichier: string);  
+begin  
   try
     // Vérifier que le dataset contient des données
     if FDQueryVentes.IsEmpty then
@@ -1362,8 +1362,8 @@ end;
 ### Validation avant export
 
 ```pascal
-function TForm1.ValiderAvantExport: Boolean;
-begin
+function TForm1.ValiderAvantExport: Boolean;  
+begin  
   Result := True;
 
   // Vérifier la connexion
@@ -1399,8 +1399,8 @@ end;
 uses
   System.Threading;
 
-procedure TForm1.ExporterAsync(const NomFichier: string);
-begin
+procedure TForm1.ExporterAsync(const NomFichier: string);  
+begin  
   btnExporter.Enabled := False;
   ProgressBar1.Visible := True;
 
@@ -1439,8 +1439,8 @@ end;
 ### Export par lots (batch)
 
 ```pascal
-procedure TForm1.ExporterParLots(const CheminBase: string);
-const
+procedure TForm1.ExporterParLots(const CheminBase: string);  
+const  
   TAILLE_LOT = 1000;
 var
   NumeroLot: Integer;

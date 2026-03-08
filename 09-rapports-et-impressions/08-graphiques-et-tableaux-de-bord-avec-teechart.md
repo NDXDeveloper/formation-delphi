@@ -93,8 +93,8 @@ type
 ### Mise en page du formulaire
 
 ```pascal
-procedure TFormTableauDeBord.FormCreate(Sender: TObject);
-begin
+procedure TFormTableauDeBord.FormCreate(Sender: TObject);  
+begin  
   // Configuration du formulaire
   Caption := 'Tableau de bord - Ventes';
   WindowState := wsMaximized;
@@ -117,8 +117,8 @@ begin
   Timer1.Enabled := True;
 end;
 
-procedure TFormTableauDeBord.ConfigurerInterface;
-begin
+procedure TFormTableauDeBord.ConfigurerInterface;  
+begin  
   // En-tête
   PanelHeader.Height := 60;
   PanelHeader.Align := alTop;
@@ -143,8 +143,8 @@ begin
   ConfigurerGraphiqueComparaison;
 end;
 
-procedure TFormTableauDeBord.ConfigurerPanelKPI(Panel: TPanel; const Titre: string);
-begin
+procedure TFormTableauDeBord.ConfigurerPanelKPI(Panel: TPanel; const Titre: string);  
+begin  
   Panel.BevelOuter := bvNone;
   Panel.Color := clWhite;
   Panel.BorderStyle := bsSingle;
@@ -179,8 +179,8 @@ end;
 ### Indicateurs numériques
 
 ```pascal
-procedure TFormTableauDeBord.MettreAJourKPIs;
-var
+procedure TFormTableauDeBord.MettreAJourKPIs;  
+var  
   CA, CAMoisPrecedent: Double;
   NombreClients: Integer;
   TauxSatisfaction: Double;
@@ -237,8 +237,8 @@ begin
   AfficherKPI(PanelKPI4, FormatFloat('0.0', TauxSatisfaction) + '/5 ★', clOrange);
 end;
 
-procedure TFormTableauDeBord.AfficherKPI(Panel: TPanel; const Valeur: string; Couleur: TColor);
-var
+procedure TFormTableauDeBord.AfficherKPI(Panel: TPanel; const Valeur: string; Couleur: TColor);  
+var  
   LabelValeur: TLabel;
 begin
   LabelValeur := Panel.FindComponent('LabelValeur' + Panel.Name) as TLabel;
@@ -271,8 +271,8 @@ type
     procedure Initialiser(const Titre: string; Valeur, ValeurPrecedente: Double);
   end;
 
-constructor TKPIAvecTendance.Create(AOwner: TComponent);
-begin
+constructor TKPIAvecTendance.Create(AOwner: TComponent);  
+begin  
   inherited;
 
   // Image/Icône
@@ -314,16 +314,16 @@ begin
   FLabelTendance.Alignment := taCenter;
 end;
 
-procedure TKPIAvecTendance.Initialiser(const Titre: string; Valeur, ValeurPrecedente: Double);
-begin
+procedure TKPIAvecTendance.Initialiser(const Titre: string; Valeur, ValeurPrecedente: Double);  
+begin  
   FTitre := Titre;
   FValeur := Valeur;
   FValeurPrecedente := ValeurPrecedente;
   MettreAJour;
 end;
 
-procedure TKPIAvecTendance.MettreAJour;
-var
+procedure TKPIAvecTendance.MettreAJour;  
+var  
   Tendance: Double;
 begin
   FLabelTitre.Caption := FTitre;
@@ -351,8 +351,8 @@ begin
   end;
 end;
 
-function TKPIAvecTendance.CalculerTendance: Double;
-begin
+function TKPIAvecTendance.CalculerTendance: Double;  
+begin  
   if FValeurPrecedente <> 0 then
     Result := ((FValeur - FValeurPrecedente) / FValeurPrecedente) * 100
   else
@@ -368,8 +368,8 @@ end;
 uses
   VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs;
 
-procedure TFormTableauDeBord.ConfigurerGraphiquePrincipal;
-begin
+procedure TFormTableauDeBord.ConfigurerGraphiquePrincipal;  
+begin  
   // Configuration générale
   ChartPrincipal.Title.Text.Text := 'Évolution des Ventes Mensuelles';
   ChartPrincipal.Title.Font.Size := 12;
@@ -396,8 +396,8 @@ begin
   ChartPrincipal.BottomAxis.Grid.Visible := False;
 end;
 
-procedure TFormTableauDeBord.ChargerGraphiquePrincipal;
-var
+procedure TFormTableauDeBord.ChargerGraphiquePrincipal;  
+var  
   Serie2024, Serie2023: TLineSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -450,8 +450,8 @@ end;
 ### Graphique de répartition (Camembert)
 
 ```pascal
-procedure TFormTableauDeBord.ConfigurerGraphiqueRepartition;
-begin
+procedure TFormTableauDeBord.ConfigurerGraphiqueRepartition;  
+begin  
   ChartRepartition.Title.Text.Text := 'Répartition par Catégorie';
   ChartRepartition.Title.Font.Size := 11;
   ChartRepartition.Title.Font.Style := [fsBold];
@@ -463,8 +463,8 @@ begin
   ChartRepartition.Legend.Alignment := laRight;
 end;
 
-procedure TFormTableauDeBord.ChargerGraphiqueRepartition;
-var
+procedure TFormTableauDeBord.ChargerGraphiqueRepartition;  
+var  
   Serie: TPieSeries;
 begin
   ChartRepartition.RemoveAllSeries;
@@ -522,8 +522,8 @@ end;
 ### Graphique de comparaison (Barres)
 
 ```pascal
-procedure TFormTableauDeBord.ConfigurerGraphiqueComparaison;
-begin
+procedure TFormTableauDeBord.ConfigurerGraphiqueComparaison;  
+begin  
   ChartComparaison.Title.Text.Text := 'Top 10 Produits';
   ChartComparaison.Title.Font.Size := 11;
   ChartComparaison.Title.Font.Style := [fsBold];
@@ -535,8 +535,8 @@ begin
   ChartComparaison.LeftAxis.Title.Caption := 'Ventes';
 end;
 
-procedure TFormTableauDeBord.ChargerGraphiqueComparaison;
-var
+procedure TFormTableauDeBord.ChargerGraphiqueComparaison;  
+var  
   Serie: THorizBarSeries;
 begin
   ChartComparaison.RemoveAllSeries;
@@ -586,8 +586,8 @@ end;
 uses
   VCLTee.TeeGauge;
 
-procedure TFormTableauDeBord.CreerJaugeObjectif;
-var
+procedure TFormTableauDeBord.CreerJaugeObjectif;  
+var  
   ChartJauge: TChart;
   Jauge: TGaugeSeries;
   ObjectifAtteint: Double;
@@ -634,8 +634,8 @@ begin
   Jauge.Frame.Color := clGray;
 end;
 
-function TFormTableauDeBord.CalculerPourcentageObjectif: Double;
-var
+function TFormTableauDeBord.CalculerPourcentageObjectif: Double;  
+var  
   CAActuel, CAObjectif: Double;
 begin
   // CA actuel
@@ -676,8 +676,8 @@ type
     procedure Effacer;
   end;
 
-constructor TSparkline.Create(AOwner: TComponent);
-begin
+constructor TSparkline.Create(AOwner: TComponent);  
+begin  
   inherited;
 
   // Configuration minimaliste
@@ -699,8 +699,8 @@ begin
   FSerie.Pointer.Visible := False;
 end;
 
-procedure TSparkline.AjouterValeurs(const Valeurs: array of Double);
-var
+procedure TSparkline.AjouterValeurs(const Valeurs: array of Double);  
+var  
   i: Integer;
 begin
   FSerie.Clear;
@@ -708,14 +708,14 @@ begin
     FSerie.AddY(Valeurs[i]);
 end;
 
-procedure TSparkline.Effacer;
-begin
+procedure TSparkline.Effacer;  
+begin  
   FSerie.Clear;
 end;
 
 // Utilisation dans un KPI
-procedure TFormTableauDeBord.AjouterSparklineAuKPI(Panel: TPanel);
-var
+procedure TFormTableauDeBord.AjouterSparklineAuKPI(Panel: TPanel);  
+var  
   Sparkline: TSparkline;
   Valeurs: array[0..6] of Double;
 begin
@@ -734,8 +734,8 @@ end;
 ### Graphique de tendance avec zone de confiance
 
 ```pascal
-procedure TFormTableauDeBord.CreerGraphiqueTendance;
-var
+procedure TFormTableauDeBord.CreerGraphiqueTendance;  
+var  
   ChartTendance: TChart;
   SerieDonnees: TLineSeries;
   SerieTendance: TLineSeries;
@@ -778,8 +778,8 @@ end;
 ### Filtres globaux
 
 ```pascal
-procedure TFormTableauDeBord.AppliquerFiltresGlobaux;
-var
+procedure TFormTableauDeBord.AppliquerFiltresGlobaux;  
+var  
   DateDebut, DateFin: TDate;
   Categorie: string;
 begin
@@ -806,8 +806,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.btnActualiserClick(Sender: TObject);
-begin
+procedure TFormTableauDeBord.btnActualiserClick(Sender: TObject);  
+begin  
   AppliquerFiltresGlobaux;
 end;
 ```
@@ -831,8 +831,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.AfficherDetailCategorie(const Categorie: string);
-var
+procedure TFormTableauDeBord.AfficherDetailCategorie(const Categorie: string);  
+var  
   FormDetail: TFormDetailCategorie;
 begin
   FormDetail := TFormDetailCategorie.Create(Self);
@@ -851,8 +851,8 @@ end;
 ### Synchronisation entre graphiques
 
 ```pascal
-procedure TFormTableauDeBord.SynchroniserGraphiques;
-var
+procedure TFormTableauDeBord.SynchroniserGraphiques;  
+var  
   MoisSelectionne: Integer;
 begin
   // Quand on clique sur un mois dans le graphique principal
@@ -878,8 +878,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.MarquerPointSelectionne(Series: TChartSeries; Index: Integer);
-var
+procedure TFormTableauDeBord.MarquerPointSelectionne(Series: TChartSeries; Index: Integer);  
+var  
   i: Integer;
 begin
   // Réinitialiser tous les points
@@ -907,8 +907,8 @@ end;
 uses
   VCLTee.TeeTools;
 
-procedure TFormTableauDeBord.ConfigurerTooltips;
-var
+procedure TFormTableauDeBord.ConfigurerTooltips;  
+var  
   Tool: TMarksTipTool;
 begin
   // ChartPrincipal
@@ -940,8 +940,8 @@ end;
 ### Actualisation automatique
 
 ```pascal
-procedure TFormTableauDeBord.Timer1Timer(Sender: TObject);
-begin
+procedure TFormTableauDeBord.Timer1Timer(Sender: TObject);  
+begin  
   if FActualisationAutomatique then
   begin
     ChargerDonnees;
@@ -952,8 +952,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.CheckBoxAutoRefreshClick(Sender: TObject);
-begin
+procedure TFormTableauDeBord.CheckBoxAutoRefreshClick(Sender: TObject);  
+begin  
   FActualisationAutomatique := CheckBoxAutoRefresh.Checked;
   Timer1.Enabled := FActualisationAutomatique;
 
@@ -967,8 +967,8 @@ end;
 ### Actualisation progressive
 
 ```pascal
-procedure TFormTableauDeBord.ActualiserProgressivement;
-begin
+procedure TFormTableauDeBord.ActualiserProgressivement;  
+begin  
   // Actualiser les KPIs d'abord (plus rapide)
   TTask.Run(
     procedure
@@ -1007,8 +1007,8 @@ end;
 uses
   VCLTee.TeeAnimations;
 
-procedure TFormTableauDeBord.AnimerActualisation;
-var
+procedure TFormTableauDeBord.AnimerActualisation;  
+var  
   Animation: TTeeAnimation;
 begin
   // Charger les nouvelles données
@@ -1025,8 +1025,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.AnimerKPI(Panel: TPanel; NouvelleValeur: Double);
-var
+procedure TFormTableauDeBord.AnimerKPI(Panel: TPanel; NouvelleValeur: Double);  
+var  
   LabelValeur: TLabel;
   ValeurActuelle: Double;
   Timer: TTimer;
@@ -1075,8 +1075,8 @@ end;
 uses
   VCLTee.TeePNG;
 
-procedure TFormTableauDeBord.ExporterTableauDeBordImage(const NomFichier: string);
-var
+procedure TFormTableauDeBord.ExporterTableauDeBordImage(const NomFichier: string);  
+var  
   Bitmap: TBitmap;
 begin
   Bitmap := TBitmap.Create;
@@ -1110,8 +1110,8 @@ end;
 uses
   frxClass, frxExportPDF;
 
-procedure TFormTableauDeBord.ExporterTableauDeBordPDF(const NomFichier: string);
-var
+procedure TFormTableauDeBord.ExporterTableauDeBordPDF(const NomFichier: string);  
+var  
   Report: TfrxReport;
   Page: TfrxReportPage;
   PDFExport: TfrxPDFExport;
@@ -1196,13 +1196,13 @@ end;
 ### Adaptation à la taille de fenêtre
 
 ```pascal
-procedure TFormTableauDeBord.FormResize(Sender: TObject);
-begin
+procedure TFormTableauDeBord.FormResize(Sender: TObject);  
+begin  
   AdapterDisposition;
 end;
 
-procedure TFormTableauDeBord.AdapterDisposition;
-begin
+procedure TFormTableauDeBord.AdapterDisposition;  
+begin  
   // Largeur suffisante : disposition en colonnes
   if ClientWidth >= 1200 then
   begin
@@ -1220,8 +1220,8 @@ begin
   end;
 end;
 
-procedure TFormTableauDeBord.DispositionLarge;
-begin
+procedure TFormTableauDeBord.DispositionLarge;  
+begin  
   // KPIs en ligne
   PanelKPI1.Width := ClientWidth div 4;
   PanelKPI2.Width := ClientWidth div 4;
@@ -1240,14 +1240,14 @@ begin
   ChartComparaison.Top := ChartPrincipal.Height;
 end;
 
-procedure TFormTableauDeBord.DispositionMoyenne;
-begin
+procedure TFormTableauDeBord.DispositionMoyenne;  
+begin  
   // Disposition ajustée pour écran moyen
   // ...
 end;
 
-procedure TFormTableauDeBord.DispositionEtroite;
-begin
+procedure TFormTableauDeBord.DispositionEtroite;  
+begin  
   // Tout en vertical pour petit écran
   PanelKPI1.Width := ClientWidth;
   PanelKPI2.Width := ClientWidth;
@@ -1263,8 +1263,8 @@ end;
 ### Thème sombre
 
 ```pascal
-procedure TFormTableauDeBord.AppliquerThemeSombre;
-begin
+procedure TFormTableauDeBord.AppliquerThemeSombre;  
+begin  
   // Formulaire
   Color := $00202020;
 
@@ -1285,8 +1285,8 @@ begin
   ConfigurerGraphiqueThemeSombre(ChartComparaison);
 end;
 
-procedure TFormTableauDeBord.ConfigurerGraphiqueThemeSombre(Chart: TChart);
-begin
+procedure TFormTableauDeBord.ConfigurerGraphiqueThemeSombre(Chart: TChart);  
+begin  
   Chart.Color := $00303030;
   Chart.BackColor := $00303030;
   Chart.Title.Font.Color := clWhite;
@@ -1315,18 +1315,18 @@ type
     class function ObtenirCouleur(Index: Integer): TColor;
   end;
 
-class function TPaletteTableauBord.Couleur1: TColor;
-begin
+class function TPaletteTableauBord.Couleur1: TColor;  
+begin  
   Result := $00FF8040; // Bleu-orange principal
 end;
 
-class function TPaletteTableauBord.Couleur2: TColor;
-begin
+class function TPaletteTableauBord.Couleur2: TColor;  
+begin  
   Result := $004080FF; // Orange complémentaire
 end;
 
-class function TPaletteTableauBord.ObtenirCouleur(Index: Integer): TColor;
-const
+class function TPaletteTableauBord.ObtenirCouleur(Index: Integer): TColor;  
+const  
   Palette: array[0..6] of TColor = (
     $00FF8040, $004080FF, $0080FF40, $00FF4080,
     $0040FF80, $008040FF, $00FFFF40
@@ -1336,8 +1336,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormTableauBord.AppliquerPalette;
-var
+procedure TFormTableauBord.AppliquerPalette;  
+var  
   i: Integer;
 begin
   for i := 0 to ChartRepartition.SeriesCount - 1 do

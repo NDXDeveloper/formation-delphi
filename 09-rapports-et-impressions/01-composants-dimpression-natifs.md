@@ -70,8 +70,8 @@ Le composant `TPrinterSetupDialog` affiche la boîte de dialogue de configuratio
 **Utilisation typique :**
 
 ```pascal
-if PrinterSetupDialog1.Execute then
-begin
+if PrinterSetupDialog1.Execute then  
+begin  
   // L'utilisateur a validé, les paramètres sont appliqués
   ShowMessage('Configuration enregistrée');
 end;
@@ -91,8 +91,8 @@ Une impression se déroule toujours selon le même schéma :
 Voici un exemple simple d'impression d'un texte :
 
 ```pascal
-procedure TForm1.btnImprimerClick(Sender: TObject);
-begin
+procedure TForm1.btnImprimerClick(Sender: TObject);  
+begin  
   Printer.BeginDoc;  // Début du document d'impression
   try
     // Impression du texte
@@ -116,8 +116,8 @@ end;
 Il est recommandé de toujours permettre à l'utilisateur de choisir son imprimante et ses options. Voici comment intégrer le dialogue d'impression :
 
 ```pascal
-procedure TForm1.btnImprimerAvecDialogueClick(Sender: TObject);
-begin
+procedure TForm1.btnImprimerAvecDialogueClick(Sender: TObject);  
+begin  
   // Configuration du dialogue
   PrintDialog1.MinPage := 1;
   PrintDialog1.MaxPage := 1;
@@ -148,8 +148,8 @@ Le Canvas de l'imprimante fonctionne comme celui d'un formulaire. Vous pouvez mo
 ### Propriétés de la police
 
 ```pascal
-procedure TForm1.ImprimerAvecMiseEnForme;
-begin
+procedure TForm1.ImprimerAvecMiseEnForme;  
+begin  
   Printer.BeginDoc;
   try
     // Titre en gras et grande taille
@@ -187,8 +187,8 @@ En plus du texte, vous pouvez dessiner des lignes, des rectangles et d'autres fo
 
 ```pascal
 // Tracer une ligne horizontale
-Printer.Canvas.MoveTo(100, 500);
-Printer.Canvas.LineTo(500, 500);
+Printer.Canvas.MoveTo(100, 500);  
+Printer.Canvas.LineTo(500, 500);  
 ```
 
 ### Rectangles
@@ -202,9 +202,9 @@ Printer.Canvas.Rectangle(100, 600, 400, 800);
 
 ```pascal
 // Rectangle avec fond coloré
-Printer.Canvas.Brush.Color := clYellow;
-Printer.Canvas.Brush.Style := bsSolid;
-Printer.Canvas.Rectangle(100, 900, 400, 1100);
+Printer.Canvas.Brush.Color := clYellow;  
+Printer.Canvas.Brush.Style := bsSolid;  
+Printer.Canvas.Rectangle(100, 900, 400, 1100);  
 ```
 
 ## Gestion des pages multiples
@@ -212,8 +212,8 @@ Printer.Canvas.Rectangle(100, 900, 400, 1100);
 Pour les documents de plusieurs pages, utilisez la méthode `NewPage` :
 
 ```pascal
-procedure TForm1.ImprimerPlusieursPages;
-var
+procedure TForm1.ImprimerPlusieursPages;  
+var  
   i: Integer;
 begin
   Printer.BeginDoc;
@@ -237,13 +237,21 @@ end;
 Les coordonnées du Canvas sont en pixels, mais il est utile de connaître les dimensions réelles de la page :
 
 ```pascal
-procedure TForm1.AfficherDimensionsPage;
-var
+uses
+  Winapi.Windows, Printers;
+
+procedure TForm1.AfficherDimensionsPage;  
+var  
   LargeurMM, HauteurMM: Double;
+  DPIX, DPIY: Integer;
 begin
-  // Conversion pixels vers millimètres (approximation)
-  LargeurMM := (Printer.PageWidth / Screen.PixelsPerInch) * 25.4;
-  HauteurMM := (Printer.PageHeight / Screen.PixelsPerInch) * 25.4;
+  // Obtenir la résolution de l'imprimante (pas de l'écran !)
+  // Printer.PageWidth/PageHeight sont en pixels à la résolution de l'imprimante
+  DPIX := GetDeviceCaps(Printer.Handle, LOGPIXELSX);
+  DPIY := GetDeviceCaps(Printer.Handle, LOGPIXELSY);
+
+  LargeurMM := (Printer.PageWidth / DPIX) * 25.4;
+  HauteurMM := (Printer.PageHeight / DPIY) * 25.4;
 
   ShowMessage(Format('Largeur : %.1f mm, Hauteur : %.1f mm', [LargeurMM, HauteurMM]));
 end;
@@ -266,8 +274,8 @@ Printer.Orientation := poLandscape;  // Paysage (horizontal)
 Voici un exemple pratique pour imprimer le contenu d'un composant TMemo :
 
 ```pascal
-procedure TForm1.ImprimerMemo;
-var
+procedure TForm1.ImprimerMemo;  
+var  
   i, Y: Integer;
   HauteurLigne: Integer;
 begin
@@ -305,8 +313,8 @@ end;
 Il est important de gérer les erreurs qui peuvent survenir lors de l'impression :
 
 ```pascal
-procedure TForm1.ImprimerAvecGestionErreurs;
-begin
+procedure TForm1.ImprimerAvecGestionErreurs;  
+begin  
   if PrintDialog1.Execute then
   begin
     try
@@ -342,8 +350,8 @@ Cette méthode peut être appelée entre `BeginDoc` et `EndDoc` pour interrompre
 Vous pouvez afficher la liste de toutes les imprimantes disponibles :
 
 ```pascal
-procedure TForm1.AfficherImprimantes;
-var
+procedure TForm1.AfficherImprimantes;  
+var  
   i: Integer;
 begin
   Memo1.Lines.Clear;
@@ -377,8 +385,8 @@ if Printer.Printers.Count > 1 then
 Le bloc `try...finally` garantit que `EndDoc` sera toujours appelé, même en cas d'erreur :
 
 ```pascal
-Printer.BeginDoc;
-try
+Printer.BeginDoc;  
+try  
   // Votre code d'impression ici
 finally
   Printer.EndDoc;
@@ -390,8 +398,8 @@ end;
 Vérifiez qu'une imprimante est disponible avant de tenter d'imprimer :
 
 ```pascal
-if Printer.Printers.Count = 0 then
-begin
+if Printer.Printers.Count = 0 then  
+begin  
   ShowMessage('Aucune imprimante installée');
   Exit;
 end;
@@ -423,8 +431,8 @@ const
 Voici un exemple pratique qui combine plusieurs concepts :
 
 ```pascal
-procedure TForm1.ImprimerFactureSimple;
-var
+procedure TForm1.ImprimerFactureSimple;  
+var  
   Y: Integer;
 begin
   if PrintDialog1.Execute then

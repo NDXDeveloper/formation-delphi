@@ -107,8 +107,8 @@ Si vous souhaitez la version Pro :
 uses
   VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs;
 
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Serie: TLineSeries;
 begin
   // Créer une série de type ligne
@@ -132,8 +132,8 @@ end;
 ### Configuration de base
 
 ```pascal
-procedure TForm1.ConfigurerGraphique;
-begin
+procedure TForm1.ConfigurerGraphique;  
+begin  
   // Titre du graphique
   ChartPrincipal.Title.Text.Text := 'Évolution des ventes';
   ChartPrincipal.Title.Font.Size := 14;
@@ -161,8 +161,8 @@ end;
 Parfaits pour visualiser des évolutions dans le temps.
 
 ```pascal
-procedure TForm1.CreerGraphiqueLigne;
-var
+procedure TForm1.CreerGraphiqueLigne;  
+var  
   Serie: TLineSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -195,8 +195,8 @@ end;
 Idéaux pour comparer des valeurs entre différentes catégories.
 
 ```pascal
-procedure TForm1.CreerGraphiqueBarres;
-var
+procedure TForm1.CreerGraphiqueBarres;  
+var  
   Serie: TBarSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -228,8 +228,8 @@ end;
 Parfaits pour montrer des proportions ou des parts.
 
 ```pascal
-procedure TForm1.CreerGraphiqueCamembert;
-var
+procedure TForm1.CreerGraphiqueCamembert;  
+var  
   Serie: TPieSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -262,8 +262,8 @@ end;
 Visualisent les volumes cumulés dans le temps.
 
 ```pascal
-procedure TForm1.CreerGraphiqueAire;
-var
+procedure TForm1.CreerGraphiqueAire;  
+var  
   Serie: TAreaSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -295,8 +295,8 @@ end;
 Parfaits pour visualiser la corrélation entre deux variables.
 
 ```pascal
-procedure TForm1.CreerGraphiquePoints;
-var
+procedure TForm1.CreerGraphiquePoints;  
+var  
   Serie: TPointSeries;
   i: Integer;
 begin
@@ -324,8 +324,8 @@ end;
 Affichent trois dimensions de données.
 
 ```pascal
-procedure TForm1.CreerGraphiqueBulles;
-var
+procedure TForm1.CreerGraphiqueBulles;  
+var  
   Serie: TBubbleSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -351,8 +351,8 @@ end;
 **TDBChart** est un composant qui se lie directement à un dataset.
 
 ```pascal
-procedure TForm1.ConfigurerGraphiqueDB;
-var
+procedure TForm1.ConfigurerGraphiqueDB;  
+var  
   Serie: TLineSeries;
 begin
   // Préparer la requête
@@ -380,8 +380,8 @@ end;
 Pour plus de contrôle, remplissez manuellement :
 
 ```pascal
-procedure TForm1.RemplirGraphiqueDepuisDB;
-var
+procedure TForm1.RemplirGraphiqueDepuisDB;  
+var  
   Serie: TBarSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -420,13 +420,13 @@ end;
 Actualisez le graphique lors des changements de données :
 
 ```pascal
-procedure TForm1.FDQueryVentesAfterScroll(DataSet: TDataSet);
-begin
+procedure TForm1.FDQueryVentesAfterScroll(DataSet: TDataSet);  
+begin  
   RemplirGraphiqueDepuisDB;
 end;
 
-procedure TForm1.btnActualiserClick(Sender: TObject);
-begin
+procedure TForm1.btnActualiserClick(Sender: TObject);  
+begin  
   FDQueryVentes.Refresh;
   RemplirGraphiqueDepuisDB;
 end;
@@ -437,8 +437,8 @@ end;
 ### Comparaison de plusieurs datasets
 
 ```pascal
-procedure TForm1.CreerGraphiqueComparatif;
-var
+procedure TForm1.CreerGraphiqueComparatif;  
+var  
   Serie2023, Serie2024: TLineSeries;
 begin
   ChartPrincipal.RemoveAllSeries;
@@ -474,8 +474,8 @@ end;
 Combinez différents types de graphiques :
 
 ```pascal
-procedure TForm1.CreerGraphiqueMixte;
-var
+procedure TForm1.CreerGraphiqueMixte;  
+var  
   SerieBarres: TBarSeries;
   SerieLigne: TLineSeries;
 begin
@@ -512,8 +512,8 @@ end;
 ### Axes personnalisés
 
 ```pascal
-procedure TForm1.PersonnaliserAxes;
-begin
+procedure TForm1.PersonnaliserAxes;  
+begin  
   // Axe des ordonnées (gauche)
   ChartPrincipal.LeftAxis.Title.Caption := 'Montant (K€)';
   ChartPrincipal.LeftAxis.Title.Font.Style := [fsBold];
@@ -538,8 +538,8 @@ end;
 ### Couleurs et dégradés
 
 ```pascal
-procedure TForm1.PersonnaliserCouleurs;
-var
+procedure TForm1.PersonnaliserCouleurs;  
+var  
   Serie: TBarSeries;
 begin
   Serie := TBarSeries(ChartPrincipal.Series[0]);
@@ -569,8 +569,8 @@ end;
 uses
   VCLTee.TeeTools;
 
-procedure TForm1.AjouterAnnotations;
-var
+procedure TForm1.AjouterAnnotations;  
+var  
   Annotation: TAnnotationTool;
   Ligne: TColorLineTool;
 begin
@@ -598,8 +598,8 @@ end;
 ### Zoom et navigation
 
 ```pascal
-procedure TForm1.ActiverZoom;
-begin
+procedure TForm1.ActiverZoom;  
+begin  
   // Zoom avec la souris
   ChartPrincipal.AllowZoom := True;
   ChartPrincipal.Zoom.Allow := True;
@@ -613,8 +613,8 @@ begin
   ChartPrincipal.AllowPanning := pmBoth;
 end;
 
-procedure TForm1.btnResetZoomClick(Sender: TObject);
-begin
+procedure TForm1.btnResetZoomClick(Sender: TObject);  
+begin  
   ChartPrincipal.UndoZoom;
 end;
 ```
@@ -625,8 +625,8 @@ end;
 uses
   VCLTee.TeeTools;
 
-procedure TForm1.ActiverSurvol;
-var
+procedure TForm1.ActiverSurvol;  
+var  
   Hint: TMarksTipTool;
 begin
   // Afficher les valeurs au survol
@@ -636,8 +636,8 @@ begin
   Hint.MouseDelay := 100; // Délai en millisecondes
 end;
 
-procedure TForm1.ChartPrincipalMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
+procedure TForm1.ChartPrincipalMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);  
+var  
   Clicked: Integer;
   Serie: TChartSeries;
 begin
@@ -694,8 +694,8 @@ end;
 ### Activation de la 3D
 
 ```pascal
-procedure TForm1.Activer3D;
-begin
+procedure TForm1.Activer3D;  
+begin  
   // Activer le mode 3D
   ChartPrincipal.View3D := True;
 
@@ -720,8 +720,8 @@ end;
 uses
   VCLTee.TeeSurfa;
 
-procedure TForm1.CreerGraphiqueSurface;
-var
+procedure TForm1.CreerGraphiqueSurface;  
+var  
   Serie: TSurfaceSeries;
   x, z: Integer;
 begin
@@ -746,18 +746,18 @@ end;
 ### Contrôle de rotation 3D
 
 ```pascal
-procedure TForm1.TrackBarRotationChange(Sender: TObject);
-begin
+procedure TForm1.TrackBarRotationChange(Sender: TObject);  
+begin  
   ChartPrincipal.Rotation := TrackBarRotation.Position;
 end;
 
-procedure TForm1.TrackBarElevationChange(Sender: TObject);
-begin
+procedure TForm1.TrackBarElevationChange(Sender: TObject);  
+begin  
   ChartPrincipal.Elevation := TrackBarElevation.Position;
 end;
 
-procedure TForm1.CheckBox3DClick(Sender: TObject);
-begin
+procedure TForm1.CheckBox3DClick(Sender: TObject);  
+begin  
   ChartPrincipal.View3D := CheckBox3D.Checked;
 end;
 ```
@@ -770,8 +770,8 @@ end;
 uses
   VCLTee.TeeAnimations;
 
-procedure TForm1.AnimerGraphique;
-var
+procedure TForm1.AnimerGraphique;  
+var  
   Animation: TTeeAnimation;
 begin
   Animation := TTeeAnimation.Create(ChartPrincipal);
@@ -784,8 +784,8 @@ end;
 ### Mise à jour dynamique
 
 ```pascal
-procedure TForm1.Timer1Timer(Sender: TObject);
-var
+procedure TForm1.Timer1Timer(Sender: TObject);  
+var  
   Serie: TLineSeries;
   NouvelleValeur: Double;
 begin
@@ -809,8 +809,8 @@ end;
 ### Transition entre graphiques
 
 ```pascal
-procedure TForm1.TransitionVersNouveauGraphique;
-var
+procedure TForm1.TransitionVersNouveauGraphique;  
+var  
   OldChart: TBitmap;
 begin
   // Capturer l'état actuel
@@ -836,8 +836,8 @@ end;
 ### Disposition multi-graphiques
 
 ```pascal
-procedure TForm1.CreerTableauDeBord;
-begin
+procedure TForm1.CreerTableauDeBord;  
+begin  
   // Graphique 1 : Évolution mensuelle (en haut)
   CreerGraphiqueEvolution(Chart1);
 
@@ -851,8 +851,8 @@ begin
   AfficherIndicateurs;
 end;
 
-procedure TForm1.CreerGraphiqueEvolution(Chart: TChart);
-var
+procedure TForm1.CreerGraphiqueEvolution(Chart: TChart);  
+var  
   Serie: TLineSeries;
 begin
   Chart.RemoveAllSeries;
@@ -867,8 +867,8 @@ end;
 Créez des indicateurs clés de performance visuels :
 
 ```pascal
-procedure TForm1.AfficherKPI(const Nom: string; Valeur, Objectif: Double);
-var
+procedure TForm1.AfficherKPI(const Nom: string; Valeur, Objectif: Double);  
+var  
   Pourcentage: Double;
   Couleur: TColor;
 begin
@@ -901,8 +901,8 @@ end;
 uses
   VCLTee.TeeGauge;
 
-procedure TForm1.CreerJauge;
-var
+procedure TForm1.CreerJauge;  
+var  
   Jauge: TGaugeSeries;
 begin
   ChartJauge.RemoveAllSeries;
@@ -936,40 +936,37 @@ end;
 uses
   VCLTee.TeePNG, VCLTee.TeeJPEG;
 
-procedure TForm1.ExporterGraphiqueImage(const NomFichier: string);
-var
+procedure TForm1.ExporterGraphiqueImage(const NomFichier: string);  
+var  
   Extension: string;
 begin
   Extension := LowerCase(ExtractFileExt(NomFichier));
 
-  case Extension of
-    '.bmp': ChartPrincipal.SaveToBitmapFile(NomFichier);
-
-    '.png':
-      begin
-        var PNG := TTeePNGExport.Create;
-        try
-          PNG.Width := ChartPrincipal.Width;
-          PNG.Height := ChartPrincipal.Height;
-          PNG.Panel := ChartPrincipal;
-          PNG.SaveToFile(NomFichier);
-        finally
-          PNG.Free;
-        end;
-      end;
-
-    '.jpg', '.jpeg':
-      begin
-        var JPEG := TTeeJPEGExport.Create;
-        try
-          JPEG.Width := ChartPrincipal.Width;
-          JPEG.Height := ChartPrincipal.Height;
-          JPEG.Panel := ChartPrincipal;
-          JPEG.SaveToFile(NomFichier);
-        finally
-          JPEG.Free;
-        end;
-      end;
+  if Extension = '.bmp' then
+    ChartPrincipal.SaveToBitmapFile(NomFichier)
+  else if Extension = '.png' then
+  begin
+    var PNG := TTeePNGExport.Create;
+    try
+      PNG.Width := ChartPrincipal.Width;
+      PNG.Height := ChartPrincipal.Height;
+      PNG.Panel := ChartPrincipal;
+      PNG.SaveToFile(NomFichier);
+    finally
+      PNG.Free;
+    end;
+  end
+  else if (Extension = '.jpg') or (Extension = '.jpeg') then
+  begin
+    var JPEG := TTeeJPEGExport.Create;
+    try
+      JPEG.Width := ChartPrincipal.Width;
+      JPEG.Height := ChartPrincipal.Height;
+      JPEG.Panel := ChartPrincipal;
+      JPEG.SaveToFile(NomFichier);
+    finally
+      JPEG.Free;
+    end;
   end;
 
   ShowMessage('Graphique exporté : ' + NomFichier);
@@ -982,8 +979,8 @@ end;
 uses
   Vcl.Clipbrd;
 
-procedure TForm1.CopierGraphiqueVersPressePapiers;
-var
+procedure TForm1.CopierGraphiqueVersPressePapiers;  
+var  
   Bitmap: TBitmap;
 begin
   Bitmap := TBitmap.Create;
@@ -1005,8 +1002,8 @@ end;
 uses
   VCLTee.TeePDFCanvas;
 
-procedure TForm1.ExporterGraphiquePDF(const NomFichier: string);
-var
+procedure TForm1.ExporterGraphiquePDF(const NomFichier: string);  
+var  
   PDF: TTeePDFCanvas;
 begin
   PDF := TTeePDFCanvas.Create;
@@ -1031,8 +1028,8 @@ Pour visualiser des plannings et chronologies.
 uses
   VCLTee.TeeGantt;
 
-procedure TForm1.CreerGraphiqueGantt;
-var
+procedure TForm1.CreerGraphiqueGantt;  
+var  
   Gantt: TGanttSeries;
 begin
   ChartGantt.RemoveAllSeries;
@@ -1058,8 +1055,8 @@ end;
 uses
   VCLTee.TeeCandl;
 
-procedure TForm1.CreerGraphiqueBoursier;
-var
+procedure TForm1.CreerGraphiqueBoursier;  
+var  
   Candle: TCandleSeries;
 begin
   ChartBourse.RemoveAllSeries;
@@ -1082,8 +1079,8 @@ end;
 ### Carte thermique (Heatmap)
 
 ```pascal
-procedure TForm1.CreerCarteThermique;
-var
+procedure TForm1.CreerCarteThermique;  
+var  
   i, j: Integer;
   Serie: TPointSeries;
   Valeur: Double;
@@ -1136,8 +1133,8 @@ type
     FMaxPoints: Integer;
   end;
 
-procedure TFormMonitoring.FormCreate(Sender: TObject);
-begin
+procedure TFormMonitoring.FormCreate(Sender: TObject);  
+begin  
   FMaxPoints := 60; // 60 secondes d'historique
 
   // Série pour le CPU
@@ -1165,8 +1162,8 @@ begin
   Timer1.Enabled := True;
 end;
 
-procedure TFormMonitoring.Timer1Timer(Sender: TObject);
-var
+procedure TFormMonitoring.Timer1Timer(Sender: TObject);  
+var  
   CPU, Memoire: Double;
 begin
   // Obtenir les valeurs (simulées ici)
@@ -1196,8 +1193,8 @@ end;
 Pour de grandes quantités de données, utilisez les séries "Fast" :
 
 ```pascal
-procedure TForm1.CreerGraphiquePerformant;
-var
+procedure TForm1.CreerGraphiquePerformant;  
+var  
   Serie: TFastLineSeries;
   i: Integer;
 begin
@@ -1219,8 +1216,8 @@ end;
 ### Suspension du redessin
 
 ```pascal
-procedure TForm1.AjouterBeaucoupDePoints;
-var
+procedure TForm1.AjouterBeaucoupDePoints;  
+var  
   i: Integer;
 begin
   // Suspendre le redessin pendant l'ajout
@@ -1238,8 +1235,8 @@ end;
 ### Simplification visuelle
 
 ```pascal
-procedure TForm1.OptimiserAffichage;
-begin
+procedure TForm1.OptimiserAffichage;  
+begin  
   // Désactiver les effets coûteux
   ChartPrincipal.View3D := False;
   ChartPrincipal.Gradient.Visible := False;
@@ -1255,8 +1252,8 @@ end;
 ### Adaptation à la taille de la fenêtre
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   // Ajuster la taille des polices selon la taille de la fenêtre
   if Width < 800 then
   begin
@@ -1280,8 +1277,8 @@ end;
 ### Mode sombre
 
 ```pascal
-procedure TForm1.AppliquerModeSombre;
-begin
+procedure TForm1.AppliquerModeSombre;  
+begin  
   ChartPrincipal.Color := $00202020; // Gris foncé
   ChartPrincipal.BackColor := $00202020;
   ChartPrincipal.Title.Font.Color := clWhite;
@@ -1366,8 +1363,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormTableauBord.FormCreate(Sender: TObject);
-begin
+procedure TFormTableauBord.FormCreate(Sender: TObject);  
+begin  
   // Configurer la connexion
   FDConnection1.Params.Values['Database'] := 'ma_base';
   FDConnection1.Connected := True;
@@ -1376,16 +1373,16 @@ begin
   ChargerDonnees;
 end;
 
-procedure TFormTableauBord.ChargerDonnees;
-begin
+procedure TFormTableauBord.ChargerDonnees;  
+begin  
   CreerGraphiqueEvolution;
   CreerGraphiqueRepartition;
   CreerGraphiqueComparaison;
   CreerGraphiqueTop10;
 end;
 
-procedure TFormTableauBord.CreerGraphiqueEvolution;
-var
+procedure TFormTableauBord.CreerGraphiqueEvolution;  
+var  
   Serie: TLineSeries;
 begin
   ChartEvolution.RemoveAllSeries;
@@ -1418,8 +1415,8 @@ begin
   end;
 end;
 
-procedure TFormTableauBord.CreerGraphiqueRepartition;
-var
+procedure TFormTableauBord.CreerGraphiqueRepartition;  
+var  
   Serie: TPieSeries;
 begin
   ChartRepartition.RemoveAllSeries;
@@ -1449,8 +1446,8 @@ begin
   end;
 end;
 
-procedure TFormTableauBord.CreerGraphiqueComparaison;
-var
+procedure TFormTableauBord.CreerGraphiqueComparaison;  
+var  
   Serie2023, Serie2024: TBarSeries;
 begin
   ChartComparaison.RemoveAllSeries;
@@ -1485,8 +1482,8 @@ begin
   // (logique de remplissage des deux séries)
 end;
 
-procedure TFormTableauBord.CreerGraphiqueTop10;
-var
+procedure TFormTableauBord.CreerGraphiqueTop10;  
+var  
   Serie: THorizBarSeries;
 begin
   ChartTop10.RemoveAllSeries;

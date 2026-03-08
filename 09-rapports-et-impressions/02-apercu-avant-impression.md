@@ -91,14 +91,14 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormApercu.FormCreate(Sender: TObject);
-begin
+procedure TFormApercu.FormCreate(Sender: TObject);  
+begin  
   FZoom := 100;  // Zoom à 100% par défaut
   ImageApercu.Picture.Bitmap := TBitmap.Create;
 end;
 
-procedure TFormApercu.GenererApercu;
-var
+procedure TFormApercu.GenererApercu;  
+var  
   FacteurEchelle: Double;
 begin
   // Créer un bitmap aux dimensions de la page d'impression
@@ -123,16 +123,16 @@ begin
   AjusterZoom;
 end;
 
-procedure TFormApercu.AjusterZoom;
-begin
+procedure TFormApercu.AjusterZoom;  
+begin  
   ImageApercu.Width := Round(ImageApercu.Picture.Bitmap.Width * FZoom / 100);
   ImageApercu.Height := Round(ImageApercu.Picture.Bitmap.Height * FZoom / 100);
   ImageApercu.Stretch := True;
   ImageApercu.Proportional := True;
 end;
 
-procedure TFormApercu.btnZoomPlusClick(Sender: TObject);
-begin
+procedure TFormApercu.btnZoomPlusClick(Sender: TObject);  
+begin  
   if FZoom < 200 then
   begin
     FZoom := FZoom + 10;
@@ -140,8 +140,8 @@ begin
   end;
 end;
 
-procedure TFormApercu.btnZoomMoinsClick(Sender: TObject);
-begin
+procedure TFormApercu.btnZoomMoinsClick(Sender: TObject);  
+begin  
   if FZoom > 20 then
   begin
     FZoom := FZoom - 10;
@@ -149,8 +149,8 @@ begin
   end;
 end;
 
-procedure TFormApercu.btnImprimerClick(Sender: TObject);
-begin
+procedure TFormApercu.btnImprimerClick(Sender: TObject);  
+begin  
   // Imprimer réellement le document
   Printer.BeginDoc;
   try
@@ -162,8 +162,8 @@ begin
   Close;
 end;
 
-procedure TFormApercu.btnFermerClick(Sender: TObject);
-begin
+procedure TFormApercu.btnFermerClick(Sender: TObject);  
+begin  
   Close;
 end;
 
@@ -175,8 +175,8 @@ end.
 Depuis votre formulaire principal, vous pouvez afficher l'aperçu ainsi :
 
 ```pascal
-procedure TFormPrincipal.btnApercuClick(Sender: TObject);
-begin
+procedure TFormPrincipal.btnApercuClick(Sender: TObject);  
+begin  
   FormApercu := TFormApercu.Create(Self);
   try
     FormApercu.GenererApercu;
@@ -198,8 +198,8 @@ L'utilisation d'un `TMetafile` au lieu d'un `TBitmap` offre plusieurs avantages 
 ### Code avec TMetafile
 
 ```pascal
-procedure TFormApercu.GenererApercuMetafile;
-var
+procedure TFormApercu.GenererApercuMetafile;  
+var  
   Metafile: TMetafile;
   MetafileCanvas: TMetafileCanvas;
 begin
@@ -262,22 +262,22 @@ type
 
 implementation
 
-constructor TGestionnaireApercu.Create;
-begin
+constructor TGestionnaireApercu.Create;  
+begin  
   inherited;
   FPageCourante := 1;
   FNombrePages := 1;
 end;
 
-procedure TGestionnaireApercu.DefinirProcedureDessin(AProcedure: TTypeProcedureDessin; ANombrePages: Integer);
-begin
+procedure TGestionnaireApercu.DefinirProcedureDessin(AProcedure: TTypeProcedureDessin; ANombrePages: Integer);  
+begin  
   FProcedureDessin := AProcedure;
   FNombrePages := ANombrePages;
   FPageCourante := 1;
 end;
 
-procedure TGestionnaireApercu.GenererPage(ACanvas: TCanvas; APageWidth, APageHeight: Integer; ANumeroPage: Integer);
-begin
+procedure TGestionnaireApercu.GenererPage(ACanvas: TCanvas; APageWidth, APageHeight: Integer; ANumeroPage: Integer);  
+begin  
   if Assigned(FProcedureDessin) then
   begin
     FPageCourante := ANumeroPage;
@@ -289,8 +289,8 @@ end;
 ### Utilisation de la classe
 
 ```pascal
-procedure TFormPrincipal.DessinerMonDocument(Canvas: TCanvas; PageWidth, PageHeight: Integer);
-begin
+procedure TFormPrincipal.DessinerMonDocument(Canvas: TCanvas; PageWidth, PageHeight: Integer);  
+begin  
   // Dessiner le contenu du document
   Canvas.Font.Size := 14;
   Canvas.Font.Style := [fsBold];
@@ -301,8 +301,8 @@ begin
   Canvas.TextOut(100, 200, 'Contenu de la page ' + IntToStr(GestionnaireApercu.PageCourante));
 end;
 
-procedure TFormPrincipal.btnApercuAvecClasseClick(Sender: TObject);
-begin
+procedure TFormPrincipal.btnApercuAvecClasseClick(Sender: TObject);  
+begin  
   // Créer le gestionnaire
   GestionnaireApercu := TGestionnaireApercu.Create;
   try
@@ -339,8 +339,8 @@ Ajoutez ces composants dans le Panel de votre formulaire d'aperçu :
 ### Code de navigation
 
 ```pascal
-procedure TFormApercu.btnPagePrecedenteClick(Sender: TObject);
-begin
+procedure TFormApercu.btnPagePrecedenteClick(Sender: TObject);  
+begin  
   if Assigned(FGestionnaire) and (FGestionnaire.PageCourante > 1) then
   begin
     FGestionnaire.PageCourante := FGestionnaire.PageCourante - 1;
@@ -349,8 +349,8 @@ begin
   end;
 end;
 
-procedure TFormApercu.btnPageSuivanteClick(Sender: TObject);
-begin
+procedure TFormApercu.btnPageSuivanteClick(Sender: TObject);  
+begin  
   if Assigned(FGestionnaire) and (FGestionnaire.PageCourante < FGestionnaire.NombrePages) then
   begin
     FGestionnaire.PageCourante := FGestionnaire.PageCourante + 1;
@@ -359,8 +359,8 @@ begin
   end;
 end;
 
-procedure TFormApercu.MettreAJourAffichagePage;
-begin
+procedure TFormApercu.MettreAJourAffichagePage;  
+begin  
   lblNumeroPage.Caption := Format('Page %d / %d',
     [FGestionnaire.PageCourante, FGestionnaire.NombrePages]);
 
@@ -387,8 +387,8 @@ RxLib est une bibliothèque gratuite qui propose un composant `TPrintPreview` tr
 uses
   RxRichEd;
 
-procedure TForm1.btnApercuRxClick(Sender: TObject);
-begin
+procedure TForm1.btnApercuRxClick(Sender: TObject);  
+begin  
   PrintPreview1.BeginDoc;
   try
     PrintPreview1.Canvas.Font.Size := 12;
@@ -420,8 +420,8 @@ Implémentez différents modes de zoom :
 type
   TModeZoom = (zmAjusterLargeur, zmAjusterHauteur, zmPageEntiere, zmPersonnalise);
 
-procedure TFormApercu.AppliquerModeZoom(Mode: TModeZoom);
-begin
+procedure TFormApercu.AppliquerModeZoom(Mode: TModeZoom);  
+begin  
   case Mode of
     zmAjusterLargeur:
       begin
@@ -452,8 +452,8 @@ end;
 Pour afficher plusieurs pages simultanément :
 
 ```pascal
-procedure TFormApercu.AfficherDeuxPages;
-var
+procedure TFormApercu.AfficherDeuxPages;  
+var  
   i: Integer;
   Image: TImage;
   PosX: Integer;
@@ -482,8 +482,8 @@ end;
 Permettez à l'utilisateur d'imprimer directement depuis l'aperçu :
 
 ```pascal
-procedure TFormApercu.btnImprimerDepuisApercuClick(Sender: TObject);
-var
+procedure TFormApercu.btnImprimerDepuisApercuClick(Sender: TObject);  
+var  
   PrintDialog: TPrintDialog;
 begin
   PrintDialog := TPrintDialog.Create(Self);
@@ -502,8 +502,8 @@ begin
   end;
 end;
 
-procedure TFormApercu.ImprimerPages(DebutPage, FinPage: Integer);
-var
+procedure TFormApercu.ImprimerPages(DebutPage, FinPage: Integer);  
+var  
   i: Integer;
 begin
   Printer.BeginDoc;
@@ -534,8 +534,8 @@ Utilisez une bibliothèque comme Gnostice ou Synopse PDF :
 uses
   SynPdf;
 
-procedure TFormApercu.ExporterEnPDF(const NomFichier: string);
-var
+procedure TFormApercu.ExporterEnPDF(const NomFichier: string);  
+var  
   PDF: TPdfDocument;
   Page: TPdfPage;
   i: Integer;
@@ -564,31 +564,37 @@ end;
 Exportez l'aperçu comme image :
 
 ```pascal
-procedure TFormApercu.ExporterEnImage(const NomFichier: string);
+procedure TFormApercu.ExporterEnImage(const NomFichier: string);  
+var  
+  Ext: string;
+  JPEG: TJPEGImage;
+  PNG: TPngImage;
 begin
-  case ExtractFileExt(NomFichier).ToLower of
-    '.bmp': ImageApercu.Picture.Bitmap.SaveToFile(NomFichier);
-    '.jpg', '.jpeg':
-      begin
-        var JPEG := TJPEGImage.Create;
-        try
-          JPEG.Assign(ImageApercu.Picture.Bitmap);
-          JPEG.CompressionQuality := 90;
-          JPEG.SaveToFile(NomFichier);
-        finally
-          JPEG.Free;
-        end;
-      end;
-    '.png':
-      begin
-        var PNG := TPngImage.Create;
-        try
-          PNG.Assign(ImageApercu.Picture.Bitmap);
-          PNG.SaveToFile(NomFichier);
-        finally
-          PNG.Free;
-        end;
-      end;
+  // Note : case ne fonctionne pas sur des string en Delphi
+  Ext := LowerCase(ExtractFileExt(NomFichier));
+
+  if Ext = '.bmp' then
+    ImageApercu.Picture.Bitmap.SaveToFile(NomFichier)
+  else if (Ext = '.jpg') or (Ext = '.jpeg') then
+  begin
+    JPEG := TJPEGImage.Create;
+    try
+      JPEG.Assign(ImageApercu.Picture.Bitmap);
+      JPEG.CompressionQuality := 90;
+      JPEG.SaveToFile(NomFichier);
+    finally
+      JPEG.Free;
+    end;
+  end
+  else if Ext = '.png' then
+  begin
+    PNG := TPngImage.Create;
+    try
+      PNG.Assign(ImageApercu.Picture.Bitmap);
+      PNG.SaveToFile(NomFichier);
+    finally
+      PNG.Free;
+    end;
   end;
 
   ShowMessage('Image exportée : ' + NomFichier);
@@ -614,20 +620,20 @@ type
     procedure Vider;
   end;
 
-constructor TCachePages.Create;
-begin
+constructor TCachePages.Create;  
+begin  
   inherited;
   FPages := TObjectList<TBitmap>.Create(True);
 end;
 
-destructor TCachePages.Destroy;
-begin
+destructor TCachePages.Destroy;  
+begin  
   FPages.Free;
   inherited;
 end;
 
-procedure TCachePages.AjouterPage(Bitmap: TBitmap);
-var
+procedure TCachePages.AjouterPage(Bitmap: TBitmap);  
+var  
   NouvellePage: TBitmap;
 begin
   NouvellePage := TBitmap.Create;
@@ -635,16 +641,16 @@ begin
   FPages.Add(NouvellePage);
 end;
 
-function TCachePages.ObtenirPage(Index: Integer): TBitmap;
-begin
+function TCachePages.ObtenirPage(Index: Integer): TBitmap;  
+begin  
   if (Index >= 0) and (Index < FPages.Count) then
     Result := FPages[Index]
   else
     Result := nil;
 end;
 
-procedure TCachePages.Vider;
-begin
+procedure TCachePages.Vider;  
+begin  
   FPages.Clear;
 end;
 ```
@@ -654,8 +660,8 @@ end;
 Pour ne pas bloquer l'interface utilisateur :
 
 ```pascal
-procedure TFormApercu.GenererApercuAsyncrone;
-begin
+procedure TFormApercu.GenererApercuAsyncrone;  
+begin  
   TTask.Run(
     procedure
     var
@@ -765,8 +771,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormApercuPro.FormCreate(Sender: TObject);
-begin
+procedure TFormApercuPro.FormCreate(Sender: TObject);  
+begin  
   FPageCourante := 1;
   FNombrePages := 5;  // Exemple avec 5 pages
 
@@ -783,8 +789,8 @@ begin
   MettreAJourAffichage;
 end;
 
-procedure TFormApercuPro.GenererApercu;
-var
+procedure TFormApercuPro.GenererApercu;  
+var  
   Metafile: TMetafile;
   MetafileCanvas: TMetafileCanvas;
 begin
@@ -820,8 +826,8 @@ begin
   AppliquerZoom;
 end;
 
-procedure TFormApercuPro.AppliquerZoom;
-var
+procedure TFormApercuPro.AppliquerZoom;  
+var  
   ZoomPourcent: Integer;
 begin
   ZoomPourcent := TrackBarZoom.Position;
@@ -832,20 +838,20 @@ begin
   lblZoom.Caption := Format('Zoom : %d%%', [ZoomPourcent]);
 end;
 
-procedure TFormApercuPro.MettreAJourAffichage;
-begin
+procedure TFormApercuPro.MettreAJourAffichage;  
+begin  
   lblPage.Caption := Format('Page %d / %d', [FPageCourante, FNombrePages]);
   btnPagePrec.Enabled := FPageCourante > 1;
   btnPageSuiv.Enabled := FPageCourante < FNombrePages;
 end;
 
-procedure TFormApercuPro.TrackBarZoomChange(Sender: TObject);
-begin
+procedure TFormApercuPro.TrackBarZoomChange(Sender: TObject);  
+begin  
   AppliquerZoom;
 end;
 
-procedure TFormApercuPro.btnPagePrecClick(Sender: TObject);
-begin
+procedure TFormApercuPro.btnPagePrecClick(Sender: TObject);  
+begin  
   if FPageCourante > 1 then
   begin
     Dec(FPageCourante);
@@ -854,8 +860,8 @@ begin
   end;
 end;
 
-procedure TFormApercuPro.btnPageSuivClick(Sender: TObject);
-begin
+procedure TFormApercuPro.btnPageSuivClick(Sender: TObject);  
+begin  
   if FPageCourante < FNombrePages then
   begin
     Inc(FPageCourante);
@@ -864,8 +870,8 @@ begin
   end;
 end;
 
-procedure TFormApercuPro.btnImprimerClick(Sender: TObject);
-var
+procedure TFormApercuPro.btnImprimerClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   if MessageDlg('Imprimer toutes les pages ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
@@ -887,8 +893,8 @@ begin
   end;
 end;
 
-procedure TFormApercuPro.btnExporterClick(Sender: TObject);
-begin
+procedure TFormApercuPro.btnExporterClick(Sender: TObject);  
+begin  
   SaveDialog1.Filter := 'Image PNG|*.png|Image JPEG|*.jpg|Bitmap|*.bmp';
   if SaveDialog1.Execute then
   begin
@@ -897,13 +903,13 @@ begin
   end;
 end;
 
-procedure TFormApercuPro.btnFermerClick(Sender: TObject);
-begin
+procedure TFormApercuPro.btnFermerClick(Sender: TObject);  
+begin  
   Close;
 end;
 
-procedure TFormApercuPro.ComboModeAffichageChange(Sender: TObject);
-begin
+procedure TFormApercuPro.ComboModeAffichageChange(Sender: TObject);  
+begin  
   case ComboModeAffichage.ItemIndex of
     0: TrackBarZoom.Position := 100;  // Page entière
     1: TrackBarZoom.Position := Round((ScrollBox1.Width - 20) * 100 / ImageApercu.Picture.Width);

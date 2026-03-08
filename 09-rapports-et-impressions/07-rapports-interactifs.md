@@ -44,8 +44,8 @@ Un rapport interactif est un rapport qui offre des fonctionnalités permettant �
 FastReport offre un excellent support pour les rapports interactifs.
 
 ```pascal
-procedure TForm1.ConfigurerRapportInteractif;
-begin
+procedure TForm1.ConfigurerRapportInteractif;  
+begin  
   // Charger le rapport
   frxReport1.LoadFromFile('RapportInteractif.fr3');
 
@@ -89,8 +89,8 @@ type
     procedure btnRechercherClick(Sender: TObject);
   end;
 
-procedure TFormApercuInteractif.FormCreate(Sender: TObject);
-begin
+procedure TFormApercuInteractif.FormCreate(Sender: TObject);  
+begin  
   // Lier le preview au rapport
   frxReport1.Preview := frxPreview;
   frxReport1.ShowReport(True); // True = mode modal
@@ -100,8 +100,8 @@ begin
   ComboBoxZoom.ItemIndex := 2; // 100%
 end;
 
-procedure TFormApercuInteractif.ComboBoxZoomChange(Sender: TObject);
-begin
+procedure TFormApercuInteractif.ComboBoxZoomChange(Sender: TObject);  
+begin  
   case ComboBoxZoom.ItemIndex of
     0: frxPreview.Zoom := 0.5;
     1: frxPreview.Zoom := 0.75;
@@ -112,8 +112,8 @@ begin
   end;
 end;
 
-procedure TFormApercuInteractif.btnRechercherClick(Sender: TObject);
-begin
+procedure TFormApercuInteractif.btnRechercherClick(Sender: TObject);  
+begin  
   frxPreview.Find(EditRecherche.Text);
 end;
 ```
@@ -145,8 +145,8 @@ end;
 FastReport génère automatiquement une table des matières basée sur les signets.
 
 ```pascal
-procedure TForm1.CreerRapportAvecTDM;
-begin
+procedure TForm1.CreerRapportAvecTDM;  
+begin  
   // Le rapport doit avoir des signets configurés
   frxReport1.LoadFromFile('RapportAvecSignets.fr3');
 
@@ -167,20 +167,20 @@ Créez une structure de navigation à plusieurs niveaux.
 
 ```pascal
 // Dans le Group Header Région
-procedure RegionHeaderOnBeforePrint;
-begin
+procedure RegionHeaderOnBeforePrint;  
+begin  
   Engine.AddBookmark(<frxDBDataset."nom_region">, 0); // Niveau 0
 end;
 
 // Dans le Group Header Ville
-procedure VilleHeaderOnBeforePrint;
-begin
+procedure VilleHeaderOnBeforePrint;  
+begin  
   Engine.AddBookmark(<frxDBDataset."nom_ville">, 1); // Niveau 1
 end;
 
 // Dans le Group Header Magasin
-procedure MagasinHeaderOnBeforePrint;
-begin
+procedure MagasinHeaderOnBeforePrint;  
+begin  
   Engine.AddBookmark(<frxDBDataset."nom_magasin">, 2); // Niveau 2
 end;
 ```
@@ -238,8 +238,8 @@ Le drill-down permet d'explorer les données du général au détail.
 ### Drill-down par code
 
 ```pascal
-procedure TForm1.CreerDrillDown;
-begin
+procedure TForm1.CreerDrillDown;  
+begin  
   // Dans le designer, configurez les groupes avec Collapsed = True
   frxReport1.LoadFromFile('RapportDrillDown.fr3');
 
@@ -256,8 +256,8 @@ Montrez différents niveaux de détail selon les besoins.
 // Variable globale dans le rapport : NiveauDetail (Integer)
 
 // Dans le designer, événement OnBeforePrint de la bande de détail
-procedure DetailBandOnBeforePrint;
-begin
+procedure DetailBandOnBeforePrint;  
+begin  
   // Afficher plus ou moins de détails selon le niveau
   case <NiveauDetail> of
     1: // Niveau résumé
@@ -285,8 +285,8 @@ Ajoutez des symboles pour indiquer la possibilité d'expansion.
 
 ```pascal
 // Dans l'événement OnBeforePrint du Group Header
-procedure GroupHeaderOnBeforePrint;
-begin
+procedure GroupHeaderOnBeforePrint;  
+begin  
   if <GroupHeader1.Collapsed> then
     MemoIndicateur.Text := '▶'
   else
@@ -311,14 +311,14 @@ type
     procedure AfficherRapportDetail(ID: Integer);
   end;
 
-procedure TGestionnaireRapports.AfficherRapportPrincipal;
-begin
+procedure TGestionnaireRapports.AfficherRapportPrincipal;  
+begin  
   FRapportPrincipal.LoadFromFile('RapportVentes.fr3');
   FRapportPrincipal.ShowReport;
 end;
 
-procedure TGestionnaireRapports.AfficherRapportDetail(ID: Integer);
-begin
+procedure TGestionnaireRapports.AfficherRapportDetail(ID: Integer);  
+begin  
   // Charger le rapport détaillé
   FRapportDetail.LoadFromFile('RapportDetailVente.fr3');
 
@@ -339,8 +339,8 @@ end;
 3. Événement **OnClick** de l'objet :
 
 ```pascal
-procedure MemoNumeroCommandeOnClick;
-begin
+procedure MemoNumeroCommandeOnClick;  
+begin  
   // Appeler une procédure Delphi
   frxReport1.DoScript('AfficherDetailCommande', <frxDBDataset."id_commande">);
 end;
@@ -378,8 +378,8 @@ type
     procedure Avancer;
   end;
 
-procedure TForm1.btnRetourClick(Sender: TObject);
-begin
+procedure TForm1.btnRetourClick(Sender: TObject);  
+begin  
   if HistoriqueNavigation.PeutRetourner then
   begin
     HistoriqueNavigation.Retourner;
@@ -410,8 +410,8 @@ type
     procedure FormCreate(Sender: TObject);
   end;
 
-procedure TFormRapportAvecFiltres.FormCreate(Sender: TObject);
-begin
+procedure TFormRapportAvecFiltres.FormCreate(Sender: TObject);  
+begin  
   // Initialiser les filtres
   DateEdit1.Date := StartOfTheMonth(Date);
   DateEdit2.Date := EndOfTheMonth(Date);
@@ -420,8 +420,8 @@ begin
   ChargerCategories;
 end;
 
-procedure TFormRapportAvecFiltres.btnAppliquerClick(Sender: TObject);
-begin
+procedure TFormRapportAvecFiltres.btnAppliquerClick(Sender: TObject);  
+begin  
   // Construire la requête avec les filtres
   var SQL := 'SELECT * FROM ventes WHERE 1=1';
 
@@ -467,8 +467,8 @@ FastReport permet d'intégrer des filtres directement dans l'aperçu.
 Les filtres en cascade se mettent à jour selon les sélections précédentes.
 
 ```pascal
-procedure TFormRapportFiltres.ComboCategorieChange(Sender: TObject);
-begin
+procedure TFormRapportFiltres.ComboCategorieChange(Sender: TObject);  
+begin  
   // Mettre à jour les sous-catégories selon la catégorie
   ChargerSousCategories(ComboCategorie.Text);
 
@@ -477,8 +477,8 @@ begin
   ComboBoxProduit.Enabled := False;
 end;
 
-procedure TFormRapportFiltres.ComboSousCategorieChange(Sender: TObject);
-begin
+procedure TFormRapportFiltres.ComboSousCategorieChange(Sender: TObject);  
+begin  
   // Mettre à jour les produits selon la sous-catégorie
   ChargerProduits(ComboCategorie.Text, ComboSousCategorie.Text);
   ComboBoxProduit.Enabled := True;
@@ -499,8 +499,8 @@ type
     Parametres: TDictionary<string, string>;
   end;
 
-procedure TFormRapportFiltres.btnSauvegarderFiltreClick(Sender: TObject);
-var
+procedure TFormRapportFiltres.btnSauvegarderFiltreClick(Sender: TObject);  
+var  
   Filtre: TFiltreSauvegarde;
   NomFiltre: string;
 begin
@@ -518,8 +518,8 @@ begin
   end;
 end;
 
-procedure TFormRapportFiltres.ChargerFiltre(const Filtre: TFiltreSauvegarde);
-begin
+procedure TFormRapportFiltres.ChargerFiltre(const Filtre: TFiltreSauvegarde);  
+begin  
   DateEdit1.Date := Filtre.DateDebut;
   DateEdit2.Date := Filtre.DateFin;
   ComboCategorie.Text := Filtre.Categorie;
@@ -545,8 +545,8 @@ type
     procedure TrierPar(const Colonne: string);
   end;
 
-procedure TFormRapportTriable.TrierPar(const Colonne: string);
-begin
+procedure TFormRapportTriable.TrierPar(const Colonne: string);  
+begin  
   // Inverser l'ordre si on clique sur la même colonne
   if FColonneTri = Colonne then
   begin
@@ -576,8 +576,8 @@ end;
 Créez un panneau permettant de configurer le tri.
 
 ```pascal
-procedure TFormRapportTriable.CreerPanneauTri;
-var
+procedure TFormRapportTriable.CreerPanneauTri;  
+var  
   Panel: TPanel;
   ComboColonne: TComboBox;
   ComboOrdre: TComboBox;
@@ -633,8 +633,8 @@ type
 var
   CriteresTri: TList<TCriterieTri>;
 
-procedure TFormRapportTriable.AjouterCriterieTri(const Colonne, Ordre: string);
-var
+procedure TFormRapportTriable.AjouterCriterieTri(const Colonne, Ordre: string);  
+var  
   Critere: TCriterieTri;
 begin
   Critere.Colonne := Colonne;
@@ -644,8 +644,8 @@ begin
   AppliquerTri;
 end;
 
-procedure TFormRapportTriable.AppliquerTri;
-var
+procedure TFormRapportTriable.AppliquerTri;  
+var  
   SQL, ClauseOrderBy: string;
   i: Integer;
 begin
@@ -676,8 +676,8 @@ end;
 FastReport offre une fonction de recherche native.
 
 ```pascal
-procedure TForm1.btnRechercherClick(Sender: TObject);
-begin
+procedure TForm1.btnRechercherClick(Sender: TObject);  
+begin  
   // Ouvrir la boîte de dialogue de recherche
   frxPreview.Find;
 
@@ -685,8 +685,8 @@ begin
   // frxPreview.Find('mot_à_rechercher');
 end;
 
-procedure TForm1.EditRechercheKeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TForm1.EditRechercheKeyPress(Sender: TObject; var Key: Char);  
+begin  
   if Key = #13 then // Entrée
   begin
     frxPreview.Find(EditRecherche.Text);
@@ -698,8 +698,8 @@ end;
 ### Mise en évidence des résultats
 
 ```pascal
-procedure TForm1.RechercherEtSurligner(const Texte: string);
-begin
+procedure TForm1.RechercherEtSurligner(const Texte: string);  
+begin  
   // Rechercher
   var Trouve := frxPreview.Find(Texte, []);
 
@@ -722,8 +722,8 @@ type
     RechercheDans: string; // 'Tout', 'Colonnes', 'Titres'
   end;
 
-procedure TForm1.RechercheAvancee(Options: TOptionsRecherche);
-var
+procedure TForm1.RechercheAvancee(Options: TOptionsRecherche);  
+var  
   Flags: TfrxSearchFlags;
 begin
   Flags := [];
@@ -756,8 +756,8 @@ Ajoutez des boutons cliquables dans le rapport.
 3. Dans l'événement OnClick du Shape :
 
 ```pascal
-procedure ShapeBoutonOnClick;
-begin
+procedure ShapeBoutonOnClick;  
+begin  
   // Appeler une fonction Delphi
   frxReport1.DoScript('ExporterSelectionPDF', <frxDBDataset."id">);
 end;
@@ -766,8 +766,8 @@ end;
 **Dans Delphi :**
 
 ```pascal
-procedure TForm1.frxReport1UserFunction(const MethodName: String; var Params: Variant);
-begin
+procedure TForm1.frxReport1UserFunction(const MethodName: String; var Params: Variant);  
+begin  
   if MethodName = 'EXPORTERSELECTIONPDF' then
   begin
     var ID := Integer(Params[0]);
@@ -828,8 +828,8 @@ end;
 
 ```pascal
 // Dans l'événement OnClick d'un objet du rapport
-procedure BoutonValiderOnClick;
-begin
+procedure BoutonValiderOnClick;  
+begin  
   if <frxDBDataset."statut"> = 'En attente' then
   begin
     // Valider l'enregistrement
@@ -863,8 +863,8 @@ type
     procedure MettreAJourTableauBord;
   end;
 
-procedure TFormTableauBordInteractif.AppliquerFiltres;
-begin
+procedure TFormTableauBordInteractif.AppliquerFiltres;  
+begin  
   // Appliquer les filtres à toutes les requêtes
   var DateDebut := DateEdit1.Date;
   var DateFin := DateEdit2.Date;
@@ -877,8 +877,8 @@ begin
   MettreAJourGrille(DateDebut, DateFin, Filtre);
 end;
 
-procedure TFormTableauBordInteractif.MettreAJourTableauBord;
-begin
+procedure TFormTableauBordInteractif.MettreAJourTableauBord;  
+begin  
   Screen.Cursor := crHourGlass;
   try
     AppliquerFiltres;
@@ -907,8 +907,8 @@ begin
   AfficherRapportDetailCategorie(Categorie);
 end;
 
-procedure TFormTableauBordInteractif.AfficherRapportDetailCategorie(const Categorie: string);
-begin
+procedure TFormTableauBordInteractif.AfficherRapportDetailCategorie(const Categorie: string);  
+begin  
   frxReportDetail.Variables['Categorie'] := QuotedStr(Categorie);
   frxReportDetail.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
   frxReportDetail.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
@@ -922,8 +922,8 @@ end;
 Mettez à jour le tableau de bord périodiquement.
 
 ```pascal
-procedure TFormTableauBordInteractif.FormCreate(Sender: TObject);
-begin
+procedure TFormTableauBordInteractif.FormCreate(Sender: TObject);  
+begin  
   // Activer le timer pour actualisation automatique
   Timer1.Interval := 60000; // 60 secondes
   Timer1.Enabled := True;
@@ -932,8 +932,8 @@ begin
   MettreAJourTableauBord;
 end;
 
-procedure TFormTableauBordInteractif.Timer1Timer(Sender: TObject);
-begin
+procedure TFormTableauBordInteractif.Timer1Timer(Sender: TObject);  
+begin  
   if CheckBoxActualisationAuto.Checked then
     MettreAJourTableauBord;
 end;
@@ -954,8 +954,8 @@ type
     btnExporter: TButton;
   end;
 
-procedure TFormExportInteractif.btnExporterClick(Sender: TObject);
-var
+procedure TFormExportInteractif.btnExporterClick(Sender: TObject);  
+var  
   SectionsAExporter: TStringList;
   i: Integer;
 begin
@@ -988,8 +988,8 @@ begin
   end;
 end;
 
-procedure TFormExportInteractif.ConfigurerSectionsVisibles(Sections: TStringList);
-begin
+procedure TFormExportInteractif.ConfigurerSectionsVisibles(Sections: TStringList);  
+begin  
   // Masquer toutes les sections
   frxReport1.FindObject('SectionVentes').Visible := False;
   frxReport1.FindObject('SectionStatistiques').Visible := False;
@@ -1012,8 +1012,8 @@ end;
 Montrez un aperçu de ce qui sera exporté.
 
 ```pascal
-procedure TFormExportInteractif.btnApercuClick(Sender: TObject);
-begin
+procedure TFormExportInteractif.btnApercuClick(Sender: TObject);  
+begin  
   // Configurer le rapport selon les sélections
   ConfigurerSectionsVisibles(GetSectionsSelectionnees);
 
@@ -1021,8 +1021,8 @@ begin
   frxReport1.ShowReport;
 end;
 
-procedure TFormExportInteractif.btnExporterDepuisApercuClick(Sender: TObject);
-begin
+procedure TFormExportInteractif.btnExporterDepuisApercuClick(Sender: TObject);  
+begin  
   // L'utilisateur a vu l'aperçu et veut exporter
   if frxReport1.PreparedPages.Count = 0 then
   begin
@@ -1064,8 +1064,8 @@ type
     procedure btnRechercherClick(Sender: TObject);
   end;
 
-procedure TFormApercuPersonnalise.btnEmailClick(Sender: TObject);
-var
+procedure TFormApercuPersonnalise.btnEmailClick(Sender: TObject);  
+var  
   SaveDialog: TSaveDialog;
   FichierPDF: string;
 begin
@@ -1077,8 +1077,8 @@ begin
   EnvoyerEmailAvecPieceJointe(FichierPDF);
 end;
 
-procedure TFormApercuPersonnalise.btnPartagerClick(Sender: TObject);
-var
+procedure TFormApercuPersonnalise.btnPartagerClick(Sender: TObject);  
+var  
   Menu: TPopupMenu;
 begin
   // Créer un menu avec différentes options de partage
@@ -1098,8 +1098,8 @@ end;
 ### Barre d'outils personnalisée
 
 ```pascal
-procedure TFormApercuPersonnalise.ConfigurerBarreOutils;
-begin
+procedure TFormApercuPersonnalise.ConfigurerBarreOutils;  
+begin  
   // Configurer les boutons de la barre d'outils
   with ToolBar1 do
   begin
@@ -1137,8 +1137,8 @@ type
     DateCreation: TDateTime;
   end;
 
-procedure TFormRapportCollaboratif.AjouterAnnotation(Page, X, Y: Integer; const Texte: string);
-var
+procedure TFormRapportCollaboratif.AjouterAnnotation(Page, X, Y: Integer; const Texte: string);  
+var  
   Annotation: TAnnotation;
 begin
   Annotation.ID := GenererID;
@@ -1172,8 +1172,8 @@ end;
 ### Partage de rapports
 
 ```pascal
-procedure TFormRapportCollaboratif.PartagerRapport;
-var
+procedure TFormRapportCollaboratif.PartagerRapport;  
+var  
   Destinataires: TStringList;
   i: Integer;
 begin
@@ -1209,8 +1209,8 @@ end;
 Pour les gros rapports, chargez les données progressivement.
 
 ```pascal
-procedure TForm1.GenererRapportProgressif;
-const
+procedure TForm1.GenererRapportProgressif;  
+const  
   TAILLE_BLOC = 1000;
 var
   Offset: Integer;
@@ -1254,8 +1254,8 @@ type
     function EstValide(const CleRapport: string): Boolean;
   end;
 
-procedure TForm1.AfficherRapportAvecCache(const Parametres: string);
-var
+procedure TForm1.AfficherRapportAvecCache(const Parametres: string);  
+var  
   CleCache: string;
 begin
   CleCache := GenererCleCacheRapport(Parametres);
@@ -1374,8 +1374,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormRapportVentesInteractif.FormCreate(Sender: TObject);
-begin
+procedure TFormRapportVentesInteractif.FormCreate(Sender: TObject);  
+begin  
   FHistorique := TList<string>.Create;
 
   // Configuration de la connexion
@@ -1392,8 +1392,8 @@ begin
   GenererRapport;
 end;
 
-procedure TFormRapportVentesInteractif.InitialiserFiltres;
-begin
+procedure TFormRapportVentesInteractif.InitialiserFiltres;  
+begin  
   // Dates par défaut : mois en cours
   DateEdit1.Date := StartOfTheMonth(Date);
   DateEdit2.Date := EndOfTheMonth(Date);
@@ -1419,8 +1419,8 @@ begin
   ComboVendeur.ItemIndex := 0;
 end;
 
-procedure TFormRapportVentesInteractif.AppliquerFiltres;
-var
+procedure TFormRapportVentesInteractif.AppliquerFiltres;  
+var  
   SQL: string;
 begin
   SQL := 'SELECT v.*, p.nom as produit, p.categorie, u.nom as vendeur ' +
@@ -1458,8 +1458,8 @@ begin
      ComboCategorie.Text, ComboVendeur.Text]));
 end;
 
-procedure TFormRapportVentesInteractif.btnAppliquerClick(Sender: TObject);
-begin
+procedure TFormRapportVentesInteractif.btnAppliquerClick(Sender: TObject);  
+begin  
   Screen.Cursor := crHourGlass;
   try
     AppliquerFiltres;
@@ -1470,8 +1470,8 @@ begin
   end;
 end;
 
-procedure TFormRapportVentesInteractif.GenererRapport;
-begin
+procedure TFormRapportVentesInteractif.GenererRapport;  
+begin  
   // Passer les paramètres au rapport
   frxReport1.Variables['DateDebut'] := QuotedStr(DateToStr(DateEdit1.Date));
   frxReport1.Variables['DateFin'] := QuotedStr(DateToStr(DateEdit2.Date));
@@ -1497,8 +1497,8 @@ begin
   end;
 end;
 
-procedure TFormRapportVentesInteractif.AfficherDetailVente(ID: Integer);
-begin
+procedure TFormRapportVentesInteractif.AfficherDetailVente(ID: Integer);  
+begin  
   // Créer un nouveau formulaire pour afficher les détails
   var FormDetail := TFormDetailVente.Create(Self);
   try
@@ -1511,15 +1511,15 @@ begin
   AjouterHistorique('Détail vente #' + IntToStr(ID));
 end;
 
-procedure TFormRapportVentesInteractif.btnResetClick(Sender: TObject);
-begin
+procedure TFormRapportVentesInteractif.btnResetClick(Sender: TObject);  
+begin  
   InitialiserFiltres;
   CheckBoxDetails.Checked := False;
   btnAppliquerClick(nil);
 end;
 
-procedure TFormRapportVentesInteractif.btnExporterClick(Sender: TObject);
-var
+procedure TFormRapportVentesInteractif.btnExporterClick(Sender: TObject);  
+var  
   SaveDialog: TSaveDialog;
 begin
   SaveDialog := TSaveDialog.Create(Self);
@@ -1542,8 +1542,8 @@ begin
   end;
 end;
 
-procedure TFormRapportVentesInteractif.AjouterHistorique(const Action: string);
-begin
+procedure TFormRapportVentesInteractif.AjouterHistorique(const Action: string);  
+begin  
   FHistorique.Add(Format('[%s] %s', [TimeToStr(Now), Action]));
 end;
 

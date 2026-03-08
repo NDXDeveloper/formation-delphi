@@ -218,8 +218,8 @@ Le designer FastReport se compose de :
 Retournez dans Delphi et écrivez le code pour afficher le rapport :
 
 ```pascal
-procedure TForm1.btnAfficherRapportClick(Sender: TObject);
-begin
+procedure TForm1.btnAfficherRapportClick(Sender: TObject);  
+begin  
   // Charger le fichier rapport
   frxReport1.LoadFromFile('MonPremierRapport.fr3');
 
@@ -233,8 +233,8 @@ end;
 Vous pouvez aussi concevoir le rapport directement dans le composant :
 
 ```pascal
-procedure TForm1.btnAfficherRapportClick(Sender: TObject);
-begin
+procedure TForm1.btnAfficherRapportClick(Sender: TObject);  
+begin  
   // Le rapport est déjà dans le composant
   frxReport1.ShowReport;
 end;
@@ -260,9 +260,9 @@ FDConnection1.DriverName := 'MySQL';
 // ... autres paramètres de connexion
 
 // Requête
-FDQueryClients.Connection := FDConnection1;
-FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
-FDQueryClients.Open;
+FDQueryClients.Connection := FDConnection1;  
+FDQueryClients.SQL.Text := 'SELECT * FROM clients ORDER BY nom';  
+FDQueryClients.Open;  
 
 // DataSource
 DataSourceClients.DataSet := FDQueryClients;
@@ -324,8 +324,8 @@ Les expressions entre crochets sont automatiquement remplacées par FastReport.
 ### Code complet
 
 ```pascal
-procedure TForm1.btnRapportClientsClick(Sender: TObject);
-begin
+procedure TForm1.btnRapportClientsClick(Sender: TObject);  
+begin  
   try
     // Ouvrir la connexion et la requête
     FDConnection1.Connected := True;
@@ -465,8 +465,8 @@ Les sous-rapports permettent d'inclure un rapport dans un autre.
 
 Exemple : une facture avec les détails des lignes
 
-**Rapport principal :** informations de la facture (client, date, numéro)
-**Sous-rapport :** lignes de la facture (articles, quantités, prix)
+**Rapport principal :** informations de la facture (client, date, numéro)  
+**Sous-rapport :** lignes de la facture (articles, quantités, prix)  
 
 ### Création d'un sous-rapport
 
@@ -487,12 +487,12 @@ Exemple : une facture avec les détails des lignes
 
 ```pascal
 // Dans le code
-frxDBDatasetFactures.DataSet := FDQueryFactures;
-frxDBDatasetLignes.DataSet := FDQueryLignes;
+frxDBDatasetFactures.DataSet := FDQueryFactures;  
+frxDBDatasetLignes.DataSet := FDQueryLignes;  
 
 // Définir la relation
-FDQueryLignes.MasterSource := DataSourceFactures;
-FDQueryLignes.MasterFields := 'id_facture';
+FDQueryLignes.MasterSource := DataSourceFactures;  
+FDQueryLignes.MasterFields := 'id_facture';  
 ```
 
 ## Graphiques dans les rapports
@@ -552,8 +552,8 @@ Vous pouvez aussi exporter directement par code :
 uses
   frxClass, frxExportPDF;
 
-procedure TForm1.ExporterEnPDF;
-var
+procedure TForm1.ExporterEnPDF;  
+var  
   PDFExport: TfrxPDFExport;
 begin
   PDFExport := TfrxPDFExport.Create(nil);
@@ -580,8 +580,8 @@ end;
 uses
   frxClass, frxExportXLS;
 
-procedure TForm1.ExporterEnExcel;
-var
+procedure TForm1.ExporterEnExcel;  
+var  
   ExcelExport: TfrxXLSExport;
 begin
   ExcelExport := TfrxXLSExport.Create(nil);
@@ -624,8 +624,8 @@ Vous pouvez passer des variables au rapport depuis votre code.
 ### Affectation par code
 
 ```pascal
-procedure TForm1.AfficherRapportAvecParametre;
-begin
+procedure TForm1.AfficherRapportAvecParametre;  
+begin  
   frxReport1.LoadFromFile('MonRapport.fr3');
 
   // Affecter la valeur de la variable
@@ -641,8 +641,8 @@ end;
 Dans un Memo du rapport, utilisez :
 
 ```
-Client : [NomClient]
-Date : [DateRapport]
+Client : [NomClient]  
+Date : [DateRapport]  
 ```
 
 ## QuickReport : présentation
@@ -672,8 +672,8 @@ Un rapport QuickReport se construit directement sur un formulaire Delphi :
 
 ```pascal
 // Sur le formulaire principal
-procedure TForm1.btnRapportQRClick(Sender: TObject);
-begin
+procedure TForm1.btnRapportQRClick(Sender: TObject);  
+begin  
   FormRapportQR := TFormRapportQR.Create(Self);
   try
     FormRapportQR.QuickRep1.Preview;
@@ -683,8 +683,8 @@ begin
 end;
 
 // Sur le formulaire du rapport
-procedure TFormRapportQR.QuickRep1BeforePrint(Sender: TCustomQuickRep; var PrintReport: Boolean);
-begin
+procedure TFormRapportQR.QuickRep1BeforePrint(Sender: TCustomQuickRep; var PrintReport: Boolean);  
+begin  
   // Préparation du rapport
   QRLabel1.Caption := 'Rapport du ' + DateToStr(Date);
 end;
@@ -694,9 +694,9 @@ end;
 
 ```pascal
 // Configuration
-QuickRep1.DataSet := FDQueryClients;
-QRDBText1.DataSet := FDQueryClients;
-QRDBText1.DataField := 'nom';
+QuickRep1.DataSet := FDQueryClients;  
+QRDBText1.DataSet := FDQueryClients;  
+QRDBText1.DataField := 'nom';  
 ```
 
 ### Limitations de QuickReport
@@ -810,8 +810,8 @@ Permet de faire deux passes : une pour compter, une pour imprimer.
 **Gestion de la mémoire**
 
 ```pascal
-frxReport1.EngineOptions.UseFileCache := True;
-frxReport1.EngineOptions.TempDir := 'C:\Temp';
+frxReport1.EngineOptions.UseFileCache := True;  
+frxReport1.EngineOptions.TempDir := 'C:\Temp';  
 ```
 
 Utilise le disque plutôt que la mémoire pour les gros rapports.
@@ -819,8 +819,8 @@ Utilise le disque plutôt que la mémoire pour les gros rapports.
 ### Préparation en arrière-plan
 
 ```pascal
-procedure TForm1.PreparerRapportAsync;
-begin
+procedure TForm1.PreparerRapportAsync;  
+begin  
   TTask.Run(
     procedure
     begin
@@ -844,15 +844,15 @@ end;
 Protégez vos fichiers de rapport :
 
 ```pascal
-frxReport1.Password := 'MonMotDePasse';
-frxReport1.SaveToFile('RapportProtege.fr3');
+frxReport1.Password := 'MonMotDePasse';  
+frxReport1.SaveToFile('RapportProtege.fr3');  
 ```
 
 Pour charger :
 
 ```pascal
-frxReport1.Password := 'MonMotDePasse';
-frxReport1.LoadFromFile('RapportProtege.fr3');
+frxReport1.Password := 'MonMotDePasse';  
+frxReport1.LoadFromFile('RapportProtege.fr3');  
 ```
 
 ### PDF avec restrictions
@@ -860,9 +860,9 @@ frxReport1.LoadFromFile('RapportProtege.fr3');
 Créez des PDF protégés :
 
 ```pascal
-PDFExport.UserPassword := 'lecture';
-PDFExport.OwnerPassword := 'admin';
-PDFExport.ProtectionFlags := [ePrint, eModify];
+PDFExport.UserPassword := 'lecture';  
+PDFExport.OwnerPassword := 'admin';  
+PDFExport.ProtectionFlags := [ePrint, eModify];  
 ```
 
 ## Internationalisation
