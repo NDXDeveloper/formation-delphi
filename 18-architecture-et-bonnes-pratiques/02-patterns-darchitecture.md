@@ -22,8 +22,8 @@ Un pattern (ou patron en français) d'architecture est une solution réutilisabl
 Sans pattern, votre code ressemble souvent à cela :
 
 ```pascal
-procedure TFormMain.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonSaveClick(Sender: TObject);  
+begin  
   // Tout mélangé dans un même endroit !
   if EditName.Text = '' then
   begin
@@ -146,8 +146,8 @@ implementation
 uses
   System.SysUtils, System.RegularExpressions;
 
-constructor TClient.Create;
-begin
+constructor TClient.Create;  
+begin  
   inherited;
   FId := 0;
   FNom := '';
@@ -155,18 +155,18 @@ begin
   FMontantTotal := 0;
 end;
 
-procedure TClient.SetNom(const Value: string);
-begin
+procedure TClient.SetNom(const Value: string);  
+begin  
   FNom := Trim(Value);
 end;
 
-procedure TClient.SetEmail(const Value: string);
-begin
+procedure TClient.SetEmail(const Value: string);  
+begin  
   FEmail := Trim(LowerCase(Value));
 end;
 
-function TClient.IsValid: Boolean;
-var
+function TClient.IsValid: Boolean;  
+var  
   EmailRegex: TRegEx;
 begin
   Result := False;
@@ -183,8 +183,8 @@ begin
   Result := True;
 end;
 
-function TClient.GetErrorMessage: string;
-var
+function TClient.GetErrorMessage: string;  
+var  
   EmailRegex: TRegEx;
 begin
   if FNom.Length < 2 then
@@ -197,8 +197,8 @@ begin
   Result := '';
 end;
 
-function TClient.CalculerTotalTTC(TauxTVA: Double): Currency;
-begin
+function TClient.CalculerTotalTTC(TauxTVA: Double): Currency;  
+begin  
   Result := FMontantTotal * (1 + TauxTVA / 100);
 end;
 
@@ -266,19 +266,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
+procedure TFormClient.FormCreate(Sender: TObject);  
+begin  
   FController := TClientController.Create;
   ViderFormulaire;
 end;
 
-procedure TFormClient.FormDestroy(Sender: TObject);
-begin
+procedure TFormClient.FormDestroy(Sender: TObject);  
+begin  
   FController.Free;
 end;
 
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-var
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+var  
   Nom, Email: string;
   Montant: Currency;
   Success: Boolean;
@@ -307,15 +307,15 @@ begin
     AfficherMessage(ErrorMsg, True);
 end;
 
-procedure TFormClient.AfficherClient(Client: TClient);
-begin
+procedure TFormClient.AfficherClient(Client: TClient);  
+begin  
   EditNom.Text := Client.Nom;
   EditEmail.Text := Client.Email;
   EditMontant.Text := CurrToStr(Client.MontantTotal);
 end;
 
-procedure TFormClient.ViderFormulaire;
-begin
+procedure TFormClient.ViderFormulaire;  
+begin  
   EditNom.Clear;
   EditEmail.Clear;
   EditMontant.Clear;
@@ -323,8 +323,8 @@ begin
   EditNom.SetFocus;
 end;
 
-procedure TFormClient.AfficherMessage(const Message: string; Erreur: Boolean);
-begin
+procedure TFormClient.AfficherMessage(const Message: string; Erreur: Boolean);  
+begin  
   LabelMessage.Caption := Message;
   if Erreur then
     LabelMessage.Font.Color := clRed
@@ -386,14 +386,14 @@ implementation
 uses
   DataModuleMain; // Module pour l'accès à la base
 
-constructor TClientController.Create;
-begin
+constructor TClientController.Create;  
+begin  
   inherited;
   FModel := TClient.Create;
 end;
 
-destructor TClientController.Destroy;
-begin
+destructor TClientController.Destroy;  
+begin  
   FModel.Free;
   inherited;
 end;
@@ -430,8 +430,8 @@ begin
   end;
 end;
 
-function TClientController.SauvegarderEnBase(Client: TClient): Boolean;
-begin
+function TClientController.SauvegarderEnBase(Client: TClient): Boolean;  
+begin  
   Result := False;
 
   // Utilisation du DataModule pour la persistance
@@ -452,8 +452,8 @@ begin
   end;
 end;
 
-function TClientController.ChargerClient(Id: Integer): TClient;
-begin
+function TClientController.ChargerClient(Id: Integer): TClient;  
+begin  
   Result := TClient.Create;
 
   with dmMain.QueryClient do
@@ -473,8 +473,8 @@ begin
   end;
 end;
 
-function TClientController.SupprimerClient(Id: Integer): Boolean;
-begin
+function TClientController.SupprimerClient(Id: Integer): Boolean;  
+begin  
   Result := False;
 
   with dmMain.QueryClient do
@@ -534,8 +534,8 @@ Voici comment les composants interagissent :
 **1. Testabilité**
 ```pascal
 // Test du modèle sans interface
-procedure TestValidationClient;
-var
+procedure TestValidationClient;  
+var  
   Client: TClient;
 begin
   Client := TClient.Create;
@@ -686,8 +686,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormClient.FormCreate(Sender: TObject);
-begin
+procedure TFormClient.FormCreate(Sender: TObject);  
+begin  
   FViewModel := TClientViewModel.Create;
 
   // Configuration du data binding
@@ -711,13 +711,13 @@ begin
   end;
 end;
 
-procedure TFormClient.FormDestroy(Sender: TObject);
-begin
+procedure TFormClient.FormDestroy(Sender: TObject);  
+begin  
   FViewModel.Free;
 end;
 
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+begin  
   // La View ne fait que transmettre les données au ViewModel
   FViewModel.Nom := EditNom.Text;
   FViewModel.Email := EditEmail.Text;
@@ -792,27 +792,27 @@ implementation
 uses
   DataModuleMain;
 
-constructor TClientViewModel.Create;
-begin
+constructor TClientViewModel.Create;  
+begin  
   inherited;
   FClient := TClient.Create;
   FMessage := '';
   FEstErreur := False;
 end;
 
-destructor TClientViewModel.Destroy;
-begin
+destructor TClientViewModel.Destroy;  
+begin  
   FClient.Free;
   inherited;
 end;
 
-function TClientViewModel.GetNom: string;
-begin
+function TClientViewModel.GetNom: string;  
+begin  
   Result := FClient.Nom;
 end;
 
-procedure TClientViewModel.SetNom(const Value: string);
-begin
+procedure TClientViewModel.SetNom(const Value: string);  
+begin  
   if FClient.Nom <> Value then
   begin
     FClient.Nom := Value;
@@ -820,13 +820,13 @@ begin
   end;
 end;
 
-function TClientViewModel.GetEmail: string;
-begin
+function TClientViewModel.GetEmail: string;  
+begin  
   Result := FClient.Email;
 end;
 
-procedure TClientViewModel.SetEmail(const Value: string);
-begin
+procedure TClientViewModel.SetEmail(const Value: string);  
+begin  
   if FClient.Email <> Value then
   begin
     FClient.Email := Value;
@@ -834,8 +834,8 @@ begin
   end;
 end;
 
-function TClientViewModel.GetMontantAffichage: string;
-begin
+function TClientViewModel.GetMontantAffichage: string;  
+begin  
   // Conversion du modèle vers l'affichage
   if FClient.MontantTotal = 0 then
     Result := ''
@@ -843,8 +843,8 @@ begin
     Result := FormatFloat('#,##0.00', FClient.MontantTotal);
 end;
 
-procedure TClientViewModel.SetMontantAffichage(const Value: string);
-var
+procedure TClientViewModel.SetMontantAffichage(const Value: string);  
+var  
   Montant: Currency;
 begin
   // Conversion de l'affichage vers le modèle
@@ -857,21 +857,21 @@ begin
   end;
 end;
 
-procedure TClientViewModel.NotifierChangement(const PropertyName: string);
-begin
+procedure TClientViewModel.NotifierChangement(const PropertyName: string);  
+begin  
   if Assigned(FOnPropertyChanged) then
     FOnPropertyChanged(PropertyName);
 end;
 
-procedure TClientViewModel.DefinirMessage(const Msg: string; Erreur: Boolean);
-begin
+procedure TClientViewModel.DefinirMessage(const Msg: string; Erreur: Boolean);  
+begin  
   FMessage := Msg;
   FEstErreur := Erreur;
   NotifierChangement('Message');
 end;
 
-procedure TClientViewModel.Sauvegarder;
-begin
+procedure TClientViewModel.Sauvegarder;  
+begin  
   // 1. Validation
   if not FClient.IsValid then
   begin
@@ -894,8 +894,8 @@ begin
   end;
 end;
 
-function TClientViewModel.SauvegarderEnBase: Boolean;
-begin
+function TClientViewModel.SauvegarderEnBase: Boolean;  
+begin  
   Result := False;
 
   with dmMain.QueryClient do
@@ -915,8 +915,8 @@ begin
   end;
 end;
 
-procedure TClientViewModel.NouveauClient;
-begin
+procedure TClientViewModel.NouveauClient;  
+begin  
   FClient.Free;
   FClient := TClient.Create;
   NotifierChangement('Nom');
@@ -946,8 +946,8 @@ Le ViewModel ne contient que de la logique de présentation. Aucune référence 
 
 ```pascal
 // Test du ViewModel sans interface graphique
-procedure TestSauvegardeClient;
-var
+procedure TestSauvegardeClient;  
+var  
   ViewModel: TClientViewModel;
   MessageRecu: string;
 begin
@@ -978,14 +978,14 @@ Toute la conversion entre données métier et affichage est dans le ViewModel :
 
 ```pascal
 // Formatage pour l'affichage
-function TClientViewModel.GetMontantAffichage: string;
-begin
+function TClientViewModel.GetMontantAffichage: string;  
+begin  
   Result := FormatFloat('#,##0.00 €', FClient.MontantTotal);
 end;
 
 // Parsing depuis l'affichage
-procedure TClientViewModel.SetMontantAffichage(const Value: string);
-var
+procedure TClientViewModel.SetMontantAffichage(const Value: string);  
+var  
   Montant: Currency;
   ValueNettoyee: string;
 begin
@@ -1190,22 +1190,22 @@ type
 
 implementation
 
-procedure TFormClientList.FormCreate(Sender: TObject);
-begin
+procedure TFormClientList.FormCreate(Sender: TObject);  
+begin  
   FController := TClientController.Create;
   AfficherClients(FController.ChargerTous);
 end;
 
-procedure TFormClientList.ButtonRechercherClick(Sender: TObject);
-var
+procedure TFormClientList.ButtonRechercherClick(Sender: TObject);  
+var  
   Clients: TArray<TClient>;
 begin
   Clients := FController.RechercherClients(EditRecherche.Text);
   AfficherClients(Clients);
 end;
 
-procedure TFormClientList.AfficherClients(Clients: TArray<TClient>);
-var
+procedure TFormClientList.AfficherClients(Clients: TArray<TClient>);  
+var  
   I: Integer;
 begin
   GridClients.RowCount := Length(Clients) + 1;
@@ -1266,23 +1266,23 @@ type
 
 implementation
 
-constructor TClientListViewModel.Create;
-begin
+constructor TClientListViewModel.Create;  
+begin  
   inherited;
   FClientList := TClientList.Create;
   FClients := TObjectList<TClientViewModel>.Create(True);
   ChargerTous;
 end;
 
-destructor TClientListViewModel.Destroy;
-begin
+destructor TClientListViewModel.Destroy;  
+begin  
   FClients.Free;
   FClientList.Free;
   inherited;
 end;
 
-procedure TClientListViewModel.SetTermeRecherche(const Value: string);
-begin
+procedure TClientListViewModel.SetTermeRecherche(const Value: string);  
+begin  
   if FTermeRecherche <> Value then
   begin
     FTermeRecherche := Value;
@@ -1290,8 +1290,8 @@ begin
   end;
 end;
 
-procedure TClientListViewModel.Rechercher;
-var
+procedure TClientListViewModel.Rechercher;  
+var  
   Resultats: TArray<TClient>;
 begin
   if FTermeRecherche = '' then
@@ -1302,13 +1302,13 @@ begin
   ChargerClients(Resultats);
 end;
 
-procedure TClientListViewModel.ChargerTous;
-begin
+procedure TClientListViewModel.ChargerTous;  
+begin  
   ChargerClients(FClientList.GetAll);
 end;
 
-procedure TClientListViewModel.ChargerClients(Clients: TArray<TClient>);
-var
+procedure TClientListViewModel.ChargerClients(Clients: TArray<TClient>);  
+var  
   I: Integer;
   VM: TClientViewModel;
 begin
@@ -1349,20 +1349,20 @@ type
 
 implementation
 
-procedure TFormClientList.FormCreate(Sender: TObject);
-begin
+procedure TFormClientList.FormCreate(Sender: TObject);  
+begin  
   FViewModel := TClientListViewModel.Create;
   FViewModel.OnClientsChanged := OnClientsChanged;
 end;
 
-procedure TFormClientList.EditRechercheChange(Sender: TObject);
-begin
+procedure TFormClientList.EditRechercheChange(Sender: TObject);  
+begin  
   // Le binding met à jour automatiquement
   FViewModel.TermeRecherche := EditRecherche.Text;
 end;
 
-procedure TFormClientList.OnClientsChanged(Sender: TObject);
-var
+procedure TFormClientList.OnClientsChanged(Sender: TObject);  
+var  
   I: Integer;
 begin
   GridClients.RowCount := FViewModel.Clients.Count + 1;
@@ -1420,8 +1420,8 @@ Expliquez dans un README ou un document pourquoi vous avez choisi tel pattern, c
 **Mauvais** :
 ```pascal
 // Controller qui fait de l'affichage
-procedure TClientController.Sauvegarder;
-begin
+procedure TClientController.Sauvegarder;  
+begin  
   if Save then
     ShowMessage('Sauvegardé !'); // NON ! Le Controller ne doit pas afficher
 end;
@@ -1430,8 +1430,8 @@ end;
 **Bon** :
 ```pascal
 // Le Controller retourne le résultat, la View affiche
-function TClientController.Sauvegarder: Boolean;
-begin
+function TClientController.Sauvegarder: Boolean;  
+begin  
   Result := Save;
 end;
 ```
@@ -1455,8 +1455,8 @@ Le Controller/ViewModel n'est pas un fourre-tout. La logique métier va dans le 
 
 **Mauvais** :
 ```pascal
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+begin  
   Query.SQL.Text := 'INSERT...'; // NON ! Passez par le Controller/ViewModel
   Query.ExecSQL;
 end;

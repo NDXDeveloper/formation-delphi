@@ -43,8 +43,8 @@ Lorsque l'UI et la logique métier sont mélangées (on parle de **couplage fort
 **Exemple problématique :**
 
 ```pascal
-procedure TFormCalcul.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormCalcul.ButtonCalculerClick(Sender: TObject);  
+var  
   PrixHT, TauxTVA, PrixTTC: Double;
 begin
   // Récupération depuis l'interface
@@ -74,8 +74,8 @@ Si vous voulez calculer la TVA ailleurs dans votre application (dans un rapport,
 ### 3. Difficile à maintenir
 
 ```pascal
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-begin
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+begin  
   // 500 lignes de code mêlant tout...
   if EditNom.Text = '' then
     ShowMessage('Nom requis');
@@ -125,11 +125,11 @@ Voici un guide simple pour identifier ce qui est UI et ce qui est logique métie
 **Exemples :**
 ```pascal
 // UI
-ShowMessage('Erreur');
-EditNom.Text := 'Jean';
-ButtonSave.Enabled := False;
-LabelTotal.Caption := '100 €';
-if FormClient.ShowModal = mrOk then ...
+ShowMessage('Erreur');  
+EditNom.Text := 'Jean';  
+ButtonSave.Enabled := False;  
+LabelTotal.Caption := '100 €';  
+if FormClient.ShowModal = mrOk then ...  
 ```
 
 ### C'est de la logique métier si...
@@ -144,11 +144,11 @@ if FormClient.ShowModal = mrOk then ...
 **Exemples :**
 ```pascal
 // Logique métier
-Total := Prix * Quantite * (1 - Remise/100);
-if Email.Contains('@') then ...
-Client.Age := YearsBetween(Now, Client.DateNaissance);
-if Stock < SeuilAlerte then ...
-Sauvegarder(Client);
+Total := Prix * Quantite * (1 - Remise/100);  
+if Email.Contains('@') then ...  
+Client.Age := YearsBetween(Now, Client.DateNaissance);  
+if Stock < SeuilAlerte then ...  
+Sauvegarder(Client);  
 ```
 
 ### Test simple : la question "Et si ?"
@@ -161,14 +161,14 @@ Posez-vous cette question : **"Et si je voulais utiliser cette logique depuis un
 **Exemple :**
 ```pascal
 // Peut être utilisé sans interface ? OUI → Logique métier
-function CalculerTotalTTC(PrixHT, TauxTVA: Double): Double;
-begin
+function CalculerTotalTTC(PrixHT, TauxTVA: Double): Double;  
+begin  
   Result := PrixHT * (1 + TauxTVA / 100);
 end;
 
 // Peut être utilisé sans interface ? NON → UI
-procedure AfficherTotal(Total: Double);
-begin
+procedure AfficherTotal(Total: Double);  
+begin  
   LabelTotal.Caption := FormatFloat('#,##0.00 €', Total);
 end;
 ```
@@ -184,8 +184,8 @@ La technique la plus simple consiste à **extraire la logique dans des fonctions
 **AVANT (Tout mélangé) :**
 
 ```pascal
-procedure TFormFacture.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormFacture.ButtonCalculerClick(Sender: TObject);  
+var  
   PrixHT, Quantite, Remise, TauxTVA, Total: Double;
 begin
   // Récupération UI
@@ -227,23 +227,23 @@ type
 
 implementation
 
-class function TCalculateurFacture.CalculerSousTotal(PrixUnitaire, Quantite: Double): Double;
-begin
+class function TCalculateurFacture.CalculerSousTotal(PrixUnitaire, Quantite: Double): Double;  
+begin  
   Result := PrixUnitaire * Quantite;
 end;
 
-class function TCalculateurFacture.AppliquerRemise(Montant, PourcentageRemise: Double): Double;
-begin
+class function TCalculateurFacture.AppliquerRemise(Montant, PourcentageRemise: Double): Double;  
+begin  
   Result := Montant - (Montant * PourcentageRemise / 100);
 end;
 
-class function TCalculateurFacture.CalculerTVA(MontantHT, TauxTVA: Double): Double;
-begin
+class function TCalculateurFacture.CalculerTVA(MontantHT, TauxTVA: Double): Double;  
+begin  
   Result := MontantHT * (1 + TauxTVA / 100);
 end;
 
-class function TCalculateurFacture.CalculerTotal(PrixUnitaire, Quantite, Remise, TauxTVA: Double): Double;
-var
+class function TCalculateurFacture.CalculerTotal(PrixUnitaire, Quantite, Remise, TauxTVA: Double): Double;  
+var  
   SousTotal, AvecRemise: Double;
 begin
   SousTotal := CalculerSousTotal(PrixUnitaire, Quantite);
@@ -254,8 +254,8 @@ end;
 end.
 
 // ========== UI (dans le formulaire) ==========
-procedure TFormFacture.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormFacture.ButtonCalculerClick(Sender: TObject);  
+var  
   PrixHT, Quantite, Remise, TauxTVA, Total: Double;
 begin
   // 1. Récupération des données de l'UI
@@ -271,8 +271,8 @@ begin
   AfficherTotal(Total);
 end;
 
-procedure TFormFacture.AfficherTotal(Total: Double);
-begin
+procedure TFormFacture.AfficherTotal(Total: Double);  
+begin  
   LabelTotal.Caption := FormatFloat('#,##0.00 €', Total);
 
   // Règle d'affichage (UI, pas métier)
@@ -291,8 +291,8 @@ end;
 
 **Test unitaire maintenant possible :**
 ```pascal
-procedure TestCalculTotal;
-var
+procedure TestCalculTotal;  
+var  
   Total: Double;
 begin
   Total := TCalculateurFacture.CalculerTotal(100, 2, 10, 20);
@@ -375,23 +375,23 @@ implementation
 
 { TLigneCommande }
 
-constructor TLigneCommande.Create(const Produit: string; Quantite: Integer; PrixUnitaire: Currency);
-begin
+constructor TLigneCommande.Create(const Produit: string; Quantite: Integer; PrixUnitaire: Currency);  
+begin  
   inherited Create;
   FProduit := Produit;
   FQuantite := Quantite;
   FPrixUnitaire := PrixUnitaire;
 end;
 
-function TLigneCommande.CalculerTotal: Currency;
-begin
+function TLigneCommande.CalculerTotal: Currency;  
+begin  
   Result := FQuantite * FPrixUnitaire;
 end;
 
 { TCommande }
 
-constructor TCommande.Create(const NumeroCommande: string; const NomClient: string);
-begin
+constructor TCommande.Create(const NumeroCommande: string; const NomClient: string);  
+begin  
   inherited Create;
   FNumero := NumeroCommande;
   FClient := NomClient;
@@ -402,28 +402,28 @@ begin
   FDateLivraison := 0;
 end;
 
-destructor TCommande.Destroy;
-begin
+destructor TCommande.Destroy;  
+begin  
   FLignes.Free;
   inherited;
 end;
 
-procedure TCommande.AjouterLigne(const Produit: string; Quantite: Integer; PrixUnitaire: Currency);
-var
+procedure TCommande.AjouterLigne(const Produit: string; Quantite: Integer; PrixUnitaire: Currency);  
+var  
   Ligne: TLigneCommande;
 begin
   Ligne := TLigneCommande.Create(Produit, Quantite, PrixUnitaire);
   FLignes.Add(Ligne);
 end;
 
-procedure TCommande.SupprimerLigne(Index: Integer);
-begin
+procedure TCommande.SupprimerLigne(Index: Integer);  
+begin  
   if (Index >= 0) and (Index < FLignes.Count) then
     FLignes.Delete(Index);
 end;
 
-function TCommande.CalculerSousTotal: Currency;
-var
+function TCommande.CalculerSousTotal: Currency;  
+var  
   Ligne: TLigneCommande;
   Total: Currency;
 begin
@@ -433,16 +433,16 @@ begin
   Result := Total;
 end;
 
-function TCommande.CalculerRemise: Currency;
-var
+function TCommande.CalculerRemise: Currency;  
+var  
   SousTotal: Currency;
 begin
   SousTotal := CalculerSousTotal;
   Result := SousTotal * (FRemiseClient / 100);
 end;
 
-function TCommande.CalculerTVA(TauxTVA: Double): Currency;
-var
+function TCommande.CalculerTVA(TauxTVA: Double): Currency;  
+var  
   SousTotal, Remise, MontantHT: Currency;
 begin
   SousTotal := CalculerSousTotal;
@@ -451,8 +451,8 @@ begin
   Result := MontantHT * (TauxTVA / 100);
 end;
 
-function TCommande.CalculerTotalTTC(TauxTVA: Double): Currency;
-var
+function TCommande.CalculerTotalTTC(TauxTVA: Double): Currency;  
+var  
   SousTotal, Remise, MontantHT, TVA: Currency;
 begin
   SousTotal := CalculerSousTotal;
@@ -462,8 +462,8 @@ begin
   Result := MontantHT + TVA;
 end;
 
-function TCommande.PeutEtreValidee(out MessageErreur: string): Boolean;
-begin
+function TCommande.PeutEtreValidee(out MessageErreur: string): Boolean;  
+begin  
   Result := False;
   MessageErreur := '';
 
@@ -505,8 +505,8 @@ begin
   Result := True;
 end;
 
-function TCommande.Valider(out MessageErreur: string): Boolean;
-begin
+function TCommande.Valider(out MessageErreur: string): Boolean;  
+begin  
   Result := False;
 
   if not PeutEtreValidee(MessageErreur) then
@@ -516,8 +516,8 @@ begin
   Result := True;
 end;
 
-function TCommande.PeutEtreAnnulee(out MessageErreur: string): Boolean;
-begin
+function TCommande.PeutEtreAnnulee(out MessageErreur: string): Boolean;  
+begin  
   Result := False;
   MessageErreur := '';
 
@@ -538,8 +538,8 @@ begin
   Result := True;
 end;
 
-function TCommande.Annuler(out MessageErreur: string): Boolean;
-begin
+function TCommande.Annuler(out MessageErreur: string): Boolean;  
+begin  
   Result := False;
 
   if not PeutEtreAnnulee(MessageErreur) then
@@ -588,8 +588,8 @@ implementation
 uses
   System.SysUtils, Vcl.Dialogs;
 
-procedure TFormCommande.FormCreate(Sender: TObject);
-begin
+procedure TFormCommande.FormCreate(Sender: TObject);  
+begin  
   FCommande := TCommande.Create('CMD-2025-001', EditClient.Text);
 
   // Ajout de quelques lignes pour l'exemple
@@ -600,13 +600,13 @@ begin
   AfficherCommande;
 end;
 
-procedure TFormCommande.FormDestroy(Sender: TObject);
-begin
+procedure TFormCommande.FormDestroy(Sender: TObject);  
+begin  
   FCommande.Free;
 end;
 
-procedure TFormCommande.AfficherCommande;
-var
+procedure TFormCommande.AfficherCommande;  
+var  
   I: Integer;
 begin
   // Affichage des lignes
@@ -626,16 +626,16 @@ begin
   ButtonAnnuler.Enabled := (FCommande.Statut <> scAnnulee);
 end;
 
-procedure TFormCommande.MettreAJourTotal;
-var
+procedure TFormCommande.MettreAJourTotal;  
+var  
   Total: Currency;
 begin
   Total := FCommande.CalculerTotalTTC(20); // 20% de TVA
   LabelTotal.Caption := Format('Total TTC : %s', [FormatFloat('#,##0.00 €', Total)]);
 end;
 
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   MessageErreur: string;
 begin
   // Récupération de la date de livraison depuis l'UI
@@ -651,8 +651,8 @@ begin
     AfficherMessage(MessageErreur, True);
 end;
 
-procedure TFormCommande.ButtonAnnulerClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonAnnulerClick(Sender: TObject);  
+var  
   MessageErreur: string;
 begin
   if MessageDlg('Êtes-vous sûr de vouloir annuler cette commande ?',
@@ -668,8 +668,8 @@ begin
   end;
 end;
 
-procedure TFormCommande.AfficherMessage(const Message: string; Erreur: Boolean);
-begin
+procedure TFormCommande.AfficherMessage(const Message: string; Erreur: Boolean);  
+begin  
   if Erreur then
     ShowMessage('Erreur : ' + Message)
   else
@@ -693,8 +693,8 @@ end.
 
 3. **Testable**
 ```pascal
-procedure TestValidationCommande;
-var
+procedure TestValidationCommande;  
+var  
   Commande: TCommande;
   Erreur: string;
 begin
@@ -769,22 +769,22 @@ implementation
 uses
   System.SysUtils, DataModuleMain;
 
-function TCommandeService.GenererNumeroCommande: string;
-begin
+function TCommandeService.GenererNumeroCommande: string;  
+begin  
   // Logique de génération de numéro
   Result := Format('CMD-%s-%d', [FormatDateTime('YYYYMMDD', Now), Random(9999)]);
 end;
 
-function TCommandeService.CreerCommande(const NomClient: string): TCommande;
-var
+function TCommandeService.CreerCommande(const NomClient: string): TCommande;  
+var  
   NumeroCommande: string;
 begin
   NumeroCommande := GenererNumeroCommande;
   Result := TCommande.Create(NumeroCommande, NomClient);
 end;
 
-function TCommandeService.ChargerCommande(const NumeroCommande: string): TCommande;
-begin
+function TCommandeService.ChargerCommande(const NumeroCommande: string): TCommande;  
+begin  
   // Chargement depuis la base de données
   Result := nil;
 
@@ -808,8 +808,8 @@ begin
   end;
 end;
 
-function TCommandeService.SauvegarderCommande(Commande: TCommande): Boolean;
-begin
+function TCommandeService.SauvegarderCommande(Commande: TCommande): Boolean;  
+begin  
   Result := False;
 
   try
@@ -834,8 +834,8 @@ begin
   end;
 end;
 
-function TCommandeService.ValiderCommande(Commande: TCommande; out MessageErreur: string): Boolean;
-begin
+function TCommandeService.ValiderCommande(Commande: TCommande; out MessageErreur: string): Boolean;  
+begin  
   Result := False;
 
   // 1. Validation métier
@@ -866,8 +866,8 @@ begin
   Result := True;
 end;
 
-function TCommandeService.AnnulerCommande(Commande: TCommande; out MessageErreur: string): Boolean;
-begin
+function TCommandeService.AnnulerCommande(Commande: TCommande; out MessageErreur: string): Boolean;  
+begin  
   Result := False;
 
   if not Commande.Annuler(MessageErreur) then
@@ -880,8 +880,8 @@ begin
   Result := SauvegarderCommande(Commande);
 end;
 
-function TCommandeService.RechercherCommandes(const CritereRecherche: string): TObjectList<TCommande>;
-begin
+function TCommandeService.RechercherCommandes(const CritereRecherche: string): TObjectList<TCommande>;  
+begin  
   Result := TObjectList<TCommande>.Create(True);
 
   // Recherche en base de données
@@ -901,14 +901,14 @@ begin
   end;
 end;
 
-function TCommandeService.MettreAJourStock(Commande: TCommande): Boolean;
-begin
+function TCommandeService.MettreAJourStock(Commande: TCommande): Boolean;  
+begin  
   // Logique de mise à jour du stock
   Result := True;
 end;
 
-function TCommandeService.EnvoyerEmailConfirmation(Commande: TCommande): Boolean;
-begin
+function TCommandeService.EnvoyerEmailConfirmation(Commande: TCommande): Boolean;  
+begin  
   // Logique d'envoi d'email
   Result := True;
 end;
@@ -919,8 +919,8 @@ end.
 **L'UI devient encore plus simple :**
 
 ```pascal
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   Service: ICommandeService;
   MessageErreur: string;
 begin
@@ -967,22 +967,22 @@ implementation
 
 { TValidationResult }
 
-class function TValidationResult.Success: TValidationResult;
-begin
+class function TValidationResult.Success: TValidationResult;  
+begin  
   Result.IsValid := True;
   Result.ErrorMessage := '';
 end;
 
-class function TValidationResult.Failure(const Message: string): TValidationResult;
-begin
+class function TValidationResult.Failure(const Message: string): TValidationResult;  
+begin  
   Result.IsValid := False;
   Result.ErrorMessage := Message;
 end;
 
 { TClientValidator }
 
-class function TClientValidator.ValiderNom(const Nom: string): TValidationResult;
-begin
+class function TClientValidator.ValiderNom(const Nom: string): TValidationResult;  
+begin  
   if Trim(Nom) = '' then
     Exit(TValidationResult.Failure('Le nom est obligatoire'));
 
@@ -995,8 +995,8 @@ begin
   Result := TValidationResult.Success;
 end;
 
-class function TClientValidator.ValiderEmail(const Email: string): TValidationResult;
-var
+class function TClientValidator.ValiderEmail(const Email: string): TValidationResult;  
+var  
   EmailRegex: TRegEx;
 begin
   if Trim(Email) = '' then
@@ -1010,8 +1010,8 @@ begin
   Result := TValidationResult.Success;
 end;
 
-class function TClientValidator.ValiderTelephone(const Telephone: string): TValidationResult;
-var
+class function TClientValidator.ValiderTelephone(const Telephone: string): TValidationResult;  
+var  
   TelephoneNettoye: string;
 begin
   TelephoneNettoye := StringReplace(Telephone, ' ', '', [rfReplaceAll]);
@@ -1024,8 +1024,8 @@ begin
   Result := TValidationResult.Success;
 end;
 
-class function TClientValidator.ValiderClient(const Nom, Email, Telephone: string): TValidationResult;
-var
+class function TClientValidator.ValiderClient(const Nom, Email, Telephone: string): TValidationResult;  
+var  
   ResultatNom, ResultatEmail, ResultatTelephone: TValidationResult;
 begin
   ResultatNom := ValiderNom(Nom);
@@ -1049,8 +1049,8 @@ end.
 **Utilisation dans l'UI :**
 
 ```pascal
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-var
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+var  
   ValidationResult: TValidationResult;
 begin
   // Validation séparée et claire
@@ -1076,8 +1076,8 @@ end;
 
 **Interdit :**
 ```pascal
-procedure TFormCommande.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormCommande.ButtonSaveClick(Sender: TObject);  
+begin  
   // INTERDIT : Règle métier dans le formulaire
   if (Total > 1000) and (DayOfWeek(Now) = 2) then
     Total := Total * 0.95;
@@ -1086,8 +1086,8 @@ end;
 
 **Autorisé :**
 ```pascal
-procedure TFormCommande.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormCommande.ButtonSaveClick(Sender: TObject);  
+begin  
   // OK : Délégation à la logique métier
   Total := FCommande.CalculerTotalAvecPromotions;
 end;
@@ -1097,8 +1097,8 @@ end;
 
 **Interdit :**
 ```pascal
-function TCommande.Valider: Boolean;
-begin
+function TCommande.Valider: Boolean;  
+begin  
   Result := CalculerTotal > 0;
   if Result then
     ShowMessage('Commande validée !'); // INTERDIT : Affichage dans la logique
@@ -1107,8 +1107,8 @@ end;
 
 **Autorisé :**
 ```pascal
-function TCommande.Valider(out MessageErreur: string): Boolean;
-begin
+function TCommande.Valider(out MessageErreur: string): Boolean;  
+begin  
   Result := CalculerTotal > 0;
   if not Result then
     MessageErreur := 'Le total doit être supérieur à 0';
@@ -1122,8 +1122,8 @@ Chaque calcul métier doit être une fonction séparée, testable et réutilisab
 
 **Mauvais :**
 ```pascal
-procedure TFormFacture.ButtonCalculerClick(Sender: TObject);
-begin
+procedure TFormFacture.ButtonCalculerClick(Sender: TObject);  
+begin  
   LabelTotal.Caption := FloatToStr(
     StrToFloat(EditPrix.Text) *
     StrToInt(EditQte.Text) *
@@ -1135,8 +1135,8 @@ end;
 
 **Bon :**
 ```pascal
-function CalculerTotal(Prix, Quantite, Remise: Double): Double;
-var
+function CalculerTotal(Prix, Quantite, Remise: Double): Double;  
+var  
   SousTotal, AvecRemise: Double;
 begin
   SousTotal := Prix * Quantite;
@@ -1144,8 +1144,8 @@ begin
   Result := AvecRemise * 1.20; // TVA
 end;
 
-procedure TFormFacture.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormFacture.ButtonCalculerClick(Sender: TObject);  
+var  
   Total: Double;
 begin
   Total := CalculerTotal(
@@ -1163,8 +1163,8 @@ Chaque règle de validation doit être une fonction indépendante.
 
 **Mauvais :**
 ```pascal
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+begin  
   if (EditNom.Text = '') or (Length(EditNom.Text) < 2) or
      (EditEmail.Text = '') or (not EditEmail.Text.Contains('@')) then
   begin
@@ -1176,8 +1176,8 @@ end;
 
 **Bon :**
 ```pascal
-function ValiderNom(const Nom: string; out Erreur: string): Boolean;
-begin
+function ValiderNom(const Nom: string; out Erreur: string): Boolean;  
+begin  
   if Trim(Nom) = '' then
   begin
     Erreur := 'Le nom est obligatoire';
@@ -1247,9 +1247,9 @@ Voyons les avantages réels de cette séparation sur un exemple concret.
 
 **Sans séparation :**
 ```
-Vous devez chercher dans TOUS les formulaires où le calcul est fait
-Vous trouvez 15 endroits différents
-Vous modifiez 14 sur 15 (vous en oubliez un)
+Vous devez chercher dans TOUS les formulaires où le calcul est fait  
+Vous trouvez 15 endroits différents  
+Vous modifiez 14 sur 15 (vous en oubliez un)  
 → Bug en production : une facture mal calculée
 ```
 
@@ -1257,8 +1257,8 @@ Vous modifiez 14 sur 15 (vous en oubliez un)
 ```
 Vous modifiez UNE SEULE fonction :
 
-function CalculerTVA(MontantHT: Currency): Currency;
-begin
+function CalculerTVA(MontantHT: Currency): Currency;  
+begin  
   Result := MontantHT * 0.21; // Était 0.20
 end;
 
@@ -1289,15 +1289,15 @@ La logique métier est réutilisable telle quelle
 
 **Sans séparation :**
 ```
-Impossible de tester sans créer les formulaires
-Les tests sont lents et fragiles
+Impossible de tester sans créer les formulaires  
+Les tests sont lents et fragiles  
 → Vous abandonnez les tests
 ```
 
 **Avec séparation :**
 ```
-Chaque fonction métier est testable indépendamment
-Les tests sont rapides (millisecondes)
+Chaque fonction métier est testable indépendamment  
+Les tests sont rapides (millisecondes)  
 → Vous testez tout facilement
 ```
 
@@ -1307,8 +1307,8 @@ Les tests sont rapides (millisecondes)
 
 **Avant :**
 ```pascal
-procedure TFormDevis.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormDevis.ButtonCalculerClick(Sender: TObject);  
+var  
   Montant: Double;
 begin
   Montant := StrToFloat(EditMontant.Text);
@@ -1351,8 +1351,8 @@ type
 
 implementation
 
-class function TCalculateurRemises.CalculerRemiseMontant(Montant: Currency): Currency;
-begin
+class function TCalculateurRemises.CalculerRemiseMontant(Montant: Currency): Currency;  
+begin  
   // Règle métier : remise par paliers
   if Montant > 10000 then
     Result := Montant * 0.85  // 15% de remise
@@ -1364,8 +1364,8 @@ begin
     Result := Montant;        // Pas de remise
 end;
 
-class function TCalculateurRemises.CalculerRemiseFidelite(Montant: Currency; EstFidele: Boolean): Currency;
-begin
+class function TCalculateurRemises.CalculerRemiseFidelite(Montant: Currency; EstFidele: Boolean): Currency;  
+begin  
   // Règle métier : 3% pour les clients fidèles
   if EstFidele then
     Result := Montant * 0.97
@@ -1373,8 +1373,8 @@ begin
     Result := Montant;
 end;
 
-class function TCalculateurRemises.CalculerRemiseSaisonniere(Montant: Currency; Mois: Integer): Currency;
-begin
+class function TCalculateurRemises.CalculerRemiseSaisonniere(Montant: Currency; Mois: Integer): Currency;  
+begin  
   // Règle métier : 2% en janvier et juillet
   if (Mois = 1) or (Mois = 7) then
     Result := Montant * 0.98
@@ -1382,8 +1382,8 @@ begin
     Result := Montant;
 end;
 
-class function TCalculateurRemises.CalculerMontantFinal(MontantInitial: Currency; EstClientFidele: Boolean): Currency;
-var
+class function TCalculateurRemises.CalculerMontantFinal(MontantInitial: Currency; EstClientFidele: Boolean): Currency;  
+var  
   Montant: Currency;
 begin
   // Application successive des remises
@@ -1397,8 +1397,8 @@ end;
 end.
 
 // ========== UI ==========
-procedure TFormDevis.ButtonCalculerClick(Sender: TObject);
-var
+procedure TFormDevis.ButtonCalculerClick(Sender: TObject);  
+var  
   MontantInitial, MontantFinal: Currency;
   EstFidele: Boolean;
 begin
@@ -1416,8 +1416,8 @@ end;
 
 **Tests possibles :**
 ```pascal
-procedure TestRemiseMontant;
-begin
+procedure TestRemiseMontant;  
+begin  
   Assert(TCalculateurRemises.CalculerRemiseMontant(500) = 500, 'Pas de remise sous 1000');
   Assert(TCalculateurRemises.CalculerRemiseMontant(2000) = 1900, 'Remise 5% entre 1000 et 5000');
   Assert(TCalculateurRemises.CalculerRemiseMontant(7000) = 6300, 'Remise 10% entre 5000 et 10000');
@@ -1429,8 +1429,8 @@ end;
 
 **Avant :**
 ```pascal
-procedure TFormInscription.ButtonValiderClick(Sender: TObject);
-begin
+procedure TFormInscription.ButtonValiderClick(Sender: TObject);  
+begin  
   // Validation inline complexe
   if (EditNom.Text = '') or (EditPrenom.Text = '') or
      (EditEmail.Text = '') or (not EditEmail.Text.Contains('@')) or
@@ -1481,8 +1481,8 @@ implementation
 uses
   System.SysUtils, System.DateUtils, System.RegularExpressions;
 
-class function TInscriptionValidator.ValiderNomPrenom(const Valeur, Champ: string; out Erreur: string): Boolean;
-begin
+class function TInscriptionValidator.ValiderNomPrenom(const Valeur, Champ: string; out Erreur: string): Boolean;  
+begin  
   if Trim(Valeur) = '' then
   begin
     Erreur := Format('Le %s est obligatoire', [Champ]);
@@ -1498,8 +1498,8 @@ begin
   Result := True;
 end;
 
-class function TInscriptionValidator.ValiderEmail(const Email: string; out Erreur: string): Boolean;
-var
+class function TInscriptionValidator.ValiderEmail(const Email: string; out Erreur: string): Boolean;  
+var  
   EmailRegex: TRegEx;
 begin
   if Trim(Email) = '' then
@@ -1518,8 +1518,8 @@ begin
   Result := True;
 end;
 
-class function TInscriptionValidator.ValiderMotDePasse(const MotDePasse, Confirmation: string; out Erreur: string): Boolean;
-begin
+class function TInscriptionValidator.ValiderMotDePasse(const MotDePasse, Confirmation: string; out Erreur: string): Boolean;  
+begin  
   if Trim(MotDePasse) = '' then
   begin
     Erreur := 'Le mot de passe est obligatoire';
@@ -1541,8 +1541,8 @@ begin
   Result := True;
 end;
 
-class function TInscriptionValidator.ValiderAge(DateNaissance: TDateTime; out Erreur: string): Boolean;
-var
+class function TInscriptionValidator.ValiderAge(DateNaissance: TDateTime; out Erreur: string): Boolean;  
+var  
   Age: Integer;
 begin
   Age := YearsBetween(Now, DateNaissance);
@@ -1562,8 +1562,8 @@ begin
   Result := True;
 end;
 
-class function TInscriptionValidator.ValiderCGU(Accepte: Boolean; out Erreur: string): Boolean;
-begin
+class function TInscriptionValidator.ValiderCGU(Accepte: Boolean; out Erreur: string): Boolean;  
+begin  
   if not Accepte then
   begin
     Erreur := 'Vous devez accepter les conditions générales d''utilisation';
@@ -1573,8 +1573,8 @@ begin
   Result := True;
 end;
 
-class function TInscriptionValidator.Valider(const Data: TInscriptionData; out Erreur: string): Boolean;
-begin
+class function TInscriptionValidator.Valider(const Data: TInscriptionData; out Erreur: string): Boolean;  
+begin  
   // Validation dans un ordre logique
   if not ValiderNomPrenom(Data.Nom, 'nom', Erreur) then
     Exit(False);
@@ -1600,8 +1600,8 @@ end;
 end.
 
 // ========== UI ==========
-procedure TFormInscription.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormInscription.ButtonValiderClick(Sender: TObject);  
+var  
   Data: TInscriptionData;
   Erreur: string;
 begin
@@ -1632,8 +1632,8 @@ end;
 
 **Mauvais :**
 ```pascal
-function SauvegarderClient(Client: TClient): Boolean;
-begin
+function SauvegarderClient(Client: TClient): Boolean;  
+begin  
   Result := True;
   try
     // Sauvegarde...
@@ -1646,8 +1646,8 @@ end;
 
 **Bon :**
 ```pascal
-function SauvegarderClient(Client: TClient; out MessageErreur: string): Boolean;
-begin
+function SauvegarderClient(Client: TClient; out MessageErreur: string): Boolean;  
+begin  
   Result := True;
   try
     // Sauvegarde...
@@ -1692,8 +1692,8 @@ type
   end;
 
 // L'affichage est dans l'UI :
-procedure TFormClient.AfficherClient(Client: TClient);
-begin
+procedure TFormClient.AfficherClient(Client: TClient);  
+begin  
   LabelNom.Caption := Client.Nom;
   LabelEmail.Caption := Client.Email;
 end;
@@ -1703,16 +1703,16 @@ end;
 
 **Mauvais :**
 ```pascal
-function Valider: Boolean;
-begin
+function Valider: Boolean;  
+begin  
   Result := (EditNom.Text <> '') and (EditEmail.Text <> ''); // NON !
 end;
 ```
 
 **Bon :**
 ```pascal
-function Valider(const Nom, Email: string): Boolean;
-begin
+function Valider(const Nom, Email: string): Boolean;  
+begin  
   Result := (Trim(Nom) <> '') and (Trim(Email) <> '');
 end;
 
@@ -1726,14 +1726,14 @@ if Valider(EditNom.Text, EditEmail.Text) then
 **Mauvais :**
 ```pascal
 // Dans FormClient
-procedure ButtonCalculerClick(Sender: TObject);
-begin
+procedure ButtonCalculerClick(Sender: TObject);  
+begin  
   Total := Prix * (1 + TVA/100); // Calcul en dur
 end;
 
 // Dans FormFacture
-procedure ButtonTotalClick(Sender: TObject);
-begin
+procedure ButtonTotalClick(Sender: TObject);  
+begin  
   MontantTTC := MontantHT * (1 + TauxTVA/100); // Même calcul dupliqué
 end;
 ```
@@ -1741,14 +1741,14 @@ end;
 **Bon :**
 ```pascal
 // Une seule fonction réutilisable
-function CalculerTTC(MontantHT, TauxTVA: Currency): Currency;
-begin
+function CalculerTTC(MontantHT, TauxTVA: Currency): Currency;  
+begin  
   Result := MontantHT * (1 + TauxTVA / 100);
 end;
 
 // Utilisée partout
-Total := CalculerTTC(Prix, TVA);
-MontantTTC := CalculerTTC(MontantHT, TauxTVA);
+Total := CalculerTTC(Prix, TVA);  
+MontantTTC := CalculerTTC(MontantHT, TauxTVA);  
 ```
 
 ## Conclusion

@@ -29,8 +29,8 @@ Sans gestion de configuration, vous rencontrez ces problèmes :
 
 **Mauvais exemple :**
 ```pascal
-procedure TFormMain.ConnecterBDD;
-begin
+procedure TFormMain.ConnecterBDD;  
+begin  
   FDConnection.Params.Values['Server'] := 'localhost';
   FDConnection.Params.Values['Database'] := 'mabase';
   FDConnection.Params.Values['User_Name'] := 'root';
@@ -140,8 +140,8 @@ Le format INI est simple, lisible et natif à Windows.
 ```ini
 ; Commentaire
 [Section1]
-Cle1=Valeur1
-Cle2=Valeur2
+Cle1=Valeur1  
+Cle2=Valeur2  
 
 [Section2]
 Cle3=Valeur3
@@ -151,22 +151,22 @@ Cle3=Valeur3
 ```ini
 ; Configuration de l'application
 [Database]
-Server=localhost
-Port=3306
-Database=gestion_clients
-UserName=admin
-Password=encrypted_password
+Server=localhost  
+Port=3306  
+Database=gestion_clients  
+UserName=admin  
+Password=encrypted_password  
 
 [Application]
-Language=fr
-Theme=light
-LogLevel=info
-MaxConnections=10
+Language=fr  
+Theme=light  
+LogLevel=info  
+MaxConnections=10  
 
 [Paths]
-DataFolder=C:\Data
-LogFolder=C:\Logs
-TempFolder=C:\Temp
+DataFolder=C:\Data  
+LogFolder=C:\Logs  
+TempFolder=C:\Temp  
 ```
 
 **Utilisation en Delphi :**
@@ -208,47 +208,47 @@ implementation
 uses
   System.IOUtils;
 
-constructor TAppConfig.Create;
-begin
+constructor TAppConfig.Create;  
+begin  
   inherited;
   // Fichier de config à côté de l'exécutable
   FConfigFile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.ini');
   FIniFile := TIniFile.Create(FConfigFile);
 end;
 
-destructor TAppConfig.Destroy;
-begin
+destructor TAppConfig.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-function TAppConfig.GetDatabaseServer: string;
-begin
+function TAppConfig.GetDatabaseServer: string;  
+begin  
   Result := FIniFile.ReadString('Database', 'Server', 'localhost');
 end;
 
-function TAppConfig.GetDatabasePort: Integer;
-begin
+function TAppConfig.GetDatabasePort: Integer;  
+begin  
   Result := FIniFile.ReadInteger('Database', 'Port', 3306);
 end;
 
-function TAppConfig.GetLanguage: string;
-begin
+function TAppConfig.GetLanguage: string;  
+begin  
   Result := FIniFile.ReadString('Application', 'Language', 'fr');
 end;
 
-function TAppConfig.GetTheme: string;
-begin
+function TAppConfig.GetTheme: string;  
+begin  
   Result := FIniFile.ReadString('Application', 'Theme', 'light');
 end;
 
-procedure TAppConfig.SetLanguage(const Value: string);
-begin
+procedure TAppConfig.SetLanguage(const Value: string);  
+begin  
   FIniFile.WriteString('Application', 'Language', Value);
 end;
 
-procedure TAppConfig.SetTheme(const Value: string);
-begin
+procedure TAppConfig.SetTheme(const Value: string);  
+begin  
   FIniFile.WriteString('Application', 'Theme', Value);
 end;
 
@@ -353,21 +353,21 @@ type
 
 implementation
 
-constructor TAppConfig.Create;
-begin
+constructor TAppConfig.Create;  
+begin  
   inherited;
   FConfigFile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.json');
   LoadConfig;
 end;
 
-destructor TAppConfig.Destroy;
-begin
+destructor TAppConfig.Destroy;  
+begin  
   FJsonObject.Free;
   inherited;
 end;
 
-procedure TAppConfig.LoadConfig;
-var
+procedure TAppConfig.LoadConfig;  
+var  
   JsonString: string;
 begin
   if TFile.Exists(FConfigFile) then
@@ -379,16 +379,16 @@ begin
     FJsonObject := TJSONObject.Create;
 end;
 
-procedure TAppConfig.SaveConfig;
-var
+procedure TAppConfig.SaveConfig;  
+var  
   JsonString: string;
 begin
   JsonString := FJsonObject.Format;
   TFile.WriteAllText(FConfigFile, JsonString, TEncoding.UTF8);
 end;
 
-function TAppConfig.GetDatabaseConfig: TDatabaseConfig;
-var
+function TAppConfig.GetDatabaseConfig: TDatabaseConfig;  
+var  
   DbObject: TJSONObject;
 begin
   DbObject := FJsonObject.GetValue<TJSONObject>('database');
@@ -412,8 +412,8 @@ begin
   end;
 end;
 
-function TAppConfig.GetLanguage: string;
-var
+function TAppConfig.GetLanguage: string;  
+var  
   AppObject: TJSONObject;
 begin
   AppObject := FJsonObject.GetValue<TJSONObject>('application');
@@ -423,8 +423,8 @@ begin
     Result := 'fr';
 end;
 
-procedure TAppConfig.SetLanguage(const Value: string);
-var
+procedure TAppConfig.SetLanguage(const Value: string);  
+var  
   AppObject: TJSONObject;
 begin
   AppObject := FJsonObject.GetValue<TJSONObject>('application');
@@ -439,8 +439,8 @@ begin
   SaveConfig;
 end;
 
-function TAppConfig.GetString(const Path: string; const Default: string): string;
-var
+function TAppConfig.GetString(const Path: string; const Default: string): string;  
+var  
   Parts: TArray<string>;
   Current: TJSONValue;
   I: Integer;
@@ -464,8 +464,8 @@ begin
     Result := TJSONString(Current).Value;
 end;
 
-function TAppConfig.GetInteger(const Path: string; const Default: Integer): Integer;
-var
+function TAppConfig.GetInteger(const Path: string; const Default: Integer): Integer;  
+var  
   Value: string;
 begin
   Value := GetString(Path);
@@ -473,8 +473,8 @@ begin
     Result := Default;
 end;
 
-function TAppConfig.GetBoolean(const Path: string; const Default: Boolean): Boolean;
-var
+function TAppConfig.GetBoolean(const Path: string; const Default: Boolean): Boolean;  
+var  
   Value: string;
 begin
   Value := GetString(Path).ToLower;
@@ -486,8 +486,8 @@ begin
     Result := Default;
 end;
 
-procedure TAppConfig.SetString(const Path: string; const Value: string);
-var
+procedure TAppConfig.SetString(const Path: string; const Value: string);  
+var  
   Parts: TArray<string>;
   Current: TJSONObject;
   I: Integer;
@@ -594,21 +594,21 @@ type
 
 implementation
 
-constructor TAppConfig.Create;
-begin
+constructor TAppConfig.Create;  
+begin  
   inherited;
   FRegistry := TRegistry.Create;
   FRegistry.RootKey := HKEY_CURRENT_USER;
 end;
 
-destructor TAppConfig.Destroy;
-begin
+destructor TAppConfig.Destroy;  
+begin  
   FRegistry.Free;
   inherited;
 end;
 
-function TAppConfig.GetLanguage: string;
-begin
+function TAppConfig.GetLanguage: string;  
+begin  
   Result := 'fr'; // Valeur par défaut
 
   if FRegistry.OpenKeyReadOnly(APP_KEY) then
@@ -620,8 +620,8 @@ begin
   end;
 end;
 
-procedure TAppConfig.SetLanguage(const Value: string);
-begin
+procedure TAppConfig.SetLanguage(const Value: string);  
+begin  
   if FRegistry.OpenKey(APP_KEY, True) then
   try
     FRegistry.WriteString('Language', Value);
@@ -630,8 +630,8 @@ begin
   end;
 end;
 
-function TAppConfig.GetWindowPosition(out Left, Top, Width, Height: Integer): Boolean;
-begin
+function TAppConfig.GetWindowPosition(out Left, Top, Width, Height: Integer): Boolean;  
+begin  
   Result := False;
 
   if FRegistry.OpenKeyReadOnly(APP_KEY + '\Window') then
@@ -652,8 +652,8 @@ begin
   end;
 end;
 
-procedure TAppConfig.SetWindowPosition(Left, Top, Width, Height: Integer);
-begin
+procedure TAppConfig.SetWindowPosition(Left, Top, Width, Height: Integer);  
+begin  
   if FRegistry.OpenKey(APP_KEY + '\Window', True) then
   try
     FRegistry.WriteInteger('Left', Left);
@@ -687,8 +687,8 @@ Le choix de l'emplacement dépend du type de configuration.
 Pour la configuration d'application partagée par tous les utilisateurs.
 
 ```pascal
-function GetAppConfigPath: string;
-begin
+function GetAppConfigPath: string;  
+begin  
   Result := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.ini');
 end;
 ```
@@ -707,8 +707,8 @@ end;
 Windows : `C:\ProgramData\MonApplication\`
 
 ```pascal
-function GetAppDataConfigPath: string;
-begin
+function GetAppDataConfigPath: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetPublicPath,  // C:\ProgramData
     'MonApplication',
@@ -730,8 +730,8 @@ end;
 Windows : `C:\Users\[Utilisateur]\AppData\Roaming\MonApplication\`
 
 ```pascal
-function GetUserConfigPath: string;
-begin
+function GetUserConfigPath: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetHomePath,  // C:\Users\[User]
     'AppData',
@@ -755,8 +755,8 @@ end;
 Windows : `C:\Users\[Utilisateur]\AppData\Local\MonApplication\`
 
 ```pascal
-function GetLocalConfigPath: string;
-begin
+function GetLocalConfigPath: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetHomePath,
     'AppData',
@@ -799,18 +799,18 @@ type
 
 implementation
 
-class constructor TAppPaths.Create;
-begin
+class constructor TAppPaths.Create;  
+begin  
   FAppName := 'MonApplication'; // Peut être configuré
 end;
 
-class function TAppPaths.GetAppConfigFile: string;
-begin
+class function TAppPaths.GetAppConfigFile: string;  
+begin  
   Result := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.ini');
 end;
 
-class function TAppPaths.GetUserConfigFile: string;
-begin
+class function TAppPaths.GetUserConfigFile: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetHomePath,
     'AppData',
@@ -821,8 +821,8 @@ begin
   EnsureFolderExists(TPath.GetDirectoryName(Result));
 end;
 
-class function TAppPaths.GetDataFolder: string;
-begin
+class function TAppPaths.GetDataFolder: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetPublicPath,
     FAppName,
@@ -831,8 +831,8 @@ begin
   EnsureFolderExists(Result);
 end;
 
-class function TAppPaths.GetLogFolder: string;
-begin
+class function TAppPaths.GetLogFolder: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetHomePath,
     'AppData',
@@ -843,8 +843,8 @@ begin
   EnsureFolderExists(Result);
 end;
 
-class function TAppPaths.GetTempFolder: string;
-begin
+class function TAppPaths.GetTempFolder: string;  
+begin  
   Result := TPath.Combine(
     TPath.GetTempPath,
     FAppName
@@ -852,8 +852,8 @@ begin
   EnsureFolderExists(Result);
 end;
 
-class procedure TAppPaths.EnsureFolderExists(const Path: string);
-begin
+class procedure TAppPaths.EnsureFolderExists(const Path: string);  
+begin  
   if not TDirectory.Exists(Path) then
     TDirectory.CreateDirectory(Path);
 end;
@@ -897,15 +897,15 @@ implementation
 uses
   System.SysUtils, System.IOUtils;
 
-constructor TEnvironmentConfig.Create;
-begin
+constructor TEnvironmentConfig.Create;  
+begin  
   inherited;
   DetermineEnvironment;
   FConfigFile := GetConfigFileName;
 end;
 
-procedure TEnvironmentConfig.DetermineEnvironment;
-var
+procedure TEnvironmentConfig.DetermineEnvironment;  
+var  
   EnvVar: string;
 begin
   // Méthode 1 : Variable d'environnement
@@ -927,8 +927,8 @@ begin
   end;
 end;
 
-function TEnvironmentConfig.GetConfigFileName: string;
-var
+function TEnvironmentConfig.GetConfigFileName: string;  
+var  
   BasePath: string;
 begin
   BasePath := ExtractFilePath(ParamStr(0));
@@ -969,21 +969,21 @@ Un seul fichier avec des sections par environnement :
 
 ```ini
 [Development.Database]
-Server=localhost
-Database=test_db
+Server=localhost  
+Database=test_db  
 
 [Testing.Database]
-Server=test-server
-Database=test_db
+Server=test-server  
+Database=test_db  
 
 [Production.Database]
-Server=prod-server.company.com
-Database=production_db
+Server=prod-server.company.com  
+Database=production_db  
 ```
 
 ```pascal
-function GetConfigSection(const BaseSection: string): string;
-var
+function GetConfigSection(const BaseSection: string): string;  
+var  
   Env: string;
 begin
   Env := GetEnvironmentVariable('APP_ENV');
@@ -1030,21 +1030,21 @@ type
 
 implementation
 
-constructor THierarchicalConfig.Create;
-begin
+constructor THierarchicalConfig.Create;  
+begin  
   inherited;
   LoadConfigs;
 end;
 
-destructor THierarchicalConfig.Destroy;
-begin
+destructor THierarchicalConfig.Destroy;  
+begin  
   FDefaultConfig.Free;
   FLocalConfig.Free;
   inherited;
 end;
 
-procedure THierarchicalConfig.LoadConfigs;
-var
+procedure THierarchicalConfig.LoadConfigs;  
+var  
   DefaultFile, LocalFile: string;
   JsonString: string;
 begin
@@ -1070,8 +1070,8 @@ begin
     FLocalConfig := TJSONObject.Create;
 end;
 
-function THierarchicalConfig.GetValue(const Path: string; const Default: string): string;
-var
+function THierarchicalConfig.GetValue(const Path: string; const Default: string): string;  
+var  
   Parts: TArray<string>;
   Current: TJSONValue;
   I: Integer;
@@ -1115,13 +1115,13 @@ begin
     Result := TJSONString(Current).Value;
 end;
 
-function THierarchicalConfig.GetString(const Path: string; const Default: string): string;
-begin
+function THierarchicalConfig.GetString(const Path: string; const Default: string): string;  
+begin  
   Result := GetValue(Path, Default);
 end;
 
-function THierarchicalConfig.GetInteger(const Path: string; const Default: Integer): Integer;
-var
+function THierarchicalConfig.GetInteger(const Path: string; const Default: Integer): Integer;  
+var  
   Value: string;
 begin
   Value := GetValue(Path, IntToStr(Default));
@@ -1129,8 +1129,8 @@ begin
     Result := Default;
 end;
 
-function THierarchicalConfig.GetBoolean(const Path: string; const Default: Boolean): Boolean;
-var
+function THierarchicalConfig.GetBoolean(const Path: string; const Default: Boolean): Boolean;  
+var  
   Value: string;
 begin
   Value := GetValue(Path, BoolToStr(Default, True)).ToLower;
@@ -1171,8 +1171,8 @@ implementation
 uses
   System.Hash;
 
-class function TConfigSecurity.Encrypt(const PlainText: string): string;
-var
+class function TConfigSecurity.Encrypt(const PlainText: string): string;  
+var  
   Bytes: TBytes;
   Key: Byte;
   I: Integer;
@@ -1189,8 +1189,8 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
 end;
 
-class function TConfigSecurity.Decrypt(const CipherText: string): string;
-var
+class function TConfigSecurity.Decrypt(const CipherText: string): string;  
+var  
   Bytes: TBytes;
   Key: Byte;
   I: Integer;
@@ -1210,12 +1210,12 @@ end.
 **Utilisation :**
 ```pascal
 // Lors de l'enregistrement
-EncryptedPassword := TConfigSecurity.Encrypt('motdepasse123');
-IniFile.WriteString('Database', 'Password', EncryptedPassword);
+EncryptedPassword := TConfigSecurity.Encrypt('motdepasse123');  
+IniFile.WriteString('Database', 'Password', EncryptedPassword);  
 
 // Lors de la lecture
-EncryptedPassword := IniFile.ReadString('Database', 'Password', '');
-Password := TConfigSecurity.Decrypt(EncryptedPassword);
+EncryptedPassword := IniFile.ReadString('Database', 'Password', '');  
+Password := TConfigSecurity.Decrypt(EncryptedPassword);  
 ```
 
 ### Technique 2 : Utiliser Windows DPAPI
@@ -1242,8 +1242,8 @@ implementation
 uses
   System.NetEncoding;
 
-class function TDPAPIConfig.ProtectString(const PlainText: string): TBytes;
-var
+class function TDPAPIConfig.ProtectString(const PlainText: string): TBytes;  
+var  
   DataIn, DataOut: DATA_BLOB;
   PlainBytes: TBytes;
 begin
@@ -1262,8 +1262,8 @@ begin
     raise Exception.Create('Erreur de chiffrement');
 end;
 
-class function TDPAPIConfig.UnprotectString(const ProtectedData: TBytes): string;
-var
+class function TDPAPIConfig.UnprotectString(const ProtectedData: TBytes): string;  
+var  
   DataIn, DataOut: DATA_BLOB;
   ResultBytes: TBytes;
 begin
@@ -1289,8 +1289,8 @@ end.
 Pour les secrets en production, utilisez des variables d'environnement plutôt que des fichiers :
 
 ```pascal
-function GetDatabasePassword: string;
-begin
+function GetDatabasePassword: string;  
+begin  
   // D'abord chercher dans les variables d'environnement
   Result := GetEnvironmentVariable('DB_PASSWORD');
 
@@ -1322,11 +1322,11 @@ end;
 ; config.template.ini - Copiez ce fichier en config.local.ini et configurez vos valeurs
 
 [Database]
-Server=localhost
-Port=3306
-Database=votre_base
-UserName=votre_utilisateur
-Password=CHANGEZ_MOI
+Server=localhost  
+Port=3306  
+Database=votre_base  
+UserName=votre_utilisateur  
+Password=CHANGEZ_MOI  
 ```
 
 ## Classe de configuration centralisée
@@ -1403,16 +1403,16 @@ uses
 
 { TDatabaseConfig }
 
-function TDatabaseConfig.GetConnectionString: string;
-begin
+function TDatabaseConfig.GetConnectionString: string;  
+begin  
   Result := Format('Server=%s;Port=%d;Database=%s;User=%s;Password=%s',
     [Server, Port, Database, Username, Password]);
 end;
 
 { TPathsConfig }
 
-procedure TPathsConfig.EnsureFoldersExist;
-begin
+procedure TPathsConfig.EnsureFoldersExist;  
+begin  
   if not TDirectory.Exists(DataFolder) then
     TDirectory.CreateDirectory(DataFolder);
   if not TDirectory.Exists(LogFolder) then
@@ -1423,13 +1423,13 @@ end;
 
 { TAppConfiguration }
 
-constructor TAppConfiguration.Create;
-begin
+constructor TAppConfiguration.Create;  
+begin  
   Create(TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.ini'));
 end;
 
-constructor TAppConfiguration.Create(const ConfigFile: string);
-begin
+constructor TAppConfiguration.Create(const ConfigFile: string);  
+begin  
   inherited Create;
   FConfigFile := ConfigFile;
 
@@ -1440,14 +1440,14 @@ begin
   LoadConfiguration;
 end;
 
-destructor TAppConfiguration.Destroy;
-begin
+destructor TAppConfiguration.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-procedure TAppConfiguration.CreateDefaultConfig;
-var
+procedure TAppConfiguration.CreateDefaultConfig;  
+var  
   DefaultIni: TIniFile;
 begin
   DefaultIni := TIniFile.Create(FConfigFile);
@@ -1477,16 +1477,16 @@ begin
   end;
 end;
 
-procedure TAppConfiguration.LoadConfiguration;
-begin
+procedure TAppConfiguration.LoadConfiguration;  
+begin  
   LoadDatabaseConfig;
   LoadApplicationConfig;
   LoadPathsConfig;
   FPaths.EnsureFoldersExist;
 end;
 
-procedure TAppConfiguration.LoadDatabaseConfig;
-var
+procedure TAppConfiguration.LoadDatabaseConfig;  
+var  
   EncryptedPassword: string;
 begin
   FDatabase.Server := FIniFile.ReadString('Database', 'Server', 'localhost');
@@ -1501,16 +1501,16 @@ begin
     FDatabase.Password := '';
 end;
 
-procedure TAppConfiguration.LoadApplicationConfig;
-begin
+procedure TAppConfiguration.LoadApplicationConfig;  
+begin  
   FApplication.Language := FIniFile.ReadString('Application', 'Language', 'fr');
   FApplication.Theme := FIniFile.ReadString('Application', 'Theme', 'light');
   FApplication.LogLevel := FIniFile.ReadString('Application', 'LogLevel', 'info');
   FApplication.MaxConnections := FIniFile.ReadInteger('Application', 'MaxConnections', 10);
 end;
 
-procedure TAppConfiguration.LoadPathsConfig;
-begin
+procedure TAppConfiguration.LoadPathsConfig;  
+begin  
   FPaths.DataFolder := FIniFile.ReadString('Paths', 'DataFolder',
     TPath.Combine(ExtractFilePath(ParamStr(0)), 'Data'));
   FPaths.LogFolder := FIniFile.ReadString('Paths', 'LogFolder',
@@ -1519,15 +1519,15 @@ begin
     TPath.Combine(TPath.GetTempPath, 'MyApp'));
 end;
 
-procedure TAppConfiguration.Reload;
-begin
+procedure TAppConfiguration.Reload;  
+begin  
   FIniFile.Free;
   FIniFile := TIniFile.Create(FConfigFile);
   LoadConfiguration;
 end;
 
-procedure TAppConfiguration.Save;
-begin
+procedure TAppConfiguration.Save;  
+begin  
   // Sauvegarder la base de données
   FIniFile.WriteString('Database', 'Server', FDatabase.Server);
   FIniFile.WriteInteger('Database', 'Port', FDatabase.Port);
@@ -1564,8 +1564,8 @@ uses
   AppConfiguration;
 
 // Connexion à la base de données
-procedure TDataModule.ConnecterBDD;
-begin
+procedure TDataModule.ConnecterBDD;  
+begin  
   FDConnection.Params.Values['Server'] := AppConfig.Database.Server;
   FDConnection.Params.Values['Port'] := IntToStr(AppConfig.Database.Port);
   FDConnection.Params.Values['Database'] := AppConfig.Database.Database;
@@ -1575,16 +1575,16 @@ begin
 end;
 
 // Changement de langue
-procedure TFormMain.MenuFrancaisClick(Sender: TObject);
-begin
+procedure TFormMain.MenuFrancaisClick(Sender: TObject);  
+begin  
   AppConfig.Application.Language := 'fr';
   AppConfig.Save;
   // Recharger l'interface...
 end;
 
 // Écriture de logs
-procedure WriteLog(const Message: string);
-var
+procedure WriteLog(const Message: string);  
+var  
   LogFile: string;
 begin
   LogFile := TPath.Combine(AppConfig.Paths.LogFolder,
@@ -1639,8 +1639,8 @@ var
 
 implementation
 
-constructor TUserPreferences.Create;
-begin
+constructor TUserPreferences.Create;  
+begin  
   inherited;
   FConfigFile := TPath.Combine(
     TPath.GetHomePath,
@@ -1656,29 +1656,29 @@ begin
   FIniFile := TIniFile.Create(FConfigFile);
 end;
 
-destructor TUserPreferences.Destroy;
-begin
+destructor TUserPreferences.Destroy;  
+begin  
   FIniFile.Free;
   inherited;
 end;
 
-function TUserPreferences.GetLanguage: string;
-begin
+function TUserPreferences.GetLanguage: string;  
+begin  
   Result := FIniFile.ReadString('UI', 'Language', 'fr');
 end;
 
-procedure TUserPreferences.SetLanguage(const Value: string);
-begin
+procedure TUserPreferences.SetLanguage(const Value: string);  
+begin  
   FIniFile.WriteString('UI', 'Language', Value);
 end;
 
-function TUserPreferences.GetTheme: string;
-begin
+function TUserPreferences.GetTheme: string;  
+begin  
   Result := FIniFile.ReadString('UI', 'Theme', 'light');
 end;
 
-procedure TUserPreferences.SetTheme(const Value: string);
-begin
+procedure TUserPreferences.SetTheme(const Value: string);  
+begin  
   FIniFile.WriteString('UI', 'Theme', Value);
 end;
 
@@ -1711,8 +1711,8 @@ begin
   end;
 end;
 
-procedure TUserPreferences.SaveGridColumns(const GridName: string; const Columns: TArray<Integer>);
-var
+procedure TUserPreferences.SaveGridColumns(const GridName: string; const Columns: TArray<Integer>);  
+var  
   I: Integer;
   Section: string;
 begin
@@ -1723,8 +1723,8 @@ begin
     FIniFile.WriteInteger(Section, 'Col' + IntToStr(I), Columns[I]);
 end;
 
-function TUserPreferences.LoadGridColumns(const GridName: string): TArray<Integer>;
-var
+function TUserPreferences.LoadGridColumns(const GridName: string): TArray<Integer>;  
+var  
   Section: string;
   Keys: TStringList;
   I: Integer;
@@ -1742,8 +1742,8 @@ begin
   end;
 end;
 
-procedure TUserPreferences.AddRecentFile(const FileName: string);
-var
+procedure TUserPreferences.AddRecentFile(const FileName: string);  
+var  
   RecentFiles: TArray<string>;
   I, Count: Integer;
 begin
@@ -1776,8 +1776,8 @@ begin
     FIniFile.WriteString('RecentFiles', 'File' + IntToStr(I), RecentFiles[I]);
 end;
 
-function TUserPreferences.GetRecentFiles: TArray<string>;
-var
+function TUserPreferences.GetRecentFiles: TArray<string>;  
+var  
   I: Integer;
   FileName: string;
   Files: TStringList;
@@ -1814,14 +1814,14 @@ end.
 
 ```pascal
 // Sauvegarder la position de la fenêtre
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   UserPrefs.SaveWindowPosition('Main', Left, Top, Width, Height);
 end;
 
 // Restaurer la position
-procedure TFormMain.FormCreate(Sender: TObject);
-var
+procedure TFormMain.FormCreate(Sender: TObject);  
+var  
   L, T, W, H: Integer;
 begin
   if UserPrefs.LoadWindowPosition('Main', L, T, W, H) then
@@ -1834,8 +1834,8 @@ begin
 end;
 
 // Ajouter un fichier récent
-procedure TFormMain.OpenFile(const FileName: string);
-begin
+procedure TFormMain.OpenFile(const FileName: string);  
+begin  
   // Ouvrir le fichier...
   UserPrefs.AddRecentFile(FileName);
   UpdateRecentFilesMenu;
@@ -1866,8 +1866,8 @@ type
 
 implementation
 
-class procedure TConfigValidator.AddError(var Errors: TArray<string>; const Error: string);
-begin
+class procedure TConfigValidator.AddError(var Errors: TArray<string>; const Error: string);  
+begin  
   SetLength(Errors, Length(Errors) + 1);
   Errors[High(Errors)] := Error;
 end;
@@ -1972,8 +1972,8 @@ end.
 Toujours fournir des valeurs par défaut raisonnables :
 
 ```pascal
-Language := Config.GetString('Application.Language', 'fr'); // Défaut : français
-Timeout := Config.GetInteger('Network.Timeout', 30); // Défaut : 30 secondes
+Language := Config.GetString('Application.Language', 'fr'); // Défaut : français  
+Timeout := Config.GetInteger('Network.Timeout', 30); // Défaut : 30 secondes  
 ```
 
 ### 2. Documentation
@@ -2017,9 +2017,9 @@ Ne versionnez pas les configurations locales :
 
 ```gitignore
 # Fichiers de configuration
-config.ini
-config.local.ini
-config.prod.ini
+config.ini  
+config.local.ini  
+config.prod.ini  
 *.local.json
 
 # Préférences utilisateur
@@ -2054,25 +2054,25 @@ implementation
 const
   CURRENT_VERSION = 3;
 
-class function TConfigMigration.GetConfigVersion(IniFile: TIniFile): Integer;
-begin
+class function TConfigMigration.GetConfigVersion(IniFile: TIniFile): Integer;  
+begin  
   Result := IniFile.ReadInteger('Meta', 'Version', 1);
 end;
 
-class procedure TConfigMigration.SetConfigVersion(IniFile: TIniFile; Version: Integer);
-begin
+class procedure TConfigMigration.SetConfigVersion(IniFile: TIniFile; Version: Integer);  
+begin  
   IniFile.WriteInteger('Meta', 'Version', Version);
 end;
 
-class procedure TConfigMigration.MigrateFrom1To2(IniFile: TIniFile);
-begin
+class procedure TConfigMigration.MigrateFrom1To2(IniFile: TIniFile);  
+begin  
   // Version 1 → 2 : Ajout du timeout
   if not IniFile.ValueExists('Network', 'Timeout') then
     IniFile.WriteInteger('Network', 'Timeout', 30);
 end;
 
-class procedure TConfigMigration.MigrateFrom2To3(IniFile: TIniFile);
-begin
+class procedure TConfigMigration.MigrateFrom2To3(IniFile: TIniFile);  
+begin  
   // Version 2 → 3 : Renommage de la section
   if IniFile.SectionExists('App') then
   begin
@@ -2084,8 +2084,8 @@ begin
   end;
 end;
 
-class procedure TConfigMigration.Migrate(const ConfigFile: string);
-var
+class procedure TConfigMigration.Migrate(const ConfigFile: string);  
+var  
   IniFile: TIniFile;
   CurrentVersion: Integer;
 begin

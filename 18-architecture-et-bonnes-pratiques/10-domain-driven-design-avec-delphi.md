@@ -123,8 +123,8 @@ type
 
 ```pascal
 // ❌ Langage technique
-procedure ProcessData(ID: Integer);
-var
+procedure ProcessData(ID: Integer);  
+var  
   Record: TDataRecord;
 begin
   Record := LoadRecord(ID);
@@ -133,8 +133,8 @@ begin
 end;
 
 // ✅ Langage métier (Ubiquitous Language)
-procedure ApproveInvoice(InvoiceID: TInvoiceID);
-var
+procedure ApproveInvoice(InvoiceID: TInvoiceID);  
+var  
   Invoice: TInvoice;
 begin
   Invoice := FInvoiceRepository.GetByID(InvoiceID);
@@ -244,8 +244,8 @@ type
 
 implementation
 
-constructor TCustomer.Create(ID: TCustomerID; const Name, Email: string);
-begin
+constructor TCustomer.Create(ID: TCustomerID; const Name, Email: string);  
+begin  
   inherited Create;
   FID := ID;
   FName := Name;
@@ -253,8 +253,8 @@ begin
   FCreatedAt := Now;
 end;
 
-function TCustomer.Equals(Other: TCustomer): Boolean;
-begin
+function TCustomer.Equals(Other: TCustomer): Boolean;  
+begin  
   // Deux clients sont égaux s'ils ont le même ID
   // Même si leur nom ou email a changé
   Result := (Other <> nil) and (FID.Value = Other.ID.Value);
@@ -308,32 +308,32 @@ type
 
 implementation
 
-constructor TEmailAddress.Create(const Value: string);
-begin
+constructor TEmailAddress.Create(const Value: string);  
+begin  
   if not IsValidEmail(Value) then
     raise Exception.Create('Invalid email address');
   FValue := Value;
 end;
 
-class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;
-begin
+class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;  
+begin  
   Result := IsValidEmail(Value);
   if Result then
     Email.FValue := Value;
 end;
 
-function TEmailAddress.IsValid: Boolean;
-begin
+function TEmailAddress.IsValid: Boolean;  
+begin  
   Result := FValue.Contains('@') and (Length(FValue) > 3);
 end;
 
-function TEmailAddress.GetValue: string;
-begin
+function TEmailAddress.GetValue: string;  
+begin  
   Result := FValue;
 end;
 
-class operator TEmailAddress.Equal(const A, B: TEmailAddress): Boolean;
-begin
+class operator TEmailAddress.Equal(const A, B: TEmailAddress): Boolean;  
+begin  
   Result := A.Value = B.Value;
 end;
 ```
@@ -469,8 +469,8 @@ type
 
 implementation
 
-constructor TOrder.Create(ID: TOrderID; CustomerID: TCustomerID);
-begin
+constructor TOrder.Create(ID: TOrderID; CustomerID: TCustomerID);  
+begin  
   inherited Create;
   FID := ID;
   FCustomerID := CustomerID;
@@ -479,14 +479,14 @@ begin
   FTotal := 0;
 end;
 
-destructor TOrder.Destroy;
-begin
+destructor TOrder.Destroy;  
+begin  
   FLines.Free;
   inherited;
 end;
 
-procedure TOrder.AddLine(ProductID: TProductID; Quantity: Integer; Price: Currency);
-var
+procedure TOrder.AddLine(ProductID: TProductID; Quantity: Integer; Price: Currency);  
+var  
   Line: TOrderLine;
 begin
   // Validation
@@ -504,8 +504,8 @@ begin
   RecalculateTotal;
 end;
 
-procedure TOrder.UpdateLineQuantity(ProductID: TProductID; NewQuantity: Integer);
-var
+procedure TOrder.UpdateLineQuantity(ProductID: TProductID; NewQuantity: Integer);  
+var  
   Line: TOrderLine;
 begin
   if FStatus <> osCreated then
@@ -529,8 +529,8 @@ begin
   RecalculateTotal;
 end;
 
-procedure TOrder.RemoveLine(ProductID: TProductID);
-var
+procedure TOrder.RemoveLine(ProductID: TProductID);  
+var  
   I: Integer;
 begin
   if FStatus <> osCreated then
@@ -548,8 +548,8 @@ begin
   RecalculateTotal;
 end;
 
-procedure TOrder.RecalculateTotal;
-var
+procedure TOrder.RecalculateTotal;  
+var  
   Line: TOrderLine;
 begin
   FTotal := 0;
@@ -557,13 +557,13 @@ begin
     FTotal := FTotal + Line.GetTotal;
 end;
 
-function TOrder.ValidateOrderLine(ProductID: TProductID; Quantity: Integer): Boolean;
-begin
+function TOrder.ValidateOrderLine(ProductID: TProductID; Quantity: Integer): Boolean;  
+begin  
   Result := (Quantity > 0) and (Quantity <= 1000);  // Règles métier
 end;
 
-procedure TOrder.Submit;
-begin
+procedure TOrder.Submit;  
+begin  
   if FStatus <> osCreated then
     raise Exception.Create('Order already submitted');
 
@@ -573,8 +573,8 @@ begin
   FStatus := osSubmitted;
 end;
 
-procedure TOrder.Cancel;
-begin
+procedure TOrder.Cancel;  
+begin  
   if FStatus in [osShipped, osDelivered] then
     raise Exception.Create('Cannot cancel shipped/delivered order');
 
@@ -651,14 +651,14 @@ type
 
 implementation
 
-constructor TOrderRepository.Create(Connection: TFDConnection);
-begin
+constructor TOrderRepository.Create(Connection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := Connection;
 end;
 
-function TOrderRepository.GetByID(ID: TOrderID): TOrder;
-var
+function TOrderRepository.GetByID(ID: TOrderID): TOrder;  
+var  
   Query: TFDQuery;
 begin
   Result := nil;
@@ -676,8 +676,8 @@ begin
   end;
 end;
 
-function TOrderRepository.GetByCustomer(CustomerID: TCustomerID): TList<TOrder>;
-var
+function TOrderRepository.GetByCustomer(CustomerID: TCustomerID): TList<TOrder>;  
+var  
   Query: TFDQuery;
   Order: TOrder;
 begin
@@ -700,8 +700,8 @@ begin
   end;
 end;
 
-procedure TOrderRepository.Save(Order: TOrder);
-var
+procedure TOrderRepository.Save(Order: TOrder);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -737,8 +737,8 @@ begin
   end;
 end;
 
-procedure TOrderRepository.Delete(Order: TOrder);
-var
+procedure TOrderRepository.Delete(Order: TOrder);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -752,8 +752,8 @@ begin
   end;
 end;
 
-function TOrderRepository.MapDataSetToOrder(DS: TDataSet): TOrder;
-var
+function TOrderRepository.MapDataSetToOrder(DS: TDataSet): TOrder;  
+var  
   OrderID: TOrderID;
   CustomerID: TCustomerID;
 begin
@@ -765,8 +765,8 @@ begin
   // Charger les lignes...
 end;
 
-procedure TOrderRepository.MapOrderToDataSet(Order: TOrder; DS: TDataSet);
-begin
+procedure TOrderRepository.MapOrderToDataSet(Order: TOrder; DS: TDataSet);  
+begin  
   DS.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
   DS.ParamByName('status').AsInteger := Ord(Order.Status);
   DS.ParamByName('total').AsCurrency := Order.Total;
@@ -911,14 +911,14 @@ type
 
 implementation
 
-constructor TDomainEvent.Create;
-begin
+constructor TDomainEvent.Create;  
+begin  
   inherited Create;
   FOccurredAt := Now;
 end;
 
-constructor TOrderPlacedEvent.Create(OrderID: TOrderID; CustomerID: TCustomerID; TotalAmount: Currency);
-begin
+constructor TOrderPlacedEvent.Create(OrderID: TOrderID; CustomerID: TCustomerID; TotalAmount: Currency);  
+begin  
   inherited Create;
   FOrderID := OrderID;
   FCustomerID := CustomerID;
@@ -944,8 +944,8 @@ type
 
 implementation
 
-procedure TOrder.Submit;
-var
+procedure TOrder.Submit;  
+var  
   Event: TOrderPlacedEvent;
 begin
   if FStatus <> osCreated then
@@ -958,13 +958,13 @@ begin
   FDomainEvents.Add(Event);
 end;
 
-function TOrder.GetDomainEvents: TArray<TDomainEvent>;
-begin
+function TOrder.GetDomainEvents: TArray<TDomainEvent>;  
+begin  
   Result := FDomainEvents.ToArray;
 end;
 
-procedure TOrder.ClearDomainEvents;
-begin
+procedure TOrder.ClearDomainEvents;  
+begin  
   FDomainEvents.Clear;
 end;
 ```
@@ -984,8 +984,8 @@ type
 
 implementation
 
-procedure TOrderPlacedEventHandler.Handle(Event: TOrderPlacedEvent);
-begin
+procedure TOrderPlacedEventHandler.Handle(Event: TOrderPlacedEvent);  
+begin  
   // Envoyer email de confirmation
   WriteLn('Sending confirmation email for order: ', GUIDToString(Event.OrderID.Value));
 
@@ -1070,8 +1070,8 @@ uses
 
 { TGuestName }
 
-constructor TGuestName.Create(const FirstName, LastName: string);
-begin
+constructor TGuestName.Create(const FirstName, LastName: string);  
+begin  
   if Trim(FirstName) = '' then
     raise Exception.Create('First name is required');
   if Trim(LastName) = '' then
@@ -1081,21 +1081,21 @@ begin
   FLastName := Trim(LastName);
 end;
 
-function TGuestName.GetFullName: string;
-begin
+function TGuestName.GetFullName: string;  
+begin  
   Result := FFirstName + ' ' + FLastName;
 end;
 
 { TEmailAddress }
 
-constructor TEmailAddress.Create(const Value: string);
-begin
+constructor TEmailAddress.Create(const Value: string);  
+begin  
   if not TryCreate(Value, Self) then
     raise Exception.Create('Invalid email address');
 end;
 
-class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;
-begin
+class function TEmailAddress.TryCreate(const Value: string; out Email: TEmailAddress): Boolean;  
+begin  
   Result := (Trim(Value) <> '') and Value.Contains('@');
   if Result then
     Email.FValue := LowerCase(Trim(Value));
@@ -1103,8 +1103,8 @@ end;
 
 { TDateRange }
 
-constructor TDateRange.Create(CheckIn, CheckOut: TDate);
-begin
+constructor TDateRange.Create(CheckIn, CheckOut: TDate);  
+begin  
   if CheckIn >= CheckOut then
     raise Exception.Create('Check-out must be after check-in');
   if CheckIn < Date then
@@ -1114,40 +1114,40 @@ begin
   FCheckOut := CheckOut;
 end;
 
-function TDateRange.GetNights: Integer;
-begin
+function TDateRange.GetNights: Integer;  
+begin  
   Result := DaysBetween(FCheckOut, FCheckIn);
 end;
 
-function TDateRange.Contains(Date: TDate): Boolean;
-begin
+function TDateRange.Contains(Date: TDate): Boolean;  
+begin  
   Result := (Date >= FCheckIn) and (Date < FCheckOut);
 end;
 
-function TDateRange.Overlaps(Other: TDateRange): Boolean;
-begin
+function TDateRange.Overlaps(Other: TDateRange): Boolean;  
+begin  
   Result := (FCheckIn < Other.CheckOut) and (FCheckOut > Other.CheckIn);
 end;
 
 { TMoney }
 
-constructor TMoney.Create(Amount: Currency; const CurrencyCode: string);
-begin
+constructor TMoney.Create(Amount: Currency; const CurrencyCode: string);  
+begin  
   if Amount < 0 then
     raise Exception.Create('Amount cannot be negative');
   FAmount := Amount;
   FCurrencyCode := UpperCase(CurrencyCode);
 end;
 
-function TMoney.Add(Other: TMoney): TMoney;
-begin
+function TMoney.Add(Other: TMoney): TMoney;  
+begin  
   if FCurrencyCode <> Other.CurrencyCode then
     raise Exception.Create('Cannot add different currencies');
   Result := TMoney.Create(FAmount + Other.Amount, FCurrencyCode);
 end;
 
-function TMoney.Multiply(Factor: Double): TMoney;
-begin
+function TMoney.Multiply(Factor: Double): TMoney;  
+begin  
   Result := TMoney.Create(FAmount * Factor, FCurrencyCode);
 end;
 
@@ -1217,8 +1217,8 @@ implementation
 
 { TGuest }
 
-constructor TGuest.Create(ID: TGuestID; Name: TGuestName; Email: TEmailAddress; const Phone: string);
-begin
+constructor TGuest.Create(ID: TGuestID; Name: TGuestName; Email: TEmailAddress; const Phone: string);  
+begin  
   inherited Create;
   FID := ID;
   FName := Name;
@@ -1239,8 +1239,8 @@ begin
   FMaxOccupancy := MaxOccupancy;
 end;
 
-function TRoom.CalculatePrice(Nights: Integer): TMoney;
-begin
+function TRoom.CalculatePrice(Nights: Integer): TMoney;  
+begin  
   Result := FPricePerNight.Multiply(Nights);
 end;
 
@@ -1322,24 +1322,24 @@ begin
   FDomainEvents := TList<TDomainEvent>.Create;
 end;
 
-destructor TBooking.Destroy;
-begin
+destructor TBooking.Destroy;  
+begin  
   FDomainEvents.Free;
   inherited;
 end;
 
-procedure TBooking.AddDomainEvent(Event: TDomainEvent);
-begin
+procedure TBooking.AddDomainEvent(Event: TDomainEvent);  
+begin  
   FDomainEvents.Add(Event);
 end;
 
-function TBooking.CanBeConfirmed: Boolean;
-begin
+function TBooking.CanBeConfirmed: Boolean;  
+begin  
   Result := FStatus = bsPending;
 end;
 
-procedure TBooking.Confirm;
-var
+procedure TBooking.Confirm;  
+var  
   Event: TBookingConfirmedEvent;
 begin
   if not CanBeConfirmed then
@@ -1351,13 +1351,13 @@ begin
   AddDomainEvent(Event);
 end;
 
-function TBooking.CanCheckIn: Boolean;
-begin
+function TBooking.CanCheckIn: Boolean;  
+begin  
   Result := (FStatus = bsConfirmed) and (Date >= FDateRange.CheckIn);
 end;
 
-procedure TBooking.CheckIn;
-var
+procedure TBooking.CheckIn;  
+var  
   Event: TGuestCheckedInEvent;
 begin
   if not CanCheckIn then
@@ -1369,13 +1369,13 @@ begin
   AddDomainEvent(Event);
 end;
 
-function TBooking.CanCheckOut: Boolean;
-begin
+function TBooking.CanCheckOut: Boolean;  
+begin  
   Result := FStatus = bsCheckedIn;
 end;
 
-procedure TBooking.CheckOut;
-var
+procedure TBooking.CheckOut;  
+var  
   Event: TGuestCheckedOutEvent;
 begin
   if not CanCheckOut then
@@ -1387,13 +1387,13 @@ begin
   AddDomainEvent(Event);
 end;
 
-function TBooking.CanBeCancelled: Boolean;
-begin
+function TBooking.CanBeCancelled: Boolean;  
+begin  
   Result := FStatus in [bsPending, bsConfirmed];
 end;
 
-procedure TBooking.Cancel(const Reason: string);
-var
+procedure TBooking.Cancel(const Reason: string);  
+var  
   Event: TBookingCancelledEvent;
 begin
   if not CanBeCancelled then
@@ -1405,13 +1405,13 @@ begin
   AddDomainEvent(Event);
 end;
 
-function TBooking.GetDomainEvents: TArray<TDomainEvent>;
-begin
+function TBooking.GetDomainEvents: TArray<TDomainEvent>;  
+begin  
   Result := FDomainEvents.ToArray;
 end;
 
-procedure TBooking.ClearDomainEvents;
-begin
+procedure TBooking.ClearDomainEvents;  
+begin  
   FDomainEvents.Clear;
 end;
 
@@ -1450,14 +1450,14 @@ implementation
 uses
   System.SysUtils;
 
-constructor TBookingService.Create(BookingRepository: IBookingRepository);
-begin
+constructor TBookingService.Create(BookingRepository: IBookingRepository);  
+begin  
   inherited Create;
   FBookingRepository := BookingRepository;
 end;
 
-function TBookingService.IsRoomAvailable(RoomID: TRoomID; DateRange: TDateRange): Boolean;
-var
+function TBookingService.IsRoomAvailable(RoomID: TRoomID; DateRange: TDateRange): Boolean;  
+var  
   ExistingBookings: TList<TBooking>;
   Booking: TBooking;
 begin
@@ -1481,8 +1481,8 @@ begin
   end;
 end;
 
-function TBookingService.CreateBooking(Guest: TGuest; Room: TRoom; DateRange: TDateRange): TBooking;
-var
+function TBookingService.CreateBooking(Guest: TGuest; Room: TRoom; DateRange: TDateRange): TBooking;  
+var  
   BookingID: TBookingID;
   TotalPrice: TMoney;
 begin
@@ -1695,14 +1695,14 @@ Le Domain-Driven Design n'est pas une silver bullet, mais une approche puissante
 
 **Quand appliquer DDD avec Delphi ?**
 
-✅ Applications d'entreprise complexes
-✅ Règles métier riches et changeantes
-✅ Projets à long terme
+✅ Applications d'entreprise complexes  
+✅ Règles métier riches et changeantes  
+✅ Projets à long terme  
 ✅ Équipe avec accès aux experts métier
 
-❌ CRUD simples
-❌ Prototypes rapides
-❌ Applications sans logique métier
+❌ CRUD simples  
+❌ Prototypes rapides  
+❌ Applications sans logique métier  
 ❌ Projets jetables
 
 **Commencez petit :**

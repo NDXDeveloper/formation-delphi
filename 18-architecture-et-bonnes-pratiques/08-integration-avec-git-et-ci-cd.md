@@ -207,13 +207,13 @@ Pour le CI/CD, les messages de commit peuvent déclencher des actions.
 **Convention Conventional Commits :**
 
 ```bash
-feat: Ajout du formulaire de connexion
-fix: Correction du calcul de TVA
-docs: Mise à jour du README
-test: Ajout des tests pour TClient
-refactor: Extraction de la logique de validation
-chore: Mise à jour des dépendances
-ci: Configuration du pipeline GitLab
+feat: Ajout du formulaire de connexion  
+fix: Correction du calcul de TVA  
+docs: Mise à jour du README  
+test: Ajout des tests pour TClient  
+refactor: Extraction de la logique de validation  
+chore: Mise à jour des dépendances  
+ci: Configuration du pipeline GitLab  
 
 # Avec breaking change
 feat!: Changement de l'API de connexion
@@ -245,46 +245,46 @@ C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat
 @echo off
 REM build.bat - Script de compilation
 
-echo ========================================
-echo Compilation du projet Delphi
-echo ========================================
+echo ========================================  
+echo Compilation du projet Delphi  
+echo ========================================  
 
-REM Charger les variables d'environnement Delphi
-call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
+REM Charger les variables d'environnement Delphi  
+call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"  
 
-REM Nettoyer les fichiers précédents
-echo.
-echo [1/4] Nettoyage...
-del /Q Win32\Release\*.exe 2>nul
-del /Q Win32\Release\*.dcu 2>nul
+REM Nettoyer les fichiers précédents  
+echo.  
+echo [1/4] Nettoyage...  
+del /Q Win32\Release\*.exe 2>nul  
+del /Q Win32\Release\*.dcu 2>nul  
 
-REM Compiler le projet
-echo.
-echo [2/4] Compilation...
-msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32
+REM Compiler le projet  
+echo.  
+echo [2/4] Compilation...  
+msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32  
 
-REM Vérifier le résultat
-if %ERRORLEVEL% NEQ 0 (
+REM Vérifier le résultat  
+if %ERRORLEVEL% NEQ 0 (  
     echo.
     echo *** ERREUR: La compilation a echoue ***
     exit /b 1
 )
 
-echo.
-echo [3/4] Compilation reussie !
+echo.  
+echo [3/4] Compilation reussie !  
 
-REM Créer le dossier de distribution
-echo.
-echo [4/4] Creation du package...
-if not exist "Deploy" mkdir Deploy
-copy Win32\Release\*.exe Deploy\
-copy Win32\Release\*.dll Deploy\ 2>nul
+REM Créer le dossier de distribution  
+echo.  
+echo [4/4] Creation du package...  
+if not exist "Deploy" mkdir Deploy  
+copy Win32\Release\*.exe Deploy\  
+copy Win32\Release\*.dll Deploy\ 2>nul  
 
-echo.
-echo ========================================
-echo Build termine avec succes !
-echo Package disponible dans: Deploy\
-echo ========================================
+echo.  
+echo ========================================  
+echo Build termine avec succes !  
+echo Package disponible dans: Deploy\  
+echo ========================================  
 
 exit /b 0
 ```
@@ -320,8 +320,8 @@ dcc32 -B ^
 
 if %ERRORLEVEL% NEQ 0 exit /b 1
 
-echo Compilation reussie !
-exit /b 0
+echo Compilation reussie !  
+exit /b 0  
 ```
 
 **Options principales :**
@@ -338,41 +338,41 @@ exit /b 0
 @echo off
 setlocal enabledelayedexpansion
 
-REM ========================================
-REM Script de build professionnel
-REM ========================================
+REM ========================================  
+REM Script de build professionnel  
+REM ========================================  
 
-set PROJECT_NAME=GestionClients
-set VERSION=1.0.0
-set BUILD_CONFIG=Release
-set BUILD_PLATFORM=Win32
+set PROJECT_NAME=GestionClients  
+set VERSION=1.0.0  
+set BUILD_CONFIG=Release  
+set BUILD_PLATFORM=Win32  
 
-echo.
-echo ========================================
-echo Build de %PROJECT_NAME% v%VERSION%
-echo Configuration: %BUILD_CONFIG%
-echo Plateforme: %BUILD_PLATFORM%
-echo ========================================
+echo.  
+echo ========================================  
+echo Build de %PROJECT_NAME% v%VERSION%  
+echo Configuration: %BUILD_CONFIG%  
+echo Plateforme: %BUILD_PLATFORM%  
+echo ========================================  
 
-REM Variables d'environnement Delphi
-call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
-if %ERRORLEVEL% NEQ 0 (
+REM Variables d'environnement Delphi  
+call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"  
+if %ERRORLEVEL% NEQ 0 (  
     echo ERREUR: Impossible de charger rsvars.bat
     exit /b 1
 )
 
-REM Nettoyage
-echo.
-echo [1/5] Nettoyage des fichiers precedents...
-if exist "%BUILD_PLATFORM%\%BUILD_CONFIG%" (
+REM Nettoyage  
+echo.  
+echo [1/5] Nettoyage des fichiers precedents...  
+if exist "%BUILD_PLATFORM%\%BUILD_CONFIG%" (  
     del /Q "%BUILD_PLATFORM%\%BUILD_CONFIG%\*.exe" 2>nul
     del /Q "%BUILD_PLATFORM%\%BUILD_CONFIG%\*.dcu" 2>nul
 )
 
-REM Compilation
-echo.
-echo [2/5] Compilation du projet...
-msbuild %PROJECT_NAME%.dproj ^
+REM Compilation  
+echo.  
+echo [2/5] Compilation du projet...  
+msbuild %PROJECT_NAME%.dproj ^  
     /t:Build ^
     /p:Config=%BUILD_CONFIG% ^
     /p:Platform=%BUILD_PLATFORM% ^
@@ -385,50 +385,50 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-REM Vérification du résultat
-echo.
-echo [3/5] Verification du build...
-set EXE_PATH=%BUILD_PLATFORM%\%BUILD_CONFIG%\%PROJECT_NAME%.exe
-if not exist "%EXE_PATH%" (
+REM Vérification du résultat  
+echo.  
+echo [3/5] Verification du build...  
+set EXE_PATH=%BUILD_PLATFORM%\%BUILD_CONFIG%\%PROJECT_NAME%.exe  
+if not exist "%EXE_PATH%" (  
     echo ERREUR: L'executable n'a pas ete genere
     exit /b 1
 )
 
-REM Création du package
-echo.
-echo [4/5] Creation du package de distribution...
-set DEPLOY_DIR=Deploy\%PROJECT_NAME%_v%VERSION%_%BUILD_PLATFORM%
-if exist "%DEPLOY_DIR%" rmdir /S /Q "%DEPLOY_DIR%"
-mkdir "%DEPLOY_DIR%"
+REM Création du package  
+echo.  
+echo [4/5] Creation du package de distribution...  
+set DEPLOY_DIR=Deploy\%PROJECT_NAME%_v%VERSION%_%BUILD_PLATFORM%  
+if exist "%DEPLOY_DIR%" rmdir /S /Q "%DEPLOY_DIR%"  
+mkdir "%DEPLOY_DIR%"  
 
-copy "%EXE_PATH%" "%DEPLOY_DIR%\" >nul
-copy "%BUILD_PLATFORM%\%BUILD_CONFIG%\*.dll" "%DEPLOY_DIR%\" 2>nul
-copy "README.md" "%DEPLOY_DIR%\" 2>nul
-copy "LICENSE" "%DEPLOY_DIR%\" 2>nul
+copy "%EXE_PATH%" "%DEPLOY_DIR%\" >nul  
+copy "%BUILD_PLATFORM%\%BUILD_CONFIG%\*.dll" "%DEPLOY_DIR%\" 2>nul  
+copy "README.md" "%DEPLOY_DIR%\" 2>nul  
+copy "LICENSE" "%DEPLOY_DIR%\" 2>nul  
 
-REM Génération d'un fichier version
-echo Version=%VERSION% > "%DEPLOY_DIR%\version.txt"
-echo Build Date=%DATE% %TIME% >> "%DEPLOY_DIR%\version.txt"
-echo Platform=%BUILD_PLATFORM% >> "%DEPLOY_DIR%\version.txt"
-echo Config=%BUILD_CONFIG% >> "%DEPLOY_DIR%\version.txt"
+REM Génération d'un fichier version  
+echo Version=%VERSION% > "%DEPLOY_DIR%\version.txt"  
+echo Build Date=%DATE% %TIME% >> "%DEPLOY_DIR%\version.txt"  
+echo Platform=%BUILD_PLATFORM% >> "%DEPLOY_DIR%\version.txt"  
+echo Config=%BUILD_CONFIG% >> "%DEPLOY_DIR%\version.txt"  
 
-REM Compression (si 7-Zip est installé)
-echo.
-echo [5/5] Compression...
-set ZIP_FILE=Deploy\%PROJECT_NAME%_v%VERSION%_%BUILD_PLATFORM%.zip
-if exist "C:\Program Files\7-Zip\7z.exe" (
+REM Compression (si 7-Zip est installé)  
+echo.  
+echo [5/5] Compression...  
+set ZIP_FILE=Deploy\%PROJECT_NAME%_v%VERSION%_%BUILD_PLATFORM%.zip  
+if exist "C:\Program Files\7-Zip\7z.exe" (  
     "C:\Program Files\7-Zip\7z.exe" a -tzip "%ZIP_FILE%" "%DEPLOY_DIR%\*" >nul
     echo Archive creee: %ZIP_FILE%
 ) else (
     echo 7-Zip non trouve, archive non creee
 )
 
-echo.
-echo ========================================
-echo Build termine avec succes !
-echo Executable: %EXE_PATH%
-echo Package: %DEPLOY_DIR%
-echo ========================================
+echo.  
+echo ========================================  
+echo Build termine avec succes !  
+echo Executable: %EXE_PATH%  
+echo Package: %DEPLOY_DIR%  
+echo ========================================  
 
 exit /b 0
 ```
@@ -444,9 +444,9 @@ Les workflows GitHub Actions sont des fichiers YAML dans `.github/workflows/`.
 **Structure de base :**
 
 ```yaml
-name: Nom du workflow
-on: [événements déclencheurs]
-jobs:
+name: Nom du workflow  
+on: [événements déclencheurs]  
+jobs:  
   nom-du-job:
     runs-on: [type de machine]
     steps:
@@ -810,11 +810,11 @@ cd C:\GitLab-Runner
 
 **Configuration lors de l'enregistrement :**
 ```
-GitLab URL: https://gitlab.com/
-Token: [votre token depuis GitLab]
-Description: Delphi Build Server
-Tags: windows, delphi
-Executor: shell
+GitLab URL: https://gitlab.com/  
+Token: [votre token depuis GitLab]  
+Description: Delphi Build Server  
+Tags: windows, delphi  
+Executor: shell  
 ```
 
 ### Pipeline avancé avec cache
@@ -1270,15 +1270,15 @@ build-installer:
 
 ```ini
 [Setup]
-AppName=Mon Application
-AppVersion={#VERSION}
-DefaultDirName={pf}\MonApplication
-OutputDir=Output
-OutputBaseFilename=Setup_{#VERSION}
+AppName=Mon Application  
+AppVersion={#VERSION}  
+DefaultDirName={pf}\MonApplication  
+OutputDir=Output  
+OutputBaseFilename=Setup_{#VERSION}  
 
 [Files]
-Source: "Win32\Release\MonApplication.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Win32\Release\MonApplication.exe"; DestDir: "{app}"; Flags: ignoreversion  
+Source: "Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
 
 [Icons]
 Name: "{group}\Mon Application"; Filename: "{app}\MonApplication.exe"

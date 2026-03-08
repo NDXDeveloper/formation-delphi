@@ -133,10 +133,10 @@ Utils.pas (contenant 5000 lignes avec tout et n'importe quoi)
 
 **Bonne pratique :**
 ```
-StringUtils.pas      # Utilitaires pour les chaînes
-DateUtils.pas        # Utilitaires pour les dates
-FileUtils.pas        # Utilitaires pour les fichiers
-MathUtils.pas        # Utilitaires mathématiques
+StringUtils.pas      # Utilitaires pour les chaînes  
+DateUtils.pas        # Utilitaires pour les dates  
+FileUtils.pas        # Utilitaires pour les fichiers  
+MathUtils.pas        # Utilitaires mathématiques  
 ```
 
 ### Convention de nommage des unités
@@ -192,20 +192,20 @@ implementation
 
 { TCustomer }
 
-procedure TCustomer.SetName(const Value: string);
-begin
+procedure TCustomer.SetName(const Value: string);  
+begin  
   FName := Trim(Value);
 end;
 
 { TCustomerManager }
 
-function TCustomerManager.LoadCustomer(ID: Integer): TCustomer;
-begin
+function TCustomerManager.LoadCustomer(ID: Integer): TCustomer;  
+begin  
   // Implémentation
 end;
 
-procedure TCustomerManager.SaveCustomer(Customer: TCustomer);
-begin
+procedure TCustomerManager.SaveCustomer(Customer: TCustomer);  
+begin  
   // Implémentation
 end;
 
@@ -384,8 +384,8 @@ implementation
 uses
   System.IniFiles;
 
-constructor TAppConfig.Create;
-begin
+constructor TAppConfig.Create;  
+begin  
   inherited;
   {$IFDEF DEBUG}
     LoadFromFile('Config\app.config.dev.ini');
@@ -394,8 +394,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TAppConfig.LoadFromFile(const FileName: string);
-var
+procedure TAppConfig.LoadFromFile(const FileName: string);  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(FileName);
@@ -432,11 +432,11 @@ Si vous utilisez Git, créez un `.gitignore` adapté à Delphi :
 *.dll
 
 # Dossiers de build
-Win32/
-Win64/
-OSX64/
-Android/
-iOSDevice/
+Win32/  
+Win64/  
+OSX64/  
+Android/  
+iOSDevice/  
 
 # Historique
 __history/

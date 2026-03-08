@@ -17,8 +17,8 @@ La **documentation** est l'art d'expliquer votre code : ce qu'il fait, pourquoi 
 **Situation réelle :**
 ```pascal
 // Code que vous avez écrit il y a 6 mois
-function Process(X: Integer): Integer;
-begin
+function Process(X: Integer): Integer;  
+begin  
   Result := X * 3 + 7 - (X div 2);
 end;
 ```
@@ -35,8 +35,8 @@ end;
 ///   Formule : (quantité × 3) + bonus_fixe - réduction_volume
 ///   où réduction_volume = quantité ÷ 2
 /// </remarks>
-function CalculerCoefficientAjustement(Quantite: Integer): Integer;
-begin
+function CalculerCoefficientAjustement(Quantite: Integer): Integer;  
+begin  
   Result := Quantite * 3 + 7 - (Quantite div 2);
 end;
 ```
@@ -84,8 +84,8 @@ Il existe plusieurs niveaux de documentation, chacun ayant son utilité.
 Les commentaires directs dans le code, pour expliquer des lignes complexes.
 
 ```pascal
-procedure TFacture.Calculer;
-var
+procedure TFacture.Calculer;  
+var  
   Total: Currency;
 begin
   Total := SousTotal;
@@ -201,8 +201,8 @@ function MaFonction(NomParam: Integer): string;
 /// <param name="MontantHT">Montant hors taxes en euros</param>
 /// <param name="TauxTVA">Taux de TVA en pourcentage (ex: 20 pour 20%)</param>
 /// <returns>Montant de la TVA en euros</returns>
-function CalculerTVA(MontantHT: Currency; TauxTVA: Double): Currency;
-begin
+function CalculerTVA(MontantHT: Currency; TauxTVA: Double): Currency;  
+begin  
   Result := MontantHT * (TauxTVA / 100);
 end;
 ```
@@ -224,8 +224,8 @@ end;
 ///   Cette méthode valide automatiquement les données avant sauvegarde
 ///   Si le client existe déjà (même ID), il sera mis à jour
 /// </remarks>
-procedure TClientManager.Sauvegarder(Client: TClient);
-begin
+procedure TClientManager.Sauvegarder(Client: TClient);  
+begin  
   if not Client.EstValide then
     raise EClientInvalid.Create('Données client invalides');
 
@@ -322,8 +322,8 @@ Sleep(100);
 ///   détecter les erreurs de saisie dans les numéros de carte.
 ///   Voir : https://fr.wikipedia.org/wiki/Formule_de_Luhn
 /// </remarks>
-function ValiderNumeroCarte(const Numero: string): Boolean;
-var
+function ValiderNumeroCarte(const Numero: string): Boolean;  
+var  
   Somme, Chiffre, I: Integer;
 begin
   Somme := 0;
@@ -516,8 +516,8 @@ Incluez des exemples pour les fonctions complexes :
 ///     // Resultat = '01 23 45 67 89'
 ///   </code>
 /// </example>
-function FormaterTelephone(const Numero: string): string;
-begin
+function FormaterTelephone(const Numero: string): string;  
+begin  
   if Length(Numero) <> 10 then
     Exit(Numero);
 
@@ -636,8 +636,8 @@ implementation
 
 { TClient }
 
-constructor TClient.Create;
-begin
+constructor TClient.Create;  
+begin  
   inherited;
   FID := 0;
   FNom := '';
@@ -646,13 +646,13 @@ begin
   FEstPremium := False;
 end;
 
-procedure TClient.SetNom(const Value: string);
-begin
+procedure TClient.SetNom(const Value: string);  
+begin  
   FNom := Trim(Value);
 end;
 
-function TClient.Valider(out MessageErreur: string): Boolean;
-begin
+function TClient.Valider(out MessageErreur: string): Boolean;  
+begin  
   Result := False;
   MessageErreur := '';
 
@@ -716,7 +716,7 @@ interface
 
 Le README est la porte d'entrée de votre projet. Il doit contenir :
 
-```markdown
+````markdown
 # Mon Application de Gestion
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)]()
@@ -759,8 +759,8 @@ Application de gestion commerciale développée en Delphi pour Windows.
 
 1. Clonez le repository :
 ```bash
-git clone https://github.com/societe/mon-application.git
-cd mon-application
+git clone https://github.com/societe/mon-application.git  
+cd mon-application  
 ```
 
 2. Restaurez les dépendances :
@@ -780,10 +780,10 @@ copy config.template.ini config.local.ini
 5. Éditez `config.local.ini` avec vos paramètres :
 ```ini
 [Database]
-Server=localhost
-Database=gestion_commerciale
-Username=root
-Password=votre_mot_de_passe
+Server=localhost  
+Database=gestion_commerciale  
+Username=root  
+Password=votre_mot_de_passe  
 ```
 
 6. Ouvrez `GestionCommerciale.dpr` dans Delphi
@@ -802,11 +802,11 @@ Le fichier `config.ini` contient les paramètres de connexion :
 
 ```ini
 [Database]
-Server=localhost
-Port=3306
-Database=gestion_commerciale
-Username=root
-Password=
+Server=localhost  
+Port=3306  
+Database=gestion_commerciale  
+Username=root  
+Password=  
 ```
 
 ### Personnalisation
@@ -855,13 +855,13 @@ Le projet suit une architecture en couches :
 
 ```
 GestionCommerciale/
-├── Source/
-│   ├── UI/              # Interface utilisateur (VCL)
-│   ├── Business/        # Logique métier
-│   ├── DataAccess/      # Accès aux données
-│   └── Models/          # Modèles de données
-├── Database/            # Scripts SQL
-├── Tests/               # Tests unitaires
+├── Source/  
+│   ├── UI/              # Interface utilisateur (VCL)  
+│   ├── Business/        # Logique métier  
+│   ├── DataAccess/      # Accès aux données  
+│   └── Models/          # Modèles de données  
+├── Database/            # Scripts SQL  
+├── Tests/               # Tests unitaires  
 └── Docs/                # Documentation
 ```
 
@@ -908,7 +908,7 @@ Voir aussi la liste des [contributeurs](https://github.com/societe/mon-applicati
 - [x] Version 2.0 - Interface modernisée
 - [ ] Version 2.5 - Support multi-devises
 - [ ] Version 3.0 - Application mobile (FMX)
-```
+````
 
 ### CHANGELOG.md
 
@@ -919,8 +919,8 @@ Documentez l'évolution du projet :
 
 Toutes les modifications notables de ce projet sont documentées dans ce fichier.
 
-Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),  
+et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).  
 
 ## [Non publié]
 
@@ -994,8 +994,8 @@ Merci de votre intérêt pour contribuer à ce projet !
 
 ## Code de conduite
 
-Ce projet adhère au [Code de conduite Contributor Covenant](CODE_OF_CONDUCT.md).
-En participant, vous vous engagez à respecter ce code.
+Ce projet adhère au [Code de conduite Contributor Covenant](CODE_OF_CONDUCT.md).  
+En participant, vous vous engagez à respecter ce code.  
 
 ## Comment contribuer
 
@@ -1150,8 +1150,8 @@ La documentation obsolète est pire que pas de documentation.
 ```pascal
 // ❌ Documentation obsolète (dangereuse !)
 /// <returns>Retourne toujours True</returns>
-function Valider: Boolean;
-begin
+function Valider: Boolean;  
+begin  
   // Le code a changé mais pas la doc !
   Result := False;
 end;
@@ -1160,8 +1160,8 @@ end;
 /// <returns>
 ///   True si les données sont valides, False sinon
 /// </returns>
-function Valider: Boolean;
-begin
+function Valider: Boolean;  
+begin  
   Result := FNom <> '';
 end;
 ```
@@ -1179,8 +1179,8 @@ Marquez les problèmes et améliorations futures :
 // NOTE: Cette fonction est appelée très souvent, optimiser si possible
 // WARNING: Ne pas appeler dans un thread
 
-function FormatDate(Date: TDateTime): string;
-begin
+function FormatDate(Date: TDateTime): string;  
+begin  
   // Implémentation...
 end;
 ```
@@ -1311,15 +1311,15 @@ function CalculerTotalTTC(MontantHT: Currency): Currency;
 /// <example>
 ///   Si X = 5, le résultat sera 10
 /// </example>
-function Doubler(X: Integer): Integer;
-begin
+function Doubler(X: Integer): Integer;  
+begin  
   Result := X * 2;
 end;
 
 // ✅ Documentation concise et utile
 /// <summary>Retourne le double de la valeur</summary>
-function Doubler(X: Integer): Integer;
-begin
+function Doubler(X: Integer): Integer;  
+begin  
   Result := X * 2;
 end;
 ```
@@ -1473,15 +1473,15 @@ function CalculerTotal: Currency;
 ///   et elle va afficher un message à l'écran en utilisant la fonction
 ///   ShowMessage de Delphi qui ouvre une boîte de dialogue modale
 /// </summary>
-procedure ButtonClick(Sender: TObject);
-begin
+procedure ButtonClick(Sender: TObject);  
+begin  
   ShowMessage('Bonjour');
 end;
 
 // ✅ Concis et utile
 /// <summary>Affiche le message de bienvenue</summary>
-procedure ButtonClick(Sender: TObject);
-begin
+procedure ButtonClick(Sender: TObject);  
+begin  
   ShowMessage('Bonjour');
 end;
 ```

@@ -274,18 +274,18 @@ Créez un fichier nommé `.gitignore` à la racine de votre projet :
 # Dossiers de compilation
 __history/
 __recovery/
-Win32/
-Win64/
-Win64/
-OSX32/
-OSX64/
-iOSDevice/
-iOSDevice32/
-iOSDevice64/
-iOSSimulator/
-Android/
-Android64/
-Linux64/
+Win32/  
+Win64/  
+Win64/  
+OSX32/  
+OSX64/  
+iOSDevice/  
+iOSDevice32/  
+iOSDevice64/  
+iOSSimulator/  
+Android/  
+Android64/  
+Linux64/  
 
 # Fichiers de sauvegarde
 *.~pas
@@ -307,15 +307,15 @@ Linux64/
 Desktop.ini
 
 # Fichiers de configuration locaux
-config.local.ini
-config.prod.ini
+config.local.ini  
+config.prod.ini  
 *.local.json
 
 # Logs et données temporaires
 *.log
 *.tmp
-temp/
-logs/
+temp/  
+logs/  
 
 # IDE
 .vs/
@@ -387,8 +387,8 @@ Vous travaillez normalement sur votre code dans Delphi.
 
 ```pascal
 // Vous modifiez MainForm.pas
-procedure TFormMain.ButtonClickClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonClickClick(Sender: TObject);  
+begin  
   ShowMessage('Hello Git!');
 end;
 ```
@@ -401,8 +401,8 @@ git status
 
 **Résultat :**
 ```
-On branch main
-Changes not staged for commit:
+On branch main  
+Changes not staged for commit:  
   modified:   Source/MainForm.pas
 ```
 
@@ -418,8 +418,8 @@ git diff Source/MainForm.pas
 
 **Résultat :**
 ```diff
-diff --git a/Source/MainForm.pas b/Source/MainForm.pas
-index 1234567..abcdefg 100644
+diff --git a/Source/MainForm.pas b/Source/MainForm.pas  
+index 1234567..abcdefg 100644  
 --- a/Source/MainForm.pas
 +++ b/Source/MainForm.pas
 @@ -45,7 +45,7 @@ procedure TFormMain.ButtonClickClick(Sender: TObject);
@@ -483,9 +483,9 @@ Description détaillée si nécessaire
 
 **Exemples :**
 ```bash
-git commit -m "feat: Ajout du formulaire de connexion"
-git commit -m "fix: Correction du bug d'affichage des dates"
-git commit -m "refactor: Séparation UI et logique métier"
+git commit -m "feat: Ajout du formulaire de connexion"  
+git commit -m "fix: Correction du bug d'affichage des dates"  
+git commit -m "refactor: Séparation UI et logique métier"  
 ```
 
 ### 6. Cycle continu
@@ -558,11 +558,11 @@ Une fois sur votre branche, travaillez normalement :
 # ...
 
 # Commiter
-git add .
-git commit -m "feat: Ajout du formulaire client"
+git add .  
+git commit -m "feat: Ajout du formulaire client"  
 
-git add .
-git commit -m "feat: Validation des champs client"
+git add .  
+git commit -m "feat: Validation des champs client"  
 ```
 
 Ces commits sont **uniquement** sur la branche `feature/ajout-client`. La branche `main` n'est pas affectée.
@@ -600,8 +600,8 @@ git branch -d feature/ajout-client
 
 **Résultat :**
 ```
-Updating 1a2b3c4..7b8c9d2
-Fast-forward
+Updating 1a2b3c4..7b8c9d2  
+Fast-forward  
  Source/ClientForm.pas | 150 ++++++++++++++++++++++++++
  Source/ClientForm.dfm | 85 +++++++++++++++
  2 files changed, 235 insertions(+)
@@ -669,8 +669,8 @@ ShowMessage('Version finale combinée');
 5. Marquez comme résolu et commitez :
 
 ```bash
-git add Source/MainForm.pas
-git commit -m "Résolution du conflit dans MainForm"
+git add Source/MainForm.pas  
+git commit -m "Résolution du conflit dans MainForm"  
 ```
 
 **Dans une GUI :**
@@ -752,8 +752,8 @@ Pour télécharger les modifications des autres :
 git pull
 
 # Équivalent à:
-git fetch  # Télécharger
-git merge  # Fusionner
+git fetch  # Télécharger  
+git merge  # Fusionner  
 ```
 
 #### Fetch (Télécharger sans fusionner)
@@ -775,8 +775,8 @@ git merge origin/main
 
 1. **Cloner le projet**
 ```bash
-git clone https://github.com/equipe/projet.git
-cd projet
+git clone https://github.com/equipe/projet.git  
+cd projet  
 ```
 
 2. **Créer une branche pour votre fonctionnalité**
@@ -787,16 +787,16 @@ git checkout -b feature/ma-fonctionnalite
 3. **Travailler et commiter**
 ```bash
 # Modifications...
-git add .
-git commit -m "feat: Ajout de ma fonctionnalité"
+git add .  
+git commit -m "feat: Ajout de ma fonctionnalité"  
 ```
 
 4. **Récupérer les dernières modifications**
 ```bash
-git checkout main
-git pull
-git checkout feature/ma-fonctionnalite
-git merge main  # Fusionner les dernières modifs dans votre branche
+git checkout main  
+git pull  
+git checkout feature/ma-fonctionnalite  
+git merge main  # Fusionner les dernières modifs dans votre branche  
 ```
 
 5. **Pousser votre branche**
@@ -816,9 +816,9 @@ git push -u origin feature/ma-fonctionnalite
 
 8. **Nettoyer localement**
 ```bash
-git checkout main
-git pull
-git branch -d feature/ma-fonctionnalite
+git checkout main  
+git pull  
+git branch -d feature/ma-fonctionnalite  
 ```
 
 ## Commandes Git essentielles
@@ -828,77 +828,77 @@ Voici un récapitulatif des commandes les plus utilisées :
 ### Configuration
 
 ```bash
-git config --global user.name "Nom"
-git config --global user.email "email@example.com"
-git config --list
+git config --global user.name "Nom"  
+git config --global user.email "email@example.com"  
+git config --list  
 ```
 
 ### Créer et cloner
 
 ```bash
-git init                           # Créer un nouveau repo
-git clone <url>                    # Cloner un repo existant
+git init                           # Créer un nouveau repo  
+git clone <url>                    # Cloner un repo existant  
 ```
 
 ### Changements locaux
 
 ```bash
-git status                         # État des fichiers
-git diff                          # Voir les modifications
-git add <fichier>                 # Ajouter un fichier
-git add .                         # Ajouter tous les fichiers
-git commit -m "message"           # Créer un commit
-git commit -am "message"          # Ajouter et commiter en une commande
+git status                         # État des fichiers  
+git diff                          # Voir les modifications  
+git add <fichier>                 # Ajouter un fichier  
+git add .                         # Ajouter tous les fichiers  
+git commit -m "message"           # Créer un commit  
+git commit -am "message"          # Ajouter et commiter en une commande  
 ```
 
 ### Historique
 
 ```bash
-git log                           # Historique complet
-git log --oneline                 # Historique compact
-git log --oneline --graph --all   # Avec graphique des branches
-git show <commit>                 # Détails d'un commit
+git log                           # Historique complet  
+git log --oneline                 # Historique compact  
+git log --oneline --graph --all   # Avec graphique des branches  
+git show <commit>                 # Détails d'un commit  
 ```
 
 ### Branches
 
 ```bash
-git branch                        # Lister les branches
-git branch <nom>                  # Créer une branche
-git checkout <branche>            # Changer de branche
-git checkout -b <branche>         # Créer et changer de branche
-git merge <branche>               # Fusionner une branche
-git branch -d <branche>           # Supprimer une branche
+git branch                        # Lister les branches  
+git branch <nom>                  # Créer une branche  
+git checkout <branche>            # Changer de branche  
+git checkout -b <branche>         # Créer et changer de branche  
+git merge <branche>               # Fusionner une branche  
+git branch -d <branche>           # Supprimer une branche  
 ```
 
 ### Remote (distant)
 
 ```bash
-git remote add origin <url>       # Ajouter un remote
-git remote -v                     # Voir les remotes
-git push                          # Pousser les commits
-git push -u origin <branche>      # Pousser et définir upstream
-git pull                          # Récupérer et fusionner
-git fetch                         # Récupérer sans fusionner
+git remote add origin <url>       # Ajouter un remote  
+git remote -v                     # Voir les remotes  
+git push                          # Pousser les commits  
+git push -u origin <branche>      # Pousser et définir upstream  
+git pull                          # Récupérer et fusionner  
+git fetch                         # Récupérer sans fusionner  
 ```
 
 ### Annuler des changements
 
 ```bash
-git checkout -- <fichier>         # Annuler les modifs d'un fichier
-git reset HEAD <fichier>          # Retirer de la staging area
-git reset --soft HEAD~1           # Annuler le dernier commit (garde les changements)
-git reset --hard HEAD~1           # Annuler le dernier commit (perd les changements)
-git revert <commit>               # Créer un commit qui annule un commit précédent
+git checkout -- <fichier>         # Annuler les modifs d'un fichier  
+git reset HEAD <fichier>          # Retirer de la staging area  
+git reset --soft HEAD~1           # Annuler le dernier commit (garde les changements)  
+git reset --hard HEAD~1           # Annuler le dernier commit (perd les changements)  
+git revert <commit>               # Créer un commit qui annule un commit précédent  
 ```
 
 ### Autres
 
 ```bash
-git stash                         # Mettre de côté les modifications
-git stash pop                     # Récupérer les modifications
-git tag v1.0.0                    # Créer un tag
-git tag -a v1.0.0 -m "Version 1.0" # Tag avec annotation
+git stash                         # Mettre de côté les modifications  
+git stash pop                     # Récupérer les modifications  
+git tag v1.0.0                    # Créer un tag  
+git tag -a v1.0.0 -m "Version 1.0" # Tag avec annotation  
 ```
 
 ## Tags et Releases
@@ -1216,8 +1216,8 @@ git rm --cached config.prod.ini
 echo "config.prod.ini" >> .gitignore
 
 # 3. Commiter
-git add .gitignore
-git commit -m "Suppression fichier sensible de Git"
+git add .gitignore  
+git commit -m "Suppression fichier sensible de Git"  
 
 # 4. Si déjà poussé, nettoyer l'historique (complexe)
 # Utilisez git filter-branch ou BFG Repo-Cleaner
@@ -1320,9 +1320,9 @@ Voici un scénario réaliste d'une journée de travail :
 
 ```bash
 # 1. Récupérer les dernières modifications
-cd C:\Projets\MonAppli
-git checkout main
-git pull
+cd C:\Projets\MonAppli  
+git checkout main  
+git pull  
 
 # 2. Créer une branche pour la fonctionnalité du jour
 git checkout -b feature/ajout-export-excel
@@ -1335,12 +1335,12 @@ git checkout -b feature/ajout-export-excel
 
 ```bash
 # 4. Vérifier ce qui a changé
-git status
-git diff
+git status  
+git diff  
 
 # 5. Commiter les changements
-git add Source/ExportExcel.pas Source/ExportExcel.dfm
-git commit -m "feat: Création du module d'export Excel"
+git add Source/ExportExcel.pas Source/ExportExcel.dfm  
+git commit -m "feat: Création du module d'export Excel"  
 ```
 
 ### Après-midi : Continuation
@@ -1350,8 +1350,8 @@ git commit -m "feat: Création du module d'export Excel"
 # ... plus de code ...
 
 # 7. Autre commit
-git add .
-git commit -m "feat: Ajout formatage des cellules Excel"
+git add .  
+git commit -m "feat: Ajout formatage des cellules Excel"  
 ```
 
 ### Fin de journée : Synchronisation
@@ -1373,8 +1373,8 @@ git checkout main
 # 11. Pull Request approuvée et fusionnée (via GitHub)
 
 # 12. Mettre à jour votre repo local
-git checkout main
-git pull
+git checkout main  
+git pull  
 
 # 13. Supprimer la branche locale
 git branch -d feature/ajout-export-excel
@@ -1407,15 +1407,15 @@ Le versionnement avec Git est une compétence essentielle pour tout développeur
 **Commandes essentielles à retenir :**
 
 ```bash
-git init                    # Créer un repo
-git clone <url>            # Cloner un repo
-git status                 # État des fichiers
-git add .                  # Ajouter tout
-git commit -m "message"    # Commiter
-git push                   # Pousser
-git pull                   # Récupérer
-git checkout -b <branche>  # Créer une branche
-git merge <branche>        # Fusionner
+git init                    # Créer un repo  
+git clone <url>            # Cloner un repo  
+git status                 # État des fichiers  
+git add .                  # Ajouter tout  
+git commit -m "message"    # Commiter  
+git push                   # Pousser  
+git pull                   # Récupérer  
+git checkout -b <branche>  # Créer une branche  
+git merge <branche>        # Fusionner  
 ```
 
 **N'ayez pas peur de faire des erreurs !** Git permet presque toujours de revenir en arrière. L'important est de commencer à l'utiliser et d'apprendre progressivement.

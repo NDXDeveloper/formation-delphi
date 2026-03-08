@@ -237,8 +237,8 @@ Avant de plonger dans les détails techniques des sections suivantes, comprenons
 **Mauvaise approche** :
 ```pascal
 // Tout dans une seule procédure : UI, logique, base de données
-procedure TForm1.ButtonSaveClick(Sender: TObject);
-begin
+procedure TForm1.ButtonSaveClick(Sender: TObject);  
+begin  
   // Validation de l'interface
   if Edit1.Text = '' then
   begin
@@ -299,8 +299,8 @@ L'héritage peut créer des hiérarchies complexes et fragiles. La composition o
 
 ### 6. Couplage faible, cohésion forte
 
-**Couplage faible** : Les modules doivent être aussi indépendants que possible.
-**Cohésion forte** : À l'intérieur d'un module, tout doit être fortement lié.
+**Couplage faible** : Les modules doivent être aussi indépendants que possible.  
+**Cohésion forte** : À l'intérieur d'un module, tout doit être fortement lié.  
 
 ## Ce que vous allez apprendre dans ce chapitre
 

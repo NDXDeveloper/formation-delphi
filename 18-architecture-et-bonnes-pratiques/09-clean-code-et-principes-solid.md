@@ -47,8 +47,8 @@ var
   d: Integer;  // d ? Quoi ?
   x: string;   // x ?
 
-procedure p(a: Integer);  // Que fait p ?
-begin
+procedure p(a: Integer);  // Que fait p ?  
+begin  
   // ...
 end;
 
@@ -62,8 +62,8 @@ var
   DaysUntilExpiration: Integer;
   CustomerEmail: string;
 
-procedure CalculateTotalWithDiscount(DiscountPercentage: Integer);
-begin
+procedure CalculateTotalWithDiscount(DiscountPercentage: Integer);  
+begin  
   // ...
 end;
 
@@ -109,8 +109,8 @@ Une fonction doit faire **une seule chose**, et la faire bien.
 
 **❌ Fonction trop longue :**
 ```pascal
-procedure ProcessOrder(OrderID: Integer);
-var
+procedure ProcessOrder(OrderID: Integer);  
+var  
   Order: TOrder;
   Customer: TCustomer;
   Total: Currency;
@@ -144,8 +144,8 @@ end; // 270 lignes !
 
 **✅ Fonctions courtes et focalisées :**
 ```pascal
-procedure ProcessOrder(OrderID: Integer);
-var
+procedure ProcessOrder(OrderID: Integer);  
+var  
   Order: TOrder;
 begin
   Order := LoadOrder(OrderID);
@@ -157,14 +157,14 @@ begin
   UpdateInventory(Order);
 end;
 
-function LoadOrder(OrderID: Integer): TOrder;
-begin
+function LoadOrder(OrderID: Integer): TOrder;  
+begin  
   // Uniquement charger la commande
   Result := FOrderRepository.GetByID(OrderID);
 end;
 
-procedure ValidateOrder(Order: TOrder);
-begin
+procedure ValidateOrder(Order: TOrder);  
+begin  
   // Uniquement valider
   if not Order.IsValid then
     raise EOrderValidationError.Create('Invalid order');
@@ -181,8 +181,8 @@ Une fonction ne doit pas modifier des choses inattendues.
 
 **❌ Effets de bord cachés :**
 ```pascal
-function CalculateTotal(Order: TOrder): Currency;
-begin
+function CalculateTotal(Order: TOrder): Currency;  
+begin  
   Result := Order.SubTotal + Order.Tax;
 
   // ⚠️ Effet de bord : modification de l'état global
@@ -196,8 +196,8 @@ end;
 
 **✅ Fonction pure (sans effets de bord) :**
 ```pascal
-function CalculateTotal(SubTotal, Tax: Currency): Currency;
-begin
+function CalculateTotal(SubTotal, Tax: Currency): Currency;  
+begin  
   Result := SubTotal + Tax;
   // Aucun effet de bord, juste un calcul
 end;
@@ -243,8 +243,8 @@ Supprimez le code inutilisé.
 
 **❌ Code mort conservé "au cas où" :**
 ```pascal
-procedure Process;
-begin
+procedure Process;  
+begin  
   // DoSomething;  ← Code commenté "au cas où"
   // OldMethod;    ← Ancienne version conservée
 
@@ -259,8 +259,8 @@ end;
 
 **✅ Code propre :**
 ```pascal
-procedure Process;
-begin
+procedure Process;  
+begin  
   NewMethod;
   NewAlgorithm;
 end;
@@ -279,8 +279,8 @@ Inc(i);
 Client := TClient.Create;
 
 // Boucle sur les items
-for Item in Items do
-begin
+for Item in Items do  
+begin  
   // Traiter l'item
   ProcessItem(Item);
 end;
@@ -288,8 +288,8 @@ end;
 
 **✅ Code auto-documenté :**
 ```pascal
-procedure ProcessAllItems;
-var
+procedure ProcessAllItems;  
+var  
   Item: TOrderItem;
 begin
   for Item in FOrderItems do
@@ -313,8 +313,8 @@ function ValidateCreditCard(const Number: string): Boolean;
 
 **❌ Codes d'erreur :**
 ```pascal
-function SaveCustomer(Customer: TCustomer): Integer;
-begin
+function SaveCustomer(Customer: TCustomer): Integer;  
+begin  
   if not Customer.IsValid then
     Exit(ERROR_INVALID_DATA);
 
@@ -326,8 +326,8 @@ begin
 end;
 
 // Appelant doit vérifier les codes
-Code := SaveCustomer(Customer);
-if Code = ERROR_INVALID_DATA then
+Code := SaveCustomer(Customer);  
+if Code = ERROR_INVALID_DATA then  
   ShowMessage('Données invalides')
 else if Code = ERROR_NO_CONNECTION then
   ShowMessage('Pas de connexion');
@@ -335,8 +335,8 @@ else if Code = ERROR_NO_CONNECTION then
 
 **✅ Exceptions typées :**
 ```pascal
-procedure SaveCustomer(Customer: TCustomer);
-begin
+procedure SaveCustomer(Customer: TCustomer);  
+begin  
   if not Customer.IsValid then
     raise ECustomerValidationError.Create('Invalid customer data');
 
@@ -363,11 +363,11 @@ end;
 SOLID est un acronyme pour cinq principes de conception orientée objet. Appliqués ensemble, ils produisent du code flexible, maintenable et évolutif.
 
 ```
-S - Single Responsibility Principle (Principe de responsabilité unique)
-O - Open/Closed Principle (Principe ouvert/fermé)
-L - Liskov Substitution Principle (Principe de substitution de Liskov)
-I - Interface Segregation Principle (Principe de ségrégation des interfaces)
-D - Dependency Inversion Principle (Principe d'inversion des dépendances)
+S - Single Responsibility Principle (Principe de responsabilité unique)  
+O - Open/Closed Principle (Principe ouvert/fermé)  
+L - Liskov Substitution Principle (Principe de substitution de Liskov)  
+I - Interface Segregation Principle (Principe de ségrégation des interfaces)  
+D - Dependency Inversion Principle (Principe d'inversion des dépendances)  
 ```
 
 ### S - Single Responsibility Principle (SRP)
@@ -485,8 +485,8 @@ type
 
 implementation
 
-procedure TPaymentProcessor.ProcessPayment(Amount: Currency; PaymentType: TPaymentType);
-begin
+procedure TPaymentProcessor.ProcessPayment(Amount: Currency; PaymentType: TPaymentType);  
+begin  
   case PaymentType of
     ptCreditCard:
       begin
@@ -541,23 +541,23 @@ type
 
 implementation
 
-constructor TCreditCardPayment.Create(const CardNumber, ExpiryDate: string);
-begin
+constructor TCreditCardPayment.Create(const CardNumber, ExpiryDate: string);  
+begin  
   inherited Create;
   FCardNumber := CardNumber;
   FExpiryDate := ExpiryDate;
 end;
 
-procedure TCreditCardPayment.ProcessPayment(Amount: Currency);
-begin
+procedure TCreditCardPayment.ProcessPayment(Amount: Currency);  
+begin  
   // Logique spécifique carte de crédit
   ConnectToCreditCardGateway;
   AuthorizePayment(FCardNumber, FExpiryDate, Amount);
   // ...
 end;
 
-function TCreditCardPayment.GetName: string;
-begin
+function TCreditCardPayment.GetName: string;  
+begin  
   Result := 'Credit Card';
 end;
 
@@ -574,22 +574,22 @@ type
 
 implementation
 
-constructor TPayPalPayment.Create(const Email: string);
-begin
+constructor TPayPalPayment.Create(const Email: string);  
+begin  
   inherited Create;
   FEmail := Email;
 end;
 
-procedure TPayPalPayment.ProcessPayment(Amount: Currency);
-begin
+procedure TPayPalPayment.ProcessPayment(Amount: Currency);  
+begin  
   // Logique spécifique PayPal
   ConnectToPayPalAPI;
   AuthorizePayment(FEmail, Amount);
   // ...
 end;
 
-function TPayPalPayment.GetName: string;
-begin
+function TPayPalPayment.GetName: string;  
+begin  
   Result := 'PayPal';
 end;
 
@@ -602,8 +602,8 @@ type
 
 implementation
 
-procedure TPaymentProcessor.ProcessPayment(PaymentMethod: IPaymentMethod; Amount: Currency);
-begin
+procedure TPaymentProcessor.ProcessPayment(PaymentMethod: IPaymentMethod; Amount: Currency);  
+begin  
   // Même code pour tous les moyens de paiement
   WriteLn('Processing payment with: ' + PaymentMethod.GetName);
   PaymentMethod.ProcessPayment(Amount);
@@ -626,20 +626,20 @@ type
 
 implementation
 
-constructor TBitcoinPayment.Create(const WalletAddress: string);
-begin
+constructor TBitcoinPayment.Create(const WalletAddress: string);  
+begin  
   inherited Create;
   FWalletAddress := WalletAddress;
 end;
 
-procedure TBitcoinPayment.ProcessPayment(Amount: Currency);
-begin
+procedure TBitcoinPayment.ProcessPayment(Amount: Currency);  
+begin  
   ConnectToBlockchain;
   SendBitcoin(FWalletAddress, Amount);
 end;
 
-function TBitcoinPayment.GetName: string;
-begin
+function TBitcoinPayment.GetName: string;  
+begin  
   Result := 'Bitcoin';
 end;
 ```
@@ -704,30 +704,30 @@ type
 implementation
 
 // Rectangle
-procedure TRectangle.SetWidth(Value: Integer);
-begin
+procedure TRectangle.SetWidth(Value: Integer);  
+begin  
   FWidth := Value;
 end;
 
-procedure TRectangle.SetHeight(Value: Integer);
-begin
+procedure TRectangle.SetHeight(Value: Integer);  
+begin  
   FHeight := Value;
 end;
 
-function TRectangle.GetArea: Integer;
-begin
+function TRectangle.GetArea: Integer;  
+begin  
   Result := FWidth * FHeight;
 end;
 
 // Carré : largeur et hauteur doivent être égales
-procedure TSquare.SetWidth(Value: Integer);
-begin
+procedure TSquare.SetWidth(Value: Integer);  
+begin  
   FWidth := Value;
   FHeight := Value;  // ⚠️ Effet de bord inattendu
 end;
 
-procedure TSquare.SetHeight(Value: Integer);
-begin
+procedure TSquare.SetHeight(Value: Integer);  
+begin  
   FWidth := Value;   // ⚠️ Effet de bord inattendu
   FHeight := Value;
 end;
@@ -735,8 +735,8 @@ end;
 
 **Pourquoi c'est un problème :**
 ```pascal
-procedure TestRectangle(R: TRectangle);
-begin
+procedure TestRectangle(R: TRectangle);  
+begin  
   R.Width := 5;
   R.Height := 10;
 
@@ -789,26 +789,26 @@ type
 
 implementation
 
-constructor TRectangle.Create(Width, Height: Integer);
-begin
+constructor TRectangle.Create(Width, Height: Integer);  
+begin  
   inherited Create;
   FWidth := Width;
   FHeight := Height;
 end;
 
-function TRectangle.GetArea: Integer;
-begin
+function TRectangle.GetArea: Integer;  
+begin  
   Result := FWidth * FHeight;
 end;
 
-constructor TSquare.Create(Side: Integer);
-begin
+constructor TSquare.Create(Side: Integer);  
+begin  
   inherited Create;
   FSide := Side;
 end;
 
-function TSquare.GetArea: Integer;
-begin
+function TSquare.GetArea: Integer;  
+begin  
   Result := FSide * FSide;
 end;
 ```
@@ -828,8 +828,8 @@ type
 
 implementation
 
-procedure TPenguin.Fly;
-begin
+procedure TPenguin.Fly;  
+begin  
   raise Exception.Create('Penguins cannot fly!');
 end;
 ```
@@ -890,13 +890,13 @@ type
 
 implementation
 
-procedure TRobotWorker.Work;
-begin
+procedure TRobotWorker.Work;  
+begin  
   // OK
 end;
 
-procedure TRobotWorker.Eat;
-begin
+procedure TRobotWorker.Eat;  
+begin  
   raise Exception.Create('Robots do not eat!');
 end;
 
@@ -966,16 +966,16 @@ type
 
 **Utilisation :**
 ```pascal
-procedure ManageWorkers(Workers: TArray<IWorkable>);
-var
+procedure ManageWorkers(Workers: TArray<IWorkable>);  
+var  
   Worker: IWorkable;
 begin
   for Worker in Workers do
     Worker.Work;
 end;
 
-procedure PayDay(Workers: TArray<IPayable>);
-var
+procedure PayDay(Workers: TArray<IPayable>);  
+var  
   Worker: IPayable;
 begin
   for Worker in Workers do
@@ -1039,20 +1039,20 @@ type
 
 implementation
 
-constructor TCustomerService.Create;
-begin
+constructor TCustomerService.Create;  
+begin  
   inherited;
   FDatabase := TMySQLDatabase.Create;  // ⚠️ Couplage fort
 end;
 
-destructor TCustomerService.Destroy;
-begin
+destructor TCustomerService.Destroy;  
+begin  
   FDatabase.Free;
   inherited;
 end;
 
-function TCustomerService.GetCustomer(ID: Integer): TCustomer;
-var
+function TCustomerService.GetCustomer(ID: Integer): TCustomer;  
+var  
   DS: TDataSet;
 begin
   DS := FDatabase.ExecuteQuery('SELECT * FROM customers WHERE id = ' + IntToStr(ID));
@@ -1114,14 +1114,14 @@ type
 
 implementation
 
-constructor TCustomerService.Create(Database: IDatabase);
-begin
+constructor TCustomerService.Create(Database: IDatabase);  
+begin  
   inherited Create;
   FDatabase := Database;  // ✅ La dépendance est injectée
 end;
 
-function TCustomerService.GetCustomer(ID: Integer): TCustomer;
-var
+function TCustomerService.GetCustomer(ID: Integer): TCustomer;  
+var  
   DS: TDataSet;
 begin
   DS := FDatabase.ExecuteQuery('SELECT * FROM customers WHERE id = ' + IntToStr(ID));
@@ -1174,8 +1174,8 @@ type
 
 implementation
 
-constructor TOrderProcessor.Create;
-begin
+constructor TOrderProcessor.Create;  
+begin  
   inherited;
   FConnection := TFDConnection.Create(nil);
   FConnection.Params.Values['Server'] := 'localhost';
@@ -1183,14 +1183,14 @@ begin
   FConnection.Connected := True;
 end;
 
-destructor TOrderProcessor.Destroy;
-begin
+destructor TOrderProcessor.Destroy;  
+begin  
   FConnection.Free;
   inherited;
 end;
 
-function TOrderProcessor.ProcessOrder(OrderID: Integer): Boolean;
-var
+function TOrderProcessor.ProcessOrder(OrderID: Integer): Boolean;  
+var  
   Query: TFDQuery;
   Total, Discount: Currency;
   CustomerType: string;
@@ -1315,33 +1315,33 @@ type
 
 implementation
 
-function TStandardDiscount.CalculateDiscount(Total: Currency): Currency;
-begin
+function TStandardDiscount.CalculateDiscount(Total: Currency): Currency;  
+begin  
   Result := 0;  // Pas de remise
 end;
 
-function TStandardDiscount.GetCustomerType: string;
-begin
+function TStandardDiscount.GetCustomerType: string;  
+begin  
   Result := 'standard';
 end;
 
-function TPremiumDiscount.CalculateDiscount(Total: Currency): Currency;
-begin
+function TPremiumDiscount.CalculateDiscount(Total: Currency): Currency;  
+begin  
   Result := Total * 0.10;  // 10% de remise
 end;
 
-function TPremiumDiscount.GetCustomerType: string;
-begin
+function TPremiumDiscount.GetCustomerType: string;  
+begin  
   Result := 'premium';
 end;
 
-function TVIPDiscount.CalculateDiscount(Total: Currency): Currency;
-begin
+function TVIPDiscount.CalculateDiscount(Total: Currency): Currency;  
+begin  
   Result := Total * 0.20;  // 20% de remise
 end;
 
-function TVIPDiscount.GetCustomerType: string;
-begin
+function TVIPDiscount.GetCustomerType: string;  
+begin  
   Result := 'vip';
 end;
 
@@ -1359,14 +1359,14 @@ type
 
 implementation
 
-constructor TOrderRepository.Create(Connection: TFDConnection);
-begin
+constructor TOrderRepository.Create(Connection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := Connection;
 end;
 
-function TOrderRepository.GetOrder(ID: Integer): TOrder;
-var
+function TOrderRepository.GetOrder(ID: Integer): TOrder;  
+var  
   Query: TFDQuery;
 begin
   Result := nil;
@@ -1389,8 +1389,8 @@ begin
   end;
 end;
 
-procedure TOrderRepository.UpdateOrder(Order: TOrder);
-var
+procedure TOrderRepository.UpdateOrder(Order: TOrder);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1415,8 +1415,8 @@ type
 
 implementation
 
-procedure TEmailNotificationService.SendOrderConfirmation(Order: TOrder);
-begin
+procedure TEmailNotificationService.SendOrderConfirmation(Order: TOrder);  
+begin  
   // Logique d'envoi d'email
   WriteLn('Sending confirmation email for order #', Order.ID);
 end;
@@ -1452,19 +1452,19 @@ begin
   FDiscountStrategies := TDictionary<string, IDiscountStrategy>.Create;
 end;
 
-destructor TOrderProcessor.Destroy;
-begin
+destructor TOrderProcessor.Destroy;  
+begin  
   FDiscountStrategies.Free;
   inherited;
 end;
 
-procedure TOrderProcessor.RegisterDiscountStrategy(Strategy: IDiscountStrategy);
-begin
+procedure TOrderProcessor.RegisterDiscountStrategy(Strategy: IDiscountStrategy);  
+begin  
   FDiscountStrategies.Add(Strategy.GetCustomerType, Strategy);
 end;
 
-function TOrderProcessor.ProcessOrder(OrderID: Integer): Boolean;
-var
+function TOrderProcessor.ProcessOrder(OrderID: Integer): Boolean;  
+var  
   Order: TOrder;
   Strategy: IDiscountStrategy;
   Discount: Currency;
@@ -1574,8 +1574,8 @@ type
   end;
 
 // Test
-procedure TestOrderProcessing;
-var
+procedure TestOrderProcessing;  
+var  
   TestOrder: TOrder;
   Repository: IOrderRepository;
   Notification: INotificationService;

@@ -58,8 +58,8 @@ Un autre développeur voit souvent des problèmes que l'auteur n'a pas vus.
 **Exemple réel :**
 ```pascal
 // Code original
-function CalculerRemise(Prix: Currency; Pourcentage: Integer): Currency;
-begin
+function CalculerRemise(Prix: Currency; Pourcentage: Integer): Currency;  
+begin  
   Result := Prix * Pourcentage / 100;
 end;
 
@@ -83,8 +83,8 @@ Les juniors apprennent des seniors, et vice versa. Chacun découvre de nouvelles
 **Exemple :**
 ```pascal
 // Code junior
-function EstVide(Liste: TStringList): Boolean;
-begin
+function EstVide(Liste: TStringList): Boolean;  
+begin  
   if Liste.Count = 0 then
     Result := True
   else
@@ -92,8 +92,8 @@ begin
 end;
 
 // Reviewer senior : "Tu peux simplifier :"
-function EstVide(Liste: TStringList): Boolean;
-begin
+function EstVide(Liste: TStringList): Boolean;  
+begin  
   Result := Liste.Count = 0;
 end;
 ```
@@ -209,8 +209,8 @@ Ajout de la fonctionnalité d'export Excel pour les rapports clients
 - Gestion du fichier déjà ouvert : OK (message d'erreur approprié)
 
 ## Points d'attention
-Vérifiez particulièrement la fonction `FormaterCellule()` ligne 245,
-j'ai un doute sur la gestion des dates.
+Vérifiez particulièrement la fonction `FormaterCellule()` ligne 245,  
+j'ai un doute sur la gestion des dates.  
 ```
 
 **4. Répondez aux commentaires constructivement**
@@ -297,8 +297,8 @@ Voici ce qu'il faut vérifier :
 **Exemple :**
 ```pascal
 // Code à revoir
-function Calculer(X: Integer): Integer;
-begin
+function Calculer(X: Integer): Integer;  
+begin  
   Result := X * 2 + 5 - X div 2;
 end;
 
@@ -307,8 +307,8 @@ end;
 
 // ✅ Bon commentaire
 "J'ai du mal à comprendre ce calcul. Peux-tu ajouter un commentaire
-expliquant la formule métier ? Ou mieux, découper en plusieurs étapes
-avec des variables intermédiaires nommées explicitement ?"
+expliquant la formule métier ? Ou mieux, découper en plusieurs étapes  
+avec des variables intermédiaires nommées explicitement ?"  
 ```
 
 **3. Différenciez les catégories de commentaires**
@@ -410,8 +410,8 @@ var
 
 implementation
 
-function TClientManager.GetClient(id: Integer): TDataSet;
-var
+function TClientManager.GetClient(id: Integer): TDataSet;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -420,8 +420,8 @@ begin
   Result := Query;
 end;
 
-procedure TClientManager.Save(name, email: string; premium: Boolean);
-var
+procedure TClientManager.Save(name, email: string; premium: Boolean);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -441,16 +441,16 @@ end.
 [BLOQUANT] Ligne 25-27 : Injection SQL possible
 La requête concatène directement l'ID dans le SQL. Utilise des paramètres :
 
-Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
-Query.ParamByName('id').AsInteger := id;
+Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';  
+Query.ParamByName('id').AsInteger := id;  
 
 ---
 
 [BLOQUANT] Ligne 25, 33 : Fuites mémoire
 Les TFDQuery créés ne sont jamais libérés. Utilise try..finally :
 
-Query := TFDQuery.Create(nil);
-try
+Query := TFDQuery.Create(nil);  
+try  
   // ... utilisation
 finally
   Query.Free;
@@ -464,14 +464,14 @@ Même problème que GetClient. Utilise des paramètres.
 ---
 
 [IMPORTANT] Ligne 21 : Type de retour inapproprié
-Retourner un TDataSet force le code appelant à gérer la mémoire.
-Mieux : retourner un objet TClient avec les données copiées.
+Retourner un TDataSet force le code appelant à gérer la mémoire.  
+Mieux : retourner un objet TClient avec les données copiées.  
 
 ---
 
 [SUGGESTION] Ligne 30 : Extraction de méthode
-La logique de sauvegarde pourrait être dans une méthode privée
-ExecuteInsert() pour la réutilisabilité.
+La logique de sauvegarde pourrait être dans une méthode privée  
+ExecuteInsert() pour la réutilisabilité.  
 
 ---
 
@@ -484,14 +484,14 @@ Les paramètres devraient commencer par une majuscule en Delphi :
 ---
 
 [NIT] Ligne 38 : Variable globale
-ClientManager en variable globale n'est pas une bonne pratique.
-Privilégie un singleton ou dependency injection.
+ClientManager en variable globale n'est pas une bonne pratique.  
+Privilégie un singleton ou dependency injection.  
 
 ---
 
 [QUESTION] Ligne 30
-Comment gères-tu le cas où le client existe déjà ?
-Faut-il un UPDATE au lieu d'INSERT ?
+Comment gères-tu le cas où le client existe déjà ?  
+Faut-il un UPDATE au lieu d'INSERT ?  
 
 ---
 
@@ -543,20 +543,20 @@ type
 
 implementation
 
-constructor TClientManager.Create(Connection: TFDConnection);
-begin
+constructor TClientManager.Create(Connection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := Connection;
 end;
 
-function TClientManager.CreateQuery: TFDQuery;
-begin
+function TClientManager.CreateQuery: TFDQuery;  
+begin  
   Result := TFDQuery.Create(nil);
   Result.Connection := FConnection;
 end;
 
-function TClientManager.GetClient(ID: Integer): TClient;
-var
+function TClientManager.GetClient(ID: Integer): TClient;  
+var  
   Query: TFDQuery;
 begin
   Query := CreateQuery;
@@ -577,8 +577,8 @@ begin
   end;
 end;
 
-procedure TClientManager.SaveClient(const Client: TClient);
-var
+procedure TClientManager.SaveClient(const Client: TClient);  
+var  
   Query: TFDQuery;
 begin
   Query := CreateQuery;
@@ -691,8 +691,8 @@ Les "code smells" sont des signes que le code a besoin de refactoring.
 **Le problème :**
 ```pascal
 // Dans FormClient
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+begin  
   if EditNom.Text = '' then
   begin
     ShowMessage('Le nom est obligatoire');
@@ -707,8 +707,8 @@ begin
 end;
 
 // Dans FormFournisseur (même code dupliqué !)
-procedure TFormFournisseur.ButtonSaveClick(Sender: TObject);
-begin
+procedure TFormFournisseur.ButtonSaveClick(Sender: TObject);  
+begin  
   if EditNom.Text = '' then
   begin
     ShowMessage('Le nom est obligatoire');
@@ -738,8 +738,8 @@ type
 
 implementation
 
-class function TValidationHelper.ValiderNom(const Nom: string; out Erreur: string): Boolean;
-begin
+class function TValidationHelper.ValiderNom(const Nom: string; out Erreur: string): Boolean;  
+begin  
   if Trim(Nom) = '' then
   begin
     Erreur := 'Le nom est obligatoire';
@@ -748,8 +748,8 @@ begin
   Result := True;
 end;
 
-class function TValidationHelper.ValiderEmail(const Email: string; out Erreur: string): Boolean;
-begin
+class function TValidationHelper.ValiderEmail(const Email: string; out Erreur: string): Boolean;  
+begin  
   if not Email.Contains('@') then
   begin
     Erreur := 'Email invalide';
@@ -761,8 +761,8 @@ end;
 end.
 
 // Utilisation
-procedure TFormClient.ButtonSaveClick(Sender: TObject);
-var
+procedure TFormClient.ButtonSaveClick(Sender: TObject);  
+var  
   Erreur: string;
 begin
   if not TValidationHelper.ValiderNom(EditNom.Text, Erreur) then
@@ -785,8 +785,8 @@ end;
 
 **Le problème :**
 ```pascal
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   Total: Currency;
   Client: TClient;
   Erreur: string;
@@ -806,8 +806,8 @@ end;
 
 **La solution (Extract Method) :**
 ```pascal
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-begin
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+begin  
   if not ValiderFormulaire then
     Exit;
 
@@ -825,20 +825,20 @@ begin
   ShowMessage('Commande validée avec succès !');
 end;
 
-function TFormCommande.ValiderFormulaire: Boolean;
-begin
+function TFormCommande.ValiderFormulaire: Boolean;  
+begin  
   // Logique de validation
   Result := True;
 end;
 
-function TFormCommande.VerifierStock: Boolean;
-begin
+function TFormCommande.VerifierStock: Boolean;  
+begin  
   // Vérification du stock
   Result := True;
 end;
 
-procedure TFormCommande.EnregistrerCommande;
-begin
+procedure TFormCommande.EnregistrerCommande;  
+begin  
   // Enregistrement
 end;
 
@@ -922,8 +922,8 @@ var Total: Currency;
 // Initialiser le total à zéro
 Total := 0;
 // Boucler sur chaque ligne
-for I := 0 to Liste.Count - 1 do
-begin
+for I := 0 to Liste.Count - 1 do  
+begin  
   // Ajouter le prix au total
   Total := Total + Liste[I].Prix;
 end;
@@ -931,8 +931,8 @@ end;
 
 **La solution (Rename pour plus de clarté) :**
 ```pascal
-function CalculerTotal: Currency;
-var
+function CalculerTotal: Currency;  
+var  
   MontantTotal: Currency;
   Ligne: TLigneCommande;
 begin
@@ -949,8 +949,8 @@ end;
 
 **Le problème :**
 ```pascal
-function ObtenirNomComplet: string;
-var
+function ObtenirNomComplet: string;  
+var  
   Resultat: string;
 begin
   Resultat := FPrenom + ' ' + FNom;
@@ -960,8 +960,8 @@ end;
 
 **La solution (Inline Temp) :**
 ```pascal
-function ObtenirNomComplet: string;
-begin
+function ObtenirNomComplet: string;  
+begin  
   Result := FPrenom + ' ' + FNom;
 end;
 ```
@@ -980,37 +980,37 @@ end;
 
 **La solution (Extract Method) :**
 ```pascal
-function ClientPeutEffectuerOperation(Client: TClient): Boolean;
-begin
+function ClientPeutEffectuerOperation(Client: TClient): Boolean;  
+begin  
   Result := EstDansTrancheAge(Client) and
             ADuCredit(Client) and
             EstAutorise(Client) and
             EstClientFidele(Client);
 end;
 
-function EstDansTrancheAge(Client: TClient): Boolean;
-begin
+function EstDansTrancheAge(Client: TClient): Boolean;  
+begin  
   Result := (Client.Age >= 18) and (Client.Age <= 65);
 end;
 
-function ADuCredit(Client: TClient): Boolean;
-begin
+function ADuCredit(Client: TClient): Boolean;  
+begin  
   Result := Client.Solde > 1000;
 end;
 
-function EstAutorise(Client: TClient): Boolean;
-begin
+function EstAutorise(Client: TClient): Boolean;  
+begin  
   Result := not Client.EstBloque;
 end;
 
-function EstClientFidele(Client: TClient): Boolean;
-begin
+function EstClientFidele(Client: TClient): Boolean;  
+begin  
   Result := (Client.Type = ctPremium) or (Client.AncienneteAnnees > 5);
 end;
 
 // Utilisation
-if ClientPeutEffectuerOperation(Client) then
-begin
+if ClientPeutEffectuerOperation(Client) then  
+begin  
   // Autoriser l'opération
 end;
 ```
@@ -1043,8 +1043,8 @@ Prendre un morceau de code et en faire une fonction.
 
 **Avant :**
 ```pascal
-procedure Afficher;
-begin
+procedure Afficher;  
+begin  
   // Calcul complexe sur 20 lignes
   X := A * B + C / D - E;
   Y := X * 2 + F;
@@ -1058,16 +1058,16 @@ end;
 
 **Après :**
 ```pascal
-procedure Afficher;
-var
+procedure Afficher;  
+var  
   Resultat: Double;
 begin
   Resultat := CalculerFormuleComplexe(A, B, C, D, E, F, G, H, I);
   ShowMessage(FloatToStr(Resultat));
 end;
 
-function CalculerFormuleComplexe(A, B, C, D, E, F, G, H, I: Double): Double;
-var
+function CalculerFormuleComplexe(A, B, C, D, E, F, G, H, I: Double): Double;  
+var  
   X, Y, Z: Double;
 begin
   X := A * B + C / D - E;
@@ -1083,13 +1083,13 @@ L'inverse : si une méthode est trop simple, l'intégrer dans l'appelant.
 
 **Avant :**
 ```pascal
-function EstMajeur(Age: Integer): Boolean;
-begin
+function EstMajeur(Age: Integer): Boolean;  
+begin  
   Result := Age >= 18;
 end;
 
-procedure Verifier;
-begin
+procedure Verifier;  
+begin  
   if EstMajeur(Client.Age) then
     // ...
 end;
@@ -1097,8 +1097,8 @@ end;
 
 **Après :**
 ```pascal
-procedure Verifier;
-begin
+procedure Verifier;  
+begin  
   if Client.Age >= 18 then
     // ...
 end;
@@ -1201,8 +1201,8 @@ Remplacer les nombres "magiques" par des constantes nommées.
 
 **Avant :**
 ```pascal
-procedure CalculerRemise;
-begin
+procedure CalculerRemise;  
+begin  
   if Montant > 1000 then
     Remise := Montant * 0.1
   else if Montant > 500 then
@@ -1225,8 +1225,8 @@ const
   BONUS_FIDELITE = 1.5;
   JOURS_PAR_AN = 365;
 
-procedure CalculerRemise;
-begin
+procedure CalculerRemise;  
+begin  
   if Montant > SEUIL_REMISE_ELEVEE then
     Remise := Montant * TAUX_REMISE_ELEVEE
   else if Montant > SEUIL_REMISE_STANDARD then
@@ -1243,14 +1243,14 @@ end;
 
 **Avant :**
 ```pascal
-if not (Client.EstBloque) then
-begin
+if not (Client.EstBloque) then  
+begin  
   if Client.Solde > 0 then
     Autoriser
   else
     Refuser;
-end
-else
+end  
+else  
   Refuser;
 ```
 
@@ -1274,8 +1274,8 @@ Utilisez la checklist des code smells.
 
 ```pascal
 // Test avant refactoring
-procedure TestCalculerRemise;
-begin
+procedure TestCalculerRemise;  
+begin  
   Assert(CalculerRemise(800) = 40, 'Remise 5% sur 800');
   Assert(CalculerRemise(1500) = 150, 'Remise 10% sur 1500');
   Assert(CalculerRemise(100) = 0, 'Pas de remise sous 500');
@@ -1291,9 +1291,9 @@ Tout refactoriser d'un coup pendant 3 jours
 
 **✅ Bonne approche :**
 ```
-Petit refactoring → Tests → Commit
-Petit refactoring → Tests → Commit
-Petit refactoring → Tests → Commit
+Petit refactoring → Tests → Commit  
+Petit refactoring → Tests → Commit  
+Petit refactoring → Tests → Commit  
 ```
 
 #### 4. Testez après chaque étape
@@ -1303,9 +1303,9 @@ Lancez les tests après CHAQUE modification.
 #### 5. Commitez fréquemment
 
 ```bash
-git commit -m "refactor: Extract method CalculerRemise"
-git commit -m "refactor: Rename variable X en MontantTotal"
-git commit -m "refactor: Extract class TAdresse"
+git commit -m "refactor: Extract method CalculerRemise"  
+git commit -m "refactor: Rename variable X en MontantTotal"  
+git commit -m "refactor: Extract class TAdresse"  
 ```
 
 ### Exemple complet de refactoring
@@ -1329,8 +1329,8 @@ type
 
 implementation
 
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   c, p, q: Integer;
   pr: Double;
   t: Double;
@@ -1408,8 +1408,8 @@ end.
 **Étape 1 : Rename (Renommer les variables)**
 
 ```pascal
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   ClientID, ProduitID, Quantite: Integer;
   PrixUnitaire: Double;
   Total: Double;
@@ -1467,8 +1467,8 @@ begin
   Result := True;
 end;
 
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   ClientID, ProduitID, Quantite: Integer;
   PrixUnitaire: Double;
   MessageErreur: string;
@@ -1493,8 +1493,8 @@ const
   TAUX_REMISE_STANDARD = 0.05;
   TAUX_TVA = 0.20;
 
-function CalculerRemise(MontantHT: Currency): Currency;
-begin
+function CalculerRemise(MontantHT: Currency): Currency;  
+begin  
   if MontantHT > SEUIL_REMISE_ELEVEE then
     Result := MontantHT * TAUX_REMISE_ELEVEE
   else if MontantHT > SEUIL_REMISE_STANDARD then
@@ -1503,8 +1503,8 @@ begin
     Result := 0;
 end;
 
-function CalculerTotalTTC(PrixUnitaire: Currency; Quantite: Integer): Currency;
-var
+function CalculerTotalTTC(PrixUnitaire: Currency; Quantite: Integer): Currency;  
+var  
   MontantHT, Remise, MontantAvecRemise: Currency;
 begin
   MontantHT := PrixUnitaire * Quantite;
@@ -1541,14 +1541,14 @@ type
 
 implementation
 
-constructor TCommandeManager.Create(Connection: TFDConnection);
-begin
+constructor TCommandeManager.Create(Connection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := Connection;
 end;
 
-function TCommandeManager.CalculerRemise(MontantHT: Currency): Currency;
-const
+function TCommandeManager.CalculerRemise(MontantHT: Currency): Currency;  
+const  
   SEUIL_REMISE_ELEVEE = 1000;
   SEUIL_REMISE_STANDARD = 500;
   TAUX_REMISE_ELEVEE = 0.10;
@@ -1562,8 +1562,8 @@ begin
     Result := 0;
 end;
 
-function TCommandeManager.CalculerTotalTTC(const Data: TCommandeData): Currency;
-const
+function TCommandeManager.CalculerTotalTTC(const Data: TCommandeData): Currency;  
+const  
   TAUX_TVA = 0.20;
 var
   MontantHT, Remise, MontantAvecRemise: Currency;
@@ -1574,8 +1574,8 @@ begin
   Result := MontantAvecRemise * (1 + TAUX_TVA);
 end;
 
-function TCommandeManager.EnregistrerCommande(const Data: TCommandeData): Boolean;
-var
+function TCommandeManager.EnregistrerCommande(const Data: TCommandeData): Boolean;  
+var  
   Query: TFDQuery;
   Total: Currency;
 begin
@@ -1630,13 +1630,13 @@ implementation
 uses
   CommandeManager;
 
-procedure TFormCommande.FormCreate(Sender: TObject);
-begin
+procedure TFormCommande.FormCreate(Sender: TObject);  
+begin  
   FCommandeManager := TCommandeManager.Create(dmMain.Connection);
 end;
 
-procedure TFormCommande.FormDestroy(Sender: TObject);
-begin
+procedure TFormCommande.FormDestroy(Sender: TObject);  
+begin  
   FCommandeManager.Free;
 end;
 
@@ -1676,8 +1676,8 @@ begin
   Result := True;
 end;
 
-procedure TFormCommande.ButtonValiderClick(Sender: TObject);
-var
+procedure TFormCommande.ButtonValiderClick(Sender: TObject);  
+var  
   Data: TCommandeData;
   MessageErreur: string;
 begin
@@ -1735,8 +1735,8 @@ Les tests sont essentiels pour refactoriser en toute sécurité.
 
 ```pascal
 // Tests unitaires avec DUnitX
-procedure TestCalculerRemise;
-begin
+procedure TestCalculerRemise;  
+begin  
   Assert.AreEqual(0, CalculerRemise(100), 'Pas de remise sous 500');
   Assert.AreEqual(25, CalculerRemise(500), 'Remise 5% sur 500');
   Assert.AreEqual(150, CalculerRemise(1500), 'Remise 10% sur 1500');
