@@ -12,15 +12,15 @@ Cette section finale du chapitre multithreading rassemble les meilleures pratiqu
 
 ```pascal
 // ❌ MAUVAIS : Bloque l'interface
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   Sleep(5000); // L'interface se fige pendant 5 secondes !
   ShowMessage('Terminé');
 end;
 
 // ✅ BON : Interface réactive
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   TTask.Run(
     procedure
     begin
@@ -148,8 +148,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Trop de threads
-for i := 1 to 10000 do
-begin
+for i := 1 to 10000 do  
+begin  
   TTask.Run(
     procedure
     begin
@@ -183,8 +183,8 @@ Plus une section critique est longue, plus elle crée de contention et ralentit 
 
 ```pascal
 // ❌ MAUVAIS : Section critique trop longue
-CS.Enter;
-try
+CS.Enter;  
+try  
   LireFichier(); // Opération lente
   TraiterDonnees(); // Opération lente
   Inc(Compteur); // Opération rapide
@@ -193,11 +193,11 @@ finally
 end;
 
 // ✅ BON : Minimiser la section critique
-LireFichier(); // En dehors
-TraiterDonnees(); // En dehors
+LireFichier(); // En dehors  
+TraiterDonnees(); // En dehors  
 
-CS.Enter;
-try
+CS.Enter;  
+try  
   Inc(Compteur); // Seulement ce qui doit être protégé
 finally
   CS.Leave;
@@ -277,8 +277,8 @@ CS1.Leave;
 
 ```pascal
 // ✅ BON : Éviter le blocage infini
-if CS1.TryEnter then
-begin
+if CS1.TryEnter then  
+begin  
   try
     if CS2.TryEnter then
     begin
@@ -302,16 +302,16 @@ end;
 
 ```pascal
 // ✅ BON : Éviter l'imbrication
-CS1.Enter;
-try
+CS1.Enter;  
+try  
   // Traitement 1
 finally
   CS1.Leave;
 end;
 
 // Séparé
-CS2.Enter;
-try
+CS2.Enter;  
+try  
   // Traitement 2
 finally
   CS2.Leave;
@@ -390,8 +390,8 @@ TTask.Run(
 
 ```pascal
 // ❌ LENT : Mise à jour à chaque itération
-for i := 1 to 100000 do
-begin
+for i := 1 to 100000 do  
+begin  
   TraiterElement(i);
   TThread.Queue(nil,
     procedure
@@ -474,8 +474,8 @@ end;
 ### Comparer séquentiel vs parallèle
 
 ```pascal
-procedure TForm1.ComparerPerformances;
-var
+procedure TForm1.ComparerPerformances;  
+var  
   Chrono: TStopwatch;
   TempsSeq, TempsParallele: Int64;
 begin
@@ -510,8 +510,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Consomme du CPU inutilement
-while not FTerminer do
-begin
+while not FTerminer do  
+begin  
   if FNouvelleDonnee then
   begin
     Traiter;
@@ -521,8 +521,8 @@ begin
 end;
 
 // ✅ BON : Avec pause
-while not FTerminer do
-begin
+while not FTerminer do  
+begin  
   if FNouvelleDonnee then
   begin
     Traiter;
@@ -532,8 +532,8 @@ begin
 end;
 
 // ✅ MEILLEUR : Utiliser un Event
-while not FTerminer do
-begin
+while not FTerminer do  
+begin  
   if FEvent.WaitFor(1000) = wrSignaled then
   begin
     Traiter;
@@ -545,8 +545,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Créer un thread par requête
-for i := 1 to 1000 do
-begin
+for i := 1 to 1000 do  
+begin  
   TThread.CreateAnonymousThread(
     procedure
     begin
@@ -556,8 +556,8 @@ begin
 end;
 
 // ✅ BON : Utiliser le pool de threads
-for i := 1 to 1000 do
-begin
+for i := 1 to 1000 do  
+begin  
   TTask.Run(
     procedure
     var
@@ -574,8 +574,8 @@ end;
 
 ```pascal
 // ❌ LENT : Trop de synchronisation
-for i := 1 to 10000 do
-begin
+for i := 1 to 10000 do  
+begin  
   CS.Enter;
   try
     Inc(Compteur);
@@ -605,8 +605,8 @@ end;
 
 ```pascal
 // ❌ DANGEREUX : Variable de boucle capturée
-for i := 1 to 10 do
-begin
+for i := 1 to 10 do  
+begin  
   TTask.Run(
     procedure
     begin
@@ -616,8 +616,8 @@ begin
 end;
 
 // ✅ CORRECT : Copie locale
-for i := 1 to 10 do
-begin
+for i := 1 to 10 do  
+begin  
   TTask.Run(
     procedure
     var
@@ -642,8 +642,8 @@ Dans les options de projet (Project > Options > Delphi Compiler > Debugging) :
 ### Points d'arrêt conditionnels
 
 ```pascal
-procedure TMonThread.Execute;
-var
+procedure TMonThread.Execute;  
+var  
   i: Integer;
 begin
   for i := 1 to 1000 do
@@ -660,8 +660,8 @@ end;
 ### Logger les événements
 
 ```pascal
-procedure Log(const Msg: string);
-var
+procedure Log(const Msg: string);  
+var  
   CS: TCriticalSection; // Global
 begin
   CS.Enter;
@@ -677,8 +677,8 @@ begin
 end;
 
 // Utilisation
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   Log('Thread démarré');
   try
     TraiterDonnees;
@@ -760,8 +760,8 @@ Pour analyser les performances et identifier les goulots d'étranglement.
 uses
   CodeSite;
 
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   CodeSite.Send('Thread démarré', Self);
   // ...
 end;

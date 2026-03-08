@@ -30,8 +30,8 @@ Chaque application Delphi possède un **thread principal** (aussi appelé thread
 
 ```pascal
 // ❌ MAUVAIS : Bloque l'interface
-procedure TForm1.ButtonTelechargerClick(Sender: TObject);
-var
+procedure TForm1.ButtonTelechargerClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   Label1.Caption := 'Téléchargement en cours...';
@@ -62,8 +62,8 @@ La méthode la plus simple (mais pas idéale) : permettre au thread principal de
 
 ```pascal
 // ⚠️ Solution simple mais limitée
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-var
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 1 to 1000 do
@@ -95,8 +95,8 @@ La meilleure approche moderne : déporter le travail dans un thread séparé.
 
 ```pascal
 // ✅ BON : Interface réactive
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+begin  
   // Désactiver le bouton pendant le traitement
   Button1.Enabled := False;
   ProgressBar1.Position := 0;
@@ -145,8 +145,8 @@ end;
 Une barre de progression informe l'utilisateur de l'avancement et montre que l'application n'est pas figée.
 
 ```pascal
-procedure TForm1.ButtonCalculerClick(Sender: TObject);
-var
+procedure TForm1.ButtonCalculerClick(Sender: TObject);  
+var  
   Total: Integer;
 begin
   Total := 5000;
@@ -192,8 +192,8 @@ end;
 ### Affichage de messages intermédiaires
 
 ```pascal
-procedure TForm1.ButtonImporterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonImporterClick(Sender: TObject);  
+begin  
   Memo1.Clear;
 
   TTask.Run(
@@ -243,8 +243,8 @@ type
     FAnnuler: Boolean;
   end;
 
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+begin  
   FAnnuler := False;
   ButtonDemarrer.Enabled := False;
   ButtonAnnuler.Enabled := True;
@@ -298,8 +298,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
   FAnnuler := True;
 end;
 ```
@@ -313,8 +313,8 @@ type
     FTokenSource: ICancellationTokenSource;
   end;
 
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-var
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+var  
   Token: ICancellationToken;
 begin
   // Créer un token d'annulation
@@ -361,8 +361,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
   if Assigned(FTokenSource) then
     FTokenSource.Cancel;
 end;
@@ -373,8 +373,8 @@ end;
 Pour les opérations dont on ne connaît pas la durée, utilisez un indicateur d'activité.
 
 ```pascal
-procedure TForm1.ButtonConnecterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonConnecterClick(Sender: TObject);  
+begin  
   ActivityIndicator1.Animate := True;
   Label1.Caption := 'Connexion au serveur...';
   ButtonConnecter.Enabled := False;
@@ -422,8 +422,8 @@ type
     FEnTraitement: Boolean;
   end;
 
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+begin  
   // Vérifier si un traitement est déjà en cours
   if FEnTraitement then
   begin
@@ -471,8 +471,8 @@ type
     procedure TelechargerFichier(const URL, Destination: string);
   end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   if FEnCours then Exit;
 
   FEnCours := True;
@@ -487,8 +487,8 @@ begin
   );
 end;
 
-procedure TForm1.TelechargerFichier(const URL, Destination: string);
-begin
+procedure TForm1.TelechargerFichier(const URL, Destination: string);  
+begin  
   TTask.Run(
     procedure
     var
@@ -605,8 +605,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
   FAnnuler := True;
 end;
 ```
@@ -616,8 +616,8 @@ end;
 ### Changer le curseur
 
 ```pascal
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+begin  
   Screen.Cursor := crHourGlass; // Sablier
 
   TTask.Run(
@@ -642,20 +642,20 @@ end;
 ### Désactiver temporairement les contrôles
 
 ```pascal
-procedure TForm1.DesactiverInterface;
-begin
+procedure TForm1.DesactiverInterface;  
+begin  
   Panel1.Enabled := False; // Désactive tous les contrôles du panel
   Cursor := crHourGlass;
 end;
 
-procedure TForm1.ReactiverInterface;
-begin
+procedure TForm1.ReactiverInterface;  
+begin  
   Panel1.Enabled := True;
   Cursor := crDefault;
 end;
 
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-begin
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+begin  
   DesactiverInterface;
 
   TTask.Run(
@@ -677,8 +677,8 @@ Mettre à jour l'interface trop fréquemment peut ralentir l'application.
 
 ```pascal
 // ❌ MAUVAIS : Mise à jour à chaque itération (lent)
-for i := 1 to 100000 do
-begin
+for i := 1 to 100000 do  
+begin  
   TraiterElement(i);
   TThread.Queue(nil,
     procedure
@@ -746,14 +746,14 @@ TThread.Queue(nil,
 
 ```pascal
 // ❌ MAUVAIS
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   OperationLongue(); // Bloque l'interface
 end;
 
 // ✅ BON
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   TTask.Run(
     procedure
     begin
@@ -767,8 +767,8 @@ end;
 
 ```pascal
 // ✅ BON : L'utilisateur sait ce qui se passe
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   Label1.Caption := 'Traitement en cours...';
   ProgressBar1.Visible := True;
 

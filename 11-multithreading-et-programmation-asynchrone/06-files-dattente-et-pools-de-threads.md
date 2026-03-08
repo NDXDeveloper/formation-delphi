@@ -29,10 +29,10 @@ Les files d'attente permettent à des threads de s'échanger des données de man
 
 ```pascal
 // Thread 1 (Producteur)
-File.Push('Nouvelle tâche');
+FileAttente.Push('Nouvelle tâche');
 
 // Thread 2 (Consommateur)
-Tache := File.Pop; // Récupère 'Nouvelle tâche'
+Tache := FileAttente.Pop; // Récupère 'Nouvelle tâche'
 ```
 
 ### 2. Découplage producteur-consommateur
@@ -75,9 +75,9 @@ finalization
 
 ```pascal
 // Ajouter un message à la file
-FileMessages.PushItem('Message 1');
-FileMessages.PushItem('Message 2');
-FileMessages.PushItem('Message 3');
+FileMessages.PushItem('Message 1');  
+FileMessages.PushItem('Message 2');  
+FileMessages.PushItem('Message 3');  
 ```
 
 #### Pop : Retirer un élément
@@ -122,7 +122,7 @@ uses
   System.Generics.Collections, System.SyncObjs;
 
 var
-  File: TThreadedQueue<Integer>;
+  FileAttente: TThreadedQueue<Integer>;
 
 type
   // Thread producteur : ajoute des nombres
@@ -137,8 +137,8 @@ type
     procedure Execute; override;
   end;
 
-procedure TThreadProducteur.Execute;
-var
+procedure TThreadProducteur.Execute;  
+var  
   i: Integer;
 begin
   for i := 1 to 100 do
@@ -146,7 +146,7 @@ begin
     if Terminated then Exit;
 
     // Produire un nombre
-    File.PushItem(i);
+    FileAttente.PushItem(i);
 
     TThread.Queue(nil,
       procedure
@@ -159,17 +159,17 @@ begin
   end;
 
   // Signal de fin
-  File.PushItem(-1); // -1 = fin
+  FileAttente.PushItem(-1); // -1 = fin
 end;
 
-procedure TThreadConsommateur.Execute;
-var
+procedure TThreadConsommateur.Execute;  
+var  
   Nombre: Integer;
 begin
   while not Terminated do
   begin
     // Consommer un nombre (attendre si vide)
-    if File.PopItem(Nombre) = wrSignaled then
+    if FileAttente.PopItem(Nombre) = wrSignaled then
     begin
       // Vérifier le signal de fin
       if Nombre = -1 then
@@ -189,9 +189,9 @@ begin
 end;
 
 // Démarrage
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-begin
-  File := TThreadedQueue<Integer>.Create;
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+begin  
+  FileAttente := TThreadedQueue<Integer>.Create;
 
   TThreadProducteur.Create(False);
   TThreadConsommateur.Create(False);
@@ -270,8 +270,8 @@ Quand vous utilisez TTask.Run, le pool de threads est utilisé automatiquement :
 
 ```pascal
 // Ces tâches utilisent le pool de threads
-for i := 1 to 100 do
-begin
+for i := 1 to 100 do  
+begin  
   TTask.Run(
     procedure
     begin
@@ -311,15 +311,15 @@ type
     constructor Create(ANumero: Integer);
   end;
 
-constructor TThreadConsommateur.Create(ANumero: Integer);
-begin
+constructor TThreadConsommateur.Create(ANumero: Integer);  
+begin  
   inherited Create(False);
   FreeOnTerminate := True;
   FNumero := ANumero;
 end;
 
-procedure TThreadConsommateur.Execute;
-var
+procedure TThreadConsommateur.Execute;  
+var  
   Travail: TTravail;
 begin
   while not Terminated do
@@ -352,8 +352,8 @@ begin
 end;
 
 // Démarrage du système
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-var
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+var  
   i: Integer;
   Travail: TTravail;
 begin
@@ -399,8 +399,8 @@ var
   FilePrioriteNormale: TThreadedQueue<TTache>;
   FilePrioriteBasse: TThreadedQueue<TTache>;
 
-procedure TThreadConsommateur.Execute;
-var
+procedure TThreadConsommateur.Execute;  
+var  
   Tache: TTache;
   WaitResult: TWaitResult;
 begin
@@ -486,23 +486,23 @@ type
     function Statistiques: string;
   end;
 
-constructor TMoniteurFile.Create;
-begin
+constructor TMoniteurFile.Create;  
+begin  
   FFile := TThreadedQueue<Integer>.Create;
   FCS := TCriticalSection.Create;
   FNbAjoutes := 0;
   FNbRetires := 0;
 end;
 
-destructor TMoniteurFile.Destroy;
-begin
+destructor TMoniteurFile.Destroy;  
+begin  
   FFile.Free;
   FCS.Free;
   inherited;
 end;
 
-procedure TMoniteurFile.Ajouter(Valeur: Integer);
-begin
+procedure TMoniteurFile.Ajouter(Valeur: Integer);  
+begin  
   FFile.PushItem(Valeur);
 
   FCS.Enter;
@@ -513,8 +513,8 @@ begin
   end;
 end;
 
-function TMoniteurFile.Retirer: Integer;
-begin
+function TMoniteurFile.Retirer: Integer;  
+begin  
   if FFile.PopItem(Result) = wrSignaled then
   begin
     FCS.Enter;
@@ -526,13 +526,13 @@ begin
   end;
 end;
 
-function TMoniteurFile.TailleFile: Integer;
-begin
+function TMoniteurFile.TailleFile: Integer;  
+begin  
   Result := FFile.QueueSize;
 end;
 
-function TMoniteurFile.Statistiques: string;
-begin
+function TMoniteurFile.Statistiques: string;  
+begin  
   FCS.Enter;
   try
     Result := Format('Ajoutés: %d, Retirés: %d, En attente: %d',
@@ -556,8 +556,8 @@ var
   FileTraitement: TThreadedQueue<TFichierATraiter>;
 
 // Scanner un dossier et ajouter à la file
-procedure TForm1.ScannerDossier(const Dossier: string);
-var
+procedure TForm1.ScannerDossier(const Dossier: string);  
+var  
   Fichiers: TArray<string>;
   Fichier: string;
   Item: TFichierATraiter;
@@ -585,8 +585,8 @@ type
     procedure Execute; override;
   end;
 
-procedure TThreadTraitementFichier.Execute;
-var
+procedure TThreadTraitementFichier.Execute;  
+var  
   Item: TFichierATraiter;
 begin
   while not Terminated do
@@ -621,8 +621,8 @@ begin
 end;
 
 // Lancer le traitement
-procedure TForm1.ButtonTraiterClick(Sender: TObject);
-var
+procedure TForm1.ButtonTraiterClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   FileTraitement := TThreadedQueue<TFichierATraiter>.Create;
@@ -659,8 +659,8 @@ type
     procedure ArreterProprement;
   end;
 
-constructor TGestionnaireFile.Create(NbConsommateurs: Integer);
-var
+constructor TGestionnaireFile.Create(NbConsommateurs: Integer);  
+var  
   i: Integer;
 begin
   FFile := TThreadedQueue<Integer>.Create;
@@ -676,22 +676,22 @@ begin
   end;
 end;
 
-destructor TGestionnaireFile.Destroy;
-begin
+destructor TGestionnaireFile.Destroy;  
+begin  
   ArreterProprement;
   FConsommateurs.Free;
   FFile.Free;
   inherited;
 end;
 
-procedure TGestionnaireFile.Ajouter(Valeur: Integer);
-begin
+procedure TGestionnaireFile.Ajouter(Valeur: Integer);  
+begin  
   if FActif then
     FFile.PushItem(Valeur);
 end;
 
-procedure TGestionnaireFile.ArreterProprement;
-var
+procedure TGestionnaireFile.ArreterProprement;  
+var  
   Thread: TThread;
 begin
   FActif := False;
@@ -717,13 +717,13 @@ end;
 
 ```pascal
 var
-  File: TThreadedQueue<Integer>;
+  FileAttente: TThreadedQueue<Integer>;
 begin
-  File := TThreadedQueue<Integer>.Create;
+  FileAttente := TThreadedQueue<Integer>.Create;
   try
     // Utiliser la file
   finally
-    File.Free; // Ne pas oublier !
+    FileAttente.Free; // Ne pas oublier !
   end;
 end;
 ```
@@ -735,7 +735,7 @@ const
   SIGNAL_FIN = -1; // Ou une valeur spéciale
 
 // Dans le producteur
-File.PushItem(SIGNAL_FIN);
+FileAttente.PushItem(SIGNAL_FIN);
 
 // Dans le consommateur
 if Valeur = SIGNAL_FIN then
@@ -746,11 +746,11 @@ if Valeur = SIGNAL_FIN then
 
 ```pascal
 // ✅ BON : Utiliser un timeout
-if File.PopItem(Item, 1000) = wrSignaled then
+if FileAttente.PopItem(Item, 1000) = wrSignaled then
   TraiterItem(Item);
 
 // ❌ MAUVAIS : Attente infinie sans vérification
-File.PopItem(Item); // Peut bloquer indéfiniment !
+FileAttente.PopItem(Item); // Peut bloquer indéfiniment !
 ```
 
 ### 4. Dimensionner correctement le pool
@@ -770,11 +770,11 @@ end;
 Assurez-vous qu'aucun thread ne monopolise les ressources :
 
 ```pascal
-procedure TThreadConsommateur.Execute;
-begin
+procedure TThreadConsommateur.Execute;  
+begin  
   while not Terminated do
   begin
-    if File.PopItem(Item, 100) = wrSignaled then
+    if FileAttente.PopItem(Item, 100) = wrSignaled then
     begin
       TraiterItem(Item);
 

@@ -33,12 +33,12 @@ L'opération `Inc(Compteur)` semble simple, mais en réalité elle se décompose
 **Le problème** : Un autre thread peut s'exécuter entre ces étapes !
 
 ```
-Thread 1 : Lit Compteur (100)
-Thread 2 : Lit Compteur (100)     ← Lit la même valeur !
-Thread 1 : Calcule 100 + 1 = 101
-Thread 2 : Calcule 100 + 1 = 101  ← Calcule la même chose !
-Thread 1 : Écrit 101 dans Compteur
-Thread 2 : Écrit 101 dans Compteur ← Écrase avec la même valeur !
+Thread 1 : Lit Compteur (100)  
+Thread 2 : Lit Compteur (100)     ← Lit la même valeur !  
+Thread 1 : Calcule 100 + 1 = 101  
+Thread 2 : Calcule 100 + 1 = 101  ← Calcule la même chose !  
+Thread 1 : Écrit 101 dans Compteur  
+Thread 2 : Écrit 101 dans Compteur ← Écrase avec la même valeur !  
 ```
 
 Résultat : Au lieu de 102, on a 101. Une incrémentation a été "perdue" !
@@ -80,8 +80,8 @@ finalization
 ### Protéger une ressource partagée
 
 ```pascal
-procedure TMonThread.Execute;
-var
+procedure TMonThread.Execute;  
+var  
   i: Integer;
 begin
   for i := 1 to 1000 do
@@ -132,14 +132,14 @@ var
 
 implementation
 
-constructor TThreadCompteur.Create;
-begin
+constructor TThreadCompteur.Create;  
+begin  
   inherited Create(False);
   FreeOnTerminate := True;
 end;
 
-procedure TThreadCompteur.Execute;
-var
+procedure TThreadCompteur.Execute;  
+var  
   i: Integer;
   ValeurLocale: Integer;
 begin
@@ -170,19 +170,19 @@ begin
 end;
 
 // Dans le formulaire
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   CS := TCriticalSection.Create;
   CompteurGlobal := 0;
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   CS.Free;
 end;
 
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-var
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   // Créer plusieurs threads qui incrémentent le même compteur
@@ -196,8 +196,8 @@ end;
 Parfois, vous ne voulez pas que le thread attende. `TryEnter` tente d'entrer et retourne immédiatement :
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   if SectionCritique.TryEnter then
   begin
     try
@@ -226,8 +226,8 @@ var
   MonObjet: TObject;
 
 // Dans un thread
-TMonitor.Enter(MonObjet);
-try
+TMonitor.Enter(MonObjet);  
+try  
   // Section critique
   Inc(Compteur);
 finally
@@ -279,15 +279,15 @@ var
   Event: TEvent;
 
 // Thread 1 : Attendre un signal
-procedure TThread1.Execute;
-begin
+procedure TThread1.Execute;  
+begin  
   Event.WaitFor(INFINITE); // Attendre indéfiniment
   // Le signal est reçu, continuer...
 end;
 
 // Thread 2 : Envoyer un signal
-procedure TThread2.Execute;
-begin
+procedure TThread2.Execute;  
+begin  
   // Faire quelque chose...
   Event.SetEvent; // Signaler aux threads en attente
 end;
@@ -306,8 +306,8 @@ initialization
   Semaphore := TSemaphore.Create(nil, 3, 3, '');
 
 // Dans un thread
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   Semaphore.Acquire; // Attendre une place disponible
   try
     // Maximum 3 threads peuvent être ici en même temps
@@ -330,8 +330,8 @@ initialization
   TLS := TThreadLocalStorage.Create;
 
 // Dans un thread
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // Chaque thread a sa propre valeur
   TLS.Value := Pointer(ThreadID);
 
@@ -346,8 +346,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Trop de code dans la section critique
-CS.Enter;
-try
+CS.Enter;  
+try  
   Lire_Donnees_Du_Disque();     // Opération lente !
   Traiter_Donnees();             // Opération lente !
   Inc(Compteur);
@@ -356,11 +356,11 @@ finally
 end;
 
 // ✅ BON : Seulement le nécessaire
-Lire_Donnees_Du_Disque();       // En dehors
-Traiter_Donnees();               // En dehors
+Lire_Donnees_Du_Disque();       // En dehors  
+Traiter_Donnees();               // En dehors  
 
-CS.Enter;
-try
+CS.Enter;  
+try  
   Inc(Compteur);                 // Rapide et protégé
 finally
   CS.Leave;
@@ -371,8 +371,8 @@ end;
 
 ```pascal
 // ✅ CORRECT
-CS.Enter;
-try
+CS.Enter;  
+try  
   // Code protégé
 finally
   CS.Leave; // Garanti d'être appelé
@@ -446,22 +446,22 @@ type
     function EstVide: Boolean;
   end;
 
-constructor TFileThreadSafe.Create;
-begin
+constructor TFileThreadSafe.Create;  
+begin  
   inherited;
   FListe := TList<Integer>.Create;
   FCS := TCriticalSection.Create;
 end;
 
-destructor TFileThreadSafe.Destroy;
-begin
+destructor TFileThreadSafe.Destroy;  
+begin  
   FCS.Free;
   FListe.Free;
   inherited;
 end;
 
-procedure TFileThreadSafe.Ajouter(AValeur: Integer);
-begin
+procedure TFileThreadSafe.Ajouter(AValeur: Integer);  
+begin  
   FCS.Enter;
   try
     FListe.Add(AValeur);
@@ -470,8 +470,8 @@ begin
   end;
 end;
 
-function TFileThreadSafe.Retirer: Integer;
-begin
+function TFileThreadSafe.Retirer: Integer;  
+begin  
   FCS.Enter;
   try
     if FListe.Count > 0 then
@@ -486,8 +486,8 @@ begin
   end;
 end;
 
-function TFileThreadSafe.EstVide: Boolean;
-begin
+function TFileThreadSafe.EstVide: Boolean;  
+begin  
   FCS.Enter;
   try
     Result := FListe.Count = 0;

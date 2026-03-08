@@ -28,8 +28,8 @@ Dans le mode asynchrone, vous n'êtes pas bloqué à attendre !
 
 ```pascal
 // MODE SYNCHRONE (bloquant)
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   Label1.Caption := 'Téléchargement en cours...';
 
   // L'interface se fige pendant 5 secondes !
@@ -39,8 +39,8 @@ begin
 end;
 
 // MODE ASYNCHRONE (non-bloquant)
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   Label1.Caption := 'Téléchargement en cours...';
 
   // Lance le téléchargement et continue immédiatement
@@ -69,8 +69,8 @@ type
   TCallbackProcedure = reference to procedure(const Resultat: string);
 
 // Fonction qui accepte un callback
-procedure FaireQuelqueChoseAsync(ACallback: TCallbackProcedure);
-begin
+procedure FaireQuelqueChoseAsync(ACallback: TCallbackProcedure);  
+begin  
   TTask.Run(
     procedure
     var
@@ -92,8 +92,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   FaireQuelqueChoseAsync(
     procedure(const Resultat: string)
     begin
@@ -109,8 +109,8 @@ end;
 ### Exemple simple : Callback de succès
 
 ```pascal
-procedure TelechargerAsync(const URL: string; OnTermine: TProc);
-begin
+procedure TelechargerAsync(const URL: string; OnTermine: TProc);  
+begin  
   TTask.Run(
     procedure
     begin
@@ -130,8 +130,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   TelechargerAsync('http://example.com/data.json',
     procedure
     begin
@@ -147,8 +147,8 @@ end;
 type
   TResultCallback = reference to procedure(const Donnees: string; Erreur: Boolean);
 
-procedure ChargerDonneesAsync(const URL: string; OnTermine: TResultCallback);
-begin
+procedure ChargerDonneesAsync(const URL: string; OnTermine: TResultCallback);  
+begin  
   TTask.Run(
     procedure
     var
@@ -181,8 +181,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ChargerDonneesAsync('http://example.com/api/users',
     procedure(const Donnees: string; Erreur: Boolean)
     begin
@@ -244,8 +244,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ExecuterAsync('Traiter les données',
     // Callback de succès
     procedure(const Resultat: string)
@@ -269,8 +269,8 @@ Parfois, vous devez exécuter plusieurs opérations asynchrones l'une après l'a
 
 ```pascal
 // ❌ Code difficile à lire (pyramide de doom)
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   OperationAsync1(
     procedure(Resultat1: string)
     begin
@@ -299,13 +299,13 @@ end;
 
 ```pascal
 // ✅ Code plus lisible
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Etape1;
 end;
 
-procedure TForm1.Etape1;
-begin
+procedure TForm1.Etape1;  
+begin  
   OperationAsync1(
     procedure(Resultat1: string)
     begin
@@ -315,8 +315,8 @@ begin
   );
 end;
 
-procedure TForm1.Etape2;
-begin
+procedure TForm1.Etape2;  
+begin  
   OperationAsync2(FResultat1,
     procedure(Resultat2: string)
     begin
@@ -326,8 +326,8 @@ begin
   );
 end;
 
-procedure TForm1.Etape3;
-begin
+procedure TForm1.Etape3;  
+begin  
   OperationAsync3(FResultat2,
     procedure(ResultatFinal: string)
     begin
@@ -384,8 +384,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ProgressBar1.Position := 0;
 
   TelechargerGrossFichierAsync('http://example.com/bigfile.zip',
@@ -409,8 +409,8 @@ end;
 Utiliser IFuture avec des continuations permet d'enchaîner des opérations de manière élégante.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Future: IFuture<string>;
 begin
   // Première opération asynchrone
@@ -524,8 +524,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Label1.Caption := 'Chargement...';
 
   RequeteHTTPAsync('https://api.github.com/users/embarcadero',
@@ -552,8 +552,8 @@ end;
 ### Exécuter plusieurs tâches et attendre toutes les réponses
 
 ```pascal
-procedure TForm1.ChargerPlusieursFichiersAsync;
-var
+procedure TForm1.ChargerPlusieursFichiersAsync;  
+var  
   Taches: TArray<ITask>;
   Resultats: TArray<string>;
 begin
@@ -618,14 +618,14 @@ type
     procedure Cancel;
   end;
 
-constructor TOperationAsyncHandle.Create(AToken: ICancellationToken; ATask: ITask);
-begin
+constructor TOperationAsyncHandle.Create(AToken: ICancellationToken; ATask: ITask);  
+begin  
   FToken := AToken;
   FTask := ATask;
 end;
 
-procedure TOperationAsyncHandle.Cancel;
-begin
+procedure TOperationAsyncHandle.Cancel;  
+begin  
   FToken.Cancel;
 end;
 
@@ -689,8 +689,8 @@ end;
 var
   OperationEnCours: TOperationAsyncHandle;
 
-procedure TForm1.ButtonDemarrerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
+begin  
   OperationEnCours := ExecuterOperationAnnulable(
     // Progression
     procedure(Pourcentage: Integer)
@@ -706,8 +706,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
   if Assigned(OperationEnCours) then
   begin
     OperationEnCours.Cancel;
@@ -748,8 +748,8 @@ OnComplete(); // Peut planter l'interface
 
 ```pascal
 // ❌ DANGEREUX
-procedure TForm1.MauvaiseMethode;
-var
+procedure TForm1.MauvaiseMethode;  
+var  
   i: Integer;
 begin
   for i := 1 to 10 do
@@ -765,8 +765,8 @@ begin
 end;
 
 // ✅ BON
-procedure TForm1.BonneMethode;
-var
+procedure TForm1.BonneMethode;  
+var  
   i: Integer;
 begin
   for i := 1 to 10 do
@@ -792,8 +792,8 @@ end;
 ### 4. Gérer les erreurs dans les callbacks
 
 ```pascal
-procedure MonCallback(const Resultat: string);
-begin
+procedure MonCallback(const Resultat: string);  
+begin  
   try
     // Traiter le résultat
     TraiterResultat(Resultat);
@@ -813,8 +813,8 @@ Si votre callback capture des objets, assurez-vous qu'ils sont toujours valides 
 
 ```pascal
 // ❌ DANGEREUX
-procedure TForm1.MauvaiseMethode;
-var
+procedure TForm1.MauvaiseMethode;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -832,8 +832,8 @@ begin
 end;
 
 // ✅ BON
-procedure TForm1.BonneMethode;
-var
+procedure TForm1.BonneMethode;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;

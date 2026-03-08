@@ -26,8 +26,8 @@ type
 
 implementation
 
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // Le code qui s'exécutera dans le thread
   // Cette méthode est appelée automatiquement au démarrage du thread
 end;
@@ -50,8 +50,8 @@ type
 
 implementation
 
-constructor TThreadCompteur.Create;
-begin
+constructor TThreadCompteur.Create;  
+begin  
   // Appeler le constructeur parent
   // False = le thread démarre immédiatement
   // True = le thread est créé en pause
@@ -64,8 +64,8 @@ begin
   FreeOnTerminate := True;
 end;
 
-procedure TThreadCompteur.Execute;
-var
+procedure TThreadCompteur.Execute;  
+var  
   i: Integer;
 begin
   // Ce code s'exécute dans un thread séparé
@@ -88,8 +88,8 @@ end;
 Pour utiliser ce thread dans votre application :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   MonThread: TThreadCompteur;
 begin
   // Créer et démarrer le thread
@@ -109,8 +109,8 @@ Deux façons de créer un thread :
 MonThread := TMonThread.Create(False);
 
 // Création en pause (il faudra appeler Start)
-MonThread := TMonThread.Create(True);
-MonThread.Start; // Démarrage manuel
+MonThread := TMonThread.Create(True);  
+MonThread.Start; // Démarrage manuel  
 ```
 
 ### 2. Exécution
@@ -118,8 +118,8 @@ MonThread.Start; // Démarrage manuel
 La méthode `Execute` contient le code qui s'exécutera dans le thread. Elle est appelée automatiquement lorsque le thread démarre.
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // Votre code ici
   // Cette méthode s'exécute dans un thread séparé
 
@@ -139,8 +139,8 @@ end;
 Pour arrêter proprement un thread :
 
 ```pascal
-procedure TForm1.Button2Click(Sender: TObject);
-begin
+procedure TForm1.Button2Click(Sender: TObject);  
+begin  
   if Assigned(MonThread) then
   begin
     // Demander l'arrêt du thread
@@ -159,8 +159,8 @@ Deux approches pour libérer la mémoire :
 
 **Approche 1 : Libération automatique**
 ```pascal
-constructor TMonThread.Create;
-begin
+constructor TMonThread.Create;  
+begin  
   inherited Create(False);
   FreeOnTerminate := True; // Le thread se libère tout seul
 end;
@@ -168,16 +168,16 @@ end;
 
 **Approche 2 : Libération manuelle**
 ```pascal
-constructor TMonThread.Create;
-begin
+constructor TMonThread.Create;  
+begin  
   inherited Create(False);
   FreeOnTerminate := False; // On gère manuellement
 end;
 
 // Plus tard, dans votre code
-MonThread.Terminate;
-MonThread.WaitFor; // Attendre la fin
-MonThread.Free;    // Libérer manuellement
+MonThread.Terminate;  
+MonThread.WaitFor; // Attendre la fin  
+MonThread.Free;    // Libérer manuellement  
 ```
 
 ## Communiquer avec l'interface utilisateur
@@ -199,16 +199,16 @@ type
     procedure Execute; override;
   end;
 
-procedure TThreadTelecharge.MettreAJourInterface;
-begin
+procedure TThreadTelecharge.MettreAJourInterface;  
+begin  
   // Ce code s'exécute dans le thread principal
   // On peut modifier l'interface en toute sécurité
   Form1.ProgressBar1.Position := FProgression;
   Form1.Label1.Caption := FMessage;
 end;
 
-procedure TThreadTelecharge.Execute;
-var
+procedure TThreadTelecharge.Execute;  
+var  
   i: Integer;
 begin
   for i := 1 to 100 do
@@ -236,8 +236,8 @@ end;
 Similaire à `Synchronize`, mais asynchrone :
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // Queue ne bloque pas le thread
   // La mise à jour se fera "quand le thread principal aura le temps"
   Queue(MettreAJourInterface);
@@ -258,8 +258,8 @@ end;
 Indique si on a demandé l'arrêt du thread :
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   while not Terminated do
   begin
     // Traitement
@@ -273,8 +273,8 @@ end;
 Détermine si le thread se libère automatiquement :
 
 ```pascal
-constructor TMonThread.Create;
-begin
+constructor TMonThread.Create;  
+begin  
   inherited Create(False);
   FreeOnTerminate := True; // Libération automatique
 end;
@@ -287,8 +287,8 @@ end;
 Définit la priorité du thread :
 
 ```pascal
-constructor TMonThread.Create;
-begin
+constructor TMonThread.Create;  
+begin  
   inherited Create(False);
   Priority := tpNormal; // Priorité par défaut
 end;
@@ -321,24 +321,24 @@ type
     property Resultat: Integer read FResultat;
   end;
 
-constructor TThreadCalcul.Create(AValeur1, AValeur2: Integer);
-begin
+constructor TThreadCalcul.Create(AValeur1, AValeur2: Integer);  
+begin  
   inherited Create(True); // Créer en pause
   FValeur1 := AValeur1;
   FValeur2 := AValeur2;
   FreeOnTerminate := False; // On veut récupérer le résultat
 end;
 
-procedure TThreadCalcul.Execute;
-begin
+procedure TThreadCalcul.Execute;  
+begin  
   // Simulation d'un calcul long
   Sleep(2000);
   FResultat := FValeur1 + FValeur2;
 end;
 
 // Utilisation
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   ThreadCalcul: TThreadCalcul;
 begin
   ThreadCalcul := TThreadCalcul.Create(10, 20);
@@ -363,9 +363,9 @@ type
   end;
 
 // Utilisation
-MonThread := TThreadTraitement.Create(True);
-MonThread.Fichier := 'C:\data.txt';
-MonThread.Start;
+MonThread := TThreadTraitement.Create(True);  
+MonThread.Fichier := 'C:\data.txt';  
+MonThread.Start;  
 ```
 
 ## Gestion des erreurs dans les threads
@@ -373,8 +373,8 @@ MonThread.Start;
 Les exceptions dans un thread doivent être gérées avec soin :
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   try
     // Code qui peut lever une exception
     // ...
@@ -393,8 +393,8 @@ end;
 ### 1. Toujours vérifier Terminated
 
 ```pascal
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   while not Terminated do
   begin
     // Traitement
@@ -408,14 +408,14 @@ end;
 
 ```pascal
 // ❌ MAUVAIS
-while True do
-begin
+while True do  
+begin  
   // ...
 end;
 
 // ✅ BON
-while not Terminated do
-begin
+while not Terminated do  
+begin  
   // ...
 end;
 ```
@@ -456,22 +456,22 @@ type
     constructor Create(const ANomFichier: string);
   end;
 
-constructor TThreadTelechargement.Create(const ANomFichier: string);
-begin
+constructor TThreadTelechargement.Create(const ANomFichier: string);  
+begin  
   inherited Create(False);
   FNomFichier := ANomFichier;
   FreeOnTerminate := True;
 end;
 
-procedure TThreadTelechargement.AfficherProgression;
-begin
+procedure TThreadTelechargement.AfficherProgression;  
+begin  
   Form1.ProgressBar1.Position := FProgression;
   Form1.Label1.Caption := Format('Téléchargement de %s : %d%%',
     [FNomFichier, FProgression]);
 end;
 
-procedure TThreadTelechargement.Execute;
-var
+procedure TThreadTelechargement.Execute;  
+var  
   i: Integer;
 begin
   for i := 0 to 100 do

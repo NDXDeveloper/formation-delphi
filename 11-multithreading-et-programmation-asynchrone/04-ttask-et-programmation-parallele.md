@@ -36,8 +36,8 @@ uses
 ### Créer et exécuter une tâche simple
 
 ```pascal
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   // Créer et démarrer une tâche
   TTask.Run(
     procedure
@@ -229,8 +229,8 @@ Une des fonctionnalités les plus puissantes de la PPL : paralléliser automatiq
 uses
   System.Threading;
 
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   i: Integer;
   Temps: TDateTime;
 begin
@@ -255,8 +255,8 @@ end;
 
 ```pascal
 // SÉQUENTIEL (lent)
-procedure TraitementSequentiel;
-var
+procedure TraitementSequentiel;  
+var  
   i: Integer;
 begin
   for i := 1 to 1000 do
@@ -266,8 +266,8 @@ begin
 end;
 
 // PARALLÈLE (rapide sur multi-cœurs)
-procedure TraitementParallele;
-begin
+procedure TraitementParallele;  
+begin  
   TParallel.For(1, 1000,
     procedure(Index: Integer)
     begin
@@ -378,8 +378,8 @@ uses
   System.Threading;
 
 // Définir le nombre minimum et maximum de threads
-TThreadPool.Default.SetMinWorkerThreads(2);
-TThreadPool.Default.SetMaxWorkerThreads(8);
+TThreadPool.Default.SetMinWorkerThreads(2);  
+TThreadPool.Default.SetMaxWorkerThreads(8);  
 ```
 
 ### Avantages du pool de threads
@@ -399,8 +399,8 @@ type
     procedure Button1Click(Sender: TObject);
   end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Fichiers: TArray<string>;
   NbTraites: Integer;
   CS: TCriticalSection;
@@ -573,8 +573,8 @@ TTask.Run(
 
 ```pascal
 // ❌ DANGEREUX
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 1 to 10 do
@@ -590,8 +590,8 @@ begin
 end;
 
 // ✅ CORRECT : Capturer dans une variable locale
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 1 to 10 do

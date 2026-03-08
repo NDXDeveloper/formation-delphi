@@ -23,8 +23,8 @@ type
     procedure TelechargerUnFichier(const URL: string; Index: Integer);
   end;
 
-procedure TForm1.TelechargerFichiers(const URLs: TArray<string>);
-var
+procedure TForm1.TelechargerFichiers(const URLs: TArray<string>);  
+var  
   i: Integer;
   Taches: TArray<ITask>;
 begin
@@ -60,8 +60,8 @@ begin
   end;
 end;
 
-procedure TForm1.TelechargerUnFichier(const URL: string; Index: Integer);
-var
+procedure TForm1.TelechargerUnFichier(const URL: string; Index: Integer);  
+var  
   HttpClient: THTTPClient;
   NomFichier: string;
 begin
@@ -105,8 +105,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.ButtonTelechargerClick(Sender: TObject);
-var
+procedure TForm1.ButtonTelechargerClick(Sender: TObject);  
+var  
   URLs: TArray<string>;
 begin
   URLs := [
@@ -141,8 +141,8 @@ type
     procedure RechercherAsync(const Critere: string);
   end;
 
-procedure TForm1.RechercherAsync(const Critere: string);
-begin
+procedure TForm1.RechercherAsync(const Critere: string);  
+begin  
   // Annuler la recherche précédente si elle existe
   FAnnuler := True;
   if Assigned(FRechercheEnCours) then
@@ -218,8 +218,8 @@ begin
 end;
 
 // Recherche instantanée pendant la frappe
-procedure TForm1.EditRechercheChange(Sender: TObject);
-begin
+procedure TForm1.EditRechercheChange(Sender: TObject);  
+begin  
   if Length(EditRecherche.Text) >= 3 then
     RechercherAsync(EditRecherche.Text);
 end;
@@ -237,8 +237,8 @@ end;
 **Solution** : Traiter plusieurs images simultanément en utilisant tous les cœurs du processeur.
 
 ```pascal
-procedure TForm1.TraiterImagesParallele(const Dossier: string);
-var
+procedure TForm1.TraiterImagesParallele(const Dossier: string);  
+var  
   Fichiers: TArray<string>;
   NbTraites: Integer;
   CS: TCriticalSection;
@@ -338,8 +338,8 @@ type
     destructor Destroy; override;
   end;
 
-constructor TThreadSurveillanceDossier.Create(const ADossier: string);
-begin
+constructor TThreadSurveillanceDossier.Create(const ADossier: string);  
+begin  
   inherited Create(False);
   FreeOnTerminate := True;
   FDossier := ADossier;
@@ -353,14 +353,14 @@ begin
   );
 end;
 
-destructor TThreadSurveillanceDossier.Destroy;
-begin
+destructor TThreadSurveillanceDossier.Destroy;  
+begin  
   FFichiersPrecedents.Free;
   inherited;
 end;
 
-procedure TThreadSurveillanceDossier.Execute;
-begin
+procedure TThreadSurveillanceDossier.Execute;  
+begin  
   while not Terminated do
   begin
     VerifierNouveauxFichiers;
@@ -368,8 +368,8 @@ begin
   end;
 end;
 
-procedure TThreadSurveillanceDossier.VerifierNouveauxFichiers;
-var
+procedure TThreadSurveillanceDossier.VerifierNouveauxFichiers;  
+var  
   FichiersActuels: TStringList;
   Fichier: string;
 begin
@@ -396,8 +396,8 @@ begin
   end;
 end;
 
-procedure TThreadSurveillanceDossier.NotifierNouveauFichier(const Fichier: string);
-begin
+procedure TThreadSurveillanceDossier.NotifierNouveauFichier(const Fichier: string);  
+begin  
   TThread.Queue(nil,
     procedure
     begin
@@ -413,14 +413,14 @@ end;
 var
   ThreadSurveillance: TThreadSurveillanceDossier;
 
-procedure TForm1.ButtonDemarrerSurveillanceClick(Sender: TObject);
-begin
+procedure TForm1.ButtonDemarrerSurveillanceClick(Sender: TObject);  
+begin  
   ThreadSurveillance := TThreadSurveillanceDossier.Create('C:\Uploads');
   Memo1.Lines.Add('Surveillance démarrée...');
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   if Assigned(ThreadSurveillance) then
   begin
     ThreadSurveillance.Terminate;
@@ -441,8 +441,8 @@ end;
 **Solution** : Effectuer l'export dans un thread séparé.
 
 ```pascal
-procedure TForm1.ExporterVersExcelAsync;
-begin
+procedure TForm1.ExporterVersExcelAsync;  
+begin  
   ButtonExporter.Enabled := False;
   ProgressBar1.Position := 0;
   Label1.Caption := 'Export en cours...';
@@ -561,8 +561,8 @@ type
     procedure ValiderEmailAsync(const Email: string);
   end;
 
-procedure TForm1.EditEmailChange(Sender: TObject);
-begin
+procedure TForm1.EditEmailChange(Sender: TObject);  
+begin  
   // Attendre 500ms après la dernière frappe
   FDerniereValidation := Now;
 
@@ -584,8 +584,8 @@ begin
   );
 end;
 
-procedure TForm1.ValiderEmailAsync(const Email: string);
-begin
+procedure TForm1.ValiderEmailAsync(const Email: string);  
+begin  
   // Annuler la validation précédente si elle existe
   if Assigned(FValidationEnCours) then
     FValidationEnCours.Wait;
@@ -650,8 +650,8 @@ type
     Corps: string;
   end;
 
-procedure TForm1.EnvoyerEmailsEnMasse(const Emails: TArray<TEmailAEnvoyer>);
-var
+procedure TForm1.EnvoyerEmailsEnMasse(const Emails: TArray<TEmailAEnvoyer>);  
+var  
   FileEmails: TThreadedQueue<TEmailAEnvoyer>;
   NbEnvoyes, NbEchecs: Integer;
   CS: TCriticalSection;
@@ -781,8 +781,8 @@ end;
 **Solution** : Vérification et téléchargement en arrière-plan.
 
 ```pascal
-procedure TForm1.VerifierMiseAJourAsync;
-begin
+procedure TForm1.VerifierMiseAJourAsync;  
+begin  
   TTask.Run(
     procedure
     var
@@ -837,8 +837,8 @@ begin
   );
 end;
 
-procedure TForm1.TelechargerMiseAJour(const Version: string);
-begin
+procedure TForm1.TelechargerMiseAJour(const Version: string);  
+begin  
   TTask.Run(
     procedure
     var
@@ -897,8 +897,8 @@ begin
 end;
 
 // Vérifier au démarrage de l'application
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   VerifierMiseAJourAsync;
 end;
 ```
@@ -922,8 +922,8 @@ type
     procedure CompresserFichierAsync(const FichierSource, FichierDest: string);
   end;
 
-procedure TForm1.CompresserFichierAsync(const FichierSource, FichierDest: string);
-begin
+procedure TForm1.CompresserFichierAsync(const FichierSource, FichierDest: string);  
+begin  
   FAnnulerCompression := False;
   ButtonCompressi.Enabled := False;
   ButtonAnnuler.Enabled := True;
@@ -1035,8 +1035,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
   FAnnulerCompression := True;
 end;
 ```

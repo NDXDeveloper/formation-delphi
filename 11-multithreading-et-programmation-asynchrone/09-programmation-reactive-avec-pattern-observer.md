@@ -31,8 +31,8 @@ Imaginez une chaîne YouTube :
 
 ```pascal
 // ❌ Code couplé et difficile à maintenir
-procedure TDataManager.ModifierPrix(NouveauPrix: Double);
-begin
+procedure TDataManager.ModifierPrix(NouveauPrix: Double);  
+begin  
   FPrix := NouveauPrix;
 
   // Doit connaître et appeler manuellement chaque composant
@@ -52,8 +52,8 @@ end;
 
 ```pascal
 // ✅ Code découplé et flexible
-procedure TDataManager.ModifierPrix(NouveauPrix: Double);
-begin
+procedure TDataManager.ModifierPrix(NouveauPrix: Double);  
+begin  
   FPrix := NouveauPrix;
 
   // Notifier tous les observateurs (sans les connaître individuellement)
@@ -105,31 +105,31 @@ type
     procedure Notifier(const Donnees: TValue);
   end;
 
-constructor TSubject.Create;
-begin
+constructor TSubject.Create;  
+begin  
   inherited;
   FObservers := TList<IObserver>.Create;
 end;
 
-destructor TSubject.Destroy;
-begin
+destructor TSubject.Destroy;  
+begin  
   FObservers.Free;
   inherited;
 end;
 
-procedure TSubject.Attacher(Observer: IObserver);
-begin
+procedure TSubject.Attacher(Observer: IObserver);  
+begin  
   if not FObservers.Contains(Observer) then
     FObservers.Add(Observer);
 end;
 
-procedure TSubject.Detacher(Observer: IObserver);
-begin
+procedure TSubject.Detacher(Observer: IObserver);  
+begin  
   FObservers.Remove(Observer);
 end;
 
-procedure TSubject.Notifier(const Donnees: TValue);
-var
+procedure TSubject.Notifier(const Donnees: TValue);  
+var  
   Observer: IObserver;
 begin
   for Observer in FObservers do
@@ -149,14 +149,14 @@ type
     procedure Actualiser(const Sujet: TObject; const Donnees: TValue);
   end;
 
-constructor TAffichagePrix.Create(ALabel: TLabel);
-begin
+constructor TAffichagePrix.Create(ALabel: TLabel);  
+begin  
   inherited Create;
   FLabel := ALabel;
 end;
 
-procedure TAffichagePrix.Actualiser(const Sujet: TObject; const Donnees: TValue);
-begin
+procedure TAffichagePrix.Actualiser(const Sujet: TObject; const Donnees: TValue);  
+begin  
   // Mettre à jour l'affichage quand le prix change
   FLabel.Caption := Format('Prix actuel : %.2f €', [Donnees.AsExtended]);
 end;
@@ -169,8 +169,8 @@ var
   GestionnairePrix: TSubject;
   AffichagePrix1, AffichagePrix2: IObserver;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Créer le sujet
   GestionnairePrix := TSubject.Create;
 
@@ -183,8 +183,8 @@ begin
   GestionnairePrix.Attacher(AffichagePrix2);
 end;
 
-procedure TForm1.ButtonChangerPrixClick(Sender: TObject);
-begin
+procedure TForm1.ButtonChangerPrixClick(Sender: TObject);  
+begin  
   // Notifier tous les observateurs du nouveau prix
   GestionnairePrix.Notifier(TValue.From<Double>(19.99));
   // Label1 et Label2 sont automatiquement mis à jour !
@@ -219,31 +219,31 @@ type
     procedure PublierEvenement(const Evenement: TEvenementData);
   end;
 
-constructor TGestionnaireEvenements.Create;
-begin
+constructor TGestionnaireEvenements.Create;  
+begin  
   inherited;
   FObservateurs := TList<IObserver>.Create;
 end;
 
-destructor TGestionnaireEvenements.Destroy;
-begin
+destructor TGestionnaireEvenements.Destroy;  
+begin  
   FObservateurs.Free;
   inherited;
 end;
 
-procedure TGestionnaireEvenements.AbonnerObservateur(Observer: IObserver);
-begin
+procedure TGestionnaireEvenements.AbonnerObservateur(Observer: IObserver);  
+begin  
   if not FObservateurs.Contains(Observer) then
     FObservateurs.Add(Observer);
 end;
 
-procedure TGestionnaireEvenements.DesabonnerObservateur(Observer: IObserver);
-begin
+procedure TGestionnaireEvenements.DesabonnerObservateur(Observer: IObserver);  
+begin  
   FObservateurs.Remove(Observer);
 end;
 
-procedure TGestionnaireEvenements.PublierEvenement(const Evenement: TEvenementData);
-var
+procedure TGestionnaireEvenements.PublierEvenement(const Evenement: TEvenementData);  
+var  
   Observer: IObserver;
 begin
   for Observer in FObservateurs do
@@ -273,14 +273,14 @@ type
     procedure Actualiser(const Sujet: TObject; const Donnees: TValue);
   end;
 
-constructor TObservateurMemo.Create(AMemo: TMemo);
-begin
+constructor TObservateurMemo.Create(AMemo: TMemo);  
+begin  
   inherited Create;
   FMemo := AMemo;
 end;
 
-procedure TObservateurMemo.Actualiser(const Sujet: TObject; const Donnees: TValue);
-var
+procedure TObservateurMemo.Actualiser(const Sujet: TObject; const Donnees: TValue);  
+var  
   Evenement: TEvenementData;
 begin
   Evenement := Donnees.AsType<TEvenementData>;
@@ -299,8 +299,8 @@ type
     procedure Actualiser(const Sujet: TObject; const Donnees: TValue);
   end;
 
-procedure TObservateurNotification.Actualiser(const Sujet: TObject; const Donnees: TValue);
-var
+procedure TObservateurNotification.Actualiser(const Sujet: TObject; const Donnees: TValue);  
+var  
   Evenement: TEvenementData;
 begin
   Evenement := Donnees.AsType<TEvenementData>;
@@ -319,8 +319,8 @@ end;
 var
   Gestionnaire: TGestionnaireEvenements;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Gestionnaire := TGestionnaireEvenements.Create;
 
   // Abonner différents observateurs
@@ -328,8 +328,8 @@ begin
   Gestionnaire.AbonnerObservateur(TObservateurNotification.Create);
 end;
 
-procedure TForm1.ButtonEnvoyerMessageClick(Sender: TObject);
-var
+procedure TForm1.ButtonEnvoyerMessageClick(Sender: TObject);  
+var  
   Evenement: TEvenementData;
 begin
   Evenement.TypeEvenement := teNouveauMessage;
@@ -357,8 +357,8 @@ type
     procedure EnvoyerNotification(const Message: string);
   end;
 
-procedure TNotificationManager.EnvoyerNotification(const Message: string);
-begin
+procedure TNotificationManager.EnvoyerNotification(const Message: string);  
+begin  
   if Assigned(FOnNotification) then
     FOnNotification(Self, Message);
 end;
@@ -367,22 +367,22 @@ end;
 var
   NotifManager: TNotificationManager;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   NotifManager := TNotificationManager.Create;
 
   // S'abonner à l'événement
   NotifManager.OnNotification := GererNotification;
 end;
 
-procedure TForm1.GererNotification(Sender: TObject; const Message: string);
-begin
+procedure TForm1.GererNotification(Sender: TObject; const Message: string);  
+begin  
   Memo1.Lines.Add(Message);
   ShowMessage(Message);
 end;
 
-procedure TForm1.ButtonEnvoyerClick(Sender: TObject);
-begin
+procedure TForm1.ButtonEnvoyerClick(Sender: TObject);  
+begin  
   NotifManager.EnvoyerNotification('Test de notification');
 end;
 ```
@@ -406,30 +406,30 @@ type
     procedure Publier(const Message: string);
   end;
 
-constructor TMultiNotificationManager.Create;
-begin
+constructor TMultiNotificationManager.Create;  
+begin  
   inherited;
   FAbonnes := TList<TNotificationProc>.Create;
 end;
 
-destructor TMultiNotificationManager.Destroy;
-begin
+destructor TMultiNotificationManager.Destroy;  
+begin  
   FAbonnes.Free;
   inherited;
 end;
 
-procedure TMultiNotificationManager.Abonner(AProc: TNotificationProc);
-begin
+procedure TMultiNotificationManager.Abonner(AProc: TNotificationProc);  
+begin  
   FAbonnes.Add(AProc);
 end;
 
-procedure TMultiNotificationManager.Desabonner(AProc: TNotificationProc);
-begin
+procedure TMultiNotificationManager.Desabonner(AProc: TNotificationProc);  
+begin  
   FAbonnes.Remove(AProc);
 end;
 
-procedure TMultiNotificationManager.Publier(const Message: string);
-var
+procedure TMultiNotificationManager.Publier(const Message: string);  
+var  
   Abonne: TNotificationProc;
 begin
   for Abonne in FAbonnes do
@@ -440,8 +440,8 @@ end;
 var
   Manager: TMultiNotificationManager;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Manager := TMultiNotificationManager.Create;
 
   // Abonner plusieurs gestionnaires
@@ -468,8 +468,8 @@ begin
   );
 end;
 
-procedure TForm1.ButtonPublierClick(Sender: TObject);
-begin
+procedure TForm1.ButtonPublierClick(Sender: TObject);  
+begin  
   Manager.Publier('Événement: Traitement terminé');
   // Tous les abonnés sont notifiés automatiquement !
 end;
@@ -508,8 +508,8 @@ begin
   FCallback := ACallback;
 end;
 
-procedure TObservateurFiltre.Actualiser(const Sujet: TObject; const Donnees: TValue);
-var
+procedure TObservateurFiltre.Actualiser(const Sujet: TObject; const Donnees: TValue);  
+var  
   Evt: TEvenement;
 begin
   Evt := Donnees.AsType<TEvenement>;
@@ -520,8 +520,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Gestionnaire: TSubject;
   ObsErreurs, ObsTout: IObserver;
 begin
@@ -572,22 +572,22 @@ type
     procedure Notifier(const Donnees: TValue);
   end;
 
-constructor TSubjectThreadSafe.Create;
-begin
+constructor TSubjectThreadSafe.Create;  
+begin  
   inherited;
   FObservateurs := TList<IObserver>.Create;
   FCS := TCriticalSection.Create;
 end;
 
-destructor TSubjectThreadSafe.Destroy;
-begin
+destructor TSubjectThreadSafe.Destroy;  
+begin  
   FCS.Free;
   FObservateurs.Free;
   inherited;
 end;
 
-procedure TSubjectThreadSafe.Attacher(Observer: IObserver);
-begin
+procedure TSubjectThreadSafe.Attacher(Observer: IObserver);  
+begin  
   FCS.Enter;
   try
     if not FObservateurs.Contains(Observer) then
@@ -597,8 +597,8 @@ begin
   end;
 end;
 
-procedure TSubjectThreadSafe.Detacher(Observer: IObserver);
-begin
+procedure TSubjectThreadSafe.Detacher(Observer: IObserver);  
+begin  
   FCS.Enter;
   try
     FObservateurs.Remove(Observer);
@@ -607,8 +607,8 @@ begin
   end;
 end;
 
-procedure TSubjectThreadSafe.Notifier(const Donnees: TValue);
-var
+procedure TSubjectThreadSafe.Notifier(const Donnees: TValue);  
+var  
   Observer: IObserver;
   ListeCopie: TArray<IObserver>;
 begin
@@ -664,34 +664,34 @@ type
     procedure Notifier(const Info: TInfoTelechargement);
   end;
 
-constructor TGestionnaireTelechargements.Create;
-begin
+constructor TGestionnaireTelechargements.Create;  
+begin  
   inherited;
   FObservateurs := TList<IObserver>.Create;
   FTelechargements := TDictionary<Integer, TInfoTelechargement>.Create;
   FProchainID := 1;
 end;
 
-destructor TGestionnaireTelechargements.Destroy;
-begin
+destructor TGestionnaireTelechargements.Destroy;  
+begin  
   FTelechargements.Free;
   FObservateurs.Free;
   inherited;
 end;
 
-procedure TGestionnaireTelechargements.Abonner(Observer: IObserver);
-begin
+procedure TGestionnaireTelechargements.Abonner(Observer: IObserver);  
+begin  
   if not FObservateurs.Contains(Observer) then
     FObservateurs.Add(Observer);
 end;
 
-procedure TGestionnaireTelechargements.Desabonner(Observer: IObserver);
-begin
+procedure TGestionnaireTelechargements.Desabonner(Observer: IObserver);  
+begin  
   FObservateurs.Remove(Observer);
 end;
 
-function TGestionnaireTelechargements.AjouterTelechargement(const Fichier: string): Integer;
-var
+function TGestionnaireTelechargements.AjouterTelechargement(const Fichier: string): Integer;  
+var  
   Info: TInfoTelechargement;
 begin
   Result := FProchainID;
@@ -706,8 +706,8 @@ begin
   Notifier(Info);
 end;
 
-procedure TGestionnaireTelechargements.DemarrerTelechargement(ID: Integer);
-var
+procedure TGestionnaireTelechargements.DemarrerTelechargement(ID: Integer);  
+var  
   Info: TInfoTelechargement;
 begin
   if FTelechargements.TryGetValue(ID, Info) then
@@ -718,8 +718,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireTelechargements.MettreAJourProgression(ID, Progression: Integer);
-var
+procedure TGestionnaireTelechargements.MettreAJourProgression(ID, Progression: Integer);  
+var  
   Info: TInfoTelechargement;
 begin
   if FTelechargements.TryGetValue(ID, Info) then
@@ -730,8 +730,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireTelechargements.TerminerTelechargement(ID: Integer; Succes: Boolean);
-var
+procedure TGestionnaireTelechargements.TerminerTelechargement(ID: Integer; Succes: Boolean);  
+var  
   Info: TInfoTelechargement;
 begin
   if FTelechargements.TryGetValue(ID, Info) then
@@ -746,8 +746,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireTelechargements.Notifier(const Info: TInfoTelechargement);
-var
+procedure TGestionnaireTelechargements.Notifier(const Info: TInfoTelechargement);  
+var  
   Observer: IObserver;
 begin
   for Observer in FObservateurs do
@@ -765,14 +765,14 @@ type
     procedure Actualiser(const Sujet: TObject; const Donnees: TValue);
   end;
 
-constructor TObservateurListView.Create(AListView: TListView);
-begin
+constructor TObservateurListView.Create(AListView: TListView);  
+begin  
   inherited Create;
   FListView := AListView;
 end;
 
-function TObservateurListView.TrouverItem(ID: Integer): TListItem;
-var
+function TObservateurListView.TrouverItem(ID: Integer): TListItem;  
+var  
   i: Integer;
 begin
   Result := nil;
@@ -786,8 +786,8 @@ begin
   end;
 end;
 
-procedure TObservateurListView.Actualiser(const Sujet: TObject; const Donnees: TValue);
-var
+procedure TObservateurListView.Actualiser(const Sujet: TObject; const Donnees: TValue);  
+var  
   Info: TInfoTelechargement;
   Item: TListItem;
 begin
@@ -812,16 +812,16 @@ end;
 var
   Gestionnaire: TGestionnaireTelechargements;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Gestionnaire := TGestionnaireTelechargements.Create;
 
   // Abonner la ListView
   Gestionnaire.Abonner(TObservateurListView.Create(ListView1));
 end;
 
-procedure TForm1.ButtonTelechargerClick(Sender: TObject);
-var
+procedure TForm1.ButtonTelechargerClick(Sender: TObject);  
+var  
   ID: Integer;
 begin
   ID := Gestionnaire.AjouterTelechargement('http://example.com/file.zip');
@@ -868,8 +868,8 @@ type
 ### 2. Se désabonner proprement
 
 ```pascal
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Toujours se désabonner pour éviter les fuites
   if Assigned(Gestionnaire) and Assigned(FObservateur) then
     Gestionnaire.Desabonner(FObservateur);
@@ -879,8 +879,8 @@ end;
 ### 3. Protéger contre les exceptions
 
 ```pascal
-procedure TSubject.Notifier(const Donnees: TValue);
-var
+procedure TSubject.Notifier(const Donnees: TValue);  
+var  
   Observer: IObserver;
 begin
   for Observer in FObservateurs do
@@ -910,8 +910,8 @@ type
     procedure Notifier(const Donnees: TValue);
   end;
 
-procedure TSubjectAvecThrottle.Notifier(const Donnees: TValue);
-begin
+procedure TSubjectAvecThrottle.Notifier(const Donnees: TValue);  
+begin  
   // Ne notifier que si assez de temps s'est écoulé
   if MilliSecondsBetween(Now, FDerniereNotification) >= FDelaiMinimum then
   begin
