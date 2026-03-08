@@ -354,7 +354,7 @@ Nettoyer et réorganiser votre code devient simple et sûr.
 - Recherche sémantique (par signification, pas seulement par texte)
 
 **Impact :**
-Trouver une fonction ou une variable dans un gros projet prend secondes au lieu de minutes.
+Trouver une fonction ou une variable dans un gros projet prend des secondes au lieu de minutes.
 
 ### Collaboration en équipe
 
@@ -429,7 +429,7 @@ Delphi 13 améliore l'accessibilité pour tous.
 - Meilleure compatibilité avec JAWS et NVDA
 - Support des technologies d'assistance
 - Navigation clavier améliorée
-- Attributs ARIA pour les applications
+- Propriétés d'accessibilité pour les composants visuels
 
 **Importance :**
 Vos applications sont accessibles aux utilisateurs ayant des besoins spécifiques.

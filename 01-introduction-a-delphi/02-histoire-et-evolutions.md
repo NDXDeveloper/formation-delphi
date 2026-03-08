@@ -35,7 +35,7 @@ Apporte des améliorations significatives à l'IDE et introduit de nouvelles fon
 Considérée par beaucoup comme l'une des versions les plus stables et abouties de l'ère Borland. Elle améliore les performances et ajoute de nombreux composants.
 
 ### Delphi 6 (2001)
-Première version à supporter officiellement Linux avec **Kylix**, un effort de Borland pour porter Delphi sur d'autres plateformes. Introduction de WebSnap pour le développement web.
+Introduit WebSnap pour le développement web et de nombreux composants. En parallèle, Borland lance **Kylix**, un produit compagnon permettant de développer pour Linux avec un environnement similaire à Delphi — une première tentative de sortir du monde exclusivement Windows.
 
 ### Delphi 7 (2002)
 Version emblématique et très populaire, encore utilisée dans certaines entreprises aujourd'hui. Elle représente l'apogée de Delphi sous Borland, avec une stabilité remarquable et un ensemble de fonctionnalités mature.
@@ -64,7 +64,7 @@ En 2008, **Embarcadero Technologies** rachète CodeGear et poursuit le développ
 Améliore l'IDE et introduit de nouveaux composants. Première version sous le nom complet "RAD Studio".
 
 ### Delphi XE (2010)
-Changement de nomenclature : XE signifie "Cross-Platform Everywhere" (Multi-plateforme partout), annonçant l'ambition d'Embarcadero.
+Changement de nomenclature avec le suffixe XE, annonçant l'ambition multi-plateforme d'Embarcadero.
 
 ### Delphi XE2 (2011)
 **Révolution majeure** : introduction de **FireMonkey (FMX)**, un nouveau framework permettant de créer des applications pour Windows, macOS, iOS et Android à partir d'un code source unique. C'est un tournant historique pour Delphi.

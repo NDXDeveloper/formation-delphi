@@ -555,7 +555,7 @@ Vous en apprendrez d'autres naturellement avec le temps.
 Si vous avez déjà utilisé d'autres environnements de développement :
 
 **Visual Studio :**
-- Structure similaire avec des zones ancrable
+- Structure similaire avec des zones ancrables
 - Delphi est plus simple et moins "lourd"
 - L'inspecteur d'objets est comparable à la fenêtre Propriétés
 

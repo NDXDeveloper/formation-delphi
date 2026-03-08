@@ -12,9 +12,9 @@ Avant d'entrer dans les comparaisons détaillées, comprenons les différentes p
 
 ### Approche RAD (Rapid Application Development)
 
-**Représentants :** Delphi, Visual Basic, FileMaker
-**Philosophie :** Développement rapide par conception visuelle et composants réutilisables
-**Objectif :** Créer des applications fonctionnelles le plus rapidement possible
+**Représentants :** Delphi, Visual Basic, FileMaker  
+**Philosophie :** Développement rapide par conception visuelle et composants réutilisables  
+**Objectif :** Créer des applications fonctionnelles le plus rapidement possible  
 
 **Avantages :**
 - Productivité élevée
@@ -27,9 +27,9 @@ Avant d'entrer dans les comparaisons détaillées, comprenons les différentes p
 
 ### Approche Code-First
 
-**Représentants :** Visual Studio Code, Sublime Text, Vim
-**Philosophie :** Le code est au centre, les outils visuels sont secondaires
-**Objectif :** Contrôle total et flexibilité maximale
+**Représentants :** Visual Studio Code, Sublime Text, Vim  
+**Philosophie :** Le code est au centre, les outils visuels sont secondaires  
+**Objectif :** Contrôle total et flexibilité maximale  
 
 **Avantages :**
 - Contrôle fin sur tous les aspects
@@ -43,9 +43,9 @@ Avant d'entrer dans les comparaisons détaillées, comprenons les différentes p
 
 ### Approche intégrée (IDE complet)
 
-**Représentants :** Visual Studio, IntelliJ IDEA, Eclipse
-**Philosophie :** Tout-en-un avec outils intégrés pour toutes les tâches
-**Objectif :** Un seul environnement pour tout le cycle de développement
+**Représentants :** Visual Studio, IntelliJ IDEA, Eclipse  
+**Philosophie :** Tout-en-un avec outils intégrés pour toutes les tâches  
+**Objectif :** Un seul environnement pour tout le cycle de développement  
 
 **Avantages :**
 - Tout est intégré et cohérent
@@ -241,7 +241,7 @@ C++ est un langage puissant, souvent utilisé avec Qt pour les interfaces graphi
 - **C++/Qt :** Qt Designer séparé, plus complexe
 
 **Gestion de la mémoire :**
-- **Delphi :** Gestion automatique (ARC sur mobile)
+- **Delphi :** Gestion par ownership (création/libération explicite avec `Free`), plus simple qu'en C++
 - **C++ :** Manuelle (pointeurs, new/delete) ou smart pointers
 
 **Temps de compilation :**
@@ -335,9 +335,8 @@ Flutter est le framework mobile de Google, de plus en plus populaire.
 ### Similitudes
 
 - Multi-plateforme (mobile et desktop)
-- Interface utilisateur déclarative
-- Hot reload (rechargement à chaud)
 - Performance native
+- Bibliothèque de composants/widgets riche
 
 ### Différences principales
 

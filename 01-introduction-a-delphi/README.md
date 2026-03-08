@@ -99,14 +99,14 @@ Pour être transparent, ce chapitre d'introduction ne contient pas :
 
 À la fin de ce chapitre, vous devriez :
 
-✓ Comprendre ce qu'est Delphi et sa philosophie de développement
-✓ Connaître l'histoire et l'évolution de Delphi
-✓ Savoir quelle édition choisir pour vos besoins
-✓ Comprendre les avantages et cas d'usage de Delphi
-✓ Avoir installé et configuré Delphi sur votre ordinateur
-✓ Vous sentir à l'aise avec l'interface de l'environnement
-✓ Situer Delphi par rapport aux autres outils de développement
-✓ Connaître les principales nouveautés de Delphi 13
+✓ Comprendre ce qu'est Delphi et sa philosophie de développement  
+✓ Connaître l'histoire et l'évolution de Delphi  
+✓ Savoir quelle édition choisir pour vos besoins  
+✓ Comprendre les avantages et cas d'usage de Delphi  
+✓ Avoir installé et configuré Delphi sur votre ordinateur  
+✓ Vous sentir à l'aise avec l'interface de l'environnement  
+✓ Situer Delphi par rapport aux autres outils de développement  
+✓ Connaître les principales nouveautés de Delphi 13  
 ✓ Être motivé et prêt à commencer votre apprentissage pratique
 
 ## Un dernier mot avant de commencer

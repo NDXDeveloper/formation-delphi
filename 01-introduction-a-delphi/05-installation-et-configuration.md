@@ -157,7 +157,7 @@ Une fois le téléchargement terminé, vous pouvez procéder à l'installation.
 - Cliquez sur "Next"
 
 **Étape 4 : Sélection du dossier d'installation**
-- Le dossier par défaut est généralement : `C:\Program Files (x86)\Embarcadero\Studio\22.0`
+- Le dossier par défaut est généralement : `C:\Program Files (x86)\Embarcadero\Studio\24.0`
 - **Recommandation :** Gardez le dossier par défaut sauf raison spécifique
 - Assurez-vous d'avoir suffisamment d'espace disque
 - Cliquez sur "Next"
@@ -405,7 +405,7 @@ Après l'installation, explorez ces ressources :
 
 **Exemples de code :**
 - Installés avec Delphi
-- Généralement dans : `C:\Users\Public\Documents\Embarcadero\Studio\22.0\Samples`
+- Généralement dans : `C:\Users\Public\Documents\Embarcadero\Studio\24.0\Samples`
 
 **Tutoriels en ligne :**
 - Site officiel Embarcadero

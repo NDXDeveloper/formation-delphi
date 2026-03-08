@@ -47,8 +47,8 @@ Avec Delphi, vous écrivez votre code **une seule fois** et vous pouvez le compi
 Object Pascal est réputé pour sa **clarté et sa lisibilité**. Regardez cet exemple simple :
 
 ```pascal
-procedure CalculerTotal(Prix: Double; Quantite: Integer);
-var
+procedure CalculerTotal(Prix: Double; Quantite: Integer);  
+var  
   Total: Double;
 begin
   Total := Prix * Quantite;
