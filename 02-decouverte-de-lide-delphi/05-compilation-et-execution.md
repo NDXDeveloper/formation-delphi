@@ -130,12 +130,12 @@ Le fichier .exe est créé dans le dossier de sortie. Il est prêt à être exé
 Pendant la compilation, vous verrez en bas de l'IDE la fenêtre **Messages** qui affiche la progression :
 
 ```
-Compilation démarrée
-Compilation de MonProjet.dpr
-Compilation de FormPrincipale.pas
+Compilation démarrée  
+Compilation de MonProjet.dpr  
+Compilation de FormPrincipale.pas  
 ...
-Compilation réussie
-Temps écoulé : 00:00:01.2
+Compilation réussie  
+Temps écoulé : 00:00:01.2  
 ```
 
 Cette fenêtre est importante : c'est là que s'afficheront les erreurs et avertissements.
@@ -417,7 +417,7 @@ Plus vos unités sont petites et bien séparées, plus la compilation incrément
 
 ### Précompiler les bibliothèques
 
-Les bibliothèques que vous n'modifiez pas (VCL, composants tiers) sont déjà précompilées. C'est pourquoi elles ne rallongent pas le temps de compilation.
+Les bibliothèques que vous ne modifiez pas (VCL, composants tiers) sont déjà précompilées. C'est pourquoi elles ne rallongent pas le temps de compilation.
 
 ### Machine plus rapide
 

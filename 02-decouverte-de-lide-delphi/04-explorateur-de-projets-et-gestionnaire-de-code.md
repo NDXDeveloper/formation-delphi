@@ -344,11 +344,11 @@ C'est utile pour éditer plusieurs lignes en même temps, par exemple pour ajout
 
 Delphi propose des templates pour insérer rapidement des structures de code courantes.
 
-Tapez un raccourci et appuyez sur **Espace** pour l'expanser. Par exemple :
+Tapez un raccourci et appuyez sur **Tab** pour l'expanser. Par exemple :
 
-- `try` + **Espace** → insère un bloc try-finally complet
-- `ife` + **Espace** → insère une structure if-then-else
-- `fori` + **Espace** → insère une boucle for
+- `try` + **Tab** → insère un bloc try-finally complet
+- `ife` + **Tab** → insère une structure if-then-else
+- `fori` + **Tab** → insère une boucle for
 
 Vous pouvez voir tous les templates disponibles et en créer de nouveaux dans **Outils > Options > Éditeur de code > Code Insight**.
 

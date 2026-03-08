@@ -62,7 +62,7 @@ L'éditeur de code de Delphi est très sophistiqué :
 - Il vous signale les erreurs de syntaxe en temps réel
 - Il vous permet de naviguer facilement entre différentes parties de votre code
 
-Vous pouvez basculer entre la vue concepteur et la vue code en utilisant les touches **F12** (pour la fiche) et **F11** (pour le code), ou en cliquant sur les onglets correspondants.
+Vous pouvez basculer entre la vue concepteur et la vue code en utilisant la touche **F12**, ou en cliquant sur les onglets correspondants. La touche **F11** affiche l'inspecteur d'objets.
 
 ### L'inspecteur d'objets (Object Inspector)
 

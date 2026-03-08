@@ -155,19 +155,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   IncrementCounter;
   Label1.Caption := 'Compteur : ' + IntToStr(FCounter);
 end;
 
-procedure TForm1.IncrementCounter;
-begin
+procedure TForm1.IncrementCounter;  
+begin  
   Inc(FCounter);
 end;
 
-function TForm1.GetCounter: Integer;
-begin
+function TForm1.GetCounter: Integer;  
+begin  
   Result := FCounter;
 end;
 
@@ -220,8 +220,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ...
 end;
 
@@ -551,8 +551,8 @@ UnitUtils.pas
 Une **dépendance circulaire** se produit quand deux unités dépendent l'une de l'autre :
 
 ```
-UnitA uses UnitB
-UnitB uses UnitA
+UnitA uses UnitB  
+UnitB uses UnitA  
 ```
 
 C'est un problème ! Le compilateur Delphi ne peut pas compiler cette situation dans la section **interface**.
@@ -707,15 +707,15 @@ Si vous utilisez Git, SVN ou un autre système de contrôle de version, voici ce
 *.dylib
 
 # Dossiers de sortie
-Win32/
-Win64/
-OSX32/
-OSX64/
-Android/
-Android64/
-iOSDevice/
-iOSDevice64/
-iOSSimulator/
+Win32/  
+Win64/  
+OSX32/  
+OSX64/  
+Android/  
+Android64/  
+iOSDevice/  
+iOSDevice64/  
+iOSSimulator/  
 
 # Fichiers temporaires
 *.local

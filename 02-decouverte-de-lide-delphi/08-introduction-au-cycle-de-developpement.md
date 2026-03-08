@@ -457,7 +457,7 @@ Malgré tous vos tests, des bugs seront découverts en production :
 
 **Priorisez** : bugs critiques d'abord, bugs mineurs ensuite
 
-**Corrigez** : reproducteur le bug, corriger, tester
+**Corrigez** : reproduire le bug, corriger, tester
 
 **Distribuez la correction** : via une mise à jour
 

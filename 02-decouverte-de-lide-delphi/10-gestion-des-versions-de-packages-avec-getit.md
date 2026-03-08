@@ -257,8 +257,8 @@ GetIt gère souvent les dépendances automatiquement :
 
 Le problème se corse quand deux packages dépendent de versions différentes du même package :
 
-**Package A nécessite LibraryX version 2.x**
-**Package B nécessite LibraryX version 3.x**
+**Package A nécessite LibraryX version 2.x**  
+**Package B nécessite LibraryX version 3.x**  
 
 **Solutions possibles** :
 
@@ -408,10 +408,10 @@ Pour un format plus compact, certains développeurs utilisent un style similaire
 # Delphi Packages Requirements
 # Format: PackageName==Version
 
-FastReport-VCL-Community==6.9.12
-Spring4D==2.0.1
-DUnitX==latest
-ZXing-Delphi==3.5.0 # manual install
+FastReport-VCL-Community==6.9.12  
+Spring4D==2.0.1  
+DUnitX==latest  
+ZXing-Delphi==3.5.0 # manual install  
 ```
 
 ### Dans le code source
@@ -566,9 +566,9 @@ Si vous installez des packages manuellement, utilisez Git pour gérer leurs sour
 
 ```bash
 # Dans votre dossier de bibliothèques Delphi
-git clone https://github.com/auteur/package.git
-cd package
-git checkout v2.3.5  # Basculer vers une version spécifique
+git clone https://github.com/auteur/package.git  
+cd package  
+git checkout v2.3.5  # Basculer vers une version spécifique  
 ```
 
 Cela vous permet de changer facilement de version.

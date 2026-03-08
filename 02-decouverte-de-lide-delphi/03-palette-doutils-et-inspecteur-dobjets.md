@@ -298,8 +298,8 @@ C'est entre ces deux lignes que vous écrirez le code qui s'exécutera quand l'�
 Par exemple, pour un bouton nommé "Button1", Delphi créera :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Votre code ici
 end;
 ```
@@ -307,8 +307,8 @@ end;
 Vous pouvez alors écrire, par exemple :
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Vous avez cliqué sur le bouton !');
 end;
 ```
@@ -352,9 +352,9 @@ C'est très pratique pour, par exemple, aligner plusieurs boutons, leur donner l
 
 Vous pouvez copier des composants comme vous copiez du texte :
 
-**Ctrl + C** : copier
-**Ctrl + X** : couper
-**Ctrl + V** : coller
+**Ctrl + C** : copier  
+**Ctrl + X** : couper  
+**Ctrl + V** : coller  
 
 Quand vous collez un composant, Delphi lui donne automatiquement un nouveau nom (Button2, Button3, etc.) et copie toutes ses propriétés.
 

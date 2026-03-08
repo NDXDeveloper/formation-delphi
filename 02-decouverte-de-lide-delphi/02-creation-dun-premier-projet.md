@@ -54,7 +54,7 @@ Dès que vous validez votre choix, Delphi crée automatiquement plusieurs choses
 
 **Une fiche vide** apparaît dans le concepteur : c'est la fenêtre principale de votre future application. Elle est actuellement vide et porte le nom par défaut "Form1".
 
-**Une unité de code associée** : derrière cette fiche, il y a déjà du code Pascal généré automatiquement. Vous pouvez le voir en appuyant sur **F11** ou en cliquant sur l'onglet "Unit1.pas" en bas.
+**Une unité de code associée** : derrière cette fiche, il y a déjà du code Pascal généré automatiquement. Vous pouvez le voir en appuyant sur **F12** ou en cliquant sur l'onglet "Unit1.pas" en bas.
 
 **Un fichier projet** : Delphi a créé le fichier principal de votre projet, mais vous n'avez pas besoin d'y toucher pour l'instant.
 
@@ -108,7 +108,7 @@ N'hésitez pas à explorer ces propriétés dans l'inspecteur d'objets pour voir
 
 ## Le code généré automatiquement
 
-Appuyez sur **F11** pour voir le code associé à votre fiche. Vous verrez quelque chose comme ceci :
+Appuyez sur **F12** pour voir le code associé à votre fiche. Vous verrez quelque chose comme ceci :
 
 ```
 unit MainUnit;

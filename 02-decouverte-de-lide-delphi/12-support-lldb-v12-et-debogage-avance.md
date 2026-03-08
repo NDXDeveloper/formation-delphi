@@ -45,8 +45,8 @@ Les bugs de syntaxe sont les plus faciles à corriger. Les bugs intermittents so
 **Débogage "à l'ancienne"** : ajouter des `ShowMessage` partout pour voir ce qui se passe
 
 ```pascal
-procedure CalculerTotal;
-begin
+procedure CalculerTotal;  
+begin  
   ShowMessage('Début du calcul');
   Total := Prix * Quantite;
   ShowMessage('Total calculé : ' + FloatToStr(Total));
@@ -65,9 +65,9 @@ C'est ce que nous allons apprendre !
 
 ### Définition
 
-**LLDB** signifie **Low Level Debugger** (Débogueur de Bas Niveau). C'est un débogueur open source développé par le projet LLVM.
+**LLDB** signifie **LLVM Debugger** (Débogueur LLVM). C'est un débogueur open source développé dans le cadre du projet LLVM, un écosystème de compilation moderne.
 
-**Bas niveau** ne signifie pas "difficile" ! Cela signifie qu'il travaille au niveau des instructions machine, ce qui lui donne une grande puissance et flexibilité.
+LLDB est capable de travailler au niveau des instructions machine, ce qui lui donne une grande puissance et flexibilité.
 
 ### Pourquoi LLDB v12 dans Delphi 13 ?
 
@@ -85,7 +85,7 @@ Avec LLDB v12, Delphi unifie le débogage :
 
 **Un seul débogueur** pour toutes les plateformes (ou presque)
 
-**Plus moderne** : LLDB est activement maintenu et améliorer
+**Plus moderne** : LLDB est activement maintenu et amélioré
 
 **Plus puissant** : fonctionnalités avancées de débogage
 
@@ -262,12 +262,12 @@ La **pile d'appels** montre le chemin d'exécution : quelle fonction a appelé q
 
 **Exemple** :
 ```
-FormMain.Button1Click  <- Vous êtes ici
-FormMain.CalculerTotal
-FormMain.ValiderDonnees
+FormMain.ValiderDonnees  <- Vous êtes ici  
+FormMain.CalculerTotal  
+FormMain.Button1Click  
 ```
 
-Cela signifie : `ValiderDonnees` a appelé `CalculerTotal`, qui a appelé `Button1Click`, et vous êtes actuellement dans `Button1Click`.
+Cela signifie : `Button1Click` a appelé `CalculerTotal`, qui a appelé `ValiderDonnees`, et vous êtes actuellement dans `ValiderDonnees`.
 
 **Double-cliquez** sur une ligne de la pile pour voir le code à cet endroit.
 
@@ -292,8 +292,8 @@ Un **point d'arrêt conditionnel** ne s'arrête que si une condition est vraie.
 **Exemple** : vous avez une boucle qui s'exécute 1000 fois, mais le bug n'apparaît que quand `i = 873`.
 
 ```pascal
-for i := 0 to 1000 do
-begin
+for i := 0 to 1000 do  
+begin  
   TraiterElement(i);  // Bug quand i = 873
 end;
 ```
@@ -466,8 +466,8 @@ end;
 
 **Objet déjà libéré** :
 ```pascal
-Liste.Free;
-Liste.Add('Test');  // ERREUR : Liste a été libérée
+Liste.Free;  
+Liste.Add('Test');  // ERREUR : Liste a été libérée  
 ```
 
 **Pointeur nil** :
@@ -492,10 +492,10 @@ end;
 Votre programme semble figé, ne répondant plus ? C'est peut-être une **boucle infinie**.
 
 ```pascal
-while Condition do
-begin
+while Condition do  
+begin  
   // Si Condition reste toujours True, boucle infinie !
-  FairQuelqueChose;
+  FaireQuelqueChose;
 end;
 ```
 
@@ -514,7 +514,7 @@ begin
   Compteur := 0;
   while (Condition) and (Compteur < 1000) do  // Max 1000 itérations
   begin
-    FairQuelqueChose;
+    FaireQuelqueChose;
     Inc(Compteur);
   end;
 
@@ -541,8 +541,8 @@ Votre calcul donne un résultat faux, mais vous ne savez pas où est l'erreur.
 
 **Exemple** :
 ```pascal
-function CalculerTotal(Prix, Quantite: Double): Double;
-var
+function CalculerTotal(Prix, Quantite: Double): Double;  
+var  
   SousTotal: Double;
 begin
   SousTotal := Prix * Quantite;  // Vérifiez : SousTotal correct ?
@@ -715,8 +715,8 @@ Parfois, le débogueur ne peut pas être utilisé (problème de timing, applicat
 **Logging** : écrire dans un fichier journal
 
 ```pascal
-procedure Log(const Msg: string);
-var
+procedure Log(const Msg: string);  
+var  
   F: TextFile;
 begin
   AssignFile(F, 'debug.log');
@@ -795,8 +795,8 @@ Nous verrons les tests en détail dans un chapitre ultérieur.
 
 **Vérifiez les paramètres** :
 ```pascal
-procedure TraiterClient(Client: TClient);
-begin
+procedure TraiterClient(Client: TClient);  
+begin  
   if not Assigned(Client) then
     raise Exception.Create('Client ne peut pas être nil');
   // ...
@@ -805,8 +805,8 @@ end;
 
 **Gérez les cas limites** :
 ```pascal
-function Diviser(A, B: Integer): Integer;
-begin
+function Diviser(A, B: Integer): Integer;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro impossible');
   Result := A div B;

@@ -224,8 +224,8 @@ Quand vous avez un problème avec du code, incluez-le dans votre question :
 ```
 J'ai ce code pour ajouter un élément à une liste :
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ListBox1.Add('Nouvel élément');
 end;
 
@@ -301,8 +301,8 @@ Notez aussi le bloc `try-finally` pour assurer que la liste est libérée même 
 **IA** : "Voici le code pour lire un fichier et afficher son contenu :
 
 ```pascal
-procedure TForm1.ButtonLireFichierClick(Sender: TObject);
-var
+procedure TForm1.ButtonLireFichierClick(Sender: TObject);  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -318,8 +318,8 @@ end;
 Alternativement, pour plus de contrôle ligne par ligne :
 
 ```pascal
-procedure TForm1.ButtonLireFichierClick(Sender: TObject);
-var
+procedure TForm1.ButtonLireFichierClick(Sender: TObject);  
+var  
   Fichier: TStringList;
   i: Integer;
 begin
@@ -335,7 +335,7 @@ begin
     Fichier.Free;
   end;
 end;
-```"
+```
 
 ### Itération et affinement
 
@@ -374,8 +374,8 @@ Demandez à l'IA de générer des tests unitaires :
 "Génère des tests DUnitX pour cette fonction :"
 
 ```pascal
-function CalculerTVA(MontantHT: Double; TauxTVA: Double): Double;
-begin
+function CalculerTVA(MontantHT: Double; TauxTVA: Double): Double;  
+begin  
   Result := MontantHT * (1 + TauxTVA / 100);
 end;
 ```
@@ -389,8 +389,8 @@ Si vous héritez d'un projet avec du code que vous ne comprenez pas :
 "Peux-tu expliquer ce que fait ce code ?"
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 0 to ComponentCount - 1 do
@@ -408,8 +408,8 @@ Demandez à l'IA de documenter votre code :
 "Ajoute des commentaires de documentation XML à cette fonction :"
 
 ```pascal
-function CalculerPrixTTC(PrixHT: Double; TVA: Double): Double;
-begin
+function CalculerPrixTTC(PrixHT: Double; TVA: Double): Double;  
+begin  
   Result := PrixHT * (1 + TVA);
 end;
 ```

@@ -145,10 +145,10 @@ Vous avez maintenant une vision claire de ce qui vous attend dans ce chapitre. V
 
 Avant de passer à la première section, assurez-vous que :
 
-✅ Delphi 13 Florence est installé sur votre ordinateur
-✅ Vous avez quelques heures devant vous (ou prévoyez plusieurs sessions)
-✅ Vous êtes prêt à pratiquer, pas seulement à lire
-✅ Vous avez de quoi prendre des notes si vous le souhaitez
+✅ Delphi 13 Florence est installé sur votre ordinateur  
+✅ Vous avez quelques heures devant vous (ou prévoyez plusieurs sessions)  
+✅ Vous êtes prêt à pratiquer, pas seulement à lire  
+✅ Vous avez de quoi prendre des notes si vous le souhaitez  
 ✅ Vous êtes dans un environnement calme où vous pouvez vous concentrer
 
 N'oubliez pas : Rome ne s'est pas construite en un jour, et la maîtrise de l'IDE non plus. Soyez patient, curieux, et persévérant. Chaque petite découverte, chaque raccourci appris, chaque outil maîtrisé vous rapproche de votre objectif : devenir un développeur Delphi compétent et efficace.
