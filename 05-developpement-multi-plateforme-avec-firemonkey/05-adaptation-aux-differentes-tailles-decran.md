@@ -73,8 +73,8 @@ L'interface s'étire et se contracte proportionnellement.
 
 ```pascal
 // Tous les éléments utilisent des pourcentages ou s'alignent
-Panel1.Align := TAlignLayout.Client;  // Occupe tout l'espace
-Button1.Align := TAlignLayout.Bottom; // S'étend en largeur
+Panel1.Align := TAlignLayout.Client;  // Occupe tout l'espace  
+Button1.Align := TAlignLayout.Bottom; // S'étend en largeur  
 
 // Résultat : L'interface s'adapte mais garde la même structure
 ```
@@ -92,8 +92,8 @@ Button1.Align := TAlignLayout.Bottom; // S'étend en largeur
 L'interface change de structure à certaines tailles critiques (breakpoints).
 
 ```pascal
-procedure TForm1.AdapterInterface;
-begin
+procedure TForm1.AdapterInterface;  
+begin  
   if Width < 600 then
   begin
     // Layout mobile
@@ -125,8 +125,8 @@ end;
 Combinaison des deux approches : layout fluide avec des points de rupture pour les changements majeurs.
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   // Base fluide
   AjusterEspacements;
 
@@ -167,8 +167,8 @@ const
 type
   TScreenSize = (ssMobileSmall, ssMobile, ssTablet, ssDesktop, ssDesktopLarge);
 
-function TForm1.GetScreenSize: TScreenSize;
-begin
+function TForm1.GetScreenSize: TScreenSize;  
+begin  
   if Width < BREAKPOINT_MOBILE then
     Result := ssMobileSmall
   else if Width < BREAKPOINT_PHABLET then
@@ -181,8 +181,8 @@ begin
     Result := ssDesktopLarge;
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
-var
+procedure TForm1.FormResize(Sender: TObject);  
+var  
   NewSize: TScreenSize;
 begin
   NewSize := GetScreenSize;
@@ -195,8 +195,8 @@ begin
   end;
 end;
 
-procedure TForm1.ReorganiserInterface(ScreenSize: TScreenSize);
-begin
+procedure TForm1.ReorganiserInterface(ScreenSize: TScreenSize);  
+begin  
   case ScreenSize of
     ssMobileSmall, ssMobile:
       AppliquerLayoutMobile;
@@ -215,10 +215,10 @@ end;
 **❌ Mauvais** : Trop de breakpoints
 ```pascal
 // Ne faites pas ça - trop complexe
-if Width = 320 then...
-else if Width = 375 then...
-else if Width = 414 then...
-else if Width = 768 then...
+if Width = 320 then...  
+else if Width = 375 then...  
+else if Width = 414 then...  
+else if Width = 768 then...  
 // etc... cauchemar de maintenance
 ```
 
@@ -247,8 +247,8 @@ else
 #### 1. Layout en colonne unique
 
 ```pascal
-procedure TForm1.AppliquerLayoutMobile;
-begin
+procedure TForm1.AppliquerLayoutMobile;  
+begin  
   // Tout en colonne verticale
   MainLayout.Align := TAlignLayout.Client;
 
@@ -270,17 +270,17 @@ end;
 
 ```pascal
 // Utiliser des onglets en bas plutôt qu'un menu
-TabControl1.Visible := True;
-TabControl1.TabPosition := TTabPosition.Bottom;
-MenuBar.Visible := False;
+TabControl1.Visible := True;  
+TabControl1.TabPosition := TTabPosition.Bottom;  
+MenuBar.Visible := False;  
 ```
 
 #### 3. Textes et contrôles plus grands
 
 ```pascal
 // Taille tactile
-Button1.Height := 50;  // Au lieu de 30 sur desktop
-Label1.TextSettings.Font.Size := 16;  // Au lieu de 11
+Button1.Height := 50;  // Au lieu de 30 sur desktop  
+Label1.TextSettings.Font.Size := 16;  // Au lieu de 11  
 ```
 
 ### Tablette (600px - 1024px)
@@ -295,8 +295,8 @@ Label1.TextSettings.Font.Size := 16;  // Au lieu de 11
 #### 1. Layout deux colonnes en paysage
 
 ```pascal
-procedure TForm1.AppliquerLayoutTablette;
-begin
+procedure TForm1.AppliquerLayoutTablette;  
+begin  
   if Width > Height then
   begin
     // Paysage : deux colonnes
@@ -319,8 +319,8 @@ end;
 
 ```pascal
 // Plus d'éléments par ligne sur tablette
-if GetScreenSize = ssTablet then
-begin
+if GetScreenSize = ssTablet then  
+begin  
   if Width > Height then
     GridLayout1.ColumnCount := 4  // Paysage
   else
@@ -340,8 +340,8 @@ end;
 #### 1. Layout multi-colonnes
 
 ```pascal
-procedure TForm1.AppliquerLayoutDesktop;
-begin
+procedure TForm1.AppliquerLayoutDesktop;  
+begin  
   // Trois panneaux : navigation, liste, détails
   NavPanel.Visible := True;
   NavPanel.Width := 200;
@@ -366,9 +366,9 @@ end;
 
 ```pascal
 // Contrôles desktop plus petits et compacts
-Button1.Height := 30;
-Label1.TextSettings.Font.Size := 11;
-ListView1.ItemHeight := 24;
+Button1.Height := 30;  
+Label1.TextSettings.Font.Size := 11;  
+ListView1.ItemHeight := 24;  
 ```
 
 ## 5. Gestion de la densité de pixels (DPI/Scale)
@@ -390,8 +390,8 @@ Button1.Width := 100;
 ### Détecter le facteur de scaling
 
 ```pascal
-function TForm1.GetScaleFactor: Single;
-begin
+function TForm1.GetScaleFactor: Single;  
+begin  
   Result := Self.Handle.Scale;
   // Retourne par exemple :
   // 1.0 pour écran standard
@@ -404,8 +404,8 @@ end;
 ### Adapter selon le DPI
 
 ```pascal
-procedure TForm1.AdapterSelonDPI;
-var
+procedure TForm1.AdapterSelonDPI;  
+var  
   Scale: Single;
 begin
   Scale := GetScaleFactor;
@@ -427,8 +427,8 @@ end;
 ### Images adaptatives par résolution
 
 ```pascal
-procedure TForm1.ChargerImageAdaptee(Image: TImage; NomBase: string);
-var
+procedure TForm1.ChargerImageAdaptee(Image: TImage; NomBase: string);  
+var  
   Scale: Single;
   Fichier: string;
 begin
@@ -455,8 +455,8 @@ ChargerImageAdaptee(Image1, 'Images\Logo');
 ### Pattern 1 : Grille responsive
 
 ```pascal
-procedure TForm1.ConfigurerGrilleResponsive;
-var
+procedure TForm1.ConfigurerGrilleResponsive;  
+var  
   ScreenSize: TScreenSize;
 begin
   ScreenSize := GetScreenSize;
@@ -496,8 +496,8 @@ end;
 ### Pattern 2 : Sidebar adaptative
 
 ```pascal
-procedure TForm1.ConfigurerSidebar;
-begin
+procedure TForm1.ConfigurerSidebar;  
+begin  
   if Width < BREAKPOINT_DESKTOP then
   begin
     // Mobile/Tablette : Sidebar en overlay
@@ -534,8 +534,8 @@ end;
 ### Pattern 3 : Formulaire adaptatif
 
 ```pascal
-procedure TForm1.ConfigurerFormulaireAdaptatif;
-var
+procedure TForm1.ConfigurerFormulaireAdaptatif;  
+var  
   ColonnesDisponibles: Integer;
 begin
   // Calculer le nombre de colonnes selon la largeur
@@ -560,8 +560,8 @@ end;
 ### Pattern 4 : Navigation adaptative
 
 ```pascal
-procedure TForm1.ConfigurerNavigationAdaptative;
-begin
+procedure TForm1.ConfigurerNavigationAdaptative;  
+begin  
   case GetScreenSize of
     ssMobileSmall, ssMobile:
     begin
@@ -599,13 +599,13 @@ end;
 ### Détecter l'orientation
 
 ```pascal
-function TForm1.EstEnModePaysage: Boolean;
-begin
+function TForm1.EstEnModePaysage: Boolean;  
+begin  
   Result := Width > Height;
 end;
 
-function TForm1.EstEnModePortrait: Boolean;
-begin
+function TForm1.EstEnModePortrait: Boolean;  
+begin  
   Result := Height > Width;
 end;
 ```
@@ -613,13 +613,13 @@ end;
 ### Adapter selon l'orientation
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   AdapterSelonOrientation;
 end;
 
-procedure TForm1.AdapterSelonOrientation;
-begin
+procedure TForm1.AdapterSelonOrientation;  
+begin  
   if EstEnModePaysage then
   begin
     // Mode paysage : disposition horizontale
@@ -645,8 +645,8 @@ end;
 ### Exemple pratique : Galerie photos
 
 ```pascal
-procedure TForm1.AdapterGalerie;
-begin
+procedure TForm1.AdapterGalerie;  
+begin  
   if EstEnModePaysage then
   begin
     // Paysage : Plus de colonnes, moins de lignes
@@ -671,8 +671,8 @@ end;
 Au lieu de marges fixes, utilisez des marges qui s'adaptent à la taille de l'écran.
 
 ```pascal
-procedure TForm1.ConfigurerMargesAdaptatives;
-var
+procedure TForm1.ConfigurerMargesAdaptatives;  
+var  
   MargeBase: Single;
 begin
   // Calculer une marge de base proportionnelle à la largeur
@@ -697,8 +697,8 @@ end;
 ### Espacements selon la catégorie d'écran
 
 ```pascal
-procedure TForm1.ConfigurerEspacements;
-begin
+procedure TForm1.ConfigurerEspacements;  
+begin  
   case GetScreenSize of
     ssMobileSmall, ssMobile:
     begin
@@ -729,8 +729,8 @@ end;
 ### Tailles de police adaptatives
 
 ```pascal
-procedure TForm1.ConfigurerTypographie;
-var
+procedure TForm1.ConfigurerTypographie;  
+var  
   TailleBase: Single;
 begin
   case GetScreenSize of
@@ -763,8 +763,8 @@ end;
 Sur desktop, limitez la largeur des blocs de texte pour une lecture confortable :
 
 ```pascal
-procedure TForm1.LimiterLargeurTexte;
-begin
+procedure TForm1.LimiterLargeurTexte;  
+begin  
   if Width > BREAKPOINT_DESKTOP then
   begin
     // Sur grand écran, limiter la largeur du texte
@@ -801,8 +801,8 @@ end;
 ### Tester programmatiquement
 
 ```pascal
-procedure TForm1.TesterDifferentesTailles;
-begin
+procedure TForm1.TesterDifferentesTailles;  
+begin  
   // Simuler différentes tailles pour tester
 
   // iPhone SE
@@ -815,8 +815,8 @@ begin
   SimulerTaille(1920, 1080);
 end;
 
-procedure TForm1.SimulerTaille(Largeur, Hauteur: Integer);
-begin
+procedure TForm1.SimulerTaille(Largeur, Hauteur: Integer);  
+begin  
   {$IFDEF DEBUG}
   // Uniquement en mode debug
   Self.Width := Largeur;
@@ -855,8 +855,8 @@ end;
 var
   FDerniereCategorie: TScreenSize;
 
-procedure TForm1.FormResize(Sender: TObject);
-var
+procedure TForm1.FormResize(Sender: TObject);  
+var  
   CategorieActuelle: TScreenSize;
 begin
   CategorieActuelle := GetScreenSize;
@@ -883,23 +883,23 @@ Pour éviter trop de recalculs lors du redimensionnement :
 var
   FResizeTimer: TTimer;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   FResizeTimer := TTimer.Create(Self);
   FResizeTimer.Interval := 300;  // 300ms de délai
   FResizeTimer.Enabled := False;
   FResizeTimer.OnTimer := ResizeTimerTimer;
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   // Relancer le timer à chaque resize
   FResizeTimer.Enabled := False;
   FResizeTimer.Enabled := True;
 end;
 
-procedure TForm1.ResizeTimerTimer(Sender: TObject);
-begin
+procedure TForm1.ResizeTimerTimer(Sender: TObject);  
+begin  
   FResizeTimer.Enabled := False;
 
   // Faire la réorganisation coûteuse maintenant
@@ -910,8 +910,8 @@ end;
 ### Charger les ressources à la demande
 
 ```pascal
-procedure TForm1.ChargerRessourcesSelonTaille;
-begin
+procedure TForm1.ChargerRessourcesSelonTaille;  
+begin  
   case GetScreenSize of
     ssMobileSmall, ssMobile:
     begin
@@ -966,8 +966,8 @@ TAnimator.AnimateFloat(Panel1, 'Width', 300, 0.3);
 **5. Tester les orientations**
 ```pascal
 // Sur mobile/tablette, toujours tester portrait ET paysage
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   AdapterSelonOrientation;
 end;
 ```
@@ -983,8 +983,8 @@ end;
 **1. Positions absolues en pixels**
 ```pascal
 // ❌ MAUVAIS - Ne s'adapte pas
-Button1.Position.X := 100;
-Button1.Position.Y := 200;
+Button1.Position.X := 100;  
+Button1.Position.Y := 200;  
 
 // ✅ BON - S'adapte automatiquement
 Button1.Align := TAlignLayout.Bottom;

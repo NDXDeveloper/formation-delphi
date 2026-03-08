@@ -30,10 +30,10 @@ Le grand avantage : un seul style s'applique à TOUS les composants de votre app
 
 ```pascal
 // Sans changer une ligne de code de l'interface, vous pouvez :
-StyleBook1.LoadFromFile('StyleModerne.style');    // Look moderne
-StyleBook1.LoadFromFile('StyleiOS.style');        // Look iOS
-StyleBook1.LoadFromFile('StyleAndroid.style');    // Look Android
-StyleBook1.LoadFromFile('StyleSombre.style');     // Mode sombre
+StyleBook1.LoadFromFile('StyleModerne.style');    // Look moderne  
+StyleBook1.LoadFromFile('StyleiOS.style');        // Look iOS  
+StyleBook1.LoadFromFile('StyleAndroid.style');    // Look Android  
+StyleBook1.LoadFromFile('StyleSombre.style');     // Mode sombre  
 ```
 
 ## 2. Les styles prédéfinis
@@ -127,20 +127,20 @@ Form1.StyleBook := StyleBook1;
 ### Charger un style dynamiquement
 
 ```pascal
-procedure TForm1.ChargerStyleModerne;
-begin
+procedure TForm1.ChargerStyleModerne;  
+begin  
   StyleBook1.LoadFromFile('Styles\Moderne.style');
   Form1.StyleBook := StyleBook1;
 end;
 
-procedure TForm1.ChargerStyleSombre;
-begin
+procedure TForm1.ChargerStyleSombre;  
+begin  
   StyleBook1.LoadFromFile('Styles\Sombre.style');
   Form1.StyleBook := StyleBook1;
 end;
 
-procedure TForm1.ButtonThemeClick(Sender: TObject);
-begin
+procedure TForm1.ButtonThemeClick(Sender: TObject);  
+begin  
   if ModeActuel = 'Clair' then
   begin
     ChargerStyleSombre;
@@ -221,12 +221,12 @@ En changeant simplement le StyleLookup, vous créez des variantes sans dupliquer
 
 ```pascal
 // Bouton d'action principale
-ButtonPrimary.Text := 'Sauvegarder';
-ButtonPrimary.StyleLookup := 'buttonstyle';
+ButtonPrimary.Text := 'Sauvegarder';  
+ButtonPrimary.StyleLookup := 'buttonstyle';  
 
 // Bouton secondaire avec style différent
-ButtonSecondary.Text := 'Annuler';
-ButtonSecondary.StyleLookup := 'toolbuttonstyle';
+ButtonSecondary.Text := 'Annuler';  
+ButtonSecondary.StyleLookup := 'toolbuttonstyle';  
 ```
 
 ## 5. Personnalisation des couleurs et propriétés
@@ -242,9 +242,9 @@ Même en utilisant un style prédéfini, vous pouvez modifier certaines proprié
 Rectangle1.Fill.Color := TAlphaColors.Blue;
 
 // Utiliser un dégradé
-Rectangle1.Fill.Kind := TBrushKind.Gradient;
-Rectangle1.Fill.Gradient.Color := TAlphaColors.Blue;
-Rectangle1.Fill.Gradient.Color1 := TAlphaColors.Lightblue;
+Rectangle1.Fill.Kind := TBrushKind.Gradient;  
+Rectangle1.Fill.Gradient.Color := TAlphaColors.Blue;  
+Rectangle1.Fill.Gradient.Color1 := TAlphaColors.Lightblue;  
 ```
 
 #### Propriété Stroke (Bordure)
@@ -285,8 +285,8 @@ Label1.TextSettings.Font.Size := 18;
 Label1.TextSettings.Font.Family := 'Segoe UI';
 
 // Style de police
-Label1.TextSettings.FontColor := TAlphaColors.Navy;
-Label1.TextSettings.Font.Style := [TFontStyle.fsBold];
+Label1.TextSettings.FontColor := TAlphaColors.Navy;  
+Label1.TextSettings.Font.Style := [TFontStyle.fsBold];  
 
 // Alignement horizontal
 Label1.TextSettings.HorzAlign := TTextAlign.Center;
@@ -301,8 +301,8 @@ FireMonkey utilise des couleurs ARGB (Alpha, Rouge, Vert, Bleu) permettant la tr
 
 ```pascal
 // Couleurs prédéfinies
-Rectangle1.Fill.Color := TAlphaColors.Red;
-Rectangle1.Fill.Color := TAlphaColors.Blue;
+Rectangle1.Fill.Color := TAlphaColors.Red;  
+Rectangle1.Fill.Color := TAlphaColors.Blue;  
 
 // Couleur personnalisée avec alpha
 // Format : $AARRGGBB (AA = alpha, RR = rouge, GG = vert, BB = bleu)
@@ -397,8 +397,8 @@ var
   StyleSombre: TStyleBook;
   ModeSombre: Boolean;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   ModeSombre := False;
   StyleClair := TStyleBook.Create(Self);
   StyleClair.LoadFromFile('Styles\Clair.style');
@@ -410,8 +410,8 @@ begin
   Self.StyleBook := StyleClair;
 end;
 
-procedure TForm1.BasculerTheme;
-begin
+procedure TForm1.BasculerTheme;  
+begin  
   if ModeSombre then
   begin
     Self.StyleBook := StyleClair;
@@ -428,8 +428,8 @@ end;
 #### Méthode 2 : Couleurs adaptatives
 
 ```pascal
-procedure TForm1.AppliquerCouleurs(ModeSombre: Boolean);
-begin
+procedure TForm1.AppliquerCouleurs(ModeSombre: Boolean);  
+begin  
   if ModeSombre then
   begin
     Form1.Fill.Color := TAlphaColors.Black;
@@ -453,8 +453,8 @@ Sur les plateformes modernes, vous pouvez détecter si l'utilisateur préfère u
 uses
   FMX.Platform;
 
-function TForm1.SystemeEnModeSombre: Boolean;
-var
+function TForm1.SystemeEnModeSombre: Boolean;  
+var  
   ThemeService: IFMXThemeService;
 begin
   Result := False;
@@ -466,8 +466,8 @@ begin
   end;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   if SystemeEnModeSombre then
     AppliquerThemeSombre
   else
@@ -541,8 +541,8 @@ end;
 Vous pouvez appliquer plusieurs effets à un même composant :
 
 ```pascal
-procedure TForm1.StyilserBoutonPremium(Button: TButton);
-var
+procedure TForm1.StyliserBoutonPremium(Button: TButton);  
+var  
   Shadow: TShadowEffect;
   Glow: TGlowEffect;
 begin
@@ -596,8 +596,8 @@ end;
 
 **Chargement asynchrone** :
 ```pascal
-procedure TForm1.ChargerStyleAsync;
-begin
+procedure TForm1.ChargerStyleAsync;  
+begin  
   TTask.Run(procedure
   begin
     StyleBook1.LoadFromFile('StyleLourd.style');
@@ -619,9 +619,9 @@ Parfois, vous voulez qu'un seul composant ait un style différent sans changer t
 
 ```pascal
 // Personnaliser directement
-Button1.StyledSettings := [];  // Désactiver le style hérité
-Button1.Fill.Color := TAlphaColors.Red;
-Button1.TextSettings.FontColor := TAlphaColors.White;
+Button1.StyledSettings := [];  // Désactiver le style hérité  
+Button1.Fill.Color := TAlphaColors.Red;  
+Button1.TextSettings.FontColor := TAlphaColors.White;  
 ```
 
 #### Méthode 2 : StyleLookup personnalisé
@@ -644,8 +644,8 @@ Button1.StyledSettings := [TStyledSetting.Family,
                            TStyledSetting.Style];
 
 // Ne pas hériter de la couleur de police
-Button1.StyledSettings := Button1.StyledSettings - [TStyledSetting.FontColor];
-Button1.TextSettings.FontColor := TAlphaColors.Red;  // Couleur personnalisée
+Button1.StyledSettings := Button1.StyledSettings - [TStyledSetting.FontColor];  
+Button1.TextSettings.FontColor := TAlphaColors.Red;  // Couleur personnalisée  
 
 // Ignorer complètement le style
 Button1.StyledSettings := [];
@@ -742,12 +742,12 @@ Assurez-vous d'avoir un contraste suffisant entre le texte et l'arrière-plan :
 
 ```pascal
 // BON : Contraste élevé
-Panel1.Fill.Color := TAlphaColors.White;
-Label1.TextSettings.FontColor := TAlphaColors.Black;
+Panel1.Fill.Color := TAlphaColors.White;  
+Label1.TextSettings.FontColor := TAlphaColors.Black;  
 
 // MAUVAIS : Contraste faible
-Panel1.Fill.Color := TAlphaColors.Lightgray;
-Label1.TextSettings.FontColor := TAlphaColors.White;
+Panel1.Fill.Color := TAlphaColors.Lightgray;  
+Label1.TextSettings.FontColor := TAlphaColors.White;  
 ```
 
 ### Taille de texte adaptée
@@ -769,8 +769,8 @@ Label1.TextSettings.FontColor := TAlphaColors.White;
 ButtonDanger.Fill.Color := TAlphaColors.Red;
 
 // ✅ BON : Couleur + icône + texte
-ButtonDanger.Fill.Color := TAlphaColors.Red;
-ButtonDanger.Text := '⚠ Supprimer';  // Icône + texte explicite
+ButtonDanger.Fill.Color := TAlphaColors.Red;  
+ButtonDanger.Text := '⚠ Supprimer';  // Icône + texte explicite  
 ```
 
 ## 13. Exemples de palettes de couleurs

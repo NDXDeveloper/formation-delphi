@@ -42,8 +42,8 @@ Développer pour mobile n'est pas simplement "compiler pour iOS ou Android". Les
 
 ```pascal
 // Ce qui fonctionne bien sur PC...
-for i := 1 to 10000 do
-begin
+for i := 1 to 10000 do  
+begin  
   Image := TImage.Create(Self);
   Image.Bitmap.LoadFromFile('photo' + i.ToString + '.jpg');
   // ... traitement
@@ -72,8 +72,8 @@ Développer en pensant mobile d'abord, puis enrichir pour desktop :
 
 ```pascal
 // ❌ MAUVAIS : Trop d'éléments
-procedure TForm1.CreerInterface;
-var
+procedure TForm1.CreerInterface;  
+var  
   i: Integer;
 begin
   for i := 1 to 100 do
@@ -95,8 +95,8 @@ end;
 
 ```pascal
 // ✅ BON : Simplifier
-procedure TForm1.CreerInterfaceOptimisee;
-var
+procedure TForm1.CreerInterfaceOptimisee;  
+var  
   i: Integer;
 begin
   for i := 1 to 100 do
@@ -124,8 +124,8 @@ end;
 - Transparence excessive
 
 ```pascal
-procedure TForm1.ConfigurerEffetsSelonPlateforme;
-begin
+procedure TForm1.ConfigurerEffetsSelonPlateforme;  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Mobile : Désactiver les effets
     BlurEffect1.Enabled := False;
@@ -146,8 +146,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Créer 1000 items d'un coup
-procedure TForm1.RemplirListe;
-var
+procedure TForm1.RemplirListe;  
+var  
   i: Integer;
 begin
   for i := 1 to 1000 do
@@ -162,8 +162,8 @@ end;
 
 ```pascal
 // ✅ BON : Utiliser la virtualisation
-procedure TForm1.RemplirListeVirtuelle;
-begin
+procedure TForm1.RemplirListeVirtuelle;  
+begin  
   // TListView avec virtualisation
   ListView1.Items.Count := 1000;  // Juste le nombre
   // Les items sont créés à la demande lors du scroll
@@ -174,7 +174,7 @@ procedure TForm1.ListView1UpdateObjects(const Sender: TObject;
 begin
   // Cette méthode est appelée pour chaque item visible
   AItem.Text := 'Item ' + AItem.Index.ToString;
-  AItem.Detail := 'Détails de l\'item';
+  AItem.Detail := 'Détails de l''item';
 
   // Seuls les items visibles sont créés
 end;
@@ -184,8 +184,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Mettre à jour l'UI à chaque itération
-procedure TForm1.TraiterDonnees;
-var
+procedure TForm1.TraiterDonnees;  
+var  
   i: Integer;
 begin
   for i := 1 to 10000 do
@@ -203,8 +203,8 @@ end;
 
 ```pascal
 // ✅ BON : Mettre à jour par lots
-procedure TForm1.TraiterDonneesOptimise;
-var
+procedure TForm1.TraiterDonneesOptimise;  
+var  
   i: Integer;
 begin
   for i := 1 to 10000 do
@@ -242,8 +242,8 @@ end;
 var
   FImages: TArray<TBitmap>;
 
-procedure TForm1.ChargerImages;
-var
+procedure TForm1.ChargerImages;  
+var  
   i: Integer;
 begin
   SetLength(FImages, 100);
@@ -258,8 +258,8 @@ end;
 
 ```pascal
 // ✅ BON : Charger à la demande
-procedure TForm1.ChargerImageALaDemande(Index: Integer);
-begin
+procedure TForm1.ChargerImageALaDemande(Index: Integer);  
+begin  
   // Libérer l'image précédente
   if Assigned(FImageActuelle) then
     FImageActuelle.Free;
@@ -275,8 +275,8 @@ end;
 ### Vider les caches régulièrement
 
 ```pascal
-procedure TForm1.ViderCaches;
-begin
+procedure TForm1.ViderCaches;  
+begin  
   // Vider les bitmaps non utilisés
   Image1.Bitmap.Clear;
   Image2.Bitmap.Clear;
@@ -290,8 +290,8 @@ begin
   FListeObjetsTemporaires.Clear;
 end;
 
-procedure TForm1.FormDeactivate(Sender: TObject);
-begin
+procedure TForm1.FormDeactivate(Sender: TObject);  
+begin  
   // Libérer les ressources quand l'app passe en arrière-plan
   ViderCaches;
 end;
@@ -301,16 +301,16 @@ end;
 
 ```pascal
 // Utiliser ReportMemoryLeaksOnShutdown en mode Debug
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
   {$ENDIF}
 end;
 
 // Vérifier qu'on libère tout
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Libérer explicitement les objets créés
   FreeAndNil(FMonObjet);
   FreeAndNil(FMaListe);
@@ -327,8 +327,8 @@ end;
 ```
 Taille en mémoire = Largeur × Hauteur × 4 octets (RGBA)
 
-Exemple :
-Image 1920×1080 = 1920 × 1080 × 4 = 8.3 MB en mémoire
+Exemple :  
+Image 1920×1080 = 1920 × 1080 × 4 = 8.3 MB en mémoire  
 (même si le fichier JPG fait 500 KB sur disque !)
 ```
 
@@ -432,22 +432,22 @@ type
     procedure Vider;
   end;
 
-constructor TImageCache.Create(TailleMaxMB: Integer);
-begin
+constructor TImageCache.Create(TailleMaxMB: Integer);  
+begin  
   inherited Create;
   FCache := TDictionary<string, TBitmap>.Create;
   FTailleMaxCache := TailleMaxMB * 1024 * 1024;  // Convertir en octets
 end;
 
-destructor TImageCache.Destroy;
-begin
+destructor TImageCache.Destroy;  
+begin  
   Vider;
   FCache.Free;
   inherited;
 end;
 
-function TImageCache.Obtenir(const Fichier: string): TBitmap;
-begin
+function TImageCache.Obtenir(const Fichier: string): TBitmap;  
+begin  
   // Chercher dans le cache
   if not FCache.TryGetValue(Fichier, Result) then
   begin
@@ -461,8 +461,8 @@ begin
   end;
 end;
 
-procedure TImageCache.Vider;
-begin
+procedure TImageCache.Vider;  
+begin  
   for var Bitmap in FCache.Values do
     Bitmap.Free;
   FCache.Clear;
@@ -475,8 +475,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Animation à 60 FPS peut être trop
-procedure TForm1.Timer60FPSTimer(Sender: TObject);
-begin
+procedure TForm1.Timer60FPSTimer(Sender: TObject);  
+begin  
   // Appelé 60 fois par seconde = beaucoup de travail
   Rectangle1.Position.X := Rectangle1.Position.X + 1;
   Rectangle1.RotationAngle := Rectangle1.RotationAngle + 1;
@@ -486,8 +486,8 @@ end;
 
 ```pascal
 // ✅ BON : Utiliser TAnimation intégré
-procedure TForm1.AnimerAvecTAnimation;
-var
+procedure TForm1.AnimerAvecTAnimation;  
+var  
   Anim: TFloatAnimation;
 begin
   // FireMonkey optimise automatiquement
@@ -507,8 +507,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Trop d'animations simultanées
-procedure TForm1.AnimerTout;
-var
+procedure TForm1.AnimerTout;  
+var  
   i: Integer;
 begin
   // 50 éléments animés = surcharge
@@ -527,8 +527,8 @@ end;
 
 ```pascal
 // ✅ BON : Animer par groupes
-procedure TForm1.AnimerParGroupes;
-var
+procedure TForm1.AnimerParGroupes;  
+var  
   i: Integer;
 begin
   // Animer 5 par 5 avec délai
@@ -549,8 +549,8 @@ end;
 ### Désactiver les animations sur appareil lent
 
 ```pascal
-function TForm1.AppareilRapide: Boolean;
-begin
+function TForm1.AppareilRapide: Boolean;  
+begin  
   // Détecter si l'appareil est assez puissant
   {$IFDEF ANDROID}
     // Vérifier le nombre de cœurs, la RAM, etc.
@@ -563,8 +563,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TForm1.ConfigurerAnimations;
-begin
+procedure TForm1.ConfigurerAnimations;  
+begin  
   if AppareilRapide then
   begin
     // Activer toutes les animations
@@ -584,8 +584,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Une requête par donnée
-procedure TForm1.ChargerDonnees;
-var
+procedure TForm1.ChargerDonnees;  
+var  
   i: Integer;
 begin
   for i := 1 to 100 do
@@ -600,8 +600,8 @@ end;
 
 ```pascal
 // ✅ BON : Une seule requête
-procedure TForm1.ChargerDonneesOptimise;
-begin
+procedure TForm1.ChargerDonneesOptimise;  
+begin  
   // Une seule requête pour tout
   RESTClient1.BaseURL := 'https://api.exemple.com/items?limit=100';
   RESTRequest1.Execute;
@@ -634,8 +634,8 @@ type
     function EstDansCache(const URL: string): Boolean;
   end;
 
-function TCacheReseau.ObtenirDonnees(const URL: string): string;
-begin
+function TCacheReseau.ObtenirDonnees(const URL: string): string;  
+begin  
   // Vérifier si en cache et pas expiré
   if EstDansCache(URL) then
   begin
@@ -657,15 +657,15 @@ begin
   Result := '';
 end;
 
-procedure TCacheReseau.StockerDonnees(const URL, Donnees: string);
-begin
+procedure TCacheReseau.StockerDonnees(const URL, Donnees: string);  
+begin  
   FCacheDonnees.AddOrSetValue(URL, Donnees);
   FCacheExpiration.AddOrSetValue(URL, Now);
 end;
 
 // Utilisation
-procedure TForm1.ChargerAvecCache(const URL: string);
-var
+procedure TForm1.ChargerAvecCache(const URL: string);  
+var  
   Donnees: string;
 begin
   // Essayer le cache d'abord
@@ -690,8 +690,8 @@ end;
 ### Désactiver les synchronisations en arrière-plan
 
 ```pascal
-procedure TForm1.GererEtatApplication;
-begin
+procedure TForm1.GererEtatApplication;  
+begin  
   // Événement quand l'app passe en arrière-plan
   var FMXApplicationEventService: IFMXApplicationEventService;
   if TPlatformServices.Current.SupportsPlatformService(
@@ -726,8 +726,8 @@ end;
 
 ```pascal
 // ❌ MAUVAIS : Calcul dans le thread principal
-procedure TForm1.ButtonCalculClick(Sender: TObject);
-var
+procedure TForm1.ButtonCalculClick(Sender: TObject);  
+var  
   i: Integer;
   Resultat: Double;
 begin
@@ -741,8 +741,8 @@ end;
 
 ```pascal
 // ✅ BON : Calcul asynchrone avec TTask
-procedure TForm1.ButtonCalculClickOptimise(Sender: TObject);
-begin
+procedure TForm1.ButtonCalculClickOptimise(Sender: TObject);  
+begin  
   // Afficher un indicateur de chargement
   ProgressCircle.Visible := True;
   ProgressCircle.Enabled := True;
@@ -814,8 +814,8 @@ end;
 uses
   System.Diagnostics;
 
-procedure TForm1.MesurerPerformance;
-var
+procedure TForm1.MesurerPerformance;  
+var  
   Chrono: TStopwatch;
 begin
   Chrono := TStopwatch.StartNew;
@@ -837,8 +837,8 @@ end;
 ### Surveiller l'utilisation mémoire
 
 ```pascal
-function TForm1.ObtenirMemoireUtilisee: Int64;
-var
+function TForm1.ObtenirMemoireUtilisee: Int64;  
+var  
   MemoryManagerState: TMemoryManagerState;
   SmallBlockTypeState: TSmallBlockTypeState;
 begin
@@ -851,8 +851,8 @@ begin
                        SmallBlockTypeState.AllocatedBlockCount;
 end;
 
-procedure TForm1.AfficherInfosMemoire;
-var
+procedure TForm1.AfficherInfosMemoire;  
+var  
   MemMB: Double;
 begin
   MemMB := ObtenirMemoireUtilisee / (1024 * 1024);
@@ -901,8 +901,8 @@ end;
 
 ```pascal
 {$IFDEF IOS}
-procedure TForm1.DesactiverMotionBlur;
-begin
+procedure TForm1.DesactiverMotionBlur;  
+begin  
   // iOS ajoute parfois un effet de flou pendant les animations
   // Désactiver pour de meilleures performances
   Quality := TCanvasQuality.SystemDefault;
@@ -914,8 +914,8 @@ end;
 
 ```pascal
 {$IFDEF IOS}
-function TForm1.EstiPhoneRecent: Boolean;
-var
+function TForm1.EstiPhoneRecent: Boolean;  
+var  
   Device: UIDevice;
 begin
   Device := TUIDevice.Wrap(TUIDevice.OCClass.currentDevice);
@@ -924,8 +924,8 @@ begin
   Result := Device.systemVersion.doubleValue >= 14.0;
 end;
 
-procedure TForm1.ConfigurerSeloniPhone;
-begin
+procedure TForm1.ConfigurerSeloniPhone;  
+begin  
   if EstiPhoneRecent then
   begin
     // iPhone récent : activer plus de fonctionnalités
@@ -951,13 +951,13 @@ end;
 uses
   Androidapi.Helpers;
 
-function TForm1.VersionAndroid: Integer;
-begin
+function TForm1.VersionAndroid: Integer;  
+begin  
   Result := TJBuild_VERSION.JavaClass.SDK_INT;
 end;
 
-procedure TForm1.ConfigurerSelonAndroid;
-begin
+procedure TForm1.ConfigurerSelonAndroid;  
+begin  
   if VersionAndroid >= 28 then  // Android 9.0+
   begin
     // Version récente : fonctionnalités complètes
@@ -981,8 +981,8 @@ end;
 
 ```pascal
 {$IFDEF ANDROID}
-function TForm1.EstGrandEcran: Boolean;
-var
+function TForm1.EstGrandEcran: Boolean;  
+var  
   ScreenService: IFMXScreenService;
   ScreenSize: TSize;
 begin
@@ -997,8 +997,8 @@ begin
     Result := False;
 end;
 
-procedure TForm1.AdapterSelonEcran;
-begin
+procedure TForm1.AdapterSelonEcran;  
+begin  
   if EstGrandEcran then
   begin
     // Grand écran : interface enrichie
@@ -1041,8 +1041,8 @@ end;
 **3. Charger progressivement**
 ```pascal
 // Afficher l'interface rapidement
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Afficher l'essentiel immédiatement
   AfficherInterfaceMinimale;
 
@@ -1061,8 +1061,8 @@ end;
 **4. Gérer les états de l'application**
 ```pascal
 // Économiser la batterie en arrière-plan
-procedure TForm1.ApplicationEnteredBackground;
-begin
+procedure TForm1.ApplicationEnteredBackground;  
+begin  
   // Suspendre les timers
   Timer1.Enabled := False;
 
@@ -1084,8 +1084,8 @@ end;
 **6. Limiter les redessins**
 ```pascal
 // Utiliser BeginUpdate/EndUpdate
-ListBox1.BeginUpdate;
-try
+ListBox1.BeginUpdate;  
+try  
   for i := 1 to 1000 do
     ListBox1.Items.Add('Item ' + i.ToString);
 finally
@@ -1098,8 +1098,8 @@ end;
 **1. Charger toutes les données au démarrage**
 ```pascal
 // ❌ MAUVAIS
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   ChargerToutesLesImages;  // Lourd
   ChargerToutesBDD;         // Lent
   InitialiserTout;          // Long
@@ -1110,8 +1110,8 @@ end;
 **2. Animations et effets excessifs**
 ```pascal
 // ❌ MAUVAIS : Trop d'effets
-for i := 0 to 50 do
-begin
+for i := 0 to 50 do  
+begin  
   var Shadow := TShadowEffect.Create(Buttons[i]);
   var Glow := TGlowEffect.Create(Buttons[i]);
   var Blur := TBlurEffect.Create(Buttons[i]);
@@ -1124,8 +1124,8 @@ end;
 // ❌ MAUVAIS
 Timer1.Interval := 100;  // 10 fois par seconde
 
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   // Requête réseau toutes les 100ms = batterie vide rapidement
   SynchroniserServeur;
 end;
@@ -1134,8 +1134,8 @@ end;
 **4. Ignorer la mémoire**
 ```pascal
 // ❌ MAUVAIS : Fuites mémoire
-procedure TForm1.CreerObjets;
-begin
+procedure TForm1.CreerObjets;  
+begin  
   for i := 1 to 1000 do
   begin
     var Obj := TMonObjet.Create;  // Jamais libéré !
@@ -1148,8 +1148,8 @@ end;
 **5. Blocage du thread principal**
 ```pascal
 // ❌ MAUVAIS
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   Sleep(5000);  // Interface gelée 5 secondes
   // L'utilisateur pense que l'app a crashé
 end;

@@ -110,8 +110,8 @@ Chaque type d'animation hérite de `TAnimation` et ajoute des fonctionnalités s
 **En code (Run Time)** :
 
 ```pascal
-procedure TForm1.AnimerBouton;
-var
+procedure TForm1.AnimerBouton;  
+var  
   Anim: TFloatAnimation;
 begin
   // Créer l'animation
@@ -134,8 +134,8 @@ end;
 #### Faire apparaître (Fade In)
 
 ```pascal
-procedure TForm1.FadeIn(Composant: TControl);
-var
+procedure TForm1.FadeIn(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   // Partir de transparent
@@ -156,8 +156,8 @@ end;
 #### Faire disparaître (Fade Out)
 
 ```pascal
-procedure TForm1.FadeOut(Composant: TControl);
-var
+procedure TForm1.FadeOut(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   // Animer vers transparent
@@ -181,8 +181,8 @@ end;
 #### Déplacement horizontal
 
 ```pascal
-procedure TForm1.DeplacerVersLaDroite(Composant: TControl);
-var
+procedure TForm1.DeplacerVersLaDroite(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   Anim := TFloatAnimation.Create(Composant);
@@ -198,8 +198,8 @@ end;
 #### Rotation
 
 ```pascal
-procedure TForm1.FaireTourner(Composant: TControl);
-var
+procedure TForm1.FaireTourner(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   Anim := TFloatAnimation.Create(Composant);
@@ -216,8 +216,8 @@ end;
 #### Zoom (Échelle)
 
 ```pascal
-procedure TForm1.Zoomer(Composant: TControl);
-var
+procedure TForm1.Zoomer(Composant: TControl);  
+var  
   AnimX, AnimY: TFloatAnimation;
 begin
   // Animer Scale.X
@@ -246,8 +246,8 @@ end;
 
 **Duration** : Durée de l'animation en secondes
 ```pascal
-Anim.Duration := 0.5;  // 0.5 seconde
-Anim.Duration := 2.0;  // 2 secondes
+Anim.Duration := 0.5;  // 0.5 seconde  
+Anim.Duration := 2.0;  // 2 secondes  
 ```
 
 **Delay** : Délai avant le début
@@ -267,8 +267,8 @@ Anim.Loop := True;  // Boucle infinie
 
 **Enabled** : Activer/désactiver
 ```pascal
-Anim.Enabled := True;   // L'animation peut démarrer
-Anim.Enabled := False;  // L'animation est désactivée
+Anim.Enabled := True;   // L'animation peut démarrer  
+Anim.Enabled := False;  // L'animation est désactivée  
 ```
 
 **Inverse** : Inverser le sens
@@ -308,8 +308,8 @@ type
 ### Utilisation des interpolations
 
 ```pascal
-procedure TForm1.AnimerAvecInterpolation;
-var
+procedure TForm1.AnimerAvecInterpolation;  
+var  
   Anim: TFloatAnimation;
 begin
   Anim := TFloatAnimation.Create(Button1);
@@ -339,40 +339,40 @@ Anim.Interpolation := TInterpolationType.Linear;
 
 **Quadratic Out** : Mouvement naturel (recommandé)
 ```pascal
-Anim.Interpolation := TInterpolationType.Quadratic;
-Anim.AnimationType := TAnimationType.Out;
+Anim.Interpolation := TInterpolationType.Quadratic;  
+Anim.AnimationType := TAnimationType.Out;  
 // Démarre vite, ralentit naturellement
 ```
 
 **Elastic** : Effet ressort
 ```pascal
-Anim.Interpolation := TInterpolationType.Elastic;
-Anim.AnimationType := TAnimationType.Out;
+Anim.Interpolation := TInterpolationType.Elastic;  
+Anim.AnimationType := TAnimationType.Out;  
 // Arrive à destination et rebondit légèrement
 ```
 
 **Bounce** : Effet rebond
 ```pascal
-Anim.Interpolation := TInterpolationType.Bounce;
-Anim.AnimationType := TAnimationType.Out;
+Anim.Interpolation := TInterpolationType.Bounce;  
+Anim.AnimationType := TAnimationType.Out;  
 // Rebondit plusieurs fois à l'arrivée
 ```
 
 **Back** : Effet recul
 ```pascal
-Anim.Interpolation := TInterpolationType.Back;
-Anim.AnimationType := TAnimationType.Out;
+Anim.Interpolation := TInterpolationType.Back;  
+Anim.AnimationType := TAnimationType.Out;  
 // Dépasse légèrement la cible puis revient
 ```
 
 ### Recommandations par cas d'usage
 
-**Apparition/disparition** : Quadratic ou Cubic Out
-**Déplacement d'éléments** : Quadratic InOut
-**Feedback bouton** : Back ou Elastic (subtil)
-**Animation ludique** : Bounce
-**Animation mécanique** : Linear
-**Attention utilisateur** : Elastic (modéré)
+**Apparition/disparition** : Quadratic ou Cubic Out  
+**Déplacement d'éléments** : Quadratic InOut  
+**Feedback bouton** : Back ou Elastic (subtil)  
+**Animation ludique** : Bounce  
+**Animation mécanique** : Linear  
+**Attention utilisateur** : Elastic (modéré)  
 
 ## 5. TColorAnimation - Animations de couleur
 
@@ -381,8 +381,8 @@ Anim.AnimationType := TAnimationType.Out;
 `TColorAnimation` permet d'animer la transition entre deux couleurs.
 
 ```pascal
-procedure TForm1.AnimerCouleurFond;
-var
+procedure TForm1.AnimerCouleurFond;  
+var  
   Anim: TColorAnimation;
 begin
   Anim := TColorAnimation.Create(Rectangle1);
@@ -398,8 +398,8 @@ end;
 ### Effet de pulsation (couleur)
 
 ```pascal
-procedure TForm1.PulsationCouleur(Composant: TRectangle);
-var
+procedure TForm1.PulsationCouleur(Composant: TRectangle);  
+var  
   Anim: TColorAnimation;
 begin
   Anim := TColorAnimation.Create(Composant);
@@ -417,8 +417,8 @@ end;
 ### Animer la couleur du texte
 
 ```pascal
-procedure TForm1.AnimerCouleurTexte;
-var
+procedure TForm1.AnimerCouleurTexte;  
+var  
   Anim: TColorAnimation;
 begin
   Anim := TColorAnimation.Create(Label1);
@@ -436,8 +436,8 @@ end;
 ### Plusieurs animations simultanées
 
 ```pascal
-procedure TForm1.AnimationComplete(Composant: TControl);
-var
+procedure TForm1.AnimationComplete(Composant: TControl);  
+var  
   AnimOpacity: TFloatAnimation;
   AnimScale: TFloatAnimation;
   AnimRotation: TFloatAnimation;
@@ -474,8 +474,8 @@ end;
 ### Animations séquentielles
 
 ```pascal
-procedure TForm1.AnimationSequence(Composant: TControl);
-var
+procedure TForm1.AnimationSequence(Composant: TControl);  
+var  
   Anim1, Anim2, Anim3: TFloatAnimation;
 begin
   // Animation 1 : Déplacement
@@ -514,8 +514,8 @@ end;
 ### Chaînage avec OnFinish
 
 ```pascal
-procedure TForm1.AnimationChainee(Composant: TControl);
-var
+procedure TForm1.AnimationChainee(Composant: TControl);  
+var  
   Anim1: TFloatAnimation;
 begin
   // Première animation
@@ -560,8 +560,8 @@ Les **effets** sont des filtres visuels appliqués aux composants :
 ### TShadowEffect - Ombre portée
 
 ```pascal
-procedure TForm1.AjouterOmbre(Composant: TControl);
-var
+procedure TForm1.AjouterOmbre(Composant: TControl);  
+var  
   Shadow: TShadowEffect;
 begin
   Shadow := TShadowEffect.Create(Composant);
@@ -579,8 +579,8 @@ end;
 ### TGlowEffect - Effet de lueur
 
 ```pascal
-procedure TForm1.AjouterLueur(Composant: TControl);
-var
+procedure TForm1.AjouterLueur(Composant: TControl);  
+var  
   Glow: TGlowEffect;
 begin
   Glow := TGlowEffect.Create(Composant);
@@ -596,8 +596,8 @@ end;
 ### TBlurEffect - Effet de flou
 
 ```pascal
-procedure TForm1.AjouterFlou(Composant: TControl);
-var
+procedure TForm1.AjouterFlou(Composant: TControl);  
+var  
   Blur: TBlurEffect;
 begin
   Blur := TBlurEffect.Create(Composant);
@@ -611,8 +611,8 @@ end;
 ### TReflectionEffect - Effet miroir
 
 ```pascal
-procedure TForm1.AjouterReflet(Composant: TControl);
-var
+procedure TForm1.AjouterReflet(Composant: TControl);  
+var  
   Reflection: TReflectionEffect;
 begin
   Reflection := TReflectionEffect.Create(Composant);
@@ -628,8 +628,8 @@ end;
 ### TInnerGlowEffect - Lueur intérieure
 
 ```pascal
-procedure TForm1.AjouterLueurInterieure(Composant: TControl);
-var
+procedure TForm1.AjouterLueurInterieure(Composant: TControl);  
+var  
   InnerGlow: TInnerGlowEffect;
 begin
   InnerGlow := TInnerGlowEffect.Create(Composant);
@@ -645,8 +645,8 @@ end;
 ### Animer les effets
 
 ```pascal
-procedure TForm1.AnimerOmbre(Composant: TControl);
-var
+procedure TForm1.AnimerOmbre(Composant: TControl);  
+var  
   Shadow: TShadowEffect;
   Anim: TFloatAnimation;
 begin
@@ -673,8 +673,8 @@ end;
 ### Shake (Secousse)
 
 ```pascal
-procedure TForm1.Shake(Composant: TControl);
-var
+procedure TForm1.Shake(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
   PosInitiale: Single;
 begin
@@ -708,8 +708,8 @@ end;
 ### Pulse (Pulsation)
 
 ```pascal
-procedure TForm1.Pulse(Composant: TControl);
-var
+procedure TForm1.Pulse(Composant: TControl);  
+var  
   AnimX, AnimY: TFloatAnimation;
 begin
   // Pulser en X
@@ -739,8 +739,8 @@ end;
 ### Slide In (Glissement vers l'intérieur)
 
 ```pascal
-procedure TForm1.SlideInFromLeft(Composant: TControl);
-var
+procedure TForm1.SlideInFromLeft(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   // Positionner hors écran à gauche
@@ -763,8 +763,8 @@ end;
 ### Bounce (Rebond)
 
 ```pascal
-procedure TForm1.Bounce(Composant: TControl);
-var
+procedure TForm1.Bounce(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
   PosY: Single;
 begin
@@ -786,8 +786,8 @@ end;
 ### Flip (Retournement)
 
 ```pascal
-procedure TForm1.Flip(Composant: TControl);
-var
+procedure TForm1.Flip(Composant: TControl);  
+var  
   Anim: TFloatAnimation;
 begin
   Anim := TFloatAnimation.Create(Composant);
@@ -807,8 +807,8 @@ end;
 ### Spinner rotatif
 
 ```pascal
-procedure TForm1.CreerSpinner;
-var
+procedure TForm1.CreerSpinner;  
+var  
   Circle: TCircle;
   Anim: TFloatAnimation;
 begin
@@ -840,8 +840,8 @@ end;
 ### Points de chargement
 
 ```pascal
-procedure TForm1.CreerDotsLoader;
-var
+procedure TForm1.CreerDotsLoader;  
+var  
   i: Integer;
   Dot: TCircle;
   Anim: TFloatAnimation;
@@ -875,8 +875,8 @@ end;
 ### Barre de progression animée
 
 ```pascal
-procedure TForm1.AnimerProgressBar;
-var
+procedure TForm1.AnimerProgressBar;  
+var  
   Anim: TFloatAnimation;
 begin
   Anim := TFloatAnimation.Create(ProgressBar1);
@@ -895,8 +895,8 @@ end;
 ### Transition simple
 
 ```pascal
-procedure TForm1.TransitionVersEcran2;
-var
+procedure TForm1.TransitionVersEcran2;  
+var  
   AnimOut, AnimIn: TFloatAnimation;
 begin
   // Faire sortir l'écran actuel
@@ -930,8 +930,8 @@ end;
 ### Transition avec fondu croisé
 
 ```pascal
-procedure TForm1.TransitionFondu;
-var
+procedure TForm1.TransitionFondu;  
+var  
   AnimOut, AnimIn: TFloatAnimation;
 begin
   // Préparer le nouvel écran
@@ -1020,8 +1020,8 @@ end;
 ### Effet ondulation (Ripple - Material Design)
 
 ```pascal
-procedure TForm1.CreerEffetRipple(X, Y: Single);
-var
+procedure TForm1.CreerEffetRipple(X, Y: Single);  
+var  
   Circle: TCircle;
   AnimScale, AnimOpacity: TFloatAnimation;
 begin
@@ -1078,8 +1078,8 @@ Anim.Duration := 3.0;  // ❌ MAUVAIS
 **2. Utiliser des interpolations naturelles**
 ```pascal
 // Quadratic Out = naturel
-Anim.Interpolation := TInterpolationType.Quadratic;
-Anim.AnimationType := TAnimationType.Out;
+Anim.Interpolation := TInterpolationType.Quadratic;  
+Anim.AnimationType := TAnimationType.Out;  
 ```
 
 **3. Animer les états, pas les actions**
@@ -1106,8 +1106,8 @@ FadeIn(PanelOptions);
 
 **5. Libérer les animations terminées**
 ```pascal
-Anim.OnFinish := procedure(Sender: TObject)
-begin
+Anim.OnFinish := procedure(Sender: TObject)  
+begin  
   TAnimation(Sender).Free;  // Libérer la mémoire
 end;
 ```
@@ -1115,8 +1115,8 @@ end;
 **6. Donner du feedback**
 ```pascal
 // Toujours confirmer une action par une animation
-procedure TForm1.SauvegarderClick(Sender: TObject);
-begin
+procedure TForm1.SauvegarderClick(Sender: TObject);  
+begin  
   // Sauvegarder
   Sauvegarder;
 
@@ -1159,8 +1159,8 @@ for var Button in ListeBoutons do
 **5. Oublier de libérer**
 ```pascal
 // ❌ MAUVAIS : Créer sans libérer
-procedure AnimerSansLiberer;
-begin
+procedure AnimerSansLiberer;  
+begin  
   var Anim := TFloatAnimation.Create(nil);  // Fuite mémoire !
   Anim.Start;
 end;
@@ -1171,8 +1171,8 @@ end;
 ### Optimiser pour mobile
 
 ```pascal
-procedure TForm1.ConfigurerAnimationsSelonPlateforme;
-begin
+procedure TForm1.ConfigurerAnimationsSelonPlateforme;  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Mobile : Simplifier
     NombreAnimationsSimultanees := 3;
@@ -1190,8 +1190,8 @@ end;
 ### Arrêter les animations inutiles
 
 ```pascal
-procedure TForm1.FormDeactivate(Sender: TObject);
-begin
+procedure TForm1.FormDeactivate(Sender: TObject);  
+begin  
   // Arrêter les animations quand l'app passe en arrière-plan
   for var i := 0 to ComponentCount - 1 do
   begin
@@ -1207,8 +1207,8 @@ end;
 var
   FAnimationFadeIn: TFloatAnimation;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Créer une fois
   FAnimationFadeIn := TFloatAnimation.Create(Self);
   FAnimationFadeIn.PropertyName := 'Opacity';
@@ -1217,8 +1217,8 @@ begin
   FAnimationFadeIn.Duration := 0.3;
 end;
 
-procedure TForm1.FadeInComposant(Composant: TControl);
-begin
+procedure TForm1.FadeInComposant(Composant: TControl);  
+begin  
   // Réutiliser
   FAnimationFadeIn.Parent := Composant;
   FAnimationFadeIn.Start;

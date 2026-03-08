@@ -44,8 +44,8 @@ Le principe de FireMonkey :
 
 ```pascal
 // Un seul code source
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   ShowMessage('Hello World!');
 end;
 
@@ -256,8 +256,8 @@ Chaque plateforme génère des fichiers différents :
 
 **Windows** :
 ```
-Win32\Debug\MonApp.exe
-Win64\Release\MonApp.exe
+Win32\Debug\MonApp.exe  
+Win64\Release\MonApp.exe  
 ```
 
 **macOS** :
@@ -346,8 +346,8 @@ Pour écrire du code spécifique à une plateforme, utilisez les directives de c
 ### Exemple pratique : Adapter l'interface
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Mobile : Boutons plus grands
     Button1.Height := 50;
@@ -381,8 +381,8 @@ Chaque plateforme a ses propres API natives :
 uses
   WinAPI.Windows, WinAPI.Messages;
 
-procedure AfficherNotificationWindows;
-begin
+procedure AfficherNotificationWindows;  
+begin  
   // Utiliser l'API Windows
   MessageBox(0, 'Notification', 'Application', MB_OK);
 end;
@@ -392,8 +392,8 @@ end;
 uses
   Androidapi.JNI.JavaTypes, Androidapi.JNI.Toast;
 
-procedure AfficherNotificationAndroid;
-var
+procedure AfficherNotificationAndroid;  
+var  
   Toast: JToast;
 begin
   // Utiliser l'API Android
@@ -409,8 +409,8 @@ end;
 uses
   iOSapi.Foundation, iOSapi.UIKit;
 
-procedure AfficherNotificationiOS;
-var
+procedure AfficherNotificationiOS;  
+var  
   Alert: UIAlertView;
 begin
   // Utiliser l'API iOS
@@ -431,8 +431,8 @@ end;
 Créer des fonctions qui fonctionnent sur toutes les plateformes :
 
 ```pascal
-procedure AfficherNotification(const Titre, Message: string);
-begin
+procedure AfficherNotification(const Titre, Message: string);  
+begin  
   {$IFDEF MSWINDOWS}
     AfficherNotificationWindows;
   {$ENDIF}
@@ -457,8 +457,8 @@ begin
 end;
 
 // Utilisation simple partout
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   AfficherNotification('Info', 'Action terminée');
 end;
 ```
@@ -555,8 +555,8 @@ MonApp.app/
 uses
   iOSapi.AVFoundation;
 
-procedure DemanderAccesCamera;
-begin
+procedure DemanderAccesCamera;  
+begin  
   TAVCaptureDevice.OCClass.requestAccessForMediaType(
     AVMediaTypeVideo,
     procedure(granted: Boolean)
@@ -609,8 +609,8 @@ uses
   FMX.Platform.Android;
 
 // Demander une permission à l'exécution (Android 6.0+)
-procedure DemanderPermission(const Permission: string);
-begin
+procedure DemanderPermission(const Permission: string);  
+begin  
   PermissionsService.RequestPermissions(
     [Permission],
     procedure(const APermissions: TArray<string>;
@@ -736,8 +736,8 @@ Deployment Manager
 
 ```pascal
 // Chemin du fichier déployé
-function ObtenirCheminRessource(const NomFichier: string): string;
-begin
+function ObtenirCheminRessource(const NomFichier: string): string;  
+begin  
   {$IFDEF MSWINDOWS}
     Result := ExtractFilePath(ParamStr(0)) + NomFichier;
   {$ENDIF}
@@ -869,8 +869,8 @@ Option 2 : Machine virtuelle
 ### Performances mobile vs desktop
 
 ```pascal
-procedure TForm1.OptimiserSelonPlateforme;
-begin
+procedure TForm1.OptimiserSelonPlateforme;  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Mobile : Limiter les effets visuels
     EffetOmbre1.Enabled := False;
@@ -898,8 +898,8 @@ end;
 ### Gestion de la mémoire
 
 ```pascal
-procedure TForm1.GererMemoireSelonPlateforme;
-begin
+procedure TForm1.GererMemoireSelonPlateforme;  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Mobile : Mémoire limitée
     // Libérer agressivement les ressources
@@ -918,8 +918,8 @@ end;
 ### Économie de batterie (mobile)
 
 ```pascal
-procedure TForm1.ModeEconomieBatterie;
-begin
+procedure TForm1.ModeEconomieBatterie;  
+begin  
   {$IFDEF ANDROID OR IOS}
     // Réduire la fréquence GPS
     LocationSensor1.Distance := 100;  // 100m au lieu de 10m
@@ -1145,72 +1145,72 @@ Fichier := TPath.Combine(TPath.GetTempPath, 'data.txt');
 
 **Problème** : DLL manquantes
 ```
-Solution : Déployer les DLLs nécessaires avec l'exe
-ou utiliser un installateur qui les installe
+Solution : Déployer les DLLs nécessaires avec l'exe  
+ou utiliser un installateur qui les installe  
 ```
 
 **Problème** : Permissions insuffisantes
 ```
-Solution : Demander l'élévation UAC si nécessaire
-ou éviter d'écrire dans Program Files
+Solution : Demander l'élévation UAC si nécessaire  
+ou éviter d'écrire dans Program Files  
 ```
 
 ### Problèmes macOS
 
 **Problème** : "App endommagée" au lancement
 ```
-Solution : Signer correctement l'application
-ou demander à l'utilisateur d'autoriser dans Sécurité & Confidentialité
+Solution : Signer correctement l'application  
+ou demander à l'utilisateur d'autoriser dans Sécurité & Confidentialité  
 ```
 
 **Problème** : Connexion PAServer échoue
 ```
-Solution : Vérifier le firewall sur le Mac
-S'assurer que PAServer est en cours d'exécution
-Vérifier l'IP et le mot de passe
+Solution : Vérifier le firewall sur le Mac  
+S'assurer que PAServer est en cours d'exécution  
+Vérifier l'IP et le mot de passe  
 ```
 
 ### Problèmes iOS
 
 **Problème** : Profil de provisionnement invalide
 ```
-Solution : Régénérer le profil sur developer.apple.com
-Télécharger et réinstaller dans Xcode
+Solution : Régénérer le profil sur developer.apple.com  
+Télécharger et réinstaller dans Xcode  
 ```
 
 **Problème** : App crash au lancement
 ```
-Solution : Vérifier les logs dans Xcode
-Souvent lié aux permissions ou ressources manquantes
+Solution : Vérifier les logs dans Xcode  
+Souvent lié aux permissions ou ressources manquantes  
 ```
 
 ### Problèmes Android
 
 **Problème** : Permission refusée
 ```
-Solution : Déclarer dans AndroidManifest.xml
-Demander à l'exécution pour Android 6.0+
+Solution : Déclarer dans AndroidManifest.xml  
+Demander à l'exécution pour Android 6.0+  
 ```
 
 **Problème** : APK ne s'installe pas
 ```
-Solution : Vérifier la signature
-Vérifier la version d'Android cible
-Autoriser sources inconnues
+Solution : Vérifier la signature  
+Vérifier la version d'Android cible  
+Autoriser sources inconnues  
 ```
 
 ### Problèmes Linux
 
 **Problème** : Bibliothèques manquantes
 ```
-Solution : Installer les dépendances
-sudo apt-get install libgtk-3-0
+Solution : Installer les dépendances  
+sudo apt-get install libgtk-3-0  
 ```
 
 **Problème** : Connexion PAServer échoue
 ```
-Solution : Vérifier le firewall Linux
-S'assurer que le port est ouvert
+Solution : Vérifier le firewall Linux  
+S'assurer que le port est ouvert  
 ```
 
 ## Conclusion

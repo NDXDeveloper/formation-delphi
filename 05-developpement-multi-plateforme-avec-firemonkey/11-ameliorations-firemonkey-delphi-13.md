@@ -45,8 +45,8 @@ Delphi 13 apporte des optimisations significatives au moteur de rendu FireMonkey
 
 ```pascal
 // Le même code, mais plus rapide en Delphi 13
-procedure TForm1.DessinComplexe;
-var
+procedure TForm1.DessinComplexe;  
+var  
   i: Integer;
 begin
   Canvas.BeginScene;
@@ -88,8 +88,8 @@ end;
 
 ```pascal
 // Delphi 13 : Garbage collection améliorée pour les objets FMX
-procedure TForm1.CreerBeaucoupDeComposants;
-var
+procedure TForm1.CreerBeaucoupDeComposants;  
+var  
   i: Integer;
   Rect: TRectangle;
 begin
@@ -111,8 +111,8 @@ end;
 Un nouveau composant bouton avec styles Material Design et iOS intégrés :
 
 ```pascal
-procedure TForm1.UtiliserModernButton;
-var
+procedure TForm1.UtiliserModernButton;  
+var  
   Button: TModernButton;
 begin
   Button := TModernButton.Create(Self);
@@ -148,8 +148,8 @@ end;
 Contrôle de sélection style iOS natif :
 
 ```pascal
-procedure TForm1.CreerSegmentedControl;
-var
+procedure TForm1.CreerSegmentedControl;  
+var  
   SegControl: TSegmentedControl;
 begin
   SegControl := TSegmentedControl.Create(Self);
@@ -183,8 +183,8 @@ end;
 Ensemble de chips sélectionnables (Material Design) :
 
 ```pascal
-procedure TForm1.CreerChipGroup;
-var
+procedure TForm1.CreerChipGroup;  
+var  
   ChipGroup: TChipGroup;
 begin
   ChipGroup := TChipGroup.Create(Self);
@@ -217,8 +217,8 @@ end;
 ListView avec performances et apparence améliorées :
 
 ```pascal
-procedure TForm1.ConfigurerModernListView;
-begin
+procedure TForm1.ConfigurerModernListView;  
+begin  
   ModernListView1.Style := TListViewStyle.Cards;  // Cards, List, Grid
 
   // Swipe actions (comme iOS/Android)
@@ -246,8 +246,8 @@ end;
 Effet "skeleton" pour indiquer le chargement (comme Facebook, LinkedIn) :
 
 ```pascal
-procedure TForm1.AfficherSkeletonLoader;
-var
+procedure TForm1.AfficherSkeletonLoader;  
+var  
   Skeleton: TSkeletonLoader;
 begin
   Skeleton := TSkeletonLoader.Create(Self);
@@ -291,8 +291,8 @@ end;
 
 ```pascal
 // Meilleures capacités d'inspection sur iOS/macOS
-procedure TForm1.DebugComplexe;
-var
+procedure TForm1.DebugComplexe;  
+var  
   Liste: TList<string>;
   Dict: TDictionary<string, Integer>;
 begin
@@ -355,8 +355,8 @@ Delphi 13 intègre un assistant IA qui aide au développement FireMonkey.
 // "Créer un formulaire de connexion avec email et mot de passe"
 // Et l'IA génère :
 
-procedure TForm1.CreerFormulaireConnexion;
-begin
+procedure TForm1.CreerFormulaireConnexion;  
+begin  
   // Code généré par l'IA
   EditEmail := TEdit.Create(Self);
   EditEmail.Parent := Self;
@@ -535,8 +535,8 @@ Styles ajoutés en Delphi 13 :
 
 ```pascal
 // Nouveau pattern builder en Delphi 13
-procedure TForm1.CreerInterfaceModerne;
-begin
+procedure TForm1.CreerInterfaceModerne;  
+begin  
   TFormBuilder.Create(Self)
     .AddToolbar('Mon Application')
       .AddButton('Nouveau', ActNouveau)
@@ -563,8 +563,8 @@ end;
 // Observable patterns intégrés
 uses FMX.Observable;
 
-procedure TForm1.ReactiveExample;
-var
+procedure TForm1.ReactiveExample;  
+var  
   DataSource: TObservable<TData>;
 begin
   DataSource := TObservable<TData>.Create;
@@ -642,8 +642,8 @@ Pendant le debug, nouveau panneau "FMX Inspector" :
 // Delphi 13 améliore le support async
 uses System.Threading;
 
-procedure TForm1.ChargerDonneesAsync;
-begin
+procedure TForm1.ChargerDonneesAsync;  
+begin  
   TTask.Run(
     procedure
     var
@@ -668,8 +668,8 @@ end;
 ```pascal
 uses FMX.Storage;
 
-procedure TForm1.SauvegarderDonnees;
-var
+procedure TForm1.SauvegarderDonnees;  
+var  
   Storage: IUnifiedStorage;
 begin
   // Nouveau : API unifiée pour toutes les plateformes
@@ -695,14 +695,14 @@ end;
 
 ```pascal
 // Delphi 13 ajoute le support d'accessibilité
-procedure TForm1.ConfigurerAccessibilite;
-begin
+procedure TForm1.ConfigurerAccessibilite;  
+begin  
   Button1.AccessibleName := 'Bouton de connexion';
   Button1.AccessibleDescription := 'Cliquez pour vous connecter';
   Button1.AccessibleRole := TAccessibleRole.Button;
 
-  EditNom.AccessibleName := 'Nom d\'utilisateur';
-  EditNom.AccessibleHint := 'Entrez votre nom d\'utilisateur';
+  EditNom.AccessibleName := 'Nom d''utilisateur';
+  EditNom.AccessibleHint := 'Entrez votre nom d''utilisateur';
 
   // Compatible avec :
   // - VoiceOver (iOS/macOS)
@@ -718,8 +718,8 @@ end;
 
 ```pascal
 // Nouveau : détection automatique du mode sombre système
-procedure TForm1.AdapterAuTheme;
-begin
+procedure TForm1.AdapterAuTheme;  
+begin  
   if TThemeManager.SystemIsDarkMode then
   begin
     StyleBook1.LoadFromFile('DarkTheme.style');
@@ -732,8 +732,8 @@ begin
 end;
 
 // Événement quand le système change de thème
-procedure TForm1.FormThemeChanged(Sender: TObject);
-begin
+procedure TForm1.FormThemeChanged(Sender: TObject);  
+begin  
   AdapterAuTheme;
 end;
 ```
@@ -810,15 +810,15 @@ Analyse automatique :
 // Utilisez les nouveautés au fur et à mesure :
 
 // Projet existant
-procedure MaintainCompatibility;
-begin
+procedure MaintainCompatibility;  
+begin  
   // Votre ancien code fonctionne tel quel
   OldListView.Items.Add('Item');
 end;
 
 // Nouveau code peut utiliser les nouveautés
-procedure UseNewFeatures;
-begin
+procedure UseNewFeatures;  
+begin  
   // Adoptez progressivement les nouveaux composants
   ModernListView.AddItem('Item moderne');
 end;

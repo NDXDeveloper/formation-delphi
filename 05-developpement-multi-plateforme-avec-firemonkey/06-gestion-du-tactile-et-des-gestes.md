@@ -19,20 +19,20 @@ Les interfaces tactiles ont révolutionné notre façon d'interagir avec les app
 
 **Événements typiques** :
 ```pascal
-procedure TForm1.ButtonMouseEnter(Sender: TObject);
-begin
+procedure TForm1.ButtonMouseEnter(Sender: TObject);  
+begin  
   // Souris entre dans la zone du bouton
   Button1.Opacity := 0.8;
 end;
 
-procedure TForm1.ButtonMouseLeave(Sender: TObject);
-begin
+procedure TForm1.ButtonMouseLeave(Sender: TObject);  
+begin  
   // Souris sort de la zone du bouton
   Button1.Opacity := 1.0;
 end;
 
-procedure TForm1.ButtonClick(Sender: TObject);
-begin
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
   // Clic sur le bouton
   ShowMessage('Clic !');
 end;
@@ -49,8 +49,8 @@ end;
 
 **Événements typiques** :
 ```pascal
-procedure TForm1.ButtonTap(Sender: TObject; const Point: TPointF);
-begin
+procedure TForm1.ButtonTap(Sender: TObject; const Point: TPointF);  
+begin  
   // Tap (équivalent du clic) sur le bouton
   ShowMessage('Tap !');
 end;
@@ -90,8 +90,8 @@ end;
 `OnTap` est l'équivalent tactile du `OnClick`. C'est un contact bref et direct.
 
 ```pascal
-procedure TForm1.Button1Tap(Sender: TObject; const Point: TPointF);
-begin
+procedure TForm1.Button1Tap(Sender: TObject; const Point: TPointF);  
+begin  
   // Point contient les coordonnées exactes du tap
   ShowMessage('Tap à la position : ' +
               Point.X.ToString + ', ' + Point.Y.ToString);
@@ -250,8 +250,8 @@ Pour qu'un composant reconnaisse les gestes, vous devez :
 **Étape 1** : Activer Touch dans les options
 ```pascal
 // En code
-Image1.Touch.GestureManager := GestureManager1;
-Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
+Image1.Touch.GestureManager := GestureManager1;  
+Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom,  
                                      TInteractiveGesture.Pan,
                                      TInteractiveGesture.Rotate];
 
@@ -306,8 +306,8 @@ GestureManager1.StandardGestures := [sgLeft, sgRight, sgUp, sgDown];
 **Étape 3** : Lier les composants
 ```pascal
 // Chaque composant utilise le GestureManager
-Image1.Touch.GestureManager := GestureManager1;
-Panel1.Touch.GestureManager := GestureManager1;
+Image1.Touch.GestureManager := GestureManager1;  
+Panel1.Touch.GestureManager := GestureManager1;  
 ```
 
 ### Gestes standards (Standard Gestures)
@@ -330,8 +330,8 @@ GestureManager1.StandardGestures := [sgLeft, sgRight];
 ### Exemple complet : Galerie d'images avec gestes
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration du GestureManager
   GestureManager1.StandardGestures := [sgLeft, sgRight];
 
@@ -368,8 +368,8 @@ begin
   end;
 end;
 
-procedure TForm1.ImageSuivante;
-begin
+procedure TForm1.ImageSuivante;  
+begin  
   Inc(FIndexImage);
   if FIndexImage >= FListeImages.Count then
     FIndexImage := 0;
@@ -377,8 +377,8 @@ begin
   AfficherImage(FIndexImage);
 end;
 
-procedure TForm1.ImagePrecedente;
-begin
+procedure TForm1.ImagePrecedente;  
+begin  
   Dec(FIndexImage);
   if FIndexImage < 0 then
     FIndexImage := FListeImages.Count - 1;
@@ -386,8 +386,8 @@ begin
   AfficherImage(FIndexImage);
 end;
 
-procedure TForm1.ZoomerImage(Distance: Single);
-var
+procedure TForm1.ZoomerImage(Distance: Single);  
+var  
   FacteurZoom: Single;
 begin
   // Distance positif = écarter les doigts (zoom in)
@@ -450,25 +450,22 @@ begin
   if EventInfo.GestureID = igiZoom then
   begin
     // Vérifier les phases du geste
-    case EventInfo.Flags of
-      [TInteractiveGestureFlag.gfBegin]:
-      begin
-        // Début du geste : sauvegarder l'échelle initiale
-        FEchelleInitiale := Image1.Scale.X;
-      end;
-
-      [TInteractiveGestureFlag.gfInertia], [TInteractiveGestureFlag.gfEnd]:
-      begin
-        // Fin du geste ou inertie
-        // Rien de spécial à faire
-      end;
-
-      else
-      begin
-        // Pendant le geste : ajuster l'échelle en temps réel
-        Image1.Scale.X := FEchelleInitiale * EventInfo.Distance / 100;
-        Image1.Scale.Y := FEchelleInitiale * EventInfo.Distance / 100;
-      end;
+    if TInteractiveGestureFlag.gfBegin in EventInfo.Flags then
+    begin
+      // Début du geste : sauvegarder l'échelle initiale
+      FEchelleInitiale := Image1.Scale.X;
+    end
+    else if (TInteractiveGestureFlag.gfInertia in EventInfo.Flags) or
+            (TInteractiveGestureFlag.gfEnd in EventInfo.Flags) then
+    begin
+      // Fin du geste ou inertie
+      // Rien de spécial à faire
+    end
+    else
+    begin
+      // Pendant le geste : ajuster l'échelle en temps réel
+      Image1.Scale.X := FEchelleInitiale * EventInfo.Distance / 100;
+      Image1.Scale.Y := FEchelleInitiale * EventInfo.Distance / 100;
     end;
 
     Handled := True;
@@ -484,18 +481,15 @@ procedure TForm1.ImageRotateGesture(Sender: TObject;
 begin
   if EventInfo.GestureID = igiRotate then
   begin
-    case EventInfo.Flags of
-      [TInteractiveGestureFlag.gfBegin]:
-      begin
-        // Sauvegarder l'angle initial
-        FAngleInitial := Image1.RotationAngle;
-      end;
-
-      else
-      begin
-        // Appliquer la rotation en temps réel
-        Image1.RotationAngle := FAngleInitial + RadToDeg(EventInfo.Angle);
-      end;
+    if TInteractiveGestureFlag.gfBegin in EventInfo.Flags then
+    begin
+      // Sauvegarder l'angle initial
+      FAngleInitial := Image1.RotationAngle;
+    end
+    else
+    begin
+      // Appliquer la rotation en temps réel
+      Image1.RotationAngle := FAngleInitial + RadToDeg(EventInfo.Angle);
     end;
 
     Handled := True;
@@ -540,12 +534,12 @@ Pourquoi ?
 
 ```pascal
 // ❌ MAUVAIS : Bouton trop petit
-Button1.Width := 30;
-Button1.Height := 20;
+Button1.Width := 30;  
+Button1.Height := 20;  
 
 // ✅ BON : Taille tactile confortable
-Button1.Width := 120;
-Button1.Height := 50;
+Button1.Width := 120;  
+Button1.Height := 50;  
 
 // Sur mobile spécifiquement
 {$IFDEF ANDROID OR IOS}
@@ -561,8 +555,8 @@ Button1.Height := 50;
 
 ```pascal
 // Configuration d'une barre de boutons tactiles
-ButtonsLayout.ItemSpacing := 12;  // 12 pixels entre chaque bouton
-ButtonsLayout.Padding.Rect := TRectF.Create(10, 10, 10, 10);
+ButtonsLayout.ItemSpacing := 12;  // 12 pixels entre chaque bouton  
+ButtonsLayout.Padding.Rect := TRectF.Create(10, 10, 10, 10);  
 ```
 
 ### Zones de confort sur mobile
@@ -584,9 +578,9 @@ Sur smartphone, certaines zones sont plus faciles à atteindre :
 **Implications** :
 ```pascal
 // Placer les actions principales dans la zone accessible
-ButtonConfirmer.Align := TAlignLayout.Bottom;
-ButtonConfirmer.Height := 60;
-ButtonConfirmer.Margins.Bottom := 20;
+ButtonConfirmer.Align := TAlignLayout.Bottom;  
+ButtonConfirmer.Height := 60;  
+ButtonConfirmer.Margins.Bottom := 20;  
 
 // Actions secondaires peuvent être plus haut
 ButtonParametres.Align := TAlignLayout.Top;
@@ -622,8 +616,8 @@ end;
 ### Animation de feedback
 
 ```pascal
-procedure TForm1.ButtonTapAnimation(Sender: TObject);
-var
+procedure TForm1.ButtonTapAnimation(Sender: TObject);  
+var  
   ScaleAnim: TFloatAnimation;
 begin
   // Créer une animation de "pression"
@@ -651,8 +645,8 @@ end;
 ### Feedback sur swipe
 
 ```pascal
-procedure TForm1.ListSwipeIndicateur(Direction: TSwipeDirection);
-var
+procedure TForm1.ListSwipeIndicateur(Direction: TSwipeDirection);  
+var  
   Indicator: TRectangle;
 begin
   // Créer un indicateur visuel du swipe
@@ -689,8 +683,8 @@ Sur appareils mobiles, vous pouvez déclencher une vibration :
 uses
   FMX.VirtualKeyboard, FMX.Platform;
 
-procedure TForm1.DeclencherVibration;
-var
+procedure TForm1.DeclencherVibration;  
+var  
   VKService: IFMXVirtualKeyboardService;
 begin
   {$IFDEF ANDROID OR IOS}
@@ -748,20 +742,20 @@ end;
 ### Désactiver temporairement des gestes
 
 ```pascal
-procedure TForm1.ActiverModeZoom;
-begin
+procedure TForm1.ActiverModeZoom;  
+begin  
   // En mode zoom, désactiver le pan
   Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom];
 end;
 
-procedure TForm1.ActiverModePan;
-begin
+procedure TForm1.ActiverModePan;  
+begin  
   // En mode navigation, désactiver le zoom
   Image1.Touch.InteractiveGestures := [TInteractiveGesture.Pan];
 end;
 
-procedure TForm1.ActiverTousLesGestes;
-begin
+procedure TForm1.ActiverTousLesGestes;  
+begin  
   // Réactiver tous les gestes
   Image1.Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
                                        TInteractiveGesture.Pan,
@@ -772,8 +766,8 @@ end;
 ### Gestes contextuels
 
 ```pascal
-procedure TForm1.AjusterGestesSelonContexte;
-begin
+procedure TForm1.AjusterGestesSelonContexte;  
+begin  
   if ModeEdition then
   begin
     // En édition : permettre rotation et zoom
@@ -921,8 +915,8 @@ begin
   end;
 end;
 
-procedure TForm1.RevelerBoutonSupprimer(Item: TListBoxItem);
-var
+procedure TForm1.RevelerBoutonSupprimer(Item: TListBoxItem);  
+var  
   Anim: TFloatAnimation;
 begin
   // Animer l'item vers la gauche
@@ -968,8 +962,8 @@ begin
   end;
 end;
 
-procedure TForm1.ZoomerCarte(Distance: Single);
-var
+procedure TForm1.ZoomerCarte(Distance: Single);  
+var  
   NouveauZoom: Single;
 begin
   NouveauZoom := FZoomActuel * (1 + Distance / 200);
@@ -983,8 +977,8 @@ begin
   end;
 end;
 
-procedure TForm1.ZoomRapide(Centre: TPointF);
-begin
+procedure TForm1.ZoomRapide(Centre: TPointF);  
+begin  
   // Doubler le zoom avec animation
   TAnimator.AnimateFloat(ImageCarte, 'Scale.X', FZoomActuel * 2, 0.3);
   TAnimator.AnimateFloat(ImageCarte, 'Scale.Y', FZoomActuel * 2, 0.3);
@@ -1058,14 +1052,14 @@ end;
 **1. Respecter les tailles minimales**
 ```pascal
 // Zones tactiles : minimum 44x44 pixels
-Button1.Width := 120;
-Button1.Height := 50;
+Button1.Width := 120;  
+Button1.Height := 50;  
 ```
 
 **2. Donner un feedback immédiat**
 ```pascal
-procedure ButtonTap(Sender: TObject);
-begin
+procedure ButtonTap(Sender: TObject);  
+begin  
   // Feedback visuel instantané
   (Sender as TButton).Opacity := 0.7;
   // Puis action
@@ -1092,8 +1086,8 @@ end;
 
 **5. Gérer le paramètre Handled**
 ```pascal
-procedure OnGesture(...; var Handled: Boolean);
-begin
+procedure OnGesture(...; var Handled: Boolean);  
+begin  
   if GestionOK then
     Handled := True;  // Empêche la propagation
 end;
@@ -1110,8 +1104,8 @@ end;
 **1. Zones tactiles trop petites**
 ```pascal
 // ❌ MAUVAIS
-Button1.Width := 30;
-Button1.Height := 20;
+Button1.Width := 30;  
+Button1.Height := 20;  
 ```
 
 **2. Gestes non-standard sans explication**

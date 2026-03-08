@@ -45,12 +45,12 @@ C'est le même code, mais l'interface s'adapte !
 **Règle 1 : Ne jamais utiliser de positions absolues**
 ```pascal
 // ❌ MAUVAIS : Position fixe
-Button1.Position.X := 100;
-Button1.Position.Y := 200;
+Button1.Position.X := 100;  
+Button1.Position.Y := 200;  
 
 // ✅ BON : Alignement relatif
-Button1.Align := TAlignLayout.Bottom;
-Button1.Margins.Bottom := 10;
+Button1.Align := TAlignLayout.Bottom;  
+Button1.Margins.Bottom := 10;  
 ```
 
 **Règle 2 : Toujours tester sur plusieurs tailles d'écran**
@@ -74,21 +74,21 @@ Les layouts (TLayout, TGridLayout, TFlowLayout) sont vos meilleurs amis pour cr�
 **Utilisation typique** :
 ```pascal
 // Créer une zone d'en-tête
-HeaderLayout := TLayout.Create(Form1);
-HeaderLayout.Parent := Form1;
-HeaderLayout.Align := TAlignLayout.Top;
-HeaderLayout.Height := 60;
+HeaderLayout := TLayout.Create(Form1);  
+HeaderLayout.Parent := Form1;  
+HeaderLayout.Align := TAlignLayout.Top;  
+HeaderLayout.Height := 60;  
 
 // Créer une zone de contenu
-ContentLayout := TLayout.Create(Form1);
-ContentLayout.Parent := Form1;
-ContentLayout.Align := TAlignLayout.Client; // Prend tout l'espace restant
+ContentLayout := TLayout.Create(Form1);  
+ContentLayout.Parent := Form1;  
+ContentLayout.Align := TAlignLayout.Client; // Prend tout l'espace restant  
 
 // Créer une zone de pied de page
-FooterLayout := TLayout.Create(Form1);
-FooterLayout.Parent := Form1;
-FooterLayout.Align := TAlignLayout.Bottom;
-FooterLayout.Height := 40;
+FooterLayout := TLayout.Create(Form1);  
+FooterLayout.Parent := Form1;  
+FooterLayout.Align := TAlignLayout.Bottom;  
+FooterLayout.Height := 40;  
 ```
 
 **Résultat** : Une structure classique en trois parties qui s'adapte à toutes les tailles d'écran.
@@ -107,15 +107,15 @@ FooterLayout.Height := 40;
 **Exemple d'utilisation** :
 Créer une grille de 3x3 boutons :
 ```pascal
-GridLayout1.ColumnCount := 3;
-GridLayout1.RowCount := 3;
-GridLayout1.ItemWidth := 100;
-GridLayout1.ItemHeight := 100;
-GridLayout1.Orientation := TOrientation.Horizontal;
+GridLayout1.ColumnCount := 3;  
+GridLayout1.RowCount := 3;  
+GridLayout1.ItemWidth := 100;  
+GridLayout1.ItemHeight := 100;  
+GridLayout1.Orientation := TOrientation.Horizontal;  
 
 // Ajouter 9 boutons - ils se placeront automatiquement dans la grille
-for i := 1 to 9 do
-begin
+for i := 1 to 9 do  
+begin  
   Button := TButton.Create(GridLayout1);
   Button.Parent := GridLayout1;
   Button.Text := IntToStr(i);
@@ -139,13 +139,13 @@ end;
 
 **Utilisation typique** :
 ```pascal
-FlowLayout1.Justify := TFlowJustify.Left;
-FlowLayout1.HorizontalGap := 10;
-FlowLayout1.VerticalGap := 10;
+FlowLayout1.Justify := TFlowJustify.Left;  
+FlowLayout1.HorizontalGap := 10;  
+FlowLayout1.VerticalGap := 10;  
 
 // Ajouter plusieurs tags/badges
-for i := 1 to 20 do
-begin
+for i := 1 to 20 do  
+begin  
   Tag := TButton.Create(FlowLayout1);
   Tag.Parent := FlowLayout1;
   Tag.Text := 'Tag ' + IntToStr(i);
@@ -171,13 +171,13 @@ end;
 
 **Utilisation** :
 ```pascal
-ScrollBox1.Align := TAlignLayout.Client;
-ScrollBox1.ShowScrollBars := False; // Masqué sur mobile, gestuel
+ScrollBox1.Align := TAlignLayout.Client;  
+ScrollBox1.ShowScrollBars := False; // Masqué sur mobile, gestuel  
 
 // Ajouter du contenu qui peut dépasser
-ContentLayout := TLayout.Create(ScrollBox1);
-ContentLayout.Parent := ScrollBox1;
-ContentLayout.Height := 2000; // Plus haut que l'écran
+ContentLayout := TLayout.Create(ScrollBox1);  
+ContentLayout.Parent := ScrollBox1;  
+ContentLayout.Height := 2000; // Plus haut que l'écran  
 ```
 
 **Important sur mobile** : Sur iOS et Android, il est recommandé de masquer les barres de défilement et de laisser l'utilisateur faire défiler avec ses doigts.
@@ -202,26 +202,26 @@ La propriété `Align` est cruciale pour créer des interfaces adaptatives.
 
 **TAlignLayout.Top** : S'aligne en haut, s'étend sur toute la largeur
 ```pascal
-Toolbar.Align := TAlignLayout.Top;
-Toolbar.Height := 50; // Définir la hauteur
+Toolbar.Align := TAlignLayout.Top;  
+Toolbar.Height := 50; // Définir la hauteur  
 ```
 
 **TAlignLayout.Bottom** : S'aligne en bas, s'étend sur toute la largeur
 ```pascal
-StatusBar.Align := TAlignLayout.Bottom;
-StatusBar.Height := 30;
+StatusBar.Align := TAlignLayout.Bottom;  
+StatusBar.Height := 30;  
 ```
 
 **TAlignLayout.Left** : S'aligne à gauche, s'étend sur toute la hauteur
 ```pascal
-SidePanel.Align := TAlignLayout.Left;
-SidePanel.Width := 200;
+SidePanel.Align := TAlignLayout.Left;  
+SidePanel.Width := 200;  
 ```
 
 **TAlignLayout.Right** : S'aligne à droite, s'étend sur toute la hauteur
 ```pascal
-PropertiesPanel.Align := TAlignLayout.Right;
-PropertiesPanel.Width := 250;
+PropertiesPanel.Align := TAlignLayout.Right;  
+PropertiesPanel.Width := 250;  
 ```
 
 **TAlignLayout.Client** : Occupe tout l'espace restant
@@ -263,10 +263,10 @@ MainArea.Align := TAlignLayout.Client;
 Les marges créent un espace **autour** du composant, entre lui et son conteneur ou ses voisins.
 
 ```pascal
-Button1.Margins.Left := 10;
-Button1.Margins.Top := 10;
-Button1.Margins.Right := 10;
-Button1.Margins.Bottom := 10;
+Button1.Margins.Left := 10;  
+Button1.Margins.Top := 10;  
+Button1.Margins.Right := 10;  
+Button1.Margins.Bottom := 10;  
 
 // Ou en une seule fois
 Button1.Margins.Rect := TRectF.Create(10, 10, 10, 10);
@@ -274,11 +274,11 @@ Button1.Margins.Rect := TRectF.Create(10, 10, 10, 10);
 
 **Utilisation typique** :
 ```pascal
-Panel1.Align := TAlignLayout.Client;
-Panel1.Margins.Left := 20;
-Panel1.Margins.Top := 20;
-Panel1.Margins.Right := 20;
-Panel1.Margins.Bottom := 20;
+Panel1.Align := TAlignLayout.Client;  
+Panel1.Margins.Left := 20;  
+Panel1.Margins.Top := 20;  
+Panel1.Margins.Right := 20;  
+Panel1.Margins.Bottom := 20;  
 // Le panel occupe tout l'espace client mais avec 20 pixels de marge
 ```
 
@@ -287,10 +287,10 @@ Panel1.Margins.Bottom := 20;
 Le padding crée un espace **à l'intérieur** du composant, entre ses bords et son contenu.
 
 ```pascal
-Panel1.Padding.Left := 15;
-Panel1.Padding.Top := 15;
-Panel1.Padding.Right := 15;
-Panel1.Padding.Bottom := 15;
+Panel1.Padding.Left := 15;  
+Panel1.Padding.Top := 15;  
+Panel1.Padding.Right := 15;  
+Panel1.Padding.Bottom := 15;  
 // Les composants enfants auront 15 pixels d'espace par rapport aux bords
 ```
 
@@ -360,9 +360,9 @@ Panel1.Anchors := [akLeft, akTop, akRight, akBottom];
 
 **Rester en bas à droite** : `[akRight, akBottom]`
 ```pascal
-ButtonOK.Anchors := [akRight, akBottom];
-ButtonOK.Position.X := Form1.Width - ButtonOK.Width - 10;
-ButtonOK.Position.Y := Form1.Height - ButtonOK.Height - 10;
+ButtonOK.Anchors := [akRight, akBottom];  
+ButtonOK.Position.X := Form1.Width - ButtonOK.Width - 10;  
+ButtonOK.Position.Y := Form1.Height - ButtonOK.Height - 10;  
 // Le bouton reste toujours en bas à droite
 ```
 
@@ -410,12 +410,12 @@ Créer une interface qui s'adapte à toutes les tailles avec des layouts intelli
 **Exemple** :
 ```pascal
 // Structure qui fonctionne sur toutes les tailles
-MainLayout.Align := TAlignLayout.Client;
-MainLayout.Padding.Rect := TRectF.Create(10, 10, 10, 10);
+MainLayout.Align := TAlignLayout.Client;  
+MainLayout.Padding.Rect := TRectF.Create(10, 10, 10, 10);  
 
 // Utiliser TFlowLayout pour que les éléments s'adaptent
-FlowLayout1.Parent := MainLayout;
-FlowLayout1.Align := TAlignLayout.Top;
+FlowLayout1.Parent := MainLayout;  
+FlowLayout1.Align := TAlignLayout.Top;  
 ```
 
 **Avantages** :
@@ -432,14 +432,14 @@ Créer différentes dispositions selon la taille d'écran disponible.
 
 **Principe** :
 ```pascal
-if Form1.Width < 600 then
-begin
+if Form1.Width < 600 then  
+begin  
   // Disposition mobile : une colonne
   SidePanel.Visible := False;
   MainContent.Align := TAlignLayout.Client;
-end
-else
-begin
+end  
+else  
+begin  
   // Disposition desktop : deux colonnes
   SidePanel.Visible := True;
   SidePanel.Width := 250;
@@ -478,8 +478,8 @@ Sur mobile et tablette, l'utilisateur peut faire pivoter l'appareil.
 ### Détecter le changement d'orientation
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   if Width > Height then
   begin
     // Mode paysage (Landscape)
@@ -498,8 +498,8 @@ end;
 **Exemple pratique** : Application de galerie photos
 
 ```pascal
-procedure TForm1.AdaptToOrientation;
-begin
+procedure TForm1.AdaptToOrientation;  
+begin  
   if Width > Height then
   begin
     // Paysage : Plus d'images par ligne
@@ -512,8 +512,8 @@ begin
   end;
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   AdaptToOrientation;
 end;
 ```
@@ -547,9 +547,9 @@ Le composant `TMultiView` est essentiel pour créer des interfaces modernes avec
 ### Configuration basique
 
 ```pascal
-MultiView1.Mode := TMultiViewMode.Drawer; // Menu type "drawer"
-MultiView1.DrawerOptions := [TDrawerOption.ShowAnimation];
-MultiView1.MasterButton := ButtonMenu; // Bouton qui ouvre/ferme le menu
+MultiView1.Mode := TMultiViewMode.Drawer; // Menu type "drawer"  
+MultiView1.DrawerOptions := [TDrawerOption.ShowAnimation];  
+MultiView1.MasterButton := ButtonMenu; // Bouton qui ouvre/ferme le menu  
 
 // Contenu du menu
 ListBox1.Parent := MultiView1;
@@ -577,8 +577,8 @@ ListBox1.Parent := MultiView1;
 ### Exemple d'utilisation
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration du MultiView
   MultiView1.Width := 250;
   MultiView1.Mode := TMultiViewMode.Drawer;
@@ -594,8 +594,8 @@ begin
   ListBox1.Items.Add('À propos');
 end;
 
-procedure TForm1.ListBox1ItemClick(Sender: TCustomListBox; const Item: TListBoxItem);
-begin
+procedure TForm1.ListBox1ItemClick(Sender: TCustomListBox; const Item: TListBoxItem);  
+begin  
   // Gérer le clic sur un item
   case ListBox1.ItemIndex of
     0: ShowHome;
@@ -650,12 +650,12 @@ Sur mobile, les zones tactiles doivent être suffisamment grandes (minimum 44x44
 
 ### Pattern 1 : Master-Detail adaptatif
 
-**Sur tablette/desktop** : Deux panneaux côte à côte
-**Sur smartphone** : Navigation entre deux écrans
+**Sur tablette/desktop** : Deux panneaux côte à côte  
+**Sur smartphone** : Navigation entre deux écrans  
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   if Width >= 768 then
   begin
     // Mode tablette/desktop : Vue côte à côte
@@ -682,8 +682,8 @@ end;
 
 ### Pattern 2 : Tabs vs Menu
 
-**Sur mobile** : Onglets en bas (style iOS) ou menu hamburger
-**Sur desktop** : Onglets en haut ou menu latéral permanent
+**Sur mobile** : Onglets en bas (style iOS) ou menu hamburger  
+**Sur desktop** : Onglets en haut ou menu latéral permanent  
 
 ```pascal
 {$IFDEF ANDROID OR IOS}
@@ -702,8 +702,8 @@ end;
 Adapter le nombre de colonnes selon la largeur disponible.
 
 ```pascal
-procedure TForm1.ArrangeFormFields;
-begin
+procedure TForm1.ArrangeFormFields;  
+begin  
   if Width < 600 then
   begin
     // Mobile : Une colonne

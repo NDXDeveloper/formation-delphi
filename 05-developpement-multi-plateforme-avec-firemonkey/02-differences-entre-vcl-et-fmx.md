@@ -116,14 +116,14 @@ Heureusement, de nombreuses propriétés sont similaires :
 
 ```pascal
 // VCL
-Button1.Caption := 'Cliquez-moi';
-Button1.Enabled := True;
-Button1.Visible := True;
+Button1.Caption := 'Cliquez-moi';  
+Button1.Enabled := True;  
+Button1.Visible := True;  
 
 // FMX
-Button1.Text := 'Cliquez-moi';  // Notez : Text au lieu de Caption
-Button1.Enabled := True;        // Identique
-Button1.Visible := True;        // Identique
+Button1.Text := 'Cliquez-moi';  // Notez : Text au lieu de Caption  
+Button1.Enabled := True;        // Identique  
+Button1.Visible := True;        // Identique  
 ```
 
 ### Différences de propriétés importantes
@@ -164,10 +164,10 @@ Button1.Visible := True;        // Identique
 En VCL, le positionnement classique est absolu :
 
 ```pascal
-Button1.Left := 10;
-Button1.Top := 20;
-Button1.Width := 100;
-Button1.Height := 25;
+Button1.Left := 10;  
+Button1.Top := 20;  
+Button1.Width := 100;  
+Button1.Height := 25;  
 ```
 
 Vous pouvez utiliser des ancrages (Anchors) et des alignements (Align) pour rendre l'interface adaptative, mais l'approche par défaut est positionnelle.
@@ -193,8 +193,8 @@ FireMonkey encourage une approche plus moderne avec des layouts :
 **Exemple conceptuel** :
 ```pascal
 // Créer une barre d'outils en haut qui s'étend sur toute la largeur
-Toolbar.Align := TAlignLayout.Top;
-Toolbar.Height := 50;
+Toolbar.Align := TAlignLayout.Top;  
+Toolbar.Height := 50;  
 
 // Zone de contenu qui occupe tout l'espace restant
 ContentArea.Align := TAlignLayout.Client;
@@ -210,16 +210,16 @@ Les événements principaux fonctionnent de manière similaire :
 
 **VCL** :
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bouton cliqué!');
 end;
 ```
 
 **FMX** :
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bouton cliqué!');
 end;
 ```
@@ -230,9 +230,9 @@ FMX ajoute des événements spécifiques pour le tactile :
 
 ```pascal
 // Événements tactiles en FMX
-procedure TForm1.Button1Tap(Sender: TObject; const Point: TPointF);
-procedure TForm1.Button1Swipe(Sender: TObject; const Direction: TSwipeDirection);
-procedure TForm1.Button1Gesture(Sender: TObject; const EventInfo: TGestureEventInfo);
+procedure TForm1.Button1Tap(Sender: TObject; const Point: TPointF);  
+procedure TForm1.Button1Swipe(Sender: TObject; const Direction: TSwipeDirection);  
+procedure TForm1.Button1Gesture(Sender: TObject; const EventInfo: TGestureEventInfo);  
 ```
 
 Ces événements n'existent pas en VCL car ils sont spécifiques aux interfaces tactiles.
@@ -283,8 +283,8 @@ FireMonkey utilise un système de styles très puissant :
 **Exemple** :
 ```pascal
 // Charger un style iOS sur Windows pour tester
-StyleBook1.LoadFromFile('iOS_Style.style');
-Form1.StyleBook := StyleBook1;
+StyleBook1.LoadFromFile('iOS_Style.style');  
+Form1.StyleBook := StyleBook1;  
 ```
 
 ### Comparaison visuelle
@@ -329,11 +329,11 @@ FireMonkey offre de nombreux effets prêts à l'emploi :
 **Exemple conceptuel** :
 ```pascal
 // Ajouter une ombre à un bouton (design time ou code)
-var Shadow: TShadowEffect;
-Shadow := TShadowEffect.Create(Button1);
-Shadow.Parent := Button1;
-Shadow.Distance := 3;
-Shadow.Softness := 0.3;
+var Shadow: TShadowEffect;  
+Shadow := TShadowEffect.Create(Button1);  
+Shadow.Parent := Button1;  
+Shadow.Distance := 3;  
+Shadow.Softness := 0.3;  
 ```
 
 ## 8. Performance et utilisation des ressources

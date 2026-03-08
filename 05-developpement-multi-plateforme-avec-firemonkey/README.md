@@ -82,8 +82,8 @@ Il existe plusieurs stratégies pour le multi-plateforme :
 
 Le monde du développement logiciel a radicalement changé ces dernières années :
 
-**Avant 2010** : Développement principalement desktop, Windows dominant
-**Aujourd'hui** : Écosystème diversifié avec mobile, tablettes, desktop, cloud
+**Avant 2010** : Développement principalement desktop, Windows dominant  
+**Aujourd'hui** : Écosystème diversifié avec mobile, tablettes, desktop, cloud  
 
 Ne pas proposer son application sur mobile, c'est potentiellement perdre 60 à 70% de ses utilisateurs potentiels. Ne pas supporter macOS ou Linux, c'est exclure des segments de marché importants.
 

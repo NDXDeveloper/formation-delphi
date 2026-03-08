@@ -14,8 +14,8 @@ Linux représente un écosystème important dans le monde du développement logi
 
 ### Un peu d'histoire
 
-**2017** : Première version de FMXLinux avec Delphi 10.2 Tokyo
-**Aujourd'hui** : Support mature et stable dans Delphi
+**2017** : Première version de FMXLinux avec Delphi 10.2 Tokyo  
+**Aujourd'hui** : Support mature et stable dans Delphi  
 
 FMXLinux comble un vide important : avant son existence, il n'y avait pas de solution RAD (Rapid Application Development) simple pour créer des applications graphiques Linux avec Delphi.
 
@@ -114,8 +114,8 @@ Copiez ce fichier sur votre machine Linux (via SFTP, clé USB, etc.)
 Sur Linux, dans un terminal :
 ```bash
 # Créer un répertoire pour PAServer
-mkdir ~/PAServer
-cd ~/PAServer
+mkdir ~/PAServer  
+cd ~/PAServer  
 
 # Extraire l'archive
 tar -xzf LinuxPAServer23.0.tar.gz
@@ -128,19 +128,19 @@ chmod +x paserver
 
 Ubuntu/Debian :
 ```bash
-sudo apt-get update
-sudo apt-get install libgtk-3-0 libgtk-3-dev
-sudo apt-get install joe wget p7zip-full curl openssh-server
-sudo apt-get install build-essential
-sudo apt-get install zlib1g-dev libcurl4-gnutls-dev
+sudo apt-get update  
+sudo apt-get install libgtk-3-0 libgtk-3-dev  
+sudo apt-get install joe wget p7zip-full curl openssh-server  
+sudo apt-get install build-essential  
+sudo apt-get install zlib1g-dev libcurl4-gnutls-dev  
 ```
 
 Fedora/Red Hat :
 ```bash
-sudo dnf install gtk3 gtk3-devel
-sudo dnf install joe wget p7zip curl openssh-server
-sudo dnf install gcc gcc-c++ make
-sudo dnf install zlib-devel libcurl-devel
+sudo dnf install gtk3 gtk3-devel  
+sudo dnf install joe wget p7zip curl openssh-server  
+sudo dnf install gcc gcc-c++ make  
+sudo dnf install zlib-devel libcurl-devel  
 ```
 
 **Étape 4 : Lancer PAServer**
@@ -153,9 +153,9 @@ cd ~/PAServer
 Première exécution : PAServer vous demandera de créer un mot de passe.
 
 ```
-PAServer version 23.0
-Password:
-Confirm password:
+PAServer version 23.0  
+Password:  
+Confirm password:  
 
 PAServer started on port 64211
 ```
@@ -206,8 +206,8 @@ Si vous avez déjà un projet FireMonkey :
 
 **Étape 1 : Nouveau projet**
 ```
-File → New → Multi-Device Application
-Template : Blank Application
+File → New → Multi-Device Application  
+Template : Blank Application  
 ```
 
 **Étape 2 : Ajouter des composants**
@@ -251,8 +251,8 @@ implementation
 
 {$R *.fmx}
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   LabelTitre.Text := 'Application Linux avec FMXLinux';
   EditNom.TextPrompt := 'Entrez votre nom';
   ButtonBonjour.Text := 'Dire Bonjour';
@@ -264,8 +264,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TForm1.ButtonBonjourClick(Sender: TObject);
-var
+procedure TForm1.ButtonBonjourClick(Sender: TObject);  
+var  
   Message: string;
 begin
   if EditNom.Text.Trim.IsEmpty then
@@ -351,21 +351,21 @@ end;
 uses
   Posix.Stdlib;
 
-function ObtenirCheminHome: string;
-begin
+function ObtenirCheminHome: string;  
+begin  
   Result := string(getenv('HOME'));
   // Exemple : /home/username
 end;
 
-function ObtenirCheminConfig: string;
-begin
-  Result := TPath.Combine(ObtenirCheminHome, '.config', 'MonApp');
+function ObtenirCheminConfig: string;  
+begin  
+  Result := TPath.Combine(TPath.Combine(ObtenirCheminHome, '.config'), 'MonApp');
   // Exemple : /home/username/.config/MonApp
 end;
 
-function ObtenirCheminDonnees: string;
-begin
-  Result := TPath.Combine(ObtenirCheminHome, '.local', 'share', 'MonApp');
+function ObtenirCheminDonnees: string;  
+begin  
+  Result := TPath.Combine(TPath.Combine(TPath.Combine(ObtenirCheminHome, '.local'), 'share'), 'MonApp');
   // Exemple : /home/username/.local/share/MonApp
 end;
 {$ENDIF}
@@ -380,8 +380,8 @@ Sur Linux, les permissions sont importantes :
 uses
   Posix.SysStat;
 
-procedure RendreExecutable(const Fichier: string);
-var
+procedure RendreExecutable(const Fichier: string);  
+var  
   StatBuf: _stat;
 begin
   // Obtenir les permissions actuelles
@@ -402,8 +402,8 @@ end;
 uses
   Posix.Stdlib;
 
-function ObtenirVariableEnv(const NomVar: string): string;
-var
+function ObtenirVariableEnv(const NomVar: string): string;  
+var  
   P: PAnsiChar;
 begin
   P := getenv(PAnsiChar(AnsiString(NomVar)));
@@ -414,8 +414,8 @@ begin
 end;
 
 // Exemples
-procedure AfficherInfosSysteme;
-begin
+procedure AfficherInfosSysteme;  
+begin  
   ShowMessage('User : ' + ObtenirVariableEnv('USER'));
   ShowMessage('Home : ' + ObtenirVariableEnv('HOME'));
   ShowMessage('Shell : ' + ObtenirVariableEnv('SHELL'));
@@ -431,14 +431,14 @@ end;
 uses
   Posix.Stdlib, Posix.Unistd;
 
-function ExecuterCommande(const Commande: string): Integer;
-begin
+function ExecuterCommande(const Commande: string): Integer;  
+begin  
   Result := system(PAnsiChar(AnsiString(Commande)));
 end;
 
 // Exemples d'utilisation
-procedure ExemplesCommandes;
-begin
+procedure ExemplesCommandes;  
+begin  
   // Ouvrir un fichier avec l'application par défaut
   ExecuterCommande('xdg-open /home/user/document.pdf');
 
@@ -455,19 +455,19 @@ end;
 
 ```pascal
 {$IFDEF LINUX}
-function ObtenirEnvironnementBureau: string;
-begin
+function ObtenirEnvironnementBureau: string;  
+begin  
   Result := ObtenirVariableEnv('XDG_CURRENT_DESKTOP');
   // Retourne : GNOME, KDE, XFCE, etc.
 end;
 
-function EstGNOME: Boolean;
-begin
+function EstGNOME: Boolean;  
+begin  
   Result := ObtenirEnvironnementBureau.Contains('GNOME');
 end;
 
-function EstKDE: Boolean;
-begin
+function EstKDE: Boolean;  
+begin  
   Result := ObtenirEnvironnementBureau.Contains('KDE');
 end;
 {$ENDIF}
@@ -480,8 +480,8 @@ end;
 FireMonkey sur Linux utilise GTK3, ce qui donne une apparence cohérente avec le système :
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   {$IFDEF LINUX}
   // L'apparence est automatiquement GTK3
   // Les boutons, menus, dialogues ressemblent à des apps Linux natives
@@ -494,8 +494,8 @@ end;
 Les dialogues FireMonkey s'affichent comme des dialogues GTK natifs :
 
 ```pascal
-procedure TForm1.AfficherDialogues;
-begin
+procedure TForm1.AfficherDialogues;  
+begin  
   // Dialogue message - apparence native GTK
   ShowMessage('Message Linux natif');
 
@@ -520,8 +520,8 @@ end;
 ### Icônes et thème système
 
 ```pascal
-procedure TForm1.AdapterAuTheme;
-begin
+procedure TForm1.AdapterAuTheme;  
+begin  
   {$IFDEF LINUX}
   // FireMonkey s'adapte au thème clair/sombre du système
   // Pas de code spécial nécessaire
@@ -563,32 +563,32 @@ MonApp/
 #!/bin/bash
 # Installation de MonApp
 
-APP_NAME="MonApp"
-INSTALL_DIR="/opt/$APP_NAME"
-DESKTOP_FILE="/usr/share/applications/$APP_NAME.desktop"
+APP_NAME="MonApp"  
+INSTALL_DIR="/opt/$APP_NAME"  
+DESKTOP_FILE="/usr/share/applications/$APP_NAME.desktop"  
 
 echo "Installation de $APP_NAME..."
 
 # Créer le répertoire d'installation
-sudo mkdir -p $INSTALL_DIR
-sudo cp $APP_NAME $INSTALL_DIR/
-sudo chmod +x $INSTALL_DIR/$APP_NAME
+sudo mkdir -p $INSTALL_DIR  
+sudo cp $APP_NAME $INSTALL_DIR/  
+sudo chmod +x $INSTALL_DIR/$APP_NAME  
 
 # Créer le raccourci desktop
 sudo cat > $DESKTOP_FILE << EOF
 [Desktop Entry]
-Version=1.0
-Type=Application
-Name=$APP_NAME
-Comment=Mon Application Linux
-Exec=$INSTALL_DIR/$APP_NAME
-Icon=$INSTALL_DIR/icon.png
-Terminal=false
-Categories=Utility;
-EOF
+Version=1.0  
+Type=Application  
+Name=$APP_NAME  
+Comment=Mon Application Linux  
+Exec=$INSTALL_DIR/$APP_NAME  
+Icon=$INSTALL_DIR/icon.png  
+Terminal=false  
+Categories=Utility;  
+EOF  
 
-echo "Installation terminée !"
-echo "Lancez l'application depuis le menu Applications."
+echo "Installation terminée !"  
+echo "Lancez l'application depuis le menu Applications."  
 ```
 
 ### Méthode 2 : Package .deb (Debian/Ubuntu)
@@ -610,14 +610,14 @@ monapp_1.0-1_amd64/
 
 **Fichier control** :
 ```
-Package: monapp
-Version: 1.0-1
-Section: utils
-Priority: optional
-Architecture: amd64
-Depends: libgtk-3-0
-Maintainer: Votre Nom <email@exemple.com>
-Description: Mon Application Linux
+Package: monapp  
+Version: 1.0-1  
+Section: utils  
+Priority: optional  
+Architecture: amd64  
+Depends: libgtk-3-0  
+Maintainer: Votre Nom <email@exemple.com>  
+Description: Mon Application Linux  
  Description détaillée de votre application
  sur plusieurs lignes si nécessaire.
 ```
@@ -674,11 +674,11 @@ Résultat : `MonApp-x86_64.AppImage` (fichier unique distributable)
 
 **Fichier manifest (org.exemple.MonApp.yaml)** :
 ```yaml
-app-id: org.exemple.MonApp
-runtime: org.freedesktop.Platform
-runtime-version: '22.08'
-sdk: org.freedesktop.Sdk
-command: MonApp
+app-id: org.exemple.MonApp  
+runtime: org.freedesktop.Platform  
+runtime-version: '22.08'  
+sdk: org.freedesktop.Sdk  
+command: MonApp  
 
 finish-args:
   - --share=ipc
@@ -705,8 +705,8 @@ modules:
 
 **Construire le Flatpak** :
 ```bash
-flatpak-builder --force-clean build-dir org.exemple.MonApp.yaml
-flatpak-builder --repo=repo --force-clean build-dir org.exemple.MonApp.yaml
+flatpak-builder --force-clean build-dir org.exemple.MonApp.yaml  
+flatpak-builder --repo=repo --force-clean build-dir org.exemple.MonApp.yaml  
 ```
 
 ## 8. Intégration système Linux
@@ -718,17 +718,17 @@ Pour que votre application apparaisse dans le menu :
 **monapp.desktop** :
 ```ini
 [Desktop Entry]
-Version=1.0
-Type=Application
-Name=Mon Application
-Name[fr]=Mon Application
-Comment=Description courte
-Comment[fr]=Description courte en français
-Exec=/opt/monapp/MonApp
-Icon=/opt/monapp/icon.png
-Terminal=false
-Categories=Utility;Office;
-Keywords=gestion;outil;
+Version=1.0  
+Type=Application  
+Name=Mon Application  
+Name[fr]=Mon Application  
+Comment=Description courte  
+Comment[fr]=Description courte en français  
+Exec=/opt/monapp/MonApp  
+Icon=/opt/monapp/icon.png  
+Terminal=false  
+Categories=Utility;Office;  
+Keywords=gestion;outil;  
 ```
 
 **Installation** :
@@ -749,10 +749,10 @@ cp monapp.desktop ~/.local/share/applications/
 **Installation des icônes** :
 ```bash
 # Icônes système
-sudo cp icon-16.png /usr/share/icons/hicolor/16x16/apps/monapp.png
-sudo cp icon-32.png /usr/share/icons/hicolor/32x32/apps/monapp.png
-sudo cp icon-48.png /usr/share/icons/hicolor/48x48/apps/monapp.png
-sudo cp icon-256.png /usr/share/icons/hicolor/256x256/apps/monapp.png
+sudo cp icon-16.png /usr/share/icons/hicolor/16x16/apps/monapp.png  
+sudo cp icon-32.png /usr/share/icons/hicolor/32x32/apps/monapp.png  
+sudo cp icon-48.png /usr/share/icons/hicolor/48x48/apps/monapp.png  
+sudo cp icon-256.png /usr/share/icons/hicolor/256x256/apps/monapp.png  
 
 # Mettre à jour le cache d'icônes
 sudo gtk-update-icon-cache /usr/share/icons/hicolor/
@@ -762,8 +762,8 @@ sudo gtk-update-icon-cache /usr/share/icons/hicolor/
 
 ```pascal
 {$IFDEF LINUX}
-procedure EnvoyerNotification(const Titre, Message: string);
-var
+procedure EnvoyerNotification(const Titre, Message: string);  
+var  
   Commande: string;
 begin
   // Utiliser notify-send pour les notifications
@@ -772,8 +772,8 @@ begin
 end;
 
 // Notification avec icône
-procedure NotificationAvecIcone(const Titre, Message, Icone: string);
-var
+procedure NotificationAvecIcone(const Titre, Message, Icone: string);  
+var  
   Commande: string;
 begin
   Commande := Format('notify-send -i "%s" "%s" "%s"', [Icone, Titre, Message]);
@@ -781,8 +781,8 @@ begin
 end;
 
 // Exemples
-procedure TForm1.EnvoyerNotifications;
-begin
+procedure TForm1.EnvoyerNotifications;  
+begin  
   EnvoyerNotification('Information', 'Traitement terminé avec succès');
   NotificationAvecIcone('Erreur', 'Une erreur est survenue', 'dialog-error');
 end;
@@ -812,14 +812,14 @@ Delphi permet de déboguer votre application Linux directement depuis l'IDE Wind
 
 ```pascal
 {$IFDEF LINUX}
-procedure EcrireLog(const Message: string);
-var
+procedure EcrireLog(const Message: string);  
+var  
   Fichier: TextFile;
   CheminLog: string;
 begin
   CheminLog := TPath.Combine(
-    TPath.GetHomePath,
-    '.local', 'share', 'MonApp', 'app.log'
+    TPath.Combine(TPath.Combine(TPath.Combine(TPath.GetHomePath, '.local'), 'share'), 'MonApp'),
+    'app.log'
   );
 
   // Créer le répertoire si nécessaire
@@ -848,8 +848,8 @@ end;
 uses
   Posix.SysUtsname;
 
-function ObtenirInfosSysteme: string;
-var
+function ObtenirInfosSysteme: string;  
+var  
   UtsName: utsname;
 begin
   if uname(UtsName) = 0 then
@@ -873,8 +873,8 @@ begin
     Result := 'Impossible d''obtenir les infos système';
 end;
 
-procedure TForm1.AfficherInfosSysteme;
-begin
+procedure TForm1.AfficherInfosSysteme;  
+begin  
   ShowMessage(ObtenirInfosSysteme);
 end;
 {$ENDIF}
@@ -884,12 +884,12 @@ end;
 
 ### Ce qui fonctionne parfaitement
 
-✅ **Composants FireMonkey standards**
-✅ **FireDAC** (accès bases de données)
-✅ **REST/HTTP** (communication réseau)
-✅ **Fichiers et flux**
-✅ **Threads et parallélisme**
-✅ **Animations et effets**
+✅ **Composants FireMonkey standards**  
+✅ **FireDAC** (accès bases de données)  
+✅ **REST/HTTP** (communication réseau)  
+✅ **Fichiers et flux**  
+✅ **Threads et parallélisme**  
+✅ **Animations et effets**  
 ✅ **JSON, XML**
 
 ### Limitations connues
@@ -907,14 +907,14 @@ end;
 **Pour WebBrowser** :
 ```pascal
 {$IFDEF LINUX}
-procedure OuvrirURL(const URL: string);
-begin
+procedure OuvrirURL(const URL: string);  
+begin  
   // Ouvrir dans le navigateur par défaut
   system(PAnsiChar(AnsiString('xdg-open ' + URL)));
 end;
 {$ELSE}
-procedure OuvrirURL(const URL: string);
-begin
+procedure OuvrirURL(const URL: string);  
+begin  
   WebBrowser1.Navigate(URL);
 end;
 {$ENDIF}
@@ -975,8 +975,8 @@ CheminFichier := 'C:\Users\user\Documents\data.txt';
 ```pascal
 {$IFDEF LINUX}
 // Les utilisateurs Linux apprécient les options CLI
-if ParamCount > 0 then
-begin
+if ParamCount > 0 then  
+begin  
   if ParamStr(1) = '--version' then
     WriteLn('MonApp version 1.0')
   else if ParamStr(1) = '--help' then
