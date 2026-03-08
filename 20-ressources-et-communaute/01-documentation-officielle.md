@@ -105,8 +105,8 @@ Chaque classe, composant ou fonction dans Delphi est documenté de manière stan
 Prenons l'exemple de TStringList, une classe très utilisée :
 
 ```
-Unit: System.Classes
-Hierarchy: TObject → TPersistent → TStrings → TStringList
+Unit: System.Classes  
+Hierarchy: TObject → TPersistent → TStrings → TStringList  
 ```
 
 En lisant cette information, vous savez que :
@@ -215,8 +215,8 @@ La documentation utilise parfois un vocabulaire technique. Ne vous découragez p
 
 ### Code Examples Repository
 
-Embarcadero maintient un dépôt d'exemples de code sur GitHub :
-https://github.com/Embarcadero
+Embarcadero maintient un dépôt d'exemples de code sur GitHub :  
+https://github.com/Embarcadero  
 
 Vous y trouverez des projets complets démontrant l'utilisation de fonctionnalités spécifiques.
 

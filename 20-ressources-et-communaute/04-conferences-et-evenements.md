@@ -285,8 +285,8 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ?
 
 ### Meetups francophones
 
-**Paris Delphi User Group**
-**Lyon, Marseille, etc.**
+**Paris Delphi User Group**  
+**Lyon, Marseille, etc.**  
 Recherchez dans votre région sur :
 - Meetup.com
 - Groupes Facebook francophones

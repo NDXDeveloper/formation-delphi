@@ -190,8 +190,8 @@ Pour obtenir de l'aide rapidement et efficacement, votre question doit contenir 
 
 **1. Un titre clair et descriptif**
 
-❌ Mauvais : "Aide svp"
-❌ Mauvais : "Problème avec mon code"
+❌ Mauvais : "Aide svp"  
+❌ Mauvais : "Problème avec mon code"  
 ✅ Bon : "Erreur 'Access Violation' lors de la lecture d'un fichier CSV avec TStringList"
 
 **2. Le contexte**
@@ -206,8 +206,8 @@ Précisez :
 
 ```pascal
 // Utilisez des blocs de code formatés
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   MyList: TStringList;
 begin
   MyList := TStringList.Create;
@@ -231,7 +231,7 @@ Si vous avez une erreur, copiez le message complet, pas juste "ça ne marche pas
 ### Les erreurs à éviter
 
 **Ne demandez pas à quelqu'un de faire votre travail**
-❌ "Besoin du code complet pour une application de gestion de stock"
+❌ "Besoin du code complet pour une application de gestion de stock"  
 ✅ "Comment puis-je structurer une requête SQL pour gérer les mouvements de stock ?"
 
 **Ne postez pas de captures d'écran de code**

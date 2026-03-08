@@ -229,8 +229,8 @@ Access Violation à l'adresse 0x...
 
 **Structure typique d'un test DUnitX** :
 ```pascal
-procedure TMyTests.TestBasicFunctionality;
-var
+procedure TMyTests.TestBasicFunctionality;  
+var  
   Component: TMyComponent;
 begin
   Component := TMyComponent.Create;
@@ -388,8 +388,8 @@ end;
 
 **Clonez localement** :
 ```bash
-git clone https://github.com/VotreNom/nom-du-projet.git
-cd nom-du-projet
+git clone https://github.com/VotreNom/nom-du-projet.git  
+cd nom-du-projet  
 ```
 
 **Ajoutez le remote "upstream"** :
@@ -458,8 +458,8 @@ Fixes #123
 ```
 Fix: Memory leak in TStringList.LoadFromFile
 
-The destructor wasn't freeing the internal buffer properly
-when an exception occurred during loading.
+The destructor wasn't freeing the internal buffer properly  
+when an exception occurred during loading.  
 
 Fixes #456
 ```
@@ -489,8 +489,8 @@ Closes #234
 
 **Mettez à jour votre branche** :
 ```bash
-git fetch upstream
-git rebase upstream/main
+git fetch upstream  
+git rebase upstream/main  
 # Résolvez les conflits si nécessaire
 ```
 
@@ -566,9 +566,9 @@ Fixes #123
 **Modifications demandées** :
 ```bash
 # Faites les modifications dans votre branche
-git add .
-git commit -m "Address review comments"
-git push origin fix-memory-leak
+git add .  
+git commit -m "Address review comments"  
+git push origin fix-memory-leak  
 # La PR se met à jour automatiquement
 ```
 
@@ -599,9 +599,9 @@ git push origin --delete fix-memory-leak
 
 **Prochaine contribution** :
 ```bash
-git checkout main
-git pull upstream main
-git checkout -b nouvelle-contribution
+git checkout main  
+git pull upstream main  
+git checkout -b nouvelle-contribution  
 ```
 
 ## Bonnes pratiques de contribution

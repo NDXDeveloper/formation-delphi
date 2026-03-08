@@ -535,8 +535,8 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 /Tests           - Tests unitaires
 /Docs            - Documentation
 /Lib             - Dépendances
-README.md        - Documentation principale
-LICENSE          - Licence du projet
+README.md        - Documentation principale  
+LICENSE          - Licence du projet  
 ```
 
 **Questions à se poser** :
