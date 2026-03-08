@@ -265,8 +265,8 @@ Créer de nouvelles applications modernes qui coexistent et communiquent avec l'
 ```pascal
 // Exemple d'adaptation Unicode
 // Ancien (Delphi 7)
-procedure OldWay(s: String);
-var
+procedure OldWay(s: String);  
+var  
   p: PChar;
 begin
   p := PChar(s);
@@ -274,8 +274,8 @@ begin
 end;
 
 // Nouveau (Delphi 12+)
-procedure NewWay(s: String);
-var
+procedure NewWay(s: String);  
+var  
   p: PChar;
 begin
   p := PChar(s);  // Fonctionne mais attention à l'encodage
@@ -323,8 +323,8 @@ var
   utf8: UTF8String; // UTF-8
 
 // Conversions explicites
-s := String(a);
-a := AnsiString(s);
+s := String(a);  
+a := AnsiString(s);  
 ```
 
 **Problème : Integer overflow en 64 bits**
@@ -476,25 +476,25 @@ BDE (Borland Database Engine) était la technologie d'accès aux données histor
 
 **Étape 1 : Mapping des composants**
 ```
-TTable → TFDTable
-TQuery → TFDQuery
-TStoredProc → TFDStoredProc
-TDatabase → TFDConnection
+TTable → TFDTable  
+TQuery → TFDQuery  
+TStoredProc → TFDStoredProc  
+TDatabase → TFDConnection  
 ```
 
 **Étape 2 : Adaptation du code**
 ```pascal
 // Ancien (BDE)
-Table1.DatabaseName := 'DBDEMOS';
-Table1.TableName := 'Customer';
-Table1.Open;
+Table1.DatabaseName := 'DBDEMOS';  
+Table1.TableName := 'Customer';  
+Table1.Open;  
 
 // Nouveau (FireDAC)
-FDConnection1.Params.Add('Database=C:\Data\demo.db');
-FDConnection1.Connected := True;
-FDTable1.Connection := FDConnection1;
-FDTable1.TableName := 'Customer';
-FDTable1.Open;
+FDConnection1.Params.Add('Database=C:\Data\demo.db');  
+FDConnection1.Connected := True;  
+FDTable1.Connection := FDConnection1;  
+FDTable1.TableName := 'Customer';  
+FDTable1.Open;  
 ```
 
 **Étape 3 : Gestion des paramètres**
@@ -533,14 +533,14 @@ FDQuery1.ParamByName('ID').AsInteger := 123;
 **Exemple de transformation**
 ```pascal
 // Ancien : logique applicative
-Table1.Filter := 'Status = ''Active''';
-Table1.Filtered := True;
+Table1.Filter := 'Status = ''Active''';  
+Table1.Filtered := True;  
 // Parcours côté client
 
 // Nouveau : SQL côté serveur
-FDQuery1.SQL.Text := 'SELECT * FROM Customers WHERE Status = :Status';
-FDQuery1.ParamByName('Status').AsString := 'Active';
-FDQuery1.Open;
+FDQuery1.SQL.Text := 'SELECT * FROM Customers WHERE Status = :Status';  
+FDQuery1.ParamByName('Status').AsString := 'Active';  
+FDQuery1.Open;  
 // Filtrage côté base (beaucoup plus efficace)
 ```
 
@@ -581,8 +581,8 @@ FDQuery1.Open;
 **Implémentation progressive**
 ```pascal
 // Avant : tout mélangé dans le formulaire
-procedure TCustomerForm.SaveButtonClick(Sender: TObject);
-begin
+procedure TCustomerForm.SaveButtonClick(Sender: TObject);  
+begin  
   // Validation UI
   if Edit1.Text = '' then
     ShowMessage('Nom requis');
@@ -597,8 +597,8 @@ begin
 end;
 
 // Après : séparé en couches
-procedure TCustomerForm.SaveButtonClick(Sender: TObject);
-var
+procedure TCustomerForm.SaveButtonClick(Sender: TObject);  
+var  
   customer: TCustomer;
   validation: TValidationResult;
 begin
@@ -634,10 +634,24 @@ type
   TCustomerViewModel = class
   private
     FCustomer: TCustomer;
+    function GetName: string;
+    procedure SetName(const Value: string);
+    function GetEmail: string;
+    procedure SetEmail(const Value: string);
   published
-    property Name: string read FCustomer.Name write FCustomer.Name;
-    property Email: string read FCustomer.Email write FCustomer.Email;
+    property Name: string read GetName write SetName;
+    property Email: string read GetEmail write SetEmail;
   end;
+
+function TCustomerViewModel.GetName: string;  
+begin  
+  Result := FCustomer.Name;
+end;
+
+procedure TCustomerViewModel.SetName(const Value: string);  
+begin  
+  FCustomer.Name := Value;
+end;
 
 // View (formulaire)
 // LiveBindings connecte automatiquement
@@ -676,9 +690,9 @@ type
 git checkout -b migration-delphi13
 
 # Commits fréquents lors de la migration
-git commit -m "Migration: conversion projet Delphi 13"
-git commit -m "Migration: correction warnings Unicode"
-git commit -m "Migration: adaptation composants tiers"
+git commit -m "Migration: conversion projet Delphi 13"  
+git commit -m "Migration: correction warnings Unicode"  
+git commit -m "Migration: adaptation composants tiers"  
 ```
 
 **Avantages**
@@ -692,8 +706,8 @@ git commit -m "Migration: adaptation composants tiers"
 **DUnitX pour tests unitaires**
 ```pascal
 [TestFixture]
-TCustomerServiceTests = class
-public
+TCustomerServiceTests = class  
+public  
   [Test]
   procedure TestValidateEmail_Valid_ReturnsTrue;
 
@@ -701,8 +715,8 @@ public
   procedure TestValidateEmail_Invalid_ReturnsFalse;
 end;
 
-procedure TCustomerServiceTests.TestValidateEmail_Valid_ReturnsTrue;
-var
+procedure TCustomerServiceTests.TestValidateEmail_Valid_ReturnsTrue;  
+var  
   service: TCustomerService;
 begin
   service := TCustomerService.Create;

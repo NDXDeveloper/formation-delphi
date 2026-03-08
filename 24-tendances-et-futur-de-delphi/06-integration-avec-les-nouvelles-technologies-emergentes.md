@@ -79,10 +79,9 @@ Utiliser des services IA hébergés dans le cloud (OpenAI, Google AI, Azure AI, 
 uses
   System.Net.HttpClient, System.JSON;
 
-procedure TForm1.CallOpenAI(const prompt: string);
-var
+procedure TForm1.CallOpenAI(const prompt: string);  
+var  
   http: THTTPClient;
-  request: THTTPRequest;
   response: IHTTPResponse;
   json, resultJson: TJSONObject;
   apiKey: string;
@@ -98,11 +97,11 @@ begin
       json.AddPair('max_tokens', TJSONNumber.Create(150));
 
       // Envoi de la requête
-      request.Headers.AddHeader('Authorization', 'Bearer ' + apiKey);
       response := http.Post('https://api.openai.com/v1/completions',
         TStringStream.Create(json.ToString, TEncoding.UTF8),
         nil,
-        [TNetHeader.Create('Content-Type', 'application/json')]);
+        [TNetHeader.Create('Content-Type', 'application/json'),
+         TNetHeader.Create('Authorization', 'Bearer ' + apiKey)]);
 
       // Traitement de la réponse
       if response.StatusCode = 200 then
@@ -144,8 +143,8 @@ Exécuter des modèles d'IA directement dans votre application.
 **Exemple avec ONNX**
 ```pascal
 // Chargement d'un modèle de classification d'images
-procedure TForm1.LoadAndRunModel;
-var
+procedure TForm1.LoadAndRunModel;  
+var  
   onnxModel: TONNXModel;  // Wrapper Delphi pour ONNX
   input: TArray<Single>;
   output: TArray<Single>;
@@ -185,8 +184,8 @@ Disponible via GetIt Package Manager.
 uses
   PythonEngine, PythonGUIInputOutput;
 
-procedure TForm1.RunPythonML;
-var
+procedure TForm1.RunPythonML;  
+var  
   pythonEngine: TPythonEngine;
 begin
   pythonEngine := TPythonEngine.Create(nil);
@@ -273,8 +272,8 @@ Des serveurs, stockage et services accessibles via Internet, gérés par des fou
 **S3 (Stockage)**
 ```pascal
 // Exemple avec composant REST
-procedure TForm1.UploadToS3(const fileName: string);
-var
+procedure TForm1.UploadToS3(const fileName: string);  
+var  
   restClient: TRESTClient;
   restRequest: TRESTRequest;
 begin
@@ -325,8 +324,8 @@ Votre application Delphi appelle des fonctions Lambda via API Gateway.
 **Azure AI Services**
 ```pascal
 // Exemple : Azure Computer Vision
-procedure TForm1.AnalyzeImage(imageUrl: string);
-var
+procedure TForm1.AnalyzeImage(imageUrl: string);  
+var  
   restClient: TRESTClient;
   restRequest: TRESTRequest;
   response: TRESTResponse;
@@ -379,8 +378,8 @@ end;
 **Google Maps API**
 ```pascal
 // Intégration Google Maps dans application Delphi
-procedure TForm1.ShowGoogleMap(latitude, longitude: Double);
-var
+procedure TForm1.ShowGoogleMap(latitude, longitude: Double);  
+var  
   webBrowser: TWebBrowser;
   mapUrl: string;
 begin
@@ -442,8 +441,8 @@ type
     function SaveCustomer(customer: TCustomer): Boolean;
   end;
 
-function TCloudService.GetCustomers: TArray<TCustomer>;
-var
+function TCloudService.GetCustomers: TArray<TCustomer>;  
+var  
   request: TRESTRequest;
   response: TRESTResponse;
   jsonArray: TJSONArray;
@@ -487,8 +486,8 @@ end;
 
 **Exemple d'intégration Firebase**
 ```pascal
-procedure TForm1.SaveToFirebase(data: TJSONObject);
-var
+procedure TForm1.SaveToFirebase(data: TJSONObject);  
+var  
   restClient: TRESTClient;
   restRequest: TRESTRequest;
 begin
@@ -564,27 +563,27 @@ type
     procedure Subscribe(topic: string);
   end;
 
-constructor TSensorMonitor.Create;
-begin
+constructor TSensorMonitor.Create;  
+begin  
   FMQTTClient := TMQTTClient.Create;
   FMQTTClient.OnMessage := OnMessageReceived;
 end;
 
-procedure TSensorMonitor.Connect;
-begin
+procedure TSensorMonitor.Connect;  
+begin  
   FMQTTClient.Host := 'broker.hivemq.com';
   FMQTTClient.Port := 1883;
   FMQTTClient.ClientID := 'DelphiClient_' + TGUID.NewGuid.ToString;
   FMQTTClient.Connect;
 end;
 
-procedure TSensorMonitor.Subscribe(topic: string);
-begin
+procedure TSensorMonitor.Subscribe(topic: string);  
+begin  
   FMQTTClient.Subscribe(topic, 0);  // QoS 0
 end;
 
-procedure TSensorMonitor.OnMessageReceived(topic, payload: string);
-var
+procedure TSensorMonitor.OnMessageReceived(topic, payload: string);  
+var  
   temperature: Double;
 begin
   if topic = 'home/sensors/temperature' then
@@ -600,8 +599,8 @@ end;
 
 **TComPort (composant série)**
 ```pascal
-procedure TForm1.ReadFromArduino;
-var
+procedure TForm1.ReadFromArduino;  
+var  
   comPort: TComPort;
   data: string;
 begin
@@ -629,8 +628,8 @@ Delphi supporte BLE nativement pour communiquer avec devices modernes.
 uses
   System.Bluetooth;
 
-procedure TForm1.ScanBLEDevices;
-var
+procedure TForm1.ScanBLEDevices;  
+var  
   bluetoothLE: TBluetoothLE;
   devices: TBluetoothLEDeviceList;
 begin
@@ -643,11 +642,14 @@ begin
     ListBox1.Items.Add(device.DeviceName);
 end;
 
-procedure TForm1.ConnectToDevice(deviceName: string);
-var
+procedure TForm1.ConnectToDevice(deviceName: string);  
+var  
+  bluetoothLE: TBluetoothLEAdapter;
   device: TBluetoothLEDevice;
   service: TBluetoothGattService;
 begin
+  bluetoothLE := TBluetoothLEManager.Current.CurrentAdapter;
+
   // Connexion au device
   device := bluetoothLE.GetDeviceByName(deviceName);
   device.Connect;
@@ -729,8 +731,8 @@ type
     procedure Start;
   end;
 
-procedure TIoTGateway.CollectAndSend;
-var
+procedure TIoTGateway.CollectAndSend;  
+var  
   sensor: TSensor;
   data: TJSONObject;
 begin
@@ -739,9 +741,9 @@ begin
     data := TJSONObject.Create;
     try
       data.AddPair('sensor_id', sensor.ID);
-      data.AddPair('timestamp', DateTimeToUnix(Now));
-      data.AddPair('value', sensor.ReadValue);
-      data.AddPair('unit', sensor.Unit);
+      data.AddPair('timestamp', TJSONNumber.Create(DateTimeToUnix(Now)));
+      data.AddPair('value', TJSONNumber.Create(sensor.ReadValue));
+      data.AddPair('unit', sensor.MeasureUnit);
 
       // Envoi via MQTT
       FMQTTClient.Publish('sensors/' + sensor.ID, data.ToString);
@@ -772,8 +774,8 @@ Une blockchain est un registre distribué et immuable de transactions, utilisé 
 **Exemple : Intégration Ethereum**
 ```pascal
 // Lecture du solde d'une adresse Ethereum
-procedure TForm1.GetEthBalance(address: string);
-var
+procedure TForm1.GetEthBalance(address: string);  
+var  
   restClient: TRESTClient;
   restRequest: TRESTRequest;
   response: TRESTResponse;
@@ -820,12 +822,9 @@ end;
 uses
   System.Hash;
 
-function CalculateSHA256(data: string): string;
-var
-  hashSHA256: THashSHA2;
-begin
-  hashSHA256 := THashSHA2.Create;
-  Result := hashSHA256.GetHashString(data);
+function CalculateSHA256(const data: string): string;  
+begin  
+  Result := THashSHA2.GetHashString(data);
 end;
 ```
 
@@ -840,8 +839,8 @@ Application Delphi pour gérer Bitcoin, Ethereum, etc.
 **2. Traçabilité produit**
 ```pascal
 // Enregistrement d'un produit sur blockchain
-procedure TForm1.RegisterProduct(productID, data: string);
-var
+procedure TForm1.RegisterProduct(productID, data: string);  
+var  
   hash: string;
   transaction: TBlockchainTransaction;
 begin
@@ -896,8 +895,8 @@ Delphi n'a pas de support AR/VR natif sophistiqué comme Unity ou Unreal.
 **3. WebView avec Web AR**
 ```pascal
 // Affichage d'expérience AR web dans Delphi
-procedure TForm1.ShowWebAR;
-begin
+procedure TForm1.ShowWebAR;  
+begin  
   WebBrowser1.Navigate('https://votre-site.com/ar-experience');
   // La page web utilise WebXR ou AR.js
 end;
@@ -925,8 +924,8 @@ Alternative à REST permettant de requêter exactement les données nécessaires
 **Intégration Delphi**
 ```pascal
 // Requête GraphQL depuis Delphi
-procedure TForm1.QueryGraphQL;
-var
+procedure TForm1.QueryGraphQL;  
+var  
   restClient: TRESTClient;
   restRequest: TRESTRequest;
   query: string;
@@ -985,21 +984,21 @@ type
     procedure SendMessage(msg: string);
   end;
 
-procedure TChatClient.Connect(serverURL: string);
-begin
+procedure TChatClient.Connect(serverURL: string);  
+begin  
   FWebSocket := TsgcWebSocketClient.Create(nil);
   FWebSocket.OnMessage := OnMessage;
   FWebSocket.URL := serverURL;
   FWebSocket.Active := True;
 end;
 
-procedure TChatClient.SendMessage(msg: string);
-begin
+procedure TChatClient.SendMessage(msg: string);  
+begin  
   FWebSocket.WriteData(msg);
 end;
 
-procedure TChatClient.OnMessage(Connection: TsgcWSConnection; const Text: string);
-begin
+procedure TChatClient.OnMessage(Connection: TsgcWSConnection; const Text: string);  
+begin  
   // Message reçu du serveur
   ShowMessage('Message: ' + Text);
 end;
@@ -1038,8 +1037,8 @@ end;
 **Exemple : Connexion à un data warehouse**
 ```pascal
 // Connexion à Snowflake, BigQuery, Redshift via ODBC/REST
-procedure TForm1.QueryDataWarehouse;
-var
+procedure TForm1.QueryDataWarehouse;  
+var  
   query: TFDQuery;
 begin
   query := TFDQuery.Create(nil);
@@ -1068,8 +1067,8 @@ Composant graphique puissant intégré à Delphi.
 
 **Dashboards modernes**
 ```pascal
-procedure TForm1.CreateDashboard;
-var
+procedure TForm1.CreateDashboard;  
+var  
   chart: TChart;
   series: TLineSeries;
 begin
@@ -1136,8 +1135,8 @@ type
     procedure OnSensorData(data: TSensorData);
   end;
 
-procedure TEdgeProcessor.OnSensorData(data: TSensorData);
-begin
+procedure TEdgeProcessor.OnSensorData(data: TSensorData);  
+begin  
   // Ajout au buffer
   FDataBuffer.Enqueue(data);
 
@@ -1181,8 +1180,8 @@ Toujours valider les données reçues d'APIs externes.
 var
   FCache: TDictionary<string, TJSONObject>;
 
-function GetDataWithCache(endpoint: string): TJSONObject;
-begin
+function GetDataWithCache(endpoint: string): TJSONObject;  
+begin  
   if FCache.ContainsKey(endpoint) then
     Exit(FCache[endpoint]);  // Retour cache
 
@@ -1195,8 +1194,8 @@ end;
 Ne pas bloquer l'UI pendant les appels API.
 
 ```pascal
-procedure TForm1.LoadDataAsync;
-begin
+procedure TForm1.LoadDataAsync;  
+begin  
   TTask.Run(procedure
     var
       data: string;
@@ -1215,8 +1214,8 @@ end;
 
 **Toujours prévoir les échecs**
 ```pascal
-procedure TForm1.CallAPIWithErrorHandling;
-var
+procedure TForm1.CallAPIWithErrorHandling;  
+var  
   retryCount: Integer;
 begin
   retryCount := 0;

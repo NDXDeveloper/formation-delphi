@@ -47,8 +47,8 @@ Développeur : "Comment trier une liste de clients par date de dernière command
 
 IA Delphi : "Voici une solution avec TList<T>.Sort :
 
-procedure TForm1.SortCustomersByLastOrder;
-begin
+procedure TForm1.SortCustomersByLastOrder;  
+begin  
   CustomerList.Sort(TComparer<TCustomer>.Construct(
     function(const Left, Right: TCustomer): Integer
     begin
@@ -225,8 +225,8 @@ else
 status := age >= 18 ? 'Adulte' : 'Mineur';
 
 // Utile pour les assignations conditionnelles
-discount := isPremium ? 0.20 : 0.10;
-message := count > 0 ? IntToStr(count) + ' items' : 'Aucun item';
+discount := isPremium ? 0.20 : 0.10;  
+message := count > 0 ? IntToStr(count) + ' items' : 'Aucun item';  
 
 // Même imbriqué (avec modération)
 priority := urgent ? 'High' : (important ? 'Medium' : 'Low');
@@ -317,14 +317,14 @@ Cette fonctionnalité apparemment simple change fondamentalement le workflow :
 
 **Impact sur le métier**
 ```
-Scénario classique :
-Client : "Pouvez-vous me montrer à quoi ça ressemblera ?"
-Dev : "Je dois d'abord finir le développement..."
+Scénario classique :  
+Client : "Pouvez-vous me montrer à quoi ça ressemblera ?"  
+Dev : "Je dois d'abord finir le développement..."  
 → Feedback tardif, changements coûteux
 
-Avec Delphi 13 :
-Client : "Pouvez-vous me montrer à quoi ça ressemblera ?"
-Dev : "Regardez ces 5 options" (changement de style en direct)
+Avec Delphi 13 :  
+Client : "Pouvez-vous me montrer à quoi ça ressemblera ?"  
+Dev : "Regardez ces 5 options" (changement de style en direct)  
 → Feedback immédiat, validation précoce
 ```
 
@@ -336,8 +336,8 @@ Delphi 13 consolide l'idée que "multiplateforme" n'est plus un extra mais le co
 
 **Évolution de la pensée**
 ```
-Années 90-2000 : "Application Windows"
-Années 2010 : "Application Windows, peut-être Mac"
+Années 90-2000 : "Application Windows"  
+Années 2010 : "Application Windows, peut-être Mac"  
 2020+ : "Application pour toutes les plateformes pertinentes"
 ```
 
@@ -713,11 +713,11 @@ Vous voici arrivé au terme de ce parcours d'apprentissage complet de Delphi. Vo
 
 **Vous êtes maintenant équipé pour**
 
-✅ **Créer des applications professionnelles** de qualité production
-✅ **Développer pour multiples plateformes** avec un seul code
-✅ **Intégrer des technologies modernes** (IA, cloud, IoT)
-✅ **Moderniser des applications existantes** efficacement
-✅ **Être productif** et livrer rapidement
+✅ **Créer des applications professionnelles** de qualité production  
+✅ **Développer pour multiples plateformes** avec un seul code  
+✅ **Intégrer des technologies modernes** (IA, cloud, IoT)  
+✅ **Moderniser des applications existantes** efficacement  
+✅ **Être productif** et livrer rapidement  
 ✅ **Évoluer** avec les nouvelles versions de Delphi
 
 **Le voyage continue**
