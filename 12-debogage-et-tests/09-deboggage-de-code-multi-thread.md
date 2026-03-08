@@ -32,16 +32,16 @@ Le **multi-threading** est une technique qui permet à votre application d'exéc
 
 ```pascal
 // Code mono-thread (séquentiel)
-procedure ExecuterTaches;
-begin
+procedure ExecuterTaches;  
+begin  
   TacheA;  // S'exécute
   TacheB;  // Puis s'exécute
   TacheC;  // Puis s'exécute
 end;
 
 // Code multi-thread (parallèle)
-procedure ExecuterTachesParalleles;
-begin
+procedure ExecuterTachesParalleles;  
+begin  
   TTask.Run(procedure begin TacheA; end);  // S'exécute
   TTask.Run(procedure begin TacheB; end);  // S'exécute en même temps
   TTask.Run(procedure begin TacheC; end);  // S'exécute en même temps
@@ -67,23 +67,23 @@ L'exécution multi-thread est **non-déterministe** : l'ordre dans lequel les th
 
 ```pascal
 // Thread 1
-procedure Thread1;
-begin
+procedure Thread1;  
+begin  
   WriteLn('A');
   WriteLn('B');
 end;
 
 // Thread 2
-procedure Thread2;
-begin
+procedure Thread2;  
+begin  
   WriteLn('X');
   WriteLn('Y');
 end;
 ```
 
-**Exécution 1 :** A, X, B, Y
-**Exécution 2 :** X, A, Y, B
-**Exécution 3 :** A, B, X, Y
+**Exécution 1 :** A, X, B, Y  
+**Exécution 2 :** X, A, Y, B  
+**Exécution 3 :** A, B, X, Y  
 
 Chaque exécution peut produire un ordre différent !
 
@@ -106,24 +106,24 @@ var
   Compteur: Integer = 0;
 
 // Thread 1
-procedure Thread1;
-var i: Integer;
-begin
+procedure Thread1;  
+var i: Integer;  
+begin  
   for i := 1 to 1000 do
     Inc(Compteur);  // Compteur = Compteur + 1
 end;
 
 // Thread 2
-procedure Thread2;
-var i: Integer;
-begin
+procedure Thread2;  
+var i: Integer;  
+begin  
   for i := 1 to 1000 do
     Inc(Compteur);  // Compteur = Compteur + 1
 end;
 ```
 
-**Résultat attendu :** 2000
-**Résultat obtenu :** Parfois 1547, parfois 1823, parfois 2000...
+**Résultat attendu :** 2000  
+**Résultat obtenu :** Parfois 1547, parfois 1823, parfois 2000...  
 
 **Pourquoi ?** `Inc(Compteur)` n'est pas atomique :
 1. Lire Compteur (ex: 100)
@@ -170,8 +170,8 @@ Un thread accède à un objet pendant qu'un autre le libère :
 
 ```pascal
 // Thread 1 : Crée et utilise l'objet
-MonObjet := TMonObjet.Create;
-MonObjet.Traiter;
+MonObjet := TMonObjet.Create;  
+MonObjet.Traiter;  
 
 // Thread 2 : Libère l'objet
 MonObjet.Free;
@@ -201,13 +201,13 @@ type
     function ObtenirValeur: Integer;
   end;
 
-procedure TCompteurNonSecurise.Incrementer;
-begin
+procedure TCompteurNonSecurise.Incrementer;  
+begin  
   FValeur := FValeur + 1;  // ❌ NON thread-safe
 end;
 
-function TCompteurNonSecurise.ObtenirValeur: Integer;
-begin
+function TCompteurNonSecurise.ObtenirValeur: Integer;  
+begin  
   Result := FValeur;
 end;
 ```
@@ -227,19 +227,19 @@ type
     function ObtenirValeur: Integer;
   end;
 
-constructor TCompteurSecurise.Create;
-begin
+constructor TCompteurSecurise.Create;  
+begin  
   FLock := TCriticalSection.Create;
 end;
 
-destructor TCompteurSecurise.Destroy;
-begin
+destructor TCompteurSecurise.Destroy;  
+begin  
   FLock.Free;
   inherited;
 end;
 
-procedure TCompteurSecurise.Incrementer;
-begin
+procedure TCompteurSecurise.Incrementer;  
+begin  
   FLock.Enter;
   try
     FValeur := FValeur + 1;  // ✓ Thread-safe
@@ -248,8 +248,8 @@ begin
   end;
 end;
 
-function TCompteurSecurise.ObtenirValeur: Integer;
-begin
+function TCompteurSecurise.ObtenirValeur: Integer;  
+begin  
   FLock.Enter;
   try
     Result := FValeur;
@@ -276,8 +276,8 @@ end;
 
 ```pascal
 // ✓ BON : Toujours acquérir les locks dans le même ordre
-procedure SafeOperation;
-begin
+procedure SafeOperation;  
+begin  
   Lock1.Enter;  // Toujours Lock1 d'abord
   try
     Lock2.Enter;  // Puis Lock2
@@ -299,8 +299,8 @@ end;
 **Code incorrect :**
 
 ```pascal
-procedure MonThread.Execute;
-begin
+procedure MonThread.Execute;  
+begin  
   // ❌ DANGEREUX : Accès VCL depuis un thread
   Label1.Caption := 'Traitement...';
   Memo1.Lines.Add('Log');
@@ -312,8 +312,8 @@ end;
 **Code correct :**
 
 ```pascal
-procedure MonThread.Execute;
-begin
+procedure MonThread.Execute;  
+begin  
   // ✓ BON : Utiliser Synchronize
   TThread.Synchronize(nil, procedure
   begin
@@ -330,8 +330,8 @@ end;
 Les objets créés dans un thread doivent être libérés, mais la gestion devient complexe :
 
 ```pascal
-procedure MonThread.Execute;
-var
+procedure MonThread.Execute;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -352,8 +352,8 @@ end;
 **Solution correcte :**
 
 ```pascal
-procedure MonThread.Execute;
-var
+procedure MonThread.Execute;  
+var  
   Liste: TStringList;
   Copie: TStringList;
 begin
@@ -386,20 +386,20 @@ var
   Resultat: Integer;  // Variable globale
 
 // Thread 1
-procedure Thread1;
-begin
+procedure Thread1;  
+begin  
   Resultat := CalculComplexe1;  // Écriture
 end;
 
 // Thread 2
-procedure Thread2;
-begin
+procedure Thread2;  
+begin  
   Resultat := CalculComplexe2;  // Écriture
 end;
 
 // Thread principal
-procedure AfficherResultat;
-begin
+procedure AfficherResultat;  
+begin  
   ShowMessage(IntToStr(Resultat));  // Lecture - quelle valeur ?
 end;
 ```
@@ -499,8 +499,8 @@ Les variables locales de chaque thread sont indépendantes.
 **Exemple :**
 
 ```pascal
-procedure TMyThread.Execute;
-var
+procedure TMyThread.Execute;  
+var  
   CompteurLocal: Integer;  // Variable LOCALE à ce thread
 begin
   CompteurLocal := 0;
@@ -521,12 +521,12 @@ Dans le **Evaluate/Modify** (Ctrl+F7), les expressions sont évaluées dans le c
 
 ```
 (Thread 5432 sélectionné)
-Evaluate: MonObjet.FValeur
-Result: 42
+Evaluate: MonObjet.FValeur  
+Result: 42  
 
 (Thread 5433 sélectionné)
-Evaluate: MonObjet.FValeur
-Result: 42  (même objet si partagé)
+Evaluate: MonObjet.FValeur  
+Result: 42  (même objet si partagé)  
           ou différent si objet local
 ```
 
@@ -550,22 +550,22 @@ type
     procedure Log(const Message: string);
   end;
 
-constructor TThreadSafeLogger.Create(const FileName: string);
-begin
+constructor TThreadSafeLogger.Create(const FileName: string);  
+begin  
   FLock := TCriticalSection.Create;
   AssignFile(FLogFile, FileName);
   Rewrite(FLogFile);
 end;
 
-destructor TThreadSafeLogger.Destroy;
-begin
+destructor TThreadSafeLogger.Destroy;  
+begin  
   CloseFile(FLogFile);
   FLock.Free;
   inherited;
 end;
 
-procedure TThreadSafeLogger.Log(const Message: string);
-var
+procedure TThreadSafeLogger.Log(const Message: string);  
+var  
   ThreadID: TThreadID;
 begin
   ThreadID := TThread.CurrentThread.ThreadID;
@@ -589,8 +589,8 @@ end;
 var
   Logger: TThreadSafeLogger;
 
-procedure TMyThread.Execute;
-begin
+procedure TMyThread.Execute;  
+begin  
   Logger.Log('Thread démarré');
 
   TraiterDonnees;
@@ -618,8 +618,8 @@ Vous voyez clairement l'ordre d'exécution et les entrelacements.
 Utilisez des assertions pour vérifier vos hypothèses :
 
 ```pascal
-procedure TMyThread.Execute;
-begin
+procedure TMyThread.Execute;  
+begin  
   Assert(TThread.CurrentThread.ThreadID <> MainThreadID,
          'Cette méthode ne doit PAS être appelée depuis le thread principal');
 
@@ -640,8 +640,8 @@ end;
 Ajoutez des `Sleep()` pour ralentir l'exécution et rendre les race conditions plus visibles :
 
 ```pascal
-procedure TMyThread.Execute;
-begin
+procedure TMyThread.Execute;  
+begin  
   FLock.Enter;
   try
     Valeur := Valeur + 1;
@@ -662,8 +662,8 @@ Si un bug apparaît avec `Sleep(10)`, c'est qu'il existe sans Sleep aussi, mais 
 Créez de nombreux threads pour augmenter la probabilité de race conditions :
 
 ```pascal
-procedure TesterAvecStress;
-var
+procedure TesterAvecStress;  
+var  
   i: Integer;
   Threads: array[0..99] of TThread;
 begin
@@ -695,8 +695,8 @@ var
   AppelsEntree: Integer = 0;
   AppelsSortie: Integer = 0;
 
-procedure SectionCritique;
-begin
+procedure SectionCritique;  
+begin  
   AtomicIncrement(AppelsEntree);
   try
     // Code critique
@@ -725,8 +725,8 @@ type
     function DetectRace: Boolean;
   end;
 
-procedure TAccessTracker.RecordAccess;
-var
+procedure TAccessTracker.RecordAccess;  
+var  
   CurrentThread: TThreadID;
 begin
   CurrentThread := TThread.CurrentThread.ThreadID;
@@ -789,8 +789,8 @@ Thread 5433:
 
 ```pascal
 // ✓ BON : Toujours le même ordre partout
-procedure Operation1;
-begin
+procedure Operation1;  
+begin  
   LockA.Enter;
   try
     LockB.Enter;
@@ -804,8 +804,8 @@ begin
   end;
 end;
 
-procedure Operation2;
-begin
+procedure Operation2;  
+begin  
   LockA.Enter;  // Même ordre : A puis B
   try
     LockB.Enter;
@@ -823,15 +823,15 @@ end;
 **Règle 2 : Timeouts**
 
 ```pascal
-if Lock.TryEnter(1000) then  // Attendre max 1 seconde
-begin
+if Lock.TryEnter(1000) then  // Attendre max 1 seconde  
+begin  
   try
     // Travail...
   finally
     Lock.Leave;
   end;
-end
-else
+end  
+else  
   raise Exception.Create('Timeout : deadlock possible');
 ```
 
@@ -839,8 +839,8 @@ else
 
 ```pascal
 // ❌ MAUVAIS : Lock tenu longtemps
-Lock.Enter;
-try
+Lock.Enter;  
+try  
   TraitementLong;  // 10 secondes
   AccesRapide;
 finally
@@ -848,9 +848,9 @@ finally
 end;
 
 // ✓ BON : Lock minimal
-TraitementLong;  // Sans lock
-Lock.Enter;
-try
+TraitementLong;  // Sans lock  
+Lock.Enter;  
+try  
   AccesRapide;  // Seulement ici
 finally
   Lock.Leave;
@@ -880,8 +880,8 @@ type
     function ObtenirSolde: Currency;
   end;
 
-procedure TCompteThreadSafe.Debiter(Montant: Currency);
-var
+procedure TCompteThreadSafe.Debiter(Montant: Currency);  
+var  
   SoldeAvant, SoldeApres: Currency;
 begin
   FLock.Enter;
@@ -908,21 +908,21 @@ var
   TotalCredits: Integer = 0;
   TotalDebits: Integer = 0;
 
-procedure Crediter(Montant: Currency);
-begin
+procedure Crediter(Montant: Currency);  
+begin  
   AtomicIncrement(TotalCredits);
   // ... opération ...
 end;
 
-procedure Debiter(Montant: Currency);
-begin
+procedure Debiter(Montant: Currency);  
+begin  
   AtomicIncrement(TotalDebits);
   // ... opération ...
 end;
 
 // Vérification finale
-procedure VerifierCoherence;
-begin
+procedure VerifierCoherence;  
+begin  
   Assert(TotalCredits + TotalDebits = NombreOperationsAttendu,
          'Certaines opérations ont été perdues (race condition)');
 end;
@@ -944,20 +944,20 @@ type
     procedure SetValue(Value: Integer);
   end;
 
-procedure TProtectedData.BeginAccess;
-begin
+procedure TProtectedData.BeginAccess;  
+begin  
   if FCurrentOwner <> 0 then
     raise Exception.Create('Accès concurrent détecté !');
   FCurrentOwner := TThread.CurrentThread.ThreadID;
 end;
 
-procedure TProtectedData.EndAccess;
-begin
+procedure TProtectedData.EndAccess;  
+begin  
   FCurrentOwner := 0;
 end;
 
-procedure TProtectedData.SetValue(Value: Integer);
-begin
+procedure TProtectedData.SetValue(Value: Integer);  
+begin  
   BeginAccess;
   try
     FData := Value;
@@ -974,16 +974,16 @@ end;
 Pour un logging rapide pendant le débogage :
 
 ```pascal
-procedure LogThread(const Message: string);
-begin
+procedure LogThread(const Message: string);  
+begin  
   OutputDebugString(PChar(Format('[Thread %d] %s',
                                  [TThread.CurrentThread.ThreadID,
                                   Message])));
 end;
 
 // Usage
-procedure TMyThread.Execute;
-begin
+procedure TMyThread.Execute;  
+begin  
   LogThread('Début du traitement');
   // ...
   LogThread('Fin du traitement');
@@ -1023,8 +1023,8 @@ var
   Compteur: Integer;
 
 // ✓ Thread-safe sans lock
-procedure Incrementer;
-begin
+procedure Incrementer;  
+begin  
   AtomicIncrement(Compteur);
 end;
 
@@ -1053,8 +1053,8 @@ var
   Instance: TMonSingleton = nil;
   Lock: TCriticalSection;
 
-function ObtenirInstance: TMonSingleton;
-begin
+function ObtenirInstance: TMonSingleton;  
+begin  
   if Instance = nil then  // Premier check (rapide, sans lock)
   begin
     Lock.Enter;
@@ -1089,8 +1089,8 @@ type
   end;
 
 // Producer thread
-procedure Producer;
-var
+procedure Producer;  
+var  
   Item: TWorkItem;
 begin
   Item := CreerItem;
@@ -1098,8 +1098,8 @@ begin
 end;
 
 // Consumer thread
-procedure Consumer;
-var
+procedure Consumer;  
+var  
   Item: TWorkItem;
 begin
   if Queue.Dequeue(Item, 1000) then
@@ -1127,8 +1127,8 @@ type
   end;
 
 // Usage
-ThreadPool.QueueTask(procedure
-begin
+ThreadPool.QueueTask(procedure  
+begin  
   TraiterDonnees;
 end);
 ```
@@ -1209,8 +1209,8 @@ Ne vous lancez pas immédiatement dans des architectures multi-thread complexes.
 
 ```pascal
 // Simple et sûr
-TTask.Run(procedure
-begin
+TTask.Run(procedure  
+begin  
   // Votre code ici
   TraiterDonnees;
 
@@ -1353,23 +1353,23 @@ Threads 1234 et 5678 sont en "Waiting" → suspect !
 **4. Call Stack du thread 1234**
 
 ```
-TCriticalSection.Enter
-TOrderManager.ProcessOrder ligne 145
+TCriticalSection.Enter  
+TOrderManager.ProcessOrder ligne 145  
   → Attend FLockB
 ```
 
 **5. Call Stack du thread 5678**
 
 ```
-TCriticalSection.Enter
-TOrderManager.UpdateInventory ligne 287
+TCriticalSection.Enter  
+TOrderManager.UpdateInventory ligne 287  
   → Attend FLockA
 ```
 
 **6. Analyse**
 
-Thread 1234 attend LockB et détient LockA
-Thread 5678 attend LockA et détient LockB
+Thread 1234 attend LockB et détient LockA  
+Thread 5678 attend LockA et détient LockB  
 
 → **Deadlock classique !**
 
@@ -1379,8 +1379,8 @@ Modifier le code pour acquérir les locks dans le même ordre :
 
 ```pascal
 // Avant (deadlock possible)
-procedure ProcessOrder;
-begin
+procedure ProcessOrder;  
+begin  
   FLockA.Enter;
   try
     FLockB.Enter;  // Ordre différent selon la méthode
@@ -1395,8 +1395,8 @@ begin
 end;
 
 // Après (cohérent)
-procedure ProcessOrder;
-begin
+procedure ProcessOrder;  
+begin  
   FLockA.Enter;  // Toujours A puis B
   try
     FLockB.Enter;
@@ -1410,8 +1410,8 @@ begin
   end;
 end;
 
-procedure UpdateInventory;
-begin
+procedure UpdateInventory;  
+begin  
   FLockA.Enter;  // Même ordre : A puis B
   try
     FLockB.Enter;

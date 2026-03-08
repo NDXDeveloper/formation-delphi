@@ -318,8 +318,8 @@ Si le débogage complet n'est pas nécessaire, vous pouvez simplement déployer 
 
 ```pascal
 // Ajouter du logging pour le diagnostic à distance
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Logger.Info('Application démarrée sur : ' + GetComputerName);
   Logger.Info('Version OS : ' + TOSVersion.ToString);
 end;
@@ -432,9 +432,9 @@ Quand une application plante sur la machine distante :
 
 Même si l'application a planté, LLDB conserve l'état :
 ```
-bt  # Voir la stack trace du crash
-frame select 0  # Sélectionner le frame où le crash s'est produit
-frame variable  # Voir les variables locales à ce moment
+bt  # Voir la stack trace du crash  
+frame select 0  # Sélectionner le frame où le crash s'est produit  
+frame variable  # Voir les variables locales à ce moment  
 ```
 
 ## Débogage mobile (iOS et Android)
@@ -488,8 +488,8 @@ Vous pouvez déboguer sans câble USB :
 
 ```bash
 # Sur votre PC, avec le device connecté en USB initialement
-adb tcpip 5555
-adb connect [IP_DU_DEVICE]:5555
+adb tcpip 5555  
+adb connect [IP_DU_DEVICE]:5555  
 
 # Maintenant vous pouvez débrancher l'USB
 ```
@@ -638,8 +638,8 @@ Configurez le pare-feu pour n'autoriser que votre machine de développement :
 Sur **macOS** :
 ```bash
 # Autoriser uniquement depuis une IP spécifique
-sudo pfctl -e
-sudo pfctl -f /etc/pf.conf
+sudo pfctl -e  
+sudo pfctl -f /etc/pf.conf  
 ```
 
 Sur **Linux** (avec UFW) :
@@ -667,8 +667,8 @@ Ne laissez pas PAServer tourner en permanence. Lancez-le seulement quand nécess
 PAServer affiche les connexions entrantes. Surveillez ces messages pour détecter des accès suspects :
 
 ```
-PAServer version 22.0.47991.6037 Ready.
-Accepted connection from 192.168.1.50:54321
+PAServer version 22.0.47991.6037 Ready.  
+Accepted connection from 192.168.1.50:54321  
 ```
 
 Si vous voyez une IP inconnue, arrêtez PAServer immédiatement.
@@ -699,8 +699,8 @@ Selon votre situation, d'autres approches peuvent être plus appropriées :
 Pour des problèmes difficiles à reproduire :
 
 ```pascal
-procedure OperationComplexe;
-begin
+procedure OperationComplexe;  
+begin  
   Logger.Debug('Début OperationComplexe');
   Logger.Debug('Paramètre A = ' + IntToStr(A));
 
@@ -730,14 +730,14 @@ Utilisez des outils comme **EurekaLog** ou **madExcept** qui capturent automatiq
 
 ```pascal
 // Configuration EurekaLog
-procedure ConfigurerEurekaLog;
-begin
+procedure ConfigurerEurekaLog;  
+begin  
   ExceptionLog1.OnException := GererException;
   ExceptionLog1.Active := True;
 end;
 
-procedure GererException(Sender: TObject; E: Exception; var Handled: Boolean);
-begin
+procedure GererException(Sender: TObject; E: Exception; var Handled: Boolean);  
+begin  
   // EurekaLog capture automatiquement la stack trace
   // et peut envoyer un rapport par email
   Handled := True;

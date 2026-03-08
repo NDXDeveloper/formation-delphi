@@ -54,8 +54,8 @@ FonctionA (100ms au total)
 └── Appelle FonctionC (30ms)
 ```
 
-Temps inclusif de FonctionA : 100ms
-Temps exclusif de FonctionA : 20ms
+Temps inclusif de FonctionA : 100ms  
+Temps exclusif de FonctionA : 20ms  
 
 ### La règle des 80/20 (Principe de Pareto)
 
@@ -84,8 +84,8 @@ Delphi fournit la classe `TStopwatch` qui permet de mesurer précisément le tem
 uses
   System.Diagnostics;
 
-procedure MesureTempsExecution;
-var
+procedure MesureTempsExecution;  
+var  
   Chrono: TStopwatch;
   TempsEcoule: Int64;
 begin
@@ -116,8 +116,8 @@ end;
 ### Mesurer des portions de code spécifiques
 
 ```pascal
-procedure AnalyserPerformances;
-var
+procedure AnalyserPerformances;  
+var  
   Chrono: TStopwatch;
   TempsPartie1, TempsPartie2, TempsPartie3: Int64;
 begin
@@ -149,8 +149,8 @@ end;
 Pour des opérations très rapides, il faut les répéter plusieurs fois pour obtenir une mesure significative :
 
 ```pascal
-procedure MesurerOperationRapide;
-var
+procedure MesurerOperationRapide;  
+var  
   Chrono: TStopwatch;
   i: Integer;
   NombreIterations: Integer;
@@ -182,8 +182,8 @@ Utilisez `GetProcessMemoryInfo` (Windows) pour surveiller l'utilisation mémoire
 uses
   Winapi.Windows, Winapi.PsAPI;
 
-function ObtenirMemoireUtilisee: Cardinal;
-var
+function ObtenirMemoireUtilisee: Cardinal;  
+var  
   MemCounters: TProcessMemoryCounters;
 begin
   MemCounters.cb := SizeOf(MemCounters);
@@ -193,8 +193,8 @@ begin
     Result := 0;
 end;
 
-procedure AnalyserMemoire;
-var
+procedure AnalyserMemoire;  
+var  
   MemoireAvant, MemoireApres: Cardinal;
 begin
   MemoireAvant := ObtenirMemoireUtilisee;
@@ -320,29 +320,29 @@ var
 
 implementation
 
-constructor TProfileurSimple.Create;
-begin
+constructor TProfileurSimple.Create;  
+begin  
   FMesures := TDictionary<string, Int64>.Create;
   FChronos := TDictionary<string, TStopwatch>.Create;
 end;
 
-destructor TProfileurSimple.Destroy;
-begin
+destructor TProfileurSimple.Destroy;  
+begin  
   FMesures.Free;
   FChronos.Free;
   inherited;
 end;
 
-procedure TProfileurSimple.Commencer(const Nom: string);
-var
+procedure TProfileurSimple.Commencer(const Nom: string);  
+var  
   Chrono: TStopwatch;
 begin
   Chrono := TStopwatch.StartNew;
   FChronos.AddOrSetValue(Nom, Chrono);
 end;
 
-procedure TProfileurSimple.Terminer(const Nom: string);
-var
+procedure TProfileurSimple.Terminer(const Nom: string);  
+var  
   Chrono: TStopwatch;
   Temps: Int64;
 begin
@@ -360,8 +360,8 @@ begin
   end;
 end;
 
-procedure TProfileurSimple.AfficherResultats;
-var
+procedure TProfileurSimple.AfficherResultats;  
+var  
   Paire: TPair<string, Int64>;
 begin
   WriteLn('=== Résultats du profilage ===');
@@ -382,8 +382,8 @@ end.
 **Utilisation :**
 
 ```pascal
-procedure MonTraitement;
-begin
+procedure MonTraitement;  
+begin  
   Profileur.Commencer('Chargement données');
   ChargerDonnees;
   Profileur.Terminer('Chargement données');
@@ -423,12 +423,12 @@ Supposons que le profileur vous montre :
 ```
 Fonction                    Temps    %      Appels
 ================================================
-ChargerClients             2500ms   50%    1
-RechercherClient           1000ms   20%    50000
-AfficherInterface          500ms    10%    1
-CalculerTotal              400ms    8%     10000
-ValiderEmail               300ms    6%     5000
-Autres                     300ms    6%     -
+ChargerClients             2500ms   50%    1  
+RechercherClient           1000ms   20%    50000  
+AfficherInterface          500ms    10%    1  
+CalculerTotal              400ms    8%     10000  
+ValiderEmail               300ms    6%     5000  
+Autres                     300ms    6%     -  
 ```
 
 **Analyse :**
@@ -469,8 +469,8 @@ Une fois les goulots identifiés, voici les techniques courantes pour optimiser 
 
 ```pascal
 // LENT : Recherche linéaire dans une liste
-function TrouverClient(Liste: TList<TClient>; ID: Integer): TClient;
-var
+function TrouverClient(Liste: TList<TClient>; ID: Integer): TClient;  
+var  
   Client: TClient;
 begin
   Result := nil;
@@ -488,8 +488,8 @@ end;
 var
   Clients: TDictionary<Integer, TClient>;
 
-function TrouverClientRapide(ID: Integer): TClient;
-begin
+function TrouverClientRapide(ID: Integer): TClient;  
+begin  
   Clients.TryGetValue(ID, Result);
 end;
 ```
@@ -498,8 +498,8 @@ end;
 
 ```pascal
 // LENT : O(n²)
-procedure TrouverDoublons(Liste: TList<Integer>);
-var
+procedure TrouverDoublons(Liste: TList<Integer>);  
+var  
   i, j: Integer;
 begin
   for i := 0 to Liste.Count - 1 do
@@ -509,8 +509,8 @@ begin
 end;
 
 // RAPIDE : O(n)
-procedure TrouverDoublonsRapide(Liste: TList<Integer>);
-var
+procedure TrouverDoublonsRapide(Liste: TList<Integer>);  
+var  
   Vus: TDictionary<Integer, Boolean>;
   Valeur: Integer;
 begin
@@ -535,8 +535,8 @@ end;
 
 ```pascal
 // LENT : Chaque += crée une nouvelle chaîne
-function GenererRapport(Lignes: TStringList): string;
-var
+function GenererRapport(Lignes: TStringList): string;  
+var  
   Ligne: string;
 begin
   Result := '';
@@ -545,8 +545,8 @@ begin
 end;
 
 // RAPIDE : Utiliser TStringBuilder
-function GenererRapportRapide(Lignes: TStringList): string;
-var
+function GenererRapportRapide(Lignes: TStringList): string;  
+var  
   Builder: TStringBuilder;
   Ligne: string;
 begin
@@ -589,8 +589,8 @@ type
     function CalculerComplexe(const Param: string): Double;
   end;
 
-function TCalculateurCache.CalculerComplexe(const Param: string): Double;
-begin
+function TCalculateurCache.CalculerComplexe(const Param: string): Double;  
+begin  
   // Vérifier si déjà calculé
   if FCacheResultats.TryGetValue(Param, Result) then
     Exit;  // Retourner la valeur en cache
@@ -609,8 +609,8 @@ end;
 
 ```pascal
 // LENT : Une requête par client
-procedure ChargerCommandesLent(Clients: TList<TClient>);
-var
+procedure ChargerCommandesLent(Clients: TList<TClient>);  
+var  
   Client: TClient;
 begin
   for Client in Clients do
@@ -621,8 +621,8 @@ begin
 end;
 
 // RAPIDE : Une seule requête pour tous
-procedure ChargerCommandesRapide(Clients: TList<TClient>);
-var
+procedure ChargerCommandesRapide(Clients: TList<TClient>);  
+var  
   IDsClients: string;
 begin
   // Créer une liste d'IDs : '1,2,3,4,5'
@@ -648,8 +648,8 @@ SELECT ID, Nom, Prenom FROM Clients WHERE ...
 **Utiliser les transactions pour les opérations multiples :**
 
 ```pascal
-procedure InsererPlusieursFois;
-begin
+procedure InsererPlusieursFois;  
+begin  
   // Démarrer une transaction
   FDConnection.StartTransaction;
   try
@@ -671,8 +671,8 @@ end;
 **Suspendre les mises à jour visuelles :**
 
 ```pascal
-procedure RemplirListeRapide;
-begin
+procedure RemplirListeRapide;  
+begin  
   ListView1.Items.BeginUpdate;
   try
     for i := 1 to 10000 do
@@ -690,8 +690,8 @@ Utilisez des composants virtuels (comme `TListView` en mode virtuel) qui ne cré
 **Charger les images en arrière-plan :**
 
 ```pascal
-procedure ChargerImageAsync(const URL: string);
-begin
+procedure ChargerImageAsync(const URL: string);  
+begin  
   TTask.Run(procedure
   var
     Image: TBitmap;
@@ -715,8 +715,8 @@ end;
 
 ```pascal
 // LENT : Créer/détruire à chaque fois
-procedure TraiterDonnees;
-var
+procedure TraiterDonnees;  
+var  
   Liste: TStringList;
 begin
   for i := 1 to 1000 do
@@ -731,8 +731,8 @@ begin
 end;
 
 // RAPIDE : Réutiliser
-procedure TraiterDonneesRapide;
-var
+procedure TraiterDonneesRapide;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -752,8 +752,8 @@ end;
 
 ```pascal
 // Dimensionner correctement les listes
-Liste := TList<string>.Create;
-Liste.Capacity := 1000;  // Pré-allouer si on connaît la taille
+Liste := TList<string>.Create;  
+Liste.Capacity := 1000;  // Pré-allouer si on connaît la taille  
 ```
 
 ### 7. Parallélisation et multithreading
@@ -764,8 +764,8 @@ Pour les tâches qui peuvent s'exécuter en parallèle :
 uses
   System.Threading;
 
-procedure TraiterEnParallele;
-begin
+procedure TraiterEnParallele;  
+begin  
   TParallel.For(0, 999, procedure(i: Integer)
   begin
     // Traiter l'élément i en parallèle
@@ -810,8 +810,8 @@ N'optimisez pas au détriment de la lisibilité sauf nécessité absolue. Un cod
 
 ```pascal
 // Préférez ceci (clair)
-function CalculerMoyenne(Valeurs: TArray<Integer>): Double;
-var
+function CalculerMoyenne(Valeurs: TArray<Integer>): Double;  
+var  
   Somme, i: Integer;
 begin
   Somme := 0;
@@ -821,8 +821,8 @@ begin
 end;
 
 // Plutôt que ceci (obscur mais marginalement plus rapide)
-function CalculerMoyenne(V: TArray<Integer>): Double;
-var S,i:Integer;begin S:=0;for i:=0to High(V)do S:=S+V[i];Result:=S/Length(V);end;
+function CalculerMoyenne(V: TArray<Integer>): Double;  
+var S,i:Integer;begin S:=0;for i:=0to High(V)do S:=S+V[i];Result:=S/Length(V);end;  
 ```
 
 ### 4. Testez après chaque optimisation
@@ -840,8 +840,8 @@ Si vous écrivez du code optimisé qui n'est pas évident, ajoutez un commentair
 // Utilisation de TStringBuilder plutôt que concaténation
 // car cette fonction peut traiter jusqu'à 100 000 lignes
 // (gain mesuré : 5000ms → 200ms)
-function GenererGrosRapport: string;
-var
+function GenererGrosRapport: string;  
+var  
   Builder: TStringBuilder;
 begin
   // ...
@@ -890,8 +890,8 @@ Une optimisation qui casse des fonctionnalités ne vaut rien. Testez toujours ap
 Ajoutez des journaux de performance dans votre application en production :
 
 ```pascal
-procedure TraiterCommande(Commande: TCommande);
-var
+procedure TraiterCommande(Commande: TCommande);  
+var  
   Chrono: TStopwatch;
 begin
   Chrono := TStopwatch.StartNew;
@@ -915,8 +915,8 @@ Pour les applications professionnelles, envoyez des métriques de performance à
 Configurez des alertes si certaines opérations dépassent un temps acceptable :
 
 ```pascal
-procedure TraiterAvecAlerte(Temps: Int64);
-begin
+procedure TraiterAvecAlerte(Temps: Int64);  
+begin  
   if Temps > 5000 then  // Plus de 5 secondes
     EnvoyerAlerte('Traitement anormalement lent : ' + IntToStr(Temps) + ' ms');
 end;
@@ -992,8 +992,8 @@ for i := 0 to 9999 do
   AjouterLigne(Donnees[i]);  // Rafraîchit à chaque ligne
 
 // APRÈS
-StringGrid1.BeginUpdate;
-try
+StringGrid1.BeginUpdate;  
+try  
   for i := 0 to 9999 do
     AjouterLigne(Donnees[i]);
 finally
@@ -1017,8 +1017,8 @@ end;
 // AVANT
 FClients: TList<TClient>;
 
-function TrouverClient(ID: Integer): TClient;
-var
+function TrouverClient(ID: Integer): TClient;  
+var  
   Client: TClient;
 begin
   for Client in FClients do
@@ -1030,8 +1030,8 @@ end;
 // APRÈS
 FClients: TDictionary<Integer, TClient>;
 
-function TrouverClient(ID: Integer): TClient;
-begin
+function TrouverClient(ID: Integer): TClient;  
+begin  
   FClients.TryGetValue(ID, Result);
 end;
 ```
@@ -1050,8 +1050,8 @@ end;
 
 ```pascal
 // AVANT
-function GenererRapport: string;
-var
+function GenererRapport: string;  
+var  
   i: Integer;
 begin
   Result := '';
@@ -1060,8 +1060,8 @@ begin
 end;
 
 // APRÈS
-function GenererRapport: string;
-var
+function GenererRapport: string;  
+var  
   Builder: TStringBuilder;
   i: Integer;
 begin

@@ -119,8 +119,8 @@ type
     function EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;
   end;
 
-function TServiceEmailReel.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;
-begin
+function TServiceEmailReel.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;  
+begin  
   // Code réel qui envoie vraiment un email via SMTP
   Result := SMTPClient.Send(Destinataire, Sujet, Message);
 end;
@@ -142,26 +142,26 @@ type
     procedure Reinitialiser;
   end;
 
-constructor TServiceEmailMock.Create;
-begin
+constructor TServiceEmailMock.Create;  
+begin  
   FEmailsEnvoyes := TStringList.Create;
 end;
 
-destructor TServiceEmailMock.Destroy;
-begin
+destructor TServiceEmailMock.Destroy;  
+begin  
   FEmailsEnvoyes.Free;
   inherited;
 end;
 
-function TServiceEmailMock.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;
-begin
+function TServiceEmailMock.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;  
+begin  
   // Ne fait que noter qu'un email a été "envoyé"
   FEmailsEnvoyes.Add(Format('%s|%s|%s', [Destinataire, Sujet, Message]));
   Result := True;
 end;
 
-function TServiceEmailMock.AEnvoyeEmailA(const Destinataire: string): Boolean;
-var
+function TServiceEmailMock.AEnvoyeEmailA(const Destinataire: string): Boolean;  
+var  
   i: Integer;
 begin
   Result := False;
@@ -179,8 +179,8 @@ end;
 **Utilisation dans un test :**
 
 ```pascal
-procedure TestInscriptionEnvoieEmail;
-var
+procedure TestInscriptionEnvoieEmail;  
+var  
   ServiceEmail: IServiceEmail;
   ServiceInscription: TServiceInscription;
 begin
@@ -224,8 +224,8 @@ type
     procedure Log(const Message: string);
   end;
 
-procedure TLoggerDummy.Log(const Message: string);
-begin
+procedure TLoggerDummy.Log(const Message: string);  
+begin  
   // Ne fait rien du tout
 end;
 ```
@@ -243,8 +243,8 @@ type
     function ChargerClient(ID: Integer): TClient;
   end;
 
-function TRepositoryClientStub.ChargerClient(ID: Integer): TClient;
-begin
+function TRepositoryClientStub.ChargerClient(ID: Integer): TClient;  
+begin  
   // Retourne toujours le même client de test
   Result := TClient.Create;
   Result.ID := ID;
@@ -272,20 +272,20 @@ type
     procedure SauvegarderClient(Client: TClient);
   end;
 
-constructor TDatabaseFake.Create;
-begin
+constructor TDatabaseFake.Create;  
+begin  
   // Base de données en mémoire
   FData := TDictionary<Integer, TClient>.Create;
 end;
 
-function TDatabaseFake.ChargerClient(ID: Integer): TClient;
-begin
+function TDatabaseFake.ChargerClient(ID: Integer): TClient;  
+begin  
   if not FData.TryGetValue(ID, Result) then
     Result := nil;
 end;
 
-procedure TDatabaseFake.SauvegarderClient(Client: TClient);
-begin
+procedure TDatabaseFake.SauvegarderClient(Client: TClient);  
+begin  
   FData.AddOrSetValue(Client.ID, Client);
 end;
 ```
@@ -309,8 +309,8 @@ type
     property DernierDestinataire: string read FDernierDestinataire;
   end;
 
-function TEmailServiceSpy.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;
-begin
+function TEmailServiceSpy.EnvoyerEmail(const Destinataire, Sujet, Message: string): Boolean;  
+begin  
   Inc(FNombreAppels);
   FDernierDestinataire := Destinataire;
   Result := True;
@@ -325,8 +325,8 @@ Un objet configuré avec des attentes. Il vérifie lui-même si les attentes son
 
 ```pascal
 // Exemple conceptuel avec un framework de mocking
-Mock := TMock<IServiceEmail>.Create;
-Mock.Setup.WillExecute(
+Mock := TMock<IServiceEmail>.Create;  
+Mock.Setup.WillExecute(  
   function (const Args: TArray<TValue>): TValue
   begin
     Result := True;
@@ -334,8 +334,8 @@ Mock.Setup.WillExecute(
 );
 
 // Usage
-ServiceEmail := Mock;
-ServiceInscription.InscrireUtilisateur('test@example.com');
+ServiceEmail := Mock;  
+ServiceInscription.InscrireUtilisateur('test@example.com');  
 
 // Vérification
 Mock.Verify('EnvoyerEmail', Times.Once);
@@ -368,8 +368,8 @@ type
     procedure InscrireUtilisateur(const Nom, Email: string);
   end;
 
-procedure TServiceInscription.InscrireUtilisateur(const Nom, Email: string);
-var
+procedure TServiceInscription.InscrireUtilisateur(const Nom, Email: string);  
+var  
   ServiceEmail: TServiceEmailReel;  // ❌ Dépendance créée en dur
 begin
   ServiceEmail := TServiceEmailReel.Create;
@@ -400,13 +400,13 @@ type
     procedure InscrireUtilisateur(const Nom, Email: string);
   end;
 
-constructor TServiceInscription.Create(ServiceEmail: IServiceEmail);
-begin
+constructor TServiceInscription.Create(ServiceEmail: IServiceEmail);  
+begin  
   FServiceEmail := ServiceEmail;
 end;
 
-procedure TServiceInscription.InscrireUtilisateur(const Nom, Email: string);
-begin
+procedure TServiceInscription.InscrireUtilisateur(const Nom, Email: string);  
+begin  
   // Créer l'utilisateur...
 
   // Envoyer l'email via l'interface injectée
@@ -433,8 +433,8 @@ type
   end;
 
 // Usage
-Service := TServiceInscription.Create;
-Service.ServiceEmail := TServiceEmailMock.Create;  // Injection
+Service := TServiceInscription.Create;  
+Service.ServiceEmail := TServiceEmailMock.Create;  // Injection  
 ```
 
 **Injection par méthode :**
@@ -692,8 +692,8 @@ type
 ### Tests unitaires avec mocks
 
 ```pascal
-procedure TestCreerCommandeAvecSucces;
-var
+procedure TestCreerCommandeAvecSucces;  
+var  
   ClientRepo: IClientRepository;
   ProduitRepo: IProduitRepository;
   ServicePaiement: IServicePaiement;
@@ -757,8 +757,8 @@ begin
   end;
 end;
 
-procedure TestCreerCommandeAvecPaiementEchoue;
-var
+procedure TestCreerCommandeAvecPaiementEchoue;  
+var  
   ClientRepo: IClientRepository;
   ProduitRepo: IProduitRepository;
   ServicePaiement: IServicePaiement;
@@ -824,8 +824,8 @@ Créer des mocks manuellement peut devenir répétitif. Les frameworks de mockin
 uses
   Delphi.Mocks;
 
-procedure TestAvecDelphiMocks;
-var
+procedure TestAvecDelphiMocks;  
+var  
   MockEmail: TMock<IServiceEmail>;
   ServiceInscription: TServiceInscription;
 begin
@@ -864,8 +864,8 @@ end;
 uses
   Spring.Mocking;
 
-procedure TestAvecSpring4D;
-var
+procedure TestAvecSpring4D;  
+var  
   Mock: Mock<IServiceEmail>;
   ServiceInscription: TServiceInscription;
 begin
@@ -997,8 +997,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TestPaiementAvecSoldeInsuffisant;
-var
+procedure TestPaiementAvecSoldeInsuffisant;  
+var  
   ServicePaiement: IServicePaiement;
   Mock: TServicePaiementMockAvecSolde;
 begin
@@ -1033,8 +1033,8 @@ type
     procedure AjouterReponse(const Reponse: string);
   end;
 
-function TServiceAPIMockAvecSequence.AppelerAPI(const Endpoint: string): string;
-begin
+function TServiceAPIMockAvecSequence.AppelerAPI(const Endpoint: string): string;  
+begin  
   if FReponses.Count > 0 then
     Result := FReponses.Dequeue
   else
@@ -1045,8 +1045,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TestRetryAvecSequenceReponses;
-var
+procedure TestRetryAvecSequenceReponses;  
+var  
   ServiceAPI: IServiceAPI;
   Mock: TServiceAPIMockAvecSequence;
 begin
@@ -1084,8 +1084,8 @@ type
     function VerifierOrdre(const OrdreAttendu: TArray<string>): Boolean;
   end;
 
-function TServiceTransactionMock.VerifierOrdre(const OrdreAttendu: TArray<string>): Boolean;
-var
+function TServiceTransactionMock.VerifierOrdre(const OrdreAttendu: TArray<string>): Boolean;  
+var  
   i: Integer;
 begin
   Result := FAppels.Count = Length(OrdreAttendu);
@@ -1106,8 +1106,8 @@ end;
 **Test :**
 
 ```pascal
-procedure TestTransactionOrdreCorrect;
-var
+procedure TestTransactionOrdreCorrect;  
+var  
   Mock: TServiceTransactionMock;
 begin
   Mock := TServiceTransactionMock.Create;
@@ -1154,14 +1154,14 @@ Nommez vos mocks de manière explicite :
 
 ```pascal
 // Bon nommage
-TServiceEmailMock
-TClientRepositoryStub
-TDatabaseFake
+TServiceEmailMock  
+TClientRepositoryStub  
+TDatabaseFake  
 
 // Nommage confus
-TServiceEmail2
-TTestClient
-TMyRepo
+TServiceEmail2  
+TTestClient  
+TMyRepo  
 ```
 
 ### 3. Un mock par test (généralement)
@@ -1170,16 +1170,16 @@ Créez des mocks frais pour chaque test pour éviter les dépendances entre test
 
 ```pascal
 [Setup]
-procedure Setup;
-begin
+procedure Setup;  
+begin  
   // Créer des mocks frais avant chaque test
   FMockEmail := TServiceEmailMock.Create;
   FMockDatabase := TDatabaseMock.Create;
 end;
 
 [TearDown]
-procedure TearDown;
-begin
+procedure TearDown;  
+begin  
   // Nettoyer après chaque test
   FMockEmail := nil;  // Interface, libération automatique
   FMockDatabase := nil;
@@ -1198,8 +1198,8 @@ Mock.Verify('EnvoyerEmail').WasCalledExactlyOnce
     .WithParameter('message', 'Texte exact du message');
 
 // BON - Vérifier l'essentiel
-Mock.Verify('EnvoyerEmail').WasCalledOnce;
-Assert.IsTrue(MockEmail.AEnvoyeEmailA('exact@example.com'));
+Mock.Verify('EnvoyerEmail').WasCalledOnce;  
+Assert.IsTrue(MockEmail.AEnvoyeEmailA('exact@example.com'));  
 ```
 
 ### 5. Documentation des mocks
@@ -1295,8 +1295,8 @@ type
     procedure ConfigurerMocksScenarioErreur;
   end;
 
-procedure TTestServiceComplexe.Setup;
-begin
+procedure TTestServiceComplexe.Setup;  
+begin  
   // Créer tous les mocks
   FMockClient := TClientRepositoryMock.Create;
   FMockProduit := TProduitRepositoryMock.Create;
@@ -1312,14 +1312,14 @@ begin
   );
 end;
 
-procedure TTestServiceComplexe.TearDown;
-begin
+procedure TTestServiceComplexe.TearDown;  
+begin  
   FService.Free;
   // Les interfaces sont libérées automatiquement
 end;
 
-procedure TTestServiceComplexe.ConfigurerMocksScenarioNormal;
-var
+procedure TTestServiceComplexe.ConfigurerMocksScenarioNormal;  
+var  
   Client: TClient;
   Produit: TProduit;
 begin
@@ -1335,8 +1335,8 @@ begin
   (FMockProduit as TProduitRepositoryMock).AjouterProduit(Produit);
 end;
 
-procedure TTestServiceComplexe.TestScenario1;
-begin
+procedure TTestServiceComplexe.TestScenario1;  
+begin  
   // Arrange
   ConfigurerMocksScenarioNormal;
 
@@ -1360,8 +1360,8 @@ type
     function CreerCommande(ClientID: Integer): Boolean;
   end;
 
-function TServiceCommande.CreerCommande(ClientID: Integer): Boolean;
-var
+function TServiceCommande.CreerCommande(ClientID: Integer): Boolean;  
+var  
   Connection: TFDConnection;
   Query: TFDQuery;
   Client: TClient;
@@ -1447,8 +1447,8 @@ begin
   FServiceEmail := ServiceEmail;
 end;
 
-function TServiceCommande.CreerCommande(ClientID: Integer): Boolean;
-var
+function TServiceCommande.CreerCommande(ClientID: Integer): Boolean;  
+var  
   Client: TClient;
 begin
   // Utiliser les interfaces injectées
@@ -1475,8 +1475,8 @@ end;
 **Maintenant testable :**
 
 ```pascal
-procedure TestCreerCommandeAvecClientExistant;
-var
+procedure TestCreerCommandeAvecClientExistant;  
+var  
   MockRepo: IClientRepository;
   MockEmail: IServiceEmail;
   Service: TServiceCommande;
@@ -1580,9 +1580,9 @@ Si possible, écrivez d'abord un test avec les vraies dépendances pour comprend
 
 ```pascal
 // Tout mocker, même les objets simples
-MockDateHelper := TMock<TDateHelper>.Create;
-MockStringHelper := TMock<TStringHelper>.Create;
-MockMathHelper := TMock<TMathHelper>.Create;
+MockDateHelper := TMock<TDateHelper>.Create;  
+MockStringHelper := TMock<TStringHelper>.Create;  
+MockMathHelper := TMock<TMathHelper>.Create;  
 // ... et 20 autres mocks ...
 ```
 
@@ -1594,9 +1594,9 @@ MockMathHelper := TMock<TMathHelper>.Create;
 
 ```pascal
 // Test trop couplé à l'implémentation
-Mock.Verify('MethodeInterne1').WasCalled;
-Mock.Verify('MethodeInterne2').WasCalledAfter('MethodeInterne1');
-Mock.Verify('MethodeInterne3').WasCalledExactly(3).Times;
+Mock.Verify('MethodeInterne1').WasCalled;  
+Mock.Verify('MethodeInterne2').WasCalledAfter('MethodeInterne1');  
+Mock.Verify('MethodeInterne3').WasCalledExactly(3).Times;  
 ```
 
 Si l'implémentation change, le test casse même si le comportement est correct.
@@ -1622,8 +1622,8 @@ Si le vrai service de paiement a un bug, vous ne le détecterez pas car le mock 
 
 ```pascal
 // Le mock réimplémente toute la logique métier
-function TMockComplexe.Calculer: Currency;
-begin
+function TMockComplexe.Calculer: Currency;  
+begin  
   // 100 lignes de logique...
 end;
 ```
@@ -1635,8 +1635,8 @@ end;
 **Problème :**
 
 ```pascal
-procedure Test1;
-var
+procedure Test1;  
+var  
   Mock: TMonMock;
 begin
   Mock := TMonMock.Create;

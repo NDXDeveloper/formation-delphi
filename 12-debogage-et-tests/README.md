@@ -437,8 +437,8 @@ Delphi 13 Florence vous fournit de puissants outils de débogage :
 Les exemples de code sont présentés ainsi :
 
 ```pascal
-procedure Exemple;
-begin
+procedure Exemple;  
+begin  
   // Ceci est un exemple de code
   ShowMessage('Hello World');
 end;
@@ -468,9 +468,9 @@ BonneApproche;
 
 ### Niveaux de difficulté
 
-⭐ **Débutant** : Accessible à tous
-⭐⭐ **Intermédiaire** : Nécessite quelques bases
-⭐⭐⭐ **Avancé** : Pour développeurs expérimentés
+⭐ **Débutant** : Accessible à tous  
+⭐⭐ **Intermédiaire** : Nécessite quelques bases  
+⭐⭐⭐ **Avancé** : Pour développeurs expérimentés  
 ⭐⭐⭐⭐ **Expert** : Concepts complexes
 
 ## Structure type d'une section
@@ -552,16 +552,16 @@ Pour tirer le maximum de ce chapitre, nous vous encourageons à :
 
 Apprendre à déboguer et à tester efficacement va transformer votre façon de développer. Vous passerez de :
 
-❌ **"Mon code ne marche pas, je ne sais pas pourquoi"**
-à
+❌ **"Mon code ne marche pas, je ne sais pas pourquoi"**  
+à  
 ✓ **"Je sais exactement où est le problème et comment le corriger"**
 
-❌ **"J'ai peur de modifier ce code, ça pourrait tout casser"**
-à
+❌ **"J'ai peur de modifier ce code, ça pourrait tout casser"**  
+à  
 ✓ **"Je peux refactoriser en confiance, mes tests me protègent"**
 
-❌ **"Il y a encore un bug en production... pourquoi ?"**
-à
+❌ **"Il y a encore un bug en production... pourquoi ?"**  
+à  
 ✓ **"Mes tests ont détecté le problème avant la mise en production"**
 
 **C'est un investissement qui va vous servir toute votre carrière de développeur.**

@@ -83,12 +83,12 @@ Même si chaque composant fonctionne isolément, ils peuvent ne pas fonctionner 
 
 ```pascal
 // Ces deux fonctions fonctionnent parfaitement seules...
-function ChargerClient(ID: Integer): TClient; // ✓ Tests unitaires OK
-function CalculerRemise(Client: TClient): Double; // ✓ Tests unitaires OK
+function ChargerClient(ID: Integer): TClient; // ✓ Tests unitaires OK  
+function CalculerRemise(Client: TClient): Double; // ✓ Tests unitaires OK  
 
 // ...mais ensemble, il y a un problème :
-procedure AppliquerRemiseClient(ClientID: Integer);
-var
+procedure AppliquerRemiseClient(ClientID: Integer);  
+var  
   Client: TClient;
   Remise: Double;
 begin
@@ -179,8 +179,8 @@ Ces tests vérifient que votre application interagit correctement avec la base d
 **Exemple conceptuel :**
 
 ```pascal
-procedure TestAjouterClient;
-var
+procedure TestAjouterClient;  
+var  
   Client: TClient;
   ID: Integer;
 begin
@@ -222,8 +222,8 @@ Vérifient que votre application communique correctement avec des APIs externes 
 **Exemple conceptuel :**
 
 ```pascal
-procedure TestRecupererUtilisateur;
-var
+procedure TestRecupererUtilisateur;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -275,8 +275,8 @@ Vérifient les opérations de lecture/écriture de fichiers.
 **Exemple conceptuel :**
 
 ```pascal
-procedure TestExporterClientsCSV;
-var
+procedure TestExporterClientsCSV;  
+var  
   Clients: TList<TClient>;
   CheminFichier: string;
   Contenu: TStringList;
@@ -380,8 +380,8 @@ USE MyApp_Test;
 Pour des tests très rapides :
 
 ```pascal
-procedure ConfigurerBaseDeDonneesTest;
-begin
+procedure ConfigurerBaseDeDonneesTest;  
+begin  
   FDConnection.DriverName := 'SQLite';
   FDConnection.Params.Database := ':memory:';  // Base en RAM
   FDConnection.Connected := True;
@@ -399,8 +399,8 @@ Utilisez Docker pour créer des environnements de test isolés :
 
 ```yaml
 # docker-compose.yml
-version: '3'
-services:
+version: '3'  
+services:  
   mysql-test:
     image: mysql:8.0
     environment:
@@ -418,8 +418,8 @@ Utilisez des fichiers de configuration différents :
 type
   TEnvironment = (envDev, envTest, envProd);
 
-function ChargerConfiguration(Env: TEnvironment): TConfiguration;
-begin
+function ChargerConfiguration(Env: TEnvironment): TConfiguration;  
+begin  
   case Env of
     envDev:  Result := ChargerFichier('config.dev.ini');
     envTest: Result := ChargerFichier('config.test.ini');
@@ -432,19 +432,19 @@ end;
 
 ```ini
 [Database]
-Server=localhost
-Port=3307
-Database=myapp_test
-Username=test_user
-Password=test_password
+Server=localhost  
+Port=3307  
+Database=myapp_test  
+Username=test_user  
+Password=test_password  
 
 [API]
-BaseURL=https://api-test.example.com
-Timeout=5000
+BaseURL=https://api-test.example.com  
+Timeout=5000  
 
 [Logging]
-Level=DEBUG
-FilePath=./logs/test.log
+Level=DEBUG  
+FilePath=./logs/test.log  
 ```
 
 ## Stratégies de tests d'intégration
@@ -552,8 +552,8 @@ type
     function EnvoyerEmail(const Destinataire, Sujet, Corps: string): Boolean;
   end;
 
-function TServiceEmailReel.EnvoyerEmail(const Destinataire, Sujet, Corps: string): Boolean;
-begin
+function TServiceEmailReel.EnvoyerEmail(const Destinataire, Sujet, Corps: string): Boolean;  
+begin  
   // Envoie réellement l'email via SMTP
   Result := SMTPClient.Envoyer(Destinataire, Sujet, Corps);
 end;
@@ -575,20 +575,20 @@ type
     procedure Reinitialiser;
   end;
 
-constructor TServiceEmailMock.Create;
-begin
+constructor TServiceEmailMock.Create;  
+begin  
   FEmailsEnvoyes := TList<string>.Create;
 end;
 
-function TServiceEmailMock.EnvoyerEmail(const Destinataire, Sujet, Corps: string): Boolean;
-begin
+function TServiceEmailMock.EnvoyerEmail(const Destinataire, Sujet, Corps: string): Boolean;  
+begin  
   // Ne fait qu'enregistrer qu'un email a été "envoyé"
   FEmailsEnvoyes.Add(Destinataire);
   Result := True;
 end;
 
-function TServiceEmailMock.VerifierEmailEnvoye(const Destinataire: string): Boolean;
-begin
+function TServiceEmailMock.VerifierEmailEnvoye(const Destinataire: string): Boolean;  
+begin  
   Result := FEmailsEnvoyes.Contains(Destinataire);
 end;
 ```
@@ -596,8 +596,8 @@ end;
 **Utilisation dans un test :**
 
 ```pascal
-procedure TestEnvoiConfirmationCommande;
-var
+procedure TestEnvoiConfirmationCommande;  
+var  
   ServiceEmail: IServiceEmail;
   GestionnaireCommandes: TGestionnaireCommandes;
 begin
@@ -696,44 +696,44 @@ type
 
 implementation
 
-procedure TBaseIntegrationTest.SetupFixture;
-begin
+procedure TBaseIntegrationTest.SetupFixture;  
+begin  
   // Configuration une fois pour tous les tests de la fixture
   ChargerConfiguration(envTest);
 end;
 
-procedure TBaseIntegrationTest.TearDownFixture;
-begin
+procedure TBaseIntegrationTest.TearDownFixture;  
+begin  
   // Nettoyage final
 end;
 
-procedure TBaseIntegrationTest.Setup;
-begin
+procedure TBaseIntegrationTest.Setup;  
+begin  
   // Avant chaque test
   SetupDatabase;
   SetupTestData;
 end;
 
-procedure TBaseIntegrationTest.TearDown;
-begin
+procedure TBaseIntegrationTest.TearDown;  
+begin  
   // Après chaque test
   CleanupDatabase;
 end;
 
-procedure TBaseIntegrationTest.SetupDatabase;
-begin
+procedure TBaseIntegrationTest.SetupDatabase;  
+begin  
   // Se connecter à la base de test
   // Créer les tables si nécessaire
 end;
 
-procedure TBaseIntegrationTest.CleanupDatabase;
-begin
+procedure TBaseIntegrationTest.CleanupDatabase;  
+begin  
   // Supprimer les données de test
   // Réinitialiser les séquences
 end;
 
-procedure TBaseIntegrationTest.SetupTestData;
-begin
+procedure TBaseIntegrationTest.SetupTestData;  
+begin  
   // Insérer des données de test communes
 end;
 
@@ -788,26 +788,26 @@ implementation
 uses
   System.SysUtils;
 
-procedure TTestClientRepository.SetupDatabase;
-begin
+procedure TTestClientRepository.SetupDatabase;  
+begin  
   inherited;
   // Configuration spécifique pour les tests de clients
 end;
 
-procedure TTestClientRepository.Setup;
-begin
+procedure TTestClientRepository.Setup;  
+begin  
   inherited;
   FRepository := TClientRepository.Create;
 end;
 
-procedure TTestClientRepository.TearDown;
-begin
+procedure TTestClientRepository.TearDown;  
+begin  
   FRepository.Free;
   inherited;
 end;
 
-procedure TTestClientRepository.Test_AjouterClient_DoitCreerClientEnBase;
-var
+procedure TTestClientRepository.Test_AjouterClient_DoitCreerClientEnBase;  
+var  
   Client: TClient;
   ID: Integer;
   ClientCharge: TClient;
@@ -841,8 +841,8 @@ begin
   end;
 end;
 
-procedure TTestClientRepository.Test_ChargerClient_DoitRetournerClientExistant;
-var
+procedure TTestClientRepository.Test_ChargerClient_DoitRetournerClientExistant;  
+var  
   Client: TClient;
   ID: Integer;
   ClientCharge: TClient;
@@ -872,8 +872,8 @@ begin
   end;
 end;
 
-procedure TTestClientRepository.Test_ModifierClient_DoitMettreAJourDonnees;
-var
+procedure TTestClientRepository.Test_ModifierClient_DoitMettreAJourDonnees;  
+var  
   Client: TClient;
   ID: Integer;
   ClientModifie: TClient;
@@ -909,8 +909,8 @@ begin
   end;
 end;
 
-procedure TTestClientRepository.Test_SupprimerClient_DoitRetirerClientDeBase;
-var
+procedure TTestClientRepository.Test_SupprimerClient_DoitRetirerClientDeBase;  
+var  
   Client: TClient;
   ID: Integer;
   ClientCharge: TClient;
@@ -934,8 +934,8 @@ begin
   Assert.IsNull(ClientCharge, 'Le client ne doit plus exister en base');
 end;
 
-procedure TTestClientRepository.Test_ListerClients_DoitRetournerTousLesClients;
-var
+procedure TTestClientRepository.Test_ListerClients_DoitRetournerTousLesClients;  
+var  
   Client1, Client2: TClient;
   ID1, ID2: Integer;
   Clients: TList<TClient>;
@@ -1001,8 +1001,8 @@ Les **data builders** (ou **test data builders**) sont des classes helper qui cr
 **Sans builder :**
 
 ```pascal
-procedure TestMethode1;
-var
+procedure TestMethode1;  
+var  
   Client: TClient;
 begin
   Client := TClient.Create;
@@ -1023,8 +1023,8 @@ Beaucoup de code répétitif !
 **Avec builder :**
 
 ```pascal
-procedure TestMethode1;
-var
+procedure TestMethode1;  
+var  
   Client: TClient;
 begin
   Client := TClientBuilder.UnClientParDefaut;
@@ -1061,8 +1061,8 @@ type
 
 implementation
 
-constructor TClientBuilder.Create;
-begin
+constructor TClientBuilder.Create;  
+begin  
   FClient := TClient.Create;
   // Valeurs par défaut
   FClient.Nom := 'NomTest';
@@ -1075,56 +1075,56 @@ begin
   FClient.DateInscription := Now;
 end;
 
-class function TClientBuilder.UnClient: TClientBuilder;
-begin
+class function TClientBuilder.UnClient: TClientBuilder;  
+begin  
   Result := TClientBuilder.Create;
 end;
 
-class function TClientBuilder.UnClientParDefaut: TClient;
-begin
+class function TClientBuilder.UnClientParDefaut: TClient;  
+begin  
   Result := TClientBuilder.Create.Construire;
 end;
 
-function TClientBuilder.AvecNom(const Nom: string): TClientBuilder;
-begin
+function TClientBuilder.AvecNom(const Nom: string): TClientBuilder;  
+begin  
   FClient.Nom := Nom;
   Result := Self;
 end;
 
-function TClientBuilder.AvecPrenom(const Prenom: string): TClientBuilder;
-begin
+function TClientBuilder.AvecPrenom(const Prenom: string): TClientBuilder;  
+begin  
   FClient.Prenom := Prenom;
   Result := Self;
 end;
 
-function TClientBuilder.AvecEmail(const Email: string): TClientBuilder;
-begin
+function TClientBuilder.AvecEmail(const Email: string): TClientBuilder;  
+begin  
   FClient.Email := Email;
   Result := Self;
 end;
 
-function TClientBuilder.AvecTelephone(const Telephone: string): TClientBuilder;
-begin
+function TClientBuilder.AvecTelephone(const Telephone: string): TClientBuilder;  
+begin  
   FClient.Telephone := Telephone;
   Result := Self;
 end;
 
-function TClientBuilder.AvecAdresse(const Adresse, CodePostal, Ville: string): TClientBuilder;
-begin
+function TClientBuilder.AvecAdresse(const Adresse, CodePostal, Ville: string): TClientBuilder;  
+begin  
   FClient.Adresse := Adresse;
   FClient.CodePostal := CodePostal;
   FClient.Ville := Ville;
   Result := Self;
 end;
 
-function TClientBuilder.Construire: TClient;
-begin
+function TClientBuilder.Construire: TClient;  
+begin  
   Result := FClient;
   FClient := nil;  // Transférer la propriété
 end;
 
-destructor TClientBuilder.Destroy;
-begin
+destructor TClientBuilder.Destroy;  
+begin  
   FClient.Free;  // Au cas où Construire n'a pas été appelé
   inherited;
 end;
@@ -1133,8 +1133,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TestAjouterClientAvecAdresseParis;
-var
+procedure TestAjouterClientAvecAdresseParis;  
+var  
   Client: TClient;
 begin
   // Client avec juste le nom personnalisé, le reste par défaut
@@ -1145,8 +1145,8 @@ begin
   // ...test...
 end;
 
-procedure TestAjouterClientComplet;
-var
+procedure TestAjouterClientComplet;  
+var  
   Client: TClient;
 begin
   // Client complètement personnalisé avec syntaxe fluide
@@ -1184,8 +1184,8 @@ type
     procedure MonTest;
   end;
 
-procedure TTestAvecTransaction.Setup;
-begin
+procedure TTestAvecTransaction.Setup;  
+begin  
   FConnection := TFDConnection.Create(nil);
   // Configuration de la connexion...
   FConnection.Connected := True;
@@ -1194,8 +1194,8 @@ begin
   FConnection.StartTransaction;
 end;
 
-procedure TTestAvecTransaction.TearDown;
-begin
+procedure TTestAvecTransaction.TearDown;  
+begin  
   // TOUJOURS faire un rollback, jamais de commit
   if FConnection.InTransaction then
     FConnection.Rollback;
@@ -1203,8 +1203,8 @@ begin
   FConnection.Free;
 end;
 
-procedure TTestAvecTransaction.MonTest;
-begin
+procedure TTestAvecTransaction.MonTest;  
+begin  
   // Effectuer des opérations sur la base
   // INSERT, UPDATE, DELETE...
 
@@ -1284,19 +1284,19 @@ implementation
 uses
   System.SysUtils;
 
-procedure TTestAPIREST.SetupFixture;
-begin
+procedure TTestAPIREST.SetupFixture;  
+begin  
   // URL de l'API de test
   FBaseURL := 'https://api-test.example.com/v1';
 end;
 
-procedure TTestAPIREST.TearDownFixture;
-begin
+procedure TTestAPIREST.TearDownFixture;  
+begin  
   // Nettoyage final
 end;
 
-procedure TTestAPIREST.Setup;
-begin
+procedure TTestAPIREST.Setup;  
+begin  
   FRESTClient := TRESTClient.Create(FBaseURL);
   FRESTRequest := TRESTRequest.Create(nil);
   FRESTResponse := TRESTResponse.Create(nil);
@@ -1312,15 +1312,15 @@ begin
                                TRESTRequestParameterKind.pkHTTPHEADER);
 end;
 
-procedure TTestAPIREST.TearDown;
-begin
+procedure TTestAPIREST.TearDown;  
+begin  
   FRESTResponse.Free;
   FRESTRequest.Free;
   FRESTClient.Free;
 end;
 
-procedure TTestAPIREST.Test_GET_Utilisateurs_RetourneListeUtilisateurs;
-var
+procedure TTestAPIREST.Test_GET_Utilisateurs_RetourneListeUtilisateurs;  
+var  
   JSONArray: TJSONArray;
 begin
   // Arrange
@@ -1339,8 +1339,8 @@ begin
   Assert.IsTrue(JSONArray.Count > 0, 'Le tableau doit contenir au moins un utilisateur');
 end;
 
-procedure TTestAPIREST.Test_GET_UtilisateurParID_RetourneUtilisateur;
-var
+procedure TTestAPIREST.Test_GET_UtilisateurParID_RetourneUtilisateur;  
+var  
   JSONObject: TJSONObject;
   UserID: Integer;
 begin
@@ -1365,8 +1365,8 @@ begin
   Assert.IsTrue(JSONObject.TryGetValue<string>('email') <> '', 'L''email doit être présent');
 end;
 
-procedure TTestAPIREST.Test_POST_CreerUtilisateur_RetourneUtilisateurCree;
-var
+procedure TTestAPIREST.Test_POST_CreerUtilisateur_RetourneUtilisateurCree;  
+var  
   JSONObject, ResponseObject: TJSONObject;
   NewUserID: Integer;
 begin
@@ -1400,8 +1400,8 @@ begin
   Assert.AreEqual('Test User', ResponseObject.GetValue<string>('name'));
 end;
 
-procedure TTestAPIREST.Test_PUT_ModifierUtilisateur_MiseAJourReussie;
-var
+procedure TTestAPIREST.Test_PUT_ModifierUtilisateur_MiseAJourReussie;  
+var  
   JSONObject: TJSONObject;
 begin
   // Arrange
@@ -1425,8 +1425,8 @@ begin
   Assert.AreEqual(200, FRESTResponse.StatusCode, 'Status code doit être 200 OK');
 end;
 
-procedure TTestAPIREST.Test_DELETE_SupprimerUtilisateur_SuppressionReussie;
-begin
+procedure TTestAPIREST.Test_DELETE_SupprimerUtilisateur_SuppressionReussie;  
+begin  
   // Arrange
   FRESTRequest.Resource := 'users/999';  // ID de test à supprimer
   FRESTRequest.Method := rmDELETE;
@@ -1441,8 +1441,8 @@ begin
   );
 end;
 
-procedure TTestAPIREST.Test_GET_UtilisateurInexistant_Retourne404;
-begin
+procedure TTestAPIREST.Test_GET_UtilisateurInexistant_Retourne404;  
+begin  
   // Arrange
   FRESTRequest.Resource := 'users/999999';  // ID qui n'existe pas
   FRESTRequest.Method := rmGET;
@@ -1468,8 +1468,8 @@ Les **fixtures** sont des ensembles de données prédéfinies pour les tests.
 ```sql
 -- test_fixtures.sql
 -- Nettoyer les données existantes
-DELETE FROM Commandes;
-DELETE FROM Clients;
+DELETE FROM Commandes;  
+DELETE FROM Clients;  
 
 -- Insérer des données de test
 INSERT INTO Clients (ID, Nom, Prenom, Email) VALUES
@@ -1486,8 +1486,8 @@ INSERT INTO Commandes (ID, ClientID, DateCommande, MontantTotal) VALUES
 **Chargement :**
 
 ```pascal
-procedure ChargerFixtures;
-var
+procedure ChargerFixtures;  
+var  
   Script: TStringList;
 begin
   Script := TStringList.Create;
@@ -1511,8 +1511,8 @@ type
     class procedure SupprimerToutesLesDonnees;
   end;
 
-class procedure TTestFixtures.InsererClientsTest;
-begin
+class procedure TTestFixtures.InsererClientsTest;  
+begin  
   with FDQuery do
   begin
     SQL.Text := 'INSERT INTO Clients (Nom, Prenom, Email) VALUES (:Nom, :Prenom, :Email)';
@@ -1529,8 +1529,8 @@ begin
   end;
 end;
 
-class procedure TTestFixtures.SupprimerToutesLesDonnees;
-begin
+class procedure TTestFixtures.SupprimerToutesLesDonnees;  
+begin  
   FDConnection.ExecSQL('DELETE FROM Commandes');
   FDConnection.ExecSQL('DELETE FROM Clients');
 end;
@@ -1567,8 +1567,8 @@ Chaque test doit être indépendant et ne pas dépendre de l'ordre d'exécution.
 **Mauvais :**
 
 ```pascal
-procedure Test1_CreerClient; // Crée un client avec ID=1
-procedure Test2_ModifierClient; // Suppose que le client ID=1 existe
+procedure Test1_CreerClient; // Crée un client avec ID=1  
+procedure Test2_ModifierClient; // Suppose que le client ID=1 existe  
 ```
 
 Si Test1 échoue, Test2 échouera aussi. C'est une **dépendance**.
@@ -1576,13 +1576,13 @@ Si Test1 échoue, Test2 échouera aussi. C'est une **dépendance**.
 **Bon :**
 
 ```pascal
-procedure Test1_CreerClient;
-begin
+procedure Test1_CreerClient;  
+begin  
   // Crée son propre client
 end;
 
-procedure Test2_ModifierClient;
-begin
+procedure Test2_ModifierClient;  
+begin  
   // Crée d'abord un client, puis le modifie
   CreerClientTest;
   // ... modification ...
@@ -1594,8 +1594,8 @@ end;
 **TOUJOURS** nettoyer après vos tests, même en cas d'erreur.
 
 ```pascal
-procedure MonTest;
-var
+procedure MonTest;  
+var  
   Client: TClient;
   ID: Integer;
 begin
@@ -1643,8 +1643,8 @@ Assert.IsTrue(Abs(Now - Client.DateInscription) < OneSecond);
 Email := 'test_fixe@example.com';
 
 // BON : Trier ou chercher spécifiquement
-Premier := Clients.Find(function(C: TClient): Boolean
-begin
+Premier := Clients.Find(function(C: TClient): Boolean  
+begin  
   Result := C.ID = IDAttendu;
 end);
 ```
@@ -1667,8 +1667,8 @@ Ne testez qu'une seule chose à la fois.
 **Mauvais :**
 
 ```pascal
-procedure Test_ToutesLesOperationsClient;
-begin
+procedure Test_ToutesLesOperationsClient;  
+begin  
   // Créer
   ID := Repository.Ajouter(Client);
   Assert...
@@ -1686,9 +1686,9 @@ end;
 **Bon :**
 
 ```pascal
-procedure Test_AjouterClient; // Un test
-procedure Test_ModifierClient; // Un autre test
-procedure Test_SupprimerClient; // Un troisième test
+procedure Test_AjouterClient; // Un test  
+procedure Test_ModifierClient; // Un autre test  
+procedure Test_SupprimerClient; // Un troisième test  
 ```
 
 ### 6. Tests rapides

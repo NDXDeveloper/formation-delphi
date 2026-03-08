@@ -34,8 +34,8 @@ Plus la couverture est haute, plus vous avez de chances d'avoir trouvé les bugs
 ### Exemple visuel simple
 
 ```pascal
-procedure CalculerRemise(Prix: Currency; EstMembre: Boolean);
-begin
+procedure CalculerRemise(Prix: Currency; EstMembre: Boolean);  
+begin  
   if Prix > 100 then        // Ligne 1 - Toujours exécutée dans les tests
     if EstMembre then       // Ligne 2 - Toujours exécutée dans les tests
       Prix := Prix * 0.9    // Ligne 3 - Exécutée seulement si EstMembre = True
@@ -49,8 +49,8 @@ end;
 **Test existant :**
 
 ```pascal
-procedure TestRemiseMembre;
-begin
+procedure TestRemiseMembre;  
+begin  
   CalculerRemise(150, True);  // Exécute lignes 1, 2, 3, 5
 end;
 ```
@@ -69,8 +69,8 @@ Il existe plusieurs niveaux de granularité pour mesurer la couverture.
 C'est la plus simple : quelle proportion des lignes de code est exécutée ?
 
 ```pascal
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   X: Integer;
 begin
   X := 10;           // Ligne 1
@@ -98,8 +98,8 @@ Exemple;  // X = 10, donc X > 5 est vrai
 Mesure si toutes les branches de décision (if, case, etc.) ont été testées.
 
 ```pascal
-procedure ExempleCondition(A, B: Integer);
-begin
+procedure ExempleCondition(A, B: Integer);  
+begin  
   if (A > 0) and (B > 0) then  // 2 branches possibles : vrai ou faux
     WriteLn('Positifs')
   else
@@ -114,8 +114,8 @@ end;
 **Tests complets :**
 
 ```pascal
-ExempleCondition(1, 1);   // Condition vraie
-ExempleCondition(-1, 1);  // Condition fausse
+ExempleCondition(1, 1);   // Condition vraie  
+ExempleCondition(-1, 1);  // Condition fausse  
 ```
 
 ### 3. Couverture de chemins (Path Coverage)
@@ -123,8 +123,8 @@ ExempleCondition(-1, 1);  // Condition fausse
 Mesure si tous les chemins d'exécution possibles ont été testés.
 
 ```pascal
-procedure ExempleChemins(A, B: Integer);
-begin
+procedure ExempleChemins(A, B: Integer);  
+begin  
   if A > 0 then       // Condition 1
     WriteLn('A+');
 
@@ -142,10 +142,10 @@ end;
 **Pour 100% de couverture de chemins :**
 
 ```pascal
-ExempleChemins(1, 1);    // Chemin 1
-ExempleChemins(1, -1);   // Chemin 2
-ExempleChemins(-1, 1);   // Chemin 3
-ExempleChemins(-1, -1);  // Chemin 4
+ExempleChemins(1, 1);    // Chemin 1  
+ExempleChemins(1, -1);   // Chemin 2  
+ExempleChemins(-1, 1);   // Chemin 3  
+ExempleChemins(-1, -1);  // Chemin 4  
 ```
 
 ### 4. Couverture de conditions (Condition Coverage)
@@ -190,8 +190,8 @@ La couverture vous montre exactement quelles parties de votre code ne sont pas t
 Le code qui n'est jamais exécuté, même par les tests, est probablement du **code mort** (dead code) qui peut être supprimé.
 
 ```pascal
-procedure AncienneFonction;
-begin
+procedure AncienneFonction;  
+begin  
   // Couverture : 0%
   // Jamais appelée, même par l'application
   // → Peut être supprimée
@@ -207,10 +207,10 @@ Si vous avez un temps limité, concentrez-vous sur le code le plus critique qui 
 ```
 Unité              Couverture
 ----------------------------
-ClientService      95%   ← Bien testé
-OrderProcessor     45%   ← À améliorer !
-PaymentGateway     30%   ← Critique et peu testé !
-Logger             100%  ← Parfait
+ClientService      95%   ← Bien testé  
+OrderProcessor     45%   ← À améliorer !  
+PaymentGateway     30%   ← Critique et peu testé !  
+Logger             100%  ← Parfait  
 ```
 
 Priorité : **PaymentGateway** (critique pour le business ET peu testé).
@@ -220,10 +220,10 @@ Priorité : **PaymentGateway** (critique pour le business ET peu testé).
 Suivre la couverture au fil du temps :
 
 ```
-Semaine 1 : 35%
-Semaine 2 : 42%
-Semaine 3 : 58%
-Semaine 4 : 67%
+Semaine 1 : 35%  
+Semaine 2 : 42%  
+Semaine 3 : 58%  
+Semaine 4 : 67%  
 ```
 
 Progression visible et motivante !
@@ -235,8 +235,8 @@ Quand vous ajoutez du nouveau code, la couverture globale peut baisser si vous n
 **Exemple :**
 
 ```
-Avant ajout nouvelle fonctionnalité : 75% de couverture
-Après ajout de 500 lignes sans tests : 60% de couverture
+Avant ajout nouvelle fonctionnalité : 75% de couverture  
+Après ajout de 500 lignes sans tests : 60% de couverture  
 ```
 
 **Alarme** : La couverture a baissé → Ajoutez des tests !
@@ -282,10 +282,10 @@ MyApp - Couverture : 73.5%
 
 Unités                    Lignes    Couverture
 -----------------------------------------------
-ClientManager.pas         250       95.2%  ✓
-OrderProcessor.pas        180       68.3%  ⚠
-PaymentService.pas        120       45.8%  ✗
-Utils.pas                 80        100%   ✓
+ClientManager.pas         250       95.2%  ✓  
+OrderProcessor.pas        180       68.3%  ⚠  
+PaymentService.pas        120       45.8%  ✗  
+Utils.pas                 80        100%   ✓  
 ```
 
 ### Intégration avec les tests
@@ -298,11 +298,11 @@ Créez un fichier batch `RunTestsWithCoverage.bat` :
 @echo off
 echo Exécution des tests avec couverture...
 
-REM Nettoyer les anciens rapports
-if exist CodeCoverage_html rmdir /s /q CodeCoverage_html
+REM Nettoyer les anciens rapports  
+if exist CodeCoverage_html rmdir /s /q CodeCoverage_html  
 
-REM Exécuter les tests avec couverture
-CodeCoverage.exe ^
+REM Exécuter les tests avec couverture  
+CodeCoverage.exe ^  
   -e MonAppTests.exe ^
   -m MonApp.exe ^
   -a ^
@@ -312,11 +312,11 @@ CodeCoverage.exe ^
   -uf Vcl ^
   -uf Winapi
 
-REM Ouvrir le rapport
-start CodeCoverage_html\index.html
+REM Ouvrir le rapport  
+start CodeCoverage_html\index.html  
 
-echo Terminé !
-pause
+echo Terminé !  
+pause  
 ```
 
 **Paramètres additionnels :**
@@ -357,8 +357,8 @@ pause
 ### Rapport par unité
 
 ```
-Unité: ClientManager.pas
-Couverture globale: 85.2%
+Unité: ClientManager.pas  
+Couverture globale: 85.2%  
 
 Ligne    Code                               État
 ---------------------------------------------------
@@ -381,10 +381,10 @@ Ligne    Code                               État
 ### Rapport par méthode
 
 ```
-TClientManager.AddClient - Couverture: 100%
-TClientManager.RemoveClient - Couverture: 100%
-TClientManager.ValidateAge - Couverture: 50%  ← Attention !
-TClientManager.SendEmail - Couverture: 0%    ← Jamais testé !
+TClientManager.AddClient - Couverture: 100%  
+TClientManager.RemoveClient - Couverture: 100%  
+TClientManager.ValidateAge - Couverture: 50%  ← Attention !  
+TClientManager.SendEmail - Couverture: 0%    ← Jamais testé !  
 ```
 
 **Actions :**
@@ -406,8 +406,8 @@ if (Order.Total > 1000) and (Customer.IsPremium) then
 **Test à ajouter :**
 
 ```pascal
-procedure TestProcessOrderNonPremium;
-begin
+procedure TestProcessOrderNonPremium;  
+begin  
   // Order.Total > 1000 mais Customer.IsPremium = False
 end;
 ```
@@ -417,14 +417,14 @@ end;
 **Important :** 100% de couverture ne signifie pas que le code est correct !
 
 ```pascal
-function Diviser(A, B: Integer): Integer;
-begin
+function Diviser(A, B: Integer): Integer;  
+begin  
   Result := A div B;  // Couvert à 100%
 end;
 
 // Test
-procedure TestDiviser;
-begin
+procedure TestDiviser;  
+begin  
   Assert.AreEqual(5, Diviser(10, 2));  // ✓ Ligne exécutée
 end;
 ```
@@ -495,11 +495,11 @@ Plutôt qu'un objectif global, utilisez des objectifs par zone :
 ```
 Module                    Objectif    Actuel
 --------------------------------------------
-Paiements                 90%         85%  ← Critique
-Calculs métier            80%         75%  ← Important
-Interface utilisateur     50%         45%  ← Moins critique
-Utilitaires               70%         100% ← OK
-Logging                   30%         35%  ← Non critique
+Paiements                 90%         85%  ← Critique  
+Calculs métier            80%         75%  ← Important  
+Interface utilisateur     50%         45%  ← Moins critique  
+Utilitaires               70%         100% ← OK  
+Logging                   30%         35%  ← Non critique  
 ```
 
 ## Métriques de qualité au-delà de la couverture
@@ -519,14 +519,14 @@ Complexité = Nombre de points de décision + 1
 
 ```pascal
 // Complexité = 1 (pas de décision)
-function SimpleAddition(A, B: Integer): Integer;
-begin
+function SimpleAddition(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 
 // Complexité = 2 (un if)
-function Max(A, B: Integer): Integer;
-begin
+function Max(A, B: Integer): Integer;  
+begin  
   if A > B then
     Result := A
   else
@@ -534,8 +534,8 @@ begin
 end;
 
 // Complexité = 4 (trois if)
-function ComplexFunction(A, B, C: Integer): Integer;
-begin
+function ComplexFunction(A, B, C: Integer): Integer;  
+begin  
   if A > 0 then
     if B > 0 then
       if C > 0 then
@@ -602,8 +602,8 @@ if Condition1 then
 **Mauvais exemple (150 lignes) :**
 
 ```pascal
-procedure ProcessOrder;
-begin
+procedure ProcessOrder;  
+begin  
   // Valider les données (30 lignes)
   // Calculer les totaux (40 lignes)
   // Appliquer les remises (35 lignes)
@@ -615,8 +615,8 @@ end;
 **Bon exemple (5 fonctions de 20-30 lignes) :**
 
 ```pascal
-procedure ProcessOrder;
-begin
+procedure ProcessOrder;  
+begin  
   ValidateOrderData;
   CalculateTotals;
   ApplyDiscounts;
@@ -718,21 +718,21 @@ Répétez le processus jusqu'à atteindre votre objectif.
 **1. Tests des cas limites**
 
 ```pascal
-function Diviser(A, B: Integer): Integer;
-begin
+function Diviser(A, B: Integer): Integer;  
+begin  
   if B = 0 then
     raise Exception.Create('Division par zéro');
   Result := A div B;
 end;
 
 // Tests
-procedure TestDiviserNormal;
-begin
+procedure TestDiviserNormal;  
+begin  
   Assert.AreEqual(5, Diviser(10, 2));
 end;
 
-procedure TestDiviserParZero;  // ← Ajoute 100% de couverture
-begin
+procedure TestDiviserParZero;  // ← Ajoute 100% de couverture  
+begin  
   Assert.WillRaise(procedure
   begin
     Diviser(10, 0);
@@ -754,8 +754,8 @@ else
 **3. Tests des exceptions**
 
 ```pascal
-procedure ChargerClient(ID: Integer);
-begin
+procedure ChargerClient(ID: Integer);  
+begin  
   if ID <= 0 then
     raise EArgumentException.Create('ID invalide');  // ← Tester ça
   // ...
@@ -844,8 +844,8 @@ var
 
 ```pascal
 // ✓ Bon
-function EstValide(Client: TClient): Boolean;
-begin
+function EstValide(Client: TClient): Boolean;  
+begin  
   Result := (Client <> nil) and
             (Client.Email <> '') and
             (Client.Age >= 18);
@@ -981,11 +981,11 @@ Lors des code reviews, examinez :
 **Commentaire type :**
 
 ```
-Changement : +150 lignes de code, +0 lignes de tests
-Couverture : 75% → 68% (baisse de 7%)
+Changement : +150 lignes de code, +0 lignes de tests  
+Couverture : 75% → 68% (baisse de 7%)  
 
-Action : Merci d'ajouter des tests pour les nouvelles fonctionnalités
-avant que la PR soit acceptée.
+Action : Merci d'ajouter des tests pour les nouvelles fonctionnalités  
+avant que la PR soit acceptée.  
 ```
 
 ## Pièges à éviter
@@ -1000,8 +1000,8 @@ avant que la PR soit acceptée.
 
 ```pascal
 // ❌ Test inutile
-procedure TestGetterSetter;
-begin
+procedure TestGetterSetter;  
+begin  
   Client.Nom := 'Test';
   Assert.AreEqual('Test', Client.Nom);  // Évident, inutile
 end;
@@ -1015,8 +1015,8 @@ end;
 
 ```pascal
 // ❌ Test qui ne teste rien vraiment
-procedure TestMauvais;
-begin
+procedure TestMauvais;  
+begin  
   Fonction;  // Pas d'assertion !
 end;
 ```
@@ -1138,9 +1138,9 @@ N'exécutez pas la couverture manuellement. Intégrez-la dans :
 ### 8. Fixez des objectifs réalistes
 
 ```
-Projet legacy (10% actuellement) → Objectif 40% en 6 mois
-Nouveau projet → Objectif 70% dès le début
-Module critique → Objectif 85%
+Projet legacy (10% actuellement) → Objectif 40% en 6 mois  
+Nouveau projet → Objectif 70% dès le début  
+Module critique → Objectif 85%  
 ```
 
 ### 9. Célébrez les progrès
@@ -1165,8 +1165,8 @@ La couverture est un moyen, pas une fin.
 
 ```
 === Rapport de couverture ===
-Date : 2025-10-18
-Projet : MonApplication
+Date : 2025-10-18  
+Projet : MonApplication  
 
 Résumé global :
 - Lignes totales : 12,450
@@ -1187,26 +1187,26 @@ Top 5 unités peu couvertes :
 4. CacheManager.pas : 48.9%
 5. OrderProcessor.pas : 52.3%
 
-Action recommandée :
-Focus sur PaymentGateway et EmailService (modules critiques)
+Action recommandée :  
+Focus sur PaymentGateway et EmailService (modules critiques)  
 ```
 
 ### Dashboard de suivi
 
 ```
-Projet : MonApplication
-Période : Octobre 2025
+Projet : MonApplication  
+Période : Octobre 2025  
 
      35%  45%  58%  67%  71.8%
-Sem1  ▓   ░    ░    ░    ░
-Sem2  ▓   ▓    ░    ░    ░
-Sem3  ▓   ▓    ▓    ░    ░
-Sem4  ▓   ▓    ▓    ▓    ░
-Sem5  ▓   ▓    ▓    ▓    ▓
+Sem1  ▓   ░    ░    ░    ░  
+Sem2  ▓   ▓    ░    ░    ░  
+Sem3  ▓   ▓    ▓    ░    ░  
+Sem4  ▓   ▓    ▓    ▓    ░  
+Sem5  ▓   ▓    ▓    ▓    ▓  
 
-Objectif 75% : En bonne voie ✓
-Complexité moyenne : 8.2 (bon)
-Dette technique : -15% ce mois
+Objectif 75% : En bonne voie ✓  
+Complexité moyenne : 8.2 (bon)  
+Dette technique : -15% ce mois  
 ```
 
 ## Checklist qualité complète

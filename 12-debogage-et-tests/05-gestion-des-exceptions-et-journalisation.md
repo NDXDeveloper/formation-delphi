@@ -112,8 +112,8 @@ Exception
 La structure `try...except` permet de capturer et de gérer les exceptions :
 
 ```pascal
-procedure ExempleGestionException;
-var
+procedure ExempleGestionException;  
+var  
   Resultat: Integer;
 begin
   try
@@ -141,8 +141,8 @@ end;
 Vous pouvez gérer différents types d'exceptions différemment :
 
 ```pascal
-procedure DivisionSecurisee(A, B: Integer);
-begin
+procedure DivisionSecurisee(A, B: Integer);  
+begin  
   try
     ShowMessage(Format('Résultat : %d', [A div B]));
   except
@@ -195,8 +195,8 @@ end;
 Parfois, vous voulez gérer partiellement une exception puis la relancer pour qu'elle soit traitée à un niveau supérieur :
 
 ```pascal
-procedure ChargerConfiguration;
-begin
+procedure ChargerConfiguration;  
+begin  
   try
     LireFichierConfig('config.ini');
   except
@@ -219,8 +219,8 @@ Le mot-clé `raise` sans paramètre relance l'exception actuelle.
 Vous pouvez créer et lever vos propres exceptions :
 
 ```pascal
-procedure DefinirAge(Age: Integer);
-begin
+procedure DefinirAge(Age: Integer);  
+begin  
   if Age < 0 then
     raise Exception.Create('L''âge ne peut pas être négatif');
 
@@ -237,8 +237,8 @@ Pour des cas plus spécifiques, créez vos propres classes d'exception :
 type
   EAgeInvalide = class(Exception);
 
-procedure DefinirAge(Age: Integer);
-begin
+procedure DefinirAge(Age: Integer);  
+begin  
   if (Age < 0) or (Age > 150) then
     raise EAgeInvalide.Create('Âge invalide : ' + IntToStr(Age));
 
@@ -255,8 +255,8 @@ Le bloc `finally` garantit qu'un code sera exécuté **quelle que soit** l'issue
 ### Structure de base
 
 ```pascal
-procedure TraiterFichier;
-var
+procedure TraiterFichier;  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -279,8 +279,8 @@ Sans `finally`, si une exception se produit, l'objet ne sera jamais libéré :
 
 ```pascal
 // MAUVAIS CODE - Fuite mémoire possible
-procedure MauvaiseGestion;
-var
+procedure MauvaiseGestion;  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -290,8 +290,8 @@ begin
 end;
 
 // BON CODE - Pas de fuite mémoire
-procedure BonneGestion;
-var
+procedure BonneGestion;  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -309,8 +309,8 @@ end;
 Pour une gestion complète, vous pouvez imbriquer les deux structures :
 
 ```pascal
-procedure GestionComplete;
-var
+procedure GestionComplete;  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -331,8 +331,8 @@ end;
 Ou plus simplement avec une seule structure :
 
 ```pascal
-procedure GestionSimplifiee;
-var
+procedure GestionSimplifiee;  
+var  
   Fichier: TStringList;
 begin
   Fichier := TStringList.Create;
@@ -380,8 +380,8 @@ Utilisez `try...finally` pour tous les objets que vous créez :
 
 ```pascal
 // Pattern standard pour tout objet
-MonObjet := TMonObjet.Create;
-try
+MonObjet := TMonObjet.Create;  
+try  
   // Utiliser MonObjet
 finally
   MonObjet.Free;
@@ -432,8 +432,8 @@ end;
 Ajoutez du contexte à vos exceptions pour faciliter le débogage :
 
 ```pascal
-procedure TraiterClient(ClientID: Integer);
-begin
+procedure TraiterClient(ClientID: Integer);  
+begin  
   try
     ChargerClient(ClientID);
   except
@@ -450,8 +450,8 @@ Pour les erreurs attendues, utilisez parfois des valeurs de retour plutôt que d
 
 ```pascal
 // Pour une conversion qui peut échouer souvent
-function TryConvertirEnEntier(const Texte: string; out Valeur: Integer): Boolean;
-begin
+function TryConvertirEnEntier(const Texte: string; out Valeur: Integer): Boolean;  
+begin  
   Result := TryStrToInt(Texte, Valeur);
 end;
 
@@ -470,8 +470,8 @@ Gérez les exceptions au niveau où vous avez suffisamment d'informations et de 
 
 ```pascal
 // Bas niveau - Peut juste journaliser et relancer
-procedure ChargerFichier(const Nom: string);
-begin
+procedure ChargerFichier(const Nom: string);  
+begin  
   try
     // Charger...
   except
@@ -484,8 +484,8 @@ begin
 end;
 
 // Haut niveau - Peut gérer et informer l'utilisateur
-procedure BoutonChargerClick(Sender: TObject);
-begin
+procedure BoutonChargerClick(Sender: TObject);  
+begin  
   try
     ChargerFichier(NomFichier);
   except
@@ -578,15 +578,15 @@ var
 
 implementation
 
-constructor TSimpleLogger.Create(const FichierLog: string; NiveauMin: TNiveauLog);
-begin
+constructor TSimpleLogger.Create(const FichierLog: string; NiveauMin: TNiveauLog);  
+begin  
   inherited Create;
   FFichierLog := FichierLog;
   FNiveauMin := NiveauMin;
 end;
 
-procedure TSimpleLogger.EcrireLigne(const Niveau, Message: string);
-var
+procedure TSimpleLogger.EcrireLigne(const Niveau, Message: string);  
+var  
   Fichier: TextFile;
   Ligne: string;
 begin
@@ -605,44 +605,44 @@ begin
   end;
 end;
 
-procedure TSimpleLogger.Info(const Message: string);
-begin
+procedure TSimpleLogger.Info(const Message: string);  
+begin  
   if FNiveauMin <= nlInfo then
     EcrireLigne('INFO', Message);
 end;
 
-procedure TSimpleLogger.Error(const Message: string);
-begin
+procedure TSimpleLogger.Error(const Message: string);  
+begin  
   if FNiveauMin <= nlError then
     EcrireLigne('ERROR', Message);
 end;
 
-procedure TSimpleLogger.Warning(const Message: string);
-begin
+procedure TSimpleLogger.Warning(const Message: string);  
+begin  
   if FNiveauMin <= nlWarning then
     EcrireLigne('WARNING', Message);
 end;
 
-procedure TSimpleLogger.Debug(const Message: string);
-begin
+procedure TSimpleLogger.Debug(const Message: string);  
+begin  
   if FNiveauMin <= nlDebug then
     EcrireLigne('DEBUG', Message);
 end;
 
-procedure TSimpleLogger.Trace(const Message: string);
-begin
+procedure TSimpleLogger.Trace(const Message: string);  
+begin  
   if FNiveauMin <= nlTrace then
     EcrireLigne('TRACE', Message);
 end;
 
-procedure TSimpleLogger.Fatal(const Message: string);
-begin
+procedure TSimpleLogger.Fatal(const Message: string);  
+begin  
   if FNiveauMin <= nlFatal then
     EcrireLigne('FATAL', Message);
 end;
 
-procedure TSimpleLogger.LogException(const Contexte: string; E: Exception);
-begin
+procedure TSimpleLogger.LogException(const Contexte: string; E: Exception);  
+begin  
   Error(Format('%s - Exception %s : %s', [Contexte, E.ClassName, E.Message]));
 end;
 
@@ -658,8 +658,8 @@ end.
 ### Utilisation du logger
 
 ```pascal
-procedure TraiterCommande(CommandeID: Integer);
-begin
+procedure TraiterCommande(CommandeID: Integer);  
+begin  
   Logger.Info('Début traitement commande ' + IntToStr(CommandeID));
 
   try
@@ -717,14 +717,14 @@ uses
 var
   Logger: TLogLogger;
 
-procedure InitialiserLog;
-begin
+procedure InitialiserLog;  
+begin  
   Logger := TLogLogger.GetLogger('MonApplication');
   Logger.Level := Trace;
 end;
 
-procedure Exemple;
-begin
+procedure Exemple;  
+begin  
   Logger.Info('Application démarrée');
   Logger.Debug('Configuration chargée');
 
@@ -753,8 +753,8 @@ CodeSite est un système de logging et de débogage en temps réel.
 uses
   CodeSiteLogging;
 
-procedure Exemple;
-var
+procedure Exemple;  
+var  
   Client: TClient;
 begin
   CodeSite.Send('Application démarrée');
@@ -798,8 +798,8 @@ Le framework mORMot inclut un système de logging très performant.
 uses
   mormot.core.log;
 
-procedure Exemple;
-begin
+procedure Exemple;  
+begin  
   TSynLog.Add.Log(sllInfo, 'Application démarrée');
   TSynLog.Add.Log(sllDebug, 'Mode debug activé');
 
@@ -844,8 +844,8 @@ type
     procedure RoterFichiers;
   end;
 
-procedure TRotationLog.VerifierRotation;
-var
+procedure TRotationLog.VerifierRotation;  
+var  
   TailleFichier: Int64;
 begin
   if FileExists(FFichierBase) then
@@ -856,8 +856,8 @@ begin
   end;
 end;
 
-procedure TRotationLog.RoterFichiers;
-var
+procedure TRotationLog.RoterFichiers;  
+var  
   i: Integer;
 begin
   // Supprimer le plus ancien
@@ -886,8 +886,8 @@ end;
 Pour faciliter l'analyse, utilisez un format structuré (JSON) :
 
 ```pascal
-procedure LoggerJSON(const Niveau, Message: string; Donnees: TJSONObject);
-var
+procedure LoggerJSON(const Niveau, Message: string; Donnees: TJSONObject);  
+var  
   LogEntry: TJSONObject;
 begin
   LogEntry := TJSONObject.Create;
@@ -940,8 +940,8 @@ type
     procedure Log(const Message: string);
   end;
 
-constructor TAsyncLogger.Create;
-begin
+constructor TAsyncLogger.Create;  
+begin  
   FQueue := TThreadedQueue<string>.Create;
 
   FThread := TThread.CreateAnonymousThread(ProcessQueue);
@@ -949,13 +949,13 @@ begin
   FThread.Start;
 end;
 
-procedure TAsyncLogger.Log(const Message: string);
-begin
+procedure TAsyncLogger.Log(const Message: string);  
+begin  
   FQueue.PushItem(Message);
 end;
 
-procedure TAsyncLogger.ProcessQueue;
-var
+procedure TAsyncLogger.ProcessQueue;  
+var  
   Message: string;
 begin
   while not TThread.Current.CheckTerminated do
@@ -973,14 +973,14 @@ end;
 Delphi permet de capturer toutes les exceptions non gérées au niveau de l'application :
 
 ```pascal
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
+procedure TMainForm.FormCreate(Sender: TObject);  
+begin  
   // Définir un gestionnaire global d'exceptions
   Application.OnException := GererExceptionGlobale;
 end;
 
-procedure TMainForm.GererExceptionGlobale(Sender: TObject; E: Exception);
-begin
+procedure TMainForm.GererExceptionGlobale(Sender: TObject; E: Exception);  
+begin  
   // Journaliser l'exception
   Logger.Fatal(Format('Exception non gérée : %s - %s',
                      [E.ClassName, E.Message]));
@@ -998,8 +998,8 @@ end;
 ### Pattern standard : Try-Except-Finally avec logging
 
 ```pascal
-procedure OperationComplete;
-var
+procedure OperationComplete;  
+var  
   Ressource: TRessource;
 begin
   Logger.Info('Début OperationComplete');
@@ -1032,15 +1032,15 @@ end;
 Créez une fonction helper pour enrichir les exceptions :
 
 ```pascal
-procedure RaiseWithContext(const Contexte: string; E: Exception);
-begin
+procedure RaiseWithContext(const Contexte: string; E: Exception);  
+begin  
   Logger.Error(Format('%s - %s: %s', [Contexte, E.ClassName, E.Message]));
   raise Exception.Create(Contexte + ' : ' + E.Message);
 end;
 
 // Utilisation
-procedure TraiterClient(ClientID: Integer);
-begin
+procedure TraiterClient(ClientID: Integer);  
+begin  
   try
     ChargerDonneesClient(ClientID);
   except
@@ -1081,8 +1081,8 @@ grep "ERROR.*Jean Dupont" application.log
 Pour les erreurs critiques, mettez en place des alertes automatiques :
 
 ```pascal
-procedure TLogger.Fatal(const Message: string);
-begin
+procedure TLogger.Fatal(const Message: string);  
+begin  
   // Log normal
   EcrireLigne('FATAL', Message);
 
@@ -1164,8 +1164,8 @@ Créez des macros pour simplifier le logging :
   {$DEFINE LOG_ENTRY_EXIT}
 {$ENDIF}
 
-procedure MaFonction;
-begin
+procedure MaFonction;  
+begin  
   {$IFDEF LOG_ENTRY_EXIT}
   Logger.Trace('>> MaFonction');
   {$ENDIF}
@@ -1193,15 +1193,15 @@ type
     destructor Destroy; override;
   end;
 
-constructor TLogTimer.Create(const Nom: string);
-begin
+constructor TLogTimer.Create(const Nom: string);  
+begin  
   FNom := Nom;
   Logger.Debug(FNom + ' : début');
   FChrono := TStopwatch.StartNew;
 end;
 
-destructor TLogTimer.Destroy;
-begin
+destructor TLogTimer.Destroy;  
+begin  
   FChrono.Stop;
   Logger.Debug(Format('%s : terminé en %d ms',
                      [FNom, FChrono.ElapsedMilliseconds]));
@@ -1209,8 +1209,8 @@ begin
 end;
 
 // Utilisation
-procedure TraitementLong;
-var
+procedure TraitementLong;  
+var  
   Timer: TLogTimer;
 begin
   Timer := TLogTimer.Create('TraitementLong');

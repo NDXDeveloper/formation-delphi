@@ -323,8 +323,8 @@ Voici quelques situations courantes où modifier une variable est utile :
 **Exemple pratique :**
 
 ```pascal
-procedure VerifierAge;
-var
+procedure VerifierAge;  
+var  
   Age: Integer;
 begin
   Age := 15;  // ← Point d'arrêt ici
@@ -416,10 +416,10 @@ La Call Stack affiche la **séquence d'appels de fonctions** qui a mené à l'en
 **Exemple :**
 
 ```
-FonctionC (ligne 45) ← Vous êtes ici
-FonctionB (ligne 30) ← Appelée par FonctionB
-FonctionA (ligne 15) ← Appelée par FonctionA
-FormCreate (ligne 8) ← Point d'entrée
+FonctionC (ligne 45) ← Vous êtes ici  
+FonctionB (ligne 30) ← Appelée par FonctionB  
+FonctionA (ligne 15) ← Appelée par FonctionA  
+FormCreate (ligne 8) ← Point d'entrée  
 ```
 
 **Utilité pour l'inspection :**

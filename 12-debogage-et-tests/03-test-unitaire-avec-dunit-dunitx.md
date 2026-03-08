@@ -28,8 +28,8 @@ Les tests unitaires font exactement la même chose pour votre code : ils vérifi
 Supposons que vous ayez écrit une fonction pour calculer la TVA :
 
 ```pascal
-function CalculerTVA(MontantHT: Double; TauxTVA: Double): Double;
-begin
+function CalculerTVA(MontantHT: Double; TauxTVA: Double): Double;  
+begin  
   Result := MontantHT * (TauxTVA / 100);
 end;
 ```
@@ -243,26 +243,26 @@ type
 
 implementation
 
-procedure TTestCalculs.Setup;
-begin
+procedure TTestCalculs.Setup;  
+begin  
   // Code exécuté AVANT chaque test
   // Utilisé pour préparer l'environnement de test
 end;
 
-procedure TTestCalculs.TearDown;
-begin
+procedure TTestCalculs.TearDown;  
+begin  
   // Code exécuté APRÈS chaque test
   // Utilisé pour nettoyer l'environnement
 end;
 
-procedure TTestCalculs.TestAddition;
-begin
+procedure TTestCalculs.TestAddition;  
+begin  
   // Votre test ici
   Assert.AreEqual(4, 2 + 2, 'Addition incorrecte');
 end;
 
-procedure TTestCalculs.TestMultiplication;
-begin
+procedure TTestCalculs.TestMultiplication;  
+begin  
   // Votre test ici
   Assert.AreEqual(6, 2 * 3, 'Multiplication incorrecte');
 end;
@@ -296,8 +296,8 @@ Marque une méthode comme étant un test à exécuter.
 
 ```pascal
 [Test]
-procedure MonTest;
-begin
+procedure MonTest;  
+begin  
   // Code de test
 end;
 ```
@@ -310,8 +310,8 @@ Méthode exécutée **avant chaque test** de la fixture. Utilisée pour prépare
 
 ```pascal
 [Setup]
-procedure Setup;
-begin
+procedure Setup;  
+begin  
   // Créer les objets nécessaires
   FCalculateur := TCalculateur.Create;
 end;
@@ -323,8 +323,8 @@ Méthode exécutée **après chaque test** pour nettoyer les ressources.
 
 ```pascal
 [TearDown]
-procedure TearDown;
-begin
+procedure TearDown;  
+begin  
   // Libérer les objets
   FCalculateur.Free;
 end;
@@ -336,14 +336,14 @@ Exécutés **une seule fois** avant tous les tests de la fixture (Setup) et apr�
 
 ```pascal
 [SetupFixture]
-procedure SetupFixture;
-begin
+procedure SetupFixture;  
+begin  
   // Initialisation coûteuse faite une seule fois
 end;
 
 [TearDownFixture]
-procedure TearDownFixture;
-begin
+procedure TearDownFixture;  
+begin  
   // Nettoyage final
 end;
 ```
@@ -355,8 +355,8 @@ Désactive temporairement un test sans le supprimer.
 ```pascal
 [Test]
 [Ignore('Test désactivé pendant le refactoring')]
-procedure TestEnCours;
-begin
+procedure TestEnCours;  
+begin  
   // Ce test ne sera pas exécuté
 end;
 ```
@@ -370,8 +370,8 @@ Les assertions sont les instructions qui vérifient que votre code produit les r
 Vérifie que deux valeurs sont égales.
 
 ```pascal
-procedure TestAddition;
-begin
+procedure TestAddition;  
+begin  
   Assert.AreEqual(4, 2 + 2, 'Addition devrait donner 4');
   Assert.AreEqual('Bonjour', GetSalutation, 'Salutation incorrecte');
 end;
@@ -386,8 +386,8 @@ Le message est optionnel mais **fortement recommandé** car il vous aide à comp
 Vérifie que deux valeurs sont différentes.
 
 ```pascal
-procedure TestGenererID;
-var
+procedure TestGenererID;  
+var  
   ID1, ID2: string;
 begin
   ID1 := GenererNouvelID;
@@ -401,8 +401,8 @@ end;
 Vérifient qu'une condition booléenne est vraie ou fausse.
 
 ```pascal
-procedure TestEstMajeur;
-begin
+procedure TestEstMajeur;  
+begin  
   Assert.IsTrue(EstMajeur(25), 'Personne de 25 ans doit être majeure');
   Assert.IsFalse(EstMajeur(15), 'Personne de 15 ans ne doit pas être majeure');
 end;
@@ -413,8 +413,8 @@ end;
 Pour vérifier si un objet ou pointeur est nil ou non.
 
 ```pascal
-procedure TestCreerObjet;
-var
+procedure TestCreerObjet;  
+var  
   MonObjet: TMonObjet;
 begin
   MonObjet := TMonObjet.Create;
@@ -431,8 +431,8 @@ end;
 Vérifie qu'une exception spécifique est levée.
 
 ```pascal
-procedure TestDivisionParZero;
-begin
+procedure TestDivisionParZero;  
+begin  
   Assert.WillRaise(
     procedure
     begin
@@ -451,8 +451,8 @@ Ceci est particulièrement important pour tester que votre code gère correcteme
 Pour les chaînes de caractères :
 
 ```pascal
-procedure TestMessage;
-var
+procedure TestMessage;  
+var  
   Message: string;
 begin
   Message := 'Bonjour le monde';
@@ -466,8 +466,8 @@ end;
 Pour les nombres à virgule flottante (Double, Single), utilisez une tolérance car la comparaison exacte peut échouer à cause de la précision limitée.
 
 ```pascal
-procedure TestCalculPI;
-var
+procedure TestCalculPI;  
+var  
   ValeurCalculee: Double;
 begin
   ValeurCalculee := CalculerPI;
@@ -485,8 +485,8 @@ Supposons que vous ayez cette fonction dans votre application :
 
 ```pascal
 // Dans l'unité MesCalculs.pas
-function Additionner(A, B: Integer): Integer;
-begin
+function Additionner(A, B: Integer): Integer;  
+begin  
   Result := A + B;
 end;
 ```
@@ -519,20 +519,20 @@ type
 
 implementation
 
-procedure TTestCalculs.TestAdditionPositifs;
-begin
+procedure TTestCalculs.TestAdditionPositifs;  
+begin  
   Assert.AreEqual(5, Additionner(2, 3), 'Addition de nombres positifs');
   Assert.AreEqual(100, Additionner(50, 50), 'Addition de grands nombres');
 end;
 
-procedure TTestCalculs.TestAdditionNegatifs;
-begin
+procedure TTestCalculs.TestAdditionNegatifs;  
+begin  
   Assert.AreEqual(-5, Additionner(-2, -3), 'Addition de nombres négatifs');
   Assert.AreEqual(1, Additionner(-2, 3), 'Addition mixte positif/négatif');
 end;
 
-procedure TTestCalculs.TestAdditionZero;
-begin
+procedure TTestCalculs.TestAdditionZero;  
+begin  
   Assert.AreEqual(5, Additionner(5, 0), 'Addition avec zéro');
   Assert.AreEqual(0, Additionner(0, 0), 'Addition de deux zéros');
 end;
@@ -563,24 +563,24 @@ type
 
 implementation
 
-constructor TCalculateur.Create;
-begin
+constructor TCalculateur.Create;  
+begin  
   inherited;
   FMemoire := 0;
 end;
 
-procedure TCalculateur.Effacer;
-begin
+procedure TCalculateur.Effacer;  
+begin  
   FMemoire := 0;
 end;
 
-procedure TCalculateur.Ajouter(Valeur: Double);
-begin
+procedure TCalculateur.Ajouter(Valeur: Double);  
+begin  
   FMemoire := FMemoire + Valeur;
 end;
 
-function TCalculateur.ObtenirTotal: Double;
-begin
+function TCalculateur.ObtenirTotal: Double;  
+begin  
   Result := FMemoire;
 end;
 ```
@@ -623,26 +623,26 @@ type
 
 implementation
 
-procedure TTestCalculateur.Setup;
-begin
+procedure TTestCalculateur.Setup;  
+begin  
   // Créer une nouvelle instance avant chaque test
   FCalculateur := TCalculateur.Create;
 end;
 
-procedure TTestCalculateur.TearDown;
-begin
+procedure TTestCalculateur.TearDown;  
+begin  
   // Libérer l'instance après chaque test
   FCalculateur.Free;
 end;
 
-procedure TTestCalculateur.TestCreation;
-begin
+procedure TTestCalculateur.TestCreation;  
+begin  
   Assert.IsNotNull(FCalculateur, 'Calculateur devrait être créé');
   Assert.AreEqual(0.0, FCalculateur.ObtenirTotal, 0.001, 'Total initial devrait être 0');
 end;
 
-procedure TTestCalculateur.TestAjout;
-begin
+procedure TTestCalculateur.TestAjout;  
+begin  
   FCalculateur.Ajouter(5);
   Assert.AreEqual(5.0, FCalculateur.ObtenirTotal, 0.001, 'Après ajout de 5');
 
@@ -650,15 +650,15 @@ begin
   Assert.AreEqual(8.0, FCalculateur.ObtenirTotal, 0.001, 'Après ajout de 3');
 end;
 
-procedure TTestCalculateur.TestEffacer;
-begin
+procedure TTestCalculateur.TestEffacer;  
+begin  
   FCalculateur.Ajouter(10);
   FCalculateur.Effacer;
   Assert.AreEqual(0.0, FCalculateur.ObtenirTotal, 0.001, 'Total après effacement');
 end;
 
-procedure TTestCalculateur.TestPlusieursOperations;
-begin
+procedure TTestCalculateur.TestPlusieursOperations;  
+begin  
   FCalculateur.Ajouter(10);
   FCalculateur.Ajouter(20);
   FCalculateur.Ajouter(-5);
@@ -767,8 +767,8 @@ Chaque test devrait vérifier un comportement spécifique. Si un test échoue, v
 **Mauvais exemple :**
 
 ```pascal
-procedure TestTout;
-begin
+procedure TestTout;  
+begin  
   Assert.AreEqual(4, Additionner(2, 2));
   Assert.AreEqual(6, Multiplier(2, 3));
   Assert.AreEqual(10, Diviser(100, 10));
@@ -779,18 +779,18 @@ end;
 **Bon exemple :**
 
 ```pascal
-procedure TestAddition;
-begin
+procedure TestAddition;  
+begin  
   Assert.AreEqual(4, Additionner(2, 2));
 end;
 
-procedure TestMultiplication;
-begin
+procedure TestMultiplication;  
+begin  
   Assert.AreEqual(6, Multiplier(2, 3));
 end;
 
-procedure TestDivision;
-begin
+procedure TestDivision;  
+begin  
   Assert.AreEqual(10, Diviser(100, 10));
 end;
 ```
@@ -821,8 +821,8 @@ Ne testez pas seulement les cas normaux, testez aussi :
 - Les cas d'erreur
 
 ```pascal
-procedure TestDivision;
-begin
+procedure TestDivision;  
+begin  
   // Cas normal
   Assert.AreEqual(5, Diviser(10, 2));
 
@@ -853,9 +853,9 @@ Le nom d'un test devrait décrire clairement ce qu'il teste :
 procedure Test1;
 
 // Plus clair
-procedure TestAdditionDeuxNombresPositifs;
-procedure TestDivisionParZeroLeveException;
-procedure TestListeVideRetourneFalseAContient;
+procedure TestAdditionDeuxNombresPositifs;  
+procedure TestDivisionParZeroLeveException;  
+procedure TestListeVideRetourneFalseAContient;  
 ```
 
 ### 7. Arrangez, Agissez, Affirmez (AAA Pattern)
@@ -863,8 +863,8 @@ procedure TestListeVideRetourneFalseAContient;
 Organisez vos tests selon le pattern AAA :
 
 ```pascal
-procedure TestAjouterClient;
-var
+procedure TestAjouterClient;  
+var  
   Gestionnaire: TGestionnaireClients;
   NombreInitial, NombreApres: Integer;
 begin
@@ -902,10 +902,10 @@ Au moins une assertion a échoué. Le message d'erreur vous indique :
 **Exemple de message d'échec :**
 
 ```
-TestAddition FAILED
-Expected: 5
-But was: 4
-Message: Addition devrait donner 5
+TestAddition FAILED  
+Expected: 5  
+But was: 4  
+Message: Addition devrait donner 5  
 ```
 
 ### Test ignoré (Ignored)
@@ -962,13 +962,13 @@ type
 
 implementation
 
-procedure TTestCalculs.TestAddition;
-begin
+procedure TTestCalculs.TestAddition;  
+begin  
   CheckEquals(4, 2 + 2, 'Addition incorrecte');
 end;
 
-procedure TTestCalculs.TestMultiplication;
-begin
+procedure TTestCalculs.TestMultiplication;  
+begin  
   CheckEquals(6, 2 * 3, 'Multiplication incorrecte');
 end;
 
@@ -1015,8 +1015,8 @@ Si un test vérifie un cas complexe ou un bug spécifique, ajoutez un commentair
 
 ```pascal
 [Test]
-procedure TestCalculMensuel;
-begin
+procedure TestCalculMensuel;  
+begin  
   // Ce test vérifie le correctif pour le bug #1234
   // où les mois de février étaient mal calculés
   Assert.AreEqual(28, CalculerJoursMois(2, 2023));
