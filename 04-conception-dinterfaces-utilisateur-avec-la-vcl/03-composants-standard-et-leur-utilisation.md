@@ -223,13 +223,13 @@ Vous explorerez les composants permettant d'afficher des collections de données
 
 Une fois cette section maîtrisée, vous serez capable de :
 
-✓ **Choisir le composant approprié** pour chaque besoin d'interface
-✓ **Configurer les propriétés** pour obtenir l'apparence et le comportement souhaités
-✓ **Gérer les événements** pour réagir aux actions de l'utilisateur
-✓ **Valider les saisies** et gérer les erreurs élégamment
-✓ **Créer des formulaires complets** avec tous les types de contrôles
-✓ **Afficher et manipuler des collections de données** avec les listes et grilles
-✓ **Organiser le code** avec le système d'actions
+✓ **Choisir le composant approprié** pour chaque besoin d'interface  
+✓ **Configurer les propriétés** pour obtenir l'apparence et le comportement souhaités  
+✓ **Gérer les événements** pour réagir aux actions de l'utilisateur  
+✓ **Valider les saisies** et gérer les erreurs élégamment  
+✓ **Créer des formulaires complets** avec tous les types de contrôles  
+✓ **Afficher et manipuler des collections de données** avec les listes et grilles  
+✓ **Organiser le code** avec le système d'actions  
 ✓ **Suivre les bonnes pratiques** pour créer des interfaces professionnelles et ergonomiques
 
 ## Les composants standards en action

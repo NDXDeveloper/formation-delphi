@@ -104,8 +104,8 @@ end;
 
 **Dans les propriétés :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration conditionnelle en une ligne
   Button1.Enabled := if CheckBox1.Checked then True else False;
 
@@ -121,14 +121,14 @@ end;
 
 **Dans les calculs :**
 ```pascal
-function CalculerRemise(Montant: Double; EstMembre: Boolean): Double;
-begin
+function CalculerRemise(Montant: Double; EstMembre: Boolean): Double;  
+begin  
   // Remise de 10% pour les membres, sinon 5%
   Result := Montant * (if EstMembre then 0.90 else 0.95);
 end;
 
-function ObtenirNote(Score: Integer): string;
-begin
+function ObtenirNote(Score: Integer): string;  
+begin  
   // Notes simplifiées
   Result := if Score >= 90 then 'A'
        else if Score >= 80 then 'B'
@@ -140,8 +140,8 @@ end;
 
 **Dans les affichages :**
 ```pascal
-procedure TForm1.AfficherResultat;
-begin
+procedure TForm1.AfficherResultat;  
+begin  
   // Message pluriel/singulier
   LabelResultat.Caption := Format('Vous avez %d %s',
     [NbItems, if NbItems > 1 then 'éléments' else 'élément']);
@@ -175,9 +175,9 @@ end;
 **✓ À faire :**
 ```pascal
 // Expressions simples et lisibles
-Couleur := if EstActif then clGreen else clRed;
-Message := if Count = 0 then 'Aucun' else IntToStr(Count);
-Visible := if Mode = mEdit then True else False;
+Couleur := if EstActif then clGreen else clRed;  
+Message := if Count = 0 then 'Aucun' else IntToStr(Count);  
+Visible := if Mode = mEdit then True else False;  
 ```
 
 **✗ À éviter :**
@@ -282,8 +282,8 @@ Caractéristiques :
 uses
   Vcl.Themes;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Méthode 1 : Style spécifique
   if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
     TStyleManager.SetStyle('Windows11 Modern Dark');
@@ -292,8 +292,8 @@ begin
   AppliquerStyleSysteme;
 end;
 
-procedure TFormMain.AppliquerStyleSysteme;
-var
+procedure TFormMain.AppliquerStyleSysteme;  
+var  
   StyleName: string;
 begin
   // Détecter le thème Windows
@@ -306,8 +306,8 @@ begin
     TStyleManager.SetStyle(StyleName);
 end;
 
-function SystemUseDarkMode: Boolean;
-var
+function SystemUseDarkMode: Boolean;  
+var  
   Reg: TRegistry;
 begin
   Result := False;
@@ -398,8 +398,8 @@ type
 **3. Points d'arrêt conditionnels avancés**
 
 ```pascal
-procedure TForm1.TraiterListe;
-var
+procedure TForm1.TraiterListe;  
+var  
   i: Integer;
 begin
   for i := 0 to List.Count - 1 do
@@ -435,8 +435,8 @@ end;
 3. Cocher "Utiliser LLDB pour le débogage"
 4. OK
 
-Pour iOS/macOS, LLDB est utilisé automatiquement
-Pour Windows, vous pouvez choisir entre Classic et LLDB
+Pour iOS/macOS, LLDB est utilisé automatiquement  
+Pour Windows, vous pouvez choisir entre Classic et LLDB  
 ```
 
 ---
@@ -519,8 +519,8 @@ uses
   TMS.VCL.Grid,
   TMS.VCL.Controls;
 
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Grid: TTMSFMXGrid;
 begin
   // Utiliser le composant installé
@@ -535,8 +535,8 @@ end;
 ```pascal
 // GetIt peut vérifier automatiquement les mises à jour
 
-procedure TFormMain.VerifierMisesAJour;
-begin
+procedure TFormMain.VerifierMisesAJour;  
+begin  
   // Dans Outils → GetIt Package Manager
   // Onglet "Mises à jour"
   // Liste tous les packages ayant des nouvelles versions
@@ -598,41 +598,41 @@ type
 
 implementation
 
-constructor TClient.Create(const ANom, APrenom, AEmail: string);
-begin
+constructor TClient.Create(const ANom, APrenom, AEmail: string);  
+begin  
   FNom := ANom;
   FPrenom := APrenom;
   FEmail := AEmail;
 end;
 
-procedure TClient.SetNom(const Value: string);
-begin
+procedure TClient.SetNom(const Value: string);  
+begin  
   if Trim(Value) = '' then
     raise Exception.Create('Le nom ne peut pas être vide');
   FNom := Value;
 end;
 
-procedure TClient.SetPrenom(const Value: string);
-begin
+procedure TClient.SetPrenom(const Value: string);  
+begin  
   if Trim(Value) = '' then
     raise Exception.Create('Le prénom ne peut pas être vide');
   FPrenom := Value;
 end;
 
-procedure TClient.SetEmail(const Value: string);
-begin
+procedure TClient.SetEmail(const Value: string);  
+begin  
   if not EstEmailValide then
     raise Exception.Create('Email invalide');
   FEmail := Value;
 end;
 
-function TClient.EstEmailValide: Boolean;
-begin
+function TClient.EstEmailValide: Boolean;  
+begin  
   Result := (Pos('@', FEmail) > 0) and (Pos('.', FEmail) > 0);
 end;
 
-function TClient.NomComplet: string;
-begin
+function TClient.NomComplet: string;  
+begin  
   Result := Format('%s %s', [FPrenom, FNom]);
 end;
 ```
@@ -644,8 +644,8 @@ Code soumis :
 ```
 
 ```pascal
-function BinarySearch(A: array of Integer; X: Integer): Integer;
-var
+function BinarySearch(A: array of Integer; X: Integer): Integer;  
+var  
   L, R, M: Integer;
 begin
   L := Low(A);
@@ -665,8 +665,8 @@ end;
 ```
 
 ```
-Explication IA :
-Cette fonction implémente l'algorithme de recherche binaire.
+Explication IA :  
+Cette fonction implémente l'algorithme de recherche binaire.  
 
 Fonctionnement :
 1. Initialise les bornes gauche (L) et droite (R)
@@ -676,8 +676,8 @@ Fonctionnement :
    - Ajuste les bornes selon le résultat
 3. Retourne l'index si trouvé, -1 sinon
 
-Complexité : O(log n)
-Prérequis : Le tableau doit être trié
+Complexité : O(log n)  
+Prérequis : Le tableau doit être trié  
 ```
 
 **3. Détection de bugs**
@@ -687,8 +687,8 @@ Code avec problème :
 ```
 
 ```pascal
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -708,8 +708,8 @@ Solution recommandée :
 ```
 
 ```pascal
-procedure TForm1.ButtonClick(Sender: TObject);
-var
+procedure TForm1.ButtonClick(Sender: TObject);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -729,8 +729,8 @@ Code à optimiser :
 ```
 
 ```pascal
-function CompterVoyelles(const Texte: string): Integer;
-var
+function CompterVoyelles(const Texte: string): Integer;  
+var  
   i: Integer;
   c: Char;
 begin
@@ -745,8 +745,8 @@ end;
 ```
 
 ```
-Suggestion IA :
-Cette fonction peut être optimisée :
+Suggestion IA :  
+Cette fonction peut être optimisée :  
 
 1. Appel de LowerCase à chaque itération (coûteux)
 2. Comparaisons multiples
@@ -755,8 +755,8 @@ Version optimisée :
 ```
 
 ```pascal
-function CompterVoyelles(const Texte: string): Integer;
-const
+function CompterVoyelles(const Texte: string): Integer;  
+const  
   VOYELLES = ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
 var
   c: Char;
@@ -783,8 +783,8 @@ end;
 **Nouvelles propriétés :**
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Style moderne
   Button1.StyleElements := [seFont, seClient, seBorder];
 
@@ -809,8 +809,8 @@ end;
 **Nouvelles fonctionnalités :**
 
 ```pascal
-procedure TForm1.ConfigurerEdit;
-begin
+procedure TForm1.ConfigurerEdit;  
+begin  
   // Texte d'indication (placeholder)
   Edit1.TextHint := 'Entrez votre nom...';
   Edit1.TextHintColor := clGray;
@@ -831,8 +831,8 @@ begin
   Edit1.RightButton.OnClick := EditClearClick;
 end;
 
-procedure TForm1.EditClearClick(Sender: TObject);
-begin
+procedure TForm1.EditClearClick(Sender: TObject);  
+begin  
   Edit1.Clear;
   Edit1.SetFocus;
 end;
@@ -843,8 +843,8 @@ end;
 **Performances accrues :**
 
 ```pascal
-procedure TForm1.RemplirListeOptimisee;
-var
+procedure TForm1.RemplirListeOptimisee;  
+var  
   i: Integer;
   Item: TListItem;
 begin
@@ -869,8 +869,8 @@ begin
 end;
 
 // Nouvelle propriété : Groupes améliorés
-procedure TForm1.ConfigurerGroupes;
-begin
+procedure TForm1.ConfigurerGroupes;  
+begin  
   ListView1.GroupView := True;
   ListView1.Groups.Clear;
 
@@ -886,8 +886,8 @@ end;
 ### TTreeView modernisé
 
 ```pascal
-procedure TForm1.ConfigurerTreeView;
-begin
+procedure TForm1.ConfigurerTreeView;  
+begin  
   // Style moderne
   TreeView1.StyleElements := [seFont, seClient, seBorder];
 
@@ -902,8 +902,8 @@ begin
   RechercherDansArbre('Recherche');
 end;
 
-procedure TForm1.RechercherDansArbre(const Texte: string);
-var
+procedure TForm1.RechercherDansArbre(const Texte: string);  
+var  
   Node: TTreeNode;
 begin
   // Delphi 13 : Méthode de recherche optimisée
@@ -919,8 +919,8 @@ end;
 ### TPanel avec effets
 
 ```pascal
-procedure TForm1.CreerPanelModerne;
-begin
+procedure TForm1.CreerPanelModerne;  
+begin  
   // Nouveautés Delphi 13
   Panel1.DoubleBuffered := True; // Amélioration du rendu
   Panel1.ShowCaption := True;
@@ -943,8 +943,8 @@ end;
 
 ```pascal
 // Delphi 13 : Pool de connexions amélioré
-procedure TDataModule1.ConfigurerConnexion;
-begin
+procedure TDataModule1.ConfigurerConnexion;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
   FDConnection1.Params.Add('Server=localhost');
@@ -965,8 +965,8 @@ end;
 ### Requêtes asynchrones améliorées
 
 ```pascal
-procedure TForm1.ExecuterRequeteAsync;
-begin
+procedure TForm1.ExecuterRequeteAsync;  
+begin  
   // Delphi 13 : Performances asynchrones améliorées
   FDQuery1.SQL.Text := 'SELECT * FROM customers WHERE country = :country';
   FDQuery1.ParamByName('country').AsString := 'France';
@@ -997,8 +997,8 @@ end;
 uses
   FireDAC.Comp.Client, FireDAC.Stan.Param, System.JSON;
 
-procedure TForm1.ExporterEnJSON;
-var
+procedure TForm1.ExporterEnJSON;  
+var  
   JSONArray: TJSONArray;
 begin
   // Delphi 13 : Conversion dataset → JSON optimisée
@@ -1009,8 +1009,8 @@ begin
   JSONArray.Free;
 end;
 
-procedure TForm1.ImporterDepuisJSON;
-var
+procedure TForm1.ImporterDepuisJSON;  
+var  
   JSONText: string;
 begin
   JSONText := Memo1.Lines.Text;
@@ -1072,16 +1072,16 @@ Raccourcis améliorés :
 ```pascal
 // Delphi 13 : Détection de problèmes en temps réel
 
-procedure Test;
-var
+procedure Test;  
+var  
   x: Integer;
 begin
   x := 10;
   // ⚠️ Variable assignée mais jamais utilisée
 end;
 
-procedure Test2;
-var
+procedure Test2;  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -1135,8 +1135,8 @@ Recherche dans les fichiers (Ctrl+Shift+F) :
 // 1. Optimisation des strings
 // Le compilateur détecte et optimise les opérations sur strings
 
-function ConcatenerStrings(A, B, C: string): string;
-begin
+function ConcatenerStrings(A, B, C: string): string;  
+begin  
   // Delphi 13 : Optimisé automatiquement
   Result := A + B + C;
   // Ancien : Plusieurs allocations
@@ -1146,8 +1146,8 @@ end;
 // 2. Inline automatique étendu
 // Plus de fonctions sont automatiquement inlinées
 
-function Carre(X: Integer): Integer; inline;
-begin
+function Carre(X: Integer): Integer; inline;  
+begin  
   Result := X * X;
 end;
 
@@ -1156,8 +1156,8 @@ end;
 // 3. Optimisation des boucles
 // Détection et optimisation de patterns courants
 
-procedure Traiter(const Liste: TArray<Integer>);
-var
+procedure Traiter(const Liste: TArray<Integer>);  
+var  
   i, Total: Integer;
 begin
   Total := 0;
@@ -1173,9 +1173,9 @@ end;
 ```
 Améliorations moyennes du temps de compilation :
 
-Petit projet (< 100 units) : -10%
-Projet moyen (100-500 units) : -20%
-Grand projet (> 500 units) : -30%
+Petit projet (< 100 units) : -10%  
+Projet moyen (100-500 units) : -20%  
+Grand projet (> 500 units) : -30%  
 
 Compilation incrémentale améliorée :
 - Détection plus fine des dépendances
@@ -1234,8 +1234,8 @@ Status := if Validated then 'OK' else 'KO';
 TStyleManager.SetStyle('Windows11 Modern Dark');
 
 // 3. Nouvelles propriétés des composants
-Button1.ImageAlignment := iaLeft;
-Edit1.TextHint := 'Placeholder';
+Button1.ImageAlignment := iaLeft;  
+Edit1.TextHint := 'Placeholder';  
 
 // Pas de changement breaking !
 ```
@@ -1261,8 +1261,8 @@ Result := if (A and B) or (C and not D) then
 ### 2. Profiter des nouveaux styles
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Détecter et appliquer le thème système
   AppliquerThemeSysteme;
 
@@ -1364,15 +1364,15 @@ Delphi 13 Florence représente une évolution majeure de la VCL avec des amélio
 
 ### Points clés à retenir
 
-✅ **Opérateur ternaire** - Code plus concis et lisible
-✅ **Styles Windows 11** - Interface moderne et native
-✅ **LLDB v12** - Débogage plus puissant
-✅ **GetIt amélioré** - Gestion de packages simplifiée
-✅ **Companion IA** - Assistance intelligente
-✅ **Composants VCL** - Nouvelles propriétés et performances
-✅ **FireDAC** - Connexions et async optimisés
-✅ **IDE** - Productivité accrue
-✅ **Performance** - Compilation et exécution plus rapides
+✅ **Opérateur ternaire** - Code plus concis et lisible  
+✅ **Styles Windows 11** - Interface moderne et native  
+✅ **LLDB v12** - Débogage plus puissant  
+✅ **GetIt amélioré** - Gestion de packages simplifiée  
+✅ **Companion IA** - Assistance intelligente  
+✅ **Composants VCL** - Nouvelles propriétés et performances  
+✅ **FireDAC** - Connexions et async optimisés  
+✅ **IDE** - Productivité accrue  
+✅ **Performance** - Compilation et exécution plus rapides  
 ✅ **Compatibilité** - Migration facile depuis Delphi 12
 
 ### Prochaines étapes

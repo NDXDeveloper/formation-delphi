@@ -178,8 +178,8 @@ C'est la **première étape**, quand le formulaire est créé en mémoire mais n
 - Établir des connexions
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Code d'initialisation ici
   Caption := 'Bienvenue !';
   // Charger les paramètres, connecter à la BD, etc.
@@ -212,8 +212,8 @@ Déclenché quand le formulaire **devient invisible** (mais n'est pas détruit).
 **OnCloseQuery** : Déclenché quand l'utilisateur tente de fermer le formulaire. Vous pouvez annuler la fermeture ici.
 
 ```pascal
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);  
+begin  
   // Demander confirmation
   CanClose := MessageDlg('Voulez-vous vraiment quitter ?',
                           mtConfirmation, [mbYes, mbNo], 0) = mrYes;
@@ -230,8 +230,8 @@ C'est la **dernière étape**, quand le formulaire est libéré de la mémoire. 
 - Sauvegarder des paramètres
 
 ```pascal
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
   // Libérer les ressources
   // Fermer les connexions
   // Sauvegarder les paramètres
@@ -269,8 +269,8 @@ Il existe deux méthodes principales pour afficher un formulaire :
 Le formulaire **bloque** l'accès aux autres fenêtres de l'application tant qu'il n'est pas fermé. Idéal pour les dialogues.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Form2: TForm2;
 begin
   Form2 := TForm2.Create(Self);
@@ -291,8 +291,8 @@ end;
 Le formulaire s'affiche mais l'utilisateur peut **continuer à interagir** avec les autres fenêtres. Idéal pour les fenêtres d'outils ou de visualisation.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Form2.Show;  // Affiche Form2 si déjà créé
 end;
 ```
@@ -356,8 +356,8 @@ Donnez des **noms significatifs** à vos formulaires plutôt que de garder Form1
 Pour les formulaires modaux, utilisez toujours un bloc `try...finally` :
 
 ```pascal
-Form2 := TForm2.Create(Self);
-try
+Form2 := TForm2.Create(Self);  
+try  
   Form2.ShowModal;
 finally
   Form2.Free;

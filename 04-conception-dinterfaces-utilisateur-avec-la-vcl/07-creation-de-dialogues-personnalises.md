@@ -149,8 +149,8 @@ Dans votre formulaire principal :
 uses
   FormDialogue; // Ajouter dans la clause uses
 
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
-var
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
+var  
   Dialogue: TFormDialogue;
 begin
   // Créer l'instance du dialogue
@@ -177,8 +177,8 @@ end;
 ### Méthode alternative avec FreeOnRelease
 
 ```pascal
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
-begin
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
+begin  
   with TFormDialogue.Create(Self) do
   try
     if ShowModal = mrOk then
@@ -223,18 +223,18 @@ type
 
 implementation
 
-function TFormDialogue.GetNomUtilisateur: string;
-begin
+function TFormDialogue.GetNomUtilisateur: string;  
+begin  
   Result := EditNom.Text;
 end;
 
-function TFormDialogue.GetMotDePasse: string;
-begin
+function TFormDialogue.GetMotDePasse: string;  
+begin  
   Result := EditMotDePasse.Text;
 end;
 
-function TFormDialogue.GetSeSouvenir: Boolean;
-begin
+function TFormDialogue.GetSeSouvenir: Boolean;  
+begin  
   Result := CheckBoxSeSouvenir.Checked;
 end;
 ```
@@ -242,8 +242,8 @@ end;
 **Utilisation dans le formulaire principal :**
 
 ```pascal
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
-var
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
+var  
   Dialogue: TFormDialogue;
 begin
   Dialogue := TFormDialogue.Create(Self);
@@ -280,8 +280,8 @@ type
 
 implementation
 
-procedure TFormDialogue.Initialiser(const NomParDefaut: string);
-begin
+procedure TFormDialogue.Initialiser(const NomParDefaut: string);  
+begin  
   EditNom.Text := NomParDefaut;
   EditMotDePasse.Clear;
   CheckBoxSeSouvenir.Checked := False;
@@ -292,8 +292,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
-var
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
+var  
   Dialogue: TFormDialogue;
 begin
   Dialogue := TFormDialogue.Create(Self);
@@ -351,8 +351,8 @@ end;
 **Utilisation simplifiée :**
 
 ```pascal
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
-var
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
+var  
   Nom, MotDePasse: string;
   SeSouvenir: Boolean;
 begin
@@ -373,8 +373,8 @@ end;
 Empêchez la fermeture du dialogue si les données sont invalides :
 
 ```pascal
-procedure TFormDialogue.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormDialogue.ButtonOKClick(Sender: TObject);  
+begin  
   // Valider le nom d'utilisateur
   if Trim(EditNom.Text) = '' then
   begin
@@ -401,15 +401,15 @@ end;
 ### Validation en temps réel
 
 ```pascal
-procedure TFormDialogue.EditNomChange(Sender: TObject);
-begin
+procedure TFormDialogue.EditNomChange(Sender: TObject);  
+begin  
   // Activer/désactiver le bouton OK selon la validité
   ButtonOK.Enabled := (Trim(EditNom.Text) <> '') and
                       (Length(EditMotDePasse.Text) >= 6);
 end;
 
-procedure TFormDialogue.EditMotDePasseChange(Sender: TObject);
-begin
+procedure TFormDialogue.EditMotDePasseChange(Sender: TObject);  
+begin  
   ButtonOK.Enabled := (Trim(EditNom.Text) <> '') and
                       (Length(EditMotDePasse.Text) >= 6);
 
@@ -422,8 +422,8 @@ begin
     LabelForce.Caption := 'Fort';
 end;
 
-procedure TFormDialogue.FormCreate(Sender: TObject);
-begin
+procedure TFormDialogue.FormCreate(Sender: TObject);  
+begin  
   // Désactiver le bouton OK au départ
   ButtonOK.Enabled := False;
 end;
@@ -434,8 +434,8 @@ end;
 Pour une validation plus complexe :
 
 ```pascal
-procedure TFormDialogue.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
+procedure TFormDialogue.FormCloseQuery(Sender: TObject; var CanClose: Boolean);  
+begin  
   // Ne valider que si l'utilisateur a cliqué sur OK
   if ModalResult = mrOk then
   begin
@@ -453,8 +453,8 @@ begin
   end;
 end;
 
-function TFormDialogue.ValiderDonnees: Boolean;
-begin
+function TFormDialogue.ValiderDonnees: Boolean;  
+begin  
   Result := True;
 
   // Validation du nom
@@ -504,8 +504,8 @@ type
 
 implementation
 
-procedure TFormPrincipal.AfficherDialogueNonModal;
-begin
+procedure TFormPrincipal.AfficherDialogueNonModal;  
+begin  
   // Créer si nécessaire
   if not Assigned(FDialogueNonModal) then
   begin
@@ -525,8 +525,8 @@ begin
   FDialogueNonModal := nil;
 end;
 
-procedure TFormPrincipal.FormDestroy(Sender: TObject);
-begin
+procedure TFormPrincipal.FormDestroy(Sender: TObject);  
+begin  
   // Nettoyer si le dialogue est encore ouvert
   if Assigned(FDialogueNonModal) then
     FDialogueNonModal.Free;
@@ -547,15 +547,15 @@ type
   end;
 
 // Dans le dialogue
-procedure TFormDialogue.ButtonAppliquerClick(Sender: TObject);
-begin
+procedure TFormDialogue.ButtonAppliquerClick(Sender: TObject);  
+begin  
   if Assigned(FFormParent) then
     FFormParent.AppliquerParametres(EditNom.Text, CheckBox1.Checked);
 end;
 
 // Dans le formulaire principal
-procedure TFormPrincipal.AfficherDialogueNonModal;
-begin
+procedure TFormPrincipal.AfficherDialogueNonModal;  
+begin  
   if not Assigned(FDialogueNonModal) then
   begin
     FDialogueNonModal := TFormDialogue.Create(Self);
@@ -600,8 +600,8 @@ type
 
 implementation
 
-procedure TFormSelectionProduits.ChargerProduits(const Produits: TStringList);
-var
+procedure TFormSelectionProduits.ChargerProduits(const Produits: TStringList);  
+var  
   i: Integer;
 begin
   CheckListBox1.Items.Clear;
@@ -624,8 +624,8 @@ begin
   end;
 end;
 
-procedure TFormSelectionProduits.MettreAJourCompteur;
-var
+procedure TFormSelectionProduits.MettreAJourCompteur;  
+var  
   i, Compte: Integer;
 begin
   Compte := 0;
@@ -639,8 +639,8 @@ begin
   ButtonOK.Enabled := Compte > 0;
 end;
 
-procedure TFormSelectionProduits.ButtonToutSelectionnerClick(Sender: TObject);
-var
+procedure TFormSelectionProduits.ButtonToutSelectionnerClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 0 to CheckListBox1.Items.Count - 1 do
@@ -648,8 +648,8 @@ begin
   MettreAJourCompteur;
 end;
 
-procedure TFormSelectionProduits.ButtonToutDeselectionnerClick(Sender: TObject);
-var
+procedure TFormSelectionProduits.ButtonToutDeselectionnerClick(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 0 to CheckListBox1.Items.Count - 1 do
@@ -657,8 +657,8 @@ begin
   MettreAJourCompteur;
 end;
 
-procedure TFormSelectionProduits.CheckListBox1ClickCheck(Sender: TObject);
-begin
+procedure TFormSelectionProduits.CheckListBox1ClickCheck(Sender: TObject);  
+begin  
   MettreAJourCompteur;
 end;
 ```
@@ -666,8 +666,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TFormPrincipal.ButtonSelectionnerProduitsClick(Sender: TObject);
-var
+procedure TFormPrincipal.ButtonSelectionnerProduitsClick(Sender: TObject);  
+var  
   Dialogue: TFormSelectionProduits;
   ListeProduits, ProduitsSelectionnes: TStringList;
 begin
@@ -722,8 +722,8 @@ type
 
 implementation
 
-procedure TFormProgression.Initialiser(Max: Integer);
-begin
+procedure TFormProgression.Initialiser(Max: Integer);  
+begin  
   FAnnule := False;
   ProgressBar1.Min := 0;
   ProgressBar1.Max := Max;
@@ -739,8 +739,8 @@ begin
   Application.ProcessMessages; // Permettre la mise à jour de l'interface
 end;
 
-procedure TFormProgression.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TFormProgression.ButtonAnnulerClick(Sender: TObject);  
+begin  
   if MessageDlg('Voulez-vous vraiment annuler l''opération ?',
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
@@ -754,8 +754,8 @@ end;
 **Utilisation :**
 
 ```pascal
-procedure TFormPrincipal.TraiterFichiersAvecProgression;
-var
+procedure TFormPrincipal.TraiterFichiersAvecProgression;  
+var  
   Dialogue: TFormProgression;
   i: Integer;
 begin
@@ -816,15 +816,17 @@ type
 
 implementation
 
-procedure TFormAssistant.Initialiser;
-begin
+procedure TFormAssistant.Initialiser;  
+begin  
   PageControl1.ActivePageIndex := 0;
-  PageControl1.TabVisible := False; // Masquer les onglets
+  // Masquer les onglets pour un aspect assistant
+  for var I := 0 to PageControl1.PageCount - 1 do
+    PageControl1.Pages[I].TabVisible := False;
   MettreAJourBoutons;
 end;
 
-procedure TFormAssistant.MettreAJourBoutons;
-var
+procedure TFormAssistant.MettreAJourBoutons;  
+var  
   PageActuelle: Integer;
 begin
   PageActuelle := PageControl1.ActivePageIndex;
@@ -838,15 +840,15 @@ begin
   // Bouton Terminer
   ButtonTerminer.Visible := PageActuelle = PageControl1.PageCount - 1;
 
-  // Changer le texte du bouton Suivant
+  // Changer le texte du bouton Suivant sur l'avant-dernière page
   if PageActuelle = PageControl1.PageCount - 2 then
-    ButtonSuivant.Caption := 'Suivant >'
+    ButtonSuivant.Caption := 'Terminer'
   else
     ButtonSuivant.Caption := 'Suivant >';
 end;
 
-procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonSuivantClick(Sender: TObject);  
+begin  
   // Valider la page actuelle avant de continuer
   if not ValiderPageActuelle then
   begin
@@ -862,8 +864,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.ButtonPrecedentClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonPrecedentClick(Sender: TObject);  
+begin  
   // Revenir à la page précédente
   if PageControl1.ActivePageIndex > 0 then
   begin
@@ -872,8 +874,8 @@ begin
   end;
 end;
 
-function TFormAssistant.ValiderPageActuelle: Boolean;
-begin
+function TFormAssistant.ValiderPageActuelle: Boolean;  
+begin  
   Result := True;
 
   case PageControl1.ActivePageIndex of
@@ -895,8 +897,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.ButtonTerminerClick(Sender: TObject);
-begin
+procedure TFormAssistant.ButtonTerminerClick(Sender: TObject);  
+begin  
   // Valider une dernière fois
   if not ValiderPageActuelle then
   begin
@@ -912,8 +914,8 @@ begin
   end;
 end;
 
-procedure TFormAssistant.FormCreate(Sender: TObject);
-begin
+procedure TFormAssistant.FormCreate(Sender: TObject);  
+begin  
   Initialiser;
 end;
 ```
@@ -921,8 +923,8 @@ end;
 ### Page de résumé dans l'assistant
 
 ```pascal
-procedure TFormAssistant.PageControl1Change(Sender: TObject);
-begin
+procedure TFormAssistant.PageControl1Change(Sender: TObject);  
+begin  
   MettreAJourBoutons;
 
   // Si on arrive sur la page de confirmation, afficher un résumé
@@ -930,8 +932,8 @@ begin
     AfficherResume;
 end;
 
-procedure TFormAssistant.AfficherResume;
-begin
+procedure TFormAssistant.AfficherResume;  
+begin  
   MemoResume.Lines.Clear;
   MemoResume.Lines.Add('=== RÉSUMÉ DE LA CONFIGURATION ===');
   MemoResume.Lines.Add('');
@@ -971,15 +973,15 @@ type
 
 implementation
 
-procedure TFormParametres.FormCreate(Sender: TObject);
-begin
+procedure TFormParametres.FormCreate(Sender: TObject);  
+begin  
   FModifie := False;
   ButtonAppliquer.Enabled := False;
   ChargerParametres;
 end;
 
-procedure TFormParametres.ChargerParametres;
-begin
+procedure TFormParametres.ChargerParametres;  
+begin  
   // Charger les paramètres depuis un fichier INI ou registre
   EditNom.Text := LireParametre('Nom', 'Utilisateur');
   CheckBoxNotifications.Checked := LireParametreBool('Notifications', True);
@@ -987,8 +989,8 @@ begin
   // etc.
 end;
 
-procedure TFormParametres.EnregistrerParametres;
-begin
+procedure TFormParametres.EnregistrerParametres;  
+begin  
   // Enregistrer les paramètres
   EcrireParametre('Nom', EditNom.Text);
   EcrireParametreBool('Notifications', CheckBoxNotifications.Checked);
@@ -999,21 +1001,21 @@ begin
   ButtonAppliquer.Enabled := False;
 end;
 
-procedure TFormParametres.ControleChange(Sender: TObject);
-begin
+procedure TFormParametres.ControleChange(Sender: TObject);  
+begin  
   // Marquer comme modifié
   FModifie := True;
   ButtonAppliquer.Enabled := True;
 end;
 
-procedure TFormParametres.ButtonAppliquerClick(Sender: TObject);
-begin
+procedure TFormParametres.ButtonAppliquerClick(Sender: TObject);  
+begin  
   EnregistrerParametres;
   ShowMessage('Paramètres enregistrés');
 end;
 
-procedure TFormParametres.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormParametres.ButtonOKClick(Sender: TObject);  
+begin  
   if FModifie then
     EnregistrerParametres;
   ModalResult := mrOk;
@@ -1049,8 +1051,8 @@ end;
 ### 1. Taille et positionnement
 
 ```pascal
-procedure TFormDialogue.FormCreate(Sender: TObject);
-begin
+procedure TFormDialogue.FormCreate(Sender: TObject);  
+begin  
   // Taille appropriée
   Width := 450;
   Height := 300;
@@ -1069,8 +1071,8 @@ end;
 ### 2. Focus initial
 
 ```pascal
-procedure TFormDialogue.FormShow(Sender: TObject);
-begin
+procedure TFormDialogue.FormShow(Sender: TObject);  
+begin  
   // Placer le focus sur le premier champ
   EditNom.SetFocus;
 
@@ -1107,8 +1109,8 @@ end;
 ### 4. Messages d'aide
 
 ```pascal
-procedure TFormDialogue.LabelAideClick(Sender: TObject);
-begin
+procedure TFormDialogue.LabelAideClick(Sender: TObject);  
+begin  
   ShowMessage(
     'Nom d''utilisateur : 3-20 caractères' + #13#10 +
     'Mot de passe : minimum 6 caractères' + #13#10 +
@@ -1117,8 +1119,8 @@ begin
 end;
 
 // Ou utiliser des Hints
-procedure TFormDialogue.FormCreate(Sender: TObject);
-begin
+procedure TFormDialogue.FormCreate(Sender: TObject);  
+begin  
   ShowHint := True;
   EditNom.Hint := 'Entrez votre nom d''utilisateur (3-20 caractères)';
   EditMotDePasse.Hint := 'Minimum 6 caractères, sensible à la casse';
@@ -1133,8 +1135,8 @@ const
   MARGE = 10;
   ESPACEMENT = 5;
 
-procedure TFormDialogue.AlignerControles;
-begin
+procedure TFormDialogue.AlignerControles;  
+begin  
   Label1.Left := MARGE;
   Label1.Top := MARGE;
 
@@ -1152,8 +1154,8 @@ end;
 
 ```pascal
 // Toujours libérer les dialogues
-procedure TFormPrincipal.AfficherDialogue;
-var
+procedure TFormPrincipal.AfficherDialogue;  
+var  
   Dialogue: TFormDialogue;
 begin
   Dialogue := TFormDialogue.Create(Self);
@@ -1166,8 +1168,8 @@ begin
 end;
 
 // Pour les dialogues non-modaux
-procedure TFormPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TFormPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   Action := caFree; // Libération automatique
 end;
 ```
@@ -1176,8 +1178,8 @@ end;
 
 ```pascal
 // Préparer pour la traduction
-procedure TFormDialogue.FormCreate(Sender: TObject);
-begin
+procedure TFormDialogue.FormCreate(Sender: TObject);  
+begin  
   Caption := GetText('DLG_LOGIN_CAPTION', 'Connexion');
   LabelNom.Caption := GetText('DLG_LOGIN_USERNAME', 'Nom d''utilisateur');
   LabelMDP.Caption := GetText('DLG_LOGIN_PASSWORD', 'Mot de passe');
@@ -1223,8 +1225,8 @@ type
 ### Dialogue "À propos"
 
 ```pascal
-procedure TFormAPropos.FormCreate(Sender: TObject);
-begin
+procedure TFormAPropos.FormCreate(Sender: TObject);  
+begin  
   BorderStyle := bsDialog;
   Position := poScreenCenter;
 

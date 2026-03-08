@@ -94,9 +94,9 @@ Aide
 Utilisez le caractère `&` avant une lettre pour créer un raccourci Alt :
 
 ```pascal
-MenuFichier.Caption := '&Fichier';      // Alt+F
-MenuOuvrir.Caption := '&Ouvrir...';     // Alt+O
-MenuEnregistrer.Caption := '&Enregistrer'; // Alt+E
+MenuFichier.Caption := '&Fichier';      // Alt+F  
+MenuOuvrir.Caption := '&Ouvrir...';     // Alt+O  
+MenuEnregistrer.Caption := '&Enregistrer'; // Alt+E  
 ```
 
 #### Raccourcis clavier (ShortCut)
@@ -127,14 +127,14 @@ L'événement le plus important est **OnClick**, déclenché quand l'utilisateur
 // Double-cliquez sur l'élément de menu dans le concepteur
 // pour créer automatiquement la procédure OnClick
 
-procedure TForm1.MenuFichierNouveauClick(Sender: TObject);
-begin
+procedure TForm1.MenuFichierNouveauClick(Sender: TObject);  
+begin  
   ShowMessage('Création d''un nouveau document');
   // Votre code ici
 end;
 
-procedure TForm1.MenuFichierOuvrirClick(Sender: TObject);
-begin
+procedure TForm1.MenuFichierOuvrirClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     // Charger le fichier sélectionné
@@ -142,8 +142,8 @@ begin
   end;
 end;
 
-procedure TForm1.MenuFichierEnregistrerClick(Sender: TObject);
-begin
+procedure TForm1.MenuFichierEnregistrerClick(Sender: TObject);  
+begin  
   if SaveDialog1.Execute then
   begin
     Memo1.Lines.SaveToFile(SaveDialog1.FileName);
@@ -151,8 +151,8 @@ begin
   end;
 end;
 
-procedure TForm1.MenuFichierQuitterClick(Sender: TObject);
-begin
+procedure TForm1.MenuFichierQuitterClick(Sender: TObject);  
+begin  
   Close; // Ferme l'application
 end;
 ```
@@ -184,30 +184,30 @@ MenuAdmin.Visible := False;
 ### Exemple complet : Menu avec gestion d'état
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Initialiser l'état des menus
   MenuFichierEnregistrer.Enabled := False; // Pas de document ouvert
   MenuEditionAnnuler.Enabled := False;
   MenuEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
-procedure TForm1.MenuFichierNouveauClick(Sender: TObject);
-begin
+procedure TForm1.MenuFichierNouveauClick(Sender: TObject);  
+begin  
   Memo1.Clear;
   MenuFichierEnregistrer.Enabled := True; // Activer l'enregistrement
   Caption := 'Mon Application - Nouveau document';
 end;
 
-procedure TForm1.MenuEditionAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.MenuEditionAnnulerClick(Sender: TObject);  
+begin  
   Memo1.Undo;
   // Désactiver si plus d'annulation possible
   MenuEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
-procedure TForm1.Memo1Change(Sender: TObject);
-begin
+procedure TForm1.Memo1Change(Sender: TObject);  
+begin  
   // Activer "Annuler" si le contenu a changé
   MenuEditionAnnuler.Enabled := Memo1.Modified;
 end;
@@ -250,35 +250,35 @@ Dans l'Inspecteur d'objets du composant cible :
 // ────────
 // - Tout sélectionner
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Le menu contextuel est déjà lié via la propriété PopupMenu
   // du Memo1 en mode conception
 end;
 
-procedure TForm1.PopupCoupeClick(Sender: TObject);
-begin
+procedure TForm1.PopupCoupeClick(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
 end;
 
-procedure TForm1.PopupCopierClick(Sender: TObject);
-begin
+procedure TForm1.PopupCopierClick(Sender: TObject);  
+begin  
   Memo1.CopyToClipboard;
 end;
 
-procedure TForm1.PopupCollerClick(Sender: TObject);
-begin
+procedure TForm1.PopupCollerClick(Sender: TObject);  
+begin  
   Memo1.PasteFromClipboard;
 end;
 
-procedure TForm1.PopupToutSelectionnerClick(Sender: TObject);
-begin
+procedure TForm1.PopupToutSelectionnerClick(Sender: TObject);  
+begin  
   Memo1.SelectAll;
 end;
 
 // Événement déclenché avant l'affichage du menu
-procedure TForm1.PopupMenu1Popup(Sender: TObject);
-begin
+procedure TForm1.PopupMenu1Popup(Sender: TObject);  
+begin  
   // Activer/désactiver les éléments selon le contexte
   PopupCouper.Enabled := Memo1.SelLength > 0;
   PopupCopier.Enabled := Memo1.SelLength > 0;
@@ -289,8 +289,8 @@ end;
 ### Afficher un menu contextuel par code
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   P: TPoint;
 begin
   // Obtenir la position de la souris
@@ -353,8 +353,8 @@ Vous aurez besoin de :
 
 **Méthode 2 : Par code**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   BoutonNouveau, BoutonOuvrir, BoutonEnregistrer: TToolButton;
   Separateur: TToolButton;
 begin
@@ -429,8 +429,8 @@ end;
 ### Exemple complet : Barre d'outils avec états
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration de la barre d'outils
   ToolBar1.ShowCaptions := False;
   ToolBar1.ShowHint := True;
@@ -441,28 +441,28 @@ begin
   ToolButtonAnnuler.Enabled := False;
 end;
 
-procedure TForm1.ToolButtonNouveauClick(Sender: TObject);
-begin
+procedure TForm1.ToolButtonNouveauClick(Sender: TObject);  
+begin  
   Memo1.Clear;
   ToolButtonEnregistrer.Enabled := True;
   Caption := 'Mon Éditeur - Nouveau document';
 end;
 
-procedure TForm1.ToolButtonAnnulerClick(Sender: TObject);
-begin
+procedure TForm1.ToolButtonAnnulerClick(Sender: TObject);  
+begin  
   Memo1.Undo;
   ToolButtonAnnuler.Enabled := Memo1.CanUndo;
 end;
 
 // Bouton à bascule pour afficher/masquer une règle
-procedure TForm1.ToolButtonRegleClick(Sender: TObject);
-begin
+procedure TForm1.ToolButtonRegleClick(Sender: TObject);  
+begin  
   Panel1.Visible := ToolButtonRegle.Down;
 end;
 
 // Bouton avec menu déroulant
-procedure TForm1.ToolButtonZoomClick(Sender: TObject);
-begin
+procedure TForm1.ToolButtonZoomClick(Sender: TObject);  
+begin  
   // Le menu se déclenche automatiquement
   // si DropdownMenu est défini
 end;
@@ -514,8 +514,8 @@ Une **ActionList** est un composant puissant qui centralise la gestion des actio
 ### Exemple complet avec ActionList
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Associer l'ImageList aux actions
   ActionList1.Images := ImageList1;
 
@@ -525,8 +525,8 @@ begin
 end;
 
 // Action Nouveau
-procedure TForm1.ActFichierNouveauExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierNouveauExecute(Sender: TObject);  
+begin  
   if Memo1.Modified then
   begin
     case MessageDlg('Voulez-vous enregistrer les modifications ?',
@@ -543,8 +543,8 @@ begin
 end;
 
 // Action Ouvrir
-procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     Memo1.Lines.LoadFromFile(OpenDialog1.FileName);
@@ -554,8 +554,8 @@ begin
 end;
 
 // Action Enregistrer
-procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);  
+begin  
   if SaveDialog1.FileName = '' then
   begin
     if SaveDialog1.Execute then
@@ -573,41 +573,41 @@ begin
 end;
 
 // Gestion automatique de l'état
-procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);  
+begin  
   // OnUpdate est appelé régulièrement
   // pour mettre à jour l'état de l'action
   ActFichierEnregistrer.Enabled := Memo1.Modified;
 end;
 
-procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);  
+begin  
   ActEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
-procedure TForm1.ActEditionCollerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionCollerUpdate(Sender: TObject);  
+begin  
   ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
 // Actions d'édition
-procedure TForm1.ActEditionCoupeExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCoupeExecute(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
 end;
 
-procedure TForm1.ActEditionCopierExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCopierExecute(Sender: TObject);  
+begin  
   Memo1.CopyToClipboard;
 end;
 
-procedure TForm1.ActEditionCollerExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCollerExecute(Sender: TObject);  
+begin  
   Memo1.PasteFromClipboard;
 end;
 
-procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);  
+begin  
   Memo1.Undo;
 end;
 ```
@@ -639,10 +639,10 @@ Vous pouvez organiser vos actions en catégories :
 
 ```pascal
 // Définir la catégorie d'une action
-ActFichierNouveau.Category := 'Fichier';
-ActFichierOuvrir.Category := 'Fichier';
-ActEditionCouper.Category := 'Edition';
-ActEditionCopier.Category := 'Edition';
+ActFichierNouveau.Category := 'Fichier';  
+ActFichierOuvrir.Category := 'Fichier';  
+ActEditionCouper.Category := 'Edition';  
+ActEditionCopier.Category := 'Edition';  
 ```
 
 ---
@@ -739,8 +739,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration
   ActionList1.Images := ImageList1;
   Memo1.Clear;
@@ -753,8 +753,8 @@ begin
   SaveDialog1.DefaultExt := 'txt';
 end;
 
-procedure TForm1.MettreAJourTitre;
-begin
+procedure TForm1.MettreAJourTitre;  
+begin  
   if FNomFichier = '' then
     Caption := 'Éditeur de texte - Sans titre'
   else
@@ -764,8 +764,8 @@ begin
     Caption := Caption + ' *';
 end;
 
-procedure TForm1.ActFichierNouveauExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierNouveauExecute(Sender: TObject);  
+begin  
   if Memo1.Modified then
   begin
     case MessageDlg('Enregistrer les modifications ?',
@@ -782,8 +782,8 @@ begin
   StatusBar1.SimpleText := 'Nouveau document créé';
 end;
 
-procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierOuvrirExecute(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     Memo1.Lines.LoadFromFile(OpenDialog1.FileName);
@@ -794,8 +794,8 @@ begin
   end;
 end;
 
-procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierEnregistrerExecute(Sender: TObject);  
+begin  
   if FNomFichier = '' then
   begin
     if SaveDialog1.Execute then
@@ -810,67 +810,67 @@ begin
   StatusBar1.SimpleText := 'Fichier enregistré : ' + FNomFichier;
 end;
 
-procedure TForm1.ActFichierQuitterExecute(Sender: TObject);
-begin
+procedure TForm1.ActFichierQuitterExecute(Sender: TObject);  
+begin  
   Close;
 end;
 
-procedure TForm1.ActEditionCoupeExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCoupeExecute(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
   StatusBar1.SimpleText := 'Texte coupé';
 end;
 
-procedure TForm1.ActEditionCopierExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCopierExecute(Sender: TObject);  
+begin  
   Memo1.CopyToClipboard;
   StatusBar1.SimpleText := 'Texte copié';
 end;
 
-procedure TForm1.ActEditionCollerExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCollerExecute(Sender: TObject);  
+begin  
   Memo1.PasteFromClipboard;
   StatusBar1.SimpleText := 'Texte collé';
 end;
 
-procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionAnnulerExecute(Sender: TObject);  
+begin  
   Memo1.Undo;
   StatusBar1.SimpleText := 'Annulation effectuée';
 end;
 
-procedure TForm1.ActAideAProposExecute(Sender: TObject);
-begin
+procedure TForm1.ActAideAProposExecute(Sender: TObject);  
+begin  
   ShowMessage('Éditeur de texte simple' + #13#10 +
               'Version 1.0' + #13#10 +
               'Créé avec Delphi');
 end;
 
-procedure TForm1.Memo1Change(Sender: TObject);
-begin
+procedure TForm1.Memo1Change(Sender: TObject);  
+begin  
   MettreAJourTitre;
   StatusBar1.SimpleText := Format('Lignes: %d  Caractères: %d',
     [Memo1.Lines.Count, Length(Memo1.Text)]);
 end;
 
 // Mise à jour automatique des états
-procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActFichierEnregistrerUpdate(Sender: TObject);  
+begin  
   ActFichierEnregistrer.Enabled := Memo1.Modified;
 end;
 
-procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionAnnulerUpdate(Sender: TObject);  
+begin  
   ActEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
-procedure TForm1.ActEditionCollerUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionCollerUpdate(Sender: TObject);  
+begin  
   ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
-procedure TForm1.ActEditionCoupeUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionCoupeUpdate(Sender: TObject);  
+begin  
   ActEditionCouper.Enabled := Memo1.SelLength > 0;
 end;
 
@@ -941,8 +941,8 @@ end.
 ### Afficher/masquer la barre d'outils
 
 ```pascal
-procedure TForm1.MenuAffichageBarreOutilsClick(Sender: TObject);
-begin
+procedure TForm1.MenuAffichageBarreOutilsClick(Sender: TObject);  
+begin  
   ToolBar1.Visible := not ToolBar1.Visible;
   MenuAffichageBarreOutils.Checked := ToolBar1.Visible;
 end;
@@ -963,25 +963,24 @@ end;
 ### Menus dynamiques (liste récente)
 
 ```pascal
-procedure TForm1.AjouterFichierRecent(const NomFichier: string);
-var
+procedure TForm1.AjouterFichierRecent(const NomFichier: string);  
+var  
   MenuItem: TMenuItem;
 begin
   // Créer un nouvel élément de menu
   MenuItem := TMenuItem.Create(MenuFichier);
-  MenuItem.Caption := ExtractFileName(NomFichier);
+  MenuItem.Caption := NomFichier;  // Le chemin complet dans Caption
   MenuItem.OnClick := OuvrirFichierRecent;
-  MenuItem.Tag := PtrInt(NomFichier); // Stocker le chemin complet
 
   // Insérer avant le séparateur et "Quitter"
   MenuFichier.Insert(MenuFichier.Count - 2, MenuItem);
 end;
 
-procedure TForm1.OuvrirFichierRecent(Sender: TObject);
-var
+procedure TForm1.OuvrirFichierRecent(Sender: TObject);  
+var  
   NomFichier: string;
 begin
-  NomFichier := string((Sender as TMenuItem).Tag);
+  NomFichier := (Sender as TMenuItem).Caption;
   if FileExists(NomFichier) then
   begin
     Memo1.Lines.LoadFromFile(NomFichier);

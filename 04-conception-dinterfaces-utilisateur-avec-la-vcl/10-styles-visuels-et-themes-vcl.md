@@ -156,9 +156,9 @@ C'est la méthode la plus simple pour appliquer un style permanent.
 
 **1. Ouvrir les options du projet**
 ```
-Menu Projet → Options
-ou
-Clic droit sur le projet → Options
+Menu Projet → Options  
+ou  
+Clic droit sur le projet → Options  
 ```
 
 **2. Naviguer vers les styles**
@@ -182,9 +182,9 @@ Dans la liste déroulante en haut :
 
 **5. Appliquer et compiler**
 ```
-Cliquer sur OK
-Compiler le projet (Ctrl + F9)
-Exécuter (F9)
+Cliquer sur OK  
+Compiler le projet (Ctrl + F9)  
+Exécuter (F9)  
 ```
 
 **Important :** Les styles sélectionnés seront inclus dans l'exécutable, augmentant légèrement sa taille.
@@ -197,8 +197,8 @@ Pour changer le style dynamiquement pendant l'exécution.
 uses
   Vcl.Themes;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Vérifier si un style est disponible
   if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
   begin
@@ -213,8 +213,8 @@ end;
 Permettre à l'utilisateur de choisir son style préféré.
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   StyleName: string;
 begin
   // Remplir une ComboBox avec les styles disponibles
@@ -228,8 +228,8 @@ begin
   );
 end;
 
-procedure TForm1.ComboBoxStylesChange(Sender: TObject);
-begin
+procedure TForm1.ComboBoxStylesChange(Sender: TObject);  
+begin  
   // Appliquer le style sélectionné
   if ComboBoxStyles.ItemIndex <> -1 then
     TStyleManager.SetStyle(ComboBoxStyles.Items[ComboBoxStyles.ItemIndex]);
@@ -248,28 +248,28 @@ Delphi 13 permet de visualiser les styles directement pendant la conception.
 
 **1. Dans l'Inspecteur d'objets du formulaire**
 ```
-Propriété : StyleElements
-Valeur : [seFont, seClient, seBorder]  (par défaut, activé)
+Propriété : StyleElements  
+Valeur : [seFont, seClient, seBorder]  (par défaut, activé)  
 ```
 
 **2. Prévisualisation en temps réel**
 ```
-Menu Affichage → Aperçu du style
-ou
-Barre d'outils → Sélecteur de style
+Menu Affichage → Aperçu du style  
+ou  
+Barre d'outils → Sélecteur de style  
 ```
 
 **3. Changer temporairement le style de l'IDE**
 ```
-Menu Outils → Options
-Environnement → Thème de l'IDE
+Menu Outils → Options  
+Environnement → Thème de l'IDE  
 ```
 
 ### Conception avec aperçu du style
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Le formulaire et ses composants respectent automatiquement
   // le style défini dans les options du projet
 
@@ -292,12 +292,12 @@ La propriété `StyleElements` permet de contrôler quels aspects du style sont 
 Button1.StyleElements := [seFont, seClient, seBorder];
 
 // Désactiver le style de police uniquement
-Button1.StyleElements := [seClient, seBorder];
-Button1.Font.Color := clRed; // Cette couleur sera respectée
+Button1.StyleElements := [seClient, seBorder];  
+Button1.Font.Color := clRed; // Cette couleur sera respectée  
 
 // Désactiver complètement le style pour ce composant
-Button1.StyleElements := [];
-Button1.Color := clYellow; // Couleur personnalisée
+Button1.StyleElements := [];  
+Button1.Color := clYellow; // Couleur personnalisée  
 ```
 
 **Éléments de StyleElements :**
@@ -318,8 +318,8 @@ Button1.Color := clYellow; // Couleur personnalisée
 uses
   Vcl.Themes;
 
-procedure TForm1.AfficherInfosStyle;
-var
+procedure TForm1.AfficherInfosStyle;  
+var  
   Style: TCustomStyleServices;
 begin
   Style := TStyleManager.ActiveStyle;
@@ -339,8 +339,8 @@ end;
 ### Lister tous les styles disponibles
 
 ```pascal
-procedure TForm1.ListerStyles;
-var
+procedure TForm1.ListerStyles;  
+var  
   StyleName: string;
 begin
   ListBox1.Items.Clear;
@@ -360,8 +360,8 @@ end;
 ### Charger un style externe
 
 ```pascal
-procedure TForm1.ChargerStyleExterne;
-var
+procedure TForm1.ChargerStyleExterne;  
+var  
   NomFichier: string;
 begin
   OpenDialog1.Filter := 'Styles VCL (*.vsf)|*.vsf';
@@ -392,8 +392,8 @@ end;
 uses
   System.IniFiles;
 
-procedure TForm1.SauvegarderPreferencesStyle;
-var
+procedure TForm1.SauvegarderPreferencesStyle;  
+var  
   Ini: TIniFile;
 begin
   Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -404,8 +404,8 @@ begin
   end;
 end;
 
-procedure TForm1.ChargerPreferencesStyle;
-var
+procedure TForm1.ChargerPreferencesStyle;  
+var  
   Ini: TIniFile;
   StyleName: string;
 begin
@@ -431,8 +431,8 @@ Au lieu de coder des couleurs en dur, utilisez les couleurs du style actif.
 
 **Mauvaise pratique :**
 ```pascal
-procedure TForm1.DessinerFond;
-begin
+procedure TForm1.DessinerFond;  
+begin  
   Canvas.Brush.Color := clWhite; // Toujours blanc, même en mode sombre
   Canvas.FillRect(ClientRect);
   Canvas.Font.Color := clBlack;  // Toujours noir
@@ -445,8 +445,8 @@ end;
 uses
   Vcl.Themes;
 
-procedure TForm1.DessinerFond;
-var
+procedure TForm1.DessinerFond;  
+var  
   StyleServices: TCustomStyleServices;
 begin
   StyleServices := TStyleManager.ActiveStyle;
@@ -464,16 +464,16 @@ end;
 
 ```pascal
 // Couleurs principales
-clWindow        // Arrière-plan des fenêtres
-clWindowText    // Texte des fenêtres
-clBtnFace       // Fond des boutons
-clBtnText       // Texte des boutons
-clHighlight     // Sélection
-clHighlightText // Texte sélectionné
+clWindow        // Arrière-plan des fenêtres  
+clWindowText    // Texte des fenêtres  
+clBtnFace       // Fond des boutons  
+clBtnText       // Texte des boutons  
+clHighlight     // Sélection  
+clHighlightText // Texte sélectionné  
 
 // Exemple d'utilisation
-procedure TForm1.AppliquerCouleurs;
-var
+procedure TForm1.AppliquerCouleurs;  
+var  
   Style: TCustomStyleServices;
 begin
   Style := TStyleManager.ActiveStyle;
@@ -491,8 +491,8 @@ end;
 uses
   Vcl.Themes;
 
-procedure TForm1.Image1Paint(Sender: TObject);
-var
+procedure TForm1.Image1Paint(Sender: TObject);  
+var  
   Details: TThemedElementDetails;
   R: TRect;
 begin
@@ -524,8 +524,8 @@ Certains composants tiers ne supportent pas automatiquement les styles VCL.
 ### Solution 1 : StyleElements
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Forcer l'application du style
   ComposantTiers1.StyleElements := [seFont, seClient, seBorder];
 end;
@@ -545,8 +545,8 @@ type
     procedure Paint(Canvas: TCanvas); override;
   end;
 
-procedure TStyleHook_MonComposant.Paint(Canvas: TCanvas);
-begin
+procedure TStyleHook_MonComposant.Paint(Canvas: TCanvas);  
+begin  
   // Code de dessin personnalisé avec le style
   inherited;
 end;
@@ -602,8 +602,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormPreferences.FormCreate(Sender: TObject);
-begin
+procedure TFormPreferences.FormCreate(Sender: TObject);  
+begin  
   // Sauvegarder le style actuel
   FStyleInitial := TStyleManager.ActiveStyle.Name;
 
@@ -614,8 +614,8 @@ begin
   RadioGroupStyles.ItemIndex := RadioGroupStyles.Items.IndexOf(FStyleInitial);
 end;
 
-procedure TFormPreferences.ChargerStyles;
-var
+procedure TFormPreferences.ChargerStyles;  
+var  
   StyleName: string;
 begin
   RadioGroupStyles.Items.Clear;
@@ -625,14 +625,14 @@ begin
     RadioGroupStyles.Items.Add(StyleName);
 end;
 
-procedure TFormPreferences.RadioGroupStylesClick(Sender: TObject);
-begin
+procedure TFormPreferences.RadioGroupStylesClick(Sender: TObject);  
+begin  
   if RadioGroupStyles.ItemIndex <> -1 then
     AppercuStyle(RadioGroupStyles.Items[RadioGroupStyles.ItemIndex]);
 end;
 
-procedure TFormPreferences.AppercuStyle(const StyleName: string);
-begin
+procedure TFormPreferences.AppercuStyle(const StyleName: string);  
+begin  
   // Appliquer temporairement le style pour l'aperçu
   if TStyleManager.IsValidStyle(StyleName) then
   begin
@@ -646,8 +646,8 @@ begin
   end;
 end;
 
-procedure TFormPreferences.ButtonAppliquerClick(Sender: TObject);
-begin
+procedure TFormPreferences.ButtonAppliquerClick(Sender: TObject);  
+begin  
   // Appliquer définitivement le style sélectionné
   if RadioGroupStyles.ItemIndex <> -1 then
   begin
@@ -656,8 +656,8 @@ begin
   end;
 end;
 
-procedure TFormPreferences.ButtonOKClick(Sender: TObject);
-begin
+procedure TFormPreferences.ButtonOKClick(Sender: TObject);  
+begin  
   ButtonAppliquerClick(Sender);
   ModalResult := mrOk;
 end;
@@ -668,8 +668,8 @@ end.
 ### Exemple d'utilisation
 
 ```pascal
-procedure TFormMain.MenuOptionsStyleClick(Sender: TObject);
-begin
+procedure TFormMain.MenuOptionsStyleClick(Sender: TObject);  
+begin  
   with TFormPreferences.Create(Self) do
   try
     if ShowModal = mrOk then
@@ -696,8 +696,8 @@ Windows 10/11 permet aux utilisateurs de choisir entre mode clair et sombre.
 uses
   Winapi.Windows, System.Win.Registry;
 
-function EstModeSombreWindows: Boolean;
-var
+function EstModeSombreWindows: Boolean;  
+var  
   Reg: TRegistry;
 begin
   Result := False;
@@ -719,8 +719,8 @@ end;
 ### Appliquer automatiquement le bon style
 
 ```pascal
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Appliquer le style selon les préférences Windows
   if EstModeSombreWindows then
   begin
@@ -738,8 +738,8 @@ end;
 ### Basculer entre modes
 
 ```pascal
-procedure TFormMain.MenuBasculerModeClick(Sender: TObject);
-var
+procedure TFormMain.MenuBasculerModeClick(Sender: TObject);  
+var  
   StyleActuel: string;
 begin
   StyleActuel := TStyleManager.ActiveStyle.Name;
@@ -805,8 +805,8 @@ Menu Outils → Bitmap Style Designer
 // Cliquer sur "Ajouter" et sélectionner votre fichier .vsf
 
 // Méthode 2 : Charger dynamiquement
-procedure TForm1.ChargerStylePersonnalise;
-var
+procedure TForm1.ChargerStylePersonnalise;  
+var  
   StylePath: string;
 begin
   StylePath := ExtractFilePath(Application.ExeName) + 'Styles\MonStyle.vsf';
@@ -831,8 +831,8 @@ end;
 uses
   Vcl.Themes;
 
-procedure TForm1.PersonnaliserCouleurs;
-var
+procedure TForm1.PersonnaliserCouleurs;  
+var  
   Style: TCustomStyleServices;
 begin
   Style := TStyleManager.ActiveStyle;
@@ -874,8 +874,8 @@ end;
 
 **2. Charger les styles à la demande**
 ```pascal
-procedure TForm1.ChargerStyleSiNecessaire(const StyleName: string);
-begin
+procedure TForm1.ChargerStyleSiNecessaire(const StyleName: string);  
+begin  
   if not TStyleManager.IsValidStyle(StyleName) then
   begin
     // Charger depuis un fichier externe
@@ -888,8 +888,8 @@ end;
 
 **3. Libérer les styles non utilisés**
 ```pascal
-procedure TForm1.LibererStylesInutilises;
-var
+procedure TForm1.LibererStylesInutilises;  
+var  
   StyleName: string;
 begin
   for StyleName in TStyleManager.StyleNames do
@@ -920,8 +920,8 @@ Couleur de texte codée en dur.
 Label1.Font.Color := clBlack;
 
 // Bon
-Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);
-Label1.StyleElements := [seFont, seClient, seBorder];
+Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);  
+Label1.StyleElements := [seFont, seClient, seBorder];  
 ```
 
 ### Problème 2 : Composant ne respecte pas le style
@@ -935,8 +935,8 @@ Un composant garde l'apparence Windows standard.
 MonComposant.StyleElements := [seFont, seClient, seBorder];
 
 // Forcer le redessin
-MonComposant.Invalidate;
-MonComposant.Repaint;
+MonComposant.Invalidate;  
+MonComposant.Repaint;  
 ```
 
 ### Problème 3 : Changement de style lent
@@ -946,8 +946,8 @@ L'application se fige lors du changement de style.
 
 **Solution :**
 ```pascal
-procedure TForm1.ChangerStyleAsync(const NouveauStyle: string);
-begin
+procedure TForm1.ChangerStyleAsync(const NouveauStyle: string);  
+begin  
   Screen.Cursor := crHourGlass;
   try
     Application.ProcessMessages;
@@ -969,8 +969,8 @@ Après changement de style, certaines zones gardent l'ancien style.
 
 **Solution :**
 ```pascal
-procedure TForm1.ActualiserTout;
-var
+procedure TForm1.ActualiserTout;  
+var  
   i: Integer;
 begin
   // Forcer le redessin du formulaire principal
@@ -999,8 +999,8 @@ Les icônes avec fond blanc sont visibles en mode sombre.
 // Utiliser des images avec transparence (PNG)
 // Ou utiliser plusieurs ImageList selon le thème
 
-procedure TForm1.ActualiserImages;
-begin
+procedure TForm1.ActualiserImages;  
+begin  
   if Pos('Dark', TStyleManager.ActiveStyle.Name) > 0 then
   begin
     // Images pour mode sombre
@@ -1024,8 +1024,8 @@ end;
 
 ```pascal
 // Appliquer à tous les composants lors de la création
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   i: Integer;
 begin
   for i := 0 to ComponentCount - 1 do
@@ -1049,12 +1049,12 @@ end;
 
 ```pascal
 // À éviter
-Panel1.Color := clWhite;
-Label1.Font.Color := clBlack;
+Panel1.Color := clWhite;  
+Label1.Font.Color := clBlack;  
 
 // Préférer
-Panel1.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindow);
-Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);
+Panel1.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindow);  
+Label1.Font.Color := TStyleManager.ActiveStyle.GetSystemColor(clWindowText);  
 ```
 
 ### 4. Gérer les images correctement
@@ -1147,8 +1147,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Charger les préférences sauvegardées
   ChargerPreferences;
 
@@ -1159,14 +1159,14 @@ begin
   MettreAJourStyleActif;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
-begin
+procedure TFormMain.FormDestroy(Sender: TObject);  
+begin  
   // Sauvegarder les préférences
   SauvegarderPreferences;
 end;
 
-procedure TFormMain.ChargerPreferences;
-var
+procedure TFormMain.ChargerPreferences;  
+var  
   Ini: TIniFile;
   StyleName: string;
 begin
@@ -1182,8 +1182,8 @@ begin
   end;
 end;
 
-procedure TFormMain.SauvegarderPreferences;
-var
+procedure TFormMain.SauvegarderPreferences;  
+var  
   Ini: TIniFile;
 begin
   Ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
@@ -1195,8 +1195,8 @@ begin
   end;
 end;
 
-procedure TFormMain.CreerMenuStyles;
-var
+procedure TFormMain.CreerMenuStyles;  
+var  
   StyleName: string;
   MenuItem: TMenuItem;
 begin
@@ -1220,8 +1220,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ChangerStyle(Sender: TObject);
-var
+procedure TFormMain.ChangerStyle(Sender: TObject);  
+var  
   MenuItem: TMenuItem;
 begin
   if Sender is TMenuItem then
@@ -1242,8 +1242,8 @@ begin
   end;
 end;
 
-procedure TFormMain.MettreAJourStyleActif;
-begin
+procedure TFormMain.MettreAJourStyleActif;  
+begin  
   // Afficher le style actif dans la barre d'état
   StatusBar1.SimpleText := 'Style actif : ' + TStyleManager.ActiveStyle.Name;
 
@@ -1251,14 +1251,14 @@ begin
   Invalidate;
 end;
 
-procedure TFormMain.MenuThemeClick(Sender: TObject);
-begin
+procedure TFormMain.MenuThemeClick(Sender: TObject);  
+begin  
   // Recréer le menu au cas où des styles auraient été ajoutés
   CreerMenuStyles;
 end;
 
-procedure TFormMain.MenuQuitterClick(Sender: TObject);
-begin
+procedure TFormMain.MenuQuitterClick(Sender: TObject);  
+begin  
   Close;
 end;
 

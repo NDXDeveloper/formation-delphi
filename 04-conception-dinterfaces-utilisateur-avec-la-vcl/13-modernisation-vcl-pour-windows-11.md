@@ -20,8 +20,8 @@ Windows 10                      Windows 11
 └──────────────┘               ╰──────────────╯
 Coins carrés                   Coins arrondis
 
-Boutons plats                  Boutons avec ombres
-Menus simples                  Menus avec effets
+Boutons plats                  Boutons avec ombres  
+Menus simples                  Menus avec effets  
 ```
 
 **Éléments clés du design Windows 11 :**
@@ -59,18 +59,18 @@ Menus simples                  Menus avec effets
 
 **Configuration minimale :**
 ```
-Processeur : 1 GHz dual-core 64-bit
-RAM : 4 GB
-Stockage : 64 GB
-TPM : Version 2.0
-UEFI : Secure Boot capable
+Processeur : 1 GHz dual-core 64-bit  
+RAM : 4 GB  
+Stockage : 64 GB  
+TPM : Version 2.0  
+UEFI : Secure Boot capable  
 ```
 
 **Pour les développeurs :**
 ```
-Windows 11 SDK
-Visual Studio 2019/2022 (optionnel)
-Delphi 11+ (Delphi 13 recommandé)
+Windows 11 SDK  
+Visual Studio 2019/2022 (optionnel)  
+Delphi 11+ (Delphi 13 recommandé)  
 ```
 
 ---
@@ -110,8 +110,8 @@ const
 uses
   Vcl.Themes;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Appliquer le style Windows 11
   if TStyleManager.IsValidStyle('Windows11 Modern Light') then
     TStyleManager.SetStyle('Windows11 Modern Light');
@@ -124,8 +124,8 @@ end;
 uses
   Winapi.Windows, System.Win.Registry, Vcl.Themes;
 
-function GetWindowsTheme: string;
-var
+function GetWindowsTheme: string;  
+var  
   Reg: TRegistry;
   UseLightTheme: Integer;
 begin
@@ -152,8 +152,8 @@ begin
   end;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-var
+procedure TFormMain.FormCreate(Sender: TObject);  
+var  
   ThemeName: string;
 begin
   // Détecter et appliquer le thème système
@@ -174,8 +174,8 @@ type
       message WM_SETTINGCHANGE;
   end;
 
-procedure TFormMain.WMSettingChange(var Message: TWMSettingChange);
-var
+procedure TFormMain.WMSettingChange(var Message: TWMSettingChange);  
+var  
   Section: string;
 begin
   inherited;
@@ -231,8 +231,8 @@ function DwmSetWindowAttribute(hwnd: HWND; dwAttribute: DWORD;
   pvAttribute: Pointer; cbAttribute: DWORD): HRESULT; stdcall;
   external 'dwmapi.dll';
 
-procedure TFormMain.ActiverCoinsArrondis;
-var
+procedure TFormMain.ActiverCoinsArrondis;  
+var  
   Preference: Integer;
 begin
   Preference := DWMWCP_ROUND;
@@ -240,8 +240,8 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Vérifier si Windows 11 22H2 ou supérieur
   if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22621) then
     ActiverCoinsArrondis;
@@ -256,8 +256,8 @@ const
   DWMWA_CAPTION_COLOR = 35;
   DWMWA_TEXT_COLOR = 36;
 
-procedure TFormMain.PersonnaliserBordure;
-var
+procedure TFormMain.PersonnaliserBordure;  
+var  
   CouleurBordure: COLORREF;
   CouleurTitre: COLORREF;
 begin
@@ -282,8 +282,8 @@ const
   DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
   DWMWA_MICA_EFFECT = 1029;
 
-procedure TFormMain.ActiverEffetMica;
-var
+procedure TFormMain.ActiverEffetMica;  
+var  
   UseMica: Integer;
   UseDarkMode: Integer;
 begin
@@ -301,8 +301,8 @@ begin
     @UseMica, SizeOf(UseMica));
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Vérifier Windows 11
   if TOSVersion.Major >= 10 then
     ActiverEffetMica;
@@ -319,8 +319,8 @@ Windows 11 utilise les icônes Fluent Design avec un style épuré et moderne.
 
 **Ressources pour icônes :**
 ```
-Microsoft Fluent UI System Icons (gratuit)
-https://github.com/microsoft/fluentui-system-icons
+Microsoft Fluent UI System Icons (gratuit)  
+https://github.com/microsoft/fluentui-system-icons  
 
 Caractéristiques :
 - Format SVG et PNG
@@ -332,8 +332,8 @@ Caractéristiques :
 **Intégration dans Delphi :**
 
 ```pascal
-procedure TFormMain.ChargerIconesModernes;
-begin
+procedure TFormMain.ChargerIconesModernes;  
+begin  
   // Configurer les ImageList pour différents DPI
   ImageList16.Width := ScaleValue(16);
   ImageList16.Height := ScaleValue(16);
@@ -403,8 +403,8 @@ type
     procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
   end;
 
-procedure TFormMain.EtendreBarreTitre;
-const
+procedure TFormMain.EtendreBarreTitre;  
+const  
   DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 var
   Marges: TMargins;
@@ -418,8 +418,8 @@ begin
   DwmExtendFrameIntoClientArea(Handle, @Marges);
 end;
 
-procedure TFormMain.WMNCCalcSize(var Message: TWMNCCalcSize);
-begin
+procedure TFormMain.WMNCCalcSize(var Message: TWMNCCalcSize);  
+begin  
   // Ne pas réduire la zone client
   if Message.CalcValidRects then
   begin
@@ -430,8 +430,8 @@ begin
     inherited;
 end;
 
-procedure TFormMain.WMNCHitTest(var Message: TWMNCHitTest);
-var
+procedure TFormMain.WMNCHitTest(var Message: TWMNCHitTest);  
+var  
   P: TPoint;
 begin
   inherited;
@@ -449,8 +449,8 @@ begin
   end;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Supprimer la bordure standard
   BorderStyle := bsNone;
 
@@ -472,8 +472,8 @@ end;
 ### Boutons de fenêtre personnalisés
 
 ```pascal
-procedure TFormMain.AjouterBoutonsControle;
-var
+procedure TFormMain.AjouterBoutonsControle;  
+var  
   BtnFermer, BtnMaximiser, BtnMinimiser: TButton;
 begin
   // Bouton fermer
@@ -513,21 +513,21 @@ begin
   BtnMinimiser.OnClick := BtnMinimiserClick;
 end;
 
-procedure TFormMain.BtnFermerClick(Sender: TObject);
-begin
+procedure TFormMain.BtnFermerClick(Sender: TObject);  
+begin  
   Close;
 end;
 
-procedure TFormMain.BtnMaximiserClick(Sender: TObject);
-begin
+procedure TFormMain.BtnMaximiserClick(Sender: TObject);  
+begin  
   if WindowState = wsMaximized then
     WindowState := wsNormal
   else
     WindowState := wsMaximized;
 end;
 
-procedure TFormMain.BtnMinimiserClick(Sender: TObject);
-begin
+procedure TFormMain.BtnMinimiserClick(Sender: TObject);  
+begin  
   WindowState := wsMinimized;
 end;
 ```
@@ -625,13 +625,13 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.ButtonMontrerPanelClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonMontrerPanelClick(Sender: TObject);  
+begin  
   AnimerComposant(Panel1, atFadeIn, 300);
 end;
 
-procedure TFormMain.ButtonCacherPanelClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonCacherPanelClick(Sender: TObject);  
+begin  
   AnimerComposant(Panel1, atFadeOut, 300);
 end;
 ```
@@ -639,8 +639,8 @@ end;
 ### Transition entre fenêtres
 
 ```pascal
-procedure TFormMain.OuvrirFormulaireAvecAnimation(FormClass: TFormClass);
-var
+procedure TFormMain.OuvrirFormulaireAvecAnimation(FormClass: TFormClass);  
+var  
   Form: TForm;
 begin
   Form := FormClass.Create(Application);
@@ -721,8 +721,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormMain.ButtonNotifierClick(Sender: TObject);
-begin
+procedure TFormMain.ButtonNotifierClick(Sender: TObject);  
+begin  
   TNotification.Afficher(
     'Mise à jour disponible',
     'Une nouvelle version de l''application est disponible.',
@@ -740,8 +740,8 @@ end;
 uses
   Winapi.Windows, Winapi.WinRT;
 
-procedure EnvoyerToastNotification(const Titre, Corps: string);
-var
+procedure EnvoyerToastNotification(const Titre, Corps: string);  
+var  
   ToastXml: string;
 begin
   // XML pour toast moderne Windows 11
@@ -773,8 +773,8 @@ end;
 uses
   Winapi.Windows, System.Win.Registry;
 
-function EstEnModeTablette: Boolean;
-var
+function EstEnModeTablette: Boolean;  
+var  
   Reg: TRegistry;
 begin
   Result := False;
@@ -793,8 +793,8 @@ begin
   end;
 end;
 
-procedure TFormMain.AdapterPourModeTablette;
-begin
+procedure TFormMain.AdapterPourModeTablette;  
+begin  
   if EstEnModeTablette then
   begin
     // Interface adaptée au tactile
@@ -833,8 +833,8 @@ type
     procedure WMGesture(var Message: TMessage); message WM_GESTURE;
   end;
 
-procedure TFormMain.WMGesture(var Message: TMessage);
-const
+procedure TFormMain.WMGesture(var Message: TMessage);  
+const  
   GID_BEGIN = 1;
   GID_END = 2;
   GID_ZOOM = 3;
@@ -956,12 +956,12 @@ Avantages :
 ```
 Assets à fournir (format PNG avec transparence) :
 
-Square44x44Logo.png        (44 × 44 px)   - Petite icône
-Square150x150Logo.png      (150 × 150 px) - Tuile moyenne
-Wide310x150Logo.png        (310 × 150 px) - Tuile large
-Square310x310Logo.png      (310 × 310 px) - Tuile grande
-StoreLogo.png              (50 × 50 px)   - Store
-SplashScreen.png           (620 × 300 px) - Écran de démarrage
+Square44x44Logo.png        (44 × 44 px)   - Petite icône  
+Square150x150Logo.png      (150 × 150 px) - Tuile moyenne  
+Wide310x150Logo.png        (310 × 150 px) - Tuile large  
+Square310x310Logo.png      (310 × 310 px) - Tuile grande  
+StoreLogo.png              (50 × 50 px)   - Store  
+SplashScreen.png           (620 × 300 px) - Écran de démarrage  
 
 Échelles supplémentaires à 125%, 150%, 200%, 400%
 ```
@@ -971,8 +971,8 @@ SplashScreen.png           (620 × 300 px) - Écran de démarrage
 ```pascal
 // Configuration de l'application pour MSIX
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Détecter si l'application s'exécute dans un package MSIX
   if IsAppPackaged then
   begin
@@ -985,8 +985,8 @@ begin
   end;
 end;
 
-function IsAppPackaged: Boolean;
-var
+function IsAppPackaged: Boolean;  
+var  
   PackageFullName: array[0..MAX_PATH] of Char;
   Length: UINT32;
 begin
@@ -994,8 +994,8 @@ begin
   Result := GetCurrentPackageFullName(@Length, @PackageFullName) = ERROR_SUCCESS;
 end;
 
-procedure TFormMain.ConfigurerPourStore;
-begin
+procedure TFormMain.ConfigurerPourStore;  
+begin  
   // Utiliser le dossier local de l'application
   CheminDonnees := TPath.Combine(
     TPath.GetHomePath,
@@ -1092,7 +1092,7 @@ type
     procedure ActiverEffetMica;
     function GetThemeSysteme: string;
     procedure AppliquerCouleurAccent;
-    procedure CreerBoutons Controls;
+    procedure CreerBoutonsControles;
     procedure WMSettingChange(var Message: TWMSettingChange);
       message WM_SETTINGCHANGE;
     procedure WMDwmColorizationColorChanged(var Message: TMessage);
@@ -1121,8 +1121,8 @@ function DwmSetWindowAttribute(hwnd: HWND; dwAttribute: DWORD;
 function DwmExtendFrameIntoClientArea(hwnd: HWND; const pMarInset: PMargins): HRESULT; stdcall;
   external 'dwmapi.dll';
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Configuration de base
   Scaled := True;
   AutoScroll := True;
@@ -1132,8 +1132,8 @@ begin
   ModerniserInterface;
 end;
 
-procedure TFormMain.FormShow(Sender: TObject);
-begin
+procedure TFormMain.FormShow(Sender: TObject);  
+begin  
   // Appliquer après que la fenêtre soit créée
   if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22000) then
   begin
@@ -1143,8 +1143,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ModerniserInterface;
-begin
+procedure TFormMain.ModerniserInterface;  
+begin  
   // 1. Appliquer le style Windows 11
   AppliquerStyleWindows11;
 
@@ -1183,16 +1183,16 @@ begin
   StatusBar1.Height := ScaleValue(24);
 end;
 
-procedure TFormMain.AppliquerStyleWindows11;
-begin
+procedure TFormMain.AppliquerStyleWindows11;  
+begin  
   FThemeSysteme := GetThemeSysteme;
 
   if TStyleManager.IsValidStyle(FThemeSysteme) then
     TStyleManager.SetStyle(FThemeSysteme);
 end;
 
-function TFormMain.GetThemeSysteme: string;
-var
+function TFormMain.GetThemeSysteme: string;  
+var  
   Reg: TRegistry;
   UseLightTheme: Integer;
 begin
@@ -1219,8 +1219,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ActiverCoinsArrondis;
-var
+procedure TFormMain.ActiverCoinsArrondis;  
+var  
   Preference: Integer;
 begin
   Preference := DWMWCP_ROUND;
@@ -1228,8 +1228,8 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.ActiverEffetMica;
-var
+procedure TFormMain.ActiverEffetMica;  
+var  
   UseMica: Integer;
   UseDarkMode: Integer;
 begin
@@ -1247,8 +1247,8 @@ begin
     @UseMica, SizeOf(UseMica));
 end;
 
-procedure TFormMain.AppliquerCouleurAccent;
-var
+procedure TFormMain.AppliquerCouleurAccent;  
+var  
   Reg: TRegistry;
   CouleurAccent: DWORD;
   CouleurBordure: COLORREF;
@@ -1280,8 +1280,8 @@ begin
   end;
 end;
 
-procedure TFormMain.CreerBoutonsControles;
-var
+procedure TFormMain.CreerBoutonsControles;  
+var  
   BtnFermer, BtnMaximiser, BtnMinimiser: TButton;
 begin
   // Créer les boutons de contrôle Windows 11 style
@@ -1299,8 +1299,8 @@ begin
     end;
 end;
 
-procedure TFormMain.WMSettingChange(var Message: TWMSettingChange);
-var
+procedure TFormMain.WMSettingChange(var Message: TWMSettingChange);  
+var  
   Section: string;
 begin
   inherited;
@@ -1324,8 +1324,8 @@ begin
   end;
 end;
 
-procedure TFormMain.WMDwmColorizationColorChanged(var Message: TMessage);
-begin
+procedure TFormMain.WMDwmColorizationColorChanged(var Message: TMessage);  
+begin  
   inherited;
 
   // La couleur d'accent a changé
@@ -1344,22 +1344,22 @@ La modernisation de vos applications VCL pour Windows 11 n'est pas qu'une questi
 
 ### Points clés à retenir
 
-✅ **Styles Windows 11** : Utilisez les styles intégrés de Delphi 13
-✅ **Coins arrondis** : Activez-les via l'API DWM
-✅ **Thème système** : Détectez et suivez les préférences utilisateur
-✅ **Icônes modernes** : Adoptez Fluent Design
-✅ **Animations** : Rendez l'interface plus vivante
-✅ **Support tactile** : Pensez aux appareils hybrides
-✅ **Microsoft Store** : Préparez un package MSIX
+✅ **Styles Windows 11** : Utilisez les styles intégrés de Delphi 13  
+✅ **Coins arrondis** : Activez-les via l'API DWM  
+✅ **Thème système** : Détectez et suivez les préférences utilisateur  
+✅ **Icônes modernes** : Adoptez Fluent Design  
+✅ **Animations** : Rendez l'interface plus vivante  
+✅ **Support tactile** : Pensez aux appareils hybrides  
+✅ **Microsoft Store** : Préparez un package MSIX  
 ✅ **Tests** : Vérifiez sur Windows 11 réel
 
 ### Bénéfices de la modernisation
 
-🎨 **Apparence** : Interface élégante et contemporaine
-⚡ **Performance** : Animations fluides et réactivité
-📱 **Versatilité** : Fonctionne en mode desktop et tablette
-🏪 **Distribution** : Présence sur le Microsoft Store possible
-👥 **Satisfaction** : Utilisateurs plus heureux
+🎨 **Apparence** : Interface élégante et contemporaine  
+⚡ **Performance** : Animations fluides et réactivité  
+📱 **Versatilité** : Fonctionne en mode desktop et tablette  
+🏪 **Distribution** : Présence sur le Microsoft Store possible  
+👥 **Satisfaction** : Utilisateurs plus heureux  
 🚀 **Futur** : Application prête pour les évolutions
 
 Avec Delphi 13 Florence et ces techniques, vos applications VCL seront parfaitement intégrées à Windows 11 et offriront une expérience utilisateur moderne et professionnelle ! 🚀

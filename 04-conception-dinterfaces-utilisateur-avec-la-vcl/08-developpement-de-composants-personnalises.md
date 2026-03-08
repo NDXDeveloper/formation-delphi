@@ -125,15 +125,15 @@ procedure Register;
 
 implementation
 
-constructor TEditNumerique.Create(AOwner: TComponent);
-begin
+constructor TEditNumerique.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   FAccepterDecimales := True;
   FAccepterNegatifs := True;
 end;
 
-procedure TEditNumerique.KeyPress(var Key: Char);
-var
+procedure TEditNumerique.KeyPress(var Key: Char);  
+var  
   SeparateurDecimal: Char;
 begin
   SeparateurDecimal := FormatSettings.DecimalSeparator;
@@ -173,8 +173,8 @@ begin
   Beep;
 end;
 
-procedure Register;
-begin
+procedure Register;  
+begin  
   RegisterComponents('Mes Composants', [TEditNumerique]);
 end;
 
@@ -210,8 +210,8 @@ published
 
 **Le constructeur :**
 ```pascal
-constructor TEditNumerique.Create(AOwner: TComponent);
-begin
+constructor TEditNumerique.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner); // Toujours appeler le constructeur parent
   FAccepterDecimales := True; // Initialiser les valeurs par défaut
   FAccepterNegatifs := True;
@@ -220,8 +220,8 @@ end;
 
 **La procédure Register :**
 ```pascal
-procedure Register;
-begin
+procedure Register;  
+begin  
   // Enregistre le composant dans la palette d'outils
   RegisterComponents('Mes Composants', [TEditNumerique]);
 end;
@@ -239,15 +239,15 @@ end;
 #### Étape 5 : Utiliser le composant
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Le composant est configuré visuellement dans l'Inspecteur d'objets
   EditNumerique1.AccepterDecimales := True;
   EditNumerique1.AccepterNegatifs := False;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Valeur: Double;
 begin
   if TryStrToFloat(EditNumerique1.Text, Valeur) then
@@ -281,8 +281,8 @@ type
 
 implementation
 
-procedure TMonComposant.SetCouleurFond(const Value: TColor);
-begin
+procedure TMonComposant.SetCouleurFond(const Value: TColor);  
+begin  
   if FCouleurFond <> Value then
   begin
     FCouleurFond := Value;
@@ -290,8 +290,8 @@ begin
   end;
 end;
 
-procedure TMonComposant.SetTexte(const Value: string);
-begin
+procedure TMonComposant.SetTexte(const Value: string);  
+begin  
   if FTexte <> Value then
   begin
     FTexte := Value;
@@ -318,8 +318,8 @@ type
     property EstPair: Boolean read GetEstPair; // Lecture seule
   end;
 
-function TCompteur.GetEstPair: Boolean;
-begin
+function TCompteur.GetEstPair: Boolean;  
+begin  
   Result := (FValeur mod 2) = 0;
 end;
 ```
@@ -335,8 +335,8 @@ type
     property Rayon: Integer read FRayon write FRayon default 10;
   end;
 
-constructor TMonBouton.Create(AOwner: TComponent);
-begin
+constructor TMonBouton.Create(AOwner: TComponent);  
+begin  
   inherited;
   FRayon := 10; // Important : initialiser avec la valeur par défaut
 end;
@@ -364,16 +364,16 @@ type
 
 implementation
 
-constructor TLabelPersonnalise.Create(AOwner: TComponent);
-begin
+constructor TLabelPersonnalise.Create(AOwner: TComponent);  
+begin  
   inherited;
   FAlignement := atGauche;
   Width := 100;
   Height := 20;
 end;
 
-procedure TLabelPersonnalise.SetAlignement(const Value: TAlignementTexte);
-begin
+procedure TLabelPersonnalise.SetAlignement(const Value: TAlignementTexte);  
+begin  
   if FAlignement <> Value then
   begin
     FAlignement := Value;
@@ -381,8 +381,8 @@ begin
   end;
 end;
 
-procedure TLabelPersonnalise.Paint;
-var
+procedure TLabelPersonnalise.Paint;  
+var  
   R: TRect;
   Flags: Integer;
 begin
@@ -431,8 +431,8 @@ type
 
 implementation
 
-procedure TCompteurPersonnalise.SetValeur(const Value: Integer);
-begin
+procedure TCompteurPersonnalise.SetValeur(const Value: Integer);  
+begin  
   if FValeur <> Value then
   begin
     FValeur := Value;
@@ -440,8 +440,8 @@ begin
   end;
 end;
 
-procedure TCompteurPersonnalise.DoValeurChange(NouvelleValeur: Integer);
-begin
+procedure TCompteurPersonnalise.DoValeurChange(NouvelleValeur: Integer);  
+begin  
   // Déclencher l'événement s'il est assigné
   if Assigned(FOnValeurChange) then
     FOnValeurChange(Self, NouvelleValeur);
@@ -451,13 +451,13 @@ end;
 ### Utiliser l'événement
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   CompteurPersonnalise1.OnValeurChange := GererChangementValeur;
 end;
 
-procedure TForm1.GererChangementValeur(Sender: TObject; NouvelleValeur: Integer);
-begin
+procedure TForm1.GererChangementValeur(Sender: TObject; NouvelleValeur: Integer);  
+begin  
   Label1.Caption := 'Nouvelle valeur : ' + IntToStr(NouvelleValeur);
 end;
 ```
@@ -523,8 +523,8 @@ procedure Register;
 
 implementation
 
-constructor TJaugeCirculaire.Create(AOwner: TComponent);
-begin
+constructor TJaugeCirculaire.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
 
   // Valeurs par défaut
@@ -540,8 +540,8 @@ begin
   Height := 100;
 end;
 
-procedure TJaugeCirculaire.SetMinimum(const Value: Integer);
-begin
+procedure TJaugeCirculaire.SetMinimum(const Value: Integer);  
+begin  
   if FMinimum <> Value then
   begin
     FMinimum := Value;
@@ -551,8 +551,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetMaximum(const Value: Integer);
-begin
+procedure TJaugeCirculaire.SetMaximum(const Value: Integer);  
+begin  
   if FMaximum <> Value then
   begin
     FMaximum := Value;
@@ -562,8 +562,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetPosition(const Value: Integer);
-begin
+procedure TJaugeCirculaire.SetPosition(const Value: Integer);  
+begin  
   if FPosition <> Value then
   begin
     // Limiter la valeur entre Min et Max
@@ -578,8 +578,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetCouleurFond(const Value: TColor);
-begin
+procedure TJaugeCirculaire.SetCouleurFond(const Value: TColor);  
+begin  
   if FCouleurFond <> Value then
   begin
     FCouleurFond := Value;
@@ -587,8 +587,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetCouleurJauge(const Value: TColor);
-begin
+procedure TJaugeCirculaire.SetCouleurJauge(const Value: TColor);  
+begin  
   if FCouleurJauge <> Value then
   begin
     FCouleurJauge := Value;
@@ -596,8 +596,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.SetEpaisseur(const Value: Integer);
-begin
+procedure TJaugeCirculaire.SetEpaisseur(const Value: Integer);  
+begin  
   if FEpaisseur <> Value then
   begin
     FEpaisseur := Value;
@@ -605,8 +605,8 @@ begin
   end;
 end;
 
-procedure TJaugeCirculaire.Paint;
-var
+procedure TJaugeCirculaire.Paint;  
+var  
   Rect: TRect;
   CentreX, CentreY, Rayon: Integer;
   Pourcentage: Double;
@@ -661,8 +661,8 @@ begin
                  Texte);
 end;
 
-procedure Register;
-begin
+procedure Register;  
+begin  
   RegisterComponents('Mes Composants', [TJaugeCirculaire]);
 end;
 
@@ -672,23 +672,23 @@ end.
 ### Utilisation du composant
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   JaugeCirculaire1.Minimum := 0;
   JaugeCirculaire1.Maximum := 100;
   JaugeCirculaire1.Position := 0;
   JaugeCirculaire1.CouleurJauge := clBlue;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Incrémenter la jauge
   if JaugeCirculaire1.Position < JaugeCirculaire1.Maximum then
     JaugeCirculaire1.Position := JaugeCirculaire1.Position + 10;
 end;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   // Animation automatique
   JaugeCirculaire1.Position := (JaugeCirculaire1.Position + 1) mod 101;
 end;
@@ -739,8 +739,8 @@ type
 
 implementation
 
-constructor TPanneauPersonnalise.Create(AOwner: TComponent);
-begin
+constructor TPanneauPersonnalise.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
 
   FTitre := 'Panneau';
@@ -755,8 +755,8 @@ begin
   ControlStyle := ControlStyle + [csAcceptsControls];
 end;
 
-procedure TPanneauPersonnalise.SetTitre(const Value: string);
-begin
+procedure TPanneauPersonnalise.SetTitre(const Value: string);  
+begin  
   if FTitre <> Value then
   begin
     FTitre := Value;
@@ -764,8 +764,8 @@ begin
   end;
 end;
 
-procedure TPanneauPersonnalise.SetCouleurTitre(const Value: TColor);
-begin
+procedure TPanneauPersonnalise.SetCouleurTitre(const Value: TColor);  
+begin  
   if FCouleurTitre <> Value then
   begin
     FCouleurTitre := Value;
@@ -773,8 +773,8 @@ begin
   end;
 end;
 
-procedure TPanneauPersonnalise.SetHauteurTitre(const Value: Integer);
-begin
+procedure TPanneauPersonnalise.SetHauteurTitre(const Value: Integer);  
+begin  
   if FHauteurTitre <> Value then
   begin
     FHauteurTitre := Value;
@@ -783,8 +783,8 @@ begin
   end;
 end;
 
-procedure TPanneauPersonnalise.Paint;
-var
+procedure TPanneauPersonnalise.Paint;  
+var  
   R: TRect;
 begin
   inherited Paint;
@@ -807,14 +807,14 @@ begin
   Canvas.Rectangle(0, 0, Width, Height);
 end;
 
-procedure TPanneauPersonnalise.Resize;
-begin
+procedure TPanneauPersonnalise.Resize;  
+begin  
   inherited Resize;
   Invalidate;
 end;
 
-procedure TPanneauPersonnalise.AlignControls(AControl: TControl; var Rect: TRect);
-begin
+procedure TPanneauPersonnalise.AlignControls(AControl: TControl; var Rect: TRect);  
+begin  
   // Ajuster la zone disponible pour les contrôles enfants
   // en tenant compte de la barre de titre
   Rect.Top := FHauteurTitre + 5;
@@ -881,34 +881,34 @@ implementation
 uses
   System.IOUtils;
 
-constructor TGestionnaireLog.Create(AOwner: TComponent);
-begin
+constructor TGestionnaireLog.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
   FActif := True;
   FNiveauMinimum := nlDebug;
   FNomFichier := 'application.log';
 end;
 
-destructor TGestionnaireLog.Destroy;
-begin
+destructor TGestionnaireLog.Destroy;  
+begin  
   // Nettoyage si nécessaire
   inherited Destroy;
 end;
 
-procedure TGestionnaireLog.SetNomFichier(const Value: string);
-begin
+procedure TGestionnaireLog.SetNomFichier(const Value: string);  
+begin  
   if FNomFichier <> Value then
     FNomFichier := Value;
 end;
 
-procedure TGestionnaireLog.DoLog(Niveau: TNiveauLog; const Message: string);
-begin
+procedure TGestionnaireLog.DoLog(Niveau: TNiveauLog; const Message: string);  
+begin  
   if Assigned(FOnLog) then
     FOnLog(Self, Niveau, Message);
 end;
 
-procedure TGestionnaireLog.EcrireDansFichier(const Ligne: string);
-var
+procedure TGestionnaireLog.EcrireDansFichier(const Ligne: string);  
+var  
   Fichier: TextFile;
 begin
   try
@@ -927,8 +927,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireLog.Log(Niveau: TNiveauLog; const Message: string);
-const
+procedure TGestionnaireLog.Log(Niveau: TNiveauLog; const Message: string);  
+const  
   NiveauTexte: array[TNiveauLog] of string =
     ('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL');
 var
@@ -949,33 +949,33 @@ begin
   DoLog(Niveau, Message);
 end;
 
-procedure TGestionnaireLog.Debug(const Message: string);
-begin
+procedure TGestionnaireLog.Debug(const Message: string);  
+begin  
   Log(nlDebug, Message);
 end;
 
-procedure TGestionnaireLog.Info(const Message: string);
-begin
+procedure TGestionnaireLog.Info(const Message: string);  
+begin  
   Log(nlInfo, Message);
 end;
 
-procedure TGestionnaireLog.Avertissement(const Message: string);
-begin
+procedure TGestionnaireLog.Avertissement(const Message: string);  
+begin  
   Log(nlAvertissement, Message);
 end;
 
-procedure TGestionnaireLog.Erreur(const Message: string);
-begin
+procedure TGestionnaireLog.Erreur(const Message: string);  
+begin  
   Log(nlErreur, Message);
 end;
 
-procedure TGestionnaireLog.Critique(const Message: string);
-begin
+procedure TGestionnaireLog.Critique(const Message: string);  
+begin  
   Log(nlCritique, Message);
 end;
 
-procedure Register;
-begin
+procedure Register;  
+begin  
   RegisterComponents('Mes Composants', [TGestionnaireLog]);
 end;
 
@@ -985,8 +985,8 @@ end.
 ### Utilisation
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   GestionnaireLog1.NomFichier := 'C:\Logs\monapp.log';
   GestionnaireLog1.Actif := True;
   GestionnaireLog1.NiveauMinimum := nlInfo;
@@ -995,8 +995,8 @@ begin
   GestionnaireLog1.Info('Application démarrée');
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   try
     // Code qui peut générer une erreur
     GestionnaireLog1.Debug('Début du traitement');
@@ -1088,14 +1088,14 @@ type
 ### 2. Toujours appeler inherited
 
 ```pascal
-constructor TMonComposant.Create(AOwner: TComponent);
-begin
+constructor TMonComposant.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner); // TOUJOURS en premier
   // Votre code d'initialisation
 end;
 
-procedure TMonComposant.Paint;
-begin
+procedure TMonComposant.Paint;  
+begin  
   inherited Paint; // Appeler la version parente
   // Votre code de dessin
 end;
@@ -1104,8 +1104,8 @@ end;
 ### 3. Utiliser Invalidate pour le redessin
 
 ```pascal
-procedure TMonComposant.SetCouleur(const Value: TColor);
-begin
+procedure TMonComposant.SetCouleur(const Value: TColor);  
+begin  
   if FCouleur <> Value then
   begin
     FCouleur := Value;
@@ -1117,8 +1117,8 @@ end;
 ### 4. Valider les valeurs des propriétés
 
 ```pascal
-procedure TJauge.SetMaximum(const Value: Integer);
-begin
+procedure TJauge.SetMaximum(const Value: Integer);  
+begin  
   if Value <= FMinimum then
     raise Exception.Create('Maximum doit être supérieur à Minimum');
 
@@ -1163,25 +1163,25 @@ type
 
 implementation
 
-constructor TMonComposant.Create(AOwner: TComponent);
-begin
+constructor TMonComposant.Create(AOwner: TComponent);  
+begin  
   inherited;
   FOptions := TStringList.Create;
 end;
 
-destructor TMonComposant.Destroy;
-begin
+destructor TMonComposant.Destroy;  
+begin  
   FOptions.Free;
   inherited;
 end;
 
-function TMonComposant.GetOptions: TStrings;
-begin
+function TMonComposant.GetOptions: TStrings;  
+begin  
   Result := FOptions;
 end;
 
-procedure TMonComposant.SetOptions(const Value: TStrings);
-begin
+procedure TMonComposant.SetOptions(const Value: TStrings);  
+begin  
   FOptions.Assign(Value);
 end;
 ```
@@ -1189,20 +1189,20 @@ end;
 ### 7. Optimiser le redessin
 
 ```pascal
-procedure TMonComposant.BeginUpdate;
-begin
+procedure TMonComposant.BeginUpdate;  
+begin  
   Inc(FUpdateCount);
 end;
 
-procedure TMonComposant.EndUpdate;
-begin
+procedure TMonComposant.EndUpdate;  
+begin  
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
     Invalidate;
 end;
 
-procedure TMonComposant.SetPropriete(const Value: Integer);
-begin
+procedure TMonComposant.SetPropriete(const Value: Integer);  
+begin  
   if FUpdateCount = 0 then
     Invalidate;
 end;
@@ -1211,8 +1211,8 @@ end;
 ### 8. Supporter le changement de taille
 
 ```pascal
-procedure TMonComposant.Paint;
-var
+procedure TMonComposant.Paint;  
+var  
   R: TRect;
 begin
   inherited;
@@ -1229,8 +1229,8 @@ end;
 
 ```pascal
 {$IFDEF DEBUG}
-procedure TMonComposant.SetPosition(const Value: Integer);
-begin
+procedure TMonComposant.SetPosition(const Value: Integer);  
+begin  
   // Vérifications supplémentaires en mode debug
   Assert(Value >= FMinimum, 'Position < Minimum');
   Assert(Value <= FMaximum, 'Position > Maximum');
@@ -1244,8 +1244,8 @@ end;
 ### 10. Gestion des ressources
 
 ```pascal
-destructor TMonComposant.Destroy;
-begin
+destructor TMonComposant.Destroy;  
+begin  
   // Libérer tous les objets créés
   FreeAndNil(FBitmap);
   FreeAndNil(FListe);
@@ -1274,8 +1274,8 @@ type
     function GetValue: string; override;
   end;
 
-procedure TCouleurGradientEditor.Edit;
-begin
+procedure TCouleurGradientEditor.Edit;  
+begin  
   // Afficher un dialogue personnalisé pour éditer la propriété
   with TFormEditeurCouleur.Create(nil) do
   try
@@ -1287,19 +1287,19 @@ begin
   end;
 end;
 
-function TCouleurGradientEditor.GetAttributes: TPropertyAttributes;
-begin
+function TCouleurGradientEditor.GetAttributes: TPropertyAttributes;  
+begin  
   Result := [paDialog, paRevertable];
 end;
 
-function TCouleurGradientEditor.GetValue: string;
-begin
+function TCouleurGradientEditor.GetValue: string;  
+begin  
   Result := ColorToString(GetOrdValue);
 end;
 
 // Enregistrer l'éditeur
-procedure Register;
-begin
+procedure Register;  
+begin  
   RegisterPropertyEditor(TypeInfo(TColor), TMonComposant,
     'CouleurGradient', TCouleurGradientEditor);
 end;
@@ -1314,8 +1314,8 @@ end;
 
 {$R EditNumerique.dcr}
 
-procedure Register;
-begin
+procedure Register;  
+begin  
   RegisterComponents('Mes Composants', [TEditNumerique]);
 end;
 ```
@@ -1331,19 +1331,19 @@ type
     procedure EcrireData(Writer: TWriter);
   end;
 
-procedure TMonComposant.DefineProperties(Filer: TFiler);
-begin
+procedure TMonComposant.DefineProperties(Filer: TFiler);  
+begin  
   inherited;
   Filer.DefineProperty('DonneesPersonnalisees', LireData, EcrireData, True);
 end;
 
-procedure TMonComposant.LireData(Reader: TReader);
-begin
+procedure TMonComposant.LireData(Reader: TReader);  
+begin  
   // Lire depuis le fichier .dfm
 end;
 
-procedure TMonComposant.EcrireData(Writer: TWriter);
-begin
+procedure TMonComposant.EcrireData(Writer: TWriter);  
+begin  
   // Écrire dans le fichier .dfm
 end;
 ```

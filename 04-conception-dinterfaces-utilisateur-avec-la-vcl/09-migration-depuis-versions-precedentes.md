@@ -325,9 +325,9 @@ end;
 Essayez de compiler le projet :
 
 ```
-Menu Projet → Compiler [Projet]
-ou
-Ctrl + F9
+Menu Projet → Compiler [Projet]  
+ou  
+Ctrl + F9  
 ```
 
 **Résultats possibles :**
@@ -372,8 +372,8 @@ Delphi 13 peut souvent corriger automatiquement. Sinon, ajoutez les préfixes ma
 
 **Code Delphi 7 :**
 ```pascal
-procedure TraiterFichier(NomFichier: string);
-var
+procedure TraiterFichier(NomFichier: string);  
+var  
   F: File;
   Buffer: array[0..1023] of Char;
 begin
@@ -386,8 +386,8 @@ end;
 
 **Solution Delphi 13 :**
 ```pascal
-procedure TraiterFichier(const NomFichier: string);
-var
+procedure TraiterFichier(const NomFichier: string);  
+var  
   Stream: TFileStream;
   Buffer: TBytes;
 begin
@@ -460,8 +460,8 @@ end;
 
 **Avant :**
 ```pascal
-procedure SauvegarderTexte(const Texte: string);
-var
+procedure SauvegarderTexte(const Texte: string);  
+var  
   F: TextFile;
 begin
   AssignFile(F, 'sortie.txt');
@@ -473,8 +473,8 @@ end;
 
 **Après :**
 ```pascal
-procedure SauvegarderTexte(const Texte: string);
-var
+procedure SauvegarderTexte(const Texte: string);  
+var  
   Liste: TStringList;
 begin
   Liste := TStringList.Create;
@@ -539,8 +539,8 @@ end;
 
 **Delphi 13 - Nouvelles propriétés :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Styles modernes disponibles
   Button1.StyleElements := [seFont, seClient, seBorder];
 
@@ -555,8 +555,8 @@ end;
 
 **Code mis à jour :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Masques de saisie améliorés
   Edit1.TextHint := 'Entrez votre nom'; // Texte d'indication
   Edit1.NumbersOnly := True; // Seulement des chiffres (nouvelle propriété)
@@ -566,8 +566,8 @@ end;
 #### TMainMenu et menus modernes
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Support des images amélioré
   MainMenu1.Images := ImageList1;
   MenuFichier.ImageIndex := 0;
@@ -581,8 +581,8 @@ end;
 
 **Ancien code avec TStringGrid :**
 ```pascal
-procedure TForm1.RemplirGrille;
-var
+procedure TForm1.RemplirGrille;  
+var  
   i: Integer;
 begin
   StringGrid1.RowCount := 10;
@@ -596,8 +596,8 @@ end;
 
 **Nouveau code avec TStringGrid amélioré :**
 ```pascal
-procedure TForm1.RemplirGrille;
-var
+procedure TForm1.RemplirGrille;  
+var  
   i: Integer;
 begin
   StringGrid1.BeginUpdate;
@@ -628,8 +628,8 @@ Delphi 13 supporte les styles visuels modernes pour Windows 11.
 uses
   Vcl.Themes;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Vérifier si les styles sont disponibles
   if TStyleManager.IsValidStyle('Windows11 Modern Dark') then
     TStyleManager.SetStyle('Windows11 Modern Dark');
@@ -648,8 +648,8 @@ end;
 
 **Code compatible avec les styles :**
 ```pascal
-procedure TForm1.DessinerFond;
-begin
+procedure TForm1.DessinerFond;  
+begin  
   // Utiliser les couleurs du thème actuel
   Canvas.Brush.Color := StyleServices.GetSystemColor(clWindow);
   Canvas.FillRect(ClientRect);
@@ -671,15 +671,15 @@ Les applications Delphi anciennes peuvent apparaître floues sur les écrans hau
 **Ancienne approche (Delphi 7) :**
 ```pascal
 // Tailles codées en dur
-Button1.Width := 75;
-Button1.Height := 25;
-Label1.Font.Size := 8;
+Button1.Width := 75;  
+Button1.Height := 25;  
+Label1.Font.Size := 8;  
 ```
 
 **Nouvelle approche (Delphi 13) :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Utiliser des facteurs d'échelle
   Button1.Width := ScaleValue(75);
   Button1.Height := ScaleValue(25);
@@ -688,16 +688,16 @@ begin
   // si la propriété Scaled est True
 end;
 
-function TForm1.ScaleValue(Value: Integer): Integer;
-begin
+function TForm1.ScaleValue(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, Self.PixelsPerInch, 96);
 end;
 ```
 
 **Configuration du formulaire :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Activer le support DPI
   Self.Scaled := True;
   Self.Font.Name := 'Segoe UI';
@@ -828,8 +828,8 @@ Créez un script pour automatiser certaines tâches :
 
 ```pascal
 // Script de migration automatique (pseudo-code)
-procedure MigrerUnites;
-var
+procedure MigrerUnites;  
+var  
   Fichiers: TStringList;
   i: Integer;
   Contenu: string;
@@ -1034,8 +1034,8 @@ type
     procedure Execute; override;
   end;
 
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // DANGER : Accès direct à l'interface depuis le thread
   Form1.Label1.Caption := 'Traitement...';
 end;
@@ -1051,13 +1051,13 @@ type
     procedure MettreAJourInterface;
   end;
 
-procedure TMonThread.MettreAJourInterface;
-begin
+procedure TMonThread.MettreAJourInterface;  
+begin  
   Form1.Label1.Caption := 'Traitement...';
 end;
 
-procedure TMonThread.Execute;
-begin
+procedure TMonThread.Execute;  
+begin  
   // Synchroniser avec le thread principal
   Synchronize(MettreAJourInterface);
 
@@ -1098,10 +1098,10 @@ end;
 Migrer progressivement chaque module de l'application.
 
 ```
-Phase 1 : Module de connexion
-Phase 2 : Module de gestion clients
-Phase 3 : Module de facturation
-Phase 4 : Module de reporting
+Phase 1 : Module de connexion  
+Phase 2 : Module de gestion clients  
+Phase 3 : Module de facturation  
+Phase 4 : Module de reporting  
 ```
 
 **Avantages :**
@@ -1137,8 +1137,8 @@ Développer une nouvelle version en parallèle.
 
 ```bash
 # Git - Créer une branche de migration
-git checkout -b migration-delphi13
-git commit -m "Début migration Delphi 13"
+git checkout -b migration-delphi13  
+git commit -m "Début migration Delphi 13"  
 ```
 
 ### 2. Documenter les changements
@@ -1174,11 +1174,11 @@ Testez après chaque modification significative :
 ### 4. Planification
 
 ```
-Semaine 1 : Évaluation et préparation
-Semaine 2-3 : Migration du code
-Semaine 4 : Tests et corrections
-Semaine 5 : Tests utilisateurs
-Semaine 6 : Déploiement
+Semaine 1 : Évaluation et préparation  
+Semaine 2-3 : Migration du code  
+Semaine 4 : Tests et corrections  
+Semaine 5 : Tests utilisateurs  
+Semaine 6 : Déploiement  
 ```
 
 ### 5. Formation de l'équipe

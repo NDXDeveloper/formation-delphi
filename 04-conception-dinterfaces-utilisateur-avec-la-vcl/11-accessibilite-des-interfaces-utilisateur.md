@@ -80,8 +80,8 @@ Une application accessible est :
 
 **P - Perceptible**
 ```
-L'information doit être présentable aux utilisateurs
-de manière à ce qu'ils puissent la percevoir.
+L'information doit être présentable aux utilisateurs  
+de manière à ce qu'ils puissent la percevoir.  
 
 Exemples :
 - Alternative textuelle pour les images
@@ -92,8 +92,8 @@ Exemples :
 
 **O - Opérable (Utilisable)**
 ```
-Les composants de l'interface doivent être utilisables
-par tous les moyens d'interaction.
+Les composants de l'interface doivent être utilisables  
+par tous les moyens d'interaction.  
 
 Exemples :
 - Navigation au clavier complète
@@ -104,8 +104,8 @@ Exemples :
 
 **U - Understandable (Compréhensible)**
 ```
-L'information et l'utilisation de l'interface
-doivent être compréhensibles.
+L'information et l'utilisation de l'interface  
+doivent être compréhensibles.  
 
 Exemples :
 - Texte lisible et compréhensible
@@ -116,8 +116,8 @@ Exemples :
 
 **R - Robuste**
 ```
-Le contenu doit être robuste pour être interprété
-par différentes technologies d'assistance.
+Le contenu doit être robuste pour être interprété  
+par différentes technologies d'assistance.  
 
 Exemples :
 - Code valide et standard
@@ -143,8 +143,8 @@ De nombreux utilisateurs ne peuvent pas ou préfèrent ne pas utiliser la souris
 La touche Tab permet de naviguer entre les contrôles. L'ordre doit être logique et prévisible.
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Définir l'ordre de tabulation
   EditNom.TabOrder := 0;      // Premier champ
   EditPrenom.TabOrder := 1;   // Deuxième champ
@@ -158,8 +158,8 @@ end;
 
 **Vérification automatique :**
 ```pascal
-procedure TForm1.VerifierOrdreTabulation;
-var
+procedure TForm1.VerifierOrdreTabulation;  
+var  
   i: Integer;
   Controle: TWinControl;
 begin
@@ -181,8 +181,8 @@ end;
 ### TabStop : Inclure/exclure de la tabulation
 
 ```pascal
-procedure TForm1.ConfigurerTabStop;
-begin
+procedure TForm1.ConfigurerTabStop;  
+begin  
   // Composants devant recevoir le focus
   EditNom.TabStop := True;
   ButtonValider.TabStop := True;
@@ -200,8 +200,8 @@ end;
 
 **Touches d'accès rapide (mnémoniques) :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Utiliser & pour créer un raccourci Alt+lettre
   LabelNom.Caption := '&Nom :';         // Alt+N
   LabelPrenom.Caption := '&Prénom :';   // Alt+P
@@ -304,8 +304,8 @@ Un **lecteur d'écran** est un logiciel qui lit à haute voix le contenu affich�
 
 **Hint : Info-bulle**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Activer les hints
   ShowHint := True;
 
@@ -328,25 +328,25 @@ end;
 **Caption : Texte descriptif**
 ```pascal
 // Mauvais : Icônes sans texte
-Button1.Caption := '';
-Button2.Caption := '';
+Button1.Caption := '';  
+Button2.Caption := '';  
 
 // Bon : Texte descriptif
-ButtonNouveau.Caption := 'Nouveau';
-ButtonOuvrir.Caption := 'Ouvrir';
-ButtonEnregistrer.Caption := 'Enregistrer';
+ButtonNouveau.Caption := 'Nouveau';  
+ButtonOuvrir.Caption := 'Ouvrir';  
+ButtonEnregistrer.Caption := 'Enregistrer';  
 
 // Acceptable avec hint clair si contrainte d'espace
-SpeedButton1.Caption := '';
-SpeedButton1.Hint := 'Nouveau document (Ctrl+N)';
-SpeedButton1.ShowHint := True;
+SpeedButton1.Caption := '';  
+SpeedButton1.Hint := 'Nouveau document (Ctrl+N)';  
+SpeedButton1.ShowHint := True;  
 ```
 
 **AccessibleName et AccessibleDescription (Windows)**
 ```pascal
 // Pour les composants VCL avec support MSAA
-procedure TForm1.ConfigurerAccessibilite;
-begin
+procedure TForm1.ConfigurerAccessibilite;  
+begin  
   // Ces propriétés aident les lecteurs d'écran
   Edit1.AccessibleName := 'Nom du client';
   Edit1.AccessibleDescription := 'Saisir le nom complet du client';
@@ -360,8 +360,8 @@ end;
 
 ```pascal
 // Informer l'utilisateur des changements
-procedure TForm1.AjouterElementAListe(const Element: string);
-begin
+procedure TForm1.AjouterElementAListe(const Element: string);  
+begin  
   ListBox1.Items.Add(Element);
 
   // Annoncer le changement
@@ -372,8 +372,8 @@ begin
   AnnoncerMessage(Format('%s ajouté', [Element]));
 end;
 
-procedure TForm1.AnnoncerMessage(const Message: string);
-begin
+procedure TForm1.AnnoncerMessage(const Message: string);  
+begin  
   // Utiliser la synthèse vocale Windows (nécessite units supplémentaires)
   // Ou mettre à jour un composant visible par les lecteurs d'écran
   LabelAnnonce.Caption := Message;
@@ -403,8 +403,8 @@ Niveau AAA (optimal) :
 uses
   Vcl.Graphics;
 
-function CalculerLuminance(Couleur: TColor): Double;
-var
+function CalculerLuminance(Couleur: TColor): Double;  
+var  
   R, G, B: Byte;
   Rs, Gs, Bs: Double;
 begin
@@ -437,8 +437,8 @@ begin
   Result := 0.2126 * Rs + 0.7152 * Gs + 0.0722 * Bs;
 end;
 
-function CalculerRatioContraste(Couleur1, Couleur2: TColor): Double;
-var
+function CalculerRatioContraste(Couleur1, Couleur2: TColor): Double;  
+var  
   L1, L2: Double;
 begin
   L1 := CalculerLuminance(Couleur1);
@@ -450,8 +450,8 @@ begin
     Result := (L2 + 0.05) / (L1 + 0.05);
 end;
 
-procedure TForm1.VerifierContrasteLabel;
-var
+procedure TForm1.VerifierContrasteLabel;  
+var  
   Ratio: Double;
 begin
   Ratio := CalculerRatioContraste(Label1.Font.Color, Label1.Color);
@@ -472,8 +472,8 @@ end;
 **Mauvaise pratique :**
 ```pascal
 // Utiliser uniquement la couleur pour indiquer un état
-procedure TForm1.MarquerChampInvalide(Edit: TEdit);
-begin
+procedure TForm1.MarquerChampInvalide(Edit: TEdit);  
+begin  
   Edit.Color := clRed; // Seul indicateur = problème pour daltoniens
 end;
 ```
@@ -481,8 +481,8 @@ end;
 **Bonne pratique :**
 ```pascal
 // Combiner couleur et autre indicateur visuel
-procedure TForm1.MarquerChampInvalide(Edit: TEdit; const MessageErreur: string);
-begin
+procedure TForm1.MarquerChampInvalide(Edit: TEdit; const MessageErreur: string);  
+begin  
   // Couleur
   Edit.Color := RGB(255, 230, 230); // Rouge pâle
 
@@ -499,8 +499,8 @@ begin
   Edit.BorderStyle := bsSingle;
 end;
 
-procedure TForm1.MarquerChampValide(Edit: TEdit);
-begin
+procedure TForm1.MarquerChampValide(Edit: TEdit);  
+begin  
   Edit.Color := clWindow;
   ImageErreur.Visible := False;
   LabelErreur.Visible := False;
@@ -533,8 +533,8 @@ const
 
 **Polices recommandées :**
 ```pascal
-procedure TForm1.ChoisirPoliceAccessible;
-begin
+procedure TForm1.ChoisirPoliceAccessible;  
+begin  
   // Polices sans serif, claires et lisibles
   Font.Name := 'Segoe UI';        // Windows moderne
   // ou
@@ -556,8 +556,8 @@ end;
 ### Polices pour la dyslexie
 
 ```pascal
-procedure TForm1.ActiverModeSymptexie;
-begin
+procedure TForm1.ActiverModeSymptexie;  
+begin  
   // Polices spécialement conçues pour la dyslexie
   // (nécessite d'installer la police sur le système)
 
@@ -579,8 +579,8 @@ end;
 type
   TTaillePolice = (tpPetite, tpMoyenne, tpGrande, tpTresGrande);
 
-procedure TForm1.ChangerTaillePolice(Taille: TTaillePolice);
-var
+procedure TForm1.ChangerTaillePolice(Taille: TTaillePolice);  
+var  
   i: Integer;
   NouvelleSize: Integer;
 begin
@@ -606,8 +606,8 @@ begin
   AjusterDimensionsFormulaire;
 end;
 
-procedure TForm1.AjusterDimensionsFormulaire;
-begin
+procedure TForm1.AjusterDimensionsFormulaire;  
+begin  
   // Augmenter la hauteur pour accommoder le texte plus grand
   Height := Height + (Font.Size - 11) * 10;
 end;
@@ -616,8 +616,8 @@ end;
 ### Menu de réglage de taille
 
 ```pascal
-procedure TForm1.CreerMenuAccessibilite;
-var
+procedure TForm1.CreerMenuAccessibilite;  
+var  
   MenuAccessibilite, SousMenuTaille: TMenuItem;
 begin
   // Créer menu principal
@@ -651,8 +651,8 @@ begin
   Parent.Add(MenuItem);
 end;
 
-procedure TForm1.MenuTailleClick(Sender: TObject);
-begin
+procedure TForm1.MenuTailleClick(Sender: TObject);  
+begin  
   if Sender is TMenuItem then
     ChangerTaillePolice(TTaillePolice(TMenuItem(Sender).Tag));
 end;
@@ -669,8 +669,8 @@ Le focus visuel indique quel élément est actuellement actif lors de la navigat
 ### Indicateur de focus par défaut
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // S'assurer que le focus est visible
   Button1.TabStop := True;
 
@@ -689,8 +689,8 @@ type
     procedure DoExit; override;
   end;
 
-procedure TEditAvecFocus.DoEnter;
-begin
+procedure TEditAvecFocus.DoEnter;  
+begin  
   inherited;
   // Mettre en évidence le champ actif
   Color := RGB(255, 255, 200); // Jaune pâle
@@ -698,8 +698,8 @@ begin
   BorderStyle := bsSingle;
 end;
 
-procedure TEditAvecFocus.DoExit;
-begin
+procedure TEditAvecFocus.DoExit;  
+begin  
   inherited;
   // Retour à l'apparence normale
   Color := clWindow;
@@ -710,8 +710,8 @@ end;
 ### Ordre de focus logique
 
 ```pascal
-procedure TForm1.ConfigurerOrdreLogique;
-begin
+procedure TForm1.ConfigurerOrdreLogique;  
+begin  
   // Ordre de lecture naturel : gauche à droite, haut en bas
 
   // Ligne 1
@@ -736,8 +736,8 @@ end;
 ### Focus visible même avec la souris
 
 ```pascal
-procedure TForm1.Button1Enter(Sender: TObject);
-begin
+procedure TForm1.Button1Enter(Sender: TObject);  
+begin  
   // Toujours afficher un indicateur visuel du focus
   Button1.Font.Style := [fsBold];
 
@@ -746,8 +746,8 @@ begin
   Panel1.BorderWidth := 2;
 end;
 
-procedure TForm1.Button1Exit(Sender: TObject);
-begin
+procedure TForm1.Button1Exit(Sender: TObject);  
+begin  
   Button1.Font.Style := [];
   Panel1.BorderWidth := 1;
 end;
@@ -760,8 +760,8 @@ end;
 ### Labels associés aux champs
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // TOUJOURS associer un label à chaque champ de saisie
 
   LabelNom.Caption := '&Nom :';
@@ -782,8 +782,8 @@ end;
 ### Messages d'erreur clairs
 
 ```pascal
-procedure TForm1.ValiderFormulaire;
-var
+procedure TForm1.ValiderFormulaire;  
+var  
   Erreurs: TStringList;
 begin
   Erreurs := TStringList.Create;
@@ -833,8 +833,8 @@ end;
 ### Indication des champs obligatoires
 
 ```pascal
-procedure TForm1.MarquerChampsObligatoires;
-begin
+procedure TForm1.MarquerChampsObligatoires;  
+begin  
   // Méthode 1 : Astérisque dans le label
   LabelNom.Caption := '&Nom * :';
   LabelEmail.Caption := '&Email * :';
@@ -855,8 +855,8 @@ end;
 ### Groupes de champs liés
 
 ```pascal
-procedure TForm1.CreerGroupeAdresse;
-begin
+procedure TForm1.CreerGroupeAdresse;  
+begin  
   // Utiliser un GroupBox pour regrouper les champs liés
   GroupBoxAdresse := TGroupBox.Create(Self);
   GroupBoxAdresse.Parent := Self;
@@ -884,14 +884,14 @@ end;
 
 ```pascal
 // Mauvais : Message vague
-procedure AfficherErreurVague;
-begin
+procedure AfficherErreurVague;  
+begin  
   ShowMessage('Erreur !');
 end;
 
 // Bon : Message descriptif et actionnable
-procedure AfficherErreurDescriptive;
-begin
+procedure AfficherErreurDescriptive;  
+begin  
   ShowMessage(
     'Erreur lors de la sauvegarde' + #13#10#13#10 +
     'Le fichier "donnees.db" est en lecture seule.' + #13#10#13#10 +
@@ -906,8 +906,8 @@ end;
 ### Prévention des erreurs
 
 ```pascal
-procedure TForm1.PrevenirErreursSaisie;
-begin
+procedure TForm1.PrevenirErreursSaisie;  
+begin  
   // Limiter la saisie
   EditAge.NumbersOnly := True;
   EditAge.MaxLength := 3;
@@ -919,8 +919,8 @@ begin
   EditEmail.OnChange := ValiderEmailEnTempsReel;
 end;
 
-procedure TForm1.ValiderEmailEnTempsReel(Sender: TObject);
-begin
+procedure TForm1.ValiderEmailEnTempsReel(Sender: TObject);  
+begin  
   if Length(EditEmail.Text) = 0 then
   begin
     LabelAideEmail.Caption := 'Entrez votre adresse email';
@@ -942,8 +942,8 @@ end;
 ### Confirmation des actions importantes
 
 ```pascal
-procedure TForm1.SupprimerElementAvecConfirmation;
-var
+procedure TForm1.SupprimerElementAvecConfirmation;  
+var  
   NomElement: string;
 begin
   if ListBox1.ItemIndex = -1 then
@@ -1011,8 +1011,8 @@ end;
 
 ```pascal
 // Test : Pouvez-vous faire TOUT cela sans souris ?
-procedure TForm1.TesterNavigationClavier;
-begin
+procedure TForm1.TesterNavigationClavier;  
+begin  
   {
     1. Ouvrir l'application
     2. Naviguer entre tous les champs avec Tab
@@ -1032,8 +1032,8 @@ end;
 
 ```pascal
 // Installer NVDA (gratuit) et tester :
-procedure TesterAvecNVDA;
-begin
+procedure TesterAvecNVDA;  
+begin  
   {
     1. Lancer NVDA (Ctrl+Alt+N)
     2. Lancer votre application
@@ -1055,8 +1055,8 @@ end;
 ### Test de contraste
 
 ```pascal
-procedure TForm1.TesterContrastes;
-var
+procedure TForm1.TesterContrastes;  
+var  
   i: Integer;
   Ratio: Double;
   ProblemesTrouves: TStringList;
@@ -1227,8 +1227,8 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormInscription.FormCreate(Sender: TObject);
-begin
+procedure TFormInscription.FormCreate(Sender: TObject);  
+begin  
   ConfigurerAccessibilite;
   ConfigurerOrdreTabulation;
   ConfigurerRaccourcis;
@@ -1240,8 +1240,8 @@ begin
   StatusBar1.SimpleText := 'Remplissez le formulaire d''inscription';
 end;
 
-procedure TFormInscription.ConfigurerAccessibilite;
-begin
+procedure TFormInscription.ConfigurerAccessibilite;  
+begin  
   // Titre du formulaire descriptif
   Caption := 'Formulaire d''inscription - Tous les champs sont obligatoires';
 
@@ -1284,8 +1284,8 @@ begin
   LabelAideEmail.Font.Color := clGray;
 end;
 
-procedure TFormInscription.ConfigurerOrdreTabulation;
-begin
+procedure TFormInscription.ConfigurerOrdreTabulation;  
+begin  
   // Ordre logique de tabulation
   EditNom.TabOrder := 0;
   EditPrenom.TabOrder := 1;
@@ -1300,8 +1300,8 @@ begin
   ButtonAnnuler.Cancel := True;
 end;
 
-procedure TFormInscription.ConfigurerRaccourcis;
-begin
+procedure TFormInscription.ConfigurerRaccourcis;  
+begin  
   // Gestion globale du clavier
   KeyPreview := True;
 end;
@@ -1334,8 +1334,8 @@ begin
   end;
 end;
 
-procedure TFormInscription.EditEmailChange(Sender: TObject);
-begin
+procedure TFormInscription.EditEmailChange(Sender: TObject);  
+begin  
   // Validation en temps réel avec feedback visuel
   if Length(EditEmail.Text) = 0 then
   begin
@@ -1357,8 +1357,8 @@ begin
   end;
 end;
 
-function TFormInscription.ValiderFormulaire: Boolean;
-var
+function TFormInscription.ValiderFormulaire: Boolean;  
+var  
   Erreurs: TStringList;
 begin
   Result := False;
@@ -1407,8 +1407,8 @@ begin
   end;
 end;
 
-procedure TFormInscription.ButtonValiderClick(Sender: TObject);
-begin
+procedure TFormInscription.ButtonValiderClick(Sender: TObject);  
+begin  
   if ValiderFormulaire then
   begin
     MessageDlg(
@@ -1423,8 +1423,8 @@ begin
   end;
 end;
 
-procedure TFormInscription.ButtonAnnulerClick(Sender: TObject);
-begin
+procedure TFormInscription.ButtonAnnulerClick(Sender: TObject);  
+begin  
   if MessageDlg(
     'Voulez-vous vraiment annuler l''inscription ?',
     mtConfirmation,
@@ -1445,12 +1445,12 @@ L'accessibilité n'est pas une contrainte, c'est une opportunité de créer de m
 
 ### Avantages d'une application accessible
 
-✅ **Inclusive** - Utilisable par tous
-✅ **Professionnelle** - Image de qualité
-✅ **Légale** - Conforme aux réglementations
-✅ **Utilisable** - Plus facile pour tous
-✅ **Maintenable** - Mieux structurée
-✅ **Performante** - Navigation optimisée
+✅ **Inclusive** - Utilisable par tous  
+✅ **Professionnelle** - Image de qualité  
+✅ **Légale** - Conforme aux réglementations  
+✅ **Utilisable** - Plus facile pour tous  
+✅ **Maintenable** - Mieux structurée  
+✅ **Performante** - Navigation optimisée  
 ✅ **Future-proof** - Compatible avec nouvelles technologies
 
 ### Points clés à retenir

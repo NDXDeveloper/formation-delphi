@@ -102,8 +102,8 @@ Enfin, vous verrez comment aller plus loin :
 
 Pour tirer le meilleur parti de ce chapitre, vous devriez avoir :
 
-✓ **Une installation fonctionnelle de Delphi** (couverte au chapitre 1)
-✓ **Une familiarité avec l'IDE Delphi** (couverte au chapitre 2)
+✓ **Une installation fonctionnelle de Delphi** (couverte au chapitre 1)  
+✓ **Une familiarité avec l'IDE Delphi** (couverte au chapitre 2)  
 ✓ **Des bases en Object Pascal** (couvertes au chapitre 3)
 
 Si vous avez bien assimilé les concepts des trois premiers chapitres, vous êtes parfaitement préparé pour aborder la conception d'interfaces utilisateur !
@@ -210,16 +210,16 @@ Dans ce chapitre, nous nous concentrons sur la VCL car c'est souvent le **meille
 
 Une fois ce chapitre maîtrisé, vous serez capable de :
 
-✓ Créer des interfaces utilisateur attractives et professionnelles
-✓ Utiliser efficacement les composants VCL standards
-✓ Organiser vos formulaires de manière logique et ergonomique
-✓ Gérer les interactions utilisateur avec les événements
-✓ Créer des menus et barres d'outils
-✓ Utiliser des composants avancés comme les grilles et les arbres
-✓ Appliquer des styles visuels modernes
-✓ Créer des dialogues personnalisés
-✓ Comprendre quand et comment créer vos propres composants
-✓ Adapter vos interfaces aux écrans haute résolution
+✓ Créer des interfaces utilisateur attractives et professionnelles  
+✓ Utiliser efficacement les composants VCL standards  
+✓ Organiser vos formulaires de manière logique et ergonomique  
+✓ Gérer les interactions utilisateur avec les événements  
+✓ Créer des menus et barres d'outils  
+✓ Utiliser des composants avancés comme les grilles et les arbres  
+✓ Appliquer des styles visuels modernes  
+✓ Créer des dialogues personnalisés  
+✓ Comprendre quand et comment créer vos propres composants  
+✓ Adapter vos interfaces aux écrans haute résolution  
 ✓ Suivre les bonnes pratiques pour des interfaces accessibles
 
 En d'autres termes, vous aurez toutes les compétences nécessaires pour créer les interfaces utilisateur de **n'importe quelle application Windows**, du simple utilitaire à l'application de gestion d'entreprise complexe.

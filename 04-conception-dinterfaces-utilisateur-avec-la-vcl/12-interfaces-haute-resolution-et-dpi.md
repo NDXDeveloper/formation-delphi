@@ -16,24 +16,24 @@ Avec la popularisation des écrans haute résolution (4K, 5K, Retina), la gestio
 
 **Écrans traditionnels (96 DPI) :**
 ```
-Résolution standard : 1920×1080 (Full HD)
-Taille écran : 24 pouces
-DPI : 96
-Pixels par pouce : 92
+Résolution standard : 1920×1080 (Full HD)  
+Taille écran : 24 pouces  
+DPI : 96  
+Pixels par pouce : 92  
 
-Apparence : Pixels visibles de près
-Texte : Légèrement pixelisé
+Apparence : Pixels visibles de près  
+Texte : Légèrement pixelisé  
 ```
 
 **Écrans haute résolution (192+ DPI) :**
 ```
-Résolution 4K : 3840×2160
-Taille écran : 24 pouces
-DPI : 192 (200% scaling)
-Pixels par pouce : 184
+Résolution 4K : 3840×2160  
+Taille écran : 24 pouces  
+DPI : 192 (200% scaling)  
+Pixels par pouce : 184  
 
-Apparence : Pixels invisibles
-Texte : Parfaitement lisse
+Apparence : Pixels invisibles  
+Texte : Parfaitement lisse  
 ```
 
 ### Le problème avec les anciennes applications
@@ -184,8 +184,8 @@ Fonctionne sur tous les écrans
 ### Scaled : Activer le scaling automatique
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // TOUJOURS activer Scaled pour le support DPI
   Scaled := True;
 
@@ -196,8 +196,8 @@ end;
 
 **Dans l'Inspecteur d'objets :**
 ```
-Propriété : Scaled
-Valeur : True (IMPORTANT !)
+Propriété : Scaled  
+Valeur : True (IMPORTANT !)  
 ```
 
 ### PixelsPerInch : DPI de conception
@@ -209,8 +209,8 @@ Valeur : True (IMPORTANT !)
 
 // Lecture seule en mode design
 // Vous pouvez le lire en runtime :
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   ShowMessage(Format('DPI de conception : %d', [PixelsPerInch]));
   ShowMessage(Format('DPI actuel : %d', [Screen.PixelsPerInch]));
 end;
@@ -219,8 +219,8 @@ end;
 ### Font.PixelsPerInch : DPI de la police
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // La police s'adapte automatiquement si Scaled = True
   Font.Name := 'Segoe UI';
   Font.Size := 9; // Taille logique (points)
@@ -234,8 +234,8 @@ end;
 ### AutoScroll : Barres de défilement automatiques
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Permettre le défilement si le contenu dépasse la taille
   AutoScroll := True;
 
@@ -254,10 +254,10 @@ Delphi ajuste automatiquement la taille des composants selon la formule :
 ```
 Taille réelle = Taille de conception × (DPI actuel / DPI de conception)
 
-Exemple :
-Bouton conçu à 96 DPI, largeur 100 pixels
-Sur écran 192 DPI : 100 × (192 / 96) = 200 pixels
-Sur écran 144 DPI : 100 × (144 / 96) = 150 pixels
+Exemple :  
+Bouton conçu à 96 DPI, largeur 100 pixels  
+Sur écran 192 DPI : 100 × (192 / 96) = 200 pixels  
+Sur écran 144 DPI : 100 × (144 / 96) = 150 pixels  
 ```
 
 ### Exemple de formulaire auto-scalable
@@ -290,14 +290,14 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   ConfigurerDPI;
   AfficherInfosDPI;
 end;
 
-procedure TFormMain.ConfigurerDPI;
-begin
+procedure TFormMain.ConfigurerDPI;  
+begin  
   // Activer le scaling automatique
   Scaled := True;
 
@@ -312,8 +312,8 @@ begin
   // du scaling du formulaire
 end;
 
-procedure TFormMain.AfficherInfosDPI;
-begin
+procedure TFormMain.AfficherInfosDPI;  
+begin  
   Caption := Format('Mon Application - DPI: %d (Scale: %d%%)',
     [Screen.PixelsPerInch,
      Round(Screen.PixelsPerInch / 96 * 100)]);
@@ -365,20 +365,20 @@ Parfois, vous devez gérer le DPI manuellement :
 
 ```pascal
 // Fonction utilitaire pour scaler une valeur
-function ScaleValue(Value: Integer): Integer;
-begin
+function ScaleValue(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, Screen.PixelsPerInch, 96);
 end;
 
 // Ou pour scaler depuis le DPI de conception du formulaire
-function TForm1.ScaleValueFromDesign(Value: Integer): Integer;
-begin
+function TForm1.ScaleValueFromDesign(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, Screen.PixelsPerInch, Self.PixelsPerInch);
 end;
 
 // Utilisation :
-procedure TForm1.CreerBoutonDynamique;
-var
+procedure TForm1.CreerBoutonDynamique;  
+var  
   Bouton: TButton;
 begin
   Bouton := TButton.Create(Self);
@@ -397,8 +397,8 @@ end;
 ### Scaler le dessin sur Canvas
 
 ```pascal
-procedure TForm1.Image1Paint(Sender: TObject);
-var
+procedure TForm1.Image1Paint(Sender: TObject);  
+var  
   ScaleFactor: Double;
   RayonScaled, XScaled, YScaled: Integer;
 begin
@@ -439,37 +439,37 @@ type
 
 implementation
 
-class procedure TDPIHelper.Initialize;
-begin
+class procedure TDPIHelper.Initialize;  
+begin  
   FCurrentDPI := Screen.PixelsPerInch;
 end;
 
-class function TDPIHelper.Scale(Value: Integer): Integer;
-begin
+class function TDPIHelper.Scale(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, FCurrentDPI, 96);
 end;
 
-class function TDPIHelper.ScaleFloat(Value: Double): Double;
-begin
+class function TDPIHelper.ScaleFloat(Value: Double): Double;  
+begin  
   Result := Value * FCurrentDPI / 96;
 end;
 
-class function TDPIHelper.ScaleRect(const R: TRect): TRect;
-begin
+class function TDPIHelper.ScaleRect(const R: TRect): TRect;  
+begin  
   Result.Left := Scale(R.Left);
   Result.Top := Scale(R.Top);
   Result.Right := Scale(R.Right);
   Result.Bottom := Scale(R.Bottom);
 end;
 
-class function TDPIHelper.Unscale(Value: Integer): Integer;
-begin
+class function TDPIHelper.Unscale(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, 96, FCurrentDPI);
 end;
 
 // Utilisation :
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   TDPIHelper.Initialize;
 
   Panel1.Width := TDPIHelper.Scale(200);
@@ -496,8 +496,8 @@ Image1.Stretch := True;
 ### Solution 1 : Images multiples selon DPI
 
 ```pascal
-procedure TForm1.ChargerImageSelon DPI;
-var
+procedure TForm1.ChargerImageSelonDPI;  
+var  
   NomFichier: string;
 begin
   // Choisir l'image selon le DPI
@@ -518,8 +518,8 @@ end;
 ### Solution 2 : ImageList avec multi-résolution
 
 ```pascal
-procedure TForm1.ConfigurerImageListDPI;
-begin
+procedure TForm1.ConfigurerImageListDPI;  
+begin  
   // Delphi supporte les ImageList multi-résolution
   ImageList1.Width := ScaleValue(16);
   ImageList1.Height := ScaleValue(16);
@@ -534,8 +534,8 @@ end;
 ```pascal
 // Utiliser des SVG pour une qualité parfaite à toute taille
 // Nécessite un composant SVG (TMS, etc.)
-procedure TForm1.ChargerSVG;
-begin
+procedure TForm1.ChargerSVG;  
+begin  
   // Les SVG s'adaptent parfaitement à n'importe quel DPI
   SVGImage1.LoadFromFile('icone.svg');
   SVGImage1.Width := ScaleValue(100);
@@ -553,11 +553,11 @@ type
     ImageList32: TImageList;   // Images 32×32
     ImageList48: TImageList;   // Images 48×48
   private
-    procedure ChoisirImageListSelon DPI;
+    procedure ChoisirImageListSelonDPI;
   end;
 
-procedure TFormMain.ChoisirImageListSelon DPI;
-begin
+procedure TFormMain.ChoisirImageListSelonDPI;  
+begin  
   // Choisir l'ImageList appropriée
   if Screen.PixelsPerInch >= 192 then
   begin
@@ -598,8 +598,8 @@ type
     procedure AjusterPourNouveauDPI;
   end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   FDPIActuel := Screen.PixelsPerInch;
 end;
 
@@ -617,8 +617,8 @@ begin
   end;
 end;
 
-procedure TFormMain.AjusterPourNouveauDPI;
-begin
+procedure TFormMain.AjusterPourNouveauDPI;  
+begin  
   // Recalculer les éléments qui ne se scalent pas automatiquement
 
   // Recharger les images appropriées
@@ -646,8 +646,8 @@ type
     procedure WMDpiChanged(var Message: TMessage); message WM_DPICHANGED;
   end;
 
-procedure TFormMain.WMDpiChanged(var Message: TMessage);
-var
+procedure TFormMain.WMDpiChanged(var Message: TMessage);  
+var  
   NouveauDPI: Integer;
   SuggestedRect: PRect;
 begin
@@ -779,15 +779,15 @@ implementation
 
 {$R *.dfm}
 
-procedure TFormTestDPI.FormCreate(Sender: TObject);
-begin
+procedure TFormTestDPI.FormCreate(Sender: TObject);  
+begin  
   Scaled := True;
   AfficherInfosDPI;
   DessinerRegle;
 end;
 
-procedure TFormTestDPI.AfficherInfosDPI;
-begin
+procedure TFormTestDPI.AfficherInfosDPI;  
+begin  
   MemoInfo.Lines.Clear;
   MemoInfo.Lines.Add('=== Informations DPI ===');
   MemoInfo.Lines.Add('');
@@ -808,8 +808,8 @@ begin
   MemoInfo.Lines.Add(Format('Scaled : %s', [BoolToStr(Scaled, True)]));
 end;
 
-procedure TFormTestDPI.DessinerRegle;
-var
+procedure TFormTestDPI.DessinerRegle;  
+var  
   i, Largeur: Integer;
   ScaleFactor: Double;
 begin
@@ -837,8 +837,8 @@ begin
   end;
 end;
 
-procedure TFormTestDPI.ButtonRafraichirClick(Sender: TObject);
-begin
+procedure TFormTestDPI.ButtonRafraichirClick(Sender: TObject);  
+begin  
   AfficherInfosDPI;
   DessinerRegle;
 end;
@@ -881,15 +881,15 @@ Propriété AutoSize = False ou composants trop petits.
 **Solution :**
 ```pascal
 // Pour les labels
-Label1.AutoSize := True;
-Label1.WordWrap := True; // Si multiligne
+Label1.AutoSize := True;  
+Label1.WordWrap := True; // Si multiligne  
 
 // Pour les boutons
 Button1.AutoSize := True;
 
 // Ou définir des tailles minimales
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Button1.Constraints.MinWidth := ScaleValue(100);
   Button1.Constraints.MinHeight := ScaleValue(25);
 end;
@@ -911,8 +911,8 @@ const
   LARGEUR_BOUTON_MIN = 80;
   TAILLE_ICONE_MIN = 24;
 
-procedure TForm1.ConfigurerBoutons;
-begin
+procedure TForm1.ConfigurerBoutons;  
+begin  
   Button1.Height := ScaleValue(HAUTEUR_BOUTON_MIN);
   Button1.Width := ScaleValue(LARGEUR_BOUTON_MIN);
 end;
@@ -929,8 +929,8 @@ Images en résolution unique étirées.
 **Solution :**
 ```pascal
 // Utiliser plusieurs résolutions
-procedure ChargerIconeAdaptee;
-begin
+procedure ChargerIconeAdaptee;  
+begin  
   if Screen.PixelsPerInch >= 192 then
     ImageList1.LoadFromFile('icones@2x.png')
   else if Screen.PixelsPerInch >= 144 then
@@ -953,16 +953,16 @@ Utilisation de positions absolues au lieu d'alignements.
 **Solution :**
 ```pascal
 // Préférer les propriétés d'alignement
-Panel1.Align := alTop;
-Panel2.Align := alClient;
-Button1.Align := alBottom;
+Panel1.Align := alTop;  
+Panel2.Align := alClient;  
+Button1.Align := alBottom;  
 
 // Ou utiliser les ancres
 Button1.Anchors := [akRight, akBottom];
 
 // Au lieu de
-Button1.Left := 500;  // Position absolue = problème
-Button1.Top := 400;
+Button1.Left := 500;  // Position absolue = problème  
+Button1.Top := 400;  
 ```
 
 ### Problème 6 : Police trop petite/grande
@@ -975,8 +975,8 @@ Font.PixelsPerInch non correctement défini.
 
 **Solution :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Laisser Delphi gérer la police
   Font.Name := 'Segoe UI';
   Font.Size := 9;  // Taille en points, pas en pixels
@@ -994,8 +994,8 @@ end;
 
 ```pascal
 // Pour TOUS les formulaires
-procedure TFormBase.FormCreate(Sender: TObject);
-begin
+procedure TFormBase.FormCreate(Sender: TObject);  
+begin  
   Scaled := True;
   AutoScroll := True;
 end;
@@ -1005,8 +1005,8 @@ end;
 
 ```pascal
 // Bon : Tailles proportionnelles
-Panel1.Width := ClientWidth div 2;
-Panel2.Height := ClientHeight - Panel1.Height;
+Panel1.Width := ClientWidth div 2;  
+Panel2.Height := ClientHeight - Panel1.Height;  
 
 // Mauvais : Tailles absolues
 Panel1.Width := 400;  // Ne s'adapte pas
@@ -1016,13 +1016,13 @@ Panel1.Width := 400;  // Ne s'adapte pas
 
 ```pascal
 // Bon : Utilisation d'Align
-PanelGauche.Align := alLeft;
-PanelGauche.Width := ScaleValue(200);
-PanelDroite.Align := alClient;
+PanelGauche.Align := alLeft;  
+PanelGauche.Width := ScaleValue(200);  
+PanelDroite.Align := alClient;  
 
 // Bon : Utilisation d'Anchors
-ButtonOK.Anchors := [akRight, akBottom];
-ButtonAnnuler.Anchors := [akRight, akBottom];
+ButtonOK.Anchors := [akRight, akBottom];  
+ButtonAnnuler.Anchors := [akRight, akBottom];  
 ```
 
 ### 4. Tester régulièrement
@@ -1038,8 +1038,8 @@ Workflow recommandé :
 ### 5. Utiliser AutoSize pour les labels
 
 ```pascal
-procedure ConfigurerLabels;
-begin
+procedure ConfigurerLabels;  
+begin  
   Label1.AutoSize := True;
   Label1.WordWrap := True;  // Si texte long
 
@@ -1050,8 +1050,8 @@ end;
 ### 6. Définir des contraintes minimales
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Empêcher le formulaire d'être trop petit
   Constraints.MinWidth := ScaleValue(800);
   Constraints.MinHeight := ScaleValue(600);
@@ -1087,8 +1087,8 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
-constructor TBoutonScalable.Create(AOwner: TComponent);
-begin
+constructor TBoutonScalable.Create(AOwner: TComponent);  
+begin  
   inherited Create(AOwner);
 
   // Configuration par défaut scalable
@@ -1148,13 +1148,13 @@ implementation
 {$R *.dfm}
 
 // Fonction helper
-function ScaleValue(Value: Integer): Integer;
-begin
+function ScaleValue(Value: Integer): Integer;  
+begin  
   Result := MulDiv(Value, Screen.PixelsPerInch, 96);
 end;
 
-procedure TFormPrincipal.FormCreate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormCreate(Sender: TObject);  
+begin  
   FDPIInitial := Screen.PixelsPerInch;
   ConfigurerDPI;
   AjusterLayout;
@@ -1162,8 +1162,8 @@ begin
   MettreAJourStatusBar;
 end;
 
-procedure TFormPrincipal.ConfigurerDPI;
-begin
+procedure TFormPrincipal.ConfigurerDPI;  
+begin  
   // Activer le scaling automatique
   Scaled := True;
   AutoScroll := True;
@@ -1201,8 +1201,8 @@ begin
   );
 end;
 
-procedure TFormPrincipal.AjusterLayout;
-begin
+procedure TFormPrincipal.AjusterLayout;  
+begin  
   // Layout réactif avec Align
   PanelHaut.Align := alTop;
   PanelGauche.Align := alLeft;
@@ -1221,8 +1221,8 @@ begin
   LabelTitre.Font.Style := [fsBold];
 end;
 
-procedure TFormPrincipal.ChargerImagesSelonDPI;
-var
+procedure TFormPrincipal.ChargerImagesSelonDPI;  
+var  
   CheminImage: string;
 begin
   // Choisir l'image selon le DPI
@@ -1247,8 +1247,8 @@ begin
   end;
 end;
 
-procedure TFormPrincipal.MettreAJourStatusBar;
-begin
+procedure TFormPrincipal.MettreAJourStatusBar;  
+begin  
   StatusBar1.Panels[0].Text := Format('DPI: %d (%d%%)',
     [Screen.PixelsPerInch,
      Round(Screen.PixelsPerInch / 96 * 100)]);
@@ -1257,8 +1257,8 @@ begin
     [Screen.Width, Screen.Height]);
 end;
 
-procedure TFormPrincipal.FormResize(Sender: TObject);
-begin
+procedure TFormPrincipal.FormResize(Sender: TObject);  
+begin  
   // Ajustements lors du redimensionnement
   MettreAJourStatusBar;
 end;
@@ -1292,13 +1292,13 @@ La gestion correcte du DPI est essentielle pour créer des applications modernes
 
 ### Points clés à retenir
 
-✅ **Toujours activer Scaled = True** sur tous les formulaires
-✅ **Configurer le manifeste** avec PerMonitorV2
-✅ **Utiliser des fonctions de scaling** pour les valeurs dynamiques
-✅ **Prévoir plusieurs résolutions d'images** (1x, 1.5x, 2x)
-✅ **Privilégier Align et Anchors** plutôt que des positions fixes
-✅ **Tester régulièrement** à différents DPI
-✅ **Définir des contraintes minimales** pour éviter les interfaces cassées
+✅ **Toujours activer Scaled = True** sur tous les formulaires  
+✅ **Configurer le manifeste** avec PerMonitorV2  
+✅ **Utiliser des fonctions de scaling** pour les valeurs dynamiques  
+✅ **Prévoir plusieurs résolutions d'images** (1x, 1.5x, 2x)  
+✅ **Privilégier Align et Anchors** plutôt que des positions fixes  
+✅ **Tester régulièrement** à différents DPI  
+✅ **Définir des contraintes minimales** pour éviter les interfaces cassées  
 ✅ **Utiliser des polices scalables** (taille en points, pas en pixels)
 
 ### Avantages d'une application DPI-aware

@@ -64,16 +64,16 @@ Un gestionnaire d'événement (event handler) est une procédure qui s'exécute 
 
 **Syntaxe générale :**
 ```pascal
-procedure TForm1.NomComposantNomEvenement(Sender: TObject);
-begin
+procedure TForm1.NomComposantNomEvenement(Sender: TObject);  
+begin  
   // Votre code ici
 end;
 ```
 
 **Exemple concret :**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ShowMessage('Bouton cliqué !');
 end;
 ```
@@ -86,8 +86,8 @@ Le paramètre **Sender** représente le composant qui a déclenché l'événemen
 
 ```pascal
 // Un seul gestionnaire pour plusieurs boutons
-procedure TForm1.BoutonClick(Sender: TObject);
-begin
+procedure TForm1.BoutonClick(Sender: TObject);  
+begin  
   if Sender = Button1 then
     ShowMessage('Bouton 1 cliqué')
   else if Sender = Button2 then
@@ -99,8 +99,8 @@ end;
 
 **Utilisation avancée avec cast :**
 ```pascal
-procedure TForm1.BoutonClick(Sender: TObject);
-var
+procedure TForm1.BoutonClick(Sender: TObject);  
+var  
   Bouton: TButton;
 begin
   // Convertir Sender en TButton pour accéder à ses propriétés
@@ -152,14 +152,14 @@ end;
 procedure MonGestionnaire(Sender: TObject);
 
 // Dans le code
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Assigner le gestionnaire
   Button1.OnClick := MonGestionnaire;
 end;
 
-procedure TForm1.MonGestionnaire(Sender: TObject);
-begin
+procedure TForm1.MonGestionnaire(Sender: TObject);  
+begin  
   ShowMessage('Événement déclenché !');
 end;
 ```
@@ -173,8 +173,8 @@ end;
 L'événement le plus utilisé, déclenché lors d'un clic simple.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   Label1.Caption := 'Bouton cliqué !';
 end;
 ```
@@ -184,8 +184,8 @@ end;
 Déclenché lors d'un double-clic.
 
 ```pascal
-procedure TForm1.ListBox1DblClick(Sender: TObject);
-begin
+procedure TForm1.ListBox1DblClick(Sender: TObject);  
+begin  
   if ListBox1.ItemIndex <> -1 then
     ShowMessage('Vous avez double-cliqué sur : ' +
                 ListBox1.Items[ListBox1.ItemIndex]);
@@ -242,14 +242,14 @@ end;
 Déclenchés lorsque la souris entre ou sort du composant.
 
 ```pascal
-procedure TForm1.Button1MouseEnter(Sender: TObject);
-begin
+procedure TForm1.Button1MouseEnter(Sender: TObject);  
+begin  
   Button1.Color := clYellow;
   Button1.Font.Style := [fsBold];
 end;
 
-procedure TForm1.Button1MouseLeave(Sender: TObject);
-begin
+procedure TForm1.Button1MouseLeave(Sender: TObject);  
+begin  
   Button1.Color := clBtnFace;
   Button1.Font.Style := [];
 end;
@@ -282,10 +282,10 @@ end;
 Déclenché lorsqu'une touche de caractère est appuyée.
 
 ```pascal
-procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);  
+begin  
   // N'accepter que des chiffres
-  if not (Key in ['0'..'9', #8, #13]) then  // #8 = Backspace, #13 = Enter
+  if not CharInSet(Key, ['0'..'9', #8, #13]) then  // #8 = Backspace, #13 = Enter
   begin
     Key := #0; // Annuler la frappe
     Beep; // Son d'alerte
@@ -331,7 +331,7 @@ end;
 
 | Code | Touche |
 |------|--------|
-| `VK_RETURN` ou `VK_ENTER` | Entrée |
+| `VK_RETURN` | Entrée |
 | `VK_ESCAPE` | Échap |
 | `VK_SPACE` | Espace |
 | `VK_BACK` | Retour arrière |
@@ -353,15 +353,15 @@ end;
 ### Exemple complet : Calculatrice au clavier
 
 ```pascal
-procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TForm1.Edit1KeyPress(Sender: TObject; var Key: Char);  
+begin  
   case Key of
     '0'..'9', ',', '.':
       ; // Accepter les chiffres et décimales
 
     '+', '-', '*', '/':
       begin
-        FOprateur := Key;
+        FOperateur := Key;
         FValeur1 := StrToFloatDef(Edit1.Text, 0);
         Edit1.Clear;
       end;
@@ -397,8 +397,8 @@ end;
 Déclenché une seule fois, à la création du formulaire. C'est l'endroit idéal pour initialiser vos variables et composants.
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Initialisation
   FCompteur := 0;
   ListBox1.Items.Clear;
@@ -418,8 +418,8 @@ end;
 Déclenché chaque fois que le formulaire devient visible.
 
 ```pascal
-procedure TForm1.FormShow(Sender: TObject);
-begin
+procedure TForm1.FormShow(Sender: TObject);  
+begin  
   // Actualiser les données à chaque affichage
   ActualiserListeProduits;
 
@@ -433,8 +433,8 @@ end;
 **OnCloseQuery** : Permet de confirmer la fermeture.
 
 ```pascal
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);  
+begin  
   if Memo1.Modified then
   begin
     case MessageDlg('Enregistrer les modifications ?',
@@ -458,8 +458,8 @@ end;
 **OnClose** : Déclenché juste avant la fermeture effective.
 
 ```pascal
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   // Nettoyer les ressources
   SauvegarderConfiguration;
 
@@ -479,8 +479,8 @@ end;
 Déclenché lorsque la taille du formulaire change.
 
 ```pascal
-procedure TForm1.FormResize(Sender: TObject);
-begin
+procedure TForm1.FormResize(Sender: TObject);  
+begin  
   // Adapter la taille des composants
   Panel1.Width := ClientWidth - 20;
   Memo1.Height := ClientHeight - Panel1.Height - 30;
@@ -495,15 +495,15 @@ end;
 Déclenchés lorsque le formulaire devient actif ou perd le focus.
 
 ```pascal
-procedure TForm1.FormActivate(Sender: TObject);
-begin
+procedure TForm1.FormActivate(Sender: TObject);  
+begin  
   // Actualiser quand la fenêtre redevient active
   VerifierMisesAJour;
   StatusBar1.SimpleText := 'Fenêtre active';
 end;
 
-procedure TForm1.FormDeactivate(Sender: TObject);
-begin
+procedure TForm1.FormDeactivate(Sender: TObject);  
+begin  
   StatusBar1.SimpleText := 'Fenêtre inactive';
 end;
 ```
@@ -517,8 +517,8 @@ end;
 Déclenché à chaque modification du texte.
 
 ```pascal
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
+procedure TForm1.Edit1Change(Sender: TObject);  
+begin  
   // Compter les caractères en temps réel
   Label1.Caption := Format('Caractères : %d / 100', [Length(Edit1.Text)]);
 
@@ -541,16 +541,16 @@ end;
 Déclenchés lorsque le contrôle reçoit ou perd le focus.
 
 ```pascal
-procedure TForm1.Edit1Enter(Sender: TObject);
-begin
+procedure TForm1.Edit1Enter(Sender: TObject);  
+begin  
   // Sélectionner tout le texte quand on entre dans le champ
   Edit1.SelectAll;
   Edit1.Color := clYellow;
   StatusBar1.SimpleText := 'Saisie du nom...';
 end;
 
-procedure TForm1.Edit1Exit(Sender: TObject);
-begin
+procedure TForm1.Edit1Exit(Sender: TObject);  
+begin  
   // Valider et formatter à la sortie
   Edit1.Text := Trim(Edit1.Text); // Enlever les espaces
   Edit1.Color := clWindow;
@@ -566,14 +566,14 @@ end;
 ### TComboBox : OnChange et OnSelect
 
 ```pascal
-procedure TForm1.ComboBox1Change(Sender: TObject);
-begin
+procedure TForm1.ComboBox1Change(Sender: TObject);  
+begin  
   // Déclenché pour toute modification (même par code)
   Label1.Caption := 'Sélection : ' + ComboBox1.Text;
 end;
 
-procedure TForm1.ComboBox1Select(Sender: TObject);
-begin
+procedure TForm1.ComboBox1Select(Sender: TObject);  
+begin  
   // Déclenché uniquement par sélection utilisateur
   case ComboBox1.ItemIndex of
     0: AfficherPage1;
@@ -586,8 +586,8 @@ end;
 ### TCheckBox : OnClick
 
 ```pascal
-procedure TForm1.CheckBox1Click(Sender: TObject);
-begin
+procedure TForm1.CheckBox1Click(Sender: TObject);  
+begin  
   if CheckBox1.Checked then
   begin
     Panel1.Visible := True;
@@ -604,8 +604,8 @@ end;
 ### TListBox et TListView : OnClick, OnDblClick, OnSelectItem
 
 ```pascal
-procedure TForm1.ListBox1Click(Sender: TObject);
-begin
+procedure TForm1.ListBox1Click(Sender: TObject);  
+begin  
   if ListBox1.ItemIndex <> -1 then
   begin
     // Afficher des détails
@@ -616,8 +616,8 @@ begin
     Button1.Enabled := False;
 end;
 
-procedure TForm1.ListBox1DblClick(Sender: TObject);
-begin
+procedure TForm1.ListBox1DblClick(Sender: TObject);  
+begin  
   // Double-clic pour éditer
   if ListBox1.ItemIndex <> -1 then
     EditerElement(ListBox1.ItemIndex);
@@ -629,14 +629,14 @@ end;
 Déclenché périodiquement selon l'intervalle défini.
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Timer1.Interval := 1000; // 1000 ms = 1 seconde
   Timer1.Enabled := True;
 end;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   // Mise à jour de l'heure
   Label1.Caption := TimeToStr(Now);
 
@@ -693,8 +693,8 @@ Il est important de comprendre l'ordre dans lequel les événements se déclench
 ### Exemple de traçage des événements
 
 ```pascal
-procedure TForm1.TracerEvenement(const NomEvenement: string);
-begin
+procedure TForm1.TracerEvenement(const NomEvenement: string);  
+begin  
   Memo1.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + NomEvenement);
 end;
 
@@ -704,8 +704,8 @@ begin
   TracerEvenement('Button1.OnMouseDown');
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   TracerEvenement('Button1.OnClick');
 end;
 
@@ -740,26 +740,26 @@ type
 
 implementation
 
-procedure TForm1.DeclencherNotification(const Message: string);
-begin
+procedure TForm1.DeclencherNotification(const Message: string);  
+begin  
   // Déclencher l'événement s'il est assigné
   if Assigned(FOnNotification) then
     FOnNotification(Self, Message);
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   DeclencherNotification('Le bouton a été cliqué !');
 end;
 
 // Utilisation
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   OnNotification := GererNotification;
 end;
 
-procedure TForm1.GererNotification(Sender: TObject; const Message: string);
-begin
+procedure TForm1.GererNotification(Sender: TObject; const Message: string);  
+begin  
   ShowMessage(Message);
 end;
 ```
@@ -769,8 +769,8 @@ end;
 Disponible à partir de Delphi 2009.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Créer un événement anonyme
   TThread.CreateAnonymousThread(
     procedure
@@ -792,8 +792,8 @@ end;
 Parfois, vous devez modifier un contrôle sans déclencher ses événements.
 
 ```pascal
-procedure TForm1.ChargerDonnees;
-var
+procedure TForm1.ChargerDonnees;  
+var  
   EventHandler: TNotifyEvent;
 begin
   // Sauvegarder le gestionnaire
@@ -822,21 +822,21 @@ end;
 ### Exemple 1 : Validation de formulaire
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   Button1.Enabled := False; // Désactiver jusqu'à validation
 end;
 
-procedure TForm1.EditChange(Sender: TObject);
-begin
+procedure TForm1.EditChange(Sender: TObject);  
+begin  
   // Activer le bouton seulement si tous les champs sont remplis
   Button1.Enabled := (Edit1.Text <> '') and
                      (Edit2.Text <> '') and
                      (Edit3.Text <> '');
 end;
 
-procedure TForm1.Edit1Exit(Sender: TObject);
-begin
+procedure TForm1.Edit1Exit(Sender: TObject);  
+begin  
   // Validation du nom
   if Trim(Edit1.Text) = '' then
   begin
@@ -845,8 +845,8 @@ begin
   end;
 end;
 
-procedure TForm1.Edit2Exit(Sender: TObject);
-begin
+procedure TForm1.Edit2Exit(Sender: TObject);  
+begin  
   // Validation de l'email
   if Pos('@', Edit2.Text) = 0 then
   begin
@@ -855,10 +855,10 @@ begin
   end;
 end;
 
-procedure TForm1.Edit3KeyPress(Sender: TObject; var Key: Char);
-begin
+procedure TForm1.Edit3KeyPress(Sender: TObject; var Key: Char);  
+begin  
   // Accepter uniquement les chiffres pour le téléphone
-  if not (Key in ['0'..'9', #8, #13]) then
+  if not CharInSet(Key, ['0'..'9', #8, #13]) then
     Key := #0;
 end;
 ```
@@ -874,8 +874,8 @@ type
     FDernierX, FDernierY: Integer;
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   FDessin := False;
   Image1.Canvas.Brush.Color := clWhite;
   Image1.Canvas.FillRect(Image1.ClientRect);
@@ -918,8 +918,8 @@ end;
 ### Exemple 3 : Recherche dynamique
 
 ```pascal
-procedure TForm1.EditRechercheChange(Sender: TObject);
-var
+procedure TForm1.EditRechercheChange(Sender: TObject);  
+var  
   i: Integer;
   Texte: string;
 begin
@@ -984,8 +984,8 @@ begin
   Accept := Source = ListBox1;
 end;
 
-procedure TForm1.ListBox2DragDrop(Sender, Source: TObject; X, Y: Integer);
-begin
+procedure TForm1.ListBox2DragDrop(Sender, Source: TObject; X, Y: Integer);  
+begin  
   if (Source = ListBox1) and (ListBox1.ItemIndex <> -1) then
   begin
     // Copier l'élément
@@ -1015,15 +1015,15 @@ procedure TForm1.Button1Click(Sender: TObject);
 
 ```pascal
 // À éviter : Trop de logique dans OnChange
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
+procedure TForm1.Edit1Change(Sender: TObject);  
+begin  
   // 50 lignes de code...
   // Difficile à maintenir !
 end;
 
 // Préférer : Découper en fonctions
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
+procedure TForm1.Edit1Change(Sender: TObject);  
+begin  
   ValiderChamp;
   MettreAJourCompteur;
   VerifierLongueur;
@@ -1033,8 +1033,8 @@ end;
 ### 3. Vérifier les conditions avant de traiter
 
 ```pascal
-procedure TForm1.ListBox1DblClick(Sender: TObject);
-begin
+procedure TForm1.ListBox1DblClick(Sender: TObject);  
+begin  
   // Toujours vérifier qu'un élément est sélectionné
   if ListBox1.ItemIndex = -1 then
     Exit;
@@ -1053,8 +1053,8 @@ type
     FMiseAJourEnCours: Boolean;
   end;
 
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
+procedure TForm1.Edit1Change(Sender: TObject);  
+begin  
   if FMiseAJourEnCours then
     Exit; // Éviter la récursion
 
@@ -1071,8 +1071,8 @@ end;
 ### 5. Gérer les exceptions dans les événements
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   try
     // Code qui pourrait générer une exception
     ConvertirEtAfficher(Edit1.Text);
@@ -1089,8 +1089,8 @@ end;
 ### 6. Libérer les ressources correctement
 
 ```pascal
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);  
+begin  
   try
     // Sauvegarder les données
     SauvegarderConfiguration;
@@ -1110,8 +1110,8 @@ end;
 ### 7. Documenter les événements complexes
 
 ```pascal
-procedure TForm1.ComplexEventHandler(Sender: TObject);
-begin
+procedure TForm1.ComplexEventHandler(Sender: TObject);  
+begin  
   {
     Ce gestionnaire d'événement effectue les opérations suivantes :
     1. Valide les données saisies
@@ -1135,8 +1135,8 @@ end;
 
 **1. Points d'arrêt**
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Placer un point d'arrêt ici (F5)
   ShowMessage('Test');
 end;
@@ -1144,8 +1144,8 @@ end;
 
 **2. Messages de trace**
 ```pascal
-procedure TForm1.Edit1Change(Sender: TObject);
-begin
+procedure TForm1.Edit1Change(Sender: TObject);  
+begin  
   OutputDebugString(PChar('Edit1.Text = ' + Edit1.Text));
 end;
 ```
@@ -1155,8 +1155,8 @@ end;
 var
   FCompteurAppels: Integer = 0;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
+procedure TForm1.Timer1Timer(Sender: TObject);  
+begin  
   Inc(FCompteurAppels);
   Caption := Format('Appels : %d', [FCompteurAppels]);
 end;
@@ -1177,14 +1177,14 @@ if Assigned(FObjet) then
 **2. Modifier un composant pendant son événement**
 ```pascal
 // Attention : Peut causer des problèmes
-procedure TForm1.ListBox1Click(Sender: TObject);
-begin
+procedure TForm1.ListBox1Click(Sender: TObject);  
+begin  
   ListBox1.Items.Clear; // Dangereux pendant l'événement Click
 end;
 
 // Mieux : Utiliser PostMessage ou un flag
-procedure TForm1.ListBox1Click(Sender: TObject);
-begin
+procedure TForm1.ListBox1Click(Sender: TObject);  
+begin  
   PostMessage(Handle, WM_USER + 1, 0, 0);
 end;
 ```

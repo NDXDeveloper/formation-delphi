@@ -69,8 +69,8 @@ Pour chaque onglet (TabSheet), vous pouvez modifier :
 ### Exemple de code pratique
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   i: Integer;
 begin
   // Configurer le PageControl
@@ -92,8 +92,8 @@ begin
 end;
 
 // Événement de changement d'onglet
-procedure TForm1.PageControl1Change(Sender: TObject);
-begin
+procedure TForm1.PageControl1Change(Sender: TObject);  
+begin  
   ShowMessage('Vous êtes maintenant sur : ' +
               PageControl1.ActivePage.Caption);
 end;
@@ -162,8 +162,8 @@ Un TreeView est composé de **nœuds** (nodes) :
 #### Méthode 2 : Par code
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   RootNode, ChildNode, SubChildNode: TTreeNode;
 begin
   TreeView1.Items.Clear; // Vider l'arborescence
@@ -186,8 +186,8 @@ end;
 ### Exemple complet : Arborescence de pays et villes
 
 ```pascal
-procedure TForm1.CreerArborescenceVilles;
-var
+procedure TForm1.CreerArborescenceVilles;  
+var  
   France, Paris, Lyon: TTreeNode;
   Espagne, Madrid, Barcelone: TTreeNode;
 begin
@@ -207,8 +207,8 @@ begin
 end;
 
 // Gérer la sélection d'un nœud
-procedure TForm1.TreeView1Click(Sender: TObject);
-var
+procedure TForm1.TreeView1Click(Sender: TObject);  
+var  
   SelectedNode: TTreeNode;
 begin
   SelectedNode := TreeView1.Selected;
@@ -223,8 +223,8 @@ end;
 
 ```pascal
 // Développer un nœud
-Node.Expand(False); // False = développer seulement ce nœud
-Node.Expand(True);  // True = développer aussi les enfants
+Node.Expand(False); // False = développer seulement ce nœud  
+Node.Expand(True);  // True = développer aussi les enfants  
 
 // Réduire un nœud
 Node.Collapse(True);
@@ -237,9 +237,9 @@ if Node.HasChildren then
   ShowMessage('Ce nœud a des enfants');
 
 // Parcourir les enfants d'un nœud
-ChildNode := Node.GetFirstChild;
-while Assigned(ChildNode) do
-begin
+ChildNode := Node.GetFirstChild;  
+while Assigned(ChildNode) do  
+begin  
   // Faire quelque chose avec ChildNode
   ShowMessage(ChildNode.Text);
   ChildNode := Node.GetNextChild(ChildNode);
@@ -252,8 +252,8 @@ ParentNode := Node.Parent;
 ### Utiliser des images avec ImageList
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   FolderNode, FileNode: TTreeNode;
 begin
   // Associer un ImageList au TreeView
@@ -321,8 +321,8 @@ Le ListView propose plusieurs modes via la propriété **ViewStyle** :
 
 **Par code :**
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   ListView1.ViewStyle := vsReport;
   ListView1.Columns.Clear;
 
@@ -366,8 +366,8 @@ end;
 ### Ajouter des éléments
 
 ```pascal
-procedure TForm1.AjouterPersonne(Nom, Prenom: string; Age: Integer);
-var
+procedure TForm1.AjouterPersonne(Nom, Prenom: string; Age: Integer);  
+var  
   Item: TListItem;
 begin
   Item := ListView1.Items.Add;
@@ -377,8 +377,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   ListView1.Items.Clear;
 
   AjouterPersonne('Dupont', 'Jean', 35);
@@ -390,8 +390,8 @@ end;
 ### Exemple complet avec gestion
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Configuration du ListView
   ListView1.ViewStyle := vsReport;
   ListView1.GridLines := True;
@@ -422,8 +422,8 @@ begin
   RemplirListeProduits;
 end;
 
-procedure TForm1.RemplirListeProduits;
-var
+procedure TForm1.RemplirListeProduits;  
+var  
   Item: TListItem;
 begin
   ListView1.Items.BeginUpdate; // Optimisation
@@ -467,8 +467,8 @@ begin
 end;
 
 // Double-clic sur un élément
-procedure TForm1.ListView1DblClick(Sender: TObject);
-var
+procedure TForm1.ListView1DblClick(Sender: TObject);  
+var  
   Item: TListItem;
 begin
   Item := ListView1.Selected;
@@ -481,8 +481,8 @@ begin
 end;
 
 // Clic sur l'en-tête d'une colonne (pour le tri)
-procedure TForm1.ListView1ColumnClick(Sender: TObject; Column: TListColumn);
-begin
+procedure TForm1.ListView1ColumnClick(Sender: TObject; Column: TListColumn);  
+begin  
   // Implémenter le tri par colonne
   ShowMessage('Tri par : ' + Column.Caption);
 end;
@@ -491,8 +491,8 @@ end;
 ### Utiliser des images
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Item: TListItem;
 begin
   // Associer les ImageList
@@ -510,8 +510,8 @@ end;
 ### Recherche dans le ListView
 
 ```pascal
-procedure TForm1.RechercherDansListView(const Texte: string);
-var
+procedure TForm1.RechercherDansListView(const Texte: string);  
+var  
   i: Integer;
   Item: TListItem;
   Trouve: Boolean;
@@ -540,8 +540,8 @@ end;
 
 ```pascal
 // Supprimer l'élément sélectionné
-procedure TForm1.SupprimerSelection;
-begin
+procedure TForm1.SupprimerSelection;  
+begin  
   if Assigned(ListView1.Selected) then
   begin
     if MessageDlg('Voulez-vous vraiment supprimer cet élément ?',
@@ -553,8 +553,8 @@ begin
 end;
 
 // Supprimer tous les éléments sélectionnés (MultiSelect = True)
-procedure TForm1.SupprimerToutesSelections;
-var
+procedure TForm1.SupprimerToutesSelections;  
+var  
   i: Integer;
 begin
   if ListView1.SelCount > 0 then
