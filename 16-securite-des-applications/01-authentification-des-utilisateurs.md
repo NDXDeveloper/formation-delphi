@@ -47,8 +47,8 @@ Un hash est une fonction mathématique qui transforme un mot de passe en une cha
 
 **Exemple de transformation** :
 ```
-Mot de passe : "MonMotDePasse123"
-Hash (SHA-256) : "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+Mot de passe : "MonMotDePasse123"  
+Hash (SHA-256) : "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"  
 ```
 
 **Propriétés importantes du hash** :
@@ -66,8 +66,8 @@ Un salt est une valeur aléatoire ajoutée au mot de passe avant le hashage pour
 
 **Exemple** :
 ```
-Utilisateur 1 : "password" + salt "abc123" → hash différent
-Utilisateur 2 : "password" + salt "xyz789" → hash différent
+Utilisateur 1 : "password" + salt "abc123" → hash différent  
+Utilisateur 2 : "password" + salt "xyz789" → hash différent  
 ```
 
 ### Session utilisateur
@@ -112,8 +112,8 @@ Delphi dispose de FireDAC, un framework puissant pour accéder aux bases de donn
 Voici un exemple simplifié de vérification d'authentification :
 
 ```pascal
-procedure TFormConnexion.BtnConnexionClick(Sender: TObject);
-var
+procedure TFormConnexion.BtnConnexionClick(Sender: TObject);  
+var  
   MotDePasseHash: string;
   Salt: string;
   HashCalcule: string;
@@ -154,8 +154,8 @@ end;
 Lors de l'inscription d'un nouvel utilisateur :
 
 ```pascal
-procedure TFormInscription.BtnInscrireClick(Sender: TObject);
-var
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);  
+var  
   Salt: string;
   HashMotDePasse: string;
 begin
@@ -178,7 +178,7 @@ begin
     ShowMessage('Inscription réussie !');
   except
     on E: Exception do
-      ShowMessage('Erreur lors de l\'inscription : ' + E.Message);
+      ShowMessage('Erreur lors de l''inscription : ' + E.Message);
   end;
 end;
 ```
@@ -191,14 +191,14 @@ Delphi propose plusieurs unités pour le hashage. Voici un exemple avec l'unité
 uses
   System.Hash, System.SysUtils;
 
-function CalculerHash(const ATexte: string): string;
-begin
+function CalculerHash(const ATexte: string): string;  
+begin  
   // Utilise SHA-256 pour créer un hash sécurisé
   Result := THashSHA2.GetHashString(ATexte);
 end;
 
-function GenererSaltAleatoire(): string;
-var
+function GenererSaltAleatoire(): string;  
+var  
   GUID: TGUID;
 begin
   // Génère un GUID unique comme salt
@@ -224,16 +224,16 @@ var
 ### Initialisation de la session
 
 ```pascal
-procedure InitialiserSession(AID: Integer; ANom: string; ARole: string);
-begin
+procedure InitialiserSession(AID: Integer; ANom: string; ARole: string);  
+begin  
   UtilisateurConnecte := True;
   IDUtilisateur := AID;
   NomUtilisateur := ANom;
   RoleUtilisateur := ARole;
 end;
 
-procedure TerminerSession;
-begin
+procedure TerminerSession;  
+begin  
   UtilisateurConnecte := False;
   IDUtilisateur := 0;
   NomUtilisateur := '';
@@ -251,8 +251,8 @@ Imposez des règles pour les mots de passe :
 - Pas de mots du dictionnaire
 
 ```pascal
-function MotDePasseValide(const AMotDePasse: string): Boolean;
-var
+function MotDePasseValide(const AMotDePasse: string): Boolean;  
+var  
   AMajuscule, AMinuscule, AChiffre, ASpecial: Boolean;
   i: Integer;
 begin
@@ -297,8 +297,8 @@ const
   MAX_TENTATIVES = 5;
   DELAI_BLOCAGE_MINUTES = 15;
 
-procedure TFormConnexion.BtnConnexionClick(Sender: TObject);
-begin
+procedure TFormConnexion.BtnConnexionClick(Sender: TObject);  
+begin  
   // Vérifier si le compte est temporairement bloqué
   if (TentativesEchouees >= MAX_TENTATIVES) and
      (MinutesBetween(Now, DerniereTentative) < DELAI_BLOCAGE_MINUTES) then
@@ -339,8 +339,8 @@ FDQuery1.SQL.Text := 'SELECT * FROM Utilisateurs WHERE NomUtilisateur = "' +
                       EditUtilisateur.Text + '"';
 
 // ✅ BON - sécurisé avec des paramètres
-FDQuery1.SQL.Text := 'SELECT * FROM Utilisateurs WHERE NomUtilisateur = :Username';
-FDQuery1.ParamByName('Username').AsString := EditUtilisateur.Text;
+FDQuery1.SQL.Text := 'SELECT * FROM Utilisateurs WHERE NomUtilisateur = :Username';  
+FDQuery1.ParamByName('Username').AsString := EditUtilisateur.Text;  
 ```
 
 ### 4. Masquer les informations sensibles
@@ -381,8 +381,8 @@ Pour permettre aux utilisateurs de réinitialiser leur mot de passe :
 
 1. **Générer un token unique temporaire**
 ```pascal
-function GenererTokenReset(): string;
-var
+function GenererTokenReset(): string;  
+var  
   GUID: TGUID;
 begin
   CreateGUID(GUID);
@@ -392,8 +392,8 @@ end;
 
 2. **Enregistrer le token avec une date d'expiration**
 ```sql
-ALTER TABLE Utilisateurs ADD COLUMN TokenReset VARCHAR(100);
-ALTER TABLE Utilisateurs ADD COLUMN TokenExpiration DATETIME;
+ALTER TABLE Utilisateurs ADD COLUMN TokenReset VARCHAR(100);  
+ALTER TABLE Utilisateurs ADD COLUMN TokenExpiration DATETIME;  
 ```
 
 3. **Envoyer un email avec le lien de réinitialisation**
@@ -405,8 +405,8 @@ ALTER TABLE Utilisateurs ADD COLUMN TokenExpiration DATETIME;
 Pour garder l'utilisateur connecté entre les sessions :
 
 ```pascal
-procedure SauvegarderToken(const AToken: string);
-var
+procedure SauvegarderToken(const AToken: string);  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
@@ -417,8 +417,8 @@ begin
   end;
 end;
 
-function ChargerToken(): string;
-var
+function ChargerToken(): string;  
+var  
   IniFile: TIniFile;
 begin
   IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
@@ -450,8 +450,8 @@ Pour iOS et Android, vous pouvez intégrer Touch ID / Face ID / Empreinte digita
 uses
   FMX.Platform, FMX.Biometrics;
 
-procedure AuthentifierParBiometrie;
-var
+procedure AuthentifierParBiometrie;  
+var  
   BiometricAuth: TBiometricAuth;
 begin
   BiometricAuth := TBiometricAuth.Create(nil);

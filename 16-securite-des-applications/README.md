@@ -373,8 +373,8 @@ Posez-vous constamment ces questions :
 
 ```pascal
 // ❌ MAUVAIS - En cas d'erreur, l'accès est autorisé
-function VerifierAcces: Boolean;
-begin
+function VerifierAcces: Boolean;  
+begin  
   Result := True; // Par défaut
   try
     // Vérification...
@@ -384,8 +384,8 @@ begin
 end;
 
 // ✅ BON - En cas d'erreur, l'accès est refusé
-function VerifierAcces: Boolean;
-begin
+function VerifierAcces: Boolean;  
+begin  
   Result := False; // Par défaut sécurisé
   try
     // Vérification...

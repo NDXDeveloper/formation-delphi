@@ -111,26 +111,26 @@ type
 
 implementation
 
-class constructor TLogger.Create;
-begin
+class constructor TLogger.Create;  
+begin  
   FLock := TCriticalSection.Create;
   FInstance := TLogger.Create;
   FInstance.FFichierLog := ChangeFileExt(ParamStr(0), '.log');
 end;
 
-class destructor TLogger.Destroy;
-begin
+class destructor TLogger.Destroy;  
+begin  
   FInstance.Free;
   FLock.Free;
 end;
 
-class function TLogger.Instance: TLogger;
-begin
+class function TLogger.Instance: TLogger;  
+begin  
   Result := FInstance;
 end;
 
-procedure TLogger.EcrireDansFichier(const ALigne: string);
-var
+procedure TLogger.EcrireDansFichier(const ALigne: string);  
+var  
   Fichier: TextFile;
 begin
   FLock.Enter;
@@ -177,28 +177,28 @@ begin
   EcrireDansFichier(Ligne);
 end;
 
-procedure TLogger.Debug(const AMessage: string; const AContexte: string);
-begin
+procedure TLogger.Debug(const AMessage: string; const AContexte: string);  
+begin  
   Log(nlDebug, AMessage, AContexte);
 end;
 
-procedure TLogger.Info(const AMessage: string; const AContexte: string);
-begin
+procedure TLogger.Info(const AMessage: string; const AContexte: string);  
+begin  
   Log(nlInfo, AMessage, AContexte);
 end;
 
-procedure TLogger.Warning(const AMessage: string; const AContexte: string);
-begin
+procedure TLogger.Warning(const AMessage: string; const AContexte: string);  
+begin  
   Log(nlWarning, AMessage, AContexte);
 end;
 
-procedure TLogger.Error(const AMessage: string; const AContexte: string);
-begin
+procedure TLogger.Error(const AMessage: string; const AContexte: string);  
+begin  
   Log(nlError, AMessage, AContexte);
 end;
 
-procedure TLogger.Critical(const AMessage: string; const AContexte: string);
-begin
+procedure TLogger.Critical(const AMessage: string; const AContexte: string);  
+begin  
   Log(nlCritical, AMessage, AContexte);
 end;
 
@@ -212,35 +212,35 @@ uses
   UnitLogger;
 
 // Journaliser une connexion réussie
-procedure JournaliserConnexion(const AUsername: string);
-begin
+procedure JournaliserConnexion(const AUsername: string);  
+begin  
   TLogger.Instance.Info('Connexion utilisateur',
                         Format('Username: %s, IP: %s', [AUsername, ObtenirIPClient]));
 end;
 
 // Journaliser une tentative échouée
-procedure JournaliserEchecConnexion(const AUsername: string);
-begin
+procedure JournaliserEchecConnexion(const AUsername: string);  
+begin  
   TLogger.Instance.Warning('Échec de connexion',
                            Format('Username: %s, IP: %s', [AUsername, ObtenirIPClient]));
 end;
 
 // Journaliser une erreur
-procedure JournaliserErreurBD(const AMessage: string);
-begin
+procedure JournaliserErreurBD(const AMessage: string);  
+begin  
   TLogger.Instance.Error('Erreur base de données', AMessage);
 end;
 
 // Journaliser un événement critique
-procedure JournaliserSecuriteCompromise;
-begin
+procedure JournaliserSecuriteCompromise;  
+begin  
   TLogger.Instance.Critical('Tentative d''injection SQL détectée',
                              'IP: ' + ObtenirIPClient);
 end;
 
 // Exemple dans une application
-procedure TFormLogin.BtnConnexionClick(Sender: TObject);
-var
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);  
+var  
   Username: string;
 begin
   Username := EditUsername.Text;
@@ -329,8 +329,8 @@ type
                        AIDEnregistrement: Integer; const AAncien, ANouveau: string);
   end;
 
-constructor TLoggerBD.Create(AConnection: TFDConnection);
-begin
+constructor TLoggerBD.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
@@ -402,8 +402,8 @@ begin
 end;
 
 // Utilisation
-procedure ModifierUtilisateur(AID: Integer; const ANouveauNom: string);
-var
+procedure ModifierUtilisateur(AID: Integer; const ANouveauNom: string);  
+var  
   AncienNom: string;
   Query: TFDQuery;
 begin
@@ -440,43 +440,43 @@ end;
 
 ```sql
 -- Tentatives de connexion échouées dans les dernières 24h
-SELECT Username, AdresseIP, COUNT(*) as NbTentatives, MAX(DateHeure) as DerniereTentative
-FROM LogsConnexions
-WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-GROUP BY Username, AdresseIP
-HAVING NbTentatives > 5
-ORDER BY NbTentatives DESC;
+SELECT Username, AdresseIP, COUNT(*) as NbTentatives, MAX(DateHeure) as DerniereTentative  
+FROM LogsConnexions  
+WHERE Reussi = FALSE AND DateHeure >= DATE_SUB(NOW(), INTERVAL 24 HOUR)  
+GROUP BY Username, AdresseIP  
+HAVING NbTentatives > 5  
+ORDER BY NbTentatives DESC;  
 
 -- Activités suspectes (même IP, plusieurs comptes)
-SELECT AdresseIP, COUNT(DISTINCT Username) as NbComptes, COUNT(*) as NbConnexions
-FROM LogsConnexions
-WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
-GROUP BY AdresseIP
-HAVING NbComptes > 3;
+SELECT AdresseIP, COUNT(DISTINCT Username) as NbComptes, COUNT(*) as NbConnexions  
+FROM LogsConnexions  
+WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 1 HOUR)  
+GROUP BY AdresseIP  
+HAVING NbComptes > 3;  
 
 -- Événements critiques récents
-SELECT DateHeure, Message, AdresseIP, IDUtilisateur
-FROM LogsSecurite
-WHERE Niveau = 'CRITICAL' AND DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-ORDER BY DateHeure DESC;
+SELECT DateHeure, Message, AdresseIP, IDUtilisateur  
+FROM LogsSecurite  
+WHERE Niveau = 'CRITICAL' AND DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)  
+ORDER BY DateHeure DESC;  
 
 -- Modifications de données sensibles
 SELECT u.Username, la.Action, la.TableCible, la.DateHeure,
        la.AnciennesValeurs, la.NouvellesValeurs
-FROM LogsAudit la
-JOIN Users u ON la.IDUtilisateur = u.ID
-WHERE la.TableCible IN ('Users', 'Transactions', 'Configurations')
-ORDER BY la.DateHeure DESC
-LIMIT 100;
+FROM LogsAudit la  
+JOIN Users u ON la.IDUtilisateur = u.ID  
+WHERE la.TableCible IN ('Users', 'Transactions', 'Configurations')  
+ORDER BY la.DateHeure DESC  
+LIMIT 100;  
 
 -- Pic d'activité inhabituel
 SELECT DATE_FORMAT(DateHeure, '%Y-%m-%d %H:00:00') as Heure,
        COUNT(*) as NbEvenements
-FROM LogsSecurite
-WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-GROUP BY Heure
-HAVING NbEvenements > 1000
-ORDER BY NbEvenements DESC;
+FROM LogsSecurite  
+WHERE DateHeure >= DATE_SUB(NOW(), INTERVAL 7 DAY)  
+GROUP BY Heure  
+HAVING NbEvenements > 1000  
+ORDER BY NbEvenements DESC;  
 ```
 
 ### Tableau de bord de sécurité
@@ -494,14 +494,14 @@ type
     function ObtenirIPsSuspectes: TDataSet;
   end;
 
-constructor TDashboardSecurite.Create(AConnection: TFDConnection);
-begin
+constructor TDashboardSecurite.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-function TDashboardSecurite.ObtenirStatistiques24h: string;
-var
+function TDashboardSecurite.ObtenirStatistiques24h: string;  
+var  
   Query: TFDQuery;
   Stats: TStringList;
 begin
@@ -541,8 +541,8 @@ begin
   end;
 end;
 
-function TDashboardSecurite.ObtenirTentativesEchouees: TDataSet;
-var
+function TDashboardSecurite.ObtenirTentativesEchouees: TDataSet;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -559,8 +559,8 @@ begin
   Result := Query;
 end;
 
-function TDashboardSecurite.ObtenirEvenementsCritiques: TDataSet;
-var
+function TDashboardSecurite.ObtenirEvenementsCritiques: TDataSet;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -575,8 +575,8 @@ begin
   Result := Query;
 end;
 
-function TDashboardSecurite.ObtenirIPsSuspectes: TDataSet;
-var
+function TDashboardSecurite.ObtenirIPsSuspectes: TDataSet;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -615,26 +615,26 @@ type
     procedure AlerterEvenementCritique(const AMessage: string);
   end;
 
-constructor TSystemeAlertes.Create(AConnection: TFDConnection);
-begin
+constructor TSystemeAlertes.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-procedure TSystemeAlertes.EnvoyerEmail(const ADestinataire, ASujet, ACorps: string);
-begin
+procedure TSystemeAlertes.EnvoyerEmail(const ADestinataire, ASujet, ACorps: string);  
+begin  
   // Implémentation de l'envoi d'email
   // Utiliser Indy (TIdSMTP) ou un service comme SendGrid
 end;
 
-procedure TSystemeAlertes.EnvoyerSMS(const ANumero, AMessage: string);
-begin
+procedure TSystemeAlertes.EnvoyerSMS(const ANumero, AMessage: string);  
+begin  
   // Implémentation de l'envoi de SMS
   // Utiliser un service comme Twilio, Nexmo, etc.
 end;
 
-procedure TSystemeAlertes.AlerterTentativesEchoueesExcessives;
-var
+procedure TSystemeAlertes.AlerterTentativesEchoueesExcessives;  
+var  
   Query: TFDQuery;
   Message: string;
 begin
@@ -671,8 +671,8 @@ begin
   end;
 end;
 
-procedure TSystemeAlertes.AlerterActiviteSuspecte;
-var
+procedure TSystemeAlertes.AlerterActiviteSuspecte;  
+var  
   Query: TFDQuery;
   Message: string;
 begin
@@ -713,8 +713,8 @@ begin
   end;
 end;
 
-procedure TSystemeAlertes.AlerterEvenementCritique(const AMessage: string);
-begin
+procedure TSystemeAlertes.AlerterEvenementCritique(const AMessage: string);  
+begin  
   EnvoyerEmail('security@monentreprise.com',
                'ALERTE CRITIQUE',
                'Événement critique détecté : ' + AMessage);
@@ -722,8 +722,8 @@ begin
   TLogger.Instance.Critical('Alerte critique déclenchée', AMessage);
 end;
 
-procedure TSystemeAlertes.VerifierAlertes;
-begin
+procedure TSystemeAlertes.VerifierAlertes;  
+begin  
   // Exécuter toutes les vérifications
   AlerterTentativesEchoueesExcessives;
   AlerterActiviteSuspecte;
@@ -731,8 +731,8 @@ begin
 end;
 
 // Utilisation avec un timer
-procedure TFormPrincipal.TimerAlerteTimer(Sender: TObject);
-begin
+procedure TFormPrincipal.TimerAlerteTimer(Sender: TObject);  
+begin  
   SystemeAlertes.VerifierAlertes;
 end;
 ```
@@ -773,8 +773,8 @@ begin
     ForceDirectories(FRepertoireArchive);
 end;
 
-procedure TGestionnaireLogsArchive.ArchiverLogsAnciens(AJoursConservation: Integer);
-var
+procedure TGestionnaireLogsArchive.ArchiverLogsAnciens(AJoursConservation: Integer);  
+var  
   Query: TFDQuery;
   DateLimite: TDateTime;
   NomFichierArchive: string;
@@ -832,8 +832,8 @@ begin
   end;
 end;
 
-procedure TGestionnaireLogsArchive.NettoyerLogsArchives(AMoisConservation: Integer);
-var
+procedure TGestionnaireLogsArchive.NettoyerLogsArchives(AMoisConservation: Integer);  
+var  
   SearchRec: TSearchRec;
   DateLimite: TDateTime;
   CheminFichier: string;
@@ -904,8 +904,8 @@ begin
 end;
 
 // Tâche planifiée quotidienne
-procedure TFormPrincipal.TimerArchivageTimer(Sender: TObject);
-begin
+procedure TFormPrincipal.TimerArchivageTimer(Sender: TObject);  
+begin  
   // Archiver les logs de plus de 90 jours
   GestionnaireArchive.ArchiverLogsAnciens(90);
 
@@ -959,21 +959,21 @@ type
     procedure GenererRapport(const ANomFichier: string);
   end;
 
-constructor TAuditSecurite.Create(AConnection: TFDConnection);
-begin
+constructor TAuditSecurite.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
   FResultats := TList<TResultatAudit>.Create;
 end;
 
-destructor TAuditSecurite.Destroy;
-begin
+destructor TAuditSecurite.Destroy;  
+begin  
   FResultats.Free;
   inherited;
 end;
 
-procedure TAuditSecurite.VerifierRequetesParametrees;
-var
+procedure TAuditSecurite.VerifierRequetesParametrees;  
+var  
   Resultat: TResultatAudit;
 begin
   Resultat.Description := 'Vérification des requêtes paramétrées';
@@ -987,8 +987,8 @@ begin
   FResultats.Add(Resultat);
 end;
 
-procedure TAuditSecurite.VerifierGestionMotsDePasse;
-var
+procedure TAuditSecurite.VerifierGestionMotsDePasse;  
+var  
   Query: TFDQuery;
   Resultat: TResultatAudit;
 begin
@@ -1021,8 +1021,8 @@ begin
   end;
 end;
 
-procedure TAuditSecurite.VerifierJournalisation;
-var
+procedure TAuditSecurite.VerifierJournalisation;  
+var  
   Query: TFDQuery;
   Resultat: TResultatAudit;
 begin
@@ -1057,8 +1057,8 @@ begin
   end;
 end;
 
-procedure TAuditSecurite.VerifierConfigurationBD;
-var
+procedure TAuditSecurite.VerifierConfigurationBD;  
+var  
   Query: TFDQuery;
   Resultat: TResultatAudit;
 begin
@@ -1101,8 +1101,8 @@ begin
   end;
 end;
 
-procedure TAuditSecurite.ExecuterAudit;
-begin
+procedure TAuditSecurite.ExecuterAudit;  
+begin  
   FResultats.Clear;
 
   VerifierRequetesParametrees;
@@ -1111,8 +1111,8 @@ begin
   VerifierConfigurationBD;
 end;
 
-procedure TAuditSecurite.GenererRapport(const ANomFichier: string);
-var
+procedure TAuditSecurite.GenererRapport(const ANomFichier: string);  
+var  
   Fichier: TextFile;
   Resultat: TResultatAudit;
   i: Integer;
@@ -1158,7 +1158,7 @@ Le RGPD impose de pouvoir :
 
 ```pascal
 type
-  TTraçabilitéRGPD = class
+  TTracabiliteRGPD = class
   private
     FConnection: TFDConnection;
   public
@@ -1172,13 +1172,13 @@ type
                                           const ANomFichier: string);
   end;
 
-constructor TTraçabilitéRGPD.Create(AConnection: TFDConnection);
-begin
+constructor TTracabiliteRGPD.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-procedure TTraçabilitéRGPD.LogAccesDonneesPersonnelles(AIDUtilisateur,
+procedure TTracabiliteRGPD.LogAccesDonneesPersonnelles(AIDUtilisateur,
                                                          AIDPersonneConcernee: Integer;
                                                          const ATypeAcces: string);
 var
@@ -1199,7 +1199,7 @@ begin
   end;
 end;
 
-procedure TTraçabilitéRGPD.LogConsentement(AIDPersonne: Integer;
+procedure TTracabiliteRGPD.LogConsentement(AIDPersonne: Integer;
                                             const ATypeTraitement: string;
                                             AConsenti: Boolean);
 var
@@ -1220,7 +1220,7 @@ begin
   end;
 end;
 
-procedure TTraçabilitéRGPD.GenererRapportAcces(AIDPersonne: Integer;
+procedure TTracabiliteRGPD.GenererRapportAcces(AIDPersonne: Integer;
                                                 const ANomFichier: string);
 var
   Query: TFDQuery;
@@ -1291,8 +1291,8 @@ LogEvent('User:' + Username + ', IP:' + IP + ', Action:Login, Result:Success');
 **4. Surveiller activement**
 ```pascal
 // Ne pas juste collecter, mais analyser
-TimerSurveillance.Enabled := True;
-TimerSurveillance.Interval := 300000; // Toutes les 5 minutes
+TimerSurveillance.Enabled := True;  
+TimerSurveillance.Interval := 300000; // Toutes les 5 minutes  
 ```
 
 **5. Archiver régulièrement**

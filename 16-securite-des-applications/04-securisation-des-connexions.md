@@ -47,8 +47,8 @@ Client ──[Données chiffrées]──> Serveur
 
 **Différences visuelles** :
 ```
-HTTP  : http://example.com  (pas de cadenas dans le navigateur)
-HTTPS : https://example.com (cadenas 🔒 dans le navigateur)
+HTTP  : http://example.com  (pas de cadenas dans le navigateur)  
+HTTPS : https://example.com (cadenas 🔒 dans le navigateur)  
 ```
 
 ### SSL et TLS
@@ -92,8 +92,8 @@ Client vérifie :
 
 **Étape 3 : Génération des clés**
 ```
-Client et Serveur génèrent ensemble une clé de session unique
-Cette clé servira à chiffrer toutes les communications
+Client et Serveur génèrent ensemble une clé de session unique  
+Cette clé servira à chiffrer toutes les communications  
 ```
 
 **Étape 4 : Communication sécurisée**
@@ -210,8 +210,8 @@ La manière la plus simple et moderne pour les API REST :
 uses
   REST.Client, REST.Types, System.JSON, System.SysUtils;
 
-procedure AppelerAPISecurisee;
-var
+procedure AppelerAPISecurisee;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -255,8 +255,8 @@ begin
 end;
 
 // Exemple avec POST de données JSON
-procedure EnvoyerDonneesJSON;
-var
+procedure EnvoyerDonneesJSON;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -303,8 +303,8 @@ Pour des connexions HTTP plus personnalisées :
 uses
   IdHTTP, IdSSLOpenSSL, System.SysUtils;
 
-function TelechargerPageHTTPS(const AURL: string): string;
-var
+function TelechargerPageHTTPS(const AURL: string): string;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
@@ -331,8 +331,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.BtnTelechargerClick(Sender: TObject);
-var
+procedure TForm1.BtnTelechargerClick(Sender: TObject);  
+var  
   Contenu: string;
 begin
   try
@@ -345,8 +345,8 @@ begin
 end;
 
 // POST avec HTTPS
-procedure EnvoyerDonneesHTTPS(const AURL, ADonnees: string);
-var
+procedure EnvoyerDonneesHTTPS(const AURL, ADonnees: string);  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
   Stream: TStringStream;
@@ -378,8 +378,8 @@ end;
 ### 3. Gestion des erreurs SSL/TLS
 
 ```pascal
-procedure RequeteHTTPSAvecGestionErreurs;
-var
+procedure RequeteHTTPSAvecGestionErreurs;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
@@ -428,8 +428,8 @@ end;
 uses
   IdSSLOpenSSL, IdX509;
 
-procedure TForm1.VerifierCertificat;
-var
+procedure TForm1.VerifierCertificat;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
@@ -486,8 +486,8 @@ end;
 ### MySQL/MariaDB avec SSL
 
 ```pascal
-procedure ConfigurerConnexionMySQLSSL;
-begin
+procedure ConfigurerConnexionMySQLSSL;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
   FDConnection1.Params.Add('Server=mysql.example.com');
@@ -517,8 +517,8 @@ begin
 end;
 
 // Vérifier si la connexion est chiffrée
-procedure VerifierChiffrementConnexion;
-var
+procedure VerifierChiffrementConnexion;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -543,8 +543,8 @@ end;
 ### PostgreSQL avec SSL
 
 ```pascal
-procedure ConfigurerConnexionPostgreSQLSSL;
-begin
+procedure ConfigurerConnexionPostgreSQLSSL;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=PG');
   FDConnection1.Params.Add('Server=postgres.example.com');
@@ -570,8 +570,8 @@ end;
 ### SQL Server avec encryption
 
 ```pascal
-procedure ConfigurerConnexionSQLServerChiffree;
-begin
+procedure ConfigurerConnexionSQLServerChiffree;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MSSQL');
   FDConnection1.Params.Add('Server=sqlserver.example.com');
@@ -642,8 +642,8 @@ uses
   REST.Client, System.JSON;
 
 // Se connecter et obtenir un JWT
-function SeConnecterEtObtenirToken(const ALogin, APassword: string): string;
-var
+function SeConnecterEtObtenirToken(const ALogin, APassword: string): string;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -689,8 +689,8 @@ begin
 end;
 
 // Utiliser le token pour accéder à une API protégée
-procedure AccederAPIProtegee(const AToken: string);
-var
+procedure AccederAPIProtegee(const AToken: string);  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -724,8 +724,8 @@ begin
 end;
 
 // Exemple d'utilisation complète
-procedure TForm1.BtnConnexionSecuriseClick(Sender: TObject);
-var
+procedure TForm1.BtnConnexionSecuriseClick(Sender: TObject);  
+var  
   Token: string;
 begin
   // 1. Se connecter et obtenir le token
@@ -785,16 +785,16 @@ type
     property AccessToken: string read FAccessToken;
   end;
 
-constructor TOAuth2Manager.Create(const AClientID, AClientSecret, ARedirectURI: string);
-begin
+constructor TOAuth2Manager.Create(const AClientID, AClientSecret, ARedirectURI: string);  
+begin  
   inherited Create;
   FClientID := AClientID;
   FClientSecret := AClientSecret;
   FRedirectURI := ARedirectURI;
 end;
 
-function TOAuth2Manager.ObtenirURLAutorisation: string;
-begin
+function TOAuth2Manager.ObtenirURLAutorisation: string;  
+begin  
   // Construire l'URL d'autorisation
   Result := 'https://accounts.google.com/o/oauth2/v2/auth' +
             '?client_id=' + TNetEncoding.URL.Encode(FClientID) +
@@ -803,8 +803,8 @@ begin
             '&scope=openid%20email%20profile';
 end;
 
-function TOAuth2Manager.EchangerCodeConteToken(const ACode: string): Boolean;
-var
+function TOAuth2Manager.EchangerCodeConteToken(const ACode: string): Boolean;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
   Params: TStringStream;
@@ -848,8 +848,8 @@ begin
   end;
 end;
 
-function TOAuth2Manager.AccederRessource(const AURL: string): string;
-var
+function TOAuth2Manager.AccederRessource(const AURL: string): string;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
@@ -903,9 +903,9 @@ Application → Tunnel SSH local:3307 → SSH Server → MySQL Server:3306
 EtablirTunnelSSH('user@server.com', 'password', 3307, 'localhost', 3306);
 
 // Puis se connecter à MySQL via le tunnel local
-FDConnection1.Params.Add('Server=localhost');
-FDConnection1.Params.Add('Port=3307'); // Port local du tunnel
-FDConnection1.Connected := True;
+FDConnection1.Params.Add('Server=localhost');  
+FDConnection1.Params.Add('Port=3307'); // Port local du tunnel  
+FDConnection1.Connected := True;  
 ```
 
 ## Pinning de certificat
@@ -915,9 +915,9 @@ Pour renforcer la sécurité, vous pouvez "épingler" un certificat spécifique.
 **Concept** : Au lieu de faire confiance à n'importe quel certificat valide, on ne fait confiance qu'à UN certificat spécifique.
 
 ```pascal
-procedure TForm1.VerifierCertificatEpingle(Certificate: TIdX509; var Accept: Boolean);
-const
-  EMPREINTE_ATTENDUE = 'A1:B2:C3:D4:E5:F6:...; // SHA-256 du certificat
+procedure TForm1.VerifierCertificatEpingle(Certificate: TIdX509; var Accept: Boolean);  
+const  
+  EMPREINTE_ATTENDUE = 'A1:B2:C3:D4:E5:F6:...'; // SHA-256 du certificat
 var
   EmpreinteCertificat: string;
 begin
@@ -978,8 +978,8 @@ Request.Resource := 'api/data?token=' + Token;
 **5. Gérer l'expiration des tokens**
 ```pascal
 // Vérifier avant chaque requête
-if TokenExpire then
-begin
+if TokenExpire then  
+begin  
   Token := RafraichirToken(RefreshToken);
   SauvegarderToken(Token);
 end;
@@ -1030,12 +1030,12 @@ end;
 **4. Ne pas mélanger HTTP et HTTPS**
 ```pascal
 // ❌ MAUVAIS - Mélange de protocoles
-PageHTTPS := 'https://monsite.com';
-ImageHTTP := 'http://monsite.com/logo.png'; // Non sécurisé !
+PageHTTPS := 'https://monsite.com';  
+ImageHTTP := 'http://monsite.com/logo.png'; // Non sécurisé !  
 
 // ✅ BON - Tout en HTTPS
-PageHTTPS := 'https://monsite.com';
-ImageHTTPS := 'https://monsite.com/logo.png';
+PageHTTPS := 'https://monsite.com';  
+ImageHTTPS := 'https://monsite.com/logo.png';  
 ```
 
 ## Tester la sécurité de vos connexions
@@ -1060,8 +1060,8 @@ ImageHTTPS := 'https://monsite.com/logo.png';
 ### Vérification dans Delphi
 
 ```pascal
-procedure TesterConnexionSecurisee;
-var
+procedure TesterConnexionSecurisee;  
+var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
   InfosConnexion: TStringList;

@@ -42,15 +42,15 @@ C'est une confusion fréquente, clarifions :
 | **Résultat** : Document + Signature | **Résultat** : Document chiffré |
 
 ```
-Signature numérique :
-Document original (lisible) + Signature (preuve d'authenticité)
+Signature numérique :  
+Document original (lisible) + Signature (preuve d'authenticité)  
 ┌────────────────┐     ┌──────────┐
 │  "Bonjour"     │  +  │ Signature│
 │  (lisible)     │     │ (proof)  │
 └────────────────┘     └──────────┘
 
-Chiffrement :
-Document chiffré (illisible)
+Chiffrement :  
+Document chiffré (illisible)  
 ┌────────────────┐
 │  "8k2Lp9mQ"    │
 │  (illisible)   │
@@ -140,14 +140,14 @@ SIGNATURE                           VÉRIFICATION
 uses
   System.Hash, System.SysUtils;
 
-function CalculerHashSHA256(const ATexte: string): string;
-begin
+function CalculerHashSHA256(const ATexte: string): string;  
+begin  
   Result := THashSHA2.GetHashString(ATexte);
 end;
 
 // Exemple d'utilisation
-procedure TForm1.BtnHashClick(Sender: TObject);
-var
+procedure TForm1.BtnHashClick(Sender: TObject);  
+var  
   Texte: string;
   Hash: string;
 begin
@@ -167,8 +167,8 @@ end;
 ### Hash d'un fichier
 
 ```pascal
-function CalculerHashFichier(const ANomFichier: string): string;
-var
+function CalculerHashFichier(const ANomFichier: string): string;  
+var  
   FileStream: TFileStream;
   HashSHA: THashSHA2;
   Buffer: TBytes;
@@ -194,8 +194,8 @@ begin
 end;
 
 // Vérifier l'intégrité d'un fichier téléchargé
-procedure VerifierIntegriteFichier(const AFichier, AHashAttendu: string);
-var
+procedure VerifierIntegriteFichier(const AFichier, AHashAttendu: string);  
+var  
   HashCalcule: string;
 begin
   HashCalcule := CalculerHashFichier(AFichier);
@@ -207,8 +207,8 @@ begin
 end;
 
 // Exemple
-procedure TForm1.BtnVerifierClick(Sender: TObject);
-begin
+procedure TForm1.BtnVerifierClick(Sender: TObject);  
+begin  
   // Hash fourni par l'éditeur du logiciel
   VerifierIntegriteFichier(
     'C:\Downloads\application.exe',
@@ -226,25 +226,25 @@ uses
   System.SysUtils, System.Classes;
 
 type
-  TPaireClés = record
-    CléPrivée: string;
-    CléPublique: string;
+  TPaireCles = record
+    ClePrivee: string;
+    ClePublique: string;
   end;
 
 // Note : Pour une vraie application, utilisez une bibliothèque crypto robuste
 // comme OpenSSL ou les composants Indy
-function GénérerPaireClésRSA: TPaireClés;
-begin
+function GenererPaireClesRSA: TPaireCles;  
+begin  
   // Génération simplifiée pour l'exemple
   // En production, utilisez une vraie bibliothèque RSA
 
-  Result.CléPrivée := 'PRIVATE_KEY_PLACEHOLDER';
-  Result.CléPublique := 'PUBLIC_KEY_PLACEHOLDER';
+  Result.ClePrivee := 'PRIVATE_KEY_PLACEHOLDER';
+  Result.ClePublique := 'PUBLIC_KEY_PLACEHOLDER';
 
   // Avec une vraie bibliothèque :
   // RSA.GenerateKeys(2048);
-  // Result.CléPrivée := RSA.PrivateKey;
-  // Result.CléPublique := RSA.PublicKey;
+  // Result.ClePrivee := RSA.PrivateKey;
+  // Result.ClePublique := RSA.PublicKey;
 end;
 ```
 
@@ -252,25 +252,25 @@ end;
 
 ```pascal
 type
-  TSignatureNumérique = class
+  TSignatureNumerique = class
   private
-    FCléPrivée: string;
-    FCléPublique: string;
+    FClePrivee: string;
+    FClePublique: string;
   public
-    constructor Create(const ACléPrivée, ACléPublique: string);
+    constructor Create(const AClePrivee, AClePublique: string);
     function SignerDocument(const ADocument: string): string;
-    function VérifierSignature(const ADocument, ASignature: string): Boolean;
+    function VerifierSignature(const ADocument, ASignature: string): Boolean;
   end;
 
-constructor TSignatureNumérique.Create(const ACléPrivée, ACléPublique: string);
-begin
+constructor TSignatureNumerique.Create(const AClePrivee, AClePublique: string);  
+begin  
   inherited Create;
-  FCléPrivée := ACléPrivée;
-  FCléPublique := ACléPublique;
+  FClePrivee := AClePrivee;
+  FClePublique := AClePublique;
 end;
 
-function TSignatureNumérique.SignerDocument(const ADocument: string): string;
-var
+function TSignatureNumerique.SignerDocument(const ADocument: string): string;  
+var  
   Hash: string;
 begin
   // 1. Calculer le hash du document
@@ -281,40 +281,40 @@ begin
   Result := 'SIGNATURE_' + Hash;
 
   // Avec une vraie bibliothèque :
-  // Result := RSA.Sign(Hash, FCléPrivée);
+  // Result := RSA.Sign(Hash, FClePrivee);
 end;
 
-function TSignatureNumérique.VérifierSignature(const ADocument, ASignature: string): Boolean;
-var
-  HashCalculé: string;
-  HashDéchiffré: string;
+function TSignatureNumerique.VerifierSignature(const ADocument, ASignature: string): Boolean;  
+var  
+  HashCalcule: string;
+  HashDechiffre: string;
 begin
   // 1. Calculer le hash du document reçu
-  HashCalculé := THashSHA2.GetHashString(ADocument);
+  HashCalcule := THashSHA2.GetHashString(ADocument);
 
   // 2. "Déchiffrer" la signature avec la clé publique
   // En production, utilisez une vraie bibliothèque RSA
-  HashDéchiffré := StringReplace(ASignature, 'SIGNATURE_', '', []);
+  HashDechiffre := StringReplace(ASignature, 'SIGNATURE_', '', []);
 
   // Avec une vraie bibliothèque :
-  // HashDéchiffré := RSA.Verify(ASignature, FCléPublique);
+  // HashDechiffre := RSA.Verify(ASignature, FClePublique);
 
   // 3. Comparer les hash
-  Result := (HashCalculé = HashDéchiffré);
+  Result := (HashCalcule = HashDechiffre);
 end;
 
 // Utilisation
-procedure TForm1.BtnSignerClick(Sender: TObject);
-var
-  Signature: TSignatureNumérique;
+procedure TForm1.BtnSignerClick(Sender: TObject);  
+var  
+  Signature: TSignatureNumerique;
   Document: string;
   SignatureDoc: string;
   EstValide: Boolean;
 begin
   // Générer une paire de clés
-  Paire := GénérerPaireClésRSA;
+  Paire := GenererPaireClesRSA;
 
-  Signature := TSignatureNumérique.Create(Paire.CléPrivée, Paire.CléPublique);
+  Signature := TSignatureNumerique.Create(Paire.ClePrivee, Paire.ClePublique);
   try
     Document := MemoDocument.Lines.Text;
 
@@ -324,7 +324,7 @@ begin
     ShowMessage('Document signé');
 
     // Vérifier la signature
-    EstValide := Signature.VérifierSignature(Document, SignatureDoc);
+    EstValide := Signature.VerifierSignature(Document, SignatureDoc);
 
     if EstValide then
       ShowMessage('✓ Signature valide')
@@ -349,11 +349,11 @@ type
   public
     class function CalculerEmpreinte(const AFichier: string): string;
     class procedure SauvegarderEmpreinte(const AFichier, AFichierSignature: string);
-    class function VérifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;
+    class function VerifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;
   end;
 
-class function TSignatureFichier.CalculerEmpreinte(const AFichier: string): string;
-var
+class function TSignatureFichier.CalculerEmpreinte(const AFichier: string): string;  
+var  
   HashSHA: TIdHashSHA256;
 begin
   HashSHA := TIdHashSHA256.Create;
@@ -364,8 +364,8 @@ begin
   end;
 end;
 
-class procedure TSignatureFichier.SauvegarderEmpreinte(const AFichier, AFichierSignature: string);
-var
+class procedure TSignatureFichier.SauvegarderEmpreinte(const AFichier, AFichierSignature: string);  
+var  
   Empreinte: string;
   Signature: TStringList;
 begin
@@ -382,10 +382,10 @@ begin
   end;
 end;
 
-class function TSignatureFichier.VérifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;
-var
-  EmpreinteCalculée: string;
-  EmpreinteStockée: string;
+class function TSignatureFichier.VerifierEmpreinte(const AFichier, AFichierSignature: string): Boolean;  
+var  
+  EmpreinteCalculee: string;
+  EmpreinteStockee: string;
   Signature: TStringList;
   i: Integer;
 begin
@@ -395,7 +395,7 @@ begin
     Exit;
 
   // Calculer l'empreinte actuelle
-  EmpreinteCalculée := CalculerEmpreinte(AFichier);
+  EmpreinteCalculee := CalculerEmpreinte(AFichier);
 
   // Lire l'empreinte stockée
   Signature := TStringList.Create;
@@ -406,21 +406,21 @@ begin
     begin
       if Signature[i].StartsWith('SHA-256: ') then
       begin
-        EmpreinteStockée := Copy(Signature[i], 10, Length(Signature[i]));
+        EmpreinteStockee := Copy(Signature[i], 10, Length(Signature[i]));
         Break;
       end;
     end;
 
     // Comparer
-    Result := (EmpreinteCalculée = EmpreinteStockée);
+    Result := (EmpreinteCalculee = EmpreinteStockee);
   finally
     Signature.Free;
   end;
 end;
 
 // Utilisation
-procedure TForm1.BtnSignerFichierClick(Sender: TObject);
-begin
+procedure TForm1.BtnSignerFichierClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     TSignatureFichier.SauvegarderEmpreinte(
@@ -431,11 +431,11 @@ begin
   end;
 end;
 
-procedure TForm1.BtnVérifierFichierClick(Sender: TObject);
-begin
+procedure TForm1.BtnVerifierFichierClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
-    if TSignatureFichier.VérifierEmpreinte(
+    if TSignatureFichier.VerifierEmpreinte(
          OpenDialog1.FileName,
          OpenDialog1.FileName + '.sig') then
       ShowMessage('✓ Fichier authentique et non modifié')
@@ -496,8 +496,8 @@ Certificat Racine (Root CA)
 uses
   IdSSLOpenSSL, IdX509;
 
-procedure LireInformationsCertificat(const AFichierCert: string);
-var
+procedure LireInformationsCertificat(const AFichierCert: string);  
+var  
   Certificate: TIdX509;
 begin
   Certificate := TIdX509.Create(nil);
@@ -560,9 +560,9 @@ Le code signing permet de signer vos exécutables pour prouver leur authenticit�
 ### Créer un certificat auto-signé (développement)
 
 ```batch
-REM Créer un certificat de test avec makecert (Windows SDK)
-makecert -sv MonApp.pvk -n "CN=MonEntreprise" MonApp.cer -r
-pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123
+REM Créer un certificat de test avec makecert (Windows SDK)  
+makecert -sv MonApp.pvk -n "CN=MonEntreprise" MonApp.cer -r  
+pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123  
 ```
 
 ### Signer un exécutable
@@ -570,18 +570,18 @@ pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123
 **Avec SignTool (Windows SDK)** :
 
 ```batch
-REM Signer avec SignTool
-signtool sign /f MonApp.pfx /p MotDePasse123 /t http://timestamp.digicert.com MonApplication.exe
+REM Signer avec SignTool  
+signtool sign /f MonApp.pfx /p MotDePasse123 /t http://timestamp.digicert.com MonApplication.exe  
 
-REM Vérifier la signature
-signtool verify /pa MonApplication.exe
+REM Vérifier la signature  
+signtool verify /pa MonApplication.exe  
 ```
 
 **Automatiser dans Delphi** :
 
 ```pascal
-procedure SignerExécutable(const AFichierExe, ACertificat, AMotDePasse: string);
-var
+procedure SignerExecutable(const AFichierExe, ACertificat, AMotDePasse: string);  
+var  
   Commande: string;
   ExitCode: Cardinal;
 begin
@@ -600,8 +600,8 @@ begin
     ShowMessage('✗ Erreur lors de la signature');
 end;
 
-function ExecuterCommande(const ACommande: string): Cardinal;
-var
+function ExecuterCommande(const ACommande: string): Cardinal;  
+var  
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
 begin
@@ -623,13 +623,13 @@ begin
 end;
 
 // Intégration dans le build
-procedure TFormBuild.BtnCompilerEtSignerClick(Sender: TObject);
-begin
+procedure TFormBuild.BtnCompilerEtSignerClick(Sender: TObject);  
+begin  
   // 1. Compiler l'application
   CompilerProjet;
 
   // 2. Signer l'exécutable
-  SignerExécutable(
+  SignerExecutable(
     'C:\Projets\MonApp\MonApp.exe',
     'C:\Certificats\MonApp.pfx',
     'MotDePasseSecret'
@@ -645,8 +645,8 @@ end;
 uses
   Winapi.Windows, System.SysUtils;
 
-function VérifierSignatureExécutable(const AFichier: string): Boolean;
-var
+function VerifierSignatureExecutable(const AFichier: string): Boolean;  
+var  
   VersionInfo: DWORD;
   VersionInfoSize: DWORD;
   VersionData: Pointer;
@@ -671,11 +671,11 @@ begin
   end;
 end;
 
-procedure TForm1.BtnVérifierSignatureClick(Sender: TObject);
-begin
+procedure TForm1.BtnVerifierSignatureClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
-    if VérifierSignatureExécutable(OpenDialog1.FileName) then
+    if VerifierSignatureExecutable(OpenDialog1.FileName) then
       ShowMessage('✓ L''exécutable est signé')
     else
       ShowMessage('✗ L''exécutable n''est PAS signé');
@@ -694,11 +694,11 @@ type
   TSignaturePDF = class
   public
     procedure SignerPDF(const AFichierPDF, ACertificat, AMotDePasse: string);
-    function VérifierSignaturePDF(const AFichierPDF: string): Boolean;
+    function VerifierSignaturePDF(const AFichierPDF: string): Boolean;
   end;
 
-procedure TSignaturePDF.SignerPDF(const AFichierPDF, ACertificat, AMotDePasse: string);
-begin
+procedure TSignaturePDF.SignerPDF(const AFichierPDF, ACertificat, AMotDePasse: string);  
+begin  
   // Exemple conceptuel (nécessite une bibliothèque PDF)
 
   // 1. Ouvrir le PDF
@@ -746,8 +746,8 @@ const
   TIMESTAMP_SECTIGO = 'http://timestamp.sectigo.com';
   TIMESTAMP_GLOBALSIGN = 'http://timestamp.globalsign.com';
 
-procedure SignerAvecHorodatage(const AFichier, ACertificat: string);
-var
+procedure SignerAvecHorodatage(const AFichier, ACertificat: string);  
+var  
   Commande: string;
 begin
   Commande := Format(
@@ -774,8 +774,8 @@ type
     SHA512: string;
   end;
 
-function CalculerTousLesChecksums(const AFichier: string): TChecksums;
-var
+function CalculerTousLesChecksums(const AFichier: string): TChecksums;  
+var  
   FileStream: TFileStream;
   HashMD5: THashMD5;
   HashSHA1: THashSHA1;
@@ -805,8 +805,8 @@ begin
   end;
 end;
 
-procedure GenererFichierChecksums(const AFichier: string);
-var
+procedure GenererFichierChecksums(const AFichier: string);  
+var  
   Checksums: TChecksums;
   Fichier: TStringList;
   NomFichier: string;
@@ -832,8 +832,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.BtnGenererChecksumsClick(Sender: TObject);
-begin
+procedure TForm1.BtnGenererChecksumsClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
     GenererFichierChecksums(OpenDialog1.FileName);
 end;
@@ -847,41 +847,41 @@ Pour sécuriser les mises à jour de votre application :
 type
   TValidateurMiseAJour = class
   private
-    FCléPublique: string;
+    FClePublique: string;
   public
-    constructor Create(const ACléPublique: string);
-    function VérifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;
-    procedure TéléchargerEtInstaller(const AURL: string);
+    constructor Create(const AClePublique: string);
+    function VerifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;
+    procedure TelechargerEtInstaller(const AURL: string);
   end;
 
-constructor TValidateurMiseAJour.Create(const ACléPublique: string);
-begin
+constructor TValidateurMiseAJour.Create(const AClePublique: string);  
+begin  
   inherited Create;
-  FCléPublique := ACléPublique;
+  FClePublique := AClePublique;
 end;
 
-function TValidateurMiseAJour.VérifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;
-var
-  HashCalculé: string;
-  SignatureDécodée: string;
+function TValidateurMiseAJour.VerifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;  
+var  
+  HashCalcule: string;
+  SignatureDecodee: string;
 begin
   Result := False;
 
   // 1. Calculer le hash du fichier téléchargé
-  HashCalculé := CalculerHashFichier(AFichierMAJ);
+  HashCalcule := CalculerHashFichier(AFichierMAJ);
 
   // 2. Vérifier la signature avec la clé publique
-  // SignatureDécodée := RSA.Verify(ASignature, FCléPublique);
+  // SignatureDecodee := RSA.Verify(ASignature, FClePublique);
 
   // 3. Comparer
-  // Result := (HashCalculé = SignatureDécodée);
+  // Result := (HashCalcule = SignatureDecodee);
 
   // Version simplifiée pour l'exemple
   Result := True; // Implémenter la vraie vérification
 end;
 
-procedure TValidateurMiseAJour.TéléchargerEtInstaller(const AURL: string);
-var
+procedure TValidateurMiseAJour.TelechargerEtInstaller(const AURL: string);  
+var  
   FichierMAJ: string;
   FichierSignature: string;
   HTTP: TIdHTTP;
@@ -897,7 +897,7 @@ begin
     HTTP.Get(AURL + '.sig', FichierSignature);
 
     // Vérifier la signature
-    if VérifierMiseAJour(FichierMAJ, TFile.ReadAllText(FichierSignature)) then
+    if VerifierMiseAJour(FichierMAJ, TFile.ReadAllText(FichierSignature)) then
     begin
       ShowMessage('✓ Mise à jour authentique, installation...');
       // Lancer l'installateur
@@ -924,11 +924,11 @@ type
   TSignatureBlockchain = class
   public
     function EnregistrerSignature(const ADocument, ASignature: string): string; // Retourne hash transaction
-    function VérifierSurBlockchain(const AHashTransaction: string): Boolean;
+    function VerifierSurBlockchain(const AHashTransaction: string): Boolean;
   end;
 
-function TSignatureBlockchain.EnregistrerSignature(const ADocument, ASignature: string): string;
-var
+function TSignatureBlockchain.EnregistrerSignature(const ADocument, ASignature: string): string;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;

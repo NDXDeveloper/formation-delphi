@@ -36,8 +36,8 @@ const
   API_KEY = 'sk_live_51Hxyz...';
   ENCRYPTION_KEY = 'MaCleDeChiffrement';
 
-procedure ConnecterBD;
-begin
+procedure ConnecterBD;  
+begin  
   FDConnection1.Params.Add('Password=' + DB_PASSWORD);  // DANGER !
 end;
 ```
@@ -53,13 +53,13 @@ end;
 ```pascal
 // ❌ DANGEREUX - Fichier config.ini :
 [Database]
-Server=localhost
-Username=admin
-Password=MotDePasseSecret123    // Lisible par n'importe qui !
+Server=localhost  
+Username=admin  
+Password=MotDePasseSecret123    // Lisible par n'importe qui !  
 
 [API]
-GoogleAPIKey=AIzaSyD...
-AWSSecretKey=wJalrXUtnF...
+GoogleAPIKey=AIzaSyD...  
+AWSSecretKey=wJalrXUtnF...  
 ```
 
 ### ❌ Dans la base de données en clair
@@ -78,8 +78,8 @@ INSERT INTO Configuration VALUES ('SMTP_Password', 'motdepasse123');
 
 ```pascal
 // ❌ MOYENNEMENT DANGEREUX (mieux que rien mais pas sécurisé)
-procedure SauvegarderDansRegistry;
-var
+procedure SauvegarderDansRegistry;  
+var  
   Registry: TRegistry;
 begin
   Registry := TRegistry.Create;
@@ -134,8 +134,8 @@ function CryptUnprotectData(pDataIn: PDATA_BLOB; ppszDataDescr: PPWideChar;
   dwFlags: DWORD; pDataOut: PDATA_BLOB): BOOL; stdcall;
   external 'Crypt32.dll' name 'CryptUnprotectData';
 
-class function TDPAPIHelper.ChiffrerDonnees(const ADonnees: string): TBytes;
-var
+class function TDPAPIHelper.ChiffrerDonnees(const ADonnees: string): TBytes;  
+var  
   DataIn: DATA_BLOB;
   DataOut: DATA_BLOB;
   DonneesBytes: TBytes;
@@ -163,8 +163,8 @@ begin
     raise Exception.Create('Erreur de chiffrement DPAPI');
 end;
 
-class function TDPAPIHelper.DechiffrerDonnees(const ADonneesChiffrees: TBytes): string;
-var
+class function TDPAPIHelper.DechiffrerDonnees(const ADonneesChiffrees: TBytes): string;  
+var  
   DataIn: DATA_BLOB;
   DataOut: DATA_BLOB;
   ResultBytes: TBytes;
@@ -191,8 +191,8 @@ begin
 end;
 
 // Exemple d'utilisation
-procedure SauvegarderMotDePasseSecurise;
-var
+procedure SauvegarderMotDePasseSecurise;  
+var  
   MotDePasse: string;
   DonneesChiffrees: TBytes;
   Fichier: TFileStream;
@@ -211,8 +211,8 @@ begin
   end;
 end;
 
-procedure ChargerMotDePasseSecurise;
-var
+procedure ChargerMotDePasseSecurise;  
+var  
   DonneesChiffrees: TBytes;
   Fichier: TFileStream;
   MotDePasse: string;
@@ -243,8 +243,8 @@ Sur macOS, utilisez le Keychain pour stocker les identifiants de manière sécur
 uses
   Macapi.Security;
 
-function SauvegarderDansKeychain(const AService, ACompte, AMotDePasse: string): Boolean;
-var
+function SauvegarderDansKeychain(const AService, ACompte, AMotDePasse: string): Boolean;  
+var  
   Status: OSStatus;
   ServicePtr: MarshaledAString;
   ComptePtr: MarshaledAString;
@@ -268,8 +268,8 @@ begin
   Result := Status = errSecSuccess;
 end;
 
-function ChargerDepuisKeychain(const AService, ACompte: string): string;
-var
+function ChargerDepuisKeychain(const AService, ACompte: string): string;  
+var  
   Status: OSStatus;
   ServicePtr: MarshaledAString;
   ComptePtr: MarshaledAString;
@@ -299,8 +299,8 @@ begin
 end;
 
 // Utilisation
-procedure ConfigurerBaseDonnees;
-var
+procedure ConfigurerBaseDonnees;  
+var  
   Password: string;
 begin
   Password := ChargerDepuisKeychain('MonApplication', 'DatabasePassword');
@@ -456,8 +456,8 @@ end;
 {$ENDIF}
 {$ENDIF}
 
-class procedure TGestionSecrets.Supprimer(const ACle: string);
-var
+class procedure TGestionSecrets.Supprimer(const ACle: string);  
+var  
   CheminFichier: string;
 begin
   {$IFDEF MSWINDOWS}
@@ -470,8 +470,8 @@ begin
     DeleteFile(CheminFichier);
 end;
 
-class function TGestionSecrets.Existe(const ACle: string): Boolean;
-var
+class function TGestionSecrets.Existe(const ACle: string): Boolean;  
+var  
   CheminFichier: string;
 begin
   {$IFDEF MSWINDOWS}
@@ -489,8 +489,8 @@ end;
 end.
 
 // Utilisation simple et multi-plateforme
-procedure ConfigurerApplication;
-begin
+procedure ConfigurerApplication;  
+begin  
   // Sauvegarder un mot de passe (une seule fois, lors de la configuration)
   TGestionSecrets.Sauvegarder('DBPassword', 'MotDePasseSecret123');
   TGestionSecrets.Sauvegarder('APIKey', 'sk_live_51Hxyz...');
@@ -510,15 +510,15 @@ Les variables d'environnement sont une bonne solution pour les applications serv
 uses
   System.SysUtils;
 
-function LireVariableEnvironnement(const ANom: string; const AParDefaut: string = ''): string;
-begin
+function LireVariableEnvironnement(const ANom: string; const AParDefaut: string = ''): string;  
+begin  
   Result := GetEnvironmentVariable(ANom);
   if Result = '' then
     Result := AParDefaut;
 end;
 
-procedure ConfigurerDepuisEnvironnement;
-begin
+procedure ConfigurerDepuisEnvironnement;  
+begin  
   // Lire depuis les variables d'environnement
   FDConnection1.Params.Add('Server=' + LireVariableEnvironnement('DB_SERVER', 'localhost'));
   FDConnection1.Params.Add('Database=' + LireVariableEnvironnement('DB_NAME', 'mydb'));
@@ -535,14 +535,14 @@ end;
 
 **Configuration des variables sous Windows** :
 ```batch
-REM Définir temporairement (session actuelle)
-set DB_PASSWORD=MotDePasseSecret
+REM Définir temporairement (session actuelle)  
+set DB_PASSWORD=MotDePasseSecret  
 
-REM Définir de manière permanente (utilisateur)
-setx DB_PASSWORD "MotDePasseSecret"
+REM Définir de manière permanente (utilisateur)  
+setx DB_PASSWORD "MotDePasseSecret"  
 
-REM Définir de manière permanente (système - admin requis)
-setx DB_PASSWORD "MotDePasseSecret" /M
+REM Définir de manière permanente (système - admin requis)  
+setx DB_PASSWORD "MotDePasseSecret" /M  
 ```
 
 **Configuration sous Linux/macOS** :
@@ -577,8 +577,8 @@ type
     procedure Enregistrer;
   end;
 
-constructor TConfigSecurisee.Create(const ACheminFichier, ACleMaitre: string);
-begin
+constructor TConfigSecurisee.Create(const ACheminFichier, ACleMaitre: string);  
+begin  
   inherited Create;
   FCheminFichier := ACheminFichier;
   FCleMaitre := ACleMaitre;
@@ -588,14 +588,14 @@ begin
     ChargerFichier;
 end;
 
-destructor TConfigSecurisee.Destroy;
-begin
+destructor TConfigSecurisee.Destroy;  
+begin  
   FValeurs.Free;
   inherited;
 end;
 
-procedure TConfigSecurisee.ChargerFichier;
-var
+procedure TConfigSecurisee.ChargerFichier;  
+var  
   ContenuChiffre: string;
   ContenuClair: string;
   Lignes: TStringList;
@@ -627,8 +627,8 @@ begin
   end;
 end;
 
-procedure TConfigSecurisee.SauvegarderFichier;
-var
+procedure TConfigSecurisee.SauvegarderFichier;  
+var  
   Lignes: TStringList;
   Cle: string;
   ContenuClair: string;
@@ -655,38 +655,38 @@ begin
   TFile.WriteAllText(FCheminFichier, ContenuChiffre);
 end;
 
-function TConfigSecurisee.ChiffrerContenu(const AContenu: string): string;
-begin
+function TConfigSecurisee.ChiffrerContenu(const AContenu: string): string;  
+begin  
   // Utiliser votre méthode de chiffrement préférée (AES, etc.)
   // Exemple simplifié avec Base64 (à remplacer par un vrai chiffrement)
   Result := TNetEncoding.Base64.Encode(AContenu);
 end;
 
-function TConfigSecurisee.DechiffrerContenu(const AContenu: string): string;
-begin
+function TConfigSecurisee.DechiffrerContenu(const AContenu: string): string;  
+begin  
   // Déchiffrer (correspondant à ChiffrerContenu)
   Result := TNetEncoding.Base64.Decode(AContenu);
 end;
 
-procedure TConfigSecurisee.DefinirValeur(const ACle, AValeur: string);
-begin
+procedure TConfigSecurisee.DefinirValeur(const ACle, AValeur: string);  
+begin  
   FValeurs.AddOrSetValue(ACle, AValeur);
 end;
 
-function TConfigSecurisee.ObtenirValeur(const ACle: string; const AParDefaut: string): string;
-begin
+function TConfigSecurisee.ObtenirValeur(const ACle: string; const AParDefaut: string): string;  
+begin  
   if not FValeurs.TryGetValue(ACle, Result) then
     Result := AParDefaut;
 end;
 
-procedure TConfigSecurisee.Enregistrer;
-begin
+procedure TConfigSecurisee.Enregistrer;  
+begin  
   SauvegarderFichier;
 end;
 
 // Utilisation
-procedure ConfigurerAvecFichierSecurise;
-var
+procedure ConfigurerAvecFichierSecurise;  
+var  
   Config: TConfigSecurisee;
   CleMaitre: string;
 begin
@@ -722,16 +722,16 @@ type
     function ObtenirSecret(const ASecretName: string): string;
   end;
 
-constructor TAWSSecretsManager.Create(const ARegion, AAccessKeyID, ASecretAccessKey: string);
-begin
+constructor TAWSSecretsManager.Create(const ARegion, AAccessKeyID, ASecretAccessKey: string);  
+begin  
   inherited Create;
   FRegion := ARegion;
   FAccessKeyID := AAccessKeyID;
   FSecretAccessKey := ASecretAccessKey;
 end;
 
-function TAWSSecretsManager.ObtenirSecret(const ASecretName: string): string;
-var
+function TAWSSecretsManager.ObtenirSecret(const ASecretName: string): string;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -778,8 +778,8 @@ begin
 end;
 
 // Utilisation
-procedure ConfigurerAvecAWS;
-var
+procedure ConfigurerAvecAWS;  
+var  
   SecretsManager: TAWSSecretsManager;
   DBPassword: string;
 begin
@@ -815,8 +815,8 @@ type
     class procedure DemanderEtSauvegarderIdentifiants;
   end;
 
-class procedure TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;
-var
+class procedure TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;  
+var  
   Form: TForm;
   EditServer: TEdit;
   EditDatabase: TEdit;
@@ -891,8 +891,8 @@ begin
 end;
 
 // Appeler au démarrage de l'application
-procedure TFormPrincipal.FormCreate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormCreate(Sender: TObject);  
+begin  
   TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;
 
   // Charger la configuration
@@ -916,14 +916,14 @@ type
     procedure VerifierDateExpiration;
   end;
 
-constructor TRotationSecrets.Create(AConnection: TFDConnection);
-begin
+constructor TRotationSecrets.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-procedure TRotationSecrets.RoterMotDePasseBD;
-var
+procedure TRotationSecrets.RoterMotDePasseBD;  
+var  
   NouveauPassword: string;
   Query: TFDQuery;
 begin
@@ -949,8 +949,8 @@ begin
   end;
 end;
 
-procedure TRotationSecrets.VerifierDateExpiration;
-var
+procedure TRotationSecrets.VerifierDateExpiration;  
+var  
   DateDerniereRotation: TDateTime;
   JoursDepuisRotation: Integer;
 begin
@@ -970,8 +970,8 @@ begin
   end;
 end;
 
-function GenererMotDePasseFort(ALongueur: Integer): string;
-const
+function GenererMotDePasseFort(ALongueur: Integer): string;  
+const  
   CARACTERES = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
 var
   i: Integer;
@@ -996,14 +996,14 @@ type
     procedure GenererRapportAcces(const ANomFichier: string);
   end;
 
-constructor TAuditSecrets.Create(AConnection: TFDConnection);
-begin
+constructor TAuditSecrets.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-procedure TAuditSecrets.LoggerAccesSecret(const ANomSecret: string; AIDUtilisateur: Integer);
-var
+procedure TAuditSecrets.LoggerAccesSecret(const ANomSecret: string; AIDUtilisateur: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -1020,8 +1020,8 @@ begin
   end;
 end;
 
-procedure TAuditSecrets.GenererRapportAcces(const ANomFichier: string);
-var
+procedure TAuditSecrets.GenererRapportAcces(const ANomFichier: string);  
+var  
   Query: TFDQuery;
   Fichier: TextFile;
 begin
@@ -1085,8 +1085,8 @@ secrets/
 **3. Chiffrer avant de stocker**
 ```pascal
 // ✅ BON
-MotDePasseChiffre := TDPAPIHelper.ChiffrerDonnees(MotDePasse);
-SauvegarderDansFichier(MotDePasseChiffre);
+MotDePasseChiffre := TDPAPIHelper.ChiffrerDonnees(MotDePasse);  
+SauvegarderDansFichier(MotDePasseChiffre);  
 
 // ❌ MAUVAIS
 SauvegarderDansFichier(MotDePasse); // En clair !
@@ -1102,8 +1102,8 @@ SauvegarderDansFichier(MotDePasse); // En clair !
 **5. Auditer les accès**
 ```pascal
 // Logger chaque fois qu'un secret est lu
-procedure ChargerSecret(const ANom: string): string;
-begin
+procedure ChargerSecret(const ANom: string): string;  
+begin  
   Result := TGestionSecrets.Charger(ANom);
   AuditSecrets.LoggerAcces(ANom, UtilisateurActuel);
 end;
@@ -1147,8 +1147,8 @@ TLogger.Log('Connexion réussie pour utilisateur: ' + Username);
 const MASTER_PASSWORD = 'admin123';
 
 // ✅ BON - secrets différents pour chaque service
-DBPassword := TGestionSecrets.Charger('DB_Password');
-APIKey := TGestionSecrets.Charger('API_Key');
+DBPassword := TGestionSecrets.Charger('DB_Password');  
+APIKey := TGestionSecrets.Charger('API_Key');  
 ```
 
 ## Checklist de sécurité des identifiants

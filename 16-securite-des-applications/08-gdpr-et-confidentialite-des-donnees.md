@@ -38,36 +38,36 @@ Une donnée personnelle est toute information se rapportant à une personne phys
 ### Données directement identifiantes
 
 ```
-Nom, Prénom
-Adresse email
-Numéro de téléphone
-Adresse postale
-Numéro de sécurité sociale
-Plaque d'immatriculation
-Photo ou vidéo du visage
+Nom, Prénom  
+Adresse email  
+Numéro de téléphone  
+Adresse postale  
+Numéro de sécurité sociale  
+Plaque d'immatriculation  
+Photo ou vidéo du visage  
 ```
 
 ### Données indirectement identifiantes
 
 ```
-Adresse IP
-Cookie identifiant
-Numéro de client
-Données de géolocalisation
-Données biométriques
+Adresse IP  
+Cookie identifiant  
+Numéro de client  
+Données de géolocalisation  
+Données biométriques  
 ```
 
 ### Données sensibles (protection renforcée)
 
 ```
-Origine ethnique ou raciale
-Opinions politiques
-Convictions religieuses
-Appartenance syndicale
-Données génétiques ou biométriques
-Données de santé
-Orientation sexuelle
-Casier judiciaire
+Origine ethnique ou raciale  
+Opinions politiques  
+Convictions religieuses  
+Appartenance syndicale  
+Données génétiques ou biométriques  
+Données de santé  
+Orientation sexuelle  
+Casier judiciaire  
 ```
 
 ## Les 7 principes du RGPD
@@ -78,8 +78,8 @@ Casier judiciaire
 
 ```pascal
 // ✅ BON - Informer clairement l'utilisateur
-procedure AfficherPolitiqueConfidentialite;
-begin
+procedure AfficherPolitiqueConfidentialite;  
+begin  
   ShowMessage('Vos données (nom, email, adresse) seront utilisées uniquement pour :' + sLineBreak +
               '- Créer votre compte' + sLineBreak +
               '- Vous envoyer des notifications importantes' + sLineBreak +
@@ -88,8 +88,8 @@ begin
 end;
 
 // ❌ MAUVAIS - Collecte cachée
-procedure CollecterDonneesCachees;
-begin
+procedure CollecterDonneesCachees;  
+begin  
   // Collecte silencieuse sans informer l'utilisateur
   EnvoyerVersServeur(ListeContacts, HistoriqueNavigation, Localisation);
 end;
@@ -109,8 +109,8 @@ type
     ftSupport
   );
 
-procedure CollecterDonneesAvecFinalite(AFinalite: TFinaliteTraitement; const AEmail: string);
-begin
+procedure CollecterDonneesAvecFinalite(AFinalite: TFinaliteTraitement; const AEmail: string);  
+begin  
   case AFinalite of
     ftCreationCompte:
     begin
@@ -132,8 +132,8 @@ begin
 end;
 
 // ❌ MAUVAIS - Utilisation détournée
-procedure UtilisationDetournee;
-var
+procedure UtilisationDetournee;  
+var  
   EmailsClients: TStringList;
 begin
   EmailsClients := ChargerEmailsClients;
@@ -182,8 +182,8 @@ type
     Ville: string;
   end;
 
-procedure DemanderAdresseAuMomentCommande;
-begin
+procedure DemanderAdresseAuMomentCommande;  
+begin  
   // Demander l'adresse uniquement quand l'utilisateur commande
   if UtilisateurCommandeQuelqueChose then
     AdresseLivraison := SaisirAdresseLivraison;
@@ -203,8 +203,8 @@ type
     procedure SupprimerDonneesObsoletes;
   end;
 
-procedure TGestionDonneesUtilisateur.PermettreModification(AIDUtilisateur: Integer);
-begin
+procedure TGestionDonneesUtilisateur.PermettreModification(AIDUtilisateur: Integer);  
+begin  
   // Permettre à l'utilisateur de modifier ses données
   FormModificationProfil := TFormModificationProfil.Create(nil);
   try
@@ -216,8 +216,8 @@ begin
   end;
 end;
 
-procedure TGestionDonneesUtilisateur.VerifierEtNettoyer;
-var
+procedure TGestionDonneesUtilisateur.VerifierEtNettoyer;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -255,8 +255,8 @@ type
       NEWSLETTER = 36;       // 3 ans
   end;
 
-procedure SupprimerDonneesExpirees;
-var
+procedure SupprimerDonneesExpirees;  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -289,8 +289,8 @@ begin
 end;
 
 // Tâche planifiée (à exécuter quotidiennement ou hebdomadairement)
-procedure TFormPrincipal.TimerNettoyageTimer(Sender: TObject);
-begin
+procedure TFormPrincipal.TimerNettoyageTimer(Sender: TObject);  
+begin  
   SupprimerDonneesExpirees;
 end;
 ```
@@ -305,8 +305,8 @@ end;
 // - 16.4 Sécurisation des connexions
 // - 16.5 Protection contre les vulnérabilités
 
-procedure ProtegerDonneesPersonnelles;
-begin
+procedure ProtegerDonneesPersonnelles;  
+begin  
   // 1. Chiffrement
   ChiffrerDonneesAuRepos;
   UtiliserHTTPS;
@@ -353,14 +353,14 @@ type
     procedure GenererRapportPDF(AIDUtilisateur: Integer; const ANomFichier: string);
   end;
 
-constructor TExportDonneesPersonnelles.Create(AConnection: TFDConnection);
-begin
+constructor TExportDonneesPersonnelles.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-function TExportDonneesPersonnelles.ExporterDonneesUtilisateur(AIDUtilisateur: Integer): string;
-var
+function TExportDonneesPersonnelles.ExporterDonneesUtilisateur(AIDUtilisateur: Integer): string;  
+var  
   Query: TFDQuery;
   JSONRoot: TJSONObject;
   JSONUtilisateur: TJSONObject;
@@ -444,8 +444,8 @@ begin
 end;
 
 // Interface utilisateur
-procedure TFormProfil.BtnExporterDonneesClick(Sender: TObject);
-var
+procedure TFormProfil.BtnExporterDonneesClick(Sender: TObject);  
+var  
   Export: TExportDonneesPersonnelles;
   CheminFichier: string;
 begin
@@ -469,8 +469,8 @@ end;
 L'utilisateur peut corriger ses données inexactes.
 
 ```pascal
-procedure TFormMonProfil.BtnModifierClick(Sender: TObject);
-var
+procedure TFormMonProfil.BtnModifierClick(Sender: TObject);  
+var  
   Query: TFDQuery;
 begin
   // Validation
@@ -525,14 +525,14 @@ type
     procedure SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);
   end;
 
-constructor TSuppressionCompte.Create(AConnection: TFDConnection);
-begin
+constructor TSuppressionCompte.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
 
-procedure TSuppressionCompte.SupprimerDonneesUtilisateur(AIDUtilisateur: Integer);
-var
+procedure TSuppressionCompte.SupprimerDonneesUtilisateur(AIDUtilisateur: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -561,8 +561,8 @@ begin
   end;
 end;
 
-procedure TSuppressionCompte.AnonymiserDonneesConservees(AIDUtilisateur: Integer);
-var
+procedure TSuppressionCompte.AnonymiserDonneesConservees(AIDUtilisateur: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -593,8 +593,8 @@ begin
   end;
 end;
 
-procedure TSuppressionCompte.JournaliserSuppression(AIDUtilisateur: Integer);
-var
+procedure TSuppressionCompte.JournaliserSuppression(AIDUtilisateur: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -610,8 +610,8 @@ begin
   end;
 end;
 
-procedure TSuppressionCompte.SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);
-begin
+procedure TSuppressionCompte.SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);  
+begin  
   // 1. Journaliser la demande
   JournaliserSuppression(AIDUtilisateur);
 
@@ -626,8 +626,8 @@ begin
 end;
 
 // Interface utilisateur
-procedure TFormParametres.BtnSupprimerCompteClick(Sender: TObject);
-var
+procedure TFormParametres.BtnSupprimerCompteClick(Sender: TObject);  
+var  
   Suppression: TSuppressionCompte;
   Confirmation: string;
 begin
@@ -663,8 +663,8 @@ end;
 L'utilisateur peut récupérer ses données dans un format structuré.
 
 ```pascal
-procedure TFormProfil.BtnExporterDonneesPortablesClick(Sender: TObject);
-var
+procedure TFormProfil.BtnExporterDonneesPortablesClick(Sender: TObject);  
+var  
   Export: TExportDonneesPersonnelles;
   JSON: string;
   CheminJSON, CheminCSV: string;
@@ -688,8 +688,8 @@ begin
   end;
 end;
 
-procedure ExporterVersCSV(AIDUtilisateur: Integer; const ANomFichier: string);
-var
+procedure ExporterVersCSV(AIDUtilisateur: Integer; const ANomFichier: string);  
+var  
   Query: TFDQuery;
   CSV: TStringList;
 begin
@@ -740,8 +740,8 @@ type
     function AConsenti(AIDUtilisateur: Integer; const ATypeTraitement: string): Boolean;
   end;
 
-constructor TGestionConsentements.Create(AConnection: TFDConnection);
-begin
+constructor TGestionConsentements.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
@@ -799,8 +799,8 @@ begin
 end;
 
 // Interface de gestion des consentements
-procedure TFormParametresViePrivee.ChargerConsentements;
-begin
+procedure TFormParametresViePrivee.ChargerConsentements;  
+begin  
   CheckBoxNewsletter.Checked :=
     GestionConsentements.AConsenti(UtilisateurConnecteID, 'newsletter');
 
@@ -811,8 +811,8 @@ begin
     GestionConsentements.AConsenti(UtilisateurConnecteID, 'partage_partenaires');
 end;
 
-procedure TFormParametresViePrivee.BtnEnregistrerClick(Sender: TObject);
-begin
+procedure TFormParametresViePrivee.BtnEnregistrerClick(Sender: TObject);  
+begin  
   GestionConsentements.DefinirConsentement(
     UtilisateurConnecteID, 'newsletter', CheckBoxNewsletter.Checked);
 
@@ -850,8 +850,8 @@ CREATE INDEX idx_utilisateur_type ON Consentements(IDUtilisateur, TypeTraitement
 ### Demande de consentement explicite
 
 ```pascal
-procedure TFormInscription.BtnInscrireClick(Sender: TObject);
-begin
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);  
+begin  
   // Validation des champs...
 
   // Consentement EXPLICITE obligatoire
@@ -878,8 +878,8 @@ end;
 ### Interface de consentement granulaire
 
 ```pascal
-procedure TFormConsentements.AfficherOptionsConsentement;
-begin
+procedure TFormConsentements.AfficherOptionsConsentement;  
+begin  
   // Consentement obligatoire (non modifiable)
   CheckBoxCGU.Checked := True;
   CheckBoxCGU.Enabled := False;
@@ -921,8 +921,8 @@ type
     procedure NotifierUtilisateurs(AUtilisateursConcernes: TArray<Integer>);
   end;
 
-constructor TViolationDonnees.Create(AConnection: TFDConnection);
-begin
+constructor TViolationDonnees.Create(AConnection: TFDConnection);  
+begin  
   inherited Create;
   FConnection := AConnection;
 end;
@@ -970,8 +970,8 @@ begin
   end;
 end;
 
-procedure TViolationDonnees.NotifierCNIL(const ADetails: string);
-begin
+procedure TViolationDonnees.NotifierCNIL(const ADetails: string);  
+begin  
   // En production : envoyer via le portail de notification de la CNIL
   // https://www.cnil.fr/fr/notifier-une-violation-de-donnees-personnelles
 
@@ -983,8 +983,8 @@ begin
                ADetails);
 end;
 
-procedure TViolationDonnees.NotifierUtilisateurs(AUtilisateursConcernes: TArray<Integer>);
-var
+procedure TViolationDonnees.NotifierUtilisateurs(AUtilisateursConcernes: TArray<Integer>);  
+var  
   Query: TFDQuery;
   IDUser: Integer;
   Email: string;
@@ -1019,8 +1019,8 @@ begin
 end;
 
 // En cas de violation détectée
-procedure GererViolationDonnees;
-var
+procedure GererViolationDonnees;  
+var  
   Violation: TViolationDonnees;
   UtilisateursConcernes: TArray<Integer>;
 begin
@@ -1076,8 +1076,8 @@ type
     PaysDestination: string;
   end;
 
-constructor TRegistreTraitements.Create;
-begin
+constructor TRegistreTraitements.Create;  
+begin  
   inherited Create;
   FTraitements := TList<TTraitement>.Create;
 
@@ -1085,8 +1085,8 @@ begin
   DefinirTraitements;
 end;
 
-procedure DefinirTraitements;
-var
+procedure DefinirTraitements;  
+var  
   Traitement: TTraitement;
 begin
   // Traitement 1 : Gestion des comptes clients
@@ -1131,8 +1131,8 @@ begin
   // Ajouter tous les autres traitements...
 end;
 
-procedure TRegistreTraitements.GenererRapport(const ANomFichier: string);
-var
+procedure TRegistreTraitements.GenererRapport(const ANomFichier: string);  
+var  
   Fichier: TextFile;
   Traitement: TTraitement;
   Donnee: string;
@@ -1171,8 +1171,8 @@ end;
 Vous devez fournir une politique de confidentialité claire et accessible.
 
 ```pascal
-procedure AfficherPolitiqueConfidentialite;
-var
+procedure AfficherPolitiqueConfidentialite;  
+var  
   Politique: TStringList;
 begin
   Politique := TStringList.Create;

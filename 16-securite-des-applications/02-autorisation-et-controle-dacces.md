@@ -90,8 +90,8 @@ Utilisateur → Rôle → Permissions → Ressources
 
 **Exemple** :
 ```
-Jean (Utilisateur) → Gestionnaire (Rôle) → [Créer, Modifier, Lire] → Documents
-Marie (Utilisateur) → Administrateur (Rôle) → [Toutes permissions] → Tout
+Jean (Utilisateur) → Gestionnaire (Rôle) → [Créer, Modifier, Lire] → Documents  
+Marie (Utilisateur) → Administrateur (Rôle) → [Toutes permissions] → Tout  
 ```
 
 ### 2. ACL (Access Control List)
@@ -112,8 +112,8 @@ Permissions basées sur des attributs (département, localisation, heure, etc.)
 
 **Exemple** :
 ```
-SI (Département = "Ventes" ET Heure < 18h00 ET Localisation = "Bureau")
-ALORS Autoriser accès CRM
+SI (Département = "Ventes" ET Heure < 18h00 ET Localisation = "Bureau")  
+ALORS Autoriser accès CRM  
 ```
 
 Plus complexe mais très puissant pour des besoins spécifiques.
@@ -185,8 +185,8 @@ INSERT INTO Permissions (NomPermission, Description, CodePermission) VALUES
 
 -- Attribution des permissions aux rôles
 -- Administrateur : toutes les permissions
-INSERT INTO RolesPermissions (IDRole, IDPermission)
-SELECT 1, ID FROM Permissions;
+INSERT INTO RolesPermissions (IDRole, IDPermission)  
+SELECT 1, ID FROM Permissions;  
 
 -- Gestionnaire : gestion documents + lecture utilisateurs
 INSERT INTO RolesPermissions (IDRole, IDPermission) VALUES
@@ -246,8 +246,8 @@ implementation
 
 { TGestionPermissions }
 
-constructor TGestionPermissions.Create(AConnection: TFDConnection; AIDUtilisateur: Integer);
-begin
+constructor TGestionPermissions.Create(AConnection: TFDConnection; AIDUtilisateur: Integer);  
+begin  
   inherited Create;
   FConnection := AConnection;
   FIDUtilisateur := AIDUtilisateur;
@@ -257,15 +257,15 @@ begin
   ChargerRoles;
 end;
 
-destructor TGestionPermissions.Destroy;
-begin
+destructor TGestionPermissions.Destroy;  
+begin  
   FPermissions.Free;
   FRoles.Free;
   inherited;
 end;
 
-procedure TGestionPermissions.ChargerPermissions;
-var
+procedure TGestionPermissions.ChargerPermissions;  
+var  
   Query: TFDQuery;
 begin
   FPermissions.Clear;
@@ -291,8 +291,8 @@ begin
   end;
 end;
 
-procedure TGestionPermissions.ChargerRoles;
-var
+procedure TGestionPermissions.ChargerRoles;  
+var  
   Query: TFDQuery;
 begin
   FRoles.Clear;
@@ -317,18 +317,18 @@ begin
   end;
 end;
 
-function TGestionPermissions.APermission(const ACodePermission: string): Boolean;
-begin
+function TGestionPermissions.APermission(const ACodePermission: string): Boolean;  
+begin  
   Result := FPermissions.Contains(ACodePermission);
 end;
 
-function TGestionPermissions.ARoles(const ANomRole: string): Boolean;
-begin
+function TGestionPermissions.ARoles(const ANomRole: string): Boolean;  
+begin  
   Result := FRoles.Contains(ANomRole);
 end;
 
-procedure TGestionPermissions.Rafraichir;
-begin
+procedure TGestionPermissions.Rafraichir;  
+begin  
   ChargerPermissions;
   ChargerRoles;
 end;
@@ -344,15 +344,15 @@ Dans votre unité principale, déclarez une variable globale :
 var
   GestionPermissions: TGestionPermissions;
 
-procedure InitialiserPermissions(AConnection: TFDConnection; AIDUtilisateur: Integer);
-begin
+procedure InitialiserPermissions(AConnection: TFDConnection; AIDUtilisateur: Integer);  
+begin  
   if Assigned(GestionPermissions) then
     GestionPermissions.Free;
   GestionPermissions := TGestionPermissions.Create(AConnection, AIDUtilisateur);
 end;
 
-procedure LibererPermissions;
-begin
+procedure LibererPermissions;  
+begin  
   if Assigned(GestionPermissions) then
   begin
     GestionPermissions.Free;
@@ -366,8 +366,8 @@ end;
 #### a) Activer/désactiver des boutons
 
 ```pascal
-procedure TFormPrincipal.FormShow(Sender: TObject);
-begin
+procedure TFormPrincipal.FormShow(Sender: TObject);  
+begin  
   // Contrôle des boutons selon les permissions
   BtnCreerUtilisateur.Enabled := GestionPermissions.APermission('USER_CREATE');
   BtnModifierUtilisateur.Enabled := GestionPermissions.APermission('USER_UPDATE');
@@ -388,8 +388,8 @@ end;
 #### b) Vérifier avant une action
 
 ```pascal
-procedure TFormDocuments.BtnSupprimerClick(Sender: TObject);
-begin
+procedure TFormDocuments.BtnSupprimerClick(Sender: TObject);  
+begin  
   // Vérifier la permission avant de supprimer
   if not GestionPermissions.APermission('DOC_DELETE') then
   begin
@@ -410,8 +410,8 @@ end;
 #### c) Contrôler l'accès à un formulaire entier
 
 ```pascal
-procedure TFormPrincipal.MenuGestionUtilisateursClick(Sender: TObject);
-begin
+procedure TFormPrincipal.MenuGestionUtilisateursClick(Sender: TObject);  
+begin  
   if not GestionPermissions.APermission('USER_READ') then
   begin
     ShowMessage('Accès refusé. Vous n''avez pas les droits nécessaires.');
@@ -433,8 +433,8 @@ end;
 Pour une meilleure expérience utilisateur, masquez les éléments inaccessibles plutôt que de les désactiver :
 
 ```pascal
-procedure TFormPrincipal.AppliquerPermissionsInterface;
-begin
+procedure TFormPrincipal.AppliquerPermissionsInterface;  
+begin  
   // Masquer complètement les options non autorisées
   BtnCreerUtilisateur.Visible := GestionPermissions.APermission('USER_CREATE');
   BtnModifierUtilisateur.Visible := GestionPermissions.APermission('USER_UPDATE');
@@ -461,15 +461,15 @@ Pour un contrôle plus fin, vous pouvez implémenter des permissions au niveau d
 
 ```sql
 -- Ajouter une colonne propriétaire
-ALTER TABLE Documents ADD COLUMN IDProprietaire INT;
-ALTER TABLE Documents ADD FOREIGN KEY (IDProprietaire) REFERENCES Utilisateurs(ID);
+ALTER TABLE Documents ADD COLUMN IDProprietaire INT;  
+ALTER TABLE Documents ADD FOREIGN KEY (IDProprietaire) REFERENCES Utilisateurs(ID);  
 ```
 
 ### Vérification de propriété
 
 ```pascal
-function TDocumentManager.PeutModifierDocument(AIDDocument, AIDUtilisateur: Integer): Boolean;
-var
+function TDocumentManager.PeutModifierDocument(AIDDocument, AIDUtilisateur: Integer): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Result := False;
@@ -506,8 +506,8 @@ end;
 Un utilisateur peut avoir plusieurs rôles simultanément :
 
 ```pascal
-procedure AttribuerRole(AIDUtilisateur, AIDRole: Integer);
-var
+procedure AttribuerRole(AIDUtilisateur, AIDRole: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -536,8 +536,8 @@ begin
   end;
 end;
 
-procedure RetirerRole(AIDUtilisateur, AIDRole: Integer);
-var
+procedure RetirerRole(AIDUtilisateur, AIDRole: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -559,14 +559,14 @@ end;
 ### Formulaire de gestion des rôles
 
 ```pascal
-procedure TFormGestionRoles.ChargerRoles;
-begin
+procedure TFormGestionRoles.ChargerRoles;  
+begin  
   FDQueryRoles.SQL.Text := 'SELECT * FROM Roles ORDER BY NomRole';
   FDQueryRoles.Open;
 end;
 
-procedure TFormGestionRoles.ChargerPermissionsRole(AIDRole: Integer);
-begin
+procedure TFormGestionRoles.ChargerPermissionsRole(AIDRole: Integer);  
+begin  
   FDQueryPermissions.SQL.Text :=
     'SELECT p.ID, p.NomPermission, p.Description, ' +
     '       IF(rp.IDRole IS NULL, 0, 1) as Attribuee ' +
@@ -577,8 +577,8 @@ begin
   FDQueryPermissions.Open;
 end;
 
-procedure TFormGestionRoles.AttribuerOuRetirerPermission(AIDRole, AIDPermission: Integer; AAttribuer: Boolean);
-var
+procedure TFormGestionRoles.AttribuerOuRetirerPermission(AIDRole, AIDPermission: Integer; AAttribuer: Boolean);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -610,13 +610,13 @@ end;
 Pour des accès temporaires :
 
 ```sql
-ALTER TABLE UtilisateursRoles ADD COLUMN DateDebut DATETIME;
-ALTER TABLE UtilisateursRoles ADD COLUMN DateFin DATETIME;
+ALTER TABLE UtilisateursRoles ADD COLUMN DateDebut DATETIME;  
+ALTER TABLE UtilisateursRoles ADD COLUMN DateFin DATETIME;  
 ```
 
 ```pascal
-function RoleActif(AIDUtilisateur, AIDRole: Integer): Boolean;
-var
+function RoleActif(AIDUtilisateur, AIDRole: Integer): Boolean;  
+var  
   Query: TFDQuery;
 begin
   Result := False;
@@ -680,8 +680,8 @@ CREATE TABLE JournalAcces (
 ```
 
 ```pascal
-procedure JournaliserAcces(AIDUtilisateur: Integer; const AAction, ARessource: string; AAutorise: Boolean);
-var
+procedure JournaliserAcces(AIDUtilisateur: Integer; const AAction, ARessource: string; AAutorise: Boolean);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -723,8 +723,8 @@ AttribuerRole(IDUtilisateur, RoleUtilisateur);
 Par défaut, tout devrait être interdit :
 
 ```pascal
-function TGestionPermissions.APermission(const ACodePermission: string): Boolean;
-begin
+function TGestionPermissions.APermission(const ACodePermission: string): Boolean;  
+begin  
   // Par défaut : refusé
   Result := False;
 
@@ -743,15 +743,15 @@ Séparez la logique métier de la logique d'autorisation :
 
 ```pascal
 // Couche métier
-procedure SupprimerDocument(AIDDocument: Integer);
-begin
+procedure SupprimerDocument(AIDDocument: Integer);  
+begin  
   // Logique de suppression uniquement
   ExecuterRequeteSuppressionDocument(AIDDocument);
 end;
 
 // Couche présentation avec contrôle d'accès
-procedure TFormDocuments.BtnSupprimerClick(Sender: TObject);
-begin
+procedure TFormDocuments.BtnSupprimerClick(Sender: TObject);  
+begin  
   // Vérifier l'autorisation
   if not GestionPermissions.APermission('DOC_DELETE') then
   begin
@@ -787,15 +787,15 @@ Dans les applications client-serveur, vérifiez TOUJOURS les permissions côté 
 
 ```pascal
 // Sur le client (interface)
-if not GestionPermissions.APermission('DOC_DELETE') then
-begin
+if not GestionPermissions.APermission('DOC_DELETE') then  
+begin  
   BtnSupprimer.Enabled := False; // Interface seulement
   Exit;
 end;
 
 // Sur le serveur (API/Service)
-function ServiceDocuments.SupprimerDocument(AIDUtilisateur, AIDDocument: Integer): Boolean;
-begin
+function ServiceDocuments.SupprimerDocument(AIDUtilisateur, AIDDocument: Integer): Boolean;  
+begin  
   // Vérification côté serveur obligatoire
   if not VerifierPermissionServeur(AIDUtilisateur, 'DOC_DELETE') then
     raise Exception.Create('Accès refusé');
@@ -810,8 +810,8 @@ end;
 Pour FireMonkey (iOS/Android) :
 
 ```pascal
-procedure TFormMobile.VerifierPermissionsEtAfficher;
-begin
+procedure TFormMobile.VerifierPermissionsEtAfficher;  
+begin  
   // Charger les permissions depuis le serveur
   ChargerPermissionsDepuisServeur;
 
@@ -856,8 +856,8 @@ CREATE TABLE DelegationsPermissions (
 Permissions qui dépendent du contexte (heure, lieu, etc.) :
 
 ```pascal
-function PermissionContextuelle(const ACodePermission: string): Boolean;
-var
+function PermissionContextuelle(const ACodePermission: string): Boolean;  
+var  
   HeureActuelle: TTime;
 begin
   Result := GestionPermissions.APermission(ACodePermission);

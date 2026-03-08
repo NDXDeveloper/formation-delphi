@@ -40,11 +40,11 @@ C'est la vulnérabilité **N°1** la plus dangereuse. Un attaquant insère du co
 
 **Exemple de scénario** :
 ```
-Utilisateur entre : admin
-Mot de passe : ' OR '1'='1
+Utilisateur entre : admin  
+Mot de passe : ' OR '1'='1  
 
-Requête générée :
-SELECT * FROM Users WHERE username = 'admin' AND password = '' OR '1'='1'
+Requête générée :  
+SELECT * FROM Users WHERE username = 'admin' AND password = '' OR '1'='1'  
 
 Résultat : La condition '1'='1' est toujours vraie, donc l'attaquant est connecté !
 ```
@@ -53,8 +53,8 @@ Résultat : La condition '1'='1' est toujours vraie, donc l'attaquant est connec
 
 ```pascal
 // ❌ TRÈS DANGEREUX - Vulnérable aux injections SQL
-procedure TFormLogin.BtnConnexionClick(Sender: TObject);
-var
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);  
+var  
   Query: TFDQuery;
   SQL: string;
 begin
@@ -94,8 +94,8 @@ Résultat : **Toute la table Users est supprimée !**
 
 ```pascal
 // ✅ SÉCURISÉ - Utilise des paramètres
-procedure TFormLogin.BtnConnexionClickSecurise(Sender: TObject);
-var
+procedure TFormLogin.BtnConnexionClickSecurise(Sender: TObject);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -129,8 +129,8 @@ Les paramètres sont traités comme des **données**, jamais comme du **code SQL
 
 ```pascal
 // INSERT sécurisé
-procedure AjouterUtilisateurSecurise(const ANom, AEmail: string);
-var
+procedure AjouterUtilisateurSecurise(const ANom, AEmail: string);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -146,8 +146,8 @@ begin
 end;
 
 // UPDATE sécurisé
-procedure ModifierUtilisateurSecurise(AID: Integer; const ANom: string);
-var
+procedure ModifierUtilisateurSecurise(AID: Integer; const ANom: string);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -163,8 +163,8 @@ begin
 end;
 
 // DELETE sécurisé
-procedure SupprimerUtilisateurSecurise(AID: Integer);
-var
+procedure SupprimerUtilisateurSecurise(AID: Integer);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);
@@ -179,8 +179,8 @@ begin
 end;
 
 // SELECT avec clause IN sécurisée
-procedure ChercherUtilisateursParIDs(const AIDs: array of Integer);
-var
+procedure ChercherUtilisateursParIDs(const AIDs: array of Integer);  
+var  
   Query: TFDQuery;
   i: Integer;
   Params: string;
@@ -223,8 +223,8 @@ end;
 En plus des paramètres, validez toujours les entrées :
 
 ```pascal
-function ValiderNomUtilisateur(const AUsername: string): Boolean;
-begin
+function ValiderNomUtilisateur(const AUsername: string): Boolean;  
+begin  
   Result := False;
 
   // Vérifier la longueur
@@ -238,8 +238,8 @@ begin
   Result := True;
 end;
 
-procedure TFormInscription.BtnInscrireClick(Sender: TObject);
-begin
+procedure TFormInscription.BtnInscrireClick(Sender: TObject);  
+begin  
   if not ValiderNomUtilisateur(EditUsername.Text) then
   begin
     ShowMessage('Nom d''utilisateur invalide. ' +
@@ -261,8 +261,8 @@ Le XSS permet à un attaquant d'injecter du code JavaScript malveillant dans vot
 
 ```pascal
 // ❌ VULNÉRABLE
-procedure AfficherMessage(const AMessage: string);
-begin
+procedure AfficherMessage(const AMessage: string);  
+begin  
   // Affiche directement le HTML
   WebBrowser1.Navigate('about:blank');
   (WebBrowser1.Document as IHTMLDocument2).write(
@@ -300,8 +300,8 @@ URL : http://site.com/search?q=<script>alert('XSS')</script>
 uses
   System.NetEncoding;
 
-function EchapperHTML(const ATexte: string): string;
-begin
+function EchapperHTML(const ATexte: string): string;  
+begin  
   Result := ATexte;
   Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
   Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
@@ -311,8 +311,8 @@ begin
 end;
 
 // ✅ SÉCURISÉ
-procedure AfficherMessageSecurise(const AMessage: string);
-var
+procedure AfficherMessageSecurise(const AMessage: string);  
+var  
   MessageEchappe: string;
 begin
   MessageEchappe := EchapperHTML(AMessage);
@@ -334,8 +334,8 @@ end;
 uses
   System.NetEncoding;
 
-function EncoderPourHTML(const ATexte: string): string;
-begin
+function EncoderPourHTML(const ATexte: string): string;  
+begin  
   Result := TNetEncoding.HTML.Encode(ATexte);
 end;
 ```
@@ -345,8 +345,8 @@ end;
 Pour les applications web servies par Delphi :
 
 ```pascal
-procedure ConfigurerHeadersSecurite;
-begin
+procedure ConfigurerHeadersSecurite;  
+begin  
   // Ajouter un header CSP qui interdit les scripts inline
   Response.SetCustomHeader('Content-Security-Policy',
     'default-src ''self''; script-src ''self'' https://cdnjs.cloudflare.com');
@@ -356,8 +356,8 @@ end;
 ### Validation des entrées
 
 ```pascal
-function FiltrerBalises(const ATexte: string): string;
-var
+function FiltrerBalises(const ATexte: string): string;  
+var  
   BaliseAutorisees: array of string;
 begin
   // Liste blanche de balises autorisées
@@ -404,18 +404,18 @@ type
     class function ValiderToken(const ASessionID, AToken: string): Boolean;
   end;
 
-class constructor TCSRFManager.Create;
-begin
+class constructor TCSRFManager.Create;  
+begin  
   FTokens := TDictionary<string, TDateTime>.Create;
 end;
 
-class destructor TCSRFManager.Destroy;
-begin
+class destructor TCSRFManager.Destroy;  
+begin  
   FTokens.Free;
 end;
 
-class function TCSRFManager.GenererToken(const ASessionID: string): string;
-var
+class function TCSRFManager.GenererToken(const ASessionID: string): string;  
+var  
   GUID: TGUID;
 begin
   CreateGUID(GUID);
@@ -425,8 +425,8 @@ begin
   FTokens.AddOrSetValue(ASessionID + '_' + Result, Now);
 end;
 
-class function TCSRFManager.ValiderToken(const ASessionID, AToken: string): Boolean;
-var
+class function TCSRFManager.ValiderToken(const ASessionID, AToken: string): Boolean;  
+var  
   Cle: string;
   DateCreation: TDateTime;
 begin
@@ -445,8 +445,8 @@ begin
 end;
 
 // Utilisation dans un formulaire
-procedure TFormAction.FormCreate(Sender: TObject);
-begin
+procedure TFormAction.FormCreate(Sender: TObject);  
+begin  
   // Générer un token CSRF pour ce formulaire
   FCSRFToken := TCSRFManager.GenererToken(SessionID);
 
@@ -454,8 +454,8 @@ begin
   HiddenCSRFToken.Value := FCSRFToken;
 end;
 
-procedure TFormAction.BtnSoumettreClick(Sender: TObject);
-var
+procedure TFormAction.BtnSoumettreClick(Sender: TObject);  
+var  
   TokenRecu: string;
 begin
   TokenRecu := HiddenCSRFToken.Value;
@@ -476,8 +476,8 @@ end;
 
 1. **Vérifier le referer**
 ```pascal
-function VerifierReferer(const ARefererAttendu: string): Boolean;
-var
+function VerifierReferer(const ARefererAttendu: string): Boolean;  
+var  
   Referer: string;
 begin
   Referer := Request.GetFieldByName('Referer');
@@ -505,15 +505,15 @@ Response.SetCookie('session_id', SessionID, 0, '/', '', True, True, 'Strict');
 
 ```pascal
 // ❌ MAUVAIS - Liste noire (interdire certains caractères)
-function ValiderNomListeNoire(const ANom: string): Boolean;
-begin
+function ValiderNomListeNoire(const ANom: string): Boolean;  
+begin  
   // Trop facile à contourner
   Result := (Pos('<', ANom) = 0) and (Pos('>', ANom) = 0);
 end;
 
 // ✅ BON - Liste blanche (autoriser seulement certains caractères)
-function ValiderNomListeBlanche(const ANom: string): Boolean;
-begin
+function ValiderNomListeBlanche(const ANom: string): Boolean;  
+begin  
   // Seulement lettres, espaces, tirets et apostrophes
   Result := TRegEx.IsMatch(ANom, '^[a-zA-ZÀ-ÿ \-'']+$');
 end;
@@ -527,32 +527,34 @@ end;
 uses
   System.RegularExpressions;
 
-function ValiderEmail(const AEmail: string): Boolean;
-const
+function ValiderEmail(const AEmail: string): Boolean;  
+const  
   REGEX_EMAIL = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
 begin
   Result := TRegEx.IsMatch(AEmail, REGEX_EMAIL);
 end;
 
-function ValiderTelephone(const ATel: string): Boolean;
-const
+function ValiderTelephone(const ATel: string): Boolean;  
+const  
   REGEX_TEL_FR = '^0[1-9](\d{2}){4}$'; // Format français
+var
+  TelNettoye: string;
 begin
   // Supprimer les espaces et tirets
-  ATel := StringReplace(ATel, ' ', '', [rfReplaceAll]);
-  ATel := StringReplace(ATel, '-', '', [rfReplaceAll]);
-  Result := TRegEx.IsMatch(ATel, REGEX_TEL_FR);
+  TelNettoye := StringReplace(ATel, ' ', '', [rfReplaceAll]);
+  TelNettoye := StringReplace(TelNettoye, '-', '', [rfReplaceAll]);
+  Result := TRegEx.IsMatch(TelNettoye, REGEX_TEL_FR);
 end;
 
-function ValiderCodePostal(const ACodePostal: string): Boolean;
-const
+function ValiderCodePostal(const ACodePostal: string): Boolean;  
+const  
   REGEX_CP_FR = '^\d{5}$';
 begin
   Result := TRegEx.IsMatch(ACodePostal, REGEX_CP_FR);
 end;
 
-function ValiderURL(const AURL: string): Boolean;
-const
+function ValiderURL(const AURL: string): Boolean;  
+const  
   REGEX_URL = '^https?://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(/.*)?$';
 begin
   Result := TRegEx.IsMatch(AURL, REGEX_URL);
@@ -562,18 +564,18 @@ end;
 **2. Validation de plage**
 
 ```pascal
-function ValiderAge(AAge: Integer): Boolean;
-begin
+function ValiderAge(AAge: Integer): Boolean;  
+begin  
   Result := (AAge >= 0) and (AAge <= 150);
 end;
 
-function ValiderMontant(AMontant: Currency): Boolean;
-begin
+function ValiderMontant(AMontant: Currency): Boolean;  
+begin  
   Result := (AMontant >= 0) and (AMontant <= 1000000);
 end;
 
-function ValiderDate(ADate: TDate): Boolean;
-begin
+function ValiderDate(ADate: TDate): Boolean;  
+begin  
   // Date entre 1900 et aujourd'hui
   Result := (ADate >= EncodeDate(1900, 1, 1)) and (ADate <= Date);
 end;
@@ -582,13 +584,13 @@ end;
 **3. Validation de longueur**
 
 ```pascal
-function ValiderLongueurTexte(const ATexte: string; AMin, AMax: Integer): Boolean;
-begin
+function ValiderLongueurTexte(const ATexte: string; AMin, AMax: Integer): Boolean;  
+begin  
   Result := (Length(ATexte) >= AMin) and (Length(ATexte) <= AMax);
 end;
 
-function ValiderCommentaire(const ACommentaire: string): Boolean;
-begin
+function ValiderCommentaire(const ACommentaire: string): Boolean;  
+begin  
   // Entre 10 et 1000 caractères
   Result := ValiderLongueurTexte(ACommentaire, 10, 1000);
 end;
@@ -597,22 +599,22 @@ end;
 **4. Validation de type**
 
 ```pascal
-function EstUnEntier(const ATexte: string): Boolean;
-var
+function EstUnEntier(const ATexte: string): Boolean;  
+var  
   Valeur: Integer;
 begin
   Result := TryStrToInt(ATexte, Valeur);
 end;
 
-function EstUnDecimal(const ATexte: string): Boolean;
-var
+function EstUnDecimal(const ATexte: string): Boolean;  
+var  
   Valeur: Double;
 begin
   Result := TryStrToFloat(ATexte, Valeur);
 end;
 
-function EstUneDate(const ATexte: string): Boolean;
-var
+function EstUneDate(const ATexte: string): Boolean;  
+var  
   Valeur: TDate;
 begin
   Result := TryStrToDate(ATexte, Valeur);
@@ -634,19 +636,19 @@ type
     class function Plage(AValeur, AMin, AMax: Integer): Boolean;
   end;
 
-class function TValidateur.Email(const AEmail: string): Boolean;
-begin
+class function TValidateur.Email(const AEmail: string): Boolean;  
+begin  
   Result := TRegEx.IsMatch(AEmail, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 end;
 
-class function TValidateur.NomUtilisateur(const AUsername: string): Boolean;
-begin
+class function TValidateur.NomUtilisateur(const AUsername: string): Boolean;  
+begin  
   // 3-20 caractères, lettres, chiffres et underscore uniquement
   Result := TRegEx.IsMatch(AUsername, '^[a-zA-Z0-9_]{3,20}$');
 end;
 
-class function TValidateur.MotDePasse(const APassword: string): Boolean;
-var
+class function TValidateur.MotDePasse(const APassword: string): Boolean;  
+var  
   AMajuscule, AMinuscule, AChiffre, ASpecial: Boolean;
   i: Integer;
 begin
@@ -677,14 +679,14 @@ begin
   Result := (Ord(AMajuscule) + Ord(AMinuscule) + Ord(AChiffre) + Ord(ASpecial)) >= 3;
 end;
 
-class function TValidateur.Plage(AValeur, AMin, AMax: Integer): Boolean;
-begin
+class function TValidateur.Plage(AValeur, AMin, AMax: Integer): Boolean;  
+begin  
   Result := (AValeur >= AMin) and (AValeur <= AMax);
 end;
 
 // Utilisation
-procedure TForm1.BtnValiderClick(Sender: TObject);
-begin
+procedure TForm1.BtnValiderClick(Sender: TObject);  
+begin  
   if not TValidateur.Email(EditEmail.Text) then
   begin
     ShowMessage('Email invalide');
@@ -737,8 +739,8 @@ type
     class procedure LoggerErreur(const AMessage, ADetails: string);
   end;
 
-class procedure TLoggerSecurite.LoggerErreur(const AMessage, ADetails: string);
-var
+class procedure TLoggerSecurite.LoggerErreur(const AMessage, ADetails: string);  
+var  
   Fichier: TextFile;
   Ligne: string;
 begin
@@ -757,8 +759,8 @@ begin
 end;
 
 // ✅ SÉCURISÉ - Message générique à l'utilisateur, log détaillé
-procedure ExecuterRequeteSecurisee;
-begin
+procedure ExecuterRequeteSecurisee;  
+begin  
   try
     Query.SQL.Text := 'SELECT * FROM Users WHERE ID = :ID';
     Query.ParamByName('ID').AsInteger := StrToInt(EditID.Text);
@@ -787,8 +789,8 @@ const
   ERR_VALIDATION = 2001;
   ERR_AUTH = 3001;
 
-function ObtenirMessageErreur(ACode: Integer): string;
-begin
+function ObtenirMessageErreur(ACode: Integer): string;  
+begin  
   case ACode of
     ERR_DB_CONNECTION: Result := 'Impossible de se connecter au serveur';
     ERR_DB_QUERY: Result := 'Erreur lors de la récupération des données';
@@ -799,8 +801,8 @@ begin
   end;
 end;
 
-procedure TraiterErreur(ACode: Integer; const ADetailsInternes: string);
-begin
+procedure TraiterErreur(ACode: Integer; const ADetailsInternes: string);  
+begin  
   // Message utilisateur
   ShowMessage(ObtenirMessageErreur(ACode));
 
@@ -837,8 +839,8 @@ type
     class function ScannerVirus(const ACheminFichier: string): Boolean;
   end;
 
-class function TUploadSecurise.ValiderFichier(const ANomFichier: string; ATaille: Int64): Boolean;
-var
+class function TUploadSecurise.ValiderFichier(const ANomFichier: string; ATaille: Int64): Boolean;  
+var  
   Extension: string;
   i: Integer;
   ExtensionAutorisee: Boolean;
@@ -887,8 +889,8 @@ begin
   Result := True;
 end;
 
-class function TUploadSecurise.GenererNomSecurise: string;
-var
+class function TUploadSecurise.GenererNomSecurise: string;  
+var  
   GUID: TGUID;
 begin
   // Générer un nom unique pour éviter les collisions et les attaques
@@ -898,8 +900,8 @@ begin
   Result := StringReplace(Result, '-', '', [rfReplaceAll]);
 end;
 
-class function TUploadSecurise.ScannerVirus(const ACheminFichier: string): Boolean;
-begin
+class function TUploadSecurise.ScannerVirus(const ACheminFichier: string): Boolean;  
+begin  
   // Intégrer avec un antivirus (ClamAV, Windows Defender, etc.)
   // Pour l'exemple, on suppose que c'est propre
   Result := True;
@@ -908,8 +910,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.UploadFichier;
-var
+procedure TForm1.UploadFichier;  
+var  
   NomOriginal: string;
   NomSecurise: string;
   CheminDestination: string;
@@ -949,8 +951,8 @@ begin
   end;
 end;
 
-function GetFileSize(const AFileName: string): Int64;
-var
+function GetFileSize(const AFileName: string): Int64;  
+var  
   FileStream: TFileStream;
 begin
   FileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
@@ -983,13 +985,13 @@ type
     class procedure ReinitialiserTentatives(const AUsername: string);
   end;
 
-class constructor TProtectionForceBrute.Create;
-begin
+class constructor TProtectionForceBrute.Create;  
+begin  
   FTentatives := TDictionary<string, TList<TDateTime>>.Create;
 end;
 
-class destructor TProtectionForceBrute.Destroy;
-var
+class destructor TProtectionForceBrute.Destroy;  
+var  
   Liste: TList<TDateTime>;
 begin
   for Liste in FTentatives.Values do
@@ -997,8 +999,8 @@ begin
   FTentatives.Free;
 end;
 
-class function TProtectionForceBrute.PeutTenterConnexion(const AUsername: string): Boolean;
-const
+class function TProtectionForceBrute.PeutTenterConnexion(const AUsername: string): Boolean;  
+const  
   MAX_TENTATIVES = 5;
   FENETRE_MINUTES = 15;
 var
@@ -1024,8 +1026,8 @@ begin
   Result := TentativesRecentes < MAX_TENTATIVES;
 end;
 
-class procedure TProtectionForceBrute.EnregistrerTentativeEchouee(const AUsername: string);
-var
+class procedure TProtectionForceBrute.EnregistrerTentativeEchouee(const AUsername: string);  
+var  
   Liste: TList<TDateTime>;
 begin
   if not FTentatives.TryGetValue(AUsername, Liste) then
@@ -1037,8 +1039,8 @@ begin
   Liste.Add(Now);
 end;
 
-class procedure TProtectionForceBrute.ReinitialiserTentatives(const AUsername: string);
-var
+class procedure TProtectionForceBrute.ReinitialiserTentatives(const AUsername: string);  
+var  
   Liste: TList<TDateTime>;
 begin
   if FTentatives.TryGetValue(AUsername, Liste) then
@@ -1049,8 +1051,8 @@ begin
 end;
 
 // Utilisation
-procedure TFormLogin.BtnConnexionClick(Sender: TObject);
-var
+procedure TFormLogin.BtnConnexionClick(Sender: TObject);  
+var  
   Username: string;
 begin
   Username := EditUsername.Text;
@@ -1083,8 +1085,8 @@ end;
 Pour les tentatives répétées, ajouter un CAPTCHA :
 
 ```pascal
-procedure TFormLogin.AfficherCaptchaSiNecessaire;
-const
+procedure TFormLogin.AfficherCaptchaSiNecessaire;  
+const  
   SEUIL_CAPTCHA = 3;
 var
   NbTentatives: Integer;
@@ -1098,8 +1100,8 @@ begin
   end;
 end;
 
-function ValiderCaptcha(const AReponse: string): Boolean;
-begin
+function ValiderCaptcha(const AReponse: string): Boolean;  
+begin  
   // Vérifier la réponse du CAPTCHA
   Result := AReponse = FReponseCaptchaAttendue;
 end;
@@ -1120,13 +1122,13 @@ type
     class function PeutExecuterRequete(const AClientID: string): Boolean;
   end;
 
-class constructor TRateLimiter.Create;
-begin
+class constructor TRateLimiter.Create;  
+begin  
   FRequetes := TDictionary<string, TList<TDateTime>>.Create;
 end;
 
-class destructor TRateLimiter.Destroy;
-var
+class destructor TRateLimiter.Destroy;  
+var  
   Liste: TList<TDateTime>;
 begin
   for Liste in FRequetes.Values do
@@ -1134,8 +1136,8 @@ begin
   FRequetes.Free;
 end;
 
-class function TRateLimiter.PeutExecuterRequete(const AClientID: string): Boolean;
-const
+class function TRateLimiter.PeutExecuterRequete(const AClientID: string): Boolean;  
+const  
   MAX_REQUETES_PAR_MINUTE = 60;
 var
   Liste: TList<TDateTime>;
@@ -1168,8 +1170,8 @@ begin
 end;
 
 // Utilisation
-procedure TraiterRequeteAPI(const AClientID: string);
-begin
+procedure TraiterRequeteAPI(const AClientID: string);  
+begin  
   if not TRateLimiter.PeutExecuterRequete(AClientID) then
   begin
     // 429 Too Many Requests
@@ -1196,8 +1198,8 @@ Demande : /download?file=../../etc/passwd
 ### Protection
 
 ```pascal
-function CheminSecurise(const ACheminBase, AFichierDemande: string): string;
-var
+function CheminSecurise(const ACheminBase, AFichierDemande: string): string;  
+var  
   CheminComplet: string;
   CheminCanonique: string;
 begin
@@ -1215,8 +1217,8 @@ begin
 end;
 
 // Utilisation
-procedure TelechargerFichier(const ANomFichier: string);
-var
+procedure TelechargerFichier(const ANomFichier: string);  
+var  
   CheminBase: string;
   CheminFichier: string;
 begin

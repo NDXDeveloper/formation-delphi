@@ -154,14 +154,14 @@ uses
   System.Hash, System.SysUtils;
 
 // Hacher une chaîne avec SHA-256
-function HasherTexte(const ATexte: string): string;
-begin
+function HasherTexte(const ATexte: string): string;  
+begin  
   Result := THashSHA2.GetHashString(ATexte);
 end;
 
 // Exemple d'utilisation
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   TexteClair: string;
   Hash: string;
 begin
@@ -183,8 +183,8 @@ uses
   IdGlobal, IdHashSHA, IdCoderMIME, System.SysUtils;
 
 // Chiffrement simple avec XOR (à des fins éducatives uniquement, PAS SÉCURISÉ)
-function ChiffrerXOR(const ATexte, ACle: string): string;
-var
+function ChiffrerXOR(const ATexte, ACle: string): string;  
+var  
   i: Integer;
   TexteBytes: TIdBytes;
   CleBytes: TIdBytes;
@@ -211,25 +211,25 @@ uses
   System.SysUtils, System.NetEncoding;
 
 // Exemple de base avec encodage Base64 (pas du chiffrement, juste de l'encodage)
-function EncoderBase64(const ATexte: string): string;
-begin
+function EncoderBase64(const ATexte: string): string;  
+begin  
   Result := TNetEncoding.Base64.Encode(ATexte);
 end;
 
-function DecoderBase64(const ATexteEncode: string): string;
-begin
+function DecoderBase64(const ATexteEncode: string): string;  
+begin  
   Result := TNetEncoding.Base64.Decode(ATexteEncode);
 end;
 
 // Utilisation
-procedure TForm1.BtnEncoderClick(Sender: TObject);
-begin
+procedure TForm1.BtnEncoderClick(Sender: TObject);  
+begin  
   EditEncode.Text := EncoderBase64(EditClair.Text);
   // "Bonjour" devient "Qm9uam91cg=="
 end;
 
-procedure TForm1.BtnDecoderClick(Sender: TObject);
-begin
+procedure TForm1.BtnDecoderClick(Sender: TObject);  
+begin  
   EditDecode.Text := DecoderBase64(EditEncode.Text);
   // "Qm9uam91cg==" redevient "Bonjour"
 end;
@@ -259,8 +259,8 @@ type
     function Dechiffrer(const ATexteChiffre: string): string;
   end;
 
-constructor TChiffrementAES.Create(const ACle: string);
-var
+constructor TChiffrementAES.Create(const ACle: string);  
+var  
   Hash: TDCP_sha256;
   Key: array[0..31] of byte;
 begin
@@ -280,14 +280,14 @@ begin
   FCipher.Init(Key, SizeOf(Key) * 8, nil);
 end;
 
-destructor TChiffrementAES.Destroy;
-begin
+destructor TChiffrementAES.Destroy;  
+begin  
   FCipher.Free;
   inherited;
 end;
 
-function TChiffrementAES.Chiffrer(const ATexte: string): string;
-var
+function TChiffrementAES.Chiffrer(const ATexte: string): string;  
+var  
   Input: TBytes;
   Output: TBytes;
 begin
@@ -299,8 +299,8 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(Output);
 end;
 
-function TChiffrementAES.Dechiffrer(const ATexteChiffre: string): string;
-var
+function TChiffrementAES.Dechiffrer(const ATexteChiffre: string): string;  
+var  
   Input: TBytes;
   Output: TBytes;
 begin
@@ -313,8 +313,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.BtnChiffrerClick(Sender: TObject);
-var
+procedure TForm1.BtnChiffrerClick(Sender: TObject);  
+var  
   Chiffrement: TChiffrementAES;
 begin
   Chiffrement := TChiffrementAES.Create('MaCleSecrete123!');
@@ -346,8 +346,8 @@ uses
   System.SysUtils;
 
 // Générer une clé aléatoire
-function GenererCleAleatoire(ATaille: Integer): TBytes;
-var
+function GenererCleAleatoire(ATaille: Integer): TBytes;  
+var  
   i: Integer;
 begin
   SetLength(Result, ATaille);
@@ -376,8 +376,8 @@ const
   CLE_CHIFFREMENT = 'MaCleSecrete123!';
 
 // ✅ BON - clé depuis configuration sécurisée
-function ChargerCle: string;
-var
+function ChargerCle: string;  
+var  
   ConfigFile: TIniFile;
 begin
   ConfigFile := TIniFile.Create(GetConfigPath);
@@ -417,8 +417,8 @@ end;
 uses
   Winapi.Windows, System.SysUtils;
 
-function ChiffrerAvecDPAPI(const ATexte: string): TBytes;
-var
+function ChiffrerAvecDPAPI(const ATexte: string): TBytes;  
+var  
   DataIn: DATA_BLOB;
   DataOut: DATA_BLOB;
   TexteBytes: TBytes;
@@ -437,8 +437,8 @@ begin
     raise Exception.Create('Erreur de chiffrement DPAPI');
 end;
 
-function DechiffrerAvecDPAPI(const ATexteChiffre: TBytes): string;
-var
+function DechiffrerAvecDPAPI(const ATexteChiffre: TBytes): string;  
+var  
   DataIn: DATA_BLOB;
   DataOut: DATA_BLOB;
   ResultBytes: TBytes;
@@ -466,8 +466,8 @@ end;
 uses
   System.Classes, System.SysUtils, System.IOUtils;
 
-procedure ChiffrerFichier(const AFichierSource, AFichierDestination, ACle: string);
-var
+procedure ChiffrerFichier(const AFichierSource, AFichierDestination, ACle: string);  
+var  
   StreamSource: TFileStream;
   StreamDest: TFileStream;
   Buffer: TBytes;
@@ -494,8 +494,8 @@ begin
   end;
 end;
 
-procedure DechiffrerFichier(const AFichierChiffre, AFichierDestination, ACle: string);
-var
+procedure DechiffrerFichier(const AFichierChiffre, AFichierDestination, ACle: string);  
+var  
   StreamSource: TFileStream;
   StreamDest: TFileStream;
   Buffer: TBytes;
@@ -522,8 +522,8 @@ begin
 end;
 
 // Utilisation
-procedure TForm1.BtnChiffrerFichierClick(Sender: TObject);
-begin
+procedure TForm1.BtnChiffrerFichierClick(Sender: TObject);  
+begin  
   if OpenDialog1.Execute then
   begin
     ChiffrerFichier(
@@ -541,8 +541,8 @@ end;
 Pour de gros fichiers, chiffrez par blocs pour éviter de saturer la mémoire :
 
 ```pascal
-procedure ChiffrerGrosFichier(const AFichierSource, AFichierDestination, ACle: string);
-const
+procedure ChiffrerGrosFichier(const AFichierSource, AFichierDestination, ACle: string);  
+const  
   TAILLE_BLOC = 1024 * 1024; // 1 Mo par bloc
 var
   StreamSource: TFileStream;
@@ -598,8 +598,8 @@ CREATE TABLE Clients (
 ```
 
 ```pascal
-procedure InsererClientAvecDonneesChiffrees;
-var
+procedure InsererClientAvecDonneesChiffrees;  
+var  
   Query: TFDQuery;
   Chiffrement: TChiffrementAES;
   NumeroCarte: string;
@@ -628,8 +628,8 @@ begin
   end;
 end;
 
-function LireNumeroCarteClient(AIDClient: Integer): string;
-var
+function LireNumeroCarteClient(AIDClient: Integer): string;  
+var  
   Query: TFDQuery;
   Chiffrement: TChiffrementAES;
   NumeroCarteChiffre: string;
@@ -661,8 +661,8 @@ end;
 FireDAC supporte SSL/TLS pour les connexions MySQL :
 
 ```pascal
-procedure ConfigurerConnexionSSL;
-begin
+procedure ConfigurerConnexionSSL;  
+begin  
   FDConnection1.Params.Clear;
   FDConnection1.Params.Add('DriverID=MySQL');
   FDConnection1.Params.Add('Server=localhost');
@@ -692,8 +692,8 @@ Certains SGBD comme SQL Server et Oracle proposent le TDE (Transparent Data Encr
 uses
   REST.Client, REST.Types, System.JSON;
 
-procedure AppelerAPISecurisee;
-var
+procedure AppelerAPISecurisee;  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
@@ -734,8 +734,8 @@ end;
 uses
   IdSSLOpenSSL, IdTCPClient;
 
-procedure ConnexionSecuriseeSSL;
-var
+procedure ConnexionSecuriseeSSL;  
+var  
   Client: TIdTCPClient;
   SSL: TIdSSLIOHandlerSocketOpenSSL;
 begin
@@ -774,8 +774,8 @@ Un IV est une valeur aléatoire utilisée avec la clé de chiffrement pour garan
 **Importance** : Sans IV, un attaquant peut détecter des motifs dans les données chiffrées.
 
 ```pascal
-procedure ChiffrerAvecIV(const ATexte: string; const ACle: TBytes; out ATexteChiffre, AIV: TBytes);
-var
+procedure ChiffrerAvecIV(const ATexte: string; const ACle: TBytes; out ATexteChiffre, AIV: TBytes);  
+var  
   i: Integer;
 begin
   // Générer un IV aléatoire
@@ -790,8 +790,8 @@ begin
 end;
 
 // Lors du stockage, garder l'IV avec les données chiffrées
-procedure StockerDonneesChiffrees(const ATexte: string);
-var
+procedure StockerDonneesChiffrees(const ATexte: string);  
+var  
   Cle: TBytes;
   TexteChiffre: TBytes;
   IV: TBytes;
@@ -824,8 +824,8 @@ Le plus courant. Chaque bloc dépend du précédent.
 Bloc 1 → Chiffré → XOR avec Bloc 2 → Chiffré → ...
 ```
 
-**Avantage** : Motifs cachés
-**Inconvénient** : Erreur dans un bloc affecte les suivants
+**Avantage** : Motifs cachés  
+**Inconvénient** : Erreur dans un bloc affecte les suivants  
 
 ### ECB (Electronic Codebook)
 
@@ -837,8 +837,8 @@ Bloc 1 → Chiffré → XOR avec Bloc 2 → Chiffré → ...
 
 ```pascal
 // Exemple conceptuel avec GCM
-procedure ChiffrerModeGCM(const ATexte: string);
-begin
+procedure ChiffrerModeGCM(const ATexte: string);  
+begin  
   // Utilise AES-GCM pour chiffrer ET authentifier
   // Garantit que les données n'ont pas été modifiées
   // Nécessite une bibliothèque supportant GCM
@@ -886,8 +886,8 @@ const IV_FIXE = '1234567890123456';
 **5. Combinez chiffrement et authentification**
 ```pascal
 // Utilisez HMAC pour vérifier l'intégrité
-HMAC := CalculerHMAC(TexteChiffre, CleHMAC);
-StockerAvecAuthentification(TexteChiffre, HMAC);
+HMAC := CalculerHMAC(TexteChiffre, CleHMAC);  
+StockerAvecAuthentification(TexteChiffre, HMAC);  
 ```
 
 ### ❌ À éviter
@@ -913,8 +913,8 @@ Même chiffrées, les données ont une valeur. Contrôlez l'accès.
 **4. Ne pas oublier de nettoyer la mémoire**
 
 ```pascal
-procedure UtiliserCle;
-var
+procedure UtiliserCle;  
+var  
   Cle: string;
 begin
   Cle := ChargerCleSecrete;
@@ -957,8 +957,8 @@ type
     property NumeroCarte: string read GetNumeroCarte write SetNumeroCarte;
   end;
 
-function TClientSecurise.GetNumeroCarte: string;
-var
+function TClientSecurise.GetNumeroCarte: string;  
+var  
   Chiffrement: TChiffrementAES;
 begin
   if FNumeroCarteChiffre = '' then
@@ -972,8 +972,8 @@ begin
   end;
 end;
 
-procedure TClientSecurise.SetNumeroCarte(const Value: string);
-var
+procedure TClientSecurise.SetNumeroCarte(const Value: string);  
+var  
   Chiffrement: TChiffrementAES;
 begin
   Chiffrement := TChiffrementAES.Create(CleGlobale);
@@ -989,8 +989,8 @@ end;
 
 ```pascal
 // Chiffrer avant de sauvegarder sur le mobile
-procedure SauvegarderDonneesLocales(const ADonnees: string);
-var
+procedure SauvegarderDonneesLocales(const ADonnees: string);  
+var  
   Fichier: TFileStream;
   Chiffrement: TChiffrementAES;
   DonneesChiffrees: TBytes;
@@ -1017,8 +1017,8 @@ end;
 ### Application cloud : chiffrer avant l'envoi
 
 ```pascal
-procedure EnvoyerFichierChiffre(const AFichierLocal: string);
-var
+procedure EnvoyerFichierChiffre(const AFichierLocal: string);  
+var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   FichierChiffre: TMemoryStream;
@@ -1073,8 +1073,8 @@ Le RGPD recommande (et parfois impose) le chiffrement des données personnelles 
 
 ```pascal
 // Implémenter une table d'audit du chiffrement
-procedure JournaliserChiffrement(ATableau, AColonne: string);
-var
+procedure JournaliserChiffrement(ATableau, AColonne: string);  
+var  
   Query: TFDQuery;
 begin
   Query := TFDQuery.Create(nil);

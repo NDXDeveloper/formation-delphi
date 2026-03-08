@@ -62,8 +62,8 @@ type
     class function Supprimer(const ACle: string): Boolean;
   end;
 
-class function TKeychainHelper.Sauvegarder(const ACle, AValeur: string): Boolean;
-var
+class function TKeychainHelper.Sauvegarder(const ACle, AValeur: string): Boolean;  
+var  
   Query: NSMutableDictionary;
   Status: OSStatus;
   DataValue: NSData;
@@ -93,8 +93,8 @@ begin
   Result := (Status = errSecSuccess);
 end;
 
-class function TKeychainHelper.Charger(const ACle: string): string;
-var
+class function TKeychainHelper.Charger(const ACle: string): string;  
+var  
   Query: NSMutableDictionary;
   Status: OSStatus;
   DataRef: Pointer;
@@ -121,8 +121,8 @@ begin
   end;
 end;
 
-class function TKeychainHelper.Supprimer(const ACle: string): Boolean;
-var
+class function TKeychainHelper.Supprimer(const ACle: string): Boolean;  
+var  
   Query: NSMutableDictionary;
   Status: OSStatus;
 begin
@@ -139,16 +139,16 @@ begin
 end;
 
 // Utilisation
-procedure SauvegarderTokeniOS;
-begin
+procedure SauvegarderTokeniOS;  
+begin  
   if TKeychainHelper.Sauvegarder('auth_token', 'eyJhbGciOiJIUzI1NiIs...') then
     ShowMessage('Token sauvegardé dans le Keychain')
   else
     ShowMessage('Erreur de sauvegarde');
 end;
 
-procedure ChargerTokeniOS;
-var
+procedure ChargerTokeniOS;  
+var  
   Token: string;
 begin
   Token := TKeychainHelper.Charger('auth_token');
@@ -181,8 +181,8 @@ type
     class function Supprimer(const ACle: string): Boolean;
   end;
 
-class function TAndroidKeyStore.Sauvegarder(const ACle, AValeur: string): Boolean;
-var
+class function TAndroidKeyStore.Sauvegarder(const ACle, AValeur: string): Boolean;  
+var  
   SharedPrefs: JSharedPreferences;
   Editor: JSharedPreferences_Editor;
 begin
@@ -202,8 +202,8 @@ begin
   end;
 end;
 
-class function TAndroidKeyStore.Charger(const ACle: string): string;
-var
+class function TAndroidKeyStore.Charger(const ACle: string): string;  
+var  
   SharedPrefs: JSharedPreferences;
 begin
   try
@@ -218,8 +218,8 @@ begin
   end;
 end;
 
-class function TAndroidKeyStore.Supprimer(const ACle: string): Boolean;
-var
+class function TAndroidKeyStore.Supprimer(const ACle: string): Boolean;  
+var  
   SharedPrefs: JSharedPreferences;
   Editor: JSharedPreferences_Editor;
 begin
@@ -239,8 +239,8 @@ begin
 end;
 
 // Utilisation
-procedure SauvegarderTokenAndroid;
-begin
+procedure SauvegarderTokenAndroid;  
+begin  
   if TAndroidKeyStore.Sauvegarder('auth_token', 'eyJhbGciOiJIUzI1NiIs...') then
     ShowMessage('Token sauvegardé dans SharedPreferences')
   else
@@ -260,8 +260,8 @@ type
     class function Supprimer(const ACle: string): Boolean;
   end;
 
-class function TStockageSecurise.Sauvegarder(const ACle, AValeur: string): Boolean;
-begin
+class function TStockageSecurise.Sauvegarder(const ACle, AValeur: string): Boolean;  
+begin  
   {$IFDEF IOS}
   Result := TKeychainHelper.Sauvegarder(ACle, AValeur);
   {$ENDIF}
@@ -276,8 +276,8 @@ begin
   {$ENDIF}
 end;
 
-class function TStockageSecurise.Charger(const ACle: string): string;
-begin
+class function TStockageSecurise.Charger(const ACle: string): string;  
+begin  
   {$IFDEF IOS}
   Result := TKeychainHelper.Charger(ACle);
   {$ENDIF}
@@ -291,8 +291,8 @@ begin
   {$ENDIF}
 end;
 
-class function TStockageSecurise.Supprimer(const ACle: string): Boolean;
-begin
+class function TStockageSecurise.Supprimer(const ACle: string): Boolean;  
+begin  
   {$IFDEF IOS}
   Result := TKeychainHelper.Supprimer(ACle);
   {$ENDIF}
@@ -307,8 +307,8 @@ begin
 end;
 
 // Utilisation simple et multi-plateforme
-procedure ConfigurerApplicationMobile;
-begin
+procedure ConfigurerApplicationMobile;  
+begin  
   // Sauvegarder le token d'authentification
   TStockageSecurise.Sauvegarder('auth_token', TokenUtilisateur);
 
@@ -316,8 +316,8 @@ begin
   TStockageSecurise.Sauvegarder('api_key', CleAPI);
 end;
 
-procedure ChargerConfiguration;
-var
+procedure ChargerConfiguration;  
+var  
   Token: string;
 begin
   Token := TStockageSecurise.Charger('auth_token');
@@ -346,25 +346,25 @@ type
     procedure Authentifier(const ARaison: string; ACallback: TProc<Boolean>);
   end;
 
-constructor TAuthBiometrique.Create;
-begin
+constructor TAuthBiometrique.Create;  
+begin  
   inherited Create;
   FBiometricAuth := TBiometricAuth.Create(nil);
 end;
 
-destructor TAuthBiometrique.Destroy;
-begin
+destructor TAuthBiometrique.Destroy;  
+begin  
   FBiometricAuth.Free;
   inherited;
 end;
 
-function TAuthBiometrique.EstDisponible: Boolean;
-begin
+function TAuthBiometrique.EstDisponible: Boolean;  
+begin  
   Result := FBiometricAuth.BiometryType <> TBiometryType.None;
 end;
 
-function TAuthBiometrique.TypeBiometrie: string;
-begin
+function TAuthBiometrique.TypeBiometrie: string;  
+begin  
   case FBiometricAuth.BiometryType of
     TBiometryType.None: Result := 'Aucune biométrie disponible';
     TBiometryType.FaceID: Result := 'Face ID';
@@ -375,8 +375,8 @@ begin
   end;
 end;
 
-procedure TAuthBiometrique.Authentifier(const ARaison: string; ACallback: TProc<Boolean>);
-begin
+procedure TAuthBiometrique.Authentifier(const ARaison: string; ACallback: TProc<Boolean>);  
+begin  
   if not EstDisponible then
   begin
     ShowMessage('Authentification biométrique non disponible sur cet appareil');
@@ -405,8 +405,8 @@ begin
 end;
 
 // Utilisation dans un formulaire
-procedure TFormLogin.BtnBiometriqueClick(Sender: TObject);
-var
+procedure TFormLogin.BtnBiometriqueClick(Sender: TObject);  
+var  
   AuthBio: TAuthBiometrique;
 begin
   AuthBio := TAuthBiometrique.Create;
@@ -442,8 +442,8 @@ begin
 end;
 
 // Configuration des préférences
-procedure TFormParametres.SwitchBiometrieSwitch(Sender: TObject);
-var
+procedure TFormParametres.SwitchBiometrieSwitch(Sender: TObject);  
+var  
   AuthBio: TAuthBiometrique;
 begin
   AuthBio := TAuthBiometrique.Create;
@@ -509,16 +509,16 @@ type
     procedure DemanderPermissionStockage(ACallback: TProc<Boolean>);
   end;
 
-constructor TGestionPermissions.Create;
-begin
+constructor TGestionPermissions.Create;  
+begin  
   inherited Create;
   TPlatformServices.Current.SupportsPlatformService(
     IFMXPermissionsService,
     FPermissionsService);
 end;
 
-procedure TGestionPermissions.DemanderPermissionCamera(ACallback: TProc<Boolean>);
-begin
+procedure TGestionPermissions.DemanderPermissionCamera(ACallback: TProc<Boolean>);  
+begin  
   {$IFDEF ANDROID}
   FPermissionsService.RequestPermissions(
     ['android.permission.CAMERA'],
@@ -549,8 +549,8 @@ begin
   {$ENDIF}
 end;
 
-procedure TGestionPermissions.DemanderPermissionLocalisation(ACallback: TProc<Boolean>);
-begin
+procedure TGestionPermissions.DemanderPermissionLocalisation(ACallback: TProc<Boolean>);  
+begin  
   {$IFDEF ANDROID}
   FPermissionsService.RequestPermissions(
     ['android.permission.ACCESS_FINE_LOCATION'],
@@ -582,8 +582,8 @@ begin
 end;
 
 // Utilisation avec justification claire
-procedure TFormCarte.BtnLocaliserClick(Sender: TObject);
-var
+procedure TFormCarte.BtnLocaliserClick(Sender: TObject);  
+var  
   Permissions: TGestionPermissions;
 begin
   Permissions := TGestionPermissions.Create;
@@ -650,8 +650,8 @@ type
     function Post(const AEndpoint, AData: string): string;
   end;
 
-constructor TAPIMobile.Create(const ABaseURL: string);
-begin
+constructor TAPIMobile.Create(const ABaseURL: string);  
+begin  
   inherited Create;
 
   // ✅ Forcer HTTPS
@@ -666,14 +666,14 @@ begin
   FHTTPClient.ResponseTimeout := 30000;   // 30 secondes
 end;
 
-destructor TAPIMobile.Destroy;
-begin
+destructor TAPIMobile.Destroy;  
+begin  
   FHTTPClient.Free;
   inherited;
 end;
 
-function TAPIMobile.Get(const AEndpoint: string): string;
-var
+function TAPIMobile.Get(const AEndpoint: string): string;  
+var  
   Response: IHTTPResponse;
 begin
   try
@@ -693,8 +693,8 @@ begin
   end;
 end;
 
-function TAPIMobile.Post(const AEndpoint, AData: string): string;
-var
+function TAPIMobile.Post(const AEndpoint, AData: string): string;  
+var  
   Response: IHTTPResponse;
   Stream: TStringStream;
 begin
@@ -714,8 +714,8 @@ begin
 end;
 
 // Utilisation avec token d'authentification
-procedure AppelerAPIAvecToken;
-var
+procedure AppelerAPIAvecToken;  
+var  
   API: TAPIMobile;
   Token: string;
   Response: string;
@@ -749,8 +749,8 @@ type
     constructor Create(const ABaseURL: string);
   end;
 
-constructor TAPIPinned.Create(const ABaseURL: string);
-begin
+constructor TAPIPinned.Create(const ABaseURL: string);  
+begin  
   inherited Create(ABaseURL);
 
   // Configuration du certificate pinning
@@ -779,23 +779,23 @@ const
   // ✅ BON - Charger depuis un serveur ou stockage sécurisé
 
 // 2. Éviter le code sensible facilement décompilable
-procedure ProtegerLogiqueCritique;
-begin
+procedure ProtegerLogiqueCritique;  
+begin  
   // Déplacer la logique critique côté serveur
   // Le mobile ne fait qu'afficher les résultats
 end;
 
 // 3. Vérifier l'intégrité de l'application
-function VerifierIntegrite: Boolean;
-begin
+function VerifierIntegrite: Boolean;  
+begin  
   // Vérifier que l'app n'a pas été modifiée
   // Détecter le jailbreak/root
   Result := not EstJailbreakOuRoot;
 end;
 
 // 4. Obscurcir les chaînes sensibles
-function DecodeSecret(const AEncoded: string): string;
-begin
+function DecodeSecret(const AEncoded: string): string;  
+begin  
   // Décoder une chaîne Base64 ou XOR au runtime
   Result := TNetEncoding.Base64.Decode(AEncoded);
 end;
@@ -813,8 +813,8 @@ type
   end;
 
 {$IFDEF IOS}
-class function TDetectionSecurite.EstJailbreak: Boolean;
-var
+class function TDetectionSecurite.EstJailbreak: Boolean;  
+var  
   CheminsSuspects: array[0..3] of string;
   i: Integer;
 begin
@@ -849,8 +849,8 @@ end;
 {$ENDIF}
 
 {$IFDEF ANDROID}
-class function TDetectionSecurite.EstRoot: Boolean;
-var
+class function TDetectionSecurite.EstRoot: Boolean;  
+var  
   CheminsSU: array[0..5] of string;
   i: Integer;
 begin
@@ -876,8 +876,8 @@ end;
 {$ENDIF}
 
 // Utilisation au démarrage
-procedure TFormPrincipal.FormCreate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormCreate(Sender: TObject);  
+begin  
   if TDetectionSecurite.EstJailbreak or TDetectionSecurite.EstRoot then
   begin
     ShowMessage('AVERTISSEMENT : Appareil modifié détecté. ' +
@@ -898,8 +898,8 @@ end;
 uses
   FireDAC.Comp.Client, FireDAC.Stan.Option, FireDAC.Stan.Def;
 
-procedure CreerBaseDonneesChiffree;
-var
+procedure CreerBaseDonneesChiffree;  
+var  
   Connection: TFDConnection;
 begin
   Connection := TFDConnection.Create(nil);
@@ -929,8 +929,8 @@ begin
   end;
 end;
 
-function GenererCleChiffrement: string;
-var
+function GenererCleChiffrement: string;  
+var  
   DeviceID: string;
 begin
   // Générer une clé unique basée sur l'appareil
@@ -958,8 +958,8 @@ type
     class procedure EffacerHistorique;
   end;
 
-class procedure TNettoyageDonnees.EffacerCache;
-var
+class procedure TNettoyageDonnees.EffacerCache;  
+var  
   CheminCache: string;
 begin
   {$IFDEF IOS}
@@ -977,8 +977,8 @@ begin
   end;
 end;
 
-class procedure TNettoyageDonnees.EffacerDonneesTemporaires;
-var
+class procedure TNettoyageDonnees.EffacerDonneesTemporaires;  
+var  
   CheminTemp: string;
 begin
   CheminTemp := TPath.GetTempPath;
@@ -991,8 +991,8 @@ begin
 end;
 
 // Nettoyer à la déconnexion
-procedure TFormPrincipal.BtnDeconnexionClick(Sender: TObject);
-begin
+procedure TFormPrincipal.BtnDeconnexionClick(Sender: TObject);  
+begin  
   // Supprimer le token
   TStockageSecurise.Supprimer('auth_token');
 
@@ -1014,8 +1014,8 @@ end;
 uses
   Androidapi.JNI.GraphicsContentViewText, Androidapi.Helpers;
 
-procedure EmpecherCapturesEcran;
-var
+procedure EmpecherCapturesEcran;  
+var  
   Window: JWindow;
 begin
   Window := TAndroidHelper.Activity.getWindow;
@@ -1026,16 +1026,16 @@ end;
 {$IFDEF IOS}
 // iOS ne permet pas de bloquer les captures d'écran
 // Mais on peut détecter quand une capture est prise
-procedure DetecterCaptureEcran;
-begin
+procedure DetecterCaptureEcran;  
+begin  
   // S'abonner aux notifications de capture d'écran
   // et réagir (flouter l'écran, déconnecter, etc.)
 end;
 {$ENDIF}
 
 // Appeler au démarrage des écrans sensibles
-procedure TFormDonneesBancaires.FormShow(Sender: TObject);
-begin
+procedure TFormDonneesBancaires.FormShow(Sender: TObject);  
+begin  
   {$IFDEF ANDROID}
   EmpecherCapturesEcran;
   {$ENDIF}
@@ -1045,15 +1045,15 @@ end;
 ### Masquer le contenu dans le sélecteur d'apps
 
 ```pascal
-procedure TFormPrincipal.FormDeactivate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormDeactivate(Sender: TObject);  
+begin  
   // Masquer le contenu sensible quand l'app passe en arrière-plan
   PanelDonneesSensibles.Visible := False;
   ImageOverlay.Visible := True; // Afficher un écran de veille
 end;
 
-procedure TFormPrincipal.FormActivate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormActivate(Sender: TObject);  
+begin  
   // Réafficher le contenu après vérification
   ImageOverlay.Visible := False;
 
@@ -1080,8 +1080,8 @@ type
     procedure Deconnecter;
   end;
 
-constructor TGestionSession.Create(ATimeoutMinutes: Integer);
-begin
+constructor TGestionSession.Create(ATimeoutMinutes: Integer);  
+begin  
   inherited Create;
   FTimeoutMinutes := ATimeoutMinutes;
   FDerniereActivite := Now;
@@ -1092,14 +1092,14 @@ begin
   FTimer.Enabled := True;
 end;
 
-destructor TGestionSession.Destroy;
-begin
+destructor TGestionSession.Destroy;  
+begin  
   FTimer.Free;
   inherited;
 end;
 
-procedure TGestionSession.TimerTick(Sender: TObject);
-var
+procedure TGestionSession.TimerTick(Sender: TObject);  
+var  
   MinutesInactif: Integer;
 begin
   MinutesInactif := MinutesBetween(Now, FDerniereActivite);
@@ -1111,13 +1111,13 @@ begin
   end;
 end;
 
-procedure TGestionSession.ResetTimeout;
-begin
+procedure TGestionSession.ResetTimeout;  
+begin  
   FDerniereActivite := Now;
 end;
 
-procedure TGestionSession.Deconnecter;
-begin
+procedure TGestionSession.Deconnecter;  
+begin  
   // Supprimer les données sensibles
   TStockageSecurise.Supprimer('auth_token');
 
@@ -1131,19 +1131,19 @@ end;
 var
   GestionSession: TGestionSession;
 
-procedure TFormPrincipal.FormCreate(Sender: TObject);
-begin
+procedure TFormPrincipal.FormCreate(Sender: TObject);  
+begin  
   GestionSession := TGestionSession.Create(15); // 15 minutes
 end;
 
-procedure TFormPrincipal.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
-begin
+procedure TFormPrincipal.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);  
+begin  
   // Réinitialiser le timeout à chaque interaction
   GestionSession.ResetTimeout;
 end;
 
-procedure TFormPrincipal.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-begin
+procedure TFormPrincipal.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);  
+begin  
   GestionSession.ResetTimeout;
 end;
 ```
