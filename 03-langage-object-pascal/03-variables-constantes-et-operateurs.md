@@ -48,9 +48,9 @@ begin
 end;
 ```
 
-#### Initialisation inline (depuis Delphi 2009)
+#### Initialisation déclarative (au niveau de l'unité)
 
-Vous pouvez initialiser une variable directement lors de sa déclaration :
+Vous pouvez initialiser une variable globale directement lors de sa déclaration, avec le signe `=` :
 
 ```pascal
 var
@@ -65,6 +65,8 @@ end;
 ```
 
 **Avantage :** Cela rend le code plus lisible et évite les oublis d'initialisation.
+
+> 💡 **Note** : Cette syntaxe avec `=` fonctionne pour les variables globales (au niveau de l'unité). Pour initialiser une variable **locale dans un bloc de code**, on utilise la syntaxe **inline** avec `:=` introduite dans Delphi 10.3 Rio (voir plus bas).
 
 ### Variables locales vs variables globales
 
@@ -168,16 +170,20 @@ const
   ModeDebug: Boolean = True;
 ```
 
+> ⚠️ **Piège historique des constantes typées** : Lorsque la directive `{$J+}` (*writeable typed constants*) est activée, les constantes typées peuvent être **modifiées à l'exécution** ! C'est un héritage du Turbo Pascal qui permettait d'utiliser les constantes typées comme des « variables initialisées ». Dans Delphi moderne, la directive par défaut est `{$J-}` (constantes vraiment immuables), mais soyez vigilant si vous travaillez sur du code ancien.
+
 #### Constantes non typées
 
 ```pascal
 const
-  Pi = 3.14159265358979;
+  RatioOr = 1.61803398875;
   Titre = 'Bienvenue';
   MaxValeur = 1000;
 ```
 
-**Note :** Le type est déduit automatiquement de la valeur assignée.
+**Note :** Le type est déduit automatiquement de la valeur assignée. Les constantes non typées sont **toujours immuables** et souvent inlinées par le compilateur (substitution littérale sur le lieu d'utilisation).
+
+> 💡 **Constantes prédéfinies de la RTL** : Avant de déclarer une constante mathématique, regardez si Delphi ne l'expose pas déjà. Par exemple `Pi` est défini dans `System` (≈ 3,1415926535897932), et l'unité `System.Math` propose `NaN`, `Infinity`, `MaxDouble`, `MinDouble`, ainsi que des constantes physiques courantes.
 
 ### Constantes vs Variables
 
@@ -229,6 +235,16 @@ begin
     ShowMessage(MSG_ERREUR_CONNEXION);
 end;
 ```
+
+> 💡 **`resourcestring` pour les applications localisables** : Object Pascal propose un mot-clé spécifique `resourcestring` pour les chaînes destinées à être traduites. Ces chaînes sont stockées dans une table de ressources de l'exécutable et peuvent être modifiées par les outils de traduction (Translation Manager, ITE…) sans recompilation du code source :
+>
+> ```pascal
+> resourcestring
+>   SMsgErreurConnexion = 'Impossible de se connecter à la base de données';
+>   SMsgSuccesSauvegarde = 'Les données ont été sauvegardées avec succès';
+> ```
+>
+> S'utilisent comme des constantes normales, mais permettent la localisation. Convention : préfixe `S` pour *String resource*.
 
 ## Les opérateurs
 
@@ -356,6 +372,24 @@ end;
 | True | False |
 | False | True |
 
+### Évaluation court-circuit (short-circuit)
+
+Par défaut, Delphi utilise l'**évaluation court-circuit** des expressions booléennes : dès que le résultat est connu, l'évaluation s'arrête.
+
+```pascal
+// Si Liste est nil, on n'évalue PAS Liste.Count (qui planterait)
+if (Liste <> nil) and (Liste.Count > 0) then
+  Traiter(Liste);
+
+// De même pour or : si la première condition est True, on n'évalue pas la seconde
+if (Cache <> nil) or ChargerDepuisDisque then
+  Continuer;
+```
+
+> 💡 **Directive `{$B}`** : Le comportement par défaut est `{$B-}` (court-circuit activé). Avec `{$B+}` (Complete Boolean Evaluation), toutes les opérandes sont systématiquement évaluées — un mode rarement souhaité aujourd'hui, mais qu'on rencontre parfois dans du vieux code.
+>
+> Le court-circuit ne s'applique **qu'aux booléens** : sur des entiers, `and` et `or` restent des opérations bit-à-bit qui évaluent toujours les deux opérandes.
+
 ### Opérateurs de chaînes
 
 | Opérateur | Description | Exemple |
@@ -377,10 +411,16 @@ begin
   // Concaténation avec des variables et du texte
   Message := 'Bonjour ' + Prenom + ', bienvenue !';
 
-  // Concaténation avec des nombres (conversion automatique)
+  // Concaténation avec des nombres : conversion EXPLICITE obligatoire
   Message := 'Vous avez ' + IntToStr(25) + ' ans';
 end;
 ```
+
+> ⚠️ **Pas de conversion implicite** : Object Pascal n'accepte pas `'Vous avez ' + 25 + ' ans'`. Le compilateur rejette ce code car `string + Integer` est une opération non définie. Vous devez convertir explicitement : `IntToStr(25)`, `FloatToStr(3.14)`, `BoolToStr(True, True)`… Une alternative plus lisible est d'utiliser la fonction `Format` :
+>
+> ```pascal
+> Message := Format('Vous avez %d ans', [25]);
+> ```
 
 ### Opérateur d'affectation
 
@@ -703,13 +743,16 @@ var
   Total: Double = 0.0;
   Nom: string = '';
 
-// ❌ Variable non initialisée (valeur imprévisible)
+// ❌ Variable locale non initialisée (valeur imprévisible)
+procedure Calculer;
 var
-  Compteur: Integer;
+  Compteur: Integer;  // Pas de valeur par défaut !
 begin
-  Compteur := Compteur + 1;  // DANGER : Compteur a une valeur aléatoire
+  Compteur := Compteur + 1;  // DANGER : Compteur contient une valeur aléatoire
 end;
 ```
+
+> 💡 **Règle d'initialisation par défaut** : Les **champs d'instance** d'une classe et les **variables globales** d'une unité sont automatiquement mis à zéro (`0`, `''`, `nil`, `False`) avant utilisation. En revanche, les **variables locales** (déclarées dans une procédure ou fonction) ne le sont **pas** : elles contiennent ce qui se trouvait précédemment sur la pile. Initialisez-les toujours avant lecture.
 
 ### Utilisation des constantes
 

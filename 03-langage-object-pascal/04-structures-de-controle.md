@@ -412,6 +412,28 @@ begin
 end;
 ```
 
+**Case avec des chaînes (Delphi XE7+) :**
+
+Depuis Delphi XE7, le `case` accepte aussi les chaînes de caractères :
+
+```pascal
+var
+  Commande: string;
+begin
+  Commande := 'sauver';
+
+  case Commande of
+    'sauver', 'enregistrer': Sauvegarder;
+    'charger', 'ouvrir':     Charger;
+    'quitter', 'sortir':     Quitter;
+  else
+    ShowMessage('Commande inconnue : ' + Commande);
+  end;
+end;
+```
+
+> 💡 **Limites du `case` avec chaînes** : Les étiquettes doivent être des **constantes littérales** (pas des variables) et la comparaison est sensible à la casse. Pour ignorer la casse, normalisez la chaîne avant : `case LowerCase(Commande) of …`.
+
 ## Les boucles
 
 Les boucles permettent de répéter des instructions plusieurs fois.
@@ -525,7 +547,27 @@ begin
 end;
 ```
 
-**Avantage :** La variable `i` n'existe que dans la boucle, ce qui évite les conflits de noms.
+**Avantage :** La variable `i` n'existe que dans la boucle, ce qui évite les conflits de noms et clarifie sa portée.
+
+Le compilateur peut également déduire le type de la variable inline si vous n'avez pas besoin de le préciser :
+
+```pascal
+begin
+  for var i := 1 to 10 do  // Type Integer déduit automatiquement
+    ShowMessage(IntToStr(i));
+end;
+```
+
+La syntaxe inline fonctionne aussi avec `for...in` :
+
+```pascal
+var
+  Nombres: array[0..3] of Integer = (10, 20, 30, 40);
+begin
+  for var Valeur in Nombres do
+    ShowMessage(IntToStr(Valeur));
+end;
+```
 
 ### La boucle for...in
 
@@ -633,7 +675,7 @@ begin
 end;
 ```
 
-**Exemple : Lecture de fichier :**
+**Exemple : Lecture de fichier (API classique Pascal) :**
 ```pascal
 var
   Fichier: TextFile;
@@ -652,6 +694,8 @@ begin
   end;
 end;
 ```
+
+> 💡 **Alternative moderne** : Pour la lecture de fichiers texte, l'API moderne recommandée s'appuie sur `TStreamReader` (unité `System.Classes`) ou `TFile.ReadAllLines` (unité `System.IOUtils`), qui gèrent nativement l'encodage Unicode et offrent une syntaxe plus concise. L'API `AssignFile`/`Reset`/`CloseFile` reste valide mais est considérée comme un héritage du Pascal historique.
 
 **Attention avec while :**
 ```pascal
@@ -907,6 +951,19 @@ begin
   Result := True;  // Nombre valide
 end;
 ```
+
+> 💡 **`Exit(Valeur)` — variante moderne** : Depuis Delphi 2009, `Exit` accepte un argument qui devient la valeur de retour. C'est plus concis :
+>
+> ```pascal
+> function EstNombreValide(Nombre: Integer): Boolean;
+> begin
+>   if Nombre < 1 then
+>     Exit(False);   // Sort immédiatement en renvoyant False
+>   if Nombre > 100 then
+>     Exit(False);
+>   Result := True;
+> end;
+> ```
 
 ## Boucles imbriquées
 

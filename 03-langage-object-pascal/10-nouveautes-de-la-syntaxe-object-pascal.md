@@ -565,6 +565,11 @@ end;
 **✅ Lisibilité** : syntaxe naturelle  
 **✅ Réutilisabilité** : helpers utilisables partout  
 
+> ⚠️ **Limitation importante** : Un type ne peut avoir qu'**un seul helper actif** à un endroit donné du code (le dernier visible via la clause `uses`). Si deux unités définissent un helper pour le même type, seul celui de l'unité la plus récemment incluse sera disponible. Pour cette raison :
+>
+> - Évitez de redéfinir un helper pour un type de la RTL (`string`, `TStringList`, etc.) — vous masqueriez les méthodes officielles de la RTL (`TStringHelper`, etc.).
+> - Pour des extensions partagées entre plusieurs unités, préférez des **fonctions utilitaires** dans une classe dédiée plutôt qu'un helper.
+
 ## Littéraux binaires (Delphi 10.4 Sydney)
 
 ### Qu'est-ce qu'un littéral binaire ?
@@ -886,7 +891,7 @@ end;
 
 ## Améliorations des chaînes de caractères
 
-### Chaînes multi-lignes
+### Concaténation classique sur plusieurs lignes
 
 ```pascal
 const
@@ -901,6 +906,30 @@ const
   SQL_ORDER  = 'ORDER BY Nom';
   SQL_QUERY2 = SQL_SELECT + ' ' + SQL_WHERE + ' ' + SQL_ORDER;
 ```
+
+### Chaînes multi-lignes natives (Delphi 12 Athens+)
+
+Delphi 12 a introduit les **chaînes multi-lignes** délimitées par des triples apostrophes (`'''`). Elles préservent les sauts de ligne tels qu'ils apparaissent dans le code, sans aucune concaténation :
+
+```pascal
+const
+  SQL_QUERY = '''
+    SELECT *
+    FROM Clients
+    WHERE Actif = 1
+    ORDER BY Nom
+    ''';
+
+  HTML_TEMPLATE = '''
+    <html>
+      <body>
+        <h1>Bonjour</h1>
+      </body>
+    </html>
+    ''';
+```
+
+L'indentation **commune** aux lignes (déterminée par la position du `'''` de fermeture) est automatiquement supprimée — vous pouvez donc aligner votre chaîne avec votre code sans polluer le contenu.
 
 ### Interpolation avec Format
 
@@ -920,62 +949,94 @@ end;
 
 ### Records gérés automatiquement
 
-Delphi 10.4 Sydney a introduit les **managed records** qui peuvent implémenter une gestion automatique de la mémoire :
+Delphi 10.4 Sydney a introduit les **managed records** : des records dotés d'opérateurs spéciaux invoqués automatiquement par le compilateur lors de la création, la copie et la destruction du record. Cela permet d'implémenter une gestion automatique de ressources (RAII — *Resource Acquisition Is Initialization*).
+
+Les opérateurs disponibles sont :
+- `Initialize(out Dest)` — appelé à la création d'une instance
+- `Finalize(var Dest)` — appelé quand l'instance sort de portée
+- `Assign(var Dest; const [ref] Src)` — appelé lors d'une affectation entre records
+
+**Exemple complet : libération automatique d'un objet**
 
 ```pascal
 type
   TAutoFree<T: class> = record
-  private
+  strict private
     FValue: T;
   public
-    constructor Create(AValue: T);
     class operator Initialize(out Dest: TAutoFree<T>);
     class operator Finalize(var Dest: TAutoFree<T>);
-    class operator Implicit(const Value: TAutoFree<T>): T;
+    procedure Assign(AValue: T);
     property Value: T read FValue;
   end;
 
-// Libération automatique - pas besoin de try..finally !
+class operator TAutoFree<T>.Initialize(out Dest: TAutoFree<T>);
+begin
+  Dest.FValue := nil;  // Champ vide à la création
+end;
+
+class operator TAutoFree<T>.Finalize(var Dest: TAutoFree<T>);
+begin
+  Dest.FValue.Free;    // Libération automatique de l'objet possédé
+end;
+
+procedure TAutoFree<T>.Assign(AValue: T);
+begin
+  FValue.Free;         // Libère l'éventuel objet précédent
+  FValue := AValue;
+end;
+
+// Utilisation : libération automatique sans try..finally
+procedure UtiliserAutoFree;
 var
   Liste: TAutoFree<TStringList>;
 begin
-  Liste := TAutoFree<TStringList>.Create(TStringList.Create);
-  Liste.Value.Add('Test');
-  // Libéré automatiquement à la fin du scope
+  Liste.Assign(TStringList.Create);
+  Liste.Value.Add('Bonjour');
+  Liste.Value.Add('Monde');
+  ShowMessage(Liste.Value.Text);
+  // Liste sort de portée : Finalize est appelé, TStringList est libéré
 end;
 ```
 
+> 💡 **Quand utiliser les managed records ?** Pour les types qui possèdent une ressource (handle de fichier, connexion, objet) et que vous voulez libérer automatiquement. C'est l'équivalent en Object Pascal de `std::unique_ptr` en C++ ou `using` en C#.
+
 ## Résumé des nouveautés par version
 
-### Delphi 13 Florence (2024)
+### Delphi 13 Florence (septembre 2025)
 - ✨ **Opérateur ternaire** : `if...then...else` inline
 - Améliorations VCL, FireMonkey et FireDAC
-- Support LLDB v12
-- Améliorations IA
+- Support LLDB v12 et débogage avancé
+- Intégration de fonctionnalités d'assistance par IA
+- Améliorations multiplateformes (Windows, macOS, Linux, iOS, Android)
 
-### Delphi 12 Athens (2023)
-- Améliorations de performance
-- Nouvelles fonctionnalités IDE
+### Delphi 12 Athens (novembre 2023)
+- ✨ **Chaînes multi-lignes** : littéraux délimités par `'''` (triples apostrophes)
+- Améliorations de performance du compilateur et du linker
+- Nouvelles fonctionnalités IDE (interface modernisée, prise en charge HighDPI)
+- Améliorations VCL Styles et FireMonkey
 
-### Delphi 11 Alexandria (2021)
-- Amélioration des helpers
-- Nouvelles API de threading
+### Delphi 11 Alexandria (septembre 2021)
+- Amélioration significative de l'éditeur de code et du débogueur
+- Support HighDPI dans l'IDE
+- Améliorations des helpers et nouvelles API de threading
 
-### Delphi 10.4 Sydney (2020)
-- ✨ **Littéraux binaires** : notation %
-- ✨ **Managed records** : gestion automatique (Initialize/Finalize)
+### Delphi 10.4 Sydney (mai 2020)
+- ✨ **Littéraux binaires** : notation `%`
+- ✨ **Managed records** : gestion automatique (`Initialize` / `Finalize` / `Assign`)
 - Améliorations des génériques
-- Support macOS 64-bit
+- Refonte de l'auto-complétion (LSP / Code Insight)
+- Support macOS 64 bits
 
-### Delphi 10.3 Rio (2018)
-- ✨ **Variables inline** : déclaration à la volée
-- Support Linux pour serveurs
-- Améliorations IDE
+### Delphi 10.3 Rio (novembre 2018)
+- ✨ **Variables inline** : déclaration à la volée (`var x := ...`)
+- Support Linux pour serveurs (compilateur 64 bits Linux)
+- Améliorations IDE et nouvelles versions Android/iOS
 
 ### Delphi 10 Seattle/Berlin (2015-2016)
-- Améliorations FireDAC
+- Améliorations FireDAC et nouveaux pilotes de bases de données
 - Support Windows 10
-- Améliorations mobile
+- Améliorations majeures pour le développement mobile
 
 ## Conseils d'utilisation
 
@@ -1028,6 +1089,7 @@ Si vous partagez du code avec d'autres projets, assurez-vous que tous utilisent 
 Les principales nouveautés modernes d'Object Pascal :
 
 - **Opérateur ternaire** (Delphi 13) : conditions inline concises
+- **Chaînes multi-lignes** (Delphi 12) : littéraux `'''` préservant les sauts de ligne
 - **Variables inline** (10.3+) : déclaration à la volée
 - **Méthodes anonymes** : fonctions sans nom, callbacks
 - **Attributs** : métadonnées sur classes et propriétés

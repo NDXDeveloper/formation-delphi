@@ -201,6 +201,12 @@ begin
 end;
 ```
 
+> 💡 **`var` vs `out` — quelle différence ?**
+> - **`var`** : la valeur **initiale** de la variable est transmise à la routine, qui peut la lire et la modifier. Convient à un échange ou à une modification.
+> - **`out`** : la routine est censée **écrire** la valeur. Pour les types gérés (chaînes, interfaces, tableaux dynamiques), le compilateur libère automatiquement la valeur initiale avant l'appel. Convient aux fonctions du type `TryParse` qui doivent uniquement remplir une valeur de sortie.
+>
+> Le sémantiquement : utilisez `out` quand la routine fixe la valeur sans dépendre de l'état précédent.
+
 ### Tableau récapitulatif des types de paramètres
 
 | Type | Mot-clé | Passage | Modification | Usage |
@@ -264,9 +270,33 @@ end;
 ```
 
 **Fonctions utiles :**
-- `Low(Tableau)` : Retourne l'indice minimum
-- `High(Tableau)` : Retourne l'indice maximum
-- `Length(Tableau)` : Retourne la taille du tableau
+- `Low(Tableau)` : Retourne l'indice minimum (toujours 0 pour un tableau ouvert)
+- `High(Tableau)` : Retourne l'indice maximum (`Length - 1`)
+- `Length(Tableau)` : Retourne le nombre d'éléments
+
+### Paramètres `array of const` (variants ouverts)
+
+Pour accepter un nombre variable d'arguments de **types différents**, utilisez `array of const`. C'est exactement ce qui est utilisé par `Format` :
+
+```pascal
+procedure JournaliserValeurs(const Args: array of const);  
+var  
+  i: Integer;
+begin
+  for i := Low(Args) to High(Args) do
+    case Args[i].VType of
+      vtInteger:    WriteLn('Entier : ', Args[i].VInteger);
+      vtExtended:   WriteLn('Réel : ', Args[i].VExtended^:0:2);
+      vtUnicodeString: WriteLn('Chaîne : ', string(Args[i].VUnicodeString));
+      vtBoolean:    WriteLn('Booléen : ', Args[i].VBoolean);
+    end;
+end;
+
+// Utilisation
+JournaliserValeurs([42, 3.14, 'Bonjour', True]);
+```
+
+> 💡 En pratique, `array of const` est surtout utilisé pour des fonctions de formatage comme `Format` ou `WriteLn`. Pour vos propres APIs, préférez des paramètres typés explicites lorsque c'est possible : c'est plus sûr.
 
 ## Les fonctions
 
@@ -353,6 +383,8 @@ begin
 end;
 ```
 
+> ℹ️ **Note pédagogique** : Cette validation est volontairement simpliste pour illustrer la notion de fonction booléenne. Une validation d'e-mail réellement robuste nécessite une expression régulière (unité `System.RegularExpressions`) ou une bibliothèque dédiée.
+
 #### Fonction de calcul
 
 ```pascal
@@ -403,6 +435,13 @@ begin
 end;
 ```
 
+> ⚠️ **Limitation `UpCase`** : `UpCase` ne gère que les caractères ASCII non accentués (`'a'..'z'` → `'A'..'Z'`). Pour les caractères accentués (`'é'`, `'à'`, `'ç'`…), elle ne fait rien. Pour une conversion robuste sur du texte Unicode, utilisez `TCharacter.ToUpper` (unité `System.Character`) :
+>
+> ```pascal
+> uses System.Character;
+> Result[i] := TCharacter.ToUpper(Result[i]);
+> ```
+
 #### Fonction avec plusieurs valeurs de retour
 
 Utilisez des paramètres `var` ou `out` pour retourner plusieurs valeurs.
@@ -445,6 +484,10 @@ begin
   Result := ((Annee mod 4) = 0) and
             (((Annee mod 100) <> 0) or ((Annee mod 400) = 0));
 end;
+
+// Note : la RTL fournit déjà `IsLeapYear(Annee)` dans System.SysUtils.
+// La version ci-dessus est présentée à titre pédagogique pour illustrer
+// la logique d'une fonction booléenne avec une expression composée.
 
 // Utilisation
 var

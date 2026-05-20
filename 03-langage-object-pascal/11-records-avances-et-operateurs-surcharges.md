@@ -36,10 +36,12 @@ end;
 |----------------|--------|--------|
 | **Type** | Type valeur | Type référence |
 | **Stockage** | Pile (stack) | Tas (heap) |
-| **Création** | Automatique | Avec Create |
-| **Libération** | Automatique | Avec Free |
+| **Création** | Automatique | Avec `Create` |
+| **Libération** | Automatique | Avec `Free` |
 | **Héritage** | Non | Oui |
-| **Interfaces** | Oui (depuis Delphi 2009) | Oui |
+| **Implémenter une interface** | Non | Oui |
+| **Méthodes** | Oui (depuis Delphi 2006) | Oui |
+| **Opérateurs surchargés** | Oui | Oui (limités) |
 | **Performance** | Plus rapide | Légèrement plus lent |
 | **Copie** | Copie de valeur | Copie de référence |
 
@@ -975,28 +977,40 @@ end;
 
 ## Liste des opérateurs disponibles
 
-| Opérateur | Méthode | Usage |
-|-----------|---------|-------|
-| + | Add | A + B |
-| - (binaire) | Subtract | A - B |
-| * | Multiply | A * B |
-| / | Divide | A / B |
-| - (unaire) | Negative | -A |
-| = | Equal | A = B |
-| <> | NotEqual | A <> B |
-| < | LessThan | A < B |
-| > | GreaterThan | A > B |
-| <= | LessThanOrEqual | A <= B |
-| >= | GreaterThanOrEqual | A >= B |
-| Implicit | Implicit | A := B (conversion auto) |
-| Explicit | Explicit | A := TypeA(B) (cast) |
-| Inc | Inc | Inc(A) |
-| Dec | Dec | Dec(A) |
-| LogicalAnd | LogicalAnd | A and B |
-| LogicalOr | LogicalOr | A or B |
-| LogicalNot | LogicalNot | not A |
-| BitwiseAnd | BitwiseAnd | A and B |
-| BitwiseOr | BitwiseOr | A or B |
+| Opérateur | Méthode (`class operator`) | Usage |
+|-----------|---------------------------|-------|
+| `+` | `Add` | `A + B` |
+| `-` (binaire) | `Subtract` | `A - B` |
+| `*` | `Multiply` | `A * B` |
+| `/` | `Divide` | `A / B` (division réelle) |
+| `div` | `IntDivide` | `A div B` (division entière) |
+| `mod` | `Modulus` | `A mod B` (reste) |
+| `-` (unaire) | `Negative` | `-A` |
+| `+` (unaire) | `Positive` | `+A` |
+| `=` | `Equal` | `A = B` |
+| `<>` | `NotEqual` | `A <> B` |
+| `<` | `LessThan` | `A < B` |
+| `>` | `GreaterThan` | `A > B` |
+| `<=` | `LessThanOrEqual` | `A <= B` |
+| `>=` | `GreaterThanOrEqual` | `A >= B` |
+| `in` | `In` | `X in Ens` |
+| Conversion implicite | `Implicit` | `A := B` (assignée automatiquement) |
+| Conversion explicite | `Explicit` | `A := TypeA(B)` (cast) |
+| `Inc` | `Inc` | `Inc(A)` |
+| `Dec` | `Dec` | `Dec(A)` |
+| `and` (logique) | `LogicalAnd` | `A and B` |
+| `or` (logique) | `LogicalOr` | `A or B` |
+| `xor` (logique) | `LogicalXor` | `A xor B` |
+| `not` (logique) | `LogicalNot` | `not A` |
+| `and` (bit-à-bit) | `BitwiseAnd` | `A and B` (entiers) |
+| `or` (bit-à-bit) | `BitwiseOr` | `A or B` (entiers) |
+| `xor` (bit-à-bit) | `BitwiseXor` | `A xor B` (entiers) |
+| `shl` | `LeftShift` | `A shl N` |
+| `shr` | `RightShift` | `A shr N` |
+| `Round` | `Round` | `Round(A)` |
+| `Trunc` | `Trunc` | `Trunc(A)` |
+
+> 💡 La présence de `Initialize`, `Finalize` et `Assign` (Delphi 10.4+) transforme un record en **managed record** (voir section 3.10).
 
 ## Bonnes pratiques
 

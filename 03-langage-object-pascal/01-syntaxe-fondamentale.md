@@ -24,7 +24,7 @@ implementation
 end.
 ```
 
-Chaque unité se termine obligatoirement par le mot-clé `end` suivi d'un point (`.`).
+Chaque unité se termine obligatoirement par le mot-clé `end` suivi d'un point (`.`). Ce point marque la **fin du fichier source** : tout ce qui suit est ignoré par le compilateur.
 
 ## Les commentaires
 
@@ -44,6 +44,17 @@ Il existe trois façons d'écrire des commentaires en Object Pascal :
 
 **Recommandation :** Privilégiez `//` pour les commentaires courts et `{ }` pour les commentaires longs ou la désactivation temporaire de code.
 
+> ⚠️ **Cas particulier : les directives de compilation** : Une accolade suivie immédiatement d'un `$` n'est **pas** un commentaire, mais une **directive de compilation** qui modifie le comportement du compilateur. Exemples : `{$R+}` active la vérification de plage, `{$IFDEF DEBUG}` introduit une compilation conditionnelle, `{$I MonFichier.inc}` insère un fichier. Ne placez donc jamais un commentaire « ordinaire » sous la forme `{$ ... }`.
+
+> 💡 **Commentaires de documentation (XMLDoc)** : Pour documenter des éléments destinés à être réutilisés (méthodes publiques, classes), Delphi reconnaît la syntaxe XMLDoc avec `///`. Ces commentaires sont exploités par l'aide contextuelle de l'IDE et par les générateurs de documentation :
+>
+> ```pascal
+> /// <summary>Calcule le montant TTC à partir du montant HT.</summary>
+> /// <param name="PrixHT">Prix hors taxes en euros</param>
+> /// <returns>Prix TTC en euros</returns>
+> function CalculerTTC(PrixHT: Double): Double;
+> ```
+
 ## Les instructions et le point-virgule
 
 En Object Pascal, chaque instruction se termine par un point-virgule (`;`) qui sert de séparateur d'instructions.
@@ -59,7 +70,23 @@ begin
 end;
 ```
 
-**Point important :** Le point-virgule n'est pas obligatoire avant certains mots-clés comme `end`, `else`, `until`, ou `except`, car ces mots-clés marquent déjà une séparation logique.
+**Point important :** Le point-virgule n'est pas obligatoire avant certains mots-clés comme `end`, `until`, ou `except`, car ces mots-clés marquent déjà une séparation logique.
+
+> ⚠️ **Cas particulier d'`else`** : Devant `else`, un point-virgule **provoque une erreur de syntaxe** car il termine prématurément le `if`. Cette règle s'applique à `if...then...else` comme à `case...else`.
+>
+> ```pascal
+> // ❌ Erreur de compilation : point-virgule en trop avant else
+> if X > 0 then
+>   Y := 1;
+> else
+>   Y := 0;
+>
+> // ✅ Correct : pas de point-virgule avant else
+> if X > 0 then
+>   Y := 1
+> else
+>   Y := 0;
+> ```
 
 ## La casse : sensibilité aux majuscules/minuscules
 
@@ -138,7 +165,9 @@ Object Pascal possède des mots-clés réservés qui ne peuvent pas être utilis
 - **Structure :** `program`, `unit`, `interface`, `implementation`, `uses`, `begin`, `end`
 - **Déclarations :** `var`, `const`, `type`, `procedure`, `function`, `class`, `record`
 - **Contrôle :** `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `while`, `do`, `repeat`, `until`
-- **Autres :** `and`, `or`, `not`, `nil`, `true`, `false`, `try`, `except`, `finally`, `raise`
+- **Logique et gestion d'erreur :** `and`, `or`, `not`, `xor`, `nil`, `try`, `except`, `finally`, `raise`
+
+> 💡 **À noter** : `True` et `False` ne sont pas des mots-clés réservés à proprement parler, mais des **constantes booléennes prédéfinies** dans la RTL (Run-Time Library). De même, certains termes (`read`, `write`, `virtual`, `override`, `public`, `private`, etc.) sont des **directives contextuelles** : ils ont un sens spécial dans certains contextes mais peuvent techniquement servir d'identifiants dans d'autres (déconseillé en pratique).
 
 ## Les espaces blancs
 
@@ -182,11 +211,16 @@ Object Pascal utilise plusieurs symboles comme séparateurs et délimiteurs :
 |---------|-------|
 | `;` | Séparateur d'instructions |
 | `,` | Séparateur de paramètres ou d'éléments de liste |
-| `.` | Accès aux membres d'un objet ou d'un enregistrement |
-| `:` | Séparateur entre identifiant et type |
-| `()` | Délimiteur de paramètres ou expression |
-| `[]` | Délimiteur pour les tableaux et ensembles |
-| `''` | Délimiteur pour les chaînes de caractères |
+| `.` | Accès aux membres d'un objet ou d'un enregistrement ; marque aussi la fin d'une unité (`end.`) |
+| `:` | Séparateur entre identifiant et type (`Age: Integer`) |
+| `:=` | Opérateur d'**affectation** (« reçoit ») |
+| `=` | Opérateur d'**égalité** (en comparaison) et d'**initialisation déclarative** (en `const` / typed-const) |
+| `()` | Délimiteur de paramètres ou d'expression |
+| `[]` | Délimiteur pour les tableaux, les ensembles et les attributs |
+| `''` | Délimiteur pour les chaînes de caractères et les littéraux `Char` |
+| `#` | Préfixe d'un caractère par son code (`#13#10` = retour à la ligne) |
+
+> ⚠️ **Piège fréquent pour les débutants** : ne pas confondre `:=` (affectation) et `=` (égalité). En Object Pascal, ces deux opérateurs sont strictement distincts, contrairement à beaucoup d'autres langages qui surchargent le signe `=`.
 
 ## Règles de nommage
 

@@ -138,11 +138,14 @@ begin
   Result := A + B;
 end;
 
-function CalculerMoyenne(Valeurs: array of Double): Double;  
+function CalculerMoyenne(const Valeurs: array of Double): Double;  
 var  
   I: Integer;
   Somme: Double;
 begin
+  if Length(Valeurs) = 0 then
+    raise Exception.Create('Impossible de calculer la moyenne d''un tableau vide');
+
   Somme := 0;
   for I := Low(Valeurs) to High(Valeurs) do
     Somme := Somme + Valeurs[I];
@@ -260,9 +263,11 @@ end.
 // ✅ Bon - unités séparées par responsabilité
 unit App.Modeles;      // Classes de données  
 unit App.Database;     // Accès aux données  
-unit App.Interface;    // Composants d'interface  
+unit App.UI;           // Composants d'interface  
 unit App.Utilitaires;  // Fonctions utilitaires  
 ```
+
+> ⚠️ **Attention aux noms réservés** : N'utilisez jamais un mot-clé d'Object Pascal comme nom d'unité ou partie d'un nom (par exemple `App.Interface` provoque une erreur, car `interface` est un mot réservé). Préférez `App.UI`, `App.Interfaces` (pluriel) ou `App.Ihm`.
 
 ### Exemple d'organisation par couches
 
@@ -431,7 +436,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.IOUtils;
+  System.SysUtils, System.IOUtils, System.TypInfo;
 
 class function TLogger.Instance: TLogger;  
 begin  
@@ -444,6 +449,8 @@ procedure TLogger.Log(const Message: string; Level: TLogLevel);
 var  
   LogMessage: string;
 begin
+  // GetEnumName / TypeInfo proviennent de System.TypInfo et permettent
+  // d'obtenir le nom littéral d'une valeur d'énumération via la RTTI.
   LogMessage := Format('[%s] [%s] %s',
     [DateTimeToStr(Now), GetEnumName(TypeInfo(TLogLevel), Ord(Level)), Message]);
   // Écrire dans le fichier...
@@ -475,7 +482,10 @@ unit App.Utils.StringHelper;
 interface
 
 type
-  TStringHelper = class
+  // Note : on évite le nom de classe TStringHelper car la RTL (System.SysUtils)
+  // définit déjà un record helper du même nom pour le type string. On garde
+  // toutefois `StringHelper` dans le nom de l'unité, qui n'entre pas en conflit.
+  TStringUtils = class
   public
     class function EstEmail(const Email: string): Boolean;
     class function EstTelephone(const Tel: string): Boolean;
@@ -485,25 +495,28 @@ type
 
 implementation
 
-class function TStringHelper.EstEmail(const Email: string): Boolean;  
+uses
+  System.SysUtils;
+
+class function TStringUtils.EstEmail(const Email: string): Boolean;  
 begin  
   // Validation d'email
   Result := Pos('@', Email) > 0;
 end;
 
-class function TStringHelper.EstTelephone(const Tel: string): Boolean;  
+class function TStringUtils.EstTelephone(const Tel: string): Boolean;  
 begin  
   // Validation de téléphone
   Result := Length(Tel) >= 10;
 end;
 
-class function TStringHelper.CapitaliserMots(const Texte: string): string;  
+class function TStringUtils.CapitaliserMots(const Texte: string): string;  
 begin  
   // Mettre une majuscule au début de chaque mot
   Result := Texte;  // Implémentation simplifiée
 end;
 
-class function TStringHelper.RemplacerAccents(const Texte: string): string;  
+class function TStringUtils.RemplacerAccents(const Texte: string): string;  
 begin  
   // Remplacer les accents
   Result := StringReplace(Texte, 'é', 'e', [rfReplaceAll]);
@@ -578,6 +591,8 @@ implementation
 uses
   FireDAC.Comp.Client;  // Accès aux données
 
+// Note : ces fonctions allouent un nouvel objet à chaque appel.
+// L'appelant est responsable de libérer l'objet retourné (try..finally).
 function TClientDAO.ObtenirTous: TList<TClient>;  
 begin  
   Result := TList<TClient>.Create;
@@ -1031,10 +1046,11 @@ GestionCommerciale/
 
 ### Navigation dans le code
 
-- **Ctrl + Clic** : aller à la définition
-- **Ctrl + Shift + Flèches** : naviguer entre déclaration/implémentation
-- **Ctrl + G** : aller à la ligne
-- **Ctrl + Q + Q** : marquer/revenir à une position
+- **Ctrl + Clic** : aller à la définition d'un symbole
+- **Ctrl + Shift + ↑/↓** : basculer entre la déclaration (`interface`) et l'implémentation (`implementation`)
+- **Alt + ←** / **Alt + →** : revenir à la position précédente / suivante (historique de navigation)
+- **Ctrl + Maj + 0..9** : poser un signet à la ligne courante (jusqu'à 10 signets)
+- **Ctrl + 0..9** : sauter au signet correspondant
 
 ### Refactoring
 

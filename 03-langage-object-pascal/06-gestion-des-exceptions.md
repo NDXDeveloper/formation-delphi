@@ -39,7 +39,7 @@ begin
 end;
 ```
 
-**Problème :** Si l'utilisateur entre du texte non numérique, l'application génère une erreur et peut se fermer brutalement.
+**Problème :** Si l'utilisateur entre du texte non numérique, une exception `EConvertError` est levée. Dans une application VCL ou FMX, le gestionnaire d'exception global de Delphi affiche alors une boîte de message d'erreur générique (peu conviviale), tandis que dans une application console le programme se ferme brutalement. Dans tous les cas, l'exécution de la suite du code (`ShowMessage`) est interrompue.
 
 ## La structure try...except
 
@@ -326,6 +326,13 @@ Vous pouvez lever vos propres exceptions pour signaler des erreurs.
 raise Exception.Create('Message d''erreur');
 ```
 
+Pour intégrer des valeurs dans le message, préférez `CreateFmt` qui combine `Create` et `Format` :
+
+```pascal
+raise Exception.CreateFmt('Solde insuffisant pour %s : il manque %.2f €',
+                          [NomClient, MontantManquant]);
+```
+
 ### Exemple : Validation de données
 
 ```pascal
@@ -409,14 +416,17 @@ Delphi fournit de nombreux types d'exceptions prédéfinis :
 |-----------|-------------|---------|
 | `Exception` | Exception de base (parent de toutes) | Toute erreur générique |
 | `EConvertError` | Erreur de conversion | `StrToInt('abc')` |
-| `EDivByZero` | Division par zéro | `X := 10 div 0` |
+| `EDivByZero` | Division entière par zéro | `X := 10 div 0` |
+| `EZeroDivide` | Division réelle par zéro | `X := 10.0 / 0.0` (selon configuration FPU) |
 | `EInOutError` | Erreur d'entrée/sortie | Fichier introuvable |
-| `ERangeError` | Dépassement de plage | Accès hors limites d'un tableau |
+| `ERangeError` | Dépassement de plage (nécessite `{$R+}`) | Accès hors limites d'un tableau |
 | `EAccessViolation` | Violation d'accès mémoire | Pointeur nil déréférencé |
 | `EOutOfMemory` | Mémoire insuffisante | Allocation impossible |
-| `EIntOverflow` | Dépassement d'entier | Résultat trop grand |
+| `EIntOverflow` | Dépassement d'entier (nécessite `{$Q+}`) | Résultat trop grand |
 | `EInvalidOp` | Opération invalide | Opération mathématique invalide |
-| `EAbort` | Abandon silencieux | Interruption volontaire |
+| `EAbort` | Abandon silencieux | Interruption volontaire (`Abort`) |
+
+> 💡 **Note sur les vérifications** : Certaines exceptions comme `ERangeError` (dépassement de plage de tableau) et `EIntOverflow` (dépassement d'entier) ne sont levées que si les directives de compilation `{$R+}` et `{$Q+}` sont activées. Ces vérifications sont activées par défaut en mode **Debug** et désactivées en mode **Release** pour les performances.
 
 ### Exemples d'exceptions courantes
 
@@ -904,46 +914,60 @@ end;
 ### Erreur 4 : Re-créer l'exception au lieu de la re-lever
 
 ```pascal
-// ❌ MAUVAIS : perd la trace de l'exception originale
+// ❌ MAUVAIS : perd la trace de l'exception originale (type, pile d'appels)
 try
   // Code
 except
   on E: Exception do
-    raise Exception.Create(E.Message);  // Nouvelle exception
+    raise Exception.Create(E.Message);  // Nouvelle exception : type Exception générique
 end;
 
-// ✅ BON : conserve la trace
+// ✅ BON : conserve l'exception originale (type + pile)
 try
   // Code
 except
   on E: Exception do
   begin
     Log(E.Message);
-    raise;  // Re-lève l'exception originale
+    raise;  // Re-lève EXACTEMENT l'exception originale
   end;
 end;
 ```
 
+> 💡 **`raise` sans argument** : à l'intérieur d'un bloc `except`, l'instruction `raise` sans argument relance l'exception courante **avec son type et sa pile d'appels d'origine**. C'est l'idiome correct pour journaliser sans masquer l'erreur. Si vous souhaitez **enrichir** le message d'erreur avec du contexte, utilisez une exception personnalisée qui conserve une référence vers l'exception originale (`Exception.InnerException` depuis Delphi 2009).
+
 ### Erreur 5 : Utiliser les exceptions pour le contrôle de flux
 
 ```pascal
-// ❌ MAUVAIS : exception pour la logique normale
+// ❌ MAUVAIS : exception pour un cas attendu (utilisateur introuvable)
 function TrouverUtilisateur(ID: Integer): TUtilisateur;  
 begin  
   if not UtilisateurExiste(ID) then
     raise Exception.Create('Utilisateur non trouvé');
-  // ...
+  Result := ChargerUtilisateur(ID);
 end;
 
-// ✅ BON : utiliser un booléen ou nil
+// ✅ BON : retourner nil pour signaler l'absence (la non-trouvaille est un cas normal)
 function TrouverUtilisateur(ID: Integer): TUtilisateur;  
 begin  
-  if not UtilisateurExiste(ID) then
-    Result := nil  // Ou retourner False avec un paramètre out
+  if UtilisateurExiste(ID) then
+    Result := ChargerUtilisateur(ID)
   else
-    // Chercher l'utilisateur
+    Result := nil;
+end;
+
+// ✅ Alternative : utiliser un booléen de retour avec paramètre out
+function TryTrouverUtilisateur(ID: Integer; out Utilisateur: TUtilisateur): Boolean;  
+begin  
+  Result := UtilisateurExiste(ID);
+  if Result then
+    Utilisateur := ChargerUtilisateur(ID)
+  else
+    Utilisateur := nil;
 end;
 ```
+
+> 💡 **Règle** : Une exception doit signaler un état **anormal** (panne d'infrastructure, données corrompues, contrat violé). Si un cas se produit régulièrement dans le fonctionnement normal de l'application (par exemple « utilisateur inexistant »), traitez-le par un retour explicite plutôt que par une exception.
 
 ## Points clés à retenir
 

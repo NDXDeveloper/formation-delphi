@@ -25,7 +25,7 @@ else
 
 **Compilation native** : Contrairement aux langages interprétés, Object Pascal est compilé en code machine natif, ce qui garantit des performances optimales.
 
-**Multi-paradigme** : Object Pascal supporte plusieurs styles de programmation :
+**Multi-paradigme** : Object Pascal prend en charge plusieurs styles de programmation :
 - Programmation procédurale (fonctions et procédures)
 - Programmation orientée objet (classes et objets)
 - Programmation générique (génériques)
@@ -213,6 +213,9 @@ function Additionner(A, B: Integer): Integer;
 // IMPLEMENTATION : le code interne
 implementation
 
+uses
+  Vcl.Dialogs;  // Nécessaire pour ShowMessage, mais utilisé uniquement ici
+
 procedure TMaClasse.FaireQuelqueChose;  
 begin  
   ShowMessage('Ceci est ma méthode');
@@ -234,7 +237,7 @@ unit MainForm;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls;
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Dialogs;
 
 type
   TForm1 = class(TForm)

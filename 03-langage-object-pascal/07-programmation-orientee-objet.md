@@ -63,7 +63,7 @@ Le **polymorphisme** (du grec "plusieurs formes") permet à des objets de types 
 
 L'**abstraction** consiste à représenter les concepts essentiels sans inclure les détails d'implémentation. On se concentre sur **ce que fait** un objet plutôt que sur **comment il le fait**.
 
-**Exemple** : Une télécommande abstraite les commandes complexes de la télévision en simples boutons.
+**Exemple** : Une télécommande masque la complexité électronique de la télévision derrière quelques boutons simples (volume, chaîne, marche/arrêt).
 
 **Avantage** : Simplifie la complexité et facilite la compréhension.
 
@@ -331,7 +331,7 @@ Dans les sections suivantes, vous découvrirez en détail :
 3. **L'héritage et le polymorphisme** : réutiliser et étendre le code
 4. **Les constructeurs et destructeurs** : gérer le cycle de vie des objets
 5. **Les interfaces** : définir des contrats flexibles
-6. **La généricité** : créer du code réutilisable et type-safe
+6. **La généricité** : créer du code réutilisable avec un typage sûr
 
 Chaque concept sera expliqué avec des exemples concrets et progressifs, adaptés aux débutants.
 
