@@ -8,7 +8,7 @@ Vous tenez entre vos mains (ou sur votre écran) un guide complet pour apprendre
 
 ## Pourquoi ce chapitre est important
 
-Avant de plonger dans le code et de créer vos premières applications, il est essentiel de bien comprendre ce qu'est Delphi, d'où il vient, et pourquoi il mérite votre attention en 2025. Ce premier chapitre pose les fondations de votre apprentissage en vous donnant une vision claire et complète de l'outil que vous allez maîtriser.
+Avant de plonger dans le code et de créer vos premières applications, il est essentiel de bien comprendre ce qu'est Delphi, d'où il vient, et pourquoi il mérite toujours votre attention aujourd'hui, plus de trente ans après sa première version. Ce premier chapitre pose les fondations de votre apprentissage en vous donnant une vision claire et complète de l'outil que vous allez maîtriser.
 
 Trop souvent, les développeurs débutants se précipitent dans le code sans prendre le temps de comprendre leur environnement de travail. C'est comme vouloir conduire une voiture sans connaître les commandes du tableau de bord : vous finirez par avancer, mais le voyage sera beaucoup plus difficile qu'il ne devrait l'être.
 
@@ -48,6 +48,33 @@ Pour situer Delphi dans le paysage du développement logiciel, nous le comparero
 
 Enfin, vous découvrirez ce qui fait de Delphi 13 Florence une version particulièrement excitante, avec ses innovations en intelligence artificielle, ses améliorations de performance, et ses nouvelles fonctionnalités qui facilitent encore plus le développement.
 
+## Prérequis pour ce chapitre
+
+Bonne nouvelle : ce chapitre n'exige **aucun prérequis technique**. Vous n'avez besoin que :
+
+- **D'un ordinateur Windows** (10 ou 11) pour pouvoir installer Delphi à la section 1.5
+- **D'une connexion Internet** pour télécharger Delphi et accéder aux ressources en ligne
+- **De curiosité et d'un peu de patience** : Delphi est puissant, et la première découverte demande un minimum d'attention
+
+Aucune connaissance préalable en programmation n'est nécessaire pour comprendre ce chapitre introductif. Les concepts techniques (compilation, IDE, framework…) seront expliqués au fur et à mesure.
+
+## Temps de lecture estimé
+
+Ce chapitre représente environ **2 à 3 heures de lecture attentive**, hors temps d'installation de Delphi. Voici une estimation par section :
+
+| Section | Temps de lecture | Temps de pratique |
+|---------|------------------|-------------------|
+| 1.1 Qu'est-ce que Delphi ? | 10-15 min | — |
+| 1.2 Histoire et évolutions | 10-15 min | — |
+| 1.3 Versions et éditions | 15-20 min | — |
+| 1.4 Avantages et cas d'usage | 15-20 min | — |
+| 1.5 Installation | 20-30 min | 30-60 min (téléchargement + installation) |
+| 1.6 Premier aperçu | 20-30 min | 15-20 min (exploration libre) |
+| 1.7 Comparaison | 20-30 min | — |
+| 1.8 Nouveautés Delphi 13 | 15-20 min | — |
+
+**Conseil :** Ne tentez pas de tout faire d'une traite. Une lecture par session de 30-45 minutes maximum est plus efficace pour retenir l'information.
+
 ## Notre approche pédagogique
 
 Ce tutoriel a été conçu avec une philosophie claire : **l'accessibilité pour tous**.
@@ -86,14 +113,23 @@ Bien que tout soit expliqué dans le texte, prendre des notes personnelles vous 
 
 Certaines sections mentionnent des ressources externes ou des sites web. N'hésitez pas à les explorer pour approfondir certains aspects qui vous intéressent particulièrement.
 
-## Ce que vous ne trouverez pas ici
+## Ce que vous trouverez (et ne trouverez pas) ici
 
-Pour être transparent, ce chapitre d'introduction ne contient pas :
+Pour être transparent, voici ce que contient ce chapitre :
 
-- **De code détaillé :** Le code viendra dans les chapitres suivants. Ici, nous restons au niveau conceptuel.
-- **De tutoriels techniques approfondis :** Les détails techniques seront abordés dans les chapitres dédiés.
-- **De débats philosophiques :** Nous présentons les faits objectivement, en reconnaissant les forces et les limites.
-- **De promotion excessive :** Nous aimons Delphi, mais nous restons honnêtes sur ce qu'il peut et ne peut pas faire.
+**✓ Présent dans ce chapitre :**
+- Une vue d'ensemble conceptuelle de Delphi et de son écosystème
+- Quelques exemples de code courts pour illustrer la philosophie et la productivité (sans entrer dans le détail du langage)
+- Des comparaisons chiffrées et techniques avec d'autres environnements
+- Un guide d'installation pas à pas
+- Une visite guidée de l'interface IDE
+
+**✗ Absent de ce chapitre (volontairement, ce sera abordé plus tard) :**
+- **Apprentissage du langage Object Pascal en profondeur** — c'est le chapitre 3 entier qui y est consacré
+- **Création détaillée de projets** — premier vrai projet au chapitre 2
+- **Exercices pratiques structurés** — toute la formation privilégie la lecture suivie d'expérimentation libre
+- **Débats philosophiques sur les "meilleurs" langages** — nous présentons les faits objectivement
+- **Promotion excessive de Delphi** — nous aimons Delphi, mais nous restons honnêtes sur ses forces ET ses limites
 
 ## Vos attentes après ce chapitre
 
@@ -121,14 +157,14 @@ Mais au-delà de l'outil, vous apprenez aussi une façon de penser le développe
 
 ## Structure de ce chapitre
 
-- **1.1 Qu'est-ce que Delphi ?** - Découverte de l'outil et de sa philosophie
-- **1.2 Histoire et évolutions** - De Turbo Pascal à Delphi 13
-- **1.3 Versions disponibles et éditions** - Choisir la bonne édition
-- **1.4 Avantages et cas d'utilisation** - Pourquoi choisir Delphi ?
-- **1.5 Installation et configuration** - Installer Delphi pas à pas
-- **1.6 Premier aperçu de l'environnement** - Visite guidée de l'IDE
-- **1.7 Comparaison avec d'autres environnements** - Delphi vs les alternatives
-- **1.8 Nouveautés de Delphi 13 Florence** - Les innovations de la dernière version
+- **[1.1 Qu'est-ce que Delphi ?](01-quest-ce-que-delphi.md)** - Découverte de l'outil et de sa philosophie
+- **[1.2 Histoire et évolutions](02-histoire-et-evolutions.md)** - De Turbo Pascal à Delphi 13
+- **[1.3 Versions disponibles et éditions](03-versions-disponibles-et-editions.md)** - Choisir la bonne édition
+- **[1.4 Avantages et cas d'utilisation](04-avantages-et-cas-dutilisation.md)** - Pourquoi choisir Delphi ?
+- **[1.5 Installation et configuration](05-installation-et-configuration.md)** - Installer Delphi pas à pas
+- **[1.6 Premier aperçu de l'environnement](06-premier-apercu-de-lenvironnement.md)** - Visite guidée de l'IDE
+- **[1.7 Comparaison avec d'autres environnements](07-comparaison-avec-dautres-environnements.md)** - Delphi vs les alternatives
+- **[1.8 Nouveautés de Delphi 13 Florence](08-nouveautes-de-delphi-13-florence.md)** - Les innovations de la dernière version
 
 Commençons notre exploration avec la première section : Qu'est-ce que Delphi ?
 

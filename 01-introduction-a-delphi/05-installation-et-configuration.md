@@ -10,46 +10,80 @@ L'installation de Delphi est une étape cruciale pour commencer votre voyage dan
 
 Avant d'installer Delphi, assurez-vous que votre ordinateur répond aux exigences minimales.
 
-### Configuration matérielle minimale
+### Configuration matérielle minimale (officielle Embarcadero pour Delphi 13)
 
 **Processeur :**
-- Intel Core i3 ou équivalent AMD
-- 64 bits obligatoire (Delphi ne fonctionne plus sur les systèmes 32 bits)
+- 1,8 GHz dual-core minimum
+- Quad-core ou supérieur **recommandé**
+- 64 bits obligatoire (les processeurs single-core ne sont pas supportés)
 
 **Mémoire RAM :**
-- 4 Go minimum
-- 8 Go recommandés
-- 16 Go ou plus pour un confort optimal
+- 8 Go minimum (l'IDE Delphi 13 étant 64 bits, il consomme davantage de mémoire que les versions antérieures)
+- 16 Go **recommandés**
+- 32 Go ou plus pour les projets très volumineux ou les développeurs travaillant sur plusieurs plateformes simultanément
 
 **Espace disque :**
-- 10 Go minimum pour l'installation de base
-- 20 à 60 Go recommandés selon les plateformes ciblées
-- SSD fortement recommandé pour de meilleures performances
+- 6 Go minimum pour une installation très réduite
+- 60 Go pour une installation complète avec toutes les plateformes (Windows 32/64, macOS, iOS, Android, Linux, exemples, documentation)
+- **SSD fortement recommandé** : la compilation et le démarrage de l'IDE seront beaucoup plus rapides
+
+**Carte graphique :**
+- Compatible **DirectX 11**
 
 **Écran :**
-- Résolution minimum : 1366 x 768
+- Résolution minimum : 1440 x 900
 - Recommandé : 1920 x 1080 ou supérieur
-- Delphi supporte les écrans haute résolution (4K)
+- Delphi 13 supporte parfaitement les écrans haute résolution (HiDPI, 4K) grâce à son IDE entièrement vectorisé
 
 ### Système d'exploitation
 
 **Windows :**
-- Windows 10 (version 1903 ou ultérieure)
+- Windows 10 (version 1903 ou ultérieure, en 64 bits)
 - Windows 11 (recommandé)
-- Windows Server 2016 ou ultérieur
+- Windows Server 2016, 2019 ou 2022
 
-**Important :** Delphi lui-même fonctionne uniquement sur Windows. Cependant, une fois installé, vous pourrez créer des applications pour Windows, macOS, iOS, Android et Linux.
+**Important :** Delphi lui-même fonctionne uniquement sur Windows. Cependant, une fois installé, vous pourrez créer des applications pour Windows, macOS, iOS, Android et Linux à partir de cette même installation Windows. Pour cibler macOS ou iOS et déployer/tester réellement, vous aurez besoin d'un Mac accessible sur le réseau (utilisé via le PAServer d'Embarcadero — voir plus bas).
+
+### Configuration côté Mac (pour développement iOS / macOS)
+
+Si vous comptez développer pour macOS ou iOS, vous aurez besoin d'un Mac en complément de votre PC Windows. C'est une exigence d'Apple qui s'applique à toutes les technologies (Delphi, Xamarin, React Native, Flutter…) : seul un Mac peut compiler/signer pour iOS et macOS.
+
+**Sur le Mac, vous devrez installer :**
+
+1. **Xcode** (gratuit sur le Mac App Store), qui fournit :
+   - Le SDK iOS et macOS
+   - Les outils de signature de code (codesign)
+   - Le simulateur iOS
+   - Les outils en ligne de commande
+
+2. **PAServer (Platform Assistant Server)** d'Embarcadero, qui fait le pont entre votre Delphi sous Windows et le Mac :
+   - PAServer est fourni avec Delphi (cherchez le dossier `PAServer` dans l'installation)
+   - Copiez l'installateur sur votre Mac et exécutez-le
+   - Lancez ensuite PAServer sur le Mac : il écoute sur un port réseau (par défaut 64211)
+   - Dans Delphi sur Windows, configurez un **Connection Profile** pointant vers l'adresse IP du Mac
+
+3. **Un compte développeur Apple** (gratuit pour les tests sur appareil personnel, payant à 99 $/an pour publier sur l'App Store)
+
+**Configuration réseau :** Le Mac et le PC Windows doivent être sur le même réseau local (ou accessibles via VPN). Une fois configuré, vous pouvez compiler et lancer une application iOS/macOS depuis Windows comme si tout se faisait localement — Delphi envoie le code source au Mac via PAServer, qui compile et déploie.
+
+> 💡 **Alternative cloud :** Si vous n'avez pas de Mac, certains services proposent des Mac en location à distance (MacInCloud, MacStadium, etc.). Vous pouvez aussi utiliser une **machine virtuelle macOS** sur un PC Intel ou sur un Mac Mini d'occasion comme machine de build dédiée.
 
 ### Logiciels prérequis
 
 Delphi installera automatiquement certains composants nécessaires, mais vous devez avoir :
 
 **Microsoft .NET Framework :**
-- Version 4.7.2 ou ultérieure
+- Version 4.5 ou ultérieure (Embarcadero peut vous proposer une version plus récente lors de l'installation)
 - Généralement déjà installé sur Windows 10/11
 
 **Visual C++ Redistributable :**
 - Installé automatiquement par Delphi si nécessaire
+
+**Windows SDK :**
+- L'installateur vérifie le SDK Windows présent sur la machine et propose un lien vers la dernière version si besoin
+
+**Android SDK / NDK (uniquement si vous ciblez Android) :**
+- L'installateur propose d'installer automatiquement Android SDK 25.2.5 et le NDK r27b pour Delphi 13
 
 **Droits d'administration :**
 - Vous devez avoir des droits administrateur sur votre ordinateur pour installer Delphi
@@ -114,14 +148,21 @@ Le processus est similaire, mais vous devrez :
 - Soit demander une version d'essai de 30 jours
 - Soit entrer un code de licence si vous en avez déjà un
 
-### Téléchargement par le License Manager
+### Web Installer vs ISO complet
 
-Embarcadero propose également un gestionnaire de téléchargement appelé **License Manager** qui :
-- Facilite le téléchargement des gros fichiers
-- Permet de reprendre un téléchargement interrompu
-- Gère vos licences et activations
+Embarcadero propose **deux modes de téléchargement** pour l'installateur :
 
-**Recommandé** pour les connexions instables ou lentes.
+**Web Installer (recommandé) :**
+- Un petit installateur (~100 Mo) qui télécharge les composants à la demande
+- Avantage : vous pouvez ne sélectionner que les plateformes dont vous avez besoin
+- Inconvénient : nécessite une connexion stable pendant toute l'installation
+
+**ISO complet (Offline Installer) :**
+- Un gros fichier ISO (5-10 Go selon la version)
+- Avantage : pas besoin de connexion Internet pendant l'installation, idéal pour un poste hors-ligne ou plusieurs machines à installer
+- Inconvénient : téléchargement initial long
+
+Le **License Manager** d'Embarcadero (séparé) sert quant à lui à gérer vos licences et activations après installation. Vous le trouverez dans `bin\LicenseManager.exe` une fois Delphi installé.
 
 ## Installation de Delphi
 
@@ -157,7 +198,8 @@ Une fois le téléchargement terminé, vous pouvez procéder à l'installation.
 - Cliquez sur "Next"
 
 **Étape 4 : Sélection du dossier d'installation**
-- Le dossier par défaut est généralement : `C:\Program Files (x86)\Embarcadero\Studio\24.0`
+- Pour Delphi 13 Florence, l'IDE est désormais 64 bits natif. Le dossier par défaut est : `C:\Program Files\Embarcadero\Studio\24.0`
+- (Pour rappel : sur les versions antérieures à Delphi 13, le chemin était `C:\Program Files (x86)\Embarcadero\Studio\X.0` car l'IDE était une application 32 bits)
 - **Recommandation :** Gardez le dossier par défaut sauf raison spécifique
 - Assurez-vous d'avoir suffisamment d'espace disque
 - Cliquez sur "Next"
@@ -169,14 +211,15 @@ Vous devrez choisir quels composants installer :
 - ✓ Delphi (obligatoire)
 - ✓ RAD Studio IDE (obligatoire)
 - ✓ Documentation et exemples
-- ✓ Plateformes : Windows 32-bit et Windows 64-bit
+- ✓ Plateformes : Windows 32-bit et Windows 64-bit (les deux sont utiles pour cibler les vieux clients comme les nouveaux)
+- ✓ Windows on Arm (Arm64EC) si vous avez Delphi 13.1 et un PC Arm ou si vous prévoyez de cibler ce type de matériel
 
 **Vous pouvez décocher (pour économiser de l'espace) :**
-- C++Builder (si vous ne faites que du Delphi)
-- Plateformes mobiles (iOS, Android) si vous utilisez la Community Edition
+- C++Builder (si vous ne faites que du Delphi et n'avez pas de licence pour C++Builder)
+- Plateformes mobiles (iOS, Android) si vous n'en avez pas besoin immédiatement (la Community Edition les supporte aussi, contrairement à une idée reçue)
 - Plateformes macOS et Linux si vous n'en avez pas besoin immédiatement
 
-**Important :** Vous pourrez toujours ajouter des composants plus tard via le programme d'installation.
+**Important :** Vous pourrez toujours ajouter ou retirer des composants plus tard via la fonction "Modifier l'installation" (Modify) du programme d'installation.
 
 **Étape 6 : Sélection des fonctionnalités additionnelles**
 - GetIt Package Manager (recommandé : laissez coché)
@@ -261,16 +304,41 @@ Au premier lancement :
 Delphi propose plusieurs thèmes :
 - **Light Theme :** Thème clair, traditionnel
 - **Dark Theme :** Thème sombre, moins fatigant pour les yeux
-- Vous pouvez changer cela dans : Tools > Options > IDE > Themes
+- **Mountain Mist / Charcoal Dark Slate :** Variantes intermédiaires
+
+Pour changer de thème : **Tools > Options > User Interface > IDE > Theme**. Le thème est appliqué à toute l'interface (menus, palette, éditeur).
 
 ### Configuration de l'éditeur de code
 
-Personnalisez l'éditeur selon vos préférences :
-- Tools > Options > Editor Options
-- Taille de la police (recommandé : 10-12 points)
-- Coloration syntaxique
-- Indentation (recommandé : 2 espaces)
-- Affichage des numéros de ligne (utile)
+Personnalisez l'éditeur selon vos préférences via **Tools > Options > Editor > Display** (et sous-sections) :
+- **Taille de la police** (recommandé : 11-12 points sur un écran Full HD, 14-16 sur 4K)
+- **Coloration syntaxique** : couleurs personnalisables par type de jeton (Editor > Color)
+- **Indentation** : par défaut 2 espaces (convention Delphi historique)
+- **Numéros de ligne** : à activer ! Très utile pour les erreurs de compilation et le débogage
+- **Block Indent / Tab Settings** : à laisser sur "Smart Tab" pour un comportement intuitif
+
+### Choix du schéma de raccourcis clavier
+
+Delphi propose plusieurs **schémas de raccourcis** (Key Mapping) pour s'adapter aux développeurs venant d'autres IDE :
+
+- **Default** : Le schéma Delphi moderne (recommandé pour les nouveaux développeurs)
+- **Classic** : Les raccourcis historiques de Turbo Pascal / Delphi 7 (pour les vétérans)
+- **Visual Studio** : Pour les développeurs habitués à Visual Studio
+- **Visual Basic** : Compatible avec les anciens habitués de VB
+
+Pour changer : **Tools > Options > User Interface > Editor > Key Mappings**.
+
+> 💡 **Astuce :** Si vous venez de Visual Studio ou que vous travaillez en parallèle avec, le schéma "Visual Studio" peut vous éviter beaucoup de confusion (notamment pour F5, F10, F11 qui n'ont pas le même comportement par défaut entre Delphi et VS).
+
+### IDE Insight (recherche universelle)
+
+À retenir absolument dès le démarrage : **Ctrl+.** (Control + point) ouvre l'**IDE Insight**, une barre de recherche universelle qui permet de :
+- Trouver n'importe quelle commande de menu
+- Ouvrir n'importe quel fichier du projet
+- Lancer n'importe quelle fonction de l'IDE
+- Configurer n'importe quelle option
+
+C'est l'équivalent du "Quick Open" de VS Code ou du "Ctrl+Shift+P" de plein d'IDE modernes. **Indispensable** quand on ne se souvient plus dans quel menu se trouve une fonction.
 
 ### Choix de la disposition (Layout)
 
@@ -285,6 +353,40 @@ Delphi doit connaître certains chemins système :
 - Tools > Options > Environment Options > Delphi Options > Library
 - Ces chemins sont normalement configurés automatiquement
 - **Pour les débutants :** Ne modifiez rien ici pour l'instant
+
+## Structure des fichiers installés
+
+Une fois Delphi 13 Florence installé, vous trouverez les fichiers répartis comme suit :
+
+**Programme principal (binaires de l'IDE et compilateurs) :**
+```
+C:\Program Files\Embarcadero\Studio\24.0\
+├── bin\                  ← Exécutables : IDE (bds.exe), compilateurs (dcc32.exe, dcc64.exe…), outils
+├── source\               ← Code source de la RTL, VCL, FMX (très utile pour comprendre Delphi)
+├── lib\                  ← Bibliothèques pré-compilées (*.dcu, *.bpl)
+├── PAServer\             ← Installateur du Platform Assistant pour Mac/Linux
+└── ...
+```
+
+**Données utilisateur (configurations, registre des composants) :**
+```
+C:\Users\<VotreNom>\AppData\Roaming\Embarcadero\BDS\24.0\
+├── Bds.dproj            ← Configuration globale
+├── Library.bdsproj      ← Liste des packages installés
+└── ...
+```
+
+**Documents partagés (exemples, projets de démo) :**
+```
+C:\Users\Public\Documents\Embarcadero\Studio\24.0\
+├── Samples\             ← Exemples de code Delphi
+├── CatalogRepository\   ← Cache GetIt
+└── Styles\              ← Fichiers de styles VCL/FMX (.vsf)
+```
+
+**Bon à savoir :**
+- Le dossier `source\` contient le **code source intégral** de la RTL, VCL et FireMonkey. C'est une ressource d'apprentissage exceptionnelle : à chaque fois que vous voulez comprendre comment fonctionne un composant, vous pouvez aller lire son code source.
+- Si vous avez un problème d'IDE qui plante au démarrage, **renommer le dossier `AppData\Roaming\Embarcadero\BDS\24.0\`** force Delphi à recréer une configuration neuve — souvent suffisant pour régler les problèmes de profil corrompu.
 
 ## Vérification de l'installation
 
@@ -377,6 +479,49 @@ Certains composants nécessitent une installation manuelle :
 - Augmentez la RAM de votre ordinateur
 - Installez Delphi sur un SSD
 
+### L'antivirus signale RAD Studio comme suspect
+
+**Solution :**
+- C'est un faux positif courant avec les antivirus heuristiques (Windows Defender, Avast, McAfee…)
+- Ajoutez le dossier `C:\Program Files\Embarcadero\` aux **exclusions de votre antivirus**
+- Ajoutez aussi `C:\Users\<VotreNom>\AppData\Local\Embarcadero\` et `AppData\Roaming\Embarcadero\`
+- En l'absence d'exclusions, l'antivirus peut considérablement ralentir la compilation (scan de chaque DCU généré)
+
+### "Cannot find package" au chargement d'un projet
+
+**Solution :**
+- Un package requis par le projet n'est pas installé dans votre IDE
+- Vérifiez dans GetIt si le package manque
+- Ou installez-le manuellement depuis la source du composant
+- Ce problème est fréquent quand on ouvre un projet écrit par quelqu'un d'autre
+
+### Code Insight (autocomplétion) ne fonctionne pas
+
+**Solution :**
+- Tools > Options > Editor > Language Server : vérifier que **DelphiLSP** est activé
+- Redémarrer Delphi
+- Si le projet est très gros, l'indexation initiale peut prendre quelques minutes
+- Vérifier dans le Messages Pane si DelphiLSP affiche des erreurs
+
+## Désinstallation propre
+
+Si vous devez désinstaller Delphi (pour réinstaller une version propre, pour libérer de l'espace, etc.) :
+
+1. **Désinstallation normale :**
+   - Panneau de configuration > Programmes et fonctionnalités
+   - Sélectionner "Embarcadero RAD Studio 13" > Désinstaller
+   - Suivre l'assistant
+
+2. **Nettoyage des fichiers résiduels (recommandé pour une désinstallation complète) :**
+   - Supprimer `C:\Program Files\Embarcadero\Studio\24.0\` (si encore présent)
+   - Supprimer `C:\Users\<VotreNom>\AppData\Roaming\Embarcadero\BDS\24.0\`
+   - Supprimer `C:\Users\<VotreNom>\AppData\Local\Embarcadero\BDS\24.0\`
+   - Supprimer les exemples partagés : `C:\Users\Public\Documents\Embarcadero\Studio\24.0\` (attention : sauvegardez vos modifications si vous y avez touché)
+
+3. **Outil officiel Embarcadero :**
+   - Embarcadero distribue un outil "**ISO de désinstallation**" disponible sur leur site, qui nettoie tout proprement
+   - Recommandé après plusieurs installations/désinstallations successives
+
 ## Sauvegarde de votre configuration
 
 Une fois Delphi configuré à votre goût :
@@ -386,31 +531,40 @@ Une fois Delphi configuré à votre goût :
 
 ## Mises à jour
 
-Delphi reçoit régulièrement des mises à jour :
-- **Correctifs de bugs :** Installez-les dès leur disponibilité
-- **Mises à jour mineures :** Généralement sûres et recommandées
-- **Nouvelles versions majeures :** Testez avant de migrer vos projets importants
+Delphi reçoit régulièrement des mises à jour, classées en plusieurs catégories :
+
+- **Patches (correctifs de bugs)** — petits correctifs ciblés, publiés quelques fois par an. Installez-les dès leur disponibilité.
+- **Updates intermédiaires** (ex : Delphi 13.1 par rapport à Delphi 13.0) — apportent des nouveautés mais respectent globalement la compatibilité avec la version majeure courante.
+- **Nouvelles versions majeures** (ex : Delphi 13 vs Delphi 12) — publication annuelle environ, peuvent contenir des changements de compatibilité. **Testez avant de migrer vos projets importants.**
 
 Pour vérifier les mises à jour :
-- Help > Check for Updates
-- Ou via GetIt Package Manager
+- **Tools > Manage Platforms** : pour ajouter/retirer des plateformes ou mettre à jour des SDK mobiles
+- **Help > Check for Updates** : pour les patches IDE
+- **License Manager** (`bin\LicenseManager.exe`) : informations détaillées sur votre licence et les versions disponibles
+- **GetIt Package Manager** : pour les composants et bibliothèques tiers
+- Une fois inscrit, vous recevez aussi des notifications par email d'Embarcadero pour les nouvelles versions
 
 ## Ressources post-installation
 
 Après l'installation, explorez ces ressources :
 
 **Documentation intégrée :**
-- Help > RAD Studio Documentation (F1)
+- Help > RAD Studio Documentation (F1 contextuel sur n'importe quel mot-clé)
 - Extrêmement complète et bien organisée
+- Disponible en ligne : [docwiki.embarcadero.com](https://docwiki.embarcadero.com/)
 
 **Exemples de code :**
 - Installés avec Delphi
-- Généralement dans : `C:\Users\Public\Documents\Embarcadero\Studio\24.0\Samples`
+- Pour Delphi 13 Florence : `C:\Users\Public\Documents\Embarcadero\Studio\24.0\Samples`
+- Également accessibles via le menu Tools de l'IDE
+- Source GitHub officielle d'Embarcadero avec des exemples additionnels : [github.com/Embarcadero](https://github.com/Embarcadero)
 
 **Tutoriels en ligne :**
 - Site officiel Embarcadero
 - DocWiki d'Embarcadero
-- YouTube et blogs spécialisés
+- YouTube (chaînes Embarcadero, Marco Cantù, Jim McKeeth)
+- Blogs spécialisés (Marco Cantù, Andrea Magni, Olaf Monien, etc.)
+- Site web companion IA (nouveau dans Delphi 13)
 
 ## Conseils pour bien démarrer
 

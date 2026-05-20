@@ -13,9 +13,9 @@ Pour démarrer Delphi :
 - Ou allez dans le menu Démarrer > Embarcadero RAD Studio 13
 
 **Premier lancement :**
-- Delphi peut prendre quelques secondes à démarrer (c'est normal)
-- Une page de bienvenue peut s'afficher avec des liens vers la documentation
-- Vous pouvez fermer cette page ou cocher "Ne plus afficher" pour les prochains lancements
+- Delphi peut prendre quelques secondes à démarrer (c'est normal). Depuis Delphi 13 Florence, l'IDE est désormais une véritable application 64 bits : il démarre un peu plus lentement la première fois, mais peut gérer des projets bien plus volumineux qu'auparavant sans limitation mémoire.
+- Une page de bienvenue (Welcome Page) s'affiche avec des liens vers la documentation, les projets récents et des tutoriels
+- Vous pouvez la garder ouverte ou cocher "Don't show on startup" pour les prochains lancements
 
 ## Vue d'ensemble de l'interface
 
@@ -101,7 +101,10 @@ Pour tester votre application :
 Accès aux outils et configurations :
 - **Options :** Paramètres généraux de l'IDE
 - **GetIt Package Manager :** Installer des composants supplémentaires
-- **IDE Fix Pack :** Corrections et améliorations communautaires (si installé)
+- **Manage Platforms :** Ajouter/retirer des plateformes cibles (Windows 32/64, mobile, etc.)
+- **Configure Tools :** Ajouter des outils externes au menu (ex : GitHub Desktop, terminaux)
+
+> 💡 **Note historique :** Vous entendrez parler de "**IDE Fix Pack**", un outil tiers communautaire qui corrigeait des bugs et améliorait les performances des anciennes versions de Delphi. Avec les améliorations majeures du compilateur et de l'IDE depuis Delphi 11+, il est devenu beaucoup moins nécessaire et son développement actif a ralenti. Vous pouvez l'oublier sur Delphi 13.
 
 ### Menu Help (Aide)
 
@@ -190,47 +193,131 @@ Pour voir le code :
 - Utile pour localiser les erreurs
 - Peut être activé/désactivé dans les options
 
-**Auto-complétion :**
+**Auto-complétion (Code Insight) :**
 - Quand vous tapez, Delphi propose des suggestions
 - Appuyez sur Ctrl+Espace pour forcer l'affichage des suggestions
 - Utilisez les flèches et Entrée pour choisir
+- Depuis Delphi 10.4 Sydney, le Code Insight repose sur **LSP** (Language Server Protocol), comme dans VS Code. Cela améliore la précision des suggestions et l'analyse sémantique du code en arrière-plan. Delphi 13 Florence ajoute encore des améliorations à ce moteur.
 
 **Indentation automatique :**
 - Delphi indente automatiquement votre code
 - Garde votre code bien structuré et lisible
 
-**Pliage de code :**
+**Pliage de code (Code Folding) :**
 - Des petits symboles [-] et [+] permettent de plier/déplier des sections
 - Utile pour naviguer dans du code long
+
+**Multi-curseur (depuis Delphi 12) :**
+- Possibilité d'éditer plusieurs lignes simultanément (Alt+Clic)
+- Très utile pour les modifications répétitives
 
 ### Structure typique d'une unité
 
 Quand vous regardez le code pour la première fois, vous voyez une structure comme :
 
 ```pascal
-unit Unit1;
+unit Unit1;                          // 1. Nom de l'unité (correspond au nom du fichier .pas)
 
-interface
+interface                            // 2. Section publique : ce qui est visible des autres unités
 
-uses
-  // Liste des unités utilisées
+uses                                 // 3. Liste des unités utilisées (équivalent des "import" dans d'autres langages)
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
-type
+type                                 // 4. Déclaration de types (classes, records, énumérations)
   TForm1 = class(TForm)
-    // Déclarations
+    // Champs et méthodes publiques
+  private
+    { Private declarations }         // 5. Déclarations privées (internes à l'unité)
+  public
+    { Public declarations }          // 6. Déclarations publiques (visibles partout)
   end;
 
-var
+var                                  // 7. Variables globales de l'unité
   Form1: TForm1;
 
-implementation
+implementation                       // 8. Section d'implémentation : le code réel
 
-// Le code de vos procédures et fonctions
+{$R *.dfm}                           // 9. Directive : associe ce fichier .pas au fichier .dfm correspondant
 
-end.
+// Vos procédures et fonctions s'écrivent ici
+
+end.                                 // 10. Fin de l'unité (le point final est obligatoire !)
 ```
 
-**Ne vous inquiétez pas** si cela semble cryptique maintenant. Nous détaillerons tout cela dans les sections sur le langage Object Pascal.
+**Décodage rapide :**
+
+| Élément | Rôle |
+|---------|------|
+| `unit Unit1;` | Nom de l'unité = nom du fichier `.pas` |
+| `interface` | Tout ce qui est déclaré ici est **visible** depuis d'autres unités qui font `uses Unit1` |
+| `uses` | Liste les autres unités dont vous avez besoin (équivalent `import` / `#include`) |
+| `type` | Définit des types personnalisés (classes, enums…) |
+| `private` / `public` | Niveau de visibilité des membres d'une classe |
+| `var` | Variables (ici, l'instance globale `Form1`) |
+| `implementation` | Code réel (caché des autres unités, sauf pour les éléments déclarés dans `interface`) |
+| `{$R *.dfm}` | Directive du compilateur : "lie ce code au fichier `.dfm` du même nom" — c'est ce qui fait le pont entre le formulaire visuel et le code |
+| `end.` | **Avec un point final**, marque la fin de l'unité (le point est obligatoire !) |
+
+**Ne vous inquiétez pas** si cela semble cryptique maintenant. Nous détaillerons tout cela dans les sections sur le langage Object Pascal (chapitre 3).
+
+### Les types de fichiers générés par Delphi
+
+Quand vous créez un projet Delphi, plusieurs types de fichiers sont créés. Voici les principaux :
+
+| Extension | Contenu | À versionner dans Git ? |
+|-----------|---------|------------------------|
+| `.dpr` | **D**elphi **Pr**oject — fichier principal du projet (équivalent du `main`) | ✓ Oui |
+| `.dproj` | Fichier XML décrivant les options du projet (plateformes, drapeaux compilateur) | ✓ Oui |
+| `.pas` | **Pas**cal — fichier source d'une unité Object Pascal | ✓ Oui |
+| `.dfm` | **D**elphi **F**or**m** — description du formulaire (composants, propriétés) | ✓ Oui |
+| `.fmx` | Équivalent de `.dfm` pour les formulaires FireMonkey | ✓ Oui |
+| `.res` | **Res**source compilée (icônes, version, manifest) | ✓ Oui (généré) |
+| `.dcu` | **D**elphi **C**ompiled **U**nit — unité compilée (binaire intermédiaire) | ✗ Non (régénéré) |
+| `.bpl` | **B**orland **P**ackage **L**ibrary — package de composants compilé | ✗ Non |
+| `.exe` | Application finale exécutable | ✗ Non (généré) |
+| `.identcache` / `.local` | Cache de l'IDE (chemins, fenêtres ouvertes) | ✗ Non (à ignorer) |
+| `__history\` | Sauvegardes automatiques de l'éditeur | ✗ Non (à ignorer) |
+
+**Astuce Git :** Un bon `.gitignore` pour un projet Delphi exclut typiquement :
+```gitignore
+*.dcu
+*.exe
+*.local
+*.identcache
+__history/
+Win32/Debug/
+Win32/Release/
+Win64/
+```
+
+### Conventions de nommage des composants
+
+Pour rendre votre code lisible, il est recommandé de **renommer vos composants** avec un préfixe indiquant leur type. C'est une convention historique en Delphi (appelée parfois "notation hongroise simplifiée") :
+
+| Préfixe | Type de composant | Exemple |
+|---------|------------------|---------|
+| `btn` | TButton | `btnValider`, `btnAnnuler` |
+| `lbl` | TLabel | `lblNom`, `lblTotal` |
+| `edt` | TEdit | `edtNom`, `edtEmail` |
+| `mmo` | TMemo | `mmoDescription` |
+| `cbx` | TComboBox | `cbxPays` |
+| `chk` | TCheckBox | `chkAccepter` |
+| `rb` | TRadioButton | `rbHomme`, `rbFemme` |
+| `lst` | TListBox | `lstClients` |
+| `grd` | TStringGrid / TDBGrid | `grdProduits` |
+| `pnl` | TPanel | `pnlEntete`, `pnlPiedDePage` |
+| `tmr` | TTimer | `tmrHorloge` |
+| `img` | TImage | `imgLogo` |
+| `qry` | TFDQuery | `qryClients` |
+| `con` | TFDConnection | `conPrincipale` |
+| `ds` | TDataSource | `dsClients` |
+
+**Pourquoi cette convention ?**
+Quand vous écrivez `btnValider.Enabled := False;`, vous voyez immédiatement qu'il s'agit d'un bouton, sans avoir à chercher sa déclaration. Cela rend la relecture du code beaucoup plus rapide.
+
+> 💡 Cette convention n'est pas obligatoire — elle est devenue standard dans la communauté Delphi mais reste une question de style. Certaines équipes préfèrent des noms descriptifs sans préfixe (`ValiderBouton`, `NomChamp`). Choisissez une convention et **tenez-vous-y** dans tout votre projet.
 
 ## La palette d'outils (Tool Palette)
 
@@ -268,13 +355,23 @@ Et bien d'autres catégories encore...
 2. Cliquez sur le formulaire à l'endroit où vous voulez le placer
 3. Le composant apparaît et vous pouvez le déplacer/redimensionner
 
+**Astuce — déposer plusieurs composants du même type :**
+- Maintenez la touche **Maj** (Shift) enfoncée en cliquant sur le composant dans la palette
+- Cliquez plusieurs fois sur le formulaire — chaque clic crée un nouveau composant
+- Appuyez sur **Échap** pour sortir de ce mode
+
 **Mode de recherche :**
 - En haut de la palette, une zone de recherche
 - Tapez le nom d'un composant pour le trouver rapidement
 - Exemple : tapez "button" pour trouver tous les types de boutons
 
+**Sélection de plusieurs composants sur le formulaire :**
+- **Clic + glisser** dans une zone vide : sélection rectangulaire de tous les composants à l'intérieur
+- **Maj + clic** sur plusieurs composants : ajout à la sélection
+- Utile pour aligner, redimensionner ou déplacer plusieurs composants en bloc
+
 **Réorganisation :**
-- Vous pouvez épingler vos composants favoris
+- Vous pouvez épingler vos composants favoris (clic droit > "Add to Favorites")
 - Créer vos propres catégories
 - Clic droit sur la palette pour les options
 
@@ -309,29 +406,41 @@ Voici quelques propriétés que vous verrez souvent :
 - Le nom du composant dans le code
 - Par défaut : Button1, Edit1, etc.
 - Changez-le pour quelque chose de plus parlant : btnValider, edtNom, etc.
+- **⚠️ Le nom ne peut pas contenir d'espace, d'accent, ni de tiret. Seuls les lettres, chiffres et underscore `_` sont autorisés, et il ne peut pas commencer par un chiffre.**
 
 **Caption / Text :**
 - Le texte affiché sur le composant
-- Caption pour les boutons, labels, formulaires
-- Text pour les zones de saisie
+- `Caption` pour les boutons, labels, formulaires (texte d'affichage)
+- `Text` pour les zones de saisie (TEdit, TMemo — contenu modifiable par l'utilisateur)
 
 **Width / Height :**
 - Largeur et hauteur en pixels
+- Modifiable directement ou en tirant les poignées du composant à la souris
 
 **Left / Top :**
-- Position horizontale et verticale
+- Position horizontale et verticale (en pixels, depuis le coin haut-gauche du parent)
 
 **Enabled :**
-- True : composant actif
-- False : composant grisé et non utilisable
+- `True` : composant actif et interactif
+- `False` : composant grisé, non utilisable, mais visible
 
 **Visible :**
-- True : composant visible
-- False : composant caché
+- `True` : composant visible
+- `False` : composant caché (et ne prend plus de place visuelle)
 
 **Font :**
-- Police de caractères, taille, style
+- Police de caractères, taille, style (gras, italique, etc.)
 - Cliquez sur [...] pour ouvrir l'éditeur de police
+
+**TabOrder :**
+- Numéro d'ordre dans la **navigation au clavier** (touche Tab)
+- Le composant avec `TabOrder = 0` reçoit le focus en premier, puis 1, 2, 3...
+- **Important pour l'accessibilité** : un bon TabOrder permet aux utilisateurs de naviguer dans le formulaire au clavier dans un ordre logique (haut vers bas, gauche vers droite généralement)
+- Réglez-le pour chaque composant, ou utilisez le menu **Edit > Tab Order** pour réorganiser visuellement
+
+**TabStop :**
+- `True` : le composant peut recevoir le focus via Tab
+- `False` : il est sauté lors de la navigation au clavier (utile pour les labels ou décorations)
 
 ### Mode d'affichage
 
@@ -435,6 +544,7 @@ Voici les raccourcis les plus utiles à connaître dès le début :
 - **Ctrl+F12 :** Liste des formulaires
 - **Shift+F12 :** Liste des unités
 - **F11 :** Inspecteur d'objets
+- **Ctrl+.** (Control + point) : **IDE Insight** — recherche universelle (fichiers, commandes, options). À mémoriser absolument !
 
 **Édition :**
 - **Ctrl+S :** Sauvegarder
@@ -466,8 +576,9 @@ Voici les raccourcis les plus utiles à connaître dès le début :
 - **F8 :** Step Over (passer à la ligne suivante)
 
 **Affichage :**
-- **F11 :** Afficher l'inspecteur d'objets
-- **Shift+Alt+F11 :** Palette d'outils
+- **F11 :** Afficher / focaliser l'inspecteur d'objets
+- **View > Tool Palette** (ou raccourci configurable) : afficher la palette d'outils
+- **Ctrl+Alt+F11** : Project Manager
 
 ## Personnalisation de l'environnement
 
@@ -485,16 +596,16 @@ Vous pouvez créer vos propres dispositions et les sauvegarder.
 ### Thèmes visuels
 
 **Pour changer le thème :**
-- Tools > Options > User Interface > IDE
-- Choisissez entre Light (clair) et Dark (sombre)
-- Appliquez et redémarrez l'IDE
+- **Tools > Options > User Interface > IDE > Theme**
+- Choisissez entre Light (clair), Dark (sombre), ou les variantes intermédiaires (Mountain Mist, Charcoal Dark Slate)
+- Le changement est immédiat (un redémarrage de l'IDE peut parfois être nécessaire pour rafraîchir toutes les fenêtres)
 
 ### Taille des polices
 
-**Pour ajuster la taille du texte :**
-- Tools > Options > Editor Options > Display
-- Modifiez "Font" et "Size"
-- Prévisualisez avant d'appliquer
+**Pour ajuster la taille du texte de l'éditeur de code :**
+- **Tools > Options > Editor > Display**
+- Modifiez "Editor Font" et "Size"
+- Prévisualisez le résultat dans la zone en bas du dialogue avant d'appliquer
 
 ### Positionnement des fenêtres
 
@@ -544,30 +655,36 @@ Plus tard, vous personnaliserez selon vos préférences.
 ### Apprenez les raccourcis progressivement
 
 Commencez avec les raccourcis de base :
-- F9 pour exécuter
-- F12 pour basculer formulaire/code
-- Ctrl+S pour sauvegarder
+- **F9** pour exécuter
+- **F12** pour basculer formulaire/code
+- **Ctrl+S** pour sauvegarder
+- **Ctrl+.** (Control + point) pour ouvrir IDE Insight et chercher n'importe quoi
 
 Vous en apprendrez d'autres naturellement avec le temps.
 
-## Comparaison avec d'autres IDE
+## Comparaison rapide avec d'autres IDE
 
-Si vous avez déjà utilisé d'autres environnements de développement :
+Si vous avez déjà utilisé d'autres environnements de développement, voici quelques repères rapides (une comparaison détaillée est faite au chapitre 1.7) :
 
 **Visual Studio :**
-- Structure similaire avec des zones ancrables
+- Structure similaire avec des zones ancrables et personnalisables
 - Delphi est plus simple et moins "lourd"
-- L'inspecteur d'objets est comparable à la fenêtre Propriétés
+- L'inspecteur d'objets est comparable à la fenêtre Propriétés de Visual Studio
+
+**VS Code :**
+- VS Code est un éditeur extensible, Delphi est un IDE RAD intégré
+- VS Code mise sur les extensions, Delphi sur l'intégration native
+- Le LSP de Delphi 13 partage des concepts avec celui de VS Code
 
 **Eclipse / IntelliJ :**
-- Concept de perspectives similaire aux desktops de Delphi
+- Concept de "perspectives" similaire aux desktops de Delphi
 - Delphi est plus orienté visuel pour les interfaces
-- Moins d'extensions mais plus intégré
+- Moins d'extensions tierces, mais une expérience plus intégrée out-of-the-box
 
 **Visual Basic (classique) :**
-- Très similaire dans l'approche RAD
-- Delphi est plus puissant et moderne
-- Le principe du concepteur de formulaires est identique
+- Très similaire dans l'approche RAD (héritage historique commun)
+- Delphi est plus puissant, plus moderne, et toujours activement développé
+- Le principe du concepteur de formulaires est quasiment identique
 
 ## Récapitulatif des zones principales
 
@@ -595,6 +712,6 @@ Les trois zones les plus importantes pour commencer sont :
 
 Prenez le temps de vous familiariser avec l'interface en créant quelques projets simples. Plus vous utiliserez Delphi, plus l'environnement vous semblera naturel et intuitif.
 
-Dans la section suivante, nous créerons ensemble votre premier projet et vous verrez concrètement comment toutes ces zones fonctionnent ensemble !
+Dans la section suivante, nous comparerons Delphi à d'autres environnements de développement (Visual Studio, VS Code, Java/Eclipse, Python, etc.), pour bien situer ses forces et ses spécificités dans le paysage actuel. La création concrète de votre premier projet sera abordée au chapitre 2 (Découverte de l'IDE Delphi).
 
 ⏭️ [Comparaison avec d'autres environnements de développement](/01-introduction-a-delphi/07-comparaison-avec-dautres-environnements.md)
