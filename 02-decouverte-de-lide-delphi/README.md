@@ -52,7 +52,7 @@ Comment passer de l'idée à l'application terminée ? Vous découvrirez le cycl
 
 ### Les outils modernes de Delphi 13
 
-Delphi 13 Florence apporte des nouveautés importantes : le gestionnaire de packages GetIt pour installer facilement des composants et bibliothèques, le site web companion IA pour vous assister dans votre développement, et le support LLDB v12 pour un débogage plus puissant et unifié sur toutes les plateformes.
+Delphi 13 Florence apporte des nouveautés importantes : le gestionnaire de packages GetIt pour installer facilement des composants et bibliothèques, le site web companion IA pour vous assister dans votre développement, et le support **LLDB v12** pour un débogage modernisé sur les plateformes Unix-like (macOS, iOS, Android, Linux). Sous Windows, Delphi conserve son débogueur natif intégré, optimisé pour cette plateforme.
 
 ## Une approche progressive
 
@@ -114,28 +114,58 @@ Vous allez rencontrer des difficultés. C'est inévitable et c'est normal. Vous 
 
 **Consultez l'aide intégrée** : appuyez sur F1 n'importe où dans l'IDE pour obtenir de l'aide contextuelle.
 
-**Utilisez le companion IA** : Delphi 13 intègre une assistance IA qui peut répondre à vos questions.
+**Utilisez le companion IA** : Delphi 13 propose un site web companion IA associé à votre licence, qui peut répondre à vos questions sur le langage et l'IDE (voir section 2.11).
 
 **Recherchez en ligne** : la communauté Delphi est très active. Forums, blogs, Stack Overflow regorgent de réponses.
 
 **Posez des questions** : n'hésitez pas à demander de l'aide sur les forums francophones ou anglophones. La communauté Delphi est généralement très accueillante et prête à aider les débutants.
 
+## Prérequis pour ce chapitre
+
+Pour tirer le meilleur parti de ce chapitre, vous devriez :
+
+- **Avoir lu le chapitre 1** (Introduction à Delphi) — en particulier la section 1.5 sur l'installation et 1.6 sur le premier aperçu de l'environnement
+- **Avoir Delphi 13 Florence installé** sur votre ordinateur (une édition Community gratuite, lorsqu'elle est disponible pour votre version, suffit largement ; sinon, une édition Professional, Enterprise ou Architect)
+- **Disposer de quelques heures** étalées sur plusieurs sessions
+- **Aucun prérequis en programmation** : ce chapitre porte sur l'IDE, pas sur le langage (le langage Object Pascal sera traité au chapitre 3)
+
+## Temps de lecture estimé
+
+Ce chapitre représente environ **4 à 6 heures de lecture attentive**, plus le temps de pratique. Voici une estimation par section :
+
+| Section | Temps de lecture | Temps de pratique |
+|---------|------------------|-------------------|
+| 2.1 Présentation de l'interface | 15-20 min | 10-15 min (exploration) |
+| 2.2 Création d'un premier projet | 20-30 min | 30-45 min (faire le projet) |
+| 2.3 Palette d'outils et Inspecteur | 25-30 min | 20-30 min |
+| 2.4 Explorateur et gestionnaire de code | 25-30 min | 15-20 min |
+| 2.5 Compilation et exécution | 25-30 min | 15-20 min |
+| 2.6 Personnalisation de l'IDE | 25-30 min | 15-30 min |
+| 2.7 Structure d'un projet Delphi | 25-30 min | 10-15 min |
+| 2.8 Cycle de développement | 25-30 min | — |
+| 2.9 Gestionnaire de packages GetIt | 25-30 min | 15-20 min |
+| 2.10 Gestion des versions de packages | 20-25 min | — |
+| 2.11 Site web companion IA | 20-25 min | 10-15 min |
+| 2.12 Support LLDB et débogage | 30-40 min | 15-30 min |
+
+**Conseil :** Privilégiez la pratique. Vous retiendrez 10 fois mieux en testant qu'en lisant seul.
+
 ## Structure du chapitre
 
-Voici comment ce chapitre est organisé :
+Voici comment ce chapitre est organisé (liens cliquables) :
 
-1. **Présentation de l'interface** : vue d'ensemble de l'IDE, identification des différentes zones
-2. **Création d'un premier projet** : de la création à l'exécution
-3. **La Palette d'outils et l'Inspecteur d'objets** : les deux piliers de la conception visuelle
-4. **Explorateur de projets et gestionnaire de code** : navigation et organisation
-5. **Compilation et exécution** : du code source à l'application
-6. **Personnalisation de l'IDE** : adapter l'environnement à vos préférences
-7. **Structure d'un projet Delphi** : comprendre l'organisation des fichiers
-8. **Cycle de développement** : de l'idée à la livraison
-9. **Gestionnaire de packages GetIt** : installer des composants facilement
-10. **Gestion des versions de packages** : maintenir la cohérence de vos projets
-11. **Site web companion IA** : l'assistance intelligence artificielle
-12. **Support LLDB et débogage** : traquer et corriger les bugs efficacement
+1. **[Présentation de l'interface](/02-decouverte-de-lide-delphi/01-presentation-de-linterface.md)** : vue d'ensemble de l'IDE, identification des différentes zones
+2. **[Création d'un premier projet](/02-decouverte-de-lide-delphi/02-creation-dun-premier-projet.md)** : de la création à l'exécution
+3. **[La Palette d'outils et l'Inspecteur d'objets](/02-decouverte-de-lide-delphi/03-palette-doutils-et-inspecteur-dobjets.md)** : les deux piliers de la conception visuelle
+4. **[Explorateur de projets et gestionnaire de code](/02-decouverte-de-lide-delphi/04-explorateur-de-projets-et-gestionnaire-de-code.md)** : navigation et organisation
+5. **[Compilation et exécution](/02-decouverte-de-lide-delphi/05-compilation-et-execution.md)** : du code source à l'application
+6. **[Personnalisation de l'IDE](/02-decouverte-de-lide-delphi/06-personnalisation-de-lide.md)** : adapter l'environnement à vos préférences
+7. **[Structure d'un projet Delphi](/02-decouverte-de-lide-delphi/07-structure-dun-projet-delphi.md)** : comprendre l'organisation des fichiers
+8. **[Cycle de développement](/02-decouverte-de-lide-delphi/08-introduction-au-cycle-de-developpement.md)** : de l'idée à la livraison
+9. **[Gestionnaire de packages GetIt](/02-decouverte-de-lide-delphi/09-utilisation-du-gestionnaire-de-packages.md)** : installer des composants facilement
+10. **[Gestion des versions de packages](/02-decouverte-de-lide-delphi/10-gestion-des-versions-de-packages-avec-getit.md)** : maintenir la cohérence de vos projets
+11. **[Site web companion IA](/02-decouverte-de-lide-delphi/11-site-web-companion-ia-et-assistance.md)** : l'assistance par intelligence artificielle
+12. **[Support LLDB v12 et débogage avancé](/02-decouverte-de-lide-delphi/12-support-lldb-v12-et-debogage-avance.md)** : traquer et corriger les bugs efficacement
 
 Chaque section a été conçue pour être accessible, progressive, et pratique. Nous privilégions les explications claires et les exemples concrets plutôt que le jargon technique.
 

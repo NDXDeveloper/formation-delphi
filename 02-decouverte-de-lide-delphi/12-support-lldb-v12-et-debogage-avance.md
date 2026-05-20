@@ -6,7 +6,7 @@
 
 Même le meilleur développeur écrit du code avec des bugs. C'est inévitable et c'est normal ! Ce qui distingue un bon développeur d'un développeur débutant, c'est sa capacité à **trouver et corriger** ces bugs efficacement.
 
-C'est là qu'intervient le **débogage** (debugging en anglais). Le débogage est l'art de traquer et d'éliminer les bugs dans votre code. Et pour cela, vous avez besoin d'outils puissants. Delphi 13 Florence intègre le support de **LLDB v12**, un débogueur moderne et performant qui va transformer votre façon de déboguer.
+C'est là qu'intervient le **débogage** (debugging en anglais). Le débogage est l'art de traquer et d'éliminer les bugs dans votre code. Et pour cela, vous avez besoin d'outils puissants. Delphi 13 Florence intègre la prise en charge de **LLDB v12**, un débogueur moderne et performant qui va transformer votre façon de déboguer.
 
 Dans cette section, nous allons découvrir ce qu'est LLDB, pourquoi c'est une amélioration importante, et comment utiliser les outils de débogage de Delphi, des techniques de base aux techniques avancées. Même si vous êtes débutant, vous allez apprendre les fondamentaux qui vous serviront tout au long de votre carrière.
 
@@ -55,7 +55,7 @@ begin
 end;
 ```
 
-**Problème** : fastidieux, encombre le code, faut tout supprimer après
+**Problème** : fastidieux, encombre le code, et il faut tout supprimer après le débogage
 
 **Débogage moderne** : utiliser un débogueur qui permet d'inspecter le code en temps réel, sans modifier le code source
 
@@ -73,39 +73,41 @@ LLDB est capable de travailler au niveau des instructions machine, ce qui lui do
 
 Avant Delphi 13, différentes versions de Delphi utilisaient différents débogueurs selon la plateforme :
 
-**Windows** : débogueur intégré propriétaire de Delphi
+**Windows** : débogueur intégré propriétaire de Delphi (basé sur l'API Windows)
 
-**macOS, iOS** : débogueurs spécifiques à Apple
+**macOS, iOS** : débogueurs spécifiques à Apple (versions plus anciennes de LLDB)
 
-**Android** : débogueur Android
+**Android** : débogueur Android basé sur LLDB
 
 **Linux** : débogueur GDB
 
-Avec LLDB v12, Delphi unifie le débogage :
+Avec LLDB v12, Delphi **harmonise et modernise** le débogage sur les plateformes Unix-like :
 
-**Un seul débogueur** pour toutes les plateformes (ou presque)
+**LLDB v12** est principalement utilisé pour : **macOS, iOS, Android, Linux**
 
-**Plus moderne** : LLDB est activement maintenu et amélioré
+**Windows** : continue d'utiliser son débogueur natif intégré (plus performant sur cette plateforme)
 
-**Plus puissant** : fonctionnalités avancées de débogage
+**Plus moderne** : LLDB v12 est activement maintenu et amélioré dans l'écosystème LLVM
 
-**Meilleure intégration** : expérience uniforme dans l'IDE
+**Plus puissant** : fonctionnalités avancées de débogage (inspection de types complexes, scripts, etc.)
 
-**Performance** : plus rapide et plus stable
+**Meilleure intégration** : expérience plus uniforme entre macOS, iOS, Android et Linux
+
+**Performance** : plus rapide et plus stable que les anciennes versions de LLDB intégrées
 
 ### Avantages de LLDB v12
 
-**Support multi-plateforme** : déboguer sur Windows, macOS, iOS, Android, Linux avec les mêmes outils
+**Prise en charge multi-plateforme Unix-like** : déboguer sur macOS, iOS, Android et Linux avec le même débogueur LLVM (Windows conserve son débogueur natif)
 
 **Débogage distant amélioré** : déboguer sur un appareil mobile ou un serveur distant plus facilement
 
-**Inspection avancée** : examiner les structures de données complexes plus facilement
+**Inspection avancée** : examiner les structures de données complexes plus facilement (objets, listes génériques, dictionnaires)
 
-**Performance** : démarrage plus rapide, pas à pas plus fluide
+**Performance** : démarrage plus rapide, pas à pas plus fluide qu'avec les anciennes versions de LLDB
 
-**Stabilité** : moins de crashs du débogueur
+**Stabilité** : moins de crashs du débogueur, notamment sur Android et iOS
 
-**Extensibilité** : possibilité d'ajouter des scripts et plugins
+**Extensibilité** : LLDB prend en charge des scripts Python pour automatiser certaines tâches de débogage (utilisation avancée)
 
 ## Les bases du débogage dans Delphi
 
@@ -117,7 +119,7 @@ Pour déboguer votre application :
 
 **Appuyez sur F9** (ou cliquez sur le bouton vert "Exécuter")
 
-Votre application se lance en mode débogage. À première vue, cela ressemble à une exécution normale, mais en coulisse, le débogueur est actif et attend vos instructions.
+Votre application se lance en mode débogage. À première vue, cela ressemble à une exécution normale, mais en coulisses, le débogueur est actif et attend vos instructions.
 
 **Note** : assurez-vous d'être en configuration **Debug**, pas **Release**. En Release, les informations de débogage sont supprimées.
 
@@ -127,17 +129,17 @@ Un **point d'arrêt** est un marqueur que vous placez sur une ligne de code. Qua
 
 #### Définir un point d'arrêt
 
-**Méthode 1** : Cliquez dans la **marge gauche** de l'éditeur de code, à côté de la ligne où vous voulez vous arrêter. Un point rouge apparaît.
+**Méthode 1** : Cliquez dans la **marge gauche** de l'éditeur de code (ou sur le numéro de ligne), à côté de la ligne où vous voulez vous arrêter. Un point rouge apparaît.
 
 **Méthode 2** : Placez votre curseur sur la ligne, puis appuyez sur **F5**.
 
-**Méthode 3** : Menu **Exécuter > Ajouter un point d'arrêt**.
+**Méthode 3** : Menu **Run > Add Breakpoint > Source Breakpoint** (Exécuter > Ajouter un point d'arrêt).
 
 #### Supprimer un point d'arrêt
 
 **Cliquez à nouveau** sur le point rouge, ou appuyez sur **F5** avec le curseur sur la ligne.
 
-Pour **supprimer tous les points d'arrêt** : **Exécuter > Supprimer tous les points d'arrêt**.
+Pour **supprimer tous les points d'arrêt** : **Run > Delete All Breakpoints** (Exécuter > Supprimer tous les points d'arrêt).
 
 #### Que se passe-t-il à un point d'arrêt ?
 
@@ -220,7 +222,7 @@ Simple et rapide !
 
 #### Fenêtre Variables locales
 
-**Affichage** : **Affichage > Fenêtres de débogage > Variables locales** (ou généralement affichée automatiquement)
+**Affichage** : **View > Debug Windows > Local Variables** (Affichage > Fenêtres de débogage > Variables locales), ou raccourci **Ctrl + Alt + L**
 
 Cette fenêtre liste **toutes les variables locales** de la fonction actuelle avec leurs valeurs.
 
@@ -235,8 +237,8 @@ Vous pouvez **développer** les structures complexes (objets, enregistrements, t
 
 Si vous voulez **surveiller spécifiquement** certaines variables ou expressions :
 
-1. **Affichage > Fenêtres de débogage > Espions**
-2. **Cliquez sur "Ajouter un espion"**
+1. **View > Debug Windows > Watches** (Affichage > Fenêtres de débogage > Espions), raccourci **Ctrl + Alt + W**
+2. **Clic droit > Add Watch** (Ajouter un espion), ou **Ctrl + F5**
 3. **Tapez le nom de la variable** ou une expression (comme `Prix * Quantite`)
 
 La fenêtre Espions affiche en permanence les valeurs de ces expressions pendant le débogage.
@@ -247,10 +249,10 @@ La fenêtre Espions affiche en permanence les valeurs de ces expressions pendant
 
 Pendant le débogage, vous pouvez **évaluer des expressions** ou même **modifier des valeurs** :
 
-1. **Exécuter > Évaluer/Modifier** (ou **Ctrl + F7**)
+1. **Run > Evaluate/Modify** (Exécuter > Évaluer/Modifier), raccourci **Ctrl + F7**
 2. **Tapez une expression** : `Total + 10`, `Length(MaChaine)`, `MaListe.Count`, etc.
-3. **Cliquez sur Évaluer** : voir le résultat
-4. **Pour modifier** : changez la valeur, cliquez sur Modifier
+3. **Cliquez sur Evaluate** (Évaluer) : voir le résultat
+4. **Pour modifier** : changez la valeur, cliquez sur **Modify** (Modifier)
 
 **Exemple d'utilisation** : vous voulez tester ce qui se passe si une variable a une valeur différente, sans relancer le programme.
 
@@ -258,7 +260,7 @@ Pendant le débogage, vous pouvez **évaluer des expressions** ou même **modifi
 
 La **pile d'appels** montre le chemin d'exécution : quelle fonction a appelé quelle fonction.
 
-**Affichage** : **Affichage > Fenêtres de débogage > Pile d'appels**
+**Affichage** : **View > Debug Windows > Call Stack** (Affichage > Fenêtres de débogage > Pile d'appels), raccourci **Ctrl + Alt + S**
 
 **Exemple** :
 ```
@@ -277,7 +279,7 @@ Cela signifie : `Button1Click` a appelé `CalculerTotal`, qui a appelé `Valider
 
 Pour arrêter la session de débogage :
 
-**Exécuter > Arrêt du programme** (ou **Ctrl + F2**)
+**Run > Program Reset** (Exécuter > Arrêt du programme), raccourci **Ctrl + F2**
 
 Ou simplement fermez votre application normalement.
 
@@ -319,13 +321,13 @@ Maintenant, le programme ne s'arrête que quand `i` vaut 873.
 
 Un point d'arrêt peut être configuré pour ne s'activer qu'après **N passages**.
 
-**Exemple** : vous voulez vous arrêter à la 10ème itération d'une boucle.
+**Exemple** : vous voulez vous arrêter à la 10ᵉ itération d'une boucle.
 
 1. **Clic droit sur le point d'arrêt**
 2. **Propriétés**
 3. **Nombre de passages** : 10
 
-Le point d'arrêt sera ignoré les 9 premières fois, et s'activera la 10ème.
+Le point d'arrêt sera ignoré les 9 premières fois, et s'activera la 10ᵉ.
 
 ### Points d'arrêt sur exception
 
@@ -333,8 +335,8 @@ Vous pouvez demander au débogueur de s'arrêter quand une exception se produit,
 
 **Configuration** :
 
-1. **Outils > Options > Débogueur**
-2. **Exceptions à ignorer** ou **Break on exception**
+1. **Tools > Options > Debugger Options > Embarcadero Debuggers > Language Exceptions** (Outils > Options > Options du débogueur)
+2. Configurez **Notify on Language Exceptions** ou la liste des exceptions à ignorer
 3. **Cochez/décochez** les types d'exceptions
 
 **Utile pour** : déboguer des exceptions qui sont gérées mais ne devraient pas se produire.
@@ -343,7 +345,7 @@ Vous pouvez demander au débogueur de s'arrêter quand une exception se produit,
 
 Si votre application utilise plusieurs threads (programmation parallèle), vous pouvez voir tous les threads actifs :
 
-**Affichage > Fenêtres de débogage > Threads**
+**View > Debug Windows > Threads** (Affichage > Fenêtres de débogage > Threads), raccourci **Ctrl + Alt + T**
 
 Cette fenêtre liste :
 - Tous les threads
@@ -358,7 +360,7 @@ Vous pouvez **basculer entre threads** pour déboguer chacun.
 
 Pour les développeurs avancés, la **fenêtre CPU** montre le code assembleur (instructions machine).
 
-**Affichage > Fenêtres de débogage > CPU**
+**View > Debug Windows > CPU Windows** (Affichage > Fenêtres de débogage > Fenêtres CPU)
 
 Vous voyez :
 - Le code assembleur
@@ -398,9 +400,9 @@ Avec LLDB v12, inspecter des structures de données complexes est plus facile.
 
 **Tableaux dynamiques** : voyez tous les éléments, même s'il y en a des milliers
 
-**Listes génériques** : TList, TStringList, TObjectList affichent leurs contenus de manière lisible
+**Listes et collections** : `TList<T>`, `TStringList`, `TObjectList<T>` affichent leurs contenus de manière lisible
 
-**Dictionnaires** : TDictionary montre les paires clé/valeur
+**Dictionnaires** : `TDictionary<K, V>` montre les paires clé/valeur
 
 **Exemple** :
 ```pascal
@@ -501,7 +503,7 @@ end;
 
 **Comment déboguer** :
 
-1. **Pausez l'exécution** : dans Delphi, cliquez sur le bouton "Pause" ou **Exécuter > Arrêter le programme**
+1. **Pausez l'exécution** : dans Delphi, cliquez sur le bouton "Pause" dans la barre d'outils, ou **Run > Program Pause** (Exécuter > Suspendre le programme)
 2. Le débogueur montre **où le programme est bloqué**
 3. **Inspectez la condition** : pourquoi reste-t-elle vraie ?
 4. **Vérifiez** que quelque chose dans la boucle modifie effectivement la condition
@@ -584,7 +586,7 @@ Le bug n'apparaît que parfois ? C'est le plus difficile à déboguer.
 
 ### Comprenez avant de corriger
 
-**Ne corrigez pas au hasard** en espérant que ça marche. Comprenez d'abord **pourquoi** il y a un bug.
+**Ne corrigez pas au hasard** en espérant que cela fonctionne. Comprenez d'abord **pourquoi** il y a un bug.
 
 Une fois que vous comprenez, la correction est évidente.
 
@@ -613,11 +615,11 @@ Plus le code est simple, plus il est facile de trouver le bug.
 
 Avec Git, vous pouvez :
 
-**Comparer** : qu'est-ce qui a changé depuis la dernière version qui marchait ?
+**Comparer** : qu'est-ce qui a changé depuis la dernière version qui fonctionnait ?
 
 **Revenir en arrière** : testez une version précédente pour voir si le bug existait
 
-**Bisect** : Git peut automatiquement trouver quel commit a introduit le bug
+**`git bisect`** : Git peut automatiquement trouver quel commit a introduit le bug, par recherche dichotomique
 
 ### Faites des pauses
 
@@ -641,7 +643,7 @@ Les messages d'erreur donnent des indices. Ne les ignorez pas !
 
 **"Cannot assign to read-only property"** → vous essayez de modifier une propriété en lecture seule
 
-Cherchez le message sur Google si vous ne le comprenez pas.
+Recherchez le message sur le Web (Stack Overflow, DocWiki Embarcadero, forums Delphi) si vous ne le comprenez pas.
 
 ### Testez vos hypothèses
 
@@ -655,56 +657,61 @@ Ne supposez pas, vérifiez.
 
 ### Options du débogueur
 
-**Outils > Options > Débogueur**
+**Tools > Options > Debugger Options** (Outils > Options > Options du débogueur)
 
 Vous pouvez configurer :
 
-**Débogueur par défaut** : assurez-vous que LLDB est sélectionné (si disponible pour votre plateforme)
+**Default Debugger** : assurez-vous que LLDB est sélectionné pour les plateformes Unix-like (macOS, iOS, Android, Linux). Pour Windows, le débogueur natif Delphi reste utilisé.
+
+**Embarcadero Debuggers > Native OS X / iOS / Android Debugger** : confirmation que LLDB est utilisé pour ces plateformes
 
 **Options de débogage** :
-- Arrêt sur les exceptions
-- Évaluation d'expression
-- Timeouts
+- Arrêt sur les exceptions (Language Exceptions)
+- Évaluation d'expression (Evaluator Settings)
+- Timeouts de connexion
 
-**Symboles de débogage** : où chercher les informations de débogage
+**Symboles de débogage** : où chercher les informations de débogage (symbol paths)
 
 **Pour débuter** : les valeurs par défaut sont généralement bonnes.
 
 ### Options de projet
 
-**Projet > Options > Compilation**
+**Project > Options > Building > Delphi Compiler > Compiling** (Projet > Options > Compilation > Compilateur Delphi > Compilation)
 
-**Informations de débogage** : doit être activé en mode Debug
+**Debug information** : doit être activé en mode Debug (généralement `True`)
 
 **Assertions** : activez-les en Debug pour détecter les conditions anormales
 
-**Optimisations** : désactivées en Debug (le code optimisé est plus difficile à déboguer)
+**Optimization** : désactivée en Debug (le code optimisé est plus difficile à déboguer)
+
+**Stack frames** : activé en Debug pour avoir des piles d'appel plus claires
 
 ### Vérifier que LLDB est actif
 
 Dans certaines configurations, vous pouvez voir quel débogueur est utilisé :
 
-**Affichage > Fenêtres de débogage** : si vous voyez des fenêtres spécifiques à LLDB, c'est bon signe
+**View > Debug Windows** : si vous voyez des fenêtres spécifiques à LLDB (notamment LLDB Console), c'est bon signe
 
-**Messages du débogueur** : au démarrage du débogage, l'IDE peut afficher des messages indiquant "LLDB connected" ou similaire
+**Messages du débogueur** : au démarrage du débogage, l'IDE peut afficher des messages indiquant "LLDB connected" ou similaire dans la fenêtre **Event Log**
 
 ## Limites et alternatives
 
 ### Limitations de LLDB dans Delphi
 
-**Toutes les plateformes ne sont pas supportées** : Windows utilise encore parfois le débogueur natif Delphi dans certaines configurations
+**Windows utilise le débogueur natif Delphi** : LLDB v12 n'est utilisé que pour les plateformes Unix-like (macOS, iOS, Android, Linux). Sur Windows, le débogueur d'origine (Win32/Win64) reste celui d'Embarcadero.
 
 **Courbe d'apprentissage** : LLDB a plus de fonctionnalités, donc plus à apprendre
 
 **Compatibilité** : certains anciens projets peuvent avoir des problèmes avec le nouveau débogueur
 
-### Retour à l'ancien débogueur
+### Choix du débogueur
 
-Si vous avez des problèmes avec LLDB, vous pouvez parfois revenir à l'ancien débogueur :
+Le débogueur utilisé dépend de la plateforme cible de votre projet :
 
-**Outils > Options > Débogueur > Débogueur par défaut**
+- **Windows (Win32, Win64, Win64Arm)** : débogueur natif Delphi
+- **macOS (OSX64, OSXARM64), iOS, Android, Linux** : LLDB v12
 
-Mais pour Delphi 13 et les nouvelles fonctionnalités, LLDB est recommandé.
+Ce choix se fait automatiquement selon la plateforme active. Vous pouvez consulter les options dans **Tools > Options > Debugger Options > Embarcadero Debuggers** (Outils > Options > Options du débogueur > Débogueurs Embarcadero).
 
 ### Débogage sans débogueur
 
@@ -757,23 +764,31 @@ Ce sont des outils tiers pour capturer et analyser les exceptions :
 
 Pour le débogage de **performance** :
 
-**AQTime** : profileur puissant pour trouver les goulots d'étranglement
+**AQTime** (SmartBear) : profileur commercial puissant pour trouver les goulots d'étranglement (a été inclus avec certaines anciennes éditions de RAD Studio, désormais à acquérir séparément)
 
-**Sampling Profiler** : inclus dans certaines éditions de Delphi
+**Sampling Profiler** : outil communautaire gratuit pour Delphi, à installer séparément
+
+**Profileurs externes** : Visual Studio Profiler (pour analyser un .exe Windows), ou outils de profilage de plateforme (Instruments sur macOS, Android Studio Profiler, etc.)
 
 **Mesure** : quelle fonction prend le plus de temps ? Où sont les fuites mémoire ?
 
 ### FastMM en mode debug
 
-FastMM est le gestionnaire de mémoire de Delphi. En mode debug, il peut détecter :
+**FastMM** est le gestionnaire de mémoire de Delphi. Depuis Delphi 11, c'est la version **FastMM5** qui est intégrée par défaut. En mode debug, il peut détecter :
 
-**Fuites mémoire** : objets créés mais jamais libérés
+**Fuites mémoire (Memory leaks)** : objets créés mais jamais libérés. Pour activer la détection, ajoutez ceci au début de votre `.dpr` :
+
+```pascal
+ReportMemoryLeaksOnShutdown := True;
+```
+
+Lors de la fermeture de votre application, une boîte de dialogue listera toutes les fuites mémoire détectées.
 
 **Double Free** : libérer un objet deux fois
 
 **Use after free** : utiliser un objet après l'avoir libéré
 
-Activez FastMM en mode debug pour ces vérifications supplémentaires.
+**Configuration avancée** : pour des vérifications encore plus poussées (mode "full debug"), vous pouvez télécharger **FastMM4** comme remplacement et l'activer dans votre projet. Ce mode très détaillé est utile pour traquer des problèmes mémoire complexes.
 
 ## Pour aller plus loin
 
@@ -820,11 +835,11 @@ end;
 Documentez les **hypothèses** de votre code :
 
 ```pascal
-// ATTENTION : cette fonction suppose que la liste est triée
-function RechercherBinaire(Liste: TList; Valeur: Integer): Integer;
+// ATTENTION : cette fonction suppose que la liste est triée par ordre croissant
+function RechercherBinaire(Liste: TList<Integer>; Valeur: Integer): Integer;
 ```
 
-Cela aide au débogage : si ça ne marche pas, vous savez vérifier si l'hypothèse est respectée.
+Cela aide au débogage : si cela ne fonctionne pas, vous savez où vérifier — l'hypothèse documentée est-elle bien respectée ?
 
 ## Conclusion
 
@@ -837,7 +852,7 @@ Points essentiels à retenir :
 - **Inspection de variables** : info-bulles, fenêtre Variables locales, Espions
 - **Pile d'appels** : comprendre le chemin d'exécution
 - **Points d'arrêt conditionnels** : s'arrêter seulement dans certaines conditions
-- **LLDB v12** : débogueur moderne et puissant pour toutes les plateformes
+- **LLDB v12** : débogueur moderne pour macOS, iOS, Android et Linux (Windows conserve son débogueur natif)
 - **Stratégie** : comprenez avant de corriger, divisez pour régner, isolez le problème
 
 Le débogage est autant un art qu'une science. Plus vous déboguerez, plus vous deviendrez rapide et efficace. N'ayez pas peur des bugs : ils sont des opportunités d'apprendre et d'améliorer votre code.

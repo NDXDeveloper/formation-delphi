@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Vous avez créé plusieurs projets, ajouté des composants, écrit du code... Mais vous êtes-vous déjà demandé comment tout cela s'organise en coulisse ? Comment Delphi transforme vos fiches visuelles et votre code en une application exécutable ?
+Vous avez créé plusieurs projets, ajouté des composants, écrit du code... Mais vous êtes-vous déjà demandé comment tout cela s'organise en coulisses ? Comment Delphi transforme vos fiches visuelles et votre code en une application exécutable ?
 
 Comprendre la structure d'un projet Delphi est essentiel pour bien organiser votre travail, résoudre les problèmes, et travailler efficacement sur des projets plus complexes. Dans cette section, nous allons explorer en détail tous les fichiers qui composent un projet, leur rôle, et comment ils interagissent.
 
@@ -39,7 +39,7 @@ MonApplication/
 ├── FormSecondaire.pas          (Code d'une autre fiche)
 ├── FormSecondaire.dfm          (Définition visuelle de l'autre fiche)
 ├── UnitUtils.pas               (Unité de code sans interface)
-├── Win32/                      (Dossier de sortie Windows 32 bits)
+├── Win64/                      (Dossier de sortie Windows 64 bits — défaut Delphi 13)
 │   ├── Debug/
 │   │   ├── MonApplication.exe  (Exécutable de débogage)
 │   │   ├── FormPrincipale.dcu  (Unité compilée)
@@ -47,12 +47,14 @@ MonApplication/
 │   │   └── UnitUtils.dcu
 │   └── Release/
 │       └── MonApplication.exe  (Exécutable de production)
-├── Win64/                      (Dossier de sortie Windows 64 bits)
-├── __history/                  (Historique des modifications)
-└── __recovery/                 (Fichiers de récupération)
+├── Win32/                      (Dossier de sortie Windows 32 bits — optionnel)
+├── __history/                  (Historique des modifications de l'éditeur)
+└── __recovery/                 (Fichiers de récupération en cas de crash)
 ```
 
 Ne soyez pas intimidé par tous ces fichiers ! Nous allons les explorer un par un.
+
+> 💡 **Note :** D'autres dossiers de sortie peuvent apparaître selon les plateformes que vous ciblez : `OSX64/`, `iOSDevice64/`, `Android64/`, `Linux64/`, `Win64Arm/` (Delphi 13.1+), etc.
 
 ## Les fichiers essentiels
 
@@ -335,13 +337,15 @@ Chaque composant est représenté avec toutes ses propriétés. Les composants c
 
 Par défaut, vous voyez la fiche dans le concepteur visuel. Pour voir le .dfm en mode texte :
 
-**Clic droit sur la fiche dans l'Explorateur de projets > Afficher en tant que texte**
+**Clic droit sur la fiche dans le concepteur > View as Text** (Afficher en tant que texte) — raccourci **Alt + F12**
 
 Pour revenir au mode visuel :
 
-**Clic droit > Afficher en tant que fiche**
+**Clic droit > View as Form** (Afficher en tant que fiche) — raccourci **Alt + F12** à nouveau
 
 **Attention** : vous pouvez modifier le .dfm directement en mode texte, mais c'est risqué. Une erreur de syntaxe peut rendre la fiche impossible à ouvrir. Préférez toujours utiliser le concepteur visuel et l'Inspecteur d'objets.
+
+> 💡 **À propos de l'encodage :** vous remarquerez peut-être que les caractères accentués sont représentés sous forme numérique dans le .dfm (par exemple `'Premi'#232're'` pour "Première"). C'est normal : c'est un encodage spécial Delphi pour rester compatible avec différents encodages de texte. Le rendu visuel reste correct.
 
 #### Synchronisation .pas et .dfm
 
@@ -367,14 +371,14 @@ Les fichiers .res (Resource) contiennent des ressources binaires incorporées da
 
 Pour voir et modifier les ressources de votre projet :
 
-**Projet > Ressources et images**
+**Project > Resources and Images** (Projet > Ressources et images)
 
 Vous pouvez y ajouter, supprimer ou modifier l'icône de l'application et d'autres ressources.
 
 #### Modifier l'icône de l'application
 
-1. **Projet > Options > Application**
-2. Cliquez sur **Charger l'icône**
+1. **Project > Options > Application** (Projet > Options > Application)
+2. Cliquez sur **Load Icon** (Charger l'icône)
 3. Choisissez un fichier .ico
 4. L'icône est incorporée dans le .res
 
@@ -394,7 +398,7 @@ C'est le fichier de projet moderne au format XML. Il contient :
 - Les options du compilateur et de l'éditeur de liens
 - Les frameworks et bibliothèques utilisés
 
-Vous ne devez généralement pas éditer ce fichier manuellement. Utilisez **Projet > Options** pour modifier les paramètres.
+Vous ne devez généralement pas éditer ce fichier manuellement. Utilisez **Project > Options** (Projet > Options) pour modifier les paramètres.
 
 #### Autres fichiers de configuration
 
@@ -414,17 +418,17 @@ Quand vous compilez votre projet, Delphi crée plusieurs fichiers.
 
 Les fichiers .dcu (Delphi Compiled Unit) sont la version compilée de vos fichiers .pas. Ils contiennent le code machine généré par le compilateur.
 
-**Emplacement** : dans Win32\Debug ou Win32\Release
+**Emplacement** : dans `Win64\Debug` ou `Win64\Release` (selon la plateforme et la configuration)
 
 **Rôle** : fichiers intermédiaires de compilation. Delphi les utilise pour la compilation incrémentale (recompiler uniquement ce qui a changé).
 
-**Suppression** : vous pouvez les supprimer sans problème via **Projet > Nettoyer**. Ils seront recréés à la prochaine compilation.
+**Suppression** : vous pouvez les supprimer sans problème via **Project > Clean** (Projet > Nettoyer). Ils seront recréés à la prochaine compilation.
 
 ### L'exécutable (.exe)
 
 C'est le fichier final, votre application exécutable.
 
-**Emplacement** : dans Win32\Debug ou Win32\Release
+**Emplacement** : dans `Win64\Debug` ou `Win64\Release` (ou le dossier correspondant à la plateforme cible : `OSX64\Debug`, `iOSDevice64\Debug`, etc.)
 
 **Rôle** : c'est ce fichier que vous distribuez et que les utilisateurs lancent.
 
@@ -436,9 +440,9 @@ Ces fichiers contiennent des informations pour le débogage :
 
 **.map** : carte mémoire du programme (adresses des fonctions, variables)
 
-**.rsm** : informations de débogage détaillées
+**.rsm** : informations de débogage détaillées (Delphi Remote Symbol Map)
 
-Ces fichiers ne sont générés que si vous activez les options correspondantes dans **Projet > Options > Compilation > Éditeur de liens**.
+Ces fichiers ne sont générés que si vous activez les options correspondantes dans **Project > Options > Building > Delphi Compiler > Linking** (Projet > Options > Compilation > Compilateur Delphi > Édition de liens).
 
 **Usage** : utiles pour analyser les crashs en production, mais pas nécessaires pour le développement normal.
 
@@ -650,14 +654,18 @@ MonProjetFMX/
 ├── FormMain.fmx     (au lieu de .dfm)
 ├── Win32/
 ├── Win64/
-├── OSX64/
-├── Android/
-├── Android64/
-├── iOSDevice64/
-└── iOSSimulator/
+├── Win64Arm/       (Delphi 13.1+)
+├── OSX64/          (macOS Intel x64)
+├── OSXARM64/       (macOS Apple Silicon)
+├── Android64/      (Android ARM 64 bits)
+├── iOSDevice64/    (iOS sur appareil)
+├── iOSSimARM64/    (Simulateur iOS sur Mac Apple Silicon)
+└── Linux64/        (Linux 64 bits)
 ```
 
 Notez que les fiches FireMonkey utilisent **.fmx** au lieu de **.dfm**.
+
+> 💡 **Note plateformes :** les anciennes plateformes 32 bits (`OSX32`, `Android` ARM 32, `iOSDevice` 32) ont disparu des versions récentes de Delphi (Apple a abandonné le 32 bits sur macOS et iOS, et Google Play exige du 64 bits pour Android). Pour macOS Apple Silicon, c'est `OSXARM64` ; pour iOS sur appareil moderne, c'est `iOSDevice64`.
 
 ## Fichiers à inclure dans le contrôle de version
 
@@ -709,13 +717,13 @@ Si vous utilisez Git, SVN ou un autre système de contrôle de version, voici ce
 # Dossiers de sortie
 Win32/  
 Win64/  
-OSX32/  
+Win64Arm/  
 OSX64/  
-Android/  
+OSXARM64/  
 Android64/  
-iOSDevice/  
 iOSDevice64/  
-iOSSimulator/  
+iOSSimARM64/  
+Linux64/  
 
 # Fichiers temporaires
 *.local
@@ -757,10 +765,10 @@ MonProjet/
 │   └── TestCalculs.pas
 ├── MonProjet.dpr
 ├── MonProjet.dproj
-└── Win32/
+└── Win64/                   (sortie de compilation, à exclure du contrôle de version)
 ```
 
-**Note** : Delphi ne crée pas automatiquement ces sous-dossiers. Vous devez les créer manuellement et configurer les chemins dans **Projet > Options > Répertoires et conditions**.
+**Note** : Delphi ne crée pas automatiquement ces sous-dossiers. Vous devez les créer manuellement et configurer les chemins dans **Project > Options > Building > Delphi Compiler > Directories and Conditionals** (Projet > Options > Compilation > Compilateur Delphi > Répertoires et conditions).
 
 ### Conseils d'organisation
 
@@ -785,7 +793,7 @@ MonProjet/
 **Solutions** :
 - Vérifiez l'orthographe dans la clause uses
 - Assurez-vous que le fichier existe dans le projet
-- Ajoutez le chemin du fichier dans **Projet > Options > Répertoires et conditions > Chemin de recherche**
+- Ajoutez le chemin du fichier dans **Project > Options > Building > Delphi Compiler > Directories and Conditionals > Search path** (Projet > Options > Compilation > Compilateur Delphi > Répertoires et conditions > Chemin de recherche)
 
 ### "Circular unit reference"
 

@@ -12,27 +12,29 @@ Personnaliser votre environnement de travail n'est pas un luxe superficiel : un 
 
 ### Le menu Options
 
-Le point central de la personnalisation est le menu **Outils > Options** (ou **Alt + O**). Cette fenêtre de dialogue contient des dizaines de pages d'options, organisées en catégories dans une arborescence à gauche.
+Le point central de la personnalisation est le menu **Tools > Options** (Outils > Options). Cette fenêtre de dialogue contient des dizaines de pages d'options, organisées en catégories dans une arborescence à gauche.
+
+**Astuce :** vous pouvez aussi y accéder rapidement via **Ctrl + .** (IDE Insight) en tapant "options".
 
 Au premier abord, cela peut sembler intimidant avec toutes ces options ! Mais ne vous inquiétez pas : les valeurs par défaut sont généralement bonnes, et vous n'avez pas besoin de tout modifier. Nous allons explorer les options les plus utiles pour débuter.
 
 ### Structure du dialogue Options
 
-L'arborescence de gauche organise les options en grandes catégories :
+L'arborescence de gauche organise les options en grandes catégories (les noms anglais sont ceux affichés par l'IDE quand il est en langue anglaise, choix par défaut) :
 
-**Environnement** : options générales de l'IDE (langue, dossiers, etc.)
+**Environment Options** : options générales de l'IDE (dossiers de projets, proxy, options d'enregistrement, etc.)
 
-**Éditeur de code** : tout ce qui concerne l'édition du code (police, couleurs, comportement)
+**User Interface** : apparence de l'IDE (thème, éditeur, raccourcis clavier, Form Designer, IDE Insight)
 
-**Concepteur de fiches** : options pour le concepteur visuel
+**Editor** : tout ce qui concerne l'édition du code (police, couleurs, Code Insight, templates, sauvegarde)
 
-**Débogueur** : configuration du débogage
+**Language** : options spécifiques au langage (Delphi, C++) et chemins de bibliothèques
 
-**Outils** : configuration des outils externes
+**Debugger Options** : configuration du débogage (exceptions, symboles, types de débogueurs)
 
-**Gestionnaire de packages** : gestion des composants et packages
+**Type Library**, **Translation Tools**, **Resource Compiler** : outils spécifiques (avancé)
 
-Chaque catégorie contient plusieurs sous-catégories. Explorez-les tranquillement pour découvrir ce qui est disponible.
+Chaque catégorie contient plusieurs sous-catégories. Explorez-les tranquillement pour découvrir ce qui est disponible. La structure exacte peut varier légèrement selon votre édition Delphi (Community / Pro / Enterprise / Architect).
 
 ## Personnaliser l'apparence générale
 
@@ -42,43 +44,43 @@ Delphi 13 Florence propose plusieurs thèmes visuels pour l'IDE. Le choix du th�
 
 Pour changer de thème :
 
-1. Allez dans **Outils > Options**
-2. Dans l'arborescence, sélectionnez **Thème de l'IDE** (ou **IDE Theme**)
-3. Dans la liste déroulante, choisissez un thème
+1. Allez dans **Tools > Options > User Interface > IDE > Theme** (Outils > Options > Interface utilisateur > IDE > Thème)
+2. Dans la liste déroulante, choisissez un thème
 
-Les thèmes disponibles incluent généralement :
+Les thèmes disponibles dans Delphi 13 :
 
 **Light** : thème clair, classique, avec fond blanc. Idéal pour les environnements bien éclairés.
 
 **Dark** : thème sombre avec fond noir ou gris foncé. Réduit la fatigue oculaire, particulièrement apprécié pour de longues sessions de programmation, surtout en soirée.
 
-**Blue** : un compromis entre clair et sombre, avec des tons bleutés.
+**Mountain Mist** : variante claire avec des tons gris doux
 
-**Autres thèmes** : selon votre version de Delphi, d'autres thèmes peuvent être disponibles.
+**Charcoal Dark Slate** : variante sombre encore plus sobre
 
-Après avoir changé de thème, vous devez généralement redémarrer Delphi pour que tous les éléments prennent le nouveau thème.
+Après avoir changé de thème, un redémarrage de l'IDE peut être nécessaire pour rafraîchir certains éléments (titre de fenêtre, certains panneaux).
 
 **Conseil** : testez différents thèmes pour trouver celui qui vous convient. Le thème sombre est très populaire parmi les développeurs, mais certains préfèrent le thème clair. C'est une question de préférence personnelle.
 
 ### Langue de l'interface
 
-Si vous préférez utiliser Delphi en anglais (la documentation est plus complète en anglais) ou dans une autre langue :
+L'IDE Delphi est principalement distribué en **anglais**. Selon les éditions et les régions, Embarcadero propose également des installeurs traduits en **allemand** et en **japonais** (il n'existe pas de version officielle en français de l'IDE lui-même). La documentation et la majorité des ressources communautaires sont en anglais.
 
-1. **Outils > Options > Environnement > Options d'environnement**
-2. Dans **Langue**, sélectionnez votre choix
-3. Redémarrez Delphi
+Si une langue alternative est disponible sur votre installation, vous la trouverez dans :
 
-Pour ce tutoriel, nous supposons que vous utilisez l'interface en français, mais n'hésitez pas à basculer en anglais si vous êtes plus à l'aise.
+1. **Tools > Options > Environment Options** (Outils > Options > Options d'environnement)
+2. Section **Language** (si l'option apparaît)
+3. Redémarrez Delphi après le changement
+
+Pour ce tutoriel, nous mentionnons systématiquement le nom anglais des menus suivi de leur traduction française entre parenthèses, afin que vous puissiez vous repérer quelle que soit la configuration utilisée.
 
 ### Taille des polices de l'interface
 
 Sur les écrans haute résolution (4K), l'interface peut sembler petite. Vous pouvez ajuster la taille :
 
-1. **Outils > Options > Environnement > Options d'environnement**
-2. Cherchez les options de **mise à l'échelle** ou **scaling**
-3. Ajustez selon vos besoins
+1. **Tools > Options > User Interface > IDE > Fonts**
+2. Ou ajustez la **mise à l'échelle Windows** dans les paramètres système (recommandé en premier)
 
-Delphi 13 gère beaucoup mieux les écrans haute résolution que les versions précédentes, mais vous devrez peut-être quand même ajuster certains paramètres.
+Delphi 13 gère beaucoup mieux les écrans haute résolution que les versions précédentes grâce à son IDE 64 bits avec icônes vectorielles, mais vous devrez peut-être quand même ajuster certains paramètres.
 
 ## Personnaliser l'éditeur de code
 
@@ -90,13 +92,13 @@ La police de l'éditeur de code affecte directement la lisibilité et le confort
 
 Pour la configurer :
 
-1. **Outils > Options > Éditeur de code > Affichage**
-2. Cherchez la section **Police de l'éditeur**
+1. **Tools > Options > Editor > Display** (Outils > Options > Éditeur > Affichage)
+2. Cherchez la section **Editor Font** (Police de l'éditeur)
 
 **Police** : choisissez une police à chasse fixe (monospace). Les plus populaires :
 - **Consolas** : la police par défaut de Delphi, excellente lisibilité
 - **Courier New** : classique et universelle
-- **Fira Code** : moderne, avec support des ligatures (si vous les aimez)
+- **Fira Code** : moderne, gérant les ligatures de code (si vous les aimez)
 - **Source Code Pro** : très lisible, créée par Adobe
 - **JetBrains Mono** : récente et très populaire
 
@@ -120,8 +122,8 @@ La coloration syntaxique aide à distinguer les différents éléments du code. 
 
 Pour personnaliser ces couleurs :
 
-1. **Outils > Options > Éditeur de code > Coloration**
-2. Sélectionnez un élément dans la liste (par exemple, "Mot réservé")
+1. **Tools > Options > Editor > Color** (Outils > Options > Éditeur > Couleurs)
+2. Sélectionnez un élément dans la liste (par exemple, "Reserved word")
 3. Choisissez la couleur de texte et/ou de fond
 
 **Attention** : la coloration par défaut est bien pensée. Ne modifiez les couleurs que si vous avez une bonne raison. Un excès de couleurs peut nuire à la lisibilité.
@@ -130,7 +132,7 @@ Pour personnaliser ces couleurs :
 
 ### Options d'affichage
 
-Dans **Outils > Options > Éditeur de code > Affichage**, vous trouverez de nombreuses options d'affichage :
+Dans **Tools > Options > Editor > Display** (Outils > Options > Éditeur > Affichage), vous trouverez de nombreuses options d'affichage :
 
 **Numéros de ligne** : affiche les numéros de ligne dans la marge gauche. Très utile pour la navigation et le débogage. Recommandé : **activé**.
 
@@ -146,7 +148,7 @@ Dans **Outils > Options > Éditeur de code > Affichage**, vous trouverez de nomb
 
 ### Options d'édition
 
-Dans **Outils > Options > Éditeur de code > Options générales**, vous contrôlez le comportement de l'éditeur :
+Dans **Tools > Options > Editor > Editor** (Outils > Options > Éditeur > Éditeur), vous contrôlez le comportement de l'éditeur :
 
 **Indentation automatique** : indente automatiquement le code au fur et à mesure que vous tapez. Recommandé : **activé**.
 
@@ -162,13 +164,13 @@ Dans **Outils > Options > Éditeur de code > Options générales**, vous contrô
 
 ### Code Insight
 
-Dans **Outils > Options > Éditeur de code > Code Insight**, vous configurez l'auto-complétion et l'aide contextuelle :
+Dans **Tools > Options > Editor > Code Insight** (Outils > Options > Éditeur > Code Insight), vous configurez l'auto-complétion et l'aide contextuelle :
 
 **Délai d'invocation automatique** : temps d'attente avant que l'auto-complétion n'apparaisse automatiquement. Valeur recommandée : 1000 ms (1 seconde).
 
 **Activer Code Insight** : active les fonctionnalités d'assistance au code. Recommandé : **activé** (sauf si vous trouvez cela trop intrusif).
 
-**Info-bulles sur les symboles** : affiche des infos quand vous survolez un élément. Recommandé : **activé**.
+**Info-bulles sur les symboles** : affiche des informations quand vous survolez un élément. Recommandé : **activé**.
 
 **Navigation par Ctrl+clic** : permet de naviguer vers les déclarations avec Ctrl+clic. Recommandé : **activé**.
 
@@ -180,7 +182,7 @@ Les templates (ou modèles de code) sont des raccourcis pour insérer rapidement
 
 Pour les gérer :
 
-1. **Outils > Options > Éditeur de code > Code Insight > Templates de code**
+1. **Tools > Options > Editor > Code Insight > Templates** (Outils > Options > Éditeur > Code Insight > Templates)
 2. Vous voyez la liste des templates existants
 3. Vous pouvez en ajouter, modifier ou supprimer
 
@@ -206,7 +208,7 @@ Delphi propose plusieurs dispositions par défaut, mais vous pouvez créer les v
 
 Pour changer de disposition :
 
-**Menu Affichage > Dispositions de bureau**
+**View > Desktops** (Affichage > Dispositions de bureau)
 
 Vous verrez plusieurs options :
 - **Default Layout** : la disposition par défaut
@@ -218,8 +220,8 @@ Vous pouvez basculer entre ces dispositions selon votre activité du moment.
 #### Créer votre propre disposition
 
 1. Organisez vos fenêtres exactement comme vous le souhaitez
-2. **Affichage > Dispositions de bureau > Enregistrer la disposition de bureau**
-3. Donnez-lui un nom significatif (par exemple, "Ma disposition VCL" ou "Ma disposition coding")
+2. **View > Desktops > Save Desktop** (Affichage > Dispositions de bureau > Enregistrer la disposition)
+3. Donnez-lui un nom significatif (par exemple, "Ma disposition VCL" ou "Ma disposition Édition de code")
 4. Votre disposition personnalisée apparaît maintenant dans le menu
 
 **Astuce** : créez différentes dispositions pour différentes tâches :
@@ -232,7 +234,7 @@ Vous pouvez basculer entre ces dispositions selon votre activité du moment.
 
 Pour supprimer ou renommer une disposition :
 
-**Affichage > Dispositions de bureau > Gérer les dispositions de bureau**
+**View > Desktops > Manage Desktops** (Affichage > Dispositions de bureau > Gérer les dispositions)
 
 ### Ancrage et positionnement des fenêtres
 
@@ -270,8 +272,8 @@ Les zones ancrées peuvent être redimensionnées en faisant glisser leurs bordu
 
 Certaines fenêtres peuvent être configurées pour se masquer automatiquement quand vous ne les utilisez pas, libérant ainsi de l'espace :
 
-1. Clic droit sur la barre de titre d'une fenêtre ancrée
-2. Cochez **Masquage automatique**
+1. Cliquez sur l'icône **punaise** (📌) dans la barre de titre d'une fenêtre ancrée
+2. Ou faites un clic droit > **Auto Hide** (Masquage automatique)
 
 La fenêtre se réduit alors en un onglet sur le bord de l'IDE. Passez votre souris sur cet onglet pour que la fenêtre réapparaisse temporairement.
 
@@ -283,8 +285,8 @@ Vous pouvez personnaliser les barres d'outils : ajouter ou retirer des boutons, 
 
 Pour personnaliser :
 
-1. **Affichage > Barres d'outils > Personnaliser**
-2. Ou clic droit sur une barre d'outils et choisir **Personnaliser**
+1. **View > Toolbars > Customize** (Affichage > Barres d'outils > Personnaliser)
+2. Ou clic droit sur une barre d'outils et choisir **Customize** (Personnaliser)
 
 Dans la boîte de dialogue de personnalisation :
 
@@ -302,7 +304,7 @@ Les raccourcis clavier sont essentiels pour la productivité. Delphi propose des
 
 ### Voir et modifier les raccourcis
 
-1. **Outils > Options > Éditeur clavier** (ou **Keyboard Options**)
+1. **Tools > Options > User Interface > Editor > Key Mappings** (Outils > Options > Interface utilisateur > Éditeur > Raccourcis clavier)
 2. Vous voyez la liste de toutes les commandes disponibles
 3. Pour chaque commande, les raccourcis actuels sont affichés
 
@@ -310,10 +312,10 @@ Les raccourcis clavier sont essentiels pour la productivité. Delphi propose des
 
 1. Sélectionnez une commande dans la liste
 2. Dans la section du bas, vous voyez le raccourci actuel
-3. Cliquez dans le champ **Nouveau raccourci**
+3. Cliquez dans le champ **Press shortcut keys** (Nouveau raccourci)
 4. Appuyez sur la combinaison de touches souhaitée (par exemple, **Ctrl + Shift + Z**)
 5. Si le raccourci est déjà utilisé, Delphi vous le signale
-6. Cliquez sur **Affecter** pour valider
+6. Cliquez sur **Assign** (Affecter) pour valider
 
 ### Raccourcis à personnaliser pour les débutants
 
@@ -325,7 +327,7 @@ La plupart des raccourcis par défaut sont bien pensés, mais voici quelques sug
 
 **Formater le code** : par défaut **Ctrl + D**. Très utile, assurez-vous qu'il est bien configuré.
 
-**Conseil** : ne modifiez pas trop de raccourcis au début. Apprenez d'abord les raccourcis par défaut, puis personnalisez uniquement ceux qui vous gênent vraiment. Trop de modifications peut vous désorienter, surtout si vous passez d'un ordinateur à un autre.
+**Conseil** : ne modifiez pas trop de raccourcis au début. Apprenez d'abord les raccourcis par défaut, puis personnalisez uniquement ceux qui vous gênent vraiment. Trop de modifications peuvent vous désorienter, surtout si vous passez d'un ordinateur à un autre.
 
 ### Jeux de raccourcis
 
@@ -335,7 +337,7 @@ Delphi propose différents jeux de raccourcis (keymap) :
 - **Visual Studio** : pour ceux habitués à Visual Studio
 - **Autres** : selon votre version
 
-Vous pouvez changer de jeu dans **Outils > Options > Éditeur clavier**, en haut de la fenêtre.
+Vous pouvez changer de jeu dans **Tools > Options > User Interface > Editor > Key Mappings** (Outils > Options > Interface utilisateur > Éditeur > Raccourcis clavier), en haut de la fenêtre.
 
 Si vous venez d'un autre environnement de développement, utiliser un jeu de raccourcis familier peut faciliter la transition.
 
@@ -347,7 +349,7 @@ Quand vous placez des composants sur une fiche, une grille invisible vous aide �
 
 Pour configurer cette grille :
 
-1. **Outils > Options > Concepteur de fiches**
+1. **Tools > Options > User Interface > Form Designer** (Outils > Options > Interface utilisateur > Concepteur de fiches)
 2. Cherchez les options de **grille**
 
 **Afficher la grille** : rend la grille visible (petits points sur la fiche). Selon préférence.
@@ -374,11 +376,11 @@ Vous pouvez configurer comment les composants sont sélectionnés et déplacés 
 
 Le débogueur a aussi ses options de personnalisation. Nous verrons le débogage en détail dans un chapitre ultérieur, mais voici quelques options de base :
 
-1. **Outils > Options > Débogueur**
+1. **Tools > Options > Debugger Options** (Outils > Options > Options du débogueur)
 
 **Options de débogueur** :
-- **Arrêt sur les exceptions du langage** : le programme s'arrête quand une exception se produit, même si elle est gérée. Utile pour déboguer. Recommandé : selon besoin.
-- **Ignorer les points d'arrêt non-valides** : évite les messages d'avertissement pour les points d'arrêt qui ne peuvent pas être définis.
+- **Language Exceptions** : le programme s'arrête quand une exception se produit, même si elle est gérée. Utile pour déboguer. Recommandé : selon besoin.
+- **Ignorer les points d'arrêt invalides** : évite les messages d'avertissement pour les points d'arrêt qui ne peuvent pas être définis.
 
 **Colonnes de la fenêtre de débogage** : personnalisez quelles informations afficher dans les fenêtres de surveillance.
 
@@ -388,9 +390,9 @@ Le débogueur a aussi ses options de personnalisation. Nous verrons le débogage
 
 Pour éviter de perdre votre travail en cas de crash (rare, mais possible), activez la sauvegarde automatique :
 
-1. **Outils > Options > Éditeur de code > Options générales**
-2. Cherchez **Sauvegarde automatique**
-3. **Activez** l'option
+1. **Tools > Options > Editor > Editor** (Outils > Options > Éditeur > Éditeur)
+2. Cherchez **Auto save options** (Options de sauvegarde automatique)
+3. **Activez** l'option (Editor files / Project desktop)
 4. Configurez l'intervalle (recommandé : 5 minutes)
 
 Delphi sauvegardera alors vos fichiers modifiés à intervalles réguliers.
@@ -407,8 +409,8 @@ Delphi crée des fichiers de sauvegarde avec l'extension .~pas, .~dfm, etc. Ce s
 
 Vous pouvez configurer si vous voulez créer ces fichiers et combien en garder :
 
-1. **Outils > Options > Environnement > Options d'environnement**
-2. Cherchez les options de **sauvegarde**
+1. **Tools > Options > Environment Options** (Outils > Options > Options d'environnement)
+2. Cherchez les options de **sauvegarde de fichier**
 
 Recommandé : garder au moins 1 fichier de sauvegarde, pour pouvoir revenir en arrière en cas d'erreur.
 
@@ -420,8 +422,8 @@ Delphi doit savoir où trouver les fichiers sources, les bibliothèques, etc.
 
 Pour configurer les chemins :
 
-1. **Outils > Options > Environnement > Chemins et répertoires**
-2. Ou pour un projet spécifique : **Projet > Options > Chemins et répertoires**
+1. **Tools > Options > Language > Delphi > Library** (Outils > Options > Langage > Delphi > Bibliothèque) — chemins globaux
+2. Ou pour un projet spécifique : **Project > Options > Building > Delphi Compiler > Directories and Conditionals** (Projet > Options > Compilation > Compilateur Delphi > Répertoires et conditions)
 
 Les chemins importants :
 
@@ -446,6 +448,11 @@ Malheureusement, Delphi ne propose pas de fonction d'export intégrée simple po
 C:\Users\[VotreNom]\AppData\Roaming\Embarcadero\BDS\[Version]
 ```
 
+Pour Delphi 13 Florence, la version est **24.0**, donc le chemin complet est :
+```
+C:\Users\[VotreNom]\AppData\Roaming\Embarcadero\BDS\24.0
+```
+
 Sauvegardez ce dossier pour conserver vos paramètres.
 
 **Dispositions de bureau** : les dispositions sont sauvegardées automatiquement dans ce même dossier.
@@ -460,7 +467,7 @@ Copiez le dossier de configuration d'un ordinateur à l'autre. Assurez-vous d'av
 
 ### Commencez simple
 
-Ne modifiez pas tout d'un coup ! Commencez avec les paramètres par défaut, et ne personnalisez que ce qui vous gêne vraiment. Au fil du temps, vous découvrirez naturellement les options qui amélioreront votre workflow.
+Ne modifiez pas tout d'un coup ! Commencez avec les paramètres par défaut, et ne personnalisez que ce qui vous gêne vraiment. Au fil du temps, vous découvrirez naturellement les options qui amélioreront votre flux de travail.
 
 ### Documentez vos modifications
 
@@ -520,7 +527,7 @@ Voici une configuration recommandée pour bien démarrer avec Delphi :
 
 **Désactiver la sauvegarde automatique** : c'est une protection importante. Gardez-la activée.
 
-**Masquer des fenêtres importantes** : si vous masquez accidentellement l'Inspecteur d'objets ou la Palette, réaffichez-les via le menu Affichage.
+**Masquer des fenêtres importantes** : si vous masquez accidentellement l'Inspecteur d'objets ou la Palette, réaffichez-les via le menu **View** (Affichage).
 
 **Oublier de sauvegarder sa disposition** : si vous organisez vos fenêtres mais ne sauvegardez pas la disposition, vous perdrez tout si Delphi redémarre.
 
@@ -534,8 +541,11 @@ Si vous avez trop modifié et que vous voulez revenir aux paramètres par défau
 
 **Supprimer (ou renommer) le dossier de configuration** :
 ```
-C:\Users\[VotreNom]\AppData\Roaming\Embarcadero\BDS\[Version]
+C:\Users\[VotreNom]\AppData\Roaming\Embarcadero\BDS\24.0
 ```
+(pour Delphi 13 Florence)
+
+> 💡 **Astuce sans suppression :** plutôt que de supprimer, **renommez** le dossier en `24.0.backup`. Au prochain lancement, Delphi recréera un dossier `24.0` propre. Si vous voulez revenir à votre configuration précédente, supprimez le nouveau et renommez `24.0.backup` → `24.0`.
 
 **Relancer Delphi** : il recréera le dossier avec les paramètres par défaut
 

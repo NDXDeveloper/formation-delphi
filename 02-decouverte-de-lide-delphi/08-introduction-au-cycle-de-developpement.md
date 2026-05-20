@@ -56,7 +56,7 @@ RAD signifie **Rapid Application Development** (Développement Rapide d'Applicat
 
 **Le développement visuel** : concevoir l'interface graphiquement plutôt qu'en code
 
-**Les composants réutilisables** : utiliser des briques préfabriquées plutôt que tout coder from scratch
+**Les composants réutilisables** : utiliser des briques préfabriquées plutôt que tout coder depuis zéro
 
 **L'itération rapide** : créer, tester, améliorer en cycles courts
 
@@ -115,7 +115,7 @@ Avant d'ouvrir Delphi, posez-vous ces questions :
 - Exemple : "Synchronisation avec un smartphone ; envoi d'emails en masse"
 
 **Quelles sont les contraintes ?**
-- Exemple : "Doit fonctionner sur Windows 7 minimum ; base de données locale"
+- Exemple : "Doit fonctionner sur Windows 10 minimum ; base de données locale ; pas de connexion internet requise"
 
 Notez tout cela, même simplement sur papier ou dans un fichier texte. Cela vous guidera pendant le développement.
 
@@ -199,7 +199,7 @@ Ne tentez pas de tout faire en même temps ! Classez vos fonctionnalités par pr
 **P2 (Priorité 2)** : fonctionnalités importantes mais pas bloquantes
 - Exemple : rechercher des contacts
 
-**P3 (Priorité 3)** : fonctionnalités "nice to have"
+**P3 (Priorité 3)** : fonctionnalités bonus, agréables mais non essentielles
 - Exemple : statistiques sur les contacts
 
 Développez d'abord toutes les P1, puis les P2, puis les P3.
@@ -210,7 +210,7 @@ Pour chaque fonctionnalité :
 
 **1. Implémentez** : écrivez le code nécessaire
 
-**2. Testez** : vérifiez que ça fonctionne (compilation + test manuel)
+**2. Testez** : vérifiez que cela fonctionne (compilation + test manuel)
 
 **3. Déboguez** : corrigez les bugs trouvés
 
@@ -369,8 +369,8 @@ Votre application est prête ! Il faut maintenant la préparer pour la distribut
 Jusqu'ici, vous avez travaillé en mode **Debug**. Pour la distribution, compilez en mode **Release** :
 
 1. Dans la barre d'outils, changez la configuration de "Debug" à "Release"
-2. **Projet > Tout construire** (Shift + F9) pour une recompilation complète
-3. L'exécutable optimisé se trouve dans Win32\Release (ou Win64\Release)
+2. **Project > Build** (Projet > Construire), raccourci **Shift + F9** pour une recompilation complète
+3. L'exécutable optimisé se trouve dans `Win64\Release` (ou la plateforme cible : `OSX64\Release`, `iOSDevice64\Release`, etc.)
 
 L'exécutable Release est :
 - Plus petit (pas d'informations de débogage)
@@ -381,16 +381,16 @@ L'exécutable Release est :
 
 Définissez les informations de version de votre application :
 
-1. **Projet > Options > Application > Version Info**
-2. Cochez "Inclure les informations de version"
+1. **Project > Options > Version Info** (Projet > Options > Informations de version)
+2. Cochez **Include version information in project**
 3. Remplissez :
-   - **Version** : 1.0.0.0 (ou votre numéro de version)
-   - **Nom de l'application**
-   - **Description**
-   - **Copyright**
-   - **Nom du fichier**
+   - **MajorVer, MinorVer, Release, Build** : par exemple 1.0.0.0 pour votre première version stable
+   - **ProductName** : nom de l'application
+   - **FileDescription** : description
+   - **LegalCopyright** : mention de copyright
+   - **FileVersion** et **ProductVersion** : numéros de version textuels
 
-Ces informations s'affichent dans les propriétés du fichier .exe dans Windows.
+Ces informations s'affichent dans les propriétés du fichier .exe dans Windows (clic droit > Propriétés > Détails) et sont utilisées par les outils de déploiement.
 
 #### Test de la version Release
 
@@ -622,7 +622,7 @@ Ne développez pas pendant des semaines sans tester. Vous accumulerez des bugs d
 
 **Corrigez les bugs immédiatement** dès qu'ils sont découverts.
 
-**Gardez toujours une version qui marche** : si vous cassez tout en expérimentant, vous pouvez revenir en arrière.
+**Gardez toujours une version qui fonctionne** : si vous cassez tout en expérimentant, vous pouvez revenir en arrière.
 
 ### Sauvegardez et versionnez
 
@@ -728,6 +728,6 @@ Le développement logiciel est un processus d'apprentissage continu. Chaque proj
 
 Avec Delphi, vous avez un outil puissant qui facilite grandement ce cycle de développement. Profitez de sa rapidité pour expérimenter, itérer, et créer des applications de qualité.
 
-Dans les prochains chapitres, nous plongerons dans le langage Object Pascal pour maîtriser les fondations de la programmation avec Delphi !
+Dans la prochaine section, nous découvrirons le **Gestionnaire de Packages GetIt**, qui vous permet d'installer rapidement des composants et bibliothèques pour enrichir vos projets.
 
 ⏭️ [Utilisation du Gestionnaire de Packages (GetIt Package Manager)](/02-decouverte-de-lide-delphi/09-utilisation-du-gestionnaire-de-packages.md)

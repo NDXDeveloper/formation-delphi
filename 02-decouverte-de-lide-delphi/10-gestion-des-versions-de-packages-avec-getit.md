@@ -92,9 +92,9 @@ Le troisième chiffre (5 dans 2.3.5) représente la version **patch** ou **corre
 - Correction d'une fuite mémoire
 - Correction de fautes dans la documentation
 
-**Impact** : aucun, que des améliorations
+**Impact** : aucun en théorie, uniquement des améliorations
 
-**Conseil** : mettez à jour dès que possible, c'est que du bénéfice !
+**Conseil** : mettez à jour dès que possible, vous n'avez que des bénéfices à en tirer.
 
 ### Exemples de progression de versions
 
@@ -217,7 +217,7 @@ Avant d'installer ou de mettre à jour un package, vérifiez :
 
 **Version de Delphi** : "Compatible with Delphi 10.4 and later" signifie que votre Delphi doit être en version 10.4 minimum
 
-**Plateformes** : Windows 32/64, macOS, iOS, Android, Linux ? Vérifiez que vos plateformes cibles sont supportées
+**Plateformes** : Windows 32/64, macOS, iOS, Android, Linux ? Vérifiez que vos plateformes cibles sont prises en charge
 
 **Dépendances** : certains packages nécessitent d'autres packages. GetIt gère généralement cela automatiquement
 
@@ -225,7 +225,7 @@ Avant d'installer ou de mettre à jour un package, vérifiez :
 
 ### Matrice de compatibilité
 
-Pour un projet multi-versions (supportant Delphi 11, 12 et 13 par exemple), créez une matrice de compatibilité :
+Pour un projet multi-versions (compatible Delphi 11, 12 et 13 par exemple), créez une matrice de compatibilité :
 
 | Package | Delphi 11 | Delphi 12 | Delphi 13 | Notes |
 |---------|-----------|-----------|-----------|-------|
@@ -274,7 +274,7 @@ Ce genre de problème est rare mais peut arriver sur de gros projets.
 
 ## Stratégies de mise à jour
 
-### Stratégie conservatrice : "If it ain't broke, don't fix it"
+### Stratégie conservatrice : "Si ça marche, ne touchez à rien"
 
 **Principe** : ne mettez à jour que si vous avez une bonne raison (bug critique, fonctionnalité nécessaire).
 
@@ -361,21 +361,21 @@ Créez un fichier dans votre projet qui liste toutes les dépendances :
 ### Composants d'interface
 - **FastReport VCL Community Edition**
   - Version : 6.9.12
-  - Installé le : 2024-12-15
+  - Installé le : 2026-04-15
   - Usage : génération de rapports PDF
   - Notes : version Community gratuite suffisante
 
 ### Frameworks
 - **Spring4D**
   - Version : 2.0.1
-  - Installé le : 2024-11-20
+  - Installé le : 2026-03-10
   - Usage : conteneurs IoC, collections génériques
   - Notes : installation via GetIt, configuration par défaut
 
 ### Tests
 - **DUnitX**
   - Version : dernière stable
-  - Installé le : 2024-11-20
+  - Installé le : 2026-03-10
   - Usage : tests unitaires
   - Notes : framework de tests recommandé
 
@@ -383,20 +383,20 @@ Créez un fichier dans votre projet qui liste toutes les dépendances :
 
 ### ZXing Delphi
 - Version : 3.5.0
-- Source : https://github.com/Lakritz/ZXing.Delphi
+- Source : https://github.com/Spelt/ZXing.Delphi
 - Installation : cloner le dépôt, compiler ZXing.dproj
 - Usage : génération et lecture de QR codes
-- Notes : version GetIt obsolète, installation manuelle recommandée
+- Notes : installation manuelle recommandée
 
 ## Historique des versions
 
-### 2024-12-15 : Mise à jour FastReport
+### 2026-04-15 : Mise à jour FastReport
 - Ancienne version : 6.9.10
 - Nouvelle version : 6.9.12
 - Raison : correction bug impression PDF
 - Impact : aucun, rétrocompatible
 
-### 2024-11-20 : Installation initiale
+### 2026-03-10 : Installation initiale
 - Tous les packages installés
 ```
 
@@ -405,13 +405,13 @@ Créez un fichier dans votre projet qui liste toutes les dépendances :
 Pour un format plus compact, certains développeurs utilisent un style similaire à Python :
 
 ```
-# Delphi Packages Requirements
-# Format: PackageName==Version
+# Dépendances packages Delphi
+# Format: NomPackage==Version
 
-FastReport-VCL-Community==6.9.12  
-Spring4D==2.0.1  
-DUnitX==latest  
-ZXing-Delphi==3.5.0 # manual install  
+FastReport-VCL-Community==6.9.12
+Spring4D==2.0.1
+DUnitX==latest
+ZXing-Delphi==3.5.0  # installation manuelle
 ```
 
 ### Dans le code source
@@ -537,7 +537,7 @@ Vous avez deux options pour distribuer votre application :
 - Vous devez distribuer les .bpl avec le .exe
 - Utile si plusieurs applications partagent les mêmes packages
 
-**Configuration** : **Projet > Options > Packages > Link with Runtime Packages**
+**Configuration** : **Project > Options > Packages > Runtime Packages > Link with Runtime Packages** (Projet > Options > Packages > Packages d'exécution)
 
 ### Versions des packages et déploiement
 
@@ -581,7 +581,7 @@ Cela vous permet de changer facilement de version.
 
 ✅ **Vérifiez la compatibilité** : avec votre Delphi, vos plateformes
 
-✅ **Sauvegardez** : commitez votre code actuel dans Git
+✅ **Sauvegardez** : committez votre code actuel dans Git
 
 ✅ **Testez sur une branche** : ne mettez pas à jour directement dans master/main
 
@@ -666,6 +666,6 @@ Points essentiels à retenir :
 
 Avec ces connaissances et ces bonnes pratiques, vous êtes maintenant équipé pour gérer efficacement les packages et leurs versions dans vos projets Delphi. La clé est la discipline : prendre le temps de bien faire les choses aujourd'hui vous évitera des problèmes demain.
 
-Dans la prochaine section, nous découvrirons le site web companion IA et l'assistance au développement, des nouveautés de Delphi 13 qui vont révolutionner votre façon de développer !
+Dans la prochaine section, nous découvrirons le site web companion IA et l'assistance au développement, des nouveautés de Delphi 13 qui peuvent significativement améliorer votre façon de développer.
 
 ⏭️ [Site web companion IA et assistance au développement](/02-decouverte-de-lide-delphi/11-site-web-companion-ia-et-assistance.md)

@@ -18,7 +18,7 @@ Pensez à la Palette d'outils comme à une immense bibliothèque de briques Lego
 
 ### Localisation de la Palette d'outils
 
-La Palette d'outils se trouve généralement sur le côté droit de l'IDE, parfois sous forme d'onglet que vous pouvez dérouler. Si vous ne la voyez pas, vous pouvez l'afficher via le menu **Affichage > Palette d'outils**.
+La Palette d'outils se trouve généralement sur le côté droit de l'IDE, parfois sous forme d'onglet que vous pouvez dérouler. Si vous ne la voyez pas, vous pouvez l'afficher via le menu **View > Tool Palette** (Affichage > Palette d'outils).
 
 ### Organisation de la Palette
 
@@ -90,13 +90,15 @@ Composants qui utilisent les contrôles natifs de Windows :
 
 Composants qui interagissent avec le système :
 
-**TTimer** : pour déclencher des actions à intervalles réguliers.
+**TTimer** : pour déclencher des actions à intervalles réguliers (très utilisé).
 
-**TMediaPlayer** : pour lire des fichiers audio et vidéo.
+**TPaintBox** : zone de dessin personnalisée pour dessiner via le canevas (`Canvas`).
 
-**TDriveComboBox** : pour sélectionner un lecteur (C:, D:, etc.).
+**TImageList** : pour gérer des listes d'images utilisées par d'autres composants (boutons, listes, arbres).
 
-**TDirectoryListBox** : pour naviguer dans les dossiers.
+**TVirtualImageList** : version moderne (Delphi 10.3+) qui s'adapte automatiquement aux écrans haute résolution (HiDPI).
+
+> 💡 Vous verrez aussi parfois `TDriveComboBox`, `TDirectoryListBox`, `TFileListBox`, `TMediaPlayer` : ce sont des composants legacy issus de Windows 16 bits, conservés pour la compatibilité mais rarement utilisés dans les applications modernes. Préférez `TOpenDialog`/`TSaveDialog` ou les composants natifs `TFileOpenDialog`/`TFileSaveDialog` (Vista+).
 
 #### Data Access et Data Controls
 
@@ -182,7 +184,7 @@ L'Inspecteur d'objets est votre centre de contrôle pour tous ces réglages.
 
 ### Localisation de l'Inspecteur
 
-L'Inspecteur d'objets se trouve généralement à droite de l'IDE, souvent juste à côté de la Palette d'outils. Si vous ne le voyez pas, affichez-le via le menu **Affichage > Inspecteur d'objets**, ou appuyez sur **F11**.
+L'Inspecteur d'objets se trouve généralement à droite de l'IDE, souvent juste à côté de la Palette d'outils. Si vous ne le voyez pas, affichez-le via le menu **View > Object Inspector** (Affichage > Inspecteur d'objets), ou appuyez sur **F11** (qui donne le focus à l'inspecteur, et permet aussi de basculer entre l'éditeur, le concepteur et l'inspecteur).
 
 ### Structure de l'Inspecteur
 
@@ -212,7 +214,7 @@ Il existe différents types de propriétés, chacune s'éditant différemment :
 
 **Propriétés numériques** : vous entrez un nombre. Par exemple, **Width** (largeur) ou **Height** (hauteur).
 
-**Propriétés booléennes** : vraies ou fausses (True/False). Par exemple, **Visible** (le composant est-il visible ?) ou **Enabled** (le composant est-il actif ?).
+**Propriétés booléennes** : la valeur est `True` (vrai) ou `False` (faux). Par exemple, **Visible** (le composant est-il visible ?) ou **Enabled** (le composant est-il actif ?).
 
 **Propriétés énumérées** : une liste de choix prédéfinis. Cliquez sur la flèche pour voir les options. Par exemple, **Align** définit comment le composant se positionne dans son conteneur.
 
@@ -226,7 +228,7 @@ Il existe différents types de propriétés, chacune s'éditant différemment :
 
 Voici les propriétés que vous rencontrerez le plus souvent :
 
-**Name** : le nom interne du composant dans le code. C'est important de donner des noms significatifs, comme "ButtonSave" plutôt que "Button1".
+**Name** : le nom interne du composant dans le code. Il est important de donner des noms significatifs, comme `ButtonSave` plutôt que `Button1`.
 
 **Caption** : le texte affiché sur le composant (pour les boutons, labels, formulaires, etc.).
 
@@ -321,7 +323,7 @@ Vous pouvez donner un nom personnalisé à un gestionnaire d'événement en tapa
 
 ## Travailler avec la Palette et l'Inspecteur ensemble
 
-Ces deux outils fonctionnent en tandem. Voici un workflow typique :
+Ces deux outils fonctionnent en tandem. Voici un flux de travail typique :
 
 1. **Choisir un composant** dans la Palette d'outils
 2. **Le placer** sur la fiche
@@ -336,11 +338,13 @@ Pour sélectionner un composant sur la fiche :
 
 **Clic simple** : sélectionne le composant. Vous voyez des petites poignées carrées autour de lui.
 
-**Ctrl + clic** : pour sélectionner plusieurs composants en même temps.
+**Shift + clic** : pour ajouter (ou retirer) un composant à la sélection — permet de sélectionner plusieurs composants en même temps.
 
-**Sélection par zone** : cliquez et faites glisser sur la fiche pour créer un rectangle de sélection.
+**Sélection par zone** : cliquez et faites glisser sur la fiche (depuis une zone vide) pour créer un rectangle de sélection. Tous les composants inclus seront sélectionnés.
 
-**Via l'Inspecteur** : utilisez la liste déroulante en haut de l'Inspecteur pour sélectionner un composant par son nom.
+**Via l'Inspecteur** : utilisez la liste déroulante (Component Selector) en haut de l'Inspecteur d'objets pour sélectionner rapidement un composant par son nom. Très utile quand un composant est masqué derrière un autre.
+
+**Échap** : annule la sélection en cours.
 
 ### Modifier plusieurs composants à la fois
 
@@ -362,11 +366,13 @@ Quand vous collez un composant, Delphi lui donne automatiquement un nouveau nom 
 
 Delphi propose des outils pour aligner vos composants de manière professionnelle :
 
-**Menu Edition > Aligner** : propose de nombreuses options d'alignement
+**Menu Edit > Align** (Édition > Aligner) : propose de nombreuses options d'alignement (à gauche, à droite, centré, etc.) entre les composants sélectionnés.
 
-**Grille magnétique** : par défaut, les composants se "collent" à une grille invisible pour faciliter l'alignement. Vous pouvez voir cette grille en allant dans **Outils > Options > Concepteur de fiches**.
+**Edit > Size** (Édition > Taille) : pour donner la même taille à plusieurs composants sélectionnés.
 
-**Guides d'alignement** : quand vous déplacez un composant, des lignes bleues apparaissent pour vous aider à l'aligner avec les autres composants.
+**Grille magnétique** : par défaut, les composants se "collent" à une grille invisible pour faciliter l'alignement. Vous pouvez configurer cette grille via **Tools > Options > User Interface > VCL Designer** (ou **FMX Designer** pour FireMonkey).
+
+**Guides d'alignement** : quand vous déplacez un composant, des lignes bleues apparaissent pour vous aider à l'aligner avec les autres composants (snap lines).
 
 ## Astuces et conseils pratiques
 
@@ -434,15 +440,27 @@ Les **TPanel** peuvent aussi servir de zones redimensionnables en utilisant la p
 
 ### Verrouiller les composants
 
-Une fois que vous avez positionné vos composants, vous pouvez les verrouiller pour éviter de les déplacer accidentellement. Cliquez avec le bouton droit sur la fiche et sélectionnez **Verrouiller les contrôles**.
+Une fois que vous avez positionné vos composants, vous pouvez les verrouiller pour éviter de les déplacer accidentellement. Cliquez avec le bouton droit sur la fiche et sélectionnez **Lock Controls** (Verrouiller les contrôles).
+
+Pour déverrouiller, refaites la même opération (la commande est un toggle).
 
 ### Ordre Z (ordre d'empilement)
 
-Quand plusieurs composants se superposent, vous pouvez contrôler lequel est au-dessus. Cliquez avec le bouton droit sur un composant et choisissez **Ordre de disposition > Amener au premier plan** ou **Envoyer à l'arrière-plan**.
+Quand plusieurs composants se superposent, vous pouvez contrôler lequel est au-dessus. Cliquez avec le bouton droit sur un composant et choisissez :
+- **Control > Bring to Front** (Contrôle > Premier plan) : amener au-dessus
+- **Control > Send to Back** (Contrôle > Arrière-plan) : envoyer derrière
 
 ### Modèles de composants
 
-Si vous configurez souvent un composant de la même manière, vous pouvez créer un modèle. Configurez le composant comme vous le souhaitez, puis cliquez avec le bouton droit dessus et choisissez **Créer un modèle de composant**. Ce modèle apparaîtra dans la Palette d'outils pour une réutilisation facile.
+Si vous configurez souvent un composant de la même manière, vous pouvez créer un modèle. Configurez le composant comme vous le souhaitez, puis cliquez avec le bouton droit dessus et choisissez **Add to Palette** ou **Create Component Template** (Créer un modèle de composant). Ce modèle apparaîtra dans la Palette d'outils pour une réutilisation facile.
+
+### LiveBindings (liaison de données visuelle)
+
+Pour les composants avancés, Delphi propose les **LiveBindings** : un système qui permet de lier visuellement des propriétés de composants entre elles, ou des composants à des sources de données, **sans écrire de code**.
+
+Exemple : lier une `TEdit` à une valeur dans une base de données, ou synchroniser deux composants.
+
+Pour explorer : **View > LiveBindings Designer**. Nous y reviendrons dans le chapitre 8 (accès aux bases de données).
 
 ## Conclusion
 

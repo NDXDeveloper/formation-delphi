@@ -4,11 +4,11 @@
 
 ## Introduction
 
-Le développement logiciel a connu une révolution ces dernières années avec l'arrivée de l'intelligence artificielle. Delphi 13 Florence embrasse cette révolution en intégrant des fonctionnalités d'assistance par IA qui transforment la façon dont vous développez vos applications.
+L'intelligence artificielle transforme progressivement le développement logiciel. Delphi 13 Florence introduit une intégration avec l'IA via un **site web companion** : une plateforme web associée à votre licence Delphi qui propose des fonctionnalités d'assistance pour répondre à vos questions, suggérer du code, et vous aider dans l'apprentissage.
 
-Imaginez avoir un assistant expert en Delphi disponible 24h/24, capable de répondre à vos questions, de vous suggérer du code, de vous aider à résoudre des bugs, et de vous guider dans l'apprentissage du langage. C'est exactement ce que propose le site web companion IA de Delphi 13.
+Dans cette section, nous allons découvrir le companion IA, comprendre ses capacités actuelles et ses limites, et apprendre à l'utiliser efficacement pour accélérer votre apprentissage et votre développement.
 
-Dans cette section, nous allons découvrir ces nouveaux outils d'assistance, comprendre comment ils fonctionnent, et apprendre à les utiliser efficacement pour accélérer votre apprentissage et votre développement.
+> ⚠️ **Note importante :** Le companion IA est une fonctionnalité **récente** de Delphi 13 et est en **évolution continue**. Les fonctionnalités exactes, l'interface et les modalités d'accès peuvent changer entre les mises à jour. Cette section décrit le concept général et les usages typiques — consultez la documentation officielle d'Embarcadero pour les détails techniques à jour.
 
 ## Qu'est-ce que le site web companion IA ?
 
@@ -32,33 +32,23 @@ Pensez-y comme à un collègue expert toujours disponible, qui :
 
 ### Technologie sous-jacente
 
-Le companion IA repose sur des modèles de langage avancés (LLM - Large Language Models) qui ont été entraînés sur :
+Le companion IA repose sur des modèles de langage avancés (LLM — Large Language Models) issus de différents fournisseurs (OpenAI, Anthropic, Google, ou modèles open source comme Ollama selon la configuration). Embarcadero a également annoncé pour Delphi 13 un **SmartCore AI Component Pack** comprenant un composant `TAIConnection` permettant aux développeurs d'intégrer ces modèles dans leurs propres applications.
 
-**Documentation Delphi** : toute la documentation officielle
-
-**Code source exemple** : des milliers d'exemples de code Delphi
-
-**Forums et communauté** : questions et réponses de la communauté Delphi
-
-**Bonnes pratiques** : patterns de conception et conventions de code
-
-**Bibliothèques standard** : VCL, FireMonkey, RTL, FireDAC, etc.
-
-Ces modèles comprennent le contexte de vos questions et génèrent des réponses spécifiques à Delphi et Object Pascal.
+L'assistance est enrichie d'un **contexte spécifique à Delphi** : documentation officielle (DocWiki), conventions Object Pascal, bibliothèques VCL/FireMonkey/RTL/FireDAC, exemples de code et patterns courants. Cette contextualisation s'effectue par **prompt engineering** (instructions données au modèle) plutôt que par un ré-entraînement complet — c'est aussi ce qui permet à la solution d'évoluer rapidement en suivant les sorties Delphi.
 
 ### Différence avec les IA génériques
 
-Contrairement à des IA généralistes comme ChatGPT, le companion IA de Delphi :
+Comparé à un usage direct d'une IA généraliste (ChatGPT, Claude, Gemini…), le companion IA de Delphi présente plusieurs avantages :
 
-**Est spécialisé** : entraîné spécifiquement sur Delphi et Object Pascal
+**Contexte Delphi pré-injecté** : les conventions du langage, la VCL, FireMonkey et les bibliothèques RTL sont automatiquement prises en compte, sans que vous ayez à les préciser à chaque requête
 
-**Comprend le contexte** : connaît les spécificités de chaque version de Delphi
+**Intégration IDE** : accessible directement depuis l'éditeur de code, parfois avec accès au fichier en cours
 
-**Donne des réponses précises** : adaptées aux conventions et bibliothèques Delphi
+**Connaissance ciblée des versions Delphi** : informations à jour sur les nouveautés (Delphi 12, 13, 13.1)
 
-**Est à jour** : connaît les dernières fonctionnalités de Delphi 13
+**Référence à la documentation officielle** : les réponses peuvent renvoyer vers les pages de la DocWiki
 
-**Est intégré** : accessible directement depuis l'IDE ou via le portail web
+À noter que les **modèles sous-jacents** restent généralement les mêmes modèles publics. La différence vient de la spécialisation du contexte et de l'intégration dans l'IDE, pas d'un modèle radicalement différent.
 
 ## Accéder au site web companion IA
 
@@ -66,13 +56,15 @@ Contrairement à des IA généralistes comme ChatGPT, le companion IA de Delphi 
 
 Plusieurs façons d'accéder au companion IA depuis Delphi :
 
-**Menu Aide** : **Aide > Companion IA** ou **Aide > AI Assistant**
+**Menu Help** : **Help > AI Companion** (Aide > Companion IA) — le nom exact peut varier selon la version
 
-**Raccourci clavier** : selon votre configuration (vérifiez dans **Outils > Options > Éditeur clavier**)
+**Raccourci clavier** : pas de raccourci par défaut, mais vous pouvez en définir un dans **Tools > Options > User Interface > Editor > Key Mappings**
+
+**IDE Insight** : **Ctrl + .** puis tapez "AI" ou "Companion"
 
 **Barre d'outils** : certaines configurations affichent une icône IA dans la barre d'outils
 
-**Menu contextuel** : clic droit dans l'éditeur de code peut proposer des options IA
+**Menu contextuel** : clic droit dans l'éditeur de code peut proposer des options IA contextuelles
 
 Selon la méthode, cela ouvre :
 - Une fenêtre intégrée dans l'IDE
@@ -234,7 +226,7 @@ J'obtiens une erreur de compilation. Pourquoi ?
 
 #### Indiquez la version de Delphi
 
-Si pertinent : "Je travaille avec Delphi 13 Florence" ou "Je dois supporter Delphi 11 et ultérieur"
+Si pertinent : "Je travaille avec Delphi 13 Florence" ou "Je dois rester compatible avec Delphi 11 et versions ultérieures"
 
 #### Posez une question à la fois
 
@@ -246,7 +238,7 @@ Plutôt que de poser 5 questions d'un coup, posez-les une par une. Vous obtiendr
 
 **Vous** : "Peux-tu m'expliquer comment utiliser l'opérateur ternaire dans Delphi 13 avec un exemple simple ?"
 
-**IA** : "L'opérateur ternaire en Delphi 13 s'écrit avec `if` et `then` et `else` sur une ligne. Voici un exemple :
+**IA** : "L'opérateur ternaire en Delphi 13 s'écrit avec `if`, `then` et `else` sur une ligne (à l'intérieur d'une expression). Voici un exemple :
 
 ```pascal
 var
@@ -292,7 +284,7 @@ begin
 end;
 ```
 
-Notez aussi le bloc `try-finally` pour assurer que la liste est libérée même en cas d'erreur."
+Notez aussi le bloc `try-finally` pour garantir que la liste est libérée même en cas d'erreur."
 
 #### Exemple 3 : Demander une fonctionnalité complète
 
@@ -436,7 +428,7 @@ L'IA identifiera les changements nécessaires.
 
 ### Assistance contextuelle
 
-Selon votre configuration, l'IA peut être contextuellement consciente :
+Selon votre configuration, l'IA peut être sensible au contexte :
 
 **Fichier actif** : elle sait quel fichier vous éditez
 
@@ -642,7 +634,7 @@ GitHub Copilot est un assistant IA qui fonctionne dans de nombreux éditeurs. Bi
 
 **Générer des tests**
 
-**Note** : son support de Delphi/Object Pascal est moins bon que les langages mainstream (Python, JavaScript, etc.), mais s'améliore.
+**Note** : sa prise en charge de Delphi/Object Pascal est moins bonne que pour les langages les plus répandus (Python, JavaScript, etc.), mais s'améliore au fil des versions.
 
 ### ChatGPT et IA génériques
 
@@ -746,7 +738,7 @@ L'IA est un outil, pas une vérité absolue. Si quelque chose ne semble pas logi
 
 ## Conclusion
 
-Le site web companion IA et l'assistance au développement sont des ajouts révolutionnaires à Delphi 13 Florence. Ils transforment la façon dont vous apprenez, développez, et résolvez les problèmes.
+Le site web companion IA et l'assistance au développement sont des ajouts significatifs à Delphi 13 Florence. Bien utilisés, ils peuvent améliorer votre façon d'apprendre, de développer, et de résoudre les problèmes.
 
 Points essentiels à retenir :
 

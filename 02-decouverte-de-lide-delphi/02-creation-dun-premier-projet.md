@@ -6,7 +6,7 @@
 
 Maintenant que vous connaissez l'interface de Delphi, il est temps de créer votre premier projet ! Cette étape est excitante car vous allez passer de la théorie à la pratique. Ne vous inquiétez pas, créer un projet dans Delphi est très simple et intuitif.
 
-Dans cette section, nous allons voir comment démarrer un nouveau projet, comprendre ce qui se passe en coulisse, et explorer les différents types de projets que vous pouvez créer.
+Dans cette section, nous allons voir comment démarrer un nouveau projet, comprendre ce qui se passe en coulisses, et explorer les différents types de projets que vous pouvez créer.
 
 ## Qu'est-ce qu'un projet Delphi ?
 
@@ -26,13 +26,17 @@ Delphi gère automatiquement la plupart de ces fichiers pour vous. Vous n'avez p
 
 Il existe plusieurs façons de créer un nouveau projet dans Delphi :
 
-**Via le menu principal** : cliquez sur "Fichier" puis "Nouveau", et enfin "Application Windows VCL" (ou "Application multi-plateforme - FireMonkey" selon votre besoin).
+**Via le menu principal** : cliquez sur **File > New > VCL Forms Application** (Fichier > Nouveau > Application Windows VCL) — ou choisissez **Multi-Device Application - Delphi** pour un projet FireMonkey multi-plateforme.
 
-**Via l'écran d'accueil** : si vous venez de lancer Delphi, l'écran d'accueil affiche des raccourcis pour créer rapidement un nouveau projet.
+**Via la Welcome Page** : si vous venez de lancer Delphi, la page d'accueil affiche des raccourcis pour créer rapidement un nouveau projet à partir de différents modèles.
 
-**Via le raccourci clavier** : vous pouvez utiliser **Ctrl + N** pour ouvrir le dialogue de création.
+**Via le menu File > New > Other** (Fichier > Nouveau > Autre) : ouvre la fenêtre **New Items** (Object Repository) qui contient l'ensemble des modèles disponibles, classés par catégorie. C'est la voie la plus complète.
 
-Pour notre premier projet, nous allons choisir une **Application Windows VCL**, qui est le type de projet le plus classique et le plus simple pour débuter sous Windows.
+**Via IDE Insight** : **Ctrl + .** puis tapez "VCL" ou "New Project".
+
+> 💡 Le raccourci **Ctrl + N** dépend du contexte : dans certaines versions de Delphi il ouvre un nouveau fichier dans l'éditeur, dans d'autres il déroule le menu New. Pour un comportement constant, préférez le menu **File > New** ou **Ctrl + .** (IDE Insight).
+
+Pour notre premier projet, nous allons choisir une **VCL Forms Application** (Application Windows VCL), qui est le type de projet le plus classique et le plus simple pour débuter sous Windows.
 
 ### Étape 2 : Choisir le type de projet
 
@@ -64,11 +68,11 @@ Dès que vous validez votre choix, Delphi crée automatiquement plusieurs choses
 
 Avant d'aller plus loin, il est important d'enregistrer votre projet. C'est une bonne habitude à prendre dès le début.
 
-**Choisir "Fichier > Enregistrer tout"** ou appuyez sur **Ctrl + Shift + S**.
+**File > Save All** (Fichier > Enregistrer tout) ou appuyez sur **Ctrl + Shift + S**.
 
 Delphi vous demandera de choisir un emplacement et un nom pour :
 
-1. **L'unité de code** (Unit1.pas) : par défaut, Delphi propose "Unit1". Il est recommandé de choisir un nom plus explicite, par exemple "MainUnit" ou "PrincipaleUnit" si c'est votre unité principale.
+1. **L'unité de code** (Unit1.pas) : par défaut, Delphi propose "Unit1". Il est recommandé de choisir un nom plus explicite, par exemple `uMain` ou `MainUnit` si c'est votre unité principale.
 
 2. **Le projet** (.dpr) : Delphi propose "Project1". Donnez-lui un nom significatif, par exemple "MonPremierProjet".
 
@@ -110,7 +114,7 @@ N'hésitez pas à explorer ces propriétés dans l'inspecteur d'objets pour voir
 
 Appuyez sur **F12** pour voir le code associé à votre fiche. Vous verrez quelque chose comme ceci :
 
-```
+```pascal
 unit MainUnit;
 
 interface
@@ -169,6 +173,94 @@ Si tout se passe bien, une nouvelle fenêtre s'ouvre : c'est votre application !
 
 **En bas de l'IDE Delphi**, vous verrez la fenêtre de messages qui affiche les résultats de la compilation. Si tout s'est bien passé, vous verrez un message indiquant la réussite de la compilation et le nombre de lignes compilées.
 
+## Premier vrai projet interactif : "Hello World" avec un bouton
+
+Une application vide, c'est sympa, mais peu satisfaisant. Faisons un véritable mini-projet en 5 étapes : un bouton qui affiche un message quand on clique dessus. C'est l'équivalent du "Hello World" en Delphi.
+
+### Étape 1 : Ajouter un bouton sur la fiche
+
+1. Dans la **Tool Palette** (palette d'outils, à gauche), repérez la catégorie **Standard**
+2. Cliquez sur le composant **TButton** (l'icône bouton)
+3. Cliquez ensuite **au centre de la fiche** (Form1) — un bouton apparaît avec le texte par défaut "Button1"
+
+### Étape 2 : Personnaliser le bouton
+
+Le bouton est sélectionné automatiquement. Dans l'**Object Inspector** (à droite), modifiez les propriétés suivantes :
+
+| Propriété | Valeur à mettre |
+|-----------|------------------|
+| `Name` | `btnSaluer` |
+| `Caption` | `Dis bonjour` |
+| `Width` | `120` |
+| `Height` | `40` |
+
+Vous verrez le bouton se transformer en temps réel sur la fiche.
+
+### Étape 3 : Créer le code de l'événement clic
+
+**Double-cliquez** sur le bouton dans la fiche. Delphi bascule automatiquement dans l'éditeur de code et crée une procédure vide :
+
+```pascal
+procedure TForm1.btnSaluerClick(Sender: TObject);
+begin
+
+end;
+```
+
+Le curseur est positionné entre `begin` et `end`. Tapez la ligne suivante :
+
+```pascal
+procedure TForm1.btnSaluerClick(Sender: TObject);
+begin
+  ShowMessage('Bonjour ! Bienvenue dans Delphi.');
+end;
+```
+
+`ShowMessage` est une **procédure** (déclarée dans `Vcl.Dialogs`) qui affiche une petite boîte de dialogue avec votre texte. En Object Pascal, une procédure ne renvoie pas de valeur, contrairement à une fonction.
+
+### Étape 4 : Sauvegarder et compiler
+
+- **Ctrl + Shift + S** pour tout sauvegarder
+- **F9** pour compiler et lancer l'application
+
+### Étape 5 : Tester !
+
+Votre application s'ouvre. Cliquez sur le bouton "Dis bonjour". Une boîte de dialogue apparaît avec votre message. Cliquez sur "OK" pour la fermer.
+
+**Bravo ! Vous venez de créer votre première application Delphi interactive.**
+
+> 💡 **Ce qui s'est passé en coulisses :**
+> 1. Vous avez ajouté visuellement un composant à votre fiche (sans code)
+> 2. Delphi a automatiquement déclaré ce bouton dans la classe `TForm1`
+> 3. En double-cliquant, Delphi a créé une **procédure d'événement** et l'a liée au clic du bouton
+> 4. Vous avez écrit **1 ligne** de code pour définir le comportement
+> 5. La compilation a transformé tout cela en un `.exe` autonome
+>
+> Combien de lignes de code avez-vous écrites au total ? **Une seule.** C'est la productivité Delphi en action.
+
+### Pour aller un peu plus loin
+
+Modifiez le message pour qu'il affiche une réponse différente selon l'heure :
+
+```pascal
+procedure TForm1.btnSaluerClick(Sender: TObject);
+var
+  Heure: Word;
+begin
+  Heure := HourOf(Now);
+  if Heure < 12 then
+    ShowMessage('Bonjour ! Bonne matinée.')
+  else if Heure < 18 then
+    ShowMessage('Bon après-midi !')
+  else
+    ShowMessage('Bonsoir ! Bonne soirée.');
+end;
+```
+
+Vous devrez ajouter `System.DateUtils` dans la clause `uses` (Delphi vous le proposera automatiquement avec une ampoule lumineuse dans la marge).
+
+Recompilez (**F9**) et cliquez sur le bouton. Le message change selon l'heure de la journée !
+
 ## Les différents modes de compilation
 
 Delphi offre plusieurs façons de compiler et exécuter votre projet :
@@ -177,23 +269,31 @@ Delphi offre plusieurs façons de compiler et exécuter votre projet :
 
 **Ctrl + F9 (Compiler)** : compile le projet sans le lancer. Utile pour vérifier qu'il n'y a pas d'erreurs.
 
-**Shift + F9 (Compiler et construire)** : recompile tout le projet depuis zéro, même les parties qui n'ont pas changé.
-
-**F12** : vous ramène rapidement au concepteur de fiche si vous êtes dans le code.
+**Shift + F9 (Compiler et construire)** : recompile tout le projet depuis zéro, même les parties qui n'ont pas changé (équivalent à un Build complet).
 
 Pour l'instant, **F9** sera votre raccourci le plus utilisé.
+
+> 💡 **Rappel** : la touche **F12** ne déclenche pas de compilation — elle vous fait basculer entre la vue concepteur et la vue code. Pratique pour passer rapidement de l'un à l'autre pendant que vous travaillez.
 
 ## Où se trouve votre application ?
 
 Quand vous compilez votre projet, Delphi crée un fichier exécutable (.exe). Mais où est-il ?
 
-Par défaut, l'exécutable se trouve dans un sous-dossier de votre projet :
+Par défaut, l'exécutable se trouve dans un sous-dossier de votre projet, organisé par **plateforme** puis **configuration** :
 
-- **Win32\Debug** pour une compilation en mode Debug (développement) pour Windows 32 bits
-- **Win64\Debug** pour Windows 64 bits
-- **Win32\Release** pour une version finale optimisée
+- **Win64\Debug** : compilation en mode Debug (développement) pour Windows 64 bits — **plateforme par défaut dans Delphi 13**
+- **Win32\Debug** : Windows 32 bits — rarement nécessaire aujourd'hui (utile uniquement pour cibler des environnements anciens ou des contraintes d'intégration spécifiques)
+- **Win64\Release** : version finale optimisée 64 bits
+- **Win64Arm\Debug** : Windows on Arm (nouveauté Delphi 13.1)
+
+Et sur d'autres plateformes :
+- **OSX64\Debug** : pour macOS
+- **Android64\Debug**, **iOSDevice64\Debug** : pour mobile
+- **Linux64\Debug** : pour Linux
 
 Vous pouvez naviguer vers ce dossier et double-cliquer sur votre .exe pour lancer votre application sans passer par Delphi. C'est le fichier que vous pourrez distribuer à d'autres personnes (même si pour l'instant, il ne fait pas grand-chose !).
+
+> 💡 **Astuce :** le chemin de sortie est configurable dans **Project > Options > Building > Delphi Compiler > Output Directory**. Vous pouvez aussi y accéder rapidement via clic droit sur le projet > **Show in Explorer** pour ouvrir le dossier dans l'explorateur Windows.
 
 ## Les configurations de compilation
 
@@ -237,7 +337,7 @@ Dès votre premier projet, prenez de bonnes habitudes :
 
 **Commentez votre code** : même si pour l'instant il n'y a pas beaucoup de code, prenez l'habitude de commenter ce que vous faites.
 
-**Testez souvent** : compilez et testez votre application fréquemment, même pour de petites modifications. C'est plus facile de corriger les erreurs au fur et à mesure que de chercher un bug dans 100 lignes de code modifiées.
+**Testez souvent** : compilez et testez votre application fréquemment, même pour de petites modifications. Il est plus facile de corriger les erreurs au fur et à mesure que de chercher un bug dans 100 lignes de code modifiées.
 
 ## Les erreurs courantes et comment les éviter
 
@@ -253,19 +353,19 @@ Même dans un projet simple, vous pouvez rencontrer quelques problèmes :
 
 ## Fermer et rouvrir un projet
 
-Pour fermer votre projet actuel : **Fichier > Fermer tout**
+Pour fermer votre projet actuel : **File > Close All** (Fichier > Fermer tout)
 
-Pour rouvrir un projet existant : **Fichier > Ouvrir un projet** (ou **Ctrl + F11**), puis naviguez jusqu'au fichier .dproj ou .dpr de votre projet.
+Pour rouvrir un projet existant : **File > Open Project** (Fichier > Ouvrir un projet), ou **Ctrl + F11**, puis naviguez jusqu'au fichier `.dproj` ou `.dpr` de votre projet.
 
-Delphi garde aussi une liste des projets récents dans le menu "Fichier", ce qui vous permet de les rouvrir rapidement.
+Delphi garde aussi une liste des projets récents dans le menu **File > Reopen** (Fichier > Récemment ouverts), ce qui vous permet de les rouvrir rapidement.
 
 ## Gérer plusieurs projets
 
-Au début, vous travaillerez probablement sur un projet à la fois. Mais Delphi permet aussi de gérer plusieurs projets simultanément grâce aux **groupes de projets** (.groupproj).
+Au début, vous travaillerez probablement sur un projet à la fois. Mais Delphi permet aussi de gérer plusieurs projets simultanément grâce aux **groupes de projets** (`.groupproj`).
 
 Un groupe de projets est utile quand vous développez plusieurs applications qui travaillent ensemble, par exemple une application principale et une DLL, ou un client et un serveur.
 
-Pour créer un groupe de projets : **Fichier > Nouveau > Autre > Delphi Projects > Project Group**
+Pour créer un groupe de projets : **File > New > Other > Delphi Projects > Project Group** (Fichier > Nouveau > Autre > Projets Delphi > Groupe de projets)
 
 Mais ne vous souciez pas de cela pour l'instant. Concentrez-vous sur la maîtrise d'un seul projet à la fois.
 
@@ -275,11 +375,11 @@ Félicitations ! Vous venez de créer, compiler et exécuter votre premier proje
 
 Vous savez maintenant :
 
-- Comment créer un nouveau projet
-- Comprendre les fichiers générés
-- Naviguer entre la fiche et le code
+- Créer un nouveau projet
+- Identifier les principaux fichiers générés (.dpr, .pas, .dfm, .dproj, .res)
+- Naviguer entre la fiche (concepteur) et le code (éditeur)
 - Compiler et exécuter une application
-- Où se trouve votre exécutable
+- Localiser votre exécutable dans le dossier de sortie
 
 Dans les prochaines sections, nous allons enrichir cette application en ajoutant des composants visuels, en écrivant du code, et en créant quelque chose d'utile et d'interactif.
 

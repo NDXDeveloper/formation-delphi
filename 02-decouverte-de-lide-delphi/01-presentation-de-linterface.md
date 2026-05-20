@@ -8,9 +8,51 @@ Lorsque vous lancez Delphi pour la première fois, vous découvrez un environnem
 
 L'interface de Delphi 13 Florence est conçue pour vous permettre de développer des applications de manière visuelle et intuitive. Prenons le temps de découvrir ensemble les différentes zones qui composent cet environnement.
 
+## Le tout premier écran : la Welcome Page
+
+Quand vous lancez Delphi 13 pour la première fois, vous êtes accueilli par la **Welcome Page** (page d'accueil). C'est un point de départ pratique qui regroupe :
+
+- **Vos projets récents** (la liste est vide au premier lancement)
+- **Des modèles de projets** pour démarrer rapidement (VCL, FireMonkey, console, etc.)
+- **Des liens vers la documentation** et les tutoriels
+- **Les nouveautés de la version** que vous utilisez
+- **Le site web companion IA** (nouveau dans Delphi 13)
+
+Cette page reste accessible en permanence via un onglet en haut de l'IDE. Vous pouvez la fermer si vous préférez et la rouvrir via le menu **View > Welcome Page** (Affichage > Page d'accueil).
+
+> 💡 **Astuce :** Au début, vous pouvez décocher l'option "Show on startup" si vous préférez démarrer directement sans la voir.
+
 ## Vue d'ensemble de l'interface
 
-L'IDE (Integrated Development Environment) de Delphi est organisé en plusieurs zones principales qui travaillent ensemble pour faciliter votre développement :
+L'IDE (Integrated Development Environment) de Delphi est organisé en plusieurs zones principales qui travaillent ensemble pour faciliter votre développement. Voici un schéma simplifié de la disposition standard :
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  Barre de menus : File  Edit  Search  View  Project  Run  Tools  Help  │
+├────────────────────────────────────────────────────────────────────────┤
+│  Barres d'outils : [New] [Open] [Save] | [Run▶] [Pause] [Stop] | ...   │
+├──────────────┬──────────────────────────────────────┬──────────────────┤
+│              │                                      │                  │
+│              │                                      │  Project Manager │
+│   Tool       │     Form Designer / Code Editor      │  (Explorateur de │
+│   Palette    │                                      │   projets)       │
+│   (Palette   │   - Vue "Design" : conception        │                  │
+│    d'outils) │     visuelle de l'interface          ├──────────────────┤
+│              │   - Vue "Code" (F12) : éditeur       │                  │
+│   Composants │     de code Object Pascal            │ Object Inspector │
+│   classés    │                                      │  (Inspecteur     │
+│   par        │                                      │   d'objets)      │
+│   catégorie  │                                      │                  │
+│              │                                      │  - Properties    │
+│              │                                      │  - Events        │
+│              ├──────────────────────────────────────┤                  │
+│              │ Messages : erreurs, warnings, debug  │ Structure View   │
+└──────────────┴──────────────────────────────────────┴──────────────────┘
+```
+
+Cette disposition est **personnalisable** : vous pouvez déplacer chaque fenêtre, l'ancrer ailleurs, ou la faire flotter. Mais cette organisation par défaut est un bon point de départ.
+
+Détaillons maintenant chaque zone :
 
 ### La barre de menus
 
@@ -62,7 +104,7 @@ L'éditeur de code de Delphi est très sophistiqué :
 - Il vous signale les erreurs de syntaxe en temps réel
 - Il vous permet de naviguer facilement entre différentes parties de votre code
 
-Vous pouvez basculer entre la vue concepteur et la vue code en utilisant la touche **F12**, ou en cliquant sur les onglets correspondants. La touche **F11** affiche l'inspecteur d'objets.
+Vous pouvez basculer entre la vue concepteur et la vue code en utilisant la touche **F12**, ou en cliquant sur les onglets correspondants. La touche **F11** donne le focus à l'inspecteur d'objets (et permet aussi de basculer rapidement entre l'éditeur, le concepteur et l'inspecteur).
 
 ### L'inspecteur d'objets (Object Inspector)
 
@@ -122,21 +164,29 @@ L'une des forces de Delphi est que vous pouvez adapter l'interface à vos préf�
 
 **Redimensionner les zones** : en faisant glisser les bordures entre les différentes zones, vous pouvez donner plus ou moins d'espace à chaque fenêtre.
 
-**Masquer ou afficher des fenêtres** : via le menu "Affichage", vous pouvez choisir quelles fenêtres afficher selon vos besoins du moment.
+**Masquer ou afficher des fenêtres** : via le menu **View** (Affichage), vous pouvez choisir quelles fenêtres afficher selon vos besoins du moment.
 
-**Enregistrer des dispositions** : une fois que vous avez organisé votre interface comme vous le souhaitez, vous pouvez enregistrer cette disposition pour la retrouver facilement. Allez dans "Affichage > Dispositions de bureau" pour gérer vos dispositions personnalisées.
+**Activer l'Auto-Hide (masquage automatique)** : pour les fenêtres ancrées, cliquez sur la petite icône punaise (📌) dans leur barre de titre. La fenêtre se replie en un onglet sur le bord de l'IDE et ne s'affiche qu'au survol. C'est très pratique pour gagner de l'espace tout en gardant les fenêtres accessibles.
+
+**Enregistrer des dispositions** : une fois que vous avez organisé votre interface comme vous le souhaitez, vous pouvez enregistrer cette disposition pour la retrouver facilement. Allez dans **View > Desktops** (Affichage > Dispositions de bureau) pour gérer vos dispositions personnalisées.
+
+> 📌 **Note sur la langue de l'IDE :** Cette formation utilise systématiquement les noms anglais des menus suivis de leur traduction française entre parenthèses. L'IDE Delphi n'est pas officiellement distribué en français (seuls l'anglais, l'allemand et le japonais sont disponibles selon les éditions et les régions). L'anglais est donc la langue à laquelle vous serez exposé dans l'IDE, la DocWiki et la plupart des ressources communautaires. La traduction française que nous fournissons sert uniquement à clarifier le sens des termes pendant l'apprentissage.
 
 ## Les nouveautés de l'interface dans Delphi 13 Florence
 
-Delphi 13 apporte quelques améliorations bienvenues à l'interface :
+Delphi 13 apporte plusieurs améliorations significatives à l'interface :
 
-**Meilleure prise en charge des écrans haute résolution** : l'interface s'adapte mieux aux écrans 4K et aux configurations multi-moniteurs.
+**IDE 64 bits natif** : pour la première fois en près de 30 ans, l'IDE Delphi tourne comme une véritable application 64 bits (Delphi 2 était passé en 32 bits en 1996, et l'IDE l'est resté jusqu'à Delphi 12). Cela élimine l'ancienne limite mémoire (~4 Go par processus en 32 bits) et permet de travailler sur de très gros projets avec de nombreux packages chargés simultanément.
 
-**Thèmes visuels améliorés** : vous pouvez choisir entre un thème clair et un thème sombre, plus confortable pour de longues sessions de programmation.
+**Meilleure prise en charge des écrans haute résolution** : l'interface s'adapte mieux aux écrans 4K, 5K, 8K, et aux configurations multi-moniteurs, grâce à des icônes vectorielles et un rendu HiDPI optimisé.
 
-**Amélioration du gestionnaire GetIt** : l'accès aux packages et composants tiers est plus intégré et fluide.
+**Thèmes visuels améliorés** : vous pouvez choisir entre un thème clair, un thème sombre, et plusieurs variantes intermédiaires (Mountain Mist, Charcoal Dark Slate), plus confortables pour de longues sessions.
 
-**Support LLDB v12** : pour un débogage plus performant, particulièrement sur les plateformes non-Windows.
+**Amélioration du gestionnaire GetIt** : l'accès aux packages et composants tiers est plus intégré et fluide, avec une meilleure gestion des versions (voir section 2.10).
+
+**Support LLDB v12** : pour un débogage modernisé sur macOS, iOS, Android et Linux (Windows conserve son débogueur natif).
+
+**Site web companion IA** : un nouvel outil d'assistance pour répondre à vos questions et générer du code Object Pascal (voir section 2.11).
 
 ## Conseils pour bien débuter
 
@@ -147,6 +197,7 @@ Delphi 13 apporte quelques améliorations bienvenues à l'interface :
 - **F9** : compiler et exécuter
 - **Ctrl + Espace** : auto-complétion du code
 - **Ctrl + S** : enregistrer
+- **Ctrl + .** (Control + point) : ouvrir **IDE Insight**, la recherche universelle. Tapez n'importe quoi (nom de commande, de fichier, d'option) et l'IDE le trouve. À retenir absolument !
 
 **N'hésitez pas à réorganiser** : testez différentes dispositions de fenêtres pour trouver celle qui vous convient le mieux. Chaque développeur a ses préférences !
 

@@ -20,7 +20,7 @@ Il vous montre tous les fichiers qui composent votre application : les fiches, l
 
 ### Localisation de l'Explorateur de projets
 
-L'Explorateur de projets se trouve généralement en haut à droite de l'IDE. Si vous ne le voyez pas, vous pouvez l'afficher via le menu **Affichage > Gestionnaire de projets** ou en appuyant sur **Ctrl + Alt + F11**.
+L'Explorateur de projets se trouve généralement en haut à droite de l'IDE. Si vous ne le voyez pas, vous pouvez l'afficher via le menu **View > Project Manager** (Affichage > Gestionnaire de projets) ou en appuyant sur **Ctrl + Alt + F11**.
 
 ### Structure de l'arborescence
 
@@ -29,15 +29,14 @@ Quand vous ouvrez l'Explorateur de projets, vous voyez une structure hiérarchiq
 ```
 ProjectGroup1 (le groupe de projets)
 └── MonApplication.exe (votre projet)
-    ├── MonApplication.dpr (le fichier projet principal)
     ├── Build Configurations (configurations de compilation)
     │   ├── Debug
     │   └── Release
-    ├── FormPrincipale (votre fiche principale)
-    │   ├── FormPrincipale.pas (le code)
-    │   └── FormPrincipale.dfm (la définition visuelle)
-    ├── Références (les bibliothèques utilisées)
-    └── Contenu (autres fichiers et ressources)
+    ├── Target Platforms (plateformes cibles : Win64, Win32, etc.)
+    ├── MonApplication.dpr (le fichier projet principal)
+    ├── FormPrincipale.pas (votre fiche principale)
+    │   └── FormPrincipale.dfm (définition visuelle, sous le .pas)
+    └── References (bibliothèques/unités référencées)
 ```
 
 Chaque élément de cette arborescence représente un fichier ou un groupe de fichiers de votre projet.
@@ -76,7 +75,7 @@ Les unités sont les véritables travailleurs de votre application. C'est là qu
 
 Ce sont des fichiers spéciaux qui décrivent l'apparence de vos fenêtres. Ils stockent toutes les propriétés que vous définissez dans l'Inspecteur d'objets : la position des composants, leurs couleurs, leurs tailles, etc.
 
-Ces fichiers sont au format texte, mais dans un format spécifique à Delphi. Vous pouvez les voir en faisant un clic droit sur une fiche dans l'Explorateur de projets et en choisissant **Afficher en tant que texte**.
+Ces fichiers sont au format texte, mais dans un format spécifique à Delphi. Vous pouvez les voir en faisant un clic droit sur la fiche dans le concepteur et en choisissant **View as Text** (Afficher en tant que texte), ou via le raccourci **Alt + F12**.
 
 Généralement, vous ne modifiez pas ces fichiers directement. Vous utilisez le concepteur visuel et l'Inspecteur d'objets, et Delphi met à jour le .dfm automatiquement.
 
@@ -102,23 +101,23 @@ L'Explorateur de projets n'est pas qu'un simple affichage : c'est un outil inter
 
 Vous pouvez ajouter de nouveaux éléments à votre projet de plusieurs façons :
 
-**Via le menu Fichier > Nouveau > Fiche** : crée une nouvelle fiche avec son unité de code.
+**Via le menu File > New > Form** (Fichier > Nouveau > Fiche) : crée une nouvelle fiche avec son unité de code.
 
-**Via le menu Fichier > Nouveau > Unité** : crée une nouvelle unité de code sans interface visuelle.
+**Via le menu File > New > Unit** (Fichier > Nouveau > Unité) : crée une nouvelle unité de code sans interface visuelle.
 
-**Clic droit dans l'Explorateur** : sur le nom du projet, choisissez **Ajouter** pour ajouter un fichier existant.
+**Clic droit dans l'Explorateur** : sur le nom du projet, choisissez **Add** (Ajouter) pour ajouter un fichier existant.
 
 **Par glisser-déposer** : depuis l'explorateur Windows, vous pouvez faire glisser un fichier .pas dans l'Explorateur de projets.
 
 #### Supprimer des fichiers du projet
 
-**Clic droit** sur un fichier et choisissez **Retirer du projet**. Attention : cela ne supprime pas le fichier de votre disque dur, cela le retire simplement du projet.
+**Clic droit** sur un fichier et choisissez **Remove from Project** (Retirer du projet). Attention : cela ne supprime pas le fichier de votre disque dur, cela le retire simplement du projet.
 
-Si vous voulez vraiment supprimer le fichier, choisissez **Supprimer** au lieu de **Retirer du projet**.
+Si vous voulez vraiment supprimer le fichier, choisissez **Delete** (Supprimer) au lieu de **Remove from Project**.
 
 #### Organiser les fichiers
 
-Pour les projets complexes, vous pouvez organiser vos fichiers en dossiers virtuels dans l'Explorateur de projets. Clic droit sur le projet, choisissez **Ajouter > Nouveau dossier**, donnez un nom au dossier, puis glissez-déposez vos fichiers dedans.
+Pour les projets complexes, vous pouvez organiser vos fichiers en dossiers virtuels dans l'Explorateur de projets. Clic droit sur le projet, choisissez **Add > New Folder** (Ajouter > Nouveau dossier), donnez un nom au dossier, puis glissez-déposez vos fichiers dedans.
 
 Attention : ce sont des dossiers virtuels dans l'Explorateur, pas de vrais dossiers sur votre disque dur. C'est simplement une aide visuelle pour organiser vos fichiers.
 
@@ -130,7 +129,7 @@ Vous verrez dans l'Explorateur un nœud appelé **Build Configurations** qui con
 
 **Release** : configuration pour la distribution finale. Le code est optimisé pour la vitesse et la taille, mais plus difficile à déboguer.
 
-Vous pouvez basculer entre ces configurations via la barre d'outils ou le menu **Projet > Configurer la version**. Pendant le développement, restez en mode **Debug**.
+Vous pouvez basculer entre ces configurations via la barre d'outils, ou par clic droit sur **Build Configurations** dans le Project Manager. Pendant le développement, restez en mode **Debug**.
 
 ### Groupes de projets
 
@@ -140,7 +139,7 @@ Un groupe de projets vous permet de travailler sur plusieurs projets en même te
 - Un client et un serveur
 - Plusieurs outils qui partagent du code commun
 
-Dans l'Explorateur de projets, vous verrez alors plusieurs projets listés sous le groupe. Vous pouvez définir quel projet est le projet actif (celui qui sera compilé quand vous appuyez sur F9) en faisant un clic droit et en choisissant **Activer**.
+Dans l'Explorateur de projets, vous verrez alors plusieurs projets listés sous le groupe. Vous pouvez définir quel projet est le projet actif (celui qui sera compilé quand vous appuyez sur F9) en faisant un clic droit et en choisissant **Activate** (Activer).
 
 ### Options du projet
 
@@ -148,15 +147,15 @@ Un clic droit sur le nom du projet dans l'Explorateur donne accès à **Options*
 
 **Application** : nom de l'application, icône, fichier de manifeste
 
-**Formulaires** : quelle fiche se crée automatiquement au démarrage
+**Forms** (Formulaires) : quelle fiche se crée automatiquement au démarrage
 
-**Compilateur** : options de compilation avancées
+**Delphi Compiler** (Compilateur Delphi) : options de compilation avancées
 
-**Répertoires/Conditions** : chemins de recherche pour les fichiers
+**Directories and Conditionals** (Répertoires et conditions) : chemins de recherche pour les fichiers
 
-**Version Info** : informations de version de votre application
+**Version Info** (Informations de version) : informations de version de votre application
 
-**Connexion** : pour les applications qui utilisent des bases de données
+**Connection** (Connexion) : pour les applications qui utilisent des bases de données
 
 Ne modifiez ces options que si vous savez ce que vous faites. Les valeurs par défaut conviennent pour commencer.
 
@@ -180,15 +179,20 @@ Cette fenêtre, souvent située sous l'Explorateur de projets, affiche la struct
 
 Vous pouvez double-cliquer sur n'importe quel élément pour naviguer directement vers sa définition dans le code. C'est extrêmement pratique pour les gros fichiers.
 
-Si vous ne voyez pas cette fenêtre, affichez-la via **Affichage > Explorateur de structure**.
+Si vous ne voyez pas cette fenêtre, affichez-la via **View > Structure** (Affichage > Explorateur de structure).
 
 ### Navigation dans le code
 
 #### Onglets de fichiers
 
-En haut de l'éditeur de code, vous voyez des onglets pour tous les fichiers ouverts. Cliquez sur un onglet pour basculer vers ce fichier. Vous pouvez fermer un onglet en cliquant sur le petit "x" à droite.
+En haut de l'éditeur de code, vous voyez des onglets pour tous les fichiers ouverts. Cliquez sur un onglet pour basculer vers ce fichier. Vous pouvez fermer un onglet en cliquant sur le petit "x" à droite, ou avec **Ctrl + F4**.
 
-**Astuce** : faites un clic droit sur un onglet pour voir des options utiles comme "Fermer tous sauf celui-ci" ou "Ouvrir le dossier contenant".
+**Astuce** : faites un clic droit sur un onglet pour voir des options utiles :
+- **Close** (Fermer) : ferme cet onglet
+- **Close All Other Pages** (Fermer tous sauf celui-ci) : conserve uniquement le fichier actif
+- **Close All Pages** : ferme tous les onglets
+- **Open Folder in Explorer** (Ouvrir le dossier contenant) : ouvre l'emplacement du fichier dans Windows
+- **Copy Full Path** : copie le chemin complet du fichier dans le presse-papiers
 
 #### Basculer entre interface et implémentation
 
@@ -197,9 +201,9 @@ Dans une unité Delphi, le code est organisé en deux sections principales :
 - **interface** : les déclarations publiques (ce qui est visible par les autres unités)
 - **implementation** : les implémentations réelles (le code qui fait le travail)
 
-Pour naviguer rapidement entre la déclaration d'une procédure (dans **interface**) et son implémentation (dans **implementation**), placez votre curseur sur le nom de la procédure et appuyez sur **Ctrl + Shift + Flèche haut** ou **Flèche bas**.
+Pour naviguer rapidement entre la déclaration d'une procédure (dans **interface**) et son implémentation (dans **implementation**), placez votre curseur sur le nom de la procédure et appuyez sur **Ctrl + Shift + ↑** ou **Ctrl + Shift + ↓**.
 
-Vous pouvez aussi faire un clic droit et choisir **Rechercher la déclaration** ou **Rechercher l'implémentation**.
+Vous pouvez aussi faire un clic droit et choisir **Find Declaration** (Rechercher la déclaration) ou **Find Implementation** (Rechercher l'implémentation).
 
 #### Basculer entre fiche et code
 
@@ -207,7 +211,7 @@ Nous l'avons déjà vu, mais c'est tellement important que ça mérite d'être r
 
 **F12** : bascule entre le concepteur de fiche et le code associé
 
-**F11** : ouvre l'Inspecteur d'objets
+**F11** : donne le focus à l'Inspecteur d'objets (et permet de basculer rapidement entre l'éditeur, le concepteur et l'inspecteur)
 
 Ces raccourcis sont parmi les plus utilisés dans Delphi.
 
@@ -261,7 +265,7 @@ Placez votre curseur sur un nom de variable, de fonction, de classe, etc., et :
 
 **Ctrl + clic** : saute directement à la déclaration
 
-Ou **clic droit > Rechercher la déclaration**
+Ou **clic droit > Find Declaration** (Rechercher la déclaration)
 
 C'est l'une des fonctionnalités les plus utiles de Delphi. Vous pouvez naviguer dans votre code en suivant les références, comme si vous cliquiez sur des liens hypertexte.
 
@@ -269,7 +273,7 @@ C'est l'une des fonctionnalités les plus utiles de Delphi. Vous pouvez naviguer
 
 Pour voir tous les endroits où un élément est utilisé :
 
-**Clic droit sur l'élément > Trouver des références**
+**Clic droit sur l'élément > Find References** (Trouver des références)
 
 Ou **Shift + Ctrl + Entrée**
 
@@ -322,7 +326,7 @@ Ou utilisez **Ctrl + Shift + I** pour indenter, et **Ctrl + Shift + U** pour dé
 
 #### Complétion des blocs
 
-Quand vous tapez `begin` et que vous appuyez sur **Entrée**, Delphi ajoute automatiquement le `end;` correspondant et positionne votre curseur entre les deux. Pareil pour d'autres structures comme `if`, `while`, `try`, etc.
+Quand vous tapez `begin` et que vous appuyez sur **Entrée**, Delphi ajoute automatiquement le `end;` correspondant et positionne votre curseur entre les deux. De même pour d'autres structures comme `if`, `while`, `try`, etc.
 
 #### Commentaires rapides
 
@@ -344,13 +348,13 @@ C'est utile pour éditer plusieurs lignes en même temps, par exemple pour ajout
 
 Delphi propose des templates pour insérer rapidement des structures de code courantes.
 
-Tapez un raccourci et appuyez sur **Tab** pour l'expanser. Par exemple :
+Tapez un raccourci et appuyez sur **Tab** pour le développer en bloc de code complet. Par exemple :
 
 - `try` + **Tab** → insère un bloc try-finally complet
 - `ife` + **Tab** → insère une structure if-then-else
 - `fori` + **Tab** → insère une boucle for
 
-Vous pouvez voir tous les templates disponibles et en créer de nouveaux dans **Outils > Options > Éditeur de code > Code Insight**.
+Vous pouvez voir tous les templates disponibles et en créer de nouveaux dans **Tools > Options > Editor > Code Insight > Templates** (Outils > Options > Éditeur de code > Code Insight > Templates).
 
 ### Refactoring
 
@@ -361,20 +365,28 @@ Le refactoring consiste à améliorer la structure de votre code sans changer so
 Pour renommer une variable, une fonction, une classe, etc. partout où elle est utilisée :
 
 1. Placez votre curseur sur l'élément
-2. Clic droit > **Refactoriser > Renommer** (ou **Ctrl + Shift + E**)
+2. Clic droit > **Refactor > Rename** (Refactoriser > Renommer), ou raccourci **Ctrl + Shift + E**
 3. Tapez le nouveau nom
 4. Delphi met à jour toutes les occurrences
 
 C'est beaucoup plus sûr que de faire un simple rechercher/remplacer, car Delphi comprend la portée et le contexte.
 
-#### Extraire une méthode
+#### Extraire une méthode (Extract Method)
 
 Si vous avez un bloc de code que vous voulez transformer en méthode séparée :
 
 1. Sélectionnez le bloc
-2. Clic droit > **Refactoriser > Extraire méthode**
+2. Clic droit > **Refactor > Extract Method** (Refactoriser > Extraire méthode), ou **Ctrl + Shift + M**
 3. Donnez un nom à la méthode
 4. Delphi crée la méthode et remplace le bloc sélectionné par un appel à cette méthode
+
+#### Autres refactorings disponibles
+
+- **Extract Variable** (extraire une variable depuis une expression)
+- **Extract Resource String** (extraire une chaîne dans les ressources, utile pour l'internationalisation)
+- **Inline Variable / Method** (inverse de l'extraction)
+- **Change Parameters** (modifier la signature d'une méthode)
+- **Find Unit** (Alt+Entrée sur un identificateur inconnu : Delphi propose l'unité à ajouter dans la clause uses)
 
 #### Déclarer une variable
 
@@ -414,9 +426,9 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
 ```
 
-#### Ajouter une unité automatiquement
+#### Ajouter une unité automatiquement (Use Unit)
 
-Quand vous utilisez un type ou une fonction qui n'est pas encore dans votre clause **uses**, Delphi souligne l'erreur. Cliquez sur l'ampoule ou appuyez sur **Alt + Entrée**, et choisissez **Ajouter l'unité à la clause uses**.
+Quand vous utilisez un type ou une fonction qui n'est pas encore dans votre clause **uses**, Delphi souligne l'erreur. Cliquez sur l'ampoule ou appuyez sur **Alt + Entrée**, et choisissez **Use Unit** (Ajouter l'unité à la clause uses).
 
 Delphi trouve automatiquement la bonne unité et l'ajoute pour vous.
 
@@ -424,7 +436,7 @@ Delphi trouve automatiquement la bonne unité et l'ajoute pour vous.
 
 Avec le temps, votre clause **uses** peut devenir longue et désordonnée. Vous pouvez la réorganiser :
 
-**Clic droit dans le code > Refactoriser > Organiser les uses**
+**Clic droit dans le code > Refactor > Reorder Uses** (Refactoriser > Organiser les uses)
 
 Delphi trie les unités alphabétiquement et supprime les doublons.
 
@@ -481,17 +493,17 @@ Ces régions peuvent être repliées dans l'éditeur pour une meilleure lisibili
 
 ### Gestion de projet
 
-**Sauvegardez régulièrement** : **Ctrl + S** doit devenir un réflexe. Ou mieux, activez la sauvegarde automatique dans **Outils > Options > Éditeur de code**.
+**Sauvegardez régulièrement** : **Ctrl + S** doit devenir un réflexe. Ou mieux, activez la sauvegarde automatique dans **Tools > Options > Editor > Editor** (Outils > Options > Éditeur).
 
 **Utilisez le contrôle de version** : Git, SVN, ou autre. Même pour des projets personnels, c'est une sécurité précieuse.
 
 **Compilez souvent** : ne laissez pas des centaines de lignes de code s'accumuler sans compiler. Compilez régulièrement pour détecter les erreurs tôt.
 
-**Organisez vos fichiers sur le disque** : créez une structure de dossiers claire (par exemple, un dossier Sources pour le code, un dossier Resources pour les images, etc.).
+**Organisez vos fichiers sur le disque** : créez une structure de dossiers claire (par exemple, un dossier `Sources` pour le code, un dossier `Resources` pour les images, etc.).
 
 ### Personnalisation de l'éditeur
 
-Dans **Outils > Options > Éditeur de code**, vous pouvez personnaliser de nombreux aspects :
+Dans **Tools > Options > Editor** (Outils > Options > Éditeur), vous pouvez personnaliser de nombreux aspects :
 
 - La taille et la police du code
 - Les couleurs de la coloration syntaxique

@@ -70,11 +70,13 @@ Un **package** (ou paquet) est un ensemble de composants, bibliothèques ou outi
 
 Il existe plusieurs façons d'ouvrir GetIt Package Manager :
 
-**Via le menu principal** : **Outils > GetIt Package Manager**
+**Via le menu principal** : **Tools > GetIt Package Manager** (Outils > Gestionnaire de packages GetIt)
 
-**Via l'écran d'accueil** : au démarrage de Delphi, cliquez sur "Obtenir plus" ou "GetIt" dans l'écran d'accueil
+**Via l'écran d'accueil (Welcome Page)** : au démarrage de Delphi, cliquez sur "GetIt" dans la Welcome Page
 
 **Via la barre d'outils** : certaines versions affichent un bouton GetIt directement
+
+**Via IDE Insight** : `Ctrl + .` puis tapez "GetIt"
 
 **Raccourci clavier** : pas de raccourci par défaut, mais vous pouvez en créer un dans les options
 
@@ -150,7 +152,7 @@ En cliquant sur un package, vous accédez à sa page de détails qui affiche :
 
 **Licence** : gratuit, commercial, open source, etc.
 
-**Compatibilité** : versions de Delphi supportées, plateformes compatibles
+**Compatibilité** : versions de Delphi prises en charge, plateformes compatibles
 
 **Captures d'écran** : aperçus visuels si c'est un composant graphique
 
@@ -188,7 +190,7 @@ L'installation d'un package via GetIt est très simple :
 
 ### Ce qui se passe pendant l'installation
 
-Derrière les scènes, GetIt :
+En coulisses, GetIt :
 
 **Télécharge** les fichiers du package depuis le serveur
 
@@ -224,7 +226,7 @@ Après l'installation d'un package de composants, vérifiez qu'il est bien dispo
 
 **Créez un projet de test** : ajoutez le nouveau composant sur une fiche pour vérifier qu'il fonctionne
 
-**Consultez la documentation** : beaucoup de packages incluent une documentation accessible via **Aide > Contenu tiers**
+**Consultez la documentation** : beaucoup de packages incluent une documentation accessible via **Help > Third-Party Help** (Aide > Aide des produits tiers) ou directement sur le site web de l'éditeur
 
 ### Si l'installation échoue
 
@@ -314,7 +316,7 @@ Voici quelques packages populaires disponibles via GetIt, utiles pour différent
 
 **DevExpress VCL** : suite complète de composants professionnels pour VCL (commercial)
 
-**AlphaControls** : composants VCL avec support de skinning avancé (commercial)
+**AlphaControls** : composants VCL avec gestion avancée du skinning (commercial)
 
 **Project Magenta Styles** : thèmes visuels modernes pour VCL (gratuit)
 
@@ -328,7 +330,7 @@ Voici quelques packages populaires disponibles via GetIt, utiles pour différent
 
 **FireDAC Extensions** : extensions supplémentaires pour FireDAC
 
-**DevArt Data Access Components** : composants d'accès aux données professionnels (commercial)
+**Devart Data Access Components** : composants d'accès aux données professionnels (commercial)
 
 ### Web et REST
 
@@ -350,15 +352,19 @@ Voici quelques packages populaires disponibles via GetIt, utiles pour différent
 
 **DUnitX** : framework de tests unitaires moderne (open source, gratuit)
 
-**GExperts** : extensions de l'IDE très utiles (open source, gratuit)
+**GExperts** : extensions de l'IDE très utiles (open source, gratuit). À télécharger sur https://www.gexperts.org/ ; installation manuelle (pas systématiquement présent dans GetIt selon les versions).
 
 ### Mobile et multi-plateforme
 
-**FMXLinux** : support Linux pour FireMonkey (inclus avec certaines éditions)
+**FMXLinux** : support Linux pour les applications FireMonkey. Depuis Delphi 11, ce package est intégré directement à RAD Studio (édition Enterprise ou Architect), sans installation supplémentaire via GetIt.
 
 **Kastri** : bibliothèque complète pour le développement mobile (open source, gratuit)
 
-### Exemples et learning
+### Graphiques modernes
+
+**Skia4Delphi** : bibliothèque graphique moderne basée sur Skia (le moteur 2D utilisé par Google Chrome, Android, Flutter). Depuis Delphi 12, Skia4Delphi est intégré dans RAD Studio et peut servir de moteur de rendu alternatif pour FireMonkey, avec prise en charge des effets visuels avancés, du format SVG, des animations Lottie, etc.
+
+### Exemples et apprentissage
 
 **RAD Studio Code Examples** : exemples officiels Embarcadero (gratuit)
 
@@ -471,7 +477,7 @@ C'est utile pour les packages très récents ou spécialisés qui ne sont pas en
 
 **Solutions** :
 - Vérifiez votre connexion internet
-- Configurez les paramètres de proxy dans **Outils > Options > Connexion**
+- Configurez les paramètres de proxy dans **Tools > Options > Environment Options > Proxy** (Outils > Options > Options d'environnement > Proxy)
 - Essayez plus tard
 
 ### Package ne s'installe pas
@@ -498,7 +504,7 @@ C'est utile pour les packages très récents ou spécialisés qui ne sont pas en
 
 **Solutions** :
 - Redémarrez Delphi complètement
-- Vérifiez dans **Composants > Installer des packages** que le package est bien listé
+- Vérifiez dans **Component > Install Packages** (Composant > Installer les packages) que le package est bien listé
 - Réinstallez le package
 
 ### Conflits entre packages
@@ -557,7 +563,7 @@ Chaque développeur installe les packages localement sur sa machine via GetIt.
 
 **Packages officiels Embarcadero** : sûrs, vérifiés
 
-**Packages d'éditeurs connus** : généralement sûrs (DevExpress, TMS, DevArt, etc.)
+**Packages d'éditeurs connus** : généralement sûrs (DevExpress, TMS, Devart, etc.)
 
 **Packages open source populaires** : code source visible, communauté active = généralement sûrs
 
@@ -622,7 +628,7 @@ Après avoir installé un package, prenez le temps de :
 - Essayer les exemples fournis
 - Expérimenter dans un projet de test
 
-Ne vous contentez pas de l'installer et d'espérer que ça fonctionne magiquement !
+Ne vous contentez pas de l'installer en espérant que tout fonctionne comme par magie.
 
 ### Posez des questions
 
@@ -632,7 +638,7 @@ Si vous avez des difficultés avec un package :
 - Visitez Stack Overflow
 - Contactez l'auteur si c'est un package open source
 
-La communauté Delphi est généralement très aidante.
+La communauté Delphi est généralement très serviable et accueillante envers les nouveaux développeurs.
 
 ## Conclusion
 

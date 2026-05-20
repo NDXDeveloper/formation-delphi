@@ -59,7 +59,7 @@ Si vous avez déjà lancé votre application et que vous appuyez à nouveau sur 
 
 ### Compiler sans exécuter : Ctrl + F9
 
-Parfois, vous voulez juste vérifier que votre code compile correctement, sans lancer l'application. Utilisez **Ctrl + F9** (ou menu **Projet > Compiler**).
+Parfois, vous voulez juste vérifier que votre code compile correctement, sans lancer l'application. Utilisez **Ctrl + F9** (ou menu **Project > Compile [nom du projet]** / Projet > Compiler).
 
 Cela compile votre projet et vous indique s'il y a des erreurs, mais ne lance pas l'exécutable.
 
@@ -72,7 +72,7 @@ C'est utile pour :
 
 Normalement, Delphi est intelligent : il ne recompile que les fichiers qui ont changé depuis la dernière compilation. C'est ce qu'on appelle la "compilation incrémentale", et c'est ce qui rend Delphi rapide.
 
-Mais parfois, vous voulez forcer une recompilation complète de tous les fichiers, depuis zéro. Utilisez **Shift + F9** (ou menu **Projet > Tout construire**).
+Mais parfois, vous voulez forcer une recompilation complète de tous les fichiers, depuis zéro. Utilisez **Shift + F9** (ou menu **Project > Build** / Projet > Construire).
 
 Utilisez cette option quand :
 - Vous soupçonnez un problème de compilation incrémentale
@@ -82,9 +82,9 @@ Utilisez cette option quand :
 
 ### Nettoyer le projet
 
-Pour supprimer tous les fichiers générés par la compilation (fichiers .dcu, .exe, etc.) et repartir de zéro : **Projet > Nettoyer**.
+Pour supprimer tous les fichiers générés par la compilation (fichiers .dcu, .exe, etc.) et repartir de zéro : **Project > Clean** (Projet > Nettoyer).
 
-Cela peut résoudre certains problèmes mystérieux de compilation.
+Cela peut résoudre certains problèmes mystérieux de compilation, notamment quand des fichiers .dcu obsolètes traînent.
 
 ## Le processus de compilation en détail
 
@@ -113,7 +113,7 @@ C'est à ce stade que les erreurs de logique de typage sont détectées.
 
 Si tout est correct, le compilateur génère des fichiers intermédiaires appelés "unités compilées" (fichiers .dcu pour Delphi Compiled Unit). Ces fichiers contiennent le code machine correspondant à vos unités .pas.
 
-Les .dcu sont stockés dans le dossier de sortie (généralement Win32\Debug ou Win64\Debug).
+Les .dcu sont stockés dans le dossier de sortie (généralement `Win64\Debug` pour Delphi 13, ou `Win32\Debug` si vous ciblez le 32 bits).
 
 ### Phase 4 : Liaison (Linking)
 
@@ -125,7 +125,7 @@ C'est aussi à ce stade que sont incorporées les ressources (icône de l'applic
 
 Le fichier .exe est créé dans le dossier de sortie. Il est prêt à être exécuté !
 
-### Ce qui se passe en coulisse
+### Ce qui se passe en coulisses
 
 Pendant la compilation, vous verrez en bas de l'IDE la fenêtre **Messages** qui affiche la progression :
 
@@ -170,7 +170,7 @@ Exemples d'avertissements courants :
 
 **"Return value might be undefined"** : une fonction ne retourne pas toujours une valeur dans tous les cas possibles.
 
-**"Local variable 'X' not used"** : vous avez déclaré une variable que vous n'utilisez jamais. Ce n'est pas grave, mais c'est du code mort.
+**"Local variable 'X' is assigned but never used"** : vous avez modifié une variable que vous n'utilisez jamais ensuite. Ce n'est pas critique, mais c'est du code mort.
 
 Ne négligez pas les avertissements ! Même s'ils ne bloquent pas la compilation, ils signalent souvent de vrais bugs.
 
@@ -285,32 +285,40 @@ Pour changer de configuration :
 1. Dans la barre d'outils, trouvez le menu déroulant qui affiche "Debug" ou "Release"
 2. Cliquez dessus et sélectionnez la configuration souhaitée
 
-Ou via le menu **Projet > Configuration de build** et choisissez la configuration active.
+Ou via le **Project Manager** (à droite) : développez **Build Configurations**, faites un clic droit sur **Debug** ou **Release** et choisissez **Activate** (Activer).
 
 ### Plateformes cibles
 
-Delphi permet de compiler pour différentes plateformes :
+Delphi 13 permet de compiler pour différentes plateformes :
 
-**Win32** : Windows 32 bits (compatible avec tous les Windows, de XP à Windows 11)
+**Win32 (Windows x86)** : Windows 32 bits — compatible avec Windows 10 et 11 (Windows 7/8 ne sont plus officiellement pris en charge). Utile pour les anciennes applications héritées ou pour cibler des machines avec peu de mémoire.
 
-**Win64** : Windows 64 bits (recommandé pour les applications modernes)
+**Win64 (Windows x64)** : Windows 64 bits — recommandé par défaut pour la plupart des applications modernes.
 
-**macOS** : pour créer des applications Mac (nécessite une licence appropriée)
+**Win64 (Arm)** : Windows on Arm via **Arm64EC** (nouveauté **Delphi 13.1**) — pour les machines Windows ARM modernes (Copilot+ PC avec Snapdragon X Elite/Plus, Surface Pro 11, Surface Laptop 7, etc.).
 
-**iOS** : pour créer des applications iPhone et iPad
+**macOS** (x64 et ARM Apple Silicon) : nécessite un Mac accessible via PAServer (voir chapitre 1.5).
 
-**Android** : pour créer des applications Android
+**iOS** (Device et Simulator) : applications iPhone et iPad. Nécessite un Mac.
 
-**Linux** : pour créer des applications Linux (avec FireMonkey)
+**Android 64 bits** : applications pour smartphones et tablettes Android. Google Play exige désormais le 64 bits ; le 32 bits Android est obsolète et n'est plus retenu pour les nouvelles publications.
+
+**Linux 64-bit** : applications serveur ou desktop (avec FMXLinux pour la GUI).
 
 Pour changer de plateforme :
 
-1. Dans l'Explorateur de projets, clic droit sur le projet
-2. Choisissez **Ajouter une plateforme**
+1. Dans l'Explorateur de projets, clic droit sur le projet → **Target Platforms**
+2. Choisissez **Add Platform** (Ajouter une plateforme)
 3. Sélectionnez la plateforme souhaitée
-4. Dans la barre d'outils, sélectionnez la plateforme active
+4. Dans la barre d'outils, sélectionnez la plateforme active dans le menu déroulant
 
-Pour débuter, concentrez-vous sur Win32 ou Win64. Les autres plateformes nécessitent des configurations supplémentaires.
+> ⚠️ **Restrictions selon votre édition :**
+> - **Community Edition** : Win32, Win64, macOS, iOS, Android (pas de Linux)
+> - **Professional / Enterprise / Architect** : toutes les plateformes
+>
+> Voir le chapitre 1.3 pour les détails sur les éditions.
+
+Pour débuter, concentrez-vous sur **Win64** (la plateforme moderne par défaut). Les autres plateformes nécessitent des configurations supplémentaires (PAServer pour Mac/iOS, SDK Android, etc.).
 
 ## Les fichiers générés par la compilation
 
@@ -361,9 +369,15 @@ Nous verrons la distribution en détail dans un chapitre ultérieur.
 
 ### Accéder aux options
 
-Menu **Projet > Options**, puis section **Compilation** (ou **Compilateur Delphi**).
+Menu **Project > Options** (Projet > Options), puis section **Building > Delphi Compiler** (Compilation > Compilateur Delphi).
 
-Vous y trouverez de nombreuses options. Pour débuter, les valeurs par défaut sont généralement appropriées, mais voici quelques options importantes à connaître :
+Vous y trouverez de nombreuses options regroupées en sous-sections :
+- **Compiling** : optimisation, syntaxe, débordement
+- **Hints and Warnings** : avertissements et indications
+- **Linking** : éditeur de liens
+- **Directories and Conditionals** : chemins et symboles conditionnels
+
+Pour débuter, les valeurs par défaut sont généralement appropriées, mais voici quelques options importantes à connaître :
 
 ### Options de syntaxe
 
@@ -423,9 +437,54 @@ Les bibliothèques que vous ne modifiez pas (VCL, composants tiers) sont déjà 
 
 Évidemment, un ordinateur plus rapide compile plus vite ! Mais surtout :
 
-- **SSD** : un disque SSD accélère grandement la compilation
-- **RAM** : au moins 8 Go, idéalement 16 Go ou plus
-- **Processeur** : plus de cœurs = compilation plus rapide (Delphi utilise la parallélisation)
+- **SSD** : un disque SSD accélère grandement la compilation (la compilation lit beaucoup de petits fichiers)
+- **RAM** : au moins 8 Go, idéalement 16 Go ou plus pour Delphi 13 (IDE 64 bits)
+- **Processeur** : un processeur rapide reste utile, même si le compilateur Delphi Pascal est historiquement orienté **single-thread**. Certaines opérations (liaison, génération de ressources, compilation de plusieurs projets en parallèle dans un groupe) bénéficient de plusieurs cœurs.
+
+## Directives de compilation
+
+Delphi propose des **directives de compilation** que vous pouvez insérer directement dans votre code pour contrôler localement le comportement du compilateur. Elles s'écrivent entre `{$ ... }` :
+
+```pascal
+// Activer/désactiver des optimisations localement
+{$O+}    // Optimisations ON
+{$O-}    // Optimisations OFF
+
+// Vérification des débordements
+{$Q+}    // Vérification ON (détecte les dépassements d'entiers)
+{$Q-}    // OFF
+
+// Vérification des limites de tableaux
+{$R+}    // ON (utile en debug)
+{$R-}    // OFF (plus rapide en release)
+
+// Compilation conditionnelle
+{$IFDEF DEBUG}
+  OutputDebugString('Mode debug activé');  // visible dans Event Log de l'IDE
+{$ENDIF}
+
+{$IFDEF MSWINDOWS}
+  // Code spécifique à Windows (utilise l'API Win32/Win64)
+{$ENDIF}
+
+{$IFDEF ANDROID}
+  // Code spécifique à Android
+{$ENDIF}
+
+// Régions repliables dans l'éditeur
+{$REGION 'Mes méthodes privées'}
+  // Plusieurs procédures...
+{$ENDREGION}
+
+// Inclusion de fichiers
+{$INCLUDE MyDefines.inc}
+
+// Directives liées aux ressources
+{$R MaRessource.RES}
+{$R *.dfm}
+```
+
+Ces directives sont **très puissantes** pour adapter votre code aux différentes plateformes ou aux différentes configurations (debug/release). Nous y reviendrons en détail dans le chapitre 3.
 
 ## Résolution de problèmes
 
@@ -479,7 +538,7 @@ Delphi sauvegarde automatiquement, mais prenez l'habitude de sauvegarder manuell
 
 ### Utilisez le contrôle de version
 
-Un système comme Git vous permet de revenir en arrière si une compilation casse tout. Commitez régulièrement votre code qui compile.
+Un système comme Git vous permet de revenir en arrière si une compilation casse tout. Committez régulièrement votre code qui compile.
 
 ### Documentez les options spéciales
 
