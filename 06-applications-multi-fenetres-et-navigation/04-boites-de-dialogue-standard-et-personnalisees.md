@@ -13,6 +13,13 @@ Les boîtes de dialogue sont des fenêtres modales temporaires qui permettent d'
 
 Delphi offre un ensemble complet de boîtes de dialogue prêtes à l'emploi, ainsi que la possibilité de créer vos propres boîtes de dialogue personnalisées.
 
+> 📌 **Périmètre de ce chapitre** : les exemples ci-dessous utilisent principalement les unités **VCL** (`Vcl.Dialogs`, `Vcl.Forms`, `Vcl.StdCtrls`…) car le MDI et les dialogues système Windows sont des notions purement Desktop. Pour les équivalents FMX et les particularités mobiles (notamment `MessageDlg` qui n'est **pas synchrone sur Android**), voir le chapitre [6.6 Navigation mobile](/06-applications-multi-fenetres-et-navigation/06-navigation-dans-les-applications-mobiles.md) qui présente `FMX.DialogService.TDialogService` (asynchrone, à callback).  
+>  
+> ⚠️ **Limitations mobiles importantes à connaître** :  
+> - `MessageDlg` / `ShowMessage` **synchrones** ne sont pas implémentés sur Android — utilisez `TDialogService.MessageDialog` asynchrone  
+> - `TOpenDialog` / `TSaveDialog` **ne fonctionnent pas sur Android** — implémentez un sélecteur custom ou utilisez les *intents* natifs  
+> - Les dialogues `TColorDialog`, `TFontDialog`, `TPrintDialog`, `TFindDialog`, `TReplaceDialog` sont spécifiques à Windows
+
 ## Boîtes de dialogue de messages simples
 
 ### ShowMessage - Le message le plus simple
@@ -178,6 +185,8 @@ begin
 end;
 ```
 
+> ℹ️ **À noter** : si l'utilisateur clique sur **Annuler**, `Ville` recevra `'Paris'` (la valeur par défaut), pas une chaîne vide. Préférez `InputQuery` si vous devez distinguer l'annulation de la validation.
+
 ### InputQuery - Saisie avec validation
 
 Permet de vérifier si l'utilisateur a cliqué sur OK ou Annuler.
@@ -202,19 +211,30 @@ end;
 ```
 
 **Différence avec InputBox :**
-- `InputBox` retourne toujours une chaîne (vide si annulé)
-- `InputQuery` retourne `True` si OK, `False` si Annuler
+- `InputBox` retourne **toujours une chaîne** : la valeur saisie si OK, ou la **valeur par défaut (`ADefault`)** si l'utilisateur a cliqué sur Annuler. Impossible donc de distinguer « j'ai annulé » de « j'ai validé sans rien changer ».
+- `InputQuery` retourne `True` si l'utilisateur a cliqué sur OK, `False` s'il a cliqué sur Annuler — la valeur saisie est récupérée via le paramètre `var Value`. C'est l'option à privilégier dès que vous avez besoin de savoir si l'utilisateur a validé ou annulé.
+
+> ⚠️ **Piège classique avec `InputBox`** : tester `if Resultat = '' then ...` ne signifie **pas** « utilisateur annulé », mais seulement « la chaîne courante (saisie ou défaut) est vide ». Si votre `ADefault` est vide, vous ne saurez jamais si l'utilisateur a annulé ou validé un champ vide. Référence : [docwiki — Vcl.Dialogs.InputBox](https://docwiki.embarcadero.com/Libraries/Athens/en/Vcl.Dialogs.InputBox).
 
 ### Saisie de mot de passe
+
+> ℹ️ La surcharge VCL avec masque a la signature suivante (le booléen `MaskInput` est en **3ᵉ position**, avant `Value`) :  
+>  
+> ```pascal  
+> function InputQuery(const ACaption, APrompt: string;
+>                     const MaskInput: Boolean;
+>                     var Value: string): Boolean;
+> ```
 
 ```pascal
 var
   MotDePasse: string;
 begin
   MotDePasse := '';
-  if InputQuery('Authentification', 'Mot de passe :', MotDePasse, True) then
+  // Attention à l'ordre : ACaption, APrompt, MaskInput (Boolean), var Value
+  if InputQuery('Authentification', 'Mot de passe :', True, MotDePasse) then
   begin
-    // Le paramètre True masque le texte saisi (****)
+    // Le 3ᵉ paramètre True masque le texte saisi (****)
     if MotDePasse = 'secret' then
       ShowMessage('Accès autorisé')
     else
@@ -387,26 +407,32 @@ begin
 end;
 ```
 
-**Options du ColorDialog :**
+**Options du ColorDialog** — l'énumération `TColorDialogOption` comporte 5 valeurs :
+
 ```pascal
 ColorDialog1.Options := [
-  cdFullOpen,        // Affiche les couleurs personnalisées
-  cdSolidColor,      // Seulement les couleurs pleines
-  cdAnyColor         // Toutes les couleurs
+  cdFullOpen,          // Affiche d'emblée le panneau des couleurs personnalisées
+  cdPreventFullOpen,   // Désactive le bouton « Définir des couleurs personnalisées »
+  cdShowHelp,          // Affiche un bouton Aide
+  cdSolidColor,        // Convertit la couleur retournée en couleur pleine la plus proche
+  cdAnyColor           // Autorise les couleurs non pleines (par défaut sous Windows)
 ];
 ```
+
+> ℹ️ `cdFullOpen` et `cdPreventFullOpen` sont mutuellement exclusifs dans la pratique : si vous activez `cdPreventFullOpen`, l'utilisateur ne pourra pas dérouler la palette étendue, même si `cdFullOpen` est également présent.
 
 ### TFontDialog - Sélection de police
 
 ```pascal
 procedure TForm1.ButtonPoliceClick(Sender: TObject);  
 begin  
-  FontDialog1.Font := Memo1.Font;  // Police actuelle
+  // Bonne pratique : utiliser Assign pour copier les propriétés de TFont
+  // (l'assignation directe := fonctionne mais c'est un effet de bord du setter ;
+  //  Assign est explicite et plus sûr — TFont est un TPersistent)
+  FontDialog1.Font.Assign(Memo1.Font);   // Initialise avec la police actuelle
 
   if FontDialog1.Execute then
-  begin
-    Memo1.Font := FontDialog1.Font;
-  end;
+    Memo1.Font.Assign(FontDialog1.Font); // Applique la police choisie
 end;
 ```
 
@@ -722,7 +748,12 @@ begin
   try
     if FormConn.ShowModal = mrOk then
     begin
-      // Vérifier les identifiants
+      // ⚠️ Comparaison à un mot de passe en clair UNIQUEMENT pour l'exemple.
+      // En production, NE JAMAIS stocker ni comparer un mot de passe en clair :
+      //   - stockez seulement un HASH (bcrypt, Argon2, scrypt — voir System.Hash
+      //     ou une bibliothèque dédiée comme DCPCrypt / Sodium pour Delphi)
+      //   - comparez le hash du mot de passe saisi au hash stocké
+      //   - utilisez un sel (salt) unique par utilisateur
       if (FormConn.Utilisateur = 'admin') and (FormConn.MotDePasse = 'secret') then
       begin
         ShowMessage('Connexion réussie !');
@@ -854,6 +885,8 @@ type
     ProgressBar1: TProgressBar;
     LabelMessage: TLabel;
     ButtonAnnuler: TButton;
+    procedure ButtonAnnulerClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     FAnnule: Boolean;
   public
@@ -863,11 +896,25 @@ type
 
 implementation
 
+procedure TFormProgression.FormCreate(Sender: TObject);  
+begin  
+  FAnnule := False;
+  Position := poScreenCenter;
+  BorderStyle := bsDialog;
+end;
+
+procedure TFormProgression.ButtonAnnulerClick(Sender: TObject);  
+begin  
+  // Lever le drapeau ; la boucle appelante le verra
+  // au prochain appel de MettreAJour (via ProcessMessages)
+  FAnnule := True;
+end;
+
 procedure TFormProgression.MettreAJour(const Message: string; Position: Integer);  
 begin  
   LabelMessage.Caption := Message;
   ProgressBar1.Position := Position;
-  Application.ProcessMessages;  // Rafraîchir l'interface
+  Application.ProcessMessages;  // Rafraîchir l'interface et traiter les clics
 end;
 
 // Utilisation
@@ -882,13 +929,16 @@ begin
 
     for i := 1 to 100 do
     begin
+      // Note : ProcessMessages dans MettreAJour propage les clics utilisateur,
+      // dont le clic sur ButtonAnnuler qui passe FAnnule à True.
+      FormProg.MettreAJour('Traitement en cours... ' + IntToStr(i) + '%', i);
+
       if FormProg.Annule then
       begin
         ShowMessage('Traitement annulé');
         Break;
       end;
 
-      FormProg.MettreAJour('Traitement en cours... ' + IntToStr(i) + '%', i);
       Sleep(50);  // Simulation d'un traitement
     end;
   finally
@@ -1011,6 +1061,7 @@ Les boîtes de dialogue sont essentielles pour l'interaction avec l'utilisateur.
 - **ModalResult** : Utilisez les valeurs appropriées (mrOk, mrCancel, etc.)
 - **Libération** : Toujours libérer les dialogues personnalisés avec `Free`
 - **Expérience utilisateur** : Configurez Default, Cancel, Position et BorderStyle
+- **Multiplateforme** : sur mobile, préférer `TDialogService` (asynchrone) ; certains dialogues VCL n'existent pas en FMX
 
 Une bonne utilisation des boîtes de dialogue rend votre application plus intuitive et professionnelle.
 

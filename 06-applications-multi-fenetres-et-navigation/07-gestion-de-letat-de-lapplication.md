@@ -152,6 +152,8 @@ begin
 end;
 ```
 
+> ⚠️ **Attention au multi-écran** : si l'utilisateur a déconnecté un moniteur depuis la dernière sauvegarde, la position restaurée peut placer la fenêtre **hors de tout écran visible**. Avant d'appliquer `Left` et `Top`, vérifiez qu'au moins une portion de la fenêtre tombe dans `Screen.DesktopRect` (VCL) ou `Screen.WorkAreaRect` (FMX). Si ce n'est pas le cas, repassez par `Position := poScreenCenter` pour ramener la fenêtre à l'écran principal.
+
 ### Mémoriser l'onglet actif
 
 ```pascal
@@ -209,7 +211,7 @@ begin
   IniFile := TIniFile.Create(GetConfigPath);
   try
     // Sauvegarder la largeur de chaque colonne
-    for i := 0 to StringGrid1.ColumnCount - 1 do
+    for i := 0 to StringGrid1.ColCount - 1 do
     begin
       IniFile.WriteInteger('Grid', 'Column' + IntToStr(i) + 'Width',
         StringGrid1.ColWidths[i]);
@@ -232,7 +234,7 @@ begin
   IniFile := TIniFile.Create(GetConfigPath);
   try
     // Restaurer la largeur de chaque colonne
-    for i := 0 to StringGrid1.ColumnCount - 1 do
+    for i := 0 to StringGrid1.ColCount - 1 do
     begin
       StringGrid1.ColWidths[i] :=
         IniFile.ReadInteger('Grid', 'Column' + IntToStr(i) + 'Width',
@@ -373,6 +375,8 @@ type
     procedure EditNomChange(Sender: TObject);
     procedure MemoDescriptionChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FModifie: Boolean;
     FDonneesOriginales: TStringList;
@@ -386,8 +390,15 @@ implementation
 procedure TFormEdit.FormCreate(Sender: TObject);  
 begin  
   FModifie := False;
-  FDonneesOriginales := TStringList.Create;
+  FDonneesOriginales := TStringList.Create;  // Créé ici
   SauvegarderDonneesOriginales;
+end;
+
+procedure TFormEdit.FormDestroy(Sender: TObject);  
+begin  
+  // ⚠️ Important : libérer le TStringList créé dans FormCreate
+  // (sinon fuite mémoire détectée par ReportMemoryLeaksOnShutdown)
+  FDonneesOriginales.Free;
 end;
 
 procedure TFormEdit.SauvegarderDonneesOriginales;  
@@ -484,8 +495,10 @@ begin
     FDerniereSauvegarde := Now;
     FModifie := False;
 
-    // Optionnel : afficher une notification discrète
-    ShowMessage('Sauvegarde automatique effectuée');
+    // Notification discrète : afficher dans la barre d'état plutôt
+    // qu'un ShowMessage modal qui interromprait la frappe de l'utilisateur.
+    StatusBar1.SimpleText := Format('Sauvegarde auto à %s',
+      [FormatDateTime('hh:nn:ss', FDerniereSauvegarde)]);
   except
     on E: Exception do
       // Logger l'erreur sans interrompre l'utilisateur
@@ -493,6 +506,8 @@ begin
   end;
 end;
 ```
+
+> ⚠️ **Évitez `ShowMessage` pour les sauvegardes automatiques** : un dialogue modal interrompt la frappe et frustre l'utilisateur. Préférez une `TStatusBar`, un `TLabel` discret, ou un message éphémère qui disparaît après quelques secondes.
 
 ## Gestion de l'état de session
 
@@ -512,6 +527,8 @@ type
   public
     class function Instance: TSessionManager;
     class destructor Destroy;
+
+    destructor Destroy; override;
 
     function Login(const Username, Password: string): Boolean;
     procedure Logout;
@@ -535,7 +552,14 @@ end;
 class destructor TSessionManager.Destroy;  
 begin  
   if Assigned(FInstance) then
-    FInstance.Free;
+    FreeAndNil(FInstance);
+end;
+
+destructor TSessionManager.Destroy;  
+begin  
+  // Libère l'utilisateur courant si encore connecté à la fermeture de l'app
+  FreeAndNil(FCurrentUser);
+  inherited;
 end;
 
 function TSessionManager.Login(const Username, Password: string): Boolean;  
@@ -545,11 +569,14 @@ begin
   // Vérifier les identifiants (exemple simplifié)
   if VerifierIdentifiants(Username, Password) then
   begin
+    // Libérer l'éventuel utilisateur d'une session précédente avant d'en créer un nouveau
+    FreeAndNil(FCurrentUser);
+
     FIsAuthenticated := True;
     FLoginTime := Now;
     FLastActivity := Now;
     FSessionToken := GenerateToken;
-    FCurrentUser := ChargerUtilisateur(Username);
+    FCurrentUser := ChargerUtilisateur(Username);  // TUser créé ici → propriétaire = ce manager
     FTimeout := 30; // 30 minutes
 
     Result := True;
@@ -560,7 +587,8 @@ procedure TSessionManager.Logout;
 begin  
   FIsAuthenticated := False;
   FSessionToken := '';
-  FCurrentUser := nil;
+  // Libérer l'objet utilisateur pour éviter une fuite mémoire
+  FreeAndNil(FCurrentUser);
 end;
 
 procedure TSessionManager.UpdateActivity;  
@@ -843,6 +871,15 @@ begin
   end;
 end;
 
+procedure TApplicationState.SetSort(const Column: string);  
+begin  
+  if FSortColumn <> Column then
+  begin
+    FSortColumn := Column;
+    DoStateChanged;
+  end;
+end;
+
 procedure TApplicationState.SaveState;  
 var  
   IniFile: TIniFile;
@@ -1107,23 +1144,19 @@ end;
 function TProfileManager.LoadProfile(const ProfileName: string): Boolean;  
 var  
   ProfilePath: string;
-  IniFile: TIniFile;
 begin
   ProfilePath := GetProfilePath(ProfileName);
   Result := TFile.Exists(ProfilePath);
 
   if Result then
   begin
-    IniFile := TIniFile.Create(ProfilePath);
-    try
-      FCurrentProfile := ProfileName;
+    FCurrentProfile := ProfileName;
 
-      // Charger les données du profil
-      TApplicationState.Instance.LoadState;
-      LoadUserPreferences(ProfileName);
-    finally
-      IniFile.Free;
-    end;
+    // Charger les données du profil
+    // (LoadState et LoadUserPreferences ouvrent leurs propres fichiers INI ;
+    //  le chemin du profil sert ici à valider l'existence et à mémoriser le nom courant.)
+    TApplicationState.Instance.LoadState;
+    LoadUserPreferences(ProfileName);
   end;
 end;
 
@@ -1143,16 +1176,38 @@ begin
   end;
 end;
 
+/// <summary>
+/// Retourne la liste des profils existants.
+/// ⚠️ L'appelant est responsable de libérer le TStringList retourné
+/// (sinon fuite mémoire). Pattern d'usage :
+///   <code>
+///   var Profils := PM.GetProfileList;
+///   try
+///     // Utiliser Profils
+///   finally
+///     Profils.Free;
+///   end;
+///   </code>
+/// </summary>
 function TProfileManager.GetProfileList: TStringList;  
 var  
   Files: TArray<string>;
   FileName: string;
 begin
   Result := TStringList.Create;
-
-  Files := TDirectory.GetFiles(FProfilesPath, '*.ini');
-  for FileName in Files do
-    Result.Add(TPath.GetFileNameWithoutExtension(FileName));
+  try
+    // Sécurise contre les exceptions de TDirectory.GetFiles (chemin
+    // inaccessible, droits insuffisants...) : si quelque chose explose
+    // après la création de Result, on libère avant de propager l'erreur,
+    // sinon on aurait une fuite mémoire (l'appelant n'a pas encore
+    // récupéré le pointeur).
+    Files := TDirectory.GetFiles(FProfilesPath, '*.ini');
+    for FileName in Files do
+      Result.Add(TPath.GetFileNameWithoutExtension(FileName));
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 procedure TProfileManager.SwitchProfile(const ProfileName: string);  

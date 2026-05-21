@@ -16,11 +16,13 @@ Dans cette section, nous allons explorer les différentes techniques pour faire 
 
 Il existe plusieurs méthodes pour faire communiquer des formulaires :
 
-1. **Accès direct** : Un formulaire accède directement aux propriétés/méthodes d'un autre
+1. **Accès direct aux composants** : Un formulaire accède directement aux composants visuels d'un autre
 2. **Propriétés publiques** : Utilisation de propriétés pour encapsuler les données
 3. **Méthodes publiques** : Appel de méthodes définies dans les formulaires
-4. **Événements et callbacks** : Communication par notification
-5. **Variables globales ou singleton** : Partage de données via un point central
+4. **Événements personnalisés** : Communication par notification typée (`of object`)
+5. **Procédures callback** : Passer une fonction/procédure (`reference to procedure`) au formulaire enfant
+6. **Référence au formulaire parent** : L'enfant garde une référence directe vers le parent
+7. **Variables globales ou singleton** : Partage de données via un point central
 
 Chaque approche a ses avantages et inconvénients. Nous allons les examiner en détail.
 
@@ -336,12 +338,12 @@ end;
 **Avantages :**
 - Faible couplage : le formulaire enfant ne connaît pas le parent
 - Réutilisable : le formulaire enfant peut être utilisé dans différents contextes
-- Flexible : plusieurs gestionnaires peuvent s'abonner au même événement
-- Suit les conventions Delphi
+- Suit les conventions Delphi (mêmes principes que `OnClick`, `OnChange`…)
 
 **Inconvénients :**
 - Plus complexe à comprendre pour les débutants
 - Nécessite plus de code initial
+- **Un seul gestionnaire à la fois** : assigner un nouveau handler **écrase** le précédent. Pour notifier plusieurs abonnés en parallèle (pattern *multicast*), implémentez vous-même une `TList<TDonneesValideeEvent>` et itérez dessus, ou utilisez le pattern Observer
 
 **Quand l'utiliser :** Pour des composants réutilisables et des architectures propres.
 
@@ -351,13 +353,20 @@ end;
 
 Passer une procédure en paramètre au formulaire enfant.
 
-### Exemple
+> ⚠️ **Choisir le bon type de callback** : Delphi distingue deux types incompatibles entre eux :  
+> - **`procedure(...) of object`** (un *method pointer*) — accepte uniquement des **méthodes d'instance**.  
+> - **`reference to procedure(...)`** (une *anonymous method reference*) — accepte **méthodes d'instance ET procédures anonymes**, et capture les variables locales (closures).  
+>  
+> Pour pouvoir utiliser une procédure anonyme inline, déclarez votre type comme `reference to procedure`. Sinon, le compilateur émet **E2010 « Incompatible types »**.
+
+### Exemple avec `reference to procedure` (accepte méthodes ET procédures anonymes)
 
 **Form2.pas (formulaire enfant)**
 ```pascal
 type
-  // Définir le type de callback
-  TCallbackProcedure = procedure(const Valeur: string) of object;
+  // Type "reference to procedure" : accepte aussi bien une méthode d'instance
+  // qu'une procédure anonyme. C'est le plus flexible.
+  TCallbackProcedure = reference to procedure(const Valeur: string);
 
   TForm2 = class(TForm)
     Edit1: TEdit;
@@ -379,7 +388,7 @@ begin
 end;
 ```
 
-**Form1.pas (formulaire parent)**
+**Form1.pas (formulaire parent) — utilisation avec une procédure anonyme**
 ```pascal
 procedure TForm1.Button1Click(Sender: TObject);  
 var  
@@ -387,7 +396,7 @@ var
 begin
   FormSaisie := TForm2.Create(Self);
   try
-    // Définir le callback
+    // Procédure anonyme : capture Memo1 (closure)
     FormSaisie.Callback := procedure(const Valeur: string)
     begin
       Memo1.Lines.Add('Valeur reçue : ' + Valeur);
@@ -402,7 +411,7 @@ end;
 
 ### Note sur les méthodes anonymes
 
-L'exemple ci-dessus utilise une méthode anonyme (introduite depuis Delphi 2009). Voici la version traditionnelle :
+L'exemple ci-dessus utilise une méthode anonyme (introduite depuis Delphi 2009). Voici la version traditionnelle avec une **méthode d'instance** (compatible elle aussi avec `reference to procedure`) :
 
 ```pascal
 type
@@ -430,11 +439,26 @@ begin
 end;
 ```
 
+### Variante stricte avec `procedure of object`
+
+Si vous **n'avez besoin que de méthodes d'instance** (style « événements Delphi classique »), déclarez plutôt le type comme `of object`. Mais attention, dans ce cas une procédure anonyme inline **ne compile pas** :
+
+```pascal
+type
+  TCallbackMethod = procedure(const Valeur: string) of object;  // method pointer
+
+// Utilisation : uniquement avec une méthode d'instance
+FormSaisie.Callback := TraiterValeur;  // OK
+// FormSaisie.Callback := procedure(...) begin ... end;  // ❌ E2010 incompatible
+```
+
 ## Méthode 6 : Référence au formulaire parent
 
 ### Principe
 
 Passer une référence du formulaire parent au formulaire enfant.
+
+> ⚠️ **Attention aux références circulaires `uses`** : si Form2.pas déclare `FFormParent: TForm1`, il faut que l'unité Form1 soit visible dans Form2. Or Form1 utilise généralement Form2 pour le créer — d'où un risque de cycle. **La règle de base** : placez `uses Form2` dans la section `implementation` de Form1.pas, et déclarez `FFormParent` avec le type spécifique `TForm1` en plaçant `uses Form1` dans la section `interface` de Form2 (un seul des deux sens en interface, l'autre en implementation, résout le cycle). Pour un découplage plus propre, voir la **variante avec interface** plus bas.
 
 ### Exemple
 
@@ -508,6 +532,71 @@ end;
 - Peut créer des dépendances circulaires
 
 **Quand l'utiliser :** Uniquement pour des formulaires très spécifiques qui ne seront jamais réutilisés ailleurs.
+
+### Variante avec interface (couplage faible)
+
+Pour éviter complètement la dépendance directe vers `TForm1`, déclarez le **contrat** dans une unité tierce sous forme d'**interface**. Form2 n'a alors plus besoin de connaître Form1 : il connaît juste l'interface.
+
+**UnitContrats.pas (unité partagée, aucune dépendance vers les formulaires)**
+```pascal
+unit UnitContrats;
+
+interface
+
+type
+  IParentListe = interface
+    ['{B6A2D8E5-9F4C-4F1A-9C7E-2A1B4D8E6F3C}']
+    procedure AjouterDansListe(const Texte: string);
+  end;
+
+implementation
+
+end.
+```
+
+**Form2.pas (enfant — ne connaît que l'interface)**
+```pascal
+uses UnitContrats;
+
+type
+  TForm2 = class(TForm)
+    Button1: TButton;
+    procedure Button1Click(Sender: TObject);
+  private
+    FParent: IParentListe;  // ← contrat, pas TForm1
+  public
+    constructor Create(AOwner: TComponent; const AParent: IParentListe); reintroduce;
+  end;
+
+constructor TForm2.Create(AOwner: TComponent; const AParent: IParentListe);  
+begin  
+  inherited Create(AOwner);
+  FParent := AParent;
+end;
+
+procedure TForm2.Button1Click(Sender: TObject);  
+begin  
+  if Assigned(FParent) then
+    FParent.AjouterDansListe('Élément ajouté depuis Form2');
+end;
+```
+
+**Form1.pas (parent — implémente l'interface)**
+```pascal
+uses UnitContrats;
+
+type
+  TForm1 = class(TForm, IParentListe)
+    ListBox1: TListBox;
+  public
+    // Implémentation de IParentListe
+    procedure AjouterDansListe(const Texte: string);
+  end;
+```
+
+> ✅ **Avantages de cette approche** : aucune référence circulaire entre Form1.pas et Form2.pas, Form2 devient réutilisable avec n'importe quel parent qui implémente `IParentListe`, et le code est testable (on peut injecter une fausse implémentation pour les tests unitaires).  
+>  
+> ⚠️ **Gestion mémoire** : les interfaces utilisent le **comptage de références** en Delphi. Comme un `TForm` n'implémente pas `_AddRef`/`_Release` par défaut (héritage de `TComponent`), le comptage de références n'a aucun effet ici — l'objet reste géré normalement par son `Owner`. Pour des classes héritant de `TInterfacedObject`, en revanche, le comptage est actif et l'objet est libéré quand plus aucune référence n'existe.
 
 ## Méthode 7 : Variables globales ou unité partagée
 
@@ -696,7 +785,8 @@ end;
 
 ### Solution 2 : Événement (recommandé)
 
-**Form2.pas (saisie)**
+**Form2.pas (saisie)** — l'événement est ici typé `of object` (convention Delphi pour les événements de composants) et accepte donc des **méthodes d'instance** uniquement :
+
 ```pascal
 type
   TElementAjouteEvent = procedure(Sender: TObject; const Element: string) of object;
@@ -724,25 +814,38 @@ begin
 end;
 ```
 
-**Form1.pas (principal)**
+**Form1.pas (principal)** — on déclare une **méthode privée** pour gérer l'événement (les procédures anonymes ne sont **pas** compatibles avec `of object`) :
+
 ```pascal
+type
+  TForm1 = class(TForm)
+    ListBox1: TListBox;
+    Button1: TButton;
+    procedure Button1Click(Sender: TObject);
+  private
+    procedure GererElementAjoute(Sender: TObject; const Element: string);
+  end;
+
+procedure TForm1.GererElementAjoute(Sender: TObject; const Element: string);  
+begin  
+  ListBox1.Items.Add(Element);
+end;
+
 procedure TForm1.Button1Click(Sender: TObject);  
 var  
   FormSaisie: TForm2;
 begin
   FormSaisie := TForm2.Create(Self);
   try
-    FormSaisie.OnElementAjoute := procedure(Sender: TObject; const Element: string)
-    begin
-      ListBox1.Items.Add(Element);
-    end;
-
+    FormSaisie.OnElementAjoute := GererElementAjoute;
     FormSaisie.ShowModal;
   finally
     FormSaisie.Free;
   end;
 end;
 ```
+
+> 💡 Si vous voulez pouvoir utiliser une **procédure anonyme** (par exemple pour bénéficier de la capture des variables locales), déclarez `TElementAjouteEvent` comme `reference to procedure(...)` au lieu de `procedure(...) of object` — voir la **Méthode 5** ci-dessus.
 
 ## Bonnes pratiques
 
@@ -839,10 +942,12 @@ La communication entre formulaires est essentielle dans le développement d'appl
 
 - **Pour débuter** : utilisez l'accès direct ou les propriétés publiques
 - **Pour des applications professionnelles** : privilégiez les événements et les méthodes publiques
+- **Pour le découplage maximal** : extrayez un contrat sous forme d'**interface** dans une unité tierce
 - **Réduisez le couplage** : les formulaires ne devraient pas dépendre les uns des autres
 - **Encapsulez** : ne donnez pas accès directement aux composants internes
 - **Documentez** : expliquez clairement comment utiliser vos formulaires
 - **Pensez réutilisable** : un formulaire bien conçu peut servir dans plusieurs contextes
+- **`reference to procedure` vs `procedure of object`** : choisissez le bon type de callback selon que vous avez besoin de fermetures/anonymes ou non
 
 Choisissez la méthode appropriée en fonction de votre contexte, de la taille de votre projet et de vos besoins de réutilisabilité.
 

@@ -116,25 +116,32 @@ end;
 
 ### Récupérer le résultat d'un formulaire modal
 
+`ShowModal` est une **fonction** qui retourne la valeur de `ModalResult` au moment de la fermeture. Vous pouvez donc utiliser directement son résultat dans une comparaison ou un `case` :
+
 ```pascal
 procedure TForm1.Button1Click(Sender: TObject);  
 begin  
-  if Form2.ShowModal = mrOk then
-  begin
-    ShowMessage('L''utilisateur a cliqué sur OK');
-  end
-  else if Form2.ModalResult = mrCancel then
-  begin
-    ShowMessage('L''utilisateur a annulé');
+  case Form2.ShowModal of
+    mrOk:     ShowMessage('L''utilisateur a cliqué sur OK');
+    mrCancel: ShowMessage('L''utilisateur a annulé');
+    mrYes:    ShowMessage('L''utilisateur a répondu Oui');
+    mrNo:     ShowMessage('L''utilisateur a répondu Non');
   end;
 end;
 ```
 
+> 💡 **Pourquoi `case` plutôt que des `if/else if` enchaînés ?** Le `case` est plus lisible quand on a plus de deux valeurs à tester, et le compilateur l'optimise en table de saut. Réservez `if/else if` aux cas où chaque branche teste une condition différente.
+
 Les valeurs `ModalResult` courantes :
-- `mrOk` : Validation (bouton OK)
-- `mrCancel` : Annulation (bouton Annuler)
+- `mrNone` (0) : Aucun résultat — utilisé pour **empêcher la fermeture** depuis `OnClick` d'un bouton de validation
+- `mrOk` (1) : Validation (bouton OK)
+- `mrCancel` (2) : Annulation (bouton Annuler ou touche Échap)
+- `mrAbort`, `mrRetry`, `mrIgnore` : Abandonner / Réessayer / Ignorer
 - `mrYes` / `mrNo` : Réponses Oui/Non
-- `mrAbort`, `mrRetry`, `mrIgnore` : Autres options
+- `mrAll`, `mrYesToAll`, `mrNoToAll` : Variantes « pour tout »
+- `mrClose`, `mrHelp` : Fermer, Aide
+
+> 💡 **Astuce `mrNone`** : si vous voulez **annuler** la fermeture d'un dialogue modal depuis le clic sur un bouton (par exemple parce que la validation a échoué), faites `ModalResult := mrNone;` dans le gestionnaire `OnClick` — le formulaire reste alors ouvert.
 
 ## Gestion de la création et destruction des formulaires
 
@@ -189,6 +196,18 @@ end;
 ```
 
 `Assigned()` retourne `True` si la variable contient une référence valide à un objet.
+
+> ⚠️ **Piège du pointeur invalide** : si `Form2` est fermé avec `Action := caFree` dans son `OnClose`, l'objet est libéré mais la **variable globale `Form2` n'est pas remise à `nil` automatiquement**. Un nouvel appel à `Assigned(Form2)` retournera donc `True` et vous accéderez à un objet détruit → violation d'accès.  
+>  
+> **Solution** : dans `Form2.OnClose`, remettez explicitement la variable à `nil` :  
+>  
+> ```pascal  
+> procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+> begin
+>   Action := caFree;
+>   Form2 := nil;  // ← important : invalide la variable globale
+> end;
+> ```
 
 ## Masquer et réafficher un formulaire
 
@@ -390,13 +409,50 @@ end;
 ```pascal
 procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);  
 begin  
-  // Pour un formulaire modal, ne rien faire de spécial
-  Action := caHide;
+  // Valeurs possibles de Action :
+  //   caHide     : (défaut) le formulaire est seulement caché — il reste en mémoire
+  //   caFree     : le formulaire est libéré automatiquement après la fermeture
+  //   caMinimize : le formulaire est minimisé au lieu d'être fermé
+  //   caNone     : la fermeture est annulée
 
-  // Pour un formulaire créé dynamiquement
-  // Action := caFree;  // Libère automatiquement le formulaire
+  // Cas 1 : formulaire modal créé/Free manuellement avec try/finally
+  //         → laisser caHide (défaut), votre code Free s'en charge après ShowModal
+
+  // Cas 2 : formulaire non-modal créé dynamiquement et que vous ne référencez plus
+  //         → Action := caFree;
 end;
 ```
+
+> ⚠️ **Ne combinez jamais `caFree` avec un `Free` manuel** : vous libéreriez deux fois le même objet, ce qui provoque une violation d'accès. Choisissez **un seul** mode de gestion de la durée de vie.
+
+### 6. Empêcher ou confirmer la fermeture avec `OnCloseQuery`
+
+L'événement `OnCloseQuery` est déclenché **avant** `OnClose` et permet de **bloquer** la fermeture du formulaire en passant `CanClose` à `False` :
+
+```pascal
+procedure TForm2.FormCloseQuery(Sender: TObject; var CanClose: Boolean);  
+begin  
+  if FModifie then
+  begin
+    case MessageDlg('Des modifications n''ont pas été sauvegardées.' + sLineBreak +
+                    'Voulez-vous les enregistrer ?',
+                    mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+      mrYes:    Enregistrer;            // Sauvegarde puis ferme
+      mrNo:     ;                       // Ferme sans sauvegarder
+      mrCancel: CanClose := False;      // Annule la fermeture
+    end;
+  end;
+end;
+```
+
+**Différence avec `OnClose` :**
+
+| Événement       | Rôle                                                   | Variable de contrôle |
+|-----------------|--------------------------------------------------------|----------------------|
+| `OnCloseQuery`  | Décide **si** le formulaire peut être fermé           | `CanClose: Boolean`  |
+| `OnClose`       | Décide **comment** la fermeture sera effectuée        | `Action: TCloseAction` |
+
+> 💡 `OnCloseQuery` est l'endroit idéal pour valider une saisie obligatoire ou prévenir une perte de données ; `OnClose` sert à gérer le devenir du formulaire (libération, masquage…).
 
 ## Position et taille des formulaires
 
@@ -443,6 +499,34 @@ Pour l'envoyer à l'arrière-plan :
 Form2.SendToBack;
 ```
 
+### Maintenir un formulaire au-dessus des autres
+
+Pour qu'une fenêtre d'outils ou de palette **reste toujours au-dessus** des autres fenêtres (même quand elle perd le focus), utilisez `FormStyle := fsStayOnTop` :
+
+```pascal
+// Dans l'OnCreate ou directement dans l'Inspecteur d'objets
+Form2.FormStyle := fsStayOnTop;
+```
+
+> 💡 **Cas d'usage** : palettes d'outils, mini-lecteurs, fenêtres de surveillance en temps réel. À utiliser avec parcimonie — un formulaire `fsStayOnTop` est intrusif si l'utilisateur travaille avec d'autres applications.
+
+### Choisir le parent visuel d'un formulaire non-modal
+
+Par défaut, un formulaire non-modal créé avec `Show` peut « disparaître » derrière le formulaire principal quand celui-ci reprend le focus. La propriété `PopupMode` règle ce comportement :
+
+```pascal
+// pmNone     : comportement « Win32 classique » (pré-Delphi 8) — peut passer derrière
+// pmAuto     : le PopupParent devient automatiquement Screen.ActiveForm.
+//              C'est ce que ShowModal fait implicitement depuis Delphi 8+.
+// pmExplicit : vous désignez vous-même PopupParent.
+//              Si PopupParent est nil, Application.MainForm est utilisé.
+Form2.PopupMode := pmExplicit;  
+Form2.PopupParent := Self;  // Self = le formulaire qui crée Form2  
+Form2.Show;  
+```
+
+> 💡 **Astuce VCL** : pour qu'une **fenêtre d'outils flottante** (tool window) reste toujours au-dessus de votre formulaire principal sans bloquer son interaction, utilisez `PopupMode := pmExplicit` et `PopupParent := MonFormulairePrincipal`. C'est la méthode recommandée par Embarcadero, plus prévisible que `fsStayOnTop` (qui place la fenêtre au-dessus de **toutes** les autres applications).
+
 ## Résumé
 
 La gestion des formulaires multiples dans Delphi offre une grande flexibilité pour organiser votre application. Les points clés à retenir :
@@ -453,6 +537,8 @@ La gestion des formulaires multiples dans Delphi offre une grande flexibilité p
 - Utiliser des propriétés et méthodes pour passer des données entre formulaires
 - Respecter les bonnes pratiques pour éviter les fuites mémoire
 - Définir le `ModalResult` pour faciliter la communication avec les formulaires modaux
+- **`OnCloseQuery`** pour décider **si** un formulaire peut être fermé, **`OnClose`** pour décider **comment** (libération, masquage, minimisation)
+- Ne jamais combiner `Action := caFree` avec un `Free` manuel (double libération)
 
 La maîtrise de ces concepts vous permettra de créer des applications Delphi avec des interfaces utilisateur riches et bien organisées.
 

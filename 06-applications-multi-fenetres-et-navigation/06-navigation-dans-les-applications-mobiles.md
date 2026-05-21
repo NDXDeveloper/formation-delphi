@@ -77,11 +77,13 @@ end;
 
 procedure TFormMain.ConfigurerNavigation;  
 begin  
-  // Masquer les onglets visuels (on créera des boutons personnalisés)
+  // Valeurs possibles de TabPosition (scoped enum TTabPosition) :
+  //   None            : aucun onglet visible (vous fournissez vos propres boutons)
+  //   Top             : onglets en haut (style Android classique)
+  //   Bottom          : onglets en bas (style iOS classique)
+  //   Dots            : petits points indicateurs (carrousels / onboarding)
+  //   PlatformDefault : position naturelle de la plateforme (Top sur Android, Bottom sur iOS)
   TabControl1.TabPosition := TTabPosition.None;
-
-  // Ou afficher les onglets en bas (style iOS)
-  // TabControl1.TabPosition := TTabPosition.Bottom;
 
   // Configuration des TabItems
   TabItemAccueil.Text := 'Accueil';
@@ -262,7 +264,8 @@ type
     ButtonRetour: TButton;
     ListBox1: TListBox;
     procedure FormCreate(Sender: TObject);
-    procedure ListBox1ItemClick(Sender: TObject; const Point: TPointF);
+    procedure ListBox1ItemClick(const Sender: TCustomListBox;
+      const Item: TListBoxItem);
     procedure ButtonRetourClick(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
       Shift: TShiftState);
@@ -287,14 +290,15 @@ begin
   inherited;
 end;
 
-procedure TFormMain.ListBox1ItemClick(Sender: TObject; const Point: TPointF);  
-begin  
+procedure TFormMain.ListBox1ItemClick(const Sender: TCustomListBox;
+  const Item: TListBoxItem);
+begin
   // Naviguer vers le détail
   FNavManager.Push(TabItemDetail);
   ButtonRetour.Visible := True;
 
   // Charger les détails de l'élément sélectionné
-  LabelDetail.Text := 'Détail de : ' + ListBox1.Selected.Text;
+  LabelDetail.Text := 'Détail de : ' + Item.Text;
 end;
 
 procedure TFormMain.ButtonRetourClick(Sender: TObject);  
@@ -327,41 +331,67 @@ FireMonkey permet d'ajouter des animations lors des changements de page.
 
 ### Transitions de base
 
+La méthode la plus simple pour animer le passage entre deux onglets est de **laisser `TTabControl` gérer la transition** via sa propriété `Transition` (voir section suivante). Si vous voulez animer manuellement un autre composant, utilisez `TAnimator.AnimateFloat` :
+
 ```pascal
 uses
   FMX.Ani;
 
-procedure TFormMain.NaviguerAvecAnimation(VersDroite: Boolean);  
-begin  
-  // Utiliser TAnimator pour une animation simple et sûre
+procedure TFormMain.FaireGlisserPanel(VersDroite: Boolean);  
+var  
+  CibleX: Single;
+begin
+  // Animer un Panel de gauche à droite (ou inversement)
   if VersDroite then
-    TAnimator.AnimateFloat(TabControl1, 'Position.X',
-      0, 0.3, TAnimationType.InOut, TInterpolationType.Quadratic)
+    CibleX := Self.Width - Panel1.Width  // Bord droit
   else
-    TAnimator.AnimateFloat(TabControl1, 'Position.X',
-      0, 0.3, TAnimationType.InOut, TInterpolationType.Quadratic);
+    CibleX := 0;                          // Bord gauche
+
+  TAnimator.AnimateFloat(Panel1, 'Position.X',
+    CibleX,                             // Valeur cible
+    0.3,                                // Durée (secondes)
+    TAnimationType.InOut,
+    TInterpolationType.Quadratic);
 end;
 ```
 
-> **Note :** Pour des animations plus complexes, créez un `TFloatAnimation` en tant qu'enfant du composant cible. L'animation sera automatiquement libérée par son parent. Ne la libérez pas manuellement tant qu'elle est en cours d'exécution.
+> **Note :** Pour des animations plus complexes (boucle, AutoReverse, plusieurs propriétés), créez un `TFloatAnimation` en tant qu'enfant du composant cible. L'animation sera automatiquement libérée par son parent. Ne la libérez pas manuellement tant qu'elle est en cours d'exécution.
 
 ### Transition slide (glissement)
 
+Deux approches possibles selon le niveau de contrôle souhaité :
+
+**Approche 1 — Configurer la propriété `Transition`** puis changer de tab normalement :
+
 ```pascal
 procedure TFormMain.ChangerTabAvecSlide(NouvelIndex: Integer);  
-var  
-  Direction: Integer;
-begin
-  Direction := NouvelIndex - TabControl1.TabIndex;
-
-  // Configurer la transition
+begin  
+  // Active l'animation Slide
   TabControl1.Transition := TTabTransition.Slide;
-  TabControl1.TransitionEffect := TTabTransitionEffect.Normal;
 
   // Changer d'onglet (l'animation se fait automatiquement)
   TabControl1.TabIndex := NouvelIndex;
 end;
 ```
+
+**Approche 2 — Méthode `SetActiveTabWithTransition`** qui contrôle aussi la direction :
+
+```pascal
+procedure TFormMain.NaviguerVers(Cible: TTabItem);  
+var  
+  Direction: TTabTransitionDirection;
+begin
+  // TTabTransitionDirection est un scoped enum (tdNormal, tdReversed)
+  if Cible.Index > TabControl1.TabIndex then
+    Direction := TTabTransitionDirection.tdNormal    // Glissement → vers la droite
+  else
+    Direction := TTabTransitionDirection.tdReversed; // Glissement ← vers la gauche
+
+  TabControl1.SetActiveTabWithTransition(Cible, TTabTransition.Slide, Direction);
+end;
+```
+
+> ℹ️ **À propos de la durée d'animation** : `TTabControl` n'expose **pas** de propriété publique standard pour personnaliser la durée du slide. La durée est gérée en interne (animation de ~0,3s par défaut). Pour une animation totalement personnalisable, désactivez la transition de `TTabControl` (`Transition := TTabTransition.None`) et pilotez vous-même une `TFloatAnimation` sur la propriété `Position.X` du conteneur, ou sur `Opacity` pour un fondu.
 
 ### Personnaliser les transitions
 
@@ -373,21 +403,17 @@ procedure TFormMain.AppliquerTransition(TransType: TTransitionType);
 begin  
   case TransType of
     ttSlide:
-    begin
       TabControl1.Transition := TTabTransition.Slide;
-      TabControl1.TransitionDuration := 0.3;
-    end;
 
     ttFade:
     begin
       TabControl1.Transition := TTabTransition.None;
       // Implémenter un fade manuel avec TFloatAnimation sur Opacity
+      // (voir l'exemple Skeleton screens plus bas pour le pattern)
     end;
 
     ttNone:
-    begin
       TabControl1.Transition := TTabTransition.None;
-    end;
   end;
 end;
 ```
@@ -426,8 +452,8 @@ begin
   // Mode du MultiView
   MultiView1.Mode := TMultiViewMode.Drawer;  // Menu coulissant
 
-  // Position du menu
-  MultiView1.DrawerOptions.Placement := TDrawerPlacement.Left;
+  // Position du menu (le type réel est TPanePlacement)
+  MultiView1.DrawerOptions.Placement := TPanePlacement.Left;
 
   // Largeur du menu
   MultiView1.Width := 250;
@@ -538,14 +564,17 @@ begin
   Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
                                   TInteractiveGesture.Pan];
 
-  // Gestes standards
-  Touch.StandardGestures := [TStandardGesture.Left, TStandardGesture.Right];
+  // Gestes standards (les valeurs de TStandardGesture sont préfixées 'sg')
+  Touch.StandardGestures := [TStandardGesture.sgLeft, TStandardGesture.sgRight];
 end;
 
 procedure TFormMain.FormGesture(Sender: TObject;
   const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  if EventInfo.GestureID = igiLeft then
+  // Dans EventInfo.GestureID, les constantes des gestes standards
+  // (balayages) sont préfixées `sgi` (Standard Gesture ID).
+  // Les gestes interactifs (zoom, pan, rotate…) utilisent `igi`.
+  if EventInfo.GestureID = sgiLeft then
   begin
     // Swipe vers la gauche : page suivante
     if TabControl1.TabIndex < TabControl1.TabCount - 1 then
@@ -554,7 +583,7 @@ begin
       Handled := True;
     end;
   end
-  else if EventInfo.GestureID = igiRight then
+  else if EventInfo.GestureID = sgiRight then
   begin
     // Swipe vers la droite : page précédente
     if TabControl1.TabIndex > 0 then
@@ -633,7 +662,7 @@ Gérer correctement le bouton retour physique d'Android.
 
 ```pascal
 uses
-  FMX.Platform;
+  FMX.Platform, FMX.DialogService, System.UITypes;
 
 type
   TFormMain = class(TForm)
@@ -678,52 +707,70 @@ begin
   end;
 
   // Si on est sur l'accueil, demander confirmation pour quitter
-  if MessageDlg('Voulez-vous quitter l''application ?',
-    TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
-  begin
-    // Laisser l'application se fermer
-    Result := False;
-  end
-  else
-    Result := True;
+  // ⚠️ Sur Android, MessageDlg synchrone n'est pas implémenté ;
+  // utilisez TDialogService.MessageDialog (asynchrone, à callback).
+  Result := True;  // On consomme le back par défaut
+  TDialogService.MessageDialog('Voulez-vous quitter l''application ?',
+    TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], TMsgDlgBtn.mbNo, 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if AResult = mrYes then
+        Application.Terminate;  // Quitte explicitement l'app
+    end);
 end;
 ```
+
+> ℹ️ **Pourquoi `TDialogService` plutôt que `MessageDlg` ?** Sur Android, le moteur FireMonkey ne peut pas bloquer le thread principal (contrainte de l'OS) ; `MessageDlg` synchrone lève l'erreur *« blocking dialogs not implemented on this platform »*. Depuis Delphi 10.3, `FMX.Dialogs.MessageDlg` est d'ailleurs marqué **deprecated** au profit de `FMX.DialogService.TDialogService.MessageDialog`.
 
 ## Navigation avec paramètres
 
 Passer des données entre les écrans.
 
-### Méthode 1 : Propriétés publiques
+### Méthode 1 : Propriétés publiques sur le formulaire
+
+L'approche la plus simple consiste à stocker l'élément sélectionné comme propriété **du formulaire principal**, puis à demander au formulaire de charger les détails et d'activer l'onglet correspondant.
 
 ```pascal
 type
-  TTabItemDetail = class(TTabItem)
+  TFormMain = class(TForm)
+    TabControl1: TTabControl;
+    TabItemListe: TTabItem;
+    TabItemDetail: TTabItem;
+    ListBox1: TListBox;
+    LabelDetailNom: TLabel;
+    procedure ListBox1ItemClick(const Sender: TCustomListBox;
+      const Item: TListBoxItem);
   private
     FItemID: Integer;
     FItemNom: string;
-  public
-    property ItemID: Integer read FItemID write FItemID;
-    property ItemNom: string read FItemNom write FItemNom;
-    procedure ChargerDetails;
+    procedure AfficherDetails(AItemID: Integer; const AItemNom: string);
   end;
 
 implementation
 
-procedure TTabItemDetail.ChargerDetails;  
+procedure TFormMain.AfficherDetails(AItemID: Integer; const AItemNom: string);  
 begin  
-  LabelNom.Text := FItemNom;
-  // Charger les détails depuis la base de données avec FItemID
-end;
+  // Mémoriser le contexte courant
+  FItemID := AItemID;
+  FItemNom := AItemNom;
 
-// Utilisation
-procedure TFormMain.ListBox1ItemClick(Sender: TObject);  
-begin  
-  TabItemDetail.ItemID := ListBox1.ItemIndex;
-  TabItemDetail.ItemNom := ListBox1.Selected.Text;
-  TabItemDetail.ChargerDetails;
+  // Mettre à jour les composants visuels (qui appartiennent au formulaire)
+  LabelDetailNom.Text := FItemNom;
+  // Charger d'autres infos depuis la base avec FItemID...
+
+  // Activer l'onglet de détail
   TabControl1.ActiveTab := TabItemDetail;
 end;
+
+procedure TFormMain.ListBox1ItemClick(const Sender: TCustomListBox;
+  const Item: TListBoxItem);
+begin
+  AfficherDetails(Item.Index, Item.Text);
+end;
 ```
+
+> 💡 Cette approche évite de dériver `TTabItem` (compliqué à enregistrer dans le designer FMX) et garde toute la logique métier dans le formulaire qui possède les composants visuels.
 
 ### Méthode 2 : Événement avec données
 
@@ -807,30 +854,62 @@ end;
 
 ### Menu contextuel (ActionSheet iOS / BottomSheet Android)
 
+> ℹ️ **Important** : la classe standard `FMX.DialogService.TDialogService` n'expose que 3 méthodes : `MessageDialog`, `ShowMessage` et `InputQuery`. **Il n'existe pas de `TDialogService.ActionSheet` natif** dans FMX. Pour un menu d'actions style iOS / bottom-sheet Android, vous avez deux options :  
+>  
+> 1. **Construire un panneau custom** glissant depuis le bas (approche cross-platform avec uniquement des composants FMX standard)  
+> 2. **Utiliser une bibliothèque tierce** comme [FGX Native](https://github.com/fgx-native/fgx) qui expose `TfgActionSheet`
+
+**Option 1 — Panel custom (approche standard FMX)** :
+
 ```pascal
-uses
-  FMX.DialogService;
+type
+  TFormMain = class(TForm)
+    PanelActionSheet: TPanel;     // Align := TAlignLayout.Bottom au design
+    LayoutBackdrop: TLayout;      // Align := TAlignLayout.Client + TRectangle semi-transparent
+    ButtonPartager: TButton;
+    ButtonCopier: TButton;
+    ButtonSupprimer: TButton;
+    ButtonAnnuler: TButton;
+    procedure ButtonPartagerClick(Sender: TObject);
+    procedure ButtonAnnulerClick(Sender: TObject);
+  private
+    procedure AfficherActionSheet;
+    procedure MasquerActionSheet;
+  end;
 
-procedure TFormMain.AfficherMenuActions;  
-var  
-  Actions: array of string;
-begin
-  Actions := ['Partager', 'Copier', 'Supprimer', 'Annuler'];
+procedure TFormMain.AfficherActionSheet;  
+begin  
+  PanelActionSheet.Position.Y := Height;     // Hors écran (en bas)
+  PanelActionSheet.Visible := True;
+  LayoutBackdrop.Visible := True;
 
-  TDialogService.ActionSheet('Actions', Actions,
-    procedure(const AResult: TModalResult)
-    begin
-      case AResult of
-        0: ShowMessage('Partager');
-        1: ShowMessage('Copier');
-        2: ShowMessage('Supprimer');
-        // 3 = Annuler, ne rien faire
-      end;
-    end);
+  // Animer le panel qui remonte depuis le bas
+  TAnimator.AnimateFloat(PanelActionSheet, 'Position.Y',
+    Height - PanelActionSheet.Height, 0.25, TAnimationType.Out);
+end;
+
+procedure TFormMain.MasquerActionSheet;  
+begin  
+  // AnimateFloatWait est une méthode d'instance sur TFmxObject :
+  // on l'appelle sur le composant à animer, pas via TAnimator.
+  PanelActionSheet.AnimateFloatWait('Position.Y', Height, 0.2, TAnimationType.In);
+  PanelActionSheet.Visible := False;
+  LayoutBackdrop.Visible := False;
+end;
+
+procedure TFormMain.ButtonPartagerClick(Sender: TObject);  
+begin  
+  MasquerActionSheet;
+  // Action de partage
+end;
+
+procedure TFormMain.ButtonAnnulerClick(Sender: TObject);  
+begin  
+  MasquerActionSheet;
 end;
 ```
 
-> **Note :** `TDialogService` fournit des méthodes multiplateformes pour afficher des dialogues natifs. Sur iOS, `ActionSheet` affiche un menu depuis le bas de l'écran. Sur Android, il affiche un dialogue standard.
+> 💡 **Bonne pratique UX** : sur iOS, l'ActionSheet glisse depuis le bas avec un fond semi-transparent (alpha ~50%) et un coin arrondi en haut. Sur Android, un *BottomSheet* a une apparence similaire. L'animation `TAnimator.AnimateFloat` sur `Position.Y` reproduit fidèlement ce comportement.
 
 ## Indicateurs de chargement
 
@@ -882,14 +961,23 @@ begin
     Rect.Parent := Item;
     Rect.Align := TAlignLayout.Client;
     Rect.Margins.Rect := RectF(10, 10, 10, 10);
-    Rect.Fill.Color := TAlphaColorRec.Lightgray;
+    // Les constantes de couleurs sont dans TAlphaColors (pas TAlphaColorRec qui est un record)
+    Rect.Fill.Color := TAlphaColors.Lightgray;
     Rect.Stroke.Kind := TBrushKind.None;
     Rect.XRadius := 5;
     Rect.YRadius := 5;
 
-    // Animation de pulsation
-    TAnimator.AnimateFloat(Rect, 'Opacity', 0.3, 1, TAnimationType.InOut,
-      TInterpolationType.Linear);
+    // Animation de pulsation : on crée un TFloatAnimation avec AutoReverse + Loop.
+    // (TAnimator.AnimateFloat est one-shot, il ne supporte ni la boucle ni l'AutoReverse.)
+    var Anim := TFloatAnimation.Create(Rect);
+    Anim.Parent := Rect;
+    Anim.PropertyName := 'Opacity';
+    Anim.StartValue := 0.3;
+    Anim.StopValue := 1.0;
+    Anim.Duration := 0.8;
+    Anim.AutoReverse := True;
+    Anim.Loop := True;
+    Anim.Start;
   end;
 end;
 ```
@@ -900,19 +988,17 @@ end;
 
 ```pascal
 uses
-  System.IOUtils;
+  System.IOUtils, System.IniFiles;
 
 procedure TFormMain.SauvegarderEtat;  
 var  
   IniFile: TIniFile;
   ConfigPath: string;
 begin
-  {$IFDEF ANDROID}
+  // TPath.GetDocumentsPath fonctionne sur toutes les plateformes ;
+  // pas besoin de directive conditionnelle pour Android/iOS (les chemins
+  // étaient identiques dans les deux branches précédentes).
   ConfigPath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
-  {$ENDIF}
-  {$IFDEF IOS}
-  ConfigPath := TPath.Combine(TPath.GetDocumentsPath, 'config.ini');
-  {$ENDIF}
 
   IniFile := TIniFile.Create(ConfigPath);
   try
@@ -979,9 +1065,17 @@ end;
 
 ### 3. Transitions rapides
 
+L'animation par défaut de `TTabControl.Transition := TTabTransition.Slide` dure environ 300 ms, ce qui est dans la fourchette recommandée (200–300 ms). Pour ajuster finement la durée, pilotez vous-même l'animation avec `TFloatAnimation` :
+
 ```pascal
-// Les animations doivent être courtes (200-300ms max)
-TabControl1.TransitionDuration := 0.25;
+// Animation de glissement custom à 250ms
+var Anim := TFloatAnimation.Create(LayoutContenu);  
+Anim.Parent := LayoutContenu;  
+Anim.PropertyName := 'Position.X';  
+Anim.StartValue := Form.Width;  
+Anim.StopValue := 0;  
+Anim.Duration := 0.25;       // 250 ms — fluide et rapide  
+Anim.Start;  
 ```
 
 ### 4. Gérer les états
@@ -1034,6 +1128,10 @@ end;
 // iOS : Navigation en bas, bouton retour en haut à gauche
 // Android : Navigation en haut, bouton menu hamburger
 
+// Option 1 : laissez FMX choisir selon la plateforme (plus simple)
+TabControl1.TabPosition := TTabPosition.PlatformDefault;
+
+// Option 2 : forcer manuellement avec des directives conditionnelles
 {$IFDEF IOS}
 TabControl1.TabPosition := TTabPosition.Bottom;
 {$ENDIF}
@@ -1042,6 +1140,8 @@ TabControl1.TabPosition := TTabPosition.Bottom;
 TabControl1.TabPosition := TTabPosition.Top;
 {$ENDIF}
 ```
+
+> 💡 `TTabPosition.PlatformDefault` adopte la convention native de chaque OS — utilisez-la pour un comportement automatique, ou les directives conditionnelles pour un contrôle plus fin (par exemple si vous voulez le bottom-tab partout, même sur Android).
 
 ## Patterns de navigation avancés
 
@@ -1054,20 +1154,22 @@ type
     TabMaster: TTabItem;
     TabDetail: TTabItem;
     ListBox1: TListBox;
-    procedure ListBox1ItemClick(Sender: TObject);
+    procedure ListBox1ItemClick(const Sender: TCustomListBox;
+      const Item: TListBoxItem);
   private
-    procedure AfficherDetail(ItemIndex: Integer);
+    procedure AfficherDetail(const ItemText: string);
   end;
 
-procedure TFormMain.ListBox1ItemClick(Sender: TObject);  
-begin  
-  AfficherDetail(ListBox1.ItemIndex);
+procedure TFormMain.ListBox1ItemClick(const Sender: TCustomListBox;
+  const Item: TListBoxItem);
+begin
+  AfficherDetail(Item.Text);
 end;
 
-procedure TFormMain.AfficherDetail(ItemIndex: Integer);  
+procedure TFormMain.AfficherDetail(const ItemText: string);  
 begin  
   // Charger les détails
-  LabelDetailTitre.Text := ListBox1.Items[ItemIndex];
+  LabelDetailTitre.Text := ItemText;
 
   // Naviguer avec animation
   TabControl1.Transition := TTabTransition.Slide;
@@ -1091,17 +1193,29 @@ end;
 
 ```pascal
 procedure TFormMain.GererLienProfond(const URL: string);  
-begin  
+var  
+  IDStr: string;
+  ID: Integer;
+begin
+  // ⚠️ Une URL externe ne doit JAMAIS être considérée comme fiable :
+  // utilisez TryStrToInt pour éviter une EConvertError sur un identifiant invalide.
+
   // Exemple : myapp://profile/123
   if URL.StartsWith('myapp://profile/') then
   begin
-    var ID := URL.Replace('myapp://profile/', '');
-    NaviguerVersProfil(StrToInt(ID));
+    IDStr := URL.Replace('myapp://profile/', '');
+    if TryStrToInt(IDStr, ID) then
+      NaviguerVersProfil(ID)
+    else
+      ShowMessage('Lien invalide : identifiant de profil non numérique');
   end
   else if URL.StartsWith('myapp://article/') then
   begin
-    var ID := URL.Replace('myapp://article/', '');
-    NaviguerVersArticle(StrToInt(ID));
+    IDStr := URL.Replace('myapp://article/', '');
+    if TryStrToInt(IDStr, ID) then
+      NaviguerVersArticle(ID)
+    else
+      ShowMessage('Lien invalide : identifiant d''article non numérique');
   end;
 end;
 ```

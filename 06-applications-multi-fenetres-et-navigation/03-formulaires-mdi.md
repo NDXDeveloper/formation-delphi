@@ -14,6 +14,8 @@ Vous avez probablement déjà utilisé des applications MDI sans le savoir. Des 
 
 Dans cette section, nous allons apprendre à créer et gérer des applications MDI avec Delphi.
 
+> 📌 **Disponibilité plateforme** : le MDI est une **spécificité Windows VCL**. Il **n'existe pas en FireMonkey** (FMX), et il n'est **pas supporté nativement sur macOS / Linux** (le concept ne fait pas partie de leurs guidelines d'interface). Si vous visez le multiplateforme, utilisez plutôt une **interface à onglets** (voir section « Alternatives au MDI » plus bas) ou des **fenêtres SDI** indépendantes.
+
 ## Comprendre le concept MDI
 
 ### MDI vs SDI
@@ -143,18 +145,18 @@ end;
 
 ### Parcourir les formulaires enfants ouverts
 
+> ℹ️ Dans un formulaire **parent MDI**, la zone cliente est réservée à l'affichage des fenêtres enfants. Pour afficher du contenu fixe (liste, statut, etc.), placez vos composants dans une `TStatusBar` (alignée en bas) ou un `TPanel` avec `Align := alTop`/`alBottom`. L'exemple ci-dessous suppose qu'un `TListBox` se trouve dans un tel `TPanel`.
+
 ```pascal
 procedure TForm1.ListerDocumentsClick(Sender: TObject);  
 var  
   i: Integer;
 begin
-  Memo1.Clear;
-  Memo1.Lines.Add('Documents ouverts :');
+  ListBoxDocuments.Items.Clear;
+  ListBoxDocuments.Items.Add('Documents ouverts :');
 
   for i := 0 to MDIChildCount - 1 do
-  begin
-    Memo1.Lines.Add('  - ' + MDIChildren[i].Caption);
-  end;
+    ListBoxDocuments.Items.Add('  - ' + MDIChildren[i].Caption);
 end;
 ```
 
@@ -237,36 +239,49 @@ end;
 
 ### Fusion de menus (Menu Merging)
 
-Les formulaires enfants peuvent avoir leur propre menu qui se fusionne avec celui du parent.
+Les formulaires enfants peuvent avoir leur propre menu qui se **fusionne automatiquement** avec celui du parent lorsque l'enfant est actif. C'est le mécanisme « Menu Merging » de la VCL.
 
-**Form2 (enfant) :**
+> ✅ **Pour les applications MDI** (notre cas dans ce chapitre), la fusion est **automatique** dès que les formulaires enfants ont leur propre `TMainMenu` avec des `GroupIndex` appropriés. Vous **n'avez pas besoin** d'activer la propriété `AutoMerge` — cette propriété sert uniquement aux applications **non-MDI** souhaitant fusionner manuellement les menus de fenêtres secondaires.
+
+**Pour les MDI, deux conditions suffisent :**
+
+1. Le formulaire parent et chaque formulaire enfant ont leur **propre** `TMainMenu`.
+2. Chaque `TMenuItem` reçoit un **`GroupIndex`** qui détermine sa position de fusion : les items des enfants ayant un `GroupIndex` identique à un item du parent **remplacent** celui-ci ; les autres s'**insèrent** à la position triée par `GroupIndex`.
+
+**Form1 (parent MDI) — configuration du menu** :
 ```pascal
-// Créer un menu spécifique au formulaire enfant
-procedure TForm2.FormCreate(Sender: TObject);  
+procedure TFormMain.FormCreate(Sender: TObject);  
 begin  
-  with MainMenu1 do
-  begin
-    with Items.Add do
-    begin
-      Caption := '&Édition';
-
-      with Add do
-      begin
-        Caption := '&Copier';
-        OnClick := CopierClick;
-      end;
-
-      with Add do
-      begin
-        Caption := 'Co&ller';
-        OnClick := CollerClick;
-      end;
-    end;
-  end;
+  // Pas besoin de AutoMerge en MDI — la fusion est gérée par le moteur MDI
+  MenuFichier.GroupIndex := 0;          // Fichier en première position
+  MenuFenetre.GroupIndex := 10;         // Fenêtre en dernière position
+  MenuAide.GroupIndex := 20;            // Aide tout à droite
 end;
 ```
 
-Le menu "Édition" apparaîtra dans la barre de menu principale quand ce formulaire enfant est actif.
+**Form2 (enfant MDI) — menu qui se fusionne** :
+```pascal
+procedure TFormDocument.FormCreate(Sender: TObject);  
+begin  
+  // GroupIndex = 5 : s'insère entre Fichier (0) et Fenêtre (10)
+  MenuEdition.GroupIndex := 5;
+
+  // Sous-items du menu Édition
+  // (créés normalement dans le designer ou par code)
+end;
+```
+
+**Résultat** lorsque ce formulaire enfant est actif, la barre de menus du parent affiche :
+
+```
+Fichier (0)  |  Édition (5, ajouté par l'enfant)  |  Fenêtre (10)  |  Aide (20)
+```
+
+> ℹ️ **Astuce** : si vous voulez **remplacer** un menu du parent (par exemple, son menu Fichier par celui de l'enfant), donnez au menu de l'enfant le **même `GroupIndex`** que celui du parent. La VCL substituera alors le menu enfant à celui du parent pendant la durée d'activation du document.
+
+> 📌 **Cas non-MDI** : pour des fenêtres secondaires « normales » (formulaires `fsNormal` modaux ou non-modaux affichés via `Show`), passez la propriété `AutoMerge` du `TMainMenu` du **formulaire secondaire** à `True` (et **laissez** `AutoMerge` à `False` sur le menu principal). La fusion se déclenchera alors quand le formulaire secondaire devient actif. En MDI, cette propriété est ignorée.
+
+> ⚠️ **Note plateforme** : la fusion automatique ne fonctionne **qu'en VCL** sur Windows (pas en FMX, qui n'a pas de support MDI natif).
 
 ## Organisation des fenêtres MDI
 
@@ -774,9 +789,12 @@ begin
   DocsModifies := False;
 
   // Vérifier si des documents ont été modifiés
+  // (filtrer avec `is` évite une EInvalidCast si vous mélangez plusieurs
+  //  types d'enfants MDI, par exemple TFormDocument et TFormImage)
   for i := 0 to MDIChildCount - 1 do
   begin
-    if (MDIChildren[i] as TFormDocument).Modifie then
+    if (MDIChildren[i] is TFormDocument) and
+       TFormDocument(MDIChildren[i]).Modifie then
     begin
       DocsModifies := True;
       Break;

@@ -503,12 +503,20 @@ begin
     begin
       Lbl := TLabel(PanelIndicateurs.Controls[i]);
 
+      // Réinitialiser systématiquement avant d'appliquer le nouveau style
+      // (sinon les attributs précédents persisteraient lors d'une navigation arrière)
+      Lbl.Font.Style := [];
+      Lbl.Font.Color := clWindowText;
+
       if Lbl.Tag < PageControl1.ActivePageIndex then
-        Lbl.Font.Color := clGreen  // Étape complétée
+        Lbl.Font.Color := clGreen        // Étape complétée
       else if Lbl.Tag = PageControl1.ActivePageIndex then
-        Lbl.Font.Style := [fsBold]  // Étape courante
+      begin
+        Lbl.Font.Style := [fsBold];      // Étape courante
+        Lbl.Font.Color := clHighlight;
+      end
       else
-        Lbl.Font.Color := clGray;  // Étape future
+        Lbl.Font.Color := clGrayText;    // Étape future
     end;
   end;
 end;
@@ -832,13 +840,14 @@ begin
   if not ValiderPageCourante then
     Exit;
 
+  // Cas normal : page suivante
   ProchainePage := PageControl1.ActivePageIndex + 1;
 
-  // Si l'utilisateur a choisi "Installation personnalisée"
-  if RadioButtonPersonnalisee.Checked then
-    ProchainePage := ProchainePage + 0  // Page des options
-  else
-    ProchainePage := ProchainePage + 1; // Sauter la page des options
+  // Cas particulier : installation rapide → on saute la page d'options détaillées
+  // (par exemple si la page courante est l'index 1 et que les options sont en index 2)
+  if (PageControl1.ActivePageIndex = 1) and
+     RadioButtonInstallationRapide.Checked then
+    Inc(ProchainePage);  // saute la page suivante
 
   if ProchainePage < PageControl1.PageCount then
   begin
@@ -848,16 +857,26 @@ begin
 end;
 ```
 
+> 💡 **Important** : pour revenir en arrière correctement, `ButtonPrecedentClick` doit lui aussi connaître les pages sautées (mémorisez par exemple un historique des pages visitées dans une `TStack<Integer>` plutôt que de simplement décrémenter `ActivePageIndex`).
+
 ### Sauvegarde et reprise
 
 Permettre à l'utilisateur de sauvegarder sa progression :
 
 ```pascal
+uses System.IOUtils, System.IniFiles;
+
 procedure TFormAssistant.SauvegarderProgression;  
 var  
   IniFile: TIniFile;
+  ConfigPath: string;
 begin
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  // ⚠️ Ne PAS sauvegarder à côté de l'exe (.ini dans Program Files)
+  //   → sur Windows, ce dossier n'est pas accessible en écriture sans élévation.
+  // Préférer TPath.GetHomePath (ou GetDocumentsPath sur mobile) :
+  ConfigPath := TPath.Combine(TPath.GetHomePath, 'assistant-progression.ini');
+
+  IniFile := TIniFile.Create(ConfigPath);
   try
     IniFile.WriteInteger('Assistant', 'PageIndex', PageControl1.ActivePageIndex);
     IniFile.WriteString('Etape1', 'Nom', EditNom.Text);
@@ -871,9 +890,12 @@ end;
 procedure TFormAssistant.ChargerProgression;  
 var  
   IniFile: TIniFile;
+  ConfigPath: string;
   PageIndex: Integer;
 begin
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  ConfigPath := TPath.Combine(TPath.GetHomePath, 'assistant-progression.ini');
+
+  IniFile := TIniFile.Create(ConfigPath);
   try
     PageIndex := IniFile.ReadInteger('Assistant', 'PageIndex', 0);
     PageControl1.ActivePageIndex := PageIndex;
@@ -1001,11 +1023,9 @@ end;
 ### 2. Toujours permettre de revenir en arrière
 
 ```pascal
-// Sauf pendant l'exécution d'une tâche
-if PasEnCoursDeTraitement then
-  ButtonPrecedent.Enabled := PageIndex > 0
-else
-  ButtonPrecedent.Enabled := False;
+// Sauf pendant l'exécution d'une tâche (utilisez un nom positif pour la condition,
+// plus lisible que « PasEnCoursDeTraitement »).
+ButtonPrecedent.Enabled := (not EnCoursDeTraitement) and (PageIndex > 0);
 ```
 
 ### 3. Validation immédiate
