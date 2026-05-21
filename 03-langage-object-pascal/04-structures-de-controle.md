@@ -952,7 +952,7 @@ begin
 end;
 ```
 
-> 💡 **`Exit(Valeur)` — variante moderne** : Depuis Delphi 2009, `Exit` accepte un argument qui devient la valeur de retour. C'est plus concis :
+> 💡 **`Exit(Valeur)` — variante moderne** : Depuis Delphi 2009, `Exit` accepte un argument qui devient la valeur de retour. C'est plus concis :  
 >
 > ```pascal
 > function EstNombreValide(Nombre: Integer): Boolean;

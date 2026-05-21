@@ -57,8 +57,8 @@ Avec Delphi, vous écrivez votre code **une seule fois** et vous pouvez le compi
 Object Pascal est réputé pour sa **clarté et sa lisibilité**. Regardez cet exemple simple :
 
 ```pascal
-procedure CalculerTotal(Prix: Double; Quantite: Integer);
-var
+procedure CalculerTotal(Prix: Double; Quantite: Integer);  
+var  
   Total: Double;
 begin
   Total := Prix * Quantite;
@@ -142,12 +142,12 @@ Malgré son âge, Delphi bénéficie d'une **communauté mondiale très active**
 
 Contrairement aux applications **interprétées** (Python, JavaScript) ou exécutées via **bytecode** (Java, C#/.NET classique), le code compilé natif de Delphi est **beaucoup plus difficile à décompiler** vers du source lisible. Votre logique métier et vos algorithmes sont donc mieux protégés contre la copie ou le reverse engineering.
 
-> ⚠️ **Nuance importante :** "Mieux protégé" ne signifie pas "inviolable". Des outils de décompilation existent pour Delphi (comme **IDR — Interactive Delphi Reconstructor**, ou des plugins IDA Pro spécialisés). Ils peuvent reconstruire une partie du code, les noms de classes, et les structures de données. La RTTI étendue de Delphi facilite même un peu ce travail. Pour une protection vraiment forte, il faut compléter par :
-> - L'**offuscation** des chaînes sensibles
-> - Le **chiffrement** des données critiques
-> - L'**activation en ligne** des fonctionnalités payantes
-> - Une **vérification d'intégrité** du binaire (anti-tampering)
->
+> ⚠️ **Nuance importante :** "Mieux protégé" ne signifie pas "inviolable". Des outils de décompilation existent pour Delphi (comme **IDR — Interactive Delphi Reconstructor**, ou des plugins IDA Pro spécialisés). Ils peuvent reconstruire une partie du code, les noms de classes, et les structures de données. La RTTI étendue de Delphi facilite même un peu ce travail. Pour une protection vraiment forte, il faut compléter par :  
+> - L'**offuscation** des chaînes sensibles  
+> - Le **chiffrement** des données critiques  
+> - L'**activation en ligne** des fonctionnalités payantes  
+> - Une **vérification d'intégrité** du binaire (anti-tampering)  
+>  
 > Néanmoins, l'effort de reverse engineering reste **bien plus élevé** qu'avec un `.jar` Java ou une DLL .NET, qui peuvent être décompilés vers un code source quasi-original en quelques clics.
 
 ### 10. Faible coût total de possession
@@ -315,8 +315,8 @@ Pour illustrer concrètement la productivité Delphi, voici un exemple complet d
 **Code Delphi complet (à coller dans l'événement OnClick d'un bouton) :**
 
 ```pascal
-procedure TForm1.btnOuvrirClick(Sender: TObject);
-var
+procedure TForm1.btnOuvrirClick(Sender: TObject);  
+var  
   Dialog: TOpenDialog;
   Lignes: TStringList;
 begin

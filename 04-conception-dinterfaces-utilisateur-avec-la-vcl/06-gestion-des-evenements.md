@@ -99,8 +99,8 @@ end;
 
 **Utilisation avancée avec cast :**
 ```pascal
-procedure TForm1.BoutonClick(Sender: TObject);
-var
+procedure TForm1.BoutonClick(Sender: TObject);  
+var  
   Bouton: TButton;
 begin
   // Convertir Sender en TButton pour accéder à ses propriétés
@@ -245,14 +245,14 @@ Déclenchés lorsque la souris entre ou sort du composant.
 
 ```pascal
 // Exemple sur un TPanel (Color fonctionne, contrairement à TButton sous Windows)
-procedure TForm1.Panel1MouseEnter(Sender: TObject);
-begin
+procedure TForm1.Panel1MouseEnter(Sender: TObject);  
+begin  
   Panel1.Color := clYellow;
   Panel1.Font.Style := [fsBold];
 end;
 
-procedure TForm1.Panel1MouseLeave(Sender: TObject);
-begin
+procedure TForm1.Panel1MouseLeave(Sender: TObject);  
+begin  
   Panel1.Color := clBtnFace;
   Panel1.Font.Style := [];
 end;
@@ -892,8 +892,8 @@ type
     FDernierX, FDernierY: Integer;
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   FDessin := False;
 
   // IMPORTANT : initialiser le Bitmap interne du TImage,

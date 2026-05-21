@@ -312,10 +312,10 @@ Pour changer de plateforme :
 3. Sélectionnez la plateforme souhaitée
 4. Dans la barre d'outils, sélectionnez la plateforme active dans le menu déroulant
 
-> ⚠️ **Restrictions selon votre édition :**
-> - **Community Edition** : Win32, Win64, macOS, iOS, Android (pas de Linux)
-> - **Professional / Enterprise / Architect** : toutes les plateformes
->
+> ⚠️ **Restrictions selon votre édition :**  
+> - **Community Edition** : Win32, Win64, macOS, iOS, Android (pas de Linux)  
+> - **Professional / Enterprise / Architect** : toutes les plateformes  
+>  
 > Voir le chapitre 1.3 pour les détails sur les éditions.
 
 Pour débuter, concentrez-vous sur **Win64** (la plateforme moderne par défaut). Les autres plateformes nécessitent des configurations supplémentaires (PAServer pour Mac/iOS, SDK Android, etc.).

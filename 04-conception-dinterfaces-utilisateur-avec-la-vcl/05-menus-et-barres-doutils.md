@@ -186,8 +186,8 @@ MenuAdmin.Visible := False;
 ```pascal
 // Nécessite : uses Vcl.Clipbrd;          (pour la fonction Clipboard)
 // Nécessite : uses Winapi.Windows;       (pour la constante CF_TEXT)
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Initialiser l'état des menus
   MenuFichierEnregistrer.Enabled := False; // Pas de document ouvert
   MenuEditionAnnuler.Enabled := False;
@@ -208,8 +208,8 @@ begin
   MenuEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
-procedure TForm1.Memo1Change(Sender: TObject);
-begin
+procedure TForm1.Memo1Change(Sender: TObject);  
+begin  
   // Activer "Annuler" si une action peut effectivement être annulée
   // (CanUndo est plus précis que Modified, qui reste True même après Undo)
   MenuEditionAnnuler.Enabled := Memo1.CanUndo;
@@ -259,8 +259,8 @@ begin
   // du Memo1 en mode conception
 end;
 
-procedure TForm1.PopupCouperClick(Sender: TObject);
-begin
+procedure TForm1.PopupCouperClick(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
 end;
 
@@ -597,8 +597,8 @@ begin
 end;
 
 // Actions d'édition
-procedure TForm1.ActEditionCouperExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCouperExecute(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
 end;
 
@@ -823,8 +823,8 @@ begin
   Close;
 end;
 
-procedure TForm1.ActEditionCouperExecute(Sender: TObject);
-begin
+procedure TForm1.ActEditionCouperExecute(Sender: TObject);  
+begin  
   Memo1.CutToClipboard;
   StatusBar1.SimpleText := 'Texte coupé';
 end;
@@ -877,8 +877,8 @@ begin
   ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
-procedure TForm1.ActEditionCouperUpdate(Sender: TObject);
-begin
+procedure TForm1.ActEditionCouperUpdate(Sender: TObject);  
+begin  
   ActEditionCouper.Enabled := Memo1.SelLength > 0;
 end;
 

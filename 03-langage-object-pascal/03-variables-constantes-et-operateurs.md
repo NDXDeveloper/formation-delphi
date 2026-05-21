@@ -236,14 +236,14 @@ begin
 end;
 ```
 
-> 💡 **`resourcestring` pour les applications localisables** : Object Pascal propose un mot-clé spécifique `resourcestring` pour les chaînes destinées à être traduites. Ces chaînes sont stockées dans une table de ressources de l'exécutable et peuvent être modifiées par les outils de traduction (Translation Manager, ITE…) sans recompilation du code source :
+> 💡 **`resourcestring` pour les applications localisables** : Object Pascal propose un mot-clé spécifique `resourcestring` pour les chaînes destinées à être traduites. Ces chaînes sont stockées dans une table de ressources de l'exécutable et peuvent être modifiées par les outils de traduction (Translation Manager, ITE…) sans recompilation du code source :  
 >
 > ```pascal
 > resourcestring
 >   SMsgErreurConnexion = 'Impossible de se connecter à la base de données';
 >   SMsgSuccesSauvegarde = 'Les données ont été sauvegardées avec succès';
 > ```
->
+>  
 > S'utilisent comme des constantes normales, mais permettent la localisation. Convention : préfixe `S` pour *String resource*.
 
 ## Les opérateurs
@@ -386,8 +386,8 @@ if (Cache <> nil) or ChargerDepuisDisque then
   Continuer;
 ```
 
-> 💡 **Directive `{$B}`** : Le comportement par défaut est `{$B-}` (court-circuit activé). Avec `{$B+}` (Complete Boolean Evaluation), toutes les opérandes sont systématiquement évaluées — un mode rarement souhaité aujourd'hui, mais qu'on rencontre parfois dans du vieux code.
->
+> 💡 **Directive `{$B}`** : Le comportement par défaut est `{$B-}` (court-circuit activé). Avec `{$B+}` (Complete Boolean Evaluation), toutes les opérandes sont systématiquement évaluées — un mode rarement souhaité aujourd'hui, mais qu'on rencontre parfois dans du vieux code.  
+>  
 > Le court-circuit ne s'applique **qu'aux booléens** : sur des entiers, `and` et `or` restent des opérations bit-à-bit qui évaluent toujours les deux opérandes.
 
 ### Opérateurs de chaînes
@@ -416,7 +416,7 @@ begin
 end;
 ```
 
-> ⚠️ **Pas de conversion implicite** : Object Pascal n'accepte pas `'Vous avez ' + 25 + ' ans'`. Le compilateur rejette ce code car `string + Integer` est une opération non définie. Vous devez convertir explicitement : `IntToStr(25)`, `FloatToStr(3.14)`, `BoolToStr(True, True)`… Une alternative plus lisible est d'utiliser la fonction `Format` :
+> ⚠️ **Pas de conversion implicite** : Object Pascal n'accepte pas `'Vous avez ' + 25 + ' ans'`. Le compilateur rejette ce code car `string + Integer` est une opération non définie. Vous devez convertir explicitement : `IntToStr(25)`, `FloatToStr(3.14)`, `BoolToStr(True, True)`… Une alternative plus lisible est d'utiliser la fonction `Format` :  
 >
 > ```pascal
 > Message := Format('Vous avez %d ans', [25]);
@@ -744,8 +744,8 @@ var
   Nom: string = '';
 
 // ❌ Variable locale non initialisée (valeur imprévisible)
-procedure Calculer;
-var
+procedure Calculer;  
+var  
   Compteur: Integer;  // Pas de valeur par défaut !
 begin
   Compteur := Compteur + 1;  // DANGER : Compteur contient une valeur aléatoire

@@ -408,10 +408,10 @@ Pour un format plus compact, certains développeurs utilisent un style similaire
 # Dépendances packages Delphi
 # Format: NomPackage==Version
 
-FastReport-VCL-Community==6.9.12
-Spring4D==2.0.1
-DUnitX==latest
-ZXing-Delphi==3.5.0  # installation manuelle
+FastReport-VCL-Community==6.9.12  
+Spring4D==2.0.1  
+DUnitX==latest  
+ZXing-Delphi==3.5.0  # installation manuelle  
 ```
 
 ### Dans le code source

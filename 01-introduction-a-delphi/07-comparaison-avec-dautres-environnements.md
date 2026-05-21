@@ -12,16 +12,16 @@ Avant les comparaisons détaillées, regardons côte à côte un programme simpl
 
 **Object Pascal (Delphi) :**
 ```pascal
-program Hello;
-begin
+program Hello;  
+begin  
   WriteLn('Bonjour');
 end.
 ```
 
 **C# (.NET) :**
 ```csharp
-using System;
-class Hello {
+using System;  
+class Hello {  
     static void Main() {
         Console.WriteLine("Bonjour");
     }

@@ -46,7 +46,7 @@ Il existe trois façons d'écrire des commentaires en Object Pascal :
 
 > ⚠️ **Cas particulier : les directives de compilation** : Une accolade suivie immédiatement d'un `$` n'est **pas** un commentaire, mais une **directive de compilation** qui modifie le comportement du compilateur. Exemples : `{$R+}` active la vérification de plage, `{$IFDEF DEBUG}` introduit une compilation conditionnelle, `{$I MonFichier.inc}` insère un fichier. Ne placez donc jamais un commentaire « ordinaire » sous la forme `{$ ... }`.
 
-> 💡 **Commentaires de documentation (XMLDoc)** : Pour documenter des éléments destinés à être réutilisés (méthodes publiques, classes), Delphi reconnaît la syntaxe XMLDoc avec `///`. Ces commentaires sont exploités par l'aide contextuelle de l'IDE et par les générateurs de documentation :
+> 💡 **Commentaires de documentation (XMLDoc)** : Pour documenter des éléments destinés à être réutilisés (méthodes publiques, classes), Delphi reconnaît la syntaxe XMLDoc avec `///`. Ces commentaires sont exploités par l'aide contextuelle de l'IDE et par les générateurs de documentation :  
 >
 > ```pascal
 > /// <summary>Calcule le montant TTC à partir du montant HT.</summary>
@@ -72,7 +72,7 @@ end;
 
 **Point important :** Le point-virgule n'est pas obligatoire avant certains mots-clés comme `end`, `until`, ou `except`, car ces mots-clés marquent déjà une séparation logique.
 
-> ⚠️ **Cas particulier d'`else`** : Devant `else`, un point-virgule **provoque une erreur de syntaxe** car il termine prématurément le `if`. Cette règle s'applique à `if...then...else` comme à `case...else`.
+> ⚠️ **Cas particulier d'`else`** : Devant `else`, un point-virgule **provoque une erreur de syntaxe** car il termine prématurément le `if`. Cette règle s'applique à `if...then...else` comme à `case...else`.  
 >
 > ```pascal
 > // ❌ Erreur de compilation : point-virgule en trop avant else

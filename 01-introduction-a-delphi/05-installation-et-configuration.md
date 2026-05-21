@@ -208,10 +208,10 @@ Une fois le téléchargement terminé, vous pouvez procéder à l'installation.
 Vous devrez choisir quels composants installer :
 
 **Pour les débutants, installez :**
-- ✓ Delphi (obligatoire)
-- ✓ RAD Studio IDE (obligatoire)
-- ✓ Documentation et exemples
-- ✓ Plateformes : Windows 32-bit et Windows 64-bit (les deux sont utiles pour cibler les vieux clients comme les nouveaux)
+- ✓ Delphi (obligatoire)  
+- ✓ RAD Studio IDE (obligatoire)  
+- ✓ Documentation et exemples  
+- ✓ Plateformes : Windows 32-bit et Windows 64-bit (les deux sont utiles pour cibler les vieux clients comme les nouveaux)  
 - ✓ Windows on Arm (Arm64EC) si vous avez Delphi 13.1 et un PC Arm ou si vous prévoyez de cibler ce type de matériel
 
 **Vous pouvez décocher (pour économiser de l'espace) :**

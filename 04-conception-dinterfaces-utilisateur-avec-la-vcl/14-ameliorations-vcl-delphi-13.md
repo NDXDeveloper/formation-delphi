@@ -175,9 +175,9 @@ end;
 **✓ À faire :**
 ```pascal
 // Expressions simples et lisibles
-Couleur := if EstActif then clGreen else clRed;
-Message := if Count = 0 then 'Aucun' else IntToStr(Count);
-ButtonOK.Caption := if Editing then 'Enregistrer' else 'Modifier';
+Couleur := if EstActif then clGreen else clRed;  
+Message := if Count = 0 then 'Aucun' else IntToStr(Count);  
+ButtonOK.Caption := if Editing then 'Enregistrer' else 'Modifier';  
 ```
 
 > ⚠️ **Évitez `if Condition then True else False`** : c'est juste `Condition`. Écrivez directement `Visible := Mode = mEdit;` plutôt que `Visible := if Mode = mEdit then True else False;` — l'opérateur ternaire n'apporte rien quand le résultat est déjà un booléen.
@@ -221,9 +221,9 @@ Status := if Validated then 'OK' else 'KO';
 
 **5. Évaluation paresseuse (court-circuit)**
 
-> 💡 **Différence essentielle avec `IfThen`** : l'opérateur ternaire **n'évalue qu'une seule branche** (celle qui est sélectionnée par la condition), alors que la fonction `IfThen` (de `System.StrUtils` / `System.Math`) **évalue toujours les deux** avant de retourner le résultat.
->
-> Cela rend l'opérateur ternaire utilisable dans des cas où l'une des branches pourrait lever une exception :
+> 💡 **Différence essentielle avec `IfThen`** : l'opérateur ternaire **n'évalue qu'une seule branche** (celle qui est sélectionnée par la condition), alors que la fonction `IfThen` (de `System.StrUtils` / `System.Math`) **évalue toujours les deux** avant de retourner le résultat.  
+>  
+> Cela rend l'opérateur ternaire utilisable dans des cas où l'une des branches pourrait lever une exception :  
 >
 > ```pascal
 > // ✅ Sans risque : la division n'est évaluée que si Diviseur <> 0
@@ -232,7 +232,7 @@ Status := if Validated then 'OK' else 'KO';
 > // ❌ Avec IfThen : la division est TOUJOURS évaluée → EDivByZero possible
 > Resultat := IfThen(Diviseur <> 0, Dividende / Diviseur, 0);
 > ```
->
+>  
 > Le mot-clé `if` joue désormais un double rôle dans le langage : instruction (statement) classique **ou** opérateur expression, selon sa position dans le code source.
 
 ---
@@ -528,8 +528,8 @@ uses
   // Unités du package installé via GetIt
   AdvGrid, AdvObj;
 
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   Grid: TAdvStringGrid;
 begin
   // Utiliser le composant installé
@@ -630,16 +630,16 @@ begin
   FPrenom := Value;
 end;
 
-procedure TClient.SetEmail(const Value: string);
-begin
+procedure TClient.SetEmail(const Value: string);  
+begin  
   // Important : on valide `Value` (la nouvelle valeur), pas `FEmail` !
   if (Pos('@', Value) <= 0) or (Pos('.', Value) <= 0) then
     raise Exception.Create('Email invalide');
   FEmail := Value;
 end;
 
-function TClient.EstEmailValide: Boolean;
-begin
+function TClient.EstEmailValide: Boolean;  
+begin  
   Result := (Pos('@', FEmail) > 0) and (Pos('.', FEmail) > 0);
 end;
 
@@ -742,8 +742,8 @@ Code à optimiser :
 
 ```pascal
 // Nécessite : uses System.Character;  // pour TCharacter.ToLower
-function CompterVoyelles(const Texte: string): Integer;
-var
+function CompterVoyelles(const Texte: string): Integer;  
+var  
   i: Integer;
   c: Char;
 begin
@@ -796,8 +796,8 @@ end;
 **Nouvelles propriétés :**
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // Style moderne
   Button1.StyleElements := [seFont, seClient, seBorder];
 
@@ -821,8 +821,8 @@ end;
 **Nouvelles fonctionnalités :**
 
 ```pascal
-procedure TForm1.ConfigurerEdit;
-begin
+procedure TForm1.ConfigurerEdit;  
+begin  
   // Texte d'indication (placeholder), déjà disponible dans les versions précédentes
   Edit1.TextHint := 'Entrez votre nom...';
 
@@ -832,7 +832,7 @@ begin
 end;
 ```
 
-> 💡 **Pour afficher des icônes ou un bouton dans la zone de saisie**, utilisez le composant **TButtonedEdit** (palette **Additional**) plutôt que le `TEdit` standard. Il dérive de `TCustomEdit` et expose les propriétés `LeftButton` / `RightButton`, chacune avec ses sous-propriétés `Visible`, `Enabled`, `ImageIndex`, `HotImageIndex`, `PressedImageIndex`, `DisabledImageIndex` et l'événement `OnClick` :
+> 💡 **Pour afficher des icônes ou un bouton dans la zone de saisie**, utilisez le composant **TButtonedEdit** (palette **Additional**) plutôt que le `TEdit` standard. Il dérive de `TCustomEdit` et expose les propriétés `LeftButton` / `RightButton`, chacune avec ses sous-propriétés `Visible`, `Enabled`, `ImageIndex`, `HotImageIndex`, `PressedImageIndex`, `DisabledImageIndex` et l'événement `OnClick` :  
 >
 > ```pascal
 > procedure TForm1.ConfigurerButtonedEdit;
@@ -1019,8 +1019,8 @@ uses
   FireDAC.Stan.StorageJSON,    // nécessaire pour activer le format JSON
   System.JSON;
 
-procedure TForm1.ExporterEnJSON;
-begin
+procedure TForm1.ExporterEnJSON;  
+begin  
   // Sauvegarde directe en JSON dans un fichier
   FDQuery1.SaveToFile('export.json', sfJSON);
 
@@ -1028,8 +1028,8 @@ begin
   // (à compléter selon vos besoins)
 end;
 
-procedure TForm1.ImporterDepuisJSON;
-begin
+procedure TForm1.ImporterDepuisJSON;  
+begin  
   // Chargement direct depuis un fichier JSON
   FDMemTable1.LoadFromFile('export.json', sfJSON);
 

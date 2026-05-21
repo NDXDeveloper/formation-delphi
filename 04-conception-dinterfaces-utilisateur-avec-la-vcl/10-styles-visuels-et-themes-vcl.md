@@ -292,12 +292,12 @@ La propriété `StyleElements` permet de contrôler quels aspects du style sont 
 Button1.StyleElements := [seFont, seClient, seBorder];
 
 // Désactiver le style de police uniquement
-Button1.StyleElements := [seClient, seBorder];
-Button1.Font.Color := clRed; // Cette couleur sera respectée
+Button1.StyleElements := [seClient, seBorder];  
+Button1.Font.Color := clRed; // Cette couleur sera respectée  
 
 // Désactiver complètement le style pour ce composant
-Panel1.StyleElements := [];
-Panel1.Color := clYellow; // Couleur personnalisée respectée sur TPanel
+Panel1.StyleElements := [];  
+Panel1.Color := clYellow; // Couleur personnalisée respectée sur TPanel  
 ```
 
 > ℹ️ **Limitation Windows** : retirer `seClient` d'un `TButton` standard ne suffit pas à lui appliquer une `Color` personnalisée, car le rendu reste délégué au thème natif Windows. Pour un bouton coloré, utilisez plutôt `TPanel` cliquable, `TSpeedButton`/`TBitBtn`, ou désactivez les thèmes globalement.
@@ -322,8 +322,8 @@ uses
   Vcl.Graphics,    // pour ColorToRGB
   Winapi.Windows;  // pour GetRValue, GetGValue, GetBValue
 
-procedure TForm1.AfficherInfosStyle;
-var
+procedure TForm1.AfficherInfosStyle;  
+var  
   Style: TCustomStyleServices;
   CouleurFond: TColor;
   Luminance: Integer;
@@ -507,8 +507,8 @@ end;
 uses
   Vcl.Themes;
 
-procedure TForm1.PaintBox1Paint(Sender: TObject);
-var
+procedure TForm1.PaintBox1Paint(Sender: TObject);  
+var  
   Details: TThemedElementDetails;
   R: TRect;
 begin

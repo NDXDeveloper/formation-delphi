@@ -240,8 +240,8 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Vérifier si Windows 11 (build 22000) ou supérieur
   if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22000) then
     ActiverCoinsArrondis;
@@ -277,14 +277,14 @@ end;
 
 L'effet Mica donne un arrière-plan semi-transparent avec un léger flou.
 
-> ⚠️ **Deux API selon la version de Windows 11** :
-> - **Windows 11 versions initiales** (build < 22621) : attribut non documenté `DWMWA_MICA_EFFECT = 1029` (valeur 0/1).
-> - **Windows 11 22H2 et ultérieur** (build ≥ 22621) : API officielle `DWMWA_SYSTEMBACKDROP_TYPE = 38`, qui accepte plusieurs valeurs :
->   - `DWMSBT_NONE = 1` (pas d'effet)
->   - `DWMSBT_MAINWINDOW = 2` (Mica)
->   - `DWMSBT_TRANSIENTWINDOW = 3` (Acrylic)
->   - `DWMSBT_TABBEDWINDOW = 4` (Mica Alt, pour fenêtres à onglets)
->
+> ⚠️ **Deux API selon la version de Windows 11** :  
+> - **Windows 11 versions initiales** (build < 22621) : attribut non documenté `DWMWA_MICA_EFFECT = 1029` (valeur 0/1).  
+> - **Windows 11 22H2 et ultérieur** (build ≥ 22621) : API officielle `DWMWA_SYSTEMBACKDROP_TYPE = 38`, qui accepte plusieurs valeurs :  
+>   - `DWMSBT_NONE = 1` (pas d'effet)  
+>   - `DWMSBT_MAINWINDOW = 2` (Mica)  
+>   - `DWMSBT_TRANSIENTWINDOW = 3` (Acrylic)  
+>   - `DWMSBT_TABBEDWINDOW = 4` (Mica Alt, pour fenêtres à onglets)  
+>  
 > Le code ci-dessous tente d'abord la nouvelle API puis retombe sur l'ancienne pour conserver la compatibilité.
 
 ```pascal
@@ -294,8 +294,8 @@ const
   DWMWA_SYSTEMBACKDROP_TYPE = 38;       // Nouvelle API (build ≥ 22621)
   DWMSBT_MAINWINDOW = 2;                // Mica
 
-procedure TFormMain.ActiverEffetMica;
-var
+procedure TFormMain.ActiverEffetMica;  
+var  
   UseMica: Integer;
   UseDarkMode: Integer;
   BackdropType: Integer;
@@ -324,8 +324,8 @@ begin
   end;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
+procedure TFormMain.FormCreate(Sender: TObject);  
+begin  
   // Mica n'existe qu'à partir de Windows 11 (build 22000)
   if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22000) then
     ActiverEffetMica;
@@ -429,8 +429,8 @@ type
   end;
 
 // Nécessite : uses Winapi.Dwmapi;  // pour le record MARGINS et DwmExtendFrameIntoClientArea
-procedure TFormMain.EtendreBarreTitre;
-const
+procedure TFormMain.EtendreBarreTitre;  
+const  
   DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 var
   Marges: Winapi.Dwmapi.TMargins;  // type explicite : record DWM (≠ Vcl.Controls.TMargins qui est une classe)
@@ -505,8 +505,8 @@ end;
 uses
   Vcl.Buttons; // pour TSpeedButton
 
-procedure TFormMain.AjouterBoutonsControle;
-var
+procedure TFormMain.AjouterBoutonsControle;  
+var  
   BtnFermer, BtnMaximiser, BtnMinimiser: TSpeedButton;
 begin
   // Bouton fermer
@@ -1274,8 +1274,8 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.ActiverEffetMica;
-var
+procedure TFormMain.ActiverEffetMica;  
+var  
   UseMica: Integer;
   UseDarkMode: Integer;
   BackdropType: Integer;
@@ -1337,8 +1337,8 @@ begin
   end;
 end;
 
-procedure TFormMain.CreerBoutonsControles;
-var
+procedure TFormMain.CreerBoutonsControles;  
+var  
   BtnFermer: TSpeedButton;
 begin
   // Créer les boutons de contrôle Windows 11 style
@@ -1354,8 +1354,8 @@ begin
   BtnFermer.OnClick := BtnFermerClick;
 end;
 
-procedure TFormMain.BtnFermerClick(Sender: TObject);
-begin
+procedure TFormMain.BtnFermerClick(Sender: TObject);  
+begin  
   Close;
 end;
 

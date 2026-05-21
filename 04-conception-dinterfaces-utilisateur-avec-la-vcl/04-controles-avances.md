@@ -252,8 +252,8 @@ ParentNode := Node.Parent;
 ### Utiliser des images avec ImageList
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);
-var
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
   FolderNode, FileNode: TTreeNode;
 begin
   // Associer un ImageList au TreeView
@@ -270,11 +270,11 @@ begin
 end;
 ```
 
-> 💡 **Indices d'images du `TTreeNode` à connaître** :
-> - `ImageIndex` : image par défaut (nœud non sélectionné, non développé).
-> - `SelectedIndex` : image quand le nœud est **sélectionné** (focus).
-> - `ExpandedImageIndex` : image quand le nœud est **développé** (dossier ouvert vs. fermé) — disponible dans les versions modernes de Delphi.
-> - `StateIndex` : image d'état (case à cocher, par exemple), prise dans la collection `StateImages`.
+> 💡 **Indices d'images du `TTreeNode` à connaître** :  
+> - `ImageIndex` : image par défaut (nœud non sélectionné, non développé).  
+> - `SelectedIndex` : image quand le nœud est **sélectionné** (focus).  
+> - `ExpandedImageIndex` : image quand le nœud est **développé** (dossier ouvert vs. fermé) — disponible dans les versions modernes de Delphi.  
+> - `StateIndex` : image d'état (case à cocher, par exemple), prise dans la collection `StateImages`.  
 > - `OverlayIndex` : index d'une image superposée à `ImageIndex` (icône de superposition).
 
 ### Conseils pratiques

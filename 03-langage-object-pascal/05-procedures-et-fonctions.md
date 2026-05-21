@@ -201,10 +201,10 @@ begin
 end;
 ```
 
-> 💡 **`var` vs `out` — quelle différence ?**
-> - **`var`** : la valeur **initiale** de la variable est transmise à la routine, qui peut la lire et la modifier. Convient à un échange ou à une modification.
-> - **`out`** : la routine est censée **écrire** la valeur. Pour les types gérés (chaînes, interfaces, tableaux dynamiques), le compilateur libère automatiquement la valeur initiale avant l'appel. Convient aux fonctions du type `TryParse` qui doivent uniquement remplir une valeur de sortie.
->
+> 💡 **`var` vs `out` — quelle différence ?**  
+> - **`var`** : la valeur **initiale** de la variable est transmise à la routine, qui peut la lire et la modifier. Convient à un échange ou à une modification.  
+> - **`out`** : la routine est censée **écrire** la valeur. Pour les types gérés (chaînes, interfaces, tableaux dynamiques), le compilateur libère automatiquement la valeur initiale avant l'appel. Convient aux fonctions du type `TryParse` qui doivent uniquement remplir une valeur de sortie.  
+>  
 > Le sémantiquement : utilisez `out` quand la routine fixe la valeur sans dépendre de l'état précédent.
 
 ### Tableau récapitulatif des types de paramètres
@@ -435,7 +435,7 @@ begin
 end;
 ```
 
-> ⚠️ **Limitation `UpCase`** : `UpCase` ne gère que les caractères ASCII non accentués (`'a'..'z'` → `'A'..'Z'`). Pour les caractères accentués (`'é'`, `'à'`, `'ç'`…), elle ne fait rien. Pour une conversion robuste sur du texte Unicode, utilisez `TCharacter.ToUpper` (unité `System.Character`) :
+> ⚠️ **Limitation `UpCase`** : `UpCase` ne gère que les caractères ASCII non accentués (`'a'..'z'` → `'A'..'Z'`). Pour les caractères accentués (`'é'`, `'à'`, `'ç'`…), elle ne fait rien. Pour une conversion robuste sur du texte Unicode, utilisez `TCharacter.ToUpper` (unité `System.Character`) :  
 >
 > ```pascal
 > uses System.Character;

@@ -353,8 +353,8 @@ Certains composants VCL exposent des propriétés étendues d'accessibilité dan
 
 ```pascal
 // Pour les composants VCL avec support MSAA étendu (Delphi 10.4+)
-procedure TForm1.ConfigurerAccessibilite;
-begin
+procedure TForm1.ConfigurerAccessibilite;  
+begin  
   // Ces propriétés aident les lecteurs d'écran
   Edit1.AccessibleName := 'Nom du client';
   Edit1.AccessibleDescription := 'Saisir le nom complet du client';
@@ -415,8 +415,8 @@ uses
   Winapi.Windows,  // pour GetRValue, GetGValue, GetBValue
   System.Math;     // pour Power
 
-function CalculerLuminance(Couleur: TColor): Double;
-var
+function CalculerLuminance(Couleur: TColor): Double;  
+var  
   R, G, B: Byte;
   Rs, Gs, Bs: Double;
 begin
@@ -570,8 +570,8 @@ end;
 ### Polices pour la dyslexie
 
 ```pascal
-procedure TForm1.ActiverModeDyslexie;
-begin
+procedure TForm1.ActiverModeDyslexie;  
+begin  
   // Polices spécialement conçues pour la dyslexie
   // (nécessite d'installer la police sur le système)
 

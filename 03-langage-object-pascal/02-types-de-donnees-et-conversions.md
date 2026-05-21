@@ -363,7 +363,7 @@ begin
 end;
 ```
 
-> ⚠️ **Piège locale-dépendant de `StrToFloat`** : `StrToFloat` utilise le `DecimalSeparator` de la locale système. En **français**, c'est la virgule (`'19,99'`), en **anglais** le point (`'19.99'`). Pour lire une chaîne au format **fixe** (point décimal, indépendant de la locale — pratique pour les fichiers, JSON, XML…), passez `TFormatSettings.Invariant` :
+> ⚠️ **Piège locale-dépendant de `StrToFloat`** : `StrToFloat` utilise le `DecimalSeparator` de la locale système. En **français**, c'est la virgule (`'19,99'`), en **anglais** le point (`'19.99'`). Pour lire une chaîne au format **fixe** (point décimal, indépendant de la locale — pratique pour les fichiers, JSON, XML…), passez `TFormatSettings.Invariant` :  
 >
 > ```pascal
 > uses System.SysUtils;
@@ -415,13 +415,13 @@ end;
 | `Ceil(x)` | Arrondit au supérieur | `Ceil(3.2)` = 4 |
 | `Floor(x)` | Arrondit à l'inférieur | `Floor(3.7)` = 3 |
 
-> ⚠️ **Piège de `Round` : l'arrondi banquier** : Par défaut, `Round` utilise le mode *banker's rounding* (arrondi au pair le plus proche) lorsqu'il y a égalité (`.5`). Ainsi :
->
-> - `Round(2.5)` retourne **2** (pas 3 !)
-> - `Round(3.5)` retourne **4**
-> - `Round(0.5)` retourne **0**
-> - `Round(1.5)` retourne **2**
->
+> ⚠️ **Piège de `Round` : l'arrondi banquier** : Par défaut, `Round` utilise le mode *banker's rounding* (arrondi au pair le plus proche) lorsqu'il y a égalité (`.5`). Ainsi :  
+>  
+> - `Round(2.5)` retourne **2** (pas 3 !)  
+> - `Round(3.5)` retourne **4**  
+> - `Round(0.5)` retourne **0**  
+> - `Round(1.5)` retourne **2**  
+>  
 > Cette règle (norme IEEE 754) réduit le biais cumulatif sur de grands volumes de calculs. Pour obtenir l'arrondi « scolaire » (toujours au-dessus pour `.5`), utilisez `SimpleRoundTo` ou implémentez `Trunc(X + 0.5)` pour les positifs.
 
 #### Conversions de booléens

@@ -20,10 +20,10 @@ Pour bien comprendre, imaginez que vous voulez créer une fenêtre avec un bouto
 
 ```c
 // Pseudo-code Win32 simplifié — beaucoup de code pour pas grand-chose
-WNDCLASS wc = { 0 };
-wc.lpfnWndProc = WindowProc;
-RegisterClass(&wc);
-HWND hwnd = CreateWindowEx(0, "MaClasse", "Ma fenêtre", WS_OVERLAPPEDWINDOW, ...);
+WNDCLASS wc = { 0 };  
+wc.lpfnWndProc = WindowProc;  
+RegisterClass(&wc);  
+HWND hwnd = CreateWindowEx(0, "MaClasse", "Ma fenêtre", WS_OVERLAPPEDWINDOW, ...);  
 // + gestion des messages, du bouton, des événements...
 ```
 
@@ -52,8 +52,8 @@ Voici un exemple très simple pour vous donner une idée du style Object Pascal 
 ```pascal
 program Bonjour;
 
-procedure Saluer(const Nom: string);
-begin
+procedure Saluer(const Nom: string);  
+begin  
   WriteLn('Bonjour, ', Nom, ' !');
 end;
 

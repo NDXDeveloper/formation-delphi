@@ -201,8 +201,8 @@ Vous verrez le bouton se transformer en temps réel sur la fiche.
 **Double-cliquez** sur le bouton dans la fiche. Delphi bascule automatiquement dans l'éditeur de code et crée une procédure vide :
 
 ```pascal
-procedure TForm1.btnSaluerClick(Sender: TObject);
-begin
+procedure TForm1.btnSaluerClick(Sender: TObject);  
+begin  
 
 end;
 ```
@@ -210,8 +210,8 @@ end;
 Le curseur est positionné entre `begin` et `end`. Tapez la ligne suivante :
 
 ```pascal
-procedure TForm1.btnSaluerClick(Sender: TObject);
-begin
+procedure TForm1.btnSaluerClick(Sender: TObject);  
+begin  
   ShowMessage('Bonjour ! Bienvenue dans Delphi.');
 end;
 ```
@@ -229,13 +229,13 @@ Votre application s'ouvre. Cliquez sur le bouton "Dis bonjour". Une boîte de di
 
 **Bravo ! Vous venez de créer votre première application Delphi interactive.**
 
-> 💡 **Ce qui s'est passé en coulisses :**
-> 1. Vous avez ajouté visuellement un composant à votre fiche (sans code)
-> 2. Delphi a automatiquement déclaré ce bouton dans la classe `TForm1`
-> 3. En double-cliquant, Delphi a créé une **procédure d'événement** et l'a liée au clic du bouton
-> 4. Vous avez écrit **1 ligne** de code pour définir le comportement
-> 5. La compilation a transformé tout cela en un `.exe` autonome
->
+> 💡 **Ce qui s'est passé en coulisses :**  
+> 1. Vous avez ajouté visuellement un composant à votre fiche (sans code)  
+> 2. Delphi a automatiquement déclaré ce bouton dans la classe `TForm1`  
+> 3. En double-cliquant, Delphi a créé une **procédure d'événement** et l'a liée au clic du bouton  
+> 4. Vous avez écrit **1 ligne** de code pour définir le comportement  
+> 5. La compilation a transformé tout cela en un `.exe` autonome  
+>  
 > Combien de lignes de code avez-vous écrites au total ? **Une seule.** C'est la productivité Delphi en action.
 
 ### Pour aller un peu plus loin
@@ -243,8 +243,8 @@ Votre application s'ouvre. Cliquez sur le bouton "Dis bonjour". Une boîte de di
 Modifiez le message pour qu'il affiche une réponse différente selon l'heure :
 
 ```pascal
-procedure TForm1.btnSaluerClick(Sender: TObject);
-var
+procedure TForm1.btnSaluerClick(Sender: TObject);  
+var  
   Heure: Word;
 begin
   Heure := HourOf(Now);

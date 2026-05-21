@@ -1203,21 +1203,21 @@ end;
 Le motif **BeginUpdate / EndUpdate** permet de cumuler plusieurs modifications de propriétés sans déclencher un redessin à chaque fois — utile quand on charge un grand nombre de valeurs d'un coup.
 
 ```pascal
-procedure TMonComposant.BeginUpdate;
-begin
+procedure TMonComposant.BeginUpdate;  
+begin  
   Inc(FUpdateCount);
 end;
 
-procedure TMonComposant.EndUpdate;
-begin
+procedure TMonComposant.EndUpdate;  
+begin  
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
     Invalidate;  // Un seul redessin à la fin
 end;
 
 // Chaque setter doit consulter FUpdateCount avant d'appeler Invalidate
-procedure TMonComposant.SetPropriete(const Value: Integer);
-begin
+procedure TMonComposant.SetPropriete(const Value: Integer);  
+begin  
   if FPropriete <> Value then
   begin
     FPropriete := Value;                // Toujours mémoriser la valeur

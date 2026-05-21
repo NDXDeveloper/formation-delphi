@@ -287,9 +287,9 @@ Quand vous créez un projet Delphi, plusieurs types de fichiers sont créés. Vo
 *.local
 *.identcache
 __history/
-Win32/Debug/
-Win32/Release/
-Win64/
+Win32/Debug/  
+Win32/Release/  
+Win64/  
 ```
 
 ### Conventions de nommage des composants

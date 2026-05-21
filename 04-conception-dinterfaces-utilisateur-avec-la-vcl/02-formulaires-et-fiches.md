@@ -293,15 +293,15 @@ end;
 Le formulaire s'affiche mais l'utilisateur peut **continuer à interagir** avec les autres fenêtres. Idéal pour les fenêtres d'outils ou de visualisation.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);
-begin
+procedure TForm1.Button1Click(Sender: TObject);  
+begin  
   // Form2 est ici une variable globale, créée automatiquement au démarrage
   // par Delphi (voir Projet → Options → Formulaires)
   Form2.Show;
 end;
 ```
 
-> ⚠️ **Différence importante avec ShowModal** : Avec `Show`, **vous ne devez pas libérer le formulaire après l'appel** : la procédure retourne immédiatement, et le formulaire continue d'exister. Pour libérer un formulaire non-modal proprement, utilisez son événement `OnClose` :
+> ⚠️ **Différence importante avec ShowModal** : Avec `Show`, **vous ne devez pas libérer le formulaire après l'appel** : la procédure retourne immédiatement, et le formulaire continue d'exister. Pour libérer un formulaire non-modal proprement, utilisez son événement `OnClose` :  
 >
 > ```pascal
 > procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -342,16 +342,16 @@ type
     constructor Create(AOwner: TComponent; const ANom: string); reintroduce;
   end;
 
-constructor TForm2.Create(AOwner: TComponent; const ANom: string);
-begin
+constructor TForm2.Create(AOwner: TComponent; const ANom: string);  
+begin  
   inherited Create(AOwner);
   Caption := 'Édition de ' + ANom;
   // Initialiser les champs du formulaire avec ANom...
 end;
 
 // Utilisation côté appelant
-procedure TForm1.Button1Click(Sender: TObject);
-var
+procedure TForm1.Button1Click(Sender: TObject);  
+var  
   Form2: TForm2;
 begin
   Form2 := TForm2.Create(Self, 'Dupont');

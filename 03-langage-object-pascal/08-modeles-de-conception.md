@@ -119,8 +119,8 @@ begin
 end;
 ```
 
-> 💡 **Note Object Pascal** : En Object Pascal, le modificateur `private` autorise l'accès depuis **la même unité**. Pour qu'un Singleton ne puisse vraiment être instancié que via `Instance`, déclarez le constructeur en `strict private` — il sera alors inaccessible même au code écrit dans la même unité.
->
+> 💡 **Note Object Pascal** : En Object Pascal, le modificateur `private` autorise l'accès depuis **la même unité**. Pour qu'un Singleton ne puisse vraiment être instancié que via `Instance`, déclarez le constructeur en `strict private` — il sera alors inaccessible même au code écrit dans la même unité.  
+>  
 > ⚠️ **Multithreading** : Cette implémentation simple n'est pas thread-safe. Si plusieurs threads peuvent appeler `Instance` simultanément, protégez l'accès avec un `TCriticalSection` ou utilisez `TInterlocked.CompareExchange`.
 
 ### Utilisation

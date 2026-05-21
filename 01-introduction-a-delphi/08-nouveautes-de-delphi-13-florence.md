@@ -67,8 +67,8 @@ C'est aussi simple que d'ajouter un composant FireDAC pour se connecter à une b
 Voici un aperçu de ce à quoi ressemble du code utilisant les composants IA (la syntaxe exacte peut varier selon les drivers utilisés, mais l'esprit reste celui-ci) :
 
 ```pascal
-procedure TForm1.btnPoserQuestionClick(Sender: TObject);
-begin
+procedure TForm1.btnPoserQuestionClick(Sender: TObject);  
+begin  
   // Préparer la requête
   AITextRequest1.Prompt := 'Résume ce texte en 3 phrases : ' + mmoTexte.Text;
   AITextRequest1.MaxTokens := 200;

@@ -565,9 +565,9 @@ end;
 **✅ Lisibilité** : syntaxe naturelle  
 **✅ Réutilisabilité** : helpers utilisables partout  
 
-> ⚠️ **Limitation importante** : Un type ne peut avoir qu'**un seul helper actif** à un endroit donné du code (le dernier visible via la clause `uses`). Si deux unités définissent un helper pour le même type, seul celui de l'unité la plus récemment incluse sera disponible. Pour cette raison :
->
-> - Évitez de redéfinir un helper pour un type de la RTL (`string`, `TStringList`, etc.) — vous masqueriez les méthodes officielles de la RTL (`TStringHelper`, etc.).
+> ⚠️ **Limitation importante** : Un type ne peut avoir qu'**un seul helper actif** à un endroit donné du code (le dernier visible via la clause `uses`). Si deux unités définissent un helper pour le même type, seul celui de l'unité la plus récemment incluse sera disponible. Pour cette raison :  
+>  
+> - Évitez de redéfinir un helper pour un type de la RTL (`string`, `TStringList`, etc.) — vous masqueriez les méthodes officielles de la RTL (`TStringHelper`, etc.).  
 > - Pour des extensions partagées entre plusieurs unités, préférez des **fonctions utilitaires** dans une classe dédiée plutôt qu'un helper.
 
 ## Littéraux binaires (Delphi 10.4 Sydney)
@@ -970,25 +970,25 @@ type
     property Value: T read FValue;
   end;
 
-class operator TAutoFree<T>.Initialize(out Dest: TAutoFree<T>);
-begin
+class operator TAutoFree<T>.Initialize(out Dest: TAutoFree<T>);  
+begin  
   Dest.FValue := nil;  // Champ vide à la création
 end;
 
-class operator TAutoFree<T>.Finalize(var Dest: TAutoFree<T>);
-begin
+class operator TAutoFree<T>.Finalize(var Dest: TAutoFree<T>);  
+begin  
   Dest.FValue.Free;    // Libération automatique de l'objet possédé
 end;
 
-procedure TAutoFree<T>.Assign(AValue: T);
-begin
+procedure TAutoFree<T>.Assign(AValue: T);  
+begin  
   FValue.Free;         // Libère l'éventuel objet précédent
   FValue := AValue;
 end;
 
 // Utilisation : libération automatique sans try..finally
-procedure UtiliserAutoFree;
-var
+procedure UtiliserAutoFree;  
+var  
   Liste: TAutoFree<TStringList>;
 begin
   Liste.Assign(TStringList.Create);
@@ -1022,7 +1022,7 @@ end;
 - Améliorations des helpers et nouvelles API de threading
 
 ### Delphi 10.4 Sydney (mai 2020)
-- ✨ **Littéraux binaires** : notation `%`
+- ✨ **Littéraux binaires** : notation `%`  
 - ✨ **Managed records** : gestion automatique (`Initialize` / `Finalize` / `Assign`)
 - Améliorations des génériques
 - Refonte de l'auto-complétion (LSP / Code Insight)
