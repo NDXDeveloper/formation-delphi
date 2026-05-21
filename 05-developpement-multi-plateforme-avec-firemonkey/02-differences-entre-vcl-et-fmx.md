@@ -185,7 +185,7 @@ FireMonkey encourage une approche plus moderne avec des layouts :
 - `TScrollBox` : Zone défilante
 
 **Propriétés de positionnement avancées** :
-- `Align` : AlignTop, AlignBottom, AlignClient, AlignLeft, AlignRight, etc.
+- `Align` (type `TAlignLayout`) : `Top`, `Bottom`, `Left`, `Right`, `Client`, `Contents`, `Center`, `Scale`, etc.
 - `Anchors` : Ancrer les bords par rapport au parent
 - `Margins` : Marges externes
 - `Padding` : Marges internes
@@ -229,13 +229,13 @@ end;
 FMX ajoute des événements spécifiques pour le tactile :
 
 ```pascal
-// Événements tactiles en FMX
+// Événements tactiles en FMX (signatures correctes)
 procedure TForm1.Button1Tap(Sender: TObject; const Point: TPointF);  
-procedure TForm1.Button1Swipe(Sender: TObject; const Direction: TSwipeDirection);  
-procedure TForm1.Button1Gesture(Sender: TObject; const EventInfo: TGestureEventInfo);  
+procedure TForm1.FormGesture(Sender: TObject;  
+  const EventInfo: TGestureEventInfo; var Handled: Boolean);
 ```
 
-Ces événements n'existent pas en VCL car ils sont spécifiques aux interfaces tactiles.
+Ces événements n'existent pas en VCL car ils sont spécifiques aux interfaces tactiles. Pour les balayages (swipe), pincements, rotations, etc., FireMonkey utilise un système de gestes unifié via `TGestureManager` et l'événement `OnGesture` du formulaire — on identifie le geste avec `EventInfo.GestureID` (`igiZoom`, `igiPan`, `igiDoubleTap`…).
 
 ### Événements souris vs tactile
 
@@ -328,12 +328,15 @@ FireMonkey offre de nombreux effets prêts à l'emploi :
 
 **Exemple conceptuel** :
 ```pascal
-// Ajouter une ombre à un bouton (design time ou code)
-var Shadow: TShadowEffect;  
-Shadow := TShadowEffect.Create(Button1);  
-Shadow.Parent := Button1;  
-Shadow.Distance := 3;  
-Shadow.Softness := 0.3;  
+// Ajouter une ombre à un bouton (à exécuter dans un événement, p. ex. OnCreate)
+var
+  Shadow: TShadowEffect;
+begin
+  Shadow := TShadowEffect.Create(Button1);
+  Shadow.Parent := Button1;        // l'effet s'applique à Button1
+  Shadow.Distance := 3;
+  Shadow.Softness := 0.3;
+end;
 ```
 
 ## 8. Performance et utilisation des ressources
@@ -378,10 +381,10 @@ Shadow.Softness := 0.3;
 
 **Cibles de compilation** :
 - Windows 32 bits et 64 bits
-- macOS (Intel et Apple Silicon)
-- iOS (iPhone et iPad)
-- Android (ARM et x86)
-- Linux 64 bits
+- macOS (Intel x64 et Apple Silicon ARM64)
+- iOS (iPhone et iPad, ARM64)
+- Android (ARM 32 bits et ARM 64 bits)
+- Linux 64 bits (via FMXLinux)
 
 **Résultat** :
 - Un package d'application pour chaque plateforme

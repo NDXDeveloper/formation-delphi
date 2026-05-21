@@ -6,6 +6,8 @@
 
 Delphi 13 Florence marque une étape importante dans l'évolution de FireMonkey. Cette version apporte de nombreuses améliorations en termes de performances, de fonctionnalités et d'expérience développeur. Dans cette section, nous allons découvrir les nouveautés et améliorations qui rendent le développement FireMonkey encore plus puissant et agréable.
 
+> ⚠️ **Note importante sur ce chapitre** : certains composants présentés ici à titre **illustratif** (`TModernButton`, `TChipGroup`, `TSkeletonLoader`, `TFormBuilder`, `TUnifiedStorage`, `TObservable<T>`, mot-clé `await`…) **ne font pas partie de la bibliothèque FireMonkey standard livrée avec Delphi 13**. Ils sont présentés comme des **patterns conceptuels** que vous pourriez retrouver dans des bibliothèques tierces (TMS, DevExpress, Spring4D, etc.) ou que vous pourriez implémenter vous-même. Pour la liste **exacte** des composants disponibles, consultez la palette dans **Project → Components List** de votre version. Les éléments **réellement intégrés à Delphi 13** sont notamment : l'opérateur ternaire, le support **LLDB v20**, les styles Windows 11, l'amélioration GetIt, le site web companion IA, et les évolutions VCL listées au chapitre 4.14.
+
 ## 1. Vue d'ensemble des améliorations
 
 ### Axes d'amélioration principaux
@@ -20,7 +22,7 @@ Delphi 13 Florence se concentre sur quatre axes majeurs pour FireMonkey :
 
 **Expérience développeur** :
 - Nouveaux outils de conception
-- Débogage amélioré avec LLDB v12
+- Débogage amélioré avec LLDB v20
 - Assistant IA pour le développement
 - Prototypage rapide
 
@@ -63,11 +65,13 @@ begin
 end;
 ```
 
-**Améliorations mesurables** :
-- ✅ Framerate amélioré de 20-30% sur mobile
-- ✅ Consommation mémoire réduite de 15%
-- ✅ Temps de démarrage réduit de 25%
+**Améliorations annoncées** (à confirmer sur votre projet) :
+- ✅ Framerate amélioré sur mobile
+- ✅ Consommation mémoire réduite
+- ✅ Temps de démarrage réduit
 - ✅ Animations plus fluides sur appareils bas de gamme
+
+> ℹ️ Les pourcentages exacts varient selon le projet, les composants utilisés et l'appareil cible. Mesurez sur votre propre application avant/après une montée de version pour avoir des chiffres significatifs.
 
 ### Compilation et déploiement
 
@@ -84,10 +88,11 @@ end;
 - Packages optimisés pour chaque plateforme
 - Binaires plus compacts
 
-### Gestion mémoire intelligente
+### Gestion mémoire
+
+> ℹ️ Delphi **n'a pas de garbage collector** traditionnel pour les objets standards (à l'exception des interfaces COM/ARC et des chaînes/dynamic arrays). La libération mémoire suit le modèle **ownership** (la propriété Owner) ou doit être faite explicitement via `Free` / `FreeAndNil`.
 
 ```pascal
-// Delphi 13 : Garbage collection améliorée pour les objets FMX
 procedure TForm1.CreerBeaucoupDeComposants;  
 var  
   i: Integer;
@@ -95,18 +100,21 @@ var
 begin
   for i := 1 to 1000 do
   begin
-    Rect := TRectangle.Create(Self);
-    Rect.Parent := ScrollBox1;
-    // Libération automatique optimisée
-    // Moins de fragmentation mémoire
-    // Meilleure performance globale
+    Rect := TRectangle.Create(Self);  // Self = Owner
+    Rect.Parent := ScrollBox1;        // Parent = conteneur visuel
+    // Les Rectangle seront libérés automatiquement quand Self
+    // (le formulaire) sera détruit, grâce au mécanisme d'Owner.
   end;
 end;
 ```
 
+Si vous souhaitez libérer des composants explicitement avant la destruction du formulaire, utilisez `Rect.Free;` (le composant se désinscrit alors automatiquement de son Owner).
+
 ## 3. Nouveaux composants et contrôles
 
-### TModernButton - Bouton moderne
+> ⚠️ **Rappel** : les classes `TModernButton`, `TSegmentedControl`, `TChipGroup`, `TModernListView`, `TSkeletonLoader` (ainsi que les types associés `TModernButtonStyle`, `TIconType`, `TIconPosition`, `TChipSelectionMode`, `TListViewStyle`, `TSkeletonType`) présentées dans cette section **n'existent pas** dans FireMonkey standard. Ce sont des **patterns illustratifs** — vous pouvez les implémenter vous-même, ou utiliser des équivalents dans **TMS FMX UI Pack**, **DevExpress**, **D.P.F Delphi iOS Native Components**, etc. Pour la liste réelle des composants FMX livrés avec Delphi 13, consultez la palette dans l'IDE et le DocWiki (`FMX.*`).
+
+### TModernButton - Bouton moderne (exemple conceptuel)
 
 Un nouveau composant bouton avec styles Material Design et iOS intégrés :
 
@@ -279,13 +287,13 @@ begin
 end;
 ```
 
-## 4. Débogage amélioré avec LLDB v12
+## 4. Débogage amélioré avec LLDB v20
 
 ### Qu'est-ce que LLDB ?
 
 **LLDB** (LLVM Debugger) est un débogueur moderne et puissant utilisé par Xcode et maintenant intégré à Delphi 13 pour un meilleur débogage multi-plateforme.
 
-### Avantages de LLDB v12
+### Avantages de LLDB v20
 
 **Débogage iOS/macOS amélioré** :
 
@@ -300,7 +308,7 @@ begin
   Dict := TDictionary<string, Integer>.Create;
 
   // Point d'arrêt ici
-  // LLDB v12 affiche maintenant :
+  // LLDB v20 affiche maintenant :
   // - Contenu complet de Liste
   // - Toutes les paires clé-valeur de Dict
   // - Structures complexes lisibles
@@ -454,47 +462,43 @@ Le principe des styles VCL en prototypage rapide s'applique aussi à FMX :
 
 ### Bibliothèque de styles étendue
 
-**Nouveaux styles prédéfinis** :
+**Styles fournis avec Delphi** :
 
+Embarcadero livre une bibliothèque de styles FMX dans :
 ```
-Styles ajoutés en Delphi 13 :
-- Material Design Light/Dark (Google)
-- iOS 17 Light/Dark (Apple)
-- Fluent Design (Microsoft)
-- Custom Modern (Embarcadero)
-- Glassmorphism (Tendance)
-- Neumorphism (Moderne)
+C:\Users\Public\Documents\Embarcadero\Studio\<version>\Styles\
 ```
 
-**Import/Export facilité** :
-- Exporter vos styles personnalisés
-- Partager avec l'équipe
-- Importer depuis la communauté
-- Marketplace de styles (nouveau)
+Vous y trouverez notamment des styles inspirés de Material Design, iOS et Windows. La liste exacte évolue d'une version à l'autre — explorez ce dossier pour découvrir ce qui est disponible dans votre installation.
+
+> ℹ️ Les noms exotiques (« Glassmorphism », « Neumorphism », etc.) ne sont **pas des styles standards** livrés par Embarcadero : ce sont des tendances de design que vous devrez implémenter vous-même via l'éditeur de styles, ou trouver dans des packs tiers/communautaires.
+
+**Import/Export** :
+- Exporter vos styles personnalisés (`File → Save As → *.style`)
+- Partager avec l'équipe (fichier `.style` à versionner)
+- Importer depuis la communauté (forums Embarcadero, GitHub)
 
 ## 7. Support étendu des plateformes
 
-### iOS 17 et Android 14
+### Versions iOS et Android supportées
 
-**Support complet des dernières versions** :
+**Support des dernières versions** dans Delphi 13.1 :
 
 ```pascal
 {$IFDEF IOS}
-// Support iOS 17
-// - Widgets interactifs
-// - StandBy mode
-// - Nouvelles API de contact
-// - Améliorations App Clips
+// Delphi 13.1 (Release 1) :
+// - Minimum iOS supporté : iOS 15
+// - Support officiel jusqu'à iOS 26
 {$ENDIF}
 
 {$IFDEF ANDROID}
-// Support Android 14
-// - Permissions de photos partielles
-// - Nouveau système de notifications
-// - Predictive back gesture
-// - Support appareils pliables amélioré
+// Delphi 13.1 (Release 1) :
+// - Support de l'API level 36.1 d'Android
+//   (requis par le Google Play Store à partir d'août 2026)
 {$ENDIF}
 ```
+
+> ℹ️ La valeur minimale d'iOS dans **Project → Options → Application → Version Info** est passée de 11.0 à **15.0** dans Delphi 13.1. Vérifiez les paramètres de votre projet existant après une mise à jour.
 
 ### macOS Sonoma et Apple Silicon
 
@@ -529,12 +533,14 @@ Styles ajoutés en Delphi 13 :
 
 ## 8. Nouveaux patterns de conception
 
-### Builder pattern pour interfaces
+### Builder pattern pour interfaces (exemple conceptuel)
+
+> ⚠️ **Rappel** : `TFormBuilder` **n'existe pas** dans Delphi 13. L'exemple ci-dessous est un **pseudo-code illustratif** montrant ce qu'un builder fluide pourrait ressembler. Vous pouvez implémenter ce pattern vous-même comme classe utilitaire, ou utiliser des bibliothèques tierces qui proposent ce style.
 
 **Construction fluide d'interfaces** :
 
 ```pascal
-// Nouveau pattern builder en Delphi 13
+// Exemple conceptuel — TFormBuilder serait une classe à créer vous-même
 procedure TForm1.CreerInterfaceModerne;  
 begin  
   TFormBuilder.Create(Self)
@@ -555,92 +561,80 @@ begin
 end;
 ```
 
-### Reactive programming support
+En pratique, la création d'interfaces se fait via le concepteur visuel de Delphi (Form Designer), qui génère le fichier `.fmx` correspondant. La création purement code reste plus verbeuse, sans builder fluide intégré.
 
-**Support des patterns réactifs** :
+### Reactive programming (patterns)
+
+> ⚠️ `FMX.Observable` / `TObservable<T>` **n'existent pas** dans FireMonkey standard. Le pattern Observable peut être implémenté manuellement ou via des bibliothèques tierces (par ex. **Spring4D Reactive** ou les `IObservable<T>` de [DSharp](https://github.com/laffer1/DSharp)).
+
+Pour rester sur l'écosystème intégré, on utilise plutôt :
+
+- **LiveBindings** pour synchroniser automatiquement composants visuels et données (un véritable mécanisme de liaison de propriétés intégré à FMX),
+- **TMessageManager** (`System.Messaging`) pour le pattern Pub/Sub via messages,
+- les événements classiques (`TNotifyEvent`) pour les observers simples.
+
+Exemple avec `TMessageManager` :
 
 ```pascal
-// Observable patterns intégrés
-uses FMX.Observable;
+uses
+  System.Messaging;
 
-procedure TForm1.ReactiveExample;  
-var  
-  DataSource: TObservable<TData>;
-begin
-  DataSource := TObservable<TData>.Create;
+type
+  TDataChangedMessage = class(TMessage<string>);
 
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
   // S'abonner aux changements
-  DataSource.Subscribe(
-    procedure(Data: TData)
+  TMessageManager.DefaultManager.SubscribeToMessage(
+    TDataChangedMessage,
+    procedure(const Sender: TObject; const M: System.Messaging.TMessage)
     begin
-      // UI mise à jour automatiquement
-      Label1.Text := Data.Valeur;
-    end
-  );
+      Label1.Text := TDataChangedMessage(M).Value;
+    end);
+end;
 
-  // Modifier les données
-  DataSource.Next(NouvellesDonnees);  // UI mise à jour automatiquement
+procedure TForm1.NotifierChangement(const NouvelleValeur: string);  
+begin  
+  // Publier
+  TMessageManager.DefaultManager.SendMessage(
+    Self, TDataChangedMessage.Create(NouvelleValeur));
 end;
 ```
 
-## 9. Outils de développement améliorés
+## 9. Outils de développement
 
-### Analyseur de performance intégré
+> ⚠️ Les outils nommés ci-dessous (« Profile FMX Application », « FMX Inspector », « New FMX Component Wizard ») sont décrits à titre **illustratif** : leur nom et leur disponibilité varient entre versions et éditions. Voici les outils **effectivement disponibles** dans Delphi 13 pour analyser et déboguer une application FMX :
 
-**Profiler FireMonkey** :
+### Profiling
 
-```pascal
-// Nouveau profiler spécifique FMX
-// Tools → Profile FMX Application
+- **Build Insights** dans l'IDE : pour mesurer le temps de compilation et identifier les goulots
+- **AQTime / Sampling Profiler** (édition Architect) : profiler de performance général
+- **GetIt** propose plusieurs profilers tiers compatibles FMX
+- Pour un profiling « maison », `System.Diagnostics.TStopwatch` reste l'outil le plus utilisé
 
-// Mesure automatiquement :
-// - Temps de rendu par frame
-// - Utilisation GPU
-// - Allocations mémoire
-// - Appels de dessin
-// - Goulots d'étranglement
+### Inspection d'interface
 
-// Rapports visuels avec suggestions d'optimisation
+- **Live Bindings Designer** : pour visualiser et éditer les liaisons de propriétés
+- **Form Designer** avec sélecteur de plateforme/appareil pour prévisualiser
+- À l'exécution, on peut parcourir `Self.Components` ou `Self.Children` pour inspecter dynamiquement
+
+### Création de composants
+
+Pour créer un composant FMX, utilisez la procédure standard :
 ```
-
-### Inspecteur d'interface en direct
-
-**UI Inspector temps réel** :
-
+Component → New Component  (puis sélectionner FireMonkey comme base)
 ```
-Pendant le debug, nouveau panneau "FMX Inspector" :
-- Arbre des composants en direct
-- Propriétés modifiables en temps réel
-- Mesures et positionnement
-- Hiérarchie visuelle
-- Performance par composant
-```
-
-### Générateur de composants
-
-**Assistant de création de composants** :
-
-```pascal
-// Tools → New FMX Component Wizard
-
-// Génère automatiquement :
-// - Classe de base
-// - Propriétés publiées
-// - Méthodes de dessin
-// - Gestion des événements
-// - Package d'installation
-// - Documentation de base
-```
+L'assistant génère le squelette de la classe et le package d'installation.
 
 ## 10. API modernes
 
-### Async/Await amélioré
+### Traitement asynchrone avec TTask
 
-**Syntaxe asynchrone simplifiée** :
+> ⚠️ **Mise au point** : Delphi **n'a pas** de mot-clé `await` natif comme C# ou JavaScript. Le code asynchrone utilise `TTask` (de `System.Threading`) et `TThread.Synchronize`/`TThread.Queue` pour repasser sur le thread UI. L'exemple ci-dessous montre le pattern réel :
 
 ```pascal
-// Delphi 13 améliore le support async
-uses System.Threading;
+uses
+  System.Threading, System.Classes;
 
 procedure TForm1.ChargerDonneesAsync;  
 begin  
@@ -649,94 +643,98 @@ begin
     var
       Donnees: string;
     begin
-      // Chargement asynchrone
-      Donnees := await ChargerDepuisServeur;
+      // Chargement asynchrone (thread de fond)
+      Donnees := ChargerDepuisServeur;  // appel bloquant dans ce thread
 
-      // Retour automatique au thread UI
-      Label1.Text := Donnees;
-    end
-  );
+      // Repasser sur le thread UI pour la mise à jour
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          Label1.Text := Donnees;
+        end);
+    end);
 end;
-
-// Notation "await" optimisée pour FMX
 ```
 
-### API de stockage unifiée
+Pour chaîner des étapes sans rester bloqué, on peut utiliser `TTask.Run(...).ContinueWith(...)`. La bibliothèque tierce **Spring4D** propose en outre des `Future<T>` avec un style proche d'async/await, mais ce n'est pas standard.
 
-**Stockage multi-plateforme simplifié** :
+### Chemins de stockage multi-plateforme
+
+> ⚠️ `FMX.Storage` / `IUnifiedStorage` / `TUnifiedStorage` **n'existent pas** dans FireMonkey. Pour stocker des données de manière portable, utilisez les méthodes de `System.IOUtils.TPath` :
 
 ```pascal
-uses FMX.Storage;
+uses
+  System.IOUtils, System.SysUtils;
 
-procedure TForm1.SauvegarderDonnees;  
+procedure TForm1.SauvegarderDonnees(const JSONString: string);  
 var  
-  Storage: IUnifiedStorage;
+  Dossier, Fichier: string;
 begin
-  // Nouveau : API unifiée pour toutes les plateformes
-  Storage := TUnifiedStorage.Create;
+  // TPath.GetDocumentsPath choisit automatiquement le bon emplacement :
+  // - Windows : %USERPROFILE%\Documents
+  // - macOS   : ~/Documents
+  // - iOS     : Documents folder du bundle
+  // - Android : stockage interne privé
+  // - Linux   : ~/Documents
+  Dossier := TPath.Combine(TPath.GetDocumentsPath, 'MonApp');
+  ForceDirectories(Dossier);
 
-  // Sauvegarde automatique dans le bon emplacement selon la plateforme
-  Storage.SaveString('config.json', JSONString);
-
-  // Gère automatiquement :
-  // - Windows : %APPDATA%
-  // - macOS : ~/Library/Application Support
-  // - iOS : Documents folder
-  // - Android : Internal storage
-  // - Linux : ~/.local/share
+  Fichier := TPath.Combine(Dossier, 'config.json');
+  TFile.WriteAllText(Fichier, JSONString, TEncoding.UTF8);
 end;
 ```
+
+Autres méthodes utiles selon le besoin : `TPath.GetHomePath`, `TPath.GetTempPath`, `TPath.GetPublicPath`, `TPath.GetSharedDocumentsPath`, `TPath.GetCachePath`.
 
 ## 11. Accessibilité améliorée
 
-### Support ARIA et lecteurs d'écran
+### Support lecteurs d'écran
 
-**Accessibilité native** :
+> ⚠️ Le support d'accessibilité de FireMonkey reste **plus limité** que celui de la VCL. Les propriétés `AccessibleName`, `AccessibleDescription`, `AccessibleRole`, `AccessibleHint` présentées ci-dessous sont **conceptuelles** : leur disponibilité réelle et leur efficacité varient selon le contrôle FMX et la plateforme cible (VoiceOver iOS/macOS, TalkBack Android, Narrator Windows, Orca Linux). Vérifiez toujours dans la palette et la doc DocWiki ce que votre version expose réellement.
 
 ```pascal
-// Delphi 13 ajoute le support d'accessibilité
+// Exemple conceptuel - vérifier la disponibilité sur vos contrôles
 procedure TForm1.ConfigurerAccessibilite;  
 begin  
-  Button1.AccessibleName := 'Bouton de connexion';
-  Button1.AccessibleDescription := 'Cliquez pour vous connecter';
-  Button1.AccessibleRole := TAccessibleRole.Button;
+  // Le minimum portable : un texte clair sur chaque contrôle
+  // (lu par les lecteurs d'écran qui supportent l'OS cible)
+  Button1.Text  := 'Se connecter';
+  EditNom.TextPrompt := 'Nom d''utilisateur';
 
-  EditNom.AccessibleName := 'Nom d''utilisateur';
-  EditNom.AccessibleHint := 'Entrez votre nom d''utilisateur';
-
-  // Compatible avec :
-  // - VoiceOver (iOS/macOS)
-  // - TalkBack (Android)
-  // - Narrator (Windows)
-  // - Orca (Linux)
+  // Si votre version expose ces propriétés étendues, utilisez-les :
+  // Button1.AccessibleName := 'Bouton de connexion';
+  // Button1.AccessibleDescription := 'Cliquez pour vous connecter';
 end;
 ```
 
-### Support mode sombre automatique
+En pratique, sur **mobile**, le lecteur d'écran lit le `Text` (boutons) ou le `TextPrompt` (édits). Sur **desktop Windows**, le support natif via UIA est plus inégal en FMX qu'en VCL ; les applications nécessitant une accessibilité forte gagnent à utiliser la VCL ou à compléter avec des bibliothèques tierces.
 
-**Détection et adaptation automatiques** :
+### Support du mode sombre système
+
+**Détection via le platform service** `IFMXSystemAppearanceService` :
 
 ```pascal
-// Nouveau : détection automatique du mode sombre système
-procedure TForm1.AdapterAuTheme;  
-begin  
-  if TThemeManager.SystemIsDarkMode then
-  begin
-    StyleBook1.LoadFromFile('DarkTheme.style');
-    // Ou laissez FMX s'adapter automatiquement
-  end
-  else
-  begin
-    StyleBook1.LoadFromFile('LightTheme.style');
-  end;
-end;
+uses
+  FMX.Platform;
 
-// Événement quand le système change de thème
-procedure TForm1.FormThemeChanged(Sender: TObject);  
-begin  
-  AdapterAuTheme;
+procedure TForm1.AdapterAuTheme;  
+var  
+  AppearanceSvc: IFMXSystemAppearanceService;
+  EnSombre: Boolean;
+begin
+  EnSombre := False;
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXSystemAppearanceService, AppearanceSvc) then
+    EnSombre := AppearanceSvc.ThemeKind = TSystemThemeKind.Dark;
+
+  if EnSombre then
+    StyleBook1.LoadFromFile('DarkTheme.style')
+  else
+    StyleBook1.LoadFromFile('LightTheme.style');
 end;
 ```
+
+> ℹ️ `TThemeManager.SystemIsDarkMode` n'existe pas en FireMonkey. La détection passe par `IFMXSystemAppearanceService` (déjà vue au chapitre 5.4). Pour réagir aux changements de thème système en cours d'exécution, abonnez-vous à `TSystemAppearanceChangedMessage` via `TMessageManager.DefaultManager.SubscribeToMessage`.
 
 ## 12. Performance et optimisations diverses
 
@@ -761,7 +759,7 @@ end;
 
 ### Comparaison de performance
 
-**Exemple : ListView avec 10000 items**
+**Exemple illustratif : ListView avec 10000 items**
 
 ```
 Delphi 12.1 :
@@ -774,6 +772,8 @@ Delphi 13 :
 - Scroll FPS : 58 (+29%)
 - Mémoire : 152 MB (-15%)
 ```
+
+> ⚠️ **Chiffres indicatifs** : ces valeurs sont fournies à titre d'**ordre de grandeur** et varient fortement selon l'appareil, le mode (Debug/Release), les composants utilisés et la taille des items. Pour des chiffres applicables à **votre** projet, mesurez avec `TStopwatch` et un profiler avant et après une mise à jour. Ne vous fiez pas aveuglément à des pourcentages génériques.
 
 ## 13. Migration depuis les versions précédentes
 
@@ -789,39 +789,23 @@ Delphi 13 :
 // - Nouvelles fonctionnalités disponibles
 ```
 
-### Outils de migration
+### Migration en pratique
 
-**Assistant de migration** :
-
-```
-Tools → Migrate Project to Delphi 13
-
-Analyse automatique :
-- API dépréciées → Suggestions de remplacement
-- Optimisations possibles → Suggestions
-- Nouveaux composants disponibles → Alternatives
-- Rapport complet avec recommandations
-```
+> ℹ️ Il n'existe pas d'« assistant Migrate Project to Delphi 13 » automatique. La procédure réelle :  
+>  
+> 1. Ouvrir l'ancien `.dproj` dans Delphi 13 — le projet est converti automatiquement  
+> 2. Recompiler : examiner les **warnings** et **hints** sur les unités/API dépréciées  
+> 3. Ajuster manuellement les usages dépréciés (consulter le DocWiki pour les remplacements)  
+> 4. Tester chaque plateforme cible — certains comportements peuvent changer entre versions  
+> 5. Pour les composants tiers (TMS, DevExpress…), réinstaller la version compatible Delphi 13
 
 ### Adopter les nouveautés progressivement
 
 ```pascal
-// Vous n'êtes pas obligé de tout changer immédiatement
-// Utilisez les nouveautés au fur et à mesure :
-
-// Projet existant
-procedure MaintainCompatibility;  
-begin  
-  // Votre ancien code fonctionne tel quel
-  OldListView.Items.Add('Item');
-end;
-
-// Nouveau code peut utiliser les nouveautés
-procedure UseNewFeatures;  
-begin  
-  // Adoptez progressivement les nouveaux composants
-  ModernListView.AddItem('Item moderne');
-end;
+// Votre code Delphi 10/11/12 doit compiler tel quel après l'ouverture
+// du projet dans Delphi 13. Adoptez ensuite les nouveautés au fur et à
+// mesure (opérateur ternaire, gestionnaire inline, nouveaux styles,
+// nouvelles API listées dans ce chapitre).
 ```
 
 ## 14. Ressources et documentation
@@ -858,51 +842,54 @@ end;
 
 ### Tirer parti des nouveautés
 
-**1. Utiliser les nouveaux composants** :
+**1. Privilégier les composants standards FMX** :
 ```pascal
-// Préférer ModernButton à TButton pour interfaces modernes
-// Utiliser TSkeletonLoader pour chargements
-// Adopter TSegmentedControl pour sélections iOS-style
+// Pour le multi-plateforme, partez de TButton, TListView, TEdit, etc.
+// Pour des composants modernes (Material/iOS), regardez les packs
+// tiers (TMS FMX UI Pack, DevExpress, etc.) plutôt que de tout réécrire.
 ```
 
-**2. Activer l'assistant IA** :
+**2. Utiliser le site web companion IA** :
 ```pascal
-// Tools → Options → AI Assistant → Enable
-// Laisser l'IA vous suggérer des améliorations
+// Aide → Companion IA (ouvre le site dans un navigateur)
+// Pratique pour générer des squelettes de code ou expliquer une API.
 ```
 
 **3. Profiler régulièrement** :
 ```pascal
-// Tools → Profile FMX Application
-// Identifier les goulots d'étranglement
-// Appliquer les suggestions d'optimisation
+// Mesurer le temps avec System.Diagnostics.TStopwatch :
+//   Chrono := TStopwatch.StartNew;
+//   ... code à mesurer ...
+//   ShowMessage(Chrono.ElapsedMilliseconds.ToString + ' ms');
+//
+// Pour un profiling profond : Sampling Profiler / AQTime / outils GPU
+// (RenderDoc, Instruments, Android GPU Inspector).
 ```
 
-**4. Exploiter LLDB v12** :
+**4. Exploiter LLDB v20** :
 ```pascal
-// Utiliser les expressions de surveillance avancées
-// Inspecter les structures complexes
-// Déboguer plus efficacement sur iOS/macOS
+// Sur iOS/macOS/Linux, le débogueur LLDB v20 :
+//   - Affiche le contenu complet des collections (TList, TDictionary…)
+//   - Évalue des expressions complexes dans la fenêtre Watch
+//   - Pose des points d'arrêt conditionnels plus rapidement
 ```
 
-**5. Utiliser le stockage unifié** :
+**5. Utiliser System.IOUtils.TPath pour le stockage portable** :
 ```pascal
-// Adopter TUnifiedStorage pour la persistance
-// Une API, toutes les plateformes
+// Une seule API, tous les OS — voir section 10 :
+// TPath.GetDocumentsPath, TPath.GetHomePath, TPath.GetCachePath, etc.
 ```
 
 ### Optimisations recommandées
 
-```pascal
-// Activer les optimisations Delphi 13
-// Project → Options → Delphi Compiler
-// - Link-Time Code Generation : True
-// - Optimization : Speed
-// - Inline : Auto
+> ℹ️ Les directives `$OPTIMIZATION` et `$INLINE` sont par défaut activées en mode **Release**. Vérifiez et ajustez dans **Project → Options → Building → Delphi Compiler → Compiling** :
 
-{$OPTIMIZATION ON}
-{$INLINE AUTO}
+```pascal
+{$OPTIMIZATION ON}   // Optimisations activées
+{$INLINE AUTO}       // Inlining automatique des routines marquées `inline`
 ```
+
+Côté projet, dans **Project → Options → Building → Delphi Compiler → Linking** : activer **Generate console** seulement si besoin, et garder **Debug DCUs** désactivé en Release.
 
 ## Conclusion
 
@@ -912,17 +899,17 @@ Delphi 13 Florence représente une avancée significative pour FireMonkey. Les a
 
 🚀 **Nouveaux composants** : Interface moderne prête à l'emploi
 
-🚀 **Débogage** : LLDB v12 pour un debug de qualité professionnelle
+🚀 **Débogage** : LLDB v20 pour un debug de qualité professionnelle
 
 🚀 **IA** : Assistant intelligent pour coder plus vite
 
-🚀 **Support plateforme** : iOS 17, Android 14, macOS Sonoma
+🚀 **Support plateforme** : iOS 15+ (jusqu'à iOS 26), Android API 36.1, macOS Sonoma/Sequoia
 
-🚀 **Accessibilité** : Support natif des lecteurs d'écran
+🚀 **Accessibilité** : Support en évolution (encore plus limité qu'en VCL — voir section 11)
 
 🚀 **Outils** : Profiler, inspecteur, générateurs
 
-🚀 **API** : Stockage unifié, async/await amélioré
+🚀 **API portables** : `System.IOUtils.TPath` pour les chemins, `TTask` + `TThread.Synchronize` pour l'asynchrone
 
 Ces améliorations rendent FireMonkey plus puissant, plus rapide, et plus agréable à utiliser. Que vous développiez pour mobile, desktop, ou les deux, Delphi 13 vous offre les outils pour créer des applications modernes et performantes. L'intégration de l'IA marque le début d'une nouvelle ère dans le développement RAD, où l'assistant intelligent vous aide à coder mieux et plus vite.
 

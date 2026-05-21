@@ -107,7 +107,11 @@ Utilisez un style personnalisé quand :
 
 **FileName** : Chemin vers le fichier de style (.style)
 ```pascal
+// Exemple Windows (chemin absolu)
 StyleBook1.FileName := 'C:\Styles\MonStyle.style';
+
+// Version portable (fonctionne sur toutes les plateformes FMX)
+StyleBook1.FileName := TPath.Combine(TPath.GetDocumentsPath, 'MonApp', 'MonStyle.style');
 ```
 
 **Resource** : Style embarqué dans l'application
@@ -126,16 +130,18 @@ Form1.StyleBook := StyleBook1;
 
 ### Charger un style dynamiquement
 
+> ℹ️ Le séparateur `/` fonctionne sur **toutes les plateformes** FMX (Windows, macOS, iOS, Android, Linux). On évite ainsi le `\` Windows qui casse les chemins sous Unix. Pour des chemins absolus portables, utilisez `TPath.Combine` (`System.IOUtils`).
+
 ```pascal
 procedure TForm1.ChargerStyleModerne;  
 begin  
-  StyleBook1.LoadFromFile('Styles\Moderne.style');
+  StyleBook1.LoadFromFile('Styles/Moderne.style');
   Form1.StyleBook := StyleBook1;
 end;
 
 procedure TForm1.ChargerStyleSombre;  
 begin  
-  StyleBook1.LoadFromFile('Styles\Sombre.style');
+  StyleBook1.LoadFromFile('Styles/Sombre.style');
   Form1.StyleBook := StyleBook1;
 end;
 
@@ -277,22 +283,25 @@ Panel1.Opacity := 0.1;
 
 #### TextSettings pour les composants de texte
 
+> ⚠️ Pour que les modifications de `TextSettings` (taille, famille, couleur, style) soient visibles sur un contrôle dont le **style** définit déjà ces propriétés, il faut **détacher** chaque propriété concernée de `StyledSettings`. Sinon, le style écrase votre valeur au prochain rafraîchissement. Voir la section **10. Styles par composant individuel** ci-dessous.
+
 ```pascal
-// Taille de police
-Label1.TextSettings.Font.Size := 18;
+// Détacher du style ce que l'on veut modifier en code :
+Label1.StyledSettings := Label1.StyledSettings -
+                         [TStyledSetting.Size,
+                          TStyledSetting.Family,
+                          TStyledSetting.FontColor,
+                          TStyledSetting.Style];
 
-// Famille de police
-Label1.TextSettings.Font.Family := 'Segoe UI';
+// Maintenant les modifications sont prises en compte :
+Label1.TextSettings.Font.Size := 18;                       // Taille  
+Label1.TextSettings.Font.Family := 'Segoe UI';             // Famille  
+Label1.TextSettings.FontColor := TAlphaColors.Navy;        // Couleur  
+Label1.TextSettings.Font.Style := [TFontStyle.fsBold];     // Gras / Italique / …  
 
-// Style de police
-Label1.TextSettings.FontColor := TAlphaColors.Navy;  
-Label1.TextSettings.Font.Style := [TFontStyle.fsBold];  
-
-// Alignement horizontal
-Label1.TextSettings.HorzAlign := TTextAlign.Center;
-
-// Alignement vertical
-Label1.TextSettings.VertAlign := TTextAlign.Center;
+// Les alignements ne dépendent pas de StyledSettings :
+Label1.TextSettings.HorzAlign := TTextAlign.Center;        // Horizontal  
+Label1.TextSettings.VertAlign := TTextAlign.Center;        // Vertical  
 ```
 
 ### Couleurs avec canal alpha
@@ -308,9 +317,23 @@ Rectangle1.Fill.Color := TAlphaColors.Blue;
 // Format : $AARRGGBB (AA = alpha, RR = rouge, GG = vert, BB = bleu)
 Rectangle1.Fill.Color := $80FF0000;  // Rouge semi-transparent
 
-// Utiliser TAlphaColorRec pour plus de clarté
-Rectangle1.Fill.Color := TAlphaColorRec.Create(255, 0, 0, 128); // Rouge, alpha 128
+// Utiliser MakeColor pour plus de clarté (System.UIConsts)
+//   MakeColor(R, G, B, A) construit un TAlphaColor
+Rectangle1.Fill.Color := MakeColor(255, 0, 0, 128); // Rouge, alpha 128
+
+// Ou en assignant les champs d'un TAlphaColorRec
+var
+  AC: TAlphaColorRec;
+begin
+  AC.R := 255;
+  AC.G := 0;
+  AC.B := 0;
+  AC.A := 128;
+  Rectangle1.Fill.Color := AC.Color;
+end;
 ```
+
+> ℹ️ `TAlphaColorRec` est un **record variant** (pas un objet) — il n'a pas de constructeur `Create`. On manipule directement ses champs `R`, `G`, `B`, `A`, ou on utilise la fonction `MakeColor` de `System.UIConsts`.
 
 ## 6. Création de styles personnalisés
 
@@ -401,10 +424,10 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin  
   ModeSombre := False;
   StyleClair := TStyleBook.Create(Self);
-  StyleClair.LoadFromFile('Styles\Clair.style');
+  StyleClair.LoadFromFile('Styles/Clair.style');
 
   StyleSombre := TStyleBook.Create(Self);
-  StyleSombre.LoadFromFile('Styles\Sombre.style');
+  StyleSombre.LoadFromFile('Styles/Sombre.style');
 
   // Appliquer le style clair par défaut
   Self.StyleBook := StyleClair;
@@ -427,6 +450,8 @@ end;
 
 #### Méthode 2 : Couleurs adaptatives
 
+> ℹ️ `TForm.Fill` existe en FMX (via `TCommonCustomForm.Fill: TBrush`). En revanche, `TPanel.Fill` n'est **pas** une propriété directe — la couleur du panneau passe par son `TRectangle` interne ou par un style. Dans l'exemple ci-dessous, on utilise des **`TRectangle`** comme conteneurs de fond pour pouvoir piloter la couleur en code.
+
 ```pascal
 procedure TForm1.AppliquerCouleurs(ModeSombre: Boolean);  
 begin  
@@ -434,20 +459,20 @@ begin
   begin
     Form1.Fill.Color := TAlphaColors.Black;
     Label1.TextSettings.FontColor := TAlphaColors.White;
-    Panel1.Fill.Color := $FF1E1E1E;  // Gris foncé
+    RectFond.Fill.Color := $FF1E1E1E;  // Gris foncé (TRectangle de fond)
   end
   else
   begin
     Form1.Fill.Color := TAlphaColors.White;
     Label1.TextSettings.FontColor := TAlphaColors.Black;
-    Panel1.Fill.Color := TAlphaColors.Whitesmoke;
+    RectFond.Fill.Color := TAlphaColors.Whitesmoke;
   end;
 end;
 ```
 
 ### Détecter la préférence système
 
-Sur les plateformes modernes, vous pouvez détecter si l'utilisateur préfère un thème sombre :
+Sur les plateformes modernes, vous pouvez détecter si l'utilisateur préfère un thème sombre via le service `IFMXSystemAppearanceService` :
 
 ```pascal
 uses
@@ -455,15 +480,12 @@ uses
 
 function TForm1.SystemeEnModeSombre: Boolean;  
 var  
-  ThemeService: IFMXThemeService;
+  AppearanceSvc: IFMXSystemAppearanceService;
 begin
   Result := False;
-  if TPlatformServices.Current.SupportsPlatformService(IFMXThemeService) then
-  begin
-    ThemeService := TPlatformServices.Current.GetPlatformService(IFMXThemeService) as IFMXThemeService;
-    // Vérifier le thème système
-    Result := ThemeService.DefaultTheme = 'Dark';
-  end;
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXSystemAppearanceService, AppearanceSvc) then
+    Result := AppearanceSvc.ThemeKind = TSystemThemeKind.Dark;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);  
@@ -474,6 +496,8 @@ begin
     AppliquerThemeClair;
 end;
 ```
+
+> ℹ️ `TSystemThemeKind` peut valoir `Unspecified`, `Light` ou `Dark`. Sur les plateformes qui ne fournissent pas l'information (certains Linux par exemple), le service peut renvoyer `Unspecified` ou ne pas être disponible — d'où la vérification `SupportsPlatformService`.
 
 ## 8. Effets visuels sur les styles
 
@@ -583,7 +607,7 @@ end;
 
 **Sur mobile** :
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   // Limiter les effets sur mobile
   Shadow1.Enabled := False;
   Blur1.Enabled := False;
@@ -615,20 +639,34 @@ end;
 
 Parfois, vous voulez qu'un seul composant ait un style différent sans changer tout le formulaire.
 
-#### Méthode 1 : Propriétés directes
+> ⚠️ **Important** : en FireMonkey, `TButton` (et la plupart des contrôles « stylés » comme `TEdit`, `TListBox`, `TPanel`…) **n'expose pas** de propriété `Fill` ou `Color` directement. Sa couleur de fond est définie par son **style** (le `TRectangle` interne de la template). Seuls les **formes graphiques** de `FMX.Objects` — `TRectangle`, `TCircle`, `TEllipse`, `TPath`, `TArc`, `TPie`, `TLine` — et le formulaire `TForm` (via `TCommonCustomForm.Fill`) ont une vraie propriété `Fill: TBrush` modifiable en runtime. `TLayout`, lui, est un **conteneur invisible** : pour lui donner un fond, on ajoute un `TRectangle` enfant aligné `Client`.
+
+#### Méthode 1 : Personnaliser le **texte** d'un bouton (la propriété disponible)
 
 ```pascal
-// Personnaliser directement
-Button1.StyledSettings := [];  // Désactiver le style hérité  
-Button1.Fill.Color := TAlphaColors.Red;  
-Button1.TextSettings.FontColor := TAlphaColors.White;  
+// On peut modifier ce qui est exposé directement : TextSettings, StyledSettings,
+// IconSettings (Delphi 12+), Action, etc.
+Button1.StyledSettings := Button1.StyledSettings -
+                          [TStyledSetting.FontColor];   // Détacher du style
+Button1.TextSettings.FontColor := TAlphaColors.Red;
 ```
 
-#### Méthode 2 : StyleLookup personnalisé
+#### Méthode 1bis : Pour un vrai bouton coloré, créer un faux bouton avec `TRectangle`
 
 ```pascal
-// Créer un style unique dans l'éditeur de styles
-// et lui donner un nom personnalisé
+// Un TRectangle, contrairement à TButton, a une vraie propriété Fill
+RectButton.Fill.Color := TAlphaColors.Red;            // Fond rouge  
+RectButton.Stroke.Kind := TBrushKind.None;            // Pas de bordure  
+RectButton.Cursor := crHandPoint;                     // Curseur main  
+RectButton.HitTest := True;                           // Capter les clics  
+// + un TLabel enfant pour le texte, + un OnClick (= TNotifyEvent)
+```
+
+#### Méthode 2 : StyleLookup personnalisé (la voie « FMX idiomatique »)
+
+```pascal
+// Créer un style unique dans l'éditeur de styles (Outils → Éditeur de style
+// de bitmap) puis lui donner un nom personnalisé via StyleLookup.
 Button1.StyleLookup := 'MyCoolButtonStyle';
 ```
 
@@ -741,19 +779,19 @@ Assurez-vous d'avoir un contraste suffisant entre le texte et l'arrière-plan :
 - Texte large (18pt+) : Au moins 3:1
 
 ```pascal
-// BON : Contraste élevé
-Panel1.Fill.Color := TAlphaColors.White;  
+// BON : Contraste élevé (RectFond est un TRectangle servant d'arrière-plan)
+RectFond.Fill.Color := TAlphaColors.White;  
 Label1.TextSettings.FontColor := TAlphaColors.Black;  
 
 // MAUVAIS : Contraste faible
-Panel1.Fill.Color := TAlphaColors.Lightgray;  
+RectFond.Fill.Color := TAlphaColors.Lightgray;  
 Label1.TextSettings.FontColor := TAlphaColors.White;  
 ```
 
 ### Taille de texte adaptée
 
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   // Minimum 14-16pt sur mobile
   Label1.TextSettings.Font.Size := 16;
 {$ELSE}
@@ -764,13 +802,15 @@ Label1.TextSettings.FontColor := TAlphaColors.White;
 
 ### Ne pas se fier uniquement à la couleur
 
-```pascal
-// ❌ MAUVAIS : Couleur seule
-ButtonDanger.Fill.Color := TAlphaColors.Red;
+> ℹ️ `TButton.Fill` n'existe pas — pour colorer un bouton FMX, on passe par un **StyleLookup** personnalisé. Ici on se concentre sur le principe d'accessibilité : la couleur seule ne doit jamais porter l'information.
 
-// ✅ BON : Couleur + icône + texte
-ButtonDanger.Fill.Color := TAlphaColors.Red;  
-ButtonDanger.Text := '⚠ Supprimer';  // Icône + texte explicite  
+```pascal
+// ❌ MAUVAIS : Couleur seule (et qui ne marche pas en plus, TButton n'a pas Fill)
+//   ButtonDanger.Fill.Color := TAlphaColors.Red;  // ne compile pas
+
+// ✅ BON : Couleur + icône Unicode + texte explicite
+ButtonDanger.Text := '⚠ Supprimer';  
+ButtonDanger.StyleLookup := 'DangerButtonStyle';  // style rouge défini une fois  
 ```
 
 ## 13. Exemples de palettes de couleurs

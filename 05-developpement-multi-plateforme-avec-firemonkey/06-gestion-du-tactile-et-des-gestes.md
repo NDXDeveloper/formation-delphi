@@ -59,7 +59,8 @@ procedure TForm1.ImageSwipe(Sender: TObject;
   const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
   // Geste de balayage sur l'image
-  if EventInfo.GestureID = igiRight then
+  // (sgiLeft/sgiRight/sgiUp/sgiDown = gestes standards de FMX.Gestures)
+  if EventInfo.GestureID = sgiRight then
     ImageSuivante;
 end;
 ```
@@ -161,13 +162,17 @@ procedure TForm1.Canvas1MouseMove(Sender: TObject; Shift: TShiftState;
 begin
   if FEnTrainDeDessiner then
   begin
-    // Dessiner une ligne
-    Canvas1.Canvas.BeginScene;
+    // ℹ️ Pour dessiner de façon persistante en FMX, on dessine sur le
+    // Bitmap d'un TImage (ici nommé Canvas1) via Canvas1.Bitmap.Canvas.
+    // Penser à dimensionner le bitmap au préalable :
+    //   if Canvas1.Bitmap.IsEmpty then
+    //     Canvas1.Bitmap.SetSize(Round(Canvas1.Width), Round(Canvas1.Height));
+    Canvas1.Bitmap.Canvas.BeginScene;
     try
-      Canvas1.Canvas.DrawLine(FDernierPoint, PointF(X, Y), 1.0);
+      Canvas1.Bitmap.Canvas.DrawLine(FDernierPoint, PointF(X, Y), 1.0);
       FDernierPoint := PointF(X, Y);
     finally
-      Canvas1.Canvas.EndScene;
+      Canvas1.Bitmap.Canvas.EndScene;
     end;
   end;
 end;
@@ -191,25 +196,27 @@ Un **geste** est une séquence de mouvements tactiles qui forme un pattern recon
 
 **Gestes de base** :
 
-**igiLeft** - Balayage vers la gauche (Swipe Left)
+> ℹ️ **Convention de nommage** : dans `EventInfo.GestureID`, les **gestes standards** (balayages) utilisent le préfixe `sgi` (Standard Gesture ID), tandis que les **gestes interactifs** (zoom, rotation…) utilisent le préfixe `igi` (Interactive Gesture ID). Ces constantes entières sont définies dans **FMX.Gestures**.
+
+**sgiLeft** - Balayage vers la gauche (Swipe Left)
 ```pascal
 // Utilisateur fait glisser son doigt de droite à gauche
 // Typique pour : page suivante, supprimer un élément
 ```
 
-**igiRight** - Balayage vers la droite (Swipe Right)
+**sgiRight** - Balayage vers la droite (Swipe Right)
 ```pascal
 // Utilisateur fait glisser son doigt de gauche à droite
 // Typique pour : page précédente, annuler
 ```
 
-**igiUp** - Balayage vers le haut (Swipe Up)
+**sgiUp** - Balayage vers le haut (Swipe Up)
 ```pascal
 // Utilisateur fait glisser son doigt de bas en haut
 // Typique pour : faire défiler, révéler plus d'infos
 ```
 
-**igiDown** - Balayage vers le bas (Swipe Down)
+**sgiDown** - Balayage vers le bas (Swipe Down)
 ```pascal
 // Utilisateur fait glisser son doigt de haut en bas
 // Typique pour : actualiser, faire défiler vers le bas
@@ -296,35 +303,38 @@ end;
 // Il apparaît dans la zone des composants non visuels
 ```
 
-**Étape 2** : Configurer les gestes reconnus
-```pascal
-// Dans l'inspecteur d'objets du GestureManager
-// Ou en code :
-GestureManager1.StandardGestures := [sgLeft, sgRight, sgUp, sgDown];
-```
-
-**Étape 3** : Lier les composants
+**Étape 2** : Lier les composants et choisir les gestes écoutés
 ```pascal
 // Chaque composant utilise le GestureManager
 Image1.Touch.GestureManager := GestureManager1;  
 Panel1.Touch.GestureManager := GestureManager1;  
+
+// Puis on choisit les gestes standards par contrôle (pas sur le GestureManager) :
+Image1.Touch.StandardGestures := [TStandardGesture.sgLeft,
+                                  TStandardGesture.sgRight,
+                                  TStandardGesture.sgUp,
+                                  TStandardGesture.sgDown];
 ```
+
+> ℹ️ Contrairement à la VCL, la propriété `StandardGestures` se configure sur le **contrôle** (via `Touch.StandardGestures`), pas directement sur le `TGestureManager`. Le `GestureManager` agit comme un dictionnaire centralisé de gestes (utile surtout pour les gestes enregistrés/personnalisés) ; chaque contrôle pioche ceux qu'il veut écouter.
 
 ### Gestes standards (Standard Gestures)
 
-Les gestes standards sont les patterns prédéfinis :
+Les gestes standards sont des patterns prédéfinis. La bibliothèque FireMonkey en propose une **trentaine** (FMX.Types.TStandardGesture) : balayages dans 8 directions, Scratchout, Triangle, Square, Circle, ChevronUp/Down, Curlicue, Check, etc.
+
+Extrait des valeurs les plus courantes :
 
 ```pascal
-type
-  TStandardGesture = (
-    sgLeft,      // Balayage gauche
-    sgRight,     // Balayage droite
-    sgUp,        // Balayage haut
-    sgDown       // Balayage bas
-  );
+// Quelques valeurs de TStandardGesture (FMX.Types) :
+//   sgLeft, sgRight, sgUp, sgDown        — balayages cardinaux
+//   sgUpLeft, sgUpRight, sgDownLeft, sgDownRight — balayages diagonaux
+//   sgScratchout, sgTriangle, sgSquare, sgCircle — formes
+//   sgCheck, sgCurlicue, sgChevronUp, sgChevronDown — autres
 
-// Activer plusieurs gestes
-GestureManager1.StandardGestures := [sgLeft, sgRight];
+// Activer plusieurs gestes sur un contrôle (préfixer avec le nom du type
+// pour lever toute ambiguïté) :
+Image1.Touch.StandardGestures := [TStandardGesture.sgLeft,
+                                  TStandardGesture.sgRight];
 ```
 
 ### Exemple complet : Galerie d'images avec gestes
@@ -332,11 +342,14 @@ GestureManager1.StandardGestures := [sgLeft, sgRight];
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);  
 begin  
-  // Configuration du GestureManager
-  GestureManager1.StandardGestures := [sgLeft, sgRight];
-
-  // Configuration de l'image
+  // Lier l'image au GestureManager
   ImageViewer.Touch.GestureManager := GestureManager1;
+
+  // Configuration des gestes standards de l'image
+  ImageViewer.Touch.StandardGestures := [TStandardGesture.sgLeft,
+                                         TStandardGesture.sgRight];
+
+  // Configuration des gestes interactifs
   ImageViewer.Touch.InteractiveGestures := [TInteractiveGesture.Zoom,
                                             TInteractiveGesture.Pan];
 
@@ -348,13 +361,13 @@ end;
 procedure TForm1.ImageViewerGesture(Sender: TObject;
   const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  if EventInfo.GestureID = igiLeft then
+  if EventInfo.GestureID = sgiLeft then
   begin
     // Swipe gauche : image suivante
     ImageSuivante;
     Handled := True;
   end
-  else if EventInfo.GestureID = igiRight then
+  else if EventInfo.GestureID = sgiRight then
   begin
     // Swipe droite : image précédente
     ImagePrecedente;
@@ -542,7 +555,7 @@ Button1.Width := 120;
 Button1.Height := 50;  
 
 // Sur mobile spécifiquement
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   Button1.Height := 50;  // Minimum recommandé
 {$ELSE}
   Button1.Height := 30;  // Desktop : plus petit acceptable
@@ -655,20 +668,19 @@ begin
   Indicator.Width := 100;
   Indicator.Height := 50;
 
+  // TSwipeDirection (FMX.ListView) a les valeurs : ToLeft, ToRight
   case Direction of
-    TSwipeDirection.Left:
+    TSwipeDirection.ToLeft:
     begin
       Indicator.Position.X := Width;
       Indicator.Fill.Color := TAlphaColors.Red;
-      // Animer vers la gauche
       AnimerVersGauche(Indicator);
     end;
 
-    TSwipeDirection.Right:
+    TSwipeDirection.ToRight:
     begin
       Indicator.Position.X := -100;
       Indicator.Fill.Color := TAlphaColors.Green;
-      // Animer vers la droite
       AnimerVersDroite(Indicator);
     end;
   end;
@@ -677,27 +689,54 @@ end;
 
 ### Vibration tactile (Haptic Feedback)
 
-Sur appareils mobiles, vous pouvez déclencher une vibration :
+Sur appareils mobiles, vous pouvez déclencher une vibration. FireMonkey ne fournit **pas** d'API multi-plateforme dédiée — il faut passer par les API natives :
+
+> ⚠️ **Android API 26+** : la méthode `Vibrator.vibrate(long)` est **dépréciée** depuis Android 8 (API 26, 2017). Sur Android 8+ il faut utiliser `VibrationEffect.createOneShot(durationMs, amplitude)` puis `Vibrator.vibrate(VibrationEffect)`. Pour rester simple, l'exemple ci-dessous utilise l'API dépréciée (qui fonctionne encore aujourd'hui mais émet des warnings dans les logs Android). En production, testez la version Android et basculez sur `VibrationEffect` si `TJBuild_VERSION.JavaClass.SDK_INT >= 26`.
 
 ```pascal
+{$IFDEF ANDROID}
 uses
-  FMX.VirtualKeyboard, FMX.Platform;
+  Androidapi.JNI.Os, Androidapi.Helpers, Androidapi.JNI.GraphicsContentViewText;
+
+procedure TForm1.DeclencherVibrationAndroid(DurationMs: Int64);  
+var  
+  VibratorService: JObject;
+  Vibrator: JVibrator;
+begin
+  VibratorService := TAndroidHelper.Context.getSystemService(
+    TJContext.JavaClass.VIBRATOR_SERVICE);
+  if Assigned(VibratorService) then
+  begin
+    Vibrator := TJVibrator.Wrap((VibratorService as ILocalObject).GetObjectID);
+    Vibrator.vibrate(DurationMs);  // API dépréciée mais toujours fonctionnelle
+  end;
+end;
+{$ENDIF}
+
+{$IFDEF IOS}
+uses
+  iOSapi.UIKit, Macapi.ObjectiveC;
+
+procedure TForm1.DeclencherVibrationIOS;  
+begin  
+  // UIImpactFeedbackGenerator (iOS 10+) ou AudioServicesPlaySystemSound
+  // pour un feedback haptique riche, utiliser UIImpactFeedbackGenerator
+  // via les bindings iOS — code omis pour la concision
+end;
+{$ENDIF}
 
 procedure TForm1.DeclencherVibration;  
-var  
-  VKService: IFMXVirtualKeyboardService;
-begin
-  {$IFDEF ANDROID OR IOS}
-  if TPlatformServices.Current.SupportsPlatformService(
-    IFMXVirtualKeyboardService, IInterface(VKService)) then
-  begin
-    // Vibration courte
-    VKService.HideVirtualKeyboard;
-    // Note : API limitée, pour vibration complète utiliser services natifs
-  end;
+begin  
+  {$IFDEF ANDROID}
+  DeclencherVibrationAndroid(50);  // 50 ms
+  {$ENDIF}
+  {$IFDEF IOS}
+  DeclencherVibrationIOS;
   {$ENDIF}
 end;
 ```
+
+> ⚠️ Sur Android, l'utilisation de `Vibrator` nécessite la permission `android.permission.VIBRATE` (à déclarer dans **Project → Options → Application → Uses Permissions**). Sur iOS, le retour haptique riche passe par `UIImpactFeedbackGenerator`, `UISelectionFeedbackGenerator` et `UINotificationFeedbackGenerator` (iOS 10+).
 
 ## 8. Gestes en conflit
 
@@ -778,7 +817,8 @@ begin
   begin
     // En navigation : permettre pan et swipe
     Canvas.Touch.InteractiveGestures := [TInteractiveGesture.Pan];
-    Canvas.Touch.GestureManager.StandardGestures := [sgLeft, sgRight];
+    Canvas.Touch.StandardGestures := [TStandardGesture.sgLeft,
+                                      TStandardGesture.sgRight];
   end
   else if ModeVisualisation then
   begin
@@ -804,19 +844,21 @@ begin
   // Touches est un tableau de tous les points de contact actifs
   Label1.Text := 'Nombre de doigts : ' + Length(Touches).ToString;
 
-  for I := 0 to Length(Touches) - 1 do
-  begin
-    Point := Touches[I].Location;
+  // On dessine sur le bitmap d'un TImage nommé `ImageDessin` qui sert
+  // de surface persistante. `BeginScene`/`EndScene` entourent toute la
+  // boucle pour ne faire qu'une seule transaction de rendu.
+  ImageDessin.Bitmap.Canvas.BeginScene;
+  try
+    for I := 0 to Length(Touches) - 1 do
+    begin
+      Point := Touches[I].Location;
 
-    // Dessiner un cercle à chaque point de contact
-    Canvas.Canvas.BeginScene;
-    try
-      Canvas.Canvas.Fill.Color := TAlphaColors.Blue;
-      Canvas.Canvas.FillEllipse(
+      ImageDessin.Bitmap.Canvas.Fill.Color := TAlphaColors.Blue;
+      ImageDessin.Bitmap.Canvas.FillEllipse(
         RectF(Point.X - 25, Point.Y - 25, Point.X + 25, Point.Y + 25), 0.5);
-    finally
-      Canvas.Canvas.EndScene;
     end;
+  finally
+    ImageDessin.Bitmap.Canvas.EndScene;
   end;
 end;
 ```
@@ -858,8 +900,8 @@ begin
 
     TTouchAction.Move:
     begin
-      // Dessiner avec chaque doigt
-      Canvas.Canvas.BeginScene;
+      // Dessiner avec chaque doigt sur le bitmap du TImage de dessin
+      ImageDessin.Bitmap.Canvas.BeginScene;
       try
         for I := 0 to Length(Touches) - 1 do
         begin
@@ -869,14 +911,14 @@ begin
           Index := TrouverDoigt(I);
           if Index >= 0 then
           begin
-            Canvas.Canvas.Stroke.Color := FDoigtsActifs[Index].Couleur;
-            Canvas.Canvas.DrawLine(
+            ImageDessin.Bitmap.Canvas.Stroke.Color := FDoigtsActifs[Index].Couleur;
+            ImageDessin.Bitmap.Canvas.DrawLine(
               FDoigtsActifs[Index].DernierPoint, Point, 1.0);
             FDoigtsActifs[Index].DernierPoint := Point;
           end;
         end;
       finally
-        Canvas.Canvas.EndScene;
+        ImageDessin.Bitmap.Canvas.EndScene;
       end;
     end;
 
@@ -899,14 +941,14 @@ procedure TForm1.ListBoxItemSwipe(Sender: TObject;
 var
   Item: TListBoxItem;
 begin
-  if EventInfo.GestureID = igiLeft then
+  if EventInfo.GestureID = sgiLeft then
   begin
     // Swipe gauche : révéler le bouton supprimer
     Item := (Sender as TListBoxItem);
     RevelerBoutonSupprimer(Item);
     Handled := True;
   end
-  else if EventInfo.GestureID = igiRight then
+  else if EventInfo.GestureID = sgiRight then
   begin
     // Swipe droite : masquer le bouton
     Item := (Sender as TListBoxItem);
@@ -1178,10 +1220,10 @@ var
   GestureNom: string;
 begin
   case EventInfo.GestureID of
-    igiLeft: GestureNom := 'Swipe Left';
-    igiRight: GestureNom := 'Swipe Right';
-    igiUp: GestureNom := 'Swipe Up';
-    igiDown: GestureNom := 'Swipe Down';
+    sgiLeft: GestureNom := 'Swipe Left';
+    sgiRight: GestureNom := 'Swipe Right';
+    sgiUp: GestureNom := 'Swipe Up';
+    sgiDown: GestureNom := 'Swipe Down';
     igiZoom: GestureNom := 'Zoom';
     igiPan: GestureNom := 'Pan';
     igiRotate: GestureNom := 'Rotate';

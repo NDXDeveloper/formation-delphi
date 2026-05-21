@@ -46,10 +46,10 @@ FireMonkey utilise un système de rendu vectoriel accéléré par GPU. Contraire
 
 FireMonkey fait abstraction des différences entre les systèmes d'exploitation. Il traduit vos composants et votre code en appels natifs pour chaque plateforme :
 
-- Sur Windows, il utilise DirectX ou GDI+
-- Sur macOS et iOS, il utilise Metal ou OpenGL
+- Sur Windows, il utilise Direct2D/Direct3D (avec repli logiciel si nécessaire)
+- Sur macOS et iOS, il utilise Metal (par défaut sur les versions récentes) ou OpenGL
 - Sur Android, il utilise OpenGL ES
-- Sur Linux, il utilise OpenGL
+- Sur Linux, il utilise OpenGL (via FMXLinux)
 
 En tant que développeur, vous n'avez pas à vous soucier de ces détails techniques. Vous placez un bouton dans votre interface, et FireMonkey s'occupe de le rendre correctement sur chaque plateforme.
 

@@ -139,7 +139,9 @@ end;
 
 **Utilisation typique** :
 ```pascal
-FlowLayout1.Justify := TFlowJustify.Left;  
+// TFlowJustify (FMX.Layouts) accepte : Center, Beginning, Ending, Justify
+// Note : "Beginning" remplace "Left/Top" car Begin est un mot-clé Delphi
+FlowLayout1.Justify := TFlowJustify.Beginning;  
 FlowLayout1.HorizontalGap := 10;  
 FlowLayout1.VerticalGap := 10;  
 
@@ -230,10 +232,10 @@ MainContent.Align := TAlignLayout.Client;
 // Pas besoin de spécifier Width/Height
 ```
 
-**TAlignLayout.Contents** : S'adapte à son contenu
+**TAlignLayout.Contents** : Occupe toute la zone du parent (comme `Client` mais en ignorant les marges/paddings)
 ```pascal
 Panel1.Align := TAlignLayout.Contents;
-// La taille s'ajuste automatiquement
+// Le composant remplit l'intégralité de la zone du parent
 ```
 
 ### Ordre d'alignement
@@ -459,8 +461,10 @@ end;
 
 Utiliser des vues complètement différentes pour mobile et desktop.
 
+> ℹ️ **Syntaxe importante** : `{$IFDEF}` n'accepte qu'**un seul symbole** (`{$IFDEF ANDROID}`). Pour combiner plusieurs symboles avec un opérateur logique, utilisez `{$IF defined(...)}` qui accepte les expressions `or`, `and`, `not` :
+
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   // Interface mobile avec TTabControl
   TabControl1.Visible := True;
   DesktopLayout.Visible := False;
@@ -520,18 +524,33 @@ end;
 
 ### Verrouiller l'orientation
 
-Parfois, vous voulez forcer une orientation :
+Parfois, vous voulez forcer une orientation. En FMX, on passe par le **platform service** `IFMXScreenService` :
 
 ```pascal
-// Portrait uniquement
-ScreenService := TScreenOrientations.Portrait;
+uses
+  FMX.Platform, FMX.Types;
 
-// Paysage uniquement
-ScreenService := TScreenOrientations.Landscape;
+procedure TForm1.VerrouillerOrientation;  
+var  
+  ScreenSvc: IFMXScreenService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXScreenService, ScreenSvc) then
+  begin
+    // Portrait uniquement
+    ScreenSvc.SetScreenOrientation([TScreenOrientation.Portrait]);
 
-// Permettre les deux
-ScreenService := TScreenOrientations.Portrait + TScreenOrientations.Landscape;
+    // Paysage uniquement
+    // ScreenSvc.SetScreenOrientation([TScreenOrientation.Landscape]);
+
+    // Permettre les deux orientations principales
+    // ScreenSvc.SetScreenOrientation(
+    //   [TScreenOrientation.Portrait, TScreenOrientation.Landscape]);
+  end;
+end;
 ```
+
+> ℹ️ `TScreenOrientation` est l'énumération (`Portrait`, `Landscape`, `InvertedPortrait`, `InvertedLandscape`), et `SetScreenOrientation` attend un **set** de ces valeurs. Sur iOS, vous devez aussi déclarer les orientations supportées dans les **options de projet** (Project → Options → Application → Orientation).
 
 ## 8. Composant TMultiView - Menus latéraux
 
@@ -548,31 +567,47 @@ Le composant `TMultiView` est essentiel pour créer des interfaces modernes avec
 
 ```pascal
 MultiView1.Mode := TMultiViewMode.Drawer; // Menu type "drawer"  
-MultiView1.DrawerOptions := [TDrawerOption.ShowAnimation];  
-MultiView1.MasterButton := ButtonMenu; // Bouton qui ouvre/ferme le menu  
+MultiView1.MasterButton := ButtonMenu;    // Bouton qui ouvre/ferme le menu  
+
+// DrawerOptions est un objet (TDrawerAppearance) qui regroupe
+// plusieurs sous-propriétés :
+MultiView1.DrawerOptions.Mode := TDrawerMode.PushingDetailView;  
+MultiView1.DrawerOptions.Placement := TPanePlacement.Left;  
+MultiView1.DrawerOptions.DurationSliding := 0.3;  // 300 ms d'animation  
 
 // Contenu du menu
 ListBox1.Parent := MultiView1;
 // ... ajouter des items
 ```
 
+> ℹ️ `MultiView1.DrawerOptions` n'est **pas un set** d'options : c'est un objet `TDrawerAppearance` exposant des sous-propriétés (`Mode`, `Placement`, `DurationSliding`, `TouchAreaSize`). Inspectez-le dans l'Object Inspector pour découvrir toutes les options disponibles.
+
 ### Modes disponibles
+
+`TMultiViewMode` (FMX.MultiView) propose 6 modes :
 
 **Drawer** : Menu qui coulisse depuis le côté
 - Typique sur Android
-- Se superpose au contenu
+- Se superpose au contenu (ou le pousse selon `DrawerOptions.Mode`)
 
-**PlatformBehaviour** : S'adapte à la plateforme
-- Drawer sur mobile
-- Panel fixe sur desktop
+**PlatformBehaviour** : S'adapte automatiquement à la plateforme
+- Drawer sur mobile, Panel sur desktop
+- Choix du mode selon l'OS, le type d'appareil et l'orientation
 
-**Panel** : Panneau classique
-- Toujours visible sur desktop
-- Peut se cacher sur mobile
+**Panel** : Master et detail toujours côte à côte
+- Master docké à gauche ou à droite du MultiView
+- Affichage permanent quelle que soit la plateforme
 
-**Popover** : Fenêtre flottante
+**Popover** : Pop-up flottant
 - Style iOS
-- Se positionne près du bouton
+- Affiché/masqué via le `MasterButton`
+
+**NavigationPane** : Panneau navigation rétractable
+- Affiché comme panneau réduit (largeur `CollapsedWidth`)
+- S'étend au survol/clic
+
+**Custom** : Présentation personnalisée
+- Définir `CustomPresentationClass` pour fournir votre propre rendu
 
 ### Exemple d'utilisation
 
@@ -594,8 +629,9 @@ begin
   ListBox1.Items.Add('À propos');
 end;
 
-procedure TForm1.ListBox1ItemClick(Sender: TCustomListBox; const Item: TListBoxItem);  
-begin  
+procedure TForm1.ListBox1ItemClick(const Sender: TCustomListBox;
+  const Item: TListBoxItem);
+begin
   // Gérer le clic sur un item
   case ListBox1.ItemIndex of
     0: ShowHome;
@@ -615,8 +651,8 @@ end;
 Sur mobile, les zones tactiles doivent être suffisamment grandes (minimum 44x44 pixels).
 
 ```pascal
-{$IFDEF ANDROID OR IOS}
-  Button1.Height := 44; // Taille minimale tactile
+{$IF defined(ANDROID) or defined(IOS)}
+  Button1.Height := 48; // Taille minimale tactile (recommandé Material/Apple)
   Button1.Width := 120;
 {$ELSE}
   Button1.Height := 25; // Taille desktop classique
@@ -624,10 +660,12 @@ Sur mobile, les zones tactiles doivent être suffisamment grandes (minimum 44x44
 {$ENDIF}
 ```
 
+> ℹ️ Les recommandations officielles sont **44×44 pt minimum** côté Apple (HIG iOS) et **48×48 dp minimum** côté Google (Material Design Android). Une hauteur de 48 couvre les deux.
+
 ### Espacement adapté
 
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   FlowLayout1.HorizontalGap := 15; // Plus d'espace sur mobile
   FlowLayout1.VerticalGap := 15;
 {$ELSE}
@@ -639,7 +677,7 @@ Sur mobile, les zones tactiles doivent être suffisamment grandes (minimum 44x44
 ### Taille de police adaptée
 
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   Label1.TextSettings.Font.Size := 16; // Police plus grande sur mobile
 {$ELSE}
   Label1.TextSettings.Font.Size := 11; // Police standard desktop
@@ -686,7 +724,7 @@ end;
 **Sur desktop** : Onglets en haut ou menu latéral permanent  
 
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   TabControl1.TabPosition := TTabPosition.Bottom;
   TabControl1.Visible := True;
   SideMenu.Visible := False;

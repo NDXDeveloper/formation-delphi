@@ -67,16 +67,20 @@ FireMonkey utilise un système d'animation **déclaratif** et **automatique** :
 ### Architecture des animations
 
 ```
-TAnimation (classe de base abstraite)
-├── TFloatAnimation (animer un nombre)
-├── TColorAnimation (animer une couleur)
-├── TGradientAnimation (animer un dégradé)
-├── TBitmapAnimation (animer entre images)
-├── TBitmapListAnimation (animer une séquence)
-└── TPathAnimation (animer le long d'un chemin)
+TAnimation (classe de base abstraite, FMX.Ani)
+├── TFloatAnimation         (animer un nombre Single/Double)
+├── TIntAnimation           (animer un Integer)
+├── TColorAnimation         (animer une couleur TAlphaColor)
+├── TRectAnimation          (animer un TRectF)
+├── TGradientAnimation      (animer un dégradé)
+├── TBitmapAnimation        (transitionner d'une image à une autre)
+├── TBitmapListAnimation    (animer une séquence d'images / sprite)
+├── TFloatKeyAnimation      (animer un nombre via images-clés)
+├── TColorKeyAnimation      (animer une couleur via images-clés)
+└── TPathAnimation          (animer un objet le long d'un TPath)
 ```
 
-Chaque type d'animation hérite de `TAnimation` et ajoute des fonctionnalités spécifiques.
+Chaque type d'animation hérite de `TAnimation` et ajoute des fonctionnalités spécifiques. `TFloatAnimation` est de loin la plus utilisée (Position, Scale, Opacity, RotationAngle…).
 
 ## 3. TFloatAnimation - Animations de nombres
 
@@ -241,6 +245,25 @@ begin
   AnimY.Start;
 end;
 ```
+
+> ⚠️ **Note importante sur les événements et les procédures anonymes** : `TAnimation.OnFinish` est de type `TNotifyEvent` (`procedure (Sender: TObject) of object`), donc il n'accepte que des **méthodes d'instance**, pas des procédures anonymes. Les types `procedure of object` (method pointer) et `reference to procedure` (procédure anonyme) sont **incompatibles** en Delphi — aucune conversion implicite n'est faite, même dans Delphi 13. Si vous écrivez `Anim.OnFinish := procedure(Sender: TObject) begin ... end;`, le compilateur émettra **« E2010 Incompatible types »**.  
+>  
+> **Solution recommandée** : créez une vraie méthode d'instance :  
+>  
+> ```pascal  
+> procedure TForm1.MonAnimFinish(Sender: TObject);  
+> begin  
+>   // ... votre code (récupérer le contexte via Sender, un champ membre,  
+>   //     ou Sender.TagObject par exemple)  
+> end;  
+>  
+> // puis assigner :  
+> Anim.OnFinish := MonAnimFinish;  
+> ```  
+>  
+> **Dispatcher d'anonyme via une méthode d'instance** : si vous tenez vraiment à passer une procédure anonyme pour le code de fin, stockez-la dans un champ `FOnFinishProc: TProc;` et faites dispatcher par une méthode `procedure HandleAnimFinish(Sender: TObject); begin if Assigned(FOnFinishProc) then FOnFinishProc(); end;` puis `Anim.OnFinish := HandleAnimFinish;`. Voir aussi la bibliothèque communautaire **AnonymousEvent** (GitHub) pour un wrapper générique.  
+>  
+> 📌 **Pour la suite de ce chapitre** : les exemples ci-dessous présentent volontairement la syntaxe « procédure anonyme inline » par **souci de concision pédagogique** — ils mettent l'accent sur la logique d'animation. Dans votre code de production, transposez systématiquement en méthode d'instance comme expliqué ci-dessus.
 
 ### Propriétés importantes de TAnimation
 
@@ -416,11 +439,16 @@ end;
 
 ### Animer la couleur du texte
 
+> ⚠️ Pour que le changement de `TextSettings.FontColor` soit visible à l'écran sur un `TLabel`, il faut au préalable **retirer** `TStyledSetting.FontColor` de la propriété `StyledSettings` — sinon le style écrase la couleur animée à chaque rafraîchissement.
+
 ```pascal
 procedure TForm1.AnimerCouleurTexte;  
 var  
   Anim: TColorAnimation;
 begin
+  // Détacher la couleur de police du style pour qu'elle soit modifiable
+  Label1.StyledSettings := Label1.StyledSettings - [TStyledSetting.FontColor];
+
   Anim := TColorAnimation.Create(Label1);
   Anim.Parent := Label1;
   Anim.PropertyName := 'TextSettings.FontColor';
@@ -672,7 +700,12 @@ end;
 
 ### Shake (Secousse)
 
+> ℹ️ Une animation avec `Loop := True` ne déclenche **pas** `OnFinish` (la boucle est infinie). Pour limiter la durée du shake, on lance un `TTask` qui arrête l'animation après un délai. *Astuce* : on ne peut pas assigner une procédure anonyme directement à `TTimer.OnTimer` (qui est un `TNotifyEvent of object`), donc `TTask.Run` + `TThread.Sleep` est une alternative pratique.
+
 ```pascal
+uses
+  System.Threading, System.Classes;
+
 procedure TForm1.Shake(Composant: TControl);  
 var  
   Anim: TFloatAnimation;
@@ -688,20 +721,20 @@ begin
   Anim.Duration := 0.1;
   Anim.AutoReverse := True;
   Anim.Loop := True;
-
-  Anim.OnFinish := procedure(Sender: TObject)
-  begin
-    // Arrêter après 3 oscillations
-    if Anim.Tag >= 3 then
-    begin
-      Anim.Stop;
-      Composant.Position.X := PosInitiale;
-    end
-    else
-      Anim.Tag := Anim.Tag + 1;
-  end;
-
   Anim.Start;
+
+  // Arrêter le shake après ~0.6 s (≈ 3 allers-retours)
+  TTask.Run(
+    procedure
+    begin
+      TThread.Sleep(600);
+      TThread.Queue(nil,
+        procedure
+        begin
+          Anim.Stop;
+          Composant.Position.X := PosInitiale;
+        end);
+    end);
 end;
 ```
 
@@ -1093,7 +1126,7 @@ FadeIn(PanelOptions);
 
 **4. Limiter sur mobile**
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   // Mobile : animations simples
   Anim.Duration := 0.2;
   // Pas d'effets visuels
@@ -1105,12 +1138,24 @@ FadeIn(PanelOptions);
 ```
 
 **5. Libérer les animations terminées**
+
+Pour libérer une animation à la fin, n'appelez **pas** `Free` directement dans `OnFinish` (l'animation est encore en cours d'exécution sur la pile d'appel). Différez la libération avec `TThread.ForceQueue` :
+
 ```pascal
 Anim.OnFinish := procedure(Sender: TObject)  
-begin  
-  TAnimation(Sender).Free;  // Libérer la mémoire
+var  
+  ToFree: TAnimation;
+begin
+  ToFree := TAnimation(Sender);
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      ToFree.Free;  // Libération différée, après que OnFinish soit revenu
+    end);
 end;
 ```
+
+Si l'animation a un `Owner` (composant parent), elle est libérée automatiquement quand le parent est détruit — pas besoin de la libérer manuellement dans ce cas.
 
 **6. Donner du feedback**
 ```pascal
@@ -1173,7 +1218,7 @@ end;
 ```pascal
 procedure TForm1.ConfigurerAnimationsSelonPlateforme;  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Mobile : Simplifier
     NombreAnimationsSimultanees := 3;
     DureeAnimationDefaut := 0.2;

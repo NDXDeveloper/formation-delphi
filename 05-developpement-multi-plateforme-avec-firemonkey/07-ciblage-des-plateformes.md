@@ -12,12 +12,14 @@ L'un des atouts majeurs de FireMonkey est sa capacité à compiler une seule app
 
 **Desktop** :
 - **Windows** : 32 bits et 64 bits (Windows 10, 11)
-- **macOS** : Intel et Apple Silicon (macOS 10.14+)
-- **Linux** : 64 bits (principales distributions)
+- **macOS** : Intel et Apple Silicon (macOS 14 Sonoma / 15 Sequoia recommandés)
+- **Linux** : 64 bits (principales distributions, via FMXLinux)
 
 **Mobile** :
-- **iOS** : iPhone et iPad (iOS 12+)
-- **Android** : Smartphones et tablettes (Android 6.0+)
+- **iOS** : iPhone et iPad (iOS 15+ minimum dans Delphi 13.1, jusqu'à iOS 26)
+- **Android** : Smartphones et tablettes (jusqu'à API level 36.1 dans Delphi 13.1)
+
+> ℹ️ Les valeurs minimales évoluent à chaque mise à jour de RAD Studio (et avec les exigences des stores). Pour le détail à jour, consultez **Project → Options → Application → Version Info** et la [page Platform Status](https://docwiki.embarcadero.com/PlatformStatus/en/Main_Page) d'Embarcadero.
 
 ### Éditions de Delphi et plateformes
 
@@ -81,8 +83,8 @@ Pour compiler vers macOS, vous avez besoin :
 - Connexion réseau entre votre PC Windows et le Mac
 
 **Logiciel sur le Mac** :
-- macOS 10.14 ou supérieur
-- Xcode installé (gratuit depuis l'App Store)
+- macOS récent (14 Sonoma ou 15 Sequoia recommandés pour Delphi 13)
+- Xcode installé (gratuit depuis l'App Store, version requise dépendant de l'iOS cible)
 - PAServer (Platform Assistant Server) - fourni avec Delphi
 
 **Configuration** :
@@ -242,12 +244,25 @@ msbuild MonProjet.dproj /p:Platform=Android
 msbuild MonProjet.dproj /p:Platform=iOSDevice64
 ```
 
-**Méthode 3 : Compilation batch**
-```pascal
-// Script pour compiler toutes les plateformes
-for %%p in (Win32 Win64 Android iOSDevice64 OSX64) do (
+**Méthode 3 : Compilation batch (Windows)**
+
+Script `.bat` pour compiler successivement plusieurs plateformes :
+
+```batch
+@echo off
+rem Script Windows pour compiler toutes les plateformes  
+for %%p in (Win32 Win64 Android64 iOSDevice64 OSX64) do (  
     msbuild MonProjet.dproj /p:Platform=%%p /p:Config=Release
 )
+```
+
+Sous Bash (macOS / Linux pour les builds locales) :
+
+```bash
+#!/bin/bash
+for p in Win32 Win64 Android64 iOSDevice64 OSX64; do
+    msbuild MonProjet.dproj /p:Platform=$p /p:Config=Release
+done
 ```
 
 ### Fichiers générés par plateforme
@@ -305,7 +320,7 @@ Pour écrire du code spécifique à une plateforme, utilisez les directives de c
 {$ENDIF}
 
 {$IFDEF MACOS}
-  // Code macOS uniquement (inclut iOS et macOS)
+  // Code macOS uniquement (le symbole IOS est distinct)
 {$ENDIF}
 
 {$IFDEF ANDROID}
@@ -323,8 +338,10 @@ Pour écrire du code spécifique à une plateforme, utilisez les directives de c
 
 ### Directives combinées
 
+> ⚠️ **Important** : `{$IFDEF}` n'accepte qu'**un seul symbole**. Pour combiner plusieurs symboles avec `or`, `and`, `not`, il faut utiliser `{$IF defined(...)}` (avec `{$IFEND}` ou `{$ENDIF}`) :
+
 ```pascal
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   // Code mobile (Android et iOS)
   TaillePolice := 16;
 {$ELSE}
@@ -334,7 +351,7 @@ Pour écrire du code spécifique à une plateforme, utilisez les directives de c
 ```
 
 ```pascal
-{$IFDEF MSWINDOWS OR MACOS OR LINUX}
+{$IF defined(MSWINDOWS) or defined(MACOS) or defined(LINUX)}
   // Code desktop seulement
   AfficherBarreMenu;
 {$ELSE}
@@ -343,12 +360,14 @@ Pour écrire du code spécifique à une plateforme, utilisez les directives de c
 {$ENDIF}
 ```
 
+> ℹ️ Pour factoriser, vous pouvez aussi définir vos propres symboles dans **Project → Options → Building → Delphi Compiler → Conditional Defines** (par exemple `MOBILE_APP`) et les tester ensuite avec un simple `{$IFDEF MOBILE_APP}`. *Note* : Embarcadero a retiré son propre symbole `MOBILE` à partir de Delphi 10.4 Sydney — ne plus s'y fier dans le code récent.
+
 ### Exemple pratique : Adapter l'interface
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Mobile : Boutons plus grands
     Button1.Height := 50;
     Button1.Width := 200;
@@ -407,21 +426,16 @@ end;
 
 {$IFDEF IOS}
 uses
-  iOSapi.Foundation, iOSapi.UIKit;
+  iOSapi.Foundation, iOSapi.UIKit, Macapi.Helpers;
 
-procedure AfficherNotificationiOS;  
-var  
-  Alert: UIAlertView;
-begin
-  // Utiliser l'API iOS
-  Alert := TUIAlertView.Create;
-  Alert.initWithTitle(
-    StrToNSStr('Application'),
-    StrToNSStr('Notification'),
-    nil,
-    StrToNSStr('OK'),
-    nil);
-  Alert.show;
+// ⚠️ UIAlertView est déprécié depuis iOS 9. Sur iOS moderne, utilisez
+// UIAlertController. Le plus simple en FMX reste TDialogService.
+procedure AfficherNotificationiOS(const Titre, Message: string);  
+begin  
+  // Préférer l'API FMX multi-plateforme :
+  TDialogService.ShowMessage(Message);
+  // (UIAlertController nécessite un contrôleur de présentation
+  // et est plus verbeux à invoquer manuellement depuis Delphi.)
 end;
 {$ENDIF}
 ```
@@ -442,7 +456,7 @@ begin
   {$ENDIF}
 
   {$IFDEF IOS}
-    AfficherNotificationiOS;
+    AfficherNotificationiOS(Titre, Message);
   {$ENDIF}
 
   {$IFDEF MACOS}
@@ -503,10 +517,14 @@ end;
 **Considérations** :
 
 ```pascal
+uses
+  System.IOUtils;
+
 {$IFDEF MACOS}
-  // Chemins macOS
-  CheminApp := ExtractFilePath(ParamStr(0));
-  CheminDocs := GetHomePath + '/Documents/';
+  // Chemins macOS — préférer System.IOUtils.TPath qui est multi-plateforme
+  CheminApp  := ExtractFilePath(ParamStr(0));
+  CheminDocs := TPath.GetDocumentsPath;
+  CheminHome := TPath.GetHomePath;  // ~/
 
   // Sandbox pour App Store
   // Limitations d'accès aux fichiers
@@ -551,9 +569,9 @@ MonApp.app/
 
 **Permissions à demander** :
 ```pascal
-// Exemple : Demander accès à la caméra
+// Exemple : Demander accès à la caméra (callback exécuté en arrière-plan)
 uses
-  iOSapi.AVFoundation;
+  iOSapi.AVFoundation, FMX.Forms;
 
 procedure DemanderAccesCamera;  
 begin  
@@ -561,13 +579,22 @@ begin
     AVMediaTypeVideo,
     procedure(granted: Boolean)
     begin
-      if granted then
-        // Autorisation accordée
-      else
-        // Autorisation refusée
+      // Le callback est appelé sur un thread arbitraire — repasser
+      // sur le thread UI avant de toucher à l'interface.
+      TThread.Queue(nil,
+        procedure
+        begin
+          if granted then
+            ShowMessage('Caméra autorisée')
+          else
+            ShowMessage('Caméra refusée — proposer à l''utilisateur ' +
+                        'd''aller dans Réglages → Confidentialité');
+        end);
     end);
 end;
 ```
+
+> ℹ️ N'oubliez pas de déclarer la clé `NSCameraUsageDescription` (avec un texte d'explication en français) dans les **options de projet → Version Info → Custom keys**. Sans ce texte, iOS refusera l'accès et l'application sera rejetée à l'App Store.
 
 **Orientations** :
 - Configurer dans Project → Options → Version Info
@@ -605,6 +632,7 @@ end;
 ```pascal
 {$IFDEF ANDROID}
 uses
+  System.Permissions,  // pour PermissionsService et TPermissionStatus
   Androidapi.Helpers, Androidapi.JNI.JavaTypes,
   FMX.Platform.Android;
 
@@ -618,13 +646,19 @@ begin
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
-        // Permission accordée
+      begin
+        // Permission accordée — utilisez la fonctionnalité
+      end
       else
-        // Permission refusée
+      begin
+        // Permission refusée — afficher un message à l'utilisateur
+      end;
     end);
 end;
 {$ENDIF}
 ```
+
+> ℹ️ `PermissionsService` est une variable globale de `System.Permissions` (unité multi-plateforme). N'oubliez pas de **déclarer la permission** dans **Project → Options → Application → Uses Permissions** également, sinon le système la refusera systématiquement.
 
 **Chemins Android** :
 ```pascal
@@ -812,9 +846,11 @@ Option 1 : Mac physique
 - Idéal pour développement et tests
 - Coûteux
 
-Option 2 : Machine virtuelle
-- VMware, VirtualBox (gris légalement)
-- Performances réduites
+Option 2 : Machine virtuelle (VMware, VirtualBox…)
+- L'EULA d'Apple n'autorise macOS qu'en VM hébergée sur du matériel Apple.
+  Sur un PC non Apple, c'est en violation des conditions Apple — à n'utiliser
+  qu'avec prudence et en connaissance de cause.
+- Performances réduites par rapport à un Mac natif.
 ```
 
 **Pour Linux** :
@@ -839,9 +875,9 @@ Option 2 : Machine virtuelle
 - [ ] UAC activé
 
 **macOS** :
-- [ ] macOS sur Intel
-- [ ] macOS sur Apple Silicon (M1/M2)
-- [ ] Différentes versions (10.14+)
+- [ ] macOS sur Intel (x64)
+- [ ] macOS sur Apple Silicon (M1/M2/M3)
+- [ ] macOS récent (Sonoma 14, Sequoia 15)
 - [ ] Retina display
 
 **iOS** :
@@ -849,13 +885,13 @@ Option 2 : Machine virtuelle
 - [ ] iPhone Pro Max (grand écran)
 - [ ] iPad
 - [ ] Portrait et paysage
-- [ ] iOS 15, 16, 17
+- [ ] iOS récents (15+ : 15, 16, 17, 18, jusqu'à iOS 26 supporté par Delphi 13.1)
 
 **Android** :
 - [ ] Smartphone petit écran (5")
 - [ ] Smartphone grand écran (6.5")
 - [ ] Tablette
-- [ ] Android 8, 10, 12, 13
+- [ ] Plusieurs versions Android (10, 12, 13, 14, 15)
 - [ ] Différents fabricants (Samsung, Google, Xiaomi)
 
 **Linux** :
@@ -871,7 +907,7 @@ Option 2 : Machine virtuelle
 ```pascal
 procedure TForm1.OptimiserSelonPlateforme;  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Mobile : Limiter les effets visuels
     EffetOmbre1.Enabled := False;
     EffetFlou1.Enabled := False;
@@ -900,7 +936,7 @@ end;
 ```pascal
 procedure TForm1.GererMemoireSelonPlateforme;  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Mobile : Mémoire limitée
     // Libérer agressivement les ressources
     Image1.Bitmap.Clear;
@@ -920,7 +956,7 @@ end;
 ```pascal
 procedure TForm1.ModeEconomieBatterie;  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Réduire la fréquence GPS
     LocationSensor1.Distance := 100;  // 100m au lieu de 10m
 
@@ -1010,15 +1046,17 @@ xcrun notarytool submit MonApp.app \
    - F-Droid (open source)
 
 **Signature de l'APK** :
-```pascal
-// Configuration dans Delphi
-Project → Options → Provisioning → Android
+```
+Configuration dans Delphi :  
+Project → Options → Provisioning → Android  
 - Créer un keystore
 - Signer l'APK
 
-// Ou via ligne de commande
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 \
-  -keystore MonKeystore.keystore MonApp.apk mon_alias
+# Ou via ligne de commande avec apksigner (outil Android moderne, recommandé)
+apksigner sign --ks MonKeystore.keystore --ks-key-alias mon_alias MonApp.apk
+
+# (jarsigner est l'ancien outil, encore fonctionnel mais déprécié pour les
+#  APK modernes — apksigner gère correctement les schémas v2/v3/v4.)
 ```
 
 ### Linux : Distribution

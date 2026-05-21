@@ -389,10 +389,20 @@ Button1.Width := 100;
 
 ### Détecter le facteur de scaling
 
+En FMX, on récupère le facteur d'échelle via le platform service `IFMXScreenService` :
+
 ```pascal
+uses
+  FMX.Platform;
+
 function TForm1.GetScaleFactor: Single;  
-begin  
-  Result := Self.Handle.Scale;
+var  
+  ScreenSvc: IFMXScreenService;
+begin
+  Result := 1.0;
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXScreenService, ScreenSvc) then
+    Result := ScreenSvc.GetScreenScale;
   // Retourne par exemple :
   // 1.0 pour écran standard
   // 1.5 pour écran haute résolution
@@ -400,6 +410,8 @@ begin
   // 3.0 pour certains smartphones haute résolution
 end;
 ```
+
+> ⚠️ **Limitation connue** : sur Windows, `GetScreenScale` peut renvoyer `1.0` même avec un scaling système élevé (150 %, 200 %…). Sur cette plateforme, fiez-vous plutôt à `Screen.PixelsPerInch / 96` (où `Screen` est le `Screen` FMX de `FMX.Forms`) pour estimer le facteur réel.
 
 ### Adapter selon le DPI
 
@@ -445,8 +457,8 @@ begin
     Image.Bitmap.LoadFromFile(Fichier);
 end;
 
-// Utilisation
-ChargerImageAdaptee(Image1, 'Images\Logo');
+// Utilisation (séparateur `/` portable sur toutes les plateformes FMX)
+ChargerImageAdaptee(Image1, 'Images/Logo');
 // Charge Logo.png, Logo@2x.png ou Logo@3x.png selon le DPI
 ```
 

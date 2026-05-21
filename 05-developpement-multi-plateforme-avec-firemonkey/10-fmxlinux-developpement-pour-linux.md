@@ -43,16 +43,16 @@ FMXLinux comble un vide important : avant son existence, il n'y avait pas de sol
 FMXLinux fonctionne sur les principales distributions Linux 64 bits :
 
 **Famille Debian** :
-- Ubuntu 18.04 LTS, 20.04 LTS, 22.04 LTS
-- Debian 10, 11, 12
-- Linux Mint
+- Ubuntu 22.04 LTS, 24.04 LTS (et versions plus récentes)
+- Debian 12 Bookworm, 13 Trixie
+- Linux Mint 21+, 22+
 - Elementary OS
 
 **Famille Red Hat** :
-- Fedora 36, 37, 38
-- Red Hat Enterprise Linux (RHEL) 8, 9
+- Fedora 39, 40, 41 (et plus récents)
+- Red Hat Enterprise Linux (RHEL) 9, 10
 - CentOS Stream
-- Rocky Linux
+- Rocky Linux 9
 
 **Autres** :
 - openSUSE Leap, Tumbleweed
@@ -104,21 +104,23 @@ Vous développez sur Windows, mais la compilation et l'exécution se font sur Li
 
 PAServer pour Linux se trouve dans votre installation Delphi :
 ```
-C:\Program Files (x86)\Embarcadero\Studio\XX.0\PAServer\LinuxPAServer23.0.tar.gz
+C:\Program Files (x86)\Embarcadero\Studio\XX.0\PAServer\LinuxPAServerXX.X.tar.gz
 ```
+
+> ℹ️ Le numéro de version (`XX.X`) varie selon votre version de Delphi : `23.0` pour Delphi 12 Athens, valeurs plus récentes pour Delphi 13 Florence. Vérifiez le nom exact du fichier dans votre dossier `PAServer`.
 
 Copiez ce fichier sur votre machine Linux (via SFTP, clé USB, etc.)
 
 **Étape 2 : Extraire et installer**
 
-Sur Linux, dans un terminal :
+Sur Linux, dans un terminal (adaptez le nom du fichier `.tar.gz` à votre version) :
 ```bash
 # Créer un répertoire pour PAServer
 mkdir ~/PAServer  
 cd ~/PAServer  
 
-# Extraire l'archive
-tar -xzf LinuxPAServer23.0.tar.gz
+# Extraire l'archive (remplacer XX.X par votre version)
+tar -xzf LinuxPAServerXX.X.tar.gz
 
 # Rendre le script exécutable
 chmod +x paserver
@@ -153,7 +155,7 @@ cd ~/PAServer
 Première exécution : PAServer vous demandera de créer un mot de passe.
 
 ```
-PAServer version 23.0  
+PAServer version XX.X  
 Password:  
 Confirm password:  
 
@@ -359,13 +361,16 @@ end;
 
 function ObtenirCheminConfig: string;  
 begin  
-  Result := TPath.Combine(TPath.Combine(ObtenirCheminHome, '.config'), 'MonApp');
+  // System.IOUtils.TPath.Combine accepte aussi 3 et 4 paramètres en surcharge,
+  // ce qui évite les TPath.Combine imbriqués.
+  Result := TPath.Combine(ObtenirCheminHome, '.config', 'MonApp');
   // Exemple : /home/username/.config/MonApp
 end;
 
 function ObtenirCheminDonnees: string;  
 begin  
-  Result := TPath.Combine(TPath.Combine(TPath.Combine(ObtenirCheminHome, '.local'), 'share'), 'MonApp');
+  // Surcharge à 4 paramètres pour les chemins XDG « ~/.local/share/MonApp »
+  Result := TPath.Combine(ObtenirCheminHome, '.local', 'share', 'MonApp');
   // Exemple : /home/username/.local/share/MonApp
 end;
 {$ENDIF}
@@ -519,17 +524,20 @@ end;
 
 ### Icônes et thème système
 
+> ℹ️ **Icône d'application sous Linux** : contrairement à la VCL, `FMX.Forms.TApplication` n'expose **pas** de propriété `Icon` qu'on pourrait charger à l'exécution. Sous Linux, l'icône de la fenêtre et du menu d'applications est définie au niveau **système** via :  
+>  
+> 1. Le fichier `.desktop` installé dans `/usr/share/applications/` (champ `Icon=`)  
+> 2. Les icônes installées dans `/usr/share/icons/hicolor/<taille>/apps/`  
+>  
+> Le thème système (clair/sombre) GTK est automatiquement appliqué à l'interface FireMonkey — vous n'avez rien de spécial à coder pour suivre le thème de l'environnement de bureau Linux.
+
 ```pascal
 procedure TForm1.AdapterAuTheme;  
 begin  
   {$IFDEF LINUX}
-  // FireMonkey s'adapte au thème clair/sombre du système
-  // Pas de code spécial nécessaire
-
-  // Pour une icône d'application
-  if FileExists('/usr/share/icons/hicolor/48x48/apps/monapp.png') then
-    Application.Icon.LoadFromFile(
-      '/usr/share/icons/hicolor/48x48/apps/monapp.png');
+  // FireMonkey s'adapte au thème clair/sombre du système GTK.
+  // Pour personnaliser, utilisez plutôt un TStyleBook (voir chapitre 5.4)
+  // avec un style adapté au thème souhaité.
   {$ENDIF}
 end;
 ```
@@ -575,7 +583,10 @@ sudo cp $APP_NAME $INSTALL_DIR/
 sudo chmod +x $INSTALL_DIR/$APP_NAME  
 
 # Créer le raccourci desktop
-sudo cat > $DESKTOP_FILE << EOF
+# Note : `sudo cat > /etc/...` ne fonctionne PAS car la redirection
+# est faite par le shell utilisateur AVANT que sudo n'élève le `cat`.
+# Utiliser `sudo tee` (qui élève bien le processus d'écriture) :
+sudo tee $DESKTOP_FILE > /dev/null << EOF
 [Desktop Entry]
 Version=1.0  
 Type=Application  
@@ -760,14 +771,17 @@ sudo gtk-update-icon-cache /usr/share/icons/hicolor/
 
 ### Notifications desktop
 
+> ⚠️ **Attention à l'injection de commande** : `system()` exécute la chaîne via le shell. Si `Titre` ou `Message` provient de l'utilisateur, des caractères comme `"`, `` ` ``, `$`, `;`, `&` peuvent **injecter des commandes arbitraires**. Pour du contenu fixe c'est sans risque, mais pour du contenu dynamique, validez/échappez d'abord les entrées (ou utilisez `fork`/`exec` avec arguments séparés, ou `popen` avec quotation correcte).
+
 ```pascal
 {$IFDEF LINUX}
 procedure EnvoyerNotification(const Titre, Message: string);  
 var  
   Commande: string;
 begin
-  // Utiliser notify-send pour les notifications
-  Commande := Format('notify-send "%s" "%s"', [Titre, Message]);
+  // ⚠️ Pour contenu de confiance uniquement
+  Commande := Format('notify-send "%s" "%s"',
+    [Titre.Replace('"', '\"'), Message.Replace('"', '\"')]);
   system(PAnsiChar(AnsiString(Commande)));
 end;
 
@@ -776,7 +790,10 @@ procedure NotificationAvecIcone(const Titre, Message, Icone: string);
 var  
   Commande: string;
 begin
-  Commande := Format('notify-send -i "%s" "%s" "%s"', [Icone, Titre, Message]);
+  Commande := Format('notify-send -i "%s" "%s" "%s"',
+    [Icone.Replace('"', '\"'),
+     Titre.Replace('"', '\"'),
+     Message.Replace('"', '\"')]);
   system(PAnsiChar(AnsiString(Commande)));
 end;
 
@@ -817,10 +834,11 @@ var
   Fichier: TextFile;
   CheminLog: string;
 begin
+  // ~/.local/share/MonApp/app.log — TPath.Combine accepte 2, 3 ou 4 paramètres
+  // (surcharge open-array si plus de segments), évitant les appels imbriqués.
   CheminLog := TPath.Combine(
-    TPath.Combine(TPath.Combine(TPath.Combine(TPath.GetHomePath, '.local'), 'share'), 'MonApp'),
-    'app.log'
-  );
+    TPath.Combine(TPath.GetHomePath, '.local', 'share', 'MonApp'),
+    'app.log');
 
   // Créer le répertoire si nécessaire
   ForceDirectories(TPath.GetDirectoryName(CheminLog));
@@ -908,9 +926,13 @@ end;
 ```pascal
 {$IFDEF LINUX}
 procedure OuvrirURL(const URL: string);  
-begin  
+var  
+  URLEchappee: string;
+begin
+  // ⚠️ Échapper les guillemets pour éviter l'injection de commande shell
+  URLEchappee := URL.Replace('"', '\"');
   // Ouvrir dans le navigateur par défaut
-  system(PAnsiChar(AnsiString('xdg-open ' + URL)));
+  system(PAnsiChar(AnsiString('xdg-open "' + URLEchappee + '"')));
 end;
 {$ELSE}
 procedure OuvrirURL(const URL: string);  
@@ -919,6 +941,8 @@ begin
 end;
 {$ENDIF}
 ```
+
+> ℹ️ Pour une exécution **sans shell** (donc sans risque d'injection), préférez `fork`/`execvp` via `Posix.Unistd` plutôt que `system()`. Voir aussi `TPlatformServices.Current.SupportsPlatformService(IFMXLaunchURLService, ...)` qui offre une API portable (Windows/macOS/iOS/Android) pour ouvrir une URL dans le navigateur par défaut.
 
 ## 11. Bonnes pratiques FMXLinux
 

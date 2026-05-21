@@ -104,7 +104,7 @@ begin
     var Button := TButton.Create(Self);
     Button.Parent := ScrollBox1;
 
-    {$IFDEF ANDROID OR IOS}
+    {$IF defined(ANDROID) or defined(IOS)}
       // Pas d'effets sur mobile
     {$ELSE}
       // Effets uniquement sur desktop
@@ -126,7 +126,7 @@ end;
 ```pascal
 procedure TForm1.ConfigurerEffetsSelonPlateforme;  
 begin  
-  {$IFDEF ANDROID OR IOS}
+  {$IF defined(ANDROID) or defined(IOS)}
     // Mobile : Désactiver les effets
     BlurEffect1.Enabled := False;
     ShadowEffect1.Enabled := False;
@@ -161,24 +161,28 @@ end;
 ```
 
 ```pascal
-// ✅ BON : Utiliser la virtualisation
+// ✅ BON : Préférer TListView FMX (recycle ses vues affichées)
 procedure TForm1.RemplirListeVirtuelle;  
-begin  
-  // TListView avec virtualisation
-  ListView1.Items.Count := 1000;  // Juste le nombre
-  // Les items sont créés à la demande lors du scroll
-end;
-
-procedure TForm1.ListView1UpdateObjects(const Sender: TObject;
-  const AItem: TListViewItem);
+var  
+  i: Integer;
+  Item: TListViewItem;
 begin
-  // Cette méthode est appelée pour chaque item visible
-  AItem.Text := 'Item ' + AItem.Index.ToString;
-  AItem.Detail := 'Détails de l''item';
-
-  // Seuls les items visibles sont créés
+  ListView1.BeginUpdate;
+  try
+    ListView1.Items.Clear;
+    for i := 1 to 1000 do
+    begin
+      Item := ListView1.Items.Add;
+      Item.Text := 'Item ' + i.ToString;
+      Item.Detail := 'Valeur ' + i.ToString;
+    end;
+  finally
+    ListView1.EndUpdate;
+  end;
 end;
 ```
+
+> ℹ️ **TListView FMX vs VCL** : en **VCL**, le mode virtuel s'active avec `OwnerData := True` puis `Items.Count := N`. En **FMX**, l'architecture est différente : `TListView` recycle automatiquement les vues affichées (seules les lignes visibles ont leur représentation visuelle créée, même quand `Items` en contient des milliers). Pour aller plus loin, utilisez un `TListView.Adapter` ou les événements `OnUpdatingObjects/OnUpdateObjects` pour personnaliser le rendu de chaque item.
 
 ### Réduire les mises à jour de l'UI
 
@@ -277,12 +281,16 @@ end;
 ```pascal
 procedure TForm1.ViderCaches;  
 begin  
-  // Vider les bitmaps non utilisés
-  Image1.Bitmap.Clear;
-  Image2.Bitmap.Clear;
+  // Vider les bitmaps non utilisés (Clear remet le contenu à transparent)
+  Image1.Bitmap.Clear(TAlphaColors.Null);
+  Image2.Bitmap.Clear(TAlphaColors.Null);
+  // Pour vraiment libérer la mémoire pixel : SetSize(0, 0)
+  // Image1.Bitmap.SetSize(0, 0);
 
-  // Forcer le garbage collection (Delphi gère automatiquement,
-  // mais on peut suggérer)
+  // ℹ️ Delphi n'a pas de garbage collector pour les objets (TObject).
+  // La libération est explicite via Free/FreeAndNil. Seuls les types
+  // gérés (string, interface, TArray, dynamic array) sont libérés
+  // automatiquement par compteur de références.
 
   // Libérer les objets temporaires
   for var Obj in FListeObjetsTemporaires do
@@ -366,7 +374,8 @@ begin
         RectF(0, 0, BitmapTemp.Width, BitmapTemp.Height),
         RectF(0, 0, NouvelleLargeur, NouvelleHauteur),
         1.0,
-        True);  // High quality
+        False);  // HighSpeed = False → qualité maximale (filtrage bilinéaire)
+                 //   passer True privilégie la vitesse (proche du nearest-neighbor)
     finally
       Image1.Bitmap.Canvas.EndScene;
     end;
@@ -376,7 +385,7 @@ begin
 end;
 
 // Utilisation
-{$IFDEF ANDROID OR IOS}
+{$IF defined(ANDROID) or defined(IOS)}
   ChargerImageRedimensionnee('photo.jpg', 800, 600);  // Résolution mobile
 {$ELSE}
   ChargerImageRedimensionnee('photo.jpg', 1920, 1080);  // Résolution desktop
@@ -391,6 +400,9 @@ end;
 
 procedure TForm1.SauvegarderImageOptimisee(Bitmap: TBitmap;
   const Fichier: string);
+var
+  Surface: TBitmapSurface;
+  SaveParams: TBitmapCodecSaveParams;
 begin
   // Déterminer le format selon le contenu
   if ImageATransparence(Bitmap) then
@@ -401,13 +413,14 @@ begin
   else
   begin
     // JPG avec compression pour les photos
-    var Surface := TBitmapSurface.Create;
+    Surface := TBitmapSurface.Create;
     try
       Surface.Assign(Bitmap);
 
-      // Qualité 80% = bon compromis taille/qualité
+      // Spécifier explicitement la qualité (80 % = bon compromis taille/qualité)
+      SaveParams.Quality := 80;
       if not TBitmapCodecManager.SaveToFile(
-        Fichier + '.jpg', Surface, nil) then
+        Fichier + '.jpg', Surface, @SaveParams) then
         raise Exception.Create('Erreur sauvegarde');
     finally
       Surface.Free;
@@ -415,6 +428,8 @@ begin
   end;
 end;
 ```
+
+> ℹ️ Sans `SaveParams` (ou en passant `nil`), la qualité par défaut du codec JPG est utilisée (généralement 75-90 % selon les plateformes). Pour un contrôle précis, passez un `TBitmapCodecSaveParams` avec `Quality` entre 1 et 100.
 
 ### Compression et cache d'images
 
@@ -551,15 +566,18 @@ end;
 ```pascal
 function TForm1.AppareilRapide: Boolean;  
 begin  
-  // Détecter si l'appareil est assez puissant
+  // Valeur par défaut (desktop, ou plateforme non testée)
+  Result := True;
+
   {$IFDEF ANDROID}
-    // Vérifier le nombre de cœurs, la RAM, etc.
-    Result := GetProcessorCount > 4;
+    // Vérifier le nombre de cœurs (heuristique simple)
+    //  TThread.ProcessorCount est multi-plateforme (System.Classes)
+    Result := TThread.ProcessorCount > 4;
   {$ENDIF}
 
   {$IFDEF IOS}
-    // iPhone plus récent = plus rapide
-    Result := True;  // iOS généralement performant
+    // iPhone : généralement performant sur les modèles récents
+    Result := True;
   {$ENDIF}
 end;
 
@@ -689,34 +707,42 @@ end;
 
 ### Désactiver les synchronisations en arrière-plan
 
-```pascal
-procedure TForm1.GererEtatApplication;  
-begin  
-  // Événement quand l'app passe en arrière-plan
-  var FMXApplicationEventService: IFMXApplicationEventService;
-  if TPlatformServices.Current.SupportsPlatformService(
-    IFMXApplicationEventService, FMXApplicationEventService) then
-  begin
-    FMXApplicationEventService.SetApplicationEventHandler(
-      procedure(AAppEvent: TApplicationEvent; AContext: TObject)
-      begin
-        case AAppEvent of
-          TApplicationEvent.BecameActive:
-          begin
-            // App devient active : reprendre les activités
-            Timer1.Enabled := True;
-            ReprendreSynchronisation;
-          end;
+> ℹ️ `IFMXApplicationEventService.SetApplicationEventHandler` attend une **`function ... of object`** retournant `Boolean` (type `TApplicationEventHandler`), **pas** une procédure anonyme. On déclare donc le handler comme une méthode d'instance de la classe. Le `Boolean` indique si l'évènement a été géré (utile surtout pour `OpenURL` sur iOS — pour les autres événements, retournez simplement `True`).
 
-          TApplicationEvent.EnteredBackground:
-          begin
-            // App en arrière-plan : économiser la batterie
-            Timer1.Enabled := False;
-            SusprendreSynchronisation;
-          end;
-        end;
-      end);
+```pascal
+// Déclaration dans la classe :
+//   private
+//     function HandleAppEvent(AAppEvent: TApplicationEvent;
+//                             AContext: TObject): Boolean;
+
+function TForm1.HandleAppEvent(AAppEvent: TApplicationEvent;
+  AContext: TObject): Boolean;
+begin
+  case AAppEvent of
+    TApplicationEvent.BecameActive:
+      begin
+        // App devient active : reprendre les activités
+        Timer1.Enabled := True;
+        ReprendreSynchronisation;
+      end;
+
+    TApplicationEvent.EnteredBackground:
+      begin
+        // App en arrière-plan : économiser la batterie
+        Timer1.Enabled := False;
+        SuspendreSynchronisation;
+      end;
   end;
+  Result := True;  // évènement géré
+end;
+
+procedure TForm1.GererEtatApplication;  
+var  
+  FMXApplicationEventService: IFMXApplicationEventService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXApplicationEventService, FMXApplicationEventService) then
+    FMXApplicationEventService.SetApplicationEventHandler(HandleAppEvent);
 end;
 ```
 
@@ -788,7 +814,7 @@ begin
         Bitmap.LoadFromFile(Fichier);
 
         // Redimensionner si nécessaire
-        {$IFDEF ANDROID OR IOS}
+        {$IF defined(ANDROID) or defined(IOS)}
         if Bitmap.Width > 1024 then
           RedimensionnerBitmap(Bitmap, 1024, 768);
         {$ENDIF}
@@ -867,45 +893,55 @@ end;
 
 ### Calculer le framerate
 
+> ℹ️ Un événement `OnRender` à signature 3D (`Context: TContext3D`) n'existe que sur **TForm3D**. Pour un formulaire 2D classique (`TForm`), on mesure plutôt les FPS via un `TTimer` haute fréquence (par ex. 16 ms) qui compare le compteur de frames sur 1 seconde glissante. L'exemple ci-dessous montre l'approche **TTimer** :
+
 ```pascal
 var
   FFrameCount: Integer;
   FLastTime: TDateTime;
   FFPS: Single;
 
-procedure TForm1.FormRender(Sender: TObject; Context: TContext3D;
-  const ATarget: TContextTarget);
-begin
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
+  FLastTime := Now;
+  TimerFPS.Interval := 16; // ~60 Hz
+  TimerFPS.Enabled := True;
+end;
+
+procedure TForm1.TimerFPSTimer(Sender: TObject);  
+begin  
   Inc(FFrameCount);
 
   // Calculer FPS chaque seconde
-  if Now - FLastTime >= 1/86400 then  // 1 seconde
+  if (Now - FLastTime) * 86400 >= 1.0 then  // 1 seconde écoulée
   begin
     FFPS := FFrameCount / ((Now - FLastTime) * 86400);
     FFrameCount := 0;
     FLastTime := Now;
 
     LabelFPS.Text := Format('FPS : %.1f', [FFPS]);
-
-    {$IFDEF DEBUG}
-    if FFPS < 30 then
-      ShowMessage('ATTENTION : Framerate faible !');
-    {$ENDIF}
   end;
+
+  // Forcer un redessinage pour que FPS reflète bien le rendu réel
+  Invalidate;
 end;
 ```
 
+Pour un vrai profiling du moteur de rendu FMX (mesure des appels GPU, des passes de dessin, etc.), utilisez des outils externes (RenderDoc sur Windows, Instruments sur macOS/iOS, Android GPU Inspector).
+
 ## 9. Optimisations spécifiques iOS
 
-### Désactiver le motion blur
+### Régler la qualité du Canvas
 
 ```pascal
 {$IFDEF IOS}
-procedure TForm1.DesactiverMotionBlur;  
+procedure TForm1.AjusterQualiteCanvas;  
 begin  
-  // iOS ajoute parfois un effet de flou pendant les animations
-  // Désactiver pour de meilleures performances
-  Quality := TCanvasQuality.SystemDefault;
+  // Sur les appareils anciens, baisser la qualité de rendu peut
+  // améliorer le framerate. La propriété Quality appartient au
+  // canvas du formulaire (TFmxObject).
+  Self.Quality := TCanvasQuality.SystemDefault;
+  // Autres valeurs possibles : HighPerformance, HighQuality
 end;
 {$ENDIF}
 ```
@@ -920,7 +956,9 @@ var
 begin
   Device := TUIDevice.Wrap(TUIDevice.OCClass.currentDevice);
 
-  // iPhone 12 et plus récents
+  // Vérifie la version d'iOS installée (pas le modèle d'appareil) :
+  // iOS 14+ tourne déjà sur des appareils plus anciens (iPhone 6s, etc.).
+  // Pour identifier le modèle exact, lire Device.model + utsname (sysctl).
   Result := Device.systemVersion.doubleValue >= 14.0;
 end;
 
@@ -984,14 +1022,14 @@ end;
 function TForm1.EstGrandEcran: Boolean;  
 var  
   ScreenService: IFMXScreenService;
-  ScreenSize: TSize;
+  ScreenSize: TPointF;   // GetScreenSize retourne un TPointF (X = largeur, Y = hauteur, en unités logiques)
 begin
   if TPlatformServices.Current.SupportsPlatformService(
     IFMXScreenService, ScreenService) then
   begin
     ScreenSize := ScreenService.GetScreenSize;
-    // Plus de 6 pouces en diagonale
-    Result := Sqrt(Sqr(ScreenSize.Width) + Sqr(ScreenSize.Height)) > 1000;
+    // Heuristique : diagonale en pixels logiques > 1000
+    Result := Sqrt(Sqr(ScreenSize.X) + Sqr(ScreenSize.Y)) > 1000;
   end
   else
     Result := False;
