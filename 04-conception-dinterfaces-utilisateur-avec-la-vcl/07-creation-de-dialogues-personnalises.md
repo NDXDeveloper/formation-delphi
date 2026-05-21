@@ -174,11 +174,13 @@ begin
 end;
 ```
 
-### Méthode alternative avec FreeOnRelease
+### Forme condensée avec `with`
+
+Variante syntaxique plus compacte (mais moins recommandée : la clause `with` rend le code difficile à relire pour un tiers, et la complétion automatique de l'IDE devient ambiguë sur les noms qui pourraient appartenir à plusieurs portées) :
 
 ```pascal
-procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);  
-begin  
+procedure TFormPrincipal.ButtonConnexionClick(Sender: TObject);
+begin
   with TFormDialogue.Create(Self) do
   try
     if ShowModal = mrOk then
@@ -190,6 +192,8 @@ begin
   end;
 end;
 ```
+
+> 💡 **Préférez la première forme** avec une variable locale `Dialogue: TFormDialogue` : elle est plus explicite, plus sûre à refactorer et plus lisible.
 
 ---
 

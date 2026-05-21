@@ -51,6 +51,27 @@ Chaque composant VCL possède trois types d'éléments que vous pouvez manipuler
 
 La VCL est organisée selon une hiérarchie de classes héritées les unes des autres. Cela signifie que tous les composants partagent des fonctionnalités communes héritées de leurs composants parents. Par exemple, tous les composants visuels héritent de la classe de base `TControl`, qui leur donne des propriétés communes comme `Width`, `Height`, `Left`, `Top`, `Visible`, etc.
 
+**Hiérarchie simplifiée :**
+
+```
+TObject
+  └─ TPersistent
+      └─ TComponent           (composants non visuels)
+          └─ TControl         (composants visuels)
+              ├─ TGraphicControl  (contrôles légers, sans handle Windows)
+              │   ├─ TLabel, TImage, TShape…
+              │   └─ …
+              └─ TWinControl      (contrôles avec handle Windows, peuvent recevoir le focus)
+                  ├─ TButton, TEdit, TListBox…
+                  └─ …
+```
+
+**Pourquoi cette distinction ?**
+- Les **`TGraphicControl`** sont légers et rapides : ils ne consomment pas de ressources Windows (ils sont dessinés par leur parent). Idéal pour les labels et formes décoratives.
+- Les **`TWinControl`** sont des contrôles Windows complets : ils ont leur propre fenêtre système, peuvent recevoir le focus clavier et contenir d'autres contrôles.
+
+> 💡 **Le préfixe `T` dans Delphi** : vous remarquerez que toutes les classes commencent par la lettre `T` (`TButton`, `TForm`, `TList`…). C'est une **convention universelle dans l'écosystème Delphi** : `T` signifie « Type ». Les **instances** (variables) de ces classes, elles, n'ont pas de préfixe : `Button1: TButton`, `Form1: TForm`. Cette convention vous aidera, en lisant du code, à distinguer immédiatement un type d'une variable. Les champs privés sont, eux, traditionnellement préfixés par `F` (`FNom`, `FCount`).
+
 ## Architecture de la VCL
 
 ### Composants visuels et non-visuels
@@ -61,7 +82,7 @@ La VCL contient deux catégories principales de composants :
 - `TButton` : Un bouton
 - `TEdit` : Une zone de saisie de texte
 - `TLabel` : Une étiquette de texte
-- `TListBox` : Une liste déroulante
+- `TListBox` : Une liste verticale d'éléments (à ne pas confondre avec `TComboBox`, qui est la liste déroulante)
 - `TImage` : Une image
 
 **Composants non-visuels** : Ce sont des composants qui fournissent des fonctionnalités mais n'ont pas de représentation visuelle pour l'utilisateur final. Ils apparaissent uniquement lors de la conception dans l'IDE. Exemples :
@@ -132,8 +153,8 @@ Des boîtes de dialogue prédéfinies (ouvrir un fichier, choisir une couleur, e
 Lorsque vous placez un composant sur un formulaire dans l'IDE de Delphi :
 
 1. **Delphi génère automatiquement le code** nécessaire dans votre fichier source
-2. Le composant est déclaré comme une propriété de votre formulaire
-3. Ses propriétés initiales sont sauvegardées dans un fichier de ressources (.dfm)
+2. Le composant est déclaré comme un **champ** (field) de la classe de votre formulaire, dans la section `published`
+3. Ses propriétés initiales sont sauvegardées dans un fichier `.dfm` (texte au format Object Pascal)
 4. Vous pouvez ensuite modifier ses propriétés via l'Inspecteur d'objets ou directement dans le code
 
 Par exemple, quand vous placez un bouton, Delphi crée quelque chose comme ceci dans votre code :
@@ -141,11 +162,11 @@ Par exemple, quand vous placez un bouton, Delphi crée quelque chose comme ceci 
 ```pascal
 type
   TForm1 = class(TForm)
-    Button1: TButton;  // Déclaration automatique du bouton
+    Button1: TButton;  // Champ ajouté automatiquement (section published implicite)
   end;
 ```
 
-Vous n'avez pas à écrire ce code vous-même : Delphi s'en charge !
+Vous n'avez pas à écrire ce code vous-même : Delphi s'en charge ! La section `published` (implicite par défaut dans une classe `TForm`) permet à Delphi de relier ce champ à l'objet décrit dans le `.dfm` lors du chargement du formulaire.
 
 ## La VCL aujourd'hui
 
@@ -166,7 +187,7 @@ La VCL est bien plus qu'une simple bibliothèque de composants : c'est un **éco
 - **Simplicité** pour les débutants grâce à l'approche visuelle
 - **Puissance** pour les développeurs expérimentés qui veulent aller plus loin
 - **Rapidité** de développement sans compromis sur les performances
-- **Maturité** avec plus de 25 ans d'évolution et d'optimisation
+- **Maturité** avec près de trois décennies d'évolution et d'optimisation (depuis Delphi 1, sorti en 1995)
 
 Dans les sections suivantes de cette formation, nous allons explorer concrètement comment utiliser la VCL pour créer des interfaces utilisateur riches et interactives. Vous découvrirez comment manipuler les formulaires, utiliser les différents composants, gérer les événements, et bien plus encore.
 

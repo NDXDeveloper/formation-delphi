@@ -396,9 +396,11 @@ end;
 
 ### Scaler le dessin sur Canvas
 
+> ℹ️ **Choix du composant** : pour intercepter un événement `OnPaint`, utilisez un **`TPaintBox`** (onglet *System*). `TImage` n'expose pas d'événement `OnPaint` — il sert à afficher un `Picture` chargé, pas à dessiner à la demande à chaque rafraîchissement.
+
 ```pascal
-procedure TForm1.Image1Paint(Sender: TObject);  
-var  
+procedure TForm1.PaintBox1Paint(Sender: TObject);
+var
   ScaleFactor: Double;
   RayonScaled, XScaled, YScaled: Integer;
 begin
@@ -411,8 +413,8 @@ begin
   YScaled := Round(100 * ScaleFactor);
 
   // Dessiner avec les valeurs scalées
-  Image1.Canvas.Brush.Color := clBlue;
-  Image1.Canvas.Ellipse(
+  PaintBox1.Canvas.Brush.Color := clBlue;
+  PaintBox1.Canvas.Ellipse(
     XScaled - RayonScaled,
     YScaled - RayonScaled,
     XScaled + RayonScaled,

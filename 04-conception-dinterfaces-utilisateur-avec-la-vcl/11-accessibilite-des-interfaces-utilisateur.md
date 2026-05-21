@@ -218,6 +218,9 @@ end;
 ```
 
 **Raccourcis clavier globaux :**
+
+> ⚠️ **Indispensable** : pour que `FormKeyDown` reçoive les frappes **avant** qu'elles n'atteignent les contrôles (et permette ainsi de capturer les raccourcis globaux), la propriété **`KeyPreview` du formulaire doit être à `True`** (à définir dans l'Inspecteur d'objets ou dans `OnCreate`). Sans cela, les contrôles consomment les frappes avant que `FormKeyDown` ne se déclenche.
+
 ```pascal
 procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
@@ -288,7 +291,9 @@ end;
 
 ---
 
-## 4.11.4 Lecteurs d'écran et ARIA
+## 4.11.4 Lecteurs d'écran et accessibilité Windows
+
+> ℹ️ **Note** : on entend parfois parler d'**ARIA** (Accessible Rich Internet Applications), mais ARIA est une norme **du Web (HTML/JavaScript)** — elle ne s'applique pas aux applications VCL natives. Sous Windows, l'équivalent est **MSAA** (Microsoft Active Accessibility) et son successeur **UIA** (UI Automation), avec lesquels les contrôles VCL s'intègrent automatiquement. La VCL expose donc nativement les informations d'accessibilité (nom, rôle, état) aux lecteurs d'écran sans que vous ayez à coder explicitement « ARIA ».
 
 ### Qu'est-ce qu'un lecteur d'écran ?
 
@@ -342,11 +347,14 @@ SpeedButton1.Hint := 'Nouveau document (Ctrl+N)';
 SpeedButton1.ShowHint := True;  
 ```
 
-**AccessibleName et AccessibleDescription (Windows)**
+**AccessibleName et AccessibleDescription (MSAA)**
+
+Certains composants VCL exposent des propriétés étendues d'accessibilité dans Delphi récent :
+
 ```pascal
-// Pour les composants VCL avec support MSAA
-procedure TForm1.ConfigurerAccessibilite;  
-begin  
+// Pour les composants VCL avec support MSAA étendu (Delphi 10.4+)
+procedure TForm1.ConfigurerAccessibilite;
+begin
   // Ces propriétés aident les lecteurs d'écran
   Edit1.AccessibleName := 'Nom du client';
   Edit1.AccessibleDescription := 'Saisir le nom complet du client';
@@ -355,6 +363,8 @@ begin
   Button1.AccessibleDescription := 'Cliquer pour enregistrer les modifications';
 end;
 ```
+
+> ⚠️ **Disponibilité variable** : ces propriétés ne sont pas exposées de manière uniforme sur tous les contrôles VCL et leur prise en charge dépend de la version de Delphi. Le plus important reste d'**associer un `TLabel` avec `FocusControl` à chaque champ de saisie** : les lecteurs d'écran annoncent alors automatiquement le texte du label quand l'utilisateur entre dans le champ.
 
 ### Annoncer les changements dynamiques
 
@@ -401,10 +411,12 @@ Niveau AAA (optimal) :
 
 ```pascal
 uses
-  Vcl.Graphics;
+  Vcl.Graphics,    // pour TColor
+  Winapi.Windows,  // pour GetRValue, GetGValue, GetBValue
+  System.Math;     // pour Power
 
-function CalculerLuminance(Couleur: TColor): Double;  
-var  
+function CalculerLuminance(Couleur: TColor): Double;
+var
   R, G, B: Byte;
   Rs, Gs, Bs: Double;
 begin
@@ -510,20 +522,22 @@ end;
 ### Palettes de couleurs accessibles
 
 ```pascal
-// Palettes testées pour le daltonisme
+// Palette indicative pour les états (couleurs "Web safe")
 const
-  // Couleurs sûres pour tous types de daltonisme
-  COULEUR_SUCCES = TColor($00AA00);    // Vert
-  COULEUR_ERREUR = TColor($0000CC);    // Rouge
-  COULEUR_AVERTISSEMENT = TColor($0099FF); // Orange
-  COULEUR_INFO = TColor($CC6600);      // Bleu
+  // Rappel : TColor est codé en BGR ($BBGGRR)
+  COULEUR_SUCCES        = TColor($00AA00);  // Vert
+  COULEUR_ERREUR        = TColor($0000CC);  // Rouge
+  COULEUR_AVERTISSEMENT = TColor($0099FF);  // Orange (RGB 255,153,0)
+  COULEUR_INFO          = TColor($CC6600);  // Bleu  (RGB 0,102,204)
 
   // Couleurs avec bon contraste
   TEXTE_SOMBRE = TColor($333333);
-  TEXTE_CLAIR = TColor($FFFFFF);
-  FOND_CLAIR = TColor($FFFFFF);
-  FOND_SOMBRE = TColor($2B2B2B);
+  TEXTE_CLAIR  = TColor($FFFFFF);
+  FOND_CLAIR   = TColor($FFFFFF);
+  FOND_SOMBRE  = TColor($2B2B2B);
 ```
+
+> ⚠️ **Attention au piège rouge/vert** : la palette ci-dessus reste **lisible pour la plupart des utilisateurs**, mais le couple « rouge succès / vert erreur » est précisément ce que les daltonismes les plus fréquents (deutéranopie, protanopie — 5 à 8 % des hommes) confondent. Ne vous reposez **jamais uniquement sur la couleur** pour différencier ces deux états : doublez systématiquement le signal avec une icône (`✓` / `✗`), un texte (« OK » / « Erreur »), un changement de forme ou un soulignement. Pour des palettes optimisées pour le daltonisme, préférez des combinaisons **bleu/orange** plutôt que rouge/vert (par exemple les palettes [ColorBrewer](https://colorbrewer2.org/) ou [IBM Carbon Charts](https://carbondesignsystem.com/data-visualization/color-palettes/)).
 
 ---
 
@@ -556,8 +570,8 @@ end;
 ### Polices pour la dyslexie
 
 ```pascal
-procedure TForm1.ActiverModeSymptexie;  
-begin  
+procedure TForm1.ActiverModeDyslexie;
+begin
   // Polices spécialement conçues pour la dyslexie
   // (nécessite d'installer la police sur le système)
 

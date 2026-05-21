@@ -186,6 +186,8 @@ begin
 end;
 ```
 
+> 💡 **À ce stade, les composants du formulaire existent déjà** : quand `OnCreate` se déclenche, les composants posés en mode conception (boutons, labels, etc.) ont été instanciés et leurs propriétés ont été chargées depuis le fichier `.dfm`. Vous pouvez donc y accéder en toute sécurité (`Button1.Enabled := False;`). En revanche, le **handle Windows** de la fenêtre n'est pas forcément créé : si vous avez besoin d'une opération qui nécessite la fenêtre (par exemple `SetFocus` sur un contrôle), faites-le plutôt dans `OnShow`.
+
 ### 2. Affichage (OnShow)
 
 Déclenché juste **avant que le formulaire ne devienne visible**. Cet événement se produit à chaque fois que le formulaire est affiché (même après avoir été caché).
@@ -291,11 +293,22 @@ end;
 Le formulaire s'affiche mais l'utilisateur peut **continuer à interagir** avec les autres fenêtres. Idéal pour les fenêtres d'outils ou de visualisation.
 
 ```pascal
-procedure TForm1.Button1Click(Sender: TObject);  
-begin  
-  Form2.Show;  // Affiche Form2 si déjà créé
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  // Form2 est ici une variable globale, créée automatiquement au démarrage
+  // par Delphi (voir Projet → Options → Formulaires)
+  Form2.Show;
 end;
 ```
+
+> ⚠️ **Différence importante avec ShowModal** : Avec `Show`, **vous ne devez pas libérer le formulaire après l'appel** : la procédure retourne immédiatement, et le formulaire continue d'exister. Pour libérer un formulaire non-modal proprement, utilisez son événement `OnClose` :
+>
+> ```pascal
+> procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+> begin
+>   Action := caFree;  // Le formulaire est libéré quand on le ferme
+> end;
+> ```
 
 ### Communication entre formulaires
 
@@ -329,8 +342,25 @@ type
     constructor Create(AOwner: TComponent; const ANom: string); reintroduce;
   end;
 
-// Utilisation
-Form2 := TForm2.Create(Self, 'Dupont');
+constructor TForm2.Create(AOwner: TComponent; const ANom: string);
+begin
+  inherited Create(AOwner);
+  Caption := 'Édition de ' + ANom;
+  // Initialiser les champs du formulaire avec ANom...
+end;
+
+// Utilisation côté appelant
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Form2: TForm2;
+begin
+  Form2 := TForm2.Create(Self, 'Dupont');
+  try
+    Form2.ShowModal;
+  finally
+    Form2.Free;
+  end;
+end;
 ```
 
 **3. Variables globales ou unités partagées**

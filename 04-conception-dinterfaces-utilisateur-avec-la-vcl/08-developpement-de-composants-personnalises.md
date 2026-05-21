@@ -1073,16 +1073,28 @@ end.
 
 ### 1. Nommage des composants
 
+Utilisez un **préfixe cohérent** pour identifier visuellement vos composants dans la palette et éviter les conflits avec les composants standards :
+
 ```pascal
-// Bon : Préfixe cohérent
+// Bon : Préfixe cohérent pour vos composants
 type
   TMesComposantsEdit = class(TEdit)
-  TMesComposantsButton = class(TButton)
+    // ...
+  end;
 
-// Ou utiliser un préfixe d'entreprise
+  TMesComposantsButton = class(TButton)
+    // ...
+  end;
+
+// Ou utiliser un préfixe d'entreprise (ex. ACME)
 type
   TACMEButton = class(TButton)
+    // ...
+  end;
+
   TACMEEdit = class(TEdit)
+    // ...
+  end;
 ```
 
 ### 2. Toujours appeler inherited
@@ -1188,24 +1200,41 @@ end;
 
 ### 7. Optimiser le redessin
 
+Le motif **BeginUpdate / EndUpdate** permet de cumuler plusieurs modifications de propriétés sans déclencher un redessin à chaque fois — utile quand on charge un grand nombre de valeurs d'un coup.
+
 ```pascal
-procedure TMonComposant.BeginUpdate;  
-begin  
+procedure TMonComposant.BeginUpdate;
+begin
   Inc(FUpdateCount);
 end;
 
-procedure TMonComposant.EndUpdate;  
-begin  
+procedure TMonComposant.EndUpdate;
+begin
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
-    Invalidate;
+    Invalidate;  // Un seul redessin à la fin
 end;
 
-procedure TMonComposant.SetPropriete(const Value: Integer);  
-begin  
-  if FUpdateCount = 0 then
-    Invalidate;
+// Chaque setter doit consulter FUpdateCount avant d'appeler Invalidate
+procedure TMonComposant.SetPropriete(const Value: Integer);
+begin
+  if FPropriete <> Value then
+  begin
+    FPropriete := Value;                // Toujours mémoriser la valeur
+    if FUpdateCount = 0 then
+      Invalidate;                       // Redessiner seulement hors batch
+  end;
 end;
+
+// Utilisation côté appelant :
+//   MonComposant1.BeginUpdate;
+//   try
+//     MonComposant1.Propriete1 := 10;
+//     MonComposant1.Propriete2 := 20;
+//     MonComposant1.Propriete3 := 30;  // Aucun redessin pour l'instant
+//   finally
+//     MonComposant1.EndUpdate;          // Un seul Invalidate ici
+//   end;
 ```
 
 ### 8. Supporter le changement de taille

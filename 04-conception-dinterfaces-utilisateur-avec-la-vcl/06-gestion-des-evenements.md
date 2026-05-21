@@ -99,8 +99,8 @@ end;
 
 **Utilisation avancée avec cast :**
 ```pascal
-procedure TForm1.BoutonClick(Sender: TObject);  
-var  
+procedure TForm1.BoutonClick(Sender: TObject);
+var
   Bouton: TButton;
 begin
   // Convertir Sender en TButton pour accéder à ses propriétés
@@ -108,9 +108,11 @@ begin
   ShowMessage('Vous avez cliqué sur : ' + Bouton.Caption);
 
   // Modifier le bouton qui a été cliqué
-  Bouton.Color := clRed;
+  Bouton.Caption := 'Cliqué !';
 end;
 ```
+
+> ℹ️ **Note** : la propriété `Color` d'un `TButton` standard n'a aucun effet visible sous Windows car le rendu est délégué au thème système. Pour personnaliser réellement l'apparence d'un bouton, utilisez `TBitBtn`, `TSpeedButton`, ou appliquez un style VCL.
 
 ---
 
@@ -242,36 +244,50 @@ end;
 Déclenchés lorsque la souris entre ou sort du composant.
 
 ```pascal
-procedure TForm1.Button1MouseEnter(Sender: TObject);  
-begin  
-  Button1.Color := clYellow;
-  Button1.Font.Style := [fsBold];
+// Exemple sur un TPanel (Color fonctionne, contrairement à TButton sous Windows)
+procedure TForm1.Panel1MouseEnter(Sender: TObject);
+begin
+  Panel1.Color := clYellow;
+  Panel1.Font.Style := [fsBold];
 end;
 
-procedure TForm1.Button1MouseLeave(Sender: TObject);  
-begin  
-  Button1.Color := clBtnFace;
-  Button1.Font.Style := [];
+procedure TForm1.Panel1MouseLeave(Sender: TObject);
+begin
+  Panel1.Color := clBtnFace;
+  Panel1.Font.Style := [];
 end;
 ```
+
+> ℹ️ **Astuce** : pour un effet de survol visible sur un *bouton*, utilisez `TSpeedButton` (avec `Flat := True`) ou `TBitBtn`, ou jouez sur la propriété `Font.Color` / `Cursor` plutôt que `Color`, car la `Color` d'un `TButton` standard est ignorée par le thème Windows.
 
 ### OnMouseWheel
 
 Déclenché lors de l'utilisation de la molette de la souris.
 
+> ⚠️ **Important** : `OnMouseWheel` est exposé par `TWinControl` (donc `TForm`, `TPanel`, `TScrollBox`…), **pas** par `TGraphicControl` (`TImage`, `TLabel`, `TPaintBox`). Pour gérer la molette au-dessus d'une image, il faut soit placer cette image dans un conteneur (un `TPanel`, par exemple) et gérer l'événement sur le conteneur, soit traiter l'événement au niveau du formulaire (qui reçoit la molette quand le pointeur survole sa zone cliente).
+
 ```pascal
-procedure TForm1.Image1MouseWheel(Sender: TObject; Shift: TShiftState;
+// Exemple : OnMouseWheel du formulaire, qui zoome l'image qu'il contient
+procedure TForm1.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
-  // Zoomer avec la molette
+  // Zoomer avec la molette (élargir et grandir proportionnellement)
   if WheelDelta > 0 then
-    Image1.Width := Image1.Width + 10  // Zoom avant
+  begin
+    Image1.Width := Image1.Width + 10;   // Zoom avant
+    Image1.Height := Image1.Height + 10;
+  end
   else
-    Image1.Width := Image1.Width - 10; // Zoom arrière
+  begin
+    Image1.Width := Image1.Width - 10;   // Zoom arrière
+    Image1.Height := Image1.Height - 10;
+  end;
 
   Handled := True; // Indiquer que l'événement a été traité
 end;
 ```
+
+> 💡 **Pour que l'image suive le zoom**, assurez-vous que `Image1.Stretch := True;` et `Image1.Proportional := True;` sont activés. Sans cela, on ne fait que redimensionner le composant, pas le contenu.
 
 ---
 
@@ -674,10 +690,12 @@ Il est important de comprendre l'ordre dans lequel les événements se déclench
 ### Lors d'un clic sur un bouton
 
 ```
-1. OnMouseDown
-2. OnClick
-3. OnMouseUp
+1. OnMouseDown    (la souris s'enfonce)
+2. OnMouseUp      (la souris se relâche)
+3. OnClick        (le clic est validé, déclenché après MouseUp)
 ```
+
+> 💡 **Important** : `OnClick` est déclenché **après** `OnMouseUp`, et seulement si la souris a été relâchée **au-dessus du même contrôle** que celui où elle a été enfoncée. Si l'utilisateur enfonce la souris sur un bouton puis déplace le curseur ailleurs avant de relâcher, `OnClick` **n'est pas déclenché** — c'est le comportement standard Windows.
 
 ### Lors de la saisie dans un Edit
 
@@ -874,9 +892,14 @@ type
     FDernierX, FDernierY: Integer;
   end;
 
-procedure TForm1.FormCreate(Sender: TObject);  
-begin  
+procedure TForm1.FormCreate(Sender: TObject);
+begin
   FDessin := False;
+
+  // IMPORTANT : initialiser le Bitmap interne du TImage,
+  // sinon `Image1.Canvas` lèvera "Canvas does not allow drawing".
+  Image1.Picture.Bitmap.SetSize(Image1.Width, Image1.Height);
+
   Image1.Canvas.Brush.Color := clWhite;
   Image1.Canvas.FillRect(Image1.ClientRect);
 end;

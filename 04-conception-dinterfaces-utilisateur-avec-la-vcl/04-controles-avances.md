@@ -252,8 +252,8 @@ ParentNode := Node.Parent;
 ### Utiliser des images avec ImageList
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);  
-var  
+procedure TForm1.FormCreate(Sender: TObject);
+var
   FolderNode, FileNode: TTreeNode;
 begin
   // Associer un ImageList au TreeView
@@ -261,14 +261,21 @@ begin
 
   // Ajouter des nœuds avec des images
   FolderNode := TreeView1.Items.Add(nil, 'Dossier');
-  FolderNode.ImageIndex := 0; // Image fermée
-  FolderNode.SelectedIndex := 1; // Image ouverte
+  FolderNode.ImageIndex := 0;     // Image affichée quand le nœud n'est pas sélectionné
+  FolderNode.SelectedIndex := 1;  // Image affichée quand le nœud est sélectionné
 
   FileNode := TreeView1.Items.AddChild(FolderNode, 'Fichier.txt');
   FileNode.ImageIndex := 2;
-  FileNode.SelectedIndex := 2;
+  FileNode.SelectedIndex := 2;    // Même image pour les deux états
 end;
 ```
+
+> 💡 **Indices d'images du `TTreeNode` à connaître** :
+> - `ImageIndex` : image par défaut (nœud non sélectionné, non développé).
+> - `SelectedIndex` : image quand le nœud est **sélectionné** (focus).
+> - `ExpandedImageIndex` : image quand le nœud est **développé** (dossier ouvert vs. fermé) — disponible dans les versions modernes de Delphi.
+> - `StateIndex` : image d'état (case à cocher, par exemple), prise dans la collection `StateImages`.
+> - `OverlayIndex` : index d'une image superposée à `ImageIndex` (icône de superposition).
 
 ### Conseils pratiques
 
@@ -578,7 +585,7 @@ end;
 - Utilisez `BeginUpdate` / `EndUpdate` lors de l'ajout ou suppression de nombreux éléments
 - Activez `RowSelect` pour une meilleure expérience utilisateur en mode Report
 - Implémentez le tri par colonnes pour faciliter la navigation
-- Utilisez des couleurs alternées pour améliorer la lisibilité (voir propriété `AlternateRowColor` dans certaines versions)
+- Pour des **couleurs alternées** entre les lignes, gérez l'événement `OnCustomDrawItem` (TListView n'a pas de propriété native équivalente) : alternez la couleur du `Sender.Canvas.Brush` selon `Item.Index mod 2`
 - Stockez des données supplémentaires dans la propriété `Data` de chaque item
 
 ---

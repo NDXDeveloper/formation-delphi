@@ -184,8 +184,10 @@ MenuAdmin.Visible := False;
 ### Exemple complet : Menu avec gestion d'état
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);  
-begin  
+// Nécessite : uses Vcl.Clipbrd;          (pour la fonction Clipboard)
+// Nécessite : uses Winapi.Windows;       (pour la constante CF_TEXT)
+procedure TForm1.FormCreate(Sender: TObject);
+begin
   // Initialiser l'état des menus
   MenuFichierEnregistrer.Enabled := False; // Pas de document ouvert
   MenuEditionAnnuler.Enabled := False;
@@ -206,10 +208,11 @@ begin
   MenuEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 
-procedure TForm1.Memo1Change(Sender: TObject);  
-begin  
-  // Activer "Annuler" si le contenu a changé
-  MenuEditionAnnuler.Enabled := Memo1.Modified;
+procedure TForm1.Memo1Change(Sender: TObject);
+begin
+  // Activer "Annuler" si une action peut effectivement être annulée
+  // (CanUndo est plus précis que Modified, qui reste True même après Undo)
+  MenuEditionAnnuler.Enabled := Memo1.CanUndo;
 end;
 ```
 
@@ -256,8 +259,8 @@ begin
   // du Memo1 en mode conception
 end;
 
-procedure TForm1.PopupCoupeClick(Sender: TObject);  
-begin  
+procedure TForm1.PopupCouperClick(Sender: TObject);
+begin
   Memo1.CutToClipboard;
 end;
 
@@ -303,12 +306,15 @@ end;
 // Ou afficher à la position du composant
 procedure TForm1.Image1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+var
+  PosEcran: TPoint;
 begin
   if Button = mbRight then
   begin
     // Convertir les coordonnées locales en coordonnées écran
-    PopupMenu1.Popup(Image1.ClientToScreen(Point(X, Y)).X,
-                     Image1.ClientToScreen(Point(X, Y)).Y);
+    // (une seule conversion, on réutilise le résultat)
+    PosEcran := Image1.ClientToScreen(Point(X, Y));
+    PopupMenu1.Popup(PosEcran.X, PosEcran.Y);
   end;
 end;
 ```
@@ -591,8 +597,8 @@ begin
 end;
 
 // Actions d'édition
-procedure TForm1.ActEditionCoupeExecute(Sender: TObject);  
-begin  
+procedure TForm1.ActEditionCouperExecute(Sender: TObject);
+begin
   Memo1.CutToClipboard;
 end;
 
@@ -657,8 +663,10 @@ unit Unit1;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Menus, ToolWin, ComCtrls, ImgList, ActnList;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.StdCtrls, Vcl.Menus, Vcl.ToolWin, Vcl.ComCtrls, Vcl.ImgList,
+  Vcl.ActnList;
 
 type
   TForm1 = class(TForm)
@@ -715,7 +723,7 @@ type
     procedure ActFichierOuvrirExecute(Sender: TObject);
     procedure ActFichierEnregistrerExecute(Sender: TObject);
     procedure ActFichierQuitterExecute(Sender: TObject);
-    procedure ActEditionCoupeExecute(Sender: TObject);
+    procedure ActEditionCouperExecute(Sender: TObject);
     procedure ActEditionCopierExecute(Sender: TObject);
     procedure ActEditionCollerExecute(Sender: TObject);
     procedure ActEditionAnnulerExecute(Sender: TObject);
@@ -724,7 +732,7 @@ type
     procedure ActFichierEnregistrerUpdate(Sender: TObject);
     procedure ActEditionAnnulerUpdate(Sender: TObject);
     procedure ActEditionCollerUpdate(Sender: TObject);
-    procedure ActEditionCoupeUpdate(Sender: TObject);
+    procedure ActEditionCouperUpdate(Sender: TObject);
   private
     FNomFichier: string;
     procedure MettreAJourTitre;
@@ -815,8 +823,8 @@ begin
   Close;
 end;
 
-procedure TForm1.ActEditionCoupeExecute(Sender: TObject);  
-begin  
+procedure TForm1.ActEditionCouperExecute(Sender: TObject);
+begin
   Memo1.CutToClipboard;
   StatusBar1.SimpleText := 'Texte coupé';
 end;
@@ -869,8 +877,8 @@ begin
   ActEditionColler.Enabled := Clipboard.HasFormat(CF_TEXT);
 end;
 
-procedure TForm1.ActEditionCoupeUpdate(Sender: TObject);  
-begin  
+procedure TForm1.ActEditionCouperUpdate(Sender: TObject);
+begin
   ActEditionCouper.Enabled := Memo1.SelLength > 0;
 end;
 

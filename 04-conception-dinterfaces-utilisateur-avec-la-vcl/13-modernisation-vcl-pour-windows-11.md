@@ -209,9 +209,9 @@ end;
 
 ## 4.13.3 Coins arrondis et bordures modernes
 
-### Activer les coins arrondis (Windows 11 22H2+)
+### Activer les coins arrondis (Windows 11 21H2+)
 
-Windows 11 22H2 a introduit les coins arrondis pour les fenêtres des applications.
+Windows 11 21H2 (build 22000) a introduit les coins arrondis pour les fenêtres des applications via l'attribut DWM `DWMWA_WINDOW_CORNER_PREFERENCE`.
 
 **API DWM pour coins arrondis :**
 
@@ -240,10 +240,10 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);  
-begin  
-  // Vérifier si Windows 11 22H2 ou supérieur
-  if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22621) then
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Vérifier si Windows 11 (build 22000) ou supérieur
+  if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22000) then
     ActiverCoinsArrondis;
 end;
 ```
@@ -277,15 +277,28 @@ end;
 
 L'effet Mica donne un arrière-plan semi-transparent avec un léger flou.
 
+> ⚠️ **Deux API selon la version de Windows 11** :
+> - **Windows 11 versions initiales** (build < 22621) : attribut non documenté `DWMWA_MICA_EFFECT = 1029` (valeur 0/1).
+> - **Windows 11 22H2 et ultérieur** (build ≥ 22621) : API officielle `DWMWA_SYSTEMBACKDROP_TYPE = 38`, qui accepte plusieurs valeurs :
+>   - `DWMSBT_NONE = 1` (pas d'effet)
+>   - `DWMSBT_MAINWINDOW = 2` (Mica)
+>   - `DWMSBT_TRANSIENTWINDOW = 3` (Acrylic)
+>   - `DWMSBT_TABBEDWINDOW = 4` (Mica Alt, pour fenêtres à onglets)
+>
+> Le code ci-dessous tente d'abord la nouvelle API puis retombe sur l'ancienne pour conserver la compatibilité.
+
 ```pascal
 const
   DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-  DWMWA_MICA_EFFECT = 1029;
+  DWMWA_MICA_EFFECT = 1029;             // Ancienne API (build < 22621)
+  DWMWA_SYSTEMBACKDROP_TYPE = 38;       // Nouvelle API (build ≥ 22621)
+  DWMSBT_MAINWINDOW = 2;                // Mica
 
-procedure TFormMain.ActiverEffetMica;  
-var  
+procedure TFormMain.ActiverEffetMica;
+var
   UseMica: Integer;
   UseDarkMode: Integer;
+  BackdropType: Integer;
 begin
   // Activer le mode sombre si nécessaire
   if Pos('Dark', TStyleManager.ActiveStyle.Name) > 0 then
@@ -295,19 +308,31 @@ begin
       @UseDarkMode, SizeOf(UseDarkMode));
   end;
 
-  // Activer l'effet Mica
-  UseMica := 1;
-  DwmSetWindowAttribute(Handle, DWMWA_MICA_EFFECT,
-    @UseMica, SizeOf(UseMica));
+  // Build 22621 (Windows 11 22H2) ou supérieur : API officielle
+  if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22621) then
+  begin
+    BackdropType := DWMSBT_MAINWINDOW;
+    DwmSetWindowAttribute(Handle, DWMWA_SYSTEMBACKDROP_TYPE,
+      @BackdropType, SizeOf(BackdropType));
+  end
+  else
+  begin
+    // Anciennes versions de Windows 11 : ancien attribut non documenté
+    UseMica := 1;
+    DwmSetWindowAttribute(Handle, DWMWA_MICA_EFFECT,
+      @UseMica, SizeOf(UseMica));
+  end;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);  
-begin  
-  // Vérifier Windows 11
-  if TOSVersion.Major >= 10 then
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  // Mica n'existe qu'à partir de Windows 11 (build 22000)
+  if (TOSVersion.Major >= 10) and (TOSVersion.Build >= 22000) then
     ActiverEffetMica;
 end;
 ```
+
+> ℹ️ **Pourquoi `TOSVersion.Major >= 10` pour Windows 11 ?** Microsoft a conservé le numéro de version major à `10` pour Windows 11 (afin d'éviter de casser les applications qui testent `Major = 10` pour détecter Windows 10). Pour distinguer Windows 10 et Windows 11, on regarde le **build** : Windows 10 va jusqu'au build 19045 environ, Windows 11 commence au build 22000.
 
 ---
 
@@ -403,11 +428,12 @@ type
     procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
   end;
 
-procedure TFormMain.EtendreBarreTitre;  
-const  
+// Nécessite : uses Winapi.Dwmapi;  // pour le record MARGINS et DwmExtendFrameIntoClientArea
+procedure TFormMain.EtendreBarreTitre;
+const
   DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 var
-  Marges: TMargins;
+  Marges: Winapi.Dwmapi.TMargins;  // type explicite : record DWM (≠ Vcl.Controls.TMargins qui est une classe)
 begin
   // Étendre le cadre client dans la zone non-client
   Marges.cyTopHeight := 32; // Hauteur de la barre de titre personnalisée
@@ -415,7 +441,9 @@ begin
   Marges.cxRightWidth := 0;
   Marges.cyBottomHeight := 0;
 
-  DwmExtendFrameIntoClientArea(Handle, @Marges);
+  // En Delphi, la signature acceptée est `const pMarInset: TMargins` ;
+  // on passe donc le record directement.
+  DwmExtendFrameIntoClientArea(Handle, Marges);
 end;
 
 procedure TFormMain.WMNCCalcSize(var Message: TWMNCCalcSize);  
@@ -471,13 +499,18 @@ end;
 
 ### Boutons de fenêtre personnalisés
 
+> ℹ️ **Important** : `TButton` standard **n'a pas** de propriété `Flat`. Pour des boutons sans bordure 3D (style « flat » moderne), utilisez `TSpeedButton` (unité `Vcl.Buttons`).
+
 ```pascal
-procedure TFormMain.AjouterBoutonsControle;  
-var  
-  BtnFermer, BtnMaximiser, BtnMinimiser: TButton;
+uses
+  Vcl.Buttons; // pour TSpeedButton
+
+procedure TFormMain.AjouterBoutonsControle;
+var
+  BtnFermer, BtnMaximiser, BtnMinimiser: TSpeedButton;
 begin
   // Bouton fermer
-  BtnFermer := TButton.Create(Self);
+  BtnFermer := TSpeedButton.Create(Self);
   BtnFermer.Parent := PanelTitre;
   BtnFermer.Width := 48;
   BtnFermer.Height := 32;
@@ -489,7 +522,7 @@ begin
   BtnFermer.OnClick := BtnFermerClick;
 
   // Bouton maximiser
-  BtnMaximiser := TButton.Create(Self);
+  BtnMaximiser := TSpeedButton.Create(Self);
   BtnMaximiser.Parent := PanelTitre;
   BtnMaximiser.Width := 48;
   BtnMaximiser.Height := 32;
@@ -501,7 +534,7 @@ begin
   BtnMaximiser.OnClick := BtnMaximiserClick;
 
   // Bouton minimiser
-  BtnMinimiser := TButton.Create(Self);
+  BtnMinimiser := TSpeedButton.Create(Self);
   BtnMinimiser.Parent := PanelTitre;
   BtnMinimiser.Width := 48;
   BtnMinimiser.Height := 32;
@@ -542,7 +575,7 @@ Windows 11 met l'accent sur les animations douces et naturelles.
 
 ```pascal
 uses
-  Vcl.ExtCtrls, System.Math;
+  Vcl.ExtCtrls, System.Math, System.DateUtils;  // System.DateUtils pour MilliSecondsBetween
 
 type
   TAnimationType = (atFadeIn, atFadeOut, atSlideIn, atSlideOut);
@@ -599,9 +632,17 @@ begin
       case AnimType of
         atFadeIn, atFadeOut:
           begin
-            Composant.AlphaBlend := True;
-            Composant.AlphaBlendValue := Round(OpaciteDepart +
-              (OpaciteFin - OpaciteDepart) * Easing);
+            // ⚠️ AlphaBlend / AlphaBlendValue n'existent que sur TForm
+            // (TCustomForm). Cette branche ne fonctionne donc que si
+            // Composant est en réalité un formulaire. Pour un Panel ou autre
+            // contrôle, utilisez plutôt un changement de couleur progressif
+            // ou animez Visible/Width/Height à la place.
+            if Composant is TCustomForm then
+            begin
+              TCustomForm(Composant).AlphaBlend := True;
+              TCustomForm(Composant).AlphaBlendValue := Round(OpaciteDepart +
+                (OpaciteFin - OpaciteDepart) * Easing);
+            end;
           end;
         atSlideIn, atSlideOut:
           begin
@@ -1074,7 +1115,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Vcl.Imaging.pngimage, Vcl.Themes, System.Win.Registry;
+  Vcl.ComCtrls, Vcl.Buttons, Vcl.Imaging.pngimage, Vcl.Themes,
+  System.Win.Registry;
 
 type
   TFormMain = class(TForm)
@@ -1093,6 +1135,7 @@ type
     function GetThemeSysteme: string;
     procedure AppliquerCouleurAccent;
     procedure CreerBoutonsControles;
+    procedure BtnFermerClick(Sender: TObject);
     procedure WMSettingChange(var Message: TWMSettingChange);
       message WM_SETTINGCHANGE;
     procedure WMDwmColorizationColorChanged(var Message: TMessage);
@@ -1108,18 +1151,21 @@ implementation
 
 const
   DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-  DWMWA_MICA_EFFECT = 1029;
-  DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-  DWMWA_BORDER_COLOR = 34;
-  DWMWA_CAPTION_COLOR = 35;
-  DWMWCP_ROUND = 2;
+  DWMWA_USE_IMMERSIVE_DARK_MODE   = 20;
+  DWMWA_BORDER_COLOR              = 34;
+  DWMWA_CAPTION_COLOR             = 35;
+  DWMWA_MICA_EFFECT               = 1029; // Ancienne API (build < 22621)
+  DWMWA_SYSTEMBACKDROP_TYPE       = 38;   // Nouvelle API (build ≥ 22621)
+  DWMSBT_MAINWINDOW               = 2;    // Mica via DWMWA_SYSTEMBACKDROP_TYPE
+  DWMWCP_ROUND                    = 2;
 
 function DwmSetWindowAttribute(hwnd: HWND; dwAttribute: DWORD;
   pvAttribute: Pointer; cbAttribute: DWORD): HRESULT; stdcall;
   external 'dwmapi.dll';
 
-function DwmExtendFrameIntoClientArea(hwnd: HWND; const pMarInset: PMargins): HRESULT; stdcall;
-  external 'dwmapi.dll';
+// Note : si vous avez besoin d'étendre le cadre client (voir section 4.13.5),
+// utilisez plutôt l'unité Winapi.Dwmapi qui déclare déjà DwmExtendFrameIntoClientArea
+// avec la bonne signature `const pMarInset: TMargins`.
 
 procedure TFormMain.FormCreate(Sender: TObject);  
 begin  
@@ -1228,10 +1274,11 @@ begin
     @Preference, SizeOf(Preference));
 end;
 
-procedure TFormMain.ActiverEffetMica;  
-var  
+procedure TFormMain.ActiverEffetMica;
+var
   UseMica: Integer;
   UseDarkMode: Integer;
+  BackdropType: Integer;
 begin
   // Mode sombre si nécessaire
   if Pos('Dark', FThemeSysteme) > 0 then
@@ -1241,10 +1288,20 @@ begin
       @UseDarkMode, SizeOf(UseDarkMode));
   end;
 
-  // Effet Mica
-  UseMica := 1;
-  DwmSetWindowAttribute(Handle, DWMWA_MICA_EFFECT,
-    @UseMica, SizeOf(UseMica));
+  // Effet Mica : on privilégie la nouvelle API officielle (build ≥ 22621),
+  // sinon on retombe sur l'ancien attribut non documenté.
+  if TOSVersion.Build >= 22621 then
+  begin
+    BackdropType := DWMSBT_MAINWINDOW;
+    DwmSetWindowAttribute(Handle, DWMWA_SYSTEMBACKDROP_TYPE,
+      @BackdropType, SizeOf(BackdropType));
+  end
+  else
+  begin
+    UseMica := 1;
+    DwmSetWindowAttribute(Handle, DWMWA_MICA_EFFECT,
+      @UseMica, SizeOf(UseMica));
+  end;
 end;
 
 procedure TFormMain.AppliquerCouleurAccent;  
@@ -1280,23 +1337,26 @@ begin
   end;
 end;
 
-procedure TFormMain.CreerBoutonsControles;  
-var  
-  BtnFermer, BtnMaximiser, BtnMinimiser: TButton;
+procedure TFormMain.CreerBoutonsControles;
+var
+  BtnFermer: TSpeedButton;
 begin
   // Créer les boutons de contrôle Windows 11 style
   // (Implémentation simplifiée - voir section 4.13.5 pour détails)
+  // NB : on utilise TSpeedButton car TButton standard n'expose pas Flat.
 
-  BtnFermer := TButton.Create(Self);
+  BtnFermer := TSpeedButton.Create(Self);
   BtnFermer.Parent := PanelTitre;
   BtnFermer.Align := alRight;
   BtnFermer.Width := ScaleValue(48);
   BtnFermer.Caption := '✕';
   BtnFermer.Flat := True;
-  BtnFermer.OnClick := procedure(Sender: TObject)
-    begin
-      Close;
-    end;
+  BtnFermer.OnClick := BtnFermerClick;
+end;
+
+procedure TFormMain.BtnFermerClick(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TFormMain.WMSettingChange(var Message: TWMSettingChange);  

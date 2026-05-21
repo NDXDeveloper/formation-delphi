@@ -112,7 +112,7 @@ Si vous avez bien assimilé les concepts des trois premiers chapitres, vous ête
 
 ### Apprendre par la pratique
 
-Ce chapitre adopte une approche **pratique et progressive**. Chaque section s'appuie sur les connaissances acquises dans les sections précédentes. Les concepts sont illustrés par des exemples concrets et des captures d'écran pour faciliter votre compréhension.
+Ce chapitre adopte une approche **pratique et progressive**. Chaque section s'appuie sur les connaissances acquises dans les sections précédentes. Les concepts sont illustrés par des exemples de code concrets et des schémas pour faciliter votre compréhension.
 
 ### De la théorie à la pratique
 
@@ -137,7 +137,7 @@ Avant de plonger dans les détails, voici quelques raisons qui font de la VCL un
 
 ### 1. Maturité et stabilité
 
-La VCL existe depuis plus de 25 ans et a été éprouvée par des millions d'applications. C'est une bibliothèque **stable, fiable et bien documentée**.
+La VCL existe depuis 1995 (sortie de Delphi 1) — soit près de trois décennies — et a été éprouvée par des millions d'applications. C'est une bibliothèque **stable, fiable et bien documentée**.
 
 ### 2. Performance native
 

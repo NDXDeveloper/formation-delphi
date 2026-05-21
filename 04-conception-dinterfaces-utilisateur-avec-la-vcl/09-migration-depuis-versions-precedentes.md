@@ -12,7 +12,7 @@ La migration d'applications depuis des versions antérieures de Delphi vers Delp
 
 **Nouvelles fonctionnalités :**
 - Support des dernières versions de Windows (Windows 11)
-- Améliorations de l'IDE (intelligence artificielle, débogage LLDB v12)
+- Améliorations de l'IDE (intelligence artificielle, débogage LLDB v20)
 - Nouvelles fonctionnalités du langage (opérateur ternaire)
 - Support amélioré des plateformes modernes
 - Composants VCL et FMX modernisés
@@ -50,10 +50,10 @@ Avant de commencer, évaluez votre projet :
 **1. Version source**
 ```
 Quelle est la version actuelle de Delphi ?
-- Delphi 7 et antérieur (pré-Unicode)
-- Delphi 2007 et antérieur (pré-.NET)
-- Delphi 2009-XE8 (Unicode, architecture 32-bit)
-- Delphi 10.x-12.x (moderne, 64-bit)
+- Delphi 7 et antérieur (pré-Unicode, ANSI uniquement)
+- Delphi 2007 (ANSI, dernière version avant Unicode généralisé)
+- Delphi 2009-XE8 (Unicode, 32 et 64 bits selon les versions)
+- Delphi 10.x-12.x (moderne, multi-plateformes, FireMonkey)
 ```
 
 **2. Complexité du projet**
@@ -506,7 +506,8 @@ end;
 **Après (FireDAC) :**
 ```pascal
 uses
-  FireDAC.Comp.Client, FireDAC.Stan.Def;
+  FireDAC.Comp.Client, FireDAC.Stan.Def,
+  FireDAC.Phys.SQLite;  // unité du driver SQLite (nécessaire à l'utilisation)
 
 var
   Query: TFDQuery;
@@ -516,7 +517,8 @@ begin
   Query := TFDQuery.Create(nil);
   try
     Connection.DriverName := 'SQLite';
-    Connection.Params.Database := 'data.db';
+    // Chaque paramètre est défini via Params.Values['Nom'] (forme universelle)
+    Connection.Params.Values['Database'] := 'data.db';
     Connection.Connected := True;
 
     Query.Connection := Connection;
@@ -746,7 +748,10 @@ end;
 **Nouveau code FireDAC :**
 ```pascal
 uses
-  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DApt;
+  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DApt,
+  FireDAC.Phys.MySQL;     // unité du driver MySQL (à inclure pour charger le driver)
+  // En cas de driver différent, remplacez : FireDAC.Phys.SQLite, FireDAC.Phys.PG (PostgreSQL),
+  // FireDAC.Phys.MSSQL, etc.
 
 var
   Connection: TFDConnection;

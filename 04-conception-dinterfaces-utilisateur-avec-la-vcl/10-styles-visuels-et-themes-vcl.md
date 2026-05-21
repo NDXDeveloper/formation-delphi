@@ -292,13 +292,15 @@ La propriété `StyleElements` permet de contrôler quels aspects du style sont 
 Button1.StyleElements := [seFont, seClient, seBorder];
 
 // Désactiver le style de police uniquement
-Button1.StyleElements := [seClient, seBorder];  
-Button1.Font.Color := clRed; // Cette couleur sera respectée  
+Button1.StyleElements := [seClient, seBorder];
+Button1.Font.Color := clRed; // Cette couleur sera respectée
 
 // Désactiver complètement le style pour ce composant
-Button1.StyleElements := [];  
-Button1.Color := clYellow; // Couleur personnalisée  
+Panel1.StyleElements := [];
+Panel1.Color := clYellow; // Couleur personnalisée respectée sur TPanel
 ```
+
+> ℹ️ **Limitation Windows** : retirer `seClient` d'un `TButton` standard ne suffit pas à lui appliquer une `Color` personnalisée, car le rendu reste délégué au thème natif Windows. Pour un bouton coloré, utilisez plutôt `TPanel` cliquable, `TSpeedButton`/`TBitBtn`, ou désactivez les thèmes globalement.
 
 **Éléments de StyleElements :**
 
@@ -316,11 +318,15 @@ Button1.Color := clYellow; // Couleur personnalisée
 
 ```pascal
 uses
-  Vcl.Themes;
+  Vcl.Themes,
+  Vcl.Graphics,    // pour ColorToRGB
+  Winapi.Windows;  // pour GetRValue, GetGValue, GetBValue
 
-procedure TForm1.AfficherInfosStyle;  
-var  
+procedure TForm1.AfficherInfosStyle;
+var
   Style: TCustomStyleServices;
+  CouleurFond: TColor;
+  Luminance: Integer;
 begin
   Style := TStyleManager.ActiveStyle;
 
@@ -328,8 +334,16 @@ begin
   Memo1.Lines.Add('Nom du style : ' + Style.Name);
   Memo1.Lines.Add('Fichier : ' + TStyleManager.ActiveStyle.FileName);
 
-  // Vérifier si c'est un style sombre
-  if Style.GetSystemColor(clWindow) = clBlack then
+  // Détecter si c'est un style sombre :
+  // on regarde la luminance moyenne du fond fenêtre (clWindow).
+  // Les thèmes sombres utilisent typiquement des gris très foncés
+  // (#202020, #2D2D30…), pas du noir pur — il faut donc tester un seuil.
+  CouleurFond := ColorToRGB(Style.GetSystemColor(clWindow));
+  Luminance := (GetRValue(CouleurFond) * 30 +
+                GetGValue(CouleurFond) * 59 +
+                GetBValue(CouleurFond) * 11) div 100;
+
+  if Luminance < 128 then
     Memo1.Lines.Add('Mode : Sombre')
   else
     Memo1.Lines.Add('Mode : Clair');
@@ -487,23 +501,25 @@ end;
 
 ### Dessiner avec le style
 
+> ℹ️ **Choix du composant** : pour dessiner dans un événement `OnPaint`, utilisez un **`TPaintBox`** (onglet *System*) — `TImage` n'expose pas d'événement `OnPaint`. La même remarque s'applique partout où vous voulez dessiner « à la volée » avec le style VCL.
+
 ```pascal
 uses
   Vcl.Themes;
 
-procedure TForm1.Image1Paint(Sender: TObject);  
-var  
+procedure TForm1.PaintBox1Paint(Sender: TObject);
+var
   Details: TThemedElementDetails;
   R: TRect;
 begin
-  R := Image1.ClientRect;
+  R := PaintBox1.ClientRect;
 
   // Dessiner un bouton avec le style actif
   Details := TStyleManager.ActiveStyle.GetElementDetails(tbPushButtonNormal);
-  TStyleManager.ActiveStyle.DrawElement(Image1.Canvas.Handle, Details, R);
+  TStyleManager.ActiveStyle.DrawElement(PaintBox1.Canvas.Handle, Details, R);
 
   // Dessiner du texte centré
-  TStyleManager.ActiveStyle.DrawText(Image1.Canvas.Handle, Details,
+  TStyleManager.ActiveStyle.DrawText(PaintBox1.Canvas.Handle, Details,
     'Bouton stylisé', R, [tfCenter, tfVerticalCenter, tfSingleLine]);
 end;
 ```
@@ -592,7 +608,7 @@ type
   private
     FStyleInitial: string;
     procedure ChargerStyles;
-    procedure AppercuStyle(const StyleName: string);
+    procedure ApercuStyle(const StyleName: string);
   end;
 
 var
@@ -628,10 +644,10 @@ end;
 procedure TFormPreferences.RadioGroupStylesClick(Sender: TObject);  
 begin  
   if RadioGroupStyles.ItemIndex <> -1 then
-    AppercuStyle(RadioGroupStyles.Items[RadioGroupStyles.ItemIndex]);
+    ApercuStyle(RadioGroupStyles.Items[RadioGroupStyles.ItemIndex]);
 end;
 
-procedure TFormPreferences.AppercuStyle(const StyleName: string);  
+procedure TFormPreferences.ApercuStyle(const StyleName: string);  
 begin  
   // Appliquer temporairement le style pour l'aperçu
   if TStyleManager.IsValidStyle(StyleName) then

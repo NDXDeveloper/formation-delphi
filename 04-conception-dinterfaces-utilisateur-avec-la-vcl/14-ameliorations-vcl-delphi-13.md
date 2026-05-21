@@ -25,7 +25,7 @@ Delphi 13 Florence marque une étape importante dans l'évolution de la VCL (Vis
 **3. IDE et productivité**
 - Site web companion IA pour assistance
 - GetIt Package Manager amélioré
-- Support LLDB v12 pour débogage avancé
+- Support LLDB v20 pour débogage avancé
 - Outils de refactoring améliorés
 
 **4. Composants VCL**
@@ -175,10 +175,12 @@ end;
 **✓ À faire :**
 ```pascal
 // Expressions simples et lisibles
-Couleur := if EstActif then clGreen else clRed;  
-Message := if Count = 0 then 'Aucun' else IntToStr(Count);  
-Visible := if Mode = mEdit then True else False;  
+Couleur := if EstActif then clGreen else clRed;
+Message := if Count = 0 then 'Aucun' else IntToStr(Count);
+ButtonOK.Caption := if Editing then 'Enregistrer' else 'Modifier';
 ```
+
+> ⚠️ **Évitez `if Condition then True else False`** : c'est juste `Condition`. Écrivez directement `Visible := Mode = mEdit;` plutôt que `Visible := if Mode = mEdit then True else False;` — l'opérateur ternaire n'apporte rien quand le résultat est déjà un booléen.
 
 **✗ À éviter :**
 ```pascal
@@ -217,6 +219,22 @@ Total := Quantite * (if EstMembre then PrixMembre else PrixNormal);
 Status := if Validated then 'OK' else 'KO';
 ```
 
+**5. Évaluation paresseuse (court-circuit)**
+
+> 💡 **Différence essentielle avec `IfThen`** : l'opérateur ternaire **n'évalue qu'une seule branche** (celle qui est sélectionnée par la condition), alors que la fonction `IfThen` (de `System.StrUtils` / `System.Math`) **évalue toujours les deux** avant de retourner le résultat.
+>
+> Cela rend l'opérateur ternaire utilisable dans des cas où l'une des branches pourrait lever une exception :
+>
+> ```pascal
+> // ✅ Sans risque : la division n'est évaluée que si Diviseur <> 0
+> Resultat := if Diviseur <> 0 then Dividende / Diviseur else 0;
+>
+> // ❌ Avec IfThen : la division est TOUJOURS évaluée → EDivByZero possible
+> Resultat := IfThen(Diviseur <> 0, Dividende / Diviseur, 0);
+> ```
+>
+> Le mot-clé `if` joue désormais un double rôle dans le langage : instruction (statement) classique **ou** opérateur expression, selon sa position dans le code source.
+
 ---
 
 ## 4.14.3 Nouveaux styles VCL Windows 11
@@ -225,20 +243,20 @@ Status := if Validated then 'OK' else 'KO';
 
 Delphi 13 inclut de nouveaux styles spécialement conçus pour Windows 11.
 
-**Liste des nouveaux styles :**
+**Liste des nouveaux styles inclus** (Delphi 13.1 Florence Release 1) :
 ```pascal
 const
-  NOUVEAUX_STYLES_DELPHI13: array[0..3] of string = (
-    'Windows11 Modern Light',   // Thème clair Windows 11
-    'Windows11 Modern Dark',    // Thème sombre Windows 11
-    'Windows11 Polar Light',    // Variante claire avec bleus
-    'Windows11 Mica Dark'       // Thème sombre avec effet Mica
+  NOUVEAUX_STYLES_WINDOWS11: array[0..1] of string = (
+    'Windows11 Modern Light',  // Thème clair Windows 11
+    'Windows11 Modern Dark'    // Thème sombre Windows 11
   );
 ```
 
+> 📌 **Évolution entre versions** : Delphi 13.0 introduit les styles `Windows11 Modern Light` et `Windows11 Modern Dark`. Selon votre installation et les mises à jour appliquées, des variantes colorées supplémentaires peuvent être disponibles. Vérifiez **Projet → Options → Apparence → Styles VCL personnalisés** pour la liste exacte disponible dans votre version.
+
 ### Caractéristiques des nouveaux styles
 
-**Windows11 Modern Light :**
+**Windows Modern :**
 ```
 Caractéristiques :
 - Fond blanc éclatant
@@ -248,7 +266,7 @@ Caractéristiques :
 - Parfait pour applications professionnelles
 ```
 
-**Windows11 Modern Dark :**
+**Windows Modern Dark :**
 ```
 Caractéristiques :
 - Fond gris foncé (#202020)
@@ -258,22 +276,13 @@ Caractéristiques :
 - Idéal pour travail prolongé
 ```
 
-**Windows11 Polar Light :**
+**Variantes colorées (selon installation) :**
 ```
 Caractéristiques :
-- Tons bleus/gris clairs
-- Ambiance froide et claire
-- Contraste doux
-- Adapté aux applications créatives
-```
-
-**Windows11 Mica Dark :**
-```
-Caractéristiques :
-- Effet Mica intégré
-- Transparence dynamique
-- Suit la couleur du bureau
-- Ultra moderne
+- Mêmes bases visuelles que Windows11 Modern
+- Couleur d'accentuation différente
+- Permet d'adapter la charte graphique
+- Disponibilité variable selon la version et les mises à jour
 ```
 
 ### Application des nouveaux styles
@@ -336,13 +345,13 @@ Delphi 13 améliore le rendu des styles VCL avec :
 
 ---
 
-## 4.14.4 Support LLDB v12
+## 4.14.4 Support LLDB v20
 
 ### Qu'est-ce que LLDB ?
 
 LLDB (Low Level Debugger) est un débogueur moderne et puissant intégré à Delphi 13.
 
-**Avantages de LLDB v12 :**
+**Avantages de LLDB v20 :**
 - Débogage plus rapide
 - Meilleure inspection des variables
 - Support multi-plateforme amélioré
@@ -360,9 +369,9 @@ LLDB (Low Level Debugger) est un débogueur moderne et puissant intégré à Del
 var
   LongText: string;
 begin
-  LongText := 'Texte très long...'; // LLDB v12 affiche tout
+  LongText := 'Texte très long...'; // LLDB v20 affiche tout
   // Delphi 12 et antérieur : tronqué à 255 caractères
-  // Delphi 13 LLDB v12 : affichage complet
+  // Delphi 13 LLDB v20 : affichage complet
 end;
 
 // Inspecter des structures complexes
@@ -377,7 +386,7 @@ type
     end;
   end;
 
-// LLDB v12 affiche toute la hiérarchie clairement
+// LLDB v20 affiche toute la hiérarchie clairement
 ```
 
 **2. Évaluation d'expressions à la volée**
@@ -388,7 +397,7 @@ type
 
 // Exemple : Calculer dynamiquement
 // Expression : List.Count * 2 + Offset
-// LLDB v12 évalue en temps réel
+// LLDB v20 évalue en temps réel
 
 // Exemple : Appeler des méthodes
 // Expression : MyObject.GetTotalPrice(true)
@@ -416,7 +425,7 @@ end;
 **4. Surveillance de mémoire**
 
 ```pascal
-// LLDB v12 permet de surveiller les adresses mémoire
+// LLDB v20 permet de surveiller les adresses mémoire
 // Utile pour détecter les corruptions
 
 var
@@ -513,22 +522,24 @@ Package: FireDAC
 
 ```pascal
 // Une fois un package installé via GetIt, il est immédiatement disponible
+// Exemple avec TMS VCL UI Pack (TAdvStringGrid = grille avancée VCL de TMS)
 
 uses
-  // Package installé via GetIt
-  TMS.VCL.Grid,
-  TMS.VCL.Controls;
+  // Unités du package installé via GetIt
+  AdvGrid, AdvObj;
 
-procedure TForm1.FormCreate(Sender: TObject);  
-var  
-  Grid: TTMSFMXGrid;
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  Grid: TAdvStringGrid;
 begin
   // Utiliser le composant installé
-  Grid := TTMSFMXGrid.Create(Self);
+  Grid := TAdvStringGrid.Create(Self);
   Grid.Parent := Self;
   Grid.Align := alClient;
 end;
 ```
+
+> ℹ️ **Attention au mix VCL / FMX** : `TTMSFMXGrid` (suffixe **FMX**) est le composant grille de **TMS FMX UI Pack**, destiné à **FireMonkey**, pas à la VCL. L'équivalent VCL est `TAdvStringGrid` (TMS VCL UI Pack). Ne mélangez pas les deux familles dans une application VCL.
 
 ### Mises à jour automatiques
 
@@ -619,15 +630,16 @@ begin
   FPrenom := Value;
 end;
 
-procedure TClient.SetEmail(const Value: string);  
-begin  
-  if not EstEmailValide then
+procedure TClient.SetEmail(const Value: string);
+begin
+  // Important : on valide `Value` (la nouvelle valeur), pas `FEmail` !
+  if (Pos('@', Value) <= 0) or (Pos('.', Value) <= 0) then
     raise Exception.Create('Email invalide');
   FEmail := Value;
 end;
 
-function TClient.EstEmailValide: Boolean;  
-begin  
+function TClient.EstEmailValide: Boolean;
+begin
   Result := (Pos('@', FEmail) > 0) and (Pos('.', FEmail) > 0);
 end;
 
@@ -729,15 +741,16 @@ Code à optimiser :
 ```
 
 ```pascal
-function CompterVoyelles(const Texte: string): Integer;  
-var  
+// Nécessite : uses System.Character;  // pour TCharacter.ToLower
+function CompterVoyelles(const Texte: string): Integer;
+var
   i: Integer;
   c: Char;
 begin
   Result := 0;
   for i := 1 to Length(Texte) do
   begin
-    c := LowerCase(Texte[i]);
+    c := TCharacter.ToLower(Texte[i]);  // ToLower(Char) renvoie un Char (≠ LowerCase qui prend une string)
     if (c = 'a') or (c = 'e') or (c = 'i') or (c = 'o') or (c = 'u') or (c = 'y') then
       Inc(Result);
   end;
@@ -783,60 +796,65 @@ end;
 **Nouvelles propriétés :**
 
 ```pascal
-procedure TForm1.FormCreate(Sender: TObject);  
-begin  
+procedure TForm1.FormCreate(Sender: TObject);
+begin
   // Style moderne
   Button1.StyleElements := [seFont, seClient, seBorder];
 
   // Images avec alignement
   Button1.Images := ImageList1;
   Button1.ImageIndex := 0;
-  Button1.ImageAlignment := iaLeft;  // Nouvelle propriété
-  Button1.ImageMargins.Left := 4;   // Marges de l'image
+  Button1.ImageAlignment := iaLeft;
+  Button1.ImageMargins.Left := 4; // Marges de l'image
 
-  // Espacement du texte
-  Button1.Spacing := 8; // Espace entre image et texte
-
-  // États visuels améliorés
-  Button1.HotImageIndex := 1;  // Image au survol
-  Button1.PressedImageIndex := 2; // Image pressée
-  Button1.DisabledImageIndex := 3; // Image désactivée
+  // États visuels (TButton expose ces 4 index depuis Delphi 10.4)
+  Button1.HotImageIndex := 1;       // Image au survol
+  Button1.PressedImageIndex := 2;   // Image pressée
+  Button1.DisabledImageIndex := 3;  // Image désactivée
 end;
 ```
+
+> ℹ️ **Attention `Spacing`** : la propriété `Spacing` (espace entre l'image et le texte) **n'existe pas** sur `TButton` standard, elle est réservée à `TBitBtn` et `TSpeedButton`. Pour ajuster l'espacement avec `TButton`, jouez plutôt sur `ImageMargins`.
 
 ### TEdit amélioré
 
 **Nouvelles fonctionnalités :**
 
 ```pascal
-procedure TForm1.ConfigurerEdit;  
-begin  
-  // Texte d'indication (placeholder)
+procedure TForm1.ConfigurerEdit;
+begin
+  // Texte d'indication (placeholder), déjà disponible dans les versions précédentes
   Edit1.TextHint := 'Entrez votre nom...';
-  Edit1.TextHintColor := clGray;
 
-  // Validation améliorée
-  Edit1.NumbersOnly := True; // Nouveauté : chiffres uniquement
-  Edit1.CharCase := ecUpperCase; // Majuscules automatiques
-
-  // Icônes intégrées (Delphi 13)
-  Edit1.LeftIcon := ImageList1;
-  Edit1.LeftIconIndex := 0;
-  Edit1.RightIcon := ImageList1;
-  Edit1.RightIconIndex := 1;
-
-  // Boutons d'action
-  Edit1.RightButton.Visible := True;
-  Edit1.RightButton.Glyph.LoadFromFile('clear.png');
-  Edit1.RightButton.OnClick := EditClearClick;
-end;
-
-procedure TForm1.EditClearClick(Sender: TObject);  
-begin  
-  Edit1.Clear;
-  Edit1.SetFocus;
+  // Validation : NumbersOnly et CharCase
+  Edit1.NumbersOnly := True;       // Chiffres uniquement
+  Edit1.CharCase := ecUpperCase;   // Majuscules automatiques
 end;
 ```
+
+> 💡 **Pour afficher des icônes ou un bouton dans la zone de saisie**, utilisez le composant **TButtonedEdit** (palette **Additional**) plutôt que le `TEdit` standard. Il dérive de `TCustomEdit` et expose les propriétés `LeftButton` / `RightButton`, chacune avec ses sous-propriétés `Visible`, `Enabled`, `ImageIndex`, `HotImageIndex`, `PressedImageIndex`, `DisabledImageIndex` et l'événement `OnClick` :
+>
+> ```pascal
+> procedure TForm1.ConfigurerButtonedEdit;
+> begin
+>   ButtonedEdit1.Images := ImageList1;
+>
+>   // Bouton de gauche (par exemple : icône loupe pour recherche)
+>   ButtonedEdit1.LeftButton.Visible := True;
+>   ButtonedEdit1.LeftButton.ImageIndex := 0;
+>
+>   // Bouton de droite (par exemple : croix pour effacer)
+>   ButtonedEdit1.RightButton.Visible := True;
+>   ButtonedEdit1.RightButton.ImageIndex := 1;
+>   ButtonedEdit1.OnRightButtonClick := ButtonedEditClearClick;
+> end;
+>
+> procedure TForm1.ButtonedEditClearClick(Sender: TObject);
+> begin
+>   ButtonedEdit1.Clear;
+>   ButtonedEdit1.SetFocus;
+> end;
+> ```
 
 ### TListView amélioré
 
@@ -993,35 +1011,33 @@ end;
 
 ### Support JSON amélioré
 
+FireDAC propose nativement la sérialisation des datasets via `SaveToFile`/`LoadFromFile` (ou `SaveToStream`/`LoadFromStream`) en passant le format `sfJSON` :
+
 ```pascal
 uses
-  FireDAC.Comp.Client, FireDAC.Stan.Param, System.JSON;
+  FireDAC.Comp.Client, FireDAC.Stan.Param,
+  FireDAC.Stan.StorageJSON,    // nécessaire pour activer le format JSON
+  System.JSON;
 
-procedure TForm1.ExporterEnJSON;  
-var  
-  JSONArray: TJSONArray;
+procedure TForm1.ExporterEnJSON;
 begin
-  // Delphi 13 : Conversion dataset → JSON optimisée
-  JSONArray := FDQuery1.ToJSONArray;
+  // Sauvegarde directe en JSON dans un fichier
+  FDQuery1.SaveToFile('export.json', sfJSON);
 
-  Memo1.Lines.Text := JSONArray.Format(2); // Formatage avec indentation
-
-  JSONArray.Free;
+  // Ou récupération sous forme de chaîne via un TMemoryStream
+  // (à compléter selon vos besoins)
 end;
 
-procedure TForm1.ImporterDepuisJSON;  
-var  
-  JSONText: string;
+procedure TForm1.ImporterDepuisJSON;
 begin
-  JSONText := Memo1.Lines.Text;
-
-  // Delphi 13 : Conversion JSON → dataset améliorée
-  FDMemTable1.LoadFromJSON(JSONText);
-  FDMemTable1.Open;
+  // Chargement direct depuis un fichier JSON
+  FDMemTable1.LoadFromFile('export.json', sfJSON);
 
   DBGrid1.DataSource.DataSet := FDMemTable1;
 end;
 ```
+
+> 💡 **Méthodes `ToJSONArray`/`LoadFromJSON`** : ces noms apparaissent fréquemment dans la communauté mais ne sont **pas natifs** à FireDAC — ils proviennent généralement de bibliothèques tierces comme [DataSet Serialize](https://github.com/viniciussanchez/dataset-serialize). Pour rester en code 100 % standard, préférez `SaveToStream`/`LoadFromStream` avec `sfJSON`.
 
 ---
 
@@ -1208,8 +1224,8 @@ Réduction moyenne : 25-35%
 | Fonctionnalité | Delphi 12 | Delphi 13 | Amélioration |
 |----------------|-----------|-----------|--------------|
 | **Opérateur ternaire** | ❌ Non | ✅ Oui | 🆕 Nouveau |
-| **Styles Windows 11** | 2 styles | 4+ styles | +100% |
-| **LLDB** | v11 | v12 | Version majeure |
+| **Styles Windows 11** | ❌ Non | ✅ Light + Dark | 🆕 Nouveau |
+| **LLDB** | v15 | v20 | Saut majeur (Clang 20 aligné) |
 | **GetIt** | Basique | Modernisé | Interface + Versions |
 | **Companion IA** | ❌ Non | ✅ Oui | 🆕 Nouveau |
 | **Compilation** | Rapide | Plus rapide | -20% temps |
@@ -1324,7 +1340,8 @@ Ne pas copier-coller aveuglément !
    Documentation complète des nouveautés
 
 3. Exemples de code
-   C:\Users\Public\Documents\Embarcadero\Studio\23.0\Samples\
+   C:\Users\Public\Documents\Embarcadero\Studio\37.0\Samples\
+   (la version BDS interne de Delphi 13 est 37.0, CompilerVersion = 37)
 
 4. Webinaires Embarcadero
    Vidéos de présentation des nouveautés
@@ -1366,7 +1383,7 @@ Delphi 13 Florence représente une évolution majeure de la VCL avec des amélio
 
 ✅ **Opérateur ternaire** - Code plus concis et lisible  
 ✅ **Styles Windows 11** - Interface moderne et native  
-✅ **LLDB v12** - Débogage plus puissant  
+✅ **LLDB v20** - Débogage plus puissant  
 ✅ **GetIt amélioré** - Gestion de packages simplifiée  
 ✅ **Companion IA** - Assistance intelligente  
 ✅ **Composants VCL** - Nouvelles propriétés et performances  

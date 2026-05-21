@@ -401,7 +401,7 @@ Les composants standards sont la **fondation** de toute application Delphi réus
 
 Ne visez pas la perfection immédiate. L'apprentissage est **progressif et itératif**. Vous reviendrez naturellement vers ces composants tout au long de votre carrière de développeur Delphi, découvrant à chaque fois de nouvelles facettes et possibilités.
 
-**Rappel important :** Ces composants existent depuis plus de 25 ans et sont utilisés dans des millions d'applications à travers le monde. Ils ont été testés, éprouvés, optimisés et documentés par des générations de développeurs. En les apprenant, vous rejoignez une communauté mondiale de développeurs Delphi.
+**Rappel important :** Ces composants existent depuis 1995 (Delphi 1), soit près de trois décennies, et sont utilisés dans des millions d'applications à travers le monde. Ils ont été testés, éprouvés, optimisés et documentés par des générations de développeurs. En les apprenant, vous rejoignez une communauté mondiale de développeurs Delphi.
 
 ## Prêt à plonger dans le détail ?
 
