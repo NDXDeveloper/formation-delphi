@@ -1,9 +1,9 @@
 # 🚀 Formation Complète Delphi 13 Florence
 
-![License](https://img.shields.io/badge/License-CC%20BY%204.0-blue.svg)
-![Delphi Version](https://img.shields.io/badge/Delphi-13%20Florence-red.svg)
-![Completion](https://img.shields.io/badge/Modules-24%2F24-green.svg)
-![Language](https://img.shields.io/badge/Langue-Français-blue.svg)
+![License](https://img.shields.io/badge/License-CC%20BY%204.0-blue.svg)  
+![Delphi Version](https://img.shields.io/badge/Delphi-13%20Florence-red.svg)  
+![Completion](https://img.shields.io/badge/Modules-24%2F24-green.svg)  
+![Language](https://img.shields.io/badge/Langue-Français-blue.svg)  
 ![Platform](https://img.shields.io/badge/Plateformes-Windows%20%7C%20macOS%20%7C%20iOS%20%7C%20Android%20%7C%20Linux-lightgrey.svg)
 
 **Un guide complet et pratique pour maîtriser Delphi, du développeur débutant à l'expert multi-plateforme.**
@@ -31,13 +31,13 @@
 Formation complète sur Delphi 13 Florence couvrant tous les aspects du développement RAD moderne, du Object Pascal aux applications mobiles, web et IA. Parfaite pour les débutants, enrichissante pour les experts.
 
 **✨ Points clés :**
-- 📚 **24 modules progressifs** de l'introduction aux projets avancés
-- 🎯 **VCL et FireMonkey** pour le développement multi-plateforme
-- 🗄️ **Bases de données** MySQL/MariaDB avec FireDAC
-- 📱 **Applications mobiles** iOS et Android natives
-- 🌐 **Services Web** REST, SOAP, GraphQL
-- 🤖 **Intelligence Artificielle** et Machine Learning intégrés
-- 🔧 **IoT** Arduino, Raspberry Pi, MQTT
+- 📚 **24 modules progressifs** de l'introduction aux projets avancés  
+- 🎯 **VCL et FireMonkey** pour le développement multi-plateforme  
+- 🗄️ **Bases de données** MySQL/MariaDB avec FireDAC  
+- 📱 **Applications mobiles** iOS et Android natives  
+- 🌐 **Services Web** REST, SOAP, GraphQL  
+- 🤖 **Intelligence Artificielle** et Machine Learning intégrés  
+- 🔧 **IoT** Arduino, Raspberry Pi, MQTT  
 - 🇫🇷 **En français** et gratuit (CC BY 4.0)
 
 **Durée estimée :** 60-80 heures • **Niveau :** Tous niveaux • **Compatible :** Delphi 11+ (optimisé Delphi 13)
@@ -48,13 +48,13 @@ Formation complète sur Delphi 13 Florence couvrant tous les aspects du dévelop
 
 La formation complète couvre **24 modules progressifs** organisés en grandes thématiques :
 
-- 🎯 **Fondamentaux** - Introduction, IDE, Object Pascal, interfaces VCL
-- 🌐 **Multi-plateforme** - FireMonkey (Windows, macOS, iOS, Android, Linux)
-- 🗄️ **Données** - MySQL/MariaDB avec FireDAC, rapports et visualisations
-- 🔗 **Communication** - REST, WebSockets, GraphQL, services cloud
-- ⚡ **Performance** - Multithreading, optimisation, débogage avancé
-- 📱 **Mobile** - Applications natives iOS/Android avec capteurs et notifications
-- 🔐 **Sécurité** - Authentification, chiffrement, GDPR
+- 🎯 **Fondamentaux** - Introduction, IDE, Object Pascal, interfaces VCL  
+- 🌐 **Multi-plateforme** - FireMonkey (Windows, macOS, iOS, Android, Linux)  
+- 🗄️ **Données** - MySQL/MariaDB avec FireDAC, rapports et visualisations  
+- 🔗 **Communication** - REST, WebSockets, GraphQL, services cloud  
+- ⚡ **Performance** - Multithreading, optimisation, débogage avancé  
+- 📱 **Mobile** - Applications natives iOS/Android avec capteurs et notifications  
+- 🔐 **Sécurité** - Authentification, chiffrement, GDPR  
 - 🚀 **Avancé** - IoT, IA/ML, applications web, architecture moderne
 
 **📖 Consultez le [SOMMAIRE.md](SOMMAIRE.md) pour la table des matières complète et détaillée.**
@@ -72,7 +72,7 @@ La formation complète couvre **24 modules progressifs** organisés en grandes t
 
 2. Installer selon votre système d'exploitation
    Windows : 10/11 (64-bit recommandé)
-   macOS : 11+ (pour le développement iOS/macOS)
+   macOS : 14 Sonoma ou 15 Sequoia (pour le développement iOS/macOS)
 
 3. Configuration minimale :
    - 8 GB RAM (16 GB recommandé)
@@ -216,8 +216,8 @@ Licence CC BY 4.0
 ## 👨‍💻 Contact
 
 **Nicolas DEOUX**
-- 📧 [NDXDev@gmail.com](mailto:NDXDev@gmail.com)
-- 💼 [LinkedIn](https://www.linkedin.com/in/nicolas-deoux-ab295980/)
+- 📧 [NDXDev@gmail.com](mailto:NDXDev@gmail.com)  
+- 💼 [LinkedIn](https://www.linkedin.com/in/nicolas-deoux-ab295980/)  
 - 🐙 [GitHub](https://github.com/NDXDeveloper)
 
 **Support :** Ouvrez une issue sur GitHub pour toute question technique.
@@ -240,13 +240,13 @@ FireDAC • FastReport • TeeChart • TMS Components • DevExpress
 
 Cette formation met en avant les fonctionnalités exclusives de Delphi 13 :
 
-- ✨ **Opérateur ternaire** (condition ? valeur1 : valeur2)
-- 🎨 **Styles VCL en mode conception** pour prototypage rapide
-- 🤖 **Site web companion IA** pour développement assisté
-- 🐛 **Support LLDB v12** pour débogage avancé
-- 📦 **Gestionnaire GetIt amélioré** pour les packages
-- 🌐 **WebStencils** pour intégration serveur
-- 🚀 **Améliorations VCL et FireMonkey** performances et fonctionnalités
+- ✨ **Opérateur ternaire** (`Résultat := if Condition then Valeur1 else Valeur2;`)  
+- 🎨 **Styles VCL en mode conception** pour prototypage rapide  
+- 🤖 **Site web companion IA** pour développement assisté  
+- 🐛 **Support LLDB v20** pour débogage avancé  
+- 📦 **Gestionnaire GetIt amélioré** pour les packages  
+- 🌐 **WebStencils** pour intégration serveur  
+- 🚀 **Améliorations VCL et FireMonkey** performances et fonctionnalités  
 - 🔥 **FireDAC optimisé** pour bases de données modernes
 
 ---
@@ -260,6 +260,6 @@ Cette formation met en avant les fonctionnalités exclusives de Delphi 13 :
 
 **[⬆ Retour en haut](#-formation-complète-delphi-13-florence)**
 
-*Dernière mise à jour : Mars 2026 • Delphi 13 Florence*
+*Dernière mise à jour : Mai 2026 • Delphi 13 Florence*
 
 </div>
