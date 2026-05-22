@@ -645,8 +645,15 @@ var
   Person: TPerson;
 begin
   Result := TJSONArray.Create;
-  for Person in FPersons do
-    Result.AddElement(Person.ToJSON);
+  try
+    // Protection contre une exception levée par Person.ToJSON :
+    // sans ce try/except, Result resterait orphelin (fuite mémoire).
+    for Person in FPersons do
+      Result.AddElement(Person.ToJSON);
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 procedure TPersonList.FromJSON(JSONArray: TJSONArray);  

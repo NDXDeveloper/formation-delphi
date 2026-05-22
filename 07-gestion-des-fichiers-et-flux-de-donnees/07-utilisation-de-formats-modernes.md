@@ -1407,6 +1407,17 @@ begin
 end;
 ```
 
+> 💡 **Approche alternative pour les en-têtes par requête** : modifier `FHttpClient.ContentType := 'application/json'` change l'état du client entre les appels et **n'est pas thread-safe** si vous partagez le même `THTTPClient` entre plusieurs threads. Pour un usage concurrent, passez plutôt les en-têtes en paramètre à chaque appel :  
+>  
+> ```pascal  
+> var Headers: TNetHeaders;  
+> SetLength(Headers, 1);  
+> Headers[0] := TNetHeader.Create('Content-Type', 'application/json');  
+> Response := FHttpClient.Post(URL, RequestBody, nil, Headers);  
+> ```  
+>  
+> Chaque requête transporte alors ses propres en-têtes, sans toucher au state du client. Référence : [docwiki — Using an HTTP Client](https://docwiki.embarcadero.com/RADStudio/Sydney/en/Using_an_HTTP_Client).
+
 ---
 
 ## Bonnes pratiques

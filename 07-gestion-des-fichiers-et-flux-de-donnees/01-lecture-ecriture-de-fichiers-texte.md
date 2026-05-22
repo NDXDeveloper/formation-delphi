@@ -123,7 +123,7 @@ end;
 
 ### Gestion de l'encodage avec TStringList
 
-Par défaut, TStringList utilise l'encodage ANSI. Pour gérer différents encodages (notamment UTF-8 pour les caractères accentués) :
+Par défaut, `TStringList` utilise `TEncoding.Default`, c'est-à-dire l'encodage système (ANSI/CP-1252 sur Windows, UTF-8 sur Linux/macOS). Pour un comportement reproductible d'une plateforme à l'autre, **précisez explicitement l'encodage** — `TEncoding.UTF8` est le choix recommandé en pratique :
 
 ```pascal
 procedure LireFichierUTF8;  
@@ -158,10 +158,14 @@ end;
 ```
 
 **Encodages disponibles :**
-- `TEncoding.ANSI` : encodage Windows par défaut
 - `TEncoding.UTF8` : recommandé pour les caractères internationaux
-- `TEncoding.Unicode` : UTF-16
-- `TEncoding.ASCII` : caractères ASCII de base uniquement
+- `TEncoding.Default` : encodage système (ANSI/CP-1252 sur Windows, UTF-8 sur Linux/macOS)
+- `TEncoding.Unicode` : UTF-16 Little-Endian
+- `TEncoding.BigEndianUnicode` : UTF-16 Big-Endian
+- `TEncoding.ASCII` : caractères ASCII 7 bits uniquement
+- `TEncoding.GetEncoding(<codepage>)` : pour un code page Windows spécifique (ex. 1252, 1251, 850…)
+
+> ⚠️ **Attention** : il n'existe **pas** de `TEncoding.ANSI` en Delphi moderne. Si vous voulez l'encodage ANSI Windows, utilisez `TEncoding.Default` (sur Windows) ou `TEncoding.GetEncoding(1252)` pour explicitement viser Windows-1252.
 
 ---
 

@@ -251,12 +251,17 @@ Les fichiers texte utilisent différents encodages pour représenter les caract�
 // UTF-8 (recommandé, universel)
 TFile.WriteAllText('fichier.txt', 'Contenu avec accents éàç', TEncoding.UTF8);
 
-// ANSI (ancien standard Windows)
-TFile.WriteAllText('fichier.txt', 'Contenu', TEncoding.ANSI);
+// Encodage système (ANSI sur Windows, UTF-8 sur Linux/macOS)
+TFile.WriteAllText('fichier.txt', 'Contenu', TEncoding.Default);
 
-// Unicode (UTF-16)
+// Unicode (UTF-16 Little-Endian)
 TFile.WriteAllText('fichier.txt', 'Contenu', TEncoding.Unicode);
+
+// Pour un code page Windows spécifique (ex. 1252 = Western European)
+TFile.WriteAllText('fichier.txt', 'Contenu', TEncoding.GetEncoding(1252));
 ```
+
+> ℹ️ **`TEncoding.ANSI` n'existe pas** : les encodages prédéfinis sont `UTF8`, `Default` (système), `Unicode` (UTF-16 LE), `BigEndianUnicode` et `ASCII`. Pour un code page Windows spécifique (1252, 1251…), passez par `TEncoding.GetEncoding(<numéro>)`.
 
 **Règle d'or :** Utilisez toujours **UTF-8** pour les nouveaux fichiers. C'est le standard universel qui gère tous les caractères internationaux.
 

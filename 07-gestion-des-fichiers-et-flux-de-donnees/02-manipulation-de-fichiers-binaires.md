@@ -245,11 +245,19 @@ begin
   end;
 
   // Lecture
+  // ⚠️ Important : on stocke chaque appel dans une variable séparée.
+  // L'ordre d'évaluation des opérandes de `+` n'est PAS garanti par
+  // le compilateur Delphi ; concaténer trois `LireChaine(Stream)` dans
+  // une seule expression peut lire les chaînes dans un ordre inattendu
+  // selon l'architecture (Win32, Win64, macOS, Android). On évite ce piège
+  // en séparant explicitement les lectures, qui ont un effet de bord
+  // (avancement de Stream.Position).
   Stream := TFileStream.Create('textes.bin', fmOpenRead);
   try
-    TexteLu := LireChaine(Stream) + ' ' +
-               LireChaine(Stream) + ' ' +
-               LireChaine(Stream);
+    var S1 := LireChaine(Stream);
+    var S2 := LireChaine(Stream);
+    var S3 := LireChaine(Stream);
+    TexteLu := S1 + ' ' + S2 + ' ' + S3;
     ShowMessage(TexteLu);
   finally
     Stream.Free;
@@ -436,8 +444,24 @@ end;
 **Note importante :**
 - Utilisez `packed record` pour éviter l'alignement mémoire automatique
 - Les tableaux de Char ont une taille fixe
-- `StrPCopy` copie une string dans un tableau de Char
+- `StrPCopy` copie une string dans un tableau de Char (terminé par #0)
 - `StrPas` convertit un tableau de Char en string
+
+> ⚠️ **Risque de buffer overflow avec `StrPCopy`** : cette fonction **ne vérifie pas la taille du buffer destination**. Si la chaîne source est plus longue que le tableau cible, `StrPCopy` écrit au-delà du buffer et corrompt la mémoire — c'est un bug classique de sécurité.  
+>  
+> **Solution sûre** : utilisez `StrPLCopy(Dest, Source, MaxLen)` qui tronque à `MaxLen` caractères (en gardant la place pour le `#0` final) :  
+>  
+> ```pascal  
+> // SÛRES : Length(Personne.Nom) - 1 = 49 (on garde une place pour le #0)  
+> StrPLCopy(Personne.Nom, 'Jean Dupont', Length(Personne.Nom) - 1);  
+> ```
+
+> ⚠️ **Char = WideChar en Delphi moderne (Unicode)** : depuis Delphi 2009, `Char` est aliasé sur `WideChar` (**2 octets** UTF-16, pas 1 octet). Donc `array[0..49] of Char` occupe **100 octets**, pas 50. Pour :  
+>  
+> - **Économiser de l'espace** ou rester compatible avec un format ASCII pur → utilisez `array[0..49] of AnsiChar` (50 octets, 1 octet par caractère)  
+> - **Supporter les caractères internationaux** (accentués, asiatiques, emojis…) → gardez `Char` mais **n'oubliez pas que `SizeOf` double**  
+>  
+> Dans tous les cas, **utilisez systématiquement `SizeOf()`** dans vos appels à `Stream.Read/Write` — ne codez jamais la taille en dur — pour rester portable et résistant aux changements de version. Référence : [docwiki — String Types](https://docwiki.embarcadero.com/RADStudio/Sydney/en/String_Types_(Delphi)).
 
 ---
 
@@ -1077,9 +1101,11 @@ begin
     // Préparer le nouveau client
     FillChar(Client, SizeOf(TClient), 0);
     Client.ID := Header.NombreEnregistrements + 1;
-    StrPCopy(Client.Nom, Nom);
-    StrPCopy(Client.Email, Email);
-    StrPCopy(Client.Telephone, Telephone);
+    // StrPLCopy borne la longueur copiée et garantit le #0 final, contrairement
+    // à StrPCopy qui peut déborder du buffer si l'entrée est trop longue.
+    StrPLCopy(Client.Nom, Nom, Length(Client.Nom) - 1);
+    StrPLCopy(Client.Email, Email, Length(Client.Email) - 1);
+    StrPLCopy(Client.Telephone, Telephone, Length(Client.Telephone) - 1);
     Client.Solde := Solde;
     Client.Actif := True;
 

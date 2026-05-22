@@ -236,12 +236,13 @@ begin
 end;
 
 // Comparaison des niveaux
+// Utilise TStopwatch (System.Diagnostics) : cross-platform, haute précision,
+// pas de wrap (contrairement à GetTickCount 32 bits qui reboucle après ~49 jours).
 procedure TForm1.CompareNiveaux;  
 var  
   Original, Compresse1, Compresse2, Compresse3: TMemoryStream;
   i: Integer;
-  Debut, Fin: Cardinal;
-  Temps: Cardinal;
+  Chrono: TStopwatch;
 begin
   Original := TMemoryStream.Create;
   Compresse1 := TMemoryStream.Create;
@@ -253,25 +254,25 @@ begin
       Original.WriteBuffer(i, SizeOf(Integer));
 
     // Niveau zcFastest
-    Debut := GetTickCount;
+    Chrono := TStopwatch.StartNew;
     CompresserAvecNiveau(Original, Compresse1, zcFastest);
-    Temps := GetTickCount - Debut;
+    Chrono.Stop;
     Memo1.Lines.Add(Format('Fastest : %d octets, %d ms',
-      [Compresse1.Size, Temps]));
+      [Compresse1.Size, Chrono.ElapsedMilliseconds]));
 
     // Niveau zcDefault
-    Debut := GetTickCount;
+    Chrono := TStopwatch.StartNew;
     CompresserAvecNiveau(Original, Compresse2, zcDefault);
-    Temps := GetTickCount - Debut;
+    Chrono.Stop;
     Memo1.Lines.Add(Format('Default : %d octets, %d ms',
-      [Compresse2.Size, Temps]));
+      [Compresse2.Size, Chrono.ElapsedMilliseconds]));
 
     // Niveau zcMax
-    Debut := GetTickCount;
+    Chrono := TStopwatch.StartNew;
     CompresserAvecNiveau(Original, Compresse3, zcMax);
-    Temps := GetTickCount - Debut;
+    Chrono.Stop;
     Memo1.Lines.Add(Format('Max : %d octets, %d ms',
-      [Compresse3.Size, Temps]));
+      [Compresse3.Size, Chrono.ElapsedMilliseconds]));
   finally
     Original.Free;
     Compresse1.Free;
@@ -895,14 +896,20 @@ var
   Fichier: string;
 begin
   Result := TStringList.Create;
+  try
+    // Sécurise contre les exceptions de TDirectory.GetFiles : si quelque chose
+    // explose après la création de Result, on libère avant de propager
+    // l'erreur — sinon l'appelant n'aurait jamais le pointeur (fuite mémoire).
+    Fichiers := TDirectory.GetFiles(FDossierDestination, 'backup_*.zip');
 
-  // Chercher tous les fichiers .zip dans le dossier destination
-  Fichiers := TDirectory.GetFiles(FDossierDestination, 'backup_*.zip');
+    for Fichier in Fichiers do
+      Result.Add(Fichier);
 
-  for Fichier in Fichiers do
-    Result.Add(Fichier);
-
-  Result.Sort;
+    Result.Sort;
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 // Utilisation
@@ -942,9 +949,9 @@ end;
 
 ## Note sur la protection par mot de passe (ZIP)
 
-> **Important :** La classe `TZipFile` de Delphi (`System.Zip`) **ne supporte pas nativement** la création d'archives ZIP protégées par mot de passe. Pour cette fonctionnalité, vous devrez utiliser une bibliothèque tierce comme **Abbrevia**, **TurboPower Abbrevia** ou **7-Zip SDK**.
->
-> Si vous avez besoin de protéger des données, vous pouvez combiner la compression ZLib avec un chiffrement séparé (par exemple via les API de chiffrement de Delphi dans `System.NetEncoding` ou des bibliothèques cryptographiques).
+> **Important :** La classe `TZipFile` de Delphi (`System.Zip`) **ne supporte pas nativement** la création d'archives ZIP protégées par mot de passe. Pour cette fonctionnalité, vous devrez utiliser une bibliothèque tierce comme **Abbrevia** (TurboPower) ou **7-Zip SDK**.  
+>  
+> Si vous avez besoin de protéger des données, combinez la compression ZLib avec un chiffrement séparé : utilisez **`System.Hash`** pour le hachage des clés/mots de passe, et une bibliothèque cryptographique dédiée (par exemple **DCPCrypt**, **lockbox** ou **Sodium for Delphi**) pour le chiffrement symétrique. L'unité `System.NetEncoding` ne sert qu'à l'encodage de transport (Base64, URL, HTML), **pas au chiffrement**.
 
 ---
 
@@ -973,9 +980,15 @@ const
 var
   SourceStream, DestStream: TFileStream;
   Compresseur: TZCompressionStream;
-  Buffer: array[0..TAILLE_BLOC-1] of Byte;
+  Buffer: TBytes;             // ← tableau dynamique alloué sur le tas
   BytesLus: Integer;
 begin
+  // ⚠️ Ne déclarez PAS `Buffer: array[0..TAILLE_BLOC-1] of Byte` sur la pile :
+  //     1 Mo en variable locale dépasse la taille de pile par défaut (1 Mo
+  //     sur Windows) et provoque un stack overflow. Utilisez un `TBytes`
+  //     alloué dynamiquement (heap) avec `SetLength`.
+  SetLength(Buffer, TAILLE_BLOC);
+
   SourceStream := TFileStream.Create(Source, fmOpenRead);
   try
     DestStream := TFileStream.Create(Destination, fmCreate);
@@ -983,9 +996,9 @@ begin
       Compresseur := TZCompressionStream.Create(DestStream, zcDefault);
       try
         repeat
-          BytesLus := SourceStream.Read(Buffer, TAILLE_BLOC);
+          BytesLus := SourceStream.Read(Buffer[0], TAILLE_BLOC);
           if BytesLus > 0 then
-            Compresseur.WriteBuffer(Buffer, BytesLus);
+            Compresseur.WriteBuffer(Buffer[0], BytesLus);
         until BytesLus = 0;
       finally
         Compresseur.Free;
@@ -1225,9 +1238,9 @@ Dans ce chapitre, vous avez découvert la compression et décompression en Delph
 
 **Outils disponibles :**
 - **System.ZLib** : compression de streams et fichiers
-- **System.Zip** : création et manipulation d'archives ZIP
+- **System.Zip** : création et manipulation d'archives ZIP (sans mot de passe natif)
 - Niveaux de compression (Fastest, Default, Max)
-- Protection par mot de passe
+- Bibliothèques tierces pour ZIP avec mot de passe (Abbrevia, 7-Zip SDK)
 
 **Techniques apprises :**
 - Compresser des streams, fichiers et chaînes

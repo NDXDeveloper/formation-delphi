@@ -322,21 +322,26 @@ end;
 
 ```pascal
 function EchapperChampCSV(const Champ: string; QuoteChar: Char): string;  
-begin  
+var  
+  Quote: string;
+begin
   Result := Champ;
+  Quote := QuoteChar;
 
   // Si le champ contient des caractères spéciaux, l'encadrer de guillemets
+  // Note : on utilise systématiquement QuoteChar (et pas '"' en dur), pour que
+  // la fonction reste correcte si l'appelant utilise un autre caractère d'encadrement.
   if (Pos(',', Result) > 0) or
      (Pos(';', Result) > 0) or
-     (Pos('"', Result) > 0) or
+     (Pos(QuoteChar, Result) > 0) or
      (Pos(#13, Result) > 0) or
      (Pos(#10, Result) > 0) then
   begin
-    // Doubler les guillemets internes
-    Result := StringReplace(Result, '"', '""', [rfReplaceAll]);
+    // Doubler les caractères d'encadrement internes (RFC 4180)
+    Result := StringReplace(Result, Quote, Quote + Quote, [rfReplaceAll]);
 
     // Encadrer
-    Result := QuoteChar + Result + QuoteChar;
+    Result := Quote + Result + Quote;
   end;
 end;
 
@@ -669,11 +674,16 @@ Les fichiers Excel (.xlsx, .xls) sont des formats binaires complexes qui peuvent
 
 Delphi n'a pas de support natif pour Excel, mais plusieurs options existent :
 
-1. **OLE Automation** : Utilise Excel installé sur le PC
-2. **SheetJS (XLSX)** : Bibliothèque tierce pure Delphi
-3. **Composants tiers** : TMS, DevExpress, etc.
+1. **OLE Automation** : Utilise Excel installé sur le PC (Windows uniquement)
+2. **Bibliothèques tierces Delphi natives** : pas besoin d'Excel installé, multiplateformes
+   - **TMS FlexCel** (commercial, très complet)
+   - **XLSReadWriteII** d'Axolot (commercial)
+   - **SimpleXLSX** (open-source, lecture/écriture XLSX simple)
+   - **Spreadsheet de fpSpreadsheet** (LCL / Free Pascal mais portable)
+3. **Lecture/écriture manuelle du XLSX** : un .xlsx est un ZIP de fichiers XML — possible mais complexe
+4. **Composants éditeurs** : TMS, DevExpress, Steema, etc.
 
-Nous allons voir les deux premières méthodes.
+Nous allons voir l'approche OLE Automation (la plus simple si Excel est installé) puis présenter brièvement l'approche manuelle.
 
 ---
 

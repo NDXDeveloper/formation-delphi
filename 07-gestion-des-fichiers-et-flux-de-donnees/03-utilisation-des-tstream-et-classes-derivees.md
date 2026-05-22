@@ -507,26 +507,32 @@ end;
 
 ### Créer depuis une chaîne existante
 
+Pour parcourir le contenu d'un `TStringStream` ligne par ligne, le plus simple est de récupérer son `DataString` et de le charger dans un `TStringList` qui se charge du découpage CRLF / LF :
+
 ```pascal
 var
   StringStream: TStringStream;
+  Lignes: TStringList;
   Ligne: string;
 begin
   StringStream := TStringStream.Create('Ligne 1'#13#10'Ligne 2'#13#10'Ligne 3',
                                        TEncoding.UTF8);
   try
-    // Lire ligne par ligne
-    while StringStream.Position < StringStream.Size do
-    begin
-      Ligne := '';
-      // Lire caractère par caractère jusqu'à la fin de ligne
-      // (exemple simplifié)
+    Lignes := TStringList.Create;
+    try
+      Lignes.Text := StringStream.DataString;  // découpe automatique par CRLF/LF
+      for Ligne in Lignes do
+        ShowMessage(Ligne);
+    finally
+      Lignes.Free;
     end;
   finally
     StringStream.Free;
   end;
 end;
 ```
+
+> 💡 Une lecture caractère par caractère via `Stream.Read` est possible mais nettement plus laborieuse — `TStringList` est conçu exactement pour ce découpage et gère correctement les fins de ligne mixtes (`#13#10`, `#10`, `#13`).
 
 ### Exemple : Génération de CSV
 

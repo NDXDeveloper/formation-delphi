@@ -113,31 +113,38 @@ var
   Ext: string;
 begin
   Result := TStringList.Create;
-
-  for i := 0 to Fichiers.Count - 1 do
-  begin
-    Fichier := Fichiers[i];
-
-    // Vérifier la taille
-    Taille := TFile.GetSize(Fichier);
-    if (Taille < TailleMin) or (Taille > TailleMax) then
-      Continue;
-
-    // Vérifier l'extension
-    Extension := LowerCase(ExtractFileExt(Fichier));
-    ExtensionValide := False;
-
-    for Ext in Extensions do
+  try
+    // Protection : TFile.GetSize peut lever si un fichier disparaît pendant
+    // le parcours. On libère Result et on relaye l'exception, sinon l'appelant
+    // n'a jamais le pointeur retourné (fuite mémoire).
+    for i := 0 to Fichiers.Count - 1 do
     begin
-      if Extension = LowerCase(Ext) then
-      begin
-        ExtensionValide := True;
-        Break;
-      end;
-    end;
+      Fichier := Fichiers[i];
 
-    if ExtensionValide then
-      Result.Add(Fichier);
+      // Vérifier la taille
+      Taille := TFile.GetSize(Fichier);
+      if (Taille < TailleMin) or (Taille > TailleMax) then
+        Continue;
+
+      // Vérifier l'extension
+      Extension := LowerCase(ExtractFileExt(Fichier));
+      ExtensionValide := False;
+
+      for Ext in Extensions do
+      begin
+        if Extension = LowerCase(Ext) then
+        begin
+          ExtensionValide := True;
+          Break;
+        end;
+      end;
+
+      if ExtensionValide then
+        Result.Add(Fichier);
+    end;
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -751,6 +758,15 @@ begin
 end;
 ```
 
+> ⚠️ **Thread-safety obligatoire** : avec `TParallel.For`, plusieurs threads exécutent simultanément le corps de la boucle. Pour éviter les corruptions de données :  
+>  
+> - **Ne touchez jamais à l'UI** (`ShowMessage`, `Memo1.Lines.Add`, `ProgressBar.Position`…) depuis l'intérieur — utilisez `TThread.Queue` ou `TThread.Synchronize`  
+> - **Protégez les ressources partagées** (TStringList, TList, compteurs Integer…) avec un `TCriticalSection`, un `TMonitor.Enter/Exit` ou utilisez les versions thread-safe (`TThreadList<T>`)  
+> - **Évitez `TStringList`** non-thread-safe ; préférez `TThreadList<string>` ou des opérations purement locales  
+> - **Le logger doit être thread-safe** lui aussi (ajoutez un verrou autour de `LogXxx`)  
+>  
+> En cas de doute, restez sur un traitement séquentiel (`for i := 0 to ...`) qui est toujours sûr.
+
 ### Classe complète pour traitement asynchrone
 
 ```pascal
@@ -1100,6 +1116,10 @@ begin
         begin
           FLogger.LogInfo(Format('[TEST] Supprimerait : %s (%d Ko)',
             [Fichier, TailleSupprimer div 1024]));
+          // Comptabiliser même en mode test, sinon le résumé affiche
+          // toujours « 0 fichiers seraient supprimés »
+          Inc(NombreSupprimes);
+          Inc(TailleTotale, TailleSupprimer);
         end
         else
         begin
@@ -1120,8 +1140,8 @@ begin
   end;
 
   if FDryRun then
-    FLogger.LogInfo(Format('Fin du test : %d fichiers seraient supprimés',
-      [NombreSupprimes]))
+    FLogger.LogInfo(Format('Fin du test : %d fichiers seraient supprimés (%d Mo)',
+      [NombreSupprimes, TailleTotale div (1024 * 1024)]))
   else
     FLogger.LogInfo(Format('Nettoyage terminé : %d fichiers supprimés, %d Mo libérés',
       [NombreSupprimes, TailleTotale div (1024 * 1024)]));
