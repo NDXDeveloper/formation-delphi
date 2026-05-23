@@ -423,22 +423,26 @@ end;
 procedure TFormRapportAvecFiltres.btnAppliquerClick(Sender: TObject);  
 begin  
   // Construire la requête avec les filtres
-  var SQL := 'SELECT * FROM ventes WHERE 1=1';
+  // ATTENTION : on utilise des paramètres SQL (:nom_param) plutôt que
+  // de concaténer les valeurs, ce qui protège contre l'injection SQL
+  var SQL := 'SELECT * FROM ventes ' +
+             'WHERE date_vente BETWEEN :date_debut AND :date_fin';
 
-  // Filtre par date
-  SQL := SQL + Format(' AND date_vente BETWEEN %s AND %s',
-    [QuotedStr(DateToStr(DateEdit1.Date)), QuotedStr(DateToStr(DateEdit2.Date))]);
-
-  // Filtre par catégorie
+  // Filtre par catégorie (ajouté conditionnellement)
   if ComboCategorie.ItemIndex > 0 then
-    SQL := SQL + Format(' AND categorie = %s', [QuotedStr(ComboCategorie.Text)]);
+    SQL := SQL + ' AND categorie = :categorie';
 
   // Filtre par statut
   if not CheckBoxInclureClotures.Checked then
     SQL := SQL + ' AND statut <> ''Cloturé''';
 
-  // Appliquer les filtres
+  // Appliquer la requête et lier les paramètres
+  FDQueryVentes.Close;
   FDQueryVentes.SQL.Text := SQL;
+  FDQueryVentes.ParamByName('date_debut').AsDate := DateEdit1.Date;
+  FDQueryVentes.ParamByName('date_fin').AsDate := DateEdit2.Date;
+  if ComboCategorie.ItemIndex > 0 then
+    FDQueryVentes.ParamByName('categorie').AsString := ComboCategorie.Text;
   FDQueryVentes.Open;
 
   // Passer les informations au rapport pour affichage
@@ -450,6 +454,8 @@ begin
   frxReport1.ShowReport;
 end;
 ```
+
+> **Bonne pratique** : préférez toujours les **paramètres SQL nommés** (`:date_debut`, `:categorie`, etc.) à la concaténation de chaînes. Ils protègent contre les injections SQL et bénéficient des optimisations du moteur de base de données (plan de requête réutilisable).
 
 ### Filtres dans le rapport FastReport
 
@@ -573,51 +579,63 @@ end;
 
 ### Interface de tri
 
-Créez un panneau permettant de configurer le tri.
+Créez un panneau permettant de configurer le tri. Stockez les contrôles comme champs de la classe pour pouvoir les référencer dans le gestionnaire d'événement standard. La déclaration ci-dessous **complète** la classe `TFormRapportTriable` du paragraphe précédent (ajoutez ces champs et méthodes à la classe existante).
 
 ```pascal
+type
+  TFormRapportTriable = class(TForm)
+  // ... champs existants (FColonneTri, FOrdreTri, etc.)
+  private
+    FPanelTri: TPanel;
+    FComboColonne: TComboBox;
+    FComboOrdre: TComboBox;
+    FBtnAppliquer: TButton;
+    procedure btnAppliquerTriClick(Sender: TObject);
+  public
+    procedure CreerPanneauTri;
+  end;
+
 procedure TFormRapportTriable.CreerPanneauTri;  
-var  
-  Panel: TPanel;
-  ComboColonne: TComboBox;
-  ComboOrdre: TComboBox;
-  btnAppliquer: TButton;
-begin
-  Panel := TPanel.Create(Self);
-  Panel.Parent := Self;
-  Panel.Align := alTop;
-  Panel.Height := 50;
+begin  
+  FPanelTri := TPanel.Create(Self);
+  FPanelTri.Parent := Self;
+  FPanelTri.Align := alTop;
+  FPanelTri.Height := 50;
 
   // Sélection de colonne
-  ComboColonne := TComboBox.Create(Panel);
-  ComboColonne.Parent := Panel;
-  ComboColonne.Left := 10;
-  ComboColonne.Top := 10;
-  ComboColonne.Items.AddStrings(['Date', 'Produit', 'Montant', 'Quantité']);
-  ComboColonne.ItemIndex := 0;
+  FComboColonne := TComboBox.Create(FPanelTri);
+  FComboColonne.Parent := FPanelTri;
+  FComboColonne.Left := 10;
+  FComboColonne.Top := 10;
+  FComboColonne.Items.AddStrings(['Date', 'Produit', 'Montant', 'Quantité']);
+  FComboColonne.ItemIndex := 0;
 
   // Ordre de tri
-  ComboOrdre := TComboBox.Create(Panel);
-  ComboOrdre.Parent := Panel;
-  ComboOrdre.Left := 150;
-  ComboOrdre.Top := 10;
-  ComboOrdre.Items.AddStrings(['Croissant', 'Décroissant']);
-  ComboOrdre.ItemIndex := 0;
+  FComboOrdre := TComboBox.Create(FPanelTri);
+  FComboOrdre.Parent := FPanelTri;
+  FComboOrdre.Left := 150;
+  FComboOrdre.Top := 10;
+  FComboOrdre.Items.AddStrings(['Croissant', 'Décroissant']);
+  FComboOrdre.ItemIndex := 0;
 
   // Bouton appliquer
-  btnAppliquer := TButton.Create(Panel);
-  btnAppliquer.Parent := Panel;
-  btnAppliquer.Left := 290;
-  btnAppliquer.Top := 10;
-  btnAppliquer.Caption := 'Trier';
-  btnAppliquer.OnClick := procedure(Sender: TObject)
-  begin
-    var Colonne := ComboColonne.Text;
-    var Ordre := IfThen(ComboOrdre.ItemIndex = 0, 'ASC', 'DESC');
-    TrierPar(Colonne);
-  end;
+  FBtnAppliquer := TButton.Create(FPanelTri);
+  FBtnAppliquer.Parent := FPanelTri;
+  FBtnAppliquer.Left := 290;
+  FBtnAppliquer.Top := 10;
+  FBtnAppliquer.Caption := 'Trier';
+  FBtnAppliquer.OnClick := btnAppliquerTriClick;
+end;
+
+procedure TFormRapportTriable.btnAppliquerTriClick(Sender: TObject);  
+begin  
+  // L'ordre n'est pas utilisé par TrierPar dans cet exemple,
+  // mais on le calcule pour montrer comment lire les combos
+  TrierPar(FComboColonne.Text);
 end;
 ```
+
+> **Note** : En Delphi, les événements (de type `procedure of object`) ne peuvent pas recevoir directement une méthode anonyme. Il faut donc passer par une vraie méthode de classe, comme `btnAppliquerTriClick` ci-dessus.
 
 ### Tri multiple
 
@@ -668,6 +686,8 @@ begin
   frxReport1.ShowReport;
 end;
 ```
+
+> **Important** : la clause `ORDER BY` ne supporte pas les paramètres SQL (`:param`), il faut donc concaténer les noms de colonnes. **Validez impérativement** ces noms contre une liste blanche prédéfinie pour éviter l'injection SQL — n'utilisez jamais directement une saisie utilisateur libre comme nom de colonne.
 
 ## Recherche dans les rapports
 
@@ -783,10 +803,30 @@ end;
 
 ### Actions contextuelles
 
-Proposez des actions différentes selon le contexte.
+Proposez des actions différentes selon le contexte. Comme les événements VCL n'acceptent pas les méthodes anonymes, on déclare des méthodes dédiées sur le formulaire.
 
 ```pascal
-procedure TForm1.frxReport1ClickObject(Sender: TView; Button: TMouseButton;
+type
+  TForm1 = class(TForm)
+    // ... autres composants
+    procedure frxReport1ClickObject(Sender: TfrxView; Button: TMouseButton;
+      Shift: TShiftState; var Modified: Boolean);
+  private
+    procedure MenuVoirDetailsClick(Sender: TObject);
+    procedure MenuExporterLigneClick(Sender: TObject);
+  end;
+
+procedure TForm1.MenuVoirDetailsClick(Sender: TObject);  
+begin  
+  AfficherDetails;
+end;
+
+procedure TForm1.MenuExporterLigneClick(Sender: TObject);  
+begin  
+  ExporterLignePDF;
+end;
+
+procedure TForm1.frxReport1ClickObject(Sender: TfrxView; Button: TMouseButton;
   Shift: TShiftState; var Modified: Boolean);
 var
   Menu: TPopupMenu;
@@ -800,19 +840,13 @@ begin
       // Action 1 : Voir les détails
       MenuItem := TMenuItem.Create(Menu);
       MenuItem.Caption := 'Voir les détails';
-      MenuItem.OnClick := procedure(Sender: TObject)
-      begin
-        AfficherDetails;
-      end;
+      MenuItem.OnClick := MenuVoirDetailsClick;
       Menu.Items.Add(MenuItem);
 
       // Action 2 : Exporter cette ligne
       MenuItem := TMenuItem.Create(Menu);
       MenuItem.Caption := 'Exporter en PDF';
-      MenuItem.OnClick := procedure(Sender: TObject)
-      begin
-        ExporterLignePDF;
-      end;
+      MenuItem.OnClick := MenuExporterLigneClick;
       Menu.Items.Add(MenuItem);
 
       // Afficher le menu
@@ -988,22 +1022,32 @@ begin
   end;
 end;
 
-procedure TFormExportInteractif.ConfigurerSectionsVisibles(Sections: TStringList);  
-begin  
-  // Masquer toutes les sections
-  frxReport1.FindObject('SectionVentes').Visible := False;
-  frxReport1.FindObject('SectionStatistiques').Visible := False;
-  frxReport1.FindObject('SectionGraphiques').Visible := False;
+procedure TFormExportInteractif.ConfigurerSectionsVisibles(Sections: TStringList);
+
+  procedure DefinirVisibilite(const NomObjet: string; Visible: Boolean);
+  var
+    Obj: TfrxComponent;
+  begin
+    Obj := frxReport1.FindObject(NomObjet);
+    if Assigned(Obj) then
+      Obj.Visible := Visible;
+  end;
+
+begin
+  // Masquer toutes les sections (FindObject peut retourner nil)
+  DefinirVisibilite('SectionVentes', False);
+  DefinirVisibilite('SectionStatistiques', False);
+  DefinirVisibilite('SectionGraphiques', False);
 
   // Afficher uniquement les sections sélectionnées
   if Sections.IndexOf('Ventes') >= 0 then
-    frxReport1.FindObject('SectionVentes').Visible := True;
+    DefinirVisibilite('SectionVentes', True);
 
   if Sections.IndexOf('Statistiques') >= 0 then
-    frxReport1.FindObject('SectionStatistiques').Visible := True;
+    DefinirVisibilite('SectionStatistiques', True);
 
   if Sections.IndexOf('Graphiques') >= 0 then
-    frxReport1.FindObject('SectionGraphiques').Visible := True;
+    DefinirVisibilite('SectionGraphiques', True);
 end;
 ```
 
@@ -1328,7 +1372,8 @@ unit URapportVentesInteractif;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, System.DateUtils,
+  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
   Vcl.StdCtrls, Vcl.ComCtrls, FireDAC.Comp.Client,
   frxClass, frxDBSet, frxPreview;
 
@@ -1401,15 +1446,19 @@ begin
   // Charger les catégories
   ComboCategorie.Items.Clear;
   ComboCategorie.Items.Add('Toutes');
-  FDConnection1.ExecSQL('SELECT DISTINCT categorie FROM produits ORDER BY categorie',
-    procedure(DataSet: TDataSet)
+  var QueryCategories := TFDQuery.Create(nil);
+  try
+    QueryCategories.Connection := FDConnection1;
+    QueryCategories.SQL.Text := 'SELECT DISTINCT categorie FROM produits ORDER BY categorie';
+    QueryCategories.Open;
+    while not QueryCategories.Eof do
     begin
-      while not DataSet.Eof do
-      begin
-        ComboCategorie.Items.Add(DataSet.FieldByName('categorie').AsString);
-        DataSet.Next;
-      end;
-    end);
+      ComboCategorie.Items.Add(QueryCategories.FieldByName('categorie').AsString);
+      QueryCategories.Next;
+    end;
+  finally
+    QueryCategories.Free;
+  end;
   ComboCategorie.ItemIndex := 0;
 
   // Charger les vendeurs

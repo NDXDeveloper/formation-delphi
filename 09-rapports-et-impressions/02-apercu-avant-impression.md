@@ -22,9 +22,9 @@ Les avantages d'un aperçu avant impression sont nombreux :
 
 Il existe trois approches principales pour créer un aperçu avant impression dans Delphi :
 
-1. **Approche manuelle** : créer son propre système d'aperçu en dessinant sur un formulaire
-2. **Composant TPrintPreviewDialog** : disponible dans certaines versions de Delphi
-3. **Bibliothèques tierces** : utiliser des composants spécialisés
+1. **Approche manuelle** : créer son propre système d'aperçu en dessinant sur un TImage ou TMetafile
+2. **Bibliothèques tierces gratuites** : JVCL (JEDI VCL), composants open source
+3. **Bibliothèques tierces commerciales** : FastReport, ReportBuilder, DevExpress (aperçu intégré)
 
 Nous allons explorer chacune de ces approches.
 
@@ -61,7 +61,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Printers;
+  Vcl.ExtCtrls, Vcl.Printers;
 
 type
   TFormApercu = class(TForm)
@@ -98,9 +98,7 @@ begin
 end;
 
 procedure TFormApercu.GenererApercu;  
-var  
-  FacteurEchelle: Double;
-begin
+begin  
   // Créer un bitmap aux dimensions de la page d'impression
   ImageApercu.Picture.Bitmap.Width := Printer.PageWidth;
   ImageApercu.Picture.Bitmap.Height := Printer.PageHeight;
@@ -110,9 +108,6 @@ begin
   ImageApercu.Picture.Bitmap.Canvas.FillRect(
     Rect(0, 0, ImageApercu.Picture.Bitmap.Width, ImageApercu.Picture.Bitmap.Height)
   );
-
-  // Calculer le facteur d'échelle pour adapter l'impression au bitmap
-  FacteurEchelle := ImageApercu.Picture.Bitmap.Width / Screen.PixelsPerInch;
 
   // Dessiner le contenu (exemple simple)
   ImageApercu.Picture.Bitmap.Canvas.Font.Size := 12;
@@ -371,44 +366,47 @@ end;
 
 ## Approche 3 : Composants tiers
 
-### TPrintPreview de RxLib
+### TPrintPreview de RxLib (JVCL)
 
-RxLib est une bibliothèque gratuite qui propose un composant `TPrintPreview` très performant.
+RxLib est une bibliothèque historique gratuite proposant un composant `TPrintPreview`. Le projet RxLib a été en grande partie absorbé par la **JEDI Visual Component Library (JVCL)**, qui est aujourd'hui la solution recommandée pour bénéficier de ces composants sur les versions modernes de Delphi.
 
 **Installation :**
 
-1. Téléchargez RxLib depuis GitHub
+1. Téléchargez la JVCL depuis [https://github.com/project-jedi/jvcl](https://github.com/project-jedi/jvcl) ou via GetIt Package Manager
 2. Installez les packages dans Delphi
-3. Le composant apparaît dans la palette "Rx Controls"
+3. Le composant apparaît dans la palette "Jv Print Preview"
 
-**Utilisation basique :**
+**Utilisation basique avec JVCL :**
 
 ```pascal
 uses
-  RxRichEd;
+  JvPrnDlg, JvPrintPreview;
 
-procedure TForm1.btnApercuRxClick(Sender: TObject);  
+procedure TForm1.btnApercuJvClick(Sender: TObject);  
 begin  
-  PrintPreview1.BeginDoc;
+  // JvPrintPreview encapsule un système d'aperçu complet
+  JvPrintPreview1.BeginDoc;
   try
-    PrintPreview1.Canvas.Font.Size := 12;
-    PrintPreview1.Canvas.TextOut(100, 100, 'Aperçu avec RxLib');
+    JvPrintPreview1.Canvas.Font.Size := 12;
+    JvPrintPreview1.Canvas.TextOut(100, 100, 'Aperçu avec JVCL');
   finally
-    PrintPreview1.EndDoc;
+    JvPrintPreview1.EndDoc;
   end;
 
-  PrintPreview1.ShowModal;
+  JvPrintPreview1.Preview; // Affiche l'aperçu intégré
 end;
 ```
+
+> **Note** : la JVCL évolue régulièrement et le nom exact des classes peut varier selon la version. Consultez la documentation officielle du projet JEDI sur GitHub pour les composants à jour.
 
 ### Autres bibliothèques
 
 Il existe d'autres bibliothèques offrant des aperçus avant impression :
 
-- **FastReport** : générateur de rapports complet avec aperçu intégré
-- **QuickReport** : inclus dans certaines versions de Delphi
-- **ReportBuilder** : solution professionnelle payante
-- **VCL-Extensions** : composants additionnels pour Delphi
+- **FastReport** : générateur de rapports complet avec aperçu intégré (intégré à Delphi depuis XE2)
+- **QuickReport** : historique, plus inclus dans Delphi depuis longtemps (disponible séparément chez QBS Software)
+- **ReportBuilder** : solution professionnelle payante (Digital Metaphors)
+- **JVCL (JEDI VCL)** : composants additionnels open source pour Delphi, dont des outils d'impression
 
 ## Fonctionnalités avancées d'aperçu
 
@@ -438,6 +436,7 @@ begin
     zmPageEntiere:
       begin
         // Calculer le zoom pour que toute la page soit visible
+        // (Min nécessite l'unité System.Math dans la clause uses)
         var ZoomLargeur := Round((ScrollBox1.Width - 20) * 100 / ImageApercu.Picture.Width);
         var ZoomHauteur := Round((ScrollBox1.Height - 20) * 100 / ImageApercu.Picture.Height);
         FZoom := Min(ZoomLargeur, ZoomHauteur);
@@ -528,27 +527,28 @@ Ajoutez la possibilité d'exporter le document vers différents formats.
 
 ### Exportation en PDF
 
-Utilisez une bibliothèque comme Gnostice ou Synopse PDF :
+Utilisez une bibliothèque comme Gnostice ou **Synopse PDF** (intégrée à la suite open source mORMot). Le code ci-dessous utilise `TPdfDocumentGDI`, qui expose un `Canvas` compatible VCL pointant automatiquement sur la page courante :
 
 ```pascal
 uses
-  SynPdf;
+  SynPdf, SynGdiPlus;
 
 procedure TFormApercu.ExporterEnPDF(const NomFichier: string);  
 var  
-  PDF: TPdfDocument;
-  Page: TPdfPage;
+  PDF: TPdfDocumentGDI;
   i: Integer;
 begin
-  PDF := TPdfDocument.Create;
+  PDF := TPdfDocumentGDI.Create;
   try
     for i := 1 to FGestionnaire.NombrePages do
     begin
-      Page := PDF.AddPage;
+      // AddPage rend Canvas actif sur la nouvelle page
+      PDF.AddPage;
       FGestionnaire.PageCourante := i;
 
-      // Dessiner sur la page PDF
-      FGestionnaire.GenererPage(Page.Canvas, Round(595.28), Round(841.89), i);
+      // Dessiner sur le Canvas GDI de la page courante
+      // (595 x 842 points = A4 standard à 72 DPI)
+      FGestionnaire.GenererPage(PDF.VCLCanvas, 595, 842, i);
     end;
 
     PDF.SaveToFile(NomFichier);
@@ -558,6 +558,8 @@ begin
   end;
 end;
 ```
+
+> **Note** : `TPdfDocumentGDI.VCLCanvas` est un `TCanvas` qui redirige les opérations GDI standards vers le PDF, ce qui permet de réutiliser exactement le même code de dessin que pour l'imprimante ou un bitmap d'aperçu.
 
 ### Exportation en image
 
@@ -570,7 +572,7 @@ var
   JPEG: TJPEGImage;
   PNG: TPngImage;
 begin
-  // Note : case ne fonctionne pas sur des string en Delphi
+  // On utilise une cascade if/else if pour comparer l'extension du fichier
   Ext := LowerCase(ExtractFileExt(NomFichier));
 
   if Ext = '.bmp' then
@@ -731,7 +733,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Printers;
+  Vcl.ComCtrls, Vcl.Printers;
 
 type
   TFormApercuPro = class(TForm)
@@ -930,6 +932,6 @@ L'aperçu avant impression est une fonctionnalité essentielle qui améliore con
 - **Performances** : utilisez le cache et la génération asynchrone pour les gros documents
 - **Composants tiers** : pour des fonctionnalités avancées sans réinventer la roue
 
-Dans la prochaine section, nous découvrirons les générateurs de rapports comme FastReport et QuickReport qui offrent des aperçus encore plus sophistiqués avec des fonctionnalités de conception visuelle.
+Dans la prochaine section, nous découvrirons les générateurs de rapports comme FastReport qui offrent des aperçus encore plus sophistiqués avec des fonctionnalités de conception visuelle.
 
 ⏭️ [Générateurs de rapports (FastReport, QuickReport)](/09-rapports-et-impressions/03-generateurs-de-rapports.md)

@@ -68,20 +68,20 @@ Les générateurs de rapports sont parfaits pour :
 - Léger et rapide
 
 **Points faibles :**
-- Plus maintenu activement
+- N'est plus activement maintenu
 - Fonctionnalités limitées par rapport à FastReport
 - Export limité (principalement PDF)
 - Interface vieillissante
 
 **Disponibilité :**
-QuickReport était inclus dans Delphi jusqu'à la version XE, puis retiré. Il existe des versions tierces comme QR5 disponibles séparément.
+QuickReport était inclus dans Delphi jusqu'à Delphi 2007, puis retiré dès Delphi 2009 (remplacé par Rave Reports, puis par FastReport à partir de XE2). Il reste disponible séparément chez QBS Software (versions QR5/QR6).
 
 ### Autres alternatives
 
 D'autres solutions existent également :
 
-- **ReportBuilder** : solution professionnelle très complète
-- **Rave Reports** : inclus dans certaines versions de Delphi
+- **ReportBuilder** : solution professionnelle très complète (Digital Metaphors)
+- **Rave Reports** : historiquement inclus jusqu'à Delphi XE2, désormais disponible séparément chez Nevrona
 - **DevExpress Reports** : si vous utilisez la suite DevExpress
 - **FreeReport** : version open source de FastReport (ancienne)
 
@@ -107,7 +107,7 @@ L'installation de FastReport est simple :
 
 Après installation, vous devriez voir :
 
-- Un nouvel onglet **FastReport 6** dans la palette de composants
+- Un nouvel onglet **FastReport** (FastReport VCL 7 est la version la plus récente, FastReport VCL 6 étant encore très répandue) dans la palette de composants
 - Les composants principaux : `TfrxReport`, `TfrxDBDataset`, `TfrxDesigner`, etc.
 - Le menu **Tools → FastReport** dans l'IDE
 
@@ -165,7 +165,7 @@ FastReport peut se connecter à plusieurs types de sources :
 1. Créez un nouveau projet VCL
 2. Ajoutez un formulaire principal
 3. Placez les composants suivants :
-   - `TfrxReport` (onglet FastReport 6) nommé `frxReport1`
+   - `TfrxReport` (onglet FastReport) nommé `frxReport1`
    - `TButton` nommé `btnAfficherRapport` avec Caption = 'Afficher le rapport'
 
 ### Conception du rapport
@@ -576,20 +576,22 @@ end;
 
 #### Export en Excel
 
+Pour le format moderne **XLSX** (Excel 2007+) :
+
 ```pascal
 uses
-  frxClass, frxExportXLS;
+  frxClass, frxExportXLSX;
 
 procedure TForm1.ExporterEnExcel;  
 var  
-  ExcelExport: TfrxXLSExport;
+  ExcelExport: TfrxXLSXExport;
 begin
-  ExcelExport := TfrxXLSExport.Create(nil);
+  ExcelExport := TfrxXLSXExport.Create(nil);
   try
     frxReport1.LoadFromFile('MonRapport.fr3');
     frxReport1.PrepareReport;
 
-    ExcelExport.FileName := 'C:\Rapports\MonRapport.xls';
+    ExcelExport.FileName := 'C:\Rapports\MonRapport.xlsx';
     ExcelExport.ShowDialog := False;
     ExcelExport.OpenAfterExport := True;  // Ouvrir automatiquement
 
@@ -599,6 +601,8 @@ begin
   end;
 end;
 ```
+
+> **Note** : Pour l'ancien format **XLS** (Excel 97-2003), utilisez à la place l'unité `frxExportXLS` et la classe `TfrxXLSExport`. Le format XLSX est cependant fortement recommandé pour les nouveaux projets.
 
 #### Autres formats disponibles
 
@@ -703,7 +707,7 @@ QRDBText1.DataField := 'nom';
 
 - Interface moins moderne que FastReport
 - Fonctionnalités d'export limitées
-- Plus maintenu activement
+- N'est plus activement maintenu
 - Moins flexible pour les mises en page complexes
 
 ## Comparaison FastReport vs QuickReport
@@ -713,8 +717,8 @@ QRDBText1.DataField := 'nom';
 | **Interface** | Moderne, designer séparé | Intégrée à l'IDE |
 | **Facilité** | Courbe d'apprentissage moyenne | Plus simple pour débuter |
 | **Exports** | Nombreux formats (PDF, Excel, etc.) | Limité (principalement PDF) |
-| **Prix** | Payant (version d'évaluation) | Gratuit (si inclus dans Delphi) |
-| **Maintenance** | Mise à jour régulière | Plus maintenu |
+| **Prix** | Payant (version d'évaluation disponible) | Payant chez QBS Software (n'est plus inclus dans Delphi) |
+| **Maintenance** | Mise à jour régulière | Maintenance limitée |
 | **Fonctionnalités** | Très complet | Basique |
 | **Performance** | Excellente | Bonne |
 | **Support** | Actif, documentation complète | Limité |
@@ -862,8 +866,12 @@ Créez des PDF protégés :
 ```pascal
 PDFExport.UserPassword := 'lecture';  
 PDFExport.OwnerPassword := 'admin';  
+// ProtectionFlags = liste des actions AUTORISÉES pour le lecteur
+// (impression + modification autorisées ici ; toutes les autres bloquées)
 PDFExport.ProtectionFlags := [ePrint, eModify];  
 ```
+
+> **Drapeaux disponibles** : `ePrint` (impression), `eModify` (modification du contenu), `eCopy` (copie de texte/images), `eAnnot` (annotations). Une liste vide `[]` bloque toutes les actions ; n'incluez que ce que vous souhaitez autoriser.
 
 ## Internationalisation
 
@@ -899,14 +907,14 @@ end;
 
 Pour distribuer votre application avec FastReport :
 
-**DLLs requises :**
-- `fs26.bpl` : moteur de script
-- `fsDB26.bpl` : accès aux données
-- `frx26.bpl` : moteur FastReport
-- `frxDB26.bpl` : composants base de données
-- `frxe26.bpl` : composants export
+**BPL requis (exemple pour Delphi 13 Florence, numéro de version 300) :**
+- `fs300.bpl` : moteur de script
+- `fsDB300.bpl` : accès aux données
+- `frx300.bpl` : moteur FastReport
+- `frxDB300.bpl` : composants base de données
+- `frxe300.bpl` : composants export
 
-**Remarque :** Le nombre (26) correspond à la version de Delphi.
+**Remarque :** Le nombre dans le nom du BPL correspond au numéro de version interne du compilateur Delphi (260 = 10.3 Rio, 270 = 10.4 Sydney, 280 = 11 Alexandria, 290 = 12 Athens, 300 = 13 Florence).
 
 ### Installation minimale
 

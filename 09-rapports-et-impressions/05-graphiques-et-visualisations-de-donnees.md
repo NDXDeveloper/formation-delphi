@@ -19,9 +19,16 @@ Les graphiques offrent de nombreux avantages :
 
 ## Solutions disponibles dans Delphi
 
-### TChart (VCL natif)
+> **Précision importante** : le composant `TChart` que vous trouvez dans la palette de Delphi fait partie de la bibliothèque **TeeChart** de Steema Software. Il existe deux éditions :  
+>  
+> - **TeeChart Standard** : version gratuite incluse dans Delphi (types de base : Line, Bar, Pie, Area, Point, FastLine, HorizBar)  
+> - **TeeChart Pro** : version commerciale étendue (60+ types incluant Gauge, Gantt, Candlestick, surface 3D, etc.)  
+>  
+> Le composant s'appelle `TChart` dans les deux cas — la différence se situe au niveau du nombre de séries disponibles et des fonctionnalités avancées.
 
-**TChart** est le composant graphique inclus dans Delphi VCL.
+### TeeChart Standard (inclus avec Delphi)
+
+**TChart** est le composant graphique de TeeChart Standard inclus avec Delphi.
 
 **Avantages :**
 - Gratuit et inclus dans Delphi
@@ -30,15 +37,15 @@ Les graphiques offrent de nombreux avantages :
 - Bonne intégration VCL
 
 **Limitations :**
-- Fonctionnalités limitées
+- Types de graphiques limités (par rapport à Pro)
 - Apparence moins moderne
-- Peu d'options d'interactivité
+- Peu d'options d'interactivité avancées
 
-**Emplacement :** Onglet **Additional** de la palette de composants
+**Emplacement :** Onglet **TeeChart** de la palette de composants
 
-### TeeChart
+### TeeChart Pro
 
-**TeeChart** est la bibliothèque graphique professionnelle de référence pour Delphi.
+**TeeChart Pro** est la version commerciale étendue de la bibliothèque graphique de Steema Software.
 
 **Avantages :**
 - Très complet : 60+ types de graphiques
@@ -244,12 +251,12 @@ begin
   // Détacher une tranche
   Serie.ExplodeBiggest := 15; // Pourcentage de séparation
 
-  // Ajouter des données
-  Serie.AddXY(35, 'Électronique', clBlue);
-  Serie.AddXY(25, 'Vêtements', clRed);
-  Serie.AddXY(20, 'Alimentation', clGreen);
-  Serie.AddXY(15, 'Maison', clYellow);
-  Serie.AddXY(5, 'Autres', clGray);
+  // Ajouter des données (AddPie(Valeur, Label, Couleur) pour les camemberts)
+  Serie.AddPie(35, 'Électronique', clBlue);
+  Serie.AddPie(25, 'Vêtements', clRed);
+  Serie.AddPie(20, 'Alimentation', clGreen);
+  Serie.AddPie(15, 'Maison', clYellow);
+  Serie.AddPie(5, 'Autres', clGray);
 
   // Afficher les pourcentages
   Serie.Marks.Visible := True;
@@ -998,6 +1005,8 @@ end;
 
 ### Export en PDF
 
+> **Nécessite TeeChart Pro** : l'unité `VCLTee.TeePDFCanvas` n'est pas incluse dans TeeChart Standard (la version livrée gratuitement avec Delphi). Pour exporter en PDF avec uniquement TeeChart Standard, exportez d'abord en image (PNG/JPEG) puis intégrez l'image dans un PDF via FastReport ou Synopse PDF.
+
 ```pascal
 uses
   VCLTee.TeePDFCanvas;
@@ -1019,6 +1028,8 @@ end;
 ```
 
 ## Graphiques spécialisés
+
+> **Note** : Certains graphiques spécialisés (Gantt, Candlestick, surface 3D, jauges, etc.) ne sont disponibles que dans **TeeChart Pro**. La version TeeChart Standard livrée avec Delphi inclut les types les plus courants (Line, Bar, Pie, Area, Point, FastLine, etc.).
 
 ### Graphique de Gantt
 
@@ -1438,9 +1449,11 @@ begin
 
   while not FDQueryVentes.Eof do
   begin
-    Serie.AddXY(
+    // AddPie pour les camemberts (la couleur sera choisie automatiquement)
+    Serie.AddPie(
       FDQueryVentes.FieldByName('total').AsFloat,
-      FDQueryVentes.FieldByName('categorie').AsString
+      FDQueryVentes.FieldByName('categorie').AsString,
+      clTeeColor  // couleur auto
     );
     FDQueryVentes.Next;
   end;

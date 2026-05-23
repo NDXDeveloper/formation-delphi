@@ -30,10 +30,10 @@ Les différents formats répondent à des besoins variés :
 
 - **FastReport** : export PDF, Excel, Word, HTML et plus
 - **DevExpress** : suite complète d'export
-- **Gnostice** : solutions PDF professionnelles
-- **TMS Software** : composants d'export spécialisés
-- **Synopse PDF** : bibliothèque PDF open source
-- **SheetJS** : manipulation Excel avancée
+- **Gnostice** : solutions PDF professionnelles (PDFtoolkit)
+- **TMS Software** : composants d'export spécialisés (TMS FlexCel, TMS XData)
+- **Synopse PDF (mORMot)** : bibliothèque PDF open source
+- **FlexCel** : bibliothèque XLSX/XLS native Delphi sans dépendance à Excel
 
 ### Approches par format
 
@@ -90,7 +90,7 @@ end;
 
 ### Méthode 2 : Avec Synopse PDF
 
-Bibliothèque PDF open source très performante.
+Bibliothèque PDF open source très performante, intégrée à la suite mORMot.
 
 ```pascal
 uses
@@ -99,7 +99,6 @@ uses
 procedure TForm1.ExporterEnPDF_Synopse(const NomFichier: string);  
 var  
   PDF: TPdfDocumentGDI;
-  Page: TPdfPage;
   Y: Integer;
 begin
   PDF := TPdfDocumentGDI.Create;
@@ -110,9 +109,8 @@ begin
     PDF.Info.Subject := 'Statistiques';
     PDF.Info.CreationDate := Now;
 
-    // Ajouter une page
+    // Ajouter une page (PDF.Canvas pointe alors sur la page courante)
     PDF.AddPage;
-    Page := PDF.CurrentPage;
 
     // Configuration de la police
     PDF.Canvas.SetFont('Arial', 12);
@@ -266,6 +264,8 @@ end;
 
 Contrôle direct d'Excel via COM.
 
+> **Prérequis importants** : l'approche OLE Automation nécessite que **Microsoft Excel soit installé** sur la machine où s'exécute l'application. Cette méthode ne fonctionne que **sous Windows**. Pour des exports XLSX portables (Linux, macOS, ou sans Excel installé), préférez FastReport, FlexCel ou la méthode FireDAC.
+
 ```pascal
 uses
   ComObj, Variants;
@@ -275,6 +275,7 @@ var
   ExcelApp, Workbook, Worksheet: Variant;
   Ligne: Integer;
 begin
+  ExcelApp := Unassigned;
   try
     // Créer l'application Excel
     ExcelApp := CreateOleObject('Excel.Application');
@@ -336,15 +337,19 @@ begin
 
     ShowMessage('Fichier Excel créé avec succès');
   finally
-    ExcelApp.Quit;
-    ExcelApp := Unassigned;
+    // Vérifier que ExcelApp a bien été créé avant d'appeler Quit
+    if not VarIsEmpty(ExcelApp) then
+    begin
+      ExcelApp.Quit;
+      ExcelApp := Unassigned;
+    end;
   end;
 end;
 ```
 
-### Méthode 3 : Export direct vers XLSX avec bibliothèque
+### Méthode 3 : Export direct vers XLSX avec FireDAC
 
-Utilisation de la bibliothèque XLSX (SheetJS via FireDAC ou composants tiers).
+FireDAC propose un mécanisme natif de transfert via `TFDBatchMove` capable d'écrire directement vers un fichier XLSX, sans nécessiter Excel ni de bibliothèque tierce.
 
 ```pascal
 uses
@@ -399,8 +404,9 @@ procedure TForm1.ExporterExcelMultiFeuilles(const NomFichier: string);
 var  
   ExcelApp, Workbook: Variant;
 begin
-  ExcelApp := CreateOleObject('Excel.Application');
+  ExcelApp := Unassigned;
   try
+    ExcelApp := CreateOleObject('Excel.Application');
     Workbook := ExcelApp.Workbooks.Add;
 
     // Feuille 1 : Ventes
@@ -420,7 +426,8 @@ begin
     Workbook.SaveAs(NomFichier);
     Workbook.Close;
   finally
-    ExcelApp.Quit;
+    if not VarIsEmpty(ExcelApp) then
+      ExcelApp.Quit;
   end;
 end;
 
@@ -915,7 +922,7 @@ JSON est le format moderne pour les APIs et applications web.
 
 ```pascal
 uses
-  System.JSON;
+  System.JSON, System.IOUtils, Data.DB;
 
 procedure TForm1.ExporterEnJSON(const NomFichier: string);  
 var  
@@ -1021,14 +1028,15 @@ Pour créer des documents Word éditables.
 
 ```pascal
 uses
-  ComObj;
+  ComObj, Variants;
 
 procedure TForm1.ExporterEnWord(const NomFichier: string);  
 var  
   WordApp, Document, Range: Variant;
 begin
-  WordApp := CreateOleObject('Word.Application');
+  WordApp := Unassigned;
   try
+    WordApp := CreateOleObject('Word.Application');
     WordApp.Visible := False;
 
     // Nouveau document
@@ -1043,12 +1051,15 @@ begin
 
     // Date
     Range := Document.Range;
-    Range.Start := Range.End;
+    Range.Start := Range.&End;
     Range.Text := 'Date : ' + DateToStr(Date) + #13#10#13#10;
+
+    // Note : Le mot 'End' étant réservé en Pascal, on utilise le préfixe '&'
+    // pour accéder à la propriété 'End' des objets OLE (Word, Excel, etc.)
 
     // Tableau
     var Table := Document.Tables.Add(
-      Document.Range(Range.End, Range.End),
+      Document.Range(Range.&End, Range.&End),
       FDQueryVentes.RecordCount + 1,  // lignes (+ en-tête)
       FDQueryVentes.FieldCount        // colonnes
     );
@@ -1083,7 +1094,8 @@ begin
 
     ShowMessage('Document Word créé');
   finally
-    WordApp.Quit;
+    if not VarIsEmpty(WordApp) then
+      WordApp.Quit;
   end;
 end;
 ```

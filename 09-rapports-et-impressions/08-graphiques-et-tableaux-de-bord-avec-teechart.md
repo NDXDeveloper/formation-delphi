@@ -6,6 +6,8 @@
 
 TeeChart est la solution de référence pour créer des tableaux de bord professionnels dans Delphi. Au-delà de simples graphiques isolés, cette section explore la création de tableaux de bord complets qui combinent plusieurs visualisations, offrent des interactions riches et présentent les données de manière cohérente et intuitive. Les tableaux de bord transforment les données brutes en insights actionnables pour la prise de décision.
 
+> **À noter** : ce chapitre exploite à la fois les types de graphiques de **TeeChart Standard** (inclus avec Delphi) et certaines fonctionnalités de **TeeChart Pro** (jauges, animations, tooltips avancés). Chaque section concernée signale explicitement les fonctionnalités nécessitant la version Pro.
+
 ## Qu'est-ce qu'un tableau de bord ?
 
 Un tableau de bord (dashboard) est une interface visuelle qui présente les indicateurs clés de performance (KPI) et les métriques importantes d'une organisation ou d'un processus. Il se caractérise par :
@@ -185,26 +187,40 @@ var
   NombreClients: Integer;
   TauxSatisfaction: Double;
   Evolution: Double;
+
+  // Helper local pour exécuter une requête scalaire
+  function ExecuterRequeteScalaire(const SQL: string; const NomChamp: string): Variant;
+  var
+    Query: TFDQuery;
+  begin
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := SQL;
+      Query.Open;
+      if not Query.IsEmpty then
+        Result := Query.FieldByName(NomChamp).Value
+      else
+        Result := 0;
+    finally
+      Query.Free;
+    end;
+  end;
+
 begin
   // Calculer le chiffre d'affaires
-  FDConnection1.ExecSQL(
+  CA := ExecuterRequeteScalaire(
     'SELECT SUM(montant) as total FROM ventes ' +
     'WHERE MONTH(date_vente) = MONTH(CURDATE()) ' +
     'AND YEAR(date_vente) = YEAR(CURDATE())',
-    procedure(DataSet: TDataSet)
-    begin
-      CA := DataSet.FieldByName('total').AsFloat;
-    end
+    'total'
   );
 
   // CA du mois précédent pour comparaison
-  FDConnection1.ExecSQL(
+  CAMoisPrecedent := ExecuterRequeteScalaire(
     'SELECT SUM(montant) as total FROM ventes ' +
     'WHERE MONTH(date_vente) = MONTH(CURDATE() - INTERVAL 1 MONTH)',
-    procedure(DataSet: TDataSet)
-    begin
-      CAMoisPrecedent := DataSet.FieldByName('total').AsFloat;
-    end
+    'total'
   );
 
   // Calculer l'évolution
@@ -214,13 +230,10 @@ begin
     Evolution := 0;
 
   // Nombre de clients actifs
-  FDConnection1.ExecSQL(
+  NombreClients := ExecuterRequeteScalaire(
     'SELECT COUNT(DISTINCT id_client) as total FROM ventes ' +
     'WHERE MONTH(date_vente) = MONTH(CURDATE())',
-    procedure(DataSet: TDataSet)
-    begin
-      NombreClients := DataSet.FieldByName('total').AsInteger;
-    end
+    'total'
   );
 
   // Taux de satisfaction (exemple)
@@ -580,6 +593,8 @@ end;
 
 ## Graphiques avancés pour tableaux de bord
 
+> **Note** : les composants jauge (`TGaugeSeries`), animations (`TTeeAnimation`), tooltips spécialisés et plusieurs autres séries avancées appartiennent à **TeeChart Pro**. La version Standard livrée avec Delphi contient les types fondamentaux (Line, Bar, Pie, Area, Point, FastLine, HorizBar) mais pas ces extensions.
+
 ### Graphique de jauge
 
 ```pascal
@@ -637,24 +652,27 @@ end;
 function TFormTableauDeBord.CalculerPourcentageObjectif: Double;  
 var  
   CAActuel, CAObjectif: Double;
+  Query: TFDQuery;
 begin
-  // CA actuel
-  FDConnection1.ExecSQL(
-    'SELECT SUM(montant) as total FROM ventes WHERE MONTH(date_vente) = MONTH(CURDATE())',
-    procedure(DataSet: TDataSet)
-    begin
-      CAActuel := DataSet.FieldByName('total').AsFloat;
-    end
-  );
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
 
-  // CA objectif
-  FDConnection1.ExecSQL(
-    'SELECT objectif FROM objectifs_mensuels WHERE mois = MONTH(CURDATE())',
-    procedure(DataSet: TDataSet)
-    begin
-      CAObjectif := DataSet.FieldByName('objectif').AsFloat;
-    end
-  );
+    // CA actuel
+    Query.SQL.Text :=
+      'SELECT SUM(montant) as total FROM ventes WHERE MONTH(date_vente) = MONTH(CURDATE())';
+    Query.Open;
+    CAActuel := Query.FieldByName('total').AsFloat;
+    Query.Close;
+
+    // CA objectif
+    Query.SQL.Text :=
+      'SELECT objectif FROM objectifs_mensuels WHERE mois = MONTH(CURDATE())';
+    Query.Open;
+    CAObjectif := Query.FieldByName('objectif').AsFloat;
+  finally
+    Query.Free;
+  end;
 
   if CAObjectif > 0 then
     Result := (CAActuel / CAObjectif) * 100
@@ -851,14 +869,9 @@ end;
 ### Synchronisation entre graphiques
 
 ```pascal
-procedure TFormTableauDeBord.SynchroniserGraphiques;  
-var  
-  MoisSelectionne: Integer;
-begin
-  // Quand on clique sur un mois dans le graphique principal
-  MoisSelectionne := ChartPrincipal.Series[0].XValues.Locate(PointClique);
-
-  // Mettre à jour les autres graphiques pour ce mois
+procedure TFormTableauDeBord.SynchroniserGraphiques(MoisSelectionne: Integer);  
+begin  
+  // Mettre à jour les autres graphiques en fonction du mois choisi
   ChargerGraphiqueRepartition(MoisSelectionne);
   ChargerGraphiqueComparaison(MoisSelectionne);
   ChargerTableauDetails(MoisSelectionne);
@@ -870,6 +883,7 @@ procedure TFormTableauDeBord.ChartPrincipalClickSeries(Sender: TCustomChart;
 begin
   if Button = mbLeft then
   begin
+    // Récupérer le mois associé au point cliqué (X de la série)
     var Mois := Round(Series.XValue[ValueIndex]);
     SynchroniserGraphiques(Mois);
 
@@ -903,6 +917,8 @@ end;
 
 ### Tooltip personnalisé
 
+L'événement `OnGetText` (comme tous les événements `of object` de la VCL) attend une méthode de classe et non une procédure anonyme.
+
 ```pascal
 uses
   VCLTee.TeeTools;
@@ -918,19 +934,24 @@ begin
   Tool.MouseDelay := 100;
   Tool.Style := smsXY;
 
-  // Personnaliser le format
-  Tool.OnGetText := procedure(Sender: TMarksTipTool; var Text: string)
-  begin
-    var Serie := Sender.Series;
-    var Index := Sender.ValueIndex;
+  // Personnaliser le format via une méthode de classe
+  Tool.OnGetText := TooltipGetText;
+end;
 
-    if Assigned(Serie) and (Index >= 0) then
-    begin
-      Text := Format('%s'#13#10'Montant : %s €'#13#10'Évolution : %s',
-        [Serie.Labels[Index],
-         FormatFloat('#,##0.00', Serie.YValue[Index]),
-         CalculerEvolutionPoint(Serie, Index)]);
-    end;
+procedure TFormTableauDeBord.TooltipGetText(Sender: TMarksTipTool; var Text: string);  
+var  
+  Serie: TChartSeries;
+  Index: Integer;
+begin
+  Serie := Sender.Series;
+  Index := Sender.ValueIndex;
+
+  if Assigned(Serie) and (Index >= 0) then
+  begin
+    Text := Format('%s'#13#10'Montant : %s €'#13#10'Évolution : %s',
+      [Serie.Labels[Index],
+       FormatFloat('#,##0.00', Serie.YValue[Index]),
+       CalculerEvolutionPoint(Serie, Index)]);
   end;
 end;
 ```
@@ -1003,6 +1024,8 @@ end;
 
 ### Animation lors de l'actualisation
 
+> **Nécessite TeeChart Pro** : `VCLTee.TeeAnimations` (avec `TTeeAnimation`) fait partie de TeeChart Pro et n'est pas disponible dans la version Standard livrée avec Delphi.
+
 ```pascal
 uses
   VCLTee.TeeAnimations;
@@ -1024,46 +1047,66 @@ begin
     Animation.Free;
   end;
 end;
+```
 
+L'animation suivante interpole entre deux valeurs sur 20 étapes. Comme les événements VCL n'acceptent pas de méthodes anonymes, on utilise une classe d'animation dédiée :
+
+```pascal
+type
+  TAnimationKPI = class
+  private
+    FTimer: TTimer;
+    FLabelCible: TLabel;
+    FValeurDebut, FValeurFin: Double;
+    FEtape: Integer;
+    procedure DoTimer(Sender: TObject);
+  public
+    constructor Create(ALabel: TLabel; AValeurFin: Double);
+  end;
+
+constructor TAnimationKPI.Create(ALabel: TLabel; AValeurFin: Double);  
+begin  
+  inherited Create;
+  FLabelCible := ALabel;
+  FValeurFin := AValeurFin;
+  FValeurDebut := StrToFloatDef(
+    StringReplace(ALabel.Caption, ' ', '', [rfReplaceAll]), 0);
+  FEtape := 0;
+
+  FTimer := TTimer.Create(ALabel);
+  FTimer.Interval := 50;
+  FTimer.OnTimer := DoTimer;
+  FTimer.Enabled := True;
+end;
+
+procedure TAnimationKPI.DoTimer(Sender: TObject);  
+var  
+  Progress, Intermediaire: Double;
+begin
+  Inc(FEtape);
+  Progress := FEtape / 20;
+  if Progress >= 1 then
+  begin
+    FLabelCible.Caption := FormatFloat('#,##0', FValeurFin);
+    FTimer.Enabled := False;
+    FTimer.Free;
+    Free;  // libération de l'objet animation
+  end
+  else
+  begin
+    Intermediaire := FValeurDebut + (FValeurFin - FValeurDebut) * Progress;
+    FLabelCible.Caption := FormatFloat('#,##0', Intermediaire);
+  end;
+end;
+
+// Utilisation
 procedure TFormTableauDeBord.AnimerKPI(Panel: TPanel; NouvelleValeur: Double);  
 var  
   LabelValeur: TLabel;
-  ValeurActuelle: Double;
-  Timer: TTimer;
 begin
   LabelValeur := Panel.FindComponent('LabelValeur' + Panel.Name) as TLabel;
-  if not Assigned(LabelValeur) then Exit;
-
-  // Animer la transition de valeur
-  ValeurActuelle := StrToFloatDef(StringReplace(LabelValeur.Caption, ' ', '', [rfReplaceAll]), 0);
-
-  Timer := TTimer.Create(Panel);
-  Timer.Interval := 50;
-  Timer.Tag := 0;
-  Timer.OnTimer := procedure(Sender: TObject)
-  var
-    T: TTimer;
-    Progress: Double;
-    ValeurIntermediaire: Double;
-  begin
-    T := Sender as TTimer;
-    Inc(T.Tag);
-
-    Progress := T.Tag / 20; // 20 étapes
-
-    if Progress >= 1 then
-    begin
-      LabelValeur.Caption := FormatFloat('#,##0', NouvelleValeur);
-      T.Enabled := False;
-      T.Free;
-    end
-    else
-    begin
-      ValeurIntermediaire := ValeurActuelle + (NouvelleValeur - ValeurActuelle) * Progress;
-      LabelValeur.Caption := FormatFloat('#,##0', ValeurIntermediaire);
-    end;
-  end;
-  Timer.Enabled := True;
+  if Assigned(LabelValeur) then
+    TAnimationKPI.Create(LabelValeur, NouvelleValeur);
 end;
 ```
 
@@ -1135,8 +1178,13 @@ var
     Picture: TfrxPictureView;
     Bitmap: TBitmap;
   begin
-    Bitmap := Chart.TeeCreateBitmap(Chart.Color, Chart.ClientRect);
+    Bitmap := TBitmap.Create;
     try
+      Bitmap.Width := Chart.Width;
+      Bitmap.Height := Chart.Height;
+      // Rendu du graphique TeeChart vers le bitmap
+      Chart.Draw(Bitmap.Canvas, Bitmap.Canvas.ClipRect);
+
       Picture := TfrxPictureView.Create(Page);
       Picture.Left := X;
       Picture.Top := Y;
@@ -1336,16 +1384,21 @@ begin
 end;
 
 // Utilisation
-procedure TFormTableauBord.AppliquerPalette;  
+procedure TFormTableauDeBord.AppliquerPalette;  
 var  
-  i: Integer;
+  i, j: Integer;
+  PieSerie: TPieSeries;
 begin
   for i := 0 to ChartRepartition.SeriesCount - 1 do
   begin
     if ChartRepartition.Series[i] is TPieSeries then
     begin
-      // La palette sera appliquée automatiquement
-      TPieSeries(ChartRepartition.Series[i]).ColorEachSlice := True;
+      PieSerie := TPieSeries(ChartRepartition.Series[i]);
+      // ColorEachPoint = chaque tranche prend une couleur différente
+      PieSerie.ColorEachPoint := True;
+      // Appliquer notre palette personnalisée à chaque point
+      for j := 0 to PieSerie.Count - 1 do
+        PieSerie.ValueColor[j] := TPaletteTableauBord.ObtenirCouleur(j);
     end;
   end;
 end;

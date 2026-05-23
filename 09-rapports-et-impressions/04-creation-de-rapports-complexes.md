@@ -702,22 +702,37 @@ Affichez des images stockées dans la base de données.
 
 **Si stockées en BLOB :**
 
+La méthode la plus simple consiste à utiliser la liaison automatique de FastReport. Dans le designer :
+
+1. Placez un objet **Picture** dans la bande Master Data
+2. Dans l'Inspecteur d'objets :
+   - **DataSet** : sélectionnez `frxDBDataset`
+   - **DataField** : sélectionnez le champ BLOB (ex. `photo`)
+3. FastReport chargera automatiquement l'image pour chaque enregistrement
+
+Si vous avez besoin d'un traitement personnalisé côté Delphi (pas en PascalScript), utilisez l'événement `OnBeforePrint` du rapport au niveau du code Delphi pour manipuler le champ BLOB via le dataset Delphi associé :
+
 ```pascal
-// Dans OnBeforePrint du Picture
+procedure TForm1.frxReport1BeforePrint(Sender: TfrxView);  
+var  
+  Stream: TMemoryStream;
+  Field: TBlobField;
 begin
-  if not <frxDBDataset."photo">.IsNull then
+  if Sender.Name = 'PicturePhoto' then  // Identifier le bon objet
   begin
-    var Stream := TMemoryStream.Create;
-    try
-      <frxDBDataset."photo">.SaveToStream(Stream);
-      Stream.Position := 0;
-      Picture1.Picture.LoadFromStream(Stream);
-    finally
-      Stream.Free;
+    if not FDQueryClients.FieldByName('photo').IsNull then
+    begin
+      Stream := TMemoryStream.Create;
+      try
+        Field := FDQueryClients.FieldByName('photo') as TBlobField;
+        Field.SaveToStream(Stream);
+        Stream.Position := 0;
+        TfrxPictureView(Sender).Picture.LoadFromStream(Stream);
+      finally
+        Stream.Free;
+      end;
     end;
-  end
-  else
-    Picture1.Picture := nil; // Pas d'image
+  end;
 end;
 ```
 
@@ -1022,8 +1037,11 @@ begin
   // Configurer le rapport selon les options
   if not CheckGraphiques.Checked then
   begin
-    // Cacher la section graphiques
-    frxReport1.FindObject('BandGraphiques').Visible := False;
+    // Cacher la section graphiques (FindObject peut retourner nil
+    // si l'objet n'existe pas dans le rapport)
+    var BandGraphiques := frxReport1.FindObject('BandGraphiques');
+    if Assigned(BandGraphiques) then
+      BandGraphiques.Visible := False;
   end;
 
   // Générer le rapport
@@ -1184,7 +1202,7 @@ unit URapportGestion;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, FireDAC.Comp.Client,
+  System.SysUtils, System.Classes, System.DateUtils, Data.DB, FireDAC.Comp.Client,
   frxClass, frxDBSet, frxExportPDF;
 
 type
@@ -1232,7 +1250,10 @@ begin
   var TotalDepenses := FDQueryDepenses.FieldByName('total').AsFloat;
   var Benefice := TotalVentes - TotalDepenses;
   var ObjectifMois := FDQueryObjectifs.FieldByName('objectif').AsFloat;
-  var TauxReussite := (TotalVentes / ObjectifMois) * 100;
+  // Protection contre la division par zéro (si l'objectif n'est pas défini)
+  var TauxReussite: Double := 0;
+  if ObjectifMois > 0 then
+    TauxReussite := (TotalVentes / ObjectifMois) * 100;
 
   // Charger et configurer le rapport
   frxReport.LoadFromFile('RapportGestion.fr3');

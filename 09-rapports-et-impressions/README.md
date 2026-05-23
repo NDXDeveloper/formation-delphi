@@ -28,7 +28,7 @@ Les utilisateurs d'applications professionnelles attendent généralement :
 - **Flexibilité** : possibilité de personnaliser la présentation
 - **Rapidité** : génération rapide, même pour de gros volumes
 - **Formats variés** : PDF, Excel, Word, HTML selon les besoins
-- **Interactivité** : filtres, tri, drill-down pour explorer les données
+- **Interactivité** : filtres, tri, drill-down (exploration progressive des données du général au détail)
 - **Fiabilité** : résultats cohérents et reproductibles
 
 ## Vue d'ensemble des solutions dans Delphi
@@ -58,10 +58,10 @@ Delphi inclut des composants intégrés qui permettent d'imprimer directement sa
 
 Les générateurs de rapports offrent des fonctionnalités avancées avec des designers visuels :
 
-- **FastReport** : solution moderne et complète (la plus utilisée)
-- **QuickReport** : simple et léger (historique)
-- **ReportBuilder** : très complet mais commercial
-- **Rave Reports** : inclus dans certaines versions de Delphi
+- **FastReport** : solution moderne et complète (la plus utilisée, intégrée à Delphi depuis XE2)
+- **QuickReport** : simple et léger (historique, plus inclus depuis longtemps)
+- **ReportBuilder** : très complet mais commercial (Digital Metaphors)
+- **Rave Reports** : historiquement inclus jusqu'à Delphi XE2, désormais disponible comme produit tiers chez Nevrona
 
 **Avantages** :
 - Designer visuel WYSIWYG
@@ -79,9 +79,9 @@ Les générateurs de rapports offrent des fonctionnalités avancées avec des de
 
 Pour les tableaux de bord et analyses visuelles :
 
-- **TeeChart** : bibliothèque graphique professionnelle
-- **TChart** : composant natif VCL
-- Autres bibliothèques tierces (DevExpress, TMS Charts...)
+- **TeeChart Standard** : version incluse gratuitement avec Delphi (composant `TChart` dans la palette TeeChart)
+- **TeeChart Pro** : version commerciale étendue de Steema Software (60+ types de graphiques, fonctionnalités avancées)
+- Autres bibliothèques tierces (DevExpress Charts, TMS Charts...)
 
 **Usages** :
 - Tableaux de bord interactifs
@@ -424,9 +424,10 @@ Si certains concepts vous semblent flous, n'hésitez pas à revenir aux chapitre
 
 ### Documentation officielle
 
-- Documentation Delphi sur les impressions
-- Aide FastReport (si installé)
-- Documentation TeeChart
+- **DocWiki Embarcadero** ([docwiki.embarcadero.com](https://docwiki.embarcadero.com/RADStudio/en/Main_Page)) : documentation officielle de Delphi (TPrinter, TCanvas, etc.)
+- **Aide F1 intégrée à Delphi** : accessible sur tout composant ou identifiant
+- **Documentation FastReport** (si installé, ou sur [fast-report.com](https://www.fast-report.com))
+- **Documentation TeeChart** (sur [steema.com](https://www.steema.com))
 
 ### Exemples fournis
 

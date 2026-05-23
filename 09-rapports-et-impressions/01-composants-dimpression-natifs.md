@@ -25,7 +25,7 @@ Les composants d'impression natifs de Delphi offrent plusieurs avantages :
 
 ```pascal
 uses
-  Printers;  // Unité nécessaire pour utiliser TPrinter
+  Vcl.Printers;  // Unité nécessaire pour utiliser TPrinter (alias court 'Printers' également accepté)
 
 var
   MonImprimante: TPrinter;
@@ -85,6 +85,10 @@ Une impression se déroule toujours selon le même schéma :
 2. **Contenu** : dessin sur le Canvas
 3. **Nouvelle page** (si nécessaire) : appel de `NewPage`
 4. **Fin** : appel de `EndDoc`
+
+> **À retenir : les unités du Canvas d'impression**  
+>  
+> Les coordonnées X/Y, les épaisseurs de trait et les tailles du `Printer.Canvas` sont exprimées en **pixels à la résolution de l'imprimante** (typiquement 300 à 1200 DPI), et non pas à la résolution de l'écran. Par exemple, une distance de 100 pixels à 300 DPI ne représente que ~0,85 cm sur le papier. Pour calculer une mesure réelle en millimètres, voir la section « Calculer les dimensions » plus bas dans ce chapitre.
 
 ### Exemple de base
 
@@ -238,7 +242,7 @@ Les coordonnées du Canvas sont en pixels, mais il est utile de connaître les d
 
 ```pascal
 uses
-  Winapi.Windows, Printers;
+  Winapi.Windows, Vcl.Printers;
 
 procedure TForm1.AfficherDimensionsPage;  
 var  
@@ -310,26 +314,31 @@ end;
 
 ## Gestion des erreurs d'impression
 
-Il est important de gérer les erreurs qui peuvent survenir lors de l'impression :
+Il est important de gérer les erreurs qui peuvent survenir lors de l'impression. En cas d'exception pendant le rendu, on appelle `Abort` **avant** la fin du document pour signaler le job d'impression comme annulé auprès du spooler :
 
 ```pascal
 procedure TForm1.ImprimerAvecGestionErreurs;  
 begin  
   if PrintDialog1.Execute then
   begin
+    Printer.BeginDoc;
     try
-      Printer.BeginDoc;
       try
         Printer.Canvas.TextOut(100, 100, 'Test d''impression');
-      finally
+        // ... autres opérations de dessin
+      except
+        on E: Exception do
+        begin
+          // Abort marque le job comme annulé auprès du spooler
+          Printer.Abort;
+          ShowMessage('Erreur lors de l''impression : ' + E.Message);
+        end;
+      end;
+    finally
+      // EndDoc reste appelé pour libérer proprement les ressources.
+      // Si Abort a été appelé, EndDoc n'enverra pas le job à l'imprimante.
+      if Printer.Printing then
         Printer.EndDoc;
-      end;
-    except
-      on E: Exception do
-      begin
-        ShowMessage('Erreur lors de l''impression : ' + E.Message);
-        Printer.Abort;  // Annule l'impression en cas d'erreur
-      end;
     end;
   end;
 end;
@@ -506,7 +515,7 @@ Les composants d'impression natifs sont parfaits pour :
 - Des documents avec peu de mise en forme
 - Des applications où vous voulez éviter les dépendances externes
 
-Pour des rapports plus complexes, il sera préférable d'utiliser des bibliothèques spécialisées comme FastReport ou QuickReport (voir sections 9.3 et 9.4).
+Pour des rapports plus complexes, il sera préférable d'utiliser des bibliothèques spécialisées comme FastReport (voir sections 9.3 et 9.4).
 
 ## Résumé
 
