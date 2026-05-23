@@ -829,13 +829,21 @@ end;
 function TClientDAO.DataSetToClient(DataSet: TFDQuery): TClient;  
 begin  
   Result := TClient.Create;
-  Result.ID := DataSet.FieldByName('id').AsInteger;
-  Result.Nom := DataSet.FieldByName('nom').AsString;
-  Result.Prenom := DataSet.FieldByName('prenom').AsString;
-  Result.Email := DataSet.FieldByName('email').AsString;
-  Result.Telephone := DataSet.FieldByName('telephone').AsString;
-  Result.Actif := DataSet.FieldByName('actif').AsBoolean;
-  Result.DateCreation := DataSet.FieldByName('date_creation').AsDateTime;
+  try
+    Result.ID := DataSet.FieldByName('id').AsInteger;
+    Result.Nom := DataSet.FieldByName('nom').AsString;
+    Result.Prenom := DataSet.FieldByName('prenom').AsString;
+    Result.Email := DataSet.FieldByName('email').AsString;
+    Result.Telephone := DataSet.FieldByName('telephone').AsString;
+    Result.Actif := DataSet.FieldByName('actif').AsBoolean;
+    Result.DateCreation := DataSet.FieldByName('date_creation').AsDateTime;
+  except
+    // Si un champ manque ou si une conversion échoue (ex. un champ
+    // 'date_creation' NULL converti en TDateTime), on libère Result —
+    // sinon l'appelant n'a jamais le pointeur et le TClient fuit.
+    Result.Free;
+    raise;
+  end;
 end;
 
 function TClientDAO.Lire(ID: Integer): TClient;  
@@ -857,18 +865,25 @@ var
   Client: TClient;
 begin
   Result := TObjectList<TClient>.Create(True);  // True = possède les objets
+  try
+    FDataModule.FDQueryClients.Close;
+    FDataModule.FDQueryClients.SQL.Text :=
+      'SELECT * FROM clients WHERE actif = TRUE ORDER BY nom, prenom';
+    FDataModule.FDQueryClients.Open;
 
-  FDataModule.FDQueryClients.Close;
-  FDataModule.FDQueryClients.SQL.Text :=
-    'SELECT * FROM clients WHERE actif = TRUE ORDER BY nom, prenom';
-  FDataModule.FDQueryClients.Open;
-
-  FDataModule.FDQueryClients.First;
-  while not FDataModule.FDQueryClients.Eof do
-  begin
-    Client := DataSetToClient(FDataModule.FDQueryClients);
-    Result.Add(Client);
-    FDataModule.FDQueryClients.Next;
+    FDataModule.FDQueryClients.First;
+    while not FDataModule.FDQueryClients.Eof do
+    begin
+      Client := DataSetToClient(FDataModule.FDQueryClients);
+      Result.Add(Client);
+      FDataModule.FDQueryClients.Next;
+    end;
+  except
+    // En cas d'exception (perte de connexion, erreur SQL...), on libère
+    // la liste — l'appelant n'aura jamais le pointeur, donc fuite assurée
+    // sans cette protection.
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -936,19 +951,23 @@ var
   Client: TClient;
 begin
   Result := TObjectList<TClient>.Create(True);
+  try
+    FDataModule.FDQueryClients.Close;
+    FDataModule.FDQueryClients.SQL.Text :=
+      'SELECT * FROM clients WHERE nom LIKE :nom ORDER BY nom';
+    FDataModule.FDQueryClients.ParamByName('nom').AsString := '%' + Nom + '%';
+    FDataModule.FDQueryClients.Open;
 
-  FDataModule.FDQueryClients.Close;
-  FDataModule.FDQueryClients.SQL.Text :=
-    'SELECT * FROM clients WHERE nom LIKE :nom ORDER BY nom';
-  FDataModule.FDQueryClients.ParamByName('nom').AsString := '%' + Nom + '%';
-  FDataModule.FDQueryClients.Open;
-
-  FDataModule.FDQueryClients.First;
-  while not FDataModule.FDQueryClients.Eof do
-  begin
-    Client := DataSetToClient(FDataModule.FDQueryClients);
-    Result.Add(Client);
-    FDataModule.FDQueryClients.Next;
+    FDataModule.FDQueryClients.First;
+    while not FDataModule.FDQueryClients.Eof do
+    begin
+      Client := DataSetToClient(FDataModule.FDQueryClients);
+      Result.Add(Client);
+      FDataModule.FDQueryClients.Next;
+    end;
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -1097,7 +1116,7 @@ type
 // Interface pour l'accès données
 type
   IClientRepository = interface
-    ['{GUID-HERE}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']  // ← Générer un vrai GUID
     function Lire(ID: Integer): TClient;
     function LireTous: TObjectList<TClient>;
     function Creer(Client: TClient): Integer;
@@ -1125,6 +1144,8 @@ type
     // Le manager ne connaît pas FireDAC, seulement l'interface !
   end;
 ```
+
+> 💡 **Astuce IDE — générer un GUID** : pour insérer un GUID unique dans l'éditeur Delphi, placez le curseur juste après le mot-clé `interface` et appuyez sur **Ctrl+Shift+G**. L'IDE insère un GUID frais à chaque appel. **Ne réutilisez jamais** un GUID copié-collé : chaque interface doit avoir le sien, sinon le mécanisme de typage à l'exécution (`QueryInterface`, `Supports`) renvoie de faux positifs et fait planter le code de manière subtile.
 
 **Résultat :** On peut facilement remplacer FireDAC par une autre technologie sans toucher au Manager !
 

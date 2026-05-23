@@ -425,6 +425,7 @@ end;
 // Recherche avec filtre
 procedure TdmDatabase.RechercherParNom(const Nom: string);  
 begin  
+  // ⚠️ Voir avertissement ci-dessous sur l'injection NoSQL
   MongoQuery.QFind := Format('{"nom": "%s"}', [Nom]);
   MongoQuery.Open;
 end;
@@ -444,6 +445,26 @@ begin
   MongoQuery.Open;
 end;
 ```
+
+> ⚠️ **Injection NoSQL** : la construction `Format('{"nom": "%s"}', [Nom])` ci-dessus est **vulnérable** si `Nom` provient d'une entrée utilisateur — exactement le même problème que les injections SQL vu plus haut. Si l'utilisateur entre par exemple `"}, "_$where": "this.role=='admin'", "x": "`, la requête JSON résultante peut exécuter du code MongoDB arbitraire (les opérateurs `$where`, `$function` exécutent du JavaScript côté serveur).  
+>  
+> **Bonnes pratiques pour MongoDB depuis Delphi** :  
+>  
+> 1. **Échapper systématiquement** les valeurs avant de les insérer dans le JSON, ou mieux : construire le document via `TJSONObject` (qui gère l'échappement) puis sérialiser :  
+>  
+>    ```pascal  
+>    var JSON: TJSONObject;  
+>    JSON := TJSONObject.Create;  
+>    try  
+>      JSON.AddPair('nom', Nom);  // TJSONObject échappe les guillemets, antislashes etc.  
+>      MongoQuery.QFind := JSON.ToString;  
+>    finally  
+>      JSON.Free;  
+>    end;  
+>    ```  
+>  
+> 2. **Désactiver les opérateurs JavaScript** sur le serveur MongoDB en production : `security.javascriptEnabled: false` dans `mongod.conf` empêche `$where` et `$function`.  
+> 3. **Valider la forme attendue** des entrées (un nom ne devrait pas contenir `{`, `}`, `$`…) côté application.
 
 #### 3. Mettre à jour (Update)
 

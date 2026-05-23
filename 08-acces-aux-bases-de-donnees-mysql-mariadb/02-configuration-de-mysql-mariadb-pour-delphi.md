@@ -130,16 +130,25 @@ Une fois MySQL/MariaDB installé, vous devez vous connecter pour créer votre ba
 1. Clic droit dans la liste des bases à gauche
 2. Sélectionnez "Créer nouveau" → "Base de données"
 3. Donnez un nom à votre base (par exemple : `ma_gestion` ou `projet_delphi`)
-4. Choisissez l'encodage : **utf8mb4** (recommandé pour supporter tous les caractères Unicode)
-5. Collation : **utf8mb4_general_ci**
+4. Choisissez l'encodage : **utf8mb4** (recommandé pour supporter tous les caractères Unicode, y compris les emojis)
+5. Collation : **utf8mb4_unicode_ci** (recommandée, voir note ci-dessous)
 6. Cliquez sur "OK"
 
 **Méthode SQL :**
 ```sql
 CREATE DATABASE ma_gestion  
 CHARACTER SET utf8mb4  
-COLLATE utf8mb4_general_ci;  
+COLLATE utf8mb4_unicode_ci;  
 ```
+
+> 💡 **Quelle collation choisir ?**  
+>  
+> - `utf8mb4_general_ci` : plus rapide, mais comparaisons moins précises sur certains caractères Unicode  
+> - `utf8mb4_unicode_ci` : comparaisons et tris conformes au standard Unicode (recommandé pour des applications internationales)  
+> - `utf8mb4_0900_ai_ci` : disponible depuis MySQL 8.0, encore plus précise (basée sur Unicode 9.0). C'est la **valeur par défaut** sous MySQL 8+.  
+> - `utf8mb4_uca1400_ai_ci` : équivalent moderne sur MariaDB 10.10+.  
+>  
+> Pour la **portabilité** entre MySQL et MariaDB et la **conformité Unicode**, `utf8mb4_unicode_ci` reste un excellent choix par défaut.
 
 ### Création d'un utilisateur dédié (recommandé)
 
@@ -166,8 +175,24 @@ FLUSH PRIVILEGES;
 **Explications :**
 - `'delphi_user'@'localhost'` : nom d'utilisateur qui ne peut se connecter que depuis la machine locale
 - `IDENTIFIED BY 'MotDePasseSecurise123!'` : le mot de passe (choisissez-en un fort !)
-- `GRANT ALL PRIVILEGES ON ma_gestion.*` : droits complets sur la base `ma_gestion` uniquement
+- `GRANT ALL PRIVILEGES ON ma_gestion.*` : droits complets sur la base `ma_gestion` uniquement (pas sur les autres bases)
 - `FLUSH PRIVILEGES` : applique immédiatement les changements
+
+> 💡 **Encore plus strict — principe du moindre privilège** : `GRANT ALL PRIVILEGES` inclut des droits dont une application standard n'a pas besoin (`CREATE TABLE`, `DROP TABLE`, `GRANT OPTION`…). Pour la production, donnez uniquement ce dont l'application a besoin :  
+>  
+> ```sql  
+> -- Compte applicatif : juste lire et modifier les données  
+> GRANT SELECT, INSERT, UPDATE, DELETE  
+>   ON ma_gestion.*  
+>   TO 'delphi_user'@'localhost';  
+>  
+> -- Compte de migration (utilisé seulement par les scripts de schema)  
+> GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX  
+>   ON ma_gestion.*  
+>   TO 'delphi_migration'@'localhost';  
+> ```  
+>  
+> Voir le chapitre 8.11 — Sécurisation pour plus de détails sur la stratégie multi-utilisateurs.
 
 **Testez la connexion avec le nouvel utilisateur :**
 - Créez une nouvelle session dans HeidiSQL avec l'utilisateur `delphi_user`
@@ -210,6 +235,16 @@ FireDAC utilise la bibliothèque client MySQL (`libmysql.dll` sous Windows) pour
 #### Sous macOS et Linux
 
 La bibliothèque client est généralement installée automatiquement avec MySQL/MariaDB et accessible dans le système. FireDAC la trouvera automatiquement dans la plupart des cas.
+
+**Noms de fichiers selon l'OS :**
+
+| Plateforme | Nom du fichier |
+|------------|---------------|
+| Windows | `libmysql.dll` (MySQL) ou `libmariadb.dll` (MariaDB) |
+| macOS | `libmysqlclient.dylib` ou `libmariadb.dylib` |
+| Linux | `libmysqlclient.so` ou `libmariadb.so` |
+
+Sur Linux, les paquets `libmariadb-dev` (Debian/Ubuntu) ou `mariadb-connector-c` (Red Hat/Fedora) fournissent la bibliothèque cliente nécessaire.
 
 ### Option 2 : Pilote ODBC (alternative, moins performant)
 

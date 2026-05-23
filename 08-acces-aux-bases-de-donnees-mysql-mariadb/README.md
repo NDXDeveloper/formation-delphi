@@ -542,7 +542,7 @@ Les bases de données peuvent sembler intimidantes au début. C'est normal ! Vou
 
 **Mon conseil** :
 - Allez-y étape par étape
-- N'ayez pas peur des erreurs (elles sont vos meilleures professeurs)
+- N'ayez pas peur des erreurs (elles sont vos meilleurs professeurs)
 - Expérimentez autant que possible
 - Créez vos propres petits projets
 - Amusez-vous !

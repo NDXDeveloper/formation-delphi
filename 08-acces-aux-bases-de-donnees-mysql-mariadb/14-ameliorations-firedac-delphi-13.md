@@ -8,6 +8,8 @@
 
 Dans ce chapitre, nous allons explorer les nouveautés de FireDAC dans Delphi 13 et voir comment elles peuvent améliorer vos applications.
 
+> 📌 **Note importante sur ce chapitre** : les paramètres et propriétés exacts présentés ici **illustrent les concepts** (pooling, cache, savepoints, batch updates, support JSON…) qui existent réellement dans FireDAC. Certains noms exacts peuvent varier selon la version mineure et les mises à jour ; vérifiez toujours les noms précis dans la [documentation officielle DocWiki](https://docwiki.embarcadero.com/RADStudio/en/FireDAC) ou via la complétion de l'IDE. L'objectif ici est de vous **familiariser avec les capacités** de FireDAC plutôt que de fournir une référence d'API exhaustive.
+
 ## Vue d'ensemble des nouveautés
 
 ### Principales améliorations

@@ -389,13 +389,21 @@ Password=VotreMotDePasse
 CharacterSet=utf8mb4  
 ```
 
+> ⚠️ **Sécurité — Mot de passe en clair dans un INI** : un fichier `config.ini` lisible par n'importe quel utilisateur du poste expose immédiatement les identifiants de la base. Pour le **développement local** c'est acceptable, mais **jamais en production**. Solutions plus sûres :  
+>  
+> - **Chiffrer** le mot de passe avant de l'écrire (ex. `System.Hash` + clé d'application, ou `TNetEncoding.Base64` au minimum pour offusquer — **pas** considéré comme un vrai chiffrement)  
+> - Utiliser les **Windows Credential Manager** (`CredRead/CredWrite` via l'API Windows) ou le **Keychain macOS** / **libsecret Linux**  
+> - Stocker le mot de passe dans des **variables d'environnement** lues au démarrage (`GetEnvironmentVariable`)  
+> - Restreindre les **permissions du fichier** (`icacls` sous Windows, `chmod 600` sous Linux/macOS) pour qu'il ne soit lisible que par l'utilisateur qui fait tourner l'application  
+> - Pour des applications client-serveur, déléguer l'authentification à un **service d'identité** (LDAP, Active Directory, OAuth2…) plutôt qu'un mot de passe MySQL embarqué
+
 ### Code pour lire le fichier INI
 
-Ajoutez `IniFiles` dans la clause `uses` de votre unité :
+Ajoutez `System.IniFiles` dans la clause `uses` de votre unité :
 
 ```pascal
 uses
-  System.SysUtils, System.Classes, IniFiles;
+  System.SysUtils, System.Classes, System.IniFiles;
 ```
 
 Créez une méthode pour charger la configuration :

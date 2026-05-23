@@ -152,8 +152,8 @@ AND password = '\' OR \'1\'=\'1'
 
 ### Règle d'or
 
-> **JAMAIS de concaténation de chaînes dans les requêtes SQL**
->
+> **JAMAIS de concaténation de chaînes dans les requêtes SQL**  
+>  
 > **TOUJOURS utiliser des paramètres**
 
 ```pascal
@@ -164,6 +164,8 @@ SQL := 'SELECT * FROM clients WHERE nom = ''' + editNom.Text + '''';
 SQL := 'SELECT * FROM clients WHERE nom = :nom';  
 ParamByName('nom').AsString := editNom.Text;  
 ```
+
+> 📌 **Note** : l'exemple de formulaire de connexion ci-dessus illustre **uniquement** comment se prémunir des injections SQL. Il compare un mot de passe en clair, ce qui **n'est pas la bonne pratique** : les mots de passe doivent être hachés en base (jamais en clair) et la vérification se fait en comparant les **hachages**, pas les chaînes brutes. La section suivante explique comment faire correctement.
 
 ## Sécurisation des mots de passe
 
@@ -245,9 +247,41 @@ end;
 - Résistant aux attaques par force brute (slow by design)
 - Salt automatique (chaque hash est unique)
 
-### Alternative : SHA-256 + Salt
+> 💡 **Bonne pratique de sécurité — messages d'erreur** : à la connexion, ne **JAMAIS** distinguer dans le message d'erreur entre « login inexistant » et « mot de passe incorrect » :  
+>  
+> ```pascal  
+> // ❌ Mauvais : révèle à l'attaquant si le login existe  
+> if not LoginExiste then  
+>   ShowMessage('Login inexistant')      // ← Énumération possible  
+> else if not PasswordCorrect then  
+>   ShowMessage('Mot de passe incorrect');  
+>  
+> // ✅ Bon : message identique dans les deux cas  
+> ShowMessage('Identifiants invalides');  
+> ```  
+>  
+> Pour aller encore plus loin (paranoïa avancée), un attaquant pourrait **mesurer le temps de réponse** : si la vérification est rapide quand le login n'existe pas (pas de hash à comparer) et plus lente sinon (hash BCrypt = ~100ms), il peut découvrir les logins valides. Pour égaliser les temps, comparez toujours contre un hash factice si le login n'existe pas :  
+>  
+> ```pascal  
+> if Query.IsEmpty then  
+>   TBCrypt.CompareHash(Password, HASH_FACTICE)  // Consomme le temps habituel  
+> else  
+>   Result := TBCrypt.CompareHash(Password, HashStocke);  
+> ```
 
-Si BCrypt n'est pas disponible, utilisez au minimum SHA-256 avec un salt :
+### ⚠️ SHA-256 + Salt : insuffisant en pratique
+
+> **Avertissement important** : **SHA-256 même avec un salt n'est PAS un substitut acceptable à BCrypt/Argon2/scrypt** pour hacher des mots de passe. SHA-256 est une fonction de hachage **rapide** (volontairement), conçue pour les empreintes de fichiers ou la signature ; sur du matériel moderne, un attaquant peut tester **des milliards de mots de passe par seconde** avec un GPU. BCrypt et Argon2 sont **volontairement lents** (paramètres `cost`/`iterations` ajustables) pour qu'une seule vérification prenne ~100 ms, ce qui rend les attaques par force brute irréalistes.  
+>  
+> N'utilisez SHA-256 + salt **que dans un contexte pédagogique** ou pour des données qui ne sont pas des mots de passe. Pour les mots de passe en production :  
+>  
+> - **Premier choix** : Argon2id (moderne, gagnant du Password Hashing Competition 2015)  
+> - **Choix classique éprouvé** : BCrypt (toujours sûr en 2026)  
+> - **Alternative** : scrypt  
+>  
+> Bibliothèques Delphi : `DelphiBcrypt`, `Sodium for Delphi` (Argon2), `TMS Cryptography Pack`.
+
+À titre **purement illustratif**, voici la mécanique d'un hachage avec salt :
 
 ```pascal
 uses
@@ -263,10 +297,13 @@ end;
 
 function HashPasswordAvecSalt(const Password, Salt: string): string;  
 begin  
+  // ⚠️ NE PAS UTILISER EN PRODUCTION — voir avertissement ci-dessus.
+  // SHA-256 ne « ralentit » pas l'attaquant ; pour des mots de passe il faut
+  // BCrypt, Argon2 ou scrypt (avec coût ajustable).
   Result := THashSHA2.GetHashString(Password + Salt);
 end;
 
-// Utilisation
+// Utilisation (toujours à titre illustratif uniquement)
 procedure CreerUtilisateur(const Login, Password: string);  
 var  
   Salt, Hash: string;
@@ -300,7 +337,9 @@ FDConnection1.Params.Add('Password=motdepasse123');
 - Visible dans l'exécutable (désassemblage)
 - Difficile à changer
 
-### Solution 1 : Fichier de configuration chiffré
+### Solution 1 : Fichier de configuration avec mot de passe offusqué (pas réellement chiffré)
+
+> ⚠️ **Attention au vocabulaire** : l'exemple ci-dessous **n'est PAS du chiffrement** au sens cryptographique. Un XOR avec une clé d'un octet codée en dur est de l'**offuscation** — n'importe qui peut le retrouver en quelques minutes. Cela complique seulement la lecture pour un utilisateur curieux ; cela ne protège pas contre un attaquant. Pour du véritable chiffrement, voir la note en fin de section.
 
 ```pascal
 unit uConfigManager;
@@ -308,14 +347,14 @@ unit uConfigManager;
 interface
 
 uses
-  System.SysUtils, System.Classes, IniFiles, System.NetEncoding;
+  System.SysUtils, System.Classes, System.IniFiles, System.NetEncoding;
 
 type
   TConfigManager = class
   private
     FIniFile: TIniFile;
-    function Dechiffrer(const TexteChiffre: string): string;
-    function Chiffrer(const TexteClair: string): string;
+    function Desoffusquer(const TexteOffusque: string): string;
+    function Offusquer(const TexteClair: string): string;
   public
     constructor Create(const CheminFichier: string);
     destructor Destroy; override;
@@ -341,15 +380,17 @@ begin
   inherited;
 end;
 
-function TConfigManager.Chiffrer(const TexteClair: string): string;  
+function TConfigManager.Offusquer(const TexteClair: string): string;  
 var  
   Bytes: TBytes;
   i: Integer;
   Cle: Byte;
 begin
-  // Chiffrement simple XOR (pour l'exemple)
-  // En production, utilisez un vrai algorithme de chiffrement (AES)
-  Cle := 42;  // Clé simple (à améliorer !)
+  // ⚠️ Offuscation XOR — PAS du chiffrement.
+  // Une vraie clé doit faire au minimum 128 bits, être imprévisible, et l'algo
+  // doit être AES (ou ChaCha20). Pour des secrets en production, utilisez
+  // System.Net.Crypto, Sodium for Delphi, ou les coffres-forts de l'OS.
+  Cle := 42;  // Clé triviale (à titre d'exemple seulement)
 
   Bytes := TEncoding.UTF8.GetBytes(TexteClair);
   for i := 0 to Length(Bytes) - 1 do
@@ -358,7 +399,7 @@ begin
   Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
 end;
 
-function TConfigManager.Dechiffrer(const TexteChiffre: string): string;  
+function TConfigManager.Desoffusquer(const TexteOffusque: string): string;  
 var  
   Bytes: TBytes;
   i: Integer;
@@ -366,7 +407,7 @@ var
 begin
   Cle := 42;
 
-  Bytes := TNetEncoding.Base64.DecodeStringToBytes(TexteChiffre);
+  Bytes := TNetEncoding.Base64.DecodeStringToBytes(TexteOffusque);
   for i := 0 to Length(Bytes) - 1 do
     Bytes[i] := Bytes[i] xor Cle;
 
@@ -375,30 +416,39 @@ end;
 
 function TConfigManager.LireMotDePasse: string;  
 var  
-  TexteChiffre: string;
+  TexteOffusque: string;
 begin
-  TexteChiffre := FIniFile.ReadString('Database', 'Password', '');
-  if TexteChiffre <> '' then
-    Result := Dechiffrer(TexteChiffre)
+  TexteOffusque := FIniFile.ReadString('Database', 'Password', '');
+  if TexteOffusque <> '' then
+    Result := Desoffusquer(TexteOffusque)
   else
     Result := '';
 end;
 
 procedure TConfigManager.EcrireMotDePasse(const MotDePasse: string);  
 var  
-  TexteChiffre: string;
+  TexteOffusque: string;
 begin
-  TexteChiffre := Chiffrer(MotDePasse);
-  FIniFile.WriteString('Database', 'Password', TexteChiffre);
+  TexteOffusque := Offusquer(MotDePasse);
+  FIniFile.WriteString('Database', 'Password', TexteOffusque);
 end;
 
 end.
 ```
 
+> 🔐 **Pour du vrai chiffrement** : utilisez **AES-256-GCM** (chiffrement authentifié, recommandé en 2026) avec une clé issue d'un dérivateur (PBKDF2, Argon2). Bibliothèques :  
+>  
+> - `System.Net.Crypto` (Delphi) — primitive bas niveau  
+> - **Sodium for Delphi** (libsodium) — API moderne, sûre par défaut  
+> - **TMS Cryptography Pack** (commercial)  
+> - **DCPCrypt** (open source historique)  
+>  
+> Et stockez la clé maître **en dehors** du binaire (variable d'environnement, coffre OS, KMS cloud — voir solutions 2 et 3 ci-dessous).
+
 **Utilisation :**
 
 ```pascal
-procedure TDataModule.ConfigurerConnexion;  
+procedure TdmDatabase.ConfigurerConnexion;  
 var  
   Config: TConfigManager;
   MotDePasse: string;
@@ -445,7 +495,7 @@ setx DB_PASSWORD "MonMotDePasseSecurise"
 ### Solution 3 : Demander à l'utilisateur
 
 ```pascal
-procedure TDataModule.DataModuleCreate(Sender: TObject);  
+procedure TdmDatabase.DataModuleCreate(Sender: TObject);  
 var  
   Password: string;
 begin
@@ -522,13 +572,15 @@ GRANT ALL PRIVILEGES ON ma_base.* TO 'app_admin'@'localhost';
 
 ```pascal
 type
-  TDataModule = class(TDataModule)
+  TdmConnexions = class(TDataModule)
     FDConnectionReadOnly: TFDConnection;
     FDConnectionStandard: TFDConnection;
     FDConnectionAdmin: TFDConnection;
+  public
+    procedure ConfigurerConnexions;
   end;
 
-procedure TDataModule.ConfigurerConnexions;  
+procedure TdmConnexions.ConfigurerConnexions;  
 begin  
   // Connexion lecture seule pour les rapports
   FDConnectionReadOnly.Params.Add('User_Name=app_readonly');
@@ -546,11 +598,13 @@ end;
 procedure GenererRapport;  
 begin  
   // Utiliser la connexion read-only
-  FDQuery1.Connection := FDConnectionReadOnly;
+  FDQuery1.Connection := dmConnexions.FDConnectionReadOnly;
   FDQuery1.SQL.Text := 'SELECT * FROM statistiques';
   FDQuery1.Open;
 end;
 ```
+
+> ⚠️ **Important — nom de la classe** : la classe doit avoir un nom **différent** de `TDataModule` (par exemple `TdmConnexions`). Une déclaration `TDataModule = class(TDataModule)` ne compile pas (référence circulaire à elle-même).
 
 ## Validation des entrées utilisateur
 
@@ -621,6 +675,11 @@ end;
 ### Limiter les tentatives de connexion
 
 ```pascal
+// Unités nécessaires : System.DateUtils (MinutesBetween),
+// System.Generics.Collections (TDictionary)
+uses
+  System.SysUtils, System.DateUtils, System.Generics.Collections;
+
 type
   TTentativeConnexion = record
     Login: string;
@@ -629,6 +688,9 @@ type
   end;
 
 var
+  // Variable globale unique pour toute l'application — à créer dans
+  // le bloc initialization de l'unité (ou au démarrage de l'app) et
+  // à libérer dans finalization (voir note plus bas).
   Tentatives: TDictionary<string, TTentativeConnexion>;
 
 function TentativeAutorisee(const Login: string): Boolean;  
@@ -695,7 +757,20 @@ begin
     ShowMessage('Identifiants invalides');
   end;
 end;
+
+// À placer en fin d'unité, après tout le code :
+initialization
+  Tentatives := TDictionary<string, TTentativeConnexion>.Create;
+
+finalization
+  Tentatives.Free;
 ```
+
+> ⚠️ **Note pour la production** :  
+>  
+> - **Thread-safety** : si l'application est multi-thread (serveur, web service…), protégez les accès à `Tentatives` avec un `TCriticalSection` — sinon deux threads concurrents peuvent corrompre le dictionnaire.  
+> - **Persistance** : le dictionnaire est en mémoire et redémarre à zéro à chaque relance de l'application. Pour une vraie protection en production, stockez le compteur dans la **base de données** (table `tentatives_connexion`) avec horodatage, et purgez périodiquement les anciennes entrées.  
+> - **Identification de l'attaquant** : limiter par login seul ne suffit pas — un attaquant peut tester des logins différents. Limiter aussi par **adresse IP** (ou les deux en combinaison) ; à coupler avec un système comme **fail2ban** au niveau OS pour bannir les IP suspectes.
 
 ## Audit et journalisation (Logging)
 
@@ -707,15 +782,17 @@ unit uAuditLogger;
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes, System.SyncObjs, System.IOUtils;
 
 type
   TAuditLogger = class
   private
     FLogFile: string;
+    FLock: TCriticalSection;  // Sérialise les écritures concurrentes
     procedure EcrireLigne(const Ligne: string);
   public
     constructor Create(const CheminLog: string);
+    destructor Destroy; override;
 
     procedure LogConnexion(const Utilisateur: string; Succes: Boolean);
     procedure LogAction(const Utilisateur, Action, Details: string);
@@ -728,21 +805,40 @@ constructor TAuditLogger.Create(const CheminLog: string);
 begin  
   inherited Create;
   FLogFile := CheminLog;
+  FLock := TCriticalSection.Create;
+end;
+
+destructor TAuditLogger.Destroy;  
+begin  
+  FLock.Free;
+  inherited;
 end;
 
 procedure TAuditLogger.EcrireLigne(const Ligne: string);  
 var  
-  F: TextFile;
+  Ligne_UTF8: TBytes;
+  Stream: TFileStream;
 begin
-  AssignFile(F, FLogFile);
-  if FileExists(FLogFile) then
-    Append(F)
-  else
-    Rewrite(F);
+  // Préparer la ligne en UTF-8 avec un saut de ligne final
+  Ligne_UTF8 := TEncoding.UTF8.GetBytes(
+    FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + Ligne + sLineBreak);
+
+  // Section critique : un seul thread écrit à la fois pour éviter
+  // l'entrelacement des lignes ou la corruption du fichier.
+  FLock.Enter;
   try
-    WriteLn(F, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + Ligne);
+    if TFile.Exists(FLogFile) then
+      Stream := TFileStream.Create(FLogFile, fmOpenWrite or fmShareDenyWrite)
+    else
+      Stream := TFileStream.Create(FLogFile, fmCreate);
+    try
+      Stream.Seek(0, soEnd);  // Ajouter à la fin
+      Stream.WriteBuffer(Ligne_UTF8[0], Length(Ligne_UTF8));
+    finally
+      Stream.Free;
+    end;
   finally
-    CloseFile(F);
+    FLock.Leave;
   end;
 end;
 
@@ -766,6 +862,12 @@ end;
 
 end.
 ```
+
+> 💡 **Pourquoi ces choix ?**  
+>  
+> - **`TCriticalSection`** : sans verrou, deux threads qui appellent `LogAction` en même temps peuvent entrelacer leurs lignes ou corrompre le fichier. La section critique sérialise l'écriture.  
+> - **`TFileStream` + `TEncoding.UTF8`** : `TextFile`/`WriteLn` écrit en encodage ANSI système sous Windows, ce qui casse les accents (« RÉUSSIE », « ÉCHOUÉE ») à l'ouverture sous Linux ou dans un éditeur Unicode. `TFileStream` + UTF-8 produit un fichier portable.  
+> - **`fmShareDenyWrite`** : permet à un outil de monitoring (`tail -f`, lecteur de logs) d'ouvrir le fichier en lecture pendant qu'on y écrit.
 
 **Utilisation :**
 
@@ -831,6 +933,8 @@ end;
 
 ### Chiffrer les données personnelles
 
+> ⚠️ **À nouveau, attention au vocabulaire** : l'exemple ci-dessous illustre le **principe** d'un chiffrement à clé répétée, mais ce **n'est PAS** un chiffrement sérieux. **Ne stockez jamais** un vrai numéro de sécurité sociale, une carte bancaire, ou des données médicales avec ce code. Utilisez **AES-256-GCM** via une bibliothèque éprouvée (voir liste plus bas).
+
 ```sql
 -- Stocker des données chiffrées
 CREATE TABLE clients (
@@ -842,33 +946,33 @@ CREATE TABLE clients (
 );
 ```
 
+Exemple **pédagogique** (XOR à clé répétée, NE PAS UTILISER EN PRODUCTION) :
+
 ```pascal
 uses
   System.NetEncoding;
 
-function ChiffrerDonnees(const Donnees: string; const Cle: string): string;  
+function OffusquerDonnees(const Donnees: string; const Cle: string): string;  
 var  
-  // Utiliser une vraie bibliothèque de chiffrement (AES-256)
-  // Ceci est un exemple simplifié
   Bytes: TBytes;
   i: Integer;
 begin
+  // ⚠️ XOR à clé répétée — facile à casser par analyse de fréquence.
+  // À titre d'illustration uniquement. Pour de vraies données sensibles,
+  // utilisez AES-256-GCM (cf. Sodium for Delphi, TMS Cryptography Pack).
   Bytes := TEncoding.UTF8.GetBytes(Donnees);
-
-  // XOR simple (REMPLACER par AES en production !)
   for i := 0 to Length(Bytes) - 1 do
     Bytes[i] := Bytes[i] xor Ord(Cle[1 + (i mod Length(Cle))]);
 
   Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
 end;
 
-function DechiffrerDonnees(const DonneesChiffrees: string; const Cle: string): string;  
+function DesoffusquerDonnees(const DonneesOffusquees: string; const Cle: string): string;  
 var  
   Bytes: TBytes;
   i: Integer;
 begin
-  // Opération inverse : Base64 decode → XOR → UTF8 decode
-  Bytes := TNetEncoding.Base64.DecodeStringToBytes(DonneesChiffrees);
+  Bytes := TNetEncoding.Base64.DecodeStringToBytes(DonneesOffusquees);
 
   for i := 0 to Length(Bytes) - 1 do
     Bytes[i] := Bytes[i] xor Ord(Cle[1 + (i mod Length(Cle))]);
@@ -876,14 +980,14 @@ begin
   Result := TEncoding.UTF8.GetString(Bytes);
 end;
 
-// Utilisation
+// Utilisation (à des fins pédagogiques uniquement)
 procedure SauvegarderClientAvecDonneesSensibles;  
 var  
-  NSS_Chiffre: string;
+  NSS_Offusque: string;
   Cle: string;
 begin
-  Cle := 'CleSecreteTresDifficile123!@#';  // En production : clé plus forte
-  NSS_Chiffre := ChiffrerDonnees('1 85 03 75 116 234 56', Cle);
+  Cle := 'CleSecreteTresDifficile123!@#';
+  NSS_Offusque := OffusquerDonnees('1 85 03 75 116 234 56', Cle);
 
   FDQuery1.SQL.Text :=
     'INSERT INTO clients (nom, email, numero_securite_sociale_chiffre) ' +
@@ -891,18 +995,26 @@ begin
 
   FDQuery1.ParamByName('nom').AsString := 'Dupont';
   FDQuery1.ParamByName('email').AsString := 'dupont@email.fr';
-  FDQuery1.ParamByName('nss').AsString := NSS_Chiffre;
+  FDQuery1.ParamByName('nss').AsString := NSS_Offusque;
 
   FDQuery1.ExecSQL;
 end;
 ```
+
+> 💡 **Données ultra-sensibles (numéro de sécurité sociale, carte bancaire, données de santé)** : ces données sont encadrées par la **RGPD** (Europe) et le **PCI DSS** (cartes bancaires). Dans la plupart des cas, la bonne approche n'est **pas de chiffrer vous-même**, mais :  
+>  
+> - **Tokeniser** : ne jamais stocker le numéro brut, le remplacer par un identifiant opaque (le vrai numéro est géré par un prestataire spécialisé comme Stripe, Adyen…)  
+> - **Déléguer** à un coffre-fort géré (HashiCorp Vault, AWS KMS, Azure Key Vault)  
+> - **Hash + sel** si la donnée n'a besoin que d'être comparée et jamais relue en clair  
+>  
+> Ne réinventez pas la cryptographie — utilisez des composants éprouvés et audités.
 
 ## Checklist de sécurité
 
 ### ✅ Base de données
 
 - [ ] Requêtes paramétrées pour TOUTES les entrées utilisateur
-- [ ] Mots de passe hachés (BCrypt ou SHA-256 + salt)
+- [ ] Mots de passe hachés avec **Argon2id** ou **BCrypt** (PAS SHA-256 nu — voir section dédiée)
 - [ ] Connexions SSL/TLS activées
 - [ ] Principe du moindre privilège (droits minimaux)
 - [ ] Pas de compte root/admin dans l'application
@@ -1039,10 +1151,12 @@ else
 
 ### Bibliothèques recommandées
 
-- **BCrypt** : Hachage de mots de passe
-- **OpenSSL** : Chiffrement et SSL/TLS
-- **TMS Security** : Suite de sécurité pour Delphi
-- **Indy** : Communications sécurisées
+- **Sodium for Delphi** (libsodium) : Argon2id pour les mots de passe, AES-256-GCM pour les données — API moderne, défauts sûrs
+- **DelphiBcrypt** : Hachage de mots de passe BCrypt (open source)
+- **TMS Cryptography Pack** : Suite cryptographique complète (commercial)
+- **OpenSSL** : Chiffrement et SSL/TLS (via Indy ou wrapper)
+- **Indy** : Communications sécurisées (TLS/SSL, SMTPS, HTTPS…)
+- **DCPCrypt** : Bibliothèque historique open source (chiffrement symétrique/asymétrique)
 
 ## Résumé
 
@@ -1056,7 +1170,8 @@ else
 
 2. **JAMAIS stocker les mots de passe en clair**
    ```pascal
-   // ✅ Hash (BCrypt, SHA-256)
+   // ✅ Hash : Argon2id, BCrypt, scrypt (algorithmes "lents" anti-bruteforce)
+   // ❌ SHA-256 / MD5 / SHA-1 nus : trop rapides, vulnérables au GPU bruteforce
    // ❌ Texte brut
    ```
 
@@ -1083,11 +1198,13 @@ else
 | Menace | Solution |
 |--------|----------|
 | **Injection SQL** | Requêtes paramétrées |
-| **Mots de passe compromis** | Hachage (BCrypt) |
+| **Injection NoSQL** (MongoDB) | Échappement via `TJSONObject` + désactiver `$where` |
+| **Mots de passe compromis** | Hachage **Argon2id** ou BCrypt (PAS SHA-256 nu) |
 | **Écoute réseau** | SSL/TLS |
 | **Accès non autorisé** | Authentification + droits |
-| **Force brute** | Limitation de tentatives |
-| **Fuite de données** | Chiffrement + audit |
+| **Force brute** | Limitation de tentatives + algos lents |
+| **Fuite de données** | Chiffrement AES-256-GCM + audit |
+| **Identifiants en dur** | Variables d'env / coffre OS / KMS |
 
 ### Checklist rapide avant déploiement
 

@@ -85,7 +85,8 @@ DBGrid1.Options := DBGrid1.Options + [dgIndicator];
 // Permettre l'édition directe
 DBGrid1.Options := DBGrid1.Options + [dgEditing];
 
-// Afficher les lignes alternées colorées
+// Tracer une ligne horizontale entre chaque rangée
+// (pour un fond alterné coloré, utiliser plutôt l'événement OnDrawColumnCell)
 DBGrid1.Options := DBGrid1.Options + [dgRowLines];
 ```
 
@@ -225,8 +226,27 @@ end;
 
 // Clic sur un titre de colonne (pour trier)
 procedure TForm1.DBGrid1TitleClick(Column: TColumn);  
-begin  
-  // Trier par cette colonne
+const  
+  // ⚠️ Whitelist obligatoire : on ne peut PAS paramétrer un nom de colonne
+  // dans ORDER BY (SQL ne supporte les paramètres que pour les VALEURS).
+  // La concaténation directe serait vulnérable à l'injection si le nom de
+  // colonne pouvait être influencé par l'utilisateur. La whitelist limite
+  // les valeurs possibles à des colonnes connues et sûres.
+  COLONNES_TRIABLES: array[0..3] of string = ('nom', 'prenom', 'email', 'date_inscription');
+var
+  Trouve: Boolean;
+  Col: string;
+begin
+  Trouve := False;
+  for Col in COLONNES_TRIABLES do
+    if SameText(Col, Column.FieldName) then
+    begin
+      Trouve := True;
+      Break;
+    end;
+
+  if not Trouve then Exit;  // Colonne non triable : on ignore
+
   FDQuery1.Close;
   FDQuery1.SQL.Text := 'SELECT * FROM clients ORDER BY ' + Column.FieldName;
   FDQuery1.Open;
@@ -243,55 +263,68 @@ end;
 ### Exporter le contenu du DBGrid
 
 ```pascal
+uses
+  System.Classes, System.SysUtils;
+
+// Échappement minimal RFC 4180 — voir chapitre 7.8 pour la version complète
+function EchapperCSV(const Champ: string; Sep: Char = ';'): string;  
+begin  
+  Result := Champ;
+  if (Pos(Sep, Result) > 0) or (Pos('"', Result) > 0) or
+     (Pos(#13, Result) > 0) or (Pos(#10, Result) > 0) then
+    Result := '"' + StringReplace(Result, '"', '""', [rfReplaceAll]) + '"';
+end;
+
 procedure ExporterVersCsv(Grid: TDBGrid; const NomFichier: string);  
 var  
-  F: TextFile;
+  Lignes: TStringList;
   i: Integer;
   Ligne: string;
+  DataSet: TDataSet;
 begin
-  AssignFile(F, NomFichier);
-  Rewrite(F);
+  DataSet := Grid.DataSource.DataSet;
+  Lignes := TStringList.Create;
   try
     // En-têtes
     Ligne := '';
     for i := 0 to Grid.Columns.Count - 1 do
-    begin
       if Grid.Columns[i].Visible then
       begin
         if Ligne <> '' then Ligne := Ligne + ';';
-        Ligne := Ligne + Grid.Columns[i].Title.Caption;
+        Ligne := Ligne + EchapperCSV(Grid.Columns[i].Title.Caption);
       end;
-    end;
-    WriteLn(F, Ligne);
+    Lignes.Add(Ligne);
 
-    // Données
-    Grid.DataSource.DataSet.DisableControls;
+    // Données — DisableControls évite de redessiner le DBGrid à chaque Next
+    DataSet.DisableControls;
     try
-      Grid.DataSource.DataSet.First;
-      while not Grid.DataSource.DataSet.Eof do
+      DataSet.First;
+      while not DataSet.Eof do
       begin
         Ligne := '';
         for i := 0 to Grid.Columns.Count - 1 do
-        begin
-          if Grid.Columns[i].Visible then
+          if Grid.Columns[i].Visible and Assigned(Grid.Columns[i].Field) then
           begin
             if Ligne <> '' then Ligne := Ligne + ';';
-            Ligne := Ligne + Grid.Columns[i].Field.AsString;
+            Ligne := Ligne + EchapperCSV(Grid.Columns[i].Field.AsString);
           end;
-        end;
-        WriteLn(F, Ligne);
-        Grid.DataSource.DataSet.Next;
+        Lignes.Add(Ligne);
+        DataSet.Next;
       end;
     finally
-      Grid.DataSource.DataSet.EnableControls;
+      DataSet.EnableControls;
     end;
 
+    // Sauvegarde en UTF-8 (BOM inclus pour Excel)
+    Lignes.SaveToFile(NomFichier, TEncoding.UTF8);
     ShowMessage('Export réussi');
   finally
-    CloseFile(F);
+    Lignes.Free;
   end;
 end;
 ```
+
+> 💡 **Pourquoi `TStringList` + `TEncoding.UTF8` plutôt que `TextFile` / `WriteLn`** : `TextFile` écrit en encodage ANSI système sous Windows, ce qui casse silencieusement les caractères accentués et les caractères non européens dès qu'on ouvre l'export sous un autre OS ou un autre logiciel. `TStringList.SaveToFile(..., TEncoding.UTF8)` produit un CSV portable et préfixé du BOM UTF-8 que Excel reconnaît à l'ouverture.
 
 ## Contrôles de saisie
 

@@ -210,8 +210,10 @@ unit uMigrationManager;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.IOUtils,
-  FireDAC.Comp.Client;
+  System.SysUtils, System.Classes, System.IOUtils, System.DateUtils,
+  System.Generics.Collections, System.Generics.Defaults,
+  FireDAC.Comp.Client, FireDAC.Comp.ScriptCommands, FireDAC.Stan.Util,
+  FireDAC.Comp.Script;
 
 type
   TMigration = record
@@ -355,25 +357,30 @@ end;
 procedure TMigrationManager.AppliquerMigration(const Migration: TMigration);  
 var  
   Script: string;
-  Query: TFDQuery;
+  FDScript: TFDScript;
   Debut: TDateTime;
   Duree: Integer;
 begin
   // Charger le script
   Script := ChargerScriptMigration(Migration.NomFichier);
 
-  Query := TFDQuery.Create(nil);
+  // ⚠️ Important : on utilise TFDScript et non TFDQuery.
+  // TFDQuery.ExecSQL n'exécute qu'UNE SEULE commande SQL. Or un script de
+  // migration contient typiquement plusieurs commandes séparées par `;`
+  // (CREATE TABLE, ALTER, INSERT…). TFDScript gère ce cas en découpant
+  // automatiquement le script aux séparateurs.
+  FDScript := TFDScript.Create(nil);
   try
-    Query.Connection := FConnection;
+    FDScript.Connection := FConnection;
 
     // Mesurer le temps d'exécution
     Debut := Now;
 
-    // Exécuter le script
-    // Note : Pour des scripts complexes avec plusieurs commandes,
-    // il faudrait les séparer et les exécuter une par une
-    Query.SQL.Text := Script;
-    Query.ExecSQL;
+    // Exécuter tout le script
+    FDScript.SQLScripts.Add;
+    FDScript.SQLScripts[0].SQL.Text := Script;
+    FDScript.ValidateAll;
+    FDScript.ExecuteAll;
 
     // Calculer la durée
     Duree := MilliSecondsBetween(Now, Debut);
@@ -382,7 +389,7 @@ begin
     EnregistrerMigration(Migration, Duree);
 
   finally
-    Query.Free;
+    FDScript.Free;
   end;
 end;
 
@@ -899,23 +906,67 @@ Pour les applications TMS XData (REST/ORM).
 Pour des tables avec beaucoup de données :
 
 ```sql
--- Migration progressive par lots
-SET @batch_size = 1000;  
-SET @offset = 0;  
+-- ⚠️ REPEAT/UNTIL est un bloc de contrôle MySQL qui doit être à l'intérieur
+-- d'une procédure stockée ou d'un bloc BEGIN..END. On ne peut pas l'exécuter
+-- directement comme une requête isolée. Voici le wrapper complet :
 
-REPEAT
-  UPDATE clients
-  SET email = LOWER(email)
-  WHERE id >= @offset AND id < @offset + @batch_size;
+DELIMITER //
 
-  SET @offset = @offset + @batch_size;
+CREATE PROCEDURE migrate_emails_batch()  
+BEGIN  
+  DECLARE batch_size INT DEFAULT 1000;
+  DECLARE max_offset INT DEFAULT 0;
+  DECLARE current_offset INT DEFAULT 0;
+  DECLARE max_id INT;
 
-  -- Pause pour ne pas saturer
-  SELECT SLEEP(0.1);
+  SELECT MAX(id) INTO max_id FROM clients;
 
-UNTIL @offset > (SELECT MAX(id) FROM clients)  
-END REPEAT;  
+  REPEAT
+    UPDATE clients
+       SET email = LOWER(email)
+     WHERE id >= current_offset
+       AND id <  current_offset + batch_size;
+
+    SET current_offset = current_offset + batch_size;
+
+    -- Pause pour ne pas saturer (0.1 seconde)
+    DO SLEEP(0.1);
+
+  UNTIL current_offset > max_id
+  END REPEAT;
+END //
+
+DELIMITER ;
+
+-- Appel
+CALL migrate_emails_batch();
+
+-- Nettoyage (optionnel)
+DROP PROCEDURE migrate_emails_batch;
 ```
+
+> 💡 **Alternative côté Delphi** : la même logique en boucle Pascal donne plus de contrôle et fonctionne sur tous les SGBD, sans procédure stockée :  
+>  
+> ```pascal  
+> const BATCH_SIZE = 1000;  
+> var Offset, MaxId: Integer;  
+> begin  
+>   QueryMax.Open;  
+>   MaxId := QueryMax.Fields[0].AsInteger;  
+>   Offset := 0;  
+>   while Offset <= MaxId do  
+>   begin  
+>     QueryUpdate.SQL.Text :=  
+>       'UPDATE clients SET email = LOWER(email) ' +  
+>       'WHERE id >= :a AND id < :b';  
+>     QueryUpdate.ParamByName('a').AsInteger := Offset;  
+>     QueryUpdate.ParamByName('b').AsInteger := Offset + BATCH_SIZE;  
+>     QueryUpdate.ExecSQL;  
+>     Inc(Offset, BATCH_SIZE);  
+>     Sleep(100);  // pause de 100ms entre les lots  
+>   end;  
+> end;  
+> ```
 
 ### Migration avec downtime minimal
 

@@ -166,7 +166,7 @@ else
 ### Parcourir tous les enregistrements
 
 ```pascal
-procedure ParcourrirTous;  
+procedure ParcourirTous;  
 begin  
   FDQuery1.First;
   while not FDQuery1.Eof do
@@ -407,9 +407,11 @@ DBGrid1.DataSource := DataSource1;
 
 **Automatisme :** Quand vous changez d'enregistrement dans le DataSet, **tous** les contrôles liés se mettent à jour automatiquement !
 
-## Exemple complet : Formulaire maître-détail
+## Exemple complet : Formulaire avec navigation et édition
 
-Créons une interface complète avec navigation et édition :
+Créons une interface complète qui combine grille de consultation, formulaire d'édition et navigateur :
+
+> 💡 **Note sur la terminologie « maître-détail »** : le pattern *master-detail* désigne une relation entre **deux datasets liés** (ex. clients/commandes : sélectionner un client filtre automatiquement ses commandes). L'exemple ci-dessous présente un formulaire de gestion sur **un seul** dataset. Pour une vraie relation maître-détail, voir la section dédiée plus bas ou le chapitre 8.8 (Live Bindings).
 
 ### Composants sur le formulaire
 
@@ -703,6 +705,9 @@ FDQuery1.IndexFieldNames := 'nom:D';  // D pour Descending
 ### Méthode Locate
 
 ```pascal
+uses
+  System.Variants;  // Nécessaire pour VarArrayOf et VarIsNull
+
 // Chercher un enregistrement
 if FDQuery1.Locate('nom', 'Dupont', []) then
   ShowMessage('Client trouvé')
@@ -721,6 +726,8 @@ if FDQuery1.Locate('nom', 'Dup', [loPartialKey]) then
 if FDQuery1.Locate('nom;prenom', VarArrayOf(['Dupont', 'Jean']), []) then
   ShowMessage('Trouvé');
 ```
+
+> 💡 **Locate côté client vs côté serveur** : `Locate` parcourt le dataset **déjà chargé en mémoire**, séquentiellement. Sur 100 enregistrements c'est instantané ; sur 100 000 c'est lent et bloque l'UI. Pour de grands volumes, préférez un **`SELECT ... WHERE`** qui laisse le serveur faire la recherche en utilisant les **indexes** — bien plus rapide. Réservez `Locate` aux datasets de taille modeste (typiquement < 10 000 lignes) ou aux datasets entièrement en mémoire (`TFDMemTable`).
 
 ### Méthode Lookup
 
@@ -876,9 +883,14 @@ end;
 
 3. **Accéder aux champs d'un dataset fermé**
    ```pascal
-   // ❌ ERREUR
-   if not FDQuery1.Active then
-     FDQuery1.FieldByName('nom').AsString;  // Exception !
+   // ❌ ERREUR : accès aux champs alors que le dataset n'est pas ouvert
+   //    → lève une exception
+   FDQuery1.Close;
+   ShowMessage(FDQuery1.FieldByName('nom').AsString);  // Plantage !
+
+   // ✅ CORRECT : toujours vérifier Active avant d'accéder aux champs
+   if FDQuery1.Active and not FDQuery1.IsEmpty then
+     ShowMessage(FDQuery1.FieldByName('nom').AsString);
    ```
 
 ## Résumé

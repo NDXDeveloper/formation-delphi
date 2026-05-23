@@ -114,10 +114,11 @@ TFDQuery: FDQueryClients
 ```pascal
 procedure TdmDatabase.ConfigurerSQLite;  
 var  
-  CheminBase: string;
+  CheminBase, DossierBase: string;
 begin
   // Chemin du fichier de base de données
   CheminBase := ExtractFilePath(Application.ExeName) + 'data\mabase.db';
+  DossierBase := ExtractFileDir(CheminBase);
 
   // Configuration de la connexion
   FDConnection1.Params.Clear;
@@ -131,9 +132,11 @@ begin
 
   FDConnection1.LoginPrompt := False;
 
-  // Créer le fichier s'il n'existe pas
-  if not FileExists(CheminBase) then
-    ForceDirectories(ExtractFileDir(CheminBase));
+  // Important : créer le DOSSIER s'il n'existe pas (pas le fichier — SQLite
+  // crée le fichier automatiquement). Sans ce dossier, la connexion échoue
+  // avec "unable to open database file".
+  if not DirectoryExists(DossierBase) then
+    ForceDirectories(DossierBase);
 
   FDConnection1.Connected := True;
 end;
@@ -287,10 +290,26 @@ end;
 
 function TDatabaseSQLite.ListerClients: TFDQuery;  
 begin  
+  // ⚠️ Cette fonction transfère la propriété du TFDQuery à l'appelant :
+  // c'est à lui d'appeler Result.Free quand il a fini.
+  // Pattern d'utilisation recommandé :
+  //   Query := DB.ListerClients;
+  //   try
+  //     while not Query.Eof do ...
+  //   finally
+  //     Query.Free;
+  //   end;
   Result := TFDQuery.Create(nil);
-  Result.Connection := FConnection;
-  Result.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
-  Result.Open;
+  try
+    Result.Connection := FConnection;
+    Result.SQL.Text := 'SELECT * FROM clients ORDER BY nom';
+    Result.Open;
+  except
+    // Si l'ouverture échoue, on libère pour éviter une fuite — sinon
+    // l'appelant n'a jamais le pointeur retourné.
+    Result.Free;
+    raise;
+  end;
 end;
 
 end.
@@ -772,9 +791,17 @@ id INTEGER PRIMARY KEY AUTOINCREMENT
 -- MySQL, PostgreSQL, SQLite
 SELECT * FROM clients LIMIT 10
 
--- SQL Server
+-- SQL Server (syntaxe historique)
 SELECT TOP 10 * FROM clients
+
+-- SQL Server 2012+ et standard ANSI SQL:2008 — fonctionne aussi sur
+-- PostgreSQL et MySQL 8.0.19+
+SELECT * FROM clients
+  ORDER BY nom
+  OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;
 ```
+
+> 💡 **`OFFSET..FETCH NEXT` est la syntaxe portable** : c'est la forme standard ANSI SQL. Elle nécessite `ORDER BY` (la notion d'« 10 premiers » n'a de sens qu'avec un ordre défini) et fonctionne sur SQL Server, PostgreSQL, Oracle 12c+ et MySQL 8.0.19+. Si vous écrivez du SQL portable, préférez-la à `LIMIT` (non standard mais omniprésent côté open source) et `TOP` (spécifique SQL Server).
 
 #### Date actuelle
 

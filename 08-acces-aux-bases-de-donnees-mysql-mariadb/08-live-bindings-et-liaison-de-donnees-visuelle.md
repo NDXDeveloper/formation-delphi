@@ -714,21 +714,40 @@ type
   TClientViewModel = class
   private
     FClient: TClientModel;
-    FAdapter: TAdapterBindSource;
   public
     constructor Create(AOwner: TComponent);
+    destructor Destroy; override;
     property Client: TClientModel read FClient;
-    property Adapter: TAdapterBindSource read FAdapter;
   end;
 
-// View (Formulaire)
+constructor TClientViewModel.Create(AOwner: TComponent);  
+begin  
+  inherited Create;
+  FClient := TClientModel.Create;
+end;
+
+destructor TClientViewModel.Destroy;  
+begin  
+  FClient.Free;
+  inherited;
+end;
+
+// View (Formulaire) — AdapterBindSource1 est un composant déposé au design-time
 procedure TFormClient.FormCreate(Sender: TObject);  
 begin  
   FViewModel := TClientViewModel.Create(Self);
-  AdapterBindSource1 := FViewModel.Adapter;
-  // Les liaisons dans l'éditeur visuel font le reste !
+
+  // On configure l'adapter pour pointer sur l'objet métier exposé par le
+  // ViewModel. On NE remplace PAS le composant AdapterBindSource1
+  // (c'est un champ de la classe TFormClient, déposé sur le formulaire) :
+  // on modifie son contenu.
+  AdapterBindSource1.Adapter.SetDataObject(FViewModel.Client);
+  AdapterBindSource1.Active := True;
+  // Les liaisons définies dans l'éditeur visuel font le reste !
 end;
 ```
+
+> ⚠️ **Piège à éviter** : `AdapterBindSource1` n'est pas une variable libre, c'est un champ de la classe pointant vers un composant déposé dans l'IDE. Écrire `AdapterBindSource1 := X;` perdrait la référence au composant initialisé par l'IDE et provoquerait des bugs incompréhensibles. Modifiez toujours ses **propriétés** (`Adapter`, `Active`, …) plutôt que la variable elle-même.
 
 ## Bonnes pratiques
 

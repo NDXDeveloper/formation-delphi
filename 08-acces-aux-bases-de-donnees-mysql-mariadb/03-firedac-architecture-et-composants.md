@@ -247,6 +247,14 @@ Quand une requête prend du temps, l'utilisateur voit que l'application travaill
 **Dans la palette de composants :**
 Onglet **FireDAC** → `TFDGUIxWaitCursor`
 
+> 💡 **VCL vs FMX** : `TFDGUIxWaitCursor` fonctionne avec les deux frameworks, mais il s'appuie sur des unités différentes selon la cible :  
+>  
+> - **Applications VCL** (Windows desktop) → l'unité `FireDAC.VCLUI.Wait` est requise dans le `uses`  
+> - **Applications FireMonkey/FMX** (multi-plateformes) → l'unité `FireDAC.FMXUI.Wait` est requise à la place  
+> - **Applications console / sans UI** → utilisez `FireDAC.ConsoleUI.Wait`  
+>  
+> Sans la bonne unité, vous obtiendrez à l'exécution l'erreur « FireDAC error: cannot find suitable wait cursor implementation ». Delphi ajoute automatiquement l'unité correcte quand vous déposez le composant sur le formulaire.
+
 ### TFDTransaction
 
 **Rôle :** Gère les transactions pour assurer l'intégrité des données.

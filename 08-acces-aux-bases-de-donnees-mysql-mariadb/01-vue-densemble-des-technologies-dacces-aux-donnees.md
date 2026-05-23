@@ -52,7 +52,7 @@ FireDAC est inclus dans toutes les éditions de Delphi, y compris la Community E
 
 **Limitations :**
 - Moins de fonctionnalités que FireDAC
-- Moins bien maintenu aujourd'hui
+- **Officiellement déprécié** par Embarcadero depuis plusieurs versions (les composants restent disponibles mais ne sont plus activement développés)
 - Support limité du multi-plateformes
 
 **Quand l'utiliser ?**
@@ -108,8 +108,8 @@ Delphi (via FireDAC) offre un excellent support pour **SQLite**, une base de don
 - Parfait pour les applications desktop légères ou mobiles
 - Idéal pour le stockage local
 
-#### Data Snap
-**Data Snap** n'est pas vraiment une technologie d'accès aux données, mais plutôt un **framework multi-tiers** :
+#### DataSnap
+**DataSnap** n'est pas vraiment une technologie d'accès aux données, mais plutôt un **framework multi-tiers** :
 - Permet de créer des serveurs d'application
 - Sépare la logique d'accès aux données du client
 - Utile pour les architectures distribuées
