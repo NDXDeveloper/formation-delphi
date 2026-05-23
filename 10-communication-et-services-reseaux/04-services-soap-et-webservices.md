@@ -561,7 +561,10 @@ begin
     // Accéder au client HTTP
     HTTPReqResp := HTTPRIO.HTTPWebNode as THTTPReqResp;
 
-    // Configurer le certificat
+    // ⚠️ ATTENTION SÉCURITÉ : soIgnoreInvalidCerts désactive la validation des
+    // certificats TLS. Utile UNIQUEMENT en développement local (certificats
+    // auto-signés, environnement de test). En production, cela ouvre la porte
+    // aux attaques de type Man-in-the-Middle. À supprimer avant déploiement.
     HTTPReqResp.InvokeOptions := HTTPReqResp.InvokeOptions + [soIgnoreInvalidCerts];
 
     // Pour utiliser un certificat client spécifique,
@@ -651,6 +654,10 @@ begin
     FMemo.Lines.Add('=== REQUÊTE ' + MethodName + ' ===');
     FMemo.Lines.Add(Request.DataString);
     FMemo.Lines.Add('');
+
+    // Remettre la position à zéro pour que le framework SOAP puisse
+    // relire le stream et l'envoyer effectivement sur le réseau.
+    SOAPRequest.Position := 0;
   finally
     Request.Free;
   end;
@@ -668,6 +675,10 @@ begin
     FMemo.Lines.Add('=== RÉPONSE ' + MethodName + ' ===');
     FMemo.Lines.Add(Response.DataString);
     FMemo.Lines.Add('');
+
+    // Idem : le framework SOAP doit pouvoir reparcourir la réponse
+    // pour la désérialiser après notre interception.
+    SOAPResponse.Position := 0;
   finally
     Response.Free;
   end;
@@ -1079,15 +1090,15 @@ Si vous appelez souvent le même service, conservez l'instance :
 type
   TFormPrincipale = class(TForm)
   private
-    FServiceCalculateur: ICalculateur;
-    function GetServiceCalculateur: ICalculateur;
+    FServiceCalculator: ICalculatorSoap;
+    function GetServiceCalculator: ICalculatorSoap;
   end;
 
-function TFormPrincipale.GetServiceCalculateur: ICalculateur;  
+function TFormPrincipale.GetServiceCalculator: ICalculatorSoap;  
 begin  
-  if not Assigned(FServiceCalculateur) then
-    FServiceCalculateur := GetICalculateurSoap(False);
-  Result := FServiceCalculateur;
+  if not Assigned(FServiceCalculator) then
+    FServiceCalculator := GetICalculatorSoap(False);
+  Result := FServiceCalculator;
 end;
 ```
 

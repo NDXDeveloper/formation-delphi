@@ -779,6 +779,8 @@ end;
 
 **Côté Client :**
 
+Le client reçoit le DataSet et peut l'utiliser directement, ou le copier dans un `TFDMemTable`/`TClientDataSet` pour un usage déconnecté :
+
 ```pascal
 procedure TFormClient.ChargerClients;  
 var  
@@ -787,9 +789,16 @@ begin
   try
     DataSet := FServerMethods.GetClients;
 
-    ClientDataSet1.Data := TDataSetProvider.Create(nil).Data;
+    // Option 1 : Lier directement le DataSource au DataSet reçu
+    DataSource1.DataSet := DataSet;
+
+    // Option 2 (alternative) : Copier dans un FDMemTable local pour usage déconnecté
+    // FDMemTable1.Close;
+    // FDMemTable1.CopyDataSet(DataSet, [coStructure, coRestart, coAppend]);
+    // DataSource1.DataSet := FDMemTable1;
+
     // Afficher dans une grille
-    DBGrid1.DataSource.DataSet := ClientDataSet1;
+    DBGrid1.DataSource := DataSource1;
 
   except
     on E: Exception do
@@ -972,11 +981,17 @@ type
     LoginTime: TDateTime;
     LastActivity: TDateTime;
     SessionData: TDictionary<string, string>;
+    // Destructeur explicite indispensable : le doOwnsValues du dictionnaire
+    // parent (FSessions) libère le TSessionInfo, mais pas le TDictionary
+    // imbriqué qu'il contient. Sans ce destructor, fuite mémoire à chaque session.
+    destructor Destroy; override;
   end;
 
   TServerMethods = class(TDSServerModule)
   private
     class var FSessions: TObjectDictionary<string, TSessionInfo>;
+    class constructor Create;
+    class destructor Destroy;
     function GetSessionID: string;
     function GetSession: TSessionInfo;
   public
@@ -988,9 +1003,21 @@ type
 
 implementation
 
+destructor TSessionInfo.Destroy;  
+begin  
+  SessionData.Free;
+  inherited;
+end;
+
 class constructor TServerMethods.Create;  
 begin  
   FSessions := TObjectDictionary<string, TSessionInfo>.Create([doOwnsValues]);
+end;
+
+class destructor TServerMethods.Destroy;  
+begin  
+  // Le doOwnsValues garantit que tous les TSessionInfo restants sont libérés
+  FSessions.Free;
 end;
 
 function TServerMethods.Login(const Username, Password: string): string;  
@@ -1132,7 +1159,11 @@ begin
   Total := FServerMethods.GetTotalClients;
   TotalPages := (Total + PAGE_SIZE - 1) div PAGE_SIZE;
 
-  ClientDataSet1.Data := DataSet;
+  // Copier les données dans un FDMemTable local pour affichage déconnecté
+  FDMemTable1.Close;
+  FDMemTable1.CopyDataSet(DataSet, [coStructure, coRestart, coAppend]);
+  DataSource1.DataSet := FDMemTable1;
+
   LabelPage.Caption := Format('Page %d / %d', [NumeroPage, TotalPages]);
 end;
 ```
@@ -1150,6 +1181,13 @@ var
   InputStream, OutputStream: TMemoryStream;
   Compressor: TZCompressionStream;
 begin
+  // Cas limite : pas de données à compresser
+  if Length(Data) = 0 then
+  begin
+    SetLength(Result, 0);
+    Exit;
+  end;
+
   InputStream := TMemoryStream.Create;
   OutputStream := TMemoryStream.Create;
   try
@@ -1160,12 +1198,15 @@ begin
     try
       Compressor.CopyFrom(InputStream, InputStream.Size);
     finally
-      Compressor.Free;
+      Compressor.Free; // Free flushe le buffer dans OutputStream
     end;
 
     SetLength(Result, OutputStream.Size);
-    OutputStream.Position := 0;
-    OutputStream.Read(Result[0], OutputStream.Size);
+    if OutputStream.Size > 0 then
+    begin
+      OutputStream.Position := 0;
+      OutputStream.Read(Result[0], OutputStream.Size);
+    end;
 
   finally
     InputStream.Free;

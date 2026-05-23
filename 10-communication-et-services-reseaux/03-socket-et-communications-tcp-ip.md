@@ -777,7 +777,7 @@ begin
   end;
 
   // Valider le format
-  if not CommadeValide(Commande) then
+  if not CommandeValide(Commande) then
   begin
     AjouterLog('Commande invalide: ' + Commande);
     AContext.Connection.IOHandler.WriteLn('ERREUR: Commande invalide');
@@ -788,7 +788,7 @@ begin
   TraiterCommande(AContext, Commande);
 end;
 
-function TFormServeur.CommadeValide(const Commande: string): Boolean;  
+function TFormServeur.CommandeValide(const Commande: string): Boolean;  
 begin  
   // Implémenter votre logique de validation
   Result := not Commande.IsEmpty;
@@ -804,8 +804,13 @@ var
 const
   MAX_CLIENTS = 10;
 begin
-  NombreClients := IdTCPServer1.Contexts.LockList.Count;
-  IdTCPServer1.Contexts.UnlockList;
+  // LockList et UnlockList doivent toujours être appariés via try-finally
+  with IdTCPServer1.Contexts.LockList do
+  try
+    NombreClients := Count;
+  finally
+    IdTCPServer1.Contexts.UnlockList;
+  end;
 
   if NombreClients > MAX_CLIENTS then
   begin
@@ -897,9 +902,13 @@ type
     procedure IdTCPServer1Execute(AContext: TIdContext);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FUtilisateurs: TDictionary<string, string>; // IP -> Pseudo
+    FUtilisateurs: TDictionary<string, string>; // IP:Port -> Pseudo
     procedure AjouterLog(const Message: string);
     procedure DiffuserMessage(const Message: string; ExclureContext: TIdContext = nil);
+    // IP seule ne suffit pas comme clé : plusieurs clients derrière un même
+    // NAT (box internet, réseau d'entreprise…) partageraient la même IP.
+    // La combinaison IP:Port est unique pour chaque connexion TCP active.
+    function GetClientKey(AContext: TIdContext): string;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -916,6 +925,11 @@ constructor TFormChatServeur.Create(AOwner: TComponent);
 begin  
   inherited;
   FUtilisateurs := TDictionary<string, string>.Create;
+end;
+
+function TFormChatServeur.GetClientKey(AContext: TIdContext): string;  
+begin  
+  Result := AContext.Binding.PeerIP + ':' + IntToStr(AContext.Binding.PeerPort);
 end;
 
 destructor TFormChatServeur.Destroy;  
@@ -956,20 +970,21 @@ end;
 
 procedure TFormChatServeur.IdTCPServer1Connect(AContext: TIdContext);  
 var  
-  Pseudo: string;
+  Pseudo, ClientKey: string;
 begin
   // Recevoir le pseudo du nouvel utilisateur
   Pseudo := AContext.Connection.IOHandler.ReadLn;
+  ClientKey := GetClientKey(AContext);
 
   // Stocker le pseudo
   TMonitor.Enter(FUtilisateurs);
   try
-    FUtilisateurs.Add(AContext.Binding.PeerIP, Pseudo);
+    FUtilisateurs.Add(ClientKey, Pseudo);
   finally
     TMonitor.Exit(FUtilisateurs);
   end;
 
-  AjouterLog(Pseudo + ' s''est connecté (' + AContext.Binding.PeerIP + ')');
+  AjouterLog(Pseudo + ' s''est connecté (' + ClientKey + ')');
 
   // Informer tous les autres utilisateurs
   DiffuserMessage('*** ' + Pseudo + ' a rejoint le chat ***', AContext);
@@ -980,13 +995,14 @@ end;
 
 procedure TFormChatServeur.IdTCPServer1Disconnect(AContext: TIdContext);  
 var  
-  Pseudo: string;
+  Pseudo, ClientKey: string;
 begin
+  ClientKey := GetClientKey(AContext);
   TMonitor.Enter(FUtilisateurs);
   try
-    if FUtilisateurs.TryGetValue(AContext.Binding.PeerIP, Pseudo) then
+    if FUtilisateurs.TryGetValue(ClientKey, Pseudo) then
     begin
-      FUtilisateurs.Remove(AContext.Binding.PeerIP);
+      FUtilisateurs.Remove(ClientKey);
       AjouterLog(Pseudo + ' s''est déconnecté');
       DiffuserMessage('*** ' + Pseudo + ' a quitté le chat ***');
     end;
@@ -1005,7 +1021,7 @@ begin
   begin
     TMonitor.Enter(FUtilisateurs);
     try
-      if FUtilisateurs.TryGetValue(AContext.Binding.PeerIP, Pseudo) then
+      if FUtilisateurs.TryGetValue(GetClientKey(AContext), Pseudo) then
       begin
         AjouterLog(Pseudo + ': ' + Message);
         DiffuserMessage(Pseudo + ': ' + Message, AContext);
@@ -1072,6 +1088,8 @@ uses
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient;
 
 type
+  TFormChatClient = class;  // Forward declaration
+
   TThreadReceptionChat = class(TThread)
   private
     FClient: TIdTCPClient;
@@ -1283,8 +1301,8 @@ end.
 ✅ **Composants Indy :**
 - `TIdTCPServer` pour créer un serveur
 - `TIdTCPClient` pour créer un client
-- `ReadLn/WriteLn` pour les données texte
-- `ReadStream/WriteStream` pour les données binaires
+- `IOHandler.ReadLn` / `IOHandler.WriteLn` pour les données texte
+- `IOHandler.ReadStream` / `IOHandler.Write(Stream, …)` pour les données binaires
 
 ✅ **Multithreading :**
 - Le serveur gère chaque client dans un thread

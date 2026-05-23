@@ -181,7 +181,8 @@ type
   TWebSocketState = (wsConnecting, wsOpen, wsClosing, wsClosed);
 
   TWebSocketClient = class
-  private
+  protected
+    // Membres protégés pour permettre l'extension (heartbeat, reconnexion auto…)
     FTCPClient: TIdTCPClient;
     FSSLHandler: TIdSSLIOHandlerSocketOpenSSL;
     FState: TWebSocketState;
@@ -193,11 +194,16 @@ type
     FLock: TCriticalSection;
     FReceiveThread: TThread;
 
-    procedure PerformHandshake(const Host, Path: string);
+    procedure PerformHandshake(const Host, Path: string; UseSSL: Boolean);
     procedure StartReceiveThread;
     procedure ProcessFrame;
     function BuildFrame(const Data: string; OpCode: Byte = $01): TBytes; overload;
     function BuildFrame(const Data: TBytes; OpCode: Byte = $02): TBytes; overload;
+
+    // Hook surchargeable par les classes héritées qui doivent réagir à la
+    // réception d'un Pong (par exemple THeartbeatWebSocket pour mettre à
+    // jour FLastPong et détecter une connexion morte).
+    procedure HandlePongReceived(const Payload: TBytes); virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -205,6 +211,7 @@ type
     procedure Connect(const URL: string);
     procedure Send(const Message: string); overload;
     procedure Send(const Data: TBytes); overload;
+    procedure SendPing;
     procedure Close;
 
     property State: TWebSocketState read FState;
@@ -224,8 +231,10 @@ constructor TWebSocketClient.Create;
 begin  
   inherited;
   FTCPClient := TIdTCPClient.Create(nil);
-  FSSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  FTCPClient.IOHandler := FSSLHandler;
+  // FSSLHandler créé à la demande dans Connect quand on utilise wss://.
+  // L'attacher inconditionnellement empêcherait les connexions ws:// en clair
+  // car Indy tenterait toujours un handshake TLS.
+  FSSLHandler := nil;
   FState := wsClosed;
   FLock := TCriticalSection.Create;
 end;
@@ -235,13 +244,13 @@ begin
   Close;
   FLock.Free;
   FTCPClient.Free;
-  FSSLHandler.Free;
+  FSSLHandler.Free; // Free sur nil est sûr en Pascal
   inherited;
 end;
 
 procedure TWebSocketClient.Connect(const URL: string);  
 var  
-  Protocol, Host, Path: string;
+  Host, Path: string;
   Port: Integer;
   UseSSL: Boolean;
 begin
@@ -284,15 +293,26 @@ begin
 
   if UseSSL then
   begin
+    // Création du SSL handler uniquement pour wss://
+    if not Assigned(FSSLHandler) then
+    begin
+      FSSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+      FTCPClient.IOHandler := FSSLHandler;
+    end;
     FSSLHandler.SSLOptions.Method := sslvTLSv1_2;
     FSSLHandler.SSLOptions.Mode := sslmClient;
+  end
+  else
+  begin
+    // ws:// : pas d'IOHandler SSL ; Indy utilise alors le handler TCP par défaut
+    FTCPClient.IOHandler := nil;
   end;
 
   try
     FTCPClient.Connect;
 
     // Handshake WebSocket
-    PerformHandshake(Host, Path);
+    PerformHandshake(Host, Path, UseSSL);
 
     FState := wsOpen;
 
@@ -313,20 +333,27 @@ begin
   end;
 end;
 
-procedure TWebSocketClient.PerformHandshake(const Host, Path: string);  
+procedure TWebSocketClient.PerformHandshake(const Host, Path: string; UseSSL: Boolean);  
 var  
   Key, Accept, ExpectedAccept: string;
-  Request, Response: string;
+  Request, Response, OriginScheme: string;
   Lines: TArray<string>;
   Line: string;
   HandshakeOK: Boolean;
 begin
-  // Générer une clé aléatoire
+  // Générer une clé aléatoire (16 octets aléatoires encodés en base64, selon RFC 6455)
   Key := TNetEncoding.Base64.Encode(THashSHA1.GetHashString(TGUID.NewGuid.ToString));
 
-  // Calculer l'Accept attendu
-  ExpectedAccept := TNetEncoding.Base64.Encode(
+  // Calculer l'Accept attendu : base64(SHA1(Key + GUID magique))
+  // On encode les 20 octets binaires de SHA1, pas la chaîne hex
+  ExpectedAccept := TNetEncoding.Base64.EncodeBytesToString(
     THashSHA1.GetHashBytes(Key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'));
+
+  // L'en-tête Origin doit refléter le schéma utilisé (http pour ws://, https pour wss://)
+  if UseSSL then
+    OriginScheme := 'https://'
+  else
+    OriginScheme := 'http://';
 
   // Construire la requête de handshake
   Request :=
@@ -336,7 +363,7 @@ begin
     'Connection: Upgrade' + #13#10 +
     'Sec-WebSocket-Key: ' + Key + #13#10 +
     'Sec-WebSocket-Version: 13' + #13#10 +
-    'Origin: http://' + Host + #13#10 +
+    'Origin: ' + OriginScheme + Host + #13#10 +
     #13#10;
 
   // Envoyer la requête
@@ -401,7 +428,7 @@ end;
 procedure TWebSocketClient.ProcessFrame;  
 var  
   Byte1, Byte2: Byte;
-  Fin, Masked: Boolean;
+  Masked: Boolean;
   OpCode: Byte;
   PayloadLength: Int64;
   MaskingKey: array[0..3] of Byte;
@@ -413,7 +440,9 @@ begin
   Byte1 := FTCPClient.IOHandler.ReadByte;
   Byte2 := FTCPClient.IOHandler.ReadByte;
 
-  Fin := (Byte1 and $80) <> 0;
+  // Note : on ignore le bit FIN ici car cet exemple ne gère pas la
+  // fragmentation des messages (frames de continuation). Pour un
+  // support complet, il faudrait accumuler les payloads jusqu'à FIN=1.
   OpCode := Byte1 and $0F;
   Masked := (Byte2 and $80) <> 0;
   PayloadLength := Byte2 and $7F;
@@ -459,10 +488,26 @@ begin
 
     $09: // Ping
       begin
-        // Répondre avec Pong
-        Send(Payload);
+        // Répondre avec une vraie frame Pong (opcode $0A) qui contient
+        // exactement le même payload que le Ping reçu (cf. RFC 6455 §5.5.3)
+        FLock.Enter;
+        try
+          FTCPClient.IOHandler.Write(TIdBytes(BuildFrame(Payload, $0A)));
+        finally
+          FLock.Leave;
+        end;
       end;
+
+    $0A: // Pong (réponse à un Ping qu'on a émis)
+      HandlePongReceived(Payload);
   end;
+end;
+
+procedure TWebSocketClient.HandlePongReceived(const Payload: TBytes);  
+begin  
+  // Comportement par défaut : ne rien faire.
+  // Les classes héritées peuvent surcharger pour mettre à jour leur état
+  // de heartbeat ou notifier l'application.
 end;
 
 function TWebSocketClient.BuildFrame(const Data: string; OpCode: Byte): TBytes;  
@@ -561,9 +606,28 @@ begin
   end;
 end;
 
+procedure TWebSocketClient.SendPing;  
+var  
+  EmptyPayload, Frame: TBytes;
+begin
+  if FState <> wsOpen then
+    raise Exception.Create('WebSocket non connecté');
+
+  FLock.Enter;
+  try
+    // Frame Ping (opcode $09) avec payload vide, construite proprement
+    // par BuildFrame (qui gère le bit FIN, le masquage, etc.)
+    SetLength(EmptyPayload, 0);
+    Frame := BuildFrame(EmptyPayload, $09);
+    FTCPClient.IOHandler.Write(TIdBytes(Frame));
+  finally
+    FLock.Leave;
+  end;
+end;
+
 procedure TWebSocketClient.Close;  
 var  
-  CloseFrame: TBytes;
+  EmptyPayload: TBytes;
 begin
   if FState = wsClosed then
     Exit;
@@ -571,13 +635,19 @@ begin
   FState := wsClosing;
 
   try
-    // Envoyer frame de fermeture
-    SetLength(CloseFrame, 2);
-    CloseFrame[0] := $88; // FIN + Close opcode
-    CloseFrame[1] := $00; // Pas de payload
-
+    // Envoyer frame de fermeture (opcode $08).
+    // IMPORTANT : selon RFC 6455 §5.3, le client doit masquer TOUTES ses frames
+    // (y compris les frames de contrôle comme Close). BuildFrame s'en charge.
     if FTCPClient.Connected then
-      FTCPClient.IOHandler.Write(TIdBytes(CloseFrame));
+    begin
+      SetLength(EmptyPayload, 0);
+      FLock.Enter;
+      try
+        FTCPClient.IOHandler.Write(TIdBytes(BuildFrame(EmptyPayload, $08)));
+      finally
+        FLock.Leave;
+      end;
+    end;
   finally
     if Assigned(FReceiveThread) then
     begin
@@ -649,8 +719,10 @@ begin
   FWebSocket.OnDisconnect := OnWebSocketDisconnect;
   FWebSocket.OnError := OnWebSocketError;
 
-  // URL par défaut
-  EditURL.Text := 'wss://echo.websocket.org';
+  // URL par défaut (service Echo public pour tester)
+  // Note : echo.websocket.org a été arrêté en 2021,
+  // on utilise echo.websocket.events qui reprend le même rôle
+  EditURL.Text := 'wss://echo.websocket.events';
 
   UpdateUI;
 end;
@@ -756,7 +828,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  IdHTTPServer, IdContext, IdCustomHTTPServer, IdHashSHA,
+  IdHTTPServer, IdContext, IdCustomHTTPServer, System.Hash,
   System.NetEncoding, System.SyncObjs;
 
 type
@@ -786,6 +858,7 @@ type
     procedure HTTPServerCommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
     procedure HandleWebSocketFrame(Connection: TWebSocketConnection);
+    procedure SendPongFrame(AContext: TIdContext; const Payload: TBytes);
   public
     constructor Create(Port: Integer);
     destructor Destroy; override;
@@ -816,11 +889,12 @@ var
   Frame: TBytes;
   MessageBytes: TBytes;
   PayloadLength: Int64;
+  i: Integer;
 begin
   MessageBytes := TEncoding.UTF8.GetBytes(Message);
   PayloadLength := Length(MessageBytes);
 
-  // Construire la frame
+  // Construire la frame (serveur : pas de masquage selon RFC 6455 §5.3)
   if PayloadLength < 126 then
     SetLength(Frame, 2 + PayloadLength)
   else if PayloadLength < 65536 then
@@ -828,14 +902,15 @@ begin
   else
     SetLength(Frame, 10 + PayloadLength);
 
-  // Byte 1: FIN + Text opcode
+  // Byte 0 : FIN=1 + Text opcode ($01)
   Frame[0] := $81;
 
-  // Byte 2+: Payload length (serveur ne masque pas)
+  // Bytes suivants : taille du payload selon le schéma RFC 6455 §5.2
   if PayloadLength < 126 then
   begin
     Frame[1] := Byte(PayloadLength);
-    Move(MessageBytes[0], Frame[2], PayloadLength);
+    if PayloadLength > 0 then
+      Move(MessageBytes[0], Frame[2], PayloadLength);
   end
   else if PayloadLength < 65536 then
   begin
@@ -843,6 +918,14 @@ begin
     Frame[2] := (PayloadLength shr 8) and $FF;
     Frame[3] := PayloadLength and $FF;
     Move(MessageBytes[0], Frame[4], PayloadLength);
+  end
+  else
+  begin
+    // Très gros payload : 8 octets de longueur étendue (big-endian)
+    Frame[1] := 127;
+    for i := 7 downto 0 do
+      Frame[2 + (7 - i)] := (PayloadLength shr (i * 8)) and $FF;
+    Move(MessageBytes[0], Frame[10], PayloadLength);
   end;
 
   FContext.Connection.IOHandler.Write(TIdBytes(Frame));
@@ -913,9 +996,9 @@ begin
     // Récupérer la clé
     Key := ARequestInfo.RawHeaders.Values['Sec-WebSocket-Key'];
 
-    // Calculer l'Accept
-    Accept := TNetEncoding.Base64.Encode(
-      TIdHashSHA1.HashString(Key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'));
+    // Calculer l'Accept : base64(SHA1(Key + GUID magique RFC 6455))
+    Accept := TNetEncoding.Base64.EncodeBytesToString(
+      THashSHA1.GetHashBytes(Key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'));
 
     // Réponse de handshake
     AResponseInfo.ResponseNo := 101;
@@ -960,6 +1043,37 @@ begin
     // Requête HTTP normale
     AResponseInfo.ContentText := '<html><body>WebSocket Server</body></html>';
   end;
+end;
+
+procedure TWebSocketServer.SendPongFrame(AContext: TIdContext; const Payload: TBytes);  
+var  
+  Frame: TBytes;
+  PayloadLength: Integer;
+begin
+  PayloadLength := Length(Payload);
+
+  // Frame Pong sans masquage (les frames serveur ne sont jamais masquées)
+  if PayloadLength < 126 then
+  begin
+    SetLength(Frame, 2 + PayloadLength);
+    Frame[0] := $8A;              // FIN=1, opcode=0x0A (Pong)
+    Frame[1] := Byte(PayloadLength); // MASK=0, payload length
+    if PayloadLength > 0 then
+      Move(Payload[0], Frame[2], PayloadLength);
+  end
+  else
+  begin
+    // Pour les payloads plus grands, étendre la longueur (≤ 125 normalement
+    // pour les frames de contrôle selon RFC 6455 §5.5, donc cas rare ici)
+    SetLength(Frame, 4 + PayloadLength);
+    Frame[0] := $8A;
+    Frame[1] := 126;
+    Frame[2] := (PayloadLength shr 8) and $FF;
+    Frame[3] := PayloadLength and $FF;
+    Move(Payload[0], Frame[4], PayloadLength);
+  end;
+
+  AContext.Connection.IOHandler.Write(TIdBytes(Frame));
 end;
 
 procedure TWebSocketServer.HandleWebSocketFrame(Connection: TWebSocketConnection);  
@@ -1012,9 +1126,9 @@ begin
 
     $09: // Ping
       begin
-        // Répondre avec Pong
-        Payload[0] := $8A; // Pong opcode
-        Connection.Context.Connection.IOHandler.Write(TIdBytes(Payload));
+        // Répondre avec une vraie frame Pong (opcode $0A).
+        // Côté serveur, les frames ne sont PAS masquées (RFC 6455 §5.3).
+        SendPongFrame(Connection.Context, Payload);
       end;
   end;
 end;
@@ -1169,19 +1283,30 @@ end;
 
 procedure TChatClient.HandleMessage(const JSONMessage: string);  
 var  
+  ParsedValue: TJSONValue;
   JSON: TJSONObject;
   MessageType: string;
   ChatMsg: TChatMessage;
   User: string;
 begin
-  JSON := TJSONObject.ParseJSONValue(JSONMessage) as TJSONObject;
+  // Parsing prudent : un message malformé ne doit pas faire crasher le client
+  ParsedValue := TJSONObject.ParseJSONValue(JSONMessage);
+  if not (ParsedValue is TJSONObject) then
+  begin
+    ParsedValue.Free; // nil ou autre type
+    Exit;             // message ignoré silencieusement
+  end;
+
+  JSON := TJSONObject(ParsedValue);
   try
-    MessageType := JSON.GetValue<string>('type');
+    // 'type' est obligatoire dans notre protocole ; absence = message ignoré
+    if not JSON.TryGetValue<string>('type', MessageType) then
+      Exit;
 
     if MessageType = 'message' then
     begin
-      ChatMsg.Username := JSON.GetValue<string>('username');
-      ChatMsg.Message := JSON.GetValue<string>('message');
+      JSON.TryGetValue<string>('username', ChatMsg.Username);
+      JSON.TryGetValue<string>('message', ChatMsg.Message);
       ChatMsg.Timestamp := Now; // Ou parser depuis JSON
 
       if Assigned(FOnChatMessage) then
@@ -1189,14 +1314,12 @@ begin
     end
     else if MessageType = 'join' then
     begin
-      User := JSON.GetValue<string>('username');
-      if Assigned(FOnUserJoined) then
+      if JSON.TryGetValue<string>('username', User) and Assigned(FOnUserJoined) then
         FOnUserJoined(User);
     end
     else if MessageType = 'leave' then
     begin
-      User := JSON.GetValue<string>('username');
-      if Assigned(FOnUserLeft) then
+      if JSON.TryGetValue<string>('username', User) and Assigned(FOnUserLeft) then
         FOnUserLeft(User);
     end;
 
@@ -1338,7 +1461,9 @@ type
     FPingTimeout: Integer;
 
     procedure OnHeartbeatTimer(Sender: TObject);
-    procedure SendPing;
+  protected
+    // Mis à jour à chaque Pong reçu pour prouver que la connexion est vivante
+    procedure HandlePongReceived(const Payload: TBytes); override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1394,19 +1519,16 @@ begin
   end
   else
   begin
+    // Utilise la méthode SendPing héritée qui construit une vraie ping frame
+    // (opcode $09) avec masquage correct via BuildFrame
     SendPing;
   end;
 end;
 
-procedure THeartbeatWebSocket.SendPing;  
-var  
-  PingFrame: TBytes;
-begin
-  SetLength(PingFrame, 2);
-  PingFrame[0] := $89; // Ping opcode
-  PingFrame[1] := $80; // Masked, no payload
-
-  Send(PingFrame);
+procedure THeartbeatWebSocket.HandlePongReceived(const Payload: TBytes);  
+begin  
+  // Le serveur a répondu à notre Ping : la connexion est encore vivante
+  FLastPong := Now;
 end;
 ```
 
@@ -1475,16 +1597,28 @@ end;
 ```pascal
 procedure HandleMessage(const Message: string);  
 var  
+  ParsedValue: TJSONValue;
   JSON: TJSONObject;
+  MessageType: string;
 begin
   try
-    JSON := TJSONObject.ParseJSONValue(Message) as TJSONObject;
+    // Parsing robuste : ParseJSONValue peut retourner nil ou un type
+    // différent de TJSONObject. Le pattern `as TJSONObject` direct fuit
+    // la mémoire dans ce cas car le TJSONValue créé n'est jamais libéré.
+    ParsedValue := TJSONObject.ParseJSONValue(Message);
+    if not (ParsedValue is TJSONObject) then
+    begin
+      ParsedValue.Free; // nil ou autre type (Free sur nil est sûr)
+      raise Exception.Create('Message JSON invalide');
+    end;
+
+    JSON := TJSONObject(ParsedValue);
     try
-      // Valider la structure
-      if not JSON.TryGetValue<string>('type') then
+      // Valider la structure (TryGetValue retourne True si le champ existe)
+      if not JSON.TryGetValue<string>('type', MessageType) then
         raise Exception.Create('Champ "type" manquant');
 
-      // Traiter...
+      // Traiter selon le type...
     finally
       JSON.Free;
     end;

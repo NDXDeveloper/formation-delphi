@@ -129,7 +129,7 @@ var
   JSONTexte: string;
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
-  Nom, Prenom, Ville: string;
+  Nom, Prenom: string;
   Age: Integer;
   Actif: Boolean;
 begin
@@ -428,11 +428,12 @@ Delphi propose plusieurs approches pour XML :
 - Plus bas niveau
 - Plus de contrôle
 
-**3. XML.VerySimple** - API simplifiée
-- Très intuitive
-- Recommandée pour les débutants
+**3. OmniXML / VerySimple XML** - Bibliothèques tierces alternatives
+- OmniXML : implémentation Pascal native (peut être un vendor de TXMLDocument)
+- VerySimple XML : composant gratuit de Dennis Spreen (non livré avec Delphi, à installer séparément)
+- Plus simples mais à installer séparément
 
-Nous allons principalement utiliser **XML.XMLDoc** qui est le plus courant.
+Nous allons principalement utiliser **XML.XMLDoc** qui est livré avec Delphi et le plus courant.
 
 ### Créer un document XML
 
@@ -507,13 +508,13 @@ var
 begin
   XMLDoc := TXMLDocument.Create(nil);
   try
+    // Charger d'abord le contenu, puis activer le document
+    XMLDoc.LoadFromXML(Memo1.Text);
     XMLDoc.Active := True;
 
-    // Charger depuis une chaîne
-    XMLDoc.LoadFromXML(Memo1.Text);
-
-    // Ou charger depuis un fichier
+    // Ou charger depuis un fichier :
     // XMLDoc.LoadFromFile('donnees.xml');
+    // XMLDoc.Active := True;
 
     // Obtenir le nœud racine
     RootNode := XMLDoc.DocumentElement;
@@ -536,7 +537,7 @@ end;
 Pour naviguer dans la structure :
 
 ```pascal
-procedure TForm1.ParcoururXML;  
+procedure TForm1.ParcourirXML;  
 var  
   XMLDoc: IXMLDocument;
   RootNode, AdresseNode, CompetencesNode, Node: IXMLNode;
@@ -618,16 +619,15 @@ begin
 end;
 ```
 
-### Rechercher des nœuds avec XPath
+### Rechercher des nœuds par nom
 
-XPath permet de rechercher des éléments dans un document XML :
+Pour rechercher des éléments dans un document XML, on parcourt les `ChildNodes` et on teste les noms. Notez que `FindNode` (sur `IXMLNodeList`) ne retourne **qu'un seul nœud** (le premier trouvé) — pour récupérer tous les nœuds portant un nom donné, il faut itérer manuellement :
 
 ```pascal
-procedure TForm1.RechercherAvecXPath;  
+procedure TForm1.RechercherNoeuds;  
 var  
   XMLDoc: IXMLDocument;
-  NodeList: IXMLNodeList;
-  Node: IXMLNode;
+  RootNode, Node: IXMLNode;
   i: Integer;
 begin
   XMLDoc := TXMLDocument.Create(nil);
@@ -635,15 +635,15 @@ begin
     XMLDoc.LoadFromFile('personnes.xml');
     XMLDoc.Active := True;
 
-    // Rechercher tous les éléments "nom"
-    NodeList := XMLDoc.DocumentElement.ChildNodes.FindNode('nom');
+    RootNode := XMLDoc.DocumentElement;
 
-    // Parcourir les résultats
+    // Rechercher tous les éléments "nom" enfants directs de la racine
     Memo1.Lines.Clear;
-    for i := 0 to NodeList.Count - 1 do
+    for i := 0 to RootNode.ChildNodes.Count - 1 do
     begin
-      Node := NodeList[i];
-      Memo1.Lines.Add('Nom trouvé: ' + Node.Text);
+      Node := RootNode.ChildNodes[i];
+      if Node.NodeName = 'nom' then
+        Memo1.Lines.Add('Nom trouvé: ' + Node.Text);
     end;
 
   finally
@@ -651,6 +651,8 @@ begin
   end;
 end;
 ```
+
+> **Note** : Delphi fournit également un support XPath via `Xml.xmldom` et `Xml.XPath` (selon le vendor XML utilisé : MSXML sous Windows, OmniXML, ADOM, etc.). Le support XPath n'est pas toujours uniforme entre les vendors ; pour des recherches simples, l'itération manuelle ci-dessus est portable et fiable.
 
 ### Modifier un document XML
 
@@ -846,8 +848,10 @@ begin
     '{"nom":"Dubois","prenom":"Marie","age":28}'
   ) as TJSONObject;
 
-  XMLDoc := TXMLDocument.Create(nil);
+  // try-finally imbriqué : garantit que JSONObject est libéré
+  // même si la création du document XML échoue
   try
+    XMLDoc := TXMLDocument.Create(nil);
     XMLDoc.Active := True;
 
     // Créer la structure XML
@@ -865,9 +869,9 @@ begin
     // Afficher le XML
     XMLDoc.SaveToXML(Memo1.Lines);
 
+    // L'interface XMLDoc se libère automatiquement à la fin du scope
   finally
     JSONObject.Free;
-    XMLDoc := nil;
   end;
 end;
 ```
@@ -882,9 +886,12 @@ var
   JSONObject: TJSONObject;
   Nom, Prenom, Age: string;
 begin
-  XMLDoc := TXMLDocument.Create(nil);
   JSONObject := TJSONObject.Create;
+  // Création du JSON d'abord, puis on protège son cycle de vie ;
+  // l'interface XMLDoc se libère automatiquement à la fin du scope
   try
+    XMLDoc := TXMLDocument.Create(nil);
+
     // Charger le XML
     XMLDoc.LoadFromFile('personne.xml');
     XMLDoc.Active := True;
@@ -905,7 +912,6 @@ begin
     Memo1.Text := JSONObject.Format(2);
 
   finally
-    XMLDoc := nil;
     JSONObject.Free;
   end;
 end;

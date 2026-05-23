@@ -296,7 +296,9 @@ type
     constructor Create(Config: TOAuth2Config);
 
     procedure StartAuthorizationFlow;
-    function HandleCallback(const AuthorizationCode: string): Boolean;
+    // ReceivedState DOIT correspondre au state généré par StartAuthorizationFlow,
+    // sinon la requête est rejetée (protection CSRF, cf. RFC 6749 §10.12)
+    function HandleCallback(const AuthorizationCode, ReceivedState: string): Boolean;
     function RefreshAccessToken: Boolean;
   end;
 
@@ -344,7 +346,7 @@ begin
   // Le serveur OAuth redirigera vers RedirectURI avec le code
 end;
 
-function TOAuth2Flow.HandleCallback(const AuthorizationCode: string): Boolean;  
+function TOAuth2Flow.HandleCallback(const AuthorizationCode, ReceivedState: string): Boolean;  
 var  
   HTTPClient: THTTPClient;
   Response: IHTTPResponse;
@@ -354,6 +356,13 @@ var
   ExpiresIn: Integer;
 begin
   Result := False;
+
+  // PROTECTION CSRF : refuser le callback si le state ne correspond pas
+  // à celui qu'on a généré au début du flux. Sans cette vérification,
+  // un attaquant peut faire compléter l'authentification au nom d'un
+  // utilisateur depuis un autre site.
+  if (FState = '') or (ReceivedState <> FState) then
+    raise Exception.Create('CSRF détecté : state OAuth2 invalide');
 
   HTTPClient := THTTPClient.Create;
   RequestBody := TStringList.Create;
@@ -785,8 +794,9 @@ begin
     // Attendre le callback
     if CallbackServer.WaitForCallback(60000) then
     begin
-      // Échanger le code contre un token
-      if Flow.HandleCallback(CallbackServer.AuthorizationCode) then
+      // Échanger le code contre un token en validant le state (CSRF)
+      if Flow.HandleCallback(CallbackServer.AuthorizationCode,
+                             CallbackServer.State) then
       begin
         ShowMessage('Authentification réussie !');
 
@@ -848,9 +858,10 @@ begin
   Config.ClientSecret := 'VOTRE_APP_SECRET';
   Config.RedirectURI := 'http://localhost:8080/callback';
 
-  // Endpoints Facebook
-  Config.AuthorizationEndpoint := 'https://www.facebook.com/v12.0/dialog/oauth';
-  Config.TokenEndpoint := 'https://graph.facebook.com/v12.0/oauth/access_token';
+  // Endpoints Facebook (Graph API v18.0 — consulter https://developers.facebook.com/docs/graph-api/changelog
+  // pour la version la plus récente, les anciennes versions sont progressivement dépréciées)
+  Config.AuthorizationEndpoint := 'https://www.facebook.com/v18.0/dialog/oauth';
+  Config.TokenEndpoint := 'https://graph.facebook.com/v18.0/oauth/access_token';
 
   // Scopes
   Config.Scopes := 'email public_profile';
@@ -915,6 +926,7 @@ class function TJWTHelper.DecodeJWT(const Token: string): TJWTPayload;
 var  
   Parts: TArray<string>;
   PayloadEncoded, PayloadJSON: string;
+  ParsedValue: TJSONValue;
   JSONObject: TJSONObject;
   ScopesArray: TJSONArray;
   i: Integer;
@@ -929,20 +941,32 @@ begin
   // Décoder le payload (partie 2)
   PayloadEncoded := Parts[1];
 
+  // Convertir Base64URL → Base64 standard (alphabet différent)
+  PayloadEncoded := StringReplace(PayloadEncoded, '-', '+', [rfReplaceAll]);
+  PayloadEncoded := StringReplace(PayloadEncoded, '_', '/', [rfReplaceAll]);
+
   // Ajouter le padding si nécessaire
   while (Length(PayloadEncoded) mod 4) <> 0 do
     PayloadEncoded := PayloadEncoded + '=';
 
-  // Décoder Base64URL
+  // Décoder Base64 standard
   PayloadJSON := TNetEncoding.Base64.Decode(PayloadEncoded);
 
-  // Parser JSON
-  JSONObject := TJSONObject.ParseJSONValue(PayloadJSON) as TJSONObject;
+  // Parser JSON de manière robuste : ParseJSONValue peut retourner nil
+  // ou un type différent de TJSONObject si la payload est invalide.
+  ParsedValue := TJSONObject.ParseJSONValue(PayloadJSON);
+  if not (ParsedValue is TJSONObject) then
+  begin
+    ParsedValue.Free; // nil ou type inattendu
+    raise Exception.Create('Payload JWT invalide (pas un objet JSON)');
+  end;
+
+  JSONObject := TJSONObject(ParsedValue);
   try
-    // Extraire les champs
-    if JSONObject.TryGetValue<string>('sub', Result.Subject) then;
-    if JSONObject.TryGetValue<string>('name', Result.Name) then;
-    if JSONObject.TryGetValue<string>('email', Result.Email) then;
+    // Extraire les champs (TryGetValue laisse Result.X inchangé si la clé est absente)
+    JSONObject.TryGetValue<string>('sub', Result.Subject);
+    JSONObject.TryGetValue<string>('name', Result.Name);
+    JSONObject.TryGetValue<string>('email', Result.Email);
 
     // Convertir les timestamps Unix en TDateTime
     if JSONObject.TryGetValue<Int64>('iat', UnixTime) then
@@ -997,7 +1021,8 @@ uses
 type
   TJWTGenerator = class
   private
-    class function Base64URLEncode(const Input: string): string;
+    class function Base64URLEncodeString(const Input: string): string;
+    class function Base64URLEncodeBytes(const Input: TBytes): string;
     class function CreateSignature(const Header, Payload, Secret: string): string;
   public
     class function GenerateJWT(const UserID, Name, Email: string;
@@ -1010,7 +1035,7 @@ implementation
 uses
   System.DateUtils;
 
-class function TJWTGenerator.Base64URLEncode(const Input: string): string;  
+class function TJWTGenerator.Base64URLEncodeString(const Input: string): string;  
 begin  
   Result := TNetEncoding.Base64.Encode(Input);
   // Convertir Base64 standard en Base64URL
@@ -1019,14 +1044,23 @@ begin
   Result := StringReplace(Result, '=', '', [rfReplaceAll]);
 end;
 
+class function TJWTGenerator.Base64URLEncodeBytes(const Input: TBytes): string;  
+begin  
+  Result := TNetEncoding.Base64.EncodeBytesToString(Input);
+  Result := StringReplace(Result, '+', '-', [rfReplaceAll]);
+  Result := StringReplace(Result, '/', '_', [rfReplaceAll]);
+  Result := StringReplace(Result, '=', '', [rfReplaceAll]);
+end;
+
 class function TJWTGenerator.CreateSignature(const Header, Payload, Secret: string): string;  
 var  
   Data: string;
-  Hash: string;
+  HashBytes: TBytes;
 begin
   Data := Header + '.' + Payload;
-  Hash := THashSHA2.GetHMAC(Data, Secret, SHA256);
-  Result := Base64URLEncode(Hash);
+  // HMAC-SHA256 doit produire des bytes binaires (32 octets), pas une string hex
+  HashBytes := THashSHA2.GetHMACAsBytes(Data, Secret, SHA256);
+  Result := Base64URLEncodeBytes(HashBytes);
 end;
 
 class function TJWTGenerator.GenerateJWT(const UserID, Name, Email: string;
@@ -1044,7 +1078,7 @@ begin
   try
     HeaderJSON.AddPair('alg', 'HS256');
     HeaderJSON.AddPair('typ', 'JWT');
-    Header := Base64URLEncode(HeaderJSON.ToString);
+    Header := Base64URLEncodeString(HeaderJSON.ToString);
   finally
     HeaderJSON.Free;
   end;
@@ -1068,7 +1102,7 @@ begin
       ScopesArray.Add(Scope);
     PayloadJSON.AddPair('scopes', ScopesArray);
 
-    Payload := Base64URLEncode(PayloadJSON.ToString);
+    Payload := Base64URLEncodeString(PayloadJSON.ToString);
   finally
     PayloadJSON.Free;
   end;
@@ -1166,7 +1200,7 @@ uses
 type
   TTokenEncryption = class
   private
-    class function XOREncrypt(const Data, Key: string): string;
+    class procedure XORBytes(var Data: TBytes; const Key: TBytes);
   public
     class function EncryptToken(const Token, Password: string): string;
     class function DecryptToken(const EncryptedToken, Password: string): string;
@@ -1177,39 +1211,43 @@ implementation
 uses
   System.Hash;
 
-class function TTokenEncryption.XOREncrypt(const Data, Key: string): string;  
+class procedure TTokenEncryption.XORBytes(var Data: TBytes; const Key: TBytes);  
 var  
   i: Integer;
-  DataBytes, KeyBytes, ResultBytes: TBytes;
 begin
-  DataBytes := TEncoding.UTF8.GetBytes(Data);
-  KeyBytes := TEncoding.UTF8.GetBytes(Key);
-  SetLength(ResultBytes, Length(DataBytes));
-
-  for i := 0 to High(DataBytes) do
-    ResultBytes[i] := DataBytes[i] xor KeyBytes[i mod Length(KeyBytes)];
-
-  Result := TNetEncoding.Base64.EncodeBytesToString(ResultBytes);
+  for i := 0 to High(Data) do
+    Data[i] := Data[i] xor Key[i mod Length(Key)];
 end;
 
 class function TTokenEncryption.EncryptToken(const Token, Password: string): string;  
 var  
-  Key: string;
+  DataBytes, KeyBytes: TBytes;
 begin
-  // Créer une clé à partir du mot de passe
-  Key := THashSHA2.GetHashString(Password);
+  // Octets bruts du token
+  DataBytes := TEncoding.UTF8.GetBytes(Token);
+  // Clé dérivée du mot de passe (SHA-256 → 64 caractères hex)
+  KeyBytes := TEncoding.UTF8.GetBytes(THashSHA2.GetHashString(Password));
 
   // Chiffrer avec XOR (simple, pour exemple)
   // En production, utiliser AES ou autre algorithme robuste
-  Result := XOREncrypt(Token, Key);
+  XORBytes(DataBytes, KeyBytes);
+
+  // Encoder en base64 pour transport/stockage en texte
+  Result := TNetEncoding.Base64.EncodeBytesToString(DataBytes);
 end;
 
 class function TTokenEncryption.DecryptToken(const EncryptedToken, Password: string): string;  
 var  
-  Key: string;
+  DataBytes, KeyBytes: TBytes;
 begin
-  Key := THashSHA2.GetHashString(Password);
-  Result := XOREncrypt(EncryptedToken, Key); // XOR est réversible
+  // Inverser : décoder la base64 d'abord pour retrouver les octets chiffrés
+  DataBytes := TNetEncoding.Base64.DecodeStringToBytes(EncryptedToken);
+  KeyBytes := TEncoding.UTF8.GetBytes(THashSHA2.GetHashString(Password));
+
+  // XOR est réversible : ré-appliquer pour déchiffrer
+  XORBytes(DataBytes, KeyBytes);
+
+  Result := TEncoding.UTF8.GetString(DataBytes);
 end;
 
 end.
@@ -1265,23 +1303,36 @@ type
 class function TPKCEHelper.GenerateCodeVerifier: string;  
 var  
   i: Integer;
+  RandomBytes: TBytes;
 const
+  // RFC 7636 §4.1 : alphabet `unreserved` pour le code_verifier
   Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 begin
+  // IMPORTANT : Random() de Delphi n'est PAS cryptographiquement sûr et est
+  // prévisible (RFC 7636 exige une vraie entropie pour empêcher l'attaquant
+  // de deviner le verifier). On dérive 96 octets d'entropie en hashant
+  // 3 GUID v4 (la création de GUID utilise la source d'entropie système).
+  SetLength(RandomBytes, 32 * 3);
+  Move(THashSHA2.GetHashBytes(TGUID.NewGuid.ToString)[0], RandomBytes[0], 32);
+  Move(THashSHA2.GetHashBytes(TGUID.NewGuid.ToString)[0], RandomBytes[32], 32);
+  Move(THashSHA2.GetHashBytes(TGUID.NewGuid.ToString)[0], RandomBytes[64], 32);
+
+  // Mapper chaque octet sur l'alphabet autorisé
   SetLength(Result, 128);
-  for i := 1 to 128 do
-    Result[i] := Chars[Random(Length(Chars)) + 1];
+  for i := 0 to 127 do
+    Result[i + 1] := Chars[(RandomBytes[i] mod Length(Chars)) + 1];
 end;
 
 class function TPKCEHelper.GenerateCodeChallenge(const Verifier: string): string;  
 var  
-  Hash: string;
+  HashBytes: TBytes;
 begin
-  // SHA256 du verifier
-  Hash := THashSHA2.GetHashString(Verifier, SHA256);
+  // Conforme RFC 7636 : code_challenge = BASE64URL(SHA256(code_verifier))
+  // Il faut les 32 octets binaires du SHA256, pas la chaîne hex
+  HashBytes := THashSHA2.GetHashBytes(Verifier, SHA256);
 
-  // Base64URL encode
-  Result := TNetEncoding.Base64.Encode(Hash);
+  // Base64URL encode des octets binaires
+  Result := TNetEncoding.Base64.EncodeBytesToString(HashBytes);
   Result := StringReplace(Result, '+', '-', [rfReplaceAll]);
   Result := StringReplace(Result, '/', '_', [rfReplaceAll]);
   Result := StringReplace(Result, '=', '', [rfReplaceAll]);
@@ -1477,18 +1528,24 @@ begin
         TThread.Synchronize(nil,
           procedure
           begin
-            if FFlow.HandleCallback(FCallbackServer.AuthorizationCode) then
-            begin
-              MemoInfo.Lines.Add('Authentification réussie !');
+            try
+              if FFlow.HandleCallback(FCallbackServer.AuthorizationCode,
+                                      FCallbackServer.State) then
+              begin
+                MemoInfo.Lines.Add('Authentification réussie !');
 
-              // Sauvegarder les tokens
-              TSecureTokenStorage.SaveToken('GoogleAccessToken', FConfig.AccessToken);
-              TSecureTokenStorage.SaveToken('GoogleRefreshToken', FConfig.RefreshToken);
+                // Sauvegarder les tokens
+                TSecureTokenStorage.SaveToken('GoogleAccessToken', FConfig.AccessToken);
+                TSecureTokenStorage.SaveToken('GoogleRefreshToken', FConfig.RefreshToken);
 
-              UpdateUI;
-            end
-            else
-              MemoInfo.Lines.Add('Échec de l''authentification');
+                UpdateUI;
+              end
+              else
+                MemoInfo.Lines.Add('Échec de l''authentification');
+            except
+              on E: Exception do
+                MemoInfo.Lines.Add('Erreur: ' + E.Message);
+            end;
           end);
       end
       else

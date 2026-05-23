@@ -320,6 +320,9 @@ end;
 Certaines API utilisent l'authentification HTTP basique :
 
 ```pascal
+uses
+  REST.Authenticator.Basic; // Pour THTTPBasicAuthenticator
+
 procedure TForm1.ConfigurerAuthBasique;  
 begin  
   RESTClient1.Authenticator := THTTPBasicAuthenticator.Create(
@@ -334,6 +337,9 @@ end;
 Plus courant dans les API modernes :
 
 ```pascal
+uses
+  REST.Authenticator.OAuth; // Pour TOAuth2Authenticator
+
 procedure TForm1.ConfigurerAuthToken;  
 var  
   OAuth2: TOAuth2Authenticator;
@@ -360,6 +366,50 @@ begin
   RESTClient1.ReadTimeout := 10000;
 end;
 ```
+
+### Appels asynchrones (ne pas bloquer l'UI)
+
+Par défaut, `RESTRequest1.Execute` est **synchrone** : il bloque le thread appelant (souvent le thread UI) jusqu'à réception de la réponse. Sur une connexion lente, l'application "gèle" pendant plusieurs secondes.
+
+Pour éviter cela, utilisez `ExecuteAsync` qui exécute la requête dans un thread séparé :
+
+```pascal
+procedure TForm1.ButtonGetDataAsyncClick(Sender: TObject);  
+begin  
+  // Désactiver le bouton pendant la requête
+  ButtonGetDataAsync.Enabled := False;
+  LabelStatus.Caption := 'Chargement...';
+
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Resource := 'users/1';
+
+  // ExecuteAsync(ACompletionHandler, ASynchronized, AFreeThread, ACompletionHandlerWithError)
+  RESTRequest1.ExecuteAsync(
+    procedure
+    begin
+      // Ce code s'exécute dans le thread UI une fois la réponse reçue
+      Memo1.Text := RESTResponse1.Content;
+      LabelStatus.Caption := 'Terminé';
+      ButtonGetDataAsync.Enabled := True;
+    end,
+    True,  // ASynchronized = True → CompletionHandler appelé dans le thread UI
+    True,  // AFreeThread = True → libère le thread automatiquement
+    procedure(AObject: TObject)
+    begin
+      // Gestion d'erreur (appelée dans le thread UI car ASynchronized=True)
+      if AObject is Exception then
+        LabelStatus.Caption := 'Erreur: ' + Exception(AObject).Message;
+      ButtonGetDataAsync.Enabled := True;
+    end
+  );
+end;
+```
+
+**Points importants :**
+- `ExecuteAsync` retourne immédiatement, le thread UI reste réactif
+- Le `CompletionHandler` est appelé quand la réponse arrive
+- Si `ASynchronized = True`, le handler s'exécute dans le thread UI (sûr pour accéder aux composants visuels)
+- Le gestionnaire d'erreur reçoit l'exception levée en cas de problème réseau
 
 ## Exemple complet : Application météo
 
@@ -441,6 +491,7 @@ procedure TForm1.AfficherMeteo(const JSONResponse: string);
 var  
   JSONValue: TJSONValue;
   JSONObject, MainObject: TJSONObject;
+  WeatherArray: TJSONArray;
   Temperature, Ressenti: Double;
   Description, VilleNom: string;
 begin
@@ -457,12 +508,20 @@ begin
       Temperature := MainObject.GetValue<Double>('temp');
       Ressenti := MainObject.GetValue<Double>('feels_like');
 
+      // La description est dans le tableau "weather" (premier élément)
+      Description := '';
+      WeatherArray := JSONObject.GetValue<TJSONArray>('weather');
+      if (WeatherArray <> nil) and (WeatherArray.Count > 0) then
+        Description := (WeatherArray.Items[0] as TJSONObject).GetValue<string>('description');
+
       // Afficher dans le Memo
       MemoResult.Lines.Clear;
       MemoResult.Lines.Add('Météo pour : ' + VilleNom);
       MemoResult.Lines.Add('');
       MemoResult.Lines.Add('Température : ' + FormatFloat('0.0', Temperature) + '°C');
       MemoResult.Lines.Add('Ressenti : ' + FormatFloat('0.0', Ressenti) + '°C');
+      if not Description.IsEmpty then
+        MemoResult.Lines.Add('Description : ' + Description);
     end;
   finally
     JSONValue.Free;

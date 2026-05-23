@@ -77,7 +77,7 @@ Le standard le plus populaire pour les services web modernes.
 **Exemple concret :**
 Votre application de météo interroge un serveur pour obtenir les prévisions :
 ```
-Application → GET http://api.meteo.com/previsions/paris  
+Application → GET https://api.meteo.com/previsions/paris  
 Serveur → { "ville": "Paris", "temperature": 18, "meteo": "Ensoleillé" }  
 ```
 
@@ -156,7 +156,7 @@ Systèmes répartis sur plusieurs serveurs.
 ```
 ┌─────────┐     ┌─────────┐     ┌─────────┐
 │Serveur 1│◄───►│Serveur 2│◄───►│Serveur 3│
-│(Europe) │     │ (Asie)  │     │(Amérique│
+│ Europe  │     │  Asie   │     │Amérique │
 └─────────┘     └─────────┘     └─────────┘
 ```
 
@@ -278,7 +278,7 @@ Serveur → "Nouveau message : 'Bonjour'" (instantané)
 - **Serverless** : Sans gestion de serveur
 
 **Sécurité :**
-- **OAuth2** : Authentification déléguée
+- **OAuth2** : Autorisation déléguée (souvent associé à OpenID Connect pour l'authentification)
 - **JWT** : Tokens sécurisés
 - **API Keys** : Clés d'accès
 - **HTTPS** : Chiffrement des communications
@@ -334,25 +334,25 @@ Avant de commencer, vous devriez être à l'aise avec :
 
 ### Structure du chapitre
 
-Ce chapitre est organisé de manière progressive :
+Ce chapitre est organisé selon l'ordre des sections (10.1 à 10.10), du plus accessible au plus avancé :
 
-**Niveau débutant :**
-1. APIs REST - Le plus accessible
-2. JSON/XML - Manipulation de données
-3. OAuth2 - Sécurité moderne
+**Niveau débutant — Les fondations :**
+1. **10.1 APIs REST** — Le plus accessible, point de départ recommandé
+2. **10.2 JSON/XML** — Manipulation des formats de données
 
-**Niveau intermédiaire :**
-4. Sockets TCP/IP - Communication directe
-5. SOAP - Services d'entreprise
-6. Architecture client-serveur
+**Niveau intermédiaire — Communication directe et services :**
+3. **10.3 Sockets TCP/IP** — Communication réseau de bas niveau
+4. **10.4 SOAP** — Services web d'entreprise
+5. **10.5 Architecture client-serveur** — Structurer vos applications connectées
 
-**Niveau avancé :**
-7. Applications distribuées
-8. GraphQL - APIs modernes
-9. Services cloud - AWS, Azure, Google
-10. WebSockets - Temps réel
+**Niveau avancé — Architectures et technologies modernes :**
+6. **10.6 Applications distribuées** — Systèmes répartis sur plusieurs nœuds
+7. **10.7 OAuth2 et authentification moderne** — Sécurité standard du web
+8. **10.8 GraphQL et nouvelles APIs** — Alternative flexible à REST
+9. **10.9 Services cloud** — AWS, Azure, Google Cloud
+10. **10.10 WebSockets** — Communication temps réel bidirectionnelle
 
-Vous pouvez suivre l'ordre proposé ou sauter directement aux sections qui vous intéressent, mais nous recommandons de commencer par les APIs REST pour acquérir les bases.
+Vous pouvez suivre l'ordre proposé ou sauter directement aux sections qui vous intéressent, mais nous recommandons de commencer par les APIs REST (10.1) pour acquérir les bases.
 
 ### Outils et composants Delphi
 
@@ -384,7 +384,7 @@ De nombreuses APIs gratuites existent pour s'entraîner :
 **3. Utilisez des outils de test**
 - **Postman** : Tester des APIs REST
 - **SoapUI** : Tester des services SOAP
-- **WebSocket.org** : Tester des WebSockets
+- **websocket.events** (https://websocket.events) : Service d'écho WebSocket public pour tester (l'ancien echo.websocket.org a été arrêté en 2021)
 
 **4. Gérez toujours les erreurs**
 Le réseau peut échouer. Utilisez toujours try-except et gérez les timeouts.
@@ -416,7 +416,9 @@ end;
 - **Webhook.site** : Tester des webhooks
 
 **Standards et spécifications :**
-- RFC 2616 : HTTP/1.1
+- RFC 9110-9112 : HTTP Semantics, Caching et HTTP/1.1 (juin 2022, remplacent les RFC 7230-7235 et l'ancienne RFC 2616)
+- RFC 9113 : HTTP/2
+- RFC 9114 : HTTP/3
 - RFC 6455 : WebSocket Protocol
 - OAuth 2.0 : RFC 6749
 - JSON : RFC 8259

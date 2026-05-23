@@ -153,7 +153,7 @@ Exemple :       Office 365, Gmail, Salesforce
 - **Cloud Functions** : Fonctions serverless
 - **Firestore** : Base NoSQL
 - **Cloud CDN** : Distribution
-- **AI Platform** : Machine Learning avancé
+- **Vertex AI** : Plateforme unifiée de Machine Learning (remplace l'ancien AI Platform)
 
 **Avantages :**
 - Leader en IA/ML
@@ -204,9 +204,10 @@ type
 
   TAWSAuthHelper = class
   public
+    // DateISO doit être identique entre la signature et l'en-tête x-amz-date,
+    // sinon AWS rejette la requête avec "Signature mismatch"
     class function SignRequest(const Credentials: TAWSCredentials;
-      const Service, HTTPMethod, CanonicalURI: string;
-      Headers: TStrings): string;
+      const Service, HTTPMethod, CanonicalURI, DateISO: string): string;
     class function GetAuthorizationHeader(const Credentials: TAWSCredentials;
       const Service, HTTPMethod, CanonicalURI: string;
       const DateISO: string): string;
@@ -214,17 +215,29 @@ type
 
 implementation
 
+// Convertit un tableau d'octets en chaîne hexadécimale minuscule
+// (format requis par AWS Signature V4 pour la signature finale)
+function BytesToHexLower(const Bytes: TBytes): string;  
+var  
+  i: Integer;
+begin
+  SetLength(Result, Length(Bytes) * 2);
+  for i := 0 to High(Bytes) do
+  begin
+    Result[1 + i * 2]     := LowerCase(IntToHex(Bytes[i] shr 4, 1))[1];
+    Result[1 + i * 2 + 1] := LowerCase(IntToHex(Bytes[i] and $0F, 1))[1];
+  end;
+end;
+
 class function TAWSAuthHelper.SignRequest(const Credentials: TAWSCredentials;
-  const Service, HTTPMethod, CanonicalURI: string;
-  Headers: TStrings): string;
+  const Service, HTTPMethod, CanonicalURI, DateISO: string): string;
 var
-  DateISO, DateStamp: string;
+  DateStamp: string;
   CanonicalHeaders, SignedHeaders: string;
   CanonicalRequest, StringToSign: string;
   SigningKey, Signature: TBytes;
 begin
-  // Date au format ISO 8601
-  DateISO := FormatDateTime('yyyymmdd"T"hhnnss"Z"', TTimeZone.Local.ToUniversalTime(Now));
+  // DateStamp = première moitié du DateISO (yyyymmdd)
   DateStamp := Copy(DateISO, 1, 8);
 
   // En-têtes canoniques
@@ -235,20 +248,21 @@ begin
   SignedHeaders := 'host;x-amz-date';
 
   // Requête canonique
+  // Note : AWS exige les hash en hexadécimal MINUSCULE
   CanonicalRequest :=
     HTTPMethod + #10 +
     CanonicalURI + #10 +
     '' + #10 +  // Query string vide
     CanonicalHeaders + #10 +
     SignedHeaders + #10 +
-    THashSHA2.GetHashString('', SHA256); // Payload vide
+    LowerCase(THashSHA2.GetHashString('', SHA256)); // Payload vide
 
   // Chaîne à signer
   StringToSign :=
     'AWS4-HMAC-SHA256' + #10 +
     DateISO + #10 +
     DateStamp + '/' + Credentials.Region + '/' + Service + '/aws4_request' + #10 +
-    THashSHA2.GetHashString(CanonicalRequest, SHA256);
+    LowerCase(THashSHA2.GetHashString(CanonicalRequest, SHA256));
 
   // Clé de signature (processus complexe AWS)
   SigningKey := TEncoding.UTF8.GetBytes('AWS4' + Credentials.SecretAccessKey);
@@ -259,8 +273,8 @@ begin
 
   Signature := THashSHA2.GetHMACAsBytes(StringToSign, SigningKey);
 
-  // Retourner la signature hexadécimale
-  Result := TNetEncoding.Base16.Encode(Signature).ToLower;
+  // Retourner la signature au format hexadécimal minuscule (requis par AWS Sigv4)
+  Result := BytesToHexLower(Signature);
 end;
 
 class function TAWSAuthHelper.GetAuthorizationHeader(
@@ -269,7 +283,9 @@ class function TAWSAuthHelper.GetAuthorizationHeader(
 var
   Signature: string;
 begin
-  Signature := SignRequest(Credentials, Service, HTTPMethod, CanonicalURI, nil);
+  // On passe la MÊME DateISO à SignRequest pour que l'en-tête et la signature
+  // utilisent exactement le même horodatage
+  Signature := SignRequest(Credentials, Service, HTTPMethod, CanonicalURI, DateISO);
 
   Result := Format(
     'AWS4-HMAC-SHA256 Credential=%s/%s/%s/%s/aws4_request, ' +
@@ -373,6 +389,11 @@ type
     FPrivateKey: string;
     FAccessToken: string;
     FTokenExpiry: TDateTime;
+
+    // Helpers internes : encodage et signature du JWT
+    function Base64URLEncode(const Input: string): string;
+    function SignWithRSA(const Data, PrivateKey: string): string;
+    function CreateJWT: string;
   public
     constructor Create(const ServiceAccountJSON: string);
 
@@ -458,10 +479,29 @@ begin
   end;
 end;
 
-function CreateJWT: string;  
+function TGoogleCloudAuth.Base64URLEncode(const Input: string): string;  
+begin  
+  // Base64URL : alphabet « URL-safe » de la RFC 4648 §5
+  Result := TNetEncoding.Base64.Encode(Input);
+  Result := StringReplace(Result, '+', '-', [rfReplaceAll]);
+  Result := StringReplace(Result, '/', '_', [rfReplaceAll]);
+  Result := StringReplace(Result, '=', '', [rfReplaceAll]);
+end;
+
+function TGoogleCloudAuth.SignWithRSA(const Data, PrivateKey: string): string;  
+begin  
+  // Signature RSA-SHA256 avec la clé privée — nécessite une bibliothèque
+  // cryptographique externe (OpenSSL via Indy, TMS Cryptography Pack,
+  // OpenSSL via System.Net.URLClient en Delphi 11+, etc.).
+  // Le résultat doit être la signature binaire encodée en Base64URL.
+  raise ENotImplemented.Create(
+    'SignWithRSA : à implémenter avec une bibliothèque RSA (OpenSSL, TMS, …)');
+end;
+
+function TGoogleCloudAuth.CreateJWT: string;  
 var  
   Header, Payload: TJSONObject;
-  HeaderEncoded, PayloadEncoded: string;
+  HeaderEncoded, PayloadEncoded, Signature: string;
   IssuedAt, Expiry: Int64;
 begin
   // Header
@@ -491,8 +531,7 @@ begin
     Payload.Free;
   end;
 
-  // Signature avec la clé privée RSA
-  // (Nécessite une bibliothèque de cryptographie RSA)
+  // Signature RSA-SHA256 sur "header.payload"
   Signature := SignWithRSA(HeaderEncoded + '.' + PayloadEncoded, FPrivateKey);
 
   Result := HeaderEncoded + '.' + PayloadEncoded + '.' + Signature;
@@ -643,16 +682,19 @@ function TAWSS3Client.GetFileURL(const S3Key: string;
 var
   Expiry: Int64;
   StringToSign, Signature: string;
+  SignatureBytes: TBytes;
 begin
+  // Note : implémentation simplifiée façon AWS Signature V2 (HMAC-SHA1)
+  // En production, privilégier AWS Signature V4 (plus sécurisée mais plus complexe)
   Expiry := DateTimeToUnix(IncSecond(Now, ExpirySeconds));
 
   StringToSign := Format('GET'#10#10#10'%d'#10'/%s/%s',
     [Expiry, FBucketName, S3Key]);
 
-  Signature := THashSHA2.GetHMAC(StringToSign, FCredentials.SecretAccessKey, SHA256);
+  // HMAC-SHA1 sur les bytes binaires, puis Base64 du résultat brut
+  SignatureBytes := THashSHA1.GetHMACAsBytes(StringToSign, FCredentials.SecretAccessKey);
   Signature := TNetEncoding.URL.Encode(
-    TNetEncoding.Base64.EncodeBytesToString(
-      TEncoding.UTF8.GetBytes(Signature)));
+    TNetEncoding.Base64.EncodeBytesToString(SignatureBytes));
 
   Result := Format(
     'https://%s.s3.%s.amazonaws.com/%s?AWSAccessKeyId=%s&Expires=%d&Signature=%s',
@@ -666,9 +708,11 @@ end.
 **Utilisation :**
 
 ```pascal
+// Nécessite : uses Winapi.ShellAPI;  (pour ShellExecute)
 var
   Credentials: TAWSCredentials;
   S3Client: TAWSS3Client;
+  URL: string;
 begin
   // Configuration
   Credentials.AccessKeyID := 'VOTRE_ACCESS_KEY';
@@ -1138,7 +1182,7 @@ var
   Rekognition: TAWSRekognition;
   Labels: TJSONArray;
   i: Integer;
-  Label: TJSONObject;
+  LabelObj: TJSONObject;  // 'Label' est un mot réservé en Pascal
 begin
   Rekognition := TAWSRekognition.Create(Credentials);
   try
@@ -1148,10 +1192,10 @@ begin
 
       for i := 0 to Labels.Count - 1 do
       begin
-        Label := Labels.Items[i] as TJSONObject;
+        LabelObj := Labels.Items[i] as TJSONObject;
         Memo1.Lines.Add(Format('- %s (confiance: %.1f%%)',
-          [Label.GetValue<string>('Name'),
-           Label.GetValue<Double>('Confidence')]));
+          [LabelObj.GetValue<string>('Name'),
+           LabelObj.GetValue<Double>('Confidence')]));
       end;
     finally
       Labels.Free;

@@ -563,6 +563,11 @@ type
   TEventBus = class
   private
     FSubscribers: TDictionary<string, TList<TEventHandler>>;
+    // Un système d'événements partagé entre threads doit protéger ses
+    // structures internes : Subscribe et Publish peuvent être appelés
+    // simultanément depuis plusieurs threads (ce qui est typique dans un
+    // contexte distribué).
+    FLock: TCriticalSection;
   public
     constructor Create;
     destructor Destroy; override;
@@ -574,19 +579,29 @@ type
 
 implementation
 
+uses
+  System.SyncObjs;
+
 constructor TEventBus.Create;  
 begin  
   inherited;
   FSubscribers := TDictionary<string, TList<TEventHandler>>.Create;
+  FLock := TCriticalSection.Create;
 end;
 
 destructor TEventBus.Destroy;  
 var  
   List: TList<TEventHandler>;
 begin
-  for List in FSubscribers.Values do
-    List.Free;
-  FSubscribers.Free;
+  FLock.Enter;
+  try
+    for List in FSubscribers.Values do
+      List.Free;
+    FSubscribers.Free;
+  finally
+    FLock.Leave;
+  end;
+  FLock.Free;
   inherited;
 end;
 
@@ -594,37 +609,58 @@ procedure TEventBus.Subscribe(const EventType: string; Handler: TEventHandler);
 var  
   Handlers: TList<TEventHandler>;
 begin
-  if not FSubscribers.TryGetValue(EventType, Handlers) then
-  begin
-    Handlers := TList<TEventHandler>.Create;
-    FSubscribers.Add(EventType, Handlers);
-  end;
+  FLock.Enter;
+  try
+    if not FSubscribers.TryGetValue(EventType, Handlers) then
+    begin
+      Handlers := TList<TEventHandler>.Create;
+      FSubscribers.Add(EventType, Handlers);
+    end;
 
-  Handlers.Add(Handler);
+    Handlers.Add(Handler);
+  finally
+    FLock.Leave;
+  end;
 end;
 
 procedure TEventBus.Unsubscribe(const EventType: string; Handler: TEventHandler);  
 var  
   Handlers: TList<TEventHandler>;
 begin
-  if FSubscribers.TryGetValue(EventType, Handlers) then
-    Handlers.Remove(Handler);
+  FLock.Enter;
+  try
+    if FSubscribers.TryGetValue(EventType, Handlers) then
+      Handlers.Remove(Handler);
+  finally
+    FLock.Leave;
+  end;
 end;
 
 procedure TEventBus.Publish(const EventType, EventData: string);  
 var  
-  Handlers: TList<TEventHandler>;
+  HandlersSnapshot: TArray<TEventHandler>;
   Handler: TEventHandler;
+  Handlers: TList<TEventHandler>;
 begin
-  if FSubscribers.TryGetValue(EventType, Handlers) then
+  // On copie les handlers sous lock pour libérer le mutex avant d'invoquer
+  // les callbacks : si un handler met du temps ou s'abonne/désabonne lui-même,
+  // on évite ainsi tout deadlock.
+  FLock.Enter;
+  try
+    if FSubscribers.TryGetValue(EventType, Handlers) then
+      HandlersSnapshot := Handlers.ToArray
+    else
+      Exit;
+  finally
+    FLock.Leave;
+  end;
+
+  for Handler in HandlersSnapshot do
   begin
-    for Handler in Handlers do
-    begin
-      try
-        Handler(EventData);
-      except
-        // Logger l'erreur mais continuer
-      end;
+    try
+      Handler(EventData);
+    except
+      // Logger l'erreur mais continuer
     end;
   end;
 end;
@@ -737,7 +773,6 @@ end;
 procedure TDataSynchronizer.PushToRemote(const TableName: string; RecordID: Integer);  
 var  
   LocalQuery, RemoteQuery: TFDQuery;
-  FieldName: string;
 begin
   LocalQuery := TFDQuery.Create(nil);
   RemoteQuery := TFDQuery.Create(nil);
@@ -944,7 +979,6 @@ type
   TWeightedLoadBalancer = class
   private
     FServers: TList<TServerConfig>;
-    FCurrentWeight: Integer;
     function GetWeightedServer: string;
   public
     constructor Create;
@@ -1463,7 +1497,7 @@ end;
 
 ```pascal
 type
-  TCircuitState = (csClose, csOpen, csHalfOpen);
+  TCircuitState = (csClosed, csOpen, csHalfOpen);
 
   TCircuitBreaker = class
   private
@@ -1479,19 +1513,18 @@ type
 
 function TCircuitBreaker.Execute(Operation: TFunc<Boolean>): Boolean;  
 begin  
+  // Si circuit ouvert et timeout écoulé → passer en demi-ouvert et essayer
+  if (FState = csOpen) and (SecondsBetween(Now, FLastFailureTime) >= FTimeout) then
+    FState := csHalfOpen;
+
   case FState of
     csOpen:
-      begin
-        // Vérifier si le timeout est écoulé
-        if SecondsBetween(Now, FLastFailureTime) >= FTimeout then
-          FState := csHalfOpen
-        else
-          raise Exception.Create('Circuit ouvert');
-      end;
+      // Circuit toujours ouvert : on refuse l'opération sans l'exécuter
+      raise Exception.Create('Circuit ouvert');
 
     csHalfOpen:
       begin
-        // Essayer une requête
+        // Essayer une requête de test
         try
           Result := Operation();
           if Result then

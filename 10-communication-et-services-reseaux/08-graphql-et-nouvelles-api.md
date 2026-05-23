@@ -417,7 +417,9 @@ var
   RequestBody: TJSONObject;
   RequestStream: TStringStream;
   Response: IHTTPResponse;
+  ParsedValue: TJSONValue;
   ResponseJSON: TJSONObject;
+  DataValue: TJSONObject;
 begin
   Result := nil;
 
@@ -427,7 +429,10 @@ begin
     RequestBody.AddPair('query', QueryText);
 
     if Assigned(Variables) then
-      RequestBody.AddPair('variables', Variables);
+      // Cloner Variables : AddPair transfère la propriété au JSON parent,
+      // donc on clone pour que l'appelant puisse libérer son Variables sans
+      // provoquer de double free quand RequestBody est détruit
+      RequestBody.AddPair('variables', Variables.Clone as TJSONValue);
 
     // Préparer la requête HTTP
     RequestStream := TStringStream.Create(RequestBody.ToString, TEncoding.UTF8);
@@ -443,18 +448,31 @@ begin
 
       if Response.StatusCode = 200 then
       begin
-        ResponseJSON := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
-
-        // Vérifier les erreurs GraphQL
-        if ResponseJSON.TryGetValue<TJSONObject>('errors', Result) then
+        // Parser prudemment : ParseJSONValue retourne nil sur du JSON invalide
+        ParsedValue := TJSONObject.ParseJSONValue(Response.ContentAsString);
+        if not (ParsedValue is TJSONObject) then
         begin
-          raise Exception.Create('Erreur GraphQL: ' +
-            ResponseJSON.GetValue('errors').ToString);
+          ParsedValue.Free; // nil ou type inattendu
+          raise Exception.Create('Réponse GraphQL invalide (pas un objet JSON)');
         end;
 
-        // Retourner les données
-        Result := ResponseJSON.GetValue<TJSONObject>('data').Clone as TJSONObject;
-        ResponseJSON.Free;
+        ResponseJSON := TJSONObject(ParsedValue);
+        try
+          // Vérifier les erreurs GraphQL
+          if Assigned(ResponseJSON.FindValue('errors')) then
+            raise Exception.Create('Erreur GraphQL: ' +
+              ResponseJSON.GetValue('errors').ToString);
+
+          // Le champ "data" peut être absent en cas d'erreur serveur
+          DataValue := ResponseJSON.GetValue<TJSONObject>('data');
+          if not Assigned(DataValue) then
+            raise Exception.Create('Réponse GraphQL sans champ "data"');
+
+          // Retourner une copie indépendante (ResponseJSON sera libéré)
+          Result := DataValue.Clone as TJSONObject;
+        finally
+          ResponseJSON.Free;
+        end;
       end
       else
         raise Exception.CreateFmt('Erreur HTTP: %d - %s',
@@ -867,6 +885,13 @@ end;
 
 **API publique sans authentification :**
 
+> **Note** : Le projet SpaceX-API (incluant son endpoint GraphQL) est passé en  
+> archive read-only fin 2024. Le code ci-dessous reste valide pédagogiquement  
+> pour comprendre la structure d'une requête GraphQL, mais l'endpoint peut  
+> être indisponible ou figé sur des données historiques. Pour s'entraîner,  
+> préférer aujourd'hui des API GraphQL maintenues comme `countries.trevorblades.com`  
+> (informations sur les pays) ou `rickandmortyapi.com/graphql`.
+
 ```pascal
 var
   GraphQL: TGraphQLClient;
@@ -1140,7 +1165,7 @@ begin
       end);
     end;
 
-    WS.Connect('ws://echo.websocket.org');
+    WS.Connect('wss://echo.websocket.events');
     WS.Send('Hello WebSocket!');
 
     Sleep(2000);
@@ -1172,16 +1197,19 @@ unit SSEClient;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Net.HttpClient;
+  System.SysUtils, System.Classes, System.Net.HttpClient, System.Net.URLClient;
 
 type
   TSSEClient = class
   private
     FHTTPClient: THTTPClient;
-    FStream: TStream;
+    FBuffer: TMemoryStream;
     FOnMessage: TProc<string>;
     FActive: Boolean;
-    procedure ProcessStream;
+    FCurrentPosition: Int64;
+    procedure HandleReceiveData(const Sender: TObject; AContentLength: Int64;
+      AReadCount: Int64; var AAbort: Boolean);
+    procedure ProcessAvailableLines;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1198,71 +1226,98 @@ constructor TSSEClient.Create;
 begin  
   inherited;
   FHTTPClient := THTTPClient.Create;
+  FBuffer := TMemoryStream.Create;
   FActive := False;
+  FCurrentPosition := 0;
 end;
 
 destructor TSSEClient.Destroy;  
 begin  
   Disconnect;
+  FBuffer.Free;
   FHTTPClient.Free;
   inherited;
 end;
 
 procedure TSSEClient.Connect(const URL: string);  
-var  
-  Response: IHTTPResponse;
-begin
+begin  
   FActive := True;
+  FBuffer.Clear;
+  FCurrentPosition := 0;
 
+  // OnReceiveData est appelé au fil de l'arrivée des données ; on accumule
+  // dans FBuffer puis on extrait les lignes "data:" prêtes à être consommées
+  FHTTPClient.OnReceiveData := HandleReceiveData;
+
+  // Lancer la lecture dans un thread pour ne pas bloquer l'UI
   TThread.CreateAnonymousThread(
     procedure
     begin
-      Response := FHTTPClient.Get(URL, FStream);
-
-      while FActive do
-      begin
-        ProcessStream;
-        Sleep(100);
+      try
+        FHTTPClient.Get(URL, FBuffer); // bloquant tant que FActive=True
+      except
+        on E: Exception do
+          ; // ignorer : Disconnect a probablement provoqué l'arrêt
       end;
     end).Start;
 end;
 
-procedure TSSEClient.ProcessStream;  
-var  
-  Reader: TStreamReader;
-  Line: string;
-  EventData: string;
+procedure TSSEClient.HandleReceiveData(const Sender: TObject;
+  AContentLength: Int64; AReadCount: Int64; var AAbort: Boolean);
 begin
-  if not Assigned(FStream) then
+  // Demande d'arrêt si l'utilisateur a appelé Disconnect
+  AAbort := not FActive;
+  if not AAbort then
+    ProcessAvailableLines;
+end;
+
+procedure TSSEClient.ProcessAvailableLines;  
+var  
+  Available: string;
+  Lines: TArray<string>;
+  Line, EventData: string;
+  Bytes: TBytes;
+  NewLength, ConsumedBytes: Int64;
+begin
+  // Lire seulement les nouveaux octets ajoutés depuis le dernier passage
+  NewLength := FBuffer.Size - FCurrentPosition;
+  if NewLength <= 0 then
     Exit;
 
-  Reader := TStreamReader.Create(FStream, TEncoding.UTF8, False);
-  try
-    while not Reader.EndOfStream do
+  SetLength(Bytes, NewLength);
+  FBuffer.Position := FCurrentPosition;
+  FBuffer.ReadBuffer(Bytes[0], NewLength);
+  Available := TEncoding.UTF8.GetString(Bytes);
+
+  // SSE termine chaque événement par une ligne vide ; on traite par lignes
+  // complètes uniquement (les fragments incomplets restent dans FBuffer
+  // jusqu'au prochain appel).
+  if not Available.Contains(#10) then
+    Exit;
+
+  Lines := Available.Split([#10]);
+  ConsumedBytes := 0;
+  for Line in Copy(Lines, 0, Length(Lines) - 1) do  // exclut le dernier (peut être incomplet)
+  begin
+    ConsumedBytes := ConsumedBytes + Length(TEncoding.UTF8.GetBytes(Line)) + 1; // +1 pour le #10
+    if Line.StartsWith('data: ') then
     begin
-      Line := Reader.ReadLine;
-
-      if Line.StartsWith('data: ') then
-      begin
-        EventData := Line.Substring(6);
-
-        if Assigned(FOnMessage) then
-        begin
-          TThread.Synchronize(nil, procedure
+      EventData := Line.Substring(6).TrimRight;
+      if Assigned(FOnMessage) then
+        TThread.Synchronize(nil,
+          procedure
           begin
             FOnMessage(EventData);
           end);
-        end;
-      end;
     end;
-  finally
-    Reader.Free;
   end;
+
+  FCurrentPosition := FCurrentPosition + ConsumedBytes;
 end;
 
 procedure TSSEClient.Disconnect;  
 begin  
-  FActive := False;
+  FActive := False; // HandleReceiveData renverra AAbort=True au prochain appel
 end;
 
 end.
@@ -1496,8 +1551,9 @@ end;
 - Helper classes pour simplifier
 
 ✅ **API publiques pour tester :**
-- GitHub GraphQL API
-- SpaceX API
+- GitHub GraphQL API (authentification requise)
+- countries.trevorblades.com (informations sur les pays, sans auth)
+- rickandmortyapi.com/graphql (sans auth)
 - Shopify GraphQL
 - Pokemon GraphQL
 
