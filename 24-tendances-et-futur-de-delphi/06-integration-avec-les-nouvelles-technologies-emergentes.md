@@ -73,45 +73,65 @@ Utiliser des services IA hébergés dans le cloud (OpenAI, Google AI, Azure AI, 
 - ✅ Modèles à jour automatiquement
 - ✅ Mise en œuvre rapide
 
-**Exemple : Intégration OpenAI GPT**
+**Exemple : Intégration OpenAI GPT (Chat Completions API)**
 
 ```pascal
 uses
-  System.Net.HttpClient, System.JSON;
+  System.Net.HttpClient, System.Net.URLClient, System.JSON, System.Classes;
 
 procedure TForm1.CallOpenAI(const prompt: string);  
 var  
   http: THTTPClient;
   response: IHTTPResponse;
   json, resultJson: TJSONObject;
+  messages: TJSONArray;
+  userMessage: TJSONObject;
+  body: TStringStream;
   apiKey: string;
 begin
-  apiKey := 'votre-clé-api';
+  // Charger la clé depuis une configuration sécurisée, jamais en dur
+  apiKey := LoadApiKeyFromSecureConfig;
   http := THTTPClient.Create;
   try
-    // Préparation de la requête
+    // Préparation de la requête au format Chat Completions
     json := TJSONObject.Create;
     try
-      json.AddPair('model', 'gpt-4');
-      json.AddPair('prompt', prompt);
+      json.AddPair('model', 'gpt-4o');  // Modèle actuel recommandé
+
+      // Construction de la liste des messages
+      messages := TJSONArray.Create;
+      userMessage := TJSONObject.Create;
+      userMessage.AddPair('role', 'user');
+      userMessage.AddPair('content', prompt);
+      messages.AddElement(userMessage);
+      json.AddPair('messages', messages);
+
       json.AddPair('max_tokens', TJSONNumber.Create(150));
 
-      // Envoi de la requête
-      response := http.Post('https://api.openai.com/v1/completions',
-        TStringStream.Create(json.ToString, TEncoding.UTF8),
-        nil,
-        [TNetHeader.Create('Content-Type', 'application/json'),
-         TNetHeader.Create('Authorization', 'Bearer ' + apiKey)]);
+      body := TStringStream.Create(json.ToString, TEncoding.UTF8);
+      try
+        // Envoi de la requête sur l'endpoint chat/completions
+        response := http.Post('https://api.openai.com/v1/chat/completions',
+          body,
+          nil,
+          [TNetHeader.Create('Content-Type', 'application/json'),
+           TNetHeader.Create('Authorization', 'Bearer ' + apiKey)]);
 
-      // Traitement de la réponse
-      if response.StatusCode = 200 then
-      begin
-        resultJson := TJSONObject.ParseJSONValue(response.ContentAsString) as TJSONObject;
-        try
-          Memo1.Lines.Add(resultJson.GetValue<string>('choices[0].text'));
-        finally
-          resultJson.Free;
+        // Traitement de la réponse
+        if response.StatusCode = 200 then
+        begin
+          resultJson := TJSONObject.ParseJSONValue(response.ContentAsString) as TJSONObject;
+          try
+            // Le contenu est dans choices[0].message.content
+            Memo1.Lines.Add(
+              (resultJson.GetValue('choices') as TJSONArray)
+                .Items[0].GetValue<string>('message.content'));
+          finally
+            resultJson.Free;
+          end;
         end;
+      finally
+        body.Free;
       end;
     finally
       json.Free;
@@ -121,6 +141,8 @@ begin
   end;
 end;
 ```
+
+**Note** : L'ancien endpoint `/v1/completions` est désormais considéré comme legacy par OpenAI. L'endpoint moderne `/v1/chat/completions` utilise un format basé sur une liste de messages (avec des rôles `user`, `assistant`, `system`), ce qui offre plus de souplesse pour les conversations contextuelles.
 
 **Cas d'usage pratiques**
 - Chatbots intelligents dans vos applications

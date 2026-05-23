@@ -64,7 +64,7 @@ L'environnement de développement intégré (IDE) est au cœur de l'expérience 
 Le multiplateforme reste une priorité absolue pour Delphi :
 
 **Extension de la couverture plateforme**
-- Support des dernières versions d'OS (Windows 11+, macOS 15+)
+- Support des dernières versions d'OS (Windows 11+, macOS Sequoia/Tahoe)
 - Amélioration continue du support Linux
 - Compatibilité avec les nouvelles architectures (ARM, Apple Silicon)
 - Support des systèmes d'exploitation émergents
@@ -219,14 +219,15 @@ L'intégration dans les workflows modernes s'intensifie :
 Embarcadero a établi un rythme régulier :
 
 **Releases majeures**
-- Deux versions par an (printemps et automne)
+- Une version majeure par an (généralement en automne)
 - Numérotation séquentielle (Delphi 12, 13, 14...)
 - Noms de code basés sur des villes
 
 **Mises à jour intermédiaires**
+- Plusieurs mises à jour mineures par an (.1, .2, .3)
 - Correctifs et patches réguliers
 - Hotfix pour les problèmes critiques
-- Améliorations continues entre versions
+- Améliorations continues entre versions majeures
 
 **Bêtas et previews**
 - Programmes de bêta test publics
@@ -274,7 +275,8 @@ Les priorités pour les versions à venir incluent :
 - Android et iOS dernières versions
 
 **Intégration IA**
-- Extension du companion IA
+- Extension de Smart CodeInsight (assistant IA)
+- Enrichissement du SmartCore AI Component Pack
 - Plus de suggestions intelligentes
 - Génération de tests automatiques
 - Documentation auto-générée
@@ -506,7 +508,7 @@ Si vous évaluez Delphi pour votre organisation :
 La roadmap de Delphi montre un outil qui continue d'évoluer pour répondre aux besoins modernes du développement logiciel. Les orientations futures couvrent tous les aspects importants : performance, multiplateforme, cloud, IA, mobilité et productivité.
 
 **Points clés à retenir :**
-- Embarcadero maintient un rythme régulier de releases (2 par an)
+- Embarcadero maintient un rythme régulier de releases (une version majeure par an, plusieurs mises à jour mineures)
 - L'IA et le cloud sont des priorités stratégiques majeures
 - Le multiplateforme reste au cœur de la vision
 - La compatibilité avec l'existant est préservée

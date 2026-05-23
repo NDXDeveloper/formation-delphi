@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Le développement d'applications connaît aujourd'hui une transformation majeure avec l'émergence des plateformes low-code et no-code. Ces approches promettent de créer des applications plus rapidement, avec moins de code, et de rendre le développement accessible à davantage de personnes. Mais Delphi pratique cette philosophie depuis presque 30 ans ! Cette section explore comment Delphi, pionnier du RAD (Rapid Application Development), s'inscrit dans la tendance moderne du low-code.
+Le développement d'applications connaît aujourd'hui une transformation majeure avec l'émergence des plateformes low-code et no-code. Ces approches promettent de créer des applications plus rapidement, avec moins de code, et de rendre le développement accessible à davantage de personnes. Mais Delphi pratique cette philosophie depuis plus de 30 ans ! Cette section explore comment Delphi, pionnier du RAD (Rapid Application Development), s'inscrit dans la tendance moderne du low-code.
 
 ## Comprendre les concepts fondamentaux
 
@@ -288,7 +288,7 @@ Delphi se situe entre les plateformes low-code pures et les langages traditionne
 ### Scénario 1 : Application de gestion simple
 
 **Sans low-code (approche traditionnelle)**
-1. Écrire le code HTML/UI
+1. Écrire manuellement le code de l'interface utilisateur
 2. Coder la logique d'accès aux données
 3. Gérer la synchronisation UI-données manuellement
 4. Coder la validation
@@ -575,7 +575,7 @@ Le low-code et le RAD ne sont pas des buzzwords marketing pour Delphi : c'est da
 - Applications complexes
 
 **Investissement pérenne**
-- Approche éprouvée depuis 30 ans
+- Approche éprouvée depuis plus de 30 ans
 - Évolution continue
 - Pas de mode passagère
 - Compétences transférables

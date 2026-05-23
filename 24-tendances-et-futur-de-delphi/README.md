@@ -17,7 +17,7 @@ Lorsque vous apprenez un langage ou un outil de développement, une question lé
 
 ### Un outil qui traverse les décennies
 
-Delphi a une histoire unique dans le monde du développement logiciel. Né en 1995, il a déjà vécu presque trois décennies d'évolution technologique. Durant cette période, nous avons vu :
+Delphi a une histoire unique dans le monde du développement logiciel. Né en 1995, il a déjà vécu plus de trois décennies d'évolution technologique. Durant cette période, nous avons vu :
 
 - L'émergence et parfois la disparition de nombreux langages et frameworks
 - La révolution du Web et des applications mobiles
@@ -29,7 +29,7 @@ Et pourtant, Delphi est toujours là, non pas comme un vestige du passé, mais c
 
 ### Delphi dans le contexte technologique actuel
 
-Le paysage du développement logiciel en 2025 est radicalement différent de celui de 1995. Aujourd'hui, un développeur a accès à :
+Le paysage actuel du développement logiciel est radicalement différent de celui de 1995. Aujourd'hui, un développeur a accès à :
 
 - Des dizaines de langages de programmation
 - Des centaines de frameworks et bibliothèques

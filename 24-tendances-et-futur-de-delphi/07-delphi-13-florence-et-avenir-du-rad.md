@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Nous voici arrivés à la dernière section de ce chapitre sur les tendances et l'avenir de Delphi. Après avoir exploré l'évolution récente, la roadmap, le positionnement compétitif et l'intégration avec les nouvelles technologies, il est temps de nous concentrer sur la version actuelle : **Delphi 13 Florence**. Cette version, sortie en 2024, n'est pas simplement une mise à jour incrémentale. Elle incarne la vision d'Embarcadero pour l'avenir du développement rapide d'applications. Explorons ensemble ce que Delphi 13 nous révèle sur le futur du RAD et du développement logiciel.
+Nous voici arrivés à la dernière section de ce chapitre sur les tendances et l'avenir de Delphi. Après avoir exploré l'évolution récente, la roadmap, le positionnement compétitif et l'intégration avec les nouvelles technologies, il est temps de nous concentrer sur la version actuelle : **Delphi 13 Florence**. Cette version, sortie en 2025, n'est pas simplement une mise à jour incrémentale. Elle incarne la vision d'Embarcadero pour l'avenir du développement rapide d'applications. Explorons ensemble ce que Delphi 13 nous révèle sur le futur du RAD et du développement logiciel.
 
 ## Delphi 13 Florence : Vue d'ensemble
 
@@ -30,11 +30,13 @@ Delphi 13 Florence arrive à un moment charnière où :
 
 ### 1. Intégration de l'Intelligence Artificielle
 
-**Le site web companion IA**
+**Smart CodeInsight et SmartCore AI Component Pack**
 
-Delphi 13 introduit un assistant IA accessible directement depuis l'IDE ou via un site web dédié.
+Delphi 13 introduit deux innovations IA majeures :
+- **Smart CodeInsight** : assistant IA intégré à l'IDE pour aider le développeur
+- **SmartCore AI Component Pack** : ensemble de composants prêts à l'emploi pour intégrer l'IA dans vos applications (compatible avec OpenAI, Claude, Gemini, Ollama)
 
-**Fonctionnalités**
+**Fonctionnalités de Smart CodeInsight**
 - **Aide au codage** : suggestions intelligentes, complétion avancée
 - **Résolution de problèmes** : analyse d'erreurs et propositions de solutions
 - **Génération de code** : création de fonctions à partir de descriptions
@@ -72,10 +74,10 @@ Cette méthode utilise un comparateur générique pour trier..."
 - Accélération du prototypage
 - Focus sur la logique métier
 
-### 2. Support LLDB v12 - Débogage de nouvelle génération
+### 2. Support LLDB v20 - Débogage de nouvelle génération
 
 **Qu'est-ce que LLDB ?**
-LLDB (Low Level Debugger) est un débogueur moderne, plus puissant et flexible que les outils traditionnels.
+LLDB (Low Level Debugger) est un débogueur moderne, plus puissant et flexible que les outils traditionnels. Delphi 13 Florence intègre LLDB v20 pour le débogueur Win64 dans l'IDE 64 bits, en cohérence avec la mise à jour du compilateur C++ vers Clang 20.
 
 **Améliorations apportées**
 
@@ -96,7 +98,7 @@ LLDB (Low Level Debugger) est un débogueur moderne, plus puissant et flexible q
 
 **Exemple pratique**
 ```pascal
-// Avec LLDB v12, vous pouvez :
+// Avec LLDB v20, vous pouvez :
 // 1. Poser un breakpoint conditionnel
 //    "Arrêter si customer.TotalOrders > 1000"
 //
@@ -202,38 +204,44 @@ Avec Delphi 13 :
 - Plus de distributions supportées
 - Meilleure intégration avec l'environnement Linux
 
-### 5. Opérateur ternaire
+### 5. Opérateur ternaire conditionnel
 
 **Nouveauté syntaxique importante**
 
-Delphi 13 introduit enfin l'opérateur ternaire, présent dans la plupart des langages modernes.
+Delphi 13 introduit l'opérateur ternaire conditionnel, mais avec une syntaxe respectueuse de la tradition Pascal : le mot-clé `if` est réutilisé comme opérateur (et non `?:` comme en C/C++).
 
 **Syntaxe**
 ```pascal
-result := condition ? valeur_si_vrai : valeur_si_faux;
+result := if condition then valeur_si_vrai else valeur_si_faux;
 ```
 
 **Exemples pratiques**
 ```pascal
-// Avant Delphi 13 (verbeux)
+// Avant Delphi 13 (verbeux, instruction if/then/else complète)
 if age >= 18 then
   status := 'Adulte'
 else
   status := 'Mineur';
 
-// Avec Delphi 13 (concis)
-status := age >= 18 ? 'Adulte' : 'Mineur';
+// Avec Delphi 13 (concis, if utilisé comme opérateur dans une expression)
+status := if age >= 18 then 'Adulte' else 'Mineur';
 
 // Utile pour les assignations conditionnelles
-discount := isPremium ? 0.20 : 0.10;  
-message := count > 0 ? IntToStr(count) + ' items' : 'Aucun item';  
+discount := if isPremium then 0.20 else 0.10;  
+message := if count > 0 then IntToStr(count) + ' items' else 'Aucun item';  
+
+// Utilisable comme argument de fonction
+ShowMessage(if Failed then 'Échec' else 'Succès');
 
 // Même imbriqué (avec modération)
-priority := urgent ? 'High' : (important ? 'Medium' : 'Low');
+priority := if urgent then 'High' else (if important then 'Medium' else 'Low');
 ```
 
+**Différence avec IfThen()**
+Contrairement à la fonction `IfThen()` historique, l'opérateur ternaire supporte l'évaluation paresseuse : seule la branche correspondante à la condition est évaluée. Cela évite les effets de bord indésirables et améliore les performances.
+
 **Impact**
-Code plus concis et lisible pour les cas simples, alignement avec les pratiques modernes.
+Code plus concis et lisible pour les cas simples, tout en respectant la philosophie Pascal du langage. Disponible depuis la sortie de RAD Studio 13 Florence en septembre 2025.
 
 ### 6. Autres améliorations techniques
 
@@ -383,7 +391,7 @@ Après des années de "la performance viendra plus tard", on observe un retour v
 - WebAssembly (compilation native pour le Web)
 - Rust et Go (performance et sécurité)
 
-Delphi 13, avec ses 30 ans de compilation native, est bien positionné pour cette tendance.
+Delphi 13, avec ses plus de 30 ans de compilation native, est bien positionné pour cette tendance.
 
 ## L'avenir du RAD selon Delphi 13
 
@@ -401,29 +409,29 @@ RAD 1.0 + Multiplateforme + Frameworks modernes
 = Productivité 3-5x sur plus de plateformes
 ```
 
-**RAD 3.0 (2025+, Delphi 13)**
+**RAD 3.0 (à partir de Delphi 13)**
 ```
 RAD 2.0 + IA générative + Préview instantané + Écosystème ouvert
 = Productivité 10x+ potentielle
 ```
 
-### Vision 2025-2030
+### Vision pour les prochaines années
 
 **Prédictions réalistes basées sur Delphi 13**
 
-**À court terme (2025-2026)**
-- L'IA suggèrera des architectures complètes
+**À court terme (1-2 ans)**
+- L'IA suggérera des architectures complètes
 - Génération automatique de tests unitaires
 - Refactoring intelligent et sûr
 - Documentation auto-générée et maintenue
 
-**À moyen terme (2027-2028)**
+**À moyen terme (3-5 ans)**
 - Développement conversationnel : "Crée-moi une application de..."
 - Détection automatique de bugs de sécurité
 - Optimisation automatique des performances
 - Migration assistée entre versions
 
-**À long terme (2029-2030)**
+**À long terme (5-10 ans)**
 - Co-développement humain-IA fluide
 - IA qui apprend du style de chaque développeur
 - Maintenance prédictive du code
@@ -466,7 +474,7 @@ Logique métier complexe :
 Les deux coexistent dans le même projet sans friction
 ```
 
-## L'écosystème Delphi en 2025 et au-delà
+## L'écosystème Delphi aujourd'hui et au-delà
 
 ### Communauté revitalisée
 
@@ -548,7 +556,7 @@ Vous avez choisi d'apprendre Delphi à une époque fascinante :
 Vous avez un assistant 24/7 qui répond à vos questions et vous guide. Les générations précédentes auraient rêvé de cela.
 
 **2. Outil mature + innovations récentes**
-Vous bénéficiez de 30 ans de stabilité et de maturité, plus les innovations les plus récentes (IA, styles instantanés, etc.).
+Vous bénéficiez de plus de 30 ans de stabilité et de maturité, plus les innovations les plus récentes (IA, styles instantanés, etc.).
 
 **3. Compétences transférables**
 Les concepts que vous apprenez (POO, bases de données, UI/UX, architecture) sont universels. Delphi est une excellente base.
@@ -612,7 +620,7 @@ Compilation native, pas de runtime complexe, pas de dépendance à un cloud prop
 
 ### Scénario optimiste (mais réaliste)
 
-**Delphi en 2030**
+**Delphi à l'horizon 2030**
 
 **Position sur le marché**
 - Niche dominante : desktop professionnel, multiplateforme natif
@@ -632,13 +640,13 @@ Compilation native, pas de runtime complexe, pas de dépendance à un cloud prop
 - Communauté mondiale de 100 000+ développeurs actifs
 - Présence forte dans l'éducation
 
-**Développement typique en 2030**
+**Développement typique projeté à l'horizon 2030**
 ```
 Développeur : "Je veux créer une application de gestion de stock
                avec reconnaissance d'images des produits, prédiction
                des besoins, et interface multiplateforme moderne"
 
-Delphi IA 2030 :
+Delphi IA (horizon 2030) :
 - Génère l'architecture complète en 30 secondes
 - Crée l'interface avec les derniers standards UX
 - Intègre un modèle de vision pré-entraîné
@@ -755,7 +763,7 @@ Dans un monde saturé d'applications lentes et lourdes, les applications natives
 
 **Vous faites partie de l'histoire**
 
-En choisissant Delphi, vous rejoignez une lignée de développeurs qui, depuis 30 ans, créent des applications qui durent, qui performent, et qui font la différence.
+En choisissant Delphi, vous rejoignez une lignée de développeurs qui, depuis plus de 30 ans, créent des applications qui durent, qui performent, et qui font la différence.
 
 **Derniers mots**
 

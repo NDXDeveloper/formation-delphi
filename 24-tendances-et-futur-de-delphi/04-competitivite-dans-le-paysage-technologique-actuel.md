@@ -4,13 +4,13 @@
 
 ## Introduction
 
-Choisir une technologie de développement est une décision stratégique importante. Que vous soyez un développeur qui lance sa carrière, une entreprise qui sélectionne ses outils, ou un professionnel qui évalue ses compétences, vous devez comprendre comment Delphi se positionne face à la concurrence. Cette section propose une analyse objective et équilibrée de la compétitivité de Delphi dans l'écosystème technologique de 2025.
+Choisir une technologie de développement est une décision stratégique importante. Que vous soyez un développeur qui lance sa carrière, une entreprise qui sélectionne ses outils, ou un professionnel qui évalue ses compétences, vous devez comprendre comment Delphi se positionne face à la concurrence. Cette section propose une analyse objective et équilibrée de la compétitivité de Delphi dans l'écosystème technologique actuel.
 
 ## Le paysage technologique actuel
 
 ### Un marché fragmenté et diversifié
 
-Le développement logiciel en 2025 offre une multitude de choix :
+Le développement logiciel actuel offre une multitude de choix :
 
 **Langages populaires**
 - JavaScript/TypeScript (Web, mobile via React Native)
@@ -159,7 +159,7 @@ La philosophie RAD de Delphi n'est pas qu'un argument marketing :
 
 ### 4. Maturité et stabilité
 
-**30 ans d'évolution**
+**Plus de 30 ans d'évolution**
 
 Delphi n'est pas un nouveau framework qui disparaîtra demain :
 
@@ -511,7 +511,8 @@ Pour des applications desktop/métier, Delphi est souvent l'option la plus renta
 ### Pour un développeur freelance
 
 **Investissement**
-- Licence : 1 000 - 2 000 € pour Community ou Professional
+- Community Edition : gratuite (sous conditions de revenus)
+- Professional : 1 000 - 2 000 € selon promotion
 - Formation : auto-apprentissage (gratuit)
 
 **Revenus potentiels**
@@ -529,8 +530,8 @@ Pour des applications desktop/métier, Delphi est souvent l'option la plus renta
 ### Statistiques et indicateurs
 
 **Indices TIOBE (popularité des langages)**
-- Delphi/Object Pascal : position 10-20
-- Pas dans le top 5, mais présence stable
+- Delphi/Object Pascal : régulièrement dans le top 10 en 2026 (positions 9-10)
+- Présence stable et durable
 - Communauté fidèle et active
 
 **Offres d'emploi**
@@ -617,7 +618,7 @@ Stabilité probable, pas d'explosion mais pas de disparition. Position de niche 
 
 ### Pour un débutant
 
-**Dois-je apprendre Delphi en 2025 ?**
+**Dois-je apprendre Delphi aujourd'hui ?**
 
 **OUI si :**
 - Vous visez des applications desktop professionnelles
@@ -677,7 +678,7 @@ Stabilité probable, pas d'explosion mais pas de disparition. Position de niche 
 
 ### Positionnement réaliste
 
-**Dans le paysage technologique 2025 :**
+**Dans le paysage technologique actuel :**
 
 **Top tier pour :**
 - Applications desktop Windows

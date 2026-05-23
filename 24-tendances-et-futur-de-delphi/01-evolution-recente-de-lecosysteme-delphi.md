@@ -10,10 +10,10 @@ L'écosystème Delphi a connu une évolution remarquable au cours des dernières
 
 ### La stratégie de releases régulières
 
-Depuis son acquisition par Embarcadero Technologies, puis IDERA, Delphi suit un cycle de releases régulières et prévisibles. Contrairement aux années 2000 où les mises à jour étaient espacées et parfois incertaines, l'éditeur propose maintenant :
+Depuis son acquisition par Embarcadero Technologies en 2008 (Embarcadero étant elle-même devenue une filiale d'Idera en 2015, tout en conservant sa marque pour les outils de développement), Delphi suit un cycle de releases régulières et prévisibles. Contrairement aux années 2000 où les mises à jour étaient espacées et parfois incertaines, l'éditeur propose maintenant :
 
-- **Deux versions majeures par an** : généralement au printemps et à l'automne
-- **Des noms de code inspirants** : chaque version porte le nom d'une ville (Athens, Sydney, Alexandria, Athens, Florence...)
+- **Une version majeure par an** : généralement en automne, complétée par plusieurs mises à jour mineures (.1, .2, .3) au cours de l'année
+- **Des noms de code inspirants** : chaque version majeure porte le nom d'une ville (Seattle, Berlin, Tokyo, Rio, Sydney, Alexandria, Athens, Florence)
 - **Des améliorations continues** : chaque release apporte son lot de nouvelles fonctionnalités, corrections et optimisations
 
 Cette régularité permet aux développeurs de planifier leurs projets avec confiance et d'adopter progressivement les nouvelles fonctionnalités.
@@ -24,8 +24,8 @@ L'une des évolutions les plus significatives est l'introduction de la **Communi
 
 - L'accès complet à l'IDE Delphi
 - Le développement pour Windows, macOS, iOS et Android
-- Les mêmes fonctionnalités que l'édition professionnelle
-- Une licence utilisable pour des revenus jusqu'à 5 000 $ par an
+- L'essentiel des fonctionnalités de l'édition Professional
+- Une licence utilisable pour des revenus annuels totaux inférieurs à 5 000 $ et pour des équipes de moins de 5 développeurs
 
 Cette initiative a permis à de nombreux débutants, étudiants et développeurs indépendants de découvrir ou redécouvrir Delphi sans barrière financière.
 
@@ -42,13 +42,13 @@ Delphi s'est adapté aux évolutions des systèmes d'exploitation :
 - Compatibilité avec les écrans haute résolution (High DPI)
 
 **macOS récent**
-- Support des processeurs Apple Silicon (M1, M2, M3)
+- Support des processeurs Apple Silicon (M1 à M5)
 - Compatibilité avec les dernières versions de macOS
 - Adaptation aux changements de l'écosystème Apple
 
 **Linux de bureau**
 - FMXLinux permet désormais de créer des applications graphiques Linux
-- Support des principales distributions (Ubuntu, Debian, RedHat)
+- Support des principales distributions (Ubuntu, Debian, Red Hat)
 - Une réponse à la demande croissante d'applications multiplateformes
 
 ### Évolution des technologies supportées
@@ -118,11 +118,16 @@ L'écosystème de composants reste très riche :
 
 Delphi 13 Florence marque un tournant avec l'intégration de l'intelligence artificielle :
 
-**Site web companion IA**
+**Smart CodeInsight (assistant IA intégré)**
 - Un assistant IA dédié aux développeurs Delphi
 - Aide à la résolution de problèmes de code
 - Suggestions de bonnes pratiques
 - Exemples de code contextuels
+
+**SmartCore AI Component Pack**
+- Composants prêts à l'emploi pour intégrer l'IA dans vos applications
+- Connecteurs vers les principaux moteurs IA (OpenAI, Claude, Gemini, Ollama)
+- Architecture extensible pour ajouter d'autres moteurs
 
 **Développement assisté**
 - Complétion de code intelligente
@@ -147,7 +152,7 @@ Chaque version apporte des optimisations :
 **IDE**
 - Interface plus réactive
 - Gestion améliorée des grands projets
-- Débogueur plus puissant (LLDB v12)
+- Débogueur plus puissant (LLDB v20 pour Win64 dans Delphi 13 Florence)
 - Outils de profilage intégrés
 
 **Performances d'exécution**
