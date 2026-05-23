@@ -1069,6 +1069,30 @@ begin
 end;
 ```
 
+> ⚠️ **Attention** : ce pattern est sûr sur x86/x64 (modèle mémoire fort), mais peut être problématique sur ARM (Android, iOS) sans **memory barriers** explicites. Pour une version totalement portable, préférez `TInterlocked.CompareExchange` ou la fonction `System.AtomicCmpExchange` afin de garantir la visibilité du pointeur dès qu'il est publié :
+
+```pascal
+var
+  Instance: TMonSingleton = nil;
+
+function ObtenirInstance: TMonSingleton;  
+var  
+  NewInstance: TMonSingleton;
+begin
+  Result := TMonSingleton(AtomicCmpExchange(Pointer(Instance), nil, nil));
+  if Result = nil then
+  begin
+    NewInstance := TMonSingleton.Create;
+    if AtomicCmpExchange(Pointer(Instance), Pointer(NewInstance), nil) <> nil then
+      NewInstance.Free  // une autre instance a été publiée en premier
+    else
+      Result := NewInstance;
+    if Result = nil then
+      Result := TMonSingleton(AtomicCmpExchange(Pointer(Instance), nil, nil));
+  end;
+end;
+```
+
 ### Pattern : Producer-Consumer
 
 Pour communiquer entre threads de manière sûre :

@@ -317,13 +317,31 @@ Cette approche est moins sophistiquée mais rapide à mettre en place.
 Si le débogage complet n'est pas nécessaire, vous pouvez simplement déployer l'exécutable :
 
 ```pascal
+uses
+  System.SysUtils;  // pour TOSVersion
+
+// Petite fonction utilitaire (Windows uniquement)
+function NomMachine: string;  
+var  
+  Buffer: array[0..255] of Char;
+  Size: DWORD;
+begin
+  Size := Length(Buffer);
+  if Winapi.Windows.GetComputerName(Buffer, Size) then
+    Result := Buffer
+  else
+    Result := '(inconnu)';
+end;
+
 // Ajouter du logging pour le diagnostic à distance
 procedure TForm1.FormCreate(Sender: TObject);  
 begin  
-  Logger.Info('Application démarrée sur : ' + GetComputerName);
+  Logger.Info('Application démarrée sur : ' + NomMachine);
   Logger.Info('Version OS : ' + TOSVersion.ToString);
 end;
 ```
+
+> 💡 Pour une version multi-plateforme, vous pouvez utiliser `System.Net.Socket.TIPAddress` ou la variable d'environnement (`GetEnvironmentVariable('COMPUTERNAME')` sous Windows, `HOSTNAME` ou `HOST` sous Linux/macOS).
 
 Puis récupérez le fichier de log pour analyser les problèmes.
 

@@ -263,13 +263,15 @@ Après ajout de 500 lignes sans tests : 60% de couverture
 **Utilisation basique :**
 
 ```cmd
-CodeCoverage.exe -e MonAppTests.exe -m MonApp.exe -a
+CodeCoverage.exe -e MonAppTests.exe -m MonAppTests.map -a
 ```
 
 **Paramètres :**
-- `-e` : Exécutable de tests
-- `-m` : Module à analyser (votre application)
-- `-a` : Générer tous les rapports
+- `-e` : Exécutable de tests à profiler
+- `-m` : Fichier `.map` correspondant à l'exécutable (généré par le compilateur Delphi)
+- `-a` : Générer tous les types de rapports (HTML, XML, EMMA)
+
+> ⚠️ **Important** : Pour que la couverture fonctionne, vous devez compiler votre projet de tests avec les options **Detailed Map File** et **Debug Information** activées (Project Options > Linker / Compiling).
 
 **Sortie :**
 - Fichiers HTML dans le dossier `CodeCoverage_html/`
@@ -304,13 +306,11 @@ if exist CodeCoverage_html rmdir /s /q CodeCoverage_html
 REM Exécuter les tests avec couverture  
 CodeCoverage.exe ^  
   -e MonAppTests.exe ^
-  -m MonApp.exe ^
+  -m MonAppTests.map ^
   -a ^
   -ife ^
-  -spf *.pas ^
-  -uf System ^
-  -uf Vcl ^
-  -uf Winapi
+  -spf sources.txt ^
+  -uf units.txt
 
 REM Ouvrir le rapport  
 start CodeCoverage_html\index.html  
@@ -320,9 +320,11 @@ pause
 ```
 
 **Paramètres additionnels :**
-- `-ife` : Exclure les fichiers d'exemple
-- `-spf` : N'inclure que les fichiers .pas
-- `-uf` : Exclure les unités système (System, Vcl, etc.)
+- `-ife` : Include First Executable line (inclure la première ligne exécutable de chaque procédure dans l'analyse)
+- `-spf <fichier>` : Source Path File — fichier listant les chemins vers les sources `.pas`
+- `-uf <fichier>` : Unit File — fichier listant les unités à inclure dans la couverture
+
+> 💡 Pour la liste complète des paramètres, consultez la documentation officielle sur GitHub.
 
 ### Autres outils
 
@@ -485,7 +487,7 @@ Pour la plupart des projets, **70-80%** de couverture est un excellent objectif 
 
 **Citation célèbre :**
 
-> "Viser 100% de couverture est contre-productif. Visez une couverture élevée des parties critiques."
+> "Viser 100% de couverture est contre-productif. Visez une couverture élevée des parties critiques."  
 > – Martin Fowler
 
 ### Prioriser les zones critiques
@@ -931,7 +933,7 @@ test:
 coverage:
   stage: coverage
   script:
-    - CodeCoverage.exe -e MonAppTests.exe -m MonApp.exe -a
+    - CodeCoverage.exe -e MonAppTests.exe -m MonAppTests.map -a
   artifacts:
     paths:
       - CodeCoverage_html/

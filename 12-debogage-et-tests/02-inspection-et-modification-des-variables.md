@@ -416,10 +416,10 @@ La Call Stack affiche la **séquence d'appels de fonctions** qui a mené à l'en
 **Exemple :**
 
 ```
-FonctionC (ligne 45) ← Vous êtes ici  
-FonctionB (ligne 30) ← Appelée par FonctionB  
-FonctionA (ligne 15) ← Appelée par FonctionA  
-FormCreate (ligne 8) ← Point d'entrée  
+FonctionC (ligne 45) ← Vous êtes ici (en haut de la pile)  
+FonctionB (ligne 30) ← A appelé FonctionC  
+FonctionA (ligne 15) ← A appelé FonctionB  
+FormCreate (ligne 8) ← Point d'entrée, a appelé FonctionA  
 ```
 
 **Utilité pour l'inspection :**

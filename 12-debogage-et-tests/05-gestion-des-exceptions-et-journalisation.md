@@ -81,11 +81,13 @@ begin
 end;
 ```
 
-**EFilerError** : Erreur lors de la lecture/écriture de fichiers
+**EFileStreamError / EFOpenError / EFCreateError** : Erreurs liées aux flux et fichiers (impossible d'ouvrir, de créer, etc.)
 
 **EOutOfMemory** : Mémoire insuffisante
 
 **Exception** : Classe de base de toutes les exceptions
+
+> 💡 **Note** : `EFilerError` existe également (dans `System.Classes`) mais elle est utilisée par les classes `TReader` / `TWriter` pour la sérialisation de composants (fichiers `.dfm`/`.fmx`), pas pour les opérations fichier classiques.
 
 ### Hiérarchie des exceptions
 
@@ -178,17 +180,15 @@ except
   begin
     ShowMessage('Type d''exception : ' + E.ClassName);
     ShowMessage('Message : ' + E.Message);
-
-    // Pour un débogage plus détaillé
-    ShowMessage('Stack Trace : ' + E.StackTrace);
   end;
 end;
 ```
 
-**Propriétés utiles :**
+**Propriétés utiles de la classe `Exception` standard :**
 - `ClassName` : Le nom de la classe d'exception
 - `Message` : Description de l'erreur
-- `StackTrace` : Trace de la pile d'appels (disponible avec debug info)
+
+> 💡 **Stack trace** : la classe `Exception` standard de Delphi **ne fournit pas** de pile d'appels (`StackTrace`). Pour obtenir cette information précieuse en cas d'erreur, installez une bibliothèque tierce comme **EurekaLog** ou **madExcept**. Ces outils enrichissent automatiquement les exceptions avec une trace détaillée incluant les noms des fonctions, fichiers sources et numéros de ligne.
 
 ### Relancer une exception
 
@@ -848,9 +848,10 @@ procedure TRotationLog.VerifierRotation;
 var  
   TailleFichier: Int64;
 begin
+  // Utiliser TFile.GetSize de System.IOUtils pour obtenir la taille du fichier
   if FileExists(FFichierBase) then
   begin
-    TailleFichier := GetFileSize(FFichierBase);
+    TailleFichier := TFile.GetSize(FFichierBase);
     if TailleFichier > FTailleMax then
       RoterFichiers;
   end;
@@ -933,6 +934,7 @@ type
   private
     FQueue: TThreadedQueue<string>;
     FThread: TThread;
+    FStopped: Boolean;
     procedure ProcessQueue;
   public
     constructor Create;
@@ -942,11 +944,23 @@ type
 
 constructor TAsyncLogger.Create;  
 begin  
-  FQueue := TThreadedQueue<string>.Create;
+  inherited Create;
+  FQueue := TThreadedQueue<string>.Create(1024, INFINITE, 100);
+  FStopped := False;
 
   FThread := TThread.CreateAnonymousThread(ProcessQueue);
   FThread.FreeOnTerminate := False;
   FThread.Start;
+end;
+
+destructor TAsyncLogger.Destroy;  
+begin  
+  FStopped := True;
+  FQueue.DoShutDown;   // débloque PopItem en attente
+  FThread.WaitFor;
+  FThread.Free;
+  FQueue.Free;
+  inherited;
 end;
 
 procedure TAsyncLogger.Log(const Message: string);  
@@ -958,13 +972,15 @@ procedure TAsyncLogger.ProcessQueue;
 var  
   Message: string;
 begin
-  while not TThread.Current.CheckTerminated do
+  while not FStopped do
   begin
     if FQueue.PopItem(Message) = wrSignaled then
       EcrireDansFichier(Message);
   end;
 end;
 ```
+
+> 💡 **Note** : `TThreadedQueue<T>` est défini dans `System.Generics.Collections`. La méthode `DoShutDown` débloque tout consommateur en attente sur `PopItem`. Pensez à ajouter ces unités dans la clause `uses` : `System.Classes`, `System.Generics.Collections`, `System.SyncObjs`.
 
 ## Intégration exception + journalisation
 

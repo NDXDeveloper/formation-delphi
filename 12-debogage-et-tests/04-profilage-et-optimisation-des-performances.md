@@ -787,12 +787,14 @@ Dans **Project > Options > Delphi Compiler > Compiling** :
 **Utiliser les directives de compilation :**
 
 ```pascal
-{$OPTIMIZATION ON}  // Activer optimisation pour cette unité
-{$RANGECHECKING OFF}  // Désactiver vérifications en Release (attention !)
-{$OVERFLOWCHECKS OFF}
+{$OPTIMIZATION ON}    // Activer optimisation pour cette unité
+{$RANGECHECKS OFF}    // Désactiver les vérifications de bornes (attention !)
+{$OVERFLOWCHECKS OFF} // Désactiver les vérifications de débordement
 ```
 
-**Attention :** Désactiver les vérifications peut introduire des bugs. Faites-le uniquement après tests approfondis.
+Versions courtes équivalentes : `{$O+}`, `{$R-}`, `{$Q-}`.
+
+**Attention :** Désactiver les vérifications peut masquer des bugs (accès tableau hors bornes, overflow d'entiers). Faites-le uniquement sur du code éprouvé et testé en profondeur.
 
 ## Bonnes pratiques d'optimisation
 
