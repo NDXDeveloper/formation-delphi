@@ -216,7 +216,7 @@ Dans cette section, nous allons explorer l'écosystème francophone Delphi dans 
 **Comment rejoindre** : Recherchez "Delphi" ou "Pascal" sur Facebook, demandez l'adhésion
 
 #### Delphi France
-**Similar au précédent** : Groupe actif pour développeurs francophones
+**Similaire au précédent** : Groupe actif pour développeurs francophones
 
 #### Pascal et Delphi (Débutants)
 **Focus** : Spécialement pour les débutants
@@ -237,7 +237,7 @@ Dans cette section, nous allons explorer l'écosystème francophone Delphi dans 
 - Discussions professionnelles
 - Offres d'emploi
 - Partage d'expériences
-- Networking
+- Réseautage (networking)
 
 **Utilité** :
 - Connexions professionnelles
@@ -276,7 +276,7 @@ Dans cette section, nous allons explorer l'écosystème francophone Delphi dans 
 **Contenu** :
 - Tutoriels Delphi en français
 - Développement de projets complets
-- Lives de coding
+- Sessions de programmation en direct (lives)
 - Actualités Delphi commentées
 
 **Fréquence** : Régulière, plusieurs vidéos par mois
@@ -310,7 +310,7 @@ Dans cette section, nous allons explorer l'écosystème francophone Delphi dans 
 **Présence** :
 - Blog : developpeur-pascal.fr
 - YouTube : Serial Streameur
-- Twitter/X : @premartinpatrick
+- Twitter/X : @PremartinPatric
 - Twitch
 
 **Pourquoi suivre** :
@@ -365,7 +365,7 @@ Dans cette section, nous allons explorer l'écosystème francophone Delphi dans 
 **Delphi Developer Day France** (vérifier disponibilité actuelle)
 - Historiquement à Paris
 - Présentations techniques
-- Networking
+- Réseautage
 - Sponsorisé par Embarcadero parfois
 
 **Meetups informels** :
@@ -429,7 +429,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 **Devoxx France** (Paris)
 - Grande conférence développeurs
 - Parfois des sessions Delphi ou Pascal
-- Networking avec développeurs francophones
+- Réseautage avec développeurs francophones
 
 **Mix-IT** (Lyon)
 - Conférence tech
@@ -437,9 +437,9 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 **Forum PHP et autres** :
 - Présence occasionnelle de développeurs Delphi
-- Networking inter-communautés
+- Réseautage inter-communautés
 
-**Conseil** : Même dans des conférences non spécifiquement Delphi, vous pouvez rencontrer d'autres développeurs Delphi francophones et networker.
+**Conseil** : Même dans des conférences non spécifiquement Delphi, vous pouvez rencontrer d'autres développeurs Delphi francophones et développer votre réseau.
 
 ## Ressources d'apprentissage en français
 
@@ -475,7 +475,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 ### Documentation traduite
 
-**Certaines ressources** : Membres de la communauté traduisent occasionnellement
+**Certaines ressources** : Des membres de la communauté traduisent occasionnellement
 
 **Où trouver** :
 - Section documentation de developpez.com
@@ -553,7 +553,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 **Conseil** : Beaucoup d'offres Delphi ne sont pas explicitement titrées "Delphi". Cherchez aussi "Pascal", "RAD Studio", "Embarcadero", ou "maintenance application gestion".
 
-### Freelancing et consulting
+### Freelance et conseil (consulting)
 
 **Demande** : Forte demande pour consultants Delphi expérimentés
 
@@ -570,12 +570,14 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 - Formation Delphi
 - Développement de composants sur mesure
 
-**Tarifs** (France, indicatif 2024-2025) :
+**Tarifs** (France, indicatif 2025-2026) :
 - Junior : 300-400€/jour
 - Intermédiaire : 400-550€/jour
 - Senior/Expert : 550-800€/jour
 
-**Réseau** : Le networking dans la communauté francophone est essentiel pour trouver des missions.
+**Note** : Ces tarifs sont donnés à titre indicatif et peuvent varier selon la région, la spécialisation et la conjoncture du marché.
+
+**Réseau** : Le réseautage (networking) dans la communauté francophone est essentiel pour trouver des missions.
 
 ### Créer sa boîte
 
@@ -598,7 +600,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 **Améliorer votre compréhension** : Enseigner, c'est apprendre deux fois
 
-**Networking** : Vous créez des liens durables
+**Réseautage** : Vous créez des liens durables
 
 **Satisfaction personnelle** : Aider quelqu'un est gratifiant
 
@@ -618,7 +620,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 **Bénéfice** : Consolide vos propres connaissances
 
 #### Corriger la documentation
-**Typos et erreurs** : Dans tutoriels developpez.com
+**Fautes de frappe et erreurs** : Dans tutoriels developpez.com
 
 **Comment contribuer** : Contactez les modérateurs ou l'auteur
 
@@ -639,7 +641,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 - Tutoriels vidéo (sous-titres)
 
 #### Partager vos découvertes
-**Format** : Post de forum ou article de blog
+**Format** : Publication de forum ou article de blog
 
 **Contenu** :
 - "J'ai découvert cette astuce Delphi"
@@ -677,7 +679,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 - Tutoriels pas à pas
 - Résolution de problèmes courants
 - Développement de projet en direct
-- Reviews de composants
+- Critiques (reviews) de composants
 
 **Plateformes** :
 - YouTube (principal)
@@ -718,9 +720,9 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 #### Mentorat
 **Format** :
-- Mentorat 1-to-1
+- Mentorat individuel (1 à 1)
 - Groupes d'étude
-- Sessions Q&A régulières
+- Sessions Q&R régulières
 
 **Impact** : Transformez des débutants en développeurs compétents
 
@@ -815,7 +817,7 @@ Si rien n'existe dans votre région, pourquoi ne pas lancer un groupe ? Commence
 
 ### Pragmatisme
 
-**Approche pratique** : Focus sur "comment faire marcher" plus que théorie pure
+**Approche pratique** : Accent mis sur "comment faire marcher" plus que sur la théorie pure
 
 **Applications métier** : Expertise forte sur les applications de gestion
 

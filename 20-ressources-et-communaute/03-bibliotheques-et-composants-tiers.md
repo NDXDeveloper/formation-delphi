@@ -193,7 +193,7 @@ Les forums Delphi que nous avons vus précédemment sont d'excellentes sources p
 **Grilles de données avancées**
 - DevExpress VCL / FMX
 - TMS Component Pack
-- EhLib (TMSDBGrid)
+- EhLib (TDBGridEh)
 
 Ces composants offrent :
 - Tri et filtrage automatiques
@@ -211,13 +211,13 @@ Permettent de créer des interfaces modernes et personnalisées.
 
 **Contrôles avancés**
 - TMS Component Pack (calendriers, planners, contrôles de saisie enrichis)
-- Raize Components (contrôles Windows modernes)
+- Konopka Signature VCL Controls (KSVC, anciennement Raize Components, racheté par Embarcadero en 2015)
 - PngComponents (support PNG natif pour anciennes versions)
 
 ### Bases de données et accès aux données
 
 **Connexion et composants de données**
-- AnyDAC / FireDAC (inclus dans Delphi)
+- FireDAC (inclus dans Delphi, anciennement nommé AnyDAC avant le rachat par Embarcadero en 2013)
 - UniDAC (Universal Data Access Components) - Accès universel
 - ZeosLib - Open source, support multi-SGBD
 
@@ -256,9 +256,10 @@ Permettent de créer des interfaces modernes et personnalisées.
 - Synopse PDF Engine (gratuit, open source)
 
 **Excel**
-- TMS FlexCel Studio
-- TMS XLSReadWrite
-- OpenXLS (open source)
+- TMS FlexCel Studio (commercial)
+- TMS XLSReadWrite (commercial)
+- Excel4Delphi (open source)
+- ZEXMLSS (open source, Lazarus/Delphi)
 
 **ZIP et compression**
 - TMS Pack (compression multiple formats)
@@ -274,13 +275,13 @@ Permettent de créer des interfaces modernes et personnalisées.
 ### Cryptographie et sécurité
 
 **Chiffrement**
-- LockBox (open source)
-- SecureBlackBox
+- TurboPower LockBox (open source, anciennement commercial)
+- SecureBlackBox (commercial)
 - DCPcrypt (open source)
 
-**Hashing et signatures**
-- TurboPower LockBox
-- OpenSSL wrappers
+**Hachage et signatures**
+- DCPcrypt (algorithmes de hachage : SHA, MD5, etc.)
+- OpenSSL wrappers (TIdSSLIOHandlerSocketOpenSSL d'Indy, ou wrappers tiers)
 
 ### Multimédia et graphisme
 
@@ -310,7 +311,7 @@ Permettent de créer des interfaces modernes et personnalisées.
 - Pascal Analyzer
 - FixInsight
 
-**Profiling**
+**Profilage (Profiling)**
 - AQTime Pro
 - Sampling Profiler (open source)
 
@@ -388,9 +389,9 @@ Recherchez :
 
 **Pour un projet professionnel** :
 - Que se passe-t-il si l'éditeur arrête le support ?
-- Puis-je obtenir le code source en escrow ?
+- Puis-je obtenir le code source via un dépôt fiduciaire (escrow) ?
 - Quelle est la politique de mises à jour ?
-- Y a-t-il un SLA (Service Level Agreement) ?
+- Y a-t-il un SLA (Service Level Agreement, contrat de niveau de service) ?
 
 **Pour un projet personnel** :
 - Est-ce que je comprends suffisamment le composant ?
@@ -633,7 +634,7 @@ Si vous développez quelque chose d'utile :
 Les forums que nous avons vus au chapitre 20.2 sont excellents pour demander des recommandations de composants.
 
 ### Chaînes YouTube
-Beaucoup de développeurs font des reviews de composants et des tutoriels d'intégration.
+Beaucoup de développeurs publient des critiques (reviews) de composants et des tutoriels d'intégration.
 
 ## Conclusion
 

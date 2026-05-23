@@ -40,7 +40,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 
 **Projets de départ** : Certains projets peuvent servir de base à vos propres créations.
 
-### Communauté et networking
+### Communauté et réseautage
 
 **Contribution** : Participer à un projet open source vous permet de construire votre réputation.
 
@@ -157,17 +157,17 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 **Licence** : GPL/LGPL/MPL (triple licence)
 
 #### Spring4D
-**URL** : https://github.com/VSoftTechnologies/Spring4D
+**URL** : https://github.com/spring4d/spring4d
 
 **Description** : Framework apportant des concepts modernes à Delphi
 
 **Fonctionnalités** :
-- Dependency Injection (IoC Container)
+- Injection de dépendances (Dependency Injection / conteneur IoC)
 - Collections enrichies
 - Reflection avancée
-- Interception et AOP
-- MVVM support
-- Logging
+- Interception et AOP (Programmation Orientée Aspects)
+- Support MVVM (Model-View-ViewModel)
+- Logging (journalisation)
 
 **Niveau** : Intermédiaire
 
@@ -287,10 +287,15 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 
 **Utilité** : Créer des outils d'analyse ou génération de code
 
-#### Pascal Analyzer
-**Certains composants open source** : Outils d'analyse de code
+#### Outils d'analyse statique
 
-**Utilité** : Comprendre comment analyser la qualité du code
+**Pascal Analyzer** (commercial, Peganza) : Référence pour l'analyse statique de code Pascal/Delphi
+
+**Alternatives open source** :
+- **FixInsight** (gratuit pour usage personnel) : Analyse statique légère
+- **Delphi AST** (open source) : Permet de construire vos propres outils d'analyse
+
+**Utilité** : Comprendre comment analyser la qualité du code et écrire des outils sur ce socle
 
 ### Composants et bibliothèques UI
 
@@ -303,8 +308,8 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 - Manipulation d'images rapide
 - Transformations
 - Effets
-- Anti-aliasing
-- Layers
+- Anti-aliasing (anticrénelage)
+- Calques (layers)
 
 **Niveau** : Intermédiaire
 
@@ -334,7 +339,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 **Pourquoi l'étudier** :
 - Composant personnalisé complexe
 - Gestion de la performance
-- Rendu custom
+- Rendu personnalisé (custom drawing)
 
 **Usage** : Applications nécessitant des listes/arborescences complexes
 
@@ -350,7 +355,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 - Animations fluides
 - Effets avancés
 - Multi-plateforme (VCL et FMX)
-- SVG support
+- Support SVG
 
 **Niveau** : Intermédiaire à avancé
 
@@ -376,7 +381,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 - Application complète et mature
 - Interface utilisateur complexe
 - Gestion de fichiers avancée
-- Multi-plateforme (VCL et Lazarus)
+- Multi-plateforme (écrit avec Free Pascal et Lazarus, fonctionne sur Windows, macOS, Linux, FreeBSD, Haiku)
 
 **Apprentissage** :
 - Structure d'une grande application
@@ -386,7 +391,11 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 **Licence** : GPL
 
 #### Lazarus (compatible Free Pascal)
-**URL** : https://github.com/graemeg/fpGUI
+**URL officielle** : https://gitlab.com/freepascal.org/lazarus/lazarus
+
+**Miroir GitHub** : https://github.com/fpc/Lazarus
+
+**Site officiel** : https://www.lazarus-ide.org/
 
 **Note** : Bien que Lazarus soit Free Pascal, beaucoup de concepts sont applicables à Delphi
 
@@ -415,7 +424,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 **Pourquoi l'étudier** :
 - Protocoles réseau
 - Communications bas niveau
-- Projet mature (20+ ans)
+- Projet mature (créé en 1997, plus de 25 ans d'évolution)
 
 #### Synapse
 **URL** : https://github.com/geby/synapse
@@ -465,7 +474,7 @@ Dans cette section, nous allons explorer l'univers des projets open source Delph
 - 3D et 2D
 - Physique
 - Audio
-- Cross-platform
+- Multi-plateforme (cross-platform)
 
 **Niveau** : Intermédiaire à avancé
 
@@ -622,7 +631,7 @@ LICENSE          - Licence du projet
 
 **Apprentissage accéléré** :
 - Revue de code par des experts
-- Feedback direct sur votre travail
+- Retour direct sur votre travail (feedback)
 - Apprentissage des meilleures pratiques
 
 **Portfolio visible** :
@@ -632,7 +641,7 @@ LICENSE          - Licence du projet
 
 **Communauté** :
 - Rencontres avec d'autres développeurs
-- Networking
+- Réseautage (networking)
 - Reconnaissance
 
 **Rendre à la communauté** :
@@ -750,7 +759,7 @@ LICENSE          - Licence du projet
 - Titre clair et concis
 - Description détaillée de la modification
 - Référence à l'issue corrigée
-- Screenshots si interface UI
+- Captures d'écran si interface UI modifiée
 
 **Exemple de description** :
 ```
@@ -768,7 +777,7 @@ Fix memory leak in TStringList (fixes #123)
 **Répondez aux commentaires** :
 - Discussion constructive
 - Apportez les modifications demandées
-- Remerciez pour les feedbacks
+- Remerciez pour les retours
 
 **Apprentissage** : La revue de code est une opportunité d'apprendre
 
@@ -972,7 +981,7 @@ Fix memory leak in TStringList (fixes #123)
 - Description claire
 - Installation
 - Exemples d'usage
-- Contribution guidelines
+- Directives de contribution (fichier CONTRIBUTING.md)
 
 **Code propre** :
 - Bien commenté
@@ -1013,7 +1022,7 @@ Les projets open source Delphi constituent une richesse inestimable pour votre a
 **Plan d'action immédiat** :
 
 **Cette semaine** :
-- Visitez Awesome Delphi et bookmarkez-le
+- Visitez Awesome Delphi et ajoutez-le à vos favoris
 - Choisissez un petit projet qui vous intéresse
 - Clonez-le et réussissez à le compiler
 

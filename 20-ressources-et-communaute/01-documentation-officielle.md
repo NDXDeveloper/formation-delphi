@@ -149,10 +149,10 @@ La documentation propose souvent des chemins d'apprentissage progressifs :
 ### Où les trouver ?
 
 Dans le DocWiki, cherchez "What's New in RAD Studio" suivi du numéro de version. Pour Delphi 13 Florence, vous trouverez notamment :
-- L'opérateur ternaire
+- L'opérateur ternaire conditionnel (utilisant le mot-clé `if` comme opérateur)
 - Les améliorations VCL et FireMonkey
-- Le support LLDB v12
-- Les nouveautés du site companion IA
+- Le débogueur LLDB v20 pour Win64
+- Le SmartCore AI Component Pack et les améliorations de Smart CodeInsight (assistant IA pour les développeurs)
 
 ## La documentation des bibliothèques tierces
 
@@ -199,7 +199,7 @@ Si vous ne trouvez pas ce que vous cherchez dans la documentation :
 1. **Reformulez votre recherche** : Essayez différents termes
 2. **Consultez l'index alphabétique** : Parfois plus efficace que la recherche
 3. **Vérifiez les forums officiels** : D'autres utilisateurs ont peut-être eu la même question
-4. **Utilisez le companion IA** : Delphi 13 intègre une assistance IA pour le développement
+4. **Utilisez Smart CodeInsight** : Delphi 13 intègre une assistance IA (Smart CodeInsight) pour le développement
 
 ### Comprendre les termes techniques
 

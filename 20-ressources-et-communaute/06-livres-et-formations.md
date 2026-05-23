@@ -12,7 +12,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 ### Apprentissage structuré et progressif
 
-**Parcours cohérent** : Contrairement aux articles isolés, un livre ou une formation vous guide à travers un curriculum réfléchi, où chaque chapitre construit sur le précédent.
+**Parcours cohérent** : Contrairement aux articles isolés, un livre ou une formation vous guide à travers un cursus réfléchi, où chaque chapitre s'appuie sur le précédent.
 
 **Progression naturelle** : Vous évitez les lacunes. Les auteurs et formateurs anticipent ce que vous devez savoir à chaque étape.
 
@@ -103,7 +103,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 - Architecture d'applications
 - Patterns de conception
 - Code propre et maintenable
-- SOLID principles avec Delphi
+- Principes SOLID avec Delphi
 
 **Points forts** :
 - Focus sur la qualité du code
@@ -122,8 +122,8 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 **Contenu** :
 - Techniques avancées d'architecture
-- Dependency Injection
-- Testing et qualité
+- Injection de dépendances (Dependency Injection)
+- Tests et qualité
 - Patterns avancés
 
 **Pour qui ?** : Développeurs expérimentés visant l'excellence
@@ -135,7 +135,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 **Contenu** :
 - Optimisation de code
 - Multithreading et programmation parallèle
-- Profiling et analyse de performance
+- Profilage (profiling) et analyse de performance
 - Optimisation mémoire
 - Techniques de bas niveau
 
@@ -380,7 +380,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 **Avantages** :
 - Formateurs certifiés Embarcadero
 - Contenu à jour garanti
-- Networking avec autres professionnels
+- Réseautage avec d'autres professionnels
 - Certification reconnue
 
 **Comment** : Contacter Embarcadero ou leurs partenaires de formation
@@ -411,7 +411,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 **Revues de code** : Excellente façon d'apprendre
 
-**Documentation interne** : Wikis, guides de style, best practices
+**Documentation interne** : Wikis, guides de style, bonnes pratiques (best practices)
 
 **Budget formation** : Négociez une formation externe financée
 
@@ -535,7 +535,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 **Nuance** : Les fondamentaux (Object Pascal, POO) n'ont pas beaucoup changé, donc même un livre plus ancien reste utile pour les bases
 
-**Idéal** : Contenu mis à jour pour Delphi 11-13
+**Idéal** : Contenu mis à jour pour Delphi 11, 12 ou 13
 
 #### 2. Niveau requis
 
@@ -596,7 +596,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 #### 7. Support et communauté
 
 **Pour les formations** :
-- Forum ou section Q&A ?
+- Forum ou section Q&R (questions/réponses) ?
 - L'instructeur répond-il aux questions ?
 - Communauté d'apprenants active ?
 
@@ -694,7 +694,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 - Expertise reconnue dans un domaine
 - Mentorat d'autres développeurs
 - Contribution à des projets open source
-- Possiblement speaker en conférences
+- Possiblement intervenant (speaker) en conférences
 
 *Ressources* :
 - Formations professionnelles spécialisées
@@ -720,7 +720,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 **Appliquez immédiatement** : Ce que vous apprenez dans un projet réel
 
-**Exemples de projets progression** :
+**Exemples de projets par niveau de progression** :
 - Débutant : Calculatrice, To-Do List
 - Intermédiaire : Gestionnaire de contacts avec BD
 - Avancé : Application complète multi-tiers
@@ -828,7 +828,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 *Investissement* : 300€ en formations/livres
 
 *Gain* :
-- 20h de recherche économisées = 1000€+ (si vous valuez votre temps à 50€/h)
+- 20h de recherche économisées = 1000€+ (si vous valorisez votre temps à 50€/h)
 - Meilleure qualité de code = moins de bugs = moins de maintenance
 - Compétences pour obtenir un meilleur poste ou missions mieux payées
 
@@ -866,7 +866,7 @@ Dans cette section, nous allons explorer l'univers des livres et formations disp
 
 ## Éviter les pièges
 
-### Le collectionnite aiguë
+### La collectionnite aiguë
 
 **Symptôme** : Acheter tous les livres sans en lire aucun
 

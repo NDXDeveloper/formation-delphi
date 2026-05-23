@@ -14,7 +14,7 @@ Ce chapitre est peut-être l'un des plus importants de cette formation, car il v
 
 ### Vous n'êtes pas seul
 
-L'une des forces de Delphi, c'est sa communauté. Depuis plus de 25 ans, des milliers de développeurs à travers le monde utilisent Delphi pour créer des applications professionnelles. Cette longue histoire a donné naissance à :
+L'une des forces de Delphi, c'est sa communauté. Depuis plus de 30 ans (Delphi est né en 1995), des milliers de développeurs à travers le monde utilisent Delphi pour créer des applications professionnelles. Cette longue histoire a donné naissance à :
 
 - Une documentation riche et détaillée
 - Des forums actifs où les questions trouvent rapidement des réponses
@@ -51,7 +51,7 @@ L'une des grandes forces de Delphi est la disponibilité de milliers de composan
 
 ### Conférences et événements (20.4)
 
-Les événements Delphi, qu'ils soient physiques ou en ligne, sont d'excellentes opportunités pour apprendre, networker et rester à la pointe de la technologie. Nous passerons en revue les principaux événements de l'écosystème Delphi.
+Les événements Delphi, qu'ils soient physiques ou en ligne, sont d'excellentes opportunités pour apprendre, développer son réseau professionnel et rester à la pointe de la technologie. Nous passerons en revue les principaux événements de l'écosystème Delphi.
 
 ### Blogs et chaînes YouTube (20.5)
 
@@ -87,7 +87,7 @@ Au-delà des aspects techniques, être connecté à la communauté Delphi prése
 
 **Veille technologique** : En suivant les discussions et les actualités, vous restez informé des évolutions du marché et des meilleures pratiques.
 
-**Résolution de problèmes** : Aucun développeur ne travaille en isolation complète. Avoir un réseau vous permet de trouver de l'aide rapidement quand vous bloquez sur un problème complexe.
+**Résolution de problèmes** : Aucun développeur ne travaille en isolement complet. Avoir un réseau vous permet de trouver de l'aide rapidement quand vous bloquez sur un problème complexe.
 
 **Inspiration** : Voir ce que d'autres créent avec Delphi peut vous donner des idées pour vos propres projets et vous motiver à progresser.
 
@@ -99,7 +99,7 @@ Un principe fondamental de l'apprentissage est que nous apprenons mieux en ensei
 - Vous construisez votre réputation
 - Vous contribuez à l'écosystème dont vous bénéficiez
 
-Ne pensez pas qu'il faut être un expert pour partager. Même en tant que débutant, vous pouvez aider d'autres débutants qui ont les mêmes questions que vous avez eu hier !
+Ne pensez pas qu'il faut être un expert pour partager. Même en tant que débutant, vous pouvez aider d'autres débutants qui ont les mêmes questions que vous avez eues hier !
 
 ## Comment utiliser ce chapitre
 
@@ -124,10 +124,10 @@ Si vous avez déjà une certaine expérience :
 Si vous maîtrisez déjà bien Delphi :
 1. Envisagez de contribuer à des projets open source
 2. Partagez votre expertise via un blog ou des vidéos
-3. Participez aux conférences en tant que speaker
-4. Mentorez les nouveaux développeurs
+3. Participez aux conférences en tant qu'orateur (speaker)
+4. Accompagnez les nouveaux développeurs (mentorat)
 
-## L'état de l'écosystème Delphi en 2025
+## L'état actuel de l'écosystème Delphi
 
 ### Une communauté toujours active
 

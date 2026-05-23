@@ -22,7 +22,7 @@ Dans cette section, nous allons explorer l'écosystème des blogs et chaînes Yo
 
 **Tutoriels pas à pas** : Des guides complets qui vous prennent par la main pour réaliser quelque chose de concret.
 
-**Astuces et tips** : Des petites techniques qui peuvent transformer votre façon de coder.
+**Astuces et conseils** : Des petites techniques qui peuvent transformer votre façon de coder.
 
 **Réflexions et analyses** : Des articles de fond sur l'architecture, les bonnes pratiques, l'avenir de Delphi.
 
@@ -96,19 +96,21 @@ Dans cette section, nous allons explorer l'écosystème des blogs et chaînes Yo
 
 **Particularité** : Excellent pour comprendre les aspects bas niveau de Delphi et Windows.
 
-#### Delphi Haven (Jerry Dodge)
+#### Delphi Haven (Chris Rolliston)
+
+**URL** : https://delphihaven.wordpress.com/
 
 **Thématiques** :
-- Tutoriels pratiques
-- Composants personnalisés
-- Développement d'applications complètes
+- Code Delphi multi-plateforme (Windows, macOS)
+- Composants personnalisés (TClipboard, etc.)
+- VCL et FireMonkey
 - Bonnes pratiques
 
 **Style** : Pédagogique et accessible
 
 **Public** : Tous niveaux
 
-**Particularité** : Articles bien structurés avec des exemples complets.
+**Particularité** : Articles bien structurés avec des exemples complets et liens vers du code open source sur GitHub.
 
 #### Marco Cantù's Blog
 
@@ -142,7 +144,9 @@ Dans cette section, nous allons explorer l'écosystème des blogs et chaînes Yo
 
 **Particularité** : Incontournable si vous développez des backends avec Delphi.
 
-#### Delphi Code Monkey (Andrew Polkinghorn)
+#### Delphi Code Monkey (Warren Postma)
+
+**URL** : http://delphicodemonkey.blogspot.com/
 
 **Thématiques** :
 - Tutoriels variés
@@ -153,6 +157,8 @@ Dans cette section, nous allons explorer l'écosystème des blogs et chaînes Yo
 **Style** : Pratique et accessible
 
 **Public** : Débutants à intermédiaires
+
+**Particularité** : Warren est MVP Embarcadero, passionné par Delphi depuis ses premières versions.
 
 ### Blogs francophones
 
@@ -231,7 +237,7 @@ Plusieurs développeurs francophones maintiennent des blogs personnels. Vous pou
 - Tutoriels Delphi et C++Builder
 - Conseils de productivité
 - Découverte de fonctionnalités
-- Tips et astuces rapides
+- Astuces rapides
 
 **Style** : Énergique, enthousiaste, très pédagogique
 

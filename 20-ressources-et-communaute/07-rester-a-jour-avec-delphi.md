@@ -68,9 +68,9 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 
 **Versions majeures** : Généralement tous les 12-24 mois
 
-**Mises à jour mineures** : Updates et patches réguliers entre les versions majeures
+**Mises à jour mineures** : Updates et correctifs (patches) réguliers entre les versions majeures
 
-**Hotfixes** : Corrections urgentes si nécessaire
+**Hotfixes** : Correctifs d'urgence si nécessaire
 
 **Tendance actuelle** : Embarcadero a accéléré le rythme ces dernières années, avec des versions plus fréquentes.
 
@@ -153,14 +153,16 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 - Annonces de nouvelles versions
 - Tutoriels sur les nouvelles fonctionnalités
 - Cas d'usage clients
-- Tips et astuces
+- Conseils et astuces
 - Articles techniques approfondis
 
 **Conseil** : Abonnez-vous au flux RSS ou à la newsletter
 
 **Auteurs importants** :
-- Jim McKeeth (Chief Developer Advocate)
-- David Intersimone (Chief Evangelist)
+- Ian Barker (Developer Advocate Embarcadero depuis 2023)
+- David Intersimone "David I" (figure historique de la communauté, toujours actif)
+- Marco Cantù (RAD Studio Product Manager)
+- Jim McKeeth (anciennement Chief Developer Advocate Embarcadero, désormais chez GDK Software, reste très actif dans la communauté Delphi)
 - Équipe produit Embarcadero
 
 ### Newsletter Embarcadero
@@ -239,8 +241,8 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 
 **Sur Twitter/X** :
 - @marcocantu (Marco Cantù - expert mondial)
-- @pmonasson (Patrick Prémartin - développeur et formateur français)
-- @StefanoFalasca (créateur de Horse framework)
+- @PremartinPatric (Patrick Prémartin - développeur et formateur français, MVP Embarcadero)
+- Comptes officiels des frameworks populaires (HashLoad pour Horse, DelphiMVCFramework, etc.)
 - Cherchez "MVP Delphi" pour trouver les Most Valuable Professionals
 
 **Sur LinkedIn** :
@@ -582,7 +584,7 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 
 **Qu'est-ce que c'est ?** : Plateforme de suivi des bugs et demandes de fonctionnalités
 
-**URL** : Accessible via le site Embarcadero
+**URL** : https://qp.embarcadero.com/ (redirige vers la plateforme Atlassian JSM)
 
 **Comment participer** :
 
@@ -616,11 +618,11 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 - Influencer le produit final en remontant les bugs
 - Être prêt le jour de la sortie officielle
 
-**Engagement** : Demande du temps pour tester et remonter des feedbacks constructifs
+**Engagement** : Demande du temps pour tester et remonter des retours constructifs
 
-### Surveys et enquêtes
+### Enquêtes utilisateurs
 
-**Régulièrement** : Embarcadero lance des enquêtes auprès des utilisateurs
+**Régulièrement** : Embarcadero lance des enquêtes (surveys) auprès des utilisateurs
 
 **Sujets** :
 - Fonctionnalités souhaitées
@@ -738,7 +740,7 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 **Cloud et Services** :
 - Intégrations cloud facilitées
 - Support serverless
-- Containerisation
+- Conteneurisation (Docker, Kubernetes)
 
 **Mobile et Multi-plateforme** :
 - FireMonkey continue d'évoluer
@@ -746,7 +748,7 @@ Dans cette section, nous allons découvrir comment rester informé de toutes ces
 - Linux desktop de plus en plus mature
 
 **Modernisation UI** :
-- Composants au design moderne (Windows 11, macOS style)
+- Composants au design moderne (style Windows 11, style macOS)
 - Animations et effets
 - Accessibilité améliorée
 

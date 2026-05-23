@@ -113,7 +113,9 @@ DelphiCon est l'événement phare organisé par Embarcadero, généralement annu
 
 **Pour les débutants** : Excellent pour découvrir différents aspects de Delphi. Choisissez les sessions marquées "Introduction" ou "Getting Started".
 
-### EKON (European Konferenz)
+### EKON (Entwickler Konferenz)
+
+**URL** : https://entwickler-konferenz.de/
 
 **Localisation** : Allemagne (Düsseldorf généralement)
 
@@ -133,17 +135,31 @@ DelphiCon est l'événement phare organisé par Embarcadero, généralement annu
 
 **Pour les francophones** : Si vous comprenez l'allemand ou l'anglais, c'est un événement de grande qualité avec une ambiance exceptionnelle.
 
-### Delphi Summit (Amérique du Sud)
+### Delphi Summit (Pays-Bas)
 
-**Localisation** : Brésil principalement
+**Organisateur** : GDK Software, en partenariat avec Embarcadero
 
-**Particularité** : Le Brésil possède une communauté Delphi très active
+**Localisation** : Pays-Bas (H2O Purmerend, près d'Amsterdam)
 
-**Format** : Conférence en présentiel
+**Format** : Conférence internationale en présentiel de 2 jours
+
+**Langue** : Anglais
+
+**Notoriété** : Événement global Delphi avec des centaines de participants venus du monde entier
+
+**Particularité** : Sessions techniques, networking et innovations Delphi
+
+### Embarcadero Conference Brazil
+
+**Localisation** : São Paulo, Brésil
+
+**Particularité** : Le Brésil possède l'une des communautés Delphi les plus actives au monde
+
+**Format** : Conférence annuelle en présentiel (généralement une journée)
 
 **Langue** : Portugais principalement, quelques sessions en anglais
 
-**Notoriété** : Grande conférence avec des centaines de participants
+**Notoriété** : Grande conférence avec plusieurs centaines de participants (~600 en 2025), avec plus de 40 sessions sur 6 scènes simultanées
 
 ## Événements en ligne (webinaires et streams)
 
@@ -157,7 +173,7 @@ DelphiCon est l'événement phare organisé par Embarcadero, généralement annu
 - Nouveautés de Delphi
 - Tutoriels techniques spécifiques
 - Démonstrations de composants
-- Best practices
+- Bonnes pratiques (best practices)
 - Cas d'usage clients
 
 **Inscription** : Via le site Embarcadero
@@ -173,8 +189,8 @@ DelphiCon est l'événement phare organisé par Embarcadero, généralement annu
 ### Twitch et YouTube Live
 
 **Streamers Delphi**
-Plusieurs développeurs Delphi font des streams en direct :
-- Sessions de coding
+Plusieurs développeurs Delphi font des streams (diffusions) en direct :
+- Sessions de programmation
 - Tutoriels en temps réel
 - Résolution de problèmes
 - Création d'applications de A à Z
@@ -195,9 +211,9 @@ Plusieurs développeurs Delphi font des streams en direct :
 **Format** : Sessions organisées par les éditeurs de composants tiers
 
 **Exemples** :
-- TMS Software webinars
-- DevExpress presentations
-- Demonstrations de nouveaux composants
+- Webinaires TMS Software
+- Présentations DevExpress
+- Démonstrations de nouveaux composants
 
 **Contenu** :
 - Présentation de nouveaux produits
@@ -324,13 +340,13 @@ Pour les événements en présentiel :
 - Chargez vos appareils
 
 **4. Préparez votre présentation personnelle**
-- Un elevator pitch court sur qui vous êtes
-- Quelques questions préparées pour les speakers
+- Une présentation rapide (elevator pitch) sur qui vous êtes
+- Quelques questions préparées pour les intervenants (speakers)
 - Vos cartes de visite (ou profil LinkedIn à jour)
 
 **5. Rejoignez les groupes de l'événement**
 - Groupes LinkedIn/Facebook de l'événement
-- Channels Slack/Discord si disponibles
+- Canaux Slack/Discord si disponibles
 - Permet de commencer le networking avant même l'événement
 
 ### Pendant l'événement
@@ -344,7 +360,7 @@ Pour les événements en présentiel :
 - Notes sur les sessions
 - Coordonnées des personnes rencontrées
 - Idées et inspirations pour vos projets
-- Screenshots de slides intéressantes
+- Captures d'écran des diapositives intéressantes
 
 **3. Profitez des pauses**
 Les pauses café et déjeuners sont souvent les moments les plus précieux pour :
@@ -462,10 +478,10 @@ Ayez quelques questions techniques prêtes, cela facilite l'engagement dans les 
 - Espaces de coworking offrent souvent des salles gratuitement
 
 **4. Formats simples qui marchent**
-- Lightning talks (présentations de 5-10 min)
+- Lightning talks (présentations éclair de 5-10 min)
 - Show & Tell (chacun montre un projet/code)
 - Coding dojo (programmation en groupe)
-- Q&A avec un expert (remote ou en personne)
+- Q&R avec un expert (à distance ou en personne)
 
 **5. Soyez régulier**
 Mieux vaut un petit événement mensuel qu'un grand événement annuel qui s'essouffle.
@@ -600,7 +616,7 @@ Les conférences et événements sont bien plus que de simples occasions d'appre
 - Commencez par les événements virtuels gratuits (moins intimidant)
 - Un seul événement peut transformer votre façon de développer
 - Vous avez votre place même en tant que débutant
-- Le networking est aussi important que les sessions techniques
+- Le réseautage (networking) est aussi important que les sessions techniques
 - Restez en contact après l'événement
 - Considérez d'organiser un meetup local si rien n'existe près de chez vous
 - L'investissement (temps/argent) se rentabilise rapidement
@@ -609,6 +625,6 @@ Les conférences et événements sont bien plus que de simples occasions d'appre
 
 La communauté Delphi est accueillante et bienveillante. N'ayez pas peur de participer, de poser des questions, et de rencontrer ces développeurs qui, comme vous, sont passionnés par cet outil formidable qu'est Delphi.
 
-Peut-être qu'un jour, vous serez vous-même speaker lors d'une conférence, partageant votre expertise et votre passion avec une nouvelle génération de développeurs Delphi. Ce voyage commence par un simple clic sur "S'inscrire" à votre premier événement. Alors, qu'attendez-vous ?
+Peut-être qu'un jour, vous serez vous-même intervenant (speaker) lors d'une conférence, partageant votre expertise et votre passion avec une nouvelle génération de développeurs Delphi. Ce voyage commence par un simple clic sur "S'inscrire" à votre premier événement. Alors, qu'attendez-vous ?
 
 ⏭️ [Blogs et chaînes YouTube](/20-ressources-et-communaute/05-blogs-et-chaines-youtube.md)

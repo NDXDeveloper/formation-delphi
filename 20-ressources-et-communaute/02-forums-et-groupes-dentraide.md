@@ -26,9 +26,11 @@ Les forums Delphi sont généralement très accueillants envers les débutants, 
 
 ### Embarcadero Community Forums
 
-**URL** : https://community.embarcadero.com/
+**URL** : https://community.idera.com/developer-tools/ (suite au rachat d'Embarcadero par Idera)
 
-Les forums officiels d'Embarcadero sont la plateforme principale pour toutes les questions relatives à Delphi et RAD Studio.
+**Note** : Embarcadero a été racheté par Idera. La plateforme communautaire est en transition, consultez la liste des forums officiels et communautaires sur https://blogs.embarcadero.com/community/ pour disposer des liens les plus à jour.
+
+Les forums officiels d'Embarcadero/Idera sont la plateforme principale pour toutes les questions relatives à Delphi et RAD Studio.
 
 **Organisation** : Les forums sont divisés en plusieurs catégories :
 - **Delphi General** : Questions générales sur Delphi
@@ -122,7 +124,7 @@ Plusieurs groupes Facebook actifs existent pour les développeurs Delphi :
 
 **Delphi Programming** : Autre groupe actif axé sur la programmation
 - Échanges de code
-- Astuces et tips
+- Astuces et conseils
 - Discussions sur les bonnes pratiques
 
 **Points forts** :
@@ -139,7 +141,7 @@ Plusieurs groupes Facebook actifs existent pour les développeurs Delphi :
 **Embarcadero Delphi Developers** et autres groupes LinkedIn permettent des discussions plus professionnelles.
 
 **Utilité** :
-- Networking professionnel
+- Réseautage professionnel
 - Opportunités de carrière
 - Discussions stratégiques sur l'utilisation de Delphi en entreprise
 
@@ -280,7 +282,7 @@ Posez vos questions publiquement, cela profite à toute la communauté.
 **Ne soyez pas exigeant**
 Évitez les phrases comme "C'est urgent !" ou "J'ai besoin d'une réponse rapidement". Tout le monde a des priorités.
 
-**N'êtes pas agressif**
+**Ne soyez pas agressif**
 Si une réponse ne vous convient pas, restez respectueux. Expliquez calmement pourquoi cela ne résout pas votre problème.
 
 ## Comment contribuer à la communauté
@@ -421,7 +423,7 @@ Il n'y a pas de pression pour passer rapidement d'une phase à l'autre. Allez à
 **Showcases / Démonstrations**
 Beaucoup de forums ont des sections où les développeurs montrent leurs créations. C'est inspirant et éducatif.
 
-**Jobs / Opportunités**
+**Emplois / Opportunités** (Jobs)
 Des sections dédiées aux offres d'emploi et missions freelance.
 
 **Off-Topic**

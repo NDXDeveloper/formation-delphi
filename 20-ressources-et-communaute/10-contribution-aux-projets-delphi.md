@@ -14,7 +14,7 @@ Dans cette dernière section du chapitre 20, nous allons explorer comment vous p
 
 **Apprentissage accéléré** : Contribuer à un projet vous force à comprendre le code en profondeur, bien au-delà d'une simple lecture.
 
-**Revue de code par des experts** : Vos contributions seront relues par des développeurs expérimentés qui vous donneront un feedback direct et constructif. C'est comme avoir un mentor personnel.
+**Revue de code par des experts** : Vos contributions seront relues par des développeurs expérimentés qui vous donneront des retours directs et constructifs. C'est comme avoir un mentor personnel.
 
 **Découverte de nouvelles techniques** : En travaillant sur différents projets, vous découvrez des approches, patterns et solutions que vous n'auriez jamais imaginés seul.
 
@@ -84,7 +84,7 @@ Dans cette dernière section du chapitre 20, nous allons explorer comment vous p
 - Guides de démarrage rapide (Quick Start)
 - FAQ basées sur les questions récurrentes
 - Guides d'architecture pour les développeurs
-- Changelog lisible pour les utilisateurs
+- Journal des modifications (changelog) lisible pour les utilisateurs
 
 **Documenter des cas d'usage** :
 - "Comment faire X avec cette bibliothèque"
@@ -212,7 +212,7 @@ Access Violation à l'adresse 0x...
 - Rendre plus pédagogique
 
 **Tutoriels complets** :
-- Guide pas à pas avec screenshots
+- Guide pas à pas avec captures d'écran
 - Projet complet de A à Z
 - Vidéo tutoriel
 
@@ -244,7 +244,7 @@ end;
 ```
 
 **Pourquoi c'est une bonne contribution débutant** :
-- Forces à comprendre le code
+- Vous force à comprendre le code
 - Framework de test bien défini
 - Impact direct sur la qualité
 - Peu de risque de casser quelque chose
@@ -287,7 +287,7 @@ end;
 - Avant de coder, créez une issue pour discuter
 - Expliquez le cas d'usage
 - Proposez une API/interface
-- Attendez feedback des mainteneurs
+- Attendez les retours des mainteneurs
 
 **Niveau** : Avancé
 
@@ -546,7 +546,7 @@ Décrivez les tests effectués
 Fixes #123
 ```
 
-**Captures d'écran** : Si changements visuels, ajoutez des screenshots
+**Captures d'écran** : Si changements visuels, ajoutez des captures d'écran (screenshots)
 
 **Exemple avant/après** : Pour corrections de bugs, montrez le comportement avant/après
 
@@ -616,7 +616,7 @@ git checkout -b nouvelle-contribution
 
 **Patience** : Les revues peuvent prendre du temps
 
-**Remerciez** : Remerciez pour le temps passé à reviewer votre contribution
+**Remerciez** : Remerciez pour le temps passé à relire (reviewer) votre contribution
 
 ### Code
 
@@ -662,8 +662,8 @@ git checkout -b nouvelle-contribution
 
 **Vidéos** :
 - Tutoriels screencast
-- Lives de coding
-- Reviews de composants
+- Sessions de programmation en direct (lives)
+- Critiques (reviews) de composants
 
 **Présentations** :
 - Meetups locaux
@@ -678,7 +678,7 @@ git checkout -b nouvelle-contribution
 - Forums Embarcadero
 - Reddit r/delphi
 
-**Mentoring** :
+**Mentorat** :
 - Aidez les débutants
 - Guidez sur des projets open source
 - Partagez votre expérience
@@ -692,7 +692,7 @@ git checkout -b nouvelle-contribution
 
 **Donations** : Si vous utilisez un projet open source et en avez les moyens
 
-**Sponsorship GitHub** : Sponsorisez les mainteneurs de projets que vous utilisez
+**GitHub Sponsors** : Parrainez les mainteneurs de projets que vous utilisez
 
 **Achat de licences** : Pour composants commerciaux que vous utilisez
 
@@ -702,9 +702,9 @@ git checkout -b nouvelle-contribution
 
 **Recommandez** : Delphi et ses bibliothèques dans vos cercles professionnels
 
-**Showcases** : Montrez vos réalisations Delphi
+**Vitrines (showcases)** : Montrez vos réalisations Delphi
 
-**Témoignages** : Études de cas, success stories
+**Témoignages** : Études de cas, retours d'expérience positifs
 
 ## Gérer le syndrome de l'imposteur
 
@@ -725,7 +725,7 @@ git checkout -b nouvelle-contribution
 **Conseils** :
 - Commencez par de la documentation
 - Soyez humble : "Je débute, vos retours sont bienvenus"
-- Apprenez des feedbacks
+- Apprenez des retours (feedbacks)
 - Tout expert a été débutant
 
 ### "Ma contribution est trop petite"
@@ -794,7 +794,9 @@ git checkout -b nouvelle-contribution
 
 ### Quality Portal
 
-**URL** : Via site Embarcadero
+**URL** : https://qp.embarcadero.com/ (qui redirige vers la plateforme Atlassian JSM)
+
+**Note** : L'ancienne plateforme quality.embarcadero.com reste accessible en lecture seule pour consulter les anciens tickets.
 
 **Signaler des bugs Delphi** :
 - Interface IDE
@@ -833,7 +835,7 @@ git checkout -b nouvelle-contribution
 **Processus** :
 - Contactez Embarcadero
 - Proposez votre contribution
-- Suivez leurs guidelines
+- Suivez leurs directives (guidelines)
 
 ## Créer un mouvement
 
@@ -861,7 +863,7 @@ git checkout -b nouvelle-contribution
 
 **Résultat** : Votre projet devient une référence communautaire
 
-### Legacy et impact
+### Héritage et impact
 
 **Votre nom dans l'histoire Delphi** :
 - Projets que vous créez
@@ -880,7 +882,7 @@ Vous avez découvert :
 - **20.1** : La documentation officielle, votre référence de base
 - **20.2** : Les forums et groupes d'entraide où poser vos questions
 - **20.3** : Les bibliothèques et composants tiers qui enrichissent Delphi
-- **20.4** : Les conférences et événements pour apprendre et networker
+- **20.4** : Les conférences et événements pour apprendre et développer son réseau
 - **20.5** : Les blogs et chaînes YouTube pour votre veille
 - **20.6** : Les livres et formations pour un apprentissage structuré
 - **20.7** : Comment rester à jour avec Delphi
