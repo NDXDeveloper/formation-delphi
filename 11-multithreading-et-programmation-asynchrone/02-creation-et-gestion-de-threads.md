@@ -53,15 +53,18 @@ implementation
 constructor TThreadCompteur.Create;  
 begin  
   // Appeler le constructeur parent
-  // False = le thread démarre immédiatement
-  // True = le thread est créé en pause
-  inherited Create(False);
+  // True = le thread est créé en pause (recommandé pour initialiser les champs en toute sécurité)
+  // False = le thread démarre immédiatement (DANGER : risque de race condition avec l'initialisation)
+  inherited Create(True);
 
-  // Initialisation
+  // Initialisation des champs AVANT de démarrer le thread
   FCompteur := 0;
 
   // Le thread se libérera automatiquement à la fin
   FreeOnTerminate := True;
+
+  // Démarrer le thread maintenant que tout est initialisé
+  Start;
 end;
 
 procedure TThreadCompteur.Execute;  
@@ -94,7 +97,7 @@ var
 begin
   // Créer et démarrer le thread
   MonThread := TThreadCompteur.Create;
-  // Le thread démarre automatiquement car on a passé False au constructeur
+  // Le thread démarre dans le constructeur via l'appel à Start
 end;
 ```
 
@@ -105,13 +108,16 @@ end;
 Deux façons de créer un thread :
 
 ```pascal
-// Démarrage immédiat
+// Démarrage immédiat (risqué si vous devez initialiser des champs après)
 MonThread := TMonThread.Create(False);
 
-// Création en pause (il faudra appeler Start)
-MonThread := TMonThread.Create(True);  
-MonThread.Start; // Démarrage manuel  
+// Création en pause puis démarrage explicite (RECOMMANDÉ)
+MonThread := TMonThread.Create(True);
+// ... initialisations éventuelles ...
+MonThread.Start;
 ```
+
+> ⚠️ **Bonne pratique** : Préférez `Create(True)` suivi de `Start` à `Create(False)`. Avec `Create(False)`, le thread peut commencer à exécuter sa méthode `Execute` avant que vous ayez fini d'initialiser ses propriétés, ce qui peut causer des bugs de race condition difficiles à reproduire.
 
 ### 2. Exécution
 
@@ -161,8 +167,9 @@ Deux approches pour libérer la mémoire :
 ```pascal
 constructor TMonThread.Create;  
 begin  
-  inherited Create(False);
-  FreeOnTerminate := True; // Le thread se libère tout seul
+  inherited Create(True);       // Créer en pause
+  FreeOnTerminate := True;      // Le thread se libère tout seul
+  Start;                        // Démarrer après l'initialisation
 end;
 ```
 
@@ -170,8 +177,9 @@ end;
 ```pascal
 constructor TMonThread.Create;  
 begin  
-  inherited Create(False);
-  FreeOnTerminate := False; // On gère manuellement
+  inherited Create(True);       // Créer en pause
+  FreeOnTerminate := False;     // On gère manuellement
+  Start;                        // Démarrer après l'initialisation
 end;
 
 // Plus tard, dans votre code
@@ -275,12 +283,15 @@ Détermine si le thread se libère automatiquement :
 ```pascal
 constructor TMonThread.Create;  
 begin  
-  inherited Create(False);
-  FreeOnTerminate := True; // Libération automatique
+  inherited Create(True);       // Créer en pause
+  FreeOnTerminate := True;      // Libération automatique
+  Start;                        // Démarrer après l'initialisation
 end;
 ```
 
 **Attention** : Si `FreeOnTerminate = True`, ne gardez PAS de référence au thread et ne tentez pas de le libérer manuellement !
+
+> 💡 **Astuce** : Toujours créer le thread avec `Create(True)` puis appeler `Start;` à la fin du constructeur. Cela garantit que tous les champs sont initialisés avant que `Execute` ne commence.
 
 ### Priority (Priorité)
 
@@ -289,8 +300,9 @@ Définit la priorité du thread :
 ```pascal
 constructor TMonThread.Create;  
 begin  
-  inherited Create(False);
-  Priority := tpNormal; // Priorité par défaut
+  inherited Create(True);       // Créer en pause
+  Priority := tpNormal;         // Priorité par défaut
+  Start;                        // Démarrer après l'initialisation
 end;
 ```
 
@@ -367,6 +379,42 @@ MonThread := TThreadTraitement.Create(True);
 MonThread.Fichier := 'C:\data.txt';  
 MonThread.Start;  
 ```
+
+## Thread anonyme : TThread.CreateAnonymousThread
+
+Pour créer un thread « jetable » sans définir une classe, Delphi fournit `TThread.CreateAnonymousThread`. C'est pratique pour des opérations ponctuelles :
+
+```pascal
+procedure TForm1.ButtonClick(Sender: TObject);  
+begin  
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      // Code exécuté dans un thread séparé
+      Sleep(2000);
+
+      // Pour modifier l'UI, passer par TThread.Queue ou Synchronize
+      TThread.Queue(nil,
+        procedure
+        begin
+          ShowMessage('Tâche anonyme terminée !');
+        end
+      );
+    end
+  ).Start; // Ne pas oublier Start !
+end;
+```
+
+**Caractéristiques** :
+- `FreeOnTerminate := True` par défaut (le thread se libère seul)
+- Pas besoin de créer une classe dérivée de TThread
+- Idéal pour les opérations simples et ponctuelles
+- Pour des cas plus complexes (annulation propre, propriétés, plusieurs méthodes), préférez une classe TThread dédiée ou `TTask` (voir chapitre 11.4)
+
+> 💡 **Comparaison rapide** :  
+> - **TThread.CreateAnonymousThread** : thread simple, code inline, oubliez-le après Start  
+> - **Classe TThread dédiée** : contrôle fin, état persistant, plusieurs méthodes  
+> - **TTask** : pool de threads, futures, parallélisme (chapitre 11.4)
 
 ## Gestion des erreurs dans les threads
 
@@ -458,9 +506,10 @@ type
 
 constructor TThreadTelechargement.Create(const ANomFichier: string);  
 begin  
-  inherited Create(False);
+  inherited Create(True);       // Créer en pause
   FNomFichier := ANomFichier;
   FreeOnTerminate := True;
+  Start;                        // Démarrer après l'initialisation
 end;
 
 procedure TThreadTelechargement.AfficherProgression;  
@@ -503,9 +552,11 @@ end;
 - Redéfinir la méthode `Execute` qui contient le code du thread
 - Utiliser `Synchronize` ou `Queue` pour mettre à jour l'interface utilisateur
 - Vérifier régulièrement `Terminated` pour permettre l'arrêt propre du thread
-- Choisir entre `FreeOnTerminate = True` (automatique) ou False (manuel)
+- Choisir entre `FreeOnTerminate = True` (automatique) ou `False` (manuel)
 - Gérer les exceptions dans la méthode `Execute`
 - Ne jamais modifier l'interface directement depuis un thread secondaire
+- Préférer `Create(True)` + initialisation + `Start` à `Create(False)`
+- Utiliser `TThread.CreateAnonymousThread` pour les threads simples et ponctuels
 
 Dans la prochaine section, nous verrons comment synchroniser l'accès aux ressources partagées entre plusieurs threads.
 

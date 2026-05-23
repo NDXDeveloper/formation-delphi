@@ -12,7 +12,11 @@ Cette section présente des exemples pratiques et réels d'utilisation du multit
 
 ```pascal
 uses
-  System.Threading, System.Net.HttpClient, System.Generics.Collections;
+  System.Threading,           // TTask, ITask
+  System.Net.HttpClient,      // THTTPClient
+  System.Generics.Collections,
+  System.SyncObjs,            // TCriticalSection
+  System.IOUtils;             // TDirectory, TPath
 
 type
   TForm1 = class(TForm)
@@ -24,40 +28,55 @@ type
   end;
 
 procedure TForm1.TelechargerFichiers(const URLs: TArray<string>);  
-var  
-  i: Integer;
-  Taches: TArray<ITask>;
-begin
+begin  
   FNbTermines := 0;
   FCS := TCriticalSection.Create;
+  ProgressBar1.Max := Length(URLs);
+  ProgressBar1.Position := 0;
 
-  try
-    SetLength(Taches, Length(URLs));
-    ProgressBar1.Max := Length(URLs);
-    ProgressBar1.Position := 0;
-
-    // Lancer le téléchargement de chaque fichier en parallèle
-    for i := 0 to High(URLs) do
+  // IMPORTANT : on enveloppe tout dans TTask.Run pour ne pas bloquer le thread
+  // UI. Sinon, TTask.WaitForAll bloquerait l'interface jusqu'à la fin de tous
+  // les téléchargements — exactement ce qu'on cherche à éviter avec le
+  // multithreading.
+  TTask.Run(
+    procedure
+    var
+      i: Integer;
+      Taches: TArray<ITask>;
     begin
-      Taches[i] := TTask.Run(
-        procedure
-        var
-          Index: Integer;
+      try
+        SetLength(Taches, Length(URLs));
+
+        // Lancer le téléchargement de chaque fichier en parallèle.
+        // IMPORTANT : capturer i et URLs[i] AVANT la procédure anonyme.
+        for i := 0 to High(URLs) do
         begin
-          Index := i; // Capture locale
-          TelechargerUnFichier(URLs[Index], Index);
-        end
-      );
-    end;
+          var IndexLocal := i;
+          var URLLocale := URLs[i];
+          Taches[i] := TTask.Run(
+            procedure
+            begin
+              TelechargerUnFichier(URLLocale, IndexLocal);
+            end
+          );
+        end;
 
-    // Attendre que tous les téléchargements soient terminés
-    TTask.WaitForAll(Taches);
+        // Attendre dans le thread secondaire (l'UI reste réactive)
+        TTask.WaitForAll(Taches);
 
-    ShowMessage('Tous les fichiers ont été téléchargés !');
-
-  finally
-    FCS.Free;
-  end;
+        // Notifier l'UI
+        TThread.Queue(nil,
+          procedure
+          begin
+            ShowMessage('Tous les fichiers ont été téléchargés !');
+          end
+        );
+      finally
+        FCS.Free;
+        FCS := nil;
+      end;
+    end
+  );
 end;
 
 procedure TForm1.TelechargerUnFichier(const URL: string; Index: Integer);  
@@ -91,10 +110,12 @@ begin
     except
       on E: Exception do
       begin
+        // Capture du message AVANT Queue (E libéré à la sortie du except)
+        var MessageErreur := E.Message;
         TThread.Queue(nil,
           procedure
           begin
-            Memo1.Lines.Add(Format('Erreur fichier %d : %s', [Index, E.Message]));
+            Memo1.Lines.Add(Format('Erreur fichier %d : %s', [Index, MessageErreur]));
           end
         );
       end;
@@ -131,6 +152,8 @@ end;
 **Problème** : Rechercher dans 1 million d'enregistrements peut prendre plusieurs secondes et bloquer l'interface.
 
 **Solution** : Effectuer la recherche dans un thread séparé.
+
+> ⚠️ **Important sur FireDAC** : Une instance `TFDConnection` n'est pas conçue pour être partagée par plusieurs requêtes parallèles dans des threads différents. Tant qu'une seule tâche utilise la connexion à la fois (comme dans les exemples ci-dessous), c'est correct. Pour exécuter plusieurs requêtes en parallèle, créez une `TFDConnection` par thread, ou utilisez le pool de connexions FireDAC (`FDManager.AddConnectionDef` + `Pooled := True`).
 
 ```pascal
 type
@@ -184,6 +207,15 @@ begin
             Exit;
           end;
 
+          // IMPORTANT : capturer les valeurs AVANT TThread.Queue.
+          // Sans cela, quand la Queue s'exécutera dans le thread principal,
+          // Query aura déjà avancé (via Query.Next plus bas) et FieldByName
+          // lirait des valeurs incorrectes — voire un EOF.
+          var IDCapture := Query.FieldByName('id').AsString;
+          var NomCapture := Query.FieldByName('nom').AsString;
+          var PrenomCapture := Query.FieldByName('prenom').AsString;
+          var EmailCapture := Query.FieldByName('email').AsString;
+
           // Ajouter le résultat à l'interface
           TThread.Queue(nil,
             procedure
@@ -191,10 +223,10 @@ begin
               Item: TListItem;
             begin
               Item := ListView1.Items.Add;
-              Item.Caption := Query.FieldByName('id').AsString;
-              Item.SubItems.Add(Query.FieldByName('nom').AsString);
-              Item.SubItems.Add(Query.FieldByName('prenom').AsString);
-              Item.SubItems.Add(Query.FieldByName('email').AsString);
+              Item.Caption := IDCapture;
+              Item.SubItems.Add(NomCapture);
+              Item.SubItems.Add(PrenomCapture);
+              Item.SubItems.Add(EmailCapture);
             end
           );
 
@@ -240,75 +272,89 @@ end;
 procedure TForm1.TraiterImagesParallele(const Dossier: string);  
 var  
   Fichiers: TArray<string>;
-  NbTraites: Integer;
-  CS: TCriticalSection;
 begin
   Fichiers := TDirectory.GetFiles(Dossier, '*.jpg');
-  NbTraites := 0;
-  CS := TCriticalSection.Create;
+  ProgressBar1.Max := Length(Fichiers);
+  ProgressBar1.Position := 0;
+  Label1.Caption := Format('Traitement de %d images...', [Length(Fichiers)]);
 
-  try
-    ProgressBar1.Max := Length(Fichiers);
-    ProgressBar1.Position := 0;
-    Label1.Caption := Format('Traitement de %d images...', [Length(Fichiers)]);
+  // IMPORTANT : envelopper TParallel.For dans TTask.Run pour ne pas bloquer
+  // le thread UI pendant tout le traitement parallèle.
+  TTask.Run(
+    procedure
+    var
+      NbTraites: Integer;
+      CS: TCriticalSection;
+    begin
+      NbTraites := 0;
+      CS := TCriticalSection.Create;
+      try
+        // Traiter en parallèle (utilise automatiquement tous les cœurs)
+        TParallel.For(0, High(Fichiers),
+          procedure(Index: Integer)
+          var
+            Image: TBitmap;
+            ImageRedim: TBitmap;
+            NomSortie, NomCourtCapture: string;
+          begin
+            Image := TBitmap.Create;
+            ImageRedim := TBitmap.Create;
+            try
+              // Charger l'image
+              Image.LoadFromFile(Fichiers[Index]);
 
-    // Traiter en parallèle (utilise automatiquement tous les cœurs)
-    TParallel.For(0, High(Fichiers),
-      procedure(Index: Integer)
-      var
-        Image: TBitmap;
-        ImageRedim: TBitmap;
-        NomSortie: string;
-      begin
-        Image := TBitmap.Create;
-        ImageRedim := TBitmap.Create;
-        try
-          // Charger l'image
-          Image.LoadFromFile(Fichiers[Index]);
+              // Redimensionner (800x600)
+              ImageRedim.Width := 800;
+              ImageRedim.Height := 600;
+              ImageRedim.Canvas.StretchDraw(
+                Rect(0, 0, 800, 600),
+                Image
+              );
 
-          // Redimensionner (800x600)
-          ImageRedim.Width := 800;
-          ImageRedim.Height := 600;
-          ImageRedim.Canvas.StretchDraw(
-            Rect(0, 0, 800, 600),
-            Image
-          );
+              // Sauvegarder
+              NomSortie := TPath.Combine(
+                TPath.GetDirectoryName(Fichiers[Index]),
+                'redim_' + TPath.GetFileName(Fichiers[Index])
+              );
+              ImageRedim.SaveToFile(NomSortie);
 
-          // Sauvegarder
-          NomSortie := TPath.Combine(
-            TPath.GetDirectoryName(Fichiers[Index]),
-            'redim_' + TPath.GetFileName(Fichiers[Index])
-          );
-          ImageRedim.SaveToFile(NomSortie);
+              // Mise à jour de la progression
+              CS.Enter;
+              try
+                Inc(NbTraites);
+              finally
+                CS.Leave;
+              end;
 
-          // Mise à jour de la progression
-          CS.Enter;
-          try
-            Inc(NbTraites);
-          finally
-            CS.Leave;
-          end;
+              // Capture locale pour l'UI
+              var NbCapture := NbTraites;
+              NomCourtCapture := ExtractFileName(Fichiers[Index]);
+              TThread.Queue(nil,
+                procedure
+                begin
+                  ProgressBar1.Position := NbCapture;
+                  Label2.Caption := NomCourtCapture;
+                end
+              );
 
-          TThread.Queue(nil,
-            procedure
-            begin
-              ProgressBar1.Position := NbTraites;
-              Label2.Caption := ExtractFileName(Fichiers[Index]);
-            end
-          );
+            finally
+              Image.Free;
+              ImageRedim.Free;
+            end;
+          end
+        );
 
-        finally
-          Image.Free;
-          ImageRedim.Free;
-        end;
-      end
-    );
-
-    ShowMessage('Traitement terminé !');
-
-  finally
-    CS.Free;
-  end;
+        TThread.Queue(nil,
+          procedure
+          begin
+            ShowMessage('Traitement terminé !');
+          end
+        );
+      finally
+        CS.Free;
+      end;
+    end
+  );
 end;
 ```
 
@@ -340,7 +386,7 @@ type
 
 constructor TThreadSurveillanceDossier.Create(const ADossier: string);  
 begin  
-  inherited Create(False);
+  inherited Create(True);       // Créer en pause pour pouvoir initialiser
   FreeOnTerminate := True;
   FDossier := ADossier;
   FFichiersPrecedents := TStringList.Create;
@@ -351,6 +397,8 @@ begin
   FFichiersPrecedents.AddStrings(
     TDirectory.GetFiles(FDossier, '*.*', TSearchOption.soTopDirectoryOnly)
   );
+
+  Start;                        // Démarrer maintenant que tout est initialisé
 end;
 
 destructor TThreadSurveillanceDossier.Destroy;  
@@ -453,93 +501,108 @@ begin
       Excel: Variant;
       Workbook, Worksheet: Variant;
       Query: TFDQuery;
-      Ligne, Col: Integer;
+      Ligne, Col, NbLignesTotal: Integer;
     begin
+      // IMPORTANT : tout thread secondaire utilisant COM (Excel, Word, etc.)
+      // doit appeler CoInitialize avant et CoUninitialize après. Sans cela,
+      // CreateOleObject échouera ou les appels seront instables.
+      CoInitialize(nil);
       try
-        // Créer Excel (COM)
-        Excel := CreateOleObject('Excel.Application');
-        Excel.Visible := False;
-        Workbook := Excel.Workbooks.Add;
-        Worksheet := Workbook.Worksheets[1];
-
-        // Préparer la requête
-        Query := TFDQuery.Create(nil);
         try
-          Query.Connection := FDConnection1;
-          Query.SQL.Text := 'SELECT * FROM ventes ORDER BY date_vente';
-          Query.Open;
+          // Créer Excel (COM)
+          Excel := CreateOleObject('Excel.Application');
+          Excel.Visible := False;
+          Workbook := Excel.Workbooks.Add;
+          Worksheet := Workbook.Worksheets[1];
 
-          // En-têtes
-          for Col := 0 to Query.FieldCount - 1 do
-            Worksheet.Cells[1, Col + 1] := Query.Fields[Col].FieldName;
+          // Préparer la requête
+          Query := TFDQuery.Create(nil);
+          try
+            Query.Connection := FDConnection1;
+            Query.SQL.Text := 'SELECT * FROM ventes ORDER BY date_vente';
+            Query.Open;
+            NbLignesTotal := Query.RecordCount;
 
-          // Données
-          Ligne := 2;
-          while not Query.Eof do
-          begin
+            // En-têtes
             for Col := 0 to Query.FieldCount - 1 do
-              Worksheet.Cells[Ligne, Col + 1] := Query.Fields[Col].AsString;
+              Worksheet.Cells[1, Col + 1] := Query.Fields[Col].FieldName;
 
-            // Mise à jour de la progression
-            if (Ligne mod 100) = 0 then
+            // Données
+            Ligne := 2;
+            while not Query.Eof do
             begin
-              TThread.Queue(nil,
-                procedure
-                begin
-                  ProgressBar1.Position := (Ligne * 100) div Query.RecordCount;
-                  Label1.Caption := Format('Export : %d / %d lignes',
-                    [Ligne - 1, Query.RecordCount]);
-                end
-              );
+              for Col := 0 to Query.FieldCount - 1 do
+                Worksheet.Cells[Ligne, Col + 1] := Query.Fields[Col].AsString;
+
+              // Mise à jour de la progression
+              if (Ligne mod 100) = 0 then
+              begin
+                // Capture locale pour figer les valeurs envoyées à l'UI
+                var LigneLocale := Ligne;
+                var TotalLocal := NbLignesTotal;
+                TThread.Queue(nil,
+                  procedure
+                  begin
+                    if TotalLocal > 0 then
+                      ProgressBar1.Position := (LigneLocale * 100) div TotalLocal;
+                    Label1.Caption := Format('Export : %d / %d lignes',
+                      [LigneLocale - 1, TotalLocal]);
+                  end
+                );
+              end;
+
+              Inc(Ligne);
+              Query.Next;
             end;
 
-            Inc(Ligne);
-            Query.Next;
+            // Sauvegarder
+            Workbook.SaveAs('C:\Exports\ventes_' +
+              FormatDateTime('yyyymmdd_hhnnss', Now) + '.xlsx');
+            Workbook.Close;
+
+          finally
+            Query.Free;
           end;
 
-          // Sauvegarder
-          Workbook.SaveAs('C:\Exports\ventes_' +
-            FormatDateTime('yyyymmdd_hhnnss', Now) + '.xlsx');
-          Workbook.Close;
+          Excel.Quit;
 
-        finally
-          Query.Free;
-        end;
-
-        Excel.Quit;
-
-        // Succès
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ShowMessage('Export terminé !');
-          end
-        );
-
-      except
-        on E: Exception do
-        begin
+          // Succès
           TThread.Synchronize(nil,
             procedure
             begin
-              ShowMessage('Erreur : ' + E.Message);
+              ShowMessage('Export terminé !');
             end
           );
-        end;
-      end;
 
-      // Réactiver l'interface
-      TThread.Queue(nil,
-        procedure
-        begin
-          ButtonExporter.Enabled := True;
-          Label1.Caption := 'Prêt';
-        end
-      );
+        except
+          on E: Exception do
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                ShowMessage('Erreur : ' + E.Message);
+              end
+            );
+          end;
+        end;
+
+        // Réactiver l'interface
+        TThread.Queue(nil,
+          procedure
+          begin
+            ButtonExporter.Enabled := True;
+            Label1.Caption := 'Prêt';
+          end
+        );
+      finally
+        CoUninitialize;
+      end;
     end
   );
 end;
 ```
+
+> ⚠️ **COM dans un thread secondaire** : N'oubliez pas `CoInitialize(nil)` au début et `CoUninitialize` à la fin (toujours dans un bloc `try..finally`). Sans cela, l'appel à `CreateOleObject` lèvera une exception "CoInitialize n'a pas été appelé".
 
 **Avantages** :
 - L'utilisateur peut continuer à travailler pendant l'export
@@ -562,16 +625,20 @@ type
   end;
 
 procedure TForm1.EditEmailChange(Sender: TObject);  
-begin  
+var  
+  EmailCapture: string;
+begin
   // Attendre 500ms après la dernière frappe
   FDerniereValidation := Now;
 
+  // IMPORTANT : capturer EditEmail.Text dans le thread UI AVANT la tâche.
+  // Les composants visuels ne sont pas thread-safe et ne doivent pas
+  // être lus depuis un thread secondaire.
+  EmailCapture := EditEmail.Text;
+
   TTask.Run(
     procedure
-    var
-      Email: string;
     begin
-      Email := EditEmail.Text;
       Sleep(500);
 
       // Vérifier si l'utilisateur continue de taper
@@ -579,7 +646,7 @@ begin
         Exit;
 
       // Valider
-      ValiderEmailAsync(Email);
+      ValiderEmailAsync(EmailCapture);
     end
   );
 end;
@@ -651,123 +718,136 @@ type
   end;
 
 procedure TForm1.EnvoyerEmailsEnMasse(const Emails: TArray<TEmailAEnvoyer>);  
-var  
-  FileEmails: TThreadedQueue<TEmailAEnvoyer>;
-  NbEnvoyes, NbEchecs: Integer;
-  CS: TCriticalSection;
-  i: Integer;
+const  
+  NB_THREADS = 5;
 begin
-  FileEmails := TThreadedQueue<TEmailAEnvoyer>.Create;
-  CS := TCriticalSection.Create;
-  NbEnvoyes := 0;
-  NbEchecs := 0;
+  ProgressBar1.Max := Length(Emails);
+  ProgressBar1.Position := 0;
 
-  try
-    // Remplir la file
-    for i := 0 to High(Emails) do
-      FileEmails.PushItem(Emails[i]);
-
-    // Signal de fin
-    var EmailFin: TEmailAEnvoyer;
-    EmailFin.Destinataire := 'FIN';
-    FileEmails.PushItem(EmailFin);
-
-    ProgressBar1.Max := Length(Emails);
-    ProgressBar1.Position := 0;
-
-    // Créer 5 threads d'envoi parallèles
-    for i := 1 to 5 do
+  // IMPORTANT : envelopper tout dans TTask.Run pour ne pas bloquer l'UI.
+  // L'attente des threads d'envoi se fait dans le thread orchestrateur.
+  TTask.Run(
+    procedure
+    var
+      FileEmails: TThreadedQueue<TEmailAEnvoyer>;
+      NbEnvoyes, NbEchecs: Integer;
+      CS: TCriticalSection;
+      Taches: array[1..NB_THREADS] of ITask;
+      i: Integer;
     begin
-      TTask.Run(
-        procedure
-        var
-          Email: TEmailAEnvoyer;
-          IdMTP: TIdSMTP;
-          Message: TIdMessage;
+      FileEmails := TThreadedQueue<TEmailAEnvoyer>.Create;
+      CS := TCriticalSection.Create;
+      NbEnvoyes := 0;
+      NbEchecs := 0;
+      try
+        // Remplir la file
+        for i := 0 to High(Emails) do
+          FileEmails.PushItem(Emails[i]);
+
+        // Signal de fin (un seul suffit : les threads se le repassent)
+        var EmailFin: TEmailAEnvoyer;
+        EmailFin.Destinataire := 'FIN';
+        FileEmails.PushItem(EmailFin);
+
+        // Créer NB_THREADS travailleurs parallèles
+        for i := 1 to NB_THREADS do
         begin
-          IdMTP := TIdSMTP.Create(nil);
-          Message := TIdMessage.Create(nil);
-          try
-            // Configuration SMTP
-            IdMTP.Host := 'smtp.example.com';
-            IdMTP.Port := 587;
-            // ... autres paramètres ...
-
-            while True do
+          Taches[i] := TTask.Run(
+            procedure
+            var
+              Email: TEmailAEnvoyer;
+              IdMTP: TIdSMTP;
+              Message: TIdMessage;
             begin
-              // Récupérer un email de la file
-              if FileEmails.PopItem(Email, 1000) = wrSignaled then
-              begin
-                // Vérifier la fin
-                if Email.Destinataire = 'FIN' then
-                begin
-                  FileEmails.PushItem(Email); // Pour les autres threads
-                  Break;
-                end;
+              IdMTP := TIdSMTP.Create(nil);
+              Message := TIdMessage.Create(nil);
+              try
+                // Configuration SMTP
+                IdMTP.Host := 'smtp.example.com';
+                IdMTP.Port := 587;
+                IdMTP.Username := 'user@example.com';
+                IdMTP.Password := 'motdepasse';
+                // ... éventuellement TLS/SSL via IOHandler ...
 
+                // IMPORTANT : se connecter au serveur SMTP avant d'envoyer
+                IdMTP.Connect;
                 try
-                  // Envoyer l'email
-                  Message.Recipients.Clear;
-                  Message.Recipients.Add.Address := Email.Destinataire;
-                  Message.Subject := Email.Sujet;
-                  Message.Body.Text := Email.Corps;
-
-                  IdMTP.Send(Message);
-
-                  // Succès
-                  CS.Enter;
-                  try
-                    Inc(NbEnvoyes);
-                  finally
-                    CS.Leave;
-                  end;
-
-                except
-                  // Échec
-                  CS.Enter;
-                  try
-                    Inc(NbEchecs);
-                  finally
-                    CS.Leave;
-                  end;
-                end;
-
-                // Mise à jour
-                TThread.Queue(nil,
-                  procedure
+                  while True do
                   begin
-                    ProgressBar1.Position := NbEnvoyes + NbEchecs;
-                    Label1.Caption := Format('Envoyés : %d | Échecs : %d',
-                      [NbEnvoyes, NbEchecs]);
-                  end
-                );
+                    if FileEmails.PopItem(Email, 1000) <> wrSignaled then
+                      Continue;
+
+                    // Signal de fin : on le remet pour les autres threads et on sort
+                    if Email.Destinataire = 'FIN' then
+                    begin
+                      FileEmails.PushItem(Email);
+                      Break;
+                    end;
+
+                    try
+                      Message.Recipients.Clear;
+                      Message.Recipients.Add.Address := Email.Destinataire;
+                      Message.Subject := Email.Sujet;
+                      Message.Body.Text := Email.Corps;
+                      IdMTP.Send(Message);
+
+                      TInterlocked.Increment(NbEnvoyes);
+                    except
+                      TInterlocked.Increment(NbEchecs);
+                    end;
+
+                    // Capture locale pour figer les valeurs envoyées à l'UI
+                    var ProgressionLocale := NbEnvoyes + NbEchecs;
+                    var EnvoyesLocaux := NbEnvoyes;
+                    var EchecsLocaux := NbEchecs;
+                    TThread.Queue(nil,
+                      procedure
+                      begin
+                        ProgressBar1.Position := ProgressionLocale;
+                        Label1.Caption := Format('Envoyés : %d | Échecs : %d',
+                          [EnvoyesLocaux, EchecsLocaux]);
+                      end
+                    );
+                  end;
+                finally
+                  if IdMTP.Connected then
+                    IdMTP.Disconnect;
+                end;
+              finally
+                Message.Free;
+                IdMTP.Free;
               end;
-            end;
+            end
+          );
+        end;
 
-          finally
-            Message.Free;
-            IdMTP.Free;
-          end;
-        end
-      );
-    end;
+        // Attendre la fin des travailleurs dans CE thread orchestrateur (pas l'UI)
+        TTask.WaitForAll(Taches);
 
-  finally
-    // Attendre que tous les threads aient fini
-    while (NbEnvoyes + NbEchecs) < Length(Emails) do
-    begin
-      Application.ProcessMessages;
-      Sleep(100);
-    end;
-
-    FileEmails.Free;
-    CS.Free;
-
-    ShowMessage(Format('Envoi terminé : %d réussis, %d échecs',
-      [NbEnvoyes, NbEchecs]));
-  end;
+        // Capture locale puis notification UI
+        var EnvoyesFinal := NbEnvoyes;
+        var EchecsFinal := NbEchecs;
+        TThread.Queue(nil,
+          procedure
+          begin
+            ShowMessage(Format('Envoi terminé : %d réussis, %d échecs',
+              [EnvoyesFinal, EchecsFinal]));
+          end
+        );
+      finally
+        FileEmails.Free;
+        CS.Free;
+      end;
+    end
+  );
 end;
 ```
+
+> 💡 **Améliorations notables par rapport à un pattern naïf** :  
+> - Tout est encapsulé dans un `TTask.Run` orchestrateur → l'UI reste réactive  
+> - `TInterlocked.Increment` remplace `CS.Enter`/`Leave` pour les compteurs (plus rapide)  
+> - `TTask.WaitForAll` attend la fin dans le thread orchestrateur, pas dans l'UI  
+> - Captures locales avant `TThread.Queue` pour figer les valeurs affichées
 
 **Avantages** :
 - 5× plus rapide avec 5 threads parallèles
@@ -843,6 +923,7 @@ begin
     procedure
     var
       HttpClient: THTTPClient;
+      Response: IHTTPResponse;
       FileStream: TFileStream;
       URL, CheminLocal: string;
     begin
@@ -853,14 +934,14 @@ begin
       FileStream := nil;
       try
         try
-          FileStream := TFileStream.Create(CheminLocal, fmCreate);
+          // IMPORTANT : un seul appel à Get — chaque Get() émet une nouvelle
+          // requête HTTP. On stocke le résultat dans une variable et on
+          // travaille avec.
+          Response := HttpClient.Get(URL);
 
-          // Télécharger avec progression
-          HttpClient.Get(URL).ContentStream.Position := 0;
-          FileStream.CopyFrom(
-            HttpClient.Get(URL).ContentStream,
-            HttpClient.Get(URL).ContentLength
-          );
+          FileStream := TFileStream.Create(CheminLocal, fmCreate);
+          Response.ContentStream.Position := 0;
+          FileStream.CopyFrom(Response.ContentStream, Response.ContentLength);
 
           // Téléchargement terminé
           TThread.Synchronize(nil,
@@ -925,7 +1006,7 @@ type
 procedure TForm1.CompresserFichierAsync(const FichierSource, FichierDest: string);  
 begin  
   FAnnulerCompression := False;
-  ButtonCompressi.Enabled := False;
+  ButtonCompresser.Enabled := False;
   ButtonAnnuler.Enabled := True;
   ProgressBar1.Position := 0;
 
@@ -957,11 +1038,18 @@ begin
             // Vérifier l'annulation
             if FAnnulerCompression then
             begin
+              // Fermer les flux AVANT de tenter de supprimer le fichier
+              FreeAndNil(CompStream);
+              FreeAndNil(DestStream);
+              FreeAndNil(SourceStream);
+
+              if FileExists(FichierDest) then
+                DeleteFile(FichierDest); // Supprimer le fichier partiel
+
               TThread.Queue(nil,
                 procedure
                 begin
                   ShowMessage('Compression annulée');
-                  DeleteFile(FichierDest); // Supprimer le fichier partiel
                 end
               );
               Exit;
@@ -974,13 +1062,15 @@ begin
               CompStream.Write(Buffer, BytesLus);
               Inc(TailleLue, BytesLus);
 
+              // Capture locale du pourcentage : TailleLue évolue à chaque tour
+              var Pourcentage: Integer := 0;
+              if TailleTotal > 0 then
+                Pourcentage := (TailleLue * 100) div TailleTotal;
+
               // Mise à jour de la progression
               TThread.Queue(nil,
                 procedure
-                var
-                  Pourcentage: Integer;
                 begin
-                  Pourcentage := (TailleLue * 100) div TailleTotal;
                   ProgressBar1.Position := Pourcentage;
                   Label1.Caption := Format('Compression : %d%%', [Pourcentage]);
                 end
@@ -1026,7 +1116,7 @@ begin
         TThread.Queue(nil,
           procedure
           begin
-            ButtonCompressi.Enabled := True;
+            ButtonCompresser.Enabled := True;
             ButtonAnnuler.Enabled := False;
           end
         );

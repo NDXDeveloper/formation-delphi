@@ -125,6 +125,8 @@ end;
 
 ## Attendre la fin d'une tâche
 
+> ⚠️ **Attention** : `Wait`, `WaitForAll`, `WaitForAny` et `Future.Value` bloquent le thread appelant tant que la tâche n'est pas terminée. Appelés directement depuis le thread UI, ils figent l'interface ! Les exemples ci-dessous illustrent l'API ; en pratique, dans une application UI, enveloppez-les dans un autre `TTask.Run` ou utilisez plutôt des callbacks (voir chapitre 11.5).
+
 ### Wait - Attendre la fin
 
 ```pascal
@@ -138,7 +140,7 @@ begin
     end
   );
 
-  // Attendre que la tâche se termine
+  // Attendre que la tâche se termine (BLOQUE le thread appelant !)
   MaTache.Wait;
 
   ShowMessage('La tâche est terminée !');
@@ -178,12 +180,11 @@ begin
   // Créer plusieurs tâches
   for i := 0 to 2 do
   begin
+    // IMPORTANT : capturer i AVANT TTask.Run pour figer sa valeur
+    var Numero := i;
     Taches[i] := TTask.Run(
       procedure
-      var
-        Numero: Integer;
       begin
-        Numero := i;
         Sleep(1000 * (Numero + 1)); // Temps différent pour chaque tâche
         TThread.Queue(nil,
           procedure
@@ -201,6 +202,8 @@ begin
   ShowMessage('Toutes les tâches sont terminées !');
 end;
 ```
+
+> ⚠️ La variable `Numero` est déclarée et capturée **avant** `TTask.Run`. Si on avait écrit `Numero := i;` à l'intérieur de la procédure anonyme, `i` aurait pu déjà avoir changé au moment où la tâche démarre.
 
 ### TTask.WaitForAny - Attendre la première tâche
 
@@ -231,7 +234,6 @@ uses
 
 procedure TForm1.ButtonClick(Sender: TObject);  
 var  
-  i: Integer;
   Temps: TDateTime;
 begin
   Temps := Now;
@@ -277,25 +279,34 @@ begin
 end;
 ```
 
-### TParallel.For avec options
+### TParallel.For avec un pool de threads dédié
 
-Vous pouvez contrôler le comportement de la boucle parallèle :
+Pour contrôler le nombre de threads utilisés par une boucle parallèle, on passe un `TThreadPool` à `TParallel.For` :
 
 ```pascal
 var
-  Options: TParallel.TLoopOptions;
+  MonPool: TThreadPool;
 begin
-  Options := TParallel.TLoopOptions.Create;
-  Options.MaxWorkers := 4; // Limiter à 4 threads
+  MonPool := TThreadPool.Create;
+  try
+    // Limiter à 4 threads simultanés pour cette boucle
+    MonPool.SetMaxWorkerThreads(4);
+    MonPool.SetMinWorkerThreads(1);
 
-  TParallel.For(1, 1000, Options,
-    procedure(Index: Integer)
-    begin
-      TraiterElement(Index);
-    end
-  );
+    TParallel.For(1, 1000,
+      procedure(Index: Integer)
+      begin
+        TraiterElement(Index);
+      end,
+      MonPool
+    );
+  finally
+    MonPool.Free;
+  end;
 end;
 ```
+
+> 💡 **Note** : Sans pool spécifique, `TParallel.For` utilise `TThreadPool.Default`, qui se dimensionne automatiquement selon le nombre de cœurs disponibles.
 
 ## TParallel.ForEach - Itérer sur des collections
 
@@ -327,25 +338,40 @@ end;
 
 ## Annuler une tâche
 
-### Utilisation de TTask avec annulation
+La PPL Delphi ne fournit pas de mécanisme d'annulation natif comme certains  
+autres environnements (TPL .NET, par exemple). On utilise donc un **drapeau  
+booléen partagé** que la tâche consulte régulièrement.  
+
+### Pattern d'annulation avec un drapeau
+
+Le drapeau doit être accessible aussi bien depuis l'intérieur que depuis  
+l'extérieur de la tâche — typiquement un champ du formulaire :  
 
 ```pascal
-var
-  MaTache: ITask;
-  Token: ICancellationToken;
-begin
-  // Créer un token d'annulation
-  Token := TCancellationTokenSource.Create.Token;
+type
+  TForm1 = class(TForm)
+    ButtonLancer: TButton;
+    ButtonAnnuler: TButton;
+    procedure ButtonLancerClick(Sender: TObject);
+    procedure ButtonAnnulerClick(Sender: TObject);
+  private
+    FAnnulationDemandee: Boolean;
+    FTacheEnCours: ITask;
+  end;
 
-  MaTache := TTask.Run(
+procedure TForm1.ButtonLancerClick(Sender: TObject);  
+begin  
+  FAnnulationDemandee := False;
+
+  FTacheEnCours := TTask.Run(
     procedure
     var
       i: Integer;
     begin
       for i := 1 to 1000 do
       begin
-        // Vérifier si l'annulation est demandée
-        if Token.IsCancelled then
+        // Vérifier régulièrement si l'annulation est demandée
+        if FAnnulationDemandee then
         begin
           TThread.Queue(nil,
             procedure
@@ -359,13 +385,29 @@ begin
         // Travail
         Sleep(10);
       end;
+
+      TThread.Queue(nil,
+        procedure
+        begin
+          ShowMessage('Tâche terminée normalement.');
+        end
+      );
     end
   );
+end;
 
-  // Plus tard, pour annuler :
-  // Token.Cancel;
+procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
+begin  
+  // Demander l'annulation : la tâche verra le changement à sa prochaine
+  // vérification de FAnnulationDemandee
+  FAnnulationDemandee := True;
 end;
 ```
+
+> **Note** : pour les scénarios complexes avec de nombreuses tâches, on peut  
+> encapsuler le drapeau dans une petite classe partagée (avec une section  
+> critique si nécessaire) — mais pour un simple flag booléen, les lectures  
+> et écritures sont déjà atomiques sur les plateformes Delphi supportées.
 
 ## Pool de threads
 
@@ -402,49 +444,67 @@ type
 procedure TForm1.Button1Click(Sender: TObject);  
 var  
   Fichiers: TArray<string>;
-  NbTraites: Integer;
-  CS: TCriticalSection;
 begin
   // Liste de fichiers à traiter
   Fichiers := TDirectory.GetFiles('C:\Images', '*.jpg');
 
-  NbTraites := 0;
-  CS := TCriticalSection.Create;
-  try
-    ProgressBar1.Max := Length(Fichiers);
-    ProgressBar1.Position := 0;
+  ProgressBar1.Max := Length(Fichiers);
+  ProgressBar1.Position := 0;
+  Button1.Enabled := False;
 
-    // Traiter les images en parallèle
-    TParallel.For(0, Length(Fichiers) - 1,
-      procedure(Index: Integer)
-      begin
-        // Traiter l'image (redimensionner, convertir, etc.)
-        TraiterImage(Fichiers[Index]);
+  // IMPORTANT : envelopper TParallel.For dans TTask.Run pour ne pas bloquer
+  // le thread UI. TParallel.For est synchrone : appelé directement depuis
+  // un événement UI, il fige l'interface jusqu'à ce que toutes les itérations
+  // soient terminées (et les TThread.Queue ne pourraient même pas s'exécuter).
+  TTask.Run(
+    procedure
+    var
+      NbTraites: Integer;
+      CS: TCriticalSection;
+    begin
+      NbTraites := 0;
+      CS := TCriticalSection.Create;
+      try
+        // Traiter les images en parallèle
+        TParallel.For(0, Length(Fichiers) - 1,
+          procedure(Index: Integer)
+          begin
+            // Traiter l'image (redimensionner, convertir, etc.)
+            TraiterImage(Fichiers[Index]);
 
-        // Incrémenter le compteur de manière thread-safe
-        CS.Enter;
-        try
-          Inc(NbTraites);
-        finally
-          CS.Leave;
-        end;
+            // Incrémenter le compteur de manière thread-safe
+            CS.Enter;
+            try
+              Inc(NbTraites);
+            finally
+              CS.Leave;
+            end;
 
-        // Mettre à jour l'interface
+            // Capture locale pour figer la valeur envoyée à l'UI
+            var NbCapture := NbTraites;
+            TThread.Queue(nil,
+              procedure
+              begin
+                ProgressBar1.Position := NbCapture;
+                Label1.Caption := Format('Traité : %d / %d',
+                  [NbCapture, Length(Fichiers)]);
+              end
+            );
+          end
+        );
+
         TThread.Queue(nil,
           procedure
           begin
-            ProgressBar1.Position := NbTraites;
-            Label1.Caption := Format('Traité : %d / %d',
-              [NbTraites, Length(Fichiers)]);
+            ShowMessage('Toutes les images ont été traitées !');
+            Button1.Enabled := True;
           end
         );
-      end
-    );
-
-    ShowMessage('Toutes les images ont été traitées !');
-  finally
-    CS.Free;
-  end;
+      finally
+        CS.Free;
+      end;
+    end
+  );
 end;
 ```
 
@@ -485,7 +545,7 @@ begin
   // Récupérer les résultats (attend que toutes les tâches soient terminées)
   Total := Future1.Value + Future2.Value + Future3.Value;
 
-  ShowMessage('Total : ' + IntToStr(Total)); // 10 + 400 + 900 = 1410
+  ShowMessage('Total : ' + IntToStr(Total)); // 100 + 400 + 900 = 1400
 end;
 ```
 
@@ -506,11 +566,14 @@ begin
       except
         on E: Exception do
         begin
-          // Logger l'erreur ou notifier l'utilisateur
+          // IMPORTANT : capturer E.Message AVANT TThread.Queue.
+          // L'objet E est libéré à la sortie du bloc except,
+          // donc E.Message serait invalide quand la Queue s'exécute (asynchrone).
+          var MessageErreur := E.Message;
           TThread.Queue(nil,
             procedure
             begin
-              ShowMessage('Erreur : ' + E.Message);
+              ShowMessage('Erreur : ' + MessageErreur);
             end
           );
         end;
@@ -557,7 +620,7 @@ end;
 ### 1. Utiliser TTask pour les tâches courtes
 
 ```pascal
-// ✅ BON : Tâche ponctuelle
+// ✅ BON : Tâche ponctuelle avec TTask
 TTask.Run(
   procedure
   begin
@@ -565,8 +628,9 @@ TTask.Run(
   end
 );
 
-// ❌ MAUVAIS : Utiliser TThread pour les services de longue durée
-// (comme surveiller un port réseau en continu)
+// ❌ INADAPTÉ pour TTask : pour les services de longue durée
+// (comme surveiller un port réseau en continu), préférer une classe
+// TThread dédiée avec une boucle while not Terminated do.
 ```
 
 ### 2. Ne pas capturer de variables locales dangereuses
@@ -589,25 +653,25 @@ begin
   end;
 end;
 
-// ✅ CORRECT : Capturer dans une variable locale
+// ✅ CORRECT : Capturer la variable AVANT la procédure anonyme
 procedure TForm1.ButtonClick(Sender: TObject);  
 var  
   i: Integer;
 begin
   for i := 1 to 10 do
   begin
+    var Numero := i; // Copie locale AVANT TTask.Run
     TTask.Run(
       procedure
-      var
-        Numero: Integer;
       begin
-        Numero := i; // Copie locale
         ShowMessage(IntToStr(Numero));
       end
     );
   end;
 end;
 ```
+
+> ⚠️ **Important** : `Numero := i` doit être **avant** `TTask.Run`. Si on le mettait à l'intérieur de la procédure anonyme (`procedure var Numero: Integer; begin Numero := i; ...`), `i` serait lu au moment de l'exécution de la tâche — pas au moment de sa création — donc le bug serait toujours là.
 
 ### 3. Synchroniser l'accès aux ressources partagées
 

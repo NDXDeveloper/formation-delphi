@@ -113,11 +113,12 @@ begin
         // Traitement lourd dans le thread
         TraiterElement(i);
 
-        // Mise à jour de l'interface (de manière sûre)
+        // Capture locale pour figer la valeur (i évolue dans la boucle)
+        var Pourcentage := (i * 100) div 1000;
         TThread.Queue(nil,
           procedure
           begin
-            ProgressBar1.Position := (i * 100) div 1000;
+            ProgressBar1.Position := Pourcentage;
           end
         );
       end;
@@ -166,11 +167,14 @@ begin
         // Mettre à jour la barre tous les 50 éléments (pour ne pas surcharger)
         if (i mod 50) = 0 then
         begin
+          // Capture locale des valeurs au moment de la mise en queue
+          var PositionLocale := i;
+          var PourcentageLocal := (i * 100) div Total;
           TThread.Queue(nil,
             procedure
             begin
-              ProgressBar1.Position := i;
-              Label1.Caption := Format('Progression : %d%%', [(i * 100) div Total]);
+              ProgressBar1.Position := PositionLocale;
+              Label1.Caption := Format('Progression : %d%%', [PourcentageLocal]);
             end
           );
         end;
@@ -200,17 +204,17 @@ begin
     procedure
     var
       i: Integer;
-      Message: string;
     begin
       for i := 1 to 100 do
       begin
-        // Traiter un fichier
-        Message := Format('Traitement du fichier %d...', [i]);
+        // Capture locale du message : sans cela, tous les Queue affichent
+        // la dernière valeur de Message car ils s'exécutent en différé
+        var MessageLocal := Format('Traitement du fichier %d...', [i]);
 
         TThread.Queue(nil,
           procedure
           begin
-            Memo1.Lines.Add(Message);
+            Memo1.Lines.Add(MessageLocal);
           end
         );
 
@@ -276,10 +280,11 @@ begin
         // Mise à jour
         if (i mod 100) = 0 then
         begin
+          var PourcentageLocal := (i * 100) div 10000;
           TThread.Queue(nil,
             procedure
             begin
-              ProgressBar1.Position := (i * 100) div 10000;
+              ProgressBar1.Position := PourcentageLocal;
             end
           );
         end;
@@ -304,22 +309,42 @@ begin
 end;
 ```
 
-### Avec un token d'annulation
+### Avec un objet d'annulation partagé
+
+Si vous avez plusieurs opérations annulables en parallèle, encapsuler le  
+drapeau d'annulation dans un petit objet partagé évite d'éparpiller des  
+variables booléennes dans la classe Form.  
 
 ```pascal
 type
+  // Objet partagé entre l'UI et la tâche : la tâche consulte AnnulationDemandee,
+  // l'UI appelle Cancel pour la demander
+  TJetonAnnulation = class
+  private
+    FAnnulationDemandee: Boolean;
+  public
+    procedure Cancel;
+    property AnnulationDemandee: Boolean read FAnnulationDemandee;
+  end;
+
   TForm1 = class(TForm)
   private
-    FTokenSource: ICancellationTokenSource;
+    FJeton: TJetonAnnulation;
   end;
+
+procedure TJetonAnnulation.Cancel;  
+begin  
+  // Boolean : écriture atomique sur les plateformes Delphi
+  FAnnulationDemandee := True;
+end;
 
 procedure TForm1.ButtonDemarrerClick(Sender: TObject);  
 var  
-  Token: ICancellationToken;
+  Jeton: TJetonAnnulation;
 begin
-  // Créer un token d'annulation
-  FTokenSource := TCancellationTokenSource.Create;
-  Token := FTokenSource.Token;
+  // Créer un jeton pour cette opération (capture locale dans la tâche)
+  FJeton := TJetonAnnulation.Create;
+  Jeton := FJeton;
 
   ButtonDemarrer.Enabled := False;
   ButtonAnnuler.Enabled := True;
@@ -329,42 +354,52 @@ begin
     var
       i: Integer;
     begin
-      for i := 1 to 10000 do
-      begin
-        // Vérifier l'annulation
-        if Token.IsCancelled then
+      try
+        for i := 1 to 10000 do
         begin
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage('Annulé');
-              ButtonDemarrer.Enabled := True;
-              ButtonAnnuler.Enabled := False;
-            end
-          );
-          Exit;
+          // Vérifier l'annulation à intervalles raisonnables
+          if Jeton.AnnulationDemandee then
+          begin
+            TThread.Queue(nil,
+              procedure
+              begin
+                ShowMessage('Annulé');
+                ButtonDemarrer.Enabled := True;
+                ButtonAnnuler.Enabled := False;
+              end
+            );
+            Exit;
+          end;
+
+          TraiterElement(i);
         end;
 
-        TraiterElement(i);
+        // Terminé normalement
+        TThread.Queue(nil,
+          procedure
+          begin
+            ShowMessage('Terminé');
+            ButtonDemarrer.Enabled := True;
+            ButtonAnnuler.Enabled := False;
+          end
+        );
+      finally
+        // Libération centralisée du jeton à la fin de la tâche
+        TThread.Queue(nil,
+          procedure
+          begin
+            FreeAndNil(FJeton);
+          end
+        );
       end;
-
-      // Terminé
-      TThread.Queue(nil,
-        procedure
-        begin
-          ShowMessage('Terminé');
-          ButtonDemarrer.Enabled := True;
-          ButtonAnnuler.Enabled := False;
-        end
-      );
     end
   );
 end;
 
 procedure TForm1.ButtonAnnulerClick(Sender: TObject);  
 begin  
-  if Assigned(FTokenSource) then
-    FTokenSource.Cancel;
+  if Assigned(FJeton) then
+    FJeton.Cancel;
 end;
 ```
 
@@ -539,14 +574,21 @@ begin
             // Calculer la vitesse
             Vitesse := TailleRecue / (1024 * 1024) / ((Now - Debut) * 24 * 60 * 60);
 
+            // Capture locale des valeurs : ces variables continuent d'évoluer
+            // pendant que la procédure Queue attend dans la file du thread UI
+            var PourcentageQueue := Pourcentage;
+            var TailleRecueQueue := TailleRecue;
+            var TailleTotalQueue := TailleTotal;
+            var VitesseQueue := Vitesse;
+
             // Mettre à jour l'interface
             TThread.Queue(nil,
               procedure
               begin
-                ProgressBar1.Position := Pourcentage;
+                ProgressBar1.Position := PourcentageQueue;
                 Label1.Caption := Format('Téléchargé : %d Mo / %d Mo',
-                  [TailleRecue div (1024 * 1024), TailleTotal div (1024 * 1024)]);
-                Label2.Caption := Format('Vitesse : %.2f Mo/s', [Vitesse]);
+                  [TailleRecueQueue div (1024 * 1024), TailleTotalQueue div (1024 * 1024)]);
+                Label2.Caption := Format('Vitesse : %.2f Mo/s', [VitesseQueue]);
               end
             );
           end;
@@ -554,6 +596,10 @@ begin
           // Vérifier si annulé ou terminé
           if FAnnuler then
           begin
+            // IMPORTANT : fermer le flux AVANT DeleteFile, sinon Windows
+            // refuse de supprimer un fichier encore ouvert
+            FreeAndNil(FileStream);
+
             TThread.Synchronize(nil,
               procedure
               begin
@@ -691,8 +737,9 @@ end;
 // ✅ BON : Mise à jour périodique (rapide)
 var
   DerniereMAJ: TDateTime;
+  i: Integer;
 begin
-  DerniereMAJ := 0;
+  DerniereMAJ := Now;
 
   for i := 1 to 100000 do
   begin
@@ -701,11 +748,14 @@ begin
     // Mettre à jour seulement toutes les 100ms
     if MilliSecondsBetween(Now, DerniereMAJ) > 100 then
     begin
+      // Capture locale pour figer les valeurs envoyées à l'UI
+      var ValeurI := i;
+      var PositionLocale := (i * 100) div 100000;
       TThread.Queue(nil,
         procedure
         begin
-          Label1.Caption := IntToStr(i);
-          ProgressBar1.Position := (i * 100) div 100000;
+          Label1.Caption := IntToStr(ValeurI);
+          ProgressBar1.Position := PositionLocale;
         end
       );
       DerniereMAJ := Now;

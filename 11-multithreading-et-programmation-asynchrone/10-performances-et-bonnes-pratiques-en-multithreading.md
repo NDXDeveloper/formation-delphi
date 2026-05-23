@@ -144,10 +144,10 @@ begin
 end;
 ```
 
-### Trop de threads = Performance dégradée
+### Trop de tâches = surcharge du pool
 
 ```pascal
-// ❌ MAUVAIS : Trop de threads
+// ❌ INEFFICACE : 10 000 tâches indépendantes
 for i := 1 to 10000 do  
 begin  
   TTask.Run(
@@ -157,16 +157,19 @@ begin
     end
   );
 end;
-// Crée 10000 threads ! Le système passe son temps à les gérer
+// Le pool ne crée pas 10 000 threads (il a une taille limitée), mais il
+// doit ordonnancer et démarrer 10 000 tâches : l'overhead d'orchestration
+// peut devenir supérieur au gain de parallélisme.
 
-// ✅ BON : Utiliser TParallel qui gère le pool
+// ✅ BON : TParallel.For partitionne intelligemment la plage
 TParallel.For(1, 10000,
   procedure(Index: Integer)
   begin
     TraiterElement(Index);
   end
 );
-// Utilise automatiquement le nombre optimal de threads
+// Le compilateur découpe la plage en quelques blocs distribués sur le pool :
+// beaucoup moins d'orchestration, meilleure utilisation des caches CPU.
 ```
 
 ### Règles selon le type de tâche
@@ -323,14 +326,16 @@ end;
 ### FreeOnTerminate et gestion mémoire
 
 ```pascal
-// ❌ DANGEREUX : Fuite mémoire
+// ❌ DANGEREUX : Référence dangling et double-free potentiel
 var
   MonThread: TThread;
 begin
   MonThread := TThread.Create(False);
   MonThread.FreeOnTerminate := True;
-  // Ne PAS garder de référence !
-  // MonThread.Free; ← NE JAMAIS FAIRE !
+  // Le thread se libère SEUL à la fin
+  // → la variable MonThread pointe alors vers un objet détruit (dangling pointer)
+  // → ne JAMAIS appeler MonThread.Free (double free, crash garanti)
+  // → ne JAMAIS lire/écrire MonThread.UneMethode (accès après libération)
 end;
 
 // ✅ BON : Soit auto, soit manuel, mais pas les deux
@@ -346,6 +351,8 @@ begin
   end;
 end;
 ```
+
+**Règle simple** : `FreeOnTerminate := True` → vous oubliez le thread. `FreeOnTerminate := False` → vous gardez la référence pour `WaitFor` + `Free` manuels.
 
 ### Capture de variables dans TTask
 
@@ -404,8 +411,9 @@ end;
 // ✅ RAPIDE : Mise à jour périodique
 var
   DerniereMAJ: TDateTime;
+  i: Integer;
 begin
-  DerniereMAJ := 0;
+  DerniereMAJ := Now;
 
   for i := 1 to 100000 do
   begin
@@ -414,10 +422,11 @@ begin
     // Mettre à jour seulement toutes les 100ms
     if MilliSecondsBetween(Now, DerniereMAJ) > 100 then
     begin
+      var Progression := (i * 100) div 100000;  // Copie locale (sinon i pourrait avoir changé)
       TThread.Queue(nil,
         procedure
         begin
-          ProgressBar1.Position := (i * 100) div 100000;
+          ProgressBar1.Position := Progression;
         end
       );
       DerniereMAJ := Now;
@@ -478,6 +487,7 @@ procedure TForm1.ComparerPerformances;
 var  
   Chrono: TStopwatch;
   TempsSeq, TempsParallele: Int64;
+  i: Integer;
 begin
   // Test séquentiel
   Chrono := TStopwatch.StartNew;
@@ -558,13 +568,14 @@ end;
 // ✅ BON : Utiliser le pool de threads
 for i := 1 to 1000 do  
 begin  
+  // IMPORTANT : capturer i AVANT TTask.Run pour figer sa valeur.
+  // Si on faisait Index := i à l'intérieur de la procédure, on lirait
+  // la valeur de i au moment où la tâche démarre — pas à sa création.
+  var IndexLocal := i;
   TTask.Run(
     procedure
-    var
-      Index: Integer;
     begin
-      Index := i;
-      TraiterRequete(Index);
+      TraiterRequete(IndexLocal);
     end
   );
 end;
@@ -599,6 +610,11 @@ begin
     CS.Leave;
   end;
 end;
+
+// ✅ ENCORE PLUS RAPIDE : TInterlocked pour les opérations atomiques simples
+// (voir chapitre 11.3 pour les détails sur TInterlocked)
+for i := 1 to 10000 do
+  TInterlocked.Increment(Compteur); // Sans section critique, atomique
 ```
 
 ### 4. Capture de variables de boucle
@@ -615,20 +631,20 @@ begin
   );
 end;
 
-// ✅ CORRECT : Copie locale
+// ✅ CORRECT : Copie locale AVANT le TTask.Run
 for i := 1 to 10 do  
 begin  
+  var IndexLocal := i; // Capture AVANT la procédure : la valeur est figée
   TTask.Run(
     procedure
-    var
-      Index: Integer;
     begin
-      Index := i; // Copie locale
-      ShowMessage(IntToStr(Index));
+      ShowMessage(IntToStr(IndexLocal));
     end
   );
 end;
 ```
+
+> ⚠️ **Pièce maîtresse** : la copie locale doit être faite **avant** `TTask.Run`, dans le corps de la boucle. Une assignation `Index := i` placée **à l'intérieur** de la procédure anonyme ne résout PAS le problème : elle lirait toujours la valeur courante de `i` au moment de l'exécution, qui pourrait avoir changé.
 
 ## Débogage du code multithread
 
@@ -660,11 +676,13 @@ end;
 ### Logger les événements
 
 ```pascal
+// Variable globale d'unité (déclarée en section interface ou implementation)
+var
+  CSLog: TCriticalSection;
+
 procedure Log(const Msg: string);  
-var  
-  CS: TCriticalSection; // Global
-begin
-  CS.Enter;
+begin  
+  CSLog.Enter;
   try
     TFile.AppendAllText('debug.log',
       Format('[%s] Thread %d: %s' + sLineBreak,
@@ -672,9 +690,16 @@ begin
          TThread.CurrentThread.ThreadID,
          Msg]));
   finally
-    CS.Leave;
+    CSLog.Leave;
   end;
 end;
+
+// Initialisation dans la section initialization de l'unité
+initialization
+  CSLog := TCriticalSection.Create;
+
+finalization
+  CSLog.Free;
 
 // Utilisation
 procedure TMonThread.Execute;  
@@ -689,6 +714,8 @@ begin
   end;
 end;
 ```
+
+> ⚠️ **Attention** : La section critique `CSLog` doit être une variable globale (déclarée en dehors de la procédure) et initialisée une seule fois. Si elle était locale à la procédure, chaque appel utiliserait une référence non initialisée, causant un Access Violation.
 
 ## Checklist des bonnes pratiques
 
@@ -728,37 +755,47 @@ end;
 
 - [ ] Tester sur machines mono-cœur ET multi-cœurs
 - [ ] Tester avec beaucoup d'utilisateurs simultanés
-- [ ] Vérifier les fuites mémoire (FastMM en mode debug)
-- [ ] Profiler les performances
+- [ ] Vérifier les fuites mémoire (`ReportMemoryLeaksOnShutdown := True;` ou FastMM5)
+- [ ] Profiler les performances (Sampling Profiler, FastMM5, outils tiers)
 - [ ] Documenter le comportement multithread
 
 ## Outils utiles
 
-### FastMM pour détecter les fuites
+### Gestionnaire de mémoire pour détecter les fuites
 
-Activez FastMM en mode full debug dans votre projet :
+Delphi est livré avec son propre gestionnaire de mémoire qui détecte les fuites automatiquement en mode debug. Activez la détection au démarrage du programme :
 
 ```pascal
 program MonApplication;
 
-{$IFDEF DEBUG}
-  {$DEFINE FullDebugMode}
-{$ENDIF}
-
 uses
-  FastMM4,
+  System.SysUtils,
   // ... autres units
+
+begin
+  // Signale les fuites mémoire dans une boîte de dialogue à la fermeture
+  ReportMemoryLeaksOnShutdown := True;
+
+  Application.Initialize;
+  Application.Run;
+end.
 ```
 
-### AQTime ou Sampling Profiler
+Pour un diagnostic plus avancé (stack trace des allocations, etc.), `FastMM5` (successeur open-source de FastMM4) reste largement utilisé et compatible Delphi 13 Florence. Il s'installe via GitHub (`pleriche/FastMM5`).
 
-Pour analyser les performances et identifier les goulots d'étranglement.
+### Sampling Profiler (intégré à Delphi)
+
+Pour analyser les performances et identifier les goulots d'étranglement, Delphi intègre un profileur d'échantillonnage accessible via le menu **Tools > Sampling Profiler** (selon édition). Il permet de voir où votre application passe le plus de temps, ce qui est essentiel pour identifier les sections critiques contestées ou les calculs à paralléliser.
+
+> 💡 **Note historique** : AQTime, anciennement bundlé avec Delphi, a été retiré depuis RAD Studio 10.4. Pour des analyses très approfondies, des outils tiers comme Intel VTune Profiler ou des produits commerciaux restent disponibles.
 
 ### CodeSite pour le logging
 
+CodeSite (Raize Software/Embarcadero) est un outil de logging avancé particulièrement utile pour déboguer du code multithread : il horodate, identifie le thread émetteur et permet de visualiser les flux en temps réel.
+
 ```pascal
 uses
-  CodeSite;
+  CodeSiteLogging;
 
 procedure TMonThread.Execute;  
 begin  

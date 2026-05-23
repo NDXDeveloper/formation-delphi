@@ -129,13 +129,31 @@ type
   TThreadProducteur = class(TThread)
   protected
     procedure Execute; override;
+  public
+    constructor Create;
   end;
 
   // Thread consommateur : traite les nombres
   TThreadConsommateur = class(TThread)
   protected
     procedure Execute; override;
+  public
+    constructor Create;
   end;
+
+constructor TThreadProducteur.Create;  
+begin  
+  inherited Create(True);    // créer en pause
+  FreeOnTerminate := True;   // libération automatique à la fin
+  Start;
+end;
+
+constructor TThreadConsommateur.Create;  
+begin  
+  inherited Create(True);
+  FreeOnTerminate := True;
+  Start;
+end;
 
 procedure TThreadProducteur.Execute;  
 var  
@@ -148,10 +166,12 @@ begin
     // Produire un nombre
     FileAttente.PushItem(i);
 
+    // Capture locale pour figer la valeur de i au moment du Queue
+    var ValeurLocale := i;
     TThread.Queue(nil,
       procedure
       begin
-        Form1.Memo1.Lines.Add('Produit : ' + IntToStr(i));
+        Form1.Memo1.Lines.Add('Produit : ' + IntToStr(ValeurLocale));
       end
     );
 
@@ -178,10 +198,12 @@ begin
       // Traiter le nombre
       Sleep(150); // Simuler un traitement
 
+      // Capture locale : Nombre change à chaque itération
+      var NombreCapture := Nombre;
       TThread.Queue(nil,
         procedure
         begin
-          Form1.Memo1.Lines.Add('Consommé : ' + IntToStr(Nombre));
+          Form1.Memo1.Lines.Add('Consommé : ' + IntToStr(NombreCapture));
         end
       );
     end;
@@ -193,8 +215,10 @@ procedure TForm1.ButtonDemarrerClick(Sender: TObject);
 begin  
   FileAttente := TThreadedQueue<Integer>.Create;
 
-  TThreadProducteur.Create(False);
-  TThreadConsommateur.Create(False);
+  // Les constructeurs sans paramètre activent Start et FreeOnTerminate :
+  // les threads se libèrent seuls à la fin de Execute.
+  TThreadProducteur.Create;
+  TThreadConsommateur.Create;
 end;
 ```
 
@@ -313,9 +337,10 @@ type
 
 constructor TThreadConsommateur.Create(ANumero: Integer);  
 begin  
-  inherited Create(False);
+  inherited Create(True);       // Créer en pause
   FreeOnTerminate := True;
   FNumero := ANumero;
+  Start;                        // Démarrer après initialisation
 end;
 
 procedure TThreadConsommateur.Execute;  
@@ -338,12 +363,15 @@ begin
       // Traiter le travail
       Sleep(Random(200) + 100);
 
+      // Capture locale des champs : Travail change à chaque itération
+      var IDCapture := Travail.ID;
+      var DonneesCapture := Travail.Donnees;
       TThread.Queue(nil,
         procedure
         begin
           Form1.Memo1.Lines.Add(
             Format('Consommateur %d a traité : %d - %s',
-              [FNumero, Travail.ID, Travail.Donnees])
+              [FNumero, IDCapture, DonneesCapture])
           );
         end
       );
@@ -436,7 +464,7 @@ Pour les cas où vous n'avez pas besoin d'une file FIFO, `TThreadList` offre une
 
 ```pascal
 uses
-  System.Classes;
+  System.Generics.Collections; // TThreadList<T> et TList<T> sont ici
 
 var
   ListeThreadSafe: TThreadList<string>;
@@ -608,12 +636,13 @@ begin
         2: AnalyserDocument(Item.CheminComplet);
       end;
 
-      // Mise à jour de l'interface
+      // Capture locale : Item change à la prochaine itération
+      var NomFichierCapture := ExtractFileName(Item.CheminComplet);
       TThread.Queue(nil,
         procedure
         begin
           Form1.ProgressBar1.Position := Form1.ProgressBar1.Position + 1;
-          Form1.Label1.Caption := ExtractFileName(Item.CheminComplet);
+          Form1.Label1.Caption := NomFichierCapture;
         end
       );
     end;

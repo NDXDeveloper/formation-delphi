@@ -73,19 +73,22 @@ end;
 ```pascal
 type
   // Interface pour les observateurs
+  // Le GUID respecte le format Delphi {8-4-4-4-12} ; généré via Ctrl+Maj+G dans l'IDE
   IObserver = interface
-    ['{1234-5678-9ABC-DEF0}']
+    ['{C0F8E3B4-9A5D-4E27-B6A1-5F3C9D2E48A1}']
     procedure Actualiser(const Sujet: TObject; const Donnees: TValue);
   end;
 
   // Interface pour le sujet observé
   ISubject = interface
-    ['{ABCD-1234-5678-9012}']
+    ['{2D8B4F71-6E3A-49C5-A8D2-7B4E1F906C53}']
     procedure Attacher(Observer: IObserver);
     procedure Detacher(Observer: IObserver);
     procedure Notifier(const Donnees: TValue);
   end;
 ```
+
+> 💡 **Astuce IDE** : Dans l'éditeur Delphi, placez le curseur après le crochet d'ouverture `[` à l'intérieur de la déclaration d'interface, puis appuyez sur `Ctrl+Maj+G` : l'IDE génère automatiquement un GUID unique au bon format.
 
 ### Implémenter le Sujet
 
@@ -248,16 +251,13 @@ var
 begin
   for Observer in FObservateurs do
   begin
-    // Notifier de manière asynchrone pour ne pas bloquer
-    TTask.Run(
+    // Capture locale d'Observer : sans cela, tous les Queue exécuteraient
+    // la procédure avec le dernier Observer de la boucle
+    var ObserverLocal := Observer;
+    TThread.Queue(nil,
       procedure
       begin
-        TThread.Queue(nil,
-          procedure
-          begin
-            Observer.Actualiser(Self, TValue.From<TEvenementData>(Evenement));
-          end
-        );
+        ObserverLocal.Actualiser(Self, TValue.From<TEvenementData>(Evenement));
       end
     );
   end;
@@ -623,10 +623,13 @@ begin
   // Notifier tous les observateurs
   for Observer in ListeCopie do
   begin
+    // Capture locale d'Observer : sans cela, toutes les procédures Queue
+    // utiliseraient la dernière valeur d'Observer lors de leur exécution
+    var ObserverLocal := Observer;
     TThread.Queue(nil,
       procedure
       begin
-        Observer.Actualiser(Self, Donnees);
+        ObserverLocal.Actualiser(Self, Donnees);
       end
     );
   end;
@@ -749,9 +752,23 @@ end;
 procedure TGestionnaireTelechargements.Notifier(const Info: TInfoTelechargement);  
 var  
   Observer: IObserver;
+  InfoLocal: TInfoTelechargement;
 begin
+  // IMPORTANT : Notifier peut être appelé depuis un thread secondaire (cf. le
+  // ButtonTelechargerClick plus bas). Comme les observateurs peuvent toucher
+  // à des composants visuels (TListView, etc.), on passe par TThread.Queue
+  // pour s'assurer que Actualiser s'exécute dans le thread UI.
+  InfoLocal := Info; // Copie pour la capture
   for Observer in FObservateurs do
-    Observer.Actualiser(Self, TValue.From<TInfoTelechargement>(Info));
+  begin
+    var ObserverLocal := Observer; // Capture locale (cf. piège for-in + Queue)
+    TThread.Queue(nil,
+      procedure
+      begin
+        ObserverLocal.Actualiser(Self, TValue.From<TInfoTelechargement>(InfoLocal));
+      end
+    );
+  end;
 end;
 
 // Observateur : Affichage dans ListView
@@ -849,21 +866,27 @@ end;
 
 ### 1. Éviter les références circulaires
 
+Les interfaces en Delphi utilisent un comptage de références automatique. Si un observateur référence son sujet **par interface** ET que le sujet référence l'observateur **par interface**, on obtient un cycle que le compteur de références ne peut PAS libérer — c'est une fuite mémoire garantie.
+
 ```pascal
-// ❌ MAUVAIS : Référence circulaire
+// ❌ DANGEREUX : Cycle d'interfaces — ni A ni B ne sera jamais libéré
 type
   TObservateurA = class(TInterfacedObject, IObserver)
   private
-    FSubjet: TSubject; // Garde une référence
+    FSubjet: ISubject;     // Référence comptée vers le sujet
   end;
+// + TSubject possède FObservers: TList<IObserver> qui contient A
+// → A référence B par interface, B référence A par interface = cycle
 
-// ✅ BON : Utiliser des interfaces
+// ✅ BON : Utiliser [Weak] pour la référence arrière
 type
-  TObservateurB = class(TInterfacedObject, IObserver)
+  TObservateurC = class(TInterfacedObject, IObserver)
   private
-    FSubjet: ISubject; // Interface, pas de fuite mémoire
+    [Weak] FSubjet: ISubject;  // Référence faible : ne participe pas au comptage
   end;
 ```
+
+> 💡 **Alternative** : si vous ne voulez pas utiliser `[Weak]`, assurez-vous que l'observateur se **désabonne explicitement** avant d'être détruit. Cela casse manuellement le cycle.
 
 ### 2. Se désabonner proprement
 

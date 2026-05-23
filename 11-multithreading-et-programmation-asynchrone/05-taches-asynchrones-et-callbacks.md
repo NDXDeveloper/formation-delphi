@@ -229,12 +229,13 @@ begin
       except
         on E: Exception do
         begin
-          // Échec
+          // Capture du message AVANT TThread.Queue (E sera libéré à la sortie du except)
+          var MessageErreur := E.Message;
           TThread.Queue(nil,
             procedure
             begin
               if Assigned(OnError) then
-                OnError(E.Message);
+                OnError(MessageErreur);
             end
           );
         end;
@@ -361,12 +362,13 @@ begin
       begin
         Sleep(50); // Simuler le téléchargement d'un morceau
 
-        // Notifier la progression
+        // Capture locale de i AVANT la mise en queue (i changera ensuite)
+        var Pourcentage := i;
         TThread.Queue(nil,
           procedure
           begin
             if Assigned(OnProgress) then
-              OnProgress(i);
+              OnProgress(Pourcentage);
           end
         );
       end;
@@ -506,12 +508,13 @@ begin
         except
           on E: Exception do
           begin
-            // Erreur exception
+            // Capture du message AVANT Queue (E libéré à la sortie du except)
+            var MessageErreur := 'Exception : ' + E.Message;
             TThread.Queue(nil,
               procedure
               begin
                 if Assigned(OnError) then
-                  OnError('Exception : ' + E.Message);
+                  OnError(MessageErreur);
               end
             );
           end;
@@ -605,50 +608,49 @@ end;
 
 ## Annulation avec callbacks
 
-Permettre d'annuler une opération asynchrone en cours.
+Pour permettre d'annuler une opération asynchrone en cours, on encapsule un  
+drapeau d'annulation dans un objet « handle » que l'on retourne à l'appelant.  
+La PPL Delphi n'ayant pas de mécanisme natif de cancellation token, c'est le  
+pattern recommandé.  
 
 ```pascal
 type
   TOperationAsyncHandle = class
   private
-    FToken: ICancellationToken;
+    FAnnulationDemandee: Boolean;
     FTask: ITask;
   public
-    constructor Create(AToken: ICancellationToken; ATask: ITask);
     procedure Cancel;
+    property AnnulationDemandee: Boolean read FAnnulationDemandee;
+    property Task: ITask read FTask write FTask;
   end;
-
-constructor TOperationAsyncHandle.Create(AToken: ICancellationToken; ATask: ITask);  
-begin  
-  FToken := AToken;
-  FTask := ATask;
-end;
 
 procedure TOperationAsyncHandle.Cancel;  
 begin  
-  FToken.Cancel;
+  // Lecture/écriture d'un Boolean : opération atomique sur les plateformes
+  // Delphi supportées, donc pas besoin de section critique pour un simple flag.
+  FAnnulationDemandee := True;
 end;
 
 function ExecuterOperationAnnulable(
   OnProgress: TProc<Integer>;
   OnComplete: TProc): TOperationAsyncHandle;
 var
-  TokenSource: ICancellationTokenSource;
-  Token: ICancellationToken;
-  Task: ITask;
+  Handle: TOperationAsyncHandle;
 begin
-  TokenSource := TCancellationTokenSource.Create;
-  Token := TokenSource.Token;
+  // On crée le handle d'abord car la tâche en a besoin pour consulter
+  // FAnnulationDemandee
+  Handle := TOperationAsyncHandle.Create;
 
-  Task := TTask.Run(
+  Handle.Task := TTask.Run(
     procedure
     var
       i: Integer;
     begin
       for i := 1 to 100 do
       begin
-        // Vérifier l'annulation
-        if Token.IsCancelled then
+        // Vérifier l'annulation à chaque itération
+        if Handle.AnnulationDemandee then
         begin
           TThread.Queue(nil,
             procedure
@@ -661,17 +663,18 @@ begin
 
         Sleep(50);
 
-        // Notifier la progression
+        // Capture locale de i AVANT la mise en queue (i évolue ensuite)
+        var Pourcentage := i;
         TThread.Queue(nil,
           procedure
           begin
             if Assigned(OnProgress) then
-              OnProgress(i);
+              OnProgress(Pourcentage);
           end
         );
       end;
 
-      // Terminé
+      // Terminé normalement
       TThread.Queue(nil,
         procedure
         begin
@@ -682,7 +685,7 @@ begin
     end
   );
 
-  Result := TOperationAsyncHandle.Create(Token, Task);
+  Result := Handle;
 end;
 
 // Utilisation
@@ -701,7 +704,8 @@ begin
     procedure
     begin
       ShowMessage('Opération terminée !');
-      OperationEnCours := nil;
+      // Note : le handle peut être libéré ici car la tâche est terminée
+      FreeAndNil(OperationEnCours);
     end
   );
 end;
@@ -711,7 +715,10 @@ begin
   if Assigned(OperationEnCours) then
   begin
     OperationEnCours.Cancel;
-    OperationEnCours := nil;
+    // On ne libère pas tout de suite : la tâche est encore en cours,
+    // elle finira proprement à sa prochaine vérification du drapeau.
+    // Le callback OnComplete (ou le code qui termine la tâche annulée)
+    // peut se charger de FreeAndNil(OperationEnCours).
   end;
 end;
 ```
@@ -771,12 +778,11 @@ var
 begin
   for i := 1 to 10 do
   begin
+    // IMPORTANT : la capture doit être AVANT TTask.Run, pas à l'intérieur
+    var Valeur := i;
     TTask.Run(
       procedure
-      var
-        Valeur: Integer;
       begin
-        Valeur := i; // Copie locale
         TThread.Queue(nil,
           procedure
           begin
@@ -788,6 +794,8 @@ begin
   end;
 end;
 ```
+
+> ⚠️ Mettre `Valeur := i` **à l'intérieur** de la procédure anonyme ne corrige rien : `i` y serait toujours lu au moment de l'exécution. La copie doit être faite dans le corps de la boucle, avant `TTask.Run`.
 
 ### 4. Gérer les erreurs dans les callbacks
 
@@ -844,19 +852,26 @@ begin
       try
         Sleep(2000);
 
-        TThread.Queue(nil,
+        // Synchronize est BLOQUANT : on attend que le thread principal ait
+        // fini d'utiliser Liste avant de continuer (donc avant le Free).
+        // Avec Queue (asynchrone), Liste.Free pourrait être exécuté AVANT
+        // que le thread principal n'ait fini Liste.Add !
+        TThread.Synchronize(nil,
           procedure
           begin
             Liste.Add('Sûr');
+            Memo1.Lines.AddStrings(Liste);
           end
         );
       finally
-        Liste.Free; // Libéré dans le thread
+        Liste.Free; // Libéré APRÈS l'utilisation par le thread principal
       end;
     end
   );
 end;
 ```
+
+> ⚠️ **Piège classique** : `TThread.Queue` est asynchrone. Si vous libérez un objet juste après l'avoir mis en queue, le code de la queue peut s'exécuter quand l'objet est déjà détruit. Utilisez `TThread.Synchronize` (bloquant) pour garantir l'ordre, ou faites le Free **à l'intérieur** de la procédure synchronisée.
 
 ## Points clés à retenir
 

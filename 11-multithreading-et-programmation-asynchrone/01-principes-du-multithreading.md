@@ -71,6 +71,18 @@ Il est important de comprendre la différence :
 
 **Parallélisme** : Plusieurs tâches s'exécutent réellement en même temps sur plusieurs cœurs de processeur.
 
+```
+Concurrence (1 cœur) :  
+Tâche A : ▓▓░░▓▓░░▓▓░░▓▓░░  
+Tâche B : ░░▓▓░░▓▓░░▓▓░░▓▓  
+          Le cœur alterne rapidement entre A et B
+
+Parallélisme (2 cœurs) :  
+Cœur 1 - Tâche A : ▓▓▓▓▓▓▓▓▓▓▓▓  
+Cœur 2 - Tâche B : ▓▓▓▓▓▓▓▓▓▓▓▓  
+          A et B s'exécutent vraiment en simultané
+```
+
 Dans Delphi, le multithreading permet les deux selon le matériel disponible.
 
 ## Avantages et défis du multithreading

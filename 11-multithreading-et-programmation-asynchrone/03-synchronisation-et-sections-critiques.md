@@ -134,8 +134,9 @@ implementation
 
 constructor TThreadCompteur.Create;  
 begin  
-  inherited Create(False);
+  inherited Create(True);       // Créer en pause
   FreeOnTerminate := True;
+  Start;                        // Démarrer après initialisation
 end;
 
 procedure TThreadCompteur.Execute;  
@@ -219,23 +220,24 @@ end;
 
 ### TMonitor : Synchronisation simplifiée
 
-Depuis Delphi 2009, `TMonitor` offre une alternative plus moderne :
+Depuis Delphi 2009, `TMonitor` offre une alternative plus moderne : tout `TObject` peut servir de verrou. Pas besoin d'un objet `TCriticalSection` séparé — on utilise généralement l'objet qu'on veut protéger lui-même (souvent `Self`) :
 
 ```pascal
-var
-  MonObjet: TObject;
-
-// Dans un thread
-TMonitor.Enter(MonObjet);  
-try  
-  // Section critique
-  Inc(Compteur);
-finally
-  TMonitor.Exit(MonObjet);
+// Cas typique : utiliser l'objet à protéger comme verrou
+procedure TMaClasse.IncrementerCompteur;  
+begin  
+  TMonitor.Enter(Self);   // verrouille « cette instance »
+  try
+    Inc(FCompteur);
+  finally
+    TMonitor.Exit(Self);  // déverrouille
+  end;
 end;
 ```
 
-Avantage : Pas besoin de créer un objet TCriticalSection séparé.
+> ⚠️ Important : `TMonitor.Enter` doit recevoir un `TObject` **valide** (jamais `nil`). Si vous l'utilisez avec un objet dédié, créez-le explicitement (`TObject.Create`) et libérez-le.
+
+**Avantage** : Pas besoin de créer un objet `TCriticalSection` séparé pour chaque ressource à protéger.
 
 ### TMutex : Synchronisation inter-processus
 
@@ -278,6 +280,15 @@ Un **Event** permet à un thread de signaler un événement à d'autres threads 
 var
   Event: TEvent;
 
+initialization
+  // Paramètres : (EventAttributes, ManualReset, InitialState, Name)
+  // ManualReset=True : reste signalé jusqu'à ResetEvent
+  // ManualReset=False : se réinitialise automatiquement après un WaitFor réussi
+  Event := TEvent.Create(nil, True, False, '');
+
+finalization
+  Event.Free;
+
 // Thread 1 : Attendre un signal
 procedure TThread1.Execute;  
 begin  
@@ -289,9 +300,49 @@ end;
 procedure TThread2.Execute;  
 begin  
   // Faire quelque chose...
-  Event.SetEvent; // Signaler aux threads en attente
+  Event.SetEvent;   // Signaler aux threads en attente
+  // Event.ResetEvent; // Pour revenir à l'état non-signalé (mode manuel)
 end;
 ```
+
+### TInterlocked : Opérations atomiques rapides
+
+Pour de simples opérations sur des entiers (incrémentation, addition, comparaison-échange), `TInterlocked` est **bien plus rapide qu'une section critique** : ce sont des instructions processeur atomiques, sans verrouillage.
+
+```pascal
+uses
+  System.SyncObjs;
+
+var
+  Compteur: Integer;
+
+// ❌ Lent : section critique pour une simple incrémentation
+CS.Enter;  
+try  
+  Inc(Compteur);
+finally
+  CS.Leave;
+end;
+
+// ✅ Beaucoup plus rapide : incrémentation atomique
+TInterlocked.Increment(Compteur);
+
+// Autres opérations atomiques utiles
+TInterlocked.Decrement(Compteur);          // Compteur := Compteur - 1  
+TInterlocked.Add(Compteur, 10);            // Compteur := Compteur + 10  
+var Ancien := TInterlocked.Exchange(Compteur, 0); // remet à 0, retourne l'ancien  
+TInterlocked.CompareExchange(Compteur, NouvelleValeur, ValeurAttendue);  
+```
+
+**Quand utiliser TInterlocked** :
+- Compteurs simples (Integer, Int64)
+- Échange de valeur (Exchange, CompareExchange)
+- Pas pour les structures complexes
+
+**Quand utiliser TCriticalSection** :
+- Protéger plusieurs lignes de code formant une unité logique
+- Protéger une structure de données complexe (liste, dictionnaire)
+- Quand vous devez maintenir un invariant entre plusieurs variables
 
 ### TSemaphore : Limiter le nombre d'accès
 
@@ -303,7 +354,11 @@ var
 
 initialization
   // Permettre à 3 threads maximum d'accéder simultanément
+  // Paramètres : (SemaphoreAttributes, InitialCount, MaximumCount, Name)
   Semaphore := TSemaphore.Create(nil, 3, 3, '');
+
+finalization
+  Semaphore.Free;
 
 // Dans un thread
 procedure TMonThread.Execute;  
@@ -318,27 +373,40 @@ begin
 end;
 ```
 
-## Variables locales aux threads (TThreadLocalStorage)
+## Variables locales aux threads (threadvar)
 
-Parfois, chaque thread doit avoir sa propre copie d'une variable :
+Parfois, chaque thread doit avoir sa propre copie d'une variable. Pascal/Delphi fournit le mot-clé `threadvar` qui crée des variables dont chaque thread possède sa propre instance indépendante :
 
 ```pascal
-var
-  TLS: TThreadLocalStorage;
-
-initialization
-  TLS := TThreadLocalStorage.Create;
+// Déclaration : chaque thread aura sa propre copie de Compteur
+threadvar
+  CompteurLocal: Integer;
+  NomThread: string;
 
 // Dans un thread
 procedure TMonThread.Execute;  
 begin  
-  // Chaque thread a sa propre valeur
-  TLS.Value := Pointer(ThreadID);
+  // Chaque thread initialise et modifie SA propre valeur
+  CompteurLocal := 0;
+  NomThread := 'Thread-' + IntToStr(ThreadID);
 
-  // Récupérer la valeur spécifique à ce thread
-  MaValeur := Integer(TLS.Value);
+  while not Terminated do
+  begin
+    Inc(CompteurLocal); // Pas besoin de synchronisation : valeur propre à ce thread
+    // ...
+  end;
 end;
 ```
+
+**Avantages de `threadvar`** :
+- Pas besoin de synchronisation (chaque thread a sa propre instance)
+- Syntaxe identique à une variable globale classique
+- Initialisée à zéro automatiquement pour chaque nouveau thread
+
+**Limitations** :
+- Ne fonctionne qu'avec des types simples (Integer, Boolean, pointeurs, strings)
+- Pas pour les types managés complexes comme les `array of`
+- Doit être déclarée au niveau unité (pas dans une procédure)
 
 ## Bonnes pratiques de synchronisation
 
@@ -518,6 +586,7 @@ end;
 |-----------|----------------|--------|
 | TCriticalSection | Protection de sections de code | Même processus |
 | TMonitor | Alternative moderne à TCriticalSection | Même processus |
+| TInterlocked | Opérations atomiques rapides sur entiers | Même processus |
 | TMutex | Synchronisation inter-processus | Inter-processus |
 | TEvent | Signalisation entre threads | Même processus |
 | TSemaphore | Limiter le nombre d'accès | Même/Inter-processus |
@@ -531,7 +600,9 @@ end;
 - Attention aux deadlocks lors de l'utilisation de plusieurs verrous
 - Documentez clairement quelles ressources sont protégées et par quoi
 - Préférez les structures thread-safe quand elles existent
-- TMonitor offre une alternative moderne à TCriticalSection
+- `TMonitor` offre une alternative moderne à `TCriticalSection`
+- `TInterlocked` est bien plus rapide pour les opérations atomiques simples sur les entiers
+- `threadvar` permet d'avoir des variables propres à chaque thread (sans synchronisation)
 
 Dans la prochaine section, nous verrons comment Delphi simplifie encore la programmation parallèle avec TTask et la bibliothèque Parallel Programming Library (PPL).
 
