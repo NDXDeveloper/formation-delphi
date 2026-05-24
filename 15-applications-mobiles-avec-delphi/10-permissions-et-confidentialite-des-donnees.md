@@ -62,14 +62,24 @@ NSLocationAlwaysAndWhenInUseUsageDescription
 ```pascal
 // Android
 android.permission.CAMERA  
-android.permission.READ_EXTERNAL_STORAGE  
-android.permission.WRITE_EXTERNAL_STORAGE  
+android.permission.READ_EXTERNAL_STORAGE   // ⚠ obsolète pour les médias sur Android 13+  
+android.permission.WRITE_EXTERNAL_STORAGE  // ⚠ obsolète pour les médias sur Android 13+  
+
+// Android 13+ (API 33) — permissions médias ciblées
+android.permission.READ_MEDIA_IMAGES  
+android.permission.READ_MEDIA_VIDEO  
+android.permission.READ_MEDIA_AUDIO  
+
+// Android 14+ (API 34) — sélection partielle via le Photo Picker
+android.permission.READ_MEDIA_VISUAL_USER_SELECTED
 
 // iOS
 NSCameraUsageDescription  
 NSPhotoLibraryUsageDescription  
 NSPhotoLibraryAddUsageDescription  
 ```
+
+> ⚠ **Android 13+ et permissions de stockage.** À partir d'`targetSdkVersion = 33`, `READ_EXTERNAL_STORAGE` et `WRITE_EXTERNAL_STORAGE` ne permettent plus d'accéder aux photos, vidéos et fichiers audio : il faut déclarer et demander les permissions « par type » ci-dessus. Le Play Store impose un `targetSdkVersion` récent pour toute mise à jour publiée en 2026.
 
 **Microphone** :
 ```pascal
@@ -602,15 +612,19 @@ Proposez toujours une alternative quand une permission est refusée :
 ```pascal
 procedure TFormMain.BtnAjouterPhotoClick(Sender: TObject);  
 begin  
+  // Note : on nomme volontairement le paramètre du callback PermResult
+  // (et non Result) pour ne pas masquer le pseudo-identifiant Result
+  // d'éventuelles fonctions englobantes.
   TPermissionHelper.Demander(TPermissionHelper.PERMISSION_CAMERA,
-    procedure(Result: TPermissionResult)
+    procedure(PermResult: TPermissionResult)
     begin
-      case Result of
-        prAccordee, prDejaAccordee:
-          // Prendre une photo avec la caméra
+      case PermResult of
+        TPermissionResult.prAccordee,
+        TPermissionResult.prDejaAccordee:
           PrendrePhotoCamera;
-        prRefusee:
-          // Proposer de choisir une photo existante
+
+        TPermissionResult.prRefusee:
+          // Proposer la galerie en alternative
           TDialogService.MessageDialog(
             'Voulez-vous choisir une photo existante depuis votre galerie ?',
             TMsgDlgType.mtConfirmation,
@@ -716,8 +730,18 @@ begin
         end
         else
         begin
-          // L'utilisateur n'accepte pas : fermer l'application
+          // ⚠ Sur iOS, Apple INTERDIT explicitement aux applications
+          //   de se fermer programmatiquement (App Store Review
+          //   Guidelines 4.0). À la place, affichez un écran bloquant
+          //   qui explique que l'usage de l'app nécessite l'acceptation.
+          //   Sur Android, Application.Terminate fonctionne mais
+          //   l'utilisateur peut ne pas comprendre pourquoi l'app
+          //   disparaît — préférez aussi un écran bloquant.
+          {$IFDEF ANDROID}
           Application.Terminate;
+          {$ELSE}
+          AfficherEcranConsentementRequis;
+          {$ENDIF}
         end;
       end);
   finally
@@ -730,6 +754,10 @@ end;
 
 Depuis iOS 14.5, vous devez demander explicitement la permission pour tracker l'utilisateur :
 
+> ⚠ **Clé Info.plist OBLIGATOIRE.** Sans la clé `NSUserTrackingUsageDescription` dans `Info.plist`, l'appel à `requestTrackingAuthorization` **plante l'application** (crash silencieux à la review Apple). Cette clé contient le texte qui sera affiché dans le dialogue système — Apple impose qu'il soit clair sur l'usage qui sera fait du tracking.  
+>  
+> Configuration dans Delphi : `Project > Options > Version Info (iOS)` > ajouter la clé `NSUserTrackingUsageDescription` avec un message du type *« Cette application utilise votre identifiant publicitaire pour vous proposer des contenus pertinents. »*.
+
 ```pascal
 {$IFDEF IOS}
 uses
@@ -737,27 +765,30 @@ uses
 
 procedure TFormMain.DemanderPermissionTracking;  
 begin  
-  // Demander la permission de tracking sur iOS 14.5+
-  if TOSVersion.Major >= 14 then
+  // L'API n'existe que depuis iOS 14.5 — sur les versions antérieures,
+  // le tracking est autorisé par défaut sans dialogue.
+  if TOSVersion.Major < 14 then
   begin
-    ATTrackingManager.requestTrackingAuthorizationWithCompletionHandler(
-      procedure(status: ATTrackingManagerAuthorizationStatus)
-      begin
-        case status of
-          ATTrackingManagerAuthorizationStatusAuthorized:
-            begin
-              // Tracking autorisé
-              ActiverAnalytics;
-            end;
-          ATTrackingManagerAuthorizationStatusDenied,
-          ATTrackingManagerAuthorizationStatusRestricted:
-            begin
-              // Tracking refusé
-              DesactiverAnalytics;
-            end;
-        end;
-      end);
+    ActiverAnalytics;
+    Exit;
   end;
+
+  ATTrackingManager.requestTrackingAuthorizationWithCompletionHandler(
+    procedure(status: ATTrackingManagerAuthorizationStatus)
+    begin
+      case status of
+        ATTrackingManagerAuthorizationStatusAuthorized:
+          ActiverAnalytics;
+
+        ATTrackingManagerAuthorizationStatusDenied,
+        ATTrackingManagerAuthorizationStatusRestricted:
+          DesactiverAnalytics;
+
+        ATTrackingManagerAuthorizationStatusNotDetermined:
+          // L'utilisateur n'a pas encore répondu — on attend
+          ;
+      end;
+    end);
 end;
 {$ENDIF}
 ```
@@ -816,65 +847,139 @@ begin
   SauvegarderPreference('password', MotDePasse); // DANGEREUX !
 end;
 
-// ✅ BON : Utiliser un hash
+// ⚠ INSUFFISANT : SHA-256 sans sel (illustration uniquement,
+//   ne JAMAIS utiliser tel quel en production)
 uses
   System.Hash;
 
-procedure SauvegarderMotDePasseSecurise(const MotDePasse: string);  
+procedure SauvegarderMotDePasseSHA256(const MotDePasse: string);  
 var  
   Hash: string;
 begin
-  // Hasher avec SHA256
   Hash := THashSHA2.GetHashString(MotDePasse);
   SauvegarderPreference('password_hash', Hash);
+end;
+```
+
+> ⚠ **Pourquoi SHA-256 simple n'est pas suffisant pour un mot de passe.** SHA-256 est **rapide** (c'est ce qu'on veut pour vérifier un fichier, c'est ce qu'on **ne veut pas** pour un mot de passe) et **déterministe** (le même mot de passe donne toujours le même hash, donc deux comptes avec le même mot de passe se voient instantanément). Un attaquant qui récupère la base peut donc :  
+> - utiliser des *rainbow tables* précalculées,  
+> - tester des milliards de candidats par seconde sur GPU.  
+>  
+> Les algorithmes adaptés à un mot de passe sont **lents par construction**, ajoutent un **sel aléatoire** par utilisateur, et un **coût** ajustable. Les standards modernes (2026) sont :  
+> - **Argon2id** (recommandé OWASP),  
+> - **scrypt**,  
+> - **bcrypt**,  
+> - **PBKDF2** avec ≥ 600 000 itérations pour HMAC-SHA-256.
+
+```pascal
+// ✅ BON : PBKDF2-HMAC-SHA-256 avec sel aléatoire par utilisateur.
+//   Disponible nativement dans System.Hash depuis Delphi 11 Alexandria.
+uses
+  System.Hash, System.NetEncoding, System.SysUtils;
+
+const
+  PBKDF2_ITERATIONS = 600000;  // recommandation OWASP 2026 pour SHA-256
+  PBKDF2_KEY_LENGTH = 32;      // 32 octets = 256 bits
+  SALT_LENGTH       = 16;      // 16 octets = 128 bits
+
+function GenererSelAleatoire: TBytes;  
+var  
+  i: Integer;
+begin
+  // ⚠ Pour un usage cryptographique réel, `Random` n'est PAS suffisant
+  //   (générateur pseudo-aléatoire prévisible). Sur Android, il faut
+  //   passer par `java.security.SecureRandom` via JNI ; sur iOS, par
+  //   `SecRandomCopyBytes` (CommonCrypto). Le wrapper le plus simple
+  //   est OpenSSL `RAND_bytes` chargé en dynamique.
+  //   `Random` est utilisé ci-dessous pour la lisibilité pédagogique.
+  Randomize;
+  SetLength(Result, SALT_LENGTH);
+  for i := 0 to High(Result) do
+    Result[i] := Byte(Random(256));
+end;
+
+procedure SauvegarderMotDePasseSecurise(const MotDePasse: string);  
+var  
+  Sel, HashBin: TBytes;
+begin
+  Sel := GenererSelAleatoire;
+  HashBin := THashPBKDF2_SHA256.GetHashBytes(
+    MotDePasse, Sel, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH);
+
+  // On stocke le sel ET le hash (le sel n'est pas un secret,
+  // il sert uniquement à éviter les rainbow tables).
+  SauvegarderPreference('password_salt', TNetEncoding.Base64.EncodeBytesToString(Sel));
+  SauvegarderPreference('password_hash', TNetEncoding.Base64.EncodeBytesToString(HashBin));
 end;
 
 function VerifierMotDePasse(const MotDePasse: string): Boolean;  
 var  
-  HashStocke, HashSaisi: string;
+  Sel, HashStocke, HashSaisi: TBytes;
 begin
-  HashStocke := LirePreference('password_hash', '');
-  HashSaisi := THashSHA2.GetHashString(MotDePasse);
-  Result := HashStocke = HashSaisi;
+  Sel := TNetEncoding.Base64.DecodeStringToBytes(
+    LirePreference('password_salt', ''));
+  HashStocke := TNetEncoding.Base64.DecodeStringToBytes(
+    LirePreference('password_hash', ''));
+
+  if (Length(Sel) = 0) or (Length(HashStocke) = 0) then
+    Exit(False);
+
+  HashSaisi := THashPBKDF2_SHA256.GetHashBytes(
+    MotDePasse, Sel, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH);
+
+  // Comparaison à temps constant (évite les attaques temporelles)
+  Result := (Length(HashSaisi) = Length(HashStocke)) and
+            CompareMem(@HashSaisi[0], @HashStocke[0], Length(HashStocke));
 end;
 ```
 
 ### Chiffrement des données sensibles
 
+> 🚨 **Attention au piège classique : Base64 ≠ chiffrement !**  
+> `TNetEncoding.Base64` est un *encodage* réversible sans clé : n'importe qui peut décoder le résultat en une ligne. Utiliser Base64 pour « protéger » un token ou un mot de passe revient à l'écrire en clair.  
+>  
+> Pour réellement chiffrer une donnée, il faut un algorithme cryptographique avec une **clé secrète** et un **vecteur d'initialisation (IV) aléatoire**. Le standard actuel est **AES-256 en mode GCM** (qui fournit en bonus l'authentification du message). Sur mobile, la clé maître doit être stockée dans le **Keystore Android** ou le **Keychain iOS**, pas dans le code de l'application.
+
 ```pascal
+// ❌ MAUVAIS : Base64 n'est PAS du chiffrement, c'est un simple
+//             encodage réversible sans clé. À ne JAMAIS utiliser
+//             pour protéger une donnée sensible.
 uses
   System.NetEncoding;
 
-// Chiffrer une chaîne (exemple simple avec Base64)
-// En production, utilisez un vrai chiffrement (AES)
-function ChiffrerDonnee(const Donnee: string): string;  
+function PseudoChiffrer(const Donnee: string): string;  
 begin  
-  Result := TNetEncoding.Base64.Encode(Donnee);
+  Result := TNetEncoding.Base64.Encode(Donnee);  // simple encodage !
 end;
+```
 
-function DechiffrerDonnee(const DonneeChiffree: string): string;  
-begin  
-  Result := TNetEncoding.Base64.Decode(DonneeChiffree);
-end;
+```pascal
+// ✅ BON : Chiffrement symétrique AES-256-GCM via une bibliothèque
+//          cryptographique éprouvée. La RTL Delphi ne fournit pas
+//          AES nativement ; on utilise typiquement :
+//            - LockBox 3 (open source),
+//            - DCPcrypt (open source),
+//            - les API natives via System.Hash + appels JNI/Objective-C,
+//            - ou OpenSSL (libssl) chargé dynamiquement.
+//
+// Le pseudo-code ci-dessous illustre uniquement le PRINCIPE :
+// IV aléatoire à chaque chiffrement, clé maîtresse stockée dans
+// le Keychain / Keystore, jamais en dur dans le binaire.
 
-// Sauvegarder des données sensibles
-procedure SauvegarderTokenAPI(const Token: string);  
-var  
-  TokenChiffre: string;
+function ChiffrerAES_GCM(const Donnee: string;
+  const Cle: TBytes): string;
+var
+  IV, Chiffre, Tag: TBytes;
 begin
-  TokenChiffre := ChiffrerDonnee(Token);
-  SauvegarderPreference('api_token', TokenChiffre);
-end;
+  IV := GenererOctetsAleatoires(12);  // 96 bits, recommandé pour GCM
 
-function RecupererTokenAPI: string;  
-var  
-  TokenChiffre: string;
-begin
-  TokenChiffre := LirePreference('api_token', '');
-  if not TokenChiffre.IsEmpty then
-    Result := DechiffrerDonnee(TokenChiffre)
-  else
-    Result := '';
+  // Appel à la bibliothèque cryptographique :
+  //   Chiffre := AES_GCM_Encrypt(Donnee, Cle, IV, out Tag);
+
+  // On concatène IV || Tag || Chiffre puis on encode en Base64
+  // pour le stockage en chaîne. L'IV n'est pas un secret, le Tag
+  // sert à détecter une altération du chiffré.
+  Result := TNetEncoding.Base64.EncodeBytesToString(IV + Tag + Chiffre);
 end;
 ```
 
@@ -991,17 +1096,27 @@ begin
 end;
 ```
 
-### 5. Anonymisation des données
+### 5. Pseudonymisation des données
+
+> 💡 **Anonymisation vs pseudonymisation (RGPD).**  
+> - **Anonymisation** : transformation **irréversible** des données. L'individu ne peut plus être identifié, même avec d'autres informations. Les données anonymisées **sortent du champ du RGPD**.  
+> - **Pseudonymisation** : substitution réversible par un identifiant (par exemple un hash avec sel). L'individu peut être ré-identifié si on possède la table de correspondance. Les données pseudonymisées **restent soumises au RGPD**.  
+>  
+> Le code ci-dessous fait de la **pseudonymisation** (le sel est dans le binaire, donc connu d'un attaquant qui décompile l'APK/IPA) — c'est utile pour réduire l'exposition, mais ne dispense pas du consentement utilisateur ni des autres obligations.
 
 ```pascal
-// Anonymiser les données avant l'envoi au serveur
-function AnonymizerDonnees(const UserID: string): string;  
-var  
+// Pseudonymiser les données avant l'envoi au serveur
+function PseudonymiserDonnees(const UserID: string): string;  
+const  
+  // ⚠ En production, le sel doit être généré aléatoirement et stocké
+  //   côté serveur, jamais codé en dur dans l'app. Un sel partagé entre
+  //   tous les utilisateurs reste vulnérable aux rainbow tables ciblées.
+  SEL_APP = 'change-me-secret-salt';
+var
   Hash: string;
 begin
-  // Utiliser un hash au lieu de l'ID réel
-  Hash := THashSHA2.GetHashString(UserID + 'sel_secret');
-  Result := Hash.Substring(0, 16); // Tronquer pour plus d'anonymat
+  Hash := THashSHA2.GetHashString(UserID + SEL_APP);
+  Result := Hash.Substring(0, 16); // tronquer pour réduire la surface
 end;
 
 procedure EnvoyerStatistiques;  
@@ -1010,8 +1125,8 @@ var
 begin
   Stats := TJSONObject.Create;
   try
-    // Utiliser un ID anonyme
-    Stats.AddPair('user_hash', AnonymizerDonnees(GetUserID));
+    // Utiliser un ID pseudonymisé
+    Stats.AddPair('user_hash', PseudonymiserDonnees(GetUserID));
 
     // Données agrégées seulement
     Stats.AddPair('actions_count', TJSONNumber.Create(GetActionsCount));
@@ -1040,7 +1155,7 @@ begin
     LogEntry.AddPair('timestamp', DateTimeToStr(Now));
     LogEntry.AddPair('action', Action);
     LogEntry.AddPair('data_type', Donnee);
-    LogEntry.AddPair('user_id', AnonymizerDonnees(GetUserID));
+    LogEntry.AddPair('user_id', PseudonymiserDonnees(GetUserID));
 
     // Sauvegarder le log localement
     AjouterAuFichierLog(LogEntry.ToString);

@@ -691,40 +691,43 @@ Il existe plusieurs stratégies de synchronisation :
 
 ### Marquage des données pour la synchronisation
 
+> 💡 **SQLite ne supporte pas `ADD COLUMN IF NOT EXISTS`.** Pour rendre la migration idempotente, deux options propres :  
+> 1. Capturer **uniquement** l'exception « duplicate column name » (filtrer sur `EFDDBEngineException` + message contenant `duplicate column`), pas toutes les exceptions.  
+> 2. Interroger d'abord `PRAGMA table_info(Taches)` pour vérifier si la colonne existe.  
+>  
+> L'exemple ci-dessous montre l'approche 1, simplifiée : on attrape l'exception et on la *log* au lieu de la *masquer silencieusement* — cela évite que d'autres erreurs (table inexistante, transaction interrompue…) passent inaperçues.
+
 ```pascal
 // Ajouter des champs de synchronisation aux tables
 procedure TFormMain.AjouterChampsSynchronisation;  
 var  
   Query: TFDQuery;
+
+  procedure AjouterColonneSiAbsente(const SQL: string);
+  begin
+    Query.SQL.Text := SQL;
+    try
+      Query.ExecSQL;
+    except
+      on E: Exception do
+        // SQLite renvoie « duplicate column name: xxx » si la colonne existe.
+        // Tout autre message doit être loggué/remonté.
+        if Pos('duplicate column', LowerCase(E.Message)) = 0 then
+          raise;
+    end;
+  end;
+
 begin
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := Connexion;
 
-    // Ajouter des colonnes pour la synchronisation
-    Query.SQL.Text :=
-      'ALTER TABLE Taches ADD COLUMN synced BOOLEAN DEFAULT 0';
-    try
-      Query.ExecSQL;
-    except
-      // Colonne existe déjà
-    end;
-
-    Query.SQL.Text :=
-      'ALTER TABLE Taches ADD COLUMN server_id INTEGER';
-    try
-      Query.ExecSQL;
-    except
-      // Colonne existe déjà
-    end;
-
-    Query.SQL.Text :=
-      'ALTER TABLE Taches ADD COLUMN last_sync DATETIME';
-    try
-      Query.ExecSQL;
-    except
-      // Colonne existe déjà
-    end;
+    AjouterColonneSiAbsente(
+      'ALTER TABLE Taches ADD COLUMN synced BOOLEAN DEFAULT 0');
+    AjouterColonneSiAbsente(
+      'ALTER TABLE Taches ADD COLUMN server_id INTEGER');
+    AjouterColonneSiAbsente(
+      'ALTER TABLE Taches ADD COLUMN last_sync DATETIME');
   finally
     Query.Free;
   end;
@@ -778,11 +781,16 @@ begin
         Query.Next;
       end;
 
-      // Envoyer au serveur
-      Response := HttpClient.Post(
-        'https://votreserveur.com/api/sync/taches',
-        TStringStream.Create(JSONArray.ToString, TEncoding.UTF8),
-        nil);
+      // Envoyer au serveur (attention à libérer le stream)
+      var Body := TStringStream.Create(JSONArray.ToString, TEncoding.UTF8);
+      try
+        Response := HttpClient.Post(
+          'https://votreserveur.com/api/sync/taches',
+          Body,
+          nil);
+      finally
+        Body.Free;
+      end;
 
       if Response.StatusCode = 200 then
       begin
@@ -868,7 +876,15 @@ begin
 
     if Response.StatusCode = 200 then
     begin
+      // ParseJSONValue renvoie nil si le JSON est invalide ;
+      // l'opérateur `as` lèverait alors une EInvalidCast peu parlante.
       JSONArray := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
+      if not Assigned(JSONArray) then
+      begin
+        ShowMessage('Réponse serveur invalide (JSON non parsable).');
+        Exit;
+      end;
+
       try
         Connexion.StartTransaction;
         try
@@ -1026,16 +1042,27 @@ begin
   end;
 end;
 
-// Vérifier la connexion Internet
+// Vérifier la connexion Internet.
+// ⚠ Faire un GET vers google.com pour tester la connexion :
+//   - bloque le thread (jusqu'à 30 s en cas de DNS lent),
+//   - consomme inutilement de la data sur cellulaire,
+//   - et peut être bloqué dans certains pays.
+// La bonne approche sur mobile est d'utiliser les API natives
+// `ConnectivityManager` (Android) ou `SCNetworkReachability` (iOS)
+// — voir le chapitre 15.1 « Mode de connexion » pour l'exemple JNI.
+// L'implémentation ci-dessous reste utile en dépannage / desktop.
 function TFormMain.EstConnecteInternet: Boolean;  
 var  
   HttpClient: THTTPClient;
 begin
   HttpClient := THTTPClient.Create;
   try
+    HttpClient.ConnectionTimeout := 3000;  // 3 s max
+    HttpClient.ResponseTimeout   := 3000;
     try
-      var Response := HttpClient.Get('https://www.google.com');
-      Result := Response.StatusCode = 200;
+      // Cible légère et stable : un endpoint « 204 No Content »
+      Result := HttpClient.Get('https://www.gstatic.com/generate_204')
+                 .StatusCode = 204;
     except
       Result := False;
     end;
@@ -1125,26 +1152,35 @@ end;
 
 ### Cache intelligent
 
+> 💡 **Propriété et cycle de vie des `TJSONObject` cachés.** Comme tout cache d'objets Delphi, il faut décider qui possède quoi. Le pattern le plus sûr : **le cache clone à l'ajout** (il devient propriétaire de sa copie) et **clone à la lecture** (l'appelant reçoit sa propre copie qu'il libère). Sans cela, un Free maladroit côté appelant invaliderait l'entrée du cache.
+
 ```pascal
-// Mettre en cache les données fréquemment consultées
+// Mettre en cache les données fréquemment consultées avec TTL
 type
+  TCacheEntry = record
+    Valeur: TJSONObject;
+    DateExpiration: TDateTime;
+  end;
+
   TCacheManager = class
   private
-    FCache: TDictionary<string, TJSONObject>;
+    FCache: TDictionary<string, TCacheEntry>;
     FDureeCacheSecondes: Integer;
   public
     constructor Create(DureeCacheSecondes: Integer = 300);
     destructor Destroy; override;
 
-    procedure Ajouter(Cle: string; Valeur: TJSONObject);
-    function Obtenir(Cle: string): TJSONObject;
-    function Existe(Cle: string): Boolean;
+    procedure Ajouter(const Cle: string; Valeur: TJSONObject);
+    // Renvoie un Clone à libérer par l'appelant, ou nil si absent / expiré
+    function Obtenir(const Cle: string): TJSONObject;
+    function Existe(const Cle: string): Boolean;
     procedure Vider;
   end;
 
 constructor TCacheManager.Create(DureeCacheSecondes: Integer);  
 begin  
-  FCache := TDictionary<string, TJSONObject>.Create;
+  inherited Create;
+  FCache := TDictionary<string, TCacheEntry>.Create;
   FDureeCacheSecondes := DureeCacheSecondes;
 end;
 
@@ -1155,18 +1191,42 @@ begin
   inherited;
 end;
 
-procedure TCacheManager.Ajouter(Cle: string; Valeur: TJSONObject);  
-begin  
-  if FCache.ContainsKey(Cle) then
-    FCache[Cle].Free;
-
-  FCache.AddOrSetValue(Cle, Valeur.Clone as TJSONObject);
+procedure TCacheManager.Vider;  
+var  
+  Entry: TCacheEntry;
+begin
+  for Entry in FCache.Values do
+    Entry.Valeur.Free;
+  FCache.Clear;
 end;
 
-function TCacheManager.Obtenir(Cle: string): TJSONObject;  
-begin  
-  if FCache.ContainsKey(Cle) then
-    Result := FCache[Cle]
+procedure TCacheManager.Ajouter(const Cle: string; Valeur: TJSONObject);  
+var  
+  Ancien: TCacheEntry;
+  Nouveau: TCacheEntry;
+begin
+  // Libérer l'éventuelle entrée précédente
+  if FCache.TryGetValue(Cle, Ancien) then
+    Ancien.Valeur.Free;
+
+  Nouveau.Valeur := Valeur.Clone as TJSONObject;
+  Nouveau.DateExpiration := IncSecond(Now, FDureeCacheSecondes);
+  FCache.AddOrSetValue(Cle, Nouveau);
+end;
+
+function TCacheManager.Existe(const Cle: string): Boolean;  
+var  
+  Entry: TCacheEntry;
+begin
+  Result := FCache.TryGetValue(Cle, Entry) and (Entry.DateExpiration > Now);
+end;
+
+function TCacheManager.Obtenir(const Cle: string): TJSONObject;  
+var  
+  Entry: TCacheEntry;
+begin
+  if FCache.TryGetValue(Cle, Entry) and (Entry.DateExpiration > Now) then
+    Result := Entry.Valeur.Clone as TJSONObject
   else
     Result := nil;
 end;

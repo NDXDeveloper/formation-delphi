@@ -39,6 +39,8 @@ Le GPS est probablement le capteur le plus utilisé dans les applications mobile
 
 Delphi fournit le composant `TLocationSensor` qui unifie l'accès au GPS sur toutes les plateformes.
 
+> ⚠ **Permission requise avant d'activer le GPS.** Sur Android 6+ et iOS 8+, mettre `Active := True` sans permission accordée ne déclenchera **aucune lecture** — le sensor restera inactif silencieusement. Demandez d'abord la permission `ACCESS_FINE_LOCATION` (Android) ou laissez iOS afficher son dialogue système grâce à la clé `NSLocationWhenInUseUsageDescription` déclarée dans Info.plist. Voir la section *Gestion des permissions* plus bas.
+
 ```pascal
 uses
   System.Sensors, System.Sensors.Components;
@@ -47,8 +49,9 @@ uses
 procedure TFormMain.FormCreate(Sender: TObject);  
 begin  
   LocationSensor1 := TLocationSensor.Create(Self);
-  LocationSensor1.Active := True;
   LocationSensor1.OnLocationChanged := LocationChange;
+  // Active := True seulement APRÈS la demande de permission réussie
+  // (voir DemanderPermissionLocalisation plus bas).
 end;
 ```
 
@@ -124,9 +127,16 @@ end;
 
 ### Géocodage : obtenir une adresse depuis des coordonnées
 
+> ⚠ **Politique d'usage de Nominatim (OpenStreetMap).** L'API publique de Nominatim impose :  
+> - un **`User-Agent` identifiant votre application** (avec un email ou une URL de contact),  
+> - un **maximum d'une requête par seconde** sur l'instance publique,  
+> - pas d'usage commercial à fort volume — pour cela, hébergez votre propre instance ou utilisez un service payant (Mapbox, Google Geocoding, etc.).  
+>  
+> Sans ces précautions, votre IP sera bloquée. Le code ci-dessous montre comment fixer le `User-Agent`.
+
 ```pascal
 uses
-  System.Net.HttpClient, System.JSON;
+  System.Net.HttpClient, System.Net.URLClient, System.JSON;
 
 // Convertir des coordonnées GPS en adresse lisible (géocodage inversé)
 procedure TFormMain.AfficherAdresse(Latitude, Longitude: Double);  
@@ -134,25 +144,24 @@ var
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JsonValue: TJSONValue;
-  Adresse: string;
   URL: string;
 begin
-  // Utilisation de l'API de géocodage (exemple avec Nominatim)
-  URL := Format('https://nominatim.openstreetmap.org/reverse?format=json&lat=%f&lon=%f',
+  URL := Format(
+    'https://nominatim.openstreetmap.org/reverse?format=json&lat=%f&lon=%f',
     [Latitude, Longitude]);
 
   HttpClient := THTTPClient.Create;
   try
+    // Indispensable pour respecter la politique Nominatim
+    HttpClient.UserAgent := 'MonApp/1.0 (contact@exemple.fr)';
+
     Response := HttpClient.Get(URL);
     if Response.StatusCode = 200 then
     begin
       JsonValue := TJSONObject.ParseJSONValue(Response.ContentAsString);
       try
-        if JsonValue <> nil then
-        begin
-          Adresse := JsonValue.GetValue<string>('display_name');
-          LabelAdresse.Text := Adresse;
-        end;
+        if Assigned(JsonValue) then
+          LabelAdresse.Text := JsonValue.GetValue<string>('display_name');
       finally
         JsonValue.Free;
       end;
@@ -282,29 +291,37 @@ end;
 
 ### Détection de secousse (shake)
 
+> ⚠ **Attention à la gravité.** `AccelerationX/Y/Z` (en m/s²) inclut la **gravité terrestre** (~9,81 m/s² sur l'axe vertical). Au repos, la norme `√(X² + Y² + Z²)` vaut donc déjà ≈ 9,81. Pour détecter une vraie secousse, on compare la norme à un seuil **supérieur à la gravité** (typiquement 12 à 15 m/s², soit ~3-5 m/s² au-dessus du repos), ou on soustrait la gravité estimée via un filtre passe-haut.
+
 ```pascal
+uses
+  System.DateUtils;
+
 // Détecter si l'utilisateur secoue l'appareil
 var
-  DerniereSecousse: TDateTime;
+  DerniereSecousse: TDateTime;  // 0 initialement = jamais détectée
 
 procedure TFormMain.DetecterSecousse;  
-var  
-  AccelX, AccelY, AccelZ: Double;
-  Force: Double;
-const
-  SeuilSecousse = 2.5; // Seuil de détection
-  DelaiSecousse = 1.0; // Délai minimum entre deux secousses (en secondes)
+const  
+  GRAVITE             = 9.81;   // m/s² au repos
+  SEUIL_AU_DESSUS     = 5.0;    // tolérance au-dessus de la gravité
+  DELAI_ENTRE_SECOUSSES = 1.0;  // secondes
+var
+  AccelX, AccelY, AccelZ, Norme: Double;
 begin
   AccelX := MotionSensor1.Sensor.AccelerationX;
   AccelY := MotionSensor1.Sensor.AccelerationY;
   AccelZ := MotionSensor1.Sensor.AccelerationZ;
 
-  // Calculer la force totale du mouvement
-  Force := Sqrt(AccelX * AccelX + AccelY * AccelY + AccelZ * AccelZ);
+  // Norme du vecteur d'accélération
+  Norme := Sqrt(AccelX * AccelX + AccelY * AccelY + AccelZ * AccelZ);
 
-  // Vérifier si la force dépasse le seuil et si assez de temps s'est écoulé
-  if (Force > SeuilSecousse) and
-     (SecondsBetween(Now, DerniereSecousse) > DelaiSecousse) then
+  // Une secousse = accélération nettement supérieure à la gravité,
+  // et il faut au moins DELAI_ENTRE_SECOUSSES depuis la précédente
+  // pour éviter de déclencher plusieurs fois sur un seul geste.
+  if (Norme > GRAVITE + SEUIL_AU_DESSUS) and
+     ((DerniereSecousse = 0) or
+      (SecondsBetween(Now, DerniereSecousse) > DELAI_ENTRE_SECOUSSES)) then
   begin
     DerniereSecousse := Now;
     OnSecousseDetectee;
@@ -314,7 +331,8 @@ end;
 procedure TFormMain.OnSecousseDetectee;  
 begin  
   ShowMessage('Appareil secoué !');
-  // Déclencher une action (réinitialiser un compteur, rafraîchir des données, etc.)
+  // Action typique : réinitialiser un compteur, rafraîchir des données,
+  // annuler la dernière action (« shake to undo » sur iOS), etc.
 end;
 ```
 
@@ -403,23 +421,34 @@ end;
 // Faire pivoter une image panoramique selon l'orientation de l'appareil
 var
   AngleTotal: Double = 0;
+  DerniereMAJ: TDateTime = 0;  // 0 = première mesure ignorée
 
 procedure TFormMain.MotionSensorChange(Sender: TObject);  
 var  
+  Maintenant: TDateTime;
   DeltaTemps: Double;
   RotationY: Double;
 begin
-  // Calculer le temps écoulé depuis la dernière lecture
-  DeltaTemps := MilliSecondsBetween(Now, DerniereMAJ) / 1000;
-  DerniereMAJ := Now;
+  Maintenant := Now;
 
-  // Lire la vitesse de rotation verticale
+  // Premier appel : on ne peut pas calculer de delta, on s'initialise
+  if DerniereMAJ = 0 then
+  begin
+    DerniereMAJ := Maintenant;
+    Exit;
+  end;
+
+  // Temps écoulé en secondes depuis la dernière lecture
+  DeltaTemps := MilliSecondsBetween(Maintenant, DerniereMAJ) / 1000;
+  DerniereMAJ := Maintenant;
+
+  // Vitesse angulaire verticale (en radians par seconde)
   RotationY := MotionSensor1.Sensor.AngularVelocityY;
 
-  // Intégrer pour obtenir l'angle total
+  // Intégrer pour obtenir l'angle cumulé (en degrés)
   AngleTotal := AngleTotal + (RotationY * DeltaTemps * 180 / Pi);
 
-  // Faire pivoter l'image panoramique
+  // Faire défiler l'image panoramique horizontalement
   ImagePanorama.Position.X := -AngleTotal * 10;
 end;
 ```
@@ -430,30 +459,38 @@ Le magnétomètre détecte le champ magnétique terrestre et permet de détermin
 
 ### Obtenir le cap (direction)
 
+> ⚠ **Attention au piège des propriétés `HeadingX` / `HeadingY`.** Sur `TCustomOrientationSensor`, **`HeadingX` et `HeadingY` ne sont pas le cap en degrés** : ce sont les composantes X et Y (en microTeslas) du vecteur pointant vers le nord magnétique. Le **cap magnétique** en degrés (0 = Nord, 90 = Est, 180 = Sud, 270 = Ouest) s'obtient via la propriété `MagHeading` quand elle est exposée par la plateforme, ou en le recalculant à partir des composantes.
+
 ```pascal
 uses
-  System.Sensors;
+  System.Sensors, System.Sensors.Components, System.Math;
 
 // Lire le cap de la boussole
 procedure TFormMain.OrientationSensorChange(Sender: TObject);  
 var  
-  OrientationSensor: TOrientationSensor;
   Cap: Double;
 begin
-  OrientationSensor := TOrientationSensor.Current;
-  if Assigned(OrientationSensor) then
-  begin
-    // Lire le cap (0-360 degrés, 0 = Nord)
-    Cap := OrientationSensor.Sensor.HeadingY;
+  if not Assigned(OrientationSensor1.Sensor) then
+    Exit;
 
-    LabelCap.Text := 'Cap: ' + FormatFloat('0', Cap) + '°';
+  // Approche 1 : propriété MagHeading (cap magnétique en degrés)
+  Cap := OrientationSensor1.Sensor.MagHeading;
 
-    // Orienter une image de boussole
-    ImageAiguille.RotationAngle := -Cap;
+  // Approche 2 (fallback) : calcul à partir des composantes du vecteur
+  // if IsNan(Cap) then
+  //   Cap := RadToDeg(ArcTan2(OrientationSensor1.Sensor.HeadingY,
+  //                           OrientationSensor1.Sensor.HeadingX));
 
-    // Afficher la direction cardinale
-    AfficherDirectionCardinale(Cap);
-  end;
+  // Normaliser dans [0 ; 360[
+  while Cap < 0   do Cap := Cap + 360;
+  while Cap > 360 do Cap := Cap - 360;
+
+  LabelCap.Text := 'Cap: ' + FormatFloat('0', Cap) + '°';
+
+  // Orienter une image de boussole (l'aiguille pointe vers le nord)
+  ImageAiguille.RotationAngle := -Cap;
+
+  AfficherDirectionCardinale(Cap);
 end;
 
 procedure TFormMain.AfficherDirectionCardinale(Cap: Double);  
@@ -493,7 +530,8 @@ var
   AngleVersPOI: Double;
   DistanceAngulaire: Double;
 begin
-  Cap := OrientationSensor.Sensor.HeadingY;
+  // Cap magnétique en degrés (voir la mise en garde plus haut)
+  Cap := OrientationSensor1.Sensor.MagHeading;
 
   for POI in ListePointsInteret do
   begin
@@ -524,16 +562,15 @@ end;
 
 Sur les appareils récents, vous pouvez accéder au compteur de pas intégré.
 
-### Utilisation du podomètre
+> ⚠ **`TPedometerSensor` n'existe pas en standard dans la RTL Delphi.** Le pseudo-code ci-dessous illustre le **principe** d'utilisation. En pratique, sur Android, il faut interroger les capteurs natifs `TYPE_STEP_COUNTER` ou `TYPE_STEP_DETECTOR` via JNI ; sur iOS, on utilise `CMPedometer` du framework *CoreMotion* via les bindings Objective-C. Des bibliothèques tierces (Kastri Free, par exemple) encapsulent ce travail.
+
+### Utilisation du podomètre (exemple conceptuel)
 
 ```pascal
-uses
-  System.Sensors;
-
-// Accéder au compteur de pas
+// Pseudo-code : adapter selon le wrapper natif que vous intégrez
 procedure TFormMain.InitialiserPodometre;  
 var  
-  StepCounter: TPedometerSensor;
+  StepCounter: TPedometerSensor;  // ⚠ classe fictive — wrapper tiers
 begin
   StepCounter := TPedometerSensor.Create(Self);
   StepCounter.OnStepCountChanged := PasComptabilises;
@@ -562,20 +599,25 @@ Le capteur de luminosité ambiante peut être utilisé pour adapter l'interface 
 
 ```pascal
 uses
-  System.Sensors;
+  System.Sensors, System.Sensors.Components;
 
 // Réagir aux changements de luminosité
 procedure TFormMain.InitialiserCapteurLuminosite;  
-var  
-  LightSensor: TLightSensor;
-begin
-  LightSensor := TLightSensor.Create(Self);
-  LightSensor.OnIlluminanceChanged := ChangementLuminosite;
-  LightSensor.Active := True;
+begin  
+  // LightSensor1 est un TLightSensor posé sur la fiche.
+  // L'événement standard est OnSensorChanged (et non OnIlluminanceChanged).
+  LightSensor1.OnSensorChanged := LightSensorChange;
+  LightSensor1.Active := True;
 end;
 
-procedure TFormMain.ChangementLuminosite(Sender: TObject; Illuminance: Double);  
-begin  
+procedure TFormMain.LightSensorChange(Sender: TObject);  
+var  
+  Illuminance: Double;
+begin
+  if not Assigned(LightSensor1.Sensor) then
+    Exit;
+
+  Illuminance := LightSensor1.Sensor.Illuminance;  // en lux
   LabelLux.Text := FormatFloat('0', Illuminance) + ' lux';
 
   // Adapter l'interface selon la luminosité
@@ -611,46 +653,42 @@ L'accès aux capteurs nécessite souvent des permissions spécifiques, particuli
 
 ### Demander la permission de localisation
 
+> 💡 `PermissionsService` (unité `System.Permissions`) prend des **chaînes** correspondant aux noms Android (`android.permission.…`). Il n'y a **pas** d'unité `FMX.Permissions` exposant des constantes nommées dans la RTL standard — la convention est d'utiliser les chaînes directement, éventuellement regroupées dans une constante locale pour la lisibilité.
+
 ```pascal
 uses
-  FMX.DialogService,
-  System.Permissions;
+  FMX.DialogService, System.Permissions;
 
-// Vérifier et demander la permission de localisation
+const
+  PERM_FINE_LOCATION   = 'android.permission.ACCESS_FINE_LOCATION';
+  PERM_COARSE_LOCATION = 'android.permission.ACCESS_COARSE_LOCATION';
+
 procedure TFormMain.DemanderPermissionLocalisation;  
 begin  
   PermissionsService.RequestPermissions(
-    [FMX.Permissions.TPermissions.ACCESS_FINE_LOCATION,
-     FMX.Permissions.TPermissions.ACCESS_COARSE_LOCATION],
+    [PERM_FINE_LOCATION, PERM_COARSE_LOCATION],
     procedure(const APermissions: TArray<string>;
               const AGrantResults: TArray<TPermissionStatus>)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
       begin
-        // Permission accordée - activer le GPS
         LocationSensor1.Active := True;
         ShowMessage('GPS activé');
       end
       else
-      begin
-        // Permission refusée
         TDialogService.ShowMessage(
           'L''accès à la localisation est nécessaire pour cette fonctionnalité.');
-      end;
-    end
-  );
+    end);
 end;
 ```
 
 ### Vérifier si une permission est accordée
 
 ```pascal
-// Vérifier l'état d'une permission avant de l'utiliser
 function TFormMain.PermissionLocalisationAccordee: Boolean;  
 begin  
-  Result := PermissionsService.IsPermissionGranted(
-    FMX.Permissions.TPermissions.ACCESS_FINE_LOCATION);
+  Result := PermissionsService.IsPermissionGranted(PERM_FINE_LOCATION);
 end;
 
 procedure TFormMain.FormShow(Sender: TObject);  
@@ -668,20 +706,26 @@ end;
 
 Les capteurs consomment de l'énergie. Voici quelques conseils pour optimiser la consommation :
 
-```pascal
-// Désactiver les capteurs quand ils ne sont pas nécessaires
-procedure TFormMain.FormDeactivate(Sender: TObject);  
-begin  
-  // L'application passe en arrière-plan
-  LocationSensor1.Active := False;
-  MotionSensor1.Active := False;
-end;
+> ⚠ **Rappel cycle de vie mobile.** `OnDeactivate` / `OnActivate` d'un `TForm` réagissent au changement de focus **entre formulaires de l'app**, pas aux passages arrière-plan / premier plan déclenchés par l'OS. Pour vraiment désactiver les capteurs quand l'application passe en arrière-plan, il faut s'abonner à `IFMXApplicationEventService` (voir le chapitre 15.1) et réagir à `EnteredBackground` / `BecameActive`.
 
-procedure TFormMain.FormActivate(Sender: TObject);  
+```pascal
+// Pseudo-code à brancher dans le handler IFMXApplicationEventService
+procedure TFormMain.HandlerEvenementApp(AEvent: TApplicationEvent);  
 begin  
-  // L'application revient au premier plan
-  LocationSensor1.Active := True;
-  MotionSensor1.Active := True;
+  case AEvent of
+    TApplicationEvent.EnteredBackground:
+      begin
+        // L'app est en arrière-plan : couper tout ce qui draine la batterie
+        LocationSensor1.Active := False;
+        MotionSensor1.Active   := False;
+      end;
+    TApplicationEvent.BecameActive:
+      begin
+        // L'app revient au premier plan : on relance ce qui est utile
+        LocationSensor1.Active := True;
+        MotionSensor1.Active   := True;
+      end;
+  end;
 end;
 
 // Ajuster la fréquence de mise à jour
@@ -716,24 +760,38 @@ begin
   end;
 end;
 
-// Gérer le timeout de localisation
-procedure TFormMain.GererTimeoutGPS;  
-var  
-  TempsDebut: TDateTime;
-const
-  TimeoutSeconds = 30;
-begin
-  TempsDebut := Now;
+// Gérer un timeout de localisation — version asynchrone avec un timer.
+// ⚠ NE PAS utiliser de boucle « while + Sleep + ProcessMessages » : sur
+//   mobile cela gèle l'interface, consomme de la batterie et empêche
+//   le système de notifier la position quand elle arrive enfin.
+procedure TFormMain.DemarrerGPSAvecTimeout;  
+begin  
+  LocationObtenue := False;
+  LocationSensor1.Active := True;
 
-  while (not LocationObtenue) and
-        (SecondsBetween(Now, TempsDebut) < TimeoutSeconds) do
-  begin
-    Application.ProcessMessages;
-    Sleep(100);
-  end;
+  // Timer one-shot qui annule la demande au bout de 30 s
+  TimerTimeoutGPS.Interval := 30000;
+  TimerTimeoutGPS.OnTimer := TimerTimeoutGPSTimer;
+  TimerTimeoutGPS.Enabled := True;
+end;
 
+procedure TFormMain.TimerTimeoutGPSTimer(Sender: TObject);  
+begin  
+  TimerTimeoutGPS.Enabled := False;
   if not LocationObtenue then
-    ShowMessage('Impossible d''obtenir la localisation. Vérifiez votre connexion GPS.');
+  begin
+    LocationSensor1.Active := False;
+    ShowMessage('Impossible d''obtenir la localisation. ' +
+                'Vérifiez que le GPS est activé.');
+  end;
+end;
+
+procedure TFormMain.LocationChange(Sender: TObject;
+  const OldLocation, NewLocation: TLocationCoord2D);
+begin
+  LocationObtenue := True;
+  TimerTimeoutGPS.Enabled := False;  // on a notre position, on annule le timeout
+  // … traiter la position …
 end;
 ```
 

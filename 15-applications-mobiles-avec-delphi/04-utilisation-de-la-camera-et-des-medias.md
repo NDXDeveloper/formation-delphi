@@ -74,21 +74,23 @@ begin
   Camera1.Active := True;
 end;
 
-// Capturer une photo
+// Capturer le frame courant en photo.
+// `SampleBufferToBitmap` est SYNCHRONE : il copie le dernier frame
+// disponible dans le bitmap. Ce qui est asynchrone, c'est le flux
+// vidéo continu de la caméra, signalé par OnSampleBufferReady à
+// chaque nouvelle image.
 procedure TFormMain.BtnPrendrePhotoClick(Sender: TObject);  
 begin  
   if Camera1.Active then
-  begin
-    // La capture est asynchrone, l'événement OnSampleBufferReady sera déclenché
     Camera1.SampleBufferToBitmap(Image1.Bitmap, True);
-  end;
 end;
 
-// Gérer l'image capturée
+// Pour un aperçu vidéo « live » dans Image1, on copie chaque frame
+// au fur et à mesure. ⚠ OnSampleBufferReady est appelé depuis un
+// thread d'arrière-plan, il faut donc marshaler vers l'UI.
 procedure TFormMain.CameraSampleBufferReady(Sender: TObject;
   const ATime: TMediaTime);
 begin
-  // Synchroniser avec le thread principal
   TThread.Synchronize(nil,
     procedure
     begin
@@ -347,19 +349,18 @@ end;
 uses
   FMX.Filter.Effects;
 
-// Appliquer un filtre noir et blanc
+// Appliquer un filtre noir et blanc.
+// Note : TMonochromeEffect est un TFmxObject ; en passant Image1 comme
+// propriétaire (paramètre du constructeur) ET en mettant Parent à
+// Image1, le filtre sera automatiquement libéré quand Image1 le sera.
+// Pas besoin de Free explicite — n'essayez surtout pas avec un
+// try..finally Free : cela retirerait l'effet immédiatement.
 procedure TFormMain.AppliquerNoirEtBlanc;  
 var  
   Filtre: TMonochromeEffect;
 begin
   Filtre := TMonochromeEffect.Create(Image1);
-  try
-    Filtre.Parent := Image1;
-    // Le filtre est automatiquement appliqué visuellement
-  finally
-    // Ne pas libérer si on veut garder l'effet
-    // Filtre.Free;
-  end;
+  Filtre.Parent := Image1;
 end;
 
 // Appliquer un filtre sépia
@@ -468,17 +469,21 @@ begin
   MediaPlayer1.Play;
 end;
 
-// Contrôles de lecture
+// Contrôles de lecture.
+// ⚠ TMediaPlayer n'expose pas de méthode Pause. Pour mettre en pause,
+//   on appelle Stop : la lecture s'arrête mais CurrentTime conserve sa
+//   valeur, ce qui permet de reprendre via Play depuis cet instant.
+//   Pour un vrai « stop » (retour au début), on remet CurrentTime à 0.
 procedure TFormMain.BtnPlayClick(Sender: TObject);  
 begin  
   if Assigned(MediaPlayer1) then
-    MediaPlayer1.Play;
+    MediaPlayer1.Play;  // reprend là où on s'est arrêté
 end;
 
 procedure TFormMain.BtnPauseClick(Sender: TObject);  
 begin  
   if Assigned(MediaPlayer1) then
-    MediaPlayer1.Stop;
+    MediaPlayer1.Stop;  // sans toucher à CurrentTime = pause
 end;
 
 procedure TFormMain.BtnStopClick(Sender: TObject);  
@@ -486,35 +491,50 @@ begin
   if Assigned(MediaPlayer1) then
   begin
     MediaPlayer1.Stop;
-    MediaPlayer1.CurrentTime := 0;
+    MediaPlayer1.CurrentTime := 0;  // retour au début
   end;
 end;
 ```
 
 ### Contrôles avancés de lecture vidéo
 
+> 💡 **Unité de `TMediaPlayer.CurrentTime` et `Duration`.** Ces propriétés sont de type `TMediaTime` (alias d'`Int64`) exprimé en **unités de 100 nanosecondes** (« ticks ») depuis le début du média. La constante `MediaTimeScale = 10000000` représente le nombre de ticks par seconde — il faut donc diviser par `MediaTimeScale` pour obtenir des secondes avant tout `FormatDateTime`.
+
 ```pascal
+uses
+  FMX.Media;  // pour MediaTimeScale
+
 // Barre de progression de la vidéo
 procedure TFormMain.TimerVideoTimer(Sender: TObject);  
-begin  
+var  
+  SecondesActuelles, SecondesTotales: Double;
+begin
   if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
   begin
+    // Le ratio CurrentTime / Duration est sans unité : OK directement
     TrackBar1.Value := (MediaPlayer1.CurrentTime / MediaPlayer1.Duration) * 100;
-    LabelTemps.Text := FormatDateTime('nn:ss', MediaPlayer1.CurrentTime / SecsPerDay) +
-      ' / ' + FormatDateTime('nn:ss', MediaPlayer1.Duration / SecsPerDay);
+
+    // Conversion ticks → secondes → TDateTime fractionnel pour FormatDateTime
+    SecondesActuelles := MediaPlayer1.CurrentTime / MediaTimeScale;
+    SecondesTotales   := MediaPlayer1.Duration   / MediaTimeScale;
+
+    LabelTemps.Text :=
+      FormatDateTime('nn:ss', SecondesActuelles / SecsPerDay) + ' / ' +
+      FormatDateTime('nn:ss', SecondesTotales   / SecsPerDay);
   end;
 end;
 
 // Permettre à l'utilisateur de naviguer dans la vidéo
+// (CurrentTime et Duration sont dans la même unité, donc le ratio
+//  reste correct sans conversion explicite)
 procedure TFormMain.TrackBar1Change(Sender: TObject);  
 begin  
   if Assigned(MediaPlayer1) and (MediaPlayer1.Duration > 0) then
-  begin
-    MediaPlayer1.CurrentTime := Round((TrackBar1.Value / 100) * MediaPlayer1.Duration);
-  end;
+    MediaPlayer1.CurrentTime :=
+      Round((TrackBar1.Value / 100) * MediaPlayer1.Duration);
 end;
 
-// Contrôle du volume
+// Contrôle du volume (Volume va de 0.0 à 1.0)
 procedure TFormMain.TrackBarVolumeChange(Sender: TObject);  
 begin  
   if Assigned(MediaPlayer1) then
@@ -528,21 +548,28 @@ L'enregistrement audio permet de créer des applications comme des dictaphones, 
 
 ### Configuration de l'enregistreur audio
 
+> 💡 **`TMicrophone` n'existe pas en standard dans FMX.** L'enregistrement audio passe par la classe abstraite `TAudioCaptureDevice` que l'on récupère via `TCaptureDeviceManager`. Le code ci-dessous montre la **bonne** approche.
+
 ```pascal
 uses
   FMX.Media;
 
-// Configurer l'enregistreur audio
 procedure TFormMain.FormCreate(Sender: TObject);  
-begin  
-  MicrophoneAudioCaptureDevice1 := TMicrophone.Create;
-end;
-
-procedure TFormMain.FormDestroy(Sender: TObject);  
-begin  
-  MicrophoneAudioCaptureDevice1.Free;
+var  
+  Devices: TArray<TCaptureDevice>;
+begin
+  // On récupère le premier périphérique audio disponible (typiquement
+  // le micro intégré ; sur un appareil avec plusieurs micros, on peut
+  // itérer pour choisir).
+  Devices := TCaptureDeviceManager.Current.GetDevicesByMediaType(TMediaType.Audio);
+  if Length(Devices) > 0 then
+    FAudioCapture := TAudioCaptureDevice(Devices[0])
+  else
+    ShowMessage('Aucun microphone disponible');
 end;
 ```
+
+> Pas de `Free` explicite : `TCaptureDeviceManager` possède les périphériques retournés et s'occupe de leur libération.
 
 ### Enregistrer un fichier audio
 
@@ -552,61 +579,59 @@ procedure TFormMain.BtnDemarrerEnregistrementClick(Sender: TObject);
 var  
   CheminFichier: string;
 begin
+  if not Assigned(FAudioCapture) then
+    Exit;
+
   CheminFichier := TPath.Combine(TPath.GetDocumentsPath,
     'enregistrement_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.wav');
 
-  if Assigned(MicrophoneAudioCaptureDevice1) then
-  begin
-    MicrophoneAudioCaptureDevice1.FileName := CheminFichier;
-    MicrophoneAudioCaptureDevice1.StartCapture;
+  FAudioCapture.FileName := CheminFichier;
+  FAudioCapture.StartCapture;
 
-    BtnDemarrerEnregistrement.Enabled := False;
-    BtnArreterEnregistrement.Enabled := True;
-    LabelStatus.Text := 'Enregistrement en cours...';
-  end;
+  BtnDemarrerEnregistrement.Enabled := False;
+  BtnArreterEnregistrement.Enabled := True;
+  LabelStatus.Text := 'Enregistrement en cours...';
 end;
 
 // Arrêter l'enregistrement
 procedure TFormMain.BtnArreterEnregistrementClick(Sender: TObject);  
 begin  
-  if Assigned(MicrophoneAudioCaptureDevice1) then
-  begin
-    MicrophoneAudioCaptureDevice1.StopCapture;
+  if not Assigned(FAudioCapture) then
+    Exit;
 
-    BtnDemarrerEnregistrement.Enabled := True;
-    BtnArreterEnregistrement.Enabled := False;
-    LabelStatus.Text := 'Enregistrement terminé';
+  FAudioCapture.StopCapture;
 
-    ShowMessage('Audio enregistré : ' + MicrophoneAudioCaptureDevice1.FileName);
-  end;
+  BtnDemarrerEnregistrement.Enabled := True;
+  BtnArreterEnregistrement.Enabled := False;
+  LabelStatus.Text := 'Enregistrement terminé';
+
+  ShowMessage('Audio enregistré : ' + FAudioCapture.FileName);
 end;
 ```
 
 ### Visualisation du niveau audio
 
+> 💡 `TAudioCaptureDevice` n'expose **pas** de propriété `AudioLevel` standard : le niveau RMS doit être calculé à partir des échantillons audio. L'exemple ci-dessous est conceptuel ; pour une vraie barre de niveau, branchez-vous sur `OnSampleBufferReady` et calculez la RMS du buffer.
+
 ```pascal
-// Afficher le niveau audio pendant l'enregistrement
+// Pseudo-code : calcul de la RMS sur les échantillons audio
 procedure TFormMain.TimerNiveauAudioTimer(Sender: TObject);  
 var  
   Niveau: Single;
 begin
-  if Assigned(MicrophoneAudioCaptureDevice1) and
-     MicrophoneAudioCaptureDevice1.State = TCaptureDeviceState.Capturing then
-  begin
-    // Obtenir le niveau audio (0.0 à 1.0)
-    Niveau := MicrophoneAudioCaptureDevice1.AudioLevel;
+  if not Assigned(FAudioCapture) or
+     (FAudioCapture.State <> TCaptureDeviceState.Capturing) then
+    Exit;
 
-    // Afficher visuellement
-    ProgressBar1.Value := Niveau * 100;
+  Niveau := CalculerNiveauRMS;  // 0.0 à 1.0, à implémenter
 
-    // Changer la couleur selon le niveau
-    if Niveau > 0.8 then
-      ProgressBar1.Foreground.Color := TAlphaColors.Red
-    else if Niveau > 0.5 then
-      ProgressBar1.Foreground.Color := TAlphaColors.Orange
-    else
-      ProgressBar1.Foreground.Color := TAlphaColors.Green;
-  end;
+  ProgressBar1.Value := Niveau * 100;
+  if Niveau > 0.8 then
+    ProgressBar1.Foreground.Color := TAlphaColors.Red
+  else if Niveau > 0.5 then
+    ProgressBar1.Foreground.Color := TAlphaColors.Orange
+  else
+    ProgressBar1.Foreground.Color := TAlphaColors.Green;
 end;
 ```
 
@@ -662,38 +687,43 @@ L'accès à la caméra, au microphone et à la bibliothèque photo nécessite de
 
 ### Demander les permissions nécessaires
 
+> 💡 `PermissionsService` accepte des **chaînes** (les noms Android). Les constantes nommées du type `TPermissions.CAMERA` n'existent pas dans la RTL standard — on déclare donc les chaînes utiles en haut du fichier.
+
 ```pascal
 uses
   System.Permissions, FMX.DialogService;
 
-// Demander la permission pour la caméra
+const
+  PERM_CAMERA              = 'android.permission.CAMERA';
+  PERM_RECORD_AUDIO        = 'android.permission.RECORD_AUDIO';
+  PERM_READ_EXT_STORAGE    = 'android.permission.READ_EXTERNAL_STORAGE';   // ⚠ obsolète Android 13+
+  PERM_WRITE_EXT_STORAGE   = 'android.permission.WRITE_EXTERNAL_STORAGE';  // ⚠ obsolète Android 13+
+  PERM_READ_MEDIA_IMAGES   = 'android.permission.READ_MEDIA_IMAGES';       // Android 13+
+  PERM_READ_MEDIA_VIDEO    = 'android.permission.READ_MEDIA_VIDEO';        // Android 13+
+  PERM_READ_MEDIA_AUDIO    = 'android.permission.READ_MEDIA_AUDIO';        // Android 13+
+  PERM_READ_MEDIA_VISUAL_USER_SELECTED =
+    'android.permission.READ_MEDIA_VISUAL_USER_SELECTED';                  // Android 14+
+
 procedure TFormMain.DemanderPermissionCamera;  
 begin  
   PermissionsService.RequestPermissions(
-    [TPermissions.CAMERA],
+    [PERM_CAMERA],
     procedure(const APermissions: TArray<string>;
               const AGrantResults: TArray<TPermissionStatus>)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
-      begin
-        // Permission accordée
-        ActiverCamera;
-      end
+        ActiverCamera
       else
-      begin
         TDialogService.ShowMessage(
           'L''accès à la caméra est nécessaire pour cette fonctionnalité.');
-      end;
-    end
-  );
+    end);
 end;
 
-// Demander la permission pour le microphone
 procedure TFormMain.DemanderPermissionMicrophone;  
 begin  
   PermissionsService.RequestPermissions(
-    [TPermissions.RECORD_AUDIO],
+    [PERM_RECORD_AUDIO],
     procedure(const APermissions: TArray<string>;
               const AGrantResults: TArray<TPermissionStatus>)
     begin
@@ -702,35 +732,48 @@ begin
         DemarrerEnregistrement
       else
         ShowMessage('Permission microphone refusée');
-    end
-  );
+    end);
 end;
 
-// Demander la permission pour accéder aux photos
+// Photos : on demande les permissions ciblées sur Android 13+
+// et les anciennes sur les versions antérieures. À adapter selon
+// votre `targetSdkVersion`.
 procedure TFormMain.DemanderPermissionPhotos;  
-begin  
-  PermissionsService.RequestPermissions(
-    [TPermissions.READ_EXTERNAL_STORAGE, TPermissions.WRITE_EXTERNAL_STORAGE],
+var  
+  Perms: TArray<string>;
+begin
+  Perms := [PERM_READ_MEDIA_IMAGES, PERM_READ_MEDIA_VIDEO,
+            PERM_READ_EXT_STORAGE];  // les deux pour couvrir toutes les versions
+
+  PermissionsService.RequestPermissions(Perms,
     procedure(const APermissions: TArray<string>;
               const AGrantResults: TArray<TPermissionStatus>)
+    var
+      Accordee: Boolean;
+      i: Integer;
     begin
-      if (Length(AGrantResults) > 0) and
-         (AGrantResults[0] = TPermissionStatus.Granted) then
+      Accordee := False;
+      for i := 0 to High(AGrantResults) do
+        if AGrantResults[i] = TPermissionStatus.Granted then
+        begin
+          Accordee := True;
+          Break;
+        end;
+
+      if Accordee then
         OuvrirGalerie
       else
         ShowMessage('Permission refusée pour accéder aux photos');
-    end
-  );
+    end);
 end;
 ```
 
 ### Vérifier les permissions avant utilisation
 
 ```pascal
-// Vérifier si on a déjà les permissions
 function TFormMain.APermissionCamera: Boolean;  
 begin  
-  Result := PermissionsService.IsPermissionGranted(TPermissions.CAMERA);
+  Result := PermissionsService.IsPermissionGranted(PERM_CAMERA);
 end;
 
 procedure TFormMain.BtnPhotoClick(Sender: TObject);  
@@ -782,19 +825,23 @@ end;
 
 ### Gestion de la mémoire
 
+> ⚠ **Cycle de vie mobile (rappel).** `FormDeactivate` ne se déclenche **pas** quand l'utilisateur quitte l'application pour répondre à un appel ou consulter une autre app. Pour vraiment libérer la caméra et le média quand l'OS met votre application en arrière-plan, branchez-vous sur `IFMXApplicationEventService` (chapitre 15.1) et réagissez à `EnteredBackground` / `BecameActive`.
+
 ```pascal
-// Libérer les ressources quand on ne les utilise plus
-procedure TFormMain.FormDeactivate(Sender: TObject);  
+// À appeler depuis le handler IFMXApplicationEventService quand
+// l'événement TApplicationEvent.EnteredBackground se produit.
+procedure TFormMain.LibererRessourcesMultimedia;  
 begin  
-  // Arrêter la caméra
+  // Arrêter la caméra (libère le hardware pour les autres apps)
   if Assigned(Camera1) and Camera1.Active then
     Camera1.Active := False;
 
-  // Arrêter la lecture média
+  // Arrêter la lecture média (évite que l'audio continue en sourdine)
   if Assigned(MediaPlayer1) then
     MediaPlayer1.Stop;
 
-  // Libérer les grandes images
+  // Libérer les grandes images (très important : un bitmap 12 MP peut
+  // peser 50+ Mo en mémoire vive)
   Image1.Bitmap.SetSize(0, 0);
 end;
 ```
@@ -802,21 +849,27 @@ end;
 ### Compression d'images
 
 ```pascal
-// Compresser une image avant l'envoi
+uses
+  FMX.Surfaces, FMX.Graphics;
+
+// Compresser une image en JPEG avant l'envoi.
+// Qualite : 1..100 (90 = bonne qualité, 70 = compromis classique).
 procedure TFormMain.CompresserImage(Image: TBitmap; Qualite: Integer);  
 var  
   Stream: TMemoryStream;
   Surface: TBitmapSurface;
+  Params: TBitmapCodecSaveParams;
 begin
   Stream := TMemoryStream.Create;
   Surface := TBitmapSurface.Create;
   try
     Surface.Assign(Image);
 
-    // Sauvegarder avec compression JPEG
-    TBitmapCodecManager.SaveToStream(Stream, Surface, '.jpg');
+    // Le paramètre de qualité est passé via TBitmapCodecSaveParams
+    Params.Quality := Qualite;
+    TBitmapCodecManager.SaveToStream(Stream, Surface, '.jpg', @Params);
 
-    // Recharger l'image compressée
+    // Recharger l'image compressée pour remplacer l'originale
     Stream.Position := 0;
     Image.LoadFromStream(Stream);
   finally
@@ -981,7 +1034,7 @@ Les points clés à retenir :
 2. **Galerie** : Accédez facilement aux photos existantes de l'utilisateur
 3. **Manipulation d'images** : Redimensionnez, pivotez et appliquez des filtres
 4. **Vidéo** : Enregistrez et lisez des vidéos avec TMediaPlayer
-5. **Audio** : Enregistrez et lisez de l'audio avec TMicrophone et TMediaPlayer
+5. **Audio** : Enregistrez avec `TAudioCaptureDevice` (via `TCaptureDeviceManager`) et lisez avec `TMediaPlayer`
 6. **Permissions** : Demandez toujours les permissions nécessaires
 7. **Optimisation** : Gérez la mémoire et traitez les médias de façon asynchrone
 8. **Partage** : Permettez aux utilisateurs de partager leurs créations

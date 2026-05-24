@@ -406,27 +406,17 @@ begin
     end);
 end;
 
-// Vérifier l'intégrité du fichier avec un checksum MD5
+// Vérifier l'intégrité du fichier téléchargé.
+// ⚠ MD5 est cryptographiquement cassé depuis 2004 (collisions
+//   triviales). Pour une mise à jour OTA, utilisez SHA-256 au minimum
+//   — c'est ce que fait la fonction CalculerSHA256 plus bas dans la
+//   section « Signature et vérification des mises à jour ».
 function TFormMain.VerifierChecksum(CheminFichier, ChecksumAttendu: string): Boolean;  
 var  
   Checksum: string;
 begin
-  Checksum := CalculerMD5(CheminFichier);
+  Checksum := CalculerSHA256(CheminFichier);
   Result := SameText(Checksum, ChecksumAttendu);
-end;
-
-// Calculer le MD5 d'un fichier
-function TFormMain.CalculerMD5(CheminFichier: string): string;  
-var  
-  MD5: THashMD5;
-  FileStream: TFileStream;
-begin
-  FileStream := TFileStream.Create(CheminFichier, fmOpenRead);
-  try
-    Result := MD5.GetHashString(FileStream);
-  finally
-    FileStream.Free;
-  end;
 end;
 ```
 
@@ -592,25 +582,24 @@ end;
 ### Au démarrage de l'application
 
 ```pascal
-// Vérifier les mises à jour au démarrage
+// Vérifier les mises à jour au démarrage, sans bloquer l'interface.
 procedure TFormMain.FormCreate(Sender: TObject);  
 begin  
-  // Vérifier seulement si connecté à Internet
-  if EstConnecteInternet then
-  begin
-    // Ne pas bloquer l'interface, vérifier en arrière-plan
-    TTask.Run(
-      procedure
-      begin
-        Sleep(2000); // Attendre 2 secondes après le démarrage
+  TTask.Run(
+    procedure
+    begin
+      Sleep(2000);  // Laisser l'application démarrer
 
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            VerifierMiseAJour;
-          end);
-      end);
-  end;
+      if not EstConnecteInternet then
+        Exit;
+
+      // VerifierMiseAJour fait des appels réseau : on les exécute dans
+      // ce thread d'arrière-plan, pas dans Synchronize (qui bloquerait
+      // l'UI). Les ShowMessage / dialogues à l'intérieur de
+      // VerifierMiseAJour doivent eux-mêmes être marshalés via
+      // TThread.Queue/Synchronize.
+      VerifierMiseAJour;
+    end);
 end;
 ```
 
@@ -841,20 +830,21 @@ begin
   Result := SameText(Signature, SignatureAttendue);
 end;
 
-// Calculer le SHA256 d'un fichier
+// Calculer le SHA256 d'un fichier.
+// THashSHA2 (System.Hash) propose une méthode de classe pratique
+// GetHashStringFromFile qui s'occupe du streaming en interne :
+// pas besoin d'ouvrir et de gérer manuellement le TFileStream.
 function TFormMain.CalculerSHA256(CheminFichier: string): string;  
-var  
-  SHA256: THashSHA2;
-  FileStream: TFileStream;
-begin
-  FileStream := TFileStream.Create(CheminFichier, fmOpenRead);
-  try
-    Result := SHA256.GetHashString(FileStream);
-  finally
-    FileStream.Free;
-  end;
+begin  
+  Result := THashSHA2.GetHashStringFromFile(CheminFichier);
 end;
 ```
+
+> ⚠ **Hash ≠ signature.** `CalculerSHA256` produit une **empreinte** : elle prouve qu'un fichier n'a pas été altéré **si** on connaît déjà la bonne empreinte. Elle ne prouve **pas** qui a produit le fichier. Pour une vraie signature numérique (qui prouve l'origine ET l'intégrité), il faut un algorithme asymétrique :  
+> - **RSA-PSS** ou **ECDSA** sur la courbe P-256 (compatible avec OpenSSL, .NET, Java, etc.),  
+> - **Ed25519** (plus rapide et plus court, recommandé pour les nouveaux projets).  
+>  
+> Côté serveur, on signe le hash avec la **clé privée** ; côté client, on vérifie avec la **clé publique** *embarquée dans l'application*. Delphi 13 dispose des unités `System.Hash` (hash) mais pas d'API native pour la signature asymétrique : on passe typiquement par OpenSSL (`Indy.libeay32`) ou les API natives `SecurityFramework` (iOS) / `java.security` (Android).
 
 ### Communication sécurisée (HTTPS)
 
@@ -869,9 +859,11 @@ end;
 // Configurer le client HTTP pour la sécurité
 procedure TFormMain.ConfigurerHTTPSecurise(HttpClient: THTTPClient);  
 begin  
-  // Valider les certificats SSL
-  HttpClient.SecureProtocols := [THTTPSecureProtocol.SSL3,
-                                   THTTPSecureProtocol.TLS12];
+  // N'autoriser que les versions modernes et sûres de TLS.
+  // ⚠ SSL 3.0, TLS 1.0 et TLS 1.1 sont obsolètes et vulnérables
+  //   (BEAST, POODLE…) — ne les incluez jamais dans une nouvelle application.
+  HttpClient.SecureProtocols := [THTTPSecureProtocol.TLS12,
+                                 THTTPSecureProtocol.TLS13];
 
   // Timeout raisonnable
   HttpClient.ConnectionTimeout := 30000; // 30 secondes
@@ -1031,10 +1023,11 @@ begin
     begin
       FOctetsTelecharges := TFile.GetSize(FCheminLocal);
 
-      // Demander la suite du fichier avec Range header
-      SetLength(Headers, 1);
-      Headers[0].Name := 'Range';
-      Headers[0].Value := Format('bytes=%d-', [FOctetsTelecharges]);
+      // Demander la suite du fichier avec un en-tête Range.
+      // On utilise TNetHeader.Create plutôt que d'affecter directement
+      // les champs Name/Value (TNetHeader est un record immuable).
+      Headers := [TNetHeader.Create('Range',
+        Format('bytes=%d-', [FOctetsTelecharges]))];
 
       // Télécharger la suite
       HttpClient.CustomHeaders := Headers;

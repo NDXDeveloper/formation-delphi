@@ -26,7 +26,11 @@ Les appareils mobiles présentent des contraintes matérielles significatives pa
 
 L'interface utilisateur mobile repose sur des principes différents du desktop :
 
-**Écran tactile** : L'absence de souris et de clavier physique change complètement la façon dont l'utilisateur interagit avec l'application. Les boutons doivent être suffisamment grands pour être touchés avec un doigt (minimum 44x44 pixels recommandé).
+**Écran tactile** : L'absence de souris et de clavier physique change complètement la façon dont l'utilisateur interagit avec l'application. Les boutons doivent être suffisamment grands pour être touchés avec un doigt :
+- **iOS** : minimum **44 × 44 points** (Human Interface Guidelines d'Apple),
+- **Android** : minimum **48 × 48 dp** (Material Design Guidelines de Google).
+
+Avec FireMonkey, on travaille en *points* logiques indépendants de la densité d'écran (la propriété `Size.Width`/`Size.Height` d'un `TControl` est exprimée dans cette unité), ce qui permet de viser directement ces tailles minimales.
 
 **Gestes** : Les utilisateurs s'attendent à pouvoir utiliser des gestes naturels comme le glissement (swipe), le pincement (pinch) pour zoomer, ou le balayage (scroll).
 
@@ -52,27 +56,54 @@ Une application mobile peut se trouver dans différents états :
 
 ### Gestion des événements de cycle de vie
 
-Dans Delphi, vous devez intercepter les événements de cycle de vie pour sauvegarder l'état de votre application :
+> ⚠ **À ne pas confondre.** `OnActivate` / `OnDeactivate` d'un `TForm` réagissent au changement de **focus** d'un formulaire interne à l'application : ils ne sont **pas** déclenchés quand l'utilisateur quitte l'app pour répondre à un appel ou consulter une autre application. Pour ces transitions système (arrière-plan / premier plan, suspension, mémoire faible), il faut s'abonner au service `IFMXApplicationEventService`.
 
 ```pascal
-// L'application passe en arrière-plan
-procedure TForm1.FormDeactivate(Sender: TObject);  
-begin  
-  // Sauvegarder l'état actuel
-  // Arrêter les animations
-  // Fermer les connexions réseau non essentielles
+uses
+  FMX.Platform;
+
+procedure TForm1.FormCreate(Sender: TObject);  
+var  
+  AppEventSvc: IFMXApplicationEventService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(
+       IFMXApplicationEventService, AppEventSvc) then
+    AppEventSvc.SetApplicationEventHandler(GererEvenementApp);
 end;
 
-// L'application revient au premier plan
-procedure TForm1.FormActivate(Sender: TObject);  
-begin  
-  // Restaurer l'état
-  // Relancer les animations
-  // Reconnecter si nécessaire
+function TForm1.GererEvenementApp(AAppEvent: TApplicationEvent;
+  AContext: TObject): Boolean;
+begin
+  case AAppEvent of
+    TApplicationEvent.WillBecomeInactive:
+      // Sur le point de passer en arrière-plan : sauvegarder vite
+      SauvegarderEtatRapide;
+
+    TApplicationEvent.EnteredBackground:
+      // L'app est en arrière-plan : arrêter timers, animations, GPS…
+      MettreEnPause;
+
+    TApplicationEvent.WillBecomeForeground:
+      // L'app va revenir au premier plan : préparer la reprise
+      PreparerReprise;
+
+    TApplicationEvent.BecameActive:
+      // L'app est de nouveau active : relancer ce qui était suspendu
+      Reprendre;
+
+    TApplicationEvent.LowMemory:
+      // iOS / Android : le système réclame de la mémoire
+      LibererCachesNonEssentiels;
+
+    TApplicationEvent.FinishedLaunching:
+      // L'application vient de finir son démarrage
+      ;
+  end;
+  Result := True;  // True = l'événement a été traité
 end;
 ```
 
-**Point important** : L'utilisateur peut quitter votre application à tout moment, et celle-ci peut être fermée par le système sans avertissement. Vous devez sauvegarder régulièrement l'état de l'application.
+**Point important** : sur iOS comme sur Android, le système peut **tuer** votre application sans préavis quand elle est en arrière-plan (manque de mémoire, économie d'énergie). Sauvegardez l'état utile dès `WillBecomeInactive` / `EnteredBackground` — n'attendez pas un `OnDestroy` du formulaire, il peut ne jamais être appelé.
 
 ## Permissions et sécurité
 
@@ -91,34 +122,38 @@ Votre application doit demander explicitement l'autorisation d'accéder à certa
 - Bluetooth
 - Accès réseau
 
+> 📖 Le **chapitre 15.10** détaille la stratégie complète : demander au bon moment, gérer les refus définitifs, ouvrir les paramètres système, respecter le RGPD et l'App Tracking Transparency (iOS 14.5+), stocker les secrets de manière sécurisée (PBKDF2, AES-GCM, Keychain/Keystore).
+
 ### Demande de permissions dans Delphi
 
 Vous devez configurer les permissions dans les paramètres du projet et les demander au moment opportun dans votre code :
 
 ```pascal
 uses
-  FMX.MediaLibrary;
+  System.Permissions, FMX.DialogService;
 
 procedure TForm1.BtnPhotoClick(Sender: TObject);  
 begin  
-  // Vérifier et demander la permission
+  // On passe directement la chaîne complète de la permission Android.
+  // Sur iOS, PermissionsService accepte aussi cette chaîne — elle est
+  // ignorée et la vraie demande passe par les API du SDK iOS lors de
+  // l'accès à la fonctionnalité (caméra, photothèque, etc.) après
+  // déclaration de la clé NSCameraUsageDescription dans Info.plist.
   PermissionsService.RequestPermissions(
-    [JStringToString(TJManifest_permission.JavaClass.CAMERA)],
+    ['android.permission.CAMERA'],
     procedure(const APermissions: TArray<string>;
               const AGrantResults: TArray<TPermissionStatus>)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
-      begin
-        // Permission accordée, utiliser la caméra
-        PrendrePhoto;
-      end
+        PrendrePhoto
       else
         ShowMessage('Permission refusée');
-    end
-  );
+    end);
 end;
 ```
+
+> 💡 La syntaxe `JStringToString(TJManifest_permission.JavaClass.CAMERA)` qu'on voit parfois ne compile **que** sur Android (les classes JNI `TJManifest_permission` n'existent pas côté iOS). Utiliser la chaîne en dur reste donc préférable pour un code multi-plateforme. Le chapitre 15.10 détaille la gestion complète des permissions avec une classe utilitaire `TPermissionHelper`.
 
 **Bonne pratique** : Expliquez toujours à l'utilisateur pourquoi vous avez besoin d'une permission avant de la demander.
 
@@ -191,18 +226,37 @@ Les applications mobiles doivent gérer intelligemment les différents types de 
 
 ### Détection du type de connexion dans Delphi
 
+La détection du type de connexion (WiFi vs cellulaire) passe par les API natives — il n'y a pas de fonction RTL multiplateforme pour cela. Voici un exemple Android via JNI :
+
 ```pascal
+{$IFDEF ANDROID}
 uses
-  System.Net.HttpClient;
+  Androidapi.JNI.Net, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.Helpers, Androidapi.JNI.JavaTypes;
 
 function EstConnecteEnWiFi: Boolean;  
-begin  
-  // Logique pour détecter le type de connexion
-  // Adapter le comportement de l'application en conséquence
+var  
+  ConnectivityManager: JConnectivityManager;
+  NetworkInfo: JNetworkInfo;
+begin
+  Result := False;
+  ConnectivityManager := TJConnectivityManager.Wrap(
+    (TAndroidHelper.Context.getSystemService(
+       TJContext.JavaClass.CONNECTIVITY_SERVICE) as ILocalObject).GetObjectID);
+
+  if Assigned(ConnectivityManager) then
+  begin
+    NetworkInfo := ConnectivityManager.getActiveNetworkInfo;
+    if Assigned(NetworkInfo) and NetworkInfo.isConnected then
+      Result := NetworkInfo.getType = TJConnectivityManager.JavaClass.TYPE_WIFI;
+  end;
 end;
+{$ENDIF}
 ```
 
-**Stratégie recommandée** : Votre application doit idéalement fonctionner hors ligne avec une synchronisation des données lorsque la connexion est rétablie.
+> 💡 Sur iOS, on utilise `SCNetworkReachability` (via `Macapi.Reachability` ou un wrapper Objective-C). Le chapitre 14 du présent cours détaille l'encapsulation d'API natives multiplateforme.
+
+**Stratégie recommandée** : Votre application doit idéalement fonctionner hors ligne avec une synchronisation des données lorsque la connexion est rétablie. Sur cellulaire, évitez les téléchargements lourds (mises à jour OTA, vidéos, gros médias) ou demandez confirmation à l'utilisateur — son forfait data n'est pas illimité.
 
 ## Notifications
 
@@ -244,6 +298,8 @@ end;
 
 Envoyées depuis un serveur, elles nécessitent une configuration plus complexe avec Firebase Cloud Messaging (FCM) pour Android et Apple Push Notification Service (APNs) pour iOS.
 
+> 📖 Le **chapitre 15.5** détaille toute la mise en œuvre : notifications locales avec `TNotificationCenter`, gestion des actions, planification récurrente, permissions Android 13+ (`POST_NOTIFICATIONS`), et notifications push avec `TPushService` côté client.
+
 ## Stockage local
 
 Les applications mobiles doivent souvent stocker des données localement.
@@ -269,6 +325,8 @@ end;
 **Base de données SQLite** : Pour des données structurées plus complexes, SQLite est intégré dans Delphi via FireDAC
 
 **Préférences système** : Pour des paramètres simples clé-valeur
+
+> 📖 Le **chapitre 15.6** approfondit ces options : `TIniFile` pour les préférences, sérialisation JSON, base SQLite via FireDAC (CRUD complet, index, transactions), et stratégies de synchronisation avec un serveur distant.
 
 ## Conclusion
 

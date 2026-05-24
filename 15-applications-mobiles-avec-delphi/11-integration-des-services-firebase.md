@@ -112,7 +112,7 @@ FCM permet d'envoyer des notifications push à vos utilisateurs sur Android et i
 
 1. Dans la console Firebase, allez dans **Project Settings** (⚙️)
 2. Onglet **Cloud Messaging**
-3. Notez votre **Server Key** (pour envoyer des notifications depuis votre serveur)
+3. Pour l'envoi côté serveur, créez un **compte de service** (Service Account) via l'onglet « Comptes de service » des Project Settings — la *Server Key* historique n'est plus utilisable (voir l'encadré sur FCM HTTP v1 plus bas).
 
 ### Configuration dans Delphi
 
@@ -124,7 +124,11 @@ Cocher :
 ☑ Receive Boot Completed
 ☑ Internet
 ☑ Access Network State
+☑ Post Notifications      ← OBLIGATOIRE depuis Android 13 (API 33)
+☑ Wake Lock               ← Recommandé pour traiter les notifications en veille
 ```
+
+> ⚠ **Android 13+ : permission `POST_NOTIFICATIONS` obligatoire.** Sans cette permission *runtime* explicitement demandée à l'utilisateur (via `PermissionsService.RequestPermissions`), l'application **ne reçoit aucune notification** sur les appareils Android 13 ou supérieur, même si le token FCM est correctement obtenu.
 
 **Composants nécessaires** :
 
@@ -186,6 +190,7 @@ var
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JSONData: TJSONObject;
+  PostStream: TStringStream;
 begin
   HttpClient := THTTPClient.Create;
   try
@@ -193,11 +198,18 @@ begin
     try
       JSONData.AddPair('device_token', Token);
       JSONData.AddPair('user_id', GetUserID);
-      JSONData.AddPair('platform', 'android');
+      JSONData.AddPair('platform', {$IFDEF ANDROID}'android'{$ELSE}'ios'{$ENDIF});
 
-      Response := HttpClient.Post(
-        'https://votreserveur.com/api/register-device',
-        TStringStream.Create(JSONData.ToString, TEncoding.UTF8));
+      // Stream créé explicitement pour pouvoir le libérer ensuite —
+      // THTTPClient.Post ne prend pas la propriété du stream.
+      PostStream := TStringStream.Create(JSONData.ToString, TEncoding.UTF8);
+      try
+        Response := HttpClient.Post(
+          'https://votreserveur.com/api/register-device',
+          PostStream);
+      finally
+        PostStream.Free;
+      end;
 
       if Response.StatusCode = 200 then
         ShowMessage('Token enregistré sur le serveur')
@@ -261,52 +273,69 @@ Vous pouvez envoyer des notifications depuis votre serveur ou depuis la console 
 
 **Depuis votre serveur** (exemple en pseudo-code) :
 
+> 🚨 **API FCM Legacy décommissionnée le 20 juin 2024.** L'endpoint historique `https://fcm.googleapis.com/fcm/send` ainsi que l'authentification par *Server Key* (`Authorization: key=…`) **ne fonctionnent plus**. Toute application qui dépendait encore de cette API renvoie désormais des erreurs HTTP 404 ou 401.  
+>  
+> La **nouvelle API FCM HTTP v1** utilise :  
+> - URL : `https://fcm.googleapis.com/v1/projects/<PROJECT_ID>/messages:send`  
+> - Authentification : **OAuth 2.0** avec un *access token* généré depuis un compte de service Google (fichier JSON téléchargé depuis Firebase Console > Project Settings > Service Accounts).  
+> - Format du payload légèrement différent (objet `message: { token, notification, data }`).  
+>  
+> L'OAuth 2.0 doit être effectué **côté serveur** (jamais dans l'app cliente : le secret du compte de service ne doit pas se retrouver dans un APK/IPA).
+
 ```pascal
-// Exemple de requête HTTP pour envoyer une notification via FCM
-procedure EnvoyerNotificationFCM(const DeviceToken, Titre, Message: string);  
-var  
+// Exemple de requête HTTP vers FCM HTTP v1 — l'access token OAuth 2.0
+// doit avoir été obtenu au préalable côté serveur à partir du JSON du
+// compte de service Google (scope https://www.googleapis.com/auth/firebase.messaging).
+procedure EnvoyerNotificationFCM(const ProjectID, AccessToken,
+  DeviceToken, Titre, Message: string);
+var
   HttpClient: THTTPClient;
   Headers: TNetHeaders;
-  JSONData: TJSONObject;
+  Body, MessageObj, Notification, Data: TJSONObject;
+  PostStream: TStringStream;
+  URL: string;
   Response: IHTTPResponse;
 begin
   HttpClient := THTTPClient.Create;
   try
-    // Headers avec la Server Key de Firebase
-    SetLength(Headers, 2);
-    Headers[0].Name := 'Authorization';
-    Headers[0].Value := 'key=VOTRE_SERVER_KEY_FIREBASE';
-    Headers[1].Name := 'Content-Type';
-    Headers[1].Value := 'application/json';
+    // En-têtes : Bearer token OAuth 2.0 + JSON
+    Headers := [
+      TNetHeader.Create('Authorization', 'Bearer ' + AccessToken),
+      TNetHeader.Create('Content-Type',  'application/json')
+    ];
 
-    // Corps de la requête
-    JSONData := TJSONObject.Create;
+    // Corps de la requête au format FCM HTTP v1
+    Body := TJSONObject.Create;
     try
-      JSONData.AddPair('to', DeviceToken);
+      MessageObj := TJSONObject.Create;
+      MessageObj.AddPair('token', DeviceToken);
 
-      var Notification := TJSONObject.Create;
+      Notification := TJSONObject.Create;
       Notification.AddPair('title', Titre);
-      Notification.AddPair('body', Message);
-      Notification.AddPair('sound', 'default');
+      Notification.AddPair('body',  Message);
+      MessageObj.AddPair('notification', Notification);
 
-      JSONData.AddPair('notification', Notification);
-
-      // Données personnalisées
-      var Data := TJSONObject.Create;
-      Data.AddPair('action', 'open_screen');
+      // Données personnalisées (toujours des chaînes en HTTP v1)
+      Data := TJSONObject.Create;
+      Data.AddPair('action',    'open_screen');
       Data.AddPair('screen_id', 'main');
-      JSONData.AddPair('data', Data);
+      MessageObj.AddPair('data', Data);
 
-      // Envoyer
-      Response := HttpClient.Post(
-        'https://fcm.googleapis.com/fcm/send',
-        TStringStream.Create(JSONData.ToString, TEncoding.UTF8),
-        nil,
-        Headers);
+      Body.AddPair('message', MessageObj);
 
-      Memo1.Lines.Add('Réponse FCM : ' + Response.ContentAsString);
+      URL := Format(
+        'https://fcm.googleapis.com/v1/projects/%s/messages:send',
+        [ProjectID]);
+
+      PostStream := TStringStream.Create(Body.ToString, TEncoding.UTF8);
+      try
+        Response := HttpClient.Post(URL, PostStream, nil, Headers);
+        Memo1.Lines.Add('Réponse FCM : ' + Response.ContentAsString);
+      finally
+        PostStream.Free;
+      end;
     finally
-      JSONData.Free;
+      Body.Free;
     end;
   finally
     HttpClient.Free;
@@ -322,11 +351,17 @@ Firebase Analytics vous permet de suivre le comportement des utilisateurs dans v
 
 Analytics est automatiquement activé quand vous ajoutez le fichier `google-services.json`.
 
+> 💡 **À propos de l'API Analytics dans Delphi.** Les unités `FMX.Analytics` / `System.Analytics` et l'interface `IFMXAnalyticsService` utilisées ci-dessous sont **conceptuelles** : la RTL Delphi standard ne fournit pas de wrapper officiel pour le SDK Firebase Analytics. En pratique, on intègre Analytics via :  
+> - une bibliothèque tierce (TMS FNC Cloud Pack, Kastri Free, etc.),  
+> - ou un wrapper JNI/Objective-C maison autour des SDK natifs Firebase Analytics.  
+>  
+> Le code ci-dessous illustre uniquement le **pattern** d'utilisation côté Delphi ; les noms exacts d'unités et d'interfaces dépendent de la bibliothèque que vous intégrez.
+
 ### Logger des événements
 
 ```pascal
 uses
-  FMX.Analytics, System.Analytics;
+  FMX.Analytics, System.Analytics;  // ⚠ unités conceptuelles, voir note ci-dessus
 
 // Logger un événement simple
 procedure TFormMain.LoggerEvenement(const NomEvenement: string);  
@@ -378,14 +413,10 @@ end;
 
 Firebase propose des événements standards pour les cas d'usage courants :
 
-```pascal
-// Ouverture de l'application
-procedure TFormMain.FormCreate(Sender: TObject);  
-begin  
-  LoggerEvenement('app_open');
-end;
+> 💡 **Événements automatiquement collectés.** Firebase Analytics enregistre **automatiquement** une liste d'événements sans intervention de votre part : `first_open`, `session_start`, `app_remove`, `screen_view` (sur Android avec le SDK officiel), `notification_open`, etc. Vous n'avez **pas besoin** de logger manuellement `app_open` au démarrage — sauf si vous voulez ajouter vos propres paramètres. La liste complète est dans la documentation Firebase.
 
-// Connexion utilisateur
+```pascal
+// Connexion utilisateur (événement standard)
 procedure TFormMain.UtilisateurConnecte;  
 begin  
   LoggerEvenementAvecParams('login',
@@ -499,7 +530,28 @@ Dans la console Firebase :
 
 ### Accès à la base de données avec REST
 
+> 💡 **Nom de domaine Realtime Database.** Le suffixe dépend de la région choisie à la création :  
+> - `https://<projet>.firebaseio.com` (US central, ancien format),  
+> - `https://<projet>-default-rtdb.firebaseio.com` (US central, format actuel),  
+> - `https://<projet>-default-rtdb.europe-west1.firebasedatabase.app` (UE),  
+> - `https://<projet>-default-rtdb.asia-southeast1.firebasedatabase.app` (Asie).  
+>  
+> L'URL exacte est visible dans la console Firebase, onglet *Realtime Database*. Les exemples ci-dessous utilisent l'ancien format pour la lisibilité ; remplacez par votre URL réelle.
+
 Firebase expose la Realtime Database via une API REST :
+
+> ⚠ **Attention aux fuites mémoire avec `TStringStream`.** Dans les exemples qui suivent, le pattern `HttpClient.Post(URL, TStringStream.Create(...))` est utilisé pour la lisibilité, **mais il fuit le stream** : `THTTPClient` n'en prend pas la propriété. En production, créez le stream dans une variable et libérez-le dans un bloc `try..finally` :  
+>  
+> ```pascal  
+> PostStream := TStringStream.Create(Body.ToString, TEncoding.UTF8);  
+> try  
+>   Response := HttpClient.Post(URL, PostStream);  
+> finally  
+>   PostStream.Free;  
+> end;  
+> ```  
+>  
+> Voir l'exemple `EnvoyerNotificationFCM` plus haut pour le pattern complet.
 
 ```pascal
 uses
@@ -676,6 +728,8 @@ Firebase Authentication gère l'authentification des utilisateurs avec différen
 
 Firebase fournit une API REST pour l'authentification :
 
+> 💡 **L'`API_KEY` Firebase côté client n'est PAS un secret.** Contrairement à une *Server Key* ou un *Service Account JSON* (qui DOIVENT rester côté serveur), l'API Key publique Firebase peut être embarquée dans l'application. Elle sert uniquement à identifier le projet — la sécurité repose sur les **règles de sécurité** Firestore/RTDB/Storage et les **restrictions d'API** que vous configurez dans la console Google Cloud (restrictions par bundle ID, SHA-1 Android, etc.). C'est pour cette raison que le même fichier `google-services.json` ou `GoogleService-Info.plist` est livré tel quel dans l'APK / IPA, sans crainte.
+
 ```pascal
 // Inscription avec email/mot de passe
 procedure TFormMain.InscrireUtilisateur(const Email, MotDePasse: string);  
@@ -848,19 +902,20 @@ service firebase.storage {
 
 ### Upload de fichier
 
+> 💡 **API Firebase Storage REST.** L'endpoint d'upload binaire simple est `/v0/b/{bucket}/o?name={chemin}&uploadType=media`. Pour des métadonnées riches (Content-Disposition, *custom metadata*), on utilise plutôt `uploadType=multipart` avec un corps `multipart/related`. La requête doit être authentifiée par un token Firebase Auth (voir section Authentication).
+
 ```pascal
 uses
-  System.Net.HttpClient, System.IOUtils;
+  System.Net.HttpClient, System.Net.URLClient, System.IOUtils, System.NetEncoding;
 
-// Uploader une image vers Firebase Storage
-procedure TFormMain.UploaderImage(const CheminLocal: string);  
+// Uploader une image vers Firebase Storage (uploadType=media)
+procedure TFormMain.UploaderImage(const CheminLocal, AuthToken: string);  
 var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   FileStream: TFileStream;
-  URL: string;
+  URL, NomFichier: string;
   Headers: TNetHeaders;
-  NomFichier: string;
 begin
   if not TFile.Exists(CheminLocal) then
   begin
@@ -873,17 +928,18 @@ begin
   try
     NomFichier := TPath.GetFileName(CheminLocal);
 
-    // URL de Firebase Storage
+    // L'encodage des / dans le path se fait via TNetEncoding.URL
     URL := Format(
-      'https://firebasestorage.googleapis.com/v0/b/votre-projet.appspot.com/o/images%%2F%s',
-      [NomFichier]);
+      'https://firebasestorage.googleapis.com/v0/b/votre-projet.appspot.com/o?' +
+      'uploadType=media&name=%s',
+      [TNetEncoding.URL.Encode('images/' + NomFichier)]);
 
-    // Headers
-    SetLength(Headers, 1);
-    Headers[0].Name := 'Content-Type';
-    Headers[0].Value := 'image/jpeg';
+    // En-têtes : type MIME + token Firebase Auth
+    Headers := [
+      TNetHeader.Create('Content-Type',  'image/jpeg'),
+      TNetHeader.Create('Authorization', 'Firebase ' + AuthToken)
+    ];
 
-    // Upload
     Response := HttpClient.Post(URL, FileStream, nil, Headers);
 
     if Response.StatusCode in [200, 201] then
@@ -891,17 +947,19 @@ begin
       var JSONResponse := TJSONObject.ParseJSONValue(
         Response.ContentAsString) as TJSONObject;
       try
-        var DownloadURL := JSONResponse.GetValue<string>('downloadTokens');
+        // ⚠ `downloadTokens` est le token, pas l'URL finale.
+        // L'URL complète est de la forme :
+        //   https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>
+        //     ?alt=media&token=<downloadTokens>
+        var DownloadToken := JSONResponse.GetValue<string>('downloadTokens');
         ShowMessage('Image uploadée avec succès !');
-        Memo1.Lines.Add('URL : ' + DownloadURL);
+        Memo1.Lines.Add('Token de téléchargement : ' + DownloadToken);
       finally
         JSONResponse.Free;
       end;
     end
     else
-    begin
       ShowMessage('Erreur d''upload : ' + Response.StatusCode.ToString);
-    end;
   finally
     FileStream.Free;
     HttpClient.Free;
@@ -980,16 +1038,21 @@ end;
 
 ### 1. Gestion des quotas
 
-Firebase offre un plan gratuit généreux, mais avec des limites :
+Firebase offre un plan gratuit généreux, mais avec des limites strictes au-delà desquelles le service est suspendu (plan Spark) ou facturé (plan Blaze, *pay-as-you-go*).
+
+**Limites principales du plan Spark (gratuit) en 2026** (vérifier les valeurs exactes sur [firebase.google.com/pricing](https://firebase.google.com/pricing)) :
+
+| Service | Limite |
+|---|---|
+| **Realtime Database** | 1 Go de stockage, 10 Go/mois en téléchargement, 100 connexions simultanées |
+| **Cloud Firestore** | 1 Gio de stockage, 50 000 lectures/jour, 20 000 écritures/jour, 20 000 suppressions/jour |
+| **Cloud Storage** | 5 Go stockés, 1 Go/jour en téléchargement, 20 000 opérations d'upload/jour |
+| **Authentication (téléphone)** | 10 000 vérifications/mois |
+| **Cloud Messaging (FCM)** | **Aucune limite** (gratuit et illimité, même sur Blaze) |
+| **Analytics** | **Aucune limite** sur le nombre d'événements |
 
 ```pascal
-// Limites quotidiennes du plan gratuit (Spark)
-const
-  QUOTA_REALTIME_DB_DOWNLOAD = 10 * 1024 * 1024 * 1024; // 10 GB/mois
-  QUOTA_STORAGE_DOWNLOAD = 1 * 1024 * 1024 * 1024;      // 1 GB/jour
-  QUOTA_FCM_MESSAGES = 10000;                           // illimité en fait
-
-// Optimiser les requêtes
+// Optimiser les requêtes pour éviter d'exploser les quotas
 procedure TFormMain.OptimiserRequetes;  
 begin  
   // ✅ BON : Charger seulement ce qui est nécessaire
@@ -997,6 +1060,9 @@ begin
 
   // ❌ MAUVAIS : Charger toute la base
   // ChargerDonnees('');
+
+  // ✅ MIEUX : Utiliser le cache local (voir section suivante)
+  //           et ne re-télécharger que les changements
 end;
 ```
 
@@ -1027,24 +1093,30 @@ end;
 
 ### 3. Gestion des erreurs
 
+> 💡 Une requête HTTP qui renvoie un code 4xx ou 5xx ne lève **pas** d'exception : `THTTPClient` retourne simplement une `IHTTPResponse` avec `StatusCode` non-200. Pour réagir aux erreurs HTTP, on inspecte `Response.StatusCode` ; pour réagir aux erreurs de transport (DNS, TLS, timeout, pas de réseau), on capture `ENetException` et `ENetHTTPClientException`.
+
 ```pascal
 procedure TFormMain.RequeteFirebaseSafe;  
-begin  
+var  
+  Response: IHTTPResponse;
+begin
   try
-    // Requête Firebase
-    LireDonnees;
-  except
-    on E: ENetHTTPClientException do
-    begin
-      case E.StatusCode of
-        401: ShowMessage('Non authentifié');
-        403: ShowMessage('Accès refusé');
-        404: ShowMessage('Donnée introuvable');
-        500: ShowMessage('Erreur serveur Firebase');
-      else
-        ShowMessage('Erreur : ' + E.Message);
-      end;
+    Response := ExecuterRequeteFirebase;  // retourne la réponse HTTP
+
+    case Response.StatusCode of
+      200, 201, 204: TraiterReponse(Response);
+      401:           ShowMessage('Non authentifié — token expiré ?');
+      403:           ShowMessage('Accès refusé par les règles Firebase');
+      404:           ShowMessage('Donnée introuvable');
+      429:           ShowMessage('Quota Firebase dépassé, réessayer plus tard');
+      500..599:      ShowMessage('Erreur côté serveur Firebase');
+    else
+      ShowMessage('Code HTTP inattendu : ' + Response.StatusCode.ToString);
     end;
+  except
+    // Erreurs de transport : pas de réseau, DNS, certificat, timeout…
+    on E: ENetException do
+      ShowMessage('Problème réseau : ' + E.Message);
     on E: Exception do
       ShowMessage('Erreur inattendue : ' + E.Message);
   end;
@@ -1053,34 +1125,73 @@ end;
 
 ### 4. Cache et mode hors ligne
 
+> ⚠ **Cycle de vie des `TJSONValue` en cache.** Un `TJSONValue` est un objet — il faut décider qui le possède. La règle simple : si le cache stocke un `TJSONValue`, c'est lui qui est responsable de le `Free` (dans son destructeur et lors d'un remplacement). Pour éviter les doubles libérations, on **clone** la valeur à l'ajout au cache et à la lecture, ce qui découple le cycle de vie côté appelant.
+
 ```pascal
-// Mettre en cache les données Firebase
 type
   TFirebaseCache = class
   private
     FCache: TDictionary<string, TJSONValue>;
   public
+    constructor Create;
+    destructor Destroy; override;
+
+    // Le cache prend une copie (Clone) pour rester indépendant
     procedure AjouterAuCache(const Cle: string; Valeur: TJSONValue);
+    // Retourne un Clone — l'appelant doit le libérer (ou nil si absent)
     function ObtenirDuCache(const Cle: string): TJSONValue;
     function EstEnCache(const Cle: string): Boolean;
+    procedure Vider;
   end;
+
+destructor TFirebaseCache.Destroy;  
+begin  
+  Vider;
+  FCache.Free;
+  inherited;
+end;
+
+procedure TFirebaseCache.AjouterAuCache(const Cle: string; Valeur: TJSONValue);  
+var  
+  Ancien: TJSONValue;
+begin
+  // Libérer l'éventuelle valeur précédente avant de remplacer
+  if FCache.TryGetValue(Cle, Ancien) then
+    Ancien.Free;
+
+  FCache.AddOrSetValue(Cle, Valeur.Clone as TJSONValue);
+end;
+
+function TFirebaseCache.ObtenirDuCache(const Cle: string): TJSONValue;  
+var  
+  Brut: TJSONValue;
+begin
+  if FCache.TryGetValue(Cle, Brut) then
+    Result := Brut.Clone as TJSONValue
+  else
+    Result := nil;
+end;
 
 // Utilisation
 procedure TFormMain.ChargerAvecCache(const Path: string);  
-begin  
+var  
+  Donnees: TJSONValue;
+begin
   if Cache.EstEnCache(Path) then
   begin
-    // Utiliser le cache
-    var Donnees := Cache.ObtenirDuCache(Path);
-    AfficherDonnees(Donnees);
+    Donnees := Cache.ObtenirDuCache(Path);
+    try
+      AfficherDonnees(Donnees);
+    finally
+      Donnees.Free;  // libération du clone retourné
+    end;
   end
   else
   begin
-    // Charger depuis Firebase
     ChargerDepuisFirebase(Path,
       procedure(Donnees: TJSONValue)
       begin
-        Cache.AjouterAuCache(Path, Donnees);
+        Cache.AjouterAuCache(Path, Donnees);  // le cache clone en interne
         AfficherDonnees(Donnees);
       end);
   end;
@@ -1138,17 +1249,27 @@ end;
 
 ### Erreur d'authentification Firebase
 
-```pascal
-// Vérifier le fichier de configuration
-procedure TFormMain.VerifierConfiguration;  
-begin  
-  {$IFDEF ANDROID}
-  var CheminConfig := TPath.Combine(
-    TPath.GetDocumentsPath, 'google-services.json');
+> ⚠ **Où se trouve `google-services.json` à l'exécution ?** Si vous l'avez déployé via *Project > Deployment* dans `assets\internal\`, son chemin sur l'appareil Android est obtenu par `TPath.GetHomePath` (pas `GetDocumentsPath`). Sur iOS, `GoogleService-Info.plist` est dans le bundle de l'application — accessible via `TPath.GetHomePath` ou les API natives `NSBundle`. La vérification doit cibler le bon répertoire selon votre configuration Deployment.
 
-  if not TFile.Exists(CheminConfig) then
-    ShowMessage('Fichier google-services.json manquant !');
+```pascal
+// Vérifier que le fichier de configuration Firebase est bien déployé.
+// ⚠ Le chemin dépend du « Remote Path » configuré dans Project >
+//   Deployment. Avec le réglage par défaut (assets/internal/ sur
+//   Android, StartUp\Documents\ sur iOS), c'est GetHomePath et non
+//   GetDocumentsPath qu'il faut interroger.
+procedure TFormMain.VerifierConfiguration;  
+var  
+  CheminConfig: string;
+begin
+  {$IFDEF ANDROID}
+  CheminConfig := TPath.Combine(TPath.GetHomePath, 'google-services.json');
   {$ENDIF}
+  {$IFDEF IOS}
+  CheminConfig := TPath.Combine(TPath.GetHomePath, 'GoogleService-Info.plist');
+  {$ENDIF}
+
+  if (CheminConfig <> '') and not TFile.Exists(CheminConfig) then
+    ShowMessage('Fichier de configuration Firebase manquant : ' + CheminConfig);
 end;
 ```
 

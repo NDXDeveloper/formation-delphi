@@ -130,6 +130,10 @@ Project > Options > Application > Splash Images
 - iPhone : 640x1136, 750x1334, 1242x2208
 - iPad : 1024x768, 2048x1536
 
+> 💡 **Évolution récente des splash screens.**  
+> - **Android 12+** : la plateforme impose son propre *Splash Screen API* — l'icône de l'application est animée par le système, vos images statiques personnalisées ne sont plus affichées (sauf si vous personnalisez via le thème). Delphi a adapté son comportement depuis la version 11.  
+> - **iOS** : Apple a remplacé les images de splash statiques par des **LaunchScreen Storyboards** (un layout vectoriel adaptatif). Delphi génère automatiquement ce storyboard à partir de votre image de splash — c'est l'apparence finale sur iPhone et iPad récents.
+
 ### Permissions et configuration
 
 Vérifiez que toutes les permissions nécessaires sont correctement déclarées :
@@ -144,8 +148,16 @@ Project > Options > Uses Permissions (Android)
 - ACCESS_COARSE_LOCATION : Localisation approximative
 - CAMERA : Appareil photo
 - RECORD_AUDIO : Microphone
-- READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE : Stockage
+- READ_EXTERNAL_STORAGE / WRITE_EXTERNAL_STORAGE : Stockage (⚠ obsolètes pour les médias sur Android 13+, voir ci-dessous)
 - VIBRATE : Vibration
+
+> ⚠ **Android 13+ (API 33) et accès aux médias.** Les permissions historiques `READ_EXTERNAL_STORAGE` et `WRITE_EXTERNAL_STORAGE` ne donnent plus accès aux photos, vidéos et musiques. Pour cibler `targetSdkVersion = 33` ou supérieur (exigence du Play Store en 2026), il faut désormais déclarer les permissions ciblées :  
+> - `READ_MEDIA_IMAGES` (photos)  
+> - `READ_MEDIA_VIDEO` (vidéos)  
+> - `READ_MEDIA_AUDIO` (musique)  
+> - `READ_MEDIA_VISUAL_USER_SELECTED` (Android 14+, sélection partielle via le *Photo Picker*)  
+>  
+> Voir le chapitre 15.4 pour le détail de la déclaration côté Delphi.
 
 **Important** : Ne demandez que les permissions réellement nécessaires. Les utilisateurs sont méfiants envers les applications qui demandent trop de permissions.
 
@@ -172,14 +184,17 @@ Le Google Play Store est la boutique d'applications officielle pour Android.
 Delphi peut générer deux formats pour Android :
 
 **APK (Android Package)** :
-- Format traditionnel
-- Un fichier pour toutes les architectures (ARM, x86)
-- Plus gros mais simple
+- Format historique
+- Un fichier par architecture (arm32, arm64, x86_64 pour les émulateurs)
+- Encore utile pour le sideloading et la distribution hors Play Store
+- ⚠ Ne peut plus être utilisé pour publier une **nouvelle** application sur le Play Store
 
 **AAB (Android App Bundle)** :
-- Format moderne recommandé par Google
-- Google génère des APK optimisés pour chaque appareil
-- Fichiers plus petits pour les utilisateurs
+- **Obligatoire pour toute nouvelle application** publiée sur le Play Store (depuis août 2021)
+- Google génère automatiquement des APK optimisés par appareil (architecture, densité d'écran, langue), réduisant la taille téléchargée par l'utilisateur
+- Format **recommandé par défaut** depuis Delphi 11 Alexandria
+
+> 💡 **Architectures Android à cibler en 2026.** Google impose au minimum **arm64-v8a** pour toute soumission au Play Store. Inclure aussi **armeabi-v7a** (32 bits) reste utile pour les vieux appareils, mais représente une part de marché de plus en plus faible. **x86 / x86_64** ne servent qu'aux émulateurs de développement — n'incluez pas ces architectures dans une release Play Store.
 
 **Compiler pour la production dans Delphi** :
 
@@ -412,9 +427,10 @@ Cette étape est la plus complexe du processus iOS.
 
 **Installer PAServer sur Mac** :
 
-1. Sur votre Mac, installez les outils Platform Assistant depuis le CD d'installation Delphi
-2. Ou téléchargez depuis le site Embarcadero
-3. Lancez PAServer sur le Mac
+1. Sur votre Mac, installez les **outils Platform Assistant** (PAServer) depuis :
+   - L'installeur RAD Studio téléchargé depuis votre compte Embarcadero (section *Additional Options* > *macOS PAServer*),
+   - Ou le dossier `PAServer` situé dans votre installation Delphi côté Windows (à copier sur le Mac et lancer).
+2. Lancez PAServer sur le Mac (par défaut sur le port 64211)
 
 **Configurer la connexion dans Delphi** :
 
@@ -460,15 +476,15 @@ Delphi compile l'application sur le Mac via PAServer et génère un fichier .IPA
 
 **Captures d'écran** :
 
-Apple exige des captures pour différentes tailles d'appareils :
+Apple exige des captures pour différentes tailles d'appareils. Les tailles **obligatoires en 2026** (les anciennes 5.5" et 6.5" ne sont plus requises pour une nouvelle soumission) sont :
 
-- **iPhone 6.7"** : 1290 x 2796 pixels (iPhone 14 Pro Max, etc.)
-- **iPhone 6.5"** : 1242 x 2688 pixels (iPhone 11 Pro Max, etc.)
-- **iPhone 5.5"** : 1242 x 2208 pixels (iPhone 8 Plus, etc.)
-- **iPad Pro 12.9"** : 2048 x 2732 pixels
-- **iPad Pro (3ème gen) 11"** : 1668 x 2388 pixels
+- **iPhone 6.9"** : 1320 × 2868 pixels (iPhone 16 Pro Max, 15 Pro Max)
+- **iPhone 6.7"** : 1290 × 2796 pixels (iPhone 14/15/16, 14/15/16 Plus)
+- **iPhone 6.5"** : 1242 × 2688 pixels (encore acceptée mais optionnelle)
+- **iPad Pro 13"** : 2064 × 2752 pixels (M4)
+- **iPad Pro 12.9"** : 2048 × 2732 pixels (6e gén.)
 
-Minimum 3 captures, maximum 10 par taille d'appareil.
+Minimum 3 captures, maximum 10 par taille d'appareil. Apple accepte aussi désormais qu'une seule taille soit fournie (la plus grande de chaque famille) — elle est automatiquement adaptée pour les autres écrans.
 
 **Conseils** :
 - Utilisez des captures d'écran réelles de votre application
@@ -517,24 +533,41 @@ Minimum 3 captures, maximum 10 par taille d'appareil.
 - Indiquez si elles sont liées à l'utilisateur
 - Indiquez si elles sont utilisées pour du tracking
 
-### Étape 8 : Uploader le build avec Application Loader
+### Étape 8 : Uploader le build
 
-**Option 1 : Via Xcode** (sur Mac)
+> 💡 **« Application Loader » n'existe plus** : l'outil historique a été retiré de Xcode 11. Les méthodes actuelles (2026) sont **Transporter** (le plus simple), **Xcode Organizer**, ou la ligne de commande via `xcrun altool` / `xcrun notarytool`.
+
+**Option 1 : Via Xcode Organizer** (sur Mac)
 1. Ouvrez **Xcode**
 2. Window > Organizer
-3. Sélectionnez votre .IPA
-4. Cliquez sur **Upload to App Store**
+3. Sélectionnez votre archive (ou importez votre .IPA via *Distribute App*)
+4. Cliquez sur **Distribute App** > **App Store Connect** > **Upload**
 
-**Option 2 : Via Transporter** (application Apple)
-1. Téléchargez Transporter depuis le Mac App Store
-2. Glissez-déposez votre fichier .IPA
-3. Cliquez sur **Deliver**
+**Option 2 : Via Transporter** (recommandé pour les builds Delphi)
+1. Téléchargez **Transporter** depuis le Mac App Store
+2. Connectez-vous avec votre Apple ID développeur
+3. Glissez-déposez votre fichier .IPA
+4. Cliquez sur **Deliver**
 
-**Option 3 : Via ligne de commande**
+**Option 3 : Via ligne de commande avec une clé API App Store Connect**
+
+L'authentification par mot de passe applicatif (`--password`) reste possible mais Apple recommande maintenant les **clés API App Store Connect** (plus sûres, révocables, et compatibles avec l'authentification à deux facteurs sans frottement). Créez la clé dans App Store Connect > Users and Access > Integrations > Keys, téléchargez le fichier `.p8` une fois pour toutes, et :
+
 ```bash
-xcrun altool --upload-app --type ios --file "chemin/vers/votre/app.ipa" \
-  --username "votre@email.com" --password "mot-de-passe-app-specific"
+# Avec une API Key (recommandé)
+xcrun altool --upload-app --type ios \
+  --file "chemin/vers/votre/app.ipa" \
+  --apiKey "ABCDE12345" \
+  --apiIssuer "12345678-90ab-cdef-1234-567890abcdef"
+
+# Variante historique (mot de passe applicatif) — toujours fonctionnelle
+xcrun altool --upload-app --type ios \
+  --file "chemin/vers/votre/app.ipa" \
+  --username "votre@email.com" \
+  --password "@keychain:AC_PASSWORD"  # mot de passe stocké dans le Keychain
 ```
+
+> 🔒 Ne mettez **jamais** le mot de passe applicatif en clair dans un script versionné. Utilisez `@keychain:NomDeLEntree` pour pointer vers une entrée du trousseau macOS, ou — mieux — la clé API ci-dessus.
 
 ### Étape 9 : Soumettre pour validation
 
@@ -672,11 +705,14 @@ Les avis influencent fortement les téléchargements.
 - Ne harcelez pas les utilisateurs
 - Utilisez l'API native de demande d'avis
 
+> 💡 **À propos de l'API de demande d'avis.** Côté iOS, l'API native s'appelle `SKStoreReviewController.requestReview` (depuis iOS 10.3, classe disponible via `iOSapi.StoreKit`). Côté Android, Google fournit l'*In-App Review API* via les Play Core Libraries. Delphi 13 expose ces fonctionnalités via un service de plateforme dont le nom exact peut varier selon les versions (`IFMXRequestReviewService`, `IFMXRatingService`, etc.). Le code ci-dessous est volontairement générique : si le service n'est pas disponible dans votre version, vous pouvez basculer sur l'appel natif via `iOSapi.StoreKit` ou ouvrir directement la fiche du Store dans le navigateur.
+
 ```pascal
 uses
   FMX.Platform;
 
-// Demander un avis avec l'API native
+// Demander un avis avec l'API native (exemple conceptuel,
+// adapter le nom du service selon la version de Delphi)
 procedure TFormMain.DemanderAvis;  
 var  
   RatingService: IFMXRatingService;
@@ -698,6 +734,12 @@ begin
     DemanderAvis;
 end;
 ```
+
+> 💡 **Limites imposées par les plateformes.**  
+> - **iOS** : `SKStoreReviewController.requestReview` peut être appelée librement, mais Apple **ignore** silencieusement la demande au-delà de **3 fois par an et par utilisateur** (par bundle ID). Vous n'avez aucune garantie que le dialogue apparaisse — c'est intentionnel pour ne pas spammer.  
+> - **Android** : l'*In-App Review API* applique un *quota* opaque côté Google Play : la fenêtre n'apparaît pas à chaque appel. Comme sur iOS, ne **jamais** afficher de message « Notez-nous » avant l'appel — l'API gère elle-même la décision d'afficher ou non.  
+>  
+> Ne déclenchez la demande qu'après une **action positive** (objectif atteint, tâche terminée, partage réussi), jamais après une erreur ou un échec.
 
 - Répondez à tous les avis (positifs et négatifs)
 - Corrigez les problèmes mentionnés dans les avis négatifs
@@ -748,10 +790,18 @@ end;
 
 ### Publicité avec AdMob
 
+> ⚠ **L'unité `FMX.Advertising` n'existe pas en standard** dans la VCL/FMX Delphi 13. Pour intégrer Google AdMob dans une application Delphi, il faut passer par :  
+> - une **bibliothèque tierce** (TMS FNC Maps/Ads, Kastri Free, etc.),  
+> - ou un **wrapper JNI/Objective-C** manuel autour des SDK natifs AdMob Android et Google Mobile Ads iOS.  
+>  
+> Le pseudo-code suivant illustre simplement le principe d'utilisation — il **ne compilera pas tel quel** avec une installation Delphi vierge.
+
 ```pascal
-// Exemple d'intégration publicitaire (conceptuel)
+// Exemple d'intégration publicitaire — pseudo-code conceptuel
+// (les composants TBannerAd / TInterstitialAd ne font pas
+//  partie de FMX en standard, ils proviennent d'une lib tierce)
 uses
-  FMX.Advertising;
+  FMX.Advertising;  // unité fournie par une bibliothèque tierce
 
 procedure TFormMain.AfficherBanniere;  
 begin  
@@ -784,6 +834,12 @@ Les achats in-app permettent de vendre du contenu ou des fonctionnalités direct
 2. Créez un nouveau produit
 3. Remplissez les informations
 4. Définissez les prix par région
+
+> 💰 **Commission prélevée par les stores (à connaître impérativement avant de fixer vos prix)**  
+> - **Apple App Store** : 30 % par défaut, ramenée à **15 %** pour les développeurs réalisant moins de 1 M$/an de chiffre d'affaires App Store (programme *Small Business Program*), et **15 %** sur les abonnements après la première année.  
+> - **Google Play** : 15 % sur le **premier million** de dollars de revenus par an par développeur, puis 30 % au-delà. 15 % sur tous les abonnements (depuis 2022).  
+>  
+> Pour le contenu **physique** (livraison de biens, services réels), aucune commission n'est due — vous pouvez utiliser un paiement externe (Stripe, PayPal…). La commission ne s'applique qu'au **contenu numérique** consommé dans l'app.
 
 ## Analyse et amélioration continue
 

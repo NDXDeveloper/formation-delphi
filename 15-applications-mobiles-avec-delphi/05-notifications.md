@@ -106,7 +106,11 @@ begin
     Notification.EnableSound := True;
 
     // Ajouter un badge (petit chiffre sur l'icône de l'app)
-    Notification.Number := 3; // Affiche "3" sur l'icône
+    // ⚠ Sur iOS, c'est natif et géré par le système. Sur Android,
+    //   c'est le lanceur qui décide (Samsung et Pixel récents le
+    //   gèrent, d'autres l'ignorent). Ne jamais en faire un canal
+    //   d'information critique : c'est purement décoratif.
+    Notification.Number := 3;
 
     // Programmer pour maintenant
     Notification.FireDate := Now;
@@ -147,32 +151,21 @@ begin
   end;
 end;
 
-// Autres intervalles de répétition disponibles
-procedure TFormMain.ExemplesRepetition;  
-var  
-  Notification: TNotification;
-begin
-  // Toutes les minutes (utile pour les tests)
-  Notification.RepeatInterval := TRepeatInterval.Minute;
+// Récapitulatif des valeurs disponibles pour RepeatInterval.
+// ⚠ Code purement illustratif — chaque affectation est indépendante,
+//   on ne réutilise PAS la même variable Notification pour plusieurs
+//   intervalles différents en pratique : créez UNE notification par
+//   planning souhaité via NotificationCenter.CreateNotification.
 
-  // Toutes les heures
-  Notification.RepeatInterval := TRepeatInterval.Hour;
-
-  // Tous les jours
-  Notification.RepeatInterval := TRepeatInterval.Day;
-
-  // Toutes les semaines
-  Notification.RepeatInterval := TRepeatInterval.Week;
-
-  // Tous les mois
-  Notification.RepeatInterval := TRepeatInterval.Month;
-
-  // Tous les ans
-  Notification.RepeatInterval := TRepeatInterval.Year;
-
-  // Aucune répétition (par défaut)
-  Notification.RepeatInterval := TRepeatInterval.None;
-end;
+// TRepeatInterval.None    — aucune répétition (valeur par défaut)
+// TRepeatInterval.Second  — toutes les secondes
+// TRepeatInterval.Minute  — toutes les minutes (utile pour les tests)
+// TRepeatInterval.Hour    — toutes les heures
+// TRepeatInterval.Day     — tous les jours
+// TRepeatInterval.Weekday — chaque jour de semaine (lun → ven)
+// TRepeatInterval.Week    — toutes les semaines (même jour)
+// TRepeatInterval.Month   — tous les mois (même date)
+// TRepeatInterval.Year    — tous les ans (même date)
 ```
 
 ### Notification avec actions
@@ -280,6 +273,9 @@ end;
 ### Minuteur et alarme
 
 ```pascal
+uses
+  System.DateUtils;  // pour IncMinute
+
 // Créer un minuteur
 procedure TFormMain.DemarrerMinuteur(Minutes: Integer);  
 var  
@@ -293,8 +289,11 @@ begin
       ' minutes est terminé.';
     Notification.EnableSound := True;
 
-    // Programmer dans X minutes
-    Notification.FireDate := Now + EncodeTime(0, Minutes, 0, 0);
+    // ⚠ Ne PAS faire `Now + EncodeTime(0, Minutes, 0, 0)` :
+    //   EncodeTime n'accepte que 0..59 pour le champ minute,
+    //   donc Minutes >= 60 lèverait une exception.
+    //   On utilise IncMinute (System.DateUtils) qui ne plafonne pas.
+    Notification.FireDate := IncMinute(Now, Minutes);
 
     NotificationCenter.ScheduleNotification(Notification);
 
@@ -337,6 +336,9 @@ end;
 ### Rappels de tâches
 
 ```pascal
+uses
+  System.DateUtils;  // pour IncHour
+
 // Système de rappel de tâches
 type
   TTache = record
@@ -347,24 +349,26 @@ type
 
 procedure TFormMain.CreerRappelTache(Tache: TTache);  
 var  
-  Notification: TNotification;
+  Notification, NotificationJour: TNotification;
 begin
+  // ⚠ Notification.Name doit être unique et idéalement sans espaces /
+  //   accents. On utilise l'ID de la tâche plutôt que son titre.
   Notification := NotificationCenter.CreateNotification;
   try
-    Notification.Name := 'Tache_' + Tache.Titre;
+    Notification.Name := 'Tache_AvantEcheance_' + Tache.Titre;
     Notification.Title := 'Rappel : ' + Tache.Titre;
     Notification.AlertBody := Tache.Description;
     Notification.EnableSound := True;
 
-    // Rappel 1 heure avant l'échéance
-    Notification.FireDate := Tache.DateEcheance - EncodeTime(1, 0, 0, 0);
+    // Rappel 1 heure avant l'échéance (IncHour gère bien les bornes)
+    Notification.FireDate := IncHour(Tache.DateEcheance, -1);
 
     NotificationCenter.ScheduleNotification(Notification);
 
-    // Créer un second rappel le jour même
-    var NotificationJour := NotificationCenter.CreateNotification;
+    // Créer un second rappel exactement à l'échéance
+    NotificationJour := NotificationCenter.CreateNotification;
     try
-      NotificationJour.Name := 'Tache_Jour_' + Tache.Titre;
+      NotificationJour.Name := 'Tache_Echeance_' + Tache.Titre;
       NotificationJour.Title := 'Aujourd''hui : ' + Tache.Titre;
       NotificationJour.AlertBody := Tache.Description;
       NotificationJour.EnableSound := True;
@@ -462,12 +466,21 @@ uses
 var
   PushService: TPushService;
 
-// Initialiser le service de notifications push
+// Initialiser le service de notifications push.
+// Le nom du service dépend de la plateforme : « GCM » sur Android
+// (l'identifiant historique a été conservé même si la techno
+// derrière est FCM), « APS » sur iOS (Apple Push Service).
 procedure TFormMain.FormCreate(Sender: TObject);  
-begin  
+const  
+  {$IFDEF ANDROID}
+  PUSH_SERVICE_NAME = TPushService.TServiceNames.GCM;
+  {$ENDIF}
+  {$IFDEF IOS}
+  PUSH_SERVICE_NAME = TPushService.TServiceNames.APS;
+  {$ENDIF}
+begin
   PushService := TPushServiceManager.Instance.GetServiceByName(
-    TPushService.TServiceNames.GCM); // GCM pour Android
-    // ou TPushService.TServiceNames.APS pour iOS
+    PUSH_SERVICE_NAME);
 
   if Assigned(PushService) then
   begin
@@ -500,24 +513,37 @@ begin
   end;
 end;
 
-// Envoyer le token à votre serveur
+// Envoyer le token à votre serveur.
+// ⚠ NE PAS concaténer Token directement dans une chaîne JSON :
+//   un caractère " ou \ casserait le JSON. On construit le corps
+//   via TJSONObject qui échappe correctement.
 procedure TFormMain.EnvoyerTokenAuServeur(Token: string);  
 var  
   HttpClient: THTTPClient;
+  Body: TJSONObject;
   RequestBody: TStringStream;
+  Response: IHTTPResponse;
 begin
   HttpClient := THTTPClient.Create;
-  RequestBody := TStringStream.Create('{"token":"' + Token + '"}', TEncoding.UTF8);
+  Body := TJSONObject.Create;
   try
-    var Response := HttpClient.Post('https://votreserveur.com/api/register-device',
-      RequestBody);
+    Body.AddPair('token', Token);
 
-    if Response.StatusCode = 200 then
-      ShowMessage('Token enregistré sur le serveur')
-    else
-      ShowMessage('Erreur lors de l''enregistrement : ' + Response.StatusCode.ToString);
+    RequestBody := TStringStream.Create(Body.ToString, TEncoding.UTF8);
+    try
+      Response := HttpClient.Post(
+        'https://votreserveur.com/api/register-device', RequestBody);
+
+      if Response.StatusCode = 200 then
+        ShowMessage('Token enregistré sur le serveur')
+      else
+        ShowMessage('Erreur lors de l''enregistrement : ' +
+                    Response.StatusCode.ToString);
+    finally
+      RequestBody.Free;
+    end;
   finally
-    RequestBody.Free;
+    Body.Free;
     HttpClient.Free;
   end;
 end;
@@ -554,6 +580,15 @@ end;
 
 Voici un exemple de code serveur (en pseudo-code) pour envoyer une notification push :
 
+> ⚠ **API FCM Legacy décommissionnée le 20 juin 2024.** L'endpoint historique `https://fcm.googleapis.com/fcm/send` et l'authentification par clé serveur (`Authorization: key=…`) ne fonctionnent plus. La **nouvelle API FCM HTTP v1** utilise :  
+> - URL : `https://fcm.googleapis.com/v1/projects/<PROJECT_ID>/messages:send`  
+> - Authentification : **OAuth 2.0** avec un *access token* généré depuis un compte de service Google (fichier `service-account.json`, JWT court-vivant)  
+> - Corps : structure JSON différente (`{"message": {"token": "...", "notification": {...}}}`)  
+>  
+> Voir la documentation officielle : https://firebase.google.com/docs/cloud-messaging/migrate-v1  
+>  
+> Le code ci-dessous illustre la **structure historique** pour comprendre le principe ; il ne fonctionnera plus tel quel et doit être adapté à HTTP v1 + OAuth 2.0 pour tout nouveau projet.
+
 ```pascal
 // Exemple conceptuel d'envoi de notification via FCM (Firebase)
 // Ce code s'exécuterait sur votre serveur, pas dans l'application mobile
@@ -563,6 +598,7 @@ var
   HttpClient: THTTPClient;
   RequestBody: TJSONObject;
   Headers: TNetHeaders;
+  PostStream: TStringStream;
 begin
   // Créer le corps de la requête JSON
   RequestBody := TJSONObject.Create;
@@ -578,22 +614,23 @@ begin
 
     // Configurer les en-têtes avec votre clé serveur FCM
     SetLength(Headers, 2);
-    Headers[0].Name := 'Authorization';
-    Headers[0].Value := 'key=VOTRE_CLE_SERVEUR_FCM';
-    Headers[1].Name := 'Content-Type';
-    Headers[1].Value := 'application/json';
+    Headers[0] := TNetHeader.Create('Authorization',
+      'key=VOTRE_CLE_SERVEUR_FCM');
+    Headers[1] := TNetHeader.Create('Content-Type', 'application/json');
 
-    // Envoyer la requête à FCM
+    // Envoyer la requête à FCM (ancien endpoint legacy, voir avertissement)
     HttpClient := THTTPClient.Create;
+    PostStream := TStringStream.Create(RequestBody.ToString, TEncoding.UTF8);
     try
       var Response := HttpClient.Post(
         'https://fcm.googleapis.com/fcm/send',
-        TStringStream.Create(RequestBody.ToString, TEncoding.UTF8),
+        PostStream,
         nil,
         Headers);
 
       WriteLn('Notification envoyée : ' + Response.StatusCode.ToString);
     finally
+      PostStream.Free;
       HttpClient.Free;
     end;
   finally
@@ -615,8 +652,10 @@ uses
 // Vérifier et demander la permission pour les notifications
 procedure TFormMain.DemanderPermissionNotifications;  
 begin  
-  // Sur Android 13+ (API 33+), il faut demander la permission
   {$IFDEF ANDROID}
+  // Android 13+ (API 33+) : permission runtime POST_NOTIFICATIONS
+  // exigée. Sans elle, les notifications sont silencieusement
+  // ignorées par le système.
   PermissionsService.RequestPermissions(
     ['android.permission.POST_NOTIFICATIONS'],
     procedure(const APermissions: TArray<string>;
@@ -629,16 +668,19 @@ begin
         ActiverNotifications;
       end
       else
-      begin
         TDialogService.ShowMessage(
           'Les notifications sont désactivées. ' +
           'Vous pouvez les activer dans les paramètres.');
-      end;
     end);
   {$ENDIF}
 
-  // Sur iOS, la demande est gérée automatiquement lors de la première notification
   {$IFDEF IOS}
+  // iOS : la première `ScheduleNotification` ou `PresentNotification`
+  // déclenche automatiquement le dialogue système de demande
+  // d'autorisation. TNotificationCenter.AuthorizationStatus permet
+  // ensuite de vérifier le statut (Authorized / Denied / NotDetermined).
+  // Pour les notifications PUSH, l'autorisation est demandée lors
+  // de l'appel `PushService.Active := True`.
   ActiverNotifications;
   {$ENDIF}
 end;

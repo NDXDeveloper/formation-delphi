@@ -196,6 +196,7 @@ type
   TTacheManager = class
   private
     FTaches: TObjectList<TTache>;
+    FProchainID: Integer;
     FOnTacheModifiee: TNotifyEvent;
   public
     constructor Create;
@@ -237,6 +238,7 @@ constructor TTacheManager.Create;
 begin  
   inherited;
   FTaches := TObjectList<TTache>.Create(True); // True = possède les objets
+  FProchainID := 1;
 end;
 
 destructor TTacheManager.Destroy;  
@@ -262,8 +264,12 @@ begin
     raise Exception.Create(MessageErreur);
   end;
 
-  // Générer un ID unique (en production, utiliser la BD)
-  Result.ID := FTaches.Count + 1;
+  // ID monotone : on incrémente un compteur interne (FProchainID,
+  // initialisé à 1 dans Create). ⚠ Ne PAS faire `FTaches.Count + 1`
+  // car les ID se réutiliseraient après suppression et créeraient
+  // des collisions.
+  Result.ID := FProchainID;
+  Inc(FProchainID);
 
   FTaches.Add(Result);
 
@@ -465,6 +471,9 @@ end;
 
 class function TPlatformHelper.CheminDocuments: string;  
 begin  
+  // ⚠ Sur Delphi, le symbole MACOS est défini AUSSI sur iOS (iOS est
+  //   basé sur Darwin). Pour distinguer macOS « pur » d'iOS, il faut
+  //   tester IOS avant MACOS, ou imbriquer {$IFNDEF IOS} dans MACOS.
   {$IFDEF MSWINDOWS}
   Result := TPath.GetDocumentsPath; // C:\Users\[User]\Documents
   {$ENDIF}
@@ -473,12 +482,19 @@ begin
   Result := TPath.GetDocumentsPath; // /data/data/[package]/files
   {$ENDIF}
 
-  {$IFDEF IOS}
-  Result := TPath.GetDocumentsPath; // /Documents
+  {$IFDEF MACOS}
+    {$IFDEF IOS}
+    Result := TPath.GetDocumentsPath; // <sandbox>/Documents
+    {$ELSE}
+    // macOS pur : TPath.GetDocumentsPath suffit également
+    // (équivaut à ~/Documents) — utiliser GetHomePath + '/Documents'
+    // si vous préférez expliciter.
+    Result := TPath.GetDocumentsPath;
+    {$ENDIF}
   {$ENDIF}
 
-  {$IFDEF MACOS}
-  Result := TPath.GetHomePath + '/Documents';
+  {$IFDEF LINUX}
+  Result := TPath.GetDocumentsPath;
   {$ENDIF}
 end;
 
@@ -743,9 +759,14 @@ begin
       Item.Caption := Tache.Titre;
       Item.SubItems.Add(Tache.Description);
       Item.SubItems.Add(DateToStr(Tache.DateEcheance));
-      Item.Data := Pointer(Tache.ID);
+      // ⚠ Item.Data est typé Pointer. Pour stocker un entier comme ID,
+      //   préférez Item.SubItemData ou Item.GroupID si disponibles, ou
+      //   utilisez un cast via NativeInt (Item.Data := Pointer(NativeInt(Tache.ID)))
+      //   pour rester portable 32/64 bits.
+      Item.Data := Pointer(NativeInt(Tache.ID));
 
-      // Couleur selon l'urgence
+      // Couleur selon l'urgence (exemple — TListItem n'a pas de Color
+      // direct sur VCL ; en pratique on utilise OnCustomDrawItem)
       if Tache.EstEnRetard then
         Item.MakeVisible(False); // Ou autre style
     end;
@@ -886,15 +907,19 @@ end;
 
 procedure TFormMain.BtnAjouterClick(Sender: TObject);  
 var  
-  Titre, Description: string;
+  Valeurs: array of string;
 begin
-  // Sur mobile, on utiliserait un dialogue ou un formulaire dédié
-  // Ici simplifié avec InputQuery
-  if InputQuery('Nouvelle tâche', ['Titre', 'Description'],
-    [Titre, Description]) then
+  // ⚠ La surcharge FMX d'InputQuery prend un `var array of string`.
+  //   On ne peut pas passer un littéral [Titre, Description] : il faut
+  //   un vrai tableau pour récupérer les valeurs saisies.
+  SetLength(Valeurs, 2);
+  Valeurs[0] := '';
+  Valeurs[1] := '';
+  if InputQuery('Nouvelle tâche', ['Titre', 'Description'], Valeurs) then
   begin
-    if not Titre.IsEmpty then
-      FViewModel.AjouterNouvelleTache(Titre, Description, Now + 7, prMoyenne);
+    if not Valeurs[0].IsEmpty then
+      FViewModel.AjouterNouvelleTache(
+        Valeurs[0], Valeurs[1], Now + 7, prMoyenne);
   end;
 end;
 
@@ -1162,13 +1187,24 @@ end;
 
 class function TDialogueHelper.DemanderTexte(const Prompt: string;
   var Valeur: string): Boolean;
+{$IFNDEF MSWINDOWS}
+var
+  Valeurs: array of string;
+{$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
+  // Surcharge VCL : Valeur est un paramètre var modifié directement
   Result := InputQuery('Saisie', Prompt, Valeur);
   {$ELSE}
-  Result := InputQuery('Saisie', [Prompt], [Valeur]);
+  // Surcharge FMX : il faut un véritable tableau pour pouvoir le
+  // passer en `var array of string` — on ne peut pas mettre
+  // [Valeur] en argument d'un paramètre var (le tableau temporaire
+  // créé ne renvoie pas la modification à Valeur).
+  SetLength(Valeurs, 1);
+  Valeurs[0] := Valeur;
+  Result := InputQuery('Saisie', [Prompt], Valeurs);
   if Result then
-    Valeur := Valeur; // FMX retourne un tableau
+    Valeur := Valeurs[0];
   {$ENDIF}
 end;
 
@@ -1311,20 +1347,37 @@ end;
 ### 2. Utiliser des interfaces pour le découplage
 
 ```pascal
-// ✅ BON : Dépendre d'interfaces, pas d'implémentations concrètes
+// ✅ BON : Dépendre d'interfaces, pas d'implémentations concrètes.
+// ⚠ En Delphi, une interface doit avoir un GUID pour bénéficier du
+//   reference counting automatique (via QueryInterface). Générez-en
+//   un avec Ctrl+Shift+G dans l'IDE.
 type
   ILogger = interface
+    ['{8A1D4B0F-3E62-4C77-9A1E-1A4F8B5C7D11}']  // GUID unique
     procedure Log(const Message: string);
   end;
 
   TTacheManager = class
   private
-    FLogger: ILogger; // Interface, pas classe concrète
+    FLogger: ILogger;  // Interface, pas classe concrète
+  public
+    property Logger: ILogger read FLogger write FLogger;
   end;
 
-// On peut facilement changer l'implémentation
-FManager.Logger := TFileLogger.Create;  // Desktop  
-FManager.Logger := TCloudLogger.Create; // Mobile  
+// Les implémentations héritent typiquement de TInterfacedObject pour
+// hériter du reference counting (auto-libération via _Release).
+type
+  TFileLogger  = class(TInterfacedObject, ILogger)
+    procedure Log(const Message: string);
+  end;
+
+  TCloudLogger = class(TInterfacedObject, ILogger)
+    procedure Log(const Message: string);
+  end;
+
+// On peut facilement changer l'implémentation sans modifier TTacheManager
+FManager.Logger := TFileLogger.Create;   // Desktop  
+FManager.Logger := TCloudLogger.Create;  // Mobile  
 ```
 
 ### 3. Minimiser les dépendances de plateforme
@@ -1403,6 +1456,6 @@ Le partage de code entre applications mobile et desktop avec Delphi est l'un des
 
 Avec une bonne architecture, développer une application Delphi multi-plateformes devient un plaisir : vous écrivez la logique une fois, vous l'adaptez visuellement pour chaque plateforme, et vous obtenez des applications natives performantes partout. C'est le meilleur des deux mondes : productivité du développement cross-platform et qualité des applications natives.
 
-Dans les sections précédentes, nous avons exploré tous les aspects du développement mobile avec Delphi, depuis les fondamentaux jusqu'aux techniques avancées de publication et de partage de code. Vous disposez maintenant de toutes les connaissances nécessaires pour créer des applications mobiles professionnelles et robustes avec Delphi !
+Dans les prochaines sections, nous aborderons deux sujets transversaux essentiels : la gestion fine des **permissions et de la confidentialité** (RGPD, App Tracking Transparency, sécurisation des secrets) et l'intégration des services cloud **Firebase** (FCM, Analytics, Realtime Database, Authentication, Storage).
 
 ⏭️ [Permissions et confidentialité des données](/15-applications-mobiles-avec-delphi/10-permissions-et-confidentialite-des-donnees.md)

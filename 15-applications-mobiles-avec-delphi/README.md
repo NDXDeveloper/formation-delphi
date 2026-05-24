@@ -127,16 +127,19 @@ Pour suivre efficacement ce chapitre, vous devriez :
 
 Les sections suivantes de ce chapitre sont organisées pour construire progressivement vos compétences :
 
-1. **Spécificités du développement mobile** : Comprendre les particularités du monde mobile
-2. **Interface utilisateur tactile** : Concevoir pour les interactions tactiles
-3. **Accès aux capteurs** : Exploiter le GPS, l'accéléromètre et autres capteurs
-4. **Caméra et médias** : Capturer et manipuler photos et vidéos
-5. **Notifications** : Communiquer avec vos utilisateurs
-6. **Stockage et synchronisation** : Gérer les données localement et en ligne
-7. **Publication** : Déployer vos applications sur les stores
-8. **Techniques avancées** : Mises à jour OTA, partage de code, Firebase, etc.
+1. **Spécificités du développement mobile** — particularités du monde mobile, cycle de vie, contraintes matérielles
+2. **Interface utilisateur tactile** — gestes, contrôles adaptés, orientations, ergonomie tactile
+3. **Accès aux capteurs** — GPS, accéléromètre, gyroscope, boussole, luminosité
+4. **Utilisation de la caméra et des médias** — photo, vidéo, son, galerie, permissions médias Android 13+
+5. **Notifications** — notifications locales et notifications push (FCM HTTP v1, APNs)
+6. **Stockage local et synchronisation** — préférences, JSON, SQLite via FireDAC, synchronisation client/serveur
+7. **Publication sur App Store / Play Store** — signature, métadonnées, validation, ASO
+8. **Mises à jour OTA (Over The Air)** — déploiement de contenu sans repasser par les stores, rollback, sécurité
+9. **Partage de code entre applications mobile et desktop** — architecture en couches, MVVM, directives conditionnelles
+10. **Permissions et confidentialité des données** — RGPD, App Tracking Transparency, hachage et chiffrement des secrets
+11. **Intégration des services Firebase** — FCM, Analytics, Realtime Database, Authentication, Storage, Crashlytics
 
-Chaque section inclut des explications théoriques, des exemples de code concrets, et des conseils pratiques basés sur les meilleures pratiques du développement mobile.
+Chaque section inclut des explications théoriques, des exemples de code concrets, et des conseils pratiques basés sur les meilleures pratiques du développement mobile en 2026.
 
 ## Votre première application mobile
 

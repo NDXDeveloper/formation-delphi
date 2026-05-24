@@ -152,14 +152,29 @@ begin
 end;
 
 // Gérer le zoom
+// On stocke la distance précédente entre les deux doigts dans un champ
+// privé du formulaire (FDistancePrecedente: Single) pour pouvoir
+// calculer un facteur d'échelle relatif à chaque mouvement.
 procedure TFormMain.Image1Gesture(Sender: TObject;
   const EventInfo: TGestureEventInfo; var Handled: Boolean);
+var
+  Facteur: Single;
 begin
   if EventInfo.GestureID = igiZoom then
   begin
-    // Appliquer le facteur de zoom
-    Image1.Scale.X := Image1.Scale.X * EventInfo.Distance / EventInfo.InertialVelocity.X;
-    Image1.Scale.Y := Image1.Scale.Y * EventInfo.Distance / EventInfo.InertialVelocity.Y;
+    if TInteractiveGestureFlag.gfBegin in EventInfo.Flags then
+    begin
+      // Début du geste : on mémorise la distance initiale
+      FDistancePrecedente := EventInfo.Distance;
+    end
+    else if FDistancePrecedente > 0 then
+    begin
+      // Mouvement : on applique un facteur proportionnel
+      Facteur := EventInfo.Distance / FDistancePrecedente;
+      Image1.Scale.X := Image1.Scale.X * Facteur;
+      Image1.Scale.Y := Image1.Scale.Y * Facteur;
+      FDistancePrecedente := EventInfo.Distance;
+    end;
     Handled := True;
   end;
 end;
@@ -235,6 +250,8 @@ end;
 
 Votre application doit gérer à la fois le mode portrait (vertical) et paysage (horizontal).
 
+> 💡 `TLayout` est un simple conteneur, il n'a **pas** de propriété `Orientation`. Pour changer la disposition selon l'orientation, on rejoue les propriétés `Align`, `Size` et `Margins` des contrôles enfants — ou on utilise un conteneur orientable comme `TFlowLayout` (avec `Justify` / `JustifyTrailing`) ou `TGridLayout` (avec `ColumnCount`).
+
 ```pascal
 uses
   FMX.Types;
@@ -243,33 +260,34 @@ uses
 procedure TFormMain.FormResize(Sender: TObject);  
 begin  
   if Width > Height then
-  begin
-    // Mode paysage
-    AdapterInterfacePaysage;
-  end
+    AdapterInterfacePaysage
   else
-  begin
-    // Mode portrait
     AdapterInterfacePortrait;
-  end;
 end;
 
 procedure TFormMain.AdapterInterfacePortrait;  
 begin  
-  // Affichage vertical : empiler les éléments
-  Layout1.Orientation := TOrientation.Vertical;
-  Image1.Width := ClientWidth - 20;
+  // En portrait : image en haut, texte juste en dessous
+  Image1.Align := TAlignLayout.Top;
   Image1.Height := 200;
+  Image1.Margins.Rect := RectF(10, 10, 10, 10);
+
+  MemoDescription.Align := TAlignLayout.Client;
 end;
 
 procedure TFormMain.AdapterInterfacePaysage;  
 begin  
-  // Affichage horizontal : placer côte à côte
-  Layout1.Orientation := TOrientation.Horizontal;
-  Image1.Width := ClientWidth / 2;
-  Image1.Height := ClientHeight - 40;
+  // En paysage : image à gauche, texte à droite (côte à côte)
+  Image1.Align := TAlignLayout.Left;
+  Image1.Width  := ClientWidth / 2;
+  Image1.Height := 0;  // ignoré quand Align = Left
+  Image1.Margins.Rect := RectF(10, 10, 10, 10);
+
+  MemoDescription.Align := TAlignLayout.Client;
 end;
 ```
+
+> 💡 Sur les vrais appareils, l'orientation est aussi accessible via `Screen.Orientation` (énumération `TScreenOrientation`). `FormResize` reste le déclencheur le plus simple et fonctionne dès qu'on tourne l'écran.
 
 ### Responsive Design avec TLayout
 
@@ -377,29 +395,76 @@ end;
 
 ### TListView - Liste tactile
 
-Pour afficher des listes d'éléments avec des interactions tactiles (swipe pour supprimer, etc.).
+Pour afficher des listes d'éléments avec des interactions tactiles (swipe pour supprimer, etc.). FireMonkey propose deux mécanismes complémentaires :
+
+**1. Activer le mode édition standard (le plus simple).** Quand `EditMode = True`, FMX affiche automatiquement un bouton « rouge » de suppression sur chaque ligne et déclenche `OnDeletingItem` / `OnDeleteItem` à la confirmation. C'est l'approche recommandée pour 90 % des cas.
 
 ```pascal
-// Créer une liste avec actions de swipe
 procedure TFormMain.CreerListeTactile;  
 var  
   Item: TListViewItem;
-  DeleteButton: TListItemButton;
+  i: Integer;
 begin
   ListView1.ItemAppearance.ItemAppearance := 'ListItemRightDetail';
+  ListView1.OnDeletingItem := ListView1DeletingItem;
 
-  // Ajouter des éléments
-  Item := ListView1.Items.Add;
-  Item.Text := 'Élément 1';
-  Item.Detail := 'Description';
+  // Ajouter quelques éléments
+  for i := 1 to 5 do
+  begin
+    Item := ListView1.Items.Add;
+    Item.Text   := 'Élément ' + i.ToString;
+    Item.Detail := 'Description ' + i.ToString;
+  end;
+end;
 
-  // Ajouter un bouton de suppression qui apparaît au swipe
-  DeleteButton := Item.Objects.ButtonObjects.Add;
-  DeleteButton.Text := 'Supprimer';
-  DeleteButton.ButtonType := TListItemButton.TButtonType.Delete;
-  DeleteButton.OnClick := SupprimerElement;
+procedure TFormMain.BtnModeEditionClick(Sender: TObject);  
+begin  
+  // Active/désactive l'apparition du bouton « rouge » de suppression
+  ListView1.EditMode := not ListView1.EditMode;
+end;
+
+procedure TFormMain.ListView1DeletingItem(Sender: TObject; AIndex: Integer;
+  var ACanDelete: Boolean);
+begin
+  // Permet d'annuler la suppression (par exemple après confirmation)
+  ACanDelete := True;
 end;
 ```
+
+**2. Ajouter un bouton personnalisé via une apparence dynamique.** Pour un bouton « Supprimer » toujours visible à droite de la ligne, on utilise une apparence comme `ListItemRightDetail` enrichie d'un `TListItemTextButton` ajouté au runtime. **Important** : `TListItemTextButton` est un *drawable* enfant de l'item — on l'instancie via son constructeur en lui passant l'item comme parent, on ne fait jamais un simple `DeleteButton.Text := …` sur une variable non initialisée.
+
+```pascal
+uses
+  FMX.ListView.Appearances;
+
+procedure TFormMain.AjouterBoutonSupprimerAItem(Item: TListViewItem;
+  TagID: Integer);
+var
+  Btn: TListItemTextButton;
+begin
+  // Le bouton se rattache aux Objects de l'item via son constructeur
+  Btn := TListItemTextButton.Create(Item);
+  Btn.Name        := 'btnDelete';
+  Btn.Text        := 'Supprimer';
+  // Énumération imbriquée — pas TListItemButtonType !
+  Btn.ButtonType  := TListItemTextButton.TButtonType.Delete;
+  Btn.TagString   := TagID.ToString;
+  Btn.PlaceOffset.X := -10;
+  Btn.Align         := TListItemAlign.Trailing;
+  Btn.TextAlign     := TTextAlign.Trailing;
+end;
+
+procedure TFormMain.ListView1ItemClickEx(const Sender: TObject;
+  ItemIndex: Integer; const LocalClickPos: TPointF;
+  const ItemObject: TListItemDrawable);
+begin
+  // Détecter le clic sur le bouton personnalisé
+  if (ItemObject <> nil) and (ItemObject.Name = 'btnDelete') then
+    SupprimerElementParTag(ItemObject.TagString);
+end;
+```
+
+> 💡 La signature de l'événement de clic « étendu » est bien `OnItemClickEx`, pas `OnClick` sur le bouton lui-même : `TListItemDrawable` n'expose pas d'événement `OnClick` propre.
 
 ### TTabControl - Navigation par onglets
 
@@ -535,23 +600,30 @@ Sur mobile, le clavier occupe une grande partie de l'écran lorsqu'il apparaît.
 
 ### Gérer l'apparition du clavier
 
+L'événement `OnVirtualKeyboardShown` est déclenché à chaque apparition/disparition du clavier virtuel. `Bounds` donne le rectangle (en pixels écran) occupé par le clavier — il faut convertir `Bounds.Top` en coordonnées formulaire avec `ScreenToClient` pour calculer la hauteur disponible restante :
+
 ```pascal
-// Ajuster l'interface quand le clavier apparaît
 procedure TFormMain.FormVirtualKeyboardShown(Sender: TObject;
   KeyboardVisible: Boolean; const Bounds: TRect);
+var
+  ClientTopDuClavier: Single;
 begin
   if KeyboardVisible then
   begin
-    // Réduire la zone de contenu pour ne pas être cachée par le clavier
-    ScrollBox1.Height := ClientHeight - (ClientHeight - Bounds.Top);
+    // Bounds est en coordonnées écran ; on le ramène au formulaire
+    ClientTopDuClavier := ScreenToClient(PointF(Bounds.Left, Bounds.Top)).Y;
+    // La zone de contenu s'arrête juste au-dessus du clavier
+    ScrollBox1.Height := ClientTopDuClavier - ScrollBox1.Position.Y;
   end
   else
   begin
-    // Restaurer la taille normale
-    ScrollBox1.Height := ClientHeight;
+    // Le clavier disparaît : on rétablit la hauteur initiale
+    ScrollBox1.Height := ClientHeight - ScrollBox1.Position.Y;
   end;
 end;
 ```
+
+> 💡 Si vous avez un `TVertScrollBox` aligné `Client`, FMX gère partiellement ce décalage tout seul (le champ qui a le focus reste visible). N'intervenez à la main que pour les mises en page non triviales.
 
 ### Types de clavier appropriés
 
