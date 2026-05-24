@@ -248,8 +248,8 @@ end;
 | Suisse | `.` (point) | `'` (apostrophe) | 1'234.56 |
 | Inde | `.` (point) | `,` (virgule) | 1,23,456.78 |
 
-> ⚠️ **Attention** : La même notation peut avoir des significations différentes !
-> - **1.234** = mille deux cent trente-quatre aux USA
+> ⚠️ **Attention** : La même notation peut avoir des significations différentes !  
+> - **1.234** = mille deux cent trente-quatre aux USA  
 > - **1.234** = un virgule deux trois quatre en Allemagne
 
 ### Formatage des nombres en Delphi
@@ -334,7 +334,7 @@ uses
   System.SysUtils;
 
 var
-  Montant: Double;
+  Montant: Currency;        // Currency est le type idiomatique pour la monnaie
   MontantStr: string;
 begin
   Montant := 1234.56;
@@ -595,14 +595,18 @@ begin
   DateISO := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss', Now);
   // "2024-12-25T14:30:45"
 
-  // Avec fuseau horaire
-  DateISO := DateToISO8601(Now);
-  // "2024-12-25T14:30:45+01:00"
+  // Avec DateToISO8601 (de System.DateUtils) :
+  //   - DateToISO8601(Now)         : interprète Now comme UTC (suffixe 'Z')
+  //   - DateToISO8601(Now, False)  : interprète Now comme heure locale
+  DateISO := DateToISO8601(Now, False);
+  // Exemple : "2024-12-25T14:30:45.000+01:00"
 
   // Conversion inverse
   MaDate := ISO8601ToDate(DateISO);
 end;
 ```
+
+> 💡 Le second paramètre `AInputIsUTC` de `DateToISO8601` (par défaut `True`) indique si la valeur passée représente déjà un temps UTC. Si vous passez `Now` (heure locale), mettez-le à `False` pour obtenir un décalage horaire (`+01:00`) au lieu du suffixe `Z`.
 
 ### Format invariant pour les nombres
 
@@ -690,10 +694,10 @@ end;
 
 function TGestionnaireFormats.FormaterNombre(Valeur: Double; Decimales: Integer): string;  
 var  
-  Format: string;
+  FormatStr: string; // évite de masquer la fonction globale Format
 begin
-  Format := '#,##0.' + StringOfChar('0', Decimales);
-  Result := FormatFloat(Format, Valeur, FFormatActuel);
+  FormatStr := '#,##0.' + StringOfChar('0', Decimales);
+  Result := FormatFloat(FormatStr, Valeur, FFormatActuel);
 end;
 
 function TGestionnaireFormats.FormaterMonnaie(Valeur: Currency): string;  

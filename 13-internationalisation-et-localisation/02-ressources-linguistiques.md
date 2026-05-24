@@ -171,24 +171,24 @@ end
 
 ### Activation de la localisation
 
-Pour rendre un formulaire localisable, vous devez activer la propriété `Localizable` du formulaire :
+La localisation des formulaires se configure au niveau **du projet** dans l'IDE Delphi, et non sur le composant lui-même :
 
-1. Sélectionnez le formulaire dans l'IDE
-2. Dans l'Inspecteur d'objets, trouvez la propriété `Localizable`
-3. Changez sa valeur à `True`
+1. Menu **Project → Languages → Add...**
+2. Sélectionnez les langues cibles dans la liste
+3. Cliquez sur **OK**
 
-> 💡 **Important** : Une fois `Localizable` activé, Delphi créera automatiquement des fichiers de ressources pour chaque langue.
+> 💡 **Important** : une fois les langues ajoutées au projet, Delphi crée automatiquement les fichiers de ressources nécessaires pour chacune.
 
 ### Création de versions linguistiques
 
-Une fois la localisation activée :
+Une fois les langues ajoutées au projet :
 
-1. Sélectionnez le formulaire
-2. Dans l'Inspecteur d'objets, modifiez la propriété `Language`
-3. Choisissez une langue (par exemple, `English`)
-4. Modifiez les textes des composants dans cette langue
+1. Menu **Project → Languages → Set Active** pour choisir la langue à éditer
+2. Ouvrez le formulaire à traduire
+3. Modifiez les textes des composants (`Caption`, `Hint`, etc.) dans cette langue
+4. Sauvegardez : Delphi écrit les modifications dans le DFM correspondant à la langue active
 
-Delphi créera automatiquement un fichier `.dfm` séparé pour chaque langue.
+Delphi gère automatiquement un fichier `.dfm` séparé pour chaque langue.
 
 **Exemple de structure de fichiers :**
 
@@ -202,22 +202,45 @@ MonFormulaire.de.dfm       // Version allemande
 
 ### Changement de langue à l'exécution
 
-Pour changer la langue de votre application à l'exécution, utilisez l'unit `System.SysUtils` :
+Pour changer la langue de votre application à l'exécution, on utilise la fonction **`LoadResourceModule`** (déclarée dans `System.SysUtils`). Elle charge la DLL de ressources générée par l'Integrated Translation Environment (ITE) de Delphi pour la langue choisie. Si elle réussit, on remplace `HInstance` par le handle du module chargé afin que les `ResourceString` et les formulaires utilisent les nouvelles ressources.
 
 ```pascal
 uses
-  System.SysUtils;
+  System.SysUtils, Winapi.Windows;
 
-procedure TForm1.ChangerLangue(const Langue: string);  
+var
+  ResModule: HMODULE = 0;
+
+procedure ChangerLangue(LocaleID: LCID);  
+var  
+  Nouveau: HMODULE;
+begin
+  // LocaleID : un identifiant LCID Windows. Exemples :
+  //   $040C = français (France), $0409 = anglais (US), $0407 = allemand
+  // Pour récupérer le LCID d'un nom court, utilisez LocaleNameToLCID
+  // (Winapi.Windows) avec 'fr-FR', 'en-US', etc.
+  Nouveau := LoadResourceModule(LocaleID);
+  if Nouveau <> 0 then
+  begin
+    if ResModule <> 0 then
+      FreeLibrary(ResModule);
+    ResModule := Nouveau;
+    HInstance := Nouveau;
+    // Les formulaires créés ensuite utiliseront la nouvelle langue.
+    // Les formulaires déjà ouverts doivent être recréés.
+  end;
+end;
+
+// Exemple d'appel
+procedure PasserEnAnglais;  
 begin  
-  // 'fr' pour français, 'en' pour anglais, 'es' pour espagnol, etc.
-  SetCurrentLanguage(Langue);
-
-  // Recharger les formulaires pour appliquer la nouvelle langue
-  // (nécessite généralement un redémarrage de l'application
-  // ou une recréation des formulaires)
+  ChangerLangue($0409); // ou LocaleNameToLCID('en-US', 0)
 end;
 ```
+
+> ⚠️ **Important** : `LoadResourceModule` charge un fichier compilé (par exemple `MonApp.FRA`, `MonApp.ENU`...) généré par l'ITE de Delphi pour chaque langue ajoutée au projet via **Project → Languages**. Les formulaires déjà affichés ne basculent pas automatiquement : il faut généralement les recréer ou redémarrer l'application.
+
+> 💡 **Alternative moderne** : pour une bascule entièrement à chaud sans dépendre de l'ITE, beaucoup d'applications préfèrent un gestionnaire de traduction custom (présenté plus bas) qui charge un dictionnaire et met à jour les `Caption` à la volée.
 
 ## Fichiers de ressources RC/RES
 
@@ -437,7 +460,15 @@ type
 var
   Traduction: TGestionnaireTraduction; // Instance globale
 
+// Helper global pour un appel concis : T('Boutons.Valider')
+function T(const Cle: string): string;
+
 implementation
+
+function T(const Cle: string): string;  
+begin  
+  Result := Traduction.T(Cle);
+end;
 
 constructor TGestionnaireTraduction.Create;  
 begin  
@@ -480,7 +511,9 @@ begin
       begin
         Cle := Sections[i] + '.' + Cles[j];
         Valeur := IniFile.ReadString(Sections[i], Cles[j], '');
-        FTraductions.Add(Cle, Valeur);
+        // AddOrSetValue plutôt que Add : évite une exception si une même
+        // clé est rechargée (par exemple lors d'un changement de langue).
+        FTraductions.AddOrSetValue(Cle, Valeur);
       end;
     end;
   finally
@@ -688,27 +721,38 @@ end;
 
 ## Fallback (retour à une langue par défaut)
 
-Il est important de gérer les cas où une traduction est manquante :
+Il est important de gérer les cas où une traduction est manquante. Voici une variante de la classe `TGestionnaireTraduction` qui maintient un **second dictionnaire** (la langue de référence) préchargé une fois pour toutes, et qui sert de filet de sécurité :
 
 ```pascal
+// 1. Ajouter le champ dans la section private de la classe :
+//    FTraductionsFallback: TDictionary<string, string>;
+//
+// 2. Le créer et le charger dans le constructeur :
+//    FTraductionsFallback := TDictionary<string, string>.Create;
+//    ChargerDictionnaire('fr', FTraductionsFallback);  // une seule fois
+//
+// 3. Le libérer dans le destructeur :
+//    FTraductionsFallback.Free;
+//
+// 4. Modifier la fonction T pour consulter le fallback :
+
 function TGestionnaireTraduction.T(const Cle: string): string;  
 begin  
   // Essayer dans la langue active
-  if not FTraductions.TryGetValue(Cle, Result) then
-  begin
-    // Si non trouvé, essayer en français (langue par défaut)
-    if FLangueActive <> 'fr' then
-    begin
-      ChargerLangue('fr');
-      if not FTraductions.TryGetValue(Cle, Result) then
-        Result := Cle; // En dernier recours, retourner la clé
-      ChargerLangue(FLangueActive); // Recharger la langue active
-    end
-    else
-      Result := Cle;
-  end;
+  if FTraductions.TryGetValue(Cle, Result) then
+    Exit;
+
+  // Sinon, essayer dans le dictionnaire de fallback (français)
+  if (FTraductionsFallback <> nil) and
+     FTraductionsFallback.TryGetValue(Cle, Result) then
+    Exit;
+
+  // En dernier recours, retourner la clé elle-même (utile pour le débogage)
+  Result := Cle;
 end;
 ```
+
+> 💡 **Évitez** de recharger le dictionnaire de fallback à chaque appel manquant : cela serait dramatiquement coûteux en I/O. Préchargez-le **une seule fois** (par exemple dans `Create`) dans un second `TDictionary<string, string>`.
 
 ## Conclusion
 

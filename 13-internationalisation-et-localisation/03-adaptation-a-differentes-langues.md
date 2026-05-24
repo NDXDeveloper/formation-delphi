@@ -15,7 +15,7 @@ Avant de commencer, comprenons deux termes importants :
 | **i18n** | Internationalization | Conception de l'application pour supporter plusieurs langues | Architecture avec ressources linguistiques |
 | **l10n** | Localization | Adaptation à une langue/culture spécifique | Traduction en français |
 
-> 💡 **i18n** = "i" + 18 lettres + "n" (internationalization)
+> 💡 **i18n** = "i" + 18 lettres + "n" (internationalization)  
 > **l10n** = "l" + 10 lettres + "n" (localization)
 
 ## Codes de langue et de culture
@@ -211,15 +211,17 @@ procedure TFormPrincipale.CreerMenuLangues;
 var  
   MenuItem: TMenuItem;
   Langues: TArray<TLangueDisponible>;
-  Langue: TLangueDisponible;
+  i: Integer;
 begin
-  Langues := SelecteurLangue.ObtenirLanguesDisponibles;
+  // On garde la liste des langues comme champ FLangues pour la retrouver
+  // dans le handler du clic.
+  FLangues := SelecteurLangue.ObtenirLanguesDisponibles;
 
-  for Langue in Langues do
+  for i := 0 to High(FLangues) do
   begin
     MenuItem := TMenuItem.Create(MenuLangue);
-    MenuItem.Caption := Langue.IconeCode + ' ' + Langue.Nom;
-    MenuItem.Tag := Integer(Langue.Code[1]); // Stocke le code
+    MenuItem.Caption := FLangues[i].IconeCode + ' ' + FLangues[i].Nom;
+    MenuItem.Tag := i;                 // Stocke l'index dans FLangues
     MenuItem.OnClick := MenuLangueClick;
     MenuLangue.Add(MenuItem);
   end;
@@ -227,17 +229,16 @@ end;
 
 procedure TFormPrincipale.MenuLangueClick(Sender: TObject);  
 var  
-  CodeLangue: string;
+  Index: Integer;
 begin
-  // Récupérer le code de langue depuis le tag
-  CodeLangue := (Sender as TMenuItem).Caption;
-  // Extraire juste le code (après le drapeau)
-  CodeLangue := Copy(CodeLangue, Pos(' ', CodeLangue) + 1, 2);
-
-  // Changer la langue
-  ChangerLangue(CodeLangue);
+  // Récupérer l'index depuis le Tag, puis le code de langue depuis FLangues.
+  Index := (Sender as TMenuItem).Tag;
+  if (Index >= 0) and (Index <= High(FLangues)) then
+    ChangerLangue(FLangues[Index].Code);
 end;
 ```
+
+> 💡 Stocker l'**index** dans le `Tag` puis retrouver le code via le tableau est bien plus robuste qu'essayer de parser le `Caption` : on évite tout problème lié au format de l'affichage (drapeau, espace, nom localisé, etc.).
 
 ## Changement de langue à l'exécution
 
@@ -249,7 +250,7 @@ Voici comment permettre à l'utilisateur de changer de langue sans redémarrer l
 procedure TFormPrincipale.ChangerLangue(const CodeLangue: string);  
 begin  
   // Définir la nouvelle langue
-  GestionnaireTraduction.DefinirLangue(CodeLangue);
+  Traduction.DefinirLangue(CodeLangue);
 
   // Recharger tous les textes de l'interface
   AppliquerTraductions;
@@ -290,45 +291,58 @@ end;
 
 ### Méthode 2 : Rechargement automatique des formulaires
 
-Pour les applications utilisant les fichiers `.dfm` localisés :
+Pour les applications utilisant les fichiers `.dfm` localisés via l'**Integrated Translation Environment (ITE)** de Delphi, on charge dynamiquement la DLL de ressources correspondante avec `LoadResourceModule` (déclarée dans `System.SysUtils`) :
 
 ```pascal
-procedure TFormPrincipale.ChangerLangueAvecDFM(const CodeLangue: string);  
+uses
+  System.SysUtils, Winapi.Windows;
+
+var
+  ResModule: HMODULE = 0;
+
+procedure TFormPrincipale.ChangerLangueAvecDFM(LocaleID: LCID);  
 var  
-  FichiersOuverts: TList<TForm>;
+  Nouveau: HMODULE;
   i: Integer;
 begin
-  // Sauvegarder les formulaires ouverts
-  FichiersOuverts := TList<TForm>.Create;
-  try
-    for i := 0 to Screen.FormCount - 1 do
-      FichiersOuverts.Add(Screen.Forms[i]);
+  // Fermer tous les formulaires secondaires
+  for i := Screen.FormCount - 1 downto 0 do
+    if Screen.Forms[i] <> Self then
+      Screen.Forms[i].Close;
 
-    // Fermer tous les formulaires sauf le principal
-    for i := Screen.FormCount - 1 downto 0 do
-    begin
-      if Screen.Forms[i] <> Self then
-        Screen.Forms[i].Close;
-    end;
+  // Charger la DLL de ressources générée par l'ITE.
+  // LocaleID est un LCID Windows (ex : $0409 pour en-US, $040C pour fr-FR).
+  Nouveau := LoadResourceModule(LocaleID);
+  if Nouveau <> 0 then
+  begin
+    if ResModule <> 0 then
+      FreeLibrary(ResModule);
+    ResModule := Nouveau;
+    HInstance := Nouveau;
 
-    // Définir la nouvelle langue
-    SetCurrentLanguage(CodeLangue);
-
-    // Recharger le formulaire principal
-    // Note : en pratique, il faut souvent redémarrer l'application
+    // Les formulaires déjà ouverts ne sont pas mis à jour automatiquement.
+    // Le plus simple est d'inviter l'utilisateur à redémarrer, ou de
+    // recréer dynamiquement le formulaire principal.
     ShowMessage(T('Messages.RedemarrerPourChangerLangue'));
-
-  finally
-    FichiersOuverts.Free;
-  end;
+  end
+  else
+    ShowMessage(T('Messages.ErreurChargementLangue'));
 end;
 ```
+
+> 💡 `LoadResourceModule` recherche dans le dossier de l'exécutable un fichier dont l'extension correspond à la langue (`.FRA`, `.ENU`, `.DEU`...). Ces fichiers sont générés automatiquement par l'**Integrated Translation Environment** de Delphi quand vous ajoutez des langues via **Project → Languages → Add...**.
+
+> 💡 Pour une approche entièrement custom basée sur un dictionnaire de chaînes, on préfère la **Méthode 1** (rechargement manuel) ou la **Méthode 3** (pattern Observer) ci-dessous, qui n'exigent pas l'ITE.
 
 ### Méthode 3 : Avec notification aux observateurs
 
 Pour une architecture plus propre, utilisez le pattern Observer :
 
 ```pascal
+uses
+  System.SysUtils, System.Generics.Collections;
+  // System.Generics.Collections est requis pour TList<T>.
+
 type
   IObservateurLangue = interface
     ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
@@ -574,7 +588,7 @@ begin
   LargeurMinimale := 400; // Largeur de base
 
   // Ajouter de l'espace pour les textes longs
-  if GestionnaireLangue.LangueActive = 'de' then
+  if Traduction.LangueActive = 'de' then
     LargeurMinimale := LargeurMinimale + 50; // Allemand = textes plus longs
 
   if Self.ClientWidth < LargeurMinimale then
@@ -881,7 +895,7 @@ end;
 procedure TFormMain.ChangerLangue(const CodeLangue: string);  
 begin  
   // Définir la nouvelle langue dans le gestionnaire
-  GestionnaireTraduction.DefinirLangue(CodeLangue);
+  Traduction.DefinirLangue(CodeLangue);
 
   // Appliquer les traductions à l'interface
   AppliquerTraductions;

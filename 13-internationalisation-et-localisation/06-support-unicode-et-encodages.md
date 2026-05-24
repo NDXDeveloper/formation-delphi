@@ -203,9 +203,11 @@ end;
 | UTF-16 LE | `TEncoding.Unicode` | UTF-16 Little Endian (Windows) |
 | UTF-16 BE | `TEncoding.BigEndianUnicode` | UTF-16 Big Endian |
 | UTF-7 | `TEncoding.UTF7` | Ancien standard email |
-| UTF-32 | `TEncoding.UTF32` | 4 octets par caractère |
-| ANSI | `TEncoding.ANSI` | Page de code système |
+| ANSI | `TEncoding.ANSI` | Page de code système (XE7+) |
 | ASCII | `TEncoding.ASCII` | 7 bits, caractères basiques |
+| Système par défaut | `TEncoding.Default` | Encodage par défaut de l'OS |
+
+> 💡 **À noter** : la RTL Delphi standard n'expose pas directement `TEncoding.UTF32`. Si vous avez besoin d'UTF-32, il faudra soit dériver une classe `TEncoding` personnalisée, soit passer par `TEncoding.GetEncoding(12000)` (code page Windows pour UTF-32 LE) sur Windows, soit utiliser une bibliothèque tierce.
 
 ## Lecture et écriture de fichiers
 
@@ -291,26 +293,27 @@ function DetecterEncodage(const NomFichier: string): TEncoding;
 var  
   Stream: TFileStream;
   Buffer: TBytes;
+  NbLus: Integer;
 begin
-  Result := nil;
+  Result := TEncoding.ANSI; // Par défaut quand aucun BOM n'est trouvé
 
   Stream := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
   try
     SetLength(Buffer, 4);
-    Stream.Read(Buffer[0], 4);
+    // Stream.Read retourne le nombre réel d'octets lus,
+    // pas forcément la taille demandée (fichier plus court).
+    NbLus := Stream.Read(Buffer[0], 4);
 
     // Vérifier le BOM
-    if (Length(Buffer) >= 3) and
+    if (NbLus >= 3) and
        (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
       Result := TEncoding.UTF8
-    else if (Length(Buffer) >= 2) and
+    else if (NbLus >= 2) and
             (Buffer[0] = $FF) and (Buffer[1] = $FE) then
       Result := TEncoding.Unicode  // UTF-16 LE
-    else if (Length(Buffer) >= 2) and
+    else if (NbLus >= 2) and
             (Buffer[0] = $FE) and (Buffer[1] = $FF) then
-      Result := TEncoding.BigEndianUnicode  // UTF-16 BE
-    else
-      Result := TEncoding.ANSI;  // Par défaut
+      Result := TEncoding.BigEndianUnicode;  // UTF-16 BE
   finally
     Stream.Free;
   end;
@@ -357,13 +360,13 @@ begin
   for i := 1 to Length(Texte) do
   begin
     // Vérifier si c'est une paire de substitution (surrogate pair)
-    if Char.IsSurrogate(Texte[i]) then
+    if TCharacter.IsSurrogate(Texte[i]) then
     begin
-      if Char.IsHighSurrogate(Texte[i]) then
+      if TCharacter.IsHighSurrogate(Texte[i]) then
       begin
         Surrogate := True;
       end
-      else if Char.IsLowSurrogate(Texte[i]) and Surrogate then
+      else if TCharacter.IsLowSurrogate(Texte[i]) and Surrogate then
       begin
         Inc(Result);
         Surrogate := False;
@@ -609,28 +612,33 @@ class function THelperEncodage.DetecterEncodageFichier(const NomFichier: string)
 var  
   Stream: TFileStream;
   Buffer: TBytes;
+  ALire: Integer;
 begin
-  Result := TEncoding.UTF8; // Par défaut
+  Result := TEncoding.UTF8; // Par défaut quand aucun BOM n'est trouvé
 
   if not FileExists(NomFichier) then
     Exit;
 
   Stream := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
   try
-    if Stream.Size < 3 then
+    if Stream.Size < 2 then
       Exit;
 
     SetLength(Buffer, 4);
-    Stream.Read(Buffer[0], Min(4, Stream.Size));
+    if Stream.Size >= 4 then
+      ALire := 4
+    else
+      ALire := Integer(Stream.Size);
+    Stream.Read(Buffer[0], ALire);
 
-    // UTF-8 BOM
-    if (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
+    // UTF-8 BOM (3 octets)
+    if (ALire >= 3) and (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
       Result := TEncoding.UTF8
     // UTF-16 LE BOM
-    else if (Buffer[0] = $FF) and (Buffer[1] = $FE) then
+    else if (ALire >= 2) and (Buffer[0] = $FF) and (Buffer[1] = $FE) then
       Result := TEncoding.Unicode
     // UTF-16 BE BOM
-    else if (Buffer[0] = $FE) and (Buffer[1] = $FF) then
+    else if (ALire >= 2) and (Buffer[0] = $FE) and (Buffer[1] = $FF) then
       Result := TEncoding.BigEndianUnicode;
   finally
     Stream.Free;
@@ -639,10 +647,36 @@ end;
 
 class function THelperEncodage.ContientBOM(const NomFichier: string): Boolean;  
 var  
-  Encodage: TEncoding;
+  Stream: TFileStream;
+  Buffer: TBytes;
+  ALire: Integer;
 begin
-  Encodage := DetecterEncodageFichier(NomFichier);
-  Result := Encodage <> TEncoding.ANSI;
+  Result := False;
+  if not FileExists(NomFichier) then
+    Exit;
+
+  Stream := TFileStream.Create(NomFichier, fmOpenRead or fmShareDenyWrite);
+  try
+    if Stream.Size < 2 then
+      Exit;
+    SetLength(Buffer, 4);
+    if Stream.Size >= 4 then
+      ALire := 4
+    else
+      ALire := Integer(Stream.Size);
+    Stream.Read(Buffer[0], ALire);
+
+    // UTF-8 BOM
+    if (ALire >= 3) and (Buffer[0] = $EF) and (Buffer[1] = $BB) and (Buffer[2] = $BF) then
+      Exit(True);
+    // UTF-16 LE / BE BOM
+    if (ALire >= 2) and
+       (((Buffer[0] = $FF) and (Buffer[1] = $FE)) or
+        ((Buffer[0] = $FE) and (Buffer[1] = $FF))) then
+      Exit(True);
+  finally
+    Stream.Free;
+  end;
 end;
 
 class function THelperEncodage.ConvertirVersUTF8(const Texte: string): UTF8String;  
@@ -797,8 +831,8 @@ const
   // Caractères européens
   TEST_EUROPEEN = 'àéèêëïôùûüÿæœçÀÉÈÊËÏÔÙÛÜŸÆŒÇ';
 
-  // Caractères spéciaux
-  TEST_SPECIAUX = '€£¥©®™§¶†‡•…‹›«»‚„"'""';
+  // Caractères spéciaux (l'apostrophe ' est doublée en Pascal : '')
+  TEST_SPECIAUX = '€£¥©®™§¶†‡•…‹›«»‚„"''""';
 
   // Caractères asiatiques
   TEST_ASIATIQUE = '中国日本한국';

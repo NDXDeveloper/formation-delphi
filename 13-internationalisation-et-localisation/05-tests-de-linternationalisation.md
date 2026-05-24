@@ -33,6 +33,12 @@ type
   private
     FLangueTeste: string;
     FProblemesTrouves: TStringList;
+    // Méthodes utilitaires à implémenter selon les besoins du projet.
+    // Elles peuvent par exemple vérifier la largeur du composant par
+    // rapport au texte traduit, l'alignement, la présence du Caption, etc.
+    procedure VerifierBouton(Bouton: TButton);
+    procedure VerifierLabel(Lbl: TLabel);
+    procedure VerifierMenuItem(MenuItem: TMenuItem);
   public
     constructor Create(const Langue: string);
     destructor Destroy; override;
@@ -173,7 +179,7 @@ var
   ClesRequises: TArray<string>;
   Valeur: string;
 begin
-  GestionnaireTraduction.DefinirLangue('fr');
+  Traduction.DefinirLangue('fr');
 
   // Liste des clés qui doivent exister
   ClesRequises := ['Boutons.Valider', 'Boutons.Annuler',
@@ -306,13 +312,16 @@ end;
 
 procedure TFormTestLangue.AppliquerLangue(const CodeLangue: string);  
 begin  
-  GestionnaireTraduction.DefinirLangue(CodeLangue);
+  Traduction.DefinirLangue(CodeLangue);
 
-  // Recharger tous les formulaires ouverts
+  // Recharger tous les formulaires ouverts en appelant leur méthode
+  // AppliquerTraductions. On suppose une classe de base commune
+  // TFormTraduisible exposant cette méthode virtuelle.
   for var i := 0 to Screen.FormCount - 1 do
   begin
-    if Screen.Forms[i] <> Self then
-      (Screen.Forms[i] as TForm).Perform(WM_LANGUAGECHANGE, 0, 0);
+    if (Screen.Forms[i] <> Self) and
+       Screen.Forms[i].InheritsFrom(TFormTraduisible) then
+      TFormTraduisible(Screen.Forms[i]).AppliquerTraductions;
   end;
 
   MemoRapport.Lines.Add(Format('Langue changée vers : %s', [CodeLangue]));
@@ -434,6 +443,9 @@ var
   i, j: Integer;
   Cle, Valeur: string;
 begin
+  // On utilise le format "Name=Value" de TStringList (Values[]).
+  // C'est plus sûr que de stocker des string dans Objects[] (problèmes de
+  // reference counting).
   Result := TStringList.Create;
   IniFile := TIniFile.Create(Format('Lang\%s.ini', [Langue]));
   Sections := TStringList.Create;
@@ -450,7 +462,7 @@ begin
       begin
         Cle := Sections[i] + '.' + Cles[j];
         Valeur := IniFile.ReadString(Sections[i], Cles[j], '');
-        Result.AddObject(Cle, TObject(Pointer(Valeur)));
+        Result.Values[Cle] := Valeur;
       end;
     end;
   finally
@@ -473,10 +485,13 @@ begin
     // Vérifier que toutes les clés de référence existent
     for i := 0 to ClesReference.Count - 1 do
     begin
-      CleRef := ClesReference[i];
+      // ClesReference[i] est au format "Name=Value", on extrait le Name
+      CleRef := ClesReference.Names[i];
+      if CleRef = '' then
+        Continue;
 
       // Clé manquante ?
-      if ClesLangue.IndexOf(CleRef) < 0 then
+      if ClesLangue.IndexOfName(CleRef) < 0 then
       begin
         Probleme.Langue := CodeLangue;
         Probleme.Cle := CleRef;
@@ -485,7 +500,7 @@ begin
       end
       else
       begin
-        ValeurLangue := string(Pointer(ClesLangue.Objects[ClesLangue.IndexOf(CleRef)]));
+        ValeurLangue := ClesLangue.Values[CleRef];
 
         // Valeur vide ?
         if Trim(ValeurLangue) = '' then
@@ -568,7 +583,8 @@ unit AnalyseurMiseEnPage;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls;
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics;
 
 type
   TProblemeMiseEnPage = record
@@ -627,9 +643,17 @@ procedure TAnalyseurMiseEnPage.VerifierDebordementBouton(Bouton: TButton);
 var  
   LargeurTexte: Integer;
   Probleme: TProblemeMiseEnPage;
+  Bmp: TBitmap;
 begin
-  // Calculer la largeur nécessaire pour le texte
-  LargeurTexte := Bouton.Canvas.TextWidth(Bouton.Caption) + 20; // Marge
+  // TButton n'expose pas de Canvas public ; on passe par un TBitmap
+  // temporaire dont on copie la Font.
+  Bmp := TBitmap.Create;
+  try
+    Bmp.Canvas.Font.Assign(Bouton.Font);
+    LargeurTexte := Bmp.Canvas.TextWidth(Bouton.Caption) + 20; // Marge
+  finally
+    Bmp.Free;
+  end;
 
   if LargeurTexte > Bouton.Width then
   begin
@@ -762,7 +786,7 @@ begin
     for Langue in LanguesATest do
     begin
       // Changer la langue
-      GestionnaireTraduction.DefinirLangue(Langue);
+      Traduction.DefinirLangue(Langue);
       Form.AppliquerTraductions;
 
       // Vérifier l'affichage
@@ -793,7 +817,7 @@ var
     Valide: Boolean;
   end;
 begin
-  GestionnaireTraduction.DefinirLangue(Langue);
+  Traduction.DefinirLangue(Langue);
   Form := TFormSaisie.Create(nil);
   try
     // Définir les données de test selon la langue
@@ -847,7 +871,7 @@ var
   DonneesOriginales: TDataSet;
   CheminFichier: string;
 begin
-  GestionnaireTraduction.DefinirLangue(Langue);
+  Traduction.DefinirLangue(Langue);
 
   // Créer des données de test
   DonneesOriginales := CreerDonneesTest;

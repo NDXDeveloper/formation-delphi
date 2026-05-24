@@ -61,22 +61,21 @@ Menu : Tools → Translation Manager
 
 #### Utilisation de l'ITM
 
-**Étape 1 : Marquer les formulaires comme localisables**
+**Étape 1 : Activer la localisation au niveau du projet**
 
-```pascal
-// Dans le formulaire, définir la propriété
-procedure TForm1.ConfigurerLocalisation;  
-begin  
-  Self.Localizable := True; // Active la localisation
-end;
-```
+La localisation se configure dans l'**IDE Delphi**, et non dans le code à l'exécution :
+
+1. Menu **Project → Languages → Add...**
+2. Choisir une (ou plusieurs) langues cibles dans la liste
+3. Cliquer sur **OK**
+4. Delphi crée automatiquement les fichiers DFM localisés pour chaque langue choisie
 
 **Étape 2 : Créer les versions linguistiques**
 
-1. Sélectionner le formulaire
-2. Dans l'Inspecteur d'objets : `Language` → choisir la langue (ex: `English`)
-3. Modifier les textes des composants dans cette langue
-4. Delphi crée automatiquement un fichier `.dfm` pour chaque langue
+1. Menu **Project → Languages → Set Active** pour sélectionner la langue à éditer
+2. Ouvrir le formulaire à traduire
+3. Modifier les `Caption`, `Hint`, etc. des composants dans cette langue
+4. Delphi enregistre ces modifications dans le DFM correspondant à la langue active
 
 **Structure de fichiers créée :**
 
@@ -363,7 +362,8 @@ type
 implementation
 
 uses
-  System.JSON, System.IOUtils;
+  System.JSON, System.IOUtils, System.TypInfo;
+  // System.TypInfo est utilisé par GetEnumName dans ImporterDepuisFichier.
 
 constructor TExportateurTraduction.Create(const LangueSource: string);  
 begin  
@@ -551,21 +551,22 @@ procedure TExportateurTraduction.ExporterVersFichier(const CheminFichier: string
   Format: TFormatExport);
 begin
   case Format of
-    feJSON: ExporterJSON(CheminFichier);
-    feCSV: ExporterCSV(CheminFichier);
+    feJSON:  ExporterJSON(CheminFichier);
+    feCSV:   ExporterCSV(CheminFichier);
     feXLIFF: ExporterXLIFF(CheminFichier);
+    fePO:    raise ENotImplemented.Create('Export PO non encore implémenté');
+  else
+    raise EArgumentException.Create('Format d''export inconnu');
   end;
 end;
 
 procedure TExportateurTraduction.ImporterDepuisFichier(const CheminFichier: string;
   Format: TFormatExport);
 begin
-  // À implémenter selon le format
-  case Format of
-    feJSON: ; // ImporterJSON
-    feCSV: ; // ImporterCSV
-    feXLIFF: ; // ImporterXLIFF
-  end;
+  // L'import n'est pas encore implémenté ; on signale clairement
+  // le besoin au lieu d'avaler silencieusement le cas.
+  raise ENotImplemented.CreateFmt('Import non implémenté pour le format %s',
+    [GetEnumName(TypeInfo(TFormatExport), Ord(Format))]);
 end;
 
 end.
@@ -898,7 +899,7 @@ end.
 
 ```pascal
 uses
-  System.Net.HttpClient, System.JSON;
+  System.SysUtils, System.Net.HttpClient, System.NetEncoding, System.JSON;
 
 function TraduireAvecDeepL(const Texte: string; LangueSource, LangueCible: string): string;  
 var  
@@ -949,9 +950,9 @@ begin
 end;
 ```
 
-> ⚠️ **Important** : La traduction automatique ne remplace PAS un traducteur humain. Utilisez-la pour :
-> - Traductions provisoires
-> - Suggestions aux traducteurs
+> ⚠️ **Important** : La traduction automatique ne remplace PAS un traducteur humain. Utilisez-la pour :  
+> - Traductions provisoires  
+> - Suggestions aux traducteurs  
 > - Contenu non critique
 
 ## Automatisation et scripts

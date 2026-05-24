@@ -17,7 +17,7 @@ Ce chapitre vous guidera à travers tous les aspects de la création d'applicati
 | **Internationalisation** | i18n | Conception d'une application pour supporter plusieurs langues et cultures | Architecture avec ressources linguistiques séparées |
 | **Localisation** | l10n | Adaptation d'une application à une langue et culture spécifique | Traduction en français avec formats de date français |
 
-> 💡 **i18n** = "i" + 18 lettres + "n" (internationalization)
+> 💡 **i18n** = "i" + 18 lettres + "n" (internationalization)  
 > **l10n** = "l" + 10 lettres + "n" (localization)
 
 ### La différence en pratique
@@ -372,10 +372,10 @@ Tout au long de ce chapitre, nous utiliserons un **projet fil rouge** : une appl
 
 ### Témoignages
 
-> **"Après avoir localisé notre logiciel en allemand et espagnol, nos ventes en Europe ont augmenté de 250%. L'investissement en valait vraiment la peine."**
+> **"Après avoir localisé notre logiciel en allemand et espagnol, nos ventes en Europe ont augmenté de 250%. L'investissement en valait vraiment la peine."**  
 > — Chef de projet, éditeur de logiciel
 
-> **"Le support de l'arabe (RTL) nous a ouvert le marché du Moyen-Orient. C'était plus simple que prévu avec BiDiMode de Delphi."**
+> **"Le support de l'arabe (RTL) nous a ouvert le marché du Moyen-Orient. C'était plus simple que prévu avec BiDiMode de Delphi."**  
 > — Développeur senior, solution ERP
 
 ## Conseils avant de commencer

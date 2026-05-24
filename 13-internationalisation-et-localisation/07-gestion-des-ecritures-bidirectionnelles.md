@@ -230,11 +230,16 @@ begin
   PageControl.BiDiMode := bdRightToLeft;
 
   // Les onglets s'affichent de droite à gauche
-  // Le premier onglet est à droite
-  PageControl.TabSheet1.Caption := 'عام'; // "Général" en arabe
-  PageControl.TabSheet2.Caption := 'متقدم'; // "Avancé" en arabe
+  // Le premier onglet (Pages[0]) est à droite
+  if PageControl.PageCount >= 2 then
+  begin
+    PageControl.Pages[0].Caption := 'عام';   // "Général" en arabe
+    PageControl.Pages[1].Caption := 'متقدم'; // "Avancé" en arabe
+  end;
 end;
 ```
+
+> 💡 On accède aux onglets via `PageControl.Pages[Index]` (de type `TTabSheet`), pas via des propriétés `TabSheet1`, `TabSheet2`... Ces dernières existent uniquement comme champs publiés du formulaire qui les contient (par exemple `Form1.TabSheet1`).
 
 ## Gestion des images et icônes
 
@@ -298,9 +303,14 @@ var
   x, y: Integer;
 begin
   Result := TBitmap.Create;
+  // Conserver le même format de pixel que l'image source pour éviter
+  // toute conversion implicite (qui peut altérer les couleurs).
+  Result.PixelFormat := ImageOriginale.PixelFormat;
   Result.Width := ImageOriginale.Width;
   Result.Height := ImageOriginale.Height;
 
+  // Note : Canvas.Pixels est très lent pour de grandes images.
+  // Pour de meilleures performances, utilisez ScanLine.
   for y := 0 to ImageOriginale.Height - 1 do
     for x := 0 to ImageOriginale.Width - 1 do
       Result.Canvas.Pixels[ImageOriginale.Width - 1 - x, y] :=
@@ -441,7 +451,7 @@ end;
 Les raccourcis clavier ne changent pas en RTL, mais leur position peut être confuse.
 
 ```pascal
-procedure ConfigurerRaccourcisRTL;  
+procedure TFormPrincipal.ConfigurerRaccourcisRTL;  
 begin  
   // Les raccourcis restent les mêmes
   ActionFichierNouveau.ShortCut := ShortCut(Ord('N'), [ssCtrl]);
@@ -546,25 +556,29 @@ end;
 procedure InverserOrdreTabulation(Form: TForm);  
 var  
   i: Integer;
-  Controls: TList;
+  Controls: TList<TWinControl>;
 begin
-  if Form.BiDiMode = bdRightToLeft then
-  begin
-    Controls := TList.Create;
-    try
-      // Collecter tous les contrôles
-      for i := 0 to Form.ControlCount - 1 do
-        Controls.Add(Form.Controls[i]);
+  if Form.BiDiMode <> bdRightToLeft then
+    Exit;
 
-      // Inverser l'ordre de tabulation
-      for i := 0 to Controls.Count - 1 do
-        TControl(Controls[i]).TabOrder := Controls.Count - 1 - i;
-    finally
-      Controls.Free;
-    end;
+  Controls := TList<TWinControl>.Create;
+  try
+    // Collecter uniquement les contrôles susceptibles d'avoir un TabOrder
+    // (la propriété TabOrder appartient à TWinControl, pas à TControl).
+    for i := 0 to Form.ControlCount - 1 do
+      if Form.Controls[i] is TWinControl then
+        Controls.Add(TWinControl(Form.Controls[i]));
+
+    // Inverser l'ordre de tabulation
+    for i := 0 to Controls.Count - 1 do
+      Controls[i].TabOrder := Controls.Count - 1 - i;
+  finally
+    Controls.Free;
   end;
 end;
 ```
+
+> 💡 **Pré-requis** : ajoutez `System.Generics.Collections` à la clause `uses` pour disposer de `TList<T>`.
 
 ## Classe de gestion RTL
 
@@ -576,7 +590,8 @@ unit GestionnaireRTL;
 interface
 
 uses
-  Vcl.Forms, Vcl.Controls, System.Classes, System.SysUtils;
+  Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, System.Classes, System.SysUtils;
+  // Vcl.ExtCtrls est requis pour TPanel utilisé dans RealignerPanels.
 
 type
   TGestionnaireRTL = class
@@ -708,9 +723,9 @@ begin
   begin
     Control := Form.Controls[i];
 
-    // Forcer le réalignement
+    // Realign est défini sur TWinControl ; il faut donc caster.
     if Control is TPanel then
-      Control.Realign;
+      TPanel(Control).Realign;
   end;
 end;
 
@@ -734,12 +749,13 @@ end.
 
 ```pascal
 uses
-  GestionnaireRTL;
+  GestionnaireRTL, GestionnaireTraduction;
 
 procedure TFormPrincipal.ChangerLangue(const CodeLangue: string);  
 begin  
-  // Charger les traductions
-  GestionnaireTraduction.DefinirLangue(CodeLangue);
+  // Charger les traductions (Traduction est l'instance globale
+  // déclarée dans l'unit GestionnaireTraduction)
+  Traduction.DefinirLangue(CodeLangue);
 
   // Appliquer RTL si nécessaire
   if GestRTL.EstLangueRTL(CodeLangue) then

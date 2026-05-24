@@ -82,11 +82,23 @@ var
 
 ### Initialisation lors de la déclaration
 
+Une variable globale (au niveau de l'unité) peut être initialisée à sa déclaration avec le signe `=` (« constante typée modifiable ») :
+
 ```pascal
+// Au niveau de l'interface ou de l'implementation d'une unité
 var
   Prenom: string = 'Marie';
   Ville: string = 'Paris';
 ```
+
+> 💡 **Variable locale dans une procédure** : depuis Delphi 10.3, on peut déclarer et initialiser une variable locale en une ligne avec les *inline variables* — attention, on utilise alors `:=` (et non `=`) :  
+> ```pascal  
+> procedure Exemple;  
+> begin  
+>   var Prenom: string := 'Marie';   // inline variable, Delphi 10.3+  
+>   ShowMessage(Prenom);  
+> end;  
+> ```
 
 ### Chaînes vides
 
@@ -375,10 +387,13 @@ begin
   // Conversion en entier avec valeur par défaut en cas d'erreur
   Nombre := StrToIntDef('abc', 0); // 0 (car 'abc' n'est pas un nombre)
 
-  // Conversion en réel
-  NombreReel := StrToFloat('3.14'); // 3.14
+  // Conversion en réel (attention : dépend du séparateur décimal de la locale)
+  NombreReel := StrToFloat('3.14'); // ✓ Fonctionne si le séparateur décimal est '.'
+                                    // ✗ Échoue (EConvertError) si le séparateur est ',' (français)
 end;
 ```
+
+> ⚠️ **Attention** : `StrToFloat` (sans `TFormatSettings` explicite) utilise le séparateur décimal **du système**. Sur un Windows en français, il faut écrire `'3,14'`, pas `'3.14'`. Pour un comportement portable, utilisez la surcharge avec `TFormatSettings` (voir le chapitre **13.4 Formats de date, heure et nombres**).
 
 ### Nombre vers chaîne
 
