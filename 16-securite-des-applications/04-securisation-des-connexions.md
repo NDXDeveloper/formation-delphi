@@ -53,17 +53,22 @@ HTTPS : https://example.com (cadenas 🔒 dans le navigateur)
 
 ### SSL et TLS
 
-**SSL (Secure Sockets Layer)** : Ancien protocole de sécurité, maintenant obsolète.
+**SSL (Secure Sockets Layer)** : Ancien protocole de sécurité, **définitivement obsolète**. SSL 2.0 (1995) et SSL 3.0 (1996) sont interdits par la RFC 7568 (2015). Ne plus jamais autoriser.
 
 **TLS (Transport Layer Security)** : Remplaçant moderne de SSL, c'est ce qu'on utilise aujourd'hui.
 
 **Versions de TLS** :
-- TLS 1.0 : ❌ Déprécié, vulnérable
-- TLS 1.1 : ❌ Déprécié, ne plus utiliser
-- TLS 1.2 : ✅ Bon, encore largement utilisé
-- TLS 1.3 : ✅ Meilleur, plus rapide et plus sûr
+- TLS 1.0 (1999) : ❌ Déprécié RFC 8996 (mars 2021). Plus accepté par les navigateurs modernes ni par PCI DSS depuis 2018.
+- TLS 1.1 (2006) : ❌ Idem RFC 8996.
+- TLS 1.2 (2008) : ✅ Bon, encore largement déployé. Niveau minimum acceptable en 2026.
+- TLS 1.3 (RFC 8446, 2018) : ✅ Le standard. Handshake en 1 RTT (0 RTT avec resumption), suppression des algorithmes faibles (RSA key exchange, CBC, MD5/SHA-1), forward secrecy obligatoire.
 
-**Note importante** : Même si on dit souvent "SSL", on parle en réalité de TLS aujourd'hui. Les deux termes sont utilisés de manière interchangeable par habitude.
+**Note importante** : Même si on dit souvent "SSL", on parle en réalité de TLS aujourd'hui. Les deux termes sont utilisés de manière interchangeable par habitude — mais techniquement, *SSL est mort*, *TLS est vivant*.
+
+> 🔮 **Évolutions à connaître** :  
+> - **QUIC + HTTP/3** : transport au-dessus d'UDP (au lieu de TCP), avec TLS 1.3 intégré. Réduit les latences et résiste mieux aux pertes réseau. Déjà utilisé par Google, Cloudflare, Meta.  
+> - **mTLS** (Mutual TLS) : authentification mutuelle client + serveur par certificats. Standard pour les microservices et les API B2B.  
+> - **Encrypted ClientHello (ECH)** : chiffrement du SNI pour empêcher la censure et le fingerprinting par DPI. En cours de déploiement.
 
 ## Comment fonctionne HTTPS/TLS
 
@@ -144,11 +149,11 @@ Un certificat numérique est comme une carte d'identité pour un site web. Il pr
 Les **Certificate Authorities** sont des organisations de confiance qui vérifient l'identité des sites web et signent leurs certificats.
 
 **Principales CA** :
-- Let's Encrypt (gratuit, automatisé)
-- DigiCert
-- GlobalSign
-- Sectigo
-- GoDaddy
+- **Let's Encrypt** (gratuit, automatisé via ACME, certificats valides 90 jours)
+- **ZeroSSL** (gratuit, alternative à Let's Encrypt, certificats valides 90 jours)
+- **Google Trust Services** (gratuit depuis 2024, via ACME)
+- **DigiCert, GlobalSign, Sectigo** (commerciaux, certificats OV/EV)
+- **GoDaddy, Comodo, Entrust** (autres acteurs commerciaux historiques)
 
 **Hiérarchie de confiance** :
 ```
@@ -171,8 +176,8 @@ Certificat racine (CA racine)
 
 **3. EV (Extended Validation)** : Validation étendue
 - Vérification approfondie de l'organisation
-- Barre d'adresse verte dans certains navigateurs
-- Pour sites de banques, e-commerce important
+- ⚠ La fameuse « barre d'adresse verte avec le nom de l'entreprise » a été **retirée** par Chrome 77 (sept. 2019) et Firefox 70 (oct. 2019). Les EV ne sont plus visuellement distinguables des DV par l'utilisateur moyen.
+- Coût significatif (~200-800 €/an), pertinence limitée aujourd'hui — privilégier DV + bonnes pratiques (HSTS, CT logs).
 
 **4. Wildcard** : Pour sous-domaines
 - Protège *.monsite.com
@@ -312,12 +317,18 @@ begin
   SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
     // Configurer SSL/TLS
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     SSLHandler.SSLOptions.Mode := sslmClient;
 
-    // Options de vérification du certificat
+    // Options de vérification du certificat.
+    // ⚠ `VerifyDepth := 2` ne supporte qu'une chaîne courte
+    //   (serveur → intermédiaire → racine). Beaucoup de CA modernes
+    //   utilisent des intermédiaires en cascade (root → cross-sign →
+    //   intermédiaire → cert). 5 à 9 est plus prudent — la valeur par
+    //   défaut d'OpenSSL est 100.
     SSLHandler.SSLOptions.VerifyMode := [sslvrfPeer];
-    SSLHandler.SSLOptions.VerifyDepth := 2;
+    SSLHandler.SSLOptions.VerifyDepth := 9;
 
     // Assigner le handler SSL au client HTTP
     HTTP.IOHandler := SSLHandler;
@@ -356,7 +367,8 @@ begin
   SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   Stream := TStringStream.Create(ADonnees, TEncoding.UTF8);
   try
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     SSLHandler.SSLOptions.Mode := sslmClient;
     HTTP.IOHandler := SSLHandler;
 
@@ -386,7 +398,8 @@ begin
   HTTP := TIdHTTP.Create(nil);
   SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     HTTP.IOHandler := SSLHandler;
 
     try
@@ -439,7 +452,8 @@ begin
     // Événement de vérification du certificat
     SSLHandler.OnVerifyPeer := SSLVerifyPeerEvent;
 
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     SSLHandler.SSLOptions.VerifyMode := [sslvrfPeer, sslvrfFailIfNoPeerCert];
     HTTP.IOHandler := SSLHandler;
 
@@ -460,14 +474,21 @@ begin
   Memo1.Lines.Add('  Valide du : ' + DateTimeToStr(Certificate.notBefore));
   Memo1.Lines.Add('  Valide jusqu''au : ' + DateTimeToStr(Certificate.notAfter));
 
-  // Vérifier la validité
+  // Vérifier la validité.
+  // ⚠ Les codes AError ci-dessous sont les codes de retour d'OpenSSL
+  //   (`X509_V_ERR_*`, voir `<openssl/x509_vfy.h>`). La liste complète
+  //   compte une trentaine de codes — il est utile de loguer le code
+  //   numérique exact pour pouvoir diagnostiquer en production.
   if not AOk then
   begin
     case AError of
-      10: Memo1.Lines.Add('  ⚠️ Certificat expiré');
-      18: Memo1.Lines.Add('  ⚠️ Certificat auto-signé');
-      19: Memo1.Lines.Add('  ⚠️ CA auto-signée dans la chaîne');
-      20: Memo1.Lines.Add('  ⚠️ Impossible de vérifier le certificat');
+      10: Memo1.Lines.Add('  ⚠️ Certificat expiré (X509_V_ERR_CERT_HAS_EXPIRED)');
+      18: Memo1.Lines.Add('  ⚠️ Certificat auto-signé (X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)');
+      19: Memo1.Lines.Add('  ⚠️ CA auto-signée dans la chaîne (X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)');
+      20: Memo1.Lines.Add('  ⚠️ Émetteur introuvable (X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)');
+      23: Memo1.Lines.Add('  ⚠️ Certificat révoqué (X509_V_ERR_CERT_REVOKED)');
+      24: Memo1.Lines.Add('  ⚠️ CA invalide (X509_V_ERR_INVALID_CA)');
+      62: Memo1.Lines.Add('  ⚠️ Nom d''hôte ne correspond pas (X509_V_ERR_HOSTNAME_MISMATCH)');
     else
       Memo1.Lines.Add('  ⚠️ Erreur de vérification : ' + IntToStr(AError));
     end;
@@ -552,16 +573,19 @@ begin
   FDConnection1.Params.Add('User_Name=utilisateur');
   FDConnection1.Params.Add('Password=motdepasse');
 
-  // Mode SSL
-  // require : exige SSL
-  // verify-ca : vérifie le certificat CA
-  // verify-full : vérifie CA + nom d'hôte
-  FDConnection1.Params.Add('SSLMode=require');
+  // Mode SSL (du moins sécurisé au plus sécurisé) :
+  //   disable     : sans SSL — interdit en production
+  //   allow       : SSL si le serveur le propose, sans vérification
+  //   prefer      : tente SSL d'abord, fallback sur sans SSL si refusé
+  //   require     : ⚠ exige SSL mais NE VÉRIFIE PAS le certificat → MITM trivial
+  //   verify-ca   : vérifie que le certificat est signé par la CA fournie
+  //   verify-full : vérifie CA + correspondance du nom d'hôte ← RECOMMANDÉ PROD
+  FDConnection1.Params.Add('SSLMode=verify-full');
 
-  // Certificats
-  FDConnection1.Params.Add('SSLCert=client.crt');
-  FDConnection1.Params.Add('SSLKey=client.key');
-  FDConnection1.Params.Add('SSLRootCert=root.crt');
+  // Certificats (obligatoires avec verify-ca/verify-full)
+  FDConnection1.Params.Add('SSLCert=client.crt');         // certificat client (mTLS)
+  FDConnection1.Params.Add('SSLKey=client.key');          // clé privée du client
+  FDConnection1.Params.Add('SSLRootCert=root.crt');       // CA pour vérifier le serveur
 
   FDConnection1.Connected := True;
 end;
@@ -582,11 +606,18 @@ begin
   FDConnection1.Params.Add('User_Name=utilisateur');
   FDConnection1.Params.Add('Password=motdepasse');
 
-  // Chiffrement activé
+  // Chiffrement activé.
+  // 💡 Depuis ODBC Driver 18 for SQL Server (2022), `Encrypt=yes` est
+  //   activé par DÉFAUT. Si vous utilisez encore un driver plus ancien,
+  //   la valeur par défaut était `no` — il fallait l'activer manuellement.
   FDConnection1.Params.Add('Encrypt=yes');
 
-  // Faire confiance au certificat du serveur (développement uniquement)
-  // En production, utilisez un certificat valide
+  // Faire confiance au certificat du serveur (développement uniquement).
+  // ⚠ `TrustServerCertificate=yes` permet MITM trivial : un attaquant
+  //   en position d'intercepter le trafic présente son propre certificat
+  //   et le client l'accepte sans broncher. En PRODUCTION, toujours `no`
+  //   et déployer un certificat signé par une CA reconnue (ou votre
+  //   propre CA interne avec son certificat racine installé sur le client).
   FDConnection1.Params.Add('TrustServerCertificate=no');
 
   FDConnection1.Connected := True;
@@ -635,6 +666,20 @@ HMACSHA256(
 )
 ```
 
+### Pièges JWT à connaître
+
+Le JWT est puissant mais a une histoire d'implémentations cassées. Les principaux pièges :
+
+> 🚨 **Piège 1 : `alg: "none"`**. La RFC 7519 autorise l'algorithme `none` (aucune signature). Une implémentation naïve qui se fie à l'`alg` du header acceptera un JWT non signé fabriqué par n'importe qui. **Côté serveur** : refuser explicitement `alg: none` et **toujours imposer l'algorithme attendu** côté code (`if header.alg != "HS256" then raise`).
+
+> 🚨 **Piège 2 : confusion HS256 vs RS256**. Si votre serveur accepte aussi bien HS256 (HMAC, clé symétrique partagée) que RS256 (RSA, clé publique connue de tous), un attaquant peut fabriquer un JWT « HS256 » dont la clé HMAC est la clé publique RSA — que tout le monde connaît. Toujours **lier l'algorithme à la clé**, pas l'inverse.
+
+> 🚨 **Piège 3 : secret HS256 trop court**. Si vous signez avec HS256 et un secret de type « `password123` », un attaquant peut le brute-forcer hors-ligne après avoir capturé un JWT. Un secret HMAC doit faire **au moins 256 bits aléatoires** (≥ 32 octets CSPRNG).
+
+> 🚨 **Piège 4 : payload non chiffré, juste signé**. Le JWT est signé mais lisible — le payload est juste du Base64URL. Ne PAS mettre de données sensibles (mot de passe, numéro de carte, données médicales) dans le payload. Si vous avez besoin de confidentialité en plus de l'intégrité, utiliser JWE (JSON Web Encryption) ou tout simplement chiffrer le serveur → client par TLS et garder le JWT minimal.
+
+> 🚨 **Piège 5 : pas de rotation/révocation**. Un JWT signé reste valide jusqu'à sa date d'expiration, même si l'utilisateur change de mot de passe ou si vous voulez révoquer son accès. Solutions : durée de vie **courte** (15 min) + refresh token rotatif, ou liste de révocation côté serveur (`jti` claim + cache des `jti` révoqués).
+
 ### Utilisation de JWT dans Delphi
 
 ```pascal
@@ -670,12 +715,17 @@ begin
     // Exécuter
     RESTRequest.Execute;
 
-    // Extraire le token de la réponse
+    // Extraire le token de la réponse.
+    // ⚠ Si la réponse n'est pas un JSON valide (5xx avec page HTML, proxy
+    //   d'erreur…), `ParseJSONValue` retourne `nil`. `nil as TJSONObject`
+    //   renvoie `nil`, et l'appel suivant à `GetValue` provoque alors une
+    //   Access Violation. Tester `Assigned` avant d'utiliser.
     if RESTResponse.StatusCode = 200 then
     begin
       JSONResponse := TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject;
       try
-        Result := JSONResponse.GetValue<string>('token');
+        if Assigned(JSONResponse) then
+          JSONResponse.TryGetValue<string>('token', Result);
       finally
         JSONResponse.Free;
       end;
@@ -777,10 +827,14 @@ type
     FClientSecret: string;
     FRedirectURI: string;
     FAccessToken: string;
+    // Conservé entre les deux étapes du flow PKCE : on l'envoie à /authorize
+    // (sous forme de challenge SHA-256) puis à /token (en clair, pour que
+    // le serveur recalcule le hash et vérifie qu'il correspond au challenge).
+    FCodeVerifier: string;
   public
     constructor Create(const AClientID, AClientSecret, ARedirectURI: string);
     function ObtenirURLAutorisation: string;
-    function EchangerCodeConteToken(const ACode: string): Boolean;
+    function EchangerCodeContreToken(const ACode: string): Boolean;
     function AccederRessource(const AURL: string): string;
     property AccessToken: string read FAccessToken;
   end;
@@ -794,16 +848,46 @@ begin
 end;
 
 function TOAuth2Manager.ObtenirURLAutorisation: string;  
-begin  
-  // Construire l'URL d'autorisation
+var  
+  Verifier, Challenge: string;
+begin
+  // ⚠ PKCE (RFC 7636) est OBLIGATOIRE pour les clients publics en OAuth 2.1.
+  //   Sans PKCE, un autre app sur l'appareil peut intercepter le code et
+  //   l'échanger contre un token à votre place.
+  //
+  // 1. Générer un `code_verifier` aléatoire (43 à 128 caractères, alphabet
+  //    base64url-safe : [A-Z][a-z][0-9]-._~). Implémentation : 32 octets
+  //    aléatoires CSPRNG, encodés en base64url (sans padding).
+  Verifier := GenererCodeVerifierPKCE;
+  FCodeVerifier := Verifier;               // à conserver pour l'échange
+
+  // 2. `code_challenge` = base64url-no-pad(SHA-256(code_verifier))
+  //    ⚠ ATTENTION : « base64url » ≠ « URL encoding ».
+  //    base64url remplace `+` par `-`, `/` par `_`, et supprime le padding `=`.
+  //    `TNetEncoding.URL.Encode` ferait du percent-encoding, ce qui produirait
+  //    une chaîne incorrecte. Utiliser `TNetEncoding.Base64URL` (introduit en
+  //    Delphi 11) ou bien transformer le Base64 standard.
+  Challenge := TNetEncoding.Base64URL.EncodeBytesToString(
+    THashSHA2.GetHashBytes(Verifier));
+  // TNetEncoding.Base64URL retire normalement le padding ; au cas où, on le
+  // retire explicitement (RFC 7636 §4.2 : pas de padding).
+  while Challenge.EndsWith('=') do
+    Challenge := Copy(Challenge, 1, Length(Challenge) - 1);
+
+  // 3. Construire l'URL d'autorisation avec le challenge
   Result := 'https://accounts.google.com/o/oauth2/v2/auth' +
             '?client_id=' + TNetEncoding.URL.Encode(FClientID) +
             '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
             '&response_type=code' +
-            '&scope=openid%20email%20profile';
+            '&scope=openid%20email%20profile' +
+            '&code_challenge=' + Challenge +
+            '&code_challenge_method=S256' +
+            // Paramètre `state` pour la défense anti-CSRF — vérifier
+            // au retour qu'il correspond à celui envoyé.
+            '&state=' + GenererStateAleatoire;
 end;
 
-function TOAuth2Manager.EchangerCodeConteToken(const ACode: string): Boolean;  
+function TOAuth2Manager.EchangerCodeContreToken(const ACode: string): Boolean;  
 var  
   HTTP: TIdHTTP;
   SSLHandler: TIdSSLIOHandlerSocketOpenSSL;
@@ -815,26 +899,35 @@ begin
   HTTP := TIdHTTP.Create(nil);
   SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     HTTP.IOHandler := SSLHandler;
     HTTP.Request.ContentType := 'application/x-www-form-urlencoded';
 
     // Préparer les paramètres
+    // ⚠ `code_verifier` (PKCE) est OBLIGATOIRE ici si on l'a envoyé à
+    //   l'étape /authorize. Sans lui, le serveur refusera l'échange.
     Params := TStringStream.Create(
       'code=' + TNetEncoding.URL.Encode(ACode) +
       '&client_id=' + TNetEncoding.URL.Encode(FClientID) +
       '&client_secret=' + TNetEncoding.URL.Encode(FClientSecret) +
       '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
+      '&code_verifier=' + TNetEncoding.URL.Encode(FCodeVerifier) +
       '&grant_type=authorization_code'
     );
     try
       // Échanger le code contre un token
       Response := HTTP.Post('https://oauth2.googleapis.com/token', Params);
 
-      // Extraire le token de la réponse
+      // Extraire le token de la réponse.
+      // ⚠ Si la réponse n'est pas du JSON valide (HTML d'erreur 5xx,
+      //   page de maintenance, etc.), `ParseJSONValue` retourne `nil`.
+      //   En Delphi, `nil as TJSONObject` renvoie `nil` sans exception,
+      //   mais l'accès suivant `JSON.TryGetValue` lèverait alors une AV.
+      //   Toujours tester `Assigned(JSON)` avant utilisation.
       JSON := TJSONObject.ParseJSONValue(Response) as TJSONObject;
       try
-        if JSON.TryGetValue<string>('access_token', FAccessToken) then
+        if Assigned(JSON) and JSON.TryGetValue<string>('access_token', FAccessToken) then
           Result := True;
       finally
         JSON.Free;
@@ -856,7 +949,8 @@ begin
   HTTP := TIdHTTP.Create(nil);
   SSLHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     HTTP.IOHandler := SSLHandler;
 
     // Ajouter le token dans le header
@@ -910,29 +1004,99 @@ FDConnection1.Connected := True;
 
 ## Pinning de certificat
 
-Pour renforcer la sécurité, vous pouvez "épingler" un certificat spécifique.
+Pour renforcer la sécurité, vous pouvez "épingler" un certificat ou (mieux) une clé publique spécifique.
 
-**Concept** : Au lieu de faire confiance à n'importe quel certificat valide, on ne fait confiance qu'à UN certificat spécifique.
+**Concept** : Au lieu de faire confiance à n'importe quel certificat signé par une CA reconnue, on ne fait confiance qu'à UN identifiant cryptographique précis.
+
+> 💡 **Pinning par SPKI (Subject Public Key Info), pas par certificat entier** : si on épingle le certificat complet, l'application casse à chaque renouvellement du certificat (tous les 90 jours avec Let's Encrypt). En épinglant le **hash de la clé publique** (SPKI), le renouvellement avec la même clé publique reste compatible. C'est la méthode recommandée par OWASP et utilisée par les apps des banques.
 
 ```pascal
 procedure TForm1.VerifierCertificatEpingle(Certificate: TIdX509; var Accept: Boolean);  
 const  
-  EMPREINTE_ATTENDUE = 'A1:B2:C3:D4:E5:F6:...'; // SHA-256 du certificat
+  // SHA-256 de la SPKI (Subject Public Key Info), en Base64.
+  // À obtenir avec : openssl x509 -in cert.pem -pubkey -noout |
+  //                  openssl pkey -pubin -outform DER |
+  //                  openssl dgst -sha256 -binary | openssl base64
+  //
+  // ⚠ Toujours épingler AU MOINS deux clés (la prod + une backup) pour
+  //   pouvoir basculer en cas de compromission de la clé principale.
+  SPKI_PINS: array[0..1] of string = (
+    'YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=',  // clé actuelle
+    'sRHdihwgkaib1P1gxX8HFszlD+7/gTfNvuAybgLPNis='   // clé de secours
+  );
 var
-  EmpreinteCertificat: string;
+  Pin: string;
+  CleHashee: string;
 begin
-  // Calculer l'empreinte du certificat reçu
-  EmpreinteCertificat := CalculerEmpreinteSHA256(Certificate);
+  // Calculer le hash SHA-256 de la clé publique du certificat reçu
+  CleHashee := CalculerHashSPKI(Certificate);  // helper à écrire avec OpenSSL
 
-  // Vérifier qu'elle correspond
-  Accept := (EmpreinteCertificat = EMPREINTE_ATTENDUE);
+  Accept := False;
+  for Pin in SPKI_PINS do
+    if SameStr(CleHashee, Pin) then
+    begin
+      Accept := True;
+      Break;
+    end;
 
   if not Accept then
-    ShowMessage('⚠️ ALERTE : Certificat non reconnu ! Possible attaque MITM.');
+  begin
+    // Logger et signaler — possible attaque MITM ou changement de
+    // clé non anticipé. Ne pas laisser passer la requête.
+    LoggerErreur('Pinning échoué : SPKI reçue = ' + CleHashee);
+    raise EIdSSLProtocolException.Create(
+      'Certificat refusé par le pinning. Connexion interrompue.');
+  end;
 end;
 ```
 
-**Usage** : Principalement pour les applications mobiles communiquant avec votre propre API.
+**Usage** : Principalement pour les applications mobiles et desktop communiquant avec votre propre API. Inutile pour un navigateur (qui a son propre mécanisme HPKP désormais déprécié au profit de *Certificate Transparency*).
+
+## HSTS (HTTP Strict Transport Security)
+
+Côté serveur, l'entête HTTP `Strict-Transport-Security` indique au navigateur de **toujours** utiliser HTTPS pour votre domaine, même si l'utilisateur tape `http://` :
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+```
+
+- `max-age=31536000` : valide 1 an.
+- `includeSubDomains` : applique aussi aux sous-domaines.
+- `preload` : permet l'inclusion dans la *HSTS Preload List* des navigateurs (Chromium, Firefox), pour que la première visite soit aussi protégée.
+
+En Delphi/WebBroker, l'entête s'ajoute dans la réponse :
+
+```pascal
+procedure TMonWebModule.WebModuleAfterDispatch(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+begin
+  // ⚠ `CustomHeaders` est un `TStringList` qui utilise `=` comme séparateur
+  //   par défaut. Or la valeur HSTS contient elle-même des `=`
+  //   (`max-age=31536000`). Pour éviter une confusion du parser, utiliser
+  //   `SetCustomHeader(NomEntete, Valeur)` qui sépare proprement :
+  Response.SetCustomHeader('Strict-Transport-Security',
+                           'max-age=31536000; includeSubDomains');
+end;
+```
+
+> ⚠️ **HSTS est ENGAGEANT** : une fois envoyée, l'instruction `max-age=31536000` reste en cache du navigateur pendant 1 an. Si vous activez HSTS puis perdez votre certificat (ou voulez revenir temporairement à HTTP), les visiteurs réguliers ne pourront PLUS accéder au site avant l'expiration. Pour tester : commencer par `max-age=300` (5 min), valider, puis monter progressivement. Le `preload` est encore plus engageant : entrée définitive dans la liste chromium si validée.
+
+## mTLS (Mutual TLS)
+
+Le TLS standard authentifie le **serveur** auprès du client. Le **mTLS** ajoute la réciproque : le client présente lui aussi un certificat que le serveur vérifie. Cas d'usage typiques :
+
+- **API backend-to-backend** : microservices internes qui ne doivent accepter que des appelants connus.
+- **IoT** : un parc d'objets connectés où chaque appareil a son propre certificat.
+- **B2B** : intégration avec un partenaire qui a fourni un certificat client.
+
+Avec Indy côté client :
+
+```pascal
+SSLHandler.SSLOptions.CertFile := 'client-cert.pem';  
+SSLHandler.SSLOptions.KeyFile := 'client-key.pem';  
+// La clé doit rester confidentielle ; si elle fuit, l'identité du
+// client est usurpable jusqu'à révocation du certificat.
+```
 
 ## Bonnes pratiques
 
@@ -950,7 +1114,8 @@ RESTClient.BaseURL := 'http://api.monsite.com';
 **2. Utiliser TLS 1.2 ou supérieur**
 ```pascal
 // ✅ BON
-SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+// Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
 
 // ❌ MAUVAIS
 SSLHandler.SSLOptions.Method := sslvSSLv3; // Vulnérable
@@ -1075,7 +1240,8 @@ begin
       InfosConnexion.Add(Msg);
     end;
 
-    SSLHandler.SSLOptions.Method := sslvTLSv1_2;
+    // Autoriser TLS 1.2 et 1.3 (TLS 1.0/1.1 sont obsolètes en 2026)
+    SSLHandler.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     HTTP.IOHandler := SSLHandler;
 
     HTTP.Get('https://www.google.com');

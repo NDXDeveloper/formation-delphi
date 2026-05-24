@@ -96,10 +96,11 @@ Chiffre avec clé K         Déchiffre avec clé K
 - Une clé compromise = toutes les données compromises
 
 **Algorithmes courants** :
-- **AES (Advanced Encryption Standard)** : Le standard actuel, très sûr
-- **3DES (Triple DES)** : Ancien, moins recommandé aujourd'hui
-- **Blowfish** : Rapide, pour des données non critiques
-- **ChaCha20** : Moderne, très performant sur mobile
+- **AES (Advanced Encryption Standard)** : Le standard actuel, très sûr — clés 128/192/256 bits
+- **ChaCha20** : Moderne, très performant sur mobile (alternative AES sans accélération matérielle)
+- **3DES (Triple DES)** : ❌ **Déprécié par le NIST depuis 2017, interdit pour le chiffrement de nouvelles données depuis le 31 décembre 2023** (SP 800-131A Rev. 2). Bloc de 64 bits → vulnérable à Sweet32. Ne plus utiliser pour de nouveaux projets ; ne conserver que pour déchiffrer d'anciennes données.
+- **Blowfish** : ❌ Même problème de bloc 64 bits que 3DES → vulnérable à Sweet32 sur les long flux. Son successeur **Twofish** (128 bits) reste sûr mais n'est plus très utilisé. Préférez AES ou ChaCha20.
+- **DES** : ❌ Cassé depuis 1998 (force brute en quelques heures). À ne JAMAIS utiliser.
 
 ### 2. Chiffrement asymétrique
 
@@ -127,9 +128,10 @@ Chiffre "Secret"           Déchiffre avec clé privée
 - Limité en taille de données
 
 **Algorithmes courants** :
-- **RSA** : Le plus utilisé, très fiable
-- **ECC (Elliptic Curve Cryptography)** : Plus rapide, clés plus courtes
-- **DSA** : Pour les signatures numériques
+- **RSA** : Largement déployé. ⚠ Selon le NIST SP 800-131A Rév. 2 et les recommandations ANSSI : **RSA-2048 acceptable jusqu'à fin 2030**, **RSA-3072 minimum à partir de 2031**. Pour tout nouveau déploiement en 2026, privilégier directement 3072 bits afin d'éviter une migration prochaine. Toujours utiliser **OAEP** (padding pour le chiffrement) et **PSS** (padding pour la signature) — l'ancien PKCS#1 v1.5 a des vulnérabilités connues (Bleichenbacher).
+- **ECC (Elliptic Curve Cryptography)** : plus rapide qu'RSA, clés beaucoup plus courtes (256 bits ECC ≈ 3072 bits RSA). Courbes recommandées : **P-256** (NIST), **Curve25519** (Bernstein, performance + résistance side-channel).
+- **EdDSA / Ed25519** : signatures modernes sur Curve25519, ~100× plus rapides qu'RSA-3072 pour signer. Standardisées RFC 8032, supportées partout en 2026.
+- **DSA** : ⚠ Largement remplacé par **ECDSA** (DSA sur courbes elliptiques) et surtout **Ed25519**. À éviter pour de nouveaux projets.
 
 ### 3. Chiffrement hybride
 
@@ -239,7 +241,23 @@ end;
 
 ### Chiffrement AES robuste
 
-Pour un vrai chiffrement sécurisé, utilisez une bibliothèque comme DCPcrypt ou Lockbox :
+Pour un vrai chiffrement sécurisé, utilisez une bibliothèque éprouvée. **La RTL Delphi ne fournit pas AES nativement** — il faut donc passer par une bibliothèque tierce ou OpenSSL.
+
+> 💡 **Bibliothèques AES recommandées pour Delphi 13 (2026)** :  
+> - **OpenSSL via Indy** (`IdHashSHA`, `IdSSL`…) — éprouvé, gratuit, à jour  
+> - **LockBox 3** — open source, maintenu, compatible Delphi récent  
+> - **GrijjyFoundation** — `Grijjy.System.Crypto` moderne (AES-GCM, ChaCha20)  
+> - **TMS Cryptography Pack** — commercial, support officiel  
+> - **DCPcrypt** — historique, encore fonctionnel mais peu maintenu depuis 2014  
+>  
+> Préférez **AES-GCM** (authentifié) plutôt qu'AES-CBC pour tout nouveau projet : il combine chiffrement et intégrité en une seule opération.
+
+> 🚨 **Le code ci-dessous présente PLUSIEURS faiblesses** que nous laissons volontairement pour les corriger ensuite :  
+> 1. **Pas d'IV explicite** : `FCipher.Init(Key, SizeOf(Key) * 8, nil)` avec `nil` ⇒ IV nul = même donnée chiffrée donne toujours le même résultat = motifs détectables.  
+> 2. **Dérivation de clé par simple SHA-256** : insuffisant si la clé vient d'un mot de passe utilisateur. Il faut **PBKDF2 / Argon2** (voir plus bas).  
+> 3. **Pas d'authentification** : un attaquant peut altérer le chiffré sans qu'on le détecte. Il faut un HMAC ou utiliser un mode authentifié (GCM).  
+>  
+> Versions sécurisées dans la suite du chapitre.
 
 ```pascal
 // Exemple conceptuel avec pseudo-code
@@ -267,7 +285,9 @@ begin
   inherited Create;
   FCipher := TDCP_rijndael.Create(nil);
 
-  // Créer une clé de 256 bits à partir du mot de passe
+  // ⚠ Hash SHA-256 simple — INSUFFISANT pour dériver une clé depuis
+  //   un mot de passe utilisateur. À remplacer par PBKDF2 ou Argon2
+  //   (voir la section « Dérivation de clé » plus bas).
   Hash := TDCP_sha256.Create(nil);
   try
     Hash.Init;
@@ -277,6 +297,8 @@ begin
     Hash.Free;
   end;
 
+  // ⚠ IV nul (`nil`) ! En production, générer un IV aléatoire de
+  //   16 octets via un CSPRNG et le stocker à côté du chiffré.
   FCipher.Init(Key, SizeOf(Key) * 8, nil);
 end;
 
@@ -292,6 +314,20 @@ var
   Output: TBytes;
 begin
   Input := TEncoding.UTF8.GetBytes(ATexte);
+
+  // ⚠ AES-CBC opère sur des blocs de 16 octets. Si `Length(Input)` n'est pas
+  //   un multiple de 16, il faut PADDER les données (typiquement PKCS#7) :
+  //   chaque octet de padding contient la valeur N = nombre d'octets à
+  //   ajouter (1 à 16). L'absence de padding produit un crash ou une
+  //   troncature silencieuse en fin de message.
+  //
+  //   Code ci-dessous : suppose que la bibliothèque DCPcrypt gère le
+  //   padding interne (vrai pour `EncryptStream` ; faux pour `EncryptCBC`
+  //   dans l'API « bas niveau »). Pour une vraie implémentation :
+  //     1. Ajouter le padding PKCS#7 manuellement avant l'appel.
+  //     2. Allouer Output de taille `Input.Length + (16 - Input.Length mod 16)`.
+  //     3. Au déchiffrement, lire le dernier octet pour connaître le padding
+  //        à retirer.
   SetLength(Output, Length(Input));
 
   FCipher.EncryptCBC(Input[0], Output[0], Length(Input));
@@ -341,30 +377,59 @@ Plus la clé est longue, plus le chiffrement est sûr :
 
 **2. Génération de clés**
 
+> 🚨 **`Random` n'est PAS cryptographiquement sûr.** Le générateur pseudo-aléatoire de Delphi est prévisible : un attaquant qui devine la *seed* peut reconstruire toutes les clés générées. Pour la cryptographie, il faut un **CSPRNG** (*Cryptographically Secure PRNG*) :  
+> - **Windows** : `BCryptGenRandom` (API CNG) ou l'ancien `CryptGenRandom`  
+> - **Linux / Android** : `getrandom(2)` ou `/dev/urandom`  
+> - **macOS / iOS** : `SecRandomCopyBytes` (`Security.framework`)  
+> - **Cross-platform** : OpenSSL `RAND_bytes` (via `IdSSLOpenSSL`)
+
 ```pascal
 uses
-  System.SysUtils;
+  System.SysUtils, System.Hash, System.NetEncoding;
 
-// Générer une clé aléatoire
+// ❌ NE PAS FAIRE — version naïve qui montre le piège :
+// function GenererCleAleatoire(ATaille: Integer): TBytes;
+// var i: Integer;
+// begin
+//   SetLength(Result, ATaille);
+//   Randomize;                        // Graine = horloge système, prédictible
+//   for i := 0 to ATaille - 1 do
+//     Result[i] := Random(256);       // Mersenne Twister, pas cryptographique
+// end;
+
+// ✅ Version correcte : utiliser le CSPRNG du système d'exploitation.
+//    `RemplirOctetsCSPRNG` est défini en section 16.1 (BCryptGenRandom sur
+//    Windows, /dev/urandom sur Linux, SecRandomCopyBytes sur macOS/iOS).
 function GenererCleAleatoire(ATaille: Integer): TBytes;  
-var  
-  i: Integer;
-begin
+begin  
   SetLength(Result, ATaille);
-  Randomize;
-  for i := 0 to ATaille - 1 do
-    Result[i] := Random(256);
+  RemplirOctetsCSPRNG(Result);
 end;
 
-// Dériver une clé depuis un mot de passe (PBKDF2)
-// Utilise plusieurs itérations pour ralentir les attaques par force brute
-function DeriverCleDepuisMotDePasse(const AMotDePasse, ASalt: string;
-  AIterations: Integer): TBytes;
+// ✅ Dérive une clé robuste depuis un mot de passe via PBKDF2-HMAC-SHA-256.
+//    Disponible NATIVEMENT dans System.Hash depuis Delphi 11 — aucune
+//    bibliothèque externe nécessaire.
+function DeriverCleDepuisMotDePasse(const AMotDePasse: string;
+  const ASalt: TBytes; AIterations, ATailleCleOctets: Integer): TBytes;
 begin
-  // Implémentation PBKDF2
-  // Nécessite une bibliothèque cryptographique
-  // Exemple simplifié :
-  Result := GenererCleAleatoire(32); // À remplacer par vraie implémentation
+  Result := THashPBKDF2_SHA256.GetHashBytes(
+    AMotDePasse, ASalt, AIterations, ATailleCleOctets);
+end;
+
+// Exemple d'utilisation
+procedure DemoDerivationCle;  
+var  
+  Sel, Cle: TBytes;
+begin
+  // 1. Générer un sel aléatoire (16 octets minimum)
+  Sel := GenererCleAleatoire(16);
+
+  // 2. Dériver une clé AES-256 (32 octets) avec 600 000 itérations
+  //    (recommandation OWASP 2026 pour SHA-256)
+  Cle := DeriverCleDepuisMotDePasse('MotDePasseUtilisateur', Sel, 600000, 32);
+
+  // 3. Stocker le sel à côté du chiffré (pas secret) ; la clé ne sort
+  //    jamais de la mémoire.
 end;
 ```
 
@@ -414,8 +479,12 @@ end;
 
 ```pascal
 // Exemple : Utiliser Windows DPAPI
+// ⚠ Les types `DATA_BLOB`, `CryptProtectData`, `CryptUnprotectData` sont
+//   définis dans l'unité `Winapi.Wincrypt`, PAS dans `Winapi.Windows`.
+//   Selon la version de Delphi, certains noms peuvent aussi se trouver
+//   dans `JwaWinCrypt` (JEDI). Ajuster vos `uses` en conséquence.
 uses
-  Winapi.Windows, System.SysUtils;
+  Winapi.Windows, Winapi.Wincrypt, System.SysUtils;
 
 function ChiffrerAvecDPAPI(const ATexte: string): TBytes;  
 var  
@@ -473,20 +542,28 @@ var
   Buffer: TBytes;
   Chiffrement: TChiffrementAES; // Classe définie précédemment
 begin
-  StreamSource := TFileStream.Create(AFichierSource, fmOpenRead);
+  // ⚠ CETTE IMPLÉMENTATION CHARGE TOUT LE FICHIER EN MÉMOIRE.
+  //   Pour un fichier de 100 Mo : pas de problème. Pour un fichier de
+  //   plusieurs Go, le process plante (OutOfMemory) ou ralentit
+  //   considérablement (swap). Voir la version « gros fichiers » plus bas.
+  //
+  // ⚠ `Read(Buffer[0], N)` peut lire MOINS de N octets (rare mais légal
+  //   pour les flux réseau, pipes, etc.). Pour un fichier, `ReadBuffer`
+  //   est préférable : il lève une exception si la lecture est
+  //   incomplète, évitant un buffer partiellement initialisé.
+  StreamSource := TFileStream.Create(AFichierSource, fmOpenRead or fmShareDenyWrite);
   StreamDest := TFileStream.Create(AFichierDestination, fmCreate);
   Chiffrement := TChiffrementAES.Create(ACle);
   try
-    // Lire le fichier source
+    // Lire le fichier source d'un coup (ReadBuffer = lecture exhaustive)
     SetLength(Buffer, StreamSource.Size);
-    StreamSource.Read(Buffer[0], StreamSource.Size);
+    StreamSource.ReadBuffer(Buffer, StreamSource.Size);
 
     // Chiffrer
-    // (Simplification - en réalité, traiter par blocs pour gros fichiers)
     Buffer := ChiffrerBuffer(Buffer, Chiffrement);
 
-    // Écrire le fichier chiffré
-    StreamDest.Write(Buffer[0], Length(Buffer));
+    // Écrire le fichier chiffré (WriteBuffer = écriture exhaustive)
+    StreamDest.WriteBuffer(Buffer, Length(Buffer));
   finally
     Chiffrement.Free;
     StreamDest.Free;
@@ -656,6 +733,10 @@ begin
 end;
 ```
 
+> 💡 **Recommandation PCI DSS pour les numéros de carte** : ne JAMAIS afficher le PAN (Primary Account Number) complet à l'utilisateur. Masquer tout sauf les 6 premiers et les 4 derniers chiffres (`1234 56XX XXXX 3456`). Pour le journal de transaction, ne conserver que le PAN masqué ou un *token* irréversible (tokenisation). Et de toute façon, **ne stockez pas de numéros de carte si vous n'avez pas la certification PCI DSS appropriée** : déléguez cela à un prestataire (Stripe, Adyen, Mollie) qui retourne juste un identifiant de carte ré-utilisable.
+
+> ⚠️ **Données déchiffrées en mémoire** : une fois en clair côté application, le numéro reste vulnérable aux *core dumps*, à l'inspection par debugger, ou au swap disque. Limitez la durée de vie : déchiffrer juste avant l'usage, écraser le buffer (`FillChar`) juste après. Si vous manipulez les données par `string`, sachez que la copy-on-write de Delphi rend l'effacement difficile : préférez `TBytes`.
+
 ### 2. Chiffrement de la connexion à la base
 
 FireDAC supporte SSL/TLS pour les connexions MySQL :
@@ -672,9 +753,20 @@ begin
 
   // Activer SSL/TLS
   FDConnection1.Params.Add('UseSSL=True');
+
+  // ⚠ IMPORTANT : préciser le mode de vérification du certificat serveur.
+  //   Sans cela, MySQL accepte un certificat auto-signé ou un certificat
+  //   pour un autre serveur → attaque MITM possible.
+  //   Valeurs MySQL : DISABLED, PREFERRED, REQUIRED, VERIFY_CA, VERIFY_IDENTITY.
+  //   VERIFY_IDENTITY = vérifie CA + correspondance du nom d'hôte (production).
+  FDConnection1.Params.Add('SSLMode=VERIFY_IDENTITY');
+
+  // Certificat de la CA pour vérifier le serveur (obligatoire avec VERIFY_*)
+  FDConnection1.Params.Add('SSLCA=ca-cert.pem');
+
+  // Certificat client pour authentification mutuelle (mTLS) — optionnel
   FDConnection1.Params.Add('SSLCert=client-cert.pem');
   FDConnection1.Params.Add('SSLKey=client-key.pem');
-  FDConnection1.Params.Add('SSLCA=ca-cert.pem');
 
   FDConnection1.Connected := True;
 end;
@@ -742,8 +834,9 @@ begin
   Client := TIdTCPClient.Create(nil);
   SSL := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   try
-    // Configurer SSL
-    SSL.SSLOptions.Method := sslvTLSv1_2;
+    // Configurer SSL — accepter TLS 1.2 ET 1.3, refuser tout en-dessous.
+    // (TLS 1.0/1.1 sont obsolètes depuis 2020 ; SSLv3 et antérieurs interdits.)
+    SSL.SSLOptions.SSLVersions := [sslvTLSv1_2, sslvTLSv1_3];
     SSL.SSLOptions.Mode := sslmClient;
 
     Client.IOHandler := SSL;
@@ -774,22 +867,23 @@ Un IV est une valeur aléatoire utilisée avec la clé de chiffrement pour garan
 **Importance** : Sans IV, un attaquant peut détecter des motifs dans les données chiffrées.
 
 ```pascal
-procedure ChiffrerAvecIV(const ATexte: string; const ACle: TBytes; out ATexteChiffre, AIV: TBytes);  
-var  
-  i: Integer;
+procedure ChiffrerAvecIV(const ATexte: string; const ACle: TBytes;
+                          out ATexteChiffre, AIV: TBytes);
 begin
-  // Générer un IV aléatoire
-  SetLength(AIV, 16); // 16 octets pour AES
-  Randomize;
-  for i := 0 to 15 do
-    AIV[i] := Random(256);
+  // ⚠ L'IV doit provenir d'un CSPRNG, JAMAIS de `Random`. Un IV prédictible
+  //   pour AES-CBC permet une attaque par clair choisi (BEAST, 2011).
+  //   Pour AES-GCM, un IV réutilisé est CATASTROPHIQUE : il révèle la clé
+  //   d'authentification GMAC, l'attaquant peut forger des messages.
+  SetLength(AIV, 16); // 16 octets pour AES-CBC, 12 octets pour AES-GCM
+  RemplirOctetsCSPRNG(AIV);   // wrapper plate-forme — voir section 16.1
 
   // Chiffrer avec la clé ET l'IV
   // (Code simplifié - utilisez une vraie bibliothèque crypto)
   ATexteChiffre := ChiffrerAESAvecIV(ATexte, ACle, AIV);
 end;
 
-// Lors du stockage, garder l'IV avec les données chiffrées
+// Lors du stockage, garder l'IV avec les données chiffrées.
+// Format suggéré : [IV][Ciphertext]  ou  [IV][Tag GCM][Ciphertext]
 procedure StockerDonneesChiffrees(const ATexte: string);  
 var  
   Cle: TBytes;
@@ -800,12 +894,15 @@ begin
   Cle := ChargerCleSecurisee;
   ChiffrerAvecIV(ATexte, Cle, TexteChiffre, IV);
 
+  // ⚠ Toujours utiliser `WriteBuffer` (lève une exception si écriture
+  //   incomplète) plutôt que `Write` (retourne silencieusement le
+  //   nombre d'octets écrits).
   Fichier := TFileStream.Create('data.encrypted', fmCreate);
   try
     // Écrire d'abord l'IV (pas secret, mais nécessaire pour déchiffrer)
-    Fichier.Write(IV[0], Length(IV));
+    Fichier.WriteBuffer(Pointer(IV)^, Length(IV));
     // Puis les données chiffrées
-    Fichier.Write(TexteChiffre[0], Length(TexteChiffre));
+    Fichier.WriteBuffer(Pointer(TexteChiffre)^, Length(TexteChiffre));
   finally
     Fichier.Free;
   end;
@@ -833,17 +930,40 @@ Bloc 1 → Chiffré → XOR avec Bloc 2 → Chiffré → ...
 
 ### GCM (Galois/Counter Mode)
 
-**Recommandé** : Mode moderne qui offre à la fois chiffrement et authentification.
+**Recommandé** : Mode moderne qui offre à la fois chiffrement et authentification (AEAD — *Authenticated Encryption with Associated Data*). Le chiffré est accompagné d'un *tag d'authentification* de 16 octets ; toute altération est détectée au déchiffrement.
 
 ```pascal
-// Exemple conceptuel avec GCM
-procedure ChiffrerModeGCM(const ATexte: string);  
-begin  
-  // Utilise AES-GCM pour chiffrer ET authentifier
-  // Garantit que les données n'ont pas été modifiées
-  // Nécessite une bibliothèque supportant GCM
-end;
+// Pattern d'usage AES-256-GCM via OpenSSL (Indy fournit IdSSLOpenSSLHeaders).
+// Note : System.Hash ne contient PAS d'AES — il faut OpenSSL, LockBox ou TMS.
+//
+// Format du chiffré stocké : [IV 12 octets][Ciphertext][Tag 16 octets]
+//
+// 1. Chiffrement :
+//    - Générer IV de 12 octets via CSPRNG (NE JAMAIS réutiliser !)
+//    - EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nil, nil, nil)
+//    - EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, 12, nil)
+//    - EVP_EncryptInit_ex(ctx, nil, nil, Key, IV)
+//    - (option) EVP_EncryptUpdate(ctx, nil, ..., AAD, Length(AAD)) // données associées
+//    - EVP_EncryptUpdate(ctx, OutBuf, ..., InBuf, Length(InBuf))
+//    - EVP_EncryptFinal_ex(ctx, ...)
+//    - EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, Tag)
+//
+// 2. Déchiffrement : mêmes appels avec EVP_Decrypt*. SET_TAG AVANT le Final.
+//    Si EVP_DecryptFinal_ex retourne 0 → le tag ne matche pas → MESSAGE ALTÉRÉ.
+//    Dans ce cas, NE PAS retourner le clair partiel, lever une exception.
 ```
+
+### ChaCha20-Poly1305
+
+Alternative AEAD à AES-GCM, **recommandée par TLS 1.3** et particulièrement utile sur les appareils mobiles qui n'ont pas d'accélération matérielle AES-NI :
+
+- **Performance** : 3 à 5× plus rapide qu'AES sur ARM sans extensions cryptographiques.
+- **Sécurité** : même niveau qu'AES-256, sans les pièges de timing des implémentations AES non protégées.
+- **Standardisation** : RFC 8439 (2018), supporté par OpenSSL ≥ 1.1.0 (`EVP_chacha20_poly1305()`).
+
+Préférez **ChaCha20-Poly1305 sur mobile et IoT**, **AES-256-GCM sur serveur** (où AES-NI est disponible).
+
+> 🔮 **Cryptographie post-quantique (PQC)** : NIST a finalisé en août 2024 ses trois premiers standards (FIPS 203/204/205) — ML-KEM (ex-Kyber) pour l'échange de clés, ML-DSA (ex-Dilithium) et SLH-DSA (ex-SPHINCS+) pour la signature. Ils remplaceront progressivement RSA et ECC d'ici la prochaine décennie face à la menace d'un ordinateur quantique capable de casser ces deux algorithmes (algorithme de Shor). Pour AES-256 et SHA-256/512, la menace quantique est marginale (algorithme de Grover ne fait que doubler la longueur de clé effective requise) : ils restent les choix sûrs pour la décennie à venir. Surveillez l'apparition de ces algorithmes dans OpenSSL ≥ 3.5 et anticipez la « *crypto-agility* » dans vos applications (rendre les algorithmes paramétrables, pas en dur).
 
 ## Bonnes pratiques
 
@@ -912,22 +1032,26 @@ Même chiffrées, les données ont une valeur. Contrôlez l'accès.
 
 **4. Ne pas oublier de nettoyer la mémoire**
 
+> ⚠ **Le `String` Delphi est *managé* et *copy-on-write*.** Faire `FillChar(Cle[1], ...)` sur un `string` n'efface PAS forcément la mémoire originale : Delphi peut avoir déjà copié la chaîne ailleurs (assignation, paramètre, retour de fonction). Pour vraiment effacer un secret, manipulez un `TBytes` (tableau dynamique d'octets, non managé en COW) et écrasez-le avant `SetLength(0)`.
+
 ```pascal
-procedure UtiliserCle;  
+procedure UtiliserCleSecurise;  
 var  
-  Cle: string;
+  CleBytes: TBytes;
 begin
-  Cle := ChargerCleSecrete;
+  CleBytes := ChargerCleSecreteEnBytes;  // jamais transformé en String !
   try
-    // Utiliser la clé
-    ChiffrerDonnees(Cle);
+    ChiffrerDonneesAvecBytes(CleBytes);
   finally
-    // Effacer la clé de la mémoire
-    FillChar(Cle[1], Length(Cle) * SizeOf(Char), 0);
-    Cle := '';
+    // Écraser explicitement, puis libérer le tableau
+    if Length(CleBytes) > 0 then
+      FillChar(CleBytes[0], Length(CleBytes), 0);
+    SetLength(CleBytes, 0);
   end;
 end;
 ```
+
+> 💡 Cette précaution sert principalement contre les *crash dumps* et l'analyse mémoire post-mortem. Un attaquant ayant déjà obtenu un accès lecture au processus a souvent les moyens de tout récupérer — mais réduire la fenêtre d'exposition reste une bonne pratique défensive.
 
 **5. Ne pas négliger la performance**
 
@@ -1004,7 +1128,11 @@ begin
 
     Fichier := TFileStream.Create(CheminFichier, fmCreate);
     try
-      Fichier.Write(DonneesChiffrees[0], Length(DonneesChiffrees));
+      // ⚠ `WriteBuffer` lève une exception si écriture incomplète ;
+      //   `Write` retourne silencieusement le nombre d'octets écrits.
+      //   Pour des données chiffrées, une écriture partielle = fichier
+      //   illisible — donc on veut une exception.
+      Fichier.WriteBuffer(Pointer(DonneesChiffrees)^, Length(DonneesChiffrees));
     finally
       Fichier.Free;
     end;
@@ -1042,10 +1170,14 @@ begin
       RESTRequest.AddBody(FichierChiffre, TRESTContentType.ctAPPLICATION_OCTET_STREAM);
       RESTRequest.Execute;
 
-      if RESTRequest.Response.StatusCode = 200 then
+      // ⚠ Un POST d'upload réussi peut retourner 200 (OK), 201 (Created),
+      //   202 (Accepted) ou 204 (No Content) selon l'API. Tester la plage 2xx.
+      if (RESTRequest.Response.StatusCode >= 200) and
+         (RESTRequest.Response.StatusCode < 300) then
         ShowMessage('Fichier chiffré envoyé avec succès')
       else
-        ShowMessage('Erreur d''envoi');
+        ShowMessage('Erreur d''envoi : ' +
+                    IntToStr(RESTRequest.Response.StatusCode));
     finally
       RESTRequest.Free;
       RESTClient.Free;
@@ -1069,7 +1201,7 @@ Le RGPD recommande (et parfois impose) le chiffrement des données personnelles 
 - Données médicales
 - Toute donnée sensible
 
-**Avantage RGPD** : Si vos données chiffrées sont volées mais que la clé est en sécurité, vous n'avez pas à notifier la violation dans certains cas.
+**Avantage RGPD** : l'article 34§3a permet d'**éviter la notification aux personnes concernées** si les données étaient « *rendues incompréhensibles à toute personne qui n'est pas autorisée à y avoir accès* » — typiquement par chiffrement avec une clé restée non compromise. ⚠ Attention : la notification à la CNIL (article 33) reste obligatoire dans la plupart des cas, et il faut être en mesure de **prouver** que la clé n'a pas été compromise (gestion documentée des clés, audits, séparation des secrets).
 
 ```pascal
 // Implémenter une table d'audit du chiffrement

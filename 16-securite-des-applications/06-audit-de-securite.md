@@ -115,6 +115,14 @@ class constructor TLogger.Create;
 begin  
   FLock := TCriticalSection.Create;
   FInstance := TLogger.Create;
+  // ⚠ `ChangeFileExt(ParamStr(0), '.log')` place le log à côté de
+  //   l'exécutable. Sur Windows c'est OK depuis l'UAC (sauf si l'exe
+  //   est dans Program Files), mais sur Linux/macOS `/usr/local/bin/`
+  //   est read-only. Pour une vraie portabilité, utiliser plutôt :
+  //     TPath.Combine(TPath.GetCachePath, 'monapp.log')   // logs jetables
+  //     TPath.Combine(TPath.GetDocumentsPath, 'monapp.log') // logs visibles
+  //   Sur serveur Linux, traditionnellement /var/log/monapp/ avec un
+  //   répertoire créé par le packaging avec les bonnes permissions.
   FInstance.FFichierLog := ChangeFileExt(ParamStr(0), '.log');
 end;
 
@@ -165,8 +173,14 @@ begin
     nlCritical: NiveauStr := 'CRITICAL';
   end;
 
+  // ⚠ Toujours horodater en UTC : un log écrit en heure locale est ambigu
+  //   au passage à l'heure d'été (deux événements distants peuvent porter
+  //   le même horodatage) et illisible dans un cluster multi-fuseaux.
+  //   ISO 8601 avec millisecondes pour la précision sur des événements
+  //   rapprochés.
   Ligne := Format('[%s] [%s] %s', [
-    FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+    FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',
+                   TTimeZone.Local.ToUniversalTime(Now)),
     NiveauStr,
     AMessage
   ]);
@@ -204,6 +218,74 @@ end;
 
 end.
 ```
+
+### Format moderne : JSON Lines
+
+En 2026, le format de log dominant pour les nouvelles applications est **JSON Lines** (`.jsonl`, alias *ndjson*) : un objet JSON par ligne. Avantages :
+
+- **Machine-parsable** : un `cat fichier.jsonl | jq` filtre instantanément.
+- **Schéma extensible** : ajout d'un champ sans casser les anciens parseurs.
+- **Compatible ELK / Splunk / Datadog / Loki** : ingestion directe.
+- **Lisible humainement** quand mis en forme.
+
+```pascal
+uses
+  System.JSON, System.DateUtils, System.SysUtils;
+
+// Helper portable : nom de la machine pour identifier l'instance dans les logs
+function NomMachine: string;  
+begin  
+  // Windows : COMPUTERNAME ; Linux/macOS : HOSTNAME (parfois HOST).
+  // ⚠ La fonction Windows API `GetComputerNameEx` prend deux paramètres
+  //   (NameType + buffer) et n'est pas portable. Préférer une variable
+  //   d'environnement, supportée partout.
+  Result := GetEnvironmentVariable('COMPUTERNAME');
+  if Result = '' then
+    Result := GetEnvironmentVariable('HOSTNAME');
+  if Result = '' then
+    Result := 'unknown';
+end;
+
+procedure TLogger.LogJSON(ANiveau: TNiveauLog; const AMessage: string;
+                           const AContexte: TJSONObject = nil);
+var
+  Obj: TJSONObject;
+const
+  Niveaux: array[TNiveauLog] of string = (
+    'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL');
+begin
+  Obj := TJSONObject.Create;
+  try
+    Obj.AddPair('ts', FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',
+                                     TTimeZone.Local.ToUniversalTime(Now)));
+    Obj.AddPair('level', Niveaux[ANiveau]);
+    Obj.AddPair('msg', AMessage);
+    Obj.AddPair('service', 'monapp');     // identifiant de service
+    Obj.AddPair('host', NomMachine);
+    if Assigned(AContexte) then
+      Obj.AddPair('ctx', AContexte.Clone as TJSONObject);
+
+    EcrireDansFichier(Obj.ToJSON);
+  finally
+    Obj.Free;
+  end;
+end;
+```
+
+Exemple de ligne produite :
+
+```json
+{"ts":"2026-05-24T14:23:01.512Z","level":"WARNING","msg":"Échec de connexion","service":"monapp","host":"web-01","ctx":{"username":"alice","ip":"203.0.113.42"}}
+```
+
+### Intégrité des logs (anti-tampering)
+
+Un attaquant qui obtient un accès en écriture sur les fichiers de logs efface ses traces. Quatre techniques pour s'en prémunir, par ordre de robustesse croissante :
+
+1. **Append-only au niveau filesystem** : sur Linux, `chattr +a /var/log/monapp.log` empêche toute modification ou suppression, même par root, jusqu'à `chattr -a`.
+2. **Chaînage par hash** (*hash chain*) : chaque ligne inclut le hash SHA-256 de la précédente. Toute altération invalide la chaîne. Implémentable en pur Delphi.
+3. **Externalisation immédiate** : pousser les logs vers un système distant (syslog, Loki, CloudWatch) — l'attaquant doit compromettre **deux** systèmes pour effacer ses traces.
+4. **Cosignatures notariales** : pour les logs à valeur probante (RGPD, finance), signer périodiquement le batch avec un timestamping authority RFC 3161.
 
 ### Utilisation du logger
 
@@ -265,6 +347,8 @@ Pour des analyses plus avancées, stockez les logs en base de données :
 ### Structure de table de logs
 
 ```sql
+-- ⚠ ENUM est spécifique à MySQL/MariaDB. Pour un SQL portable, remplacer
+--   par VARCHAR(16) + contrainte CHECK ou par un type ENUM dédié (Postgres).
 CREATE TABLE LogsSecurite (
     ID BIGINT PRIMARY KEY AUTO_INCREMENT,
     DateHeure DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -406,29 +490,51 @@ procedure ModifierUtilisateur(AID: Integer; const ANouveauNom: string);
 var  
   AncienNom: string;
   Query: TFDQuery;
+  Ancien, Nouveau: TJSONObject;
 begin
   Query := TFDQuery.Create(nil);
+  Ancien := TJSONObject.Create;
+  Nouveau := TJSONObject.Create;
   try
     Query.Connection := FDConnection1;
 
-    // Récupérer l'ancienne valeur
-    Query.SQL.Text := 'SELECT Nom FROM Users WHERE ID = :ID';
-    Query.ParamByName('ID').AsInteger := AID;
-    Query.Open;
-    AncienNom := Query.FieldByName('Nom').AsString;
-    Query.Close;
+    // ⚠ Encapsuler dans une transaction : si l'écriture du log échoue,
+    //   on ne veut pas avoir modifié sans trace ; si la modification
+    //   échoue, on ne veut pas de trace fantôme. Tout ou rien.
+    FDConnection1.StartTransaction;
+    try
+      // Récupérer l'ancienne valeur
+      Query.SQL.Text := 'SELECT Nom FROM Users WHERE ID = :ID FOR UPDATE';
+      Query.ParamByName('ID').AsInteger := AID;
+      Query.Open;
+      AncienNom := Query.FieldByName('Nom').AsString;
+      Query.Close;
 
-    // Effectuer la modification
-    Query.SQL.Text := 'UPDATE Users SET Nom = :Nom WHERE ID = :ID';
-    Query.ParamByName('Nom').AsString := ANouveauNom;
-    Query.ParamByName('ID').AsInteger := AID;
-    Query.ExecSQL;
+      // Effectuer la modification
+      Query.SQL.Text := 'UPDATE Users SET Nom = :Nom WHERE ID = :ID';
+      Query.ParamByName('Nom').AsString := ANouveauNom;
+      Query.ParamByName('ID').AsInteger := AID;
+      Query.ExecSQL;
 
-    // Journaliser la modification
-    LoggerBD.LogAudit(UtilisateurConnecteID, 'UPDATE', 'Users', AID,
-                      Format('{"Nom":"%s"}', [AncienNom]),
-                      Format('{"Nom":"%s"}', [ANouveauNom]));
+      // ✅ Construire le JSON via TJSONObject : guillemets, backslashes
+      //   et caractères de contrôle sont correctement échappés.
+      //   ❌ NE PAS faire Format('{"Nom":"%s"}', [...]) : un nom contenant
+      //      `"` ou `\n` casse le JSON et peut même créer une faille (log
+      //      injection, où l'attaquant injecte des champs supplémentaires).
+      Ancien.AddPair('Nom', AncienNom);
+      Nouveau.AddPair('Nom', ANouveauNom);
+
+      LoggerBD.LogAudit(UtilisateurConnecteID, 'UPDATE', 'Users', AID,
+                        Ancien.ToJSON, Nouveau.ToJSON);
+
+      FDConnection1.Commit;
+    except
+      FDConnection1.Rollback;
+      raise;
+    end;
   finally
+    Nouveau.Free;
+    Ancien.Free;
     Query.Free;
   end;
 end;
@@ -541,6 +647,12 @@ begin
   end;
 end;
 
+// ⚠ Cette fonction TRANSFÈRE la propriété du Query au caller, qui DOIT
+//   l'appeler `.Free` après usage. Convention dangereuse : un caller qui
+//   oublie le Free fuit la mémoire à chaque appel. Pour clarifier :
+//   - renommer la fonction (`CreerDataSetTentativesEchouees`) ;
+//   - documenter explicitement « propriété transférée à l'appelant » ;
+//   - ou retourner un objet wrapper qui se détruit avec un `try/finally`.
 function TDashboardSecurite.ObtenirTentativesEchouees: TDataSet;  
 var  
   Query: TFDQuery;
@@ -638,6 +750,14 @@ var
   Query: TFDQuery;
   Message: string;
 begin
+  // ⚠ Si ce code est appelé par un timer toutes les minutes, il enverra
+  //   un email à CHAQUE itération tant que la condition reste vraie.
+  //   Résultat : 60 emails par heure pour la même alerte. En production :
+  //   1. Maintenir une table `AlertesEnvoyees(Type, Cle, DerniereNotification)`
+  //      et n'envoyer que si plus de N minutes depuis la dernière.
+  //   2. Ou utiliser un SIEM (ELK, Splunk) avec dédoublonnage natif.
+  //   3. Préférer l'envoi asynchrone (thread/file de messages) pour ne pas
+  //      bloquer le timer pendant les appels SMTP/SMS.
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FConnection;
@@ -750,7 +870,7 @@ Les logs peuvent devenir **très volumineux** rapidement. Il faut :
 
 ```pascal
 type
-  TGestionnaireLogsarchive = class
+  TGestionnaireLogsArchive = class
   private
     FConnection: TFDConnection;
     FRepertoireArchive: string;
@@ -838,7 +958,9 @@ var
   DateLimite: TDateTime;
   CheminFichier: string;
 begin
-  DateLimite := Now - (AMoisConservation * 30);
+  // IncMonth (System.DateUtils) gère correctement les mois de longueur variable
+  // et les années bissextiles, contrairement à un calcul Now - (N * 30).
+  DateLimite := IncMonth(Now, -AMoisConservation);
 
   if FindFirst(TPath.Combine(FRepertoireArchive, '*.txt'), faAnyFile, SearchRec) = 0 then
   begin
@@ -846,8 +968,12 @@ begin
       repeat
         CheminFichier := TPath.Combine(FRepertoireArchive, SearchRec.Name);
 
-        // Supprimer les fichiers plus anciens que la limite
-        if FileDateToDateTime(SearchRec.Time) < DateLimite then
+        // Supprimer les fichiers plus anciens que la limite.
+        // ⚠ `SearchRec.Time` (LongInt, format DOS) est déprécié et limité
+        //   à 2107. Préférer `SearchRec.TimeStamp` (TDateTime) introduit
+        //   en Delphi XE2, qui supporte les dates futures et est plus
+        //   précis (à la seconde près au lieu de 2 secondes).
+        if SearchRec.TimeStamp < DateLimite then
         begin
           DeleteFile(CheminFichier);
           TLogger.Instance.Info('Archive supprimée', CheminFichier);
@@ -913,6 +1039,22 @@ begin
   GestionnaireArchive.NettoyerLogsArchives(12);
 end;
 ```
+
+> ⚠️ **Échappement CSV** : la concaténation `Format('%d;%s;...', [...])` du code ci-dessus écrit les valeurs telles quelles. Si un message ou un User-Agent contient un point-virgule, un guillemet ou un saut de ligne, le fichier exporté devient invalide ou exploitable (CSV injection — un attaquant peut forcer une formule `=cmd|'/C calc'!A1` qui sera exécutée à l'ouverture dans Excel). Pour un export robuste :  
+>  
+> - encadrer chaque champ par des guillemets doubles et doubler les guillemets internes (RFC 4180) ;  
+> - préfixer par une apostrophe `'` les champs commençant par `=`, `+`, `-`, `@`, `\t`, `\r` pour neutraliser l'injection de formules ;  
+> - préférer un format binaire ou JSON Lines si le destinataire n'est pas une feuille de calcul.
+
+> 💡 **TextFile vs TStreamWriter** : le type `TextFile` historique de Pascal fonctionne mais utilise l'encodage ANSI du système et n'est pas thread-safe. Pour des logs portables, préférez `TStreamWriter` avec `TEncoding.UTF8` (unité `System.Classes`) — c'est ce que recommande la documentation Delphi 13.
+
+> 💡 **Déléguer la rotation au système** : avant d'implémenter votre propre rotation, regardez ce que fait l'OS :  
+> - **Linux** : `logrotate` est configurable via `/etc/logrotate.d/monapp.conf` et gère rotation, compression, suppression, signal de relecture (HUP) en quelques lignes.  
+> - **systemd-journald** : pour les services lancés par systemd, journald gère déjà la rotation (`SystemMaxUse=`, `MaxRetentionSec=`).  
+> - **Windows** : l'**Event Log** (Observateur d'événements) gère ses propres rotations ; vous pouvez y écrire avec `ReportEvent` (API Windows) ou `TEventLog` (unité `Vcl.SvcMgr`).  
+> - **macOS** : `os_log` (depuis 10.12) et `newsyslog.conf` font la même chose.  
+>  
+> Réservez votre code de rotation aux cas où les logs vont en base, dans un SIEM externe, ou dans un format spécifique non géré par le système.
 
 ## Tests de sécurité
 
@@ -998,21 +1140,32 @@ begin
 
     Resultat.Description := 'Vérification du hashage des mots de passe';
 
-    // Vérifier qu'aucun mot de passe n'est stocké en clair
-    Query.SQL.Text := 'SELECT COUNT(*) as Total FROM Users WHERE LENGTH(Password) < 32';
+    // Détection heuristique : un hash PBKDF2/Argon2/bcrypt encodé Base64
+    // dépasse largement 40 caractères, et un sel séparé est généralement présent.
+    // Un MD5/SHA-1 hex (32/40 caractères) est considéré comme obsolète,
+    // un mot de passe < 32 caractères est presque toujours en clair.
+    Query.SQL.Text :=
+      'SELECT COUNT(*) AS Total FROM Users ' +
+      'WHERE Password IS NULL OR CHAR_LENGTH(Password) < 40 OR Salt IS NULL';
     Query.Open;
 
     if Query.FieldByName('Total').AsInteger > 0 then
     begin
       Resultat.Statut := False;
       Resultat.Gravite := 'CRITIQUE';
-      Resultat.Recommandation := 'Des mots de passe semblent stockés en clair ou mal hashés';
+      Resultat.Recommandation :=
+        'Des comptes semblent avoir un mot de passe en clair, un hash faible ' +
+        '(MD5/SHA-1) ou sans sel. Migrer vers PBKDF2-HMAC-SHA-256 (≥ 600 000 ' +
+        'itérations), Argon2id, scrypt ou bcrypt.';
     end
     else
     begin
       Resultat.Statut := True;
       Resultat.Gravite := 'OK';
-      Resultat.Recommandation := 'Les mots de passe sont correctement hashés';
+      Resultat.Recommandation :=
+        'Les mots de passe semblent hashés avec un algorithme moderne. ' +
+        'Vérifier toutefois la valeur du paramètre "iterations" et la longueur ' +
+        'du sel par un audit applicatif.';
     end;
 
     FResultats.Add(Resultat);
@@ -1062,6 +1215,21 @@ var
   Query: TFDQuery;
   Resultat: TResultatAudit;
 begin
+  // ⚠ Les requêtes ci-dessous sont SPÉCIFIQUES à MySQL/MariaDB. Pour un audit
+  //   portable, adapter selon le SGBD via `FConnection.DriverName` :
+  //
+  //   MySQL/MariaDB   : SELECT VERSION();
+  //                     SHOW STATUS LIKE 'Ssl_cipher';
+  //   PostgreSQL      : SELECT version();
+  //                     SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid();
+  //   SQL Server      : SELECT @@VERSION;
+  //                     SELECT encrypt_option FROM sys.dm_exec_connections
+  //                       WHERE session_id = @@SPID;
+  //   Oracle          : SELECT banner FROM v$version;
+  //                     SELECT network_service_banner FROM v$session_connect_info;
+  //   SQLite          : SELECT sqlite_version();  -- SSL N/A (fichier local)
+  //   Firebird        : SELECT rdb$get_context('SYSTEM','ENGINE_VERSION')
+  //                              FROM rdb$database;
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FConnection;
@@ -1079,7 +1247,7 @@ begin
 
     // Vérifier que SSL est activé
     Resultat.Description := 'Connexion SSL à la base de données';
-    Query.SQL.Text := 'SHOW STATUS LIKE "Ssl_cipher"';
+    Query.SQL.Text := 'SHOW STATUS LIKE ''Ssl_cipher''';
     Query.Open;
 
     if Query.FieldByName('Value').AsString <> '' then
@@ -1392,6 +1560,7 @@ Avant le déploiement :
 **Sections complémentaires** :
 - **16.7** : Stockage sécurisé des identifiants
 - **16.8** : GDPR et confidentialité des données
+- **16.9** : Signature numérique et validation
 - **16.10** : Sécurité des applications mobiles
 
 **Outils recommandés** :

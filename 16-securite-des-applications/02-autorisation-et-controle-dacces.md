@@ -185,8 +185,14 @@ INSERT INTO Permissions (NomPermission, Description, CodePermission) VALUES
 
 -- Attribution des permissions aux rôles
 -- Administrateur : toutes les permissions
+-- ⚠ `SELECT 1, ID FROM Permissions` suppose que le rôle Administrateur a
+--   l'ID 1. Si vous supprimez puis recréez la table Roles, l'ID peut être
+--   différent. Plus robuste, basé sur le nom :
 INSERT INTO RolesPermissions (IDRole, IDPermission)  
-SELECT 1, ID FROM Permissions;  
+SELECT  
+  (SELECT ID FROM Roles WHERE NomRole = 'Administrateur'),
+  ID
+FROM Permissions;
 
 -- Gestionnaire : gestion documents + lecture utilisateurs
 INSERT INTO RolesPermissions (IDRole, IDPermission) VALUES
@@ -221,6 +227,11 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections, FireDAC.Comp.Client;
 
 type
+  // ⚠ Note sur les structures de données : `TList<string>.Contains` est en
+  //   O(n). Pour quelques dizaines de permissions par utilisateur c'est
+  //   négligeable, mais pour des applications avec des centaines de
+  //   permissions, préférer `THashSet<string>` (O(1) en lookup) du même
+  //   namespace `System.Generics.Collections`.
   TGestionPermissions = class
   private
     FIDUtilisateur: Integer;
@@ -346,22 +357,23 @@ var
 
 procedure InitialiserPermissions(AConnection: TFDConnection; AIDUtilisateur: Integer);  
 begin  
-  if Assigned(GestionPermissions) then
-    GestionPermissions.Free;
+  // ⚠ Utiliser `FreeAndNil` plutôt que `Free` seul : si `Create` ci-dessous
+  //   lève une exception, `GestionPermissions` resterait un *dangling
+  //   pointer* (objet libéré mais référence non nettoyée) qui causerait un
+  //   crash au prochain accès. `FreeAndNil` met la variable à `nil` en plus.
+  FreeAndNil(GestionPermissions);
   GestionPermissions := TGestionPermissions.Create(AConnection, AIDUtilisateur);
 end;
 
 procedure LibererPermissions;  
 begin  
-  if Assigned(GestionPermissions) then
-  begin
-    GestionPermissions.Free;
-    GestionPermissions := nil;
-  end;
+  FreeAndNil(GestionPermissions);
 end;
 ```
 
 ### 3. Contrôler l'accès aux fonctionnalités
+
+> 🚨 **Désactiver un bouton n'est PAS une mesure de sécurité.** L'application cliente s'exécute sur la machine de l'utilisateur — il peut la décompiler, la modifier, ou simplement reproduire l'appel réseau avec curl/Postman. **La vraie vérification doit être côté serveur**, dans le service métier qui exécute l'action. Les contrôles côté client sont purement **ergonomiques** (cacher ce qui est inutile).
 
 #### a) Activer/désactiver des boutons
 
@@ -457,6 +469,12 @@ end;
 
 Pour un contrôle plus fin, vous pouvez implémenter des permissions au niveau des enregistrements :
 
+> ⚠️ **IDOR — Insecure Direct Object Reference (OWASP A01:2021 « Broken Access Control »)** : c'est la classe de vulnérabilités la plus courante en 2024-2025 selon le rapport OWASP. Un utilisateur authentifié devine ou itère un identifiant pour accéder aux données d'un autre utilisateur (`/api/invoice?id=42` puis `/api/invoice?id=43`). Une permission générique `DOC_READ` ne suffit pas : il faut vérifier que **cet utilisateur précis a le droit de lire CE document précis**. Solutions :  
+>  
+> - vérifier la propriété de l'enregistrement (exemple ci-dessous) ;  
+> - ou utiliser des **identifiants non énumérables** (UUID v4 + CSPRNG, slugs aléatoires) pour rendre la devinette plus coûteuse ;  
+> - ne **jamais** se reposer uniquement sur le masquage côté client (`Visible := False`) — la requête réseau est triviale à reproduire.
+
 ### Propriété des données
 
 ```sql
@@ -510,27 +528,27 @@ procedure AttribuerRole(AIDUtilisateur, AIDRole: Integer);
 var  
   Query: TFDQuery;
 begin
+  // ⚠ Pattern « SELECT puis INSERT » : race condition possible si deux
+  //   administrateurs cliquent en même temps — les deux voient COUNT=0
+  //   et les deux INSERT s'exécutent → doublon ou violation FK.
+  //
+  // Solution : déclarer (IDUtilisateur, IDRole) comme CLÉ PRIMAIRE
+  // composée ou UNIQUE sur la table — c'est déjà le cas dans le schéma
+  // proposé plus haut — et utiliser une syntaxe « insert or ignore » :
+  //   MySQL/MariaDB : INSERT IGNORE INTO ...
+  //   PostgreSQL    : INSERT ... ON CONFLICT DO NOTHING
+  //   SQL Server    : MERGE WHEN MATCHED DO NOTHING WHEN NOT MATCHED INSERT
+  //   SQLite        : INSERT OR IGNORE INTO ...
+  //   Firebird      : UPDATE OR INSERT INTO ... MATCHING (...)
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
-
-    // Vérifier si l'association existe déjà
-    Query.SQL.Text := 'SELECT COUNT(*) as Compte FROM UtilisateursRoles ' +
-                      'WHERE IDUtilisateur = :IDUser AND IDRole = :IDRole';
+    Query.SQL.Text :=
+      'INSERT IGNORE INTO UtilisateursRoles (IDUtilisateur, IDRole) ' +
+      'VALUES (:IDUser, :IDRole)';
     Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
     Query.ParamByName('IDRole').AsInteger := AIDRole;
-    Query.Open;
-
-    if Query.FieldByName('Compte').AsInteger = 0 then
-    begin
-      // Créer l'association
-      Query.Close;
-      Query.SQL.Text := 'INSERT INTO UtilisateursRoles (IDUtilisateur, IDRole) ' +
-                        'VALUES (:IDUser, :IDRole)';
-      Query.ParamByName('IDUser').AsInteger := AIDUtilisateur;
-      Query.ParamByName('IDRole').AsInteger := AIDRole;
-      Query.ExecSQL;
-    end;
+    Query.ExecSQL;
   finally
     Query.Free;
   end;
@@ -567,11 +585,16 @@ end;
 
 procedure TFormGestionRoles.ChargerPermissionsRole(AIDRole: Integer);  
 begin  
+  // ⚠ La fonction IF(...) est spécifique à MySQL/MariaDB.
+  //   Sur PostgreSQL, SQL Server, SQLite, Oracle, utilisez la
+  //   syntaxe standard CASE WHEN ... THEN ... ELSE ... END
+  //   (montrée ci-dessous) qui fonctionne partout.
   FDQueryPermissions.SQL.Text :=
     'SELECT p.ID, p.NomPermission, p.Description, ' +
-    '       IF(rp.IDRole IS NULL, 0, 1) as Attribuee ' +
+    '       CASE WHEN rp.IDRole IS NULL THEN 0 ELSE 1 END AS Attribuee ' +
     'FROM Permissions p ' +
-    'LEFT JOIN RolesPermissions rp ON p.ID = rp.IDPermission AND rp.IDRole = :IDRole ' +
+    'LEFT JOIN RolesPermissions rp ' +
+    '  ON p.ID = rp.IDPermission AND rp.IDRole = :IDRole ' +
     'ORDER BY p.NomPermission';
   FDQueryPermissions.ParamByName('IDRole').AsInteger := AIDRole;
   FDQueryPermissions.Open;
@@ -612,6 +635,14 @@ Pour des accès temporaires :
 ```sql
 ALTER TABLE UtilisateursRoles ADD COLUMN DateDebut DATETIME;  
 ALTER TABLE UtilisateursRoles ADD COLUMN DateFin DATETIME;  
+
+-- ⚠ Sans index sur DateFin, le scan de la table à chaque vérification
+--   devient prohibitif quand la table grossit (plusieurs millions de lignes
+--   typiques dans une grande entreprise). Ajouter :
+CREATE INDEX idx_role_dates ON UtilisateursRoles(IDUtilisateur, IDRole, DateFin);
+
+-- 💡 Tâche planifiée pour nettoyer les permissions expirées :
+-- DELETE FROM UtilisateursRoles WHERE DateFin IS NOT NULL AND DateFin < NOW();
 ```
 
 ```pascal
@@ -638,6 +669,97 @@ begin
   end;
 end;
 ```
+
+## Invalidation du cache de permissions
+
+`TGestionPermissions` charge les permissions une fois à la connexion. Si un administrateur modifie les rôles d'un utilisateur **pendant** sa session, l'application ne le verra pas. Trois stratégies :
+
+```pascal
+// 1. TTL : recharger périodiquement (simple, mais latence)
+procedure TGestionPermissions.VerifierTTL;  
+begin  
+  if SecondsBetween(Now, FDernierChargement) > 300 then  // 5 min
+    Rafraichir;
+end;
+
+// 2. Numéro de version stocké en base (côté serveur) — on incrémente
+//    UtilisateursVersion.Numero à chaque modification de rôle. À chaque
+//    requête, on lit Numero et on recharge si différent du cache local.
+//
+// 3. Notification push (WebSocket, SSE, ou TIdNotificationClient) — le
+//    serveur informe activement les clients connectés qu'un changement
+//    de rôle a eu lieu. Le plus réactif, mais le plus complexe.
+```
+
+## Policy-as-Code (ABAC moderne)
+
+Pour les applications complexes, encoder les règles ABAC directement dans le code Delphi devient vite ingérable. Les approches modernes externalisent les politiques :
+
+- **OPA / Rego** (Open Policy Agent) : moteur de politiques open source, on appelle un endpoint HTTP avec le contexte d'évaluation et il retourne `allow/deny`. Très utilisé en 2024-2025.
+- **AWS Cedar** : langage de politique d'Amazon, open source depuis 2023, plus expressif que JSON.
+- **XACML** : standard OASIS plus ancien et plus verbeux, encore présent dans les grandes entreprises.
+
+Le code Delphi se contente alors d'appeler le moteur — il n'a plus de logique d'autorisation en dur :
+
+```pascal
+function TFormDocuments.PeutEffectuer(const AAction, ARessource: string;
+                                      AIDRessource: Integer): Boolean;
+var
+  HTTP: THTTPClient;
+  Requete, Reponse: TJSONObject;
+  Subject, Ressource: TJSONObject;
+  Stream: TStringStream;
+begin
+  // ⚠ Pattern `Requete.AddPair('x', TJSONObject.Create.AddPair(...))` :
+  //   le sous-objet créé devient « propriété » de la requête (libéré par
+  //   `Requete.Free`). En revanche, si une exception se produit ENTRE
+  //   `TJSONObject.Create` et le `AddPair` parent, le sous-objet fuit.
+  //   La version ci-dessous construit chaque sous-objet dans un `try...except`
+  //   séparé pour rester safe — verbeux mais correct.
+  Requete := TJSONObject.Create;
+  try
+    Subject := TJSONObject.Create;
+    Subject.AddPair('id', TJSONNumber.Create(IDUtilisateur));
+    Subject.AddPair('roles', RolesJSON);
+    Requete.AddPair('subject', Subject);   // ownership transféré à Requete
+
+    Requete.AddPair('action', AAction);
+
+    Ressource := TJSONObject.Create;
+    Ressource.AddPair('type', ARessource);
+    Ressource.AddPair('id', TJSONNumber.Create(AIDRessource));
+    Requete.AddPair('resource', Ressource);
+
+    HTTP := THTTPClient.Create;
+    Stream := TStringStream.Create(Requete.ToJSON, TEncoding.UTF8);
+    try
+      // ⚠ Bug fréquent : `Reponse` n'était PAS libéré ici → fuite mémoire.
+      //   Toujours libérer le TJSONObject retourné par ParseJSONValue.
+      // ⚠ Si la réponse n'est pas un JSON valide (OPA en panne, erreur 500,
+      //   page HTML d'erreur), ParseJSONValue retourne nil. Garde nécessaire.
+      Reponse := TJSONObject.ParseJSONValue(
+        HTTP.Post('https://opa.local/v1/data/myapp/allow', Stream)
+            .ContentAsString) as TJSONObject;
+      try
+        // Fail-safe : par défaut, REFUSER l'accès (cf principe « Fail-Safe »
+        // du README — en cas de doute, on refuse, on n'accorde pas).
+        Result := False;
+        if Assigned(Reponse) then
+          Reponse.TryGetValue<Boolean>('result', Result);
+      finally
+        Reponse.Free;
+      end;
+    finally
+      Stream.Free;
+      HTTP.Free;
+    end;
+  finally
+    Requete.Free;
+  end;
+end;
+```
+
+L'intérêt : les politiques deviennent versionnées (Git), testables (tests unitaires sur OPA), auditables et modifiables sans redéployer l'application Delphi.
 
 ## Hiérarchie des rôles
 
@@ -667,6 +789,10 @@ Administrateur (hérite de tout)
 Il est important de tracer qui accède à quoi et quand :
 
 ```sql
+-- ⚠ Le type ENUM est spécifique à MySQL/MariaDB. Pour un SQL portable :
+--   - PostgreSQL : CREATE TYPE resultat_acces AS ENUM ('Autorisé','Refusé') ;
+--   - SQL Server, Oracle, SQLite : VARCHAR + contrainte CHECK
+--     (Resultat IN ('Autorisé','Refusé')).
 CREATE TABLE JournalAcces (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     IDUtilisateur INT NOT NULL,
@@ -856,21 +982,44 @@ CREATE TABLE DelegationsPermissions (
 Permissions qui dépendent du contexte (heure, lieu, etc.) :
 
 ```pascal
-function PermissionContextuelle(const ACodePermission: string): Boolean;  
-var  
-  HeureActuelle: TTime;
+function PermissionContextuelle(const ACodePermission, AFuseauUtilisateur: string;
+                                 const ALocalisation: TLocalisation): Boolean;
+var
+  HeureUtilisateur: TDateTime;
 begin
   Result := GestionPermissions.APermission(ACodePermission);
 
   if Result and (ACodePermission = 'ACCES_FINANCE') then
   begin
-    HeureActuelle := Time;
+    // ⚠ Ne PAS utiliser `Time` (heure locale du serveur) : pour un
+    //   utilisateur à New York se connectant à un serveur à Paris, c'est
+    //   l'heure de New York qui compte. Toujours convertir vers le fuseau
+    //   horaire de l'utilisateur (stocké dans son profil), ou raisonner
+    //   en UTC + offset.
+    HeureUtilisateur := TTimeZone.GetTimeZone(AFuseauUtilisateur)
+                                 .ToLocalTime(TTimeZone.Local.ToUniversalTime(Now));
+
     // Accès aux données financières uniquement pendant les heures de bureau
-    Result := (HeureActuelle >= EncodeTime(8, 0, 0, 0)) and
-              (HeureActuelle <= EncodeTime(18, 0, 0, 0));
+    Result := (TimeOf(HeureUtilisateur) >= EncodeTime(8, 0, 0, 0)) and
+              (TimeOf(HeureUtilisateur) <= EncodeTime(18, 0, 0, 0));
+
+    // Restriction géographique éventuelle (ex. : bloquer depuis l'étranger
+    // pour un compte n'ayant pas activé le « voyage » dans ses paramètres)
+    if Result and (ALocalisation.Pays <> 'FR') then
+      Result := UtilisateurAAutoriseVoyage(GestionPermissions.IDUtilisateur);
   end;
 end;
 ```
+
+### Délégation de permissions — règles métier
+
+L'exemple SQL ci-dessus permet de créer une délégation, mais il manque la **logique métier** essentielle :
+
+1. **Le délégant doit lui-même posséder la permission qu'il délègue.** Sinon, n'importe qui pourrait déléguer des droits administrateur.
+2. **La période de délégation doit être bornée** (DateDebut ≤ DateFin, durée maximale raisonnable).
+3. **La délégation doit être journalisée** comme un événement de sécurité critique (cf 16.6).
+4. **Permission de déléguer** : tous les rôles ne doivent pas pouvoir déléguer — c'est en soi une permission qui doit être accordée explicitement (`PERM_DELEGATE`).
+5. **Auditabilité** : quand un utilisateur effectue une action via permission déléguée, le log doit indiquer **les deux** identifiants (acteur réel + identité empruntée), comme `sudo` sous Linux.
 
 ## Résumé des points essentiels
 

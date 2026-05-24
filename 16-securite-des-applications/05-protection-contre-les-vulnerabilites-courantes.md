@@ -19,18 +19,20 @@ Les vulnérabilités apparaissent généralement pour ces raisons :
 
 ## Le OWASP Top 10
 
-L'OWASP (Open Web Application Security Project) publie régulièrement une liste des 10 vulnérabilités les plus critiques. Voici celles que nous allons aborder :
+L'OWASP (Open Web Application Security Project) publie régulièrement une liste des 10 vulnérabilités les plus critiques. Voici la version **OWASP Top 10 — édition 2021** (toujours d'actualité en 2026, la prochaine révision est attendue) :
 
-1. **Injection** (SQL, commandes, etc.)
-2. **Broken Authentication** (authentification cassée)
-3. **Sensitive Data Exposure** (exposition de données sensibles)
-4. **XML External Entities (XXE)**
-5. **Broken Access Control** (contrôle d'accès cassé)
-6. **Security Misconfiguration** (mauvaise configuration)
-7. **Cross-Site Scripting (XSS)**
-8. **Insecure Deserialization** (désérialisation non sécurisée)
-9. **Using Components with Known Vulnerabilities** (composants vulnérables)
-10. **Insufficient Logging & Monitoring** (journalisation insuffisante)
+1. **A01 — Broken Access Control** (contrôle d'accès cassé) — *passé en n°1 depuis 2021*
+2. **A02 — Cryptographic Failures** (échecs cryptographiques, ex *Sensitive Data Exposure*)
+3. **A03 — Injection** (SQL, commandes, LDAP, NoSQL… inclut désormais XSS)
+4. **A04 — Insecure Design** (failles de conception, *nouvelle catégorie 2021*)
+5. **A05 — Security Misconfiguration** (mauvaise configuration, inclut désormais XXE)
+6. **A06 — Vulnerable and Outdated Components** (composants vulnérables ou obsolètes)
+7. **A07 — Identification and Authentication Failures** (anciennement *Broken Authentication*)
+8. **A08 — Software and Data Integrity Failures** (*nouvelle catégorie 2021*, ex CI/CD compromis)
+9. **A09 — Security Logging and Monitoring Failures** (journalisation insuffisante)
+10. **A10 — Server-Side Request Forgery (SSRF)** (*nouvelle catégorie 2021*)
+
+> 💡 Ce chapitre couvre les catégories les plus pertinentes pour un développeur Delphi : injection (A03), contrôle d'accès (A01), échecs cryptographiques (A02, voir chapitre 16.3), authentification (A07, voir chapitre 16.1), et journalisation (A09, voir chapitre 16.6).
 
 ## 1. Injection SQL
 
@@ -94,24 +96,38 @@ Résultat : **Toute la table Users est supprimée !**
 
 ```pascal
 // ✅ SÉCURISÉ - Utilise des paramètres
+// ⚠ Cet exemple se concentre uniquement sur la protection anti-injection.
+//   Pour le flux d'authentification complet (récupération du sel, calcul
+//   PBKDF2, comparaison à temps constant), voir la section 16.1.
 procedure TFormLogin.BtnConnexionClickSecurise(Sender: TObject);  
 var  
   Query: TFDQuery;
+  HashStocke, SaltB64, HashCalcule: string;
 begin
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
 
-    // Utilisation de paramètres nommés
-    Query.SQL.Text := 'SELECT * FROM Users WHERE Username = :Username AND Password = :Password';
-
-    // Les paramètres sont automatiquement échappés
+    // 1. Récupérer le sel et le hash de l'utilisateur via requête paramétrée
+    Query.SQL.Text :=
+      'SELECT MotDePasseHash, Salt FROM Users WHERE Username = :Username';
     Query.ParamByName('Username').AsString := EditUsername.Text;
-    Query.ParamByName('Password').AsString := HashMotDePasse(EditPassword.Text);
-
     Query.Open;
 
-    if not Query.IsEmpty then
+    if Query.IsEmpty then
+    begin
+      ShowMessage('Identifiants incorrects');  // message identique = on ne révèle pas
+      Exit;                                    // si l'utilisateur existe
+    end;
+
+    SaltB64 := Query.FieldByName('Salt').AsString;
+    HashStocke := Query.FieldByName('MotDePasseHash').AsString;
+
+    // 2. Hasher le mot de passe saisi avec le sel récupéré (PBKDF2, voir 16.1)
+    HashCalcule := HasherMotDePasse(EditPassword.Text, SaltB64);
+
+    // 3. Comparaison à temps constant pour empêcher les attaques temporelles
+    if HashEgalTempsConstant(HashCalcule, HashStocke) then
       ShowMessage('Connexion réussie')
     else
       ShowMessage('Identifiants incorrects');
@@ -185,6 +201,16 @@ var
   i: Integer;
   Params: string;
 begin
+  // ⚠ Cas particulier : tableau vide → `WHERE ID IN ()` est un SQL invalide
+  //   sur la plupart des SGBD. À court-circuiter explicitement :
+  if Length(AIDs) = 0 then
+    Exit;
+
+  // ⚠ Limite à ne pas oublier : la plupart des SGBD imposent un maximum
+  //   de paramètres par requête (~65 535 pour MySQL, 32 767 pour Oracle,
+  //   2 100 pour SQL Server). Pour de longues listes d'IDs, préférez
+  //   un INSERT temporaire ou un JOIN avec une table-valued parameter.
+
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
@@ -340,37 +366,85 @@ begin
 end;
 ```
 
-**Solution 3 : Content Security Policy (CSP)**
+**Solution 3 : Content Security Policy (CSP) et autres en-têtes de sécurité**
 
-Pour les applications web servies par Delphi :
+Pour les applications web servies par Delphi (WebBroker, Horse, mORMot…), configurer une suite d'en-têtes de sécurité — c'est presque gratuit, et très efficace pour la défense en profondeur :
 
 ```pascal
-procedure ConfigurerHeadersSecurite;  
+procedure ConfigurerHeadersSecurite(AResponse: TWebResponse);  
 begin  
-  // Ajouter un header CSP qui interdit les scripts inline
-  Response.SetCustomHeader('Content-Security-Policy',
-    'default-src ''self''; script-src ''self'' https://cdnjs.cloudflare.com');
+  // CSP : empêche l'exécution de scripts non whitelistés et limite les origines.
+  //   - default-src 'self'    : par défaut, ressources depuis le même origine
+  //   - script-src 'self' ... : scripts uniquement depuis notre site + CDN whitelisté
+  //   - style-src             : pareil pour CSS
+  //   - frame-ancestors       : remplace X-Frame-Options, empêche le clickjacking
+  //   - base-uri              : empêche les attaques par <base> tag
+  //   - form-action           : limite les destinations de formulaires
+  //   - upgrade-insecure-requests : convertit automatiquement http:// → https://
+  AResponse.SetCustomHeader('Content-Security-Policy',
+    'default-src ''self''; ' +
+    'script-src ''self'' https://cdnjs.cloudflare.com; ' +
+    'style-src ''self'' ''unsafe-inline''; ' +
+    'img-src ''self'' data: https:; ' +
+    'frame-ancestors ''none''; ' +
+    'base-uri ''self''; ' +
+    'form-action ''self''; ' +
+    'upgrade-insecure-requests');
+
+  // Empêche le sniffing MIME → réduit XSS via fichiers servis avec un type incorrect.
+  AResponse.SetCustomHeader('X-Content-Type-Options', 'nosniff');
+
+  // Anti-clickjacking pour les vieux navigateurs (CSP frame-ancestors prend le relais).
+  AResponse.SetCustomHeader('X-Frame-Options', 'DENY');
+
+  // Strict-Transport-Security : impose HTTPS pour 1 an (cf section HSTS plus loin).
+  AResponse.SetCustomHeader('Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains');
+
+  // Referrer-Policy : limite l'information envoyée à des sites tiers.
+  AResponse.SetCustomHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // Permissions-Policy (anciennement Feature-Policy) : désactive APIs sensibles
+  //   non utilisées (caméra, micro, géolocalisation, etc.).
+  AResponse.SetCustomHeader('Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=()');
 end;
 ```
 
+> 💡 **Tester votre configuration** : [securityheaders.com](https://securityheaders.com) note de A+ à F la suite d'entêtes que vous renvoyez. Un objectif raisonnable : A. Le rapport pointe aussi les directives CSP suspectes (`'unsafe-inline'`, `'unsafe-eval'`) à éviter.
+
+> 💡 **Inline scripts et nonces** : si vous devez vraiment injecter du JS inline (analytics, etc.), utilisez `script-src 'self' 'nonce-<aléatoire>'` et générez un nonce CSPRNG différent à chaque requête, à mettre dans l'attribut `nonce="..."` du `<script>`. Plus sûr que `'unsafe-inline'`.
+
 ### Validation des entrées
+
+> 🚨 **NE PAS écrire votre propre filtreur HTML par regex.** Le HTML est un langage **non régulier** ; un regex ne peut pas le filtrer correctement. Tous les contournements suivants ont été utilisés dans la nature :  
+> ```html  
+> <ScRiPt>alert(1)</sCrIpT>         <!-- mixed case -->  
+> <script\n>alert(1)</script>        <!-- newline -->  
+> <img src=x onerror=alert(1)>      <!-- attribut JS, pas de balise script -->  
+> <a href="javascript:alert(1)">    <!-- protocole javascript: -->  
+> <svg onload=alert(1)>             <!-- événement sur SVG -->  
+> &lt;script&gt;alert(1)&lt;/script&gt; <!-- double encodage -->  
+> ```  
+> Pour assainir du HTML utilisateur (champ riche, commentaires Markdown rendus en HTML…), utilisez impérativement une **bibliothèque éprouvée** :  
+> - **DOMPurify** côté navigateur (référence, maintenu par Mario Heiderich).  
+> - **Bleach** (Python), **HtmlSanitizer** (.NET) si vous avez un microservice de rendu.  
+> - Côté Delphi pur, aucune bibliothèque mature équivalente — déléguer à un service externe ou imposer un format **Markdown** strict (qui rend en HTML sans accepter de HTML brut).
 
 ```pascal
 function FiltrerBalises(const ATexte: string): string;  
 var  
   BaliseAutorisees: array of string;
 begin
-  // Liste blanche de balises autorisées
+  // ⚠ Exemple SIMPLIFIÉ — ne couvre PAS tous les contournements.
+  //   Ne pas utiliser en production sans bibliothèque de sanitisation.
   BaliseAutorisees := ['<b>', '</b>', '<i>', '</i>', '<br>'];
-
-  // Supprimer toutes les balises sauf celles autorisées
   Result := ATexte;
 
-  // Supprimer d'abord tous les scripts
+  // Supprimer scripts et iframes — ne couvre PAS les attributs JS,
+  // les protocoles javascript:, le double encodage, etc.
   Result := TRegEx.Replace(Result, '<script[^>]*>.*?</script>', '', [roIgnoreCase]);
   Result := TRegEx.Replace(Result, '<iframe[^>]*>.*?</iframe>', '', [roIgnoreCase]);
-
-  // Pour une protection maximale, utiliser une bibliothèque de sanitisation HTML
 end;
 ```
 
@@ -416,12 +490,21 @@ end;
 
 class function TCSRFManager.GenererToken(const ASessionID: string): string;  
 var  
-  GUID: TGUID;
+  Octets: TBytes;
 begin
-  CreateGUID(GUID);
-  Result := GUIDToString(GUID);
+  // ⚠ Ne PAS utiliser CreateGUID : un GUID v4 contient certes des bits
+  //   aléatoires, mais son entropie réelle dépend de l'implémentation
+  //   système et n'est pas garantie cryptographique. Un token CSRF est
+  //   un secret, il doit provenir d'un CSPRNG.
+  SetLength(Octets, 32);                  // 256 bits
+  RemplirOctetsCSPRNG(Octets);            // voir section 16.1
+  Result := TNetEncoding.Base64.EncodeBytesToString(Octets);
 
   // Stocker le token avec timestamp
+  // ⚠ TDictionary n'est PAS thread-safe : un serveur HTTP qui traite
+  //   plusieurs requêtes en parallèle peut corrompre la structure.
+  //   En production, encapsuler dans TThreadedDictionary, ou protéger
+  //   les accès par un TCriticalSection / TMonitor.Enter(FTokens).
   FTokens.AddOrSetValue(ASessionID + '_' + Result, Now);
 end;
 
@@ -474,14 +557,37 @@ end;
 
 **Autres protections CSRF** :
 
-1. **Vérifier le referer**
+1. **Vérifier le `Origin` / `Referer`**
 ```pascal
-function VerifierReferer(const ARefererAttendu: string): Boolean;  
+uses
+  System.NetEncoding;
+
+function VerifierOrigine(const AOrigineAttendue: string): Boolean;  
 var  
-  Referer: string;
+  Origine, URI_Host: string;
+  URI: TURI;
 begin
-  Referer := Request.GetFieldByName('Referer');
-  Result := Pos(ARefererAttendu, Referer) > 0;
+  // ⚠ Préférer le header `Origin` au `Referer` : `Origin` ne contient
+  //   PAS le path complet et est défini pour les requêtes cross-origin
+  //   par tous les navigateurs modernes. `Referer` peut être supprimé
+  //   par le navigateur (Referrer-Policy) ou falsifié par des proxies.
+  Origine := Request.GetFieldByName('Origin');
+  if Origine = '' then
+    Origine := Request.GetFieldByName('Referer');
+  if Origine = '' then
+    Exit(False);                  // Pas d'origine → refuser par défaut
+
+  // ⚠ Comparer le HOST exact, PAS un substring : un `Pos('monsite.com', ...)`
+  //   accepterait `attaquant-monsite.com.evil.com` comme origine valide !
+  try
+    URI := TURI.Create(Origine);
+    URI_Host := URI.Host;
+  except
+    Exit(False);                  // URL malformée → refuser
+  end;
+
+  // Comparer avec le host attendu (insensible à la casse, pas de port).
+  Result := SameText(URI_Host, AOrigineAttendue);
 end;
 ```
 
@@ -493,8 +599,23 @@ end;
 
 3. **SameSite Cookie**
 ```pascal
-// Configurer les cookies avec l'attribut SameSite
-Response.SetCookie('session_id', SessionID, 0, '/', '', True, True, 'Strict');
+// ⚠ La signature exacte de SetCookie varie selon le framework :
+//   - WebBroker (TWebResponse.SetCookieField) : signature à 5 arguments
+//     (Values, Domain, Path, Expires, Secure)
+//   - mORMot, Horse, et d'autres frameworks tiers : signatures différentes.
+//
+// L'attribut `SameSite` n'est PAS directement exposé partout — il faut
+// souvent l'ajouter au header `Set-Cookie` brut. Par exemple :
+Response.SetCustomHeader('Set-Cookie',
+  Format('session_id=%s; Path=/; Secure; HttpOnly; SameSite=Strict',
+         [SessionID]));
+
+// Niveaux SameSite (RFC 6265bis) :
+//   - Strict : le cookie n'est PAS envoyé pour les requêtes cross-origin
+//     (même un lien depuis Google n'inclura PAS le cookie).
+//   - Lax (par défaut depuis Chrome 80, fév. 2020) : envoyé pour les
+//     navigations top-level GET, pas pour les POST cross-origin.
+//   - None : envoyé partout (nécessite `Secure` en complément).
 ```
 
 ## 4. Validation des entrées
@@ -515,7 +636,17 @@ end;
 function ValiderNomListeBlanche(const ANom: string): Boolean;  
 begin  
   // Seulement lettres, espaces, tirets et apostrophes
-  Result := TRegEx.IsMatch(ANom, '^[a-zA-ZÀ-ÿ \-'']+$');
+  // ⚠ La classe `À-ÿ` couvre le Latin-1 Supplement Unicode ($C0-$FF)
+  //   et inclut donc é, à, ñ, ö, etc. Mais elle EXCLUT :
+  //   - les autres alphabets (cyrillique, grec, chinois, arabe, hébreu...)
+  //   - certaines extensions latines (ą, č, ę, ł, ř, ş, ž des langues d'Europe centrale)
+  //   - les caractères francophones comme œ et Œ qui ne sont pas dans Latin-1.
+  //
+  //   Pour une vraie internationalisation, utiliser la propriété Unicode
+  //   `\p{L}` (Letter) supportée par les regex Delphi 11+ :
+  //     '^[\p{L}\p{M}'' \-]+$'
+  //   `\p{L}` = toute lettre Unicode, `\p{M}` = marques combinantes (accents).
+  Result := TRegEx.IsMatch(ANom, '^[\p{L}\p{M}'' \-]+$');
 end;
 ```
 
@@ -652,9 +783,15 @@ var
   AMajuscule, AMinuscule, AChiffre, ASpecial: Boolean;
   i: Integer;
 begin
+  // ⚠ Cette implémentation suit l'ancien pattern « N types de caractères ».
+  //   Les recommandations modernes (NIST SP 800-63B Rév. 4, OWASP ASVS 4)
+  //   privilégient la LONGUEUR et le REJET DES MOTS DE PASSE COMPROMIS
+  //   plutôt que des contraintes de composition.
+  //   Voir section 16.1 (`MotDePasseValide` + `EstMotDePasseCompromis` via
+  //   l'API HIBP k-anonyme) pour la version recommandée 2026.
   Result := False;
 
-  // Minimum 8 caractères
+  // Minimum 8 caractères (12+ recommandés)
   if Length(APassword) < 8 then
     Exit;
 
@@ -742,16 +879,29 @@ type
 class procedure TLoggerSecurite.LoggerErreur(const AMessage, ADetails: string);  
 var  
   Fichier: TextFile;
-  Ligne: string;
+  Ligne, CheminFichier: string;
 begin
-  AssignFile(Fichier, 'logs\errors.log');
+  // ⚠ Utiliser `TPath.Combine` pour rester portable (Windows utilise `\`,
+  //   Linux/macOS utilisent `/`). Un chemin codé en dur comme
+  //   `'logs\errors.log'` ne fonctionne que sur Windows.
+  // ⚠ Pour une vraie implémentation, voir la classe TLogger du chapitre 16.6
+  //   avec verrou thread-safe, rotation, UTC et JSON Lines.
+  CheminFichier := TPath.Combine(
+    TPath.Combine(ExtractFilePath(ParamStr(0)), 'logs'),
+    'errors.log');
+  ForceDirectories(ExtractFilePath(CheminFichier));
+
+  AssignFile(Fichier, CheminFichier);
   try
-    if FileExists('logs\errors.log') then
+    if FileExists(CheminFichier) then
       Append(Fichier)
     else
       Rewrite(Fichier);
 
-    Ligne := Format('[%s] %s - %s', [DateTimeToStr(Now), AMessage, ADetails]);
+    Ligne := Format('[%s] %s - %s',
+      [FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',
+                      TTimeZone.Local.ToUniversalTime(Now)),
+       AMessage, ADetails]);
     WriteLn(Fichier, Ligne);
   finally
     CloseFile(Fichier);
@@ -760,10 +910,23 @@ end;
 
 // ✅ SÉCURISÉ - Message générique à l'utilisateur, log détaillé
 procedure ExecuterRequeteSecurisee;  
-begin  
+var  
+  IDValeur: Integer;
+begin
+  // ⚠ Valider les entrées AVANT d'exécuter la requête.
+  //   `StrToInt` lèverait `EConvertError` sur "abc" — attraper l'exception
+  //   et l'afficher en générique fonctionne, mais c'est mieux d'éviter
+  //   l'exception en validant explicitement via `TryStrToInt` ou `TEdit`
+  //   avec un masque numérique.
+  if not TryStrToInt(EditID.Text, IDValeur) then
+  begin
+    ShowMessage('Identifiant invalide.');
+    Exit;
+  end;
+
   try
     Query.SQL.Text := 'SELECT * FROM Users WHERE ID = :ID';
-    Query.ParamByName('ID').AsInteger := StrToInt(EditID.Text);
+    Query.ParamByName('ID').AsInteger := IDValeur;
     Query.Open;
   except
     on E: Exception do
@@ -887,6 +1050,45 @@ begin
   end;
 
   Result := True;
+end;
+
+// ⚠ La vérification d'extension est INSUFFISANTE. Un attaquant renomme
+//   `payload.exe` en `image.jpg` et passe la validation. Pour une vraie
+//   sécurité, vérifier la **signature binaire** du fichier (magic bytes) :
+//
+//   PNG  : 89 50 4E 47 0D 0A 1A 0A
+//   JPEG : FF D8 FF
+//   GIF  : 47 49 46 38 (37|39) 61
+//   PDF  : 25 50 44 46 2D
+//   ZIP  : 50 4B 03 04        (donc aussi DOCX, XLSX, JAR, APK...)
+//
+class function TUploadSecurise.VerifierMagicBytes(const ACheminFichier,
+                                                   AExtensionAttendue: string): Boolean;
+var
+  Stream: TFileStream;
+  Buffer: array[0..7] of Byte;
+  Lus: Integer;
+begin
+  Result := False;
+  Stream := TFileStream.Create(ACheminFichier, fmOpenRead);
+  try
+    Lus := Stream.Read(Buffer, SizeOf(Buffer));
+    if Lus < 4 then Exit;
+
+    if SameText(AExtensionAttendue, '.png') then
+      Result := (Buffer[0] = $89) and (Buffer[1] = $50) and
+                (Buffer[2] = $4E) and (Buffer[3] = $47)
+    else if SameText(AExtensionAttendue, '.jpg') or
+            SameText(AExtensionAttendue, '.jpeg') then
+      Result := (Buffer[0] = $FF) and (Buffer[1] = $D8) and (Buffer[2] = $FF)
+    else if SameText(AExtensionAttendue, '.gif') then
+      Result := (Buffer[0] = $47) and (Buffer[1] = $49) and (Buffer[2] = $46)
+    else if SameText(AExtensionAttendue, '.pdf') then
+      Result := (Buffer[0] = $25) and (Buffer[1] = $50) and
+                (Buffer[2] = $44) and (Buffer[3] = $46);
+  finally
+    Stream.Free;
+  end;
 end;
 
 class function TUploadSecurise.GenererNomSecurise: string;  
@@ -1202,15 +1404,32 @@ function CheminSecurise(const ACheminBase, AFichierDemande: string): string;
 var  
   CheminComplet: string;
   CheminCanonique: string;
+  BaseCanonique: string;
 begin
-  // Construire le chemin complet
+  // ⚠ Plusieurs pièges classiques à éviter ici :
+  //
+  // 1. Si `AFichierDemande` commence par '/' ou 'C:\', `TPath.Combine`
+  //    RETOURNE `AFichierDemande` tel quel (ignore `ACheminBase`).
+  //    Refuser explicitement les chemins absolus :
+  if TPath.IsPathRooted(AFichierDemande) then
+    raise Exception.Create('Accès refusé : chemin absolu interdit');
+
+  // 2. Refuser explicitement la présence de '..' avant même la résolution.
+  //    Belt and suspenders.
+  if (Pos('..', AFichierDemande) > 0) then
+    raise Exception.Create('Accès refusé : séquence ".." interdite');
+
+  // 3. Normaliser les DEUX chemins (base et résultat) pour une comparaison
+  //    fiable. Sans cela, `'/srv/downloads-public'.StartsWith('/srv/downloads')`
+  //    matche, ce qui est une vulnérabilité.
   CheminComplet := TPath.Combine(ACheminBase, AFichierDemande);
-
-  // Obtenir le chemin canonique (résolu, sans ..)
   CheminCanonique := ExpandFileName(CheminComplet);
+  BaseCanonique := IncludeTrailingPathDelimiter(ExpandFileName(ACheminBase));
 
-  // Vérifier que le chemin final est bien dans le répertoire de base
-  if not CheminCanonique.StartsWith(ACheminBase) then
+  // 4. Comparer en s'assurant que le séparateur de fin force la frontière.
+  //    `downloads/` ne matche PAS `downloads-public/...`.
+  if not CheminCanonique.StartsWith(BaseCanonique,
+       {$IFDEF MSWINDOWS} True {$ELSE} False {$ENDIF}) then  // case-insensitive sur Windows
     raise Exception.Create('Accès refusé : tentative de path traversal');
 
   Result := CheminCanonique;
@@ -1240,6 +1459,195 @@ begin
   end;
 end;
 ```
+
+## 10. Mass Assignment (OWASP API6:2023)
+
+### Le problème
+
+Lorsqu'une API accepte un objet JSON pour mettre à jour un enregistrement, un attaquant peut **ajouter des champs non prévus** que le développeur n'a pas pensé à filtrer :
+
+```pascal
+// ❌ VULNÉRABLE — l'attaquant peut injecter "IsAdmin": true dans le JSON
+procedure ModifierProfil(const ABody: string);  
+var  
+  JSON: TJSONObject;
+  Champ: TJSONPair;
+  Update: string;
+begin
+  JSON := TJSONObject.ParseJSONValue(ABody) as TJSONObject;
+  try
+    // Construire dynamiquement UPDATE avec TOUS les champs reçus.
+    // Si le client envoie { "Nom": "X", "IsAdmin": true, "Solde": 999999 }
+    // → tous ces champs sont mis à jour !
+    Update := 'UPDATE Users SET ';
+    for Champ in JSON do
+      Update := Update + Champ.JsonString.Value + ' = ' +
+                Champ.JsonValue.ToJSON + ', ';
+    // ...
+  finally
+    JSON.Free;
+  end;
+end;
+```
+
+### Protection : liste blanche explicite des champs autorisés
+
+```pascal
+const
+  CHAMPS_AUTORISES: array[0..3] of string =
+    ('Nom', 'Prenom', 'Email', 'Telephone');
+
+function EstChampAutorise(const ANom: string): Boolean;  
+var  
+  Champ: string;
+begin
+  for Champ in CHAMPS_AUTORISES do
+    if SameText(Champ, ANom) then
+      Exit(True);
+  Result := False;
+end;
+
+procedure ModifierProfilSecurise(AIDUtilisateur: Integer; const ABody: string);  
+var  
+  ValeurParsee: TJSONValue;
+  JSON: TJSONObject;
+  Pair: TJSONPair;
+  Query: TFDQuery;
+begin
+  // ⚠ `as TJSONObject` lève une `EInvalidCast` si la valeur n'est pas un
+  //   objet (par ex. `[1,2,3]` ou `"hello"`). Utiliser `ParseJSONValue`
+  //   et vérifier le type explicitement avant de caster.
+  ValeurParsee := TJSONObject.ParseJSONValue(ABody);
+  if not (ValeurParsee is TJSONObject) then
+  begin
+    ValeurParsee.Free;
+    raise Exception.Create('Le body doit être un objet JSON.');
+  end;
+  JSON := TJSONObject(ValeurParsee);
+
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FDConnection1;
+    for Pair in JSON do
+    begin
+      // ✅ Ne traiter QUE les champs explicitement autorisés
+      if EstChampAutorise(Pair.JsonString.Value) then
+      begin
+        // ⚠ Le nom de colonne est concaténé (pas paramétrable en SQL DDL).
+        //   La sécurité repose ENTIÈREMENT sur la whitelist : si elle est
+        //   cassée, l'injection SQL est directe. Vérifier doublement la
+        //   whitelist en cas de doute (par exemple en l'écrivant à deux
+        //   endroits différents) et tester les cas limites en CI.
+        Query.SQL.Text := Format(
+          'UPDATE Users SET %s = :Valeur WHERE ID = :ID',
+          [Pair.JsonString.Value]);
+        Query.ParamByName('Valeur').AsString := Pair.JsonValue.Value;
+        Query.ParamByName('ID').AsInteger := AIDUtilisateur;
+        Query.ExecSQL;
+      end;
+      // Les autres champs (IsAdmin, Solde, MotDePasseHash...) sont IGNORÉS.
+    end;
+  finally
+    Query.Free;
+    JSON.Free;
+  end;
+end;
+```
+
+> 💡 **Pattern DTO** : la pratique recommandée est de définir un **DTO** (Data Transfer Object) dédié à la mise à jour, qui n'expose QUE les champs modifiables. Ainsi le code de mapping ne peut PAS toucher aux autres champs, même par accident.
+
+## 11. SSRF (Server-Side Request Forgery)
+
+### Le problème (OWASP A10:2021)
+
+Si votre application Delphi côté serveur récupère des ressources depuis une URL fournie par l'utilisateur, un attaquant peut la forcer à appeler des URLs **internes** auxquelles il n'a normalement pas accès :
+
+```pascal
+// ❌ VULNÉRABLE SSRF
+procedure TWebModule.HandlerPreview(Sender: TObject;
+  Request: TWebRequest; Response: TWebResponse);
+var
+  URL: string;
+  HTTP: TIdHTTP;
+begin
+  URL := Request.QueryFields.Values['url'];  // ex: ?url=https://example.com/og:image
+  HTTP := TIdHTTP.Create;
+  try
+    // Le serveur récupère l'URL → l'attaquant fait passer :
+    //   ?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+    //   (endpoint des métadonnées AWS — donne les credentials du serveur)
+    // ou :
+    //   ?url=http://localhost:6379/  (Redis interne, sans authentification)
+    //   ?url=file:///etc/passwd      (système de fichiers local)
+    Response.Content := HTTP.Get(URL);
+  finally
+    HTTP.Free;
+  end;
+end;
+```
+
+### Protection : liste blanche + résolution DNS
+
+```pascal
+uses
+  IdGlobal, IdStack, System.RegularExpressions;
+
+function URLSecuriseePourFetch(const AURL: string): Boolean;  
+const  
+  DOMAINES_AUTORISES: array[0..2] of string =
+    ('api.partenaire1.com', 'cdn.partenaire2.com', 'images.unsplash.com');
+var
+  URI: TIdURI;
+  IP: string;
+  i: Integer;
+begin
+  Result := False;
+  URI := TIdURI.Create(AURL);
+  try
+    // 1. Refuser tout protocole autre que HTTPS
+    if not SameText(URI.Protocol, 'https') then Exit;
+
+    // 2. Liste blanche stricte de domaines
+    for i := 0 to High(DOMAINES_AUTORISES) do
+      if SameText(URI.Host, DOMAINES_AUTORISES[i]) then
+        Break
+      else if i = High(DOMAINES_AUTORISES) then
+        Exit;
+
+    // 3. Résoudre le DNS et REJETER les plages IP privées / locales.
+    //    Sinon, un attaquant peut posséder un domaine du whitelist qui
+    //    pointe (via DNS) vers 127.0.0.1 ou 169.254.169.254.
+    IP := GStack.ResolveHost(URI.Host);
+    if EstIPPrivee(IP) or EstIPLocale(IP) or EstIPMetadata(IP) then
+      Exit;
+
+    Result := True;
+  finally
+    URI.Free;
+  end;
+end;
+
+function EstIPPrivee(const AIP: string): Boolean;  
+begin  
+  Result := AIP.StartsWith('10.') or
+            AIP.StartsWith('192.168.') or
+            TRegEx.IsMatch(AIP, '^172\.(1[6-9]|2\d|3[01])\.') or
+            AIP.StartsWith('169.254.') or  // link-local
+            AIP.StartsWith('127.') or       // loopback
+            (AIP = '::1') or                // IPv6 loopback
+            AIP.StartsWith('fc') or         // IPv6 unique local
+            AIP.StartsWith('fe80:');        // IPv6 link-local
+end;
+
+function EstIPMetadata(const AIP: string): Boolean;  
+begin  
+  // Endpoints de métadonnées des clouds — accès = compromission totale
+  Result := (AIP = '169.254.169.254') or    // AWS, Azure, GCP, OpenStack
+            (AIP = '100.100.100.200');      // Alibaba Cloud
+end;
+```
+
+> ⚠️ **Attention à la "TOCTOU" (Time-Of-Check to Time-Of-Use)** : valider l'URL, puis la passer à `TIdHTTP.Get` rouvre une seconde résolution DNS — l'attaquant peut servir une IP différente entre les deux. La protection robuste implique de **résoudre le DNS une fois**, valider l'IP obtenue, puis appeler **par IP** (avec l'entête `Host` réécrit).
 
 ## Checklist de sécurité
 

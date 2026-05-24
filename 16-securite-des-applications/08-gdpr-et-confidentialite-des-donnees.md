@@ -19,17 +19,22 @@ Le RGPD (Règlement Général sur la Protection des Données), ou GDPR en anglai
 **Pour votre application** :
 - Conformité légale obligatoire
 - Confiance des utilisateurs renforcée
-- Amendes évitées (jusqu'à 20 millions € ou 4% du CA mondial)
+- Amendes évitées. **Deux niveaux** (article 83) :
+  - Jusqu'à **10 millions € ou 2 % du CA mondial** (le plus élevé) pour les manquements moins graves (registre des traitements, AIPD, notification de violation…).
+  - Jusqu'à **20 millions € ou 4 % du CA mondial** pour les manquements les plus graves (consentement, droits des personnes, transferts internationaux…).
 - Bonne réputation
 
 ### À qui s'applique le RGPD ?
 
 Le RGPD s'applique si :
-- Votre entreprise est située dans l'UE
-- Vous traitez des données de citoyens européens
-- Vous offrez des services à des résidents de l'UE
+- Votre entreprise est établie dans l'UE (article 3§1) — peu importe que le traitement ait lieu dans ou hors UE ;
+- Ou votre entreprise est hors UE mais traite les données de **personnes situées dans l'UE** (article 3§2) :
+  - en leur offrant des biens ou des services (gratuits ou payants),
+  - ou en surveillant leur comportement dans l'UE.
 
-**Même si votre serveur est aux USA**, si vous avez des clients européens, vous devez respecter le RGPD.
+> ⚠ **Erreur fréquente** : « citoyens européens ». Le critère du RGPD n'est PAS la nationalité, c'est la **localisation au moment du traitement**. Un touriste américain à Paris qui utilise votre app a les mêmes droits qu'un résident français. Un Français installé à New York n'est pas couvert par le RGPD (mais peut l'être par le CCPA californien, ou la LGPD brésilienne, etc.).
+
+**Même si votre serveur est aux USA**, si vous avez des utilisateurs en Europe, vous devez respecter le RGPD.
 
 ## Qu'est-ce qu'une donnée personnelle ?
 
@@ -69,6 +74,33 @@ Données de santé
 Orientation sexuelle  
 Casier judiciaire  
 ```
+
+### Pseudonymisation vs anonymisation : ne pas confondre
+
+| | Pseudonymisation | Anonymisation |
+|---|---|---|
+| **Définition** | Remplacer l'identifiant par un pseudonyme, mais conserver une table de correspondance | Suppression *irréversible* de tout lien avec l'identité |
+| **Réversibilité** | Réversible (avec la clé) | Irréversible |
+| **Statut RGPD** | Reste une donnée personnelle | N'est plus une donnée personnelle |
+| **Exemple** | `user_id = 'a3f5b...'` + table `(a3f5b... → jean@dupont.fr)` | Agrégat statistique « 42 hommes 30-40 ans ont acheté X » |
+
+Le RGPD **encourage** la pseudonymisation comme mesure de sécurité (article 32), mais l'**anonymisation complète** est plus rare en pratique qu'on ne le croit : il suffit souvent de croiser quelques attributs (code postal + date de naissance + sexe) pour ré-identifier une personne avec haute probabilité. La CNIL et le G29/EDPB ont publié des guides sur les critères d'anonymisation valable (test de singularisation, de corrélation, d'inférence).
+
+### Privacy by Design et by Default (article 25)
+
+Deux obligations distinctes du responsable de traitement :
+
+- **Privacy by Design** : intégrer la protection des données *dès la conception* de l'application — chiffrement, minimisation, contrôle d'accès. Pas comme une couche ajoutée après coup.
+- **Privacy by Default** : les paramètres par défaut doivent être les plus protecteurs (ex : profil privé par défaut, notifications opt-in, partage désactivé).
+
+### Responsable de traitement vs Sous-traitant
+
+Le RGPD distingue deux rôles aux obligations très différentes :
+
+- **Responsable de traitement** (*controller*) : décide des finalités et moyens du traitement. C'est lui qui répond devant la CNIL.
+- **Sous-traitant** (*processor*) : traite les données *pour le compte du* responsable. Doit être lié par un contrat (article 28) listant ses obligations.
+
+Si vous éditez un logiciel SaaS qui traite les données de vos clients, vous êtes **sous-traitant** de vos clients. Si vous éditez un logiciel installé chez le client, vous n'êtes ni l'un ni l'autre (vous fournissez l'outil, le client est seul responsable). Cette distinction conditionne quelles obligations s'appliquent à vous.
 
 ## Les 7 principes du RGPD
 
@@ -113,14 +145,17 @@ procedure CollecterDonneesAvecFinalite(AFinalite: TFinaliteTraitement; const AEm
 begin  
   case AFinalite of
     ftCreationCompte:
-    begin
-      // OK : Utiliser l'email pour créer le compte
+      // ✅ Base légale : exécution du contrat (art. 6§1b RGPD)
       CreerCompte(AEmail);
-    end;
+
+    ftGestionCommandes:
+      // ✅ Base légale : exécution du contrat
+      AjouterDansHistoriqueCommandes(AEmail);
 
     ftEnvoiNewsletter:
     begin
-      // ❌ INTERDIT sans consentement explicite
+      // ⚠ Base légale : consentement (art. 6§1a). Doit être libre,
+      //   spécifique, éclairé et univoque (recital 32).
       if not ConsentementNewsletter(AEmail) then
       begin
         ShowMessage('Vous devez consentir à recevoir la newsletter');
@@ -128,6 +163,21 @@ begin
       end;
       InscrireNewsletter(AEmail);
     end;
+
+    ftAnalyseStatistique:
+      // ⚠ Intérêt légitime (art. 6§1f), à condition que les données
+      //   soient pseudonymisées et qu'un test de balance des intérêts
+      //   ait été documenté. Sinon, consentement nécessaire.
+      EnregistrerStatistiquePseudonymisee(AEmail);
+
+    ftSupport:
+      // ✅ Base légale : exécution du contrat / intérêt légitime
+      OuvrirTicketSupport(AEmail);
+  else
+    // ⚠ Toute finalité non listée doit être REFUSÉE explicitement —
+    //   éviter qu'une nouvelle valeur d'enum soit silencieusement
+    //   traitée sans base légale documentée.
+    raise Exception.CreateFmt('Finalité non prévue : %d', [Ord(AFinalite)]);
   end;
 end;
 
@@ -224,14 +274,24 @@ begin
   try
     Query.Connection := FDConnection1;
 
-    // Supprimer les doublons
+    // ⚠ Syntaxe `DELETE u1 FROM ... INNER JOIN ...` propre à MySQL/MariaDB.
+    //   Équivalent portable (ANSI SQL) :
+    //     DELETE FROM Utilisateurs
+    //     WHERE ID NOT IN (SELECT MIN(ID) FROM Utilisateurs GROUP BY Email);
+    //   (Attention : sur MySQL, on ne peut pas faire DELETE depuis une
+    //    table puis SELECT depuis la même table dans la même requête —
+    //    il faut une sous-requête imbriquée `SELECT ... FROM (SELECT...)`.)
     Query.SQL.Text :=
       'DELETE u1 FROM Utilisateurs u1 ' +
       'INNER JOIN Utilisateurs u2 ' +
       'WHERE u1.ID > u2.ID AND u1.Email = u2.Email';
     Query.ExecSQL;
 
-    // Normaliser les formats
+    // Normaliser les formats.
+    // ⚠ Si la colonne Email a une contrainte UNIQUE et que deux comptes
+    //   existaient avec « Jean@Dupont.FR » et « jean@dupont.fr », le UPDATE
+    //   en masse échouera (violation d'unicité). Exécuter D'ABORD la
+    //   dédoublication ci-dessus.
     Query.SQL.Text :=
       'UPDATE Utilisateurs SET Email = LOWER(TRIM(Email))';
     Query.ExecSQL;
@@ -259,6 +319,20 @@ procedure SupprimerDonneesExpirees;
 var  
   Query: TFDQuery;
 begin
+  // ⚠ La suppression automatique de comptes inactifs doit être PRÉCÉDÉE :
+  //   1. d'un email d'avertissement (typiquement 30 jours avant) ;
+  //   2. d'un mécanisme simple permettant à l'utilisateur de réactiver
+  //      son compte (un clic dans l'email) ;
+  //   3. d'une journalisation pour pouvoir répondre à toute réclamation.
+  //   La CNIL a déjà sanctionné des entreprises ayant supprimé des comptes
+  //   sans préavis (« durée de conservation » ≠ « suppression brutale »).
+  //
+  // ⚠ Durées de conservation à adapter à votre métier :
+  //   - Comptabilité (France) : 10 ans (Code de commerce)
+  //   - Marketing : 3 ans après dernier contact (CNIL)
+  //   - Logs sécurité : 6 mois (recommandation CNIL)
+  //   - Données médicales : 20-30 ans selon les cas
+
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FDConnection1;
@@ -336,6 +410,41 @@ type
   end;
 ```
 
+### Analyse d'Impact relative à la Protection des Données (AIPD / DPIA)
+
+**Article 35 du RGPD** : pour les traitements **à risque élevé** pour les droits et libertés des personnes, une AIPD est **obligatoire** avant la mise en œuvre.
+
+Cas où l'AIPD est obligatoire (liste indicative CNIL) :
+- Traitements à grande échelle de données sensibles ou de mineurs.
+- Surveillance systématique d'une zone accessible au public.
+- Profilage avec décision automatisée ayant un effet juridique.
+- Croisement de données venant de plusieurs sources avec finalités différentes.
+- Données biométriques pour identifier une personne.
+
+Une AIPD documente :
+- La description du traitement et ses finalités.
+- La nécessité et la proportionnalité.
+- Les risques pour les personnes concernées.
+- Les mesures pour traiter ces risques.
+
+La CNIL fournit un outil gratuit (PIA) pour réaliser une AIPD.
+
+### Transferts internationaux de données (chapitre 5 du RGPD)
+
+Tout transfert de données personnelles **hors de l'UE/EEE** est soumis à conditions strictes :
+
+| Pays / Cadre | Statut 2026 |
+|---|---|
+| Pays « adéquats » (UK, Suisse, Japon, Corée du Sud…) | Transfert libre, comme dans l'UE |
+| **États-Unis** | **Data Privacy Framework** (juillet 2023) — décision d'adéquation pour les entreprises certifiées DPF. Couvre la plupart des géants tech (Google, Microsoft, Salesforce…). Risque : recours européens en cours (Schrems III ?). |
+| Autres pays | Clauses Contractuelles Types (CCT) de la Commission ou règles d'entreprise contraignantes (BCR) |
+
+> ⚠️ **Conséquences pratiques pour une app Delphi** :  
+> - Stockage AWS/Azure/GCP : vérifier la région — `eu-west-3` (Paris), `eu-central-1` (Francfort) restent en UE. `us-east-1` (Virginie) = transfert.  
+> - Service de mail transactionnel (SendGrid, Mailgun) basé aux US : vérifier qu'ils sont certifiés DPF.  
+> - Outil de support tiers (Intercom, Zendesk) : idem.  
+> - **Conseil de la CNIL en 2024-2025** : privilégier les hébergeurs européens (souveraineté), surtout pour les données sensibles ou les administrations.
+
 ## Les droits des utilisateurs (et comment les implémenter)
 
 ### 1. Droit d'accès
@@ -396,10 +505,17 @@ begin
       JSONCommandes := TJSONArray.Create;
       while not Query.Eof do
       begin
+        // ⚠ Utiliser un format DATE et un format NUMÉRIQUE invariants
+        //   pour l'export : un Belge qui exporte et un Américain qui
+        //   relit ne doivent pas avoir d'ambiguïté `,` vs `.`. ISO 8601
+        //   pour les dates, `.` pour les nombres.
         JSONCommandes.Add(TJSONObject.Create
           .AddPair('numero', Query.FieldByName('Numero').AsString)
-          .AddPair('date', DateToStr(Query.FieldByName('DateCommande').AsDateTime))
-          .AddPair('montant', FloatToStr(Query.FieldByName('Montant').AsFloat))
+          .AddPair('date', FormatDateTime('yyyy-mm-dd',
+                                          Query.FieldByName('DateCommande').AsDateTime))
+          .AddPair('montant', FormatFloat('0.00',
+                                          Query.FieldByName('Montant').AsFloat,
+                                          TFormatSettings.Invariant))
         );
         Query.Next;
       end;
@@ -435,7 +551,10 @@ begin
     Lignes.Add('');
     Lignes.Add(JSON); // En production, formatter joliment
 
-    Lignes.SaveToFile(ANomFichier);
+    // ⚠ Spécifier UTF-8 explicitement pour préserver les caractères
+    //   accentués (é, ç, à...) à travers tous les systèmes — sinon
+    //   Delphi utilise l'ANSI Windows par défaut.
+    Lignes.SaveToFile(ANomFichier, TEncoding.UTF8);
 
     // En production : convertir en PDF avec un outil comme FastReport
   finally
@@ -446,20 +565,21 @@ end;
 // Interface utilisateur
 procedure TFormProfil.BtnExporterDonneesClick(Sender: TObject);  
 var  
-  Export: TExportDonneesPersonnelles;
+  Exportation: TExportDonneesPersonnelles;
   CheminFichier: string;
 begin
-  Export := TExportDonneesPersonnelles.Create(FDConnection1);
+  Exportation := TExportDonneesPersonnelles.Create(FDConnection1);
   try
     CheminFichier := TPath.Combine(TPath.GetDocumentsPath,
                                     'mes_donnees_' + FormatDateTime('yyyymmdd', Now) + '.json');
 
     TFile.WriteAllText(CheminFichier,
-                       Export.ExporterDonneesUtilisateur(UtilisateurConnecteID));
+                       Exportation.ExporterDonneesUtilisateur(UtilisateurConnecteID),
+                       TEncoding.UTF8);
 
     ShowMessage('Vos données ont été exportées vers :' + sLineBreak + CheminFichier);
   finally
-    Export.Free;
+    Exportation.Free;
   end;
 end;
 ```
@@ -569,7 +689,14 @@ begin
   try
     Query.Connection := FConnection;
 
-    // Anonymiser les commandes (obligation légale de garder 5 ans)
+    // Anonymiser les commandes (obligation légale de garder 5 ans).
+    //
+    // ⚠ Si une table archive des commandes a une CONTRAINTE UNIQUE sur
+    //   EmailClient, écraser plusieurs lignes avec « anonyme@deleted.com »
+    //   violera cette contrainte. Solutions :
+    //   - retirer la contrainte UNIQUE sur les tables historiques ;
+    //   - ou anonymiser avec une valeur dérivée non collisionnante,
+    //     par exemple Format('anonyme+%d@deleted.local', [IDCommande]).
     Query.SQL.Text :=
       'UPDATE Commandes SET ' +
       '  NomClient = ''Utilisateur supprimé'', ' +
@@ -612,14 +739,31 @@ end;
 
 procedure TSuppressionCompte.SupprimerCompte(AIDUtilisateur: Integer; const ARaison: string);  
 begin  
-  // 1. Journaliser la demande
-  JournaliserSuppression(AIDUtilisateur);
+  // ⚠️ La suppression RGPD doit être atomique : si l'une des étapes échoue,
+  // il ne faut pas se retrouver avec un utilisateur supprimé mais des commandes
+  // non anonymisées (fuite RGPD) ou des préférences orphelines.
+  FConnection.StartTransaction;
+  try
+    // 1. Journaliser la demande (la trace de la demande doit survivre au rollback :
+    //    on peut la dupliquer hors transaction si le rollback échoue)
+    JournaliserSuppression(AIDUtilisateur);
 
-  // 2. Anonymiser les données à conserver
-  AnonymiserDonneesConservees(AIDUtilisateur);
+    // 2. Anonymiser les données à conserver (commandes pour obligations fiscales)
+    AnonymiserDonneesConservees(AIDUtilisateur);
 
-  // 3. Supprimer toutes les autres données
-  SupprimerDonneesUtilisateur(AIDUtilisateur);
+    // 3. Supprimer toutes les autres données
+    SupprimerDonneesUtilisateur(AIDUtilisateur);
+
+    FConnection.Commit;
+  except
+    on E: Exception do
+    begin
+      FConnection.Rollback;
+      TLogger.Instance.Error('Suppression RGPD échouée',
+        Format('User ID: %d, Erreur: %s', [AIDUtilisateur, E.Message]));
+      raise;
+    end;
+  end;
 
   TLogger.Instance.Info('Compte supprimé',
                         Format('User ID: %d, Raison: %s', [AIDUtilisateur, ARaison]));
@@ -665,14 +809,14 @@ L'utilisateur peut récupérer ses données dans un format structuré.
 ```pascal
 procedure TFormProfil.BtnExporterDonneesPortablesClick(Sender: TObject);  
 var  
-  Export: TExportDonneesPersonnelles;
+  Exportation: TExportDonneesPersonnelles;
   JSON: string;
   CheminJSON, CheminCSV: string;
 begin
-  Export := TExportDonneesPersonnelles.Create(FDConnection1);
+  Exportation := TExportDonneesPersonnelles.Create(FDConnection1);
   try
     // Export JSON
-    JSON := Export.ExporterDonneesUtilisateur(UtilisateurConnecteID);
+    JSON := Exportation.ExporterDonneesUtilisateur(UtilisateurConnecteID);
     CheminJSON := TPath.Combine(TPath.GetDocumentsPath, 'mes_donnees.json');
     TFile.WriteAllText(CheminJSON, JSON, TEncoding.UTF8);
 
@@ -684,15 +828,31 @@ begin
                 '- JSON : ' + CheminJSON + sLineBreak +
                 '- CSV : ' + CheminCSV);
   finally
-    Export.Free;
+    Exportation.Free;
   end;
+end;
+
+function EchapperChampCSV(const AValeur: string): string;  
+begin  
+  // RFC 4180 : si le champ contient `;`, `"`, `,` ou un retour ligne,
+  // il faut le entourer de guillemets doubles ; les guillemets internes
+  // sont doublés.
+  if AValeur.IndexOfAny([';', '"', ',', #10, #13]) >= 0 then
+    Result := '"' + StringReplace(AValeur, '"', '""', [rfReplaceAll]) + '"'
+  else
+    Result := AValeur;
 end;
 
 procedure ExporterVersCSV(AIDUtilisateur: Integer; const ANomFichier: string);  
 var  
   Query: TFDQuery;
   CSV: TStringList;
+  Settings: TFormatSettings;
 begin
+  // Format invariant pour les dates et nombres — sinon un Belge et un
+  // Américain obtiendront des CSV incompatibles (`,` vs `.` comme décimal).
+  Settings := TFormatSettings.Invariant;
+
   Query := TFDQuery.Create(nil);
   CSV := TStringList.Create;
   try
@@ -702,19 +862,21 @@ begin
     Query.Open;
 
     // En-tête
-    CSV.Add('Numéro;Date;Montant;Statut');
+    CSV.Add('Numero;Date;Montant;Statut');
 
     // Données
     while not Query.Eof do
     begin
-      CSV.Add(Format('%s;%s;%s;%s',
-        [Query.FieldByName('Numero').AsString,
-         DateToStr(Query.FieldByName('DateCommande').AsDateTime),
-         FloatToStr(Query.FieldByName('Montant').AsFloat),
-         Query.FieldByName('Statut').AsString]));
+      CSV.Add(
+        EchapperChampCSV(Query.FieldByName('Numero').AsString) + ';' +
+        FormatDateTime('yyyy-mm-dd', Query.FieldByName('DateCommande').AsDateTime) + ';' +
+        FormatFloat('0.00', Query.FieldByName('Montant').AsFloat, Settings) + ';' +
+        EchapperChampCSV(Query.FieldByName('Statut').AsString));
       Query.Next;
     end;
 
+    // Préfixer d'un BOM UTF-8 pour qu'Excel détecte correctement l'encodage
+    CSV.WriteBOM := True;
     CSV.SaveToFile(ANomFichier, TEncoding.UTF8);
   finally
     CSV.Free;
@@ -722,6 +884,11 @@ begin
   end;
 end;
 ```
+
+> 💡 **Sauvegardes et droit à l'oubli** : la suppression dans la base **principale** ne suffit pas — vos sauvegardes contiennent encore les données. La CNIL accepte généralement le principe de la « purge cyclique » : la donnée disparaît au prochain cycle de rotation des sauvegardes, à condition que :  
+> - votre **politique de rétention** soit documentée et raisonnable (typiquement 30 à 90 jours) ;  
+> - les sauvegardes soient **isolées** (chiffrées + accès restreint) jusqu'à leur rotation ;  
+> - si l'utilisateur demande explicitement la suppression, vous l'**informez** du délai de purge des sauvegardes.
 
 ### 5. Droit d'opposition
 
@@ -757,6 +924,11 @@ begin
     Query.Connection := FConnection;
 
     // Enregistrer ou mettre à jour le consentement
+    // ⚠️ `ON DUPLICATE KEY UPDATE` est une extension MySQL/MariaDB.
+    //   - PostgreSQL : `ON CONFLICT (IDUtilisateur, TypeTraitement) DO UPDATE ...`
+    //   - SQL Server : `MERGE ... WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`
+    //   - Firebird   : `UPDATE OR INSERT INTO ... MATCHING (...)`
+    //   - SQLite     : `ON CONFLICT (...) DO UPDATE SET ...` (≥ 3.24)
     Query.SQL.Text :=
       'INSERT INTO Consentements (IDUtilisateur, TypeTraitement, Consenti, DateModification) ' +
       'VALUES (:IDUser, :Type, :Consenti, NOW()) ' +
@@ -831,6 +1003,7 @@ end;
 ### Structure de base de données
 
 ```sql
+-- Table « état courant » : un seul consentement actif par (utilisateur, type)
 CREATE TABLE Consentements (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     IDUtilisateur INT NOT NULL,
@@ -845,6 +1018,28 @@ CREATE TABLE Consentements (
 
 -- Index pour recherche rapide
 CREATE INDEX idx_utilisateur_type ON Consentements(IDUtilisateur, TypeTraitement);
+
+-- ⚠ Le RGPD exige de POUVOIR PROUVER le consentement (article 7§1). En cas
+--   de litige avec un utilisateur qui prétend ne pas avoir consenti, vous
+--   devez démontrer quand et comment il l'a fait. Un simple UPSERT écrase
+--   l'historique — il faut donc une table d'historique en plus :
+CREATE TABLE HistoriqueConsentements (
+    ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+    IDUtilisateur INT NOT NULL,
+    TypeTraitement VARCHAR(50) NOT NULL,
+    Consenti BOOLEAN NOT NULL,
+    DateChangement DATETIME DEFAULT CURRENT_TIMESTAMP,
+    AdresseIP VARCHAR(45),
+    UserAgent VARCHAR(255),
+    Source VARCHAR(50),         -- 'inscription', 'paramètres', 'banniere_cookie'…
+    INDEX idx_user_date (IDUtilisateur, DateChangement DESC)
+);
+
+-- ⚠ `ON DELETE CASCADE` supprime les consentements quand l'utilisateur est
+--   supprimé. Si vous voulez conserver une preuve de consentement APRÈS
+--   suppression du compte (par exemple en cas de litige), utilisez plutôt
+--   `ON DELETE SET NULL` sur HistoriqueConsentements (avec IDUtilisateur
+--   nullable) ou conservez les lignes anonymisées.
 ```
 
 ### Demande de consentement explicite
@@ -904,9 +1099,15 @@ end;
 
 ### Obligation légale
 
-En cas de violation de données (piratage, fuite, etc.), vous devez :
-1. **Notifier la CNIL dans les 72h**
-2. **Informer les utilisateurs concernés** si risque élevé
+Une « violation de données » au sens du RGPD (article 4§12) est **toute violation de la sécurité entraînant** la destruction, la perte, l'altération, la divulgation non autorisée ou l'accès à des données personnelles. Cela couvre bien plus que les piratages : perte d'un ordinateur portable non chiffré, envoi par erreur d'un email à la mauvaise personne, suppression accidentelle… sont aussi des violations.
+
+En cas de violation, le responsable de traitement doit :
+
+1. **Notifier l'autorité de contrôle** (CNIL en France) **dans les 72 h** après en avoir pris connaissance (article 33). ⚠ Si vous ne respectez pas ce délai, vous devez justifier ce retard. Si le risque pour les droits et libertés est **improbable** (par ex. : données déjà chiffrées avec une clé non compromise, perte rapidement contenue), la notification n'est pas obligatoire — mais documentez votre raisonnement.
+
+2. **Informer les utilisateurs concernés sans délai** uniquement si le risque pour leurs droits et libertés est **ÉLEVÉ** (article 34). Pas systématiquement.
+
+3. **Tenir un registre interne** de TOUTES les violations (même celles non notifiées à la CNIL), avec : nature, catégories et nombre approximatif de personnes concernées, conséquences probables, mesures prises (article 33§5).
 
 ```pascal
 type
@@ -938,6 +1139,12 @@ begin
   try
     Query.Connection := FConnection;
 
+    // ⚠ Idéalement, encapsuler tout le bloc dans une transaction
+    //   `FConnection.StartTransaction` / `Commit` / `Rollback` : si
+    //   l'INSERT principal réussit mais que le `for` qui suit échoue
+    //   à mi-chemin (perte de connexion, contrainte), on aurait une
+    //   violation enregistrée avec un nombre d'utilisateurs partiel.
+
     // Enregistrer la violation
     Query.SQL.Text :=
       'INSERT INTO ViolationsDonnees (DateDetection, Description, Gravite, NbUtilisateurs) ' +
@@ -947,7 +1154,12 @@ begin
     Query.ParamByName('NbUsers').AsInteger := Length(AUtilisateursConcernes);
     Query.ExecSQL;
 
-    // Récupérer l'ID de la violation
+    // Récupérer l'ID de la violation.
+    // ⚠ `GetLastAutoGenValue` fonctionne sur MySQL/MariaDB. Pour les autres SGBD :
+    //   - PostgreSQL : utiliser `INSERT ... RETURNING ID` puis `Query.Open`
+    //   - SQL Server : `SELECT SCOPE_IDENTITY()` après l'INSERT
+    //   - Oracle/Firebird : `INSERT ... RETURNING ID INTO :ID`
+    //   - SQLite : `Query.Connection.GetLastAutoGenValue` fonctionne aussi.
     IDViolation := Query.Connection.GetLastAutoGenValue;
 
     // Enregistrer les utilisateurs concernés
@@ -1051,6 +1263,18 @@ end;
 
 Le RGPD impose de tenir un registre de tous les traitements de données.
 
+> ⚠️ **Anti-pattern Pascal — record avec objets gérés manuellement** :  
+> le `TTraitement` ci-dessous contient des `TStringList` comme champs. Or  
+> un `record` est copié **par valeur** lors d'une affectation ou d'un  
+> `TList.Add` — mais ses pointeurs internes (TStringList) ne sont PAS  
+> dupliqués : on obtient deux records partageant les mêmes objets. Si l'un  
+> libère le TStringList, l'autre devient invalide. La libération manuelle  
+> dans `TRegistreTraitements.Destroy` est fragile.  
+>  
+> **Recommandation** : transformer `TTraitement` en **classe** (ownership clair  
+> via destructeur) ou n'utiliser que des types managés (`TArray<string>` au  
+> lieu de `TStringList`).
+
 ```pascal
 type
   TRegistreTraitements = class
@@ -1064,6 +1288,9 @@ type
   end;
 
 type
+  // ⚠ Voir l'avertissement ci-dessus : ce record est conservé à des fins
+  //   pédagogiques mais sa gestion mémoire est délicate. Préférer une
+  //   classe TTraitement avec destructeur, ou des `TArray<string>`.
   TTraitement = record
     Nom: string;
     Finalite: string;
@@ -1199,11 +1426,16 @@ begin
     Politique.Add('   - Commandes : 5 ans (obligation légale)');
     Politique.Add('');
     Politique.Add('5. VOS DROITS');
-    Politique.Add('   - Droit d''accès à vos données');
-    Politique.Add('   - Droit de rectification');
-    Politique.Add('   - Droit à l''effacement (droit à l''oubli)');
-    Politique.Add('   - Droit à la portabilité');
-    Politique.Add('   - Droit d''opposition');
+    Politique.Add('   - Droit d''accès à vos données (art. 15)');
+    Politique.Add('   - Droit de rectification (art. 16)');
+    Politique.Add('   - Droit à l''effacement / droit à l''oubli (art. 17)');
+    Politique.Add('   - Droit à la limitation du traitement (art. 18)');
+    Politique.Add('   - Droit à la portabilité (art. 20)');
+    Politique.Add('   - Droit d''opposition (art. 21)');
+    Politique.Add('   - Droit de ne pas faire l''objet d''une décision');
+    Politique.Add('     fondée exclusivement sur un traitement automatisé (art. 22)');
+    Politique.Add('   - Droit de retirer votre consentement à tout moment (art. 7§3)');
+    Politique.Add('   - Droit d''introduire une réclamation auprès de la CNIL (art. 77)');
     Politique.Add('');
     Politique.Add('   Pour exercer vos droits : dpo@monentreprise.com');
     Politique.Add('');
@@ -1302,7 +1534,9 @@ end;
 **4. Pas de procédure d'exercice des droits**
 ```pascal
 // ❌ Ignorer les demandes de suppression
-// ✅ Traiter dans les 30 jours maximum
+// ✅ Article 12 §3 : 1 mois maximum, prolongeable de 2 mois pour les demandes
+//    complexes ou nombreuses (le responsable doit alors notifier l'utilisateur
+//    de la prolongation et de ses motifs dans le délai initial d'1 mois).
 ```
 
 ## Résumé des points essentiels

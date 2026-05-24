@@ -34,11 +34,23 @@ Les applications mobiles présentent des défis de sécurité uniques. Contraire
 | Aspect | iOS | Android |
 |--------|-----|---------|
 | **Modèle de sécurité** | Sandbox strict | Plus permissif |
-| **Permissions** | Demandées à l'utilisation | Demandées à l'installation (ancien) ou utilisation (récent) |
-| **Stockage sécurisé** | Keychain | KeyStore |
+| **Permissions** | Demandées à l'utilisation | Demandées à l'utilisation (depuis Android 6.0 / 2015) |
+| **Stockage sécurisé** | Keychain (Secure Enclave sur iPhone 5s+) | KeyStore + StrongBox sur les appareils compatibles |
+| **Chiffrement disque** | Intégral par défaut depuis iOS 8 (2014) | Intégral par défaut depuis Android 10 (2019) |
 | **Fragmentation** | Faible (versions récentes) | Élevée (nombreuses versions) |
-| **App Store** | Contrôle strict | Plus ouvert |
+| **App Store** | Contrôle strict | Plus ouvert (sideloading possible) |
 | **Root/Jailbreak** | Jailbreak rare | Root plus courant |
+| **Attestation d'intégrité** | DeviceCheck, App Attest (iOS 14+) | Play Integrity API (remplace SafetyNet, déprécié 2024) |
+| **Auto-révocation permissions** | Apps non utilisées (iOS 12+) | Apps non utilisées depuis 3 mois (Android 11+) |
+
+### Référentiels OWASP pour le mobile
+
+Deux documents de référence à connaître :
+
+- **OWASP Mobile Top 10 (2024)** : équivalent mobile du Top 10 web. Catégories principales : *Improper Credential Usage*, *Inadequate Supply Chain Security*, *Insecure Authentication/Authorization*, *Insufficient Input/Output Validation*, *Insecure Communication*, *Inadequate Privacy Controls*, *Insufficient Binary Protections*, *Security Misconfiguration*, *Insecure Data Storage*, *Insufficient Cryptography*.
+- **OWASP MASVS** (*Mobile Application Security Verification Standard*) : référentiel de vérification en 3 niveaux (L1 standard, L2 défense en profondeur, R protection contre rétro-ingénierie). Sert de checklist d'audit. Accompagné du MASTG (*Mobile Application Security Testing Guide*) qui détaille les techniques de test.
+
+> 💡 **Pour une app traitant des données sensibles** (banque, santé, identité), viser la conformité MASVS-L2 + MASVS-R est un standard de marché en 2026.
 
 ## Stockage sécurisé sur mobile
 
@@ -152,17 +164,28 @@ var
   Token: string;
 begin
   Token := TKeychainHelper.Charger('auth_token');
+  // ⚠ NE JAMAIS afficher la valeur d'un token dans une boîte de dialogue
+  //   ou un log : un screenshot, un screen-recording, un crash report
+  //   ou un peer regardant l'écran peut alors le récupérer trivialement.
+  //   L'utilisateur n'a pas besoin de voir son token — juste de savoir
+  //   si l'app a accès à un compte valide.
   if Token <> '' then
-    ShowMessage('Token chargé : ' + Token)
+    ShowMessage('Session restaurée.')
   else
-    ShowMessage('Token non trouvé');
+    ShowMessage('Aucune session sauvegardée. Veuillez vous reconnecter.');
 end;
 {$ENDIF}
 ```
 
 ### Android KeyStore
 
-Le KeyStore Android fournit un stockage sécurisé similaire.
+Le KeyStore Android (`android.security.keystore.KeyStore`) fournit un stockage matériel des **clés cryptographiques**, mais il ne stocke pas directement vos *valeurs*. Pour stocker un secret sur Android, on combine :
+1. une clé AES générée et conservée dans le KeyStore (idéalement adossée au TEE/StrongBox) ;
+2. la valeur chiffrée par cette clé puis écrite dans `SharedPreferences` ou un fichier.
+
+La bibliothèque AndroidX `androidx.security:security-crypto` (`EncryptedSharedPreferences`, `MasterKey`) automatise ce processus.
+
+> ⚠️ **L'exemple ci-dessous N'utilise PAS le KeyStore** — il se contente d'écrire dans `SharedPreferences` en mode `MODE_PRIVATE`. C'est suffisant contre une autre application sur un appareil **non rooté**, mais sur un appareil rooté le fichier `/data/data/<package>/shared_prefs/SecureStorage.xml` est **lisible en clair**. Pour un vrai stockage sécurisé, il faut interfacer Delphi avec `EncryptedSharedPreferences` (JNI) ou chiffrer la valeur côté Delphi (AES-256-GCM, voir 16.3) avec une clé conservée dans `KeyStore`.
 
 ```pascal
 uses
@@ -186,6 +209,11 @@ var
   SharedPrefs: JSharedPreferences;
   Editor: JSharedPreferences_Editor;
 begin
+  // ⚠ `try..except Result := False end` est un anti-pattern : il masque
+  //   TOUTES les exceptions sans laisser de trace. Le bug devient
+  //   invisible (mauvaise clé, OOM, permission refusée...). En production,
+  //   logger l'erreur avec sa classe et son message via `TLogger`, ou
+  //   au minimum re-lever pour ne pas perdre l'information.
   try
     // Utiliser SharedPreferences en mode privé
     SharedPrefs := TAndroidHelper.Context.getSharedPreferences(
@@ -198,7 +226,13 @@ begin
 
     Result := True;
   except
-    Result := False;
+    on E: Exception do
+    begin
+      TLogger.Instance.Error('SharedPrefs.Sauvegarder',
+                             Format('Classe: %s, Message: %s',
+                                    [E.ClassName, E.Message]));
+      Result := False;
+    end;
   end;
 end;
 
@@ -330,6 +364,12 @@ end;
 
 ### Touch ID / Face ID (iOS) et Empreinte digitale (Android)
 
+> ⚠️ **L'unité `FMX.BiometricAuth` et la classe `TBiometricAuth` utilisées ci-dessous ne font PAS partie de la RTL FMX standard de Delphi 13** — elles n'apparaissent que dans certains composants tiers. La voie supportée en 2026 passe par les APIs natives :  
+> - **iOS** : `LocalAuthentication.LAContext` (`evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics`) via les bindings `iOSapi.LocalAuthentication`.  
+> - **Android** : `BiometricPrompt` du package `androidx.biometric` (recommandé depuis Android 9), interfacé via JNI.  
+>  
+> L'exemple ci-dessous décrit l'**API qu'aurait** un wrapper équivalent ; remplacez `TBiometricAuth` par votre propre wrapper ou par celui d'un composant tiers (TMS FNC Mobile, Konopka Signature VCL, FGX Native).
+
 ```pascal
 uses
   FMX.Platform, FMX.BiometricAuth, System.SysUtils;
@@ -421,23 +461,41 @@ begin
     // Afficher le type
     LabelBiometrie.Text := 'Disponible : ' + AuthBio.TypeBiometrie;
 
-    // Authentifier
+    // ⚠ PIÈGE D'OBJET ASYNCHRONE : `Authentifier` lance une opération sur
+    //   le système d'exploitation et retourne IMMÉDIATEMENT. Le `finally
+    //   AuthBio.Free` ci-dessous libère `AuthBio` AVANT que la callback ne
+    //   s'exécute → use-after-free quand la callback accède aux champs
+    //   du wrapper.
+    //
+    //   Solutions :
+    //   1. Faire de `AuthBio` un membre `private` du form, libéré dans
+    //      `FormDestroy` (recommandé).
+    //   2. Capturer `AuthBio` dans la closure et libérer DANS la callback :
     AuthBio.Authentifier(
       'Authentifiez-vous pour accéder à l''application',
       procedure(ASuccess: Boolean)
       begin
-        if ASuccess then
-        begin
-          // Charger le token depuis le stockage sécurisé
-          TokenUtilisateur := TStockageSecurise.Charger('auth_token');
+        try
+          if ASuccess then
+          begin
+            // Charger le token depuis le stockage sécurisé
+            TokenUtilisateur := TStockageSecurise.Charger('auth_token');
 
-          // Ouvrir l'application
-          OuvrirApplicationPrincipale;
+            // Ouvrir l'application
+            OuvrirApplicationPrincipale;
+          end;
+        finally
+          AuthBio.Free;   // libération différée jusqu'au retour de l'OS
         end;
       end
     );
-  finally
+    // ⚠ NE PAS faire `AuthBio.Free` ici : on transfère la responsabilité
+    //   à la callback ci-dessus.
+  except
+    // Si une exception survient AVANT que la callback ne soit programmée,
+    // c'est nous qui libérons.
     AuthBio.Free;
+    raise;
   end;
 end;
 
@@ -493,37 +551,29 @@ end;
 
 ```pascal
 uses
-  FMX.MediaLibrary, FMX.Platform, System.Permissions;
+  System.Permissions  // PermissionsService (variable globale)
+  {$IFDEF ANDROID}, Androidapi.Helpers, Androidapi.JNI.Os {$ENDIF};
 
 type
   TGestionPermissions = class
-  private
-    FPermissionsService: IFMXPermissionsService;
-    procedure PermissionRequestResult(Sender: TObject;
-      const APermissions: TClassicStringDynArray;
-      const AGrantResults: TClassicPermissionStatusDynArray);
   public
-    constructor Create;
     procedure DemanderPermissionCamera(ACallback: TProc<Boolean>);
     procedure DemanderPermissionLocalisation(ACallback: TProc<Boolean>);
     procedure DemanderPermissionStockage(ACallback: TProc<Boolean>);
   end;
 
-constructor TGestionPermissions.Create;  
-begin  
-  inherited Create;
-  TPlatformServices.Current.SupportsPlatformService(
-    IFMXPermissionsService,
-    FPermissionsService);
-end;
+// 💡 Depuis Delphi 10.3, on accède au service via la variable globale
+//   `PermissionsService` de `System.Permissions`. Plus besoin de passer
+//   par `TPlatformServices.Current.SupportsPlatformService` ni de garder
+//   une référence à `IFMXPermissionsService`.
 
 procedure TGestionPermissions.DemanderPermissionCamera(ACallback: TProc<Boolean>);  
 begin  
   {$IFDEF ANDROID}
-  FPermissionsService.RequestPermissions(
+  PermissionsService.RequestPermissions(
     ['android.permission.CAMERA'],
-    procedure(const APermissions: TClassicStringDynArray;
-              const AGrantResults: TClassicPermissionStatusDynArray)
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
@@ -552,10 +602,10 @@ end;
 procedure TGestionPermissions.DemanderPermissionLocalisation(ACallback: TProc<Boolean>);  
 begin  
   {$IFDEF ANDROID}
-  FPermissionsService.RequestPermissions(
+  PermissionsService.RequestPermissions(
     ['android.permission.ACCESS_FINE_LOCATION'],
-    procedure(const APermissions: TClassicStringDynArray;
-              const AGrantResults: TClassicPermissionStatusDynArray)
+    procedure(const APermissions: TArray<string>;
+              const AGrantResults: TArray<TPermissionStatus>)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
@@ -611,11 +661,34 @@ end;
 
 **AndroidManifest.xml** :
 ```xml
+<!-- Permissions générales -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+<!-- Accès au stockage : les règles ont changé. -->
+<!-- ⚠ Depuis Android 11 (API 30, 2020), READ/WRITE_EXTERNAL_STORAGE -->
+<!--    ne donnent plus accès au stockage partagé pour les apps ciblant -->
+<!--    API ≥ 30. Il faut utiliser MediaStore + le Storage Access Framework. -->
+<!-- ⚠ Depuis Android 13 (API 33, 2022), READ_EXTERNAL_STORAGE est -->
+<!--    remplacée par des permissions GRANULAIRES par type de média : -->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+                 android:maxSdkVersion="34" />
+<uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+                 android:maxSdkVersion="34" />
+<uses-permission android:name="android.permission.READ_MEDIA_AUDIO"
+                 android:maxSdkVersion="34" />
+
+<!-- ⚠ Depuis Android 14 (API 34, 2023), nouvelle permission pour -->
+<!--    accéder UNIQUEMENT à des médias sélectionnés par l'utilisateur -->
+<!--    via le photo picker, sans accéder à toute la galerie : -->
+<uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
+<!-- Conservés pour API ≤ 28 (les anciennes versions Android) -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+                 android:maxSdkVersion="32" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                 android:maxSdkVersion="28" />
 ```
 
 **Info.plist (iOS)** :
@@ -655,7 +728,12 @@ begin
   inherited Create;
 
   // ✅ Forcer HTTPS
-  if not ABaseURL.StartsWith('https://') then
+  // ⚠ `StartsWith('https://')` est sensible à la casse par défaut :
+  //   `HTTPS://api...` serait refusé alors qu'il est valide. Utiliser
+  //   le second paramètre `IgnoreCase = True`. Et tester que l'URL ne
+  //   contient pas d'autres caractères suspects (ex : `https://attaquant@api...`
+  //   utilise la syntaxe userinfo de l'URI pour tromper l'utilisateur).
+  if not ABaseURL.StartsWith('https://', True) then
     raise Exception.Create('HTTPS requis pour la sécurité');
 
   FBaseURL := ABaseURL;
@@ -724,8 +802,12 @@ begin
 
   API := TAPIMobile.Create('https://api.monapp.com');
   try
-    // Ajouter le token dans les headers
-    API.FHTTPClient.CustomHeaders['Authorization'] := 'Bearer ' + Token;
+    // ⚠ `FHTTPClient` est déclaré `private` dans la classe ci-dessus :
+    //   pour permettre cet accès, il faudrait exposer une propriété
+    //   `property AuthToken: string read GetAuthToken write SetAuthToken`
+    //   qui encapsule la manipulation du header. Cet exemple suppose
+    //   cette propriété ajoutée.
+    API.AuthToken := Token;
 
     Response := API.Get('/user/profile');
     // Traiter la réponse...
@@ -796,30 +878,50 @@ end;
 // 4. Obscurcir les chaînes sensibles
 function DecodeSecret(const AEncoded: string): string;  
 begin  
-  // Décoder une chaîne Base64 ou XOR au runtime
+  // ⚠ « Obscurcir » N'EST PAS « sécuriser ». Tout outil de rétro-ingénierie
+  //   (IDA, Ghidra, Hopper) repère facilement les chaînes Base64 dans le
+  //   binaire et les décode. Un secret « obscurci » est un secret en clair
+  //   avec une étape supplémentaire d'environ 2 secondes de travail.
+  //
+  //   L'obscurcissement n'a de sens que comme RALENTISSEUR pour les
+  //   attaquants opportunistes ; pour un vrai secret, utilisez :
+  //   - un appel serveur à chaque démarrage (le binaire ne contient JAMAIS
+  //     la valeur, seulement le mécanisme d'authentification au serveur) ;
+  //   - le Keychain/KeyStore après une première phase d'enrôlement ;
+  //   - un certificat client (mTLS) plutôt qu'une clé API.
   Result := TNetEncoding.Base64.Decode(AEncoded);
 end;
 ```
 
 ### Détection de jailbreak/root
 
+> ⚠️ **Limites de la détection** : tous les contrôles montrés ci-dessous (présence de `Cydia.app`, d'un binaire `su`, etc.) sont **trivialement contournables** par des outils publics (Liberty Lite, Shadow, Magisk Hide, objection, Frida). Considérez-les comme une **mesure de défense en profondeur** qui élève la barre pour les attaquants opportunistes, **jamais comme une garantie**. Une application traitant de données très sensibles doit en plus :  
+> - exécuter les contrôles critiques côté serveur (SafetyNet/Play Integrity API pour Android, DeviceCheck/App Attest pour iOS) ;  
+> - utiliser un *runtime application self-protection* (RASP) si le risque le justifie ;  
+> - et accepter qu'un attaquant local et déterminé finira par contourner ces contrôles.
+
 ```pascal
 type
   TDetectionSecurite = class
   public
+    // ⚠ Les méthodes ci-dessous sont déclarées sur toutes les plateformes
+    //   pour permettre la compilation cross-platform. Sur les plateformes
+    //   où la notion n'a pas de sens (jailbreak sur desktop, root sur iOS),
+    //   elles retournent simplement False.
     class function EstJailbreak: Boolean;
     class function EstRoot: Boolean;
     class function EstEmulateur: Boolean;
   end;
 
+class function TDetectionSecurite.EstJailbreak: Boolean;
 {$IFDEF IOS}
-class function TDetectionSecurite.EstJailbreak: Boolean;  
-var  
+var
   CheminsSuspects: array[0..3] of string;
   i: Integer;
+{$ENDIF}
 begin
   Result := False;
-
+  {$IFDEF IOS}
   // Chemins typiques d'un appareil jailbreaké
   CheminsSuspects[0] := '/Applications/Cydia.app';
   CheminsSuspects[1] := '/private/var/lib/apt/';
@@ -845,17 +947,18 @@ begin
       // Exception = appareil normal
     end;
   end;
+  {$ENDIF}
 end;
-{$ENDIF}
 
+class function TDetectionSecurite.EstRoot: Boolean;
 {$IFDEF ANDROID}
-class function TDetectionSecurite.EstRoot: Boolean;  
-var  
+var
   CheminsSU: array[0..5] of string;
   i: Integer;
+{$ENDIF}
 begin
   Result := False;
-
+  {$IFDEF ANDROID}
   // Chemins typiques pour les binaires SU (root)
   CheminsSU[0] := '/system/app/Superuser.apk';
   CheminsSU[1] := '/sbin/su';
@@ -872,8 +975,16 @@ begin
       Break;
     end;
   end;
+  {$ENDIF}
 end;
-{$ENDIF}
+
+class function TDetectionSecurite.EstEmulateur: Boolean;  
+begin  
+  Result := False;
+  // Implémentation possible : sur Android, lire Build.FINGERPRINT et
+  // chercher 'generic', 'sdk', 'emulator' ; sur iOS, processeur arm64
+  // émulé sur x86_64 (rare car simulator est différent).
+end;
 
 // Utilisation au démarrage
 procedure TFormPrincipal.FormCreate(Sender: TObject);  
@@ -907,17 +1018,16 @@ begin
     // SQLite avec chiffrement
     Connection.DriverName := 'SQLite';
 
-    {$IFDEF IOS}
+    // `TPath.GetDocumentsPath` retourne le bon dossier sur chaque plateforme
+    // (Documents/ sandbox sur iOS, /data/data/<pkg>/files/ sur Android,
+    // ~/Documents sur desktop). Pas besoin de différencier IOS/ANDROID ici.
     Connection.Params.Values['Database'] :=
       TPath.Combine(TPath.GetDocumentsPath, 'app.db');
-    {$ENDIF}
 
-    {$IFDEF ANDROID}
-    Connection.Params.Values['Database'] :=
-      TPath.Combine(TPath.GetDocumentsPath, 'app.db');
-    {$ENDIF}
-
-    // Activer le chiffrement avec une clé
+    // Activer le chiffrement avec une clé (nécessite le driver SQLCipher
+    // de FireDAC ; le SQLite « ordinaire » embarqué dans la RTL ne fait
+    // PAS de chiffrement). Procurez-vous le binaire SQLCipher et configurez
+    // la propriété `EngineHandle` ou `VendorLib` pour le pointer.
     Connection.Params.Values['Encrypt'] := 'aes-256';
     Connection.Params.Values['Password'] := GenererCleChiffrement;
 
@@ -929,21 +1039,64 @@ begin
   end;
 end;
 
+// ⚠ Question essentielle : OÙ stocker la clé SQLCipher ?
+//   - Si on la dérive d'un mot de passe utilisateur (Argon2id/PBKDF2),
+//     l'utilisateur doit le ressaisir à chaque démarrage — c'est le
+//     modèle des apps de gestion de mots de passe (1Password, Bitwarden).
+//   - Si on veut un déblocage automatique au démarrage, stocker la clé
+//     dans le Keychain (iOS) / KeyStore (Android) AVEC une contrainte
+//     d'accès biométrique : ainsi la clé est inaccessible sans le doigt
+//     ou le visage de l'utilisateur, même si l'appareil est rooté.
+//   - JAMAIS dériver la clé d'un identifiant de device : ils changent
+//     (réinstallation, factory reset) et l'utilisateur perd ses données.
+
 function GenererCleChiffrement: string;  
 var  
   DeviceID: string;
+  Sel: TBytes;
+  CleBin: TBytes;
+const
+  // ⚠️ Ce sel ne doit PAS être codé en dur : tout attaquant qui décompile
+  // l'APK/IPA voit la chaîne. Il faut générer un sel aléatoire (CSPRNG) au
+  // premier lancement et le conserver dans le Keychain (iOS) / KeyStore
+  // (Android). Cette constante n'est gardée que pour montrer la STRUCTURE.
+  SEL_DEMO: array[0..15] of Byte =
+    ($A0, $11, $C2, $33, $44, $55, $66, $77,
+     $88, $99, $AA, $BB, $CC, $DD, $EE, $FF);
+  PBKDF2_ITERATIONS = 600000;   // OWASP 2023+
+  PBKDF2_KEY_BYTES  = 32;       // 256 bits pour AES-256
 begin
-  // Générer une clé unique basée sur l'appareil
+  // ⚠️ `GetUniqueDeviceID_iOS` n'existe pas en tant que tel : Apple a retiré
+  // l'accès au UDID en iOS 7 (2013). L'`identifierForVendor` (iOSapi.UIKit :
+  // [TUIDevice currentDevice].identifierForVendor) change si l'utilisateur
+  // désinstalle puis réinstalle l'app — il ne s'agit donc PAS d'un identifiant
+  // matériel persistant.
+  //
+  // Sur Android, `Settings.Secure.ANDROID_ID` change selon la signature de
+  // l'app et l'utilisateur (depuis Android 8.0). Il ne doit pas servir de
+  // secret cryptographique.
+  //
+  // Pour une vraie clé de chiffrement local, préférez :
+  //   - une clé AES générée par le KeyStore matériel (TEE/StrongBox)
+  //     adossée à l'authentification biométrique ;
+  //   - ou une clé dérivée d'un mot de passe utilisateur via PBKDF2/Argon2id.
   {$IFDEF IOS}
-  DeviceID := GetUniqueDeviceID_iOS;
+  DeviceID := GetUniqueDeviceID_iOS;       // wrapper à fournir
   {$ENDIF}
-
   {$IFDEF ANDROID}
-  DeviceID := GetUniqueDeviceID_Android;
+  DeviceID := GetUniqueDeviceID_Android;   // wrapper à fournir
   {$ENDIF}
 
-  // Dériver une clé de chiffrement
-  Result := THashSHA2.GetHashString(DeviceID + 'SECRET_SALT_12345');
+  // ✅ Dérivation via PBKDF2-HMAC-SHA-256 — SHA-256 SEUL n'est PAS une KDF :
+  // il est rapide et permet une attaque par force brute massive sur GPU.
+  // PBKDF2 / Argon2id ralentissent les attaquants en imposant un coût.
+  SetLength(Sel, Length(SEL_DEMO));
+  Move(SEL_DEMO[0], Sel[0], Length(SEL_DEMO));
+
+  CleBin := THashPBKDF2_SHA256.GetHashBytes(
+    DeviceID, Sel, PBKDF2_ITERATIONS, PBKDF2_KEY_BYTES);
+
+  Result := TNetEncoding.Base64.EncodeBytesToString(CleBin);
 end;
 ```
 
@@ -962,14 +1115,15 @@ class procedure TNettoyageDonnees.EffacerCache;
 var  
   CheminCache: string;
 begin
-  {$IFDEF IOS}
-  CheminCache := TPath.Combine(TPath.GetCachePath, '');
-  {$ENDIF}
+  // `TPath.GetCachePath` retourne déjà le chemin complet — pas besoin de
+  // `TPath.Combine(..., '')` qui ne fait qu'ajouter un séparateur final.
+  CheminCache := TPath.GetCachePath;
 
-  {$IFDEF ANDROID}
-  CheminCache := TPath.Combine(TPath.GetCachePath, '');
-  {$ENDIF}
-
+  // ⚠ Supprimer puis recréer le dossier root du cache peut casser des
+  //   fichiers de cache utilisés par d'autres bibliothèques (WebView,
+  //   images cachées par TBitmap, etc.). Préférer parcourir et supprimer
+  //   uniquement vos propres sous-dossiers (`MonApp/Sensible/`) plutôt
+  //   que tout `TPath.GetCachePath`.
   if DirectoryExists(CheminCache) then
   begin
     TDirectory.Delete(CheminCache, True);
@@ -981,6 +1135,9 @@ class procedure TNettoyageDonnees.EffacerDonneesTemporaires;
 var  
   CheminTemp: string;
 begin
+  // ⚠ Idem : `TPath.GetTempPath` est partagé. Sur iOS c'est le dossier `tmp/`
+  //   du sandbox de l'app — supprimer son contenu en bloc peut interférer
+  //   avec d'autres composants. À utiliser avec parcimonie.
   CheminTemp := TPath.GetTempPath;
 
   if DirectoryExists(CheminTemp) then
@@ -1024,12 +1181,25 @@ end;
 {$ENDIF}
 
 {$IFDEF IOS}
-// iOS ne permet pas de bloquer les captures d'écran
-// Mais on peut détecter quand une capture est prise
-procedure DetecterCaptureEcran;  
+// ⚠ iOS ne permet PAS de bloquer les captures d'écran (contrairement à
+//   Android avec FLAG_SECURE). Pour empêcher la capture, il faut masquer
+//   les vues sensibles AVANT que la capture soit prise — ce qui est
+//   impossible sans préavis.
+//
+// En revanche, iOS notifie l'application APRÈS une capture via :
+//   - `UIApplicationUserDidTakeScreenshotNotification` (iOS 7+)
+//   - `screenIsCapturedDidChangeNotification` (iOS 11+) pour l'enregistrement
+//     d'écran ET le miroir d'écran (Screen Mirroring).
+//
+// Réactions possibles à la capture : afficher un message d'avertissement
+// à l'utilisateur, journaliser l'événement côté serveur, ou (apps bancaires
+// strictes) déconnecter immédiatement.
+procedure SAbonnerNotificationsCapture;  
 begin  
-  // S'abonner aux notifications de capture d'écran
-  // et réagir (flouter l'écran, déconnecter, etc.)
+  TNSNotificationCenter.Wrap(TNSNotificationCenter.OCClass.defaultCenter)
+    .addObserver(SelfAsNSObject, sel_getUid('captureDetectee:'),
+                 StrToNSStr('UIApplicationUserDidTakeScreenshotNotification'),
+                 nil);
 end;
 {$ENDIF}
 
@@ -1102,6 +1272,15 @@ procedure TGestionSession.TimerTick(Sender: TObject);
 var  
   MinutesInactif: Integer;
 begin
+  // ⚠ `Now` reflète l'horloge système, qui peut être modifiée par
+  //   l'utilisateur (manuellement ou via un changement de fuseau).
+  //   Un attaquant local pourrait reculer l'horloge pour empêcher
+  //   l'expiration de session.
+  //
+  //   Pour un compteur d'inactivité, préférer `TThread.GetTickCount64`
+  //   qui est **monotone** (incrémente toujours, ignore les modifications
+  //   d'horloge). On comparerait alors `GetTickCount64 - FTickDerniereActivite`
+  //   en millisecondes.
   MinutesInactif := MinutesBetween(Now, FDerniereActivite);
 
   if MinutesInactif >= FTimeoutMinutes then
@@ -1131,22 +1310,78 @@ end;
 var
   GestionSession: TGestionSession;
 
+// ⚠ Cette variable globale doit être créée DANS FormCreate ET libérée
+//   DANS FormDestroy. Sans le Free correspondant, on a une fuite mémoire
+//   et le TTimer survit à la fermeture du formulaire.
 procedure TFormPrincipal.FormCreate(Sender: TObject);  
 begin  
   GestionSession := TGestionSession.Create(15); // 15 minutes
 end;
 
-procedure TFormPrincipal.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);  
-begin  
-  // Réinitialiser le timeout à chaque interaction
+// ⚠ Sur mobile, il n'y a pas d'événement `MouseMove` — la VCL utilise
+//   `MouseMove` mais FireMonkey génère des `Tap`, `Touch` ou `Gesture`.
+//   Pour FMX, brancher l'écoute sur les événements tactiles globaux :
+procedure TFormPrincipal.FormTouch(Sender: TObject; const Touches: TTouches;
+                                    const Action: TTouchAction);
+begin
   GestionSession.ResetTimeout;
 end;
 
-procedure TFormPrincipal.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);  
-begin  
+procedure TFormPrincipal.FormKeyDown(Sender: TObject; var Key: Word;
+                                     var KeyChar: Char; Shift: TShiftState);
+begin
+  // Capture aussi les saisies au clavier (virtuel ou Bluetooth)
   GestionSession.ResetTimeout;
 end;
 ```
+
+> 💡 **Le timeout côté client ne suffit pas** : un attaquant qui contrôle le téléphone peut désactiver le timer. **Le serveur doit aussi** invalider les tokens après une période d'inactivité (`last_used_at` mis à jour à chaque appel, expiration côté serveur après N minutes sans activité).
+
+## Conformité éditeurs : exigences 2024-2026
+
+### Privacy Manifest (Apple)
+
+**Obligatoire depuis le 1ᵉʳ mai 2024** pour toutes les apps soumises à l'App Store et leurs SDK tiers. C'est un fichier `PrivacyInfo.xcprivacy` (XML) à inclure dans le bundle, qui déclare :
+
+1. **NSPrivacyAccessedAPITypes** : utilisation des « *Required Reason APIs* » (UserDefaults, attributs de timestamp de fichier, `mach_absolute_time`, `systemUptime`, `disk space`…) — chacune doit déclarer une « raison approuvée par Apple ».
+2. **NSPrivacyTrackingDomains** : domaines utilisés pour le tracking inter-apps.
+3. **NSPrivacyCollectedDataTypes** : types de données collectées et finalités (pour les *Privacy Nutrition Labels* affichées sur l'App Store).
+
+Une app sans Privacy Manifest est rejetée par App Store Connect. Pour Delphi 13, le manifest est à ajouter manuellement dans le bundle iOS jusqu'à intégration dans l'IDE.
+
+### Play Integrity API (Google)
+
+Google a déprécié **SafetyNet Attestation** en 2024 au profit de **Play Integrity API**. Différence principale :
+
+- **SafetyNet** : un verdict booléen `ctsProfileMatch` qui s'attestait globalement.
+- **Play Integrity** : trois verdicts séparés — `MEETS_DEVICE_INTEGRITY` (appareil non rooté/modifié), `MEETS_BASIC_INTEGRITY` (intégrité minimale), `MEETS_STRONG_INTEGRITY` (appareil avec bootloader verrouillé et Play Protect actif). Permet une politique graduée selon le niveau de risque.
+
+Le résultat est un JWT signé par Google que le serveur vérifie. Côté Delphi, on appelle l'API via JNI :
+
+```pascal
+// Pseudo-code pour appel Play Integrity
+function VerifierIntegritePlay(const ANonce: string): TIntegrityVerdict;  
+begin  
+  // 1. Appeler IntegrityManager.requestIntegrityToken(IntegrityTokenRequest)
+  //    via JNI avec le nonce généré côté serveur.
+  // 2. Récupérer le JWT et l'envoyer au serveur.
+  // 3. Serveur : appeler l'API Google Play Integrity pour décoder et
+  //    valider le JWT, retourne le verdict.
+  // 4. Décider si l'app peut continuer ou doit être bloquée.
+end;
+```
+
+> 💡 **Bonnes pratiques** :  
+> - Ne JAMAIS faire confiance à un verdict décodé côté client — l'attestation doit être validée côté serveur.  
+> - Le nonce doit être unique par requête, généré par le serveur, lié à l'action sensible (paiement, déverrouillage de fonctionnalité premium…).  
+> - Prévoir un *fallback gracieux* : un téléphone rooté légitime (développeur, power user) ne doit pas être totalement bloqué — proposer une auth renforcée à la place.
+
+### Apple App Attest
+
+L'équivalent Apple, disponible depuis iOS 14 (2020). Fournit deux primitives :
+
+- **DeviceCheck** : un identifiant persistant (2 bits par app) pour suivre l'éligibilité d'un appareil (un essai gratuit, par exemple) sans collecter de données personnelles.
+- **App Attest** : attestation cryptographique que la requête vient bien d'une instance non modifiée de votre app, sur un appareil Apple authentique. Utilisé contre le scraping et l'API abuse.
 
 ## Checklist de sécurité mobile
 
@@ -1234,7 +1469,8 @@ AuthentifierAvecBiometrie;
 
 **5. HTTPS obligatoire**
 ```pascal
-if not URL.StartsWith('https://') then
+// `IgnoreCase = True` car `HTTPS://...` est valide aussi (RFC 3986).
+if not URL.StartsWith('https://', True) then
   raise Exception.Create('HTTPS requis');
 ```
 

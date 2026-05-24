@@ -43,8 +43,8 @@ La sécurité des applications repose sur plusieurs piliers fondamentaux, souven
 
 **Exemples** :
 - Un utilisateur ne peut pas consulter les données personnelles d'un autre utilisateur
-- Les mots de passe sont chiffrés et jamais stockés en clair
-- Les communications entre le client et le serveur sont sécurisées
+- Les mots de passe sont **hashés** (pas chiffrés) et jamais stockés en clair — voir le chapitre 16.1 pour la distinction
+- Les communications entre le client et le serveur sont sécurisées (TLS)
 
 **Techniques utilisées** :
 - Chiffrement des données
@@ -110,12 +110,12 @@ La sécurité doit être pensée en **couches successives**. Si une couche est c
 **Exemple concret** : Protection d'une application bancaire
 1. **Périmètre** : Pare-feu qui filtre le trafic
 2. **Réseau** : Connexion HTTPS obligatoire
-3. **Authentification** : Identifiant + mot de passe + code SMS
+3. **Authentification** : Identifiant + mot de passe + 2ᵉ facteur (TOTP, Passkey ou push notification — **pas SMS** : le NIST SP 800-63B le déconseille depuis 2017 à cause des attaques par SIM-swap)
 4. **Autorisation** : L'utilisateur ne voit que ses comptes
 5. **Validation** : Les montants de transaction sont validés
 6. **Chiffrement** : Les données sensibles sont chiffrées en base
 7. **Journalisation** : Toutes les opérations sont tracées
-8. **Sauvegarde** : Sauvegardes quotidiennes des données
+8. **Sauvegarde** : Sauvegardes quotidiennes des données, chiffrées et testées (un backup non testé n'est PAS un backup)
 
 ## Les types de menaces courantes
 
@@ -172,7 +172,18 @@ Permettre à un attaquant d'exécuter du code arbitraire sur le serveur.
 Écrire au-delà de la mémoire allouée pour corrompre le programme.
 
 **Injection de commandes**
-Exécuter des commandes système non autorisées.
+Exécuter des commandes système non autorisées. Exemple : un champ « nom de fichier » concaténé dans `ShellExecute('cmd.exe /c convertir ' + ANomFichier)` permet à l'utilisateur d'entrer `image.png & del /Q *.*` pour exécuter une commande supplémentaire.
+
+### 5. Menaces opérationnelles (2024-2026)
+
+**Ransomware**
+Selon l'ANSSI, c'est **la menace numéro 1** depuis 2020 pour les organisations françaises. L'attaquant chiffre vos données et exige une rançon. Sauvegardes immuables + segmentation réseau + PRA testé sont les seules protections fiables.
+
+**Insider threats (menaces internes)**
+Un employé légitime (actuel ou ancien) qui exfiltre, sabote ou utilise abusivement ses accès. Souvent sous-estimées, elles représentent ~20 % des incidents selon le rapport Verizon DBIR. Contre-mesures : principe du moindre privilège, séparation des tâches, audit des accès, *zero standing privileges* (accès *just-in-time* uniquement).
+
+**Side-channel attacks (canaux auxiliaires)**
+L'attaquant déduit un secret en mesurant le temps de calcul, la consommation électrique, les radiations électromagnétiques, le cache CPU (Spectre/Meltdown 2018), etc. Contre-mesures : code à temps constant (cf comparaisons de hash), randomisation des opérations sensibles.
 
 ## Le cycle de vie de la sécurité
 
@@ -208,10 +219,13 @@ La sécurité n'est pas quelque chose qu'on ajoute à la fin du développement. 
 ### 3. Phase de test
 
 **Types de tests** :
-- Tests de pénétration (pentesting)
-- Analyse de vulnérabilités
-- Fuzzing (injection de données aléatoires)
-- Tests d'intrusion
+- **SAST** (*Static Application Security Testing*) — analyse du code source sans l'exécuter. Outils : Pascal Analyzer, Semgrep, SonarQube.
+- **DAST** (*Dynamic Application Security Testing*) — test de l'application en cours d'exécution, en envoyant des requêtes malicieuses. Outils : OWASP ZAP, Burp Suite.
+- **IAST** (*Interactive AST*) — combinaison : instrumente l'app pendant les tests DAST pour avoir une vue interne.
+- **SCA** (*Software Composition Analysis*) — analyse des dépendances pour détecter les CVE connues. Outils : Dependabot, Snyk, OWASP Dependency-Check.
+- **Tests de pénétration (pentesting)** — par des humains, simulant un vrai attaquant.
+- **Fuzzing** — injection de données aléatoires pour faire crasher l'application et trouver des vulnérabilités.
+- **Red Team** — exercice grandeur nature où une équipe (interne ou externe) tente de pénétrer le SI sans préavis.
 
 **Objectif** : Trouver les failles avant qu'un attaquant ne le fasse.
 
@@ -237,24 +251,25 @@ Delphi offre de nombreux outils et bibliothèques pour développer des applicati
 
 ### Avantages de Delphi pour la sécurité
 
-✅ **Compilation native** : Le code compilé est plus difficile à analyser que du code interprété
+✅ **Compilation native** : pas de bytecode intermédiaire trivialement décompilable (à la différence de Java/.NET). ⚠️ N'en faites PAS un argument de sécurité : les outils de rétro-ingénierie modernes (IDA Pro, Ghidra qui est gratuit depuis 2019, Hopper, Binary Ninja) désassemblent un binaire Delphi sans difficulté. Les chaînes constantes restent visibles avec `strings`, et la RTTI de Delphi fournit même aux attaquants la liste des classes, méthodes et propriétés publiées. La compilation native **ralentit** l'attaquant, elle ne le **bloque pas**.
 
 ✅ **Typage fort** : Réduit les erreurs de programmation qui peuvent créer des vulnérabilités
 
 ✅ **FireDAC avec requêtes paramétrées** : Protection native contre les injections SQL
 
-✅ **Bibliothèques de chiffrement intégrées** : Support de AES, RSA, SHA, etc.
+✅ **Bibliothèques de chiffrement intégrées** : Support de SHA-2 et PBKDF2 dans `System.Hash` ; AES, RSA et TLS via OpenSSL (par Indy ou par des wrappers tiers comme LockBox 3, GrijjyFoundation, TMS Cryptography Pack).
 
-✅ **Gestion mémoire** : Moins de risques de débordement qu'en C/C++
+✅ **Gestion mémoire** : les types managed (`string`, `TBytes`, tableaux dynamiques) éliminent la plupart des débordements typiques de C/C++. ⚠️ La sécurité n'est pas automatique : tout usage de `PChar`, `Move`, `BlockRead`, ou de pointeurs bruts peut réintroduire des dépassements. Le typage fort de Delphi est une aide, pas une garantie.
 
 ✅ **Multi-plateforme sécurisé** : Même code base pour Windows, macOS, iOS, Android, Linux
 
 ### Composants et unités de sécurité en Delphi
 
 **Unités cryptographiques** :
-- `System.Hash` : Fonctions de hachage (MD5, SHA1, SHA2)
-- `System.NetEncoding` : Encodage Base64, URL, HTML
-- Indy (Internet Direct) : SSL/TLS, protocoles sécurisés
+- `System.Hash` : fonctions de hachage. ⚠️ N'utilisez que `THashSHA2` (SHA-256/SHA-512) et `THashPBKDF2_SHA256` pour la sécurité. `THashMD5` et `THashSHA1` sont fournies à des fins de compatibilité historique : elles ne sont plus considérées comme cryptographiquement sûres (collisions pratiques démontrées).
+- `System.NetEncoding` : Encodage Base64, URL, HTML (encodages, pas du chiffrement !)
+- Indy (Internet Direct) : SSL/TLS via OpenSSL, protocoles sécurisés
+- `System.Security.Cryptography` (sur .NET, non disponible en Delphi VCL/FMX) : à ne pas confondre avec son équivalent .NET
 
 **Composants de base de données** :
 - FireDAC : Requêtes paramétrées, chiffrement de connexion
@@ -271,7 +286,7 @@ En fonction de votre domaine et de votre géographie, vous devez respecter certa
 
 ### RGPD (Règlement Général sur la Protection des Données)
 
-**Applicable** : Union Européenne et données de citoyens européens
+**Applicable** : entreprises établies dans l'UE/EEE, OU traitement de données de personnes **situées** dans l'UE (peu importe leur nationalité — voir 16.8 pour les détails sur le champ d'application).
 
 **Principes clés** :
 - Consentement explicite pour la collecte de données
@@ -288,13 +303,21 @@ En fonction de votre domaine et de votre géographie, vous devez respecter certa
 
 ### Autres réglementations importantes
 
-**PCI DSS** : Pour les applications manipulant des cartes de crédit
+**PCI DSS v4.0** : Pour les applications manipulant des cartes de crédit (la v4.0.1 publiée en 2024 est obligatoire depuis le 31 mars 2025).
 
-**HIPAA** : Pour les applications médicales (États-Unis)
+**HIPAA** : Pour les applications médicales (États-Unis).
 
-**SOX** : Pour les applications financières d'entreprises cotées
+**SOX** : Pour les applications financières d'entreprises cotées en bourse.
 
-**Loi CNIL** : Pour les applications traitant des données en France
+**Loi Informatique et Libertés** : Loi française de 1978, modifiée par la loi du 20 juin 2018 pour s'aligner sur le RGPD. C'est l'instrument national qui complète le RGPD en France ; la CNIL en est l'autorité de contrôle.
+
+**NIS 2** (directive UE 2022/2555) : entrée en vigueur en application nationale depuis octobre 2024. Élargit considérablement le périmètre de la directive NIS de 2016 : les opérateurs « essentiels » et « importants » (énergie, santé, transports, services numériques, etc.) doivent appliquer des mesures de gestion des risques cyber et notifier les incidents significatifs sous 24 h (pré-notification) puis 72 h.
+
+**DORA** (règlement UE 2022/2554) : applicable depuis le 17 janvier 2025 aux entités financières (banques, assurances, gestionnaires d'actifs, etc.) et à leurs prestataires informatiques critiques. Impose un cadre de résilience opérationnelle informatique.
+
+**AI Act** (règlement UE 2024/1689) : entré en vigueur progressivement depuis août 2024. Si votre application Delphi embarque un modèle d'IA classé « à haut risque », des obligations de documentation, de transparence et de robustesse s'appliquent.
+
+**Cyber Resilience Act** (règlement UE 2024/2847) : applicable progressivement à partir de 2026/2027. Impose des exigences de cybersécurité « by design » à tous les produits avec composants numériques mis sur le marché européen — y compris les applications desktop natives.
 
 ## Les erreurs courantes à éviter
 
@@ -314,7 +337,7 @@ En fonction de votre domaine et de votre géographie, vous devez respecter certa
 
 **Mythe** : "Si personne ne connaît mon système, il est sûr"
 
-**Réalité** : La vraie sécurité fonctionne même si l'attaquant connaît le système.
+**Réalité** : La vraie sécurité fonctionne même si l'attaquant connaît le système. C'est le **principe de Kerckhoffs** (Auguste Kerckhoffs, 1883) : *un cryptosystème doit rester sûr même si tout sauf la clé est public*. Toute la cryptographie moderne repose sur ce principe — c'est pour cela qu'on connaît les détails d'AES, de RSA ou de TLS, et qu'ils restent sûrs malgré tout.
 
 ### ❌ Erreur n°5 : Négliger les mises à jour
 
@@ -337,6 +360,26 @@ ShowMessage('Une erreur est survenue. Veuillez contacter le support.');
 
 **Règle** : Utilisez toujours des algorithmes éprouvés (AES, RSA, etc.). La cryptographie est un domaine complexe.
 
+### ❌ Erreur n°8 : Pousser un secret dans un dépôt Git public
+
+**Réalité 2024-2025** : selon le rapport annuel de GitGuardian, **23 millions de secrets** ont été détectés en 2023 sur les commits publics GitHub. Une clé API exposée 30 secondes est suffisante pour être scrapée par les bots qui parcourent en continu les nouveaux commits.
+
+**Protections** :
+- Pre-commit hooks avec `gitleaks`, `trufflehog` ou GitGuardian CLI.
+- Ne JAMAIS résoudre le problème en "supprimant le commit" — l'historique Git le garde, et même un `force-push` n'efface pas les forks/clones. Considérer le secret comme **compromis** et le rotater immédiatement.
+- Si secret compromis : rotation + audit des logs d'accès pour détecter une utilisation malveillante.
+
+### ❌ Erreur n°9 : Faire confiance à toutes ses dépendances
+
+**Supply chain** : un attaquant ne cible plus directement votre app, mais une dépendance. Cas célèbres récents : `event-stream` (npm, 2018), `ua-parser-js` (npm, 2021), `xz-utils` (Linux, mars 2024 — backdoor SSH évitée de justesse), `SolarWinds Orion` (2020 — compromission du processus de build affectant ~18 000 organisations).
+
+**Pour Delphi spécifiquement** :
+- Surveiller les CVE de vos composants : **FireDAC** (drivers MySQL/PostgreSQL/SQL Server), **Indy** (qui embarque OpenSSL et dont les DLL `libcrypto`/`libssl` doivent être à jour), bibliothèques tierces (TMS, Konopka, FastReport, JEDI…).
+- **GetIt Package Manager** (Embarcadero) : équivalent npm/NuGet pour Delphi. Ses packages ne sont pas signés individuellement — vérifier la source avant d'installer un package communautaire.
+- *Software Bill of Materials* (SBOM, format SPDX ou CycloneDX) — déclaration de toutes les dépendances et versions. Exigé par le **Cyber Resilience Act** européen à partir de 2027.
+- Verrouillage des versions dans le `.dproj` (références aux fichiers `.pas`/`.dpk` précis) et reproduction stricte des builds (même version Delphi, même patches, mêmes packages installés).
+- **Reproduire les builds en CI** sur une image clean — un build artisanal sur le poste d'un développeur n'est pas auditable.
+
 ## Mentalité sécurité (Security Mindset)
 
 Pour développer des applications sécurisées, vous devez adopter une nouvelle façon de penser :
@@ -358,14 +401,36 @@ Posez-vous constamment ces questions :
 - Une base de données d'application n'a pas besoin d'accès DROP TABLE
 - Un processus n'a besoin que des fichiers qu'il manipule
 
-### Présumer la compromission
+### Présumer la compromission (Zero Trust)
 
-**Principe** : Supposez qu'une partie du système peut être compromise.
+**Principe** : Supposez qu'une partie du système est déjà compromise. C'est le fondement de l'approche **Zero Trust** (« Never trust, always verify »), devenue depuis 2023-2024 le modèle de référence des grandes organisations et des autorités (NIST SP 800-207, ANSSI, CISA).
 
-**Exemple** :
-- Si le client est compromis, le serveur doit quand même être sûr
-- Si une session est volée, les dégâts doivent être limités
-- Si une base est copiée, les données sensibles doivent être chiffrées
+Quatre maximes :
+1. **Aucune confiance implicite** : aucune connexion, machine ou utilisateur n'est de confiance par défaut, même à l'intérieur du périmètre.
+2. **Vérification systématique** : chaque requête est authentifiée, autorisée et chiffrée, à chaque saut.
+3. **Moindre privilège** : juste l'accès nécessaire, pour la durée nécessaire (just-in-time).
+4. **Présumer la brèche** : concevoir comme si l'attaquant était déjà dans le système.
+
+**Exemple appliqué à Delphi** :
+- Si le client desktop est compromis, le serveur doit quand même être sûr (validation côté serveur, pas seulement côté client).
+- Si une session est volée, les dégâts doivent être limités (jetons à courte durée de vie, refresh tokens rotatifs, MFA pour les actions sensibles).
+- Si une base est copiée, les données sensibles doivent être chiffrées (chiffrement applicatif au-dessus du chiffrement disque).
+- Si un binaire est extrait, il ne doit contenir aucun secret en clair (rotation par configuration, jamais en dur).
+
+### Modéliser les menaces : STRIDE
+
+Avant d'écrire du code, identifiez les menaces. La méthode **STRIDE** de Microsoft est un acronyme mnémonique des six familles d'attaques :
+
+| Lettre | Menace | Propriété violée | Contre-mesure principale |
+|---|---|---|---|
+| **S** | **S**poofing (usurpation) | Authenticité | Authentification forte, MFA, certificats |
+| **T** | **T**ampering (altération) | Intégrité | Hash, signatures, transactions |
+| **R** | **R**epudiation (déni) | Non-répudiation | Journalisation signée, horodatage |
+| **I** | **I**nformation disclosure (fuite) | Confidentialité | Chiffrement, contrôle d'accès |
+| **D** | **D**enial of service | Disponibilité | Rate limiting, quotas, redondance |
+| **E** | **E**levation of privilege | Autorisation | Moindre privilège, isolation, RBAC |
+
+Parcourez chaque flux de données de votre application (entrée utilisateur, appel API, accès base, écriture fichier, IPC) et posez les 6 questions STRIDE. C'est l'outil que nous appliquerons implicitement tout au long des sections 16.1 à 16.10.
 
 ### Échec sécurisé (Fail-Safe)
 
@@ -461,42 +526,61 @@ Ce chapitre est organisé en sections progressives qui couvrent tous les aspects
 - Exemples de code sécurisé
 
 🌐 **Ressources en ligne** :
-- OWASP (Open Web Application Security Project)
-- NIST Cybersecurity Framework
-- CWE (Common Weakness Enumeration)
+- **OWASP** (Open Web Application Security Project) — Top 10, ASVS, MASVS, Cheat Sheet Series
+- **NIST Cybersecurity Framework 2.0** (publié février 2024) — version la plus récente, ajoute la fonction « Govern »
+- **CWE** (Common Weakness Enumeration) — taxonomie des faiblesses logicielles, complète OWASP
+- **CAPEC** (Common Attack Pattern Enumeration and Classification) — patterns d'attaque
+- **MITRE ATT&CK** — base de connaissances tactiques et techniques d'attaque
+- **ANSSI** (France) — guides de bonnes pratiques, particulièrement pour l'administration et les OIV
 
 ### Outils utiles
 
-🛠️ **Analyse de code** :
-- Analyseurs statiques pour Delphi
-- Outils de revue de code
+🛠️ **Analyse statique pour Delphi** :
+- **Pascal Analyzer (Peganza)** — analyseur commercial spécifique Delphi/Object Pascal, détecte bug patterns et anti-patterns
+- **FixInsight** — extension IDE qui pointe les *code smells* et erreurs courantes (anciennement TMS, désormais Open Source)
+- **DCC32 hints/warnings** — n'ignorez pas les avertissements du compilateur (`-W` au maximum)
+- **DelphiAST** — parseur Pascal pour écrire vos propres analyses
+- **Semgrep** — règles personnalisables multi-langages, utilisable pour détecter des patterns dangereux dans du Pascal (concaténation SQL, secrets en dur, etc.). De plus en plus présent dans les pipelines CI 2024-2025.
 
 🔐 **Test de sécurité** :
-- Burp Suite (test d'applications web)
-- OWASP ZAP
-- Nmap (scan réseau)
+- **Burp Suite** — proxy HTTP pour intercepter et modifier les requêtes (test d'API REST)
+- **OWASP ZAP** — alternative gratuite à Burp
+- **Nmap** — scan réseau et détection de services
+- **Wireshark** — capture de trafic pour vérifier qu'aucune donnée sensible ne fuite en clair
+- **MobSF** — *Mobile Security Framework* pour APK/IPA
 
-📊 **Surveillance** :
-- Outils de monitoring
-- Analyseurs de logs
-- Systèmes d'alerte
+📊 **Surveillance et détection de secrets** :
+- **gitleaks, trufflehog, GitGuardian CLI** — pré-commit hooks pour empêcher le push de secrets
+- **Dependabot / Renovate** — notification automatique des CVE dans vos dépendances
+- **SIEM** : ELK Stack, Splunk, Datadog, Wazuh (open source) pour centraliser et corréler les logs
 
 ## Checklist de sécurité de base
 
 Avant de déployer votre application, assurez-vous que :
 
-- [ ] Les mots de passe sont hashés avec un salt
+**Authentification & sessions**
+- [ ] Les mots de passe sont hashés avec un sel CSPRNG (Argon2id, PBKDF2 ≥ 600 000 itérations, bcrypt ou scrypt)
+- [ ] **MFA activé pour les comptes administrateur** (au minimum TOTP, idéalement Passkey/FIDO2)
+- [ ] Les sessions expirent après inactivité (côté serveur, pas seulement client)
+- [ ] Les tentatives de connexion sont limitées (par compte ET par IP)
+
+**Entrées & sorties**
 - [ ] Toutes les requêtes SQL sont paramétrées
-- [ ] Les entrées utilisateur sont validées
-- [ ] Les communications sensibles utilisent HTTPS
-- [ ] Les données sensibles sont chiffrées
-- [ ] Les sessions expirent après inactivité
-- [ ] Les erreurs ne révèlent pas d'informations système
-- [ ] Les tentatives de connexion sont limitées
-- [ ] Les actions sensibles sont journalisées
-- [ ] Les dépendances sont à jour
-- [ ] Un plan de réponse aux incidents existe
-- [ ] Les sauvegardes sont régulières et testées
+- [ ] Les entrées utilisateur sont validées (liste blanche)
+- [ ] Les sorties sont échappées selon le contexte (HTML, JS, SQL, shell)
+
+**Transport & stockage**
+- [ ] Les communications utilisent TLS 1.2 minimum (idéalement TLS 1.3)
+- [ ] Les données sensibles sont chiffrées au repos (AES-256-GCM ou ChaCha20-Poly1305)
+- [ ] Aucun secret en dur dans le code source ou les fichiers de configuration
+
+**Observabilité & réaction**
+- [ ] Les erreurs ne révèlent pas d'informations système à l'utilisateur
+- [ ] Les actions sensibles sont journalisées (UTC, JSON Lines, intégrité protégée)
+- [ ] Les dépendances sont à jour, surveillées (Dependabot/Renovate)
+- [ ] **Un plan de réponse aux incidents (IRP)** existe et a été testé au moins une fois
+- [ ] **Procédure de notification CNIL/utilisateurs** prête (72 h pour RGPD)
+- [ ] Les sauvegardes sont régulières, chiffrées, et **leur restauration a été testée**
 
 ## Conclusion de l'introduction
 

@@ -67,11 +67,18 @@ Document original → Fonction de hash → Empreinte unique
 "Contrat de vente"  → SHA-256 →      "a4f5b2c8d..."
 ```
 
-**Étape 2 : Chiffrer l'empreinte avec la clé privée**
+**Étape 2 : Signer l'empreinte avec la clé privée**
 ```
-Empreinte → Chiffrement clé privée → Signature
-"a4f5b2c8d..." → RSA clé privée →    Signature numérique
+Empreinte → Signature avec clé privée → Signature
+"a4f5b2c8d..." → RSA-PSS / ECDSA →     Signature numérique
 ```
+
+> 💡 **Pédagogiquement on dit souvent « chiffrer le hash avec la clé privée »** — c'est une simplification historique vraie pour RSA PKCS#1 v1.5 mais inexacte en général. Une **signature** est une opération mathématique distincte du chiffrement :  
+> - **RSA-PSS** (RFC 8017) : padding probabiliste, masque l'empreinte avant l'opération RSA. Recommandé sur PKCS#1 v1.5.  
+> - **ECDSA** (NIST FIPS 186-5) : signature sur courbes elliptiques, pas du tout du « chiffrement ».  
+> - **EdDSA / Ed25519** (RFC 8032) : signature déterministe, pas du chiffrement non plus.  
+>  
+> La signature et le chiffrement utilisent les mêmes paires de clés mais ne sont **pas symétriques** : on ne « déchiffre » pas une signature, on la **vérifie**.
 
 **Étape 3 : Attacher la signature au document**
 ```
@@ -85,18 +92,18 @@ Document original + Signature = Document signé
 Document reçu → Fonction de hash → Empreinte calculée
 ```
 
-**Étape 2 : Déchiffrer la signature avec la clé publique**
+**Étape 2 : Vérifier la signature avec la clé publique**
 ```
-Signature → Déchiffrement clé publique → Empreinte originale
+(Empreinte calculée, Signature, Clé publique) → Vérificateur → True / False
 ```
 
-**Étape 3 : Comparer les deux empreintes**
+**Étape 3 : Résultat**
 ```
-Si Empreinte calculée = Empreinte originale
-  → Signature valide, document non modifié
-Sinon
-  → Signature invalide ou document altéré
+True  → Signature valide, document non modifié, provient bien du signataire  
+False → Signature invalide OU document altéré OU mauvaise clé publique  
 ```
+
+> 💡 Notez que la vérification est **directement booléenne** : on ne retrouve pas l'empreinte originale séparément — l'algorithme combine empreinte calculée + signature + clé publique et retourne juste un verdict. C'est plus simple et plus sûr (pas d'oracle pour aider une attaque).
 
 ### Schéma complet
 
@@ -142,7 +149,21 @@ uses
 
 function CalculerHashSHA256(const ATexte: string): string;  
 begin  
+  // ⚠ `THashSHA2.GetHashString(string)` encode le `string` Unicode (UTF-16
+  //   LE en mémoire dans Delphi) avant de le hasher — depuis Delphi 10.3,
+  //   l'encodage par défaut est UTF-8. Vérifiez la documentation de votre
+  //   version : si vous comparez avec un hash calculé par un autre langage
+  //   (Python `hashlib.sha256(s.encode("utf-8"))`, Node, openssl en CLI),
+  //   il FAUT utiliser le même encodage des deux côtés. Pour lever toute
+  //   ambiguïté, hashez explicitement des `TBytes` produits par
+  //   `TEncoding.UTF8.GetBytes(ATexte)`.
   Result := THashSHA2.GetHashString(ATexte);
+end;
+
+// Variante non ambiguë : hash de la représentation UTF-8 explicite
+function CalculerHashSHA256UTF8(const ATexte: string): string;  
+begin  
+  Result := THashSHA2.GetHashString(TEncoding.UTF8.GetBytes(ATexte));
 end;
 
 // Exemple d'utilisation
@@ -200,7 +221,11 @@ var
 begin
   HashCalcule := CalculerHashFichier(AFichier);
 
-  if HashCalcule = AHashAttendu then
+  // ⚠ Utiliser `SameText` (comparaison insensible à la casse) plutôt que `=` :
+  //   les éditeurs publient leurs checksums tantôt en majuscules
+  //   (`A3F5B2C8...`), tantôt en minuscules (`a3f5b2c8...`). `THashSHA2`
+  //   retourne en minuscules, mais l'attendu peut venir de n'importe où.
+  if SameText(HashCalcule, AHashAttendu) then
     ShowMessage('✓ Fichier intègre - Hash correct')
   else
     ShowMessage('✗ ATTENTION : Fichier corrompu ou modifié !');
@@ -276,12 +301,20 @@ begin
   // 1. Calculer le hash du document
   Hash := THashSHA2.GetHashString(ADocument);
 
-  // 2. "Chiffrer" le hash avec la clé privée (= signer)
-  // En production, utilisez une vraie bibliothèque RSA
+  // 2. ⚠️ STUB PÉDAGOGIQUE — NE JAMAIS UTILISER EN PRODUCTION
+  // L'expression ci-dessous ne « signe » rien : elle préfixe simplement le
+  // hash par un texte constant. N'importe qui peut reproduire ce résultat
+  // sans posséder la clé privée. Le code n'est ici que pour illustrer
+  // l'ordre des étapes (hasher puis chiffrer le hash).
   Result := 'SIGNATURE_' + Hash;
 
-  // Avec une vraie bibliothèque :
-  // Result := RSA.Sign(Hash, FClePrivee);
+  // Vraie implémentation (PKCS#1 v1.5 ou RSASSA-PSS, voir OpenSSL via Indy
+  // ou la classe `THashFactory` couplée à OpenSSL) :
+  //   Result := RSA.SignPKCS1v15(Hash, FClePrivee, 'SHA256');
+  // Au minimum, RSA-3072 bits ou ECDSA P-256 sont recommandés en 2026.
+  raise Exception.Create(
+    'SignerDocument : implémentation factice. Voir documentation OpenSSL ' +
+    'ou SecureBlackbox pour une vraie signature RSA/ECDSA.');
 end;
 
 function TSignatureNumerique.VerifierSignature(const ADocument, ASignature: string): Boolean;  
@@ -289,17 +322,12 @@ var
   HashCalcule: string;
   HashDechiffre: string;
 begin
-  // 1. Calculer le hash du document reçu
+  // ⚠️ STUB pédagogique — symétrique à SignerDocument ci-dessus.
+  // En production, appeler `RSA.VerifyPKCS1v15(HashCalcule, ASignature,
+  // FClePublique, 'SHA256')` et utiliser une comparaison à temps constant
+  // pour le booléen retourné (voir HashEgalTempsConstant en section 16.1).
   HashCalcule := THashSHA2.GetHashString(ADocument);
-
-  // 2. "Déchiffrer" la signature avec la clé publique
-  // En production, utilisez une vraie bibliothèque RSA
   HashDechiffre := StringReplace(ASignature, 'SIGNATURE_', '', []);
-
-  // Avec une vraie bibliothèque :
-  // HashDechiffre := RSA.Verify(ASignature, FClePublique);
-
-  // 3. Comparer les hash
   Result := (HashCalcule = HashDechiffre);
 end;
 
@@ -310,6 +338,7 @@ var
   Document: string;
   SignatureDoc: string;
   EstValide: Boolean;
+  Paire: TPaireCles;
 begin
   // Générer une paire de clés
   Paire := GenererPaireClesRSA;
@@ -336,9 +365,11 @@ begin
 end;
 ```
 
-## Signature de fichiers avec Indy
+## Empreinte de fichiers avec Indy
 
-Pour une implémentation robuste, utilisez Indy (inclus avec Delphi) :
+> ⚠️ **Vocabulaire** : ce qui suit est une **empreinte** (checksum, hash), pas une **signature**. Une vraie signature implique une clé privée et offre des garanties d'**authenticité** en plus de l'intégrité. Une empreinte SHA-256 toute seule prouve uniquement qu'on a bien le même fichier — n'importe qui peut recalculer un nouveau hash pour un fichier modifié. Pour la vraie signature, voir la section *Code Signing* plus bas.
+
+Pour une implémentation robuste de l'empreinte, utilisez Indy (inclus avec Delphi) :
 
 ```pascal
 uses
@@ -374,9 +405,13 @@ begin
   Signature := TStringList.Create;
   try
     Signature.Add('Fichier: ' + ExtractFileName(AFichier));
-    Signature.Add('Date: ' + DateTimeToStr(Now));
+    // ISO 8601 + UTC pour éviter toute ambiguïté de format / fuseau
+    Signature.Add('Date: ' + FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',
+                                            TTimeZone.Local.ToUniversalTime(Now)));
     Signature.Add('SHA-256: ' + Empreinte);
-    Signature.SaveToFile(AFichierSignature);
+    // Encodage UTF-8 explicite pour préserver les accents éventuels du
+    // nom de fichier sur tous les systèmes
+    Signature.SaveToFile(AFichierSignature, TEncoding.UTF8);
   finally
     Signature.Free;
   end;
@@ -400,7 +435,8 @@ begin
   // Lire l'empreinte stockée
   Signature := TStringList.Create;
   try
-    Signature.LoadFromFile(AFichierSignature);
+    // Préciser l'encodage UTF-8 pour rester cohérent avec l'écriture
+    Signature.LoadFromFile(AFichierSignature, TEncoding.UTF8);
 
     for i := 0 to Signature.Count - 1 do
     begin
@@ -452,32 +488,51 @@ Un certificat numérique lie une clé publique à une identité (personne, organ
 ### Structure d'un certificat
 
 ```
-┌─────────────────────────────────────────┐
-│         CERTIFICAT NUMÉRIQUE            │
-├─────────────────────────────────────────┤
-│ Version: X.509 v3                       │
-│ Numéro de série: 1234567890             │
-│                                         │
-│ Émetteur (CA):                          │
-│   Nom: DigiCert                         │
-│   Pays: US                              │
-│                                         │
-│ Sujet (Propriétaire):                   │
-│   Nom: MonEntreprise SAS                │
-│   Pays: FR                              │
-│   Email: admin@monentreprise.com        │
-│                                         │
-│ Validité:                               │
-│   Du: 2024-01-01                        │
-│   Au: 2025-01-01                        │
-│                                         │
-│ Clé publique:                           │
-│   [Clé publique RSA 2048 bits]          │
-│                                         │
-│ Signature de la CA:                     │
-│   [Signature numérique de DigiCert]     │
-└─────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│                CERTIFICAT NUMÉRIQUE                        │
+├────────────────────────────────────────────────────────────┤
+│ Version    : X.509 v3                                      │
+│ Numéro     : 04:8e:b6:b2:51:55:c1:b4:5b:fc:81:b3:7c:79:d1  │
+│              (entier de 16+ octets, format hexadécimal)    │
+│                                                            │
+│ Émetteur (CA) :                                            │
+│   CN = DigiCert TLS RSA SHA256 2020 CA1                    │
+│   O  = DigiCert Inc                                        │
+│   C  = US                                                  │
+│                                                            │
+│ Sujet (Propriétaire) :                                     │
+│   CN = www.monentreprise.fr                                │
+│   O  = MonEntreprise SAS                                   │
+│   L  = Paris                                               │
+│   C  = FR                                                  │
+│                                                            │
+│ Subject Alternative Names (SAN) :                          │
+│   DNS: www.monentreprise.fr                                │
+│   DNS: monentreprise.fr                                    │
+│   DNS: api.monentreprise.fr                                │
+│                                                            │
+│ Validité (durée max 398 jours depuis sept. 2020) :         │
+│   Du : 2025-09-01T00:00:00Z                                │
+│   Au : 2026-09-30T23:59:59Z                                │
+│                                                            │
+│ Clé publique :                                             │
+│   Algorithme : ECDSA P-256 (ou RSA-3072+ pour les TLS)     │
+│   [Clé publique en DER]                                    │
+│                                                            │
+│ Extensions :                                               │
+│   - Key Usage : Digital Signature, Key Encipherment        │
+│   - Extended Key Usage : Server Authentication             │
+│   - CRL Distribution Points : http://crl.digicert.com/...  │
+│   - OCSP : http://ocsp.digicert.com                        │
+│   - CT Pre-Certificate SCTs : (Certificate Transparency)   │
+│                                                            │
+│ Signature de la CA :                                       │
+│   Algorithme : sha256WithRSAEncryption                     │
+│   [Signature numérique de DigiCert]                        │
+└────────────────────────────────────────────────────────────┘
 ```
+
+> 💡 **Validité maximale 398 jours** : depuis septembre 2020, Apple, Google et Mozilla refusent les certificats TLS publics dont la validité dépasse **398 jours** (~13 mois). Cette limite est descendue à **47 jours** progressivement à partir de 2026 selon le calendrier du CA/Browser Forum. Conséquence : automatiser le renouvellement (Certbot/ACME) n'est plus optionnel.
 
 ### Hiérarchie de certification
 
@@ -489,6 +544,14 @@ Certificat Racine (Root CA)
   └─ Certificat Intermédiaire
       └─ Certificat Personnel
 ```
+
+> 💡 **Vérifier la chaîne, pas juste la signature** : « la signature est valide » ne suffit pas. Une vérification complète passe par 4 étapes :  
+> 1. **Vérifier la signature** elle-même (cryptographiquement).  
+> 2. **Reconstituer la chaîne** : remonter de proche en proche du certificat signataire jusqu'à un certificat racine de confiance dans votre magasin (Windows : `Cert:\LocalMachine\Root`, navigateurs : Mozilla/Apple/Microsoft trust store).  
+> 3. **Vérifier la validité temporelle** : `notBefore ≤ now ≤ notAfter` pour CHAQUE certificat de la chaîne (y compris les intermédiaires).  
+> 4. **Vérifier la révocation** : interroger le CRL ou OCSP de l'émetteur (un certificat compromis peut être révoqué avant sa date d'expiration). **OCSP Stapling** permet au serveur de joindre la preuve OCSP avec son certificat pour éviter l'aller-retour réseau.  
+>  
+> `WinVerifyTrust` sur Windows fait tout cela automatiquement (cf section *Code Signing*). Sur d'autres plateformes, OpenSSL fournit `X509_verify_cert` qui couvre les 4 étapes si on lui fournit le bon contexte.
 
 ### Lire un certificat en Delphi
 
@@ -547,22 +610,40 @@ Le code signing permet de signer vos exécutables pour prouver leur authenticit�
 
 **Options** :
 1. **Certificats commerciaux** (recommandé pour la production)
-   - DigiCert (Code Signing Certificate)
-   - Sectigo (Code Signing Certificate)
-   - GlobalSign
-   - Prix : 200-400€ par an
+   - DigiCert, Sectigo, GlobalSign, SSL.com, Certum
+   - Prix 2026 (depuis l'obligation de token hardware en juin 2023) :
+     - **OV Code Signing** : ~300-500 €/an
+     - **EV Code Signing** : ~500-1500 €/an (livré sur token USB physique)
+   - Compter 1 à 4 semaines de délai pour la validation d'identité.
 
 2. **Certificats auto-signés** (développement uniquement)
    - Gratuit
-   - Non reconnu par les navigateurs/Windows
-   - Utile pour les tests
+   - Non reconnu par les navigateurs/Windows (déclenche SmartScreen)
+   - Utile pour les tests, le développement interne, ou pour distribuer dans une entreprise où vous installez le certificat racine sur tous les postes.
 
 ### Créer un certificat auto-signé (développement)
 
+> ⚠️ **makecert est déprécié** depuis le SDK Windows 8.1 (2014) et n'est plus livré dans les versions récentes du Windows SDK. Microsoft recommande la cmdlet PowerShell `New-SelfSignedCertificate`.
+
+```powershell
+# PowerShell — méthode actuelle (Windows 10/11)
+$cert = New-SelfSignedCertificate `
+  -Type CodeSigningCert `
+  -Subject "CN=MonEntreprise" `
+  -KeyAlgorithm RSA -KeyLength 3072 `
+  -HashAlgorithm SHA256 `
+  -CertStoreLocation "Cert:\CurrentUser\My" `
+  -NotAfter (Get-Date).AddYears(2)
+
+# Exporter en .pfx pour SignTool
+$pwd = ConvertTo-SecureString -String "MotDePasse123" -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath "MonApp.pfx" -Password $pwd
+```
+
 ```batch
-REM Créer un certificat de test avec makecert (Windows SDK)  
-makecert -sv MonApp.pvk -n "CN=MonEntreprise" MonApp.cer -r  
-pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123  
+REM Ancienne méthode (à éviter — makecert est obsolète) :  
+REM makecert -sv MonApp.pvk -n "CN=MonEntreprise" MonApp.cer -r  
+REM pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123  
 ```
 
 ### Signer un exécutable
@@ -570,12 +651,29 @@ pvk2pfx -pvk MonApp.pvk -spc MonApp.cer -pfx MonApp.pfx -po MotDePasse123
 **Avec SignTool (Windows SDK)** :
 
 ```batch
-REM Signer avec SignTool  
-signtool sign /f MonApp.pfx /p MotDePasse123 /t http://timestamp.digicert.com MonApplication.exe  
+REM ⚠ Plusieurs pièges à éviter :  
+REM   1. /p MotDePasse en clair ⇒ visible dans tasklist/history.  
+REM      → Préférer omettre /p (SignTool demandera le PIN) ou utiliser  
+REM        une variable d'environnement passée juste avant l'appel.  
+REM   2. /t (timestamp Authenticode SHA-1) est LEGACY. Les certificats  
+REM      modernes utilisent SHA-256 ⇒ il faut /tr (timestamp RFC 3161)  
+REM      avec /td sha256.  
+REM   3. Préciser /fd sha256 pour que la signature elle-même soit SHA-256.  
+REM  
+REM Signer avec SignTool (commande moderne 2026)  
+signtool sign /f MonApp.pfx ^  
+              /fd sha256 ^
+              /tr http://timestamp.digicert.com ^
+              /td sha256 ^
+              MonApplication.exe
 
-REM Vérifier la signature  
-signtool verify /pa MonApplication.exe  
+REM Vérifier la signature (kernel + user-mode policies)  
+signtool verify /pa /v MonApplication.exe  
 ```
+
+> ⚠️ **EV Code Signing et token hardware obligatoire (depuis juin 2023)** : les CIA/Baseline Requirements du CA/Browser Forum imposent que les clés privées des certificats **EV Code Signing** soient stockées sur un **module cryptographique matériel** (HSM, token USB type SafeNet eToken, YubiKey 5 FIPS). Le fichier `.pfx` exporté n'est plus accepté pour ces certificats — il faut utiliser SignTool avec `/csp` ou via le driver fourni par la CA. Depuis juin 2023, la même règle s'applique aussi aux certificats **OV Code Signing** standards. Pratiquement, vous ne recevrez plus un `.pfx` par email : un token hardware physique sera envoyé par courrier.
+
+> 💡 **Smart App Control (Windows 11 22H2+)** : ce mode active par défaut sur les nouvelles installations Windows 11 N'EXÉCUTE QUE les binaires signés avec un certificat de **haute réputation**, ou explicitement autorisés. Un nouveau certificat (même EV) met plusieurs mois à acquérir cette réputation. Pour les nouvelles applications grand public, planifier l'obtention du certificat **bien avant** la première release publique.
 
 **Automatiser dans Delphi** :
 
@@ -585,9 +683,19 @@ var
   Commande: string;
   ExitCode: Cardinal;
 begin
-  // Construire la ligne de commande SignTool
+  // ⚠ Construction de la ligne de commande :
+  //   - `/fd sha256` : digest de la signature (PAS sha1, déprécié) ;
+  //   - `/tr` + `/td sha256` : timestamp RFC 3161 SHA-256 (PAS `/t` SHA-1) ;
+  //   - mot de passe entre guillemets pour gérer les espaces et caractères
+  //     spéciaux ; en alternative, passer `/p` sans valeur → SignTool
+  //     demande interactivement le mot de passe (mieux pour les humains)
+  //     ou utiliser une variable d'environnement.
+  // ⚠ Le mot de passe en ligne de commande est visible dans le gestionnaire
+  //   de tâches et l'historique shell. En CI, utiliser un secret du runner
+  //   (GitHub Secrets, GitLab CI/CD variables, Azure Key Vault…).
   Commande := Format(
-    'signtool.exe sign /f "%s" /p %s /t http://timestamp.digicert.com /v "%s"',
+    'signtool.exe sign /f "%s" /p "%s" /fd sha256 ' +
+    '/tr http://timestamp.digicert.com /td sha256 /v "%s"',
     [ACertificat, AMotDePasse, AFichierExe]
   );
 
@@ -642,33 +750,46 @@ end;
 ### Vérifier la signature d'un exécutable
 
 ```pascal
+// ⚠️ Une approche basée uniquement sur GetFileVersionInfoSize ne vérifierait
+// qu'un bloc VERSIONINFO est présent. Cela n'a AUCUN rapport avec une
+// signature Authenticode. La VRAIE vérification doit passer par
+// WinVerifyTrust de Wintrust.dll, qui :
+//   1. valide la chaîne du certificat jusqu'à une CA de confiance ;
+//   2. vérifie la révocation (CRL/OCSP) ;
+//   3. valide l'horodatage RFC 3161.
+
 uses
-  Winapi.Windows, System.SysUtils;
+  Winapi.Windows, Winapi.WinTrust, Winapi.SoftPub, System.SysUtils;
 
 function VerifierSignatureExecutable(const AFichier: string): Boolean;  
 var  
-  VersionInfo: DWORD;
-  VersionInfoSize: DWORD;
-  VersionData: Pointer;
+  FileInfo: WINTRUST_FILE_INFO;
+  TrustData: WINTRUST_DATA;
+  Action: TGUID;
+  Status: HRESULT;
+  FichierW: WideString;
 begin
-  Result := False;
+  Action := WINTRUST_ACTION_GENERIC_VERIFY_V2;
+  FichierW := AFichier;
 
-  // Vérifier si le fichier a des informations de version signées
-  VersionInfoSize := GetFileVersionInfoSize(PChar(AFichier), VersionInfo);
+  FillChar(FileInfo, SizeOf(FileInfo), 0);
+  FileInfo.cbStruct := SizeOf(FileInfo);
+  FileInfo.pcwszFilePath := PWideChar(FichierW);
 
-  if VersionInfoSize > 0 then
-  begin
-    GetMem(VersionData, VersionInfoSize);
-    try
-      if GetFileVersionInfo(PChar(AFichier), 0, VersionInfoSize, VersionData) then
-      begin
-        // En production, vérifier réellement la signature avec WinVerifyTrust
-        Result := True;
-      end;
-    finally
-      FreeMem(VersionData);
-    end;
-  end;
+  FillChar(TrustData, SizeOf(TrustData), 0);
+  TrustData.cbStruct := SizeOf(TrustData);
+  TrustData.dwUIChoice := WTD_UI_NONE;
+  TrustData.fdwRevocationChecks := WTD_REVOKE_WHOLECHAIN;
+  TrustData.dwUnionChoice := WTD_CHOICE_FILE;
+  TrustData.pFile := @FileInfo;
+  TrustData.dwStateAction := WTD_STATEACTION_VERIFY;
+
+  Status := WinVerifyTrust(INVALID_HANDLE_VALUE, Action, @TrustData);
+  Result := Status = ERROR_SUCCESS;
+
+  // Libérer l'état interne maintenu par Wintrust
+  TrustData.dwStateAction := WTD_STATEACTION_CLOSE;
+  WinVerifyTrust(INVALID_HANDLE_VALUE, Action, @TrustData);
 end;
 
 procedure TForm1.BtnVerifierSignatureClick(Sender: TObject);  
@@ -682,6 +803,28 @@ begin
   end;
 end;
 ```
+
+### Notarization Apple (macOS)
+
+Sur macOS depuis 10.14.5 (2019), tout binaire signé distribué **hors App Store** doit en plus être **notarisé** par Apple, sinon Gatekeeper le bloque au premier lancement.
+
+Le processus :
+1. Signer le binaire avec un certificat **Developer ID Application** (Apple Developer Program, 99 $/an).
+2. Soumettre le binaire à `notarytool` (anciennement `altool` jusqu'en novembre 2023) :
+   ```bash
+   xcrun notarytool submit MonApp.dmg \
+                          --keychain-profile "AC_PROFILE" \
+                          --wait
+   ```
+3. Apple scanne le binaire (analyse statique antivirus + signature) et retourne en quelques minutes un *ticket* de notarization.
+4. *Stapler* le ticket sur le binaire pour qu'il fonctionne hors-ligne :
+   ```bash
+   xcrun stapler staple MonApp.dmg
+   ```
+
+Sans notarization, l'utilisateur voit le message *« <App> peut contenir un logiciel malveillant et ne peut être ouvert »* et doit faire un clic-droit → Ouvrir pour contourner.
+
+> 💡 **Hardened Runtime** obligatoire pour la notarization : compiler avec `-fhardened-runtime` et déclarer dans le `Info.plist` toutes les entitlements utilisées (`com.apple.security.network.client`, etc.). Sans cela, la soumission est rejetée.
 
 ## Signature de documents PDF
 
@@ -750,8 +893,12 @@ procedure SignerAvecHorodatage(const AFichier, ACertificat: string);
 var  
   Commande: string;
 begin
+  // ⚠ `/t` (timestamp Authenticode legacy SHA-1) est obsolète.
+  //   Utiliser `/tr` (timestamp RFC 3161) avec `/td sha256` pour un
+  //   horodatage moderne. Préciser aussi `/fd sha256` pour que la
+  //   signature elle-même soit SHA-256 et non SHA-1.
   Commande := Format(
-    'signtool sign /f "%s" /t %s /v "%s"',
+    'signtool sign /f "%s" /fd sha256 /tr %s /td sha256 /v "%s"',
     [ACertificat, TIMESTAMP_DIGICERT, AFichier]
   );
 
@@ -780,26 +927,38 @@ var
   HashMD5: THashMD5;
   HashSHA1: THashSHA1;
   HashSHA256: THashSHA2;
+  HashSHA512: THashSHA2;
 begin
+  // ⚠️ MD5 et SHA-1 sont conservés ci-dessous uniquement pour générer un
+  // checksum compatible avec d'anciens fichiers `.md5` / `.sha1` distribués.
+  // Ils sont CRYPTOGRAPHIQUEMENT CASSÉS (collisions pratiques : SHAttered 2017
+  // pour SHA-1, Chosen-Prefix 2009 pour MD5) et NE DOIVENT PLUS être utilisés
+  // comme preuve d'intégrité contre un adversaire. SHA-256 ou SHA-512 sont
+  // les seuls recommandés.
+
   FileStream := TFileStream.Create(AFichier, fmOpenRead or fmShareDenyWrite);
   try
-    // MD5 (déconseillé pour la sécurité, mais encore utilisé)
+    // MD5 — héritage seulement
     HashMD5 := THashMD5.Create;
     Result.MD5 := HashMD5.GetHashString(FileStream);
     FileStream.Position := 0;
 
-    // SHA-1 (déconseillé pour la sécurité critique)
+    // SHA-1 — héritage seulement
     HashSHA1 := THashSHA1.Create;
     Result.SHA1 := HashSHA1.GetHashString(FileStream);
     FileStream.Position := 0;
 
-    // SHA-256 (recommandé)
-    HashSHA256 := THashSHA2.Create;
+    // SHA-256 — recommandé (NIST FIPS 180-4)
+    HashSHA256 := THashSHA2.Create(SHA256);
     Result.SHA256 := HashSHA256.GetHashString(FileStream);
     FileStream.Position := 0;
 
-    // SHA-512 (très sûr, mais plus lent)
-    Result.SHA512 := THashSHA2.GetHashString(FileStream);
+    // SHA-512 — recommandé, plus rapide sur 64 bits (NIST FIPS 180-4)
+    // ⚠️ IMPORTANT : il faut INSTANCIER un nouveau THashSHA2 en précisant le
+    // paramètre SHA512, sinon la valeur par défaut SHA256 est utilisée et
+    // SHA256 et SHA512 retournent la même chose.
+    HashSHA512 := THashSHA2.Create(SHA512);
+    Result.SHA512 := HashSHA512.GetHashString(FileStream);
   finally
     FileStream.Free;
   end;
@@ -863,21 +1022,24 @@ end;
 function TValidateurMiseAJour.VerifierMiseAJour(const AFichierMAJ, ASignature: string): Boolean;  
 var  
   HashCalcule: string;
-  SignatureDecodee: string;
 begin
-  Result := False;
-
   // 1. Calculer le hash du fichier téléchargé
   HashCalcule := CalculerHashFichier(AFichierMAJ);
 
-  // 2. Vérifier la signature avec la clé publique
-  // SignatureDecodee := RSA.Verify(ASignature, FClePublique);
+  // 2. Vérifier la signature avec la clé publique (RSA-PSS ou ECDSA via OpenSSL)
+  // 3. Comparer le hash signé avec celui calculé
 
-  // 3. Comparer
-  // Result := (HashCalcule = SignatureDecodee);
+  // ⚠️ STUB DANGEREUX — RETOURNER `True` PAR DÉFAUT EST UNE BACKDOOR.
+  //    Toute mise à jour, même malveillante, sera installée. Cette
+  //    implémentation factice est conservée UNIQUEMENT pour illustrer
+  //    la structure ; en production, lever une exception explicite
+  //    tant que la vraie vérification n'est pas branchée :
+  raise Exception.Create(
+    'VerifierMiseAJour : implémentation factice. Brancher OpenSSL ou ' +
+    'SecureBlackbox avant de mettre cette fonction en production.');
 
-  // Version simplifiée pour l'exemple
-  Result := True; // Implémenter la vraie vérification
+  // Code à brancher en remplacement du raise ci-dessus :
+  //   Result := RSA.VerifyPSS(HashCalcule, ASignature, FClePublique, 'SHA256');
 end;
 
 procedure TValidateurMiseAJour.TelechargerEtInstaller(const AURL: string);  
@@ -886,6 +1048,15 @@ var
   FichierSignature: string;
   HTTP: TIdHTTP;
 begin
+  // ⚠ `TPath.GetTempPath` est PARTAGÉ entre toutes les apps de l'utilisateur.
+  //   Une app malicieuse pourrait pré-créer `update.exe` puis exploiter la
+  //   fenêtre TOCTOU entre `HTTP.Get` (écrasement) et `ShellExecute`.
+  //   Sécuriser en créant un sous-dossier propre à l'app, idéalement avec
+  //   un nom unique par exécution (timestamp ou GUID).
+  // ⚠ Le nom `update.exe` n'est pas portable : sur Linux il n'y a pas
+  //   d'extension, sur macOS c'est `.app` ou `.pkg`. Adapter au contexte
+  //   ou détecter via `{$IFDEF}`.
+
   HTTP := TIdHTTP.Create(nil);
   try
     // Télécharger la mise à jour
@@ -896,7 +1067,13 @@ begin
     FichierSignature := TPath.Combine(TPath.GetTempPath, 'update.sig');
     HTTP.Get(AURL + '.sig', FichierSignature);
 
-    // Vérifier la signature
+    // ⚠ `TFile.ReadAllText` lit le fichier comme du TEXTE et essaie de
+    //   détecter un BOM ou de l'interpréter comme UTF-8 — cela corrompt
+    //   une signature binaire RSA/ECDSA. Si le serveur sert la signature
+    //   binaire (.sig brut), utiliser `TFile.ReadAllBytes` et adapter
+    //   `VerifierMiseAJour` pour accepter un `TBytes`. Si la signature
+    //   est servie en Base64, alors `ReadAllText` est OK et il faut la
+    //   décoder côté `VerifierMiseAJour` avant comparaison.
     if VerifierMiseAJour(FichierMAJ, TFile.ReadAllText(FichierSignature)) then
     begin
       ShowMessage('✓ Mise à jour authentique, installation...');
@@ -953,7 +1130,23 @@ begin
     RESTRequest.Execute;
 
     if RESTResponse.StatusCode = 200 then
-      Result := (TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject).GetValue<string>('transaction_hash')
+    begin
+      // ⚠ Ne PAS faire `(ParseJSONValue(...) as TJSONObject).GetValue(...)`
+      //   en une seule expression : le TJSONObject créé par ParseJSONValue
+      //   ne sera JAMAIS libéré → fuite mémoire à chaque appel.
+      // ⚠ Si la réponse n'est pas un JSON valide, ParseJSONValue retourne
+      //   nil. Toujours tester Assigned avant d'accéder. Préférer aussi
+      //   TryGetValue à GetValue (qui lève EJSONException si clé absente).
+      var JSONReponse: TJSONObject :=
+        TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject;
+      try
+        Result := '';
+        if Assigned(JSONReponse) then
+          JSONReponse.TryGetValue<string>('transaction_hash', Result);
+      finally
+        JSONReponse.Free;
+      end;
+    end
     else
       raise Exception.Create('Erreur blockchain');
   finally
@@ -979,9 +1172,10 @@ Hash := THashMD5.GetHashString(Document);
 ```
 
 **2. Toujours horodater les signatures**
-```pascal
-// Horodatage pour validité à long terme
-signtool sign /t http://timestamp.digicert.com MonApp.exe
+```batch
+REM Horodatage pour validité à long terme — version moderne 2026  
+REM (`/tr` au lieu du legacy `/t`, `/td sha256` au lieu du SHA-1 par défaut)  
+signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 MonApp.exe  
 ```
 
 **3. Protéger la clé privée**
@@ -1071,8 +1265,9 @@ const PRIVATE_KEY = '...';
 ## Outils utiles
 
 **Windows SDK** :
-- SignTool : Signature d'exécutables
-- MakeCert : Certificats de test
+- **SignTool** : signature d'exécutables (cf section Code Signing pour les options modernes `/fd sha256 /tr /td sha256`)
+- ~~MakeCert~~ : **déprécié depuis 2014** — utiliser `New-SelfSignedCertificate` (PowerShell) à la place pour générer des certificats de test
+- **Get-AuthenticodeSignature** (PowerShell) : vérifier la signature d'un fichier en script
 
 **Bibliothèques Delphi** :
 - Indy (IdSSL) : Certificats, SSL/TLS

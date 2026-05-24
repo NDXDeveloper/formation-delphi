@@ -74,10 +74,13 @@ CREATE TABLE Configuration (
 INSERT INTO Configuration VALUES ('SMTP_Password', 'motdepasse123');
 ```
 
-### ❌ Dans les variables d'environnement Windows Registry
+### ❌ Dans la base de registre Windows (en clair)
 
 ```pascal
-// ❌ MOYENNEMENT DANGEREUX (mieux que rien mais pas sécurisé)
+// ❌ DANGEREUX — le Registry sous HKEY_CURRENT_USER est lisible par tout
+//    processus du même utilisateur (donc tout malware lancé sous votre
+//    compte), et HKEY_LOCAL_MACHINE est lisible par tous les utilisateurs.
+//    Le Registry n'a AUCUN mécanisme de chiffrement intégré.
 procedure SauvegarderDansRegistry;  
 var  
   Registry: TRegistry;
@@ -93,6 +96,8 @@ begin
 end;
 ```
 
+> 💡 Si vous voulez utiliser le Registry comme **emplacement de stockage** (pour la commodité), au moins chiffrez la valeur avec DPAPI avant d'écrire — `Registry.WriteBinaryData('Password', TDPAPIHelper.ChiffrerDonnees('MonMotDePasse'))`. Le Registry sert alors juste de conteneur, et le secret est dérivé du compte Windows.
+
 ## Solutions sécurisées
 
 ### 1. Windows DPAPI (Data Protection API)
@@ -106,6 +111,12 @@ Le DPAPI est une API Windows qui chiffre les données en utilisant les identifia
 - Gratuit et fiable
 
 **Principe** : Les données sont chiffrées avec une clé dérivée du compte Windows. Seul ce compte peut les déchiffrer.
+
+> 💡 **Deux modes à connaître** (paramètre `dwFlags` de `CryptProtectData`) :  
+> - **Sans flag** (par défaut, recommandé) : la clé dérive du **profil utilisateur courant**. Seul cet utilisateur peut déchiffrer, même sur la même machine. Idéal pour une app desktop.  
+> - **`CRYPTPROTECT_LOCAL_MACHINE` (= 4)** : la clé dérive de la **machine**. Tout processus s'exécutant sur cette machine peut déchiffrer. Utile pour les **services Windows** qui démarrent comme `LocalSystem` et ne peuvent pas hériter d'un profil utilisateur, mais réduit la sécurité — un malware lancé par n'importe quel utilisateur de la machine peut récupérer le secret.  
+>  
+> ⚠ **Migration de compte** : si l'utilisateur change de mot de passe Windows, DPAPI conserve l'accès via un mécanisme interne. En revanche, **reformater l'OS détruit définitivement la clé** : sauvegarder les blobs DPAPI dans un backup ne suffit pas, il faut aussi sauvegarder le profil utilisateur, ou prévoir une procédure de récupération.
 
 ```pascal
 uses
@@ -234,9 +245,11 @@ begin
 end;
 ```
 
-### 2. macOS Keychain
+### 2. macOS / iOS Keychain
 
-Sur macOS, utilisez le Keychain pour stocker les identifiants de manière sécurisée.
+Sur macOS et iOS, utilisez le Keychain pour stocker les identifiants de manière sécurisée.
+
+> ⚠️ **API dépréciée** : les fonctions `SecKeychainAddGenericPassword` / `SecKeychainFindGenericPassword` utilisées dans l'exemple ci-dessous appartiennent à l'ancienne API « Keychain Services » dépréciée depuis macOS 10.10 (2014). Sur les versions récentes de macOS et sur iOS, il faut utiliser `SecItemAdd`, `SecItemCopyMatching`, `SecItemUpdate` et `SecItemDelete` avec un dictionnaire `CFDictionary` contenant `kSecClass = kSecClassGenericPassword`. Le code ci-après est conservé à titre d'illustration pour les anciennes versions ; sur iOS il échouera (les anciennes API n'y existent pas).
 
 ```pascal
 {$IFDEF MACOS}
@@ -275,6 +288,7 @@ var
   ComptePtr: MarshaledAString;
   MotDePasseLength: UInt32;
   MotDePassePtr: Pointer;
+  Octets: TBytes;
 begin
   Result := '';
   ServicePtr := MarshaledAString(TMarshal.AsAnsi(AService));
@@ -293,8 +307,20 @@ begin
 
   if Status = errSecSuccess then
   begin
-    SetString(Result, PAnsiChar(MotDePassePtr), MotDePasseLength);
-    SecKeychainItemFreeContent(nil, MotDePassePtr);
+    try
+      // ⚠ `SetString(Result, PAnsiChar(...), N)` avec `Result: string`
+      //   (UnicodeString) ne convertit PAS depuis l'ANSI vers le UTF-16 :
+      //   le compilateur écrit les octets bruts dans le buffer Wide, ce
+      //   qui produit des caractères corrompus (un octet sur deux est 0).
+      //   Solution : copier dans un TBytes puis décoder selon l'encodage
+      //   réel des données (UTF-8 par défaut sur macOS).
+      SetLength(Octets, MotDePasseLength);
+      if MotDePasseLength > 0 then
+        Move(MotDePassePtr^, Octets[0], MotDePasseLength);
+      Result := TEncoding.UTF8.GetString(Octets);
+    finally
+      SecKeychainItemFreeContent(nil, MotDePassePtr);
+    end;
   end;
 end;
 
@@ -308,6 +334,58 @@ begin
 end;
 {$ENDIF}
 ```
+
+### 2bis. Linux : Secret Service API (libsecret)
+
+Sur Linux moderne (GNOME Keyring, KDE Wallet via le pont Secret Service), la bibliothèque `libsecret` expose une API D-Bus standardisée. Tous les bureaux freedesktop la prennent en charge.
+
+```pascal
+{$IFDEF LINUX}
+const
+  LIBSECRET = 'libsecret-1.so.0';
+
+type
+  PGError = Pointer;
+
+// secret_password_store_sync : chiffre et stocke le mot de passe via le
+// trousseau du bureau (GNOME Keyring / KWallet). Retourne True en cas de succès.
+function secret_password_store_sync(
+  schema: Pointer;
+  collection: PAnsiChar;
+  label_: PAnsiChar;
+  password: PAnsiChar;
+  cancellable: Pointer;
+  error: PGError
+): LongBool; cdecl; varargs; external LIBSECRET;
+
+function secret_password_lookup_sync(
+  schema: Pointer;
+  cancellable: Pointer;
+  error: PGError
+): PAnsiChar; cdecl; varargs; external LIBSECRET;
+
+// Note : le schéma `Pointer(nil)` indique d'utiliser SECRET_SCHEMA_NOTE, le
+// schéma générique fourni par libsecret. Pour des attributs structurés
+// (compte, service) il faut déclarer un SecretSchema personnalisé.
+
+function SauvegarderDansSecretService(const AService, ACompte,
+                                       AMotDePasse: string): Boolean;
+begin
+  Result := secret_password_store_sync(
+    nil,
+    PAnsiChar('default'),
+    PAnsiChar(AnsiString(AService + ' / ' + ACompte)),
+    PAnsiChar(AnsiString(AMotDePasse)),
+    nil,
+    nil,
+    'service', PAnsiChar(AnsiString(AService)),
+    'account', PAnsiChar(AnsiString(ACompte)),
+    nil);
+end;
+{$ENDIF}
+```
+
+> 💡 **Alternative simple sous Linux** : si vous ne souhaitez pas dépendre de libsecret, écrivez le secret dans un fichier sous `~/.config/<appli>/` avec les permissions `chmod 600` (lecture/écriture propriétaire uniquement) et un contenu chiffré par AES-256-GCM dont la clé est dérivée d'un mot de passe maître. Voir section 16.3 pour le chiffrement et la dérivation.
 
 ### 3. Classe multi-plateforme de gestion des secrets
 
@@ -332,6 +410,7 @@ type
     {$ENDIF}
     class function ChiffrerGenerique(const ADonnees, ACleMaitre: string): string;
     class function DechiffrerGenerique(const ADonnees, ACleMaitre: string): string;
+    class function CheminPour(const ACle: string): string;
   public
     class procedure Sauvegarder(const ACle, AValeur: string);
     class function Charger(const ACle: string): string;
@@ -360,9 +439,10 @@ begin
   // Utiliser DPAPI sur Windows
   DonneesChiffrees := ChiffrerWindowsDPAPI(AValeur);
 
+  // ⚠ `TPath.Combine` n'accepte que DEUX arguments en Delphi. Pour
+  //   construire un chemin à trois niveaux, on chaîne deux appels.
   CheminFichier := TPath.Combine(
-    TPath.GetHomePath,
-    '.monapp_secrets',
+    TPath.Combine(TPath.GetHomePath, '.monapp_secrets'),
     ACle + '.dat'
   );
 
@@ -370,10 +450,22 @@ begin
 
   Fichier := TFileStream.Create(CheminFichier, fmCreate);
   try
-    Fichier.Write(DonneesChiffrees[0], Length(DonneesChiffrees));
+    Fichier.WriteBuffer(Pointer(DonneesChiffrees)^, Length(DonneesChiffrees));
   finally
     Fichier.Free;
   end;
+
+  // ⚠ Sur Linux/macOS, `TFileStream.Create(..., fmCreate)` crée le fichier
+  //   avec l'umask par défaut, typiquement `644` (lisible par tous). Pour
+  //   un fichier de secrets, restreindre au propriétaire avec `chmod 600` :
+  //
+  //   {$IFDEF POSIX}
+  //   Posix.SysStat.fchmod(F.Handle, S_IRUSR or S_IWUSR);  // 600
+  //   {$ENDIF}
+  //
+  //   Sous Windows, DPAPI lie déjà le secret au compte ; les permissions
+  //   NTFS du fichier sont en revanche héritées du dossier parent — pour
+  //   restreindre, ajuster les ACL avec SetSecurityInfo.
 end;
 {$ELSE}
 {$IFDEF MACOS}
@@ -392,8 +484,7 @@ begin
   DonneesChiffrees := ChiffrerGenerique(AValeur, CleMaitre);
 
   CheminFichier := TPath.Combine(
-    TPath.GetHomePath,
-    '.monapp_secrets',
+    TPath.Combine(TPath.GetHomePath, '.monapp_secrets'),
     ACle + '.enc'
   );
 
@@ -410,9 +501,10 @@ var
   CheminFichier: string;
   Fichier: TFileStream;
 begin
+  // ⚠ `TPath.Combine` n'accepte que DEUX arguments en Delphi. Pour
+  //   construire un chemin à trois niveaux, on chaîne deux appels.
   CheminFichier := TPath.Combine(
-    TPath.GetHomePath,
-    '.monapp_secrets',
+    TPath.Combine(TPath.GetHomePath, '.monapp_secrets'),
     ACle + '.dat'
   );
 
@@ -441,8 +533,7 @@ var
   CheminFichier: string;
 begin
   CheminFichier := TPath.Combine(
-    TPath.GetHomePath,
-    '.monapp_secrets',
+    TPath.Combine(TPath.GetHomePath, '.monapp_secrets'),
     ACle + '.enc'
   );
 
@@ -456,31 +547,34 @@ end;
 {$ENDIF}
 {$ENDIF}
 
+// Helper privé pour éviter la duplication du calcul de chemin
+class function TGestionSecrets.CheminPour(const ACle: string): string;  
+const  
+  {$IFDEF MSWINDOWS}
+  EXTENSION = '.dat';
+  {$ELSE}
+  EXTENSION = '.enc';
+  {$ENDIF}
+begin
+  // ⚠ `TPath.Combine` n'accepte que DEUX arguments en Delphi. Chaîner
+  //   deux appels pour atteindre trois niveaux.
+  Result := TPath.Combine(
+    TPath.Combine(TPath.GetHomePath, '.monapp_secrets'),
+    ACle + EXTENSION);
+end;
+
 class procedure TGestionSecrets.Supprimer(const ACle: string);  
 var  
   CheminFichier: string;
 begin
-  {$IFDEF MSWINDOWS}
-  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.dat');
-  {$ELSE}
-  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.enc');
-  {$ENDIF}
-
+  CheminFichier := CheminPour(ACle);
   if FileExists(CheminFichier) then
     DeleteFile(CheminFichier);
 end;
 
 class function TGestionSecrets.Existe(const ACle: string): Boolean;  
-var  
-  CheminFichier: string;
-begin
-  {$IFDEF MSWINDOWS}
-  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.dat');
-  {$ELSE}
-  CheminFichier := TPath.Combine(TPath.GetHomePath, '.monapp_secrets', ACle + '.enc');
-  {$ENDIF}
-
-  Result := FileExists(CheminFichier);
+begin  
+  Result := FileExists(CheminPour(ACle));
 end;
 
 // Implémentations des méthodes privées (ChiffrerWindowsDPAPI, etc.)
@@ -504,7 +598,19 @@ end;
 
 ### 4. Variables d'environnement
 
-Les variables d'environnement sont une bonne solution pour les applications serveur.
+Les variables d'environnement sont une solution **acceptable mais imparfaite** pour les applications serveur. Elles éliminent le pire (secret dans le code, secret dans Git) mais ont leurs propres pièges :
+
+> ⚠️ **Limites des variables d'environnement** :  
+> - **Linux** : visibles via `/proc/<pid>/environ`, lisible par root et par le propriétaire du processus (donc par toute autre app du même utilisateur).  
+> - **Windows** : visibles dans Process Explorer / Process Hacker pour tout utilisateur ayant les droits sur le processus.  
+> - **Crash dumps** : un dump mémoire (configuré automatiquement par Windows Error Reporting, sentry, etc.) inclut souvent les variables d'environnement.  
+> - **Logs de démarrage** : `env`, `set`, `printenv` dans un script de démarrage diffusent la variable dans les logs CI/CD.  
+> - **`setx /M` sur Windows** définit la variable au niveau **système**, ce qui la rend lisible par **tous les utilisateurs** de la machine — exactement l'inverse de ce qu'on veut pour un secret.  
+>  
+> Pour les environnements modernes, préférez :  
+> - **Cloud (AWS, Azure, GCP)** : utiliser les *managed identities* (IAM Roles, Managed Identity, Workload Identity) — l'application reçoit automatiquement un token temporaire sans qu'aucun secret n'ait à être stocké.  
+> - **Conteneurs** : Docker secrets, Kubernetes Secrets (montés en fichiers `tmpfs`, pas en variables d'environnement), ou idéalement *External Secrets Operator* qui synchronise avec un vault.  
+> - **On-premise** : HashiCorp Vault avec un agent local qui *injecte* les secrets en mémoire au démarrage (jamais sur disque).
 
 ```pascal
 uses
@@ -542,6 +648,9 @@ REM Définir de manière permanente (utilisateur)
 setx DB_PASSWORD "MotDePasseSecret"  
 
 REM Définir de manière permanente (système - admin requis)  
+REM ⚠ /M rend la variable lisible par TOUS les utilisateurs de la machine.  
+REM   À ne JAMAIS utiliser pour un secret. Préférer le mode utilisateur  
+REM   (sans /M), ou DPAPI/Credential Manager pour un service Windows.  
 setx DB_PASSWORD "MotDePasseSecret" /M  
 ```
 
@@ -657,15 +766,24 @@ end;
 
 function TConfigSecurisee.ChiffrerContenu(const AContenu: string): string;  
 begin  
-  // Utiliser votre méthode de chiffrement préférée (AES, etc.)
-  // Exemple simplifié avec Base64 (à remplacer par un vrai chiffrement)
+  // ⚠️ STUB PÉDAGOGIQUE — À REMPLACER OBLIGATOIREMENT
+  // Base64 N'EST PAS un chiffrement, c'est un simple encodage : tout le monde
+  // peut le décoder en une ligne. La version production DOIT appeler une vraie
+  // primitive (AES-256-GCM avec IV unique + clé dérivée de FCleMaitre par
+  // PBKDF2-HMAC-SHA-256, voir section 16.3).
   Result := TNetEncoding.Base64.Encode(AContenu);
+  raise Exception.Create(
+    'ChiffrerContenu : implémentation Base64 inacceptable en production. ' +
+    'Utiliser AES-256-GCM (voir section 16.3).');
 end;
 
 function TConfigSecurisee.DechiffrerContenu(const AContenu: string): string;  
 begin  
-  // Déchiffrer (correspondant à ChiffrerContenu)
+  // Symétrique au stub ci-dessus : à remplacer par AES-256-GCM avec
+  // vérification du tag d'authentification avant de retourner les données.
   Result := TNetEncoding.Base64.Decode(AContenu);
+  raise Exception.Create(
+    'DechiffrerContenu : implémentation Base64 inacceptable en production.');
 end;
 
 procedure TConfigSecurisee.DefinirValeur(const ACle, AValeur: string);  
@@ -738,6 +856,19 @@ var
   JSONResponse: TJSONObject;
   URL: string;
 begin
+  // ⚠ L'exemple ci-dessous est SIMPLIFIÉ et NE FONCTIONNERA PAS tel quel :
+  //   AWS exige une signature SigV4 (algorithme `AWS4-HMAC-SHA256`) qui
+  //   doit être calculée sur la requête (méthode + URL + headers + body
+  //   canoniques + timestamp). C'est ~150 lignes de code Pascal à écrire
+  //   ou à reprendre d'une bibliothèque (par ex. `awssdk-pascal`,
+  //   `Delphi-AWS-SDK`, ou via un proxy local comme `aws-cli` exposé en HTTP).
+  //
+  //   Approche recommandée en production : déployer dans EC2/ECS/Lambda
+  //   avec un IAM Role attaché → AWS injecte un endpoint local de
+  //   métadonnées qui fournit des credentials temporaires sans aucune
+  //   signature à calculer côté app. C'est plus simple ET plus sûr que
+  //   d'embarquer un AccessKey/SecretKey en dur.
+
   // Construire l'URL de l'API AWS Secrets Manager
   URL := Format('https://secretsmanager.%s.amazonaws.com/', [FRegion]);
 
@@ -749,13 +880,25 @@ begin
     RESTRequest.Response := RESTResponse;
     RESTRequest.Method := TRESTRequestMethod.rmPOST;
 
-    // Ajouter l'authentification AWS (simplifiée, nécessite signature réelle)
+    // ⚠ INCOMPLET : il faut ajouter au moins ces headers, signés :
+    //   - X-Amz-Date : timestamp ISO 8601 (yyyymmddThhmmssZ)
+    //   - Authorization : signature SigV4 calculée sur la requête canonique
+    //   - X-Amz-Content-SHA256 : SHA-256 du body
     RESTRequest.AddAuthParameter('X-Amz-Target', 'secretsmanager.GetSecretValue',
                                   TRESTRequestParameterKind.pkHTTPHEADER);
 
-    // Corps de la requête
-    RESTRequest.AddBody(Format('{"SecretId":"%s"}', [ASecretName]),
-                        TRESTContentType.ctAPPLICATION_JSON);
+    // Corps de la requête.
+    // ⚠ Ne JAMAIS construire un JSON par `Format('{"k":"%s"}', [...])` :
+    //   si la valeur contient `"`, `\` ou un caractère de contrôle, le
+    //   JSON devient invalide ou exploitable. Utiliser TJSONObject pour
+    //   un échappement correct.
+    var BodyJSON: TJSONObject := TJSONObject.Create;
+    try
+      BodyJSON.AddPair('SecretId', ASecretName);
+      RESTRequest.AddBody(BodyJSON.ToJSON, TRESTContentType.ctAPPLICATION_JSON);
+    finally
+      BodyJSON.Free;
+    end;
 
     RESTRequest.Execute;
 
@@ -763,7 +906,11 @@ begin
     begin
       JSONResponse := TJSONObject.ParseJSONValue(RESTResponse.Content) as TJSONObject;
       try
-        Result := JSONResponse.GetValue<string>('SecretString');
+        // ⚠ `GetValue<string>` lève EJSONException si la clé est absente.
+        //   `TryGetValue` retourne False sans exception — préférable pour
+        //   un parser tolérant aux réponses incomplètes.
+        if Assigned(JSONResponse) then
+          JSONResponse.TryGetValue<string>('SecretString', Result);
       finally
         JSONResponse.Free;
       end;
@@ -817,65 +964,68 @@ type
 
 class procedure TConfigurationInitiale.DemanderEtSauvegarderIdentifiants;  
 var  
-  Form: TForm;
+  // ⚠ Renommé `Form` → `FormConfig` et `ModalResult` → `ResultatModal`
+  //   pour éviter de masquer la propriété `TForm.ModalResult` et la
+  //   variable globale `Form` (rarement présente mais possible).
+  FormConfig: TForm;
   EditServer: TEdit;
   EditDatabase: TEdit;
   EditUser: TEdit;
   EditPassword: TEdit;
   BtnOK: TButton;
-  ModalResult: Integer;
+  ResultatModal: Integer;
 begin
   // Vérifier si c'est la première exécution
   if TGestionSecrets.Existe('DB_Password') then
     Exit; // Déjà configuré
 
-  Form := TForm.Create(nil);
+  FormConfig := TForm.Create(nil);
   try
-    Form.Caption := 'Configuration initiale';
-    Form.Width := 400;
-    Form.Height := 250;
-    Form.Position := poScreenCenter;
+    FormConfig.Caption := 'Configuration initiale';
+    FormConfig.Width := 400;
+    FormConfig.Height := 250;
+    FormConfig.Position := poScreenCenter;
 
     // Créer les contrôles
-    EditServer := TEdit.Create(Form);
-    EditServer.Parent := Form;
+    EditServer := TEdit.Create(FormConfig);
+    EditServer.Parent := FormConfig;
     EditServer.Left := 20;
     EditServer.Top := 30;
     EditServer.Width := 350;
     EditServer.TextHint := 'Serveur de base de données';
 
-    EditDatabase := TEdit.Create(Form);
-    EditDatabase.Parent := Form;
+    EditDatabase := TEdit.Create(FormConfig);
+    EditDatabase.Parent := FormConfig;
     EditDatabase.Left := 20;
     EditDatabase.Top := 60;
     EditDatabase.Width := 350;
     EditDatabase.TextHint := 'Nom de la base de données';
 
-    EditUser := TEdit.Create(Form);
-    EditUser.Parent := Form;
+    EditUser := TEdit.Create(FormConfig);
+    EditUser.Parent := FormConfig;
     EditUser.Left := 20;
     EditUser.Top := 90;
     EditUser.Width := 350;
     EditUser.TextHint := 'Nom d''utilisateur';
 
-    EditPassword := TEdit.Create(Form);
-    EditPassword.Parent := Form;
+    EditPassword := TEdit.Create(FormConfig);
+    EditPassword.Parent := FormConfig;
     EditPassword.Left := 20;
     EditPassword.Top := 120;
     EditPassword.Width := 350;
     EditPassword.TextHint := 'Mot de passe';
     EditPassword.PasswordChar := '*';
 
-    BtnOK := TButton.Create(Form);
-    BtnOK.Parent := Form;
+    BtnOK := TButton.Create(FormConfig);
+    BtnOK.Parent := FormConfig;
     BtnOK.Caption := 'Enregistrer';
     BtnOK.Left := 150;
     BtnOK.Top := 160;
     BtnOK.ModalResult := mrOk;
 
-    ModalResult := Form.ShowModal;
+    ResultatModal := FormConfig.ShowModal;
 
-    if ModalResult = mrOk then
+    if ResultatModal = mrOk then
     begin
       // Sauvegarder de manière sécurisée
       TGestionSecrets.Sauvegarder('DB_Server', EditServer.Text);
@@ -886,7 +1036,7 @@ begin
       ShowMessage('Configuration enregistrée de manière sécurisée');
     end;
   finally
-    Form.Free;
+    FormConfig.Free;
   end;
 end;
 
@@ -924,23 +1074,39 @@ end;
 
 procedure TRotationSecrets.RoterMotDePasseBD;  
 var  
-  NouveauPassword: string;
+  NouveauPassword, SQL: string;
   Query: TFDQuery;
 begin
-  // Générer un nouveau mot de passe fort
+  // Générer un nouveau mot de passe fort via CSPRNG
   NouveauPassword := GenererMotDePasseFort(32);
 
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FConnection;
 
-    // Changer le mot de passe dans MySQL
-    Query.SQL.Text := 'ALTER USER ''monuser''@''localhost'' IDENTIFIED BY :NewPassword';
-    Query.ParamByName('NewPassword').AsString := NouveauPassword;
+    // ⚠ `ALTER USER` est une commande DDL : la plupart des SGBD N'ACCEPTENT
+    //   PAS les paramètres liés (`:NewPassword`) sur les DDL — il faut
+    //   composer la requête. Cela impose de bien VALIDER le mot de passe
+    //   pour éviter une injection SQL : ici on vient de le générer nous-
+    //   mêmes via un CSPRNG, donc il ne contient que des caractères de
+    //   notre alphabet contrôlé. Si la source était utilisateur, il
+    //   faudrait blacklister `'`, `\`, `;` ou utiliser une whitelist stricte.
+    //
+    //   Sur MySQL 8+ on peut aussi utiliser `SET PASSWORD` qui accepte les
+    //   prepared statements dans certains contextes.
+    SQL := Format('ALTER USER ''monuser''@''localhost'' IDENTIFIED BY ''%s''',
+                  [NouveauPassword]);
+    Query.SQL.Text := SQL;
     Query.ExecSQL;
 
     // Sauvegarder le nouveau mot de passe
     TGestionSecrets.Sauvegarder('DB_Password', NouveauPassword);
+
+    // Sauvegarder la date de rotation en ISO 8601 pour éviter les
+    // ambiguïtés de format local (jj/mm/aaaa vs mm/dd/yyyy)
+    TGestionSecrets.Sauvegarder('LastPasswordRotation',
+      FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',
+                     TTimeZone.Local.ToUniversalTime(Now)));
 
     // Logger l'événement
     TLogger.Instance.Info('Rotation mot de passe BD', 'Succès');
@@ -951,14 +1117,24 @@ end;
 
 procedure TRotationSecrets.VerifierDateExpiration;  
 var  
+  ValeurStockee: string;
   DateDerniereRotation: TDateTime;
   JoursDepuisRotation: Integer;
 begin
-  // Lire la date de dernière rotation
-  DateDerniereRotation := StrToDateDef(
-    TGestionSecrets.Charger('LastPasswordRotation'),
-    Now - 365  // Par défaut : il y a 1 an
-  );
+  // Lire la date de dernière rotation.
+  // ⚠ La date est stockée en ISO 8601 par RoterMotDePasseBD ; il faut donc
+  //   la PARSER avec ISO8601ToDate (qui ignore le format local de l'OS).
+  //   `StrToDateDef` utilise le format local → conversion incorrecte sur
+  //   un système configuré en mm/dd/yyyy par exemple.
+  ValeurStockee := TGestionSecrets.Charger('LastPasswordRotation');
+  if ValeurStockee = '' then
+    DateDerniereRotation := Now - 365  // jamais effectuée → forcer rotation
+  else
+    try
+      DateDerniereRotation := ISO8601ToDate(ValeurStockee);
+    except
+      DateDerniereRotation := Now - 365;
+    end;
 
   JoursDepuisRotation := DaysBetween(Now, DateDerniereRotation);
 
@@ -970,18 +1146,57 @@ begin
   end;
 end;
 
+// ❌ NE PAS FAIRE — version pédagogique du problème :
+// function GenererMotDePasseFort(ALongueur: Integer): string;
+// const
+//   CARACTERES = 'abcdefghijklmnopqrstuvwxyz...!@#$%^&*()';
+// var i: Integer;
+// begin
+//   Result := '';
+//   Randomize;                                  // Graine = temps système (prédictible)
+//   for i := 1 to ALongueur do
+//     Result := Result + CARACTERES[Random(Length(CARACTERES)) + 1];
+// end;
+// `Randomize`+`Random` n'est PAS cryptographique : la graine est l'horloge système,
+// un attaquant qui connaît l'instant exact de génération peut rejouer la séquence.
+
+// ✅ Version correcte : utiliser un CSPRNG du système d'exploitation
 function GenererMotDePasseFort(ALongueur: Integer): string;  
 const  
-  CARACTERES = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+  CARACTERES: string = 'abcdefghijklmnopqrstuvwxyz' +
+                       'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+                       '0123456789' +
+                       '!@#$%^&*()-_=+[]{};:,.<>?';
 var
-  i: Integer;
+  Octets: TBytes;
+  Bloc: array[0..3] of Byte;
+  i, NbCar: Integer;
+  Indice, Seuil: Cardinal;
 begin
+  NbCar := Length(CARACTERES);
+  // Seuil au-dessus duquel `Indice mod NbCar` produirait un biais.
+  // On rejette toute valeur ≥ Seuil et on re-tire de nouveaux octets.
+  Seuil := High(Cardinal) - (High(Cardinal) mod Cardinal(NbCar));
+
   Result := '';
-  Randomize;
+  // ⚠ Pour chaque caractère, on consomme 4 octets aléatoires. Si la
+  //   valeur est au-dessus du seuil (rare : moins de 1 chance sur 2^32 / NbCar),
+  //   on re-tire — il faut RÉGÉNÉRER de nouveaux octets à chaque essai,
+  //   sinon on lit toujours la même valeur et la boucle est infinie.
   for i := 1 to ALongueur do
-    Result := Result + CARACTERES[Random(Length(CARACTERES)) + 1];
+  begin
+    repeat
+      SetLength(Octets, 4);
+      RemplirOctetsCSPRNG(Octets);
+      Move(Octets[0], Bloc[0], 4);
+      Indice := PCardinal(@Bloc[0])^;
+    until Indice < Seuil;
+    Result := Result + CARACTERES[(Indice mod Cardinal(NbCar)) + 1];
+  end;
 end;
 ```
+
+> ⚠️ **Pourquoi `Random` est dangereux pour un secret** : `System.Random` est un générateur déterministe (Mersenne Twister depuis Delphi 12) ensemencé par `Randomize` à partir de l'horloge système. Deux applications lancées dans la même milliseconde produiront la **même** séquence, et un attaquant qui observe quelques caractères peut prédire la suite. Pour tout secret (mot de passe, sel, IV, token), utilisez exclusivement un CSPRNG du système (voir section [16.1](/16-securite-des-applications/01-authentification-des-utilisateurs.md)).
 
 ## Audit des accès aux secrets
 
