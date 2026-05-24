@@ -326,6 +326,13 @@ end;
 
 ```pascal
 // Obtenir la version de Windows
+//
+// ⚠ Depuis Windows 8.1, GetVersionEx est « version-shimmed » : sans manifeste
+//   de compatibilité déclarant explicitement Windows 10/11, l'API renverra
+//   toujours 6.2 (Windows 8). Pour obtenir la vraie version sans toucher au
+//   manifeste, lire HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion
+//   (CurrentMajorVersionNumber, CurrentBuildNumber…) ou utiliser
+//   TOSVersion (unit System.SysUtils), qui s'appuie sur RtlGetVersion.
 function ObtenirVersionWindows: string;  
 var  
   Version: TOSVersionInfo;
@@ -380,6 +387,13 @@ begin
   // Construire la ligne de commande
   CommandLine := '"' + Application + '" ' + Parametres;
 
+  // ⚠ Documenté par Microsoft : CreateProcessW peut MODIFIER en place le
+  //   buffer lpCommandLine. Si CommandLine partage son buffer avec une
+  //   autre référence (copy-on-write des strings Delphi), cette autre
+  //   référence serait corrompue. UniqueString force une copie privée
+  //   du buffer avant l'appel.
+  UniqueString(CommandLine);
+
   // Créer le processus
   Result := CreateProcess(
     nil,
@@ -408,11 +422,18 @@ var
   SI: TStartupInfo;
   PI: TProcessInformation;
   ExitCode: DWORD;
+  CommandLine: string;
 begin
   FillChar(SI, SizeOf(SI), 0);
   SI.cb := SizeOf(SI);
 
-  if CreateProcess(nil, PChar(Application), nil, nil, False, 0,
+  // Même précaution que LancerProcessus : on copie le paramètre `const`
+  // dans une variable locale, puis UniqueString pour garantir un buffer
+  // privé (CreateProcessW peut modifier lpCommandLine en place).
+  CommandLine := Application;
+  UniqueString(CommandLine);
+
+  if CreateProcess(nil, PChar(CommandLine), nil, nil, False, 0,
      nil, nil, SI, PI) then
   begin
     // Attendre que le processus se termine
@@ -551,7 +572,9 @@ begin
     Result := 'Information non disponible';
 end;
 
-// Lister tous les lecteurs
+// Lister tous les lecteurs.
+// ⚠ L'appelant est responsable de la libération du TStringList retourné
+//    (Result.Free) : cette fonction crée l'objet mais ne le détient pas.
 function ListerLecteurs: TStringList;  
 var  
   Lecteurs: DWORD;
@@ -772,6 +795,8 @@ end;
 ```
 
 ### Surveillance du presse-papiers
+
+> **Note historique :** la chaîne `SetClipboardViewer` / `ChangeClipboardChain` / `WM_DRAWCLIPBOARD` est l'API historique (Windows XP et avant). Depuis Vista, Microsoft recommande `AddClipboardFormatListener` / `RemoveClipboardFormatListener` avec le message `WM_CLIPBOARDUPDATE` : plus simple (pas de chaîne d'observateurs à maintenir, pas de risque de cassure si un programme oublie de relayer le message). L'exemple ci-dessous reste valide pédagogiquement mais privilégiez la nouvelle API dans tout nouveau code.
 
 ```pascal
 type
@@ -1055,7 +1080,7 @@ Toujours libérer les ressources allouées :
 ```pascal
 procedure GestionRessources;  
 var  
-  DC: HDC;
+  DC, ScreenDC: HDC;
   Bitmap: HBITMAP;
   OldBitmap: HBITMAP;
 begin
@@ -1063,7 +1088,15 @@ begin
   if DC = 0 then Exit;
 
   try
-    Bitmap := CreateCompatibleBitmap(GetDC(0), 100, 100);
+    // ⚠ Important : GetDC(0) doit être libéré avec ReleaseDC sinon on
+    //   « fuit » un handle GDI à chaque appel (le système en a un stock
+    //   limité par processus, ~10 000 par défaut).
+    ScreenDC := GetDC(0);
+    try
+      Bitmap := CreateCompatibleBitmap(ScreenDC, 100, 100);
+    finally
+      ReleaseDC(0, ScreenDC);
+    end;
     if Bitmap = 0 then Exit;
 
     try

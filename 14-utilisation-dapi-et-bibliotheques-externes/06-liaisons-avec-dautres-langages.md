@@ -94,7 +94,7 @@ end;
 procedure ExecuterCalculPython(a, b: Integer);  
 var  
   Script: TStringList;
-  Result: Variant;
+  Valeur: Variant;
 begin
   Script := TStringList.Create;
   try
@@ -110,11 +110,14 @@ begin
     PythonEngine1.ExecStrings(Script);
 
     // Récupérer le résultat
-    Result := PythonEngine1.EvalString('resultat');
-    ShowMessage(Format('Résultat: %d', [Integer(Result)]));
+    // (on évite de nommer la variable « Result » : c'est l'identifiant
+    //  magique du retour d'une fonction et l'utiliser dans une procedure
+    //  prête à confusion).
+    Valeur := PythonEngine1.EvalString('resultat');
+    ShowMessage(Format('Résultat: %d', [Integer(Valeur)]));
 
-    Result := PythonEngine1.EvalString('message');
-    ShowMessage(String(Result));
+    Valeur := PythonEngine1.EvalString('message');
+    ShowMessage(String(Valeur));
   finally
     Script.Free;
   end;
@@ -234,8 +237,15 @@ var
   Buffer: array[0..4095] of AnsiChar;
   BytesRead: DWORD;
   TempStr: AnsiString;
+  CommandLineLocal: string;
 begin
   Result := False;
+
+  // CreateProcessW peut modifier en place le buffer lpCommandLine
+  // (documenté MSDN). On copie le paramètre `const` dans une variable
+  // locale puis UniqueString pour avoir un buffer privé modifiable.
+  CommandLineLocal := CommandLine;
+  UniqueString(CommandLineLocal);
 
   // Créer un pipe pour capturer la sortie
   SA.nLength := SizeOf(SA);
@@ -253,20 +263,24 @@ begin
     SI.hStdOutput := WritePipe;
     SI.hStdError := WritePipe;
 
-    if CreateProcess(nil, PChar(CommandLine), nil, nil, True,
+    if CreateProcess(nil, PChar(CommandLineLocal), nil, nil, True,
        CREATE_NEW_CONSOLE, nil, nil, SI, PI) then
     begin
       CloseHandle(WritePipe);
       WritePipe := 0;
 
-      // Lire la sortie
+      // Lire la sortie.
+      // Note d'encodage : Python 3, Node.js et la plupart des CLI modernes
+      // émettent du UTF-8 par défaut. Un cast naïf `string(AnsiString)`
+      // décoderait en ANSI Windows-1252 et casserait les accents.
+      // UTF8ToString fait la conversion correcte vers le string Unicode.
       repeat
         if ReadFile(ReadPipe, Buffer, SizeOf(Buffer), BytesRead, nil) then
         begin
           if BytesRead > 0 then
           begin
             SetString(TempStr, Buffer, BytesRead);
-            Output.Add(String(TempStr));
+            Output.Add(UTF8ToString(TempStr));
           end;
         end
         else
@@ -321,7 +335,7 @@ uses
 function AnalyserDonneesAvecPython(Donnees: TArray<Integer>): TJSONObject;  
 var  
   JSONArray: TJSONArray;
-  JSONInput, JSONOutput: string;
+  JSONInput: string;
   Resultat: string;
   I: Integer;
 begin
@@ -339,7 +353,7 @@ begin
   // Exécuter le script Python
   Resultat := ExecuterScriptPython('analyse_donnees.py', '"' + JSONInput + '"');
 
-  // Parser le résultat JSON
+  // Parser le résultat JSON (l'appelant est responsable du Free)
   Result := TJSONObject.ParseJSONValue(Resultat) as TJSONObject;
 end;
 
@@ -368,7 +382,7 @@ end;
 
 Delphi peut intégrer un navigateur web et communiquer avec JavaScript.
 
-#### Utilisation de TWebBrowser (EdgeView)
+#### Utilisation de TEdgeBrowser (WebView2)
 
 ```pascal
 uses
@@ -497,12 +511,18 @@ end;
 Exécuter des scripts Node.js :
 
 ```pascal
-function ExecuterScriptNodeJS(const ScriptPath: string): string;  
-var  
+function ExecuterScriptNodeJS(const ScriptPath: string;
+  const Args: string = ''): string;
+var
   CommandLine: string;
   Output: TStringList;
 begin
-  CommandLine := Format('node "%s"', [ScriptPath]);
+  // On sépare proprement le chemin du script et ses arguments.
+  // Concaténer les deux dans ScriptPath donnerait
+  //   node "traitement.js [1,2,3]"
+  // -> Node chercherait un fichier nommé littéralement
+  //    « traitement.js [1,2,3] », qui n'existe pas.
+  CommandLine := Format('node "%s" %s', [ScriptPath, Args]);
 
   Output := TStringList.Create;
   try
@@ -526,7 +546,9 @@ var
   Resultat: string;
 begin
   Donnees := '[1, 2, 3, 4, 5]';
-  Resultat := ExecuterScriptNodeJS('traitement.js ' + Donnees);
+  // Le shell découpe sur les espaces : on encadre les données entre
+  // guillemets pour qu'elles arrivent à Node comme un seul argv[2].
+  Resultat := ExecuterScriptNodeJS('traitement.js', '"' + Donnees + '"');
   Memo1.Lines.Text := Resultat;
 end;
 ```
@@ -706,11 +728,20 @@ function TJavaWrapper.InitJVM(const ClassPath: string): Boolean;
 var  
   Args: JavaVMInitArgs;
   Options: array[0..1] of JavaVMOption;
+  // ⚠ Les chaînes passées à la JVM doivent rester vivantes jusqu'à
+  // l'appel à JNI_CreateJavaVM. On les stocke dans des variables locales
+  // (durée de vie garantie jusqu'au end de la fonction), sinon des
+  // constructions comme `PAnsiChar(AnsiString(...))` pointeraient sur
+  // des chaînes temporaires libérées avant l'appel.
+  OptClassPath, OptMemMax: AnsiString;
 begin
   Result := False;
 
-  Options[0].optionString := PAnsiChar(AnsiString('-Djava.class.path=' + ClassPath));
-  Options[1].optionString := PAnsiChar(AnsiString('-Xmx512m'));
+  OptClassPath := AnsiString('-Djava.class.path=' + ClassPath);
+  OptMemMax   := AnsiString('-Xmx512m');
+
+  Options[0].optionString := PAnsiChar(OptClassPath);
+  Options[1].optionString := PAnsiChar(OptMemMax);
 
   Args.version := JNI_VERSION_1_6;
   Args.nOptions := 2;
@@ -1121,15 +1152,17 @@ begin
 end;
 ```
 
-### MessagePack
+### MessagePack et alternatives
 
-Format binaire compact et rapide.
+**MessagePack** est un format binaire compact et rapide (environ 30 % plus petit que JSON), supporté nativement par de nombreux langages (Python, Node.js, C#, Java…). Il existe quelques bibliothèques Delphi tierces (par exemple `MessagePack4D` sur GitHub) pour l'utiliser.
+
+Si vous n'avez pas besoin du gain de taille, **JSON reste l'option la plus simple et la plus universelle** pour échanger des données entre langages — c'est lisible, déboguable à l'œil nu, et la sérialisation/désérialisation est native en Delphi (`System.JSON`) :
 
 ```pascal
 uses
   System.JSON;
 
-// Alternative simple : utiliser JSON comme format d'échange
+// Sérialisation JSON simple : portable, lisible, supportée partout
 function SerialiserJSON: string;  
 var  
   JSON: TJSONObject;
@@ -1145,6 +1178,8 @@ begin
   end;
 end;
 ```
+
+**Quand préférer MessagePack à JSON :** très gros volumes de données, contraintes réseau ou stockage forts (IoT, mobile, jeux temps réel). Sinon, restez sur JSON.
 
 ## Bonnes pratiques
 
@@ -1229,17 +1264,25 @@ end;
 
 ```pascal
 procedure TesterIntegrationPython;  
-begin  
-  // Test 1 : Vérifier que Python est disponible
-  if not ExecuterScriptPython('--version') then
+var  
+  Sortie: string;
+begin
+  // Test 1 : Vérifier que Python est disponible (-V écrit la version)
+  Sortie := ExecuterScriptPython('-V', '');
+  if Pos('Python', Sortie) = 0 then
     raise Exception.Create('Python non disponible');
 
-  // Test 2 : Vérifier les bibliothèques requises
-  if not ExecuterScriptPython('-c "import numpy"') then
+  // Test 2 : Vérifier les bibliothèques requises.
+  // Si NumPy est installé, l'import réussit silencieusement et 'OK' est
+  // affiché. S'il manque, Python lève une ImportError sur stderr et 'OK'
+  // n'est jamais imprimé -> Pos('OK', Sortie) renvoie 0.
+  Sortie := ExecuterScriptPython('-c "import numpy; print(''OK'')"', '');
+  if Pos('OK', Sortie) = 0 then
     raise Exception.Create('NumPy non installé');
 
-  // Test 3 : Test fonctionnel
-  Assert(ExecuterScriptPython('test.py') = 'OK', 'Test fonctionnel échoué');
+  // Test 3 : Test fonctionnel (test.py doit afficher 'OK')
+  Sortie := ExecuterScriptPython('test.py', '');
+  Assert(Trim(Sortie) = 'OK', 'Test fonctionnel échoué (sortie : ' + Sortie + ')');
 
   ShowMessage('Tous les tests d''intégration ont réussi');
 end;

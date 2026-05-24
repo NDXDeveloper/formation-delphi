@@ -147,7 +147,10 @@ end;
 const
   API_KEY = 'ma_cle_secrete_123';  // Visible dans le code !
 
-// Bonne pratique : Utiliser un fichier de configuration
+// Pratique acceptable : un fichier de configuration externe
+// (mieux que la clé en dur dans le binaire, mais pas vraiment sécurisé :
+//  le fichier .ini reste lisible par n'importe qui ayant accès au disque.
+//  Voir la note ci-dessous pour des solutions plus robustes).
 uses
   System.IniFiles;
 
@@ -169,6 +172,14 @@ end;
 // [API]
 // Key=votre_cle_ici
 ```
+
+> 🔒 **Pour une vraie sécurité en production**, préférez selon votre cible :  
+> - **Windows** : DPAPI (`CryptProtectData` / `CryptUnprotectData` — la clé de chiffrement est dérivée du compte utilisateur ou de la machine)  
+> - **macOS / iOS** : Keychain Services  
+> - **Android** : Keystore + EncryptedSharedPreferences  
+> - **Serveur / cloud** : variables d'environnement, ou un gestionnaire de secrets (HashiCorp Vault, Azure Key Vault, AWS Secrets Manager…)  
+>  
+> N'oubliez pas non plus de **ne pas committer** votre fichier de configuration : ajoutez `config.ini` à votre `.gitignore`.
 
 ## Services de géolocalisation
 
@@ -312,8 +323,14 @@ begin
         if JSONArray.Count > 0 then
         begin
           JSONObject := JSONArray.Items[0] as TJSONObject;
-          Latitude := StrToFloat(JSONObject.GetValue<string>('lat'));
-          Longitude := StrToFloat(JSONObject.GetValue<string>('lon'));
+          // Nominatim renvoie les coordonnées avec un point décimal
+          // ('48.8584'). StrToFloat utilise la locale système : en
+          // locale FR ('48,8584' attendu), il lèverait EConvertError.
+          // On force donc le séparateur via TFormatSettings.Invariant.
+          Latitude := StrToFloat(JSONObject.GetValue<string>('lat'),
+            TFormatSettings.Invariant);
+          Longitude := StrToFloat(JSONObject.GetValue<string>('lon'),
+            TFormatSettings.Invariant);
           Result := True;
         end;
       finally
@@ -474,13 +491,20 @@ begin
   HttpClient := THTTPClient.Create;
   PostData := TStringStream.Create('');
   try
-    // En-têtes
-    SetLength(Headers, 1);
+    // En-têtes : Stripe attend explicitement du form-urlencoded
+    // (pas du JSON) pour /v1/charges.
+    SetLength(Headers, 2);
     Headers[0] := TNetHeader.Create('Authorization', 'Bearer ' + SecretKey);
+    Headers[1] := TNetHeader.Create('Content-Type',
+      'application/x-www-form-urlencoded');
 
-    // Données POST
+    // Données POST : on URL-encode les valeurs texte pour éviter
+    // qu'un caractère spécial (rare mais possible dans certains tokens
+    // de test ou identifiants) ne casse le format form-urlencoded.
     PostData.WriteString(Format('amount=%d&currency=%s&source=%s',
-      [Montant, Devise, Token]));
+      [Montant,
+       TNetEncoding.URL.Encode(Devise),
+       TNetEncoding.URL.Encode(Token)]));
     PostData.Position := 0;
 
     // Envoyer la requête
@@ -563,9 +587,12 @@ begin
   HttpClient := THTTPClient.Create;
   PostData := TStringStream.Create('grant_type=client_credentials');
   try
-    SetLength(Headers, 1);
+    // PayPal exige application/x-www-form-urlencoded sur /oauth2/token
+    SetLength(Headers, 2);
     Headers[0] := TNetHeader.Create('Authorization',
       CreerHeaderBasicAuth(ClientID, Secret));
+    Headers[1] := TNetHeader.Create('Content-Type',
+      'application/x-www-form-urlencoded');
 
     Response := HttpClient.Post(
       'https://api.sandbox.paypal.com/v1/oauth2/token',
@@ -613,12 +640,17 @@ begin
   HttpClient := THTTPClient.Create;
   PostData := TStringStream.Create('');
   try
-    SetLength(Headers, 1);
+    // Twilio attend du form-urlencoded sur Messages.json
+    SetLength(Headers, 2);
     Headers[0] := TNetHeader.Create('Authorization',
       CreerHeaderBasicAuth(AccountSID, AuthToken));
+    Headers[1] := TNetHeader.Create('Content-Type',
+      'application/x-www-form-urlencoded');
 
     PostData.WriteString(Format('From=%s&To=%s&Body=%s',
-      [NumeroTwilio, NumeroDestinataire, TNetEncoding.URL.Encode(Message)]));
+      [TNetEncoding.URL.Encode(NumeroTwilio),
+       TNetEncoding.URL.Encode(NumeroDestinataire),
+       TNetEncoding.URL.Encode(Message)]));
     PostData.Position := 0;
 
     Response := HttpClient.Post(URL, PostData, nil, Headers);
@@ -723,10 +755,14 @@ begin
   Result := '';
   APIKey := ChargerCleAPI;
 
-  // Construire la requête JSON
+  // Construire la requête JSON.
+  // Note : le modèle 'gpt-3.5-turbo' historique reste accessible mais
+  // OpenAI recommande désormais 'gpt-4o-mini' (mêmes performances
+  // qu'un GPT-3.5, qualité supérieure et tarif comparable). Adaptez
+  // ce champ à votre besoin (qualité vs coût).
   JSONRequest := TJSONObject.Create;
   try
-    JSONRequest.AddPair('model', 'gpt-3.5-turbo');
+    JSONRequest.AddPair('model', 'gpt-4o-mini');
 
     JSONMessages := TJSONArray.Create;
     JSONMessage := TJSONObject.Create;
@@ -792,13 +828,17 @@ var
   JSONRequest, JSONResponse, JSONData: TJSONObject;
   JSONDataArray: TJSONArray;
   PostData: TStringStream;
-  APIKey, URLImage: string;
+  APIKey: string;
 begin
   Result := '';
   APIKey := ChargerCleAPI;
 
   JSONRequest := TJSONObject.Create;
   try
+    // Sans champ 'model', OpenAI utilise le modèle par défaut historique
+    // (DALL-E 2). On précise ici 'dall-e-3' pour des images de meilleure
+    // qualité. Remplacer par 'gpt-image-1' pour le modèle le plus récent.
+    JSONRequest.AddPair('model', 'dall-e-3');
     JSONRequest.AddPair('prompt', Description);
     JSONRequest.AddPair('n', TJSONNumber.Create(1));
     JSONRequest.AddPair('size', '1024x1024');
@@ -883,6 +923,8 @@ end;
 
 ### Google Drive
 
+> ⚠ **Limite de cet exemple :** Google Drive `uploadType=multipart` n'accepte pas un multipart `form-data` classique. L'API attend un body en deux parties : une partie `application/json` contenant les métadonnées (nom du fichier, dossier parent…), suivie d'une partie binaire pour le contenu, séparées par un boundary explicite. Pour des cas simples, préférez `uploadType=media` (upload binaire direct, sans métadonnées) ou l'upload reprenable (`uploadType=resumable`). Le code ci-dessous illustre le flux général mais devra être adapté pour produire le bon multipart côté production.
+
 ```pascal
 // Note: Nécessite OAuth 2.0 (voir section suivante)
 function TelechargerVersGoogleDrive(const CheminLocal, NomFichier: string;
@@ -954,11 +996,14 @@ end;
 
 function TOAuthHelper.GenererURLAutorisation: string;  
 begin  
+  // Tous les paramètres de query string doivent être URL-encodés.
+  // En pratique un ClientID Google ne contient que des caractères
+  // sûrs, mais on encode quand même par cohérence et par sécurité.
   Result := 'https://accounts.google.com/o/oauth2/v2/auth?' +
-    'client_id=' + FClientID +
+    'client_id=' + TNetEncoding.URL.Encode(FClientID) +
     '&redirect_uri=' + TNetEncoding.URL.Encode(FRedirectURI) +
     '&response_type=code' +
-    '&scope=email%20profile';
+    '&scope=' + TNetEncoding.URL.Encode('email profile');
 end;
 
 function TOAuthHelper.EchangerCodeContreToken(const Code: string): string;  
@@ -966,6 +1011,7 @@ var
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   PostData: TStringStream;
+  Headers: TNetHeaders;
   JSONResponse: TJSONObject;
 begin
   Result := '';
@@ -973,11 +1019,23 @@ begin
   HttpClient := THTTPClient.Create;
   PostData := TStringStream.Create('');
   try
+    // Google /token exige application/x-www-form-urlencoded
+    SetLength(Headers, 1);
+    Headers[0] := TNetHeader.Create('Content-Type',
+      'application/x-www-form-urlencoded');
+
+    // Tous les champs envoyés en form-urlencoded doivent être URL-encodés
+    // (le 'code' renvoyé par Google peut contenir des '/', '+', '=' qui
+    // changent la sémantique de la chaîne s'ils ne sont pas échappés).
     PostData.WriteString(Format('code=%s&client_id=%s&client_secret=%s&redirect_uri=%s&grant_type=authorization_code',
-      [Code, FClientID, FClientSecret, TNetEncoding.URL.Encode(FRedirectURI)]));
+      [TNetEncoding.URL.Encode(Code),
+       TNetEncoding.URL.Encode(FClientID),
+       TNetEncoding.URL.Encode(FClientSecret),
+       TNetEncoding.URL.Encode(FRedirectURI)]));
     PostData.Position := 0;
 
-    Response := HttpClient.Post('https://oauth2.googleapis.com/token', PostData);
+    Response := HttpClient.Post('https://oauth2.googleapis.com/token',
+      PostData, nil, Headers);
 
     if Response.StatusCode = 200 then
     begin
@@ -994,6 +1052,15 @@ begin
   end;
 end;
 
+// ⚠ Le TJSONObject retourné appartient à l'appelant : il doit appeler
+//   Free dessus quand il a fini, sinon fuite mémoire à chaque appel.
+//   Exemple :
+//     Info := OAuth.ObtenirInfoUtilisateur(Token);
+//     try
+//       ShowMessage(Info.GetValue<string>('email'));
+//     finally
+//       Info.Free;
+//     end;
 function TOAuthHelper.ObtenirInfoUtilisateur(const AccessToken: string): TJSONObject;  
 var  
   HttpClient: THTTPClient;

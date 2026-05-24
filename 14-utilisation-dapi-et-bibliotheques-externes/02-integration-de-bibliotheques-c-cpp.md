@@ -53,9 +53,9 @@ Cela produit un nom simple `Add` que Delphi peut utiliser facilement.
 
 Pour connaître les noms réels des fonctions dans une DLL, utilisez des outils comme :
 
-- **Dependency Walker** (depends.exe)
+- **Dependencies** ([lucasg/Dependencies](https://github.com/lucasg/Dependencies)) — successeur moderne et maintenu de l'historique *Dependency Walker* (qui signale faussement des dépendances manquantes sur Windows 10/11)
 - **DLL Export Viewer** de NirSoft
-- **dumpbin** (fourni avec Visual Studio)
+- **dumpbin /exports MaDLL.dll** (fourni avec Visual Studio)
 
 Ces outils vous montreront les noms exacts des fonctions exportées.
 
@@ -165,10 +165,19 @@ Les tableaux C se traduisent de différentes manières :
 type
   TArrayInt10 = array[0..9] of Integer;
 
-// Tableau dynamique (pointeur)
-// En C: int* array;
+// Tableau de taille variable (passé comme pointeur côté C).
+// En C: int* array;  -- voire `int array[]` dans la signature d'une
+// fonction, ce qui est équivalent.
+//
+// Pour utiliser ce pointeur comme un tableau côté Delphi, on déclare
+// un type intermédiaire indexable :
 type
-  PIntArray = ^Integer;  // Ou utiliser un tableau dynamique Delphi
+  TIntegerArray  = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
+  PIntegerArray  = ^TIntegerArray;
+// On peut ensuite faire `arr^[i]` après avoir reçu un PIntegerArray
+// de la DLL. Le type Integer simple (^Integer) reste possible mais
+// nécessite alors une arithmétique de pointeur manuelle pour
+// adresser les éléments suivants.
 ```
 
 ### Énumérations
@@ -179,15 +188,23 @@ Les énumérations C deviennent des énumérations ou constantes Delphi :
 // En C:
 // enum Color { RED, GREEN, BLUE };
 
-// En Delphi (énumération):
+// En Delphi (énumération) :
+// ⚠ Une énumération Delphi a par défaut une taille de 1 octet, alors
+//   qu'un `enum` C compile en `int` (4 octets sur la plupart des
+//   plateformes). Pour rester binairement compatible avec une struct
+//   ou un prototype C, on force la taille avec {$Z4} (= 4 octets).
+{$Z4}
 type
   TColor = (RED, GREEN, BLUE);
+{$Z1}  // Retour à la taille minimale (1 octet) pour les énumérations
+       // qui suivent, si on n'a plus besoin d'interop C.
 
-// Ou en constantes:
+// Ou en constantes (toujours Integer = 4 octets, donc compatible C
+// automatiquement, sans directive) :
 const
-  RED = 0;
+  RED   = 0;
   GREEN = 1;
-  BLUE = 2;
+  BLUE  = 2;
 ```
 
 ## Exemple pratique : Bibliothèque zlib
@@ -241,6 +258,15 @@ const
   Z_BEST_SPEED = 1;
   Z_BEST_COMPRESSION = 9;
   Z_DEFAULT_COMPRESSION = -1;
+
+// Modes de « flush » passés à deflate()
+const
+  Z_NO_FLUSH      = 0;
+  Z_PARTIAL_FLUSH = 1;
+  Z_SYNC_FLUSH    = 2;
+  Z_FULL_FLUSH    = 3;
+  Z_FINISH        = 4;
+  Z_BLOCK         = 5;
 
 // Déclaration des fonctions
 function deflateInit_(strm: Pointer; level: Integer;
@@ -571,15 +597,19 @@ begin
     if ret <> SQLITE_OK then
     begin
       ShowMessage('Erreur préparation: ' +
-        string(sqlite3_errmsg(db)));
+        UTF8ToString(sqlite3_errmsg(db)));
       Exit;
     end;
 
     try
-      // Exécuter et lire les résultats
+      // Exécuter et lire les résultats.
+      // sqlite3_column_text renvoie du PAnsiChar pointant sur du UTF-8 :
+      // un cast naïf en AnsiString interpréterait les octets comme ANSI
+      // (Windows-1252) et casserait les accents. UTF8ToString fait la
+      // conversion correcte vers le string Unicode de Delphi.
       while sqlite3_step(stmt) = SQLITE_ROW do
       begin
-        texte := string(AnsiString(sqlite3_column_text(stmt, 0)));
+        texte := UTF8ToString(sqlite3_column_text(stmt, 0));
         ShowMessage('Résultat: ' + texte);
       end;
     finally
@@ -608,7 +638,7 @@ end;
 - Utilisez un chemin complet si nécessaire
 
 **Fonction introuvable :**
-- Vérifiez le nom exact avec Dependency Walker
+- Vérifiez le nom exact avec **Dependencies** (voir section « Vérifier les noms exportés ») ou `dumpbin /exports`
 - Attention au name mangling en C++
 
 ### Techniques de débogage
@@ -686,8 +716,10 @@ type
 procedure CheckSQLiteResult(db: TSQLite3; ret: Integer);  
 begin  
   if ret <> SQLITE_OK then
+    // sqlite3_errmsg renvoie également du UTF-8 : on utilise UTF8ToString
+    // pour préserver les accents éventuels dans les messages d'erreur.
     raise ESQLiteError.Create(
-      'Erreur SQLite: ' + string(sqlite3_errmsg(db))
+      'Erreur SQLite: ' + UTF8ToString(sqlite3_errmsg(db))
     );
 end;
 ```
@@ -734,15 +766,17 @@ Si vous développez pour plusieurs plateformes (Windows, macOS, Linux), considé
 ```pascal
 const
   {$IFDEF MSWINDOWS}
-  SQLITE_LIB = 'sqlite3.dll';
+  SQLITE_DLL = 'sqlite3.dll';
   {$ENDIF}
   {$IFDEF MACOS}
-  SQLITE_LIB = 'libsqlite3.dylib';
+  SQLITE_DLL = 'libsqlite3.dylib';
   {$ENDIF}
   {$IFDEF LINUX}
-  SQLITE_LIB = 'libsqlite3.so';
+  SQLITE_DLL = 'libsqlite3.so';
   {$ENDIF}
 ```
+
+> 💡 Une seule constante `SQLITE_DLL` est définie par plateforme grâce aux directives conditionnelles : les déclarations `external SQLITE_DLL` plus haut continuent ainsi de fonctionner sans modification, quelle que soit la plateforme cible.
 
 ## Résumé
 

@@ -298,7 +298,9 @@ begin
     Resultat := MaFonctionDLL(param1, param2);
   except
     on E: Exception do
-      ShowMessage('Erreur lors de l appel DLL: ' + E.Message);
+      // Note : en Pascal on double l'apostrophe à l'intérieur d'une
+      // chaîne pour l'échapper -> 'l''appel'.
+      ShowMessage('Erreur lors de l''appel DLL: ' + E.Message);
   end;
 end;
 ```

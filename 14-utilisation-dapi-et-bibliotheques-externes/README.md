@@ -24,7 +24,7 @@ Imaginez que vous construisez une maison. Vous pourriez fabriquer vous-même cha
 
 ### Les différents types d'intégration
 
-Ce chapitre couvre neuf approches différentes pour intégrer du code et des fonctionnalités externes dans vos applications Delphi :
+Ce chapitre couvre dix approches différentes pour intégrer du code et des fonctionnalités externes dans vos applications Delphi :
 
 #### 1. DLLs (Dynamic Link Libraries)
 
@@ -177,6 +177,24 @@ Un **WebView** est un navigateur web miniature intégré dans votre application.
 - Cartes interactives (Leaflet, Mapbox)
 - Éditeurs de code (Monaco, CodeMirror)
 - Interfaces web modernes
+
+#### 10. Créer ses propres DLL et bibliothèques partagées
+
+Après avoir appris à **consommer** des DLL, il est temps d'apprendre à **en produire**. Une bibliothèque partagée que vous concevez (`.dll` sous Windows, `.so` sous Linux, `.dylib` sous macOS) peut être appelée depuis Delphi mais aussi depuis C/C++, C#, Python ou tout autre langage compatible.
+
+**Exemple d'utilisation :** Encapsuler votre moteur métier dans une DLL pour le partager entre une application Delphi, un script Python d'analyse et un service backend en C#.
+
+**Avantages :**
+- Réutilisation du code entre plusieurs applications
+- Partage avec n'importe quel langage qui sait charger une DLL
+- Modularité et mises à jour indépendantes
+- Système de plugins pour vos propres applications
+
+**Cas d'usage typiques :**
+- Moteur de calcul partagé entre plusieurs produits
+- Bibliothèque de fonctions métier exposée aux partenaires
+- Architecture à plugins (l'application charge dynamiquement des DLL tierces)
+- Composants logiciels distribués sous licence commerciale
 
 ## Comment aborder ce chapitre
 
@@ -355,6 +373,8 @@ end;
 
 ✅ **Utiliser JavaScript et ses bibliothèques** via WebView pour des interfaces modernes
 
+✅ **Créer vos propres DLL** et bibliothèques partagées multi-langages
+
 ## Avertissements importants
 
 ### Sécurité
@@ -413,7 +433,7 @@ Pensez à la maintenance long terme :
 
 - **Postman** : Tester des API REST
 - **JSON Formatter** : Visualiser et formater du JSON
-- **Dependency Walker** : Analyser les DLL
+- **Dependencies** ([lucasg/Dependencies](https://github.com/lucasg/Dependencies) sur GitHub) : Analyser les DLL — successeur moderne de l'historique *Dependency Walker* (qui n'est plus maintenu depuis 2006 et signale faussement des dépendances manquantes sur Windows 10/11)
 - **API documentation browsers** : Swagger, Redoc
 
 ## Prêt à commencer ?

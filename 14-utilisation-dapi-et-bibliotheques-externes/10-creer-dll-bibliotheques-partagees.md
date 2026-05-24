@@ -470,7 +470,10 @@ begin
     StrPCopy(buffer, Resultat);
 end;
 
-// Fonction qui modifie une chaîne en place
+// Fonction qui modifie une chaîne en place.
+// ⚠ UpCase ne convertit que les caractères ASCII (A-Z) — les lettres
+//   accentuées (é, à, ç, ñ…) restent en minuscules. Pour un vrai
+//   uppercase Unicode, utiliser System.Character.TCharacter.ToUpper.
 procedure MettreEnMajuscules(s: PChar); stdcall;  
 var  
   i: Integer;
@@ -503,8 +506,12 @@ type
   end;
   PPoint = ^TPoint;
 
+  // ⚠ Interop avec C : en Delphi moderne, Char = WideChar (2 octets).
+  // Un `array[0..49] of Char` occupe donc 100 octets, alors qu'un
+  // `char nom[50]` côté C n'en occupe que 50. Pour rester compatible
+  // binairement avec une struct C/C++, on utilise AnsiChar.
   TPersonne = record
-    Nom: array[0..49] of Char;
+    Nom: array[0..49] of AnsiChar;
     Age: Integer;
     Salaire: Double;
   end;
@@ -522,8 +529,10 @@ begin
   p^.Salaire := p^.Salaire * (1 + pourcentage / 100);
 end;
 
-// Fonction qui crée une structure
-function CreerPersonne(nom: PChar; age: Integer; salaire: Double): PPersonne; stdcall;  
+// Fonction qui crée une structure.
+// Note : pour rester binairement compatible avec C, on utilise PAnsiChar
+// (pas PChar = PWideChar) en cohérence avec le champ Nom de TPersonne.
+function CreerPersonne(nom: PAnsiChar; age: Integer; salaire: Double): PPersonne; stdcall;  
 begin  
   GetMem(Result, SizeOf(TPersonne));
   StrPCopy(Result^.Nom, nom);
@@ -657,6 +666,19 @@ end.
 On ne peut pas exporter une classe Delphi directement. Il faut utiliser une approche basée sur des handles.
 
 ### Approche par handle
+
+> ⚠ **Important — Exceptions et frontières DLL :** les exceptions Delphi  
+> ne traversent **pas** proprement une frontière DLL si l'appelant n'est  
+> pas Delphi (ou même un Delphi compilé séparément). L'ABI des exceptions  
+> est interne au compilateur. Si une exception remonte hors d'une fonction  
+> exportée, le comportement va de « erreur silencieuse » à « plantage du  
+> processus appelant ».  
+>  
+> **Règle :** chaque fonction exportée doit être enveloppée dans un  
+> `try..except` et signaler les erreurs via un code de retour (ou un  
+> handle nil), pas via une exception. Pour garder ces exemples lisibles  
+> on l'omet ici, mais le pattern complet est montré plus loin dans la  
+> section « 3. Gérer les exceptions » (voir `DiviserSecurise`).
 
 ```pascal
 library ClasseDLL;
@@ -938,21 +960,32 @@ begin
   {$ENDIF}
 end;
 
-// Fonction spécifique à la plateforme
-function ObtenirCheminDocuments: PChar;
+// Fonction spécifique à la plateforme.
+// ⚠ On ne peut PAS faire `Result := PChar(chaineLocale)` puis retourner le
+//   pointeur : la chaîne `string` temporaire est libérée à la sortie de la
+//   fonction, le PChar deviendrait un pointeur invalide (dangling pointer).
+//   Solution standard : faire écrire le résultat dans un buffer fourni par
+//   l'appelant, et renvoyer la longueur nécessaire.
+function ObtenirCheminDocuments(buffer: PChar; bufferSize: Integer): Integer;
   {$IFDEF MSWINDOWS}stdcall{$ELSE}cdecl{$ENDIF};
+var
+  Chemin: string;
 begin
   {$IFDEF MSWINDOWS}
-  Result := PChar(GetEnvironmentVariable('USERPROFILE') + '\Documents');
+  Chemin := GetEnvironmentVariable('USERPROFILE') + '\Documents';
   {$ENDIF}
 
   {$IFDEF LINUX}
-  Result := PChar(GetEnvironmentVariable('HOME') + '/Documents');
+  Chemin := GetEnvironmentVariable('HOME') + '/Documents';
   {$ENDIF}
 
   {$IFDEF MACOS}
-  Result := PChar(GetEnvironmentVariable('HOME') + '/Documents');
+  Chemin := GetEnvironmentVariable('HOME') + '/Documents';
   {$ENDIF}
+
+  Result := Length(Chemin);
+  if (buffer <> nil) and (bufferSize > Length(Chemin)) then
+    StrPCopy(buffer, Chemin);
 end;
 
 exports
@@ -1008,6 +1041,11 @@ exports
 
 initialization
   CompteurAppels := 0;
+  // ⚠ Attention : un chemin relatif comme 'dll_log.txt' est résolu par
+  //   rapport au répertoire de travail courant du PROCESSUS HÔTE, et
+  //   non du répertoire de la DLL. Pour un log au plus près de la DLL,
+  //   utiliser GetModuleFileName(HInstance, ...) pour récupérer son
+  //   chemin et le préfixer.
   AssignFile(FichierLog, 'dll_log.txt');
   Rewrite(FichierLog);
   WriteLn(FichierLog, 'DLL chargée à ' + FormatDateTime('hh:nn:ss', Now));
@@ -1134,7 +1172,11 @@ end.
 ### Vérifier la compatibilité
 
 ```pascal
-// Dans l'application appelante
+// Dans l'application appelante : on commence par déclarer les fonctions
+// exportées par la DLL (étape essentielle pour la liaison statique).
+function ObtenirVersionMajor: Integer; stdcall; external 'VersionDLL.dll';  
+function ObtenirVersionMinor: Integer; stdcall; external 'VersionDLL.dll';  
+
 function VerifierVersionDLL: Boolean;  
 var  
   Major, Minor: Integer;
@@ -1316,8 +1358,12 @@ begin
   end;
 
   WriteLn;
-  WriteLn(Format('Résultat: %d/%d tests réussis (%.1f%%)',
-    [reussis, total, (reussis / total) * 100]));
+  // Protection contre la division par zéro si aucun test n'a été exécuté.
+  if total > 0 then
+    WriteLn(Format('Résultat: %d/%d tests réussis (%.1f%%)',
+      [reussis, total, (reussis / total) * 100]))
+  else
+    WriteLn('Aucun test n''a été exécuté');
 end;
 
 begin

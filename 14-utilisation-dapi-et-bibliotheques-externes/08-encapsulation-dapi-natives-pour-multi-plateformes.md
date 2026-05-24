@@ -176,8 +176,11 @@ implementation
 procedure TNotificationServiceWindows.AfficherNotification(
   const Titre, Message: string);
 begin
-  // Utiliser l'API Windows pour les notifications toast
-  // Code simplifié pour l'exemple
+  // ⚠ Implémentation très simplifiée à des fins pédagogiques :
+  // MessageBox affiche une fenêtre modale, ce n'est PAS une vraie
+  // notification toast. Pour de vraies notifications toast Windows 10/11,
+  // utiliser l'API « Windows.UI.Notifications » (ToastNotificationManager)
+  // ou un composant comme TNotificationCenter (System.Notification).
   MessageBox(0, PChar(Message), PChar(Titre), MB_OK or MB_ICONINFORMATION);
 end;
 
@@ -304,15 +307,13 @@ begin
 end;
 
 function TNotificationServiceiOS.NotificationsAutorisees: Boolean;  
-var  
-  Center: UNUserNotificationCenter;
-  Settings: UNNotificationSettings;
-begin
-  Center := TUNUserNotificationCenter.Wrap(
-    TUNUserNotificationCenter.OCClass.currentNotificationCenter);
-
-  // Récupérer les paramètres de manière synchrone (simplifié)
-  Result := True; // Dans la vraie vie, utiliser un callback
+begin  
+  // ⚠ Simplification : la vraie API iOS expose les autorisations via
+  // getNotificationSettingsWithCompletionHandler qui est asynchrone
+  // (callback). Pour rester synchrone ici, on renvoie True et on
+  // s'appuie sur le système iOS pour afficher la demande de permission
+  // au premier appel à requestAuthorizationWithOptions.
+  Result := True;
 end;
 
 procedure TNotificationServiceiOS.DemanderAutorisation;  
@@ -347,25 +348,33 @@ type
 
 implementation
 
+// ⚠ Attention : sur iOS, le compilateur Delphi définit à la fois
+//   MACOS *et* IOS (iOS est dérivé de macOS dans la hiérarchie des
+//   plateformes). Pour cibler « macOS desktop uniquement », il faut
+//   donc écrire `{$IF defined(MACOS) and not defined(IOS)}`, sinon les
+//   blocs iOS et macOS seraient activés simultanément.
 uses
   {$IFDEF MSWINDOWS}
-  Notification.Windows;
+  Notification.Windows
   {$ENDIF}
   {$IFDEF ANDROID}
-  Notification.Android;
+  Notification.Android
   {$ENDIF}
   {$IFDEF IOS}
-  Notification.iOS;
+  Notification.iOS
   {$ENDIF}
-  {$IFDEF MACOS}
-  Notification.macOS;
-  {$ENDIF}
+  {$IF defined(MACOS) and not defined(IOS)}
+  Notification.macOS
+  {$IFEND}
   {$IFDEF LINUX}
-  Notification.Linux;
+  Notification.Linux
   {$ENDIF}
+  ;
 
 class function TNotificationFactory.Create: INotificationService;  
 begin  
+  Result := nil;
+
   {$IFDEF MSWINDOWS}
   Result := TNotificationServiceWindows.Create;
   {$ENDIF}
@@ -378,13 +387,20 @@ begin
   Result := TNotificationServiceiOS.Create;
   {$ENDIF}
 
-  {$IFDEF MACOS}
+  {$IF defined(MACOS) and not defined(IOS)}
   Result := TNotificationServicemacOS.Create;
-  {$ENDIF}
+  {$IFEND}
 
   {$IFDEF LINUX}
   Result := TNotificationServiceLinux.Create;
   {$ENDIF}
+
+  // Garde-fou : aucune plateforme connue n'est compilée -> on remonte
+  // immédiatement une erreur explicite plutôt que de retourner nil et
+  // de provoquer une violation d'accès au premier appel utilisateur.
+  if Result = nil then
+    raise ENotSupportedException.Create(
+      'Aucune implémentation de notification pour cette plateforme');
 end;
 
 end.
@@ -503,6 +519,10 @@ var
   LocationSensor: TLocationSensor;
   Coord: TCoordonnees;
 begin
+  // ⚠ Exemple simplifié : en production, TLocationSensor est asynchrone.
+  // Il faut s'abonner à l'événement OnLocationChanged et appeler OnSuccess
+  // depuis ce handler, sinon Latitude/Longitude renvoient NaN tant qu'aucun
+  // « fix » GPS n'a été acquis.
   LocationSensor := TLocationSensor.Create(nil);
   try
     if LocationSensor.Authorized then
@@ -536,12 +556,24 @@ end;
 
 function TLocationServiceWindows.AutorisationObtenue: Boolean;  
 begin  
-  Result := True; // Windows ne nécessite pas d'autorisation spéciale
+  // ⚠ Depuis Windows 10, la localisation EST soumise à autorisation :
+  //   Paramètres > Confidentialité et sécurité > Localisation.
+  //   L'utilisateur peut désactiver le service globalement, ou refuser
+  //   à une application particulière. La vraie source d'information
+  //   est TLocationSensor.Authorized (testé dans DemanderPosition).
+  //   Pour rester simple ici, on retourne True et on laisse l'API
+  //   système gérer le refus côté capteur.
+  Result := True;
 end;
 
 procedure TLocationServiceWindows.DemanderAutorisation;  
 begin  
-  // Pas nécessaire sur Windows
+  // Sur Windows desktop, il n'y a pas d'API programmatique pour
+  // « demander » la localisation (contrairement à iOS/Android où l'OS
+  // affiche une popup système). L'utilisateur doit aller manuellement
+  // dans les Paramètres Windows pour autoriser l'application. On peut
+  // éventuellement y rediriger via :
+  //   ShellExecute(0, 'open', 'ms-settings:privacy-location', ...);
 end;
 
 end.
@@ -673,6 +705,11 @@ implementation
 
 class function TFeatureChecker.BluetoothDisponible: Boolean;  
 begin  
+  // Valeur par défaut conservatrice : si la plateforme n'est pas
+  // explicitement gérée ci-dessous (Linux, macOS pur…), on retourne
+  // False plutôt que de laisser Result non initialisé.
+  Result := False;
+
   {$IFDEF MSWINDOWS}
   Result := True; // À implémenter correctement
   {$ENDIF}
@@ -690,6 +727,10 @@ end;
 
 class function TFeatureChecker.CameraDisponible: Boolean;  
 begin  
+  // Valeur par défaut : aucune caméra présumée disponible si la
+  // plateforme n'est pas reconnue.
+  Result := False;
+
   {$IFDEF ANDROID}
   Result := TAndroidHelper.Context.getPackageManager.hasSystemFeature(
     StringToJString('android.hardware.camera'));
@@ -713,6 +754,10 @@ end.
 unit Camera.Interfaces;
 
 interface
+
+uses
+  System.SysUtils,  // pour TProc<>
+  FMX.Graphics;     // pour TBitmap (utiliser Vcl.Graphics en projets VCL)
 
 type
   ICameraService = interface
@@ -1006,6 +1051,8 @@ end.
 ```
 
 ### Implémentation Android
+
+> **Note :** `FingerprintManager` est marqué **déprécié** depuis Android 9 (API 28, 2018). Pour une application moderne, préférez `BiometricPrompt` (package `androidx.biometric`) qui prend aussi en charge la reconnaissance faciale et le déverrouillage par PIN/motif. L'exemple ci-dessous reste valide pour comprendre le pattern d'encapsulation, mais ne doit pas être utilisé tel quel sur des appareils récents.
 
 ```pascal
 unit Biometric.Android;
@@ -1323,7 +1370,8 @@ MonProjet/
 /// - Windows: Notifications toast via API Windows 10+
 /// - Android: Notifications via NotificationManager (API 23+)
 /// - iOS: Notifications locales via UserNotifications (iOS 10+)
-/// - macOS: Notifications via NSUserNotificationCenter
+/// - macOS: Notifications via UserNotifications (macOS 10.14+,
+///   NSUserNotificationCenter est déprécié depuis Mojave)
 /// </remarks>
 type
   INotificationService = interface
@@ -1371,30 +1419,38 @@ end;
 
 function ObtenirVersionPlateforme: TPlatformVersion;  
 begin  
-  {$IFDEF ANDROID}
-  Result.Major := TAndroidHelper.Context.getApplicationInfo.targetSdkVersion;
+  // Valeurs par défaut, surchargées ci-dessous selon la plateforme.
+  Result.Major := 0;
   Result.Minor := 0;
   Result.Build := 0;
+
+  {$IFDEF ANDROID}
+  Result.Major := TAndroidHelper.Context.getApplicationInfo.targetSdkVersion;
   {$ENDIF}
 
   {$IFDEF IOS}
-  // Récupérer la version iOS
-  Result.Major := 14; // Exemple
-  Result.Minor := 0;
-  Result.Build := 0;
+  // Récupérer la version iOS (valeur d'exemple)
+  Result.Major := 14;
   {$ENDIF}
 
   {$IFDEF MSWINDOWS}
   Result.Major := 10;
-  Result.Minor := 0;
-  Result.Build := 0;
   {$ENDIF}
 end;
 
-// Utilisation
-if ObtenirVersionPlateforme.EstCompatible(10, 0) then
-  // Utiliser une fonctionnalité nécessitant version 10.0+
 end.
+```
+
+**Utilisation** dans un bloc applicatif :
+
+```pascal
+procedure UtiliserSiCompatible;  
+begin  
+  if ObtenirVersionPlateforme.EstCompatible(10, 0) then
+  begin
+    // Utiliser une fonctionnalité nécessitant version 10.0+
+  end;
+end;
 ```
 
 ## Résumé

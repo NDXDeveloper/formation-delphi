@@ -109,12 +109,18 @@ end;
 ```pascal
 procedure TForm1.ButtonChargerFichierClick(Sender: TObject);  
 var  
-  CheminFichier: string;
+  CheminFichier, URLFichier: string;
 begin
   CheminFichier := TPath.Combine(ExtractFilePath(ParamStr(0)), 'page.html');
 
   if FileExists(CheminFichier) then
-    EdgeBrowser1.Navigate('file:///' + CheminFichier)
+  begin
+    // Une URL file:// utilise des '/', pas des '\'. Sans cette conversion,
+    // Edge refuse de naviguer (chemin invalide) sur Windows.
+    URLFichier := 'file:///' + StringReplace(CheminFichier, '\', '/',
+      [rfReplaceAll]);
+    EdgeBrowser1.Navigate(URLFichier);
+  end
   else
     ShowMessage('Fichier HTML introuvable');
 end;
@@ -674,9 +680,13 @@ procedure TForm1.AjouterMarqueurCarte(Latitude, Longitude: Double;
 var
   Script: string;
 begin
+  // ⚠ JavaScript attend un point décimal ('48.8584'), pas une virgule
+  // ('48,8584' en locale FR). FormatSettings.Invariant garantit le bon
+  // séparateur quelle que soit la locale système.
   Script := Format(
     'ajouterMarqueur(%f, %f, "%s", "%s");',
-    [Latitude, Longitude, Titre, Description]
+    [Latitude, Longitude, Titre, Description],
+    TFormatSettings.Invariant
   );
 
   EdgeBrowser1.ExecuteScript(Script, nil);
@@ -686,7 +696,9 @@ procedure TForm1.CentrerCarte(Latitude, Longitude: Double; Zoom: Integer);
 var  
   Script: string;
 begin
-  Script := Format('centrerSur(%f, %f, %d);', [Latitude, Longitude, Zoom]);
+  Script := Format('centrerSur(%f, %f, %d);',
+    [Latitude, Longitude, Zoom],
+    TFormatSettings.Invariant);
   EdgeBrowser1.ExecuteScript(Script, nil);
 end;
 
@@ -987,7 +999,12 @@ function GenererHTMLAvecJSLocal: string;
 var  
   CheminJS: string;
 begin
-  CheminJS := TPath.Combine(ExtractFilePath(ParamStr(0)), 'js\mon-script.js');
+  // On laisse TPath.Combine gérer le séparateur de chemin de la plateforme
+  // courante (au lieu de coder 'js\mon-script.js' en dur, ce qui ne
+  // fonctionnerait que sous Windows).
+  CheminJS := TPath.Combine(
+    TPath.Combine(ExtractFilePath(ParamStr(0)), 'js'),
+    'mon-script.js');
 
   Result := Format(
     '<!DOCTYPE html>' +
@@ -1000,6 +1017,8 @@ begin
     '  <h1>Page avec JS local</h1>' +
     '</body>' +
     '</html>',
+    // Les URL file:// utilisent toujours '/' : on convertit les éventuels
+    // backslashes (présents sur Windows) avant d'injecter dans l'URL.
     [StringReplace(CheminJS, '\', '/', [rfReplaceAll])]
   );
 end;
@@ -1042,13 +1061,24 @@ procedure TServeurLocal.TraiterRequete(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo;
   AResponseInfo: TIdHTTPResponseInfo);
 var
-  CheminFichier, Contenu: string;
+  RacineWeb, CheminFichier: string;
 begin
-  // Servir des fichiers locaux
-  CheminFichier := TPath.Combine(
-    ExtractFilePath(ParamStr(0)),
-    'web' + ARequestInfo.Document
-  );
+  // ⚠ ATTENTION SÉCURITÉ : ARequestInfo.Document est contrôlé par le
+  // client. Une requête comme « /../../Windows/System32/config/SAM »
+  // (path traversal) permettrait de lire n'importe quel fichier du
+  // disque si on concatène naïvement. On résout donc le chemin complet
+  // puis on vérifie qu'il reste bien sous la racine /web/.
+  RacineWeb := IncludeTrailingPathDelimiter(
+    TPath.Combine(ExtractFilePath(ParamStr(0)), 'web'));
+
+  CheminFichier := TPath.GetFullPath(RacineWeb + ARequestInfo.Document);
+
+  if not CheminFichier.StartsWith(RacineWeb, True) then
+  begin
+    AResponseInfo.ResponseNo := 403;
+    AResponseInfo.ContentText := 'Accès interdit';
+    Exit;
+  end;
 
   if FileExists(CheminFichier) then
   begin
@@ -1139,12 +1169,14 @@ var
   JSONValue: TJSONValue;
 begin
   Result := False;
-
   try
     JSONValue := TJSONObject.ParseJSONValue(Message);
-    if JSONValue <> nil then
-    begin
-      Result := True;
+    // try..finally pour garantir la libération même si une exception
+    // survient entre l'évaluation de Result et le Free. TJSONValue.Free
+    // est sûr sur nil (méthode héritée de TObject.Free).
+    try
+      Result := JSONValue <> nil;
+    finally
       JSONValue.Free;
     end;
   except
@@ -1263,11 +1295,21 @@ end;
 
 ### DevTools embarqué
 
+Les DevTools de WebView2 ne s'ouvrent **pas** via une fonction JavaScript (`window.chrome.webview` n'expose pas `openDevToolsWindow` côté script). Il faut passer par l'API native :
+
 ```pascal
+procedure TForm1.FormCreate(Sender: TObject);  
+begin  
+  // 1) Autoriser l'accès aux DevTools dans les paramètres du WebView
+  //    (active aussi le raccourci F12 et le clic-droit « Inspecter »).
+  EdgeBrowser1.Settings.AreDevToolsEnabled := True;
+end;
+
 procedure TForm1.ButtonDevToolsClick(Sender: TObject);  
 begin  
-  // Ouvrir les DevTools de Edge
-  EdgeBrowser1.ExecuteScript('window.chrome.webview.openDevToolsWindow();', nil);
+  // 2) Ouvrir programmatiquement les DevTools via l'interface ICoreWebView2.
+  if Assigned(EdgeBrowser1.DefaultInterface) then
+    EdgeBrowser1.DefaultInterface.OpenDevToolsWindow;
 end;
 ```
 
@@ -1347,8 +1389,13 @@ begin
     case VarType(Parametres[I]) of
       varString, varUString:
         Params := Params + '"' + VarToStr(Parametres[I]) + '"';
-      varInteger, varInt64, varDouble:
+      varInteger, varInt64:
         Params := Params + VarToStr(Parametres[I]);
+      // ⚠ Pour les Double, on force le séparateur décimal '.' (Invariant)
+      // sinon en locale FR on obtient '3,14' qui casse l'appel JavaScript.
+      varDouble:
+        Params := Params + FloatToStr(Parametres[I],
+          TFormatSettings.Invariant);
       varBoolean:
         if Parametres[I] then
           Params := Params + 'true'
@@ -1418,4 +1465,4 @@ L'intégration de JavaScript via WebView ouvre un monde de possibilités.
 
 L'intégration JavaScript via WebView est parfaite pour ajouter des visualisations avancées, des éditeurs de code, des cartes interactives ou toute fonctionnalité où JavaScript excelle, tout en gardant la logique métier et les données dans Delphi.
 
-⏭️ [Applications mobiles avec Delphi](/14-utilisation-dapi-et-bibliotheques-externes/10-creer-dll-bibliotheques-partagees.md)
+⏭️ [Créer ses propres DLL et bibliothèques partagées](/14-utilisation-dapi-et-bibliotheques-externes/10-creer-dll-bibliotheques-partagees.md)

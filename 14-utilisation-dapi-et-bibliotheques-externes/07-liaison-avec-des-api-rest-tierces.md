@@ -100,16 +100,18 @@ begin
   end;
 end;
 
-// Alternative avec TURLBuilder (plus propre)
+// Alternative avec TURI (plus propre, gère l'encodage des paramètres)
 function RechercherUtilisateursV2(const Nom: string; Age: Integer): string;  
 var  
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   URL: TURI;
 begin
+  // TURI vient de l'unité System.Net.URLClient.
   URL := TURI.Create('https://api.example.com/users');
 
-  // Ajouter les paramètres
+  // Ajouter les paramètres (TURI URL-encode automatiquement les valeurs
+  // lors du ToString final, contrairement à la concaténation manuelle).
   URL := URL.AddParameter('name', Nom);
   URL := URL.AddParameter('age', IntToStr(Age));
 
@@ -245,6 +247,7 @@ var
   Headers: TNetHeaders;
   URL: string;
 begin
+  Result := False;
   URL := Format('https://api.example.com/users/%d', [UserID]);
 
   JSONRequest := TJSONObject.Create;
@@ -635,8 +638,10 @@ var
 begin
   Value := JSONObject.GetValue(Key);
 
+  // TJSONValue.Value est protégé : on passe par AsType<string>
+  // pour récupérer la valeur brute, sans guillemets.
   if (Value <> nil) and not (Value is TJSONNull) then
-    Result := Value.Value
+    Result := Value.AsType<string>
   else
     Result := Default;
 end;
@@ -696,6 +701,24 @@ end;
 
 ### Pagination par numéro de page
 
+> **Note :** les exemples suivants s'appuient sur une petite fonction utilitaire `FaireRequeteGET` qui encapsule un appel GET basique. Sa définition (à placer une seule fois dans votre unité) :  
+>  
+> ```pascal  
+> function FaireRequeteGET(const URL: string): string;  
+> var  
+>   HttpClient: THTTPClient;  
+>   Response: IHTTPResponse;  
+> begin  
+>   HttpClient := THTTPClient.Create;  
+>   try  
+>     Response := HttpClient.Get(URL);  
+>     Result := Response.ContentAsString;  
+>   finally  
+>     HttpClient.Free;  
+>   end;  
+> end;  
+> ```
+
 ```pascal
 function RecupererPage(NumeroPage, TaillePage: Integer): string;  
 var  
@@ -726,8 +749,11 @@ var
   URL: string;
 begin
   URL := 'https://api.example.com/users';
+  // Les curseurs renvoyés par les API sont souvent encodés en base64
+  // (contiennent '+', '/', '=') : sans URL-encoding ils seraient
+  // mal interprétés par le serveur.
   if Curseur <> '' then
-    URL := URL + '?cursor=' + Curseur;
+    URL := URL + '?cursor=' + TNetEncoding.URL.Encode(Curseur);
 
   HttpClient := THTTPClient.Create;
   try
@@ -770,14 +796,16 @@ end;
 
 ### Filtres simples
 
+> ⚠ **Nota :** dans la section « GET avec paramètres de requête » plus haut, on a déjà défini un `RechercherUtilisateurs(const Nom: string; Age: Integer)`. Pour éviter une collision de signature dans la même unité, on nomme ici la fonction `RechercherParStatut`.
+
 ```pascal
-function RechercherUtilisateurs(const Criteres: string): string;  
+function RechercherParStatut(const Statut: string): string;  
 var  
   URL: string;
 begin
   // Filtrer par critère
   URL := Format('https://api.example.com/users?status=%s',
-    [TNetEncoding.URL.Encode(Criteres)]);
+    [TNetEncoding.URL.Encode(Statut)]);
 
   Result := FaireRequeteGET(URL);
 end;
@@ -787,7 +815,7 @@ procedure TForm1.ButtonRechercherClick(Sender: TObject);
 var  
   Resultat: string;
 begin
-  Resultat := RechercherUtilisateurs('active');
+  Resultat := RechercherParStatut('active');
   Memo1.Lines.Text := Resultat;
 end;
 ```
@@ -885,28 +913,43 @@ end;
 ```pascal
 procedure TraiterErreurAPI(Response: IHTTPResponse);  
 var  
+  JSONValue: TJSONValue;
   JSONError: TJSONObject;
   ErrorCode, Message, Details: string;
 begin
-  if Response.StatusCode >= 400 then
-  begin
-    try
-      JSONError := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONObject;
-      try
-        ErrorCode := JSONError.GetValue<string>('error_code');
-        Message := JSONError.GetValue<string>('message');
-        Details := JSONError.GetValue<string>('details');
+  if Response.StatusCode < 400 then
+    Exit;
 
-        raise TAPIException.Create(Response.StatusCode, ErrorCode, Message, Details);
-      finally
-        JSONError.Free;
-      end;
-    except
-      on E: Exception do
-        raise TAPIException.Create(Response.StatusCode, '',
-          'Erreur API', Response.ContentAsString);
+  // On tente de parser la réponse JSON. Si le parsing échoue (corps
+  // non JSON, champs manquants…), on lève une exception générique.
+  // ATTENTION : on ne place pas le « raise TAPIException » à l'intérieur
+  // d'un try..except qui rattrape Exception, sinon notre exception bien
+  // formée serait remplacée par la version générique du bloc except.
+  JSONValue := nil;
+  ErrorCode := '';
+  Message := '';
+  Details := '';
+
+  try
+    JSONValue := TJSONObject.ParseJSONValue(Response.ContentAsString);
+    if JSONValue is TJSONObject then
+    begin
+      JSONError := TJSONObject(JSONValue);
+      ErrorCode := ObtenirValeurOuDefaut(JSONError, 'error_code', '');
+      Message   := ObtenirValeurOuDefaut(JSONError, 'message', '');
+      Details   := ObtenirValeurOuDefaut(JSONError, 'details', '');
     end;
+  finally
+    JSONValue.Free;
   end;
+
+  if Message = '' then
+    Message := 'Erreur API';
+
+  if Details = '' then
+    Details := Response.ContentAsString;
+
+  raise TAPIException.Create(Response.StatusCode, ErrorCode, Message, Details);
 end;
 ```
 
@@ -1128,11 +1171,34 @@ procedure TWebHookServer.TraiterWebHook(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo;
   AResponseInfo: TIdHTTPResponseInfo);
 var
+  JSONValue: TJSONValue;
   JSONData: TJSONObject;
-  EventType, Data: string;
+  EventType, Data, Payload: string;
+  Reader: TStreamReader;
 begin
-  // Lire le JSON du webhook
-  JSONData := TJSONObject.ParseJSONValue(ARequestInfo.PostStream) as TJSONObject;
+  // ParseJSONValue n'accepte pas directement un TStream :
+  // on lit le contenu du flux POST dans une chaîne au préalable.
+  ARequestInfo.PostStream.Position := 0;
+  Reader := TStreamReader.Create(ARequestInfo.PostStream, TEncoding.UTF8);
+  try
+    Payload := Reader.ReadToEnd;
+  finally
+    Reader.Free;
+  end;
+
+  // Garde-fou : si le payload n'est pas un objet JSON valide, on répond
+  // 400 plutôt que de laisser une exception remonter (ce qui ferait
+  // crasher le thread du serveur HTTP).
+  JSONValue := TJSONObject.ParseJSONValue(Payload);
+  if not (JSONValue is TJSONObject) then
+  begin
+    JSONValue.Free;
+    AResponseInfo.ResponseNo := 400;
+    AResponseInfo.ContentText := '{"error":"Invalid JSON payload"}';
+    Exit;
+  end;
+
+  JSONData := TJSONObject(JSONValue);
   try
     EventType := JSONData.GetValue<string>('event');
     Data := JSONData.GetValue<string>('data');
@@ -1162,15 +1228,35 @@ Les WebHooks signés garantissent l'authenticité :
 uses
   System.Hash, System.NetEncoding;
 
+function ComparaisonConstante(const A, B: string): Boolean;  
+var  
+  I, Diff: Integer;
+begin
+  // Comparaison à temps constant : on parcourt TOUJOURS la chaîne entière,
+  // peu importe les différences trouvées. Cela empêche un attaquant de
+  // deviner la signature caractère par caractère en mesurant le temps
+  // de réponse (timing attack classique sur SameText / '=').
+  if Length(A) <> Length(B) then
+    Exit(False);
+
+  Diff := 0;
+  for I := 1 to Length(A) do
+    Diff := Diff or (Ord(A[I]) xor Ord(B[I]));
+  Result := Diff = 0;
+end;
+
 function VerifierSignatureWebHook(const Payload, Signature, Secret: string): Boolean;  
 var  
   HashCalcule: string;
 begin
-  // Calculer HMAC-SHA256
-  HashCalcule := THashSHA2.GetHMACAsString(Payload, Secret, SHA256);
+  // Calculer HMAC-SHA256 (retourne directement la chaîne hexadécimale)
+  HashCalcule := THashSHA2.GetHMAC(Payload, Secret, SHA256);
 
-  // Comparer avec la signature reçue
-  Result := SameText(HashCalcule, Signature);
+  // ⚠ Important pour la sécurité : on N'utilise PAS SameText / `=` qui
+  // sortent à la première différence trouvée. Avec une comparaison
+  // « courte-circuit », un attaquant peut mesurer le temps de réponse
+  // et reconstruire la signature attendue caractère par caractère.
+  Result := ComparaisonConstante(LowerCase(HashCalcule), LowerCase(Signature));
 end;
 
 procedure TraiterWebHookSecurise(ARequestInfo: TIdHTTPRequestInfo;

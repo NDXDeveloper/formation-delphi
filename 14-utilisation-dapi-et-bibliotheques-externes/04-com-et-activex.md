@@ -405,7 +405,9 @@ begin
     // Créer un nouveau message
     Mail := Outlook.CreateItem(0);  // 0 = olMailItem
 
-    Mail.To := Destinataire;
+    // 'To' est un mot réservé Pascal : on le préfixe avec '&'
+    // pour qu'il soit interprété comme un identifiant.
+    Mail.&To := Destinataire;
     Mail.Subject := Sujet;
     Mail.Body := Corps;
 
@@ -446,7 +448,10 @@ begin
 
     Appointment.Subject := 'Réunion importante';
     Appointment.Location := 'Salle de conférence';
-    Appointment.Start := EncodeDate(2024, 12, 15) + EncodeTime(14, 30, 0, 0);
+    // Programmer le rendez-vous pour dans 7 jours à 14h30
+    // (date relative à Now : reste toujours dans le futur quel que soit
+    // le moment où l'exemple est exécuté).
+    Appointment.Start := Trunc(Now) + 7 + EncodeTime(14, 30, 0, 0);
     Appointment.Duration := 60;  // minutes
     Appointment.Body := 'Discussion sur le nouveau projet';
     Appointment.ReminderSet := True;
@@ -475,6 +480,8 @@ Pour utiliser un contrôle ActiveX dans Delphi :
 Delphi génère automatiquement une unité Delphi qui encapsule le contrôle ActiveX.
 
 ### Exemple : WebBrowser (Internet Explorer)
+
+> ⚠ **Composant historique.** Le contrôle `TWebBrowser` (SHDocVw) s'appuie sur le moteur d'Internet Explorer, dont le support est terminé depuis juin 2022. Il reste utile à des fins pédagogiques pour illustrer l'intégration ActiveX, mais pour tout nouveau projet préférez `TEdgeBrowser` (chapitre 14.9) qui repose sur Microsoft Edge / WebView2 et sait afficher correctement le web moderne (JavaScript ES2020+, CSS récent, etc.).
 
 ```pascal
 uses
@@ -537,7 +544,6 @@ end;
 procedure RemplirPageHTML;  
 var  
   Document: IHTMLDocument2;
-  Body: IHTMLElement;
 begin
   // Attendre que le document soit chargé
   WebBrowser1.Navigate('about:blank');
@@ -683,6 +689,12 @@ begin
       if Result then
         ShowMessage('Document ouvert avec succès');
     finally
+      // Important : Excel := Unassigned libère la référence Delphi
+      // mais ne ferme PAS Excel.exe. Sans Excel.Quit, le processus
+      // reste en mémoire comme « fantôme » (visible dans le
+      // gestionnaire des tâches). Voir la section « Éviter les fuites
+      // mémoire » juste après.
+      Excel.Quit;
       Excel := Unassigned;
     end;
   except
@@ -812,7 +824,7 @@ end;
 ```pascal
 procedure FusionnerDocumentsWord(Fichiers: TStringList; Sortie: string);  
 var  
-  Word, DocPrincipal, DocSource: OleVariant;
+  Word, DocPrincipal: OleVariant;
   I: Integer;
 begin
   if Fichiers.Count = 0 then Exit;
@@ -859,7 +871,6 @@ procedure LireTextePDF(const Fichier: string);
 var  
   AcroApp, AcroDoc, Page: OleVariant;
   I, NumPages: Integer;
-  Texte: string;
 begin
   try
     AcroApp := CreateOleObject('AcroExch.App');
@@ -872,7 +883,8 @@ begin
       for I := 0 to NumPages - 1 do
       begin
         Page := AcroDoc.AcquirePage(I);
-        // Extraction du texte (nécessite des objets supplémentaires)
+        // Extraction du texte (nécessite des objets supplémentaires
+        // type AcroExch.PDPage / AcroExch.HiliteList non montrés ici)
         // Code simplifié ici
       end;
 
@@ -974,6 +986,11 @@ begin
     try
       Result := Excel.Version;
     finally
+      // On lance et on quitte Excel juste pour lire la version :
+      // sans Excel.Quit, le processus reste en mémoire (cas typique
+      // de fuite COM, dénoncé plus haut dans « Éviter les fuites
+      // mémoire »).
+      Excel.Quit;
       Excel := Unassigned;
     end;
   except
@@ -1010,16 +1027,24 @@ end;
 
 ```pascal
 procedure LogErreurCOM(const Operation: string; E: Exception);  
-begin  
-  with TStringList.Create do
+var  
+  Log: TStringList;
+begin
+  Log := TStringList.Create;
   try
-    Add(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
-    Add('Opération: ' + Operation);
-    Add('Erreur: ' + E.Message);
-    Add('------');
-    SaveToFile('com_errors.log');
+    // Important : charger le contenu existant avant d'ajouter, sinon
+    // SaveToFile écraserait toutes les erreurs déjà loggées.
+    if FileExists('com_errors.log') then
+      Log.LoadFromFile('com_errors.log');
+
+    Log.Add(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+    Log.Add('Opération: ' + Operation);
+    Log.Add('Erreur: ' + E.Message);
+    Log.Add('------');
+
+    Log.SaveToFile('com_errors.log');
   finally
-    Free;
+    Log.Free;
   end;
 end;
 ```
