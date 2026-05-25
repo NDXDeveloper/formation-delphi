@@ -266,6 +266,18 @@ end.
 - ❌ Pas de types complexes
 - ❌ Pas de validation de schéma
 
+> ⚡ **`TIniFile` vs `TMemIniFile`** : la classe `TIniFile` (utilisée ci-dessus) appelle directement les API Windows `GetPrivateProfileXxx` / `WritePrivateProfileXxx` à chaque lecture/écriture — pratique mais lent pour des fichiers volumineux. La classe `TMemIniFile` (même API publique) charge tout le fichier en mémoire à la création et n'écrit sur disque qu'au moment où vous appelez `UpdateFile`. Pour une configuration lue de nombreuses fois pendant l'exécution, **préférez `TMemIniFile`** :  
+>  
+> ```pascal  
+> uses System.IniFiles;
+> // ...
+> FIniFile := TMemIniFile.Create(FConfigFile);  // tout charger
+> // ... beaucoup de lectures/écritures rapides ...
+> FIniFile.UpdateFile;  // flush sur disque, à appeler explicitement
+> ```  
+>  
+> `TMemIniFile` est aussi indispensable pour les fichiers INI partagés via le réseau (un seul write disque au lieu de N).
+
 ### Format JSON
 
 JSON est moderne, structuré et largement utilisé.
@@ -369,13 +381,22 @@ end;
 procedure TAppConfig.LoadConfig;  
 var  
   JsonString: string;
+  ParsedValue: TJSONValue;
 begin
+  FJsonObject := nil;
   if TFile.Exists(FConfigFile) then
   begin
     JsonString := TFile.ReadAllText(FConfigFile, TEncoding.UTF8);
-    FJsonObject := TJSONObject.ParseJSONValue(JsonString) as TJSONObject;
-  end
-  else
+    // ParseJSONValue retourne nil sur JSON invalide. On vérifie le type
+    // avant de cast en TJSONObject sinon on aurait un nil silencieux.
+    ParsedValue := TJSONObject.ParseJSONValue(JsonString);
+    if ParsedValue is TJSONObject then
+      FJsonObject := TJSONObject(ParsedValue)
+    else
+      ParsedValue.Free; // pas un objet → on jette
+  end;
+
+  if FJsonObject = nil then
     FJsonObject := TJSONObject.Create;
 end;
 
@@ -389,27 +410,31 @@ end;
 
 function TAppConfig.GetDatabaseConfig: TDatabaseConfig;  
 var  
-  DbObject: TJSONObject;
+  DbObject, OptionsObject: TJSONObject;
 begin
+  // Valeurs par défaut systématiques (au cas où une section serait absente)
+  Result.Server := 'localhost';
+  Result.Port := 3306;
+  Result.Database := '';
+  Result.Username := '';
+  Result.Password := '';
+  Result.Timeout := 30;
+
   DbObject := FJsonObject.GetValue<TJSONObject>('database');
-  if Assigned(DbObject) then
-  begin
-    Result.Server := DbObject.GetValue<string>('server', 'localhost');
-    Result.Port := DbObject.GetValue<Integer>('port', 3306);
-    Result.Database := DbObject.GetValue<string>('database', '');
-    Result.Username := DbObject.GetValue<string>('username', '');
-    Result.Password := DbObject.GetValue<string>('password', '');
-    Result.Timeout := DbObject.GetValue<TJSONObject>('options').GetValue<Integer>('timeout', 30);
-  end
-  else
-  begin
-    Result.Server := 'localhost';
-    Result.Port := 3306;
-    Result.Database := '';
-    Result.Username := '';
-    Result.Password := '';
-    Result.Timeout := 30;
-  end;
+  if not Assigned(DbObject) then
+    Exit;
+
+  Result.Server := DbObject.GetValue<string>('server', Result.Server);
+  Result.Port := DbObject.GetValue<Integer>('port', Result.Port);
+  Result.Database := DbObject.GetValue<string>('database', Result.Database);
+  Result.Username := DbObject.GetValue<string>('username', Result.Username);
+  Result.Password := DbObject.GetValue<string>('password', Result.Password);
+
+  // ⚠ Sous-objet `options` optionnel : on teste son existence avant d'appeler
+  //   GetValue dessus, sinon Access Violation si l'option est absente.
+  OptionsObject := DbObject.GetValue<TJSONObject>('options');
+  if Assigned(OptionsObject) then
+    Result.Timeout := OptionsObject.GetValue<Integer>('timeout', Result.Timeout);
 end;
 
 function TAppConfig.GetLanguage: string;  
@@ -725,17 +750,18 @@ end;
 **Inconvénients :**
 - Peut nécessiter des droits admin pour créer
 
-### 3. Dans le dossier utilisateur
+### 3. Dans le dossier utilisateur (Roaming)
 
 Windows : `C:\Users\[Utilisateur]\AppData\Roaming\MonApplication\`
 
 ```pascal
 function GetUserConfigPath: string;  
 begin  
+  // ⚠ Sur Windows, TPath.GetHomePath retourne directement %APPDATA%
+  //   (= C:\Users\[User]\AppData\Roaming), il NE FAUT PAS y rajouter
+  //   "AppData\Roaming" sinon on duplique le segment.
   Result := TPath.Combine(
-    TPath.GetHomePath,  // C:\Users\[User]
-    'AppData',
-    'Roaming',
+    TPath.GetHomePath,   // Windows: %APPDATA%, macOS/Linux: $HOME
     'MonApplication',
     'user.ini'
   );
@@ -757,13 +783,22 @@ Windows : `C:\Users\[Utilisateur]\AppData\Local\MonApplication\`
 ```pascal
 function GetLocalConfigPath: string;  
 begin  
+  // Sur Windows, on utilise la variable d'environnement LOCALAPPDATA
+  // (TPath.GetHomePath donne Roaming, pas Local).
+  {$IFDEF MSWINDOWS}
   Result := TPath.Combine(
-    TPath.GetHomePath,
-    'AppData',
-    'Local',
+    GetEnvironmentVariable('LOCALAPPDATA'),  // C:\Users\[User]\AppData\Local
     'MonApplication',
     'cache.ini'
   );
+  {$ELSE}
+  // Sur macOS/Linux, on retombe sur le dossier home.
+  Result := TPath.Combine(
+    TPath.GetHomePath,
+    '.MonApplication',
+    'cache.ini'
+  );
+  {$ENDIF}
 end;
 ```
 
@@ -811,10 +846,9 @@ end;
 
 class function TAppPaths.GetUserConfigFile: string;  
 begin  
+  // TPath.GetHomePath pointe déjà sur %APPDATA% (Roaming) sous Windows.
   Result := TPath.Combine(
     TPath.GetHomePath,
-    'AppData',
-    'Roaming',
     FAppName,
     'user.ini'
   );
@@ -824,7 +858,7 @@ end;
 class function TAppPaths.GetDataFolder: string;  
 begin  
   Result := TPath.Combine(
-    TPath.GetPublicPath,
+    TPath.GetPublicPath,   // Windows: C:\ProgramData
     FAppName,
     'Data'
   );
@@ -833,13 +867,21 @@ end;
 
 class function TAppPaths.GetLogFolder: string;  
 begin  
+  // Logs locaux à la machine → %LOCALAPPDATA% sur Windows
+  // (pas de roaming réseau pour les logs : ils peuvent être volumineux).
+  {$IFDEF MSWINDOWS}
   Result := TPath.Combine(
-    TPath.GetHomePath,
-    'AppData',
-    'Local',
+    GetEnvironmentVariable('LOCALAPPDATA'),
     FAppName,
     'Logs'
   );
+  {$ELSE}
+  Result := TPath.Combine(
+    TPath.GetHomePath,
+    '.' + FAppName,
+    'Logs'
+  );
+  {$ENDIF}
   EnsureFolderExists(Result);
 end;
 
@@ -1043,30 +1085,38 @@ begin
   inherited;
 end;
 
-procedure THierarchicalConfig.LoadConfigs;  
-var  
+procedure THierarchicalConfig.LoadConfigs;
+
+  function ParseJsonFile(const FileName: string): TJSONObject;
+  var
+    JsonString: string;
+    Parsed: TJSONValue;
+  begin
+    Result := nil;
+    if not TFile.Exists(FileName) then Exit;
+
+    JsonString := TFile.ReadAllText(FileName, TEncoding.UTF8);
+    // ParseJSONValue retourne nil sur JSON invalide ; on filtre aussi
+    // les autres types (array, scalar) qui ne sont pas un TJSONObject.
+    Parsed := TJSONObject.ParseJSONValue(JsonString);
+    if Parsed is TJSONObject then
+      Result := TJSONObject(Parsed)
+    else
+      Parsed.Free;  // pas un objet → on libère
+  end;
+
+var
   DefaultFile, LocalFile: string;
-  JsonString: string;
 begin
   DefaultFile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.default.json');
-  LocalFile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.local.json');
+  LocalFile   := TPath.Combine(ExtractFilePath(ParamStr(0)), 'config.local.json');
 
-  // Charger config par défaut
-  if TFile.Exists(DefaultFile) then
-  begin
-    JsonString := TFile.ReadAllText(DefaultFile, TEncoding.UTF8);
-    FDefaultConfig := TJSONObject.ParseJSONValue(JsonString) as TJSONObject;
-  end
-  else
+  FDefaultConfig := ParseJsonFile(DefaultFile);
+  if FDefaultConfig = nil then
     FDefaultConfig := TJSONObject.Create;
 
-  // Charger config locale (override)
-  if TFile.Exists(LocalFile) then
-  begin
-    JsonString := TFile.ReadAllText(LocalFile, TEncoding.UTF8);
-    FLocalConfig := TJSONObject.ParseJSONValue(JsonString) as TJSONObject;
-  end
-  else
+  FLocalConfig := ParseJsonFile(LocalFile);
+  if FLocalConfig = nil then
     FLocalConfig := TJSONObject.Create;
 end;
 
@@ -1299,6 +1349,57 @@ begin
     Result := Config.GetString('database.password');
 end;
 ```
+
+### Technique 4 : Coffres-forts cloud (Vaults)
+
+Pour les déploiements professionnels modernes (Kubernetes, conteneurs, cloud), les secrets sont stockés dans des coffres-forts dédiés :
+
+| Solution | Fournisseur | Cas d'usage |
+|---|---|---|
+| **HashiCorp Vault** | Open source / HashiCorp | Multi-cloud, on-premise |
+| **Azure Key Vault** | Microsoft Azure | Applications Azure |
+| **AWS Secrets Manager** | Amazon Web Services | Applications AWS |
+| **Google Secret Manager** | Google Cloud | Applications GCP |
+| **Doppler / Infisical** | SaaS | Petites équipes, multi-env |
+
+**Principe** : votre application interroge le coffre via une API REST (souvent via JWT/OAuth2) et récupère le secret à la demande. **Aucun secret n'est stocké sur disque ni dans Git.**
+
+```pascal
+// Exemple conceptuel : récupération d'un secret depuis HashiCorp Vault
+function GetSecretFromVault(const SecretPath: string): string;  
+var  
+  Client: TRESTClient;
+  Request: TRESTRequest;
+  Response: TRESTResponse;
+  VaultToken: string;
+begin
+  VaultToken := GetEnvironmentVariable('VAULT_TOKEN'); // injecté par le déployeur
+  Client := TRESTClient.Create('https://vault.company.com:8200');
+  try
+    Request := TRESTRequest.Create(nil);
+    Response := TRESTResponse.Create(nil);
+    try
+      Request.Client := Client;
+      Request.Response := Response;
+      Request.Resource := 'v1/secret/data/' + SecretPath;
+      Request.AddParameter('X-Vault-Token', VaultToken, pkHTTPHEADER);
+      Request.Execute;
+      Result := Response.JSONValue.GetValue<string>('data.data.value');
+    finally
+      Response.Free;
+      Request.Free;
+    end;
+  finally
+    Client.Free;
+  end;
+end;
+```
+
+**Avantages** :
+- Rotation automatique des secrets
+- Audit complet (qui a lu quoi, quand)
+- Révocation immédiate possible
+- Pas de secret dans le code ni les fichiers
 
 ### Bonnes pratiques de sécurité
 
@@ -1642,10 +1743,9 @@ implementation
 constructor TUserPreferences.Create;  
 begin  
   inherited;
+  // TPath.GetHomePath = %APPDATA% sous Windows (Roaming).
   FConfigFile := TPath.Combine(
     TPath.GetHomePath,
-    'AppData',
-    'Roaming',
     'MonApplication',
     'user.ini'
   );
@@ -1743,14 +1843,16 @@ begin
 end;
 
 procedure TUserPreferences.AddRecentFile(const FileName: string);  
-var  
+const  
+  MAX_RECENT_FILES = 10;
+var
   RecentFiles: TArray<string>;
-  I, Count: Integer;
+  I: Integer;
 begin
   // Charger les fichiers existants
   RecentFiles := GetRecentFiles;
 
-  // Supprimer si déjà présent
+  // Supprimer si déjà présent (pour le repositionner en tête)
   for I := High(RecentFiles) downto 0 do
   begin
     if SameText(RecentFiles[I], FileName) then
@@ -1760,15 +1862,12 @@ begin
     end;
   end;
 
-  // Ajouter en première position
-  SetLength(RecentFiles, Length(RecentFiles) + 1);
-  for I := High(RecentFiles) downto 1 do
-    RecentFiles[I] := RecentFiles[I - 1];
-  RecentFiles[0] := FileName;
+  // Ajouter en première position via Insert (équivalent au décalage manuel)
+  Insert([FileName], RecentFiles, 0);
 
-  // Limiter à 10 fichiers
-  if Length(RecentFiles) > 10 then
-    SetLength(RecentFiles, 10);
+  // Limiter à N fichiers
+  if Length(RecentFiles) > MAX_RECENT_FILES then
+    SetLength(RecentFiles, MAX_RECENT_FILES);
 
   // Sauvegarder
   FIniFile.EraseSection('RecentFiles');

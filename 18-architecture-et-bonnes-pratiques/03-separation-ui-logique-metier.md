@@ -221,7 +221,11 @@ type
   public
     class function CalculerSousTotal(PrixUnitaire, Quantite: Double): Double;
     class function AppliquerRemise(Montant, PourcentageRemise: Double): Double;
-    class function CalculerTVA(MontantHT, TauxTVA: Double): Double;
+    // ⚠ Note de nommage : `AjouterTVA` retourne le montant TTC (HT + TVA),
+    //   pas la TVA seule. Le nom traduit l'action « j'ajoute la TVA à ce
+    //   montant HT et je te rends le TTC ». Pour avoir la TVA seule,
+    //   faire `MontantHT * TauxTVA / 100`.
+    class function AjouterTVA(MontantHT, TauxTVA: Double): Double;
     class function CalculerTotal(PrixUnitaire, Quantite, Remise, TauxTVA: Double): Double;
   end;
 
@@ -237,7 +241,7 @@ begin
   Result := Montant - (Montant * PourcentageRemise / 100);
 end;
 
-class function TCalculateurFacture.CalculerTVA(MontantHT, TauxTVA: Double): Double;  
+class function TCalculateurFacture.AjouterTVA(MontantHT, TauxTVA: Double): Double;  
 begin  
   Result := MontantHT * (1 + TauxTVA / 100);
 end;
@@ -248,7 +252,7 @@ var
 begin
   SousTotal := CalculerSousTotal(PrixUnitaire, Quantite);
   AvecRemise := AppliquerRemise(SousTotal, Remise);
-  Result := CalculerTVA(AvecRemise, TauxTVA);
+  Result := AjouterTVA(AvecRemise, TauxTVA);
 end;
 
 end.
@@ -784,46 +788,44 @@ begin
 end;
 
 function TCommandeService.ChargerCommande(const NumeroCommande: string): TCommande;  
-begin  
-  // Chargement depuis la base de données
+var  
+  Query: TFDQuery;
+begin
   Result := nil;
+  Query := dmMain.QueryCommande;
 
-  with dmMain.QueryCommande do
+  Query.Close;
+  Query.SQL.Text := 'SELECT * FROM commandes WHERE numero = :numero';
+  Query.ParamByName('numero').AsString := NumeroCommande;
+  Query.Open;
+
+  if not Query.Eof then
   begin
-    Close;
-    SQL.Text := 'SELECT * FROM commandes WHERE numero = :numero';
-    ParamByName('numero').AsString := NumeroCommande;
-    Open;
+    Result := TCommande.Create(
+      Query.FieldByName('numero').AsString,
+      Query.FieldByName('client').AsString
+    );
 
-    if not Eof then
-    begin
-      Result := TCommande.Create(
-        FieldByName('numero').AsString,
-        FieldByName('client').AsString
-      );
-
-      // Charger les lignes, etc.
-      // ...
-    end;
+    // Charger les lignes, etc.
+    // ...
   end;
 end;
 
 function TCommandeService.SauvegarderCommande(Commande: TCommande): Boolean;  
-begin  
+var  
+  Query: TFDQuery;
+begin
   Result := False;
-
+  Query := dmMain.QueryCommande;
   try
-    with dmMain.QueryCommande do
-    begin
-      Close;
-      SQL.Text := 'INSERT INTO commandes (numero, client, statut, date_creation) ' +
-                  'VALUES (:numero, :client, :statut, :date_creation)';
-      ParamByName('numero').AsString := Commande.Numero;
-      ParamByName('client').AsString := Commande.Client;
-      ParamByName('statut').AsInteger := Ord(Commande.Statut);
-      ParamByName('date_creation').AsDateTime := Commande.DateCreation;
-      ExecSQL;
-    end;
+    Query.Close;
+    Query.SQL.Text := 'INSERT INTO commandes (numero, client, statut, date_creation) ' +
+                      'VALUES (:numero, :client, :statut, :date_creation)';
+    Query.ParamByName('numero').AsString := Commande.Numero;
+    Query.ParamByName('client').AsString := Commande.Client;
+    Query.ParamByName('statut').AsInteger := Ord(Commande.Statut);
+    Query.ParamByName('date_creation').AsDateTime := Commande.DateCreation;
+    Query.ExecSQL;
 
     // Sauvegarder les lignes
     // ...
@@ -881,23 +883,22 @@ begin
 end;
 
 function TCommandeService.RechercherCommandes(const CritereRecherche: string): TObjectList<TCommande>;  
-begin  
+var  
+  Query: TFDQuery;
+begin
   Result := TObjectList<TCommande>.Create(True);
+  Query := dmMain.QueryCommande;
 
-  // Recherche en base de données
-  with dmMain.QueryCommande do
+  Query.Close;
+  Query.SQL.Text := 'SELECT * FROM commandes WHERE client LIKE :critere OR numero LIKE :critere';
+  Query.ParamByName('critere').AsString := '%' + CritereRecherche + '%';
+  Query.Open;
+
+  while not Query.Eof do
   begin
-    Close;
-    SQL.Text := 'SELECT * FROM commandes WHERE client LIKE :critere OR numero LIKE :critere';
-    ParamByName('critere').AsString := '%' + CritereRecherche + '%';
-    Open;
-
-    while not Eof do
-    begin
-      // Créer et ajouter les commandes
-      // ...
-      Next;
-    end;
+    // Créer et ajouter les commandes
+    // ...
+    Query.Next;
   end;
 end;
 
@@ -996,15 +997,15 @@ begin
 end;
 
 class function TClientValidator.ValiderEmail(const Email: string): TValidationResult;  
-var  
-  EmailRegex: TRegEx;
+const  
+  EMAIL_PATTERN = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
 begin
   if Trim(Email) = '' then
     Exit(TValidationResult.Failure('L''email est obligatoire'));
 
-  EmailRegex := TRegEx.Create('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-
-  if not EmailRegex.IsMatch(Email) then
+  // TRegEx.IsMatch en version statique : pas d'instanciation explicite,
+  // pattern compilé et caché par la RTL.
+  if not TRegEx.IsMatch(Email, EMAIL_PATTERN) then
     Exit(TValidationResult.Failure('L''email n''est pas valide'));
 
   Result := TValidationResult.Success;
@@ -1499,8 +1500,8 @@ begin
 end;
 
 class function TInscriptionValidator.ValiderEmail(const Email: string; out Erreur: string): Boolean;  
-var  
-  EmailRegex: TRegEx;
+const  
+  EMAIL_PATTERN = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
 begin
   if Trim(Email) = '' then
   begin
@@ -1508,8 +1509,7 @@ begin
     Exit(False);
   end;
 
-  EmailRegex := TRegEx.Create('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-  if not EmailRegex.IsMatch(Email) then
+  if not TRegEx.IsMatch(Email, EMAIL_PATTERN) then
   begin
     Erreur := 'L''email n''est pas valide';
     Exit(False);

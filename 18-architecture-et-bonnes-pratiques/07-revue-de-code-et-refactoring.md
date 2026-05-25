@@ -22,7 +22,7 @@ Le code, c'est pareil. La **revue de code** (code review) et le **refactoring** 
 - Les équipes qui font des revues de code produisent 15% moins de bugs
 
 **Citation célèbre :**
-> "N'importe quel idiot peut écrire du code qu'un ordinateur peut comprendre. Les bons programmeurs écrivent du code que les humains peuvent comprendre."
+> "N'importe quel idiot peut écrire du code qu'un ordinateur peut comprendre. Les bons programmeurs écrivent du code que les humains peuvent comprendre."  
 > — Martin Fowler
 
 ## Partie 1 : La revue de code
@@ -970,9 +970,11 @@ end;
 
 **Le problème :**
 ```pascal
+// ⚠ Note : on évite d'utiliser `Type` comme nom de propriété (mot-clé
+//   réservé). On préfère `Categorie` ou `TypeClient`.
 if (Client.Age >= 18) and (Client.Age <= 65) and
    (Client.Solde > 1000) and (not Client.EstBloque) and
-   ((Client.Type = ctPremium) or (Client.AncienneteAnnees > 5)) then
+   ((Client.Categorie = ctPremium) or (Client.AncienneteAnnees > 5)) then
 begin
   // Autoriser l'opération
 end;
@@ -1005,7 +1007,7 @@ end;
 
 function EstClientFidele(Client: TClient): Boolean;  
 begin  
-  Result := (Client.Type = ctPremium) or (Client.AncienneteAnnees > 5);
+  Result := (Client.Categorie = ctPremium) or (Client.AncienneteAnnees > 5);
 end;
 
 // Utilisation
@@ -1753,7 +1755,7 @@ end;
 
 ### 2. Refactorisez en continu
 
-Ne attendez pas d'avoir 10 000 lignes de dette technique.
+N'attendez pas d'avoir 10 000 lignes de dette technique.
 
 **Mauvaise approche :**
 ```
@@ -1887,13 +1889,13 @@ La revue de code et le refactoring sont deux piliers de la qualité logicielle p
 
 **Citations inspirantes :**
 
-> "Le code est lu 10 fois plus souvent qu'il n'est écrit"
+> "Le code est lu 10 fois plus souvent qu'il n'est écrit"  
 > — Robert C. Martin
 
-> "Tout le monde peut écrire du code qu'un ordinateur comprend. Les bons développeurs écrivent du code que les humains comprennent"
+> "Tout le monde peut écrire du code qu'un ordinateur comprend. Les bons développeurs écrivent du code que les humains comprennent"  
 > — Martin Fowler
 
-> "Rendez-le d'abord fonctionnel, puis rendez-le beau, puis rendez-le rapide (si nécessaire)"
+> "Rendez-le d'abord fonctionnel, puis rendez-le beau, puis rendez-le rapide (si nécessaire)"  
 > — Kent Beck
 
 La revue de code et le refactoring ne sont pas du temps perdu. C'est un investissement qui vous fera gagner énormément de temps à moyen et long terme. Un code de qualité est un plaisir à maintenir. Un code chaotique est un enfer quotidien.

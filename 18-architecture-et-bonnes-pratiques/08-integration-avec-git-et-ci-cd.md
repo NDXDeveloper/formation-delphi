@@ -236,7 +236,7 @@ MSBuild est l'outil de compilation de Microsoft, utilisé par Delphi.
 
 **Localisation :**
 ```
-C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat
+C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat
 ```
 
 **Script de compilation basique :**
@@ -250,7 +250,7 @@ echo Compilation du projet Delphi
 echo ========================================  
 
 REM Charger les variables d'environnement Delphi  
-call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"  
+call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"  
 
 REM Nettoyer les fichiers précédents  
 echo.  
@@ -306,7 +306,7 @@ Alternative à MSBuild, utilisation directe du compilateur.
 @echo off
 REM Compilation avec DCC32
 
-call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
+call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
 
 dcc32 -B ^
   -$D- ^
@@ -355,7 +355,7 @@ echo Plateforme: %BUILD_PLATFORM%
 echo ========================================  
 
 REM Variables d'environnement Delphi  
-call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"  
+call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"  
 if %ERRORLEVEL% NEQ 0 (  
     echo ERREUR: Impossible de charger rsvars.bat
     exit /b 1
@@ -435,7 +435,11 @@ exit /b 0
 
 ## GitHub Actions pour Delphi
 
-GitHub Actions est la solution CI/CD intégrée à GitHub. C'est gratuit pour les projets publics et offre 2000 minutes/mois pour les projets privés.
+GitHub Actions est la solution CI/CD intégrée à GitHub.
+
+**Tarification (compte Free, 2026)** :
+- **Projets publics** : illimité, gratuit.
+- **Projets privés** : quota mensuel de 2000 minutes Linux, mais Windows est compté ×2 et macOS ×10. Pour des builds Delphi (qui tournent sur Windows), cela représente environ **1000 minutes Windows/mois**. Au-delà : ~0,016 USD/min Windows. Pour des projets Delphi actifs, prévoyez soit un **self-hosted runner**, soit un abonnement Team/Enterprise.
 
 ### Structure d'un workflow
 
@@ -492,7 +496,7 @@ jobs:
     # 3. Compiler le projet
     - name: Build Project
       run: |
-        call "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
+        call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
         msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32
       shell: cmd
 
@@ -537,20 +541,15 @@ jobs:
 - Votre machine doit rester allumée
 - Consomme vos ressources
 
-#### Solution 2 : Delphi Community Edition
+#### Solution 2 : Delphi Community Edition (limité)
 
-Si votre projet est éligible (revenus < 5000$), utilisez Community Edition.
+> ⚠ **À jour 2026** : Embarcadero **n'a pas publié de Community Edition** pour Delphi 11, 12 ni 13. La dernière CE disponible est basée sur **Delphi 10.4 Sydney** (2020). Elle ne peut donc PAS compiler du code utilisant les nouveautés de Delphi 13 Florence. Pour la CI/CD d'un projet Delphi 13 moderne, il faut soit une licence payante (Professional/Enterprise/Architect), soit un **self-hosted runner** sur une machine ayant déjà une licence active.
 
-```yaml
-- name: Install Delphi Community
-  run: |
-    # Script pour installer Delphi CE
-    # (à adapter selon votre configuration)
-```
+Si vous travaillez sur un ancien projet compatible 10.4, l'éligibilité historique de la CE était : revenus annuels inférieurs à **5000 USD** par société, équipe d'au maximum 5 développeurs, usage non commercial-only autorisé.
 
 #### Solution 3 : FPC/Lazarus (Free Pascal)
 
-Alternative open source compatible avec beaucoup de code Delphi.
+**Free Pascal Compiler** (FPC) avec l'IDE **Lazarus** est une alternative open source largement compatible avec le code Object Pascal Delphi (VCL → LCL, FireDAC → SQLdb ou ZeosLib, etc.). Idéal pour des projets non-commerciaux, du tooling ou des CI/CD entièrement gratuites.
 
 ```yaml
 - name: Setup Free Pascal
@@ -560,6 +559,8 @@ Alternative open source compatible avec beaucoup de code Delphi.
 - name: Build with FPC
   run: fpc MonProjet.dpr
 ```
+
+**Limites** : LCL (UI) n'est pas 100 % pixel-perfect identique à VCL, certaines unités Embarcadero (`FireDAC.*`, `System.JSON` moderne, LiveBindings) n'existent pas ou ont des équivalents différents. À évaluer projet par projet.
 
 ### Workflow complet avec tests
 
@@ -573,7 +574,7 @@ on:
     branches: [ main ]
 
 env:
-  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\22.0"
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\24.0"
   PROJECT_NAME: GestionClients
 
 jobs:
@@ -658,10 +659,10 @@ jobs:
           Win32/Release/*.dll
         retention-days: 30
 
-    # Créer une release si tag
+    # Créer une release si tag (action soutenue par GitHub Marketplace, v2 en 2026)
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: Win32/Release/*.exe
         body: |
@@ -746,7 +747,7 @@ stages:
 
 variables:
   PROJECT_NAME: "GestionClients"
-  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\22.0"
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\24.0"
 
 # Job de compilation
 build:
@@ -1040,8 +1041,8 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          $env:PATH = "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin;$env:PATH"
-          & "C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat"
+          $env:PATH = "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin;$env:PATH"
+          & "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
 
     - task: MSBuild@1
       displayName: 'Build $(buildPlatform) $(buildConfiguration)'
@@ -1199,18 +1200,25 @@ end.
 
 ### Tests avec couverture de code
 
-Si vous utilisez un outil de couverture (comme TestInsight) :
+L'outil de référence open source pour mesurer la couverture de code Delphi est **Delphi Code Coverage** (https://github.com/DelphiCodeCoverage/DelphiCodeCoverage) — à ne pas confondre avec **TestInsight** (Stefan Glienke) qui est un *outil de runner* pour DUnitX et non un mesureur de couverture.
 
 ```yaml
 - name: Run Tests with Coverage
   run: |
-    TestInsight\Coverage.exe MonProjetTests.exe --xml-coverage=coverage.xml
+    REM Lancer le test sous Delphi Code Coverage qui instrumente le binaire
+    CodeCoverage.exe -e Tests\Win32\Debug\MonProjetTests.exe ^
+                     -m Tests\Win32\Debug\MonProjetTests.map ^
+                     -uf units.txt ^
+                     -emma -xml
 
 - name: Publish Coverage
-  uses: codecov/codecov-action@v3
+  uses: codecov/codecov-action@v4
   with:
-    files: coverage.xml
+    files: ./CodeCoverage_Summary.xml
+    token: ${{ secrets.CODECOV_TOKEN }}
 ```
+
+> 💡 Delphi Code Coverage nécessite que le projet soit compilé avec la directive `{$D+}` (debug info) et `{$L+}` (local symbols) ainsi qu'avec un fichier `.map` détaillé (Project → Options → Linker → Detailed map file).
 
 ## Déploiement automatisé
 
@@ -1272,13 +1280,21 @@ build-installer:
 [Setup]
 AppName=Mon Application  
 AppVersion={#VERSION}  
-DefaultDirName={pf}\MonApplication  
+; ⚠ {pf} est l'ancienne constante (Program Files 32-bit forcé sur OS 64).
+;   Depuis Inno Setup 6, préférez {autopf} qui choisit automatiquement
+;   Program Files (pour une install 64-bit) ou Program Files (x86)
+;   (pour une install 32-bit), selon ArchitecturesInstallIn64BitMode.
+DefaultDirName={autopf}\MonApplication  
 OutputDir=Output  
 OutputBaseFilename=Setup_{#VERSION}  
 
+; Pour un installeur 64-bit moderne :
+ArchitecturesAllowed=x64compatible  
+ArchitecturesInstallIn64BitMode=x64compatible  
+
 [Files]
-Source: "Win32\Release\MonApplication.exe"; DestDir: "{app}"; Flags: ignoreversion  
-Source: "Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
+Source: "Win64\Release\MonApplication.exe"; DestDir: "{app}"; Flags: ignoreversion  
+Source: "Win64\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
 
 [Icons]
 Name: "{group}\Mon Application"; Filename: "{app}\MonApplication.exe"
@@ -1581,7 +1597,7 @@ L'intégration de Git avec CI/CD transforme radicalement votre façon de dévelo
 
 **Citation finale :**
 
-> "Si ça fait mal, faites-le plus souvent"
+> "Si ça fait mal, faites-le plus souvent"  
 > — Martin Fowler (sur le déploiement)
 
 L'idée : plus vous déployez fréquemment, plus ça devient facile et moins stressant. Le CI/CD rend cela possible.
@@ -1594,7 +1610,7 @@ Vous voilà prêt à moderniser votre workflow Delphi ! Commencez petit, itérez
 
 - Documentation GitHub Actions : https://docs.github.com/actions
 - Documentation GitLab CI : https://docs.gitlab.com/ee/ci/
-- Azure DevOps : https://docs.microsoft.com/azure/devops/
+- Azure DevOps : https://learn.microsoft.com/azure/devops/
 - DUnitX : https://github.com/VSoftTechnologies/DUnitX
 - Delphi MSBuild : https://docwiki.embarcadero.com/RADStudio/en/MSBuild
 

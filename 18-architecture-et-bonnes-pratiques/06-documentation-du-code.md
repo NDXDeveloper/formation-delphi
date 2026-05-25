@@ -321,23 +321,33 @@ Sleep(100);
 ///   L'algorithme de Luhn (aussi appelé "modulo 10") est utilisé pour
 ///   détecter les erreurs de saisie dans les numéros de carte.
 ///   Voir : https://fr.wikipedia.org/wiki/Formule_de_Luhn
+///
+///   Précondition : Numero doit contenir uniquement des chiffres (0-9).
+///   La fonction retourne False si la chaîne contient un caractère invalide.
 /// </remarks>
 function ValiderNumeroCarte(const Numero: string): Boolean;  
 var  
   Somme, Chiffre, I: Integer;
 begin
+  Result := False;
+  if Numero = '' then Exit;
+
   Somme := 0;
 
   // Parcourir de droite à gauche
   for I := Length(Numero) downto 1 do
   begin
-    Chiffre := StrToInt(Numero[I]);
+    // Validation défensive : on rejette tout caractère non numérique
+    if not CharInSet(Numero[I], ['0'..'9']) then
+      Exit;  // Numéro invalide → False
+
+    Chiffre := Ord(Numero[I]) - Ord('0');
 
     // Doubler un chiffre sur deux
     if (Length(Numero) - I) mod 2 = 1 then
     begin
       Chiffre := Chiffre * 2;
-      // Si > 9, soustraire 9
+      // Si > 9, soustraire 9 (équivalent à la somme des chiffres : 14 → 1+4 = 5)
       if Chiffre > 9 then
         Chiffre := Chiffre - 9;
     end;
@@ -1525,7 +1535,7 @@ La documentation est un investissement qui rapporte rapidement. Elle permet de :
 8. **Relisez** - La doc fait partie du code à revoir
 
 **Citation importante :**
-> "Le code raconte comment. Les commentaires racontent pourquoi."
+> "Le code raconte comment. Les commentaires racontent pourquoi."  
 > — Jeff Atwood
 
 Commencez dès aujourd'hui à documenter votre code. Votre futur vous-même vous remerciera !

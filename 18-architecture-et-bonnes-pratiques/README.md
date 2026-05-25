@@ -185,7 +185,7 @@ Négliger la qualité a un prix, souvent invisible au début mais dévastateur �
 
 ### Qu'est-ce que la dette technique ?
 
-Le terme "dette technique" a été inventé par Ward Cunningham, l'un des créateurs de la méthode Agile. L'analogie avec la dette financière est très parlante :
+Le terme "dette technique" a été inventé en 1992 par Ward Cunningham (inventeur du wiki et signataire du Manifeste Agile en 2001). L'analogie avec la dette financière est très parlante :
 
 **Dette financière** :
 - Vous empruntez de l'argent aujourd'hui
@@ -295,12 +295,49 @@ Si vous n'avez besoin que de MySQL aujourd'hui, ne construisez pas un système c
 
 **Principe** : Préférez composer vos objets plutôt que d'utiliser l'héritage à outrance.
 
-L'héritage peut créer des hiérarchies complexes et fragiles. La composition offre plus de flexibilité.
+L'héritage crée un couplage **statique** et fort entre la classe fille et sa classe mère : impossible de changer ce lien à l'exécution, et toute modification de la classe mère peut casser toutes ses descendantes (« fragile base class problem »).
+
+```pascal
+// ❌ Héritage rigide : impossible de combiner « volant » et « nageant »
+type
+  TAnimal = class end;
+  TVolant = class(TAnimal) end;
+  TPoisson = class(TAnimal) end;
+  TCanard = class(TVolant) end;   // mais le canard nage aussi !
+
+// ✅ Composition : un Canard COMPOSE ses comportements
+type
+  IFlyBehavior  = interface procedure Fly; end;
+  ISwimBehavior = interface procedure Swim; end;
+
+  TDuck = class
+  private
+    FFly: IFlyBehavior;
+    FSwim: ISwimBehavior;
+  public
+    constructor Create(Fly: IFlyBehavior; Swim: ISwimBehavior);
+    procedure Action; // peut combiner Fly + Swim librement
+  end;
+```
+
+Cette approche correspond au **pattern Strategy** : on peut changer les comportements à l'exécution, et tester chaque comportement isolément.
 
 ### 6. Couplage faible, cohésion forte
 
-**Couplage faible** : Les modules doivent être aussi indépendants que possible.  
-**Cohésion forte** : À l'intérieur d'un module, tout doit être fortement lié.  
+**Couplage faible** : Les modules doivent être aussi indépendants que possible — modifier l'un ne doit pas obliger à modifier les autres.  
+**Cohésion forte** : À l'intérieur d'un module, tout doit être fortement lié à une même responsabilité.  
+
+```
+✅ Idéal :  [Module A]──┐                   ┌──[Module C]
+                        └──[Interface]──────┘
+                           (couplage faible)
+
+❌ À éviter : [Module A]══════[Module B]══════[Module C]
+                        (couplage fort : changer A casse B et C)
+```
+
+**Mauvaise cohésion** : une unité `Utils.pas` contenant à la fois du formatage de chaînes, du calcul de TVA et de l'envoi d'emails — trois sujets sans rapport.  
+**Bonne cohésion** : trois unités séparées (`StringHelper.pas`, `TaxCalculator.pas`, `EmailSender.pas`), chacune focalisée sur un sujet unique.  
 
 ## Ce que vous allez apprendre dans ce chapitre
 

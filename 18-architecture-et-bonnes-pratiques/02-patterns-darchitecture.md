@@ -66,7 +66,7 @@ Chaque partie a sa responsabilité et peut être modifiée indépendamment.
 
 ### Histoire et origines
 
-Le pattern MVC a été inventé dans les années 1970 par Trygve Reenskaug pour le langage Smalltalk. C'est l'un des patterns les plus anciens et les plus utilisés en développement logiciel.
+Le pattern MVC a été formalisé en 1978-1979 par Trygve Reenskaug, chercheur norvégien au Xerox PARC, dans le cadre du langage Smalltalk-76 puis Smalltalk-80. C'est l'un des patterns les plus anciens et les plus utilisés en développement logiciel. À l'origine, Reenskaug parlait de « Thing-Model-View-Editor » avant de simplifier vers MVC.
 
 ### Les trois composants
 
@@ -124,6 +124,7 @@ type
     FMontantTotal: Currency;
     procedure SetEmail(const Value: string);
     procedure SetNom(const Value: string);
+    function IsEmailValid: Boolean;
   public
     constructor Create;
 
@@ -146,6 +147,12 @@ implementation
 uses
   System.SysUtils, System.RegularExpressions;
 
+const
+  // Regex centralisé : pattern simple suffisant pour la pédagogie.
+  // Pour une validation conforme RFC 5322 complète, utiliser plutôt
+  // une bibliothèque dédiée.
+  EMAIL_PATTERN = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+
 constructor TClient.Create;  
 begin  
   inherited;
@@ -165,33 +172,22 @@ begin
   FEmail := Trim(LowerCase(Value));
 end;
 
+function TClient.IsEmailValid: Boolean;  
+begin  
+  Result := TRegEx.IsMatch(FEmail, EMAIL_PATTERN);
+end;
+
 function TClient.IsValid: Boolean;  
-var  
-  EmailRegex: TRegEx;
-begin
-  Result := False;
-
-  // Validation du nom
-  if FNom.Length < 2 then
-    Exit;
-
-  // Validation de l'email
-  EmailRegex := TRegEx.Create('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-  if not EmailRegex.IsMatch(FEmail) then
-    Exit;
-
-  Result := True;
+begin  
+  Result := (FNom.Length >= 2) and IsEmailValid;
 end;
 
 function TClient.GetErrorMessage: string;  
-var  
-  EmailRegex: TRegEx;
-begin
+begin  
   if FNom.Length < 2 then
     Exit('Le nom doit contenir au moins 2 caractères');
 
-  EmailRegex := TRegEx.Create('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-  if not EmailRegex.IsMatch(FEmail) then
+  if not IsEmailValid then
     Exit('L''adresse email n''est pas valide');
 
   Result := '';
@@ -431,63 +427,76 @@ begin
 end;
 
 function TClientController.SauvegarderEnBase(Client: TClient): Boolean;  
-begin  
+var  
+  Query: TFDQuery;
+begin
   Result := False;
 
-  // Utilisation du DataModule pour la persistance
-  with dmMain.QueryClient do
-  begin
-    try
-      Close;
-      SQL.Text := 'INSERT INTO clients (nom, email, montant_total) ' +
-                  'VALUES (:nom, :email, :montant)';
-      ParamByName('nom').AsString := Client.Nom;
-      ParamByName('email').AsString := Client.Email;
-      ParamByName('montant').AsCurrency := Client.MontantTotal;
-      ExecSQL;
-      Result := True;
-    except
-      Result := False;
-    end;
+  // ⚠ Note pédagogique : on utilise une variable locale plutôt qu'un `with`.
+  //   Le `with X do begin ... end` est lisible mais devient ambigu si X
+  //   possède des champs portant le même nom que des variables locales,
+  //   et le compilateur résout silencieusement à un identifiant inattendu.
+  //   La communauté Delphi moderne (et l'IDE via le warning W1000) le
+  //   déconseille — préférer un identifiant local explicite.
+  Query := dmMain.QueryClient;
+  try
+    Query.Close;
+    Query.SQL.Text := 'INSERT INTO clients (nom, email, montant_total) ' +
+                      'VALUES (:nom, :email, :montant)';
+    Query.ParamByName('nom').AsString := Client.Nom;
+    Query.ParamByName('email').AsString := Client.Email;
+    Query.ParamByName('montant').AsCurrency := Client.MontantTotal;
+    Query.ExecSQL;
+    Result := True;
+  except
+    Result := False;
   end;
 end;
 
 function TClientController.ChargerClient(Id: Integer): TClient;  
-begin  
+var  
+  Query: TFDQuery;
+begin
+  Result := nil;     // ✅ Si non trouvé, on retourne nil au lieu d'un objet vide
+  Query := dmMain.QueryClient;
+
+  Query.Close;
+  Query.SQL.Text := 'SELECT * FROM clients WHERE id = :id';
+  Query.ParamByName('id').AsInteger := Id;
+  Query.Open;
+
+  if Query.Eof then
+    Exit;  // Client introuvable → nil
+
   Result := TClient.Create;
-
-  with dmMain.QueryClient do
-  begin
-    Close;
-    SQL.Text := 'SELECT * FROM clients WHERE id = :id';
-    ParamByName('id').AsInteger := Id;
-    Open;
-
-    if not Eof then
-    begin
-      Result.Id := FieldByName('id').AsInteger;
-      Result.Nom := FieldByName('nom').AsString;
-      Result.Email := FieldByName('email').AsString;
-      Result.MontantTotal := FieldByName('montant_total').AsCurrency;
-    end;
+  try
+    Result.Id := Query.FieldByName('id').AsInteger;
+    Result.Nom := Query.FieldByName('nom').AsString;
+    Result.Email := Query.FieldByName('email').AsString;
+    Result.MontantTotal := Query.FieldByName('montant_total').AsCurrency;
+  except
+    // Si l'affectation échoue (champ manquant, conversion...), on libère
+    // l'objet partiellement construit avant de propager.
+    Result.Free;
+    Result := nil;
+    raise;
   end;
 end;
 
 function TClientController.SupprimerClient(Id: Integer): Boolean;  
-begin  
+var  
+  Query: TFDQuery;
+begin
   Result := False;
-
-  with dmMain.QueryClient do
-  begin
-    try
-      Close;
-      SQL.Text := 'DELETE FROM clients WHERE id = :id';
-      ParamByName('id').AsInteger := Id;
-      ExecSQL;
-      Result := True;
-    except
-      Result := False;
-    end;
+  Query := dmMain.QueryClient;
+  try
+    Query.Close;
+    Query.SQL.Text := 'DELETE FROM clients WHERE id = :id';
+    Query.ParamByName('id').AsInteger := Id;
+    Query.ExecSQL;
+    Result := True;
+  except
+    Result := False;
   end;
 end;
 
@@ -585,7 +594,7 @@ Le Controller peut devenir un goulot d'étranglement si mal conçu.
 
 ### Histoire et origines
 
-MVVM a été introduit par Microsoft en 2005 pour WPF (Windows Presentation Foundation). Il est une évolution du MVC, spécialement adapté aux frameworks avec du data binding (liaison de données).
+MVVM a été introduit en 2005 par John Gossman, architecte chez Microsoft, pour WPF (Windows Presentation Foundation) et Silverlight. Il est une évolution du MVC et du Presentation Model de Martin Fowler, spécialement adapté aux frameworks avec du data binding (liaison de données). Côté Delphi, le binding est implémenté via le framework **LiveBindings** (disponible en VCL et FMX depuis Delphi XE2).
 
 ### Les trois composants
 
@@ -895,23 +904,22 @@ begin
 end;
 
 function TClientViewModel.SauvegarderEnBase: Boolean;  
-begin  
+var  
+  Query: TFDQuery;
+begin
   Result := False;
-
-  with dmMain.QueryClient do
-  begin
-    try
-      Close;
-      SQL.Text := 'INSERT INTO clients (nom, email, montant_total) ' +
-                  'VALUES (:nom, :email, :montant)';
-      ParamByName('nom').AsString := FClient.Nom;
-      ParamByName('email').AsString := FClient.Email;
-      ParamByName('montant').AsCurrency := FClient.MontantTotal;
-      ExecSQL;
-      Result := True;
-    except
-      Result := False;
-    end;
+  Query := dmMain.QueryClient;
+  try
+    Query.Close;
+    Query.SQL.Text := 'INSERT INTO clients (nom, email, montant_total) ' +
+                      'VALUES (:nom, :email, :montant)';
+    Query.ParamByName('nom').AsString := FClient.Nom;
+    Query.ParamByName('email').AsString := FClient.Email;
+    Query.ParamByName('montant').AsCurrency := FClient.MontantTotal;
+    Query.ExecSQL;
+    Result := True;
+  except
+    Result := False;
   end;
 end;
 
@@ -1073,7 +1081,7 @@ type
 
 ### Clean Architecture
 
-Clean Architecture (Architecture Propre) est une approche proposée par Robert C. Martin (Uncle Bob) qui met l'accent sur l'indépendance des frameworks.
+Clean Architecture (Architecture Propre) est une approche proposée en 2012 par Robert C. Martin (« Uncle Bob ») et formalisée dans son livre *Clean Architecture* (2017). Elle met l'accent sur l'indépendance vis-à-vis des frameworks, des bases de données et de l'UI.
 
 ```
 ┌─────────────────────────────────────┐
@@ -1089,7 +1097,7 @@ Clean Architecture (Architecture Propre) est une approche proposée par Robert C
 Dépendances : Toujours de l'extérieur vers l'intérieur
 ```
 
-**Principe** : Le cœur de l'application (Entities) ne dépend de rien. Tout dépend de lui.
+**Principe** : Le cœur de l'application (Entities) ne dépend de rien. Tout dépend de lui. Côté Delphi, des frameworks comme **Spring4D** (conteneur IoC, injection de dépendances) facilitent grandement la mise en œuvre de cette approche.
 
 ### Quand utiliser quel pattern ?
 
@@ -1111,6 +1119,9 @@ Prenons un cas concret : une liste de clients avec recherche et édition.
 unit ModelClient;
 
 interface
+
+uses
+  System.Generics.Collections;  // pour TList<T>
 
 type
   TClient = class

@@ -234,8 +234,10 @@ type
   public
     constructor Create(ID: TCustomerID; const Name, Email: string);
 
-    // L'égalité est basée sur l'ID, pas sur les attributs
-    function Equals(Other: TCustomer): Boolean;
+    // L'égalité est basée sur l'ID, pas sur les attributs.
+    // `reintroduce` car TObject possède déjà un `Equals(Obj: TObject)` virtuel ;
+    // ici on en prend la liberté de changer la signature en typant `Other`.
+    function Equals(Other: TCustomer): Boolean; reintroduce;
 
     property ID: TCustomerID read FID;
     property Name: string read FName write FName;
@@ -255,8 +257,10 @@ end;
 
 function TCustomer.Equals(Other: TCustomer): Boolean;  
 begin  
-  // Deux clients sont égaux s'ils ont le même ID
-  // Même si leur nom ou email a changé
+  // Deux clients sont égaux s'ils ont le même ID, même si leur nom ou
+  // email a changé. Comparaison des TGUID via IsEqualGUID (Winapi.ActiveX)
+  // ou champ par champ — ici on simplifie en supposant que `=` sur TGUID
+  // est défini (vrai en Delphi moderne via TGUID helper).
   Result := (Other <> nil) and (FID.Value = Other.ID.Value);
 end;
 ```
@@ -292,21 +296,28 @@ type
   private
     FValue: string;
     function GetValue: string;
+    class function IsValidEmail(const S: string): Boolean; static;
   public
     constructor Create(const Value: string);
     class function TryCreate(const Value: string; out Email: TEmailAddress): Boolean; static;
 
-    // Validation dans le constructeur
+    // Validation après création
     function IsValid: Boolean;
 
-    // Immutable
+    // Immutable (pas de setter)
     property Value: string read GetValue;
 
-    // Égalité basée sur la valeur
+    // Égalité basée sur la valeur, pas sur l'identité
     class operator Equal(const A, B: TEmailAddress): Boolean;
   end;
 
 implementation
+
+class function TEmailAddress.IsValidEmail(const S: string): Boolean;  
+begin  
+  // Validation simple — en production, utiliser une regex ou une lib dédiée.
+  Result := S.Contains('@') and (Length(S) > 3);
+end;
 
 constructor TEmailAddress.Create(const Value: string);  
 begin  
@@ -324,7 +335,7 @@ end;
 
 function TEmailAddress.IsValid: Boolean;  
 begin  
-  Result := FValue.Contains('@') and (Length(FValue) > 3);
+  Result := IsValidEmail(FValue);
 end;
 
 function TEmailAddress.GetValue: string;  
@@ -381,7 +392,9 @@ type
   TDateRange = record
     StartDate: TDate;
     EndDate: TDate;
-    function Contains(Date: TDate): Boolean;
+    // Paramètre `ADate` plutôt que `Date` pour éviter le masquage de
+    // la fonction System.SysUtils.Date.
+    function Contains(ADate: TDate): Boolean;
   end;
 ```
 
@@ -418,6 +431,10 @@ type
     Value: TGUID;
   end;
 
+  // ℹ️ TProductID est supposé défini comme `record Value: TGUID; end;` et
+  //   dispose d'une méthode `Equals` qui compare les TGUID champ à champ
+  //   (helper TGUID ou class operator Equal — voir TCustomerID dans la
+  //   section précédente pour le modèle).
   TOrderLine = class
   private
     FProductID: TProductID;
@@ -507,26 +524,35 @@ end;
 procedure TOrder.UpdateLineQuantity(ProductID: TProductID; NewQuantity: Integer);  
 var  
   Line: TOrderLine;
+  ExistingPrice: Currency;
+  Found: Boolean;
 begin
   if FStatus <> osCreated then
     raise Exception.Create('Cannot modify submitted order');
 
+  if NewQuantity <= 0 then
+    raise Exception.Create('Quantity must be positive');
+
+  // ⚠ Important : on capture le prix AVANT d'appeler RemoveLine,
+  //   car RemoveLine libère l'objet TOrderLine (TObjectList OwnsObjects=True).
+  //   Accéder à Line.Price après serait un use-after-free.
+  Found := False;
+  ExistingPrice := 0;
   for Line in FLines do
-  begin
     if Line.ProductID.Equals(ProductID) then
     begin
-      if NewQuantity <= 0 then
-        raise Exception.Create('Quantity must be positive');
-
-      // On ne peut pas modifier directement Line.FQuantity car c'est privé
-      // On doit recréer la ligne ou avoir une méthode SetQuantity protégée
-      RemoveLine(ProductID);
-      AddLine(ProductID, NewQuantity, Line.Price);
+      ExistingPrice := Line.Price;
+      Found := True;
       Break;
     end;
-  end;
 
-  RecalculateTotal;
+  if not Found then
+    Exit;  // Pas de ligne à mettre à jour
+
+  // RemoveLine + AddLine recalculent déjà chacun le total
+  // (donc inutile de rappeler RecalculateTotal ici).
+  RemoveLine(ProductID);
+  AddLine(ProductID, NewQuantity, ExistingPrice);
 end;
 
 procedure TOrder.RemoveLine(ProductID: TProductID);  
@@ -640,7 +666,9 @@ type
   private
     FConnection: TFDConnection;
     function MapDataSetToOrder(DS: TDataSet): TOrder;
-    procedure MapOrderToDataSet(Order: TOrder; DS: TDataSet);
+    // Le mapping inverse écrit les paramètres dans une TFDQuery, pas dans
+    // un TDataSet générique (qui n'expose pas ParamByName).
+    procedure BindOrderToQuery(Order: TOrder; Query: TFDQuery);
   public
     constructor Create(Connection: TFDConnection);
     function GetByID(ID: TOrderID): TOrder;
@@ -728,7 +756,7 @@ begin
                         'VALUES (:id, :customer_id, :status, :total)';
     end;
 
-    MapOrderToDataSet(Order, Query);
+    BindOrderToQuery(Order, Query);
     Query.ExecSQL;
 
     // Sauvegarder les lignes aussi...
@@ -765,11 +793,13 @@ begin
   // Charger les lignes...
 end;
 
-procedure TOrderRepository.MapOrderToDataSet(Order: TOrder; DS: TDataSet);  
+procedure TOrderRepository.BindOrderToQuery(Order: TOrder; Query: TFDQuery);  
 begin  
-  DS.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
-  DS.ParamByName('status').AsInteger := Ord(Order.Status);
-  DS.ParamByName('total').AsCurrency := Order.Total;
+  // On bind les paramètres SQL de la TFDQuery (TDataSet n'a pas de
+  // ParamByName, il faut spécifiquement TFDQuery / TFDStoredProc).
+  Query.ParamByName('id').AsString := GUIDToString(Order.ID.Value);
+  Query.ParamByName('status').AsInteger := Ord(Order.Status);
+  Query.ParamByName('total').AsCurrency := Order.Total;
   // etc.
 end;
 ```
@@ -860,10 +890,21 @@ begin
     Exit;
   end;
 
-  // Transaction atomique
+  // ⚠ Note : cette « transaction » n'est PAS vraiment atomique.
+  //   Si ToAccount.Credit échoue après FromAccount.Debit, on a un
+  //   débit sans crédit (argent perdu !). En production, il faut soit :
+  //   - utiliser une transaction de base de données SQL (BeginTrans/Commit/Rollback)
+  //   - implémenter manuellement un rollback (recréditer FromAccount sur erreur)
+  //   - utiliser un pattern de Saga distribué si les comptes sont sur des
+  //     services différents.
   try
     FromAccount.Debit(Amount);
-    ToAccount.Credit(Amount);
+    try
+      ToAccount.Credit(Amount);
+    except
+      FromAccount.Credit(Amount);   // compensation simple : on rétablit
+      raise;
+    end;
 
     Result.Success := True;
     Result.TransactionID := GenerateTransactionID;
@@ -1045,7 +1086,7 @@ type
   public
     constructor Create(CheckIn, CheckOut: TDate);
     function GetNights: Integer;
-    function Contains(Date: TDate): Boolean;
+    function Contains(ADate: TDate): Boolean;
     function Overlaps(Other: TDateRange): Boolean;
     property CheckIn: TDate read FCheckIn;
     property CheckOut: TDate read FCheckOut;
@@ -1119,9 +1160,11 @@ begin
   Result := DaysBetween(FCheckOut, FCheckIn);
 end;
 
-function TDateRange.Contains(Date: TDate): Boolean;  
+function TDateRange.Contains(ADate: TDate): Boolean;  
 begin  
-  Result := (Date >= FCheckIn) and (Date < FCheckOut);
+  // ⚠ Le paramètre est `ADate` (pas `Date`) pour ne pas masquer la fonction
+  //   System.SysUtils.Date qui retourne la date du jour.
+  Result := (ADate >= FCheckIn) and (ADate < FCheckOut);
 end;
 
 function TDateRange.Overlaps(Other: TDateRange): Boolean;  
@@ -1248,6 +1291,8 @@ end.
 ```
 
 ### Aggregate Root
+
+> ℹ️ L'exemple ci-dessous référence l'unité `Domain.Events` (pour `TDomainEvent`, `TBookingConfirmedEvent`, etc.). Cette unité contient les classes d'événements décrites plus haut dans la section « Domain Events ». Voir la section précédente pour le squelette de `TDomainEvent`, et créez les sous-classes `TBookingConfirmedEvent`, `TGuestCheckedInEvent`, `TGuestCheckedOutEvent`, `TBookingCancelledEvent` sur le même modèle.
 
 ```pascal
 unit Domain.Aggregates;
@@ -1427,6 +1472,7 @@ interface
 
 uses
   Domain.Aggregates, Domain.Entities, Domain.ValueObjects,
+  Domain.Repositories,           // pour IBookingRepository
   System.Generics.Collections;
 
 type
@@ -1544,6 +1590,8 @@ end.
 
 ### Utilisation
 
+> ℹ️ **Note** : le code suivant est un squelette pédagogique illustrant l'orchestration des composants DDD. Il suppose l'existence de fonctions helper (`NewGuestID`, `NewRoomID`, `ProcessDomainEvents`) et d'une variable `Connection: TFDConnection` initialisée ailleurs (généralement dans un `TDataModule`). Notez aussi que `Guest`, `Room` et `Price` (TMoney est un record, donc OK) devraient être libérés dans un vrai programme — omis ici pour la lisibilité.
+
 ```pascal
 program HotelBookingSystem;
 
@@ -1552,6 +1600,7 @@ uses
   Domain.Services, Domain.Repositories;
 
 var
+  Connection: TFDConnection;     // initialisée ailleurs (DataModule)
   BookingService: IBookingService;
   BookingRepo: IBookingRepository;
   Guest: TGuest;
@@ -1566,39 +1615,41 @@ begin
   BookingRepo := TBookingRepository.Create(Connection);
   BookingService := TBookingService.Create(BookingRepo);
 
-  // Créer un invité
+  // Créer un invité (NewGuestID = helper qui retourne un TGuestID frais)
   GuestName := TGuestName.Create('John', 'Doe');
   Email := TEmailAddress.Create('john.doe@example.com');
   Guest := TGuest.Create(NewGuestID, GuestName, Email, '+33612345678');
-
-  // Créer une chambre
-  Price := TMoney.Create(120.00, 'EUR');
-  Room := TRoom.Create(NewRoomID, '101', rtDeluxe, Price, 2);
-
-  // Créer une réservation
-  DateRange := TDateRange.Create(Date + 7, Date + 10);  // 3 nuits
-
   try
-    Booking := BookingService.CreateBooking(Guest, Room, DateRange);
+    // Créer une chambre
+    Price := TMoney.Create(120.00, 'EUR');
+    Room := TRoom.Create(NewRoomID, '101', rtDeluxe, Price, 2);
     try
-      // Confirmer
-      Booking.Confirm;
+      // Créer une réservation pour 3 nuits, dans 7 jours
+      DateRange := TDateRange.Create(Date + 7, Date + 10);
 
-      // Sauvegarder
-      BookingRepo.Save(Booking);
+      Booking := BookingService.CreateBooking(Guest, Room, DateRange);
+      try
+        // Confirmer
+        Booking.Confirm;
 
-      WriteLn('Booking created: ', GUIDToString(Booking.ID.Value));
-      WriteLn('Total price: ', Booking.TotalPrice.Amount:0:2, ' ', Booking.TotalPrice.CurrencyCode);
+        // Sauvegarder
+        BookingRepo.Save(Booking);
 
-      // Traiter les événements
-      ProcessDomainEvents(Booking.GetDomainEvents);
-      Booking.ClearDomainEvents;
+        WriteLn('Booking created: ', GUIDToString(Booking.ID.Value));
+        WriteLn('Total price: ', Booking.TotalPrice.Amount:0:2, ' ',
+                Booking.TotalPrice.CurrencyCode);
+
+        // Traiter les événements de domaine
+        ProcessDomainEvents(Booking.GetDomainEvents);
+        Booking.ClearDomainEvents;
+      finally
+        Booking.Free;
+      end;
     finally
-      Booking.Free;
+      Room.Free;
     end;
-  except
-    on E: Exception do
-      WriteLn('Error: ', E.Message);
+  finally
+    Guest.Free;
   end;
 end.
 ```
@@ -1715,7 +1766,7 @@ Le Domain-Driven Design n'est pas une silver bullet, mais une approche puissante
 
 **Citation finale :**
 
-> "Le cœur du logiciel est sa capacité à résoudre des problèmes liés au domaine pour son utilisateur"
+> "Le cœur du logiciel est sa capacité à résoudre des problèmes liés au domaine pour son utilisateur"  
 > — Eric Evans, Domain-Driven Design
 
 Le DDD transforme votre façon de penser le développement logiciel : du technique vers le métier, de la base de données vers le domaine, de la solution technique vers la solution business.

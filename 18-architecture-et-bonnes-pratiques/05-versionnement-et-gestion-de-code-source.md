@@ -173,9 +173,14 @@ git config --global user.name "Votre Nom"
 git config --global user.email "votre.email@example.com"
 
 # Éditeur par défaut (optionnel)
+# ⚠ notepad fonctionne mais n'est pas idéal (pas de coloration). Préférer :
+#   git config --global core.editor "code --wait"      (VS Code)
+#   git config --global core.editor "notepad++ -multiInst -notabbar -nosession -noPlugin"
 git config --global core.editor "notepad"
 
 # Fin de ligne (recommandé pour Windows)
+# autocrlf=true convertit LF→CRLF au checkout et CRLF→LF au commit.
+# Sur un repo multi-OS, préférer un .gitattributes (eol=lf, eol=crlf).
 git config --global core.autocrlf true
 ```
 
@@ -254,42 +259,42 @@ Créez un fichier nommé `.gitignore` à la racine de votre projet :
 ```gitignore
 # Fichiers compilés Delphi
 *.dcu
+*.dcp
 *.exe
 *.dll
 *.bpl
-*.dcp
+*.bpi
 *.so
+*.dylib
 *.apk
 *.drc
 *.map
 *.dres
 *.rsm
 *.tds
-*.dcu
 *.lib
 *.a
 *.o
 *.ocx
 
-# Dossiers de compilation
+# Dossiers de compilation par plateforme
 __history/
 __recovery/
 Win32/  
 Win64/  
-Win64/  
-OSX32/  
-OSX64/  
-iOSDevice/  
-iOSDevice32/  
+OSX64/             # macOS x86_64 (Delphi 10.x)  
+OSXARM64/          # macOS Apple Silicon (Delphi 11+)  
 iOSDevice64/  
-iOSSimulator/  
+iOSSimARM64/       # iOS Simulator ARM (Delphi 11.3+)  
 Android/  
 Android64/  
+Android32/  
 Linux64/  
 
 # Fichiers de sauvegarde
 *.~pas
 *.~dfm
+*.~fmx
 *.~dpr
 *.~dpk
 *.~dsk
@@ -297,7 +302,7 @@ Linux64/
 *.bak
 *.*~
 
-# Fichiers locaux
+# Fichiers locaux IDE
 *.local
 *.identcache
 *.projdata
@@ -317,7 +322,7 @@ config.prod.ini
 temp/  
 logs/  
 
-# IDE
+# IDE (autres)
 .vs/
 .vscode/
 *.suo
@@ -640,6 +645,27 @@ main
 2. Créez une branche pour chaque fonctionnalité/correction
 3. Fusionnez dans `main` quand terminé
 
+#### Trunk-Based Development (le plus moderne, équipes matures)
+
+```
+main (le « trunk »)
+  │
+  ├─── short-lived branch (durée < 1 jour) → merge rapide
+  ├─── short-lived branch                  → merge rapide
+  └─── feature flags pour les fonctionnalités non finies
+```
+
+**Principes** :
+1. Tout le monde travaille très près de `main`
+2. Les branches durent **moins d'une journée**
+3. Les fonctionnalités incomplètes sont cachées derrière des **feature flags** (`if FeatureFlag.IsEnabled('NewCheckout') then ...`)
+4. CI/CD obligatoire et très rapide
+5. Pas de longues branches `develop` ou `release`
+
+**Quand l'utiliser** : équipes matures avec couverture de tests élevée et CI/CD solide. C'est la stratégie qu'utilisent Google, Facebook, Netflix.
+
+> 📝 **Note** : Vincent Driessen, créateur de Git Flow en 2010, a publié en 2020 un avertissement indiquant que **Git Flow n'est pas adapté aux pratiques modernes de déploiement continu**. Pour les nouvelles équipes, préférez **GitHub Flow** ou **Trunk-Based Development**.
+
 ### Résolution de conflits
 
 Un **conflit** se produit quand deux personnes modifient la même ligne de code.
@@ -885,12 +911,29 @@ git fetch                         # Récupérer sans fusionner
 ### Annuler des changements
 
 ```bash
-git checkout -- <fichier>         # Annuler les modifs d'un fichier  
-git reset HEAD <fichier>          # Retirer de la staging area  
+git checkout -- <fichier>         # Annuler les modifs d'un fichier (ancien)  
+git reset HEAD <fichier>          # Retirer de la staging area (ancien)  
 git reset --soft HEAD~1           # Annuler le dernier commit (garde les changements)  
 git reset --hard HEAD~1           # Annuler le dernier commit (perd les changements)  
 git revert <commit>               # Créer un commit qui annule un commit précédent  
 ```
+
+### 💡 Syntaxe moderne (Git 2.23+ recommandée en 2026)
+
+Depuis Git 2.23 (août 2019), deux nouvelles commandes plus claires séparent les rôles auparavant assumés par `git checkout` :
+
+```bash
+# Au lieu de git checkout <branche>  →  changer de branche
+git switch <branche>  
+git switch -c <nouvelle-branche>      # créer ET basculer  
+
+# Au lieu de git checkout -- <fichier>  →  restaurer un fichier
+git restore <fichier>                 # depuis HEAD (annule les modifs locales)  
+git restore --staged <fichier>        # retirer de la staging area  
+git restore --source=<commit> <fichier> # restaurer depuis un commit précis  
+```
+
+Les anciennes formes restent valides ; les nouvelles sont plus lisibles et moins ambiguës.
 
 ### Autres
 
@@ -1220,8 +1263,14 @@ git add .gitignore
 git commit -m "Suppression fichier sensible de Git"  
 
 # 4. Si déjà poussé, nettoyer l'historique (complexe)
-# Utilisez git filter-branch ou BFG Repo-Cleaner
+# git filter-branch est déprécié depuis Git 2.24. Utiliser :
+#   - git filter-repo (recommandé officiellement par Git)
+#     https://github.com/newren/git-filter-repo
+#   - BFG Repo-Cleaner (plus simple, axé sur le nettoyage de secrets)
+#     https://rtyley.github.io/bfg-repo-cleaner/
 ```
+
+> ⚠ **Important** : si le secret a été poussé sur un repo public, **considérez-le compromis** et **révoquez-le immédiatement** (changer le mot de passe, régénérer la clé API). Le nettoyage de l'historique n'efface pas les copies déjà clonées par d'autres ni les caches de GitHub.
 
 ### Je veux revenir à une version antérieure
 

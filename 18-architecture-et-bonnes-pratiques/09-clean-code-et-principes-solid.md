@@ -17,7 +17,7 @@ Les **principes SOLID** sont cinq règles fondamentales qui vous guident vers ce
 ### Pourquoi le Clean Code ?
 
 **Citation célèbre :**
-> "N'importe quel idiot peut écrire du code qu'un ordinateur comprend. Les bons programmeurs écrivent du code que les humains comprennent."
+> "N'importe quel idiot peut écrire du code qu'un ordinateur comprend. Les bons programmeurs écrivent du code que les humains comprennent."  
 > — Martin Fowler
 
 **La réalité du développement :**
@@ -837,7 +837,13 @@ end;
 **Solution :**
 ```pascal
 type
-  TBird = class
+  // ⚠ Note technique : pour qu'une classe Delphi implémente une interface,
+  //   elle doit dériver d'une racine qui implémente IInterface
+  //   (TInterfacedObject est le plus simple). On peut soit faire dériver
+  //   TBird de TInterfacedObject directement, soit utiliser une chaîne
+  //   d'héritage qui inclut TInterfacedObject.
+
+  TBird = class(TInterfacedObject)   // racine compatible IInterface
   public
     procedure Eat; virtual;
   end;
@@ -1124,6 +1130,10 @@ function TCustomerService.GetCustomer(ID: Integer): TCustomer;
 var  
   DS: TDataSet;
 begin
+  // ⚠ Note : ici on concatène un Integer (donc pas de risque d'injection SQL
+  //   au sens strict). Dans un vrai projet, on préférera quand même une
+  //   interface IDatabase exposant `ExecuteQuery(const SQL: string; const Params: array of Variant)`
+  //   pour rester safe par défaut avec des paramètres bindés.
   DS := FDatabase.ExecuteQuery('SELECT * FROM customers WHERE id = ' + IntToStr(ID));
   // Conversion DataSet → TCustomer
   Result := ConvertToCustomer(DS);
@@ -1254,6 +1264,14 @@ end;
 - ❌ Injection SQL possible
 
 **Code refactorisé avec SOLID :**
+
+> 📝 **Note pédagogique** : pour la lisibilité, le code suivant utilise des blocs `implementation` multiples pour séparer visuellement chaque rôle. **Dans la vraie vie, chaque section appartiendrait à une unité Delphi distincte** :  
+> - `OrderInterfaces.pas` pour les interfaces  
+> - `OrderModel.pas` pour TOrder  
+> - `OrderDiscountStrategies.pas` pour les TStandardDiscount/TPremiumDiscount/TVIPDiscount  
+> - `OrderRepository.pas` pour TOrderRepository  
+> - `EmailNotificationService.pas` pour TEmailNotificationService  
+> - `OrderProcessor.pas` pour TOrderProcessor
 
 ```pascal
 // ============= ABSTRACTIONS (D - DIP) =============
@@ -1664,7 +1682,7 @@ Le Clean Code et les principes SOLID ne sont pas des règles rigides, mais des g
 
 **Citation finale :**
 
-> "Le seul moyen d'aller vite, c'est d'aller bien"
+> "Le seul moyen d'aller vite, c'est d'aller bien"  
 > — Robert C. Martin (Uncle Bob)
 
 Le temps investi dans le Clean Code et SOLID est du temps gagné sur le long terme. Un code propre est un plaisir à maintenir. Un code sale devient rapidement un cauchemar.

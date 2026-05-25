@@ -121,31 +121,134 @@ Delphi permet de créer facilement des serveurs REST qui exposent des API.
 
 **1. Horse (Framework Web léger)**
 
-Horse est un framework web populaire pour Delphi qui simplifie la création d'API REST.
+[Horse](https://github.com/HashLoad/horse) est un framework web open source pour Delphi inspiré de **Express.js** (Node.js). Il simplifie radicalement la création d'API REST.
 
 Avantages :
-- Syntaxe simple et intuitive
-- Middleware support
-- Documentation claire
-- Active communauté
+- Syntaxe ultra-simple et lisible
+- Système de middlewares (CORS, JWT, logger, etc.)
+- Indépendant du backend HTTP (peut tourner sur Indy, DaemonAPI ou WebBroker)
+- Compatible Windows et Linux
+- Communauté active (LinkApi / HashLoad)
 
-**2. Mars-Curiosity**
+**2. DelphiMVCFramework (DMVC)**
 
-Framework REST pour Delphi inspiré de JAX-RS (Java).
+[DelphiMVCFramework](https://github.com/danieleteti/delphimvcframework) — souvent abrégé **DMVCFramework** — par Daniele Teti, est un framework MVC complet pour applications web et services REST.
 
 Avantages :
-- Architecture par attributs
+- Pattern MVC bien structuré (Controllers, Models, Views)
+- Support de templates côté serveur (Mustache, TemplatePro)
+- Génération automatique de documentation API (Swagger / OpenAPI)
+- Sérialisation JSON puissante (jsondataobjects)
+- Support de JWT, Server-Sent Events, WebSockets
+
+**3. mORMot 2**
+
+[mORMot 2](https://github.com/synopse/mORMot2) (Synopse) est un framework SOA complet et très performant. Plus complexe qu'Horse mais extrêmement riche.
+
+Avantages :
+- Performance exceptionnelle (l'un des serveurs HTTP les plus rapides du marché)
+- ORM intégré (compatible avec la plupart des SGBD)
+- Authentification, sérialisation, RPC, micro-services
+- Mode interface-based publishing (le serveur expose des interfaces Delphi)
+
+**4. Mars-Curiosity**
+
+[Mars](https://github.com/andrea-magni/MARS) (Andrea Magni) est un framework REST pour Delphi inspiré de **JAX-RS** (Java).
+
+Avantages :
+- Architecture à base d'attributs (`[Path('/users')]`, `[GET]`)
 - Support de l'injection de dépendances
 - Intégration FireDAC
 
-**3. DMVC (Delphi MVC Framework)**
+### Exemple concret : un microservice REST avec Horse
 
-Framework MVC complet pour applications web et services REST.
+Voici un microservice complet d'API utilisateurs en moins de 50 lignes :
 
-Avantages :
-- Pattern MVC bien structuré
-- Support de templates
-- Générateur de documentation API
+```pascal
+program UsersService;
+
+{$APPTYPE CONSOLE}
+
+uses
+  Horse,                       // Framework web
+  Horse.Jhonson,               // Middleware JSON
+  System.JSON,
+  System.SysUtils;
+
+procedure GetUsers(Req: THorseRequest; Res: THorseResponse);  
+var  
+  Users: TJSONArray;
+begin
+  Users := TJSONArray.Create;
+  Users.Add(TJSONObject.Create
+    .AddPair('id', '1')
+    .AddPair('name', 'Alice'));
+  Users.Add(TJSONObject.Create
+    .AddPair('id', '2')
+    .AddPair('name', 'Bob'));
+  Res.Send<TJSONArray>(Users);
+end;
+
+procedure GetUserById(Req: THorseRequest; Res: THorseResponse);  
+var  
+  ID: string;
+  User: TJSONObject;
+begin
+  ID := Req.Params['id'];
+  User := TJSONObject.Create
+    .AddPair('id', ID)
+    .AddPair('name', 'User ' + ID);
+  Res.Send<TJSONObject>(User);
+end;
+
+procedure HealthCheck(Req: THorseRequest; Res: THorseResponse);  
+begin  
+  Res.Send<TJSONObject>(
+    TJSONObject.Create
+      .AddPair('status', 'ok')
+      .AddPair('service', 'users')
+      .AddPair('version', '1.0.0'));
+end;
+
+begin
+  // Middleware JSON activé pour toutes les routes
+  THorse.Use(Jhonson);
+
+  // Définition des routes
+  THorse.Get('/health',     HealthCheck);
+  THorse.Get('/users',      GetUsers);
+  THorse.Get('/users/:id',  GetUserById);
+
+  // Démarrage du serveur sur le port 9000
+  THorse.Listen(9000,
+    procedure(Horse: THorse)
+    begin
+      Writeln('Users microservice listening on port ', Horse.Port);
+    end);
+end.
+```
+
+**Test du service avec `curl`** :
+```bash
+curl http://localhost:9000/health
+# → {"status":"ok","service":"users","version":"1.0.0"}
+
+curl http://localhost:9000/users
+# → [{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}]
+
+curl http://localhost:9000/users/42
+# → {"id":"42","name":"User 42"}
+```
+
+> 💡 **Gestion mémoire** : grâce au middleware `Jhonson`, Horse sérialise l'objet JSON ET le libère automatiquement après l'envoi de la réponse. Vous n'avez donc pas besoin d'appeler `Users.Free` ou `User.Free` manuellement — sinon vous obtiendriez un double-free.
+
+Ce squelette se complète facilement avec :
+- Un **middleware JWT** (`Horse.Jwt`) pour sécuriser certaines routes
+- Un **middleware CORS** (`Horse.CORS`) pour les appels cross-origin
+- Un **middleware Logger** (`Horse.HandleException`) pour logger toutes les requêtes
+- L'accès à la base via FireDAC (idéalement encapsulé dans un Repository)
+
+Installation des frameworks : la méthode moderne en 2026 passe par **Boss** (https://github.com/HashLoad/boss), le package manager open source dédié à Delphi, ou par **GetIt Package Manager** intégré à RAD Studio 13.
 
 ### Structure d'un microservice Delphi
 
@@ -312,7 +415,19 @@ Si l'étape 3 échoue :
 4. Chaque service valide le token
 
 **Implémentation en Delphi** :
-Plusieurs bibliothèques Delphi existent pour gérer les JWT (jose-jwt, delphi-jose-jwt).
+La bibliothèque de référence est **delphi-jose-jwt** de Paolo Rossi (https://github.com/paolo-rossi/delphi-jose-jwt). Elle implémente la suite **JOSE** complète :
+- **JWT** (JSON Web Token) — le token lui-même
+- **JWS** (JSON Web Signature) — signature HMAC (HS256/384/512) ou RSA (RS256/384/512) ou ECDSA (ES256/384/512)
+- **JWK** (JSON Web Key) — représentation des clés
+- **JWA** (JSON Web Algorithms) — catalogue d'algorithmes
+
+Pour Horse, le middleware `Horse.JWT` (du même écosystème HashLoad) encapsule directement delphi-jose-jwt :
+
+```pascal
+uses Horse, Horse.JWT, JOSE.Core.Builder, JOSE.Core.JWT;
+
+THorse.Use(HorseJWT('MaCleSecrete'));  // Toutes les routes derrière sont protégées
+```
 
 #### OAuth2
 
@@ -384,8 +499,74 @@ Un endpoint qui retourne un JSON avec le statut du service et de ses dépendance
 - Facilite le déploiement
 - Portabilité entre environnements
 
-**Delphi et Docker** :
-Vous pouvez créer des images Docker pour vos applications Delphi Linux ou Windows.
+**Delphi et Docker** : Compilez votre service en cible **Linux64** (binaires ELF via la toolchain LLVM intégrée) depuis Delphi — possible depuis Delphi 10.2 Tokyo en Enterprise/Architect. Pour une interface graphique Linux, l'add-on tiers **FMXLinux** (KSDev) est nécessaire ; pour un microservice console/REST en revanche, la RTL standard suffit. Empaquetez ensuite dans une image Docker minimale.
+
+**Exemple de Dockerfile pour un microservice Horse (Linux64)** :
+
+```dockerfile
+# Étape 1 : image de base légère
+FROM debian:bookworm-slim
+
+# Bibliothèques runtime nécessaires aux binaires Delphi Linux
+# (libstdc++, libc6, libgcc — souvent déjà présentes — et OpenSSL pour HTTPS)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libssl3 \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Étape 2 : copie du binaire compilé
+WORKDIR /app  
+COPY ./Linux64/Release/UsersService /app/UsersService  
+RUN chmod +x /app/UsersService  
+
+# Métadonnées
+EXPOSE 9000  
+HEALTHCHECK --interval=30s --timeout=3s \  
+  CMD curl -fsS http://localhost:9000/health || exit 1
+
+# Utilisateur non-root pour la sécurité
+RUN useradd -m -s /bin/false appuser  
+USER appuser  
+
+CMD ["/app/UsersService"]
+```
+
+**Construction et lancement** :
+
+```bash
+# Compiler en Linux64 depuis Delphi (ou via msbuild)
+msbuild UsersService.dproj /p:Platform=Linux64 /p:Config=Release
+
+# Construire l'image
+docker build -t users-service:1.0.0 .
+
+# Lancer le conteneur
+docker run -d -p 9000:9000 --name users users-service:1.0.0
+
+# Tester
+curl http://localhost:9000/health
+```
+
+**Compose multi-services** (`docker-compose.yml`) :
+
+```yaml
+services:
+  users:
+    image: users-service:1.0.0
+    ports: ["9000:9000"]
+  orders:
+    image: orders-service:1.0.0
+    ports: ["9001:9001"]
+    depends_on: [users, postgres]
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_pwd
+    secrets: [db_pwd]
+secrets:
+  db_pwd:
+    file: ./secrets/db_password.txt
+```
 
 ### Orchestration avec Kubernetes
 
@@ -424,11 +605,112 @@ Vous pouvez créer des images Docker pour vos applications Delphi Linux ou Windo
 - **Ouvert** : Service inaccessible, retour immédiat d'erreur
 - **Semi-ouvert** : Test périodique pour voir si le service est de nouveau disponible
 
+```
+        ┌──────────────────┐
+        │     FERMÉ        │  Appels OK, on compte les échecs
+        │    (Closed)      │
+        └───────┬──────────┘
+                │ Seuil d'échecs atteint
+                ↓
+        ┌──────────────────┐
+        │     OUVERT       │  Tous les appels échouent immédiatement
+        │     (Open)       │  Pendant une durée fixée (ex. 30s)
+        └───────┬──────────┘
+                │ Délai expiré
+                ↓
+        ┌──────────────────┐
+        │   SEMI-OUVERT    │  Un appel test passe :
+        │   (Half-Open)    │  Succès → FERMÉ, Échec → OUVERT
+        └──────────────────┘
+```
+
+**Squelette Delphi** :
+
+```pascal
+type
+  TCircuitState = (csClosed, csOpen, csHalfOpen);
+
+  TCircuitBreaker = class
+  private
+    FState: TCircuitState;
+    FFailureCount: Integer;
+    FFailureThreshold: Integer;     // ex: 5 échecs avant ouverture
+    FOpenedAt: TDateTime;
+    FCooldownSec: Integer;          // ex: 30 secondes
+    procedure RecordSuccess;
+    procedure RecordFailure;
+    function ShouldAttemptReset: Boolean;
+  public
+    constructor Create(FailureThreshold: Integer = 5; CooldownSec: Integer = 30);
+    function Execute(Op: TFunc<Boolean>): Boolean;
+  end;
+
+function TCircuitBreaker.Execute(Op: TFunc<Boolean>): Boolean;  
+begin  
+  if (FState = csOpen) and not ShouldAttemptReset then
+    raise Exception.Create('Circuit ouvert — appel court-circuité');
+
+  if FState = csOpen then
+    FState := csHalfOpen;     // Tentative de test
+
+  try
+    Result := Op();
+    if Result then RecordSuccess else RecordFailure;
+  except
+    RecordFailure;
+    raise;
+  end;
+end;
+```
+
+Pour une implémentation complète, voir des librairies comme **Spring4D** ou **mORMot** qui proposent des composants de résilience.
+
 ### Retry Pattern
 
-**Principe** : Réessayer automatiquement une opération qui a échoué, avec un délai exponentiel entre les tentatives.
+**Principe** : Réessayer automatiquement une opération qui a échoué, avec un délai exponentiel (« exponential backoff ») entre les tentatives, et idéalement un **jitter** (aléatoire) pour éviter le « thundering herd ».
 
-**Attention** : Ne pas abuser pour éviter d'aggraver un problème.
+**Attention** : Ne pas abuser pour éviter d'aggraver un problème. **Ne retentez que les erreurs transitoires** (timeout réseau, 503 Service Unavailable…), JAMAIS les erreurs logiques (400 Bad Request, 401 Unauthorized…).
+
+**Exemple Delphi** :
+
+```pascal
+type
+  TRetryableOperation = reference to function: Boolean;
+
+function ExecuteWithRetry(Op: TRetryableOperation;
+  MaxAttempts: Integer = 3; InitialDelayMs: Integer = 100): Boolean;
+var
+  Attempt: Integer;
+  Delay: Integer;
+  JitterMax: Integer;
+begin
+  Delay := InitialDelayMs;
+  for Attempt := 1 to MaxAttempts do
+  begin
+    try
+      if Op() then
+        Exit(True);            // Succès → on sort
+    except
+      on E: Exception do
+        if Attempt = MaxAttempts then
+          raise;                // Dernière tentative : on propage
+    end;
+
+    // Backoff exponentiel + jitter aléatoire de ±20 %
+    // ⚠ Random(0) lève une exception : on garantit JitterMax >= 1.
+    JitterMax := Delay div 5;
+    if JitterMax < 1 then JitterMax := 1;
+    Sleep(Delay + Random(JitterMax));
+    Delay := Delay * 2;         // 100ms → 200ms → 400ms → 800ms…
+  end;
+  Result := False;
+end;
+
+// Utilisation :
+// ExecuteWithRetry(function: Boolean begin Result := CallRemoteAPI; end);
+```
+
+> 🔒 **Thread-safety** : la fonction `Random` de la RTL Delphi utilise un état partagé via la variable globale `RandSeed`. Dans un environnement multi-thread (typique des microservices), appelez `Randomize` une seule fois au démarrage, ou mieux, utilisez `System.Hash.THashBobJenkins` pour des nombres pseudo-aléatoires thread-safe, ou `BCryptGenRandom` (Windows) pour de la vraie entropie.
 
 ### Timeout
 
@@ -488,7 +770,7 @@ Les microservices nécessitent une infrastructure et des compétences spécifiqu
 
 ### Approche Strangler Fig
 
-**Concept** : Remplacer progressivement un monolithe par des microservices.
+**Concept** : Pattern popularisé par Martin Fowler (2004) inspiré du **figuier étrangleur**, un arbre tropical qui pousse autour d'un hôte jusqu'à le remplacer complètement. Appliqué au logiciel : on entoure progressivement un monolithe de microservices jusqu'à le remplacer.
 
 **Étapes** :
 1. Identifier une fonctionnalité à extraire
@@ -497,29 +779,55 @@ Les microservices nécessitent une infrastructure et des compétences spécifiqu
 4. Migrer progressivement les données
 5. Supprimer l'ancien code du monolithe
 
+**Schéma d'évolution** :
+
+```
+Phase 1 :    [Monolithe complet]
+                    ↓
+Phase 2 :    [Monolithe] + [µService 1] (via routeur)
+                    ↓
+Phase 3 :    [Monolithe réduit] + [µService 1] + [µService 2]
+                    ↓
+Phase N :    [µService 1] + [µService 2] + ... + [µService N]
+             (le monolithe a disparu, « étranglé »)
+```
+
+**Avantages** :
+- Migration **sans Big Bang** : pas d'arrêt prolongé
+- Possibilité de **rollback** facile à chaque étape
+- Validation continue en production
+- Acquisition progressive des compétences DevOps par l'équipe
+
+**Outil clé** : un **routeur de requêtes** (reverse proxy comme Nginx, Traefik ou un service API Gateway) qui décide pour chaque endpoint s'il route vers le monolithe ou vers le microservice extrait.
+
 ### Modularité dans le monolithe
 
-Avant de passer aux microservices, assurez-vous que votre code monolithique est bien structuré en modules avec des interfaces claires.
+Avant de passer aux microservices, assurez-vous que votre code monolithique est bien structuré en modules avec des interfaces claires. Cette étape s'appelle parfois **« monolithe modulaire »** (modular monolith) — c'est une architecture intermédiaire très valable en soi, et un excellent tremplin si vous décidez plus tard d'extraire des microservices.
 
 ## Outils et ressources pour Delphi
 
 ### Frameworks web Delphi
 
-- **Horse** : Simple et léger
-- **DMVC Framework** : Complet avec pattern MVC
-- **Mars-Curiosity** : REST avancé avec DI
+- **Horse** : Simple et léger, syntaxe à la Express.js
+- **DelphiMVCFramework (DMVC)** : Complet avec pattern MVC, Swagger intégré
+- **mORMot 2** : Hautes performances, SOA, ORM intégré
+- **Mars-Curiosity** : REST avancé avec injection de dépendances
 
 ### Bibliothèques utiles
 
-- **mORMot 2** : Framework complet pour serveurs hautes performances
-- **Spring4D** : Injection de dépendances et patterns
-- **DUnitX** : Tests unitaires
+- **Spring4D** : Injection de dépendances et patterns (https://bitbucket.org/sglienke/spring4d)
+- **DUnitX** : Tests unitaires (https://github.com/VSoftTechnologies/DUnitX)
+- **delphi-jose-jwt** (Paolo Rossi) : JWT pour authentification
+- **Boss** : Package manager pour Delphi (équivalent npm pour Node.js)
+- **GetIt Package Manager** : intégré à RAD Studio 13 Florence
 
 ### Communauté et documentation
 
-- Forums Delphi : Entraide et conseils
-- GitHub : Nombreux exemples de projets
-- Blogs spécialisés : Retours d'expérience
+- **Embarcadero DocWiki** : https://docwiki.embarcadero.com
+- **Delphi-PRAXiS** : forum communautaire de référence
+- **r/delphi** : communauté Reddit
+- **GitHub** : tag `delphi`, nombreux exemples open source
+- **Blogs** : Marco Cantù, Daniele Teti, Andrea Magni, Paolo Rossi, etc.
 
 ## Conclusion
 
