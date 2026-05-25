@@ -277,7 +277,7 @@ unit uUserModel;
 interface
 
 uses
-  System.SysUtils, System.JSON, System.Generics.Collections;
+  System.SysUtils, System.JSON, System.DateUtils, System.Generics.Collections;
 
 type
   TUserRole = (urFree, urPro, urEnterprise);
@@ -325,20 +325,31 @@ begin
   Result.AddPair('email', FEmail);
   Result.AddPair('name', FName);
   Result.AddPair('role', TJSONNumber.Create(Ord(FRole)));
-  Result.AddPair('createdAt', DateTimeToStr(FCreatedAt));
-  Result.AddPair('lastLogin', DateTimeToStr(FLastLogin));
+  // Format ISO 8601 (RFC 3339) — standard pour les API REST, indépendant
+  // des paramètres régionaux du serveur et du client.
+  Result.AddPair('createdAt', DateToISO8601(FCreatedAt, False));
+  Result.AddPair('lastLogin', DateToISO8601(FLastLogin, False));
   // Ne pas inclure le hash du mot de passe !
 end;
 
 procedure TUser.FromJSON(AJSON: TJSONObject);  
-begin  
-  if AJSON.TryGetValue<Integer>('id', FID) then;
-  if AJSON.TryGetValue<string>('email', FEmail) then;
-  if AJSON.TryGetValue<string>('name', FName) then;
+var  
+  RoleInt: Integer;
+  DateStr: string;
+begin
+  AJSON.TryGetValue<Integer>('id', FID);
+  AJSON.TryGetValue<string>('email', FEmail);
+  AJSON.TryGetValue<string>('name', FName);
 
-  var RoleInt: Integer;
   if AJSON.TryGetValue<Integer>('role', RoleInt) then
     FRole := TUserRole(RoleInt);
+
+  // Symétrie avec ToJSON : sans ce parsing, les dates renvoyées par le serveur
+  // ne sont jamais relues par le client → bug silencieux.
+  if AJSON.TryGetValue<string>('createdAt', DateStr) and (DateStr <> '') then
+    FCreatedAt := ISO8601ToDate(DateStr, False);
+  if AJSON.TryGetValue<string>('lastLogin', DateStr) and (DateStr <> '') then
+    FLastLogin := ISO8601ToDate(DateStr, False);
 end;
 
 end.
@@ -352,7 +363,7 @@ unit uTaskModel;
 interface
 
 uses
-  System.SysUtils, System.JSON, System.Generics.Collections;
+  System.SysUtils, System.JSON, System.DateUtils, System.Generics.Collections;
 
 type
   TTaskStatus = (tsNew, tsInProgress, tsCompleted, tsCancelled);
@@ -411,26 +422,40 @@ begin
   Result.AddPair('priority', TJSONNumber.Create(Ord(FPriority)));
   Result.AddPair('userId', TJSONNumber.Create(FUserID));
   Result.AddPair('teamId', TJSONNumber.Create(FTeamID));
-  Result.AddPair('dueDate', DateTimeToStr(FDueDate));
-  Result.AddPair('createdAt', DateTimeToStr(FCreatedAt));
+  // Dates au format ISO 8601 (RFC 3339) pour interopérabilité REST.
+  Result.AddPair('dueDate', DateToISO8601(FDueDate, False));
+  Result.AddPair('createdAt', DateToISO8601(FCreatedAt, False));
 
   if FStatus = tsCompleted then
-    Result.AddPair('completedAt', DateTimeToStr(FCompletedAt));
+    Result.AddPair('completedAt', DateToISO8601(FCompletedAt, False));
 end;
 
 procedure TTask.FromJSON(AJSON: TJSONObject);  
-begin  
+var  
+  StatusInt, PriorityInt: Integer;
+  DateStr: string;
+begin
   AJSON.TryGetValue<Integer>('id', FID);
   AJSON.TryGetValue<string>('title', FTitle);
   AJSON.TryGetValue<string>('description', FDescription);
   AJSON.TryGetValue<Integer>('userId', FUserID);
   AJSON.TryGetValue<Integer>('teamId', FTeamID);
 
-  var StatusInt, PriorityInt: Integer;
   if AJSON.TryGetValue<Integer>('status', StatusInt) then
     FStatus := TTaskStatus(StatusInt);
   if AJSON.TryGetValue<Integer>('priority', PriorityInt) then
     FPriority := TTaskPriority(PriorityInt);
+
+  // Important : symétrie avec ToJSON. Sans ces parsings, un client peut envoyer
+  // `dueDate` et la voir silencieusement ignorée — d'où des bugs très difficiles
+  // à diagnostiquer côté front. ISO8601ToDate accepte aussi bien `2025-01-20T17:00:00`
+  // que `2025-01-20 17:00:00` (Delphi 12+).
+  if AJSON.TryGetValue<string>('dueDate', DateStr) and (DateStr <> '') then
+    FDueDate := ISO8601ToDate(DateStr, False);
+  if AJSON.TryGetValue<string>('createdAt', DateStr) and (DateStr <> '') then
+    FCreatedAt := ISO8601ToDate(DateStr, False);
+  if AJSON.TryGetValue<string>('completedAt', DateStr) and (DateStr <> '') then
+    FCompletedAt := ISO8601ToDate(DateStr, False);
 end;
 
 end.
@@ -439,6 +464,18 @@ end.
 ### 2.4 API REST : Endpoints
 
 #### API d'authentification
+
+> ⚠️ **Important — Hachage des mots de passe** : Pour rester didactique, l'exemple ci-dessous utilise `THashSHA2.GetHashString` sur le mot de passe en clair. **Cette approche est insuffisante en production** :  
+>  
+> - SHA-256 est très rapide → vulnérable aux attaques par force brute (milliards d'essais/seconde sur GPU).  
+> - Sans sel (salt), deux utilisateurs avec le même mot de passe ont le même hash → attaques par rainbow tables.  
+>  
+> En production, utilisez un algorithme conçu pour les mots de passe :  
+> - **bcrypt** (via DCPcrypt ou une bibliothèque tierce)  
+> - **Argon2** (recommandé par OWASP)  
+> - **PBKDF2** avec ≥ 600 000 itérations SHA-256 et un sel aléatoire par utilisateur  
+>  
+> Pour un véritable JWT conforme aux RFC 7515/7519, préférez aussi la bibliothèque **delphi-jose-jwt** (Paolo Rossi) qui gère HMAC, RSA, expiration, claims standards (`iat`, `nbf`, `iss`, `aud`...) et la validation cryptographique correcte.
 
 ```pascal
 unit uAuthAPI;
@@ -527,7 +564,6 @@ function TAuthAPI.Register(const AEmail, APassword, AName: string): string;
 var  
   User: TUser;
   Response: TJSONObject;
-  PasswordHash: string;
 begin
   try
     // Valider les entrées
@@ -593,6 +629,12 @@ begin
     Response := TJSONObject.Create;
     try
       var User := DatabaseManager.GetUserByID(UserID);
+      // Important : GetUserByID renvoie nil si l'utilisateur a été supprimé
+      // entre l'émission du refresh token et son utilisation. Sans ce garde-fou,
+      // l'accès à User.Email lève EAccessViolation et le serveur retourne une
+      // erreur 500 brute au lieu d'un message clair.
+      if not Assigned(User) then
+        raise Exception.Create('Utilisateur introuvable ou supprimé');
       try
         Response.AddPair('token', TJWT.GenerateToken(UserID, User.Email));
         Result := Response.ToString;
@@ -721,6 +763,7 @@ var
   Email: string;
   Task: TTask;
   Response: TJSONObject;
+  TaskJSON: TJSONObject;
 begin
   try
     // Valider le token
@@ -730,11 +773,23 @@ begin
     // Récupérer la tâche
     Task := DatabaseManager.GetTask(ATaskID);
     try
+      // GetTask renvoie nil si l'ID n'existe pas — sans ce garde-fou, Task.UserID
+      // déclencherait EAccessViolation à la ligne suivante.
+      if not Assigned(Task) then
+        raise Exception.CreateFmt('Tâche %d introuvable', [ATaskID]);
+
       // Vérifier que l'utilisateur a accès à cette tâche
       if Task.UserID <> UserID then
         raise Exception.Create('Accès refusé');
 
-      Result := Task.ToJSON.ToString;
+      // Important : ToJSON renvoie un nouveau TJSONObject ; il faut le libérer
+      // explicitement après en avoir extrait la chaîne (sinon memory leak).
+      TaskJSON := Task.ToJSON;
+      try
+        Result := TaskJSON.ToString;
+      finally
+        TaskJSON.Free;
+      end;
     finally
       Task.Free;
     end;
@@ -760,6 +815,7 @@ var
   Task: TTask;
   JSON: TJSONObject;
   Response: TJSONObject;
+  TaskJSON: TJSONObject;
 begin
   try
     // Valider le token
@@ -767,7 +823,13 @@ begin
       raise Exception.Create('Token invalide');
 
     // Parser le JSON
+    // ⚠️ ParseJSONValue renvoie nil si ATaskJSON est mal formé, le cast
+    // `as TJSONObject` renvoie nil aussi si le JSON est valide mais n'est pas
+    // un objet (ex. un tableau). Sans cette garde, FromJSON ⇒ EAccessViolation
+    // et le client reçoit un HTTP 500 au lieu d'un message « JSON invalide ».
     JSON := TJSONObject.ParseJSONValue(ATaskJSON) as TJSONObject;
+    if not Assigned(JSON) then
+      raise Exception.Create('Payload JSON invalide');
     try
       Task := TTask.Create;
       try
@@ -778,8 +840,13 @@ begin
         // Sauvegarder en base
         Task.ID := DatabaseManager.CreateTask(Task);
 
-        // Retourner la tâche créée
-        Result := Task.ToJSON.ToString;
+        // Retourner la tâche créée — libérer le TJSONObject intermédiaire
+        TaskJSON := Task.ToJSON;
+        try
+          Result := TaskJSON.ToString;
+        finally
+          TaskJSON.Free;
+        end;
       finally
         Task.Free;
       end;
@@ -809,6 +876,7 @@ var
   Task: TTask;
   JSON: TJSONObject;
   Response: TJSONObject;
+  TaskJSON: TJSONObject;
 begin
   try
     // Valider le token
@@ -818,12 +886,19 @@ begin
     // Récupérer la tâche existante
     Task := DatabaseManager.GetTask(ATaskID);
     try
+      if not Assigned(Task) then
+        raise Exception.CreateFmt('Tâche %d introuvable', [ATaskID]);
+
       // Vérifier les droits
       if Task.UserID <> UserID then
         raise Exception.Create('Accès refusé');
 
-      // Mettre à jour avec les nouvelles données
+      // Mettre à jour avec les nouvelles données.
+      // Même garde que dans CreateTask : payload mal formé ⇒ erreur explicite
+      // plutôt que EAccessViolation côté FromJSON.
       JSON := TJSONObject.ParseJSONValue(ATaskJSON) as TJSONObject;
+      if not Assigned(JSON) then
+        raise Exception.Create('Payload JSON invalide');
       try
         Task.FromJSON(JSON);
         Task.ID := ATaskID; // Garder l'ID original
@@ -831,7 +906,12 @@ begin
         // Sauvegarder
         DatabaseManager.UpdateTask(Task);
 
-        Result := Task.ToJSON.ToString;
+        TaskJSON := Task.ToJSON;
+        try
+          Result := TaskJSON.ToString;
+        finally
+          TaskJSON.Free;
+        end;
       finally
         JSON.Free;
       end;
@@ -868,6 +948,8 @@ begin
     // Vérifier les droits
     Task := DatabaseManager.GetTask(ATaskID);
     try
+      if not Assigned(Task) then
+        raise Exception.CreateFmt('Tâche %d introuvable', [ATaskID]);
       if Task.UserID <> UserID then
         raise Exception.Create('Accès refusé');
     finally
@@ -906,6 +988,7 @@ var
   Email: string;
   Task: TTask;
   Response: TJSONObject;
+  TaskJSON: TJSONObject;
 begin
   try
     // Valider le token
@@ -915,6 +998,8 @@ begin
     // Marquer comme complétée
     Task := DatabaseManager.GetTask(ATaskID);
     try
+      if not Assigned(Task) then
+        raise Exception.CreateFmt('Tâche %d introuvable', [ATaskID]);
       if Task.UserID <> UserID then
         raise Exception.Create('Accès refusé');
 
@@ -923,7 +1008,12 @@ begin
 
       DatabaseManager.UpdateTask(Task);
 
-      Result := Task.ToJSON.ToString;
+      TaskJSON := Task.ToJSON;
+      try
+        Result := TaskJSON.ToString;
+      finally
+        TaskJSON.Free;
+      end;
     finally
       Task.Free;
     end;
@@ -949,6 +1039,7 @@ var
   Email: string;
   Task: TTask;
   Response: TJSONObject;
+  TaskJSON: TJSONObject;
 begin
   try
     // Valider le token
@@ -958,6 +1049,8 @@ begin
     // Assigner la tâche
     Task := DatabaseManager.GetTask(ATaskID);
     try
+      if not Assigned(Task) then
+        raise Exception.CreateFmt('Tâche %d introuvable', [ATaskID]);
       // Vérifier les droits (propriétaire ou membre de l'équipe)
       if Task.UserID <> UserID then
         raise Exception.Create('Accès refusé');
@@ -965,7 +1058,12 @@ begin
       Task.UserID := AUserID;
       DatabaseManager.UpdateTask(Task);
 
-      Result := Task.ToJSON.ToString;
+      TaskJSON := Task.ToJSON;
+      try
+        Result := TaskJSON.ToString;
+      finally
+        TaskJSON.Free;
+      end;
     finally
       Task.Free;
     end;
@@ -1022,9 +1120,11 @@ type
   private
     class var FSecretKey: string;
 
+    class function Base64UrlEncodeBytes(const ABytes: TBytes): string;
     class function Base64UrlEncode(const AInput: string): string;
     class function Base64UrlDecode(const AInput: string): string;
     class function CreateSignature(const AHeader, APayload: string): string;
+    class function ConstantTimeEquals(const A, B: string): Boolean;
   public
     class constructor Create;
 
@@ -1046,20 +1146,37 @@ uses
 
 class constructor TJWT.Create;  
 begin  
-  // En production, stocker dans un fichier de config sécurisé
+  // En production, stocker dans un fichier de config sécurisé (variable d'environnement,
+  // coffre-fort de secrets, etc.). Ne jamais commit cette valeur dans le repo.
   FSecretKey := 'VotreCléSecrèteTrèsLongueEtComplexe123!@#';
+end;
+
+class function TJWT.Base64UrlEncodeBytes(const ABytes: TBytes): string;  
+var  
+  Enc: TBase64Encoding;
+begin
+  // 0 = aucun retour à la ligne (les CRLF tous les 76 caractères du Base64 standard
+  // cassent les JWT, qui doivent tenir sur une seule ligne).
+  Enc := TBase64Encoding.Create(0);
+  try
+    Result := Enc.EncodeBytesToString(ABytes);
+  finally
+    Enc.Free;
+  end;
+  // Variante URL-safe : remplacements et suppression du padding `=`.
+  Result := Result.Replace('+', '-').Replace('/', '_').Replace('=', '');
 end;
 
 class function TJWT.Base64UrlEncode(const AInput: string): string;  
 begin  
-  Result := TNetEncoding.Base64.Encode(AInput);
-  // Adapter pour Base64Url
-  Result := Result.Replace('+', '-').Replace('/', '_').Replace('=', '');
+  Result := Base64UrlEncodeBytes(TEncoding.UTF8.GetBytes(AInput));
 end;
 
 class function TJWT.Base64UrlDecode(const AInput: string): string;  
 var  
   Input: string;
+  Enc: TBase64Encoding;
+  Bytes: TBytes;
 begin
   Input := AInput.Replace('-', '+').Replace('_', '/');
 
@@ -1069,15 +1186,44 @@ begin
     3: Input := Input + '=';
   end;
 
-  Result := TNetEncoding.Base64.Decode(Input);
+  Enc := TBase64Encoding.Create(0);
+  try
+    Bytes := Enc.DecodeStringToBytes(Input);
+  finally
+    Enc.Free;
+  end;
+  Result := TEncoding.UTF8.GetString(Bytes);
 end;
 
 class function TJWT.CreateSignature(const AHeader, APayload: string): string;  
 var  
-  Data: string;
+  HMACBytes: TBytes;
 begin
-  Data := AHeader + '.' + APayload + '.' + FSecretKey;
-  Result := Base64UrlEncode(THashSHA2.GetHashString(Data));
+  // Spécification JWT HS256 : signature = Base64Url(HMAC-SHA256(header.payload, secret)).
+  // ATTENTION : il faut un vrai HMAC (pas un simple SHA-256 concaténé avec le secret,
+  // qui serait vulnérable aux attaques par length extension et non conforme au standard).
+  HMACBytes := THashSHA2.GetHMACAsBytes(AHeader + '.' + APayload, FSecretKey);
+  Result := Base64UrlEncodeBytes(HMACBytes);
+end;
+
+class function TJWT.ConstantTimeEquals(const A, B: string): Boolean;  
+var  
+  I, Diff: Integer;
+begin
+  // ⚠️ Comparaison de signature à TEMPS CONSTANT.
+  // Une comparaison `=` standard sort dès le PREMIER octet qui diffère : la durée
+  // de retour révèle alors combien d'octets d'en-tête sont corrects, ce qui permet
+  // à un attaquant de deviner la signature octet par octet en mesurant les temps
+  // de réponse (« timing attack »). On parcourt tous les caractères sans early-exit
+  // et on accumule via XOR pour garantir un temps de calcul indépendant des données.
+  if Length(A) <> Length(B) then
+    Exit(False);
+
+  Diff := 0;
+  for I := 1 to Length(A) do
+    Diff := Diff or (Ord(A[I]) xor Ord(B[I]));
+
+  Result := Diff = 0;
 end;
 
 class function TJWT.GenerateToken(AUserID: Integer;
@@ -1103,9 +1249,12 @@ begin
     Payload.AddPair('userId', TJSONNumber.Create(AUserID));
     Payload.AddPair('email', AEmail);
 
-    // Expiration dans 24 heures
+    // Expiration dans 24 heures.
+    // ⚠️ Important : `Now` renvoie l'heure locale, mais le claim `exp` du JWT
+    // est défini en secondes UNIX UTC (RFC 7519). On passe donc `False` comme
+    // second paramètre à DateTimeToUnix pour qu'il convertisse local → UTC.
     ExpirationTime := IncHour(Now, 24);
-    Payload.AddPair('exp', TJSONNumber.Create(DateTimeToUnix(ExpirationTime)));
+    Payload.AddPair('exp', TJSONNumber.Create(DateTimeToUnix(ExpirationTime, False)));
 
     PayloadStr := Base64UrlEncode(Payload.ToString);
   finally
@@ -1130,9 +1279,9 @@ begin
     Payload.AddPair('userId', TJSONNumber.Create(AUserID));
     Payload.AddPair('type', 'refresh');
 
-    // Expiration dans 30 jours
+    // Expiration dans 30 jours (UTC — voir commentaire dans GenerateToken)
     ExpirationTime := IncDay(Now, 30);
-    Payload.AddPair('exp', TJSONNumber.Create(DateTimeToUnix(ExpirationTime)));
+    Payload.AddPair('exp', TJSONNumber.Create(DateTimeToUnix(ExpirationTime, False)));
 
     PayloadStr := Base64UrlEncode(Payload.ToString);
   finally
@@ -1163,20 +1312,23 @@ begin
     if Length(Parts) <> 3 then
       Exit;
 
-    // Vérifier la signature
+    // Vérifier la signature avec comparaison à temps constant (timing-safe)
     ExpectedSignature := CreateSignature(Parts[0], Parts[1]);
     ActualSignature := Parts[2];
 
-    if ExpectedSignature <> ActualSignature then
+    if not ConstantTimeEquals(ExpectedSignature, ActualSignature) then
       Exit;
 
     // Décoder le payload
     PayloadJSON := Base64UrlDecode(Parts[1]);
     Payload := TJSONObject.ParseJSONValue(PayloadJSON) as TJSONObject;
     try
-      // Vérifier l'expiration
+      // Vérifier l'expiration.
+      // ⚠️ Le timestamp `exp` est en UNIX UTC ; on demande à UnixToDateTime
+      // de renvoyer une TDateTime en heure locale (False) pour comparer
+      // directement avec `Now` qui est local lui aussi.
       ExpTimestamp := Payload.GetValue<Int64>('exp');
-      ExpTime := UnixToDateTime(ExpTimestamp);
+      ExpTime := UnixToDateTime(ExpTimestamp, False);
 
       if Now > ExpTime then
         Exit; // Token expiré
@@ -1204,6 +1356,7 @@ var
   TokenType: string;
   ExpTimestamp: Int64;
   ExpTime: TDateTime;
+  ExpectedSignature: string;
 begin
   Result := False;
   AUserID := 0;
@@ -1216,6 +1369,17 @@ begin
     if Parts[0] <> 'refresh' then
       Exit;
 
+    // ⚠️ Vérification de signature OBLIGATOIRE : sans ce contrôle, un attaquant
+    // pourrait forger un refresh token (Parts[0]='refresh', Parts[1]=payload
+    // arbitraire encodé Base64Url, Parts[2]=signature bidon) et obtenir un
+    // access token pour n'importe quel UserID. La vérification d'expiration
+    // ne protège pas si la signature elle-même n'est pas validée.
+    // Comparaison à temps constant (cf. ConstantTimeEquals) pour empêcher
+    // les timing attacks.
+    ExpectedSignature := CreateSignature(Parts[0], Parts[1]);
+    if not ConstantTimeEquals(Parts[2], ExpectedSignature) then
+      Exit;
+
     PayloadJSON := Base64UrlDecode(Parts[1]);
     Payload := TJSONObject.ParseJSONValue(PayloadJSON) as TJSONObject;
     try
@@ -1223,8 +1387,9 @@ begin
       if TokenType <> 'refresh' then
         Exit;
 
+      // UTC → heure locale (voir commentaire dans ValidateToken)
       ExpTimestamp := Payload.GetValue<Int64>('exp');
-      ExpTime := UnixToDateTime(ExpTimestamp);
+      ExpTime := UnixToDateTime(ExpTimestamp, False);
 
       if Now > ExpTime then
         Exit;
@@ -1248,14 +1413,14 @@ end.
 ```pascal
 // Dans chaque endpoint API, valider le token
 
+// Note importante : cette fonction renvoie un Boolean SANS lever d'exception,
+// afin que le caller puisse décider de la réponse (par exemple, retourner du JSON
+// '{"error": ...}' plutôt qu'une exception qui remonte en HTTP 500).
 function RequireAuth(const AToken: string; out AUserID: Integer): Boolean;  
 var  
   Email: string;
 begin
   Result := TJWT.ValidateToken(AToken, AUserID, Email);
-
-  if not Result then
-    raise Exception.Create('Authentification requise');
 end;
 
 // Utilisation
@@ -1321,6 +1486,10 @@ type
     function CreateTask(ATask: TTask): Integer;
     function UpdateTask(ATask: TTask): Boolean;
     function DeleteTask(ATaskID: Integer): Boolean;
+
+    // Exposée pour permettre aux API d'attacher des TFDQuery dédiés
+    // (ex. pagination, requêtes ad hoc) sans dupliquer la configuration.
+    property Connection: TFDConnection read FConnection;
   end;
 
 var
@@ -1347,11 +1516,21 @@ end;
 procedure TDatabaseManager.InitializeConnection;  
 var  
   IniFile: TIniFile;
+  IniPath: string;
   Host, Database, Username, Password: string;
   Port: Integer;
 begin
+  // ⚠️ On utilise le chemin ABSOLU à côté de l'exécutable, pas le current
+  // directory. Sous Windows, un service lancé par le SCM démarre avec
+  // CWD = `C:\Windows\System32` ; sous Linux, un service systemd peut avoir
+  // un CWD différent encore. Un chemin relatif `database.ini` chargerait
+  // donc le fichier au mauvais endroit (ou échouerait silencieusement).
+  // ExtractFilePath inclut déjà le séparateur final, on peut concaténer
+  // directement sans avoir besoin d'importer System.IOUtils.
+  IniPath := ExtractFilePath(ParamStr(0)) + 'database.ini';
+
   // Lire la configuration
-  IniFile := TIniFile.Create('database.ini');
+  IniFile := TIniFile.Create(IniPath);
   try
     Host := IniFile.ReadString('Database', 'Host', 'localhost');
     Port := IniFile.ReadInteger('Database', 'Port', 5432);
@@ -1520,7 +1699,15 @@ begin
     Query.ParamByName('email').AsString := AUser.Email;
     Query.ParamByName('name').AsString := AUser.Name;
     Query.ParamByName('role').AsInteger := Ord(AUser.Role);
-    Query.ParamByName('last_login').AsDateTime := AUser.LastLogin;
+
+    // ⚠️ TDateTime(0) correspond à 1899-12-30 — on ne veut PAS l'enregistrer
+    // ainsi : sémantiquement, `last_login = 0` veut dire « jamais connecté ».
+    // On passe donc NULL en base via .Clear pour que le SELECT ultérieur puisse
+    // appeler Query.FieldByName('last_login').IsNull et garder LastLogin à 0.
+    if AUser.LastLogin = 0 then
+      Query.ParamByName('last_login').Clear
+    else
+      Query.ParamByName('last_login').AsDateTime := AUser.LastLogin;
 
     Query.ExecSQL;
     Result := True;
@@ -1641,7 +1828,14 @@ begin
     Query.ParamByName('priority').AsInteger := Ord(ATask.Priority);
     Query.ParamByName('user_id').AsInteger := ATask.UserID;
     Query.ParamByName('team_id').AsInteger := ATask.TeamID;
-    Query.ParamByName('due_date').AsDateTime := ATask.DueDate;
+
+    // Même logique que pour LastLogin : si DueDate vaut 0, l'utilisateur n'a
+    // pas fixé d'échéance — on enregistre NULL plutôt que 1899-12-30.
+    if ATask.DueDate = 0 then
+      Query.ParamByName('due_date').Clear
+    else
+      Query.ParamByName('due_date').AsDateTime := ATask.DueDate;
+
     Query.ParamByName('created_at').AsDateTime := ATask.CreatedAt;
 
     Query.Open;
@@ -1677,7 +1871,12 @@ begin
     Query.ParamByName('priority').AsInteger := Ord(ATask.Priority);
     Query.ParamByName('user_id').AsInteger := ATask.UserID;
     Query.ParamByName('team_id').AsInteger := ATask.TeamID;
-    Query.ParamByName('due_date').AsDateTime := ATask.DueDate;
+
+    // Cohérent avec CreateTask : DueDate=0 ⇒ NULL en base.
+    if ATask.DueDate = 0 then
+      Query.ParamByName('due_date').Clear
+    else
+      Query.ParamByName('due_date').AsDateTime := ATask.DueDate;
 
     if ATask.Status = tsCompleted then
       Query.ParamByName('completed_at').AsDateTime := ATask.CompletedAt
@@ -1724,7 +1923,10 @@ end.
 Host=your-postgres-server.postgres.database.azure.com  
 Port=5432  
 Database=taskmaster  
-Username=admin@your-server  
+; ⚠️ Azure Flexible Server (recommandé) : `Username=admin` sans suffixe.
+; Pour l'ancien Single Server (en retrait), le format était `admin@your-server`.
+; Single Server étant retiré par Microsoft, on conserve uniquement le format moderne.
+Username=admin  
 Password=YourSecurePassword123!  
 ```
 
@@ -1857,7 +2059,8 @@ begin
   FAuthAPI.Free;
   FTaskAPI.Free;
 
-  // Nettoyer les données de test
+  // Nettoyer les données de test (méthode DeleteUser à ajouter dans TDatabaseManager
+  // au même titre que GetUserByID, UpdateUser, etc.).
   if FTestUserID > 0 then
     DatabaseManager.DeleteUser(FTestUserID);
 end;
@@ -2094,6 +2297,9 @@ end.
 
 ```dockerfile
 # Dockerfile pour l'API Delphi
+# Note : Debian 11 (bullseye) fournit libssl1.1 ; pour Debian 12 (bookworm) ou plus
+# récent, remplacez par libssl3 (l'exécutable Delphi doit être lié contre la même
+# version d'OpenSSL que celle disponible dans l'image).
 FROM debian:bullseye-slim
 
 # Installer les dépendances
@@ -2119,7 +2325,10 @@ CMD ["./TaskMasterAPI"]
 #### Docker Compose
 
 ```yaml
-version: '3.8'
+# Note : le champ `version:` de Docker Compose est désormais OBSOLÈTE et
+# déclenche un warning sur Docker Compose v2.x (à partir de fin 2023). Le schéma
+# de la Compose Specification est unifié et automatiquement géré par le CLI.
+# On l'omet donc volontairement ici. Voir : https://docs.docker.com/reference/compose-file/version-and-name/
 
 services:
   api:
@@ -2137,7 +2346,10 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:14-alpine
+    # PostgreSQL 16 LTS (supporté jusqu'en novembre 2028). PostgreSQL 14 reste
+    # supporté jusqu'en novembre 2026 mais 16 est le choix recommandé pour les
+    # nouveaux projets (perfs SIMD, logical replication améliorée…).
+    image: postgres:16-alpine
     environment:
       - POSTGRES_DB=taskmaster
       - POSTGRES_USER=postgres
@@ -2221,13 +2433,20 @@ az webapp create \
   --deployment-container-image-name your-docker-hub/taskmaster:latest
 
 # Configurer la base de données PostgreSQL
-az postgres server create \
+# ⚠️ `az postgres server create` (ci-dessous) gère l'offre « Azure Database
+# for PostgreSQL Single Server », EN RETRAIT par Microsoft. Pour tout nouveau
+# projet, utilisez plutôt `az postgres flexible-server create` (offre actuelle,
+# meilleur rapport perf/coût). La nomenclature SKU change aussi : `Standard_B1ms`
+# au lieu de l'ancien `B_Gen5_1`.
+az postgres flexible-server create \
   --resource-group taskmaster-rg \
   --name taskmaster-db \
   --location westeurope \
   --admin-user adminuser \
-  --admin-password SecurePass123! \
-  --sku-name B_Gen5_1
+  --admin-password 'SecurePass123!' \
+  --sku-name Standard_B1ms \
+  --tier Burstable \
+  --version 16
 ```
 
 ### 6.4 Configuration HTTPS avec Let's Encrypt
@@ -2455,7 +2674,7 @@ Vous êtes maintenant capable de :
 
 **Documentation** :
 - [AWS Documentation](https://docs.aws.amazon.com)
-- [Azure Documentation](https://docs.microsoft.com/azure)
+- [Azure Documentation](https://learn.microsoft.com/azure)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
 **Outils** :

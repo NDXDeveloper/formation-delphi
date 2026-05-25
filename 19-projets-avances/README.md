@@ -380,7 +380,7 @@ Avant de vous lancer dans ces projets avancés, assurez-vous de maîtriser :
 
 ❌ **Ne pas faire de pauses** : La fatigue mène aux erreurs.
 
-❌ **Perfectionnisme excessif** : Mieux vaut terminé qu'imparfait que parfait et jamais fini.
+❌ **Perfectionnisme excessif** : Mieux vaut un projet terminé mais imparfait qu'un projet parfait jamais fini.
 
 ❌ **Ignorer la documentation** : Documentez pour votre futur vous.
 
@@ -531,7 +531,5 @@ Si vous ne savez pas par où commencer, voici nos recommandations :
 Quel que soit votre choix, vous êtes sur la bonne voie. Bonne chance et bon développement !
 
 ---
-
-**Prochaine étape** : [19.1 Application de gestion complète avec MySQL/MariaDB →]()
 
 ⏭️ [Application de gestion complète avec MySQL/MariaDB](/19-projets-avances/01-application-de-gestion-complete-avec-mysql-mariadb.md)

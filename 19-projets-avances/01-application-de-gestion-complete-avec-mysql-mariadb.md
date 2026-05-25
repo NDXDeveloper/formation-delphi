@@ -113,10 +113,10 @@ Avant de commencer ce projet, vous devez avoir :
 - Compréhension des transactions
 
 ### Environnement de développement
-- Delphi 13 Florence installé (Community Edition ou supérieur)
-- MySQL 8.0 ou MariaDB 10.x installé et configuré
+- Delphi 13 Florence installé (édition Professional, Enterprise ou Architect — la Community Edition s'arrête à Delphi 12 Athens)
+- MySQL 8.0+ ou MariaDB 10.11 LTS (ou 11.x) installé et configuré
 - Un client MySQL comme MySQL Workbench ou HeidiSQL
-- Au moins 4 Go de RAM disponibles
+- 8 Go de RAM minimum recommandés (Delphi + IDE + SGBD + outils)
 
 ### Logiciels recommandés
 - **MySQL Workbench** : pour la gestion visuelle de la base de données
@@ -178,11 +178,11 @@ Notre application suivra une architecture en couches bien structurée :
 
 ### Delphi 13 Florence
 La dernière version de Delphi offre de nombreuses améliorations :
-- Opérateur ternaire pour un code plus concis
-- Support LLDB v12 pour un débogage avancé
-- Améliorations VCL et FireMonkey
-- GetIt Package Manager amélioré
-- Support IA avec le site companion
+- **Opérateur ternaire** `if...then...else` utilisable en expression (ex. `X := if Left < 100 then 22 else 45;`) avec évaluation paresseuse de la seule branche choisie
+- **IDE 64 bits** pour de meilleures performances sur les gros projets
+- **Composants IA et AI Companion** (Smart CodeInsight) pour assister la rédaction de code
+- Améliorations VCL et FireMonkey, **GetIt Package Manager** modernisé
+- Débogueur basé sur **LLDB** pour les plateformes ARM/Linux/macOS
 
 ### MySQL/MariaDB
 Système de gestion de base de données robuste et éprouvé :

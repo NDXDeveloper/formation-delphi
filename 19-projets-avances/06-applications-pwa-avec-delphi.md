@@ -74,7 +74,7 @@ Vous utilisez peut-être déjà des PWA sans le savoir :
 
 **Outils nécessaires** :
 - ✅ Delphi 13 Florence
-- ✅ TMS Web Core (inclus dans Delphi)
+- ✅ **TMS Web Core** (produit commercial tiers de [TMS Software](https://www.tmssoftware.com/site/tmswebcore.asp), licence par développeur — une version d'évaluation est téléchargeable via GetIt Package Manager)
 - ✅ Navigateur moderne (Chrome, Edge, Firefox)
 - ✅ Serveur web (IIS, Apache, ou serveur de dev)
 - ✅ Certificat SSL pour HTTPS
@@ -181,14 +181,14 @@ Une PWA repose sur trois piliers techniques :
 
 ### 2.1 Installation de TMS Web Core
 
-**TMS Web Core** est inclus dans Delphi et permet de créer des applications web en Pascal.
+**TMS Web Core** est un framework commercial développé par [TMS Software](https://www.tmssoftware.com/site/tmswebcore.asp) qui permet de créer des applications web en Object Pascal. Il s'installe via le **GetIt Package Manager** d'Embarcadero (version d'évaluation disponible) ou directement depuis le site de TMS Software (licence par développeur).
 
-**Vérification de l'installation** :
+**Installation** :
 
 1. Ouvrez Delphi 13 Florence
 2. Menu **Tools → GetIt Package Manager**
 3. Recherchez "TMS Web Core"
-4. Installez si nécessaire
+4. Cliquez sur **Install** (la version d'évaluation est utilisable pour suivre ce tutoriel)
 
 **Première utilisation** :
 
@@ -267,7 +267,8 @@ unit UMainForm;
 interface
 
 uses
-  System.SysUtils, System.Classes, JS, Web, WEBLib.Graphics, WEBLib.Controls,
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  JS, Web, WEBLib.Graphics, WEBLib.Controls,
   WEBLib.Forms, WEBLib.Dialogs, Vcl.Controls, Vcl.StdCtrls, WEBLib.StdCtrls,
   WEBLib.ExtCtrls, WEBLib.Lists;
 
@@ -320,7 +321,9 @@ var
 implementation
 
 uses
-  WEBLib.Storage, System.Generics.Collections;
+  WEBLib.Storage, System.DateUtils, System.Generics.Collections, System.JSON;
+  // System.JSON est nécessaire pour TJSONArray / TJSONObject / TJSONNumber / TJSONBool
+  // utilisés dans LoadItems et SaveItems.
 
 {$R *.dfm}
 
@@ -353,6 +356,7 @@ var
   I: Integer;
   Item: TShoppingItem;
   JSONItem: TJSONObject;
+  CreatedStr: string;
 begin
   Storage := TLocalStorage.Create;
   try
@@ -360,18 +364,39 @@ begin
 
     if JSONData <> '' then
     begin
+      // ⚠️ ParseJSONValue renvoie nil si JSONData est mal formé, et le cast
+      // `as TJSONArray` renvoie nil si la valeur n'est pas un tableau (ex.
+      // ancienne version de l'app qui stockait un objet, ou storage corrompu).
+      // Sans cette garde, JSONArray.Count lèverait EAccessViolation au démarrage.
       JSONArray := TJSONObject.ParseJSONValue(JSONData) as TJSONArray;
+      if not Assigned(JSONArray) then
+        Exit;
       try
         for I := 0 to JSONArray.Count - 1 do
         begin
+          // ⚠️ Tolérer un élément non-objet (le storage a pu être édité à la
+          // main, ou produit par une version plus ancienne).
+          if not (JSONArray.Items[I] is TJSONObject) then
+            Continue;
           JSONItem := JSONArray.Items[I] as TJSONObject;
 
           Item := TShoppingItem.Create;
-          Item.ID := JSONItem.GetValue<string>('id');
-          Item.Name := JSONItem.GetValue<string>('name');
-          Item.Quantity := JSONItem.GetValue<Integer>('quantity');
-          Item.Checked := JSONItem.GetValue<Boolean>('checked');
-          Item.CreatedAt := StrToDateTime(JSONItem.GetValue<string>('createdAt'));
+          // TryGetValue plutôt que GetValue : tolère les clés absentes (champs
+          // ajoutés/renommés entre versions de l'app). Item part avec des
+          // valeurs par défaut zéro et on n'écrase que ce qu'on trouve.
+          JSONItem.TryGetValue<string>('id', Item.ID);
+          JSONItem.TryGetValue<string>('name', Item.Name);
+          JSONItem.TryGetValue<Integer>('quantity', Item.Quantity);
+          JSONItem.TryGetValue<Boolean>('checked', Item.Checked);
+          // Format ISO 8601 — robuste aux changements de locale du navigateur.
+          if JSONItem.TryGetValue<string>('createdAt', CreatedStr) and (CreatedStr <> '') then
+            Item.CreatedAt := ISO8601ToDate(CreatedStr, False);
+
+          // ID est obligatoire (clé de DeleteItem/ToggleItem). Si absent, on
+          // en génère un nouveau pour éviter qu'un click ne sache plus quelle
+          // ligne supprimer.
+          if Item.ID = '' then
+            Item.ID := TGUID.NewGuid.ToString;
 
           FItems.Add(Item);
         end;
@@ -402,7 +427,8 @@ begin
         JSONItem.AddPair('name', Item.Name);
         JSONItem.AddPair('quantity', TJSONNumber.Create(Item.Quantity));
         JSONItem.AddPair('checked', TJSONBool.Create(Item.Checked));
-        JSONItem.AddPair('createdAt', DateTimeToStr(Item.CreatedAt));
+        // ISO 8601 — voir commentaire dans LoadItems.
+        JSONItem.AddPair('createdAt', DateToISO8601(Item.CreatedAt, False));
 
         JSONArray.AddElement(JSONItem);
       end;
@@ -774,6 +800,8 @@ button:active {
 
 Le fichier **manifest.json** décrit votre PWA :
 
+> ⚠️ **À propos du champ `purpose`** : la communauté Chromium et MDN déconseillent désormais de combiner `"any maskable"` sur la même icône — une icône maskable doit prévoir une « safe zone » de padding (≈ 20 %) qui rend la même image visuellement trop petite lorsqu'elle est utilisée en mode `any`. Il faut donc **deux fichiers d'icône distincts** : un standard (purpose `any`) et un avec safe zone (purpose `maskable`). Pour tester votre icône maskable, utilisez l'outil [maskable.app](https://maskable.app).
+
 ```json
 {
   "name": "Shopping List - Ma liste de courses",
@@ -793,49 +821,61 @@ Le fichier **manifest.json** décrit votre PWA :
       "src": "/images/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -1135,7 +1175,13 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  if (event.action === 'open') {
+  // ⚠️ event.action vaut '' quand l'utilisateur clique sur le CORPS de la
+  // notification (pas sur un bouton d'action). On ouvre donc l'app dans
+  // tous les cas SAUF si l'utilisateur a explicitement choisi « Fermer ».
+  // L'ancienne version `event.action === 'open'` ne déclenchait l'ouverture
+  // QUE sur le bouton « Ouvrir », et restait silencieuse sur le clic principal,
+  // ce qui surprend les utilisateurs.
+  if (event.action !== 'close') {
     event.waitUntil(
       clients.openWindow('/')
     );
@@ -1164,8 +1210,11 @@ fetch(request)
 ```javascript
 caches.match(request)
   .then(response => {
+    // On ouvre le cache nommé avant de pouvoir y écrire la nouvelle réponse.
     const fetchPromise = fetch(request).then(networkResponse => {
-      cache.put(request, networkResponse.clone());
+      caches.open(CACHE_NAME).then(cache => {
+        cache.put(request, networkResponse.clone());
+      });
       return networkResponse;
     });
     return response || fetchPromise;
@@ -1371,12 +1420,18 @@ end;
 
 // Utilisation
 procedure TMainForm.ButtonAddClick(Sender: TObject);  
-begin  
-  AddItem(EditItem.Text, StrToIntDef(EditQuantity.Text, 1));
+var  
+  ArticleName: string;
+begin
+  // ⚠️ AddItem vide EditItem.Text à la fin pour préparer la saisie suivante.
+  // On capture donc le nom AVANT l'appel, sinon la notification afficherait
+  // « <vide> a été ajouté à votre liste ».
+  ArticleName := EditItem.Text;
+  AddItem(ArticleName, StrToIntDef(EditQuantity.Text, 1));
 
   // Notifier l'ajout
   ShowNotification('Article ajouté',
-    Format('%s a été ajouté à votre liste', [EditItem.Text]));
+    Format('%s a été ajouté à votre liste', [ArticleName]));
 end;
 ```
 
@@ -1622,10 +1677,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./Output/Release
@@ -1692,15 +1747,19 @@ server {
   gzip on;
   gzip_types text/plain text/css application/json application/javascript;
 
-  # Cache des assets
+  # ⚠️ ORDRE IMPORTANT : pour les directives `location ~*` (regex), nginx prend
+  # le PREMIER match dans l'ordre de déclaration. On déclare donc le pattern
+  # spécifique `sw.js` / `manifest.json` AVANT le pattern général `\.js$`,
+  # sinon `sw.js` se ferait servir avec `expires 1y` et le navigateur ne
+  # rechargerait jamais le Service Worker mis à jour.
+  location ~* (sw\.js|manifest\.json)$ {
+    add_header Cache-Control "no-cache";
+  }
+
+  # Cache long pour les autres assets versionnés
   location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
     expires 1y;
     add_header Cache-Control "public, immutable";
-  }
-
-  # Pas de cache pour le SW et manifest
-  location ~* (sw\.js|manifest\.json)$ {
-    add_header Cache-Control "no-cache";
   }
 
   # SPA routing
@@ -1769,6 +1828,10 @@ npx csso styles.css -o styles.min.css
 procedure TMainForm.SetupKeyboardShortcuts;  
 begin  
   asm
+    // On capture l'instance courante avant d'entrer dans le callback :
+    // à l'intérieur du handler 'keydown', `this` désignerait `document`.
+    var self = this;
+
     document.addEventListener('keydown', function(e) {
       // Ctrl+N : Nouveau
       if (e.ctrlKey && e.key === 'n') {
@@ -1927,19 +1990,30 @@ end;
 
 ### 10.3 A/B Testing
 
+> ⚠️ Pour qu'un test A/B soit statistiquement valable, **chaque utilisateur doit  
+> rester dans la même branche** sur toutes ses visites. On lit donc d'abord la  
+> variante déjà stockée dans `localStorage` ; on ne tire au sort que lors de la  
+> première visite.
+
 ```pascal
 procedure TMainForm.SetupABTesting;  
 var  
-  Variant: string;
+  ChosenVariant: string;
 begin
-  // Déterminer la variante (A ou B)
+  // ⚠️ On évite d'appeler la variable `Variant` : c'est un nom de type
+  // prédéfini en Delphi (Variant) et même si la déclaration locale masque
+  // le type, c'est trompeur à la lecture.
   asm
-    var variant = Math.random() < 0.5 ? 'A' : 'B';
-    localStorage.setItem('variant', variant);
-    Variant = variant;
+    // 1. Récupérer la variante déjà attribuée (utilisateur récurrent).
+    // 2. Sinon, en tirer une au hasard et la persister pour les visites suivantes.
+    ChosenVariant = localStorage.getItem('variant');
+    if (!ChosenVariant) {
+      ChosenVariant = Math.random() < 0.5 ? 'A' : 'B';
+      localStorage.setItem('variant', ChosenVariant);
+    }
   end;
 
-  if Variant = 'A' then
+  if ChosenVariant = 'A' then
     SetupVariantA
   else
     SetupVariantB;

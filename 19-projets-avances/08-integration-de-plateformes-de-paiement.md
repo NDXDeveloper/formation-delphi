@@ -102,23 +102,26 @@ Une **plateforme de paiement** est un service qui permet de traiter les transact
 
 **PCI DSS** (Payment Card Industry Data Security Standard) est un ensemble de règles pour protéger les données de cartes bancaires.
 
-#### Les 3 niveaux de conformité
+> ⚠️ **Note importante** : le standard PCI DSS définit **4 niveaux de marchand** basés sur le **volume annuel** de transactions (Niveau 1 = >6 M, Niveau 2 = 1-6 M, Niveau 3 = 20 k-1 M, Niveau 4 = <20 k). Les "trois approches" ci-dessous ne sont **pas** les niveaux PCI DSS officiels : ce sont les trois **modes d'intégration** que vous pouvez choisir, chacun ayant une exigence de conformité (« SAQ ») différente. C'est une simplification pédagogique pour comprendre ce qui change selon le mode d'intégration.
 
-**Niveau 1** : Vous gérez TOUT (très complexe)
-- Stockage des numéros de carte
-- Chiffrement
-- Audits réguliers
+#### Les 3 approches d'intégration
+
+**Approche A — Vous gérez TOUT** (très complexe — exige le SAQ D le plus contraignant)
+- Stockage des numéros de carte sur vos serveurs
+- Chiffrement et rotation des clés à votre charge
+- Audits annuels obligatoires
 - **À ÉVITER !**
 
-**Niveau 2** : Plateforme tierce (recommandé)
-- La plateforme stocke les données
-- Vous n'avez jamais les numéros de carte
-- Conformité automatique
+**Approche B — Plateforme tierce via SDK/API serveur** (recommandé — SAQ A-EP ou SAQ D-Merchant selon les cas)
+- La plateforme (Stripe, PayPal...) stocke les données
+- Vous n'avez jamais les numéros de carte en clair
+- Conformité grandement simplifiée
 - **C'EST CE QUE NOUS ALLONS FAIRE**
 
-**Niveau 3** : Iframe/Redirect
-- L'utilisateur saisit ailleurs
-- Encore plus simple
+**Approche C — Iframe / Redirect / Hosted Fields** (le plus simple — SAQ A)
+- L'utilisateur saisit sa carte directement chez le PSP (Payment Service Provider)
+- Votre application ne touche jamais aux données carte
+- Conformité minimale (SAQ A : un questionnaire court)
 - Moins de contrôle sur l'UX
 
 #### Règle d'or : JAMAIS stocker les numéros de carte
@@ -316,9 +319,18 @@ end;
 function TStripe.BuildAuthHeader: string;  
 var  
   Credentials: string;
+  Encoder: TBase64Encoding;
 begin
   Credentials := FSecretKey + ':';
-  Result := 'Basic ' + TNetEncoding.Base64.Encode(Credentials);
+  // ⚠️ TNetEncoding.Base64 (instance par défaut) insère un CRLF tous les 76 caractères,
+  // ce qui casse les en-têtes HTTP pour les longues clés (Stripe live ≈ 107 caractères).
+  // On crée donc un encoder sans wrapping (0 = pas de saut de ligne).
+  Encoder := TBase64Encoding.Create(0);
+  try
+    Result := 'Basic ' + Encoder.Encode(Credentials);
+  finally
+    Encoder.Free;
+  end;
 end;
 
 function TStripe.CreatePaymentIntent(AAmount: Integer; const ACurrency: string;
@@ -381,7 +393,10 @@ begin
   Result.Currency := AJSON.GetValue<string>('currency');
   Result.ClientSecret := AJSON.GetValue<string>('client_secret');
 
-  if AJSON.TryGetValue<string>('description', Result.Description) then;
+  // description est OPTIONNEL dans la réponse Stripe — TryGetValue renvoie False
+  // si le champ est absent et laisse Result.Description vide (initialisé par
+  // défaut). On n'a donc pas besoin de tester le retour, l'effet de bord suffit.
+  AJSON.TryGetValue<string>('description', Result.Description);
 
   StatusStr := AJSON.GetValue<string>('status');
   if StatusStr = 'succeeded' then
@@ -557,7 +572,8 @@ begin
   Result.Email := AJSON.GetValue<string>('email');
   Result.Name := AJSON.GetValue<string>('name');
 
-  if AJSON.TryGetValue<string>('description', Result.Description) then;
+  // description est optionnel — voir commentaire dans ParsePaymentIntent.
+  AJSON.TryGetValue<string>('description', Result.Description);
 end;
 
 function TStripe.GetCustomer(const ACustomerID: string): TStripeCustomer;  
@@ -741,8 +757,19 @@ begin
         // Récupérer les données
         TThread.Synchronize(nil,
           procedure
+          var
+            AmountText: string;
+            FS: TFormatSettings;
           begin
-            Amount := StrToFloatDef(EditAmount.Text, 0);
+            // ⚠️ EditAmount.Text peut être saisi soit avec un point ('10.00'),
+            // soit avec une virgule ('10,00'). On normalise sur le point puis on
+            // utilise TFormatSettings.Invariant pour que la conversion fonctionne
+            // identiquement quelle que soit la locale de l'OS — sinon, sur un OS
+            // français, '10.00' tomberait sur le défaut 0 et le paiement serait
+            // de 0 centime.
+            FS := TFormatSettings.Invariant;
+            AmountText := EditAmount.Text.Replace(',', '.');
+            Amount := StrToFloatDef(AmountText, 0, FS);
             AmountCents := Round(Amount * 100); // Convertir en centimes
 
             case ComboBoxCurrency.ItemIndex of
@@ -822,9 +849,13 @@ end;
 procedure TStripePaymentForm.ButtonPayClick(Sender: TObject);  
 var  
   Amount: Double;
+  FS: TFormatSettings;
 begin
-  // Valider les données
-  Amount := StrToFloatDef(EditAmount.Text, 0);
+  // Même normalisation que dans ProcessPaymentAsync : on accepte les deux
+  // notations (point ou virgule) et on fait la conversion en format invariant
+  // pour éviter qu'un OS français rejette '10.00'.
+  FS := TFormatSettings.Invariant;
+  Amount := StrToFloatDef(EditAmount.Text.Replace(',', '.'), 0, FS);
 
   if Amount <= 0 then
   begin
@@ -916,12 +947,15 @@ begin
           Result.Status := JSONResponse.GetValue<string>('status');
           Result.CancelAtPeriodEnd := JSONResponse.GetValue<Boolean>('cancel_at_period_end');
 
-          // Dates (Unix timestamp à convertir)
+          // Dates (Unix timestamp UTC à convertir).
+          // ⚠️ Sans 2e paramètre, UnixToDateTime renvoie en UTC par défaut, ce qui crée
+          // un décalage si l'on compare ensuite avec `Now` (heure locale). On passe
+          // donc explicitement `False` pour obtenir une TDateTime en heure locale.
           var StartTimestamp := JSONResponse.GetValue<Int64>('current_period_start');
           var EndTimestamp := JSONResponse.GetValue<Int64>('current_period_end');
 
-          Result.CurrentPeriodStart := UnixToDateTime(StartTimestamp);
-          Result.CurrentPeriodEnd := UnixToDateTime(EndTimestamp);
+          Result.CurrentPeriodStart := UnixToDateTime(StartTimestamp, False);
+          Result.CurrentPeriodEnd := UnixToDateTime(EndTimestamp, False);
         finally
           JSONResponse.Free;
         end;
@@ -1082,6 +1116,7 @@ var
   JSONResponse: TJSONObject;
   Credentials: string;
   ExpiresIn: Integer;
+  Encoder: TBase64Encoding;
 begin
   // Vérifier si le token est encore valide
   if (FAccessToken <> '') and (Now < FTokenExpiry) then
@@ -1092,8 +1127,13 @@ begin
 
   HTTP := THTTPClient.Create;
   try
-    // Basic Auth
-    Credentials := TNetEncoding.Base64.Encode(FClientID + ':' + FSecret);
+    // Basic Auth — encoder sans wrapping (sinon CRLF tous les 76 caractères casse l'en-tête)
+    Encoder := TBase64Encoding.Create(0);
+    try
+      Credentials := Encoder.Encode(FClientID + ':' + FSecret);
+    finally
+      Encoder.Free;
+    end;
     HTTP.CustomHeaders['Authorization'] := 'Basic ' + Credentials;
     HTTP.CustomHeaders['Content-Type'] := 'application/x-www-form-urlencoded';
 
@@ -1163,7 +1203,12 @@ begin
 
       AmountObj := TJSONObject.Create;
       AmountObj.AddPair('currency_code', ACurrency.ToUpper);
-      AmountObj.AddPair('value', FormatFloat('0.00', AAmount));
+      // ⚠️ PayPal exige un point décimal (ex. "10.00"). FormatFloat utilise par
+      // défaut FormatSettings du système : sur un OS français, le séparateur est
+      // une virgule → "10,00", refusé par l'API. On force TFormatSettings.Invariant
+      // pour produire un format ISO/JSON conforme quel que soit l'OS d'exécution.
+      AmountObj.AddPair('value',
+        FormatFloat('0.00', AAmount, TFormatSettings.Invariant));
 
       PurchaseUnit.AddPair('amount', AmountObj);
 
@@ -1317,6 +1362,8 @@ end.
 
 ### 3.3 Interface PayPal avec WebBrowser
 
+> ⚠️ **Note importante** : Le composant **`TWebBrowser`** s'appuie sur Internet Explorer (legacy), désormais désactivé par défaut sur Windows 10/11. Pour une intégration moderne, préférez **`TEdgeBrowser`** (disponible depuis Delphi 10.4), qui repose sur Microsoft Edge WebView2 et reste compatible avec les pages PayPal/Stripe récentes. L'exemple ci-dessous reste pédagogique mais peut ne pas fonctionner sur les systèmes récents sans patcher la valeur de registre `FEATURE_BROWSER_EMULATION` pour votre exécutable.
+
 ```pascal
 unit uPayPalForm;
 
@@ -1345,7 +1392,7 @@ type
     FOrderID: string;
     FCompleted: Boolean;
 
-    procedure StartPayment(AAmount: Double; const ACurrency: string);
+    procedure StartPayment(AAmount: Double; const ACurrency, ADescription: string);
     procedure CheckOrderCompletion;
   public
     class function ExecutePayment(AAmount: Double; const ACurrency: string;
@@ -1375,13 +1422,20 @@ begin
   FPayPal.Free;
 end;
 
-procedure TPayPalForm.StartPayment(AAmount: Double; const ACurrency: string);  
+procedure TPayPalForm.StartPayment(AAmount: Double; const ACurrency, ADescription: string);  
 var  
   Order: TPayPalOrder;
+  EffectiveDescription: string;
 begin
+  // Si l'appelant n'a pas fourni de description, on retombe sur un libellé générique
+  if ADescription.Trim.IsEmpty then
+    EffectiveDescription := 'Paiement application'
+  else
+    EffectiveDescription := ADescription;
+
   try
     // Créer la commande
-    Order := FPayPal.CreateOrder(AAmount, ACurrency, 'Paiement application');
+    Order := FPayPal.CreateOrder(AAmount, ACurrency, EffectiveDescription);
     FOrderID := Order.ID;
 
     // Charger la page d'approbation PayPal
@@ -1479,7 +1533,9 @@ var
 begin
   Form := TPayPalForm.Create(nil);
   try
-    Form.StartPayment(AAmount, ACurrency);
+    // On propage la description à StartPayment pour qu'elle apparaisse sur la commande
+    // PayPal (et plus tard sur le reçu de l'acheteur), au lieu d'être perdue.
+    Form.StartPayment(AAmount, ACurrency, ADescription);
     Result := Form.ShowModal = mrOk;
   finally
     Form.Free;
@@ -1540,7 +1596,8 @@ type
 implementation
 
 uses
-  System.Hash, IdGlobal;
+  System.Hash, IdGlobal,
+  System.DateUtils;  // pour DateTimeToUnix (vérification du timestamp du webhook)
 
 { TWebhookServer }
 
@@ -1577,13 +1634,23 @@ procedure TWebhookServer.HandleRequest(AContext: TIdContext;
 var
   Payload: string;
   Signature: string;
+  Reader: TStringStream;
 begin
   // Webhook Stripe sur /webhook
   if ARequestInfo.URI = '/webhook' then
   begin
     if ARequestInfo.CommandType = hcPOST then
     begin
-      Payload := ARequestInfo.PostStream.DataString;
+      // ARequestInfo.PostStream est un TStream générique : DataString n'existe que
+      // sur TStringStream. On copie donc le contenu dans un TStringStream UTF-8.
+      Reader := TStringStream.Create('', TEncoding.UTF8);
+      try
+        ARequestInfo.PostStream.Position := 0;
+        Reader.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
+        Payload := Reader.DataString;
+      finally
+        Reader.Free;
+      end;
       Signature := ARequestInfo.RawHeaders.Values['Stripe-Signature'];
 
       // Vérifier la signature
@@ -1613,10 +1680,42 @@ begin
   end;
 end;
 
-function TWebhookServer.VerifyStripeSignature(const APayload, ASignature: string): Boolean;  
+// ⚠️ Comparaison de chaînes à TEMPS CONSTANT.
+// Une comparaison `=` standard (ou `SameStr`, `CompareStr`) sort dès le PREMIER
+// octet qui diffère : la durée de retour révèle alors combien d'octets d'en-tête
+// sont corrects, ce qui permet à un attaquant de deviner la signature octet par
+// octet en mesurant les temps de réponse (« timing attack »). Recommandation
+// Stripe officielle : utiliser une comparaison cryptographique à temps constant
+// pour TOUTE vérification de signature HMAC.
+function ConstantTimeEquals(const A, B: string): Boolean;  
 var  
+  I, Diff: Integer;
+begin
+  // Premier test : longueurs identiques. On peut retourner False immédiatement
+  // car la longueur d'un hash hexadécimal est publique et non secrète.
+  if Length(A) <> Length(B) then
+    Exit(False);
+
+  // On XOR octet par octet et on accumule dans `Diff` sans jamais sortir tôt :
+  // toute la boucle s'exécute QUEL QUE SOIT le résultat, donc le temps de
+  // retour ne dépend pas de la position de la première différence.
+  Diff := 0;
+  for I := 1 to Length(A) do
+    Diff := Diff or (Ord(A[I]) xor Ord(B[I]));
+
+  Result := Diff = 0;
+end;
+
+function TWebhookServer.VerifyStripeSignature(const APayload, ASignature: string): Boolean;  
+const  
+  // Tolérance recommandée par Stripe pour prévenir les attaques par rejeu
+  // (« replay attacks ») : on rejette tout webhook plus vieux que 5 minutes.
+  // Voir https://stripe.com/docs/webhooks/signatures#replay-attacks
+  MAX_TIMESTAMP_AGE_SECONDS = 300;
+var
   Parts: TArray<string>;
   Timestamp: string;
+  TimestampInt: Int64;
   Signatures: TArray<string>;
   ExpectedSignature: string;
   SignedPayload: string;
@@ -1638,24 +1737,30 @@ begin
     end;
   end;
 
+  // ⚠️ Garde anti-rejeu : un attaquant qui capture un webhook signé pourrait
+  // tenter de le rejouer plus tard. On vérifie donc que `t=` est récent.
+  // (DateTimeToUnix(Now, False) ⇒ timestamp UNIX UTC du moment courant.)
+  if not TryStrToInt64(Timestamp, TimestampInt) then
+    Exit; // timestamp absent ou non numérique → on refuse
+  if Abs(DateTimeToUnix(Now, False) - TimestampInt) > MAX_TIMESTAMP_AGE_SECONDS then
+    Exit; // webhook trop ancien
+
   // Construire le payload signé
   SignedPayload := Timestamp + '.' + APayload;
 
-  // Calculer la signature attendue (HMAC SHA256)
-  ExpectedSignature := THashSHA2.GetHMACAsString(
-    SignedPayload,
-    FStripeSigningSecret,
-    SHA256
-  );
+  // Calculer la signature attendue (HMAC SHA256).
+  // La surcharge sans 3e paramètre utilise SHA-256 par défaut, ce qui évite tout
+  // souci de scoped enums (SHA256 vs THashSHA2.TSHA2Version.SHA256 selon le contexte).
+  ExpectedSignature := THashSHA2.GetHMACAsString(SignedPayload, FStripeSigningSecret);
 
-  // Vérifier
+  // ⚠️ Vérifier avec ConstantTimeEquals (et NON `=` ou `SameStr`) pour ne pas
+  // exposer le secret à une timing attack. Voir la fonction au-dessus pour le
+  // détail. On parcourt TOUTES les signatures fournies même après un match
+  // pour ne pas révéler quelle clé a validé.
   for I := 0 to High(Signatures) do
   begin
-    if Signatures[I] = ExpectedSignature then
-    begin
+    if ConstantTimeEquals(Signatures[I], ExpectedSignature) then
       Result := True;
-      Break;
-    end;
   end;
 end;
 
@@ -1666,7 +1771,12 @@ var
   DataObj: TJSONObject;
   ObjectObj: TJSONObject;
 begin
+  // ParseJSONValue retourne nil si le payload est invalide ; le cast "as TJSONObject"
+  // sur nil retourne nil également (pas d'exception), il faut donc vérifier Assigned.
   JSON := TJSONObject.ParseJSONValue(APayload) as TJSONObject;
+  if not Assigned(JSON) then
+    Exit;
+
   try
     EventType := JSON.GetValue<string>('type');
     DataObj := JSON.GetValue<TJSONObject>('data');
@@ -1794,8 +1904,9 @@ begin
 
         if Attempt < MaxAttempts then
         begin
-          // Backoff exponentiel
-          WaitTime := 1000 * (2 * Attempt);
+          // Backoff exponentiel : on double l'attente à chaque tentative
+          // (2s, 4s, 8s, 16s...). `1 shl Attempt` calcule 2^Attempt.
+          WaitTime := 1000 * (1 shl Attempt);
           Sleep(WaitTime);
         end;
       end;
@@ -1991,8 +2102,22 @@ procedure TPaymentMonitor.CheckAnomalies;
 var  
   FailureRate: Double;
 begin
+  // Détection « gros montant accumulé avec peu de transactions » : on vérifie
+  // ce signal AVANT l'Exit sur < 10 paiements, sinon la condition
+  // `FTotalPayments < 5` ne pourrait jamais être vraie (l'Exit l'aurait
+  // déjà coupée) et l'alerte resterait morte.
+  if (FTotalAmount > 10000) and (FTotalPayments < 5) then
+  begin
+    SendAlert(Format(
+      'Montant inhabituel: %.2f€ en %d paiements',
+      [FTotalAmount, FTotalPayments]
+    ));
+  end;
+
+  // Pour le taux d'échec, on exige au moins 10 paiements pour disposer
+  // d'un échantillon statistiquement parlant.
   if FTotalPayments < 10 then
-    Exit; // Pas assez de données
+    Exit;
 
   FailureRate := FFailedPayments / FTotalPayments;
 
@@ -2002,15 +2127,6 @@ begin
     SendAlert(Format(
       'Taux d''échec élevé: %.1f%% (%d/%d)',
       [FailureRate * 100, FFailedPayments, FTotalPayments]
-    ));
-  end;
-
-  // Alerter si montant inhabituel
-  if (FTotalAmount > 10000) and (FTotalPayments < 5) then
-  begin
-    SendAlert(Format(
-      'Montant inhabituel: %.2f€ en %d paiements',
-      [FTotalAmount, FTotalPayments]
     ));
   end;
 end;

@@ -466,31 +466,35 @@ end;
 procedure TFormMain.UpdateNotesList;  
 var  
   I: Integer;
+  Item: TListBoxItem;
 begin
   ListBoxNotes.Clear;
 
   // Exemple : Ajouter quelques notes de test
+  // En FMX, TListBox.Items est un TStrings dont Add(string) retourne un Integer.
+  // Pour personnaliser la hauteur d'un item, il faut créer un TListBoxItem
+  // et l'ajouter comme enfant du TListBox.
   for I := 0 to 4 do
   begin
-    with ListBoxNotes.Items.Add do
-    begin
-      Text := Format('Note %d', [I + 1]);
-      Height := 60;
-    end;
+    Item := TListBoxItem.Create(ListBoxNotes);
+    Item.Parent := ListBoxNotes;
+    Item.Text := Format('Note %d', [I + 1]);
+    Item.Height := 60;
   end;
 end;
 
 procedure TFormMain.ButtonNewNoteClick(Sender: TObject);  
-begin  
+var  
+  Item: TListBoxItem;
+begin
   // Créer une nouvelle note
   SaveCurrentNote;
 
   // Ajouter à la liste
-  with ListBoxNotes.Items.Add do
-  begin
-    Text := 'Nouvelle note';
-    Height := 60;
-  end;
+  Item := TListBoxItem.Create(ListBoxNotes);
+  Item.Parent := ListBoxNotes;
+  Item.Text := 'Nouvelle note';
+  Item.Height := 60;
 
   // Sélectionner la nouvelle note
   ListBoxNotes.ItemIndex := ListBoxNotes.Items.Count - 1;
@@ -579,7 +583,7 @@ unit uNote;
 interface
 
 uses
-  System.SysUtils, System.JSON;
+  System.SysUtils, System.JSON, System.DateUtils;
 
 type
   TNote = class
@@ -625,19 +629,33 @@ begin
   Result.AddPair('id', FID);
   Result.AddPair('title', FTitle);
   Result.AddPair('content', FContent);
-  Result.AddPair('created', DateTimeToStr(FCreatedDate));
-  Result.AddPair('modified', DateTimeToStr(FModifiedDate));
+  // Format ISO 8601 : portable entre systèmes et indépendant des paramètres
+  // régionaux (DateTimeToStr utilise les séparateurs locaux, ce qui casse
+  // la lecture après un changement de locale ou de plateforme).
+  Result.AddPair('created', DateToISO8601(FCreatedDate, False));
+  Result.AddPair('modified', DateToISO8601(FModifiedDate, False));
   Result.AddPair('category', FCategory);
 end;
 
 procedure TNote.FromJSON(AJSON: TJSONObject);  
-begin  
-  FID := AJSON.GetValue<string>('id');
-  FTitle := AJSON.GetValue<string>('title');
-  FContent := AJSON.GetValue<string>('content');
-  FCreatedDate := StrToDateTime(AJSON.GetValue<string>('created'));
-  FModifiedDate := StrToDateTime(AJSON.GetValue<string>('modified'));
-  FCategory := AJSON.GetValue<string>('category');
+var  
+  CreatedStr, ModifiedStr: string;
+begin
+  // ⚠️ Robustesse : on utilise TryGetValue pour chaque champ. Si une clé est
+  // absente (cas d'un fichier produit par une version antérieure de l'app, ou
+  // édité manuellement), la valeur reste celle initialisée par le constructeur
+  // (ex. FCreatedDate = Now) au lieu de lever EJSONException.
+  AJSON.TryGetValue<string>('id', FID);
+  AJSON.TryGetValue<string>('title', FTitle);
+  AJSON.TryGetValue<string>('content', FContent);
+  AJSON.TryGetValue<string>('category', FCategory);
+
+  // ISO8601ToDate (System.DateUtils) accepte le format produit par DateToISO8601
+  // et renvoie un TDateTime quelle que soit la locale en cours.
+  if AJSON.TryGetValue<string>('created', CreatedStr) and (CreatedStr <> '') then
+    FCreatedDate := ISO8601ToDate(CreatedStr, False);
+  if AJSON.TryGetValue<string>('modified', ModifiedStr) and (ModifiedStr <> '') then
+    FModifiedDate := ISO8601ToDate(ModifiedStr, False);
 end;
 
 end.
@@ -718,15 +736,17 @@ procedure TNotesManager.InitializeDataFile;
 var  
   AppPath: string;
 begin
-  // Obtenir le chemin approprié selon l'OS
+  // Obtenir le chemin approprié selon l'OS.
+  // On utilise systématiquement TPath.Combine pour gérer correctement les
+  // séparateurs (évite les `//` quand GetHomePath se termine déjà par `/`).
   {$IFDEF MSWINDOWS}
   AppPath := TPath.GetDocumentsPath;
   {$ENDIF}
   {$IFDEF MACOS}
-  AppPath := TPath.GetHomePath + '/Documents';
+  AppPath := TPath.Combine(TPath.GetHomePath, 'Documents');
   {$ENDIF}
   {$IFDEF LINUX}
-  AppPath := TPath.GetHomePath + '/.notesapp';
+  AppPath := TPath.Combine(TPath.GetHomePath, '.notesapp');
   {$ENDIF}
 
   // Créer le dossier s'il n'existe pas
@@ -890,15 +910,17 @@ implementation
 class function TPathHelper.GetAppDataPath: string;  
 begin  
   {$IFDEF MSWINDOWS}
-  Result := TPath.GetHomePath + '\AppData\Local\NotesApp';
+  // Sur Windows, TPath.GetHomePath renvoie déjà %APPDATA% (Roaming).
+  // On ajoute simplement un sous-dossier de l'application.
+  Result := TPath.Combine(TPath.GetHomePath, 'NotesApp');
   {$ENDIF}
 
   {$IFDEF MACOS}
-  Result := TPath.GetHomePath + '/Library/Application Support/NotesApp';
+  Result := TPath.Combine(TPath.GetHomePath, 'Library/Application Support/NotesApp');
   {$ENDIF}
 
   {$IFDEF LINUX}
-  Result := TPath.GetHomePath + '/.config/notesapp';
+  Result := TPath.Combine(TPath.GetHomePath, '.config/notesapp');
   {$ENDIF}
 
   // Créer le répertoire s'il n'existe pas
@@ -919,15 +941,17 @@ end;
 class function TPathHelper.GetDesktopPath: string;  
 begin  
   {$IFDEF MSWINDOWS}
-  Result := TPath.GetHomePath + '\Desktop';
+  // Attention : sur Windows, TPath.GetHomePath renvoie %APPDATA% (Roaming),
+  // pas le profil utilisateur. Il faut donc utiliser USERPROFILE pour le bureau.
+  Result := TPath.Combine(GetEnvironmentVariable('USERPROFILE'), 'Desktop');
   {$ENDIF}
 
   {$IFDEF MACOS}
-  Result := TPath.GetHomePath + '/Desktop';
+  Result := TPath.Combine(TPath.GetHomePath, 'Desktop');
   {$ENDIF}
 
   {$IFDEF LINUX}
-  Result := TPath.GetHomePath + '/Desktop';
+  Result := TPath.Combine(TPath.GetHomePath, 'Desktop');
   {$ENDIF}
 end;
 
@@ -971,18 +995,23 @@ end;
 Parfois, vous aurez besoin de savoir sur quelle plateforme votre application s'exécute.
 
 ```pascal
+// ⚠️ Important : en Delphi, le symbole `MACOS` est défini AUSSI sur iOS
+// (iOS est dérivé de macOS). Pour distinguer correctement les deux, il faut
+// tester `IOS` AVANT `MACOS` dans un $IFDEF/ELSEIF.
 function GetCurrentPlatform: string;  
 begin  
-  {$IFDEF MSWINDOWS}
+  {$IF DEFINED(MSWINDOWS)}
   Result := 'Windows';
-  {$ENDIF}
-
-  {$IFDEF MACOS}
+  {$ELSEIF DEFINED(IOS)}
+  Result := 'iOS';
+  {$ELSEIF DEFINED(MACOS)}
   Result := 'macOS';
-  {$ENDIF}
-
-  {$IFDEF LINUX}
+  {$ELSEIF DEFINED(ANDROID)}
+  Result := 'Android';
+  {$ELSEIF DEFINED(LINUX)}
   Result := 'Linux';
+  {$ELSE}
+  Result := 'Unknown';
   {$ENDIF}
 end;
 
@@ -997,7 +1026,9 @@ end;
 
 function IsMacOS: Boolean;  
 begin  
-  {$IFDEF MACOS}
+  // On exclut explicitement iOS : sur iOS, `MACOS` est défini mais la
+  // plateforme n'est pas macOS Desktop.
+  {$IF DEFINED(MACOS) and not DEFINED(IOS)}
   Result := True;
   {$ELSE}
   Result := False;
@@ -1018,47 +1049,66 @@ end;
 
 #### Raccourcis clavier
 
-Les conventions diffèrent selon les systèmes :
+Les conventions diffèrent selon les systèmes. En FMX, `TButton` ne possède pas de propriété `ShortCut` ; on passe par un `TActionList` + `TAction`, ou on traite directement les touches via `OnKeyDown` de la fiche (avec `KeyPreview := True`) :
 
 ```pascal
+uses
+  FMX.ActnList;
+
 procedure TFormMain.SetupShortcuts;  
 begin  
+  // ActionNew est un TAction associé à ButtonNewNote (propriété Action du bouton)
   {$IFDEF MSWINDOWS}
-  // Windows : Ctrl+N pour nouvelle note
-  ButtonNewNote.ShortCut := TextToShortCut('Ctrl+N');
+  ActionNew.ShortCut := TextToShortCut('Ctrl+N');
   {$ENDIF}
 
   {$IFDEF MACOS}
-  // macOS : Cmd+N pour nouvelle note
-  ButtonNewNote.ShortCut := TextToShortCut('Cmd+N');
+  // Sur macOS, FMX traduit automatiquement Ctrl → Cmd pour les raccourcis ;
+  // on peut donc utiliser Ctrl+N et la touche Command de macOS sera reconnue.
+  ActionNew.ShortCut := TextToShortCut('Ctrl+N');
   {$ENDIF}
 
   {$IFDEF LINUX}
-  // Linux : Ctrl+N
-  ButtonNewNote.ShortCut := TextToShortCut('Ctrl+N');
+  ActionNew.ShortCut := TextToShortCut('Ctrl+N');
   {$ENDIF}
 end;
 ```
 
+> En FireMonkey, `TextToShortCut` se trouve dans **`FMX.Menus`** (équivalent du `Vcl.Menus.TextToShortCut` côté VCL). Ajoutez `FMX.Menus` à votre clause `uses`.
+
 #### Apparence selon l'OS
 
+`TStyleBook` ne possède pas de propriété `Style` ou `StyleName` directement modifiable par chaîne. Pour changer de style à l'exécution, il faut charger un fichier `.style` ou utiliser `TStyleManager` :
+
 ```pascal
+uses
+  FMX.Styles;
+
 procedure TFormMain.ApplyPlatformStyle;  
+var  
+  StyleFile: string;
 begin  
   {$IFDEF MSWINDOWS}
-  // Style Windows 10/11
-  StyleBook1.Style := 'Windows10';
+  StyleFile := 'Windows10.style';
   {$ENDIF}
 
   {$IFDEF MACOS}
-  // Style macOS
-  StyleBook1.Style := 'macOS';
+  StyleFile := 'macOS.style';
   {$ENDIF}
 
   {$IFDEF LINUX}
-  // Style adapté à Linux
-  StyleBook1.Style := 'Light';
+  StyleFile := 'Light.style';
   {$ENDIF}
+
+  // Méthode 1 : recharger le contenu du TStyleBook depuis un fichier déployé
+  if FileExists(StyleFile) then
+  begin
+    StyleBook1.LoadFromFile(StyleFile);
+    Self.StyleBook := StyleBook1;
+  end;
+
+  // Méthode 2 (alternative) : style global via TStyleManager
+  // TStyleManager.SetStyleFromFile(StyleFile);
 end;
 ```
 
@@ -1083,10 +1133,13 @@ FireMonkey permet de changer complètement l'apparence de votre application avec
 #### Code pour changer de style
 
 ```pascal
-procedure TFormMain.ApplyStyle(const AStyleName: string);  
+procedure TFormMain.ApplyStyle(const AStyleFile: string);  
 begin  
-  StyleBook1.StyleName := AStyleName;
-  // Rafraîchir l'interface
+  if not FileExists(AStyleFile) then
+    Exit;
+
+  StyleBook1.LoadFromFile(AStyleFile);
+  Self.StyleBook := StyleBook1;  // associe le StyleBook à la fiche
   Invalidate;
 end;
 
@@ -1388,7 +1441,12 @@ end;
 
 ### 8.5 Gestion des erreurs multiplateforme
 
+En FMX, `MessageDlg` est généralement **asynchrone** (avec callback) et `ShowMessage` reste portable et synchrone. Pour rester multi-plateforme, l'idéal est d'utiliser `TDialogService.MessageDialog` qui fonctionne sur Windows, macOS, Linux **et** mobile.
+
 ```pascal
+uses
+  FMX.DialogService;
+
 procedure TNotesManager.SaveToFile;  
 begin  
   try
@@ -1397,18 +1455,11 @@ begin
   except
     on E: Exception do
     begin
-      {$IFDEF MSWINDOWS}
-      MessageDlg('Erreur de sauvegarde: ' + E.Message,
-        TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
-      {$ENDIF}
-
-      {$IFDEF MACOS}
-      ShowMessage('Erreur de sauvegarde: ' + E.Message);
-      {$ENDIF}
-
-      {$IFDEF LINUX}
-      ShowMessage('Erreur de sauvegarde: ' + E.Message);
-      {$ENDIF}
+      // Approche portable (Windows / macOS / Linux / mobile)
+      TDialogService.MessageDialog(
+        'Erreur de sauvegarde : ' + E.Message,
+        TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0, nil
+      );
 
       // Logger l'erreur
       LogError(E.Message);
@@ -1416,6 +1467,8 @@ begin
   end;
 end;
 ```
+
+> Pour un affichage simple sans options de boutons, `ShowMessage(...)` reste l'alternative la plus concise et fonctionne sur toutes les plateformes desktop.
 
 ---
 
@@ -1515,7 +1568,16 @@ begin
   LogEntry := Format('[%s] %s',
     [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), AMessage]);
 
-  TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+  // ⚠️ TLogger est typiquement appelé DEPUIS un bloc `except` (cf. exemple
+  // d'utilisation plus bas). Si l'écriture échoue (disque plein, fichier
+  // verrouillé par un autre processus, droits retirés…), on ne doit PAS faire
+  // remonter une nouvelle exception qui masquerait l'erreur d'origine.
+  // On l'avale silencieusement.
+  try
+    TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+  except
+    // Avalé volontairement
+  end;
 end;
 
 class procedure TLogger.LogError(const AError: string);  
@@ -1743,18 +1805,25 @@ Créez un script Inno Setup (`setup.iss`) :
 [Setup]
 AppName=Notes App  
 AppVersion=1.0  
-DefaultDirName={pf}\NotesApp  
+DefaultDirName={autopf}\NotesApp  
 DefaultGroupName=Notes App  
 OutputDir=.\Output  
 OutputBaseFilename=NotesAppSetup  
+; Sur Inno Setup 6.3+, on utilise `x64compatible` (inclut x64 et ARM64 sous
+; émulation Windows 11). L'ancien identifiant `x64` reste accepté pour
+; rétro-compatibilité mais est marqué déprécié.
+ArchitecturesAllowed=x64compatible  
+ArchitecturesInstallIn64BitMode=x64compatible  
 
 [Files]
 Source: "Win64\Release\NotesApp.exe"; DestDir: "{app}"
 
 [Icons]
 Name: "{group}\Notes App"; Filename: "{app}\NotesApp.exe"  
-Name: "{commondesktop}\Notes App"; Filename: "{app}\NotesApp.exe"  
+Name: "{autodesktop}\Notes App"; Filename: "{app}\NotesApp.exe"  
 ```
+
+> Sur Inno Setup moderne, préférez les constantes `{autopf}` et `{autodesktop}` à `{pf}` et `{commondesktop}` : elles s'adaptent automatiquement à `PrivilegesRequired` et installent dans `Program Files` 64 bits quand l'installeur tourne en x64.
 
 #### macOS - DMG
 
@@ -1797,11 +1866,22 @@ dpkg-deb --build notesapp_1.0-1
 
 #### Windows
 
-Utilisez `signtool.exe` :
+Utilisez `signtool.exe`. ⚠️ L'ancienne option `/t` produit un timestamp SHA-1 désormais  
+considéré obsolète par Microsoft. Utilisez **`/tr`** (timestamp RFC 3161) **+** **`/td sha256`**  
+**+** **`/fd sha256`** pour une signature et un horodatage modernes :
 
 ```bash
-signtool sign /f certificate.pfx /p password /t http://timestamp.server NotesApp.exe
+signtool sign /f certificate.pfx /p password ^
+  /fd sha256 ^
+  /tr http://timestamp.digicert.com ^
+  /td sha256 ^
+  NotesApp.exe
 ```
+
+> ⚠️ Le `^` est le caractère de continuation de ligne sous **cmd.exe**. Sous **PowerShell**,  
+> remplacez-le par un backtick `` ` ``. Vérifiez aussi que le serveur de timestamp est joignable :  
+> [DigiCert](http://timestamp.digicert.com), [Sectigo](http://timestamp.sectigo.com) ou  
+> [GlobalSign](http://timestamp.globalsign.com/scripts/timstamp.dll) sont des choix courants.
 
 #### macOS
 
@@ -1918,10 +1998,5 @@ N'oubliez pas :
 **Bon développement multi-plateforme avec Delphi !** 🚀
 
 ---
-
-**Navigation** :
-- [← 19.1 Application de gestion MySQL/MariaDB]()
-- [19.3 Applications mobiles avancées →]()
-- [Retour au sommaire des projets avancés]()
 
 ⏭️ [Applications mobiles avec fonctionnalités avancées](/19-projets-avances/03-applications-mobiles-avec-fonctionnalites-avancees.md)

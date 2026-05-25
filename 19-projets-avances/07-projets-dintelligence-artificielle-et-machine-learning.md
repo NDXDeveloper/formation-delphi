@@ -255,10 +255,10 @@ Nous allons créer **"Smart Assistant"** - Un assistant intelligent multi-foncti
 2. Obtenez une clé API
 3. Notez votre clé : `sk-...`
 
-**Tarifs** (2025) :
-- GPT-3.5-turbo : ~0.002 $ / 1K tokens
-- GPT-4 : ~0.03 $ / 1K tokens
-- Budget débutant : 5-10 $ suffisent pour tester
+**Tarifs** (à titre indicatif — consultez [openai.com/pricing](https://openai.com/pricing) pour les tarifs en vigueur) :
+- Modèles « mini » / GPT-4o-mini : très peu coûteux, idéal pour les chatbots
+- Modèles flagship (GPT-4o, GPT-4-turbo) : plus puissants mais plus chers
+- Budget débutant : 5-10 $ suffisent largement pour explorer l'API en mode test
 
 #### Google Cloud Vision API
 
@@ -320,7 +320,10 @@ constructor TOpenAI.Create(const AAPIKey: string);
 begin  
   inherited Create;
   FAPIKey := AAPIKey;
-  FModel := 'gpt-3.5-turbo';  // ou 'gpt-4' pour plus de puissance
+  // Modèle par défaut : utilisez le nom officiel à jour côté OpenAI.
+  // Exemples courants : 'gpt-4o-mini' (économique), 'gpt-4o' (flagship),
+  // 'gpt-3.5-turbo' (legacy). La liste évolue régulièrement.
+  FModel := 'gpt-4o-mini';
   FConversationHistory := TList<TOpenAIMessage>.Create;
 end;
 
@@ -334,10 +337,16 @@ procedure TOpenAI.SetSystemPrompt(const APrompt: string);
 var  
   Msg: TOpenAIMessage;
 begin
-  // Le prompt système définit le comportement de l'IA
+  // Le prompt système définit le comportement de l'IA.
+  // Si un message 'system' existe déjà en tête d'historique, on le REMPLACE
+  // (sinon, appeler SetSystemPrompt deux fois empilerait deux prompts système
+  // contradictoires, ce qui perturbe le modèle).
   Msg.Role := 'system';
   Msg.Content := APrompt;
-  FConversationHistory.Insert(0, Msg);
+  if (FConversationHistory.Count > 0) and (FConversationHistory[0].Role = 'system') then
+    FConversationHistory[0] := Msg
+  else
+    FConversationHistory.Insert(0, Msg);
 end;
 
 procedure TOpenAI.ClearHistory;  
@@ -459,15 +468,17 @@ begin
     HTTP.CustomHeaders['Authorization'] := 'Bearer ' + FAPIKey;
     HTTP.CustomHeaders['Content-Type'] := 'application/json';
 
-    // Ajouter le message utilisateur à l'historique
+    // Préparer le message utilisateur (sans encore le pousser dans l'historique :
+    // on attendra le succès de l'appel API pour ne pas laisser un message orphelin
+    // sans réponse en cas d'erreur réseau / quota dépassé / etc.).
     UserMsg.Role := 'user';
     UserMsg.Content := AMessage;
-    FConversationHistory.Add(UserMsg);
 
-    // Convertir l'historique en tableau
-    SetLength(Messages, FConversationHistory.Count);
+    // Construire le tableau messages = historique existant + message en cours
+    SetLength(Messages, FConversationHistory.Count + 1);
     for I := 0 to FConversationHistory.Count - 1 do
       Messages[I] := FConversationHistory[I];
+    Messages[FConversationHistory.Count] := UserMsg;
 
     // Construire et envoyer
     Request := BuildRequest(Messages);
@@ -483,7 +494,8 @@ begin
         begin
           Result := ParseResponse(Response.ContentAsString);
 
-          // Ajouter la réponse à l'historique
+          // Maintenant seulement on persiste user + assistant dans l'historique
+          FConversationHistory.Add(UserMsg);
           AssistantMsg.Role := 'assistant';
           AssistantMsg.Content := Result;
           FConversationHistory.Add(AssistantMsg);
@@ -574,8 +586,8 @@ begin
   RichEditChat.Clear;
   RichEditChat.ReadOnly := True;
 
-  ComboBoxModel.Items.Add('GPT-3.5 Turbo (rapide)');
-  ComboBoxModel.Items.Add('GPT-4 (plus intelligent)');
+  ComboBoxModel.Items.Add('GPT-4o-mini (économique)');
+  ComboBoxModel.Items.Add('GPT-4o (puissant)');
   ComboBoxModel.ItemIndex := 0;
 
   // Message de bienvenue
@@ -589,9 +601,11 @@ end;
 
 procedure TChatbotForm.ComboBoxModelChange(Sender: TObject);  
 begin  
+  // Adaptez ces identifiants aux modèles actuellement disponibles
+  // chez OpenAI (la liste évolue régulièrement).
   case ComboBoxModel.ItemIndex of
-    0: FOpenAI.Model := 'gpt-3.5-turbo';
-    1: FOpenAI.Model := 'gpt-4';
+    0: FOpenAI.Model := 'gpt-4o-mini';
+    1: FOpenAI.Model := 'gpt-4o';
   end;
 end;
 
@@ -826,7 +840,7 @@ type
 implementation
 
 uses
-  System.Types;
+  System.Types, Vcl.Imaging.jpeg;  // TJPEGImage vit dans Vcl.Imaging.jpeg
 
 { TGoogleVision }
 
@@ -840,6 +854,7 @@ function TGoogleVision.EncodeImageToBase64(ABitmap: TBitmap): string;
 var  
   Stream: TMemoryStream;
   JPEGImage: TJPEGImage;
+  Encoder: TBase64Encoding;
 begin
   Stream := TMemoryStream.Create;
   try
@@ -853,9 +868,14 @@ begin
     end;
 
     Stream.Position := 0;
-    Result := TNetEncoding.Base64.EncodeBytesToString(
-      Stream.Memory, Stream.Size
-    );
+    // Encoder sans wrapping de lignes : un Base64 contenant des CRLF est rejeté
+    // par certaines APIs REST quand il est placé dans un champ JSON.
+    Encoder := TBase64Encoding.Create(0);
+    try
+      Result := Encoder.EncodeBytesToString(Stream.Memory, Stream.Size);
+    finally
+      Encoder.Free;
+    end;
   finally
     Stream.Free;
   end;
@@ -914,6 +934,11 @@ var
 begin
   HTTP := THTTPClient.Create;
   try
+    // Important : Google Vision attend du JSON. Sans cet en-tête, THTTPClient
+    // n'ajoute pas Content-Type quand on lui passe un TStream → Google retourne
+    // alors une erreur 400. (Voir aussi DetectText et DetectFaces ci-dessous.)
+    HTTP.CustomHeaders['Content-Type'] := 'application/json';
+
     Base64Image := EncodeImageToBase64(ABitmap);
 
     SetLength(Features, 1);
@@ -983,6 +1008,8 @@ var
 begin
   HTTP := THTTPClient.Create;
   try
+    HTTP.CustomHeaders['Content-Type'] := 'application/json';
+
     Base64Image := EncodeImageToBase64(ABitmap);
 
     SetLength(Features, 1);
@@ -1054,6 +1081,8 @@ begin
   Result := 0;
   HTTP := THTTPClient.Create;
   try
+    HTTP.CustomHeaders['Content-Type'] := 'application/json';
+
     Base64Image := EncodeImageToBase64(ABitmap);
 
     SetLength(Features, 1);
@@ -1191,12 +1220,19 @@ begin
 end;
 
 procedure TVisionForm.AnalyzeImageAsync(AAnalysisType: string);  
+var  
+  SnapshotBitmap: TBitmap;
 begin  
   if not Assigned(ImagePreview.Picture.Graphic) then
   begin
     ShowMessage('Veuillez charger une image d''abord');
     Exit;
   end;
+
+  // Copier le bitmap dans le thread principal AVANT de lancer la tâche.
+  // Accéder à ImagePreview.Picture.Graphic depuis un thread secondaire n'est pas thread-safe.
+  SnapshotBitmap := TBitmap.Create;
+  SnapshotBitmap.Assign(ImagePreview.Picture.Graphic);
 
   // Désactiver les boutons
   ButtonAnalyze.Enabled := False;
@@ -1216,12 +1252,9 @@ begin
       Obj: TDetectedObject;
       Text: TDetectedText;
     begin
+      Bitmap := SnapshotBitmap;  // capturé par la closure
       try
-        // Convertir en Bitmap
-        Bitmap := TBitmap.Create;
         try
-          Bitmap.Assign(ImagePreview.Picture.Graphic);
-
           if AAnalysisType = 'labels' then
           begin
             Objects := FVision.DetectLabels(Bitmap);
@@ -1425,6 +1458,12 @@ begin
   VarX := Variance(XValues);
   Cov := Covariance(XValues, YValues);
 
+  // Protection contre la division par zéro : si toutes les X sont identiques
+  // (VarX = 0), la régression linéaire n'est pas définie.
+  if VarX = 0 then
+    raise Exception.Create('Variance de X nulle : impossible d''ajuster une droite ' +
+      '(toutes les valeurs X sont identiques)');
+
   FSlope := Cov / VarX;
   FIntercept := Mean(YValues) - FSlope * Mean(XValues);
 
@@ -1470,7 +1509,12 @@ begin
     SSTot := SSTot + Sqr(YTrue[I] - MeanY);
   end;
 
-  Result := 1 - (SSRes / SSTot);
+  // Protection division par zéro : SSTot = 0 signifie que toutes les Y sont
+  // identiques (variance nulle). On retourne alors un R² conventionnel de 0.
+  if SSTot = 0 then
+    Result := 0
+  else
+    Result := 1 - (SSRes / SSTot);
 end;
 
 end.
@@ -1484,10 +1528,12 @@ unit uPredictionForm;
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics,
+  Winapi.Windows, System.SysUtils, System.Math, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Grids, VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs,
   VCLTee.Chart, uMachineLearning;
+  // System.Math est nécessaire pour MaxDouble (utilisé dans UpdateChart pour
+  // initialiser les bornes du graphique).
 
 type
   TPredictionForm = class(TForm)
@@ -1580,12 +1626,18 @@ end;
 procedure TPredictionForm.ButtonTrainClick(Sender: TObject);  
 var  
   Data: TArray<TDataPoint>;
-  I: Integer;
+  I, Count: Integer;
   X, Y: Double;
   Score: Double;
 begin
-  // Collecter les données depuis la grille
+  // Collecter les données depuis la grille.
+  // ⚠️ On utilise un compteur séparé `Count` plutôt que `I - 1` comme index : si
+  // une ligne contient une cellule non numérique, on la saute avec `Continue`
+  // sans l'index Count, ce qui évite de laisser un point (0,0) parasite qui
+  // fausserait la régression linéaire. On retaille Data à la fin pour ne
+  // conserver que les vrais points.
   SetLength(Data, StringGridData.RowCount - 1);
+  Count := 0;
 
   for I := 1 to StringGridData.RowCount - 1 do
   begin
@@ -1594,9 +1646,11 @@ begin
     if not TryStrToFloat(StringGridData.Cells[1, I], Y) then
       Continue;
 
-    Data[I - 1].X := X;
-    Data[I - 1].Y := Y;
+    Data[Count].X := X;
+    Data[Count].Y := Y;
+    Inc(Count);
   end;
+  SetLength(Data, Count); // ajuster à la taille réelle
 
   // Entraîner le modèle
   try
@@ -1664,14 +1718,20 @@ var
   I: Integer;
   X, Y: Double;
   MinX, MaxX: Double;
+  HasPoints: Boolean;
 begin
   // Effacer les séries
   Series1.Clear;
   Series2.Clear;
 
-  // Ajouter les points de données
-  MinX := 1000;
-  MaxX := -1000;
+  // ⚠️ Initialisation des bornes : on utilise MaxDouble / -MaxDouble plutôt
+  // qu'une constante arbitraire (1000 / -1000), car le jeu de données peut très
+  // bien contenir uniquement des valeurs > 1000 ou < -1000 (ex. années, montants
+  // en milliers). On suit aussi un flag HasPoints pour savoir si l'utilisateur
+  // a au moins fourni une ligne valide.
+  MinX := MaxDouble;
+  MaxX := -MaxDouble;
+  HasPoints := False;
 
   for I := 1 to StringGridData.RowCount - 1 do
   begin
@@ -1679,14 +1739,16 @@ begin
        TryStrToFloat(StringGridData.Cells[1, I], Y) then
     begin
       Series2.AddXY(X, Y);
+      HasPoints := True;
 
       if X < MinX then MinX := X;
       if X > MaxX then MaxX := X;
     end;
   end;
 
-  // Ajouter la ligne de régression si le modèle est entraîné
-  if FModel.Trained then
+  // Ajouter la ligne de régression si le modèle est entraîné et qu'on a au
+  // moins un point valide pour borner l'intervalle de tracé.
+  if FModel.Trained and HasPoints then
   begin
     for I := 0 to 100 do
     begin
@@ -1708,7 +1770,9 @@ unit uKNN;
 interface
 
 uses
-  System.SysUtils, System.Math, System.Generics.Collections;
+  System.SysUtils, System.Math,
+  System.Generics.Collections, System.Generics.Defaults;
+  // System.Generics.Defaults est nécessaire pour TComparer<T> utilisé dans Predict.
 
 type
   TDataPoint = record
@@ -1747,6 +1811,15 @@ var
   Sum: Double;
   I: Integer;
 begin
+  // ⚠️ La distance euclidienne suppose deux vecteurs de MÊME dimension.
+  // Sans cette vérification, un appelant qui prédit avec 3 features alors
+  // que le modèle a été entraîné avec 5 features lèverait une erreur d'accès
+  // mémoire (range check) au lieu d'un message clair.
+  if Length(A) <> Length(B) then
+    raise Exception.CreateFmt(
+      'EuclideanDistance : longueurs incompatibles (%d vs %d)',
+      [Length(A), Length(B)]);
+
   Sum := 0;
   for I := 0 to High(A) do
     Sum := Sum + Sqr(A[I] - B[I]);
@@ -1831,6 +1904,12 @@ var
   I: Integer;
   Predicted: string;
 begin
+  // Protection contre la division par zéro : un appelant qui passe un tableau
+  // vide (oubli de chargement, filtrage qui a tout retiré…) verrait sinon
+  // EZeroDivide. On renvoie 0 — accuracy non définie sur un échantillon vide.
+  if Length(ATestData) = 0 then
+    Exit(0);
+
   Correct := 0;
 
   for I := 0 to High(ATestData) do
@@ -2048,10 +2127,20 @@ var
   Pair: TJSONPair;
 begin
   JSONText := TFile.ReadAllText(FCacheFile);
+
+  // ⚠️ ParseJSONValue renvoie nil si le fichier est corrompu / vide / non-JSON
+  // (cas typique : utilisateur qui édite manuellement, ou crash en cours d'écriture).
+  // Le cast `as TJSONObject` renvoie aussi nil si la valeur racine est un tableau
+  // ou un scalaire. Sans cette garde, `for Pair in JSON` lèverait EAccessViolation.
   JSON := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
+  if not Assigned(JSON) then
+    Exit;
+
   try
     for Pair in JSON do
-      FCache.Add(Pair.JsonString.Value, Pair.JsonValue.Value);
+      // AddOrSetValue plutôt que Add : tolère des doublons éventuels si le
+      // fichier a été manipulé à la main.
+      FCache.AddOrSetValue(Pair.JsonString.Value, Pair.JsonValue.Value);
   finally
     JSON.Free;
   end;
@@ -2080,8 +2169,9 @@ begin
 
         if Attempt < AMaxRetries then
         begin
-          // Attendre avant de réessayer (backoff exponentiel)
-          Sleep(1000 * Attempt);
+          // Backoff exponentiel : 2s, 4s, 8s, 16s... `1 shl Attempt` = 2^Attempt.
+          // (Un simple `1000 * Attempt` donnerait un backoff *linéaire*.)
+          Sleep(1000 * (1 shl Attempt));
         end;
       end;
     end;
@@ -2244,7 +2334,7 @@ Vous êtes maintenant capable de :
 
 | Service | Coût mensuel | Usage |
 |---------|--------------|-------|
-| OpenAI GPT-3.5 | 5-20 $ | Chatbot ~1000 messages |
+| OpenAI (mini) | 5-20 $ | Chatbot ~1000 messages |
 | Google Vision | Gratuit | 1000 images/mois |
 | Hébergement | 5-10 $ | Serveur basique |
 | **Total** | **10-30 $** | Développement et tests |
@@ -2269,7 +2359,7 @@ Vous êtes maintenant capable de :
 - ✅ Monitorer l'utilisation
 - ✅ Définir des limites
 - ✅ Utiliser le cache agressivement
-- ✅ Choisir le bon modèle (GPT-3.5 vs GPT-4)
+- ✅ Choisir le bon modèle (le moins cher qui couvre votre besoin — souvent un modèle « mini » suffit)
 
 ### Limitations et éthique
 
@@ -2290,7 +2380,7 @@ Vous êtes maintenant capable de :
 **Documentation** :
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [Google Cloud Vision](https://cloud.google.com/vision/docs)
-- [Azure Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/)
+- [Azure AI Services](https://learn.microsoft.com/azure/ai-services/) (anciennement Azure Cognitive Services)
 
 **Apprentissage** :
 - [Coursera ML Course](https://www.coursera.org/learn/machine-learning)

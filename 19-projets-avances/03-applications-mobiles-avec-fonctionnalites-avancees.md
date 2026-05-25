@@ -264,7 +264,7 @@ cd /Applications/PAServer
 2. Installez Android Studio
 3. Lancez le SDK Manager
 4. Installez :
-   - Android SDK Platform (API 31+)
+   - Android SDK Platform (API 34 ou supérieure — Google Play exige API 34+ depuis août 2025 pour les nouvelles apps et mises à jour)
    - Android SDK Build-Tools
    - Android SDK Platform-Tools
    - Google Play Services
@@ -545,20 +545,21 @@ end;
 ```pascal
 procedure TFormMain.AdaptToScreenSize;  
 var  
-  ScreenSize: TSize;
+  ScreenWidth: Single;
   Scale: Single;
 begin
-  // Obtenir la taille de l'écran
-  ScreenSize := Screen.Size;
+  // Obtenir la largeur de l'écran (FMX : TScreen expose Width/Height en Single,
+  // il n'y a pas de propriété Size groupée comme en VCL).
+  ScreenWidth := Screen.Width;
 
   // Calculer le facteur d'échelle
-  if ScreenSize.Width < 768 then
+  if ScreenWidth < 768 then
   begin
     // Petit écran (iPhone SE, etc.)
     Scale := 0.8;
     LabelTitle.TextSettings.Font.Size := 18;
   end
-  else if ScreenSize.Width < 1024 then
+  else if ScreenWidth < 1024 then
   begin
     // Écran moyen (iPhone standard)
     Scale := 1.0;
@@ -603,7 +604,7 @@ end;
 
 ```pascal
 uses
-  System.Sensors, System.Sensors.Components, System.Permissions;
+  System.Math, System.Sensors, System.Sensors.Components, System.Permissions;
 
 type
   TFormMain = class(TForm)
@@ -615,6 +616,7 @@ type
     procedure OnPermissionRequestResult(Sender: TObject;
       const APermissions: TArray<string>;
       const AGrantResults: TArray<TPermissionStatus>);
+    function HaversineDistance(const A, B: TLocationCoord2D): Double;
   end;
 
 procedure TFormMain.RequestLocationPermission;  
@@ -642,13 +644,33 @@ begin
   end;
 end;
 
+// Distance haversine en mètres entre deux coordonnées GPS.
+// TLocationCoord2D (System.Sensors) est un simple record (Latitude, Longitude) :
+// il n'expose pas de méthode Distance, il faut donc calculer soi-même.
+function TFormMain.HaversineDistance(const A, B: TLocationCoord2D): Double;  
+const  
+  EarthRadiusMeters = 6371000.0;
+var
+  Lat1, Lat2, DLat, DLon, H: Double;
+begin
+  Lat1 := DegToRad(A.Latitude);
+  Lat2 := DegToRad(B.Latitude);
+  DLat := DegToRad(B.Latitude - A.Latitude);
+  DLon := DegToRad(B.Longitude - A.Longitude);
+
+  H := Sin(DLat / 2) * Sin(DLat / 2) +
+       Cos(Lat1) * Cos(Lat2) * Sin(DLon / 2) * Sin(DLon / 2);
+
+  Result := 2 * EarthRadiusMeters * ArcSin(Sqrt(H));
+end;
+
 procedure TFormMain.LocationSensor1LocationChanged(Sender: TObject;
   const OldLocation, NewLocation: TLocationCoord2D);
 var
   Distance: Double;
 begin
-  // Calculer la distance parcourue
-  Distance := NewLocation.Distance(OldLocation);
+  // Calculer la distance parcourue (formule haversine en mètres)
+  Distance := HaversineDistance(OldLocation, NewLocation);
 
   // Mettre à jour l'affichage
   LabelLocation.Text := Format('Lat: %.6f, Lon: %.6f',
@@ -692,49 +714,41 @@ end;
 
 #### Code de capture
 
+L'approche recommandée en FMX est d'utiliser **`TTakePhotoFromCameraAction`** (issue de `FMX.MediaLibrary.Actions`) plutôt que d'appeler manuellement le service de caméra :
+
 ```pascal
 uses
-  FMX.MediaLibrary, FMX.Platform, FMX.Graphics;
+  FMX.MediaLibrary, FMX.MediaLibrary.Actions, FMX.Platform, FMX.Graphics,
+  System.IOUtils;
 
 type
   TFormMain = class(TForm)
     ButtonTakePhoto: TButton;
     ImagePhoto: TImage;
+    TakePhotoFromCameraAction1: TTakePhotoFromCameraAction;
     procedure ButtonTakePhotoClick(Sender: TObject);
+    procedure TakePhotoFromCameraAction1DidFinishTaking(Image: TBitmap);
   private
-    procedure OnPhotoTaken(Image: TBitmap);
+    procedure SavePhotoToFile(ABitmap: TBitmap);
   end;
 
 procedure TFormMain.ButtonTakePhotoClick(Sender: TObject);  
-var  
-  MediaLibrary: IFMXCameraService;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(
-    IFMXCameraService, MediaLibrary) then
-  begin
-    MediaLibrary.TakePhotoFromCamera(
-      procedure(Image: TBitmap)
-      begin
-        OnPhotoTaken(Image);
-      end
-    );
-  end
-  else
-    ShowMessage('Caméra non disponible');
+begin  
+  // Déclenche l'ouverture de la caméra ; le callback DidFinishTaking
+  // est appelé avec le bitmap capturé.
+  TakePhotoFromCameraAction1.Execute;
 end;
 
-procedure TFormMain.OnPhotoTaken(Image: TBitmap);  
+procedure TFormMain.TakePhotoFromCameraAction1DidFinishTaking(Image: TBitmap);  
 begin  
   if Assigned(Image) then
   begin
     ImagePhoto.Bitmap.Assign(Image);
-
-    // Sauvegarder l'image
     SavePhotoToFile(Image);
   end;
 end;
 
-procedure SavePhotoToFile(ABitmap: TBitmap);  
+procedure TFormMain.SavePhotoToFile(ABitmap: TBitmap);  
 var  
   FileName: string;
 begin
@@ -754,6 +768,12 @@ uses
   System.Sensors, System.Sensors.Components;
 
 type
+  // Record local : System.Sensors n'expose pas de type "TAcceleration" prêt
+  // à l'emploi, on compose donc nous-mêmes les trois axes dans un record.
+  TAcceleration = record
+    X, Y, Z: Double;
+  end;
+
   TFormMain = class(TForm)
     MotionSensor1: TMotionSensor;
     procedure MotionSensor1DataChanged(Sender: TObject);
@@ -767,7 +787,11 @@ procedure TFormMain.MotionSensor1DataChanged(Sender: TObject);
 var  
   Accel: TAcceleration;
 begin
-  Accel := MotionSensor1.Sensor.AccelerationX;
+  // AccelerationX/Y/Z renvoient chacun un Double (un axe) ; on les agrège
+  // dans le record TAcceleration déclaré ci-dessus.
+  Accel.X := MotionSensor1.Sensor.AccelerationX;
+  Accel.Y := MotionSensor1.Sensor.AccelerationY;
+  Accel.Z := MotionSensor1.Sensor.AccelerationZ;
   DetectStep(Accel);
   FLastAcceleration := Accel;
 end;
@@ -777,14 +801,17 @@ var
   Magnitude: Double;
   Threshold: Double;
 begin
-  // Calculer l'intensité du mouvement
+  // Calculer l'intensité du mouvement.
+  // ⚠️ AccelerationX/Y/Z sont exprimés en **g** (unités de gravité) sous Delphi
+  // FMX. Au repos, téléphone à plat sur une table : X≈0, Y≈0, Z≈1 → Magnitude≈1.
+  // Tout mouvement ajoute à cette valeur de base.
   Magnitude := Sqrt(
     Sqr(AAccel.X) +
     Sqr(AAccel.Y) +
     Sqr(AAccel.Z)
   );
 
-  Threshold := 1.2; // Seuil de détection
+  Threshold := 1.2; // Seuil de détection (1.2 g = gravité + 0.2 g supplémentaire)
 
   // Détecter un pas
   if Magnitude > Threshold then
@@ -794,6 +821,11 @@ begin
   end;
 end;
 ```
+
+> ⚠️ **Limite de cet exemple** : ce code est volontairement très simplifié pour illustrer la lecture du capteur. Un seul vrai pas génère typiquement plusieurs pics d'accélération (impact, rebond, décélération) qui seront tous comptés ici — vous obtiendrez 3 à 10 fois trop de pas. Pour un véritable podomètre, utilisez plutôt :  
+> - **iOS** : `CMPedometer` (framework CoreMotion) — disponible via interop Objective-C  
+> - **Android** : `Sensor.TYPE_STEP_COUNTER` (capteur matériel calibré) — disponible via interop Java  
+> - Ou un algorithme avec **moyenne mobile + détection de pic + période de réfraction** (≥ 250 ms entre deux pas) sur la composante haute fréquence de la magnitude.
 
 ### 4.4 Notifications locales
 
@@ -913,6 +945,8 @@ type
   private
     procedure InitializeDatabase;
     function GetDatabasePath: string;
+    procedure CreateTables;  // Doit être déclarée pour que l'implémentation
+                             // `procedure TDataModule1.CreateTables;` ci-dessous compile.
   end;
 
 procedure TDataModule1.InitializeDatabase;  
@@ -1081,24 +1115,33 @@ var
   JSON: TJSONObject;
   JSONText: string;
 begin
-  if TFile.Exists(GetPreferencesFile) then
-  begin
-    JSONText := TFile.ReadAllText(GetPreferencesFile);
-    JSON := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
-    try
-      FDailyGoal := JSON.GetValue<Integer>('dailyGoal');
-      FNotificationsEnabled := JSON.GetValue<Boolean>('notificationsEnabled');
-      FUnitSystem := JSON.GetValue<string>('unitSystem');
-    finally
-      JSON.Free;
-    end;
-  end
-  else
-  begin
-    // Valeurs par défaut
-    FDailyGoal := 10000;
-    FNotificationsEnabled := True;
-    FUnitSystem := 'metric';
+  // ⚠️ On initialise TOUJOURS les valeurs par défaut AVANT de tenter le parsing,
+  // pour couvrir les trois cas qui font échouer la lecture :
+  //   - le fichier n'existe pas (première installation),
+  //   - le fichier est corrompu (crash en cours d'écriture, édition manuelle),
+  //   - une clé a été renommée/supprimée entre deux versions de l'app.
+  // Sans ces valeurs par défaut, le démarrage de l'app planterait sur
+  // EAccessViolation (JSON nil) ou EJSONException (clé manquante).
+  FDailyGoal := 10000;
+  FNotificationsEnabled := True;
+  FUnitSystem := 'metric';
+
+  if not TFile.Exists(GetPreferencesFile) then
+    Exit;
+
+  JSONText := TFile.ReadAllText(GetPreferencesFile);
+  JSON := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
+  if not Assigned(JSON) then
+    Exit; // Fichier corrompu : on garde les valeurs par défaut
+
+  try
+    // TryGetValue : une clé absente ne casse pas tout, on conserve la valeur
+    // par défaut initialisée plus haut.
+    JSON.TryGetValue<Integer>('dailyGoal', FDailyGoal);
+    JSON.TryGetValue<Boolean>('notificationsEnabled', FNotificationsEnabled);
+    JSON.TryGetValue<string>('unitSystem', FUnitSystem);
+  finally
+    JSON.Free;
   end;
 end;
 ```
@@ -1303,9 +1346,11 @@ Les systèmes mobiles modernes exigent des permissions explicites pour accéder 
 |------------|-----|---------|
 | Localisation | NSLocationWhenInUseUsageDescription | ACCESS_FINE_LOCATION |
 | Caméra | NSCameraUsageDescription | CAMERA |
-| Photos | NSPhotoLibraryUsageDescription | READ_EXTERNAL_STORAGE |
+| Photos | NSPhotoLibraryUsageDescription | READ_MEDIA_IMAGES (API 33+) / READ_EXTERNAL_STORAGE (≤ API 32) |
 | Notifications | Automatique | POST_NOTIFICATIONS (API 33+) |
 | Contacts | NSContactsUsageDescription | READ_CONTACTS |
+
+> ℹ️ **Note Android 13+** : depuis API 33, `READ_EXTERNAL_STORAGE` est **déprécié** au profit des permissions granulaires `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_AUDIO`. Sur Android 13+, déclarer uniquement `READ_EXTERNAL_STORAGE` ne permet plus d'accéder aux photos. Google Play exigeant API 34+ pour les nouvelles apps depuis août 2025, vous devez désormais utiliser les permissions `READ_MEDIA_*`.
 
 #### Code de demande de permission
 
@@ -1488,7 +1533,8 @@ uses
 procedure LogMessage(const AMessage: string);  
 begin  
   {$IFDEF ANDROID}
-  LOGI(AMessage);
+  // LOGI attend un MarshaledAString (PAnsiChar). On encode donc le message en UTF-8.
+  LOGI(MarshaledAString(UTF8Encode(AMessage)));
   {$ENDIF}
 
   {$IFDEF IOS}
@@ -1711,24 +1757,30 @@ begin
 end;
 
 procedure OpenAppStore;  
-var  
+{$IF DEFINED(IOS) or DEFINED(ANDROID)}
+var
   URL: string;
+{$ENDIF}
 begin
   {$IFDEF IOS}
-  URL := 'itms-apps://itunes.apple.com/app/idVOTRE_APP_ID';
+  // Format moderne (apps.apple.com remplace itunes.apple.com depuis iOS 13)
+  URL := 'itms-apps://apps.apple.com/app/idVOTRE_APP_ID';
+  // Sur iOS, on ouvre l'URL via SharedApplication.openURL (à compléter selon
+  // les unités iOS importées : iOSapi.UIKit, Macapi.Helpers, etc.).
+  // SharedApplication.openURL(TNSURL.Wrap(...));
   {$ENDIF}
 
   {$IFDEF ANDROID}
   URL := 'market://details?id=com.votrecompagnie.votreapp';
-  {$ENDIF}
-
-  // Ouvrir l'URL
+  // L'appel à TAndroidHelper / TJIntent doit être encadré par {$IFDEF ANDROID},
+  // sinon le code ne compile pas sur iOS (les unités Androidapi.* n'y existent pas).
   TAndroidHelper.Activity.startActivity(
     TJIntent.JavaClass.init(
       TJIntent.JavaClass.ACTION_VIEW,
       TJnet_Uri.JavaClass.parse(StringToJString(URL))
     )
   );
+  {$ENDIF}
 end;
 ```
 
@@ -1795,18 +1847,26 @@ end;
 procedure TFormMain.OnReceiveNotification(Sender: TObject;
   const ANotification: TPushServiceNotification);
 begin
-  // Traiter la notification
-  ShowMessage('Notification reçue: ' + ANotification.DataObject.GetValue('message'));
+  // Traiter la notification.
+  // ⚠️ DataObject.GetValue(name) renvoie un TJSONValue : il faut utiliser la
+  // surcharge générique GetValue<string>(name) pour obtenir directement la
+  // string ; sinon la concaténation `string + TJSONValue` ne compile pas.
+  ShowMessage('Notification reçue: ' +
+    ANotification.DataObject.GetValue<string>('message'));
 end;
 ```
 
 ### 10.2 Authentification biométrique
+
+> 💡 **Note** : Depuis Delphi 10.4, le framework propose l'unité **`FMX.BiometricAuth`** avec la classe `TBiometricAuth` qui encapsule TouchID, FaceID (iOS) et BiometricPrompt (Android) sans passer par un service custom. L'exemple ci-dessous reste valide pour illustrer le pattern « service de plateforme » utilisé sur les anciennes versions ou pour vos propres extensions.
 
 ```pascal
 uses
   FMX.Platform;
 
 type
+  // Interface custom pour illustrer le pattern Service de Plateforme.
+  // Pensez à générer un vrai GUID via Ctrl+Maj+G dans l'IDE.
   TBiometricAuthService = interface(IInterface)
     ['{VOTRE-GUID}']
     function IsBiometricAvailable: Boolean;
@@ -1889,27 +1949,34 @@ end;
 
 Permettre l'ouverture de votre app via des liens.
 
+**Configuration iOS** — à ajouter dans le fichier `Info.plist` (XML) :
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>votreapp</string>
+    </array>
+  </dict>
+</array>
+```
+
+**Configuration Android** — à ajouter dans `AndroidManifest.xml`, à l'intérieur de la balise `<activity>` correspondante :
+
+```xml
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="votreapp" android:host="activity" />
+</intent-filter>
+```
+
+**Gestion dans le code Delphi** :
+
 ```pascal
-// Configuration iOS (Info.plist)
-{
-  CFBundleURLTypes: [
-    {
-      CFBundleURLSchemes: ["votreapp"]
-    }
-  ]
-}
-
-// Configuration Android (AndroidManifest.xml)
-{
-  <intent-filter>
-    <action android:name="android.intent.action.VIEW" />
-    <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
-    <data android:scheme="votreapp" android:host="activity" />
-  </intent-filter>
-}
-
-// Gestion dans le code
 type
   TFormMain = class(TForm)
     procedure FormCreate(Sender: TObject);
@@ -1941,18 +2008,24 @@ uses
 type
   TCrashReporter = class
   public
+    // HandleException doit être une méthode de classe (et non une anonymous method)
+    // pour pouvoir être assignée à TExceptionEvent (= procedure of object).
+    class procedure HandleException(Sender: TObject; E: Exception);
     class procedure Initialize;
     class procedure LogCrash(const AException: Exception);
     class procedure SendCrashReport;
   end;
 
+class procedure TCrashReporter.HandleException(Sender: TObject; E: Exception);  
+begin  
+  LogCrash(E);
+end;
+
 class procedure TCrashReporter.Initialize;  
 begin  
-  Application.OnException :=
-    procedure(Sender: TObject; E: Exception)
-    begin
-      LogCrash(E);
-    end;
+  // Application.OnException est de type TExceptionEvent (procedure of object) :
+  // on lui passe une méthode de classe, pas une anonymous method.
+  Application.OnException := HandleException;
 end;
 
 class procedure TCrashReporter.LogCrash(const AException: Exception);  
@@ -2017,6 +2090,26 @@ type
     class procedure LoadFromServer;
     class function IsEnabled(const AFeature: string): Boolean;
   end;
+
+// ⚠️ Implémentation OBLIGATOIRE du class constructor : sans elle, FFlags reste
+// nil et le premier appel à IsEnabled lèverait EAccessViolation (FFlags.ContainsKey
+// sur un dictionnaire non initialisé). Le class constructor s'exécute
+// automatiquement au chargement de l'unité, avant tout code utilisateur.
+class constructor TFeatureFlags.Create;  
+begin  
+  FFlags := TDictionary<string, Boolean>.Create;
+end;
+
+class destructor TFeatureFlags.Destroy;  
+begin  
+  FFlags.Free;
+end;
+
+class procedure TFeatureFlags.LoadFromServer;  
+begin  
+  // Exemple : appel REST au backend pour récupérer les flags et remplir FFlags.
+  // Implémentation à compléter selon votre API (TRESTClient, TNetHTTPClient…).
+end;
 
 class function TFeatureFlags.IsEnabled(const AFeature: string): Boolean;  
 begin  

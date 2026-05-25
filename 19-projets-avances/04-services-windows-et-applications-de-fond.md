@@ -162,15 +162,18 @@ end.
 
 **Service Windows** :
 ```pascal
-program ServiceApp;
+program MonitoringService;
 
 uses
   Vcl.SvcMgr,
   ServiceUnit in 'ServiceUnit.pas';
 
 begin
+  // Application est ici de type Vcl.SvcMgr.TServiceApplication (et non
+  // Vcl.Forms.TApplication). CreateForm accepte donc des descendants de
+  // TService (ici TMonitoringService, défini dans ServiceUnit.pas).
   Application.Initialize;
-  Application.CreateForm(TServiceModule, ServiceModule);
+  Application.CreateForm(TMonitoringService, MonitoringService);
   Application.Run;
 end.
 ```
@@ -367,17 +370,22 @@ begin
   LogEntry := Format('[%s] %s',
     [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), AMessage]);
 
-  // Écriture thread-safe
-  TThread.Queue(nil,
-    procedure
-    begin
-      TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
-    end);
+  // ⚠️ NE PAS utiliser TThread.Queue/Synchronize ici : un service Windows
+  // (Vcl.SvcMgr) n'a pas de message pump qui appelle régulièrement
+  // CheckSynchronize → les appels resteraient en attente indéfiniment.
+  // L'écriture directe avec TFile.AppendAllText est acceptable car ce thread
+  // est le seul à écrire ce fichier. Pour une vraie thread-safety entre
+  // plusieurs threads, ajoutez un TCriticalSection partagé (cf. TLogger plus bas).
+  try
+    TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+  except
+    // Ignorer les erreurs d'écriture du log pour ne pas masquer l'erreur d'origine
+  end;
 end;
 
 procedure TMonitorThread.Execute;  
 var  
-  FileCount: Integer;
+  FileCount, WaitedMs: Integer;
 begin
   WriteLog('Thread de monitoring démarré');
 
@@ -398,9 +406,14 @@ begin
         WriteLog('ATTENTION : Dossier non trouvé !');
       end;
 
-      // Attendre 60 secondes avant la prochaine vérification
-      if not Terminated then
-        Sleep(60000);
+      // Attendre 60 secondes par tranches de 200 ms pour pouvoir réagir
+      // rapidement à un Terminate (sinon ServiceStop attendrait jusqu'à 60s).
+      WaitedMs := 0;
+      while (WaitedMs < 60000) and not Terminated do
+      begin
+        Sleep(200);
+        Inc(WaitedMs, 200);
+      end;
 
     except
       on E: Exception do
@@ -567,6 +580,7 @@ uses
 procedure InstallService(const AServiceName, ADisplayName, AFilePath: string);  
 var  
   SCManager, ServiceHandle: SC_HANDLE;
+  QuotedPath: string;
 begin
   // Ouvrir le gestionnaire de services
   SCManager := OpenSCManager(nil, nil, SC_MANAGER_ALL_ACCESS);
@@ -574,6 +588,15 @@ begin
     raise Exception.Create('Impossible d''ouvrir le gestionnaire de services');
 
   try
+    // ⚠️ Si le chemin du binaire contient des espaces (cas typique sous
+    // "C:\Program Files\..."), Windows interpréterait `C:\Program` comme l'exe
+    // et le reste comme des arguments. Il faut donc entourer le chemin de
+    // guillemets — recommandation officielle MSDN pour lpBinaryPathName.
+    if (Pos(' ', AFilePath) > 0) and (AFilePath[1] <> '"') then
+      QuotedPath := '"' + AFilePath + '"'
+    else
+      QuotedPath := AFilePath;
+
     // Créer le service
     ServiceHandle := CreateService(
       SCManager,
@@ -583,7 +606,7 @@ begin
       SERVICE_WIN32_OWN_PROCESS,
       SERVICE_AUTO_START,
       SERVICE_ERROR_NORMAL,
-      PChar(AFilePath),
+      PChar(QuotedPath),
       nil, nil, nil, nil, nil
     );
 
@@ -630,7 +653,6 @@ end;
 procedure StartServiceProc(const AServiceName: string);  
 var  
   SCManager, ServiceHandle: SC_HANDLE;
-  ServiceStatus: TServiceStatus;
 begin
   SCManager := OpenSCManager(nil, nil, SC_MANAGER_ALL_ACCESS);
   if SCManager = 0 then Exit;
@@ -700,7 +722,13 @@ begin
       InstallService(
         'MonitoringService',
         'Service de Monitoring',
-        ParamStr(0).Replace('ServiceInstaller.exe', 'MonitoringService.exe')
+        // ⚠️ `String.Replace` est case-sensitive : sur certaines configurations
+        // Windows retourne `ParamStr(0)` avec une casse différente
+        // (ex. `C:\Path\serviceinstaller.exe`) et le Replace échouerait
+        // silencieusement. On reconstruit le chemin depuis le dossier de l'exe
+        // courant, ce qui est insensible à la casse de l'exécutable et plus
+        // robuste si le fichier est renommé.
+        ExtractFilePath(ParamStr(0)) + 'MonitoringService.exe'
       )
     else if Command = 'uninstall' then
       UninstallService('MonitoringService')
@@ -731,6 +759,11 @@ ServiceInstaller.exe uninstall
 
 ### 3.2 Gestion via PowerShell
 
+> ⚠️ **Version PowerShell** : `Remove-Service` n'existe qu'à partir de **PowerShell 6.0+**.  
+> Sur Windows 10/11 (PowerShell 5.1 par défaut), utilisez `sc.exe delete` à la place,  
+> ou installez PowerShell 7 ([github.com/PowerShell/PowerShell](https://github.com/PowerShell/PowerShell)).  
+> `New-Service`, `Start-Service`, `Stop-Service` et `Get-Service` fonctionnent dans toutes les versions.
+
 ```powershell
 # Installer le service
 New-Service -Name "MonitoringService" `
@@ -747,8 +780,11 @@ Stop-Service -Name "MonitoringService"
 # Vérifier l'état
 Get-Service -Name "MonitoringService"
 
-# Désinstaller
+# Désinstaller (PowerShell 6+ uniquement)
 Remove-Service -Name "MonitoringService"
+
+# Alternative compatible PowerShell 5.1 (et toutes versions de Windows)
+# sc.exe delete MonitoringService
 ```
 
 ### 3.3 Vérification du service
@@ -801,12 +837,21 @@ type
   end;
 
 class constructor TLogger.Create;  
-begin  
+var  
+  LogDir: string;
+begin
   FLock := TObject.Create;
   FLogFile := TPath.Combine(
     TPath.GetPublicPath,
     'MonitoringService\debug.log'
   );
+  // Important : créer le dossier parent — le class constructor s'exécute au
+  // chargement de l'unité, AVANT InitializeService qui crée habituellement le
+  // dossier. Sans cette ligne, la première écriture de log lèverait une
+  // EDirectoryNotFoundException et masquerait l'erreur d'origine du service.
+  LogDir := TPath.GetDirectoryName(FLogFile);
+  if not TDirectory.Exists(LogDir) then
+    TDirectory.CreateDirectory(LogDir);
 end;
 
 class destructor TLogger.Destroy;  
@@ -825,7 +870,17 @@ begin
        ALevel,
        AMessage]);
 
-    TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+    // ⚠️ Si l'écriture du log échoue (disque plein, permissions retirées,
+    // dossier supprimé…), on NE doit PAS faire remonter l'exception au caller :
+    // beaucoup d'endroits dans un service appellent TLogger.Error DEPUIS un
+    // bloc except — une exception ici masquerait l'erreur originale ou
+    // arrêterait brutalement le thread. On l'avale silencieusement,
+    // cohérent avec TMonitorThread.WriteLog plus haut.
+    try
+      TFile.AppendAllText(FLogFile, LogEntry + sLineBreak);
+    except
+      // Avalé volontairement
+    end;
   finally
     TMonitor.Exit(FLock);
   end;
@@ -894,6 +949,7 @@ uses
 
 var
   ConsoleMode: Boolean;
+  Started, Stopped: Boolean;
 
 begin
   // Détecter le mode
@@ -905,12 +961,18 @@ begin
     WriteLn('Mode console - Service de Monitoring');
     WriteLn('Appuyez sur ENTER pour arrêter...');
 
-    // Simuler le service
+    // Simuler le service : Started/Stopped sont les sorties var attendues par
+    // ServiceStart / ServiceStop ; on les passe distincts de ConsoleMode.
     MonitoringService := TMonitoringService.Create(nil);
     try
-      MonitoringService.ServiceStart(MonitoringService, ConsoleMode);
-      ReadLn;
-      MonitoringService.ServiceStop(MonitoringService, ConsoleMode);
+      Started := False;
+      MonitoringService.ServiceStart(MonitoringService, Started);
+      if Started then
+      begin
+        ReadLn;
+        Stopped := False;
+        MonitoringService.ServiceStop(MonitoringService, Stopped);
+      end;
     finally
       MonitoringService.Free;
     end;
@@ -1092,6 +1154,7 @@ end;
 procedure TMonitorThread.Execute;  
 var  
   CommandProcessor: TCommandProcessor;
+  WaitedMs: Integer;
 begin
   CommandProcessor := TCommandProcessor.Create(
     'C:\ProgramData\MonitoringService\Commands'
@@ -1105,7 +1168,15 @@ begin
       // Travail normal du service
       DoMonitoring;
 
-      Sleep(5000);
+      // Attendre 5 s par tranches de 200 ms pour pouvoir s'arrêter rapidement
+      // sur un ServiceStop (un Sleep(5000) fixe ferait attendre l'intégralité
+      // du délai avant de réagir).
+      WaitedMs := 0;
+      while (WaitedMs < 5000) and not Terminated do
+      begin
+        Sleep(200);
+        Inc(WaitedMs, 200);
+      end;
     end;
   finally
     CommandProcessor.Free;
@@ -1189,15 +1260,12 @@ begin
           begin
             SetString(Command, PAnsiChar(@Buffer), BytesRead);
 
-            // Traiter la commande
+            // Traiter la commande directement dans ce thread.
+            // Note : TThread.Synchronize/Queue ne fonctionne pas dans un service
+            // Windows (pas de message pump qui appelle CheckSynchronize), donc le
+            // callback FOnCommand doit lui-même être thread-safe.
             if Assigned(FOnCommand) then
-            begin
-              TThread.Synchronize(nil,
-                procedure
-                begin
-                  FOnCommand(Command);
-                end);
-            end;
+              FOnCommand(Command);
           end;
         end;
       finally
@@ -1300,31 +1368,44 @@ var
   JSON: TJSONObject;
   JSONText: string;
 begin
-  if TFile.Exists(FConfigFile) then
-  begin
-    JSONText := TFile.ReadAllText(FConfigFile);
-    JSON := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
-    try
-      FMonitorPath := JSON.GetValue<string>('monitorPath');
-      FCheckInterval := JSON.GetValue<Integer>('checkInterval');
-      FMaxFileSize := JSON.GetValue<Int64>('maxFileSize');
+  // Valeurs par défaut systématiques : si le fichier est absent OU malformé,
+  // le service doit pouvoir continuer à tourner sans planter. Sans cette base,
+  // un JSON corrompu (édité à la main, écriture interrompue) ferait planter
+  // tout le thread de monitoring au prochain HasChanged → Reload.
+  FMonitorPath := 'C:\Temp';
+  FCheckInterval := 60;
+  FMaxFileSize := 10485760; // 10 MB
 
-      FLastModified := TFile.GetLastWriteTime(FConfigFile);
-    finally
-      JSON.Free;
-    end;
-  end
-  else
+  if not TFile.Exists(FConfigFile) then
+    Exit;
+
+  JSONText := TFile.ReadAllText(FConfigFile);
+  JSON := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
+  if not Assigned(JSON) then
   begin
-    // Valeurs par défaut
-    FMonitorPath := 'C:\Temp';
-    FCheckInterval := 60;
-    FMaxFileSize := 10485760; // 10 MB
+    TLogger.Warning('config.json malformé — valeurs par défaut conservées');
+    Exit;
+  end;
+
+  try
+    // TryGetValue : un champ manquant ne casse pas tout, on garde la valeur par défaut.
+    JSON.TryGetValue<string>('monitorPath', FMonitorPath);
+    JSON.TryGetValue<Integer>('checkInterval', FCheckInterval);
+    JSON.TryGetValue<Int64>('maxFileSize', FMaxFileSize);
+
+    FLastModified := TFile.GetLastWriteTime(FConfigFile);
+  finally
+    JSON.Free;
   end;
 end;
 
 function TServiceConfig.HasChanged: Boolean;  
 begin  
+  // TFile.GetLastWriteTime lève EFileNotFoundException si le fichier a été
+  // supprimé entre-temps (ou n'a jamais existé). On garde HasChanged silencieux
+  // pour ne pas faire planter le thread du service au prochain tick.
+  if not TFile.Exists(FConfigFile) then
+    Exit(False);
   Result := TFile.GetLastWriteTime(FConfigFile) <> FLastModified;
 end;
 
@@ -1336,7 +1417,9 @@ end;
 
 // Dans le thread du service
 procedure TMonitorThread.Execute;  
-begin  
+var  
+  TargetMs, WaitedMs: Integer;
+begin
   while not Terminated do
   begin
     // Vérifier si la config a changé
@@ -1349,7 +1432,14 @@ begin
     // Travail normal
     DoMonitoring;
 
-    Sleep(FConfig.CheckInterval * 1000);
+    // Attendre CheckInterval secondes, par tranches de 200 ms (arrêt réactif)
+    TargetMs := FConfig.CheckInterval * 1000;
+    WaitedMs := 0;
+    while (WaitedMs < TargetMs) and not Terminated do
+    begin
+      Sleep(200);
+      Inc(WaitedMs, 200);
+    end;
   end;
 end;
 ```
@@ -1484,7 +1574,9 @@ end;
 
 // Dans le thread
 procedure TMonitorThread.Execute;  
-begin  
+var  
+  WaitedMs: Integer;
+begin
   while not Terminated do
   begin
     // Vérifier les tâches planifiées
@@ -1493,7 +1585,13 @@ begin
     // Travail normal
     DoMonitoring;
 
-    Sleep(60000); // Vérifier chaque minute
+    // Attendre 1 minute, découpée en tranches de 200 ms pour arrêt réactif
+    WaitedMs := 0;
+    while (WaitedMs < 60000) and not Terminated do
+    begin
+      Sleep(200);
+      Inc(WaitedMs, 200);
+    end;
   end;
 end;
 ```
@@ -1603,7 +1701,9 @@ begin
 end;
 
 procedure TFileWatcherThread.Execute;  
-begin  
+var  
+  WaitedMs: Integer;
+begin
   TLogger.Info('Surveillance démarrée: ' + FPath);
 
   while not Terminated do
@@ -1615,7 +1715,16 @@ begin
         TLogger.Error('Erreur surveillance: ' + E.Message);
     end;
 
-    Sleep(5000); // Vérifier toutes les 5 secondes
+    // Attendre 5 secondes par tranches de 200 ms (cohérent avec les autres
+    // threads de ce fichier — un Sleep(5000) fixe ferait attendre jusqu'à
+    // 5 s avant de répondre à un ServiceStop, ce qui dépasse la fenêtre
+    // de tolérance du SCM dans certains cas).
+    WaitedMs := 0;
+    while (WaitedMs < 5000) and not Terminated do
+    begin
+      Sleep(200);
+      Inc(WaitedMs, 200);
+    end;
   end;
 end;
 ```
@@ -1695,13 +1804,22 @@ begin
 end;
 
 procedure TSyncThread.Execute;  
-begin  
+var  
+  WaitedMs: Integer;
+begin
   while not Terminated do
   begin
     SyncFolders;
 
-    // Synchroniser toutes les heures
-    Sleep(3600000);
+    // Synchroniser toutes les heures, mais en tranches de 200 ms pour pouvoir
+    // s'arrêter rapidement quand le service reçoit un Stop (sinon le SCM tuerait
+    // brutalement le processus après ~30 s de timeout).
+    WaitedMs := 0;
+    while (WaitedMs < 3600000) and not Terminated do
+    begin
+      Sleep(200);
+      Inc(WaitedMs, 200);
+    end;
   end;
 end;
 ```
@@ -1773,7 +1891,9 @@ begin
 end;
 
 procedure TCleanupThread.Execute;  
-begin  
+var  
+  WaitedMs: Integer;
+begin
   while not Terminated do
   begin
     try
@@ -1784,8 +1904,13 @@ begin
         TLogger.Error('Erreur nettoyage: ' + E.Message);
     end;
 
-    // Nettoyage quotidien à 3h du matin
-    Sleep(3600000); // Vérifier chaque heure
+    // Attendre 1 h par tranches de 200 ms (arrêt rapide possible — voir TSyncThread)
+    WaitedMs := 0;
+    while (WaitedMs < 3600000) and not Terminated do
+    begin
+      Sleep(200);
+      Inc(WaitedMs, 200);
+    end;
   end;
 end;
 ```
@@ -1802,7 +1927,7 @@ Créez un installateur avec Inno Setup :
 [Setup]
 AppName=Monitoring Service  
 AppVersion=1.0  
-DefaultDirName={pf}\MonitoringService  
+DefaultDirName={autopf}\MonitoringService  
 PrivilegesRequired=admin  
 OutputDir=Output  
 OutputBaseFilename=MonitoringService_Setup  
@@ -1973,7 +2098,17 @@ end;
 
 // Dans ServiceInstaller
 procedure InstallServiceWithAccount(const AUsername, APassword: string);  
-begin  
+var  
+  QuotedPath: string;
+begin
+  // Même précaution que dans InstallService : si le chemin contient des
+  // espaces, l'entourer de guillemets pour que Windows ne l'interprète pas
+  // comme « exe + arguments ».
+  if (Pos(' ', ExePath) > 0) and (ExePath[1] <> '"') then
+    QuotedPath := '"' + ExePath + '"'
+  else
+    QuotedPath := ExePath;
+
   ServiceHandle := CreateService(
     SCManager,
     PChar('MonitoringService'),
@@ -1982,7 +2117,7 @@ begin
     SERVICE_WIN32_OWN_PROCESS,
     SERVICE_AUTO_START,
     SERVICE_ERROR_NORMAL,
-    PChar(ExePath),
+    PChar(QuotedPath),
     nil, nil, nil,
     PChar(AUsername),  // Compte utilisateur
     PChar(APassword)   // Mot de passe
@@ -2014,17 +2149,19 @@ end;
 
 #### Chiffrement des données sensibles
 
+> ⚠️ **Attention** : `Base64` est un **encodage**, **pas un chiffrement**. N'importe qui peut décoder une chaîne Base64. L'exemple ci-dessous est volontairement simplifié pour illustrer le pattern Encrypt/Decrypt ; en production, utilisez de vrais algorithmes (AES via `System.Hash` + `System.NetEncoding` ou des bibliothèques comme **DCPcrypt**, **LockBox 3** ou **OpenSSL**).
+
 ```pascal
 uses
   System.NetEncoding;
 
-function EncryptData(const AData: string): string;  
+// ⚠️ Démonstration uniquement — REMPLACER par AES/ChaCha20 en production
+function EncodeData(const AData: string): string;  
 begin  
-  // Utiliser un vrai algorithme de chiffrement en production
   Result := TNetEncoding.Base64.Encode(AData);
 end;
 
-function DecryptData(const AData: string): string;  
+function DecodeData(const AData: string): string;  
 begin  
   Result := TNetEncoding.Base64.Decode(AData);
 end;
@@ -2036,13 +2173,17 @@ end;
 // Limiter l'utilisation mémoire
 procedure CheckMemoryUsage;  
 var  
-  MemStatus: TMemoryStatus;
+  MemStatus: TMemoryStatusEx;  // version 64 bits : indispensable au-delà de 4 Go
+  UsedMemory: UInt64;
+  MemoryPercent: UInt64;
 begin
-  MemStatus.dwLength := SizeOf(TMemoryStatus);
-  GlobalMemoryStatus(MemStatus);
+  // GlobalMemoryStatus (l'ancien) plafonne les valeurs à 4 Go via DWORD.
+  // GlobalMemoryStatusEx renvoie tous les compteurs en ULONGLONG (UInt64).
+  MemStatus.dwLength := SizeOf(TMemoryStatusEx);
+  GlobalMemoryStatusEx(MemStatus);
 
-  var UsedMemory := MemStatus.dwTotalPhys - MemStatus.dwAvailPhys;
-  var MemoryPercent := (UsedMemory * 100) div MemStatus.dwTotalPhys;
+  UsedMemory := MemStatus.ullTotalPhys - MemStatus.ullAvailPhys;
+  MemoryPercent := (UsedMemory * 100) div MemStatus.ullTotalPhys;
 
   if MemoryPercent > 80 then
   begin
@@ -2088,6 +2229,7 @@ procedure TMonitorThread.Execute;
 var  
   ErrorCount: Integer;
   MaxErrors: Integer;
+  WaitTime, WaitedMs: Integer;
 begin
   ErrorCount := 0;
   MaxErrors := 10;
@@ -2111,8 +2253,24 @@ begin
           Break;
         end;
 
-        // Attendre avant de réessayer
-        Sleep(5000 * ErrorCount); // Backoff exponentiel
+        // Backoff exponentiel plafonné : 10s, 20s, 40s, 80s, puis on bloque
+        // à 300 s (5 min). Sans plafond, `1 shl 9` = 512 ferait dépasser
+        // les 42 minutes au 9e essai, ce qui est rarement souhaitable.
+        // (On évite `Math.Min` ici pour ne pas imposer un import supplémentaire.)
+        WaitTime := 5000 * (1 shl ErrorCount);
+        if WaitTime > 300000 then
+          WaitTime := 300000;
+
+        // ⚠️ On découpe l'attente en tranches de 200 ms : le backoff peut
+        // monter jusqu'à 5 min ; un Sleep monolithique de cette durée ferait
+        // attendre TOUT le délai avant de répondre à un ServiceStop — le
+        // SCM finirait par tuer le processus de force après 30 s de timeout.
+        WaitedMs := 0;
+        while (WaitedMs < WaitTime) and not Terminated do
+        begin
+          Sleep(200);
+          Inc(WaitedMs, 200);
+        end;
       end;
     end;
   end;
@@ -2163,7 +2321,7 @@ Les services que vous pouvez créer :
 ### Ressources complémentaires
 
 **Documentation** :
-- [MSDN - Windows Services](https://docs.microsoft.com/en-us/windows/win32/services)
+- [Microsoft Learn - Windows Services](https://learn.microsoft.com/en-us/windows/win32/services)
 - [Delphi Service Application](https://docwiki.embarcadero.com/RADStudio/en/Services)
 
 **Outils** :
