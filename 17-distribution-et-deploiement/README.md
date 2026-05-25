@@ -115,18 +115,19 @@ Distribuer une application Delphi présente plusieurs défis qu'il faut anticipe
 ### Diversité des environnements
 
 Votre application devra fonctionner sur de nombreuses configurations différentes :
-- **Systèmes d'exploitation** : Windows 10, Windows 11, et leurs différentes versions
-- **Architectures** : 32 bits, 64 bits
-- **Langues** : Différentes localisations et paramètres régionaux
-- **Matériel** : Processeurs variés, quantités de mémoire différentes, résolutions d'écran diverses
+- **Systèmes d'exploitation Windows** : Windows 10 (fin de support gratuit le 14 octobre 2025), Windows 11 (24H2 actuel en 2026), Windows Server 2016/2019/2022/2025
+- **Autres plateformes** (selon votre cible Delphi 13 Florence) : macOS 14+ (Sonoma minimum recommandé en 2026, macOS 26 Tahoe disponible), iOS 17+ (iOS 15 = floor Apple), Android 8+ (API 26), Linux (Ubuntu 22.04 LTS+, Debian 12+, RHEL 9/10) — voir section 17.6
+- **Architectures** : x86 32 bits (Win32), x86_64 (Win64/Linux64), ARM64 (Windows on ARM, Apple Silicon, Android arm64-v8a, iOS arm64)
+- **Langues** : différentes localisations et paramètres régionaux (formats de date, séparateurs décimaux, jeu de caractères)
+- **Matériel** : processeurs variés, quantités de mémoire différentes, résolutions d'écran et facteurs DPI variables (du Full HD au 4K/8K)
 
 ### Dépendances
 
 Votre application peut nécessiter des composants externes :
-- **Bibliothèques système** : Certaines DLL Windows
-- **Runtime** : Bibliothèques Delphi
-- **Bases de données** : Drivers MySQL, SQLite, etc.
-- **Frameworks** : .NET, Visual C++ Redistributable, etc.
+- **Bibliothèques système** : la plupart des DLL Windows sont déjà présentes sur les systèmes cibles (`kernel32.dll`, `user32.dll`, `gdi32.dll`, `ucrtbase.dll`…). À vérifier avec **Dependencies** (cf 17.6).
+- **Runtime Delphi** : par défaut, Delphi compile en **statique** (tout est embarqué dans l'EXE) — aucun runtime à distribuer, contrairement à .NET ou Java. Sauf si vous utilisez explicitement des **runtime packages** (`.bpl`), ce qui est rare en production.
+- **Bases de données** : drivers nécessaires si vous accédez à une BD externe (`libmysql.dll`, `sqlite3.dll`, `libpq.dll`, Oracle OCI, etc.). FireDAC charge ces drivers à l'exécution.
+- **Frameworks tiers** : `.NET` (si vous appelez du code .NET via COM Interop ou Hydra), **Visual C++ Redistributable** (si vous utilisez des DLL C++ tierces), **WebView2 Runtime** (si vous utilisez `TEdgeBrowser`). **Pour du Delphi pur, ces frameworks ne sont pas nécessaires** — Delphi compile en code natif autonome.
 
 ### Sécurité et confiance
 
@@ -159,12 +160,14 @@ Vous fournissez directement l'application à vos utilisateurs :
 ### Magasins d'applications
 
 Publication sur des plateformes établies :
-- **Microsoft Store** : Pour les applications Windows
-- **Steam** : Pour les jeux et certaines applications
-- **Setapp** (macOS) : Abonnement à un ensemble d'applications
+- **Microsoft Store** : pour les applications Windows
+- **Mac App Store** : pour les applications macOS
+- **App Store** et **Google Play** : pour les apps mobiles iOS/Android (cf section 17.6)
+- **Steam** : pour les jeux et certaines applications
+- **Setapp** (macOS) : abonnement à un ensemble d'applications
 
-**Avantages** : Visibilité, confiance des utilisateurs, gestion automatique des mises à jour  
-**Inconvénients** : Commission (généralement 15-30%), processus de validation, règles strictes  
+**Avantages** : visibilité, confiance des utilisateurs, gestion automatique des mises à jour  
+**Inconvénients** : commission (12 % Microsoft Store non-jeu, 15-30 % Apple/Google selon revenus), processus de validation, règles strictes  
 
 ### Distribution d'entreprise
 
@@ -247,15 +250,20 @@ Il est beaucoup plus facile d'implémenter un système de mise à jour dès la p
 
 Avant de distribuer votre application, vérifiez ces points essentiels :
 
-- [ ] L'application a été testée en mode Release
-- [ ] Toutes les fonctionnalités ont été validées
-- [ ] Les fichiers de débogage ont été supprimés
-- [ ] Les dépendances nécessaires sont identifiées
-- [ ] La documentation utilisateur est prête
-- [ ] Les informations de licence sont claires
-- [ ] Un système de support utilisateur est en place
-- [ ] La politique de confidentialité est définie (si applicable)
-- [ ] Les sauvegardes de votre code source sont sécurisées
+- [ ] L'application a été testée en mode Release (cf 17.1).
+- [ ] Toutes les fonctionnalités ont été validées (golden path + cas d'erreur).
+- [ ] Les **informations de débogage embarquées** ont été retirées de l'EXE, mais le **fichier MAP est archivé** (indispensable pour décoder les crashes en production, cf 17.10).
+- [ ] Les dépendances nécessaires sont identifiées (vérifiées avec **Dependencies** ou ProcessMonitor, cf 17.6).
+- [ ] **L'installateur est signé numériquement** (cf 17.4 — obligatoire pour éviter le blocage SmartScreen).
+- [ ] **Test sur la cible principale 2026** (Windows 11 24H2 minimum), idéalement aussi sur Windows 10 22H2 si vous gardez ce support.
+- [ ] **Hash SHA-256 publié** à côté du téléchargement (pour permettre la vérification d'intégrité par l'utilisateur).
+- [ ] La documentation utilisateur est prête (README, FAQ).
+- [ ] Les informations de licence sont claires (LICENSE.txt + mention dans l'installateur).
+- [ ] Un système de support utilisateur est en place (email, forum, ticketing).
+- [ ] La politique de confidentialité est définie (obligatoire si vous collectez la moindre donnée — RGPD, cf 17.10).
+- [ ] Les sauvegardes de votre code source sont sécurisées (Git distant, sauvegarde locale).
+- [ ] **Plan de mise à jour** prévu (cf 17.5 — l'ajouter dans v2 est plus coûteux que dans v1).
+- [ ] **Plan de rollback** documenté (que faire si la version livrée a un bug critique ?).
 
 ## Conclusion de l'introduction
 

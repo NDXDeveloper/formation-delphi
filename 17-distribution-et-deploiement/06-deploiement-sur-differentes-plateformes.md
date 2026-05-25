@@ -16,11 +16,13 @@ Delphi 13 Florence supporte les plateformes suivantes :
 
 | Plateforme | Framework | Architectures | Niveau de support |
 |------------|-----------|---------------|-------------------|
-| **Windows** | VCL / FMX | 32-bit, 64-bit | Excellent (natif) |
-| **macOS** | FMX | 64-bit (Intel), ARM64 (M1/M2/M3) | Excellent |
-| **iOS** | FMX | ARM64 (iPhone/iPad) | Très bon |
-| **Android** | FMX | ARM, ARM64, x86 | Très bon |
-| **Linux** | FMX | 64-bit | Bon (FMXLinux) |
+| **Windows** | VCL / FMX | x86 (Win32), x86_64 (Win64), ARM64 (Windows on ARM) | Excellent (natif) |
+| **macOS** | FMX | x86_64 (Intel), ARM64 (Apple Silicon M1/M2/M3/M4/M5) | Excellent |
+| **iOS** | FMX | ARM64 (iPhone/iPad — **iOS 17+** recommandé en 2026 ; iOS 15 = floor Apple) | Très bon |
+| **Android** | FMX | ARM64-v8a (obligatoire Play Store) + ARMv7 (optionnel) | Très bon |
+| **Linux** | FMX | x86_64 (Ubuntu 22.04 LTS+, RHEL 9/10, Debian 12+) | Bon (via FMXLinux) |
+
+> 💡 **FMXLinux** : il s'agit d'une bibliothèque originellement développée par KSDev, **rachetée par Embarcadero** et désormais incluse dans Delphi Enterprise/Architect Edition (à partir de la version 11). Vérifiez son inclusion selon votre édition de licence — elle n'est pas livrée avec Community Edition.
 
 ### Choisir entre VCL et FireMonkey (FMX)
 
@@ -70,7 +72,7 @@ Windows reste la plateforme principale pour Delphi, avec deux architectures à c
 - Ne fonctionne pas sur Windows 32-bit (rare aujourd'hui)
 - Taille de l'exécutable légèrement plus grande
 
-**Recommandation 2025** : Privilégiez le 64-bit. Windows 32-bit est quasiment obsolète.
+**Recommandation 2026** : privilégiez le 64-bit. Windows 32-bit est quasiment obsolète (Microsoft ne propose plus que Windows 11 64-bit ou ARM64 ; Windows 10 32-bit n'a plus reçu de mises à jour de fonctionnalités depuis 22H2 et atteint sa fin de support gratuit en oct. 2025).
 
 ### Configuration du déploiement Windows
 
@@ -118,12 +120,18 @@ Les exécutables seront créés dans :
 
 #### Vérifier les dépendances
 
-Utilisez **Dependency Walker** (depends.exe) :
+Utilisez **Dependencies** (https://github.com/lucasg/Dependencies), successeur moderne et open source de Dependency Walker :
 
-1. Téléchargez depuis : http://www.dependencywalker.com/
-2. Ouvrez votre `.exe` dans Dependency Walker
-3. Identifiez les DLL manquantes (affichées en rouge)
-4. Incluez ces DLL dans votre installation
+1. Téléchargez la dernière release depuis GitHub.
+2. Ouvrez votre `.exe` dans Dependencies.
+3. Identifiez les DLL manquantes (affichées en rouge).
+4. Incluez ces DLL dans votre installation.
+
+> ⚠️ **Dependency Walker** (depends.exe) historique de 2006 est obsolète et produit beaucoup de faux positifs sur les **API Sets** de Windows 10/11 (les `api-ms-win-*.dll` ne sont pas de vraies DLL mais des aliases vers `ucrtbase.dll` / `kernelbase.dll`). Utilisez **Dependencies** à la place.
+
+**Alternatives modernes** :
+- **dumpbin /dependents** (Visual Studio Build Tools, gratuit) — listing CLI.
+- **Process Monitor** (Sysinternals) — observation en temps réel des DLL recherchées.
 
 ### Conventions Windows
 
@@ -152,9 +160,9 @@ Pour distribuer sur le **Microsoft Store** :
 
 #### Prérequis
 
-- Compte développeur Microsoft (19$ par an ou gratuit pour certaines organisations)
-- Application packagée en MSIX (nouveau format)
-- Conformité aux exigences du Store
+- **Compte développeur Microsoft** : depuis 2021, **19 USD une seule fois** (paiement unique, pas annuel) pour un compte individuel ; **99 USD une seule fois** pour un compte société. Les comptes éducation/non-profit peuvent être gratuits.
+- Application packagée en **MSIX** (format moderne — remplace l'ancien APPX).
+- Conformité aux exigences du Store (politique du Store, sandboxing partiel).
 
 #### Créer un package MSIX
 
@@ -174,14 +182,14 @@ Pour distribuer sur le **Microsoft Store** :
    - Processus de certification (1-3 jours)
 
 **Avantages du Microsoft Store** :
-- Visibilité accrue
-- Mises à jour automatiques gérées par Windows
-- Système de paiement intégré
+- Visibilité accrue.
+- Mises à jour automatiques gérées par Windows.
+- Système de paiement intégré.
 
 **Inconvénients** :
-- Processus de validation long
-- Restrictions sur certaines fonctionnalités
-- Commission de 15-30%
+- Processus de validation (1-3 jours en général).
+- Restrictions sur certaines fonctionnalités (sandbox MSIX).
+- Commission **12 %** sur les apps non-jeu via paiement Microsoft (politique depuis 2021), **0 %** si vous utilisez votre propre processeur de paiement, **12 %** sur les jeux PC, **30 %** sur Xbox.
 
 ## Déploiement sur macOS
 
@@ -189,10 +197,11 @@ Pour distribuer sur le **Microsoft Store** :
 
 Pour déployer sur macOS, vous avez besoin de :
 
-1. **Un Mac** avec macOS 10.14 ou supérieur
-2. **Xcode** installé (gratuit depuis l'App Store)
-3. **Delphi** avec la licence FMX
-4. **Connexion réseau** entre votre PC Windows et le Mac (PAServer)
+1. **Un Mac** récent — macOS 14 (Sonoma) minimum, macOS 15 (Sequoia) ou **macOS 26 (Tahoe)** recommandés en 2026. Apple a aligné les numéros de version en 2025 : macOS 26 succède directement à macOS 15.
+2. **Xcode** installé (gratuit depuis l'App Store) — **Xcode 16 minimum** pour soumettre à l'App Store (depuis avril 2025), **Xcode 26 obligatoire à partir d'avril 2026** pour les nouvelles soumissions.
+3. **Delphi** avec la licence FMX (Enterprise ou Architect).
+4. **Connexion réseau** entre votre PC Windows et le Mac (PAServer).
+5. **Apple Silicon recommandé** (M1/M2/M3/M4/M5) pour compiler nativement les applications ARM64. Les Mac Intel sont supportés par Delphi mais Apple ne sort plus de Mac Intel depuis 2020 — leur fin de support macOS approche.
 
 ### Configuration de PAServer
 
@@ -201,7 +210,8 @@ Pour déployer sur macOS, vous avez besoin de :
 #### Installation sur Mac
 
 1. **Copier PAServer** depuis votre installation Delphi :
-   - Emplacement : `C:\Program Files (x86)\Embarcadero\Studio\23.0\PAServer\PAServer-23.0.pkg`
+   - Emplacement (Delphi 13 Florence) : `C:\Program Files (x86)\Embarcadero\Studio\24.0\PAServer\PAServer-24.0.pkg`
+   - (Pour Delphi 12 Athens : `Studio\23.0\PAServer\PAServer-23.0.pkg`)
    - Transférez ce fichier sur votre Mac (USB, réseau, etc.)
 
 2. **Installer PAServer** :
@@ -250,10 +260,12 @@ MonApp.app/
 
 ### Signature et notarisation macOS
 
-Depuis macOS Catalina (10.15), Apple exige :
+Depuis macOS Catalina (10.15, 2019), Apple exige :
 
-1. **Signature avec certificat Developer ID**
-2. **Notarisation** par Apple
+1. **Signature** avec certificat **Developer ID Application** (Apple Developer Program, 99 $/an).
+2. **Notarisation** par Apple — distincte de la signature. Le binaire est soumis à Apple qui le scanne (analyse statique antivirus + intégrité signature), puis renvoie un *ticket* à *stapler* sur le binaire.
+3. Depuis macOS 14 Sonoma, l'**outil notarytool** remplace définitivement l'ancien `altool` (déprécié en novembre 2023).
+4. Le binaire doit être compilé avec le **Hardened Runtime** activé pour passer la notarisation.
 
 #### Obtenir un certificat Apple
 
@@ -269,30 +281,56 @@ Depuis macOS Catalina (10.15), Apple exige :
 #### Signer l'application
 
 ```bash
-# Sur le Mac, dans le Terminal
-codesign --deep --force --verify --verbose \
+# Sur le Mac, dans le Terminal.
+# ⚠ L'option `--deep` est dépréciée par Apple (avertissement depuis macOS 13)
+#   et sera retirée. Pour les bundles complexes (frameworks imbriqués),
+#   préférer signer chaque composant individuellement, du plus profond vers
+#   le plus externe. Pour un .app Delphi simple sans framework imbriqué,
+#   `--deep` fonctionne encore mais émet un warning.
+codesign --force --options=runtime --timestamp \
   --sign "Developer ID Application: Votre Nom (TEAM_ID)" \
   MonApp.app
+
+# Vérifier la signature
+codesign --verify --verbose=2 MonApp.app  
+spctl --assess --verbose MonApp.app   # Vérifie aussi Gatekeeper.  
 ```
+
+> 💡 **`--options=runtime`** active le **Hardened Runtime**, condition obligatoire pour la notarisation Apple.  
+> **`--timestamp`** ajoute un horodatage RFC 3161 sécurisé Apple, nécessaire pour la notarisation.
 
 #### Notariser l'application
 
 ```bash
-# Créer une archive
+# 1. Stocker les credentials une seule fois dans le trousseau macOS (recommandé).
+#    Le mot de passe ne sera plus jamais dans l'historique shell.
+xcrun notarytool store-credentials "MonAppNotarisation" \
+  --apple-id "votre@email.com" \
+  --team-id "TEAM_ID" \
+  --password "mot-de-passe-app-specific"
+
+# 2. Créer une archive ZIP pour la soumission
+#    (notarytool n'accepte que .zip, .pkg ou .dmg).
 ditto -c -k --keepParent MonApp.app MonApp.zip
 
-# Soumettre pour notarisation
+# 3. Soumettre pour notarisation (--wait : bloque jusqu'au résultat).
 xcrun notarytool submit MonApp.zip \
-  --apple-id "votre@email.com" \
-  --password "mot-de-passe-app-specific" \
-  --team-id "TEAM_ID" \
+  --keychain-profile "MonAppNotarisation" \
   --wait
 
-# Une fois approuvé, agrafer le ticket
+# 4. Si « Accepted » : agrafer le ticket directement dans le .app
+#    (PAS dans le .zip — pour que l'utilisateur reçoive un binaire validé).
 xcrun stapler staple MonApp.app
+
+# 5. Vérification finale offline (sans contact serveur Apple).
+xcrun stapler validate MonApp.app  
+spctl --assess --type execute --verbose MonApp.app  
 ```
 
-**Important** : Sans notarisation, macOS affichera un message d'avertissement et l'utilisateur devra passer par les préférences système pour autoriser l'application.
+**Important** :
+- Sans notarisation, macOS affichera un message d'avertissement et l'utilisateur devra passer par Réglages système → Confidentialité et sécurité pour autoriser l'application.
+- Le mot de passe « app-specific » se génère sur https://appleid.apple.com → Connexion et sécurité → Mots de passe spécifiques. **Ne pas utiliser votre mot de passe Apple ID principal**.
+- Conservez le ticket via `stapler staple` : sans cela, la validation Gatekeeper nécessite un accès Internet à chaque lancement.
 
 ### Distribution sur macOS
 
@@ -323,20 +361,23 @@ Créez un installateur macOS classique avec **Packages** (outil gratuit).
 
 Pour distribuer sur le **Mac App Store** :
 
-1. **Certificat différent** : "Mac App Store Application"
-2. **Sandbox obligatoire** : L'application doit respecter le sandboxing
-3. **Pas de notarisation nécessaire** : Gérée par le Store
-4. **Processus de soumission** via App Store Connect
+1. **Certificat différent** : « Mac App Store Application » (distinct du Developer ID utilisé pour la distribution directe).
+2. **Sandbox obligatoire** : l'application doit respecter le sandboxing macOS (entitlements déclarés explicitement).
+3. **Pas de notarisation nécessaire** : gérée par le Store.
+4. **Processus de soumission** via App Store Connect.
 
 **Avantages** :
-- Visibilité
-- Mises à jour automatiques
-- Confiance des utilisateurs
+- Visibilité dans le Mac App Store.
+- Mises à jour automatiques gérées par Apple.
+- Confiance des utilisateurs (apps vérifiées).
 
 **Inconvénients** :
-- Restrictions du sandbox (accès limité au système)
-- Commission 15-30%
-- Processus de validation (1-7 jours)
+- Restrictions du sandbox (accès limité au système — pas de COM, pas d'API privées, etc.).
+- **Commission Apple** :
+  - **30 %** par défaut sur les ventes et achats in-app.
+  - **Abonnements** : **30 %** la 1ʳᵉ année puis **15 %** à partir de la 2ᵉ année de fidélisation continue (ordre inverse de ce qui est parfois écrit en ligne).
+  - **15 %** pour tous les revenus si vous êtes inscrit au *Apple Small Business Program* (revenus annuels < 1 M USD).
+- Processus de validation (1-3 jours en moyenne en 2026, parfois quelques heures).
 
 ### Spécificités macOS
 
@@ -427,25 +468,30 @@ Une application iOS est un bundle `.app` similaire à macOS :
 MonApp.app/
 ├── Info.plist
 ├── MonApp                  (exécutable ARM64)
-├── Assets.car              (ressources graphiques)
-├── Default.png             (splash screen)
-└── ...
+├── Assets.car              (ressources graphiques compilées)
+├── LaunchScreen.storyboardc (écran de lancement compilé)
+├── PkgInfo                 (type + créateur du bundle)
+└── _CodeSignature/         (manifeste de signature)
 ```
+
+> ⚠️ **Splash screen `Default.png` obsolète** : Apple exige depuis iOS 14 un **Launch Storyboard** (`LaunchScreen.storyboard`) qui s'adapte automatiquement à toutes les tailles d'écran iPhone/iPad. Les anciennes images statiques `Default-*.png` sont rejetées par l'App Store pour les nouvelles soumissions. Delphi génère le storyboard à partir de l'image splash configurée dans `Project → Options → Application → Icons`.
 
 ### Distribution iOS
 
 #### Distribution Ad-Hoc (test)
 
-Pour distribuer à un groupe restreint de testeurs :
+Pour distribuer à un groupe restreint de testeurs sans passer par l'App Store ni TestFlight :
 
 1. **Créer un profil Ad-Hoc** :
-   - Incluez les UDID des appareils testeurs
-   - Maximum 100 appareils par an
+   - Incluez les UDID des appareils testeurs (récupérables via `xcrun xctrace list devices` ou via les Réglages iOS de l'appareil).
+   - **Limites Apple Developer Program** : 100 iPhones + 100 iPads par année fiscale Apple (octobre à octobre), même chose pour Apple Watch, Apple TV, Mac. Les ID supprimés ne sont pas restitués avant le renouvellement annuel.
 
 2. **Distribuer le fichier IPA** :
-   - Build → Archive
-   - Export → Ad-Hoc
-   - Partagez le `.ipa` avec vos testeurs
+   - **Delphi** : `Project → Deployment` puis sélectionnez la configuration *Ad-Hoc* dans *Build Configurations*. Le `.ipa` est généré dans `iOSDevice64/Release`.
+   - **Xcode** (alternative) : Window → Organizer → Archives → Distribute App → Ad-Hoc.
+   - Partagez le `.ipa` avec vos testeurs (via service tiers type Diawi, ou auto-hébergé via un manifest `itms-services://`).
+
+> 💡 **TestFlight est aujourd'hui préféré à Ad-Hoc** pour la plupart des cas : pas de limite d'appareils par UDID, gestion centralisée des testeurs, feedback intégré.
 
 #### TestFlight (test beta)
 
@@ -455,7 +501,9 @@ Pour distribuer à un groupe restreint de testeurs :
    - Project → Deployment → Archive
 
 2. **Uploader vers App Store Connect** :
-   - Via Application Loader ou Xcode
+   - Via **Transporter** (app Mac gratuite sur Mac App Store, remplace Application Loader **déprécié depuis 2018**).
+   - Ou directement via Xcode (Organizer → Distribute App).
+   - Ou via Delphi (`Project → Deployment`).
 
 3. **Inviter des testeurs** :
    - Jusqu'à 10 000 testeurs externes
@@ -479,8 +527,9 @@ Pour distribuer à un groupe restreint de testeurs :
 2. **Créer l'application** dans App Store Connect
 
 3. **Uploader le build** :
-   - Via Delphi (Deployment → Upload to App Store)
-   - Ou via Xcode/Application Loader
+   - Via Delphi (Deployment → Upload to App Store).
+   - Ou via Xcode (Organizer → Distribute App).
+   - Ou via **Transporter** (app Mac gratuite — remplace Application Loader **déprécié depuis 2018**, déjà mentionné plus haut).
 
 4. **Soumettre à la revue** :
    - Processus de validation : 1-7 jours
@@ -497,23 +546,38 @@ Pour distribuer à un groupe restreint de testeurs :
 
 ### Spécificités iOS
 
-#### Gestion de la mémoire
+#### Gestion de la mémoire et du cycle de vie
 
-iOS a une **gestion stricte de la mémoire** :
+iOS a une **gestion stricte de la mémoire** et peut **suspendre/tuer** votre app en arrière-plan. Pour réagir aux transitions d'état système, il ne faut **PAS** se baser sur `FormActivate`/`FormDeactivate` (qui détectent juste un changement de fenêtre active *dans* l'app). Utilisez plutôt le service FMX `TApplicationEventMessage` :
 
 ```pascal
-procedure TForm1.FormActivate(Sender: TObject);  
+uses
+  System.Messaging, FMX.Platform;
+
+procedure TForm1.FormCreate(Sender: TObject);  
 begin  
-  // iOS peut fermer l'app en arrière-plan
-  // Sauvegardez les données importantes
+  // S'abonner aux événements de cycle de vie de l'application iOS/Android.
+  TMessageManager.DefaultManager.SubscribeToMessage(
+    TApplicationEventMessage, AppEventHandler);
 end;
 
-procedure TForm1.FormDeactivate(Sender: TObject);  
-begin  
-  // L'app passe en arrière-plan
-  SaveData; // Sauvegarde automatique
+procedure TForm1.AppEventHandler(const Sender: TObject; const M: TMessage);  
+var  
+  Event: TApplicationEvent;
+begin
+  Event := TApplicationEventMessage(M).Value.Event;
+  case Event of
+    TApplicationEvent.EnteredBackground:
+      SaveData;          // L'app passe en arrière-plan — sauvegarder vite.
+    TApplicationEvent.LowMemory:
+      FreeOptionalCaches; // Le système signale une pression mémoire.
+    TApplicationEvent.BecameActive:
+      ReloadIfNeeded;    // Retour au premier plan.
+  end;
 end;
 ```
+
+**Important** : iOS donne ~5 secondes après `EnteredBackground` pour terminer les sauvegardes — au-delà l'app peut être suspendue. Faire le minimum (commit BD, écriture fichier ; pas d'opérations réseau bloquantes).
 
 #### Permissions
 
@@ -554,29 +618,36 @@ Dans Delphi :
 1. **Tools → Options → SDK Manager**
 2. Vérifiez que le **Android SDK** est correctement configuré
 3. Installez les composants nécessaires :
-   - Android SDK Platform-Tools
-   - Android SDK Build-Tools
-   - Android API Level 33+ (recommandé)
+   - Android SDK Platform-Tools (`adb`, `fastboot`).
+   - Android SDK Build-Tools (récent : 34.0.0 ou 35.0.0).
+   - **Android API Level 35** (Android 15) — **target SDK obligatoire pour les nouvelles apps sur Google Play depuis août 2025** ; 34 obligatoire pour les mises à jour. La règle Google : *target SDK doit être ≤ 1 an d'âge*.
 
 #### Étape 2 : Ajouter la plateforme
 
 1. **Project Manager** → Add Platform
 2. Sélectionnez :
-   - `Android (32-bit ARM)`
-   - `Android (64-bit ARM)` - **Requis par Google Play depuis 2019**
+   - `Android (64-bit ARM)` — **obligatoire** pour publication sur Google Play depuis août 2019.
+   - `Android (32-bit ARM)` — **optionnel et déconseillé** en 2026 ; Google Play accepte encore les apps qui supportent le 32-bit en plus du 64-bit, mais les nouvelles apps peuvent être publiées en 64-bit seul. Cela réduit la taille de l'APK/AAB.
 
-**Important** : Google Play exige le support 64-bit. Compilez toujours pour les deux architectures.
+> ⚠️ **Évolution Google Play (calendrier des exigences)** :  
+> - **Août 2019** : support 64-bit obligatoire (en plus du 32-bit).  
+> - **Août 2021** : nouvelles apps doivent être publiées en **AAB** (App Bundle), plus en APK direct.  
+> - **Août 2024** : target SDK 34 (Android 14) minimum.  
+> - **Août 2025** : target SDK 35 (Android 15) minimum.  
+> - **Août 2026** : target SDK 36 (Android 16) attendu — RAD Studio 13.1 ajoute le support de l'API 36.1.  
+>  
+> Règle générale : *target SDK doit être ≤ 1 an d'âge* à compter de la sortie de chaque version majeure d'Android.
 
 #### Étape 3 : Configuration du projet
 
 **Options importantes** :
 
 1. **Project → Options → Application (Android)** :
-   - **Version Code** : Numéro interne (incrémenté à chaque version)
-   - **Version Name** : Version visible (ex: 1.0.0)
-   - **Package Name** : Identifiant unique (ex: com.monentreprise.monapp)
-   - **Min SDK Version** : API minimum supportée (21 = Android 5.0)
-   - **Target SDK Version** : API ciblée (33+ recommandé)
+   - **Version Code** : numéro interne incrémenté à chaque version (Integer).
+   - **Version Name** : version visible (ex : 1.0.0).
+   - **Package Name** : identifiant unique inversé (ex : com.monentreprise.monapp). Une fois publié, **ne peut plus changer**.
+   - **Min SDK Version** : API minimum supportée. **API 24 (Android 7.0) recommandé** en 2026 — couvre ~99 % des appareils actifs. API 21 (Android 5.0) reste possible mais touche peu d'appareils supplémentaires.
+   - **Target SDK Version** : **API 35 (Android 15) en 2026** (obligation Google Play depuis août 2025).
 
 2. **Permissions** :
    - Cochez les permissions nécessaires
@@ -586,12 +657,19 @@ Dans Delphi :
 
 **Toutes les applications Android doivent être signées**.
 
+> 💡 **Play App Signing (obligatoire depuis août 2021)** : pour les nouvelles apps sur Google Play, **Google gère la clé de signature finale** (stockée dans un HSM Google). Vous ne signez plus avec la clé qui sera utilisée par les utilisateurs ; vous signez avec une **clé d'upload** (que vous pouvez régénérer en cas de perte). Google re-signe automatiquement vos AAB avec la vraie clé avant distribution.  
+>  
+> Conséquence : la perte de la clé d'upload est désormais récupérable (contactez le support Google Play). C'est un changement majeur par rapport à l'ancien modèle où perdre le keystore = impossibilité de publier des mises à jour à vie.
+
 #### Créer un keystore
 
 ```bash
 # Via la ligne de commande
+# ⚠ keysize 2048 est le minimum historique. En 2026, préférer 4096 pour
+#   une marge de sécurité confortable sur les 25-30 ans de validité d'une
+#   clé Android (qui doit survivre à toutes les mises à jour de l'app).
 keytool -genkey -v -keystore MonApp.keystore \
-  -alias MonAppKey -keyalg RSA -keysize 2048 -validity 10000
+  -alias MonAppKey -keyalg RSA -keysize 4096 -validity 10000
 
 # Vous serez invité à entrer :
 # - Un mot de passe du keystore
@@ -599,7 +677,7 @@ keytool -genkey -v -keystore MonApp.keystore \
 # - Un mot de passe pour la clé
 ```
 
-**Important** : **Ne perdez jamais ce keystore !** Sans lui, vous ne pourrez plus mettre à jour votre application sur Google Play.
+**Important** : **sauvegardez ce keystore !** Avec Play App Signing actif, vous pouvez en demander la réinitialisation auprès du support Google Play en cas de perte. Sans Play App Signing (anciennes apps), la perte du keystore = impossibilité définitive de publier des mises à jour.
 
 #### Configurer la signature dans Delphi
 
@@ -614,7 +692,7 @@ keytool -genkey -v -keystore MonApp.keystore \
 
 #### APK (Android Package)
 
-Format traditionnel pour distribuer des applications Android.
+Format traditionnel pour distribuer des applications Android. Toujours valable pour la **distribution directe** (votre site web, magasins alternatifs comme F-Droid, Amazon Appstore) mais **plus accepté par Google Play pour les nouvelles apps depuis août 2021** (qui exige le format AAB).
 
 **Créer un APK** :
 1. Sélectionnez `Android (64-bit ARM)` (ou les deux architectures)
@@ -701,18 +779,20 @@ Android tourne sur des **milliers d'appareils différents** :
 
 #### Permissions runtime
 
-Depuis Android 6.0, certaines permissions doivent être demandées à l'exécution :
+Depuis Android 6.0 (Marshmallow, API 23), les permissions « dangereuses » (caméra, micro, géolocalisation, stockage, contacts…) doivent être demandées à l'exécution **en plus** d'être déclarées dans le manifeste :
 
 ```pascal
 uses
-  FMX.Types, Androidapi.Helpers, Androidapi.JNI.Os;
+  System.Permissions,        // PermissionsService + TPermissionStatus
+  FMX.DialogService;         // Pour MessageDlg (FMX, pas VCL).
 
 procedure TForm1.RequestCameraPermission;  
 begin  
   {$IFDEF ANDROID}
   PermissionsService.RequestPermissions(
     ['android.permission.CAMERA'],
-    procedure(const APermissions: TArray<string>; const AGrantResults: TArray<TPermissionStatus>)
+    procedure(const APermissions: TClassicStringDynArray;
+              const AGrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(AGrantResults) > 0) and
          (AGrantResults[0] = TPermissionStatus.Granted) then
@@ -721,33 +801,49 @@ begin
         OpenCamera;
       end
       else
-        ShowMessage('Permission caméra refusée');
+        TDialogService.ShowMessage('Permission caméra refusée');
     end
   );
   {$ENDIF}
 end;
 ```
 
+> ⚠️ **Évolution Android 11+ (API 30) sur le stockage** : les permissions historiques `READ_EXTERNAL_STORAGE` / `WRITE_EXTERNAL_STORAGE` sont obsolètes. À partir d'Android 13 (API 33), il faut demander des permissions granulaires (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_AUDIO`) ou utiliser le Storage Access Framework via `Intent.ACTION_OPEN_DOCUMENT`.
+
 #### Gestion du bouton Retour
 
-Sur Android, le bouton **Retour** doit être géré :
+Sur Android, le bouton **Retour** matériel (ou geste « back » sur les Android 10+ en navigation gestuelle) doit être géré :
 
 ```pascal
-procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);  
-begin  
+uses
+  FMX.DialogService, FMX.Types;  // TDialogService, vkHardwareBack
+
+procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word;
+  var KeyChar: Char; Shift: TShiftState);
+begin
   {$IFDEF ANDROID}
   if Key = vkHardwareBack then
   begin
-    Key := 0; // Empêcher le comportement par défaut
+    Key := 0;  // Empêche la fermeture automatique de l'application.
 
-    // Votre logique
     if CanGoBack then
       GoBack
     else
-      // Demander confirmation de fermeture
-      if MessageDlg('Quitter l''application ?', TMsgDlgType.mtConfirmation,
-                    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes then
-        Close;
+    begin
+      // ⚠ Préférer TDialogService.MessageDialog (asynchrone, non bloquant)
+      //   à MessageDlg (modal synchrone) sur Android : MessageDlg ne suit
+      //   pas le style Material et bloque le thread UI.
+      TDialogService.MessageDialog(
+        'Quitter l''application ?',
+        TMsgDlgType.mtConfirmation,
+        [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+        TMsgDlgBtn.mbNo, 0,
+        procedure(const AResult: TModalResult)
+        begin
+          if AResult = mrYes then
+            Close;
+        end);
+    end;
   end;
   {$ENDIF}
 end;
@@ -769,25 +865,26 @@ Avec Delphi 13 et **FMXLinux**, vous pouvez créer des applications Linux graphi
 ### Prérequis
 
 1. **Machine Linux** (physique ou virtuelle)
-   - Ubuntu 20.04+ recommandé
-   - Debian, CentOS aussi supportés
+   - **Ubuntu 22.04 LTS** ou **24.04 LTS** recommandés en 2026 (Ubuntu 20.04 a atteint sa fin de support standard en avril 2025).
+   - Debian 12 (Bookworm) ou 13, Fedora 40+, RHEL 9/10 également supportés.
 
-2. **PAServer pour Linux** installé sur la machine Linux
+2. **PAServer pour Linux** installé sur la machine Linux.
 
 ### Configuration Linux
 
 #### Installation de PAServer sur Linux
 
-1. **Transférez PAServer** sur votre machine Linux :
+1. **Transférez PAServer** sur votre machine Linux (`24.0` pour Delphi 13 Florence ;
+   `23.0` pour Delphi 12 Athens) :
    ```bash
-   scp PAServer-23.0.tar.gz user@linux-machine:/tmp/
+   scp PAServer-24.0.tar.gz user@linux-machine:/tmp/
    ```
 
 2. **Installez** :
    ```bash
    cd /tmp
-   tar -xzf PAServer-23.0.tar.gz
-   cd PAServer-23.0
+   tar -xzf PAServer-24.0.tar.gz
+   cd PAServer-24.0
    ./setup.sh
    ```
 
@@ -875,10 +972,17 @@ Votre application peut nécessiter des bibliothèques système :
 # Identifier les dépendances
 ldd MonApp
 
-# Résultat exemple :
-#   libQt5Core.so.5 => /lib/x86_64-linux-gnu/libQt5Core.so.5
+# Résultat exemple pour une app FMXLinux (FireMonkey sur GTK3) :
+#   libgtk-3.so.0   => /lib/x86_64-linux-gnu/libgtk-3.so.0
+#   libgdk-3.so.0   => /lib/x86_64-linux-gnu/libgdk-3.so.0
+#   libglib-2.0.so  => /lib/x86_64-linux-gnu/libglib-2.0.so
 #   libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0
+#   libc.so.6       => /lib/x86_64-linux-gnu/libc.so.6 (glibc)
 ```
+
+> ⚠️ **FMXLinux dépend de GTK3, pas de Qt**. Sur Debian/Ubuntu, installez :  
+> `sudo apt install libgtk-3-0 libcurl4`. Sur Fedora/RHEL :  
+> `sudo dnf install gtk3 libcurl`. Sans GTK3, l'application ne démarrera pas.
 
 **Incluez les dépendances** ou documentez-les dans le README.
 
@@ -1016,9 +1120,9 @@ Sur mobile, remplacez les menus par :
 |--------|---------|-------|-----|---------|-------|
 | **Framework** | VCL/FMX | FMX | FMX | FMX | FMX |
 | **Signature requise** | Non (recommandé) | Oui | Oui | Oui | Non |
-| **Certification requise** | Non | Oui (99$/an) | Oui (99$/an) | Non | Non |
+| **Certification requise** | Non | Oui (99 $/an) | Oui (99 $/an) | Non (25 $ unique) | Non |
 | **Store principal** | Microsoft Store | Mac App Store | App Store | Play Store | - |
-| **Frais Store** | 15-30% | 15-30% | 15-30% | 15-30% | - |
+| **Frais Store** | **12 %** non-jeu (0 % si paiement perso) | 15-30 % (15 % Small Business) | 15-30 % (15 % Small Business) | 15-30 % | - |
 | **Distribution directe** | Facile | Possible | Difficile | Facile | Facile |
 | **Validation** | 1-3 jours | 1-7 jours | 1-7 jours | Heures-jours | - |
 | **Mises à jour** | Manuel/Auto | Manuel/Auto | Auto (Store) | Auto (Store) | Manuel |
@@ -1097,11 +1201,12 @@ Documentez dans votre code :
 Avant de distribuer sur chaque plateforme :
 
 ### Windows
-- [ ] Compilé en 64-bit (et 32-bit si nécessaire)
-- [ ] Testé sur Windows 10 et 11
+- [ ] Compilé en 64-bit (Win64) — cible principale en 2026
+- [ ] Testé sur Windows 11 (24H2) — cible majoritaire
+- [ ] Testé sur Windows 10 22H2 (encore présent, fin de support gratuit oct. 2025)
 - [ ] Toutes les DLL incluses
-- [ ] Installateur créé et signé
-- [ ] Testé sans droits admin
+- [ ] Installateur créé et signé (cf section 17.4 — token hardware obligatoire depuis 2023)
+- [ ] Testé sans droits admin (installation per-user) si possible
 
 ### macOS
 - [ ] Application signée avec Developer ID
@@ -1119,12 +1224,13 @@ Avant de distribuer sur chaque plateforme :
 - [ ] TestFlight testé
 
 ### Android
-- [ ] AAB créé et signé
-- [ ] Support 32-bit et 64-bit
-- [ ] Permissions déclarées
-- [ ] Icône adaptative fournie
-- [ ] Keystore sauvegardé en lieu sûr
-- [ ] Testé sur plusieurs appareils/versions
+- [ ] AAB créé et signé (APK seul n'est plus accepté par Google Play depuis août 2021)
+- [ ] Support **64-bit obligatoire**, 32-bit optionnel
+- [ ] **Target SDK 35** (Android 15) — exigence Google Play depuis août 2025
+- [ ] Permissions déclarées dans le manifest, justifiées dans la fiche Play Store
+- [ ] Icône adaptative fournie (Android 8.0+)
+- [ ] **Keystore sauvegardé** en lieu sûr ET archivé (perte = impossibilité de publier des mises à jour ; utiliser **Play App Signing** côté Google pour sécuriser la clé d'upload)
+- [ ] Testé sur plusieurs appareils/versions (Firebase Test Lab si possible)
 
 ### Linux
 - [ ] Dépendances documentées

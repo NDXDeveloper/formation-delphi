@@ -8,6 +8,14 @@ Un installateur professionnel est la carte de visite de votre application. C'est
 
 Dans cette section, nous allons explorer deux solutions populaires pour créer des installateurs professionnels pour vos applications Delphi : **Inno Setup** (gratuit et open source) et **InstallAware** (commercial avec de nombreuses fonctionnalités avancées).
 
+> 💡 **Le paysage des installateurs Windows en 2026** : au-delà des deux outils couverts ici en détail, il existe d'autres options à connaître :  
+> - **WiX Toolset v6** (gratuit, open source, sortie 2025) — génère des packages MSI et MSIX. Référence pour les builds CI/CD professionnels, mais courbe d'apprentissage importante (XML déclaratif). Très utilisé par l'industrie. Voir section 17.8 pour le détail.  
+> - **NSIS** (gratuit, open source) — alternative historique à Inno Setup, syntaxe différente. Plus utilisé dans le monde Windows général que dans la communauté Delphi.  
+> - **Advanced Installer** (commercial, ~500-3000 €/an selon édition) — devenu en 2025-2026 l'alternative commerciale la plus populaire à InstallAware. Excellente interface visuelle, génération native MSI et MSIX, intégration Visual Studio et CI.  
+> - **MSIX Packaging Tool** (gratuit, Microsoft) — pour convertir un installateur classique en package MSIX moderne (voir section 17.8).  
+>  
+> Le choix dépend de votre cible : grand public Windows → **Inno Setup** suffit largement. Distribution d'entreprise / GPO / SCCM → **WiX** ou **Advanced Installer** (MSI natif). Microsoft Store → **MSIX** (voir 17.8).
+
 ## Qu'est-ce qu'un installateur ?
 
 Un installateur est un programme qui :
@@ -52,17 +60,17 @@ Vous pourriez être tenté de simplement copier votre exécutable et demander au
 
 1. **Téléchargement**
    - Rendez-vous sur : https://jrsoftware.org/isinfo.php
-   - Téléchargez la dernière version (actuellement Inno Setup 6.x)
-   - Téléchargez aussi **ISTool** si vous préférez une interface graphique
+   - Téléchargez la dernière version (Inno Setup 6.x — la 6.4 sortie en 2024 est la version stable en 2026).
+   - ⚠ **ISTool** (IDE alternatif souvent recommandé dans d'anciens tutoriels) **n'est plus maintenu depuis 2011**. L'IDE intégré à Inno Setup 6 est désormais largement suffisant. Pour une expérience plus moderne, l'extension **Inno Setup pour VS Code** (Marketplace) offre coloration syntaxique, snippets et compilation depuis VS Code.
 
 2. **Installation**
-   - Exécutez le programme d'installation
-   - Suivez les étapes (installation standard)
+   - Exécutez le programme d'installation.
+   - Suivez les étapes (installation standard).
    - L'installateur lui-même est créé avec Inno Setup !
 
 3. **Premier lancement**
-   - Lancez **Inno Setup Compiler** depuis le menu Démarrer
-   - Vous verrez l'éditeur de scripts
+   - Lancez **Inno Setup Compiler** depuis le menu Démarrer.
+   - Vous verrez l'éditeur de scripts.
 
 ### Créer votre premier installateur avec Inno Setup
 
@@ -133,12 +141,21 @@ Inno Setup utilise des scripts texte avec l'extension `.iss`. Voici un exemple d
 [Setup]
 AppName=Mon Application Delphi  
 AppVersion=1.0  
+AppPublisher=Votre Société  
+AppPublisherURL=https://www.votre-site.com  
 DefaultDirName={autopf}\Mon Application Delphi  
 DefaultGroupName=Mon Application Delphi  
 OutputDir=Output  
 OutputBaseFilename=setup  
 Compression=lzma2  
 SolidCompression=yes  
+; ⚠ En 2026, privilégier le 64 bits. Forcer une installation 64 bits
+;   si la build est compilée pour Win64 :
+; ⚠ Depuis Inno Setup 6.3 (2024), `x64` est DÉPRÉCIÉ. Utiliser `x64compatible`
+;   qui couvre à la fois Windows x64 ET Windows on ARM (émulation x64).
+;   Le compilateur affiche un warning si vous gardez `x64`.
+ArchitecturesInstallIn64BitMode=x64compatible  
+ArchitecturesAllowed=x64compatible  
 
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"  
@@ -148,8 +165,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Créer un raccourci sur le bureau"; GroupDescription: "Raccourcis supplémentaires:"
 
 [Files]
-Source: "C:\MonProjet\Win32\Release\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion  
-Source: "C:\MonProjet\Win32\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
+; ⚠ Adaptez le chemin source à votre dossier de build Delphi (Win64\Release
+;   pour Delphi 13 Florence en 64 bits, ou Win32\Release pour le 32 bits).
+Source: "Win64\Release\MonApp.exe"; DestDir: "{app}"; Flags: ignoreversion  
+Source: "Win64\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion  
 
 [Icons]
 Name: "{group}\Mon Application"; Filename: "{app}\MonApp.exe"  
@@ -177,16 +196,38 @@ Vous pouvez modifier le script pour ajouter des fonctionnalités :
 
 ```ini
 [Setup]
-; Nécessite Windows 10 ou supérieur
-MinVersion=10.0
+; Nécessite Windows 10 1607 (build 14393) ou supérieur.
+; Format : Major.Minor.Build. Pour Windows 11 24H2 : 10.0.26100.
+; ⚠ Windows 10 atteint sa fin de support gratuit le 14 octobre 2025 ;
+;   privilégier Windows 11 comme cible principale en 2026.
+MinVersion=10.0.14393
 
 [Code]
 function InitializeSetup(): Boolean;  
 begin  
   Result := True;
-  if not IsDotNetInstalled(net462, 0) then
+  // ⚠ Pour Delphi pur, cette vérification n'est généralement PAS
+  //   nécessaire — Delphi compile en code natif sans dépendance .NET.
+  //   À vérifier uniquement si vous appelez du code .NET depuis Delphi
+  //   (COM Interop, Hydra, etc.).
+  //
+  // ⚠ Repères de support .NET en 2026 :
+  //   - .NET Framework 4.6.2  : fin de support prévue 12 janvier 2027.
+  //   - .NET Framework 4.7 / 4.7.1 : fin de support prévue 12 janvier 2027.
+  //   - .NET Framework 4.7.2 / 4.8 / 4.8.1 : supportées (cycle lié à
+  //     Windows ; pas de date de fin annoncée).
+  //   - .NET 8 (LTS) : supporté jusqu'en novembre 2026.
+  //   - .NET 10 (LTS, novembre 2025) : supporté jusqu'en novembre 2028.
+  //
+  // ⚠ `IsDotNetInstalled(...)` N'EST PAS native d'Inno Setup. Elle vient
+  //   d'un script helper de Stein Åsmul couramment réutilisé. Pour l'avoir,
+  //   téléchargez `isxdl.iss` / `donetfx_install.iss` ou écrivez votre
+  //   propre helper via `RegQueryDWordValue` sur la clé :
+  //     HKLM\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full → Release
+  //   (numéro >= 528040 pour .NET Framework 4.8, >= 533320 pour 4.8.1).
+  if not IsDotNetInstalled(net48, 0) then
   begin
-    MsgBox('Cette application nécessite .NET Framework 4.6.2.', mbError, MB_OK);
+    MsgBox('Cette application nécessite .NET Framework 4.8.', mbError, MB_OK);
     Result := False;
   end;
 end;
@@ -271,12 +312,15 @@ end;
 [Code]
 function InitializeSetup(): Boolean;  
 var  
-  OldVersion: String;
   UninstallString: String;
+  ResultCode: Integer;  // ⚠ Doit être déclaré (out param d'Exec).
 begin
   Result := True;
 
-  // Chercher une installation existante
+  // Chercher une installation existante.
+  // ⚠ Sur une cible 64 bits, l'entrée d'uninstall est généralement
+  //   sous HKLM64 (pas HKLM 32 bits). Utiliser RegQueryStringValue
+  //   avec la clé appropriée selon `IsWin64`.
   if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\MonApp_is1',
      'UninstallString', UninstallString) then
   begin
@@ -284,7 +328,8 @@ begin
               mbConfirmation, MB_YESNO) = IDYES then
     begin
       // Lancer la désinstallation
-      Exec(RemoveQuotes(UninstallString), '/SILENT', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec(RemoveQuotes(UninstallString), '/SILENT', '', SW_HIDE,
+           ewWaitUntilTerminated, ResultCode);
     end
     else
       Result := False;
@@ -418,28 +463,29 @@ InstallAware utilise un système visuel de pages :
 
 **Prérequis et redistributables**
 
-InstallAware gère automatiquement de nombreux prérequis :
+InstallAware gère automatiquement de nombreux prérequis. À utiliser **seulement si nécessaire** — Delphi compile en code natif et n'a généralement aucune de ces dépendances :
 
-1. Allez dans l'onglet `Prerequisites`
+1. Allez dans l'onglet `Prerequisites`.
 2. Cochez les composants nécessaires :
-   - Visual C++ Redistributable
-   - .NET Framework
-   - DirectX
-   - SQL Server Express
-   - Etc.
+   - **Visual C++ Redistributable** : uniquement si vous utilisez des composants tiers C++ ou des DLL liées à MSVCRT (rare pour du Delphi pur).
+   - **.NET Framework / .NET (Core)** : uniquement si vous appelez du code .NET (COM Interop, Hydra). Pour 2026, viser .NET 8 LTS ou supérieur.
+   - **DirectX** : si vous utilisez DirectX directement (FMX utilise déjà DirectX en interne sur Windows mais n'a pas besoin du redistribuable séparé).
+   - **SQL Server Express** : pour les apps qui embarquent une base SQL Server locale (LocalDB ou Express).
+   - **WebView2 Runtime** : si vous utilisez `TEdgeBrowser` (le composant Edge dans FMX/VCL). Pré-installé sur Windows 11, mais à vérifier sur Windows 10.
 
 InstallAware téléchargera et installera automatiquement ces composants si nécessaires.
 
 **Raccourcis et associations**
 
 Dans l'onglet `Shortcuts` :
-- **Start Menu** : Créez des raccourcis dans le menu Démarrer
-- **Desktop** : Raccourci sur le bureau
-- **Quick Launch** : Barre de lancement rapide
+- **Start Menu** : créez des raccourcis dans le menu Démarrer.
+- **Desktop** : raccourci sur le bureau (à laisser optionnel, beaucoup d'utilisateurs préfèrent un bureau dégagé).
+- ~~**Quick Launch**~~ : barre supprimée par Microsoft depuis Windows 7 (ne plus utiliser). Sur Windows 10/11, préférer l'épinglage à la barre des tâches.
 
 Dans l'onglet `File Associations` :
-- Associez des extensions de fichiers à votre application
-- Définissez les icônes et actions
+- Associez des extensions de fichiers à votre application.
+- Définissez les icônes et actions.
+- ⚠ Sur Windows 10+, les associations sont **proposées** à l'utilisateur via le panneau « Applications par défaut » — l'installateur ne peut plus forcer l'association comme avant Windows 8.
 
 **Registre Windows**
 
@@ -483,11 +529,12 @@ Dans l'onglet `Registry` :
 ### 1. Tester, tester, tester
 
 **Testez sur différentes configurations** :
-- Windows 10 version 21H2, 22H2
-- Windows 11
-- Machines 32 bits et 64 bits (si applicable)
+- Windows 11 23H2 et 24H2 (cible principale en 2026)
+- Windows 10 22H2 (fin de support gratuit oct. 2025 — encore présent chez beaucoup d'utilisateurs)
+- Windows Server 2019, 2022, 2025 (si votre app a des usages serveur)
+- Machines 32 bits (Win32) et 64 bits (Win64), ARM64 si vous ciblez Windows on ARM
 - Avec et sans droits administrateur
-- Sur des machines "propres" (machines virtuelles)
+- Sur des machines "propres" (machines virtuelles ou conteneurs Windows Sandbox)
 
 **Testez différents scénarios** :
 - Installation standard
@@ -545,17 +592,47 @@ Si votre application peut fonctionner sans droits admin, privilégiez une instal
 ```pascal
 ; Inno Setup - Code Pascal
 [Code]
+// ⚠ NE PAS comparer des versions comme des STRINGS : `'1.10' < '2.0'` est
+//   vrai (caractère par caractère, '1' < '2') MAIS `'1.10' < '1.9'` est
+//   également vrai par défaut, car '.' = '.' puis '1' < '9' — ce qui est
+//   faux numériquement (1.10 > 1.9). Toujours comparer en parsant les
+//   composantes. Inno Setup fournit `CompareVersion` (depuis 6.4) ou
+//   on peut utiliser un helper StrToInt sur chaque morceau.
+
+function ParseVersionMajorMinor(const V: string; out Major, Minor: Integer): Boolean;  
+var  
+  DotPos: Integer;
+begin
+  Major := 0; Minor := 0;
+  DotPos := Pos('.', V);
+  if DotPos = 0 then
+  begin
+    Result := TryStrToInt(V, Major);
+    Exit;
+  end;
+  Result := TryStrToInt(Copy(V, 1, DotPos - 1), Major) and
+            TryStrToInt(Copy(V, DotPos + 1, MaxInt), Minor);
+end;
+
 function InitializeSetup(): Boolean;  
 var  
-  Version: String;
+  VersionStr: String;
+  Major, Minor: Integer;
 begin
-  if RegQueryStringValue(HKLM, 'Software\MonApp', 'Version', Version) then
-  begin
-    // Une version existe
-    if Version < '2.0' then
-      MsgBox('Mise à jour depuis la version ' + Version, mbInformation, MB_OK);
-  end;
   Result := True;
+  // ⚠ Sur Windows 64 bits : un Inno Setup compilé en 32 bits lit par défaut
+  //   HKLM\Software\WOW6432Node\... (redirection automatique). Pour lire
+  //   la branche 64 bits, utilisez la constante HKLM64 (Inno Setup 5.x+).
+  if RegQueryStringValue(HKLM, 'Software\MonApp', 'Version', VersionStr) then
+  begin
+    if ParseVersionMajorMinor(VersionStr, Major, Minor) then
+    begin
+      // Comparaison numérique correcte : "1.10" est bien > "1.9".
+      if (Major < 2) then
+        MsgBox('Mise à jour depuis la version ' + VersionStr,
+               mbInformation, MB_OK);
+    end;
+  end;
 end;
 ```
 
@@ -587,15 +664,43 @@ Signez votre installateur avec un certificat de signature de code :
 - Évite les avertissements Windows SmartScreen
 - Requis pour le Microsoft Store
 
-**Pour signer avec Inno Setup** :
+> ⚠️ **Depuis juin 2023, les certificats OV et EV Code Signing doivent obligatoirement être stockés sur un module matériel** (HSM, token USB type SafeNet eToken, YubiKey 5 FIPS) selon les *CA/Browser Forum Baseline Requirements*. Vous ne recevrez plus de `.pfx` exportable par email — le token vous est envoyé par courrier physique. Voir section 17.4 pour le détail.
+
+**Pour signer avec Inno Setup** (commande moderne 2026) :
 ```ini
+; ⚠ Inno Setup ne fait PAS d'expansion `$VAR` style shell sur la
+;   ligne SignTool. Pour injecter une variable d'environnement, deux
+;   approches :
+;     1. Syntaxe Windows `%VAR%` — interprétée par le shell appelé
+;        par Inno Setup au moment de la compilation.
+;     2. Préprocesseur Inno Setup : `#define MyPwd GetEnv("SIGNPWD")`
+;        puis `{#MyPwd}` dans la commande.
+;   ⚠ Un mot de passe en clair sur la ligne de commande reste visible
+;   dans `tasklist` et l'historique. Préférer un token hardware avec
+;   PIN (cf bloc suivant), ou stocker le PIN dans un coffre (Vault,
+;   GitHub Secrets, etc.).
+;
+; Commande moderne (RFC 3161, SHA-256) :
+;   /fd sha256        : algorithme de digest (PAS sha1, déprécié)
+;   /tr <url> /td sha256 : timestamp RFC 3161 SHA-256 (PAS /t legacy)
+;   $f                : placeholder Inno Setup pour le fichier à signer
 [Setup]
-SignTool=signtool sign /f "MonCertificat.pfx" /p "MotDePasse" /t http://timestamp.digicert.com $f  
+SignTool=signtool sign /f "MonCertificat.pfx" /p "%SIGNPWD%" /fd sha256 /tr http://timestamp.digicert.com /td sha256 $f  
 SignedUninstaller=yes  
 ```
 
-**InstallAware** :
-- Configuration dans `Build Settings` → `Code Signing`
+**Avec un token hardware** (EV ou OV moderne, obligatoire depuis juin 2023), la commande devient :
+```ini
+; /sha1 cible le certificat par empreinte SHA-1 du sujet (pas du digest
+; de signature). /a laisse signtool choisir automatiquement le meilleur
+; certificat disponible sur le store si /sha1 est omis.
+[Setup]
+SignTool=signtool sign /sha1 "EMPREINTE_DU_CERTIFICAT" /fd sha256 /tr http://timestamp.digicert.com /td sha256 $f  
+SignedUninstaller=yes  
+```
+
+**InstallAware / Advanced Installer / WiX** :
+- Tous trois intègrent la signature en post-build, avec des options équivalentes pour préciser l'algorithme et le serveur de timestamp.
 
 ### 8. Informations de version et propriétés
 
@@ -625,16 +730,25 @@ Dans Delphi : `Projet` → `Options` → `Version Info`
 
 Permettez l'installation silencieuse pour les déploiements automatisés :
 
-**Inno Setup** :
+**Inno Setup** — switches courants :
 ```
-setup.exe /SILENT      ; Installation sans interface  
-setup.exe /VERYSILENT  ; Installation complètement invisible  
-setup.exe /DIR="C:\MonApp"  ; Spécifier le dossier  
+setup.exe /SILENT              ; Installation sans interface (erreurs visibles)  
+setup.exe /VERYSILENT          ; Installation complètement invisible  
+setup.exe /SUPPRESSMSGBOXES    ; Supprime aussi les MsgBox (à combiner avec /SILENT)  
+setup.exe /NORESTART           ; Empêche le redémarrage automatique éventuel  
+setup.exe /DIR="C:\MonApp"     ; Spécifier le dossier d'installation  
+setup.exe /TASKS="desktopicon" ; Activer/désactiver des tâches optionnelles  
+setup.exe /LOG="install.log"   ; Tracer toute l'installation dans un fichier  
+setup.exe /LANG=french         ; Forcer la langue (si plusieurs définies)  
 ```
 
+> 💡 **Combo recommandé pour le déploiement GPO/SCCM** :  
+> `setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG="%TEMP%\monapp_install.log"`
+
 **InstallAware** :
-- Support natif des installations silencieuses via MSI
-- Paramètres : `/quiet`, `/passive`
+- Support natif des installations silencieuses via MSI (puisque InstallAware peut générer un MSI sous-jacent).
+- Paramètres MSI standards : `msiexec /i monapp.msi /quiet /norestart /l*v install.log`
+- Pour les setup.exe InstallAware bootstrappers : `setup.exe /s` (silencieux) ou `setup.exe /a` (mode admin install).
 
 ## Checklist pour un installateur professionnel
 
@@ -665,7 +779,10 @@ Avant de distribuer votre installateur, vérifiez :
 - Permissions insuffisantes : Testez l'emplacement d'installation
 - Chemins incorrects : Vérifiez les chemins relatifs/absolus
 
-**Solution** : Utilisez des outils comme **Dependency Walker** pour identifier les DLL manquantes.
+**Solution** : Utilisez des outils modernes pour identifier les DLL manquantes :
+- **Dependencies** (https://github.com/lucasg/Dependencies) — successeur moderne et open source de Dependency Walker. ⚠ Dependency Walker (depends.exe) historique de 2006 est désormais obsolète et produit beaucoup de faux positifs sur les *API Sets* de Windows 10/11.
+- **Process Monitor (Sysinternals)** — pour observer en temps réel les DLL recherchées au lancement.
+- **dumpbin /dependents** (Visual Studio Build Tools, gratuit) — listing CLI des dépendances directes d'un PE.
 
 ### Erreur "Accès refusé" pendant l'installation
 

@@ -46,8 +46,8 @@ Chaque **machine virtuelle (VM)** est complètement isolée et possède :
 - Idéal pour tester des configurations dangereuses
 
 **2. Environnements multiples**
-- Testez sur Windows 7, 10, 11 sans avoir plusieurs PC
-- Testez différentes versions de serveurs
+- Testez sur Windows 10 22H2, Windows 11 23H2/24H2, Windows Server 2019/2022/2025 sans posséder plusieurs PC.
+- (Windows 7/8 ne sont plus pertinents en 2026 : fin de support Microsoft en 2020/2023, à éviter sauf cas de maintenance long terme.)
 
 **3. Snapshots (instantanés)**
 - Sauvegardez l'état exact d'une VM
@@ -85,10 +85,10 @@ Chaque **machine virtuelle (VM)** est complètement isolée et possède :
 - **Idéal pour** : Environnements professionnels
 
 #### Hyper-V (Gratuit avec Windows)
-- **Éditeur** : Microsoft
-- **Avantages** : Intégré à Windows, performant
-- **Inconvénient** : Uniquement sur Windows Pro/Entreprise
-- **Idéal pour** : Développeurs Windows
+- **Éditeur** : Microsoft.
+- **Avantages** : intégré à Windows, performant, supporté nativement par Docker Desktop et WSL2.
+- **Inconvénient** : Hyper-V « complet » (gestionnaire de VM) uniquement sur Windows **Pro / Entreprise / Education**. Sur Windows Home, seul le sous-ensemble nécessaire à WSL2 est disponible — vous pouvez quand même faire tourner Docker Desktop.
+- **Idéal pour** : développeurs Windows Pro+ qui veulent éviter d'installer un hyperviseur tiers.
 
 ## Utiliser la virtualisation pour tester des applications Delphi
 
@@ -97,9 +97,9 @@ Chaque **machine virtuelle (VM)** est complètement isolée et possède :
 #### 1. Tester sur différentes versions de Windows
 
 Créez des VM pour :
-- Windows 10 (différentes versions : 21H2, 22H2)
-- Windows 11
-- Windows Server 2019/2022
+- **Windows 10 22H2** (encore présent chez beaucoup d'utilisateurs ; fin de support gratuit Microsoft le 14 octobre 2025 — beaucoup d'utilisateurs y resteront néanmoins en 2026).
+- **Windows 11** : 23H2 et 24H2 — cible principale en 2026.
+- **Windows Server** : 2019, 2022, 2025 selon votre cible serveur.
 
 **Avantage** : Vérifiez que votre application fonctionne partout sans posséder plusieurs PC.
 
@@ -112,9 +112,9 @@ Créez des VM pour :
 #### 3. Tests de compatibilité
 
 Testez votre application avec :
-- Différentes versions de .NET Framework
-- Différentes versions de drivers de base de données
-- Différentes configurations régionales (langue, format de date)
+- Différentes versions de **.NET** si pertinent : .NET Framework 4.8/4.8.1 (maintenance) **OU** .NET 8 LTS / .NET 10 LTS (versions modernes). Le .NET Framework historique est en mode maintenance — .NET 8+ est désormais le standard pour le nouveau code .NET interop.
+- Différentes versions de drivers de base de données (FireDAC, MySQL connector, etc.).
+- Différentes configurations régionales (langue, format de date, séparateur décimal — un nombre `1,5` en français devient `1.5` en anglais : source classique de bugs).
 
 ### Exemple pratique : Créer une VM de test Windows
 
@@ -134,8 +134,11 @@ Testez votre application avec :
    - Nom : "Windows 11 Test"
    - Type : Microsoft Windows
    - Version : Windows 11 (64-bit)
-   - Mémoire : 4096 Mo (4 Go minimum)
-   - Disque dur : 50 Go
+   - Mémoire : 8192 Mo (8 Go recommandés pour Windows 11 ; 4 Go = limite stricte
+                       Microsoft mais expérience dégradée)
+   - Processeurs : 2 vCPU minimum (4 recommandés)
+   - Disque dur : 80 Go (Windows 11 + Office + Delphi runtime occupent ~50 Go)
+   - TPM 2.0 émulé et Secure Boot : requis par Windows 11 (VirtualBox 7+ supporte)
    ```
 
 4. **Installer Windows**
@@ -250,11 +253,23 @@ COPY MonApplication /app/
 CMD ["/app/MonApplication"]  
 ```
 
-#### Docker Hub
+#### Docker Hub et registres alternatifs
 
-**Docker Hub** est un registre public d'images Docker. Vous pouvez :
-- Télécharger des images existantes (MySQL, Nginx, Ubuntu, etc.)
-- Publier vos propres images
+**Docker Hub** est le registre public historique d'images Docker. Vous pouvez :
+- Télécharger des images existantes (MySQL, Nginx, Ubuntu, etc.).
+- Publier vos propres images (compte gratuit = 1 repo privé, illimité en public).
+
+> ⚠️ **Limites de pull Docker Hub (depuis 2020, renforcées en 2024)** :  
+> - **Anonyme** : 100 pulls / 6 heures (par IP). Les CI/CD partagés sur des IP publiques peuvent atteindre cette limite rapidement.  
+> - **Compte Free** : 200 pulls / 6 heures.  
+> - **Compte Pro** ($9/mois) : illimité.
+
+**Alternatives modernes** (souvent plus généreuses) :
+- **GitHub Container Registry** (`ghcr.io`) : gratuit illimité pour les repos GitHub publics, intégré à GitHub Actions via `${{ secrets.GITHUB_TOKEN }}`.
+- **GitLab Container Registry** : intégré à GitLab CI, généreux sur les quotas.
+- **Quay.io** (Red Hat) : longtemps gratuit pour open source, support des images signées (Cosign).
+- **Amazon ECR Public** : gratuit pour les images publiques (limites de pull élevées).
+- **Cloud privés** : Azure Container Registry, Google Artifact Registry (cf section 17.7 cloud).
 
 ### Installation de Docker
 
@@ -263,14 +278,17 @@ CMD ["/app/MonApplication"]
 **Docker Desktop pour Windows** :
 
 1. **Télécharger** : https://www.docker.com/products/docker-desktop/
-2. **Installer** : Suivez l'assistant
-3. **Activer WSL2** : Docker l'utilisera pour exécuter des conteneurs Linux
-4. **Redémarrer** : Docker sera disponible après redémarrage
+2. **Installer** : suivez l'assistant.
+3. **Activer WSL2** : Docker Desktop l'utilise par défaut pour exécuter des conteneurs Linux (le mode Hyper-V est conservé pour les conteneurs Windows).
+4. **Redémarrer** : Docker sera disponible après redémarrage.
 
-**Configuration minimale** :
-- Windows 10/11 Pro, Entreprise ou Éducation (64-bit)
-- 4 Go de RAM
-- Virtualisation activée dans le BIOS
+**Configuration minimale (Docker Desktop 4.x en 2026)** :
+- **Windows 10 22H2 ou Windows 11** — toutes éditions (Home, Pro, Enterprise, Education). Le requis « Pro/Enterprise » est obsolète depuis l'intégration WSL2.
+- **WSL2** activé (gratuit, fourni avec Windows).
+- 4 Go de RAM minimum (8 Go recommandés).
+- **Virtualisation activée dans le BIOS/UEFI** (VT-x sur Intel, AMD-V sur AMD).
+
+> ⚠️ **Licence commerciale Docker Desktop (2021+)** : Docker Desktop reste gratuit pour usage personnel, éducation, projets open source et **petites entreprises (< 250 salariés ET < 10 M $ de revenu annuel)**. Au-delà, une **souscription payante** est requise (Docker Pro/Team/Business — environ 5 à 24 $/mois/utilisateur en 2026). Les alternatives libres : **Rancher Desktop**, **Podman Desktop**, **Docker CE en CLI sur Linux/WSL2**.
 
 #### Sur Linux
 
@@ -287,7 +305,7 @@ Redémarrez votre session pour que les changements prennent effet.
 
 ```bash
 docker --version
-# Docker version 24.0.7, build afdd53b
+# Docker version 27.x ou 28.x en 2026 (Docker CE est en cycle de release rapide).
 
 docker run hello-world
 # Si tout fonctionne, vous verrez un message de bienvenue
@@ -341,9 +359,35 @@ program RestService;
 {$APPTYPE CONSOLE}
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.SyncObjs,
+  {$IFDEF LINUX}Posix.Signal, Posix.SysTypes,{$ENDIF}
   Web.HTTPApp,
   IdHTTPWebBrokerBridge;
+
+var
+  GTerminateEvent: TEvent;
+
+{$IFDEF LINUX}
+// ⚠ Indispensable pour Docker : `docker stop` envoie SIGTERM puis attend
+//   ~10 secondes avant SIGKILL. Sans handler, le `ReadLn` bloquerait
+//   et le conteneur serait tué brutalement (connexions HTTP coupées,
+//   pas de flush des logs, etc.). On capture SIGTERM/SIGINT pour
+//   débloquer la boucle principale et faire un arrêt propre.
+procedure HandleSignal(SigNum: Integer); cdecl;  
+begin  
+  GTerminateEvent.SetEvent;
+end;
+
+procedure InstallSignalHandlers;  
+var  
+  Action: sigaction_t;
+begin
+  FillChar(Action, SizeOf(Action), 0);
+  Action.sa_handler := @HandleSignal;
+  sigaction(SIGTERM, @Action, nil);  // docker stop
+  sigaction(SIGINT,  @Action, nil);  // Ctrl+C
+end;
+{$ENDIF}
 
 procedure StartServer;  
 var  
@@ -354,22 +398,37 @@ begin
     Server.DefaultPort := 8080;
     Server.Active := True;
     WriteLn('Serveur démarré sur le port 8080');
+
+    // Attente bloquante de la demande d'arrêt.
+    {$IFDEF LINUX}
+    GTerminateEvent.WaitFor(INFINITE);
+    WriteLn('Signal d''arrêt reçu, fermeture propre...');
+    {$ELSE}
     WriteLn('Appuyez sur Entrée pour arrêter');
     ReadLn;
+    {$ENDIF}
   finally
     Server.Free;
   end;
 end;
 
 begin
+  GTerminateEvent := TEvent.Create(nil, True, False, '');
   try
-    StartServer;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+    {$IFDEF LINUX}InstallSignalHandlers;{$ENDIF}
+    try
+      StartServer;
+    except
+      on E: Exception do
+        Writeln(E.ClassName, ': ', E.Message);
+    end;
+  finally
+    GTerminateEvent.Free;
   end;
 end.
 ```
+
+> 💡 **Pourquoi capturer SIGTERM ?** Sur Docker Linux, `docker stop` envoie d'abord SIGTERM, attend (par défaut 10 s, ajustable via `--time`), puis SIGKILL si le processus ne s'est pas terminé. Un service Delphi qui ignore SIGTERM se fait donc tuer brutalement, sans flush des logs, sans drainer les requêtes HTTP en cours. Pour orchestrer proprement avec Kubernetes ou ECS, gérer SIGTERM est indispensable.
 
 #### Étape 2 : Compiler pour Linux
 
@@ -382,13 +441,19 @@ end.
 Créez un fichier nommé `Dockerfile` (sans extension) :
 
 ```dockerfile
-# Utiliser Ubuntu 22.04 comme base
+# Utiliser Ubuntu 22.04 LTS comme base (alternative : debian:bookworm-slim).
 FROM ubuntu:22.04
 
-# Mettre à jour les paquets
-RUN apt-get update && apt-get install -y \
-    libgtk-3-0 \
-    libglib2.0-0 \
+# ⚠ Dépendances pour un service Delphi CONSOLE (TIdHTTPWebBrokerBridge) :
+#   - ca-certificates : pour la vérification TLS des appels sortants (BDD, API).
+#   - libssl3        : OpenSSL 3 (TLS pour HTTPS).
+#   - libcurl4       : utilisé par les composants HTTP modernes de la RTL.
+#   N'ajoutez PAS libgtk-3-0 ici — GTK est nécessaire UNIQUEMENT pour les
+#   apps FMXLinux GUI, pas pour un service console (gain ~50 Mo).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    libcurl4 \
     && rm -rf /var/lib/apt/lists/*
 
 # Créer le répertoire de l'application
@@ -473,7 +538,9 @@ docker rmi mon-service-rest:1.0
 **Fichier `docker-compose.yml`** :
 
 ```yaml
-version: '3.8'
+# ⚠ La directive `version:` est obsolète depuis Docker Compose v2 (2021).
+# Docker Compose v2+ ignore ce champ. Le format ci-dessous est compatible
+# avec Compose v2 et v3+.
 
 services:
   # Service web Delphi
@@ -482,25 +549,40 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    # ⚠ En PROD, NE PAS écrire les mots de passe directement dans le YAML
+    #   (qui finit généralement dans Git). Deux approches :
+    #   1. Fichier .env (ajouté au .gitignore) : `DB_PASSWORD=...`
+    #      puis `${DB_PASSWORD}` dans le YAML.
+    #   2. Docker secrets (mode swarm/k8s) : `secrets:` + montage en
+    #      `/run/secrets/db_password`, lu depuis l'app au démarrage.
     environment:
       - DB_HOST=database
       - DB_PORT=3306
       - DB_NAME=myapp
       - DB_USER=root
-      - DB_PASSWORD=secret
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD doit être défini}
     restart: unless-stopped
 
   # Base de données MySQL
   database:
-    image: mysql:8.0
+    image: mysql:8.4   # 8.4 LTS est la version LTS active en 2026
     environment:
-      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?DB_PASSWORD doit être défini}
       - MYSQL_DATABASE=myapp
     volumes:
       - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+    # ⚠ NE PAS exposer le port 3306 à l'hôte en production ; conserver
+    # uniquement la communication interne entre services. Décommentez
+    # `ports:` ci-dessous uniquement pour le développement local.
+    # ports:
+    #   - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
 # Volumes persistants
@@ -508,23 +590,31 @@ volumes:
   mysql_data:
 ```
 
+> 💡 **`depends_on: condition: service_healthy`** : permet d'attendre que MySQL soit réellement prêt (et pas seulement démarré) avant de lancer le service `api`. Évite les erreurs « connexion refusée » au démarrage initial du stack.
+
 **Utilisation** :
 
 ```bash
+# ⚠ En 2026, la commande recommandée est `docker compose` (SANS tiret,
+#   c'est un plugin intégré au CLI docker depuis Compose v2). L'ancienne
+#   commande `docker-compose` (avec tiret, Compose v1 standalone) est
+#   dépréciée et n'est plus livrée par défaut avec Docker Desktop.
+#   Les exemples ci-dessous utilisent la commande moderne.
+
 # Démarrer tous les services
-docker-compose up -d
+docker compose up -d
 
 # Voir l'état des services
-docker-compose ps
+docker compose ps
 
 # Voir les logs
-docker-compose logs -f
+docker compose logs -f
 
 # Arrêter tous les services
-docker-compose down
+docker compose down
 
 # Arrêter et supprimer les volumes (données)
-docker-compose down -v
+docker compose down -v
 ```
 
 **Avantages** :
@@ -541,11 +631,11 @@ Au lieu d'installer MySQL sur votre machine :
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+# (directive `version:` obsolète depuis Compose v2 — omise)
 
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8.4    # 8.4 LTS, supportée jusqu'en 2032
     environment:
       MYSQL_ROOT_PASSWORD: dev
       MYSQL_DATABASE: myapp_dev
@@ -561,7 +651,7 @@ volumes:
 
 **Utilisation** :
 ```bash
-docker-compose up -d
+docker compose up -d
 
 # Votre application Delphi se connecte à localhost:3306
 # Données persistantes même après arrêt
@@ -573,11 +663,11 @@ docker-compose up -d
 Créez un environnement de test complet :
 
 ```yaml
-version: '3.8'
+# (directive `version:` omise — obsolète depuis Compose v2)
 
 services:
   test-db:
-    image: mysql:8.0
+    image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: test
       MYSQL_DATABASE: test_db
@@ -585,7 +675,7 @@ services:
       - /var/lib/mysql  # Données en RAM, très rapide
 
   test-redis:
-    image: redis:7
+    image: redis:7-alpine
     tmpfs:
       - /data
 
@@ -601,7 +691,7 @@ services:
 
 **Lancement des tests** :
 ```bash
-docker-compose up --abort-on-container-exit
+docker compose up --abort-on-container-exit
 ```
 
 Tout l'environnement de test est créé, les tests sont exécutés, puis tout est détruit automatiquement.
@@ -612,29 +702,34 @@ Utilisez des fichiers de configuration différents :
 
 ```bash
 # Développement
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 # Staging
-docker-compose -f docker-compose.yml -f docker-compose.staging.yml up
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up
 
 # Production
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
 Chaque environnement a sa propre configuration mais partage la base commune.
 
 ### 4. Service de traitement par lot
 
-Application Delphi qui traite des fichiers :
+Application Delphi console qui traite des fichiers :
 
 ```dockerfile
 FROM ubuntu:22.04
 
-# Dépendances
-RUN apt-get update && apt-get install -y libgtk-3-0 && rm -rf /var/lib/apt/lists/*
+# ⚠ Pour une app CONSOLE Delphi (sans interface FMX), pas besoin de GTK.
+# N'installer que les libs réellement utilisées : SSL si appels HTTPS,
+# curl si client REST natif, libcrypto si chiffrement custom, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libssl3 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app  
 COPY BatchProcessor /app/  
+RUN chmod +x /app/BatchProcessor  
 
 # Volume pour les fichiers à traiter
 VOLUME ["/data"]
@@ -656,31 +751,46 @@ Les fichiers sont traités puis le conteneur s'arrête automatiquement.
 Utilisez des images de base minimales :
 
 ```dockerfile
-# ✗ Lourd
+# ✗ Lourd (~70 Mo)
 FROM ubuntu:22.04
 
-# ✓ Plus léger
+# ✓ Plus léger (~30 Mo)
 FROM debian:bookworm-slim
 
-# ✓ Encore plus léger (si compatibles)
-FROM alpine:3.18
+# ⚠ Très léger (~5 Mo) MAIS incompatible avec Delphi
+FROM alpine:3.20
 ```
 
-**Alpine Linux** est très léger (~5 Mo) mais peut nécessiter des ajustements pour les applications Delphi.
+> 🚨 **Alpine Linux est INCOMPATIBLE avec les binaires Delphi standards** : Alpine utilise la bibliothèque C **musl libc** au lieu de **glibc**. Or les compilateurs Delphi (dcclinux64) produisent du code lié à glibc. Une application Delphi placée dans Alpine échouera typiquement avec une erreur du type `Error loading shared libraries: libc.so.6: cannot open shared object file`. Pour minimiser la taille avec une app Delphi, utilisez plutôt :  
+> - **`debian:bookworm-slim`** (~30 Mo, glibc).  
+> - **`ubuntu:24.04`** ou **`ubuntu:22.04`** (~70 Mo, glibc, plus de paquets disponibles).  
+> - **`gcr.io/distroless/cc-debian12`** (~20 Mo, glibc, image distroless de Google sans shell ni gestionnaire de paquets).
 
 ### 2. Multi-stage builds
 
 Réduisez la taille de l'image finale :
 
 ```dockerfile
-# Stage 1 : Build (avec toutes les dépendances)
-FROM ubuntu:22.04 AS builder  
-RUN apt-get update && apt-get install -y build-tools  
+# ⚠ Pour Delphi : le compilateur Delphi (dcclinux64) ne tourne PAS dans
+#   un conteneur Linux — il est exécuté côté Windows via PAServer. Le
+#   multi-stage est donc surtout utile pour les binaires Delphi déjà
+#   compilés (qu'on copie depuis l'hôte), accompagnés d'éventuelles
+#   ressources qu'on traite dans le stage builder (compilation de scripts,
+#   tests, etc.).
+# Exemple : utiliser le stage builder pour bundler les dépendances :
+
+# Stage 1 : Build (avec outils de packaging)
+FROM ubuntu:22.04 AS builder
+# ⚠ `build-tools` n'existe PAS comme paquet Debian/Ubuntu standard.
+#   Le paquet correct est `build-essential` (gcc, make, etc.).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 COPY source/ /build/  
-RUN compile-app  
+RUN cd /build && make  
 
 # Stage 2 : Runtime (seulement ce qui est nécessaire)
-FROM ubuntu:22.04  
+FROM debian:bookworm-slim  
 COPY --from=builder /build/app /app/  
 CMD ["/app/app"]  
 ```
@@ -712,28 +822,56 @@ CMD ["/app/MonApp"]
 Les conteneurs doivent écrire sur stdout/stderr :
 
 ```pascal
-// Dans votre application Delphi
+uses System.SysUtils, System.DateUtils;
+
+// Dans votre application Delphi (service console pour Docker)
 procedure LogMessage(const Msg: string);  
 begin  
-  // Écrire sur la sortie standard pour Docker
-  WriteLn(FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' - ' + Msg);
+  // ⚠ TOUJOURS logger en UTC (suffixe « Z », format ISO 8601) : les
+  //   conteneurs tournent souvent dans des fuseaux différents et l'agrégation
+  //   centralisée (Loki, ELK, CloudWatch) suppose UTC.
+  WriteLn(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',
+                         TTimeZone.Local.ToUniversalTime(Now)) +
+          ' - ' + Msg);
+  // ⚠ stdout est bufferisé par défaut. Sans Flush(), les logs peuvent
+  //   être perdus si le conteneur est tué brutalement. Pour Docker,
+  //   forcer le flush après chaque ligne critique.
+  Flush(Output);
 end;
 ```
 
-Docker capture automatiquement ces logs : `docker logs mon-conteneur`
+Docker capture automatiquement ces logs : `docker logs mon-conteneur`.
+
+> 💡 **Niveau structuré (JSON)** : pour les pipelines de log centralisé (Loki, Elasticsearch), préférez du **JSON structuré** plutôt que du texte libre. Un parseur côté collecteur extraira directement les champs (level, msg, request_id, etc.) :  
+>  
+> ```pascal  
+> WriteLn(Format('{"ts":"%s","level":"%s","msg":"%s"}',
+>   [UtcTimestamp, Level, JsonEscape(Msg)]));
+> Flush(Output);
+> ```
 
 ### 5. Variables d'environnement pour la configuration
 
 Ne codez pas en dur les paramètres :
 
 ```pascal
-// Lire depuis les variables d'environnement
+uses
+  System.SysUtils;  // Pour GetEnvironmentVariable cross-platform.
+
+// Lire depuis les variables d'environnement (fonctionne identiquement
+// sur Windows et Linux car on utilise la version System.SysUtils,
+// pas Winapi.Windows).
 var
   DBHost, DBUser, DBPassword: string;
 begin
-  DBHost := GetEnvironmentVariable('DB_HOST');
-  DBUser := GetEnvironmentVariable('DB_USER');
+  DBHost     := GetEnvironmentVariable('DB_HOST');
+  DBUser     := GetEnvironmentVariable('DB_USER');
   DBPassword := GetEnvironmentVariable('DB_PASSWORD');
+
+  // ⚠ GetEnvironmentVariable retourne '' si la variable n'est PAS définie
+  // (n'émet pas d'exception). Vérifier la présence si elle est obligatoire :
+  if DBHost = '' then
+    raise Exception.Create('Variable d''environnement DB_HOST requise.');
 end;
 ```
 
@@ -751,16 +889,24 @@ Ajoutez des vérifications de santé :
 ```dockerfile
 FROM ubuntu:22.04
 
+# ⚠ `curl` n'est pas installé par défaut dans les images slim. Si vous
+# utilisez `debian:bookworm-slim` ou une image distroless, installez-le
+# explicitement OU utilisez `wget` / une simple commande sans dépendance.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY MonApp /app/  
 EXPOSE 8080  
 
-HEALTHCHECK --interval=30s --timeout=3s \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
 CMD ["/app/MonApp"]
 ```
 
-Docker pourra détecter si votre application ne répond plus.
+> 💡 **Alternative sans curl** : si vous voulez éviter d'ajouter curl, votre app Delphi peut écrire un fichier témoin (`/tmp/healthy`) et le healthcheck vérifie sa présence : `CMD test -f /tmp/healthy || exit 1`.
+
+Docker pourra détecter si votre application ne répond plus et la marquer comme `unhealthy` — utile pour les orchestrateurs (Kubernetes, Docker Swarm, ECS) qui peuvent alors la redémarrer automatiquement.
 
 ### 7. Volumes pour les données persistantes
 
@@ -792,20 +938,31 @@ stages:
 variables:
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
+# GitLab CI fournit automatiquement les variables $CI_REGISTRY,
+# $CI_REGISTRY_USER, $CI_REGISTRY_PASSWORD pour son container registry
+# intégré. Sans `docker login`, le `docker push` échouerait.
+.docker_login: &docker_login
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER"
+    --password-stdin "$CI_REGISTRY"
+
 build:
   stage: build
   script:
+    - *docker_login
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
 
 test:
   stage: test
   script:
+    - *docker_login
+    - docker pull $IMAGE_TAG
     - docker run --rm $IMAGE_TAG /app/run-tests.sh
 
 deploy:
   stage: deploy
   script:
+    - *docker_login
     - docker pull $IMAGE_TAG
     - docker stop mon-app || true
     - docker rm mon-app || true
@@ -813,6 +970,8 @@ deploy:
   only:
     - main
 ```
+
+> 💡 **`--password-stdin`** : passer le mot de passe via stdin évite qu'il apparaisse dans `ps -ef` / la liste des processus pendant la durée du login. Pratique standard de sécurité.
 
 **Flux** :
 1. Code committé sur Git
@@ -864,16 +1023,25 @@ Docker facilite le déploiement sur diverses plateformes cloud.
 
 ### Exemple : Déployer sur Google Cloud Run
 
+> ⚠️ **Container Registry (`gcr.io`) a été arrêté le 18 mars 2025** par Google. Le service successeur est **Artifact Registry** (`pkg.dev`). Les URLs `gcr.io` continuent à fonctionner pour les images déjà hébergées, mais toute nouvelle image doit utiliser Artifact Registry. Référence : `https://cloud.google.com/artifact-registry/docs/transition/transition-from-gcr`.
+
 ```bash
-# 1. Construire l'image
-docker build -t gcr.io/mon-projet/mon-app:v1 .
+# Prérequis : créer un dépôt Artifact Registry au préalable :
+#   gcloud artifacts repositories create mon-repo \
+#       --repository-format=docker --location=europe-west1
 
-# 2. Pousser vers Google Container Registry
-docker push gcr.io/mon-projet/mon-app:v1
+# 1. Construire l'image (URL Artifact Registry, pas gcr.io déprécié)
+docker build -t europe-west1-docker.pkg.dev/mon-projet/mon-repo/mon-app:v1 .
 
-# 3. Déployer sur Cloud Run
+# 2. S'authentifier auprès d'Artifact Registry
+gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+# 3. Pousser vers Artifact Registry
+docker push europe-west1-docker.pkg.dev/mon-projet/mon-repo/mon-app:v1
+
+# 4. Déployer sur Cloud Run
 gcloud run deploy mon-app \
-  --image gcr.io/mon-projet/mon-app:v1 \
+  --image europe-west1-docker.pkg.dev/mon-projet/mon-repo/mon-app:v1 \
   --platform managed \
   --region europe-west1 \
   --allow-unauthenticated
@@ -910,12 +1078,12 @@ Mais dans la pratique, **Docker n'est pas idéal pour les applications desktop g
 Les conteneurs Windows existent mais sont moins populaires :
 
 **Limitations** :
-- Nécessitent Windows Server comme hôte
-- Images beaucoup plus volumineuses (plusieurs Go)
-- Moins de support communautaire
-- Pas disponibles sur tous les services cloud
+- En **développement** : Windows 10/11 Pro/Enterprise/Education avec Docker Desktop en mode « Windows containers » (Hyper-V isolation activée).
+- En **production** : Windows Server 2019/2022/2025 reste l'hôte standard ; quelques services cloud (Azure ACI/AKS, AWS ECS Windows) supportent les Windows containers.
+- Images beaucoup plus volumineuses (`mcr.microsoft.com/windows/servercore:ltsc2022` fait ~2 Go ; `nanoserver` ~250 Mo mais incompatible avec la plupart des DLL Win32 et donc avec Delphi).
+- Communauté restreinte par rapport aux conteneurs Linux.
 
-**Recommandation** : Pour les applications desktop Windows, privilégiez les installateurs classiques et la virtualisation pour les tests.
+**Recommandation** : Pour les applications desktop Windows, privilégiez les installateurs classiques et la virtualisation (cf début du chapitre) pour les tests. Les conteneurs Windows ne sont vraiment utiles que pour des **services Windows headless** modernes (IIS, .NET, Delphi service compilé en console).
 
 ### Performance
 
@@ -1058,9 +1226,9 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ### Tutoriels recommandés
 
-- **Docker for Beginners** : Play with Docker (play-with-docker.com)
-- **Katacoda** : Scénarios interactifs gratuits
-- **YouTube** : Chaînes comme TechWorld with Nana
+- **Docker for Beginners** : Play with Docker (play-with-docker.com).
+- **Killercoda** (https://killercoda.com/) : successeur communautaire de Katacoda — Katacoda **fermé en juin 2022** par O'Reilly.
+- **YouTube** : chaînes comme *TechWorld with Nana*, *NetworkChuck*, *Bret Fisher Docker*.
 
 ### Outils utiles
 

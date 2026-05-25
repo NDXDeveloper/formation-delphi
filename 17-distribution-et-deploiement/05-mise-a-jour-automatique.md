@@ -206,31 +206,47 @@ begin
   Result := Format('%d.%d.%d', [Major, Minor, Release]);
 end;
 
-function TVersionInfo.CompareWith(Other: TVersionInfo): Integer;  
-begin  
-  // Retourne : -1 si inférieur, 0 si égal, 1 si supérieur
-  if Major <> Other.Major then
-    Result := Major - Other.Major
-  else if Minor <> Other.Minor then
-    Result := Minor - Other.Minor
-  else if Release <> Other.Release then
-    Result := Release - Other.Release
-  else
-    Result := Build - Other.Build;
+function TVersionInfo.CompareWith(Other: TVersionInfo): Integer;
+// Helper local : compare deux Integer en retournant -1/0/1.
+// ⚠ Renvoyer `A - B` directement risquerait l'overflow si A et B sont
+//   très éloignés (cas théorique pour des versions, mais bonne habitude).
+
+  function CmpInt(A, B: Integer): Integer;
+  begin
+    if A < B then      Result := -1
+    else if A > B then Result := 1
+    else               Result := 0;
+  end;
+
+begin
+  Result := CmpInt(Major, Other.Major);
+  if Result <> 0 then Exit;
+  Result := CmpInt(Minor, Other.Minor);
+  if Result <> 0 then Exit;
+  Result := CmpInt(Release, Other.Release);
+  if Result <> 0 then Exit;
+  Result := CmpInt(Build, Other.Build);
 end;
 
 class function TVersionInfo.FromString(const VersionStr: string): TVersionInfo;  
 var  
   Parts: TArray<string>;
 begin
+  // ⚠ Toujours initialiser le record car les champs ne sont PAS effacés
+  //   automatiquement pour un record local non managé.
+  Result.Major   := 0;
+  Result.Minor   := 0;
+  Result.Release := 0;
+  Result.Build   := 0;
+
+  // ⚠ Toujours vérifier Length(Parts) AVANT d'indexer : une chaîne vide
+  //   ou tronquée (« 1 », « 1.2 », « ») provoquerait sinon une
+  //   « Index out of bounds » sur Parts[1] ou Parts[2].
   Parts := VersionStr.Split(['.']);
-  Result.Major := StrToIntDef(Parts[0], 0);
-  Result.Minor := StrToIntDef(Parts[1], 0);
-  Result.Release := StrToIntDef(Parts[2], 0);
-  if Length(Parts) > 3 then
-    Result.Build := StrToIntDef(Parts[3], 0)
-  else
-    Result.Build := 0;
+  if Length(Parts) > 0 then Result.Major   := StrToIntDef(Parts[0], 0);
+  if Length(Parts) > 1 then Result.Minor   := StrToIntDef(Parts[1], 0);
+  if Length(Parts) > 2 then Result.Release := StrToIntDef(Parts[2], 0);
+  if Length(Parts) > 3 then Result.Build   := StrToIntDef(Parts[3], 0);
 end;
 
 end.
@@ -287,13 +303,16 @@ end;
 function TUpdateChecker.CheckForUpdates: TUpdateInfo;  
 var  
   Response: IHTTPResponse;
-  JsonStr: string;
+  JsonStr, VersionStr: string;
+  JsonValue: TJSONValue;
   JsonObj: TJSONObject;
   JsonArray: TJSONArray;
   i: Integer;
 begin
   // Initialisation
   Result.Available := False;
+  Result.IsRequired := False;
+  Result.FileSize := 0;
 
   try
     // Télécharger le fichier de version
@@ -302,24 +321,38 @@ begin
     if Response.StatusCode = 200 then
     begin
       JsonStr := Response.ContentAsString;
-      JsonObj := TJSONObject.ParseJSONValue(JsonStr) as TJSONObject;
-
+      // ⚠ ParseJSONValue peut retourner nil (JSON invalide) ou un type
+      //   autre que TJSONObject (un array, un nombre, etc. si la page
+      //   reçue n'est pas un objet). Faire un `as TJSONObject` direct
+      //   lèverait alors EInvalidCast. On teste donc le type avant.
+      JsonValue := TJSONObject.ParseJSONValue(JsonStr);
+      if not (JsonValue is TJSONObject) then
+      begin
+        JsonValue.Free;  // Libère même si nil (Free est nil-safe).
+        Exit;
+      end;
+      JsonObj := TJSONObject(JsonValue);
       try
-        // Parser les informations
-        Result.Version := TVersionInfo.FromString(
-          JsonObj.GetValue<string>('version')
-        );
+        // (JsonObj est forcément non-nil ici grâce au test ci-dessus.)
 
-        Result.DownloadURL := JsonObj.GetValue<string>('download_url');
-        Result.FileSize := JsonObj.GetValue<Int64>('file_size');
-        Result.FileHash := JsonObj.GetValue<string>('file_hash');
-        Result.IsRequired := JsonObj.GetValue<Boolean>('required');
+        // Parser les informations avec TryGetValue (ne lève PAS d'exception
+        // si une clé est absente — retourne juste False).
+        if not JsonObj.TryGetValue<string>('version', VersionStr) then
+          Exit;
+        Result.Version := TVersionInfo.FromString(VersionStr);
 
-        // Changelog
-        JsonArray := JsonObj.GetValue<TJSONArray>('changelog');
-        SetLength(Result.ChangeLog, JsonArray.Count);
-        for i := 0 to JsonArray.Count - 1 do
-          Result.ChangeLog[i] := JsonArray.Items[i].Value;
+        JsonObj.TryGetValue<string>('download_url', Result.DownloadURL);
+        JsonObj.TryGetValue<Int64>('file_size', Result.FileSize);
+        JsonObj.TryGetValue<string>('file_hash', Result.FileHash);
+        JsonObj.TryGetValue<Boolean>('required', Result.IsRequired);
+
+        // Changelog (facultatif)
+        if JsonObj.TryGetValue<TJSONArray>('changelog', JsonArray) then
+        begin
+          SetLength(Result.ChangeLog, JsonArray.Count);
+          for i := 0 to JsonArray.Count - 1 do
+            Result.ChangeLog[i] := JsonArray.Items[i].Value;
+        end;
 
         // Vérifier si une mise à jour est disponible
         Result.Available := Result.Version.CompareWith(APP_VERSION) > 0;
@@ -331,7 +364,8 @@ begin
   except
     on E: Exception do
     begin
-      // En cas d'erreur, pas de mise à jour disponible
+      // En cas d'erreur réseau ou JSON, pas de mise à jour proposée.
+      // En production, logger l'erreur pour diagnostic.
       Result.Available := False;
     end;
   end;
@@ -382,7 +416,8 @@ type
 implementation
 
 uses
-  System.Net.HttpClient, AppVersion, System.IOUtils, Winapi.ShellAPI;
+  System.Net.HttpClient, AppVersion, System.IOUtils, Vcl.Dialogs,
+  Winapi.ShellAPI;
 
 {$R *.dfm}
 
@@ -448,16 +483,22 @@ end;
 
 procedure TFormUpdate.DownloadUpdate;  
 var  
-  HttpClient: THTTPClient;
-  Response: IHTTPResponse;
-  FileStream: TFileStream;
   TempPath, FileName: string;
 begin
-  // Créer un dossier temporaire
-  TempPath := TPath.GetTempPath + 'MonAppUpdate\';
+  // Créer un sous-dossier temporaire propre à l'app (TOCTOU : éviter
+  // `TPath.GetTempPath` directement, qui est partagé entre toutes les apps
+  // de l'utilisateur — un attaquant pourrait pré-créer `setup.exe`).
+  // En production, ajouter un nombre aléatoire au PID pour rendre le nom
+  // de répertoire moins prédictible :
+  //   TempPath := ... + IntToHex(GetCurrentProcessId, 8) + '_' + ...random...;
+  TempPath := TPath.Combine(TPath.GetTempPath,
+                            'MonAppUpdate_' + IntToHex(GetCurrentProcessId, 8));
   ForceDirectories(TempPath);
 
-  FileName := TempPath + 'setup.exe';
+  FileName := TPath.Combine(TempPath, 'setup.exe');
+  // Capturer TempPath dans une variable locale réutilisable par le ShellExecute
+  // plus bas (5e paramètre = lpDirectory : éviter `nil` qui hériterait du
+  // working dir parent — souvent Program Files, lecture seule).
 
   // Télécharger dans un thread séparé
   FDownloadThread := TThread.CreateAnonymousThread(
@@ -465,6 +506,7 @@ begin
     var
       HttpClient: THTTPClient;
       FileStream: TFileStream;
+      HashOK: Boolean;
     begin
       HttpClient := THTTPClient.Create;
       try
@@ -479,16 +521,49 @@ begin
           FileStream.Free;
         end;
 
+        // ⚠ SÉCURITÉ : vérifier l'intégrité du fichier téléchargé AVANT
+        //   de l'exécuter. Le hash attendu vient du JSON serveur signé
+        //   (via TLS) ; un fichier corrompu ou substitué (MITM, miroir
+        //   compromis) ne doit pas être lancé. Voir helper plus bas
+        //   `VerifyFileHash(FileName, ExpectedHash)` qui retourne Boolean.
+        HashOK := (FUpdateInfo.FileHash <> '') and
+                  VerifyFileHash(FileName, FUpdateInfo.FileHash);
+        // Pour une vérification supplémentaire, valider aussi la signature
+        // Authenticode du binaire (cf section 16.9 + WinVerifyTrust).
+
         // Téléchargement terminé
         TThread.Synchronize(nil,
           procedure
           begin
             OnDownloadComplete(nil);
 
-            // Lancer l'installateur
-            ShellExecute(0, 'open', PChar(FileName), '/SILENT', nil, SW_SHOWNORMAL);
+            if not HashOK then
+            begin
+              ShowMessage('Mise à jour rejetée : intégrité non vérifiée.' +
+                          sLineBreak + 'Le fichier téléchargé ne correspond ' +
+                          'pas au hash attendu. Veuillez réessayer plus tard.');
+              DeleteFile(FileName);
+              Exit;
+            end;
 
-            // Fermer l'application
+            // Lancer l'installateur (Inno Setup en mode silencieux).
+            // 5e paramètre (lpDirectory) : TempPath, pas nil — sinon le
+            // working dir hérité pourrait être Program Files (lecture seule).
+            // ⚠ ShellExecute retourne une HINSTANCE : <= 32 = erreur
+            //   (ERROR_FILE_NOT_FOUND, ERROR_ACCESS_DENIED, etc.).
+            //   Ne terminer l'application QUE si l'installateur a bien démarré.
+            if NativeInt(ShellExecute(0, 'open', PChar(FileName), '/SILENT',
+                                      PChar(ExtractFilePath(FileName)),
+                                      SW_SHOWNORMAL)) <= 32 then
+            begin
+              ShowMessage('Impossible de lancer l''installateur de mise à jour. ' +
+                          'L''application va continuer à fonctionner ; ' +
+                          'réessayez plus tard.');
+              Exit;
+            end;
+
+            // L'installateur a été lancé : fermer l'application pour qu'il
+            // puisse remplacer le binaire.
             Application.Terminate;
           end
         );
@@ -501,6 +576,10 @@ begin
   FDownloadThread.FreeOnTerminate := True;
   FDownloadThread.Start;
 end;
+
+// `VerifyFileHash` est défini plus bas dans la section « 5. Vérifier
+// l'intégrité du téléchargement » — il compare le hash SHA-256 du
+// fichier avec un hash attendu (Boolean).
 
 procedure TFormUpdate.OnDownloadProgress(Sender: TObject; ContentLength, ReadCount: Int64; var Abort: Boolean);  
 var  
@@ -602,47 +681,65 @@ Au lieu de tout coder vous-même, vous pouvez utiliser des composants existants 
 - Moins flexible qu'une solution personnalisée
 - Nécessite Inno Setup
 
-### 3. AppUpdate Component
+### 3. Composants open source Delphi
 
-**Description** : Composant open source
+Plusieurs projets communautaires existent sur GitHub. Recherchez avec les mots-clés `delphi auto-update`, `delphi updater`, `delphi self-update`. Vérifiez avant adoption :
 
-**Avantages** :
-- Gratuit et open source
-- Simple d'utilisation
-- Personnalisable
+- **Date du dernier commit** : projet maintenu activement ?
+- **Compatibilité Delphi 13 Florence** : code récent et testé sur RAD Studio actuel ?
+- **Sécurité** : vérification d'intégrité (hash) et de signature (Authenticode) intégrée ?
+- **Licence** : MIT, MPL, GPL — compatible avec votre projet ?
 
-**Inconvénients** :
-- Maintenance parfois irrégulière
-- Documentation limitée
-
-**GitHub** : Recherchez "Delphi auto update" sur GitHub
+À évaluer cas par cas — la qualité varie énormément.
 
 ### 4. Winsparkle (pour Windows)
 
-**Description** : Portage Windows du système Sparkle (macOS)
+**Description** : portage Windows du système Sparkle (macOS, créé par Andy Matuschak).
 
 **Avantages** :
-- Utilisé par de nombreuses applications
-- Bien testé et fiable
-- Support des deltas (mises à jour partielles)
+- Utilisé par de nombreuses applications (Audacity, KeePass, etc.).
+- Bien testé et fiable.
+- Format d'« *appcast* » RSS standardisé.
+- Support des signatures Ed25519 pour vérifier l'authenticité des mises à jour.
 
 **Inconvénients** :
-- En C++, nécessite un wrapper pour Delphi
-- Configuration initiale complexe
+- En C/C++, nécessite un wrapper pour Delphi (DLL chargée dynamiquement, FFI sur quelques fonctions C — réalisable mais demande du travail).
+- Pas de support officiel Delphi.
 
 **Site** : https://winsparkle.org/
 
-### 5. Solution maison recommandée
+### 5. Sparkle (pour macOS)
+
+Sur **macOS**, Sparkle est la référence absolue (à peu près obligatoire pour distribuer hors App Store) :
+- Intégration avec la notarisation Apple.
+- Support EdDSA signatures depuis Sparkle 2.
+- Apparence native macOS (Sonoma 14, Sequoia 15, Tahoe 26).
+- Téléchargements deltas pour réduire la taille des mises à jour.
+
+À utiliser si vous distribuez votre app Delphi macOS hors App Store. Comme pour Winsparkle, c'est une bibliothèque C/Objective-C : il vous faudra écrire un mince wrapper Delphi (chargement dynamique via `dlopen`/`LibLoad`, FFI Pascal sur quelques fonctions exportées).
+
+### 6. Velopack (alternative moderne)
+
+**Velopack** (https://velopack.io/) est l'évolution moderne de Squirrel.Windows :
+- Cross-platform (Windows + macOS + Linux).
+- Mises à jour différentielles (deltas) ultra-rapides.
+- Pas de droits administrateur requis (install per-user).
+- API CLI, intégrable avec n'importe quel langage incluant Delphi.
+- Open source MIT.
+
+Émergeant en 2024-2026 comme solution générique recommandée pour le desktop.
+
+### 7. Solution maison recommandée
 
 Pour débuter, créez votre propre système simple :
-- Fichier JSON pour les versions
-- Code Delphi de vérification
-- Téléchargement et lancement d'installateur
+- Fichier JSON pour les versions.
+- Code Delphi de vérification (cf exemple ci-dessus).
+- Téléchargement et lancement d'installateur (Inno Setup en mode `/SILENT`).
 
 **Avantages** :
-- Contrôle total
-- Pas de dépendances
-- Apprentissage utile
+- Contrôle total.
+- Pas de dépendances externes.
+- Apprentissage utile.
 
 ## Bonnes pratiques
 
@@ -689,6 +786,9 @@ Faites toujours la vérification et le téléchargement en arrière-plan (avec T
 ### 4. Gérer les erreurs réseau
 
 ```pascal
+uses
+  System.Net.HttpClient, System.Net.HttpClientComponent, System.Net.URLClient;
+
 function TUpdateChecker.CheckForUpdates: TUpdateInfo;  
 begin  
   Result.Available := False;
@@ -696,14 +796,24 @@ begin
   try
     // Code de vérification...
   except
-    on E: ENetException do
+    // ⚠ Les exceptions réseau de System.Net.HttpClient sont :
+    //   - ENetHTTPClientException : erreur du client HTTP (TLS, DNS, refus…)
+    //   - ENetURIException        : URL invalide
+    //   Capter ces deux suffit pour le mode « silencieux » réseau.
+    on E: ENetHTTPClientException do
     begin
-      // Erreur réseau : mode silencieux, pas d'alerte
+      // Erreur réseau / TLS / DNS : silence, l'utilisateur ne doit pas
+      // être dérangé pour une simple absence de connectivité.
+      Exit;
+    end;
+    on E: ENetURIException do
+    begin
       Exit;
     end;
     on E: Exception do
     begin
-      // Autre erreur : log mais pas d'alerte
+      // Autre erreur (parsing JSON, hash, etc.) : logger pour diagnostic
+      // mais ne pas afficher de boîte d'erreur.
       LogError('Erreur mise à jour : ' + E.Message);
       Exit;
     end;
@@ -719,20 +829,29 @@ Utilisez un hash (SHA256) pour vérifier que le fichier téléchargé n'est pas 
 
 ```pascal
 uses
-  System.Hash;
+  System.SysUtils, System.Hash;
 
 function VerifyFileHash(const FileName, ExpectedHash: string): Boolean;  
 var  
   FileStream: TFileStream;
-  Hash: string;
+  Hash, NormalizedExpected: string;
 begin
-  FileStream := TFileStream.Create(FileName, fmOpenRead);
+  // ⚠ Le JSON serveur peut préfixer le hash par "SHA256:" (convention
+  //   répandue pour préciser l'algorithme). On normalise pour ne comparer
+  //   que la partie hexadécimale, insensible à la casse.
+  NormalizedExpected := ExpectedHash;
+  if NormalizedExpected.StartsWith('SHA256:', True) then
+    Delete(NormalizedExpected, 1, Length('SHA256:'));
+  NormalizedExpected := Trim(NormalizedExpected);
+
+  FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
     Hash := THashSHA2.GetHashString(FileStream);
-    Result := SameText(Hash, ExpectedHash);
   finally
     FileStream.Free;
   end;
+
+  Result := (NormalizedExpected <> '') and SameText(Hash, NormalizedExpected);
 end;
 ```
 
@@ -773,21 +892,35 @@ end;
 
 ### 9. Gérer les versions minimales
 
-Si une version est trop ancienne, forcez la mise à jour :
+Si une version est trop ancienne (faille de sécurité, format de données incompatible…), forcez la mise à jour :
 
-```pascal
+```json
 // Dans version.json
 {
   "version": "2.0.0",
   "min_version": "1.5.0",
   "required": true
 }
+```
 
-// Dans le code
-if APP_VERSION.CompareWith(MinVersion) < 0 then  
-begin  
-  ShowMessage('Votre version est trop ancienne. La mise à jour est obligatoire.');
-  // Forcer la mise à jour
+```pascal
+// Dans le code, après avoir reçu et parsé le JSON :
+var
+  MinVersionStr: string;
+  MinVersion: TVersionInfo;
+begin
+  // ⚠ Récupérer min_version du JSON avant utilisation (le champ peut
+  //   ne pas être présent — fournir une valeur par défaut "0.0.0").
+  if not JsonObj.TryGetValue<string>('min_version', MinVersionStr) then
+    MinVersionStr := '0.0.0';
+  MinVersion := TVersionInfo.FromString(MinVersionStr);
+
+  if APP_VERSION.CompareWith(MinVersion) < 0 then
+  begin
+    ShowMessage('Votre version est trop ancienne. La mise à jour est obligatoire.');
+    // Forcer la mise à jour : empêcher l'utilisateur de continuer
+    // sans installer (ButtonLater.Enabled := False ; Result.IsRequired := True).
+  end;
 end;
 ```
 
@@ -819,19 +952,51 @@ const UPDATE_URL = 'http://monsite.com/updates/version.json';  // Non sécurisé
 
 ### 2. Vérifier la signature du fichier téléchargé
 
-Le fichier de mise à jour doit être signé numériquement :
+Le fichier de mise à jour doit être signé numériquement, et l'application doit **vérifier la signature avant de l'exécuter** (cf section 16.9 du chapitre Sécurité pour le détail) :
 
 ```pascal
-function VerifySignature(const FileName: string): Boolean;  
+uses
+  Winapi.Windows, Winapi.WinTrust, Winapi.SoftPub;
+
+function VerifierSignatureAuthenticode(const AFichier: string): Boolean;  
 var  
-  WinTrustData: TWinTrustData;
-  FileInfo: TWinTrustFileInfo;
+  FileInfo: WINTRUST_FILE_INFO;
+  TrustData: WINTRUST_DATA;
+  Action: TGUID;
+  Status: HRESULT;
+  FichierW: WideString;
 begin
-  // Code de vérification de signature Windows
-  // ... (complexe, utilisez une bibliothèque)
-  Result := True; // Simplification
+  Action := WINTRUST_ACTION_GENERIC_VERIFY_V2;
+  FichierW := AFichier;
+
+  FillChar(FileInfo, SizeOf(FileInfo), 0);
+  FileInfo.cbStruct := SizeOf(FileInfo);
+  FileInfo.pcwszFilePath := PWideChar(FichierW);
+
+  FillChar(TrustData, SizeOf(TrustData), 0);
+  TrustData.cbStruct := SizeOf(TrustData);
+  TrustData.dwUIChoice := WTD_UI_NONE;
+  TrustData.fdwRevocationChecks := WTD_REVOKE_WHOLECHAIN;
+  TrustData.dwUnionChoice := WTD_CHOICE_FILE;
+  TrustData.pFile := @FileInfo;
+  TrustData.dwStateAction := WTD_STATEACTION_VERIFY;
+
+  Status := WinVerifyTrust(INVALID_HANDLE_VALUE, Action, @TrustData);
+  Result := Status = ERROR_SUCCESS;
+
+  // Libérer l'état interne
+  TrustData.dwStateAction := WTD_STATEACTION_CLOSE;
+  WinVerifyTrust(INVALID_HANDLE_VALUE, Action, @TrustData);
 end;
 ```
+
+Cette fonction utilise l'API Windows `WinVerifyTrust` qui :
+1. valide la signature cryptographique du fichier ;
+2. vérifie la chaîne du certificat jusqu'à une CA de confiance ;
+3. vérifie la révocation (CRL/OCSP) ;
+4. valide l'horodatage RFC 3161 (pour les certificats expirés).
+
+**Encore mieux** : combinez avec un *pinning* du certificat (cf chapitre 16.4) pour n'accepter que les mises à jour signées par **votre** certificat précis, pas n'importe quel certificat valide.
 
 ### 3. Utiliser des hashes
 
@@ -975,9 +1140,10 @@ MonApp.exe /update
 **Problème** : L'installation nécessite des droits admin
 
 **Solutions** :
-- Installez dans un dossier utilisateur (`%LOCALAPPDATA%`)
-- Utilisez ClickOnce pour les applications .NET
-- Demandez l'élévation seulement si nécessaire
+- **Installation per-user dans `%LOCALAPPDATA%\Programs\MonApp\`** : pas de droits admin requis. Configurable dans Inno Setup via `PrivilegesRequired=lowest` et `DefaultDirName={localappdata}\Programs\MonApp`.
+- **MSIX** (cf section 17.8) : par défaut, installation per-user sans élévation.
+- **Demandez l'élévation seulement si nécessaire** (ex : écriture dans Program Files, service Windows à enregistrer).
+- ~~ClickOnce~~ : technologie spécifique à .NET, **non applicable aux applications Delphi natives**.
 
 ### La mise à jour échoue car le fichier est en cours d'utilisation
 
@@ -1116,7 +1282,8 @@ var
 implementation
 
 uses
-  System.Threading, System.DateUtils, System.IniFiles, FormUpdate;
+  System.Threading, System.DateUtils, System.IniFiles, System.IOUtils,
+  FormUpdate;
 
 {$R *.dfm}
 
@@ -1128,11 +1295,28 @@ end;
 
 procedure TMainForm.CheckForUpdatesIfNeeded;  
 var  
+  IniPath: string;
   IniFile: TIniFile;
   LastCheck: TDateTime;
   DaysSinceLastCheck: Integer;
 begin
-  IniFile := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+  // ⚠ NE PAS écrire à côté de l'EXE — Program Files est lecture seule
+  //   pour un utilisateur standard. La virtualisation UAC redirigerait
+  //   silencieusement vers VirtualStore et la valeur ne serait jamais
+  //   relue. On stocke donc dans le dossier de l'utilisateur.
+  //
+  // ⚠ Précision sur `TPath.GetHomePath` :
+  //   - Windows : retourne `%USERPROFILE%` (ex : `C:\Users\<user>`).
+  //   - macOS / Linux : retourne `~` (home utilisateur).
+  //   Si vous voulez cibler PRÉCISÉMENT `%APPDATA%\Roaming` sur Windows,
+  //   utilisez : `TPath.Combine(TPath.GetHomePath, 'AppData\Roaming\MonApp\…')`
+  //   ou `GetEnvironmentVariable('APPDATA')`.
+  IniPath := TPath.Combine(
+    TPath.GetHomePath,            // %USERPROFILE% sous Windows
+    'MonApp\settings.ini');
+  ForceDirectories(ExtractFilePath(IniPath));
+
+  IniFile := TIniFile.Create(IniPath);
   try
     // Lire la date de dernière vérification
     LastCheck := IniFile.ReadDateTime('Updates', 'LastCheck', 0);

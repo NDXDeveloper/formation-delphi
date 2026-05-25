@@ -208,16 +208,16 @@ Le pipeline peut déployer automatiquement vers différents environnements.
 **GitHub Actions** est intégré dans GitHub.
 
 **Avantages** :
-- Intégré dans GitHub
-- Marketplace d'actions réutilisables
-- Gratuit pour les projets publics
-- 2000 minutes/mois gratuites pour privés
+- Intégré dans GitHub.
+- Marketplace d'actions réutilisables (>20 000 actions).
+- **Gratuit illimité pour les repos publics**.
+- **Repos privés (compte Free)** : 2000 minutes Linux/mois gratuites — soit **1000 minutes Windows** (×2) ou 200 minutes macOS (×10). Au-delà : ~0,008 USD/min Linux, 0,016 USD/min Windows.
 
 **Inconvénients** :
-- Coût potentiel pour gros projets privés
-- Nécessite GitHub
+- Coût qui grimpe vite pour les builds Windows fréquents (Delphi tourne sur Windows…).
+- Nécessite GitHub.
 
-**Configuration** : Fichiers YAML dans `.github/workflows/`
+**Configuration** : Fichiers YAML dans `.github/workflows/`.
 
 ### 3. Azure DevOps (anciennement VSTS)
 
@@ -254,17 +254,20 @@ Le pipeline peut déployer automatiquement vers différents environnements.
 
 ### 5. TeamCity
 
-**TeamCity** de JetBrains est un outil professionnel.
+**TeamCity** de JetBrains est un outil professionnel disponible en deux variantes :
+
+- **TeamCity On-Premises** : version auto-hébergée — **gratuite jusqu'à 3 build agents et 100 build configurations**, ce qui suffit largement pour un projet Delphi de taille modeste. Au-delà : Enterprise ~2 400 USD/an + ~360 USD/an par agent supplémentaire.
+- **TeamCity Cloud** : version hébergée par JetBrains, **45 USD/utilisateur/mois** en 2026, sans free tier (essai gratuit limité).
 
 **Avantages** :
-- Interface moderne et intuitive
-- Excellent support Delphi possible
-- Gratuit jusqu'à 3 agents
-- Très stable
+- Interface moderne et intuitive.
+- Excellent support Delphi possible (via runner Windows avec Delphi installé).
+- Très stable, utilisé par de nombreuses grandes entreprises.
 
 **Inconvénients** :
-- Auto-hébergé uniquement
-- Coût pour grande équipe
+- L'auto-hébergement (On-Premises) demande de la maintenance (machine, mises à jour TeamCity, sécurité).
+- Coût qui grimpe vite au-delà de 3 agents.
+- Documentation parfois confuse entre les variantes On-Premises et Cloud.
 
 ### Tableau comparatif
 
@@ -274,9 +277,9 @@ Le pipeline peut déployer automatiquement vers différents environnements.
 | **GitHub Actions** | Cloud | Gratuit* | Facile | Bon (via script) |
 | **Azure DevOps** | Cloud | Gratuit* | Moyenne | Excellent (MSBuild natif) |
 | **Jenkins** | Self | Gratuit | Difficile | Bon (plugins) |
-| **TeamCity** | Self | Gratuit* | Facile | Bon |
+| **TeamCity** | Cloud / Self | Gratuit* (On-Premises) | Facile | Bon |
 
-*Gratuit avec limitations
+*Gratuit avec limitations (cf détail de chaque outil ci-dessus).
 
 **Recommandation pour débutants** :
 - Si vous utilisez GitHub → **GitHub Actions**
@@ -300,11 +303,11 @@ Delphi peut se compiler sans l'IDE :
 
 ```batch
 REM Méthode 1 : Via rsvars.bat et msbuild  
-call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"  
+call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"  
 msbuild MonProjet.dproj /t:Build /p:Config=Release /p:Platform=Win32  
 
 REM Méthode 2 : Via MSBuild directement
-"C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\msbuild.exe" ^
+"C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\msbuild.exe" ^
   MonProjet.dproj ^
   /t:Build ^
   /p:Config=Release ^
@@ -334,7 +337,7 @@ stages:
 
 # Variables globales
 variables:
-  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0"
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\24.0"
   PROJECT_NAME: "MonApplication"
 
 # Stage 1 : Compilation
@@ -409,8 +412,8 @@ package_installer:
     # Compiler l'installateur avec Inno Setup
     - "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe" Setup\\MonApp.iss
 
-    # Signer l'installateur
-    - signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /t http://timestamp.digicert.com Output\\MonApp_Setup.exe
+    # Signer l'installateur (commande moderne 2026, cf section 17.4)
+    - signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /fd sha256 /tr http://timestamp.digicert.com /td sha256 Output\\MonApp_Setup.exe
   artifacts:
     paths:
       - Output/MonApp_Setup.exe
@@ -495,6 +498,18 @@ Un **runner** est la machine qui exécute les jobs.
 ### Fichier .github/workflows/build.yml
 
 ```yaml
+# ⚠ Versions GitHub Actions à jour en 2026 :
+#   - actions/checkout@v4 (v3 EOL janvier 2025)
+#   - actions/upload-artifact@v4 (v3 EOL janvier 2025, attention : v4 a un comportement
+#     différent — un seul artifact par nom)
+#   - actions/download-artifact@v4
+#   - Pour les releases : softprops/action-gh-release@v2 (actions/create-release est
+#     archivé depuis 2021)
+#
+# ⚠ Coût Windows runners : sur GitHub Actions, les minutes Windows comptent
+#   2× plus que les minutes Linux. Sur compte gratuit (2000 min/mois), cela
+#   donne environ 1000 minutes Windows réelles.
+
 name: Build and Deploy
 
 # Déclencher sur push vers main ou develop
@@ -513,38 +528,48 @@ jobs:
     steps:
     # Récupérer le code
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    # Installer Delphi (via cache ou installation)
-    # Note: Nécessite une licence
-    - name: Setup Delphi
+    # ⚠ Installer Delphi sur un runner GitHub cloud est un défi :
+    #   - L'installateur Delphi nécessite une licence (impossible à automatiser
+    #     proprement sur un runner public partagé).
+    #   - L'installation prend 30+ minutes — dépasse souvent les quotas free.
+    #   - Les fichiers d'installation Delphi ne sont pas redistribuables.
+    #
+    # ✓ Approche recommandée : utiliser un **self-hosted runner** GitHub Actions
+    #   sur une machine où Delphi est déjà installé (`runs-on: [self-hosted, windows, delphi]`).
+    #   Cf documentation GitHub : https://docs.github.com/actions/hosting-your-own-runners
+    #
+    # Alternative : Docker Windows containers avec Delphi pré-installé dans une
+    # image privée (image très volumineuse, plusieurs Go).
+    - name: Setup Delphi (placeholder — voir note ci-dessus)
       run: |
         # Script d'installation/configuration de Delphi
-        # À adapter selon votre méthode
+        # À adapter selon votre méthode (idéalement : pas d'installation, runner pré-équipé)
 
     # Compiler Win32
     - name: Build Win32
       run: |
-        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
         msbuild MonApplication.dproj /t:Rebuild /p:Config=Release /p:Platform=Win32
       shell: cmd
 
     # Compiler Win64
     - name: Build Win64
       run: |
-        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
         msbuild MonApplication.dproj /t:Rebuild /p:Config=Release /p:Platform=Win64
       shell: cmd
 
-    # Uploader les artifacts
+    # Uploader les artifacts (v4 : un nom unique par job)
     - name: Upload Win32 Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: MonApp-Win32
         path: Win32/Release/MonApplication.exe
 
     - name: Upload Win64 Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: MonApp-Win64
         path: Win64/Release/MonApplication.exe
@@ -557,17 +582,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: MonApp-Win64
 
     - name: Run Unit Tests
       run: |
         # Compiler et exécuter les tests DUnitX
-        call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+        call "C:\Program Files (x86)\Embarcadero\Studio\24.0\bin\rsvars.bat"
         msbuild Tests\TestProject.dproj /t:Build /p:Config=Release
         Tests\Win64\Release\TestProject.exe -xml:test-results.xml
       shell: cmd
@@ -586,10 +611,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Install Inno Setup
       run: choco install innosetup -y
@@ -603,11 +628,19 @@ jobs:
       env:
         CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       run: |
-        signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /t http://timestamp.digicert.com Output\MonApp_Setup.exe
+        rem ⚠ Commande SignTool moderne (cf section 17.4) :
+        rem   /fd sha256  : digest de la signature SHA-256
+        rem   /tr ... /td sha256 : timestamp RFC 3161 SHA-256
+        rem ⚠ Pour les certificats OV/EV délivrés depuis juin 2023 (token
+        rem   hardware), le .pfx n'existe plus. Utiliser un self-hosted
+        rem   runner avec le token branché, OU un HSM cloud (DigiCert
+        rem   KeyLocker, Azure Key Vault, AWS CloudHSM) via leur plugin
+        rem   SignTool dédié.
+        signtool sign /f Certificate.pfx /p %CERT_PASSWORD% /fd sha256 /tr http://timestamp.digicert.com /td sha256 Output\MonApp_Setup.exe
       shell: cmd
 
     - name: Upload Installer
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: MonApp-Installer
         path: Output/MonApp_Setup.exe
@@ -624,40 +657,60 @@ jobs:
 
     steps:
     - name: Download Installer
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: MonApp-Installer
 
-    - name: Deploy to Server
+    # ⚠ Setup SSH avant le scp : on doit MATÉRIALISER la clé secrète
+    #   dans un fichier temporaire, vérifier l'empreinte du serveur, etc.
+    #   Sinon `scp -i ssh_key` cherchera un fichier inexistant.
+    - name: Setup SSH
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
+        SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}  # `ssh-keyscan` pré-calculé
+      shell: bash
       run: |
-        # Upload via SCP ou FTP
-        scp -i ssh_key MonApp_Setup.exe user@www.monapp.com:/var/www/downloads/
+        mkdir -p ~/.ssh
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
 
+    - name: Deploy to Server
+      shell: bash
+      run: |
+        scp -i ~/.ssh/deploy_key \
+            MonApp_Setup.exe \
+            user@www.monapp.com:/var/www/downloads/
+
+    # ⚠ actions/create-release est archivé depuis 2021. Utiliser plutôt :
     - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
-        release_name: Release v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
         draft: false
         prerelease: false
+        files: MonApp_Setup.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Secrets GitHub
 
 Pour stocker les informations sensibles (mots de passe, clés SSH) :
 
-1. **Repository → Settings → Secrets and variables → Actions**
-2. **New repository secret**
+1. **Repository → Settings → Secrets and variables → Actions**.
+2. **New repository secret**.
 3. Ajouter :
-   - `CERT_PASSWORD` : Mot de passe du certificat
-   - `SSH_KEY` : Clé SSH pour le déploiement
-   - `DEPLOY_TOKEN` : Token d'authentification
+   - `CERT_PASSWORD` : mot de passe du certificat .pfx (legacy uniquement).
+   - `SSH_KEY` : **clé privée SSH** au format OpenSSH (commence par `-----BEGIN OPENSSH PRIVATE KEY-----`). Générer avec `ssh-keygen -t ed25519` et coller le contenu COMPLET.
+   - `SSH_KNOWN_HOSTS` : sortie de `ssh-keyscan -H www.monapp.com` exécuté **une fois manuellement** depuis une machine de confiance. Sans cela, le scp afficherait l'invite « Are you sure you want to continue connecting? » et planterait en CI (pas de TTY).
+   - `DEPLOY_TOKEN` : token d'authentification (le cas échéant).
 
-Les secrets sont chiffrés et jamais affichés dans les logs.
+Les secrets sont chiffrés au repos et **masqués dans les logs** (toute occurrence accidentelle est remplacée par `***`).
+
+> ⚠️ **Anti-pattern fréquent** : `ssh -o StrictHostKeyChecking=no ...` désactive la vérification du host key, **ouvrant la porte à une attaque MITM**. Toujours pré-remplir `known_hosts` plutôt que de désactiver la vérification.
 
 ## Exemple : Pipeline Azure DevOps pour Delphi
 
@@ -665,6 +718,16 @@ Les secrets sont chiffrés et jamais affichés dans les logs.
 
 ```yaml
 # Pipeline Azure pour Delphi
+# ⚠ Tâches Azure DevOps utilisées ici :
+#   - PublishBuildArtifacts@1 et DownloadBuildArtifacts@0 sont des tâches
+#     "Build Artifacts" (legacy) — toujours fonctionnelles en 2026 mais
+#     Microsoft recommande les tâches "Pipeline Artifacts" plus modernes :
+#       * PublishPipelineArtifact@1  (remplace PublishBuildArtifacts@1)
+#       * DownloadPipelineArtifact@2 (remplace DownloadBuildArtifacts@0)
+#   - Migrer vers les Pipeline Artifacts est plus rapide (téléchargements
+#     parallèles, déduplication) et offre une meilleure UX dans Azure DevOps.
+#   - MSBuild@1 reste la bonne tâche pour les projets Delphi (.dproj).
+
 trigger:
   branches:
     include:
@@ -678,7 +741,7 @@ variables:
   solution: '**/*.dproj'
   buildPlatform: 'Win32|Win64'
   buildConfiguration: 'Release'
-  delphiPath: 'C:\Program Files (x86)\Embarcadero\Studio\23.0'
+  delphiPath: 'C:\Program Files (x86)\Embarcadero\Studio\24.0'
 
 stages:
 - stage: Build
@@ -692,31 +755,34 @@ stages:
     - checkout: self
       clean: true
 
-    # Installer Delphi (ou utiliser agent pré-configuré)
-    - task: PowerShell@2
-      displayName: 'Setup Delphi Environment'
+    # ⚠ PIÈGE Azure DevOps : chaque task tourne dans un PROCESSUS séparé.
+    #   Un step « Setup Delphi Environment » qui appelle rsvars.bat ne
+    #   transmet PAS ses variables d'environnement aux tasks suivantes
+    #   (MSBuild@1, etc.). Deux approches qui MARCHENT :
+    #
+    #   1. Tout faire dans une SEULE task CMD (rsvars + msbuild ensemble) :
+    - task: CmdLine@2
+      displayName: 'Build Win32 (rsvars + msbuild même processus)'
       inputs:
-        targetType: 'inline'
         script: |
-          & "$(delphiPath)\bin\rsvars.bat"
+          call "$(delphiPath)\bin\rsvars.bat"
+          msbuild "$(solution)" /t:Rebuild /p:Config=$(buildConfiguration) /p:Platform=Win32
 
-    # Compiler Win32
-    - task: MSBuild@1
-      displayName: 'Build Win32'
+    - task: CmdLine@2
+      displayName: 'Build Win64 (rsvars + msbuild même processus)'
       inputs:
-        solution: '$(solution)'
-        platform: 'Win32'
-        configuration: '$(buildConfiguration)'
-        msbuildArguments: '/t:Rebuild'
+        script: |
+          call "$(delphiPath)\bin\rsvars.bat"
+          msbuild "$(solution)" /t:Rebuild /p:Config=$(buildConfiguration) /p:Platform=Win64
 
-    # Compiler Win64
-    - task: MSBuild@1
-      displayName: 'Build Win64'
-      inputs:
-        solution: '$(solution)'
-        platform: 'Win64'
-        configuration: '$(buildConfiguration)'
-        msbuildArguments: '/t:Rebuild'
+    #   2. (Alternative) Exporter les variables Delphi vers Azure DevOps
+    #      via `##vso[task.setvariable ...]` dans un premier step CMD,
+    #      puis utiliser MSBuild@1 ensuite. Plus complexe — non détaillé
+    #      ici.
+    #
+    # ⚠ NE PAS faire (cassé) :
+    #   - PowerShell@2 qui appelle rsvars.bat puis MSBuild@1 séparée.
+    #     Les env vars ne traverseraient pas la frontière de processus.
 
     # Publier les artifacts
     - task: PublishBuildArtifacts@1
@@ -781,13 +847,13 @@ stages:
         script: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" Setup\MonApp.iss
 
-    # Signer l'installateur
+    # Signer l'installateur (commande moderne 2026, cf section 17.4)
     - task: PowerShell@2
       displayName: 'Sign Installer'
       inputs:
         targetType: 'inline'
         script: |
-          signtool sign /f Certificate.pfx /p $(CertPassword) /t http://timestamp.digicert.com Output\MonApp_Setup.exe
+          signtool sign /f Certificate.pfx /p $(CertPassword) /fd sha256 /tr http://timestamp.digicert.com /td sha256 Output\MonApp_Setup.exe
 
     - task: PublishBuildArtifacts@1
       inputs:
@@ -940,7 +1006,7 @@ Documentez votre pipeline :
 ```yaml
 # Vérifier le chemin et le mettre en variable
 variables:
-  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\23.0"
+  DELPHI_PATH: "C:\\Program Files (x86)\\Embarcadero\\Studio\\24.0"
 
 script:
   - if not exist "%DELPHI_PATH%\\bin\\rsvars.bat" (
@@ -1103,14 +1169,25 @@ Objectif : Déploiement production avec surveillance
 
 ## Coûts du CI/CD
 
-### Coûts directs
+### Coûts directs (estimations 2026)
 
 | Service | Coût gratuit | Coût payant |
 |---------|--------------|-------------|
-| **GitLab CI** | Illimité (self-hosted) / 400 min/mois (cloud) | 10$/utilisateur/mois |
-| **GitHub Actions** | 2000 min/mois | 0.008$/min au-delà |
-| **Azure DevOps** | 1800 min/mois | 40$/agent parallèle/mois |
+| **GitLab CI** | 400 min/mois (compte Free, cloud) ou illimité (self-hosted) | ~29 $/utilisateur/mois (Premium) |
+| **GitHub Actions** | 2000 min/mois (Linux) — **les minutes Windows comptent 2×, les minutes macOS 10×** | ~0,008 $/min (Linux) au-delà |
+| **Azure DevOps** | 1800 min/mois | ~40 $/agent parallèle/mois |
 | **Jenkins** | Gratuit (self-hosted) | Coût serveur uniquement |
+
+> ⚠️ **Pour Delphi spécifiquement** : la compilation tourne sur des runners Windows. Sur GitHub Actions, prévoir que 2000 minutes brutes = **1000 minutes Windows effectives**. Un build complet d'une app moyenne (compile Win64 + tests + installateur) prend 5-15 minutes, soit ~70-200 builds/mois sur le tier gratuit. Ajouter Win32 en parallèle peut presque doubler ce temps si les builds ne sont pas parallélisés.
+
+### Self-hosted runners et signature 2026
+
+Avec l'obligation de **token hardware** pour les certificats Code Signing (cf section 17.4), la signature en CI/CD devient plus complexe :
+
+- **Option 1 — Self-hosted runner** : machine physique avec le token USB branché. Le runner exécute les jobs de signature. Avantage : utilise votre token existant. Inconvénient : machine dédiée à maintenir.
+- **Option 2 — HSM cloud** : services dédiés comme **DigiCert KeyLocker**, **Sectigo CodeSign HSM**, **SSL.com eSigner**, **Azure Key Vault** (avec certificat EV) ou **AWS CloudHSM**. Le HSM est accessible via API depuis n'importe quel runner cloud, généralement avec un plugin SignTool spécifique. Coût additionnel ~200-500 €/an mais ergonomie nettement supérieure pour le CI/CD.
+- **Option 3 — Solutions hybrides** : `jsign` (Java) ou plugin SignTool d'Azure Key Vault permettent de signer avec une clé HSM cloud sans dépendance physique. C'est une approche valide en 2026 pour les pipelines automatisés.
+- **Option 4 — Azure Artifact Signing (ex-Trusted Signing)** : **service signing-as-a-service** Microsoft, GA en 2025-2026, à **9,99 USD/mois** (5 000 signatures). Pas de certificat à gérer, pas de HSM à installer — Microsoft gère tout. Action GitHub Actions `azure/trusted-signing-action@v0` prête à l'emploi. **Recommandation 2026 pour les nouveaux projets** si vous êtes en USA/Canada/UE/UK. Voir section 17.4 pour le détail.
 
 ### Coûts indirects
 

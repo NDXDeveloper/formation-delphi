@@ -88,24 +88,29 @@ Un MSI est une base de données structurée contenant :
 
 ### Créer un MSI avec WiX Toolset
 
-**WiX** (Windows Installer XML) est l'outil gratuit et open source de Microsoft pour créer des MSI.
+**WiX** (Windows Installer XML) est l'outil gratuit et open source — historiquement publié par Microsoft, désormais géré par la **WiX Toolset Foundation** (organisation indépendante, projet open source sous licence MS-RL).
 
 #### Installation de WiX
 
-1. **Télécharger WiX** :
-   - Site : https://wixtoolset.org/
-   - Version recommandée : WiX v4 (ou v3 pour stabilité)
+> 💡 **Versions WiX en 2026** :  
+> - **WiX v3** (héritage) — toujours utilisé par d'anciens projets, mais en mode maintenance. Commandes : `candle.exe` (compilation) + `light.exe` (édition de liens).  
+> - **WiX v4** (2023) — refonte majeure : nouvelle commande unifiée `wix build`, nouveau schéma XML (namespace `http://wixtoolset.org/schemas/v4/wxs`), installation via dotnet (.NET 6+). Migration depuis v3 non triviale mais semi-automatisable.  
+> - **WiX v5** (juin 2024) — version stable largement déployée, requiert .NET 8 ou .NET 9.  
+> - **WiX v6** (2025) — version recommandée en 2026, compatible .NET 8/9/10.
 
-2. **Installer** :
-   - Exécutez le programme d'installation
-   - Suivez l'assistant
+1. **Prérequis** : **.NET 10 SDK** (LTS, sortie novembre 2025) recommandé en 2026, ou **.NET 8 SDK** (LTS, fin de support novembre 2026). Éviter .NET 9 (STS, fin de support mai 2026).
+
+2. **Installation de WiX v5/v6** (via dotnet) :
+   ```cmd
+   dotnet tool install --global wix
+   ```
 
 3. **Vérifier l'installation** :
    ```cmd
-   candle -?
-   light -?
+   wix --version
    ```
-   Si ces commandes fonctionnent, WiX est installé correctement.
+
+> 💡 **Si vous reprenez un projet existant en WiX v3** (avec `candle` / `light`), évaluez l'effort de migration vers v5/v6. Pour des projets simples, la conversion automatique via `wix convert` fonctionne ; pour des projets complexes avec extensions custom, l'effort peut être conséquent.
 
 #### Créer un MSI simple avec WiX
 
@@ -212,12 +217,27 @@ WiX utilise des fichiers XML pour définir l'installation.
 
 **Étape 2 : Compiler le MSI**
 
+> ⚠️ Le code XML montré plus haut utilise la syntaxe **WiX v3** (namespace `http://schemas.microsoft.com/wix/2006/wi`, élément racine `<Product>`). Pour **WiX v6** (recommandé en 2026) ou WiX v4/v5, la syntaxe diffère :  
+> - Namespace : `http://wixtoolset.org/schemas/v4/wxs`.  
+> - Élément racine `<Package>` (au lieu de `<Product>` qui devient implicite).  
+> - Tag `<Wix>` simplifié, plus de `<Fragment>` obligatoire pour des cas simples.  
+> - Commande unifiée `wix build` au lieu de `candle` + `light`.  
+>  
+> Pour migrer un projet WiX v3 existant : `wix convert <fichier.wxs>` fait une partie automatique du travail, mais une revue manuelle reste nécessaire pour les projets complexes (extensions personnalisées, custom actions). Voir https://wixtoolset.org pour la documentation.
+
+**Commande WiX v3 (héritage)** :
 ```cmd
 REM 1. Compiler le fichier WXS en WIXOBJ  
 candle Product.wxs  
 
 REM 2. Lier pour créer le MSI  
 light Product.wixobj -out MonApplication.msi  
+```
+
+**Commande WiX v5/v6 (recommandée en 2026)** :
+```cmd
+REM Commande unifiée : compilation + édition de liens en une seule étape  
+wix build Product.wxs -out MonApplication.msi  
 ```
 
 **Étape 3 : Tester l'installation**
@@ -240,10 +260,25 @@ msiexec /x MonApplication.msi
 Installez uniquement si certaines conditions sont remplies :
 
 ```xml
+<!-- ⚠ Les "propriétés WiX standard" (NETFRAMEWORK45, NETFRAMEWORK48, etc.)
+     n'existent QUE pour la branche historique .NET Framework (jusqu'à 4.8.1).
+     Il n'y a PAS de propriété `NETFRAMEWORK60` — .NET 6/7/8/9 (anciennement
+     .NET Core) est détecté différemment, par exemple via une recherche
+     de registre :
+       HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedhost
+     ou via les ARP/Uninstall keys.
+
+     Pour Delphi en code natif, vous n'avez généralement PAS besoin de .NET.
+     N'inclure une vérification que si votre app utilise du code .NET
+     (COM Interop, Hydra, etc.). -->
+
+<!-- Exemple : exiger .NET Framework 4.8 -->
+<PropertyRef Id="NETFRAMEWORK48" />
 <Feature Id="OptionalFeature" Title="Fonctionnalité optionnelle" Level="1">
   <Condition Level="0">
-    <!-- N'installe pas si .NET 6 n'est pas présent -->
-    <![CDATA[NETFRAMEWORK60 <> "#1"]]>
+    <!-- Niveau 0 = pas installé ; condition True => on garde Level=0.
+         Donc : si .NET Framework 4.8 ABSENT, on n'installe pas. -->
+    <![CDATA[NOT NETFRAMEWORK48]]>
   </Condition>
   <ComponentGroupRef Id="OptionalComponents" />
 </Feature>
@@ -424,7 +459,11 @@ Lors de l'installation du nouveau MSI, l'ancien est automatiquement désinstall�
 Pour des corrections mineures sans réinstallation complète :
 
 ```cmd
-REM Créer un patch MSP avec WiX  
+REM ⚠ `torch.exe` et `pyro.exe` sont des outils WiX v3 uniquement  
+REM   (supprimés en v4+). Sur WiX v5/v6, la création de patches MSP  
+REM   passe par `wix build` avec un projet *patch* dédié — la chaîne  
+REM   d'outils complète est documentée sur https://wixtoolset.org.  
+REM   Exemple WiX v3 (héritage) :  
 torch.exe v1.0.wixpdb v1.1.wixpdb -out diff.wixmst  
 pyro.exe diff.wixmst -out patch.msp  
 ```
@@ -439,19 +478,19 @@ Le **Microsoft Store** est la plateforme officielle de distribution d'applicatio
 
 **Avantages pour les développeurs** :
 
-1. **Visibilité** : Des millions d'utilisateurs Windows parcourent le Store
-2. **Confiance** : Les utilisateurs font confiance aux applications du Store
-3. **Mises à jour automatiques** : Gérées par Windows
-4. **Paiement intégré** : Microsoft gère les transactions
-5. **Pas de signature à gérer** : Microsoft signe votre application
+1. **Visibilité** : des millions d'utilisateurs Windows parcourent le Store.
+2. **Confiance** : les utilisateurs font confiance aux applications du Store.
+3. **Mises à jour automatiques** : gérées par Windows Update.
+4. **Paiement intégré** : Microsoft gère les transactions (commission 12 % non-jeu).
+5. **Re-signature par Microsoft** : votre package soumis est signé avec votre certificat (qui peut même être un certificat self-signed généré pour le Store), puis Microsoft re-signe avec sa propre chaîne de confiance avant distribution. **Vous n'avez donc PAS besoin d'un certificat OV/EV payant** pour publier sur le Store — c'est un avantage notable.
 
 **Avantages pour les utilisateurs** :
 
-1. **Installation simple** : Un clic, pas d'assistant complexe
-2. **Sécurité** : Applications validées par Microsoft
-3. **Mises à jour automatiques** : Toujours la dernière version
-4. **Désinstallation propre** : Suppression complète garantie
-5. **Sandboxing** : Applications isolées du système
+1. **Installation simple** : un clic, pas d'assistant complexe.
+2. **Sécurité** : applications validées par Microsoft (scan antimalware automatique).
+3. **Mises à jour automatiques** : toujours la dernière version.
+4. **Désinstallation propre** : suppression complète garantie.
+5. **Sandboxing partiel** : les apps UWP pures sont fortement isolées ; les apps **Win32 packagées** (cas Delphi avec `runFullTrust`) ont un sandboxing plus limité mais bénéficient quand même de la **virtualisation du registre** et du **dossier d'installation isolé** (`C:\Program Files\WindowsApps\<package>`).
 
 ### Types d'applications acceptées
 
@@ -470,8 +509,8 @@ Pour Delphi, vous distribuerez une **application Win32 packagée**.
 
 **Inscription** :
 - Site : https://developer.microsoft.com/store/register
-- **Coût** : 19$ par an (individuel) ou 99$ par an (entreprise)
-- **Processus** : Vérification d'identité (1-3 jours)
+- **Coût (depuis 2021)** : **19 USD une seule fois** (individuel) ou **99 USD une seule fois** (entreprise). Ce n'est PAS un abonnement annuel — la nouvelle politique tarifaire de Microsoft est en paiement unique à vie.
+- **Processus** : vérification d'identité (1-3 jours).
 
 #### 2. Application conforme
 
@@ -542,9 +581,9 @@ MonApp.msix
    - Possible : Machine actuelle (moins fiable)
 
 4. **Préparer l'ordinateur** :
-   - Fermer les applications en arrière-plan
-   - Désactiver l'antivirus temporairement
-   - L'outil vérifie que l'environnement est prêt
+   - Fermer les applications en arrière-plan.
+   - ⚠ **Ne PAS désactiver l'antivirus complètement** (mauvaise pratique de sécurité). Préférer **ajouter une exception** sur le dossier temporaire utilisé par MSIX Packaging Tool (`%LOCALAPPDATA%\Packages\Microsoft.MsixPackagingTool_*`). Sur Windows Defender : Paramètres → Confidentialité & sécurité → Sécurité Windows → Protection contre les virus → Gérer les paramètres → Exclusions.
+   - L'outil vérifie que l'environnement est prêt.
 
 5. **Sélectionner l'installateur** :
    - Parcourir vers votre `setup.exe` ou `.msi`
@@ -600,9 +639,12 @@ Pour plus de contrôle, créez le package manuellement.
   </Properties>
 
   <Dependencies>
+    <!-- MinVersion : Windows 10 1809 (build 17763) — version minimale supportant MSIX.
+         MaxVersionTested : Windows 11 24H2 (build 26100) en 2026.
+         Adaptez la build maxi à votre dernière version Windows testée. -->
     <TargetDeviceFamily Name="Windows.Desktop"
                         MinVersion="10.0.17763.0"
-                        MaxVersionTested="10.0.22621.0" />
+                        MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>
@@ -670,8 +712,11 @@ MonAppPackage/
 REM Créer le package MSIX  
 makeappx pack /d MonAppPackage /p MonApp.msix  
 
-REM Signer le package  
-signtool sign /fd SHA256 /a /f CertificatCodeSigning.pfx /p MotDePasse MonApp.msix  
+REM Signer le package (syntaxe moderne avec horodatage RFC 3161)  
+REM Depuis juin 2023, un certificat de code-signing standard exige  
+REM un token hardware ou un HSM cloud (cf. chap. 17.4).  
+signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 ^  
+              /a MonApp.msix
 ```
 
 **Étape 5 : Tester le package**
@@ -820,13 +865,13 @@ Jour 4 : 100% des utilisateurs
 
 | Critère | MSI | Microsoft Store |
 |---------|-----|-----------------|
-| **Coût** | Gratuit | 19-99$/an |
+| **Coût** | Gratuit | 19$/99$ **paiement unique** (depuis 2021) |
 | **Distribution** | Manuelle | Automatique via Store |
 | **Visibilité** | Dépend de vous | Store = millions d'utilisateurs |
 | **Installation** | Assistant classique | Un clic |
 | **Mises à jour** | Manuel (vous gérez) | Automatique (Windows Update) |
 | **Entreprises** | Excellent (GPO, SCCM) | Moyen (possible mais moins) |
-| **Paiements** | Vous gérez | Microsoft gère (commission 15-30%) |
+| **Paiements** | Vous gérez | Microsoft gère (commission **12 %** non-jeu, **30 %** Xbox) |
 | **Contrôle** | Total | Limité (soumis aux règles Store) |
 | **Sandboxing** | Non | Oui (isolation) |
 | **Certification** | Non requise | Obligatoire (1-3 jours) |
@@ -928,19 +973,22 @@ Pour le Store, votre application doit :
 
 #### 2. Application payante
 
-- Prix fixe (minimum 0,99$, max 999,99$)
-- Microsoft prend **15-30% de commission** :
-  - 15% si < 25 000$ de revenus
-  - 30% au-delà
-- Paiement mensuel des revenus
-- Support multi-devises automatique
+- Prix fixe (minimum 0,99 $, max 999,99 $).
+- **Commission Microsoft (politique actuelle 2026)** :
+  - **Applications non-jeu** : **12 %** (depuis juillet 2021, Microsoft a réduit de 30 % à 12 % pour aligner avec Steam).
+  - **Jeux** : **12 %** sur PC (Microsoft Store), **30 %** sur Xbox.
+  - **0 %** si vous utilisez votre propre système de paiement (depuis 2021, Microsoft autorise les développeurs à utiliser leur propre processeur de paiement pour les apps non-jeu, en gardant 100 % des revenus).
+- Paiement mensuel des revenus.
+- Support multi-devises automatique.
+
+> 💡 La politique tarifaire de Microsoft (12 % de commission, 0 % avec votre propre paiement) est **nettement plus avantageuse** que celle d'Apple/Google (15-30 %) — argument à considérer dans votre stratégie de distribution.
 
 #### 3. Abonnement
 
-- Paiement récurrent (mensuel, annuel)
-- Commission identique (15-30%)
-- Renouvellement automatique
-- Gestion des annulations par Microsoft
+- Paiement récurrent (mensuel, annuel).
+- Commission identique (**12 %** non-jeu).
+- Renouvellement automatique.
+- Gestion des annulations par Microsoft.
 
 #### 4. Essai gratuit
 
@@ -1004,12 +1052,18 @@ Le Partner Center fournit :
 
 ### MSI : "Erreur 2502" ou "Erreur 2503" lors de l'installation
 
-**Cause** : Permissions insuffisantes dans le dossier Temp
+**Cause** : Permissions insuffisantes (Windows Installer ne peut pas extraire dans `C:\Windows\Installer\` ou `%TEMP%`).
 
 **Solution** :
 ```cmd
-REM Lancer l'installation en admin  
-msiexec /i MonApp.msi /a  
+REM ⚠ /a fait un "Administrative install" (extraction réseau)  
+REM   et NE résout PAS l'erreur 2502/2503. Utiliser plutôt :  
+REM 1. Ouvrir cmd.exe EN TANT QU'ADMINISTRATEUR (clic droit → Exécuter  
+REM    en tant qu'administrateur), puis lancer :  
+msiexec /i C:\chemin\complet\MonApp.msi  
+REM  
+REM 2. OU corriger les permissions du dossier Temp :  
+REM    icacls %TEMP% /grant Users:F /T  
 ```
 
 ### MSI : Installation échoue silencieusement
@@ -1065,10 +1119,12 @@ REM Copier exactement le CN= dans le manifeste
 
 ### Documentation officielle
 
-- **WiX Toolset** : https://wixtoolset.org/documentation/
-- **MSI Reference** : https://docs.microsoft.com/windows/win32/msi/
-- **Partner Center** : https://docs.microsoft.com/windows/uwp/publish/
-- **MSIX** : https://docs.microsoft.com/windows/msix/
+- **WiX Toolset** : https://wixtoolset.org/docs/ (depuis WiX v4 ; l'ancien `/documentation/` redirige).
+- **MSI Reference** : https://learn.microsoft.com/windows/win32/msi/
+- **Partner Center** : https://learn.microsoft.com/windows/apps/publish/
+- **MSIX** : https://learn.microsoft.com/windows/msix/
+
+> 💡 Microsoft a migré `docs.microsoft.com` vers `learn.microsoft.com` en juillet 2022. Les anciennes URLs redirigent automatiquement mais les nouveaux liens utilisent le nouveau domaine.
 
 ### Outils recommandés
 
@@ -1099,11 +1155,11 @@ MSI et le Microsoft Store représentent deux approches complémentaires pour dis
 
 **Points clés à retenir** :
 
-1. **MSI** : Standard professionnel, WiX gratuit, déploiement entreprise
-2. **MSIX** : Format moderne, requis pour le Store, sandboxing
-3. **Store** : Visibilité, mises à jour auto, certification obligatoire (1-3 jours)
-4. **Coûts** : MSI gratuit, Store 19-99$/an + commission 15-30%
-5. **Les deux** : Vous pouvez distribuer via MSI ET Store simultanément
+1. **MSI** : Standard professionnel, WiX gratuit, déploiement entreprise.
+2. **MSIX** : Format moderne, requis pour le Store, sandboxing.
+3. **Store** : Visibilité, mises à jour auto, certification obligatoire (1-3 jours).
+4. **Coûts** : MSI gratuit, Store 19$/99$ **paiement unique** + commission **12 %** non-jeu (depuis 2021).
+5. **Les deux** : Vous pouvez distribuer via MSI ET Store simultanément.
 
 Avec ces deux options, vous pouvez choisir la meilleure stratégie de distribution pour votre application Delphi en fonction de votre public cible et de vos objectifs commerciaux. Dans la prochaine section, nous explorerons le déploiement continu (CI/CD) pour automatiser vos processus de build et de distribution.
 
