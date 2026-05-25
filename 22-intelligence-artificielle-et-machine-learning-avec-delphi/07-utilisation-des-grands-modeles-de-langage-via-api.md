@@ -56,78 +56,79 @@ Application : Analyse les données et fournit une explication détaillée
 
 ## Les principaux LLM disponibles
 
-### GPT-4 (OpenAI)
+> ⚠️ **Le marché des LLM évolue très vite.** Les noms de modèles, capacités et tarifs ci-dessous reflètent l'état général du marché 2025-2026 mais sont fournis à titre indicatif. Consultez systématiquement la documentation officielle de chaque fournisseur avant de figer un choix de modèle ou un budget.
+
+### Famille GPT (OpenAI)
 
 **Caractéristiques** :
 - Le plus connu et largement utilisé
-- Excellent pour la plupart des tâches
-- GPT-4 Turbo : version plus rapide et moins chère
-- GPT-4 Vision : analyse d'images
+- Famille de modèles : `gpt-4o`, `gpt-4o-mini`, série `gpt-5*` (selon disponibilités)
+- Vision multimodale **native** (intégrée à GPT-4o, plus de modèle vision séparé)
+- `gpt-3.5-turbo` reste accessible mais legacy
 
 **Points forts** :
 - Qualité générale exceptionnelle
 - Suivi d'instructions précis
 - Raisonnement avancé
 - Large adoption et documentation
+- Outils d'agent (function calling, file search, code interpreter)
 
 **Limitations** :
-- Coûteux pour gros volumes
-- Connaissances limitées à sa date d'entraînement (sauf avec tools)
+- Coûteux pour gros volumes (privilégier `mini`)
+- Connaissances limitées à la date de coupure d'entraînement (sauf web search/tools)
 - Parfois verbeux
 
-**Tarification** :
-- GPT-4 : ~60$ / million tokens
-- GPT-4 Turbo : ~10-30$ / million tokens
-- GPT-3.5 Turbo : ~1-2$ / million tokens
+**Tarification** (ordres de grandeur 2025-2026) :
+- `gpt-4o` : ~2,50$ in / ~10$ out par million de tokens
+- `gpt-4o-mini` : ~0,15$ in / ~0,60$ out par million de tokens
+- Documentation tarifaire à jour : [platform.openai.com/docs/pricing](https://platform.openai.com/docs/pricing)
 
 ### Claude (Anthropic)
 
 **Caractéristiques** :
-- Concurrent direct de GPT-4
-- Fenêtre de contexte massive (200K tokens)
+- Concurrent direct des modèles GPT
+- Fenêtre de contexte massive : 200K tokens en standard, **1M tokens** sur les modèles Claude 4.x récents
 - Focus sur la sécurité et l'éthique
+- Famille Claude 4.x : `claude-opus-4` (haut de gamme), `claude-sonnet-4` (équilibré), `claude-haiku-4` (rapide/économique)
 
 **Points forts** :
-- Excellent pour documents longs
+- Excellent pour documents longs (très grands contextes)
 - Refus approprié des requêtes inappropriées
-- Très bon en raisonnement
+- Très bon en raisonnement et génération de code
 - Conversations naturelles
 
 **Limitations** :
-- Moins connu que GPT
-- API parfois en liste d'attente
+- API tarifée (pas de tier gratuit étendu)
+- Disponibilité régionale variable
 
-**Tarification** :
-- Claude 3 Opus : ~15-75$ / million tokens
-- Claude 3 Sonnet : ~3-15$ / million tokens
-- Claude 3 Haiku : ~0.25-1.25$ / million tokens
+**Tarification** (ordres de grandeur 2025-2026) :
+- Claude Opus 4 : tarif premium (~15$ in / ~75$ out par million de tokens)
+- Claude Sonnet 4 : intermédiaire (~3$ in / ~15$ out)
+- Claude Haiku 4 : économique (sub-1$ in / quelques $ out)
+- Documentation à jour : [docs.anthropic.com/claude/docs](https://docs.anthropic.com/)
 
 ### Gemini (Google)
 
 **Caractéristiques** :
 - LLM de Google
 - Multimodal natif (texte, image, audio, vidéo)
-- Intégration avec l'écosystème Google
+- Intégration avec l'écosystème Google Cloud (Vertex AI)
 
 **Points forts** :
-- Gratuit avec quotas généreux
-- Multimodalité native
-- Performances compétitives
+- Niveau gratuit avec quotas généreux (Gemini API)
+- Multimodalité native (vidéo notamment)
+- Performances compétitives sur de nombreux benchmarks
 
 **Limitations** :
-- Plus récent, moins mature que GPT
-- API en évolution
+- API en évolution (changements de noms de modèles fréquents)
+- Disponibilité régionale variable selon les modèles
 
-**Tarification** :
-- Gemini Pro : Gratuit jusqu'à 60 requêtes/min
-- Au-delà : ~0.50$ / million tokens
-
-### Llama 3 (Meta)
+### Llama (Meta)
 
 **Caractéristiques** :
 - Open source (poids du modèle publics)
-- Peut être hébergé localement
-- Plusieurs tailles (8B, 70B paramètres)
+- Peut être hébergé localement ou via fournisseurs tiers
+- Plusieurs tailles (de quelques milliards à plusieurs centaines de milliards de paramètres)
 
 **Points forts** :
 - Gratuit si auto-hébergé
@@ -136,28 +137,25 @@ Application : Analyse les données et fournit une explication détaillée
 - Confidentialité maximale
 
 **Limitations** :
-- Nécessite infrastructure GPU
+- Nécessite infrastructure GPU (ou utilisation via fournisseurs hébergés)
 - Complexité de déploiement
-- Qualité inférieure aux modèles propriétaires
+- Qualité variable selon la taille du modèle
 
 **Utilisation via API** :
-- Plusieurs fournisseurs offrent Llama hébergé (Together AI, Replicate)
+- Plusieurs fournisseurs offrent Llama hébergé (Together AI, Groq, Replicate, Fireworks…)
 
 ### Mistral AI
 
 **Caractéristiques** :
 - Startup française
-- Modèles performants et compacts
-- Open source et API
+- Modèles performants et compacts (Mistral, Mixtral, Codestral pour le code)
+- Modèles open weight + API SaaS
 
 **Points forts** :
 - Excellent rapport qualité/prix
-- Modèles européens (RGPD)
+- Modèles européens (RGPD, souveraineté)
 - Performants sur français
-
-**Tarification** :
-- Mistral Large : ~8$ / million tokens
-- Mistral Medium : ~2.7$ / million tokens
+- Modèles spécialisés (code, multilingue, …)
 
 ## Concepts fondamentaux des LLM
 
@@ -187,15 +185,25 @@ Un token est une unité de texte que le modèle traite. Ce n'est pas exactement 
 **Calculer les tokens** :
 
 ```pascal
-// Estimation approximative (pas exacte)
-function EstimerNombreTokens(const Texte: string): Integer;  
-begin  
-  // Règle empirique : 1 token ≈ 4 caractères
-  Result := Round(Length(Texte) / 4);
+// Estimation approximative (pas exacte).
+// Pour le français, prévoir une marge supplémentaire : les accents et la
+// morphologie produisent en moyenne plus de tokens par caractère qu'en anglais.
+function EstimerNombreTokens(const Texte: string; FrancaisOuLatin: Boolean = True): Integer;  
+const  
+  CARS_PAR_TOKEN_EN = 4;  // ~4 caractères/token en anglais
+  CARS_PAR_TOKEN_FR = 3;  // ~3 caractères/token en français (plus pessimiste)
+var
+  CarsParToken: Integer;
+begin
+  if FrancaisOuLatin then
+    CarsParToken := CARS_PAR_TOKEN_FR
+  else
+    CarsParToken := CARS_PAR_TOKEN_EN;
+  Result := Round(Length(Texte) / CarsParToken);
 end;
 ```
 
-Pour un calcul exact, utilisez des API de tokenisation (tiktoken pour OpenAI).
+> ℹ️ **Pour un calcul exact** : utilisez la bibliothèque de tokenisation officielle du fournisseur — par exemple `tiktoken` (OpenAI) ou `anthropic.tokenizers` (Anthropic). En Delphi, vous pouvez les appeler via Python4Delphi, ou exposer un micro-service Python local qui retourne le nombre exact de tokens.
 
 ### Prompts
 
@@ -263,10 +271,11 @@ RequestBody.AddPair('temperature', TJSONNumber.Create(1.0)); // Créatif
 
 **Fenêtre de contexte** : Le nombre maximum de tokens que le modèle peut "voir" à la fois (prompt + réponse).
 
-**Exemples** :
-- GPT-3.5 Turbo : 16K tokens (~12 000 mots)
-- GPT-4 Turbo : 128K tokens (~96 000 mots)
-- Claude 3 : 200K tokens (~150 000 mots)
+**Exemples (ordres de grandeur)** :
+- `gpt-3.5-turbo` : 16K tokens (~12 000 mots)
+- `gpt-4o` / `gpt-4o-mini` : 128K tokens (~96 000 mots)
+- Claude 4.x : 200K tokens en standard, jusqu'à **1M tokens** (~750 000 mots) sur certains modèles récents
+- Gemini 1.5 Pro / 2.0 : jusqu'à 1M-2M tokens selon le modèle
 
 **Importance** :
 - Détermine la longueur des documents analysables
@@ -277,7 +286,9 @@ RequestBody.AddPair('temperature', TJSONNumber.Create(1.0)); // Créatif
 
 ```pascal
 const
-  MAX_CONTEXT_TOKENS = 16000; // GPT-3.5 Turbo
+  // Limites types pour `gpt-4o-mini` / `gpt-4o` (128K). Adapter selon le modèle
+  // utilisé : Claude 4 → 200K-1M, Gemini → jusqu'à 2M, gpt-3.5-turbo → 16K, etc.
+  MAX_CONTEXT_TOKENS = 128000;
   MAX_OUTPUT_TOKENS = 4000;
 
 function VerifierLimiteContexte(const Prompt: string): Boolean;  
@@ -321,6 +332,13 @@ Les LLM distinguent différents types de messages :
 ```
 
 ## Intégration pratique avec Delphi
+
+> 💡 **Solutions officielles disponibles** : Avant d'écrire un wrapper personnalisé, considérez les options officielles :  
+> - **SmartCore AI Component Pack** (officiel Embarcadero via GetIt) — multi-providers (OpenAI, Claude, Gemini, Ollama) avec `TAIConnection`, `TAIChatRequest`, etc. Voir section 22.8.  
+> - **OpenAI for Delphi** (communautaire via GetIt) — wrapper spécifique OpenAI  
+> - **Anthropic API wrapper for Delphi** (communautaire via GetIt) — wrapper spécifique Claude avec vision et MCP  
+>  
+> Le code ci-dessous reste précieux pour **comprendre le mécanisme** des APIs LLM et pour créer des wrappers personnalisés répondant à des besoins métier spécifiques.
 
 ### Classe wrapper universelle pour LLM
 
@@ -429,14 +447,30 @@ var
   Messages: TJSONArray;
   Msg: TLLMMessage;
   MsgObj: TJSONObject;
+  SystemPrompt: string;
+  MessagesAjouteAResult: Boolean;
 begin
   Result := TJSONObject.Create;
   Messages := TJSONArray.Create;
+  MessagesAjouteAResult := False;
 
   try
-    // Ajouter tous les messages
+    // ⚠️ L'API Anthropic Claude exige que les messages 'system' soient passés
+    // dans un paramètre TOP-LEVEL `system`, PAS dans le tableau messages
+    // (sinon erreur : "system role not allowed in messages"). On extrait donc
+    // le system prompt et on l'ajoute séparément pour Anthropic.
+    SystemPrompt := '';
     for Msg in FMessages do
     begin
+      if (FConfig.Provider = lpAnthropic) and (Msg.Role = 'system') then
+      begin
+        // Pour Anthropic : concaténer les system prompts dans une variable
+        if SystemPrompt <> '' then
+          SystemPrompt := SystemPrompt + #13#10;
+        SystemPrompt := SystemPrompt + Msg.Content;
+        Continue;
+      end;
+
       MsgObj := TJSONObject.Create;
       MsgObj.AddPair('role', Msg.Role);
       MsgObj.AddPair('content', Msg.Content);
@@ -449,43 +483,68 @@ begin
       begin
         Result.AddPair('model', FConfig.Model);
         Result.AddPair('messages', Messages);
+        MessagesAjouteAResult := True;
         Result.AddPair('temperature', TJSONNumber.Create(FConfig.Temperature));
+        // ℹ️ `max_tokens` reste accepté par `gpt-4o*` et `gpt-3.5-turbo`.
+        //    Sur les modèles GPT-5 et les modèles de raisonnement (`o1`, `o3`),
+        //    OpenAI exige désormais `max_completion_tokens` à la place.
         Result.AddPair('max_tokens', TJSONNumber.Create(FConfig.MaxTokens));
       end;
 
       lpAnthropic:
       begin
         Result.AddPair('model', FConfig.Model);
+        if SystemPrompt <> '' then
+          Result.AddPair('system', SystemPrompt);
         Result.AddPair('messages', Messages);
+        MessagesAjouteAResult := True;
         Result.AddPair('max_tokens', TJSONNumber.Create(FConfig.MaxTokens));
         Result.AddPair('temperature', TJSONNumber.Create(FConfig.Temperature));
       end;
 
       lpGoogle:
       begin
-        // Google Gemini a une structure différente
-        // Adapté selon leur API
+        // Google Gemini : structure différente, non implémentée ici
+        // (voir https://ai.google.dev/api/generate-content pour les détails)
+        raise ENotImplemented.Create(
+          'Provider Google : structure de requête Gemini non implémentée dans cet exemple');
       end;
     end;
   except
+    // ⚠️ Si on n'a pas encore transféré Messages à Result (cas Google ou
+    // exception précoce), il faut le libérer manuellement.
+    if not MessagesAjouteAResult then
+      Messages.Free;
     Result.Free;
-    Messages.Free;
     raise;
   end;
 end;
 
 function TLLMClient.ExtractResponse(const JSON: TJSONObject): string;  
-begin  
+var  
+  Path: string;
+  V: TJSONValue;
+begin
+  // ⚠️ Important : `TJSONObject.GetValue<T>(Name)` ne supporte PAS les paths
+  // dotted (il cherche une clé exactement nommée `choices[0]...`). C'est la
+  // méthode `FindValue(Path)` qui implémente la spécification JSONPath
+  // (`root.child`, `array[0]`, etc.). On l'utilise systématiquement ici.
   case FConfig.Provider of
     lpOpenAI, lpMistral:
-      Result := JSON.GetValue<string>('choices[0].message.content');
-
+      Path := 'choices[0].message.content';
     lpAnthropic:
-      Result := JSON.GetValue<string>('content[0].text');
-
+      Path := 'content[0].text';
     lpGoogle:
-      Result := JSON.GetValue<string>('candidates[0].content.parts[0].text');
+      Path := 'candidates[0].content.parts[0].text';
+  else
+    Exit('');
   end;
+
+  V := JSON.FindValue(Path);
+  if Assigned(V) then
+    Result := V.Value
+  else
+    Result := ''; // Format de réponse inattendu
 end;
 
 function TLLMClient.SendRequest: string;  
@@ -510,6 +569,10 @@ begin
       FRESTRequest.Resource := 'v1/messages';
       FRESTRequest.AddParameter('x-api-key', FConfig.APIKey,
         pkHTTPHEADER, [poDoNotEncode]);
+      // ℹ️ `2023-06-01` reste la version stable et conseillée pour la majorité
+      //    des intégrations (toujours valide en 2026). Anthropic publie
+      //    régulièrement de nouvelles versions ; voir la doc officielle :
+      //    https://docs.anthropic.com/en/api/versioning
       FRESTRequest.AddParameter('anthropic-version', '2023-06-01',
         pkHTTPHEADER, [poDoNotEncode]);
       FRESTRequest.AddParameter('content-type', 'application/json',
@@ -525,7 +588,13 @@ begin
     FRESTRequest.Execute;
 
     if FRESTResponse.StatusCode = 200 then
-      Result := ExtractResponse(FRESTResponse.JSONValue as TJSONObject)
+    begin
+      // ⚠️ Garde nil : si l'API renvoie un 200 mais avec un body non-JSON
+      //    (rare mais possible via proxy/middleware), JSONValue est nil.
+      if not Assigned(FRESTResponse.JSONValue) then
+        raise Exception.Create('Réponse API : JSON invalide ou body vide');
+      Result := ExtractResponse(FRESTResponse.JSONValue as TJSONObject);
+    end
     else
       raise Exception.CreateFmt('Erreur API: %d - %s',
         [FRESTResponse.StatusCode, FRESTResponse.Content]);
@@ -537,7 +606,17 @@ end;
 function TLLMClient.Chat(const UserMessage: string): string;  
 begin  
   AddMessage('user', UserMessage);
-  Result := SendRequest;
+  try
+    Result := SendRequest;
+  except
+    // ⚠️ Si SendRequest échoue, retirer le message 'user' ajouté pour ne pas
+    //    polluer l'historique avec un message orphelin sans réponse assistant
+    //    (l'API renverrait alors une erreur "messages must alternate" au
+    //    prochain appel).
+    if (FMessages.Count > 0) and (FMessages.Last.Role = 'user') then
+      FMessages.Delete(FMessages.Count - 1);
+    raise;
+  end;
   AddMessage('assistant', Result);
 end;
 ```
@@ -550,8 +629,8 @@ var
   Config: TLLMConfig;
 begin
   Config.Provider := lpOpenAI;
-  Config.APIKey := 'votre-clé-api';
-  Config.Model := 'gpt-3.5-turbo';
+  Config.APIKey := 'votre-clé-api'; // ⚠️ En production : lire depuis configuration sécurisée
+  Config.Model := 'gpt-4o-mini'; // ou 'gpt-4o' / 'claude-haiku-4' / 'mistral-large-latest'
   Config.Temperature := 0.7;
   Config.MaxTokens := 1000;
 
@@ -565,12 +644,24 @@ end;
 
 procedure TFormChat.BtnEnvoyerClick(Sender: TObject);  
 var  
-  Reponse: string;
+  UserText: string;
 begin
   if EditMessage.Text.Trim.IsEmpty then Exit;
 
-  // Afficher message utilisateur
-  AjouterMessageChat('Vous', EditMessage.Text);
+  // ⚠️ Lire EditMessage.Text dans le thread principal AVANT TTask.Run.
+  //    Accéder à un contrôle VCL/FMX depuis un thread secondaire n'est pas
+  //    thread-safe et peut produire des comportements indéterminés.
+  UserText := EditMessage.Text;
+
+  // Afficher message utilisateur et vider le champ tout de suite côté UI
+  AjouterMessageChat('Vous', UserText);
+  EditMessage.Clear;
+
+  // ⚠️ Désactiver le bouton AVANT de lancer la tâche : sans cela, l'utilisateur
+  //    pourrait cliquer plusieurs fois et déclencher plusieurs `FLLMClient.Chat`
+  //    en parallèle. TLLMClient n'est pas thread-safe (Messages et FRESTRequest
+  //    partagés) → corruption de l'historique de conversation et de la requête.
+  BtnEnvoyer.Enabled := False;
 
   // Traitement asynchrone
   TTask.Run(procedure
@@ -578,19 +669,25 @@ begin
     Response: string;
   begin
     try
-      Response := FLLMClient.Chat(EditMessage.Text);
+      Response := FLLMClient.Chat(UserText);
 
       TThread.Synchronize(nil, procedure
       begin
         AjouterMessageChat('Assistant', Response);
-        EditMessage.Clear;
+        BtnEnvoyer.Enabled := True; // Réactiver après succès
       end);
     except
       on E: Exception do
+      begin
+        // Capturer le message AVANT Synchronize pour éviter de référencer E
+        // depuis le thread principal (E n'existe plus après le `on E:` parent).
+        var ErrMsg := E.Message;
         TThread.Synchronize(nil, procedure
         begin
-          ShowMessage('Erreur: ' + E.Message);
+          ShowMessage('Erreur: ' + ErrMsg);
+          BtnEnvoyer.Enabled := True; // Réactiver aussi en cas d'erreur
         end);
+      end;
     end;
   end);
 end;
@@ -662,6 +759,8 @@ end;
 
 Demander une sortie formatée (JSON, XML, etc.).
 
+> 💡 **Astuce 2026** : OpenAI propose un mode **JSON Mode** (`response_format: { type: "json_object" }`) et même un mode **Structured Outputs** (`response_format: { type: "json_schema", json_schema: {...} }`) qui **garantit** un JSON valide conforme à un schéma. Anthropic Claude propose un équivalent via le système de tools. Ces modes éliminent la plupart des erreurs de parsing JSON.
+
 ```pascal
 const
   PROMPT_JSON =
@@ -681,8 +780,15 @@ var
 begin
   Reponse := LLM.Chat(Format(PROMPT_JSON, [Texte]));
 
-  // Parser le JSON retourné
+  // ⚠️ Le LLM enrobe souvent le JSON de texte explicatif ou de blocs ```json :
+  // on extrait d'abord la portion utile, puis on parse.
+  Reponse := ExtraireJSON(Reponse); // Définie plus bas (cas d'usage extracteur)
+
+  // Parser le JSON retourné. Si ParseJSONValue échoue (JSON malformé) ou si
+  // le résultat n'est pas un objet (ex. tableau), le cast renvoie nil.
   Result := TJSONObject.ParseJSONValue(Reponse) as TJSONObject;
+  if not Assigned(Result) then
+    raise Exception.Create('Le LLM n''a pas retourné un JSON valide.');
 end;
 ```
 
@@ -794,7 +900,7 @@ var
   Prompt: string;
 begin
   Prompt :=
-    'Corrige ce email (orthographe, grammaire, style professionnel).'#13#10 +
+    'Corrige cet email (orthographe, grammaire, style professionnel).'#13#10 +
     'Retourne uniquement la version corrigée.'#13#10 +
     #13#10 +
     Email;
@@ -831,15 +937,43 @@ begin
   // (le LLM peut ajouter du texte autour du JSON)
   Reponse := ExtraireJSON(Reponse);
 
+  // ⚠️ Le cast `as TJSONObject` renvoie nil si ParseJSONValue échoue ou si la
+  // valeur n'est pas un objet (ex. tableau). On lève une exception explicite
+  // plutôt que de retourner nil silencieusement.
   Result := TJSONObject.ParseJSONValue(Reponse) as TJSONObject;
+  if not Assigned(Result) then
+    raise Exception.Create(
+      'Le LLM n''a pas retourné un JSON d''objet valide pour la facture.');
 end;
 
 function ExtraireJSON(const Texte: string): string;  
 var  
-  StartPos, EndPos: Integer;
+  StartObj, StartArr, StartPos, EndPos: Integer;
 begin
-  StartPos := Pos('{', Texte);
-  EndPos := LastDelimiter('}', Texte);
+  // ⚠️ Cette fonction extrait soit un objet `{...}` soit un tableau `[...]`
+  //    selon ce qui apparaît en premier. Pour des structures plus complexes
+  //    (JSON imbriqué dans du markdown), envisagez une regex ou la
+  //    fonctionnalité "JSON Mode" du LLM (response_format).
+  StartObj := Pos('{', Texte);
+  StartArr := Pos('[', Texte);
+
+  if (StartObj > 0) and ((StartArr = 0) or (StartObj < StartArr)) then
+  begin
+    // Objet : extraire de { à la dernière }
+    StartPos := StartObj;
+    EndPos := LastDelimiter('}', Texte);
+  end
+  else if StartArr > 0 then
+  begin
+    // Tableau : extraire de [ à la dernière ]
+    StartPos := StartArr;
+    EndPos := LastDelimiter(']', Texte);
+  end
+  else
+  begin
+    Result := Texte;
+    Exit;
+  end;
 
   if (StartPos > 0) and (EndPos > StartPos) then
     Result := Copy(Texte, StartPos, EndPos - StartPos + 1)
@@ -876,6 +1010,47 @@ begin
   Result := Trim(Result);
 end;
 
+// ⚠️⚠️⚠️ AVERTISSEMENT SÉCURITÉ CRITIQUE ⚠️⚠️⚠️
+//
+// Exécuter une requête SQL générée par un LLM est EXTRÊMEMENT DANGEREUX en
+// production. Le LLM peut :
+//   - Halluciner et générer `DROP TABLE Clients;` ou `DELETE FROM ...`
+//   - Être manipulé par injection de prompt dans la demande utilisateur
+//   - Ignorer les contraintes métier que vous n'avez pas explicitement listées
+//
+// Mesures de protection obligatoires en production :
+//   1. Utiliser un compte BD en LECTURE SEULE pour les requêtes générées
+//   2. Whitelist : autoriser uniquement SELECT, refuser tout DDL/DML
+//   3. Parser le SQL côté serveur et rejeter les mots-clés interdits
+//   4. Limiter aux tables explicitement listées dans le schéma fourni
+//   5. Toujours afficher la requête à l'utilisateur AVANT exécution
+//   6. Logger toutes les exécutions pour audit
+//
+// L'exemple ci-dessous est PÉDAGOGIQUE et n'inclut pas ces protections.
+
+function EstSQLSeulementLecture(const SQL: string): Boolean;  
+var  
+  Normalized: string;
+begin
+  // Vérification minimale : on n'accepte que les SELECT. Cette fonction est un
+  // garde-fou supplémentaire, PAS une protection complète (parser SQL recommandé).
+  Normalized := UpperCase(Trim(SQL));
+  // On enlève les commentaires SQL avant test (le LLM peut camoufler du DML)
+  Normalized := TRegEx.Replace(Normalized, '--[^\r\n]*', '');
+  Normalized := TRegEx.Replace(Normalized, '/\*.*?\*/', '', [roSingleLine]);
+  Normalized := Trim(Normalized);
+
+  Result := Normalized.StartsWith('SELECT')
+        and not Normalized.Contains('DROP ')
+        and not Normalized.Contains('DELETE ')
+        and not Normalized.Contains('UPDATE ')
+        and not Normalized.Contains('INSERT ')
+        and not Normalized.Contains('ALTER ')
+        and not Normalized.Contains('TRUNCATE ')
+        and not Normalized.Contains('CREATE ')
+        and not Normalized.Contains('EXEC ');
+end;
+
 // Utilisation
 procedure TFormMain.BtnGenererSQLClick(Sender: TObject);  
 var  
@@ -891,9 +1066,16 @@ begin
   SQL := GenererRequeteSQL(DemandeNaturelle, Schema);
   MemoSQL.Text := SQL;
 
-  // Option: demander confirmation avant exécution
+  // Garde-fou : refuser toute requête qui n'est pas un SELECT pur
+  if not EstSQLSeulementLecture(SQL) then
+  begin
+    ShowMessage('⚠️ Requête refusée : seules les requêtes SELECT sont autorisées.');
+    Exit;
+  end;
+
+  // Confirmation utilisateur explicite avant exécution (sur compte BD lecture seule)
   if MessageDlg('Exécuter cette requête ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    ExecuterRequete(SQL);
+    ExecuterRequete(SQL); // ⚠️ Utiliser une connexion BD en lecture seule
 end;
 ```
 
@@ -984,28 +1166,51 @@ end;
 // Utilisation dans un exception handler
 procedure TFormMain.ApplicationExceptionHandler(Sender: TObject; E: Exception);  
 var  
-  Diagnostic: string;
+  ErrMessage, ErrStackTrace: string;
 begin
   // Logger l'erreur normalement
   LogError(E);
+
+  // ⚠️ Capturer Message et StackTrace AVANT TTask.Run : l'objet E sera
+  // libéré dès que ce handler retourne. Capturer E directement dans la
+  // closure produirait une référence dangling consultée en arrière-plan.
+  ErrMessage := E.Message;
+  ErrStackTrace := E.StackTrace;
 
   // Demander diagnostic à l'IA (en arrière-plan)
   TTask.Run(procedure
   var
     Diag: string;
+    DiagErrMsg: string;
   begin
-    Diag := DiagnostiquerErreur(E.Message, E.StackTrace);
+    // ⚠️ Encapsuler dans try/except : si l'API IA est indisponible, l'erreur
+    //    ne doit pas être silencieusement perdue (mais ne doit pas non plus
+    //    interrompre l'affichage de l'erreur principale via ShowMessage).
+    try
+      Diag := DiagnostiquerErreur(ErrMessage, ErrStackTrace);
 
-    TThread.Synchronize(nil, procedure
-    begin
-      // Afficher dans un panneau d'aide
-      PanelDiagnostic.Visible := True;
-      MemoDiagnostic.Text := Diag;
-    end);
+      TThread.Synchronize(nil, procedure
+      begin
+        // Afficher dans un panneau d'aide
+        PanelDiagnostic.Visible := True;
+        MemoDiagnostic.Text := Diag;
+      end);
+    except
+      on E: Exception do
+      begin
+        DiagErrMsg := E.Message;
+        TThread.Queue(nil, procedure
+        begin
+          // L'erreur principale a déjà été montrée — ici on log juste
+          // l'échec du diagnostic IA.
+          LogError('Diagnostic IA indisponible : ' + DiagErrMsg);
+        end);
+      end;
+    end;
   end);
 
   // Afficher l'erreur à l'utilisateur
-  ShowMessage(E.Message);
+  ShowMessage(ErrMessage);
 end;
 ```
 
@@ -1033,6 +1238,20 @@ type
     procedure ChargerConversation(const Fichier: string);
   end;
 
+constructor TConversationManager.Create(const LLMClient: TLLMClient;
+  MaxMessages: Integer; MaxTokens: Integer);
+begin
+  inherited Create;
+  FLLM := LLMClient;            // ownership conservé par l'appelant
+  FMaxMessages := MaxMessages;
+  FMaxTokens := MaxTokens;
+end;
+
+procedure TConversationManager.ReinitialiserConversation;  
+begin  
+  FLLM.ClearMessages;
+end;
+
 function TConversationManager.EstimerTokensConversation: Integer;  
 var  
   Msg: TLLMMessage;
@@ -1048,16 +1267,30 @@ end;
 procedure TConversationManager.TronquerConversation;  
 var  
   TokensActuels: Integer;
+  I: Integer;
 begin
   TokensActuels := EstimerTokensConversation;
 
-  // Si dépassement, supprimer les anciens messages (sauf system)
-  while (TokensActuels > FMaxTokens) and (FLLM.Messages.Count > 2) do
+  // Si dépassement, supprimer les plus anciens messages non-system.
+  // ⚠️ La version naïve `while ... do if Role<>'system' then Delete(1)`
+  // boucle INFINIMENT si Messages[1] est aussi un message system : la
+  // condition reste vraie mais aucun message n'est supprimé.
+  // On cherche donc le PREMIER index non-system à supprimer.
+  while (TokensActuels > FMaxTokens) and (FLLM.Messages.Count > 1) do
   begin
-    // Supprimer le 2ème message (1er après system)
-    if FLLM.Messages[1].Role <> 'system' then
-      FLLM.Messages.Delete(1);
+    // Trouver le premier message non-system
+    I := -1;
+    for var J := 0 to FLLM.Messages.Count - 1 do
+      if FLLM.Messages[J].Role <> 'system' then
+      begin
+        I := J;
+        Break;
+      end;
 
+    if I < 0 then
+      Break; // Plus que des messages system : on ne peut plus tronquer
+
+    FLLM.Messages.Delete(I);
     TokensActuels := EstimerTokensConversation;
   end;
 end;
@@ -1089,12 +1322,17 @@ begin
       JSON.AddElement(MsgObj);
     end;
 
+    // ⚠️ Pattern try/finally imbriqué : si TStreamWriter.Create ou Writer.Free
+    // lèvent une exception, on doit garantir la libération de FileStream.
     FileStream := TFileStream.Create(Fichier, fmCreate);
-    Writer := TStreamWriter.Create(FileStream);
     try
-      Writer.Write(JSON.ToString);
+      Writer := TStreamWriter.Create(FileStream);
+      try
+        Writer.Write(JSON.ToString);
+      finally
+        Writer.Free;
+      end;
     finally
-      Writer.Free;
       FileStream.Free;
     end;
   finally
@@ -1152,6 +1390,8 @@ end;
 
 Pour une meilleure expérience utilisateur, affichez les réponses progressivement.
 
+> ⚠️ **Limite de TRESTClient avec SSE** : `TRESTClient` ne supporte pas nativement le streaming Server-Sent Events (SSE) — il attend la fin du transfert avant de remettre la réponse. Pour du **vrai** streaming token-par-token, utilisez `TNetHTTPClient` avec un `TStream` consommé ligne par ligne, ou la bibliothèque `Indy.IdHTTP` avec gestion de l'événement `OnWork`. L'exemple ci-dessous fait du **pseudo-streaming** : il parse la réponse SSE complète après réception, ce qui n'apporte pas l'effet "frappe progressive" mais reste utile pour découper la réponse en morceaux exploitables.
+
 ```pascal
 // La plupart des API LLM supportent le streaming
 // Configuration pour OpenAI:
@@ -1177,8 +1417,15 @@ begin
         if Delta = '[DONE]' then Break;
 
         JSONObj := TJSONObject.ParseJSONValue(Delta) as TJSONObject;
+        // ⚠️ ParseJSONValue peut retourner nil si le fragment SSE est malformé
+        if not Assigned(JSONObj) then
+          Continue;
         try
-          Delta := JSONObj.GetValue<string>('choices[0].delta.content');
+          // FindValue (et non GetValue) pour les paths JSONPath
+          var DeltaVal := JSONObj.FindValue('choices[0].delta.content');
+          if not Assigned(DeltaVal) then
+            Continue;
+          Delta := DeltaVal.Value;
 
           // Afficher progressivement
           TThread.Synchronize(nil, procedure
@@ -1203,7 +1450,7 @@ function AppelerLLMAvecRetry(const Prompt: string;
   MaxRetries: Integer = 3): string;
 var
   Tentatives: Integer;
-  Erreur: Exception;
+  Delai: Integer;
 begin
   Tentatives := 0;
 
@@ -1215,13 +1462,13 @@ begin
       on E: Exception do
       begin
         Inc(Tentatives);
-        Erreur := E;
-
-        // Attendre avant retry (backoff exponentiel)
-        Sleep(1000 * Tentatives);
 
         if Tentatives >= MaxRetries then
           raise; // Propager l'exception après max retries
+
+        // Backoff exponentiel : 1s, 2s, 4s, 8s... (et non linéaire)
+        Delai := 1000 * (1 shl (Tentatives - 1)); // 2^(N-1) secondes
+        Sleep(Delai);
       end;
     end;
   until False;
@@ -1239,6 +1486,7 @@ type
     FMisses: Integer;
 
     function CalculerHash(const Prompt: string): string;
+    function GetHitRate: Double;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1246,15 +1494,30 @@ type
     function Get(const Prompt: string; out Response: string): Boolean;
     procedure Put(const Prompt, Response: string);
 
+    // Ratio hits/(hits+misses), entre 0.0 et 1.0
     property HitRate: Double read GetHitRate;
   end;
+
+constructor TLLMCache.Create;  
+begin  
+  inherited;
+  FCache := TDictionary<string, string>.Create;
+end;
+
+destructor TLLMCache.Destroy;  
+begin  
+  FCache.Free;
+  inherited;
+end;
 
 function TLLMCache.CalculerHash(const Prompt: string): string;  
 var  
   HashBytes: TBytes;
 begin
-  // Utiliser MD5 ou SHA pour le hash
-  HashBytes := THashMD5.GetHashBytes(Prompt);
+  // ⚠️ Utiliser TEncoding.UTF8.GetBytes pour gérer correctement les accents
+  //    français : sans cela, BytesOf utilise l'encodage ANSI et deux chaînes
+  //    contenant "é" peuvent produire des hash différents selon la code page.
+  HashBytes := THashMD5.GetHashBytes(TEncoding.UTF8.GetBytes(Prompt));
   Result := TNetEncoding.Base64.EncodeBytesToString(HashBytes);
 end;
 
@@ -1271,7 +1534,19 @@ begin
     Inc(FMisses);
 end;
 
-// Utilisation avec cache
+procedure TLLMCache.Put(const Prompt, Response: string);  
+begin  
+  FCache.AddOrSetValue(CalculerHash(Prompt), Response);
+end;
+
+function TLLMCache.GetHitRate: Double;  
+begin  
+  if (FHits + FMisses) = 0 then
+    Exit(0.0);
+  Result := FHits / (FHits + FMisses);
+end;
+
+// Utilisation avec cache (Cache et LLM sont des variables globales pédagogiques)
 function ChatAvecCache(const Prompt: string): string;  
 begin  
   if not Cache.Get(Prompt, Result) then
@@ -1298,9 +1573,23 @@ type
     procedure IncrementerCompteur;
   end;
 
+constructor TRateLimiter.Create(MaxRequetesParMinute: Integer);  
+begin  
+  inherited Create;
+  FMaxRequetesParMinute := MaxRequetesParMinute;
+  FRequetesMinuteActuelle := 0;
+  FDerniereReset := Now;
+end;
+
+procedure TRateLimiter.IncrementerCompteur;  
+begin  
+  Inc(FRequetesMinuteActuelle);
+end;
+
 procedure TRateLimiter.AttendreDisponibilite;  
 var  
   MinutesEcoulees: Integer;
+  MillisAttendre: Int64;
 begin
   MinutesEcoulees := MinutesBetween(Now, FDerniereReset);
 
@@ -1312,14 +1601,24 @@ begin
   end
   else if FRequetesMinuteActuelle >= FMaxRequetesParMinute then
   begin
-    // Attendre la prochaine minute
-    Sleep(60000 - (SecondsBetween(Now, FDerniereReset) * 1000));
+    // Attendre la prochaine minute.
+    // ⚠️ Sleep(Cardinal) interprète une valeur négative comme un très grand
+    // entier non signé → blocage de ~50 jours. On clamp donc à [0, 60000].
+    MillisAttendre := 60000 - (SecondsBetween(Now, FDerniereReset) * 1000);
+    if MillisAttendre < 0 then
+      MillisAttendre := 0
+    else if MillisAttendre > 60000 then
+      MillisAttendre := 60000;
+    Sleep(MillisAttendre);
     FRequetesMinuteActuelle := 0;
     FDerniereReset := Now;
   end;
 end;
 
 // Utilisation
+// ⚠️ Cette fonction est SYNCHRONE et peut bloquer jusqu'à ~60 secondes.
+//    À appeler depuis un thread secondaire (TTask.Run) — JAMAIS depuis le
+//    thread UI, sinon l'interface se gèle pendant l'attente.
 function AppelerLLMAvecLimite(const Prompt: string): string;  
 begin  
   RateLimiter.AttendreDisponibilite;
@@ -1327,6 +1626,8 @@ begin
   RateLimiter.IncrementerCompteur;
 end;
 ```
+
+> ℹ️ **Note thread-safety** : Le `TRateLimiter` ci-dessus n'est PAS thread-safe. Si plusieurs threads l'appellent simultanément, `FRequetesMinuteActuelle` peut être incrémenté de manière incohérente. Pour un usage multi-thread, encapsulez les opérations dans un `TCriticalSection` ou utilisez `TInterlocked.Increment`.
 
 ## Limitations et considérations
 
@@ -1441,11 +1742,12 @@ Les grands modèles de langage représentent une révolution pour le développem
 - Toujours considérer les aspects éthiques et de confidentialité
 
 **Recommandations** :
-1. Commencez avec GPT-3.5 Turbo (bon compromis coût/qualité)
-2. Testez différents providers pour trouver le meilleur pour votre cas
-3. Investissez du temps dans le crafting de bons prompts
+1. Commencez avec un modèle économique : `gpt-4o-mini` ou `claude-haiku-4` (bon compromis coût/qualité)
+2. Testez différents providers pour trouver le meilleur pour votre cas d'usage et votre langue
+3. Investissez du temps dans le crafting de bons prompts (souvent plus rentable qu'un modèle plus cher)
 4. Implémentez cache et monitoring dès le début
 5. Gardez toujours un contrôle humain sur les décisions critiques
+6. Surveillez les annonces de dépréciation : la liste des modèles évolue plusieurs fois par an
 
 Les LLM ne sont pas une solution magique à tous les problèmes, mais utilisés judicieusement, ils transforment radicalement ce qui est possible dans vos applications Delphi. Avec les techniques présentées dans ce chapitre, vous êtes maintenant équipé pour créer des applications véritablement intelligentes et conversationnelles.
 

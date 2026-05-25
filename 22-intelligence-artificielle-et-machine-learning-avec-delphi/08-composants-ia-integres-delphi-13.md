@@ -1,54 +1,172 @@
 🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-# 22.8 Composants IA intégrés de Delphi 13
+# 22.8 SmartCore AI Component Pack : composants IA officiels de Delphi 13
 
-## Introduction aux nouveautés IA de Delphi 13 Florence
+## Introduction au SmartCore AI Component Pack
 
-### L'évolution de Delphi vers l'IA
+Delphi 13 Florence (sorti le **10 septembre 2025**) introduit le **SmartCore AI Component Pack**, un ensemble officiel de composants permettant d'ajouter des fonctionnalités IA dans vos applications Delphi et C++Builder.
 
-Delphi 13 Florence marque un tournant majeur dans l'intégration de l'intelligence artificielle au sein de l'environnement de développement. Embarcadero a reconnu que l'IA n'est plus un domaine de niche, mais une nécessité pour les applications modernes. Cette version apporte des outils et composants spécifiquement conçus pour faciliter l'intégration de l'IA dans vos projets.
+### Documentation officielle
 
-**Philosophie de Delphi 13** : Rendre l'IA accessible aux développeurs Delphi sans nécessiter une expertise en machine learning, tout en conservant la puissance et la flexibilité qui font la réputation de Delphi.
+- Page produit : [getitnow.embarcadero.com/SmartCoreAI-1.0](https://getitnow.embarcadero.com/SmartCoreAI-1.0/)
+- Article d'introduction : [blogs.embarcadero.com/introducing-the-smartcore-ai-components-pack](https://blogs.embarcadero.com/introducing-the-smartcore-ai-components-pack/)
+- Wiki documentation : [docwiki.embarcadero.com/.../SmartCore_AI_Component_Pack](https://docwiki.embarcadero.com/RADStudio/Florence/en/SmartCore_AI_Component_Pack)
 
-### Ce que Delphi 13 apporte à l'IA
+### Installation
 
-**Avant Delphi 13** :
-- Intégration manuelle via TRESTClient
-- Écriture de wrappers personnalisés pour chaque service
-- Gestion manuelle de l'authentification et des erreurs
-- Pas d'assistance visuelle pour les API IA
+Le pack s'installe via **GetIt Package Manager** :
+1. Menu : **Outils → GetIt Package Manager**
+2. Rechercher "SmartCore AI"
+3. Installer la version compatible avec votre RAD Studio (v1.0 pour 13.0-13.1)
 
-**Avec Delphi 13** :
-- Composants prêts à l'emploi pour services IA populaires
-- Assistant visuel pour configuration des API
-- Gestion automatisée des authentifications
-- Templates et exemples intégrés
-- Support amélioré pour les formats de données IA (JSON complexe)
-- Outils de débogage spécifiques pour les appels IA
+### Architecture du pack
 
-### Vue d'ensemble des nouveautés
+Le SmartCore AI Component Pack suit une architecture similaire à FireDAC :
+- Un composant **`TAIConnection`** (équivalent au `TFDConnection`) qui lie un Driver concret
+- Plusieurs **drivers** spécifiques par fournisseur IA (OpenAI, Claude, Gemini, Ollama)
+- Des **composants de requête** (Request) pour chaque type de tâche (chat, image, JSON, stream)
 
-**1. Composants visuels IA**
-Composants déposables sur la palette pour accès facilité aux services d'IA cloud.
+### Fournisseurs IA supportés
 
-**2. Gestionnaire de clés API sécurisé**
-Système intégré pour stocker et gérer vos clés API de manière sécurisée.
+| Fournisseur | Driver | Type |
+|------------|--------|------|
+| OpenAI | `TAIOpenAIDriver` | En ligne (cloud) |
+| Anthropic Claude | `TAIClaudeDriver` | En ligne (cloud) |
+| Google Gemini | `TAIGeminiDriver` | En ligne (cloud) |
+| Ollama | `TAIOllamaDriver` | **Local** (hors ligne) |
 
-**3. Inspecteur de réponses IA**
-Outil de débogage pour visualiser et analyser les réponses des API IA.
+> 💡 Le support d'**Ollama** permet d'utiliser des LLM hors ligne (Llama, Mistral, Phi, etc.) pour des cas d'usage avec contraintes de confidentialité.
 
-**4. Templates de projets IA**
-Projets préconfiguré pour démarrer rapidement avec l'IA.
+## Composants principaux
 
-**5. Support JSON amélioré**
-Parsing et manipulation simplifiés pour les structures JSON complexes des API IA.
+### TAIConnection
 
-**6. Assistant de prompts**
-Outil visuel pour construire et tester des prompts LLM.
+**Description** : Composant central qui gère la connexion à un fournisseur IA, agnostique du driver utilisé. Similaire à `TFDConnection` pour les bases de données.
 
-## Composants IA de la palette d'outils
+**Configuration** : Via l'éditeur de design `TAIConnectionEditor` qui lance le wizard `TfrmAIConnectionWizard` (clic droit sur le composant dans le designer).
 
-### TAIRestClient
+**Propriétés clés** :
+- `Driver` : Le driver concret (`TAIOpenAIDriver`, `TAIClaudeDriver`, etc.)
+- `Params` : Paramètres typés selon le driver (`TAIOpenAIParams`, `TAIClaudeParams`, etc.)
+- `Connected` : Boolean indiquant si la connexion est active
+
+### TAIChatRequest
+
+**Description** : Composant de requête pour les conversations chat (texte → texte).
+
+**Méthode principale** : `Chat(const Prompt: string)`
+
+**Événement principal** : `OnResponse(Sender: TObject; const Text: string)`
+
+**Exemple officiel d'utilisation** :
+
+```pascal
+// Envoi d'un message
+AIChatRequest1.Chat('Where is Florence?');
+
+// Réception de la réponse
+procedure TForm27.AIChatRequest1Response(Sender: TObject;
+  const Text: string);
+begin
+  Memo1.Lines.Add(Text);
+end;
+```
+
+### TAIImageRequest
+
+**Description** : Composant de requête pour la génération d'images (texte → image).
+
+**Méthode principale** : `Execute`
+
+**Événement principal** : `OnSuccess` (donne accès au stream image ou à l'URL)
+
+**Exemple officiel d'utilisation** :
+
+```pascal
+var
+  ReqOpenAI: TAIOpenAIImageGenerationRequest;
+begin
+  ReqOpenAI := TAIOpenAIImageGenerationRequest.Create;
+  AIImageRequest1.APIRequestObject := ReqOpenAI;
+  ReqOpenAI.Prompt := 'Un coucher de soleil sur Florence, style aquarelle';
+  ReqOpenAI.Model := 'gpt-image-1'; // dall-e-3 retiré en mai 2026 → utiliser gpt-image-1
+  AIImageRequest1.Execute;
+end;
+```
+
+> ⚠️ L'exemple original du blog Embarcadero (septembre 2025) utilisait `dall-e-3`. Depuis le **12 mai 2026**, OpenAI a retiré DALL-E de son API. Utilisez **`gpt-image-1`** ou `gpt-image-1-mini` pour la génération d'images en 2026.
+
+### TAIJSONRequest
+
+**Description** : Composant de requête pour les endpoints JSON génériques (sortie structurée).
+
+**Cas d'usage** : Extraction de données structurées, réponses JSON forcées, function calling.
+
+### TAIStreamRequest
+
+**Description** : Composant de requête pour le streaming de réponse (token-par-token).
+
+**Cas d'usage** : Affichage progressif des réponses LLM (effet "frappe") pour améliorer l'UX.
+
+## Drivers et paramètres
+
+Chaque driver a sa classe `TAI<Provider>Params` avec ses propres propriétés typées :
+
+### TAIOpenAIDriver / TAIOpenAIParams
+
+```pascal
+// Configuration via le wizard de design OU programmatique :
+var
+  Conn: TAIConnection;
+  Driver: TAIOpenAIDriver;
+  Params: TAIOpenAIParams;
+begin
+  Conn := AIConnection1;
+  Driver := TAIOpenAIDriver.Create(Conn);
+  Params := TAIOpenAIParams(Driver.Params);
+
+  Params.APIKey := ObtenirCleAPI; // ⚠️ Depuis configuration sécurisée
+  Params.Model := 'gpt-4o-mini';
+  Params.Temperature := 0.7;
+  Params.MaxTokens := 1000;
+end;
+```
+
+### TAIClaudeDriver / TAIClaudeParams
+
+Configuration similaire mais avec les spécificités Anthropic (`x-api-key`, `anthropic-version`, etc.).
+
+### TAIGeminiDriver / TAIGeminiParams
+
+Configuration pour Google Gemini.
+
+### TAIOllamaDriver / TAIOllamaParams
+
+Configuration pour Ollama (LLM local) :
+
+```pascal
+Params.Endpoint := 'http://localhost:11434'; // Endpoint Ollama par défaut  
+Params.Model := 'llama3'; // ou autre modèle installé localement  
+```
+
+## Classes de base et extensibilité
+
+Le pack expose une architecture extensible :
+
+- **`TAIRequest`** : Classe de base abstraite pour tous les composants de requête
+- **`IAIDriver`** : Interface implémentée par tous les drivers
+- **`TAIDriver`** : Classe de base abstraite pour créer un driver personnalisé
+- **`TAIDriverRegistry`** : Registre permettant d'enregistrer/retrouver des drivers à l'exécution
+
+Vous pouvez créer vos propres drivers personnalisés en héritant de `TAIDriver` et en s'enregistrant dans `TAIDriverRegistry`.
+
+---
+
+## Wrappers personnalisés (template pédagogique)
+
+> ℹ️ **Section pédagogique** : Si vous avez besoin de wrappers personnalisés au-delà de SmartCore AI (cas spécifiques, optimisations métier), voici un template d'architecture inspiré de FireDAC que vous pouvez adapter. Ce code n'utilise PAS les classes officielles ci-dessus.
+
+### TAIRestClient (wrapper custom illustratif)
 
 **Description** : Composant spécialisé dérivé de TRESTClient, optimisé pour les appels aux services d'IA avec gestion automatique de nombreux aspects techniques.
 
@@ -165,7 +283,7 @@ begin
 
   // Configuration du chat
   AIChat1.AIClient := AIRestClient1;
-  AIChat1.Model := 'gpt-3.5-turbo';
+  AIChat1.Model := 'gpt-4o-mini'; // ou 'gpt-4o' pour qualité supérieure
   AIChat1.SystemMessage :=
     'Tu es un assistant technique spécialisé en Delphi. ' +
     'Réponds de manière concise et professionnelle.';
@@ -181,11 +299,15 @@ begin
   // Afficher le message de l'utilisateur
   AjouterMessage('Vous', EditMessage.Text);
 
+  // ⚠️ Désactiver le bouton AVANT l'envoi pour éviter une race condition :
+  //    si la réponse arrive très vite, l'événement OnResponseReceived
+  //    pourrait être déclenché AVANT l'instruction de désactivation et
+  //    le bouton serait réactivé puis désactivé (donc inutilisable).
+  BtnEnvoyer.Enabled := False;
+
   // Envoyer de manière asynchrone
   AIChat1.SendMessage(EditMessage.Text);
-
   EditMessage.Clear;
-  BtnEnvoyer.Enabled := False;
 end;
 
 procedure TFormChat.AIChat1ResponseReceived(Sender: TObject;
@@ -516,53 +638,56 @@ begin
 end;
 ```
 
-## Templates de projets IA
+## Idées de projets IA à construire
 
-### Projets disponibles
+> ℹ️ **Note** : Cette section présente des **idées de projets** que vous pouvez construire avec le SmartCore AI Component Pack et les outils de Delphi 13. Embarcadero ne fournit pas officiellement des templates de projets IA prédéfinis dans l'IDE — c'est à vous d'utiliser les composants `TAIConnection`, `TAIChatRequest`, etc. pour bâtir ces applications.
 
-Delphi 13 inclut plusieurs templates de projets prêts à l'emploi :
+### Idées de projets recommandées pour démarrer
 
-**1. AI Chatbot Application**
+**1. Application Chatbot**
 - Interface de chat complète (VCL ou FMX)
-- Gestion de l'historique
-- Configuration multi-providers
+- Gestion de l'historique de conversation
+- Configuration multi-providers (basculer entre OpenAI, Claude, Gemini, Ollama)
 - Sauvegarde des conversations
+- Composants : `TAIConnection` + `TAIChatRequest` (SmartCore AI)
 
-**2. Image Analysis Tool**
-- Upload d'images
-- Analyse avec différents services
-- Affichage des résultats
-- Export des données
+**2. Outil d'analyse d'images**
+- Upload d'images depuis l'utilisateur
+- Analyse via Vision API (OpenAI gpt-4o, Google Vision, Azure Computer Vision)
+- Affichage des résultats (labels, OCR, descriptions)
+- Export des données vers CSV/JSON
+- Composants : `TAIConnection` + `TAIJSONRequest` ou wrappers spécifiques
 
 **3. Document OCR & Extraction**
 - Import de PDF/images
-- OCR multilingue
-- Extraction de données structurées
+- OCR multilingue (Google Vision, Azure OCR ou Tesseract local)
+- Extraction de données structurées via LLM (Structured Outputs)
 - Export vers Excel/CSV
+- Composants : `TAIConnection` + `TAIChatRequest` (avec prompts de structured extraction)
 
-**4. Sentiment Analysis Dashboard**
-- Import de données textuelles
-- Analyse de sentiments en batch
-- Visualisations (graphiques)
-- Rapports
+**4. Dashboard d'analyse de sentiments**
+- Import de données textuelles (CSV, base de données)
+- Analyse de sentiments en batch via LLM
+- Visualisations (graphiques avec TeeChart)
+- Rapports exportables
+- Composants : `TAIChatRequest` avec prompts de classification
 
-**5. AI Assistant for Forms**
-- Formulaire intelligent
-- Auto-complétion IA
-- Validation intelligente
-- Suggestions contextuelles
+**5. Assistant intelligent pour formulaires**
+- Formulaire métier classique enrichi par IA
+- Auto-complétion contextuelle des champs
+- Validation intelligente (détection d'incohérences)
+- Suggestions contextuelles selon les autres champs
+- Composants : `TAIStreamRequest` pour des suggestions inline
 
-### Créer un projet depuis un template
+### Démarrer un projet IA
 
-**Via l'IDE** :
-1. Fichier → Nouveau → Autre
-2. Catégorie "AI Applications"
-3. Sélectionner le template
-4. Configurer le projet
-5. Le code généré est prêt à utiliser
-
-**Personnalisation** :
-Les templates génèrent du code structuré et commenté que vous pouvez facilement adapter à vos besoins.
+**Procédure générale** :
+1. **Fichier → Nouveau → Application VCL/FMX** (selon votre cible)
+2. **Outils → GetIt Package Manager** : installer **SmartCore AI Component Pack**
+3. Déposer un `TAIConnection` sur le formulaire et configurer son driver via clic droit → "Configure Connection..." (wizard `TAIConnectionEditor`)
+4. Déposer un composant de requête (`TAIChatRequest`, `TAIImageRequest`, etc.)
+5. Lier la requête à la connexion (propriété `Connection`)
+6. Écrire le code métier dans les événements `OnResponse` / `OnSuccess`
 
 ## Support JSON amélioré
 
@@ -577,12 +702,18 @@ Les API IA retournent souvent des structures JSON très imbriquées :
       "message": {
         "role": "assistant",
         "content": "Réponse...",
-        "function_call": {
-          "name": "get_weather",
-          "arguments": "{\"location\":\"Paris\"}"
-        }
+        "tool_calls": [
+          {
+            "id": "call_abc123",
+            "type": "function",
+            "function": {
+              "name": "get_weather",
+              "arguments": "{\"location\":\"Paris\"}"
+            }
+          }
+        ]
       },
-      "finish_reason": "function_call"
+      "finish_reason": "tool_calls"
     }
   ],
   "usage": {
@@ -592,6 +723,8 @@ Les API IA retournent souvent des structures JSON très imbriquées :
   }
 }
 ```
+
+> ℹ️ **Note historique** : OpenAI utilisait auparavant `function_call` (singulier) pour les appels de fonctions. Depuis novembre 2023, le format officiel est `tool_calls` (tableau), permettant des appels parallèles. L'ancien format reste accepté mais déprécié.
 
 ### TAIJSONHelper
 
@@ -608,6 +741,11 @@ var
   TotalTokens: Integer;
 begin
   Response := TJSONObject.ParseJSONValue(ResponseText) as TJSONObject;
+  // ⚠️ ParseJSONValue retourne nil si le texte n'est pas un JSON valide ;
+  //    le cast `as TJSONObject` retourne aussi nil si le résultat est par
+  //    exemple un tableau racine. On vérifie pour éviter une AV.
+  if not Assigned(Response) then
+    raise Exception.Create('Réponse API : JSON invalide ou format inattendu');
   try
     // Accès simplifié avec notation "point"
     Content := Response.GetPath<string>('choices[0].message.content');
@@ -617,10 +755,10 @@ begin
     FinishReason := Response.GetPathOrDefault<string>(
       'choices[0].finish_reason', 'unknown');
 
-    // Vérifier existence d'un chemin
-    if Response.PathExists('choices[0].message.function_call') then
-      TraiterFunctionCall(Response.GetPath<TJSONObject>(
-        'choices[0].message.function_call'));
+    // Vérifier existence d'un chemin (format moderne `tool_calls`)
+    if Response.PathExists('choices[0].message.tool_calls') then
+      TraiterToolCalls(Response.GetPath<TJSONArray>(
+        'choices[0].message.tool_calls'));
   finally
     Response.Free;
   end;
@@ -775,7 +913,8 @@ unit FormChatBot;
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls,
+  Winapi.Windows, Winapi.Messages, // Messages requis pour WM_VSCROLL / SB_BOTTOM
+  System.SysUtils, System.Classes, Vcl.Controls,
   Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
   AI.RestClient, AI.Chat, AI.Types;
 
@@ -830,7 +969,7 @@ begin
 
   // Configuration du chat
   AIChat1.AIClient := AIRestClient1;
-  AIChat1.Model := 'gpt-3.5-turbo';
+  AIChat1.Model := 'gpt-4o-mini'; // multimodal, économique
   AIChat1.SystemMessage :=
     'Tu es un assistant Delphi expert et amical. ' +
     'Tu aides les développeurs avec leurs questions techniques.';
@@ -838,8 +977,9 @@ begin
   AIChat1.MaxTokens := 1000;
   AIChat1.AutoManageContext := True;
 
-  // Remplir les modèles disponibles
-  ComboBoxModel.Items.AddStrings(['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']);
+  // Remplir les modèles disponibles (liste illustrative — adapter aux modèles
+  // actuellement disponibles sur votre compte)
+  ComboBoxModel.Items.AddStrings(['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']);
   ComboBoxModel.ItemIndex := 0;
 
   // Message de bienvenue
@@ -889,21 +1029,36 @@ begin
 end;
 
 procedure TFormChatBot.ComboBoxModelChange(Sender: TObject);  
-begin  
-  AIChat1.Model := ComboBoxModel.Text;
+var  
+  AncienModel: string;
+begin
+  // ⚠️ Sauvegarder l'ancien modèle AVANT toute modification, pour pouvoir
+  // restaurer en cas d'annulation. Sans ça, AIChat1.Model serait modifié
+  // même quand l'utilisateur clique "Non".
+  AncienModel := AIChat1.Model;
 
-  // Réinitialiser la conversation lors du changement de modèle
+  // Demander confirmation AVANT de changer
   if MessageDlg(
     'Changer de modèle réinitialisera la conversation. Continuer ?',
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
+    AIChat1.Model := ComboBoxModel.Text;
     AIChat1.ClearHistory;
     MemoChat.Clear;
     AjouterMessage('Assistant',
       'Conversation réinitialisée avec le modèle ' + ComboBoxModel.Text);
   end
   else
-    ComboBoxModel.ItemIndex := ComboBoxModel.Items.IndexOf(AIChat1.Model);
+  begin
+    // L'utilisateur annule : restaurer la sélection sans retrigger OnChange.
+    // On désactive temporairement l'événement pour éviter une boucle infinie.
+    ComboBoxModel.OnChange := nil;
+    try
+      ComboBoxModel.ItemIndex := ComboBoxModel.Items.IndexOf(AncienModel);
+    finally
+      ComboBoxModel.OnChange := ComboBoxModelChange;
+    end;
+  end;
 end;
 
 procedure TFormChatBot.AjouterMessage(const Role, Content: string);  
@@ -913,7 +1068,11 @@ begin
   MemoChat.Lines.Add('');
 
   // Scroll vers le bas
-  SendMessage(MemoChat.Handle, WM_VSCROLL, SB_BOTTOM, 0);
+  // ℹ️ `SendMessage` ici fait référence à la fonction Windows API (4 paramètres).
+  //    Pas de collision avec `AIChat1.SendMessage(string)` car la signature
+  //    diffère. Sur macOS/Linux, utilisez plutôt `MemoChat.SelStart := MemoChat.GetTextLen`
+  //    puis `MemoChat.Perform(EM_SCROLLCARET, 0, 0)` (multi-plateforme).
+  Winapi.Windows.SendMessage(MemoChat.Handle, WM_VSCROLL, SB_BOTTOM, 0);
 end;
 
 end.
@@ -925,16 +1084,26 @@ end.
 procedure TFormBatchImageAnalysis.BtnAnalyserDossierClick(Sender: TObject);  
 var  
   Files: TStringList;
-  FilePath: string;
+  FilePath, Pattern, FolderPath: string;
   i: Integer;
+  Found: TArray<string>;
 begin
+  // ⚠️ Pour SelectDirectory (de Vcl.FileCtrl), le 3e paramètre est `var`
+  //    et doit être initialisé (ne serait-ce qu'à une chaîne vide).
+  FolderPath := '';
   if not SelectDirectory('Sélectionnez un dossier', '', FolderPath) then
     Exit;
 
   Files := TStringList.Create;
   try
-    // Récupérer tous les fichiers images
-    TDirectory.GetFiles(FolderPath, '*.jpg;*.jpeg;*.png', Files);
+    // ⚠️ TDirectory.GetFiles n'accepte qu'UN seul pattern à la fois (contrairement
+    // à FindFirst). Pour combiner plusieurs extensions, on itère sur chaque pattern.
+    for Pattern in ['*.jpg', '*.jpeg', '*.png'] do
+    begin
+      Found := TDirectory.GetFiles(FolderPath, Pattern);
+      for FilePath in Found do
+        Files.Add(FilePath);
+    end;
 
     ProgressBar.Max := Files.Count;
     ProgressBar.Position := 0;
@@ -1081,7 +1250,7 @@ end;
 
 procedure TAIConfig.ConfigureAIChat(AIChat: TAIChat);  
 begin  
-  AIChat.Model := 'gpt-3.5-turbo';
+  AIChat.Model := 'gpt-4o-mini';
   AIChat.Temperature := 0.7;
   AIChat.MaxTokens := 1000;
   AIChat.AutoManageContext := True;
@@ -1125,6 +1294,8 @@ end;
 ```
 
 ### 3. Monitoring et alertes
+
+> ℹ️ **Précision Delphi** : pour pouvoir assigner une **anonymous method** à un événement (comme dans l'exemple ci-dessous), le type de l'événement doit être déclaré en `reference to procedure(...)` (équivalent à `TProc<...>`). Les événements VCL classiques (`procedure(...) of object`) n'acceptent que des méthodes d'instance. On suppose ici que `OnUsageUpdate` est déclaré en `reference to procedure` ; si ce n'est pas le cas dans votre version, créez plutôt une méthode classique sur le formulaire et assignez-la.
 
 ```pascal
 procedure TFormMain.SurveillerUtilisation;  
@@ -1171,6 +1342,6 @@ Les composants IA intégrés de Delphi 13 Florence transforment radicalement la 
 
 Avec ces outils, vous êtes parfaitement équipé pour créer des applications Delphi modernes et intelligentes qui tirent pleinement parti de la révolution de l'IA !
 
-Dans la section suivante, nous explorerons le site web companion IA qui vous assiste directement dans votre développement Delphi.
+Dans la section suivante, nous explorerons le **RAD AI Companion** qui vous assiste directement dans votre développement Delphi.
 
-⏭️ [Site web companion IA pour le développement assisté](/22-intelligence-artificielle-et-machine-learning-avec-delphi/09-site-web-companion-ia-pour-developpement-assiste.md)
+⏭️ [RAD AI Companion : assistant IA intégré pour le développement](/22-intelligence-artificielle-et-machine-learning-avec-delphi/09-site-web-companion-ia-pour-developpement-assiste.md)

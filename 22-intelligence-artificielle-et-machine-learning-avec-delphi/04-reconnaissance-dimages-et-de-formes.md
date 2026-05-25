@@ -27,9 +27,9 @@ Avant l'IA moderne, faire reconnaître un simple objet par un ordinateur nécess
 - Performances dépassant parfois l'humain
 
 **2024 et au-delà** : Modèles multimodaux
-- Combinaison vision + texte (CLIP, GPT-4 Vision)
+- Combinaison vision + texte native (CLIP, GPT-4o, Claude, Gemini)
 - Compréhension contextuelle avancée
-- Génération d'images (DALL-E, Stable Diffusion)
+- Génération d'images (gpt-image-1, Stable Diffusion, Midjourney) — DALL-E retiré de l'API OpenAI en mai 2026
 
 ## Tâches fondamentales de reconnaissance d'images
 
@@ -185,7 +185,7 @@ Image → "Scène: plage au coucher du soleil
 ### OpenCV (Open Source Computer Vision)
 
 **Présentation** :
-OpenCV est LA bibliothèque de référence pour la vision par ordinateur, créée en 2000 et maintenue par Intel.
+OpenCV est LA bibliothèque de référence pour la vision par ordinateur, initialement développée par Intel en 2000. Elle est aujourd'hui maintenue par la fondation à but non lucratif **Open Source Vision Foundation** (OpenCV.org), avec Intel parmi les contributeurs/sponsors principaux.
 
 **Capacités** :
 - Traitement d'images (filtres, transformations)
@@ -217,7 +217,7 @@ OpenCV est LA bibliothèque de référence pour la vision par ordinateur, créé
 - Configuration initiale complexe
 - Documentation parfois technique
 
-### TensorFlow / TensorFlow Lite
+### TensorFlow / LiteRT (anciennement TensorFlow Lite)
 
 **Pour la reconnaissance d'images** :
 TensorFlow excelle dans le deep learning pour la vision par ordinateur.
@@ -233,8 +233,8 @@ TensorFlow excelle dans le deep learning pour la vision par ordinateur.
 - Via Python4Delphi
 - Via API REST locale
 
-**TensorFlow Lite** :
-Version optimisée pour mobiles, parfaite pour applications FireMonkey iOS/Android.
+**LiteRT (anciennement TensorFlow Lite)** :
+Version optimisée pour mobiles et edge, parfaite pour applications FireMonkey iOS/Android. Renommée par Google en septembre 2024 (cf. section 22.2).
 
 ### PyTorch
 
@@ -276,9 +276,10 @@ Concurrent principal de TensorFlow, très populaire en recherche.
 - Détection de monuments et logos
 - Propriétés d'image (couleurs dominantes)
 
-**Tarification** :
-- 1000 premières requêtes/mois gratuites
-- Ensuite : ~1,50€ / 1000 images
+**Tarification (Label Detection, ordres de grandeur)** :
+- 1000 premières requêtes/mois gratuites par fonctionnalité
+- Ensuite : ~1,50$ / 1000 images (jusqu'à 5M/mois), dégressif au-delà
+- ⚠️ Chaque feature (LABEL_DETECTION, FACE_DETECTION, etc.) est facturée séparément. Tarifs à jour : [cloud.google.com/vision/pricing](https://cloud.google.com/vision/pricing)
 
 **Intégration Delphi** :
 REST API simple avec TRESTClient
@@ -296,17 +297,26 @@ begin
   RESTClient.BaseURL := 'https://vision.googleapis.com/v1/images:annotate';
   RESTRequest.AddParameter('key', 'VOTRE_CLE_API', pkGETorPOST);
 
-  // 3. Construire le JSON de requête
+  // 3. Construire le JSON de requête.
+  // ⚠️ Préciser ContentType : sinon RESTRequest envoie sans en-tête JSON
+  //    et Google répond 400 Bad Request. (ImageBase64 ne contient que [A-Za-z0-9+/=],
+  //    sûr en JSON ; pas d'échappement à prévoir.)
   RESTRequest.Body.Add(Format(
     '{"requests":[{"image":{"content":"%s"},"features":[{"type":"LABEL_DETECTION"}]}]}',
     [ImageBase64]
-  ));
+  ), TRESTContentType.ctAPPLICATION_JSON);
 
-  // 4. Exécuter en arrière-plan
+  // 4. Exécuter en arrière-plan (try/except obligatoire dans TTask.Run)
   TTask.Run(procedure
   begin
-    RESTRequest.Execute;
-    // Traiter les résultats...
+    try
+      RESTRequest.Execute;
+      // Traiter les résultats sur le thread principal via Synchronize/Queue...
+    except
+      on E: Exception do
+        // Logger ou notifier l'utilisateur (via Synchronize/Queue)
+        LogError('AnalyserImageGoogle : ' + E.Message);
+    end;
   end);
 end;
 ```
@@ -339,10 +349,12 @@ end;
 **Cas d'usage fort** :
 Applications nécessitant reconnaissance faciale à grande échelle.
 
-### OpenAI Vision (GPT-4 Vision)
+### OpenAI Vision (GPT-4o et successeurs)
 
 **Révolutionnaire** :
-GPT-4 Vision peut non seulement identifier des objets, mais aussi comprendre et expliquer des images complexes.
+Les modèles multimodaux d'OpenAI peuvent non seulement identifier des objets, mais aussi comprendre et expliquer des images complexes.
+
+> 💡 **Évolution des modèles** : Le nom historique `gpt-4-vision-preview` a été **déprécié en juin 2024**. Le successeur multimodal est `gpt-4o` (vision intégrée nativement), puis la série GPT-5 introduite en 2025. Utilisez toujours le nom de modèle actuel listé sur [platform.openai.com/docs/models](https://platform.openai.com/docs/models).
 
 **Exemples** :
 ```
@@ -400,18 +412,36 @@ base de données..."
 **Opérations courantes** :
 
 ```pascal
-// Redimensionner une image
+uses
+  System.Math, Vcl.Graphics; // Math pour Min, Vcl.Graphics pour TBitmap
+
+// Redimensionner une image avec interpolation (préserve le contenu)
 procedure RedimensionnerImage(Bitmap: TBitmap; MaxWidth, MaxHeight: Integer);  
 var  
   Ratio: Double;
   NewWidth, NewHeight: Integer;
+  Dest: TBitmap;
 begin
+  // ⚠️ TBitmap.SetSize() redimensionne uniquement le canvas et coupe le contenu.
+  // Pour un vrai redimensionnement avec interpolation, il faut un bitmap
+  // temporaire et StretchDraw, puis on réassigne.
   Ratio := Min(MaxWidth / Bitmap.Width, MaxHeight / Bitmap.Height);
-  if Ratio < 1 then
-  begin
-    NewWidth := Round(Bitmap.Width * Ratio);
-    NewHeight := Round(Bitmap.Height * Ratio);
-    Bitmap.SetSize(NewWidth, NewHeight);
+  if Ratio >= 1 then
+    Exit; // L'image est déjà plus petite que la cible : rien à faire
+
+  NewWidth := Round(Bitmap.Width * Ratio);
+  NewHeight := Round(Bitmap.Height * Ratio);
+
+  Dest := TBitmap.Create;
+  try
+    Dest.PixelFormat := Bitmap.PixelFormat;
+    Dest.SetSize(NewWidth, NewHeight);
+    // StretchDraw applique une interpolation bilinéaire (ou plus si
+    // SetStretchBltMode HALFTONE est activé sur Windows)
+    Dest.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight), Bitmap);
+    Bitmap.Assign(Dest);
+  finally
+    Dest.Free;
   end;
 end;
 ```
@@ -439,20 +469,30 @@ end;
 La plupart des API REST acceptent les images encodées en Base64.
 
 ```pascal
+uses
+  System.Classes,      // TFileStream, TMemoryStream
+  System.NetEncoding;  // TNetEncoding.Base64
+
 function EncoderImageBase64(const CheminFichier: string): string;  
 var  
   FileStream: TFileStream;
   MemStream: TMemoryStream;
 begin
+  // ⚠️ Le MemStream doit être créé AVANT le try qui couvre la création du
+  // FileStream : si TFileStream.Create échoue (fichier introuvable, droits…),
+  // le MemStream resterait non libéré sans ce pattern try/finally imbriqué.
   MemStream := TMemoryStream.Create;
-  FileStream := TFileStream.Create(CheminFichier, fmOpenRead);
   try
-    MemStream.CopyFrom(FileStream, FileStream.Size);
-    MemStream.Position := 0;
-    Result := TNetEncoding.Base64.EncodeBytesToString(
-      MemStream.Memory, MemStream.Size);
+    FileStream := TFileStream.Create(CheminFichier, fmOpenRead);
+    try
+      MemStream.CopyFrom(FileStream, FileStream.Size);
+      MemStream.Position := 0;
+      Result := TNetEncoding.Base64.EncodeBytesToString(
+        MemStream.Memory, MemStream.Size);
+    finally
+      FileStream.Free;
+    end;
   finally
-    FileStream.Free;
     MemStream.Free;
   end;
 end;
@@ -472,6 +512,7 @@ begin
   TTask.Run(procedure
   var
     Resultats: string;
+    ErrMsg: string;
   begin
     try
       // Analyse de l'image (peut prendre plusieurs secondes)
@@ -488,9 +529,13 @@ begin
     except
       on E: Exception do
       begin
+        // ⚠️ Capturer E.Message AVANT Synchronize (par défense).
+        //    Synchronize est synchrone, donc E reste valide ici, mais ce
+        //    pattern reste correct si on bascule vers Queue (asynchrone).
+        ErrMsg := E.Message;
         TThread.Synchronize(nil, procedure
         begin
-          ShowMessage('Erreur: ' + E.Message);
+          ShowMessage('Erreur: ' + ErrMsg);
           ProgressBar.Visible := False;
           BtnAnalyser.Enabled := True;
         end);
@@ -592,12 +637,17 @@ end;
 - Enregistrement en base de données
 
 **Considérations** :
-- RGPD : consentement, durée de conservation
+- RGPD : consentement explicite et durée de conservation limitée
 - Performance : reconnaissance rapide (< 1 seconde)
 - Sécurité : chiffrement des données biométriques
 
+> ⚠️ **Accès limité aux API de reconnaissance faciale (depuis juin 2022)** :  
+> - **Azure Face API** : `Face.identify` et `Face.verify` nécessitent une **demande d'accès** au programme Limited Access de Microsoft (formulaire à remplir, justification métier requise). Indisponible sur le tier gratuit (F0). Les capacités de détection d'émotion et de genre ont été **retirées**. Source : [Microsoft Learn - Limited Access](https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/computer-vision/limited-access-identity)  
+> - **AWS Rekognition** : `IndexFaces` / `SearchFacesByImage` restent accessibles mais soumis aux conditions d'AWS Responsible AI.  
+> - **Alternative open source** : `face_recognition` (Python via P4D) ou `OpenCV LBPHFaceRecognizer` pour des projets internes sans dépendance cloud.
+
 **Technologies** :
-- Azure Face API ou AWS Rekognition
+- AWS Rekognition (ou Azure Face API après approbation Limited Access)
 - Base de données sécurisée
 - Interface VCL/FMX
 
@@ -613,7 +663,7 @@ end;
 
 **Technologies** :
 - FireMonkey multi-plateforme
-- TensorFlow Lite pour Android/iOS
+- LiteRT (anciennement TensorFlow Lite) pour Android/iOS
 - API REST vers serveur Delphi
 
 ### 5. Analyse automatique de radiographies
@@ -671,10 +721,12 @@ end;
 
 ```pascal
 // Cache des résultats avec hash de l'image
+// ⚠️ Variable globale : à créer en `initialization` / libérer en `finalization`
+//    de l'unité, sinon AV au premier appel.
 var
   CacheReconnaissances: TDictionary<string, TResultatReconnaissance>;
 
-function ReconnaireAvecCache(const CheminImage: string): TResultatReconnaissance;  
+function ReconnaitreAvecCache(const CheminImage: string): TResultatReconnaissance;  
 var  
   HashImage: string;
 begin
@@ -688,6 +740,12 @@ begin
   end;
   // Sinon, retourner depuis le cache
 end;
+
+initialization
+  CacheReconnaissances := TDictionary<string, TResultatReconnaissance>.Create;
+
+finalization
+  CacheReconnaissances.Free;
 ```
 
 ### Traitement par lots
@@ -791,7 +849,7 @@ end;
 
 ### Modèles fondamentaux multimodaux
 
-**Vision + Langage** : Modèles comme GPT-4 Vision qui combinent compréhension d'images et de texte.
+**Vision + Langage** : Modèles multimodaux natifs comme GPT-4o, Claude 4 ou Gemini, qui combinent compréhension d'images et de texte dans une seule requête.
 
 **Applications futures** :
 - Assistance visuelle conversationnelle
@@ -808,9 +866,9 @@ end;
 - Confidentialité renforcée
 
 **Technologies** :
-- TensorFlow Lite
+- LiteRT (anciennement TensorFlow Lite)
 - ONNX Runtime Mobile
-- Puces dédiées (NPU)
+- Puces dédiées (NPU / TPU mobile)
 
 ### Reconnaissance en temps réel
 

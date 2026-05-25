@@ -26,7 +26,7 @@ TensorFlow est une bibliothèque open-source développée par Google, devenue la
 2. **Performance** : Optimisé pour utiliser les GPU (cartes graphiques) pour des calculs ultra-rapides
 3. **Écosystème riche** : Modèles pré-entraînés disponibles gratuitement
 4. **Support** : Documentation complète et communauté active
-5. **Production-ready** : Utilisé par Google, Airbnb, Twitter et des milliers d'entreprises
+5. **Production-ready** : Utilisé par Google, Airbnb, X (anciennement Twitter) et des milliers d'entreprises
 
 ### Les défis de l'intégration avec Delphi
 
@@ -60,10 +60,12 @@ TensorFlow propose une API C qui peut être appelée depuis Delphi via des DLL.
 
 ### Approche 2 : Python4Delphi (P4D)
 
-Python4Delphi est une bibliothèque qui permet d'exécuter du code Python directement depuis vos applications Delphi.
+Python4Delphi est une bibliothèque qui permet d'exécuter du code Python directement depuis vos applications Delphi. Elle est **officiellement disponible via GetIt Package Manager** d'Embarcadero ([getitnow.embarcadero.com/python4delphi](https://getitnow.embarcadero.com/python4delphi/)) et compatible avec Delphi 13 Florence.
+
+**Versions Python supportées** : Python 3.8, 3.9, 3.10, 3.11, 3.12, 3.13 (via le composant `PythonEnvironments` également disponible chez Embarcadero).
 
 **Comment ça fonctionne** :
-1. Installez Python4Delphi via GetIt Package Manager
+1. Installez Python4Delphi via GetIt Package Manager (Outils → GetIt Package Manager)
 2. Écrivez votre code ML en Python (avec TensorFlow)
 3. Appelez ce code Python depuis votre application Delphi
 4. Échangez des données entre Delphi et Python
@@ -71,17 +73,39 @@ Python4Delphi est une bibliothèque qui permet d'exécuter du code Python direct
 **Exemple conceptuel** :
 ```pascal
 // Côté Delphi
+uses
+  PythonEngine, VarPyth;
+// ⚠️ VarPyth fournit `MainModule`, `VarPythonEval` et la conversion
+// Python → Variant. Sans cette unité, `TPythonEngine.EvalString` retourne
+// un PPyObject (pointeur Python brut), pas un Variant utilisable directement.
+
 var
-  PythonEngine: TPythonEngine;
-  Result: Variant;
+  PyEngine: TPythonEngine;
+  Prediction: Variant;
 begin
-  PythonEngine := TPythonEngine.Create(nil);
+  // ⚠️ On évite d'appeler la variable locale `Result` : c'est l'identifiant
+  // réservé qui désigne la valeur de retour d'une fonction en Object Pascal.
+  PyEngine := TPythonEngine.Create(nil);
   try
-    // Exécute du code Python qui utilise TensorFlow
-    Result := PythonEngine.EvalString('predict_image("chat.jpg")');
-    ShowMessage('Prédiction: ' + VarToStr(Result));
+    // ⚠️ Configurer la version Python AVANT LoadDll. UseLastKnownVersion
+    // demande à P4D de détecter automatiquement la version installée.
+    // Sinon, on peut forcer via : PyEngine.RegVersion := '3.12';
+    PyEngine.UseLastKnownVersion := True;
+    PyEngine.LoadDll; // Charge python3X.dll en mémoire
+
+    // Charger le module Python qui contient la fonction predict_image
+    PyEngine.ExecString('import predictor');
+
+    // Évaluer une expression Python et récupérer le résultat en Variant.
+    // ⚠️ `VarPythonEval` (de VarPyth) renvoie un Variant directement ;
+    //    ne pas écrire `MainModule.EvalString(...)` qui n'est PAS une méthode
+    //    standard de l'objet __main__ exposé par VarPyth.
+    // ⚠️ Convertir Prediction en chaîne Delphi (VarToStr) AVANT PyEngine.Free :
+    //    après libération de l'interpréteur, le Variant Python devient invalide.
+    Prediction := VarPythonEval('predictor.predict_image("chat.jpg")');
+    ShowMessage('Prédiction: ' + VarToStr(Prediction));
   finally
-    PythonEngine.Free;
+    PyEngine.Free;
   end;
 end;
 ```
@@ -210,9 +234,11 @@ ONNX (Open Neural Network Exchange) est un format standardisé pour les modèles
 
 **Avantages spécifiques** : Si vous travaillez déjà avec des images, OpenCV combine traitement d'image et ML.
 
-### TensorFlow Lite
+### LiteRT (anciennement TensorFlow Lite)
 
-**Description** : Version allégée de TensorFlow pour mobiles et embedded
+**Description** : Version allégée de TensorFlow pour mobiles et embedded.
+
+> 💡 **Renommage en LiteRT (septembre 2024)** : Google a renommé **TensorFlow Lite** en **LiteRT** (« Lite Runtime ») pour refléter son support multi-framework (TF, PyTorch, JAX, Keras). Le module `tf.lite` est en cours de dépréciation au profit du nouveau dépôt indépendant LiteRT, mais l'API Interpreter reste identique — la migration ne requiert qu'un changement du nom de package. Documentation officielle : [ai.google.dev/edge/litert](https://ai.google.dev/edge/litert).
 
 **Intégration avec Delphi** :
 - Via JNI pour Android
@@ -257,18 +283,34 @@ Les modèles ML peuvent être très gourmands :
 
 ```pascal
 // Exemple conceptuel
+// ⚠️ Toujours envelopper TTask.Run dans un try/except : sans cela, une
+//    exception du modèle ML serait silencieusement perdue (TTask n'est pas
+//    `Wait`-é dans cet exemple, donc l'exception n'a aucun chemin de remontée).
 TTask.Run(procedure  
 var  
   Prediction: string;
+  ErrMsg: string;
 begin
-  // Appel au modèle ML (lent)
-  Prediction := MLModel.Predict(ImageData);
+  try
+    // Appel au modèle ML (lent)
+    Prediction := MLModel.Predict(ImageData);
 
-  // Retour sur le thread principal pour l'UI
-  TThread.Synchronize(nil, procedure
-  begin
-    LabelResult.Caption := Prediction;
-  end);
+    // Retour sur le thread principal pour l'UI
+    TThread.Synchronize(nil, procedure
+    begin
+      LabelResult.Caption := Prediction;
+    end);
+  except
+    on E: Exception do
+    begin
+      // Capturer E.Message AVANT Queue (E libéré après le `on E:`)
+      ErrMsg := E.Message;
+      TThread.Queue(nil, procedure
+      begin
+        LabelResult.Caption := 'Erreur ML : ' + ErrMsg;
+      end);
+    end;
+  end;
 end);
 ```
 

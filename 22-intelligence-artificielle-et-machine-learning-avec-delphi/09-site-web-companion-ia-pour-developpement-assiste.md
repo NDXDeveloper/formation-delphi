@@ -1,25 +1,44 @@
 🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-# 22.9 Site web companion IA pour le développement assisté
+# 22.9 RAD AI Companion et Smart CodeInsight : l'IA dans RAD Studio
 
-## Introduction au companion IA
+## Deux outils complémentaires
 
-### Qu'est-ce que le site web companion IA ?
+Delphi 13 Florence propose **deux outils IA distincts mais complémentaires** :
 
-Le site web companion IA de Delphi 13 Florence est un assistant de développement intelligent accessible directement depuis l'IDE. Il utilise des grands modèles de langage (LLM) avancés pour vous aider à coder plus rapidement, résoudre des problèmes, et apprendre Delphi de manière interactive.
+### 🌐 RAD AI Companion (web)
+- **Chatbot IA web** spécifiquement entraîné sur le contenu RAD Studio
+- Accessible via le menu **Aide → RAD AI Companion**
+- Idéal pour : questions de documentation, génération d'exemples de code, suggestions de correction
+- Documentation : [embarcadero.com/RADAICompanion](https://www.embarcadero.com/RADAICompanion)
 
-**Analogie simple** : Imaginez avoir un expert Delphi expérimenté assis à côté de vous, disponible 24/7, qui peut répondre instantanément à toutes vos questions, générer du code, corriger des erreurs, et vous expliquer des concepts complexes. C'est exactement ce que fait le companion IA.
+### 🛠️ Smart CodeInsight (IDE)
+- **Intégration IA dans l'éditeur** de l'IDE (présente depuis RAD Studio 12.3, améliorée en 13)
+- Panneau de chat dockable + commandes contextuelles dans l'éditeur (clic droit)
+- Support multi-LLM : **OpenAI, Gemini, Claude (en ligne) et Ollama (hors ligne)**
+- Idéal pour : refactoring, ajout de commentaires, génération de tests, analyse de sécurité, optimisation
+- Documentation : [docwiki.embarcadero.com/.../Smart_CodeInsight](https://docwiki.embarcadero.com/RADStudio/Florence/en/Smart_CodeInsight)
+
+> ℹ️ Cette section présente les deux outils. Les sous-sections distinguent les fonctionnalités web (RAD AI Companion) des fonctionnalités IDE (Smart CodeInsight).
+
+## Introduction au RAD AI Companion
+
+### Qu'est-ce que le RAD AI Companion ?
+
+Le **RAD AI Companion** de Delphi 13 Florence est un chatbot IA web accessible directement depuis l'IDE. Spécifiquement entraîné sur le contenu RAD Studio, il vous aide à coder plus rapidement, à résoudre des problèmes, et à apprendre Delphi de manière interactive.
+
+**Analogie simple** : Imaginez avoir un expert Delphi expérimenté assis à côté de vous, disponible 24/7, qui peut répondre instantanément à toutes vos questions, générer du code, corriger des erreurs, et vous expliquer des concepts complexes. C'est exactement ce que fait le RAD AI Companion.
 
 ### Pourquoi c'est révolutionnaire
 
-**Avant le companion IA** :
+**Avant le RAD AI Companion** :
 - Recherche sur Google/Stack Overflow
 - Consultation de documentation (parfois obsolète)
 - Attente de réponses sur les forums
 - Essais/erreurs pour comprendre
 - Temps perdu à chercher des exemples
 
-**Avec le companion IA** :
+**Avec le RAD AI Companion** :
 - Réponses instantanées dans le contexte de votre code
 - Code généré adapté à votre projet
 - Explications détaillées sur demande
@@ -34,85 +53,107 @@ Le site web companion IA de Delphi 13 Florence est un assistant de développemen
 - Peut donner des exemples non adaptés
 - Nécessite de copier-coller le code
 
-**Companion IA Delphi** :
-- Spécialisé Delphi avec connaissance approfondie
-- Accès au contexte de votre projet
-- Intégration directe dans l'IDE
+**RAD AI Companion** :
+- Entraîné spécifiquement sur le contenu RAD Studio
+- Connaissance approfondie de Delphi, VCL, FMX, FireDAC, etc.
 - Code généré prêt à utiliser
-- Suggestions basées sur vos composants et bibliothèques
+- Suggestions basées sur les bibliothèques officielles
 
 ## Accès et configuration
 
-### Activation du companion IA
+### Activation du RAD AI Companion
 
 **Première utilisation** :
 
-1. **Ouvrir le companion** :
-   - Menu : Outils → Companion IA
-   - Raccourci clavier : `Ctrl+Shift+A` (par défaut)
-   - Ou icône dans la barre d'outils
+1. **Ouvrir le RAD AI Companion** :
+   - Menu : **Aide → RAD AI Companion** (chemin officiel Embarcadero)
+   - Ou icône dans la barre d'outils si disponible
 
 2. **Configuration initiale** :
    - Accepter les conditions d'utilisation
-   - Le companion se connecte automatiquement
+   - Le RAD AI Companion s'ouvre dans son interface web intégrée
    - Configuration du compte (optionnelle pour fonctionnalités avancées)
 
 3. **Interface** :
-   - Panneau ancrable dans l'IDE
-   - Peut être positionné où vous voulez
-   - Mode fenêtre flottante disponible
+   - Interface web intégrée à l'IDE
+   - Chatbot avec génération de code et réponses contextuelles
+   - Possibilité de basculer entre chat et exemples de code
 
 ### Options de configuration
 
-**Paramètres accessibles via** : Outils → Options → Companion IA
+**Paramètres accessibles via** : Outils → Options → RAD AI Companion (ou rubrique dédiée selon la version)
 
-**Paramètres disponibles** :
+### Configuration officielle de Smart CodeInsight
 
-```
-☑ Activer le companion IA
-☑ Suggestions automatiques en cours de frappe
-☑ Analyse du contexte du projet
-☑ Historique des conversations (local)
-☐ Partager les métriques d'utilisation (anonyme)
+**Chemin d'accès** : **Outils → Options → Éditeur → Smart CodeInsight**
 
-Modèle IA : [GPT-4 ▼]  
-Langue des réponses : [Français ▼]  
-Niveau de détail : [Équilibré ▼] (Concis/Équilibré/Détaillé)  
+**Fournisseurs LLM supportés officiellement** :
+1. **OpenAI** (API payante)
+2. **Gemini by Google** (tier gratuit disponible — ⚠️ le tier gratuit utilise vos données pour l'entraînement)
+3. **Claude by Anthropic** (API payante)
+4. **Ollama** (hors ligne, self-hosted, gratuit MIT)
 
-Raccourcis personnalisables :
-- Ouvrir companion : Ctrl+Shift+A
-- Générer code : Ctrl+Shift+G
-- Expliquer sélection : Ctrl+Shift+E
-- Corriger erreur : Ctrl+Shift+F
-```
+**Options de configuration** :
+- Activation/désactivation globale de Smart CodeInsight
+- Activation individuelle par moteur (par onglet)
+- Moteur par défaut pour le chat et pour les commandes de l'éditeur
+- Paramètres par moteur :
+  - API BaseURL configurable
+  - Choix du modèle (dropdown)
+  - Paramètres spécifiques au fournisseur
+- **Stockage chiffré des clés API** (sécurité)
+- **Aucun "brokering" par Embarcadero** (les requêtes vont directement au fournisseur choisi)
+
+### Fenêtre de chat Smart CodeInsight (dockable dans l'IDE)
+
+**Commandes spéciales dans la zone de saisie** :
+- `chatgpt>` — basculer vers OpenAI
+- `gemini>` — basculer vers Gemini
+- `claude>` — basculer vers Claude
+- `ollama>` — basculer vers Ollama (local)
+- `clear>` — effacer le memo de réponse
+- `stop>` — arrêter la génération en cours
+- **`Ctrl + Enter`** — démarrer la génération
+
+### Commandes contextuelles dans l'éditeur (clic droit sur du code sélectionné)
+
+Smart CodeInsight ajoute ces commandes au menu contextuel de l'éditeur :
+
+| Commande | Description |
+|----------|-------------|
+| **AI Chat** | Ouvrir la fenêtre de chat |
+| **Find Bugs** | Identifier les problèmes potentiels du code |
+| **Explain Code** | Expliquer le code sélectionné |
+| **Add Comment** | Insérer des commentaires explicatifs |
+| **Complete the Code** | Compléter / étendre un snippet de code |
+| **Optimize Code** | Améliorer l'efficacité du code |
+| **Add Unit Test** | Générer du code de test unitaire |
+| **Convert to Assembly** | Générer la sortie en assembleur |
+| **Convert to Delphi** | Transpiler depuis C++ ou assembleur |
+| **Convert to C++ Builder** | Transpiler vers C++ |
+
+> 💡 Le résultat de ces commandes est inséré dans l'éditeur sous forme de **commentaire** après le code analysé, ce qui permet de relire et adapter le contenu généré avant utilisation.
 
 ### Modes d'utilisation
 
-**Mode Chat** :
+**Mode Chat (RAD AI Companion ou fenêtre Smart CodeInsight)** :
 Conversation libre avec l'assistant, idéal pour :
-- Poser des questions générales
+- Poser des questions générales sur Delphi/RAD Studio (RAD AI Companion est spécifiquement entraîné dessus)
 - Demander des explications
 - Brainstorming de solutions
 - Apprentissage de concepts
 
-**Mode Contextuel** :
-Intégré à l'éditeur de code, pour :
-- Suggestions pendant la frappe
-- Actions rapides sur le code sélectionné
-- Corrections d'erreurs
-- Refactoring assisté
+**Mode Contextuel (Smart CodeInsight dans l'éditeur)** :
+Intégré à l'éditeur de code via le **clic droit sur du code sélectionné**, voir la liste des commandes ci-dessus.
 
 **Mode Documentation** :
-Accès à la documentation interactive :
-- Recherche intelligente
-- Exemples personnalisés
-- Tutoriels guidés
+Le RAD AI Companion est spécifiquement entraîné sur la documentation RAD Studio, ce qui le rend très efficace pour répondre aux questions de documentation Embarcadero.
 
 ## Fonctionnalités principales
 
 ### 1. Génération de code
 
-**Principe** : Décrivez ce que vous voulez faire en langage naturel, le companion génère le code Delphi correspondant.
+**Principe** : Décrivez ce que vous voulez faire en langage naturel, le RAD AI Companion génère le code Delphi correspondant.
 
 **Comment l'utiliser** :
 
@@ -162,35 +203,37 @@ end;
 "Génère un thread pour télécharger un fichier en arrière-plan"
 ```
 
-**Le companion comprend le contexte** :
+**Le RAD AI Companion comprend le contexte** :
 
 Si vous avez déjà une classe `TClient` dans votre projet :
 ```
 Vous : Ajoute une méthode pour rechercher un client par email
 
-Companion : J'ai vu votre classe TClient. Voici la méthode à ajouter :
+Companion : J'ai vu votre classe TClient. Voici une méthode de classe :
 
-function TClient.RechercherParEmail(const Email: string): Boolean;  
-begin  
-  // Implémentation basée sur votre structure existante
-  FDQuery1.Close;
-  FDQuery1.SQL.Text := 'SELECT * FROM Clients WHERE Email = :Email';
-  FDQuery1.ParamByName('Email').AsString := Email;
-  FDQuery1.Open;
-  Result := not FDQuery1.IsEmpty;
+class function TClient.RechercherParEmail(
+  Query: TFDQuery; const Email: string): Boolean;
+begin
+  // ℹ️ `class function` car la recherche ne porte pas sur une instance
+  //    existante ; on vérifie juste si un client avec cet email existe.
+  //    Pour un vrai pattern d'accès, voir le Repository plus bas.
+  Query.Close;
+  Query.SQL.Text := 'SELECT 1 FROM Clients WHERE Email = :Email';
+  Query.ParamByName('Email').AsString := Email;
+  Query.Open;
+  Result := not Query.IsEmpty;
 end;
 ```
 
 ### 2. Explication de code
 
-**Principe** : Sélectionnez du code que vous ne comprenez pas, le companion l'explique en détail.
+**Principe** : Sélectionnez du code que vous ne comprenez pas, Smart CodeInsight l'explique en détail (commande officielle **Explain Code**).
 
 **Utilisation** :
 
-1. Sélectionnez le code mystérieux
-2. Clic droit → "Expliquer avec IA"
-   Ou `Ctrl+Shift+E`
-3. Explication détaillée apparaît
+1. Sélectionnez le code mystérieux dans l'éditeur
+2. **Clic droit → Explain Code** (commande officielle Smart CodeInsight)
+3. L'explication est insérée comme commentaire après le code
 
 **Exemple** :
 
@@ -205,7 +248,7 @@ begin
 end);
 ```
 
-**Explication du companion** :
+**Explication du RAD AI Companion** :
 ```
 Ce code utilise le multithreading avec TTask pour exécuter du code  
 en arrière-plan :  
@@ -235,9 +278,9 @@ Voulez-vous un exemple plus complet avec gestion d'erreurs ?
 
 ### 3. Détection et correction d'erreurs
 
-**Principe** : Lorsque votre code ne compile pas ou génère une erreur, le companion analyse et suggère des corrections.
+**Principe** : Lorsque votre code a un bug potentiel, Smart CodeInsight analyse et suggère des corrections (commande officielle **Find Bugs**).
 
-**Scénario 1 : Erreur de compilation**
+**Scénario 1 : Code avec bug potentiel**
 
 **Code avec erreur** :
 ```pascal
@@ -248,9 +291,9 @@ begin
 end;
 ```
 
-**Action** : Cliquer sur l'icône ampoule 💡 ou `Ctrl+Shift+F`
+**Action** : Sélectionner le bloc puis **Clic droit → Find Bugs** (commande officielle Smart CodeInsight)
 
-**Suggestion du companion** :
+**Suggestion du RAD AI Companion** :
 ```
 Erreur détectée : "Variable Liste might not have been initialized"
 
@@ -357,7 +400,7 @@ begin
 end;
 ```
 
-**Action** : Sélectionner le code de validation → Clic droit → "Refactorer avec IA"
+**Action** : Sélectionner le code → **Clic droit → Optimize Code** (commande officielle Smart CodeInsight) ou demander un refactor dans le chat
 
 **Companion suggère** :
 ```pascal
@@ -427,18 +470,20 @@ end;
 
 **Companion modernise** :
 ```pascal
-// Version moderne et concise
+// Version moderne et concise (TStrings expose nativement IndexOf)
 if ListBox1.Items.IndexOf('Test') >= 0 then
   ShowMessage('Trouvé');
 
-// Ou avec LINQ (System.Generics.Collections)
+// Ou recherche insensible à la casse :
 uses
-  System.Generics.Collections;
+  System.StrUtils;
 
-if TList<string>.Create(ListBox1.Items.ToStringArray).Contains('Test') then
-  ShowMessage('Trouvé');
+if MatchText('Test', ListBox1.Items.ToStringArray) then
+  ShowMessage('Trouvé (insensible à la casse)');
 
 💡 La méthode IndexOf est plus efficace et lisible que la boucle manuelle.
+   Évitez `TList<string>.Create(...).Contains(...)` qui crée une liste
+   intermédiaire JAMAIS LIBÉRÉE → fuite mémoire.
 ```
 
 **C. Optimiser les performances**
@@ -491,7 +536,7 @@ Recherche : "TButton"
 Résultats : Documentation standard de TButton  
 ```
 
-**Recherche avec companion** :
+**Recherche avec RAD AI Companion** :
 ```
 Vous : Comment changer la couleur d'un bouton au survol de la souris ?
 
@@ -512,8 +557,14 @@ begin
   Button1.Fill.Color := TAlphaColors.Silver;  // FMX
 end;
 
+⚠️ Pour TButton VCL, la couleur peut être ignorée par les thèmes Windows.
+   Options pour un vrai effet visuel :
+   - Désactiver les thèmes : `TButton.StyleElements := [];`
+   - Utiliser TPanel ou TSpeedButton qui supportent mieux la coloration
+   - Utiliser un style VCL personnalisé
+
 💡 Pour un effet plus sophistiqué avec FireMonkey, utilisez les styles
-et animations.
+   et animations (TColorAnimation, TFloatAnimation).
 
 Documentation connexe :
 - [TControl.OnMouseEnter](lien)
@@ -549,21 +600,24 @@ FDQuery1.ApplyUpdates; // Envoyer toutes les modifications en une fois
 
 ### 6. Suggestions de code intelligentes
 
-**Principe** : Pendant que vous codez, le companion suggère automatiquement du code pertinent.
+**Principe** : Pendant que vous codez, le RAD AI Companion suggère automatiquement du code pertinent.
 
 **Scénario 1 : Complétion intelligente**
 
 **Vous tapez** :
 ```pascal
-procedure ConnecterMySQL
+function ConnecterMySQL
 ```
 
 **Companion suggère automatiquement** (en grisé) :
 ```pascal
-procedure ConnecterMySQL(const Host, Database, Username, Password: string): Boolean;  
+function ConnecterMySQL(const Host, Database, Username, Password: string): Boolean;  
 var  
   Connection: TFDConnection;
 begin
+  // ⚠️ `function` (pas `procedure`) car on retourne un Boolean. Une procédure
+  // n'a pas de valeur de retour Result.
+  Result := False;
   Connection := TFDConnection.Create(nil);
   try
     Connection.DriverName := 'MySQL';
@@ -577,16 +631,16 @@ begin
       Result := True;
     except
       on E: Exception do
-      begin
         ShowMessage('Erreur de connexion : ' + E.Message);
-        Result := False;
-      end;
+        // Result reste False (initialisé en début de fonction)
     end;
   finally
     Connection.Free;
   end;
 end;
 ```
+
+⚠️ **Note pédagogique** : cet exemple ferme la connexion juste après le test (via Connection.Free), ce qui est rarement utile en pratique. En production, on garde généralement la TFDConnection en variable de classe et on ferme à la fermeture de l'application.
 
 **Appuyez sur `Tab`** pour accepter la suggestion.
 
@@ -628,7 +682,7 @@ Plutôt qu'une suggestion générique.
 
 ### 7. Apprentissage personnalisé
 
-**Principe** : Le companion adapte ses réponses à votre niveau et style de code.
+**Principe** : Le RAD AI Companion adapte ses réponses à votre niveau et style de code.
 
 **Initialisation** :
 
@@ -722,7 +776,7 @@ pour FMX custom styling ?
 
 ### 8. Génération de tests unitaires
 
-**Principe** : Le companion génère automatiquement des tests pour votre code.
+**Principe** : Smart CodeInsight génère automatiquement des tests pour votre code via la commande officielle **Add Unit Test**.
 
 **Votre code** :
 ```pascal
@@ -742,7 +796,7 @@ begin
 end;
 ```
 
-**Action** : Clic droit sur la fonction → "Générer tests unitaires"
+**Action** : Sélectionner la fonction → **Clic droit → Add Unit Test** (commande officielle Smart CodeInsight)
 
 **Tests générés** (DUnitX) :
 ```pascal
@@ -827,7 +881,7 @@ end;
 end.
 ```
 
-**Le companion explique** :
+**Le RAD AI Companion explique** :
 ```
 J'ai généré 6 tests couvrant les cas principaux :
 ✅ Trois codes promotionnels valides
@@ -867,7 +921,7 @@ public class Client
 }
 ```
 
-**Action** : Coller dans le companion → "Convertir en Delphi"
+**Action** : Smart CodeInsight propose la commande **Convert to Delphi** (transpile depuis C++ ou assembleur). Pour C# / autres langages, utilisez le chat du RAD AI Companion ou collez le code dans la fenêtre de chat Smart CodeInsight.
 
 **Résultat Delphi** :
 ```pascal
@@ -900,9 +954,11 @@ end;
 **Companion** :
 ```pascal
 // Interface du repository (pour injection de dépendance)
+// ⚠️ Générer le GUID avec `Ctrl+Shift+G` dans l'IDE (raccourci standard
+//    Delphi pour insérer un GUID au point d'insertion).
 type
   IClientRepository = interface
-    ['{GUID-HERE}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
     function GetAll: TObjectList<TClient>;
     function GetById(Id: Integer): TClient;
     function Add(Client: TClient): Boolean;
@@ -1020,29 +1076,36 @@ begin
   end;
 end;
 
-// Ou version encore plus concise avec LINQ-style (System.Generics.Collections)
+// Ou version utilisant un TList<string> pour filtrer puis transférer
 uses
   System.Generics.Collections, System.StrUtils;
 
 procedure TForm1.Button1Click(Sender: TObject);  
 var  
-  FilteredItems: TArray<string>;
+  Item: string;
+  Filtered: TList<string>;
 begin
-  FilteredItems := TArray<string>(ListBox1.Items.ToStringArray);
-  FilteredItems := TArray.Filter<string>(FilteredItems,
-    function(const Item: string): Boolean
-    begin
-      Result := ContainsText(Item, 'test');
-    end);
+  Filtered := TList<string>.Create;
+  try
+    for Item in ListBox1.Items do
+      if ContainsText(Item, 'test') then
+        Filtered.Add(Item);
 
-  Memo1.Lines.AddStrings(FilteredItems);
+    Memo1.Lines.AddStrings(Filtered.ToArray);
+  finally
+    Filtered.Free; // ⚠️ Toujours libérer les TList créés manuellement
+  end;
 end;
 
 Améliorations apportées :
 ✅ Syntaxe for-in plus lisible
 ✅ ContainsText (case-insensitive) au lieu de Pos+LowerCase
 ✅ Méthodes modernes de la RTL
-✅ Option avec programmation fonctionnelle
+✅ Pattern try/finally pour éviter les fuites mémoire
+
+⚠️ Note : `TArray.Filter<T>` n'existe pas dans la RTL Delphi standard.
+   Pour du vrai filtrage fonctionnel, utilisez Spring4D ou implémentez
+   votre propre helper.
 
 Autres modernisations possibles :
 - [Utiliser TTask pour exécution asynchrone]
@@ -1066,9 +1129,9 @@ WHERE c.Ville = 'Paris'
 **Companion analyse** :
 ```
 Problèmes détectés :
-❌ Deux sous-requêtes corrélées (N+1 queries)
-❌ Scan complet pour chaque client
-❌ Pas d'index visible
+❌ Deux sous-requêtes corrélées (exécutées pour chaque ligne de Clients)
+❌ Scan complet de Commandes pour chaque client
+❌ Pas d'index visible sur ClientId / Ville
 
 Version optimisée :
 
@@ -1107,7 +1170,7 @@ Gain de performance estimé : 10x à 100x selon volume de données
 **À mémoriser** :
 
 ```
-Ctrl+Shift+A  → Ouvrir le companion  
+Ctrl+Shift+A  → Ouvrir le RAD AI Companion (menu Aide → RAD AI Companion)  
 Ctrl+Shift+G  → Générer code depuis commentaire  
 Ctrl+Shift+E  → Expliquer sélection  
 Ctrl+Shift+F  → Corriger erreur  
@@ -1163,58 +1226,50 @@ Companion → Génère structure de projet complète avec :
 
 ## Confidentialité et sécurité
 
-### Ce qui est envoyé au companion
+### Ce qui est envoyé aux fournisseurs IA
 
-**Envoyé** :
-- Code que vous demandez d'analyser/générer
-- Messages du chat
-- Structure du projet (noms de classes, méthodes)
-- Erreurs de compilation
+**Important** : Selon la documentation officielle Embarcadero, **les requêtes ne sont PAS "brokerées" par Embarcadero** — elles vont directement au fournisseur IA que vous avez configuré (OpenAI, Claude, Gemini ou Ollama). Embarcadero ne reçoit ni ne traite vos données.
 
-**PAS envoyé** :
-- Clés API ou mots de passe
-- Données utilisateur de votre application
-- Code complet du projet (seulement extraits contextuels)
-- Informations de connexion base de données
+**Pour Smart CodeInsight (commandes éditeur ou chat IDE)** :
+- Vous contrôlez explicitement ce qui est envoyé : sélection + clic droit + commande
+- Le code sélectionné ET le prompt vont au fournisseur configuré
+- Les clés API sont **chiffrées** dans la configuration locale
 
-### Paramètres de confidentialité
+**Pour RAD AI Companion (chatbot web Embarcadero)** :
+- Le chat est entraîné sur le contenu RAD Studio officiel
+- ⚠️ Selon la page Embarcadero : *"questions and responses may be recorded and shared with third parties for analysis and improvement"*
+- Ne saisissez pas de données confidentielles dans ce chat
 
-```
-☑ Utiliser le companion IA
-☑ Partager le contexte du projet (améliore les suggestions)
-☐ Partager les statistiques d'utilisation (anonymisées)
-☐ Contribuer à l'amélioration du modèle
+**Bonnes pratiques** :
+- **JAMAIS** envoyer de clés API, mots de passe, secrets dans le code envoyé
+- **JAMAIS** envoyer de données utilisateur réelles (clients, etc.)
+- Anonymisez les exemples avant de demander de l'aide
+- Si vous traitez des données sensibles, privilégiez **Ollama** (LLM local, hors ligne)
 
-Mode de partage :
-● Seulement le code sélectionné
-○ Code sélectionné + contexte (fichier actuel)
-○ Code sélectionné + contexte (projet complet)
-```
+### Mode hors ligne via Ollama
 
-### Mode déconnecté
+**Smart CodeInsight supporte Ollama**, un runtime LLM local et open source (licence MIT) :
 
-**Fonctionnalités disponibles hors ligne** :
-- Templates de code locaux
-- Refactoring basique
-- Détection d'erreurs par analyse statique
-- Documentation locale
+- ✅ Aucune donnée n'est envoyée à un serveur externe
+- ✅ Idéal pour les secteurs régulés (banque, santé, gouvernement)
+- ✅ Pas de coût d'API
+- ⚠️ Nécessite des ressources matérielles locales (GPU recommandé pour de bonnes performances)
 
-**Nécessite connexion** :
-- Génération de code IA
-- Explications détaillées
-- Optimisations avancées
-- Suggestions contextuelles avancées
+**Configuration Ollama** :
+1. Installer Ollama depuis [ollama.com](https://ollama.com)
+2. Télécharger un modèle : `ollama pull llama3`
+3. Configurer Smart CodeInsight pour pointer vers `http://localhost:11434`
 
 ## Limitations et considérations
 
 ### Limitations actuelles
 
-**1. Le companion peut se tromper**
+**1. Le RAD AI Companion peut se tromper**
 
 Toujours vérifier et tester le code généré.
 
 ```
-⚠️ Le companion génère du code basé sur des patterns appris.
+⚠️ Le RAD AI Companion génère du code basé sur des patterns appris.
    Il peut parfois :
    - Utiliser des noms de variables inappropriés
    - Manquer des cas limites
@@ -1226,8 +1281,8 @@ Toujours vérifier et tester le code généré.
 **2. Connaissances limitées**
 
 ```
-Le companion connaît bien :
-✅ Delphi jusqu'à version 12
+Le RAD AI Companion connaît bien :
+✅ Delphi jusqu'à la version courante (Delphi 13 Florence)
 ✅ VCL, FireMonkey
 ✅ Patterns et pratiques courantes
 ✅ Bibliothèques populaires
@@ -1235,12 +1290,12 @@ Le companion connaît bien :
 Connaissances limitées :
 ⚠️ Bibliothèques tierces très spécifiques
 ⚠️ Code propriétaire de votre entreprise
-⚠️ Delphi 13 (nouvelles fonctionnalités, à venir)
+⚠️ Évolutions très récentes du langage (date de coupure des données d'entraînement)
 ```
 
 **3. Contexte limité**
 
-Le companion voit votre code par morceaux, pas l'architecture complète.
+Le RAD AI Companion voit votre code par morceaux, pas l'architecture complète.
 
 **Solution** : Fournir du contexte dans vos questions.
 
@@ -1282,7 +1337,7 @@ Plutôt que tout demander d'un coup.
 
 **4. Apprenez du code généré**
 
-Utilisez le companion comme outil d'apprentissage :
+Utilisez le RAD AI Companion comme outil d'apprentissage :
 - Demandez des explications sur le code généré
 - Comprenez les patterns utilisés
 - Explorez les alternatives suggérées
@@ -1291,7 +1346,7 @@ Utilisez le companion comme outil d'apprentissage :
 
 ### Tableau de bord d'utilisation
 
-Accessible via : Outils → Companion IA → Statistiques
+Accessible via : Aide → RAD AI Companion (puis section Statistiques selon les versions)
 
 **Métriques disponibles** :
 
@@ -1320,12 +1375,12 @@ Satisfaction :
 
 ### Mesure de l'impact
 
-**Avant companion** :
+**Avant RAD AI Companion** :
 - Temps moyen pour résoudre une erreur : 15 min
 - Temps pour implémenter nouvelle fonctionnalité : 2h
 - Recherche documentation : 30 min/jour
 
-**Avec companion** :
+**Avec RAD AI Companion** :
 - Temps moyen pour résoudre une erreur : 2 min (-87%)
 - Temps pour implémenter nouvelle fonctionnalité : 45 min (-62%)
 - Recherche documentation : 5 min/jour (-83%)
@@ -1334,9 +1389,9 @@ Satisfaction :
 
 ## Conclusion
 
-Le site web companion IA de Delphi 13 Florence n'est pas qu'un simple outil de génération de code. C'est un véritable assistant de développement qui transforme votre façon de travailler avec Delphi.
+Le **RAD AI Companion** de Delphi 13 Florence n'est pas qu'un simple outil de génération de code. C'est un véritable assistant de développement qui transforme votre façon de travailler avec Delphi.
 
-**Ce que le companion change** :
+**Ce que le RAD AI Companion change** :
 - Apprentissage accéléré pour les débutants
 - Productivité décuplée pour les experts
 - Réduction drastique du temps de débogage
@@ -1354,7 +1409,7 @@ Le site web companion IA de Delphi 13 Florence n'est pas qu'un simple outil de g
 
 **L'avenir du développement Delphi** :
 
-Le companion IA n'est que le début. Embarcadero continue d'investir dans l'IA pour améliorer l'expérience de développement. Les prochaines versions apporteront :
+Le RAD AI Companion n'est que le début. Embarcadero continue d'investir dans l'IA pour améliorer l'expérience de développement. Les prochaines versions apporteront :
 - Compréhension encore meilleure du contexte
 - Suggestions proactives plus pertinentes
 - Génération d'architectures complètes
@@ -1363,9 +1418,9 @@ Le companion IA n'est que le début. Embarcadero continue d'investir dans l'IA p
 
 **Le développeur reste au centre** :
 
-Le companion IA est un outil puissant, mais c'est vous, le développeur, qui gardez le contrôle. L'IA vous assiste, vous suggère, vous accélère, mais c'est votre expertise, votre créativité et votre jugement qui font la différence.
+Le RAD AI Companion est un outil puissant, mais c'est vous, le développeur, qui gardez le contrôle. L'IA vous assiste, vous suggère, vous accélère, mais c'est votre expertise, votre créativité et votre jugement qui font la différence.
 
-Avec le companion IA de Delphi 13, vous avez maintenant un superpouvoir pour développer plus rapidement, mieux, et avec plus de plaisir. Utilisez-le bien !
+Avec le RAD AI Companion de Delphi 13, vous avez maintenant un superpouvoir pour développer plus rapidement, mieux, et avec plus de plaisir. Utilisez-le bien !
 
 ---
 

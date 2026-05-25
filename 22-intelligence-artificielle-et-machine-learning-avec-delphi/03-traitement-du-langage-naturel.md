@@ -139,9 +139,9 @@ Entités extraites :
 
 **Exemple** :
 ```
-Texte : "Delphi 13 Florence a été publié en novembre 2024."  
+Texte : "Delphi 13 Florence a été publié en septembre 2025."  
 Question : "Quand Delphi 13 est-il sorti ?"  
-Réponse : "En novembre 2024"  
+Réponse : "En septembre 2025"  
 ```
 
 **Applications** :
@@ -175,11 +175,12 @@ Réponse : "En novembre 2024"
 - Analyse syntaxique
 - Classification de contenu
 
-**Azure Cognitive Services - Text Analytics**
+**Azure AI Language** (anciennement Text Analytics, dans Azure AI Services)
 - Analyse de sentiments
 - Extraction de phrases clés
 - Reconnaissance d'entités nommées
 - Détection de langue
+- CLU (Conversational Language Understanding) — successeur de LUIS
 
 **AWS Comprehend**
 - Analyse de sentiments
@@ -187,11 +188,15 @@ Réponse : "En novembre 2024"
 - Détection de sujets
 - Classification personnalisée
 
-**OpenAI API (GPT-4)**
+**OpenAI API (GPT-4o / GPT-5)**
 - Traitement de texte avancé
 - Génération de texte
 - Résumés, traductions, questions-réponses
-- Conversations naturelles
+- Conversations naturelles, multimodales (texte + images)
+
+**Anthropic Claude**
+- Analyse de documents très longs (200K → 1M tokens)
+- Excellent pour le raisonnement structuré et l'extraction d'informations
 
 ### Comment utiliser une API NLP avec Delphi
 
@@ -211,22 +216,43 @@ begin
   RESTRequest.AddParameter('text', TexteAnalyser, pkREQUESTBODY);
 
   // 3. Exécuter l'analyse (de préférence en arrière-plan)
+  // ⚠️ Toujours envelopper TTask.Run dans un try/except (sinon les exceptions
+  //    réseau / parsing JSON seraient silencieusement perdues).
   TTask.Run(procedure
+  var
+    ErrMsg: string;
   begin
-    RESTRequest.Execute;
+    try
+      RESTRequest.Execute;
 
-    // 4. Traiter le résultat
-    TThread.Synchronize(nil, procedure
-    var
-      Sentiment: string;
-      Score: Double;
-    begin
-      Sentiment := RESTResponse.JSONValue.GetValue<string>('sentiment');
-      Score := RESTResponse.JSONValue.GetValue<Double>('score');
+      // 4. Traiter le résultat
+      TThread.Synchronize(nil, procedure
+      var
+        Sentiment: string;
+        Score: Double;
+      begin
+        // Garde nil : JSONValue peut être nil si la réponse n'est pas JSON
+        if not Assigned(RESTResponse.JSONValue) then
+        begin
+          LabelResultat.Caption := 'Erreur : réponse non-JSON';
+          Exit;
+        end;
+        Sentiment := RESTResponse.JSONValue.GetValue<string>('sentiment');
+        Score := RESTResponse.JSONValue.GetValue<Double>('score');
 
-      LabelResultat.Caption := Format('Sentiment: %s (%.2f)',
-        [Sentiment, Score]);
-    end);
+        LabelResultat.Caption := Format('Sentiment: %s (%.2f)',
+          [Sentiment, Score]);
+      end);
+    except
+      on E: Exception do
+      begin
+        ErrMsg := E.Message;
+        TThread.Queue(nil, procedure
+        begin
+          LabelResultat.Caption := 'Erreur : ' + ErrMsg;
+        end);
+      end;
+    end;
   end);
 end;
 ```
@@ -260,35 +286,69 @@ end;
 - Plus lente que spaCy
 - Via Python4Delphi également
 
-**Stanford NLP (Java)**
-- Suite complète d'outils NLP
+**Stanford CoreNLP (Java) / Stanza (Python)**
+- Suite complète d'outils NLP : tokenisation, POS-tagging, NER, parsing syntaxique
+- 60+ langues supportées via **Stanza** (renommée depuis StanfordNLP en v1.0)
 - Très précis mais gourmand en ressources
-- Peut être appelé via services REST ou JNI
+- Via Python4Delphi (Stanza) ou services REST (CoreNLP Java)
+- Maintenu activement par Stanford NLP Group
 
 **Intégration avec Python4Delphi** :
 
+> ⚠️ **Performance** : Charger spaCy (`spacy.load(...)`) prend plusieurs secondes — il  
+> est donc indispensable de **créer le moteur Python une seule fois** au démarrage de  
+> l'application, et de réutiliser la même instance pour chaque appel. L'exemple ci-dessous  
+> est simplifié à des fins pédagogiques ; en production, déplacez `PyEngine`, le `LoadDll`  
+> et le `spacy.load` dans un singleton initialisé au démarrage.
+
 ```pascal
-// Exemple conceptuel avec spaCy
+// Exemple conceptuel avec spaCy (simplifié — en production, instancier
+// PyEngine une seule fois, pas à chaque appel)
+uses
+  PythonEngine, VarPyth;
+
 procedure AnalyserTexteLocal(const Texte: string);  
 var  
-  PythonEngine: TPythonEngine;
-  Script: string;
+  PyEngine: TPythonEngine;
+  Setup: string;
+  Entities: Variant;
 begin
-  PythonEngine := TPythonEngine.Create(nil);
+  PyEngine := TPythonEngine.Create(nil);
   try
-    // Charger spaCy et analyser le texte
-    Script :=
+    // ⚠️ Configurer puis charger la DLL Python AVANT d'exécuter du code.
+    // Sans LoadDll, ExecString lèverait une exception "Python is not loaded".
+    PyEngine.UseLastKnownVersion := True;
+    PyEngine.LoadDll;
+
+    // 1. Initialisation : importer spaCy et charger le modèle français.
+    //    À déplacer dans un setup global en production (le chargement
+    //    du modèle prend plusieurs secondes).
+    Setup :=
       'import spacy' + #13#10 +
-      'nlp = spacy.load("fr_core_news_sm")' + #13#10 +
-      'doc = nlp("' + Texte + '")' + #13#10 +
-      'entities = [(ent.text, ent.label_) for ent in doc.ents]';
+      'nlp = spacy.load("fr_core_news_sm")';
+    PyEngine.ExecString(Setup);
 
-    PythonEngine.ExecString(Script);
+    // 2. ⚠️ Passage du texte par variable Python pour éviter l'injection.
+    //    Concaténer directement le texte dans le script (`nlp("' + Texte + '")`)
+    //    serait vulnérable : un texte contenant `"); os.system("rm -rf /") #`
+    //    exécuterait du code Python arbitraire. On passe donc par MainModule
+    //    qui sérialise la chaîne en littéral Python sûr.
+    MainModule.input_text := Texte;
+    PyEngine.ExecString(
+      'doc = nlp(input_text)' + #13#10 +
+      'entities = [(ent.text, ent.label_) for ent in doc.ents]'
+    );
 
-    // Récupérer et traiter les résultats
-    // ...
+    // 3. Récupérer les résultats côté Delphi (Variant pointant sur la liste Python)
+    //    ⚠️ TRÈS IMPORTANT : itérer / extraire les données AVANT le `PyEngine.Free`.
+    //       Le Variant Python pointe vers un PPyObject de l'interpréteur ; une fois
+    //       PyEngine libéré, l'accès à `Entities` produit une AV.
+    Entities := MainModule.entities;
+    // Exemple d'extraction sûre dans le scope du try :
+    //   for I := 0 to VarArrayHighBound(Entities, 1) do
+    //     EnregistrerEntite(VarToStr(Entities[I][0]), VarToStr(Entities[I][1]));
   finally
-    PythonEngine.Free;
+    PyEngine.Free; // ⚠️ Toute référence à Entities devient invalide après ce point
   end;
 end;
 ```
@@ -307,7 +367,7 @@ end;
 
 ### Approche 3 : LLM (Large Language Models) via API
 
-Les modèles de langage de grande taille comme GPT-4, Claude, ou Llama sont extrêmement polyvalents pour le NLP.
+Les modèles de langage de grande taille comme la famille GPT (GPT-4o, GPT-5), Claude, Gemini ou Llama sont extrêmement polyvalents pour le NLP.
 
 **Capacités** :
 - Comprennent le contexte de manière sophistiquée
@@ -459,7 +519,9 @@ end;
 Ne retraitez pas le même texte plusieurs fois. Stockez les résultats.
 
 ```pascal
-// Cache simple avec TDictionary
+// Cache simple avec TDictionary (variable globale)
+// ⚠️ À créer dans la section `initialization` de l'unité et à libérer dans
+//    `finalization`, sinon l'accès produit une AV (access violation).
 var
   CacheSentiments: TDictionary<string, Double>;
 
@@ -472,6 +534,12 @@ begin
     CacheSentiments.Add(Texte, Result);
   end;
 end;
+
+initialization
+  CacheSentiments := TDictionary<string, Double>.Create;
+
+finalization
+  CacheSentiments.Free;
 ```
 
 **2. Traitement par lots** :
@@ -492,15 +560,32 @@ begin
   TTask.Run(procedure
   var
     Resultat: string;
+    ErrMsg: string;
   begin
-    // Traitement NLP (lent)
-    Resultat := EffectuerAnalyseNLP(Texte);
+    // ⚠️ Toujours encapsuler le code d'un TTask.Run dans un try/except :
+    //    sans cela, toute exception est silencieusement perdue jusqu'à
+    //    `TTask.Wait` ou `TTask.WaitForAll`, ce qui n'est PAS appelé ici.
+    try
+      // Traitement NLP (lent)
+      Resultat := EffectuerAnalyseNLP(Texte);
 
-    // Retour sur le thread UI
-    TThread.Queue(nil, procedure
-    begin
-      Callback(Resultat);
-    end);
+      // Retour sur le thread UI
+      TThread.Queue(nil, procedure
+      begin
+        Callback(Resultat);
+      end);
+    except
+      on E: Exception do
+      begin
+        // Capturer le message AVANT Queue (E libéré à la sortie du `on E:`)
+        ErrMsg := E.Message;
+        TThread.Queue(nil, procedure
+        begin
+          // Adapter selon votre logique : log, notification, callback d'erreur...
+          LogError('AnalyserTexteAsync : ' + ErrMsg);
+        end);
+      end;
+    end;
   end);
 end;
 ```
@@ -575,7 +660,7 @@ Le français de France ≠ français du Québec. Choisissez les bons modèles.
 Les API peuvent coûter cher avec de gros volumes. Optimisez et mettez en cache.
 
 **5. Confidentialité**
-Ne envoyez jamais de données sensibles à des API tierces sans cryptage et consentement.
+N'envoyez jamais de données sensibles à des API tierces sans chiffrement et consentement.
 
 ### Bonnes pratiques
 

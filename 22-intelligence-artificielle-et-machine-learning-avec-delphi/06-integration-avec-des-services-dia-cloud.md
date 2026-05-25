@@ -60,8 +60,9 @@ Changement de fournisseur peut nécessiter du travail de migration.
 | **Google Cloud AI** | Vision, NLP, qualité modèles | Applications grand public | Compétitif, généreux en gratuit |
 | **Azure AI** | Intégration écosystème MS | Entreprises Microsoft | Moyen, crédits gratuits |
 | **AWS AI** | Scalabilité, infrastructure | Gros volumes, scaling | Variable selon service |
-| **OpenAI** | GPT-4, modèles génératifs | Chatbots, génération contenu | Premium mais puissant |
-| **IBM Watson** | Secteur entreprise, compliance | Grandes entreprises | Premium |
+| **OpenAI** | GPT-4o/GPT-5, modèles génératifs | Chatbots, génération contenu | Premium mais puissant |
+| **Anthropic** | Claude (long contexte, code) | Documents longs, code, raisonnement | Premium |
+| **IBM watsonx** | Secteur entreprise, gouvernance, hybride | Grandes entreprises, secteurs régulés | Premium |
 | **Hugging Face** | Open source, communauté | Développeurs, recherche | Freemium |
 
 ## Google Cloud AI Platform
@@ -94,33 +95,48 @@ Google Cloud AI est la plateforme d'intelligence artificielle de Google, bénéf
 - Reconnaissance vocale
 - Synthèse vocale
 
-**Dialogflow** :
+**Conversational Agents (Dialogflow CX + Vertex AI Agent Builder)** :
 - Création de chatbots et assistants vocaux
-- Gestion du dialogue conversationnel
+- Gestion du dialogue conversationnel (flows / pages)
+- ⚠️ **Dialogflow ES** est en mode "frozen" depuis 2024 — toutes les nouvelles fonctionnalités vont sur **Dialogflow CX**, désormais accessible via la console unifiée **Conversational Agents** (l'ancienne console standalone Dialogflow CX a été dépréciée le 31 octobre 2025)
+- Pour les nouveaux projets : utiliser directement Conversational Agents / Dialogflow CX
 
-**AutoML** :
-- Entraînement de modèles personnalisés sans expertise ML
+**Vertex AI** (plateforme ML unifiée) :
+- Entraînement de modèles personnalisés (AutoML inclus)
+- Déploiement et serving de modèles
+- Pipelines ML, model registry, monitoring
+- Remplace progressivement les anciens services AI Platform / AutoML Tables
 
 ### Configuration initiale
 
 **1. Créer un compte Google Cloud** :
-- Rendez-vous sur https://cloud.google.com
-- Inscrivez-vous (300$ de crédits gratuits pour débuter)
+- Rendez-vous sur [cloud.google.com](https://cloud.google.com)
+- Inscrivez-vous (300$ de crédits Welcome gratuits, valables 90 jours)
 - Créez un projet
 
 **2. Activer les API** :
-- Dans la console, accédez à "API & Services"
-- Activez les API dont vous avez besoin (Vision, Natural Language, etc.)
+- Dans la console, accédez à "API & Services" → "Bibliothèque"
+- Activez les API dont vous avez besoin (Cloud Vision API, Cloud Natural Language API, etc.)
+- ⚠️ Chaque API doit être activée individuellement pour le projet
 
 **3. Créer des identifiants** :
-- Générez une clé API (pour tests)
-- Ou créez un compte de service (pour production)
+- Pour des tests/prototypes : générez une **clé API** (rapide à mettre en place)
+- Pour la production : créez un **compte de service** (service account) avec un fichier JSON de credentials et les rôles minimaux nécessaires
+- Pour des applications utilisateur : **OAuth 2.0** si vos utilisateurs doivent s'authentifier
 
 **4. Sécuriser la clé** :
-- Ne jamais commiter la clé dans le code source
-- Utiliser des variables d'environnement ou configuration sécurisée
+- Ne jamais commiter la clé dans le code source ou dans un dépôt Git
+- Utiliser des variables d'environnement, Secret Manager, ou Configuration chiffrée
+- Restreindre la clé API : limitez-la à votre adresse IP et aux API utilisées dans la console GCP
 
 ### Intégration avec Delphi
+
+> 💡 **Alternatives officielles via GetIt** : Avant de coder votre propre wrapper, vérifiez si une bibliothèque existe déjà :  
+> - **SmartCore AI Component Pack** (officiel Embarcadero) — supporte OpenAI, Claude, Gemini, Ollama  
+> - **OpenAI for Delphi** (communautaire, GetIt) — wrapper REST OpenAI (ChatGPT, DALL-E)  
+> - **Anthropic API wrapper for Delphi** (communautaire, GetIt) — wrapper Claude avec vision et MCP  
+>  
+> Le code ci-dessous reste utile comme exemple d'apprentissage ou pour des cas d'usage spécifiques.
 
 **Configuration des composants REST** :
 
@@ -183,16 +199,21 @@ var
   FeaturesArray: TJSONArray;
   FeatureObj: TJSONObject;
 begin
-  // 1. Charger et encoder l'image en Base64
+  // 1. Charger et encoder l'image en Base64.
+  // ⚠️ Pattern try/finally imbriqué : si TFileStream.Create échoue (fichier
+  // introuvable, droits…), MemStream resterait non libéré sans cette structure.
   MemStream := TMemoryStream.Create;
-  FileStream := TFileStream.Create(CheminImage, fmOpenRead);
   try
-    MemStream.CopyFrom(FileStream, FileStream.Size);
-    MemStream.Position := 0;
-    Base64Image := TNetEncoding.Base64.EncodeBytesToString(
-      MemStream.Memory, MemStream.Size);
+    FileStream := TFileStream.Create(CheminImage, fmOpenRead);
+    try
+      MemStream.CopyFrom(FileStream, FileStream.Size);
+      MemStream.Position := 0;
+      Base64Image := TNetEncoding.Base64.EncodeBytesToString(
+        MemStream.Memory, MemStream.Size);
+    finally
+      FileStream.Free;
+    end;
   finally
-    FileStream.Free;
     MemStream.Free;
   end;
 
@@ -231,9 +252,18 @@ begin
     // 4. Exécuter
     FRESTRequest.Execute;
 
-    // 5. Retourner le résultat
+    // 5. Retourner le résultat.
+    // ⚠️ FRESTResponse.JSONValue appartient à FRESTResponse : on doit le
+    //    **cloner** avant de le retourner, sinon l'appelant qui ferait `.Free`
+    //    libérerait un objet géré par le composant, et la requête suivante
+    //    crasherait (référence dangling). Pattern identique à TAzureComputerVision.
     if FRESTResponse.StatusCode = 200 then
-      Result := FRESTResponse.JSONValue as TJSONObject
+    begin
+      // Garde nil sur JSONValue (réponse non-JSON possible via proxy)
+      if not Assigned(FRESTResponse.JSONValue) then
+        raise Exception.Create('Réponse Google Vision : JSON invalide ou vide');
+      Result := FRESTResponse.JSONValue.Clone as TJSONObject;
+    end
     else
       raise Exception.CreateFmt('Erreur API: %d - %s',
         [FRESTResponse.StatusCode, FRESTResponse.Content]);
@@ -250,16 +280,27 @@ var
 begin
   Result := '';
 
-  // Modifier pour demander TEXT_DETECTION
+  // ⚠️ Cette méthode suppose qu'AnalyserImage soit adaptée pour demander
+  //    `TEXT_DETECTION` (ou `DOCUMENT_TEXT_DETECTION` pour des documents
+  //    avec mise en page complexe) au lieu de `LABEL_DETECTION`. Sans cette
+  //    adaptation, le champ `textAnnotations` est absent et Result restera
+  //    vide. Exemple : remplacer 'LABEL_DETECTION' par 'TEXT_DETECTION' dans
+  //    le FeatureObj de AnalyserImage avant d'appeler cette méthode.
   Response := AnalyserImage(CheminImage);
   try
     Responses := Response.GetValue<TJSONArray>('responses');
-    if Responses.Count > 0 then
-    begin
-      TextAnnotations := Responses.Items[0].GetValue<TJSONArray>('textAnnotations');
-      if (TextAnnotations <> nil) and (TextAnnotations.Count > 0) then
-        Result := TextAnnotations.Items[0].GetValue<string>('description');
-    end;
+    if (Responses = nil) or (Responses.Count = 0) then
+      Exit;
+
+    // ⚠️ `TJSONArray.Items[i]` retourne un `TJSONValue` ; on doit caster en
+    //    `TJSONObject` pour appeler `GetValue<T>`. Sans cast, le compilateur
+    //    refuse l'appel `GetValue<TJSONArray>` (méthode définie sur TJSONObject).
+    TextAnnotations := (Responses.Items[0] as TJSONObject)
+                         .GetValue<TJSONArray>('textAnnotations');
+    if (TextAnnotations <> nil) and (TextAnnotations.Count > 0) then
+      // Premier élément = texte complet (les suivants sont les mots individuels)
+      Result := (TextAnnotations.Items[0] as TJSONObject)
+                  .GetValue<string>('description');
   finally
     Response.Free;
   end;
@@ -282,10 +323,16 @@ begin
     // Analyser l'image
     Resultat := Vision.AnalyserImage(EditCheminImage.Text);
     try
-      // Extraire les labels
-      Labels := Resultat.GetValue<TJSONArray>('responses[0].labelAnnotations');
+      // ⚠️ Extraire les labels via FindValue qui supporte les paths JSONPath
+      // (`GetValue<T>` ne supporte que les clés simples, pas `responses[0]...`).
+      Labels := Resultat.FindValue('responses[0].labelAnnotations') as TJSONArray;
 
       MemoResultats.Lines.Clear;
+      if not Assigned(Labels) then
+      begin
+        MemoResultats.Lines.Add('Aucun objet détecté ou format de réponse inattendu.');
+        Exit;
+      end;
       MemoResultats.Lines.Add('Objets détectés :');
 
       for i := 0 to Labels.Count - 1 do
@@ -305,17 +352,19 @@ begin
 end;
 ```
 
-### Tarification Google Cloud AI
+### Tarification Google Cloud AI (ordres de grandeur)
+
+> ⚠️ Tarifs en USD, susceptibles d'évoluer. Consultez [cloud.google.com/pricing](https://cloud.google.com/pricing) pour les chiffres à jour.
 
 **Niveau gratuit** :
-- Cloud Vision : 1000 requêtes/mois
-- Natural Language : 5000 requêtes/mois
+- Cloud Vision : 1000 requêtes/mois **par feature** (LABEL_DETECTION, FACE_DETECTION…)
+- Natural Language : 5000 unités/mois
 - Translation : 500 000 caractères/mois
 
 **Au-delà** :
-- Vision : ~1,50€ / 1000 images
-- NLP : ~1€ / 1000 requêtes
-- Translation : ~20€ / million de caractères
+- Vision : ~1,50$ / 1000 unités (jusqu'à 5M/mois)
+- NLP : ~1$ / 1000 unités
+- Translation : ~20$ / million de caractères (modèle NMT standard)
 
 ## Microsoft Azure AI Services
 
@@ -332,11 +381,11 @@ Azure AI Services (anciennement Cognitive Services) est la suite d'IA de Microso
 - Analyse spatiale
 
 **Face API** :
-- Détection et reconnaissance faciale
-- Détection d'émotions
-- Vérification et identification
+- Détection de visages (présence, position, attributs publics)
+- Reconnaissance faciale (identification/vérification) — **accès limité depuis juin 2022**, demande Microsoft requise
+- ⚠️ La **détection d'émotion et de genre a été retirée** par Microsoft en 2022 dans le cadre de ses engagements Responsible AI
 
-**Text Analytics** :
+**Text Analytics** (intégré au service **Azure AI Language**) :
 - Analyse de sentiments
 - Extraction de phrases clés
 - Reconnaissance d'entités nommées
@@ -352,30 +401,37 @@ Azure AI Services (anciennement Cognitive Services) est la suite d'IA de Microso
 - Text-to-Speech
 - Traduction vocale
 
-**Language Understanding (LUIS)** :
+**Conversational Language Understanding (CLU)** :
 - Compréhension du langage naturel
 - Détection d'intentions
+- ⚠️ **Remplace LUIS** qui a été **complètement retiré le 31 mars 2026**. Toutes les nouvelles applications doivent utiliser CLU. Migration officielle : [docs.microsoft.com/azure/ai-services/language-service/conversational-language-understanding/how-to/migrate-from-luis](https://learn.microsoft.com/en-us/azure/ai-services/language-service/conversational-language-understanding/how-to/migrate-from-luis)
 
 **Azure OpenAI Service** :
-- Accès aux modèles GPT-4, GPT-3.5
-- DALL-E pour génération d'images
-- Whisper pour transcription audio
+- Accès aux modèles OpenAI (famille GPT-4o, GPT-5, gpt-3.5-turbo legacy)
+- ⚠️ DALL-E retiré le 12 mai 2026 ; utiliser `gpt-image-1` pour la génération d'images
+- Whisper pour transcription audio (Speech-to-Text)
+- Embeddings (`text-embedding-3-small`, `text-embedding-3-large`) pour la recherche sémantique / RAG
+- Déploiement zonal : les modèles disponibles dépendent de la région Azure choisie
 
 ### Configuration initiale
 
 **1. Créer un compte Azure** :
-- Rendez-vous sur https://azure.microsoft.com
-- Inscription avec 200$ de crédits gratuits
+- Rendez-vous sur [azure.microsoft.com](https://azure.microsoft.com)
+- Inscription avec ~200$ de crédits gratuits pour les nouveaux comptes
 - Créez un groupe de ressources
 
-**2. Créer une ressource Cognitive Services** :
-- Dans le portail Azure
-- "Créer une ressource" → "AI + Machine Learning" → "Cognitive Services"
-- Sélectionnez la région (choisir Europe West pour la France)
+**2. Créer une ressource Azure AI services** :
+- Dans le portail Azure, "Créer une ressource"
+- Catégorie : **Azure AI services** → ressource multi-service **Azure AI services** (anciennement Cognitive Services multi-service)
+- Sélectionnez la région (utilisez **West Europe** ou **France Central** pour les utilisateurs francophones)
+- Choisissez un tier (F0 gratuit avec quotas limités, ou S0 payant)
+
+> ℹ️ Pour les nouveaux projets centrés sur l'IA générative, Microsoft recommande désormais **Azure AI Foundry** (anciennement Azure AI Studio) qui unifie l'accès aux modèles GenAI, agents et outils. Documentation : [learn.microsoft.com/azure/ai-foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/).
 
 **3. Récupérer les clés** :
-- Dans la ressource créée, section "Keys and Endpoint"
-- Notez Key1 et l'endpoint
+- Dans la ressource créée, section **Keys and Endpoint** (gauche)
+- Notez **Key1** (ou Key2) et l'**endpoint** (URL spécifique à votre région)
+- ⚠️ Stockez les clés de manière sécurisée (Key Vault, variables d'environnement) — JAMAIS dans le code source
 
 ### Intégration avec Delphi
 
@@ -401,8 +457,12 @@ type
     constructor Create(const SubscriptionKey, Endpoint: string);
     destructor Destroy; override;
 
-    function AnalyserImage(const URLImage: string): TJSONObject; overload;
-    function AnalyserImage(const CheminImage: string): TJSONObject; overload;
+    // ⚠️ Deux méthodes distinctes plutôt que deux `overload` : le compilateur
+    // Delphi ne peut pas distinguer deux surcharges qui diffèrent uniquement
+    // par le nom du paramètre (les deux signatures sont `(const _: string)`,
+    // identiques pour la résolution de surcharge).
+    function AnalyserImageDepuisURL(const URLImage: string): TJSONObject;
+    function AnalyserImageDepuisFichier(const CheminImage: string): TJSONObject;
     function ExtraireTexteOCR(const CheminImage: string): string;
   end;
 
@@ -430,7 +490,7 @@ begin
   inherited;
 end;
 
-function TAzureComputerVision.AnalyserImage(const URLImage: string): TJSONObject;  
+function TAzureComputerVision.AnalyserImageDepuisURL(const URLImage: string): TJSONObject;  
 var  
   RequestBody: TJSONObject;
 begin
@@ -455,13 +515,18 @@ begin
   FRESTRequest.Execute;
 
   if FRESTResponse.StatusCode = 200 then
-    Result := FRESTResponse.JSONValue.Clone as TJSONObject
+  begin
+    // Garde nil : JSONValue peut être nil si la réponse n'est pas JSON
+    if not Assigned(FRESTResponse.JSONValue) then
+      raise Exception.Create('Réponse Azure : JSON invalide ou vide');
+    Result := FRESTResponse.JSONValue.Clone as TJSONObject;
+  end
   else
     raise Exception.CreateFmt('Erreur Azure: %d - %s',
       [FRESTResponse.StatusCode, FRESTResponse.Content]);
 end;
 
-function TAzureComputerVision.AnalyserImage(const CheminImage: string): TJSONObject;  
+function TAzureComputerVision.AnalyserImageDepuisFichier(const CheminImage: string): TJSONObject;  
 var  
   FileStream: TFileStream;
 begin
@@ -486,7 +551,12 @@ begin
   end;
 
   if FRESTResponse.StatusCode = 200 then
-    Result := FRESTResponse.JSONValue.Clone as TJSONObject
+  begin
+    // Garde nil : JSONValue peut être nil si la réponse n'est pas JSON
+    if not Assigned(FRESTResponse.JSONValue) then
+      raise Exception.Create('Réponse Azure : JSON invalide ou vide');
+    Result := FRESTResponse.JSONValue.Clone as TJSONObject;
+  end
   else
     raise Exception.CreateFmt('Erreur Azure: %d - %s',
       [FRESTResponse.StatusCode, FRESTResponse.Content]);
@@ -502,7 +572,11 @@ var
 begin
   Result := '';
 
-  // Utiliser Read API pour OCR avancé
+  // Utiliser Read API pour OCR avancé.
+  // ⚠️ L'API v3.2 reste disponible mais les versions 1.0 à 3.1 seront **retirées
+  // le 13 septembre 2026**. Pour les nouveaux projets, Microsoft recommande
+  // l'**Image Analysis 4.0 GA** (endpoint : `imageanalysis:analyze?api-version=2024-02-01`).
+  // Voir : https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/whats-new
   FRESTRequest.Resource := 'vision/v3.2/read/analyze';
   FRESTRequest.AddParameter('Ocp-Apim-Subscription-Key',
     FSubscriptionKey, pkHTTPHEADER, [poDoNotEncode]);
@@ -539,25 +613,38 @@ var
 begin
   Azure := TAzureComputerVision.Create(
     'VOTRE_SUBSCRIPTION_KEY',
+    // Format moderne 2026 (privilégié pour les nouvelles ressources) :
+    //   'https://VOTRE_NOM_RESSOURCE.cognitiveservices.azure.com/'
+    // Format historique (encore valide) :
     'https://VOTRE_REGION.api.cognitive.microsoft.com/'
   );
   try
-    Resultat := Azure.AnalyserImage(EditImagePath.Text);
+    // EditImagePath contient un chemin de fichier local → AnalyserImageDepuisFichier.
+    // Pour analyser via une URL distante (image hébergée), utilisez plutôt
+    // AnalyserImageDepuisURL(EditURL.Text).
+    Resultat := Azure.AnalyserImageDepuisFichier(EditImagePath.Text);
     try
+      // ⚠️ FindValue (et non GetValue) pour les paths dotted/indexés
       // Description
-      Description := Resultat.GetValue<string>('description.captions[0].text');
-      LabelDescription.Caption := Description;
+      var DescVal := Resultat.FindValue('description.captions[0].text');
+      if Assigned(DescVal) then
+      begin
+        Description := DescVal.Value;
+        LabelDescription.Caption := Description;
+      end;
 
-      // Tags
+      // Tags (clé simple : GetValue<T> fonctionne)
       Tags := Resultat.GetValue<TJSONArray>('tags');
       ListBoxTags.Items.Clear;
-      for i := 0 to Tags.Count - 1 do
-      begin
-        ListBoxTags.Items.Add(Format('%s (%.0f%%)', [
-          Tags.Items[i].GetValue<string>('name'),
-          Tags.Items[i].GetValue<Double>('confidence') * 100
-        ]));
-      end;
+      // ⚠️ Garde nil : GetValue<TJSONArray> retourne nil si la clé est absente
+      if Assigned(Tags) then
+        for i := 0 to Tags.Count - 1 do
+        begin
+          ListBoxTags.Items.Add(Format('%s (%.0f%%)', [
+            (Tags.Items[i] as TJSONObject).GetValue<string>('name'),
+            (Tags.Items[i] as TJSONObject).GetValue<Double>('confidence') * 100
+          ]));
+        end;
     finally
       Resultat.Free;
     end;
@@ -567,17 +654,19 @@ begin
 end;
 ```
 
-### Tarification Azure AI
+### Tarification Azure AI (ordres de grandeur)
+
+> ⚠️ Tarifs en USD, susceptibles d'évoluer. Voir [azure.microsoft.com/pricing/details/cognitive-services](https://azure.microsoft.com/pricing/details/cognitive-services/) pour les chiffres à jour.
 
 **Niveau gratuit (F0)** :
 - Computer Vision : 5000 transactions/mois
-- Text Analytics : 5000 transactions/mois
+- Azure AI Language (ex-Text Analytics) : 5000 enregistrements/mois
 - Translator : 2M caractères/mois
 
 **Niveaux payants (S0, S1, etc.)** :
-- Vision : à partir de 0,85€ / 1000 transactions
-- Text Analytics : 1,70€ / 1000 requêtes
-- Face API : 0,85€ / 1000 transactions
+- Vision : à partir de ~1$ / 1000 transactions selon la feature
+- Azure AI Language : ~1$-2$ / 1000 enregistrements selon la feature
+- Face API : ~1$ / 1000 transactions (Face Detect/Verify), accès limité requis pour Identify
 
 ## Amazon Web Services (AWS) AI
 
@@ -621,41 +710,79 @@ AWS propose une suite complète de services d'IA, réputée pour sa scalabilité
 
 ### Configuration et intégration
 
-AWS utilise un système d'authentification plus complexe (AWS Signature Version 4), mais il existe des SDK et bibliothèques pour simplifier.
+AWS utilise un système d'authentification complexe (**AWS Signature Version 4** sur chaque requête), il n'existe pas de SDK officiel AWS pour Delphi. Plusieurs stratégies possibles :
 
 **Approche recommandée pour Delphi** :
-1. Utiliser AWS SDK pour .NET via COM Interop
-2. Ou créer un micro-service Node.js/Python qui sert d'intermédiaire
-3. Ou utiliser des wrappers communautaires Delphi
+1. **Implémenter SigV4 manuellement** en Delphi (faisable mais fastidieux — algorithme HMAC-SHA256 + sérialisation canonique des headers)
+2. **Micro-service intermédiaire** Python/Node.js qui appelle AWS et que Delphi consomme via REST simple (le plus simple en pratique)
+3. **AWS SDK pour C++** wrappé dans une DLL exposée à Delphi (similaire au pattern ONNX Runtime)
+4. **Wrappers communautaires Delphi** (rechercher `TAWS4D` ou équivalents sur GitHub, qualité variable)
+5. **Présigned URLs** : si vous voulez juste uploader/downloader S3, faites générer des URLs présignées côté serveur (qui dispose d'un vrai SDK AWS) et utilisez-les depuis Delphi sans authentification
 
 ```pascal
 // Exemple conceptuel d'appel à Rekognition via wrapper
+// (la partie AWS Signature V4 est omise pour simplifier)
 function DetecterVisagesAWS(const CheminImage: string): TJSONArray;  
 var  
   RESTClient: TRESTClient;
   RESTRequest: TRESTRequest;
   RESTResponse: TRESTResponse;
   ImageBase64: string;
+  FaceDetailsValue: TJSONValue;
+  CloneValue: TJSONValue;
 begin
+  Result := nil;
+
+  // ⚠️ Triple try/finally imbriqué : si l'une des créations échoue, les
+  // objets déjà créés doivent être libérés. Sans cette structure, on aurait
+  // potentiellement des fuites mémoire.
   RESTClient := TRESTClient.Create('https://rekognition.us-east-1.amazonaws.com');
-  RESTRequest := TRESTRequest.Create(nil);
-  RESTResponse := TRESTResponse.Create(nil);
   try
-    RESTRequest.Client := RESTClient;
-    RESTRequest.Response := RESTResponse;
+    RESTRequest := TRESTRequest.Create(nil);
+    try
+      RESTResponse := TRESTResponse.Create(nil);
+      try
+        RESTRequest.Client := RESTClient;
+        RESTRequest.Response := RESTResponse;
 
-    // AWS nécessite une signature complexe
-    // Il est recommandé d'utiliser un wrapper ou SDK
+        // AWS nécessite une signature complexe (SigV4 sur chaque requête)
+        // Il est recommandé d'utiliser un wrapper, un SDK, ou un proxy
 
-    // Corps de la requête
-    ImageBase64 := EncodeImageToBase64(CheminImage);
-    // ... Configuration AWS Signature ...
+        // Corps de la requête
+        ImageBase64 := EncodeImageToBase64(CheminImage);
+        // ... Configuration AWS Signature V4 ici ...
 
-    RESTRequest.Execute;
-    Result := RESTResponse.JSONValue.GetValue<TJSONArray>('FaceDetails');
+        RESTRequest.Execute;
+
+        // ⚠️ Garde nil : si la réponse n'est pas un JSON valide
+        //    (erreur HTML d'un proxy, par exemple), JSONValue vaut nil.
+        if not Assigned(RESTResponse.JSONValue) then
+          Exit;
+
+        // ⚠️ RESTResponse.JSONValue appartient à RESTResponse. On doit
+        //    **cloner** le sous-arbre avant de le retourner, sinon la valeur
+        //    sera libérée par RESTResponse.Free juste en dessous (référence
+        //    dangling côté caller).
+        FaceDetailsValue := RESTResponse.JSONValue.FindValue('FaceDetails');
+        if Assigned(FaceDetailsValue) and (FaceDetailsValue is TJSONArray) then
+        begin
+          // Clone explicite avec vérification du type pour éviter EInvalidCast
+          // (qui produirait une fuite du Clone si le cast `as` échouait).
+          CloneValue := FaceDetailsValue.Clone;
+          try
+            Result := CloneValue as TJSONArray;
+          except
+            CloneValue.Free;
+            raise;
+          end;
+        end;
+      finally
+        RESTResponse.Free;
+      end;
+    finally
+      RESTRequest.Free;
+    end;
   finally
-    RESTResponse.Free;
-    RESTRequest.Free;
     RESTClient.Free;
   end;
 end;
@@ -668,39 +795,42 @@ end;
 - Comprehend : 50K unités/mois
 - Translate : 2M caractères/mois
 
-**Tarifs standard** :
-- Rekognition : 1€ / 1000 images
-- Comprehend : 0,0001€ par unité
-- Translate : 15€ / million de caractères
+**Tarifs standard (ordres de grandeur USD)** :
+- Rekognition : ~1$ / 1000 images
+- Comprehend : ~0,0001$ par unité
+- Translate : ~15$ / million de caractères
+- Voir [aws.amazon.com/pricing](https://aws.amazon.com/pricing/) pour les chiffres à jour
 
 ## OpenAI API
 
 ### Présentation
 
-OpenAI propose les modèles de langage les plus avancés au monde, notamment GPT-4, DALL-E pour la génération d'images, et Whisper pour la transcription audio.
+OpenAI propose des modèles de langage et multimodaux parmi les plus avancés du marché : la série GPT (GPT-4o, GPT-5+), des modèles de génération d'images, et Whisper pour la transcription audio. Les noms et capacités évoluent rapidement ; consultez toujours [platform.openai.com/docs/models](https://platform.openai.com/docs/models) pour la liste à jour.
 
 ### Services disponibles
 
-**GPT-4 / GPT-3.5** :
+**Famille GPT (chat completions)** :
 - Génération de texte
 - Compréhension du langage
 - Traduction, résumés
-- Code generation
-- GPT-4 Vision (analyse d'images)
+- Génération de code
+- Vision multimodale (depuis GPT-4o : texte + image natif)
+- Modèles courants en 2026 : `gpt-4o`, `gpt-4o-mini`, série `gpt-5*`. `gpt-3.5-turbo` reste disponible mais legacy.
 
-**DALL-E 3** :
-- Génération d'images à partir de descriptions
-- Édition d'images
+**Génération d'images** :
+- ⚠️ `dall-e-2` et `dall-e-3` ont été **retirés de l'API le 12 mai 2026**
+- Successeurs actuels : `gpt-image-1` (qualité maximale) et `gpt-image-1-mini` (économique)
+- Génération et édition d'images à partir de descriptions
 
 **Whisper** :
-- Transcription audio
-- Traduction audio
+- Transcription audio (Speech-to-Text)
+- Traduction audio multilingue
 
-**Text-to-Speech** :
+**Text-to-Speech** (TTS) :
 - Voix naturelles de haute qualité
 
 **Embeddings** :
-- Création de vecteurs sémantiques pour recherche
+- Création de vecteurs sémantiques pour recherche / RAG
 
 ### Intégration avec Delphi
 
@@ -723,7 +853,9 @@ type
     constructor Create(const APIKey: string);
     destructor Destroy; override;
 
-    function Chat(const Prompt: string; const Model: string = 'gpt-3.5-turbo'): string;
+    // Valeur par défaut : `gpt-4o-mini` (économique, multimodal, GA en 2026).
+    // `gpt-3.5-turbo` reste accessible mais est désormais considéré comme legacy.
+    function Chat(const Prompt: string; const Model: string = 'gpt-4o-mini'): string;
     function AnalyserImage(const URLImage: string; const Question: string): string;
     function GenererImage(const Description: string): string; // Retourne URL
   end;
@@ -755,8 +887,8 @@ function TOpenAI.Chat(const Prompt: string; const Model: string): string;
 var  
   RequestBody: TJSONObject;
   Messages: TJSONArray;
-  Message: TJSONObject;
-  Choices: TJSONArray;
+  UserMessage: TJSONObject;
+  ContentValue: TJSONValue;
 begin
   FRESTRequest.Resource := 'v1/chat/completions';
   FRESTRequest.Method := rmPOST;
@@ -772,11 +904,11 @@ begin
   // Corps de la requête
   RequestBody := TJSONObject.Create;
   Messages := TJSONArray.Create;
-  Message := TJSONObject.Create;
+  UserMessage := TJSONObject.Create;
   try
-    Message.AddPair('role', 'user');
-    Message.AddPair('content', Prompt);
-    Messages.AddElement(Message);
+    UserMessage.AddPair('role', 'user');
+    UserMessage.AddPair('content', Prompt);
+    Messages.AddElement(UserMessage);
 
     RequestBody.AddPair('model', Model);
     RequestBody.AddPair('messages', Messages);
@@ -784,15 +916,27 @@ begin
 
     FRESTRequest.AddBody(RequestBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
   finally
-    RequestBody.Free;
+    RequestBody.Free; // Libère récursivement Messages et UserMessage
   end;
 
   FRESTRequest.Execute;
 
   if FRESTResponse.StatusCode = 200 then
   begin
-    Choices := FRESTResponse.JSONValue.GetValue<TJSONArray>('choices');
-    Result := Choices.Items[0].GetValue<string>('message.content');
+    // ⚠️ Si la réponse n'est pas un JSON valide (ex: erreur HTML retournée par
+    //    un proxy intermédiaire), FRESTResponse.JSONValue vaut nil → AV.
+    //    On vérifie systématiquement avant d'accéder à FindValue.
+    if not Assigned(FRESTResponse.JSONValue) then
+      raise Exception.Create('Réponse OpenAI : JSON invalide ou vide');
+
+    // ⚠️ TJSONObject.GetValue<T>(name) ne supporte PAS les paths dotted.
+    //    Pour `choices[0].message.content`, il faut utiliser FindValue qui
+    //    implémente la spécification JSONPath simplifiée.
+    ContentValue := FRESTResponse.JSONValue.FindValue('choices[0].message.content');
+    if Assigned(ContentValue) then
+      Result := ContentValue.Value
+    else
+      raise Exception.Create('Réponse OpenAI : champ "content" introuvable');
   end
   else
     raise Exception.CreateFmt('Erreur OpenAI: %d - %s',
@@ -803,12 +947,12 @@ function TOpenAI.AnalyserImage(const URLImage: string; const Question: string): 
 var  
   RequestBody: TJSONObject;
   Messages: TJSONArray;
-  Message: TJSONObject;
+  Msg: TJSONObject; // évite le nom 'Message' (collision potentielle avec System.SysUtils)
   Content: TJSONArray;
   TextPart, ImagePart: TJSONObject;
   ImageURL: TJSONObject;
 begin
-  // GPT-4 Vision
+  // Vision multimodale via gpt-4o (cf. note plus bas)
   FRESTRequest.Resource := 'v1/chat/completions';
   FRESTRequest.Method := rmPOST;
   FRESTRequest.ClearBody;
@@ -820,7 +964,7 @@ begin
   // Construire le message avec image
   RequestBody := TJSONObject.Create;
   Messages := TJSONArray.Create;
-  Message := TJSONObject.Create;
+  Msg := TJSONObject.Create;
   Content := TJSONArray.Create;
   try
     // Partie texte
@@ -837,12 +981,19 @@ begin
     ImagePart.AddPair('image_url', ImageURL);
     Content.AddElement(ImagePart);
 
-    Message.AddPair('role', 'user');
-    Message.AddPair('content', Content);
-    Messages.AddElement(Message);
+    Msg.AddPair('role', 'user');
+    Msg.AddPair('content', Content);
+    Messages.AddElement(Msg);
 
-    RequestBody.AddPair('model', 'gpt-4-vision-preview');
+    // ⚠️ `gpt-4-vision-preview` a été **déprécié par OpenAI en juin 2024**.
+    // Le successeur multimodal officiel est `gpt-4o` (ou `gpt-4o-mini` pour
+    // une option plus économique). Adaptez le nom du modèle aux disponibilités
+    // actuelles de votre compte : https://platform.openai.com/docs/models
+    RequestBody.AddPair('model', 'gpt-4o');
     RequestBody.AddPair('messages', Messages);
+    // ℹ️ Sur les modèles GPT-5 et certains modèles récents, le paramètre
+    //    `max_tokens` est remplacé par `max_completion_tokens` (cf. doc OpenAI).
+    //    `max_tokens` reste accepté par `gpt-4o*` à la date de cet exemple.
     RequestBody.AddPair('max_tokens', TJSONNumber.Create(300));
 
     FRESTRequest.AddBody(RequestBody.ToString, TRESTContentType.ctAPPLICATION_JSON);
@@ -853,7 +1004,17 @@ begin
   FRESTRequest.Execute;
 
   if FRESTResponse.StatusCode = 200 then
-    Result := FRESTResponse.JSONValue.GetValue<string>('choices[0].message.content')
+  begin
+    // ⚠️ Garde nil sur JSONValue (réponse non-JSON possible via proxy)
+    if not Assigned(FRESTResponse.JSONValue) then
+      raise Exception.Create('Réponse Vision : JSON invalide ou vide');
+    // FindValue (et non GetValue) pour les paths JSONPath dotted
+    var V := FRESTResponse.JSONValue.FindValue('choices[0].message.content');
+    if Assigned(V) then
+      Result := V.Value
+    else
+      raise Exception.Create('Réponse Vision : champ "content" introuvable');
+  end
   else
     raise Exception.CreateFmt('Erreur: %s', [FRESTResponse.Content]);
 end;
@@ -864,8 +1025,6 @@ end;
 ```pascal
 procedure TFormChat.BtnEnvoyerClick(Sender: TObject);  
 var  
-  OpenAI: TOpenAI;
-  Reponse: string;
   UserMessage: string;
 begin
   UserMessage := EditMessage.Text;
@@ -880,22 +1039,43 @@ begin
   ProgressBar.Visible := True;
 
   // Traitement asynchrone
+  // ⚠️ UserMessage est capturé par la closure : Delphi crée une copie de la
+  // chaîne, donc même si EditMessage est modifié pendant le traitement, la
+  // valeur envoyée à l'API reste celle au moment du clic.
   TTask.Run(procedure
   var
     AI: TOpenAI;
     Response: string;
+    ErrMsg: string;
   begin
-    AI := TOpenAI.Create('VOTRE_CLE_API');
+    AI := TOpenAI.Create('VOTRE_CLE_API'); // ⚠️ En prod : lire depuis configuration sécurisée
     try
-      Response := AI.Chat(UserMessage, 'gpt-3.5-turbo');
+      try
+        // `gpt-4o-mini` : compromis qualité/coût excellent pour un chatbot
+        Response := AI.Chat(UserMessage, 'gpt-4o-mini');
 
-      TThread.Synchronize(nil, procedure
-      begin
-        MemoChat.Lines.Add('Assistant: ' + Response);
-        MemoChat.Lines.Add('');
-        BtnEnvoyer.Enabled := True;
-        ProgressBar.Visible := False;
-      end);
+        TThread.Synchronize(nil, procedure
+        begin
+          MemoChat.Lines.Add('Assistant: ' + Response);
+          MemoChat.Lines.Add('');
+          BtnEnvoyer.Enabled := True;
+          ProgressBar.Visible := False;
+        end);
+      except
+        on E: Exception do
+        begin
+          // ⚠️ Sans cet `except`, une erreur API laisserait BtnEnvoyer désactivé
+          //    et ProgressBar visible — l'utilisateur croirait l'app figée.
+          ErrMsg := E.Message;
+          TThread.Synchronize(nil, procedure
+          begin
+            MemoChat.Lines.Add('Erreur : ' + ErrMsg);
+            MemoChat.Lines.Add('');
+            BtnEnvoyer.Enabled := True;
+            ProgressBar.Visible := False;
+          end);
+        end;
+      end;
     finally
       AI.Free;
     end;
@@ -905,54 +1085,71 @@ end;
 
 ### Tarification OpenAI
 
-**GPT-3.5-Turbo** :
-- Input : 0,50$ / million de tokens
-- Output : 1,50$ / million de tokens
+> ⚠️ **La tarification OpenAI évolue très fréquemment.** Les chiffres ci-dessous sont fournis à titre d'**ordre de grandeur pédagogique** et peuvent être désactualisés. Consultez toujours la page officielle pour les tarifs actuels : [platform.openai.com/docs/pricing](https://platform.openai.com/docs/pricing).
 
-**GPT-4** :
-- Input : 30$ / million de tokens
-- Output : 60$ / million de tokens
+**Modèles GPT (ordre de grandeur 2025-2026)** :
+- `gpt-4o-mini` (recommandé pour la plupart des usages) : ~0,15$ input / ~0,60$ output par million de tokens
+- `gpt-4o` (multimodal, qualité supérieure) : ~2,50$ input / ~10$ output par million de tokens
+- `gpt-3.5-turbo` (legacy) : ~0,50$ input / ~1,50$ output par million de tokens
+- Série `gpt-5*` : tarifs supérieurs à `gpt-4o` (consulter la doc)
 
-**GPT-4 Vision** :
-- 10$ / million de tokens (variable selon résolution image)
+**Vision** : intégré nativement à `gpt-4o` et `gpt-4o-mini` (pas de modèle vision séparé). Coût additionnel basé sur la résolution de l'image (~0,001-0,008$ par image selon `detail: low/high`).
 
-**DALL-E 3** :
-- Standard (1024×1024) : 0,040$ par image
-- HD (1024×1024) : 0,080$ par image
+**Génération d'images** :
+- ⚠️ DALL-E 2 et DALL-E 3 ont été **retirés de l'API OpenAI le 12 mai 2026**
+- Successeurs : `gpt-image-1` et `gpt-image-1-mini`
+- Tarification basée sur la qualité demandée (low / medium / high) et la résolution
 
 ## Autres services cloud d'IA
 
-### Hugging Face Inference API
+### Hugging Face
+
+**Offres principales** :
+- **Inference API (Serverless)** : appel direct REST à des centaines de milliers de modèles, gratuit avec quotas mensuels
+- **Inference Endpoints** : déploiement dédié payant pour la production (latence garantie, scaling automatique)
+- **Spaces** : applications/démos déployées (Gradio, Streamlit)
 
 **Avantages** :
-- Accès à des milliers de modèles open source
-- Gratuit avec limitations, payant pour volumes importants
-- Communauté active
+- Accès à des milliers de modèles open source (transformers, vision, audio)
+- Communauté très active, hub de modèles ouvert
+- Compatible avec les modèles open source majeurs (Llama, Mistral, Phi, etc.)
 
 **Cas d'usage** :
 - Expérimentation avec différents modèles
 - Modèles spécialisés (langues rares, domaines spécifiques)
+- Alternative open source aux LLMs propriétaires
 
-### IBM Watson
+### IBM watsonx (anciennement IBM Watson)
 
 **Points forts** :
-- Focus entreprise et conformité
-- Excellente documentation
+- Focus entreprise et conformité (RGPD, sécurité, gouvernance)
+- Hybride : cloud, on-premises ou hybride
 - Support professionnel
 
-**Services** :
+**Plateforme watsonx 2026** (rebranding depuis 2023) :
+- **watsonx.ai** : développement et déploiement de modèles IA (LLMs, deep learning)
+- **watsonx.data** : gouvernance et préparation des données
+- **watsonx.governance** : outils d'IA responsable (audit, biais, conformité)
+
+**Services historiques toujours disponibles** :
 - Watson Natural Language Understanding
-- Watson Speech to Text
+- Watson Speech to Text / Text to Speech
 - Watson Discovery
 
 ### Anthropic Claude
 
 **Caractéristiques** :
-- Concurrent de GPT-4
-- Excellente compréhension contextuelle
-- Fenêtre de contexte très large (200K tokens)
+- Concurrent direct des modèles GPT (OpenAI)
+- Excellente compréhension contextuelle, particulièrement performant pour le code et l'analyse de documents longs
+- Fenêtre de contexte très large : 200K tokens en standard, **1M tokens disponible** sur les modèles Claude 4.x récents
+- Famille de modèles : `claude-opus-4` (le plus capable), `claude-sonnet-4` (équilibré), `claude-haiku-4` (rapide et économique)
 
-**Utilisation** : API similaire à OpenAI
+**Utilisation** : API REST similaire à OpenAI, mais avec quelques différences notables :
+- Header `x-api-key` (au lieu de `Authorization: Bearer`)
+- Header `anthropic-version` obligatoire (ex: `2023-06-01`)
+- Le rôle `system` est passé **au niveau racine** de la requête, pas dans le tableau `messages` (voir section 22.7)
+
+Plus de détails et exemples Delphi complets dans la section [22.7 - Utilisation des grands modèles de langage via API](/22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md).
 
 ## Gestion des coûts
 
@@ -965,15 +1162,30 @@ type
   TCacheAPI = class
   private
     FCache: TDictionary<string, string>;
-    FDureeValidite: TDateTime;
   public
+    constructor Create;
+    destructor Destroy; override;
     function ObtenirOuAppeler(const Cle: string;
       const FonctionAPI: TFunc<string>): string;
   end;
 
+constructor TCacheAPI.Create;  
+begin  
+  inherited;
+  FCache := TDictionary<string, string>.Create;
+end;
+
+destructor TCacheAPI.Destroy;  
+begin  
+  FCache.Free;
+  inherited;
+end;
+
 function TCacheAPI.ObtenirOuAppeler(const Cle: string;
   const FonctionAPI: TFunc<string>): string;
 begin
+  // ⚠️ Cache sans expiration : version pédagogique. En production, ajouter
+  //    une TTL (ex: TDictionary<string, record Value:string; Expire:TDateTime end>).
   if FCache.ContainsKey(Cle) then
     Result := FCache[Cle]
   else
@@ -993,25 +1205,45 @@ Groupez les requêtes quand c'est possible pour réduire les appels API.
 Réduisez la taille des images avant envoi.
 
 ```pascal
+uses
+  System.Math, Vcl.Graphics;
+
 procedure OptimiserImagePourAPI(var Bitmap: TBitmap);  
 const  
   MAX_DIMENSION = 800; // pixels
 var
   Ratio: Double;
+  NewWidth, NewHeight: Integer;
+  Dest: TBitmap;
 begin
-  if (Bitmap.Width > MAX_DIMENSION) or (Bitmap.Height > MAX_DIMENSION) then
-  begin
-    Ratio := Min(MAX_DIMENSION / Bitmap.Width, MAX_DIMENSION / Bitmap.Height);
-    Bitmap.SetSize(Round(Bitmap.Width * Ratio), Round(Bitmap.Height * Ratio));
+  // ⚠️ TBitmap.SetSize() ne redimensionne PAS le contenu de l'image, il
+  // coupe ou étend le canvas. Pour un vrai redimensionnement, il faut
+  // un bitmap temporaire et StretchDraw.
+  if (Bitmap.Width <= MAX_DIMENSION) and (Bitmap.Height <= MAX_DIMENSION) then
+    Exit;
+
+  Ratio := Min(MAX_DIMENSION / Bitmap.Width, MAX_DIMENSION / Bitmap.Height);
+  NewWidth := Round(Bitmap.Width * Ratio);
+  NewHeight := Round(Bitmap.Height * Ratio);
+
+  Dest := TBitmap.Create;
+  try
+    Dest.PixelFormat := Bitmap.PixelFormat;
+    Dest.SetSize(NewWidth, NewHeight);
+    Dest.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight), Bitmap);
+    Bitmap.Assign(Dest);
+  finally
+    Dest.Free;
   end;
 end;
 ```
 
 **4. Choisir le bon niveau de service**
 
-- Utilisez les modèles "lite" ou "standard" quand possible
-- GPT-3.5 au lieu de GPT-4 pour tâches simples
-- Prétraitez localement quand possible
+- Utilisez les modèles "mini" / "lite" quand la qualité reste suffisante
+- `gpt-4o-mini` au lieu de `gpt-4o` pour les tâches simples (rapport coût/qualité excellent)
+- `claude-haiku-4` au lieu de `claude-opus-4` pour les requêtes répétitives
+- Prétraitez localement quand possible (extraction OCR locale avant envoi au LLM, etc.)
 
 **5. Monitoring et alertes**
 
@@ -1019,8 +1251,10 @@ end;
 type
   TAPIUsageMonitor = class
   private
-    FUsageAujourdhui: Integer;
-    FLimiteQuotidienne: Integer;
+    // ⚠️ Toutes les valeurs sont stockées en CENTIMES (Integer) pour éviter
+    //    les imprécisions de calcul flottant sur les cumuls.
+    FUsageAujourdhui: Integer;     // en centimes
+    FLimiteQuotidienne: Integer;   // en centimes
     procedure VerifierLimite;
   public
     procedure IncrementerUsage(const Cout: Double);
@@ -1029,35 +1263,39 @@ type
 
 procedure TAPIUsageMonitor.IncrementerUsage(const Cout: Double);  
 begin  
+  // Convertir le coût (USD) en centimes pour cumul en Integer
   FUsageAujourdhui := FUsageAujourdhui + Round(Cout * 100);
   VerifierLimite;
 
-  if FUsageAujourdhui >= FLimiteQuotidienne * 0.8 then
-    // Alerte : 80% de la limite atteinte
+  // Alerte si 80% de la limite quotidienne atteinte
+  if FUsageAujourdhui >= Round(FLimiteQuotidienne * 0.8) then
     EnvoyerAlerteAdministrateur('Limite API proche');
 end;
 ```
 
 ### Estimation des coûts
 
-**Exemple pour une application de chatbot** :
+**Exemple pour une application de chatbot** (ordres de grandeur 2025-2026) :
 
 ```
 Utilisateurs : 1000  
 Messages moyens par jour : 5  
-Tokens moyens par message : 150 (input + output)  
+Tokens moyens par message : 150 (50 input + 100 output)  
 
 Total tokens/jour = 1000 × 5 × 150 = 750 000 tokens  
-Total tokens/mois = 750 000 × 30 = 22,5 millions  
+Répartition mensuelle = 7,5M input + 15M output sur 30 jours  
 
-Coût GPT-3.5 :
-- 22,5M tokens ≈ 11,25$ input + 33,75$ output = 45$/mois
+Coût gpt-4o-mini (~0,15$ in / 0,60$ out par million) :
+- 7,5M × 0,15$ + 15M × 0,60$ ≈ 1,13$ + 9$ = ~10$/mois
 
-Coût GPT-4 :
-- 22,5M tokens ≈ 675$ input + 1350$ output = 2025$/mois
+Coût gpt-4o (~2,50$ in / 10$ out par million) :
+- 7,5M × 2,50$ + 15M × 10$ ≈ 18,75$ + 150$ = ~169$/mois
 
-→ GPT-3.5 est 45× moins cher !
+→ gpt-4o-mini est ~17× moins cher que gpt-4o pour ce profil d'usage.
+   À adapter selon la complexité réelle des prompts et la qualité requise.
 ```
+
+> Note : ces chiffres dépendent fortement de la longueur des prompts et des réponses. Réalisez toujours une **mesure réelle** sur quelques centaines d'appels représentatifs avant de dimensionner un budget production.
 
 ## Sécurité et confidentialité
 
@@ -1094,6 +1332,9 @@ end;
 **Anonymisation** :
 
 ```pascal
+uses
+  System.RegularExpressions; // TRegEx
+
 function AnonymiserTexte(const Texte: string): string;  
 begin  
   Result := Texte;
@@ -1101,10 +1342,13 @@ begin
   // Remplacer emails
   Result := TRegEx.Replace(Result, '\b[\w\.-]+@[\w\.-]+\.\w+\b', '[EMAIL]');
 
-  // Remplacer numéros de téléphone
+  // Remplacer numéros de téléphone (format français 10 chiffres groupés par 2)
   Result := TRegEx.Replace(Result, '\b\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}[\s\.-]?\d{2}\b', '[TÉLÉPHONE]');
 
-  // Remplacer IBAN
+  // Remplacer IBAN (regex simplifiée : 2 lettres pays + 2 chiffres + BBAN)
+  // ⚠️ Cette regex ne couvre PAS tous les formats IBAN (certains pays comme
+  //    le Royaume-Uni utilisent des lettres dans le BBAN — ex: GB29 NWBK ...).
+  //    Pour une couverture complète, utiliser : `\b[A-Z]{2}\d{2}[\s]?[A-Z0-9\s]{11,30}\b`.
   Result := TRegEx.Replace(Result, '\b[A-Z]{2}\d{2}[\s]?[\d\s]{20,}\b', '[IBAN]');
 end;
 
@@ -1167,9 +1411,14 @@ Documentez comment supprimer les données déjà envoyées (la plupart des API n
 - Vous voulez SageMaker pour ML personnalisé
 
 **Utilisez OpenAI directement si** :
-- Vous voulez les meilleurs modèles de langage (GPT-4)
-- Vous développez un chatbot avancé
-- Le coût n'est pas la première priorité
+- Vous voulez les modèles de langage les plus avancés (famille GPT-4o / GPT-5)
+- Vous développez un chatbot avancé ou une assistance multimodale
+- Le coût n'est pas la première priorité (privilégiez `gpt-4o-mini` pour optimiser)
+
+**Utilisez Anthropic Claude si** :
+- Vous traitez des documents très longs (contexte 200K-1M tokens)
+- Vous voulez d'excellentes performances sur le code et le raisonnement structuré
+- La qualité de la rédaction et la fiabilité comptent autant que la rapidité
 
 **Approche hybride recommandée** :
 - Google Vision pour analyse d'images (rapport qualité/prix)
@@ -1194,6 +1443,6 @@ Les services d'IA cloud transforment radicalement ce qui est possible avec Delph
 4. Testez plusieurs services pour comparer
 5. Documentez vos choix et coûts
 
-Dans la section suivante, nous explorerons spécifiquement l'intégration des grands modèles de langage (LLM) comme GPT-4, qui révolutionnent les interfaces conversationnelles et la génération de contenu !
+Dans la section suivante, nous explorerons spécifiquement l'intégration des grands modèles de langage (LLM) comme la famille GPT-4o, Claude ou Gemini, qui révolutionnent les interfaces conversationnelles et la génération de contenu !
 
 ⏭️ [Utilisation des grands modèles de langage (LLM) via API](/22-intelligence-artificielle-et-machine-learning-avec-delphi/07-utilisation-des-grands-modeles-de-langage-via-api.md)

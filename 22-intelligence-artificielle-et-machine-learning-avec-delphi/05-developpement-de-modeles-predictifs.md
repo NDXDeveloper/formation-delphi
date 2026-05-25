@@ -103,7 +103,7 @@ Application CRM qui classe automatiquement les leads en "Haute probabilité de c
 
 **Techniques** :
 - ARIMA (AutoRegressive Integrated Moving Average)
-- Prophet (Facebook)
+- Prophet (Meta, anciennement Facebook)
 - LSTM (Long Short-Term Memory) - réseaux de neurones récurrents
 
 **Cas d'usage Delphi** :
@@ -326,8 +326,11 @@ model.fit(X_train, y_train)
 
 # Sauvegarder pour utilisation dans Delphi
 import pickle  
-pickle.dump(model, open('model.pkl', 'wb'))  
+with open('model.pkl', 'wb') as f:  # `with` garantit la fermeture du fichier  
+    pickle.dump(model, f)
 ```
+
+> ⚠️ **Sécurité** : Les fichiers `.pkl` (pickle) peuvent contenir du **code Python arbitraire exécuté lors du chargement**. Ne chargez JAMAIS un fichier pickle depuis une source non fiable. Pour le déploiement en production, préférez un format sûr comme ONNX ou JSON (pour les modèles simples).
 
 ### 6. Évaluer les performances
 
@@ -407,11 +410,14 @@ Validation croisée pour éviter le surapprentissage.
 
 **Option 1 : Exporter vers ONNX**
 ```python
-# Python : Convertir en ONNX
-import sklearn  
+# Python : Convertir un modèle scikit-learn en ONNX
+# Prérequis : pip install skl2onnx onnxruntime
 from skl2onnx import convert_sklearn  
 from skl2onnx.common.data_types import FloatTensorType  
 
+# Hypothèse : `model` est un modèle scikit-learn déjà entraîné
+# (LinearRegression, RandomForest, etc.) et `4` est le nombre de features.
+# Adapter [None, N] selon votre signature d'entrée.
 initial_type = [('float_input', FloatTensorType([None, 4]))]  
 onx = convert_sklearn(model, initial_types=initial_type)  
 
@@ -419,7 +425,7 @@ with open("model.onnx", "wb") as f:
     f.write(onx.SerializeToString())
 ```
 
-Puis utiliser ONNX Runtime depuis Delphi.
+Puis utiliser ONNX Runtime depuis Delphi (le format `.onnx` est universel et indépendant de Python).
 
 **Option 2 : Service REST Python**
 ```python
@@ -427,14 +433,21 @@ Puis utiliser ONNX Runtime depuis Delphi.
 from flask import Flask, request, jsonify  
 import pickle  
 
-app = Flask(__name__)  
-model = pickle.load(open('model.pkl', 'rb'))  
+app = Flask(__name__)
+
+# ⚠️ `with open` garantit la fermeture du handle même en cas d'exception.
+#    Rappel : ne charger un .pkl que depuis une source FIABLE (cf. note sécurité
+#    plus haut). En production, préférez ONNX (format sûr).
+with open('model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json['features']
     prediction = model.predict([data])
-    return jsonify({'prediction': prediction[0]})
+    # ⚠️ Convertir en float Python natif : NumPy float32/64 n'est pas
+    #    JSON-sérialisable par défaut → jsonify lèverait TypeError.
+    return jsonify({'prediction': float(prediction[0])})
 
 if __name__ == '__main__':
     app.run(port=5000)
@@ -447,21 +460,47 @@ var
   JSONObj: TJSONObject;
   JSONArray: TJSONArray;
   Feature: Double;
+  PredVal: TJSONValue;
 begin
-  JSONArray := TJSONArray.Create;
-  for Feature in Features do
-    JSONArray.Add(Feature);
-
+  // ⚠️ On construit JSONObj d'abord puis JSONArray à l'intérieur de son try.
+  //    Sinon, si TJSONObject.Create échoue, JSONArray reste non libéré.
   JSONObj := TJSONObject.Create;
   try
+    JSONArray := TJSONArray.Create;
+    // L'ownership de JSONArray est transféré à JSONObj via AddPair ci-dessous,
+    // mais on doit le libérer si une exception survient AVANT.
+    try
+      for Feature in Features do
+        JSONArray.AddElement(TJSONNumber.Create(Feature));
+    except
+      JSONArray.Free;
+      raise;
+    end;
+
     JSONObj.AddPair('features', JSONArray);
 
-    RESTRequest.Body.Add(JSONObj.ToString);
+    // Vider le body précédent puis poser le nouveau avec Content-Type explicite
+    // (sinon Flask ne parsera pas `request.json` correctement).
+    RESTRequest.ClearBody;
+    RESTRequest.AddBody(JSONObj.ToString, TRESTContentType.ctAPPLICATION_JSON);
     RESTRequest.Execute;
 
-    Result := RESTResponse.JSONValue.GetValue<Double>('prediction');
+    if RESTResponse.StatusCode <> 200 then
+      raise Exception.CreateFmt('Erreur API prédiction : %d - %s',
+        [RESTResponse.StatusCode, RESTResponse.Content]);
+
+    // ⚠️ Garde nil : JSONValue peut être nil si la réponse n'est pas un JSON
+    if not Assigned(RESTResponse.JSONValue) then
+      raise Exception.Create('Réponse API : JSON invalide ou vide');
+
+    // FindValue avec garde nil : message d'erreur explicite si format inattendu
+    PredVal := RESTResponse.JSONValue.FindValue('prediction');
+    if not Assigned(PredVal) then
+      raise Exception.Create('Réponse API : champ "prediction" introuvable.');
+
+    Result := PredVal.AsType<Double>;
   finally
-    JSONObj.Free;
+    JSONObj.Free; // libère récursivement JSONArray
   end;
 end;
 ```
@@ -637,7 +676,11 @@ begin
 
       Query.Next;
       ProgressBar.Position := ProgressBar.Position + 1;
-      Application.ProcessMessages; // Garder l'UI réactive
+      // ⚠️ `Application.ProcessMessages` est un antipattern connu (réentrance,
+      //    bugs subtils). Acceptable pour un script ponctuel comme ici, mais
+      //    en production préférez `TTask.Run` + `TThread.Queue` pour la
+      //    progression. Voir section 22.7 "Gestion asynchrone".
+      Application.ProcessMessages;
     end;
   finally
     Query.Free;
@@ -664,6 +707,33 @@ type
     procedure InvaliderCache(ClientID: Integer);
     procedure ViderCache;
   end;
+
+constructor TCachePredictions.Create(DureeValiditeHeures: Integer);  
+begin  
+  inherited Create;
+  FCache := TDictionary<Integer, TPredictionChurn>.Create;
+  FExpiration := TDictionary<Integer, TDateTime>.Create;
+  FDureeValidite := DureeValiditeHeures;
+end;
+
+destructor TCachePredictions.Destroy;  
+begin  
+  FCache.Free;
+  FExpiration.Free;
+  inherited;
+end;
+
+procedure TCachePredictions.InvaliderCache(ClientID: Integer);  
+begin  
+  FCache.Remove(ClientID);
+  FExpiration.Remove(ClientID);
+end;
+
+procedure TCachePredictions.ViderCache;  
+begin  
+  FCache.Clear;
+  FExpiration.Clear;
+end;
 
 function TCachePredictions.ObtenirPrediction(ClientID: Integer): TPredictionChurn;  
 var  
@@ -710,23 +780,62 @@ end;
 function PrevoirVentesProchainMois: TArray<Double>;  
 var  
   HistoriqueVentes: TArray<Double>;
-  Previsions: TJSONArray;
+  RequestBody: TJSONObject;
+  HistoriqueJSON: TJSONArray;
+  Previsions: TJSONValue;
+  PrevisionsArr: TJSONArray;
   i: Integer;
 begin
   // Récupérer l'historique
   HistoriqueVentes := ChargerHistoriqueVentes(24); // 24 mois
 
-  // Appeler API Python
-  RESTRequest.AddParameter('historique',
-    TJSONArray.Create(HistoriqueVentes).ToString);
-  RESTRequest.Execute;
+  // ⚠️ TJSONArray ne possède pas de constructeur acceptant TArray<Double>.
+  //    Il faut le construire manuellement, puis encapsuler dans le body JSON
+  //    et envoyer avec le bon Content-Type (sinon Flask ne parsera pas
+  //    `request.json` correctement).
+  RequestBody := TJSONObject.Create;
+  HistoriqueJSON := TJSONArray.Create;
+  try
+    try
+      for i := 0 to High(HistoriqueVentes) do
+        HistoriqueJSON.AddElement(TJSONNumber.Create(HistoriqueVentes[i]));
+    except
+      HistoriqueJSON.Free;
+      raise;
+    end;
 
-  // Parser les prévisions
-  Previsions := RESTResponse.JSONValue.GetValue<TJSONArray>('previsions');
-  SetLength(Result, Previsions.Count);
+    // Ownership transféré à RequestBody via AddPair
+    RequestBody.AddPair('historique', HistoriqueJSON);
 
-  for i := 0 to Previsions.Count - 1 do
-    Result[i] := Previsions.Items[i].AsType<Double>;
+    // Appeler API Python en JSON (Content-Type explicite obligatoire)
+    RESTRequest.ClearBody;
+    RESTRequest.AddBody(RequestBody.ToString,
+      TRESTContentType.ctAPPLICATION_JSON);
+    RESTRequest.Execute;
+  finally
+    RequestBody.Free; // libère récursivement HistoriqueJSON
+  end;
+
+  // Vérifier le code de statut HTTP avant de parser
+  if RESTResponse.StatusCode <> 200 then
+    raise Exception.CreateFmt('Erreur API prévisions : %d - %s',
+      [RESTResponse.StatusCode, RESTResponse.Content]);
+
+  // Garde nil : si la réponse n'est pas un JSON valide, JSONValue vaut nil
+  if not Assigned(RESTResponse.JSONValue) then
+    raise Exception.Create('Réponse API : JSON invalide ou vide');
+
+  // Parser les prévisions. FindValue (et non GetValue) pour rester robuste
+  // si la clé est absente : on lève une erreur explicite plutôt qu'une
+  // exception générique de path JSONPath.
+  Previsions := RESTResponse.JSONValue.FindValue('previsions');
+  if not (Previsions is TJSONArray) then
+    raise Exception.Create('Réponse API : champ "previsions" absent ou invalide.');
+
+  PrevisionsArr := TJSONArray(Previsions);
+  SetLength(Result, PrevisionsArr.Count);
+  for i := 0 to PrevisionsArr.Count - 1 do
+    Result[i] := (PrevisionsArr.Items[i] as TJSONNumber).AsDouble;
 end;
 ```
 
@@ -949,7 +1058,7 @@ end;
 
 **Cas d'usage** : Scoring, prédictions de séries, classification complexe
 
-### Prophet (Facebook)
+### Prophet (Meta)
 
 **Spécialisé séries temporelles** :
 - Très simple d'utilisation

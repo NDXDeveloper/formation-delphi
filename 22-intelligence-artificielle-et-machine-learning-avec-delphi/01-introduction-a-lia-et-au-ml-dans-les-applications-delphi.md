@@ -45,10 +45,10 @@ Le Machine Learning, ou apprentissage automatique, est une branche de l'IA qui p
 La méthode la plus simple pour débuter consiste à utiliser des services d'IA existants via leurs API REST.
 
 **Services disponibles** :
-- Azure Cognitive Services (Microsoft)
+- Azure AI Services (Microsoft, anciennement Cognitive Services)
 - Google Cloud AI
 - AWS AI Services
-- OpenAI API (ChatGPT, GPT-4, DALL-E)
+- OpenAI API (GPT-4o, GPT-5, Whisper, etc.)
 
 **Avantages** :
 - Pas besoin d'être expert en IA
@@ -121,9 +121,11 @@ Exemple : Un système qui apprend à jouer aux échecs en jouant des milliers de
 
 Delphi 13 a introduit plusieurs améliorations pour faciliter l'intégration de l'IA :
 
-**Site web companion IA** : Un assistant intelligent pour vous aider dans le développement, capable de générer du code, répondre à vos questions et suggérer des solutions.
+**RAD AI Companion** : Un chatbot IA web intégré à l'IDE (accessible via le menu **Aide → RAD AI Companion**), spécifiquement entraîné sur le contenu RAD Studio. Il peut générer du code, répondre à vos questions et suggérer des solutions.
 
-**Composants IA intégrés** : De nouveaux composants facilitent l'intégration de fonctionnalités IA courantes sans partir de zéro.
+**Smart CodeInsight** : Intégration IA dans l'éditeur lui-même (présente depuis RAD Studio 12.3) avec un panneau de chat dockable et des commandes contextuelles via clic droit. Supporte plusieurs fournisseurs LLM : OpenAI, Gemini, Claude (en ligne) et Ollama (hors ligne). Configuration via **Outils → Options → Éditeur → Smart CodeInsight**.
+
+**SmartCore AI Component Pack** : Ensemble officiel de composants pour intégrer l'IA dans vos applications (installable via GetIt). Inclut `TAIConnection`, `TAIChatRequest`, `TAIImageRequest`, `TAIJSONRequest`, `TAIStreamRequest` et les drivers pour OpenAI, Claude, Gemini et Ollama.
 
 **Amélioration de TRESTClient** : Optimisations pour une consommation plus efficace des API d'IA modernes.
 

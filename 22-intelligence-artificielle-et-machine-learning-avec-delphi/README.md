@@ -25,7 +25,10 @@ Pendant longtemps, l'intelligence artificielle était perçue comme un domaine r
 
 **Aujourd'hui** : Les services cloud proposent des API d'IA prêtes à l'emploi que vous pouvez intégrer en quelques heures. Des bibliothèques open source permettent d'exécuter des modèles localement. Des modèles pré-entraînés sont disponibles gratuitement pour des milliers de cas d'usage.
 
-**Delphi 13 Florence** renforce cette tendance en facilitant encore davantage l'intégration de l'IA, avec notamment son site web companion IA pour assister les développeurs et ses composants optimisés pour la consommation de services intelligents.
+**Delphi 13 Florence** (sorti le 10 septembre 2025) renforce cette tendance en facilitant encore davantage l'intégration de l'IA :
+- **RAD AI Companion** (menu Aide) : chatbot web entraîné sur le contenu RAD Studio
+- **Smart CodeInsight** : intégration IA dans l'éditeur (OpenAI, Gemini, Claude, Ollama)
+- **SmartCore AI Component Pack** : composants officiels pour intégrer l'IA dans vos applications (via GetIt)
 
 ### À qui s'adresse ce chapitre ?
 
@@ -57,10 +60,12 @@ Vous découvrirez comment créer des applications qui anticipent : prévision de
 Nous examinerons les plateformes majeures (Azure AI, Google Cloud AI, AWS AI) et comment les consommer efficacement depuis Delphi. Ces services offrent des capacités IA de niveau entreprise sans nécessiter d'infrastructure complexe.
 
 **Les grands modèles de langage (section 22.7)**
-L'explosion récente des LLM comme GPT-4, Claude ou Llama a révolutionné l'IA. Vous apprendrez à intégrer ces modèles puissants dans vos applications Delphi pour créer des assistants intelligents, générer du contenu, ou automatiser des tâches complexes.
+L'explosion récente des LLM (famille GPT-4o/GPT-5, Claude, Gemini, Llama, Mistral) a révolutionné l'IA. Vous apprendrez à intégrer ces modèles puissants dans vos applications Delphi pour créer des assistants intelligents, générer du contenu, ou automatiser des tâches complexes.
 
 **Composants et outils Delphi 13 (sections 22.8 et 22.9)**
-Nous explorerons les nouveautés spécifiques de Delphi 13 Florence pour l'IA, notamment les composants intégrés qui facilitent l'intégration, et le site web companion IA qui vous assiste dans le développement.
+Nous explorerons les nouveautés spécifiques de Delphi 13 Florence pour l'IA :
+- Section 22.8 : Le **SmartCore AI Component Pack** (composants officiels TAIConnection, TAIChatRequest, TAIImageRequest, etc. via GetIt)
+- Section 22.9 : Le **RAD AI Companion** (chatbot web) et **Smart CodeInsight** (intégration éditeur multi-LLM)
 
 ### Ce que vous saurez faire à la fin de ce chapitre
 
