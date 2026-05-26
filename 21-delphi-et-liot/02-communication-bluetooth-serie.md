@@ -49,7 +49,17 @@ Pour établir une communication série, vous devez configurer plusieurs paramèt
 
 #### 1. Port COM
 - **Windows** : COM1, COM2, COM3, etc.
-- **macOS/Linux** : /dev/ttyUSB0, /dev/ttyACM0, etc.
+- **macOS/Linux** : `/dev/ttyUSB0`, `/dev/ttyACM0`, etc.
+
+💡 **Comment trouver le numéro de port d'un Arduino branché ?**
+- **Windows** : ouvrir le *Gestionnaire de périphériques*, déplier
+  *Ports (COM et LPT)* — l'Arduino apparaît avec son numéro (ex. COM5).
+  Astuce : débrancher/rebrancher l'USB pour voir lequel disparaît/réapparaît.
+- **Linux** : commande `ls /dev/ttyACM* /dev/ttyUSB*` (Arduino Uno
+  apparaît généralement en `/dev/ttyACM0`, ESP en `/dev/ttyUSB0`).
+- **macOS** : commande `ls /dev/cu.*` (typiquement `/dev/cu.usbmodem*`).
+- **Multi-plateforme** : l'IDE Arduino affiche le port dans
+  *Outils → Port* — utiliser le même nom dans Delphi.
 
 #### 2. Vitesse (Baud Rate)
 La vitesse de transmission en bits par seconde :
@@ -88,28 +98,32 @@ Gestion du flux de données :
 
 Il existe plusieurs options pour la communication série en Delphi :
 
-#### 1. TComPort (AsyncPro)
-Bibliothèque open source populaire :
-- Facile à utiliser
-- Bien documentée
+#### 1. ComPort Library (CPortLib) — `TComPort`
+Bibliothèque open source populaire, créée par Dejan Crnila :
+- Composant `TComPort` (avec `TComDataPacket`, `TComComboBox`, etc.)
+- Facile à utiliser et bien documentée
 - Compatible avec de nombreuses versions de Delphi
-- Installation via composant
+- Fork maintenu sur GitHub (CWBudde/ComPort-Library, dernière version 4.11)
+- C'est cette bibliothèque qui est utilisée dans les exemples ci-dessous
 
-#### 2. Composants tiers commerciaux
-- **TMS Async32** : suite complète de communications
-- **Synapser Serial** : bibliothèque légère
-- **ComPort Library** : gratuite et efficace
+#### 2. TurboPower AsyncPro — `TApdComPort`
+Suite historique (à l'origine commerciale, désormais open source) :
+- Composant principal : `TApdComPort` (à ne pas confondre avec `TComPort` de CPortLib)
+- Plus large : terminal, modem, fax, protocoles X/Y/ZMODEM
+- Maintenance communautaire sur GitHub
 
-#### 3. Solution native
-Utilisation directe de l'API Windows ou des bibliothèques système.
+#### 3. Autres options
+- **Synaser** (unité de la bibliothèque **Synapse**) : approche par classe procédurale, multi-plateforme
+- **WINSOFT ComPort** : composants commerciaux multi-plateformes (Windows, Linux, macOS, Android, iOS)
+- **Solution native** : appels directs à l'API Windows (`CreateFile`, `ReadFile`, `WriteFile` sur `\\.\COMx`)
 
-### Installation de TComPort (exemple)
+### Installation de ComPort Library (exemple)
 
-Pour utiliser TComPort :
+Pour utiliser le composant `TComPort` :
 
-1. Téléchargez la bibliothèque depuis SourceForge ou GitHub
+1. Téléchargez la bibliothèque depuis SourceForge ou GitHub (CWBudde/ComPort-Library)
 2. Installez le package dans Delphi
-3. Les composants apparaissent dans la palette d'outils
+3. Les composants apparaissent dans l'onglet **CPortLib** de la palette
 4. Déposez un composant `TComPort` sur votre formulaire
 
 ### Exemple basique : Lecture de données série
@@ -270,6 +284,7 @@ procedure TForm1.ComPort1RxChar(Sender: TObject; Count: Integer);
 var  
   ReceivedData: string;
   TempValue: Double;
+  FS: TFormatSettings;
 begin
   ComPort1.ReadStr(ReceivedData, Count);
 
@@ -279,7 +294,12 @@ begin
     Delete(ReceivedData, 1, 5); // Supprimer "TEMP:"
     ReceivedData := Trim(ReceivedData);
 
-    if TryStrToFloat(ReceivedData, TempValue) then
+    // ⚠️ Arduino envoie toujours un POINT comme séparateur décimal.
+    //    Sans FormatSettings explicite, TryStrToFloat utiliserait le
+    //    séparateur du système (virgule en français) et échouerait sur
+    //    "23.5". On force donc un FormatSettings invariant.
+    FS := TFormatSettings.Invariant;
+    if TryStrToFloat(ReceivedData, TempValue, FS) then
     begin
       LabelTemperature.Caption := Format('Température : %.1f °C', [TempValue]);
     end;
@@ -332,6 +352,20 @@ Pour le Bluetooth Low Energy :
 - Multi-plateforme (Windows, macOS, iOS, Android)
 - Scan des dispositifs BLE
 - Connexion et communication
+
+⚠️ **Disponibilité selon la plateforme** : le support BLE est très inégal.
+
+| Plateforme | Support BLE | Notes |
+|------------|-------------|-------|
+| **iOS** | Excellent | API native CoreBluetooth, le plus mature |
+| **Android** | Très bon | Nécessite permissions BLUETOOTH_SCAN/CONNECT (depuis Android 12) |
+| **macOS** | Bon | Via CoreBluetooth |
+| **Windows** | Variable | Nécessite Windows 10+ ; certains modes (Peripheral) limités |
+| **Linux** | Très limité | Pas de support natif Delphi (utiliser BlueZ via shell) |
+
+Avant de débuter un projet BLE, **prototyper sur la plateforme cible**  
+pour valider que les opérations dont vous avez besoin (scan continu,  
+caractéristiques notify, connexions multiples) y sont supportées.  
 
 #### TBluetooth (Classic)
 
@@ -453,16 +487,20 @@ procedure TForm1.BluetoothLE1CharacteristicRead(const Sender: TObject;
   const ACharacteristic: TBluetoothGattCharacteristic; AGattStatus: TBluetoothGattStatus);
 var
   Data: TBytes;
-  Value: Integer;
+  Value: Word; // 16 bits non signé
 begin
   if AGattStatus = TBluetoothGattStatus.Success then
   begin
     Data := ACharacteristic.Value;
 
-    // Exemple : conversion en entier (selon votre protocole)
+    // Exemple : décoder un entier 16 bits big-endian (selon votre protocole).
+    // ⚠️ Le typage en Word (et non Integer) évite que Data[0] >= $80
+    //    soit interprété comme négatif après le shl 8.
+    //    Beaucoup de capteurs BLE utilisent en réalité du little-endian :
+    //    dans ce cas, inverser l'ordre : Word(Data[1]) shl 8 or Data[0].
     if Length(Data) >= 2 then
     begin
-      Value := (Data[0] shl 8) or Data[1];
+      Value := (Word(Data[0]) shl 8) or Data[1];
       LabelValue.Caption := 'Valeur : ' + IntToStr(Value);
     end;
   end;
@@ -484,8 +522,11 @@ begin
   SetLength(Data, 1);
   Data[0] := $01; // Commande : allumer LED
 
-  // Écrire les données
-  Device.WriteCharacteristic(Characteristic, Data);
+  // ⚠️ La signature officielle de WriteCharacteristic ne prend QUE la
+  //    caractéristique. Il faut donc d'abord placer la donnée dans la
+  //    caractéristique via SetValue, puis appeler WriteCharacteristic.
+  Characteristic.SetValue(Data);
+  Device.WriteCharacteristic(Characteristic);
 end;
 ```
 
@@ -612,16 +653,29 @@ Pour éviter de bloquer l'interface utilisateur :
 
 ```pascal
 type
+  // Événement avec donnée transmise au thread principal
+  TSerialDataEvent = procedure(Sender: TObject; const Data: string) of object;
+
   TSerialReadThread = class(TThread)
   private
     FComPort: TComPort;
-    FOnDataReceived: TNotifyEvent;
+    FOnDataReceived: TSerialDataEvent;
+    FLastBuffer: string; // Capturé pour Synchronize
   protected
     procedure Execute; override;
   public
     constructor Create(AComPort: TComPort);
-    property OnDataReceived: TNotifyEvent read FOnDataReceived write FOnDataReceived;
+    // ⚠️ TNotifyEvent (Sender uniquement) ne permet pas de transmettre la
+    //    donnée — on définit donc TSerialDataEvent avec le paramètre Data.
+    property OnDataReceived: TSerialDataEvent read FOnDataReceived write FOnDataReceived;
   end;
+
+constructor TSerialReadThread.Create(AComPort: TComPort);  
+begin  
+  inherited Create(False); // démarrer immédiatement
+  FreeOnTerminate := False;
+  FComPort := AComPort;
+end;
 
 procedure TSerialReadThread.Execute;  
 var  
@@ -629,19 +683,21 @@ var
 begin
   while not Terminated do
   begin
-    if FComPort.Connected then
+    if FComPort.Connected and (FComPort.InputCount > 0) then
     begin
-      if FComPort.InputCount > 0 then
-      begin
-        FComPort.ReadStr(Buffer, FComPort.InputCount);
+      FComPort.ReadStr(Buffer, FComPort.InputCount);
 
-        // Traiter les données reçues
-        if Assigned(FOnDataReceived) then
-          Synchronize(procedure
+      // Notifier le thread principal AVEC les données reçues.
+      // ⚠️ Stocker dans un champ avant Synchronize : la procédure anonyme
+      //    capture FLastBuffer par référence (champ stable du thread),
+      //    pas la variable locale Buffer qui pourrait être réutilisée.
+      FLastBuffer := Buffer;
+      if Assigned(FOnDataReceived) then
+        Synchronize(
+          procedure
           begin
-            // Mise à jour de l'interface utilisateur
+            FOnDataReceived(Self, FLastBuffer);
           end);
-      end;
     end;
 
     Sleep(50); // Petite pause pour ne pas surcharger le CPU
@@ -703,16 +759,17 @@ Code de parsing :
 procedure ParseMessage(const Data: string);  
 var  
   StartPos, EndPos: Integer;
-  Message: string;
+  Msg: string; // évite la collision avec Exception.Message
 begin
   StartPos := Pos('<START>', Data);
   EndPos := Pos('<END>', Data);
 
   if (StartPos > 0) and (EndPos > 0) and (EndPos > StartPos) then
   begin
-    Message := Copy(Data, StartPos + 7, EndPos - StartPos - 7);
+    // Length('<START>') = 7, donc on saute 7 caractères après StartPos
+    Msg := Copy(Data, StartPos + 7, EndPos - StartPos - 7);
     // Traiter le message
-    ProcessCommand(Message);
+    ProcessCommand(Msg);
   end;
 end;
 ```
@@ -729,24 +786,32 @@ var
   Checksum: Byte;
   I: Integer;
 begin
+  // ⚠️ Le champ Longueur fait 1 octet : on ne peut donc pas encoder plus
+  //    de 255 octets utiles. Un format plus large devrait utiliser 2
+  //    octets (Word) pour Longueur.
+  if Length(Data) > 255 then
+    raise Exception.CreateFmt(
+      'Payload de %d octets trop volumineux pour ce protocole (max 255)',
+      [Length(Data)]);
+
   SetLength(Packet, 4 + Length(Data));
 
-  Packet[0] := $AA;           // Header
-  Packet[1] := MessageType;   // Type de message
-  Packet[2] := Length(Data);  // Longueur des données
+  Packet[0] := $AA;                 // Header
+  Packet[1] := MessageType;         // Type de message
+  Packet[2] := Byte(Length(Data));  // Longueur des données (0..255)
 
   // Copier les données
   for I := 0 to Length(Data) - 1 do
     Packet[3 + I] := Data[I];
 
-  // Calculer checksum simple
+  // Calculer checksum simple (XOR de tous les octets sauf le checksum)
   Checksum := 0;
   for I := 0 to Length(Packet) - 2 do
     Checksum := Checksum xor Packet[I];
 
   Packet[Length(Packet) - 1] := Checksum;
 
-  // Envoyer
+  // Envoyer (Packet[0] désigne le buffer ; passé par référence)
   ComPort1.Write(Packet[0], Length(Packet));
 end;
 ```
@@ -791,10 +856,26 @@ Pour les protocoles binaires :
 function BytesToHex(const Data: TBytes): string;  
 var  
   I: Integer;
+  SB: TStringBuilder;
 begin
-  Result := '';
-  for I := 0 to Length(Data) - 1 do
-    Result := Result + IntToHex(Data[I], 2) + ' ';
+  // ⚠️ Pour de petits tampons (< ~100 octets), une simple concaténation
+  //    `Result := Result + IntToHex(...)` suffit. MAIS chaque
+  //    concaténation alloue une NOUVELLE string et copie tout le contenu
+  //    précédent — complexité O(n²). Sur un tampon de 1 Ko, cela devient
+  //    visiblement lent ; sur un dump de 10 Ko, c'est inutilisable.
+  //    TStringBuilder amortit ce coût en O(n) en gardant un buffer
+  //    interne extensible. Réflexe pédagogique à acquérir tôt.
+  SB := TStringBuilder.Create(Length(Data) * 3);
+  try
+    for I := 0 to Length(Data) - 1 do
+    begin
+      SB.Append(IntToHex(Data[I], 2));
+      SB.Append(' ');
+    end;
+    Result := SB.ToString;
+  finally
+    SB.Free;
+  end;
 end;
 ```
 

@@ -41,11 +41,31 @@ Arduino est une plateforme électronique open source basée sur un microcontrôl
 - **Similaire** : à l'Uno mais plus petit
 - **Utilisation** : projets embarqués compacts
 
-#### ESP32/ESP8266
-- **WiFi/Bluetooth** : intégrés
-- **Performance** : beaucoup plus puissants
-- **Prix** : très compétitifs
-- **Utilisation** : projets IoT connectés
+#### ESP8266 et ESP32 (Espressif)
+
+Bien que souvent regroupés, ce sont deux familles distinctes :
+
+**ESP8266** (le précurseur, 2014) :
+- CPU mono-cœur Tensilica L106 @ 80 MHz (160 MHz overclocké)
+- **WiFi 2.4 GHz** intégré, pas de Bluetooth
+- ~50 Ko SRAM, mémoire Flash externe
+- Variantes populaires : ESP-01, NodeMCU, Wemos D1 Mini
+
+**ESP32** (la version moderne, 2016+) :
+- CPU dual-core Tensilica Xtensa @ 240 MHz (variantes RISC-V depuis 2020)
+- **WiFi 2.4 GHz + Bluetooth Classic + BLE** intégrés
+- 520 Ko SRAM
+- Variantes : ESP32, ESP32-S2, ESP32-S3, ESP32-C3 (RISC-V),
+  ESP32-C6 (Wi-Fi 6 + Thread/Matter, recommandée pour Matter)
+
+**Communs aux deux** :
+- Programmables via l'IDE Arduino (board manager)
+- Très bon rapport prix/fonctionnalités pour l'IoT
+- Compatibles avec la plupart des bibliothèques Arduino
+- **Tension de fonctionnement : 3,3 V** (attention si vous interfacez
+  avec des composants 5 V — utiliser un level shifter)
+
+**Utilisation** : projets IoT connectés sans matériel WiFi/Bluetooth séparé.
 
 ### Pourquoi combiner Arduino et Delphi ?
 
@@ -148,7 +168,9 @@ type
     procedure FormCreate(Sender: TObject);
   private
     FReceivedData: string;
-    procedure ProcessArduinoMessage(const Message: string);
+    // ⚠️ Le paramètre est nommé `Msg` (et non `Message`) pour éviter toute
+    //    collision avec `Exception.Message` lors d'une lecture du code.
+    procedure ProcessArduinoMessage(const Msg: string);
   end;
 
 var
@@ -191,7 +213,13 @@ begin
 end;
 
 procedure TFormMain.ComPort1RxChar(Sender: TObject; Count: Integer);  
-var  
+const  
+  // Si aucun #10 n'arrive jamais (Arduino mal programmé, données binaires
+  // bruitées, etc.), FReceivedData ne se viderait pas et grandirait sans
+  // limite — fuite mémoire silencieuse. On plafonne donc à une taille
+  // raisonnable et on tronque les anciennes données.
+  MAX_BUFFER_SIZE = 8192;
+var
   Str: string;
   P: Integer;
 begin
@@ -200,6 +228,14 @@ begin
 
   // Accumuler dans le buffer
   FReceivedData := FReceivedData + Str;
+
+  // Garde-fou : si le buffer dépasse la limite sans avoir trouvé de #10,
+  // on garde uniquement la fin (les anciennes données sans terminateur
+  // sont perdues, mais le programme continue à fonctionner).
+  if Length(FReceivedData) > MAX_BUFFER_SIZE then
+    FReceivedData := Copy(FReceivedData,
+                          Length(FReceivedData) - MAX_BUFFER_SIZE div 2 + 1,
+                          MAX_BUFFER_SIZE div 2);
 
   // Chercher le séparateur de ligne
   P := Pos(#10, FReceivedData);
@@ -221,23 +257,29 @@ begin
   end;
 end;
 
-procedure TFormMain.ProcessArduinoMessage(const Message: string);  
+procedure TFormMain.ProcessArduinoMessage(const Msg: string);  
 var  
   Command, Value: string;
   P: Integer;
   TempValue: Double;
+  FS: TFormatSettings;
 begin
+  // ⚠️ Arduino utilise toujours le point comme séparateur décimal.
+  //    Sur une machine française (virgule), TryStrToFloat sans
+  //    FormatSettings explicite échouerait sur "23.5".
+  FS := TFormatSettings.Invariant;
+
   // Parser le message au format COMMANDE:VALEUR
-  P := Pos(':', Message);
+  P := Pos(':', Msg);
   if P > 0 then
   begin
-    Command := Copy(Message, 1, P - 1);
-    Value := Copy(Message, P + 1, Length(Message));
+    Command := Copy(Msg, 1, P - 1);
+    Value := Copy(Msg, P + 1, Length(Msg));
 
     // Traiter selon la commande
     if Command = 'TEMP' then
     begin
-      if TryStrToFloat(Value, TempValue) then
+      if TryStrToFloat(Value, TempValue, FS) then
       begin
         LabelTemp.Caption := Format('Température : %.1f °C', [TempValue]);
 
@@ -379,27 +421,33 @@ type
 var
   CurrentWeather: TWeatherData;
 
-procedure TFormMain.ProcessArduinoMessage(const Message: string);  
+procedure TFormMain.ProcessArduinoMessage(const Msg: string);  
 var  
   Command, Value: string;
   P: Integer;
+  FS: TFormatSettings;
 begin
-  P := Pos(':', Message);
+  // Arduino envoie les flottants avec un point décimal — on parse
+  // toujours avec un FormatSettings invariant pour rester indépendant
+  // de la locale Windows.
+  FS := TFormatSettings.Invariant;
+
+  P := Pos(':', Msg);
   if P > 0 then
   begin
-    Command := Copy(Message, 1, P - 1);
-    Value := Copy(Message, P + 1, Length(Message));
+    Command := Copy(Msg, 1, P - 1);
+    Value := Copy(Msg, P + 1, Length(Msg));
 
     CurrentWeather.Timestamp := Now;
 
     if Command = 'TEMP' then
     begin
-      TryStrToFloat(Value, CurrentWeather.Temperature);
+      TryStrToFloat(Value, CurrentWeather.Temperature, FS);
       LabelTemp.Caption := Format('%.1f °C', [CurrentWeather.Temperature]);
     end
     else if Command = 'HUM' then
     begin
-      TryStrToFloat(Value, CurrentWeather.Humidity);
+      TryStrToFloat(Value, CurrentWeather.Humidity, FS);
       LabelHum.Caption := Format('%.1f %%', [CurrentWeather.Humidity]);
     end
     else if Command = 'LIGHT' then
@@ -438,13 +486,21 @@ Le Raspberry Pi est un ordinateur complet de la taille d'une carte de crédit. C
 
 **Caractéristiques principales :**
 - **Système d'exploitation** : Raspberry Pi OS (basé sur Debian), Ubuntu, etc.
-- **Processeur** : ARM multi-cœurs (selon le modèle)
-- **Mémoire** : de 1 à 8 GB de RAM
-- **Connectivité** : WiFi, Ethernet, Bluetooth
-- **GPIO** : 40 broches pour interfacer avec l'électronique
-- **Périphériques** : USB, HDMI, caméra, etc.
+- **Processeur** : ARM (mono-cœur sur Pi Zero W, jusqu'à quad-core 2,4 GHz sur Pi 5)
+- **Mémoire** : 512 Mo (Zero W) à 16 Go (Pi 5), selon le modèle
+- **Connectivité** : WiFi, Ethernet (sauf Zero/Zero 2 W qui n'ont pas d'Ethernet), Bluetooth
+- **GPIO** : 40 broches sur tous les modèles modernes (Pi Zero W inclus, depuis le Model B+)
+- **Périphériques** : USB, HDMI, caméra (CSI), affichage (DSI)
 
 ### Modèles Raspberry Pi populaires
+
+#### Raspberry Pi 5
+- **RAM** : 2, 4, 8 ou 16 GB
+- **CPU** : Quad-core ARM Cortex-A76 64-bit @ 2.4 GHz
+- **USB** : 2x USB 3.0, 2x USB 2.0
+- **Réseau** : Gigabit Ethernet, WiFi 5, Bluetooth 5.0
+- **Utilisation** : applications gourmandes, edge AI, multimédia
+- **Note** : modèle le plus récent, environ 3× plus rapide que le Pi 4
 
 #### Raspberry Pi 4 Model B
 - **RAM** : 2, 4 ou 8 GB
@@ -453,11 +509,18 @@ Le Raspberry Pi est un ordinateur complet de la taille d'une carte de crédit. C
 - **Réseau** : Gigabit Ethernet, WiFi, Bluetooth
 - **Utilisation** : serveur, desktop, projets gourmands
 
-#### Raspberry Pi Zero W
+#### Raspberry Pi Zero 2 W
+- **Format** : ultra-compact (identique au Zero W)
+- **CPU** : Quad-core ARM Cortex-A53 @ 1 GHz
+- **RAM** : 512 MB
+- **Connectivité** : WiFi, Bluetooth
+- **Utilisation** : projets embarqués nécessitant plus de puissance que le Zero W
+
+#### Raspberry Pi Zero W (modèle initial)
 - **Format** : ultra-compact
 - **RAM** : 512 MB
 - **Connectivité** : WiFi, Bluetooth
-- **Utilisation** : projets embarqués, IoT compact
+- **Utilisation** : projets embarqués très compacts, IoT basique
 
 ### Différences Arduino vs Raspberry Pi
 
@@ -526,6 +589,7 @@ Le Raspberry Pi collecte les données de plusieurs Arduino et les transmet à l'
 ```python
 from flask import Flask, jsonify, request  
 import RPi.GPIO as GPIO  
+import atexit  
 import time  
 
 app = Flask(__name__)
@@ -534,6 +598,10 @@ app = Flask(__name__)
 LED_PIN = 18  
 GPIO.setmode(GPIO.BCM)  
 GPIO.setup(LED_PIN, GPIO.OUT)  
+
+# ⚠️ Toujours libérer les GPIO en sortie : sinon, après un Ctrl+C ou un
+#    crash, les broches restent dans leur dernier état (ex : LED allumée).
+atexit.register(GPIO.cleanup)
 
 # Simulation de capteur
 def read_sensor():
@@ -562,6 +630,16 @@ def control_led():
     return jsonify({'status': 'success', 'led_state': state})
 
 if __name__ == '__main__':
+    # app.run() utilise le serveur de DÉVELOPPEMENT intégré à Flask.
+    # En production sur Raspberry Pi, utiliser un vrai serveur WSGI
+    # (gunicorn, waitress) derrière nginx — ou utiliser systemd.
+    #
+    # 🚨 SÉCURITÉ : host='0.0.0.0' expose l'API sur TOUTES les interfaces
+    #    réseau. Sans authentification, n'importe qui sur le réseau local
+    #    peut allumer/éteindre la LED. Pour un cas d'usage réel :
+    #    - Restreindre à 127.0.0.1 si l'API n'est utilisée que localement
+    #    - Sinon ajouter un Bearer token / Basic Auth avec HTTPS
+    #    - Considérer un reverse proxy nginx avec ACL par IP
     app.run(host='0.0.0.0', port=5000)
 ```
 
@@ -626,6 +704,12 @@ var
   JSONValue: TJSONValue;
   JSONObject: TJSONObject;
 begin
+  // Initialiser Result : si la requête échoue ou si le JSON est invalide,
+  // l'appelant reçoit un enregistrement zéro et non un record indéterminé.
+  Result := Default(TSensorData);
+
+  // Nettoyer toute donnée d'un précédent appel POST sur la même instance.
+  FRESTRequest.Body.ClearBody;
   FRESTRequest.Method := rmGET;
   FRESTRequest.Resource := '/api/sensor';
 
@@ -670,9 +754,12 @@ begin
   try
     JSONObject.AddPair('state', StateStr);
 
+    // Toujours réinitialiser le Body avant un nouveau POST, sinon le
+    // contenu d'un appel antérieur s'accumulerait.
+    FRESTRequest.Body.ClearBody;
     FRESTRequest.Method := rmPOST;
     FRESTRequest.Resource := '/api/led';
-    FRESTRequest.Body.Add(JSONObject.ToString, ContentTypeFromString('application/json'));
+    FRESTRequest.Body.Add(JSONObject.ToString, ctAPPLICATION_JSON);
 
     FRESTRequest.Execute;
 
@@ -736,7 +823,11 @@ MQTT_BROKER = "broker.hivemq.com"  # Ou votre broker local
 MQTT_PORT = 1883  
 MQTT_TOPIC = "home/raspberry/sensors"  
 
-client = mqtt.Client("RaspberryPi")
+# Depuis paho-mqtt 2.0, il faut préciser la version de l'API de callbacks.
+# VERSION2 est la version recommandée (signatures cohérentes MQTT 3.x / 5.x).
+# Sans ce premier argument, paho-mqtt 2.x émet un DeprecationWarning et
+# l'appel échouera en 3.x.
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "RaspberryPi")
 
 def publish_sensor_data():
     # Simuler lecture de capteur
@@ -791,22 +882,33 @@ var
   JSONObject: TJSONObject;
   Temp, Hum: Double;
 begin
-  // Parser le JSON reçu
+  // Parser le JSON reçu (retourne nil si JSON invalide — Free(nil) est OK)
   JSONValue := TJSONObject.ParseJSONValue(Payload);
   try
     if JSONValue is TJSONObject then
     begin
       JSONObject := JSONValue as TJSONObject;
 
-      Temp := JSONObject.GetValue<Double>('temperature');
-      Hum := JSONObject.GetValue<Double>('humidity');
+      // ⚠️ TryGetValue plutôt que GetValue : si la clé manque ou que
+      //    le type ne correspond pas, GetValue lèverait une exception
+      //    qui interromprait le traitement d'un message légitime
+      //    (par exemple, un dispositif qui n'envoie pas l'humidité).
+      if not JSONObject.TryGetValue<Double>('temperature', Temp) then
+        Temp := NaN;
+      if not JSONObject.TryGetValue<Double>('humidity', Hum) then
+        Hum := NaN;
 
-      // Mettre à jour l'interface (depuis le thread principal)
-      TThread.Synchronize(nil, procedure
-      begin
-        LabelTemp.Caption := Format('%.1f °C', [Temp]);
-        LabelHum.Caption := Format('%.1f %%', [Hum]);
-      end);
+      // Mettre à jour l'interface (depuis le thread principal).
+      // Variables capturées par valeur via les paramètres anonymes (Delphi
+      // moderne les copie dans la closure).
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          if not IsNaN(Temp) then
+            LabelTemp.Caption := Format('%.1f °C', [Temp]);
+          if not IsNaN(Hum) then
+            LabelHum.Caption := Format('%.1f %%', [Hum]);
+        end);
     end;
   finally
     JSONValue.Free;
@@ -933,6 +1035,8 @@ type
     function IsValid: Boolean;
     property LastTemperature: Double read FLastTemperature;
     property LastHumidity: Double read FLastHumidity;
+    // Exposer LastUpdate en lecture seule pour l'affichage.
+    property LastUpdate: TDateTime read FLastUpdate;
   end;
 
 function TSensorCache.IsValid: Boolean;  
@@ -946,7 +1050,7 @@ begin
   begin
     LabelTemp.Caption := Format('%.1f °C', [SensorCache.LastTemperature]);
     LabelStatus.Caption := 'Dernière mise à jour : ' +
-                          FormatDateTime('hh:nn:ss', SensorCache.FLastUpdate);
+                          FormatDateTime('hh:nn:ss', SensorCache.LastUpdate);
   end
   else
   begin
@@ -961,6 +1065,9 @@ end;
 Toujours logger les communications pour faciliter le débogage :
 
 ```pascal
+uses
+  System.IOUtils; // Pour TFile.AppendAllText
+
 procedure TFormMain.LogMessage(const Source, MessageType, Content: string);  
 var  
   LogEntry: string;

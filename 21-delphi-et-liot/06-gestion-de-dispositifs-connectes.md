@@ -106,8 +106,13 @@ begin
   FLastSeen := Now;
   FLastHeartbeat := Now;
   FProperties := TStringList.Create;
+
+  // ⚠️ Duplicates n'a aucun effet sur une liste NON triée : il faut
+  //    d'abord activer Sorted, sinon TStringList.Add ne vérifie pas
+  //    les doublons et dupIgnore est ignoré silencieusement.
+  FProperties.Sorted := True;
   FProperties.Duplicates := dupIgnore;
-  FProperties.NameValueSeparator := '=';
+  FProperties.NameValueSeparator := '='; // pour Values[Name] := Value
   FBatteryLevel := -1;  // -1 = non applicable
   FSignalStrength := -1;
 end;
@@ -487,12 +492,19 @@ procedure TNetworkScanner.ScanIP(const IPAddress: string);
 var  
   TCPClient: TIdTCPClient;
   DeviceInfo: string;
+  FoundIP: string;
 begin
   TCPClient := TIdTCPClient.Create(nil);
   try
     TCPClient.Host := IPAddress;
     TCPClient.Port := FPort;
-    TCPClient.ConnectTimeout := 1000;  // 1 seconde
+    TCPClient.ConnectTimeout := 1000;  // 1 seconde pour établir la connexion
+    // ⚠️ ConnectTimeout protège seulement la phase de connexion. Sans
+    //    ReadTimeout, un dispositif qui accepte la connexion mais ne
+    //    répond pas à 'INFO' bloquerait ReadLn indéfiniment, gelant
+    //    tout le scan. 2 secondes laissent à un dispositif honnête le
+    //    temps de répondre tout en évitant un blocage permanent.
+    TCPClient.ReadTimeout := 2000;
 
     try
       TCPClient.Connect;
@@ -503,9 +515,18 @@ begin
         // Envoyer une requête d'identification
         TCPClient.IOHandler.WriteLn('INFO');
         DeviceInfo := TCPClient.IOHandler.ReadLn;
+        FoundIP := IPAddress;
 
+        // ⚠️ ScanIP s'exécute en arrière-plan : on doit donc synchroniser
+        //    UNIQUEMENT l'appel au callback (qui touchera probablement
+        //    l'UI), pas tout le scan. Capturer dans des variables stables
+        //    avant Synchronize.
         if Assigned(FOnDeviceFound) then
-          FOnDeviceFound(IPAddress, DeviceInfo);
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              FOnDeviceFound(FoundIP, DeviceInfo);
+            end);
 
         TCPClient.Disconnect;
       end;
@@ -518,32 +539,29 @@ begin
 end;
 
 procedure TNetworkScanner.StartScan;  
-var  
-  I: Integer;
-  IPAddress: string;
-begin
+begin  
   if FScanning then Exit;
 
   FScanning := True;
 
-  TThread.CreateAnonymousThread(procedure
-  var
-    J: Integer;
-  begin
-    for J := FStartRange to FEndRange do
+  // Le scan tourne dans un thread, sans Synchronize global :
+  // chaque ScanIP s'occupe lui-même de synchroniser son callback.
+  // Cela évite de geler l'UI à chaque test d'IP (jusqu'à 254 tests possibles).
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      J: Integer;
+      IPAddress: string;
     begin
-      if not FScanning then Break;
-
-      IPAddress := Format('%s.%d', [FBaseIP, J]);
-
-      TThread.Synchronize(nil, procedure
+      for J := FStartRange to FEndRange do
       begin
+        if not FScanning then Break;
+        IPAddress := Format('%s.%d', [FBaseIP, J]);
         ScanIP(IPAddress);
-      end);
-    end;
+      end;
 
-    FScanning := False;
-  end).Start;
+      FScanning := False;
+    end).Start;
 end;
 
 procedure TNetworkScanner.StopScan;  
@@ -648,17 +666,23 @@ begin
   Scanner := TNetworkScanner.Create('192.168.1', 1, 254, 80);
   try
     Scanner.OnDeviceFound := procedure(const IPAddress, DeviceInfo: string)
+    var
+      Device: TIoTDevice;
     begin
       ListBoxDevices.Items.Add(Format('%s - %s', [IPAddress, DeviceInfo]));
 
-      // Créer et ajouter le dispositif au gestionnaire
-      var Device := TIoTDevice.Create;
+      // Créer et ajouter le dispositif au gestionnaire.
+      // ⚠️ AddDevice peut refuser le dispositif (doublon d'ID) et retourner
+      //    False. Sans ce garde-fou, le Device fuirait : il n'est ni
+      //    possédé par DeviceManager (TObjectList) ni libéré ici.
+      Device := TIoTDevice.Create;
       Device.ID := IPAddress;
       Device.Name := DeviceInfo;
       Device.IPAddress := IPAddress;
       Device.Status := dsOnline;
 
-      DeviceManager.AddDevice(Device);
+      if not DeviceManager.AddDevice(Device) then
+        Device.Free;
     end;
 
     Scanner.StartScan;
@@ -773,10 +797,16 @@ begin
 
     // Type
     case Device.DeviceType of
-      dtSensor: TypeText := 'Capteur';
-      dtActuator: TypeText := 'Actionneur';
-      dtGateway: TypeText := 'Passerelle';
+      dtSensor:     TypeText := 'Capteur';
+      dtActuator:   TypeText := 'Actionneur';
+      dtGateway:    TypeText := 'Passerelle';
       dtController: TypeText := 'Contrôleur';
+    else
+      // ⚠️ Branche else obligatoire : sans elle, si TDeviceType s'enrichit
+      //    d'une nouvelle valeur, TypeText conserverait la valeur de la
+      //    ligne précédente (boucle), produisant des résultats incohérents
+      //    silencieux. Cohérent avec le case du fichier 08.
+      TypeText := 'Inconnu';
     end;
 
     StringGridDevices.Cells[0, Row] := StatusText;
@@ -848,18 +878,32 @@ end;
 procedure TFormDashboard.ShowDeviceDetails(Device: TIoTDevice);  
 var  
   Details: string;
+  BatteryStr, SignalStr: string;
 begin
+  // ⚠️ BatteryLevel et SignalStrength = -1 signifient « non applicable »
+  //    (cf. constructeur de TIoTDevice). Sans cette branche, on afficherait
+  //    « Batterie: -1% » ce qui est trompeur pour l'utilisateur.
+  if Device.BatteryLevel >= 0 then
+    BatteryStr := Format('%d%%', [Device.BatteryLevel])
+  else
+    BatteryStr := 'N/A';
+
+  if Device.SignalStrength >= 0 then
+    SignalStr := Format('%d%%', [Device.SignalStrength])
+  else
+    SignalStr := 'N/A';
+
   Details := Format(
     'Dispositif: %s' + sLineBreak +
     'ID: %s' + sLineBreak +
     'Adresse IP: %s' + sLineBreak +
     'MAC: %s' + sLineBreak +
     'Firmware: %s' + sLineBreak +
-    'Batterie: %d%%' + sLineBreak +
-    'Signal: %d%%' + sLineBreak +
+    'Batterie: %s' + sLineBreak +
+    'Signal: %s' + sLineBreak +
     'Dernière activité: %s',
     [Device.Name, Device.ID, Device.IPAddress, Device.MACAddress,
-     Device.FirmwareVersion, Device.BatteryLevel, Device.SignalStrength,
+     Device.FirmwareVersion, BatteryStr, SignalStr,
      FormatDateTime('dd/mm/yyyy hh:nn:ss', Device.LastSeen)]
   );
 
@@ -998,6 +1042,8 @@ procedure TFormConfig.ButtonApplyClick(Sender: TObject);
 var  
   Device: TIoTDevice;
   Config: TDeviceConfig;
+  SamplingInt, ReportingInt: Integer;
+  ThresholdMinD, ThresholdMaxD: Double;
 begin
   Device := DeviceManager.GetDevice(EditDeviceID.Text);
   if not Assigned(Device) then
@@ -1006,13 +1052,38 @@ begin
     Exit;
   end;
 
+  // ⚠️ Valider toutes les saisies AVANT de créer Config :
+  //    StrToInt / StrToFloat lèveraient une EConvertError peu lisible
+  //    pour l'utilisateur final si un champ est mal renseigné.
+  //    Les versions Try* permettent un message d'erreur ciblé.
+  if not TryStrToInt(EditSamplingInterval.Text, SamplingInt) then
+  begin
+    ShowMessage('Intervalle d''échantillonnage invalide');
+    Exit;
+  end;
+  if not TryStrToInt(EditReportingInterval.Text, ReportingInt) then
+  begin
+    ShowMessage('Intervalle de transmission invalide');
+    Exit;
+  end;
+  if not TryStrToFloat(EditThresholdMin.Text, ThresholdMinD) then
+  begin
+    ShowMessage('Seuil minimum invalide');
+    Exit;
+  end;
+  if not TryStrToFloat(EditThresholdMax.Text, ThresholdMaxD) then
+  begin
+    ShowMessage('Seuil maximum invalide');
+    Exit;
+  end;
+
   Config := TDeviceConfig.Create;
   try
     Config.DeviceID := Device.ID;
-    Config.SamplingInterval := StrToInt(EditSamplingInterval.Text);
-    Config.ReportingInterval := StrToInt(EditReportingInterval.Text);
-    Config.ThresholdMin := StrToFloat(EditThresholdMin.Text);
-    Config.ThresholdMax := StrToFloat(EditThresholdMax.Text);
+    Config.SamplingInterval := SamplingInt;
+    Config.ReportingInterval := ReportingInt;
+    Config.ThresholdMin := ThresholdMinD;
+    Config.ThresholdMax := ThresholdMaxD;
     Config.Enabled := CheckBoxEnabled.Checked;
 
     if TDeviceConfigurator.SetConfiguration(Device, Config) then
@@ -1167,6 +1238,7 @@ end.
 // Créer des groupes
 var
   Salon, Chambre, Jardin: TDeviceGroup;
+  Device: TIoTDevice;
 begin
   Salon := GroupManager.CreateGroup('Salon');
   Salon.Description := 'Dispositifs du salon';
@@ -1180,6 +1252,7 @@ begin
   Salon.AddDevice(LEDStripSalon);
 
   // Envoyer une commande à tous les dispositifs d'un groupe
+  // (Salon.Devices est de type TList<TIoTDevice>, donc Device : TIoTDevice)
   for Device in Salon.Devices do
   begin
     if Device.DeviceType = dtActuator then
@@ -1318,7 +1391,12 @@ procedure TDeviceManager.CheckAlertRules;
 var  
   Device: TIoTDevice;
   Temp: Double;
+  FS: TFormatSettings;
 begin
+  // Les valeurs stockées dans GetProperty arrivent typiquement de capteurs
+  // qui utilisent un POINT décimal — on parse avec FormatSettings invariant.
+  FS := TFormatSettings.Invariant;
+
   for Device in FDevices do
   begin
     // Batterie faible
@@ -1333,7 +1411,7 @@ begin
     // Température hors limites
     if Device.GetProperty('temperature') <> '' then
     begin
-      Temp := StrToFloatDef(Device.GetProperty('temperature'), 0);
+      Temp := StrToFloatDef(Device.GetProperty('temperature'), 0, FS);
       if (Temp < 0) or (Temp > 40) then
         AlertManager.RaiseAlert(Device, alCritical,
           Format('Température anormale: %.1f°C', [Temp]));
@@ -1343,6 +1421,28 @@ end;
 ```
 
 ## Mise à jour OTA (Over-The-Air)
+
+🚨 **Sécurité OTA — impératifs non négociables**
+
+Une mise à jour OTA est l'opération la plus dangereuse de tout système  
+IoT : si un attaquant parvient à pousser un firmware malveillant, il  
+prend **le contrôle physique** des dispositifs (relais, moteurs, valves,  
+caméras…). En production, une OTA doit impérativement :  
+
+1. **Téléchargement chiffré** (HTTPS/TLS, pas HTTP en clair)
+2. **Signature cryptographique** du firmware (ECDSA ou RSA) — le
+   dispositif vérifie la signature avec une clé publique embarquée
+   AVANT de flasher
+3. **Vérification d'intégrité** (SHA-256 du fichier reçu)
+4. **Mécanisme de rollback** : pouvoir revenir au firmware précédent
+   si le nouveau ne démarre pas (watchdog au boot)
+5. **Versioning** : refuser une version inférieure (anti-downgrade)
+6. **Authentification du serveur** (mTLS si possible)
+
+L'exemple ci-dessous est **délibérément simplifié** à des fins  
+pédagogiques : il n'illustre que la mécanique de progression et de  
+statut. **Ne pas déployer tel quel** sur des dispositifs réels sans  
+ajouter ces couches de sécurité.  
 
 ### Système de mise à jour à distance
 
@@ -1430,7 +1530,9 @@ unit DevicePersistence;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, DeviceManager, IoTDevice;
+  System.SysUtils, System.Classes, System.IOUtils, System.JSON,
+  DeviceManager, IoTDevice;
+  // System.IOUtils est requis pour TFile (WriteAllText / ReadAllText / Exists)
 
 type
   TDevicePersistence = class
@@ -1466,7 +1568,11 @@ begin
       JSONArray.AddElement(JSONDevice);
     end;
 
-    TFile.WriteAllText(FileName, JSONArray.ToString);
+    // ⚠️ Forcer UTF-8 : TFile.WriteAllText sans encodage utilise
+    //    TEncoding.Default qui peut être ANSI (Windows-1252 en français).
+    //    Sur un appareil dont le nom contient un accent (« Capteur étage »),
+    //    l'écriture par défaut perdrait ces caractères.
+    TFile.WriteAllText(FileName, JSONArray.ToString, TEncoding.UTF8);
   finally
     JSONArray.Free;
   end;
@@ -1475,34 +1581,60 @@ end;
 class procedure TDevicePersistence.LoadDevices(Manager: TDeviceManager; const FileName: string);  
 var  
   JSONContent: string;
-  JSONArray: TJSONArray;
   JSONValue: TJSONValue;
+  JSONArray: TJSONArray;
   JSONDevice: TJSONObject;
   Device: TIoTDevice;
   I: Integer;
 begin
   if not TFile.Exists(FileName) then Exit;
 
-  JSONContent := TFile.ReadAllText(FileName);
-  JSONArray := TJSONObject.ParseJSONValue(JSONContent) as TJSONArray;
+  // Pendant de WriteAllText : on impose l'encodage UTF-8 pour relire
+  // correctement les fichiers sauvegardés par la fonction ci-dessus.
+  JSONContent := TFile.ReadAllText(FileName, TEncoding.UTF8);
+
+  // Toujours conserver la référence racine pour la libération, et tester
+  // le type avant de caster : si le fichier ne contient pas un tableau,
+  // un cast direct lèverait EInvalidCast et fuitait JSONValue.
+  JSONValue := TJSONObject.ParseJSONValue(JSONContent);
   try
+    if not (JSONValue is TJSONArray) then
+      Exit; // Fichier mal formé : on ignore proprement
+
+    JSONArray := JSONValue as TJSONArray;
     for I := 0 to JSONArray.Count - 1 do
     begin
+      if not (JSONArray.Items[I] is TJSONObject) then
+        Continue;
+
       JSONDevice := JSONArray.Items[I] as TJSONObject;
 
       Device := TIoTDevice.Create;
-      Device.ID := JSONDevice.GetValue<string>('id');
-      Device.Name := JSONDevice.GetValue<string>('name');
-      Device.DeviceType := TDeviceType(JSONDevice.GetValue<Integer>('type'));
-      Device.IPAddress := JSONDevice.GetValue<string>('ip');
-      Device.Port := JSONDevice.GetValue<Integer>('port');
-      Device.MACAddress := JSONDevice.GetValue<string>('mac');
-      Device.FirmwareVersion := JSONDevice.GetValue<string>('firmware');
+      try
+        Device.ID := JSONDevice.GetValue<string>('id');
+        Device.Name := JSONDevice.GetValue<string>('name');
+        Device.DeviceType := TDeviceType(JSONDevice.GetValue<Integer>('type'));
+        Device.IPAddress := JSONDevice.GetValue<string>('ip');
+        Device.Port := JSONDevice.GetValue<Integer>('port');
+        Device.MACAddress := JSONDevice.GetValue<string>('mac');
+        Device.FirmwareVersion := JSONDevice.GetValue<string>('firmware');
 
-      Manager.AddDevice(Device);
+        // Même précaution que pour le scan : si AddDevice refuse le
+        // dispositif (ex. ID déjà présent), on doit le libérer ici car
+        // il n'est pas pris en charge par la TObjectList du Manager.
+        if not Manager.AddDevice(Device) then
+        begin
+          Device.Free;
+          Device := nil;
+        end;
+      except
+        // Champ JSON manquant ou type incorrect : libérer et continuer
+        Device.Free;
+        raise;
+      end;
     end;
   finally
-    JSONArray.Free;
+    JSONValue.Free;
   end;
 end;
 

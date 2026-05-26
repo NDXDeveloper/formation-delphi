@@ -130,20 +130,24 @@ begin
     Exit;
   end;
 
-  // Vérifier les limites selon le type de capteur
-  if Reading.SensorType = 'temperature' then
+  // Vérifier les limites selon le type de capteur.
+  // ⚠️ SameText (insensible à la casse) plutôt que `=` : un capteur
+  //    qui envoie "Temperature" ou "TEMPERATURE" ne doit pas voir
+  //    ses valeurs aberrantes passer comme valides. La tolérance à
+  //    la casse évite des bugs subtils selon le firmware utilisé.
+  if SameText(Reading.SensorType, 'temperature') then
   begin
     // Température doit être entre -50°C et 100°C (limites physiques raisonnables)
     if (Reading.Value < -50) or (Reading.Value > 100) then
       Result := False;
   end
-  else if Reading.SensorType = 'humidity' then
+  else if SameText(Reading.SensorType, 'humidity') then
   begin
     // Humidité doit être entre 0% et 100%
     if (Reading.Value < 0) or (Reading.Value > 100) then
       Result := False;
   end
-  else if Reading.SensorType = 'pressure' then
+  else if SameText(Reading.SensorType, 'pressure') then
   begin
     // Pression atmosphérique entre 300 et 1100 hPa
     if (Reading.Value < 300) or (Reading.Value > 1100) then
@@ -515,14 +519,19 @@ begin
 end;
 
 function TStreamingStatistics.GetVariance: Double;  
-var  
-  Mean: Double;
-begin
+begin  
+  // Variance échantillonnale (diviseur n-1, formule de Bessel).
+  // ⚠️ Cette formule "compacte" peut perdre en précision quand toutes
+  //    les valeurs sont proches en magnitude (les deux termes se
+  //    soustraient et leurs chiffres significatifs s'annulent). Pour
+  //    une précision maximale sur de longues séries, préférer
+  //    l'algorithme de Welford (incrémental) qui maintient une moyenne
+  //    et une somme d'écarts au carré séparément. Pour des données IoT
+  //    typiques (capteurs avec plage limitée), cette formule suffit.
+  //    Garde-fou : on ne retourne jamais une valeur négative due à
+  //    une éventuelle erreur d'arrondi.
   if FCount > 1 then
-  begin
-    Mean := GetMean;
-    Result := (FSumSquares - (FSum * FSum / FCount)) / (FCount - 1);
-  end
+    Result := Max(0.0, (FSumSquares - (FSum * FSum / FCount)) / (FCount - 1))
   else
     Result := 0;
 end;
@@ -635,8 +644,11 @@ end;
 
 procedure TWindowAggregator.AddValue(Timestamp: TDateTime; Value: Double);  
 begin  
-  // Si la valeur est en dehors de la fenêtre actuelle, finaliser et créer une nouvelle
-  if Timestamp >= FCurrentWindow.EndTime then
+  // ⚠️ Utiliser `while` plutôt que `if` : si Timestamp est très en avance
+  //    (par exemple, plusieurs fenêtres après la fenêtre courante), il faut
+  //    finaliser autant de fenêtres vides que nécessaire pour préserver la
+  //    continuité temporelle dans l'historique.
+  while Timestamp >= FCurrentWindow.EndTime do
   begin
     FinalizeWindow;
     InitializeWindow(FCurrentWindow.EndTime);
@@ -730,25 +742,39 @@ begin
 end;
 
 function TThresholdDetector.Detect(Value: Double): TAnomalyResult;  
-begin  
+var  
+  Range: Double;
+begin
+  // ⚠️ Default(TAnomalyResult) garantit que TOUS les champs (y compris
+  //    Threshold) sont à zéro. Sans cela, Threshold serait indéterminé
+  //    quand IsAnomaly = False, et un appelant qui le lit obtiendrait
+  //    des données aléatoires de la pile.
+  Result := Default(TAnomalyResult);
   Result.Value := Value;
-  Result.IsAnomaly := False;
   Result.AnomalyType := atNone;
-  Result.Severity := 0;
+
+  // Pour normaliser la sévérité on utilise la PLAGE Max-Min plutôt que la
+  // valeur seule du seuil : c'est cohérent pour des seuils négatifs
+  // (ex. -50 °C) et évite la division par zéro quand un seuil vaut 0.
+  // Garde-fou : si Min >= Max ou si la plage est nulle, on prend 1.
+  if FMaxThreshold > FMinThreshold then
+    Range := FMaxThreshold - FMinThreshold
+  else
+    Range := 1.0;
 
   if Value < FMinThreshold then
   begin
     Result.IsAnomaly := True;
     Result.AnomalyType := atTooLow;
     Result.Threshold := FMinThreshold;
-    Result.Severity := Min(1.0, (FMinThreshold - Value) / FMinThreshold);
+    Result.Severity := Min(1.0, (FMinThreshold - Value) / Range);
   end
   else if Value > FMaxThreshold then
   begin
     Result.IsAnomaly := True;
     Result.AnomalyType := atTooHigh;
     Result.Threshold := FMaxThreshold;
-    Result.Severity := Min(1.0, (Value - FMaxThreshold) / FMaxThreshold);
+    Result.Severity := Min(1.0, (Value - FMaxThreshold) / Range);
   end;
 end;
 
@@ -793,10 +819,9 @@ function TStatisticalDetector.Detect(Value: Double): TAnomalyResult;
 var  
   Mean, StdDev, ZScore: Double;
 begin
+  Result := Default(TAnomalyResult);
   Result.Value := Value;
-  Result.IsAnomaly := False;
   Result.AnomalyType := atNone;
-  Result.Severity := 0;
 
   // Ajouter la valeur aux statistiques
   FStats.AddValue(Value);
@@ -875,10 +900,9 @@ function TRateOfChangeDetector.Detect(Timestamp: TDateTime; Value: Double): TAno
 var  
   TimeDelta, ValueDelta, ChangeRate: Double;
 begin
+  Result := Default(TAnomalyResult);
   Result.Value := Value;
-  Result.IsAnomaly := False;
   Result.AnomalyType := atNone;
-  Result.Severity := 0;
 
   if not FInitialized then
   begin
@@ -930,6 +954,10 @@ unit DataProcessingThread;
 interface
 
 uses
+  // Winapi.Windows fournit la constante INFINITE utilisée dans le
+  // constructeur de TThreadedQueue ci-dessous (sur Linux/macOS, remplacer
+  // par Cardinal($FFFFFFFF) ou par une valeur de timeout finie).
+  Winapi.Windows,
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.SyncObjs, DataPipeline;
 
@@ -961,7 +989,12 @@ begin
   inherited Create(False);
   FreeOnTerminate := False;
 
-  FInputQueue := TThreadedQueue<TSensorReading>.Create(1000, INFINITE, 100);
+  // Paramètres TThreadedQueue.Create(QueueDepth, PushTimeout, PopTimeout)
+  // ⚠️ On utilise un PopTimeout FINI (1 seconde) plutôt qu'INFINITE :
+  //    avec INFINITE, un Terminate laisserait le thread bloqué dans
+  //    PopItem jusqu'à l'arrivée d'un nouveau message. Avec 1000 ms,
+  //    la boucle Execute revérifie périodiquement Terminated.
+  FInputQueue := TThreadedQueue<TSensorReading>.Create(1000, INFINITE, 1000);
   FProcessor := TDataProcessor.Create(20);
 end;
 
@@ -990,14 +1023,18 @@ begin
     // Traiter la donnée
     Processed := FProcessor.Process(Reading);
 
-    // Notifier via événement (synchronisé avec le thread principal)
+    // Notifier l'UI via Queue (et non Synchronize) :
+    // ⚠️ Synchronize attend que le thread principal exécute la procédure
+    //    ET bloque ce thread pendant l'attente. Si le thread principal est
+    //    en train de WaitFor (destruction du thread), on a un DEADLOCK.
+    //    Queue dépose la procédure dans la file du thread principal sans
+    //    bloquer ; la procédure sera exécutée si l'UI est encore vivante.
     if Assigned(FOnDataProcessed) then
-    begin
-      TThread.Synchronize(nil, procedure
-      begin
-        FOnDataProcessed(Processed);
-      end);
-    end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          FOnDataProcessed(Processed);
+        end);
   end;
 end;
 
@@ -1136,7 +1173,15 @@ implementation
 { TRule }
 
 function TRule.Evaluate(const Data: TProcessedData): Boolean;  
-begin  
+const  
+  // Tolérance pour la comparaison rcEquals sur des Double.
+  // ⚠️ Comparer deux flottants avec = est dangereux à cause des erreurs
+  //    d'arrondi : `0.1 + 0.2 = 0.3` retourne souvent False ! On utilise
+  //    donc « |a - b| < epsilon ». 0.01 convient pour des grandeurs
+  //    physiques (température au centième de degré près) ; adapter selon
+  //    l'unité réelle de Data.FilteredValue.
+  EQUALITY_TOLERANCE = 0.01;
+begin
   if not FEnabled then
   begin
     Result := False;
@@ -1147,7 +1192,7 @@ begin
 
   case FCondition of
     rcEquals:
-      Result := Abs(Data.FilteredValue - FThreshold1) < 0.01;
+      Result := Abs(Data.FilteredValue - FThreshold1) < EQUALITY_TOLERANCE;
 
     rcGreaterThan:
       Result := Data.FilteredValue > FThreshold1;
@@ -1444,9 +1489,22 @@ end;
 
 procedure TFormMonitoring.FormDestroy(Sender: TObject);  
 begin  
+  // Ordre de fermeture important pour éviter les crashes :
+  // 1. Couper la source de données (timer)
   Timer1.Enabled := False;
 
+  // 2. Détacher le callback : si le thread vient juste de poster un Queue,
+  //    on évite que la procédure ne touche l'UI déjà en cours de destruction.
+  FProcessingThread.OnDataProcessed := nil;
+
+  // 3. Vider toute notification encore en attente dans la file du thread UI
+  //    qui référencerait Self (méthode anonyme capturant Self/FStats…).
+  TThread.RemoveQueuedEvents(FProcessingThread);
+
+  // 4. Arrêter et libérer le thread (Terminate + WaitFor dans son destructeur)
   FProcessingThread.Free;
+
+  // 5. Libérer le reste
   FStats.Free;
   FAnomalyDetector.Free;
   FRulesEngine.Free;
@@ -1494,10 +1552,15 @@ end;
 procedure TFormMonitoring.SimulateDataInput;  
 var  
   Reading: TSensorReading;
-  BaseValue, Noise: Double;
+  BaseValue, Noise, TimeSec: Double;
 begin
-  // Simuler des données de capteur avec du bruit
-  BaseValue := 22 + Sin(Now * 100) * 3;  // Oscillation autour de 22
+  // ⚠️ Sin(Now * 100) donne une oscillation chaotique parce que Now est en
+  //    jours (45000+ en 2026) et Sin reste précis sur des angles petits.
+  //    On dérive plutôt un temps en secondes pour une oscillation visible
+  //    (période ≈ 60 s avec le facteur 0.1).
+  TimeSec := MilliSecondsBetween(Now, EncodeDate(2000, 1, 1)) / 1000;
+  BaseValue := 22 + Sin(TimeSec * 0.1) * 3;  // Oscillation lente ±3 °C autour de 22
+
   Noise := (Random - 0.5) * 2;  // Bruit aléatoire ±1
 
   // Ajouter occasionnellement des valeurs aberrantes
@@ -1532,14 +1595,19 @@ end.
 Traiter les données par lots plutôt qu'une par une :
 
 ```pascal
+uses
+  System.Threading; // Pour TParallel.For (PPL — Parallel Programming Library)
+
 procedure ProcessBatch(const Readings: TArray<TSensorReading>);  
-var  
-  Reading: TSensorReading;
-begin
-  TParallel.For(0, Length(Readings) - 1, procedure(Index: Integer)
-  begin
-    ProcessSingleReading(Readings[Index]);
-  end);
+begin  
+  // Distribue automatiquement le travail sur les cœurs disponibles.
+  // ⚠️ ProcessSingleReading doit être thread-safe (ne pas toucher à l'UI
+  //    directement, et protéger les ressources partagées par un verrou).
+  TParallel.For(0, Length(Readings) - 1,
+    procedure(Index: Integer)
+    begin
+      ProcessSingleReading(Readings[Index]);
+    end);
 end;
 ```
 

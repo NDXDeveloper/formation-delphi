@@ -180,12 +180,16 @@ Ces applications centralisent les informations de plusieurs dispositifs :
 ### Communication série
 
 ```
-TComPort ou composants tiers comme :
-- AsyncPro (Turbo Power)
-- ComPort Library
+Bibliothèques pour le port série en Delphi :
+- ComPort Library (CPortLib) → composant TComPort
+- TurboPower AsyncPro        → composant TApdComPort
+- Synaser (bibliothèque Synapse, multi-plateforme)
+- WINSOFT ComPort (commercial, multi-plateforme)
 ```
 
-Permettent la communication avec des dispositifs via port série (RS232, USB).
+Toutes permettent la communication avec des dispositifs via port série
+(RS-232, USB-Série virtuels). Les exemples du chapitre utilisent
+**ComPort Library / TComPort**.
 
 ### Communication réseau
 

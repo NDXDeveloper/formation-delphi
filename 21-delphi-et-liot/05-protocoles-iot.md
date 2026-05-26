@@ -43,13 +43,35 @@ Les deux protocoles les plus importants pour l'IoT sont :
    - Similaire à HTTP dans son approche
    - Moins populaire que MQTT mais très efficace
 
-D'autres protocoles existent (AMQP, XMPP, etc.) mais MQTT et CoAP sont les plus pertinents pour débuter.
+D'autres protocoles existent et restent pertinents selon le contexte :
+
+- **HTTP/HTTPS + REST** : universel, déjà couvert au chapitre 23 ; reste le
+  choix simple pour les API publiques et l'intégration avec le web
+- **WebSocket** : pour les flux temps réel bidirectionnels (push serveur)
+- **AMQP** (Advanced Message Queuing Protocol) : utilisé en messagerie
+  d'entreprise, plus riche que MQTT mais plus lourd (RabbitMQ par exemple)
+- **OPC UA** : protocole industriel standard (machine-to-machine en usine)
+- **Matter** (depuis fin 2022) : standard de la smart home, basé sur IPv6
+  et Thread/Wi-Fi, **interopérabilité multi-marques** (Apple, Google,
+  Amazon, Samsung). À surveiller pour l'IoT grand public en 2026+.
+- **LoRaWAN** / **Sigfox** / **NB-IoT** : protocoles bas-débit longue
+  portée pour capteurs autonomes sur batterie
+
+MQTT et CoAP sont les plus pertinents pour **débuter** car ils sont  
+généralistes, bien outillés et faciles à mettre en œuvre avec Delphi.  
 
 ## MQTT : Le protocole star de l'IoT
 
 ### Qu'est-ce que MQTT ?
 
-MQTT est un protocole de messagerie léger, inventé par IBM en 1999 et devenu standard en 2013. Il a été spécifiquement conçu pour les réseaux à faible bande passante et les dispositifs à ressources limitées.
+MQTT est un protocole de messagerie léger, inventé en 1999 par Andy  
+Stanford-Clark (IBM) et Arlen Nipper (Eurotech) pour superviser des  
+oléoducs via satellite. Standardisé par OASIS en 2014 (MQTT 3.1.1),  
+puis publié comme norme **ISO/IEC 20922** en 2016. La version courante  
+**MQTT 5.0** date de 2019 et ajoute notamment les propriétés de
+message et les codes de raison détaillés. Le protocole est spécifiquement  
+conçu pour les réseaux à faible bande passante et les dispositifs à  
+ressources limitées.  
 
 **Caractéristiques principales :**
 - **Léger** : header minimal (2 octets minimum)
@@ -178,11 +200,22 @@ Pour utiliser MQTT en Delphi, plusieurs bibliothèques sont disponibles :
 
 #### Bibliothèques MQTT pour Delphi
 
-1. **TMQTTClient** - Bibliothèque open source populaire
-2. **Indy MQTT** - Extension pour Indy
-3. **mORMot MQTT** - Partie du framework mORMot
+**Open source (gratuites) :**
+1. **Delphi-TMQTT2** (github.com/jamiei/Delphi-TMQTT2) — Client MQTT non visuel
+2. **TMQTTClient** (github.com/ZiCog/TMQTTClient) — Client basé sur Indy
+3. **delphi-mqtt** (github.com/pjde/delphi-mqtt) — Client + serveur, basé sur ICS
+4. **mORMot MQTT** (unité `mormot.net.mqtt`) — Inclus dans le framework mORMot 2
 
-Pour ce tutoriel, nous utiliserons une approche générique applicable à la plupart des bibliothèques MQTT.
+**Commerciale :**
+5. **TMS MQTT** (tmssoftware.com) — Multi-plateforme (Windows, macOS, Linux,
+   iOS, Android, Raspberry Pi), couverture complète de la spécification MQTT
+   (QoS 0/1/2, LWT, retained messages, TLS). Régulièrement maintenue.
+
+Pour ce tutoriel, nous utiliserons une **approche générique** applicable à  
+la plupart de ces bibliothèques : la classe abstraite `TMQTTClient`  
+ci-dessous représente l'API minimale (Connect, Disconnect, Publish,  
+Subscribe) commune à toutes — adaptez les noms de méthodes/propriétés  
+selon la bibliothèque que vous choisissez réellement.  
 
 ### Installation d'un broker MQTT
 
@@ -198,22 +231,50 @@ Plusieurs services offrent des brokers publics gratuits :
 
 #### Option 2 : Installer Mosquitto localement
 
-**Mosquitto** est le broker MQTT open source le plus populaire.
+**Mosquitto** (projet Eclipse) est le broker MQTT open source le plus populaire.
 
 **Installation sur Windows :**
-1. Télécharger depuis mosquitto.org
-2. Installer
-3. Démarrer le service Mosquitto
-4. Le broker écoute sur localhost:1883
+1. Télécharger l'installateur depuis [mosquitto.org/download](https://mosquitto.org/download/)
+2. Lancer l'installeur (cocher *Service* pour un démarrage automatique)
+3. Le broker écoute sur `localhost:1883`
+
+**Installation sur Linux (Debian/Ubuntu/Raspberry Pi OS) :**
+```bash
+sudo apt update  
+sudo apt install mosquitto mosquitto-clients  
+sudo systemctl enable --now mosquitto  
+```
+
+**Installation via Docker** (toutes plateformes) :
+```bash
+docker run -d --name mosquitto -p 1883:1883 eclipse-mosquitto
+```
 
 **Configuration de base :**
 ```
-# mosquitto.conf
+# /etc/mosquitto/mosquitto.conf (Linux)
+# ou C:\Program Files\mosquitto\mosquitto.conf (Windows)
 listener 1883  
 allow_anonymous true  
 ```
 
-Pour la production, configurez l'authentification et le chiffrement (TLS/SSL).
+**Outils en ligne de commande pour tester rapidement** (paquet
+`mosquitto-clients` sur Linux, dossier d'installation sur Windows) :
+
+```bash
+# Terminal 1 : s'abonner
+mosquitto_sub -h localhost -t "test/#" -v
+
+# Terminal 2 : publier
+mosquitto_pub -h localhost -t "test/hello" -m "Bonjour"
+```
+
+Cela permet de valider que le broker fonctionne **avant** d'écrire du code  
+Delphi — étape de débogage essentielle si la communication ne marche pas.  
+
+⚠️ Pour la production, configurez impérativement l'authentification
+(`allow_anonymous false` + `password_file`) et le chiffrement TLS/SSL
+(voir section *Sécurité* plus loin dans ce document).
 
 ### Exemple complet : Publisher avec Delphi
 
@@ -397,19 +458,27 @@ var
   Temperature: Double;
   Humidity: Double;
   JSONPayload: string;
+  FS: TFormatSettings;
 begin
   // Simuler des données de capteur
   Temperature := 20 + Random * 5;
   Humidity := 50 + Random * 20;
 
-  // Créer un payload JSON
-  JSONPayload := Format('{"temperature":%.1f,"humidity":%.1f,"timestamp":%d}',
-    [Temperature, Humidity, DateTimeToUnix(Now)]);
+  // ⚠️ Format() utilise le séparateur décimal de la LOCALE par défaut :
+  //    sur une machine française, "%.1f" produirait `23,5` et le JSON
+  //    résultant ne serait PAS valide. On force donc un FormatSettings
+  //    invariant (point décimal) — indispensable pour tout payload JSON.
+  FS := TFormatSettings.Invariant;
+  JSONPayload := Format(
+    '{"temperature":%.1f,"humidity":%.1f,"timestamp":%d}',
+    [Temperature, Humidity, DateTimeToUnix(Now)],
+    FS);
 
   // Publier sur le topic
   FPublisher.Publish('maison/salon/sensors', JSONPayload, 0);
 
-  Log(Format('Données publiées: T=%.1f°C, H=%.1f%%', [Temperature, Humidity]));
+  Log(Format('Données publiées: T=%.1f°C, H=%.1f%%',
+    [Temperature, Humidity], FS));
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);  
@@ -698,7 +767,12 @@ end;
 
 ### Qu'est-ce que CoAP ?
 
-CoAP (Constrained Application Protocol) est un protocole web spécialisé pour l'IoT, conçu par l'IETF (Internet Engineering Task Force). Il est optimisé pour les dispositifs à ressources très limitées.
+CoAP (Constrained Application Protocol) est un protocole web spécialisé  
+pour l'IoT, conçu par l'IETF (Internet Engineering Task Force) et  
+standardisé par la **RFC 7252** (2014). Il est optimisé pour les  
+dispositifs à ressources très limitées. Plusieurs extensions ont été  
+ajoutées depuis : RFC 7641 pour l'observation de ressources, RFC 8323  
+pour CoAP sur TCP/WebSockets.  
 
 **Caractéristiques principales :**
 - **Basé sur UDP** : plus léger que TCP
@@ -786,20 +860,32 @@ L'utilisation de CoAP en Delphi est moins commune que MQTT, mais possible avec d
 
 #### Structure basique d'une requête CoAP
 
+⚠️ Attention : l'en-tête CoAP réel **n'aligne pas chaque champ sur un octet**.
+Les 4 premiers bits du premier octet contiennent Version (2 bits), Type
+(2 bits) et TokenLength (4 bits). Le record ci-dessous est donc une vue
+**didactique** ; pour générer un vrai paquet, il faut composer le premier
+octet à la main par décalages binaires (voir le code Get plus bas).
+
 ```pascal
 type
   TCoapMethod = (cmGet, cmPost, cmPut, cmDelete);
   TCoapType = (ctConfirmable, ctNonConfirmable, ctAcknowledgement, ctReset);
 
-  TCoapMessage = packed record
-    Version: Byte;       // 2 bits
-    MessageType: Byte;   // 2 bits
-    TokenLength: Byte;   // 4 bits
+  // Vue logique — chaque champ est entier pour la lisibilité.
+  // L'encodage réel sur le réseau est packé en bits.
+  TCoapMessage = record
+    Version: Byte;       // 2 bits réels
+    MessageType: Byte;   // 2 bits réels
+    TokenLength: Byte;   // 4 bits réels
     Code: Byte;          // 8 bits
     MessageID: Word;     // 16 bits
     Token: array[0..7] of Byte;
     // Options et Payload suivent...
   end;
+
+// Composition réelle du premier octet :
+//   FirstByte := (Version shl 6) or (MessageType shl 4) or (TokenLength and $0F);
+// Avec Version=1, Type=CON(0), TokenLength=0 → $40
 ```
 
 #### Exemple simplifié de client CoAP
@@ -810,7 +896,8 @@ unit SimpleCoapClient;
 interface
 
 uses
-  System.SysUtils, IdUDPClient;
+  System.SysUtils, IdGlobal, IdUDPClient;
+  // IdGlobal pour TIdBytes ; IdUDPClient pour TIdUDPClient
 
 type
   TSimpleCoapClient = class
@@ -847,25 +934,29 @@ end;
 
 function TSimpleCoapClient.Get(const Resource: string): string;  
 var  
-  Request: TBytes;
-  Response: TBytes;
+  Request: TIdBytes;
+  Response: TIdBytes;
+  Received: Integer;
 begin
   // Construire le message CoAP GET
   // (Simplification - une vraie implémentation serait plus complexe)
   SetLength(Request, 4);
-  Request[0] := $40;  // Version 1, Type CON
-  Request[1] := $01;  // Code GET
+  Request[0] := $40;  // Version 1 (bits 6-7), Type CON (bits 4-5), TokenLength 0
+  Request[1] := $01;  // Code 0.01 = GET
   Request[2] := $00;  // Message ID (MSB)
   Request[3] := $01;  // Message ID (LSB)
 
-  // Ajouter le chemin de ressource comme option
+  // Ajouter le chemin de ressource comme option Uri-Path (n° 11)
   // ... (code simplifié)
 
-  // Envoyer
+  // Envoyer le datagramme UDP
   FUDPClient.SendBuffer(Request);
 
-  // Recevoir la réponse
-  Response := FUDPClient.ReceiveBytes;
+  // Recevoir la réponse — TIdUDPClient expose ReceiveBuffer (et non
+  // ReceiveBytes). Le tampon doit être dimensionné AVANT l'appel.
+  SetLength(Response, 1500); // MTU typique
+  Received := FUDPClient.ReceiveBuffer(Response, 5000); // timeout 5 s
+  SetLength(Response, Received);
 
   // Parser la réponse
   // ... (code simplifié)
@@ -875,16 +966,39 @@ end;
 
 procedure TSimpleCoapClient.Put(const Resource, Value: string);  
 var  
-  Request: TBytes;
+  Request: TIdBytes;
 begin
   // Construire et envoyer un message PUT
-  // ... (implémentation similaire à Get)
+  // ... (implémentation similaire à Get, code = $03 pour PUT)
 end;
 
 end.
 ```
 
-**Note** : L'exemple ci-dessus est très simplifié. Une implémentation complète de CoAP nécessite de gérer les options, le format des messages, les tokens, etc. Il est recommandé d'utiliser une bibliothèque existante.
+**Note** : L'exemple ci-dessus est très simplifié. Une implémentation
+complète de CoAP nécessite de gérer le format des options TLV, les  
+tokens, la déduplication des messages CON, les retransmissions, les  
+réponses *piggy-backed*, le mode bloc-wise pour les payloads > MTU…  
+Plusieurs centaines de lignes de code.  
+
+**Bibliothèques et alternatives recommandées :**
+
+- **libcoap** (C, [libcoap.net](https://libcoap.net/)) : implémentation
+  de référence, peut être appelée via FFI depuis Delphi.
+- **Californium** (Java) ou **aiocoap** (Python) côté serveur : si vous
+  contrôlez le dispositif côté serveur, ces bibliothèques matures
+  facilitent grandement le déploiement.
+- **Proxy CoAP↔HTTP** : pour intégrer un dispositif CoAP existant dans
+  un système Delphi REST, faire tourner un proxy (par exemple
+  `coap-http-proxy` ou `aiocoap-proxy`) sur la passerelle. Delphi parle
+  HTTP standard, le proxy traduit en CoAP. Solution pragmatique
+  recommandée pour la plupart des projets.
+
+En pratique, **si vous démarrez aujourd'hui un projet IoT en Delphi**,  
+préférez MQTT (mature, bien outillé) ou HTTP/REST. CoAP reste pertinent  
+dans des cas spécifiques (LPWAN, batterie critique, intégration de  
+dispositifs existants) — auquel cas l'approche proxy est souvent la  
+plus rentable.  
 
 ## Comparaison pratique : MQTT vs CoAP
 
@@ -946,16 +1060,36 @@ begin
 end;
 ```
 
+🚨 **AVERTISSEMENT CRITIQUE** : MQTT transmet le couple
+**username/password en clair** dans le paquet CONNECT (encodé UTF-8, pas
+chiffré). Sans TLS, n'importe qui sur le réseau (Wi-Fi public, switch  
+mal configuré, réseau d'entreprise compromis) peut capturer ces  
+identifiants avec Wireshark en 30 secondes. L'authentification  
+**doit toujours être combinée avec TLS** (section suivante) pour avoir
+un sens. Configurer username/password sans TLS donne une fausse  
+impression de sécurité — c'est pire que pas d'authentification du tout.  
+
 #### TLS/SSL
 
 Pour chiffrer les communications :
-- Port standard TLS : 8883
-- Configure le client pour utiliser SSL
+- Port standard TLS : **8883** (le port 1883 reste pour le MQTT en clair)
+- Configurer le client pour utiliser SSL
+- Vérifier le certificat du serveur (`sslvmPeer`) pour éviter les
+  attaques man-in-the-middle
 
 ```pascal
 FMQTTClient.Port := 8883;  
 FMQTTClient.UseSSL := True;  
-FMQTTClient.SSLVerifyMode := sslvmPeer;  
+FMQTTClient.SSLVerifyMode := sslvmPeer;  // ⚠️ NE PAS désactiver en prod  
+```
+
+Pour Mosquitto local, générer un certificat (auto-signé pour les tests,  
+ou via Let's Encrypt pour la production), puis dans `mosquitto.conf` :  
+```
+listener 8883  
+cafile   /etc/mosquitto/ca.crt  
+certfile /etc/mosquitto/server.crt  
+keyfile  /etc/mosquitto/server.key  
 ```
 
 #### Topics et contrôle d'accès
@@ -1000,6 +1134,12 @@ acme/paris/entrepot-a/temp-sensor-01/battery
 
 #### Reconnexion automatique
 
+Pour pouvoir se reconnecter avec le même identifiant après une perte de  
+connexion, on conserve l'identifiant client lors du premier `Connect` dans  
+un champ privé `FClientID: string`. La classe `TMQTTPublisher` montrée  
+plus haut doit donc être complétée par ce champ (et son affectation dans  
+`Connect`) avant que `EnsureConnected` soit utilisable.
+
 ```pascal
 procedure TMQTTPublisher.EnsureConnected;  
 var  
@@ -1010,11 +1150,12 @@ begin
   while not FConnected and (Attempts < 3) do
   begin
     try
+      // FClientID a été mémorisé lors du premier appel à Connect()
       Connect(FClientID);
       Break;
     except
       Inc(Attempts);
-      Sleep(1000 * Attempts);  // Backoff exponentiel
+      Sleep(1000 * Attempts);  // Backoff linéaire (×1s, ×2s, ×3s)
     end;
   end;
 
@@ -1055,16 +1196,31 @@ end;
 
 Pour des données volumineuses, compressez :
 ```pascal
+uses
+  System.Classes, System.SysUtils, System.ZLib;
+  // System.ZLib pour TZCompressionStream
+
 function CompressJSON(const JSONString: string): TBytes;  
 var  
   Input, Output: TMemoryStream;
   Compressor: TZCompressionStream;
+  Utf8: TBytes;
 begin
+  Result := nil;
+
+  // Cas particulier : chaîne vide → rien à compresser.
+  if JSONString = '' then
+    Exit;
+
   Input := TMemoryStream.Create;
   Output := TMemoryStream.Create;
   try
-    // Écrire JSON dans le stream
-    Input.WriteBuffer(JSONString[1], Length(JSONString) * SizeOf(Char));
+    // ⚠️ Convertir en UTF-8 avant compression : sinon SizeOf(Char) = 2 sur
+    //    Delphi moderne (Unicode) double inutilement la taille et le côté
+    //    réception devra connaître l'encodage exact pour décoder.
+    Utf8 := TEncoding.UTF8.GetBytes(JSONString);
+    if Length(Utf8) > 0 then
+      Input.WriteBuffer(Utf8[0], Length(Utf8));
     Input.Position := 0;
 
     // Compresser
@@ -1078,7 +1234,8 @@ begin
     // Résultat
     Output.Position := 0;
     SetLength(Result, Output.Size);
-    Output.ReadBuffer(Result[0], Output.Size);
+    if Output.Size > 0 then
+      Output.ReadBuffer(Result[0], Output.Size);
   finally
     Input.Free;
     Output.Free;

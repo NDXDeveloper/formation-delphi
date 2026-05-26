@@ -38,11 +38,17 @@ La puissance est le produit de la tension et du courant : **P = V × I**
 ### Limitations importantes
 
 #### Broches Arduino
-Les broches digitales d'un Arduino peuvent fournir :
-- **Maximum 40 mA** par broche
-- **Maximum 200 mA** au total pour toutes les broches
+Les broches digitales d'un Arduino Uno (ATmega328P) peuvent fournir :
+- **Maximum absolu 40 mA par broche** (au-delà : risque de destruction)
+- **Maximum 200 mA au total** sur l'ensemble des broches
+- **Recommandation pratique : ≤ 20 mA par broche** pour préserver la
+  durée de vie du microcontrôleur sur le long terme
 
-**Important** : Ne jamais connecter directement un dispositif gourmand (moteur, relais puissant) à une broche Arduino. Vous risquez d'endommager la carte.
+Sur ESP32 (3,3 V) ces limites sont plus basses encore : ~12 mA par broche.
+
+**Important** : Ne jamais connecter directement un dispositif gourmand
+(moteur, relais puissant) à une broche Arduino. Vous risquez d'endommager
+la carte.
 
 #### Protection nécessaire
 Pour contrôler des charges importantes, utilisez :
@@ -1001,7 +1007,8 @@ unit DeviceController;
 interface
 
 uses
-  System.SysUtils, System.Classes, CPort;
+  System.SysUtils, System.Classes, System.Math, CPort;
+  // System.Math est requis pour EnsureRange utilisé plus bas
 
 type
   TDeviceController = class
@@ -1145,8 +1152,17 @@ Implémenter un système de surveillance :
 unsigned long lastCommandTime = 0;  
 const unsigned long TIMEOUT = 5000; // 5 secondes  
 
+void setup() {
+  // ⚠️ Initialiser au démarrage : sans cela, le watchdog déclencherait
+  //    emergencyStop dès que millis() dépasse TIMEOUT (5 s après boot),
+  //    même si aucune commande n'a encore été envoyée — comportement
+  //    rarement souhaité au démarrage du dispositif.
+  lastCommandTime = millis();
+  // ... (autres initialisations : pinMode, Serial.begin, etc.)
+}
+
 void loop() {
-  // Vérifier le timeout
+  // Vérifier le timeout : si trop de temps sans commande, sécuriser
   if (millis() - lastCommandTime > TIMEOUT) {
     emergencyStop();
   }

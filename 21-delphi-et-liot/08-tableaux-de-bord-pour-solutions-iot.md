@@ -57,6 +57,13 @@ Les couleurs doivent avoir une signification immédiate :
 - **Bleu** : information neutre
 - **Gris** : inactif, désactivé, pas de donnée
 
+⚠️ **Accessibilité** : ~8 % des hommes et ~0,5 % des femmes sont
+daltoniens (le plus souvent rouge/vert). Ne jamais coder une  
+information **uniquement** par la couleur : doubler avec un pictogramme  
+(✓ / ⚠ / ✗), un texte (« Normal / Attention / Critique ») ou une forme.
+Un superviseur daltonien doit pouvoir lire le tableau de bord aussi vite  
+qu'un opérateur à vision standard.  
+
 #### 4. Contexte et comparaison
 
 Toujours donner du contexte aux valeurs :
@@ -225,6 +232,10 @@ begin
 
   FTrendLabel.Caption := Format('%s %.1f%%', [TrendArrow, Abs(FTrend)]);
 
+  // ⚠️ Code couleur arbitraire : ici hausse=rouge (mauvais pour
+  //    consommation/CPU/erreurs) et baisse=bleu. C'est INVERSE pour
+  //    le revenu ou la production : adapter selon la sémantique du
+  //    KPI ou ajouter une propriété TKPIWidget.TrendIsGoodWhenUp.
   if FTrend > 0 then
     FTrendLabel.Font.Color := clRed
   else if FTrend < 0 then
@@ -396,6 +407,12 @@ begin
   StartAngle := 180;
   SweepAngle := Round(180 * Percentage / 100);
 
+  // ⚠️ Piège classique d'AngleArc : il dessine d'ABORD une ligne du
+  //    point courant du device context jusqu'au début de l'arc. Sans
+  //    MoveTo préalable au bon endroit, on obtient une ligne parasite
+  //    depuis (0,0) traversant la jauge. On positionne le curseur sur
+  //    le point de départ de l'arc avant l'appel.
+  Canvas.MoveTo(CenterX - Radius, CenterY); // début de l'arc à 180°
   Winapi.Windows.AngleArc(Canvas.Handle, CenterX, CenterY, Radius, StartAngle, -SweepAngle);
 
   // Texte central - Titre
@@ -503,8 +520,11 @@ begin
   while FSeries.Count > FMaxPoints do
     FSeries.Delete(0);
 
-  // Ajuster l'axe X pour toujours montrer les dernières données
-  if FSeries.Count > 0 then
+  // Ajuster l'axe X pour toujours montrer les dernières données.
+  // ⚠️ Avec un seul point, SetMinMax(X, X) = plage nulle ; TeeChart
+  //    affiche alors un axe dégénéré. Attendre 2 points pour fixer
+  //    une plage non triviale, sinon laisser l'axe automatique.
+  if FSeries.Count >= 2 then
   begin
     FChart.BottomAxis.SetMinMax(
       FSeries.XValue[0],
@@ -848,8 +868,14 @@ var
   TempCount, HumCount: Integer;
   AvgTemp, AvgHum: Double;
   CPUUsage, MemoryUsage: Double;
+  FS: TFormatSettings;
 begin
   if not Assigned(FDeviceManager) then Exit;
+
+  // Les capteurs envoient les flottants avec point décimal :
+  // on parse toujours avec FormatSettings invariant pour rester
+  // indépendant de la locale système.
+  FS := TFormatSettings.Invariant;
 
   // Récupérer les dispositifs
   Devices := FDeviceManager.GetAllDevices;
@@ -867,14 +893,14 @@ begin
       // Température
       if Device.GetProperty('temperature') <> '' then
       begin
-        TempSum := TempSum + StrToFloatDef(Device.GetProperty('temperature'), 0);
+        TempSum := TempSum + StrToFloatDef(Device.GetProperty('temperature'), 0, FS);
         Inc(TempCount);
       end;
 
       // Humidité
       if Device.GetProperty('humidity') <> '' then
       begin
-        HumSum := HumSum + StrToFloatDef(Device.GetProperty('humidity'), 0);
+        HumSum := HumSum + StrToFloatDef(Device.GetProperty('humidity'), 0, FS);
         Inc(HumCount);
       end;
     end;
@@ -1392,7 +1418,14 @@ end.
 
 ## Export et rapports
 
-### Génération de rapports PDF
+### Génération de rapports texte
+
+Ce premier exemple génère un rapport au format **texte brut** (`.txt`) —  
+suffisant pour la plupart des besoins de diagnostic. Pour un véritable  
+**PDF**, il faut une bibliothèque dédiée (par exemple `Vcl.Printers` +
+`TPrinter` pour imprimer, ou un composant tiers comme **QuickReport**,
+**FastReport**, **wPDF**, ou **Synopse mORMot PDF**) ; voir le chapitre
+sur l'impression et la génération de documents.
 
 ```pascal
 procedure TFormDashboard.GenerateReport;  
@@ -1422,7 +1455,10 @@ begin
     Report.Add(FMemoAlerts.Text);
 
     FileName := Format('rapport_%s.txt', [FormatDateTime('yyyymmdd_hhnnss', Now)]);
-    Report.SaveToFile(FileName);
+    // ⚠️ Forcer UTF-8 : sans cet argument, TStringList.SaveToFile utilise
+    //    TEncoding.Default (ANSI sur Windows en français), ce qui corrompt
+    //    les accents du rapport (« Généré », « Température »…).
+    Report.SaveToFile(FileName, TEncoding.UTF8);
 
     ShowMessage('Rapport généré : ' + FileName);
   finally
@@ -1434,6 +1470,19 @@ end;
 ### Export des données en CSV
 
 ```pascal
+// Échappement CSV conforme RFC 4180 : un champ contenant virgule, guillemet
+// ou saut de ligne doit être encadré de guillemets ("), et les guillemets
+// internes doublés (""). Sans ce traitement, un nom comme `Salon, étage 1`
+// casserait toute la colonne suivante à l'ouverture dans Excel/LibreOffice.
+function CsvField(const S: string): string;  
+begin  
+  if (Pos(',', S) > 0) or (Pos('"', S) > 0)
+     or (Pos(#13, S) > 0) or (Pos(#10, S) > 0) then
+    Result := '"' + StringReplace(S, '"', '""', [rfReplaceAll]) + '"'
+  else
+    Result := S;
+end;
+
 procedure TFormDashboard.ExportToCSV;  
 var  
   CSV: TStringList;
@@ -1451,17 +1500,17 @@ begin
     for Device in Devices do
     begin
       CSV.Add(Format('%s,%s,%d,%d,%s,%d,%s',
-        [Device.ID,
-         Device.Name,
+        [CsvField(Device.ID),
+         CsvField(Device.Name),
          Ord(Device.DeviceType),
          Ord(Device.Status),
-         Device.IPAddress,
+         CsvField(Device.IPAddress),
          Device.BatteryLevel,
          FormatDateTime('yyyy-mm-dd hh:nn:ss', Device.LastSeen)]));
     end;
 
     FileName := Format('devices_%s.csv', [FormatDateTime('yyyymmdd_hhnnss', Now)]);
-    CSV.SaveToFile(FileName);
+    CSV.SaveToFile(FileName, TEncoding.UTF8);
 
     ShowMessage('Données exportées : ' + FileName);
   finally
