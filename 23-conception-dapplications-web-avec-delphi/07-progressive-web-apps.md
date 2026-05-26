@@ -173,6 +173,16 @@ Le fichier manifeste est un fichier JSON qui décrit votre application.
 - **orientation** : Orientation préférée
 - **icons** : Icônes de l'application (différentes tailles)
 
+💡 **Astuce icônes** : `"purpose": "any maskable"` annonce à
+Android/Chrome que l'icône peut être utilisée à la fois en mode  
+classique (any) ET en mode adaptatif (maskable). Pour un rendu  
+optimal, fournir **deux séries d'icônes distinctes** : une *any*  
+sans padding (l'icône occupe tout le carré) et une *maskable* avec  
+un padding de ~10 % autour (la *safe zone* pour que les masques  
+circulaires/squircle d'Android ne coupent pas le logo). Le validateur  
+[maskable.app](https://maskable.app/editor) aide à concevoir des
+icônes maskable.
+
 **Inclure le manifeste dans votre HTML :**
 ```html
 <link rel="manifest" href="/manifest.json">
@@ -251,6 +261,12 @@ self.addEventListener('activate', function(event) {
 
 // Interception des requêtes
 self.addEventListener('fetch', function(event) {
+  // ⚠️ Le Cache API n'accepte QUE les requêtes GET. Pour POST/PUT/DELETE,
+  //    on laisse le navigateur gérer normalement (sans cache).
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -263,8 +279,8 @@ self.addEventListener('fetch', function(event) {
         // Sinon, aller chercher sur le réseau
         console.log('Service Worker: Requête réseau', event.request.url);
         return fetch(event.request).then(function(response) {
-          // Mettre en cache la nouvelle ressource
-          if (response && response.status === 200) {
+          // Mettre en cache la nouvelle ressource (statut 200 seulement)
+          if (response && response.status === 200 && response.type === 'basic') {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then(function(cache) {
               cache.put(event.request, responseToCache);
@@ -276,6 +292,11 @@ self.addEventListener('fetch', function(event) {
   );
 });
 ```
+
+> 💡 `response.type === 'basic'` évite de cacher les **réponses opaques**  
+> (CORS sans `Access-Control-Allow-Origin`) qui apparaissent avec une  
+> taille de 0 octet une fois en cache et peuvent corrompre l'expérience  
+> hors ligne.
 
 **Enregistrer le Service Worker (dans votre page HTML) :**
 ```html
@@ -497,7 +518,7 @@ end.
 **Project HTML Template :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -511,7 +532,11 @@ end.
 
   <!-- Icônes pour iOS -->
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <!-- Versions iOS Safari : balise apple-* historique + sa variante
+       standardisée mobile-web-app-capable (W3C). Mettre les deux pour
+       compatibilité maximale. -->
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="MonApp">
 
@@ -532,6 +557,8 @@ Parfait pour : Assets statiques (CSS, JS, images)
 
 ```javascript
 self.addEventListener('fetch', function(event) {
+  if (event.request.method !== 'GET') return;  // Cache API = GET only
+
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -548,14 +575,24 @@ Parfait pour : API, données dynamiques
 
 ```javascript
 self.addEventListener('fetch', function(event) {
+  // ⚠️ Cache.put() N'accepte QUE les requêtes GET — un POST/PUT/DELETE
+  //    déclenchera "Request method 'POST' is unsupported". On laisse
+  //    donc passer les requêtes non-GET sans les toucher.
+  if (event.request.method !== 'GET') {
+    return;  // Le navigateur gère la requête normalement
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(function(response) {
-        // Mettre en cache pour utilisation hors ligne
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(event.request, responseToCache);
-        });
+        // Mettre en cache pour utilisation hors ligne — uniquement les
+        // réponses 200 OK : ne pas cacher les 404 ou les redirections opaques.
+        if (response && response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(event.request, responseToCache);
+          });
+        }
         return response;
       })
       .catch(function() {
@@ -572,13 +609,18 @@ Parfait pour : Équilibre entre fraîcheur et rapidité
 
 ```javascript
 self.addEventListener('fetch', function(event) {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.open(CACHE_NAME).then(function(cache) {
       return cache.match(event.request).then(function(cachedResponse) {
         // Lancer la requête réseau en parallèle
         const fetchPromise = fetch(event.request).then(function(networkResponse) {
-          // Mettre à jour le cache
-          cache.put(event.request, networkResponse.clone());
+          // Ne cacher QUE les réponses 200 basic (ni 404, ni opaques)
+          if (networkResponse && networkResponse.status === 200 &&
+              networkResponse.type === 'basic') {
+            cache.put(event.request, networkResponse.clone());
+          }
           return networkResponse;
         });
 
@@ -596,17 +638,29 @@ Parfait pour : Expérience utilisateur optimale
 
 ```javascript
 self.addEventListener('fetch', function(event) {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     new Promise(function(resolve, reject) {
       const timeoutId = setTimeout(function() {
-        // Après 500ms, utiliser le cache
-        caches.match(event.request).then(resolve);
+        // Après 500ms, basculer sur le cache (si présent ; sinon Response
+        // sera undefined et le navigateur affichera une erreur réseau).
+        caches.match(event.request).then(function(cached) {
+          if (cached) resolve(cached);
+          // Sinon, on laisse le fetch en cours continuer
+        });
       }, 500);
 
       fetch(event.request).then(function(response) {
         clearTimeout(timeoutId);
         resolve(response);
-      }, reject);
+      }).catch(function(err) {
+        clearTimeout(timeoutId);
+        // Réseau KO → essayer le cache, sinon propager l'erreur.
+        caches.match(event.request).then(function(cached) {
+          if (cached) resolve(cached); else reject(err);
+        });
+      });
     })
   );
 });
@@ -618,13 +672,21 @@ self.addEventListener('fetch', function(event) {
 
 Permet de différer des actions jusqu'à ce que l'utilisateur ait une connexion stable.
 
+> ⚠️ **Compatibilité** : Background Sync est disponible dans Chrome,  
+> Edge, Opera et la plupart des navigateurs Chromium. **Pas supporté  
+> dans Firefox ni Safari** (iOS inclus, quel que soit le pays). Pour  
+> une application multi-navigateurs, prévoir un fallback (retry au  
+> prochain chargement de page via `online` event listener).
+
 **Exemple : Envoyer des données en différé**
 
 ```javascript
-// Dans votre application
-navigator.serviceWorker.ready.then(function(registration) {
-  return registration.sync.register('envoi-donnees');
-});
+// Dans votre application — vérifier le support avant
+if ('serviceWorker' in navigator && 'SyncManager' in window) {
+  navigator.serviceWorker.ready.then(function(registration) {
+    return registration.sync.register('envoi-donnees');
+  });
+}
 
 // Dans le Service Worker
 self.addEventListener('sync', function(event) {
@@ -632,11 +694,14 @@ self.addEventListener('sync', function(event) {
     event.waitUntil(
       // Récupérer les données en attente depuis IndexedDB
       getDonneesEnAttente().then(function(donnees) {
-        // Envoyer au serveur
+        // Envoyer au serveur — Content-Type explicite pour le backend
         return fetch('/api/sync', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(donnees)
         });
+        // Si fetch rejette (réseau toujours KO), le navigateur retentera
+        // automatiquement plus tard avec backoff.
       })
     );
   }
@@ -646,6 +711,16 @@ self.addEventListener('sync', function(event) {
 ## Stockage local pour PWA
 
 ### LocalStorage (simple mais limité)
+
+> 💡 **Caractéristiques importantes** :  
+> - Quota : **~5-10 Mo par origin** selon le navigateur (à comparer  
+>   aux centaines de Mo de IndexedDB)  
+> - Stockage **synchrone** — bloque le thread principal de l'UI. À éviter  
+>   pour de gros objets ou des opérations fréquentes  
+> - Valeurs **toujours en string** — un `JSON.stringify` est nécessaire  
+>   pour stocker des objets  
+> - **Pas chiffré** : ne JAMAIS y stocker tokens d'auth, mots de passe ou  
+>   données sensibles (cf. avertissement JWT du chapitre 23.6)
 
 ```pascal
 // TMS Web Core - Sauvegarder des données
@@ -675,38 +750,51 @@ end;
 Plus puissant que localStorage, permet de stocker des objets complexes.
 
 ```javascript
+// Variable globale pour conserver la référence à la base de données.
+// (IndexedDB est asynchrone : l'ouverture est différée.)
+let db = null;
+
 // Ouvrir la base de données
 const request = indexedDB.open('MaBaseDonnees', 1);
 
 request.onupgradeneeded = function(event) {
-  const db = event.target.result;
+  const upgradeDb = event.target.result;
 
-  // Créer un object store
-  const objectStore = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+  // Créer un object store (uniquement à la création ou changement de version)
+  const objectStore = upgradeDb.createObjectStore('clients',
+    { keyPath: 'id', autoIncrement: true });
   objectStore.createIndex('nom', 'nom', { unique: false });
 };
 
-// Ajouter des données
-request.onsuccess = function(event) {
-  const db = event.target.result;
-  const transaction = db.transaction(['clients'], 'readwrite');
-  const objectStore = transaction.objectStore('clients');
+request.onerror = function(event) {
+  console.error('Erreur IndexedDB :', event.target.error);
+};
 
-  objectStore.add({
+request.onsuccess = function(event) {
+  db = event.target.result;   // ⚠️ Stocker pour usage ultérieur
+  console.log('IndexedDB prête');
+
+  // Ajouter un premier exemple
+  const tx = db.transaction(['clients'], 'readwrite');
+  tx.objectStore('clients').add({
     nom: 'Dupont',
     prenom: 'Jean',
     email: 'jean@example.com'
   });
 };
 
-// Lire des données
+// Lire des données — à n'appeler qu'APRÈS que `db` soit défini (onsuccess).
 function lireClients() {
+  if (!db) {
+    console.warn('IndexedDB pas encore initialisée');
+    return;
+  }
   const transaction = db.transaction(['clients'], 'readonly');
   const objectStore = transaction.objectStore('clients');
-  const request = objectStore.getAll();
+  const req = objectStore.getAll();
 
-  request.onsuccess = function() {
-    console.log('Clients:', request.result);
+  req.onsuccess = function() {
+    console.log('Clients:', req.result);
   };
 }
 ```
@@ -717,13 +805,22 @@ Les notifications push permettent de ré-engager les utilisateurs.
 
 ### Configuration des notifications
 
+> ⚠️ **Demander la permission uniquement sur un clic utilisateur** : depuis  
+> Chrome 80, Firefox 72 et Safari, appeler `Notification.requestPermission()`  
+> au chargement de la page est refusé silencieusement (ou pénalise le site  
+> dans le « Notification Permissions UI »). Toujours déclencher la demande  
+> en réponse à une action explicite (clic sur un bouton « Activer les  
+> notifications »).
+
 ```javascript
-// Demander la permission
-Notification.requestPermission().then(function(permission) {
-  if (permission === 'granted') {
-    console.log('Permission accordée');
-    afficherNotification();
-  }
+// À appeler depuis un gestionnaire de clic, pas au chargement de la page !
+btnEnableNotifications.addEventListener('click', () => {
+  Notification.requestPermission().then(function(permission) {
+    if (permission === 'granted') {
+      console.log('Permission accordée');
+      afficherNotification();
+    }
+  });
 });
 
 // Afficher une notification
@@ -827,13 +924,16 @@ end;
 - Tester les notifications
 
 **2. Lighthouse**
-- Auditer votre PWA
-- Score PWA (0-100)
-- Recommandations d'amélioration
+- Auditer votre PWA (Performance, Accessibility, Best Practices, SEO)
+- Recommandations d'amélioration détaillées
+- 💡 Depuis Chrome DevTools 109 (2023), Lighthouse n'a plus de
+  catégorie « PWA » avec score 0–100 séparée — les vérifications PWA
+  apparaissent maintenant comme **« Installable »** et **« PWA Optimized »**
+  dans le rapport principal, sous forme d'audits booléens (réussi/échec).
 
 **Commande :**
 ```
-F12 → Lighthouse → Progressive Web App → Generate report
+F12 → Lighthouse → cocher les catégories voulues → Analyze page load
 ```
 
 ### Simuler le mode hors ligne
@@ -879,7 +979,7 @@ F12 → Lighthouse → Progressive Web App → Generate report
 # Service Worker
 <Files "service-worker.js">
   Header set Service-Worker-Allowed "/"
-  Header set Content-Type "application/javascript"
+  Header set Content-Type "text/javascript"
 </Files>
 ```
 
@@ -890,10 +990,15 @@ location /manifest.json {
 }
 
 location /service-worker.js {
-    types { } default_type "application/javascript";
+    types { } default_type "text/javascript";
     add_header Service-Worker-Allowed "/";
 }
 ```
+
+> 💡 Depuis la **RFC 9239** (2022), le type MIME standard pour JavaScript  
+> est `text/javascript`. `application/javascript` et  
+> `application/x-javascript` sont **dépréciés** mais restent acceptés  
+> par tous les navigateurs.
 
 ### Hébergement recommandé
 
@@ -956,16 +1061,26 @@ self.addEventListener('activate', function(event) {
 ### 3. Informer l'utilisateur des mises à jour
 
 ```javascript
-self.addEventListener('controllerchange', function() {
-  window.location.reload();
-});
-
-// Détecter une nouvelle version
-navigator.serviceWorker.addEventListener('controllerchange', function() {
+// À placer côté PAGE (pas dans le Service Worker).
+// L'événement `controllerchange` est émis sur `navigator.serviceWorker`
+// quand un nouveau Service Worker prend le contrôle (après skipWaiting()).
+let refreshing = false;  
+navigator.serviceWorker.addEventListener('controllerchange', function() {  
+  if (refreshing) return;       // éviter une boucle de reload
+  refreshing = true;
   if (confirm('Nouvelle version disponible ! Recharger maintenant ?')) {
     window.location.reload();
   }
 });
+
+// Pour forcer l'activation immédiate du nouveau SW (sinon il attendrait
+// que tous les onglets de l'origine soient fermés), appeler skipWaiting
+// dans le handler 'install' du Service Worker :
+//
+//   self.addEventListener('install', (event) => {
+//     self.skipWaiting();
+//     // ... event.waitUntil(precache(...))
+//   });
 ```
 
 ### 4. Analytics pour PWA
@@ -973,17 +1088,27 @@ navigator.serviceWorker.addEventListener('controllerchange', function() {
 Suivre l'utilisation de votre PWA :
 
 ```javascript
-// Dans le Service Worker
-self.addEventListener('install', function(event) {
-  // Envoyer un événement d'installation
-  fetch('/analytics/install');
+// Dans le Service Worker — bonne pratique : différer les appels analytics
+// jusqu'au retour en ligne (sinon ils échouent silencieusement).
+
+// 1) Événement d'installation : enregistrer l'install (à envoyer dès
+//    que possible, pas pendant le 'install' qui doit rester rapide).
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    fetch('/analytics/install').catch(() => {}) // best-effort
+  );
 });
 
-// Suivre l'utilisation hors ligne
+// 2) Détection des requêtes hors ligne :
+//    ⚠️ NE PAS appeler fetch('/analytics/...') depuis l'événement fetch
+//    lui-même — ça déclencherait une boucle infinie (chaque appel
+//    analytics est lui-même un fetch). Préférer un message côté page
+//    via `postMessage` quand le SW détecte une réponse depuis le cache.
 self.addEventListener('fetch', function(event) {
-  if (!navigator.onLine) {
-    fetch('/analytics/offline-usage');
-  }
+  // Exclure les URL analytics du traitement pour éviter la récursion.
+  if (event.request.url.includes('/analytics/')) return;
+
+  // Logique de cache habituelle ici…
 });
 ```
 
@@ -1003,7 +1128,13 @@ end;
 
 ### Limitations techniques
 
-❌ **iOS Safari** : Support PWA limité (pas de notifications push, limites de stockage)  
+❌ **iOS Safari** : Support PWA en progression mais incomplet. Depuis
+  **iOS 16.4** (mars 2023), les notifications push fonctionnent UNIQUEMENT
+  pour les PWA *installées sur l'écran d'accueil*. ⚠️ Dans l'**Union
+  Européenne**, depuis iOS 17.4 (DMA), Apple a temporairement retiré le
+  support PWA standalone : les PWA s'ouvrent comme des onglets Safari
+  classiques, sans notifications push. Pas de Background Sync, ni de
+  Background Fetch, ni de Periodic Sync sur iOS quel que soit le pays.  
 ❌ **Stockage** : Peut être effacé par le système si espace faible  
 ❌ **API natives** : Accès limité au matériel (vs app native)  
 ❌ **App Stores** : Pas de présence naturelle dans les stores (mais possible via wrapper)
@@ -1026,7 +1157,8 @@ end;
 **❌ Moins adapté pour :**
 - Applications nécessitant accès matériel avancé
 - Jeux 3D performants
-- Applications nécessitant iOS notifications push
+- Applications nécessitant Background Sync sur iOS (non supporté)
+- Applications déployées en UE qui dépendent fortement de l'expérience standalone iOS (cf. DMA)
 - Applications nécessitant intégration profonde avec l'OS
 
 ## Exemple complet : Application de notes PWA
@@ -1086,6 +1218,9 @@ type
     { Public declarations }
   end;
 
+var
+  FormNotes: TFormNotes;  // instance globale référencée depuis JS
+
 implementation
 
 procedure TFormNotes.WebFormCreate(Sender: TObject);  
@@ -1093,10 +1228,11 @@ begin
   RegisterServiceWorker;
   LoadNotes;
 
-  // Synchroniser quand on revient en ligne
+  // Synchroniser quand on revient en ligne — le nom de l'instance JS
+  // correspond à la variable globale ci-dessus (FormNotes, pas Form1).
   asm
     window.addEventListener('online', function() {
-      Form1.SyncWithServer();
+      FormNotes.SyncWithServer();
     });
   end;
 end;

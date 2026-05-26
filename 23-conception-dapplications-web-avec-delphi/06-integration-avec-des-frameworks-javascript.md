@@ -35,7 +35,8 @@ Les frameworks JavaScript modernes comme **React**, **Vue.js** et **Angular** on
 
 ✅ **Performance native** - Code compilé rapide et efficace  
 ✅ **Accès base de données** - FireDAC puissant et mature  
-✅ **Logique métier sécurisée** - Code protégé côté serveur  
+✅ **Frontière de confiance claire** - Validation, autorisations et secrets
+   restent côté serveur (et non livrés au navigateur)  
 ✅ **Expertise existante** - Capitaliser sur vos compétences  
 ✅ **Stabilité éprouvée** - Plateforme fiable pour applications critiques
 
@@ -375,7 +376,13 @@ var
   JSONObject: TJSONObject;
   ClientID: Integer;
 begin
-  ClientID := StrToInt(Req.Params['id']);
+  // ⚠️ TryStrToInt évite une AccessViolation si /api/clients/abc est appelé.
+  //    StrToInt lèverait une EConvertError → 500 au lieu de 400.
+  if not TryStrToInt(Req.Params['id'], ClientID) then
+  begin
+    Res.Status(400).Send('ID invalide');
+    Exit;
+  end;
 
   Query := TFDQuery.Create(nil);
   try
@@ -414,13 +421,22 @@ var
   Body: TJSONObject;
   Response: TJSONObject;
   NewID: Integer;
+  Nom, Prenom, Email: string;
 begin
   Body := Req.Body<TJSONObject>;
 
+  // ⚠️ TryGetValue<T> retourne un BOOLEAN et remplit un paramètre OUT.
+  //    L'écriture `Body.TryGetValue<string>('nom').Trim.IsEmpty` ne
+  //    compile pas — on extrait d'abord les valeurs via TryGetValue
+  //    puis on les valide.
+  if not Body.TryGetValue<string>('nom', Nom) then       Nom := '';
+  if not Body.TryGetValue<string>('prenom', Prenom) then Prenom := '';
+  if not Body.TryGetValue<string>('email', Email) then   Email := '';
+
   // Validation basique
-  if not Body.TryGetValue<string>('nom').Trim.IsEmpty and
-     not Body.TryGetValue<string>('prenom').Trim.IsEmpty and
-     not Body.TryGetValue<string>('email').Trim.IsEmpty then
+  if (not Nom.Trim.IsEmpty) and
+     (not Prenom.Trim.IsEmpty) and
+     (not Email.Trim.IsEmpty) then
   begin
     Query := TFDQuery.Create(nil);
     try
@@ -428,13 +444,16 @@ begin
       Query.SQL.Text :=
         'INSERT INTO clients (nom, prenom, email, telephone) ' +
         'VALUES (:nom, :prenom, :email, :telephone)';
-      Query.ParamByName('nom').AsString := Body.GetValue<string>('nom');
-      Query.ParamByName('prenom').AsString := Body.GetValue<string>('prenom');
-      Query.ParamByName('email').AsString := Body.GetValue<string>('email');
+      Query.ParamByName('nom').AsString := Nom;
+      Query.ParamByName('prenom').AsString := Prenom;
+      Query.ParamByName('email').AsString := Email;
+      // GetValue<T>(path, default) ne lève pas d'exception si la clé
+      // est absente : pratique pour les champs optionnels comme le téléphone.
       Query.ParamByName('telephone').AsString := Body.GetValue<string>('telephone', '');
       Query.ExecSQL;
 
-      // Récupérer l'ID du nouveau client
+      // Récupérer l'ID du nouveau client — syntaxe MySQL/MariaDB ;
+      // pour les variantes par SGBD, voir le fichier 23.3.
       Query.SQL.Text := 'SELECT LAST_INSERT_ID() as id';
       Query.Open;
       NewID := Query.FieldByName('id').AsInteger;
@@ -445,6 +464,9 @@ begin
         Response.AddPair('id', TJSONNumber.Create(NewID));
         Response.AddPair('message', 'Client créé avec succès');
 
+        // 💡 201 Created + header Location → bonne pratique REST (HATEOAS).
+        Res.RawWebResponse.SetCustomHeader('Location',
+          Format('/api/clients/%d', [NewID]));
         Res.Status(201).Send<TJSONObject>(Response);
       finally
         // Response sera libéré automatiquement
@@ -469,9 +491,24 @@ var
   Body: TJSONObject;
   Response: TJSONObject;
   ClientID: Integer;
+  Nom, Prenom, Email: string;
 begin
-  ClientID := StrToInt(Req.Params['id']);
+  if not TryStrToInt(Req.Params['id'], ClientID) then
+  begin
+    Res.Status(400).Send('ID invalide');
+    Exit;
+  end;
   Body := Req.Body<TJSONObject>;
+
+  // ⚠️ Protéger contre Body=nil et champs manquants — cohérent avec CreateClient.
+  if not Assigned(Body) or
+     not Body.TryGetValue<string>('nom', Nom) or
+     not Body.TryGetValue<string>('prenom', Prenom) or
+     not Body.TryGetValue<string>('email', Email) then
+  begin
+    Res.Status(400).Send('Champs requis : nom, prenom, email');
+    Exit;
+  end;
 
   Query := TFDQuery.Create(nil);
   try
@@ -480,9 +517,9 @@ begin
       'UPDATE clients SET nom = :nom, prenom = :prenom, ' +
       'email = :email, telephone = :telephone WHERE id = :id';
     Query.ParamByName('id').AsInteger := ClientID;
-    Query.ParamByName('nom').AsString := Body.GetValue<string>('nom');
-    Query.ParamByName('prenom').AsString := Body.GetValue<string>('prenom');
-    Query.ParamByName('email').AsString := Body.GetValue<string>('email');
+    Query.ParamByName('nom').AsString := Nom;
+    Query.ParamByName('prenom').AsString := Prenom;
+    Query.ParamByName('email').AsString := Email;
     Query.ParamByName('telephone').AsString := Body.GetValue<string>('telephone', '');
     Query.ExecSQL;
 
@@ -504,10 +541,13 @@ end;
 procedure DeleteClient(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
 var  
   Query: TFDQuery;
-  Response: TJSONObject;
   ClientID: Integer;
 begin
-  ClientID := StrToInt(Req.Params['id']);
+  if not TryStrToInt(Req.Params['id'], ClientID) then
+  begin
+    Res.Status(400).Send('ID invalide');
+    Exit;
+  end;
 
   Query := TFDQuery.Create(nil);
   try
@@ -516,15 +556,10 @@ begin
     Query.ParamByName('id').AsInteger := ClientID;
     Query.ExecSQL;
 
-    Response := TJSONObject.Create;
-    try
-      Response.AddPair('success', TJSONBool.Create(True));
-      Response.AddPair('message', 'Client supprimé avec succès');
-
-      Res.Status(200).Send<TJSONObject>(Response);
-    finally
-      // Response sera libéré automatiquement
-    end;
+    // ⚠️ 204 No Content DOIT être renvoyé SANS corps (RFC 9110).
+    //    Aligné avec le pattern du fichier 23.3 ; le client React du
+    //    fichier intercepte déjà ce cas (cf. fonction deleteClient).
+    Res.Status(204);
   finally
     Query.Free;
   end;
@@ -667,6 +702,12 @@ export async function deleteClient(id) {
     });
     if (!response.ok) {
       throw new Error('Erreur lors de la suppression du client');
+    }
+    // ⚠️ Une réponse 204 No Content n'a PAS de corps : appeler
+    //    response.json() lèverait `SyntaxError: Unexpected end of JSON input`.
+    //    On retourne juste true en cas de succès.
+    if (response.status === 204) {
+      return true;
     }
     return await response.json();
   } catch (error) {
@@ -1014,8 +1055,25 @@ var
   Response: TJSONObject;
 begin
   Body := Req.Body<TJSONObject>;
-  Username := Body.GetValue<string>('username');
-  Password := Body.GetValue<string>('password');
+
+  // ⚠️ Protéger contre Body=nil ou champs manquants — sinon GetValue
+  //    lève une AccessViolation au lieu de retourner 400.
+  if not Assigned(Body) or
+     not Body.TryGetValue<string>('username', Username) or
+     not Body.TryGetValue<string>('password', Password) then
+  begin
+    Response := TJSONObject.Create;
+    Response.AddPair('success', TJSONBool.Create(False));
+    Response.AddPair('message', 'username et password requis');
+    Res.Status(400).Send<TJSONObject>(Response);
+    Exit;
+  end;
+
+  // ⚠️ Les 5 règles de sécurité JWT (clé secrète, longueur de clé,
+  //    expiration, contenu non sensible, durée courte) sont détaillées
+  //    dans la section 23.3. Le nom `SECRET_KEY_CHANGE_ME` ci-dessous
+  //    est volontairement explicite : en production, charger la clé
+  //    depuis une variable d'environnement, pas depuis le source.
 
   // Vérifier les identifiants (à implémenter selon votre logique)
   if VerifyCredentials(Username, Password) then
@@ -1023,7 +1081,7 @@ begin
     JWT := TJWT.Create;
     try
       JWT.Claims.Subject := Username;
-      JWT.Claims.Expiration := IncHour(Now, 24); // Expire dans 24h
+      JWT.Claims.Expiration := IncHour(Now, 1); // Expire dans 1 h (durée courte recommandée)
       JWT.Claims.SetClaimOfType<string>('role', GetUserRole(Username));
 
       Token := TJOSE.SHA256CompactToken('SECRET_KEY_CHANGE_ME', JWT);
@@ -1033,7 +1091,7 @@ begin
         Response.AddPair('success', TJSONBool.Create(True));
         Response.AddPair('token', Token);
         Response.AddPair('username', Username);
-        Response.AddPair('expiresIn', '86400'); // 24h en secondes
+        Response.AddPair('expiresIn', '3600'); // 1 h en secondes
 
         Res.Send<TJSONObject>(Response);
       finally
@@ -1066,8 +1124,9 @@ begin
     Exit;
   end;
 
-  // Retirer "Bearer " du token
-  if Token.StartsWith('Bearer ') then
+  // Retirer "Bearer " du token (IgnoreCase pour tolérer "bearer" en
+  // minuscules — certains clients ne respectent pas la casse RFC 6750).
+  if Token.StartsWith('Bearer ', True) then
     Token := Token.Substring(7);
 
   try
@@ -1097,8 +1156,27 @@ end;
 
 ### Côté React - Gestion du token
 
+🚨 **Avertissement sécurité — Où stocker le JWT ?**
+
+Le choix du stockage du token côté client est un compromis sécurité :
+
+| Stockage | Avantages | Inconvénients |
+|----------|-----------|---------------|
+| **localStorage** | Simple, survit aux fermetures d'onglets | ❌ **Vulnérable au XSS** — tout script JS peut le lire |
+| **sessionStorage** | Effacé à la fermeture de l'onglet | ❌ Toujours vulnérable au XSS |
+| **Cookie HttpOnly + Secure + SameSite** | ✅ Inaccessible à JS (anti-XSS), envoyé automatiquement | Nécessite gestion côté serveur ; vulnérable au CSRF (à atténuer avec SameSite) |
+| **Memory (variable JS)** | Aucun stockage persistant | Perdu au refresh de page (nécessite refresh token) |
+
+**Recommandation 2026** : pour les applications sensibles, stocker le
+token (ou un refresh token) dans un **cookie HttpOnly + Secure + SameSite=Strict**  
+servi par votre backend Delphi. L'exemple ci-dessous utilise  
+`localStorage` pour **simplifier l'apprentissage**, mais ce n'est PAS
+le choix recommandé en production.
+
 ```javascript
 // src/services/auth.js
+// ⚠️ DÉMO PÉDAGOGIQUE — voir l'avertissement ci-dessus avant
+//     de déployer en production.
 const TOKEN_KEY = 'auth_token';
 
 export function saveToken(token) {
@@ -1203,12 +1281,19 @@ function Login({ onLoginSuccess }) {
     <div className="login-container">
       <h2>Connexion</h2>
       <form onSubmit={handleSubmit}>
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" role="alert">{error}</div>}
 
         <div className="form-group">
-          <label>Nom d'utilisateur</label>
+          {/* htmlFor relie le label à l'input (accessibilité +
+              cliquer sur le label focus l'input).
+              autoComplete aide les gestionnaires de mots de passe
+              et déclenche le remplissage automatique du navigateur. */}
+          <label htmlFor="login-username">Nom d'utilisateur</label>
           <input
+            id="login-username"
+            name="username"
             type="text"
+            autoComplete="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -1216,9 +1301,12 @@ function Login({ onLoginSuccess }) {
         </div>
 
         <div className="form-group">
-          <label>Mot de passe</label>
+          <label htmlFor="login-password">Mot de passe</label>
           <input
+            id="login-password"
+            name="password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -1356,20 +1444,38 @@ function ClientsList() {
 - Fichiers statiques React : `/*`
 
 ```pascal
-// Servir les fichiers statiques React
+// Servir les fichiers statiques React.
+// 🚨 SÉCURITÉ : Cette fonction DOIT se protéger contre la traversée de
+//    répertoire. Une requête comme GET /../../../etc/passwd ne doit
+//    JAMAIS pouvoir lire un fichier en dehors du dossier `public`.
+//    Le pattern : résoudre le chemin absolu, puis vérifier qu'il
+//    commence bien par le dossier racine attendu.
 procedure ServeStaticFiles(Req: THorseRequest; Res: THorseResponse; Next: TProc);  
 var  
-  FileName: string;
-  FilePath: string;
+  RawPath, RootDir, FullPath: string;
 begin
-  FileName := Req.PathInfo;
-  if FileName = '/' then
-    FileName := '/index.html';
+  RawPath := Req.PathInfo;
+  if (RawPath = '') or (RawPath = '/') then
+    RawPath := '/index.html';
 
-  FilePath := TPath.Combine('public', FileName);
+  // Retirer le '/' initial pour que TPath.Combine ne le traite pas
+  // comme un chemin absolu (sinon TPath.Combine ignore 'public').
+  if RawPath.StartsWith('/') then
+    RawPath := RawPath.Substring(1);
 
-  if TFile.Exists(FilePath) then
-    Res.SendFile(FilePath)
+  RootDir := TPath.GetFullPath('public');
+  FullPath := TPath.GetFullPath(TPath.Combine(RootDir, RawPath));
+
+  // ⚠️ Garde-fou anti path-traversal : le chemin résolu DOIT rester
+  //    sous RootDir. Sans ce test, un attaquant peut sortir du sandbox.
+  if not FullPath.StartsWith(RootDir + PathDelim) then
+  begin
+    Res.Status(403).Send('Accès refusé');
+    Exit;
+  end;
+
+  if TFile.Exists(FullPath) then
+    Res.SendFile(FullPath)
   else
     Next; // Passer au handler suivant
 end;
@@ -1389,14 +1495,29 @@ end;
 
 ### 1. Variables d'environnement
 
-**React (.env) :**
+**Create React App** (legacy, déprécié en 2023 mais encore très répandu) :
 ```
+# .env
 REACT_APP_API_URL=http://localhost:9000/api
 ```
-
 ```javascript
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL
+                  || 'http://localhost:9000/api';
 ```
+
+**Vite** (recommandé pour les nouveaux projets) :
+```
+# .env
+VITE_API_URL=http://localhost:9000/api
+```
+```javascript
+const API_BASE_URL = import.meta.env.VITE_API_URL
+                  || 'http://localhost:9000/api';
+```
+
+> 💡 Depuis 2023, l'équipe React **recommande explicitement** d'utiliser  
+> Vite, Next.js, Remix… plutôt que Create React App pour les nouveaux  
+> projets. CRA n'est plus maintenu.
 
 ### 2. Gestion du loading
 

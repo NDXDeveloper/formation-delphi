@@ -87,12 +87,15 @@ DLL/SO chargée par Apache
 - Plus complexe à déployer
 ```
 
-**4. Application Standalone**
+**4. Application Standalone** ⭐ — recommandé en 2026
 ```
-Serveur HTTP intégré
-- Auto-hébergée
-- Parfaite pour développement
-- Déploiement simple
+Serveur HTTP intégré (Indy)
+- Auto-hébergée, un seul binaire à déployer
+- Multi-plateforme (Windows ET Linux)
+- Très utilisée en production derrière un reverse proxy
+  (Nginx / Caddy / IIS ARR) qui gère HTTPS et le load balancing
+- S'intègre naturellement avec Docker et systemd
+- Recommandée pour la plupart des nouveaux projets
 ```
 
 ### Création d'une application WebBroker
@@ -114,7 +117,7 @@ unit WebModuleUnit1;
 interface
 
 uses
-  System.SysUtils, System.Classes, Web.HTTPApp;
+  System.SysUtils, System.Classes, System.NetEncoding, Web.HTTPApp;
 
 type
   TWebModule1 = class(TWebModule)
@@ -138,12 +141,21 @@ implementation
 procedure TWebModule1.WebModule1DefaultHandlerAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 begin
+  // Bien préciser le Content-Type au niveau HTTP, sinon certains
+  // anciens proxys/clients peuvent interpréter le contenu en ISO-8859-1.
+  Response.ContentType := 'text/html; charset=utf-8';
+
+  // ⚠️ Request.PathInfo vient de l'URL — toujours échapper avant
+  //    injection HTML, sinon XSS reflété trivial (lien malveillant
+  //    contenant <script>...</script> dans le chemin).
   Response.Content :=
-    '<html>' +
-    '<head><title>Ma première application WebBroker</title></head>' +
+    '<!DOCTYPE html>' +
+    '<html lang="fr">' +
+    '<head><meta charset="utf-8"><title>Ma première application WebBroker</title></head>' +
     '<body>' +
     '<h1>Bonjour depuis WebBroker !</h1>' +
-    '<p>Vous avez accédé à : ' + Request.PathInfo + '</p>' +
+    '<p>Vous avez accédé à : ' +
+    TNetEncoding.HTML.Encode(Request.PathInfo) + '</p>' +
     '</body>' +
     '</html>';
   Handled := True;
@@ -177,8 +189,11 @@ implementation
 procedure TWebModule1.ActionHomeAction(Sender: TObject; Request: TWebRequest;
   Response: TWebResponse; var Handled: Boolean);
 begin
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content :=
-    '<html>' +
+    '<!DOCTYPE html>' +
+    '<html lang="fr">' +
+    '<head><meta charset="utf-8"><title>Accueil</title></head>' +
     '<body>' +
     '<h1>Page d''accueil</h1>' +
     '<ul>' +
@@ -196,7 +211,8 @@ procedure TWebModule1.ActionClientsAction(Sender: TObject; Request: TWebRequest;
 var
   HTML: string;
 begin
-  HTML := '<html><body><h1>Liste des clients</h1><ul>';
+  HTML := '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">' +
+          '<title>Clients</title></head><body><h1>Liste des clients</h1><ul>';
 
   // Ici, vous ajouteriez le code pour récupérer les clients depuis la base
   HTML := HTML + '<li>Client 1</li>';
@@ -205,6 +221,7 @@ begin
 
   HTML := HTML + '</ul></body></html>';
 
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := HTML;
   Handled := True;
 end;
@@ -213,7 +230,7 @@ end;
 procedure TWebModule1.ActionAPIAction(Sender: TObject; Request: TWebRequest;
   Response: TWebResponse; var Handled: Boolean);
 begin
-  Response.ContentType := 'application/json';
+  Response.ContentType := 'application/json; charset=utf-8';
   Response.Content :=
     '{' +
     '  "success": true,' +
@@ -281,8 +298,13 @@ begin
     SearchTerm := Request.ContentFields.Values['search'];
   end;
 
+  // ⚠️ ÉCHAPPER `SearchTerm` (donnée utilisateur) avant de la réinjecter
+  //    dans le HTML — sinon, XSS reflété trivial : un lien
+  //    /search?q=<script>alert(1)</script> exécuterait du JS chez la
+  //    victime.
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := Format('<p>Recherche : %s (page %d)</p>',
-    [SearchTerm, Page]);
+    [TNetEncoding.HTML.Encode(SearchTerm), Page]);
   Handled := True;
 end;
 ```
@@ -295,21 +317,36 @@ procedure TWebModule1.ActionLoginAction(Sender: TObject;
 var
   Username: string;
   SessionID: string;
+  NewGUID: TGUID;
 begin
   Username := Request.ContentFields.Values['username'];
 
-  // Créer ou récupérer la session
-  SessionID := Request.Cookie;
+  // Créer ou récupérer la session.
+  // ⚠️ Request.Cookie retourne le header Cookie ENTIER (toutes les paires
+  //    key=value séparées par "; "). Pour lire un cookie précis, utiliser
+  //    Request.CookieFields.Values['SessionID'].
+  SessionID := Request.CookieFields.Values['SessionID'];
   if SessionID = '' then
   begin
-    SessionID := CreateGUID; // Générer un ID unique
-    Response.SetCookieField('SessionID', SessionID, 0, '/', '', False, False);
+    // ⚠️ CreateGUID est une PROCÉDURE qui remplit un TGUID, pas une fonction.
+    //    Pour obtenir une chaîne, on convertit le TGUID en string.
+    //    En Delphi moderne, on peut aussi utiliser TGUID.NewGuid.ToString.
+    CreateGUID(NewGUID);
+    SessionID := GUIDToString(NewGUID);
+    // Signature : SetCookieField(AName, AValue, ADomain, APath,
+    //                            AExpires, ASecure, AHttpOnly)
+    // ⚠️ ASecure := True et AHttpOnly := True en production HTTPS :
+    //    Secure = cookie envoyé uniquement sur HTTPS (pas de vol sur Wi-Fi public).
+    //    HttpOnly = inaccessible depuis JavaScript (pas de vol par XSS).
+    //    À compléter idéalement avec SameSite=Lax/Strict si la version le supporte.
+    Response.SetCookieField('SessionID', SessionID, '', '/', 0, True, True);
   end;
 
   // Stocker les données de session
   // (nécessite un système de cache côté serveur)
   StoreSessionData(SessionID, 'username', Username);
 
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := '<p>Connexion réussie !</p>';
   Handled := True;
 end;
@@ -346,7 +383,12 @@ begin
         Query.Next;
       end;
 
-      Response.ContentType := 'application/json';
+      // ⚠️ Préciser le charset utf-8 dans le Content-Type : sans cela,
+      //    certains anciens clients/proxys interprètent le JSON en
+      //    ISO-8859-1, ce qui mangerait les accents (« François » → « FranÃ§ois »).
+      //    Le standard application/json est en UTF-8 (RFC 8259), mais
+      //    être explicite ne coûte rien.
+      Response.ContentType := 'application/json; charset=utf-8';
       Response.Content := JSONArray.ToString;
     finally
       JSONArray.Free;
@@ -486,27 +528,33 @@ var
   Query: TFDQuery;
   JSONObject: TJSONObject;
 begin
+  // try/except (et non try/finally) : si Query.Open échoue, on libère
+  // Result puis on relaie l'exception au client DataSnap.
   Result := TJSONArray.Create;
-
-  Query := TFDQuery.Create(nil);
   try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients';
-    Query.Open;
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FDConnection1;
+      Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients';
+      Query.Open;
 
-    while not Query.Eof do
-    begin
-      JSONObject := TJSONObject.Create;
-      JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
-      JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
-      JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
-      JSONObject.AddPair('email', Query.FieldByName('email').AsString);
-      Result.Add(JSONObject);
+      while not Query.Eof do
+      begin
+        JSONObject := TJSONObject.Create;
+        JSONObject.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+        JSONObject.AddPair('nom', Query.FieldByName('nom').AsString);
+        JSONObject.AddPair('prenom', Query.FieldByName('prenom').AsString);
+        JSONObject.AddPair('email', Query.FieldByName('email').AsString);
+        Result.Add(JSONObject);
 
-      Query.Next;
+        Query.Next;
+      end;
+    finally
+      Query.Free;
     end;
-  finally
-    Query.Free;
+  except
+    Result.Free;  // évite la fuite si une exception remonte
+    raise;
   end;
 end;
 
@@ -525,7 +573,9 @@ begin
     Query.ParamByName('email').AsString := Email;
     Query.ExecSQL;
 
-    // Récupérer l'ID généré
+    // ⚠️ `SELECT LAST_INSERT_ID()` est spécifique à MySQL / MariaDB.
+    //    Pour les autres SGBD, voir le détail des variantes dans le
+    //    fichier 23.3 (« Création de services REST avec Delphi »).
     Query.SQL.Text := 'SELECT LAST_INSERT_ID() as id';
     Query.Open;
     Result := Query.FieldByName('id').AsInteger;
@@ -583,6 +633,7 @@ type
     procedure ButtonTestEchoClick(Sender: TObject);
     procedure ButtonGetClientsClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FServerMethods: TServerMethods1Client;
   public
@@ -603,6 +654,14 @@ begin
 
   // Créer l'instance du proxy
   FServerMethods := TServerMethods1Client.Create(SQLConnection1.DBXConnection);
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);  
+begin  
+  // ⚠️ Le proxy est créé manuellement (pas via un component owner) — il
+  //    DOIT être libéré explicitement, sinon fuite mémoire à chaque
+  //    fermeture du formulaire.
+  FServerMethods.Free;
 end;
 
 procedure TForm1.ButtonTestEchoClick(Sender: TObject);  
@@ -653,8 +712,12 @@ fetch('http://localhost:8080/datasnap/rest/TServerMethods1/GetClients')
     console.log('Clients:', data.result);
   });
 
-// Avec paramètres
-fetch('http://localhost:8080/datasnap/rest/TServerMethods1/EchoString/["Hello"]')
+// Avec paramètres : DataSnap sérialise les arguments en JSON dans l'URL.
+// ⚠️ Toujours URL-encoder le JSON avec encodeURIComponent — les caractères
+//    spéciaux ("[]\"" et les accents par ex.) doivent être échappés,
+//    sinon la requête peut être rejetée ou les paramètres mal interprétés.
+const arg = encodeURIComponent(JSON.stringify(['Hello']));  
+fetch(`http://localhost:8080/datasnap/rest/TServerMethods1/EchoString/${arg}`)  
   .then(response => response.json())
   .then(data => {
     console.log('Réponse:', data.result);
@@ -685,8 +748,21 @@ implementation
 function TMyAuthentication.Authenticate(const AuthUserName, AuthPassword: string;
   const AdditionalData: string): Boolean;
 begin
-  // Vérifier les identifiants
-  // (en production, vérifier contre une base de données)
+  // 🚨 Exemple PÉDAGOGIQUE — NE JAMAIS faire ça en production !
+  //    1. Identifiants en clair dans le code source
+  //    2. Comparaison de mot de passe sans hash
+  //    3. Vulnérable à une attaque par timing (=) — utiliser une
+  //       comparaison constante en temps pour les hash sensibles
+  //
+  // En production :
+  //    - Stocker les mots de passe HASHÉS (bcrypt, Argon2, PBKDF2)
+  //      avec un sel par utilisateur (jamais en clair !)
+  //    - Vérifier avec la fonction de hash correspondante
+  //    - Logger les tentatives échouées (rate-limit / bannir l'IP)
+  //
+  // Exemple typique :
+  //    StoredHash := UserRepository.GetPasswordHash(AuthUserName);
+  //    Result := TBCrypt.Verify(AuthPassword, StoredHash);
   Result := (AuthUserName = 'admin') and (AuthPassword = 'secret123');
 end;
 
@@ -720,11 +796,20 @@ var
 procedure TServerMethods1.BroadcastMessage(const Message: string);  
 var  
   i: Integer;
+  Payload: TJSONString;
 begin
-  for i := 0 to Callbacks.Count - 1 do
-  begin
-    // Envoyer le message à tous les clients connectés
-    Callbacks[i].Broadcast(TJSONString.Create(Message));
+  // 💡 Créer le TJSONString une seule fois et le libérer en fin de boucle
+  //    (vérifier dans la doc DataSnap si Broadcast prend la propriété ou
+  //    s'en fait une copie — dans le doute, créer/libérer un par client).
+  Payload := TJSONString.Create(Message);
+  try
+    for i := 0 to Callbacks.Count - 1 do
+    begin
+      // Envoyer le message à tous les clients connectés
+      Callbacks[i].Broadcast(Payload);
+    end;
+  finally
+    Payload.Free;
   end;
 end;
 
@@ -852,7 +937,7 @@ end;
 procedure TWebModule1.ActionClientsAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 begin
-  Response.ContentType := 'application/json';
+  Response.ContentType := 'application/json; charset=utf-8';
   Response.Content := '{"clients": [...]}';
   Handled := True;
 end;
@@ -936,23 +1021,14 @@ THorse.Get('/clients',
 
 **1. Utiliser des templates HTML**
 ```pascal
+uses System.IOUtils, System.SysUtils;
+
+// ⚠️ Préciser TEncoding.UTF8 — sans cela, sur Windows en français,
+//    l'encoding par défaut (ANSI/Windows-1252) corromprait les accents
+//    d'un fichier HTML écrit en UTF-8 (« é » → « Ã© »).
 function LoadHTMLTemplate(const FileName: string): string;  
-var  
-  FileStream: TFileStream;
-  StringStream: TStringStream;
-begin
-  FileStream := TFileStream.Create(FileName, fmOpenRead);
-  try
-    StringStream := TStringStream.Create;
-    try
-      StringStream.CopyFrom(FileStream, FileStream.Size);
-      Result := StringStream.DataString;
-    finally
-      StringStream.Free;
-    end;
-  finally
-    FileStream.Free;
-  end;
+begin  
+  Result := TFile.ReadAllText(FileName, TEncoding.UTF8);
 end;
 
 procedure TWebModule1.ActionHomeAction(Sender: TObject;
@@ -962,6 +1038,7 @@ var
 begin
   HTML := LoadHTMLTemplate('templates/home.html');
   HTML := StringReplace(HTML, '{{TITLE}}', 'Accueil', [rfReplaceAll]);
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := HTML;
   Handled := True;
 end;
@@ -989,6 +1066,7 @@ end.
 // Dans WebModule
 procedure TWebModule1.ActionAPIAction(...);  
 begin  
+  Response.ContentType := 'application/json; charset=utf-8';
   Response.Content := BusinessLogic.GetClientsList;
 end;
 ```

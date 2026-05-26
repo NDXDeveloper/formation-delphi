@@ -4,11 +4,35 @@
 
 ## Introduction
 
-**WebStencils** est une technologie introduite dans les versions récentes de RAD Server (EMS - Enterprise Mobility Services) qui simplifie grandement la création de contenu HTML dynamique côté serveur avec Delphi.
+**WebStencils** est un moteur de templates côté serveur introduit dans  
+**RAD Studio 12.2 Athens** (septembre 2024) et inclus dans Delphi 13  
+Florence. Il simplifie la création de contenu HTML dynamique avec Delphi  
+en suivant une philosophie inspirée de **Razor (ASP.NET)**.  
 
-Imaginez que vous puissiez créer des templates HTML avec des "trous" que Delphi remplira automatiquement avec des données. C'est exactement ce que permettent les WebStencils !
+Les composants principaux sont :
+- **`TWebStencilsProcessor`** : traite un fichier individuel (HTML +
+  marqueurs WebStencils) et produit le contenu final
+- **`TWebStencilsEngine`** : moteur global qui orchestre le traitement
+  des fichiers dans une application Web (utilisable avec WebBroker,
+  RAD Server, DataSnap…)
 
-**Analogie :** WebStencils, c'est comme un pochoir (stencil en anglais) : vous créez un modèle avec des emplacements vides, et Delphi remplit ces emplacements avec les bonnes informations.
+Ils résident dans l'unité **`Web.Stencils`** de la RTL Delphi.
+
+⚠️ **IMPORTANT — Syntaxe** : WebStencils utilise le caractère **`@`** comme
+marqueur (à la manière de Razor), **pas** la syntaxe `{{variable}}` de  
+Mustache/Handlebars. Les exemples ci-dessous emploient la notation  
+`{{variable}}` parce qu'elle est plus visuelle et familière pour
+expliquer un système de templating **générique** ; pour la syntaxe
+**officielle** de WebStencils en Delphi, consultez le tableau dédié
+plus bas et la [DocWiki Embarcadero](https://docwiki.embarcadero.com/RADStudio/Athens/en/WebStencils).
+
+Imaginez que vous puissiez créer des templates HTML avec des "trous" que  
+Delphi remplira automatiquement avec des données. C'est exactement ce  
+que permettent les WebStencils !  
+
+**Analogie :** WebStencils, c'est comme un pochoir (stencil en anglais) :
+vous créez un modèle avec des emplacements vides, et Delphi remplit ces  
+emplacements avec les bonnes informations.  
 
 ```
 Template WebStencil           Données Delphi           Résultat HTML
@@ -22,7 +46,9 @@ Template WebStencil           Données Delphi           Résultat HTML
 
 ### Définition
 
-**WebStencils** est un système de templating intégré à RAD Server qui permet de :
+**WebStencils** est un système de templating intégré à la **RTL Delphi**
+(unité `Web.Stencils`), utilisable avec **WebBroker, RAD Server, DataSnap**
+ou tout autre framework HTTP. Il permet de :
 - Créer des templates HTML avec une syntaxe simple
 - Injecter automatiquement des données Delphi dans ces templates
 - Générer des pages web dynamiques efficacement
@@ -59,14 +85,18 @@ end;
 - Erreurs de syntaxe HTML fréquentes
 - Maintenance compliquée
 - Impossible pour un designer de modifier
+- ⚠️ **Risque XSS** : `UserName` est injecté sans échappement
+  (cf. section « Échappement HTML automatique » plus bas — WebStencils
+  résout ce problème nativement)
 
 ### Avec WebStencils (approche moderne)
 
 **Template HTML (home.html) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>{{pageTitle}}</title>
 </head>
 <body>
@@ -92,6 +122,7 @@ begin
     Stencil.Values['currentTime'] := TimeToStr(Now);
 
     // Générer et renvoyer le HTML
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := Stencil.Render;
   finally
     Stencil.Free;
@@ -106,7 +137,42 @@ end;
 - Designer peut modifier les templates
 - Moins d'erreurs
 
-## Syntaxe WebStencils
+## Syntaxe officielle WebStencils (Delphi 12.2+)
+
+Voici la **vraie** syntaxe utilisée par `TWebStencilsProcessor` en Delphi —  
+inspirée de Razor :  
+
+| Construction | Syntaxe WebStencils Delphi | Équivalent Mustache (utilisé dans les exemples didactiques ci-dessous) |
+|--------------|----------------------------|------------------------------------------------------------------------|
+| Valeur d'un objet | `@Object.Property` | `{{property}}` |
+| Boucle sur une liste | `@foreach (var item in Items) { … @item.Name … }` | `{{#each items}} … {{/each}}` |
+| Condition | `@if (condition) { … } else { … }` | `{{#if condition}} … {{else}} … {{/if}}` |
+| Échappement `@` | `@@` (double arobase) | `\{{` |
+| Bloc de code | `@{ var x = …; }` | (non disponible) |
+
+**Exemple officiel de template `.html` WebStencils :**
+```html
+<h1>Bienvenue @Person.FirstName !</h1>
+<ul>
+@foreach (var p in People)
+{
+  <li>@p.FirstName @p.LastName (@p.Age ans)</li>
+}
+</ul>
+```
+
+**Côté Delphi**, on dépose un `TWebStencilsProcessor` sur le module Web,
+on enregistre les objets/listes via `AddVar`, et on associe le processor
+à une `TWebActionItem.Producer`. Voir la [documentation officielle](https://docwiki.embarcadero.com/RADStudio/Athens/en/WebStencils)
+pour un exemple complet de bout en bout.
+
+> Le reste de ce document utilise délibérément la syntaxe Mustache  
+> (`{{variable}}`) car elle reste très répandue (Handlebars, Jinja, Vue…)  
+> et illustre les **concepts généraux** d'un moteur de template. Les  
+> mêmes idées s'appliquent à WebStencils — il suffit de transposer la  
+> syntaxe.
+
+## Syntaxe (style Mustache, à titre didactique)
 
 ### Variables simples
 
@@ -170,32 +236,39 @@ begin
   try
     Stencil.LoadFromFile('templates/clients.html');
 
-    // Créer un tableau JSON pour les clients
+    // ⚠️ ClientsArray DOIT être dans son propre try/finally pour éviter
+    //    une fuite si Query.Open ou Stencil.Render lève une exception.
     ClientsArray := TJSONArray.Create;
-
-    Query := TFDQuery.Create(nil);
     try
-      Query.Connection := FDConnection1;
-      Query.SQL.Text := 'SELECT nom, email FROM clients';
-      Query.Open;
+      Query := TFDQuery.Create(nil);
+      try
+        Query.Connection := FDConnection1;
+        Query.SQL.Text := 'SELECT nom, email FROM clients';
+        Query.Open;
 
-      while not Query.Eof do
-      begin
-        ClientObj := TJSONObject.Create;
-        ClientObj.AddPair('nom', Query.FieldByName('nom').AsString);
-        ClientObj.AddPair('email', Query.FieldByName('email').AsString);
-        ClientsArray.Add(ClientObj);
+        while not Query.Eof do
+        begin
+          ClientObj := TJSONObject.Create;
+          ClientObj.AddPair('nom', Query.FieldByName('nom').AsString);
+          ClientObj.AddPair('email', Query.FieldByName('email').AsString);
+          ClientsArray.Add(ClientObj);  // ClientsArray possède désormais ClientObj
 
-        Query.Next;
+          Query.Next;
+        end;
+      finally
+        Query.Free;
       end;
+
+      // Passer le tableau au stencil (l'API exacte dépend du moteur
+      // de templates ; consulter sa documentation pour savoir si le
+      // stencil prend la propriété du JSONArray ou s'en fait une copie).
+      Stencil.Values['clients'] := ClientsArray;
+
+      Response.ContentType := 'text/html; charset=utf-8';
+      Response.Content := Stencil.Render;
     finally
-      Query.Free;
+      ClientsArray.Free;  // libère aussi les ClientObj contenus
     end;
-
-    // Passer le tableau au stencil
-    Stencil.Values['clients'] := ClientsArray;
-
-    Response.Content := Stencil.Render;
   finally
     Stencil.Free;
   end;
@@ -263,37 +336,46 @@ Stencil.Values['messageCount'] := IntToStr(MessageCount);
 
 **Code Delphi :**
 ```pascal
+// 💡 Règle de propriété TJSON* : Add / AddPair transfère la propriété au
+//    conteneur — c'est lui qui libérera l'enfant lors de son propre Free.
+//    Ici, libérer OrdersArray à la fin libère en cascade OrderObj puis
+//    ItemsArray puis chaque ItemObj.
 var
   OrdersArray, ItemsArray: TJSONArray;
   OrderObj, ItemObj: TJSONObject;
 begin
   OrdersArray := TJSONArray.Create;
+  try
+    // Première commande
+    OrderObj := TJSONObject.Create;
+    OrderObj.AddPair('orderNumber', '12345');
+    OrderObj.AddPair('orderDate', '2026-01-15');
+    OrderObj.AddPair('total', '150.00');
 
-  // Première commande
-  OrderObj := TJSONObject.Create;
-  OrderObj.AddPair('orderNumber', '12345');
-  OrderObj.AddPair('orderDate', '2025-01-15');
-  OrderObj.AddPair('total', '150.00');
+    // Articles de la commande
+    ItemsArray := TJSONArray.Create;
 
-  // Articles de la commande
-  ItemsArray := TJSONArray.Create;
+    ItemObj := TJSONObject.Create;
+    ItemObj.AddPair('productName', 'Produit A');
+    ItemObj.AddPair('quantity', '2');
+    ItemObj.AddPair('price', '50.00');
+    ItemsArray.Add(ItemObj);
 
-  ItemObj := TJSONObject.Create;
-  ItemObj.AddPair('productName', 'Produit A');
-  ItemObj.AddPair('quantity', '2');
-  ItemObj.AddPair('price', '50.00');
-  ItemsArray.Add(ItemObj);
+    ItemObj := TJSONObject.Create;
+    ItemObj.AddPair('productName', 'Produit B');
+    ItemObj.AddPair('quantity', '1');
+    ItemObj.AddPair('price', '50.00');
+    ItemsArray.Add(ItemObj);
 
-  ItemObj := TJSONObject.Create;
-  ItemObj.AddPair('productName', 'Produit B');
-  ItemObj.AddPair('quantity', '1');
-  ItemObj.AddPair('price', '50.00');
-  ItemsArray.Add(ItemObj);
+    OrderObj.AddPair('items', ItemsArray);
+    OrdersArray.Add(OrderObj);
 
-  OrderObj.AddPair('items', ItemsArray);
-  OrdersArray.Add(OrderObj);
-
-  Stencil.Values['orders'] := OrdersArray;
+    Stencil.Values['orders'] := OrdersArray;
+    Response.ContentType := 'text/html; charset=utf-8';
+    Response.Content := Stencil.Render;
+  finally
+    OrdersArray.Free;  // libère récursivement toute la hiérarchie
+  end;
 end;
 ```
 
@@ -306,8 +388,9 @@ end;
 **Template principal (page.html) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>{{pageTitle}}</title>
 </head>
 <body>
@@ -339,9 +422,14 @@ end;
 **Template footer (footer.html) :**
 ```html
 <footer>
-  <p>&copy; 2025 MonApp - Tous droits réservés</p>
+  <p>&copy; {{year}} MonApp - Tous droits réservés</p>
 </footer>
 ```
+
+> 💡 `{{year}}` plutôt qu'une année en dur — sinon le footer  
+> affichera 2025 ad vitam aeternam. Côté Delphi :  
+> `Stencil.Values['year'] := IntToStr(YearOf(Now));`  
+> (unité `System.DateUtils`).
 
 **Code Delphi :**
 ```pascal
@@ -363,6 +451,7 @@ begin
     Stencil.Values['userName'] := 'Jean Dupont';
     Stencil.Values['content'] := '<p>Contenu principal de la page</p>';
 
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := Stencil.Render;
   finally
     Stencil.Free;
@@ -441,10 +530,14 @@ begin
     RegisterCustomHelpers(Stencil);
 
     Stencil.LoadFromFile('templates/product.html');
+    // 💡 TJSONString / TJSONNumber sont confiés au Stencil — qui les
+    //    libérera (selon l'API du moteur). Consulter la doc du moteur
+    //    de templates utilisé pour vérifier la sémantique d'ownership.
     Stencil.Values['createdAt'] := TJSONString.Create(DateToISO8601(Now));
     Stencil.Values['price'] := TJSONNumber.Create(99.99);
     Stencil.Values['description'] := 'Ceci est une très longue description...';
 
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := Stencil.Render;
   finally
     Stencil.Free;
@@ -554,27 +647,33 @@ var
   Query: TFDQuery;
   ClientObj: TJSONObject;
 begin
+  // try/except autour de Result : si Query.Open lève, on libère Result
+  // pour éviter une fuite côté appelant.
   Result := TJSONArray.Create;
-
-  Query := TFDQuery.Create(nil);
   try
-    Query.Connection := FConnection;
-    Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients ORDER BY nom';
-    Query.Open;
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := FConnection;
+      Query.SQL.Text := 'SELECT id, nom, prenom, email FROM clients ORDER BY nom';
+      Query.Open;
 
-    while not Query.Eof do
-    begin
-      ClientObj := TJSONObject.Create;
-      ClientObj.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
-      ClientObj.AddPair('nom', Query.FieldByName('nom').AsString);
-      ClientObj.AddPair('prenom', Query.FieldByName('prenom').AsString);
-      ClientObj.AddPair('email', Query.FieldByName('email').AsString);
-      Result.Add(ClientObj);
+      while not Query.Eof do
+      begin
+        ClientObj := TJSONObject.Create;
+        ClientObj.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+        ClientObj.AddPair('nom', Query.FieldByName('nom').AsString);
+        ClientObj.AddPair('prenom', Query.FieldByName('prenom').AsString);
+        ClientObj.AddPair('email', Query.FieldByName('email').AsString);
+        Result.Add(ClientObj);
 
-      Query.Next;
+        Query.Next;
+      end;
+    finally
+      Query.Free;
     end;
-  finally
-    Query.Free;
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -582,6 +681,7 @@ function TClientModel.GetById(ID: Integer): TJSONObject;
 var  
   Query: TFDQuery;
 begin
+  Result := nil;
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := FConnection;
@@ -592,14 +692,18 @@ begin
     if not Query.IsEmpty then
     begin
       Result := TJSONObject.Create;
-      Result.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
-      Result.AddPair('nom', Query.FieldByName('nom').AsString);
-      Result.AddPair('prenom', Query.FieldByName('prenom').AsString);
-      Result.AddPair('email', Query.FieldByName('email').AsString);
-      Result.AddPair('telephone', Query.FieldByName('telephone').AsString);
-    end
-    else
-      Result := nil;
+      try
+        Result.AddPair('id', TJSONNumber.Create(Query.FieldByName('id').AsInteger));
+        Result.AddPair('nom', Query.FieldByName('nom').AsString);
+        Result.AddPair('prenom', Query.FieldByName('prenom').AsString);
+        Result.AddPair('email', Query.FieldByName('email').AsString);
+        Result.AddPair('telephone', Query.FieldByName('telephone').AsString);
+      except
+        Result.Free;
+        Result := nil;
+        raise;
+      end;
+    end;
   finally
     Query.Free;
   end;
@@ -649,7 +753,16 @@ function TClientsController.RenderTemplate(const TemplateName: string;
   Data: TJSONValue): string;
 var
   Stencil: TWebStencil;
+  PagesRoot, FullPath: string;
 begin
+  // 🚨 ANTI PATH-TRAVERSAL : valider que TemplateName ne sort pas du dossier
+  //    pages/. Sans cette protection, un appel à RenderTemplate('../../etc/passwd')
+  //    pourrait lire un fichier arbitraire.
+  PagesRoot := TPath.GetFullPath('templates/pages');
+  FullPath := TPath.GetFullPath(TPath.Combine(PagesRoot, TemplateName));
+  if not FullPath.StartsWith(PagesRoot + PathDelim) then
+    raise Exception.CreateFmt('Template invalide : %s', [TemplateName]);
+
   Stencil := TWebStencil.Create;
   try
     // Charger le layout principal
@@ -659,16 +772,18 @@ begin
     Stencil.RegisterPartial('header', 'templates/partials/header.html');
     Stencil.RegisterPartial('footer', 'templates/partials/footer.html');
 
-    // Charger le contenu de la page
-    Stencil.Values['content'] := LoadFileAsString('templates/pages/' + TemplateName);
+    // Charger le contenu de la page (FullPath déjà validé)
+    Stencil.Values['content'] := LoadFileAsString(FullPath);
 
     // Ajouter les données
     if Assigned(Data) then
       Stencil.Values['data'] := Data;
 
-    // Variables globales
+    // Variables globales.
+    // ⚠️ `CurrentYear` n'existe pas en Delphi standard — utiliser
+    //    YearOf(Now) (unité System.DateUtils) pour obtenir l'année.
     Stencil.Values['appName'] := 'MonApp';
-    Stencil.Values['year'] := IntToStr(CurrentYear);
+    Stencil.Values['year'] := IntToStr(YearOf(Now));
 
     Result := Stencil.Render;
   finally
@@ -693,6 +808,7 @@ begin
     PageData.AddPair('clientCount', TJSONNumber.Create(Clients.Count));
 
     // Rendre le template
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := RenderTemplate('clients/list.html', PageData);
   finally
     PageData.Free;
@@ -719,6 +835,7 @@ begin
         PageData.AddPair('pageTitle', 'Détails du client');
         PageData.AddPair('client', Client);
 
+        Response.ContentType := 'text/html; charset=utf-8';
         Response.Content := RenderTemplate('clients/detail.html', PageData);
       finally
         PageData.Free;
@@ -727,12 +844,14 @@ begin
     else
     begin
       Response.StatusCode := 404;
+      Response.ContentType := 'text/plain; charset=utf-8';
       Response.Content := 'Client non trouvé';
     end;
   end
   else
   begin
     Response.StatusCode := 400;
+    Response.ContentType := 'text/plain; charset=utf-8';
     Response.Content := 'ID invalide';
   end;
 end;
@@ -789,12 +908,14 @@ unit TemplateCache;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections;
+  System.SysUtils, System.Classes, System.IOUtils,
+  System.Generics.Collections, System.SyncObjs;
 
 type
   TTemplateCache = class
   private
     FCache: TDictionary<string, string>;
+    FLock: TCriticalSection;  // ⚠️ Indispensable en multi-thread
     FEnabled: Boolean;
   public
     constructor Create;
@@ -814,6 +935,7 @@ implementation
 constructor TTemplateCache.Create;  
 begin  
   FCache := TDictionary<string, string>.Create;
+  FLock := TCriticalSection.Create;
   {$IFDEF DEBUG}
   FEnabled := False; // Désactivé en développement
   {$ELSE}
@@ -824,34 +946,41 @@ end;
 destructor TTemplateCache.Destroy;  
 begin  
   FCache.Free;
+  FLock.Free;
   inherited;
 end;
 
 function TTemplateCache.GetTemplate(const FileName: string): string;  
 begin  
-  // Vérifier le cache
-  if FEnabled and FCache.ContainsKey(FileName) then
-  begin
-    Result := FCache[FileName];
-    Exit;
-  end;
+  // ⚠️ Sans verrou, deux threads HTTP simultanés sur le même fichier
+  //    peuvent provoquer une EAccessViolation aléatoire (TDictionary
+  //    n'est pas thread-safe). On verrouille pour les opérations d'écriture.
+  FLock.Enter;
+  try
+    if FEnabled and FCache.TryGetValue(FileName, Result) then
+      Exit;
 
-  // Charger depuis le disque
-  if FileExists(FileName) then
-  begin
+    // Charger depuis le disque
+    if not FileExists(FileName) then
+      raise Exception.CreateFmt('Template non trouvé: %s', [FileName]);
+
     Result := TFile.ReadAllText(FileName, TEncoding.UTF8);
 
-    // Ajouter au cache
     if FEnabled then
       FCache.AddOrSetValue(FileName, Result);
-  end
-  else
-    raise Exception.CreateFmt('Template non trouvé: %s', [FileName]);
+  finally
+    FLock.Leave;
+  end;
 end;
 
 procedure TTemplateCache.Clear;  
 begin  
-  FCache.Clear;
+  FLock.Enter;
+  try
+    FCache.Clear;
+  finally
+    FLock.Leave;
+  end;
 end;
 
 initialization
@@ -879,7 +1008,7 @@ WebStencils est parfait pour générer des emails HTML personnalisés :
 **Template email (welcome.html) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <style>
@@ -951,8 +1080,12 @@ begin
     Stencil.Values['userName'] := UserName;
     Stencil.Values['userEmail'] := UserEmail;
     Stencil.Values['registrationDate'] := FormatDateTime('dd/mm/yyyy', Now);
+    // ⚠️ Encoder le token pour l'URL : caractères +, /, = (typiques en
+    //    base64) seraient mal interprétés par le navigateur sinon.
+    //    Unité requise : System.NetEncoding.
     Stencil.Values['activationLink'] :=
-      'https://monapp.com/activate?token=' + ActivationToken;
+      'https://monapp.com/activate?token=' +
+      TNetEncoding.URL.Encode(ActivationToken);
 
     HTMLContent := Stencil.Render;
   finally
@@ -963,11 +1096,18 @@ begin
   SMTP := TIdSMTP.Create(nil);
   Message := TIdMessage.Create(nil);
   try
-    // Configuration SMTP
+    // Configuration SMTP avec STARTTLS sur le port 587 (recommandé).
+    // ⚠️ Sur le port 587 sans IOHandler SSL, les identifiants partent
+    //    EN CLAIR sur le réseau. Toujours associer un TIdSSLIOHandlerSocketOpenSSL
+    //    et activer utUseExplicitTLS.
     SMTP.Host := 'smtp.example.com';
     SMTP.Port := 587;
+    SMTP.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(SMTP);
+    SMTP.UseTLS := utUseExplicitTLS;     // STARTTLS sur port 587
     SMTP.Username := 'noreply@monapp.com';
-    SMTP.Password := 'password';
+    // 🚨 NE JAMAIS hardcoder un mot de passe : charger depuis une variable
+    //    d'environnement ou un secret store (cf. avertissement JWT).
+    SMTP.Password := GetEnvironmentVariable('SMTP_PASSWORD');
 
     // Configuration du message
     Message.From.Address := 'noreply@monapp.com';
@@ -975,6 +1115,7 @@ begin
     Message.Recipients.Add.Address := UserEmail;
     Message.Subject := 'Bienvenue sur MonApp !';
     Message.ContentType := 'text/html';
+    Message.CharSet := 'utf-8';          // pour les accents
     Message.Body.Text := HTMLContent;
 
     SMTP.Connect;
@@ -1068,19 +1209,52 @@ begin
 end;
 
 procedure TI18n.LoadLanguage(const LanguageCode: string);  
-var  
+const  
+  // 🚨 Whitelist anti-path-traversal : sans cela, LanguageCode = '../../etc/passwd'
+  //    permettrait de lire un fichier arbitraire du disque.
+  ALLOWED_LANGS: array[0..3] of string = ('fr', 'en', 'es', 'de');
+var
   FileName: string;
   JSONText: string;
+  ParsedValue: TJSONValue;
   JSONObj: TJSONObject;
+  i: Integer;
+  Allowed: Boolean;
 begin
-  FileName := Format('i18n/%s.json', [LanguageCode]);
+  // Validation stricte du code de langue
+  Allowed := False;
+  for i := 0 to High(ALLOWED_LANGS) do
+    if SameText(LanguageCode, ALLOWED_LANGS[i]) then
+    begin
+      Allowed := True;
+      Break;
+    end;
+  if not Allowed then
+    raise Exception.CreateFmt('Code de langue non supporté : %s', [LanguageCode]);
+
+  // TPath.Combine = séparateur correct sur Windows comme sur Linux
+  FileName := TPath.Combine('i18n', LanguageCode + '.json');
 
   if not FTranslations.ContainsKey(LanguageCode) then
   begin
     if TFile.Exists(FileName) then
     begin
       JSONText := TFile.ReadAllText(FileName, TEncoding.UTF8);
-      JSONObj := TJSONObject.ParseJSONValue(JSONText) as TJSONObject;
+      // ⚠️ ParseJSONValue retourne nil si le JSON est invalide. Un `as
+      //    TJSONObject` direct masquerait l'erreur (nil propagé dans le
+      //    cache) ou déclencherait une EInvalidCast si la racine n'est
+      //    pas un objet (array, string, etc.). On vérifie explicitement
+      //    et on libère la valeur parsée si elle n'a pas le bon type.
+      ParsedValue := TJSONObject.ParseJSONValue(JSONText);
+      if not Assigned(ParsedValue) then
+        raise Exception.CreateFmt('JSON de traduction invalide : %s', [FileName]);
+      if not (ParsedValue is TJSONObject) then
+      begin
+        ParsedValue.Free;
+        raise Exception.CreateFmt(
+          'JSON de traduction doit être un objet (racine) : %s', [FileName]);
+      end;
+      JSONObj := TJSONObject(ParsedValue);
       FTranslations.Add(LanguageCode, JSONObj);
     end
     else
@@ -1125,14 +1299,47 @@ end.
 
 **Utilisation dans un contrôleur :**
 ```pascal
+// Helper pour extraire le code de langue principal du header Accept-Language.
+// Exemple : "fr-FR,fr;q=0.9,en;q=0.8" → "fr"
+function ParseAcceptLanguage(const AcceptLang, DefaultLang: string): string;  
+var  
+  P: Integer;
+begin
+  Result := Trim(AcceptLang);
+  if Result = '' then Exit(DefaultLang);
+
+  // Garder uniquement la première préférence (avant la virgule)
+  P := Pos(',', Result);
+  if P > 0 then
+    Result := Copy(Result, 1, P - 1);
+
+  // Couper la qualité éventuelle (« fr;q=0.9 » → « fr »)
+  P := Pos(';', Result);
+  if P > 0 then
+    Result := Copy(Result, 1, P - 1);
+
+  // Couper la sous-balise régionale (« fr-FR » → « fr ») si on ne supporte
+  // que les langues sans variante régionale.
+  P := Pos('-', Result);
+  if P > 0 then
+    Result := Copy(Result, 1, P - 1);
+
+  Result := LowerCase(Trim(Result));
+  if Result = '' then
+    Result := DefaultLang;
+end;
+
 var
   Stencil: TWebStencil;
   i18n: TI18n;
   UserLang: string;
   Params: TJSONObject;
 begin
-  // Détecter la langue de l'utilisateur
-  UserLang := Request.GetFieldByName('Accept-Language'); // ou depuis session
+  // ⚠️ Accept-Language est de la forme "fr-FR,fr;q=0.9,en;q=0.8" — il
+  //    faut PARSER avant de l'utiliser comme nom de fichier de traduction,
+  //    sinon LoadLanguage cherchera un fichier inexistant.
+  UserLang := ParseAcceptLanguage(
+    Request.GetFieldByName('Accept-Language'), 'fr');
 
   i18n := TI18n.Create;
   try
@@ -1147,11 +1354,16 @@ begin
       Stencil.Values['t_login'] := i18n.Translate('login');
       Stencil.Values['t_logout'] := i18n.Translate('logout');
 
-      // Avec paramètres
+      // Avec paramètres — Params est libéré APRÈS l'appel à Translate
       Params := TJSONObject.Create;
-      Params.AddPair('name', UserName);
-      Stencil.Values['t_hello'] := i18n.Translate('hello', Params);
+      try
+        Params.AddPair('name', UserName);
+        Stencil.Values['t_hello'] := i18n.Translate('hello', Params);
+      finally
+        Params.Free;  // ⚠️ Sans ce Free, fuite mémoire à chaque requête
+      end;
 
+      Response.ContentType := 'text/html; charset=utf-8';
       Response.Content := Stencil.Render;
     finally
       Stencil.Free;
@@ -1244,6 +1456,7 @@ Stencil.Values['isAuthenticated'] := TJSONBool.Create(True);
 procedure RenderClientPage(ClientID: Integer);  
 var  
   Client: TJSONObject;
+  Nom: string;
 begin
   Client := ClientModel.GetById(ClientID);
 
@@ -1255,8 +1468,9 @@ begin
     Exit;
   end;
 
-  // Valider les champs requis
-  if not Client.TryGetValue<string>('nom').IsEmpty then
+  // ⚠️ TryGetValue<T> retourne un BOOLEAN et remplit un OUT.
+  //    On extrait d'abord la valeur, puis on la valide.
+  if Client.TryGetValue<string>('nom', Nom) and (not Nom.IsEmpty) then
     RenderTemplate('client.html', Client)
   else
     RenderErrorPage('Données client invalides');

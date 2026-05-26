@@ -95,12 +95,17 @@ Une application web basée sur VCL utilise une approche similaire au développem
 
 ### UniGUI - Alternative commerciale
 
-**UniGUI** est une solution commerciale tierce qui offre :
+**UniGUI** (FMSoft, [unigui.com](https://www.unigui.com/)) est une
+solution commerciale tierce qui offre :
 
 - Framework similaire à IntraWeb mais plus moderne
-- Interface utilisateur plus riche (style ExtJS)
+- Interface utilisateur plus riche (basée sur **Ext JS** de Sencha)
 - Support AJAX intégré
 - Applications web responsive
+- Disponible en éditions Trial, Standard et Complete
+
+Souvent considéré comme une alternative haut de gamme à IntraWeb pour  
+les applications d'entreprise au look "RIA" (Rich Internet Application).  
 
 ## Comparaison VCL desktop vs VCL web
 
@@ -380,7 +385,10 @@ type
     function CreateMainForm: TComponent;
   end;
 
-// Usage
+// Usage — la directive WEB est un symbole à définir dans les options
+// du projet web (Project → Options → Building → Delphi Compiler →
+// Conditional defines : ajouter "WEB"). Ainsi, le même code source
+// compile en VCL (sans WEB défini) ou en web (avec WEB défini).
 var
   Factory: IFormFactory;
 begin
@@ -433,13 +441,84 @@ Image1.Picture.LoadFromFile(OpenDialog1.FileName);
 
 **En Web :** Upload nécessaire
 
+🚨 **Sécurité des uploads** : un upload non validé est l'une des
+vulnérabilités les plus dangereuses du web (RCE possible si un fichier  
+exécutable est uploadé puis appelé par URL). À l'arrivée d'un fichier,  
+TOUJOURS :  
+1. **Valider l'extension** ET le **type MIME** (jamais l'un sans l'autre)
+2. **Limiter la taille** (côté client ET côté serveur)
+3. **Renommer le fichier** avec un nom généré (GUID), ne pas garder le
+   nom utilisateur — évite le path traversal et les collisions
+4. **Stocker hors du répertoire web** ou désactiver l'exécution
+   (`<Directory>` Apache avec `Options -ExecCGI`)
+5. **Scanner antivirus** pour les uploads publics
+
 ```pascal
-// IntraWeb - Upload fichier
+uses
+  System.Classes, System.SysUtils, System.IOUtils;
+
+// Helper — TFile.GetSize n'existe PAS dans la RTL Delphi standard,
+// on l'écrit nous-mêmes via un TFileStream.
+function GetFileSizeSafe(const AFileName: string): Int64;  
+var  
+  FS: TFileStream;
+begin
+  FS := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+  try
+    Result := FS.Size;
+  finally
+    FS.Free;
+  end;
+end;
+
+// IntraWeb - Upload fichier (avec validations minimales)
 procedure TIWForm1.IWFileUpload1AsyncUpload(Sender: TObject;
   const AFileName: string);
+const
+  ALLOWED_EXT: array[0..3] of string = ('.png', '.jpg', '.jpeg', '.gif');
+  MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 Mo
+  // ⚠️ Hors du répertoire web !
+  // Windows  : 'C:\Uploads\'      Linux : '/var/uploads/'
+  // Idéalement charger depuis la conf : GetEnvironmentVariable('UPLOAD_DIR').
+  STORAGE_DIR = {$IFDEF MSWINDOWS} 'C:\Uploads\' {$ELSE} '/var/uploads/' {$ENDIF};
+var
+  Ext, SafeName, FinalPath: string;
+  FileSize: Int64;
+  i: Integer;
+  Allowed: Boolean;
 begin
-  // Le fichier est uploadé sur le serveur
-  IWImage1.Picture.LoadFromFile(AFileName);
+  // Vérifier l'extension (basé sur le nom uploadé, donc indicatif)
+  Ext := LowerCase(ExtractFileExt(AFileName));
+  Allowed := False;
+  for i := 0 to High(ALLOWED_EXT) do
+    if Ext = ALLOWED_EXT[i] then begin Allowed := True; Break; end;
+  if not Allowed then
+  begin
+    WebApplication.ShowMessage('Type de fichier non autorisé');
+    Exit;
+  end;
+
+  // Vérifier la taille
+  FileSize := GetFileSizeSafe(AFileName);
+  if FileSize > MAX_SIZE_BYTES then
+  begin
+    WebApplication.ShowMessage('Fichier trop volumineux (max 5 Mo)');
+    Exit;
+  end;
+
+  // Générer un nom de fichier sûr (GUID + extension validée)
+  SafeName := TGuid.NewGuid.ToString.Replace('{', '').Replace('}', '')
+              + Ext;
+  FinalPath := STORAGE_DIR + SafeName;
+
+  // Déplacer le fichier temporaire vers son emplacement final
+  // (TFile.Move = renommage atomique si même volume)
+  TFile.Move(AFileName, FinalPath);
+
+  // L'identifiant unique (SafeName) est à stocker en BDD pour
+  // retrouver le fichier — JAMAIS le nom original côté utilisateur
+  // (« contrat_2025.pdf » devient « 7a3f…ab9.pdf » sur disque).
+  IWImage1.Picture.LoadFromFile(FinalPath);
 end;
 ```
 
@@ -454,13 +533,25 @@ Printer.Canvas.TextOut(100, 100, 'Mon texte');
 Printer.EndDoc;  
 ```
 
-**En Web :** Génération PDF ou impression navigateur
+**En Web :** Génération PDF côté serveur, ou impression navigateur
+
+> 💡 **Solution la plus simple** : laisser le navigateur imprimer la page  
+> elle-même via `window.print()` (en JavaScript), avec une feuille de  
+> style `@media print` pour masquer la navigation. Ne nécessite aucune  
+> bibliothèque PDF.
+
+⚠️ `TPDFDocument` ci-dessous n'est **pas** un composant Delphi standard :
+c'est une classe générique utilisée ici à titre d'illustration. Pour  
+générer des PDF en Delphi, il faut une bibliothèque dédiée :  
+**FastReport**, **QuickReport**, **wPDF** (commercial), **mORMot 2**
+(unité `mormot.ui.pdf`, open source) ou la classe Delphi native
+**`TPdfDocument`** introduite via Skia4Delphi.
 
 ```pascal
-// IntraWeb - Générer un PDF
+// IntraWeb - Générer un PDF (pseudo-code avec une bibliothèque PDF)
 procedure TIWForm1.GenererPDF;  
 var  
-  PDF: TPDFDocument;
+  PDF: TPDFDocument; // bibliothèque tierce
 begin
   PDF := TPDFDocument.Create;
   try
@@ -468,7 +559,8 @@ begin
     PDF.Canvas.TextOut(100, 100, 'Mon texte');
     PDF.SaveToFile(WebApplication.ApplicationPath + 'rapport.pdf');
 
-    // Proposer le téléchargement
+    // Proposer le téléchargement (la méthode exacte dépend de la
+    // version d'IntraWeb ; voir TIWFile / WebApplication.SendFile…)
     WebApplication.SendFile('rapport.pdf');
   finally
     PDF.Free;
@@ -652,12 +744,14 @@ begin
     Exit;
   end;
 
-  // Échapper les entrées utilisateur
-  SafeValue := StringReplace(IWEdit1.Text, '''', '''''', [rfReplaceAll]);
-
-  // Utiliser des requêtes paramétrées
+  // 🚨 NE JAMAIS construire du SQL par concaténation avec échappement manuel
+  //    (StringReplace des quotes) : c'est fragile et insuffisant face aux
+  //    nombreuses variantes d'injection SQL.
+  //    ✅ Utiliser EXCLUSIVEMENT les requêtes paramétrées : FireDAC
+  //    s'occupe correctement de l'échappement selon le SGBD.
   Query.SQL.Text := 'SELECT * FROM users WHERE login = :login';
-  Query.ParamByName('login').AsString := SafeValue;
+  Query.ParamByName('login').AsString := IWEdit1.Text;
+  Query.Open;
 end;
 ```
 
@@ -669,13 +763,23 @@ Query.SQL.Text :=
   'SELECT id, nom, prenom FROM clients ' +
   'ORDER BY nom LIMIT 100';  // Pas de SELECT *
 
-// Pagination
+// Pagination (syntaxe MySQL / PostgreSQL / SQLite)
 Query.SQL.Text :=
   'SELECT * FROM clients ' +
+  'ORDER BY nom ' +                  // ⚠️ Toujours un ORDER BY avec LIMIT
   'LIMIT :limit OFFSET :offset';
 Query.ParamByName('limit').AsInteger := 50;  
 Query.ParamByName('offset').AsInteger := PageNumber * 50;  
 ```
+
+> ⚠️ **La syntaxe de pagination dépend du SGBD** :  
+> - **MySQL / PostgreSQL / SQLite** : `LIMIT n OFFSET k`  
+> - **SQL Server 2012+** et **Oracle 12c+** : `OFFSET k ROWS FETCH NEXT n ROWS ONLY`  
+>   (nécessite un `ORDER BY`)  
+> - **Firebird 3+** : `OFFSET k ROWS FETCH NEXT n ROWS ONLY` ou `ROWS k+1 TO k+n`  
+>  
+> Sans `ORDER BY` explicite, l'ordre des résultats n'est **pas garanti** et  
+> la pagination peut renvoyer plusieurs fois la même ligne.
 
 ## Conclusion
 

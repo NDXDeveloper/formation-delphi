@@ -55,9 +55,10 @@ Dans cette approche, votre application Delphi s'exécute sur un serveur et gén�
 - Modèle traditionnel client-serveur
 
 **Technologies Delphi :**
-- IntraWeb
-- WebBroker
-- Applications CGI/ISAPI
+- IntraWeb (composants visuels, modèle session/AJAX)
+- WebBroker (bas niveau, fondation historique)
+- **WebStencils** 🆕 (templates HTML inspirés de Razor, depuis Delphi 12.2)
+- Applications CGI/ISAPI (déploiement IIS/Apache)
 
 ### 2. Applications web côté client
 
@@ -70,8 +71,10 @@ Ici, votre code Delphi est transformé en JavaScript et s'exécute directement d
 - Architecture similaire aux applications JavaScript actuelles
 
 **Technologies Delphi :**
-- TMS Web Core
-- Smart Mobile Studio (anciennement)
+- **TMS Web Core** (TMS Software) — produit commercial, le standard actuel
+- **Pas2JS** (FPC/Lazarus) — compilateur Pascal → JavaScript open source
+- *Smart Mobile Studio* — produit historique d'Optimum Smart (Eric Grange) ;
+  développement quasi arrêté, ne plus choisir pour un nouveau projet
 
 ### 3. Services web et API REST
 
@@ -84,9 +87,11 @@ Cette approche consiste à créer des services web (backend) avec Delphi, qui co
 - Le frontend peut être créé avec n'importe quelle technologie
 
 **Technologies Delphi :**
-- RAD Server (EMS - Enterprise Mobility Services)
-- DataSnap
-- Frameworks tiers (Horse, MARS, etc.)
+- **RAD Server** (EMS - Enterprise Mobility Services) — solution Embarcadero
+- **DataSnap** — multi-tiers historique
+- **Horse** (open source) — minimaliste, syntaxe inspirée d'Express.js
+- **MARS Curiosity** (open source) — inspiré de JAX-RS/Jersey
+- **mORMot** (open source) — framework complet ORM + REST, très performant
 
 ### 4. Applications hybrides
 
@@ -145,7 +150,10 @@ Même si Delphi vous permet de les abstraire en grande partie, il est utile de c
 
 **HTTP (HyperText Transfer Protocol)**
 - Protocole de communication entre client et serveur
-- Méthodes : GET (récupérer), POST (envoyer), PUT (modifier), DELETE (supprimer)
+- Méthodes principales : **GET** (récupérer), **POST** (créer), **PUT**
+  (remplacer), **PATCH** (modifier partiellement), **DELETE** (supprimer)
+- Méthodes complémentaires : **HEAD** (en-têtes seulement), **OPTIONS**
+  (preflight CORS)
 - C'est le "langage" que parlent le navigateur et le serveur
 
 ### Architecture web moderne
@@ -184,7 +192,7 @@ Cette séparation offre plusieurs avantages :
 ### Côté serveur (IntraWeb, WebBroker)
 
 **Avantages :**
-- Code et logique métier protégés sur le serveur
+- Toute la logique applicative reste côté serveur (pas livrée au client)
 - Familier pour les développeurs VCL
 - Contrôle total de l'application
 - Pas de JavaScript à écrire
@@ -210,7 +218,8 @@ Cette séparation offre plusieurs avantages :
 - Excellente expérience utilisateur
 
 **Inconvénients :**
-- Code JavaScript visible (moins sécurisé)
+- Toute la logique applicative livrée au client : la sécurité doit
+  être assurée côté backend (validation, autorisations, secrets)
 - Nécessite un backend séparé pour les données
 - Courbe d'apprentissage pour les concepts web
 - Dépendance aux capacités du navigateur
@@ -221,7 +230,7 @@ Cette séparation offre plusieurs avantages :
 - Applications nécessitant réactivité
 - Progressive Web Apps (PWA)
 
-### Services REST (RAD Server, DataSnap)
+### Services REST (RAD Server, DataSnap, Horse, MARS, mORMot)
 
 **Avantages :**
 - Architecture moderne et flexible
@@ -264,9 +273,13 @@ Avec l'introduction d'IntraWeb et plus tard de DataSnap, Delphi a apporté sa ph
 Aujourd'hui, Delphi s'adapte aux standards web modernes :
 - **TMS Web Core** : Applications Single Page (SPA)
 - **RAD Server** : API REST natives
+- **WebStencils** 🆕 : moteur de templates côté serveur (Delphi 12.2 Athens
+  et 13 Florence), inspiré de Razor — voir section 23.9
+- **Frameworks REST tiers** : Horse, MARS Curiosity, mORMot — syntaxe
+  moderne, communauté active
 - **Support PWA** : Applications web progressives
-- **WebSockets** : Communication temps réel
-- Intégration avec frameworks JavaScript modernes
+- **WebSockets** : Communication temps réel (Indy, sgcWebSockets…)
+- Intégration avec frameworks JavaScript modernes (React, Vue, Angular)
 
 ## Choisir la bonne approche
 
@@ -278,9 +291,11 @@ Le choix de la technologie dépend de plusieurs facteurs :
    - Intranet d'entreprise → Côté serveur
    - Public large → Côté client ou hybride
 
-2. **Quels sont vos besoins de sécurité ?**
-   - Code ultra-protégé → Côté serveur
-   - Standard web → Côté client acceptable
+2. **Où vit la logique sensible ?**
+   - Calculs sensibles, secrets, règles métier confidentielles → garder
+     ces parties **côté serveur** (toute approche), exposées via API
+   - Logique d'affichage et d'interaction uniquement → côté client OK
+   - 💡 Ne JAMAIS protéger un secret par l'obscurité du code envoyé au client
 
 3. **Quel est votre budget d'hébergement ?**
    - Limité → Côté client (hébergement statique)
@@ -304,11 +319,13 @@ Le choix de la technologie dépend de plusieurs facteurs :
 |------------------|---------------------|
 | Migration VCL rapide | IntraWeb |
 | Application intranet | IntraWeb ou WebBroker |
-| Application web moderne | TMS Web Core |
+| Application web moderne (SPA) | TMS Web Core |
+| Sites multi-pages côté serveur (SEO) | **WebStencils** + WebBroker / Horse |
 | SaaS / Application publique | TMS Web Core + Services REST |
-| Backend pour mobile | RAD Server / DataSnap |
+| Backend pour mobile | RAD Server / DataSnap / Horse |
 | Tableau de bord temps réel | TMS Web Core + WebSockets |
-| API publique | RAD Server |
+| API publique légère | Horse / MARS Curiosity |
+| API publique d'entreprise | RAD Server |
 
 ## Prérequis techniques
 
@@ -335,9 +352,15 @@ Pour développer efficacement des applications web avec Delphi, il est utile (ma
 
 **Pour commencer le développement web avec Delphi, vous aurez besoin de :**
 
-1. **Delphi** (version récente recommandée)
-   - Community Edition acceptable pour débuter
-   - Professional ou supérieur pour IntraWeb inclus
+1. **Delphi** (version récente recommandée — 12.2 Athens minimum
+   pour WebStencils, 13 Florence pour les ajouts les plus récents)
+   - Community Edition acceptable pour débuter (usage non-commercial /
+     CA limité — voir les conditions Embarcadero à jour)
+   - Professional ou supérieur pour la plupart des composants web
+     (WebBroker, DataSnap, FireDAC)
+   - IntraWeb : la version *bundled* livrée avec Delphi est limitée ;
+     la version complète est éditée par **Atozed Software** et nécessite
+     une licence séparée
 
 2. **Navigateur web moderne**
    - Chrome, Firefox, Edge ou Safari
@@ -350,9 +373,12 @@ Pour développer efficacement des applications web avec Delphi, il est utile (ma
    - Serveur de développement intégré (IntraWeb)
 
 4. **Composants additionnels (optionnels)**
-   - IntraWeb (inclus ou standalone)
-   - TMS Web Core (licence commerciale)
-   - RAD Server (licence Enterprise)
+   - **WebBroker / WebStencils** : intégrés à Delphi (Pro/Ent/Arch)
+   - **IntraWeb** : version bundled limitée incluse, version complète via Atozed
+   - **TMS Web Core** : licence commerciale (TMS Software)
+   - **RAD Server** : licence Enterprise/Architect ou achat séparé
+   - **Horse**, **MARS Curiosity**, **mORMot** : frameworks REST tiers
+     open source (installation via GetIt ou GitHub)
 
 ## Structure de ce chapitre
 
@@ -406,4 +432,4 @@ Dans les sections qui suivent, nous allons explorer concrètement chacune de ces
 
 Prêt à faire le grand saut dans le web avec Delphi ? Commençons par découvrir IntraWeb et TMS Web Core dans la section suivante !
 
-⏭️ [Introduction à Intraweb et TMS Web Core](/23-conception-dapplications-web-avec-delphi/01-introduction-a-intraweb-et-tms-web-core.md)
+⏭️ [Introduction à IntraWeb et TMS Web Core](/23-conception-dapplications-web-avec-delphi/01-introduction-a-intraweb-et-tms-web-core.md)

@@ -1,6 +1,6 @@
 🔝 Retour au [Sommaire](/SOMMAIRE.md)
 
-# 23.1 Introduction à Intraweb et TMS Web Core
+# 23.1 Introduction à IntraWeb et TMS Web Core
 
 ## Introduction
 
@@ -30,7 +30,7 @@ IntraWeb adopte une approche **côté serveur** du développement web. Voici ce 
 - Réutilisation des connaissances VCL existantes
 
 **Pour l'architecture :**
-- Code métier sécurisé (reste sur le serveur)
+- Logique métier sur le serveur (pas envoyée au navigateur)
 - Gestion automatique des sessions utilisateur
 - Support des applications multi-utilisateurs
 - Déploiement centralisé
@@ -130,7 +130,8 @@ Lorsque vous compilez avec TMS Web Core :
 3. Le JavaScript généré s'exécute dans le navigateur
 4. L'application fonctionne comme une application web moderne
 
-**Exemple conceptuel :**
+**Exemple conceptuel** (illustration simplifiée — le code JavaScript
+réel est plus verbeux, avec gestion des classes, du RTTI et du runtime) :
 ```pascal
 // Votre code Pascal
 procedure TForm1.Button1Click(Sender: TObject);  
@@ -139,9 +140,9 @@ begin
 end;
 ```
 
-Devient approximativement :
+Devient *approximativement* :
 ```javascript
-// JavaScript généré
+// JavaScript généré (forme stylisée)
 function TForm1_Button1Click(Sender) {
   alert('Bonjour !');
 }
@@ -168,20 +169,30 @@ TMS Web Core offre des composants web natifs :
 | **Langage final** | Reste en Pascal | Transcompilé en JavaScript |
 | **Hébergement** | Nécessite serveur Delphi | Simple serveur web (Apache, nginx) |
 | **Performance réseau** | Plus d'échanges serveur | Application locale dans navigateur |
-| **Sécurité code** | Code protégé sur serveur | JavaScript visible |
+| **Logique métier** | Sur le serveur (non livrée au client) | Livrée en JS au client (toute logique sensible doit rester côté serveur via API) |
 | **Hors ligne** | Non possible | Possible (avec PWA) |
 | **Coût hébergement** | Plus élevé (serveur applicatif) | Minimal (fichiers statiques) |
 | **Scalabilité** | Limitée par ressources serveur | Excellente (charge sur clients) |
+| **Packaging desktop/mobile** | N/A | Possible via Electron / Cordova / Capacitor |
+
+> 💡 **À propos de la « sécurité »** : avec TMS Web Core, le JavaScript  
+> généré reste lisible côté client (comme tout site SPA — React, Vue,  
+> Angular). Cela n'est pas un défaut en soi ; le principe est simplement  
+> que toute logique sensible (validation métier, accès BDD, secrets,  
+> règles de prix…) doit vivre **côté serveur** dans l'API REST, jamais  
+> dans le code envoyé au navigateur. C'est l'**OWASP A04:2021 — Insecure  
+> Design** : ne jamais faire confiance au client.
 
 ### Quand utiliser IntraWeb ?
 
 IntraWeb est idéal quand :
 
-- Vous devez protéger votre code métier
+- Vous voulez écrire **toute** la logique d'application (UI + métier)
+  côté serveur, sans coder en JavaScript
 - Vous avez une application intranet d'entreprise
-- Vous voulez un contrôle total côté serveur
-- Vous migrez une application VCL existante
-- Les utilisateurs ont une bonne connexion réseau
+- Vous migrez une application VCL existante avec peu d'adaptations
+- Les utilisateurs ont une bonne connexion réseau (les allers-retours
+  serveur sont plus fréquents qu'avec une SPA)
 - Vous préférez l'approche traditionnelle serveur
 
 ### Quand utiliser TMS Web Core ?
@@ -212,16 +223,24 @@ Cette architecture moderne sépare clairement :
 
 ### IntraWeb
 
-- Inclus dans certaines éditions de Delphi (Professional et supérieures)
-- Installation via GetIt Package Manager
-- Disponible aussi en version standalone payante
+- Édité par **Atozed Software** (créé par Chad Z. Hower, ~1999-2000),
+  utilisé en production depuis le début des années 2000
+- **Version *bundled*** (« IntraWeb Standard ») livrée avec Delphi
+  (Professional et supérieures), installation via le **GetIt Package
+  Manager** ; restrictions sur le nombre de composants et de sessions
+- **Version complète** (« IntraWeb Ultimate ») : licence commerciale
+  séparée chez Atozed — déverrouille mode ISAPI multi-applications,
+  composants HTML5 avancés, support étendu
 
 ### TMS Web Core
 
-- Produit commercial de TMS Software
-- Version d'essai disponible
+- Produit commercial de **TMS Software** (Belgique)
+- Sous le capot, compile Object Pascal vers JavaScript via une chaîne
+  d'outils dérivée de **Pas2JS** (open source, Free Pascal)
+- Version d'essai disponible (~30 jours)
 - Installation via installer dédié
-- Nécessite une licence pour production
+- Nécessite une licence commerciale pour la production
+- Compatible Delphi Community, Professional, Enterprise, Architect
 
 ## Écosystème et support
 

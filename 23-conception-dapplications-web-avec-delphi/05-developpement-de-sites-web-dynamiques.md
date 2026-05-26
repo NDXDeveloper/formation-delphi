@@ -54,6 +54,8 @@ Requête → Application Delphi → Génération HTML → Navigateur
 La méthode la plus simple : construire le HTML avec des chaînes de caractères.
 
 ```pascal
+uses System.NetEncoding;
+
 procedure TWebModule1.ActionHomeAction(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
 var
@@ -65,19 +67,23 @@ begin
   if UserName = '' then
     UserName := 'Invité';
 
-  // Construire la page HTML
+  // ⚠️ UserName vient de la session, donc indirectement de la saisie
+  //    utilisateur. Même dans un exemple « simple », il faut prendre
+  //    l'habitude d'ÉCHAPPER avant injection HTML — l'apprenant qui
+  //    copie ce pattern n'oubliera pas en production.
   HTML := '<!DOCTYPE html>' + #13#10 +
-          '<html>' + #13#10 +
+          '<html lang="fr">' + #13#10 +
           '<head>' + #13#10 +
           '  <title>Accueil</title>' + #13#10 +
           '  <meta charset="utf-8">' + #13#10 +
           '</head>' + #13#10 +
           '<body>' + #13#10 +
-          '  <h1>Bienvenue, ' + UserName + ' !</h1>' + #13#10 +
+          '  <h1>Bienvenue, ' + TNetEncoding.HTML.Encode(UserName) + ' !</h1>' + #13#10 +
           '  <p>Il est actuellement ' + TimeToStr(Now) + '</p>' + #13#10 +
           '</body>' + #13#10 +
           '</html>';
 
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := HTML;
   Handled := True;
 end;
@@ -108,7 +114,7 @@ begin
   try
     // En-tête HTML
     Builder.AppendLine('<!DOCTYPE html>');
-    Builder.AppendLine('<html>');
+    Builder.AppendLine('<html lang="fr">');
     Builder.AppendLine('<head>');
     Builder.AppendLine('  <title>Liste des clients</title>');
     Builder.AppendLine('  <meta charset="utf-8">');
@@ -139,14 +145,20 @@ begin
 
       while not Query.Eof do
       begin
+        // ⚠️ Échapper les chaînes BDD avant injection HTML (anti-XSS
+        //    stocké) — voir la section « Bonnes pratiques » plus bas
+        //    pour les détails sur HTMLEncode / TNetEncoding.HTML.Encode.
         Builder.AppendLine('    <tr>');
         Builder.AppendFormat('      <td>%d</td>', [Query.FieldByName('id').AsInteger]);
         Builder.AppendLine;
-        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('nom').AsString]);
+        Builder.AppendFormat('      <td>%s</td>',
+          [TNetEncoding.HTML.Encode(Query.FieldByName('nom').AsString)]);
         Builder.AppendLine;
-        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('prenom').AsString]);
+        Builder.AppendFormat('      <td>%s</td>',
+          [TNetEncoding.HTML.Encode(Query.FieldByName('prenom').AsString)]);
         Builder.AppendLine;
-        Builder.AppendFormat('      <td>%s</td>', [Query.FieldByName('email').AsString]);
+        Builder.AppendFormat('      <td>%s</td>',
+          [TNetEncoding.HTML.Encode(Query.FieldByName('email').AsString)]);
         Builder.AppendLine;
         Builder.AppendLine('    </tr>');
         Query.Next;
@@ -159,6 +171,10 @@ begin
     Builder.AppendLine('</body>');
     Builder.AppendLine('</html>');
 
+    // Bien préciser charset=utf-8 au niveau HTTP (le meta dans le <head>
+    // est un fallback : certains parseurs anciens ne lisent que le header
+    // Content-Type pour décider de l'encodage).
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := Builder.ToString;
   finally
     Builder.Free;
@@ -191,10 +207,10 @@ MonProjet/
 **Template HTML (clients.html) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <title>{{TITLE}}</title>
   <meta charset="utf-8">
+  <title>{{TITLE}}</title>
   <style>
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ddd; padding: 8px; }
@@ -227,7 +243,8 @@ unit TemplateEngine;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections;
+  System.SysUtils, System.Classes, System.IOUtils,
+  System.Generics.Collections;
 
 type
   TTemplateEngine = class
@@ -311,7 +328,12 @@ begin
     // Charger le template
     HTML := Template.LoadTemplate('clients.html');
 
-    // Générer les lignes de la table
+    // Générer les lignes de la table.
+    // ⚠️ TOUJOURS échapper les valeurs venant de la BDD avant de les
+    //    injecter dans du HTML : un client malveillant pourrait avoir
+    //    un nom contenant <script>... (XSS stocké).
+    //    On utilise TNetEncoding.HTML.Encode (System.NetEncoding) ou
+    //    la fonction HTMLEncode présentée plus bas dans ce fichier.
     ClientRows := '';
     Query := TFDQuery.Create(nil);
     try
@@ -323,9 +345,9 @@ begin
       begin
         ClientRows := ClientRows + '<tr>' +
           Format('<td>%d</td>', [Query.FieldByName('id').AsInteger]) +
-          Format('<td>%s</td>', [Query.FieldByName('nom').AsString]) +
-          Format('<td>%s</td>', [Query.FieldByName('prenom').AsString]) +
-          Format('<td>%s</td>', [Query.FieldByName('email').AsString]) +
+          Format('<td>%s</td>', [TNetEncoding.HTML.Encode(Query.FieldByName('nom').AsString)]) +
+          Format('<td>%s</td>', [TNetEncoding.HTML.Encode(Query.FieldByName('prenom').AsString)]) +
+          Format('<td>%s</td>', [TNetEncoding.HTML.Encode(Query.FieldByName('email').AsString)]) +
           '</tr>' + #13#10;
         Query.Next;
       end;
@@ -343,6 +365,7 @@ begin
     // Remplacer les variables
     HTML := Template.ReplaceVariables(HTML, Variables);
 
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := HTML;
   finally
     Variables.Free;
@@ -372,8 +395,9 @@ Via GetIt Package Manager : "Delphi MVC Framework" (inclut support Mustache)
 **Template Mustache (clients.mustache) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>{{title}}</title>
 </head>
 <body>
@@ -400,9 +424,15 @@ Via GetIt Package Manager : "Delphi MVC Framework" (inclut support Mustache)
 ```
 
 **Code Delphi avec Mustache :**
+
+> 💡 L'exemple ci-dessous utilise la syntaxe **mORMot 1** (unités  
+> `SynMustache` / `SynCommons`, type `RawUTF8`). Pour **mORMot 2** (2021+),  
+> les unités ont été réorganisées : `SynMustache` → `mormot.core.mustache`,  
+> et le type devient `RawUtf8` (orthographe modifiée).
+
 ```pascal
 uses
-  SynMustache, SynCommons;
+  SynMustache, SynCommons;   // mORMot 1 — pour mORMot 2 : mormot.core.mustache
 
 procedure TWebModule1.RenderMustacheTemplate;  
 var  
@@ -427,6 +457,7 @@ begin
   // Rendre le template
   HTML := TSynMustache.Parse(Template).Render(Data);
 
+  Response.ContentType := 'text/html; charset=utf-8';
   Response.Content := UTF8ToString(HTML);
 end;
 ```
@@ -436,8 +467,9 @@ end;
 **Template avancé (dashboard.html) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>{{SITE_NAME}} - Tableau de bord</title>
   <style>
     .alert { padding: 10px; margin: 10px 0; border-radius: 4px; }
@@ -527,6 +559,7 @@ begin
     Variables.Add('RECENT_ACTIONS', RecentActions);
 
     HTML := Template.ReplaceVariables(HTML, Variables);
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := HTML;
   finally
     Variables.Free;
@@ -553,8 +586,11 @@ begin
 
       while not Query.Eof do
       begin
+        // ⚠️ `action` est une valeur BDD — éventuellement contrôlée par
+        //    l'utilisateur lors d'une saisie précédente. On l'échappe
+        //    avant injection HTML (anti-XSS stocké).
         Builder.AppendFormat('<li>%s - %s</li>',
-          [Query.FieldByName('action').AsString,
+          [TNetEncoding.HTML.Encode(Query.FieldByName('action').AsString),
            DateTimeToStr(Query.FieldByName('date_action').AsDateTime)]);
         Builder.AppendLine;
         Query.Next;
@@ -605,13 +641,18 @@ end;
 ```html
   </main>
   <footer>
-    <p>&copy; 2025 MonApp - Tous droits réservés</p>
+    <p>&copy; {{YEAR}} MonApp - Tous droits réservés</p>
     <p>Version {{APP_VERSION}}</p>
   </footer>
   <script src="/js/app.js"></script>
 </body>
 </html>
 ```
+
+> 💡 Préférer une variable `{{YEAR}}` plutôt qu'une année en dur — sinon  
+> le footer affichera toujours l'année où le template a été écrit, ce  
+> qui finit par paraître négligé. Côté Delphi :  
+> `Variables.Add('YEAR', IntToStr(YearOf(Now)));` (unité `System.DateUtils`).
 
 **page-clients.html :**
 ```html
@@ -658,6 +699,7 @@ begin
     // Assembler la page complète
     HTML := Template.ReplaceVariables(Content, Variables);
 
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := HTML;
   finally
     Template.Free;
@@ -690,6 +732,15 @@ end;
 
 ### Affichage d'un formulaire
 
+> 🚨 **Protection CSRF** : tout formulaire `POST/PUT/DELETE` modifiant  
+> des données doit inclure un **jeton anti-CSRF** unique par session  
+> (champ caché ou header `X-CSRF-Token`). Sans cela, un site malveillant  
+> peut soumettre des requêtes au nom d'un utilisateur authentifié  
+> (faille **OWASP A01:2021 — Broken Access Control**). Pour une API REST  
+> stateless avec JWT en header `Authorization`, le risque est moindre  
+> (l'attaquant ne peut pas lire le token depuis un autre origin) ; mais  
+> si le token est dans un cookie, il **faut** CSRF.
+
 **form-client.html :**
 ```html
 <h2>{{FORM_TITLE}}</h2>
@@ -698,6 +749,7 @@ end;
 
 <form action="/clients/save" method="POST">
   <input type="hidden" name="id" value="{{CLIENT_ID}}">
+  <input type="hidden" name="csrf_token" value="{{CSRF_TOKEN}}">
 
   <div class="form-group">
     <label for="nom">Nom :</label>
@@ -751,12 +803,15 @@ begin
 
         if not Query.IsEmpty then
         begin
+          // Même règle qu'à la réinjection : on échappe les valeurs venues
+          // de la BDD (un attaquant aurait pu insérer du HTML dans un nom
+          // via un POST précédent → XSS stocké à l'affichage du form).
           Variables.Add('FORM_TITLE', 'Modifier un client');
           Variables.Add('CLIENT_ID', IntToStr(ClientID));
-          Variables.Add('NOM', Query.FieldByName('nom').AsString);
-          Variables.Add('PRENOM', Query.FieldByName('prenom').AsString);
-          Variables.Add('EMAIL', Query.FieldByName('email').AsString);
-          Variables.Add('TELEPHONE', Query.FieldByName('telephone').AsString);
+          Variables.Add('NOM', TNetEncoding.HTML.Encode(Query.FieldByName('nom').AsString));
+          Variables.Add('PRENOM', TNetEncoding.HTML.Encode(Query.FieldByName('prenom').AsString));
+          Variables.Add('EMAIL', TNetEncoding.HTML.Encode(Query.FieldByName('email').AsString));
+          Variables.Add('TELEPHONE', TNetEncoding.HTML.Encode(Query.FieldByName('telephone').AsString));
           Variables.Add('BUTTON_TEXT', 'Modifier');
         end;
       finally
@@ -778,6 +833,10 @@ begin
     Variables.Add('ERROR_MESSAGE', '');
     Variables.Add('PAGE_TITLE', 'Gestion client');
     Variables.Add('USER_NAME', GetCurrentUser);
+    // 💡 Jeton CSRF par session — voir l'avertissement CSRF plus haut.
+    //    GenerateCSRFToken devrait stocker ce jeton en session pour le
+    //    re-vérifier dans ActionClientSaveAction (input hidden vs session).
+    Variables.Add('CSRF_TOKEN', GenerateCSRFToken);
 
     RenderPageWithLayout('form-client.html', Variables);
   finally
@@ -795,6 +854,17 @@ var
   Query: TFDQuery;
   Variables: TDictionary<string, string>;
 begin
+  // 🚨 Vérification CSRF : le jeton du formulaire DOIT correspondre à
+  //    celui stocké en session, sinon on rejette la requête (403).
+  if not VerifyCSRFToken(Request.ContentFields.Values['csrf_token']) then
+  begin
+    Response.StatusCode := 403;
+    Response.ContentType := 'text/plain; charset=utf-8';
+    Response.Content := 'Jeton CSRF invalide ou expiré.';
+    Handled := True;
+    Exit;
+  end;
+
   // Récupérer les données du formulaire
   ClientID := StrToIntDef(Request.ContentFields.Values['id'], 0);
   Nom := Trim(Request.ContentFields.Values['nom']);
@@ -805,20 +875,26 @@ begin
   // Validation
   if (Nom = '') or (Prenom = '') or (Email = '') then
   begin
-    // Erreur : ré-afficher le formulaire avec message
+    // Erreur : ré-afficher le formulaire avec message.
+    // ⚠️ Les valeurs Nom/Prenom/Email/Telephone viennent de l'utilisateur
+    //    et sont réinjectées dans le HTML — il faut les ÉCHAPPER pour
+    //    éviter le XSS reflété (un attaquant qui poste un champ contenant
+    //    <script>… verrait son script exécuté chez la victime à qui il
+    //    enverrait un lien pré-rempli).
     Variables := TDictionary<string, string>.Create;
     try
       Variables.Add('ERROR_MESSAGE',
         '<div class="alert alert-danger">Veuillez remplir tous les champs obligatoires.</div>');
       Variables.Add('FORM_TITLE', 'Modifier un client');
       Variables.Add('CLIENT_ID', IntToStr(ClientID));
-      Variables.Add('NOM', Nom);
-      Variables.Add('PRENOM', Prenom);
-      Variables.Add('EMAIL', Email);
-      Variables.Add('TELEPHONE', Telephone);
+      Variables.Add('NOM', TNetEncoding.HTML.Encode(Nom));
+      Variables.Add('PRENOM', TNetEncoding.HTML.Encode(Prenom));
+      Variables.Add('EMAIL', TNetEncoding.HTML.Encode(Email));
+      Variables.Add('TELEPHONE', TNetEncoding.HTML.Encode(Telephone));
       Variables.Add('BUTTON_TEXT', 'Modifier');
       Variables.Add('PAGE_TITLE', 'Gestion client');
       Variables.Add('USER_NAME', GetCurrentUser);
+      Variables.Add('CSRF_TOKEN', GenerateCSRFToken);  // Nouveau jeton pour ré-affichage
 
       RenderPageWithLayout('form-client.html', Variables);
     finally
@@ -859,10 +935,15 @@ begin
     Query.Free;
   end;
 
-  // Redirection vers la liste
-  Response.StatusCode := 302; // Redirect
+  // Redirection vers la liste — pattern « Post-Redirect-Get » (PRG).
+  // 💡 303 See Other (au lieu de 302) garantit que le client suivra
+  //    avec un GET, même s'il a envoyé un POST. C'est la sémantique
+  //    HTTP correcte pour PRG (RFC 9110, §15.4.4).
+  Response.StatusCode := 303;
   Response.Location := '/clients';
-  Response.Content := '<html><body>Redirection...</body></html>';
+  Response.ContentType := 'text/html; charset=utf-8';
+  Response.Content := '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">' +
+    '</head><body>Redirection vers <a href="/clients">/clients</a>…</body></html>';
 
   Handled := True;
 end;
@@ -873,6 +954,9 @@ end;
 ```pascal
 procedure TWebModule1.ActionClientsWithPagination(Sender: TObject;
   Request: TWebRequest; Response: TWebResponse; var Handled: Boolean);
+const
+  DEFAULT_PAGE_SIZE = 20;
+  MAX_PAGE_SIZE     = 100;   // ⚠️ Borne anti-DoS : sinon ?pageSize=999999
 var
   Query: TFDQuery;
   Variables: TDictionary<string, string>;
@@ -881,9 +965,14 @@ var
   PaginationHTML: string;
   i: Integer;
 begin
-  // Paramètres de pagination
+  // Paramètres de pagination — toujours borner les entiers reçus du client.
   Page := StrToIntDef(Request.QueryFields.Values['page'], 1);
-  PageSize := 20; // 20 clients par page
+  if Page < 1 then Page := 1;
+
+  PageSize := StrToIntDef(Request.QueryFields.Values['pageSize'], DEFAULT_PAGE_SIZE);
+  if PageSize < 1 then PageSize := DEFAULT_PAGE_SIZE;
+  if PageSize > MAX_PAGE_SIZE then PageSize := MAX_PAGE_SIZE;
+
   Offset := (Page - 1) * PageSize;
 
   Variables := TDictionary<string, string>.Create;
@@ -1033,7 +1122,10 @@ begin
       // Générer le tableau des résultats
       Variables.Add('CLIENTS_TABLE', GenerateClientsTableFromQuery(Query));
       Variables.Add('RESULTS_COUNT', IntToStr(Query.RecordCount));
-      Variables.Add('SEARCH_QUERY', SearchQuery);
+      // ⚠️ SearchQuery est réinjecté dans la value du <input> :
+      //    sans échappement, `" autofocus onfocus="alert(1)` casse
+      //    l'attribut et exécute du JS (XSS reflété).
+      Variables.Add('SEARCH_QUERY', TNetEncoding.HTML.Encode(SearchQuery));
 
       // Marquer le filtre sélectionné
       Variables.Add('FILTER_ALL', IfThen(FilterType = 'all', 'selected', ''));
@@ -1060,10 +1152,13 @@ end;
 Pour améliorer les performances, mettre en cache les templates chargés :
 
 ```pascal
+uses System.SyncObjs;
+
 type
   TTemplateCache = class
   private
     FCache: TDictionary<string, string>;
+    FLock: TCriticalSection;  // ⚠️ Indispensable en multi-thread
     FCacheEnabled: Boolean;
   public
     constructor Create;
@@ -1078,12 +1173,14 @@ implementation
 constructor TTemplateCache.Create;  
 begin  
   FCache := TDictionary<string, string>.Create;
+  FLock := TCriticalSection.Create;
   FCacheEnabled := True;
 end;
 
 destructor TTemplateCache.Destroy;  
 begin  
   FCache.Free;
+  FLock.Free;
   inherited;
 end;
 
@@ -1093,24 +1190,31 @@ var
 begin
   FullPath := TPath.Combine('Templates', FileName);
 
-  // Vérifier le cache
-  if FCacheEnabled and FCache.ContainsKey(FullPath) then
-  begin
-    Result := FCache[FullPath];
-    Exit;
+  // ⚠️ Sans verrou, deux threads HTTP simultanés peuvent provoquer une
+  //    EAccessViolation aléatoire (TDictionary n'est pas thread-safe).
+  FLock.Enter;
+  try
+    if FCacheEnabled and FCache.TryGetValue(FullPath, Result) then
+      Exit;
+
+    // Charger depuis le disque (en UTF-8 pour préserver les accents)
+    Result := TFile.ReadAllText(FullPath, TEncoding.UTF8);
+
+    if FCacheEnabled then
+      FCache.AddOrSetValue(FullPath, Result);
+  finally
+    FLock.Leave;
   end;
-
-  // Charger depuis le disque
-  Result := TFile.ReadAllText(FullPath, TEncoding.UTF8);
-
-  // Ajouter au cache
-  if FCacheEnabled then
-    FCache.AddOrSetValue(FullPath, Result);
 end;
 
 procedure TTemplateCache.Clear;  
 begin  
-  FCache.Clear;
+  FLock.Enter;
+  try
+    FCache.Clear;
+  finally
+    FLock.Leave;
+  end;
 end;
 
 // Variable globale
@@ -1131,11 +1235,29 @@ finalization
 
 ### 1. Échapper les caractères HTML
 
-**Toujours échapper les données utilisateur pour éviter XSS :**
+**Toujours échapper les données utilisateur pour éviter XSS** (Cross-Site
+Scripting) — un attaquant qui injecte `<script>alert('hack')</script>`  
+dans un champ de saisie verra son script exécuté chez les autres  
+utilisateurs si on ne l'échappe pas.  
+
+💡 **Astuce** : Delphi moderne fournit déjà une fonction d'encodage
+HTML dans `System.NetEncoding` :
+```pascal
+uses System.NetEncoding;
+
+Variables.Add('USER_INPUT',
+  TNetEncoding.HTML.Encode(Request.ContentFields.Values['comment']));
+```
+
+Pour les versions plus anciennes, ou pour comprendre l'opération,  
+voici une implémentation manuelle :  
 
 ```pascal
 function HTMLEncode(const Text: string): string;  
 begin  
+  // ⚠️ L'ORDRE est crucial : remplacer '&' EN PREMIER, sinon les
+  //    entités créées ensuite (&lt; etc.) seraient ré-échappées en
+  //    &amp;lt; — affichage incorrect.
   Result := Text;
   Result := StringReplace(Result, '&', '&amp;', [rfReplaceAll]);
   Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
@@ -1192,8 +1314,9 @@ end;
 **error.html :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>Erreur - {{ERROR_CODE}}</title>
   <style>
     .error-container {
@@ -1230,13 +1353,17 @@ begin
   Template := TTemplateEngine.Create('Templates');
   try
     Variables.Add('ERROR_CODE', IntToStr(ErrorCode));
-    Variables.Add('ERROR_TITLE', Title);
-    Variables.Add('ERROR_MESSAGE', Message);
+    // ⚠️ Title/Message viennent potentiellement d'un Exception.Message
+    //    — qui peut contenir des caractères HTML — donc on échappe
+    //    AVANT injection dans le template.
+    Variables.Add('ERROR_TITLE', TNetEncoding.HTML.Encode(Title));
+    Variables.Add('ERROR_MESSAGE', TNetEncoding.HTML.Encode(Message));
 
     HTML := Template.LoadTemplate('error.html');
     HTML := Template.ReplaceVariables(HTML, Variables);
 
     Response.StatusCode := ErrorCode;
+    Response.ContentType := 'text/html; charset=utf-8';
     Response.Content := HTML;
   finally
     Template.Free;
@@ -1250,7 +1377,15 @@ try
   ProcessRequest;
 except
   on E: Exception do
-    ShowError(Response, 500, 'Erreur serveur', E.Message);
+  begin
+    // ⚠️ NE PAS exposer E.Message brut à l'utilisateur final en production :
+    //    fuite d'info (structure SQL, chemin disque, version BDD) qui
+    //    aide un attaquant. Logger en interne, afficher un message
+    //    générique à l'utilisateur.
+    LogError(E.ClassName + ': ' + E.Message);  // côté serveur uniquement
+    ShowError(Response, 500, 'Erreur serveur',
+      'Une erreur interne est survenue. Notre équipe a été notifiée.');
+  end;
 end;
 ```
 

@@ -8,7 +8,15 @@
 
 Dans cette section, nous allons explorer ce qu'est WebAssembly, pourquoi c'est important, et comment cela s'intègre (ou pourrait s'intégrer) avec l'écosystème Delphi.
 
-**Note importante :** À ce jour (2025), Delphi ne compile pas nativement en WebAssembly. Cependant, comprendre cette technologie est essentiel car elle représente l'avenir du développement web haute performance, et Embarcadero pourrait l'intégrer dans les futures versions.
+**Note importante :** À ce jour (2026, RAD Studio 13.1 Florence), Delphi
+ne compile **pas** nativement en WebAssembly. Le compilateur Delphi a  
+récemment ajouté Windows-on-ARM via LLVM (13.1, mars 2026), ce qui  
+prépare techniquement le terrain pour d'autres cibles LLVM dont WASM,  
+mais aucune annonce officielle n'a été faite. Comprendre cette  
+technologie reste essentiel car elle représente l'avenir du développement  
+web haute performance, et Embarcadero pourrait l'intégrer dans les  
+futures versions. **Alternative existante** : le langage *Oxygene* de  
+RemObjects (syntaxe Object Pascal compatible) compile vers WebAssembly.  
 
 ## Qu'est-ce que WebAssembly ?
 
@@ -127,6 +135,9 @@ Contrairement à JavaScript, WebAssembly n'est lié à aucun langage source :
 ┌─────────────┐  │
 │  C# (Blazor)│──┤
 └─────────────┘  │
+┌─────────────┐  │   Pascal :
+│   Oxygene   │──┤   → Oxygene (RemObjects) compile déjà
+└─────────────┘  │   → Delphi pas encore officiellement (espéré)
 ┌─────────────┐  │
 │  (Delphi?)  │──┘
 └─────────────┘
@@ -171,17 +182,29 @@ Un fichier `.wasm` contient :
 **Charger et utiliser un module WebAssembly en JavaScript :**
 
 ```javascript
-// Charger le fichier WASM
+// Approche moderne (recommandée) : streaming compilation.
+// Compile le module PENDANT le téléchargement → plus rapide qu'attendre
+// la fin du fetch puis tout compiler. Nécessite que le serveur envoie
+// le bon Content-Type : application/wasm
+WebAssembly.instantiateStreaming(fetch('module.wasm'))
+  .then(results => {
+    const instance = results.instance;
+    const result = instance.exports.add(5, 10);
+    console.log('Résultat:', result); // 15
+  })
+  .catch(err => console.error('Erreur WASM :', err));
+
+// Approche classique (fallback si le serveur ne renvoie pas
+// application/wasm — fréquent sur les hébergeurs statiques) :
 fetch('module.wasm')
   .then(response => response.arrayBuffer())
   .then(bytes => WebAssembly.instantiate(bytes))
   .then(results => {
     const instance = results.instance;
-
-    // Appeler une fonction exportée
     const result = instance.exports.add(5, 10);
-    console.log('Résultat:', result); // 15
-  });
+    console.log('Résultat:', result);
+  })
+  .catch(err => console.error('Erreur WASM :', err));
 ```
 
 ### Communication bidirectionnelle
@@ -253,11 +276,15 @@ const wasmImports = {
 
 ## État actuel : Delphi et WebAssembly
 
-### Situation en 2025
+### Situation en 2026 (RAD Studio 13.1 Florence)
 
 **Compilation native Delphi → WebAssembly :** ❌ **Pas disponible officiellement**
 
-Embarcadero n'a pas encore publié de compilateur Delphi vers WebAssembly. Cependant, plusieurs solutions existent ou sont en développement :
+Embarcadero n'a pas encore publié de compilateur Delphi vers WebAssembly.  
+La transition partielle du compilateur vers **LLVM** (utilisé pour la  
+nouvelle cible Windows-on-ARM en 13.1) rend une cible WASM techniquement  
+plus accessible qu'auparavant, sans qu'aucune feuille de route publique  
+ne le confirme. Plusieurs solutions existent ou sont en développement :  
 
 ### 1. TMS Web Core (JavaScript, pas WASM)
 
@@ -282,19 +309,25 @@ Code Delphi (Pascal)
 - Performance JavaScript (pas WASM)
 - Pas d'accès au code natif Delphi
 
-### 2. Projets communautaires
+### 2. Projets communautaires et alternatives
 
-Quelques projets tentent de créer des ponts :
+**A. Oxygene (RemObjects)** ⭐ — la voie la plus aboutie aujourd'hui
+- Langage Object Pascal **compatible Delphi** (avec extensions)
+- Compile nativement vers WebAssembly (entre autres cibles : JVM, .NET, Cocoa…)
+- Produit commercial mais utilisable par les développeurs Delphi
+  habituels avec une courbe d'apprentissage faible
 
-**A. Pas2JS → WASM**
-- Compilateur Pascal open-source
+**B. Pas2JS → WASM**
+- Compilateur Pascal open source (Free Pascal)
 - Génère JavaScript actuellement
-- WebAssembly envisagé pour le futur
+- Une cible WebAssembly via LLVM est en cours de discussion dans la
+  communauté FPC
 
-**B. LLVM et Delphi**
-- Utiliser LLVM comme backend
-- LLVM peut générer WebAssembly
-- Pas encore mature pour Delphi
+**C. LLVM et Delphi**
+- Le compilateur Delphi utilise déjà LLVM pour certaines cibles
+  (mobile depuis longtemps, Windows-ARM en 13.1)
+- LLVM sait générer du WebAssembly via `wasm32-unknown-unknown`
+- Une cible WASM native Delphi reste à annoncer par Embarcadero
 
 ### 3. Solutions hybrides
 
@@ -444,13 +477,16 @@ dcc32 -target:wasm MathLib.dpr -o:mathlib.wasm
 
 **Utilisation en JavaScript :**
 ```javascript
-// Charger le module Delphi compilé
-const delphiModule = await WebAssembly.instantiateStreaming(
+// Charger le module Delphi compilé (à appeler depuis un contexte async,
+// ou en chaînant .then() — l'await standalone ne fonctionne qu'au top
+// level d'un module ES, pas dans un script classique).
+const { instance } = await WebAssembly.instantiateStreaming(
   fetch('mathlib.wasm')
 );
 
-// Utiliser la fonction Delphi
-const result = delphiModule.exports.CalculateComplexFormula(10.5, 20.3, 5.7);  
+// instantiateStreaming retourne { instance, module } — on accède aux
+// fonctions exportées via instance.exports.
+const result = instance.exports.CalculateComplexFormula(10.5, 20.3, 5.7);  
 console.log('Résultat du calcul Delphi:', result);  
 ```
 
@@ -495,17 +531,22 @@ implementation
 
 procedure ApplyBlur(var Pixels: TPixelArray; Width, Height: Integer);  
 var  
-  x, y, i: Integer;
+  x, y, dx, dy: Integer;
   Sum: Integer;
 begin
-  // Algorithme de flou
+  // Flou par moyenne 3×3 — chaque pixel devient la moyenne de ses 9 voisins.
+  // ⚠️ Itérer dy ET dx sur [-1..1] (pas un seul indice diagonal) pour
+  //    couvrir l'intégralité du noyau 3×3, et diviser par 9 (et non 3).
+  // 💡 En production, écrire le résultat dans un *second* tampon pour ne
+  //    pas mélanger pixels traités et pixels d'origine pendant la passe.
   for y := 1 to Height - 2 do
     for x := 1 to Width - 2 do
     begin
       Sum := 0;
-      for i := -1 to 1 do
-        Sum := Sum + Pixels[(y + i) * Width + (x + i)];
-      Pixels[y * Width + x] := Sum div 3;
+      for dy := -1 to 1 do
+        for dx := -1 to 1 do
+          Sum := Sum + Pixels[(y + dy) * Width + (x + dx)];
+      Pixels[y * Width + x] := Sum div 9;
     end;
 end;
 
@@ -513,6 +554,14 @@ end.
 ```
 
 **Utilisation côté web :**
+
+> ⚠️ Note pédagogique : `imageData.data` est un `Uint8ClampedArray` au  
+> format **RGBA** (4 octets par pixel). L'exemple `ApplyBlur` ci-dessus  
+> traite des octets individuels — pour une vraie image couleur, il  
+> faudrait soit traiter les canaux R, G, B séparément (ignorant A), soit  
+> adapter la signature pour prendre en compte les 4 canaux et un stride  
+> de 4. L'exemple reste valable pour illustrer le pont JS ↔ WASM.
+
 ```javascript
 // Obtenir les pixels d'une image Canvas
 const ctx = canvas.getContext('2d');  
@@ -596,22 +645,32 @@ Runtime WebAssembly pour cloud et edge computing :
 - WebAssembly ne peut pas manipuler le DOM directement
 - Doit passer par JavaScript pour toute interaction UI
 
-**2. Garbage Collection limitée**
-- Pas de GC standard encore (en développement)
-- Gestion mémoire manuelle nécessaire
-- Complexe pour langages avec GC (comme Delphi)
+**2. Garbage Collection — récente mais disponible**
+- **WasmGC** est désormais standard depuis fin 2024 (Chrome 119+,
+  Firefox 120+, Safari 18.2+)
+- Permet aux langages managés (Java, Kotlin, Dart, OCaml…) de compiler
+  vers WASM sans embarquer leur propre GC — gros gain de taille
+- Pour Delphi, qui utilise un compteur de référence sur les chaînes/
+  tableaux dynamiques et la libération explicite des objets, l'intérêt
+  principal serait plutôt l'**intégration avec les types JS** sans
+  copie mémoire
 
 **3. Exceptions**
-- Support des exceptions en cours d'implémentation
-- Pas de gestion d'exceptions complète
+- Proposition *exception handling* finalisée et déployée dans tous les
+  navigateurs majeurs en 2024-2025
+- Support encore inégal selon les chaînes d'outils
 
 **4. Threading**
-- Support multi-threading limité
-- SharedArrayBuffer avec restrictions de sécurité
+- Multi-threading via `SharedArrayBuffer` disponible mais nécessite
+  des headers HTTP spéciaux (COOP/COEP : `Cross-Origin-Opener-Policy`
+  et `Cross-Origin-Embedder-Policy`) pour des raisons de sécurité
+  (post-Spectre)
+- Threading WASM stable depuis 2022 dans Chrome/Firefox
 
 **5. Taille de téléchargement**
 - Fichiers WASM peuvent être volumineux
-- Important d'optimiser et compresser
+- Important d'optimiser et compresser (Brotli recommandé : ~30 %
+  plus petit que gzip sur du WASM)
 
 ### Limitations pour Delphi spécifiquement
 
@@ -645,13 +704,15 @@ Runtime WebAssembly pour cloud et edge computing :
 - Interopérabilité entre langages
 - Écosystème de modules
 
-**Garbage Collection**
-- GC natif en cours de développement
-- Facilitera les langages managés
+**Garbage Collection (WasmGC)** ✅
+- Standard depuis fin 2024 (Chrome 119+, Firefox 120+, Safari 18.2+)
+- Élimine la nécessité d'embarquer un GC dans le module WASM
+- Déjà adopté par Kotlin, Dart, Java, OCaml…
 
-**SIMD (Single Instruction Multiple Data)**
-- Instructions vectorielles
-- Performance accrue pour calculs parallèles
+**SIMD (Single Instruction Multiple Data)** ✅
+- Instructions vectorielles 128 bits (`v128`) stables depuis 2021
+- Performance accrue pour calculs parallèles (traitement image, ML)
+- Proposition *Relaxed SIMD* en cours de finalisation pour 256 bits
 
 ### Et Delphi ?
 
@@ -716,12 +777,18 @@ Runtime WebAssembly pour cloud et edge computing :
 - Syntaxe Delphi
 - JavaScript sous le capot
 
-**Option B : Blazor WebAssembly + Delphi Backend**
+**Option B : Oxygene (RemObjects) — WASM dès aujourd'hui**
+- Langage Object Pascal compatible Delphi (avec extensions)
+- Compile nativement vers WebAssembly
+- Permet de réutiliser une bonne partie d'un code Pascal existant
+- Produit commercial
+
+**Option C : Blazor WebAssembly + Delphi Backend**
 - Frontend C#/Blazor (Microsoft)
 - Backend Delphi
 - Deux langages mais complémentaires
 
-**Option C : React/Vue + Delphi Backend**
+**Option D : React/Vue + Delphi Backend**
 - Frontend JavaScript pur
 - Backend Delphi
 - Séparation claire
@@ -756,7 +823,13 @@ var
   Input: Double;
   Resultat: Double;
 begin
-  Input := StrToFloat(Edit1.Text);
+  // ⚠️ TryStrToFloat évite l'exception si l'utilisateur a tapé du texte.
+  if not TryStrToFloat(Edit1.Text, Input) then
+  begin
+    Label1.Caption := 'Veuillez entrer un nombre valide';
+    Exit;
+  end;
+
   Resultat := MathLib.ComplexCalculation(Input);
   Label1.Caption := FloatToStr(Resultat);
 end;
@@ -794,8 +867,9 @@ end.
 **Frontend (HTML + JavaScript) :**
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="utf-8">
   <title>Application Web Delphi</title>
 </head>
 <body>
@@ -804,17 +878,35 @@ end.
   <div id="result"></div>
 
   <script>
-    let wasmModule;
+    let wasmModule = null;
 
-    // Charger le module WASM Delphi
+    // Charger le module WASM Delphi (asynchrone).
+    // ⚠️ Toujours gérer le .catch() — si le fichier .wasm est absent ou
+    //    si le Content-Type n'est pas application/wasm, le chargement échoue.
     WebAssembly.instantiateStreaming(fetch('mathlib.wasm'))
       .then(obj => {
         wasmModule = obj.instance;
         console.log('Module Delphi WASM chargé');
+      })
+      .catch(err => {
+        console.error('Échec du chargement WASM :', err);
       });
 
     function calculate() {
+      // L'utilisateur peut cliquer AVANT que le module ne soit chargé.
+      if (!wasmModule) {
+        alert('Module WASM pas encore chargé, réessayez dans un instant.');
+        return;
+      }
+
       const input = parseFloat(document.getElementById('input').value);
+      // parseFloat('abc') → NaN ; on évite d'envoyer NaN au module WASM
+      // (qui produirait un résultat NaN affiché en « NaN » dans la page).
+      if (isNaN(input)) {
+        document.getElementById('result').textContent =
+          'Veuillez entrer un nombre valide';
+        return;
+      }
 
       // Appeler la fonction Delphi compilée en WASM
       const result = wasmModule.exports.ComplexCalculation(input);
@@ -893,7 +985,8 @@ WebAssembly représente **l'avenir de la performance web**, mais le support nati
 Même sans WebAssembly, Delphi reste **excellent pour le backend** :
 - Performance native côté serveur
 - Accès bases de données rapide
-- Logique métier sécurisée
+- Logique métier qui reste côté serveur (validation, autorisations,
+  secrets — pas exposés au navigateur)
 - API REST performantes
 
 Et vous pouvez créer des **frontends web modernes** avec :
